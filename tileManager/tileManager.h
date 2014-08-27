@@ -22,28 +22,38 @@ class TileManager {
     // smart implementation: dumps not needed ones based on the tileID,
     // and gets only the ones needed for an update.
     void UpdateTiles();
-    TileManager(DataSource*);
+    TileManager();
+public:
 
     std::vector<MapTile*> m_VisibleTiles;
-    std::vector<DataSource*> m_DataSources;
+    std::vector<std::unique_ptr<DataSource>> m_DataSources;
     ViewModule *m_viewModule;
-    std::vector<glm::vec3> m_visibleTileIDs;
+    std::vector<glm::vec3> m_VisibleTileIDs;
 
-public:
+
     //C++11 thread-safe implementation for a singleton
-    static TileManager& GetInstance(std::unique_ptr<DataSource> dataSource) {
-        static TileManager *instance = new TileManager(dataSource.get());
-        return *instance;
+    static TileManager&& GetInstance() {
+        static TileManager *instance = new TileManager();
+        return std::move(*instance);
     }
 
     bool CheckNewTileStatus(); //contacts the view Module to see if tiles need updating
-    void AddDataSource(DataSource*);
+    void AddDataSource(std::unique_ptr<DataSource>);
     std::vector<MapTile*> GetVisibleTiles();
-    std::vector<DataSource*> GetDataSources();
+    std::vector<std::unique_ptr<DataSource>>&& GetDataSources();
+
+    TileManager(TileManager&& other) :
+                    m_VisibleTiles(std::move(other.m_VisibleTiles)),
+                    m_DataSources(std::move(other.m_DataSources)),
+                    m_viewModule(std::move(other.m_viewModule)),
+                    m_VisibleTileIDs(std::move(other.m_VisibleTileIDs)) {
+
+    }
+
     ~TileManager() {
-        m_VisibleTiles.clear();
         m_DataSources.clear();
-        m_visibleTileIDs.clear();
+        m_VisibleTileIDs.clear();
+        m_VisibleTiles.clear();
     }
 };
 
