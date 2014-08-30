@@ -17,20 +17,26 @@ class ViewModule;
 
 /* -- Todo: Singleton Class Implementation -- */
 class TileManager {
-    // updateTiles contacts the DataSource for new tile info.
-    // naive implementation: dumps all present tiles and gets all needed
-    // smart implementation: dumps not needed ones based on the tileID,
-    // and gets only the ones needed for an update.
+    /*  --UpdateTiles--
+    updateTiles contacts the DataSource for new tile info.
+    naive implementation: dumps all present tiles and gets all needed
+    smart implementation: dumps not needed ones based on the tileID,
+    and gets only the ones needed for an update.
+    */
     void UpdateTiles();
+    /*  --CalculateVisibleTileIDs--
+    Fills the m_VisibleTileIDs, which will be calculated based on
+    the inputs from the view module.
+    */
+    void CalculateVisibleTileIDs();
     TileManager();
-public:
 
     std::vector<MapTile*> m_VisibleTiles;
     std::vector<std::unique_ptr<DataSource>> m_DataSources;
     ViewModule *m_viewModule;
     std::vector<glm::vec3> m_VisibleTileIDs;
 
-
+public:
     //C++11 thread-safe implementation for a singleton
     static TileManager&& GetInstance() {
         static TileManager *instance = new TileManager();
