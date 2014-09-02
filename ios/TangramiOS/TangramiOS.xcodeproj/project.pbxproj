@@ -297,7 +297,7 @@
 				GCC_PREFIX_HEADER = "TangramiOS/TangramiOS-Prefix.pch";
 				INFOPLIST_FILE = "TangramiOS/TangramiOS-Info.plist";
 				OTHER_CFLAGS = (
-					"-I../../src",
+					"-I../../shared",
 					"-DPLATFORM_IOS",
 				);
 				PRODUCT_NAME = "$(TARGET_NAME)";
@@ -314,7 +314,7 @@
 				GCC_PREFIX_HEADER = "TangramiOS/TangramiOS-Prefix.pch";
 				INFOPLIST_FILE = "TangramiOS/TangramiOS-Info.plist";
 				OTHER_CFLAGS = (
-					"-I../../src",
+					"-I../../shared",
 					"-DPLATFORM_IOS",
 				);
 				PRODUCT_NAME = "$(TARGET_NAME)";

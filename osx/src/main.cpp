@@ -1,6 +1,6 @@
 #define GLFW_INCLUDE_ES2
 
-#include "../../src/tangram.h"
+#include "../../shared/tangram.h"
 
 int main(void)
 {
