@@ -7,7 +7,7 @@
 
 #include <curl/multi.h>
 
-
+// clears the tileID:jsonRoot map.
 void DataSource::ClearGeoRoots() {
     for (auto& mapValue : m_JsonRoots) {
         mapValue.second->clear();
@@ -16,13 +16,18 @@ void DataSource::ClearGeoRoots() {
 }
 
 
-//--Curl Helper Functions
+//----Curl Helper Functions----
+
+//write_data call back from CURLOPT_WRITEFUNCTION
+//responsible to read and fill "stream" with the data.
 size_t write_data(void *ptr, size_t size, size_t nmemb, void *stream) {
     std::string data((const char*) ptr, (size_t) size*nmemb);
     *((std::stringstream*) stream) << data;
     return size*nmemb;
 }
 
+// curlInit initializes individual curl simple instances
+// every tile url has a curl simple instance
 static void curlInit(CURLM *curlMulti, std::string url, std::stringstream *out) {
     CURL *curlEasy = curl_easy_init();
     curl_easy_setopt(curlEasy, CURLOPT_WRITEFUNCTION, write_data);
@@ -36,6 +41,9 @@ static void curlInit(CURLM *curlMulti, std::string url, std::stringstream *out) 
     return;
 }
 
+//---- tileID and url construction----
+
+//constructs a string from the tile coodinates
 static std::shared_ptr<std::string> constructTileID(glm::vec3 tileCoord) {
     std::ostringstream strStream;
     strStream<<tileCoord.x<<"_"<<tileCoord.y<<"_"<<tileCoord.z;
@@ -44,6 +52,7 @@ static std::shared_ptr<std::string> constructTileID(glm::vec3 tileCoord) {
     return tileID;
 }
 
+//constructs a mapzen vectortile json url from the tile coordinates
 static std::unique_ptr<std::string> constructURL(glm::vec3 tileCoord) {
     std::ostringstream strStream;
     strStream<<"http://vector.mapzen.com/osm/all/"<<tileCoord.z
@@ -54,18 +63,15 @@ static std::unique_ptr<std::string> constructURL(glm::vec3 tileCoord) {
 }
 
 
-//--- MapzenVectorTileJson Implementation
+//---- MapzenVectorTileJson Implementation----
+
+// Responsible to read the tileData from the service 
+// takes a vector of tileCoordinates to be read from the service.
 void MapzenVectorTileJson::LoadTile(std::vector<glm::vec3> tileCoords) {
-    /*std::string tileIDs[3];
-    tileIDs[0] = "0_0_0";
-    tileIDs[1] = "16_19293_24641";
-    tileIDs[2] = "14_19293_24641";
-    std::vector<std::string> testURLs;
-    testURLs.push_back("http://vector.mapzen.com/osm/all/0/0/0.json");
-    testURLs.push_back("http://vector.mapzen.com/osm/all/16/19293/24641.json");
-    testURLs.push_back("http://vector.mapzen.com/osm/all/14/19293/24641.json");*/
     std::vector<std::shared_ptr<std::string>> tileIDs;
     std::vector<std::unique_ptr<std::string>> urls;
+
+    //construct tileID and url for every tileCoord
     for(auto& tileCoord : tileCoords) {
         tileIDs.push_back(constructTileID(tileCoord));
         urls.push_back(constructURL(tileCoord));
@@ -74,20 +80,22 @@ void MapzenVectorTileJson::LoadTile(std::vector<glm::vec3> tileCoords) {
     CURLM *multiHandle;
     CURLMsg *handleMsg;
     int queuedHandles, numHandles = urls.size();
+    // out will store the stringStream contents from libCurl   
     std::stringstream *out[urls.size()];
 
     curl_global_init(CURL_GLOBAL_DEFAULT);
 
     multiHandle = curl_multi_init();
     int count = 0;
+
+    // initialize curl simple interface for every url
     for(auto& url : urls) {
         out[count] = new std::stringstream;
         curlInit(multiHandle, *url.get(), out[count]);
         count++;
     }
-    /*curlInit(multiHandle, testURLs[0], &out[0]);
-    curlInit(multiHandle, testURLs[1], &out[1]);
-    curlInit(multiHandle, testURLs[2], &out[2]);*/
+
+    //do curl stuff
     if(multiHandle) {
         while(numHandles) {
             curl_multi_perform(multiHandle, &numHandles);
@@ -112,6 +120,7 @@ void MapzenVectorTileJson::LoadTile(std::vector<glm::vec3> tileCoords) {
     curl_multi_cleanup(multiHandle);
     curl_global_cleanup();
 
+    // set map data (tileID->JsonValue) for every url
     for(auto i = 0; i < urls.size(); i++) {
         std::shared_ptr<Json::Value> jsonVal(new Json::Value);
         std::string tmp = out[i]->str();
@@ -124,32 +133,8 @@ void MapzenVectorTileJson::LoadTile(std::vector<glm::vec3> tileCoords) {
     tileIDs.clear();
     urls.clear();
 }
-/*std::vector<glm::vec3> MapzenVectorTileJson::LoadTile() {
 
-    // tildID and FileName is explicitly hard coded, these
-    // will be read from the service eventually using libCurl
-
-    std::vector<glm::vec3> tileIDs;
-    tileIDs.push_back(glm::vec3(1, 2, 3));
-    //Need to do this to have a std::map, which respects only
-    std::string tileID("1_2_3");
-    std::string FileName("/Users/Varun/Development/tangram-es/data/test.json");
-
-    // Json Extracting
-    // TODO: Try Janson Library or rapidJson library
-    std::shared_ptr<Json::Value> jsonLocalValue(new Json::Value);
-    std::fstream inputStream(FileName, std::fstream::in);
-    inputStream.seekg (0, inputStream.end);
-    int length = inputStream.tellg();
-    inputStream.seekg (0, inputStream.beg);
-    char *jsonFileBuffer = new char[length];
-    inputStream.read(jsonFileBuffer, length);
-    Json::Reader jsonReader;
-    jsonReader.parse(jsonFileBuffer, jsonFileBuffer + length, *(jsonLocalValue.get()));
-    m_JsonRoots[tileID] = jsonLocalValue;
-    return std::move(tileIDs);
-}*/
-
+//Returns jsonValue for a requested tileID
 std::shared_ptr<Json::Value>
         MapzenVectorTileJson::GetData(std::string TileID) {
     return m_JsonRoots[TileID];

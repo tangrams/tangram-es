@@ -18,10 +18,10 @@ class ViewModule;
 /* -- Todo: Singleton Class Implementation -- */
 class TileManager {
     /*  --UpdateTiles--
-    updateTiles contacts the DataSource for new tile info.
-    naive implementation: dumps all present tiles and gets all needed
-    smart implementation: dumps not needed ones based on the tileID,
-    and gets only the ones needed for an update.
+    updateTiles contacts the DataSource for new tile data.
+    Naive Implementation: Current implementation, sets the tileIDs explicitly
+    Smart Todo: viewModule updates the visibleTileIDs which is then passed to the dataSource.
+    Smart Todo 2: Be smart of getting new tiles :D.
     */
     void UpdateTiles();
     /*  --CalculateVisibleTileIDs--
@@ -48,6 +48,11 @@ public:
     std::vector<MapTile*> GetVisibleTiles();
     std::vector<std::unique_ptr<DataSource>>&& GetDataSources();
 
+    // move constructor required to:
+    // 1. disable copy constructor
+    // 2. disable assignment operator
+    // 3. because tileManager is singleton
+    // 4. required for some smarts done with std::move
     TileManager(TileManager&& other) :
                     m_VisibleTiles(std::move(other.m_VisibleTiles)),
                     m_DataSources(std::move(other.m_DataSources)),

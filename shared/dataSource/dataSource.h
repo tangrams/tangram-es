@@ -19,21 +19,17 @@
 //Every implementation of a DataSource will fill this TileData instance.
 //Example MapzenVectorTile will read the json and fill this TileData
 class TileData {
-
 };
 
-//Todo: Make DataSource an abstract base class and
-//Todo: Implement MapzenVectorTile which extends DataSource
 class DataSource {
 protected:
     // map of tile coordinates (as a string: x_y_level) to json data for that tile
     std::map< std::string, std::shared_ptr<Json::Value> > m_JsonRoots;
-    //Json::Value m_JsonRoot;
 
 public:
     virtual void LoadTile(std::vector<glm::vec3> tileCoords) = 0;
     virtual std::shared_ptr<Json::Value>
-                GetData(std::string tileID) = 0;
+                	GetData(std::string tileID) = 0;
     void ClearGeoRoots();
     DataSource() {}
     ~DataSource() {
