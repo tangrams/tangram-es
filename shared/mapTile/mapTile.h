@@ -16,8 +16,8 @@ class MapTile {
     //std::vector<int> m_Indices; //in glBufferData, use &m_indices.front()
 
   public:
-    glm::vec3 m_MercXYZ;
-    MapTile(glm::vec3 m_MercXYZ);
+    glm::ivec3 m_MercXYZ;
+    MapTile(glm::ivec3 m_MercXYZ);
     //Helper Functions
     bool setVBO(std::vector<float> vboData);
     glm::vec2 GetBoundingBox();

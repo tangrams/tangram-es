@@ -17,11 +17,11 @@ bool TileManager::CheckNewTileStatus() {
 
 void TileManager::UpdateTiles() {
     DataSource *ds = m_DataSources.at(0).get();
-    
+
     //Naive Implementation to set tile Coordinates explicitly
-    m_VisibleTileIDs.push_back(glm::vec3(0,0,0));
-    m_VisibleTileIDs.push_back(glm::vec3(19293,24641,16));
-    m_VisibleTileIDs.push_back(glm::vec3(19293,24641,14));
+    m_VisibleTileIDs.push_back(glm::ivec3(0,0,0));
+    m_VisibleTileIDs.push_back(glm::ivec3(19293,24641,16));
+    m_VisibleTileIDs.push_back(glm::ivec3(19293,24641,14));
     ds->LoadTile(m_VisibleTileIDs);
     // Create MapTiles from the tileCoordinates after these are loaded.
     for(auto &tileID : m_VisibleTileIDs) {

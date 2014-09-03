@@ -34,7 +34,7 @@ class TileManager {
     std::vector<MapTile*> m_VisibleTiles;
     std::vector<std::unique_ptr<DataSource>> m_DataSources;
     ViewModule *m_viewModule;
-    std::vector<glm::vec3> m_VisibleTileIDs;
+    std::vector<glm::ivec3> m_VisibleTileIDs;
 
 public:
     //C++11 thread-safe implementation for a singleton

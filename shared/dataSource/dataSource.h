@@ -27,7 +27,7 @@ protected:
     std::map< std::string, std::shared_ptr<Json::Value> > m_JsonRoots;
 
 public:
-    virtual void LoadTile(std::vector<glm::vec3> tileCoords) = 0;
+    virtual void LoadTile(std::vector<glm::ivec3> tileCoords) = 0;
     virtual std::shared_ptr<Json::Value>
                 	GetData(std::string tileID) = 0;
     void ClearGeoRoots();
@@ -41,7 +41,7 @@ public:
 class MapzenVectorTileJson: public DataSource {
 public:
     MapzenVectorTileJson() {}
-    virtual void LoadTile(std::vector<glm::vec3> tileCoords) override;
+    virtual void LoadTile(std::vector<glm::ivec3> tileCoords) override;
     virtual std::shared_ptr<Json::Value>
                 GetData(std::string tileID) override;
 };
