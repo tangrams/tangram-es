@@ -9,6 +9,7 @@ bool TileManager::CheckNewTileStatus() {
     // if True, call updateVisibleTiles()
     // else, nothing
     if (true) {
+        //CalculateVisibleTileIDs();
         UpdateTiles();
     }
     return true;
@@ -16,19 +17,24 @@ bool TileManager::CheckNewTileStatus() {
 
 void TileManager::UpdateTiles() {
     DataSource *ds = m_DataSources.at(0).get();
-    m_VisibleTileIDs = ds->LoadTile();
-    for(auto tileIDItr = m_VisibleTileIDs.begin();
-            tileIDItr != m_VisibleTileIDs.end();
-            tileIDItr++) {
-        MapTile *mapTile = new MapTile(*tileIDItr);
+    
+    //Naive Implementation to set tile Coordinates explicitly
+    m_VisibleTileIDs.push_back(glm::vec3(0,0,0));
+    m_VisibleTileIDs.push_back(glm::vec3(19293,24641,16));
+    m_VisibleTileIDs.push_back(glm::vec3(19293,24641,14));
+    ds->LoadTile(m_VisibleTileIDs);
+    // Create MapTiles from the tileCoordinates after these are loaded.
+    for(auto &tileID : m_VisibleTileIDs) {
+        MapTile *mapTile = new MapTile(tileID);
         m_VisibleTiles.push_back(mapTile);
     }
-
 }
 
 TileManager::TileManager() {
 }
 
+
+// Should be used when adding new data sources.... FUTURE
 void TileManager::AddDataSource(std::unique_ptr<DataSource> ds) {
     m_DataSources.push_back(std::move(ds));
 }
