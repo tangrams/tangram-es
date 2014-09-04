@@ -1,9 +1,7 @@
 /*
 ...
 */
-
-#ifndef __SCENE_DIRECTOR_H__
-#define __SCENE_DIRECTOR_H__
+#pragma once
 
 #include <vector>
 
@@ -28,5 +26,3 @@ public:
     bool updateVBOs();
     bool renderLoop();
 };
-
-#endif

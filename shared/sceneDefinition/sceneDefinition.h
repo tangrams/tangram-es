@@ -1,12 +1,9 @@
 /*
 ...
 */
-
-#ifndef __SCENE_DEFINITION_H__
-#define __SCENE_DEFINITION_H__
+#pragma once
 
 #include <vector>
-
 
 
 /* -- Singleton Class Implementation -- */
@@ -23,5 +20,3 @@ public:
      */
     std::vector<float> setupVBOData();
 };
-
-#endif

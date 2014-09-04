@@ -1,9 +1,7 @@
 /*
 ...
 */
-
-#ifndef __MAP_TILE_H__
-#define __MAP_TILE_H__
+#pragma once
 
 #include "glm/glm.hpp"
 #include <vector>
@@ -28,5 +26,3 @@ class MapTile {
         m_Vertices.clear();
     }
 };
-
-#endif

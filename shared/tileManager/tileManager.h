@@ -1,9 +1,7 @@
 /*
 ...
 */
-
-#ifndef __TILE_MANAGER_H__
-#define __TILE_MANAGER_H__
+#pragma once
 
 #include <vector>
 #include <memory>
@@ -67,5 +65,3 @@ public:
         m_VisibleTiles.clear();
     }
 };
-
-#endif

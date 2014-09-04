@@ -1,9 +1,7 @@
 /*
 ...
 */
-
-#ifndef __DATA_SOURCE_H__
-#define __DATA_SOURCE_H__
+#pragma once
 
 #include "json/json.h"
 
@@ -45,5 +43,3 @@ public:
     virtual std::shared_ptr<Json::Value>
                 GetData(std::string tileID) override;
 };
-
-#endif
