@@ -20,7 +20,7 @@
 		C95CFFFA19AB8AE5003FEC0C /* Main_iPhone.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = C95CFFF819AB8AE5003FEC0C /* Main_iPhone.storyboard */; };
 		C95CFFFD19AB8AE5003FEC0C /* Main_iPad.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = C95CFFFB19AB8AE5003FEC0C /* Main_iPad.storyboard */; };
 		C9BCA9F919B8CCB1006260E7 /* platform_ios.cpp in Sources */ = {isa = PBXBuildFile; fileRef = C9BCA9F819B8CCB1006260E7 /* platform_ios.cpp */; };
-		C9BCA9FB19B8DBB8006260E7 /* tangram.cpp in Sources */ = {isa = PBXBuildFile; fileRef = C9BCA9FA19B8DBB8006260E7 /* tangram.cpp */; };
+		C9BCAA0119B8FCDB006260E7 /* tangram.cpp in Sources */ = {isa = PBXBuildFile; fileRef = C9BCAA0019B8FCDB006260E7 /* tangram.cpp */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
@@ -43,9 +43,9 @@
 		C95CFFF919AB8AE5003FEC0C /* Base */ = {isa = PBXFileReference; lastKnownFileType = file.storyboard; name = Base; path = Base.lproj/Main_iPhone.storyboard; sourceTree = "<group>"; };
 		C95CFFFC19AB8AE5003FEC0C /* Base */ = {isa = PBXFileReference; lastKnownFileType = file.storyboard; name = Base; path = Base.lproj/Main_iPad.storyboard; sourceTree = "<group>"; };
 		C9BCA9F819B8CCB1006260E7 /* platform_ios.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = platform_ios.cpp; sourceTree = "<group>"; };
-		C9BCA9FA19B8DBB8006260E7 /* tangram.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = tangram.cpp; path = ../tangram.cpp; sourceTree = "<group>"; };
 		C9BCA9FE19B8DCC0006260E7 /* tangram.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = tangram.h; path = ../../../shared/tangram.h; sourceTree = "<group>"; };
 		C9BCA9FF19B8DCDF006260E7 /* platform.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = platform.h; path = ../../../shared/platform.h; sourceTree = "<group>"; };
+		C9BCAA0019B8FCDB006260E7 /* tangram.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = tangram.cpp; path = ../../../shared/tangram.cpp; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -98,7 +98,7 @@
 			isa = PBXGroup;
 			children = (
 				C9BCA9FE19B8DCC0006260E7 /* tangram.h */,
-				C9BCA9FA19B8DBB8006260E7 /* tangram.cpp */,
+				C9BCAA0019B8FCDB006260E7 /* tangram.cpp */,
 				C9BCA9FF19B8DCDF006260E7 /* platform.h */,
 				C9BCA9F819B8CCB1006260E7 /* platform_ios.cpp */,
 				C95CFFF519AB8AE5003FEC0C /* AppDelegate.h */,
@@ -192,7 +192,7 @@
 			files = (
 				C9BCA9F919B8CCB1006260E7 /* platform_ios.cpp in Sources */,
 				C95C000419AB8AE5003FEC0C /* ViewController.mm in Sources */,
-				C9BCA9FB19B8DBB8006260E7 /* tangram.cpp in Sources */,
+				C9BCAA0119B8FCDB006260E7 /* tangram.cpp in Sources */,
 				C95CFFF719AB8AE5003FEC0C /* AppDelegate.m in Sources */,
 				C95CFFF319AB8AE5003FEC0C /* main.m in Sources */,
 			);
