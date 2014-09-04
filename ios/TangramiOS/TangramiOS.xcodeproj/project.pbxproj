@@ -7,7 +7,7 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
-		C95C000419AB8AE5003FEC0C /* ViewController.m in Sources */ = {isa = PBXBuildFile; fileRef = C95C000319AB8AE5003FEC0C /* ViewController.m */; };
+		C95C000419AB8AE5003FEC0C /* ViewController.mm in Sources */ = {isa = PBXBuildFile; fileRef = C95C000319AB8AE5003FEC0C /* ViewController.mm */; };
 		C95C000619AB8AE5003FEC0C /* Images.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = C95C000519AB8AE5003FEC0C /* Images.xcassets */; };
 		C95CFFE319AB8AE5003FEC0C /* Foundation.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = C95CFFE219AB8AE5003FEC0C /* Foundation.framework */; };
 		C95CFFE519AB8AE5003FEC0C /* CoreGraphics.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = C95CFFE419AB8AE5003FEC0C /* CoreGraphics.framework */; };
@@ -19,11 +19,13 @@
 		C95CFFF719AB8AE5003FEC0C /* AppDelegate.m in Sources */ = {isa = PBXBuildFile; fileRef = C95CFFF619AB8AE5003FEC0C /* AppDelegate.m */; };
 		C95CFFFA19AB8AE5003FEC0C /* Main_iPhone.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = C95CFFF819AB8AE5003FEC0C /* Main_iPhone.storyboard */; };
 		C95CFFFD19AB8AE5003FEC0C /* Main_iPad.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = C95CFFFB19AB8AE5003FEC0C /* Main_iPad.storyboard */; };
+		C9BCA9F919B8CCB1006260E7 /* platform_ios.cpp in Sources */ = {isa = PBXBuildFile; fileRef = C9BCA9F819B8CCB1006260E7 /* platform_ios.cpp */; };
+		C9BCA9FB19B8DBB8006260E7 /* tangram.cpp in Sources */ = {isa = PBXBuildFile; fileRef = C9BCA9FA19B8DBB8006260E7 /* tangram.cpp */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
 		C95C000219AB8AE5003FEC0C /* ViewController.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = ViewController.h; sourceTree = "<group>"; };
-		C95C000319AB8AE5003FEC0C /* ViewController.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = ViewController.m; sourceTree = "<group>"; };
+		C95C000319AB8AE5003FEC0C /* ViewController.mm */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.objcpp; path = ViewController.mm; sourceTree = "<group>"; };
 		C95C000519AB8AE5003FEC0C /* Images.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Images.xcassets; sourceTree = "<group>"; };
 		C95C000C19AB8AE5003FEC0C /* XCTest.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = XCTest.framework; path = Library/Frameworks/XCTest.framework; sourceTree = DEVELOPER_DIR; };
 		C95CFFDF19AB8AE5003FEC0C /* TangramiOS.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = TangramiOS.app; sourceTree = BUILT_PRODUCTS_DIR; };
@@ -40,6 +42,10 @@
 		C95CFFF619AB8AE5003FEC0C /* AppDelegate.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = AppDelegate.m; sourceTree = "<group>"; };
 		C95CFFF919AB8AE5003FEC0C /* Base */ = {isa = PBXFileReference; lastKnownFileType = file.storyboard; name = Base; path = Base.lproj/Main_iPhone.storyboard; sourceTree = "<group>"; };
 		C95CFFFC19AB8AE5003FEC0C /* Base */ = {isa = PBXFileReference; lastKnownFileType = file.storyboard; name = Base; path = Base.lproj/Main_iPad.storyboard; sourceTree = "<group>"; };
+		C9BCA9F819B8CCB1006260E7 /* platform_ios.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = platform_ios.cpp; sourceTree = "<group>"; };
+		C9BCA9FA19B8DBB8006260E7 /* tangram.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = tangram.cpp; path = ../tangram.cpp; sourceTree = "<group>"; };
+		C9BCA9FE19B8DCC0006260E7 /* tangram.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = tangram.h; path = ../../../shared/tangram.h; sourceTree = "<group>"; };
+		C9BCA9FF19B8DCDF006260E7 /* platform.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = platform.h; path = ../../../shared/platform.h; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -91,12 +97,16 @@
 		C95CFFEC19AB8AE5003FEC0C /* TangramiOS */ = {
 			isa = PBXGroup;
 			children = (
+				C9BCA9FE19B8DCC0006260E7 /* tangram.h */,
+				C9BCA9FA19B8DBB8006260E7 /* tangram.cpp */,
+				C9BCA9FF19B8DCDF006260E7 /* platform.h */,
+				C9BCA9F819B8CCB1006260E7 /* platform_ios.cpp */,
 				C95CFFF519AB8AE5003FEC0C /* AppDelegate.h */,
 				C95CFFF619AB8AE5003FEC0C /* AppDelegate.m */,
 				C95CFFF819AB8AE5003FEC0C /* Main_iPhone.storyboard */,
 				C95CFFFB19AB8AE5003FEC0C /* Main_iPad.storyboard */,
 				C95C000219AB8AE5003FEC0C /* ViewController.h */,
-				C95C000319AB8AE5003FEC0C /* ViewController.m */,
+				C95C000319AB8AE5003FEC0C /* ViewController.mm */,
 				C95C000519AB8AE5003FEC0C /* Images.xcassets */,
 				C95CFFED19AB8AE5003FEC0C /* Supporting Files */,
 			);
@@ -180,7 +190,9 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				C95C000419AB8AE5003FEC0C /* ViewController.m in Sources */,
+				C9BCA9F919B8CCB1006260E7 /* platform_ios.cpp in Sources */,
+				C95C000419AB8AE5003FEC0C /* ViewController.mm in Sources */,
+				C9BCA9FB19B8DBB8006260E7 /* tangram.cpp in Sources */,
 				C95CFFF719AB8AE5003FEC0C /* AppDelegate.m in Sources */,
 				C95CFFF319AB8AE5003FEC0C /* main.m in Sources */,
 			);

@@ -25,7 +25,7 @@ const GLchar* fragShaderSrc =
 	"precision mediump float;\n"
 	"#endif\n"
 	"void main(void) {\n"
-	"  gl_FragColor = vec4(93.0/255.0, 141.0/255.0, 148.0/255.0, 1.0);\n"
+	"  gl_FragColor = vec4(0.0/255.0, 141.0/255.0, 148.0/255.0, 1.0);\n"
 	"}\n";
 
 void initializeOpenGL()
