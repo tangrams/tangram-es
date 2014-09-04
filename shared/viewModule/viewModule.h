@@ -22,7 +22,7 @@
 class ViewModule {
 
 public:
-	
+
 	ViewModule(float width, float height);
 	ViewModule();
 
@@ -32,6 +32,7 @@ public:
 	void translate(float dx, float dy);
 	void zoom(int dz);
 
+	int getZoom() { return m_zoom; };
 	glm::vec3 getPosition() { return m_pos; };
 	glm::mat4 getViewMatrix() { return m_view; };
 	glm::mat4 getProjectionMatrix() { return m_proj; };
@@ -39,7 +40,7 @@ public:
 	glm::mat2 getBoundsRect(); // Returns a rectangle of the current view range as [[x_min, y_min][x_max, y_max]]
 
 private:
-	
+
 	glm::vec3 m_pos;
 	glm::mat4 m_view;
 	glm::mat4 m_proj;

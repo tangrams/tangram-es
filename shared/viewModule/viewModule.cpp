@@ -9,11 +9,11 @@ ViewModule::ViewModule() {
 }
 
 void ViewModule::init(float width, float height) {
-	
+
 	// Set up projection matrix based on input width and height with an arbitrary zoom
 	setAspect(width, height);
 	setZoom(16); // Arbitrary zoom for testing
-	
+
 	// Set up view matrix
 	m_pos = glm::vec3(0, 0, 0); // Start at 0 to begin
 	glm::vec3 direction = glm::vec3(0, 0, -1); // Look straight down
@@ -25,11 +25,12 @@ void ViewModule::init(float width, float height) {
 void ViewModule::setAspect(float width, float height) {
 
 	m_aspect = width / height;
+	setZoom(m_zoom);
 
 }
 
 void ViewModule::setPosition(float x, float y) {
-	
+
 	translate(x - m_pos.x, y - m_pos.y);
 
 }
