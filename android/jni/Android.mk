@@ -6,7 +6,7 @@ LOCAL_PATH := $(call my-dir)
 include $(CLEAR_VARS)
 
 # All the source files to include in this module
-LOCAL_SRC_FILES := ../../shared/tangram.cpp jniExports.cpp platform_android.cpp
+LOCAL_SRC_FILES := ../../core/tangram.cpp jniExports.cpp platform_android.cpp
 
 # The name of the module
 LOCAL_MODULE := tangram
@@ -14,7 +14,7 @@ LOCAL_MODULE := tangram
 # Compilation flags
 LOCAL_CFLAGS := -Werror -DPLATFORM_ANDROID
 
-LOCAL_C_INCLUDES := $(LOCAL_PATH)/include-all ../../shared/
+LOCAL_C_INCLUDES := $(LOCAL_PATH)/include-all ../../core/
 
 # Static libraries to link with
 LOCAL_LDLIBS := -llog -lGLESv2
