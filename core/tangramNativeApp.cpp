@@ -24,7 +24,7 @@ int main()
         std::ostringstream tileID (std::ostringstream::ate);
         tileID << tile->m_MercXYZ.x << "_" << tile->m_MercXYZ.y << "_" << tile->m_MercXYZ.z;
         // tileManager gets the dataSoure (only one), which gets the data stored for every tile it has.
-        std::cout<<*((tileManagerInst.GetDataSources().at(0)->GetData(tileID.str()).get()));
+        //std::cout<<*((tileManagerInst.GetDataSources().at(0)->GetData(tileID.str()).get()));
     }
 
     return 0;

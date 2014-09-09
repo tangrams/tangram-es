@@ -4,6 +4,9 @@
 #include <memory>
 #include <cstdio>
 #include <sstream>
+#include <chrono>
+#include <thread>
+#include <sys/time.h>
 
 #include <curl/multi.h>
 
@@ -47,7 +50,6 @@ static void curlInit(CURLM *curlMulti, std::string url, std::stringstream *out) 
 static std::shared_ptr<std::string> constructTileID(glm::ivec3 tileCoord) {
     std::ostringstream strStream;
     strStream<<tileCoord.x<<"_"<<tileCoord.y<<"_"<<tileCoord.z;
-    std::cout<<strStream.str();
     std::shared_ptr<std::string> tileID(new std::string(strStream.str()));
     return tileID;
 }
@@ -57,7 +59,6 @@ static std::unique_ptr<std::string> constructURL(glm::ivec3 tileCoord) {
     std::ostringstream strStream;
     strStream<<"http://vector.mapzen.com/osm/all/"<<tileCoord.z
                 <<"/"<<tileCoord.x<<"/"<<tileCoord.y<<".json";
-    std::cout<<strStream.str();
     std::unique_ptr<std::string> url(new std::string(strStream.str()));
     return std::move(url);
 }
@@ -67,7 +68,7 @@ static std::unique_ptr<std::string> constructURL(glm::ivec3 tileCoord) {
 
 // Responsible to read the tileData from the service
 // takes a vector of tileCoordinates to be read from the service.
-void MapzenVectorTileJson::LoadTile(std::vector<glm::ivec3> tileCoords) {
+bool MapzenVectorTileJson::LoadTile(std::vector<glm::ivec3> tileCoords) {
     std::vector<std::shared_ptr<std::string>> tileIDs;
     std::vector<std::unique_ptr<std::string>> urls;
 
@@ -79,6 +80,15 @@ void MapzenVectorTileJson::LoadTile(std::vector<glm::ivec3> tileCoords) {
 
     CURLM *multiHandle;
     CURLMsg *handleMsg;
+    // file descriptors to be used with curl_multi_fdset and select()
+    fd_set fdRead;
+    fd_set fdWrite;
+    fd_set fdExcep;
+    int fdMax;
+    struct timeval timeout;
+    int rc; //return value for select() call
+    CURLMcode cres;
+
     int queuedHandles, numHandles = urls.size();
     // out will store the stringStream contents from libCurl
     std::stringstream *out[urls.size()];
@@ -97,28 +107,65 @@ void MapzenVectorTileJson::LoadTile(std::vector<glm::ivec3> tileCoords) {
 
     //do curl stuff
     if(multiHandle) {
-        while(numHandles) {
-            curl_multi_perform(multiHandle, &numHandles);
-            while ((handleMsg = curl_multi_info_read(
-                                multiHandle, &queuedHandles))) {
-                if (handleMsg->msg == CURLMSG_DONE) {
-                    char *url;
-                    CURL *e = handleMsg->easy_handle;
-                    curl_easy_getinfo(handleMsg->easy_handle, CURLINFO_PRIVATE, &url);
-                    fprintf(stderr, "R: %d - %s <%s>\n",
-                            handleMsg->data.result, curl_easy_strerror(
-                                handleMsg->data.result), url);
-                    curl_multi_remove_handle(multiHandle, e);
-                    curl_easy_cleanup(e);
-                }
-                else {
-                    fprintf(stderr, "E: CURLMsg (%d)\n", handleMsg->msg);
-                }
-            }
+        //start fetching
+        cres = curl_multi_perform(multiHandle, &numHandles);
+        if(cres != CURLM_OK) {
+            fprintf(stderr, "curl_multi_perform failed %d\n", cres);
+            return false;
         }
+        
+        //if numHandles is 0, then multi_perform has no easy handles to perform fetching
+        if(!numHandles) {
+            std::cout<<"Warning: No URLS ready to read from";
+            return true;
+        }
+        
+        //Start fetching info untill no easy handle left to fetch data
+        do {
+            //set all file descriptors to 0
+            FD_ZERO(&fdRead);
+            FD_ZERO(&fdWrite);
+            FD_ZERO(&fdExcep);
+
+            //timeout specification for select() call
+            //select() will unblock either when a fd is ready or tileout is reached
+            timeout.tv_sec = 0;
+            timeout.tv_usec = 100;
+
+            //get file descriptors from the transfer
+            cres = curl_multi_fdset(multiHandle, &fdRead, &fdWrite, &fdExcep, &fdMax);
+
+            if(cres != CURLM_OK) {
+                fprintf(stderr, "curl_multi_fdset failed %d\n", cres);
+                return false;
+            }
+
+            while(fdMax < 0) {
+                std::this_thread::sleep_for(std::chrono::milliseconds(100));
+                cres = curl_multi_perform(multiHandle, &numHandles);
+                curl_multi_fdset(multiHandle, &fdRead, &fdWrite, &fdExcep, &fdMax);
+                std::cout<<"fdMax: "<<fdMax<<" cres: "<<cres<<"\n";
+            }
+
+            rc = select(fdMax+1, &fdRead, &fdWrite, &fdExcep, &timeout);
+
+            // see what select returned
+            switch(rc) {
+                case -1:
+                    //ERROR
+                    break;
+                case 0:
+                    break;
+                default:
+                    std::cout<<"Here: "<<numHandles<<"\n";
+                    curl_multi_perform(multiHandle,&numHandles);
+                    break;
+            }
+        }while(numHandles);
+        
+        curl_multi_cleanup(multiHandle);
+        curl_global_cleanup();
     }
-    curl_multi_cleanup(multiHandle);
-    curl_global_cleanup();
 
     // set map data (tileID->JsonValue) for every url
     for(auto i = 0; i < urls.size(); i++) {
@@ -132,6 +179,7 @@ void MapzenVectorTileJson::LoadTile(std::vector<glm::ivec3> tileCoords) {
     }
     tileIDs.clear();
     urls.clear();
+    return true;
 }
 
 //Returns jsonValue for a requested tileID
