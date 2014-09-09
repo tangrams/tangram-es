@@ -22,7 +22,7 @@ void TileManager::UpdateTiles() {
     m_VisibleTileIDs.push_back(glm::ivec3(0,0,0));
     m_VisibleTileIDs.push_back(glm::ivec3(19293,24641,16));
     m_VisibleTileIDs.push_back(glm::ivec3(19293,24641,14));
-    ds->LoadTile(m_VisibleTileIDs);
+    bool success = ds->LoadTile(m_VisibleTileIDs);
     // Create MapTiles from the tileCoordinates after these are loaded.
     for(auto &tileID : m_VisibleTileIDs) {
         MapTile *mapTile = new MapTile(tileID);
