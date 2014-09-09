@@ -1,6 +1,3 @@
-/*
-...
-*/
 #pragma once
 
 #include <vector>
@@ -10,8 +7,9 @@ class SceneDefinition;
 
 /* -- Singleton Class Implementation -- */
 class SceneDirector {
-    TileManager *m_TileManager;
-    SceneDefinition *m_SceneDefinition;
+    TileManager *m_tileManager;
+    SceneDefinition *m_sceneDefinition;
+    ViewModule *m_viewModule;
     SceneDirector();
 
 public:
@@ -24,5 +22,5 @@ public:
         sceneDefinition instance, which will construct the vbo data.
     */
     bool updateVBOs();
-    bool renderLoop();
+    bool renderFrame(float dt);
 };
