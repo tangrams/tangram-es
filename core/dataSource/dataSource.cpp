@@ -6,6 +6,7 @@
 #include <sstream>
 #include <chrono>
 #include <thread>
+#include <algorithm>
 #include <sys/time.h>
 
 #include <curl/multi.h>
@@ -37,7 +38,7 @@ static void curlInit(CURLM *curlMulti, std::string url, std::stringstream *out) 
     curl_easy_setopt(curlEasy, CURLOPT_WRITEDATA, out);
     curl_easy_setopt(curlEasy, CURLOPT_HEADER, 0L);
     curl_easy_setopt(curlEasy, CURLOPT_URL, url.c_str());
-    curl_easy_setopt(curlEasy, CURLOPT_PRIVATE, url.c_str());
+    curl_easy_setopt(curlEasy, CURLOPT_PRIVATE, (char *)out);
     curl_easy_setopt(curlEasy, CURLOPT_VERBOSE, 0L);
 
     curl_multi_add_handle(curlMulti, curlEasy);
@@ -61,6 +62,17 @@ static std::unique_ptr<std::string> constructURL(glm::ivec3 tileCoord) {
                 <<"/"<<tileCoord.x<<"/"<<tileCoord.y<<".json";
     std::unique_ptr<std::string> url(new std::string(strStream.str()));
     return std::move(url);
+}
+
+static std::string extractIDFromUrl(std::string url) {
+    int x,y,z;
+    std::string baseURL("http://vector.mapzen.com/osm/all/");
+    std::string jsonStr(".json");
+    std::string tmpID = url.replace(0, baseURL.length(), "");
+    std::size_t jsonPos = tmpID.find(jsonStr);
+    tmpID = tmpID.replace(jsonPos, jsonStr.length(), "");
+    std::replace(tmpID.begin(), tmpID.end(), '/','_');
+    return tmpID;
 }
 
 
@@ -90,6 +102,8 @@ bool MapzenVectorTileJson::LoadTile(std::vector<glm::ivec3> tileCoords) {
     CURLMcode cres;
 
     int queuedHandles, numHandles = urls.size();
+    int prevHandle;
+    
     // out will store the stringStream contents from libCurl
     std::stringstream *out[urls.size()];
 
@@ -120,7 +134,7 @@ bool MapzenVectorTileJson::LoadTile(std::vector<glm::ivec3> tileCoords) {
             return true;
         }
         
-        //Start fetching info untill no easy handle left to fetch data
+        //Start fetching info until no easy handle left to fetch data
         do {
             //set all file descriptors to 0
             FD_ZERO(&fdRead);
@@ -129,8 +143,8 @@ bool MapzenVectorTileJson::LoadTile(std::vector<glm::ivec3> tileCoords) {
 
             //timeout specification for select() call
             //select() will unblock either when a fd is ready or tileout is reached
-            timeout.tv_sec = 0;
-            timeout.tv_usec = 100;
+            timeout.tv_sec = 1; //enough time for fd to be ready reading data... could be optimized.
+            timeout.tv_usec = 0;
 
             //get file descriptors from the transfer
             cres = curl_multi_fdset(multiHandle, &fdRead, &fdWrite, &fdExcep, &fdMax);
@@ -139,26 +153,74 @@ bool MapzenVectorTileJson::LoadTile(std::vector<glm::ivec3> tileCoords) {
                 fprintf(stderr, "curl_multi_fdset failed %d\n", cres);
                 return false;
             }
-
+            
+            //wait and repeat until curl has something to report to the kernel wrt file descriptors
             while(fdMax < 0) {
+                //TODO: Get a better heuristic on the sleep milliseconds
+
+                //sleeps for 100 msec and calls perform and fdset to see if multi perform has started its job
                 std::this_thread::sleep_for(std::chrono::milliseconds(100));
                 cres = curl_multi_perform(multiHandle, &numHandles);
+                prevHandle = numHandles;
                 curl_multi_fdset(multiHandle, &fdRead, &fdWrite, &fdExcep, &fdMax);
-                std::cout<<"fdMax: "<<fdMax<<" cres: "<<cres<<"\n";
+                std::cout<<"Here\n"; //TODO: Remove this. Its here to test how many times this loop runs till
+                                     //multi_perform starts doing stuff
             }
 
+            //select blocks the thread until the fd set by curl is ready with data.
             rc = select(fdMax+1, &fdRead, &fdWrite, &fdExcep, &timeout);
+
+            // helper variables to convert extracted data to Json on the spot instead of waiting for all urls to be
+            // fetched and then converting the extracted data to json
+            char *url;
+            char *tmpOutData; //to read the CURLINFO_PRIVATE data which is type casted to char* from stringstream*
+            std::string tmpJsonData;
+            int length;
+            std::shared_ptr<Json::Value> jsonVal(new Json::Value);
+            Json::Reader jsonReader;
 
             // see what select returned
             switch(rc) {
                 case -1:
-                    //ERROR
+                    //select call ERRORed
                     break;
                 case 0:
+                    std::cout<<"Here timeout\n"; //TODO: Remove this. Its here to test how many times select times out.
+                                                 // So far never with 1 sec of timeout.
+                    //select call Timed out. No fd ready to read anything.
                     break;
                 default:
-                    std::cout<<"Here: "<<numHandles<<"\n";
+                    // sleep for 5 msec to give enough time for curl to read data for any of the file descriptors.
+                    std::this_thread::sleep_for(std::chrono::milliseconds(5));
+                    std::cout<<"Possible Change\n"; //TODO: Remove this. Its here to test how many times fd is ready and
+                                                    // will result in a complete data read
+                    //Perform again to see what happened with individual easy handles
                     curl_multi_perform(multiHandle,&numHandles);
+                    // if easy  handle status changed some urls are done.
+                    if(prevHandle != numHandles) {
+                        std::cout<<"Change happened\n";
+                        prevHandle = numHandles;
+                        handleMsg = curl_multi_info_read(multiHandle, &queuedHandles);
+                        // for every url done fill the jsonValue
+                        for(auto qHandItr = 0; qHandItr < queuedHandles; qHandItr++) {
+                            if(handleMsg->msg == CURLMSG_DONE) {
+                                //get the url from the easyHandle
+                                curl_easy_getinfo(handleMsg->easy_handle, CURLINFO_EFFECTIVE_URL , &url);
+                                //get the tmpOutData which is holding the extracted info from the url
+                                curl_easy_getinfo(handleMsg->easy_handle, CURLINFO_PRIVATE , &tmpOutData);
+                                // typecast back from char* to std::stringstream
+                                tmpJsonData = ((std::stringstream *)tmpOutData)->str();
+                                length = tmpJsonData.size();
+                                jsonReader.parse(tmpJsonData.c_str(), tmpJsonData.c_str() + length, *(jsonVal.get()));
+                                // no way to get what ID this url was for so have to extract ID from url
+                                m_JsonRoots[extractIDFromUrl(std::string(url))] = jsonVal;
+                                fprintf(stderr, "R: %d - %s <%s>\n", handleMsg->data.result,
+                                           curl_easy_strerror(handleMsg->data.result), url);
+                                curl_multi_remove_handle(multiHandle, handleMsg->easy_handle);
+                                curl_easy_cleanup(handleMsg->easy_handle);
+                            }
+                        }
+                    }
                     break;
             }
         }while(numHandles);
@@ -168,7 +230,7 @@ bool MapzenVectorTileJson::LoadTile(std::vector<glm::ivec3> tileCoords) {
     }
 
     // set map data (tileID->JsonValue) for every url
-    for(auto i = 0; i < urls.size(); i++) {
+    /*for(auto i = 0; i < urls.size(); i++) {
         std::shared_ptr<Json::Value> jsonVal(new Json::Value);
         std::string tmp = out[i]->str();
         int length = tmp.size();
@@ -176,7 +238,9 @@ bool MapzenVectorTileJson::LoadTile(std::vector<glm::ivec3> tileCoords) {
         jsonReader.parse(tmp.c_str(), tmp.c_str() + length, *(jsonVal.get()));
         m_JsonRoots[*(tileIDs.at(i).get())] = jsonVal;
         delete out[i];
-    }
+    }*/
+    for(auto i = 0; i < urls.size(); i++)
+        delete out[i];
     tileIDs.clear();
     urls.clear();
     return true;
