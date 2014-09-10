@@ -3,6 +3,7 @@
 #include "../mapTile/mapTile.h"
 
 #include <iostream>
+#include <thread>
 
 bool TileManager::CheckNewTileStatus() {
     //Todo: Contact the view module to get new tile needed?
@@ -13,6 +14,10 @@ bool TileManager::CheckNewTileStatus() {
         UpdateTiles();
     }
     return true;
+}
+
+void curlWorkerThread() {
+
 }
 
 void TileManager::UpdateTiles() {

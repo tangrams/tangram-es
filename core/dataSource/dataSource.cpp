@@ -11,7 +11,7 @@
 
 #include <curl/multi.h>
 
-static const int MAX_TRY = 3;
+static const int MAX_FETCH_TRY = 3;
 
 // clears the tileID:jsonRoot map.
 void DataSource::ClearGeoRoots() {
@@ -109,7 +109,7 @@ bool MapzenVectorTileJson::LoadTile(std::vector<glm::ivec3> _tileCoords) {
 
     int queuedHandles, numHandles = urls.size();
     int prevHandle;
-    int try = 0; //Counter to check for curl/select timeOuts.. maxed by static count MAX_TRY
+    int fetchTry = 0; //Counter to check for curl/select timeOuts.. maxed by static count MAX_FETCH_TRY
     
     // out will store the stringStream contents from libCurl
     std::stringstream *out[urls.size()];
@@ -162,6 +162,7 @@ bool MapzenVectorTileJson::LoadTile(std::vector<glm::ivec3> _tileCoords) {
             }
             
             //wait and repeat until curl has something to report to the kernel wrt file descriptors
+            // TODO: if no internet, then this gets stuck... put a timeout here.
             while(fdMax < 0) {
                 //TODO: Get a better heuristic on the sleep milliseconds
 
@@ -195,8 +196,8 @@ bool MapzenVectorTileJson::LoadTile(std::vector<glm::ivec3> _tileCoords) {
                     std::cout<<"Here timeout\n"; //TODO: Remove this. Its here to test how many times select times out.
                                                  // So far never with 1 sec of timeout.
                     //select call Timed out. No fd ready to read anything.
-                    try++;
-                    if(try == MAX_TRY) {
+                    fetchTry++;
+                    if(fetchTry == MAX_FETCH_TRY) {
                         curl_multi_cleanup(multiHandle);
                         curl_global_cleanup();
                         for(auto i = 0; i < urls.size(); i++) {
