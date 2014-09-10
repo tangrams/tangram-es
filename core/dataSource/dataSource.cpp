@@ -11,6 +11,8 @@
 
 #include <curl/multi.h>
 
+static const int MAX_TRY = 3;
+
 // clears the tileID:jsonRoot map.
 void DataSource::ClearGeoRoots() {
     for (auto& mapValue : m_JsonRoots) {
@@ -24,51 +26,55 @@ void DataSource::ClearGeoRoots() {
 
 //write_data call back from CURLOPT_WRITEFUNCTION
 //responsible to read and fill "stream" with the data.
-size_t write_data(void *ptr, size_t size, size_t nmemb, void *stream) {
-    std::string data((const char*) ptr, (size_t) size*nmemb);
-    *((std::stringstream*) stream) << data;
-    return size*nmemb;
+size_t write_data(void *_ptr, size_t _size, size_t _nmemb, void *_stream) {
+    std::string data((const char*) _ptr, (size_t) _size*_nmemb);
+    *((std::stringstream*) _stream) << data;
+    return _size*_nmemb;
 }
 
 // curlInit initializes individual curl simple instances
 // every tile url has a curl simple instance
-static void curlInit(CURLM *curlMulti, std::string url, std::stringstream *out) {
+static void curlInit(CURLM *_curlMulti, std::string _url, std::stringstream *_out) {
     CURL *curlEasy = curl_easy_init();
     curl_easy_setopt(curlEasy, CURLOPT_WRITEFUNCTION, write_data);
-    curl_easy_setopt(curlEasy, CURLOPT_WRITEDATA, out);
+    curl_easy_setopt(curlEasy, CURLOPT_WRITEDATA, _out);
     curl_easy_setopt(curlEasy, CURLOPT_HEADER, 0L);
-    curl_easy_setopt(curlEasy, CURLOPT_URL, url.c_str());
-    curl_easy_setopt(curlEasy, CURLOPT_PRIVATE, (char *)out);
+    curl_easy_setopt(curlEasy, CURLOPT_URL, _url.c_str());
+    curl_easy_setopt(curlEasy, CURLOPT_PRIVATE, (char *)_out);
     curl_easy_setopt(curlEasy, CURLOPT_VERBOSE, 0L);
 
-    curl_multi_add_handle(curlMulti, curlEasy);
+    curl_multi_add_handle(_curlMulti, curlEasy);
     return;
 }
 
 //---- tileID and url construction----
 
 //constructs a string from the tile coodinates
-static std::shared_ptr<std::string> constructTileID(glm::ivec3 tileCoord) {
+//TODO: Use regex to do this better.
+static std::shared_ptr<std::string> constructTileID(glm::ivec3 _tileCoord) {
     std::ostringstream strStream;
-    strStream<<tileCoord.x<<"_"<<tileCoord.y<<"_"<<tileCoord.z;
+    strStream<<_tileCoord.x<<"_"<<_tileCoord.y<<"_"<<_tileCoord.z;
     std::shared_ptr<std::string> tileID(new std::string(strStream.str()));
     return tileID;
 }
 
 //constructs a mapzen vectortile json url from the tile coordinates
-static std::unique_ptr<std::string> constructURL(glm::ivec3 tileCoord) {
+//TODO: Use regex to do this better.
+static std::unique_ptr<std::string> constructURL(glm::ivec3 _tileCoord) {
     std::ostringstream strStream;
-    strStream<<"http://vector.mapzen.com/osm/all/"<<tileCoord.z
-                <<"/"<<tileCoord.x<<"/"<<tileCoord.y<<".json";
+    strStream<<"http://vector.mapzen.com/osm/all/"<<_tileCoord.z
+                <<"/"<<_tileCoord.x<<"/"<<_tileCoord.y<<".json";
     std::unique_ptr<std::string> url(new std::string(strStream.str()));
     return std::move(url);
 }
 
-static std::string extractIDFromUrl(std::string url) {
+//TODO: Use regex to do this better.
+// Hacking to extract id from url
+static std::string extractIDFromUrl(std::string _url) {
     int x,y,z;
     std::string baseURL("http://vector.mapzen.com/osm/all/");
     std::string jsonStr(".json");
-    std::string tmpID = url.replace(0, baseURL.length(), "");
+    std::string tmpID = _url.replace(0, baseURL.length(), "");
     std::size_t jsonPos = tmpID.find(jsonStr);
     tmpID = tmpID.replace(jsonPos, jsonStr.length(), "");
     std::replace(tmpID.begin(), tmpID.end(), '/','_');
@@ -80,12 +86,12 @@ static std::string extractIDFromUrl(std::string url) {
 
 // Responsible to read the tileData from the service
 // takes a vector of tileCoordinates to be read from the service.
-bool MapzenVectorTileJson::LoadTile(std::vector<glm::ivec3> tileCoords) {
+bool MapzenVectorTileJson::LoadTile(std::vector<glm::ivec3> _tileCoords) {
     std::vector<std::shared_ptr<std::string>> tileIDs;
     std::vector<std::unique_ptr<std::string>> urls;
 
     //construct tileID and url for every tileCoord
-    for(auto& tileCoord : tileCoords) {
+    for(auto& tileCoord : _tileCoords) {
         tileIDs.push_back(constructTileID(tileCoord));
         urls.push_back(constructURL(tileCoord));
     }
@@ -103,6 +109,7 @@ bool MapzenVectorTileJson::LoadTile(std::vector<glm::ivec3> tileCoords) {
 
     int queuedHandles, numHandles = urls.size();
     int prevHandle;
+    int try = 0; //Counter to check for curl/select timeOuts.. maxed by static count MAX_TRY
     
     // out will store the stringStream contents from libCurl
     std::stringstream *out[urls.size()];
@@ -188,6 +195,17 @@ bool MapzenVectorTileJson::LoadTile(std::vector<glm::ivec3> tileCoords) {
                     std::cout<<"Here timeout\n"; //TODO: Remove this. Its here to test how many times select times out.
                                                  // So far never with 1 sec of timeout.
                     //select call Timed out. No fd ready to read anything.
+                    try++;
+                    if(try == MAX_TRY) {
+                        curl_multi_cleanup(multiHandle);
+                        curl_global_cleanup();
+                        for(auto i = 0; i < urls.size(); i++) {
+                            delete out[i];
+                        }
+                        tileIDs.clear();
+                        urls.clear();
+                        return false;
+                    }
                     break;
                 default:
                     // sleep for 5 msec to give enough time for curl to read data for any of the file descriptors.
@@ -239,8 +257,9 @@ bool MapzenVectorTileJson::LoadTile(std::vector<glm::ivec3> tileCoords) {
         m_JsonRoots[*(tileIDs.at(i).get())] = jsonVal;
         delete out[i];
     }*/
-    for(auto i = 0; i < urls.size(); i++)
+    for(auto i = 0; i < urls.size(); i++) {
         delete out[i];
+    }
     tileIDs.clear();
     urls.clear();
     return true;
@@ -248,6 +267,6 @@ bool MapzenVectorTileJson::LoadTile(std::vector<glm::ivec3> tileCoords) {
 
 //Returns jsonValue for a requested tileID
 std::shared_ptr<Json::Value>
-        MapzenVectorTileJson::GetData(std::string TileID) {
-    return m_JsonRoots[TileID];
+        MapzenVectorTileJson::GetData(std::string _tileID) {
+    return m_JsonRoots[_tileID];
 }
