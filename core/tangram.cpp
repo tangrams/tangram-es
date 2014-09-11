@@ -60,8 +60,7 @@ void renderFrame()
 	float sintsqr = pow(sin(t), 2);
 	glClearColor(0.8f * sintsqr, 0.32f * sintsqr, 0.3f * sintsqr, 1.0f);
 	glClear( GL_DEPTH_BUFFER_BIT | GL_COLOR_BUFFER_BIT);
-	glUseProgram(simpleShader.getGlProgram());
-
+	simpleShader.use();
 	GLint posAttrib = simpleShader.getAttribLocation("a_position");
 	glBindBuffer(GL_ARRAY_BUFFER, vbo);
 	glVertexAttribPointer(posAttrib, 2, GL_FLOAT, GL_FALSE, 0, 0);

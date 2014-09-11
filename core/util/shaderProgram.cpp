@@ -1,5 +1,7 @@
 #include "shaderProgram.h"
 
+GLint ShaderProgram::s_activeGlProgram = 0;
+
 ShaderProgram::ShaderProgram() {
 
     m_glProgram = 0;
@@ -37,6 +39,14 @@ GLint ShaderProgram::getAttribLocation(const std::string& _attribName) {
 
     return location;
 
+}
+
+void ShaderProgram::use() {
+
+    if (m_glProgram != 0 && m_glProgram != s_activeGlProgram) {
+        glUseProgram(m_glProgram);
+        s_activeGlProgram = m_glProgram;
+    }
 }
 
 bool ShaderProgram::buildFromSourceStrings(const std::string& _fragSrc, const std::string& _vertSrc) {

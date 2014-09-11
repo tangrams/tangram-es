@@ -17,7 +17,11 @@ public:
 
     bool buildFromSourceStrings(const std::string& _fragSrc, const std::string& _vertSrc);
 
+    void use();
+
 private:
+
+    static GLint s_activeGlProgram;
 
     GLint m_glProgram;
     GLint m_glFragmentShader;
