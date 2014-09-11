@@ -19,8 +19,17 @@
 		C95CFFF719AB8AE5003FEC0C /* AppDelegate.m in Sources */ = {isa = PBXBuildFile; fileRef = C95CFFF619AB8AE5003FEC0C /* AppDelegate.m */; };
 		C95CFFFA19AB8AE5003FEC0C /* Main_iPhone.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = C95CFFF819AB8AE5003FEC0C /* Main_iPhone.storyboard */; };
 		C95CFFFD19AB8AE5003FEC0C /* Main_iPad.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = C95CFFFB19AB8AE5003FEC0C /* Main_iPad.storyboard */; };
+		C97BD67719C0E85600A7DD2D /* dataSource.cpp in Sources */ = {isa = PBXBuildFile; fileRef = C97BD67519C0E85600A7DD2D /* dataSource.cpp */; };
+		C97BD67919C0E86900A7DD2D /* jsoncpp.cpp in Sources */ = {isa = PBXBuildFile; fileRef = C97BD67819C0E86900A7DD2D /* jsoncpp.cpp */; };
+		C97BD6A519C10C4700A7DD2D /* curlbuild.h.cmake in Resources */ = {isa = PBXBuildFile; fileRef = C97BD69819C10C4700A7DD2D /* curlbuild.h.cmake */; };
+		C97BD6A619C10C4700A7DD2D /* curlbuild.h.in in Resources */ = {isa = PBXBuildFile; fileRef = C97BD69919C10C4700A7DD2D /* curlbuild.h.in */; };
+		C97BD6A819C10C4700A7DD2D /* Makefile.am in Resources */ = {isa = PBXBuildFile; fileRef = C97BD69E19C10C4700A7DD2D /* Makefile.am */; };
+		C97BD6A919C10C4700A7DD2D /* Makefile.in in Resources */ = {isa = PBXBuildFile; fileRef = C97BD69F19C10C4700A7DD2D /* Makefile.in */; };
+		C97BD6AA19C10C4700A7DD2D /* stamp-h2 in Resources */ = {isa = PBXBuildFile; fileRef = C97BD6A219C10C4700A7DD2D /* stamp-h2 */; };
+		C97BD6AF19C10D1200A7DD2D /* libz.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = C97BD6AE19C10D1200A7DD2D /* libz.dylib */; };
 		C9BCA9F919B8CCB1006260E7 /* platform_ios.cpp in Sources */ = {isa = PBXBuildFile; fileRef = C9BCA9F819B8CCB1006260E7 /* platform_ios.cpp */; };
 		C9BCAA0419B91085006260E7 /* tangram.cpp in Sources */ = {isa = PBXBuildFile; fileRef = C9BCAA0319B91085006260E7 /* tangram.cpp */; };
+		C9CB6F8719C240EB00911943 /* libcurl.a in Frameworks */ = {isa = PBXBuildFile; fileRef = C9CB6F8619C240EB00911943 /* libcurl.a */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
@@ -42,10 +51,30 @@
 		C95CFFF619AB8AE5003FEC0C /* AppDelegate.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = AppDelegate.m; sourceTree = "<group>"; };
 		C95CFFF919AB8AE5003FEC0C /* Base */ = {isa = PBXFileReference; lastKnownFileType = file.storyboard; name = Base; path = Base.lproj/Main_iPhone.storyboard; sourceTree = "<group>"; };
 		C95CFFFC19AB8AE5003FEC0C /* Base */ = {isa = PBXFileReference; lastKnownFileType = file.storyboard; name = Base; path = Base.lproj/Main_iPad.storyboard; sourceTree = "<group>"; };
+		C97BD67519C0E85600A7DD2D /* dataSource.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = dataSource.cpp; path = ../../../core/dataSource/dataSource.cpp; sourceTree = "<group>"; };
+		C97BD67619C0E85600A7DD2D /* dataSource.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = dataSource.h; path = ../../../core/dataSource/dataSource.h; sourceTree = "<group>"; };
+		C97BD67819C0E86900A7DD2D /* jsoncpp.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = jsoncpp.cpp; path = ../../../core/include/jsoncpp.cpp; sourceTree = "<group>"; };
+		C97BD69619C10C4700A7DD2D /* curl.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = curl.h; sourceTree = "<group>"; };
+		C97BD69719C10C4700A7DD2D /* curlbuild.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = curlbuild.h; sourceTree = "<group>"; };
+		C97BD69819C10C4700A7DD2D /* curlbuild.h.cmake */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = curlbuild.h.cmake; sourceTree = "<group>"; };
+		C97BD69919C10C4700A7DD2D /* curlbuild.h.in */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = curlbuild.h.in; sourceTree = "<group>"; };
+		C97BD69A19C10C4700A7DD2D /* curlrules.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = curlrules.h; sourceTree = "<group>"; };
+		C97BD69B19C10C4700A7DD2D /* curlver.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = curlver.h; sourceTree = "<group>"; };
+		C97BD69C19C10C4700A7DD2D /* easy.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = easy.h; sourceTree = "<group>"; };
+		C97BD69D19C10C4700A7DD2D /* Makefile */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.make; path = Makefile; sourceTree = "<group>"; };
+		C97BD69E19C10C4700A7DD2D /* Makefile.am */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = Makefile.am; sourceTree = "<group>"; };
+		C97BD69F19C10C4700A7DD2D /* Makefile.in */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = Makefile.in; sourceTree = "<group>"; };
+		C97BD6A019C10C4700A7DD2D /* mprintf.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = mprintf.h; sourceTree = "<group>"; };
+		C97BD6A119C10C4700A7DD2D /* multi.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = multi.h; sourceTree = "<group>"; };
+		C97BD6A219C10C4700A7DD2D /* stamp-h2 */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = "stamp-h2"; sourceTree = "<group>"; };
+		C97BD6A319C10C4700A7DD2D /* stdcheaders.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = stdcheaders.h; sourceTree = "<group>"; };
+		C97BD6A419C10C4700A7DD2D /* typecheck-gcc.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = "typecheck-gcc.h"; sourceTree = "<group>"; };
+		C97BD6AE19C10D1200A7DD2D /* libz.dylib */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.dylib"; name = libz.dylib; path = usr/lib/libz.dylib; sourceTree = SDKROOT; };
 		C9BCA9F819B8CCB1006260E7 /* platform_ios.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = platform_ios.cpp; sourceTree = "<group>"; };
 		C9BCAA0219B91079006260E7 /* tangram.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = tangram.h; path = ../../../core/tangram.h; sourceTree = "<group>"; };
 		C9BCAA0319B91085006260E7 /* tangram.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = tangram.cpp; path = ../../../core/tangram.cpp; sourceTree = "<group>"; };
 		C9BCAA0519B91096006260E7 /* platform.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = platform.h; path = ../../../core/platform.h; sourceTree = "<group>"; };
+		C9CB6F8619C240EB00911943 /* libcurl.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; path = libcurl.a; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -53,6 +82,8 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				C97BD6AF19C10D1200A7DD2D /* libz.dylib in Frameworks */,
+				C9CB6F8719C240EB00911943 /* libcurl.a in Frameworks */,
 				C95CFFEB19AB8AE5003FEC0C /* OpenGLES.framework in Frameworks */,
 				C95CFFE519AB8AE5003FEC0C /* CoreGraphics.framework in Frameworks */,
 				C95CFFE719AB8AE5003FEC0C /* UIKit.framework in Frameworks */,
@@ -84,6 +115,7 @@
 		C95CFFE119AB8AE5003FEC0C /* Frameworks */ = {
 			isa = PBXGroup;
 			children = (
+				C97BD6AE19C10D1200A7DD2D /* libz.dylib */,
 				C95CFFE219AB8AE5003FEC0C /* Foundation.framework */,
 				C95CFFE419AB8AE5003FEC0C /* CoreGraphics.framework */,
 				C95CFFE619AB8AE5003FEC0C /* UIKit.framework */,
@@ -97,6 +129,11 @@
 		C95CFFEC19AB8AE5003FEC0C /* TangramiOS */ = {
 			isa = PBXGroup;
 			children = (
+				C9CB6F8519C240EB00911943 /* precompiled */,
+				C97BD69419C10C4700A7DD2D /* include */,
+				C97BD67819C0E86900A7DD2D /* jsoncpp.cpp */,
+				C97BD67619C0E85600A7DD2D /* dataSource.h */,
+				C97BD67519C0E85600A7DD2D /* dataSource.cpp */,
 				C9BCAA0519B91096006260E7 /* platform.h */,
 				C9BCAA0219B91079006260E7 /* tangram.h */,
 				C9BCAA0319B91085006260E7 /* tangram.cpp */,
@@ -122,6 +159,44 @@
 				C95CFFF419AB8AE5003FEC0C /* TangramiOS-Prefix.pch */,
 			);
 			name = "Supporting Files";
+			sourceTree = "<group>";
+		};
+		C97BD69419C10C4700A7DD2D /* include */ = {
+			isa = PBXGroup;
+			children = (
+				C97BD69519C10C4700A7DD2D /* curl */,
+			);
+			path = include;
+			sourceTree = "<group>";
+		};
+		C97BD69519C10C4700A7DD2D /* curl */ = {
+			isa = PBXGroup;
+			children = (
+				C97BD69619C10C4700A7DD2D /* curl.h */,
+				C97BD69719C10C4700A7DD2D /* curlbuild.h */,
+				C97BD69819C10C4700A7DD2D /* curlbuild.h.cmake */,
+				C97BD69919C10C4700A7DD2D /* curlbuild.h.in */,
+				C97BD69A19C10C4700A7DD2D /* curlrules.h */,
+				C97BD69B19C10C4700A7DD2D /* curlver.h */,
+				C97BD69C19C10C4700A7DD2D /* easy.h */,
+				C97BD69D19C10C4700A7DD2D /* Makefile */,
+				C97BD69E19C10C4700A7DD2D /* Makefile.am */,
+				C97BD69F19C10C4700A7DD2D /* Makefile.in */,
+				C97BD6A019C10C4700A7DD2D /* mprintf.h */,
+				C97BD6A119C10C4700A7DD2D /* multi.h */,
+				C97BD6A219C10C4700A7DD2D /* stamp-h2 */,
+				C97BD6A319C10C4700A7DD2D /* stdcheaders.h */,
+				C97BD6A419C10C4700A7DD2D /* typecheck-gcc.h */,
+			);
+			path = curl;
+			sourceTree = "<group>";
+		};
+		C9CB6F8519C240EB00911943 /* precompiled */ = {
+			isa = PBXGroup;
+			children = (
+				C9CB6F8619C240EB00911943 /* libcurl.a */,
+			);
+			path = precompiled;
 			sourceTree = "<group>";
 		};
 /* End PBXGroup section */
@@ -177,9 +252,14 @@
 			buildActionMask = 2147483647;
 			files = (
 				C95CFFFD19AB8AE5003FEC0C /* Main_iPad.storyboard in Resources */,
+				C97BD6A819C10C4700A7DD2D /* Makefile.am in Resources */,
 				C95CFFFA19AB8AE5003FEC0C /* Main_iPhone.storyboard in Resources */,
 				C95C000619AB8AE5003FEC0C /* Images.xcassets in Resources */,
+				C97BD6A519C10C4700A7DD2D /* curlbuild.h.cmake in Resources */,
 				C95CFFF119AB8AE5003FEC0C /* InfoPlist.strings in Resources */,
+				C97BD6A919C10C4700A7DD2D /* Makefile.in in Resources */,
+				C97BD6A619C10C4700A7DD2D /* curlbuild.h.in in Resources */,
+				C97BD6AA19C10C4700A7DD2D /* stamp-h2 in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -192,9 +272,11 @@
 			files = (
 				C9BCA9F919B8CCB1006260E7 /* platform_ios.cpp in Sources */,
 				C95C000419AB8AE5003FEC0C /* ViewController.mm in Sources */,
+				C97BD67719C0E85600A7DD2D /* dataSource.cpp in Sources */,
 				C9BCAA0419B91085006260E7 /* tangram.cpp in Sources */,
 				C95CFFF719AB8AE5003FEC0C /* AppDelegate.m in Sources */,
 				C95CFFF319AB8AE5003FEC0C /* main.m in Sources */,
+				C97BD67919C0E86900A7DD2D /* jsoncpp.cpp in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -308,8 +390,16 @@
 				GCC_PRECOMPILE_PREFIX_HEADER = YES;
 				GCC_PREFIX_HEADER = "TangramiOS/TangramiOS-Prefix.pch";
 				INFOPLIST_FILE = "TangramiOS/TangramiOS-Info.plist";
+				LIBRARY_SEARCH_PATHS = (
+					"$(inherited)",
+					"$(PROJECT_DIR)/TangramiOS",
+					"$(PROJECT_DIR)/TangramiOS/libs",
+					"$(PROJECT_DIR)/TangramiOS/precompiled",
+				);
 				OTHER_CFLAGS = (
-					"-I../../shared",
+					"-I../../core",
+					"-I../../core/include",
+					"-ITangramiOS/include",
 					"-DPLATFORM_IOS",
 				);
 				PRODUCT_NAME = "$(TARGET_NAME)";
@@ -325,8 +415,16 @@
 				GCC_PRECOMPILE_PREFIX_HEADER = YES;
 				GCC_PREFIX_HEADER = "TangramiOS/TangramiOS-Prefix.pch";
 				INFOPLIST_FILE = "TangramiOS/TangramiOS-Info.plist";
+				LIBRARY_SEARCH_PATHS = (
+					"$(inherited)",
+					"$(PROJECT_DIR)/TangramiOS",
+					"$(PROJECT_DIR)/TangramiOS/libs",
+					"$(PROJECT_DIR)/TangramiOS/precompiled",
+				);
 				OTHER_CFLAGS = (
-					"-I../../shared",
+					"-I../../core",
+					"-I../../core/include",
+					"-ITangramiOS/include",
 					"-DPLATFORM_IOS",
 				);
 				PRODUCT_NAME = "$(TARGET_NAME)";

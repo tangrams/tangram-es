@@ -33,10 +33,10 @@ android: android/bin/TangramAndroid-Debug.apk
 ios:
 	xcodebuild -workspace ios/TangramiOS.xcworkspace -scheme TangramiOS -destination 'platform=iOS Simulator,name=iPhone Retina (3.5-inch)'
 
-osx/lib/libtangram.so: core/tangram.cpp core/tangram.h
-	cc -o osx/lib/libtangram.so core/tangram.cpp osx/src/platform_osx.cpp -Icore -DPLATFORM_OSX -lglfw3 -framework OpenGL -shared
+osx/bin/libtangram.so: core/tangram.cpp core/tangram.h
+	clang++ -o osx/bin/libtangram.so osx/precompiled/libcurl.dylib core/tangram.cpp core/dataSource/dataSource.cpp core/include/jsoncpp.cpp osx/src/platform_osx.cpp -Icore -Icore/include -DPLATFORM_OSX -lglfw3 -framework OpenGL -std=c++11 -shared
 
-osx/bin/TangramOSX: osx/lib/libtangram.so
-	clang -o osx/bin/TangramOSX osx/src/main.cpp osx/lib/libtangram.so -DPLATFORM_OSX -lglfw3 -framework Cocoa -framework IOKit -framework OpenGL -framework CoreVideo
+osx/bin/TangramOSX: osx/bin/libtangram.so
+	clang++ -o osx/bin/TangramOSX osx/src/main.cpp osx/bin/libtangram.so -DPLATFORM_OSX -lglfw3 -framework Cocoa -framework IOKit -framework OpenGL -framework CoreVideo
 
 osx: osx/bin/TangramOSX
