@@ -1,6 +1,7 @@
 #pragma once
 
 #include "platform.h"
+#include "error.h"
 #include <string>
 #include <vector>
 #include <unordered_map>
@@ -27,6 +28,11 @@ public:
     GLint getAttribLocation(const std::string& _attribName);
 
     /*
+     * getUniformLocation - fetches the location of a shader uniform, caching the result
+     */
+    GLint getUniformLocation(const std::string& _uniformName);
+
+    /*
      * buildFromSourceStrings - attempts to compile a fragment shader and vertex shader from
      * strings representing the source code for each, then links them into a complete program;
      * if compiling or linking fails it prints the compiler log, returns false, and keeps the
@@ -39,7 +45,7 @@ public:
     /*
      * isValid - returns true if this object represents a valid OpenGL shader program
      */
-    bool isValid() { return m_glProgram != 0; };
+    bool isValid() { return m_glProgram == 0; };
 
     /*
      * use - binds the program in openGL if it is not already bound.
@@ -54,6 +60,7 @@ private:
     GLint m_glFragmentShader;
     GLint m_glVertexShader;
     std::unordered_map<std::string, GLint> m_attribMap;
+    std::unordered_map<std::string, GLint> m_uniformMap;
     std::string m_fragmentShaderSource;
     std::string m_vertexShaderSource;
 
