@@ -1,9 +1,9 @@
 #include "mapTile.h"
 
-MapTile::MapTile(glm::ivec3 tileCoord) : m_MercXYZ(tileCoord) {
+MapTile::MapTile(glm::ivec3 _tileCoord) : m_MercXYZ(_tileCoord) {
 }
 
-bool MapTile::setVBO(std::vector<float> vboData) {
+bool MapTile::setVBO(std::vector<float> _vboData) {
     return false;
 }
 

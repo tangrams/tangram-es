@@ -15,9 +15,9 @@ class MapTile {
 
   public:
     glm::ivec3 m_MercXYZ;
-    MapTile(glm::ivec3 m_MercXYZ);
+    MapTile(glm::ivec3 _mercXYZ);
     //Helper Functions
-    bool setVBO(std::vector<float> vboData);
+    bool setVBO(std::vector<float> _vboData);
     glm::vec2 GetBoundingBox();
     //Maybe these should be moved 2 functions to sceneDefinition
     glm::vec3 MercToPix();
