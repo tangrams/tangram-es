@@ -28,6 +28,7 @@ public:
     virtual bool LoadTile(std::vector<glm::ivec3> _tileCoords) = 0;
     virtual std::shared_ptr<Json::Value>
                 	GetData(std::string _tileID) = 0;
+    virtual bool CheckDataExists(std::string _tileID) = 0;
     void ClearGeoRoots();
     DataSource() {}
     ~DataSource() {
@@ -42,4 +43,5 @@ public:
     virtual bool LoadTile(std::vector<glm::ivec3> _tileCoords) override;
     virtual std::shared_ptr<Json::Value>
                 GetData(std::string _tileID) override;
+    virtual bool CheckDataExists(std::string _tileID);
 };

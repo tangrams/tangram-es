@@ -272,6 +272,16 @@ bool MapzenVectorTileJson::LoadTile(std::vector<glm::ivec3> _tileCoords) {
     return true;
 }
 
+//check if data for a tileID exists
+bool MapzenVectorTileJson::CheckDataExists(std::string _tileID) {
+    if(m_JsonRoots.find(_tileID) != m_JsonRoots.end()) {
+        return true;
+    }
+    else {
+        return false;
+    }
+}
+
 //Returns jsonValue for a requested tileID
 std::shared_ptr<Json::Value>
         MapzenVectorTileJson::GetData(std::string _tileID) {
