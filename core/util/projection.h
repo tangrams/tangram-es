@@ -1,0 +1,6 @@
+#pragma one
+
+class MercatorProjection {
+
+}
+
