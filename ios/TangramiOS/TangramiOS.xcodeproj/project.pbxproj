@@ -7,6 +7,7 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		C945DFB419C37D7D00AC7191 /* error.cpp in Sources */ = {isa = PBXBuildFile; fileRef = C945DFB219C37D7D00AC7191 /* error.cpp */; };
 		C95C000419AB8AE5003FEC0C /* ViewController.mm in Sources */ = {isa = PBXBuildFile; fileRef = C95C000319AB8AE5003FEC0C /* ViewController.mm */; };
 		C95C000619AB8AE5003FEC0C /* Images.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = C95C000519AB8AE5003FEC0C /* Images.xcassets */; };
 		C95CFFE319AB8AE5003FEC0C /* Foundation.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = C95CFFE219AB8AE5003FEC0C /* Foundation.framework */; };
@@ -25,6 +26,8 @@
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
+		C945DFB219C37D7D00AC7191 /* error.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = error.cpp; path = ../../../core/util/error.cpp; sourceTree = "<group>"; };
+		C945DFB319C37D7D00AC7191 /* error.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = error.h; path = ../../../core/util/error.h; sourceTree = "<group>"; };
 		C95C000219AB8AE5003FEC0C /* ViewController.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = ViewController.h; sourceTree = "<group>"; };
 		C95C000319AB8AE5003FEC0C /* ViewController.mm */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.objcpp; path = ViewController.mm; sourceTree = "<group>"; };
 		C95C000519AB8AE5003FEC0C /* Images.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Images.xcassets; sourceTree = "<group>"; };
@@ -128,6 +131,8 @@
 		C9B2B67819BF69D100E2642E /* Core */ = {
 			isa = PBXGroup;
 			children = (
+				C945DFB219C37D7D00AC7191 /* error.cpp */,
+				C945DFB319C37D7D00AC7191 /* error.h */,
 				C9B2B67919BF6A4900E2642E /* shaderProgram.h */,
 				C9B2B67A19BF6A5B00E2642E /* shaderProgram.cpp */,
 				C9BCAA0519B91096006260E7 /* platform.h */,
@@ -208,6 +213,7 @@
 				C95C000419AB8AE5003FEC0C /* ViewController.mm in Sources */,
 				C9BCAA0419B91085006260E7 /* tangram.cpp in Sources */,
 				C95CFFF719AB8AE5003FEC0C /* AppDelegate.m in Sources */,
+				C945DFB419C37D7D00AC7191 /* error.cpp in Sources */,
 				C95CFFF319AB8AE5003FEC0C /* main.m in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
