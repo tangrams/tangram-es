@@ -6,7 +6,7 @@ LOCAL_PATH := $(call my-dir)
 include $(CLEAR_VARS)
 
 # All the source files to include in this module
-LOCAL_SRC_FILES := ../../core/tangram.cpp jniExports.cpp platform_android.cpp
+LOCAL_SRC_FILES := ../../core/tangram.cpp ../../core/util/ShaderProgram.cpp ../../core/util/error.cpp jniExports.cpp platform_android.cpp
 
 # The name of the module
 LOCAL_MODULE := tangram
