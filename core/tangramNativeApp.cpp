@@ -2,6 +2,7 @@
 #include <memory>
 #include <string>
 #include <sstream>
+#include <thread>
 
 //#include "sceneDirector/sceneDirector.h"
 #include "tileManager/tileManager.h"
@@ -17,8 +18,10 @@ int main()
     TileManager tileManagerInst = TileManager::GetInstance();
     // Moved dataSource to be "owned" by tileManager
     tileManagerInst.AddDataSource(std::move(ds_ptr));
-    
-    bool newTiles = tileManagerInst.CheckNewTileStatus();
+    std::thread networkThread(&TileManager::CheckNewTileStatus, &tileManagerInst);
+    //bool newTiles = tileManagerInst.CheckNewTileStatus();
+    std::cout<<"Supposedly in render loop";
+    networkThread.join();
     std::vector<MapTile*> visibleTiles = tileManagerInst.GetVisibleTiles();
     for(auto tile : visibleTiles) {
         std::ostringstream tileID (std::ostringstream::ate);
