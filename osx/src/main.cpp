@@ -2,6 +2,11 @@
 
 #include "../../core/tangram.h"
 
+void window_size_callback(GLFWwindow* window, int width, int height)
+{
+    resizeViewport(width, height);
+}
+
 int main(void)
 {
     GLFWwindow* window;
@@ -25,6 +30,8 @@ int main(void)
 
     initializeOpenGL();
     resizeViewport(width, height);
+
+    glfwSetWindowSizeCallback(window, window_size_callback);
 
     /* Loop until the user closes the window */
     while (!glfwWindowShouldClose(window))
