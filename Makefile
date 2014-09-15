@@ -22,6 +22,23 @@ clean-osx:
 
 clean: clean-android clean-ios clean-osx
 
+CORE_SRC_FILES= \
+	core/tangram.cpp \
+	core/util/*.cpp \
+	core/viewModule/*.cpp
+
+OSX_FRAMEWORKS= \
+	-framework Cocoa \
+	-framework OpenGL \
+	-framework IOKit \
+	-framework CoreVideo
+OSX_INCLUDES= \
+	-Icore \
+	-Icore/include
+OSX_SRC_FILES= \
+	osx/src/main.cpp \
+	osx/src/platform_osx.cpp
+
 android/libs/armeabi/libtangram.so: android/jni/jniExports.cpp android/jni/platform_android.cpp core/tangram.cpp core/tangram.h android/jni/Android.mk android/jni/Application.mk
 	ndk-build -C android/jni
 
@@ -33,10 +50,7 @@ android: android/bin/TangramAndroid-Debug.apk
 ios:
 	xcodebuild -workspace ios/TangramiOS.xcworkspace -scheme TangramiOS -destination 'platform=iOS Simulator,name=iPhone Retina (3.5-inch)'
 
-osx/lib/libtangram.so: core/tangram.cpp core/tangram.h
-	clang++ -o osx/lib/libtangram.so core/tangram.cpp core/util/shaderProgram.cpp core/util/error.cpp osx/src/platform_osx.cpp -Icore -DPLATFORM_OSX -lglfw3 -framework OpenGL -std=c++11 -shared
-
-osx/bin/TangramOSX: osx/lib/libtangram.so
-	clang++ -o osx/bin/TangramOSX osx/src/main.cpp osx/lib/libtangram.so -Icore -DPLATFORM_OSX -lglfw3 -framework Cocoa -framework IOKit -framework OpenGL -framework CoreVideo -std=c++11 -g
+osx/bin/TangramOSX: $(OSX_SRC_FILES)
+	clang++ -o osx/bin/TangramOSX $(CORE_SRC_FILES) $(OSX_SRC_FILES) $(OSX_INCLUDES) $(OSX_FRAMEWORKS) -DPLATFORM_OSX -lglfw3 -std=c++11 -g
 
 osx: osx/bin/TangramOSX
