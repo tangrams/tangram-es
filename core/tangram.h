@@ -6,6 +6,7 @@
 
 #include "platform.h"
 #include "util/shaderProgram.h"
+#include "viewModule/viewModule.h"
 
 void initializeOpenGL();
 void resizeViewport(int newWidth, int newHeight);

@@ -8,6 +8,7 @@ const GLfloat vertices[] = {
 
 ShaderProgram simpleShader;
 GLuint vbo;
+ViewModule view;
 float t;
 
 const std::string vertShaderSrc =
@@ -43,11 +44,14 @@ void initializeOpenGL()
 	t = 0;
 
 	logMsg("%s\n", "initialize");
+
 }
 
 void resizeViewport(int newWidth, int newHeight)
 {
 	glViewport(0, 0, newWidth, newHeight);
+
+	view.setAspect(newWidth, newHeight);
 
 	logMsg("%s\n", "resizeViewport");
 }
