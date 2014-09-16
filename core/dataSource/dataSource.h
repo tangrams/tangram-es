@@ -31,7 +31,7 @@ public:
     virtual bool CheckDataExists(std::string _tileID) = 0;
     void ClearGeoRoots();
     DataSource() {}
-    ~DataSource() {
+    virtual ~DataSource() {
         m_JsonRoots.clear();
     }
 };
@@ -44,4 +44,5 @@ public:
     virtual std::shared_ptr<Json::Value>
                 GetData(std::string _tileID) override;
     virtual bool CheckDataExists(std::string _tileID);
+    virtual ~MapzenVectorTileJson() {}
 };
