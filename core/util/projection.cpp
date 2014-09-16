@@ -3,7 +3,6 @@
 #include "projection.h"
 
 
-//Constructor for MercProjection
 MercProjection::MercProjection(ProjectionType _type, int _tileSize) : MapProjection(_type), m_TileSize(_tileSize) {
     float invTileSize = 1.0/m_TileSize;
     m_Res = 2.0 * HALF_CIRCUMFERENCE * invTileSize;
@@ -11,24 +10,21 @@ MercProjection::MercProjection(ProjectionType _type, int _tileSize) : MapProject
 
 glm::vec2 MercProjection::LatLonToMeters(glm::vec2 _latLon) {
     glm::vec2 meters;
-    float inv180 = 1.0/180.0;
-    float inv360 = 1.0/360.0;
     //Lon -> origin shift, as parallel lines
-    meters.x = _latLon.y * HALF_CIRCUMFERENCE * inv180;
+    meters.x = _latLon.y * HALF_CIRCUMFERENCE * INV_180;
     //Lat -> first do scaling as per mercator then origin shift
-    meters.y = glm::log( glm::tan(90.0 + _latLon.x) * PI * inv360) * PI * inv180;
-    meters.y = meters.y * HALF_CIRCUMFERENCE * inv180;
+    meters.y = glm::log( glm::tan(90.0 + _latLon.x) * PI * INV_360) * PI * INV_180;
+    meters.y = meters.y * HALF_CIRCUMFERENCE * INV_180;
     return meters;
 }
 
 glm::vec2 MercProjection::MetersToLatLon(glm::vec2 _meters) {
     glm::vec2 latLon;
     float invHalfCircum = 1.0/HALF_CIRCUMFERENCE;
-    float inv180 = 1.0/180.0;
     float invPI = 1.0/PI;
     latLon.y = _meters.x * invHalfCircum * 180.0;
     latLon.x = _meters.y * invHalfCircum * 180.0;
-    latLon.x = 180.0 * invPI * (2.0 * glm::atan( glm::exp(latLon.x * PI * inv180) ) - PI * 0.5);
+    latLon.x = 180.0 * invPI * (2.0 * glm::atan( glm::exp(latLon.x * PI * INV_180) ) - PI * 0.5);
     return latLon;
 }
 
