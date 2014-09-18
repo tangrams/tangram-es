@@ -1,4 +1,4 @@
-#pragma one
+#pragma once
 
 //Define global constants
 #define PI 3.1415926535
