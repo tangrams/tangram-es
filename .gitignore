@@ -42,7 +42,7 @@ gen/
 
 # Gradle files
 .gradle/
-build/
+# build/
 
 # Local configuration file (sdk path, etc)
 local.properties
@@ -55,7 +55,7 @@ proguard/
 
 
 ### Xcode ###
-build/
+ios/**/build/
 *.pbxuser
 !default.pbxuser
 *.mode1v3
@@ -97,3 +97,11 @@ DerivedData
 *.out
 *.app
 
+# CMake files
+CMakeCache.txt
+CMakeFiles
+Makefile
+cmake_install.cmake
+
+# vim 
+*.swp

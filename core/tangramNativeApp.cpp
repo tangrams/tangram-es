@@ -9,7 +9,7 @@
 #include "dataSource/dataSource.h"
 #include "mapTile/mapTile.h"
 
-int main()
+/*int main()
 {
     // new DataSource created
     std::unique_ptr<DataSource> ds_ptr(new MapzenVectorTileJson);
@@ -27,10 +27,8 @@ int main()
         std::ostringstream tileID (std::ostringstream::ate);
         tileID << tile->m_MercXYZ.z << "_" << tile->m_MercXYZ.x << "_" << tile->m_MercXYZ.y;
         // tileManager gets the dataSoure (only one), which gets the data stored for every tile it has.
-        if ( tileManagerInst.GetDataSources().at(0)->CheckDataExists(tileID.str()) ) {
-            std::cout<<*((tileManagerInst.GetDataSources().at(0)->GetData(tileID.str()).get()));
-        }
+        std::cout<<*((tileManagerInst.GetDataSources().at(0)->GetData(tileID.str()).get()));
     }
 
     return 0;
-}
+}*/

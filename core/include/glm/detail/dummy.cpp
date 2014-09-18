@@ -184,7 +184,3 @@ glm::vec3 lighting
 	return Color;
 }
 */
-int main()
-{
-	return 0;
-}

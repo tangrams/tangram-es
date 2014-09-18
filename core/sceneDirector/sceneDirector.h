@@ -1,6 +1,7 @@
 #pragma once
 
 #include <vector>
+#include "viewModule.h"
 
 class TileManager;
 class SceneDefinition;

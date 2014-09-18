@@ -3,9 +3,7 @@
 #include "tangram.h"
 
 // WIP for the build system : should be moved
-void initializeOpenGL() {}
-void resizeViewport(int newWidth, int newHeight) {}
-void renderFrame() {}
+void logMsg(const char* fmt, ...) {}
 
 void window_size_callback(GLFWwindow* window, int width, int height)
 {

@@ -15,6 +15,7 @@
 #endif
 
 #ifdef PLATFORM_OSX
+#include <OpenGL/gl.h>
 #include <GLFW/glfw3.h>
 #include <stdio.h>
 #include <cstdarg>
