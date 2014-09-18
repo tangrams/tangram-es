@@ -1,6 +1,11 @@
 #define GLFW_INCLUDE_ES2
 
-#include "../../core/tangram.h"
+#include "tangram.h"
+
+// WIP for the build system : should be moved
+void initializeOpenGL() {}
+void resizeViewport(int newWidth, int newHeight) {}
+void renderFrame() {}
 
 void window_size_callback(GLFWwindow* window, int width, int height)
 {
