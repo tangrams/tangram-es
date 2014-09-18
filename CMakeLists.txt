@@ -27,9 +27,9 @@ endif()
 # compilation options
 set(CMAKE_CXX_FLAGS "-Wall -stdlib=libc++ -std=c++0x -g -O0")
 set(EXECUTABLE_NAME "tangram")
-
 set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} "${CMAKE_SOURCE_DIR}/build/modules")
 
+include(${PROJECT_SOURCE_DIR}/build/utils/utils.cmake)
 include(${PROJECT_SOURCE_DIR}/build/toolchains/${PLATFORM_TARGET}.cmake)
 
 add_executable(${EXECUTABLE_NAME} ${SOURCES})

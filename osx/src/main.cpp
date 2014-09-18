@@ -2,9 +2,6 @@
 
 #include "tangram.h"
 
-// WIP for the build system : should be moved
-void logMsg(const char* fmt, ...) {}
-
 void window_size_callback(GLFWwindow* window, int width, int height)
 {
     resizeViewport(width, height);
