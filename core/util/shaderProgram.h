@@ -18,9 +18,9 @@ public:
     virtual ~ShaderProgram();
 
     /* Getters */
-    GLint getGlProgram() { return m_glProgram; };
-    GLint getGlFragmentShader() { return m_glFragmentShader; };
-    GLint getGlVertexShader() { return m_glVertexShader; };
+    GLuint getGlProgram() const { return m_glProgram; };
+    GLuint getGlFragmentShader() const { return m_glFragmentShader; };
+    GLuint getGlVertexShader() const { return m_glVertexShader; };
 
     /*
      * getAttribLocation - fetches the location of a shader attribute, caching the result
@@ -45,26 +45,26 @@ public:
     /*
      * isValid - returns true if this object represents a valid OpenGL shader program
      */
-    bool isValid() { return m_glProgram == 0; };
+    bool isValid() const { return m_glProgram == 0; };
 
     /*
      * use - binds the program in openGL if it is not already bound.
      */
-    void use();
+    void use() const;
 
 private:
 
     static GLint s_activeGlProgram;
 
-    GLint m_glProgram;
-    GLint m_glFragmentShader;
-    GLint m_glVertexShader;
+    GLuint m_glProgram;
+    GLuint m_glFragmentShader;
+    GLuint m_glVertexShader;
     std::unordered_map<std::string, GLint> m_attribMap;
     std::unordered_map<std::string, GLint> m_uniformMap;
     std::string m_fragmentShaderSource;
     std::string m_vertexShaderSource;
 
-    GLint makeLinkedShaderProgram(GLint _fragShader, GLint _vertShader);
-    GLint makeCompiledShader(const std::string& _src, GLenum _type);
+    GLuint makeLinkedShaderProgram(GLint _fragShader, GLint _vertShader);
+    GLuint makeCompiledShader(const std::string& _src, GLenum _type);
 
 };
