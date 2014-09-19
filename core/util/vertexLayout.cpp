@@ -1,10 +1,10 @@
 #include "vertexLayout.h"
 
-VertexLayout::VertexLayout(std::vector<VertexAttrib> _attribs) {
+std::unordered_map<GLint, GLuint> VertexLayout::s_enabledAttribs = std::unordered_map<GLint, GLuint>();
+
+VertexLayout::VertexLayout(std::vector<VertexAttrib> _attribs) : m_attribs(_attribs) {
 
     m_stride = 0; 
-
-    m_attribs = _attribs;
 
     for (auto& attrib : m_attribs) {
 
@@ -22,26 +22,26 @@ VertexLayout::VertexLayout(std::vector<VertexAttrib> _attribs) {
                 break;
         }
 
-        attrib.offset = m_stride;
+        attrib.offset = reinterpret_cast<void*>(m_stride);
 
         m_stride += byteSize;
 
     }
 }
 
-void VertexLayout::enable(ShaderProgram _program) {
+void VertexLayout::enable(ShaderProgram* _program) {
 
-    GLint glProgram = _program.getGlProgram();
+    GLuint glProgram = _program->getGlProgram();
 
     // Enable all attributes for this layout
     for (auto& attrib : m_attribs) {
 
-        GLint location = _program.getAttribLocation(attrib.name);
+        GLint location = _program->getAttribLocation(attrib.name);
 
         if (location != -1) {
             glEnableVertexAttribArray(location);
             glVertexAttribPointer(location, attrib.size, attrib.type, attrib.normalized, m_stride, attrib.offset);
-            s_enabledAttribs[location] = glProgram; // Track currently enable attribs by the program they are bound to
+            s_enabledAttribs[location] = glProgram; // Track currently enabled attribs by the program to which they are bound
         }
 
     }
@@ -49,12 +49,12 @@ void VertexLayout::enable(ShaderProgram _program) {
     // Disable previously bound and now-unneeded attributes
     for (auto locationProgramPair : s_enabledAttribs) {
 
-        GLint& location = locationProgramPair.first;
-        GLint& boundProgram = locationProgramPair.second;
+        const GLint& location = locationProgramPair.first;
+        GLuint& boundProgram = locationProgramPair.second;
 
         if (boundProgram != glProgram && boundProgram != 0) {
             glDisableVertexAttribArray(location);
-            boundProgram = 0; 
+            boundProgram = 0;
         }
 
     }

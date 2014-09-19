@@ -15,16 +15,18 @@ public:
         GLint size;
         GLenum type;
         GLboolean normalized;
-        GLint offset;
+        GLvoid* offset;
     };
 
     VertexLayout(std::vector<VertexAttrib> _attribs);
 
-    void enable(ShaderProgram _program);
+    void enable(ShaderProgram* _program);
+
+    GLint getStride() const { return m_stride; };
 
 private:
 
-    static std::unordered_map<GLint, GLint> s_enabledAttribs; // Map from attrib locations to bound shader program
+    static std::unordered_map<GLint, GLuint> s_enabledAttribs; // Map from attrib locations to bound shader program
 
     std::vector<VertexAttrib> m_attribs;
     GLint m_stride;
