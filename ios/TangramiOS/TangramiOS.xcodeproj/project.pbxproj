@@ -7,6 +7,8 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		C923C9D319CC8D7300080EE7 /* vboMesh.cpp in Sources */ = {isa = PBXBuildFile; fileRef = C923C9CF19CC8D7300080EE7 /* vboMesh.cpp */; };
+		C923C9D419CC8D7300080EE7 /* vertexLayout.cpp in Sources */ = {isa = PBXBuildFile; fileRef = C923C9D119CC8D7300080EE7 /* vertexLayout.cpp */; };
 		C945DFB419C37D7D00AC7191 /* error.cpp in Sources */ = {isa = PBXBuildFile; fileRef = C945DFB219C37D7D00AC7191 /* error.cpp */; };
 		C95C000419AB8AE5003FEC0C /* ViewController.mm in Sources */ = {isa = PBXBuildFile; fileRef = C95C000319AB8AE5003FEC0C /* ViewController.mm */; };
 		C95C000619AB8AE5003FEC0C /* Images.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = C95C000519AB8AE5003FEC0C /* Images.xcassets */; };
@@ -26,6 +28,10 @@
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
+		C923C9CF19CC8D7300080EE7 /* vboMesh.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = vboMesh.cpp; path = ../../../core/util/vboMesh.cpp; sourceTree = "<group>"; };
+		C923C9D019CC8D7300080EE7 /* vboMesh.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = vboMesh.h; path = ../../../core/util/vboMesh.h; sourceTree = "<group>"; };
+		C923C9D119CC8D7300080EE7 /* vertexLayout.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = vertexLayout.cpp; path = ../../../core/util/vertexLayout.cpp; sourceTree = "<group>"; };
+		C923C9D219CC8D7300080EE7 /* vertexLayout.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = vertexLayout.h; path = ../../../core/util/vertexLayout.h; sourceTree = "<group>"; };
 		C945DFB219C37D7D00AC7191 /* error.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = error.cpp; path = ../../../core/util/error.cpp; sourceTree = "<group>"; };
 		C945DFB319C37D7D00AC7191 /* error.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = error.h; path = ../../../core/util/error.h; sourceTree = "<group>"; };
 		C95C000219AB8AE5003FEC0C /* ViewController.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = ViewController.h; sourceTree = "<group>"; };
@@ -131,6 +137,10 @@
 		C9B2B67819BF69D100E2642E /* Core */ = {
 			isa = PBXGroup;
 			children = (
+				C923C9CF19CC8D7300080EE7 /* vboMesh.cpp */,
+				C923C9D019CC8D7300080EE7 /* vboMesh.h */,
+				C923C9D119CC8D7300080EE7 /* vertexLayout.cpp */,
+				C923C9D219CC8D7300080EE7 /* vertexLayout.h */,
 				C945DFB219C37D7D00AC7191 /* error.cpp */,
 				C945DFB319C37D7D00AC7191 /* error.h */,
 				C9B2B67919BF6A4900E2642E /* shaderProgram.h */,
@@ -208,11 +218,13 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				C923C9D319CC8D7300080EE7 /* vboMesh.cpp in Sources */,
 				C9BCA9F919B8CCB1006260E7 /* platform_ios.cpp in Sources */,
 				C9B2B67B19BF6A5B00E2642E /* shaderProgram.cpp in Sources */,
 				C95C000419AB8AE5003FEC0C /* ViewController.mm in Sources */,
 				C9BCAA0419B91085006260E7 /* tangram.cpp in Sources */,
 				C95CFFF719AB8AE5003FEC0C /* AppDelegate.m in Sources */,
+				C923C9D419CC8D7300080EE7 /* vertexLayout.cpp in Sources */,
 				C945DFB419C37D7D00AC7191 /* error.cpp in Sources */,
 				C95CFFF319AB8AE5003FEC0C /* main.m in Sources */,
 			);
@@ -329,7 +341,7 @@
 				GCC_PREFIX_HEADER = "TangramiOS/TangramiOS-Prefix.pch";
 				INFOPLIST_FILE = "TangramiOS/TangramiOS-Info.plist";
 				OTHER_CFLAGS = (
-					"-I../../shared",
+					"-I../../core",
 					"-DPLATFORM_IOS",
 				);
 				PRODUCT_NAME = "$(TARGET_NAME)";
@@ -346,7 +358,7 @@
 				GCC_PREFIX_HEADER = "TangramiOS/TangramiOS-Prefix.pch";
 				INFOPLIST_FILE = "TangramiOS/TangramiOS-Info.plist";
 				OTHER_CFLAGS = (
-					"-I../../shared",
+					"-I../../core",
 					"-DPLATFORM_IOS",
 				);
 				PRODUCT_NAME = "$(TARGET_NAME)";

@@ -34,7 +34,7 @@ ios:
 	xcodebuild -workspace ios/TangramiOS.xcworkspace -scheme TangramiOS -destination 'platform=iOS Simulator,name=iPhone Retina (3.5-inch)'
 
 osx/lib/libtangram.so: core/tangram.cpp core/tangram.h
-	clang++ -o osx/lib/libtangram.so core/tangram.cpp core/util/shaderProgram.cpp core/util/error.cpp osx/src/platform_osx.cpp -Icore -DPLATFORM_OSX -lglfw3 -framework OpenGL -std=c++11 -shared
+	clang++ -o osx/lib/libtangram.so core/tangram.cpp core/util/*.cpp osx/src/platform_osx.cpp -Icore -DPLATFORM_OSX -lglfw3 -framework OpenGL -std=c++11 -shared
 
 osx/bin/TangramOSX: osx/lib/libtangram.so
 	clang++ -o osx/bin/TangramOSX osx/src/main.cpp osx/lib/libtangram.so -Icore -DPLATFORM_OSX -lglfw3 -framework Cocoa -framework IOKit -framework OpenGL -framework CoreVideo -std=c++11 -g

@@ -1,21 +1,29 @@
 #include "tangram.h"
 
-const GLfloat vertices[] = {
-	0.0f, 1.0f,
-	-1.0f, 0.0f,
-	1.0f, 0.0f
+struct posColVertex {
+	GLfloat pos_x;
+	GLfloat pos_y;
+	GLubyte r;
+	GLubyte g;
+	GLubyte b;
+	GLubyte a;
 };
 
-ShaderProgram simpleShader;
-GLuint vbo;
-float t;
+const posColVertex vertices[] = {
+	{ 0.0f, 1.0f, 93, 141, 148, 255},
+	{-1.0f, 0.0f, 93, 141, 148, 255},
+	{ 1.0f, 0.0f, 93, 141, 148, 255}
+};
 
 const std::string vertShaderSrc =
     "#ifdef GL_ES\n"
     "precision mediump float;\n"
     "#endif\n"
     "attribute vec4 a_position;\n"
+    "attribute vec4 a_color;\n"
+    "varying vec4 v_color;\n"
 	"void main() {\n"
+	"  v_color = a_color;\n"
 	"  gl_Position = a_position;\n"
 	"}\n";
 
@@ -23,22 +31,30 @@ const std::string fragShaderSrc =
 	"#ifdef GL_ES\n"
 	"precision mediump float;\n"
 	"#endif\n"
+	"varying vec4 v_color;\n"
 	"void main(void) {\n"
-	"  gl_FragColor = vec4(93.0/255.0, 141.0/255.0, 148.0/255.0, 1.0);\n"
+	"  gl_FragColor = v_color;\n"
 	"}\n";
 
-
+std::unique_ptr<ShaderProgram> shader;
+std::unique_ptr<VertexLayout> layout;
+std::unique_ptr<VboMesh> mesh;
+float t;
 
 void initializeOpenGL()
 {
 
-	// Make a VBO
-	glGenBuffers(1, &vbo);
-	glBindBuffer(GL_ARRAY_BUFFER, vbo);
-	glBufferData(GL_ARRAY_BUFFER, sizeof(vertices), vertices, GL_STATIC_DRAW);
+	// Make a mesh
+	layout.reset(new VertexLayout({
+		{"a_position", 2, GL_FLOAT, false, 0},
+		{"a_color", 4, GL_UNSIGNED_BYTE, true, 0}
+	}));
+	mesh.reset(new VboMesh(*layout));
+	mesh->addVertices((GLbyte*)&vertices, 3);
 
 	// Make a shader program
-	simpleShader.buildFromSourceStrings(fragShaderSrc, vertShaderSrc);
+	shader.reset(new ShaderProgram());
+	shader->buildFromSourceStrings(fragShaderSrc, vertShaderSrc);
 
 	t = 0;
 
@@ -60,13 +76,8 @@ void renderFrame()
 	float sintsqr = pow(sin(t), 2);
 	glClearColor(0.8f * sintsqr, 0.32f * sintsqr, 0.3f * sintsqr, 1.0f);
 	glClear( GL_DEPTH_BUFFER_BIT | GL_COLOR_BUFFER_BIT);
-	simpleShader.use();
-	GLint posAttrib = simpleShader.getAttribLocation("a_position");
-	glBindBuffer(GL_ARRAY_BUFFER, vbo);
-	glVertexAttribPointer(posAttrib, 2, GL_FLOAT, GL_FALSE, 0, 0);
-	glEnableVertexAttribArray(posAttrib);
-
-	glDrawArrays(GL_TRIANGLES, 0, 3);
+	
+	mesh->draw(shader.get());
 
 	GLenum glError = glGetError();
 	if (glError) {
