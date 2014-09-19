@@ -19,9 +19,6 @@ class MapTile {
     //Helper Functions
     bool setVBO(std::vector<float> _vboData);
     glm::vec2 GetBoundingBox();
-    //Maybe these should be moved 2 functions to sceneDefinition
-    glm::vec3 MercToPix();
-    glm::vec2 MercToLatLong();
     ~MapTile() {
         m_Vertices.clear();
     }
