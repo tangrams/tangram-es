@@ -9,7 +9,7 @@
 #include "dataSource/dataSource.h"
 #include "mapTile/mapTile.h"
 
-/*int main()
+int main()
 {
     // new DataSource created
     std::unique_ptr<DataSource> ds_ptr(new MapzenVectorTileJson);
@@ -31,4 +31,4 @@
     }
 
     return 0;
-}*/
+}
