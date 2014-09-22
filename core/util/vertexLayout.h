@@ -20,6 +20,8 @@ public:
 
     VertexLayout(std::vector<VertexAttrib> _attribs);
 
+    virtual ~VertexLayout();
+
     void enable(std::shared_ptr<ShaderProgram> _program);
 
     GLint getStride() const { return m_stride; };
