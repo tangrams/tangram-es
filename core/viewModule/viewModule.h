@@ -30,6 +30,8 @@ public:
     void setMapProjection(ProjectionType _projType); 
     //Sets a new map projection with specified tileSize
     void setMapProjection(ProjectionType _projType, int _tileSize);
+    //get the current mapProjection
+    MapProjection* getMapProjection();
 
 	void setAspect(float _width, float _height);
 	void setPosition(float _x, float _y);

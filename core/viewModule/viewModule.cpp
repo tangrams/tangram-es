@@ -45,6 +45,10 @@ void ViewModule::setMapProjection(ProjectionType _projType, int _tileSize) {
     return;
 }
 
+MapProjection* ViewModule::getMapProjection() {
+    return m_projection.get();
+}
+
 void ViewModule::init(float _width, float _height) {
 
 	m_dirty = true;
