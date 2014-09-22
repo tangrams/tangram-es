@@ -47,7 +47,7 @@ void VertexLayout::enable(ShaderProgram* _program) {
     }
 
     // Disable previously bound and now-unneeded attributes
-    for (auto locationProgramPair : s_enabledAttribs) {
+    for (auto& locationProgramPair : s_enabledAttribs) {
 
         const GLint& location = locationProgramPair.first;
         GLuint& boundProgram = locationProgramPair.second;
