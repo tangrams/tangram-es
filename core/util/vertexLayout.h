@@ -15,7 +15,7 @@ public:
         GLint size;
         GLenum type;
         GLboolean normalized;
-        GLvoid* offset;
+        GLvoid* offset; // Can be left as zero; value is overwritten in constructor of VertexLayout
     };
 
     VertexLayout(std::vector<VertexAttrib> _attribs);

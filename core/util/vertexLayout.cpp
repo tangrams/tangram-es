@@ -8,6 +8,11 @@ VertexLayout::VertexLayout(std::vector<VertexAttrib> _attribs) : m_attribs(_attr
 
     for (auto& attrib : m_attribs) {
 
+        // Set the offset of this vertex attribute: The stride at this point denotes the number
+        // of bytes into the vertex by which this attribute is offset, but we must cast the number
+        // as a void* to use with glVertexAttribPointer; We use reinterpret_cast to avoid warnings
+        attrib.offset = reinterpret_cast<void*>(m_stride);
+
         GLint byteSize = attrib.size;
 
         switch (attrib.type) {
@@ -22,9 +27,9 @@ VertexLayout::VertexLayout(std::vector<VertexAttrib> _attribs) : m_attribs(_attr
                 break;
         }
 
-        attrib.offset = reinterpret_cast<void*>(m_stride);
-
         m_stride += byteSize;
+
+        // TODO: Automatically add padding or warn if attributes are not byte-aligned
 
     }
 }
