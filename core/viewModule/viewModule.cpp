@@ -1,11 +1,48 @@
 #include "viewModule.h"
+#include "../platform.h"
 
-ViewModule::ViewModule(float _width, float _height) {
+ViewModule::ViewModule(float _width, float _height, ProjectionType _projType) {
+    setMapProjection(_projType);
+	init(_width, _height);
+}
+
+ViewModule::ViewModule(float _width, float _height, ProjectionType _projType, int _tileSize) {
+    setMapProjection(_projType, _tileSize);
 	init(_width, _height);
 }
 
 ViewModule::ViewModule() {
+    //Set Default projection to mercator, default tileSize is 256
+    setMapProjection(ProjectionType::mercator);
 	init(800, 600);
+}
+
+void ViewModule::setMapProjection(ProjectionType _projType) {
+    switch(_projType) {
+        case ProjectionType::mercator:
+            m_projection.reset(new MercProjection());
+            break;
+        default:
+            logMsg("Error: not a valid map projection specified.\n Setting map projection to mercator by default");
+            m_projection.reset(new MercProjection());
+            break;
+    }
+    m_dirty = true;
+    return;
+}
+
+void ViewModule::setMapProjection(ProjectionType _projType, int _tileSize) {
+    switch(_projType) {
+        case ProjectionType::mercator:
+            m_projection.reset(new MercProjection(_tileSize));
+            break;
+        default:
+            logMsg("Error: not a valid map projection specified.\n Setting map projection to mercator by default");
+            m_projection.reset(new MercProjection(_tileSize));
+            break;
+    }
+    m_dirty = true;
+    return;
 }
 
 void ViewModule::init(float _width, float _height) {
@@ -51,7 +88,7 @@ void ViewModule::translate(float _dx, float _dy) {
 void ViewModule::setZoom(int _z) {
 
 	m_zoom = _z;
-	float tileSize = 2 * PI * EARTH_RADIUS_M * pow(2, -m_zoom);
+	float tileSize = 2 * HALF_CIRCUMFERENCE * pow(2, -m_zoom);
 	m_height = 3 * tileSize; // Set viewport size to ~3 tiles vertically
 	m_width = m_height * m_aspect; // Size viewport width to match aspect ratio
 	m_proj = glm::ortho(-m_width * 0.5, m_width * 0.5, -m_height * 0.5, m_height * 0.5);
@@ -75,7 +112,7 @@ const std::vector<glm::ivec3>& ViewModule::getVisibleTiles() {
 
 	m_visibleTiles.clear();
 
-	float tileSize = 2 * PI * EARTH_RADIUS_M * pow(2, -m_zoom);
+	float tileSize = 2 * HALF_CIRCUMFERENCE * pow(2, -m_zoom);
 	float invTileSize = 1.0 / tileSize;
 
 	float vpLeftEdge = m_pos.x - m_width * 0.5;
