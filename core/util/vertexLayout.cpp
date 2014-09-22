@@ -29,7 +29,7 @@ VertexLayout::VertexLayout(std::vector<VertexAttrib> _attribs) : m_attribs(_attr
     }
 }
 
-void VertexLayout::enable(ShaderProgram* _program) {
+void VertexLayout::enable(std::shared_ptr<ShaderProgram> _program) {
 
     GLuint glProgram = _program->getGlProgram();
 

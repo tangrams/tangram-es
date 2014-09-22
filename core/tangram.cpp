@@ -77,7 +77,7 @@ void renderFrame()
 	glClearColor(0.8f * sintsqr, 0.32f * sintsqr, 0.3f * sintsqr, 1.0f);
 	glClear( GL_DEPTH_BUFFER_BIT | GL_COLOR_BUFFER_BIT);
 	
-	mesh->draw(shader.get());
+	mesh->draw(shader);
 
 	GLenum glError = glGetError();
 	if (glError) {

@@ -98,7 +98,7 @@ void VboMesh::upload() {
 
 }
 
-void VboMesh::draw(ShaderProgram* _shader) {
+void VboMesh::draw(std::shared_ptr<ShaderProgram> _shader) {
 
     // Ensure that geometry is buffered into GPU
     if (!m_isUploaded) {
