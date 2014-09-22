@@ -1,6 +1,6 @@
 #include "vboMesh.h"
 
-VboMesh::VboMesh(const VertexLayout& _vertexLayout, GLenum _drawMode) : m_vertexLayout(_vertexLayout) {
+VboMesh::VboMesh(std::shared_ptr<VertexLayout> _vertexLayout, GLenum _drawMode) : m_vertexLayout(_vertexLayout) {
 
     m_glVertexBuffer = 0;
     m_glIndexBuffer = 0;
@@ -46,7 +46,7 @@ void VboMesh::addVertices(GLbyte* _vertices, int _nVertices) {
         return;
     }
 
-    int vertexBytes = m_vertexLayout.getStride() * _nVertices;
+    int vertexBytes = m_vertexLayout->getStride() * _nVertices;
     m_vertexData.insert(m_vertexData.cend(), _vertices, _vertices + vertexBytes);
     m_nVertices += _nVertices;
 
@@ -118,7 +118,7 @@ void VboMesh::draw(ShaderProgram* _shader) {
     _shader->use();
 
     // Enable vertex attribs via vertex layout object
-    m_vertexLayout.enable(_shader);
+    m_vertexLayout->enable(_shader);
 
     // Draw as elements or arrays
     if (m_nIndices > 0) {

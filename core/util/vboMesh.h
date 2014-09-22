@@ -17,7 +17,7 @@ public:
      * Creates a VboMesh for vertex data arranged in the structure described by _vertexLayout to be drawn
      * using the OpenGL primitive type _drawMode
      */
-    VboMesh(const VertexLayout& _vertexlayout, GLenum _drawMode = GL_TRIANGLES);
+    VboMesh(std::shared_ptr<VertexLayout> _vertexlayout, GLenum _drawMode = GL_TRIANGLES);
     
     
     /*
@@ -66,7 +66,7 @@ public:
 
 private:
 
-    VertexLayout m_vertexLayout;
+    std::shared_ptr<VertexLayout> m_vertexLayout;
     
     std::vector<GLbyte> m_vertexData; // Raw interleaved vertex data in the format specified by the vertex layout
     int m_nVertices;

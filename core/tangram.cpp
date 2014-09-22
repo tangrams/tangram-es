@@ -36,24 +36,24 @@ const std::string fragShaderSrc =
 	"  gl_FragColor = v_color;\n"
 	"}\n";
 
-std::unique_ptr<ShaderProgram> shader;
-std::unique_ptr<VertexLayout> layout;
-std::unique_ptr<VboMesh> mesh;
+std::shared_ptr<ShaderProgram> shader (nullptr);
+std::shared_ptr<VertexLayout> layout (nullptr);
+std::unique_ptr<VboMesh> mesh (nullptr);
 float t;
 
 void initializeOpenGL()
 {
 
 	// Make a mesh
-	layout.reset(new VertexLayout({
+	layout = std::shared_ptr<VertexLayout>(new VertexLayout({
 		{"a_position", 2, GL_FLOAT, false, 0},
 		{"a_color", 4, GL_UNSIGNED_BYTE, true, 0}
 	}));
-	mesh.reset(new VboMesh(*layout));
+	mesh.reset(new VboMesh(layout));
 	mesh->addVertices((GLbyte*)&vertices, 3);
 
 	// Make a shader program
-	shader.reset(new ShaderProgram());
+	shader = std::make_shared<ShaderProgram>();
 	shader->buildFromSourceStrings(fragShaderSrc, vertShaderSrc);
 
 	t = 0;
