@@ -21,3 +21,4 @@
 #endif
 
 void logMsg(const char* fmt, ...);
+

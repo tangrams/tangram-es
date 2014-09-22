@@ -20,3 +20,4 @@ private:
     static std::unordered_map<GLenum, std::string> s_GlErrorCodesToStrings;
 
 };
+
