@@ -14,7 +14,7 @@ LOCAL_MODULE := tangram
 # Compilation flags
 LOCAL_CFLAGS := -Werror -DPLATFORM_ANDROID
 
-LOCAL_C_INCLUDES := $(LOCAL_PATH)/include-all ../../core/
+LOCAL_C_INCLUDES := $(LOCAL_PATH)/include-all ../../core/ ../../core/include/
 
 # Static libraries to link with
 LOCAL_LDLIBS := -llog -lGLESv2
