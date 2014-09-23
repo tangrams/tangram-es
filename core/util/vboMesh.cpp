@@ -72,23 +72,27 @@ void VboMesh::addIndices(GLushort* _indices, int _nIndices) {
 
 void VboMesh::upload() {
 
-    // Generate vertex buffer, if needed
-    if (m_glVertexBuffer == 0) {
-        glGenBuffers(1, &m_glVertexBuffer);
+    if (m_nVertices > 0) {
+        // Generate vertex buffer, if needed
+        if (m_glVertexBuffer == 0) {
+            glGenBuffers(1, &m_glVertexBuffer);
+        }
+
+        // Buffer vertex data
+        glBindBuffer(GL_ARRAY_BUFFER, m_glVertexBuffer);
+        glBufferData(GL_ARRAY_BUFFER, m_vertexData.size(), m_vertexData.data(), GL_STATIC_DRAW);
     }
 
-    // Buffer vertex data
-    glBindBuffer(GL_ARRAY_BUFFER, m_glVertexBuffer);
-    glBufferData(GL_ARRAY_BUFFER, m_vertexData.size(), m_vertexData.data(), GL_STATIC_DRAW);
+    if (m_nIndices > 0) {
+        // Generate index buffer, if needed
+        if (m_glIndexBuffer == 0) {
+            glGenBuffers(1, &m_glIndexBuffer);
+        }
 
-    // Generate index buffer, if needed
-    if (m_glIndexBuffer == 0) {
-        glGenBuffers(1, &m_glIndexBuffer);
+        // Buffer element index data
+        glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, m_glIndexBuffer);
+        glBufferData(GL_ELEMENT_ARRAY_BUFFER, m_indices.size() * sizeof(GL_UNSIGNED_SHORT), m_indices.data(), GL_STATIC_DRAW);
     }
-
-    // Buffer element index data
-    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, m_glIndexBuffer);
-    glBufferData(GL_ELEMENT_ARRAY_BUFFER, m_indices.size() * sizeof(GL_UNSIGNED_SHORT), m_indices.data(), GL_STATIC_DRAW);
 
     // Release copies of geometry in CPU memory
     m_vertexData.clear();
@@ -123,7 +127,7 @@ void VboMesh::draw(std::shared_ptr<ShaderProgram> _shader) {
     // Draw as elements or arrays
     if (m_nIndices > 0) {
         glDrawElements(m_drawMode, m_nIndices, GL_UNSIGNED_SHORT, 0);
-    } else {
+    } else if (m_nVertices > 0) {
         glDrawArrays(m_drawMode, 0, m_nVertices);
     }
 
