@@ -30,51 +30,31 @@ ShaderProgram::~ShaderProgram() {
 
 GLint ShaderProgram::getAttribLocation(const std::string& _attribName) {
 
-    // Get uniform location at this key, or create one valued at zero if absent
-    GLint location = m_attribMap[_attribName];
+    // Get uniform location at this key, or create one valued at -2 if absent
+    GLint* location = &(m_attribMap[_attribName].loc);
 
-    // Zero means this is a new entry
-    if (location == 0) {
-
+    // -2 means this is a new entry
+    if (*location == -2) {
         // Get the actual location from OpenGL
-        location = glGetAttribLocation(m_glProgram, _attribName.c_str());
-
-        // -1 Means there was an error in OpenGL retrieving the location
-        if (location == -1) {
-            // Print information about the error and leave the value at zero
-            Error::hadGlError("ShaderProgram::getAttribLocation");
-        } else {
-            // Found the location, so save it as the value for this key
-            m_attribMap[_attribName] = location;
-        }
+        *location = glGetAttribLocation(m_glProgram, _attribName.c_str());
     }
 
-    return location;
+    return *location;
 
 }
 
 GLint ShaderProgram::getUniformLocation(const std::string& _uniformName) {
 
-    // Get uniform location at this key, or create one valued at zero if absent
-    GLint location = m_uniformMap[_uniformName];
+    // Get uniform location at this key, or create one valued at -2 if absent
+    GLint* location = &(m_uniformMap[_uniformName].loc);
 
     // Zero means this is a new entry
-    if (location == 0) {
-
+    if (*location == -2) {
         // Get the actual location from OpenGL
-        location = glGetUniformLocation(m_glProgram, _uniformName.c_str());
-
-        // -1 Means there was an error in OpenGL retrieving the location
-        if (location == -1) {
-            // Print information about the error and leave the value at zero
-            Error::hadGlError("ShaderProgram::getUniformLocation");
-        } else {
-            // Found the location, so save it as the value for this key
-            m_uniformMap[_uniformName] = location;
-        }
+        *location = glGetUniformLocation(m_glProgram, _uniformName.c_str());
     }
 
-    return location;
+    return *location;
 
 }
 

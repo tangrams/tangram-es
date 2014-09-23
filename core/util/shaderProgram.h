@@ -54,13 +54,25 @@ public:
 
 private:
 
+    struct ShaderLocation {
+        GLint loc;
+        ShaderLocation() : loc(-2) {}
+        // This struct exists to resolve an ambiguity in shader locations:
+        // In the unordered_maps that store shader uniform and attrib locations,
+        // Un-mapped 'keys' are initialized by constructing the 'value' type and
+        // for numerical types this constructs a value of 0. But 0 is a valid 
+        // location, so it is ambiguous whether the value is unmapped or simply 0.
+        // Therefore, we use a dummy structure which does nothing but initialize
+        // to a value that is not a valid uniform or attribute location. 
+    };
+
     static GLint s_activeGlProgram;
 
     GLuint m_glProgram;
     GLuint m_glFragmentShader;
     GLuint m_glVertexShader;
-    std::unordered_map<std::string, GLint> m_attribMap;
-    std::unordered_map<std::string, GLint> m_uniformMap;
+    std::unordered_map<std::string, ShaderLocation> m_attribMap;
+    std::unordered_map<std::string, ShaderLocation> m_uniformMap;
     std::string m_fragmentShaderSource;
     std::string m_vertexShaderSource;
 
