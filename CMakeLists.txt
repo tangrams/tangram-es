@@ -8,16 +8,16 @@ if(NOT PLATFORM_TARGET)
     string(TOLOWER "${CMAKE_SYSTEM_NAME}" varplatform)
     string(TOUPPER "${CMAKE_SYSTEM_NAME}" VARPLATFORM)
 
-    message("No target defined (give as parameter -DPLATFORM_TARGET=platform_name).")
-    message("Targets available: ${SUPPORTED_TARGETS}.")
-    message("Will use your OS: ${varplatform}.")
+    message(STATUS "No target defined (give as parameter -DPLATFORM_TARGET=platform_name).")
+    message(STATUS "Targets available: ${SUPPORTED_TARGETS}.")
+    message(STATUS "Will use your OS: ${varplatform}.")
 
     set(PLATFORM_TARGET ${varplatform})
 else()
     string(TOLOWER "${PLATFORM_TARGET}" varplatform)
     string(TOUPPER "${PLATFORM_TARGET}" VARPLATFORM)
 
-    message("Platform chosen : ${varplatform}")
+    message(STATUS "Platform chosen : ${VARPLATFORM}")
 endif()
 
 list(FIND SUPPORTED_TARGETS ${varplatform} target_in_list)
@@ -33,7 +33,7 @@ set(CMAKE_TARGET_FILE ${PROJECT_SOURCE_DIR}/build/toolchains/${PLATFORM_TARGET}.
 
 include(${PROJECT_SOURCE_DIR}/build/utils/utils.cmake)
 
-message("Including ${varplatform} dependent cmake file : ${CMAKE_TARGET_FILE}")
+message(STATUS "Including ${varplatform} dependent cmake file : ${CMAKE_TARGET_FILE}")
 include(${CMAKE_TARGET_FILE})
 
 # dependent platform build
