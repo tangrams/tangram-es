@@ -27,7 +27,6 @@ void ViewModule::setMapProjection(ProjectionType _projType) {
             break;
     }
     m_dirty = true;
-    return;
 }
 
 MapProjection* ViewModule::getMapProjection() {
