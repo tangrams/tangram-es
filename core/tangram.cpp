@@ -10,9 +10,14 @@ struct posColVertex {
 };
 
 const posColVertex vertices[] = {
-	{ 0.0f, 1.0f, 93, 141, 148, 255},
-	{-1.0f, 0.0f, 93, 141, 148, 255},
-	{ 1.0f, 0.0f, 93, 141, 148, 255}
+	{ 0.0f,  1.0f, 93, 141, 148, 255},
+	{-1.0f,  0.0f, 93, 141, 148, 255},
+	{ 1.0f,  0.0f, 93, 141, 148, 255},
+	{ 0.0f, -1.0f, 93, 141, 148, 255}
+};
+
+const GLushort indices[] = {
+	0, 1, 2, 2, 1, 3
 };
 
 const std::string vertShaderSrc =
@@ -50,7 +55,8 @@ void initializeOpenGL()
 		{"a_color", 4, GL_UNSIGNED_BYTE, true, 0}
 	}));
 	mesh.reset(new VboMesh(layout));
-	mesh->addVertices((GLbyte*)&vertices, 3);
+	mesh->addVertices((GLbyte*)&vertices, 4);
+	mesh->addIndices((GLushort*)&indices, 6);
 
 	// Make a shader program
 	shader = std::make_shared<ShaderProgram>();
