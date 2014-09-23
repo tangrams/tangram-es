@@ -10,11 +10,3 @@ bool MapTile::setVBO(std::vector<float> _vboData) {
 glm::vec2 MapTile::GetBoundingBox() {
     return glm::vec2(0,0);
 }
-
-glm::vec3 MapTile::MercToPix() {
-    return glm::vec3(0,0,0);
-}
-
-glm::vec2 MapTile::MercToLatLong() {
-    return glm::vec2(0,0);
-}
