@@ -42,7 +42,7 @@ public:
     /*
      * Adds a single index to the mesh; indices are unsigned shorts
      */
-    void addIndex(GLushort _index);
+    void addIndex(GLushort* _index);
 
     /*
      * Adds _nIndices indices to the mesh; _indices must be a pointer to the beginning of a contiguous

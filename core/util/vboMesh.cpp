@@ -52,9 +52,9 @@ void VboMesh::addVertices(GLbyte* _vertices, int _nVertices) {
 
 }
 
-void VboMesh::addIndex(GLushort _index) {
+void VboMesh::addIndex(GLushort* _index) {
 
-    addIndices(&_index, 1);
+    addIndices(_index, 1);
 
 }
 
