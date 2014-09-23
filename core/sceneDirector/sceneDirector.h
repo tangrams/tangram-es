@@ -4,6 +4,7 @@
 
 class TileManager;
 class SceneDefinition;
+class ViewModule;
 
 /* -- Singleton Class Implementation -- */
 class SceneDirector {
