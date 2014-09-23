@@ -37,7 +37,13 @@ clean: clean-android clean-ios clean-osx clean-osx-test clean-osx-debug
 CORE_SRC_FILES= \
 	core/tangram.cpp \
 	core/util/*.cpp \
-	core/viewModule/*.cpp
+	core/viewModule/*.cpp \
+    core/dataSource/*.cpp \
+    core/tileManager/*.cpp \
+    core/mapTile/*.cpp
+
+LIB_DEPENDENCY = \
+    core/include/jsoncpp.cpp
 
 CORE_TEST_FILES = \
     unitTests/tests/*.cpp
@@ -49,7 +55,8 @@ OSX_FRAMEWORKS= \
 	-framework CoreVideo
 OSX_INCLUDES= \
 	-Icore \
-	-Icore/include
+	-Icore/include \
+    -lcurl
 OSX_SRC_FILES= \
 	osx/src/main.cpp \
 	osx/src/platform_osx.cpp
@@ -68,17 +75,17 @@ ios:
 	xcodebuild -workspace ios/TangramiOS.xcworkspace -scheme TangramiOS -destination 'platform=iOS Simulator,name=iPhone Retina (3.5-inch)'
 
 osx/bin/TangramOSX: $(OSX_SRC_FILES)
-	clang++ -o osx/bin/TangramOSX $(CORE_SRC_FILES) $(OSX_SRC_FILES) $(OSX_INCLUDES) $(OSX_FRAMEWORKS) -DPLATFORM_OSX -lglfw3 -std=c++11
+	clang++ -o osx/bin/TangramOSX $(CORE_SRC_FILES) $(OSX_SRC_FILES) $(LIB_DEPENDENCY) $(OSX_INCLUDES) $(OSX_FRAMEWORKS) -DPLATFORM_OSX -lglfw3 -std=c++11
 
 osx: osx/bin/TangramOSX
 
 osx/debug/TangramOSX: $(OSX_SRC_FILES)
-	clang++ -o osx/debug/TangramOSX $(CORE_SRC_FILES) $(OSX_SRC_FILES) $(OSX_INCLUDES) $(OSX_FRAMEWORKS) -DPLATFORM_OSX -lglfw3 -std=c++11 -g -DDEBUG
+	clang++ -o osx/debug/TangramOSX $(CORE_SRC_FILES) $(OSX_SRC_FILES) $(LIB_DEPENDENCY) $(OSX_INCLUDES) $(OSX_FRAMEWORKS) -DPLATFORM_OSX -lglfw3 -std=c++11 -g -DDEBUG
 
 osx-debug: osx/debug/TangramOSX
 
 osx/tests/TangramOSX:
-	clang++ -o osx/tests/TangramOSX $(CORE_SRC_FILES) $(CORE_TEST_FILES) $(OSX_TEST_FILES) $(OSX_INCLUDES) $(OSX_FRAMEWORKS) -DPLATFORM_OSX -lglfw3 -std=c++11 -g -DDEBUG
+	clang++ -o osx/tests/TangramOSX $(CORE_SRC_FILES) $(CORE_TEST_FILES) $(OSX_TEST_FILES) $(LIB_DEPENDENCY) $(OSX_INCLUDES) $(OSX_FRAMEWORKS) -DPLATFORM_OSX -lglfw3 -std=c++11 -g -DDEBUG
 
 osx-test: osx/tests/TangramOSX
 
