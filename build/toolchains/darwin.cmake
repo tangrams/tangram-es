@@ -1,38 +1,30 @@
-set(INCLUDE_DIR ${PROJECT_SOURCE_DIR}/core/include/)
+# options
+set(CMAKE_CXX_FLAGS "-Wall -stdlib=libc++ -std=c++0x -g -O0")
+set(EXECUTABLE_NAME "tangram.out")
 
 add_definitions(-DPLATFORM_OSX=1)
 
-add_subdirectory("${PROJECT_SOURCE_DIR}/osx/lib/glfw3")
-set(INCLUDE_DIR
-    ${INCLUDE_DIR}
-    "${PROJECT_SOURCE_DIR}/osx/lib/glfw3/include")
+# load glfw3 library
+add_subdirectory(${PROJECT_SOURCE_DIR}/osx/lib/glfw3)
+include_directories(${PROJECT_SOURCE_DIR}/osx/lib/glfw3/include)
 
-include_directories(${INCLUDE_DIR})
+# load core library
+include_directories(${PROJECT_SOURCE_DIR}/core/include/)
+add_subdirectory(${PROJECT_SOURCE_DIR}/core)
+include_recursive_dirs(${PROJECT_SOURCE_DIR}/core/*.h)
 
-add_subdirectory("${PROJECT_SOURCE_DIR}/core")
-
-#find_sources_and_include_directories(
-#    ${PROJECT_SOURCE_DIR}/core/*.h 
-#    ${PROJECT_SOURCE_DIR}/core/*.cpp)
-
-file(GLOB_RECURSE FOUND_HEADERS ${PROJECT_SOURCE_DIR}/core/*.h)
-
-set(INCLUDE_DIRS "")
-foreach(_headerFile ${FOUND_HEADERS})
-    get_filename_component(_dir ${_headerFile} PATH)
-    list(APPEND INCLUDE_DIRS ${_dir})
-endforeach()
-list(REMOVE_DUPLICATES INCLUDE_DIRS)
-
-include_directories(${INCLUDE_DIRS})
-
+# add sources and include headers
 find_sources_and_include_directories(
     ${PROJECT_SOURCE_DIR}/osx/*.h 
     ${PROJECT_SOURCE_DIR}/osx/*.cpp)
 
+# link and build functions
 function(link_libraries)
     check_and_link_libraries(${EXECUTABLE_NAME} curl OpenGL)
     target_link_libraries(${EXECUTABLE_NAME} glfw ${GLFW_LIBRARIES})
-    #target_link_libraries(${EXECUTABLE_NAME} json)
     target_link_libraries(${EXECUTABLE_NAME} core)
+endfunction()
+
+function(build) 
+    add_executable(${EXECUTABLE_NAME} ${SOURCES})
 endfunction()

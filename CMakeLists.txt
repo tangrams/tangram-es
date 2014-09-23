@@ -1,20 +1,23 @@
 cmake_minimum_required(VERSION 2.8)
 project(tangram)
 
-set(SUPPORTED_TARGETS darwin)
+# platform lookup
+set(SUPPORTED_TARGETS darwin ios)
 
 if(NOT PLATFORM_TARGET)
     string(TOLOWER "${CMAKE_SYSTEM_NAME}" varplatform)
     string(TOUPPER "${CMAKE_SYSTEM_NAME}" VARPLATFORM)
 
-    message("No target defined (give as parameter -DPLATFOR_TARGET=platform_name).")
+    message("No target defined (give as parameter -DPLATFORM_TARGET=platform_name).")
     message("Targets available: ${SUPPORTED_TARGETS}.")
     message("Will use your OS: ${varplatform}.")
 
     set(PLATFORM_TARGET ${varplatform})
 else()
-    string(TOLOWER "${TARGET}" varplatform)
-    string(TOUPPER "${TARGET}" VARPLATFORM)
+    string(TOLOWER "${PLATFORM_TARGET}" varplatform)
+    string(TOUPPER "${PLATFORM_TARGET}" VARPLATFORM)
+
+    message("Platform chosen : ${varplatform}")
 endif()
 
 list(FIND SUPPORTED_TARGETS ${varplatform} target_in_list)
@@ -24,14 +27,15 @@ if(target_in_list EQUAL -1)
     return()
 endif()
 
-# compilation options
-set(CMAKE_CXX_FLAGS "-Wall -stdlib=libc++ -std=c++0x -g -O0")
-set(EXECUTABLE_NAME "tangram")
-set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} "${CMAKE_SOURCE_DIR}/build/modules")
+# cmake inclusions and definitions
+set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} ${CMAKE_SOURCE_DIR}/build/modules)
+set(CMAKE_TARGET_FILE ${PROJECT_SOURCE_DIR}/build/toolchains/${PLATFORM_TARGET}.cmake)
 
 include(${PROJECT_SOURCE_DIR}/build/utils/utils.cmake)
-include(${PROJECT_SOURCE_DIR}/build/toolchains/${PLATFORM_TARGET}.cmake)
 
-add_executable(${EXECUTABLE_NAME} ${SOURCES})
+message("Including ${varplatform} dependent cmake file : ${CMAKE_TARGET_FILE}")
+include(${CMAKE_TARGET_FILE})
 
+# dependent platform build
+build()
 link_libraries()

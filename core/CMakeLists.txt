@@ -15,7 +15,6 @@ endforeach()
 list(REMOVE_DUPLICATES INCLUDE_DIRS)
 
 include_directories(${INCLUDE_DIR}/json)
-
 include_directories(${INCLUDE_DIRS})
 
 add_library(core ${FOUND_SOURCES})
