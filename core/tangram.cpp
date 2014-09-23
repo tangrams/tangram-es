@@ -36,9 +36,9 @@ const std::string fragShaderSrc =
 	"  gl_FragColor = v_color;\n"
 	"}\n";
 
-std::shared_ptr<ShaderProgram> shader (nullptr);
-std::shared_ptr<VertexLayout> layout (nullptr);
-std::unique_ptr<VboMesh> mesh (nullptr);
+std::shared_ptr<ShaderProgram> shader;
+std::shared_ptr<VertexLayout> layout;
+std::unique_ptr<VboMesh> mesh;
 float t;
 
 void initializeOpenGL()
