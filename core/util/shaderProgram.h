@@ -65,6 +65,10 @@ public:
     void setUniformf(const std::string& _name, float _value0, float _value1, float _value2);
     void setUniformf(const std::string& _name, float _value0, float _value1, float _value2, float _value3);
 
+    /*
+     * setUniformMatrix - ensure the program is bound and then sets the named uniform to the values
+     * beginning at the pointer _value; 4 values are used for a 2x2 matrix, 9 values for a 3x3, etc.
+     */
     void setUniformMatrix2f(const std::string& _name, float* _value, bool transpose = false);
     void setUniformMatrix3f(const std::string& _name, float* _value, bool transpose = false);
     void setUniformMatrix4f(const std::string& _name, float* _value, bool transpose = false);
@@ -76,8 +80,8 @@ private:
         ShaderLocation() : loc(-2) {}
         // This struct exists to resolve an ambiguity in shader locations:
         // In the unordered_maps that store shader uniform and attrib locations,
-        // Un-mapped 'keys' are initialized by constructing the 'value' type and
-        // for numerical types this constructs a value of 0. But 0 is a valid 
+        // Un-mapped 'keys' are initialized by constructing the 'value' type.
+        // For numerical types this constructs a value of 0. But 0 is a valid 
         // location, so it is ambiguous whether the value is unmapped or simply 0.
         // Therefore, we use a dummy structure which does nothing but initialize
         // to a value that is not a valid uniform or attribute location. 
