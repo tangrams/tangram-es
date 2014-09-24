@@ -108,6 +108,11 @@ bool ShaderProgram::buildFromSourceStrings(const std::string& _fragSrc, const st
     m_fragmentShaderSource = std::string(_fragSrc);
     m_vertexShaderSource = std::string(_vertSrc);
 
+    // Clear any cached shader locations
+
+    m_attribMap.clear();
+    m_uniformMap.clear();
+
     return true;
 
 }
