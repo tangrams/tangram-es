@@ -50,7 +50,7 @@ android: android/bin/TangramAndroid-Debug.apk
 ios:
 	xcodebuild -workspace ios/TangramiOS.xcworkspace -scheme TangramiOS -destination 'platform=iOS Simulator,name=iPhone Retina (3.5-inch)'
 
-osx/bin/TangramOSX: $(OSX_SRC_FILES)
+osx/bin/TangramOSX: $(OSX_SRC_FILES) $(CORE_SRC_FILES)
 	clang++ -o osx/bin/TangramOSX $(CORE_SRC_FILES) $(OSX_SRC_FILES) $(OSX_INCLUDES) $(OSX_FRAMEWORKS) -DPLATFORM_OSX -lglfw3 -std=c++11 -g
 
 osx: osx/bin/TangramOSX
