@@ -28,7 +28,7 @@ ShaderProgram::~ShaderProgram() {
 
 }
 
-GLint ShaderProgram::getAttribLocation(const std::string& _attribName) {
+const GLint ShaderProgram::getAttribLocation(const std::string& _attribName) {
 
     // Get uniform location at this key, or create one valued at -2 if absent
     GLint& location = m_attribMap[_attribName].loc;
@@ -43,18 +43,18 @@ GLint ShaderProgram::getAttribLocation(const std::string& _attribName) {
 
 }
 
-GLint ShaderProgram::getUniformLocation(const std::string& _uniformName) {
+const GLint ShaderProgram::getUniformLocation(const std::string& _uniformName) {
 
     // Get uniform location at this key, or create one valued at -2 if absent
-    GLint* location = &(m_uniformMap[_uniformName].loc);
+    GLint& location = m_uniformMap[_uniformName].loc;
 
     // Zero means this is a new entry
-    if (*location == -2) {
+    if (location == -2) {
         // Get the actual location from OpenGL
-        *location = glGetUniformLocation(m_glProgram, _uniformName.c_str());
+        location = glGetUniformLocation(m_glProgram, _uniformName.c_str());
     }
 
-    return *location;
+    return location;
 
 }
 

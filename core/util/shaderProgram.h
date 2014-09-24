@@ -18,19 +18,19 @@ public:
     virtual ~ShaderProgram();
 
     /* Getters */
-    GLuint getGlProgram() const { return m_glProgram; };
-    GLuint getGlFragmentShader() const { return m_glFragmentShader; };
-    GLuint getGlVertexShader() const { return m_glVertexShader; };
+    const GLuint getGlProgram() const { return m_glProgram; };
+    const GLuint getGlFragmentShader() const { return m_glFragmentShader; };
+    const GLuint getGlVertexShader() const { return m_glVertexShader; };
 
     /*
      * getAttribLocation - fetches the location of a shader attribute, caching the result
      */
-    GLint getAttribLocation(const std::string& _attribName);
+    const GLint getAttribLocation(const std::string& _attribName);
 
     /*
      * getUniformLocation - fetches the location of a shader uniform, caching the result
      */
-    GLint getUniformLocation(const std::string& _uniformName);
+    const GLint getUniformLocation(const std::string& _uniformName);
 
     /*
      * buildFromSourceStrings - attempts to compile a fragment shader and vertex shader from
