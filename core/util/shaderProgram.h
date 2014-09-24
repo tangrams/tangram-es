@@ -45,7 +45,7 @@ public:
     /*
      * isValid - returns true if this object represents a valid OpenGL shader program
      */
-    bool isValid() const { return m_glProgram == 0; };
+    bool isValid() const { return m_glProgram != 0; };
 
     /*
      * use - binds the program in openGL if it is not already bound.
