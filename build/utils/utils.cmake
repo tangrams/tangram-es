@@ -2,10 +2,11 @@ function(find_sources_and_include_directories HEADERS_PATH SOURCES_PATH)
     include_recursive_dirs(${HEADERS_PATH})
     file(GLOB_RECURSE FOUND_SOURCES ${SOURCES_PATH})
 
-    set(SOURCES
+    set(SOURCES 
         ${SOURCES}
         ${FOUND_SOURCES}
-        PARENT_SCOPE)
+        CACHE INTERNAL "sources" FORCE)
+    list(REMOVE_DUPLICATES SOURCES)
 endfunction(find_sources_and_include_directories)
 
 function(include_recursive_dirs HEADERS_PATH) 
@@ -19,6 +20,12 @@ function(include_recursive_dirs HEADERS_PATH)
     list(REMOVE_DUPLICATES INCLUDE_DIRS)
 
     include_directories(${INCLUDE_DIRS})
+
+    set(HEADERS 
+        ${HEADERS}
+        ${FOUND_HEADERS}
+        CACHE INTERNAL "headers" FORCE)
+    list(REMOVE_DUPLICATES HEADERS)
 endfunction(include_recursive_dirs)
 
 function(check_and_link_libraries TARGET) 

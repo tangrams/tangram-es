@@ -1,5 +1,5 @@
 # options
-set(CMAKE_CXX_FLAGS "-Wall -stdlib=libc++ -std=c++0x -g -O0")
+set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wall -stdlib=libc++ -std=c++0x")
 set(EXECUTABLE_NAME "tangram.out")
 
 add_definitions(-DPLATFORM_OSX=1)

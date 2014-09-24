@@ -13,24 +13,32 @@ endmacro(add_framework)
 add_definitions(-DPLATFORM_IOS=1)
 
 set(EXECUTABLE_NAME "tangram")
-set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fobjc-abi-version=2 -fobjc-arc -std=gnu++11 -stdlib=libc++ -isysroot ${CMAKE_OSX_SYSROOT}")
-set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -fobjc-abi-version=2 -fobjc-arc -isysroot ${CMAKE_OSX_SYSROOT}")
+
+set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} 
+    -fobjc-abi-version=2 
+    -fobjc-arc 
+    -std=gnu++11 
+    -stdlib=libc++ 
+    -isysroot ${CMAKE_OSX_SYSROOT}")
+
+set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} 
+    -fobjc-abi-version=2 
+    -fobjc-arc 
+    -isysroot ${CMAKE_OSX_SYSROOT}")
 
 if(${SIMULATOR})
     set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -mios-simulator-version-min=6.0")
 endif()
 
 set(SDKVER "8.0")
-set(LIBPATH "/Applications/Xcode.app/Contents/Developer/Platforms/iPhoneOS.platform/Developer/SDKs/iPhoneOS.sdk/System/Library/Frameworks")
 set(DEVROOT "/Applications/Xcode.app/Contents/Developer/Platforms/iPhoneOS.platform/Developer")
+set(LIBPATH "${DEVROOT}/SDKs/iPhoneOS.sdk/System/Library/Frameworks")
 set(SDKROOT "${DEVROOT}/SDKs/iPhoneOS${SDKVER}.sdk")
+set(FRAMEWORKS CoreGraphics CoreFoundation QuartzCore UIKit OpenGLES)
 
-set(CMAKE_EXE_LINKER_FLAGS 
-    "-framework CoreGraphics 
-     -framework CoreFoundation
-     -framework QuartzCore 
-     -framework UIKit 
-     -framework OpenGLES")
+foreach(_framework ${FRAMEWORKS})
+    set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} -framework ${_framework}")
+endforeach()
 
 set(MACOSX_BUNDLE_GUI_IDENTIFIER "com.mapzen.\${PRODUCT_NAME:Tangram}")
 set(APP_TYPE MACOSX_BUNDLE)
@@ -60,11 +68,9 @@ function(link_libraries)
     #check_and_link_libraries(${EXECUTABLE_NAME} curl)
     target_link_libraries(${EXECUTABLE_NAME} core)
     
-    add_framework(Foundation ${EXECUTABLE_NAME} ${LIBPATH})
-    add_framework(CoreGraphics ${EXECUTABLE_NAME} ${LIBPATH})
-    add_framework(CoreFoundation ${EXECUTABLE_NAME} ${LIBPATH})
-    add_framework(UIKit ${EXECUTABLE_NAME} ${LIBPATH})
-    add_framework(OpenGLES ${EXECUTABLE_NAME} ${LIBPATH})
+    foreach(_framework ${FRAMEWORKS})
+        add_framework(${_framework} ${EXECUTABLE_NAME} ${LIBPATH})
+    endforeach()
 endfunction()
 
 function(build)
