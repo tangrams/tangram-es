@@ -340,8 +340,16 @@
 				GCC_PRECOMPILE_PREFIX_HEADER = YES;
 				GCC_PREFIX_HEADER = "TangramiOS/TangramiOS-Prefix.pch";
 				INFOPLIST_FILE = "TangramiOS/TangramiOS-Info.plist";
+				LIBRARY_SEARCH_PATHS = (
+					"$(inherited)",
+					"$(PROJECT_DIR)/TangramiOS",
+					"$(PROJECT_DIR)/TangramiOS/libs",
+					"$(PROJECT_DIR)/TangramiOS/precompiled",
+				);
 				OTHER_CFLAGS = (
 					"-I../../core",
+					"-I../../core/include",
+					"-ITangramiOS/include",
 					"-DPLATFORM_IOS",
 				);
 				PRODUCT_NAME = "$(TARGET_NAME)";
@@ -357,8 +365,16 @@
 				GCC_PRECOMPILE_PREFIX_HEADER = YES;
 				GCC_PREFIX_HEADER = "TangramiOS/TangramiOS-Prefix.pch";
 				INFOPLIST_FILE = "TangramiOS/TangramiOS-Info.plist";
+				LIBRARY_SEARCH_PATHS = (
+					"$(inherited)",
+					"$(PROJECT_DIR)/TangramiOS",
+					"$(PROJECT_DIR)/TangramiOS/libs",
+					"$(PROJECT_DIR)/TangramiOS/precompiled",
+				);
 				OTHER_CFLAGS = (
 					"-I../../core",
+					"-I../../core/include",
+					"-ITangramiOS/include",
 					"-DPLATFORM_IOS",
 				);
 				PRODUCT_NAME = "$(TARGET_NAME)";

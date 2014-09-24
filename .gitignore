@@ -97,3 +97,7 @@ DerivedData
 *.out
 *.app
 
+#Keep specific precompiled static libraries
+!**/precompiled/**/*.a
+!**/precompiled/**/*.dylib
+
