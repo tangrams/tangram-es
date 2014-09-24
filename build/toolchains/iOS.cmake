@@ -6,34 +6,33 @@ macro(add_framework FWNAME APPNAME LIBPATH)
         message(ERROR ": Framework ${FWNAME} not found")
     else()
         target_link_libraries(${APPNAME} ${FRAMEWORK_${FWNAME}})
-        message(STATUS "Framework ${FWNAME} found at ${FRAMEWORK_${FWNAME}}")
+        message(STATUS "Framework ${FWNAME} found")
     endif()
 endmacro(add_framework)
 
-add_definitions(-DPLATFORM_IOS=1)
+add_definitions(-DPLATFORM_IOS)
 
 set(EXECUTABLE_NAME "tangram")
+
+# uncomment to remove ZERO_CHECK from xcode
+# set(CMAKE_SUPPRESS_REGENERATION TRUE)
 
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} 
     -fobjc-abi-version=2 
     -fobjc-arc 
     -std=gnu++11 
     -stdlib=libc++ 
-    -isysroot ${CMAKE_OSX_SYSROOT}")
+    -isysroot ${CMAKE_IOS_SDK_ROOT}")
 
 set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} 
     -fobjc-abi-version=2 
     -fobjc-arc 
-    -isysroot ${CMAKE_OSX_SYSROOT}")
+    -isysroot ${CMAKE_IOS_SDK_ROOT}")
 
 if(${SIMULATOR})
     set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -mios-simulator-version-min=6.0")
 endif()
 
-set(SDKVER "8.0")
-set(DEVROOT "/Applications/Xcode.app/Contents/Developer/Platforms/iPhoneOS.platform/Developer")
-set(LIBPATH "${DEVROOT}/SDKs/iPhoneOS.sdk/System/Library/Frameworks")
-set(SDKROOT "${DEVROOT}/SDKs/iPhoneOS${SDKVER}.sdk")
 set(FRAMEWORKS CoreGraphics CoreFoundation QuartzCore UIKit OpenGLES)
 
 foreach(_framework ${FRAMEWORKS})
@@ -65,11 +64,11 @@ endforeach()
 
 # link and build functions
 function(link_libraries)
-    #check_and_link_libraries(${EXECUTABLE_NAME} curl)
-    target_link_libraries(${EXECUTABLE_NAME} core)
+    # check_and_link_libraries(${EXECUTABLE_NAME} curl)
+    # target_link_libraries(${EXECUTABLE_NAME} core)
     
     foreach(_framework ${FRAMEWORKS})
-        add_framework(${_framework} ${EXECUTABLE_NAME} ${LIBPATH})
+        add_framework(${_framework} ${EXECUTABLE_NAME} ${CMAKE_SYSTEM_FRAMEWORK_PATH})
     endforeach()
 endfunction()
 
@@ -78,4 +77,5 @@ function(build)
 
     set_xcode_property(json GCC_GENERATE_DEBUGGING_SYMBOLS YES)
     set_xcode_property(${EXECUTABLE_NAME} GCC_GENERATE_DEBUGGING_SYMBOLS YES)
+    set_xcode_property(${EXECUTABLE_NAME} SUPPORTED_PLATFORMS "iphonesimulator iphoneos")
 endfunction()

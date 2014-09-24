@@ -111,6 +111,8 @@ else (${IOS_PLATFORM} STREQUAL "OS")
 	message (FATAL_ERROR "Unsupported IOS_PLATFORM value selected. Please choose OS or SIMULATOR")
 endif (${IOS_PLATFORM} STREQUAL "OS")
 
+message(STATUS "Chosen iOS platform : ${IOS_PLATFORM}")
+
 # Setup iOS developer location unless specified manually with CMAKE_IOS_DEVELOPER_ROOT
 # Note Xcode 4.3 changed the installation location, choose the most recent one available
 set (XCODE_POST_43_ROOT "/Applications/Xcode.app/Contents/Developer/Platforms/${IOS_PLATFORM_LOCATION}/Developer")
@@ -137,6 +139,8 @@ if (NOT DEFINED CMAKE_IOS_SDK_ROOT)
 	message (STATUS "Toolchain using default iOS SDK: ${CMAKE_IOS_SDK_ROOT}")
 endif (NOT DEFINED CMAKE_IOS_SDK_ROOT)
 set (CMAKE_IOS_SDK_ROOT ${CMAKE_IOS_SDK_ROOT} CACHE PATH "Location of the selected iOS SDK")
+
+message(STATUS "Cmake ios SDK Root : ${CMAKE_IOS_SDK_ROOT}")
 
 # Set the sysroot default to the most recent SDK
 set (CMAKE_OSX_SYSROOT ${CMAKE_IOS_SDK_ROOT} CACHE PATH "Sysroot used for iOS support")
@@ -168,7 +172,6 @@ set (CMAKE_SYSTEM_FRAMEWORK_PATH
 set (CMAKE_FIND_ROOT_PATH_MODE_PROGRAM ONLY)
 set (CMAKE_FIND_ROOT_PATH_MODE_LIBRARY ONLY)
 set (CMAKE_FIND_ROOT_PATH_MODE_INCLUDE ONLY)
-
 
 # This little macro lets you set any XCode specific property
 macro (set_xcode_property TARGET XCODE_PROPERTY XCODE_VALUE)

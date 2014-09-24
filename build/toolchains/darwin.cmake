@@ -2,7 +2,7 @@
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wall -stdlib=libc++ -std=c++0x")
 set(EXECUTABLE_NAME "tangram.out")
 
-add_definitions(-DPLATFORM_OSX=1)
+add_definitions(-DPLATFORM_OSX)
 
 # load glfw3 library
 add_subdirectory(${PROJECT_SOURCE_DIR}/osx/lib/glfw3)
