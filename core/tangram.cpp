@@ -86,7 +86,6 @@ void renderFrame()
 	glClearColor(0.8f * sintsqr, 0.32f * sintsqr, 0.3f * sintsqr, 1.0f);
 	glClear( GL_DEPTH_BUFFER_BIT | GL_COLOR_BUFFER_BIT);
 	
-	shader->use();
 	shader->setUniformf("u_time", t);
 
 	mesh->draw(shader);

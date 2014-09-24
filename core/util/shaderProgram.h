@@ -52,6 +52,9 @@ public:
      */
     void use() const;
 
+    /*
+     * setUniform - ensures the program is bound and then sets the named uniform to the given value(s)
+     */
     void setUniformi(const std::string& _name, int _value);
     void setUniformi(const std::string& _name, int _value0, int _value1);
     void setUniformi(const std::string& _name, int _value0, int _value1, int _value2);
