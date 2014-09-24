@@ -78,7 +78,7 @@ GLint ShaderProgram::getUniformLocation(const std::string& _uniformName) {
 
 }
 
-void ShaderProgram::use() {
+void ShaderProgram::use() const {
 
     if (m_glProgram != 0 && m_glProgram != s_activeGlProgram) {
         glUseProgram(m_glProgram);
@@ -132,9 +132,9 @@ bool ShaderProgram::buildFromSourceStrings(const std::string& _fragSrc, const st
 
 }
 
-GLint ShaderProgram::makeLinkedShaderProgram(GLint _fragShader, GLint _vertShader) {
+GLuint ShaderProgram::makeLinkedShaderProgram(GLint _fragShader, GLint _vertShader) {
 
-    GLint program = glCreateProgram();
+    GLuint program = glCreateProgram();
     glAttachShader(program, _fragShader);
     glAttachShader(program, _vertShader);
     glLinkProgram(program);
@@ -157,7 +157,7 @@ GLint ShaderProgram::makeLinkedShaderProgram(GLint _fragShader, GLint _vertShade
     return program;
 }
 
-GLint ShaderProgram::makeCompiledShader(const std::string& _src, GLenum _type) {
+GLuint ShaderProgram::makeCompiledShader(const std::string& _src, GLenum _type) {
 
     GLuint shader = glCreateShader(_type);
     const GLchar* source = (const GLchar*) _src.c_str();

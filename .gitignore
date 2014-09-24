@@ -42,7 +42,6 @@ gen/
 
 # Gradle files
 .gradle/
-# build/
 
 # Local configuration file (sdk path, etc)
 local.properties
@@ -55,7 +54,6 @@ proguard/
 
 
 ### Xcode ###
-ios/**/build/
 *.pbxuser
 !default.pbxuser
 *.mode1v3
@@ -96,6 +94,10 @@ DerivedData
 *.exe
 *.out
 *.app
+
+#Keep specific precompiled static libraries
+!**/precompiled/**/*.a
+!**/precompiled/**/*.dylib
 
 # CMake files
 CMakeCache.txt

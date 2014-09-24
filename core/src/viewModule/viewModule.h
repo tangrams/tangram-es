@@ -6,6 +6,8 @@
 #include <vector>
 #include <math.h>
 
+#include "../util/projection.h"
+
 /* ViewModule
  * 1. Stores a representation of the current view into the map world
  * 2. Determines which tiles are visible in the current view
@@ -16,42 +18,46 @@
  * using a top-down axis-aligned orthographic view
 */
 
-#define EARTH_RADIUS_M 6378137.0
-#define PI 3.1415926535
-
 class ViewModule {
 
 public:
 
-	ViewModule(float _width, float _height);
-	ViewModule();
+    ViewModule(float _width = 800, float _height = 600, ProjectionType _projType = ProjectionType::mercator);
+    
+    //Sets a new map projection with default tileSize
+    void setMapProjection(ProjectionType _projType); 
+    //get the current mapProjection
+    MapProjection* getMapProjection();
 
-	void setAspect(float _width, float _height);
-	void setPosition(float _x, float _y);
-	void setZoom(int _z);
-	void translate(float _dx, float _dy);
-	void zoom(int _dz);
+    void setAspect(float _width, float _height);
+    void setPosition(float _x, float _y);
+    void setZoom(int _z);
+    void translate(float _dx, float _dy);
+    void zoom(int _dz);
 
-	int getZoom() { return m_zoom; };
-	glm::vec3 getPosition() { return m_pos; };
-	glm::mat4 getViewMatrix() { return m_view; };
-	glm::mat4 getProjectionMatrix() { return m_proj; };
+    int getZoom() { return m_zoom; };
+    glm::vec3 getPosition() { return m_pos; };
+    glm::mat4 getViewMatrix() { return m_view; };
+    glm::mat4 getProjectionMatrix() { return m_proj; };
 
-	glm::mat2 getBoundsRect(); // Returns a rectangle of the current view range as [[x_min, y_min][x_max, y_max]]
-	const std::vector<glm::ivec3>& getVisibleTiles();
+    glm::mat2 getBoundsRect(); // Returns a rectangle of the current view range as [[x_min, y_min][x_max, y_max]]
+    const std::vector<glm::ivec3>& getVisibleTiles();
+
+    virtual ~ViewModule() {
+        m_visibleTiles.clear();
+    }
 
 private:
 
-	bool m_dirty;
-	std::vector<glm::ivec3> m_visibleTiles;
-	glm::vec3 m_pos;
-	glm::mat4 m_view;
-	glm::mat4 m_proj;
-	int m_zoom;
-	float m_width;
-	float m_height;
-	float m_aspect;
-
-	void init(float _width, float _height);
-
+    std::unique_ptr<MapProjection> m_projection;
+    bool m_dirty;
+    std::vector<glm::ivec3> m_visibleTiles;
+    glm::vec3 m_pos;
+    glm::mat4 m_view;
+    glm::mat4 m_proj;
+    int m_zoom;
+    float m_width;
+    float m_height;
+    float m_aspect;
 };
+
