@@ -3,7 +3,7 @@
 #include "projection.h"
 
 
-MercProjection::MercProjection(ProjectionType _type, int _tileSize) : MapProjection(_type), m_TileSize(_tileSize) {
+MercProjection::MercProjection(int _tileSize) : MapProjection(ProjectionType::mercator), m_TileSize(_tileSize) {
     float invTileSize = 1.0/m_TileSize;
     m_Res = 2.0 * HALF_CIRCUMFERENCE * invTileSize;
 }

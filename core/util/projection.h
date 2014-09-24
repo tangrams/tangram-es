@@ -109,7 +109,7 @@ public:
     * _type: type of map projection, example ProjectionType::Mercator
     * _tileSize: size of the map tile, default is 256
     */
-    MercProjection(ProjectionType _type, int  _tileSize=256);
+    MercProjection(int  _tileSize=256);
 
     virtual glm::vec2 LatLonToMeters(glm::vec2 _latLon) override;
     virtual glm::vec2 MetersToLatLon(glm::vec2 _meters) override;
