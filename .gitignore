@@ -101,3 +101,7 @@ DerivedData
 !**/precompiled/**/*.a
 !**/precompiled/**/*.dylib
 
+#Ignore vim temp files
+*~
+*.swp
+*.swo
