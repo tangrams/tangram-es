@@ -24,12 +24,14 @@ const std::string vertShaderSrc =
     "#ifdef GL_ES\n"
     "precision mediump float;\n"
     "#endif\n"
+    "uniform float u_time;\n"
     "attribute vec4 a_position;\n"
     "attribute vec4 a_color;\n"
     "varying vec4 v_color;\n"
 	"void main() {\n"
 	"  v_color = a_color;\n"
 	"  gl_Position = a_position;\n"
+	"  gl_Position.x *= sin(u_time);"
 	"}\n";
 
 const std::string fragShaderSrc =
@@ -84,11 +86,14 @@ void renderFrame()
 	glClearColor(0.8f * sintsqr, 0.32f * sintsqr, 0.3f * sintsqr, 1.0f);
 	glClear( GL_DEPTH_BUFFER_BIT | GL_COLOR_BUFFER_BIT);
 	
+	shader->use();
+	shader->setUniformf("u_time", t);
+
 	mesh->draw(shader);
 
 	GLenum glError = glGetError();
 	if (glError) {
-		logMsg("%s\n", "glError!!");
+		logMsg("GL Error %d!!!\n", glError);
 	}
 
 }
