@@ -95,6 +95,11 @@ bool ShaderProgram::buildFromSourceStrings(const std::string& _fragSrc, const st
 
     // New shaders linked successfully, so replace old shaders and program
 
+    if (m_glProgram == s_activeGlProgram) {
+        glUseProgram(0);
+        s_activeGlProgram = 0;
+    }
+
     glDeleteShader(m_glFragmentShader);
     glDeleteShader(m_glVertexShader);
     glDeleteProgram(m_glProgram);
