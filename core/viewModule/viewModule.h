@@ -6,7 +6,7 @@
 #include <vector>
 #include <math.h>
 
-#include "../util/projection.h"
+#include "util/projection.h"
 
 /* ViewModule
  * 1. Stores a representation of the current view into the map world
