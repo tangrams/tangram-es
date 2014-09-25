@@ -57,7 +57,8 @@ OSX_INCLUDES= \
 	-Icore \
 	-Icore/include 
 OSX_EXTERNAL_LIB= \
-	-lcurl
+	-lcurl \
+	-lglfw3
 OSX_SRC_FILES= \
 	osx/src/main.cpp \
 	osx/src/platform_osx.cpp
@@ -78,19 +79,19 @@ ios:
 
 osx/bin/TangramOSX: $(OSX_SRC_FILES)
 	mkdir -p osx/bin
-	clang++ -o osx/bin/TangramOSX $(CORE_SRC_FILES) $(OSX_SRC_FILES) $(LIB_DEPENDENCY) $(OSX_INCLUDES) $(OSX_EXTERNAL_LIB) $(OSX_FRAMEWORKS) -DPLATFORM_OSX -lglfw3 -std=c++11
+	clang++ -o osx/bin/TangramOSX $(CORE_SRC_FILES) $(OSX_SRC_FILES) $(LIB_DEPENDENCY) $(OSX_INCLUDES) $(OSX_EXTERNAL_LIB) $(OSX_FRAMEWORKS) -DPLATFORM_OSX -std=c++11
 
 osx: osx/bin/TangramOSX
 
 osx/debug/TangramOSX: $(OSX_SRC_FILES)
 	mkdir -p osx/debug
-	clang++ -o osx/debug/TangramOSX $(CORE_SRC_FILES) $(OSX_SRC_FILES) $(LIB_DEPENDENCY) $(OSX_INCLUDES) $(OSX_EXTERNAL_LIB) $(OSX_FRAMEWORKS) -DPLATFORM_OSX -lglfw3 -std=c++11 -g -DDEBUG
+	clang++ -o osx/debug/TangramOSX $(CORE_SRC_FILES) $(OSX_SRC_FILES) $(LIB_DEPENDENCY) $(OSX_INCLUDES) $(OSX_EXTERNAL_LIB) $(OSX_FRAMEWORKS) -DPLATFORM_OSX -std=c++11 -g -DDEBUG
 
 osx-debug: osx/debug/TangramOSX
 
 osx/tests/TangramOSX: $(OSX_SRC_FILES) $(CORE_TEST_FILES) $(OSX_TEST_FILES)
 	mkdir -p osx/tests
-	clang++ -o osx/tests/TangramOSX $(CORE_SRC_FILES) $(CORE_TEST_FILES) $(OSX_TEST_FILES) $(LIB_DEPENDENCY) $(OSX_INCLUDES) $(OSX_EXTERNAL_LIB) $(OSX_FRAMEWORKS) -DPLATFORM_OSX -lglfw3 -std=c++11 -g -DDEBUG
+	clang++ -o osx/tests/TangramOSX $(CORE_SRC_FILES) $(CORE_TEST_FILES) $(OSX_TEST_FILES) $(LIB_DEPENDENCY) $(OSX_INCLUDES) $(OSX_EXTERNAL_LIB) $(OSX_FRAMEWORKS) -DPLATFORM_OSX -std=c++11 -g -DDEBUG
 
 osx-test: osx/tests/TangramOSX
 
