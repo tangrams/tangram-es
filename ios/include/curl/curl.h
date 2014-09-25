@@ -7,7 +7,7 @@
  *                            | (__| |_| |  _ <| |___
  *                             \___|\___/|_| \_\_____|
  *
- * Copyright (C) 1998 - 2014, Daniel Stenberg, <daniel@haxx.se>, et al.
+ * Copyright (C) 1998 - 2013, Daniel Stenberg, <daniel@haxx.se>, et al.
  *
  * This software is licensed as described in the file COPYING, which
  * you should have received as part of this distribution. The terms
@@ -579,16 +579,6 @@ typedef enum {
    make programs break */
 #define CURLE_ALREADY_COMPLETE 99999
 
-/* Provide defines for really old option names */
-#define CURLOPT_FILE CURLOPT_WRITEDATA /* name changed in 7.9.7 */
-#define CURLOPT_INFILE CURLOPT_READDATA /* name changed in 7.9.7 */
-#define CURLOPT_WRITEHEADER CURLOPT_HEADERDATA
-
-/* Since long deprecated options with no code in the lib that does anything
-   with them. */
-#define CURLOPT_WRITEINFO CURLOPT_OBSOLETE40
-#define CURLOPT_CLOSEPOLICY CURLOPT_OBSOLETE72
-
 #endif /*!CURL_NO_OLDIES*/
 
 /* This prototype applies to all conversion callbacks */
@@ -764,10 +754,6 @@ typedef enum {
   CURLFTPMETHOD_LAST       /* not an option, never use */
 } curl_ftpmethod;
 
-/* bitmask defines for CURLOPT_HEADEROPT */
-#define CURLHEADER_UNIFIED  0
-#define CURLHEADER_SEPARATE (1<<0)
-
 /* CURLPROTO_ defines are for the CURLOPT_*PROTOCOLS options */
 #define CURLPROTO_HTTP   (1<<0)
 #define CURLPROTO_HTTPS  (1<<1)
@@ -830,7 +816,7 @@ typedef enum {
 
 typedef enum {
   /* This is the FILE * or void * the regular output should be written to. */
-  CINIT(WRITEDATA, OBJECTPOINT, 1),
+  CINIT(FILE, OBJECTPOINT, 1),
 
   /* The full URL to get/put */
   CINIT(URL,  OBJECTPOINT, 2),
@@ -853,7 +839,7 @@ typedef enum {
   /* not used */
 
   /* Specified file stream to upload from (use as input): */
-  CINIT(READDATA, OBJECTPOINT, 9),
+  CINIT(INFILE, OBJECTPOINT, 9),
 
   /* Buffer to receive error messages in, must be at least CURL_ERROR_SIZE
    * bytes big. If this is not used, error messages go to stderr instead: */
@@ -917,8 +903,7 @@ typedef enum {
   /* Set cookie in request: */
   CINIT(COOKIE, OBJECTPOINT, 22),
 
-  /* This points to a linked list of headers, struct curl_slist kind. This
-     list is also used for RTSP (in spite of its name) */
+  /* This points to a linked list of headers, struct curl_slist kind */
   CINIT(HTTPHEADER, OBJECTPOINT, 23),
 
   /* This points to a linked list of post entries, struct curl_httppost */
@@ -938,7 +923,7 @@ typedef enum {
 
   /* send FILE * or void * to store headers to, if you use a callback it
      is simply passed to the callback unmodified */
-  CINIT(HEADERDATA, OBJECTPOINT, 29),
+  CINIT(WRITEHEADER, OBJECTPOINT, 29),
 
   /* point to a file to read the initial cookies from, also enables
      "cookie awareness" */
@@ -971,7 +956,7 @@ typedef enum {
   /* send linked-list of post-transfer QUOTE commands */
   CINIT(POSTQUOTE, OBJECTPOINT, 39),
 
-  CINIT(OBSOLETE40, OBJECTPOINT, 40), /* OBSOLETE, do not use! */
+  CINIT(WRITEINFO, OBJECTPOINT, 40), /* DEPRECATED, do not use! */
 
   CINIT(VERBOSE, LONG, 41),      /* talk a lot */
   CINIT(HEADER, LONG, 42),       /* throw the header out too */
@@ -1050,7 +1035,7 @@ typedef enum {
   /* Max amount of cached alive connections */
   CINIT(MAXCONNECTS, LONG, 71),
 
-  CINIT(OBSOLETE72, LONG, 72), /* OBSOLETE, do not use! */
+  CINIT(CLOSEPOLICY, LONG, 72), /* DEPRECATED, do not use! */
 
   /* 73 = OBSOLETE */
 
@@ -1596,13 +1581,6 @@ typedef enum {
    * Expect: 100-continue header before sending the data anyway. */
   CINIT(EXPECT_100_TIMEOUT_MS, LONG, 227),
 
-  /* This points to a linked list of headers used for proxy requests only,
-     struct curl_slist kind */
-  CINIT(PROXYHEADER, OBJECTPOINT, 228),
-
-  /* Pass in a bitmask of "header options" */
-  CINIT(HEADEROPT, LONG, 229),
-
   CURLOPT_LASTENTRY /* the last unused */
 } CURLoption;
 
@@ -1643,6 +1621,9 @@ typedef enum {
 #define CURL_IPRESOLVE_V6       2 /* resolve to ipv6 addresses */
 
   /* three convenient "aliases" that follow the name scheme better */
+#define CURLOPT_WRITEDATA CURLOPT_FILE
+#define CURLOPT_READDATA  CURLOPT_INFILE
+#define CURLOPT_HEADERDATA CURLOPT_WRITEHEADER
 #define CURLOPT_RTSPHEADER CURLOPT_HTTPHEADER
 
   /* These enums are for use with the CURLOPT_HTTP_VERSION option. */
