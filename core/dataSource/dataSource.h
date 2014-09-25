@@ -43,11 +43,7 @@ public:
     MapzenVectorTileJson() {}
     virtual bool LoadTile(std::vector<glm::ivec3> _tileCoords) override;
     virtual std::shared_ptr<Json::Value> GetData(std::string _tileID) override;
-<<<<<<< HEAD
-    virtual bool CheckDataExists(std::string _tileID);
-=======
     virtual bool CheckDataExists(std::string _tileID) override;
->>>>>>> unittest_basics
     virtual ~MapzenVectorTileJson() {}
 };
 

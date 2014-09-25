@@ -10,7 +10,4 @@ bool MapTile::setVBO(std::vector<float> _vboData) {
 glm::vec2 MapTile::GetBoundingBox() {
     return glm::vec2(0,0);
 }
-<<<<<<< HEAD
 
-=======
->>>>>>> unittest_basics
