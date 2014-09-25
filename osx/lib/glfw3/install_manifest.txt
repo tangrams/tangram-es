@@ -1,8 +1,0 @@
-/usr/include/include/GLFW/glfw3.h
-/usr/include/include/GLFW/glfw3native.h
-/usr/include/lib/cmake/glfw/glfwConfig.cmake
-/usr/include/lib/cmake/glfw/glfwConfigVersion.cmake
-/usr/include/lib/cmake/glfw/glfwTargets.cmake
-/usr/include/lib/cmake/glfw/glfwTargets-noconfig.cmake
-/usr/include/lib/pkgconfig/glfw3.pc
-/usr/include/lib/libglfw3.a
