@@ -17,5 +17,11 @@ list(REMOVE_DUPLICATES INCLUDE_DIRS)
 include_directories(${INCLUDE_DIR}/json)
 include_directories(${INCLUDE_DIRS})
 
-add_library(core ${FOUND_SOURCES})
-target_link_libraries(core json)
+add_library(core ${CORE_LIB_TYPE} ${FOUND_SOURCES})
+
+target_link_libraries(core json ${CORE_LIB_DEPS})
+
+# wip (should use the same library for ios/osx)
+if(${VARPLATFORM} EQUAL "ios")
+    target_link_libraries(core ${CMAKE_SOURCE_DIR}/ios/precompiled/libcurl.a)
+endif()

@@ -2,7 +2,7 @@ cmake_minimum_required(VERSION 2.8)
 project(tangram)
 
 # platform lookup
-set(SUPPORTED_TARGETS darwin ios)
+set(SUPPORTED_TARGETS darwin ios android)
 
 if(NOT PLATFORM_TARGET)
     string(TOLOWER "${CMAKE_SYSTEM_NAME}" varplatform)

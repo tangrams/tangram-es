@@ -34,27 +34,24 @@ if(${IOS_PLATFORM} STREQUAL "SIMULATOR")
     set(ARCH "i386")
 endif()
 
-set(FRAMEWORKS CoreGraphics CoreFoundation QuartzCore UIKit OpenGLES)
-
-#foreach(_framework ${FRAMEWORKS})
-#    set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} -framework ${_framework}")
-#endforeach()
-
+set(FRAMEWORKS CoreGraphics CoreFoundation QuartzCore UIKit OpenGLES Security CFNetwork GLKit) 
 set(MACOSX_BUNDLE_GUI_IDENTIFIER "com.mapzen.\${PRODUCT_NAME:Tangram}")
 set(APP_TYPE MACOSX_BUNDLE)
 
-# load core sources
-set(INCLUDE_CORE_DIR ${PROJECT_SOURCE_DIR}/core/include)
+# include headers for ios
+if(${IOS_PLATFORM} STREQUAL "SIMULATOR")
+    include_directories(${PROJECT_SOURCE_DIR}/ios/include/)
+endif()
 
-add_subdirectory("${INCLUDE_CORE_DIR}/json")
-add_subdirectory("${INCLUDE_CORE_DIR}/glm")
+# load core library
+include_directories(${PROJECT_SOURCE_DIR}/core/include/)
+add_subdirectory(${PROJECT_SOURCE_DIR}/core)
+include_recursive_dirs(${PROJECT_SOURCE_DIR}/core/*.h)
 
-include_directories(${INCLUDE_CORE_DIR}/json)
-include_directories(${INCLUDE_CORE_DIR})
-
-find_sources_and_include_directories(
-    ${PROJECT_SOURCE_DIR}/core/src/*.h
-    ${PROJECT_SOURCE_DIR}/core/src/*.cpp)
+find_package(ZLIB REQUIRED)
+if (ZLIB_FOUND)
+    include_directories(${ZLIB_INCLUDE_DIRS})
+endif()
 
 # ios source files
 set(IOS_EXTENSIONS_FILES *.mm *.cpp *.m)
@@ -64,17 +61,10 @@ foreach(_ext ${IOS_EXTENSIONS_FILES})
         ${PROJECT_SOURCE_DIR}/ios/src/${_ext})
 endforeach()
 
-# curl 
-if(${IOS_PLATFORM} STREQUAL "SIMULATOR")
-    # message(STATUS "Target = Simulator, including curl from osx includes: ${PROJECT_SOURCE_DIR}/osx/include/")
-    include_directories(${PROJECT_SOURCE_DIR}/ios/include/)
-endif()
-
 # link and build functions
 function(link_libraries)
-    if(${IOS_PLATFORM} STREQUAL "SIMULATOR")
-        target_link_libraries(${EXECUTABLE_NAME} ${CMAKE_SOURCE_DIR}/ios/precompiled/libcurl.a)
-    endif()
+    target_link_libraries(${EXECUTABLE_NAME} core)
+    target_link_libraries(${EXECUTABLE_NAME} ${ZLIB_LIBRARIES})
     
     foreach(_framework ${FRAMEWORKS})
         add_framework(${_framework} ${EXECUTABLE_NAME} ${CMAKE_SYSTEM_FRAMEWORK_PATH})
