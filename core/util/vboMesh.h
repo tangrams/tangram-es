@@ -18,8 +18,18 @@ public:
      * using the OpenGL primitive type _drawMode
      */
     VboMesh(std::shared_ptr<VertexLayout> _vertexlayout, GLenum _drawMode = GL_TRIANGLES);
+    VboMesh();
     
-    
+    /*
+     * Set Vertex Layout for the vboMesh object
+     */
+    void setVertexLayout(std::shared_ptr<VertexLayout> _vertexLayout);
+
+    /*
+     * Set Draw mode for the vboMesh object
+     */
+    void setDrawMode(GLenum _drawMode = GL_TRIANGLES);
+
     /*
      * Destructs this VboMesh and releases all associated OpenGL resources
      */
