@@ -2,6 +2,7 @@
 
 #include <vector>
 #include <unordered_map>
+#include <memory>
 
 #include "platform.h"
 #include "util/shaderProgram.h"

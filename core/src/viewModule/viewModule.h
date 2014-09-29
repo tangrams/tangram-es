@@ -5,6 +5,7 @@
 #include <glm/gtc/matrix_transform.hpp>
 #include <vector>
 #include <math.h>
+#include <memory>
 
 #include "../util/projection.h"
 
