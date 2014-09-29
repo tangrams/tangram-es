@@ -27,6 +27,8 @@ if(target_in_list EQUAL -1)
     return()
 endif()
 
+set(PLATFORM ${varplatform} CACHE INTERNAL "platform" FORCE)
+
 # cmake inclusions and definitions
 set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} ${CMAKE_SOURCE_DIR}/build/modules)
 set(CMAKE_TARGET_FILE ${PROJECT_SOURCE_DIR}/build/toolchains/${PLATFORM_TARGET}.cmake)

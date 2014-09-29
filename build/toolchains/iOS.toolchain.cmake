@@ -138,8 +138,6 @@ if (NOT DEFINED CMAKE_IOS_SDK_ROOT)
 endif (NOT DEFINED CMAKE_IOS_SDK_ROOT)
 set (CMAKE_IOS_SDK_ROOT ${CMAKE_IOS_SDK_ROOT} CACHE PATH "Location of the selected iOS SDK")
 
-message(STATUS "Cmake ios SDK Root : ${CMAKE_IOS_SDK_ROOT}")
-
 # Set the sysroot default to the most recent SDK
 set (CMAKE_OSX_SYSROOT ${CMAKE_IOS_SDK_ROOT} CACHE PATH "Sysroot used for iOS support")
 
