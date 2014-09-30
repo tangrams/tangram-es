@@ -101,6 +101,7 @@ DerivedData
 
 # CMake files
 CMakeCache.txt
+CMakeScripts
 CMakeFiles
 Makefile
 cmake_install.cmake
