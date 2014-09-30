@@ -38,6 +38,7 @@ set(FRAMEWORKS CoreGraphics CoreFoundation QuartzCore UIKit OpenGLES Security CF
 set(MACOSX_BUNDLE_GUI_IDENTIFIER "com.mapzen.\${PRODUCT_NAME:Tangram}")
 set(APP_TYPE MACOSX_BUNDLE)
 set(CORE_LIB_DEPS ${CMAKE_SOURCE_DIR}/ios/precompiled/libcurl.a)
+file(GLOB_RECURSE RESOURCES ${PROJECT_SOURCE_DIR}/ios/resources/*.storyboard)
 
 # include headers for ios
 if(${IOS_PLATFORM} STREQUAL "SIMULATOR")
@@ -70,10 +71,21 @@ function(link_libraries)
     foreach(_framework ${FRAMEWORKS})
         add_framework(${_framework} ${EXECUTABLE_NAME} ${CMAKE_SYSTEM_FRAMEWORK_PATH})
     endforeach()
+
+    # copying into bundle
+    #add_custom_command(TARGET ${EXECUTABLE_NAME}
+    #    POST_BUILD
+    #    COMMAND mkdr -p "$(BUILD_DIR)/$(CONFIGURATION)$(EFFECTIVE_PLATFORM_NAME)"/${EXECUTABLE_NAME}.app/Resources
+    #    COMMAND cp ${RESOURCES}
+    #    COMMENT "copying files into bundle" VERBATIM)
 endfunction()
 
 function(build)
-    add_executable(${EXECUTABLE_NAME} ${APP_TYPE} ${HEADERS} ${SOURCES})
+    add_executable(${EXECUTABLE_NAME} ${APP_TYPE} ${HEADERS} ${SOURCES} ${RESOURCES})
+
+    set_target_properties(${EXECUTABLE_NAME} PROPERTIES
+        MACOSX_BUNDLE_INFO_PLIST ${PROJECT_SOURCE_DIR}/ios/resources/tangram-Info.plist
+        RESOURCE "${RESOURCES}")
 
     set_xcode_property(json GCC_GENERATE_DEBUGGING_SYMBOLS YES)
     set_xcode_property(${EXECUTABLE_NAME} GCC_GENERATE_DEBUGGING_SYMBOLS YES)
