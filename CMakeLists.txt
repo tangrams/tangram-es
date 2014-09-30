@@ -30,7 +30,7 @@ endif()
 set(PLATFORM ${varplatform} CACHE INTERNAL "platform" FORCE)
 
 # cmake inclusions and definitions
-set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} ${CMAKE_SOURCE_DIR}/build/modules)
+# set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} ${CMAKE_SOURCE_DIR}/build/modules)
 set(CMAKE_TARGET_FILE ${PROJECT_SOURCE_DIR}/build/toolchains/${PLATFORM_TARGET}.cmake)
 
 include(${PROJECT_SOURCE_DIR}/build/utils/utils.cmake)
