@@ -1,67 +1,60 @@
-/*
-...
-*/
 #pragma once
 
 #include <vector>
-#include <memory>
+#include <map>
 
+#include "glm/fwd.hpp"
 #include "glm/glm.hpp"
+#include "dataSource/dataSource.h"
+#include "mapTile/mapTile.h"
+#include "viewModule/viewModule.h"
 
-//Forward Declaration
-class MapTile;
-class DataSource;
-class ViewModule;
-
-/* -- Todo: Singleton Class Implementation -- */
+/*
+ * TileManager - A singleton class that functions as an accountant of MapTiles
+ */
 class TileManager {
-    /*  --UpdateTiles--
-    updateTiles contacts the DataSource for new tile data.
-    Naive Implementation: Current implementation, sets the tileIDs explicitly
-    Smart Todo: viewModule updates the visibleTileIDs which is then passed to the dataSource.
-    Smart Todo 2: Be smart of getting new tiles :D.
-    */
-    void UpdateTiles();
-    /*  --CalculateVisibleTileIDs--
-    Fills the m_VisibleTileIDs, which will be calculated based on
-    the inputs from the view module.
-    */
-    void CalculateVisibleTileIDs();
-    TileManager();
-
-    std::vector<MapTile*> m_VisibleTiles;
-    std::vector<std::unique_ptr<DataSource>> m_DataSources;
-    ViewModule *m_viewModule;
-    std::vector<glm::ivec3> m_VisibleTileIDs;
 
 public:
+    
     //C++11 thread-safe implementation for a singleton
     static TileManager&& GetInstance() {
         static TileManager *instance = new TileManager();
         return std::move(*instance);
     }
 
-    bool CheckNewTileStatus(); //contacts the view Module to see if tiles need updating
-    void AddDataSource(std::unique_ptr<DataSource>);
-    std::vector<MapTile*> GetVisibleTiles();
-    std::vector<std::unique_ptr<DataSource>>&& GetDataSources();
-
     // move constructor required to:
     // 1. disable copy constructor
     // 2. disable assignment operator
     // 3. because tileManager is singleton
     // 4. required for some smarts done with std::move
-    TileManager(TileManager&& other) :
-                    m_VisibleTiles(std::move(other.m_VisibleTiles)),
-                    m_DataSources(std::move(other.m_DataSources)),
-                    m_viewModule(std::move(other.m_viewModule)),
-                    m_VisibleTileIDs(std::move(other.m_VisibleTileIDs)) {
+    TileManager(TileManager&& _other);
 
-    }
+    virtual ~TileManager();
 
-    ~TileManager() {
-        m_DataSources.clear();
-        m_VisibleTileIDs.clear();
-        m_VisibleTiles.clear();
-    }
+    bool updateTileSet(); //contacts the view Module to see if tiles need updating
+
+    std::vector<MapTile*> getVisibleTiles();
+
+    void setView(std::shared_ptr<ViewModule> _view);
+    
+    void addDataSource(DataSource* _source);
+
+    std::vector<std::unique_ptr<DataSource>>&& GetDataSources();
+
+private:
+
+    TileManager();
+
+    std::shared_ptr<ViewModule> m_viewModule;
+
+    // TODO: std::map is probably overkill, we just need a set of MapTiles ordered by tileIDs
+    std::map<glm::ivec3, std::unique_ptr<MapTile>, MapTile::tileIDComparator> m_tileSet; 
+
+    std::vector<std::unique_ptr<DataSource>> m_dataSources;
+
+    std::vector<glm::ivec3> m_tilesToAdd;
+
+    void addTile(const glm::ivec3& _tileID);
+    void removeTile(const decltype(m_tileSet)::iterator& _tileIter);
+
 };

@@ -6,7 +6,7 @@
 #define INV_180 0.005555555
 #define INV_360 0.002777777
 
-
+#include "glm/fwd.hpp"
 #include "glm/glm.hpp"
 
 const glm::vec2 ORIGIN(HALF_CIRCUMFERENCE, HALF_CIRCUMFERENCE);

@@ -1,26 +1,48 @@
 #include "sceneDirector.h"
 
-bool SceneDirector::renderFrame(float dt) {
+SceneDirector::SceneDirector() {
 
-    //-- Set up openGL for new frame --//
-    //glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+    m_tileManager.reset(TileManager::GetInstance());
+    m_sceneDefinition.reset(new SceneDefinition());
 
-    //-- Set up current 'style' --//
-    //glUseProgram(polygonShaderProgram);
-    //set uniforms..
-    //glVertexAttribPointer(posAttrib, 2, GL_FLOAT, GL_FALSE, 0, 0);
-    //glEnableVertexAttribArray(posAttrib);
+    m_viewModule = std::make_shared<ViewModule>();
 
-    //-- Loop over visible tiles --//
-    //for (auto mapTile : m_tileManager.GetVisibleTiles()) {
+    m_tileManager->setView(m_viewModule);
+    m_tileManager->addDataSource(new MapzenVectorTileJson());
 
-        //-- Bind tile buffers --//
-        //glBindBuffer(GL_ARRAY_BUFFER, mapTile->vBuff);
-        //glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, mapTile->iBuff);
+}
 
-        //-- Draw! --//
-        //glDrawElements(GL_TRIANGLES, mapTile->nIndices / sizeof(indexType), GL_UNSIGNED_SHORT, nullptr);
+void SceneDirector::loadStyles() {
 
-    //}
+    // TODO: Instatiate styles from file
+
+}
+
+void SceneDirector::update(float _dt) {
+
+    m_tileManager->updateTileSet(m_sceneDefinition->getStyles());
+
+}
+
+void SceneDirector::renderFrame() {
+
+    // Set up openGL for new frame
+    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+
+    glm::mat4 viewProj = m_viewModule->getViewProjectionMatrix();
+
+    // Loop over all styles
+    for (auto style : m_sceneDefinition->getStyles()) {
+
+        style->setup();
+
+        // Loop over visible tiles
+        for (auto mapTile : m_tileManager->GetVisibleTiles()) {
+
+            // Draw!
+            mapTile->draw(viewProj, style);
+
+        }
+    }
 
 }

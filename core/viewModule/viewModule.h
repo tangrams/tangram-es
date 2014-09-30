@@ -4,9 +4,10 @@
 #include <glm/glm.hpp>
 #include <glm/gtc/matrix_transform.hpp>
 #include <vector>
-#include <math.h>
+#include <set>
+#include <cmath>
 
-#include "../util/projection.h"
+#include "util/projection.h"
 
 /* ViewModule
  * 1. Stores a representation of the current view into the map world
@@ -25,7 +26,7 @@ public:
     ViewModule(float _width = 800, float _height = 600, ProjectionType _projType = ProjectionType::mercator);
     
     //Sets a new map projection with default tileSize
-    void setMapProjection(ProjectionType _projType); 
+    void setMapProjection(ProjectionType _projType);
     //get the current mapProjection
     MapProjection* getMapProjection();
 
@@ -35,13 +36,15 @@ public:
     void translate(float _dx, float _dy);
     void zoom(int _dz);
 
-    int getZoom() { return m_zoom; };
-    glm::vec3 getPosition() { return m_pos; };
-    glm::mat4 getViewMatrix() { return m_view; };
-    glm::mat4 getProjectionMatrix() { return m_proj; };
+    int getZoom() const { return m_zoom; };
+    const glm::vec3& getPosition() const { return m_pos; };
+    const glm::mat4& getViewMatrix() const { return m_view; };
+    const glm::mat4& getProjectionMatrix() const { return m_proj; };
+    const glm::mat4& getViewProjectionMatrix() const;
 
-    glm::mat2 getBoundsRect(); // Returns a rectangle of the current view range as [[x_min, y_min][x_max, y_max]]
-    const std::vector<glm::ivec3>& getVisibleTiles();
+    glm::mat2 getBoundsRect() const; // Returns a rectangle of the current view range as [[x_min, y_min], [x_max, y_max]]
+    const std::set<glm::ivec3>& getVisibleTiles();
+    bool viewChanged() const { return m_dirty; };
 
     virtual ~ViewModule() {
         m_visibleTiles.clear();
@@ -51,7 +54,7 @@ private:
 
     std::unique_ptr<MapProjection> m_projection;
     bool m_dirty;
-    std::vector<glm::ivec3> m_visibleTiles;
+    std::set<glm::ivec3> m_visibleTiles;
     glm::vec3 m_pos;
     glm::mat4 m_view;
     glm::mat4 m_proj;

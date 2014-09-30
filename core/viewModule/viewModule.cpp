@@ -68,6 +68,10 @@ void ViewModule::setZoom(int _z) {
 
 }
 
+glm::mat4 ViewModule::getViewProjectionMatrix() {
+    return m_view * m_proj;
+}
+
 glm::mat2 ViewModule::getBoundsRect() {
 
     float hw = m_width * 0.5;
@@ -76,7 +80,7 @@ glm::mat2 ViewModule::getBoundsRect() {
 
 }
 
-const std::vector<glm::ivec3>& ViewModule::getVisibleTiles() {
+const std::set<glm::ivec3>& ViewModule::getVisibleTiles() {
 
     if (!m_dirty) {
         return m_visibleTiles;
@@ -102,7 +106,7 @@ const std::vector<glm::ivec3>& ViewModule::getVisibleTiles() {
 
         while (y < vpTopEdge) {
 
-            m_visibleTiles.push_back(glm::ivec3(tileX, tileY, m_zoom));
+            m_visibleTiles.insert(glm::ivec3(tileX, tileY, m_zoom));
             tileY++;
             y += tileSize;
 

@@ -1,27 +1,27 @@
 #pragma once
 
 #include <vector>
+#include "tileManager/tileManager.h"
+#include "sceneDefinition/sceneDefinition.h"
+#include "viewModule/viewModule.h"
 
-class TileManager;
-class SceneDefinition;
-class ViewModule;
-
-/* -- Singleton Class Implementation -- */
 class SceneDirector {
-    TileManager *m_tileManager;
-    SceneDefinition *m_sceneDefinition;
-    ViewModule *m_viewModule;
-    SceneDirector();
 
 public:
-    /*
-        Note: UpdateVBO iterates through all the visible tiles,
-        and "moves" (unique pointer concepts) the vbo data created
-        in the sceneDefinition into the appropriate tile style vbo..
 
-        This will pass the geoJson data from the data source to the
-        sceneDefinition instance, which will construct the vbo data.
-    */
-    bool updateVBOs();
-    bool renderFrame(float dt);
+    SceneDirector();
+
+    void loadStyles();
+
+    void update(float _dt);
+
+    void renderFrame();
+
+private:
+
+    std::unique_ptr<TileManager> m_tileManager;
+    std::unique_ptr<SceneDefinition> m_sceneDefinition;
+    
+    std::shared_ptr<ViewModule> m_viewModule;
+
 };
