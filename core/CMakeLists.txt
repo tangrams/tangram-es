@@ -19,6 +19,19 @@ include_directories(${INCLUDE_DIRS})
 
 set(FOUND_SOURCES ${FOUND_SOURCES} ${ADDITIONNAL_TARGET_DEPENDENT_SRC_FILES})
 
-add_library(core ${CORE_LIB_TYPE} ${FOUND_SOURCES})
+if(NOT DEFINED CORE_LIB_NAME)
+    set(CORE_LIB_NAME core)
+endif()
 
-target_link_libraries(core json ${CORE_LIB_DEPS})
+add_library(${CORE_LIB_NAME} ${CORE_LIB_TYPE} ${FOUND_SOURCES})
+
+target_link_libraries(${CORE_LIB_NAME} json ${CORE_LIB_DEPS})
+
+add_custom_command(TARGET ${CORE_LIB_NAME}
+        POST_BUILD
+        COMMAND ${CORE_POSTBUILD_COMMANDS}
+        COMMENT ${CORE_COMMAND_MSG} VERBATIM)
+
+if(INSTALL_CORE_LIBRARY STREQUAL "ON")
+    install(TARGETS ${CORE_LIB_NAME} DESTINATION ${CORE_INSTALLATION_PATH})
+endif()
