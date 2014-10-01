@@ -28,50 +28,30 @@ ShaderProgram::~ShaderProgram() {
 
 }
 
-GLint ShaderProgram::getAttribLocation(const std::string& _attribName) {
+const GLint ShaderProgram::getAttribLocation(const std::string& _attribName) {
 
-    // Get uniform location at this key, or create one valued at zero if absent
-    GLint location = m_attribMap[_attribName];
+    // Get uniform location at this key, or create one valued at -2 if absent
+    GLint& location = m_attribMap[_attribName].loc;
 
-    // Zero means this is a new entry
-    if (location == 0) {
-
+    // -2 means this is a new entry
+    if (location == -2) {
         // Get the actual location from OpenGL
         location = glGetAttribLocation(m_glProgram, _attribName.c_str());
-
-        // -1 Means there was an error in OpenGL retrieving the location
-        if (location == -1) {
-            // Print information about the error and leave the value at zero
-            Error::hadGlError("ShaderProgram::getAttribLocation");
-        } else {
-            // Found the location, so save it as the value for this key
-            m_attribMap[_attribName] = location;
-        }
     }
 
     return location;
 
 }
 
-GLint ShaderProgram::getUniformLocation(const std::string& _uniformName) {
+const GLint ShaderProgram::getUniformLocation(const std::string& _uniformName) {
 
-    // Get uniform location at this key, or create one valued at zero if absent
-    GLint location = m_uniformMap[_uniformName];
+    // Get uniform location at this key, or create one valued at -2 if absent
+    GLint& location = m_uniformMap[_uniformName].loc;
 
     // Zero means this is a new entry
-    if (location == 0) {
-
+    if (location == -2) {
         // Get the actual location from OpenGL
         location = glGetUniformLocation(m_glProgram, _uniformName.c_str());
-
-        // -1 Means there was an error in OpenGL retrieving the location
-        if (location == -1) {
-            // Print information about the error and leave the value at zero
-            Error::hadGlError("ShaderProgram::getUniformLocation");
-        } else {
-            // Found the location, so save it as the value for this key
-            m_uniformMap[_uniformName] = location;
-        }
     }
 
     return location;
@@ -115,6 +95,11 @@ bool ShaderProgram::buildFromSourceStrings(const std::string& _fragSrc, const st
 
     // New shaders linked successfully, so replace old shaders and program
 
+    if (m_glProgram == s_activeGlProgram) {
+        glUseProgram(0);
+        s_activeGlProgram = 0;
+    }
+
     glDeleteShader(m_glFragmentShader);
     glDeleteShader(m_glVertexShader);
     glDeleteProgram(m_glProgram);
@@ -127,6 +112,11 @@ bool ShaderProgram::buildFromSourceStrings(const std::string& _fragSrc, const st
 
     m_fragmentShaderSource = std::string(_fragSrc);
     m_vertexShaderSource = std::string(_vertSrc);
+
+    // Clear any cached shader locations
+
+    m_attribMap.clear();
+    m_uniformMap.clear();
 
     return true;
 
@@ -181,4 +171,70 @@ GLuint ShaderProgram::makeCompiledShader(const std::string& _src, GLenum _type) 
 
     return shader;
 
+}
+
+void ShaderProgram::setUniformi(const std::string& _name, int _value) {
+    use();
+    GLint location = getUniformLocation(_name);
+    glUniform1i(location, _value);
+}
+
+void ShaderProgram::setUniformi(const std::string& _name, int _value0, int _value1) {
+    use();
+    GLint location = getUniformLocation(_name);
+    glUniform2i(location, _value0, _value1);
+}
+
+void ShaderProgram::setUniformi(const std::string& _name, int _value0, int _value1, int _value2) {
+    use();
+    GLint location = getUniformLocation(_name);
+    glUniform3i(location, _value0, _value1, _value2);
+}
+
+void ShaderProgram::setUniformi(const std::string& _name, int _value0, int _value1, int _value2, int _value3) {
+    use();
+    GLint location = getUniformLocation(_name);
+    glUniform4i(location, _value0, _value1, _value2, _value3);
+}
+
+void ShaderProgram::setUniformf(const std::string& _name, float _value) {
+    use();
+    GLint location = getUniformLocation(_name);
+    glUniform1f(location, _value);
+}
+
+void ShaderProgram::setUniformf(const std::string& _name, float _value0, float _value1) {
+    use();
+    GLint location = getUniformLocation(_name);
+    glUniform2f(location, _value0, _value1);
+}
+
+void ShaderProgram::setUniformf(const std::string& _name, float _value0, float _value1, float _value2) {
+    use();
+    GLint location = getUniformLocation(_name);
+    glUniform3f(location, _value0, _value1, _value2);
+}
+
+void ShaderProgram::setUniformf(const std::string& _name, float _value0, float _value1, float _value2, float _value3) {
+    use();
+    GLint location = getUniformLocation(_name);
+    glUniform4f(location, _value0, _value1, _value2, _value3);
+}
+
+void ShaderProgram::setUniformMatrix2f(const std::string& _name, float* _value, bool _transpose) {
+    use();
+    GLint location = getUniformLocation(_name);
+    glUniformMatrix2fv(location, 1, _transpose, _value);
+}
+
+void ShaderProgram::setUniformMatrix3f(const std::string& _name, float* _value, bool _transpose) {
+    use();
+    GLint location = getUniformLocation(_name);
+    glUniformMatrix3fv(location, 1, _transpose, _value);
+}
+
+void ShaderProgram::setUniformMatrix4f(const std::string& _name, float* _value, bool _transpose) {
+    use();
+    GLint location = getUniformLocation(_name);
+    glUniformMatrix4fv(location, 1, _transpose, _value);
 }

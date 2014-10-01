@@ -83,7 +83,7 @@ osx/bin/TangramOSX: $(OSX_SRC_FILES)
 
 osx: osx/bin/TangramOSX
 
-osx/debug/TangramOSX: $(OSX_SRC_FILES)
+osx/debug/TangramOSX: $(OSX_SRC_FILES) $(CORE_SRC_FILES)
 	mkdir -p osx/debug
 	clang++ -o osx/debug/TangramOSX $(CORE_SRC_FILES) $(OSX_SRC_FILES) $(LIB_DEPENDENCY) $(OSX_INCLUDES) $(OSX_EXTERNAL_LIB) $(OSX_FRAMEWORKS) -DPLATFORM_OSX -std=c++11 -g -DDEBUG
 
