@@ -6,6 +6,11 @@ set(EXECUTABLE_NAME "tangram.out")
 add_definitions(-DPLATFORM_OSX)
 
 # load glfw3 library
+option(GLFW_BUILD_EXAMPLES OFF)
+option(GLFW_BUILD_TESTS OFF)
+option(GLFW_BUILD_DOCS OFF)
+option(GLFW_INSTALL OFF)
+
 add_subdirectory(${PROJECT_SOURCE_DIR}/osx/lib/glfw3)
 include_directories(${PROJECT_SOURCE_DIR}/osx/lib/glfw3/include)
 
