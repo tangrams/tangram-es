@@ -1,7 +1,8 @@
 #pragma once
 
-#include <vector>
 #include <map>
+#include <vector>
+#include <memory>
 
 #include "glm/fwd.hpp"
 #include "glm/glm.hpp"
@@ -9,52 +10,58 @@
 #include "mapTile/mapTile.h"
 #include "viewModule/viewModule.h"
 
-/*
- * TileManager - A singleton class that functions as an accountant of MapTiles
+/* Singleton container of <MapTile>s
+ *
+ * TileManager is a singleton that maintains a set of MapTiles based on the current view into the map
  */
 class TileManager {
 
 public:
     
-    //C++11 thread-safe implementation for a singleton
+    /* Returns the single instance of the TileManager */
     static TileManager&& GetInstance() {
         static TileManager *instance = new TileManager();
         return std::move(*instance);
     }
 
-    // move constructor required to:
-    // 1. disable copy constructor
-    // 2. disable assignment operator
-    // 3. because tileManager is singleton
-    // 4. required for some smarts done with std::move
+    /* Constructs a TileManager using move semantics */
     TileManager(TileManager&& _other);
 
     virtual ~TileManager();
 
-    bool updateTileSet(); //contacts the view Module to see if tiles need updating
+    /* Sets the view for which the TileManager will maintain tiles */
+    void setView(std::shared_ptr<ViewModule> _view) { m_viewModule = _view; }
 
-    std::vector<MapTile*> getVisibleTiles();
+    /* Sets the scene defintion which the TileManager will use to style tiles */
+    void setSceneDefintion(std::shared_ptr<SceneDefinition> _sceneDef) { m_sceneDefiniton = _sceneDef; }
 
-    void setView(std::shared_ptr<ViewModule> _view);
-    
-    void addDataSource(DataSource* _source);
+    /* Adds a <DataSource> from which tile data should be retrieved */
+    void addDataSource(std::shared_ptr<DataSource> _source) { m_dataSources.push_back(_source); }
 
-    std::vector<std::unique_ptr<DataSource>>&& GetDataSources();
+    /* Updates visible tile set if necessary
+     * 
+     * Contacts the <ViewModule> to determine whether the set of visible tiles has changed; if so,
+     * constructs or disposes tiles as needed and returns true
+     */
+    bool updateTileSet();
+
+    /* Returns the set of currently visible tiles */
+    const std::map<TileID, std::unique_ptr<MapTile>>& getVisibleTiles() { return m_tileSet; }
 
 private:
 
     TileManager();
 
     std::shared_ptr<ViewModule> m_viewModule;
+    std::shared_ptr<SceneDefinition> m_sceneDefiniton;
 
-    // TODO: std::map is probably overkill, we just need a set of MapTiles ordered by tileIDs
-    std::map<glm::ivec3, std::unique_ptr<MapTile>, MapTile::tileIDComparator> m_tileSet; 
+    std::map<TileID, std::unique_ptr<MapTile>> m_tileSet;
 
-    std::vector<std::unique_ptr<DataSource>> m_dataSources;
+    std::vector<std::shared_ptr<DataSource>> m_dataSources;
 
-    std::vector<glm::ivec3> m_tilesToAdd;
+    std::vector<TileID> m_tilesToAdd;
 
-    void addTile(const glm::ivec3& _tileID);
-    void removeTile(const decltype(m_tileSet)::iterator& _tileIter);
+    void addTile(const TileID& _tileID);
+    void removeTile(const std::map<TileID, std::unique_ptr<MapTile>>::iterator& _tileIter);
 
 };
