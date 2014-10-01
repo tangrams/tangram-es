@@ -1,4 +1,6 @@
 #include "sceneDirector.h"
+#include "glm/fwd.hpp"
+#include "glm/glm.hpp"
 
 SceneDirector::SceneDirector() {
 
@@ -8,6 +10,7 @@ SceneDirector::SceneDirector() {
     m_viewModule = std::make_shared<ViewModule>();
 
     m_tileManager->setView(m_viewModule);
+    m_tileManager->setSceneDefiniton(m_sceneDefinition);
     m_tileManager->addDataSource(new MapzenVectorTileJson());
 
 }
@@ -20,7 +23,7 @@ void SceneDirector::loadStyles() {
 
 void SceneDirector::update(float _dt) {
 
-    m_tileManager->updateTileSet(m_sceneDefinition->getStyles());
+    m_tileManager->updateTileSet();
 
 }
 
@@ -29,7 +32,7 @@ void SceneDirector::renderFrame() {
     // Set up openGL for new frame
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
-    glm::mat4 viewProj = m_viewModule->getViewProjectionMatrix();
+    glm::dmat4 viewProj = m_viewModule->getViewProjectionMatrix();
 
     // Loop over all styles
     for (auto style : m_sceneDefinition->getStyles()) {
@@ -40,7 +43,7 @@ void SceneDirector::renderFrame() {
         for (auto mapTile : m_tileManager->GetVisibleTiles()) {
 
             // Draw!
-            mapTile->draw(viewProj, style);
+            mapTile->draw(style, viewProj);
 
         }
     }

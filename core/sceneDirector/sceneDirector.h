@@ -1,6 +1,7 @@
 #pragma once
 
-#include <vector>
+#include <memory>
+
 #include "tileManager/tileManager.h"
 #include "sceneDefinition/sceneDefinition.h"
 #include "viewModule/viewModule.h"
@@ -20,8 +21,8 @@ public:
 private:
 
     std::unique_ptr<TileManager> m_tileManager;
-    std::unique_ptr<SceneDefinition> m_sceneDefinition;
     
+    std::shared_ptr<SceneDefinition> m_sceneDefinition;
     std::shared_ptr<ViewModule> m_viewModule;
 
 };
