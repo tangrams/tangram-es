@@ -34,6 +34,33 @@ std::shared_ptr<ShaderProgram> Style::getShaderProgram() {
 /*
  * Polygon Style Class Methods
  */
+PolygonStyle::PolygonStyle(std::string _geomType, GLenum _drawMode) : Style(_geomType, _drawMode) {
+    
+    // Pass in a fileName or a url to construct shader strings from
+    m_vertShaderSrcStr =
+        "#ifdef GL_ES\n"
+        "precision mediump float;\n"
+        "#endif\n"
+        "attribute vec4 a_position;\n"
+        "attribute vec4 a_color;\n"
+        "varying vec4 v_color;\n"
+        "void main() {\n"
+        "  v_color = a_color;\n"
+        "  gl_Position = a_position;\n"
+        "}\n";
+
+    m_fragShaderSrcStr =
+        "#ifdef GL_ES\n"
+        "precision mediump float;\n"
+        "#endif\n"
+        "varying vec4 v_color;\n"
+        "void main(void) {\n"
+        "  gl_FragColor = v_color;\n"
+        "}\n";
+    constructVertexLayout();
+    constructShaderProgram();
+}
+
 PolygonStyle::PolygonStyle(std::string _geomType, std::string _styleName, GLenum _drawMode) : Style(_geomType, _styleName, _drawMode) {
     
     // Pass in a fileName or a url to construct shader strings from
@@ -71,7 +98,7 @@ void PolygonStyle::constructVertexLayout() {
 }
 
 void PolygonStyle::constructShaderProgram() {
-    m_shaderProgram = std::shared_ptr<ShaderProgram>();
+    m_shaderProgram = std::shared_ptr<ShaderProgram>(new ShaderProgram());
     m_shaderProgram->buildFromSourceStrings(m_fragShaderSrcStr, m_vertShaderSrcStr);
 }
 
