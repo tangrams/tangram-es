@@ -8,6 +8,11 @@
 #include "style/style.h"
 #include <unordered_map>
 
+/* Tile of vector map data
+ * 
+ * MapTile represents a fixed area of a map at a fixed zoom level; It contains its position within a quadtree of
+ * tiles and its location in projected global space; It stores drawable geometry of the map features in its area
+ */
 class MapTile {
 
 public:
@@ -16,9 +21,18 @@ public:
 
     virtual ~MapTile();
 
+    /* An immutable identifier for a map tile 
+     * 
+     * Contains the x, y, and z indices of a tile in a quad tree; tileIDs are arbitrarily but strictly ordered
+     */
     struct tileID {
         
         tileID(int _x, int _y, int _z) : x(_x) y(_y) z(_z) {};
+
+        bool operator< (const tileID& _lhs, const tileID& _rhs) { return (_lhs.x < _rhs.x || (_lhs.y < _rhs.y || _lhs.z < _rhs.z)); }
+        bool operator> (const tileID& _lhs, const tileID& _rhs) { return _rhs < _lhs; }
+        bool operator<=(const tileID& _lhs, const tileID& _rhs) { return !(_lhs > _rhs); }
+        bool operator>=(const tileID& _lhs, const tileID& _rhs) { return !(_lhs < _rhs); }
 
         const int x;
         const int y;
@@ -26,27 +40,19 @@ public:
 
     };
 
-    /*
-     * tileIDComparator provides a strict, weak ordering on 3-component tile IDs; returns true if the first ID precedes the second
-     */
-    static struct tileIDComparator {
-        bool operator() (const tileID& _a, const tileID& _b) const {
-            if ( _a.x != _b.x) {
-                return _a.x < _b.x;
-            } else if (_a.y != _b.y) {
-                return _a.y < _b.y;
-            } else {
-                return _a.z < _b.z;
-            }
-        }
-    };
-
     const tileID& getID() const { return m_id; };
 
-    const glm::dvec2& getTileOrigin() const { return m_tileOrigin; };
+    /* Returns the lower left corner of the tile area in projection units */
+    const glm::dvec2& getOrigin() const { return m_tileOrigin; };
 
+    /* Adds drawable geometry to the tile and associates it with a <Style> 
+     * 
+     * Use std::move to pass in the mesh by move semantics; Geometry in the mesh must have coordinates relative to
+     * the tile origin.
+     */
     void addGeometry(const Style& _style, unique_ptr<VboMesh>&& _mesh);
 
+    /* Draws the geometry associated with the provided <Style> and view-projection matrix */
     void draw(const Style& _style, const glm::dmat4& _viewProjMatrix);
 
 private:
