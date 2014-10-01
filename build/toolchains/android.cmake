@@ -1,4 +1,8 @@
-set(LIBRARY_OUTPUT_PATH ${CMAKE_SOURCE_DIR}/build/libs)
+if(NOT DEFINED ANDROID_ARCHITECTURE)
+    set(ANDROID_ARCHITECTURE "armeabi-v7a")
+endif()
+
+set(LIBRARY_OUTPUT_PATH ${CMAKE_SOURCE_DIR}/build/libs/${ANDROID_ARCHITECTURE}/)
 include(${CMAKE_SOURCE_DIR}/build/toolchains/android.toolchain.cmake)
 
 add_definitions(-DPLATFORM_ANDROID)
@@ -11,14 +15,13 @@ else()
 	message(STATUS "Will use make prebuilt tool located at : ${CMAKE_BUILD_TOOL}")
 endif()
 
-set(ANDROID_ARCHITECTURE "armeabi-v7a")
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wall -std=c++11 -pedantic -llog -lz")
 set(CXX_FLAGS_DEBUG "${CXX_FLAGS_DEBUG} -g -O0")
 set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -Wall -pedantic -fPIC")
 set(EXECUTABLE_NAME "tangram.out")
 set(ANDROID_TARGET "android-19")
 set(LIBCURL_PRECOMPILED_LIB ${CMAKE_SOURCE_DIR}/android/jni/precompiled/${ANDROID_ARCHITECTURE}/libcurl.a)
-set(LIBS_INSTALLATION_PATH ${CMAKE_SOURCE_DIR}/android/libs)
+set(LIBS_INSTALLATION_PATH ${CMAKE_SOURCE_DIR}/android/libs/${ANDROID_ARCHITECTURE})
 
 install(FILES ${LIBCURL_PRECOMPILED_LIB} DESTINATION ${LIBS_INSTALLATION_PATH})
 

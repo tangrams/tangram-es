@@ -32,6 +32,11 @@ set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS}
 if(${IOS_PLATFORM} STREQUAL "SIMULATOR")
     set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -mios-simulator-version-min=6.0")
     set(ARCH "i386")
+
+    # include headers for ios
+    include_directories(${PROJECT_SOURCE_DIR}/ios/include/)
+else()
+    # todo : actual build on devices
 endif()
 
 set(FRAMEWORKS CoreGraphics CoreFoundation QuartzCore UIKit OpenGLES Security CFNetwork GLKit) 
@@ -39,11 +44,6 @@ set(MACOSX_BUNDLE_GUI_IDENTIFIER "com.mapzen.\${PRODUCT_NAME:Tangram}")
 set(APP_TYPE MACOSX_BUNDLE)
 set(CORE_LIB_DEPS ${CMAKE_SOURCE_DIR}/ios/precompiled/libcurl.a)
 file(GLOB_RECURSE RESOURCES ${PROJECT_SOURCE_DIR}/ios/resources/*.storyboard)
-
-# include headers for ios
-if(${IOS_PLATFORM} STREQUAL "SIMULATOR")
-    include_directories(${PROJECT_SOURCE_DIR}/ios/include/)
-endif()
 
 # load core library
 include_directories(${PROJECT_SOURCE_DIR}/core/include/)
@@ -73,7 +73,7 @@ function(link_libraries)
     endforeach()
 
     # copying into bundle
-    #add_custom_command(TARGET ${EXECUTABLE_NAME}
+    # add_custom_command(TARGET ${EXECUTABLE_NAME}
     #    POST_BUILD
     #    COMMAND mkdr -p "$(BUILD_DIR)/$(CONFIGURATION)$(EFFECTIVE_PLATFORM_NAME)"/${EXECUTABLE_NAME}.app/Resources
     #    COMMAND cp ${RESOURCES}
@@ -83,6 +83,7 @@ endfunction()
 function(build)
     add_executable(${EXECUTABLE_NAME} ${APP_TYPE} ${HEADERS} ${SOURCES} ${RESOURCES})
 
+    # setting xcode properties
     set_target_properties(${EXECUTABLE_NAME} PROPERTIES
         MACOSX_BUNDLE_INFO_PLIST ${PROJECT_SOURCE_DIR}/ios/resources/tangram-Info.plist
         RESOURCE "${RESOURCES}")

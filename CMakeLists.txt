@@ -27,6 +27,7 @@ if(target_in_list EQUAL -1)
     return()
 endif()
 
+# setting up cache variable platform 
 set(PLATFORM ${varplatform} CACHE INTERNAL "platform" FORCE)
 
 # cmake inclusions and definitions
@@ -40,4 +41,5 @@ include(${CMAKE_TARGET_FILE})
 
 # dependent platform build
 build()
+
 link_libraries()

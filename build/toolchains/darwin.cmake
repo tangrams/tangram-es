@@ -22,8 +22,7 @@ find_sources_and_include_directories(
 # link and build functions
 function(link_libraries)
     check_and_link_libraries(${EXECUTABLE_NAME} curl OpenGL)
-    target_link_libraries(${EXECUTABLE_NAME} glfw ${GLFW_LIBRARIES})
-    target_link_libraries(${EXECUTABLE_NAME} core)
+    target_link_libraries(${EXECUTABLE_NAME} glfw core ${GLFW_LIBRARIES})
 endfunction()
 
 function(build) 
