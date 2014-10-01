@@ -60,7 +60,7 @@ void ViewModule::translate(float _dx, float _dy) {
 void ViewModule::setZoom(int _z) {
 
     m_zoom = _z;
-    float tileSize = 2 * HALF_CIRCUMFERENCE * pow(2, -m_zoom);
+    float tileSize = 2 * MapProjection::HALF_CIRCUMFERENCE * pow(2, -m_zoom);
     m_height = 3 * tileSize; // Set viewport size to ~3 tiles vertically
     m_width = m_height * m_aspect; // Size viewport width to match aspect ratio
     m_proj = glm::ortho(-m_width * 0.5, m_width * 0.5, -m_height * 0.5, m_height * 0.5);
@@ -84,7 +84,7 @@ const std::vector<glm::ivec3>& ViewModule::getVisibleTiles() {
 
     m_visibleTiles.clear();
 
-    float tileSize = 2 * HALF_CIRCUMFERENCE * pow(2, -m_zoom);
+    float tileSize = 2 * MapProjection::HALF_CIRCUMFERENCE * pow(2, -m_zoom);
     float invTileSize = 1.0 / tileSize;
 
     float vpLeftEdge = m_pos.x - m_width * 0.5;
