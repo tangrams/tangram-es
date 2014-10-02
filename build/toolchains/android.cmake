@@ -1,6 +1,9 @@
-if(NOT DEFINED ANDROID_ARCHITECTURE)
-    set(ANDROID_ARCHITECTURE "armeabi-v7a")
+if(NOT DEFINED ANDROID_ABI)
+    set(ANDROID_ABI "armeabi-v7a")
+else()
+    message(STATUS "Possible ABI values : armeabi-v7a (default), armeabi, x86")
 endif()
+message(STATUS "Android ABI : ${ANDROID_ABI}") 
 
 set(LIBRARY_OUTPUT_PATH ${CMAKE_SOURCE_DIR}/build/libs/${ANDROID_ARCHITECTURE}/)
 include(${CMAKE_SOURCE_DIR}/build/toolchains/android.toolchain.cmake)
@@ -15,15 +18,17 @@ else()
 	message(STATUS "Will use make prebuilt tool located at : ${CMAKE_BUILD_TOOL}")
 endif()
 
-set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wall -std=c++11 -pedantic -llog -lz")
+set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wall -std=c++11 -pedantic -llog -lz ${ARCH_CXX_PARAM}")
 set(CXX_FLAGS_DEBUG "${CXX_FLAGS_DEBUG} -g -O0")
 set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -Wall -pedantic -fPIC")
 set(EXECUTABLE_NAME "tangram.out")
 set(ANDROID_TARGET "android-19")
-set(LIBCURL_PRECOMPILED_LIB ${CMAKE_SOURCE_DIR}/android/jni/precompiled/${ANDROID_ARCHITECTURE}/libcurl.a)
-set(LIBS_INSTALLATION_PATH ${CMAKE_SOURCE_DIR}/android/libs/${ANDROID_ARCHITECTURE})
+set(LIBCURL_PRECOMPILED_LIB ${CMAKE_SOURCE_DIR}/android/jni/precompiled/${ANDROID_ABI}/libcurl.a)
+set(LIBS_INSTALLATION_PATH ${CMAKE_SOURCE_DIR}/android/libs/${ANDROID_ABI})
 
 include_directories(${PROJECT_SOURCE_DIR}/android/jni/include)
+
+message(STATUS "Using curl precompiled static library : ${LIBCURL_PRECOMPILED_LIB}")
 
 set(ADDITIONNAL_TARGET_DEPENDENT_SRC_FILES 
      ${CMAKE_SOURCE_DIR}/android/jni/jniExports.cpp

@@ -1,8 +1,6 @@
 cmake_minimum_required(VERSION 2.8)
 project(core)
 
-include(../build/utils/utils.cmake)
-
 set(INCLUDE_DIR include)
 set(SOURCE_DIR src)
 
@@ -23,6 +21,7 @@ include_directories(${INCLUDE_DIR}/json ${INCLUDE_DIR} ${INCLUDE_DIRS})
 
 if(CORE_TEST_BUILD)
     # WIP for making a testing build if needed
+    # include(../build/utils/utils.cmake)
     # message(STATUS "Core - Test build selected")
     # set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wall -stdlib=libc++ -std=c++0x")
     # set(CXX_FLAGS_DEBUG "-g -O0")
@@ -55,4 +54,3 @@ else()
         install(TARGETS ${CORE_LIB_NAME} DESTINATION ${CORE_INSTALLATION_PATH})
     endif()
 endif()
-
