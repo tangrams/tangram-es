@@ -1,21 +1,8 @@
 include(${CMAKE_SOURCE_DIR}/build/toolchains/iOS.toolchain.cmake)
 
-macro(add_framework FWNAME APPNAME LIBPATH)
-    find_library(FRAMEWORK_${FWNAME} NAMES ${FWNAME} PATHS ${LIBPATH} PATH_SUFFIXES Frameworks NO_DEFAULT_PATH)
-    if(${FRAMEWORK_${FWNAME}} STREQUAL FRAMEWORK_${FWNAME}-NOTFOUND)
-        message(ERROR ": Framework ${FWNAME} not found")
-    else()
-        target_link_libraries(${APPNAME} ${FRAMEWORK_${FWNAME}})
-        message(STATUS "Framework ${FWNAME} found")
-    endif()
-endmacro(add_framework)
-
 add_definitions(-DPLATFORM_IOS)
 
 set(EXECUTABLE_NAME "tangram")
-
-# uncomment to remove ZERO_CHECK from xcode
-# set(CMAKE_SUPPRESS_REGENERATION TRUE)
 
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} 
     -fobjc-abi-version=2 
@@ -71,13 +58,6 @@ function(link_libraries)
     foreach(_framework ${FRAMEWORKS})
         add_framework(${_framework} ${EXECUTABLE_NAME} ${CMAKE_SYSTEM_FRAMEWORK_PATH})
     endforeach()
-
-    # copying into bundle
-    # add_custom_command(TARGET ${EXECUTABLE_NAME}
-    #    POST_BUILD
-    #    COMMAND mkdr -p "$(BUILD_DIR)/$(CONFIGURATION)$(EFFECTIVE_PLATFORM_NAME)"/${EXECUTABLE_NAME}.app/Resources
-    #    COMMAND cp ${RESOURCES}
-    #    COMMENT "copying files into bundle" VERBATIM)
 endfunction()
 
 function(build)
@@ -94,3 +74,13 @@ function(build)
     set_xcode_property(${EXECUTABLE_NAME} ONLY_ACTIVE_ARCH "NO")
     set_xcode_property(${EXECUTABLE_NAME} VALID_ARCHS "${ARCH}")
 endfunction()
+
+macro(add_framework FWNAME APPNAME LIBPATH)
+    find_library(FRAMEWORK_${FWNAME} NAMES ${FWNAME} PATHS ${LIBPATH} PATH_SUFFIXES Frameworks NO_DEFAULT_PATH)
+    if(${FRAMEWORK_${FWNAME}} STREQUAL FRAMEWORK_${FWNAME}-NOTFOUND)
+        message(ERROR ": Framework ${FWNAME} not found")
+    else()
+        target_link_libraries(${APPNAME} ${FRAMEWORK_${FWNAME}})
+        message(STATUS "Framework ${FWNAME} found")
+    endif()
+endmacro(add_framework)

@@ -19,38 +19,23 @@ list(REMOVE_DUPLICATES INCLUDE_DIRS)
 
 include_directories(${INCLUDE_DIR}/json ${INCLUDE_DIR} ${INCLUDE_DIRS})
 
-if(CORE_TEST_BUILD)
-    # WIP for making a testing build if needed
-    # include(../build/utils/utils.cmake)
-    # message(STATUS "Core - Test build selected")
-    # set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wall -stdlib=libc++ -std=c++0x")
-    # set(CXX_FLAGS_DEBUG "-g -O0")
-    # set(CORE_TEST_EXE core.out)
+# adding some other dependent target files if needed
+set(FOUND_SOURCES ${FOUND_SOURCES} ${ADDITIONNAL_TARGET_DEPENDENT_SRC_FILES})
 
-    # add_executable(${CORE_TEST_EXE} ${FOUND_SOURCES})
-    # check_and_link_libraries(${EXECUTABLE_NAME} OpenGL)
-    # todo : find curl
-    # target_link_libraries(${CORE_TEST_EXE} json ${CORE_LIB_DEPS})
-else()
-    message(STATUS "Core - Library build selected")
-    # adding some other dependent target files if needed
-    set(FOUND_SOURCES ${FOUND_SOURCES} ${ADDITIONNAL_TARGET_DEPENDENT_SRC_FILES})
+if(NOT DEFINED CORE_LIB_NAME)
+    set(CORE_LIB_NAME core)
+endif()
 
-    if(NOT DEFINED CORE_LIB_NAME)
-        set(CORE_LIB_NAME core)
-    endif()
+add_library(${CORE_LIB_NAME} ${CORE_LIB_TYPE} ${FOUND_SOURCES})
+target_link_libraries(${CORE_LIB_NAME} json ${CORE_LIB_DEPS})
 
-    add_library(${CORE_LIB_NAME} ${CORE_LIB_TYPE} ${FOUND_SOURCES})
-    target_link_libraries(${CORE_LIB_NAME} json ${CORE_LIB_DEPS})
+# post build commands
+add_custom_command(TARGET ${CORE_LIB_NAME}
+        POST_BUILD
+        COMMAND ${CORE_POSTBUILD_COMMANDS}
+        COMMENT ${CORE_COMMAND_MSG} VERBATIM)
 
-    # post build commands
-    add_custom_command(TARGET ${CORE_LIB_NAME}
-            POST_BUILD
-            COMMAND ${CORE_POSTBUILD_COMMANDS}
-            COMMENT ${CORE_COMMAND_MSG} VERBATIM)
-
-    # installation step
-    if(INSTALL_CORE_LIBRARY STREQUAL "ON")
-        install(TARGETS ${CORE_LIB_NAME} DESTINATION ${CORE_INSTALLATION_PATH})
-    endif()
+# installation step
+if(INSTALL_CORE_LIBRARY STREQUAL "ON")
+    install(TARGETS ${CORE_LIB_NAME} DESTINATION ${CORE_INSTALLATION_PATH})
 endif()
