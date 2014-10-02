@@ -14,15 +14,15 @@ MapTile::~MapTile() {
 
 }
 
-void MapTile::addGeometry(const Style& _style, std::unique_ptr<VboMesh>&& _mesh) {
+void MapTile::addGeometry(const Style& _style, std::unique_ptr<VboMesh> _mesh) {
 
-    m_geometry[_style.getStyleName()] = std::unique_ptr<VboMesh>(_mesh); // Move-construct a unique_ptr at the value associated with the given style
+    m_geometry[_style.getStyleName()] = std::move(_mesh); // Move-construct a unique_ptr at the value associated with the given style
 
 }
 
 void MapTile::draw(const Style& _style, const glm::dmat4& _viewProjMatrix) {
 
-    std::unique_ptr<VboMesh> styleMesh = m_geometry[_style.getStyleName()];
+    const std::unique_ptr<VboMesh>& styleMesh = m_geometry[_style.getStyleName()];
 
     if (styleMesh) {
 

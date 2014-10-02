@@ -23,7 +23,7 @@ void SceneDirector::loadStyles() {
     m_sceneDefinition = std::make_shared<SceneDefinition>();
 
     // Create a single hard-coded style for now
-    m_sceneDefinition->addStyle(std::move(new PolygonStyle("polygon", GL_TRIANGLES)));
+    m_sceneDefinition->addStyle(std::unique_ptr<Style>(new PolygonStyle("Polygon", GL_TRIANGLES)));
 
 }
 

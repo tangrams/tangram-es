@@ -53,7 +53,7 @@ public:
      * Use std::move to pass in the mesh by move semantics; Geometry in the mesh must have coordinates relative to
      * the tile origin.
      */
-    void addGeometry(const Style& _style, std::unique_ptr<VboMesh>&& _mesh);
+    void addGeometry(const Style& _style, std::unique_ptr<VboMesh> _mesh);
 
     /* Draws the geometry associated with the provided <Style> and view-projection matrix */
     void draw(const Style& _style, const glm::dmat4& _viewProjMatrix);
