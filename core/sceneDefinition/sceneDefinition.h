@@ -1,22 +1,26 @@
-/*
-...
-*/
 #pragma once
 
 #include <vector>
+#include <memory>
 
+#include "style/style.h"
 
-/* -- Singleton Class Implementation -- */
+/* Singleton container of <Style> information
+ *
+ * SceneDefinition is a singleton containing the styles, lighting, and interactions defining a map scene 
+ */
 class SceneDefinition {
 
 public:
-    // Returns a mapping of styles to VBO data
-    //std::unique_ptr< std::map<std::String, std::vector<float> > > setupVBOData();
+    
+    SceneDefinition() {};
 
-    //only one style
-    /*
-        Will take in geojson data, passed in from datasoure for
-        the tile through the scenedirector
-     */
-    std::vector<float> setupVBOData();
+    void addStyle();
+
+    const std::vector<std::unique_ptr<Style>>& getStyles() { return m_styles; };
+
+private:
+
+    std::vector<std::unique_ptr<Style>> m_styles;
+
 };

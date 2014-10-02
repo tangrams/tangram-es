@@ -18,6 +18,7 @@ SceneDirector::SceneDirector() {
 void SceneDirector::loadStyles() {
 
     // TODO: Instatiate styles from file
+    m_sceneDefinition = std::make_shared<SceneDefinition>();
 
 }
 
