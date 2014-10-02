@@ -18,7 +18,7 @@ else()
 	message(STATUS "Will use make prebuilt tool located at : ${CMAKE_BUILD_TOOL}")
 endif()
 
-set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wall -std=c++11 -pedantic -llog -lz ${ARCH_CXX_PARAM}")
+set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wall -std=c++11 -pedantic -llog -lz")
 set(CXX_FLAGS_DEBUG "${CXX_FLAGS_DEBUG} -g -O0")
 set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -Wall -pedantic -fPIC")
 set(EXECUTABLE_NAME "tangram.out")
