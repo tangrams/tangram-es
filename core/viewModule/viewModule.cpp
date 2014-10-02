@@ -19,11 +19,11 @@ ViewModule::ViewModule(float _width, float _height, ProjectionType _projType) {
 void ViewModule::setMapProjection(ProjectionType _projType) {
     switch(_projType) {
         case ProjectionType::mercator:
-            m_projection.reset(new MercProjection());
+            m_projection.reset(new MercatorProjection());
             break;
         default:
             logMsg("Error: not a valid map projection specified.\n Setting map projection to mercator by default");
-            m_projection.reset(new MercProjection());
+            m_projection.reset(new MercatorProjection());
             break;
     }
     m_dirty = true;
