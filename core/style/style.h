@@ -5,8 +5,8 @@
 
 #include <string>
 #include <vector>
+#include <unordered_map>
 
-#include "tesselator.h"
 #include "glm/glm.hpp"
 
 #include "dataSource/dataSource.h"
@@ -15,6 +15,7 @@
 #include "util/vboMesh.h"
 #include "util/projection.h"
 #include "platform.h"
+#include "mapTile/mapTile.h"
 
 class Style {
 protected:
@@ -22,12 +23,12 @@ protected:
     std::string m_styleName;
 
     std::vector<GLushort> m_indices;
+    //What layer names will be handled by this Style
+    std::unordered_map<std::string, glm::vec4> m_layerColorMap;
     
     std::shared_ptr<ShaderProgram> m_shaderProgram;
     std::shared_ptr<VertexLayout> m_vertexLayout;
     
-    TESStesselator* m_tess;
-
     GLenum m_drawMode;
 
     std::string m_fragShaderSrcStr;
@@ -51,12 +52,10 @@ public:
     virtual void constructShaderProgram() = 0;
 
     /*
-     * addDataToVBO uses the Geometry and Property of a Json->Layer->Feature to tesselate the geometry
-     *  and create vertex data. VboMesh is updated with the style data and vertex information.
-     *  NOTE: _color is glm::vec3 type and hence floats (0.0-1.0). 
-     *  These will be converted to GLubyte in the implementation
+     * addData uses the jsonRoot for a tile and iterate through all features calls fills the vbo with appropriate data.
+     * VboMesh (in the MapTile _tile object) is updated with the style data and vertex information.
      */
-    virtual void addDataToVBO(Json::Value _geomCoordinates, Json::Value _property, glm::vec4& _color, std::shared_ptr<VboMesh> _vboMesh, glm::vec2 _tileOffset, MapProjection& _mapProjection) = 0;
+    virtual void addData(Json::Value _jsonRoot, MapTile& _tile, MapProjection& _mapProjection) = 0;
     
     /*
      * Sets fragment shader source
@@ -75,14 +74,13 @@ public:
 
     virtual ~Style() {
         m_indices.clear();
-        tessDeleteTess(m_tess);
     }
 };
 
 class PolygonStyle : public Style {
     
     struct vboDataUnit {
-        //TODO: See how can we use glm::vec3 here.
+        //TODO: See how can we use glm::dvec3 here.
         //Position Data
         GLfloat pos_x;
         GLfloat pos_y;
@@ -106,7 +104,7 @@ public:
     PolygonStyle(std::string _geomType, GLenum _drawMode = GL_TRIANGLES);
     PolygonStyle(std::string _geomType, std::string _styleName, GLenum _drawMode = GL_TRIANGLES);
     
-    virtual void addDataToVBO(Json::Value _geomCoordinates, Json::Value _property, glm::vec4& _color, std::shared_ptr<VboMesh> _vboMesh, glm::vec2 _tileOffset, MapProjection& _mapProjection);
+    virtual void addData(Json::Value _jsonRoot, MapTile& _tile, MapProjection& _mapProjection);
     virtual void constructVertexLayout();
     virtual void constructShaderProgram();
     

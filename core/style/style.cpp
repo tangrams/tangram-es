@@ -1,11 +1,11 @@
 #include "style.h"
 #include "platform.h"
+#include "util/geometryHandler.h"
 
 /*
  * Style Class Methods
  */
 Style::Style(std::string _geomType, GLenum _drawMode) : m_geomType(_geomType), m_styleName(_geomType), m_drawMode(_drawMode) {
-    m_tess = tessNewTess(nullptr);
 }
 
 Style::Style(std::string _geomType, std::string _styleName, GLenum _drawMode) : m_geomType(_geomType), m_drawMode(_drawMode) {
@@ -102,91 +102,50 @@ void PolygonStyle::constructShaderProgram() {
     m_shaderProgram->buildFromSourceStrings(m_fragShaderSrcStr, m_vertShaderSrcStr);
 }
 
-void PolygonStyle::addDataToVBO(Json::Value _geomCoordinates, Json::Value _property, glm::vec4& _color, std::shared_ptr<VboMesh> _vboMesh, glm::vec2 _tileOffset, MapProjection& _mapProjection) {
-    
-    //Set Layout and drawmode for the _vboMesh
-    _vboMesh->setVertexLayout(m_vertexLayout);
-    _vboMesh->setDrawMode(m_drawMode);
-    //float color to usigned bytes
-    GLubyte colorR = static_cast<GLubyte>(_color.x * 255.0f);
-    GLubyte colorG = static_cast<GLubyte>(_color.y * 255.0f);
-    GLubyte colorB = static_cast<GLubyte>(_color.z * 255.0f);
-    GLubyte colorA = static_cast<GLubyte>(_color.w * 255.0f);
+void PolygonStyle::addData(Json::Value _jsonRoot, MapTile& _tile, MapProjection& _mapProjection) {
+    // Create a vboMesh which will eventually contain all the data
+    std::unique_ptr<VboMesh> mesh(new VboMesh(m_vertexLayout, m_drawMode));
+
+    //Initialize the Geometry Handler
+    GeometryHandler geoHandler(&_mapProjection);
 
     //Extract Feature Properties
-    float featureHeight  = 0.0f;
-    float minFeatureHeight = 0.0f;
-    if (_property.isMember("height")) {
-        featureHeight = _property["height"].asFloat();
-    }
-    if (_property.isMember("min_height")) {
-        minFeatureHeight = _property["min_height"].asFloat();
-    }
-    
-    //Setup for tesselator
-    size_t vertexDataOffset = m_vertices.size();
-    //Loop all poly rings
-    for(int i = 0; i < _geomCoordinates.size(); i++) {
-        //extract coordinates and transform to merc (x,y) using _mapProjection
-        int ringSize = _geomCoordinates[0].size();
-        std::vector<glm::vec3> ringCoords;
 
-        for(int j = 0; j < ringSize; j++) {
-            glm::vec2 meters = _mapProjection.LatLonToMeters(glm::vec2(_geomCoordinates[0][i][0].asFloat(), _geomCoordinates[0][i][1].asFloat())) - _tileOffset;
-            ringCoords.push_back(glm::vec3(meters.x, meters.y, featureHeight));
-        }
+    for(auto& layer : m_layerColorMap) {
+        Json::Value layerFeatures = _jsonRoot[layer.first.c_str()]["features"];
+        
+        //iterate through all features and check for respective geometry type
+        for(int i = 0; i < layerFeatures.size(); i++) {
+            Json::Value geometry = layerFeatures[i]["geometry"];
+            Json::Value property = layerFeatures[i]["properties"];
 
-        // Extrude poly
-        if(featureHeight != minFeatureHeight) {
-            glm::vec3 upVector(0.0f,0.0f,1.0f);
-            glm::vec3 normalVector;
-
-            for(int j = 0; j < (ringSize-1); j++) {
-                normalVector = glm::cross(upVector, ringCoords[i+1] - ringCoords[i]);
-                // 1st vertex top
-                m_vertices.push_back((vboDataUnit){ringCoords[i].x, ringCoords[i].y, ringCoords[i].z, normalVector.x, normalVector.y, normalVector.z, colorR, colorG, colorB, colorA});
-                // 2nd vertex top
-                m_vertices.push_back((vboDataUnit){ringCoords[i+1].x, ringCoords[i+1].y, ringCoords[i+1].z, normalVector.x, normalVector.y, normalVector.z, colorR, colorG, colorB, colorA});
-                // 1st vertex bottom
-                m_vertices.push_back((vboDataUnit){ringCoords[i].x, ringCoords[i].y, minFeatureHeight, normalVector.x, normalVector.y, normalVector.z, colorR, colorG, colorB, colorA});
-                // 2nd vertex bottom
-                m_vertices.push_back((vboDataUnit){ringCoords[i+1].x, ringCoords[i+1].y, minFeatureHeight, normalVector.x, normalVector.y, normalVector.z, colorR, colorG, colorB, colorA});
-
-                m_indices.push_back(vertexDataOffset);
-                m_indices.push_back(vertexDataOffset + 2);
-                m_indices.push_back(vertexDataOffset + 1);
-
-                m_indices.push_back(vertexDataOffset + 1);
-                m_indices.push_back(vertexDataOffset + 2);
-                m_indices.push_back(vertexDataOffset + 3);
-
-                vertexDataOffset += 4;
-
+            std::string geomType = geometry["type"].asString();
+            //if geomType not relevant type then move on
+            if(geomType.compare("Polygon") != 0) {
+                continue;
+            }
+            //else process this geometry
+            else {
+                //extract feature properties
+                float featureHeight  = 0.0f;
+                float minFeatureHeight = 0.0f;
+                if (property.isMember("height")) {
+                    featureHeight = property["height"].asFloat();
+                }
+                if (property.isMember("min_height")) {
+                    minFeatureHeight = property["min_height"].asFloat();
+                }
+                geoHandler.polygonAddData<vboDataUnit>(geometry["coordinates"], m_vertices, m_indices, layer.second, _tile.getOrigin(), featureHeight, minFeatureHeight);
             }
         }
-        
-        tessAddContour(m_tess, 3, &ringCoords[0].x, sizeof(glm::vec3), ringSize);
     }
-
-    //Call the tesselator to tesselate polygon into triangles
-    tessTesselate(m_tess, TESS_WINDING_NONZERO, TessElementType::TESS_POLYGONS, 3, 3, nullptr);
-
-    const int numIndices = tessGetElementCount(m_tess);
-    const TESSindex* tessIndices = tessGetElements(m_tess);
-
-    for(int i = 0; i < numIndices; i++) {
-        const TESSindex* tessIndex = &tessIndices[i * 3];
-        for(int j = 0; j < 3; j++) {
-            m_indices.push_back(GLubyte(tessIndex[j]) + vertexDataOffset);
-        }
-    }
-
-    const int numVertices = tessGetVertexCount(m_tess);
-    const float* tessVertices = tessGetVertices(m_tess);
-
-    for(int i = 0; i < numVertices; i++) {
-        m_vertices.push_back((vboDataUnit){tessVertices[3*i], tessVertices[3*i+1], tessVertices[3*i+2], 0.0f, 0.0f, 1.0f, colorR, colorG, colorB, colorA});
-    }
+    //Add vertices to mesh
+    mesh->addVertices((GLbyte*)&m_vertices, m_vertices.size());
+    mesh->addIndices((GLushort*)&m_indices, m_indices.size());
+    //1. addGeometry should take either take the name of the style or pointer to the style (this)
+    //_tile.addGeometry(m_styleName, std::move(mesh));
+    //_tile.addGeometry(this, std::move(mesh));
+    _tile.addGeometry(*this, std::move(mesh));
 }
 
 
