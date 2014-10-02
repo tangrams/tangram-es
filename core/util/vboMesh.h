@@ -72,7 +72,7 @@ public:
      * Renders the geometry in this mesh using the ShaderProgram _shader; if geometry has not already
      * been uploaded it will be uploaded at this point
      */
-    void draw(std::shared_ptr<ShaderProgram> _shader);
+    void draw(const std::shared_ptr<ShaderProgram> _shader);
 
 private:
 
