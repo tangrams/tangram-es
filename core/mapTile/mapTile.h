@@ -3,12 +3,14 @@
 #include <unordered_map>
 #include <memory>
 
+#define GLM_FORCE_RADIANS
 #include "glm/fwd.hpp"
 #include "glm/glm.hpp"
 #include "glm/gtc/matrix_transform.hpp"
 #include "util/vboMesh.h"
 #include "util/projection.h"
-#include "style/style.h"
+
+class Style;
 
 /* An immutable identifier for a map tile 
  * 
@@ -16,12 +18,13 @@
  */
 struct TileID {
     
-    TileID(int _x, int _y, int _z) : x(_x) y(_y) z(_z) {};
+    TileID(int _x, int _y, int _z) : x(_x), y(_y), z(_z) {};
 
-    bool operator< (const TileID& _lhs, const TileID& _rhs) { return (_lhs.x < _rhs.x || (_lhs.y < _rhs.y || _lhs.z < _rhs.z)); }
-    bool operator> (const TileID& _lhs, const TileID& _rhs) { return _rhs < _lhs; }
-    bool operator<=(const TileID& _lhs, const TileID& _rhs) { return !(_lhs > _rhs); }
-    bool operator>=(const TileID& _lhs, const TileID& _rhs) { return !(_lhs < _rhs); }
+    bool operator< (const TileID& _rhs) const { return (x < _rhs.x || (y < _rhs.y || z < _rhs.z)); }
+    bool operator> (const TileID& _rhs) const { return _rhs < const_cast<TileID&>(*this); }
+    bool operator<=(const TileID& _rhs) const { return !(*this > _rhs); }
+    bool operator>=(const TileID& _rhs) const { return !(*this < _rhs); }
+    bool operator==(const TileID& _rhs) const { return x == _rhs.x && y == _rhs.y && z == _rhs.z; }
 
     const int x;
     const int y;
@@ -38,7 +41,7 @@ class MapTile {
 
 public:
     
-    MapTile(TileID _id, const Projection& _projection);
+    MapTile(TileID _id, const MapProjection& _projection);
 
     virtual ~MapTile();
 

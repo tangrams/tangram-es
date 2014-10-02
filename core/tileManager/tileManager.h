@@ -10,6 +10,8 @@
 #include "mapTile/mapTile.h"
 #include "viewModule/viewModule.h"
 
+class SceneDefinition;
+
 /* Singleton container of <MapTile>s
  *
  * TileManager is a singleton that maintains a set of MapTiles based on the current view into the map
@@ -33,7 +35,7 @@ public:
     void setView(std::shared_ptr<ViewModule> _view) { m_viewModule = _view; }
 
     /* Sets the scene defintion which the TileManager will use to style tiles */
-    void setSceneDefintion(std::shared_ptr<SceneDefinition> _sceneDef) { m_sceneDefiniton = _sceneDef; }
+    void setSceneDefintion(std::shared_ptr<SceneDefinition> _sceneDef) { m_sceneDefinition = _sceneDef; }
 
     /* Adds a <DataSource> from which tile data should be retrieved */
     void addDataSource(std::shared_ptr<DataSource> _source) { m_dataSources.push_back(_source); }
@@ -53,7 +55,7 @@ private:
     TileManager();
 
     std::shared_ptr<ViewModule> m_viewModule;
-    std::shared_ptr<SceneDefinition> m_sceneDefiniton;
+    std::shared_ptr<SceneDefinition> m_sceneDefinition;
 
     std::map<TileID, std::unique_ptr<MapTile>> m_tileSet;
 

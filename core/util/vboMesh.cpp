@@ -9,6 +9,30 @@ VboMesh::VboMesh(std::shared_ptr<VertexLayout> _vertexLayout, GLenum _drawMode) 
 
     m_isUploaded = false;
 
+    setDrawMode(_drawMode);
+}
+
+VboMesh::VboMesh() {
+    m_glVertexBuffer = 0;
+    m_glIndexBuffer = 0;
+    m_nVertices = 0;
+    m_nIndices = 0;
+
+    m_isUploaded = false;
+}
+
+VboMesh::~VboMesh() {
+
+    glDeleteBuffers(1, &m_glVertexBuffer);
+    glDeleteBuffers(1, &m_glIndexBuffer);
+
+}
+
+void VboMesh::setVertexLayout(std::shared_ptr<VertexLayout> _vertexLayout) {
+    m_vertexLayout = _vertexLayout;
+}
+
+void VboMesh::setDrawMode(GLenum _drawMode) {
     switch (_drawMode) {
         case GL_POINTS:
         case GL_LINE_STRIP:
@@ -23,14 +47,6 @@ VboMesh::VboMesh(std::shared_ptr<VertexLayout> _vertexLayout, GLenum _drawMode) 
             logMsg("%s\n","Invalid draw mode for mesh! Defaulting to GL_TRIANGLES");
             m_drawMode = GL_TRIANGLES;
     }
-
-}
-
-VboMesh::~VboMesh() {
-
-    glDeleteBuffers(1, &m_glVertexBuffer);
-    glDeleteBuffers(1, &m_glIndexBuffer);
-
 }
 
 void VboMesh::addVertex(GLbyte* _vertex) {
@@ -102,7 +118,7 @@ void VboMesh::upload() {
 
 }
 
-void VboMesh::draw(std::shared_ptr<ShaderProgram> _shader) {
+void VboMesh::draw(const std::shared_ptr<ShaderProgram> _shader) {
 
     // Ensure that geometry is buffered into GPU
     if (!m_isUploaded) {

@@ -40,7 +40,7 @@ VertexLayout::~VertexLayout() {
 
 }
 
-void VertexLayout::enable(std::shared_ptr<ShaderProgram> _program) {
+void VertexLayout::enable(const std::shared_ptr<ShaderProgram> _program) {
 
     GLuint glProgram = _program->getGlProgram();
 

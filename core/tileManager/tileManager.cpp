@@ -1,4 +1,5 @@
 #include "tileManager.h"
+#include "sceneDefinition/sceneDefinition.h"
 
 TileManager::TileManager() {
 }
@@ -32,7 +33,7 @@ bool TileManager::updateTileSet() {
 
         TileID visTile = *visTilesIter;
 
-        TileID tileInSet = *(tileSetIter->first);
+        TileID tileInSet = tileSetIter->first;
 
         if (visTile == tileInSet) {
             // Tiles match here, nothing to do
@@ -57,31 +58,31 @@ bool TileManager::updateTileSet() {
         tileSetChanged = true;
     }
 
-    while (visTilesIter != m_VisibleTiles.end()) {
+    while (visTilesIter != visibleTiles.end()) {
         // All tiles in visibleTiles that haven't been covered yet are not in tileSet, so add them
         addTile(*visTilesIter);
         tileSetChanged = true;
     }
 
-    const std::vector<Style>& styles = m_sceneDefinition->getStyles();
+    const std::vector<std::unique_ptr<Style>>& styles = m_sceneDefinition->getStyles();
 
     // For now, synchronously load the tiles we need
     if (m_tilesToAdd.size() > 0) {
-        for (auto source& : m_dataSources) {
-            source->LoadTile(tilesToAdd);
+        for (auto& source : m_dataSources) {
+            source->LoadTile(m_tilesToAdd);
         }
         // Construct tiles... buckle up, this gets deep
-        for (auto style& : styles) {
-            for (auto tileID& : tilesToAdd) {
-                for (auto source& : m_dataSources) {
+        for (auto& style : styles) {
+            for (auto& tileID : m_tilesToAdd) {
+                for (auto& source : m_dataSources) {
                     // Instantiate a maptile
-                    MapTile* tile = new MapTile(tileID, m_viewModule);
+                    std::unique_ptr<MapTile> tile(new MapTile(tileID, m_viewModule->getMapProjection()));
                     // Get the previously fetched tile data
-                    std::shared_ptr<Json::Value> json = source.GetData(tileID);
+                    std::shared_ptr<Json::Value> json = source->GetData(tileID);
                     // Add styled geometry to the new tile
-                    style.addData(json, tile);
+                    style->addData(*json, *tile, m_viewModule->getMapProjection());
                     // Add the tile to our tileset
-                    m_tileSet[tileID] = std::move(*tile);
+                    m_tileSet[tileID] = std::move(tile);
                 }
             }
         }

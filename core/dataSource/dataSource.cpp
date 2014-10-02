@@ -38,6 +38,7 @@ size_t write_data(void *_ptr, size_t _size, size_t _nmemb, void *_stream) {
 }
 
 // curlInit initializes individual curl simple instances
+
 // every tile url has a curl simple instance
 static void curlInit(CURLM *_curlMulti, std::string _url, std::stringstream *_out) {
     CURL *curlEasy = curl_easy_init();
@@ -57,7 +58,7 @@ static void curlInit(CURLM *_curlMulti, std::string _url, std::stringstream *_ou
 
 // Responsible to read the tileData from the service
 // takes a vector of tileCoordinates to be read from the service.
-bool MapzenVectorTileJson::LoadTile(std::vector<glm::ivec3> _tileCoords) {
+bool MapzenVectorTileJson::LoadTile(std::vector<TileID> _tileCoords) {
     std::vector<std::unique_ptr<std::string>> urls;
 
     if(_tileCoords.size() == 0) {
@@ -262,4 +263,11 @@ bool MapzenVectorTileJson::CheckDataExists(std::string _tileID) {
 //Returns jsonValue for a requested tileID
 std::shared_ptr<Json::Value> MapzenVectorTileJson::GetData(std::string _tileID) {
     return m_JsonRoots[_tileID];
+}
+
+std::shared_ptr<Json::Value> MapzenVectorTileJson::GetData(TileID _tileID) {
+
+    std::ostringstream strStream;
+    strStream<<_tileID.z<<"_"<<_tileID.x<<"_"<<_tileID.y;
+    return GetData(std::string(strStream.str()));
 }

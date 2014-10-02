@@ -3,8 +3,9 @@
 #include <memory>
 
 #include "tileManager/tileManager.h"
-#include "sceneDefinition/sceneDefinition.h"
 #include "viewModule/viewModule.h"
+
+class SceneDefinition;
 
 class SceneDirector {
 

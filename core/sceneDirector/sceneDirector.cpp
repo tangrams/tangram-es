@@ -2,6 +2,7 @@
 #include "glm/fwd.hpp"
 #include "glm/glm.hpp"
 #include "style/style.h"
+#include "sceneDefinition/sceneDefinition.h"
 #include "platform.h"
 
 SceneDirector::SceneDirector() {
