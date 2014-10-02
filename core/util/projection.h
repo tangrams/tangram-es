@@ -146,8 +146,6 @@ public:
     virtual glm::dvec2&& PixelsToRaster(glm::dvec2 _pix, int _zoom);
     virtual glm::dvec4&& TileBounds(glm::ivec3 _tileCoord) override;
     virtual glm::dvec4&& TileLonLatBounds(glm::ivec3 _tileCoord) override;
-    //virtual glm::dvec2&& TileXYToLonLat(glm::ivec3 _tileXY);
-    //virtual glm::ivec2&& LonLatToTileXY(glm::dvec2 _lonLat, int _zoom);
     virtual ~MercatorProjection() {}
 };
 
