@@ -1,6 +1,8 @@
 #include "sceneDirector.h"
 #include "glm/fwd.hpp"
 #include "glm/glm.hpp"
+#include "style/style.h"
+#include "platform.h"
 
 SceneDirector::SceneDirector() {
 
@@ -19,6 +21,9 @@ void SceneDirector::loadStyles() {
 
     // TODO: Instatiate styles from file
     m_sceneDefinition = std::make_shared<SceneDefinition>();
+
+    // Create a single hard-coded style for now
+    m_sceneDefinition->addStyle(std::move(new PolygonStyle("polygon", GL_TRIANGLES)));
 
 }
 
