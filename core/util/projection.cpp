@@ -14,7 +14,7 @@ MercatorProjection::MercatorProjection(int _tileSize) : MapProjection(Projection
     m_Res = 2.0 * HALF_CIRCUMFERENCE * invTileSize;
 }
 
-glm::dvec2&& MercatorProjection::LonLatToMeters(glm::dvec2 _lonLat) {
+glm::dvec2&& MercatorProjection::LonLatToMeters(const glm::dvec2 _lonLat) {
     glm::dvec2 meters;
     meters.x = _lonLat.x * HALF_CIRCUMFERENCE * INV_180;
     meters.y = log( tan( PI*0.25 + _lonLat.y * PI * INV_360));
@@ -22,7 +22,7 @@ glm::dvec2&& MercatorProjection::LonLatToMeters(glm::dvec2 _lonLat) {
     return std::move(meters);
 }
 
-glm::dvec2&& MercatorProjection::MetersToLonLat(glm::dvec2 _meters) {
+glm::dvec2&& MercatorProjection::MetersToLonLat(const glm::dvec2 _meters) {
     glm::dvec2 lonLat;
     double invHalfCircum = 1.0/HALF_CIRCUMFERENCE;
     double invPI = 1.0/PI;
@@ -31,7 +31,7 @@ glm::dvec2&& MercatorProjection::MetersToLonLat(glm::dvec2 _meters) {
     return std::move(lonLat);
 }
 
-glm::dvec2&& MercatorProjection::PixelsToMeters(glm::dvec2 _pix, int _zoom) {
+glm::dvec2&& MercatorProjection::PixelsToMeters(const glm::dvec2 _pix, const int _zoom) {
     glm::dvec2 meters;
     double res = m_Res / (1 << _zoom);
     meters.x = _pix.x * res - HALF_CIRCUMFERENCE;
@@ -39,7 +39,7 @@ glm::dvec2&& MercatorProjection::PixelsToMeters(glm::dvec2 _pix, int _zoom) {
     return std::move(meters);
 }
 
-glm::dvec2&& MercatorProjection::MetersToPixel(glm::dvec2 _meters, int _zoom) {
+glm::dvec2&& MercatorProjection::MetersToPixel(const glm::dvec2 _meters, const int _zoom) {
     glm::dvec2 pix;
     double invRes = (1 << _zoom) / m_Res;
     pix.x = ( _meters.x + HALF_CIRCUMFERENCE ) * invRes;
@@ -47,7 +47,7 @@ glm::dvec2&& MercatorProjection::MetersToPixel(glm::dvec2 _meters, int _zoom) {
     return std::move(pix);
 }
 
-glm::ivec2&& MercatorProjection::PixelsToTileXY(glm::dvec2 _pix) {
+glm::ivec2&& MercatorProjection::PixelsToTileXY(const glm::dvec2 _pix) {
     //returns the tile covering a region of a pixel
     glm::ivec2 tileXY;
     double invTileSize = 1.0/m_TileSize;
@@ -56,7 +56,7 @@ glm::ivec2&& MercatorProjection::PixelsToTileXY(glm::dvec2 _pix) {
     return std::move(tileXY);
 }
 
-glm::ivec2&& MercatorProjection::MetersToTileXY(glm::dvec2 _meters, int _zoom) {
+glm::ivec2&& MercatorProjection::MetersToTileXY(const glm::dvec2 _meters, const int _zoom) {
     glm::dvec2 pix;
     glm::ivec2 tileXY;
     pix = MetersToPixel(_meters, _zoom);
@@ -64,7 +64,7 @@ glm::ivec2&& MercatorProjection::MetersToTileXY(glm::dvec2 _meters, int _zoom) {
     return std::move(tileXY);
 }
 
-glm::dvec2&& MercatorProjection::PixelsToRaster(glm::dvec2 _pix, int _zoom) {
+glm::dvec2&& MercatorProjection::PixelsToRaster(const glm::dvec2 _pix, const int _zoom) {
     glm::dvec2 transformedPix;
     double mapSize;
     mapSize = m_TileSize << _zoom;
@@ -72,7 +72,7 @@ glm::dvec2&& MercatorProjection::PixelsToRaster(glm::dvec2 _pix, int _zoom) {
     return std::move(transformedPix);
 }
 
-glm::dvec4&& MercatorProjection::TileBounds(glm::ivec3 _tileCoord) {
+glm::dvec4&& MercatorProjection::TileBounds(const glm::ivec3 _tileCoord) {
     glm::dvec2 boundMin, boundMax;
     glm::dvec4 bounds;
     boundMin = PixelsToMeters(glm::vec2(_tileCoord.x*m_TileSize, _tileCoord.y*m_TileSize), _tileCoord.z);
@@ -81,7 +81,7 @@ glm::dvec4&& MercatorProjection::TileBounds(glm::ivec3 _tileCoord) {
     return std::move(bounds);
 }
 
-glm::dvec4&& MercatorProjection::TileLonLatBounds(glm::ivec3 _tileCoord) {
+glm::dvec4&& MercatorProjection::TileLonLatBounds(const glm::ivec3 _tileCoord) {
     glm::dvec2 boundMin, boundMax;
     glm::dvec4 tileBounds, lonLatBounds;
     tileBounds = TileBounds(_tileCoord);
