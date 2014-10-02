@@ -19,16 +19,19 @@ void Style::setVertShaderSrc(std::string _vertShaderSrcStr) {
     m_vertShaderSrcStr = std::move(_vertShaderSrcStr);
 }
 
-std::string Style::getStyleName() {
-    return m_styleName;
-}
-
-std::string Style::getGeometryType() {
-    return m_geomType;
-}
-
-std::shared_ptr<ShaderProgram> Style::getShaderProgram() {
+std::shared_ptr<ShaderProgram> Style::getShaderProgram() const {
     return m_shaderProgram;
+}
+
+void Style::updateLayers(std::vector<std::pair<std::string, glm::vec4>> _newLayers) {
+    for(auto& newLayer : _newLayers) {
+        if(m_layerColorMap.find(newLayer.first) == m_layerColorMap.end()) {
+            m_layerColorMap.emplace(std::make_pair(newLayer.first, newLayer.second));
+        }
+        else {
+            m_layerColorMap[newLayer.first] = newLayer.second;
+        }
+    }
 }
 
 /*
@@ -102,7 +105,7 @@ void PolygonStyle::constructShaderProgram() {
     m_shaderProgram->buildFromSourceStrings(m_fragShaderSrcStr, m_vertShaderSrcStr);
 }
 
-void PolygonStyle::addData(Json::Value _jsonRoot, MapTile& _tile, MapProjection& _mapProjection) {
+void PolygonStyle::addData(const Json::Value _jsonRoot, MapTile& _tile, MapProjection& _mapProjection) {
     // Create a vboMesh which will eventually contain all the data
     std::unique_ptr<VboMesh> mesh(new VboMesh(m_vertexLayout, m_drawMode));
 
