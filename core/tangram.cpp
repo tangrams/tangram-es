@@ -6,6 +6,7 @@ void initializeOpenGL()
 {
 
     sceneDirector.reset(new SceneDirector());
+    sceneDirector->loadStyles();
 
     logMsg("%s\n", "initialize");
 
