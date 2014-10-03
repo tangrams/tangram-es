@@ -21,9 +21,9 @@ class TileManager {
 public:
     
     /* Returns the single instance of the TileManager */
-    static TileManager&& GetInstance() {
-        static TileManager *instance = new TileManager();
-        return std::move(*instance);
+    static std::unique_ptr<TileManager> GetInstance() {
+        static std::unique_ptr<TileManager> instance (new TileManager());
+        return std::move(instance);
     }
 
     /* Constructs a TileManager using move semantics */
@@ -35,7 +35,7 @@ public:
     void setView(std::shared_ptr<ViewModule> _view) { m_viewModule = _view; }
 
     /* Sets the scene defintion which the TileManager will use to style tiles */
-    void setSceneDefintion(std::shared_ptr<SceneDefinition> _sceneDef) { m_sceneDefinition = _sceneDef; }
+    void setSceneDefinition(std::shared_ptr<SceneDefinition> _sceneDef) { m_sceneDefinition = _sceneDef; }
 
     /* Adds a <DataSource> from which tile data should be retrieved */
     void addDataSource(std::shared_ptr<DataSource> _source) { m_dataSources.push_back(_source); }
