@@ -7,16 +7,21 @@
 
 SceneDirector::SceneDirector() {
 
-    m_tileManager = TileManager::GetInstance();
-    m_sceneDefinition.reset(new SceneDefinition());
-
     m_viewModule = std::make_shared<ViewModule>();
 
+    // Set view to Manhattan, for testing
+    //glm::dvec4 tileBounds = m_viewModule->getMapProjection().TileBounds(TileID(19293, 24641, 16));
+    //m_viewModule->setPosition(tileBounds.x, tileBounds.y);
+    //m_viewModule->setZoom(16);
+
+    logMsg("Constructed viewModule\n");
+
+    m_tileManager = TileManager::GetInstance();
     m_tileManager->setView(m_viewModule);
-    m_tileManager->setSceneDefinition(m_sceneDefinition);
-    
     std::shared_ptr<DataSource> dataSource(new MapzenVectorTileJson());
     m_tileManager->addDataSource(std::move(dataSource));
+
+    logMsg("Constructed tileManager \n");
 }
 
 void SceneDirector::loadStyles() {
@@ -25,7 +30,13 @@ void SceneDirector::loadStyles() {
     m_sceneDefinition = std::make_shared<SceneDefinition>();
 
     // Create a single hard-coded style for now
-    m_sceneDefinition->addStyle(std::unique_ptr<Style>(new PolygonStyle("Polygon", GL_TRIANGLES)));
+    std::unique_ptr<Style> style(new PolygonStyle("Polygon"));
+    style->updateLayers({{"water", glm::vec4(0.0, 0.0, 1.0, 1.0)}});
+    m_sceneDefinition->addStyle(std::move(style));
+
+    m_tileManager->setSceneDefinition(m_sceneDefinition);
+
+    logMsg("Loaded styles\n");
 
 }
 
