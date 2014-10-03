@@ -40,6 +40,8 @@ CORE_SRC_FILES= \
 	core/viewModule/*.cpp \
 	core/dataSource/*.cpp \
 	core/tileManager/*.cpp \
+	core/sceneDefinition/*.cpp \
+	core/sceneDirector/*.cpp \
 	core/mapTile/*.cpp \
 	core/style/*.cpp
 
