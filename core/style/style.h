@@ -92,6 +92,11 @@ public:
     virtual void addData(const Json::Value& _jsonRoot, MapTile& _tile, const MapProjection& _mapProjection) = 0;
     
     /*
+     * Do any gl operation on the shader
+     */
+    virtual void setup() = 0;
+    
+    /*
      * Sets fragment shader source
      */
     void setFragShaderSrc(std::string _fragShaderSrcStr);
@@ -140,8 +145,10 @@ public:
     PolygonStyle(std::string _geomType, std::string _styleName, GLenum _drawMode = GL_TRIANGLES);
     
     virtual void addData(const Json::Value& _jsonRoot, MapTile& _tile, const MapProjection& _mapProjection);
+    virtual void setup();
     virtual void constructVertexLayout();
     virtual void constructShaderProgram();
+
     
     virtual ~PolygonStyle() {
         m_vertices.clear();

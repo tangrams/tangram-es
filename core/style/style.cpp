@@ -151,4 +151,7 @@ void PolygonStyle::addData(const Json::Value& _jsonRoot, MapTile& _tile, const M
     _tile.addGeometry(*this, std::move(mesh));
 }
 
+void PolygonStyle::setup() {
+}
+
 
