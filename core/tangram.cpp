@@ -29,7 +29,7 @@ void renderFrame()
     sceneDirector->renderFrame();
 
     logMsg("Rendered\n");
-    
+
     GLenum glError = glGetError();
     if (glError) {
         logMsg("GL Error %d!!!\n", glError);
