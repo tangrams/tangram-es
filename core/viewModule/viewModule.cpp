@@ -1,4 +1,5 @@
 #include "viewModule.h"
+#include "util/tileID.h"
 #include "../platform.h"
 
 ViewModule::ViewModule(float _width, float _height, ProjectionType _projType) {

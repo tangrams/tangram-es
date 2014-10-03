@@ -1,5 +1,6 @@
 #include "mapTile.h"
 #include "style/style.h"
+#include "util/tileID.h"
 
 #include "glm/gtc/type_ptr.hpp"
 

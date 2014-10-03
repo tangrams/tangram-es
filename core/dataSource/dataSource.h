@@ -12,11 +12,8 @@
 #include <sstream>
 
 #include "glm/glm.hpp"
-
-#include "mapTile/mapTile.h"
-
+#include "util/tileID.h"
 #include "platform.h"
-
 
 //Todo: Impelement TileData, a generic datastore for all tile formats,
 //Have an instance of this in DataSource
