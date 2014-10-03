@@ -216,9 +216,7 @@ bool MapzenVectorTileJson::LoadTile(std::vector<TileID> _tileCoords) {
                     if(prevHandle != numHandles) {
                         std::cout<<"Change happened\n";//TODO: Remove this. Only here for testing
                         prevHandle = numHandles;
-                        handleMsg = curl_multi_info_read(multiHandle, &queuedHandles);
                         // for every url done fill the jsonValue
-                        int test = queuedHandles;
                         while( (handleMsg = curl_multi_info_read(multiHandle, &queuedHandles) )) {
                         //for(auto qHandItr = 0; qHandItr <= test; qHandItr++) {
                             if(handleMsg->msg == CURLMSG_DONE) {
