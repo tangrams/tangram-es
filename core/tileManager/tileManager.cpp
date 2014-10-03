@@ -68,7 +68,7 @@ bool TileManager::updateTileSet() {
         tileSetChanged = true;
     }
 
-    const std::vector<std::unique_ptr<Style>>& styles = m_sceneDefinition->getStyles();
+    std::vector<std::shared_ptr<Style>>& styles = m_sceneDefinition->getStyles();
 
     // For now, synchronously load the tiles we need
     if (m_tilesToAdd.size() > 0) {

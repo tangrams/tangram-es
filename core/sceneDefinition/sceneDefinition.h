@@ -12,16 +12,14 @@
 class SceneDefinition {
 
 public:
-    
-    SceneDefinition() {};
 
-    void addStyle(std::unique_ptr<Style> _style);
+    void addStyle(std::shared_ptr<Style> _style);
 
-    const std::vector<std::unique_ptr<Style>>& getStyles() { return m_styles; };
+    std::vector<std::shared_ptr<Style>>& getStyles() { return m_styles; };
 
 private:
 
-    std::vector<std::unique_ptr<Style>> m_styles;
+    std::vector<std::shared_ptr<Style>> m_styles;
 
 };
 

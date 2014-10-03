@@ -1,6 +1,7 @@
 #include "viewModule.h"
 #include "util/tileID.h"
 #include "../platform.h"
+#include "glm/gtx/string_cast.hpp"
 
 ViewModule::ViewModule(float _width, float _height, ProjectionType _projType) {
     //Set the map projection for the view module to use.
@@ -13,8 +14,10 @@ ViewModule::ViewModule(float _width, float _height, ProjectionType _projType) {
     // Set up view matrix
     m_pos = glm::dvec3(0, 0, 0); // Start at 0 to begin
     glm::dvec3 direction = glm::dvec3(0, 0, -1); // Look straight down
-    glm::dvec3 up = glm::dvec3(0, 0, 1); // Z-axis is 'up'
+    glm::dvec3 up = glm::dvec3(0, 1, 0); // Y-axis is 'up'
     m_view = glm::lookAt(m_pos, m_pos + direction, up);
+
+    logMsg("m_view: %s\n", glm::to_string(m_view).c_str());
 }
 
 void ViewModule::setMapProjection(ProjectionType _projType) {
@@ -70,7 +73,7 @@ void ViewModule::setZoom(int _z) {
 }
 
 const glm::dmat4&& ViewModule::getViewProjectionMatrix() const {
-    return std::move(m_view * m_proj);
+    return std::move(m_proj * m_view);
 }
 
 glm::dmat2 ViewModule::getBoundsRect() const {

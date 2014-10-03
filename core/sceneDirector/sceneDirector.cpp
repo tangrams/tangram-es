@@ -30,9 +30,9 @@ void SceneDirector::loadStyles() {
     m_sceneDefinition = std::make_shared<SceneDefinition>();
 
     // Create a single hard-coded style for now
-    std::unique_ptr<Style> style(new PolygonStyle("Polygon"));
+    std::shared_ptr<Style> style(new PolygonStyle("Polygon"));
     style->updateLayers({{"water", glm::vec4(0.0, 0.0, 1.0, 1.0)}});
-    m_sceneDefinition->addStyle(std::move(style));
+    m_sceneDefinition->addStyle(style);
 
     m_tileManager->setSceneDefinition(m_sceneDefinition);
 
