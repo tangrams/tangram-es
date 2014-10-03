@@ -1,6 +1,3 @@
-#include "dataSource.h"
-#include "../platform.h"
-
 #include <fstream>
 #include <iostream>
 #include <memory>
@@ -11,6 +8,9 @@
 #include <sys/time.h>
 
 #include <curl/multi.h>
+
+#include "dataSource.h"
+#include "../platform.h"
 
 static const int MAX_FETCH_TRY = 3;
 

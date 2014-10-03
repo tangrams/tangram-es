@@ -10,7 +10,7 @@
 #include <glm/gtc/matrix_transform.hpp>
 
 #include "util/projection.h"
-#include "mapTile/mapTile.h"
+#include "util/tileID.h"
 
 /* ViewModule
  * 1. Stores a representation of the current view into the map world

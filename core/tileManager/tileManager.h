@@ -6,11 +6,13 @@
 
 #include "glm/fwd.hpp"
 #include "glm/glm.hpp"
-#include "dataSource/dataSource.h"
-#include "mapTile/mapTile.h"
-#include "viewModule/viewModule.h"
+
+#include "util/tileID.h"
 
 class SceneDefinition;
+class MapTile;
+class ViewModule;
+class DataSource;
 
 /* Singleton container of <MapTile>s
  *

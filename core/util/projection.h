@@ -7,7 +7,7 @@
 #include "glm/fwd.hpp"
 #include "glm/glm.hpp"
 
-struct TileID;
+#include "tileID.h"
 
 enum class ProjectionType {
     mercator

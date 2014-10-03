@@ -1,5 +1,8 @@
 #include "tileManager.h"
 #include "sceneDefinition/sceneDefinition.h"
+#include "mapTile/mapTile.h"
+#include "dataSource/dataSource.h"
+#include "viewModule/viewModule.h"
 
 TileManager::TileManager() {
 }

@@ -4,6 +4,7 @@
 #pragma once
 
 #include "json/json.h"
+#include "glm/glm.hpp"
 
 #include <string>
 #include <vector>
@@ -11,10 +12,7 @@
 #include <memory>
 #include <sstream>
 
-#include "glm/glm.hpp"
-
-#include "mapTile/mapTile.h"
-
+#include "util/tileID.h"
 
 //Todo: Impelement TileData, a generic datastore for all tile formats,
 //Have an instance of this in DataSource
