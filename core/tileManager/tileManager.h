@@ -9,6 +9,7 @@
 #include "dataSource/dataSource.h"
 #include "mapTile/mapTile.h"
 #include "viewModule/viewModule.h"
+#include "platform.h"
 
 class SceneDefinition;
 
