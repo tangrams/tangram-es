@@ -7,15 +7,16 @@
 
 SceneDirector::SceneDirector() {
 
-    m_tileManager.reset(TileManager::GetInstance());
+    m_tileManager = TileManager::GetInstance();
     m_sceneDefinition.reset(new SceneDefinition());
 
     m_viewModule = std::make_shared<ViewModule>();
 
     m_tileManager->setView(m_viewModule);
-    m_tileManager->setSceneDefiniton(m_sceneDefinition);
-    m_tileManager->addDataSource(new MapzenVectorTileJson());
-
+    m_tileManager->setSceneDefinition(m_sceneDefinition);
+    
+    std::shared_ptr<DataSource> dataSource(new MapzenVectorTileJson());
+    m_tileManager->addDataSource(std::move(dataSource));
 }
 
 void SceneDirector::loadStyles() {
@@ -42,15 +43,15 @@ void SceneDirector::renderFrame() {
     glm::dmat4 viewProj = m_viewModule->getViewProjectionMatrix();
 
     // Loop over all styles
-    for (auto style : m_sceneDefinition->getStyles()) {
+    for (const auto& style : m_sceneDefinition->getStyles()) {
 
         style->setup();
 
         // Loop over visible tiles
-        for (auto mapTile : m_tileManager->GetVisibleTiles()) {
+        for (const auto& mapTile : m_tileManager->getVisibleTiles()) {
 
             // Draw!
-            mapTile->draw(style, viewProj);
+            mapTile.second->draw(*style, viewProj);
 
         }
     }
