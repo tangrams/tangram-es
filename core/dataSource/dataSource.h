@@ -15,6 +15,8 @@
 
 #include "mapTile/mapTile.h"
 
+#include "platform.h"
+
 
 //Todo: Impelement TileData, a generic datastore for all tile formats,
 //Have an instance of this in DataSource
@@ -71,6 +73,7 @@ static std::unique_ptr<std::string> constructURL(TileID _tileCoord) {
 static std::string extractIDFromUrl(std::string _url) {
     std::string baseURL("http://vector.mapzen.com/osm/all/");
     std::string jsonStr(".json");
+    logMsg("extractIDFromUrl on: %s\n", _url.c_str());
     std::string tmpID = _url.replace(0, baseURL.length(), "");
     std::size_t jsonPos = tmpID.find(jsonStr);
     tmpID = tmpID.replace(jsonPos, jsonStr.length(), "");

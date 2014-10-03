@@ -99,6 +99,7 @@ bool MapzenVectorTileJson::LoadTile(std::vector<TileID> _tileCoords) {
         out[count] = new std::stringstream;
         curlInit(multiHandle, *url.get(), out[count]);
         count++;
+        logMsg("URL: %s\n", url->c_str());
     }
 
     //do curl stuff
@@ -217,7 +218,9 @@ bool MapzenVectorTileJson::LoadTile(std::vector<TileID> _tileCoords) {
                         prevHandle = numHandles;
                         handleMsg = curl_multi_info_read(multiHandle, &queuedHandles);
                         // for every url done fill the jsonValue
-                        for(auto qHandItr = 0; qHandItr <= queuedHandles; qHandItr++) {
+                        int test = queuedHandles;
+                        while( (handleMsg = curl_multi_info_read(multiHandle, &queuedHandles) )) {
+                        //for(auto qHandItr = 0; qHandItr <= test; qHandItr++) {
                             if(handleMsg->msg == CURLMSG_DONE) {
                                 //get the url from the easyHandle
                                 curl_easy_getinfo(handleMsg->easy_handle, CURLINFO_EFFECTIVE_URL , &url);
