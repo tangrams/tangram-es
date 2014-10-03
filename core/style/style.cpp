@@ -124,7 +124,7 @@ void PolygonStyle::addData(const Json::Value& _jsonRoot, MapTile& _tile, const M
 
             std::string geomType = geometry["type"].asString();
             //if geomType not relevant type then move on
-            if(geomType.compare("Polygon") != 0) {
+            if(geomType.compare(m_geomType) != 0) {
                 continue;
             }
             //else process this geometry
