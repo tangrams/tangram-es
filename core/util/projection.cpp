@@ -35,7 +35,7 @@ glm::dvec2&& MercatorProjection::PixelsToMeters(const glm::dvec2 _pix, const int
     glm::dvec2 meters;
     double res = m_Res / (1 << _zoom);
     meters.x = _pix.x * res - HALF_CIRCUMFERENCE;
-    meters.y = _pix.y * res - HALF_CIRCUMFERENCE;
+    meters.y = HALF_CIRCUMFERENCE - _pix.y * res;
     return std::move(meters);
 }
 
