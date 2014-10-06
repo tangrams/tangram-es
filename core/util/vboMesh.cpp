@@ -125,7 +125,7 @@ void VboMesh::draw(const std::shared_ptr<ShaderProgram> _shader) {
         upload();
     }
 
-    logMsg("    Drawing VboMesh: %d vertices, %d indices\n", m_nVertices, m_nIndices);
+    //logMsg("    Drawing VboMesh: %d vertices, %d indices\n", m_nVertices, m_nIndices);
 
     // Bind buffers for drawing
     if (m_nVertices > 0) {
