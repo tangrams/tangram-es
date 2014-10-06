@@ -35,21 +35,22 @@ void GeometryHandler::polygonAddData(const Json::Value& _geomCoordinates, std::v
     for(int i = 0; i < _geomCoordinates.size(); i++) {
         //extract coordinates and transform to merc (x,y) using m_mapProjection
         int ringSize = _geomCoordinates[0].size();
-        std::vector<glm::dvec3> ringCoords;
+        std::vector<glm::vec3> ringCoords;
 
         for(int j = 0; j < ringSize; j++) {
-            logMsg("\n\tgeomCoord: (%f,%f)\n", _geomCoordinates[0][j][0].asFloat(), _geomCoordinates[0][j][1].asFloat());
+            //logMsg("\n\tgeomCoord: (%f,%f)\n", _geomCoordinates[0][j][0].asFloat(), _geomCoordinates[0][j][1].asFloat());
             glm::dvec2 tmp = m_mapProjection->LonLatToMeters(glm::dvec2(_geomCoordinates[0][j][0].asFloat(), _geomCoordinates[0][j][1].asFloat()));
-            logMsg("\tLonLatToMeters: (%f,%f)\n", tmp.x, tmp.y);
+            //logMsg("\tLonLatToMeters: (%f,%f)\n", tmp.x, tmp.y);
             glm::dvec2 meters = tmp - _tileOffset;
-            logMsg("\tMeters: (%f,%f)\n", meters.x, meters.y);
-            ringCoords.push_back(glm::dvec3(meters.x, meters.y, _height));
+            //logMsg("\tMeters: (%f,%f)\n", meters.x, meters.y);
+            //logMsg("\tOrigin: (%f,%f)\n", _tileOffset.x, _tileOffset.y);
+            ringCoords.push_back(glm::vec3(meters.x, meters.y, _height));
         }
 
         // Extrude poly
         if(_height != _minHeight) {
-            glm::dvec3 upVector(0.0f,0.0f,1.0f);
-            glm::dvec3 normalVector;
+            glm::vec3 upVector(0.0f,0.0f,1.0f);
+            glm::vec3 normalVector;
 
             for(int j = 0; j < (ringSize-1); j++) {
                 normalVector = glm::cross(upVector, ringCoords[i+1] - ringCoords[i]);
@@ -122,7 +123,7 @@ void GeometryHandler::polygonAddData(const Json::Value& _geomCoordinates, std::v
             }
         }
         //Setup the tesselator
-        tessAddContour(m_tess, 3, &ringCoords[0].x, sizeof(glm::dvec3), ringSize);
+        tessAddContour(m_tess, 3, &ringCoords[0].x, sizeof(glm::vec3), ringSize);
     }
 
     //Call the tesselator to tesselate polygon into triangles
@@ -140,18 +141,37 @@ void GeometryHandler::polygonAddData(const Json::Value& _geomCoordinates, std::v
         const int numVertices = tessGetVertexCount(m_tess);
         const float* tessVertices = tessGetVertices(m_tess);
 
+        
         for(int i = 0; i < numVertices; i++) {
+            logMsg("\tTesselated vertex: (%f,%f,%f)\n", tessVertices[3*i], tessVertices[3*i+1], tessVertices[3*i+2]);
             _vertices.push_back((T){
                                     tessVertices[3*i],
                                     tessVertices[3*i+1],
                                     tessVertices[3*i+2],
                                     0.0f, 0.0f, 1.0f,
-                                    static_cast<GLubyte>(_rgba.x),
-                                    static_cast<GLubyte>(_rgba.y),
-                                    static_cast<GLubyte>(_rgba.z),
-                                    static_cast<GLubyte>(_rgba.w)
+                                    static_cast<GLubyte>(_rgba.x*255.f),
+                                    static_cast<GLubyte>(_rgba.y*255.f),
+                                    static_cast<GLubyte>(_rgba.z*255.f),
+                                    static_cast<GLubyte>(_rgba.w*255.f)
                                    });
+            logMsg("Color: %d %d %d %d", static_cast<GLubyte>(_rgba.x*255.f),
+                                    static_cast<GLubyte>(_rgba.y*255.f),
+                                    static_cast<GLubyte>(_rgba.z*255.f),
+                                    static_cast<GLubyte>(_rgba.w*255.f));
         }
+        /*
+        _vertices.clear();
+        _vertices.push_back((T){
+            -0.5, -0.5, 0.0, 0.0, 0.0, 1.0f, 0, 0, 255, 255
+        });
+        _vertices.push_back((T){
+            0.5, -0.5, 0.0, 0.0, 0.0, 1.0f, 0, 0, 255, 255
+        });
+        _vertices.push_back((T){
+            0, 0.5, 0.0, 0.0, 0.0, 1.0f, 0, 0, 255, 255
+        });
+        _indices.clear();
+        */
     }
     else {
         logMsg("\t\t****tessTessalate returns false. Can not tesselate.****\n");
