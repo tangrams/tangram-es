@@ -20,6 +20,8 @@ TileManager::~TileManager() {
 }
 
 bool TileManager::updateTileSet() {
+
+    bool newTileLoadSuccess;
     
     if (!(m_viewModule->viewChanged())) {
         return false;
@@ -81,7 +83,12 @@ bool TileManager::updateTileSet() {
 
         for (auto& source : m_dataSources) {
             logMsg("Loading tiles...\n");
-            source->LoadTile(m_tilesToAdd);
+            newTileLoadSuccess = source->LoadTile(m_tilesToAdd);
+        }
+
+        if(!newTileLoadSuccess) {
+            logMsg("\n**New Tiles loading failed ... Timeout??**\n");
+            return false;
         }
         // Construct tiles... buckle up, this gets deep
         for (auto& style : styles) {
