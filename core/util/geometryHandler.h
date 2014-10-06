@@ -30,7 +30,7 @@ template<typename T>
 void GeometryHandler::polygonAddData(const Json::Value& _geomCoordinates, std::vector<T>& _vertices, std::vector<GLushort>& _indices, const glm::vec4& _rgba, const glm::dvec2& _tileOffset, double _height, double _minHeight) {
     //Get the size of the data already added
     size_t vertexDataOffset = _vertices.size();
-
+    
     // Iterate through rings to setup the tesselator
     for(int i = 0; i < _geomCoordinates.size(); i++) {
         //extract coordinates and transform to merc (x,y) using m_mapProjection
@@ -38,7 +38,11 @@ void GeometryHandler::polygonAddData(const Json::Value& _geomCoordinates, std::v
         std::vector<glm::dvec3> ringCoords;
 
         for(int j = 0; j < ringSize; j++) {
-            glm::dvec2 meters = m_mapProjection->LonLatToMeters(glm::dvec2(_geomCoordinates[0][i][0].asFloat(), _geomCoordinates[0][i][1].asFloat())) - _tileOffset;
+            logMsg("\n\tgeomCoord: (%f,%f)\n", _geomCoordinates[0][j][0].asFloat(), _geomCoordinates[0][j][1].asFloat());
+            glm::dvec2 tmp = m_mapProjection->LonLatToMeters(glm::dvec2(_geomCoordinates[0][j][0].asFloat(), _geomCoordinates[0][j][1].asFloat()));
+            logMsg("\tLonLatToMeters: (%f,%f)\n", tmp.x, tmp.y);
+            glm::dvec2 meters = tmp - _tileOffset;
+            logMsg("\tMeters: (%f,%f)\n", meters.x, meters.y);
             ringCoords.push_back(glm::dvec3(meters.x, meters.y, _height));
         }
 
@@ -117,38 +121,40 @@ void GeometryHandler::polygonAddData(const Json::Value& _geomCoordinates, std::v
                 vertexDataOffset += 4;
             }
         }
-        
         //Setup the tesselator
         tessAddContour(m_tess, 3, &ringCoords[0].x, sizeof(glm::dvec3), ringSize);
     }
 
     //Call the tesselator to tesselate polygon into triangles
-    tessTesselate(m_tess, TESS_WINDING_NONZERO, TessElementType::TESS_POLYGONS, 3, 3, nullptr);
+    if( tessTesselate(m_tess, TessWindingRule::TESS_WINDING_NONZERO, TessElementType::TESS_POLYGONS, 3, 3, nullptr)) {
+        const int numIndices = tessGetElementCount(m_tess);
+        const TESSindex* tessIndices = tessGetElements(m_tess);
 
-    const int numIndices = tessGetElementCount(m_tess);
-    const TESSindex* tessIndices = tessGetElements(m_tess);
+        for(int i = 0; i < numIndices; i++) {
+            const TESSindex* tessIndex = &tessIndices[i * 3];
+            for(int j = 0; j < 3; j++) {
+                _indices.push_back(GLubyte(tessIndex[j]) + vertexDataOffset);
+            }
+        }
 
-    for(int i = 0; i < numIndices; i++) {
-        const TESSindex* tessIndex = &tessIndices[i * 3];
-        for(int j = 0; j < 3; j++) {
-            _indices.push_back(GLubyte(tessIndex[j]) + vertexDataOffset);
+        const int numVertices = tessGetVertexCount(m_tess);
+        const float* tessVertices = tessGetVertices(m_tess);
+
+        for(int i = 0; i < numVertices; i++) {
+            _vertices.push_back((T){
+                                    tessVertices[3*i],
+                                    tessVertices[3*i+1],
+                                    tessVertices[3*i+2],
+                                    0.0f, 0.0f, 1.0f,
+                                    static_cast<GLubyte>(_rgba.x),
+                                    static_cast<GLubyte>(_rgba.y),
+                                    static_cast<GLubyte>(_rgba.z),
+                                    static_cast<GLubyte>(_rgba.w)
+                                   });
         }
     }
-
-    const int numVertices = tessGetVertexCount(m_tess);
-    const float* tessVertices = tessGetVertices(m_tess);
-
-    for(int i = 0; i < numVertices; i++) {
-        _vertices.push_back((T){
-                                tessVertices[3*i],
-                                tessVertices[3*i+1],
-                                tessVertices[3*i+2],
-                                0.0f, 0.0f, 1.0f,
-                                static_cast<GLubyte>(_rgba.x),
-                                static_cast<GLubyte>(_rgba.y),
-                                static_cast<GLubyte>(_rgba.z),
-                                static_cast<GLubyte>(_rgba.w)
-                               });
+    else {
+        logMsg("\t\t****tessTessalate returns false. Can not tesselate.****\n");
     }
 }
 
