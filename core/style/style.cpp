@@ -155,6 +155,11 @@ void PolygonStyle::addData(const Json::Value& _jsonRoot, MapTile& _tile, const M
     }
 }
 
+void PolygonStyle::clearStyleData() {
+    m_vertices.clear();
+    m_indices.clear();
+}
+
 void PolygonStyle::setup() {
 }
 

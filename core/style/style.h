@@ -90,6 +90,12 @@ public:
      * VboMesh (in the MapTile _tile object) is updated with the style data and vertex information.
      */
     virtual void addData(const Json::Value& _jsonRoot, MapTile& _tile, const MapProjection& _mapProjection) = 0;
+
+    /*
+     * clears m_indices and m_vertices. This needs to be called every time new tile is required to be filled with
+     * vertices and indices.
+     */
+    virtual void clearStyleData() = 0;
     
     /*
      * Do any gl operation on the shader
@@ -148,7 +154,8 @@ public:
     virtual void setup();
     virtual void constructVertexLayout();
     virtual void constructShaderProgram();
-
+    
+    virtual void clearStyleData();
     
     virtual ~PolygonStyle() {
         m_vertices.clear();
