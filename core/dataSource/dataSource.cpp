@@ -99,7 +99,6 @@ bool MapzenVectorTileJson::LoadTile(std::vector<TileID> _tileCoords) {
         out[count] = new std::stringstream;
         curlInit(multiHandle, *url.get(), out[count]);
         count++;
-        logMsg("URL: %s\n", url->c_str());
     }
 
     //do curl stuff
@@ -159,8 +158,7 @@ bool MapzenVectorTileJson::LoadTile(std::vector<TileID> _tileCoords) {
                 cres = curl_multi_perform(multiHandle, &numHandles);
                 prevHandle = numHandles;
                 curl_multi_fdset(multiHandle, &fdRead, &fdWrite, &fdExcep, &fdMax);
-                std::cout<<"Here\n"; //TODO: Remove this. Its here to test how many times this loop runs till
-                                     //multi_perform starts doing stuff
+                //std::cout<<"Here\n"; /*TODO: Remove this. Its here to test how many times this loop runs till multi_perform starts doing stuff*/
                 fdsetTimeoutCount++;
             }
 
@@ -259,6 +257,14 @@ bool MapzenVectorTileJson::CheckDataExists(std::string _tileID) {
     else {
         return false;
     }
+}
+
+//check if data for a tileID exists
+bool MapzenVectorTileJson::CheckDataExists(TileID _tileID) {
+
+    std::ostringstream strStream;
+    strStream<<_tileID.z<<"_"<<_tileID.x<<"_"<<_tileID.y;
+    return CheckDataExists(std::string(strStream.str()));
 }
 
 //Returns jsonValue for a requested tileID
