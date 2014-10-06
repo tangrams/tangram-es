@@ -21,6 +21,8 @@ SceneDirector::SceneDirector() {
     std::shared_ptr<DataSource> dataSource(new MapzenVectorTileJson());
     m_tileManager->addDataSource(std::move(dataSource));
 
+    glDisable(GL_CULL_FACE);
+
     logMsg("Constructed tileManager \n");
 }
 
