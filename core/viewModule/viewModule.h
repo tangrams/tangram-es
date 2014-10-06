@@ -43,7 +43,7 @@ public:
     const glm::dvec3& getPosition() const { return m_pos; };
     const glm::dmat4& getViewMatrix() const { return m_view; };
     const glm::dmat4& getProjectionMatrix() const { return m_proj; };
-    const glm::dmat4&& getViewProjectionMatrix() const;
+    const glm::dmat4 getViewProjectionMatrix() const;
 
     glm::dmat2 getBoundsRect() const; // Returns a rectangle of the current view range as [[x_min, y_min], [x_max, y_max]]
     const std::set<TileID>& getVisibleTiles();

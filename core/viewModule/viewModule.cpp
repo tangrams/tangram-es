@@ -12,12 +12,14 @@ ViewModule::ViewModule(float _width, float _height, ProjectionType _projType) {
     setZoom(16); // Arbitrary zoom for testing
 
     // Set up view matrix
-    m_pos = glm::dvec3(0, 0, 0); // Start at 0 to begin
+    m_pos = glm::dvec3(0, 0, 1); // Start at 0 to begin
     glm::dvec3 direction = glm::dvec3(0, 0, -1); // Look straight down
     glm::dvec3 up = glm::dvec3(0, 1, 0); // Y-axis is 'up'
     m_view = glm::lookAt(m_pos, m_pos + direction, up);
 
     logMsg("m_view: %s\n", glm::to_string(m_view).c_str());
+
+    logMsg("view projection matrix: %s\n", glm::to_string(m_proj * m_view).c_str());
 }
 
 void ViewModule::setMapProjection(ProjectionType _projType) {
@@ -68,12 +70,14 @@ void ViewModule::setZoom(int _z) {
     m_height = 3 * tileSize; // Set viewport size to ~3 tiles vertically
     m_width = m_height * m_aspect; // Size viewport width to match aspect ratio
     m_proj = glm::ortho(-m_width * 0.5, m_width * 0.5, -m_height * 0.5, m_height * 0.5);
+    //m_proj = glm::dmat4();
+    logMsg("ProjectionMatrix: %s\n", glm::to_string(m_proj).c_str());
     m_dirty = true;
 
 }
 
-const glm::dmat4&& ViewModule::getViewProjectionMatrix() const {
-    return std::move(m_proj * m_view);
+const glm::dmat4 ViewModule::getViewProjectionMatrix() const {
+    return m_proj * m_view;
 }
 
 glm::dmat2 ViewModule::getBoundsRect() const {
