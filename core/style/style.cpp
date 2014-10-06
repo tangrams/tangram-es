@@ -142,13 +142,17 @@ void PolygonStyle::addData(const Json::Value& _jsonRoot, MapTile& _tile, const M
             }
         }
     }
-    //Add vertices to mesh
-    mesh->addVertices((GLbyte*)&m_vertices, m_vertices.size());
-    mesh->addIndices((GLushort*)&m_indices, m_indices.size());
-    //1. addGeometry should take either take the name of the style or pointer to the style (this)
-    //_tile.addGeometry(m_styleName, std::move(mesh));
-    //_tile.addGeometry(this, std::move(mesh));
-    _tile.addGeometry(*this, std::move(mesh));
+    if(m_vertices.size() == 0) {
+        //Nothing to add to mesh, get rid of mesh
+        mesh.reset(nullptr);
+    }
+    else {
+        //Add vertices to mesh
+        mesh->addVertices((GLbyte*)&m_vertices, m_vertices.size());
+        mesh->addIndices((GLushort*)&m_indices, m_indices.size());
+        //1. addGeometry should take either take the name of the style or pointer to the style (this)
+        _tile.addGeometry(*this, std::move(mesh));
+    }
 }
 
 void PolygonStyle::setup() {
