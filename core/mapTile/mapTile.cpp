@@ -29,21 +29,15 @@ void MapTile::draw(const Style& _style, const glm::dmat4& _viewProjMatrix) {
 
     const std::unique_ptr<VboMesh>& styleMesh = m_geometry[_style.getStyleName()];
 
-    logMsg("Drawing mapTile %d/%d/%d\n", m_id.z, m_id.x, m_id.y);
+    //logMsg("Drawing mapTile %d/%d/%d\n", m_id.z, m_id.x, m_id.y);
 
     if (styleMesh) {
 
-        logMsg("    Drawing style %s\n", _style.getStyleName().c_str());
+        //logMsg("    Drawing style %s\n", _style.getStyleName().c_str());
 
         std::shared_ptr<ShaderProgram> shader = _style.getShaderProgram();
 
         glm::dmat4 modelViewProjMatrix = _viewProjMatrix * m_modelMatrix;
-
-        logMsg("    model matrix: %s\n", glm::to_string(m_modelMatrix).c_str());
-
-        logMsg("    viewProj matrix: %s\n", glm::to_string(_viewProjMatrix).c_str());
-
-        logMsg("    dMVP matrix: %s\n", glm::to_string(modelViewProjMatrix).c_str());
 
         //TODO: better cast to float
         glm::mat4 fmvp;
@@ -53,7 +47,7 @@ void MapTile::draw(const Style& _style, const glm::dmat4& _viewProjMatrix) {
             }
         }
 
-        logMsg("    fMVP matrix: %s\n", glm::to_string(fmvp).c_str());
+        //logMsg("    MVP matrix: %s\n", glm::to_string(fmvp).c_str());
 
         shader->setUniformMatrix4f("u_modelViewProj", glm::value_ptr(fmvp));
 
