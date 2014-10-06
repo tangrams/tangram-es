@@ -107,6 +107,7 @@ bool TileManager::updateTileSet() {
                     // Add the tile to our tileset
                     m_tileSet[tileID] = std::move(tile);
                 }
+                style->clearStyleData();
             }
         }
         m_tilesToAdd.clear();
