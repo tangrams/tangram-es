@@ -24,11 +24,11 @@ void renderFrame()
 
     sceneDirector->update(0.016);
 
-    logMsg("Updated\n");
+    //logMsg("Updated\n");
 
     sceneDirector->renderFrame();
 
-    logMsg("Rendered\n");
+    //logMsg("Rendered\n");
 
     GLenum glError = glGetError();
     if (glError) {
