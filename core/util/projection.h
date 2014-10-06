@@ -34,7 +34,7 @@ public:
      * Return value:
      *    meter (glm::dvec2).
      */
-    virtual glm::dvec2&& LonLatToMeters(const glm::dvec2 _lonLat) const = 0;
+    virtual glm::dvec2 LonLatToMeters(const glm::dvec2 _lonLat) const = 0;
 
     /* 
      * ProjectionType-Meters to Lon Lat
@@ -43,7 +43,7 @@ public:
      *  Return value:
      *    lonlat (glm::dvec2)
      */
-    virtual glm::dvec2&& MetersToLonLat(const glm::dvec2 _meters) const = 0;
+    virtual glm::dvec2 MetersToLonLat(const glm::dvec2 _meters) const = 0;
 
     /* 
      * Converts a pixel coordinate at a given zoom level of pyramid to projection meters
@@ -54,7 +54,7 @@ public:
      *  Return value:
      *    projection-meters (glm::dvec2)
      */
-    virtual glm::dvec2&& PixelsToMeters(const glm::dvec2 _pix, const int _zoom) const = 0;
+    virtual glm::dvec2 PixelsToMeters(const glm::dvec2 _pix, const int _zoom) const = 0;
     
     /* 
      * Converts projection meters to pyramid pixel coordinates in given zoom level.
@@ -65,7 +65,7 @@ public:
      * Return Value:
      *   pixels (glm::dvec2)
      */
-    virtual glm::dvec2&& MetersToPixel(const glm::dvec2 _meters, const int _zoom) const = 0;
+    virtual glm::dvec2 MetersToPixel(const glm::dvec2 _meters, const int _zoom) const = 0;
     
     /*
      * Returns a tile covering region in given pixel coordinates.
@@ -74,7 +74,7 @@ public:
      * Return Value:
      *   Tile coordinates (x and y) glm::ivec2
      */
-    virtual glm::ivec2&& PixelsToTileXY(const glm::dvec2 _pix) const = 0;
+    virtual glm::ivec2 PixelsToTileXY(const glm::dvec2 _pix) const = 0;
     
     /* 
      * Returns tile for given projection coordinates.
@@ -84,7 +84,7 @@ public:
      *  Return Value:
      *    Tile coordinates (x and y) (glm::ivec2)
      */
-    virtual glm::ivec2&& MetersToTileXY(const glm::dvec2 _meters, const int _zoom) const = 0;
+    virtual glm::ivec2 MetersToTileXY(const glm::dvec2 _meters, const int _zoom) const = 0;
 
     /*
      * Move the origin of pixel coordinates to top-left corner
@@ -94,7 +94,7 @@ public:
      * Return Value:
      *   glm::dvec2 newPixels at top-left corner
      */
-    virtual glm::dvec2&& PixelsToRaster(const glm::dvec2 _pix, const int _zoom) const = 0;
+    virtual glm::dvec2 PixelsToRaster(const glm::dvec2 _pix, const int _zoom) const = 0;
     
     /* 
      * Returns bounds of the given tile
@@ -105,7 +105,7 @@ public:
      *       x,y : min bounds in projection meters
      *       z,w : max bounds in projection meters
      */
-    virtual glm::dvec4&& TileBounds(const TileID _tileCoord) const = 0;
+    virtual glm::dvec4 TileBounds(const TileID _tileCoord) const = 0;
     
     /* 
      * bounds of space in lon lat
@@ -116,7 +116,7 @@ public:
      *       x,y: min bounds in lon lat
      *       z,w: max bounds in lon lat
      */
-    virtual glm::dvec4&& TileLonLatBounds(const TileID _tileCoord) const = 0;
+    virtual glm::dvec4 TileLonLatBounds(const TileID _tileCoord) const = 0;
     
     /* 
      * Returns the projection type of a given projection instance 
@@ -140,15 +140,15 @@ public:
      */
     MercatorProjection(int  _tileSize=256);
 
-    virtual glm::dvec2&& LonLatToMeters(const glm::dvec2 _lonLat) const override;
-    virtual glm::dvec2&& MetersToLonLat(const glm::dvec2 _meters) const override;
-    virtual glm::dvec2&& PixelsToMeters(const glm::dvec2 _pix, const int _zoom) const override;
-    virtual glm::dvec2&& MetersToPixel(const glm::dvec2 _meters, const int _zoom) const override;
-    virtual glm::ivec2&& PixelsToTileXY(const glm::dvec2 _pix) const override;
-    virtual glm::ivec2&& MetersToTileXY(const glm::dvec2 _meters, const int _zoom) const override;
-    virtual glm::dvec2&& PixelsToRaster(const glm::dvec2 _pix, const int _zoom) const override;
-    virtual glm::dvec4&& TileBounds(const TileID _tileCoord) const override;
-    virtual glm::dvec4&& TileLonLatBounds(const TileID _tileCoord) const override;
+    virtual glm::dvec2 LonLatToMeters(const glm::dvec2 _lonLat) const override;
+    virtual glm::dvec2 MetersToLonLat(const glm::dvec2 _meters) const override;
+    virtual glm::dvec2 PixelsToMeters(const glm::dvec2 _pix, const int _zoom) const override;
+    virtual glm::dvec2 MetersToPixel(const glm::dvec2 _meters, const int _zoom) const override;
+    virtual glm::ivec2 PixelsToTileXY(const glm::dvec2 _pix) const override;
+    virtual glm::ivec2 MetersToTileXY(const glm::dvec2 _meters, const int _zoom) const override;
+    virtual glm::dvec2 PixelsToRaster(const glm::dvec2 _pix, const int _zoom) const override;
+    virtual glm::dvec4 TileBounds(const TileID _tileCoord) const override;
+    virtual glm::dvec4 TileLonLatBounds(const TileID _tileCoord) const override;
     virtual ~MercatorProjection() {}
 };
 
