@@ -32,6 +32,7 @@ public:
     virtual std::shared_ptr<Json::Value> GetData(std::string _tileID) = 0;
     virtual std::shared_ptr<Json::Value> GetData(TileID _tileID) = 0;
     virtual bool CheckDataExists(std::string _tileID) = 0;
+    virtual bool CheckDataExists(TileID _tileID) = 0;
     void ClearGeoRoots();
     size_t JsonRootSize();
     DataSource() {}
@@ -48,6 +49,7 @@ public:
     virtual std::shared_ptr<Json::Value> GetData(std::string _tileID) override;
     virtual std::shared_ptr<Json::Value> GetData(TileID _tileID) override;
     virtual bool CheckDataExists(std::string _tileID) override;
+    virtual bool CheckDataExists(TileID _tileID) override;
     virtual ~MapzenVectorTileJson() {}
 };
 
@@ -70,7 +72,6 @@ static std::unique_ptr<std::string> constructURL(TileID _tileCoord) {
 static std::string extractIDFromUrl(std::string _url) {
     std::string baseURL("http://vector.mapzen.com/osm/all/");
     std::string jsonStr(".json");
-    logMsg("extractIDFromUrl on: %s\n", _url.c_str());
     std::string tmpID = _url.replace(0, baseURL.length(), "");
     std::size_t jsonPos = tmpID.find(jsonStr);
     tmpID = tmpID.replace(jsonPos, jsonStr.length(), "");
