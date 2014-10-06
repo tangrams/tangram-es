@@ -35,7 +35,7 @@ glm::dvec2 MercatorProjection::PixelsToMeters(const glm::dvec2 _pix, const int _
     glm::dvec2 meters;
     double res = m_Res / (1 << _zoom);
     meters.x = _pix.x * res - HALF_CIRCUMFERENCE;
-    meters.y = HALF_CIRCUMFERENCE - _pix.y * res;
+    meters.y = _pix.y * res - HALF_CIRCUMFERENCE;
     return meters;
 }
 
@@ -75,8 +75,8 @@ glm::dvec2 MercatorProjection::PixelsToRaster(const glm::dvec2 _pix, const int _
 glm::dvec4 MercatorProjection::TileBounds(const TileID _tileCoord) const {
     glm::dvec2 boundMin, boundMax;
     glm::dvec4 bounds;
-    boundMin = PixelsToMeters(glm::vec2(_tileCoord.x*m_TileSize, _tileCoord.y*m_TileSize), _tileCoord.z);
-    boundMax = PixelsToMeters(glm::vec2((_tileCoord.x+1)*m_TileSize, (_tileCoord.y+1)*m_TileSize), _tileCoord.z);
+    boundMin = PixelsToMeters(glm::dvec2(_tileCoord.x*m_TileSize, _tileCoord.y*m_TileSize), _tileCoord.z);
+    boundMax = PixelsToMeters(glm::dvec2((_tileCoord.x+1)*m_TileSize, (_tileCoord.y+1)*m_TileSize), _tileCoord.z);
     bounds = glm::dvec4(boundMin.x, boundMin.y, boundMax.x, boundMax.y);
     return bounds;
 }
