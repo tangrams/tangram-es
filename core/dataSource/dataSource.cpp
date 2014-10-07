@@ -180,7 +180,6 @@ bool MapzenVectorTileJson::LoadTile(std::vector<TileID> _tileCoords) {
             char *tmpOutData; //to read the CURLINFO_PRIVATE data which is type casted to char* from stringstream*
             std::string tmpJsonData;
             int length;
-            std::shared_ptr<Json::Value> jsonVal(new Json::Value);
             Json::Reader jsonReader;
 
             // see what select returned
@@ -216,7 +215,7 @@ bool MapzenVectorTileJson::LoadTile(std::vector<TileID> _tileCoords) {
                         prevHandle = numHandles;
                         // for every url done fill the jsonValue
                         while( (handleMsg = curl_multi_info_read(multiHandle, &queuedHandles) )) {
-                        //for(auto qHandItr = 0; qHandItr <= test; qHandItr++) {
+                            std::shared_ptr<Json::Value> jsonVal(new Json::Value);
                             if(handleMsg->msg == CURLMSG_DONE) {
                                 //get the url from the easyHandle
                                 curl_easy_getinfo(handleMsg->easy_handle, CURLINFO_EFFECTIVE_URL , &url);
