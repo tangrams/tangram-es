@@ -16,6 +16,10 @@ void resizeViewport(int newWidth, int newHeight)
 {
     glViewport(0, 0, newWidth, newHeight);
 
+    if (sceneDirector) {
+        sceneDirector->onResize(newWidth, newHeight);
+    }
+
     logMsg("%s\n", "resizeViewport");
 }
 

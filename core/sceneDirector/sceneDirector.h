@@ -15,6 +15,8 @@ public:
 
     void loadStyles();
 
+    void onResize(int _newWidth, int _newHeight);
+
     void update(float _dt);
 
     void renderFrame();

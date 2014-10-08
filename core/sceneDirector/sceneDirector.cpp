@@ -40,6 +40,14 @@ void SceneDirector::loadStyles() {
 
 }
 
+void SceneDirector::onResize(int _newWidth, int _newHeight) {
+
+    if (m_viewModule) {
+        m_viewModule->setAspect(_newWidth, _newHeight);
+    }
+
+}
+
 void SceneDirector::update(float _dt) {
 
     m_tileManager->updateTileSet();
