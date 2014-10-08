@@ -20,8 +20,6 @@ TileManager::~TileManager() {
 }
 
 bool TileManager::updateTileSet() {
-
-    bool newTileLoadSuccess;
     
     if (!(m_viewModule->viewChanged())) {
         return false;
@@ -81,6 +79,8 @@ bool TileManager::updateTileSet() {
             logMsg("    %d / %d / %d \n", tileID.z, tileID.x, tileID.y);
         }
 
+        bool newTileLoadSuccess = false;
+
         for (auto& source : m_dataSources) {
             logMsg("Loading tiles...\n");
             newTileLoadSuccess = source->LoadTile(m_tilesToAdd);
@@ -121,7 +121,7 @@ void TileManager::addTile(const TileID& _tileID) {
     m_tilesToAdd.push_back(_tileID);
 }
 
-void TileManager::removeTile(const std::map<TileID, std::unique_ptr<MapTile>>::iterator& _tileIter) {
+void TileManager::removeTile(std::map<TileID, std::unique_ptr<MapTile>>::iterator& _tileIter) {
     // Remove tile from tileSet and destruct tile
-    m_tileSet.erase(_tileIter);
+    m_tileSet.erase(_tileIter++);
 }

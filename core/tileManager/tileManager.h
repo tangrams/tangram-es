@@ -66,6 +66,6 @@ private:
     std::vector<TileID> m_tilesToAdd;
 
     void addTile(const TileID& _tileID);
-    void removeTile(const std::map<TileID, std::unique_ptr<MapTile>>::iterator& _tileIter);
+    void removeTile(std::map<TileID, std::unique_ptr<MapTile>>::iterator& _tileIter);
 
 };
