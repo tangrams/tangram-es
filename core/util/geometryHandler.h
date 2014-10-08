@@ -18,7 +18,7 @@ public:
     GeometryHandler(const MapProjection& m_mapProjection);
 
     template<typename T>
-    void polygonAddData(const Json::Value& _geomCoordinates, std::vector<T>& _vertices, std::vector<GLushort>& _indices, const glm::vec4& _rgba, const glm::dvec2& _tileOffset, double _height, double _minHeight);
+    void polygonAddData(const Json::Value& _geomCoordinates, std::vector<T>& _vertices, std::vector<GLushort>& _indices, const GLuint _abgr, const glm::dvec2& _tileOffset, double _height, double _minHeight);
 
     virtual ~GeometryHandler() {
         tessDeleteTess(m_tess);
@@ -27,7 +27,7 @@ public:
 
 // defining template member function
 template<typename T>
-void GeometryHandler::polygonAddData(const Json::Value& _geomCoordinates, std::vector<T>& _vertices, std::vector<GLushort>& _indices, const glm::vec4& _rgba, const glm::dvec2& _tileOffset, double _height, double _minHeight) {
+void GeometryHandler::polygonAddData(const Json::Value& _geomCoordinates, std::vector<T>& _vertices, std::vector<GLushort>& _indices, const GLuint _abgr, const glm::dvec2& _tileOffset, double _height, double _minHeight) {
     //Get the size of the data already added
     size_t vertexDataOffset = _vertices.size();
     
@@ -61,10 +61,7 @@ void GeometryHandler::polygonAddData(const Json::Value& _geomCoordinates, std::v
                                         static_cast<GLfloat>(normalVector.x), 
                                         static_cast<GLfloat>(normalVector.y), 
                                         static_cast<GLfloat>(normalVector.z), 
-                                        static_cast<GLubyte>(_rgba.x),
-                                        static_cast<GLubyte>(_rgba.y),
-                                        static_cast<GLubyte>(_rgba.z),
-                                        static_cast<GLubyte>(_rgba.w)
+                                        _abgr
                                       });
                 // 2nd vertex top
                 _vertices.push_back((T){
@@ -74,10 +71,7 @@ void GeometryHandler::polygonAddData(const Json::Value& _geomCoordinates, std::v
                                         static_cast<GLfloat>(normalVector.x), 
                                         static_cast<GLfloat>(normalVector.y), 
                                         static_cast<GLfloat>(normalVector.z), 
-                                        static_cast<GLubyte>(_rgba.x),
-                                        static_cast<GLubyte>(_rgba.y),
-                                        static_cast<GLubyte>(_rgba.z),
-                                        static_cast<GLubyte>(_rgba.w)
+                                        _abgr
                                       });
                 // 1st vertex bottom
                 _vertices.push_back((T){
@@ -87,10 +81,7 @@ void GeometryHandler::polygonAddData(const Json::Value& _geomCoordinates, std::v
                                         static_cast<GLfloat>(normalVector.x), 
                                         static_cast<GLfloat>(normalVector.y), 
                                         static_cast<GLfloat>(normalVector.z),
-                                        static_cast<GLubyte>(_rgba.x),
-                                        static_cast<GLubyte>(_rgba.y),
-                                        static_cast<GLubyte>(_rgba.z),
-                                        static_cast<GLubyte>(_rgba.w)
+                                        _abgr
                                       });
                 // 2nd vertex bottom
                 _vertices.push_back((T){
@@ -100,10 +91,7 @@ void GeometryHandler::polygonAddData(const Json::Value& _geomCoordinates, std::v
                                         static_cast<GLfloat>(normalVector.x), 
                                         static_cast<GLfloat>(normalVector.y), 
                                         static_cast<GLfloat>(normalVector.z), 
-                                        static_cast<GLubyte>(_rgba.x),
-                                        static_cast<GLubyte>(_rgba.y),
-                                        static_cast<GLubyte>(_rgba.z),
-                                        static_cast<GLubyte>(_rgba.w)
+                                        _abgr
                                       });
                 
                 //Start the index from the previous state of the vertex Data
@@ -145,10 +133,7 @@ void GeometryHandler::polygonAddData(const Json::Value& _geomCoordinates, std::v
                                     tessVertices[3*i+1],
                                     tessVertices[3*i+2],
                                     0.0f, 0.0f, 1.0f,
-                                    static_cast<GLubyte>(_rgba.x*255.f),
-                                    static_cast<GLubyte>(_rgba.y*255.f),
-                                    static_cast<GLubyte>(_rgba.z*255.f),
-                                    static_cast<GLubyte>(_rgba.w*255.f)
+                                    _abgr
                                    });
         }
     }

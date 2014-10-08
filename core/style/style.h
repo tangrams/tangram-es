@@ -1,6 +1,3 @@
-/*
-...
-*/
 #pragma once
 
 #include <string>
@@ -41,7 +38,7 @@ protected:
     std::vector<GLushort> m_indices;
     
     //What layer names will be handled by this Style
-    std::unordered_map<std::string, glm::vec4> m_layerColorMap;
+    std::unordered_map<std::string, GLuint> m_layerColorMap;
     
     /* 
      * shaderProgram, instantiated and could be shared between different styles
@@ -83,7 +80,7 @@ public:
     /* 
      * UpdateLayer updates the m_layerColorMap with a new definition of json layers which this style will process
      */
-    virtual void updateLayers(std::vector<std::pair<std::string, glm::vec4>> _newLayers);
+    virtual void updateLayers(std::vector<std::pair<std::string, GLuint>> _newLayers);
     
     /*
      * addData uses the jsonRoot for a tile and iterate through all features calls fills the vbo with appropriate data.
@@ -135,11 +132,7 @@ class PolygonStyle : public Style {
         GLfloat norm_y;
         GLfloat norm_z;
         //Color Data
-        // GLubyte rgba[4];
-        GLubyte r;
-        GLubyte g;
-        GLubyte b;
-        GLubyte a;
+        GLuint abgr;
     };
     
     /* A collection of vertices maintained by this style to be fed to a vboMesh */

@@ -21,7 +21,7 @@ std::shared_ptr<ShaderProgram> Style::getShaderProgram() const {
     return m_shaderProgram;
 }
 
-void Style::updateLayers(std::vector<std::pair<std::string, glm::vec4>> _newLayers) {
+void Style::updateLayers(std::vector<std::pair<std::string, GLuint>> _newLayers) {
     for(auto& newLayer : _newLayers) {
         if(m_layerColorMap.find(newLayer.first) == m_layerColorMap.end()) {
             m_layerColorMap.emplace(std::make_pair(newLayer.first, newLayer.second));

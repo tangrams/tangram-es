@@ -28,10 +28,10 @@ void SceneDirector::loadStyles() {
 
     // Create hard-coded styles for now
     std::unique_ptr<Style> style(new PolygonStyle("Polygon"));
-    style->updateLayers({{"water", glm::vec4(0.1, 0.1, 1.0, 1.0)}});
-    style->updateLayers({{"buildings", glm::vec4(0.7, 0.7, 0.7, 1.0)}});
-    style->updateLayers({{"earth", glm::vec4(0.1, 0.9, 0.1, 1.0)}});
-    style->updateLayers({{"landuse", glm::vec4(0.1, 0.6, 0.1, 1.0)}});
+    style->updateLayers({{"water", 0xffdd2222}});
+    style->updateLayers({{"buildings", 0xffeeeeee}});
+    style->updateLayers({{"earth", 0xff22dd22}});
+    style->updateLayers({{"landuse", 0xff22aa22}});
     m_sceneDefinition->addStyle(std::move(style));
 
     m_tileManager->setSceneDefinition(m_sceneDefinition);
