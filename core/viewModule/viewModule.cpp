@@ -56,9 +56,9 @@ void ViewModule::setPosition(double _x, double _y) {
 
 void ViewModule::translate(double _dx, double _dy) {
 
-    glm::translate(m_view, glm::dvec3(_dx, _dy, 0.0));
     m_pos.x += _dx;
     m_pos.y += _dy;
+    m_view = glm::lookAt(m_pos, m_pos + glm::dvec3(0, 0, -1), glm::dvec3(0, 1, 0));
     m_dirty = true;
 
 }
@@ -69,7 +69,7 @@ void ViewModule::setZoom(int _z) {
     float tileSize = 2 * MapProjection::HALF_CIRCUMFERENCE * pow(2, -m_zoom);
     m_height = 3 * tileSize; // Set viewport size to ~3 tiles vertically
     m_width = m_height * m_aspect; // Size viewport width to match aspect ratio
-    m_proj = glm::ortho(-m_width * 0.5, m_width * 0.5, -m_height * 0.5, m_height * 0.5);
+    m_proj = glm::ortho(-m_width * 0.5, m_width * 0.5, -m_height * 0.5, m_height * 0.5, 0.1, 100.0);
     //m_proj = glm::dmat4();
     logMsg("ProjectionMatrix: %s\n", glm::to_string(m_proj).c_str());
     m_dirty = true;
@@ -105,7 +105,7 @@ const std::set<TileID>& ViewModule::getVisibleTiles() {
 
     float vpLeftEdge = m_pos.x - m_width * 0.5 + MapProjection::HALF_CIRCUMFERENCE;
     float vpRightEdge = vpLeftEdge + m_width;
-    float vpBottomEdge = m_pos.y - m_height * 0.5 + MapProjection::HALF_CIRCUMFERENCE;
+    float vpBottomEdge = -m_pos.y - m_height * 0.5 + MapProjection::HALF_CIRCUMFERENCE;
     float vpTopEdge = vpBottomEdge + m_height;
 
     int tileX = (int) vpLeftEdge * invTileSize;
