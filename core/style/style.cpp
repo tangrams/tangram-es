@@ -141,9 +141,6 @@ void PolygonStyle::addData(const Json::Value& _jsonRoot, MapTile& _tile, const M
                     minFeatureHeight = property["min_height"].asFloat();
                 }
                 geoHandler.polygonAddData<vboDataUnit>(geometry["coordinates"], m_vertices, m_indices, layer.second, _tile.getOrigin(), featureHeight, minFeatureHeight);
-                //logMsg("Added vertex: [%f, %f, %f], [%d, %d, %d, %d]\n", m_vertices[0].pos_x, m_vertices[0].pos_y, m_vertices[0].pos_z, m_vertices[0].r, m_vertices[0].g, m_vertices[0].b, m_vertices[0].b, m_vertices[0].a);
-                //logMsg("Added vertex: [%f, %f, %f], [%d, %d, %d, %d]\n", m_vertices[1].pos_x, m_vertices[1].pos_y, m_vertices[1].pos_z, m_vertices[1].r, m_vertices[1].g, m_vertices[1].b, m_vertices[1].b, m_vertices[1].a);
-                //logMsg("Added vertex: [%f, %f, %f], [%d, %d, %d, %d]\n", m_vertices[2].pos_x, m_vertices[2].pos_y, m_vertices[2].pos_z, m_vertices[2].r, m_vertices[2].g, m_vertices[2].b, m_vertices[2].b, m_vertices[2].a);
             }
         }
     }
@@ -154,7 +151,7 @@ void PolygonStyle::addData(const Json::Value& _jsonRoot, MapTile& _tile, const M
     else {
         //Add vertices to mesh
         mesh->addVertices((GLbyte*)m_vertices.data(), m_vertices.size());
-        mesh->addIndices((GLushort*)&m_indices, m_indices.size());
+        mesh->addIndices((GLushort*)m_indices.data(), m_indices.size());
         //1. addGeometry should take either take the name of the style or pointer to the style (this)
         _tile.addGeometry(*this, std::move(mesh));
     }
