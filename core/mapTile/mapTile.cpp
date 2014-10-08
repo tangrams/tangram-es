@@ -8,8 +8,8 @@
 MapTile::MapTile(TileID _id, const MapProjection& _projection) : m_id(_id) {
 
     glm::dvec4 tileBounds = _projection.TileBounds(_id);
-    m_tileOrigin = glm::dvec2(tileBounds.x, tileBounds.y);
-    m_modelMatrix = glm::translate(glm::dmat4(1.0), glm::dvec3(tileBounds.x, tileBounds.y, 0.0)); //Use the lower-left corner for the 'model position'
+    m_tileOrigin = glm::dvec2(tileBounds.x, -tileBounds.y);
+    m_modelMatrix = glm::translate(glm::dmat4(1.0), glm::dvec3(m_tileOrigin.x, m_tileOrigin.y, 0.0)); //Use the upper-left corner for the 'model position'
 
 }
 
