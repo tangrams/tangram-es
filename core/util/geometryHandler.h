@@ -38,12 +38,8 @@ void GeometryHandler::polygonAddData(const Json::Value& _geomCoordinates, std::v
         std::vector<glm::vec3> ringCoords;
 
         for(int j = 0; j < ringSize; j++) {
-            //logMsg("\n\tgeomCoord: (%f,%f)\n", _geomCoordinates[0][j][0].asFloat(), _geomCoordinates[0][j][1].asFloat());
             glm::dvec2 tmp = m_mapProjection->LonLatToMeters(glm::dvec2(_geomCoordinates[0][j][0].asFloat(), _geomCoordinates[0][j][1].asFloat()));
-            //logMsg("\tLonLatToMeters: (%f,%f)\n", tmp.x, tmp.y);
             glm::dvec2 meters = tmp - _tileOffset;
-            //logMsg("\tMeters: (%f,%f)\n", meters.x, meters.y);
-            //logMsg("\tOrigin: (%f,%f)\n", _tileOffset.x, _tileOffset.y);
             ringCoords.push_back(glm::vec3(meters.x, meters.y, _height));
         }
 
@@ -134,7 +130,7 @@ void GeometryHandler::polygonAddData(const Json::Value& _geomCoordinates, std::v
         for(int i = 0; i < numIndices; i++) {
             const TESSindex* tessIndex = &tessIndices[i * 3];
             for(int j = 0; j < 3; j++) {
-                _indices.push_back(GLubyte(tessIndex[j]) + vertexDataOffset);
+                _indices.push_back(GLushort(tessIndex[j]) + vertexDataOffset);
             }
         }
 
@@ -154,24 +150,7 @@ void GeometryHandler::polygonAddData(const Json::Value& _geomCoordinates, std::v
                                     static_cast<GLubyte>(_rgba.z*255.f),
                                     static_cast<GLubyte>(_rgba.w*255.f)
                                    });
-            logMsg("Color: %d %d %d %d", static_cast<GLubyte>(_rgba.x*255.f),
-                                    static_cast<GLubyte>(_rgba.y*255.f),
-                                    static_cast<GLubyte>(_rgba.z*255.f),
-                                    static_cast<GLubyte>(_rgba.w*255.f));
         }
-        /*
-        _vertices.clear();
-        _vertices.push_back((T){
-            -0.5, -0.5, 0.0, 0.0, 0.0, 1.0f, 0, 0, 255, 255
-        });
-        _vertices.push_back((T){
-            0.5, -0.5, 0.0, 0.0, 0.0, 1.0f, 0, 0, 255, 255
-        });
-        _vertices.push_back((T){
-            0, 0.5, 0.0, 0.0, 0.0, 1.0f, 0, 0, 255, 255
-        });
-        _indices.clear();
-        */
     }
     else {
         logMsg("\t\t****tessTessalate returns false. Can not tesselate.****\n");
