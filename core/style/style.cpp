@@ -5,10 +5,8 @@
 /*
  * Style Class Methods
  */
-Style::Style(std::string _geomType, GLenum _drawMode) : m_geomType(_geomType), m_styleName(_geomType), m_drawMode(_drawMode) {
-}
 
-Style::Style(std::string _geomType, std::string _styleName, GLenum _drawMode) : m_geomType(_geomType), m_drawMode(_drawMode) {
+Style::Style(std::string _geomType, std::string _styleName, GLenum _drawMode) : m_geomType(_geomType), m_styleName(_styleName), m_drawMode(_drawMode) {
 }
 
 void Style::setFragShaderSrc(std::string _fragShaderSrcStr) {
@@ -37,36 +35,9 @@ void Style::updateLayers(std::vector<std::pair<std::string, glm::vec4>> _newLaye
 /*
  * Polygon Style Class Methods
  */
-PolygonStyle::PolygonStyle(std::string _geomType, GLenum _drawMode) : Style(_geomType, _drawMode) {
-    
-    // Pass in a fileName or a url to construct shader strings from
-    m_vertShaderSrcStr =
-        "#ifdef GL_ES\n"
-        "precision mediump float;\n"
-        "#endif\n"
-        "uniform mat4 u_modelViewProj;\n"
-        "attribute vec4 a_position;\n"
-        "attribute vec4 a_color;\n"
-        "varying vec4 v_color;\n"
-        "void main() {\n"
-        "  v_color = a_color;\n"
-        "  gl_Position = u_modelViewProj * a_position;\n"
-        "}\n";
-
-    m_fragShaderSrcStr =
-        "#ifdef GL_ES\n"
-        "precision mediump float;\n"
-        "#endif\n"
-        "varying vec4 v_color;\n"
-        "void main(void) {\n"
-        "  gl_FragColor = v_color;\n"
-        "}\n";
-    constructVertexLayout();
-    constructShaderProgram();
-}
 
 PolygonStyle::PolygonStyle(std::string _geomType, std::string _styleName, GLenum _drawMode) : Style(_geomType, _styleName, _drawMode) {
-    
+
     // Pass in a fileName or a url to construct shader strings from
     m_vertShaderSrcStr =
         "#ifdef GL_ES\n"
@@ -89,9 +60,12 @@ PolygonStyle::PolygonStyle(std::string _geomType, std::string _styleName, GLenum
         "void main(void) {\n"
         "  gl_FragColor = v_color;\n"
         "}\n";
+
     constructVertexLayout();
     constructShaderProgram();
 }
+
+PolygonStyle::PolygonStyle(std::string _geomType, GLenum _drawMode) : PolygonStyle(_geomType, _geomType, _drawMode) {}
 
 void PolygonStyle::constructVertexLayout() {
     // fixed per style... this is basic position, normal color

@@ -64,7 +64,7 @@ protected:
     std::string m_vertShaderSrcStr;
 
 public:
-    Style(std::string _geomType, GLenum _drawMode);
+
     Style(std::string _geomType, std::string _styleName, GLenum _drawMode);
     
     /* 
