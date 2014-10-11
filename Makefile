@@ -72,7 +72,7 @@ OSX_TEST_FILES= \
 	osx/src/platform_osx.cpp
 
 android/libs/armeabi/libtangram.so: android/jni/jniExports.cpp android/jni/platform_android.cpp core/tangram.cpp core/tangram.h android/jni/Android.mk android/jni/Application.mk
-	ndk-build -C android/jni
+	ndk-build -C android/jni -j4
 
 android/bin/TangramAndroid-Debug.apk: android/libs/armeabi/libtangram.so android/src/com/mapzen/tangram/*.java android/build.xml
 	mkdir -p android/bin

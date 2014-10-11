@@ -7,9 +7,6 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
-		C923C9D319CC8D7300080EE7 /* vboMesh.cpp in Sources */ = {isa = PBXBuildFile; fileRef = C923C9CF19CC8D7300080EE7 /* vboMesh.cpp */; };
-		C923C9D419CC8D7300080EE7 /* vertexLayout.cpp in Sources */ = {isa = PBXBuildFile; fileRef = C923C9D119CC8D7300080EE7 /* vertexLayout.cpp */; };
-		C945DFB419C37D7D00AC7191 /* error.cpp in Sources */ = {isa = PBXBuildFile; fileRef = C945DFB219C37D7D00AC7191 /* error.cpp */; };
 		C95C000419AB8AE5003FEC0C /* ViewController.mm in Sources */ = {isa = PBXBuildFile; fileRef = C95C000319AB8AE5003FEC0C /* ViewController.mm */; };
 		C95C000619AB8AE5003FEC0C /* Images.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = C95C000519AB8AE5003FEC0C /* Images.xcassets */; };
 		C95CFFE319AB8AE5003FEC0C /* Foundation.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = C95CFFE219AB8AE5003FEC0C /* Foundation.framework */; };
@@ -22,18 +19,28 @@
 		C95CFFF719AB8AE5003FEC0C /* AppDelegate.m in Sources */ = {isa = PBXBuildFile; fileRef = C95CFFF619AB8AE5003FEC0C /* AppDelegate.m */; };
 		C95CFFFA19AB8AE5003FEC0C /* Main_iPhone.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = C95CFFF819AB8AE5003FEC0C /* Main_iPhone.storyboard */; };
 		C95CFFFD19AB8AE5003FEC0C /* Main_iPad.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = C95CFFFB19AB8AE5003FEC0C /* Main_iPad.storyboard */; };
-		C9B2B67B19BF6A5B00E2642E /* shaderProgram.cpp in Sources */ = {isa = PBXBuildFile; fileRef = C9B2B67A19BF6A5B00E2642E /* shaderProgram.cpp */; };
+		C9A35C4D19E76C3A00D7802F /* error.cpp in Sources */ = {isa = PBXBuildFile; fileRef = C9A35C4019E76C3A00D7802F /* error.cpp */; };
+		C9A35C4E19E76C3A00D7802F /* geometryHandler.cpp in Sources */ = {isa = PBXBuildFile; fileRef = C9A35C4219E76C3A00D7802F /* geometryHandler.cpp */; };
+		C9A35C4F19E76C3A00D7802F /* projection.cpp in Sources */ = {isa = PBXBuildFile; fileRef = C9A35C4419E76C3A00D7802F /* projection.cpp */; };
+		C9A35C5019E76C3A00D7802F /* shaderProgram.cpp in Sources */ = {isa = PBXBuildFile; fileRef = C9A35C4619E76C3A00D7802F /* shaderProgram.cpp */; };
+		C9A35C5119E76C3A00D7802F /* vboMesh.cpp in Sources */ = {isa = PBXBuildFile; fileRef = C9A35C4919E76C3A00D7802F /* vboMesh.cpp */; };
+		C9A35C5219E76C3A00D7802F /* vertexLayout.cpp in Sources */ = {isa = PBXBuildFile; fileRef = C9A35C4B19E76C3A00D7802F /* vertexLayout.cpp */; };
+		C9A35C5619E76C4900D7802F /* viewModule.cpp in Sources */ = {isa = PBXBuildFile; fileRef = C9A35C5419E76C4900D7802F /* viewModule.cpp */; };
+		C9A35C5A19E76C5600D7802F /* tileManager.cpp in Sources */ = {isa = PBXBuildFile; fileRef = C9A35C5819E76C5600D7802F /* tileManager.cpp */; };
+		C9A35C5E19E76C6500D7802F /* style.cpp in Sources */ = {isa = PBXBuildFile; fileRef = C9A35C5C19E76C6500D7802F /* style.cpp */; };
+		C9A35C6219E76C7000D7802F /* sceneDirector.cpp in Sources */ = {isa = PBXBuildFile; fileRef = C9A35C6019E76C7000D7802F /* sceneDirector.cpp */; };
+		C9A35C6619E76C7900D7802F /* sceneDefinition.cpp in Sources */ = {isa = PBXBuildFile; fileRef = C9A35C6419E76C7900D7802F /* sceneDefinition.cpp */; };
+		C9A35C6A19E76C8200D7802F /* mapTile.cpp in Sources */ = {isa = PBXBuildFile; fileRef = C9A35C6819E76C8200D7802F /* mapTile.cpp */; };
+		C9A35C6E19E76C8E00D7802F /* dataSource.cpp in Sources */ = {isa = PBXBuildFile; fileRef = C9A35C6C19E76C8E00D7802F /* dataSource.cpp */; };
+		C9A35C7019E76CA800D7802F /* tangram.cpp in Sources */ = {isa = PBXBuildFile; fileRef = C9A35C6F19E76CA800D7802F /* tangram.cpp */; };
+		C9A35C7219E76E5500D7802F /* jsoncpp.cpp in Sources */ = {isa = PBXBuildFile; fileRef = C9A35C7119E76E5500D7802F /* jsoncpp.cpp */; };
+		C9A35C7419E76E7600D7802F /* libcurl.a in Frameworks */ = {isa = PBXBuildFile; fileRef = C9A35C7319E76E7600D7802F /* libcurl.a */; };
+		C9A35C7619E76E8700D7802F /* libtess2.a in Frameworks */ = {isa = PBXBuildFile; fileRef = C9A35C7519E76E8700D7802F /* libtess2.a */; };
+		C9A35C7819E76EA200D7802F /* libz.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = C9A35C7719E76EA200D7802F /* libz.dylib */; };
 		C9BCA9F919B8CCB1006260E7 /* platform_ios.cpp in Sources */ = {isa = PBXBuildFile; fileRef = C9BCA9F819B8CCB1006260E7 /* platform_ios.cpp */; };
-		C9BCAA0419B91085006260E7 /* tangram.cpp in Sources */ = {isa = PBXBuildFile; fileRef = C9BCAA0319B91085006260E7 /* tangram.cpp */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
-		C923C9CF19CC8D7300080EE7 /* vboMesh.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = vboMesh.cpp; path = ../../../core/util/vboMesh.cpp; sourceTree = "<group>"; };
-		C923C9D019CC8D7300080EE7 /* vboMesh.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = vboMesh.h; path = ../../../core/util/vboMesh.h; sourceTree = "<group>"; };
-		C923C9D119CC8D7300080EE7 /* vertexLayout.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = vertexLayout.cpp; path = ../../../core/util/vertexLayout.cpp; sourceTree = "<group>"; };
-		C923C9D219CC8D7300080EE7 /* vertexLayout.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = vertexLayout.h; path = ../../../core/util/vertexLayout.h; sourceTree = "<group>"; };
-		C945DFB219C37D7D00AC7191 /* error.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = error.cpp; path = ../../../core/util/error.cpp; sourceTree = "<group>"; };
-		C945DFB319C37D7D00AC7191 /* error.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = error.h; path = ../../../core/util/error.h; sourceTree = "<group>"; };
 		C95C000219AB8AE5003FEC0C /* ViewController.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = ViewController.h; sourceTree = "<group>"; };
 		C95C000319AB8AE5003FEC0C /* ViewController.mm */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.objcpp; path = ViewController.mm; sourceTree = "<group>"; };
 		C95C000519AB8AE5003FEC0C /* Images.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Images.xcassets; sourceTree = "<group>"; };
@@ -52,12 +59,39 @@
 		C95CFFF619AB8AE5003FEC0C /* AppDelegate.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = AppDelegate.m; sourceTree = "<group>"; };
 		C95CFFF919AB8AE5003FEC0C /* Base */ = {isa = PBXFileReference; lastKnownFileType = file.storyboard; name = Base; path = Base.lproj/Main_iPhone.storyboard; sourceTree = "<group>"; };
 		C95CFFFC19AB8AE5003FEC0C /* Base */ = {isa = PBXFileReference; lastKnownFileType = file.storyboard; name = Base; path = Base.lproj/Main_iPad.storyboard; sourceTree = "<group>"; };
-		C9B2B67919BF6A4900E2642E /* shaderProgram.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = shaderProgram.h; path = ../../../core/util/shaderProgram.h; sourceTree = "<group>"; };
-		C9B2B67A19BF6A5B00E2642E /* shaderProgram.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = shaderProgram.cpp; path = ../../../core/util/shaderProgram.cpp; sourceTree = "<group>"; };
+		C9A35C4019E76C3A00D7802F /* error.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = error.cpp; sourceTree = "<group>"; };
+		C9A35C4119E76C3A00D7802F /* error.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = error.h; sourceTree = "<group>"; };
+		C9A35C4219E76C3A00D7802F /* geometryHandler.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = geometryHandler.cpp; sourceTree = "<group>"; };
+		C9A35C4319E76C3A00D7802F /* geometryHandler.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = geometryHandler.h; sourceTree = "<group>"; };
+		C9A35C4419E76C3A00D7802F /* projection.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = projection.cpp; sourceTree = "<group>"; };
+		C9A35C4519E76C3A00D7802F /* projection.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = projection.h; sourceTree = "<group>"; };
+		C9A35C4619E76C3A00D7802F /* shaderProgram.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = shaderProgram.cpp; sourceTree = "<group>"; };
+		C9A35C4719E76C3A00D7802F /* shaderProgram.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = shaderProgram.h; sourceTree = "<group>"; };
+		C9A35C4819E76C3A00D7802F /* tileID.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = tileID.h; sourceTree = "<group>"; };
+		C9A35C4919E76C3A00D7802F /* vboMesh.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = vboMesh.cpp; sourceTree = "<group>"; };
+		C9A35C4A19E76C3A00D7802F /* vboMesh.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = vboMesh.h; sourceTree = "<group>"; };
+		C9A35C4B19E76C3A00D7802F /* vertexLayout.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = vertexLayout.cpp; sourceTree = "<group>"; };
+		C9A35C4C19E76C3A00D7802F /* vertexLayout.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = vertexLayout.h; sourceTree = "<group>"; };
+		C9A35C5419E76C4900D7802F /* viewModule.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = viewModule.cpp; sourceTree = "<group>"; };
+		C9A35C5519E76C4900D7802F /* viewModule.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = viewModule.h; sourceTree = "<group>"; };
+		C9A35C5819E76C5600D7802F /* tileManager.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = tileManager.cpp; sourceTree = "<group>"; };
+		C9A35C5919E76C5600D7802F /* tileManager.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = tileManager.h; sourceTree = "<group>"; };
+		C9A35C5C19E76C6500D7802F /* style.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = style.cpp; sourceTree = "<group>"; };
+		C9A35C5D19E76C6500D7802F /* style.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = style.h; sourceTree = "<group>"; };
+		C9A35C6019E76C7000D7802F /* sceneDirector.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = sceneDirector.cpp; sourceTree = "<group>"; };
+		C9A35C6119E76C7000D7802F /* sceneDirector.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = sceneDirector.h; sourceTree = "<group>"; };
+		C9A35C6419E76C7900D7802F /* sceneDefinition.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = sceneDefinition.cpp; sourceTree = "<group>"; };
+		C9A35C6519E76C7900D7802F /* sceneDefinition.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = sceneDefinition.h; sourceTree = "<group>"; };
+		C9A35C6819E76C8200D7802F /* mapTile.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = mapTile.cpp; sourceTree = "<group>"; };
+		C9A35C6919E76C8200D7802F /* mapTile.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = mapTile.h; sourceTree = "<group>"; };
+		C9A35C6C19E76C8E00D7802F /* dataSource.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = dataSource.cpp; sourceTree = "<group>"; };
+		C9A35C6D19E76C8E00D7802F /* dataSource.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = dataSource.h; sourceTree = "<group>"; };
+		C9A35C6F19E76CA800D7802F /* tangram.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = tangram.cpp; path = ../../../core/tangram.cpp; sourceTree = "<group>"; };
+		C9A35C7119E76E5500D7802F /* jsoncpp.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = jsoncpp.cpp; path = ../../../core/include/jsoncpp.cpp; sourceTree = "<group>"; };
+		C9A35C7319E76E7600D7802F /* libcurl.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; name = libcurl.a; path = precompiled/libcurl.a; sourceTree = "<group>"; };
+		C9A35C7519E76E8700D7802F /* libtess2.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; name = libtess2.a; path = ../../../core/include/libtess2/libtess2.a; sourceTree = "<group>"; };
+		C9A35C7719E76EA200D7802F /* libz.dylib */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.dylib"; name = libz.dylib; path = usr/lib/libz.dylib; sourceTree = SDKROOT; };
 		C9BCA9F819B8CCB1006260E7 /* platform_ios.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = platform_ios.cpp; sourceTree = "<group>"; };
-		C9BCAA0219B91079006260E7 /* tangram.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = tangram.h; path = ../../../core/tangram.h; sourceTree = "<group>"; };
-		C9BCAA0319B91085006260E7 /* tangram.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = tangram.cpp; path = ../../../core/tangram.cpp; sourceTree = "<group>"; };
-		C9BCAA0519B91096006260E7 /* platform.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = platform.h; path = ../../../core/platform.h; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -65,11 +99,14 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				C9A35C7819E76EA200D7802F /* libz.dylib in Frameworks */,
 				C95CFFEB19AB8AE5003FEC0C /* OpenGLES.framework in Frameworks */,
 				C95CFFE519AB8AE5003FEC0C /* CoreGraphics.framework in Frameworks */,
 				C95CFFE719AB8AE5003FEC0C /* UIKit.framework in Frameworks */,
 				C95CFFE919AB8AE5003FEC0C /* GLKit.framework in Frameworks */,
 				C95CFFE319AB8AE5003FEC0C /* Foundation.framework in Frameworks */,
+				C9A35C7619E76E8700D7802F /* libtess2.a in Frameworks */,
+				C9A35C7419E76E7600D7802F /* libcurl.a in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -96,6 +133,7 @@
 		C95CFFE119AB8AE5003FEC0C /* Frameworks */ = {
 			isa = PBXGroup;
 			children = (
+				C9A35C7719E76EA200D7802F /* libz.dylib */,
 				C95CFFE219AB8AE5003FEC0C /* Foundation.framework */,
 				C95CFFE419AB8AE5003FEC0C /* CoreGraphics.framework */,
 				C95CFFE619AB8AE5003FEC0C /* UIKit.framework */,
@@ -109,7 +147,18 @@
 		C95CFFEC19AB8AE5003FEC0C /* TangramiOS */ = {
 			isa = PBXGroup;
 			children = (
-				C9B2B67819BF69D100E2642E /* Core */,
+				C9A35C7519E76E8700D7802F /* libtess2.a */,
+				C9A35C7319E76E7600D7802F /* libcurl.a */,
+				C9A35C7119E76E5500D7802F /* jsoncpp.cpp */,
+				C9A35C6F19E76CA800D7802F /* tangram.cpp */,
+				C9A35C6B19E76C8E00D7802F /* dataSource */,
+				C9A35C6719E76C8200D7802F /* mapTile */,
+				C9A35C6319E76C7900D7802F /* sceneDefinition */,
+				C9A35C5F19E76C7000D7802F /* sceneDirector */,
+				C9A35C5B19E76C6500D7802F /* style */,
+				C9A35C5719E76C5600D7802F /* tileManager */,
+				C9A35C5319E76C4900D7802F /* viewModule */,
+				C9A35C3F19E76C3A00D7802F /* util */,
 				C9BCA9F819B8CCB1006260E7 /* platform_ios.cpp */,
 				C95CFFF519AB8AE5003FEC0C /* AppDelegate.h */,
 				C95CFFF619AB8AE5003FEC0C /* AppDelegate.m */,
@@ -134,22 +183,95 @@
 			name = "Supporting Files";
 			sourceTree = "<group>";
 		};
-		C9B2B67819BF69D100E2642E /* Core */ = {
+		C9A35C3F19E76C3A00D7802F /* util */ = {
 			isa = PBXGroup;
 			children = (
-				C923C9CF19CC8D7300080EE7 /* vboMesh.cpp */,
-				C923C9D019CC8D7300080EE7 /* vboMesh.h */,
-				C923C9D119CC8D7300080EE7 /* vertexLayout.cpp */,
-				C923C9D219CC8D7300080EE7 /* vertexLayout.h */,
-				C945DFB219C37D7D00AC7191 /* error.cpp */,
-				C945DFB319C37D7D00AC7191 /* error.h */,
-				C9B2B67919BF6A4900E2642E /* shaderProgram.h */,
-				C9B2B67A19BF6A5B00E2642E /* shaderProgram.cpp */,
-				C9BCAA0519B91096006260E7 /* platform.h */,
-				C9BCAA0219B91079006260E7 /* tangram.h */,
-				C9BCAA0319B91085006260E7 /* tangram.cpp */,
+				C9A35C4019E76C3A00D7802F /* error.cpp */,
+				C9A35C4119E76C3A00D7802F /* error.h */,
+				C9A35C4219E76C3A00D7802F /* geometryHandler.cpp */,
+				C9A35C4319E76C3A00D7802F /* geometryHandler.h */,
+				C9A35C4419E76C3A00D7802F /* projection.cpp */,
+				C9A35C4519E76C3A00D7802F /* projection.h */,
+				C9A35C4619E76C3A00D7802F /* shaderProgram.cpp */,
+				C9A35C4719E76C3A00D7802F /* shaderProgram.h */,
+				C9A35C4819E76C3A00D7802F /* tileID.h */,
+				C9A35C4919E76C3A00D7802F /* vboMesh.cpp */,
+				C9A35C4A19E76C3A00D7802F /* vboMesh.h */,
+				C9A35C4B19E76C3A00D7802F /* vertexLayout.cpp */,
+				C9A35C4C19E76C3A00D7802F /* vertexLayout.h */,
 			);
-			name = Core;
+			name = util;
+			path = ../../../core/util;
+			sourceTree = "<group>";
+		};
+		C9A35C5319E76C4900D7802F /* viewModule */ = {
+			isa = PBXGroup;
+			children = (
+				C9A35C5419E76C4900D7802F /* viewModule.cpp */,
+				C9A35C5519E76C4900D7802F /* viewModule.h */,
+			);
+			name = viewModule;
+			path = ../../../core/viewModule;
+			sourceTree = "<group>";
+		};
+		C9A35C5719E76C5600D7802F /* tileManager */ = {
+			isa = PBXGroup;
+			children = (
+				C9A35C5819E76C5600D7802F /* tileManager.cpp */,
+				C9A35C5919E76C5600D7802F /* tileManager.h */,
+			);
+			name = tileManager;
+			path = ../../../core/tileManager;
+			sourceTree = "<group>";
+		};
+		C9A35C5B19E76C6500D7802F /* style */ = {
+			isa = PBXGroup;
+			children = (
+				C9A35C5C19E76C6500D7802F /* style.cpp */,
+				C9A35C5D19E76C6500D7802F /* style.h */,
+			);
+			name = style;
+			path = ../../../core/style;
+			sourceTree = "<group>";
+		};
+		C9A35C5F19E76C7000D7802F /* sceneDirector */ = {
+			isa = PBXGroup;
+			children = (
+				C9A35C6019E76C7000D7802F /* sceneDirector.cpp */,
+				C9A35C6119E76C7000D7802F /* sceneDirector.h */,
+			);
+			name = sceneDirector;
+			path = ../../../core/sceneDirector;
+			sourceTree = "<group>";
+		};
+		C9A35C6319E76C7900D7802F /* sceneDefinition */ = {
+			isa = PBXGroup;
+			children = (
+				C9A35C6419E76C7900D7802F /* sceneDefinition.cpp */,
+				C9A35C6519E76C7900D7802F /* sceneDefinition.h */,
+			);
+			name = sceneDefinition;
+			path = ../../../core/sceneDefinition;
+			sourceTree = "<group>";
+		};
+		C9A35C6719E76C8200D7802F /* mapTile */ = {
+			isa = PBXGroup;
+			children = (
+				C9A35C6819E76C8200D7802F /* mapTile.cpp */,
+				C9A35C6919E76C8200D7802F /* mapTile.h */,
+			);
+			name = mapTile;
+			path = ../../../core/mapTile;
+			sourceTree = "<group>";
+		};
+		C9A35C6B19E76C8E00D7802F /* dataSource */ = {
+			isa = PBXGroup;
+			children = (
+				C9A35C6C19E76C8E00D7802F /* dataSource.cpp */,
+				C9A35C6D19E76C8E00D7802F /* dataSource.h */,
+			);
+			name = dataSource;
+			path = ../../../core/dataSource;
 			sourceTree = "<group>";
 		};
 /* End PBXGroup section */
@@ -218,15 +340,25 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				C923C9D319CC8D7300080EE7 /* vboMesh.cpp in Sources */,
+				C9A35C7219E76E5500D7802F /* jsoncpp.cpp in Sources */,
 				C9BCA9F919B8CCB1006260E7 /* platform_ios.cpp in Sources */,
-				C9B2B67B19BF6A5B00E2642E /* shaderProgram.cpp in Sources */,
+				C9A35C5019E76C3A00D7802F /* shaderProgram.cpp in Sources */,
+				C9A35C5119E76C3A00D7802F /* vboMesh.cpp in Sources */,
+				C9A35C5219E76C3A00D7802F /* vertexLayout.cpp in Sources */,
+				C9A35C7019E76CA800D7802F /* tangram.cpp in Sources */,
 				C95C000419AB8AE5003FEC0C /* ViewController.mm in Sources */,
-				C9BCAA0419B91085006260E7 /* tangram.cpp in Sources */,
+				C9A35C5A19E76C5600D7802F /* tileManager.cpp in Sources */,
+				C9A35C6219E76C7000D7802F /* sceneDirector.cpp in Sources */,
+				C9A35C6E19E76C8E00D7802F /* dataSource.cpp in Sources */,
+				C9A35C6619E76C7900D7802F /* sceneDefinition.cpp in Sources */,
+				C9A35C6A19E76C8200D7802F /* mapTile.cpp in Sources */,
+				C9A35C4F19E76C3A00D7802F /* projection.cpp in Sources */,
+				C9A35C5E19E76C6500D7802F /* style.cpp in Sources */,
+				C9A35C4E19E76C3A00D7802F /* geometryHandler.cpp in Sources */,
 				C95CFFF719AB8AE5003FEC0C /* AppDelegate.m in Sources */,
-				C923C9D419CC8D7300080EE7 /* vertexLayout.cpp in Sources */,
-				C945DFB419C37D7D00AC7191 /* error.cpp in Sources */,
 				C95CFFF319AB8AE5003FEC0C /* main.m in Sources */,
+				C9A35C4D19E76C3A00D7802F /* error.cpp in Sources */,
+				C9A35C5619E76C4900D7802F /* viewModule.cpp in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -345,6 +477,7 @@
 					"$(PROJECT_DIR)/TangramiOS",
 					"$(PROJECT_DIR)/TangramiOS/libs",
 					"$(PROJECT_DIR)/TangramiOS/precompiled",
+					"/Users/matt/Development/tangram-es/core/include/libtess2",
 				);
 				OTHER_CFLAGS = (
 					"-I../../core",
@@ -370,6 +503,7 @@
 					"$(PROJECT_DIR)/TangramiOS",
 					"$(PROJECT_DIR)/TangramiOS/libs",
 					"$(PROJECT_DIR)/TangramiOS/precompiled",
+					"/Users/matt/Development/tangram-es/core/include/libtess2",
 				);
 				OTHER_CFLAGS = (
 					"-I../../core",

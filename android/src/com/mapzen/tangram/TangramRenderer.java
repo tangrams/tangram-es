@@ -8,6 +8,7 @@ import javax.microedition.khronos.egl.EGLConfig;
 public class TangramRenderer implements GLSurfaceView.Renderer {
 	
 	static {
+		System.loadLibrary("c++_shared");
 		System.loadLibrary("tangram");
 	}
 
@@ -22,13 +23,12 @@ public class TangramRenderer implements GLSurfaceView.Renderer {
 
 	public void onSurfaceChanged(GL10 gl, int width, int height) 
 	{
-		init();
 		resize(width, height);
 	}
 
 	public void onSurfaceCreated(GL10 gl, EGLConfig config) 
 	{
-		// Do nothing
+		init();
 	}
 
 }
