@@ -1,6 +1,7 @@
 #include "style.h"
 #include "platform.h"
-#include "util/geometryHandler.h"
+#include "util/geometry.h"
+#include "util/jsonExtractor.h"
 
 /*
  * Style Class Methods
@@ -15,10 +16,6 @@ void Style::setFragShaderSrc(std::string _fragShaderSrcStr) {
 
 void Style::setVertShaderSrc(std::string _vertShaderSrcStr) {
     m_vertShaderSrcStr = std::move(_vertShaderSrcStr);
-}
-
-std::shared_ptr<ShaderProgram> Style::getShaderProgram() const {
-    return m_shaderProgram;
 }
 
 void Style::updateLayers(std::vector<std::pair<std::string, GLuint>> _newLayers) {
@@ -85,36 +82,22 @@ void PolygonStyle::addData(const Json::Value& _jsonRoot, MapTile& _tile, const M
     // Create a vboMesh which will eventually contain all the data
     std::unique_ptr<VboMesh> mesh(new VboMesh(m_vertexLayout, m_drawMode));
 
-    //Initialize the Geometry Handler
-    GeometryHandler geoHandler(_mapProjection);
-
     //Extract Feature Properties
-
     for(auto& layer : m_layerColorMap) {
         Json::Value layerFeatures = _jsonRoot[layer.first.c_str()]["features"];
-        
         //iterate through all features and check for respective geometry type
         for(int i = 0; i < layerFeatures.size(); i++) {
-            Json::Value geometry = layerFeatures[i]["geometry"];
-            Json::Value property = layerFeatures[i]["properties"];
-
-            std::string geomType = geometry["type"].asString();
-            //if geomType not relevant type then move on
-            if(geomType.compare(m_geomType) != 0) {
-                continue;
+            if(m_geomType.compare(JsonExtractor::extractGeomType(layerFeatures[i])) == 0) {
+                std::vector<glm::vec3> extractedGeomCoords;
+                std::vector<int> polyRingSizes;
+                JsonExtractor::extractGeomCoords(extractedGeomCoords, polyRingSizes, layerFeatures[i], _tile.getOrigin(), _mapProjection);
+                GeometryHandler::buildPolygon(extractedGeomCoords, polyRingSizes, m_vertCoords, m_vertNormals, m_indices);
+                //GeometryHandler::buildPolygonExtrusion(JsonExtractor::extractGeomCoords(layerFeatures, _tile.getOrigin(), _mapProjection), m_vertCoords, m_vertNormals, m_indices);
+                /* fill style's m_vertices with vertCoord, vertNormal and color data */
+                fillVertexData(layer.second);
             }
-            //else process this geometry
             else {
-                //extract feature properties
-                float featureHeight  = 0.0f;
-                float minFeatureHeight = 0.0f;
-                if (property.isMember("height")) {
-                    featureHeight = property["height"].asFloat();
-                }
-                if (property.isMember("min_height")) {
-                    minFeatureHeight = property["min_height"].asFloat();
-                }
-                geoHandler.polygonAddData<vboDataUnit>(geometry["coordinates"], m_vertices, m_indices, layer.second, _tile.getOrigin(), featureHeight, minFeatureHeight);
+                continue;
             }
         }
     }
@@ -129,6 +112,16 @@ void PolygonStyle::addData(const Json::Value& _jsonRoot, MapTile& _tile, const M
         //1. addGeometry should take either take the name of the style or pointer to the style (this)
         _tile.addGeometry(*this, std::move(mesh));
     }
+}
+
+void PolygonStyle::fillVertexData(const GLuint& _abgr) {
+    for(int i = m_vertices.size(); i < m_vertCoords.size(); i++) {
+        m_vertices.push_back( { m_vertCoords[i].x, m_vertCoords[i].y, m_vertCoords[i].z,
+                                m_vertNormals[i].x, m_vertNormals[i].y, m_vertNormals[i].z,
+                                _abgr
+                              });
+    }
+    return;
 }
 
 void PolygonStyle::clearStyleData() {
