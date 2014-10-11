@@ -4,6 +4,7 @@
 
 #include "tileManager/tileManager.h"
 #include "viewModule/viewModule.h"
+#include "util/geometry.h"
 
 class SceneDefinition;
 
@@ -20,6 +21,10 @@ public:
     void update(float _dt);
 
     void renderFrame();
+
+    ~SceneDirector() {
+        GeometryHandler::cleanup();
+    }
 
 private:
 
