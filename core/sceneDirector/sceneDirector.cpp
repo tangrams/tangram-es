@@ -19,6 +19,8 @@ SceneDirector::SceneDirector() {
     m_tileManager->addDataSource(std::move(dataSource));
 
     logMsg("Constructed tileManager \n");
+
+    GeometryHandler::init();
 }
 
 void SceneDirector::loadStyles() {
