@@ -37,6 +37,19 @@ protected:
     /* A collection of vertex indices maintained by this style to be fed to a vboMesh */
     std::vector<GLushort> m_indices;
     
+    /* 
+     * A collection of floats to be used to extract vertex coordinates from the geomHandler and feed to the vertexDataUnit specific to a style
+     * NOTE: These will be cleared when a tile is done tesselating
+     */
+    std::vector<glm::vec3> m_vertCoords;
+    
+    /* 
+     * A collection of floats to be used to extract normals for extruded vertices per vertex coordinate from the geomHandler and feed to the vertexDataUnit specific to a style
+     * NOTE: These will be cleared when a tile is done tesselating
+     * NOTE2: This might not be used by all styles
+     */
+    std::vector<glm::vec3> m_vertNormals;
+    
     //What layer names will be handled by this Style
     std::unordered_map<std::string, GLuint> m_layerColorMap;
     
@@ -59,6 +72,7 @@ protected:
     /* shader source */
     std::string m_fragShaderSrcStr;
     std::string m_vertShaderSrcStr;
+    
 
 public:
 
@@ -70,12 +84,17 @@ public:
      *  to read the "style description" and create a vertex layout based on that.
      */
     virtual void constructVertexLayout() = 0;
-
+    
     /*
      * Responsible to create a shader program for this style.
      *  Uses the defined frag and vert member shader source.
      */
     virtual void constructShaderProgram() = 0;
+
+    /*
+     * Method to fill the vertexDataUnit specific to every style based on the tesselated geometry
+     */
+    virtual void fillVertexData(const GLuint& _abgr) = 0;
 
     /* 
      * UpdateLayer updates the m_layerColorMap with a new definition of json layers which this style will process
@@ -110,7 +129,7 @@ public:
     void setVertShaderSrc(std::string _vertShaderSrcStr);
 
     // Returns the shader program to be fed to vboMesh->draw
-    std::shared_ptr<ShaderProgram> getShaderProgram() const;
+    std::shared_ptr<ShaderProgram> getShaderProgram() const { return m_shaderProgram; }
     std::string getStyleName() const { return m_styleName;}
     std::string getGeometryType() const { return m_geomType;}
 
@@ -138,6 +157,10 @@ class PolygonStyle : public Style {
     /* A collection of vertices maintained by this style to be fed to a vboMesh */
     std::vector<vboDataUnit> m_vertices;
 
+    virtual void constructVertexLayout();
+    virtual void constructShaderProgram();
+    virtual void fillVertexData(const GLuint& _abgr);
+
 public:
  
     PolygonStyle(std::string _geomType, GLenum _drawMode = GL_TRIANGLES);
@@ -145,8 +168,6 @@ public:
     
     virtual void addData(const Json::Value& _jsonRoot, MapTile& _tile, const MapProjection& _mapProjection);
     virtual void setup();
-    virtual void constructVertexLayout();
-    virtual void constructShaderProgram();
     
     virtual void clearStyleData();
     
