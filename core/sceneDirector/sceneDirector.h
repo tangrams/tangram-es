@@ -4,7 +4,7 @@
 
 #include "tileManager/tileManager.h"
 #include "viewModule/viewModule.h"
-#include "util/geometry.h"
+#include "util/geometryHandler.h"
 
 class SceneDefinition;
 
