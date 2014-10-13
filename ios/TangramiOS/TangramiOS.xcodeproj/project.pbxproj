@@ -7,6 +7,7 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		8BB4F61319EC18CB00F1C8F8 /* jsonExtractor.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 8BB4F61119EC18CB00F1C8F8 /* jsonExtractor.cpp */; };
 		C95C000419AB8AE5003FEC0C /* ViewController.mm in Sources */ = {isa = PBXBuildFile; fileRef = C95C000319AB8AE5003FEC0C /* ViewController.mm */; };
 		C95C000619AB8AE5003FEC0C /* Images.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = C95C000519AB8AE5003FEC0C /* Images.xcassets */; };
 		C95CFFE319AB8AE5003FEC0C /* Foundation.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = C95CFFE219AB8AE5003FEC0C /* Foundation.framework */; };
@@ -41,6 +42,8 @@
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
+		8BB4F61119EC18CB00F1C8F8 /* jsonExtractor.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = jsonExtractor.cpp; sourceTree = "<group>"; };
+		8BB4F61219EC18CB00F1C8F8 /* jsonExtractor.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = jsonExtractor.h; sourceTree = "<group>"; };
 		C95C000219AB8AE5003FEC0C /* ViewController.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = ViewController.h; sourceTree = "<group>"; };
 		C95C000319AB8AE5003FEC0C /* ViewController.mm */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.objcpp; path = ViewController.mm; sourceTree = "<group>"; };
 		C95C000519AB8AE5003FEC0C /* Images.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Images.xcassets; sourceTree = "<group>"; };
@@ -186,6 +189,8 @@
 		C9A35C3F19E76C3A00D7802F /* util */ = {
 			isa = PBXGroup;
 			children = (
+				8BB4F61119EC18CB00F1C8F8 /* jsonExtractor.cpp */,
+				8BB4F61219EC18CB00F1C8F8 /* jsonExtractor.h */,
 				C9A35C4019E76C3A00D7802F /* error.cpp */,
 				C9A35C4119E76C3A00D7802F /* error.h */,
 				C9A35C4219E76C3A00D7802F /* geometryHandler.cpp */,
@@ -348,6 +353,7 @@
 				C9A35C7019E76CA800D7802F /* tangram.cpp in Sources */,
 				C95C000419AB8AE5003FEC0C /* ViewController.mm in Sources */,
 				C9A35C5A19E76C5600D7802F /* tileManager.cpp in Sources */,
+				8BB4F61319EC18CB00F1C8F8 /* jsonExtractor.cpp in Sources */,
 				C9A35C6219E76C7000D7802F /* sceneDirector.cpp in Sources */,
 				C9A35C6E19E76C8E00D7802F /* dataSource.cpp in Sources */,
 				C9A35C6619E76C7900D7802F /* sceneDefinition.cpp in Sources */,
@@ -477,7 +483,7 @@
 					"$(PROJECT_DIR)/TangramiOS",
 					"$(PROJECT_DIR)/TangramiOS/libs",
 					"$(PROJECT_DIR)/TangramiOS/precompiled",
-					"/Users/matt/Development/tangram-es/core/include/libtess2",
+					"/Users/$USER/Development/tangram-es/core/include/libtess2",
 				);
 				OTHER_CFLAGS = (
 					"-I../../core",
@@ -503,7 +509,7 @@
 					"$(PROJECT_DIR)/TangramiOS",
 					"$(PROJECT_DIR)/TangramiOS/libs",
 					"$(PROJECT_DIR)/TangramiOS/precompiled",
-					"/Users/matt/Development/tangram-es/core/include/libtess2",
+					"/Users/$USER/Development/tangram-es/core/include/libtess2",
 				);
 				OTHER_CFLAGS = (
 					"-I../../core",
