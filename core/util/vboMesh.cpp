@@ -93,7 +93,7 @@ void VboMesh::upload() {
         if (m_glVertexBuffer == 0) {
             glGenBuffers(1, &m_glVertexBuffer);
         }
-
+        
         // Buffer vertex data
         glBindBuffer(GL_ARRAY_BUFFER, m_glVertexBuffer);
         glBufferData(GL_ARRAY_BUFFER, m_vertexData.size(), m_vertexData.data(), GL_STATIC_DRAW);

@@ -480,8 +480,6 @@
 				INFOPLIST_FILE = "TangramiOS/TangramiOS-Info.plist";
 				LIBRARY_SEARCH_PATHS = (
 					"$(inherited)",
-					"$(PROJECT_DIR)/TangramiOS",
-					"$(PROJECT_DIR)/TangramiOS/libs",
 					"$(PROJECT_DIR)/TangramiOS/precompiled",
 					"/Users/$USER/Development/tangram-es/core/include/libtess2",
 				);
@@ -506,8 +504,6 @@
 				INFOPLIST_FILE = "TangramiOS/TangramiOS-Info.plist";
 				LIBRARY_SEARCH_PATHS = (
 					"$(inherited)",
-					"$(PROJECT_DIR)/TangramiOS",
-					"$(PROJECT_DIR)/TangramiOS/libs",
 					"$(PROJECT_DIR)/TangramiOS/precompiled",
 					"/Users/$USER/Development/tangram-es/core/include/libtess2",
 				);
