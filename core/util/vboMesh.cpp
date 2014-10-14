@@ -93,7 +93,7 @@ void VboMesh::upload() {
         if (m_glVertexBuffer == 0) {
             glGenBuffers(1, &m_glVertexBuffer);
         }
-
+        
         // Buffer vertex data
         glBindBuffer(GL_ARRAY_BUFFER, m_glVertexBuffer);
         glBufferData(GL_ARRAY_BUFFER, m_vertexData.size(), m_vertexData.data(), GL_STATIC_DRAW);
@@ -107,7 +107,7 @@ void VboMesh::upload() {
 
         // Buffer element index data
         glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, m_glIndexBuffer);
-        glBufferData(GL_ELEMENT_ARRAY_BUFFER, m_indices.size() * sizeof(GL_UNSIGNED_SHORT), m_indices.data(), GL_STATIC_DRAW);
+        glBufferData(GL_ELEMENT_ARRAY_BUFFER, m_indices.size() * sizeof(GLushort), m_indices.data(), GL_STATIC_DRAW);
     }
 
     // Release copies of geometry in CPU memory
