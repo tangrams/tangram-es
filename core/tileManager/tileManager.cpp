@@ -91,24 +91,24 @@ bool TileManager::updateTileSet() {
             return false;
         }
         // Construct tiles... buckle up, this gets deep
-        for (auto& style : styles) {
-            for (auto& tileID : m_tilesToAdd) {
-                for (auto& source : m_dataSources) {
-                    logMsg("Building maptile %d/%d/%d:\n", tileID.z, tileID.x, tileID.y);
-                    // Instantiate a maptile
-                    std::unique_ptr<MapTile> tile(new MapTile(tileID, m_viewModule->getMapProjection()));
-                    // Get the previously fetched tile data
-                    logMsg("    Instantiated\n");
-                    std::shared_ptr<Json::Value> json = source->GetData(tileID);
-                    logMsg("    Retrieved JSON\n");
+        for (auto& tileID : m_tilesToAdd) {
+            logMsg("Building maptile %d/%d/%d:\n", tileID.z, tileID.x, tileID.y);
+            // Instantiate a maptile
+            std::unique_ptr<MapTile> tile(new MapTile(tileID, m_viewModule->getMapProjection()));
+            for (auto& source : m_dataSources) {
+                // Get the previously fetched tile data
+                logMsg("    Instantiated\n");
+                std::shared_ptr<Json::Value> json = source->GetData(tileID);
+                logMsg("    Retrieved JSON\n");
+                for (auto& style : styles) {
                     // Add styled geometry to the new tile
                     style->addData(*json, *tile, m_viewModule->getMapProjection());
                     logMsg("    Added data\n");
                     // Add the tile to our tileset
-                    m_tileSet[tileID] = std::move(tile);
+                    style->clearStyleData();
                 }
-                style->clearStyleData();
             }
+            m_tileSet[tileID] = std::move(tile);
         }
         m_tilesToAdd.clear();
     }
