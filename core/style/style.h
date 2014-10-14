@@ -176,3 +176,40 @@ public:
     }
 };
 
+class MultiPolygonStyle : public Style {
+
+    struct vboDataUnit {
+        //TODO: See how can we use glm::dvec3 here.
+        //Position Data
+        GLfloat pos_x;
+        GLfloat pos_y;
+        GLfloat pos_z;
+        //Normal Data
+        GLfloat norm_x;
+        GLfloat norm_y;
+        GLfloat norm_z;
+        //Color Data
+        GLuint abgr;
+    };
+    
+    /* A collection of vertices maintained by this style to be fed to a vboMesh */
+    std::vector<vboDataUnit> m_vertices;
+
+    virtual void constructVertexLayout();
+    virtual void constructShaderProgram();
+    virtual void fillVertexData(const GLuint& _abgr);
+
+public:
+ 
+    MultiPolygonStyle(std::string _geomType, GLenum _drawMode = GL_TRIANGLES);
+    MultiPolygonStyle(std::string _geomType, std::string _styleName, GLenum _drawMode = GL_TRIANGLES);
+    
+    virtual void addData(const Json::Value& _jsonRoot, MapTile& _tile, const MapProjection& _mapProjection);
+    virtual void setup();
+    
+    virtual void clearStyleData();
+    
+    virtual ~MultiPolygonStyle() {
+        m_vertices.clear();
+    }
+};
