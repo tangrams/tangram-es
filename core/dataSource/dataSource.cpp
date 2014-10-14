@@ -81,8 +81,8 @@ bool MapzenVectorTileJson::LoadTile(std::vector<TileID> _tileCoords) {
     int rc; //return value for select() call
     CURLMcode cres;
 
-    int queuedHandles, numHandles = urls.size();
-    int prevHandle;
+    int queuedHandles, numHandles = (int)urls.size();
+    int prevHandle = 0;
     int fetchTry = 0; //Counter to check for curl/select timeOuts.. maxed by static count MAX_FETCH_TRY
     int fdsetTimeoutCount = 0;
 
@@ -179,7 +179,7 @@ bool MapzenVectorTileJson::LoadTile(std::vector<TileID> _tileCoords) {
             char *url;
             char *tmpOutData; //to read the CURLINFO_PRIVATE data which is type casted to char* from stringstream*
             std::string tmpJsonData;
-            int length;
+            int length = 0;
             Json::Reader jsonReader;
 
             // see what select returned
@@ -223,7 +223,7 @@ bool MapzenVectorTileJson::LoadTile(std::vector<TileID> _tileCoords) {
                                 curl_easy_getinfo(handleMsg->easy_handle, CURLINFO_PRIVATE , &tmpOutData);
                                 // typecast back from char* to std::stringstream
                                 tmpJsonData = ((std::stringstream *)tmpOutData)->str();
-                                length = tmpJsonData.size();
+                                length = (int)tmpJsonData.size();
                                 jsonReader.parse(tmpJsonData.c_str(), tmpJsonData.c_str() + length, *(jsonVal.get()));
                                 // no way to get what ID this url was for so have to extract ID from url
                                 m_JsonRoots[extractIDFromUrl(std::string(url))] = jsonVal;
