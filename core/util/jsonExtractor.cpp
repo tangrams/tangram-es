@@ -1,6 +1,7 @@
 #include "jsonExtractor.h"
+#include "platform.h"
 
-void JsonExtractor::extractGeomCoords(std::vector<glm::vec3>& _outGeomCoords, std::vector<int>& _ringSizes, const Json::Value& _featureJson, const glm::dvec2& _tileOrigin, const MapProjection& _mapProjection) {
+void JsonExtractor::extractGeomCoords(std::vector<glm::vec3>& _outGeomCoords, std::vector<int>& _ringSizes, const Json::Value& _featureJson, const glm::dvec2& _tileOrigin, const MapProjection& _mapProjection, int _multiPolySize) {
 
     float featureHeight = 0.0;
     float minFeatureHeight = 0.0;
@@ -15,22 +16,48 @@ void JsonExtractor::extractGeomCoords(std::vector<glm::vec3>& _outGeomCoords, st
         minFeatureHeight = property["min_height"].asFloat();
     }
     
-    //iterate through all sets of rings
-    for(int i = 0; i < coordinates.size(); i++) {
-        int ringSize = coordinates[i].size();
-        //Iterate through all rings in the set and fill the coordinates
-        for(int j = 0; j < ringSize; j++) {
-            glm::dvec2 tmp = _mapProjection.LonLatToMeters(glm::dvec2(coordinates[i][j][0].asFloat(), coordinates[i][j][1].asFloat()));
-            glm::dvec2 meters = tmp - _tileOrigin;
-            _outGeomCoords.push_back(glm::vec3(meters.x, meters.y, featureHeight));
-        }
-        if(ringSize != 0) {
-            _ringSizes.push_back(ringSize);
+    if(_multiPolySize == 1) {
+        for(int i = 0; i < coordinates.size(); i++) {
+            int ringSize = coordinates[i].size();
+            //Iterate through all rings in the set and fill the coordinates
+            for(int j = 0; j < ringSize; j++) {
+                glm::dvec2 tmp = _mapProjection.LonLatToMeters(glm::dvec2(coordinates[i][j][0].asFloat(), coordinates[i][j][1].asFloat()));
+                glm::dvec2 meters = tmp - _tileOrigin;
+                _outGeomCoords.push_back(glm::vec3(meters.x, meters.y, featureHeight));
+            }
+            if(ringSize != 0) {
+                _ringSizes.push_back(ringSize);
+            }
         }
     }
+
+    else if(_multiPolySize > 1) {
+        for(int poly = 0; poly < _multiPolySize; poly++) {
+            for(int i = 0; i < coordinates[poly].size(); i++) {
+                int ringSize = coordinates[poly][i].size();
+                //Iterate through all rings in the set and fill the coordinates[poly]
+                for(int j = 0; j < ringSize; j++) {
+                    glm::dvec2 tmp = _mapProjection.LonLatToMeters(glm::dvec2(coordinates[poly][i][j][0].asFloat(), coordinates[poly][i][j][1].asFloat()));
+                    glm::dvec2 meters = tmp - _tileOrigin;
+                    _outGeomCoords.push_back(glm::vec3(meters.x, meters.y, featureHeight));
+                }
+                if(ringSize != 0) {
+                    _ringSizes.push_back(ringSize);
+                }
+            }
+        }
+    }
+    else {
+        logMsg("\n***Negative value for multiPolySize (%d), not allowed. Check json data.", _multiPolySize);
+    }
+    //iterate through all sets of rings
 }
 
 
 std::string JsonExtractor::extractGeomType(const Json::Value& _featureJson) {
     return _featureJson["geometry"]["type"].asString();
+}
+
+int JsonExtractor::extractNumPoly(const Json::Value& _featureJson) {
+    return _featureJson["geometry"]["coordinates"].size();
 }
