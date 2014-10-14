@@ -3,7 +3,6 @@
 LOCAL_PATH := $(call my-dir)
 
 # prepare libtess2
-# prebuilt binaries from openFrameworks
 include $(CLEAR_VARS)
 LOCAL_MODULE    := libtess2
 LOCAL_SRC_FILES := precompiled/$(TARGET_ARCH_ABI)/libtess2.a
