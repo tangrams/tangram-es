@@ -37,6 +37,7 @@
 		C9A35C7419E76E7600D7802F /* libcurl.a in Frameworks */ = {isa = PBXBuildFile; fileRef = C9A35C7319E76E7600D7802F /* libcurl.a */; };
 		C9A35C7619E76E8700D7802F /* libtess2.a in Frameworks */ = {isa = PBXBuildFile; fileRef = C9A35C7519E76E8700D7802F /* libtess2.a */; };
 		C9A35C7819E76EA200D7802F /* libz.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = C9A35C7719E76EA200D7802F /* libz.dylib */; };
+		C9B65B3419EC2DFF00DE2FA9 /* jsonExtractor.cpp in Sources */ = {isa = PBXBuildFile; fileRef = C9B65B3219EC2DFF00DE2FA9 /* jsonExtractor.cpp */; };
 		C9BCA9F919B8CCB1006260E7 /* platform_ios.cpp in Sources */ = {isa = PBXBuildFile; fileRef = C9BCA9F819B8CCB1006260E7 /* platform_ios.cpp */; };
 /* End PBXBuildFile section */
 
@@ -91,6 +92,8 @@
 		C9A35C7319E76E7600D7802F /* libcurl.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; name = libcurl.a; path = precompiled/libcurl.a; sourceTree = "<group>"; };
 		C9A35C7519E76E8700D7802F /* libtess2.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; name = libtess2.a; path = ../../../core/include/libtess2/libtess2.a; sourceTree = "<group>"; };
 		C9A35C7719E76EA200D7802F /* libz.dylib */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.dylib"; name = libz.dylib; path = usr/lib/libz.dylib; sourceTree = SDKROOT; };
+		C9B65B3219EC2DFF00DE2FA9 /* jsonExtractor.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = jsonExtractor.cpp; sourceTree = "<group>"; };
+		C9B65B3319EC2DFF00DE2FA9 /* jsonExtractor.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = jsonExtractor.h; sourceTree = "<group>"; };
 		C9BCA9F819B8CCB1006260E7 /* platform_ios.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = platform_ios.cpp; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
@@ -186,6 +189,8 @@
 		C9A35C3F19E76C3A00D7802F /* util */ = {
 			isa = PBXGroup;
 			children = (
+				C9B65B3219EC2DFF00DE2FA9 /* jsonExtractor.cpp */,
+				C9B65B3319EC2DFF00DE2FA9 /* jsonExtractor.h */,
 				C9A35C4019E76C3A00D7802F /* error.cpp */,
 				C9A35C4119E76C3A00D7802F /* error.h */,
 				C9A35C4219E76C3A00D7802F /* geometryHandler.cpp */,
@@ -348,6 +353,7 @@
 				C9A35C7019E76CA800D7802F /* tangram.cpp in Sources */,
 				C95C000419AB8AE5003FEC0C /* ViewController.mm in Sources */,
 				C9A35C5A19E76C5600D7802F /* tileManager.cpp in Sources */,
+				C9B65B3419EC2DFF00DE2FA9 /* jsonExtractor.cpp in Sources */,
 				C9A35C6219E76C7000D7802F /* sceneDirector.cpp in Sources */,
 				C9A35C6E19E76C8E00D7802F /* dataSource.cpp in Sources */,
 				C9A35C6619E76C7900D7802F /* sceneDefinition.cpp in Sources */,
@@ -474,8 +480,6 @@
 				INFOPLIST_FILE = "TangramiOS/TangramiOS-Info.plist";
 				LIBRARY_SEARCH_PATHS = (
 					"$(inherited)",
-					"$(PROJECT_DIR)/TangramiOS",
-					"$(PROJECT_DIR)/TangramiOS/libs",
 					"$(PROJECT_DIR)/TangramiOS/precompiled",
 					"/Users/matt/Development/tangram-es/core/include/libtess2",
 				);
@@ -500,8 +504,6 @@
 				INFOPLIST_FILE = "TangramiOS/TangramiOS-Info.plist";
 				LIBRARY_SEARCH_PATHS = (
 					"$(inherited)",
-					"$(PROJECT_DIR)/TangramiOS",
-					"$(PROJECT_DIR)/TangramiOS/libs",
 					"$(PROJECT_DIR)/TangramiOS/precompiled",
 					"/Users/matt/Development/tangram-es/core/include/libtess2",
 				);
