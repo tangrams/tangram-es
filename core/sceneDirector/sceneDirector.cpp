@@ -29,12 +29,20 @@ void SceneDirector::loadStyles() {
     m_sceneDefinition = std::make_shared<SceneDefinition>();
 
     // Create hard-coded styles for now
-    std::unique_ptr<Style> style(new PolygonStyle("Polygon"));
-    style->updateLayers({{"water", 0xffdd2222}});
-    style->updateLayers({{"buildings", 0xffeeeeee}});
-    style->updateLayers({{"earth", 0xff22dd22}});
-    style->updateLayers({{"landuse", 0xff22aa22}});
-    m_sceneDefinition->addStyle(std::move(style));
+    std::unique_ptr<Style> polyStyle(new PolygonStyle("Polygon"));
+    polyStyle->updateLayers({{"water", 0xffdd2222}});
+    polyStyle->updateLayers({{"buildings", 0xffeeeeee}});
+    polyStyle->updateLayers({{"earth", 0xff22dd22}});
+    polyStyle->updateLayers({{"landuse", 0xff22aa22}});
+
+    std::unique_ptr<Style> multiPolyStyle(new MultiPolygonStyle("MultiPolygon"));
+    multiPolyStyle->updateLayers({{"water", 0xffdd2222}});
+    multiPolyStyle->updateLayers({{"buildings", 0xffeeeeee}});
+    multiPolyStyle->updateLayers({{"earth", 0xff22dd22}});
+    multiPolyStyle->updateLayers({{"landuse", 0xff22aa22}});
+
+    m_sceneDefinition->addStyle(std::move(polyStyle));
+    m_sceneDefinition->addStyle(std::move(multiPolyStyle));
 
     m_tileManager->setSceneDefinition(m_sceneDefinition);
 
