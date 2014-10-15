@@ -12,7 +12,7 @@ ViewModule::ViewModule(float _width, float _height, ProjectionType _projType) {
     setZoom(16); // Arbitrary zoom for testing
 
     // Set up view matrix
-    m_pos = glm::dvec3(0, 0, 1); // Start at 0 to begin
+    m_pos = glm::dvec3(0, 0, 1000); // Start at 0 to begin
     glm::dvec3 direction = glm::dvec3(0, 0, -1); // Look straight down
     glm::dvec3 up = glm::dvec3(0, 1, 0); // Y-axis is 'up'
     m_view = glm::lookAt(m_pos, m_pos + direction, up);
@@ -65,13 +65,19 @@ void ViewModule::translate(double _dx, double _dy) {
 
 void ViewModule::setZoom(int _z) {
 
+    // Calculate viewport dimensions
     m_zoom = _z;
     float tileSize = 2 * MapProjection::HALF_CIRCUMFERENCE * pow(2, -m_zoom);
     m_height = 3 * tileSize; // Set viewport size to ~3 tiles vertically
     m_width = m_height * m_aspect; // Size viewport width to match aspect ratio
-    m_proj = glm::ortho(-m_width * 0.5, m_width * 0.5, -m_height * 0.5, m_height * 0.5, 0.1, 100.0);
-    //m_proj = glm::dmat4();
-    logMsg("ProjectionMatrix: %s\n", glm::to_string(m_proj).c_str());
+    
+    // Update camera projection
+    double fovy = PI * 0.5;
+    m_pos.z = m_height * 0.5 / tan(fovy * 0.5);
+    m_view = glm::lookAt(m_pos, m_pos + glm::dvec3(0, 0, -1), glm::dvec3(0, 1, 0));
+    m_proj = glm::perspective(fovy, m_aspect, 0.1, 2.0 * m_pos.z);
+    //m_proj = glm::ortho(-m_width * 0.5, m_width * 0.5, -m_height * 0.5, m_height * 0.5, 0.1, 2000.0);
+
     m_dirty = true;
 
 }

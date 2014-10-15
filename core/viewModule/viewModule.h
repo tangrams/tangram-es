@@ -64,6 +64,6 @@ private:
     int m_zoom;
     float m_width;
     float m_height;
-    float m_aspect;
+    double m_aspect;
 };
 
