@@ -100,6 +100,10 @@ bool TileManager::updateTileSet() {
                 logMsg("    Instantiated\n");
                 std::shared_ptr<Json::Value> json = source->GetData(tileID);
                 logMsg("    Retrieved JSON\n");
+                if(!json) {
+                    logMsg("    ***json root is null, tile was not read properly\n");
+                    continue;
+                }
                 for (auto& style : styles) {
                     // Add styled geometry to the new tile
                     style->addData(*json, *tile, m_viewModule->getMapProjection());
