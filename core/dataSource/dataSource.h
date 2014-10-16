@@ -36,25 +36,25 @@ public:
     /*
      * Does all the curl network calls to load the tile data and fills the data associated with a tileID
      */
-    virtual bool LoadTile(std::vector<TileID> _tileCoords) = 0;
+    virtual bool LoadTile(const std::vector<TileID>& _tileCoords) = 0;
 
     /* Returns the data corresponding to a tileID */
-    virtual std::shared_ptr<Json::Value> GetData(TileID _tileID) = 0;
+    virtual std::shared_ptr<Json::Value> GetData(const TileID& _tileID) = 0;
 
     /* Checks if data exists for a specific tileID */
-    virtual bool CheckDataExists(TileID _tileID) = 0;
+    virtual bool CheckDataExists(const TileID& _tileID) = 0;
 
     /* 
      * constructs the URL for a tile based on tile coordinates/IDs.
      * Used by LoadTile to construct URL
      */
-    virtual std::unique_ptr<std::string> constructURL(TileID _tileCoord) = 0;
+    virtual std::unique_ptr<std::string> constructURL(const TileID& _tileCoord) = 0;
 
     /* 
      * extracts tileIDs from a url
      * Used by LoadTile to extract tileIDs from curl url (!!Hack!!)
      */
-    virtual TileID extractIDFromUrl(std::string _url) = 0;
+    virtual TileID extractIDFromUrl(const std::string& _url) = 0;
     
     /* 
      * clears all data associated with this dataSource
@@ -74,14 +74,14 @@ public:
 
 //Extends DataSource class to read MapzenVectorTileJsons.
 class MapzenVectorTileJson: public DataSource {
-    virtual std::unique_ptr<std::string> constructURL(TileID _tileCoord) override;
-    virtual TileID extractIDFromUrl(std::string _url) override;
 
 public:
     MapzenVectorTileJson();
-    virtual bool LoadTile(std::vector<TileID> _tileCoords) override;
-    virtual std::shared_ptr<Json::Value> GetData(TileID _tileID) override;
-    virtual bool CheckDataExists(TileID _tileID) override;
+    virtual std::unique_ptr<std::string> constructURL(const TileID& _tileCoord) override;
+    virtual TileID extractIDFromUrl(const std::string& _url) override;
+    virtual bool LoadTile(const std::vector<TileID>& _tileCoords) override;
+    virtual std::shared_ptr<Json::Value> GetData(const TileID& _tileID) override;
+    virtual bool CheckDataExists(const TileID& _tileID) override;
     virtual ~MapzenVectorTileJson() {}
 };
 

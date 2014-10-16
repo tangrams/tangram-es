@@ -73,7 +73,7 @@ MapzenVectorTileJson::MapzenVectorTileJson() {
     }
 }
 
-std::unique_ptr<std::string> MapzenVectorTileJson::constructURL(TileID _tileCoord) {
+std::unique_ptr<std::string> MapzenVectorTileJson::constructURL(const TileID& _tileCoord) {
     std::unique_ptr<std::string> pTileUrl(nullptr);
     std::string xVal(std::to_string(_tileCoord.x));
     std::string yVal(std::to_string(_tileCoord.y));
@@ -94,7 +94,7 @@ std::unique_ptr<std::string> MapzenVectorTileJson::constructURL(TileID _tileCoor
     return std::move(pTileUrl);
 }
 
-TileID MapzenVectorTileJson::extractIDFromUrl(std::string _url) {
+TileID MapzenVectorTileJson::extractIDFromUrl(const std::string& _url) {
     int tileIndices[3];
     int index = 0;
     regObj.assign("[0-9]+");
@@ -108,7 +108,7 @@ TileID MapzenVectorTileJson::extractIDFromUrl(std::string _url) {
     return TileID(tileIndices[1], tileIndices[2], tileIndices[0]);
 }
 
-bool MapzenVectorTileJson::LoadTile(std::vector<TileID> _tileCoords) {
+bool MapzenVectorTileJson::LoadTile(const std::vector<TileID>& _tileCoords) {
     std::vector<std::unique_ptr<std::string>> urls;
 
     if(_tileCoords.size() == 0) {
@@ -298,7 +298,7 @@ bool MapzenVectorTileJson::LoadTile(std::vector<TileID> _tileCoords) {
     return true;
 }
 
-bool MapzenVectorTileJson::CheckDataExists(TileID _tileID) {
+bool MapzenVectorTileJson::CheckDataExists(const TileID& _tileID) {
     if(m_JsonRoots.find(_tileID) != m_JsonRoots.end()) {
         return true;
     }
@@ -307,7 +307,12 @@ bool MapzenVectorTileJson::CheckDataExists(TileID _tileID) {
     }
 }
 
-std::shared_ptr<Json::Value> MapzenVectorTileJson::GetData(TileID _tileID) {
-    return m_JsonRoots[_tileID];
+std::shared_ptr<Json::Value> MapzenVectorTileJson::GetData(const TileID& _tileID) {
+    if(CheckDataExists(_tileID)) {
+        return m_JsonRoots[_tileID];
+    }
+    else {
+        return nullptr;
+    }
 }
 
