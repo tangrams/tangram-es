@@ -90,9 +90,15 @@ void PolygonStyle::addData(const Json::Value& _jsonRoot, MapTile& _tile, const M
             if(m_geomType.compare(JsonExtractor::extractGeomType(layerFeatures[i])) == 0) {
                 std::vector<glm::vec3> extractedGeomCoords;
                 std::vector<int> polyRingSizes;
+                float featureHeight = 0;
+                float minFeatureHeight = 0;
                 JsonExtractor::extractGeomCoords(extractedGeomCoords, polyRingSizes, layerFeatures[i], _tile.getOrigin(), _mapProjection);
                 GeometryHandler::buildPolygon(extractedGeomCoords, polyRingSizes, m_vertCoords, m_vertNormals, m_indices);
-                //GeometryHandler::buildPolygonExtrusion(JsonExtractor::extractGeomCoords(layerFeatures, _tile.getOrigin(), _mapProjection), m_vertCoords, m_vertNormals, m_indices);
+
+                JsonExtractor::extractFeatureHeightProps(layerFeatures[i], featureHeight, minFeatureHeight);
+                if(featureHeight != minFeatureHeight) {
+                    GeometryHandler::buildPolygonExtrusion(extractedGeomCoords, polyRingSizes, minFeatureHeight, m_vertCoords, m_vertNormals, m_indices);
+                }
                 /* fill style's m_vertices with vertCoord, vertNormal and color data */
                 fillVertexData(layer.second);
             }
@@ -195,11 +201,16 @@ void MultiPolygonStyle::addData(const Json::Value& _jsonRoot, MapTile& _tile, co
         for(int i = 0; i < layerFeatures.size(); i++) {
             if(m_geomType.compare(JsonExtractor::extractGeomType(layerFeatures[i])) == 0) {
                 int numPolys = JsonExtractor::extractNumPoly(layerFeatures[i]);
+                float featureHeight = 0;
+                float minFeatureHeight = 0;
                 std::vector<glm::vec3> extractedGeomCoords;
                 std::vector<int> polyRingSizes;
                 JsonExtractor::extractGeomCoords(extractedGeomCoords, polyRingSizes, layerFeatures[i], _tile.getOrigin(), _mapProjection, numPolys);
                 GeometryHandler::buildPolygon(extractedGeomCoords, polyRingSizes, m_vertCoords, m_vertNormals, m_indices);
-                //GeometryHandler::buildPolygonExtrusion(JsonExtractor::extractGeomCoords(layerFeatures, _tile.getOrigin(), _mapProjection), m_vertCoords, m_vertNormals, m_indices);
+                JsonExtractor::extractFeatureHeightProps(layerFeatures[i], featureHeight, minFeatureHeight);
+                if(featureHeight != minFeatureHeight) {
+                    GeometryHandler::buildPolygonExtrusion(extractedGeomCoords, polyRingSizes, minFeatureHeight, m_vertCoords, m_vertNormals, m_indices);
+                }
                 /* fill style's m_vertices with vertCoord, vertNormal and color data */
                 fillVertexData(layer.second);
             }
