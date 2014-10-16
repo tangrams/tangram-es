@@ -10,7 +10,17 @@ struct TileID {
     TileID(int _x, int _y, int _z) : x(_x), y(_y), z(_z) {};
 
 
-    bool operator< (const TileID& _rhs) const { return (x < _rhs.x || (y < _rhs.y || z < _rhs.z)); }
+    bool operator< (const TileID& _rhs) const {
+        if(x != _rhs.x) {
+            return (x < _rhs.x);
+        }
+        else if(y != _rhs.y) {
+            return (y < _rhs.y);
+        }
+        else {
+            return (z < _rhs.z);
+        }
+    }
     bool operator> (const TileID& _rhs) const { return _rhs < const_cast<TileID&>(*this); }
     bool operator<=(const TileID& _rhs) const { return !(*this > _rhs); }
     bool operator>=(const TileID& _rhs) const { return !(*this < _rhs); }
