@@ -1,7 +1,7 @@
 #include "jsonExtractor.h"
 #include "platform.h"
 
-void JsonExtractor::extractGeomCoords(std::vector<glm::vec3>& _outGeomCoords, std::vector<int>& _ringSizes, const Json::Value& _featureJson, const glm::dvec2& _tileOrigin, const MapProjection& _mapProjection, int _multiPolySize) {
+void JsonExtractor::extractGeomCoords(std::vector<glm::vec3>& _outGeomCoords, std::vector<int>& _ringSizes, const Json::Value& _featureJson, const glm::dvec2& _tileOrigin, const MapProjection& _mapProjection, bool _multiGeom) {
 
     float featureHeight = 0.0;
     float minFeatureHeight = 0.0;
@@ -16,7 +16,7 @@ void JsonExtractor::extractGeomCoords(std::vector<glm::vec3>& _outGeomCoords, st
         minFeatureHeight = property["min_height"].asFloat();
     }
     
-    if(_multiPolySize == 1) {
+    if(!_multiGeom) {
         for(int i = 0; i < coordinates.size(); i++) {
             int ringSize = coordinates[i].size();
             //Iterate through all rings in the set and fill the coordinates
@@ -29,10 +29,9 @@ void JsonExtractor::extractGeomCoords(std::vector<glm::vec3>& _outGeomCoords, st
                 _ringSizes.push_back(ringSize);
             }
         }
-    }
-
-    else if(_multiPolySize > 1) {
-        for(int poly = 0; poly < _multiPolySize; poly++) {
+    } else {
+        int nGeom = geometry.size();
+        for(int poly = 0; poly < nGeom; poly++) {
             for(int i = 0; i < coordinates[poly].size(); i++) {
                 int ringSize = coordinates[poly][i].size();
                 //Iterate through all rings in the set and fill the coordinates[poly]
@@ -47,9 +46,7 @@ void JsonExtractor::extractGeomCoords(std::vector<glm::vec3>& _outGeomCoords, st
             }
         }
     }
-    else {
-        logMsg("\n***Negative value for multiPolySize (%d), not allowed. Check json data.", _multiPolySize);
-    }
+
     //iterate through all sets of rings
 }
 
@@ -60,4 +57,31 @@ std::string JsonExtractor::extractGeomType(const Json::Value& _featureJson) {
 
 int JsonExtractor::extractNumPoly(const Json::Value& _featureJson) {
     return _featureJson["geometry"]["coordinates"].size();
+}
+
+void JsonExtractor::extractPoint(const Json::Value& _in, glm::vec3& _out, const MapProjection& _proj, const glm::dvec2& _offset) {
+    
+    glm::dvec2 tmp = _proj.LonLatToMeters(glm::dvec2(_in[0].asDouble(), _in[1].asDouble()));
+    _out.x = tmp.x - _offset.x;
+    _out.y = tmp.y - _offset.y;
+    
+}
+
+void JsonExtractor::extractLine(const Json::Value& _in, std::vector<glm::vec3>& _out, const MapProjection& _proj, const glm::dvec2& _offset) {
+    
+    for (auto point : _in) {
+        glm::vec3 p;
+        extractPoint(point, p, _proj, _offset);
+        _out.push_back(p);
+    }
+    
+}
+
+void JsonExtractor::extractPoly(const Json::Value& _in, std::vector<glm::vec3>& _out, std::vector<int>& _outSizes, const MapProjection& _proj, const glm::dvec2& _offset) {
+    
+    for (auto line : _in) {
+        extractLine(line, _out, _proj, _offset);
+        _outSizes.push_back(line.size());
+    }
+    
 }
