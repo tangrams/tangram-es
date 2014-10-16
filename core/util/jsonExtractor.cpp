@@ -8,13 +8,8 @@ void JsonExtractor::extractGeomCoords(std::vector<glm::vec3>& _outGeomCoords, st
     Json::Value geometry = _featureJson["geometry"];
     Json::Value property = _featureJson["properties"];
     Json::Value coordinates = geometry["coordinates"];
-    
-    if(property.isMember("height")) {
-        featureHeight = property["height"].asFloat();
-    }
-    if(property.isMember("min_height")) {
-        minFeatureHeight = property["min_height"].asFloat();
-    }
+
+    extractFeatureHeightProps(_featureJson, featureHeight, minFeatureHeight);
     
     if(_multiPolySize == 1) {
         for(int i = 0; i < coordinates.size(); i++) {
@@ -23,7 +18,12 @@ void JsonExtractor::extractGeomCoords(std::vector<glm::vec3>& _outGeomCoords, st
             for(int j = 0; j < ringSize; j++) {
                 glm::dvec2 tmp = _mapProjection.LonLatToMeters(glm::dvec2(coordinates[i][j][0].asFloat(), coordinates[i][j][1].asFloat()));
                 glm::dvec2 meters = tmp - _tileOrigin;
-                _outGeomCoords.push_back(glm::vec3(meters.x, meters.y, featureHeight));
+                if(minFeatureHeight != featureHeight) {
+                    _outGeomCoords.push_back(glm::vec3(meters.x, meters.y, featureHeight));
+                }
+                else {
+                    _outGeomCoords.push_back(glm::vec3(meters.x, meters.y, minFeatureHeight));
+                }
             }
             if(ringSize != 0) {
                 _ringSizes.push_back(ringSize);
@@ -39,7 +39,12 @@ void JsonExtractor::extractGeomCoords(std::vector<glm::vec3>& _outGeomCoords, st
                 for(int j = 0; j < ringSize; j++) {
                     glm::dvec2 tmp = _mapProjection.LonLatToMeters(glm::dvec2(coordinates[poly][i][j][0].asFloat(), coordinates[poly][i][j][1].asFloat()));
                     glm::dvec2 meters = tmp - _tileOrigin;
-                    _outGeomCoords.push_back(glm::vec3(meters.x, meters.y, featureHeight));
+                    if(minFeatureHeight != featureHeight) {
+                        _outGeomCoords.push_back(glm::vec3(meters.x, meters.y, featureHeight));
+                    }
+                    else {
+                        _outGeomCoords.push_back(glm::vec3(meters.x, meters.y, minFeatureHeight));
+                    }
                 }
                 if(ringSize != 0) {
                     _ringSizes.push_back(ringSize);
@@ -51,6 +56,16 @@ void JsonExtractor::extractGeomCoords(std::vector<glm::vec3>& _outGeomCoords, st
         logMsg("\n***Negative value for multiPolySize (%d), not allowed. Check json data.", _multiPolySize);
     }
     //iterate through all sets of rings
+}
+
+void JsonExtractor::extractFeatureHeightProps(const Json::Value& _featureJson, float& _featureHeight, float& _minFeatureHeight) {
+    Json::Value property = _featureJson["properties"];
+    if(property.isMember("height")) {
+        _featureHeight = property["height"].asFloat();
+    }
+    if(property.isMember("min_height")) {
+        _minFeatureHeight = property["min_height"].asFloat();
+    }
 }
 
 
