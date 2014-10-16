@@ -22,19 +22,50 @@
 class TileData {
 };
 
+
+// TODO: divide DataSource into network and non-network dataSources
 class DataSource {
 protected:
-    // map of tile coordinates (as a string: x_y_level) to json data for that tile
-    std::map< std::string, std::shared_ptr<Json::Value> > m_JsonRoots;
+    // map of tileIDs to json data for that tile
+    std::map< TileID, std::shared_ptr<Json::Value> > m_JsonRoots;
+
+    /* m_urlTemplate needs to be defined for every dataSource */
+    std::string m_urlTemplate;
 
 public:
+    /*
+     * Does all the curl network calls to load the tile data and fills the data associated with a tileID
+     */
     virtual bool LoadTile(std::vector<TileID> _tileCoords) = 0;
-    virtual std::shared_ptr<Json::Value> GetData(std::string _tileID) = 0;
+
+    /* Returns the data corresponding to a tileID */
     virtual std::shared_ptr<Json::Value> GetData(TileID _tileID) = 0;
-    virtual bool CheckDataExists(std::string _tileID) = 0;
+
+    /* Checks if data exists for a specific tileID */
     virtual bool CheckDataExists(TileID _tileID) = 0;
+
+    /* 
+     * constructs the URL for a tile based on tile coordinates/IDs.
+     * Used by LoadTile to construct URL
+     */
+    virtual std::unique_ptr<std::string> constructURL(TileID _tileCoord) = 0;
+
+    /* 
+     * extracts tileIDs from a url
+     * Used by LoadTile to extract tileIDs from curl url (!!Hack!!)
+     */
+    virtual TileID extractIDFromUrl(std::string _url) = 0;
+    
+    /* 
+     * clears all data associated with this dataSource
+     */
     void ClearGeoRoots();
+
+    /*
+     * returns the number of tiles having data wrt this datasource
+     */
     size_t JsonRootSize();
+
     DataSource() {}
     virtual ~DataSource() {
         m_JsonRoots.clear();
@@ -43,38 +74,14 @@ public:
 
 //Extends DataSource class to read MapzenVectorTileJsons.
 class MapzenVectorTileJson: public DataSource {
+    virtual std::unique_ptr<std::string> constructURL(TileID _tileCoord) override;
+    virtual TileID extractIDFromUrl(std::string _url) override;
+
 public:
-    MapzenVectorTileJson() {}
+    MapzenVectorTileJson();
     virtual bool LoadTile(std::vector<TileID> _tileCoords) override;
-    virtual std::shared_ptr<Json::Value> GetData(std::string _tileID) override;
     virtual std::shared_ptr<Json::Value> GetData(TileID _tileID) override;
-    virtual bool CheckDataExists(std::string _tileID) override;
     virtual bool CheckDataExists(TileID _tileID) override;
     virtual ~MapzenVectorTileJson() {}
 };
 
-//---- tileID and url construction----
-
-//constructs a string from the tile coodinates
-
-//constructs a mapzen vectortile json url from the tile coordinates
-//TODO: Use regex to do this better.
-static std::unique_ptr<std::string> constructURL(TileID _tileCoord) {
-    std::ostringstream strStream;
-    strStream<<"http://vector.mapzen.com/osm/all/"<<_tileCoord.z
-                <<"/"<<_tileCoord.x<<"/"<<_tileCoord.y<<".json";
-    std::unique_ptr<std::string> url(new std::string(strStream.str()));
-    return std::move(url);
-}
-
-//TODO: Use regex to do this better.
-// Hacking to extract id from url
-static std::string extractIDFromUrl(std::string _url) {
-    std::string baseURL("http://vector.mapzen.com/osm/all/");
-    std::string jsonStr(".json");
-    std::string tmpID = _url.replace(0, baseURL.length(), "");
-    std::size_t jsonPos = tmpID.find(jsonStr);
-    tmpID = tmpID.replace(jsonPos, jsonStr.length(), "");
-    std::replace(tmpID.begin(), tmpID.end(), '/','_');
-    return tmpID;
-}
