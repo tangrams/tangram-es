@@ -19,6 +19,9 @@ namespace JsonExtractor {
 
     /* method to extract the number of polygons in a multipoly geometry type feature */
     int extractNumPoly(const Json::Value& _featureJson);
+
+    /* method to extract height properties of a feature */
+    void extractFeatureHeightProps(const Json::Value& _featureJson, float& _featureHeight, float& _minFeatureHeight);
     
     void extractPoint(const Json::Value& _in, glm::vec3& _out, const MapProjection& _proj, const glm::dvec2& _offset);
     

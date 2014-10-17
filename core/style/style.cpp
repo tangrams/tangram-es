@@ -118,11 +118,15 @@ void PolygonStyle::constructShaderProgram() {
         "precision mediump float;\n"
         "#endif\n"
         "uniform mat4 u_modelViewProj;\n"
+        "uniform vec4 u_lightDirection;\n"
         "attribute vec4 a_position;\n"
+        "attribute vec4 a_normal;\n"
         "attribute vec4 a_color;\n"
         "varying vec4 v_color;\n"
         "void main() {\n"
+        "  float lit = dot(normalize(u_lightDirection), normalize(a_normal));\n"
         "  v_color = a_color;\n"
+        "  v_color.rgb *= clamp(lit * 1.5, 0.5, 1.5);\n"
         "  gl_Position = u_modelViewProj * a_position;\n"
         "}\n";
     
@@ -141,17 +145,18 @@ void PolygonStyle::constructShaderProgram() {
 }
 
 void PolygonStyle::setup() {
+    m_shaderProgram->setUniformf("u_lightDirection", -1.0, -1.0, 1.0, 0.0);
 }
 
-void PolygonStyle::buildPoint(const glm::vec3& _point, const Json::Value& _props, VboMesh& _mesh) {
+void PolygonStyle::buildPoint(glm::vec3& _point, Json::Value& _props, VboMesh& _mesh) {
     // No-op
 }
 
-void PolygonStyle::buildLine(const std::vector<glm::vec3>& _line, const Json::Value& _props, VboMesh& _mesh) {
+void PolygonStyle::buildLine(std::vector<glm::vec3>& _line, Json::Value& _props, VboMesh& _mesh) {
     // No-op
 }
 
-void PolygonStyle::buildPolygon(const std::vector<glm::vec3>& _polygon, const std::vector<int>& _sizes, const Json::Value& _props, VboMesh& _mesh) {
+void PolygonStyle::buildPolygon(std::vector<glm::vec3>& _polygon, std::vector<int>& _sizes, Json::Value& _props, VboMesh& _mesh) {
     
     GLuint abgr = 0xffaaaaaa; // Default color
     
@@ -168,9 +173,27 @@ void PolygonStyle::buildPolygon(const std::vector<glm::vec3>& _polygon, const st
         abgr = 0xff507480;
     }
     
+    float height = 0;
+    float minHeight = 0;
+    
+    if (_props.isMember("height")) {
+        height = _props["height"].asFloat();
+    }
+    if (_props.isMember("min_height")) {
+        minHeight = _props["min_height"].asFloat();
+    }
+    
     // Make sure indices get correctly offset here
     int vertOffset = static_cast<int>(m_points.size());
     int indOffset = static_cast<int>(m_indices.size());
+    
+    if (minHeight != height) {
+        for (auto& pt : _polygon) {
+            pt.z = height;
+        }
+        GeometryHandler::buildPolygonExtrusion(_polygon, _sizes, minHeight, m_points, m_normals, m_indices);
+    }
+    
     GeometryHandler::buildPolygon(_polygon, _sizes, m_points, m_normals, m_indices);
     
     for (int i = vertOffset; i < m_points.size(); i++) {

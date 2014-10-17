@@ -22,15 +22,10 @@ void GeometryHandler::buildPolygon(const std::vector<glm::vec3>& _pointsIn, cons
     GLushort vertexDataOffset = (GLushort)_pointsOut.size();
     
     // add polygon contour for every ring
+    int ringIndex = 0;
     for(int i = 0; i < _ringSizes.size(); i++) {
-        int ringIndex;
-        if(i == 0) {
-            ringIndex = 0;
-        }
-        else {
-            ringIndex = _ringSizes[i-1];
-        }
         tessAddContour(tesselator, 3, &_pointsIn[ringIndex].x, sizeof(glm::vec3), _ringSizes[i]);
+        ringIndex = _ringSizes[i];
     }
 
     //call the tesselator
@@ -57,8 +52,44 @@ void GeometryHandler::buildPolygon(const std::vector<glm::vec3>& _pointsIn, cons
     }
 }
 
-void GeometryHandler::buildPolygonExtrusion(const std::vector<glm::vec3>& _pointsIn, const std::vector<int>& _ringSizes, std::vector<glm::vec3>& _pointsOut, std::vector<glm::vec3>& _normalOut, std::vector<GLushort>& _indicesOut) {
+void GeometryHandler::buildPolygonExtrusion(const std::vector<glm::vec3>& _pointsIn, const std::vector<int>& _ringSizes, const float& _minFeatureHeight, std::vector<glm::vec3>& _pointsOut, std::vector<glm::vec3>& _normalOut, std::vector<GLushort>& _indicesOut) {
+    GLushort vertexDataOffset = (GLushort)_pointsOut.size();
 
+    glm::vec3 upVector(0.0f, 0.0f, 1.0f);
+    glm::vec3 normalVector;
+
+    int ringIndex = 0;
+
+    for(int i = 0; i < _ringSizes.size(); i++) {
+        for(int j = ringIndex; j < (_ringSizes[i]-1); j++) {
+            normalVector = glm::cross(upVector, (_pointsIn[j+1] - _pointsIn[j]));
+            normalVector = glm::normalize(normalVector);
+            // 1st vertex top
+            _pointsOut.push_back(glm::vec3(_pointsIn[j].x, _pointsIn[j].y, _pointsIn[j].z));
+            _normalOut.push_back(glm::vec3(normalVector.x, normalVector.y, normalVector.z));
+            // 2nd vertex top
+            _pointsOut.push_back(glm::vec3(_pointsIn[j+1].x, _pointsIn[j+1].y, _pointsIn[j].z));
+            _normalOut.push_back(glm::vec3(normalVector.x, normalVector.y, normalVector.z));
+            // 1st vertex bottom
+            _pointsOut.push_back(glm::vec3(_pointsIn[j].x, _pointsIn[j].y, _minFeatureHeight));
+            _normalOut.push_back(glm::vec3(normalVector.x, normalVector.y, normalVector.z));
+            // 2nd vertex bottom
+            _pointsOut.push_back(glm::vec3(_pointsIn[j+1].x, _pointsIn[j+1].y, _minFeatureHeight));
+            _normalOut.push_back(glm::vec3(normalVector.x, normalVector.y, normalVector.z));
+            
+            //Start the index from the previous state of the vertex Data
+            _indicesOut.push_back(vertexDataOffset);
+            _indicesOut.push_back(vertexDataOffset + 2);
+            _indicesOut.push_back(vertexDataOffset + 1);
+
+            _indicesOut.push_back(vertexDataOffset + 1);
+            _indicesOut.push_back(vertexDataOffset + 2);
+            _indicesOut.push_back(vertexDataOffset + 3);
+
+            vertexDataOffset += 4;
+
+        }
+    }
 }
 
 void GeometryHandler::buildPolyLine(const std::vector<glm::vec3>& _pointsIn, float width, std::vector<glm::vec3>& _pointsOut, std::vector<GLushort>& _indicesOut) {

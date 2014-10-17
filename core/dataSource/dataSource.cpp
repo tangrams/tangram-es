@@ -5,6 +5,7 @@
 #include <chrono>
 #include <thread>
 #include <algorithm>
+#include <regex>
 #include <sys/time.h>
 
 #include <curl/multi.h>
@@ -14,7 +15,12 @@
 
 static const int MAX_FETCH_TRY = 3;
 
-// clears the tileID:jsonRoot map.
+/*
+ * compiling a regular expression at runtime incurs a performance cost, you should limit 
+ * your creation of regular expression objects, reusing them as needed
+ */
+static std::regex regObj;
+
 void DataSource::ClearGeoRoots() {
     for (auto& mapValue : m_JsonRoots) {
         mapValue.second->clear();
@@ -48,7 +54,6 @@ static void curlInit(CURLM *_curlMulti, std::string _url, std::stringstream *_ou
     curl_easy_setopt(curlEasy, CURLOPT_URL, _url.c_str());
     curl_easy_setopt(curlEasy, CURLOPT_PRIVATE, (char *)_out);
     curl_easy_setopt(curlEasy, CURLOPT_VERBOSE, 0L);
-
     curl_multi_add_handle(_curlMulti, curlEasy);
     return;
 }
@@ -56,9 +61,54 @@ static void curlInit(CURLM *_curlMulti, std::string _url, std::stringstream *_ou
 
 //---- MapzenVectorTileJson Implementation----
 
-// Responsible to read the tileData from the service
-// takes a vector of tileCoordinates to be read from the service.
-bool MapzenVectorTileJson::LoadTile(std::vector<TileID> _tileCoords) {
+MapzenVectorTileJson::MapzenVectorTileJson() {
+    m_urlTemplate = "http://vector.mapzen.com/osm/all/[z]/[x]/[y].json";
+    
+    // check if template is good
+    std::string regex_str = "([a-z\\./:]+)/(\\[z\\])/(\\[x\\])/(\\[y\\])([a-z\\.]+)";
+    regObj.assign(regex_str, std::regex_constants::icase);
+    std::sregex_iterator it(m_urlTemplate.begin(), m_urlTemplate.end(), regObj);
+    if(m_urlTemplate.compare((*it).str()) == 0) {
+        logMsg("\n***urlTemplate for MapzenVectorTileJson datasource is good.\n");
+    }
+}
+
+std::unique_ptr<std::string> MapzenVectorTileJson::constructURL(const TileID& _tileCoord) {
+    std::unique_ptr<std::string> pTileUrl(nullptr);
+    std::string xVal(std::to_string(_tileCoord.x));
+    std::string yVal(std::to_string(_tileCoord.y));
+    std::string zVal(std::to_string(_tileCoord.z));
+
+    std::string tileURL = "";
+    
+    regObj.assign("\\[x\\]", std::regex_constants::icase);
+    tileURL = std::regex_replace(m_urlTemplate, regObj, xVal);
+
+    regObj.assign("\\[y\\]", std::regex_constants::icase);
+    tileURL = std::regex_replace(tileURL, regObj, yVal);
+
+    regObj.assign("\\[z\\]", std::regex_constants::icase);
+    tileURL = std::regex_replace(tileURL, regObj, zVal);
+
+    pTileUrl.reset(new std::string(tileURL));
+    return std::move(pTileUrl);
+}
+
+TileID MapzenVectorTileJson::extractIDFromUrl(const std::string& _url) {
+    int tileIndices[3];
+    int index = 0;
+    regObj.assign("[0-9]+");
+    std::sregex_iterator regItr(_url.begin(), _url.end(), regObj);
+    std::sregex_iterator regItr_end;
+    while(regItr != regItr_end) {
+        tileIndices[index] = std::stoi((*regItr).str());
+        index++;
+        regItr++;
+    }
+    return TileID(tileIndices[1], tileIndices[2], tileIndices[0]);
+}
+
+bool MapzenVectorTileJson::LoadTile(const std::vector<TileID>& _tileCoords) {
     std::vector<std::unique_ptr<std::string>> urls;
 
     if(_tileCoords.size() == 0) {
@@ -248,8 +298,7 @@ bool MapzenVectorTileJson::LoadTile(std::vector<TileID> _tileCoords) {
     return true;
 }
 
-//check if data for a tileID exists
-bool MapzenVectorTileJson::CheckDataExists(std::string _tileID) {
+bool MapzenVectorTileJson::CheckDataExists(const TileID& _tileID) {
     if(m_JsonRoots.find(_tileID) != m_JsonRoots.end()) {
         return true;
     }
@@ -258,22 +307,12 @@ bool MapzenVectorTileJson::CheckDataExists(std::string _tileID) {
     }
 }
 
-//check if data for a tileID exists
-bool MapzenVectorTileJson::CheckDataExists(TileID _tileID) {
-
-    std::ostringstream strStream;
-    strStream<<_tileID.z<<"_"<<_tileID.x<<"_"<<_tileID.y;
-    return CheckDataExists(std::string(strStream.str()));
+std::shared_ptr<Json::Value> MapzenVectorTileJson::GetData(const TileID& _tileID) {
+    if(CheckDataExists(_tileID)) {
+        return m_JsonRoots[_tileID];
+    }
+    else {
+        return nullptr;
+    }
 }
 
-//Returns jsonValue for a requested tileID
-std::shared_ptr<Json::Value> MapzenVectorTileJson::GetData(std::string _tileID) {
-    return m_JsonRoots[_tileID];
-}
-
-std::shared_ptr<Json::Value> MapzenVectorTileJson::GetData(TileID _tileID) {
-
-    std::ostringstream strStream;
-    strStream<<_tileID.z<<"_"<<_tileID.x<<"_"<<_tileID.y;
-    return GetData(std::string(strStream.str()));
-}
