@@ -24,6 +24,7 @@ SceneDirector::SceneDirector() {
     GeometryHandler::init();
     
     glEnable(GL_DEPTH_TEST);
+    glDepthFunc(GL_LEQUAL);
 }
 
 void SceneDirector::loadStyles() {
