@@ -65,7 +65,7 @@ MapzenVectorTileJson::MapzenVectorTileJson() {
     m_urlTemplate = "http://vector.mapzen.com/osm/all/[z]/[x]/[y].json";
     
     // check if template is good
-    std::string regex_str = "([a-z\\./:]+)/(\\[z\\])/(\\[x\\])/(\\[y\\])([a-z\\.]+)";
+    std::string regex_str = "([a-z\\./:0-9]+)/(\\[z\\])/(\\[x\\])/(\\[y\\])([a-z\\.]+)";
     regObj.assign(regex_str, std::regex_constants::icase);
     std::sregex_iterator it(m_urlTemplate.begin(), m_urlTemplate.end(), regObj);
     if(m_urlTemplate.compare((*it).str()) == 0) {
@@ -79,33 +79,52 @@ std::unique_ptr<std::string> MapzenVectorTileJson::constructURL(const TileID& _t
     std::string yVal(std::to_string(_tileCoord.y));
     std::string zVal(std::to_string(_tileCoord.z));
 
-    std::string tileURL = "";
+    std::string tileURL = m_urlTemplate;
+    size_t pos = 0;
+    if( (pos = tileURL.find("[x]", pos)) != std::string::npos) {
+        tileURL.replace(pos, 3, xVal);
+    }
+    else {
+        logMsg("***Bad URL template??\n");
+    }
+    pos = 0;
+    if( (pos = tileURL.find("[y]", pos)) != std::string::npos) {
+        tileURL.replace(pos, 3, yVal);
+    }
+    else {
+        logMsg("***Bad URL template??\n");
+    }
+    pos = 0;
+    if( (pos = tileURL.find("[z]", pos)) != std::string::npos) {
+        tileURL.replace(pos, 3, zVal);
+    }
+    else {
+        logMsg("***Bad URL template??\n");
+    }
     
-    regObj.assign("\\[x\\]", std::regex_constants::icase);
-    tileURL = std::regex_replace(m_urlTemplate, regObj, xVal);
-
-    regObj.assign("\\[y\\]", std::regex_constants::icase);
-    tileURL = std::regex_replace(tileURL, regObj, yVal);
-
-    regObj.assign("\\[z\\]", std::regex_constants::icase);
-    tileURL = std::regex_replace(tileURL, regObj, zVal);
-
     pTileUrl.reset(new std::string(tileURL));
     return std::move(pTileUrl);
 }
 
 TileID MapzenVectorTileJson::extractIDFromUrl(const std::string& _url) {
-    int tileIndices[3];
-    int index = 0;
-    regObj.assign("[0-9]+");
-    std::sregex_iterator regItr(_url.begin(), _url.end(), regObj);
-    std::sregex_iterator regItr_end;
-    while(regItr != regItr_end) {
-        tileIndices[index] = std::stoi((*regItr).str());
-        index++;
-        regItr++;
+    int xVal, yVal, zVal;
+
+    //regObj.assign("(/[0-9]+)");
+    regObj.assign("([a-z\\./:]+)/(\\d+)/(\\d+)/(\\d+)([a-z\\.]+)");
+
+    std::smatch regMatches;
+    std::regex_match(_url, regMatches, regObj);
+    if( regMatches.empty() ) { 
+        logMsg("***Bad URL, no match found to extract tileIDs\n");
+        // TODO: have a proper invalid TileID!
+        return TileID(0,0,0);
     }
-    return TileID(tileIndices[1], tileIndices[2], tileIndices[0]);
+    
+    zVal = std::stoi(regMatches.str(2));
+    xVal = std::stoi(regMatches.str(3));
+    yVal = std::stoi(regMatches.str(4));
+    
+    return TileID(xVal, yVal, zVal);
 }
 
 bool MapzenVectorTileJson::LoadTile(const std::vector<TileID>& _tileCoords) {
