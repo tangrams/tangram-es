@@ -1,3 +1,0 @@
-[submodule "osx/lib/glfw3"]
-	path = osx/lib/glfw3
-	url = https://github.com/glfw/glfw.git
