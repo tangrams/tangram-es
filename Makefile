@@ -71,14 +71,10 @@ OSX_SRC_FILES= \
 OSX_TEST_FILES= \
 	osx/src/platform_osx.cpp
 
-android/libs/armeabi/libtangram.so: android/jni/jniExports.cpp android/jni/platform_android.cpp core/tangram.cpp core/tangram.h android/jni/Android.mk android/jni/Application.mk
+android:
 	ndk-build -C android/jni -j4
-
-android/bin/TangramAndroid-Debug.apk: android/libs/armeabi/libtangram.so android/src/com/mapzen/tangram/*.java android/build.xml
 	mkdir -p android/bin
 	ant -f android/build.xml debug
-
-android: android/bin/TangramAndroid-Debug.apk
 
 ios:
 	xcodebuild -workspace ios/TangramiOS.xcworkspace -scheme TangramiOS -destination 'platform=iOS Simulator,name=iPhone Retina (3.5-inch)'
