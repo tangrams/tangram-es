@@ -29,7 +29,9 @@ void GeometryHandler::buildPolygon(const std::vector<glm::vec3>& _pointsIn, cons
     }
 
     //call the tesselator
-    if( tessTesselate(tesselator, TessWindingRule::TESS_WINDING_NONZERO, TessElementType::TESS_POLYGONS, 3, 3, nullptr) ) {
+    glm::vec3 normal(0.0, 0.0, 1.0);
+    
+    if( tessTesselate(tesselator, TessWindingRule::TESS_WINDING_NONZERO, TessElementType::TESS_POLYGONS, 3, 3, &normal[0]) ) {
 
         const int numElements = tessGetElementCount(tesselator);
         const TESSindex* tessElements = tessGetElements(tesselator);
@@ -79,12 +81,12 @@ void GeometryHandler::buildPolygonExtrusion(const std::vector<glm::vec3>& _point
             
             //Start the index from the previous state of the vertex Data
             _indicesOut.push_back(vertexDataOffset);
-            _indicesOut.push_back(vertexDataOffset + 2);
             _indicesOut.push_back(vertexDataOffset + 1);
+            _indicesOut.push_back(vertexDataOffset + 2);
 
             _indicesOut.push_back(vertexDataOffset + 1);
-            _indicesOut.push_back(vertexDataOffset + 2);
             _indicesOut.push_back(vertexDataOffset + 3);
+            _indicesOut.push_back(vertexDataOffset + 2);
 
             vertexDataOffset += 4;
 
