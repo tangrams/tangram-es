@@ -8,11 +8,11 @@
 #include "glm/glm.hpp"
 
 #include "util/tileID.h"
+#include "dataSource/dataSource.h"
 
 class SceneDefinition;
 class MapTile;
 class ViewModule;
-class DataSource;
 
 /* Singleton container of <MapTile>s
  *
@@ -40,7 +40,7 @@ public:
     void setSceneDefinition(std::shared_ptr<SceneDefinition> _sceneDef) { m_sceneDefinition = _sceneDef; }
 
     /* Adds a <DataSource> from which tile data should be retrieved */
-    void addDataSource(std::shared_ptr<DataSource> _source) { m_dataSources.push_back(_source); }
+    void addDataSource(std::unique_ptr<DataSource> _source) { m_dataSources.push_back(std::move(_source)); }
 
     /* Updates visible tile set if necessary
      * 
@@ -61,7 +61,7 @@ private:
 
     std::map<TileID, std::unique_ptr<MapTile>> m_tileSet;
 
-    std::vector<std::shared_ptr<DataSource>> m_dataSources;
+    std::vector<std::unique_ptr<DataSource>> m_dataSources;
 
     std::vector<TileID> m_tilesToAdd;
 

@@ -1,7 +1,6 @@
 #include "tileManager.h"
 #include "sceneDefinition/sceneDefinition.h"
 #include "mapTile/mapTile.h"
-#include "dataSource/dataSource.h"
 #include "viewModule/viewModule.h"
 
 TileManager::TileManager() {
@@ -81,7 +80,7 @@ bool TileManager::updateTileSet() {
 
         bool newTileLoadSuccess = false;
 
-        for (auto& source : m_dataSources) {
+        for (const auto& source : m_dataSources) {
             logMsg("Loading tiles...\n");
             newTileLoadSuccess = source->LoadTile(m_tilesToAdd);
         }
@@ -95,7 +94,7 @@ bool TileManager::updateTileSet() {
             logMsg("Building maptile %d/%d/%d:\n", tileID.z, tileID.x, tileID.y);
             // Instantiate a maptile
             std::unique_ptr<MapTile> tile(new MapTile(tileID, m_viewModule->getMapProjection()));
-            for (auto& source : m_dataSources) {
+            for (const auto& source : m_dataSources) {
                 // Get the previously fetched tile data
                 std::shared_ptr<Json::Value> json = source->GetData(tileID);
                 logMsg("    Retrieved JSON\n");
