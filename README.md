@@ -33,6 +33,13 @@ make
 bin/tangram.out
 ```
 
+You can also generate an xcodeproj file for working with the project in XCode:
+
+```bash
+cmake .. -DPLATFORM_TARGET=darwin -G Xcode
+open tangram.xcodeproj
+```
+
 ### iOS ###
 For iOS, you can generate an XCode project by running the following from the `build` folder:
 
