@@ -10,14 +10,13 @@
 #ifdef PLATFORM_IOS
 #include <OpenGLES/ES2/gl.h>
 #include <OpenGLES/ES2/glext.h>
-#include <stdio.h>
+#include <cstdio>
 #include <cstdarg>
 #endif
 
 #ifdef PLATFORM_OSX
-#include <OpenGL/gl.h>
 #include <GLFW/glfw3.h>
-#include <stdio.h>
+#include <cstdio>
 #include <cstdarg>
 #endif
 
