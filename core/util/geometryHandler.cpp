@@ -1,7 +1,5 @@
 #include "geometryHandler.h"
 
-//static TESStesselator* GeometryHandler::tesselator = nullptr;
-
 void GeometryHandler::init() {
     // might not need this, can just check if tesselator is valid in each context that uses it
     if (tesselator == nullptr) {
@@ -46,7 +44,7 @@ void GeometryHandler::buildPolygon(const std::vector<glm::vec3>& _pointsIn, cons
         const float* tessVertices = tessGetVertices(tesselator);
         for(int i = 0; i < numVertices; i++) {
             _pointsOut.push_back(glm::vec3(tessVertices[3*i], tessVertices[3*i+1], tessVertices[3*i+2]));
-            _normalOut.push_back(glm::vec3(0.0, 0.0, 1.0));
+            _normalOut.push_back(normal);
         }
     }
     else {
@@ -101,3 +99,4 @@ void GeometryHandler::buildPolyLine(const std::vector<glm::vec3>& _pointsIn, flo
 void GeometryHandler::buildQuadAtPoint(const glm::vec3& _pointIn, const glm::vec3& _normal, float width, float height, std::vector<glm::vec3>& _pointsOut, std::vector<GLushort>& _indicesOut) {
 
 }
+
