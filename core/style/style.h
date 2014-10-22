@@ -12,6 +12,16 @@
 
 #include "json/json.h"
 
+/* Means of constructing and rendering map geometry
+ *
+ * A Style defines a way to 
+ *   1. Construct map geometry into a mesh for drawing and 
+ *   2. Render the resulting mesh in a scene
+ * Style implementations must provide functions to construct
+ * a <VertexLayout> for their geometry, construct a <ShaderProgram>
+ * for rendering meshes, and build point, line, and polygon
+ * geometry into meshes. See <PolygonStyle> for a basic implementation.
+ */
 class Style {
     
 protected:
@@ -25,10 +35,10 @@ protected:
     /* <VertexLayout> shared between meshes using this style */
     std::shared_ptr<VertexLayout> m_vertexLayout;
     
-    /* Draw mode to call GL with */
+    /* Draw mode to pass into <VboMesh>es created with this style */
     GLenum m_drawMode;
     
-    /* Set of layer strings defining which data layers this style applies to */
+    /* Set of strings defining which data layers this style applies to */
     std::set<std::string> m_layers;
     
     /* Create <VertexLayout> corresponding to this style */
@@ -43,7 +53,13 @@ protected:
     /* Build styled vertex data for line geometry and add it to the given <VboMesh> */
     virtual void buildLine(std::vector<glm::vec3>& _line, Json::Value& _props, VboMesh& _mesh) = 0;
     
-    /* Build styled vertex data for polygon geometry and add it to the given <VboMesh> */
+    /* Build styled vertex data for polygon geometry and add it to the given <VboMesh> 
+     * 
+     * Polygon geometry is provided as a vector of all points in the polygon and a vector
+     * containing the number of points in each contour (or ring) of the polygon. For a
+     * simple polygon (in the mathematical sense), _sizes will have one element which is
+     * the number of points in the first vector.
+     */
     virtual void buildPolygon(std::vector<glm::vec3>& _polygon, std::vector<int>& _sizes, Json::Value& _props, VboMesh& _mesh) = 0;
 
 public:
