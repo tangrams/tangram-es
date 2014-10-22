@@ -3,10 +3,8 @@
 #include <unordered_map>
 #include <memory>
 
-#define GLM_FORCE_RADIANS
 #include "glm/fwd.hpp"
 #include "glm/glm.hpp"
-#include "glm/gtc/matrix_transform.hpp"
 
 #include "util/vboMesh.h"
 #include "util/projection.h"
@@ -47,11 +45,11 @@ private:
 
     TileID m_id;
 
-    glm::dvec2 m_tileOrigin; // Lower-left corner of the tile in 2D projection space in meters (e.g. mercator meters)
+    glm::dvec2 m_tileOrigin; // Upper-left corner of the tile in 2D projection space in meters (e.g. mercator meters)
 
     glm::dmat4 m_modelMatrix; // Translation matrix from world origin to tile origin
 
-    std::unordered_map<std::string, std::unique_ptr<VboMesh>> m_geometry;
+    std::unordered_map<std::string, std::unique_ptr<VboMesh>> m_geometry; // Map of <Style>s and their associated <VboMesh>es
 
 };
 

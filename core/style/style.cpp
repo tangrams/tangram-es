@@ -21,7 +21,7 @@ void Style::addData(const Json::Value& _jsonRoot, MapTile& _tile, const MapProje
     
     VboMesh* mesh = new VboMesh(m_vertexLayout, m_drawMode);
     
-    for (std::string layer : m_layers) {
+    for (const std::string& layer : m_layers) {
         
         if (!_jsonRoot.isMember(layer.c_str())) {
             continue;
@@ -106,6 +106,7 @@ PolygonStyle::PolygonStyle(std::string _name, GLenum _drawMode) : Style(_name, _
 
 void PolygonStyle::constructVertexLayout() {
 
+    // TODO: Ideally this would be in the same location as the struct that it basically describes
     m_vertexLayout = std::shared_ptr<VertexLayout>(new VertexLayout({
         {"a_position", 3, GL_FLOAT, false, 0},
         {"a_normal", 3, GL_FLOAT, false, 0},
@@ -115,6 +116,8 @@ void PolygonStyle::constructVertexLayout() {
 }
 
 void PolygonStyle::constructShaderProgram() {
+    
+    // TODO: Load shader sources from file
     
     std::string vertShaderSrcStr =
         "#ifdef GL_ES\n"

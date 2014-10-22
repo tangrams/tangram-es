@@ -1,5 +1,6 @@
 #include "tangram.h"
 
+// SceneDirector is the primary controller of the map
 std::unique_ptr<SceneDirector> sceneDirector;
 
 void initializeOpenGL()
@@ -26,13 +27,10 @@ void resizeViewport(int newWidth, int newHeight)
 void renderFrame()
 {
 
+    // TODO: Use dt from client application
     sceneDirector->update(0.016);
 
-    //logMsg("Updated\n");
-
     sceneDirector->renderFrame();
-
-    //logMsg("Rendered\n");
 
     GLenum glError = glGetError();
     if (glError) {

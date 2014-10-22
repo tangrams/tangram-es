@@ -2,13 +2,14 @@
 #include "style/style.h"
 #include "util/tileID.h"
 
+#define GLM_FORCE_RADIANS
+#include "glm/gtc/matrix_transform.hpp"
 #include "glm/gtc/type_ptr.hpp"
-#include "glm/gtx/string_cast.hpp"
 
 MapTile::MapTile(TileID _id, const MapProjection& _projection) : m_id(_id) {
 
     glm::dvec4 tileBounds = _projection.TileBounds(_id);
-    // negative y coordinate: to change from y down to y up (mercator has y down and gl context we use has y up).
+    // negative y coordinate: to change from y down to y up (tile system has y down and gl context we use has y up).
     m_tileOrigin = glm::dvec2(tileBounds.x, -tileBounds.y);
     m_modelMatrix = glm::translate(glm::dmat4(1.0), glm::dvec3(m_tileOrigin.x, m_tileOrigin.y, 0.0)); //Use the upper-left corner for the 'model position'
 
@@ -30,17 +31,16 @@ void MapTile::draw(const Style& _style, const glm::dmat4& _viewProjMatrix) {
 
     const std::unique_ptr<VboMesh>& styleMesh = m_geometry[_style.getName()];
 
-    //logMsg("Drawing mapTile %d/%d/%d\n", m_id.z, m_id.x, m_id.y);
-
     if (styleMesh) {
-
-        //logMsg("    Drawing style %s\n", _style.getStyleName().c_str());
 
         std::shared_ptr<ShaderProgram> shader = _style.getShaderProgram();
 
         glm::dmat4 modelViewProjMatrix = _viewProjMatrix * m_modelMatrix;
 
-        //TODO: better cast to float
+        //TODO: figure out how to avoid casting each value like this;
+        // maybe m_modelMatrix and _viewProjMatrix can have float values
+        // and the translation can be applied separately at this point?
+        // Do we really even need a model matrix then?
         glm::mat4 fmvp;
         for (int i = 0; i < 4; i++) {
             for (int j = 0; j < 4; j++) {
