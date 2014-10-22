@@ -54,3 +54,4 @@ private:
     std::unordered_map<std::string, std::unique_ptr<VboMesh>> m_geometry;
 
 };
+

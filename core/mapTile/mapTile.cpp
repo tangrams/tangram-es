@@ -8,6 +8,7 @@
 MapTile::MapTile(TileID _id, const MapProjection& _projection) : m_id(_id) {
 
     glm::dvec4 tileBounds = _projection.TileBounds(_id);
+    // negative y coordinate: to change from y down to y up (mercator has y down and gl context we use has y up).
     m_tileOrigin = glm::dvec2(tileBounds.x, -tileBounds.y);
     m_modelMatrix = glm::translate(glm::dmat4(1.0), glm::dvec3(m_tileOrigin.x, m_tileOrigin.y, 0.0)); //Use the upper-left corner for the 'model position'
 
@@ -47,12 +48,9 @@ void MapTile::draw(const Style& _style, const glm::dmat4& _viewProjMatrix) {
             }
         }
 
-        //logMsg("    MVP matrix: %s\n", glm::to_string(fmvp).c_str());
-
         shader->setUniformMatrix4f("u_modelViewProj", glm::value_ptr(fmvp));
 
         styleMesh->draw(shader);
-
     }
-
 }
+
