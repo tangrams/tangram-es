@@ -23,13 +23,14 @@ class TileData {
 };
 
 
-// TODO: divide DataSource into network and non-network dataSources
+// TODO: divide DataSource into network and non-network dataSources.
+//       Same has been done on the webgl tangram. Follow the same pattern.
 class DataSource {
 protected:
     // map of tileIDs to json data for that tile
     std::map< TileID, std::shared_ptr<Json::Value> > m_JsonRoots;
 
-    /* m_urlTemplate needs to be defined for every dataSource */
+    /* m_urlTemplate needs to be defined for every network dataSource */
     std::string m_urlTemplate;
 
 public:
@@ -52,7 +53,7 @@ public:
 
     /* 
      * extracts tileIDs from a url
-     * Used by LoadTile to extract tileIDs from curl url (!!Hack!!)
+     * Used by LoadTile to extract tileIDs from curl url.
      */
     virtual TileID extractIDFromUrl(const std::string& _url) = 0;
     
