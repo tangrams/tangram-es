@@ -28,7 +28,7 @@ void Style::addData(const Json::Value& _jsonRoot, MapTile& _tile, const MapProje
         }
         
         Json::Value layerFeatures = _jsonRoot[layer.c_str()]["features"];
-        for (auto feature : layerFeatures) {
+        for (auto& feature : layerFeatures) {
             
             Json::Value props = feature["properties"];
             props["layer"] = layer;
