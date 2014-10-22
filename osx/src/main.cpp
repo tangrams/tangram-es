@@ -1,6 +1,6 @@
 #define GLFW_INCLUDE_ES2
 
-#include "../../core/tangram.h"
+#include "tangram.h"
 
 void window_size_callback(GLFWwindow* window, int width, int height)
 {
