@@ -84,7 +84,7 @@ void JsonExtractor::extractPoint(const Json::Value& _in, glm::vec3& _out, const 
 
 void JsonExtractor::extractLine(const Json::Value& _in, std::vector<glm::vec3>& _out, const MapProjection& _proj, const glm::dvec2& _offset) {
     
-    for (auto point : _in) {
+    for (auto& point : _in) {
         glm::vec3 p;
         extractPoint(point, p, _proj, _offset);
         _out.push_back(p);
@@ -94,7 +94,7 @@ void JsonExtractor::extractLine(const Json::Value& _in, std::vector<glm::vec3>& 
 
 void JsonExtractor::extractPoly(const Json::Value& _in, std::vector<glm::vec3>& _out, std::vector<int>& _outSizes, const MapProjection& _proj, const glm::dvec2& _offset) {
     
-    for (auto line : _in) {
+    for (auto& line : _in) {
         extractLine(line, _out, _proj, _offset);
         _outSizes.push_back(line.size());
     }

@@ -47,7 +47,7 @@ void Style::addData(const Json::Value& _jsonRoot, MapTile& _tile, const MapProje
                 
             } else if (geometryType.compare("MultiPoint") == 0) {
                 
-                for (auto pointCoords : coords) {
+                for (auto& pointCoords : coords) {
                     glm::vec3 point;
                     JsonExtractor::extractPoint(pointCoords, point, _mapProjection, _tile.getOrigin());
                     buildPoint(point, props, *mesh);
@@ -61,7 +61,7 @@ void Style::addData(const Json::Value& _jsonRoot, MapTile& _tile, const MapProje
                 
             } else if (geometryType.compare("MultiLineString") == 0) {
                 
-                for (auto lineCoords: coords) {
+                for (auto& lineCoords: coords) {
                     std::vector<glm::vec3> line;
                     JsonExtractor::extractLine(lineCoords, line, _mapProjection, _tile.getOrigin());
                     buildLine(line, props, *mesh);
@@ -76,7 +76,7 @@ void Style::addData(const Json::Value& _jsonRoot, MapTile& _tile, const MapProje
                 
             } else if (geometryType.compare("MultiPolygon") == 0) {
                 
-                for (auto polygonCoords : coords) {
+                for (auto& polygonCoords : coords) {
                     std::vector<glm::vec3> polygon;
                     std::vector<int> sizes;
                     JsonExtractor::extractPoly(polygonCoords, polygon, sizes, _mapProjection, _tile.getOrigin());
