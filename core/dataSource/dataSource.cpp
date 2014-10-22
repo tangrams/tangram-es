@@ -106,17 +106,19 @@ std::unique_ptr<std::string> MapzenVectorTileJson::constructURL(const TileID& _t
     return std::move(pTileUrl);
 }
 
+//TODO: Figure out a way to get tileIDs from curlEasy Handle!(Specifically if we are using curl multi handle).
+//Use of this helper method "might" be avoided if we go curleasy and c++11 async route.
 TileID MapzenVectorTileJson::extractIDFromUrl(const std::string& _url) {
     int xVal, yVal, zVal;
 
-    //regObj.assign("(/[0-9]+)");
     regObj.assign("([a-z\\./:]+)/(\\d+)/(\\d+)/(\\d+)([a-z\\.]+)");
 
     std::smatch regMatches;
     std::regex_match(_url, regMatches, regObj);
     if( regMatches.empty() ) { 
         logMsg("***Bad URL, no match found to extract tileIDs\n");
-        // TODO: have a proper invalid TileID!
+        // TODO: Though most likely code should not go to this path, because of the check in the constructor,
+        // But we need to have a value for an invalid TileID!
         return TileID(0,0,0);
     }
     
@@ -227,7 +229,6 @@ bool MapzenVectorTileJson::LoadTile(const std::vector<TileID>& _tileCoords) {
                 cres = curl_multi_perform(multiHandle, &numHandles);
                 prevHandle = numHandles;
                 curl_multi_fdset(multiHandle, &fdRead, &fdWrite, &fdExcep, &fdMax);
-                //std::cout<<"Here\n"; /*TODO: Remove this. Its here to test how many times this loop runs till multi_perform starts doing stuff*/
                 fdsetTimeoutCount++;
             }
 
@@ -257,8 +258,6 @@ bool MapzenVectorTileJson::LoadTile(const std::vector<TileID>& _tileCoords) {
                     //select call ERRORed
                     break;
                 case 0:
-                    std::cout<<"Here timeout\n"; //TODO: Remove this. Its here to test how many times select times out.
-                                                 // So far never with 1 sec of timeout.
                     //select call Timed out. No fd ready to read anything.
                     fetchTry++;
                     if(fetchTry == MAX_FETCH_TRY) {
@@ -274,13 +273,12 @@ bool MapzenVectorTileJson::LoadTile(const std::vector<TileID>& _tileCoords) {
                 default:
                     // sleep for 5 msec to give enough time for curl to read data for any of the file descriptors.
                     std::this_thread::sleep_for(std::chrono::milliseconds(5));
-                    std::cout<<"Possible Change\n"; //TODO: Remove this. Its here to test how many times fd is ready and
-                                                    // will result in a complete data read
+                    // A possible complete data read for a fd.
+                    
                     //Perform again to see what happened with individual easy handles
                     curl_multi_perform(multiHandle,&numHandles);
                     // if easy  handle status changed some urls are done.
                     if(prevHandle != numHandles) {
-                        std::cout<<"Change happened\n";//TODO: Remove this. Only here for testing
                         prevHandle = numHandles;
                         // for every url done fill the jsonValue
                         while( (handleMsg = curl_multi_info_read(multiHandle, &queuedHandles) )) {
