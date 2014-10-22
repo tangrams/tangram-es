@@ -24,6 +24,11 @@ cmake .. -DPLATFORM_TARGET=darwin
 make
 bin/tangram.out
 ```
+To build Xcode project for OS X, you will need to run the following:
+```bash
+cmake .. -DPLATFORM_TARGET=darwin -G Xcode
+open tangram.xcodeproj
+```
 ### iOS ###
 For iOS, an Xcode project will be generated:
 ```bash
