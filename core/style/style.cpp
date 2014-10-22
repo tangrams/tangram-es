@@ -36,6 +36,9 @@ void Style::addData(const Json::Value& _jsonRoot, MapTile& _tile, const MapProje
             Json::Value coords = geometry["coordinates"];
             std::string geometryType = geometry["type"].asString();
             
+            //TODO: For all these JsonExtraction and build calls 
+            //      make this a vector<*glm::vec3> for better std::vector operations
+
             if (geometryType.compare("Point") == 0) {
                 
                 glm::vec3 point;
