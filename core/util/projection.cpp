@@ -27,7 +27,7 @@ glm::dvec2 MercatorProjection::MetersToLonLat(const glm::dvec2 _meters) const {
     double invHalfCircum = 1.0/HALF_CIRCUMFERENCE;
     double invPI = 1.0/PI;
     lonLat.x = _meters.x * invHalfCircum * 180.0;
-    lonLat.y = (2 * atan(exp( (_meters.y / R_EARTH ) )) - PI*0.5) * 180 * invPI;
+    lonLat.y = (2.0 * atan(exp( (_meters.y / R_EARTH ) )) - PI*0.5) * 180 * invPI;
     return lonLat;
 }
 
