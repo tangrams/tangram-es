@@ -16,7 +16,7 @@ SceneDirector::SceneDirector() {
 
     m_tileManager = TileManager::GetInstance();
     m_tileManager->setView(m_viewModule);
-    std::shared_ptr<DataSource> dataSource(new MapzenVectorTileJson());
+    std::unique_ptr<DataSource> dataSource(new MapzenVectorTileJson());
     m_tileManager->addDataSource(std::move(dataSource));
 
     logMsg("Constructed tileManager \n");
