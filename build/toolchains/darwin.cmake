@@ -5,6 +5,9 @@ set(EXECUTABLE_NAME "tangram.out")
 
 add_definitions(-DPLATFORM_OSX)
 
+# include headers for homebrew-installed libraries
+include_directories(/usr/local/include)
+
 # load core library
 include_directories(${PROJECT_SOURCE_DIR}/core/include/)
 add_subdirectory(${PROJECT_SOURCE_DIR}/core)
@@ -17,23 +20,29 @@ find_sources_and_include_directories(
 
 # link and build functions
 function(link_libraries)
+    
     find_library(OPENGL_FRAMEWORK OpenGL)
     find_library(COCOA_FRAMEWORK Cocoa)
     find_library(IOKIT_FRAMEWORK IOKit)
     find_library(CORE_FOUNDATION_FRAMEWORK CoreFoundation)
     find_library(CORE_VIDEO_FRAMEWORK CoreVideo)
+    find_library(GLFW glfw3)
     
-    list(APPEND GLFW_LIBRARY -lglfw3
-                             ${OPENGL_FRAMEWORK}
-                             ${COCOA_FRAMEWORK}
-                             ${IOKIT_FRAMEWORK}
-                             ${CORE_FOUNDATION_FRAMEWORK}
-                             ${CORE_VIDEO_FRAMEWORK})
+    list(APPEND GLFW_LIBRARIES 
+        ${OPENGL_FRAMEWORK} 
+        ${COCOA_FRAMEWORK} 
+        ${IOKIT_FRAMEWORK} 
+        ${CORE_FOUNDATION_FRAMEWORK}    
+        ${CORE_VIDEO_FRAMEWORK} 
+        ${GLFW})
 
     check_and_link_libraries(${EXECUTABLE_NAME} curl)
-    target_link_libraries(${EXECUTABLE_NAME} ${GLFW_LIBRARY} core)
+    target_link_libraries(${EXECUTABLE_NAME} core ${GLFW_LIBRARIES})
+
 endfunction()
 
 function(build) 
+
     add_executable(${EXECUTABLE_NAME} ${SOURCES})
+
 endfunction()
