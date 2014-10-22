@@ -19,7 +19,8 @@ namespace GeometryHandler {
     /*
      * _pointsIn: set of rings from jsonCoordinates or other formats.
      * _pointsOut: a vector of tesselated vertex coordinates
-     * _normalsOut: 
+     * _normalsOut: normals if generated from tess, else default
+     * _indicesOut: set of indices generated from the tesselator
      */
     void buildPolygon(const std::vector<glm::vec3>& _pointsIn, const std::vector<int>& _ringSizes, std::vector<glm::vec3>& _pointsOut, std::vector<glm::vec3>& _normalsOut, std::vector<GLushort>& _indicesOut);
 
