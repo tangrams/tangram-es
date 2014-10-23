@@ -63,7 +63,7 @@ void VboMesh::addVertices(GLbyte* _vertices, int _nVertices) {
     }
 
     int vertexBytes = m_vertexLayout->getStride() * _nVertices;
-    m_vertexData.insert(m_vertexData.cend(), _vertices, _vertices + vertexBytes);
+    m_vertexData.insert(m_vertexData.end(), _vertices, _vertices + vertexBytes);
     m_nVertices += _nVertices;
 
 }
@@ -81,7 +81,7 @@ void VboMesh::addIndices(GLushort* _indices, int _nIndices) {
         return;
     }
 
-    m_indices.insert(m_indices.cend(), _indices, _indices + _nIndices);
+    m_indices.insert(m_indices.end(), _indices, _indices + _nIndices);
     m_nIndices += _nIndices;
 
 }

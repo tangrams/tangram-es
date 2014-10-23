@@ -3,6 +3,7 @@
 #include <stdlib.h>
 #include <assert.h>
 #include <math.h>
+#include <memory>
 
 #include "platform.h"
 #include "sceneDirector/sceneDirector.h"
