@@ -7,7 +7,7 @@ set(CMAKE_LIBRARY_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/lib)
 set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin)
 
 # platform lookup
-set(SUPPORTED_TARGETS darwin ios android)
+set(SUPPORTED_TARGETS darwin ios android linux)
 
 if(NOT PLATFORM_TARGET)
     string(TOLOWER "${CMAKE_SYSTEM_NAME}" varplatform)

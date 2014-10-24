@@ -15,6 +15,7 @@
 #endif
 
 #ifdef PLATFORM_OSX
+#define GL_GLEXT_PROTOTYPES
 #include <GLFW/glfw3.h>
 #include <cstdio>
 #include <cstdarg>

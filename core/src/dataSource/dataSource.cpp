@@ -8,7 +8,7 @@
 #include <regex>
 #include <sys/time.h>
 
-#include <curl/multi.h>
+#include "curl/multi.h"
 
 #include "dataSource.h"
 #include "../platform.h"
