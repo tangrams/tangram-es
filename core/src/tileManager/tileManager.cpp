@@ -7,9 +7,9 @@ TileManager::TileManager() {
 }
 
 TileManager::TileManager(TileManager&& _other) :
+    m_viewModule(std::move(_other.m_viewModule)),
     m_tileSet(std::move(_other.m_tileSet)),
-    m_dataSources(std::move(_other.m_dataSources)),
-    m_viewModule(std::move(_other.m_viewModule)) {
+    m_dataSources(std::move(_other.m_dataSources)) {
 }
 
 TileManager::~TileManager() {
