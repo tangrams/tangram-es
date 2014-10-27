@@ -3,6 +3,7 @@
 #include <vector>
 #include <set>
 #include <cmath>
+#include <memory>
 
 #define GLM_FORCE_RADIANS
 #include <glm/fwd.hpp>
