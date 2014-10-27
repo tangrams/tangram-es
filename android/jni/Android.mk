@@ -22,16 +22,16 @@ include $(PREBUILT_STATIC_LIBRARY)
 include $(CLEAR_VARS)
 
 # All the source files to include in this module
-LOCAL_SRC_FILES := ../../core/tangram.cpp jniExports.cpp platform_android.cpp
-LOCAL_SRC_FILES += ../../core/include/jsoncpp.cpp
-LOCAL_SRC_FILES += $(wildcard $(LOCAL_PATH)/../../core/util/*.cpp)
-LOCAL_SRC_FILES += $(wildcard $(LOCAL_PATH)/../../core/dataSource/*.cpp)
-LOCAL_SRC_FILES += $(wildcard $(LOCAL_PATH)/../../core/mapTile/*.cpp)
-LOCAL_SRC_FILES += $(wildcard $(LOCAL_PATH)/../../core/sceneDefinition/*.cpp)
-LOCAL_SRC_FILES += $(wildcard $(LOCAL_PATH)/../../core/sceneDirector/*.cpp)
-LOCAL_SRC_FILES += $(wildcard $(LOCAL_PATH)/../../core/style/*.cpp)
-LOCAL_SRC_FILES += $(wildcard $(LOCAL_PATH)/../../core/tileManager/*.cpp)
-LOCAL_SRC_FILES += $(wildcard $(LOCAL_PATH)/../../core/viewModule/*.cpp)
+LOCAL_SRC_FILES := ../../core/src/tangram.cpp jniExports.cpp platform_android.cpp
+LOCAL_SRC_FILES += ../../core/include/jsoncpp/jsoncpp.cpp
+LOCAL_SRC_FILES += $(wildcard $(LOCAL_PATH)/../../core/src/util/*.cpp)
+LOCAL_SRC_FILES += $(wildcard $(LOCAL_PATH)/../../core/src/dataSource/*.cpp)
+LOCAL_SRC_FILES += $(wildcard $(LOCAL_PATH)/../../core/src/mapTile/*.cpp)
+LOCAL_SRC_FILES += $(wildcard $(LOCAL_PATH)/../../core/src/sceneDefinition/*.cpp)
+LOCAL_SRC_FILES += $(wildcard $(LOCAL_PATH)/../../core/src/sceneDirector/*.cpp)
+LOCAL_SRC_FILES += $(wildcard $(LOCAL_PATH)/../../core/src/style/*.cpp)
+LOCAL_SRC_FILES += $(wildcard $(LOCAL_PATH)/../../core/src/tileManager/*.cpp)
+LOCAL_SRC_FILES += $(wildcard $(LOCAL_PATH)/../../core/src/viewModule/*.cpp)
 
 # The name of the module
 LOCAL_MODULE := tangram
@@ -39,7 +39,7 @@ LOCAL_MODULE := tangram
 # Compilation flags
 LOCAL_CFLAGS := -Werror -DPLATFORM_ANDROID -fexceptions
 
-LOCAL_C_INCLUDES := $(LOCAL_PATH)/include-all include ../../core/ ../../core/include/
+LOCAL_C_INCLUDES := $(LOCAL_PATH)/include-all include ../../core/src/ ../../core/include/ ../../core/include/jsoncpp
 
 # Static libraries to link with
 LOCAL_LDLIBS := -llog -lGLESv2 -lz
