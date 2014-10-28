@@ -9,6 +9,8 @@ if(NOT DEFINED ANDROID_TARGET)
 endif()
 message(STATUS "Android target : ${ANDROID_TARGET}")
 
+set(ANDROID_STL gnustl_shared)
+
 include(${CMAKE_SOURCE_DIR}/build/toolchains/android.toolchain.cmake)
 
 add_definitions(-DPLATFORM_ANDROID)
@@ -26,6 +28,7 @@ set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wall -std=c++11 -pedantic -llog -lz")
 set(CXX_FLAGS_DEBUG "${CXX_FLAGS_DEBUG} -g -O0")
 set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -Wall -pedantic -fPIC")
 set(LIBCURL_PRECOMPILED_LIB ${CMAKE_SOURCE_DIR}/android/jni/precompiled/${ANDROID_ABI}/libcurl.a)
+set(LIBTESS_PRECOMPILED_LIB ${CMAKE_SOURCE_DIR}/android/jni/precompiled/${ANDROID_ABI}/libtess2.a)
 
 # include dependency headers
 include_directories(${PROJECT_SOURCE_DIR}/android/jni/include)
@@ -41,7 +44,7 @@ set(ADDITIONNAL_TARGET_DEPENDENT_SRC_FILES
 set(INSTALL_CORE_LIBRARY "ON")
 set(CORE_LIB_TYPE SHARED)
 set(CORE_INSTALLATION_PATH ${CMAKE_SOURCE_DIR}/android/libs/${ANDROID_ABI})
-set(CORE_LIB_DEPS GLESv2 ${LIBCURL_PRECOMPILED_LIB})
+set(CORE_LIB_DEPS GLESv2 ${LIBCURL_PRECOMPILED_LIB} ${LIBTESS_PRECOMPILED_LIB})
 set(CORE_LIB_NAME tangram) # in order to have libtangram.so
 
 include_directories(${PROJECT_SOURCE_DIR}/core/include/)

@@ -1,67 +1,71 @@
-/*
-...
-*/
 #pragma once
 
+#include <map>
 #include <vector>
 #include <memory>
 
+#include "glm/fwd.hpp"
 #include "glm/glm.hpp"
 
-//Forward Declaration
+#include "util/tileID.h"
+#include "dataSource/dataSource.h"
+
+class SceneDefinition;
 class MapTile;
-class DataSource;
 class ViewModule;
 
-/* -- Todo: Singleton Class Implementation -- */
+/* Singleton container of <MapTile>s
+ *
+ * TileManager is a singleton that maintains a set of MapTiles based on the current view into the map
+ */
 class TileManager {
-    /*  --UpdateTiles--
-    updateTiles contacts the DataSource for new tile data.
-    Naive Implementation: Current implementation, sets the tileIDs explicitly
-    Smart Todo: viewModule updates the visibleTileIDs which is then passed to the dataSource.
-    Smart Todo 2: Be smart of getting new tiles :D.
-    */
-    void UpdateTiles();
-    /*  --CalculateVisibleTileIDs--
-    Fills the m_VisibleTileIDs, which will be calculated based on
-    the inputs from the view module.
-    */
-    void CalculateVisibleTileIDs();
-    TileManager();
-
-    std::vector<MapTile*> m_VisibleTiles;
-    std::vector<std::unique_ptr<DataSource>> m_DataSources;
-    ViewModule *m_viewModule;
-    std::vector<glm::ivec3> m_VisibleTileIDs;
 
 public:
-    //C++11 thread-safe implementation for a singleton
-    static TileManager&& GetInstance() {
-        static TileManager *instance = new TileManager();
-        return std::move(*instance);
+    
+    /* Returns the single instance of the TileManager */
+    static std::unique_ptr<TileManager> GetInstance() {
+        static std::unique_ptr<TileManager> instance (new TileManager());
+        return std::move(instance);
     }
 
-    bool CheckNewTileStatus(); //contacts the view Module to see if tiles need updating
-    void AddDataSource(std::unique_ptr<DataSource>);
-    std::vector<MapTile*> GetVisibleTiles();
-    std::vector<std::unique_ptr<DataSource>>&& GetDataSources();
+    /* Constructs a TileManager using move semantics */
+    TileManager(TileManager&& _other);
 
-    // move constructor required to:
-    // 1. disable copy constructor
-    // 2. disable assignment operator
-    // 3. because tileManager is singleton
-    // 4. required for some smarts done with std::move
-    TileManager(TileManager&& other) :
-                    m_VisibleTiles(std::move(other.m_VisibleTiles)),
-                    m_DataSources(std::move(other.m_DataSources)),
-                    m_viewModule(std::move(other.m_viewModule)),
-                    m_VisibleTileIDs(std::move(other.m_VisibleTileIDs)) {
+    virtual ~TileManager();
 
-    }
+    /* Sets the view for which the TileManager will maintain tiles */
+    void setView(std::shared_ptr<ViewModule> _view) { m_viewModule = _view; }
 
-    ~TileManager() {
-        m_DataSources.clear();
-        m_VisibleTileIDs.clear();
-        m_VisibleTiles.clear();
-    }
+    /* Sets the scene defintion which the TileManager will use to style tiles */
+    void setSceneDefinition(std::shared_ptr<SceneDefinition> _sceneDef) { m_sceneDefinition = _sceneDef; }
+
+    /* Adds a <DataSource> from which tile data should be retrieved */
+    void addDataSource(std::unique_ptr<DataSource> _source) { m_dataSources.push_back(std::move(_source)); }
+
+    /* Updates visible tile set if necessary
+     * 
+     * Contacts the <ViewModule> to determine whether the set of visible tiles has changed; if so,
+     * constructs or disposes tiles as needed and returns true
+     */
+    bool updateTileSet();
+
+    /* Returns the set of currently visible tiles */
+    const std::map<TileID, std::unique_ptr<MapTile>>& getVisibleTiles() { return m_tileSet; }
+
+private:
+
+    TileManager();
+
+    std::shared_ptr<ViewModule> m_viewModule;
+    std::shared_ptr<SceneDefinition> m_sceneDefinition;
+
+    std::map<TileID, std::unique_ptr<MapTile>> m_tileSet;
+
+    std::vector<std::unique_ptr<DataSource>> m_dataSources;
+
+    std::vector<TileID> m_tilesToAdd;
+
+    void addTile(const TileID& _tileID);
+    void removeTile(std::map<TileID, std::unique_ptr<MapTile>>::iterator& _tileIter);
+
 };

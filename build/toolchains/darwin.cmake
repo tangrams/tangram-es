@@ -1,5 +1,5 @@
 # options
-set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wall -stdlib=libc++ -std=c++11")
+set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wall -stdlib=libc++ -std=c++11 -lz")
 set(CXX_FLAGS_DEBUG "-g -O0")
 set(EXECUTABLE_NAME "tangram.out")
 
@@ -10,8 +10,9 @@ include_directories(/usr/local/include)
 
 # load core library
 include_directories(${PROJECT_SOURCE_DIR}/core/include/)
+include_directories(${PROJECT_SOURCE_DIR}/core/include/jsoncpp/)
 add_subdirectory(${PROJECT_SOURCE_DIR}/core)
-include_recursive_dirs(${PROJECT_SOURCE_DIR}/core/*.h)
+include_recursive_dirs(${PROJECT_SOURCE_DIR}/core/src/*.h)
 
 # add sources and include headers
 find_sources_and_include_directories(
@@ -32,11 +33,12 @@ function(link_libraries)
         ${OPENGL_FRAMEWORK} 
         ${COCOA_FRAMEWORK} 
         ${IOKIT_FRAMEWORK} 
-        ${CORE_FOUNDATION_FRAMEWORK}    
+        ${CORE_FOUNDATION_FRAMEWORK}   
         ${CORE_VIDEO_FRAMEWORK} 
         ${GLFW})
 
-    check_and_link_libraries(${EXECUTABLE_NAME} curl)
+    target_link_libraries(${EXECUTABLE_NAME} -lcurl) #use system libcurl
+    target_link_libraries(${EXECUTABLE_NAME} ${PROJECT_SOURCE_DIR}/osx/precompiled/libtess2/libtess2.a)
     target_link_libraries(${EXECUTABLE_NAME} core ${GLFW_LIBRARIES})
 
 endfunction()

@@ -23,7 +23,7 @@ public:
 
     virtual ~VertexLayout();
 
-    void enable(std::shared_ptr<ShaderProgram> _program);
+    void enable(const std::shared_ptr<ShaderProgram> _program);
 
     GLint getStride() const { return m_stride; };
 

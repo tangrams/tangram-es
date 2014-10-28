@@ -29,11 +29,12 @@ endif()
 set(FRAMEWORKS CoreGraphics CoreFoundation QuartzCore UIKit OpenGLES Security CFNetwork GLKit) 
 set(MACOSX_BUNDLE_GUI_IDENTIFIER "com.mapzen.\${PRODUCT_NAME:Tangram}")
 set(APP_TYPE MACOSX_BUNDLE)
-set(CORE_LIB_DEPS ${CMAKE_SOURCE_DIR}/ios/precompiled/libcurl.a)
+set(CORE_LIB_DEPS ${CMAKE_SOURCE_DIR}/ios/precompiled/libcurl/libcurl.a)
 file(GLOB_RECURSE RESOURCES ${PROJECT_SOURCE_DIR}/ios/resources/*.storyboard)
 
 # load core library
 include_directories(${PROJECT_SOURCE_DIR}/core/include/)
+include_directories(${PROJECT_SOURCE_DIR}/core/include/jsoncpp)
 add_subdirectory(${PROJECT_SOURCE_DIR}/core)
 include_recursive_dirs(${PROJECT_SOURCE_DIR}/core/*.h)
 
@@ -52,6 +53,7 @@ endforeach()
 
 # link and build functions
 function(link_libraries)
+    target_link_libraries(${EXECUTABLE_NAME} ${CMAKE_SOURCE_DIR}/ios/precompiled/libtess2/libtess2.a)
     target_link_libraries(${EXECUTABLE_NAME} core)
     target_link_libraries(${EXECUTABLE_NAME} ${ZLIB_LIBRARIES})
     

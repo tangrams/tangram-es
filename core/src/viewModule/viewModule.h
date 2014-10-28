@@ -1,13 +1,17 @@
 #pragma once
 
-#define GLM_FORCE_RADIANS
-#include <glm/glm.hpp>
-#include <glm/gtc/matrix_transform.hpp>
 #include <vector>
-#include <math.h>
+#include <set>
+#include <cmath>
 #include <memory>
 
+#define GLM_FORCE_RADIANS
+#include <glm/fwd.hpp>
+#include <glm/glm.hpp>
+#include <glm/gtc/matrix_transform.hpp>
+
 #include "util/projection.h"
+#include "util/tileID.h"
 
 /* ViewModule
  * 1. Stores a representation of the current view into the map world
@@ -26,23 +30,25 @@ public:
     ViewModule(float _width = 800, float _height = 600, ProjectionType _projType = ProjectionType::mercator);
     
     //Sets a new map projection with default tileSize
-    void setMapProjection(ProjectionType _projType); 
+    void setMapProjection(ProjectionType _projType);
     //get the current mapProjection
-    MapProjection* getMapProjection();
+    const MapProjection& getMapProjection();
 
     void setAspect(float _width, float _height);
-    void setPosition(float _x, float _y);
+    void setPosition(double _x, double _y);
     void setZoom(int _z);
-    void translate(float _dx, float _dy);
+    void translate(double _dx, double _dy);
     void zoom(int _dz);
 
-    int getZoom() { return m_zoom; };
-    glm::vec3 getPosition() { return m_pos; };
-    glm::mat4 getViewMatrix() { return m_view; };
-    glm::mat4 getProjectionMatrix() { return m_proj; };
+    int getZoom() const { return m_zoom; };
+    const glm::dvec3& getPosition() const { return m_pos; };
+    const glm::dmat4& getViewMatrix() const { return m_view; };
+    const glm::dmat4& getProjectionMatrix() const { return m_proj; };
+    const glm::dmat4 getViewProjectionMatrix() const;
 
-    glm::mat2 getBoundsRect(); // Returns a rectangle of the current view range as [[x_min, y_min][x_max, y_max]]
-    const std::vector<glm::ivec3>& getVisibleTiles();
+    glm::dmat2 getBoundsRect() const; // Returns a rectangle of the current view range as [[x_min, y_min], [x_max, y_max]]
+    const std::set<TileID>& getVisibleTiles();
+    bool viewChanged() const { return m_dirty; };
 
     virtual ~ViewModule() {
         m_visibleTiles.clear();
@@ -52,13 +58,13 @@ private:
 
     std::unique_ptr<MapProjection> m_projection;
     bool m_dirty;
-    std::vector<glm::ivec3> m_visibleTiles;
-    glm::vec3 m_pos;
-    glm::mat4 m_view;
-    glm::mat4 m_proj;
+    std::set<TileID> m_visibleTiles;
+    glm::dvec3 m_pos;
+    glm::dmat4 m_view;
+    glm::dmat4 m_proj;
     int m_zoom;
     float m_width;
     float m_height;
-    float m_aspect;
+    double m_aspect;
 };
 

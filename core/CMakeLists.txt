@@ -4,7 +4,7 @@ project(core)
 set(INCLUDE_DIR include)
 set(SOURCE_DIR src)
 
-add_subdirectory("${INCLUDE_DIR}/json")
+add_subdirectory("${INCLUDE_DIR}/jsoncpp")
 add_subdirectory("${INCLUDE_DIR}/glm")
 
 file(GLOB_RECURSE FOUND_HEADERS "${SOURCE_DIR}/*.h")
@@ -17,7 +17,7 @@ foreach(_headerFile ${FOUND_HEADERS})
 endforeach()
 list(REMOVE_DUPLICATES INCLUDE_DIRS)
 
-include_directories(${INCLUDE_DIR}/json ${INCLUDE_DIR} ${INCLUDE_DIRS})
+include_directories(${INCLUDE_DIR}/jsoncpp ${INCLUDE_DIR} ${INCLUDE_DIRS})
 
 # adding some other dependent target files if needed
 set(FOUND_SOURCES ${FOUND_SOURCES} ${ADDITIONNAL_TARGET_DEPENDENT_SRC_FILES})

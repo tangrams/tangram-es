@@ -12,6 +12,8 @@
 #include <sstream>
 
 #include "glm/glm.hpp"
+#include "util/tileID.h"
+#include "platform.h"
 
 //Todo: Impelement TileData, a generic datastore for all tile formats,
 //Have an instance of this in DataSource
@@ -20,17 +22,51 @@
 class TileData {
 };
 
+
+// TODO: divide DataSource into network and non-network dataSources.
+//       Same has been done on the webgl tangram. Follow the same pattern.
 class DataSource {
 protected:
-    // map of tile coordinates (as a string: x_y_level) to json data for that tile
-    std::map< std::string, std::shared_ptr<Json::Value> > m_JsonRoots;
+    // map of tileIDs to json data for that tile
+    std::map< TileID, std::shared_ptr<Json::Value> > m_JsonRoots;
+
+    /* m_urlTemplate needs to be defined for every network dataSource */
+    std::string m_urlTemplate;
 
 public:
-    virtual bool LoadTile(std::vector<glm::ivec3> _tileCoords) = 0;
-    virtual std::shared_ptr<Json::Value> GetData(std::string _tileID) = 0;
-    virtual bool CheckDataExists(std::string _tileID) = 0;
+    /*
+     * Does all the curl network calls to load the tile data and fills the data associated with a tileID
+     */
+    virtual bool LoadTile(const std::vector<TileID>& _tileCoords) = 0;
+
+    /* Returns the data corresponding to a tileID */
+    virtual std::shared_ptr<Json::Value> GetData(const TileID& _tileID) = 0;
+
+    /* Checks if data exists for a specific tileID */
+    virtual bool CheckDataExists(const TileID& _tileID) = 0;
+
+    /* 
+     * constructs the URL for a tile based on tile coordinates/IDs.
+     * Used by LoadTile to construct URL
+     */
+    virtual std::unique_ptr<std::string> constructURL(const TileID& _tileCoord) = 0;
+
+    /* 
+     * extracts tileIDs from a url
+     * Used by LoadTile to extract tileIDs from curl url.
+     */
+    virtual TileID extractIDFromUrl(const std::string& _url) = 0;
+    
+    /* 
+     * clears all data associated with this dataSource
+     */
     void ClearGeoRoots();
+
+    /*
+     * returns the number of tiles having data wrt this datasource
+     */
     size_t JsonRootSize();
+
     DataSource() {}
     virtual ~DataSource() {
         m_JsonRoots.clear();
@@ -39,37 +75,14 @@ public:
 
 //Extends DataSource class to read MapzenVectorTileJsons.
 class MapzenVectorTileJson: public DataSource {
+
 public:
-    MapzenVectorTileJson() {}
-    virtual bool LoadTile(std::vector<glm::ivec3> _tileCoords) override;
-    virtual std::shared_ptr<Json::Value> GetData(std::string _tileID) override;
-    virtual bool CheckDataExists(std::string _tileID) override;
+    MapzenVectorTileJson();
+    virtual std::unique_ptr<std::string> constructURL(const TileID& _tileCoord) override;
+    virtual TileID extractIDFromUrl(const std::string& _url) override;
+    virtual bool LoadTile(const std::vector<TileID>& _tileCoords) override;
+    virtual std::shared_ptr<Json::Value> GetData(const TileID& _tileID) override;
+    virtual bool CheckDataExists(const TileID& _tileID) override;
     virtual ~MapzenVectorTileJson() {}
 };
 
-//---- tileID and url construction----
-
-//constructs a string from the tile coodinates
-
-//constructs a mapzen vectortile json url from the tile coordinates
-//TODO: Use regex to do this better.
-static std::unique_ptr<std::string> constructURL(glm::ivec3 _tileCoord) {
-    std::ostringstream strStream;
-    strStream<<"http://vector.mapzen.com/osm/all/"<<_tileCoord.z
-                <<"/"<<_tileCoord.x<<"/"<<_tileCoord.y<<".json";
-    std::unique_ptr<std::string> url(new std::string(strStream.str()));
-    return std::move(url);
-}
-
-//TODO: Use regex to do this better.
-// Hacking to extract id from url
-static std::string extractIDFromUrl(std::string _url) {
-    int x,y,z;
-    std::string baseURL("http://vector.mapzen.com/osm/all/");
-    std::string jsonStr(".json");
-    std::string tmpID = _url.replace(0, baseURL.length(), "");
-    std::size_t jsonPos = tmpID.find(jsonStr);
-    tmpID = tmpID.replace(jsonPos, jsonStr.length(), "");
-    std::replace(tmpID.begin(), tmpID.end(), '/','_');
-    return tmpID;
-}
