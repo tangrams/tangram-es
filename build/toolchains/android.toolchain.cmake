@@ -1129,7 +1129,7 @@ if( BUILD_WITH_ANDROID_NDK )
   set( ANDROID_STL_INCLUDE_DIRS     "${ANDROID_LLVM_ROOT}/libcxx/include"
                                     "${ANDROID_ABI_INCLUDE_DIRS}" )
   # android support sfiles
-  include_directories (${ANDROID_NDK}/sources/android/support/include )
+  include_directories ( SYSTEM ${ANDROID_NDK}/sources/android/support/include )
   if( EXISTS "${ANDROID_LLVM_ROOT}/libs/${ANDROID_NDK_ABI_NAME}/libc++_shared.so" )
   	set( __libstl 				"${ANDROID_LLVM_ROOT}/libs/${ANDROID_NDK_ABI_NAME}/libc++_shared.so" )
   else()
