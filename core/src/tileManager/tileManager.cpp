@@ -3,28 +3,57 @@
 #include "mapTile/mapTile.h"
 #include "viewModule/viewModule.h"
 
+#include <chrono>
+
 TileManager::TileManager() {
 }
 
 TileManager::TileManager(TileManager&& _other) :
     m_viewModule(std::move(_other.m_viewModule)),
     m_tileSet(std::move(_other.m_tileSet)),
-    m_dataSources(std::move(_other.m_dataSources)) {
+    m_dataSources(std::move(_other.m_dataSources)),
+    m_incomingTiles(std::move(_other.m_incomingTiles)) {
 }
 
 TileManager::~TileManager() {
     m_dataSources.clear();
     m_tileSet.clear();
-    m_tilesToAdd.clear();
+    m_incomingTiles.clear();
 }
 
 bool TileManager::updateTileSet() {
     
-    if (!(m_viewModule->viewChanged())) {
-        return false;
+    bool tileSetChanged = false;
+    
+    // Check if any incoming tiles are finished
+    {
+        auto incomingTilesIter = m_incomingTiles.begin();
+        
+        while (incomingTilesIter != m_incomingTiles.end()) {
+            
+            std::future<MapTile*>& tileFuture = *incomingTilesIter;
+            std::chrono::milliseconds span (0);
+            
+            if (tileFuture.wait_for(span) == std::future_status::ready) {
+                MapTile* tile = tileFuture.get();
+                const TileID& id = tile->getID();
+                logMsg("Tile [%d, %d, %d] finished loading\n", id.z, id.x, id.y);
+                m_tileSet[id].reset(tile);
+                tileSetChanged = true;
+                m_incomingTiles.erase(incomingTilesIter);
+            } else {
+            
+                incomingTilesIter++;
+            }
+
+        }
     }
 
-    bool tileSetChanged = false;
+    if (!(m_viewModule->viewChanged()) && !tileSetChanged) {
+        // No new tiles have come into view and no tiles have finished loading, 
+        // so the tileset is unchanged
+        return false;
+    }
 
     const std::set<TileID>& visibleTiles = m_viewModule->getVisibleTiles();
 
@@ -67,61 +96,43 @@ bool TileManager::updateTileSet() {
         tileSetChanged = true;
     }
 
-    const std::vector<std::unique_ptr<Style>>& styles = m_sceneDefinition->getStyles();
-
-    // For now, synchronously load the tiles we need
-    if (m_tilesToAdd.size() > 0) {
-        
-        logMsg("Found tiles to add: \n");
-
-        for (auto& tileID : m_tilesToAdd) {
-            logMsg("    %d / %d / %d \n", tileID.z, tileID.x, tileID.y);
-        }
-
-        bool newTileLoadSuccess = false;
-
-        for (const auto& source : m_dataSources) {
-            logMsg("Loading tiles...\n");
-            newTileLoadSuccess = source->LoadTile(m_tilesToAdd);
-        }
-
-        if(!newTileLoadSuccess) {
-            logMsg("\n**New Tiles loading failed ... Timeout??**\n");
-            return false;
-        }
-        // Construct tiles... buckle up, this gets deep
-        for (auto& tileID : m_tilesToAdd) {
-            logMsg("Building maptile %d/%d/%d:\n", tileID.z, tileID.x, tileID.y);
-            // Instantiate a maptile
-            std::unique_ptr<MapTile> tile(new MapTile(tileID, m_viewModule->getMapProjection()));
-            for (const auto& source : m_dataSources) {
-                // Get the previously fetched tile data
-                std::shared_ptr<Json::Value> json = source->GetData(tileID);
-                logMsg("    Retrieved JSON\n");
-                if(!json) {
-                    logMsg("    ***json root is null, tile was not read properly\n");
-                    continue;
-                }
-                for (auto& style : styles) {
-                    // Add styled geometry to the new tile
-                    style->addData(*json, *tile, m_viewModule->getMapProjection());
-                }
-            }
-            // Add the tile to our tileset
-            m_tileSet[tileID] = std::move(tile);
-        }
-        m_tilesToAdd.clear();
-    }
-
     return tileSetChanged;
 }
 
 void TileManager::addTile(const TileID& _tileID) {
-    // Queue tile for loading and constructing in updateTileSet
-    m_tilesToAdd.push_back(_tileID);
+
+    m_tileSet[_tileID].reset(nullptr); // Emplace a unique_ptr that is null until tile finishes loading
+
+    std::future<MapTile*> incoming = std::async(std::launch::async, [&](TileID _id) {
+
+        MapTile* tile = new MapTile(_id, m_viewModule->getMapProjection());
+
+        for (const auto& source : m_dataSources) {
+            
+            logMsg("Loading tile [%d, %d, %d]\n", _id.z, _id.x, _id.y);
+            if ( ! source->loadTile(_id)) {
+                logMsg("New tile loading failed ... Timeout??\n");
+            }
+            
+            std::shared_ptr<Json::Value> json = source->getTileData(_id);
+            
+            for (auto& style : m_sceneDefinition->getStyles()) {
+                style->addData(*json, *tile, m_viewModule->getMapProjection());
+            }
+            
+        }
+
+        return tile;
+
+    }, _tileID);
+    
+    m_incomingTiles.push_back(std::move(incoming));
+    
 }
 
 void TileManager::removeTile(std::map<TileID, std::unique_ptr<MapTile>>::iterator& _tileIter) {
     // Remove tile from tileSet and destruct tile
     m_tileSet.erase(_tileIter++);
+
+    // TODO: if tile is being loaded, cancel loading
 }

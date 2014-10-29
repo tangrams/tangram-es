@@ -3,6 +3,7 @@
 #include <map>
 #include <vector>
 #include <memory>
+#include <future>
 
 #include "glm/fwd.hpp"
 #include "glm/glm.hpp"
@@ -63,7 +64,7 @@ private:
 
     std::vector<std::unique_ptr<DataSource>> m_dataSources;
 
-    std::vector<TileID> m_tilesToAdd;
+    std::vector< std::future<MapTile*> > m_incomingTiles;
 
     void addTile(const TileID& _tileID);
     void removeTile(std::map<TileID, std::unique_ptr<MapTile>>::iterator& _tileIter);
