@@ -48,7 +48,7 @@ public:
      */
     void addVertices(GLbyte* _vertices, int _nVertices);
 
-    bool hasVertices() const { return m_nVertices > 0; };
+    int numVertices() const { return m_nVertices; };
 
     /*
      * Adds a single index to the mesh; indices are unsigned shorts
@@ -61,7 +61,7 @@ public:
      */
     void addIndices(GLushort* _indices, int _nIndices);
 
-    bool hasIndices() const { return m_indices.size() > 0; };
+    int numIndices() const { return m_indices.size(); };
 
     /*
      * Copies all added vertices and indices into OpenGL buffer objects; After geometry is uploaded,
