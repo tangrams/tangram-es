@@ -1,6 +1,3 @@
-/*
-...
-*/
 #pragma once
 
 #include "json/json.h"
@@ -9,9 +6,7 @@
 #include <vector>
 #include <map>
 #include <memory>
-#include <sstream>
 
-#include "glm/glm.hpp"
 #include "util/tileID.h"
 #include "platform.h"
 
@@ -26,63 +21,57 @@ class TileData {
 // TODO: divide DataSource into network and non-network dataSources.
 //       Same has been done on the webgl tangram. Follow the same pattern.
 class DataSource {
+
 protected:
-    // map of tileIDs to json data for that tile
+    
+    /* Map of tileIDs to json data for that tile */
     std::map< TileID, std::shared_ptr<Json::Value> > m_JsonRoots;
 
-    /* m_urlTemplate needs to be defined for every network dataSource */
+    /* URL template for network data sources 
+     *
+     * Network data sources must define a URL template including exactly one 
+     * occurrance each of '[x]', '[y]', and '[z]' which will be replaced by
+     * the x index, y index, and zoom level of tiles to produce their URL
+     */
     std::string m_urlTemplate;
 
 public:
-    /*
-     * Does all the curl network calls to load the tile data and fills the data associated with a tileID
+    
+    /* Fetch data for a map tile
+     *
+     * LoadTile performs synchronous I/O to retrieve all needed data for a tile,
+     * then stores it to be accessed via <GetData>. This method SHALL NOT be called
+     * from the main thread. 
      */
-    virtual bool LoadTile(const std::vector<TileID>& _tileCoords) = 0;
+    virtual bool loadTile(const TileID& _tileID) = 0;
 
-    /* Returns the data corresponding to a tileID */
-    virtual std::shared_ptr<Json::Value> GetData(const TileID& _tileID) = 0;
+    /* Returns the data corresponding to a <TileID> */
+    virtual std::shared_ptr<Json::Value> getTileData(const TileID& _tileID) = 0;
 
-    /* Checks if data exists for a specific tileID */
-    virtual bool CheckDataExists(const TileID& _tileID) = 0;
+    /* Checks if data exists for a specific <TileID> */
+    virtual bool hasTileData(const TileID& _tileID) = 0;
 
-    /* 
-     * constructs the URL for a tile based on tile coordinates/IDs.
-     * Used by LoadTile to construct URL
+    /* Constructs the URL of a tile using the 
      */
     virtual std::unique_ptr<std::string> constructURL(const TileID& _tileCoord) = 0;
-
-    /* 
-     * extracts tileIDs from a url
-     * Used by LoadTile to extract tileIDs from curl url.
-     */
-    virtual TileID extractIDFromUrl(const std::string& _url) = 0;
     
-    /* 
-     * clears all data associated with this dataSource
-     */
-    void ClearGeoRoots();
-
-    /*
-     * returns the number of tiles having data wrt this datasource
-     */
-    size_t JsonRootSize();
+    /* Clears all data associated with this dataSource */
+    void clearData();
 
     DataSource() {}
-    virtual ~DataSource() {
-        m_JsonRoots.clear();
-    }
+    virtual ~DataSource() { m_JsonRoots.clear(); }
 };
 
-//Extends DataSource class to read MapzenVectorTileJsons.
+/* Extends DataSource class to read Mapzen's GeoJSON vector tiles */
 class MapzenVectorTileJson: public DataSource {
 
 public:
     MapzenVectorTileJson();
+    
+    virtual bool loadTile(const TileID& _tileID) override;
+    virtual std::shared_ptr<Json::Value> getTileData(const TileID& _tileID) override;
+    virtual bool hasTileData(const TileID& _tileID) override;
     virtual std::unique_ptr<std::string> constructURL(const TileID& _tileCoord) override;
-    virtual TileID extractIDFromUrl(const std::string& _url) override;
-    virtual bool LoadTile(const std::vector<TileID>& _tileCoords) override;
-    virtual std::shared_ptr<Json::Value> GetData(const TileID& _tileID) override;
-    virtual bool CheckDataExists(const TileID& _tileID) override;
-    virtual ~MapzenVectorTileJson() {}
+    virtual ~MapzenVectorTileJson();
 };
 
