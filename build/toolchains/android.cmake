@@ -3,14 +3,7 @@ if(NOT DEFINED ANDROID_ABI)
     message(STATUS "Possible ABI values : armeabi-v7a (default), armeabi, x86")
 endif()
 message(STATUS "Android ABI : ${ANDROID_ABI}") 
-
-if(NOT DEFINED ANDROID_TARGET)
-    set(ANDROID_TARGET "android-19")
-endif()
-message(STATUS "Android target : ${ANDROID_TARGET}")
-
-set(ANDROID_STL gnustl_shared)
-
+ 
 include(${CMAKE_SOURCE_DIR}/build/toolchains/android.toolchain.cmake)
 
 add_definitions(-DPLATFORM_ANDROID)
