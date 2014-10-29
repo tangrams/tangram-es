@@ -1,11 +1,3 @@
-if(NOT DEFINED ANDROID_ABI)
-    set(ANDROID_ABI "armeabi-v7a")
-    message(STATUS "Possible ABI values : armeabi-v7a (default), armeabi, x86")
-endif()
-message(STATUS "Android ABI : ${ANDROID_ABI}") 
- 
-include(${CMAKE_SOURCE_DIR}/build/toolchains/android.toolchain.cmake)
-
 add_definitions(-DPLATFORM_ANDROID)
 
 if(NOT MAKE_BUILD_TOOL)

@@ -307,7 +307,7 @@
 
 cmake_minimum_required( VERSION 2.6.3 )
 
-# cmake file android.cmake 
+# these should be command line arguments
 set( ANDROID_STL "c++_shared" )
 set( ANDROID_NATIVE_API_LEVEL "android-19" )
 
