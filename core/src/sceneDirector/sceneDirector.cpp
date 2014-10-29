@@ -20,8 +20,6 @@ SceneDirector::SceneDirector() {
     m_tileManager->addDataSource(std::move(dataSource));
 
     logMsg("Constructed tileManager \n");
-
-    GeometryHandler::init();
     
     glEnable(GL_DEPTH_TEST);
     glDepthFunc(GL_LEQUAL);

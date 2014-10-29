@@ -30,9 +30,7 @@ public:
 
     void renderFrame();
 
-    ~SceneDirector() {
-        GeometryHandler::cleanup();
-    }
+    ~SceneDirector() {}
 
 private:
 

@@ -1,21 +1,11 @@
 #include "geometryHandler.h"
 
-void GeometryHandler::init() {
-    // might not need this, can just check if tesselator is valid in each context that uses it
-    if (tesselator == nullptr) {
-        //create a tesselator with null allocator (default implementation as per libtess2)
-        tesselator = tessNewTess(nullptr);
-    }
-}
-
-void GeometryHandler::cleanup() {
-    if (tesselator != nullptr) {
-        tessDeleteTess(tesselator);
-    }
-}
+#include "tesselator.h"
 
 void GeometryHandler::buildPolygon(const std::vector<glm::vec3>& _pointsIn, const std::vector<int>& _ringSizes, std::vector<glm::vec3>& _pointsOut, std::vector<glm::vec3>& _normalOut, std::vector<GLushort>& _indicesOut) {
     
+    TESStesselator* tesselator = tessNewTess(nullptr);
+
     //Get the number of vertices already added
     GLushort vertexDataOffset = (GLushort)_pointsOut.size();
     
@@ -48,7 +38,7 @@ void GeometryHandler::buildPolygon(const std::vector<glm::vec3>& _pointsIn, cons
         }
     }
     else {
-        logMsg("\t\t***tessTesselate returns false. Can not tesselate.****\n");
+        logMsg("Tesselator cannot tesselate!!\n");
     }
 }
 
