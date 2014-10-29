@@ -99,12 +99,6 @@ protected:
         GLuint abgr;
     };
     
-    std::vector<PosNormColVertex> m_vertices;
-    std::vector<GLushort> m_indices;
-    
-    std::vector<glm::vec3> m_points;
-    std::vector<glm::vec3> m_normals;
-    
     virtual void constructVertexLayout() override;
     virtual void constructShaderProgram() override;
     virtual void buildPoint(glm::vec3& _point, Json::Value& _props, VboMesh& _mesh) override;
@@ -116,11 +110,8 @@ public:
     PolygonStyle(GLenum _drawMode = GL_TRIANGLES);
     PolygonStyle(std::string _name, GLenum _drawMode = GL_TRIANGLES);
     
-    virtual void addData(const Json::Value& _jsonRoot, MapTile& _tile, const MapProjection& _mapProjection) override;
-    
     virtual void setup() override;
     
     virtual ~PolygonStyle() {
-        m_vertices.clear();
     }
 };

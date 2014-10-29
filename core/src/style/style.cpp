@@ -164,6 +164,12 @@ void PolygonStyle::buildLine(std::vector<glm::vec3>& _line, Json::Value& _props,
 
 void PolygonStyle::buildPolygon(std::vector<glm::vec3>& _polygon, std::vector<int>& _sizes, Json::Value& _props, VboMesh& _mesh) {
     
+    std::vector<PosNormColVertex> vertices;
+    std::vector<GLushort> indices;
+    
+    std::vector<glm::vec3> points;
+    std::vector<glm::vec3> normals;
+
     GLuint abgr = 0xffaaaaaa; // Default color
     
     std::string layer = _props["layer"].asString();
@@ -189,36 +195,28 @@ void PolygonStyle::buildPolygon(std::vector<glm::vec3>& _polygon, std::vector<in
         minHeight = _props["min_height"].asFloat();
     }
     
-    // Make sure indices get correctly offset here
-    int vertOffset = static_cast<int>(m_points.size());
-    int indOffset = static_cast<int>(m_indices.size());
-    
     if (minHeight != height) {
         for (auto& pt : _polygon) {
             pt.z = height;
         }
-        GeometryHandler::buildPolygonExtrusion(_polygon, _sizes, minHeight, m_points, m_normals, m_indices);
+        GeometryHandler::buildPolygonExtrusion(_polygon, _sizes, minHeight, points, normals, indices);
     }
     
-    GeometryHandler::buildPolygon(_polygon, _sizes, m_points, m_normals, m_indices);
+    GeometryHandler::buildPolygon(_polygon, _sizes, points, normals, indices);
     
-    for (int i = vertOffset; i < m_points.size(); i++) {
-        glm::vec3 p = m_points[i];
-        glm::vec3 n = m_normals[i];
-        m_vertices.push_back({ p.x, p.y, p.z, n.x, n.y, n.z, abgr });
+    for (int i = 0; i < points.size(); i++) {
+        glm::vec3 p = points[i];
+        glm::vec3 n = normals[i];
+        vertices.push_back({ p.x, p.y, p.z, n.x, n.y, n.z, abgr });
     }
-    
-    _mesh.addVertices((GLbyte*)&m_vertices[vertOffset], static_cast<int>(m_points.size() - vertOffset));
-    _mesh.addIndices(&m_indices[indOffset], static_cast<int>(m_indices.size() - indOffset));
-    
-}
 
-void PolygonStyle::addData(const Json::Value &_jsonRoot, MapTile &_tile, const MapProjection &_mapProjection) {
+    // Make sure indices get correctly offset
+    int vertOffset = _mesh.numVertices();
+    for (auto& ind : indices) {
+        ind += vertOffset;
+    }
     
-    Style::addData(_jsonRoot, _tile, _mapProjection);
+    _mesh.addVertices((GLbyte*)vertices.data(), vertices.size());
+    _mesh.addIndices(indices.data(), indices.size());
     
-    m_vertices.clear();
-    m_indices.clear();
-    m_points.clear();
-    m_normals.clear();
 }
