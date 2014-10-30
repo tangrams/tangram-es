@@ -53,6 +53,11 @@ bool MapzenVectorTileJson::loadTile(const TileID& _tileID) {
     
     bool success = true; // Begin optimistically
     
+    if (hasTileData(_tileID)) {
+        // Tile has been fetched already!
+        return success;
+    }
+    
     std::unique_ptr<std::string> url = constructURL(_tileID);
 
     CURL* curlHandle = curl_easy_init();
