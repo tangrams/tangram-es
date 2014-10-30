@@ -40,9 +40,8 @@ bool TileManager::updateTileSet() {
                 logMsg("Tile [%d, %d, %d] finished loading\n", id.z, id.x, id.y);
                 m_tileSet[id].reset(tile);
                 tileSetChanged = true;
-                m_incomingTiles.erase(incomingTilesIter);
+                incomingTilesIter = m_incomingTiles.erase(incomingTilesIter);
             } else {
-            
                 incomingTilesIter++;
             }
 
@@ -130,9 +129,12 @@ void TileManager::addTile(const TileID& _tileID) {
     
 }
 
-void TileManager::removeTile(std::map<TileID, std::unique_ptr<MapTile>>::iterator& _tileIter) {
+void TileManager::removeTile(std::map< TileID, std::unique_ptr<MapTile> >::iterator& _tileIter) {
+    
     // Remove tile from tileSet and destruct tile
-    m_tileSet.erase(_tileIter++);
+    _tileIter = m_tileSet.erase(_tileIter);
 
-    // TODO: if tile is being loaded, cancel loading
+    // TODO: if tile is being loaded, cancel loading; For now they continue to load
+    // and will be culled the next time that updateTileSet is called
+    
 }
