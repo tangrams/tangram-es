@@ -40,6 +40,8 @@ void GeometryHandler::buildPolygon(const std::vector<glm::vec3>& _pointsIn, cons
     else {
         logMsg("Tesselator cannot tesselate!!\n");
     }
+    
+    tessDeleteTess(tesselator);
 }
 
 void GeometryHandler::buildPolygonExtrusion(const std::vector<glm::vec3>& _pointsIn, const std::vector<int>& _ringSizes, const float& _minFeatureHeight, std::vector<glm::vec3>& _pointsOut, std::vector<glm::vec3>& _normalOut, std::vector<GLushort>& _indicesOut) {
