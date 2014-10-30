@@ -5,6 +5,18 @@
 
 #include "dataSource.h"
 
+//---- DataSource Implementation----
+
+bool DataSource::hasTileData(const TileID& _tileID) {
+    
+    return m_JsonRoots.find(_tileID) != m_JsonRoots.end();
+}
+
+std::shared_ptr<Json::Value> DataSource::getTileData(const TileID& _tileID) {
+    
+    return hasTileData(_tileID) ? m_JsonRoots[_tileID] : nullptr;
+}
+
 void DataSource::clearData() {
     for (auto& mapValue : m_JsonRoots) {
         mapValue.second->clear();
@@ -12,7 +24,7 @@ void DataSource::clearData() {
     m_JsonRoots.clear();
 }
 
-//----Curl Helper Functions----
+//---- NetworkDataSource Implementation----
 
 //write_data call back from CURLOPT_WRITEFUNCTION
 //responsible to read and fill "stream" with the data.
@@ -21,15 +33,15 @@ static size_t write_data(char *_ptr, size_t _size, size_t _nmemb, void *_stream)
     return _size * _nmemb;
 }
 
-//---- MapzenVectorTileJson Implementation----
-
-MapzenVectorTileJson::MapzenVectorTileJson() {
-    m_urlTemplate = "http://vector.mapzen.com/osm/all/[z]/[x]/[y].json";
-    
+NetworkDataSource::NetworkDataSource() {
     curl_global_init(CURL_GLOBAL_DEFAULT);
 }
 
-std::unique_ptr<std::string> MapzenVectorTileJson::constructURL(const TileID& _tileCoord) {
+NetworkDataSource::~NetworkDataSource() {
+    curl_global_cleanup();
+}
+
+std::unique_ptr<std::string> NetworkDataSource::constructURL(const TileID& _tileCoord) {
 
     std::unique_ptr<std::string> urlPtr(new std::string(m_urlTemplate)); // Make a copy of our template
 
@@ -49,7 +61,7 @@ std::unique_ptr<std::string> MapzenVectorTileJson::constructURL(const TileID& _t
     return std::move(urlPtr);
 }
 
-bool MapzenVectorTileJson::loadTile(const TileID& _tileID) {
+bool NetworkDataSource::loadTile(const TileID& _tileID) {
     
     bool success = true; // Begin optimistically
     
@@ -104,19 +116,9 @@ bool MapzenVectorTileJson::loadTile(const TileID& _tileID) {
     return success;
 }
 
-bool MapzenVectorTileJson::hasTileData(const TileID& _tileID) {
-    
-    return m_JsonRoots.find(_tileID) != m_JsonRoots.end();
-    
-}
+//---- MapzenVectorTileJson Implementation----
 
-std::shared_ptr<Json::Value> MapzenVectorTileJson::getTileData(const TileID& _tileID) {
-    
-    return hasTileData(_tileID) ? m_JsonRoots[_tileID] : nullptr;
-    
-}
-
-MapzenVectorTileJson::~MapzenVectorTileJson() {
-    curl_global_cleanup();
+MapzenVectorTileJson::MapzenVectorTileJson() {
+    m_urlTemplate = "http://vector.mapzen.com/osm/all/[z]/[x]/[y].json";
 }
 
