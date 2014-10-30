@@ -21,17 +21,6 @@ static const int MAX_FETCH_TRY = 3;
  */
 static std::regex regObj;
 
-void DataSource::ClearGeoRoots() {
-    for (auto& mapValue : m_JsonRoots) {
-        mapValue.second->clear();
-    }
-    m_JsonRoots.clear();
-}
-
-size_t DataSource::JsonRootSize() {
-    return m_JsonRoots.size();
-}
-
 
 //----Curl Helper Functions----
 
@@ -59,26 +48,46 @@ static void curlInit(CURLM *_curlMulti, std::string _url, std::stringstream *_ou
 }
 
 
-//---- MapzenVectorTileJson Implementation----
+//---- DataSource Implementation----
 
-MapzenVectorTileJson::MapzenVectorTileJson() {
-    m_urlTemplate = "http://vector.mapzen.com/osm/all/[z]/[x]/[y].json";
-    
-    // check if template is good
-    std::string regex_str = "([a-z\\./:0-9]+)/(\\[z\\])/(\\[x\\])/(\\[y\\])([a-z\\.]+)";
-    regObj.assign(regex_str, std::regex_constants::icase);
-    std::sregex_iterator it(m_urlTemplate.begin(), m_urlTemplate.end(), regObj);
-    if(m_urlTemplate.compare((*it).str()) == 0) {
-        logMsg("\n***urlTemplate for MapzenVectorTileJson datasource is good.\n");
+void DataSource::clearGeoRoots() {
+    for (auto& mapValue : m_JsonRoots) {
+        mapValue.second->clear();
+    }
+    m_JsonRoots.clear();
+}
+
+size_t DataSource::jsonRootSize() {
+    return m_JsonRoots.size();
+}
+
+bool DataSource::checkDataExists(const TileID& _tileID) {
+    if(m_JsonRoots.find(_tileID) != m_JsonRoots.end()) {
+        return true;
+    }
+    else {
+        return false;
     }
 }
 
-std::unique_ptr<std::string> MapzenVectorTileJson::constructURL(const TileID& _tileCoord) {
+std::shared_ptr<Json::Value> DataSource::getData(const TileID& _tileID) {
+    if(checkDataExists(_tileID)) {
+        return m_JsonRoots[_tileID];
+    }
+    else {
+        return nullptr;
+    }
+}
+
+
+//---- NetworkDataSource Implementation----
+
+std::unique_ptr<std::string> NetworkDataSource::constructURL(const TileID& _tileCoord) {
     std::unique_ptr<std::string> pTileUrl(nullptr);
     std::string xVal(std::to_string(_tileCoord.x));
     std::string yVal(std::to_string(_tileCoord.y));
     std::string zVal(std::to_string(_tileCoord.z));
-
+    
     std::string tileURL = m_urlTemplate;
     size_t pos = 0;
     if( (pos = tileURL.find("[x]", pos)) != std::string::npos) {
@@ -106,6 +115,22 @@ std::unique_ptr<std::string> MapzenVectorTileJson::constructURL(const TileID& _t
     return std::move(pTileUrl);
 }
 
+//---- MapzenVectorTileJson Implementation----
+
+MapzenVectorTileJson::MapzenVectorTileJson() {
+    
+    // Override NetworkDataSource::m_urlTemplate
+    m_urlTemplate = "http://vector.mapzen.com/osm/all/[z]/[x]/[y].json";
+    
+    // check if template is good
+    std::string regex_str = "([a-z\\./:0-9]+)/(\\[z\\])/(\\[x\\])/(\\[y\\])([a-z\\.]+)";
+    regObj.assign(regex_str, std::regex_constants::icase);
+    std::sregex_iterator it(m_urlTemplate.begin(), m_urlTemplate.end(), regObj);
+    if(m_urlTemplate.compare((*it).str()) == 0) {
+        logMsg("\n***urlTemplate for MapzenVectorTileJson datasource is good.\n");
+    }
+}
+
 //TODO: Figure out a way to get tileIDs from curlEasy Handle!(Specifically if we are using curl multi handle).
 //Use of this helper method "might" be avoided if we go curleasy and c++11 async route.
 TileID MapzenVectorTileJson::extractIDFromUrl(const std::string& _url) {
@@ -129,7 +154,7 @@ TileID MapzenVectorTileJson::extractIDFromUrl(const std::string& _url) {
     return TileID(xVal, yVal, zVal);
 }
 
-bool MapzenVectorTileJson::LoadTile(const std::vector<TileID>& _tileCoords) {
+bool MapzenVectorTileJson::loadTile(const std::vector<TileID>& _tileCoords) {
     std::vector<std::unique_ptr<std::string>> urls;
 
     if(_tileCoords.size() == 0) {
@@ -314,22 +339,3 @@ bool MapzenVectorTileJson::LoadTile(const std::vector<TileID>& _tileCoords) {
     urls.clear();
     return true;
 }
-
-bool MapzenVectorTileJson::CheckDataExists(const TileID& _tileID) {
-    if(m_JsonRoots.find(_tileID) != m_JsonRoots.end()) {
-        return true;
-    }
-    else {
-        return false;
-    }
-}
-
-std::shared_ptr<Json::Value> MapzenVectorTileJson::GetData(const TileID& _tileID) {
-    if(CheckDataExists(_tileID)) {
-        return m_JsonRoots[_tileID];
-    }
-    else {
-        return nullptr;
-    }
-}
-

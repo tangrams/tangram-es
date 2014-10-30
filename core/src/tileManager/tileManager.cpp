@@ -82,7 +82,7 @@ bool TileManager::updateTileSet() {
 
         for (const auto& source : m_dataSources) {
             logMsg("Loading tiles...\n");
-            newTileLoadSuccess = source->LoadTile(m_tilesToAdd);
+            newTileLoadSuccess = source->loadTile(m_tilesToAdd);
         }
 
         if(!newTileLoadSuccess) {
@@ -96,7 +96,7 @@ bool TileManager::updateTileSet() {
             std::unique_ptr<MapTile> tile(new MapTile(tileID, m_viewModule->getMapProjection()));
             for (const auto& source : m_dataSources) {
                 // Get the previously fetched tile data
-                std::shared_ptr<Json::Value> json = source->GetData(tileID);
+                std::shared_ptr<Json::Value> json = source->getData(tileID);
                 logMsg("    Retrieved JSON\n");
                 if(!json) {
                     logMsg("    ***json root is null, tile was not read properly\n");
