@@ -13,7 +13,7 @@ This project uses _CMake_ (minimum version **2.8**), you can download it [here](
 brew install cmake
 ```
 
-Currently we are targetting three platforms (OS X, iOS and Android). Once CMake installed, you can build the project for the platform of your choice. If you are planning to test more than one platform we advise you to create subfolders inside the **build/** folder and run `cmake ../.. [OPTIONS]` from each of them.
+Currently we are targetting three platforms (OS X, iOS and Android). Once CMake installed, you can build the project for the platform of your choice. 
 
 ## platforms ##
 
@@ -25,39 +25,24 @@ brew tap homebrew/versions
 brew install glfw3
 ```
 
-Then build using GNU Make by calling these commands from `build` folder:
+Then build using GNU Make:
 
 ```bash
-cmake .. -DPLATFORM_TARGET=darwin
-make
-bin/tangram.out
-```
-
-You can also generate an xcodeproj file for working with the project in XCode:
-
-```bash
-cmake .. -DPLATFORM_TARGET=darwin -G Xcode
-open tangram.xcodeproj
+make osx
 ```
 
 ### iOS ###
-For iOS, you can generate an XCode project by running the following from the `build` folder:
+For iOS, an XCode project would be generated and target would be built by running the following:
 
 ```bash
-cmake .. -DPLATFORM_TARGET=ios -DIOS_PLATFORM=SIMULATOR -DCMAKE_TOOLCHAIN_FILE=toolchains/iOS.toolchain.cmake -G Xcode
-open tangram.xcodeproject
+make ios && open build/ios/tangram.xcodeproject
 ```
 
 Then just use Xcode as usual. Note that any Xcode configuration change you make to the project won't be preserved when Cmake runs again. Build configuration is defined only in the CMakeLists file(s).
 
 ### Android ###
-To build for Android, ensure you have your `$NDK_ROOT` environment variable set and pointing to your [NDK](https://developer.android.com/tools/sdk/ndk/index.html) toolset. 
+To build for Android, ensure you have your `$ANDROID_NDK` environment variable set and pointing to your [NDK](https://developer.android.com/tools/sdk/ndk/index.html) toolset. 
 
 ```bash
-cmake .. -DPLATFORM_TARGET=android -DCMAKE_TOOLCHAIN_FILE=toolchains/android.toolchain.cmake -DMAKE_BUILD_TOOL=$NDK_ROOT/prebuilt/[YOUR_OS]/bin/make [-DANDROID_ABI=[x86|armeabi-v7a|armeabi]]
-make
-make install
-cd .. 
-ant -f android/build.xml debug
-adb install [GENERATED_APK]
+make android [ANDROID_ARCH=[x86|armeabi-v7a|armeabi]]
 ```
