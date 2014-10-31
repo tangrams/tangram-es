@@ -90,5 +90,5 @@ endif
 
 check-ndk:
 ifndef NDK_ROOT
-    $(error NDK_ROOT is undefined)
+	$(error NDK_ROOT is undefined)
 endif
