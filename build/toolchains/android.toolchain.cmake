@@ -307,10 +307,6 @@
 
 cmake_minimum_required( VERSION 2.6.3 )
 
-# these should be command line arguments
-set( ANDROID_STL "c++_shared" )
-set( ANDROID_NATIVE_API_LEVEL "android-19" )
-
 if( DEFINED CMAKE_CROSSCOMPILING )
  # subsequent toolchain loading is not really needed
  return()
