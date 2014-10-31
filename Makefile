@@ -79,8 +79,7 @@ cmake-osx:
 	cmake ../.. ${DARWIN_CMAKE_PARAMS}
 
 ios: cmake-ios ${IOS_BUILD_DIR}/${IOS_XCODE_PROJ}
-	cd ${IOS_BUILD_DIR} && \
-	xcodebuild -target ${IOS_TARGET} -project ${IOS_XCODE_PROJ}
+	xcodebuild -target ${IOS_TARGET} -project ${IOS_BUILD_DIR}/${IOS_XCODE_PROJ}
 
 cmake-ios:
 	mkdir -p ${IOS_BUILD_DIR}
