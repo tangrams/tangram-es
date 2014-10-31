@@ -14,7 +14,14 @@ bool DataSource::hasTileData(const TileID& _tileID) {
 
 std::shared_ptr<Json::Value> DataSource::getTileData(const TileID& _tileID) {
     
-    return hasTileData(_tileID) ? m_JsonRoots[_tileID] : nullptr;
+    // TODO: implement sensible caching, instead of immediately discarding all data
+    if (hasTileData(_tileID)) {
+        std::shared_ptr<Json::Value> tileData = m_JsonRoots[_tileID];
+        m_JsonRoots.erase(_tileID);
+        return tileData;
+    } else {
+        return nullptr;
+    }
 }
 
 void DataSource::clearData() {
