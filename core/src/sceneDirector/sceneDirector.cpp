@@ -20,8 +20,6 @@ SceneDirector::SceneDirector() {
     m_tileManager->addDataSource(std::move(dataSource));
 
     logMsg("Constructed tileManager \n");
-
-    GeometryHandler::init();
     
     glEnable(GL_DEPTH_TEST);
     glDepthFunc(GL_LEQUAL);
@@ -80,10 +78,14 @@ void SceneDirector::renderFrame() {
         style->setup();
 
         // Loop over visible tiles
-        for (const auto& mapTile : m_tileManager->getVisibleTiles()) {
+        for (const auto& mapIDandTile : m_tileManager->getVisibleTiles()) {
 
-            // Draw!
-            mapTile.second->draw(*style, viewProj);
+            const std::unique_ptr<MapTile>& tile = mapIDandTile.second;
+            
+            if (tile) {
+                // Draw!
+                tile->draw(*style, viewProj);
+            }
 
         }
     }

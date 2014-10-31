@@ -4,13 +4,10 @@
 
 #include "glm/fwd.hpp"
 #include "glm/glm.hpp"
-#include "tesselator.h"
 
 #include "platform.h"
 
 namespace GeometryHandler {
-
-    static TESStesselator* tesselator = nullptr;
 
     void init();
 

@@ -1,6 +1,3 @@
-/*
-...
-*/
 #pragma once
 
 #include "json/json.h"
@@ -9,9 +6,7 @@
 #include <vector>
 #include <map>
 #include <memory>
-#include <sstream>
 
-#include "glm/glm.hpp"
 #include "util/tileID.h"
 #include "platform.h"
 
@@ -24,87 +19,76 @@ class TileData {
 
 
 class DataSource {
+
 protected:
-    // map of tileIDs to json data for that tile
+    
+    /* Map of tileIDs to json data for that tile */
     std::map< TileID, std::shared_ptr<Json::Value> > m_JsonRoots;
     
 public:
+    
+    /* Fetch data for a map tile
+     *
+     * LoadTile performs synchronous I/O to retrieve all needed data for a tile,
+     * then stores it to be accessed via <GetData>. This method SHALL NOT be called
+     * from the main thread. 
+     */
+    virtual bool loadTile(const TileID& _tileID) = 0;
+
+    /* Returns the data corresponding to a <TileID> */
+    virtual std::shared_ptr<Json::Value> getTileData(const TileID& _tileID);
+
+    /* Checks if data exists for a specific <TileID> */
+    virtual bool hasTileData(const TileID& _tileID);
+    
+    /* Clears all data associated with this dataSource */
+    void clearData();
+
     DataSource() {}
-    
-    /*
-     * Does all the curl network calls to load the tile data and fills the data associated with a tileID
-     */
-    virtual bool loadTile(const std::vector<TileID>& _tileCoords) = 0;
-    
-    /*
-     * Returns the data corresponding to a tileID
-     */
-    virtual std::shared_ptr<Json::Value> getData(const TileID& _tileID);
-    
-    /*
-     * Checks if data exists for a specific tileID 
-     */
-    virtual bool checkDataExists(const TileID& _tileID);
-    
-    /* 
-     * clears all data associated with this dataSource
-     */
-    void clearGeoRoots();
-    
-    /*
-     * returns the number of tiles having data wrt this datasource
-     */
-    size_t jsonRootSize();
-    
-    virtual ~DataSource() {
-        m_JsonRoots.clear();
-    }
+    virtual ~DataSource() { m_JsonRoots.clear(); }
 };
 
 class NetworkDataSource : public DataSource {
+
 protected:
-    /* 
-     * m_urlTemplate needs to be defined for every network dataSource
+
+    /* URL template for network data sources 
+     *
+     * Network data sources must define a URL template including exactly one 
+     * occurrance each of '[x]', '[y]', and '[z]' which will be replaced by
+     * the x index, y index, and zoom level of tiles to produce their URL
      */
     std::string m_urlTemplate;
-    
-    /*
-     * constructs the URL for a tile based on tile coordinates/IDs.
-     * Used by LoadTile to construct URL
-     */
-    virtual std::unique_ptr<std::string> constructURL(const TileID& _tileID);
-    
-    /* 
-     * extracts tileIDs from a url
-     * Used by LoadTile to extract tileIDs from curl url.
-     * NOTE: every tile source will implement its own extractID as order of x,y and z can be different
-     *       example: mapzen vector tile has z/x/y in its url
-     */
-    virtual TileID extractIDFromUrl(const std::string& _url) = 0;
+
+    /* Constructs the URL of a tile using <m_urlTemplate> */
+    virtual std::unique_ptr<std::string> constructURL(const TileID& _tileCoord);
 
 public:
-    NetworkDataSource() {};
-    virtual ~NetworkDataSource() {
-        m_urlTemplate.clear();
-    }
+
+    NetworkDataSource();
+    virtual ~NetworkDataSource();
+
+    virtual bool loadTile(const TileID& _tileID) override;
+
 };
 
-//Extends NetworkDataSource class to read MapzenVectorTileJsons.
-class MapzenVectorTileJson : public NetworkDataSource {
-private:
-    virtual TileID extractIDFromUrl(const std::string& _url) override;
+/* Extends NetworkDataSource class to read Mapzen's GeoJSON vector tiles */
+class MapzenVectorTileJson: public NetworkDataSource {
+
 public:
+
     MapzenVectorTileJson();
-    virtual bool loadTile(const std::vector<TileID>& _tileCoords) override;
-    virtual ~MapzenVectorTileJson() {}
+
 };
 
+// TODO: Support TopoJSON tiles
 class TopoJsonNetSrc : public NetworkDataSource {
 };
 
+// TODO: Support Mapbox tiles
 class MapboxFormatNetSrc : public NetworkDataSource {
 };
 
-// --Support for tiled geoJson but no network (basically supports a geojson on the filesystem)
+// TODO: Support local GeoJSON tiles
 class GeoJsonFileSrc : public DataSource {
 };
