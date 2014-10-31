@@ -90,5 +90,5 @@ endif
 
 check-ndk:
 ifndef ANDROID_NDK
-	$(error ANDROID_NDK is undefined
+	$(error ANDROID_NDK is undefined)
 endif
