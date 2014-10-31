@@ -37,18 +37,11 @@ void MapTile::draw(const Style& _style, const glm::dmat4& _viewProjMatrix) {
 
         glm::dmat4 modelViewProjMatrix = _viewProjMatrix * m_modelMatrix;
 
-        //TODO: figure out how to avoid casting each value like this;
-        // maybe m_modelMatrix and _viewProjMatrix can have float values
-        // and the translation can be applied separately at this point?
-        // Do we really even need a model matrix then?
-        glm::mat4 fmvp;
-        for (int i = 0; i < 4; i++) {
-            for (int j = 0; j < 4; j++) {
-                fmvp[i][j] = (float)modelViewProjMatrix[i][j];
-            }
-        }
+        // NOTE : casting to float, but loop over the matrix values  
+        double* first = &modelViewProjMatrix[0][0];
+        std::vector<float> fmvp(first, first + 16);
 
-        shader->setUniformMatrix4f("u_modelViewProj", glm::value_ptr(fmvp));
+        shader->setUniformMatrix4f("u_modelViewProj", &fmvp[0]);
 
         styleMesh->draw(shader);
     }
