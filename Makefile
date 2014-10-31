@@ -82,9 +82,11 @@ ios: cmake-ios ${IOS_BUILD_DIR}/${IOS_XCODE_PROJ}
 	xcodebuild -target ${IOS_TARGET} -project ${IOS_BUILD_DIR}/${IOS_XCODE_PROJ}
 
 cmake-ios:
+ifeq ($(wildcard ${IOS_BUILD_DIR}/${IOS_XCODE_PROJ}/.*),)
 	mkdir -p ${IOS_BUILD_DIR}
 	cd ${IOS_BUILD_DIR} && \
-	cmake ../.. ${IOS_CMAKE_PARAMS} 
+	cmake ../.. ${IOS_CMAKE_PARAMS}
+endif
 
 check-ndk:
 ifndef NDK_ROOT
