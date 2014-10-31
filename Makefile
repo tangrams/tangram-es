@@ -28,7 +28,7 @@ endif
 ANDROID_CMAKE_PARAMS = \
 	-DPLATFORM_TARGET=android \
 	-DCMAKE_TOOLCHAIN_FILE=${TOOLCHAIN_DIR}/android.toolchain.cmake \
-	-DMAKE_BUILD_TOOL=$NDK_ROOT/prebuilt/darwin-x86_64/bin/make \
+	-DMAKE_BUILD_TOOL=$$ANDROID_NDK/prebuilt/darwin-x86_64/bin/make \
 	-DANDROID_ABI=${ANDROID_ARCH} \
 	-DANDROID_STL=c++_shared \
 	-DANDROID_NATIVE_API_LEVEL=android-19 
@@ -89,6 +89,6 @@ ifeq ($(wildcard ${IOS_BUILD_DIR}/${IOS_XCODE_PROJ}/.*),)
 endif
 
 check-ndk:
-ifndef NDK_ROOT
-	$(error NDK_ROOT is undefined)
+ifndef ANDROID_NDK
+	$(error ANDROID_NDK is undefined
 endif

@@ -41,7 +41,7 @@ make ios && open build/ios/tangram.xcodeproject
 Then just use Xcode as usual. Note that any Xcode configuration change you make to the project won't be preserved when Cmake runs again. Build configuration is defined only in the CMakeLists file(s).
 
 ### Android ###
-To build for Android, ensure you have your `$NDK_ROOT` environment variable set and pointing to your [NDK](https://developer.android.com/tools/sdk/ndk/index.html) toolset. 
+To build for Android, ensure you have your `$ANDROID_NDK` environment variable set and pointing to your [NDK](https://developer.android.com/tools/sdk/ndk/index.html) toolset. 
 
 ```bash
 make android [ANDROID_ARCH=[x86|armeabi-v7a|armeabi]]
