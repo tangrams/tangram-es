@@ -11,6 +11,7 @@ all: android osx ios
 .PHONY: cmake-osx
 .PHONY: cmake-android
 .PHONY: cmake-ios
+.PHONY: install-android
 
 ANDROID_BUILD_DIR = build/android
 OSX_BUILD_DIR = build/osx
@@ -28,7 +29,9 @@ ANDROID_CMAKE_PARAMS = \
 	-DPLATFORM_TARGET=android \
 	-DCMAKE_TOOLCHAIN_FILE=${TOOLCHAIN_DIR}/android.toolchain.cmake \
 	-DMAKE_BUILD_TOOL=$NDK_ROOT/prebuilt/darwin-x86_64/bin/make \
-	-DANDROID_ABI=${ANDROID_ARCH}
+	-DANDROID_ABI=${ANDROID_ARCH} \
+	-DANDROID_STL=c++_shared \
+	-DANDROID_NATIVE_API_LEVEL=android-19 
 
 IOS_CMAKE_PARAMS = \
 	-DPLATFORM_TARGET=ios \
@@ -53,11 +56,13 @@ clean-osx:
 clean-ios:
 	rm -rf ${IOS_BUILD_DIR}
 
-android: check-ndk cmake-android ${ANDROID_BUILD_DIR}/Makefile android/build.xml
+android: install-android android/libs/${ANDROID_ARCH}/libtangram.so android/build.xml
+	ant -f android/build.xml debug
+
+install-android: check-ndk cmake-android ${ANDROID_BUILD_DIR}/Makefile
 	cd ${ANDROID_BUILD_DIR} && \
 	${MAKE} && \
 	${MAKE} install
-	ant -f android/build.xml debug
 
 cmake-android:
 	mkdir -p ${ANDROID_BUILD_DIR} 
