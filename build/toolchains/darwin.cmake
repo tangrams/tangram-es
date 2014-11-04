@@ -45,6 +45,6 @@ endfunction()
 
 function(build) 
 
-    add_executable(${EXECUTABLE_NAME} ${SOURCES})
+    add_executable(${EXECUTABLE_NAME} MACOSX_BUNDLE ${SOURCES} ${RESOURCES})
 
 endfunction()
