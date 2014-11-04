@@ -22,3 +22,5 @@
 
 void logMsg(const char* fmt, ...);
 
+int readInternalFile(const char* path, void*& buff, long& length);
+
