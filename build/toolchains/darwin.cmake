@@ -19,9 +19,14 @@ find_sources_and_include_directories(
     ${PROJECT_SOURCE_DIR}/osx/*.h 
     ${PROJECT_SOURCE_DIR}/osx/*.cpp)
 
+# locate resource files to include
+file(GLOB_RECURSE RESOURCES ${PROJECT_SOURCE_DIR}/osx/resources/**)
+file(GLOB_RECURSE CORE_RESOURCES ${PROJECT_SOURCE_DIR}/core/resources/**)
+list(APPEND RESOURCES ${CORE_RESOURCES})
+
 # link and build functions
 function(link_libraries)
-    
+
     find_library(OPENGL_FRAMEWORK OpenGL)
     find_library(COCOA_FRAMEWORK Cocoa)
     find_library(IOKIT_FRAMEWORK IOKit)
@@ -40,6 +45,11 @@ function(link_libraries)
     target_link_libraries(${EXECUTABLE_NAME} -lcurl) #use system libcurl
     target_link_libraries(${EXECUTABLE_NAME} ${PROJECT_SOURCE_DIR}/osx/precompiled/libtess2/libtess2.a)
     target_link_libraries(${EXECUTABLE_NAME} core ${GLFW_LIBRARIES})
+
+    # add resource files and property list
+    set_target_properties(${EXECUTABLE_NAME} PROPERTIES
+        MACOSX_BUNDLE_INFO_PLIST ${PROJECT_SOURCE_DIR}/osx/resources/tangram-Info.plist
+        RESOURCE "${RESOURCES}")
 
 endfunction()
 
