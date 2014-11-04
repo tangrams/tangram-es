@@ -117,33 +117,22 @@ void PolygonStyle::constructVertexLayout() {
 
 void PolygonStyle::constructShaderProgram() {
     
-    // TODO: Load shader sources from file
+    void* fileBuffer;
+    long fileLength;
     
-    std::string vertShaderSrcStr =
-        "#ifdef GL_ES\n"
-        "precision mediump float;\n"
-        "#endif\n"
-        "uniform mat4 u_modelViewProj;\n"
-        "uniform vec4 u_lightDirection;\n"
-        "attribute vec4 a_position;\n"
-        "attribute vec4 a_normal;\n"
-        "attribute vec4 a_color;\n"
-        "varying vec4 v_color;\n"
-        "void main() {\n"
-        "  float lit = dot(normalize(u_lightDirection), normalize(a_normal));\n"
-        "  v_color = a_color;\n"
-        "  v_color.rgb *= clamp(lit * 1.5, 0.5, 1.5);\n"
-        "  gl_Position = u_modelViewProj * a_position;\n"
-        "}\n";
+    std::string vertShaderSrcStr;
     
-    std::string fragShaderSrcStr =
-        "#ifdef GL_ES\n"
-        "precision mediump float;\n"
-        "#endif\n"
-        "varying vec4 v_color;\n"
-        "void main(void) {\n"
-        "  gl_FragColor = v_color;\n"
-        "}\n";
+    if (readInternalFile("polygon.vs", fileBuffer, fileLength) == 0) {
+        vertShaderSrcStr.assign((char*)fileBuffer, fileLength);
+        free(fileBuffer);
+    }
+    
+    std::string fragShaderSrcStr;
+    
+    if (readInternalFile("polygon.fs", fileBuffer, fileLength) == 0) {
+        fragShaderSrcStr.assign((char*)fileBuffer, fileLength);
+        free(fileBuffer);
+    }
     
     m_shaderProgram = std::make_shared<ShaderProgram>();
     m_shaderProgram->buildFromSourceStrings(fragShaderSrcStr, vertShaderSrcStr);
