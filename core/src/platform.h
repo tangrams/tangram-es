@@ -3,8 +3,8 @@
 #ifdef PLATFORM_ANDROID
 #include <GLES2/gl2.h>
 #include <GLES2/gl2ext.h>
-#include <android/log.h>
-#include <cstdarg>
+#include <jni.h>
+void setAssetManager(JNIEnv* _jniEnv, jobject _assetManager);
 #endif
 
 #ifdef PLATFORM_IOS
