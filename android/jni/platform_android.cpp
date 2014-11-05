@@ -24,26 +24,28 @@ void logMsg(const char* fmt, ...) {
 
 }
 
-int readInternalFile(const char* path, void*& buff, long& length) {
+std::string stringFromResource(const char* _path) {
 
-    // Open asset
-    AAsset* asset = AAssetManager_open(assetManager, path, AASSET_MODE_STREAMING);
+    std::string out;
     
-    // Get length of file
-    length = AAsset_getLength(asset);
-
-    // Read file
-    int bytesRead = AAsset_read(asset, buff, length);
+    // Open asset
+    AAsset* asset = AAssetManager_open(assetManager, _path, AASSET_MODE_STREAMING);
+    
+    // Allocate string
+    int length = AAsset_getLength(asset);
+    out.resize(length);
+    
+    // Read data
+    int read = AAsset_read(asset, &out.front(), length);
 
     // Clean up
     AAsset_close(asset);
 
-    if (bytesRead >= 0) {
-        return 0;
-    } else {
-        logMsg("Failed to open file at path: %s\n", path);
-        return -1;
+    if (read <= 0) {
+        logMsg("Failed to open file at path: %s\n", _path);
     }
+
+    return out;
 
 }
 

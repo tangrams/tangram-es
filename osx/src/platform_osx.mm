@@ -1,4 +1,4 @@
-#ifdef PLATFORM_IOS
+#ifdef PLATFORM_OSX
 
 #import <Foundation/Foundation.h>
 #import <utility>
@@ -6,12 +6,12 @@
 #include "platform.h"
 
 void logMsg(const char* fmt, ...) {
-
+    
     va_list args;
     va_start(args, fmt);
     vfprintf(stderr, fmt, args);
     va_end(args);
-
+    
 }
 
 NSString* resolveResourcePath(const char* _path) {
@@ -28,7 +28,7 @@ std::string stringFromResource(const char* _path) {
     NSString* str = [NSString stringWithContentsOfFile:path
                                               encoding:NSASCIIStringEncoding
                                                  error:NULL];
-
+    
     if (str == nil) {
         logMsg("Failed to read file at path: %s\n", _path);
         return std::move(std::string());
@@ -37,4 +37,4 @@ std::string stringFromResource(const char* _path) {
     return std::move(std::string([str UTF8String]));
 }
 
-#endif //PLATFORM_IOS
+#endif //PLATFORM_OSX

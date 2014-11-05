@@ -20,7 +20,8 @@ void setAssetManager(JNIEnv* _jniEnv, jobject _assetManager);
 #include <cstdarg>
 #endif
 
+#include <string>
+
 void logMsg(const char* fmt, ...);
 
-int readInternalFile(const char* path, void*& buff, long& length);
-
+std::string stringFromResource(const char* _path);

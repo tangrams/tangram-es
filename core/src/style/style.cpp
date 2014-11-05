@@ -117,22 +117,9 @@ void PolygonStyle::constructVertexLayout() {
 
 void PolygonStyle::constructShaderProgram() {
     
-    void* fileBuffer;
-    long fileLength;
+    std::string vertShaderSrcStr = stringFromResource("polygon.vs");
     
-    std::string vertShaderSrcStr;
-    
-    if (readInternalFile("polygon.vs", fileBuffer, fileLength) == 0) {
-        vertShaderSrcStr.assign((char*)fileBuffer, fileLength);
-        free(fileBuffer);
-    }
-    
-    std::string fragShaderSrcStr;
-    
-    if (readInternalFile("polygon.fs", fileBuffer, fileLength) == 0) {
-        fragShaderSrcStr.assign((char*)fileBuffer, fileLength);
-        free(fileBuffer);
-    }
+    std::string fragShaderSrcStr = stringFromResource("polygon.fs");
     
     m_shaderProgram = std::make_shared<ShaderProgram>();
     m_shaderProgram->buildFromSourceStrings(fragShaderSrcStr, vertShaderSrcStr);
