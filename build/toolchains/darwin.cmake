@@ -15,9 +15,12 @@ add_subdirectory(${PROJECT_SOURCE_DIR}/core)
 include_recursive_dirs(${PROJECT_SOURCE_DIR}/core/src/*.h)
 
 # add sources and include headers
-find_sources_and_include_directories(
-    ${PROJECT_SOURCE_DIR}/osx/*.h 
-    ${PROJECT_SOURCE_DIR}/osx/*.cpp)
+set(OSX_EXTENSIONS_FILES *.mm *.cpp)
+foreach(_ext ${OSX_EXTENSIONS_FILES})
+    find_sources_and_include_directories(
+        ${PROJECT_SOURCE_DIR}/osx/src/*.h 
+        ${PROJECT_SOURCE_DIR}/osx/src/${_ext})
+endforeach()
 
 # locate resource files to include
 file(GLOB_RECURSE RESOURCES ${PROJECT_SOURCE_DIR}/osx/resources/**)
