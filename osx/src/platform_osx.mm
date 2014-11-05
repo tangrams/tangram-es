@@ -2,6 +2,8 @@
 
 #import <Foundation/Foundation.h>
 #import <utility>
+#import <cstdio>
+#import <cstdarg>
 
 #include "platform.h"
 
