@@ -3,12 +3,10 @@
 #include "json/json.h"
 
 #include <string>
-#include <vector>
 #include <map>
 #include <memory>
 
 #include "util/tileID.h"
-#include "platform.h"
 
 //Todo: Impelement TileData, a generic datastore for all tile formats,
 //Have an instance of this in DataSource

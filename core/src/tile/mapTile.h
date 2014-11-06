@@ -3,7 +3,6 @@
 #include <unordered_map>
 #include <memory>
 
-#include "glm/fwd.hpp"
 #include "glm/glm.hpp"
 
 #include "util/vboMesh.h"

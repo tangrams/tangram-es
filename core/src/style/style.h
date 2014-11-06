@@ -7,8 +7,8 @@
 #include "util/vertexLayout.h"
 #include "util/shaderProgram.h"
 #include "util/projection.h"
+#include "tile/mapTile.h"
 #include "platform.h"
-#include "mapTile/mapTile.h"
 
 #include "json/json.h"
 

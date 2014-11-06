@@ -5,15 +5,14 @@
 #include <memory>
 #include <future>
 
-#include "glm/fwd.hpp"
 #include "glm/glm.hpp"
 
 #include "util/tileID.h"
-#include "dataSource/dataSource.h"
+#include "data/dataSource.h"
 
-class SceneDefinition;
+class Scene;
 class MapTile;
-class ViewModule;
+class View;
 
 /* Singleton container of <MapTile>s
  *
@@ -35,10 +34,10 @@ public:
     virtual ~TileManager();
 
     /* Sets the view for which the TileManager will maintain tiles */
-    void setView(std::shared_ptr<ViewModule> _view) { m_viewModule = _view; }
+    void setView(std::shared_ptr<View> _view) { m_view = _view; }
 
-    /* Sets the scene defintion which the TileManager will use to style tiles */
-    void setSceneDefinition(std::shared_ptr<SceneDefinition> _sceneDef) { m_sceneDefinition = _sceneDef; }
+    /* Sets the scene which the TileManager will use to style tiles */
+    void setScene(std::shared_ptr<Scene> _scene) { m_scene = _scene; }
 
     /* Adds a <DataSource> from which tile data should be retrieved */
     void addDataSource(std::unique_ptr<DataSource> _source) { m_dataSources.push_back(std::move(_source)); }
@@ -57,8 +56,8 @@ private:
 
     TileManager();
 
-    std::shared_ptr<ViewModule> m_viewModule;
-    std::shared_ptr<SceneDefinition> m_sceneDefinition;
+    std::shared_ptr<View> m_view;
+    std::shared_ptr<Scene> m_scene;
 
     std::map<TileID, std::unique_ptr<MapTile>> m_tileSet;
 
