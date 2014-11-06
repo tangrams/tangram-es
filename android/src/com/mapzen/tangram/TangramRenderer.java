@@ -14,10 +14,18 @@ public class TangramRenderer implements GLSurfaceView.Renderer {
 
 	private static native void init();
 	private static native void resize(int width, int height);
+	private static native void update(float dt);
 	private static native void render();
+
+	private long time = System.nanoTime();
 
 	public void onDrawFrame(GL10 gl) 
 	{
+		long newTime = System.nanoTime();
+		float delta = (newTime - time) / 1000000000.0f;
+		time = newTime;
+
+		update(delta);
 		render();
 	}
 

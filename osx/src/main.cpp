@@ -1,10 +1,11 @@
 #define GLFW_INCLUDE_ES2
 
 #include "tangram.h"
+#include "platform.h"
 
 void window_size_callback(GLFWwindow* window, int width, int height)
 {
-    resizeViewport(width, height);
+    Tangram::resize(width, height);
 }
 
 int main(void)
@@ -28,16 +29,23 @@ int main(void)
     /* Make the window's context current */
     glfwMakeContextCurrent(window);
 
-    initializeOpenGL();
-    resizeViewport(width, height);
+    Tangram::initialize();
+    Tangram::resize(width, height);
 
     glfwSetWindowSizeCallback(window, window_size_callback);
+    
+    double lastTime = glfwGetTime();
 
     /* Loop until the user closes the window */
     while (!glfwWindowShouldClose(window))
     {
+        double currentTime = glfwGetTime();
+        double delta = currentTime - lastTime;
+        lastTime = currentTime;
+        
         /* Render here */
-        renderFrame();
+        Tangram::update(delta);
+        Tangram::render();
 
         /* Swap front and back buffers */
         glfwSwapBuffers(window);
@@ -45,7 +53,8 @@ int main(void)
         /* Poll for and process events */
         glfwPollEvents();
     }
-
+    
+    Tangram::teardown();
     glfwTerminate();
     return 0;
 }
