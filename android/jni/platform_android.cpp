@@ -7,11 +7,15 @@
 #include <android/asset_manager_jni.h>
 #include <cstdarg>
 
-AAssetManager* assetManager;
+static AAssetManager* assetManager;
 
 void setAssetManager(JNIEnv* _jniEnv, jobject _assetManager) {
 
     assetManager = AAssetManager_fromJava(_jniEnv, _assetManager);
+
+    if (assetManager == nullptr) {
+        logMsg("ERROR: Could not obtain Asset Manager reference\n");
+    }
 
 }
 
@@ -31,6 +35,11 @@ std::string stringFromResource(const char* _path) {
     // Open asset
     AAsset* asset = AAssetManager_open(assetManager, _path, AASSET_MODE_STREAMING);
     
+    if (asset == nullptr) {
+        logMsg("Failed to open asset at path: %s\n", _path);
+        return out;
+    }
+
     // Allocate string
     int length = AAsset_getLength(asset);
     out.resize(length);
@@ -42,7 +51,7 @@ std::string stringFromResource(const char* _path) {
     AAsset_close(asset);
 
     if (read <= 0) {
-        logMsg("Failed to open file at path: %s\n", _path);
+        logMsg("Failed to read asset at path: %s\n", _path);
     }
 
     return out;
