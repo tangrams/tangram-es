@@ -1,4 +1,5 @@
-#ifdef PLATFORM_OSX
+#include <cstdio>
+#include <cstdarg>
 
 #include "platform.h"
 
@@ -10,5 +11,3 @@ void logMsg(const char* fmt, ...) {
     va_end(args);
 
 }
-
-#endif

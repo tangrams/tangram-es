@@ -2,6 +2,7 @@
 
 #include "tangram.h"
 #include "platform.h"
+#include "gl.h"
 
 void window_size_callback(GLFWwindow* window, int width, int height)
 {

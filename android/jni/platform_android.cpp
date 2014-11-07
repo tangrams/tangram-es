@@ -1,6 +1,7 @@
-#ifdef PLATFORM_ANDROID
-
 #include "platform.h"
+
+#include <android/log.h>
+#include <cstdarg>
 
 void logMsg(const char* fmt, ...) {
 
@@ -10,5 +11,3 @@ void logMsg(const char* fmt, ...) {
     va_end(args);
 
 }
-
-#endif

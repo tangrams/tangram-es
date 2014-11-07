@@ -9,6 +9,7 @@
 #include "util/mapProjection.h"
 #include "tile/mapTile.h"
 #include "platform.h"
+#include "gl.h"
 
 #include "json/json.h"
 
