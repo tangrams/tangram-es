@@ -6,7 +6,7 @@
 #include "glm/glm.hpp"
 
 #include "util/vboMesh.h"
-#include "util/projection.h"
+#include "util/mapProjection.h"
 
 class Style;
 struct TileID;

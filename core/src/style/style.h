@@ -6,7 +6,7 @@
 
 #include "util/vertexLayout.h"
 #include "util/shaderProgram.h"
-#include "util/projection.h"
+#include "util/mapProjection.h"
 #include "tile/mapTile.h"
 #include "platform.h"
 

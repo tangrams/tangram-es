@@ -9,7 +9,7 @@
 #include <glm/glm.hpp>
 #include <glm/gtc/matrix_transform.hpp>
 
-#include "util/projection.h"
+#include "util/mapProjection.h"
 #include "util/tileID.h"
 
 /* ViewModule
