@@ -30,7 +30,10 @@ set(FRAMEWORKS CoreGraphics CoreFoundation QuartzCore UIKit OpenGLES Security CF
 set(MACOSX_BUNDLE_GUI_IDENTIFIER "com.mapzen.\${PRODUCT_NAME:Tangram}")
 set(APP_TYPE MACOSX_BUNDLE)
 set(CORE_LIB_DEPS ${CMAKE_SOURCE_DIR}/ios/precompiled/libcurl/libcurl.a)
-file(GLOB_RECURSE RESOURCES ${PROJECT_SOURCE_DIR}/ios/resources/*.storyboard)
+
+file(GLOB_RECURSE RESOURCES ${PROJECT_SOURCE_DIR}/ios/resources/**)
+file(GLOB_RECURSE CORE_RESOURCES ${PROJECT_SOURCE_DIR}/core/resources/**)
+list(APPEND RESOURCES ${CORE_RESOURCES})
 
 # load core library
 include_directories(${PROJECT_SOURCE_DIR}/core/include/)
