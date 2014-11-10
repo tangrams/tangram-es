@@ -25,7 +25,14 @@ public:
     void loadStyles();
 
     void onResize(int _newWidth, int _newHeight);
+    
+    void onTap(const glm::vec2& _point);
+    
+    void onDoubleTap(const glm::vec2& _point);
 
+    void onPan(const glm::vec2& _velocity);
+    void onPinch(const glm::vec2& _position1, const float& _scale);
+    
     void update(float _dt);
 
     void renderFrame();

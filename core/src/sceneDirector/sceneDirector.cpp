@@ -91,3 +91,25 @@ void SceneDirector::renderFrame() {
     }
 
 }
+
+void SceneDirector::onTap(const glm::vec2& _position) {
+    logMsg("Do tap: (%f,%f)\n", _position.x, _position.y);
+    m_viewModule->translate(_position.x, _position.y);
+}
+
+void SceneDirector::onDoubleTap(const glm::vec2& _position) {
+    logMsg("Do double tap: (%f,%f)\n", _position.x, _position.y);
+}
+
+void SceneDirector::onPan(const glm::vec2& _velocity) {
+    float invVelLen = 1.0/_velocity.length();
+    glm::vec2 normalVel = glm::vec2(_velocity.x * invVelLen,
+                                     _velocity.y * invVelLen);
+    
+    m_viewModule->translate(normalVel.x*0.5, normalVel.y*0.5);
+    logMsg("Pan Velocity: (%f,%f)\tPan Normalized Velocity: (%f,%f)\n", _velocity.x, _velocity.y, normalVel.x, normalVel.y);
+}
+
+void SceneDirector::onPinch(const glm::vec2& _position1, const float& _scale) {
+    logMsg("Do pinch, pos1: (%f, %f)\tscale: (%f)\n", _position1.x, _position1.y, _scale);
+}
