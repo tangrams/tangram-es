@@ -38,3 +38,25 @@ void renderFrame()
     }
 
 }
+
+void handleGestures(Tangram::Gestures _gesture, const glm::vec2 _posOrVel1, const float _scale) {
+    switch(_gesture) {
+        case Tangram::Gestures::Tap:
+            sceneDirector->onTap(_posOrVel1);
+            break;
+        case Tangram::Gestures::DoubleTap:
+            sceneDirector->onDoubleTap(_posOrVel1);
+            break;
+        case Tangram::Gestures::Pan:
+            sceneDirector->onPan(_posOrVel1);
+            break;
+        case Tangram::Gestures::Pinch:
+            sceneDirector->onPinch(_posOrVel1, _scale);
+            break;
+        case Tangram::Gestures::Invalid:
+        default:
+            logMsg("Gesture state invalid.\n");
+            break;
+    }
+
+}
