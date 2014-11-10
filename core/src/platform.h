@@ -1,6 +1,5 @@
 #pragma once
 
-void logMsg(const char* fmt, ...);
 #ifdef PLATFORM_ANDROID
 struct _JNIEnv;
 typedef _JNIEnv JNIEnv;
