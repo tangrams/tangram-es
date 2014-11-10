@@ -18,7 +18,9 @@ OSX_BUILD_DIR = build/osx
 IOS_BUILD_DIR = build/ios
 
 TOOLCHAIN_DIR = build/toolchains
+OSX_TARGET = tangram
 IOS_TARGET = tangram
+OSX_XCODE_PROJ = tangram.xcodeproj
 IOS_XCODE_PROJ = tangram.xcodeproj
 
 ifndef ANDROID_ARCH
@@ -40,7 +42,8 @@ IOS_CMAKE_PARAMS = \
 	-G Xcode
 
 DARWIN_CMAKE_PARAMS = \
-	-DPLATFORM_TARGET=darwin
+	-DPLATFORM_TARGET=darwin \
+	-G Xcode
 
 clean: clean-android clean-osx clean-ios
 
@@ -69,9 +72,8 @@ cmake-android:
 	cd ${ANDROID_BUILD_DIR} && \
 	cmake ../.. ${ANDROID_CMAKE_PARAMS}
 
-osx: cmake-osx ${OSX_BUILD_DIR}/Makefile
-	cd ${OSX_BUILD_DIR} && \
-	${MAKE}
+osx: cmake-osx ${OSX_BUILD_DIR}/${OSX_XCODE_PROJ}
+	xcodebuild -target ${OSX_TARGET} -project ${OSX_BUILD_DIR}/${OSX_XCODE_PROJ}
 
 cmake-osx: 
 	mkdir -p ${OSX_BUILD_DIR} 
