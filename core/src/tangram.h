@@ -1,17 +1,6 @@
 #pragma once
 
-#include <stdlib.h>
-#include <assert.h>
-#include <math.h>
-#include <memory>
-
-#include "platform.h"
-#include "sceneDirector/sceneDirector.h"
-#include "util/shaderProgram.h"
-#include "util/vertexLayout.h"
-#include "util/vboMesh.h"
-
-/* Tangram C API
+/* Tangram API
  *
  * Primary interface for controlling and managing the lifecycle of a Tangram map surface
  * 
@@ -19,12 +8,22 @@
  * TODO: Input functions will go here too, things like onTouchDown, onTouchMove, etc.
  */
 
+namespace Tangram {
+
 // Create resources and initialize the map view
-void initializeOpenGL();
+void initialize();
 
 // Resize the map view to a new width and height (in pixels)
-void resizeViewport(int newWidth, int newHeight);
+void resize(int _newWidth, int _newHeight);
+
+// Update the map state with the time interval since the last update
+void update(float _dt);
 
 // Render a new frame of the map view (if needed)
-// TODO: Pass in the time step from the client application
-void renderFrame();
+void render();
+
+// Release resources and shut down renderer
+void teardown();
+
+}
+

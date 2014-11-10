@@ -4,6 +4,7 @@
 #include <curl/curl.h>
 
 #include "dataSource.h"
+#include "platform.h"
 
 //---- DataSource Implementation----
 

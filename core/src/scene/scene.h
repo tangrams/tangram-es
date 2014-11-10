@@ -7,9 +7,9 @@
 
 /* Singleton container of <Style> information
  *
- * SceneDefinition is a singleton containing the styles, lighting, and interactions defining a map scene 
+ * Scene is a singleton containing the styles, lighting, and interactions defining a map scene 
  */
-class SceneDefinition {
+class Scene {
 
 public:
     

@@ -1,7 +1,7 @@
 #include "tileManager.h"
-#include "sceneDefinition/sceneDefinition.h"
-#include "mapTile/mapTile.h"
-#include "viewModule/viewModule.h"
+#include "scene/scene.h"
+#include "tile/mapTile.h"
+#include "view/view.h"
 
 #include <chrono>
 
@@ -9,7 +9,7 @@ TileManager::TileManager() {
 }
 
 TileManager::TileManager(TileManager&& _other) :
-    m_viewModule(std::move(_other.m_viewModule)),
+    m_view(std::move(_other.m_view)),
     m_tileSet(std::move(_other.m_tileSet)),
     m_dataSources(std::move(_other.m_dataSources)),
     m_incomingTiles(std::move(_other.m_incomingTiles)) {
@@ -48,13 +48,13 @@ bool TileManager::updateTileSet() {
         }
     }
 
-    if (!(m_viewModule->viewChanged()) && !tileSetChanged) {
+    if (!(m_view->viewChanged()) && !tileSetChanged) {
         // No new tiles have come into view and no tiles have finished loading, 
         // so the tileset is unchanged
         return false;
     }
 
-    const std::set<TileID>& visibleTiles = m_viewModule->getVisibleTiles();
+    const std::set<TileID>& visibleTiles = m_view->getVisibleTiles();
 
     auto tileSetIter = m_tileSet.begin();
     auto visTilesIter = visibleTiles.begin();
@@ -104,7 +104,7 @@ void TileManager::addTile(const TileID& _tileID) {
 
     std::future<MapTile*> incoming = std::async(std::launch::async, [&](TileID _id) {
 
-        MapTile* tile = new MapTile(_id, m_viewModule->getMapProjection());
+        MapTile* tile = new MapTile(_id, m_view->getMapProjection());
 
         for (const auto& source : m_dataSources) {
             
@@ -115,8 +115,8 @@ void TileManager::addTile(const TileID& _tileID) {
             
             std::shared_ptr<Json::Value> json = source->getTileData(_id);
             
-            for (auto& style : m_sceneDefinition->getStyles()) {
-                style->addData(*json, *tile, m_viewModule->getMapProjection());
+            for (auto& style : m_scene->getStyles()) {
+                style->addData(*json, *tile, m_view->getMapProjection());
             }
             
         }

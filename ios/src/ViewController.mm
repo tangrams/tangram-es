@@ -68,29 +68,29 @@
 {
     [EAGLContext setCurrentContext:self.context];
     
-    initializeOpenGL();
+    Tangram::initialize();
     
     int width = self.view.bounds.size.width;
     int height = self.view.bounds.size.height;
-    resizeViewport(width, height);
+    Tangram::resize(width, height);
 }
 
 - (void)tearDownGL
 {
     [EAGLContext setCurrentContext:self.context];
-    
+    Tangram::teardown();
 }
 
 #pragma mark - GLKView and GLKViewController delegate methods
 
 - (void)update
 {
-    
+    Tangram::update([self timeSinceLastUpdate]);
 }
 
 - (void)glkView:(GLKView *)view drawInRect:(CGRect)rect
 {
-    renderFrame();
+    Tangram::render();
 }
 
 @end
