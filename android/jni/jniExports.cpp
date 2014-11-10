@@ -1,6 +1,8 @@
 
 #include <jni.h>
 #include "tangram.h"
+// Includes platform.h for setAssetManager reference
+#include "platform.h"
 
 extern "C" {
 	JNIEXPORT void JNICALL Java_com_mapzen_tangram_TangramRenderer_init(JNIEnv* jniEnv, jobject obj, jobject assetManager) 
