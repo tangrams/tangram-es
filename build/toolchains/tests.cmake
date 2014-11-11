@@ -16,9 +16,11 @@ set(OSX_PLATFORM_SRC ${PROJECT_SOURCE_DIR}/osx/src/platform_osx.mm)
 
 find_library(OPENGL_FRAMEWORK OpenGL)
 find_library(CORE_FOUNDATION_FRAMEWORK CoreFoundation)
-    
+find_library(COCOA_FRAMEWORK Cocoa)
+
 list(APPEND OSX_LIBRARIES 
     ${OPENGL_FRAMEWORK} 
+    ${COCOA_FRAMEWORK}
     ${CORE_FOUNDATION_FRAMEWORK})
 
 file(GLOB TEST_SOURCES unitTests/tests/*.cpp)
