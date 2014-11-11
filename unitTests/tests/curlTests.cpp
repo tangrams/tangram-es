@@ -1,11 +1,12 @@
+#define CATCH_CONFIG_MAIN 
 #include "catch/catch.hpp"
 
 #include <iostream>
 
-#include "dataSource/dataSource.h"
-#include "mapTile/mapTile.h"
+#include "dataSource.h"
+#include "mapTile.h"
 #include "glm/glm.hpp"
-#include "util/tileID.h"
+#include "tileID.h"
 
 
 TEST_CASE( "URL Name Check for MapzenVectorTileJson", "[CURL][DataSource][MapzenVectorTileJson]" ) {
