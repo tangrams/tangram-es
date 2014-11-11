@@ -23,7 +23,7 @@ list(APPEND OSX_LIBRARIES
     ${COCOA_FRAMEWORK}
     ${CORE_FOUNDATION_FRAMEWORK})
 
-file(GLOB TEST_SOURCES unitTests/tests/*.cpp)
+file(GLOB TEST_SOURCES tests/unit/*.cpp)
 
 # create an executable per test
 foreach(_src_file_path ${TEST_SOURCES})
