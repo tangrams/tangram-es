@@ -16,6 +16,7 @@ all: android osx ios
 ANDROID_BUILD_DIR = build/android
 OSX_BUILD_DIR = build/osx
 IOS_BUILD_DIR = build/ios
+TEST_BUILD_DIR = build/tests
 
 TOOLCHAIN_DIR = build/toolchains
 OSX_TARGET = tangram
@@ -26,6 +27,9 @@ IOS_XCODE_PROJ = tangram.xcodeproj
 ifndef ANDROID_ARCH
 	ANDROID_ARCH = x86
 endif
+
+TEST_CMAKE_PARAMS = \
+	-DTEST=1
 
 ANDROID_CMAKE_PARAMS = \
 	-DPLATFORM_TARGET=android \
@@ -45,7 +49,7 @@ DARWIN_CMAKE_PARAMS = \
 	-DPLATFORM_TARGET=darwin \
 	-G Xcode
 
-clean: clean-android clean-osx clean-ios
+clean: clean-android clean-osx clean-ios clean-test
 
 clean-android:
 	ndk-build -C android/jni clean
@@ -58,6 +62,9 @@ clean-osx:
 
 clean-ios:
 	rm -rf ${IOS_BUILD_DIR}
+
+clean-test:
+	rm -rf ${TEST_BUILD_DIR}
 
 android: install-android android/libs/${ANDROID_ARCH}/libtangram.so android/build.xml
 	ant -f android/build.xml debug
@@ -89,6 +96,12 @@ ifeq ($(wildcard ${IOS_BUILD_DIR}/${IOS_XCODE_PROJ}/.*),)
 	cd ${IOS_BUILD_DIR} && \
 	cmake ../.. ${IOS_CMAKE_PARAMS}
 endif
+
+test:
+	mkdir -p ${TEST_BUILD_DIR} 
+	cd ${TEST_BUILD_DIR} && \
+	cmake ../.. ${TEST_CMAKE_PARAMS} && \
+	${MAKE}
 
 check-ndk:
 ifndef ANDROID_NDK
