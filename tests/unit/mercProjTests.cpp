@@ -1,10 +1,11 @@
+#define CATCH_CONFIG_MAIN 
 #include "catch/catch.hpp"
 
 #include <iostream>
 #include <iomanip>
 
 #include "glm/glm.hpp"
-#include "util/projection.h"
+#include "mapProjection.h"
 
 #include <stdio.h>
 
