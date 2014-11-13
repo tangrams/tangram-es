@@ -82,6 +82,7 @@
     // Get the location of the tap
     CGPoint location = [tapRecognizer locationInView:self.view];
     CGPoint viewCenter = tapRecognizer.view.center;
+    logMsg("%f,%f\n", viewCenter.x, viewCenter.y);
     //handleGestures(Tangram::Gesturestures::Invalid);
     handleGestures(Tangram::Gestures::Tap, glm::vec2(location.x - viewCenter.x, -(location.y - viewCenter.y)));
 }
