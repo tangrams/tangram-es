@@ -5,7 +5,7 @@
 #include <map>
 #include <memory>
 
-#include "util/tileID.h"
+#include "tileID.h"
 #include "tileData.h"
 #include "mapTile.h"
 
@@ -16,7 +16,7 @@ protected:
     /* Map of tileIDs to data for that tile */
     std::map< TileID, std::shared_ptr<TileData> > m_tileStore;
     
-    /* Function by which a dataSource parses an I/O response into TileData */
+    /* Parse an I/O response into a <TileData>, returning an empty TileData on failure */
     virtual std::shared_ptr<TileData> parse(const MapTile& _tile, std::stringstream& _in) = 0;
     
 public:
@@ -56,8 +56,6 @@ protected:
 
     /* Constructs the URL of a tile using <m_urlTemplate> */
     virtual std::unique_ptr<std::string> constructURL(const TileID& _tileCoord);
-    
-    //virtual std::shared_ptr<TileData> parse(const MapTile& _tile, std::stringstream& _in) override;
 
 public:
 

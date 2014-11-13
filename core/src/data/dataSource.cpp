@@ -13,10 +13,8 @@ bool DataSource::hasTileData(const TileID& _tileID) {
 
 std::shared_ptr<TileData> DataSource::getTileData(const TileID& _tileID) {
     
-    // TODO: implement sensible caching, instead of immediately discarding all data
     if (hasTileData(_tileID)) {
         std::shared_ptr<TileData> tileData = m_tileStore[_tileID];
-        m_tileStore.erase(_tileID);
         return tileData;
     } else {
         return nullptr;
@@ -110,11 +108,6 @@ bool NetworkDataSource::loadTileData(const MapTile& _tile) {
     
     return success;
 }
-
-/*std::shared_ptr<TileData> NetworkDataSource::parse(const MapTile& _tile, std::stringstream& _in) {
-    // No-op
-    return std::make_shared<TileData>();
-}*/
 
 //---- MapzenVectorTileJson Implementation----
 
