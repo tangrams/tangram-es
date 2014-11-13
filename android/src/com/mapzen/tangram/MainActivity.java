@@ -7,6 +7,10 @@ import android.view.View;
 import android.view.Window;
 import android.util.Log;
 
+import android.support.v4.view.GestureDetectorCompat;
+import android.view.ScaleGestureDetector;
+import android.view.MotionEvent;
+
 import javax.microedition.khronos.egl.EGL10;
 import javax.microedition.khronos.egl.EGLConfig;
 import javax.microedition.khronos.egl.EGLContext;
@@ -16,21 +20,34 @@ public class MainActivity extends Activity
 {
 
     private GLSurfaceView view;
+    private GestureDetectorCompat detector;
+    private ScaleGestureDetector scaleDetector;
 
     @Override
     public void onCreate(Bundle savedInstanceState)
     {
-        
         super.onCreate(savedInstanceState);
-        
+
         requestWindowFeature(Window.FEATURE_NO_TITLE);
 
 		view = new GLSurfaceView(getApplication());
 		view.setEGLContextClientVersion(2);
         view.setEGLConfigChooser(8,8,8,8,16,0);
-		view.setRenderer(new TangramRenderer());
+        Tangram tangram = new Tangram();
+		view.setRenderer(tangram);
 		setContentView(view);
+        //create an instance of gesture detector using custom gestureListener
+        detector = new GestureDetectorCompat(this, tangram);
+        scaleDetector = new ScaleGestureDetector(this, tangram);
+    }
 
+    @Override 
+    public boolean onTouchEvent(MotionEvent event) 
+    { 
+        //Pass the event to gestureDetector and scaleDetector
+        this.scaleDetector.onTouchEvent(event);
+        this.detector.onTouchEvent(event);
+        return super.onTouchEvent(event);
     }
 
     @Override
@@ -48,3 +65,4 @@ public class MainActivity extends Activity
 	}
 
 }
+
