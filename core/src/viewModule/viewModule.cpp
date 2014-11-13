@@ -9,7 +9,8 @@ ViewModule::ViewModule(float _width, float _height, ProjectionType _projType) {
     
     // Set up projection matrix based on input width and height with an arbitrary zoom
     setAspect(_width, _height);
-    setZoom(16); // Arbitrary zoom for testing
+    m_zoom = 16;
+    setZoom(m_zoom); // Arbitrary zoom for testing
 
     // Set up view matrix
     m_pos = glm::dvec3(0, 0, 1000); // Start at 0 to begin
@@ -63,9 +64,16 @@ void ViewModule::translate(double _dx, double _dy) {
 
 }
 
+void ViewModule::incZoom(int _z) {
+    setZoom(m_zoom + _z);
+}
+
 void ViewModule::setZoom(int _z) {
 
     // Calculate viewport dimensions
+    if(_z > s_maxZoom) {
+        _z = s_maxZoom;
+    }
     m_zoom = _z;
     float tileSize = 2 * MapProjection::HALF_CIRCUMFERENCE * pow(2, -m_zoom);
     m_height = 3 * tileSize; // Set viewport size to ~3 tiles vertically

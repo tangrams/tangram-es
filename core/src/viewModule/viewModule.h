@@ -37,6 +37,7 @@ public:
     void setAspect(float _width, float _height);
     void setPosition(double _x, double _y);
     void setZoom(int _z);
+    void incZoom(int _z);
     void translate(double _dx, double _dy);
     void zoom(int _dz);
 
@@ -53,6 +54,8 @@ public:
     virtual ~ViewModule() {
         m_visibleTiles.clear();
     }
+    
+    static const int s_maxZoom = 18;
 
 private:
 
