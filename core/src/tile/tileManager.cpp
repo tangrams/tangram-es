@@ -109,14 +109,14 @@ void TileManager::addTile(const TileID& _tileID) {
         for (const auto& source : m_dataSources) {
             
             logMsg("Loading tile [%d, %d, %d]\n", _id.z, _id.x, _id.y);
-            if ( ! source->loadTile(_id)) {
-                logMsg("New tile loading failed ... Timeout??\n");
+            if ( ! source->loadTileData(*tile)) {
+                logMsg("ERROR: Loading failed for tile [%d, %d, %d]\n", _id.z, _id.x, _id.y);
             }
             
-            std::shared_ptr<Json::Value> json = source->getTileData(_id);
+            std::shared_ptr<TileData> tileData = source->getTileData(_id);
             
             for (auto& style : m_scene->getStyles()) {
-                style->addData(*json, *tile, m_view->getMapProjection());
+                style->addData(*tileData, *tile, m_view->getMapProjection());
             }
             
         }

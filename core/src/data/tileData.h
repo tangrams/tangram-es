@@ -1,68 +1,52 @@
 #pragma once
 
 #include <vector>
+#include <string>
 #include <unordered_map>
+#include "glm/glm.hpp"
 
 /* Notes on TileData implementation:
 
 Tile Coordinates:
 
-  A point in the geometry of a tile can be represented with adequate precision using short integers for each dimension.
-  (Truthfully, if a tile is meant to represent 256 x 256 pixels on a screen we could use a char, but this can be a future 
-  optimization.) The 2D area of a tile could be intuitively parameterized by assigning coordinates relative to one corner
-  and assuming positive values along each axis, however the way that our tile data is currently served won't allow this 
-  very easily. The geometry we receive from the server does not always fit precisely within the bounds of the tile area, 
-  so our geometry coordinates must be able to address locations outside of the tile area to some degree. For practical
-  purposes, we can assume that geometry will not be more than 1 tile size unit away from the edge of its containing tile. 
-  Given this constraint, it is actually a better use of our range of numerical precision to use the centers of tiles as 
-  the origin of our coordinates. 
+  A point in the geometry of a tile is represented with 32-bit floating point x, y, and z coordinates. Coordinates represent
+  normalized displacement from the origin (i.e. center) of a tile.
 
-  Our tile-local coordinate system is illustrated below:
+  (-1.0, 1.0) -------------------- (1.0, 1.0)
+             |                    |
+             |      +y ^          |
+             |         | (0, 0)   |
+             |       ----- > +x   |
+             |         |          |
+             |                    |
+             |                    |
+  (-1.0, -1.0)-------------------- (1.0, -1.0)
 
-  (-8192, 8192) -------------------- (8192, 8192)
-               |                    |
-               |      +y ^          |
-               |         | (0, 0)   |
-               |       ----- > +x   |
-               |         |          |
-               |                    |
-               |                    |
-  (-8192, -8192)-------------------- (8192, -8192)
-
-  Using signed short integers for local coordinates, this allows plenty of precision within a tile while also accurately
-  representing points that falls outside the tile boundaries by up to 1.5 tile-lengths (coordinate range -32768 to 32767).
+  Coordinates that fall outside the range [-1.0, 1.0] are permissible, as tile servers may chose not to clip certain geometries
+  to tile boundaries, but in the future these points may be clipped in the client-side geometry processing. 
+ 
+  Z coordinates are expected to be normalized to the same scale as x asnd y coordinates.
 
 Data heirarchy:
 
-  TileData is a heirarchical container of structs. 
+  TileData is a heirarchical container of structs modeled after the geoJSON spec: http://geojson.org/geojson-spec.html
 
-    TileData
-    {
-        Layer1
-        {
-            Feature1
-            Feature2
-            ...
-        }
-        Layer2
-        ...
-    }
-
-  At the top level, a TileData contains a list of Layer structs. 
-
-  Layer
-  {
-    String name;
-    Features...
-  }
-
-  A Layer contains a string containing its name and a list of Feature structs.
-
-  Feature
-  {
-    PList props;
-    Geometry geometry;
-  }
+  A <TileData> contains a collection of <Layer>s
+ 
+  A <Layer> contains a name and a collection of <Feature>s
+ 
+  A <Feature> contains a <GeometryType> denoting what variety of geometry is contained in the feature, a <Properties> struct
+  describing the feature, and one collection each of <Point>s, <Line>s, and <Polygon>s. Only the geometry collection corresponding
+  to the feature's geometryType should contain data. 
+ 
+  A <Properties> contains two key-value maps, one for string properties and one for numeric (floating point) properties. 
+ 
+  A <Polygon> is a collection of <Line>s representing the contours of a polygon. Contour winding rules follow the conventions of
+  the OpenGL red book described here: http://www.glprogramming.com/red/chapter11.html
+ 
+  A <Line> is a collection of <Point>s.
+ 
+  A <Point> is 3 32-bit floating point coordinates representing x, y, and z (in that order).
 
 */
 
@@ -70,15 +54,9 @@ enum GeometryType {
     POINTS,
     LINES,
     POLYGONS
-}
-
-struct Point {
-    
-    Point (signed short _x = 0, signed short _y = 0): x(_x), y(_y) {}
-    
-    signed short x;
-    signed short y;
 };
+
+typedef glm::vec3 Point;
 
 typedef std::vector<Point> Line;
 
@@ -87,13 +65,13 @@ typedef std::vector<Line> Polygon;
 struct Properties {
     
     std::unordered_map<std::string, std::string> stringProps;
-    std::unordered_map<std::string, float> numericalProps;
+    std::unordered_map<std::string, float> numericProps;
     
 };
 
 struct Feature {
     
-    GeometryType geometryType;
+    GeometryType geometryType = GeometryType::POLYGONS;
     
     std::vector<Point> points;
     std::vector<Line> lines;
@@ -105,6 +83,8 @@ struct Feature {
 
 struct Layer {
     
+    Layer(const std::string& _name) : name(_name) {}
+    
     std::string name;
     
     std::vector<Feature> features;
@@ -112,8 +92,6 @@ struct Layer {
 };
 
 struct TileData {
-    
-    const static signed short extent = 8192;
     
     std::vector<Layer> layers;
     

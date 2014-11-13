@@ -25,10 +25,19 @@ public:
     virtual ~MapTile();
 
     /* Returns the immutable <TileID> of this tile */
-    const TileID& getID() const { return m_id; };
+    const TileID& getID() const { return m_id; }
 
-    /* Returns the lower left corner of the tile area in projection units */
-    const glm::dvec2& getOrigin() const { return m_tileOrigin; };
+    /* Returns the center of the tile area in projection units */
+    const glm::dvec2& getOrigin() const { return m_tileOrigin; }
+    
+    /* Returns the map projection with which this tile interprets coordinates */
+    const MapProjection* getProjection() const { return m_projection; }
+    
+    /* Returns the length of a side of this tile in projection units */
+    float getScale() const { return m_scale; }
+    
+    /* Returns the reciprocal of <getScale()> */
+    float getInverseScale() const { return m_inverseScale; }
 
     /* Adds drawable geometry to the tile and associates it with a <Style> 
      * 
@@ -43,8 +52,14 @@ public:
 private:
 
     TileID m_id;
+    
+    const MapProjection* m_projection = nullptr;
+    
+    float m_scale = 1;
+    
+    float m_inverseScale = 1;
 
-    glm::dvec2 m_tileOrigin; // Upper-left corner of the tile in 2D projection space in meters (e.g. mercator meters)
+    glm::dvec2 m_tileOrigin; // Center of the tile in 2D projection space in meters (e.g. mercator meters)
 
     glm::dmat4 m_modelMatrix; // Translation matrix from world origin to tile origin
 

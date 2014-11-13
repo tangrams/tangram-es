@@ -1,40 +1,36 @@
 #pragma once
 
-#include "json/json.h"
-
 #include <string>
+#include <sstream>
 #include <map>
 #include <memory>
 
 #include "util/tileID.h"
-
-//Todo: Impelement TileData, a generic datastore for all tile formats,
-//Have an instance of this in DataSource
-//Every implementation of a DataSource will fill this TileData instance.
-//Example MapzenVectorTile will read the json and fill this TileData
-class TileData {
-};
-
+#include "tileData.h"
+#include "mapTile.h"
 
 class DataSource {
 
 protected:
     
-    /* Map of tileIDs to json data for that tile */
-    std::map< TileID, std::shared_ptr<Json::Value> > m_JsonRoots;
+    /* Map of tileIDs to data for that tile */
+    std::map< TileID, std::shared_ptr<TileData> > m_tileStore;
+    
+    /* Function by which a dataSource parses an I/O response into TileData */
+    virtual std::shared_ptr<TileData> parse(const MapTile& _tile, std::stringstream& _in) = 0;
     
 public:
     
     /* Fetch data for a map tile
      *
      * LoadTile performs synchronous I/O to retrieve all needed data for a tile,
-     * then stores it to be accessed via <GetData>. This method SHALL NOT be called
+     * then stores it to be accessed via <GetTileData>. This method SHALL NOT be called
      * from the main thread. 
      */
-    virtual bool loadTile(const TileID& _tileID) = 0;
+    virtual bool loadTileData(const MapTile& _tile) = 0;
 
     /* Returns the data corresponding to a <TileID> */
-    virtual std::shared_ptr<Json::Value> getTileData(const TileID& _tileID);
+    virtual std::shared_ptr<TileData> getTileData(const TileID& _tileID);
 
     /* Checks if data exists for a specific <TileID> */
     virtual bool hasTileData(const TileID& _tileID);
@@ -43,7 +39,7 @@ public:
     void clearData();
 
     DataSource() {}
-    virtual ~DataSource() { m_JsonRoots.clear(); }
+    virtual ~DataSource() { m_tileStore.clear(); }
 };
 
 class NetworkDataSource : public DataSource {
@@ -60,19 +56,25 @@ protected:
 
     /* Constructs the URL of a tile using <m_urlTemplate> */
     virtual std::unique_ptr<std::string> constructURL(const TileID& _tileCoord);
+    
+    //virtual std::shared_ptr<TileData> parse(const MapTile& _tile, std::stringstream& _in) override;
 
 public:
 
     NetworkDataSource();
     virtual ~NetworkDataSource();
 
-    virtual bool loadTile(const TileID& _tileID) override;
+    virtual bool loadTileData(const MapTile& _tile) override;
 
 };
 
 /* Extends NetworkDataSource class to read Mapzen's GeoJSON vector tiles */
 class MapzenVectorTileJson: public NetworkDataSource {
 
+protected:
+    
+    virtual std::shared_ptr<TileData> parse(const MapTile& _tile, std::stringstream& _in) override;
+    
 public:
 
     MapzenVectorTileJson();
