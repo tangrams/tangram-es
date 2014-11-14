@@ -146,11 +146,14 @@ public class Tangram implements GLSurfaceView.Renderer, ScaleGestureDetector.OnS
     public boolean onScale(ScaleGestureDetector detector) {
         scaleFactor = detector.getScaleFactor() * scaleFactor;
         Log.v("\nPinch: ", scaleFactor + ",\t" + scalePosX + "," + scalePosY);
-        constructGestures(3, scalePosX, scalePosY, scaleFactor);
+        // TODO: continous zoom
+        //constructGestures(3, scalePosX, scalePosY, scaleFactor);
         return true;
     }
 
     public void onScaleEnd(ScaleGestureDetector detector) {
+        // Only process the pinch gesture at the end (discrete zoom)
+        constructGestures(3, scalePosX, scalePosY, scaleFactor);
         scaleFactor = 1.0f;
     }
 }

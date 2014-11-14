@@ -112,10 +112,10 @@ void SceneDirector::onPan(const glm::vec2& _velocity) {
 
 void SceneDirector::onPinch(const glm::vec2& _position1, const float& _scale) {
     logMsg("Do pinch, pos1: (%f, %f)\tscale: (%f)\n", _position1.x, _position1.y, _scale);
-    if(_scale < 0.5) {
-        m_viewModule->incZoom(1);
-    }
-    else if(_scale > 1.5 && _scale < 2.0){
+    if(_scale < 1.0) {
         m_viewModule->incZoom(-1);
+    }
+    else {
+        m_viewModule->incZoom(1);
     }
 }
