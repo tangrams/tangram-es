@@ -134,7 +134,7 @@ public class Tangram implements GLSurfaceView.Renderer, ScaleGestureDetector.OnS
         float touchY = event.getY();
         Log.v("onSingleTap", touchX + "," +touchY+"\t"+viewCenter[0]+","+viewCenter[1]);
         constructGestures(0, touchX - viewCenter[0], -(touchY - viewCenter[1]));
-        return true;;
+        return true;
     }
 
     // Interface methods for OnScaleGestureListener
