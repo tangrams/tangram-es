@@ -3,6 +3,9 @@
 #include "geoJson.h"
 #include "dataSource.h"
 #include "platform.h"
+#include "tileID.h"
+#include "tileData.h"
+#include "mapTile.h"
 
 //---- DataSource Implementation----
 

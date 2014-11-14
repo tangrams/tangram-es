@@ -5,9 +5,9 @@
 #include <map>
 #include <memory>
 
-#include "tileID.h"
-#include "tileData.h"
-#include "mapTile.h"
+struct TileData;
+struct TileID;
+class MapTile;
 
 class DataSource {
 
