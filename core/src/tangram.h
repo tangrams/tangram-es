@@ -32,4 +32,8 @@ void resizeViewport(int newWidth, int newHeight);
 // TODO: Pass in the time step from the client application
 void renderFrame();
 
+/*
+ * method to interface platform gestures with sceneDirector's gesture handler methods
+ */
 void handleGestures(Tangram::Gestures _gesture, const glm::vec2 _posOrVel1 = glm::vec2(0,0), float _scale = 1.0);
+

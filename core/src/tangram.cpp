@@ -60,3 +60,4 @@ void handleGestures(Tangram::Gestures _gesture, const glm::vec2 _posOrVel1, cons
     }
 
 }
+

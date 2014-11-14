@@ -34,9 +34,11 @@ public class MainActivity extends Activity
 		view.setEGLContextClientVersion(2);
         view.setEGLConfigChooser(8,8,8,8,16,0);
         Tangram tangram = new Tangram();
+        // tangram implements the interface: GLSurfaceView.Renderer e
 		view.setRenderer(tangram);
 		setContentView(view);
-        //create an instance of gesture detector using custom gestureListener
+        //create an instance of gesture detectors
+        //      tangram implements OnScaleGestureListener and OnGestureListener
         detector = new GestureDetectorCompat(this, tangram);
         scaleDetector = new ScaleGestureDetector(this, tangram);
     }
@@ -45,9 +47,9 @@ public class MainActivity extends Activity
     public boolean onTouchEvent(MotionEvent event) 
     { 
         //Pass the event to gestureDetector and scaleDetector
-        this.scaleDetector.onTouchEvent(event);
-        this.detector.onTouchEvent(event);
-        return super.onTouchEvent(event);
+        boolean retVal = this.scaleDetector.onTouchEvent(event);
+        retVal = retVal || this.detector.onTouchEvent(event);
+        return retVal || super.onTouchEvent(event);
     }
 
     @Override

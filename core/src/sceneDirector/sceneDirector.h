@@ -26,11 +26,28 @@ public:
 
     void onResize(int _newWidth, int _newHeight);
     
+    /*
+     * Tap centers the view on the tap position
+     */
     void onTap(const glm::vec2& _point);
     
+    /*
+     * NoOP for doubleTap
+     * TODO: use it to zoom-in/out in the same tile
+     */
     void onDoubleTap(const glm::vec2& _point);
 
+    /*
+     * Pan's the view by using the velocity of the pan
+     * normalize the velocity and translate the view with a scaled down value of the normalized velocity
+     * TODO: Take zoom level into account while panning
+     */
     void onPan(const glm::vec2& _velocity);
+
+    /*
+     * Naive tile zoom up/down based on descete pinch/scale values
+     * TODO: continous zooming
+     */
     void onPinch(const glm::vec2& _position1, const float& _scale);
     
     void update(float _dt);
