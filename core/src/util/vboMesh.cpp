@@ -84,13 +84,15 @@ void VboMesh::addIndex(GLushort* _index) {
 }
 
 void VboMesh::addIndices(GLushort* _indices, int _nIndices) {
-
+    
+    int indexBufferRange = pow(2,sizeof(GLushort)*8) - 1;
+    
     if (m_isUploaded) {
         logMsg("%s\n", "VboMesh cannot add indices after upload!");
         return;
     }
     
-    if (m_nVertices >= 65535) {
+    if (m_nVertices >= indexBufferRange) {
         logMsg("WARNING: Vertex buffer full, not adding indices\n");
         return;
     }
