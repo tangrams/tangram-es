@@ -64,7 +64,8 @@ void VboMesh::addVertices(GLbyte* _vertices, int _nVertices) {
     }
     
     // Only add up to 65535 vertices, any more will overflow our 16-bit indices
-    int indexSpace = 65535 - m_nVertices;
+    int indexBufferRange = pow(2,sizeof(GLushort)*8) - 1;
+    int indexSpace = indexBufferRange - m_nVertices;
     if (_nVertices > indexSpace) {
         _nVertices = indexSpace;
         logMsg("WARNING: Tried to add more vertices than available in index space\n");
