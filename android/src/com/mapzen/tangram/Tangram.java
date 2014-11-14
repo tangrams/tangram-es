@@ -59,7 +59,7 @@ public class Tangram implements GLSurfaceView.Renderer, ScaleGestureDetector.OnS
     public boolean onDown(MotionEvent event) {
         return true;
     }
-
+    
     public boolean onSingleTapConfirmed(MotionEvent event) {
         float touchX = event.getX();
         float touchY = event.getY();
@@ -129,10 +129,12 @@ public class Tangram implements GLSurfaceView.Renderer, ScaleGestureDetector.OnS
         //not handled so return false
     }
 
-    // Need this implemented as Tangram implements the OnGestureListener interface
     public boolean onSingleTapUp(MotionEvent event) {
-        //not handled so return false
-        return false;
+        float touchX = event.getX();
+        float touchY = event.getY();
+        Log.v("onSingleTap", touchX + "," +touchY+"\t"+viewCenter[0]+","+viewCenter[1]);
+        constructGestures(0, touchX - viewCenter[0], -(touchY - viewCenter[1]));
+        return true;;
     }
 
     // Interface methods for OnScaleGestureListener
