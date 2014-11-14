@@ -1,24 +1,23 @@
-#include <sstream>
-#include <cstdio>
-
 #include <curl/curl.h>
 
+#include "geoJson.h"
 #include "dataSource.h"
 #include "platform.h"
+#include "tileID.h"
+#include "tileData.h"
+#include "mapTile.h"
 
 //---- DataSource Implementation----
 
 bool DataSource::hasTileData(const TileID& _tileID) {
     
-    return m_JsonRoots.find(_tileID) != m_JsonRoots.end();
+    return m_tileStore.find(_tileID) != m_tileStore.end();
 }
 
-std::shared_ptr<Json::Value> DataSource::getTileData(const TileID& _tileID) {
+std::shared_ptr<TileData> DataSource::getTileData(const TileID& _tileID) {
     
-    // TODO: implement sensible caching, instead of immediately discarding all data
     if (hasTileData(_tileID)) {
-        std::shared_ptr<Json::Value> tileData = m_JsonRoots[_tileID];
-        m_JsonRoots.erase(_tileID);
+        std::shared_ptr<TileData> tileData = m_tileStore[_tileID];
         return tileData;
     } else {
         return nullptr;
@@ -26,10 +25,10 @@ std::shared_ptr<Json::Value> DataSource::getTileData(const TileID& _tileID) {
 }
 
 void DataSource::clearData() {
-    for (auto& mapValue : m_JsonRoots) {
-        mapValue.second->clear();
+    for (auto& mapValue : m_tileStore) {
+        mapValue.second->layers.clear();
     }
-    m_JsonRoots.clear();
+    m_tileStore.clear();
 }
 
 //---- NetworkDataSource Implementation----
@@ -69,16 +68,16 @@ std::unique_ptr<std::string> NetworkDataSource::constructURL(const TileID& _tile
     return std::move(urlPtr);
 }
 
-bool NetworkDataSource::loadTile(const TileID& _tileID) {
+bool NetworkDataSource::loadTileData(const MapTile& _tile) {
     
     bool success = true; // Begin optimistically
     
-    if (hasTileData(_tileID)) {
+    if (hasTileData(_tile.getID())) {
         // Tile has been fetched already!
         return success;
     }
     
-    std::unique_ptr<std::string> url = constructURL(_tileID);
+    std::unique_ptr<std::string> url = constructURL(_tile.getID());
 
     CURL* curlHandle = curl_easy_init();
 
@@ -103,20 +102,9 @@ bool NetworkDataSource::loadTile(const TileID& _tileID) {
         
     } else {
         
-        // parse written data into a JSON object
-        Json::Reader jsonReader;
-        std::shared_ptr<Json::Value> jsonValue = std::make_shared<Json::Value>();
+        // parse fetched data
+        m_tileStore[_tile.getID()] = parse(_tile, out);
         
-        if (jsonReader.parse(out, *jsonValue)) {
-            
-            m_JsonRoots[_tileID] = jsonValue;
-            
-        } else {
-            
-            logMsg("Json parsing failed on tile %s\n", url->c_str());
-            success = false;
-            
-        }
     }
     
     curl_easy_cleanup(curlHandle);
@@ -128,5 +116,33 @@ bool NetworkDataSource::loadTile(const TileID& _tileID) {
 
 MapzenVectorTileJson::MapzenVectorTileJson() {
     m_urlTemplate = "http://vector.mapzen.com/osm/all/[z]/[x]/[y].json";
+}
+
+std::shared_ptr<TileData> MapzenVectorTileJson::parse(const MapTile& _tile, std::stringstream& _in) {
+    
+    std::shared_ptr<TileData> tileData = std::make_shared<TileData>();
+    
+    // parse written data into a JSON object
+    Json::Reader jsonReader;
+    Json::Value jsonValue;
+    
+    if (! jsonReader.parse(_in, jsonValue)) {
+        
+        logMsg("Json parsing failed on tile [%d, %d, %d]\n", _tile.getID().z, _tile.getID().x, _tile.getID().y);
+        return tileData;
+        
+    }
+    
+    // transform JSON data into a TileData using GeoJson functions
+    for (const auto& layerName : jsonValue.getMemberNames()) {
+        tileData->layers.emplace_back(layerName);
+        GeoJson::extractLayer(jsonValue[layerName], tileData->layers.back(), _tile);
+    }
+    
+    
+    // Discard original JSON object and return TileData
+    
+    return tileData;
+    
 }
 

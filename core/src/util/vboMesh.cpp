@@ -1,4 +1,5 @@
 #include "vboMesh.h"
+#include "platform.h"
 
 VboMesh::VboMesh(std::shared_ptr<VertexLayout> _vertexLayout, GLenum _drawMode) : m_vertexLayout(_vertexLayout) {
 
@@ -61,6 +62,14 @@ void VboMesh::addVertices(GLbyte* _vertices, int _nVertices) {
         logMsg("%s\n", "VboMesh cannot add vertices after upload!");
         return;
     }
+    
+    // Only add up to 65535 vertices, any more will overflow our 16-bit indices
+    int indexBufferRange = pow(2,sizeof(GLushort)*8) - 1;
+    int indexSpace = indexBufferRange - m_nVertices;
+    if (_nVertices > indexSpace) {
+        _nVertices = indexSpace;
+        logMsg("WARNING: Tried to add more vertices than available in index space\n");
+    }
 
     int vertexBytes = m_vertexLayout->getStride() * _nVertices;
     m_vertexData.insert(m_vertexData.end(), _vertices, _vertices + vertexBytes);
@@ -75,9 +84,16 @@ void VboMesh::addIndex(GLushort* _index) {
 }
 
 void VboMesh::addIndices(GLushort* _indices, int _nIndices) {
-
+    
+    int indexBufferRange = pow(2,sizeof(GLushort)*8) - 1;
+    
     if (m_isUploaded) {
         logMsg("%s\n", "VboMesh cannot add indices after upload!");
+        return;
+    }
+    
+    if (m_nVertices >= indexBufferRange) {
+        logMsg("WARNING: Vertex buffer full, not adding indices\n");
         return;
     }
 
@@ -87,7 +103,7 @@ void VboMesh::addIndices(GLushort* _indices, int _nIndices) {
 }
 
 void VboMesh::upload() {
-
+    
     if (m_nVertices > 0) {
         // Generate vertex buffer, if needed
         if (m_glVertexBuffer == 0) {
@@ -124,9 +140,7 @@ void VboMesh::draw(const std::shared_ptr<ShaderProgram> _shader) {
     if (!m_isUploaded) {
         upload();
     }
-
-    //logMsg("    Drawing VboMesh: %d vertices, %d indices\n", m_nVertices, m_nIndices);
-
+    
     // Bind buffers for drawing
     if (m_nVertices > 0) {
         glBindBuffer(GL_ARRAY_BUFFER, m_glVertexBuffer);

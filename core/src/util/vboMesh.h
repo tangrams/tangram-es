@@ -3,8 +3,8 @@
 #include <vector>
 #include <memory>
 
+#include "gl.h"
 #include "vertexLayout.h"
-#include "platform.h"
 
 /*
  * VboMesh - Drawable collection of geometry contained in a vertex buffer and (optionally) an index buffer
