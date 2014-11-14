@@ -52,7 +52,7 @@ clean-android:
 	ndk-build -C android/jni clean
 	ant -f android/build.xml clean
 	rm -rf ${ANDROID_BUILD_DIR}
-	rm -rf android/libs android/obj
+	rm -rf android/libs/${ANDROID_ARCH} android/obj
 
 clean-osx:
 	rm -rf ${OSX_BUILD_DIR}
@@ -60,14 +60,8 @@ clean-osx:
 clean-ios:
 	rm -rf ${IOS_BUILD_DIR}
 
-android: setup-android-build install-android android/libs/${ANDROID_ARCH}/libtangram.so android/build.xml
+android: install-android android/libs/${ANDROID_ARCH}/libtangram.so android/build.xml
 	ant -f android/build.xml debug
-
-setup-android-build: 
-	mkdir -p android/libs/src
-	cp -r ${ANDROID_SDK}/extras/android/support/v4/ android/libs
-	android update lib-project --path android/libs/src --target ${ANDROID_API_LEVEL}
-	android update project --path android
 
 install-android: check-ndk cmake-android ${ANDROID_BUILD_DIR}/Makefile
 	cd ${ANDROID_BUILD_DIR} && \
@@ -96,11 +90,6 @@ ifeq ($(wildcard ${IOS_BUILD_DIR}/${IOS_XCODE_PROJ}/.*),)
 	mkdir -p ${IOS_BUILD_DIR}
 	cd ${IOS_BUILD_DIR} && \
 	cmake ../.. ${IOS_CMAKE_PARAMS}
-endif
-
-check-sdk:
-ifndef ANDROID_SDK
-	$(error ANDROID_SDK is undefined)
 endif
 
 check-ndk:
