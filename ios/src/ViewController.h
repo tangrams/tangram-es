@@ -8,7 +8,7 @@
 
 #import <UIKit/UIKit.h>
 #import <GLKit/GLKit.h>
-#import "tangram.h"
+#include "tangram.h"
 
 @interface ViewController : GLKViewController
 

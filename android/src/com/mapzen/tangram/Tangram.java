@@ -1,6 +1,8 @@
 package com.mapzen.tangram;
 
 import android.util.Log;
+import android.content.Context;
+import android.content.res.AssetManager;
 import android.opengl.GLSurfaceView;
 import android.opengl.GLES10;
 import javax.microedition.khronos.opengles.GL10;
@@ -23,10 +25,41 @@ public class Tangram implements GLSurfaceView.Renderer, ScaleGestureDetector.OnS
 		System.loadLibrary("tangram");
 	}
 
-	private static native void init();
+	private static native void init(AssetManager assetManager);
 	private static native void resize(int width, int height);
 	private static native void render();
+    private static native void update(float dt);
     private static native void handleGestures(int gestureType, float posOrVelxd, float posOrVely, float scale);
+
+	private long time = System.nanoTime();
+
+    private AssetManager assetManager;
+
+    public Tangram(Context mainApp) {
+        this.assetManager = mainApp.getAssets();
+    }
+
+    public void onDrawFrame(GL10 gl) 
+    {
+        long newTime = System.nanoTime();
+        float delta = (newTime - time) / 1000000000.0f;
+        time = newTime;
+
+        update(delta);
+        render();
+    }
+
+	public void onSurfaceChanged(GL10 gl, int width, int height) {
+        //set the view center for gesture handling
+        viewCenter = new float[2];
+        viewCenter[0] = (float)width * 0.5f;
+        viewCenter[1] = (float)height * 0.5f;
+		resize(width, height);
+	}
+
+	public void onSurfaceCreated(GL10 gl, EGLConfig config) {
+		init(assetManager);
+	}
 
     public void constructGestures(int gestureType, float posOrVelx, float posOrVely) {
         handleGestures(gestureType, posOrVelx, posOrVely, 1.0f);
@@ -35,25 +68,6 @@ public class Tangram implements GLSurfaceView.Renderer, ScaleGestureDetector.OnS
     public void constructGestures(int gestureType, float posOrVelx, float posOrVely, float scale) {
         handleGestures(gestureType, posOrVelx, posOrVely, scale);
     }
-
-	public void onDrawFrame(GL10 gl) 
-	{
-		render();
-	}
-
-	public void onSurfaceChanged(GL10 gl, int width, int height) 
-	{
-        //set the view center for gesture handling
-        viewCenter = new float[2];
-        viewCenter[0] = (float)width * 0.5f;
-        viewCenter[1] = (float)height * 0.5f;
-		resize(width, height);
-	}
-
-	public void onSurfaceCreated(GL10 gl, EGLConfig config) 
-	{
-		init();
-	}
 
     // Interface methods for OnGestureListener
     public boolean onDown(MotionEvent event) {
@@ -91,8 +105,7 @@ public class Tangram implements GLSurfaceView.Renderer, ScaleGestureDetector.OnS
             prevTouchX = e2.getHistoricalX(0);
             prevTouchY = e2.getHistoricalY(0);
             prevTime = e2.getHistoricalEventTime(0);
-        }
-        else {
+        } else {
             prevTouchX = e1.getX();
             prevTouchY = e1.getY();
             prevTime = e1.getEventTime();

@@ -5,7 +5,7 @@
 #include "json/json.h"
 #include "glm/glm.hpp"
 
-#include "projection.h"
+#include "mapProjection.h"
 
 namespace JsonExtractor {
 

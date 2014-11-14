@@ -1,11 +1,24 @@
 #pragma once
 
+<<<<<<< HEAD
+#include <stdlib.h>
+#include <assert.h>
+#include <math.h>
+#include <memory>
+
 #include "glm/glm.hpp"
 
 #include "platform.h"
+#include "sceneDirector/sceneDirector.h"
+#include "util/shaderProgram.h"
+#include "util/vertexLayout.h"
+#include "util/vboMesh.h"
 #include "util/gestures.h"
 
+/* Tangram C API
+=======
 /* Tangram API
+>>>>>>> master
  *
  * Primary interface for controlling and managing the lifecycle of a Tangram map surface
  * 
@@ -25,13 +38,20 @@ void resize(int _newWidth, int _newHeight);
 void update(float _dt);
 
 // Render a new frame of the map view (if needed)
-void render();
+<<<<<<< HEAD
+// TODO: Pass in the time step from the client application
+void renderFrame();
 
-// Respond to touch input
-void handleGestures(Tangram::Gestures _gesture, const glm::vec2 _posOrVel1 = glm::vec2(0, 0), const float _scale = 1.0);
+/*
+ * method to interface platform gestures with sceneDirector's gesture handler methods
+ */
+void handleGestures(Tangram::Gestures _gesture, const glm::vec2 _posOrVel1 = glm::vec2(0,0), float _scale = 1.0);
+=======
+void render();
 
 // Release resources and shut down renderer
 void teardown();
 
 }
+>>>>>>> master
 

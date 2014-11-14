@@ -84,20 +84,20 @@
     CGPoint viewCenter = tapRecognizer.view.center;
     logMsg("%f,%f\n", viewCenter.x, viewCenter.y);
     //handleGestures(Tangram::Gesturestures::Invalid);
-    handleGestures(Tangram::Gestures::Tap, glm::vec2(location.x - viewCenter.x, -(location.y - viewCenter.y)));
+    Tangram::handleGestures(Tangram::Gestures::Tap, glm::vec2(location.x - viewCenter.x, -(location.y - viewCenter.y)));
 }
 
 - (void)respondToDoubleTapGesture:(UITapGestureRecognizer *)doubleTapRecognizer {
     //Get the location of the double tap
     CGPoint location = [doubleTapRecognizer locationInView:self.view];
-    handleGestures(Tangram::Gestures::DoubleTap, glm::vec2(location.x, location.y));
+    Tangram::handleGestures(Tangram::Gestures::DoubleTap, glm::vec2(location.x, location.y));
 }
 
 - (void)respondToPanGesture:(UIPanGestureRecognizer *)panRecognizer {
     //velocity is relative to previous drag location
     //not using drag position as its always relative to the initial touch point
     CGPoint velocity = [panRecognizer velocityInView:self.view];
-    handleGestures(Tangram::Gestures::Pan, glm::vec2(velocity.x, velocity.y));
+    Tangram::handleGestures(Tangram::Gestures::Pan, glm::vec2(velocity.x, velocity.y));
 }
 
 - (void)respondToPinchGesture:(UIPinchGestureRecognizer *)pinchRecognizer {
@@ -106,7 +106,7 @@
     //Do discrete zoom (only handle the pinch gesture, when it ends
     //TODO: continous zoom
     if(pinchRecognizer.state == UIGestureRecognizerStateEnded) {
-        handleGestures(Tangram::Gestures::Pinch, glm::vec2(location.x, location.y), scale);
+        Tangram::handleGestures(Tangram::Gestures::Pinch, glm::vec2(location.x, location.y), scale);
     }
 }
 
@@ -141,29 +141,29 @@
 {
     [EAGLContext setCurrentContext:self.context];
     
-    initializeOpenGL();
+    Tangram::initialize();
     
     int width = self.view.bounds.size.width;
     int height = self.view.bounds.size.height;
-    resizeViewport(width, height);
+    Tangram::resize(width, height);
 }
 
 - (void)tearDownGL
 {
     [EAGLContext setCurrentContext:self.context];
-    
+    Tangram::teardown();
 }
 
 #pragma mark - GLKView and GLKViewController delegate methods
 
 - (void)update
 {
-    
+    Tangram::update([self timeSinceLastUpdate]);
 }
 
 - (void)glkView:(GLKView *)view drawInRect:(CGRect)rect
 {
-    renderFrame();
+    Tangram::render();
 }
 
 @end
