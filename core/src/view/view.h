@@ -6,11 +6,10 @@
 #include <memory>
 
 #define GLM_FORCE_RADIANS
-#include <glm/fwd.hpp>
 #include <glm/glm.hpp>
 #include <glm/gtc/matrix_transform.hpp>
 
-#include "util/projection.h"
+#include "util/mapProjection.h"
 #include "util/tileID.h"
 
 /* ViewModule
@@ -23,11 +22,11 @@
  * using a top-down axis-aligned orthographic view
 */
 
-class ViewModule {
+class View {
 
 public:
 
-    ViewModule(float _width = 800, float _height = 600, ProjectionType _projType = ProjectionType::mercator);
+    View(float _width = 800, float _height = 600, ProjectionType _projType = ProjectionType::mercator);
     
     //Sets a new map projection with default tileSize
     void setMapProjection(ProjectionType _projType);
@@ -37,7 +36,6 @@ public:
     void setAspect(float _width, float _height);
     void setPosition(double _x, double _y);
     void setZoom(int _z);
-    void incZoom(int _z);
     void translate(double _dx, double _dy);
     void zoom(int _dz);
 
@@ -51,7 +49,7 @@ public:
     const std::set<TileID>& getVisibleTiles();
     bool viewChanged() const { return m_dirty; };
 
-    virtual ~ViewModule() {
+    virtual ~View() {
         m_visibleTiles.clear();
     }
     

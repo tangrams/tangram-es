@@ -2,12 +2,12 @@
 
 #include "tesselator.h"
 
-void GeometryHandler::buildPolygon(const std::vector<glm::vec3>& _pointsIn, const std::vector<int>& _ringSizes, std::vector<glm::vec3>& _pointsOut, std::vector<glm::vec3>& _normalOut, std::vector<GLushort>& _indicesOut) {
+void GeometryHandler::buildPolygon(const std::vector<glm::vec3>& _pointsIn, const std::vector<int>& _ringSizes, std::vector<glm::vec3>& _pointsOut, std::vector<glm::vec3>& _normalOut, std::vector<ushort>& _indicesOut) {
     
     TESStesselator* tesselator = tessNewTess(nullptr);
 
     //Get the number of vertices already added
-    GLushort vertexDataOffset = (GLushort)_pointsOut.size();
+    ushort vertexDataOffset = (ushort)_pointsOut.size();
     
     // add polygon contour for every ring
     int ringIndex = 0;
@@ -26,7 +26,7 @@ void GeometryHandler::buildPolygon(const std::vector<glm::vec3>& _pointsIn, cons
         for(int i = 0; i < numElements; i++) {
             const TESSindex* tessElement = &tessElements[i * 3];
             for(int j = 0; j < 3; j++) {
-                _indicesOut.push_back((GLushort)tessElement[j] + vertexDataOffset);
+                _indicesOut.push_back((ushort)tessElement[j] + vertexDataOffset);
             }
         }
 
@@ -44,8 +44,8 @@ void GeometryHandler::buildPolygon(const std::vector<glm::vec3>& _pointsIn, cons
     tessDeleteTess(tesselator);
 }
 
-void GeometryHandler::buildPolygonExtrusion(const std::vector<glm::vec3>& _pointsIn, const std::vector<int>& _ringSizes, const float& _minFeatureHeight, std::vector<glm::vec3>& _pointsOut, std::vector<glm::vec3>& _normalOut, std::vector<GLushort>& _indicesOut) {
-    GLushort vertexDataOffset = (GLushort)_pointsOut.size();
+void GeometryHandler::buildPolygonExtrusion(const std::vector<glm::vec3>& _pointsIn, const std::vector<int>& _ringSizes, const float& _minFeatureHeight, std::vector<glm::vec3>& _pointsOut, std::vector<glm::vec3>& _normalOut, std::vector<ushort>& _indicesOut) {
+    ushort vertexDataOffset = (ushort)_pointsOut.size();
 
     glm::vec3 upVector(0.0f, 0.0f, 1.0f);
     glm::vec3 normalVector;
@@ -84,11 +84,11 @@ void GeometryHandler::buildPolygonExtrusion(const std::vector<glm::vec3>& _point
     }
 }
 
-void GeometryHandler::buildPolyLine(const std::vector<glm::vec3>& _pointsIn, float width, std::vector<glm::vec3>& _pointsOut, std::vector<GLushort>& _indicesOut) {
+void GeometryHandler::buildPolyLine(const std::vector<glm::vec3>& _pointsIn, float width, std::vector<glm::vec3>& _pointsOut, std::vector<ushort>& _indicesOut) {
 
 }
 
-void GeometryHandler::buildQuadAtPoint(const glm::vec3& _pointIn, const glm::vec3& _normal, float width, float height, std::vector<glm::vec3>& _pointsOut, std::vector<GLushort>& _indicesOut) {
+void GeometryHandler::buildQuadAtPoint(const glm::vec3& _pointIn, const glm::vec3& _normal, float width, float height, std::vector<glm::vec3>& _pointsOut, std::vector<ushort>& _indicesOut) {
 
 }
 

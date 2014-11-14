@@ -1,24 +1,33 @@
 
 #include <jni.h>
 #include "tangram.h"
+// Includes platform.h for setAssetManager reference
+#include "platform.h"
 
 extern "C" {
-	JNIEXPORT void JNICALL Java_com_mapzen_tangram_Tangram_init(JNIEnv* jniEnv, jobject obj) 
+	JNIEXPORT void JNICALL Java_com_mapzen_tangram_Tangram_init(JNIEnv* jniEnv, jobject obj, jobject assetManager) 
 	{
-		initializeOpenGL();
+		setAssetManager(jniEnv, assetManager);
+		Tangram::initialize();
 	}
 
 	JNIEXPORT void JNICALL Java_com_mapzen_tangram_Tangram_resize(JNIEnv* jniEnv, jobject obj, jint width, jint height) 
 	{
-		resizeViewport(width, height);
+		Tangram::resize(width, height);
+	}
+
+	JNIEXPORT void JNICALL Java_com_mapzen_tangram_Tangram_update(JNIEnv* jniEnv, jobject obj, jfloat dt)
+	{
+		Tangram::update(dt);
 	}
 
 	JNIEXPORT void JNICALL Java_com_mapzen_tangram_Tangram_render(JNIEnv* jniEnv, jobject obj) 
 	{
-		renderFrame();
+		Tangram::render();
 	}
 
-    JNIEXPORT void JNICALL Java_com_mapzen_tangram_Tangram_handleGestures(JNIEnv* jniEnv, jobject obj, jint gestureType, jfloat posOrVelx, jfloat posOrVely, jfloat scale) {
+    JNIEXPORT void JNICALL Java_com_mapzen_tangram_Tangram_handleGestures(JNIEnv* jniEnv, jobject obj, jint gestureType, jfloat posOrVelx, jfloat posOrVely, jfloat scale) 
+    {
         switch(gestureType) {
             case 0:
                 handleGestures(Tangram::Gestures::Tap, glm::vec2(posOrVelx, posOrVely));

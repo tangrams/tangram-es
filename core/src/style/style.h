@@ -6,9 +6,10 @@
 
 #include "util/vertexLayout.h"
 #include "util/shaderProgram.h"
-#include "util/projection.h"
+#include "util/mapProjection.h"
+#include "tile/mapTile.h"
 #include "platform.h"
-#include "mapTile/mapTile.h"
+#include "gl.h"
 
 #include "json/json.h"
 

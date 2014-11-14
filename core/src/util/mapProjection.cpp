@@ -7,7 +7,7 @@
 #include <iomanip>
 #include <stdio.h>
 
-#include "projection.h"
+#include "mapProjection.h"
 
 MercatorProjection::MercatorProjection(int _tileSize) : MapProjection(ProjectionType::mercator), m_TileSize(_tileSize) {
     double invTileSize = 1.0/m_TileSize;
