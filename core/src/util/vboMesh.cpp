@@ -1,6 +1,8 @@
 #include "vboMesh.h"
 #include "platform.h"
 
+#define MAX_INDEX_VALUE 65535 // Maximum value of GLushort
+
 VboMesh::VboMesh(std::shared_ptr<VertexLayout> _vertexLayout, GLenum _drawMode) : m_vertexLayout(_vertexLayout) {
 
     m_glVertexBuffer = 0;
@@ -64,8 +66,7 @@ void VboMesh::addVertices(GLbyte* _vertices, int _nVertices) {
     }
     
     // Only add up to 65535 vertices, any more will overflow our 16-bit indices
-    int indexBufferRange = pow(2,sizeof(GLushort)*8) - 1;
-    int indexSpace = indexBufferRange - m_nVertices;
+    int indexSpace = MAX_INDEX_VALUE - m_nVertices;
     if (_nVertices > indexSpace) {
         _nVertices = indexSpace;
         logMsg("WARNING: Tried to add more vertices than available in index space\n");
@@ -85,14 +86,12 @@ void VboMesh::addIndex(GLushort* _index) {
 
 void VboMesh::addIndices(GLushort* _indices, int _nIndices) {
     
-    int indexBufferRange = pow(2,sizeof(GLushort)*8) - 1;
-    
     if (m_isUploaded) {
         logMsg("%s\n", "VboMesh cannot add indices after upload!");
         return;
     }
     
-    if (m_nVertices >= indexBufferRange) {
+    if (m_nVertices >= MAX_INDEX_VALUE) {
         logMsg("WARNING: Vertex buffer full, not adding indices\n");
         return;
     }
