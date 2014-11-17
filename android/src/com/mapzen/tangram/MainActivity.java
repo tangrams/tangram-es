@@ -47,9 +47,15 @@ public class MainActivity extends Activity
     public boolean onTouchEvent(MotionEvent event) 
     { 
         //Pass the event to gestureDetector and scaleDetector
-        this.scaleDetector.onTouchEvent(event);
-        this.detector.onTouchEvent(event);
-        return super.onTouchEvent(event);
+        boolean retVal;
+        retVal = this.scaleDetector.onTouchEvent(event);
+        if(!this.scaleDetector.isInProgress()) {
+            retVal = this.detector.onTouchEvent(event);
+            if(!this.detector.onTouchEvent(event)) {
+                retVal = super.onTouchEvent(event);
+            }
+        }
+        return retVal;
     }
 
     @Override
