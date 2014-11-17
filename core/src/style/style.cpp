@@ -103,20 +103,8 @@ void PolygonStyle::buildLine(Line& _line, std::string& _layer, Properties& _prop
     std::vector<GLushort> indices;
     std::vector<glm::vec3> points;
     
-    GLuint abgr = 0xffaaaaaa; // Default color
-    int width = 3;
-    
-    if (_layer.compare("buildings") == 0) {
-        abgr = 0xffcedcde;
-    } else if (_layer.compare("water") == 0) {
-        abgr = 0xff917d1a;
-    } else if (_layer.compare("roads") == 0) {
-        abgr = 0xff969696;
-    } else if (_layer.compare("earth") == 0) {
-        abgr = 0xff669171;
-    } else if (_layer.compare("landuse") == 0) {
-        abgr = 0xff507480;
-    }
+    GLuint abgr = 0xff969696; // Default road color
+    float width = 0.005;
     
     GeometryHandler::buildPolyLine(_line, width, points, indices);
     
@@ -128,6 +116,7 @@ void PolygonStyle::buildLine(Line& _line, std::string& _layer, Properties& _prop
     
     // Make sure indices get correctly offset
     int vertOffset = _mesh.numVertices();
+    logMsg("Adding to prev Mesh : %i \n",vertOffset);
     for (auto& ind : indices) {
         ind += vertOffset;
     }
