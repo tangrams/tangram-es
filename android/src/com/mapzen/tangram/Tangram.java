@@ -1,16 +1,15 @@
 package com.mapzen.tangram;
 
-import android.util.Log;
+import javax.microedition.khronos.egl.EGLConfig;
+import javax.microedition.khronos.opengles.GL10;
+
 import android.content.Context;
 import android.content.res.AssetManager;
 import android.opengl.GLSurfaceView;
-import android.opengl.GLES10;
-import javax.microedition.khronos.opengles.GL10;
-import javax.microedition.khronos.egl.EGLConfig;
+import android.util.Log;
 import android.view.GestureDetector;
 import android.view.MotionEvent;
 import android.view.ScaleGestureDetector;
-import android.view.ScaleGestureDetector.OnScaleGestureListener;
 
 public class Tangram implements GLSurfaceView.Renderer, ScaleGestureDetector.OnScaleGestureListener, GestureDetector.OnGestureListener {
 	

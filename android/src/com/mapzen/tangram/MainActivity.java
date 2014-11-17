@@ -3,18 +3,10 @@ package com.mapzen.tangram;
 import android.app.Activity;
 import android.opengl.GLSurfaceView;
 import android.os.Bundle;
-import android.view.View;
-import android.view.Window;
-import android.util.Log;
-
 import android.view.GestureDetector;
-import android.view.ScaleGestureDetector;
 import android.view.MotionEvent;
-
-import javax.microedition.khronos.egl.EGL10;
-import javax.microedition.khronos.egl.EGLConfig;
-import javax.microedition.khronos.egl.EGLContext;
-import javax.microedition.khronos.egl.EGLDisplay;
+import android.view.ScaleGestureDetector;
+import android.view.Window;
 
 public class MainActivity extends Activity
 {
