@@ -31,10 +31,10 @@ void initialize() {
     std::unique_ptr<Style> polyStyle(new PolygonStyle("Polygon"));
     polyStyle->addLayers({
         "buildings",
-        "water",
-        "roads",
-        "earth",
-        "landuse"
+        //"water",
+        //"earth",
+        //"landuse",
+        "roads"
     });
 
     // Create a scene definition and add the style

@@ -87,8 +87,91 @@ void GeometryHandler::buildPolygonExtrusion(const Polygon& _polygon, const float
     }
 }
 
-void GeometryHandler::buildPolyLine(const Line& _line, float width, std::vector<glm::vec3>& _pointsOut, std::vector<ushort>& _indicesOut) {
+void GeometryHandler::buildPolyLine(const Line& _line, float _width, std::vector<glm::vec3>& _pointsOut, std::vector<ushort>& _indicesOut) {
 
+    //  Normals and UV implemented but commented as:
+    //
+    //  _normalOut
+    //  _uvOut
+    
+    if(_line.size() > 2){
+        ushort vertexDataOffset = (ushort)_pointsOut.size();
+        
+        glm::vec3 upVector(0.0f, 0.0f, 1.0f);
+        
+        glm::vec3 normi;             // Right normal to segment between previous and current m_points
+        glm::vec3 normip1;           // Right normal to segment between current and next m_points
+        glm::vec3 rightNorm;         // Right "normal" at current point, scaled for miter joint
+        
+        glm::vec3 im1;              // Previous point coordinates
+        glm::vec3 i0 = _line[0];    // Current point coordinates
+        glm::vec3 ip1 = _line[1];   // Next point coordinates
+        
+        normip1.x = ip1.y - i0.y;
+        normip1.y = i0.x - ip1.x;
+        normip1.z = 0.;
+        
+        normip1 = glm::normalize(normip1);
+        
+        rightNorm = glm::vec3(normip1.x*_width,
+                              normip1.y*_width,
+                              normip1.z*_width);
+        
+        _pointsOut.push_back(i0 + rightNorm);
+//        _normalOut.push_back(upVector);
+//        _uvOut.push_back(glm::vec2(1.0,0.0));
+        
+        _pointsOut.push_back(i0 - rightNorm);
+//        _normalOut.push_back(upVector);
+//        _uvOut.push_back(glm::vec2(0.0,0.0));
+        
+        // Loop over intermediate m_points in the polyline
+        //
+        for (int i = 1; i < _line.size() - 1; i++) {
+            im1 = i0;
+            i0 = ip1;
+            ip1 = _line[i+1];
+            
+            normi = normip1;
+            normip1.x = ip1.y - i0.y;
+            normip1.y = i0.x - ip1.x;
+            normip1.z = 0.0f;
+            normip1 = glm::normalize(normip1);
+            
+            rightNorm = normi + normip1;
+            float scale = sqrtf(2. / (1. + glm::dot(normi,normip1) )) * _width / 2.;
+            rightNorm *= scale;
+            
+            _pointsOut.push_back(i0+rightNorm);
+//            _normalOut.push_back(upVector);
+//            _uvOut.push_back(glm::vec2(1.0,(float)i/(float)_line.size()));
+            
+            _pointsOut.push_back(i0-rightNorm);
+//            _normalOut.push_back(upVector);
+//            _uvOut.push_back(glm::vec2(0.0,(float)i/(float)_line.size()));
+            
+        }
+        
+        normip1 *= _width;
+        
+        _pointsOut.push_back(ip1 + normip1);
+//        _normalOut.push_back(upVector);
+//        _uvOut.push_back(glm::vec2(1.0,1.0));
+        
+        _pointsOut.push_back(ip1 - normip1);
+//        _normalOut.push_back(upVector);
+//        _uvOut.push_back(glm::vec2(0.0,1.0));
+        
+        for (int i = 0; i < _line.size() - 1; i++) {
+            _indicesOut.push_back(vertexDataOffset + 2*i+3);
+            _indicesOut.push_back(vertexDataOffset + 2*i+2);
+            _indicesOut.push_back(vertexDataOffset + 2*i);
+            
+            _indicesOut.push_back(vertexDataOffset + 2*i);
+            _indicesOut.push_back(vertexDataOffset + 2*i+1);
+            _indicesOut.push_back(vertexDataOffset + 2*i+3);
+        }
+    }
 }
 
 void GeometryHandler::buildQuadAtPoint(const Point& _point, const glm::vec3& _normal, float width, float height, std::vector<glm::vec3>& _pointsOut, std::vector<ushort>& _indicesOut) {
