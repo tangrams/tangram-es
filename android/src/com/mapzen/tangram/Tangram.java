@@ -29,7 +29,10 @@ public class Tangram implements GLSurfaceView.Renderer, ScaleGestureDetector.OnS
 	private static native void resize(int width, int height);
 	private static native void render();
     private static native void update(float dt);
-    private static native void handleGestures(int gestureType, float posOrVelxd, float posOrVely, float scale);
+    private static native void handleTapGestures(float posX, float posY);
+    private static native void handleDoubleTapGestures(float posX, float posY);
+    private static native void handlePanGestures(float velX, float velY);
+    private static native void handlePinchGestures(float posX, float posY, float scale);
 
 	private long time = System.nanoTime();
 
@@ -61,14 +64,6 @@ public class Tangram implements GLSurfaceView.Renderer, ScaleGestureDetector.OnS
 		init(assetManager);
 	}
 
-    public void constructGestures(int gestureType, float posOrVelx, float posOrVely) {
-        handleGestures(gestureType, posOrVelx, posOrVely, 1.0f);
-    }
-
-    public void constructGestures(int gestureType, float posOrVelx, float posOrVely, float scale) {
-        handleGestures(gestureType, posOrVelx, posOrVely, scale);
-    }
-
     // Interface methods for OnGestureListener
     public boolean onDown(MotionEvent event) {
         return true;
@@ -78,7 +73,7 @@ public class Tangram implements GLSurfaceView.Renderer, ScaleGestureDetector.OnS
         float touchX = event.getX();
         float touchY = event.getY();
         Log.v("onSingleTap", touchX + "," +touchY+"\t"+viewCenter[0]+","+viewCenter[1]);
-        constructGestures(0, touchX - viewCenter[0], -(touchY - viewCenter[1]));
+        handleTapGestures(touchX - viewCenter[0], -(touchY - viewCenter[1]));
         return true;
     }
 
@@ -86,7 +81,7 @@ public class Tangram implements GLSurfaceView.Renderer, ScaleGestureDetector.OnS
         float touchX = event.getX();
         float touchY = event.getY();
         Log.v("onSingleTap", touchX + "," +touchY+"\t"+viewCenter[0]+","+viewCenter[1]);
-        constructGestures(1, touchX - viewCenter[0], -(touchY - viewCenter[1]));
+        handleDoubleTapGestures(touchX - viewCenter[0], -(touchY - viewCenter[1]));
         return true;
     }
 
@@ -122,7 +117,7 @@ public class Tangram implements GLSurfaceView.Renderer, ScaleGestureDetector.OnS
         Log.v("onPanTap", touchX + "," +touchY+"\t"+prevTouchX+","+prevTouchY);
         Log.v("\nonPanTap time:", time + "," + prevTime);
         Log.v("\nonPanTap Velocity:", velocityX + "," + velocityY);
-        constructGestures(2, velocityX, velocityY);
+        handlePanGestures(velocityX, velocityY);
         return true;
     }
 
@@ -146,7 +141,7 @@ public class Tangram implements GLSurfaceView.Renderer, ScaleGestureDetector.OnS
         float touchX = event.getX();
         float touchY = event.getY();
         Log.v("onSingleTap", touchX + "," +touchY+"\t"+viewCenter[0]+","+viewCenter[1]);
-        constructGestures(0, touchX - viewCenter[0], -(touchY - viewCenter[1]));
+        handleTapGestures(touchX - viewCenter[0], -(touchY - viewCenter[1]));
         return true;
     }
 
@@ -162,13 +157,12 @@ public class Tangram implements GLSurfaceView.Renderer, ScaleGestureDetector.OnS
         scaleFactor = detector.getScaleFactor() * scaleFactor;
         Log.v("\nPinch: ", scaleFactor + ",\t" + scalePosX + "," + scalePosY);
         // TODO: continous zoom
-        //constructGestures(3, scalePosX, scalePosY, scaleFactor);
         return true;
     }
 
     public void onScaleEnd(ScaleGestureDetector detector) {
         // Only process the pinch gesture at the end (discrete zoom)
-        constructGestures(3, scalePosX, scalePosY, scaleFactor);
+        handlePinchGestures(scalePosX, scalePosY, scaleFactor);
         scaleFactor = 1.0f;
     }
 }

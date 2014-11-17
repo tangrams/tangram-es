@@ -116,36 +116,26 @@ void render() {
     }
 
 }
+    
+void handleTapGestures(const glm::vec2 _position) {
+    logMsg("Do tap: (%f,%f)\n", _position.x, _position.y);
+    m_view->translate(_position.x, _position.y);
+}
 
-void handleGestures(Tangram::Gestures _gesture, const glm::vec2 _posOrVel1, const float _scale) {
-    switch(_gesture) {
-        case Tangram::Gestures::Tap: {
-            logMsg("Do tap: (%f,%f)\n", _posOrVel1.x, _posOrVel1.y);
-            m_view->translate(_posOrVel1.x, _posOrVel1.y);
-            break;
-        }
-        case Tangram::Gestures::DoubleTap: {
-            logMsg("Do double tap: (%f,%f)\n", _posOrVel1.x, _posOrVel1.y);
-            break;
-        }
-        case Tangram::Gestures::Pan: {
-            float invVelLen = 1.0/_posOrVel1.length();
-            glm::vec2 normalVel = glm::vec2(-_posOrVel1.x * invVelLen, _posOrVel1.y * invVelLen);
-            m_view->translate(normalVel.x*0.5, normalVel.y*0.5);
-            logMsg("Pan Velocity: (%f,%f)\tPan Normalized Velocity: (%f,%f)\n", _posOrVel1.x, _posOrVel1.y, normalVel.x, normalVel.y);
-            break;
-        }
-        case Tangram::Gestures::Pinch: {
-            logMsg("Do pinch, pos1: (%f, %f)\tscale: (%f)\n", _posOrVel1.x, _posOrVel1.y, _scale);
-            m_view->zoom( _scale < 1.0 ? -1 : 1);
-            break;
-        }
-        default: {
-            logMsg("Gesture state invalid.\n");
-            break;
-        }
-    }
+void handleDoubleTapGestures(const glm::vec2 _position) {
+    logMsg("Do double tap: (%f,%f)\n", _position.x, _position.y);
+}
 
+void handlePanGestures(const glm::vec2 _velocity) {
+    float invVelLen = 1.0/_velocity.length();
+    glm::vec2 normalVel = glm::vec2(-_velocity.x * invVelLen, _velocity.y * invVelLen);
+    m_view->translate(normalVel.x*0.5, normalVel.y*0.5);
+    logMsg("Pan Velocity: (%f,%f)\tPan Normalized Velocity: (%f,%f)\n", _velocity.x, _velocity.y, normalVel.x, normalVel.y);
+}
+
+void handlePinchGestures(const glm::vec2 _position, const float _scale) {
+    logMsg("Do pinch, pos1: (%f, %f)\tscale: (%f)\n", _position.x, _position.y, _scale);
+    m_view->zoom( _scale < 1.0 ? -1 : 1);
 }
 
 void teardown() {
