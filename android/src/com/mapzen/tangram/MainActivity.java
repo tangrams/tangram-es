@@ -21,16 +21,15 @@ public class MainActivity extends Activity
         super.onCreate(savedInstanceState);
 
         requestWindowFeature(Window.FEATURE_NO_TITLE);
-
+        
+        Tangram tangram = new Tangram(this);
+        
 		view = new GLSurfaceView(getApplication());
 		view.setEGLContextClientVersion(2);
         view.setEGLConfigChooser(8,8,8,8,16,0);
-        Tangram tangram = new Tangram(this);
-        // tangram implements the interface: GLSurfaceView.Renderer e
 		view.setRenderer(tangram);
 		setContentView(view);
-        //create an instance of gesture detectors
-        //      tangram implements OnScaleGestureListener and OnGestureListener
+		
         detector = new GestureDetector(this, tangram);
         scaleDetector = new ScaleGestureDetector(this, tangram);
     }

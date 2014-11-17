@@ -12,11 +12,6 @@ import android.view.MotionEvent;
 import android.view.ScaleGestureDetector;
 
 public class Tangram implements GLSurfaceView.Renderer, ScaleGestureDetector.OnScaleGestureListener, GestureDetector.OnGestureListener {
-	
-    private float[] viewCenter;
-    private float scaleFactor;
-    private float scalePosX;
-    private float scalePosY;
 
 	static {
 		System.loadLibrary("c++_shared");
@@ -33,7 +28,10 @@ public class Tangram implements GLSurfaceView.Renderer, ScaleGestureDetector.OnS
     private static native void handlePinchGesture(float posX, float posY, float scale);
 
 	private long time = System.nanoTime();
-
+	private float[] viewCenter = new float[2];
+    private float scaleFactor = 1.0f;
+    private float scalePosX = 0.0f;
+    private float scalePosY = 0.0f;
     private AssetManager assetManager;
 
     public Tangram(Context mainApp) {
@@ -52,7 +50,6 @@ public class Tangram implements GLSurfaceView.Renderer, ScaleGestureDetector.OnS
 
 	public void onSurfaceChanged(GL10 gl, int width, int height) {
         //set the view center for gesture handling
-        viewCenter = new float[2];
         viewCenter[0] = (float)width * 0.5f;
         viewCenter[1] = (float)height * 0.5f;
 		resize(width, height);
@@ -63,6 +60,7 @@ public class Tangram implements GLSurfaceView.Renderer, ScaleGestureDetector.OnS
 	}
 
     // Interface methods for OnGestureListener
+	
     public boolean onDown(MotionEvent event) {
         return true;
     }
@@ -85,14 +83,13 @@ public class Tangram implements GLSurfaceView.Renderer, ScaleGestureDetector.OnS
 
     public boolean onScroll(MotionEvent e1, MotionEvent e2, float distanceX, float distanceY) {
         //TODO: Better velocity calculations using VelocityTracker and VelocityTrackerCompat classes
-        float touchX, touchY, prevTouchX, prevTouchY;
-        float velocityX, velocityY;
-        long time, prevTime;
-        float invTimeDiff;
         
-        touchX = e2.getX();
-        touchY = e2.getY();
-        time = e2.getEventTime();
+        float touchX = e2.getX();
+        float touchY = e2.getY();
+        long time = e2.getEventTime();
+        
+        float prevTouchX, prevTouchY;
+        long prevTime;
         
         if(e2.getHistorySize() > 0) {
             prevTouchX = e2.getHistoricalX(0);
@@ -108,9 +105,9 @@ public class Tangram implements GLSurfaceView.Renderer, ScaleGestureDetector.OnS
         }
         
         // Factor of 100 to match iOS velocity behavior
-        invTimeDiff = 100.0f/(float)(time - prevTime);
-        velocityX = (touchX - prevTouchX) * (invTimeDiff);
-        velocityY = (touchY - prevTouchY) * (invTimeDiff);
+        float invTimeDiff = 100.0f/(float)(time - prevTime);
+        float velocityX = (touchX - prevTouchX) * (invTimeDiff);
+        float velocityY = (touchY - prevTouchY) * (invTimeDiff);
         
         Log.v("onPanTap", touchX + "," +touchY+"\t"+prevTouchX+","+prevTouchY);
         Log.v("\nonPanTap time:", time + "," + prevTime);
@@ -119,20 +116,17 @@ public class Tangram implements GLSurfaceView.Renderer, ScaleGestureDetector.OnS
         return true;
     }
 
-    // Need this implemented as Tangram implements the OnGestureListener interface
     public boolean onFling(MotionEvent e1, MotionEvent e2, float velocityX, float velocityY) {
-        //not handled so return false
+        //not handled
         return false;
     }
 
-    // Need this implemented as Tangram implements the OnGestureListener interface
     public void onLongPress(MotionEvent event) {
-        //not handled so return false
+        //not handled
     }
 
-    // Need this implemented as Tangram implements the OnGestureListener interface
     public void onShowPress(MotionEvent event) {
-        //not handled so return false
+        //not handled
     }
 
     public boolean onSingleTapUp(MotionEvent event) {
@@ -144,6 +138,7 @@ public class Tangram implements GLSurfaceView.Renderer, ScaleGestureDetector.OnS
     }
 
     // Interface methods for OnScaleGestureListener
+    
     public boolean onScaleBegin(ScaleGestureDetector detector) {
         scaleFactor = 1.0f;
         scalePosX = detector.getFocusX();
@@ -154,7 +149,7 @@ public class Tangram implements GLSurfaceView.Renderer, ScaleGestureDetector.OnS
     public boolean onScale(ScaleGestureDetector detector) {
         scaleFactor = detector.getScaleFactor() * scaleFactor;
         Log.v("\nPinch: ", scaleFactor + ",\t" + scalePosX + "," + scalePosY);
-        // TODO: continous zoom
+        // TODO: continuous zoom
         return true;
     }
 
