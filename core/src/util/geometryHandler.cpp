@@ -87,98 +87,87 @@ void GeometryHandler::buildPolygonExtrusion(const Polygon& _polygon, const float
     }
 }
 
-void GeometryHandler::buildPolyLine(const Line& _line, float _width, std::vector<glm::vec3>& _pointsOut, std::vector<ushort>& _indicesOut) {
+void GeometryHandler::buildPolyLine(const Line& _line, float _halfWidth, std::vector<glm::vec3>& _pointsOut, std::vector<ushort>& _indicesOut) {
 
-    ushort vertexDataOffset = (ushort)_pointsOut.size();
-    
     //  UV implemented but commented as: _uvOut
     //
+    
+    ushort vertexDataOffset = (ushort)_pointsOut.size();
+    
     if(_line.size() >= 2){
-        ushort vertexDataOffset = (ushort)_pointsOut.size();
-        float pi = 3.14159265359;
         
-        glm::vec3 normi;             // Right normal to segment between previous and current m_points
-        glm::vec3 normip1;           // Right normal to segment between current and next m_points
+        glm::vec3 normPrevCurr;             // Right normal to segment between previous and current m_points
+        glm::vec3 normCurrNext;           // Right normal to segment between current and next m_points
         glm::vec3 rightNorm;         // Right "normal" at current point, scaled for miter joint
         
-        glm::vec3 im1;              // Previous point coordinates
-        glm::vec3 i0 = _line[0];    // Current point coordinates
-        glm::vec3 ip1 = _line[1];   // Next point coordinates
+        glm::vec3 prevCoord;              // Previous point coordinates
+        glm::vec3 currCoord = _line[0];    // Current point coordinates
+        glm::vec3 nextCoord = _line[1];   // Next point coordinates
     
-//        normip1.x = ip1.y - i0.y;
-//        normip1.y = i0.x - ip1.x;
-//        normip1.z = 0.;
-//        normip1 = glm::normalize(normip1);
+        normCurrNext.x = nextCoord.y - currCoord.y;
+        normCurrNext.y = currCoord.x - nextCoord.x;
+        normCurrNext.z = 0.;
+        normCurrNext = glm::normalize(normCurrNext);
         
-        glm::vec3 diff = ip1 - i0;
-        float angle = atan2f(diff.y, diff.x);
-        normip1 = glm::vec3(cos(angle+pi*0.5),
-                            sin(angle+pi*0.5),
-                            0.0);
-
-        rightNorm = glm::vec3(normip1.x*_width,
-                              normip1.y*_width,
-                              normip1.z*_width);
         
-        _pointsOut.push_back(i0 + rightNorm);
+        rightNorm = glm::vec3(normCurrNext.x*_halfWidth,
+                              normCurrNext.y*_halfWidth,
+                              normCurrNext.z*_halfWidth);
+        
+        _pointsOut.push_back(currCoord + rightNorm);
 //        _uvOut.push_back(glm::vec2(1.0,0.0));
         
-        _pointsOut.push_back(i0 - rightNorm);
+        _pointsOut.push_back(currCoord - rightNorm);
 //        _uvOut.push_back(glm::vec2(0.0,0.0));
         
         // Loop over intermediate m_points in the polyline
         //
         for (int i = 1; i < _line.size() - 1; i++) {
-            im1 = i0;
-            i0 = ip1;
-            ip1 = _line[i+1];
+            prevCoord = currCoord;
+            currCoord = nextCoord;
+            nextCoord = _line[i+1];
             
-            normi = normip1;
+            normPrevCurr = normCurrNext;
             
-//            normip1.x = ip1.y - i0.y;
-//            normip1.y = i0.x - ip1.x;
-//            normip1.z = 0.0f;
-//            normip1 = glm::normalize(normip1);
+            normCurrNext.x = nextCoord.y - currCoord.y;
+            normCurrNext.y = currCoord.x - nextCoord.x;
+            normCurrNext.z = 0.0f;
             
-            glm::vec3 diff = ip1 - i0;
-            float angle = atan2f(diff.y, diff.x);
-            normip1 = glm::vec3(cos(angle+pi*0.5),
-                                sin(angle+pi*0.5),
-                                0.0);
-            
-            rightNorm = normi + normip1;
-            float scale = _width;//sqrtf(2. / (1. + glm::dot(normi,normip1) )) * _width / 2.;
+            rightNorm = normPrevCurr + normCurrNext;
+            rightNorm = glm::normalize(rightNorm);
+            float scale = sqrtf(2. / (1. + glm::dot(normPrevCurr,normCurrNext) )) * _halfWidth / 2.;
             rightNorm *= scale;
             
-            _pointsOut.push_back(i0+rightNorm);
+            _pointsOut.push_back(currCoord+rightNorm);
 //            _uvOut.push_back(glm::vec2(1.0,(float)i/(float)_line.size()));
             
-            _pointsOut.push_back(i0-rightNorm);
+            _pointsOut.push_back(currCoord-rightNorm);
 //            _uvOut.push_back(glm::vec2(0.0,(float)i/(float)_line.size()));
             
         }
         
-        normip1 *= _width;
+        normCurrNext = glm::normalize(normCurrNext);
+        normCurrNext *= _halfWidth;
         
-        _pointsOut.push_back(ip1 + normip1);
+        _pointsOut.push_back(nextCoord + normCurrNext);
 //        _uvOut.push_back(glm::vec2(1.0,1.0));
         
-        _pointsOut.push_back(ip1 - normip1);
+        _pointsOut.push_back(nextCoord - normCurrNext);
 //        _uvOut.push_back(glm::vec2(0.0,1.0));
         
         for (int i = 0; i < _line.size() - 1; i++) {
-            _indicesOut.push_back(vertexDataOffset + 2*i+3);
             _indicesOut.push_back(vertexDataOffset + 2*i+2);
+            _indicesOut.push_back(vertexDataOffset + 2*i+1);
             _indicesOut.push_back(vertexDataOffset + 2*i);
             
-            _indicesOut.push_back(vertexDataOffset + 2*i);
-            _indicesOut.push_back(vertexDataOffset + 2*i+1);
+            _indicesOut.push_back(vertexDataOffset + 2*i+2);
             _indicesOut.push_back(vertexDataOffset + 2*i+3);
+            _indicesOut.push_back(vertexDataOffset + 2*i+1);
         }
     }
 }
 
-void GeometryHandler::buildQuadAtPoint(const Point& _point, const glm::vec3& _normal, float width, float height, std::vector<glm::vec3>& _pointsOut, std::vector<ushort>& _indicesOut) {
+void GeometryHandler::buildQuadAtPoint(const Point& _point, const glm::vec3& _normal, float halfWidth, float height, std::vector<glm::vec3>& _pointsOut, std::vector<ushort>& _indicesOut) {
 
 }
 
