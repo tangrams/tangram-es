@@ -7,7 +7,7 @@ import android.view.View;
 import android.view.Window;
 import android.util.Log;
 
-import android.support.v4.view.GestureDetectorCompat;
+import android.view.GestureDetector;
 import android.view.ScaleGestureDetector;
 import android.view.MotionEvent;
 
@@ -20,7 +20,7 @@ public class MainActivity extends Activity
 {
 
     private GLSurfaceView view;
-    private GestureDetectorCompat detector;
+    private GestureDetector detector;
     private ScaleGestureDetector scaleDetector;
 
     @Override
@@ -39,7 +39,7 @@ public class MainActivity extends Activity
 		setContentView(view);
         //create an instance of gesture detectors
         //      tangram implements OnScaleGestureListener and OnGestureListener
-        detector = new GestureDetectorCompat(this, tangram);
+        detector = new GestureDetector(this, tangram);
         scaleDetector = new ScaleGestureDetector(this, tangram);
     }
 
