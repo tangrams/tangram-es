@@ -26,7 +26,11 @@ OSX_XCODE_PROJ = tangram.xcodeproj
 IOS_XCODE_PROJ = tangram.xcodeproj
 
 ifndef ANDROID_ARCH
-	ANDROID_ARCH = x86
+	ANDROID_ARCH = armeabi-v7a
+endif
+
+ifndef ANDROID_API_LEVEL
+	ANDROID_API_LEVEL = android-19
 endif
 
 UNIT_TESTS_CMAKE_PARAMS = \
@@ -38,7 +42,7 @@ ANDROID_CMAKE_PARAMS = \
 	-DMAKE_BUILD_TOOL=$$ANDROID_NDK/prebuilt/darwin-x86_64/bin/make \
 	-DANDROID_ABI=${ANDROID_ARCH} \
 	-DANDROID_STL=c++_shared \
-	-DANDROID_NATIVE_API_LEVEL=android-19 
+	-DANDROID_NATIVE_API_LEVEL=${ANDROID_API_LEVEL}
 
 IOS_CMAKE_PARAMS = \
 	-DPLATFORM_TARGET=ios \
@@ -56,11 +60,11 @@ clean-android:
 	ndk-build -C android/jni clean
 	ant -f android/build.xml clean
 	rm -rf ${ANDROID_BUILD_DIR}
-	rm -rf android/libs android/obj
+	rm -rf android/libs/${ANDROID_ARCH} android/obj
 
 clean-osx:
 	rm -rf ${OSX_BUILD_DIR}
-
+	
 clean-ios:
 	rm -rf ${IOS_BUILD_DIR}
 
@@ -110,3 +114,4 @@ check-ndk:
 ifndef ANDROID_NDK
 	$(error ANDROID_NDK is undefined)
 endif
+

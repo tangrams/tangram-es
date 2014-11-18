@@ -3,34 +3,50 @@ package com.mapzen.tangram;
 import android.app.Activity;
 import android.opengl.GLSurfaceView;
 import android.os.Bundle;
-import android.view.View;
+import android.view.GestureDetector;
+import android.view.MotionEvent;
+import android.view.ScaleGestureDetector;
 import android.view.Window;
-import android.util.Log;
-
-import javax.microedition.khronos.egl.EGL10;
-import javax.microedition.khronos.egl.EGLConfig;
-import javax.microedition.khronos.egl.EGLContext;
-import javax.microedition.khronos.egl.EGLDisplay;
 
 public class MainActivity extends Activity
 {
 
     private GLSurfaceView view;
+    private GestureDetector detector;
+    private ScaleGestureDetector scaleDetector;
 
     @Override
     public void onCreate(Bundle savedInstanceState)
     {
-        
         super.onCreate(savedInstanceState);
-        
-        requestWindowFeature(Window.FEATURE_NO_TITLE);
 
+        requestWindowFeature(Window.FEATURE_NO_TITLE);
+        
+        Tangram tangram = new Tangram(this);
+        
 		view = new GLSurfaceView(getApplication());
 		view.setEGLContextClientVersion(2);
         view.setEGLConfigChooser(8,8,8,8,16,0);
-		view.setRenderer(new TangramRenderer(this));
+		view.setRenderer(tangram);
 		setContentView(view);
+		
+        detector = new GestureDetector(this, tangram);
+        scaleDetector = new ScaleGestureDetector(this, tangram);
+    }
 
+    @Override 
+    public boolean onTouchEvent(MotionEvent event) 
+    { 
+        //Pass the event to gestureDetector and scaleDetector
+        boolean retVal;
+        retVal = this.scaleDetector.onTouchEvent(event);
+        if(!this.scaleDetector.isInProgress()) {
+            retVal = this.detector.onTouchEvent(event);
+            if(!this.detector.onTouchEvent(event)) {
+                retVal = super.onTouchEvent(event);
+            }
+        }
+        return retVal;
     }
 
     @Override
@@ -48,3 +64,4 @@ public class MainActivity extends Activity
 	}
 
 }
+
