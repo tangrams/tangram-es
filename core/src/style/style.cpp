@@ -137,8 +137,6 @@ void PolygonStyle::buildPolygon(Polygon& _polygon, std::string& _layer, Properti
         abgr = 0xffcedcde;
     } else if (_layer.compare("water") == 0) {
         abgr = 0xff917d1a;
-    } else if (_layer.compare("roads") == 0) {
-        abgr = 0xff969696;
     } else if (_layer.compare("earth") == 0) {
         abgr = 0xff669171;
     } else if (_layer.compare("landuse") == 0) {
