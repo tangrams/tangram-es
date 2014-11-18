@@ -99,7 +99,29 @@ void PolygonStyle::buildPoint(Point& _point, std::string& _layer, Properties& _p
 }
 
 void PolygonStyle::buildLine(Line& _line, std::string& _layer, Properties& _props, VboMesh& _mesh) {
-    // No-op
+    std::vector<PosNormColVertex> vertices;
+    std::vector<GLushort> indices;
+    std::vector<glm::vec3> points;
+    
+    GLuint abgr = 0xff565656; // Default road color
+    float halfWidth = 0.02;
+    
+    GeometryHandler::buildPolyLine(_line, halfWidth, points, indices);
+    
+    for (int i = 0; i < points.size(); i++) {
+        glm::vec3 p = points[i];
+        glm::vec3 n = glm::vec3(0.0f, 0.0f, 1.0f);
+        vertices.push_back({ p.x, p.y, p.z, n.x, n.y, n.z, abgr });
+    }
+    
+    // Make sure indices get correctly offset
+    int vertOffset = _mesh.numVertices();
+    for (auto& ind : indices) {
+        ind += vertOffset;
+    }
+    
+    _mesh.addVertices((GLbyte*)vertices.data(), vertices.size());
+    _mesh.addIndices(indices.data(), indices.size());
 }
 
 void PolygonStyle::buildPolygon(Polygon& _polygon, std::string& _layer, Properties& _props, VboMesh& _mesh) {

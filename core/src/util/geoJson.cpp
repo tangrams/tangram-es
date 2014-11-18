@@ -77,14 +77,12 @@ void GeoJson::extractFeature(const Json::Value& _in, Feature& _out, const MapTil
             extractPoint(pointCoords, _out.points.back(), _tile);
         }
         
-    } else if (geometryType.compare("Line") == 0) {
-        
+    } else if (geometryType.compare("LineString") == 0) {
         _out.geometryType = GeometryType::LINES;
         _out.lines.emplace_back();
         extractLine(coords, _out.lines.back(), _tile);
         
-    } else if (geometryType.compare("MultiLine") == 0) {
-        
+    } else if (geometryType.compare("MultiLineString") == 0) {
         _out.geometryType = GeometryType::LINES;
         for (const auto& lineCoords : coords) {
             _out.lines.emplace_back();

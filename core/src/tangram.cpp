@@ -33,9 +33,9 @@ void initialize() {
     polyStyle->addLayers({
         "buildings",
         "water",
-        "roads",
         "earth",
-        "landuse"
+        "landuse",
+        "roads"
     });
 
     // Create a scene definition and add the style

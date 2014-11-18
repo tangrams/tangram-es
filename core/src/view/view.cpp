@@ -103,10 +103,6 @@ const std::set<TileID>& View::getVisibleTiles() {
         return m_visibleTiles;
     }
 
-    logMsg("Viewport: \n");
-    logMsg("    Pos: %f, %f \n", m_pos.x, m_pos.y);
-    logMsg("    Size: %f, %f \n", m_width, m_height);
-
     m_visibleTiles.clear();
 
     float tileSize = 2 * MapProjection::HALF_CIRCUMFERENCE * pow(2, -m_zoom);
@@ -141,12 +137,6 @@ const std::set<TileID>& View::getVisibleTiles() {
     }
 
     m_dirty = false;
-
-    logMsg("Visible Tiles: \n");
-
-    for (auto& tileID : m_visibleTiles) {
-        logMsg("    %d / %d / %d \n", tileID.z, tileID.x, tileID.y);
-    }
 
     return m_visibleTiles;
 
