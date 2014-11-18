@@ -103,8 +103,8 @@ void PolygonStyle::buildLine(Line& _line, std::string& _layer, Properties& _prop
     std::vector<GLushort> indices;
     std::vector<glm::vec3> points;
     
-    GLuint abgr = 0xff969696; // Default road color
-    float halfWidth = 0.03;
+    GLuint abgr = 0xff565656; // Default road color
+    float halfWidth = 0.02;
     
     GeometryHandler::buildPolyLine(_line, halfWidth, points, indices);
     
