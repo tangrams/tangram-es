@@ -52,6 +52,8 @@ public:
     virtual ~View() {
         m_visibleTiles.clear();
     }
+    
+    static const int s_maxZoom = 18;
 
 private:
 
