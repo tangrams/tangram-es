@@ -6,7 +6,7 @@ class PolylineStyle : public Style {
     
 protected:
     
-    struct PosNormColVertex {
+    struct PosNormEnormColVertex {
         //Position Data
         GLfloat pos_x;
         GLfloat pos_y;
@@ -15,6 +15,10 @@ protected:
         GLfloat norm_x;
         GLfloat norm_y;
         GLfloat norm_z;
+        //ExtrudeNormal Data
+        GLfloat enorm_x;
+        GLfloat enorm_y;
+        GLfloat ewidth;
         //Color Data
         GLuint abgr;
     };

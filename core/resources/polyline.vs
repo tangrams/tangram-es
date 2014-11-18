@@ -7,16 +7,26 @@ uniform vec4 u_lightDirection;
 uniform float u_time;
 
 attribute vec4 a_position;
-attribute vec4 a_normal;
+attribute vec3 a_normal;
+attribute vec3 a_extrudeNormal;
+attribute float a_extrudeWidth;
 attribute vec4 a_color;
 
+varying vec4 v_pos;
 varying vec4 v_color;
 
 void main() {
-  float lit = dot(normalize(u_lightDirection), normalize(a_normal));
-  v_color = a_color;
-  // v_color.rgb = vec3(abs(cos(u_time)),abs(sin(u_time)),0.5);
-  v_color.rgb *= clamp(lit * 1.5, 0.5, 1.5);
 
-  gl_Position = u_modelViewProj * a_position;
+	vec4 normal = vec4(0.,0.,1.,0.);
+
+  	float lit = dot(normalize(u_lightDirection), normalize(normal));
+  	v_color = a_color;
+  	v_color.rgb *= clamp(lit * 1.5, 0.5, 1.5);
+
+  	v_pos = a_position;
+
+  	v_pos.xyz += a_extrudeNormal*(a_extrudeWidth*abs(sin(u_time*2.)));
+  	// pos.xyz += a_extrudeNormal*(a_extrudeWidth*abs(sin(u_time*4.*pos.x*pos.y)));
+
+	gl_Position = u_modelViewProj * v_pos;
 }
