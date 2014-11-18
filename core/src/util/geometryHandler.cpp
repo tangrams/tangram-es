@@ -91,10 +91,9 @@ void GeometryHandler::buildPolyLine(const Line& _line, float _halfWidth, std::ve
 
     //  UV implemented but commented as: _uvOut
     //
-    
-    ushort vertexDataOffset = (ushort)_pointsOut.size();
-    
     if(_line.size() >= 2){
+        
+        ushort vertexDataOffset = (ushort)_pointsOut.size();
         
         glm::vec3 normPrevCurr;             // Right normal to segment between previous and current m_points
         glm::vec3 normCurrNext;           // Right normal to segment between current and next m_points
@@ -106,7 +105,7 @@ void GeometryHandler::buildPolyLine(const Line& _line, float _halfWidth, std::ve
     
         normCurrNext.x = nextCoord.y - currCoord.y;
         normCurrNext.y = currCoord.x - nextCoord.x;
-        normCurrNext.z = 0.;
+        normCurrNext.z = 0.0f;
         normCurrNext = glm::normalize(normCurrNext);
         
         

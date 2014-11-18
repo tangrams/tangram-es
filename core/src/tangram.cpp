@@ -7,7 +7,9 @@
 #include "tile/tileManager.h"
 #include "view/view.h"
 #include "data/dataSource.h"
-#include "style/style.h"
+
+#include "style/polygonStyle.h"
+#include "style/polylineStyle.h"
 #include "scene/scene.h"
 
 namespace Tangram {
@@ -33,13 +35,16 @@ void initialize() {
         "buildings",
         "water",
         "earth",
-        "landuse",
-        "roads"
+        "landuse"
     });
+    
+    std::unique_ptr<Style> linesStyle(new PolylineStyle("Polyline"));
+    polyStyle->addLayers({"roads"});
 
     // Create a scene definition and add the style
     m_scene = std::make_shared<Scene>();
-    m_scene->addStyle(std::move(polyStyle));
+    //m_scene->addStyle(std::move(polyStyle));
+    m_scene->addStyle(std::move(linesStyle));
 
     // Create a tileManager
     m_tileManager = TileManager::GetInstance();

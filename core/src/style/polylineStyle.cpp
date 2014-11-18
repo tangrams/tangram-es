@@ -1,0 +1,121 @@
+#include "polylineStyle.h"
+#include "util/geometryHandler.h"
+
+#include <time.h>
+
+PolylineStyle::PolylineStyle(std::string _name, GLenum _drawMode) : Style(_name, _drawMode) {
+    
+    constructVertexLayout();
+    constructShaderProgram();
+    
+}
+
+void PolylineStyle::constructVertexLayout() {
+    
+    // TODO: Ideally this would be in the same location as the struct that it basically describes
+    m_vertexLayout = std::shared_ptr<VertexLayout>(new VertexLayout({
+        {"a_position", 3, GL_FLOAT, false, 0},
+        {"a_normal", 3, GL_FLOAT, false, 0},
+        {"a_color", 4, GL_UNSIGNED_BYTE, true, 0}
+    }));
+    
+}
+
+void PolylineStyle::constructShaderProgram() {
+    
+    std::string vertShaderSrcStr = stringFromResource("polyline.vs");
+    
+    std::string fragShaderSrcStr = stringFromResource("polyline.fs");
+    
+    m_shaderProgram = std::make_shared<ShaderProgram>();
+    m_shaderProgram->buildFromSourceStrings(fragShaderSrcStr, vertShaderSrcStr);
+    
+}
+
+void PolylineStyle::setup() {
+    clock_t t = clock();
+    m_shaderProgram->setUniformf("u_lightDirection", -1.0, -1.0, 1.0, 0.0);
+    m_shaderProgram->setUniformf("u_time", ((float)t)/CLOCKS_PER_SEC);
+}
+
+void PolylineStyle::buildPoint(Point& _point, std::string& _layer, Properties& _props, VboMesh& _mesh) {
+    // No-op
+}
+
+void PolylineStyle::buildLine(Line& _line, std::string& _layer, Properties& _props, VboMesh& _mesh) {
+    std::vector<PosNormColVertex> vertices;
+    std::vector<GLushort> indices;
+    std::vector<glm::vec3> points;
+    
+    GLuint abgr = 0xff969696; // Default road color
+    float halfWidth = 0.02;
+    
+    GeometryHandler::buildPolyLine(_line, halfWidth, points, indices);
+    
+    for (int i = 0; i < points.size(); i++) {
+        glm::vec3 p = points[i];
+        glm::vec3 n = glm::vec3(0.0f, 0.0f, 1.0f);
+        vertices.push_back({ p.x, p.y, p.z, n.x, n.y, n.z, abgr });
+    }
+    
+    // Make sure indices get correctly offset
+    int vertOffset = _mesh.numVertices();
+    for (auto& ind : indices) {
+        ind += vertOffset;
+    }
+    
+    _mesh.addVertices((GLbyte*)vertices.data(), vertices.size());
+    _mesh.addIndices(indices.data(), indices.size());
+}
+
+void PolylineStyle::buildPolygon(Polygon& _polygon, std::string& _layer, Properties& _props, VboMesh& _mesh) {
+    
+    std::vector<PosNormColVertex> vertices;
+    std::vector<GLushort> indices;
+    std::vector<glm::vec3> points;
+    std::vector<glm::vec3> normals;
+    
+    GLuint abgr = 0xffaaaaaa; // Default color
+    
+    if (_layer.compare("buildings") == 0) {
+        abgr = 0xffcedcde;
+    } else if (_layer.compare("water") == 0) {
+        abgr = 0xff917d1a;
+    } else if (_layer.compare("roads") == 0) {
+        abgr = 0xff969696;
+    } else if (_layer.compare("earth") == 0) {
+        abgr = 0xff669171;
+    } else if (_layer.compare("landuse") == 0) {
+        abgr = 0xff507480;
+    }
+    
+    float height = _props.numericProps["height"]; // Inits to zero if not present in data
+    float minHeight = _props.numericProps["min_height"]; // Inits to zero if not present in data
+    
+    if (minHeight != height) {
+        for (auto& line : _polygon) {
+            for (auto& point : line) {
+                point.z = height;
+            }
+        }
+        GeometryHandler::buildPolygonExtrusion(_polygon, minHeight, points, normals, indices);
+    }
+    
+    GeometryHandler::buildPolygon(_polygon, points, normals, indices);
+    
+    for (int i = 0; i < points.size(); i++) {
+        glm::vec3 p = points[i];
+        glm::vec3 n = normals[i];
+        vertices.push_back({ p.x, p.y, p.z, n.x, n.y, n.z, abgr });
+    }
+    
+    // Make sure indices get correctly offset
+    int vertOffset = _mesh.numVertices();
+    for (auto& ind : indices) {
+        ind += vertOffset;
+    }
+    
+    _mesh.addVertices((GLbyte*)vertices.data(), vertices.size());
+    _mesh.addIndices(indices.data(), indices.size());
+    
+}
