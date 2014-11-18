@@ -59,9 +59,16 @@ void View::translate(double _dx, double _dy) {
 
 }
 
+void View::zoom(int _dz) {
+    setZoom(m_zoom + _dz);
+}
+
 void View::setZoom(int _z) {
 
     // Calculate viewport dimensions
+    if(_z > s_maxZoom) {
+        _z = s_maxZoom;
+    }
     m_zoom = _z;
     float tileSize = 2 * MapProjection::HALF_CIRCUMFERENCE * pow(2, -m_zoom);
     m_height = 3 * tileSize; // Set viewport size to ~3 tiles vertically
