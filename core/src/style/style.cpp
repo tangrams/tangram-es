@@ -116,7 +116,6 @@ void PolygonStyle::buildLine(Line& _line, std::string& _layer, Properties& _prop
     
     // Make sure indices get correctly offset
     int vertOffset = _mesh.numVertices();
-    logMsg("Adding to prev Mesh : %i \n",vertOffset);
     for (auto& ind : indices) {
         ind += vertOffset;
     }
