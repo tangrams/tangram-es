@@ -2,6 +2,7 @@
 
 #include <memory>
 #include <utility>
+#include <cmath>
 
 #include "platform.h"
 #include "tile/tileManager.h"
@@ -32,9 +33,9 @@ void initialize() {
     polyStyle->addLayers({
         "buildings",
         "water",
-        "roads",
         "earth",
-        "landuse"
+        "landuse",
+        "roads"
     });
 
     // Create a scene definition and add the style
@@ -53,10 +54,17 @@ void initialize() {
     m_tileManager->addDataSource(std::move(dataSource));
 
     // Set up openGL state
+    glDisable(GL_BLEND);
+    glDisable(GL_STENCIL_TEST);
     glEnable(GL_DEPTH_TEST);
+    glClearDepthf(1.0);
+    glDepthRangef(0.0, 1.0);
+    glDepthMask(GL_TRUE);
     glDepthFunc(GL_LEQUAL);
     glEnable(GL_CULL_FACE);
+    glFrontFace(GL_CCW);
     glCullFace(GL_BACK);
+    glClearColor(0.3f, 0.3f, 0.3f, 1.0f);
 
     logMsg("%s\n", "finish initialize");
 
@@ -115,6 +123,26 @@ void render() {
         logMsg("GL Error %d!!!\n", glError);
     }
 
+}
+    
+void handleTapGesture(float _posX, float _posY) {
+    logMsg("Do tap: (%f,%f)\n", _posX, _posY);
+    m_view->translate(_posX, _posY);
+}
+
+void handleDoubleTapGesture(float _posX, float _posY) {
+    logMsg("Do double tap: (%f,%f)\n", _posX, _posY);
+}
+
+void handlePanGesture(float _velX, float _velY) {
+    // TODO: Pan distance should be a function of zoom
+    m_view->translate(-_velX * 0.2, _velY * 0.2);
+    logMsg("Pan Velocity: (%f,%f)\n", _velX, _velY);
+}
+
+void handlePinchGesture(float _posX, float _posY, float _scale) {
+    logMsg("Do pinch, pos1: (%f, %f)\tscale: (%f)\n", _posX, _posY, _scale);
+    m_view->zoom( _scale < 1.0 ? -1 : 1);
 }
 
 void teardown() {

@@ -103,7 +103,9 @@ DerivedData
 CMakeCache.txt
 CMakeScripts
 CMakeFiles
+build/**
 build/**/Makefile
+**/include/**/Makefile
 cmake_install.cmake
 install_manifest.txt
 

@@ -8,10 +8,9 @@
 #include "util/shaderProgram.h"
 #include "util/mapProjection.h"
 #include "tile/mapTile.h"
+#include "tileData.h"
 #include "platform.h"
 #include "gl.h"
-
-#include "json/json.h"
 
 /* Means of constructing and rendering map geometry
  *
@@ -49,10 +48,10 @@ protected:
     virtual void constructShaderProgram() = 0;
     
     /* Build styled vertex data for point geometry and add it to the given <VboMesh> */
-    virtual void buildPoint(glm::vec3& _point, Json::Value& _props, VboMesh& _mesh) = 0;
+    virtual void buildPoint(Point& _point, std::string& _layer, Properties& _props, VboMesh& _mesh) = 0;
     
     /* Build styled vertex data for line geometry and add it to the given <VboMesh> */
-    virtual void buildLine(std::vector<glm::vec3>& _line, Json::Value& _props, VboMesh& _mesh) = 0;
+    virtual void buildLine(Line& _line, std::string& _layer, Properties& _props, VboMesh& _mesh) = 0;
     
     /* Build styled vertex data for polygon geometry and add it to the given <VboMesh> 
      * 
@@ -61,7 +60,7 @@ protected:
      * simple polygon (in the mathematical sense), _sizes will have one element which is
      * the number of points in the first vector.
      */
-    virtual void buildPolygon(std::vector<glm::vec3>& _polygon, std::vector<int>& _sizes, Json::Value& _props, VboMesh& _mesh) = 0;
+    virtual void buildPolygon(Polygon& _polygon, std::string& _layer, Properties& _props, VboMesh& _mesh) = 0;
 
 public:
 
@@ -72,7 +71,7 @@ public:
     virtual void addLayers(std::vector<std::string> _layers);
     
     /* Add styled geometry from the given Json object to the given <MapTile> */
-    virtual void addData(const Json::Value& _jsonRoot, MapTile& _tile, const MapProjection& _mapProjection);
+    virtual void addData(TileData& _data, MapTile& _tile, const MapProjection& _mapProjection);
     
     /* Perform any setup needed before drawing each frame */
     virtual void setup() = 0;
@@ -102,9 +101,9 @@ protected:
     
     virtual void constructVertexLayout() override;
     virtual void constructShaderProgram() override;
-    virtual void buildPoint(glm::vec3& _point, Json::Value& _props, VboMesh& _mesh) override;
-    virtual void buildLine(std::vector<glm::vec3>& _line, Json::Value& _props, VboMesh& _mesh) override;
-    virtual void buildPolygon(std::vector<glm::vec3>& _polygon, std::vector<int>& _sizes, Json::Value& _props, VboMesh& _mesh) override;
+    virtual void buildPoint(Point& _point, std::string& _layer, Properties& _props, VboMesh& _mesh) override;
+    virtual void buildLine(Line& _line, std::string& _layer, Properties& _props, VboMesh& _mesh) override;
+    virtual void buildPolygon(Polygon& _polygon, std::string& _layer, Properties& _props, VboMesh& _mesh) override;
 
 public:
  

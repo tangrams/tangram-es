@@ -1,6 +1,5 @@
 #include "style.h"
 #include "util/geometryHandler.h"
-#include "util/jsonExtractor.h"
 
 /*
  * Style Class Methods
@@ -17,74 +16,39 @@ void Style::addLayers(std::vector<std::string> _layers) {
     m_layers.insert(_layers.cbegin(), _layers.cend());
 }
 
-void Style::addData(const Json::Value& _jsonRoot, MapTile& _tile, const MapProjection& _mapProjection) {
+void Style::addData(TileData& _data, MapTile& _tile, const MapProjection& _mapProjection) {
     
     VboMesh* mesh = new VboMesh(m_vertexLayout, m_drawMode);
     
-    for (const std::string& layer : m_layers) {
+    for (auto& layer : _data.layers) {
         
-        if (!_jsonRoot.isMember(layer.c_str())) {
+        if (m_layers.find(layer.name) == m_layers.end()) {
             continue;
         }
         
-        Json::Value layerFeatures = _jsonRoot[layer.c_str()]["features"];
-        for (auto& feature : layerFeatures) {
-            
-            Json::Value props = feature["properties"];
-            props["layer"] = layer;
-            Json::Value geometry = feature["geometry"];
-            Json::Value coords = geometry["coordinates"];
-            std::string geometryType = geometry["type"].asString();
-            
-            //TODO: For all these JsonExtraction and build calls 
-            //      make this a vector<*glm::vec3> for better std::vector operations
+        for (auto& feature : layer.features) {
 
-            if (geometryType.compare("Point") == 0) {
-                
-                glm::vec3 point;
-                JsonExtractor::extractPoint(coords, point, _mapProjection, _tile.getOrigin());
-                buildPoint(point, props, *mesh);
-                
-            } else if (geometryType.compare("MultiPoint") == 0) {
-                
-                for (auto& pointCoords : coords) {
-                    glm::vec3 point;
-                    JsonExtractor::extractPoint(pointCoords, point, _mapProjection, _tile.getOrigin());
-                    buildPoint(point, props, *mesh);
-                }
-                
-            } else if (geometryType.compare("LineString") == 0) {
-                
-                std::vector<glm::vec3> line;
-                JsonExtractor::extractLine(coords, line, _mapProjection, _tile.getOrigin());
-                buildLine(line, props, *mesh);
-                
-            } else if (geometryType.compare("MultiLineString") == 0) {
-                
-                for (auto& lineCoords: coords) {
-                    std::vector<glm::vec3> line;
-                    JsonExtractor::extractLine(lineCoords, line, _mapProjection, _tile.getOrigin());
-                    buildLine(line, props, *mesh);
-                }
-                
-            } else if (geometryType.compare("Polygon") == 0) {
-                
-                std::vector<glm::vec3> polygon;
-                std::vector<int> sizes;
-                JsonExtractor::extractPoly(coords, polygon, sizes, _mapProjection, _tile.getOrigin());
-                buildPolygon(polygon, sizes, props, *mesh);
-                
-            } else if (geometryType.compare("MultiPolygon") == 0) {
-                
-                for (auto& polygonCoords : coords) {
-                    std::vector<glm::vec3> polygon;
-                    std::vector<int> sizes;
-                    JsonExtractor::extractPoly(polygonCoords, polygon, sizes, _mapProjection, _tile.getOrigin());
-                    buildPolygon(polygon, sizes, props, *mesh);
-                }
-                
-            } else if (geometryType.compare("GeometryCollection") == 0) {
-                logMsg("Friendly reminder that GeometryCollection objects still need to be handled\n");
+            switch (feature.geometryType) {
+                case GeometryType::POINTS:
+                    // Build points
+                    for (auto& point : feature.points) {
+                        buildPoint(point, layer.name, feature.props, *mesh);
+                    }
+                    break;
+                case GeometryType::LINES:
+                    // Build lines
+                    for (auto& line : feature.lines) {
+                        buildLine(line, layer.name, feature.props, *mesh);
+                    }
+                    break;
+                case GeometryType::POLYGONS:
+                    // Build polygons
+                    for (auto& polygon : feature.polygons) {
+                        buildPolygon(polygon, layer.name, feature.props, *mesh);
+                    }
+                    break;
+                default:
+                    break;
             }
         }
     }
@@ -130,55 +94,70 @@ void PolygonStyle::setup() {
     m_shaderProgram->setUniformf("u_lightDirection", -1.0, -1.0, 1.0, 0.0);
 }
 
-void PolygonStyle::buildPoint(glm::vec3& _point, Json::Value& _props, VboMesh& _mesh) {
+void PolygonStyle::buildPoint(Point& _point, std::string& _layer, Properties& _props, VboMesh& _mesh) {
     // No-op
 }
 
-void PolygonStyle::buildLine(std::vector<glm::vec3>& _line, Json::Value& _props, VboMesh& _mesh) {
-    // No-op
+void PolygonStyle::buildLine(Line& _line, std::string& _layer, Properties& _props, VboMesh& _mesh) {
+    std::vector<PosNormColVertex> vertices;
+    std::vector<GLushort> indices;
+    std::vector<glm::vec3> points;
+    
+    GLuint abgr = 0xff565656; // Default road color
+    float halfWidth = 0.02;
+    
+    GeometryHandler::buildPolyLine(_line, halfWidth, points, indices);
+    
+    for (int i = 0; i < points.size(); i++) {
+        glm::vec3 p = points[i];
+        glm::vec3 n = glm::vec3(0.0f, 0.0f, 1.0f);
+        vertices.push_back({ p.x, p.y, p.z, n.x, n.y, n.z, abgr });
+    }
+    
+    // Make sure indices get correctly offset
+    int vertOffset = _mesh.numVertices();
+    for (auto& ind : indices) {
+        ind += vertOffset;
+    }
+    
+    _mesh.addVertices((GLbyte*)vertices.data(), vertices.size());
+    _mesh.addIndices(indices.data(), indices.size());
 }
 
-void PolygonStyle::buildPolygon(std::vector<glm::vec3>& _polygon, std::vector<int>& _sizes, Json::Value& _props, VboMesh& _mesh) {
+void PolygonStyle::buildPolygon(Polygon& _polygon, std::string& _layer, Properties& _props, VboMesh& _mesh) {
     
     std::vector<PosNormColVertex> vertices;
     std::vector<GLushort> indices;
-    
     std::vector<glm::vec3> points;
     std::vector<glm::vec3> normals;
 
     GLuint abgr = 0xffaaaaaa; // Default color
     
-    std::string layer = _props["layer"].asString();
-    if (layer.compare("buildings") == 0) {
+    if (_layer.compare("buildings") == 0) {
         abgr = 0xffcedcde;
-    } else if (layer.compare("water") == 0) {
+    } else if (_layer.compare("water") == 0) {
         abgr = 0xff917d1a;
-    } else if (layer.compare("roads") == 0) {
+    } else if (_layer.compare("roads") == 0) {
         abgr = 0xff969696;
-    } else if (layer.compare("earth") == 0) {
+    } else if (_layer.compare("earth") == 0) {
         abgr = 0xff669171;
-    } else if (layer.compare("landuse") == 0) {
+    } else if (_layer.compare("landuse") == 0) {
         abgr = 0xff507480;
     }
     
-    float height = 0;
-    float minHeight = 0;
-    
-    if (_props.isMember("height")) {
-        height = _props["height"].asFloat();
-    }
-    if (_props.isMember("min_height")) {
-        minHeight = _props["min_height"].asFloat();
-    }
+    float height = _props.numericProps["height"]; // Inits to zero if not present in data
+    float minHeight = _props.numericProps["min_height"]; // Inits to zero if not present in data
     
     if (minHeight != height) {
-        for (auto& pt : _polygon) {
-            pt.z = height;
+        for (auto& line : _polygon) {
+            for (auto& point : line) {
+                point.z = height;
+            }
         }
-        GeometryHandler::buildPolygonExtrusion(_polygon, _sizes, minHeight, points, normals, indices);
+        GeometryHandler::buildPolygonExtrusion(_polygon, minHeight, points, normals, indices);
     }
     
-    GeometryHandler::buildPolygon(_polygon, _sizes, points, normals, indices);
+    GeometryHandler::buildPolygon(_polygon, points, normals, indices);
     
     for (int i = 0; i < points.size(); i++) {
         glm::vec3 p = points[i];

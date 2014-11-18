@@ -59,9 +59,16 @@ void View::translate(double _dx, double _dy) {
 
 }
 
+void View::zoom(int _dz) {
+    setZoom(m_zoom + _dz);
+}
+
 void View::setZoom(int _z) {
 
     // Calculate viewport dimensions
+    if(_z > s_maxZoom) {
+        _z = s_maxZoom;
+    }
     m_zoom = _z;
     float tileSize = 2 * MapProjection::HALF_CIRCUMFERENCE * pow(2, -m_zoom);
     m_height = 3 * tileSize; // Set viewport size to ~3 tiles vertically
@@ -95,10 +102,6 @@ const std::set<TileID>& View::getVisibleTiles() {
     if (!m_dirty) {
         return m_visibleTiles;
     }
-
-    logMsg("Viewport: \n");
-    logMsg("    Pos: %f, %f \n", m_pos.x, m_pos.y);
-    logMsg("    Size: %f, %f \n", m_width, m_height);
 
     m_visibleTiles.clear();
 
@@ -134,12 +137,6 @@ const std::set<TileID>& View::getVisibleTiles() {
     }
 
     m_dirty = false;
-
-    logMsg("Visible Tiles: \n");
-
-    for (auto& tileID : m_visibleTiles) {
-        logMsg("    %d / %d / %d \n", tileID.z, tileID.x, tileID.y);
-    }
 
     return m_visibleTiles;
 
