@@ -53,10 +53,17 @@ void initialize() {
     m_tileManager->addDataSource(std::move(dataSource));
 
     // Set up openGL state
+    glDisable(GL_BLEND);
+    glDisable(GL_STENCIL_TEST);
     glEnable(GL_DEPTH_TEST);
+    glClearDepthf(1.0);
+    glDepthRangef(0.0, 1.0);
+    glDepthMask(GL_TRUE);
     glDepthFunc(GL_LEQUAL);
     glEnable(GL_CULL_FACE);
+    glFrontFace(GL_CCW);
     glCullFace(GL_BACK);
+    glClearColor(0.3f, 0.3f, 0.3f, 1.0f);
 
     logMsg("%s\n", "finish initialize");
 
