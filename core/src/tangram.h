@@ -1,7 +1,5 @@
 #pragma once
 
-#include "glm/glm.hpp"
-
 #include "platform.h"
 
 /* Tangram API
@@ -27,13 +25,13 @@ void update(float _dt);
 void render();
 
 // Respond to touch input
-void handleTapGesture(const glm::vec2 _position);
+void handleTapGesture(float _posX, float _posY);
     
-void handleDoubleTapGesture(const glm::vec2 _position);
+void handleDoubleTapGesture(float _posX, float _posY);
     
-void handlePanGesture(const glm::vec2 _velocity);
+void handlePanGesture(float _velX, float _velY);
     
-void handlePinchGesture(const glm::vec2 _position, const float _scale = 1.0);
+void handlePinchGesture(float _posX, float _posY, float _scale = 1.0);
 
 // Release resources and shut down renderer
 void teardown();

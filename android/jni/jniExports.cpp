@@ -27,19 +27,19 @@ extern "C" {
 	}
 
     JNIEXPORT void JNICALL Java_com_mapzen_tangram_Tangram_handleTapGesture(JNIEnv* jniEnv, jobject obj, jfloat posX, jfloat posY) {
-        Tangram::handleTapGesture(glm::vec2(posX, posY));
+        Tangram::handleTapGesture(posX, posY);
     }
 
     JNIEXPORT void JNICALL Java_com_mapzen_tangram_Tangram_handleDoubleTapGesture(JNIEnv* jniEnv, jobject obj, jfloat posX, jfloat posY) {
-        Tangram::handleDoubleTapGesture(glm::vec2(posX, posY));
+        Tangram::handleDoubleTapGesture(posX, posY);
     }
 
     JNIEXPORT void JNICALL Java_com_mapzen_tangram_Tangram_handlePanGesture(JNIEnv* jniEnv, jobject obj, jfloat velX, jfloat velY) {
-        Tangram::handlePanGesture(glm::vec2(velX, velY));
+        Tangram::handlePanGesture(velX, velY);
     }
 
     JNIEXPORT void JNICALL Java_com_mapzen_tangram_Tangram_handlePinchGesture(JNIEnv* jniEnv, jobject obj, jfloat posX, jfloat posY, jfloat scale) {
-        Tangram::handlePinchGesture(glm::vec2(posX, posY), scale);
+        Tangram::handlePinchGesture(posX, posY, scale);
     }
     
 }

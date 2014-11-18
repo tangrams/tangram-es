@@ -2,6 +2,7 @@
 
 #include <memory>
 #include <utility>
+#include <cmath>
 
 #include "platform.h"
 #include "tile/tileManager.h"
@@ -124,24 +125,23 @@ void render() {
 
 }
     
-void handleTapGesture(const glm::vec2 _position) {
-    logMsg("Do tap: (%f,%f)\n", _position.x, _position.y);
-    m_view->translate(_position.x, _position.y);
+void handleTapGesture(float _posX, float _posY) {
+    logMsg("Do tap: (%f,%f)\n", _posX, _posY);
+    m_view->translate(_posX, _posY);
 }
 
-void handleDoubleTapGesture(const glm::vec2 _position) {
-    logMsg("Do double tap: (%f,%f)\n", _position.x, _position.y);
+void handleDoubleTapGesture(float _posX, float _posY) {
+    logMsg("Do double tap: (%f,%f)\n", _posX, _posY);
 }
 
-void handlePanGesture(const glm::vec2 _velocity) {
-    float invVelLen = 1.0/_velocity.length();
-    glm::vec2 normalVel = glm::vec2(-_velocity.x * invVelLen, _velocity.y * invVelLen);
-    m_view->translate(normalVel.x*0.5, normalVel.y*0.5);
-    logMsg("Pan Velocity: (%f,%f)\tPan Normalized Velocity: (%f,%f)\n", _velocity.x, _velocity.y, normalVel.x, normalVel.y);
+void handlePanGesture(float _velX, float _velY) {
+    // TODO: Pan distance should be a function of zoom
+    m_view->translate(-_velX * 0.2, _velY * 0.2);
+    logMsg("Pan Velocity: (%f,%f)\n", _velX, _velY);
 }
 
-void handlePinchGesture(const glm::vec2 _position, const float _scale) {
-    logMsg("Do pinch, pos1: (%f, %f)\tscale: (%f)\n", _position.x, _position.y, _scale);
+void handlePinchGesture(float _posX, float _posY, float _scale) {
+    logMsg("Do pinch, pos1: (%f, %f)\tscale: (%f)\n", _posX, _posY, _scale);
     m_view->zoom( _scale < 1.0 ? -1 : 1);
 }
 
