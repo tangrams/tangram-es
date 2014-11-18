@@ -135,7 +135,7 @@ void GeometryHandler::buildPolyLine(const Line& _line, float _halfWidth, std::ve
             
             rightNorm = normPrevCurr + normCurrNext;
             rightNorm = glm::normalize(rightNorm);
-            float scale = sqrtf(2. / (1. + glm::dot(normPrevCurr,normCurrNext) )) * _halfWidth * 0.5;
+            float scale = _halfWidth / sqrt(2. * (1. + glm::dot(normPrevCurr, normCurrNext)));
             rightNorm *= scale;
             
             _pointsOut.push_back(currCoord+rightNorm);
