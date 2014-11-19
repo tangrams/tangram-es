@@ -7,15 +7,18 @@ class PolygonStyle : public Style {
 protected:
     
     struct PosNormColVertex {
-        //Position Data
+        // Position Data
         GLfloat pos_x;
         GLfloat pos_y;
         GLfloat pos_z;
-        //Normal Data
+        // Normal Data
         GLfloat norm_x;
         GLfloat norm_y;
         GLfloat norm_z;
-        //Color Data
+        // UV Data
+        GLfloat uv_x;
+        GLfloat uv_y;
+        // Color Data
         GLuint abgr;
     };
     

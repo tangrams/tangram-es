@@ -11,11 +11,10 @@ protected:
         GLfloat pos_x;
         GLfloat pos_y;
         GLfloat pos_z;
-        //Normal Data
-        GLfloat norm_x;
-        GLfloat norm_y;
-        GLfloat norm_z;
-        //ExtrudeNormal Data
+        // Extrude Normals Data
+        GLfloat uv_x;
+        GLfloat uv_y;
+        // Extrude Normals Data
         GLfloat enorm_x;
         GLfloat enorm_y;
         GLfloat ewidth;

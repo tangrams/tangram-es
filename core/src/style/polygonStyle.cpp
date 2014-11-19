@@ -14,6 +14,7 @@ void PolygonStyle::constructVertexLayout() {
     m_vertexLayout = std::shared_ptr<VertexLayout>(new VertexLayout({
         {"a_position", 3, GL_FLOAT, false, 0},
         {"a_normal", 3, GL_FLOAT, false, 0},
+        {"a_uv", 2, GL_FLOAT, false, 0},
         {"a_color", 4, GL_UNSIGNED_BYTE, true, 0}
     }));
     
@@ -31,7 +32,7 @@ void PolygonStyle::constructShaderProgram() {
 }
 
 void PolygonStyle::setup() {
-    m_shaderProgram->setUniformf("u_lightDirection", -1.0, -1.0, 1.0, 0.0);
+    m_shaderProgram->setUniformf("u_lightDirection", -1.0, -1.0, 1.0);
 }
 
 void PolygonStyle::buildPoint(Point& _point, std::string& _layer, Properties& _props, VboMesh& _mesh) {
@@ -39,29 +40,31 @@ void PolygonStyle::buildPoint(Point& _point, std::string& _layer, Properties& _p
 }
 
 void PolygonStyle::buildLine(Line& _line, std::string& _layer, Properties& _props, VboMesh& _mesh) {
-//    std::vector<PosNormColVertex> vertices;
-//    std::vector<GLushort> indices;
-//    std::vector<glm::vec3> points;
-//    
-//    GLuint abgr = 0xff969696; // Default road color
-//    float halfWidth = 0.02;
-//    
-//    GeometryHandler::buildPolyLine(_line, halfWidth, points, indices);
-//    
-//    for (int i = 0; i < points.size(); i++) {
-//        glm::vec3 p = points[i];
-//        glm::vec3 n = glm::vec3(0.0f, 0.0f, 1.0f);
-//        vertices.push_back({ p.x, p.y, p.z, n.x, n.y, n.z, abgr });
-//    }
-//    
-//    // Make sure indices get correctly offset
-//    int vertOffset = _mesh.numVertices();
-//    for (auto& ind : indices) {
-//        ind += vertOffset;
-//    }
-//    
-//    _mesh.addVertices((GLbyte*)vertices.data(), vertices.size());
-//    _mesh.addIndices(indices.data(), indices.size());
+    std::vector<PosNormColVertex> vertices;
+    std::vector<GLushort> indices;
+    std::vector<glm::vec3> points;
+    std::vector<glm::vec2> uvs;
+    
+    GLuint abgr = 0xff969696; // Default road color
+    float halfWidth = 0.02;
+    
+    GeometryHandler::buildPolyLine(_line, halfWidth, points, uvs, indices);
+    
+    for (int i = 0; i < points.size(); i++) {
+        glm::vec3 p = points[i];
+        glm::vec3 n = glm::vec3(0.0f, 0.0f, 1.0f);
+        glm::vec2 u = uvs[i];
+        vertices.push_back({ p.x, p.y, p.z, n.x, n.y, n.z, u.x, u.y, abgr });
+    }
+    
+    // Make sure indices get correctly offset
+    int vertOffset = _mesh.numVertices();
+    for (auto& ind : indices) {
+        ind += vertOffset;
+    }
+    
+    _mesh.addVertices((GLbyte*)vertices.data(), vertices.size());
+    _mesh.addIndices(indices.data(), indices.size());
 }
 
 void PolygonStyle::buildPolygon(Polygon& _polygon, std::string& _layer, Properties& _props, VboMesh& _mesh) {
@@ -70,6 +73,7 @@ void PolygonStyle::buildPolygon(Polygon& _polygon, std::string& _layer, Properti
     std::vector<GLushort> indices;
     std::vector<glm::vec3> points;
     std::vector<glm::vec3> normals;
+    std::vector<glm::vec2> uvs;
     
     GLuint abgr = 0xffaaaaaa; // Default color
     
@@ -94,15 +98,16 @@ void PolygonStyle::buildPolygon(Polygon& _polygon, std::string& _layer, Properti
                 point.z = height;
             }
         }
-        GeometryHandler::buildPolygonExtrusion(_polygon, minHeight, points, normals, indices);
+        GeometryHandler::buildPolygonExtrusion(_polygon, minHeight, points, normals, uvs, indices);
     }
     
-    GeometryHandler::buildPolygon(_polygon, points, normals, indices);
+    GeometryHandler::buildPolygon(_polygon, points, normals, uvs, indices);
     
     for (int i = 0; i < points.size(); i++) {
         glm::vec3 p = points[i];
         glm::vec3 n = normals[i];
-        vertices.push_back({ p.x, p.y, p.z, n.x, n.y, n.z, abgr });
+        glm::vec2 u = uvs[i];
+        vertices.push_back({ p.x, p.y, p.z, n.x, n.y, n.z, u.x, u.y, abgr });
     }
     
     // Make sure indices get correctly offset
