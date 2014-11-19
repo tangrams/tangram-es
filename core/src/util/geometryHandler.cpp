@@ -54,6 +54,12 @@ void GeometryHandler::buildPolygon(const Polygon& _polygon, std::vector<glm::vec
     // This will calculate the total bounding box to compute a UV for top the top view
     Rectangle bBox;
     
+    if(_polygon.size() > 0){
+        if(_polygon[0].size()>0){
+            bBox = Rectangle(_polygon[0][0].x,_polygon[0][0].y,0,0);
+        }
+    }
+    
     // add polygon contour for every ring
     for (auto& line : _polygon) {
         bBox.growToInclude(line);
