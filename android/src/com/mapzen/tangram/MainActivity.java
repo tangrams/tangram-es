@@ -24,9 +24,8 @@ public class MainActivity extends Activity
         
         Tangram tangram = new Tangram(this);
         
-		view = new GLSurfaceView(getApplication());
+		view = new GLSurfaceView(this);
 		view.setEGLContextClientVersion(2);
-        view.setEGLConfigChooser(8,8,8,8,16,0);
 		view.setRenderer(tangram);
 		setContentView(view);
 		
