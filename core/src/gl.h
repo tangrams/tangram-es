@@ -12,4 +12,9 @@
 
 #ifdef PLATFORM_OSX
 #include <GLFW/glfw3.h>
+/*
+ * typedef to resolve name conflict in osx
+ */
+#define glClearDepthf glClearDepth
+#define glDepthRangef glDepthRange
 #endif

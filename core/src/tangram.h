@@ -1,5 +1,7 @@
 #pragma once
 
+#include "platform.h"
+
 /* Tangram API
  *
  * Primary interface for controlling and managing the lifecycle of a Tangram map surface
@@ -21,6 +23,15 @@ void update(float _dt);
 
 // Render a new frame of the map view (if needed)
 void render();
+
+// Respond to touch input
+void handleTapGesture(float _posX, float _posY);
+    
+void handleDoubleTapGesture(float _posX, float _posY);
+    
+void handlePanGesture(float _velX, float _velY);
+    
+void handlePinchGesture(float _posX, float _posY, float _scale = 1.0);
 
 // Release resources and shut down renderer
 void teardown();
