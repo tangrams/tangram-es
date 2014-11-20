@@ -1,5 +1,7 @@
 #include "shaderProgram.h"
 
+#include "util/stringsOp.h"
+
 GLint ShaderProgram::s_activeGlProgram = 0;
 
 ShaderProgram::ShaderProgram() {
@@ -238,3 +240,33 @@ void ShaderProgram::setUniformMatrix4f(const std::string& _name, float* _value, 
     GLint location = getUniformLocation(_name);
     glUniformMatrix4fv(location, 1, _transpose, _value);
 }
+
+template <typename T>
+void ShaderProgram::setLightUniform(const std::string& _propertyName, int _lightIndex, const T& _value) {
+    std::string uniformName = "u_lights[" + getString(_lightIndex) + "]." + _propertyName;
+    setUniformf(uniformName.c_str(), _value);
+}
+
+void ShaderProgram::setLightUniform(const Light &_light, int _index){
+//    setLightUniform("ambient", _index, _light.m_ambient);
+    setLightUniform("diffuse", _index, _light.m_diffuse);
+//    setLightUniform("specular", _index, _light.m_specular);
+//    setLightUniform("position", _index, _light.m_position);
+//    setLightUniform("direction", _index, _light.halfVector);
+    setLightUniform("direction", _index, _light.m_direction);
+//    setLightUniform("direction", _index, _light.spotExponent);
+//    setLightUniform("spotCutoff", _index, _light.m_spotCutoff);
+//    setLightUniform("spotCutoff", _index, _light.spotCosCutoff);
+//    setLightUniform("spotCutoff", _index, _light.constantAttenuation);
+//    setLightUniform("spotCutoff", _index, _light.linearAttenuation);
+//    setLightUniform("spotCutoff", _index, _light.quadraticAttenuation);
+}
+
+void ShaderProgram::setMaterialUniform(const Material &_material){
+    setUniformf("u_material.emission", _material.m_emission);
+    setUniformf("u_material.ambient", _material.m_ambient);
+    setUniformf("u_material.diffuse", _material.m_diffuse);
+    setUniformf("u_material.specular", _material.m_specular);
+    setUniformf("u_material.shininess", _material.m_shininess);
+}
+

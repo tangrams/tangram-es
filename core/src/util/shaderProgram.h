@@ -7,6 +7,10 @@
 #include <vector>
 #include <unordered_map>
 
+#include "scene/light.h"
+#include "scene/material.h"
+#include "glm/glm.hpp"
+
 /*
  * ShaderProgram - utility class representing an OpenGL shader program
  */
@@ -65,7 +69,7 @@ public:
     void setUniformf(const std::string& _name, float _value0, float _value1);
     void setUniformf(const std::string& _name, float _value0, float _value1, float _value2);
     void setUniformf(const std::string& _name, float _value0, float _value1, float _value2, float _value3);
-
+    
     /*
      * setUniformMatrix - ensure the program is bound and then sets the named uniform to the values
      * beginning at the pointer _value; 4 values are used for a 2x2 matrix, 9 values for a 3x3, etc.
@@ -73,6 +77,19 @@ public:
     void setUniformMatrix2f(const std::string& _name, float* _value, bool transpose = false);
     void setUniformMatrix3f(const std::string& _name, float* _value, bool transpose = false);
     void setUniformMatrix4f(const std::string& _name, float* _value, bool transpose = false);
+    
+    /*
+        WIP: Lights Implementation
+     */
+    void setMaterialUniform(const Material &_material);
+    void setLightUniform(const Light &_light, int _index);
+    
+    template <typename T>
+    void setLightUniform(const std::string& _propertyName, int _lightIndex, const T& _value);
+    
+    void setUniformf(const std::string& _name, glm::vec2 _value){setUniformf(_name,_value.x,_value.y);}
+    void setUniformf(const std::string& _name, glm::vec3 _value){setUniformf(_name,_value.x,_value.y,_value.z);}
+    void setUniformf(const std::string& _name, glm::vec4 _value){setUniformf(_name,_value.x,_value.y,_value.z,_value.w);}
 
 private:
 

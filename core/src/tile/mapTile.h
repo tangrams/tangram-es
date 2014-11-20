@@ -8,6 +8,7 @@
 #include "util/vboMesh.h"
 #include "util/mapProjection.h"
 
+class Scene;
 class Style;
 struct TileID;
 
@@ -48,6 +49,9 @@ public:
 
     /* Draws the geometry associated with the provided <Style> and view-projection matrix */
     void draw(const Style& _style, const glm::dmat4& _viewProjMatrix);
+    
+    // WIP - LIGHTS IMPLEMENTATION
+    void draw(Scene& _scene, const Style& _style, const glm::dmat4& _viewProjMatrix);
 
 private:
 

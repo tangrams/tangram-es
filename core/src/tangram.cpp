@@ -12,6 +12,7 @@
 #include "style/polygonStyle.h"
 #include "style/polylineStyle.h"
 #include "scene/scene.h"
+#include "scene/light.h"
 
 namespace Tangram {
 
@@ -42,10 +43,14 @@ void initialize() {
     std::unique_ptr<Style> linesStyle(new PolylineStyle("Polyline"));
     linesStyle->addLayers({"roads"});
 
+    std::unique_ptr<Light> dLight(new Light(LIGHT_DIRECTIONAL));
+    dLight->setDirection(glm::vec3(-1.0, -1.0, 1.0));
+    
     // Create a scene definition and add the style
     m_scene = std::make_shared<Scene>();
     m_scene->addStyle(std::move(polyStyle));
     m_scene->addStyle(std::move(linesStyle));
+    m_scene->addLight(std::move(dLight));
 
     // Create a tileManager
     m_tileManager = TileManager::GetInstance();
@@ -114,7 +119,11 @@ void render() {
             
             if (tile) {
                 // Draw!
-                tile->draw(*style, viewProj);
+//                tile->draw(*style, viewProj);
+                
+                //  Can we pass only the scene?
+                //
+                tile->draw(*m_scene, *style, viewProj);
             }
 
         }

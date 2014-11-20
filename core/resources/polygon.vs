@@ -2,8 +2,33 @@
 precision mediump float;
 #endif
 
+//	lights.glsl
+//
+#define NUM_LIGHTS 4
+uniform struct Light {
+	vec4 ambient;
+	vec4 diffuse;
+	vec4 specular;
+   	vec4 position;
+   	vec4 halfVector;
+   	vec3 direction;
+   	float spotExponent;
+    float spotCutoff;
+	float spotCosCutoff;
+    float constantAttenuation;
+    float linearAttenuation;
+    float quadraticAttenuation;
+} u_lights[NUM_LIGHTS];
+
+uniform struct Material {
+	vec4 emission;
+	vec4 ambient;
+	vec4 diffuse;
+	vec4 specular;
+	float shininess;
+} u_material;
+
 uniform mat4 u_modelViewProj;
-uniform vec3 u_lightDirection;
 
 attribute vec4 a_position;
 attribute vec4 a_color;
@@ -21,7 +46,7 @@ void main() {
 
   	v_color = a_color;
   	
-  	float lit = dot(normalize(u_lightDirection), normalize(a_normal));
+  	float lit = dot(normalize(u_lights[0].direction), normalize(a_normal));
   	v_color.rgb *= clamp(lit * 1.5, 0.5, 1.5);
   	
 	v_uv = a_uv;

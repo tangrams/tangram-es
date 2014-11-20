@@ -12,6 +12,8 @@
 #include "platform.h"
 #include "gl.h"
 
+#include "scene/material.h"
+
 /* Means of constructing and rendering map geometry
  *
  * A Style defines a way to 
@@ -80,4 +82,6 @@ public:
     std::string getName() const { return m_name; }
 
     virtual ~Style();
+    
+    Material    m_material;
 };

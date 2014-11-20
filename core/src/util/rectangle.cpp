@@ -197,6 +197,8 @@ bool Rectangle::clip( glm::vec3& _p0, glm::vec3& _p1) const {
             _p1 = r;
         }
     }
+    
+    return true;
 }
 
 void Rectangle::growToInclude(const glm::vec3& p){
