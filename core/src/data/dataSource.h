@@ -16,6 +16,8 @@ protected:
     /* Map of tileIDs to data for that tile */
     std::map< TileID, std::shared_ptr<TileData> > m_tileStore;
     
+    std::mutex m_mutex; // Used to ensure safe access from async loading threads
+    
     /* Parse an I/O response into a <TileData>, returning an empty TileData on failure */
     virtual std::shared_ptr<TileData> parse(const MapTile& _tile, std::stringstream& _in) = 0;
     
