@@ -43,14 +43,14 @@ void initialize() {
     std::unique_ptr<Style> linesStyle(new PolylineStyle("Polyline"));
     linesStyle->addLayers({"roads"});
 
-    std::unique_ptr<Light> dLight(new Light(LIGHT_DIRECTIONAL));
-    dLight->setDirection(glm::vec3(-1.0, -1.0, 1.0));
+    std::unique_ptr<DirectionalLight> directionalLight(new DirectionalLight());
+    directionalLight->m_direction = glm::vec3(-1.0, -1.0, 1.0);
     
     // Create a scene definition and add the style
     m_scene = std::make_shared<Scene>();
     m_scene->addStyle(std::move(polyStyle));
     m_scene->addStyle(std::move(linesStyle));
-    m_scene->addLight(std::move(dLight));
+    m_scene->addDirectionalLight(std::move(directionalLight));
 
     // Create a tileManager
     m_tileManager = TileManager::GetInstance();
@@ -105,6 +105,7 @@ void render() {
     // Set up openGL for new frame
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
+    glm::dmat4 view = m_view->getViewMatrix();
     glm::dmat4 viewProj = m_view->getViewProjectionMatrix();
 
     // Loop over all styles
@@ -123,7 +124,7 @@ void render() {
                 
                 //  Can we pass only the scene?
                 //
-                tile->draw(*m_scene, *style, viewProj);
+                tile->draw(*m_scene, *style, view, viewProj);
             }
 
         }

@@ -35,8 +35,8 @@ void PolylineStyle::constructShaderProgram() {
 
 void PolylineStyle::setup() {
     
-    m_shaderProgram->setMaterialUniform(m_material);
-    
+    m_material.setupProgram(*m_shaderProgram);
+
 }
 
 void PolylineStyle::buildPoint(Point& _point, std::string& _layer, Properties& _props, VboMesh& _mesh) {

@@ -1,5 +1,34 @@
 #include "material.h"
 
-Material::Material():m_emission(0.0),m_ambient(1.0),m_diffuse(1.0),m_specular(1.0),m_shininess(0.0){
+#define STRINGIFY(A) #A
+
+Material::Material():m_name("material"),m_emission(0.0),m_ambient(1.0),m_diffuse(1.0),m_specular(1.0),m_shininess(0.0){
     
+}
+
+Material::Material(const std::string &_name):m_name(_name),m_emission(0.0),m_ambient(1.0),m_diffuse(1.0),m_specular(1.0),m_shininess(0.0){
+    
+}
+
+std::string Material::getTransform(){
+    return STRINGIFY(
+                     
+uniform struct Material {
+
+    vec4 emission;
+    vec4 ambient;
+    vec4 diffuse;
+    vec4 specular;
+    float shininess;
+    
+} u_material;
+                     );
+}
+
+void Material::setupProgram(ShaderProgram &_shader){
+    _shader.setUniformf("u_"+m_name+".emission", m_emission);
+    _shader.setUniformf("u_"+m_name+".ambient", m_ambient);
+    _shader.setUniformf("u_"+m_name+".diffuse", m_diffuse);
+    _shader.setUniformf("u_"+m_name+".specular", m_specular);
+    _shader.setUniformf("u_"+m_name+".shininess", m_shininess);
 }

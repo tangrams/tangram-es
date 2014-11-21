@@ -7,8 +7,6 @@
 #include <vector>
 #include <unordered_map>
 
-#include "scene/light.h"
-#include "scene/material.h"
 #include "glm/glm.hpp"
 
 /*
@@ -79,17 +77,14 @@ public:
     void setUniformMatrix4f(const std::string& _name, float* _value, bool transpose = false);
     
     /*
-        WIP: Lights Implementation
+        WIP - start: This is need for fast lights &  Implementation
      */
-    void setMaterialUniform(const Material &_material);
-    void setLightUniform(const Light &_light, int _index);
-    
-    template <typename T>
-    void setLightUniform(const std::string& _propertyName, int _lightIndex, const T& _value);
-    
     void setUniformf(const std::string& _name, glm::vec2 _value){setUniformf(_name,_value.x,_value.y);}
     void setUniformf(const std::string& _name, glm::vec3 _value){setUniformf(_name,_value.x,_value.y,_value.z);}
     void setUniformf(const std::string& _name, glm::vec4 _value){setUniformf(_name,_value.x,_value.y,_value.z,_value.w);}
+    /* 
+        WIP - end
+     */
 
 private:
 

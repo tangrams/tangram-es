@@ -1,7 +1,5 @@
 #include "shaderProgram.h"
 
-#include "util/stringsOp.h"
-
 GLint ShaderProgram::s_activeGlProgram = 0;
 
 ShaderProgram::ShaderProgram() {
@@ -68,17 +66,65 @@ void ShaderProgram::use() const {
     }
 }
 
+//  THIS SHOULD BE REPLACER FOR A REAL PARSER/INJECTOR pluss the globas and transform commands
+//
+std::vector<std::string> splitString(const std::string &_source, const std::string &_delimiter = "", bool _ignoreEmpty = false) {
+    std::vector<std::string> result;
+    if (_delimiter.empty()) {
+        result.push_back(_source);
+        return result;
+    }
+    std::string::const_iterator substart = _source.begin(), subend;
+    while (true) {
+        subend = search(substart, _source.end(), _delimiter.begin(), _delimiter.end());
+        std::string sub(substart, subend);
+        
+        if (!_ignoreEmpty || !sub.empty()) {
+            result.push_back(sub);
+        }
+        if (subend == _source.end()) {
+            break;
+        }
+        substart = subend + _delimiter.size();
+    }
+    return result;
+}
+
+std::string dummyParser(const std::string &_src){
+    std::vector<std::string> lines = splitString(_src, "\n");
+    
+    std::string rta;
+    
+    for (auto &line: lines) {
+        if (line == "#pragma tangram: lighting") {
+            rta += stringFromResource("lights.glsl") + "\n";
+        } else {
+            rta += line + "\n";
+        }
+    }
+    
+    return rta;
+}
+
 bool ShaderProgram::buildFromSourceStrings(const std::string& _fragSrc, const std::string& _vertSrc) {
 
+    //  TODO:
+    //          - This is a hardcode injection
+    //          - Here will happen the real shader injection
+    
+    std::string glslHeader = "#ifdef GL_ES\nprecision mediump float;\n#endif\n\n";
+    std::string vertSrc = glslHeader + dummyParser(_vertSrc);
+    std::string fragSrc = glslHeader + dummyParser(_fragSrc);
+    
     // Try to compile vertex and fragment shaders, releasing resources and quiting on failure
 
-    GLint vertexShader = makeCompiledShader(_vertSrc, GL_VERTEX_SHADER);
+    GLint vertexShader = makeCompiledShader(vertSrc, GL_VERTEX_SHADER);
 
     if (vertexShader == 0) {
         return false;
     }
 
-    GLint fragmentShader = makeCompiledShader(_fragSrc, GL_FRAGMENT_SHADER);
+    GLint fragmentShader = makeCompiledShader(fragSrc, GL_FRAGMENT_SHADER);
 
     if (fragmentShader == 0) {
         glDeleteShader(vertexShader);
@@ -240,33 +286,3 @@ void ShaderProgram::setUniformMatrix4f(const std::string& _name, float* _value, 
     GLint location = getUniformLocation(_name);
     glUniformMatrix4fv(location, 1, _transpose, _value);
 }
-
-template <typename T>
-void ShaderProgram::setLightUniform(const std::string& _propertyName, int _lightIndex, const T& _value) {
-    std::string uniformName = "u_lights[" + getString(_lightIndex) + "]." + _propertyName;
-    setUniformf(uniformName.c_str(), _value);
-}
-
-void ShaderProgram::setLightUniform(const Light &_light, int _index){
-//    setLightUniform("ambient", _index, _light.m_ambient);
-    setLightUniform("diffuse", _index, _light.m_diffuse);
-//    setLightUniform("specular", _index, _light.m_specular);
-//    setLightUniform("position", _index, _light.m_position);
-//    setLightUniform("direction", _index, _light.halfVector);
-    setLightUniform("direction", _index, _light.m_direction);
-//    setLightUniform("direction", _index, _light.spotExponent);
-//    setLightUniform("spotCutoff", _index, _light.m_spotCutoff);
-//    setLightUniform("spotCutoff", _index, _light.spotCosCutoff);
-//    setLightUniform("spotCutoff", _index, _light.constantAttenuation);
-//    setLightUniform("spotCutoff", _index, _light.linearAttenuation);
-//    setLightUniform("spotCutoff", _index, _light.quadraticAttenuation);
-}
-
-void ShaderProgram::setMaterialUniform(const Material &_material){
-    setUniformf("u_material.emission", _material.m_emission);
-    setUniformf("u_material.ambient", _material.m_ambient);
-    setUniformf("u_material.diffuse", _material.m_diffuse);
-    setUniformf("u_material.specular", _material.m_specular);
-    setUniformf("u_material.shininess", _material.m_shininess);
-}
-

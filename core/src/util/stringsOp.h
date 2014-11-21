@@ -51,28 +51,6 @@ inline std::string getLower(const std::string &_str ){
     return std;
 }
 
-std::vector<std::string> splitString(const std::string &_source, const std::string &_delimiter = "", bool _ignoreEmpty = false) {
-    std::vector<std::string> result;
-    if (_delimiter.empty()) {
-        result.push_back(_source);
-        return result;
-    }
-    std::string::const_iterator substart = _source.begin(), subend;
-    while (true) {
-        subend = search(substart, _source.end(), _delimiter.begin(), _delimiter.end());
-        std::string sub(substart, subend);
-        
-        if (!_ignoreEmpty || !sub.empty()) {
-            result.push_back(sub);
-        }
-        if (subend == _source.end()) {
-            break;
-        }
-        substart = subend + _delimiter.size();
-    }
-    return result;
-}
-
 //---------------------------------------- Conversions
 
 inline int getInt(const std::string &_intString) {

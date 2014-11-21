@@ -51,7 +51,7 @@ public:
     void draw(const Style& _style, const glm::dmat4& _viewProjMatrix);
     
     // WIP - LIGHTS IMPLEMENTATION
-    void draw(Scene& _scene, const Style& _style, const glm::dmat4& _viewProjMatrix);
+    void draw(Scene& _scene, const Style& _style, const glm::dmat4& _viewMatrix, const glm::dmat4& _viewProjMatrix);
 
 private:
 

@@ -4,47 +4,67 @@
 //
 #pragma once
 
-#include <string>
-
 #include "glm/glm.hpp"
 
-enum LightType {
-    LIGHT_DIRECTIONAL,
-    LIGHT_POINT,
-    LIGHT_SPOT
-};
+#include "util/shaderProgram.h"
 
 class Light {
 public:
     
-    Light(LightType _type);
+    Light();
     virtual ~Light(){};
-    
-    void setPosition(const float _lat, const float _lon, const float _alt);
-    void setDirection(const glm::vec3 &_dir);
-    void setCutOff(const float &_cutOff);
     
     void setAmbientColor(const glm::vec4 _ambient);
     void setDiffuseColor(const glm::vec4 _diffuse);
     void setSpecularColor(const glm::vec4 _specular);
     
+    virtual std::string getTransform() = 0;
+    virtual void setupProgram( ShaderProgram &_shader );
+    
+    std::string m_name;
+    
     glm::vec4 m_ambient;
     glm::vec4 m_diffuse;
     glm::vec4 m_specular;
-    glm::vec4 m_position;
-    glm::vec4 m_halfVector;
-    glm::vec3 m_direction;
+};
+
+class DirectionalLight : public Light {
+public:
     
-    float m_spotExponent;
+    virtual std::string getTransform();
+    virtual void setupProgram( ShaderProgram &_program );
+    
+    glm::vec3 m_direction;
+    glm::vec3 m_halfVector;
+};
+
+class PointLight : public Light {
+public:
+    
+    virtual std::string getTransform();
+    virtual void setupProgram( ShaderProgram &_program );
+    
+    glm::vec4 m_position;
+    
+    float m_constantAttenuation;
+    float m_linearAttenuation;
+    float m_quadraticAttenuation;
+};
+
+class SpotLight : public Light {
+public:
+    
+    virtual std::string getTransform();
+    virtual void setupProgram( ShaderProgram &_program );
+    
+    glm::vec4 m_position;
+    
+   	glm::vec3 m_direction;
+    
+   	float m_spotExponent;
     float m_spotCutoff;
     float m_spotCosCutoff;
     float m_constantAttenuation;
     float m_linearAttenuation;
     float m_quadraticAttenuation;
-    
-    float m_lat;
-    float m_lon;
-    float m_alt;
-    
-    LightType   m_type;
 };
