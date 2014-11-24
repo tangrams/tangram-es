@@ -172,9 +172,12 @@ vec4 calculateLighting(in vec3 _ecPosition, in vec3 _normal) {
 //	COMPUTE DIRECTIONAL LIGHTS
 //
 #ifdef NUM_DIRECTIONAL_LIGHTS
-  	for(int i = 0; i < NUM_DIRECTIONAL_LIGHTS; i++){
-  		calculateDirectionalLight(u_directionalLights[i], normalize(_normal), amb, diff, spec);
-  	}
+  	// for(int i = 0; i < NUM_DIRECTIONAL_LIGHTS; i++){
+  	// 	calculateDirectionalLight(u_directionalLights[i], normalize(_normal), amb, diff, spec);
+  	// }
+
+    calculateDirectionalLight(u_directionalLights[0], _normal, amb, diff, spec);
+
 #endif
 
 // #pragma CONSTANT_DIRECTIONAL_LIGHTS
@@ -183,7 +186,7 @@ vec4 calculateLighting(in vec3 _ecPosition, in vec3 _normal) {
 //
 #ifdef NUM_POINT_LIGHTS
   	for(int i = 0; i < NUM_POINT_LIGHTS; i++){
-  		calculatePointLight(u_pointLights[i], eye, _ecPosition, normalize(_normal), amb, diff, spec);
+  		calculatePointLight(u_pointLights[i], eye, _ecPosition, _normal, amb, diff, spec);
   	}
 #endif
 
@@ -193,7 +196,7 @@ vec4 calculateLighting(in vec3 _ecPosition, in vec3 _normal) {
 //
 #ifdef NUM_SPOT_LIGHTS
   	for(int i = 0; i < NUM_SPOT_LIGHTS; i++){;
-  		calculateSpotLight(u_spotLights[i], eye, _ecPosition, normalize(_normal), amb, diff, spec);
+  		calculateSpotLight(u_spotLights[i], eye, _ecPosition, _normal, amb, diff, spec);
   	}
 #endif
 

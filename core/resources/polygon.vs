@@ -18,12 +18,13 @@ varying vec2 v_texcoord;
 
 void main() {
 
-  	v_color = a_color;
   	v_normal = normalize(a_normal);
   	v_texcoord = a_texcoord;
 
 	vec4 eyeSpaceVertexPos = u_modelView * a_position;
 	v_eye = eyeSpaceVertexPos.xyz / eyeSpaceVertexPos.w;
+
+	v_color = a_color; // * calculateLighting(v_eye,v_normal);
 
   	gl_Position = u_modelViewProj * a_position;
 }

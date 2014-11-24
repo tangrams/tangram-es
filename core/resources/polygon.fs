@@ -12,6 +12,7 @@ void main(void) {
 	vec4 color = v_color;
 
 	color *= calculateLighting(v_eye,v_normal);
+	// color = color * u_directionalLights[0].diffuse * max(0.0, dot(v_normal, normalize(vec3(u_directionalLights[0].direction))));
 
   	gl_FragColor = color;
 }
