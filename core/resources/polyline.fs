@@ -11,6 +11,7 @@ varying vec2 v_texcoord;
 void main(void) {
 	vec4 color = v_color;
 	
+	color.rg = v_texcoord.xy;
 	// color *= calculateLighting(v_eye,v_normal);
 
   	gl_FragColor = color;

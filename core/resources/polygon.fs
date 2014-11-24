@@ -11,8 +11,10 @@ varying vec2 v_texcoord;
 void main(void) {
 	vec4 color = v_color;
 
+//	Un comment if interpolation happen between normals
+//	v_normal = normalize(v_normal);
+
 	color *= calculateLighting(v_eye,v_normal);
-	// color = color * u_directionalLights[0].diffuse * max(0.0, dot(v_normal, normalize(vec3(u_directionalLights[0].direction))));
 
   	gl_FragColor = color;
 }

@@ -12,8 +12,8 @@ protected:
         GLfloat pos_y;
         GLfloat pos_z;
         // Extrude Normals Data
-        GLfloat uv_x;
-        GLfloat uv_y;
+        GLfloat texcoord_x;
+        GLfloat texcoord_y;
         // Extrude Normals Data
         GLfloat enorm_x;
         GLfloat enorm_y;
