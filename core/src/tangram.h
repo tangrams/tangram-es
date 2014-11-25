@@ -35,6 +35,6 @@ void handlePinchGesture(float _posX, float _posY, float _scale = 1.0);
 
 // Release resources and shut down renderer
 void teardown();
-
+    
 }
 

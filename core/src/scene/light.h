@@ -39,7 +39,7 @@ public:
     
 protected:
     glm::vec3 m_direction;
-    glm::vec3 m_halfVector;
+//    glm::vec3 m_halfVector;
 };
 
 class PointLight : public Light {
@@ -62,6 +62,11 @@ protected:
 class SpotLight : public Light {
 public:
     
+    void setPosition(const glm::vec3 &_pos);
+    void setDirection(const glm::vec3 &_dir);
+    void setAttenuation(float _attenuation);
+    void setCutOff(float _cutoff, float _exponent);
+    
     virtual std::string getTransform();
     virtual void setupProgram( ShaderProgram &_program );
     
@@ -74,6 +79,6 @@ protected:
     float m_spotCosCutoff;
     
     float m_constantAttenuation;
-    float m_linearAttenuation;
-    float m_quadraticAttenuation;
+//    float m_linearAttenuation;
+//    float m_quadraticAttenuation;
 };

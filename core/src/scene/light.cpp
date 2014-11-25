@@ -18,37 +18,37 @@ void Light::setupProgram( ShaderProgram &_shader ){
 //
 void DirectionalLight::setDirection(const glm::vec3 &_dir){
     m_direction = _dir;
-    m_halfVector = _dir;
+//    m_halfVector = _dir;
 }
 
 std::string DirectionalLight::getTransform(){
     return STRINGIFY(
-                     uniform struct DirectionalLight {
+                     struct DirectionalLight {
                          vec4 ambient;
                          vec4 diffuse;
                          vec4 specular;
                          
                          vec3 direction;
-                         vec3 halfVector;
-                     } u_directionalLights[NUM_DIRECTIONAL_LIGHTS];
+//                         vec3 halfVector;
+                     };
                      
                      void calculateDirectionalLight(in DirectionalLight _light, in vec3 _normal, inout vec4 _ambient, inout vec4 _diffuse, inout vec4 _specular){
                          vec3  halfVector;
                          float nDotVP;
-                         float nDotHV;
-                         float pf;
+//                         float nDotHV;
+//                         float pf;
                          
                          nDotVP = max(0.0, dot(_normal, normalize(vec3(_light.direction))));
-                         nDotHV = max(0.0, dot(_normal, vec3(_light.halfVector)));
+//                         nDotHV = max(0.0, dot(_normal, vec3(_light.halfVector)));
                          
-                         if (nDotVP == 0.0)
-                             pf = 0.0;
-                         else
-                             pf = pow(nDotHV, u_material.shininess);
+//                         if (nDotVP == 0.0)
+//                             pf = 0.0;
+//                         else
+//                             pf = pow(nDotHV, u_material.shininess);
                          
                          _ambient  += _light.ambient;
                          _diffuse  += _light.diffuse * nDotVP;
-                         _specular += _light.specular * pf;
+//                         _specular += _light.specular * pf;
                      }
                      );
 }
@@ -57,7 +57,7 @@ void DirectionalLight::setupProgram( ShaderProgram &_shader ){
     Light::setupProgram(_shader);
     
     _shader.setUniformf("u_"+m_name+".direction", m_direction);
-    _shader.setUniformf("u_"+m_name+".halfVector", m_halfVector);
+//    _shader.setUniformf("u_"+m_name+".halfVector", m_halfVector);
 }
 
 //  POINT LIGHT
@@ -66,7 +66,7 @@ void PointLight::setPosition(const glm::vec3 &_pos){
     m_position.x = _pos.x;
     m_position.y = _pos.y;
     m_position.z = _pos.z;
-    m_position.w = 0.0;
+    m_position.w = 1.0;
 }
 
 void PointLight::setAttenuation(float _attenuation){
@@ -77,16 +77,17 @@ void PointLight::setAttenuation(float _attenuation){
 
 std::string PointLight::getTransform(){
     return STRINGIFY(
-                     uniform struct PointLight {
+                     struct PointLight {
                          vec4 ambient;
                          vec4 diffuse;
                          vec4 specular;
+                         
                          vec4 position;
                          
                          float constantAttenuation;
-                         float linearAttenuation;
-                         float quadraticAttenuation;
-                     } u_pointLights[NUM_POINT_LIGHTS];
+//                         float linearAttenuation;
+//                         float quadraticAttenuation;
+                     };
                      
                      void calculatePointLight(in PointLight _light, in vec3 _eye, in vec3 _ecPosition3, in vec3 _normal, inout vec4 _ambient, inout vec4 _diffuse, inout vec4 _specular){
                          float nDotVP;
@@ -103,9 +104,9 @@ std::string PointLight::getTransform(){
                          
                          VP = normalize(VP);
                          
-                         attenuation = 1.0 / (_light.constantAttenuation +
-                                              _light.linearAttenuation * d +
-                                              _light.quadraticAttenuation * d * d);
+                         attenuation = 1.0 / (_light.constantAttenuation)// +
+//                                              _light.linearAttenuation * d +
+//                                              _light.quadraticAttenuation * d * d);
                          
                          halfVector = normalize(VP + _eye);
                          
@@ -135,10 +136,30 @@ void PointLight::setupProgram( ShaderProgram &_shader ){
 
 //  SPOT LIGHT
 //
+void SpotLight::setPosition(const glm::vec3 &_pos){
+    m_position.x = _pos.x;
+    m_position.y = _pos.y;
+    m_position.z = _pos.z;
+    m_position.w = 1.0;
+}
+
+void SpotLight::setDirection(const glm::vec3 &_dir){
+    m_direction = _dir;
+}
+
+void SpotLight::setAttenuation(float _attenuation){
+    m_constantAttenuation = _attenuation;
+}
+
+void SpotLight::setCutOff(float _cutoff, float _exponent){
+    m_spotCutoff = _cutoff;
+    m_spotCosCutoff = cos(_cutoff);
+    m_spotExponent = _exponent;
+}
 
 std::string SpotLight::getTransform(){
     return STRINGIFY(
-                     uniform struct SpotLight {
+                     struct SpotLight {
                          vec4 ambient;
                          vec4 diffuse;
                          vec4 specular;
@@ -150,9 +171,9 @@ std::string SpotLight::getTransform(){
                          float spotCutoff;
                          float spotCosCutoff;
                          float constantAttenuation;
-                         float linearAttenuation;
-                         float quadraticAttenuation;
-                     } u_spotLights[NUM_SPOT_LIGHTS];
+//                         float linearAttenuation;
+//                         float quadraticAttenuation;
+                     };
                      
                      void calculateSpotLight(in SpotLight _light, in vec3 _eye, in vec3 _ecPosition3, in vec3 _normal, inout vec4 _ambient, inout vec4 _diffuse, inout vec4 _specular){
                          float nDotVP;           // normal . light direction
@@ -219,6 +240,6 @@ void SpotLight::setupProgram( ShaderProgram &_shader ){
     _shader.setUniformf("u_"+m_name+".spotCosCutoff", m_spotCosCutoff);
     
     _shader.setUniformf("u_"+m_name+".constantAttenuation", m_constantAttenuation);
-    _shader.setUniformf("u_"+m_name+".linearAttenuation", m_linearAttenuation);
-    _shader.setUniformf("u_"+m_name+".quadraticAttenuation", m_quadraticAttenuation);
+//    _shader.setUniformf("u_"+m_name+".linearAttenuation", m_linearAttenuation);
+//    _shader.setUniformf("u_"+m_name+".quadraticAttenuation", m_quadraticAttenuation);
 }

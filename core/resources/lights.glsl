@@ -1,6 +1,6 @@
 // #define NUM_DIRECTIONAL_LIGHTS 1
-#define NUM_POINT_LIGHTS 1
-// #define NUM_SPOT_LIGHTS 1
+// #define NUM_POINT_LIGHTS 1
+#define NUM_SPOT_LIGHTS 1
 
 uniform struct Material {
 	vec4 emission;
@@ -11,12 +11,12 @@ uniform struct Material {
 } u_material;
 
 struct DirectionalLight {
-  vec4 ambient;
+    vec4 ambient;
 	vec4 diffuse;
 	vec4 specular;
 
-  vec3 direction;
-  vec3 halfVector;
+    vec3 direction;
+    // vec3 halfVector;
 };
 
 void calculateDirectionalLight(in DirectionalLight _light, in vec3 _normal, inout vec4 _ambient, inout vec4 _diffuse, inout vec4 _specular){
@@ -26,16 +26,16 @@ void calculateDirectionalLight(in DirectionalLight _light, in vec3 _normal, inou
     float pf;             // power factor
 
     nDotVP = max(0.0, dot(_normal, normalize(vec3(_light.direction))));
-    nDotHV = max(0.0, dot(_normal, vec3(_light.halfVector)));
+    // nDotHV = max(0.0, dot(_normal, vec3(_light.halfVector)));
 
-    if (nDotVP == 0.0)
-        pf = 0.0;
-    else
-        pf = pow(nDotHV, u_material.shininess);
+    // if (nDotVP == 0.0)
+    //     pf = 0.0;
+    // else
+    //     pf = pow(nDotHV, u_material.shininess);
 
     _ambient  += _light.ambient;
     _diffuse  += _light.diffuse * nDotVP;
-    _specular += _light.specular * pf;
+    // _specular += _light.specular * pf;
 }
 
 struct PointLight {
@@ -88,9 +88,9 @@ void calculatePointLight(in PointLight _light, in vec3 _eye, in vec3 _ecPosition
 }
 
 struct SpotLight {
-	  vec4 ambient;
-	  vec4 diffuse;
-	  vec4 specular;
+	vec4 ambient;
+	vec4 diffuse;
+	vec4 specular;
    	vec4 position;
 
    	vec3 direction;
@@ -98,9 +98,10 @@ struct SpotLight {
    	float spotExponent;
     float spotCutoff;
     float spotCosCutoff;
+
     float constantAttenuation;
-    float linearAttenuation;
-    float quadraticAttenuation;
+    // float linearAttenuation;
+    // float quadraticAttenuation;
 };
 
 void calculateSpotLight(in SpotLight _light, in vec3 _eye, in vec3 _ecPosition3, in vec3 _normal, inout vec4 _ambient, inout vec4 _diffuse, inout vec4 _specular){
@@ -124,9 +125,9 @@ void calculateSpotLight(in SpotLight _light, in vec3 _eye, in vec3 _ecPosition3,
     VP = normalize(VP);
 
     // Compute attenuation
-    attenuation = 1.0 / (_light.constantAttenuation +
-                         _light.linearAttenuation * d +
-                         _light.quadraticAttenuation * d * d);
+    attenuation = 1.0 / (_light.constantAttenuation);// +
+                         // _light.linearAttenuation * d +
+                         // _light.quadraticAttenuation * d * d);
 
     // See if point on surface is inside cone of illumination
     spotDot = dot(-VP, normalize(_light.direction));

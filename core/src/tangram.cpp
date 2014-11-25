@@ -47,8 +47,16 @@ void initialize() {
     directionalLight->setDirection(glm::vec3(-1.0, -1.0, 1.0));
     
     std::unique_ptr<PointLight> pointLight(new PointLight());
+    pointLight->setSpecularColor(glm::vec4(0.5,0.5,0.0,1.0));
     pointLight->setPosition(glm::vec3(0.0));
-    pointLight->setAttenuation(1.0);
+    pointLight->setAttenuation(3.0);
+    
+    std::unique_ptr<SpotLight> spotLight(new SpotLight());
+    spotLight->setSpecularColor(glm::vec4(0.5,0.5,0.0,1.0));
+    spotLight->setPosition(glm::vec3(0.0));
+    spotLight->setDirection(glm::vec3(0,PI*0.25,0.0));
+    spotLight->setCutOff(PI*0.51, 2.0);
+    spotLight->setAttenuation(0.2);
     
     // Create a scene definition and add the style
     m_scene = std::make_shared<Scene>();
@@ -56,7 +64,8 @@ void initialize() {
     m_scene->addStyle(std::move(linesStyle));
     
 //    m_scene->addDirectionalLight(std::move(directionalLight));
-    m_scene->addPointLight(std::move(pointLight));
+//    m_scene->addPointLight(std::move(pointLight));
+    m_scene->addSpotLight(std::move(spotLight));
 
     // Create a tileManager
     m_tileManager = TileManager::GetInstance();
@@ -103,6 +112,9 @@ void update(float _dt) {
     if (m_tileManager) {
         m_tileManager->updateTileSet();
     }
+    
+    float time = ((float)clock())/CLOCKS_PER_SEC;
+    m_scene->getSpotLights()[0]->setDirection(glm::vec3(time,time*0.5,time*0.25));
 
 }
 
