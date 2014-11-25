@@ -10,15 +10,14 @@ uniform struct Material {
 	float shininess;
 } u_material;
 
-#ifdef NUM_DIRECTIONAL_LIGHTS
-uniform struct DirectionalLight {
+struct DirectionalLight {
   vec4 ambient;
 	vec4 diffuse;
 	vec4 specular;
 
   vec3 direction;
   vec3 halfVector;
-} u_directionalLights[NUM_DIRECTIONAL_LIGHTS];
+};
 
 void calculateDirectionalLight(in DirectionalLight _light, in vec3 _normal, inout vec4 _ambient, inout vec4 _diffuse, inout vec4 _specular){
 	vec3  halfVector;
@@ -38,10 +37,8 @@ void calculateDirectionalLight(in DirectionalLight _light, in vec3 _normal, inou
     _diffuse  += _light.diffuse * nDotVP;
     _specular += _light.specular * pf;
 }
-#endif
 
-#ifdef NUM_POINT_LIGHTS
-uniform struct PointLight {
+struct PointLight {
     vec4 ambient;
     vec4 diffuse;
     vec4 specular;
@@ -50,7 +47,7 @@ uniform struct PointLight {
     float constantAttenuation;
     // float linearAttenuation;
     // float quadraticAttenuation;
-} u_pointLights[NUM_POINT_LIGHTS];
+};
 
 void calculatePointLight(in PointLight _light, in vec3 _eye, in vec3 _ecPosition3, in vec3 _normal, inout vec4 _ambient, inout vec4 _diffuse, inout vec4 _specular){
     float nDotVP;         // normal . light direction
@@ -89,24 +86,22 @@ void calculatePointLight(in PointLight _light, in vec3 _eye, in vec3 _ecPosition
     _diffuse += _light.diffuse * nDotVP * attenuation;
     _specular += _light.specular * pf * attenuation;
 }
-#endif
 
-#ifdef NUM_SPOT_LIGHTS
-uniform struct SpotLight {
-	vec4 ambient;
-	vec4 diffuse;
-	vec4 specular;
+struct SpotLight {
+	  vec4 ambient;
+	  vec4 diffuse;
+	  vec4 specular;
    	vec4 position;
 
    	vec3 direction;
 
    	float spotExponent;
     float spotCutoff;
-	float spotCosCutoff;
+    float spotCosCutoff;
     float constantAttenuation;
     float linearAttenuation;
     float quadraticAttenuation;
-} u_spotLights[NUM_SPOT_LIGHTS];
+};
 
 void calculateSpotLight(in SpotLight _light, in vec3 _eye, in vec3 _ecPosition3, in vec3 _normal, inout vec4 _ambient, inout vec4 _diffuse, inout vec4 _specular){
     float nDotVP;           // normal . light direction
@@ -158,6 +153,17 @@ void calculateSpotLight(in SpotLight _light, in vec3 _eye, in vec3 _ecPosition3,
     _diffuse  += _light.diffuse * nDotVP * attenuation;
     _specular += _light.specular * pf * attenuation;
 }
+
+#ifdef NUM_DIRECTIONAL_LIGHTS
+uniform DirectionalLight u_directionalLights[NUM_DIRECTIONAL_LIGHTS];
+#endif
+
+#ifdef NUM_POINT_LIGHTS
+uniform PointLight u_pointLights[NUM_POINT_LIGHTS];
+#endif
+
+#ifdef NUM_SPOT_LIGHTS
+uniform SpotLight u_spotLights[NUM_SPOT_LIGHTS];
 #endif
 
 vec4 calculateLighting(in vec3 _ecPosition, in vec3 _normal) {
@@ -171,38 +177,24 @@ vec4 calculateLighting(in vec3 _ecPosition, in vec3 _normal) {
 
 //	COMPUTE DIRECTIONAL LIGHTS
 //
+// #pragma tangram: DIRECTIONAL_LIGHTS
 #ifdef NUM_DIRECTIONAL_LIGHTS
-  	// for(int i = 0; i < NUM_DIRECTIONAL_LIGHTS; i++){
-  	// 	calculateDirectionalLight(u_directionalLights[i], normalize(_normal), amb, diff, spec);
-  	// }
-
     calculateDirectionalLight(u_directionalLights[0], _normal, amb, diff, spec);
-
 #endif
-
-// #pragma CONSTANT_DIRECTIONAL_LIGHTS
 
 //	COMPUTE POINT LIGHTS
 //
+// #pragma tangram: POINT_LIGHTS
 #ifdef NUM_POINT_LIGHTS
-  	// for(int i = 0; i < NUM_POINT_LIGHTS; i++){
-  	// 	calculatePointLight(u_pointLights[i], eye, _ecPosition, _normal, amb, diff, spec);
-  	// }
     calculatePointLight(u_pointLights[0], eye, _ecPosition, _normal, amb, diff, spec);
 #endif
 
-// #pragma CONSTANT_POINT_LIGHTS
-
 //	COMPUTE SPOT LIGHTS
 //
+// #pragma tangram: SPOT_LIGHTS
 #ifdef NUM_SPOT_LIGHTS
-  	// for(int i = 0; i < NUM_SPOT_LIGHTS; i++){;
-  	// 	calculateSpotLight(u_spotLights[i], eye, _ecPosition, _normal, amb, diff, spec);
-  	// }
     calculateSpotLight(u_spotLights[0], eye, _ecPosition, _normal, amb, diff, spec);
 #endif
-
-// #pragma CONSTANT_SPOT_LIGHTS
 
 	vec4 color =  	amb * u_material.ambient + 
 #ifdef COLOR_TEXTURE
