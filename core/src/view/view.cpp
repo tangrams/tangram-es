@@ -70,9 +70,7 @@ void View::zoom(int _dz) {
 void View::setZoom(int _z) {
 
     // ensure zoom value is allowed
-    glm::clamp(_z, 0, s_maxZoom);
-    
-    m_zoom = _z;
+    m_zoom = glm::clamp(_z, 0, s_maxZoom);
     
     // find dimensions of tiles in world space at new zoom level
     float tileSize = 2 * MapProjection::HALF_CIRCUMFERENCE * pow(2, -m_zoom);
