@@ -16,6 +16,11 @@ void Light::setupProgram( ShaderProgram &_shader ){
 
 //  DIRECTIONAL LIGHT
 //
+void DirectionalLight::setDirection(const glm::vec3 &_dir){
+    m_direction = _dir;
+    m_halfVector = _dir;
+}
+
 std::string DirectionalLight::getTransform(){
     return STRINGIFY(
                      uniform struct DirectionalLight {
@@ -57,6 +62,19 @@ void DirectionalLight::setupProgram( ShaderProgram &_shader ){
 
 //  POINT LIGHT
 //
+void PointLight::setPosition(const glm::vec3 &_pos){
+    m_position.x = _pos.x;
+    m_position.y = _pos.y;
+    m_position.z = _pos.z;
+    m_position.w = 0.0;
+}
+
+void PointLight::setAttenuation(float _attenuation){
+    m_constantAttenuation = _attenuation;
+//    m_linearAttenuation = (2.0*_attenuation)/_rad;
+//    m_quadraticAttenuation = _attenuation/powf(_rad, 2.0);
+}
+
 std::string PointLight::getTransform(){
     return STRINGIFY(
                      uniform struct PointLight {
@@ -111,8 +129,8 @@ void PointLight::setupProgram( ShaderProgram &_shader ){
     
     _shader.setUniformf("u_"+m_name+".position", m_position);
     _shader.setUniformf("u_"+m_name+".constantAttenuation", m_constantAttenuation);
-    _shader.setUniformf("u_"+m_name+".linearAttenuation", m_linearAttenuation);
-    _shader.setUniformf("u_"+m_name+".quadraticAttenuation", m_quadraticAttenuation);
+//    _shader.setUniformf("u_"+m_name+".linearAttenuation", m_linearAttenuation);
+//    _shader.setUniformf("u_"+m_name+".quadraticAttenuation", m_quadraticAttenuation);
 }
 
 //  SPOT LIGHT

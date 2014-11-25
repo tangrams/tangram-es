@@ -1,5 +1,5 @@
-#define NUM_DIRECTIONAL_LIGHTS 1
-// #define NUM_POINT_LIGHTS 1
+// #define NUM_DIRECTIONAL_LIGHTS 1
+#define NUM_POINT_LIGHTS 1
 // #define NUM_SPOT_LIGHTS 1
 
 uniform struct Material {
@@ -42,14 +42,14 @@ void calculateDirectionalLight(in DirectionalLight _light, in vec3 _normal, inou
 
 #ifdef NUM_POINT_LIGHTS
 uniform struct PointLight {
-	vec4 ambient;
-	vec4 diffuse;
-	vec4 specular;
+    vec4 ambient;
+    vec4 diffuse;
+    vec4 specular;
    	vec4 position;
 
     float constantAttenuation;
-    float linearAttenuation;
-    float quadraticAttenuation;
+    // float linearAttenuation;
+    // float quadraticAttenuation;
 } u_pointLights[NUM_POINT_LIGHTS];
 
 void calculatePointLight(in PointLight _light, in vec3 _eye, in vec3 _ecPosition3, in vec3 _normal, inout vec4 _ambient, inout vec4 _diffuse, inout vec4 _specular){
@@ -71,9 +71,9 @@ void calculatePointLight(in PointLight _light, in vec3 _eye, in vec3 _ecPosition
     VP = normalize(VP);
 
     // Compute attenuation
-    attenuation = 1.0 / (_light.constantAttenuation +
-                         _light.linearAttenuation * d +
-                         _light.quadraticAttenuation * d * d);
+    attenuation = 1.0 / (_light.constantAttenuation);// +
+                         // _light.linearAttenuation * d +
+                         // _light.quadraticAttenuation * d * d);
 
     halfVector = normalize(VP + _eye);
 
@@ -185,9 +185,10 @@ vec4 calculateLighting(in vec3 _ecPosition, in vec3 _normal) {
 //	COMPUTE POINT LIGHTS
 //
 #ifdef NUM_POINT_LIGHTS
-  	for(int i = 0; i < NUM_POINT_LIGHTS; i++){
-  		calculatePointLight(u_pointLights[i], eye, _ecPosition, _normal, amb, diff, spec);
-  	}
+  	// for(int i = 0; i < NUM_POINT_LIGHTS; i++){
+  	// 	calculatePointLight(u_pointLights[i], eye, _ecPosition, _normal, amb, diff, spec);
+  	// }
+    calculatePointLight(u_pointLights[0], eye, _ecPosition, _normal, amb, diff, spec);
 #endif
 
 // #pragma CONSTANT_POINT_LIGHTS
@@ -195,9 +196,10 @@ vec4 calculateLighting(in vec3 _ecPosition, in vec3 _normal) {
 //	COMPUTE SPOT LIGHTS
 //
 #ifdef NUM_SPOT_LIGHTS
-  	for(int i = 0; i < NUM_SPOT_LIGHTS; i++){;
-  		calculateSpotLight(u_spotLights[i], eye, _ecPosition, _normal, amb, diff, spec);
-  	}
+  	// for(int i = 0; i < NUM_SPOT_LIGHTS; i++){;
+  	// 	calculateSpotLight(u_spotLights[i], eye, _ecPosition, _normal, amb, diff, spec);
+  	// }
+    calculateSpotLight(u_spotLights[0], eye, _ecPosition, _normal, amb, diff, spec);
 #endif
 
 // #pragma CONSTANT_SPOT_LIGHTS

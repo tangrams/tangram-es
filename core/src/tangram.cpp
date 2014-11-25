@@ -44,13 +44,19 @@ void initialize() {
     linesStyle->addLayers({"roads"});
 
     std::unique_ptr<DirectionalLight> directionalLight(new DirectionalLight());
-    directionalLight->m_direction = glm::vec3(-1.0, -1.0, 1.0);
+    directionalLight->setDirection(glm::vec3(-1.0, -1.0, 1.0));
+    
+    std::unique_ptr<PointLight> pointLight(new PointLight());
+    pointLight->setPosition(glm::vec3(0.0));
+    pointLight->setAttenuation(1.0);
     
     // Create a scene definition and add the style
     m_scene = std::make_shared<Scene>();
     m_scene->addStyle(std::move(polyStyle));
     m_scene->addStyle(std::move(linesStyle));
-    m_scene->addDirectionalLight(std::move(directionalLight));
+    
+//    m_scene->addDirectionalLight(std::move(directionalLight));
+    m_scene->addPointLight(std::move(pointLight));
 
     // Create a tileManager
     m_tileManager = TileManager::GetInstance();

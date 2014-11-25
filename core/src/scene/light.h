@@ -23,6 +23,7 @@ public:
     
     std::string m_name;
     
+protected:
     glm::vec4 m_ambient;
     glm::vec4 m_diffuse;
     glm::vec4 m_specular;
@@ -31,9 +32,12 @@ public:
 class DirectionalLight : public Light {
 public:
     
+    void setDirection(const glm::vec3 &_dir);
+    
     virtual std::string getTransform();
     virtual void setupProgram( ShaderProgram &_program );
     
+protected:
     glm::vec3 m_direction;
     glm::vec3 m_halfVector;
 };
@@ -41,14 +45,18 @@ public:
 class PointLight : public Light {
 public:
     
+    void setPosition(const glm::vec3 &_pos);
+    void setAttenuation(float _attenuation);
+    
     virtual std::string getTransform();
     virtual void setupProgram( ShaderProgram &_program );
     
+protected:
     glm::vec4 m_position;
     
     float m_constantAttenuation;
-    float m_linearAttenuation;
-    float m_quadraticAttenuation;
+//    float m_linearAttenuation;
+//    float m_quadraticAttenuation;
 };
 
 class SpotLight : public Light {
@@ -57,13 +65,14 @@ public:
     virtual std::string getTransform();
     virtual void setupProgram( ShaderProgram &_program );
     
+protected:
     glm::vec4 m_position;
-    
    	glm::vec3 m_direction;
     
    	float m_spotExponent;
     float m_spotCutoff;
     float m_spotCosCutoff;
+    
     float m_constantAttenuation;
     float m_linearAttenuation;
     float m_quadraticAttenuation;
