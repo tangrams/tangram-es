@@ -26,14 +26,14 @@ class View {
 
 public:
 
-    View(float _width = 800, float _height = 600, ProjectionType _projType = ProjectionType::mercator);
+    View(int _width = 800, int _height = 600, ProjectionType _projType = ProjectionType::mercator);
     
     //Sets a new map projection with default tileSize
     void setMapProjection(ProjectionType _projType);
     //get the current mapProjection
     const MapProjection& getMapProjection();
 
-    void setAspect(float _width, float _height);
+    void setSize(int _width, int _height);
     void setPosition(double _x, double _y);
     void setZoom(int _z);
     void translate(double _dx, double _dy);
@@ -64,8 +64,9 @@ private:
     glm::dmat4 m_view;
     glm::dmat4 m_proj;
     int m_zoom;
+    int m_vpWidth;
+    int m_vpHeight;
     float m_width;
     float m_height;
     double m_aspect;
 };
-
