@@ -1,12 +1,15 @@
 #include "shaderProgram.h"
 
 GLint ShaderProgram::s_activeGlProgram = 0;
+std::unordered_set<ShaderProgram*> ShaderProgram::s_managedPrograms;
 
 ShaderProgram::ShaderProgram() {
 
     m_glProgram = 0;
     m_glFragmentShader = 0;
     m_glVertexShader = 0;
+    
+    addManagedProgram(this);
 
 }
 
@@ -25,6 +28,8 @@ ShaderProgram::~ShaderProgram() {
     }
 
     m_attribMap.clear();
+    
+    removeManagedProgram(this);
 
 }
 
@@ -48,7 +53,7 @@ const GLint ShaderProgram::getUniformLocation(const std::string& _uniformName) {
     // Get uniform location at this key, or create one valued at -2 if absent
     GLint& location = m_uniformMap[_uniformName].loc;
 
-    // Zero means this is a new entry
+    // -2 means this is a new entry
     if (location == -2) {
         // Get the actual location from OpenGL
         location = glGetUniformLocation(m_glProgram, _uniformName.c_str());
@@ -171,6 +176,28 @@ GLuint ShaderProgram::makeCompiledShader(const std::string& _src, GLenum _type) 
 
     return shader;
 
+}
+
+void ShaderProgram::addManagedProgram(ShaderProgram* _program) {
+    
+    s_managedPrograms.insert(_program);
+    
+}
+
+void ShaderProgram::removeManagedProgram(ShaderProgram* _program) {
+    
+    s_managedPrograms.erase(_program);
+    
+}
+
+void ShaderProgram::rebuildAllPrograms() {
+    
+    for (auto prog : s_managedPrograms) {
+        
+        prog->buildFromSourceStrings(prog->m_fragmentShaderSource, prog->m_vertexShaderSource);
+        
+    }
+    
 }
 
 void ShaderProgram::setUniformi(const std::string& _name, int _value) {

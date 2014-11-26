@@ -5,6 +5,7 @@
 #include "error.h"
 #include <string>
 #include <vector>
+#include <unordered_set>
 #include <unordered_map>
 
 /*
@@ -73,6 +74,23 @@ public:
     void setUniformMatrix2f(const std::string& _name, float* _value, bool transpose = false);
     void setUniformMatrix3f(const std::string& _name, float* _value, bool transpose = false);
     void setUniformMatrix4f(const std::string& _name, float* _value, bool transpose = false);
+    
+    /*
+     * Allow program to be invalidated in the event of GL context loss
+     */
+    static void addManagedProgram(ShaderProgram* _program);
+    
+    /* 
+     * Remove a program from the list of managed programs
+     */
+    static void removeManagedProgram(ShaderProgram* _program);
+    
+    /* Rebuild all managed ShaderPrograms
+     * 
+     * This should be called in the event of a GL context loss; former GL shader object
+     * handles are no longer valid and need to be re-created.
+     */
+    static void rebuildAllPrograms();
 
 private:
 
@@ -89,6 +107,8 @@ private:
     };
 
     static GLint s_activeGlProgram;
+    
+    static std::unordered_set<ShaderProgram*> s_managedPrograms;
 
     GLuint m_glProgram;
     GLuint m_glFragmentShader;
