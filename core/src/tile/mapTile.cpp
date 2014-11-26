@@ -78,6 +78,10 @@ void MapTile::draw( Scene& _scene, const Style& _style, const glm::dmat4& _viewM
         double* second = &modelViewMatrix[0][0];
         std::vector<float> fmv(second, second + 16);
         
+        double* third = &m_modelMatrix[0][0];
+        std::vector<float> fm(third, third + 16);
+        
+        shader->setUniformMatrix4f("u_model", &fm[0]);
         shader->setUniformMatrix4f("u_modelView", &fmv[0]);
         shader->setUniformMatrix4f("u_modelViewProj", &fmvp[0]);
         

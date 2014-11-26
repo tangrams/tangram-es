@@ -1,3 +1,4 @@
+uniform mat4 u_model;
 uniform mat4 u_modelView;
 uniform mat4 u_modelViewProj;
 uniform float u_time;

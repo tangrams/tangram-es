@@ -1,6 +1,8 @@
+// ------------- These needs to be dinamically injected
 // #define NUM_DIRECTIONAL_LIGHTS 1
 #define NUM_POINT_LIGHTS 1
 // #define NUM_SPOT_LIGHTS 1
+// ------------- 
 
 uniform struct Material {
 	vec4 emission;
@@ -45,7 +47,7 @@ struct PointLight {
    	vec4 position;
 
     float constantAttenuation;
-    // float linearAttenuation;
+    float linearAttenuation;
     // float quadraticAttenuation;
 };
 
@@ -68,8 +70,8 @@ void calculatePointLight(in PointLight _light, in vec3 _eye, in vec3 _ecPosition
     VP = normalize(VP);
 
     // Compute attenuation
-    attenuation = 1.0 / (_light.constantAttenuation);// +
-                         // _light.linearAttenuation * d +
+    attenuation = 1.0 / (_light.constantAttenuation +
+                         _light.linearAttenuation * d);// +
                          // _light.quadraticAttenuation * d * d);
 
     halfVector = normalize(VP + _eye);
@@ -111,7 +113,7 @@ void calculateSpotLight(in SpotLight _light, in vec3 _eye, in vec3 _ecPosition3,
     float spotDot;          // cosine of angle between spotlight
     float spotAttenuation;  // spotlight attenuation factor
     float attenuation;      // computed attenuation factor
-    float d;                // distance from surface to light source
+    // float d;                // distance from surface to light source
     vec3 VP;                // direction from surface to light position
     vec3 halfVector;        // direction of maximum highlights
 
@@ -119,7 +121,7 @@ void calculateSpotLight(in SpotLight _light, in vec3 _eye, in vec3 _ecPosition3,
     VP = vec3(_light.position) - _ecPosition3;
 
     // Compute distance between surface and light position
-    d = length(VP);
+    // d = length(VP);
 
     // Normalize the vector from surface to light position
     VP = normalize(VP);
@@ -171,7 +173,7 @@ vec4 calculateLighting(in vec3 _ecPosition, in vec3 _normal) {
 	vec3 eye = vec3(0.0, 0.0, 1.0);
   	//eye = -normalize(_ecPosition3);
 
-  	// Clear the light intensity accumulators
+  	// Light intensity accumulators
   	vec4 amb  = vec4(0.0);
   	vec4 diff = vec4(0.0);
   	vec4 spec = vec4(0.0);
@@ -197,8 +199,10 @@ vec4 calculateLighting(in vec3 _ecPosition, in vec3 _normal) {
     calculateSpotLight(u_spotLights[0], eye, _ecPosition, _normal, amb, diff, spec);
 #endif
 
+//  Final light intensity calculation
+//
 	vec4 color =  	amb * u_material.ambient + 
-#ifdef COLOR_TEXTURE
+#ifdef DIFFUSE_TEXTURE
                 	diff * texture2D(u_textureDiffuse, a_uv) +
 #else
                 	diff * u_material.diffuse +

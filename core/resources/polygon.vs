@@ -1,3 +1,4 @@
+uniform mat4 u_model;
 uniform mat4 u_modelView;
 uniform mat4 u_modelViewProj;
 uniform float u_time;
@@ -21,8 +22,7 @@ void main() {
   	v_normal = normalize(a_normal);
   	v_texcoord = a_texcoord;
 
-	// vec4 eyeSpaceVertexPos = u_modelView * a_position;
-	v_eye = a_position.xyz / a_position.w;
+	v_eye = vec3(u_modelView * a_position);
 
 	v_color = a_color; // * calculateLighting(v_eye,v_normal);
 
