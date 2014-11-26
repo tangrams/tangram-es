@@ -2,7 +2,6 @@
 
 #include <memory>
 #include <utility>
-#include <cmath>
 
 #include "platform.h"
 #include "tile/tileManager.h"
@@ -22,36 +21,44 @@ void initialize() {
     logMsg("%s\n", "initialize");
 
     // Create view
-    m_view = std::make_shared<View>();
+    if (!m_view) {
+        m_view = std::make_shared<View>();
+        
+        // Move the view to coordinates in Manhattan so we have something interesting to test
+        glm::dvec2 target = m_view->getMapProjection().LonLatToMeters(glm::dvec2(-74.00796, 40.70361));
+        m_view->setPosition(target.x, target.y);
+    }
 
-    // Move the view to coordinates in Manhattan so we have something interesting to test
-    glm::dvec2 target = m_view->getMapProjection().LonLatToMeters(glm::dvec2(-74.00796, 40.70361));
-    m_view->setPosition(target.x, target.y);
-
-    // Load style(s); hard-coded for now
-    std::unique_ptr<Style> polyStyle(new PolygonStyle("Polygon"));
-    polyStyle->addLayers({
-        "buildings",
-        "water",
-        "earth",
-        "landuse",
-        "roads"
-    });
-
-    // Create a scene definition and add the style
-    m_scene = std::make_shared<Scene>();
-    m_scene->addStyle(std::move(polyStyle));
+    // Create a scene object
+    if (!m_scene) {
+        m_scene = std::make_shared<Scene>();
+        
+        // Load style(s); hard-coded for now
+        std::unique_ptr<Style> polyStyle(new PolygonStyle("Polygon"));
+        polyStyle->addLayers({
+            "buildings",
+            "water",
+            "earth",
+            "landuse",
+            "roads"
+        });
+        
+        m_scene->addStyle(std::move(polyStyle));
+        
+    }
 
     // Create a tileManager
-    m_tileManager = TileManager::GetInstance();
-    
-    // Pass references to the view and scene into the tile manager
-    m_tileManager->setView(m_view);
-    m_tileManager->setScene(m_scene);
-
-    // Add a tile data source
-    std::unique_ptr<DataSource> dataSource(new MapzenVectorTileJson());
-    m_tileManager->addDataSource(std::move(dataSource));
+    if (!m_tileManager) {
+        m_tileManager = TileManager::GetInstance();
+        
+        // Pass references to the view and scene into the tile manager
+        m_tileManager->setView(m_view);
+        m_tileManager->setScene(m_scene);
+        
+        // Add a tile data source
+        std::unique_ptr<DataSource> dataSource(new MapzenVectorTileJson());
+        m_tileManager->addDataSource(std::move(dataSource));
+    }
 
     // Set up openGL state
     glDisable(GL_BLEND);
