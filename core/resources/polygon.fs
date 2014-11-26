@@ -1,6 +1,8 @@
-#pragma tangram: lighting
-
+uniform mat4 u_modelView;
+uniform mat4 u_modelViewProj;
 uniform float u_time;
+
+#pragma tangram: lighting
 
 varying vec4 v_color;
 varying vec3 v_eye;

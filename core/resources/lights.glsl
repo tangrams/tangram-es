@@ -1,6 +1,6 @@
 // #define NUM_DIRECTIONAL_LIGHTS 1
-// #define NUM_POINT_LIGHTS 1
-#define NUM_SPOT_LIGHTS 1
+#define NUM_POINT_LIGHTS 1
+// #define NUM_SPOT_LIGHTS 1
 
 uniform struct Material {
 	vec4 emission;
@@ -178,21 +178,21 @@ vec4 calculateLighting(in vec3 _ecPosition, in vec3 _normal) {
 
 //	COMPUTE DIRECTIONAL LIGHTS
 //
-// #pragma tangram: DIRECTIONAL_LIGHTS
+#pragma tangram: DIRECTIONAL_LIGHTS
 #ifdef NUM_DIRECTIONAL_LIGHTS
     calculateDirectionalLight(u_directionalLights[0], _normal, amb, diff, spec);
 #endif
 
 //	COMPUTE POINT LIGHTS
 //
-// #pragma tangram: POINT_LIGHTS
+#pragma tangram: POINT_LIGHTS
 #ifdef NUM_POINT_LIGHTS
     calculatePointLight(u_pointLights[0], eye, _ecPosition, _normal, amb, diff, spec);
 #endif
 
 //	COMPUTE SPOT LIGHTS
 //
-// #pragma tangram: SPOT_LIGHTS
+#pragma tangram: SPOT_LIGHTS
 #ifdef NUM_SPOT_LIGHTS
     calculateSpotLight(u_spotLights[0], eye, _ecPosition, _normal, amb, diff, spec);
 #endif

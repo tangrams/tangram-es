@@ -64,8 +64,8 @@ void initialize() {
     m_scene->addStyle(std::move(linesStyle));
     
 //    m_scene->addDirectionalLight(std::move(directionalLight));
-//    m_scene->addPointLight(std::move(pointLight));
-    m_scene->addSpotLight(std::move(spotLight));
+    m_scene->addPointLight(std::move(pointLight));
+//    m_scene->addSpotLight(std::move(spotLight));
 
     // Create a tileManager
     m_tileManager = TileManager::GetInstance();
@@ -114,8 +114,17 @@ void update(float _dt) {
     }
     
     float time = ((float)clock())/CLOCKS_PER_SEC;
-    m_scene->getSpotLights()[0]->setDirection(glm::vec3(time,time*0.5,time*0.25));
-
+    if(m_scene->getDirectionalLights().size()){
+        m_scene->getDirectionalLights()[0]->setDirection(glm::vec3(time,time*0.5,time*0.25));
+    }
+    if(m_scene->getPointLights().size()){
+        m_scene->getPointLights()[0]->setPosition(glm::vec3(cos(time),
+                                                            sin(time),
+                                                            0.0));
+    }
+    if(m_scene->getSpotLights().size()){
+        m_scene->getSpotLights()[0]->setDirection(glm::vec3(time,time*0.5,time*0.25));
+    }
 }
 
 void render() {

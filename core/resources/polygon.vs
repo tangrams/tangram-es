@@ -1,8 +1,8 @@
-#pragma tangram: lighting
-
 uniform mat4 u_modelView;
 uniform mat4 u_modelViewProj;
 uniform float u_time;
+
+#pragma tangram: lighting
 
 attribute vec4 a_position;
 attribute vec4 a_color;
@@ -21,8 +21,8 @@ void main() {
   	v_normal = normalize(a_normal);
   	v_texcoord = a_texcoord;
 
-	vec4 eyeSpaceVertexPos = u_modelView * a_position;
-	v_eye = eyeSpaceVertexPos.xyz / eyeSpaceVertexPos.w;
+	// vec4 eyeSpaceVertexPos = u_modelView * a_position;
+	v_eye = a_position.xyz / a_position.w;
 
 	v_color = a_color; // * calculateLighting(v_eye,v_normal);
 
