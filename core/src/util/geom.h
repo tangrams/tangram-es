@@ -5,6 +5,8 @@
 #include <iostream>
 
 #include "glm/glm.hpp"
+
+#define GLM_FORCE_RADIANS
 #include "glm/gtc/matrix_transform.hpp"
 
 //  Pre-Computed trigonometrical constant

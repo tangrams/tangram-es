@@ -1,4 +1,4 @@
-#include "Rectangle.h"
+#include "rectangle.h"
 
 #include "geom.h"
 #include "intersection.h"
