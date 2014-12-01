@@ -18,3 +18,15 @@
 #define glClearDepthf glClearDepth
 #define glDepthRangef glDepthRange
 #endif
+
+#ifdef PLATFORM_RPI
+//  Broadcom hardware library for hijacking the GPU card with out window manager
+//
+#include "bcm_host.h"
+
+//  OpenGL ES 2.0
+//
+#include "GLES2/gl2.h"
+#include "EGL/egl.h"
+#include "EGL/eglext.h"
+#endif
