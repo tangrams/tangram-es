@@ -3,6 +3,8 @@
 
 #define MAX_INDEX_VALUE 65535 // Maximum value of GLushort
 
+std::unordered_set<VboMesh*> VboMesh::s_managedVBOs;
+
 VboMesh::VboMesh(std::shared_ptr<VertexLayout> _vertexLayout, GLenum _drawMode) : m_vertexLayout(_vertexLayout) {
 
     m_glVertexBuffer = 0;
@@ -13,6 +15,8 @@ VboMesh::VboMesh(std::shared_ptr<VertexLayout> _vertexLayout, GLenum _drawMode) 
     m_isUploaded = false;
 
     setDrawMode(_drawMode);
+    
+    addManagedVBO(this);
 }
 
 VboMesh::VboMesh() {
@@ -22,12 +26,16 @@ VboMesh::VboMesh() {
     m_nIndices = 0;
 
     m_isUploaded = false;
+    
+    addManagedVBO(this);
 }
 
 VboMesh::~VboMesh() {
 
     glDeleteBuffers(1, &m_glVertexBuffer);
     glDeleteBuffers(1, &m_glIndexBuffer);
+    
+    removeManagedVBO(this);
 
 }
 
@@ -162,4 +170,23 @@ void VboMesh::draw(const std::shared_ptr<ShaderProgram> _shader) {
         glDrawArrays(m_drawMode, 0, m_nVertices);
     }
 
+}
+
+void VboMesh::addManagedVBO(VboMesh* _vbo) {
+    s_managedVBOs.insert(_vbo);
+}
+
+void VboMesh::removeManagedVBO(VboMesh* _vbo) {
+    s_managedVBOs.erase(_vbo);
+}
+
+void VboMesh::invalidateAllVBOs() {
+    
+    for (auto vbo : s_managedVBOs) {
+        vbo->m_isUploaded = false;
+        vbo->m_nVertices = 0;
+        vbo->m_nIndices = 0;
+        // TODO: signal to re-build vertices!
+    }
+    
 }

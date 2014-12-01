@@ -19,6 +19,9 @@ std::shared_ptr<View> m_view;
 void initialize() {
     
     logMsg("%s\n", "initialize");
+    
+    ShaderProgram::rebuildAllPrograms();
+    VboMesh::invalidateAllVBOs();
 
     // Create view
     if (!m_view) {
