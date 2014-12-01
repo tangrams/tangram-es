@@ -46,3 +46,14 @@ To build for Android, ensure you have your `$ANDROID_NDK` environment variable s
 ```bash
 make android [ANDROID_ARCH=[x86|armeabi-v7a|armeabi]]
 ```
+
+### Raspberry Pi ###
+
+To build for RaspberryPi, you will need to compile on C++11. Install the last C++ version of 4.7 the compiler and update the config file by:
+
+```
+sudo apt-get install g++-4.7
+sudo update-alternatives --install /usr/bin/gcc gcc /usr/bin/gcc-4.6 60 --slave /usr/bin/g++ g++ /usr/bin/g++-4.6 
+sudo update-alternatives --install /usr/bin/gcc gcc /usr/bin/gcc-4.7 40 --slave /usr/bin/g++ g++ /usr/bin/g++-4.7 
+sudo update-alternatives --config gcc
+```
