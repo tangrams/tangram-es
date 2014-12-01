@@ -56,7 +56,7 @@ glm::vec3 getScaled(const glm::vec3 &_vec, float _length) {
 }
 
 float getArea(const std::vector<glm::vec3> &_pts){
-    float area;
+    float area = 0.0;
     
     for(int i=0;i<(int)_pts.size()-1;i++){
         area += _pts[i].x * _pts[i+1].y - _pts[i+1].x * _pts[i].y;
@@ -69,8 +69,9 @@ float getArea(const std::vector<glm::vec3> &_pts){
 
 glm::vec3 getCentroid(const std::vector<glm::vec3> &_pts){
     glm::vec3 centroid;
+    float fraq = 1.0/(float)_pts.size();
     for (int i = 0; i < _pts.size(); i++) {
-        centroid += _pts[i] / (float)_pts.size();
+        centroid += _pts[i] * fraq;
     }
     return centroid;
 }
