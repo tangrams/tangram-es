@@ -22,6 +22,7 @@ public class Tangram extends GLSurfaceView implements Renderer, OnScaleGestureLi
 	}
 
 	private static native void init(AssetManager assetManager);
+	private static native void teardown();
 	private static native void resize(int width, int height);
 	private static native void render();
     private static native void update(float dt);
@@ -50,6 +51,10 @@ public class Tangram extends GLSurfaceView implements Renderer, OnScaleGestureLi
         this.gestureDetector = new GestureDetector(mainApp, this);
         this.scaleGestureDetector = new ScaleGestureDetector(mainApp, this);
         
+    }
+    
+    public void onDestroy() {
+    	teardown();
     }
 	
 	@Override

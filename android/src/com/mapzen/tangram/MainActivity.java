@@ -30,6 +30,12 @@ public class MainActivity extends Activity {
 		super.onResume();
 		tangram.onResume();
 	}
+	
+	@Override
+	protected void onDestroy() {
+		super.onDestroy();
+		tangram.onDestroy();
+	}
 
 }
 
