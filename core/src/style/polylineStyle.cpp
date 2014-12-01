@@ -15,7 +15,7 @@ void PolylineStyle::constructVertexLayout() {
     // TODO: Ideally this would be in the same location as the struct that it basically describes
     m_vertexLayout = std::shared_ptr<VertexLayout>(new VertexLayout({
         {"a_position", 3, GL_FLOAT, false, 0},
-        {"a_uv", 2, GL_FLOAT, false, 0},
+        {"a_texcoord", 2, GL_FLOAT, false, 0},
         {"a_extrudeNormal", 2, GL_FLOAT, false, 0},
         {"a_extrudeWidth", 1, GL_FLOAT, false, 0},
         {"a_color", 4, GL_UNSIGNED_BYTE, true, 0}
@@ -47,7 +47,7 @@ void PolylineStyle::buildLine(Line& _line, std::string& _layer, Properties& _pro
     std::vector<PosNormEnormColVertex> vertices;
     std::vector<GLushort> indices;
     std::vector<glm::vec3> points;
-    std::vector<glm::vec2> uvs;
+    std::vector<glm::vec2> texcoords;
     std::vector<glm::vec2> extrudeNormals;
     
     GLuint abgr = 0xff969696; // Default road color
@@ -65,11 +65,11 @@ void PolylineStyle::buildLine(Line& _line, std::string& _layer, Properties& _pro
         halfWidth = 0.005;
     }
     
-    GeometryHandler::buildDynamicPolyLine(_line, points, uvs, extrudeNormals, indices);
+    GeometryHandler::buildDynamicPolyLine(_line, points, texcoords, extrudeNormals, indices);
     
     for (int i = 0; i < points.size(); i++) {
         glm::vec3 p = points[i];
-        glm::vec2 uv = uvs[i];
+        glm::vec2 uv = texcoords[i];
         glm::vec2 en = extrudeNormals[i];
         vertices.push_back({ p.x, p.y, p.z, uv.x, uv.y, en.x, en.y, halfWidth, abgr });
     }

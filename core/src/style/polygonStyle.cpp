@@ -14,7 +14,7 @@ void PolygonStyle::constructVertexLayout() {
     m_vertexLayout = std::shared_ptr<VertexLayout>(new VertexLayout({
         {"a_position", 3, GL_FLOAT, false, 0},
         {"a_normal", 3, GL_FLOAT, false, 0},
-        {"a_uv", 2, GL_FLOAT, false, 0},
+        {"a_texcoord", 2, GL_FLOAT, false, 0},
         {"a_color", 4, GL_UNSIGNED_BYTE, true, 0}
     }));
     
@@ -43,17 +43,17 @@ void PolygonStyle::buildLine(Line& _line, std::string& _layer, Properties& _prop
     std::vector<PosNormColVertex> vertices;
     std::vector<GLushort> indices;
     std::vector<glm::vec3> points;
-    std::vector<glm::vec2> uvs;
+    std::vector<glm::vec2> texcoords;
     
     GLuint abgr = 0xff969696; // Default road color
     float halfWidth = 0.02;
     
-    GeometryHandler::buildPolyLine(_line, halfWidth, points, uvs, indices);
+    GeometryHandler::buildPolyLine(_line, halfWidth, points, texcoords, indices);
     
     for (int i = 0; i < points.size(); i++) {
         glm::vec3 p = points[i];
         glm::vec3 n = glm::vec3(0.0f, 0.0f, 1.0f);
-        glm::vec2 u = uvs[i];
+        glm::vec2 u = texcoords[i];
         vertices.push_back({ p.x, p.y, p.z, n.x, n.y, n.z, u.x, u.y, abgr });
     }
     
@@ -73,7 +73,7 @@ void PolygonStyle::buildPolygon(Polygon& _polygon, std::string& _layer, Properti
     std::vector<GLushort> indices;
     std::vector<glm::vec3> points;
     std::vector<glm::vec3> normals;
-    std::vector<glm::vec2> uvs;
+    std::vector<glm::vec2> texcoords;
     
     GLuint abgr = 0xffaaaaaa; // Default color
     
@@ -98,15 +98,15 @@ void PolygonStyle::buildPolygon(Polygon& _polygon, std::string& _layer, Properti
                 point.z = height;
             }
         }
-        GeometryHandler::buildPolygonExtrusion(_polygon, minHeight, points, normals, uvs, indices);
+        GeometryHandler::buildPolygonExtrusion(_polygon, minHeight, points, normals, texcoords, indices);
     }
     
-    GeometryHandler::buildPolygon(_polygon, points, normals, uvs, indices);
+    GeometryHandler::buildPolygon(_polygon, points, normals, texcoords, indices);
     
     for (int i = 0; i < points.size(); i++) {
         glm::vec3 p = points[i];
         glm::vec3 n = normals[i];
-        glm::vec2 u = uvs[i];
+        glm::vec2 u = texcoords[i];
         vertices.push_back({ p.x, p.y, p.z, n.x, n.y, n.z, u.x, u.y, abgr });
     }
     

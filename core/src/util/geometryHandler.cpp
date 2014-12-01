@@ -44,7 +44,7 @@ void GeometryHandler::buildPolygon(const Polygon& _polygon, std::vector<glm::vec
     tessDeleteTess(tesselator);
 }
 
-void GeometryHandler::buildPolygon(const Polygon& _polygon, std::vector<glm::vec3>& _pointsOut, std::vector<glm::vec3>& _normalOut, std::vector<glm::vec2>& _uvOut, std::vector<ushort>& _indicesOut) {
+void GeometryHandler::buildPolygon(const Polygon& _polygon, std::vector<glm::vec3>& _pointsOut, std::vector<glm::vec3>& _normalOut, std::vector<glm::vec2>& _texcoordOut, std::vector<ushort>& _indicesOut) {
     
     TESStesselator* tesselator = tessNewTess(nullptr);
     
@@ -83,7 +83,7 @@ void GeometryHandler::buildPolygon(const Polygon& _polygon, std::vector<glm::vec
         const int numVertices = tessGetVertexCount(tesselator);
         const float* tessVertices = tessGetVertices(tesselator);
         for(int i = 0; i < numVertices; i++) {
-            _uvOut.push_back(glm::vec2(mapValue(tessVertices[3*i],bBox.getMinX(),bBox.getMaxX(),0.,1.),
+            _texcoordOut.push_back(glm::vec2(mapValue(tessVertices[3*i],bBox.getMinX(),bBox.getMaxX(),0.,1.),
                                        mapValue(tessVertices[3*i+1],bBox.getMinY(),bBox.getMaxY(),0.,1.)));
             _pointsOut.push_back(glm::vec3(tessVertices[3*i], tessVertices[3*i+1], tessVertices[3*i+2]));
             _normalOut.push_back(normal);
@@ -141,7 +141,7 @@ void GeometryHandler::buildPolygonExtrusion(const Polygon& _polygon, const float
     }
 }
 
-void GeometryHandler::buildPolygonExtrusion(const Polygon& _polygon, const float& _minHeight, std::vector<glm::vec3>& _pointsOut, std::vector<glm::vec3>& _normalOut, std::vector<glm::vec2>& _uvOut, std::vector<ushort>& _indicesOut) {
+void GeometryHandler::buildPolygonExtrusion(const Polygon& _polygon, const float& _minHeight, std::vector<glm::vec3>& _pointsOut, std::vector<glm::vec3>& _normalOut, std::vector<glm::vec2>& _texcoordOut, std::vector<ushort>& _indicesOut) {
     
     ushort vertexDataOffset = (ushort)_pointsOut.size();
     
@@ -158,22 +158,22 @@ void GeometryHandler::buildPolygonExtrusion(const Polygon& _polygon, const float
             // 1st vertex top
             _pointsOut.push_back(line[i]);
             _normalOut.push_back(normalVector);
-            _uvOut.push_back(glm::vec2(1.,0.));
+            _texcoordOut.push_back(glm::vec2(1.,0.));
             
             // 2nd vertex top
             _pointsOut.push_back(line[i+1]);
             _normalOut.push_back(normalVector);
-            _uvOut.push_back(glm::vec2(0.,0.));
+            _texcoordOut.push_back(glm::vec2(0.,0.));
             
             // 1st vertex bottom
             _pointsOut.push_back(glm::vec3(line[i].x, line[i].y, _minHeight));
             _normalOut.push_back(normalVector);
-            _uvOut.push_back(glm::vec2(1.,1.));
+            _texcoordOut.push_back(glm::vec2(1.,1.));
             
             // 2nd vertex bottom
             _pointsOut.push_back(glm::vec3(line[i+1].x, line[i+1].y, _minHeight));
             _normalOut.push_back(normalVector);
-            _uvOut.push_back(glm::vec2(0.,1.));
+            _texcoordOut.push_back(glm::vec2(0.,1.));
             
             //Start the index from the previous state of the vertex Data
             _indicesOut.push_back(vertexDataOffset);
@@ -192,7 +192,7 @@ void GeometryHandler::buildPolygonExtrusion(const Polygon& _polygon, const float
 
 void GeometryHandler::buildPolyLine(const Line& _line, float _halfWidth, std::vector<glm::vec3>& _pointsOut, std::vector<ushort>& _indicesOut) {
 
-    //  UV implemented but commented as: _uvOut
+    //  UV implemented but commented as: _texcoordOut
     //
     if(_line.size() >= 2){
         
@@ -263,9 +263,9 @@ void GeometryHandler::buildPolyLine(const Line& _line, float _halfWidth, std::ve
     }
 }
 
-void GeometryHandler::buildPolyLine(const Line& _line, float _halfWidth, std::vector<glm::vec3>& _pointsOut, std::vector<glm::vec2>& _uvOut, std::vector<ushort>& _indicesOut) {
+void GeometryHandler::buildPolyLine(const Line& _line, float _halfWidth, std::vector<glm::vec3>& _pointsOut, std::vector<glm::vec2>& _texcoordOut, std::vector<ushort>& _indicesOut) {
     
-    //  UV implemented but commented as: _uvOut
+    //  UV implemented but commented as: _texcoordOut
     //
     if(_line.size() >= 2){
         
@@ -290,10 +290,10 @@ void GeometryHandler::buildPolyLine(const Line& _line, float _halfWidth, std::ve
                               normCurrNext.z*_halfWidth);
         
         _pointsOut.push_back(currCoord + rightNorm);
-        _uvOut.push_back(glm::vec2(1.0,0.0));
+        _texcoordOut.push_back(glm::vec2(1.0,0.0));
         
         _pointsOut.push_back(currCoord - rightNorm);
-        _uvOut.push_back(glm::vec2(0.0,0.0));
+        _texcoordOut.push_back(glm::vec2(0.0,0.0));
         
         // Loop over intermediate m_points in the polyline
         //
@@ -314,10 +314,10 @@ void GeometryHandler::buildPolyLine(const Line& _line, float _halfWidth, std::ve
             rightNorm *= scale;
             
             _pointsOut.push_back(currCoord+rightNorm);
-            _uvOut.push_back(glm::vec2(1.0,(float)i/(float)_line.size()));
+            _texcoordOut.push_back(glm::vec2(1.0,(float)i/(float)_line.size()));
             
             _pointsOut.push_back(currCoord-rightNorm);
-            _uvOut.push_back(glm::vec2(0.0,(float)i/(float)_line.size()));
+            _texcoordOut.push_back(glm::vec2(0.0,(float)i/(float)_line.size()));
             
         }
         
@@ -325,10 +325,10 @@ void GeometryHandler::buildPolyLine(const Line& _line, float _halfWidth, std::ve
         normCurrNext *= _halfWidth;
         
         _pointsOut.push_back(nextCoord + normCurrNext);
-        _uvOut.push_back(glm::vec2(1.0,1.0));
+        _texcoordOut.push_back(glm::vec2(1.0,1.0));
         
         _pointsOut.push_back(nextCoord - normCurrNext);
-        _uvOut.push_back(glm::vec2(0.0,1.0));
+        _texcoordOut.push_back(glm::vec2(0.0,1.0));
         
         for (int i = 0; i < _line.size() - 1; i++) {
             _indicesOut.push_back(vertexDataOffset + 2*i+2);
@@ -344,7 +344,7 @@ void GeometryHandler::buildPolyLine(const Line& _line, float _halfWidth, std::ve
 
 void GeometryHandler::buildDynamicPolyLine(const Line& _line, std::vector<glm::vec3>& _pointsOut, std::vector<glm::vec2>& _extrudeNormalsOut, std::vector<ushort>& _indicesOut) {
     
-    //  UV implemented but commented as: _uvOut
+    //  UV implemented but commented as: _texcoordOut
     //
     if(_line.size() >= 2){
         
@@ -414,9 +414,9 @@ void GeometryHandler::buildDynamicPolyLine(const Line& _line, std::vector<glm::v
     }
 }
 
-void GeometryHandler::buildDynamicPolyLine(const Line& _line, std::vector<glm::vec3>& _pointsOut, std::vector<glm::vec2>& _uvOut, std::vector<glm::vec2>& _extrudeNormalsOut, std::vector<ushort>& _indicesOut) {
+void GeometryHandler::buildDynamicPolyLine(const Line& _line, std::vector<glm::vec3>& _pointsOut, std::vector<glm::vec2>& _texcoordOut, std::vector<glm::vec2>& _extrudeNormalsOut, std::vector<ushort>& _indicesOut) {
     
-    //  UV implemented but commented as: _uvOut
+    //  UV implemented but commented as: _texcoordOut
     //
     if(_line.size() >= 2){
         
@@ -436,11 +436,11 @@ void GeometryHandler::buildDynamicPolyLine(const Line& _line, std::vector<glm::v
         
         rightNorm = normCurrNext;
         _pointsOut.push_back(currCoord);
-        _uvOut.push_back(glm::vec2(1.0,0.0));
+        _texcoordOut.push_back(glm::vec2(1.0,0.0));
         _extrudeNormalsOut.push_back(rightNorm);
         
         _pointsOut.push_back(currCoord);
-        _uvOut.push_back(glm::vec2(0.0,0.0));
+        _texcoordOut.push_back(glm::vec2(0.0,0.0));
         _extrudeNormalsOut.push_back(-rightNorm);
         
         // Loop over intermediate m_points in the polyline
@@ -461,11 +461,11 @@ void GeometryHandler::buildDynamicPolyLine(const Line& _line, std::vector<glm::v
             rightNorm *= scale;
             
             _pointsOut.push_back(currCoord);
-            _uvOut.push_back(glm::vec2(1.0,(float)i/(float)_line.size()));
+            _texcoordOut.push_back(glm::vec2(1.0,(float)i/(float)_line.size()));
             _extrudeNormalsOut.push_back(rightNorm);
             
             _pointsOut.push_back(currCoord);
-            _uvOut.push_back(glm::vec2(0.0,(float)i/(float)_line.size()));
+            _texcoordOut.push_back(glm::vec2(0.0,(float)i/(float)_line.size()));
             _extrudeNormalsOut.push_back(-rightNorm);
             
         }
@@ -473,11 +473,11 @@ void GeometryHandler::buildDynamicPolyLine(const Line& _line, std::vector<glm::v
         normCurrNext = glm::normalize(normCurrNext);
         
         _pointsOut.push_back(nextCoord);
-        _uvOut.push_back(glm::vec2(1.0,1.0));
+        _texcoordOut.push_back(glm::vec2(1.0,1.0));
         _extrudeNormalsOut.push_back(rightNorm);
         
         _pointsOut.push_back(nextCoord);
-        _uvOut.push_back(glm::vec2(0.0,1.0));
+        _texcoordOut.push_back(glm::vec2(0.0,1.0));
         _extrudeNormalsOut.push_back(-rightNorm);
         
         for (int i = 0; i < _line.size() - 1; i++) {

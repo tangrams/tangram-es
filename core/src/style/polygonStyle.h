@@ -16,8 +16,8 @@ protected:
         GLfloat norm_y;
         GLfloat norm_z;
         // UV Data
-        GLfloat uv_x;
-        GLfloat uv_y;
+        GLfloat texcoord_x;
+        GLfloat texcoord_y;
         // Color Data
         GLuint abgr;
     };
