@@ -172,16 +172,22 @@ bool Rectangle::clip( glm::vec3& _p0, glm::vec3& _p1) const {
     glm::vec3 bottomRight = getBottomRight();
     glm::vec3 bottomLeft  = getBottomLeft();
     
+    bool rta = false;
+    
     if (!inside(_p0)) {
         glm::vec3 r;
         if (LineSegmentIntersection(_p0, _p1, topLeft,     topRight,    r)){
             _p0 = r;
+            rta = true;
         } else if (LineSegmentIntersection(_p0, _p1, topRight,    bottomRight, r)){
             _p0 = r;
+            rta = true;
         } else if (LineSegmentIntersection(_p0, _p1, bottomRight, bottomLeft,  r)){
             _p0 = r;
+            rta = true;
         } else if (LineSegmentIntersection(_p0, _p1, bottomLeft,  topLeft,     r)){
             _p0 = r;
+            rta = true;
         }
     }
     
@@ -189,14 +195,20 @@ bool Rectangle::clip( glm::vec3& _p0, glm::vec3& _p1) const {
         glm::vec3 r;
         if (LineSegmentIntersection(_p1, _p0, topLeft,     topRight,    r)){
             _p1 = r;
+            rta = true;
         } else if (LineSegmentIntersection(_p1, _p0, topRight,    bottomRight, r)){
             _p1 = r;
+            rta = true;
         } else if (LineSegmentIntersection(_p1, _p0, bottomRight, bottomLeft,  r)){
             _p1 = r;
+            rta = true;
         } else if (LineSegmentIntersection(_p1, _p0, bottomLeft,  topLeft,     r)){
             _p1 = r;
+            rta = true;
         }
     }
+    
+    return rta;
 }
 
 void Rectangle::growToInclude(const glm::vec3& p){
