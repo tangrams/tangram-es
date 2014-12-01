@@ -65,7 +65,7 @@ void PolylineStyle::buildLine(Line& _line, std::string& _layer, Properties& _pro
         halfWidth = 0.005;
     }
     
-    GeometryHandler::buildDynamicPolyLine(_line, points, texcoords, extrudeNormals, indices);
+    GeometryHandler::buildDynamicPolyLine(_line, points, extrudeNormals, indices, texcoords);
     
     for (int i = 0; i < points.size(); i++) {
         glm::vec3 p = points[i];

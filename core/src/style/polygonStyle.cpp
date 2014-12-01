@@ -48,7 +48,7 @@ void PolygonStyle::buildLine(Line& _line, std::string& _layer, Properties& _prop
     GLuint abgr = 0xff969696; // Default road color
     float halfWidth = 0.02;
     
-    GeometryHandler::buildPolyLine(_line, halfWidth, points, texcoords, indices);
+    GeometryHandler::buildPolyLine(_line, halfWidth, points, indices, texcoords);
     
     for (int i = 0; i < points.size(); i++) {
         glm::vec3 p = points[i];
@@ -98,10 +98,10 @@ void PolygonStyle::buildPolygon(Polygon& _polygon, std::string& _layer, Properti
                 point.z = height;
             }
         }
-        GeometryHandler::buildPolygonExtrusion(_polygon, minHeight, points, normals, texcoords, indices);
+        GeometryHandler::buildPolygonExtrusion(_polygon, minHeight, points, normals, indices, texcoords);
     }
     
-    GeometryHandler::buildPolygon(_polygon, points, normals, texcoords, indices);
+    GeometryHandler::buildPolygon(_polygon, points, normals, indices, texcoords);
     
     for (int i = 0; i < points.size(); i++) {
         glm::vec3 p = points[i];
