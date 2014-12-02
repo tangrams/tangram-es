@@ -27,9 +27,9 @@ endforeach()
 # link and build functions
 function(link_libraries)
 
-    target_link_libraries(${EXECUTABLE_NAME} -lEGL)
-    target_link_libraries(${EXECUTABLE_NAME} -lGLESv2)
-    target_link_libraries(${EXECUTABLE_NAME} -lbcm_host)
+    target_link_libraries(${EXECUTABLE_NAME} /opt/vc/lib/libGLESv2_static.a)
+    target_link_libraries(${EXECUTABLE_NAME} /opt/vc/lib/libEGL_static.a)
+    #target_link_libraries(${EXECUTABLE_NAME} -lbcm_host)
     target_link_libraries(${EXECUTABLE_NAME} -lcurl) #use system libcurl
     target_link_libraries(${EXECUTABLE_NAME} ${PROJECT_SOURCE_DIR}/rpi/precompiled/libtess2/libtess2.a)
     target_link_libraries(${EXECUTABLE_NAME} core)
