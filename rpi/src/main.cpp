@@ -2,9 +2,9 @@
 #include <assert.h>
 #include <time.h>
 
-#include "gl.h"
 #include "tangram.h"
 #include "platform.h"
+#include "gl.h"
 
 //==============================================================================
 int main(int argc, char **argv){
@@ -97,8 +97,8 @@ int main(int argc, char **argv){
     assert(EGL_FALSE != result);
     
     // Set background color and clear buffers
-    initialize();
-    resize(screen_width, screen_height);
+    Tangram::initialize();
+    Tangram::resize(screen_width, screen_height);
 
     time_t lastTime;
     time(&lastTime);
@@ -108,12 +108,12 @@ int main(int argc, char **argv){
         double delta = difftime(lastTime,currentTime);
         lastTime = currentTime;
     
-        update(delta);
+        Tangram::update(delta);
 
          // Now render to the main frame buffer
         glBindFramebuffer(GL_FRAMEBUFFER,0);
         
-        render();
+        Tangram::render();
 
         //  Not sure off this two
         // glFlush();
@@ -122,6 +122,7 @@ int main(int argc, char **argv){
         eglSwapBuffers(display, surface); 
     }
     
+    Tangram::teardown();
     return 0;
 }
 
