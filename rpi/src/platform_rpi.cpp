@@ -20,7 +20,10 @@ std::string stringFromResource(const char* _path) {
     std::string buffer;
 
     file.open(_path);
-    if(!file.is_open()) return false;
+    if(!file.is_open()) {
+        return std::string();
+    }
+
     while(!file.eof()) {
         getline(file, buffer);
         into += buffer + "\n";
