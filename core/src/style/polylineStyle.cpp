@@ -1,5 +1,5 @@
 #include "polylineStyle.h"
-#include "util/geometryHandler.h"
+#include "util/builders.h"
 
 #include <time.h>
 
@@ -65,7 +65,7 @@ void PolylineStyle::buildLine(Line& _line, std::string& _layer, Properties& _pro
         halfWidth = 0.005;
     }
     
-    GeometryHandler::buildScalablePolyLine(_line, points, scalingVecs, indices, texcoords);
+    Builders::buildScalablePolyLine(_line, points, scalingVecs, indices, texcoords);
     
     for (int i = 0; i < points.size(); i++) {
         glm::vec3 p = points[i];

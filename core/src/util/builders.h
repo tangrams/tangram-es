@@ -5,7 +5,7 @@
 #include "tileData.h"
 #include "platform.h"
 
-namespace GeometryHandler {
+namespace Builders {
 
     typedef unsigned short ushort;
 

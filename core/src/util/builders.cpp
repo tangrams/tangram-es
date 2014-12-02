@@ -1,4 +1,4 @@
-#include "geometryHandler.h"
+#include "builders.h"
 
 #include "tesselator.h"
 #include "rectangle.h"
@@ -7,13 +7,13 @@
 static auto& NO_TEXCOORDS = *(new std::vector<glm::vec2>);
 static auto& NO_SCALING_VECS = *(new std::vector<glm::vec2>);
 
-void GeometryHandler::buildPolygon(const Polygon& _polygon, std::vector<glm::vec3>& _pointsOut, std::vector<glm::vec3>& _normalOut, std::vector<ushort>& _indicesOut) {
+void Builders::buildPolygon(const Polygon& _polygon, std::vector<glm::vec3>& _pointsOut, std::vector<glm::vec3>& _normalOut, std::vector<ushort>& _indicesOut) {
     
     buildPolygon(_polygon, _pointsOut, _normalOut, _indicesOut, NO_TEXCOORDS);
     
 }
 
-void GeometryHandler::buildPolygon(const Polygon& _polygon, std::vector<glm::vec3>& _pointsOut, std::vector<glm::vec3>& _normalOut, std::vector<ushort>& _indicesOut, std::vector<glm::vec2>& _texcoordOut) {
+void Builders::buildPolygon(const Polygon& _polygon, std::vector<glm::vec3>& _pointsOut, std::vector<glm::vec3>& _normalOut, std::vector<ushort>& _indicesOut, std::vector<glm::vec2>& _texcoordOut) {
     
     TESStesselator* tesselator = tessNewTess(nullptr);
     
@@ -74,13 +74,13 @@ void GeometryHandler::buildPolygon(const Polygon& _polygon, std::vector<glm::vec
     tessDeleteTess(tesselator);
 }
 
-void GeometryHandler::buildPolygonExtrusion(const Polygon& _polygon, const float& _minHeight, std::vector<glm::vec3>& _pointsOut, std::vector<glm::vec3>& _normalOut, std::vector<ushort>& _indicesOut) {
+void Builders::buildPolygonExtrusion(const Polygon& _polygon, const float& _minHeight, std::vector<glm::vec3>& _pointsOut, std::vector<glm::vec3>& _normalOut, std::vector<ushort>& _indicesOut) {
     
     buildPolygonExtrusion(_polygon, _minHeight, _pointsOut, _normalOut, _indicesOut, NO_TEXCOORDS);
     
 }
 
-void GeometryHandler::buildPolygonExtrusion(const Polygon& _polygon, const float& _minHeight, std::vector<glm::vec3>& _pointsOut, std::vector<glm::vec3>& _normalOut, std::vector<ushort>& _indicesOut, std::vector<glm::vec2>& _texcoordOut) {
+void Builders::buildPolygonExtrusion(const Polygon& _polygon, const float& _minHeight, std::vector<glm::vec3>& _pointsOut, std::vector<glm::vec3>& _normalOut, std::vector<ushort>& _indicesOut, std::vector<glm::vec2>& _texcoordOut) {
     
     ushort vertexDataOffset = (ushort)_pointsOut.size();
     
@@ -237,29 +237,29 @@ void buildGeneralPolyLine(const Line& _line, float _halfWidth, std::vector<glm::
     
 }
 
-void GeometryHandler::buildPolyLine(const Line& _line, float _halfWidth, std::vector<glm::vec3>& _pointsOut, std::vector<ushort>& _indicesOut) {
+void Builders::buildPolyLine(const Line& _line, float _halfWidth, std::vector<glm::vec3>& _pointsOut, std::vector<ushort>& _indicesOut) {
 
     buildGeneralPolyLine(_line, _halfWidth, _pointsOut, NO_SCALING_VECS, _indicesOut, NO_TEXCOORDS);
     
 }
 
-void GeometryHandler::buildPolyLine(const Line& _line, float _halfWidth, std::vector<glm::vec3>& _pointsOut, std::vector<ushort>& _indicesOut, std::vector<glm::vec2>& _texcoordOut) {
+void Builders::buildPolyLine(const Line& _line, float _halfWidth, std::vector<glm::vec3>& _pointsOut, std::vector<ushort>& _indicesOut, std::vector<glm::vec2>& _texcoordOut) {
     
     buildGeneralPolyLine(_line, _halfWidth, _pointsOut, NO_SCALING_VECS, _indicesOut, _texcoordOut);
     
 }
 
-void GeometryHandler::buildScalablePolyLine(const Line& _line, std::vector<glm::vec3>& _pointsOut, std::vector<glm::vec2>& _scalingVecsOut, std::vector<ushort>& _indicesOut) {
+void Builders::buildScalablePolyLine(const Line& _line, std::vector<glm::vec3>& _pointsOut, std::vector<glm::vec2>& _scalingVecsOut, std::vector<ushort>& _indicesOut) {
     
     buildGeneralPolyLine(_line, 0, _pointsOut, _scalingVecsOut, _indicesOut, NO_TEXCOORDS);
     
 }
 
-void GeometryHandler::buildScalablePolyLine(const Line& _line, std::vector<glm::vec3>& _pointsOut, std::vector<glm::vec2>& _scalingVecsOut, std::vector<ushort>& _indicesOut, std::vector<glm::vec2>& _texcoordOut) {
+void Builders::buildScalablePolyLine(const Line& _line, std::vector<glm::vec3>& _pointsOut, std::vector<glm::vec2>& _scalingVecsOut, std::vector<ushort>& _indicesOut, std::vector<glm::vec2>& _texcoordOut) {
     
     buildGeneralPolyLine(_line, 0, _pointsOut, _scalingVecsOut, _indicesOut, _texcoordOut);
 }
 
-void GeometryHandler::buildQuadAtPoint(const Point& _point, const glm::vec3& _normal, float halfWidth, float height, std::vector<glm::vec3>& _pointsOut, std::vector<ushort>& _indicesOut) {
+void Builders::buildQuadAtPoint(const Point& _point, const glm::vec3& _normal, float halfWidth, float height, std::vector<glm::vec3>& _pointsOut, std::vector<ushort>& _indicesOut) {
 
 }
