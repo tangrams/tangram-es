@@ -49,7 +49,24 @@ make android [ANDROID_ARCH=[x86|armeabi-v7a|armeabi]]
 
 ### Raspberry Pi ###
 
-To build for RaspberryPi, you will need to compile on C++11. Install the last C++ version of 4.7 the compiler and update the config file by:
+* Install curl:
+
+```
+sudo apt-get install curl
+```
+
+* Install CMake 3: download [cmake-3.1.X](http://www.cmake.org/download/), config, make and install.
+
+```
+wget http://www.cmake.org/files/v3.1/cmake-3.1.0-rc2.tar.gz
+tar xzvf cmake-3.1.0-rc2.tar.gz
+cd cmake-3.1.0
+./bootstrap
+make
+make install
+```
+
+* C++11 compatible compiler: Install the last C++ version of 4.7 the compiler and update the config file by:
 
 ```
 sudo apt-get install g++-4.7
@@ -57,3 +74,4 @@ sudo update-alternatives --install /usr/bin/gcc gcc /usr/bin/gcc-4.6 60 --slave 
 sudo update-alternatives --install /usr/bin/gcc gcc /usr/bin/gcc-4.7 40 --slave /usr/bin/g++ g++ /usr/bin/g++-4.7 
 sudo update-alternatives --config gcc
 ```
+ 
