@@ -1,22 +1,43 @@
 #include <stdio.h>
+#include <fcntl.h>
 #include <assert.h>
 #include <time.h>
+#include <sys/time.h>
+#include <sys/shm.h>
 
 #include "tangram.h"
 #include "platform.h"
 #include "gl.h"
 
-//==============================================================================
-int main(int argc, char **argv){
+struct timeval tv;
 
-    bcm_host_init();
-    
-    // Start OGLES
-    //  
+typedef struct {
     uint32_t screen_width;
     uint32_t screen_height;
-    
-    int32_t success = 0;
+
+    uint32_t mouse_x;
+    uint32_t mouse_y;
+	uint32_t mouse_prev_x;
+	uint32_t mouse_prev_y;
+
+    uint32_t mouse_b;	// Button number ( 0 = none )
+        
+    // OpenGL|ES objects
+    EGLDisplay display;
+    EGLSurface surface;
+    EGLContext context;
+
+} CUBE_STATE_T;
+
+static CUBE_STATE_T _state, *state=&_state;
+
+static void initOpenGL(){
+    bcm_host_init();
+
+    // Clear application state
+    memset( state, 0, sizeof( *state ) );
+
+	int32_t success = 0;
     EGLBoolean result;
     EGLint num_config;
     
@@ -34,7 +55,6 @@ int main(int argc, char **argv){
         EGL_BLUE_SIZE, 8,
         EGL_ALPHA_SIZE, 8,
         EGL_SURFACE_TYPE, EGL_WINDOW_BIT,
-        EGL_DEPTH_SIZE, 16,
         EGL_NONE
     };
     
@@ -45,38 +65,38 @@ int main(int argc, char **argv){
     EGLConfig config;
     
     // get an EGL display connection
-    EGLDisplay display = eglGetDisplay(EGL_DEFAULT_DISPLAY);
-    assert(display!=EGL_NO_DISPLAY);
+    state->display = eglGetDisplay(EGL_DEFAULT_DISPLAY);
+    assert(state->display!=EGL_NO_DISPLAY);
     
     // initialize the EGL display connection
-    result = eglInitialize(display, NULL, NULL);
+    result = eglInitialize(state->display, NULL, NULL);
     assert(EGL_FALSE != result);
     
     // get an appropriate EGL frame buffer configuration
-    result = eglChooseConfig(display, attribute_list, &config, 1, &num_config);
+    result = eglChooseConfig(state->display, attribute_list, &config, 1, &num_config);
     assert(EGL_FALSE != result);
-
+    
     // get an appropriate EGL frame buffer configuration
     result = eglBindAPI(EGL_OPENGL_ES_API);
     assert(EGL_FALSE != result);
-        
+    
     // create an EGL rendering context
-    EGLContext context = eglCreateContext(display, config, EGL_NO_CONTEXT, context_attributes);
-    assert(context!=EGL_NO_CONTEXT);
+    state->context = eglCreateContext(state->display, config, EGL_NO_CONTEXT, context_attributes);
+    assert(state->context!=EGL_NO_CONTEXT);
     
     // create an EGL window surface
-    success = graphics_get_display_size(0 /* LCD */, &screen_width, &screen_height);
+    success = graphics_get_display_size(0 /* LCD */, &state->screen_width, &state->screen_height);
     assert( success >= 0 );
     
     dst_rect.x = 0;
     dst_rect.y = 0;
-    dst_rect.width = screen_width;
-    dst_rect.height = screen_height;
+    dst_rect.width = state->screen_width;
+    dst_rect.height = state->screen_height;
     
     src_rect.x = 0;
     src_rect.y = 0;
-    src_rect.width = screen_width << 16;
-    src_rect.height = screen_height << 16;
+    src_rect.width = state->screen_width << 16;
+    src_rect.height = state->screen_height << 16;
     
     dispman_display = vc_dispmanx_display_open( 0 /* LCD */);
     dispman_update = vc_dispmanx_update_start( 0 );
@@ -85,45 +105,109 @@ int main(int argc, char **argv){
                                                &src_rect, DISPMANX_PROTECTION_NONE, 0 /*alpha*/, 0/*clamp*/, 0/*transform*/);
     
     nativewindow.element = dispman_element;
-    nativewindow.width = screen_width;
-    nativewindow.height = screen_height;
+    nativewindow.width = state->screen_width;
+    nativewindow.height = state->screen_height;
     vc_dispmanx_update_submit_sync( dispman_update );
     
     
-    EGLSurface surface = eglCreateWindowSurface( display, config, &nativewindow, NULL );
-    assert(surface != EGL_NO_SURFACE);
-    
+    state->surface = eglCreateWindowSurface( state->display, config, &nativewindow, NULL );
+    assert(state->surface != EGL_NO_SURFACE);
+     
     // connect the context to the surface
-    result = eglMakeCurrent(display, surface, surface, context);
+    result = eglMakeCurrent(state->display, state->surface, state->surface, state->context);
     assert(EGL_FALSE != result);
     
     // Set background color and clear buffers
+    glClearColor(0.15f, 0.25f, 0.35f, 1.0f);
+    glClear( GL_COLOR_BUFFER_BIT );
+
+	// Prepare viewport
+    glViewport( 0, 0, state->screen_width, state->screen_height );
+}
+
+static void updateMouse(){
+    static int fd = -1;
+    const int width=state->screen_width, height=state->screen_height;
+    static int x=width, y=height;
+    const int XSIGN = 1<<4, YSIGN = 1<<5;
+    if (fd<0) {
+       fd = open("/dev/input/mouse0",O_RDONLY|O_NONBLOCK);
+    }
+    if (fd>=0) {
+        struct {char buttons, dx, dy; } m;
+        while (1) {
+           int bytes = read(fd, &m, sizeof m);
+           if (bytes < (int)sizeof m) goto _exit;
+           if (m.buttons&8) {
+              break; // This bit should always be set
+           }
+           read(fd, &m, 1); // Try to sync up again
+        }
+        if (m.buttons&3){
+	    	state->mouse_b = m.buttons&3;
+	    	return;
+		} else {
+			state->mouse_b = 0;
+		}
+        x+=m.dx;
+        y+=m.dy;
+        if (m.buttons&XSIGN)
+           x-=256;
+        if (m.buttons&YSIGN)
+           y-=256;
+        if (x<0) x=0;
+        if (y<0) y=0;
+        if (x>width) x=width;
+        if (y>height) y=height;
+   }
+
+_exit:
+	state->mouse_prev_x = state->mouse_x;
+	state->mouse_prev_y = state->mouse_y;
+	state->mouse_x = x;
+	state->mouse_y = y;
+	state->mouse_b = 0;
+	return;
+}
+
+//==============================================================================
+int main(int argc, char **argv){
+
+	// Start OpenGL context
+	initOpenGL();
+   
+    // Set background color and clear buffers
     Tangram::initialize();
-    Tangram::resize(screen_width, screen_height);
+    Tangram::resize(state->screen_width, state->screen_height);
+	
+	// Start clock
+ 	gettimeofday(&tv, NULL);
+	unsigned long long timePrev = 	(unsigned long long)(tv.tv_sec) * 1000 +
+									(unsigned long long)(tv.tv_usec) / 1000; 
 
-    time_t lastTime;
-    time(&lastTime);
     while (1) {
-        time_t currentTime;
-        time(&currentTime);
-        double delta = difftime(lastTime,currentTime);
-        lastTime = currentTime;
-    
-        Tangram::update(delta);
 
-         // Now render to the main frame buffer
-        glBindFramebuffer(GL_FRAMEBUFFER,0);
-        
+    	// Update
+		unsigned long long timeNow = 	(unsigned long long)(tv.tv_sec) * 1000 +
+										(unsigned long long)(tv.tv_usec) / 1000;
+ 		double delta = (timeNow - timePrev)*0.001;
+
+		Tangram::update(delta);
+		timePrev = timeNow;
+
+    	updateMouse();
+    	if(state->mouse_b == 1){
+			//Tangram::handlePanGesture();
+			Tangram::handleTapGesture(	state->mouse_x,
+										state->mouse_y);
+		}
+
+        // Render        
         Tangram::render();
 
-        //  Not sure off this two
-        // glFlush();
-        // glFinish();
-
-        eglSwapBuffers(display, surface); 
+        eglSwapBuffers(state->display, state->surface); 
     }
     
     Tangram::teardown();
     return 0;
 }
-
