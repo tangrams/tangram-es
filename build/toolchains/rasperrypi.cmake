@@ -1,5 +1,6 @@
 # options
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wall -std=c++11 -fpermissive")
+set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_CXX_FLAGS} -L/opt/vc/lib/ -lGLESv2 -lEGL -lbcm_host -lvchiq_arm -lvcos -lrt")
 set(CXX_FLAGS_DEBUG "-g -O0")
 set(EXECUTABLE_NAME "tangram")
 
@@ -27,10 +28,13 @@ endforeach()
 # link and build functions
 function(link_libraries)
 
-    target_link_libraries(${EXECUTABLE_NAME} /opt/vc/lib/libGLESv2_static.a)
-    target_link_libraries(${EXECUTABLE_NAME} /opt/vc/lib/libEGL_static.a)
-    #target_link_libraries(${EXECUTABLE_NAME} -lbcm_host)
-    target_link_libraries(${EXECUTABLE_NAME} -lcurl) #use system libcurl
+	#target_link_libraries(${EXECUTABLE_NAME} /opt/vc/lib/libGLESv2_static.a)
+	#target_link_libraries(${EXECUTABLE_NAME} /opt/vc/lib/libEGL_static.a)
+	#target_link_libraries(${EXECUTABLE_NAME} -pthread)
+	#target_link_libraries(${EXECUTABLE_NAME} /opt/vc/lib/libbcm_host.so)
+	#target_link_libraries(${EXECUTABLE_NAME} /opt/vc/lib/libvcos.so)
+	#target_link_libraries(${EXECUTABLE_NAME} /opt/vc/lib/libvchiq_arm.so)
+	target_link_libraries(${EXECUTABLE_NAME} -lcurl) #use system libcurl
     target_link_libraries(${EXECUTABLE_NAME} ${PROJECT_SOURCE_DIR}/rpi/precompiled/libtess2/libtess2.a)
     target_link_libraries(${EXECUTABLE_NAME} core)
 
@@ -38,6 +42,6 @@ endfunction()
 
 function(build) 
 
-    add_executable(${EXECUTABLE_NAME} MACOSX_BUNDLE ${SOURCES} ${RESOURCES})
+    add_executable(${EXECUTABLE_NAME} ${SOURCES})
 
 endfunction()
