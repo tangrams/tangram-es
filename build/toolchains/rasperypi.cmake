@@ -1,3 +1,6 @@
+# target clang++
+set(CMAKE_CXX_COMPILER "/usr/bin/clang++")
+
 # options
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wall -stdlib=libc++ -std=c++11")
 set(CXX_FLAGS_DEBUG "-g -O0")
