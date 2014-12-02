@@ -4,8 +4,8 @@
 #include "rectangle.h"
 #include "geom.h"
 
-static auto& NO_TEXCOORDS = *(new std::vector<glm::vec2>);
-static auto& NO_SCALING_VECS = *(new std::vector<glm::vec2>);
+static auto& NO_TEXCOORDS = *(new std::vector<glm::vec2>); // denotes that texture coordinates should not be used
+static auto& NO_SCALING_VECS = *(new std::vector<glm::vec2>); // denotes that scaling vectors should not be used
 
 void Builders::buildPolygon(const Polygon& _polygon, std::vector<glm::vec3>& _pointsOut, std::vector<glm::vec3>& _normalOut, std::vector<ushort>& _indicesOut) {
     
