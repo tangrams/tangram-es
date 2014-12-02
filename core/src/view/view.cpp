@@ -78,7 +78,7 @@ void View::setZoom(int _z) {
     double fovy = PI * 0.5;
     m_pos.z = m_height * 0.5 / tan(fovy * 0.5);
     m_view = glm::lookAt(m_pos, m_pos + glm::dvec3(0, 0, -1), glm::dvec3(0, 1, 0));
-    m_proj = glm::perspective(fovy, m_aspect, 1.0, m_pos.z + 1.0);
+    m_proj = glm::perspective(fovy, m_aspect, 5.0, m_pos.z + 5.0);
     //m_proj = glm::ortho(-m_width * 0.5, m_width * 0.5, -m_height * 0.5, m_height * 0.5, 0.1, 2000.0);
 
     m_dirty = true;
