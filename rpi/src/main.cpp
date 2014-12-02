@@ -3,7 +3,7 @@
 #include <time.h>
 
 #include "gl.h"
-#include "app.h"
+#include "tangram.h"
 #include "platform.h"
 
 //==============================================================================
