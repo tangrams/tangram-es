@@ -10,6 +10,8 @@ add_definitions(-DPLATFORM_RPI)
 
 # include headers for rpi-installed libraries
 include_directories(/opt/vc/include/)
+include_directories(/opt/vc/include/interface/vcos/pthreads)
+include_directories(/opt/vc/include/interface/vmcs_host/linux)
 
 # load core library
 include_directories(${PROJECT_SOURCE_DIR}/core/include/)
