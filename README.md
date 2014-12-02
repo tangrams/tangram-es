@@ -49,11 +49,17 @@ make android [ANDROID_ARCH=[x86|armeabi-v7a|armeabi]]
 
 ### Raspberry Pi ###
 
-* Install curl:
+* Install C++11 compatible compiler:
 
 ```
-sudo apt-get install libcurl4-openssl-dev
+sudo apt-get install g++-4.7
+sudo update-alternatives --install /usr/bin/gcc gcc /usr/bin/gcc-4.6 60 --slave /usr/bin/g++ g++ /usr/bin/g++-4.6 
+sudo update-alternatives --install /usr/bin/gcc gcc /usr/bin/gcc-4.7 40 --slave /usr/bin/g++ g++ /usr/bin/g++-4.7 
+sudo update-alternatives --config gcc
 ```
+
+Then choose 4.7 version.
+
 
 * Install CMake 3: download [cmake-3.1.X](http://www.cmake.org/download/), config, make and install.
 
@@ -66,15 +72,10 @@ make
 make install
 ```
 
-* Install C++11 compatible compiler:
+* Install curl:
 
 ```
-sudo apt-get install g++-4.7
-sudo update-alternatives --install /usr/bin/gcc gcc /usr/bin/gcc-4.6 60 --slave /usr/bin/g++ g++ /usr/bin/g++-4.6 
-sudo update-alternatives --install /usr/bin/gcc gcc /usr/bin/gcc-4.7 40 --slave /usr/bin/g++ g++ /usr/bin/g++-4.7 
-sudo update-alternatives --config gcc
+sudo apt-get install libcurl4-openssl-dev
 ```
-
-Then choose 4.7 version.
 
  
