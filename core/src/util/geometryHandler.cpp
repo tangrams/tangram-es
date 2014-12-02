@@ -1,10 +1,10 @@
 #include "geometryHandler.h"
 
-//#include "tesselator.h"
+#include "tesselator.h"
 
 void GeometryHandler::buildPolygon(const Polygon& _polygon, std::vector<glm::vec3>& _pointsOut, std::vector<glm::vec3>& _normalOut, std::vector<ushort>& _indicesOut) {
     
-    /*TESStesselator* tesselator = tessNewTess(nullptr);
+    TESStesselator* tesselator = tessNewTess(nullptr);
 
     // get the number of vertices already added
     ushort vertexDataOffset = (ushort)_pointsOut.size();
@@ -39,7 +39,7 @@ void GeometryHandler::buildPolygon(const Polygon& _polygon, std::vector<glm::vec
         logMsg("Tesselator cannot tesselate!!\n");
     }
     
-    tessDeleteTess(tesselator);*/
+    tessDeleteTess(tesselator);
 }
 
 void GeometryHandler::buildPolygonExtrusion(const Polygon& _polygon, const float& _minHeight, std::vector<glm::vec3>& _pointsOut, std::vector<glm::vec3>& _normalOut, std::vector<ushort>& _indicesOut) {
