@@ -66,12 +66,9 @@ make
 make install
 ```
 
-* C++11 compatible compiler: Install the last C++ version of 4.7 the compiler and update the config file by:
+* Install Clang++:
 
 ```
-sudo apt-get install g++-4.7
-sudo update-alternatives --install /usr/bin/gcc gcc /usr/bin/gcc-4.6 60 --slave /usr/bin/g++ g++ /usr/bin/g++-4.6 
-sudo update-alternatives --install /usr/bin/gcc gcc /usr/bin/gcc-4.7 40 --slave /usr/bin/g++ g++ /usr/bin/g++-4.7 
-sudo update-alternatives --config gcc
+sudo apt-get install clang++
 ```
  
