@@ -38,6 +38,9 @@ function(build)
 
     add_executable(${EXECUTABLE_NAME} ${SOURCES})
 
-    file(COPY ${PROJECT_SOURCE_DIR}/core/resources/** DESTINATION ${PROJECT_SOURCE_DIR}/build/rpi/bin)
+    file(GLOB_RECURSE RESOURCES ${PROJECT_SOURCE_DIR}/core/resources/*)
+    foreach(_resource ${RESOURCES})
+        file(COPY ${_resource} DESTINATION ${PROJECT_SOURCE_DIR}/build/rpi/bin)
+    endforeach()
 
 endfunction()
