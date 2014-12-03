@@ -121,9 +121,18 @@ const std::set<TileID>& View::getVisibleTiles() {
 
     while (x < vpRightEdge) {
 
+        if(tileX >= pow(2, m_zoom)) {
+            break;
+        }
+
         while (y < vpTopEdge) {
 
-            m_visibleTiles.insert(TileID(tileX, tileY, m_zoom));
+            if(tileY >= pow(2, m_zoom)) {
+                break;
+            }
+            else if(tileX >= 0 && tileY >= 0) {
+                m_visibleTiles.insert(TileID(tileX, tileY, m_zoom));
+            }
             tileY++;
             y += tileSize;
 
