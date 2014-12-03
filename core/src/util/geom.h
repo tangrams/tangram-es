@@ -84,9 +84,3 @@ void setLength(glm::vec3& _vec, float _length);
 
 /* Gets a copy of _vec scaled to have length _length */
 glm::vec3 getWithLength(const glm::vec3& _vec, float _length);
-
-/* Returns the net area enclosed by the contour _pts */
-float getArea(const std::vector<glm::vec3>& _pts);
-
-/* Returns the centroid of a set of points */
-glm::vec3 getCentroid(const std::vector<glm::vec3>& _pts);

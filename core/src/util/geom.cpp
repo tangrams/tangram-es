@@ -54,24 +54,3 @@ glm::vec3 getWithLength(const glm::vec3& _vec, float _length) {
     else
         return glm::vec3();
 }
-
-float getArea(const std::vector<glm::vec3>& _pts){
-    float area = 0.0;
-    
-    for(int i=0;i<(int)_pts.size()-1;i++){
-        area += _pts[i].x * _pts[i+1].y - _pts[i+1].x * _pts[i].y;
-    }
-    area += _pts[_pts.size()-1].x * _pts[0].y - _pts[0].x * _pts[_pts.size()-1].y;
-    area *= 0.5;
-    
-    return area;
-}
-
-glm::vec3 getCentroid(const std::vector<glm::vec3>& _pts){
-    glm::vec3 centroid;
-    float fraq = 1.0/(float)_pts.size();
-    for (int i = 0; i < _pts.size(); i++) {
-        centroid += _pts[i] * fraq;
-    }
-    return centroid;
-}
