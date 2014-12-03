@@ -38,4 +38,6 @@ function(build)
 
     add_executable(${EXECUTABLE_NAME} ${SOURCES})
 
+    file(COPY ${PROJECT_SOURCE_DIR}/core/resources/** DESTINATION ${PROJECT_SOURCE_DIR}/build/rpi/bin)
+
 endfunction()
