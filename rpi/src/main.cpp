@@ -14,23 +14,23 @@ struct timeval tv;
 typedef struct {
     uint32_t screen_width;
     uint32_t screen_height;
-
+    
     // OpenGL|ES objects
     EGLDisplay display;
     EGLSurface surface;
     EGLContext context;
-
+    
 } CUBE_STATE_T;
 
 static CUBE_STATE_T _state, *state=&_state;
 
 static void initOpenGL(){
     bcm_host_init();
-
+    
     // Clear application state
     memset( state, 0, sizeof( *state ) );
-
-	int32_t success = 0;
+    
+    int32_t success = 0;
     EGLBoolean result;
     EGLint num_config;
     
@@ -106,7 +106,7 @@ static void initOpenGL(){
     
     state->surface = eglCreateWindowSurface( state->display, config, &nativewindow, NULL );
     assert(state->surface != EGL_NO_SURFACE);
-     
+    
     // connect the context to the surface
     result = eglMakeCurrent(state->display, state->surface, state->surface, state->context);
     assert(EGL_FALSE != result);
@@ -114,17 +114,17 @@ static void initOpenGL(){
     // Set background color and clear buffers
     glClearColor(0.15f, 0.25f, 0.35f, 1.0f);
     glClear( GL_COLOR_BUFFER_BIT );
-
-	// Prepare viewport
+    
+    // Prepare viewport
     glViewport( 0, 0, state->screen_width, state->screen_height );
 }
 
 typedef struct Mouse {
-	Mouse():x(0),y(0),button(0){};
-
-	float 	x,y;
-	float 	velX,velY;
-	int 	button;
+    Mouse():x(0),y(0),button(0){};
+    
+    float 	x,y;
+    float 	velX,velY;
+    int 	button;
 };
 
 static Mouse mouse;
@@ -135,89 +135,89 @@ static bool updateMouse(){
     //static int x=width, y=height;
     const int XSIGN = 1<<4, YSIGN = 1<<5;
     if (fd<0) {
-       fd = open("/dev/input/mouse0",O_RDONLY|O_NONBLOCK);
+        fd = open("/dev/input/mouse0",O_RDONLY|O_NONBLOCK);
     }
     if (fd>=0) {
-
-    	// Set values to 0
+        
+        // Set values to 0
         mouse.velX=0;
-		mouse.velY=0;
-				
-		// Extract values from driver
+        mouse.velY=0;
+        
+        // Extract values from driver
         struct {char buttons, dx, dy; } m;
         while (1) {
-           int bytes = read(fd, &m, sizeof m);
-
-           if (bytes < (int)sizeof m) {
-			  return false;
-		   } else if (m.buttons&8) {
-              break; // This bit should always be set
-           }
-
-           read(fd, &m, 1); // Try to sync up again
+            int bytes = read(fd, &m, sizeof m);
+            
+            if (bytes < (int)sizeof m) {
+                return false;
+            } else if (m.buttons&8) {
+                break; // This bit should always be set
+            }
+            
+            read(fd, &m, 1); // Try to sync up again
         }
         
         // Set button value
         if (m.buttons&3)
-	    	mouse.button = m.buttons&3;
-		else 
-			mouse.button = 0;
-
-		// Set deltas
-		mouse.velX=m.dx;
-		mouse.velY=m.dy;
-		if (m.buttons&XSIGN) mouse.velX-=256;
+            mouse.button = m.buttons&3;
+        else
+            mouse.button = 0;
+        
+        // Set deltas
+        mouse.velX=m.dx;
+        mouse.velY=m.dy;
+        if (m.buttons&XSIGN) mouse.velX-=256;
         if (m.buttons&YSIGN) mouse.velY-=256;
-
-		// Add movement
+        
+        // Add movement
         mouse.x+=mouse.velX;
         mouse.y+=mouse.velY;
-        	
+        
         // Clamp values
         if (mouse.x<0) mouse.x=0;
         if (mouse.y<0) mouse.y=0;
         if (mouse.x>width) mouse.x=width;
         if (mouse.y>height) mouse.y=height;
-    	return true;
+        return true;
     }
    	return false;
 }
 
 //==============================================================================
 int main(int argc, char **argv){
-
-	// Start OpenGL context
-	initOpenGL();
-   
+    
+    // Start OpenGL context
+    initOpenGL();
+    
     // Set background color and clear buffers
     Tangram::initialize();
     Tangram::resize(state->screen_width, state->screen_height);
-	
-	// Start clock
- 	gettimeofday(&tv, NULL);
-	unsigned long long timePrev = 	(unsigned long long)(tv.tv_sec) * 1000 +
-									(unsigned long long)(tv.tv_usec) / 1000; 
-
+    
+    // Start clock
+    gettimeofday(&tv, NULL);
+    unsigned long long timePrev = 	(unsigned long long)(tv.tv_sec) * 1000 +
+    (unsigned long long)(tv.tv_usec) / 1000;
+    
     while (1) {
-
-    	// Update
-		unsigned long long timeNow = 	(unsigned long long)(tv.tv_sec) * 1000 +
-										(unsigned long long)(tv.tv_usec) / 1000;
- 		double delta = (timeNow - timePrev)*0.001;
-
-		Tangram::update(delta);
-		timePrev = timeNow;
-
-    	if(updateMouse()){
-			if( mouse.button == 1 ){
-				Tangram::handleTapGesture(	mouse.x, mouse.y );
-			} else {
-				Tangram::handlePanGesture( mouse.velX*10.0, -mouse.velY*10.0);
-			}
-		}
-	        // Render        
+        
+        // Update
+        unsigned long long timeNow = 	(unsigned long long)(tv.tv_sec) * 1000 +
+        (unsigned long long)(tv.tv_usec) / 1000;
+        double delta = (timeNow - timePrev)*0.001;
+        
+        Tangram::update(delta);
+        timePrev = timeNow;
+        
+        if(updateMouse()){
+            if( mouse.button == 1 ){
+                Tangram::handleTapGesture(	mouse.x, mouse.y );
+            } else {
+                Tangram::handlePanGesture( mouse.velX*10.0, -mouse.velY*10.0);
+            }
+        }
+        // Render        
         Tangram::render();
-
+        
         eglSwapBuffers(state->display, state->surface); 
     }
     
