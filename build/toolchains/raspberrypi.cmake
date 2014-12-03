@@ -28,10 +28,8 @@ endforeach()
 # link and build functions
 function(link_libraries)
 
-	file(GLOB_RECURSE OBJ_FILES ${PROJECT_SOURCE_DIR}/rpi/precompiled/libtess2/*.o)
 	target_link_libraries(${EXECUTABLE_NAME} -lcurl) #use system libcurl
-    target_link_libraries(${EXECUTABLE_NAME} ${OBJ_FILES})
-	#target_link_libraries(${EXECUTABLE_NAME} ${PROJECT_SOURCE_DIR}/rpi/precompiled/libtess2/libtess2.a)
+	target_link_libraries(${EXECUTABLE_NAME} ${PROJECT_SOURCE_DIR}/rpi/precompiled/libtess2/libtess2.so)
     target_link_libraries(${EXECUTABLE_NAME} core)
 
 endfunction()
