@@ -64,6 +64,8 @@ private:
     glm::dmat4 m_view;
     glm::dmat4 m_proj;
     int m_zoom;
+    int m_vpWidth;
+    int m_vpHeight;
     float m_width;
     float m_height;
     double m_aspect;

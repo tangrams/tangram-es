@@ -3,6 +3,8 @@
 #include "platform.h"
 #include "glm/gtx/string_cast.hpp"
 
+const int View::s_maxZoom; // Create a stack reference to the static member variable
+
 View::View(float _width, float _height, ProjectionType _projType) {
     //Set the map projection for the view module to use.
     setMapProjection(_projType);
@@ -36,7 +38,9 @@ const MapProjection& View::getMapProjection() {
 }
 
 void View::setAspect(float _width, float _height) {
-
+    
+    m_vpWidth = _width;
+    m_vpHeight = _height;
     m_aspect = _width / _height;
     setZoom(m_zoom);
     m_dirty = true;
@@ -65,22 +69,29 @@ void View::zoom(int _dz) {
 
 void View::setZoom(int _z) {
 
-    // Calculate viewport dimensions
-    if(_z > s_maxZoom) {
-        _z = s_maxZoom;
-    }
-    m_zoom = _z;
-    float tileSize = 2 * MapProjection::HALF_CIRCUMFERENCE * pow(2, -m_zoom);
-    m_height = 3 * tileSize; // Set viewport size to ~3 tiles vertically
-    m_width = m_height * m_aspect; // Size viewport width to match aspect ratio
+    // ensure zoom value is allowed
+    m_zoom = glm::clamp(_z, 0, s_maxZoom);
     
-    // Update camera projection
+    // find dimensions of tiles in world space at new zoom level
+    float tileSize = 2 * MapProjection::HALF_CIRCUMFERENCE * pow(2, -m_zoom);
+    
+    // viewport height in world space is such that each tile is 256 px square in screen space
+    m_height = (float)m_vpHeight / (float)256.0 * tileSize;
+    m_width = m_height * m_aspect;
+    
+    // set vertical field-of-view to 90 deg
     double fovy = PI * 0.5;
+    
+    // set camera z to produce desired viewable area
     m_pos.z = m_height * 0.5 / tan(fovy * 0.5);
+    
+    // set near clipping distance as a function of camera z
+    double near = m_pos.z / 50.0;
+    
+    // update view and projection matrices
     m_view = glm::lookAt(m_pos, m_pos + glm::dvec3(0, 0, -1), glm::dvec3(0, 1, 0));
-    m_proj = glm::perspective(fovy, m_aspect, 1.0, m_pos.z + 1.0);
-    //m_proj = glm::ortho(-m_width * 0.5, m_width * 0.5, -m_height * 0.5, m_height * 0.5, 0.1, 2000.0);
-
+    m_proj = glm::perspective(fovy, m_aspect, near, m_pos.z + 1.0);
+    
     m_dirty = true;
 
 }
