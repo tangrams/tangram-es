@@ -134,7 +134,9 @@ void Builders::buildPolygonExtrusion(const Polygon& _polygon, const float& _minH
     }
 }
 
-void buildGeneralPolyLine(const Line& _line, float _halfWidth, std::vector<glm::vec3>& _pointsOut, std::vector<glm::vec2>& _scalingVecsOut, std::vector<ushort>& _indicesOut, std::vector<glm::vec2>& _texCoordOut) {
+void buildGeneralPolyLine(const Line& _line, float _halfWidth, std::vector<glm::vec3>& _pointsOut, std::vector<glm::vec2>& _scalingVecsOut, std::vector<Builders::ushort>& _indicesOut, std::vector<glm::vec2>& _texCoordOut) {
+
+    using Builders::ushort;
     
     if (_line.size() < 2) {
         return;
