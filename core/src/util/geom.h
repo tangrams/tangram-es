@@ -90,12 +90,3 @@ float getArea(const std::vector<glm::vec3>& _pts);
 
 /* Returns the centroid of a set of points */
 glm::vec3 getCentroid(const std::vector<glm::vec3>& _pts);
-
-/* Douglas-Peucker line simplificationbased on a tolerance */
-void simplify(std::vector<glm::vec3>& _pts, float _tolerance=0.3f);
-
-std::vector<glm::vec3> getSimplify(const std::vector<glm::vec3>& _pts, float _tolerance=0.3f);
-
-/* Calculates the convex hull of a set of points */
-std::vector<glm::vec3> getConvexHull(std::vector<glm::vec3>& _pts);
-std::vector<glm::vec3> getConvexHull(const std::vector<glm::vec3>& _pts);
