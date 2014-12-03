@@ -129,7 +129,7 @@ typedef struct Mouse {
 
 static Mouse mouse;
 
-static void updateMouse(){
+static bool updateMouse(){
     static int fd = -1;
     const int width=state->screen_width, height=state->screen_height;
     //static int x=width, y=height;
@@ -149,7 +149,7 @@ static void updateMouse(){
            int bytes = read(fd, &m, sizeof m);
 
            if (bytes < (int)sizeof m) {
-			  return;
+			  return false;
 		   } else if (m.buttons&8) {
               break; // This bit should always be set
            }
@@ -177,8 +177,10 @@ static void updateMouse(){
         if (mouse.x<0) mouse.x=0;
         if (mouse.y<0) mouse.y=0;
         if (mouse.x>width) mouse.x=width;
-        if (mouse.y>height) mouse.y=height;    	
-   }
+        if (mouse.y>height) mouse.y=height;
+    	return true;
+    }
+   	return false;
 }
 
 //==============================================================================
@@ -206,14 +208,14 @@ int main(int argc, char **argv){
 		Tangram::update(delta);
 		timePrev = timeNow;
 
-    	updateMouse();
-    	Tangram::handlePanGesture( mouse.velX, -mouse.velY );
-
-		if( mouse.button == 1 ){
-			Tangram::handleTapGesture(	mouse.x, mouse.y );
+    	if(updateMouse()){
+			if( mouse.button == 1 ){
+				Tangram::handleTapGesture(	mouse.x, mouse.y );
+			} else {
+				Tangram::handlePanGesture( mouse.velX, -mouse.velY );
+			}
 		}
-
-        // Render        
+	        // Render        
         Tangram::render();
 
         eglSwapBuffers(state->display, state->surface); 
