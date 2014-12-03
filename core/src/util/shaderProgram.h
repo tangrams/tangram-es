@@ -106,7 +106,7 @@ private:
         // to a value that is not a valid uniform or attribute location. 
     };
 
-    static GLint s_activeGlProgram;
+    static GLuint s_activeGlProgram;
     
     static std::unordered_set<ShaderProgram*> s_managedPrograms;
 

@@ -1,6 +1,6 @@
 #include "shaderProgram.h"
 
-GLint ShaderProgram::s_activeGlProgram = 0;
+GLuint ShaderProgram::s_activeGlProgram = 0;
 std::unordered_set<ShaderProgram*> ShaderProgram::s_managedPrograms;
 
 ShaderProgram::ShaderProgram() {

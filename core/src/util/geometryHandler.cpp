@@ -51,7 +51,7 @@ void GeometryHandler::buildPolygonExtrusion(const Polygon& _polygon, const float
 
     for(auto& line : _polygon) {
         
-        for(int i = 0; i < line.size() - 1; i++) {
+        for(uint i = 0; i < line.size() - 1; i++) {
             
             normalVector = glm::cross(upVector, (line[i+1] - line[i]));
             normalVector = glm::normalize(normalVector);
@@ -122,7 +122,7 @@ void GeometryHandler::buildPolyLine(const Line& _line, float _halfWidth, std::ve
         
         // Loop over intermediate m_points in the polyline
         //
-        for (int i = 1; i < _line.size() - 1; i++) {
+        for (uint i = 1; i < _line.size() - 1; i++) {
             prevCoord = currCoord;
             currCoord = nextCoord;
             nextCoord = _line[i+1];
@@ -155,7 +155,7 @@ void GeometryHandler::buildPolyLine(const Line& _line, float _halfWidth, std::ve
         _pointsOut.push_back(nextCoord - normCurrNext);
 //        _uvOut.push_back(glm::vec2(0.0,1.0));
         
-        for (int i = 0; i < _line.size() - 1; i++) {
+        for (uint i = 0; i < _line.size() - 1; i++) {
             _indicesOut.push_back(vertexDataOffset + 2*i+2);
             _indicesOut.push_back(vertexDataOffset + 2*i+1);
             _indicesOut.push_back(vertexDataOffset + 2*i);
