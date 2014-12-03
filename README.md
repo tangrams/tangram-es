@@ -60,8 +60,9 @@ sudo update-alternatives --config gcc
 
 Then choose 4.7 version.
 
+* Resolve dependence to CMake-3: right now there are two ways of resolving this:
 
-* Install CMake 3: download [cmake-3.1.X](http://www.cmake.org/download/), config, make and install.
+	1. Download [cmake-3.1.X](http://www.cmake.org/download/), config, make and install.
 
 ```
 wget http://www.cmake.org/files/v3.1/cmake-3.1.0-rc2.tar.gz
@@ -70,6 +71,20 @@ cd cmake-3.1.0
 ./bootstrap
 make
 make install
+```
+
+	2. Changing the ```CMakeLists.txt``` file: 
+
+```
+vim CMakeLists.txt
+```
+
+Then change the first line from ```VERSION 3.0``` to ```VERSION 2.8```. Should look like this:
+
+```
+cmake_minimum_required(VERSION 2.8)
+project(tangram)
+…
 ```
 
 * Install curl:
