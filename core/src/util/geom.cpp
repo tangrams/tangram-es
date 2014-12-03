@@ -6,31 +6,31 @@ int signValue(float _n) {
     else return 0;
 }
 
-void wrapRad(double &_angle){
+void wrapRad(double& _angle){
     if (_angle < -PI) _angle += PI*2.;
     if (_angle > PI) _angle -= PI*2.;
 }
 
-float mapValue(const float &value, const float &inputMin, const float &inputMax, const float &outputMin, const float &outputMax, bool clamp ) {
-    if (fabs(inputMin - inputMax) < FLT_EPSILON){
-        return outputMin;
+float mapValue(const float& _value, const float& _inputMin, const float& _inputMax, const float& _outputMin, const float& _outputMax, bool _clamp ) {
+    if (fabs(_inputMin - _inputMax) < FLT_EPSILON){
+        return _outputMin;
     } else {
-        float outVal = ((value - inputMin) / (inputMax - inputMin) * (outputMax - outputMin) + outputMin);
+        float outVal = ((_value - _inputMin) / (_inputMax - _inputMin) * (_outputMax - _outputMin) + _outputMin);
         
-        if( clamp ){
-            if(outputMax < outputMin){
-                if( outVal < outputMax )outVal = outputMax;
-                else if( outVal > outputMin )outVal = outputMin;
+        if( _clamp ){
+            if(_outputMax < _outputMin){
+                if( outVal < _outputMax )outVal = _outputMax;
+                else if( outVal > _outputMin )outVal = _outputMin;
             }else{
-                if( outVal > outputMax )outVal = outputMax;
-                else if( outVal < outputMin )outVal = outputMin;
+                if( outVal > _outputMax )outVal = _outputMax;
+                else if( outVal < _outputMin )outVal = _outputMin;
             }
         }
         return outVal;
     }
 }
 
-float lerpValue(const float &_start, const float &_stop, float const &_amt) {
+float lerp(const float& _start, const float& _stop, float const& _amt) {
     if(_start!=_stop){
         return _start + (_stop-_start) * _amt;
     } else {
@@ -38,8 +38,8 @@ float lerpValue(const float &_start, const float &_stop, float const &_amt) {
     }
 }
 
-void scale(glm::vec3 _vec, const float _length ) {
-    float l = (float)sqrt(_vec.x*_vec.x + _vec.y*_vec.y + _vec.z*_vec.z);
+void setLength(glm::vec3& _vec, const float _length ) {
+    float l = sqrtf(_vec.x*_vec.x + _vec.y*_vec.y + _vec.z*_vec.z);
     if (l > 0) {
         _vec.x = (_vec.x/l)*_length;
         _vec.y = (_vec.y/l)*_length;
@@ -47,7 +47,7 @@ void scale(glm::vec3 _vec, const float _length ) {
     }
 }
 
-glm::vec3 getScaled(const glm::vec3 &_vec, float _length) {
+glm::vec3 getWithLength(const glm::vec3& _vec, float _length) {
     float l = (float)sqrt(_vec.x*_vec.x + _vec.y*_vec.y + _vec.z*_vec.z);
     if( l > 0 )
         return glm::vec3( (_vec.x/l)*_length, (_vec.y/l)*_length, (_vec.z/l)*_length );
@@ -55,7 +55,7 @@ glm::vec3 getScaled(const glm::vec3 &_vec, float _length) {
         return glm::vec3();
 }
 
-float getArea(const std::vector<glm::vec3> &_pts){
+float getArea(const std::vector<glm::vec3>& _pts){
     float area = 0.0;
     
     for(int i=0;i<(int)_pts.size()-1;i++){
@@ -67,7 +67,7 @@ float getArea(const std::vector<glm::vec3> &_pts){
     return area;
 }
 
-glm::vec3 getCentroid(const std::vector<glm::vec3> &_pts){
+glm::vec3 getCentroid(const std::vector<glm::vec3>& _pts){
     glm::vec3 centroid;
     float fraq = 1.0/(float)_pts.size();
     for (int i = 0; i < _pts.size(); i++) {
@@ -88,14 +88,14 @@ bool isRightTurn(const glm::vec3 &a, const glm::vec3 &b, const glm::vec3 &c) {
     return ((b.x - a.x)*(c.y - a.y) - (b.y - a.y)*(c.x - a.x)) > 0;
 }
 
-std::vector<glm::vec3> getConvexHull(const std::vector<glm::vec3> &_pts){
+std::vector<glm::vec3> getConvexHull(const std::vector<glm::vec3>& _pts){
     std::vector<glm::vec3> pts;
     pts.assign(_pts.begin(),_pts.end());
     
     return getConvexHull(pts);
 }
 
-std::vector<glm::vec3> getConvexHull(std::vector<glm::vec3> &pts){
+std::vector<glm::vec3> getConvexHull(std::vector<glm::vec3>& pts){
     std::vector<glm::vec3> hull;
     glm::vec3 h1,h2,h3;
     

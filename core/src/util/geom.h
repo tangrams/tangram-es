@@ -1,7 +1,7 @@
 #pragma once
 
 #include <vector>
-#include <math.h>
+#include <cmath>
 #include <iostream>
 
 #include "glm/glm.hpp"
@@ -9,14 +9,12 @@
 #define GLM_FORCE_RADIANS
 #include "glm/gtc/matrix_transform.hpp"
 
-//  Pre-Computed trigonometrical constant
-//
 #ifndef PI
-#define PI       3.14159265358979323846
+#define PI 3.14159265358979323846
 #endif
 
 #ifndef TWO_PI
-#define TWO_PI   6.28318530717958647693
+#define TWO_PI 6.28318530717958647693
 #endif
 
 #ifndef FOUR_PI
@@ -24,81 +22,80 @@
 #endif
 
 #ifndef HALF_PI
-#define HALF_PI  1.57079632679489661923
+#define HALF_PI 1.57079632679489661923
 #endif
 
 #ifndef QUARTER_PI
 #define QUARTER_PI 0.785398163
 #endif
 
-//  Constat to convert angles between Radiants and Degrees
-//-----------------------------------------------------------
-//  Multiply a degree by DEG_TO_RAD to get a radiant.
-//  Ex: 45*DEG_TO_RAD == QUARTER_PI
+/* Multiply degrees by DEG_TO_RAD to get radians */
 #ifndef DEG_TO_RAD
-#define DEG_TO_RAD (PI/180.0)
+#define DEG_TO_RAD 0.01745329251994329576
 #endif
 
-//  Multiply a radiant bt RAD_TO_DEG to get a degree angle.
-//  Ex: PI*RAD_TO_DEG == 180
+/* Multiply radians by RAD_TO_DEG to get degrees */
 #ifndef RAD_TO_DEG
-#define RAD_TO_DEG (180.0/PI)
+#define RAD_TO_DEG 57.2957795130823208767
 #endif
 
-//  Get the minimum or maximum values of a pair of variables
-//-----------------------------------------------------------
-//  Ex: MIN(2,3) == 2
+/* Minimum value between two variables that support < comparison */
 #ifndef MIN
 #define MIN(x,y) (((x) < (y)) ? (x) : (y))
 #endif
 
-//  Ex: MAX(2,3) == 3
+/* Maximum value between two values that support > comparison */
 #ifndef MAX
 #define MAX(x,y) (((x) > (y)) ? (x) : (y))
 #endif
 
-//  Clamp a value between a min and max values
-//  Ex: CLAMP(5,2,3) == 3
+/* Clamp a value between a min and max value */
 #ifndef CLAMP
 #define CLAMP(val,min,max) ((val) < (min) ? (min) : ((val > max) ? (max) : (val)))
 #endif
 
-//  Get the absolute (unsigned) of a variable
-//  Ex: ABS(-12) == 12 && ABS(12) == 12
+/* Absolute value of a numeric variable */
 #ifndef ABS
 #define ABS(x) (((x) < 0) ? -(x) : (x))
 #endif
 
-//  Return the sign of a variable. 1 (positive), -1 (negative) and 0 if the variable is 0.
-//  Ex: signValue(-2) == -1
-int         signValue(float _n);
+/* Returns 1 for positive values, -1 for negative values and 0 otherwise.
+ * Ex: signValue(-2) == -1
+ */
+int signValue(float _n);
 
-//  Return a radiant angle between PI and -PI.
-//  Ex: wrapRad(3.24159265358979323846) == -0.1
-//  Ex: wrapRad(6.28318530717958647693) == 0.0
-void        wrapRad(double &_angle);
+/* Returns an equivalent angle in radians between -PI and PI
+ * Ex: wrapRad(3.24159265358979323846) == -0.1
+ * Ex: wrapRad(6.28318530717958647693) == 0.0
+ */
+void wrapRad(double& _rads);
 
-//  Map a value that have a min and max into an variable witch it own min and max
-//  Ex: mapValue(5,0,10,0,360) == 180
-float       mapValue(const float &value, const float &inputMin, const float &inputMax, const float &outputMin, const float &outputMax, bool clamp = true);
+/* Map a value from the range [_inputMin, _inputMax] into the range [_outputMin, _outputMax];
+ * If _clamp is true, the output is strictly within the output range.
+ * Ex: mapValue(5, 0, 10, 0, 360) == 180 
+ */
+float mapValue(const float& _value, const float& _inputMin, const float& _inputMax, const float& _outputMin, const float& _outputMax, bool _clamp = true);
 
-//  Calculates a number between two numbers at a specific increment
-float       lerpValue(const float &_start, const float &_stop, float const &_amt);
+/* Returns linear interpolation between _start and _stop by the fraction _amt */
+float lerp(const float& _start, const float& _stop, float const& _amt);
 
-//  Scale a vector by a pct (0.0-1.0) of it lenght
-void        scale(glm::vec3 &_vec, float _length);
-glm::vec3   getScaled(const glm::vec3 &_vec, float _length);
+/* Sets the length of _vec to _length */
+void setLength(glm::vec3& _vec, float _length);
 
-//  Calculate the total area a set of points
-float       getArea(const std::vector<glm::vec3> &_pts);
+/* Gets a copy of _vec scaled to have length _length */
+glm::vec3 getWithLength(const glm::vec3& _vec, float _length);
 
-//  Calculate the centroid of a set of poitns
-glm::vec3   getCentroid(const std::vector<glm::vec3> &_pts);
+/* Returns the net area enclosed by the contour _pts */
+float getArea(const std::vector<glm::vec3>& _pts);
 
-//  Douglas-Peucker line simplificationbased on a tolerance
-void simplify(std::vector<glm::vec3> &_pts, float _tolerance=0.3f);
-std::vector<glm::vec3> getSimplify(const std::vector<glm::vec3> &_pts, float _tolerance=0.3f);
+/* Returns the centroid of a set of points */
+glm::vec3 getCentroid(const std::vector<glm::vec3>& _pts);
 
-//  Calculates teh convexHull of a set of points
-std::vector<glm::vec3> getConvexHull(std::vector<glm::vec3> &_pts);
-std::vector<glm::vec3> getConvexHull(const std::vector<glm::vec3> &_pts);
+/* Douglas-Peucker line simplificationbased on a tolerance */
+void simplify(std::vector<glm::vec3>& _pts, float _tolerance=0.3f);
+
+std::vector<glm::vec3> getSimplify(const std::vector<glm::vec3>& _pts, float _tolerance=0.3f);
+
+/* Calculates the convex hull of a set of points */
+std::vector<glm::vec3> getConvexHull(std::vector<glm::vec3>& _pts);
+std::vector<glm::vec3> getConvexHull(const std::vector<glm::vec3>& _pts);
