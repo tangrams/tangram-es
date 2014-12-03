@@ -108,7 +108,7 @@ void PolygonStyle::buildLine(Line& _line, std::string& _layer, Properties& _prop
     
     GeometryHandler::buildPolyLine(_line, halfWidth, points, indices);
     
-    for (uint i = 0; i < points.size(); i++) {
+    for (size_t i = 0; i < points.size(); i++) {
         glm::vec3 p = points[i];
         glm::vec3 n = glm::vec3(0.0f, 0.0f, 1.0f);
         vertices.push_back({ p.x, p.y, p.z, n.x, n.y, n.z, abgr });
@@ -157,7 +157,7 @@ void PolygonStyle::buildPolygon(Polygon& _polygon, std::string& _layer, Properti
     
     GeometryHandler::buildPolygon(_polygon, points, normals, indices);
     
-    for (uint i = 0; i < points.size(); i++) {
+    for (size_t i = 0; i < points.size(); i++) {
         glm::vec3 p = points[i];
         glm::vec3 n = normals[i];
         vertices.push_back({ p.x, p.y, p.z, n.x, n.y, n.z, abgr });
