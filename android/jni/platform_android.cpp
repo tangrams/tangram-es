@@ -58,4 +58,30 @@ std::string stringFromResource(const char* _path) {
 
 }
 
+unsigned char* bytesFromResource(const char* _path, unsigned int* _size) {
+
+    unsigned char* data = nullptr;
+
+    AAsset* asset = AAssetManager_open(assetManager, _path, AASSET_MODE_UNKNOWN);
+
+    if (asset == nullptr) {
+        logMsg("Failed to open asset at path: %s\n", _path);
+        return data;
+    }
+
+    *_size = AAsset_getLength(asset);
+
+    data = (unsigned char*) malloc(sizeof(unsigned char) * (*_size));
+
+    int read = AAsset_read(asset, data, *_size);
+
+    if (read <= 0) {
+        logMsg("Failed to read asset at path: %s\n", _path);
+    }
+
+    AAsset_close(asset);
+
+    return data;
+}
+
 #endif
