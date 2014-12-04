@@ -66,6 +66,7 @@ unsigned char* bytesFromResource(const char* _path, unsigned int* _size) {
 
     if (asset == nullptr) {
         logMsg("Failed to open asset at path: %s\n", _path);
+        *_size = 0;
         return data;
     }
 
