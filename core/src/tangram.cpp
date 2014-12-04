@@ -77,7 +77,7 @@ void initialize() {
 
 void resize(int _newWidth, int _newHeight) {
     
-    logMsg("%s\n", "resize");
+    logMsg("resize: %d x %d\n", _newWidth, _newHeight);
 
     glViewport(0, 0, _newWidth, _newHeight);
 
