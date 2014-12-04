@@ -24,5 +24,5 @@ void main(void) {
     darken = clamp(darken, 0.5, 1.0); // reduce color values by 1/2 in darkened fragments
     
   	gl_FragColor = v_color * darken;
-    
+	gl_FragColor.a = 1.0;    
 }
