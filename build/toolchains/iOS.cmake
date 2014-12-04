@@ -20,12 +20,13 @@ set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS}
 if(${IOS_PLATFORM} STREQUAL "SIMULATOR")
     set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -mios-simulator-version-min=6.0")
     set(ARCH "i386")
-
-    # include headers for ios
-    include_directories(${PROJECT_SOURCE_DIR}/ios/include/)
 else()
-    # todo : actual build on devices
+    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS}")
+    set(ARCH "armv6 armv7")
 endif()
+
+# include headers for ios
+include_directories(${PROJECT_SOURCE_DIR}/ios/include/)
 
 set(FRAMEWORKS CoreGraphics CoreFoundation QuartzCore UIKit OpenGLES Security CFNetwork GLKit) 
 set(MACOSX_BUNDLE_GUI_IDENTIFIER "com.mapzen.\${PRODUCT_NAME:Tangram}")
