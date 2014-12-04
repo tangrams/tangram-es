@@ -37,3 +37,9 @@ foreach(_src_file_path ${TEST_SOURCES})
     target_link_libraries(${EXECUTABLE_NAME} -lcurl)
     target_link_libraries(${EXECUTABLE_NAME} core ${OSX_LIBRARIES})
 endforeach(_src_file_path ${TEST_SOURCES})
+
+# copy resources in order to make tests with resources dependency
+file(GLOB_RECURSE RESOURCES ${PROJECT_SOURCE_DIR}/core/resources/*)
+foreach(_resource ${RESOURCES})
+    file(COPY ${_resource} DESTINATION ${PROJECT_SOURCE_DIR}/build/tests/unit/bin)
+endforeach()
