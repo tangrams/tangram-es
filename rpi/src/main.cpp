@@ -5,9 +5,21 @@
 #include <sys/time.h>
 #include <sys/shm.h>
 
+#include <stdlib.h>
+#include <string.h>
+#include <termios.h>
+
 #include "tangram.h"
 #include "platform.h"
 #include "gl.h"
+
+#define KEY_ESC		27
+#define KEY_ZOOM_IN 45
+#define KEY_ZOOM_OUT 61
+#define KEY_UP 		119
+#define KEY_LEFT 	97
+#define KEY_RIGHT 	115
+#define KEY_DOWN 	122
 
 struct timeval tv;
 
@@ -183,6 +195,29 @@ static bool updateMouse(){
    	return false;
 }
 
+int getkey() {
+	int character;
+	struct termios orig_term_attr;
+	struct termios new_term_attr;
+
+	/* set the terminal to raw mode */
+	tcgetattr(fileno(stdin), &orig_term_attr);
+	memcpy(&new_term_attr, &orig_term_attr, sizeof(struct termios));
+	new_term_attr.c_lflag &= ~(ECHO|ICANON);
+	new_term_attr.c_cc[VTIME] = 0;
+	new_term_attr.c_cc[VMIN] = 0;
+	tcsetattr(fileno(stdin), TCSANOW, &new_term_attr);
+	
+	/* read a character from the stdin stream without blocking */
+	/*   returns EOF (-1) if no character is available */
+	character = fgetc(stdin);
+
+	/* restore the original terminal attributes */
+	tcsetattr(fileno(stdin), TCSANOW, &orig_term_attr);
+	
+	return character;
+}
+
 //==============================================================================
 int main(int argc, char **argv){
     
@@ -215,6 +250,33 @@ int main(int argc, char **argv){
                 Tangram::handlePanGesture( mouse.velX*10.0, -mouse.velY*10.0);
             }
         }
+
+		int key = getkey();
+		if(key != -1){
+			switch (key) {
+				case KEY_ZOOM_IN:
+					Tangram::handlePinchGesture(0.0,0.0,0.5);
+					break;
+				case KEY_ZOOM_OUT:
+					Tangram::handlePinchGesture(0.0,0.0,2.0);
+					break;
+				case KEY_UP:
+					Tangram::handlePanGesture(0.0,100.0);
+					break;
+				case KEY_DOWN:
+					Tangram::handlePanGesture(0.0,-100.0);
+					break;
+				case KEY_LEFT:
+					Tangram::handlePanGesture(100.0,0.0);
+					break;
+				case KEY_RIGHT:
+					Tangram::handlePanGesture(-100.0,0.0);
+					break;
+				default:
+					logMsg(" -> %i\n",key);
+			}	
+		}
+
         // Render        
         Tangram::render();
         
