@@ -84,9 +84,7 @@ make android [ANDROID_ARCH=[x86|armeabi-v7a|armeabi]]
 
 ```
 sudo apt-get install g++-4.7
-sudo update-alternatives --install /usr/bin/gcc gcc /usr/bin/gcc-4.6 60 --slave /usr/bin/g++ g++ /usr/bin/g++-4.6 
-sudo update-alternatives --install /usr/bin/gcc gcc /usr/bin/gcc-4.7 40 --slave /usr/bin/g++ g++ /usr/bin/g++-4.7 
-sudo update-alternatives --config gcc
+export CXX=/usr/bin/g++-4.7
 ```
 
 Then choose 4.7 version.
@@ -111,4 +109,10 @@ cmake_minimum_required(VERSION 2.8)
 sudo apt-get install libcurl4-openssl-dev
 ```
 
- 
+* Compile and run:
+
+```
+make rpi
+cd build/rpi/bin
+./tangram
+```
