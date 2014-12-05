@@ -4,7 +4,7 @@ all: android osx ios
 .PHONY: clean-android
 .PHONY: clean-osx
 .PHONY: clean-ios
-.PHONY: clena-rpi
+.PHONY: clean-rpi
 .PHONY: android
 .PHONY: osx
 .PHONY: ios
