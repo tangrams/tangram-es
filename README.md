@@ -7,7 +7,7 @@ tangram-es is a library for rendering 2D and 3D maps using OpenGL ES 2 with cust
 
 build
 =====
-This project uses _CMake_ (minimum version **3.0**), you can download it [here](http://www.cmake.org/download/) or use your favorite installation package tool like [homebrew](http://brew.sh/).
+This project uses _CMake_ (minimum version **2.8** for all platforms, except iOS platform that uses cmake **3.0**), you can download it [here](http://www.cmake.org/download/) or use your favorite installation package tool like [homebrew](http://brew.sh/).
 
 ```bash
 brew install cmake
@@ -76,4 +76,20 @@ To build for Android, ensure you have your `$ANDROID_NDK` environment variable s
 
 ```bash
 make android [ANDROID_ARCH=[x86|armeabi-v7a|armeabi]]
+```
+
+### Raspberry Pi ###
+
+Install a C++11 compatible compiler and libcurl:
+
+```
+sudo apt-get install g++-4.7 libcurl4-openssl-dev
+```
+
+Then compile and run:
+
+```
+make rpi
+cd build/rpi/bin
+./tangram
 ```
