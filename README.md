@@ -86,20 +86,6 @@ Install a C++11 compatible compiler and libcurl:
 sudo apt-get install g++-4.7 libcurl4-openssl-dev
 ```
 
-Resolve dependence width CMake-3.X: right now there are two ways of resolving this: Downloading, compiling and installing[cmake-3.1.X](http://www.cmake.org/download/) or changing the ```CMakeLists.txt``` file to look for an older version: 
-
-```
-vim CMakeLists.txt
-```
-
-Then change the first line from ```VERSION 3.0``` to ```VERSION 2.8```. Should look like this:
-
-```
-cmake_minimum_required(VERSION 2.8)
-…
-…
-```
-
 Then compile and run:
 
 ```
