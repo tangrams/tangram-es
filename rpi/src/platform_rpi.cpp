@@ -32,3 +32,24 @@ std::string stringFromResource(const char* _path) {
     file.close();
     return into;
 }
+
+unsigned char* bytesFromResource(const char* _path, unsigned int* _size) {
+    std::ifstream resource(_path, std::ifstream::ate | std::ifstream::binary);
+
+    if(!resource.is_open()) {
+        logMsg("Failed to read file at path: %s\n", _path);
+        *_size = 0;
+        return nullptr;
+    }
+
+    *_size = resource.tellg();
+
+    resource.seekg(std::ifstream::beg);
+
+    char* cdata = (char*) malloc(sizeof(char) * (*_size));
+
+    resource.read(cdata, *_size);
+    resource.close();
+
+    return reinterpret_cast<unsigned char *>(cdata);
+}
