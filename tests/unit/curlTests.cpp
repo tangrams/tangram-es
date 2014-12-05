@@ -3,10 +3,10 @@
 
 #include <iostream>
 
-#include "dataSource.h"
+/*#include "dataSource.h"
 #include "mapTile.h"
 #include "glm/glm.hpp"
-#include "tileID.h"
+#include "tileID.h"*/
 
 
 TEST_CASE( "URL Name Check for MapzenVectorTileJson", "[CURL][DataSource][MapzenVectorTileJson]" ) {

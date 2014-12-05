@@ -24,3 +24,12 @@ void logMsg(const char* fmt, ...);
  */
 std::string stringFromResource(const char* _path);
 
+/* Read and allocates size bytes of memory  
+ *
+ * Similarly to stringFromResource, _path is the location of file within 
+ * core/resources. If the file cannot be read nothing is allocated and 
+ * a nullptr is returned.
+ * _size is is an in/out parameter to retrieve the size in bytes of the 
+ * allocated file
+ */ 
+unsigned char* bytesFromResource(const char* _path, unsigned int* _size);
