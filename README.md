@@ -77,3 +77,19 @@ To build for Android, ensure you have your `$ANDROID_NDK` environment variable s
 ```bash
 make android [ANDROID_ARCH=[x86|armeabi-v7a|armeabi]]
 ```
+
+### Raspberry Pi ###
+
+Install a C++11 compatible compiler and libcurl:
+
+```
+sudo apt-get install g++-4.7 libcurl4-openssl-dev
+```
+
+Then compile and run:
+
+```
+make rpi
+cd build/rpi/bin
+./tangram
+```
