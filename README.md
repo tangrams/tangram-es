@@ -7,7 +7,7 @@ tangram-es is a library for rendering 2D and 3D maps using OpenGL ES 2 with cust
 
 build
 =====
-This project uses _CMake_ (minimum version **3.0**), you can download it [here](http://www.cmake.org/download/) or use your favorite installation package tool like [homebrew](http://brew.sh/).
+This project uses _CMake_ (minimum version **2.8** for all platforms, except iOS platform that uses cmake **3.0**), you can download it [here](http://www.cmake.org/download/) or use your favorite installation package tool like [homebrew](http://brew.sh/).
 
 ```bash
 brew install cmake
