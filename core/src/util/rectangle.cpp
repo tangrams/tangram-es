@@ -1,7 +1,6 @@
-#include "Rectangle.h"
+#include "rectangle.h"
 
 #include "geom.h"
-#include "intersection.h"
 
 Rectangle::Rectangle():x(0.0), y(0.0), width(0.0), height(0.0){
     
@@ -46,159 +45,64 @@ void Rectangle::translate(const glm::vec3 &_pos){
     y += _pos.y;
 }
 
-//----------------------------------------------------------
 glm::vec3 Rectangle::getMin() const {
     return glm::vec3(getMinX(),getMinY(),0.);
 }
 
-//----------------------------------------------------------
 glm::vec3 Rectangle::getMax() const {
     return glm::vec3(getMaxX(),getMaxY(),0.);
 }
 
-//----------------------------------------------------------
 float Rectangle::getMinX() const {
-    return MIN(x, x + width);  // - width
+    return MIN(x, x + width);
 }
 
-//----------------------------------------------------------
 float Rectangle::getMaxX() const {
-    return MAX(x, x + width);  // - width
+    return MAX(x, x + width);
 }
 
-//----------------------------------------------------------
 float Rectangle::getMinY() const{
-    return MIN(y, y + height);  // - height
+    return MIN(y, y + height);
 }
 
-//----------------------------------------------------------
 float Rectangle::getMaxY() const {
-    return MAX(y, y + height);  // - height
-}
-
-bool Rectangle::inside(const float &_px, const float &_py) const {
-    return inside(glm::vec3(_px,_py,0.));
+    return MAX(y, y + height);
 }
 
 float Rectangle::getLeft() const {
     return getMinX();
 }
 
-//----------------------------------------------------------
 float Rectangle::getRight() const {
     return getMaxX();
 }
 
-//----------------------------------------------------------
 float Rectangle::getTop() const {
     return getMinY();
 }
 
-//----------------------------------------------------------
 float Rectangle::getBottom() const {
     return getMaxY();
 }
 
-//----------------------------------------------------------
 glm::vec3 Rectangle::getTopLeft() const {
     return getMin();
 }
 
-//----------------------------------------------------------
 glm::vec3 Rectangle::getTopRight() const {
     return glm::vec3(getRight(),getTop(),0.);
 }
 
-//----------------------------------------------------------
 glm::vec3 Rectangle::getBottomLeft() const {
     return glm::vec3(getLeft(),getBottom(),0.);
 }
 
-//----------------------------------------------------------
 glm::vec3 Rectangle::getBottomRight() const {
     return getMax();
 }
 
 glm::vec3  Rectangle::getCenter() const {
     return glm::vec3(x + width * 0.5f, y + height * 0.5f, 0.0);
-}
-
-//----------------------------------------------------------
-bool Rectangle::inside(const glm::vec3& p) const {
-    return  p.x > getMinX() && p.y > getMinY() &&
-    p.x < getMaxX() && p.y < getMaxY();
-}
-
-//----------------------------------------------------------
-bool Rectangle::inside(const Rectangle& rect) const {
-    return  inside(rect.getMinX(),rect.getMinY()) &&
-    inside(rect.getMaxX(),rect.getMaxY());
-}
-
-//----------------------------------------------------------
-bool Rectangle::inside(const glm::vec3& p0, const glm::vec3& p1) const {
-    // check to see if a line segment is inside the Rectangle
-    return inside(p0) && inside(p1);
-}
-
-//----------------------------------------------------------
-bool Rectangle::intersects(const Rectangle& rect) const {
-    return (getMinX() < rect.getMaxX() && getMaxX() > rect.getMinX() &&
-            getMinY() < rect.getMaxY() && getMaxY() > rect.getMinY());
-}
-
-//----------------------------------------------------------
-bool Rectangle::intersects(const glm::vec3& p0, const glm::vec3& p1) const {
-    // check for a line intersection
-    glm::vec3 p;
-    
-    glm::vec3 topLeft     = getTopLeft();
-    glm::vec3 topRight    = getTopRight();
-    glm::vec3 bottomRight = getBottomRight();
-    glm::vec3 bottomLeft  = getBottomLeft();
-    
-    return inside(p0) || // check end inside
-    inside(p1) || // check end inside
-    LineSegmentIntersection(p0, p1, topLeft,     topRight,    p) || // cross top
-    LineSegmentIntersection(p0, p1, topRight,    bottomRight, p) || // cross right
-    LineSegmentIntersection(p0, p1, bottomRight, bottomLeft,  p) || // cross bottom
-    LineSegmentIntersection(p0, p1, bottomLeft,  topLeft,     p);   // cross left
-}
-
-bool Rectangle::clip( glm::vec3& _p0, glm::vec3& _p1) const {
-    
-    glm::vec3 topLeft     = getTopLeft();
-    glm::vec3 topRight    = getTopRight();
-    glm::vec3 bottomRight = getBottomRight();
-    glm::vec3 bottomLeft  = getBottomLeft();
-    
-    if (!inside(_p0)) {
-        glm::vec3 r;
-        if (LineSegmentIntersection(_p0, _p1, topLeft,     topRight,    r)){
-            _p0 = r;
-        } else if (LineSegmentIntersection(_p0, _p1, topRight,    bottomRight, r)){
-            _p0 = r;
-        } else if (LineSegmentIntersection(_p0, _p1, bottomRight, bottomLeft,  r)){
-            _p0 = r;
-        } else if (LineSegmentIntersection(_p0, _p1, bottomLeft,  topLeft,     r)){
-            _p0 = r;
-        }
-    }
-    
-    if (!inside(_p1)) {
-        glm::vec3 r;
-        if (LineSegmentIntersection(_p1, _p0, topLeft,     topRight,    r)){
-            _p1 = r;
-        } else if (LineSegmentIntersection(_p1, _p0, topRight,    bottomRight, r)){
-            _p1 = r;
-        } else if (LineSegmentIntersection(_p1, _p0, bottomRight, bottomLeft,  r)){
-            _p1 = r;
-        } else if (LineSegmentIntersection(_p1, _p0, bottomLeft,  topLeft,     r)){
-            _p1 = r;
-        }
-    }
-    
-    return true;
 }
 
 void Rectangle::growToInclude(const glm::vec3& p){

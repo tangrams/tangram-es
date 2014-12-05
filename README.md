@@ -31,14 +31,45 @@ Then build using GNU Make:
 make osx
 ```
 
-### iOS ###
-For iOS, an XCode project would be generated and target would be built by running the following:
+### iOS Simulator ###
+For running on the iOS simulator, generate and compile an XCode project:
 
 ```bash
-make ios && open build/ios/tangram.xcodeproject
+make ios
 ```
 
-Then just use Xcode as usual. Note that any Xcode configuration change you make to the project won't be preserved when Cmake runs again. Build configuration is defined only in the CMakeLists file(s).
+Then just open the Xcode project and run/debug from there: 
+
+```bash
+open build/ios/tangram.xcodeproject
+```
+
+Note that any Xcode configuration change you make to the project won't be preserved when Cmake runs again. Build configuration is defined only in the CMakeLists file(s).
+
+### iOS Devices ###
+For running on iOS devices you will need an iOS developer account, a valid code signing certificate, and a valid provisioning profile. Help on these topics can be found at [Apple's developer website](http://developer.apple.com). 
+
+First generate an XCode project without compiling:
+
+```bash
+make cmake-ios IOS_PLATFORM=OS
+```
+
+Then open the Xcode project:
+
+```bash
+open build/ios/tangram.xcodeproj
+```
+
+In the project settings for the target named 'tangram', set 'Team' to your developer account. Now you can build and run the demo on a connected device.
+
+When you run on a device for the first time you may encounter an error with a message similar to:
+
+![`The file ... couldn’t be opened because you don’t have permission to view it.`](images/ios-00-error.png)
+
+To fix this, go to the Issues navigator tab in Xcode and click 'Validate Project Settings' under 'tangram.xcodeproj', then allow Xcode to perform any needed changes.
+
+![Steps](images/ios-00-steps.png)
 
 ### Android ###
 To build for Android, ensure you have your `$ANDROID_NDK` environment variable set and pointing to your [NDK](https://developer.android.com/tools/sdk/ndk/index.html) toolset. 

@@ -1,5 +1,4 @@
 #include "style.h"
-#include "util/geometryHandler.h"
 
 /*
  * Style Class Methods

@@ -4,6 +4,9 @@ uniform mat4 u_modelView;
 uniform mat4 u_modelViewProj;
 uniform float u_time;
 
+attribute vec4 a_position;
+attribute vec2 a_texcoord;
+
 attribute vec3 a_extrudeNormal;
 attribute float a_extrudeWidth;
 

@@ -1,5 +1,5 @@
 #include "polylineStyle.h"
-#include "util/geometryHandler.h"
+#include "util/builders.h"
 
 #include <time.h>
 
@@ -48,7 +48,7 @@ void PolylineStyle::buildLine(Line& _line, std::string& _layer, Properties& _pro
     std::vector<GLushort> indices;
     std::vector<glm::vec3> points;
     std::vector<glm::vec2> texcoords;
-    std::vector<glm::vec2> extrudeNormals;
+    std::vector<glm::vec2> scalingVecs;
     
     GLuint abgr = 0xff969696; // Default road color
     float halfWidth = 0.02;
@@ -65,13 +65,13 @@ void PolylineStyle::buildLine(Line& _line, std::string& _layer, Properties& _pro
         halfWidth = 0.005;
     }
     
-    GeometryHandler::buildDynamicPolyLine(_line, points, texcoords, extrudeNormals, indices);
+    Builders::buildScalablePolyLine(_line, points, scalingVecs, indices, texcoords);
     
     for (int i = 0; i < points.size(); i++) {
         glm::vec3 p = points[i];
-        glm::vec2 u = texcoords[i];
-        glm::vec2 en = extrudeNormals[i];
-        vertices.push_back({ p.x, p.y, p.z, u.x, u.y, en.x, en.y, halfWidth, abgr });
+        glm::vec2 uv = texcoords[i];
+        glm::vec2 en = scalingVecs[i];
+        vertices.push_back({ p.x, p.y, p.z, uv.x, uv.y, en.x, en.y, halfWidth, abgr });
     }
     
     // Make sure indices get correctly offset

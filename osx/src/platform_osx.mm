@@ -4,6 +4,7 @@
 #import <utility>
 #import <cstdio>
 #import <cstdarg>
+#import <fstream>
 
 #include "platform.h"
 
@@ -37,6 +38,29 @@ std::string stringFromResource(const char* _path) {
     }
     
     return std::move(std::string([str UTF8String]));
+}
+
+unsigned char* bytesFromResource(const char* _path, unsigned int* _size) {
+
+    NSString* path = resolveResourcePath(_path);
+    std::ifstream resource([path UTF8String], std::ifstream::ate | std::ifstream::binary);
+
+    if(!resource.is_open()) {
+        logMsg("Failed to read file at path: %s\n", _path);
+        *_size = 0;
+        return nullptr;
+    }
+
+    *_size = resource.tellg();
+
+    resource.seekg(std::ifstream::beg);
+
+    char* cdata = (char*) malloc(sizeof(char) * (*_size));
+
+    resource.read(cdata, *_size);
+    resource.close();
+
+    return reinterpret_cast<unsigned char *>(cdata);
 }
 
 #endif //PLATFORM_OSX
