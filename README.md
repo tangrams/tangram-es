@@ -58,7 +58,7 @@ make cmake-ios IOS_PLATFORM=OS
 Then open the Xcode project:
 
 ```bash
-open build/ios/tangram.xcodeproject
+open build/ios/tangram.xcodeproj
 ```
 
 In the project settings for the target named 'tangram', set 'Team' to your developer account. Now you can build and run the demo on a connected device.
