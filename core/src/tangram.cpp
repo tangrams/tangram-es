@@ -43,13 +43,14 @@ void initialize() {
     std::unique_ptr<Style> linesStyle(new PolylineStyle("Polyline"));
     linesStyle->addLayers({"roads"});
 
+    // TESTING LIGHTS
     std::unique_ptr<DirectionalLight> directionalLight(new DirectionalLight());
     directionalLight->setDirection(glm::vec3(-1.0, -1.0, 1.0));
     
     std::unique_ptr<PointLight> pointLight(new PointLight());
-    pointLight->setSpecularColor(glm::vec4(0.5,0.5,0.0,1.0));
+    // pointLight->setSpecularColor(glm::vec4(0.5,0.5,0.0,1.0));
     pointLight->setPosition(glm::vec3(0.0));
-    pointLight->setAttenuation(2.0,0.0);
+    pointLight->setAttenuation(1.0,0.02);
     
     std::unique_ptr<SpotLight> spotLight(new SpotLight());
     spotLight->setSpecularColor(glm::vec4(0.5,0.5,0.0,1.0));
@@ -63,9 +64,9 @@ void initialize() {
     m_scene->addStyle(std::move(polyStyle));
     m_scene->addStyle(std::move(linesStyle));
     
-//    m_scene->addDirectionalLight(std::move(directionalLight));
+    // m_scene->addDirectionalLight(std::move(directionalLight));
     m_scene->addPointLight(std::move(pointLight));
-//    m_scene->addSpotLight(std::move(spotLight));
+    // m_scene->addSpotLight(std::move(spotLight));
 
     // Create a tileManager
     m_tileManager = TileManager::GetInstance();
@@ -118,9 +119,9 @@ void update(float _dt) {
         m_scene->getDirectionalLights()[0]->setDirection(glm::vec3(time,time*0.5,time*0.25));
     }
     if(m_scene->getPointLights().size()){
-        m_scene->getPointLights()[0]->setPosition(glm::vec3(1000*cos(time),
-                                                            1000*sin(time),
-                                                            10.0));
+        // m_scene->getPointLights()[0]->setPosition(glm::vec3(100*cos(time),
+        //                                                     100*sin(time),
+        //                                                     10.0));
     }
     if(m_scene->getSpotLights().size()){
         m_scene->getSpotLights()[0]->setDirection(glm::vec3(time,time*0.5,time*0.25));

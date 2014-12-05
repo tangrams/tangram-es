@@ -4,8 +4,6 @@ uniform float u_time;
 
 varying vec4 v_pos;
 varying vec4 v_color;
-varying vec2 v_texcoord;
-
 varying vec3 v_eye;
 varying vec3 v_normal;
 varying vec2 v_texcoord;

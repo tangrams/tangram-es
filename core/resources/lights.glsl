@@ -1,5 +1,5 @@
 // ------------- These needs to be dinamically injected
-// #define NUM_DIRECTIONAL_LIGHTS 1
+//#define NUM_DIRECTIONAL_LIGHTS 1
 #define NUM_POINT_LIGHTS 1
 // #define NUM_SPOT_LIGHTS 1
 // ------------- 
@@ -22,10 +22,10 @@ struct DirectionalLight {
 };
 
 void calculateDirectionalLight(in DirectionalLight _light, in vec3 _normal, inout vec4 _ambient, inout vec4 _diffuse, inout vec4 _specular){
-	vec3  halfVector;
-    float nDotVP;         // normal . light direction
-    float nDotHV;         // normal . light half vector
-    float pf;             // power factor
+	vec3  halfVector = vec3(0.0);
+    float nDotVP    = 0.0;          // normal . light direction
+    // float nDotHV    = 0.0;          // normal . light half vector
+    // float pf        = 0.0;          // power factor
 
     nDotVP = max(0.0, dot(_normal, normalize(vec3(_light.direction))));
     // nDotHV = max(0.0, dot(_normal, vec3(_light.halfVector)));
@@ -52,13 +52,13 @@ struct PointLight {
 };
 
 void calculatePointLight(in PointLight _light, in vec3 _eye, in vec3 _ecPosition3, in vec3 _normal, inout vec4 _ambient, inout vec4 _diffuse, inout vec4 _specular){
-    float nDotVP;         // normal . light direction
-    float nDotHV;         // normal . light half vector
-    float pf;             // power factor
-    float attenuation;    // computed attenuation factor
-    float d;              // distance from surface to light source
-    vec3  VP;             // direction from surface to light position
-    vec3  halfVector;     // direction of maximum highlights
+    float nDotVP    = 0.0;          // normal . light direction
+    float nDotHV    = 0.0;          // normal . light half vector
+    float pf        = 0.0;          // power factor
+    float attenuation = 0.0;        // computed attenuation factor
+    float d         = 0.0;          // distance from surface to light source
+    vec3  VP        = vec3(0.0);    // direction from surface to light position
+    vec3  halfVector = vec3(0.0);   // direction of maximum highlights
 
     // Compute vector from surface to light position
     VP = vec3(_light.position) - _ecPosition3;
@@ -70,6 +70,7 @@ void calculatePointLight(in PointLight _light, in vec3 _eye, in vec3 _ecPosition
     VP = normalize(VP);
 
     // Compute attenuation
+    // attenuation = _light.constantAttenuation;
     attenuation = 1.0 / (_light.constantAttenuation +
                          _light.linearAttenuation * d);// +
                          // _light.quadraticAttenuation * d * d);
@@ -107,15 +108,15 @@ struct SpotLight {
 };
 
 void calculateSpotLight(in SpotLight _light, in vec3 _eye, in vec3 _ecPosition3, in vec3 _normal, inout vec4 _ambient, inout vec4 _diffuse, inout vec4 _specular){
-    float nDotVP;           // normal . light direction
-    float nDotHV;           // normal . light half vector
-    float pf;               // power factor
-    float spotDot;          // cosine of angle between spotlight
-    float spotAttenuation;  // spotlight attenuation factor
-    float attenuation;      // computed attenuation factor
-    // float d;                // distance from surface to light source
-    vec3 VP;                // direction from surface to light position
-    vec3 halfVector;        // direction of maximum highlights
+    float nDotVP    = 0.0;              // normal . light direction
+    float nDotHV    = 0.0;              // normal . light half vector
+    float pf        = 0.0;              // power factor
+    float spotDot   = 0.0;              // cosine of angle between spotlight
+    float spotAttenuation   = 0.0;      // spotlight attenuation factor
+    float attenuation       = 0.0;      // computed attenuation factor
+    // float d;                         // distance from surface to light source
+    vec3 VP         = vec3(0.0);        // direction from surface to light position
+    vec3 halfVector = vec3(0.0);        // direction of maximum highlights
 
     // Compute vector from surface to light position
     VP = vec3(_light.position) - _ecPosition3;
@@ -171,12 +172,12 @@ uniform SpotLight u_spotLights[NUM_SPOT_LIGHTS];
 
 vec4 calculateLighting(in vec3 _ecPosition, in vec3 _normal) {
 	vec3 eye = vec3(0.0, 0.0, 1.0);
-  	//eye = -normalize(_ecPosition3);
+  	// eye = -normalize(_ecPosition3);
 
   	// Light intensity accumulators
-  	vec4 amb  = vec4(0.0);
-  	vec4 diff = vec4(0.0);
-  	vec4 spec = vec4(0.0);
+  	vec4 amb  = vec4(0.0,0.0,0.0,0.0);
+  	vec4 diff = vec4(0.0,0.0,0.0,0.0);
+  	vec4 spec = vec4(0.0,0.0,0.0,0.0);
 
 //	COMPUTE DIRECTIONAL LIGHTS
 //

@@ -54,8 +54,8 @@ void PointLight::setPosition(const glm::vec3 &_pos){
 }
 
 void PointLight::setAttenuation(float _constantAttenuation, float _linearAttenuation){
-    m_constantAttenuation = _constantAttenuation;
-    m_linearAttenuation = _linearAttenuation;
+   m_constantAttenuation = _constantAttenuation;
+   m_linearAttenuation = _linearAttenuation;
 }
 
 std::string PointLight::getTransform(){
