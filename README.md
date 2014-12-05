@@ -80,21 +80,13 @@ make android [ANDROID_ARCH=[x86|armeabi-v7a|armeabi]]
 
 ### Raspberry Pi ###
 
-* Install a C++11 compatible compiler and curl:
+Install a C++11 compatible compiler and libcurl:
 
 ```
 sudo apt-get install g++-4.7 libcurl4-openssl-dev
-export CXX=/usr/bin/g++-4.7
 ```
 
-* Clone this repository
-
-```
-git clone https://github.com/tangrams/tangram-es.git
-cd tangram-es
-```
-
-* Resolve dependence width CMake-3.X: right now there are two ways of resolving this: Downloading, compiling and installing[cmake-3.1.X](http://www.cmake.org/download/) or changing the ```CMakeLists.txt``` file to look for an older version: 
+Resolve dependence width CMake-3.X: right now there are two ways of resolving this: Downloading, compiling and installing[cmake-3.1.X](http://www.cmake.org/download/) or changing the ```CMakeLists.txt``` file to look for an older version: 
 
 ```
 vim CMakeLists.txt
@@ -108,7 +100,7 @@ cmake_minimum_required(VERSION 2.8)
 …
 ```
 
-* Compile and run:
+Then compile and run:
 
 ```
 make rpi
