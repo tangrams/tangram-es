@@ -18,8 +18,8 @@ add_subdirectory(${PROJECT_SOURCE_DIR}/core)
 include_recursive_dirs(${PROJECT_SOURCE_DIR}/core/src/*.h)
 
 # add sources and include headers
-set(OSX_EXTENSIONS_FILES *.mm *.cpp)
-foreach(_ext ${OSX_EXTENSIONS_FILES})
+set(RPI_EXTENSIONS_FILES *.cpp)
+foreach(_ext ${RPI_EXTENSIONS_FILES})
     find_sources_and_include_directories(
         ${PROJECT_SOURCE_DIR}/rpi/src/*.h 
         ${PROJECT_SOURCE_DIR}/rpi/src/${_ext})
