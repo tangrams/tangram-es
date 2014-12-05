@@ -18,12 +18,9 @@ add_subdirectory(${PROJECT_SOURCE_DIR}/core)
 include_recursive_dirs(${PROJECT_SOURCE_DIR}/core/src/*.h)
 
 # add sources and include headers
-set(RPI_EXTENSIONS_FILES *.cpp)
-foreach(_ext ${RPI_EXTENSIONS_FILES})
-    find_sources_and_include_directories(
-        ${PROJECT_SOURCE_DIR}/rpi/src/*.h 
-        ${PROJECT_SOURCE_DIR}/rpi/src/${_ext})
-endforeach()
+find_sources_and_include_directories(
+	${PROJECT_SOURCE_DIR}/rpi/src/*.h 
+	${PROJECT_SOURCE_DIR}/rpi/src/*.cpp)
 
 # link and build functions
 function(link_libraries)

@@ -63,7 +63,8 @@ DARWIN_CMAKE_PARAMS = \
 	-G Xcode
 
 RPI_CMAKE_PARAMS = \
-	-DPLATFORM_TARGET=raspberrypi
+	-DPLATFORM_TARGET=raspberrypi \
+	-DCMAKE_TOOLCHAIN_FILE=${TOOLCHAIN_DIR}/raspberrypi.toolchain.cmake
 
 clean: clean-android clean-osx clean-ios clean-rpi clean-tests
 
