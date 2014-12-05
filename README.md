@@ -65,9 +65,11 @@ In the project settings for the target named 'tangram', set 'Team' to your devel
 
 When you run on a device for the first time you may encounter an error with a message similar to:
 
-`The file ... couldn’t be opened because you don’t have permission to view it.`
+![`The file ... couldn’t be opened because you don’t have permission to view it.`](images/ios-00-error.png)
 
 To fix this, go to the Issues navigator tab in Xcode and click 'Validate Project Settings' under 'tangram.xcodeproj', then allow Xcode to perform any needed changes.
+
+![Steps](images/ios-00-steps.png)
 
 ### Android ###
 To build for Android, ensure you have your `$ANDROID_NDK` environment variable set and pointing to your [NDK](https://developer.android.com/tools/sdk/ndk/index.html) toolset. 
