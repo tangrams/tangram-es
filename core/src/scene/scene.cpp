@@ -1,5 +1,6 @@
 #include "scene.h"
 
+#include "platform.h"
 #include "util/stringsOp.h"
 
 void Scene::addStyle(std::unique_ptr<Style> _style) {
@@ -49,19 +50,77 @@ void Scene::addLight(std::unique_ptr<SpotLight> _sLight){
 }
 
 void Scene::injectLightning(){
-    std::string glsl = "";
+    std::string lights = "";
+
+    bool isLights = false;
 
     if(m_directionalLights.size() > 0){
-        glsl += "\n #define NUM_DIRECTIONAL_LIGHTS " + getString(m_directionalLights.size()) + "\n";
+        lights += m_directionalLights[0]->getTransform();
+        lights += "\n#define NUM_DIRECTIONAL_LIGHTS " + getString(m_directionalLights.size()) + "\n";
+        lights += "uniform DirectionalLight u_directionalLights[NUM_DIRECTIONAL_LIGHTS];\n\n";
+        isLights = true;
     }
 
     if(m_pointLights.size() > 0){
-        glsl += "\n #define NUM_POINT_LIGHTS " + getString(m_pointLights.size()) + "\n";
+        lights += m_pointLights[0]->getTransform();
+        lights += "\n#define NUM_POINT_LIGHTS " + getString(m_pointLights.size()) + "\n";
+        lights += "uniform PointLight u_pointLights[NUM_POINT_LIGHTS];\n\n";
+        isLights = true;
     }
 
     if(m_spotLights.size() > 0){
-        glsl += "\n #define NUM_SPOT_LIGHTS " + getString(m_spotLights.size()) + "\n";
+        lights += m_spotLights[0]->getTransform();
+        lights += "\n#define NUM_SPOT_LIGHTS " + getString(m_spotLights.size()) + "\n";
+        lights += "uniform SpotLight u_spotLights[NUM_SPOT_LIGHTS];\n\n";
+        isLights = true;
     }
 
-    
+    if(isLights){
+        // lights += stringFromResource("modules/ligths.glsl");
+        lights += stringFromResource("lights.glsl");
+
+        for(int i = 0; i < m_styles.size(); i++){
+            m_styles[i]->getShaderProgram()->replaceAndRebuild("lighting",lights);
+        }
+
+        //  This could be resolver more elegantly with for loops and ifdef inside the glsl code
+        //  BUT we prove that for loops (even of arrays of one) are extremely slow on the iOS simulator
+        //  BIG MISTERY
+        //
+        if(m_directionalLights.size() > 0){
+            std::string dirLigths = "";
+
+            for(int i = 0; i < m_directionalLights.size(); i++){
+                dirLigths += "calculateDirectionalLight(u_directionalLights["+getString(i)+"], _normal, amb, diff, spec);\n";
+            }
+
+            for(int i = 0; i < m_styles.size(); i++){
+                m_styles[i]->getShaderProgram()->replaceAndRebuild("directional_lights",dirLigths);
+            }
+        } 
+
+        if(m_pointLights.size() > 0){
+            std::string pntLigths = "";
+            
+            for(int i = 0; i < m_pointLights.size(); i++){
+                pntLigths += "calculatePointLight(u_pointLights["+getString(i)+"], eye, _ecPosition, _normal, amb, diff, spec);\n";
+            }
+
+            for(int i = 0; i < m_styles.size(); i++){
+                m_styles[i]->getShaderProgram()->replaceAndRebuild("point_lights",pntLigths);
+            }
+        }
+
+        if(m_spotLights.size() > 0){
+            std::string sptLigths = "";
+            
+            for(int i = 0; i < m_spotLights.size(); i++){
+                sptLigths += "calculateSpotLight(u_spotLights["+getString(i)+"], eye, _ecPosition, _normal, amb, diff, spec);\n";
+            }
+
+            for(int i = 0; i < m_styles.size(); i++){
+                m_styles[i]->getShaderProgram()->replaceAndRebuild("spot_ligths",sptLigths);
+            }
+        }
+    }
 }

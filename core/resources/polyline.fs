@@ -2,8 +2,6 @@
 precision mediump float;
 #endif
 
-#pragma tangram: lighting
-
 uniform float u_time;
 
 varying vec4 v_pos;

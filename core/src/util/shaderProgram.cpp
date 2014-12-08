@@ -118,11 +118,19 @@ bool ShaderProgram::replaceAndRebuild(const std::string& _tagName, const std::st
     bool foundOnFrag = replace(m_fragmentShaderSource,_tagName,_glslSourceCode);
     bool foundOnVert = replace(m_vertexShaderSource,_tagName,_glslSourceCode);
 
+    buildFromSourceStrings(m_fragmentShaderSource,m_vertexShaderSource);    
+
     return foundOnFrag || foundOnVert;
 }
 
 bool ShaderProgram::buildFromSourceStrings(const std::string& _fragSrc, const std::string& _vertSrc) {
     
+    //  Moving this up in order to compose the GLSL code regardles compiles or not
+    //  TODO: find a better way to do this
+    //
+    m_fragmentShaderSource = std::string(_fragSrc);
+    m_vertexShaderSource = std::string(_vertSrc);
+
     // Try to compile vertex and fragment shaders, releasing resources and quiting on failure
 
     GLint vertexShader = makeCompiledShader(_vertSrc, GL_VERTEX_SHADER);
@@ -165,8 +173,8 @@ bool ShaderProgram::buildFromSourceStrings(const std::string& _fragSrc, const st
 
     // Make copies of the shader source code inputs, for this program to keep
 
-    m_fragmentShaderSource = std::string(_fragSrc);
-    m_vertexShaderSource = std::string(_vertSrc);
+    // m_fragmentShaderSource = std::string(_fragSrc);
+    // m_vertexShaderSource = std::string(_vertSrc);
 
     // Clear any cached shader locations
 
@@ -174,7 +182,6 @@ bool ShaderProgram::buildFromSourceStrings(const std::string& _fragSrc, const st
     m_uniformMap.clear();
 
     return true;
-
 }
 
 GLuint ShaderProgram::makeLinkedShaderProgram(GLint _fragShader, GLint _vertShader) {
@@ -219,6 +226,7 @@ GLuint ShaderProgram::makeCompiledShader(const std::string& _src, GLenum _type) 
             std::vector<GLchar> infoLog(infoLength);
             glGetShaderInfoLog(shader, infoLength, NULL, &infoLog[0]);
             logMsg("Error compiling shader:\n%s\n", &infoLog[0]);
+            logMsg("%s\n",_src.c_str());
         }
         glDeleteShader(shader);
         return 0;

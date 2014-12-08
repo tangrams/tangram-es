@@ -43,7 +43,7 @@ public:
     /*  This method is inspired on the webgl version.
     *   used to inject the uniforms for this particular light on
     *   the passed shader */
-    virtual void setupProgram( ShaderProgram &_shader );
+    void setupProgram( ShaderProgram &_shader );
     
 protected:
 

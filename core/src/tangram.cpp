@@ -54,7 +54,7 @@ void initialize() {
     //  Directional
     std::unique_ptr<DirectionalLight> directionalLight(new DirectionalLight());
     directionalLight->setDirection(glm::vec3(-1.0, -1.0, 1.0));
-    m_scene->addLight(std::move(directionalLight));
+    //m_scene->addLight(std::move(directionalLight));
     
     //  Point
     std::unique_ptr<PointLight> pointLight(new PointLight());
@@ -67,7 +67,9 @@ void initialize() {
     spotLight->setPosition(glm::vec3(0.0));
     spotLight->setDirection(glm::vec3(0,PI*0.25,0.0));
     spotLight->setCutOff(PI*0.51, 2.0);
-    m_scene->addLight(std::move(spotLight));
+    //m_scene->addLight(std::move(spotLight));
+
+    m_scene->injectLightning();
     //
     //-----------------------
 

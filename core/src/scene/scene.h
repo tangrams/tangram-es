@@ -12,7 +12,7 @@
  */
 class Scene {
 public:
-    
+
     void addStyle(std::unique_ptr<Style> _style);
     
     /*  Add a Directional Light */

@@ -2,8 +2,6 @@
 precision mediump float;
 #endif
 
-#pragma tangram: lighting
-
 uniform mat4 u_modelView;
 uniform mat4 u_modelViewProj;
 uniform float u_time;

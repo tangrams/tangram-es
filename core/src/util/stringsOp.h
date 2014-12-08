@@ -30,8 +30,29 @@ inline std::istream& operator>>(std::istream& is, glm::vec3& vec) {
 }
 
 //----------------------------------------  String operations
+// std::vector<std::string> splitString(const std::string &_source, const std::string &_delimiter = "", bool _ignoreEmpty = false) {
+//     std::vector<std::string> result;
+//     if (_delimiter.empty()) {
+//         result.push_back(_source);
+//         return result;
+//     }
+//     std::string::const_iterator substart = _source.begin(), subend;
+//     while (true) {
+//         subend = search(substart, _source.end(), _delimiter.begin(), _delimiter.end());
+//         std::string sub(substart, subend);
+        
+//         if (!_ignoreEmpty || !sub.empty()) {
+//             result.push_back(sub);
+//         }
+//         if (subend == _source.end()) {
+//             break;
+//         }
+//         substart = subend + _delimiter.size();
+//     }
+//     return result;
+// }
 
-inline void stringPurifier ( std::string &_s ){
+inline void stringPurifier( std::string &_s ){
     for ( std::string::iterator it = _s.begin(), itEnd = _s.end(); it!=itEnd; ++it){
         if ( static_cast<unsigned int>(*it) < 32 || static_cast<unsigned int>(*it) > 127 ){
             (*it) = ' ';

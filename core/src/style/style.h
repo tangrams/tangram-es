@@ -25,7 +25,6 @@
  * geometry into meshes. See <PolygonStyle> for a basic implementation.
  */
 class Style {
-    
 protected:
     
     /* Unique name for a style instance */

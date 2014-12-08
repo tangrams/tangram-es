@@ -27,6 +27,8 @@ void PolygonStyle::constructShaderProgram() {
     
     m_shaderProgram = std::make_shared<ShaderProgram>();
     m_shaderProgram->buildFromSourceStrings(fragShaderSrcStr, vertShaderSrcStr);
+
+    m_shaderProgram->replaceAndRebuild("material",stringFromResource("material.glsl"));
     
 }
 
@@ -117,5 +119,4 @@ void PolygonStyle::buildPolygon(Polygon& _polygon, std::string& _layer, Properti
     
     _mesh.addVertices((GLbyte*)vertices.data(), vertices.size());
     _mesh.addIndices(indices.data(), indices.size());
-    
 }
