@@ -1,5 +1,5 @@
 // ------------- These needs to be dinamically injected
-//#define NUM_DIRECTIONAL_LIGHTS 1
+// #define NUM_DIRECTIONAL_LIGHTS 1
 #define NUM_POINT_LIGHTS 1
 // #define NUM_SPOT_LIGHTS 1
 // ------------- 
@@ -18,26 +18,14 @@ struct DirectionalLight {
 	vec4 specular;
 
     vec3 direction;
-    // vec3 halfVector;
 };
 
 void calculateDirectionalLight(in DirectionalLight _light, in vec3 _normal, inout vec4 _ambient, inout vec4 _diffuse, inout vec4 _specular){
-	vec3  halfVector = vec3(0.0);
-    float nDotVP    = 0.0;          // normal . light direction
-    // float nDotHV    = 0.0;          // normal . light half vector
-    // float pf        = 0.0;          // power factor
+    float nDotVP    =  max(0.0,dot(_normal,normalize(vec3(_light.direction))));
 
-    nDotVP = max(0.0, dot(_normal, normalize(vec3(_light.direction))));
-    // nDotHV = max(0.0, dot(_normal, vec3(_light.halfVector)));
-
-    // if (nDotVP == 0.0)
-    //     pf = 0.0;
-    // else
-    //     pf = pow(nDotHV, u_material.shininess);
-
-    _ambient  += _light.ambient;
-    _diffuse  += _light.diffuse * nDotVP;
-    // _specular += _light.specular * pf;
+    _ambient    += _light.ambient;
+    _diffuse    += _light.diffuse * nDotVP;
+    _specular   += _light.specular * nDotVP; // We can compute specular better width an extra half vector;
 }
 
 struct PointLight {
@@ -55,7 +43,7 @@ void calculatePointLight(in PointLight _light, in vec3 _eye, in vec3 _ecPosition
     float nDotVP    = 0.0;          // normal . light direction
     float nDotHV    = 0.0;          // normal . light half vector
     float pf        = 0.0;          // power factor
-    float attenuation = 0.0;        // computed attenuation factor
+    float attenuation = 1.0;        // computed attenuation factor
     float d         = 0.0;          // distance from surface to light source
     vec3  VP        = vec3(0.0);    // direction from surface to light position
     vec3  halfVector = vec3(0.0);   // direction of maximum highlights
@@ -64,16 +52,13 @@ void calculatePointLight(in PointLight _light, in vec3 _eye, in vec3 _ecPosition
     VP = vec3(_light.position) - _ecPosition3;
 
     // Compute distance between surface and light position
-    d = length(VP);
+    // d = length(VP);
 
     // Normalize the vector from surface to light position
     VP = normalize(VP);
 
     // Compute attenuation
-    // attenuation = _light.constantAttenuation;
-    attenuation = 1.0 / (_light.constantAttenuation +
-                         _light.linearAttenuation * d);// +
-                         // _light.quadraticAttenuation * d * d);
+    attenuation = 1.0 / (1.0 + _light.constantAttenuation + _light.linearAttenuation * d);
 
     halfVector = normalize(VP + _eye);
 
@@ -175,9 +160,9 @@ vec4 calculateLighting(in vec3 _ecPosition, in vec3 _normal) {
   	// eye = -normalize(_ecPosition3);
 
   	// Light intensity accumulators
-  	vec4 amb  = vec4(0.0,0.0,0.0,0.0);
-  	vec4 diff = vec4(0.0,0.0,0.0,0.0);
-  	vec4 spec = vec4(0.0,0.0,0.0,0.0);
+  	vec4 amb  = vec4(0.0);
+  	vec4 diff = vec4(0.0);
+  	vec4 spec = vec4(0.0);
 
 //	COMPUTE DIRECTIONAL LIGHTS
 //
@@ -202,13 +187,5 @@ vec4 calculateLighting(in vec3 _ecPosition, in vec3 _normal) {
 
 //  Final light intensity calculation
 //
-	vec4 color =  	amb * u_material.ambient + 
-#ifdef DIFFUSE_TEXTURE
-                	diff * texture2D(u_textureDiffuse, a_uv) +
-#else
-                	diff * u_material.diffuse +
-#endif
-                	spec * u_material.specular;
-
-  return color;
+    return  amb * u_material.ambient + diff * u_material.diffuse + spec * u_material.specular;
 }

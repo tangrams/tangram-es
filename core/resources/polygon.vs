@@ -1,3 +1,7 @@
+#ifdef GL_ES
+precision mediump float;
+#endif
+
 uniform mat4 u_model;
 uniform mat4 u_modelView;
 uniform mat4 u_modelViewProj;
@@ -20,10 +24,9 @@ void main() {
   	v_normal = normalize(a_normal);
   	v_texcoord = a_texcoord;
 
-	// v_eye = vec3(a_position);
 	v_eye = vec3(u_modelView * a_position);
 
-	v_color = a_color; // * calculateLighting(v_eye,v_normal);
+	v_color = a_color;//* calculateLighting(v_eye,v_normal);
 
   	gl_Position = u_modelViewProj * a_position;
 }

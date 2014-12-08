@@ -6,49 +6,62 @@ void Scene::addStyle(std::unique_ptr<Style> _style) {
     m_styles.push_back(std::move(_style));
 }
 
-void Scene::addDirectionalLight(std::unique_ptr<DirectionalLight> _dLight){
+void Scene::addLight(std::unique_ptr<DirectionalLight> _dLight){
     
-    if(_dLight->m_name == "abstractLight"){
+    if(_dLight->getName() == "abstractLight"){
+
         //  If the name is not declare add it to the array
-        //
-        
-        _dLight->m_name = "directionalLights["+getString(m_directionalLights.size())+"]";
+        _dLight->setName("directionalLights",m_directionalLights.size());
+        m_directionalLights.push_back(std::move(_dLight));
         
     } else {
         //  TODO:
-        //        - This is for custom lights I guess
+        //        - Custom lights
     }
-    
-    m_directionalLights.push_back(std::move(_dLight));
-}
-void Scene::addPointLight(std::unique_ptr<PointLight> _pLight){
-    
-    if(_pLight->m_name == "abstractLight"){
-        //  If the name is not declare add it to the array
-        //
-        
-        _pLight->m_name = "pointLights["+getString(m_pointLights.size())+"]";
-        
-    } else {
-        //  TODO:
-        //        - This is for custom lights I guess
-    }
-    
-    m_pointLights.push_back(std::move(_pLight));
 }
 
-void Scene::addSpotLight(std::unique_ptr<SpotLight> _sLight){
+void Scene::addLight(std::unique_ptr<PointLight> _pLight){
     
-    if(_sLight->m_name == "abstractLight"){
+    if(_pLight->getName() == "abstractLight"){
+
         //  If the name is not declare add it to the array
-        //
-        
-        _sLight->m_name = "spotLights["+getString(m_spotLights.size())+"]";
-        
+        _pLight->setName("pointLights",m_pointLights.size());
+        m_pointLights.push_back(std::move(_pLight));
+
     } else {
         //  TODO:
-        //        - This is for custom lights I guess
+        //        - Custom lights
     }
+}
+
+void Scene::addLight(std::unique_ptr<SpotLight> _sLight){
     
-    m_spotLights.push_back(std::move(_sLight));
+    if(_sLight->getName() == "abstractLight"){
+
+        //  If the name is not declare add it to the array
+        _sLight->setName("spotLights",m_spotLights.size());
+        m_spotLights.push_back(std::move(_sLight));
+
+    } else {
+        //  TODO:
+        //        - Custom lights
+    }
+}
+
+void Scene::injectLightning(){
+    std::string glsl = "";
+
+    if(m_directionalLights.size() > 0){
+        glsl += "\n #define NUM_DIRECTIONAL_LIGHTS " + getString(m_directionalLights.size()) + "\n";
+    }
+
+    if(m_pointLights.size() > 0){
+        glsl += "\n #define NUM_POINT_LIGHTS " + getString(m_pointLights.size()) + "\n";
+    }
+
+    if(m_spotLights.size() > 0){
+        glsl += "\n #define NUM_SPOT_LIGHTS " + getString(m_spotLights.size()) + "\n";
+    }
+
+    
 }

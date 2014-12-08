@@ -43,6 +43,11 @@ public:
      */
     bool buildFromSourceStrings(const std::string& _fragSrc, const std::string& _vertSrc);
 
+    /*  Parser throught vert and frag shader replacing every "#prama tangram: [tagName]" with the provided glslSourceCode
+    *   Return false if doesn't find the tagName
+    */
+    bool replaceAndRebuild(const std::string& _tagNameToSearch, const std::string& _glslToInject);
+
     // TODO: Once we have file system abstractions, provide a method to build a program from file names
 
     /*
@@ -99,6 +104,11 @@ private:
         // Therefore, we use a dummy structure which does nothing but initialize
         // to a value that is not a valid uniform or attribute location. 
     };
+
+    /*  Simple parser for injecting code on special "#prama tangram: [tagName]" 
+    *   Return false if doesn't find the tagName
+    */
+    bool replace(std::string& _glslToParse, const std::string& _tagNameToSearch, const std::string& _glslToInject);
 
     static GLint s_activeGlProgram;
 

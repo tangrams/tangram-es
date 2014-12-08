@@ -2,7 +2,7 @@
 
 #define STRINGIFY(A) #A
 
-Material::Material():m_name("material"),m_ambient(0.2),m_diffuse(0.8),m_specular(0.2),m_shininess(0.2){
+Material::Material():m_name("material"),m_ambient(1.0),m_diffuse(1.0),m_specular(0.2),m_shininess(0.2){
     
 }
 

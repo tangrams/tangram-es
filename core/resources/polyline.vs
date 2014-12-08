@@ -1,3 +1,7 @@
+#ifdef GL_ES
+precision mediump float;
+#endif
+
 #pragma tangram: lighting
 
 uniform mat4 u_modelView;

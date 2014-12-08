@@ -66,7 +66,7 @@ void ShaderProgram::use() const {
     }
 }
 
-//  THIS SHOULD BE REPLACER FOR A REAL PARSER/INJECTOR pluss the globas and transform commands
+//  This should be on the common string operations functions
 //
 std::vector<std::string> splitString(const std::string &_source, const std::string &_delimiter = "", bool _ignoreEmpty = false) {
     std::vector<std::string> result;
@@ -90,41 +90,48 @@ std::vector<std::string> splitString(const std::string &_source, const std::stri
     return result;
 }
 
-std::string dummyParser(const std::string &_src){
-    std::vector<std::string> lines = splitString(_src, "\n");
-    
-    std::string rta;
+bool ShaderProgram::replace(std::string& _glslToParse, const std::string& _tagNameToSearch, const std::string& _glslToInject){
+
+    std::string parsedString = "";
+    std::vector<std::string> lines = splitString(_glslToParse, "\n");
+
+    bool bFound = false;
     
     for (auto &line: lines) {
-        if (line == "#pragma tangram: lighting") {
-            rta += stringFromResource("lights.glsl") + "\n";
+        if (line == "#pragma tangram: " + _tagNameToSearch) {
+            parsedString += _glslToInject + "\n";
+            bFound = true;
         } else {
-            rta += line + "\n";
+            parsedString += line + "\n";
         }
     }
     
-    return rta;
+    _glslToParse = parsedString;
+
+    return bFound; 
+}
+
+bool ShaderProgram::replaceAndRebuild(const std::string& _tagName, const std::string& _glslSourceCode){
+
+    // TODO: - do some pre-checking
+
+    bool foundOnFrag = replace(m_fragmentShaderSource,_tagName,_glslSourceCode);
+    bool foundOnVert = replace(m_vertexShaderSource,_tagName,_glslSourceCode);
+
+    return foundOnFrag || foundOnVert;
 }
 
 bool ShaderProgram::buildFromSourceStrings(const std::string& _fragSrc, const std::string& _vertSrc) {
-
-    //  TODO:
-    //          - This is a hardcode injection
-    //          - Here will happen the real shader injection
-    
-    std::string glslHeader = "#ifdef GL_ES\nprecision mediump float;\n#endif\n\n";
-    std::string vertSrc = glslHeader + dummyParser(_vertSrc);
-    std::string fragSrc = glslHeader + dummyParser(_fragSrc);
     
     // Try to compile vertex and fragment shaders, releasing resources and quiting on failure
 
-    GLint vertexShader = makeCompiledShader(vertSrc, GL_VERTEX_SHADER);
+    GLint vertexShader = makeCompiledShader(_vertSrc, GL_VERTEX_SHADER);
 
     if (vertexShader == 0) {
         return false;
     }
 
-    GLint fragmentShader = makeCompiledShader(fragSrc, GL_FRAGMENT_SHADER);
+    GLint fragmentShader = makeCompiledShader(_fragSrc, GL_FRAGMENT_SHADER);
 
     if (fragmentShader == 0) {
         glDeleteShader(vertexShader);
