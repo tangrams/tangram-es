@@ -29,6 +29,7 @@
 #  Thanks to the android-cmake project for providing the command
 
 # Standard settings
+cmake_minimum_required(VERSION 3.0)
 set (CMAKE_SYSTEM_NAME Darwin)
 set (CMAKE_SYSTEM_VERSION 1)
 set (UNIX True)
