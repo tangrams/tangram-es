@@ -9,6 +9,7 @@
 #include "data/dataSource.h"
 #include "style/style.h"
 #include "scene/scene.h"
+#include "util/error.h"
 
 namespace Tangram {
 
@@ -20,7 +21,14 @@ void initialize() {
     
     logMsg("%s\n", "initialize");
     
-    ShaderProgram::rebuildAllPrograms();
+    // In case the OpenGL context has been destroyed since the last time resources were created,
+    // we invalidate all data that depends on OpenGL object handles.
+    // TODO: Determine when the context hasn't been destroyed and skip this process
+
+    // ShaderPrograms are invalidated and immediately rebuilt
+    ShaderProgram::invalidateAllPrograms();
+
+    // Buffer objects are invalidated and re-uploaded the next time they are used
     VboMesh::invalidateAllVBOs();
 
     // Create view
@@ -76,6 +84,8 @@ void initialize() {
     glCullFace(GL_BACK);
     glClearColor(0.3f, 0.3f, 0.3f, 1.0f);
 
+    while (Error::hadGlError("Tangram::initialize()")) {}
+
     logMsg("%s\n", "finish initialize");
 
 }
@@ -89,6 +99,8 @@ void resize(int _newWidth, int _newHeight) {
     if (m_view) {
         m_view->setSize(_newWidth, _newHeight);
     }
+
+    while (Error::hadGlError("Tangram::resize()")) {}
 
 }
 
@@ -125,13 +137,7 @@ void render() {
         }
     }
 
-    // TODO: This error checking is incomplete and only marginally useful 
-    // 1. We need to continue calling glGetError until no error states remain
-    // 2. Repeating an error message 60 times per second is not useful, try to consolidate 
-    GLenum glError = glGetError();
-    if (glError) {
-        logMsg("GL Error %d!!!\n", glError);
-    }
+    while (Error::hadGlError("Tangram::render()")) {}
 
 }
     
