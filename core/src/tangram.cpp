@@ -54,11 +54,13 @@ void initialize() {
     //  Directional
     std::unique_ptr<DirectionalLight> directionalLight(new DirectionalLight());
     directionalLight->setDirection(glm::vec3(-1.0, -1.0, 1.0));
-    //m_scene->addLight(std::move(directionalLight));
+    // m_scene->addLight(std::move(directionalLight));
     
     //  Point
     std::unique_ptr<PointLight> pointLight(new PointLight());
-    // pointLight->setDiffuseColor(glm::vec4(0.5,0.5,0.5,1.0));
+    pointLight->setDiffuseColor(glm::vec4(0.0,1.0,0.0,1.0));
+    pointLight->setSpecularColor(glm::vec4(0.5,0.0,1.0,1.0));
+    pointLight->setAttenuation(0.0,0.01);
     pointLight->setPosition(glm::vec3(0.0));
     m_scene->addLight(std::move(pointLight));
 
@@ -128,13 +130,9 @@ void update(float _dt) {
     }
 
     if(m_scene->getPointLights().size()){
-        // m_scene->getPointLights()[0]->setPosition(glm::vec3(100*cos(time),
-        //                                                     100*sin(time),
-        //                                                     10.0));
-
-        // float alt = 100.0*sin(time);
-        // m_scene->getPointLights()[0]->setPosition(glm::vec3(0,0, -m_view->getPosition().z+100));
-        // logMsg("%f\n",alt);
+        m_scene->getPointLights()[0]->setPosition(glm::vec3(100*cos(time),
+                                                            100*sin(time), 
+                                                            -m_view->getPosition().z+100));
     }
 
     if(m_scene->getSpotLights().size()){

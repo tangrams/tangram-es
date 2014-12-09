@@ -55,15 +55,15 @@ void Scene::injectLightning(){
     bool isLights = false;
 
     if(m_directionalLights.size() > 0){
-        lights += m_directionalLights[0]->getTransform();
-        lights += "\n#define NUM_DIRECTIONAL_LIGHTS " + getString(m_directionalLights.size()) + "\n";
+        lights += m_directionalLights[0]->getTransform()+"\n";
+        lights += "#define NUM_DIRECTIONAL_LIGHTS " + getString(m_directionalLights.size()) + "\n";
         lights += "uniform DirectionalLight u_directionalLights[NUM_DIRECTIONAL_LIGHTS];\n\n";
         isLights = true;
     }
 
     if(m_pointLights.size() > 0){
-        lights += m_pointLights[0]->getTransform();
-        lights += "\n#define NUM_POINT_LIGHTS " + getString(m_pointLights.size()) + "\n";
+        lights += m_pointLights[0]->getTransform()+"\n";
+        lights += "#define NUM_POINT_LIGHTS " + getString(m_pointLights.size()) + "\n";
         lights += "uniform PointLight u_pointLights[NUM_POINT_LIGHTS];\n\n";
         isLights = true;
     }

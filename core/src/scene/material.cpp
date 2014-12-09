@@ -3,8 +3,8 @@
 #define STRINGIFY(A) #A
 
 Material::Material():m_name("material"),
-m_emission(0.0),m_ambient(1.0),m_diffuse(1.0),m_specular(0.2),m_shininess(0.2),
-m_bEmission(false),m_bAmbient(false),m_bDiffuse(true),m_bSpecular(false){
+m_emission(0.0),m_ambient(1.0),m_diffuse(0.8),m_specular(0.2),m_shininess(0.2),
+m_bEmission(false),m_bAmbient(false),m_bDiffuse(true),m_bSpecular(true){
     
 }
 
@@ -51,27 +51,25 @@ void Material::enableSpecular(){ m_bSpecular = true; };
 void Material::disableSpecular(){ m_bSpecular = false; };
 
 std::string Material::getTransform(){
-	std::string glsl = "\n";
+	std::string defines = "\n";
 
 	if(m_bEmission){
-		glsl += "#define MATERIAL_EMISSION\n";
+		defines += "#define MATERIAL_EMISSION\n";
 	}
 	
 	if(m_bAmbient){
-		glsl += "#define MATERIAL_AMBIENT\n";
+		defines += "#define MATERIAL_AMBIENT\n";
 	}
     
     if(m_bDiffuse){
-    	glsl += "#define MATERIAL_DIFFUSE\n";
+    	defines += "#define MATERIAL_DIFFUSE\n";
     }
     
     if(m_bSpecular){
-    	glsl += "#define MATERIAL_SPECULAR\n";
+    	defines += "#define MATERIAL_SPECULAR\n";
     }
 
-	// glsl += "\n" + stringFromResource("modules/material.glsl") + "\n";
-	glsl += "\n" + stringFromResource("material.glsl") + "\n";
-    return glsl;
+    return defines + stringFromResource("material.glsl") + "\n";
 }
 
 void Material::setupProgram(ShaderProgram &_shader){

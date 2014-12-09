@@ -3,23 +3,73 @@ struct PointLight {
     vec4 diffuse;
     vec4 specular;
    	vec4 position;
+
+#ifdef POINTLIGHT_CONSTANT_ATTENUATION
+#define POINTLIGHT_ATTENUATION
+    float constantAttenuation;
+#endif
+
+#ifdef POINTLIGHT_LINEAR_ATTENUATION
+#ifndef POINTLIGHT_ATTENUATION
+#define POINTLIGHT_ATTENUATION
+#endif
+    float linearAttenuation;
+#endif
+
+
+#ifdef POINTLIGHT_QUADRATIC_ATTENUATION
+#ifndef POINTLIGHT_ATTENUATION
+#define POINTLIGHT_ATTENUATION
+#endif
+    float quadraticAttenuation;
+#endif
 };
 
 void calculateLight(in PointLight _light, in vec3 _eye, in vec3 _ecPosition3, in vec3 _normal, inout vec4 _ambient, inout vec4 _diffuse, inout vec4 _specular){
 
-#ifdef MATERIAL_AMBIENT
-    _ambient += _light.ambient;
-#endif
-
     // Compute vector from surface to light position
     vec3 VP = vec3(_light.position) - _ecPosition3;
+
+    #ifdef POINTLIGHT_LINEAR_ATTENUATION || POINTLIGHT_QUADRATIC_ATTENUATION
+    float dist = length(VP);
+    #endif 
 
     // Normalize the vector from surface to light position
     VP = normalize(VP);
     float nDotVP = min(max(0.0, dot(VP,_normal)),1.0);
+
+    #ifdef POINTLIGHT_ATTENUATION
+    float atFactor = 0.0;
+
+    #ifdef POINTLIGHT_CONSTANT_ATTENUATION
+    atFactor += _light.constantAttenuation;
+    #endif
+
+    #ifdef POINTLIGHT_LINEAR_ATTENUATION
+    atFactor += _light.linearAttenuation * dist;
+    #endif
+        
+    #ifdef POINTLIGHT_QUADRATIC_ATTENUATION
+    atFactor += _light.quadraticAttenuation * dist * dist;
+    #endif
+    
+    float attenuation = 1.0 /atFactor;
+    #endif
+
+#ifdef MATERIAL_AMBIENT
+    #ifdef POINTLIGHT_ATTENUATION
+    _ambient += _light.ambient * attenuation;
+    #else
+    _ambient += _light.ambient;
+    #endif
+#endif
     
 #ifdef MATERIAL_DIFFUSE 
+    #ifdef POINTLIGHT_ATTENUATION
+    _diffuse += _light.diffuse * nDotVP * attenuation;
+    #else
     _diffuse += _light.diffuse * nDotVP;
+    #endif
 #endif
 
 #ifdef MATERIAL_SPECULAR
@@ -29,6 +79,12 @@ void calculateLight(in PointLight _light, in vec3 _eye, in vec3 _ecPosition3, in
         float nDotHV = max(0.0, dot(_normal, halfVector));
         pf = pow(nDotHV, u_material.shininess);
     }
+
+    #ifdef POINTLIGHT_ATTENUATION
+    _specular += _light.specular * pf * attenuation;
+    #else
     _specular += _light.specular * pf;
+    #endif
+
 #endif
 }
