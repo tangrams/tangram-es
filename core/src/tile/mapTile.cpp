@@ -3,6 +3,7 @@
 #include "util/tileID.h"
 
 #include "scene/scene.h"
+#include "view/view.h"
 
 #define GLM_FORCE_RADIANS
 #include "glm/gtc/matrix_transform.hpp"
@@ -60,28 +61,27 @@ void MapTile::draw(const Style& _style, const glm::dmat4& _viewProjMatrix) {
     }
 }
 
-void MapTile::draw( Scene& _scene, const Style& _style, const glm::dmat4& _viewMatrix, const glm::dmat4& _viewProjMatrix){
+void MapTile::draw( Scene& _scene, const Style& _style, const View& _view){
     const std::unique_ptr<VboMesh>& styleMesh = m_geometry[_style.getName()];
     
     if (styleMesh) {
         
         std::shared_ptr<ShaderProgram> shader = _style.getShaderProgram();
+
+        glm::dmat4 viewMatrix = _view.getViewMatrix();
+        glm::dmat4 viewProjMatrix = _view.getViewProjectionMatrix();
         
-        glm::dmat4 modelViewProjMatrix = _viewProjMatrix * m_modelMatrix;
+        glm::dmat4 modelViewProjMatrix = viewProjMatrix * m_modelMatrix;
         
         // NOTE : casting to float, but loop over the matrix values
         double* first = &modelViewProjMatrix[0][0];
         std::vector<float> fmvp(first, first + 16);
         
-        glm::dmat4 modelViewMatrix = _viewMatrix * m_modelMatrix;
+        glm::dmat4 modelViewMatrix = viewMatrix * m_modelMatrix;
         
         double* second = &modelViewMatrix[0][0];
         std::vector<float> fmv(second, second + 16);
         
-        double* third = &m_modelMatrix[0][0];
-        std::vector<float> fm(third, third + 16);
-        
-        shader->setUniformMatrix4f("u_model", &fm[0]);
         shader->setUniformMatrix4f("u_modelView", &fmv[0]);
         shader->setUniformMatrix4f("u_modelViewProj", &fmvp[0]);
         

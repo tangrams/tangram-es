@@ -58,6 +58,7 @@ void initialize() {
     
     //  Point
     std::unique_ptr<PointLight> pointLight(new PointLight());
+    // pointLight->setDiffuseColor(glm::vec4(0.5,0.5,0.5,1.0));
     pointLight->setPosition(glm::vec3(0.0));
     m_scene->addLight(std::move(pointLight));
 
@@ -130,6 +131,10 @@ void update(float _dt) {
         // m_scene->getPointLights()[0]->setPosition(glm::vec3(100*cos(time),
         //                                                     100*sin(time),
         //                                                     10.0));
+
+        // float alt = 100.0*sin(time);
+        // m_scene->getPointLights()[0]->setPosition(glm::vec3(0,0, -m_view->getPosition().z+100));
+        // logMsg("%f\n",alt);
     }
 
     if(m_scene->getSpotLights().size()){
@@ -143,9 +148,6 @@ void render() {
 
     // Set up openGL for new frame
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-
-    glm::dmat4 view = m_view->getViewMatrix();
-    glm::dmat4 viewProj = m_view->getViewProjectionMatrix();
 
     // Loop over all styles
     for (const auto& style : m_scene->getStyles()) {
@@ -163,7 +165,7 @@ void render() {
                 
                 //  Can we pass only the scene?
                 //
-                tile->draw(*m_scene, *style, view, viewProj);
+                tile->draw(*m_scene, *style, *m_view);
             }
 
         }

@@ -228,7 +228,7 @@ GLuint ShaderProgram::makeCompiledShader(const std::string& _src, GLenum _type) 
             glGetShaderInfoLog(shader, infoLength, NULL, &infoLog[0]);
             logMsg("Error compiling shader:\n%s\n", &infoLog[0]);
 
-            // logMsg("\n>>\n%s\n",_src.c_str());
+            logMsg("\n>>\n%s\n",_src.c_str());
         }
         glDeleteShader(shader);
         return 0;

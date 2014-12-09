@@ -30,7 +30,7 @@ inline std::istream& operator>>(std::istream& is, glm::vec3& vec) {
 }
 
 //----------------------------------------  String operations
-std::vector<std::string> splitString(const std::string &_source, const std::string &_delimiter = "", bool _ignoreEmpty = false) {
+static std::vector<std::string> splitString(const std::string &_source, const std::string &_delimiter = "", bool _ignoreEmpty = false) {
     std::vector<std::string> result;
     if (_delimiter.empty()) {
         result.push_back(_source);

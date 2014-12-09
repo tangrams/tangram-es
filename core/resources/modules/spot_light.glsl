@@ -2,8 +2,8 @@ struct SpotLight {
     vec4 ambient;
     vec4 diffuse;
     vec4 specular;
-    vec4 position;
 
+    vec4 position;
     vec3 direction;
 
     float spotExponent;
@@ -17,7 +17,7 @@ void calculateLight(in SpotLight _light, in vec3 _eye, in vec3 _ecPosition3, in 
 
     // Normalize the vector from surface to light position
     VP = normalize(VP);
-    
+
     // spotlight attenuation factor
     float spotAttenuation = 0.0;
     if (spotDot >= _light.spotCosCutoff){

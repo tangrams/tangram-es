@@ -16,7 +16,7 @@ void calculateLight(in PointLight _light, in vec3 _eye, in vec3 _ecPosition3, in
 
     // Normalize the vector from surface to light position
     VP = normalize(VP);
-    float nDotVP = max(0.0, dot(_normal, VP));
+    float nDotVP = min(max(0.0, dot(VP,_normal)),1.0);
     
 #ifdef MATERIAL_DIFFUSE 
     _diffuse += _light.diffuse * nDotVP;
@@ -24,7 +24,7 @@ void calculateLight(in PointLight _light, in vec3 _eye, in vec3 _ecPosition3, in
 
 #ifdef MATERIAL_SPECULAR
     float pf = 0.0; // power factor for shinny speculars
-    if (nDotVP != 0.0){
+    if (nDotVP > 0.0){
         vec3 halfVector = normalize(VP + _eye); // Direction of maximum highlights
         float nDotHV = max(0.0, dot(_normal, halfVector));
         pf = pow(nDotHV, u_material.shininess);
