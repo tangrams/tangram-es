@@ -6,6 +6,7 @@
 
 #include "glm/glm.hpp"
 
+#include <algorithm>
 #include <iostream>
 #include <sstream>
 
@@ -50,28 +51,6 @@ static std::vector<std::string> splitString(const std::string &_source, const st
         substart = subend + _delimiter.size();
     }
     return result;
-}
-
-static std::string getLine(int _lineNumber, const std::string& _source){
-    int index = 0;
-
-    std::string delimiter = "\n";
-    std::string::const_iterator substart = _source.begin(), subend;
-
-    std::string sub; 
-    while(subend != _source.end()){
-        subend = search(substart, _source.end(), delimiter.begin(), delimiter.end());
-        sub = std::string(substart, subend);
-
-        if (!sub.empty()) {
-            if(index == _lineNumber){
-                return sub;
-            }
-            index++;
-        }
-    }
-
-    return sub;
 }
 
 inline void stringPurifier( std::string &_s ){
