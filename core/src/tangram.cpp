@@ -3,6 +3,7 @@
 #include <memory>
 #include <utility>
 #include <cmath>
+#include <time.h>
 
 #include "platform.h"
 #include "tile/tileManager.h"

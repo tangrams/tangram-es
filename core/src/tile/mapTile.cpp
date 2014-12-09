@@ -1,7 +1,9 @@
 #include "mapTile.h"
+
+#include <time.h>
+
 #include "style/style.h"
 #include "util/tileID.h"
-
 #include "scene/scene.h"
 #include "view/view.h"
 
