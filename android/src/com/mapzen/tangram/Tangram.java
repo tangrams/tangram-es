@@ -13,6 +13,7 @@ import android.view.GestureDetector.OnGestureListener;
 import android.view.MotionEvent;
 import android.view.ScaleGestureDetector;
 import android.view.ScaleGestureDetector.OnScaleGestureListener;
+import android.view.SurfaceHolder;
 
 public class Tangram extends GLSurfaceView implements Renderer, OnScaleGestureListener, OnGestureListener {
 
@@ -26,6 +27,7 @@ public class Tangram extends GLSurfaceView implements Renderer, OnScaleGestureLi
 	private static native void resize(int width, int height);
 	private static native void render();
     private static native void update(float dt);
+    private static native void onContextDestroyed();
     private static native void handleTapGesture(float posX, float posY);
     private static native void handleDoubleTapGesture(float posX, float posY);
     private static native void handlePanGesture(float velX, float velY);
@@ -36,6 +38,7 @@ public class Tangram extends GLSurfaceView implements Renderer, OnScaleGestureLi
     private float scaleFactor = 1.0f;
     private float scalePosX = 0.0f;
     private float scalePosY = 0.0f;
+    private boolean contextDestroyed = false;
     private AssetManager assetManager;
     private GestureDetector gestureDetector;
     private ScaleGestureDetector scaleGestureDetector;
@@ -45,7 +48,7 @@ public class Tangram extends GLSurfaceView implements Renderer, OnScaleGestureLi
     	
     	setEGLContextClientVersion(2);
     	setRenderer(this);
-    	//setPreserveEGLContextOnPause(true);
+    	//setPreserveEGLContextOnPause(true);	
     	
         this.assetManager = mainApp.getAssets();
         this.gestureDetector = new GestureDetector(mainApp, this);
@@ -53,8 +56,20 @@ public class Tangram extends GLSurfaceView implements Renderer, OnScaleGestureLi
         
     }
     
+    @Override
+    public void onResume() {
+    	
+    	super.onResume();
+    }
+    
     public void onDestroy() {
     	teardown();
+    }
+    
+    @Override
+    public void surfaceDestroyed(SurfaceHolder holder) {
+    	contextDestroyed = true;
+    	super.surfaceDestroyed(holder);
     }
 	
 	@Override
@@ -92,6 +107,12 @@ public class Tangram extends GLSurfaceView implements Renderer, OnScaleGestureLi
 	}
 
 	public void onSurfaceCreated(GL10 gl, EGLConfig config) {
+		
+		if (contextDestroyed) {
+    		onContextDestroyed();
+    		contextDestroyed = false;
+    	}
+    	
 		init(assetManager);
 	}
 

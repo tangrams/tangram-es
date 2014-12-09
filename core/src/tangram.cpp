@@ -20,16 +20,6 @@ std::shared_ptr<View> m_view;
 void initialize() {
     
     logMsg("%s\n", "initialize");
-    
-    // In case the OpenGL context has been destroyed since the last time resources were created,
-    // we invalidate all data that depends on OpenGL object handles.
-    // TODO: Determine when the context hasn't been destroyed and skip this process
-
-    // ShaderPrograms are invalidated and immediately rebuilt
-    ShaderProgram::invalidateAllPrograms();
-
-    // Buffer objects are invalidated and re-uploaded the next time they are used
-    VboMesh::invalidateAllVBOs();
 
     // Create view
     if (!m_view) {
@@ -163,6 +153,19 @@ void handlePinchGesture(float _posX, float _posY, float _scale) {
 
 void teardown() {
     // TODO: Release resources!
+}
+
+void onContextDestroyed() {
+    
+    // The OpenGL context has been destroyed since the last time resources were created,
+    // so we invalidate all data that depends on OpenGL object handles.
+
+    // ShaderPrograms are invalidated and immediately rebuilt
+    ShaderProgram::invalidateAllPrograms();
+
+    // Buffer objects are invalidated and re-uploaded the next time they are used
+    VboMesh::invalidateAllVBOs();
+    
 }
     
 }

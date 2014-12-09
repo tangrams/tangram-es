@@ -36,5 +36,8 @@ void handlePinchGesture(float _posX, float _posY, float _scale = 1.0);
 // Release resources and shut down renderer
 void teardown();
 
+// Invalidate and re-create all OpenGL resources
+void onContextDestroyed();
+
 }
 
