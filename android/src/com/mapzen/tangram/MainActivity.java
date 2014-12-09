@@ -5,10 +5,10 @@ import android.os.Bundle;
 import android.view.Window;
 
 public class MainActivity extends Activity {
-	
-	Tangram tangram;
     
-	@Override
+    Tangram tangram;
+    
+    @Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
 
@@ -16,26 +16,26 @@ public class MainActivity extends Activity {
         
         tangram = new Tangram(this);
         
-		setContentView(tangram);
+        setContentView(tangram);
     }
 
     @Override
-	protected void onPause() {
-		super.onPause();
-		tangram.onPause();
-	}
+    protected void onPause() {
+        super.onPause();
+        tangram.onPause();
+    }
 
-	@Override
-	protected void onResume() {
-		super.onResume();
-		tangram.onResume();
-	}
-	
-	@Override
-	protected void onDestroy() {
-		super.onDestroy();
-		tangram.onDestroy();
-	}
+    @Override
+    protected void onResume() {
+        super.onResume();
+        tangram.onResume();
+    }
+    
+    @Override
+    protected void onDestroy() {
+        super.onDestroy();
+        tangram.onDestroy();
+    }
 
 }
 

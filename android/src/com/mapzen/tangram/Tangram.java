@@ -17,24 +17,24 @@ import android.view.SurfaceHolder;
 
 public class Tangram extends GLSurfaceView implements Renderer, OnScaleGestureListener, OnGestureListener {
 
-	static {
-		System.loadLibrary("c++_shared");
-		System.loadLibrary("tangram");
-	}
+    static {
+        System.loadLibrary("c++_shared");
+        System.loadLibrary("tangram");
+    }
 
-	private static native void init(AssetManager assetManager);
-	private static native void teardown();
-	private static native void resize(int width, int height);
-	private static native void render();
+    private static native void init(AssetManager assetManager);
+    private static native void resize(int width, int height);
     private static native void update(float dt);
+    private static native void render();
+    private static native void teardown();
     private static native void onContextDestroyed();
     private static native void handleTapGesture(float posX, float posY);
     private static native void handleDoubleTapGesture(float posX, float posY);
     private static native void handlePanGesture(float velX, float velY);
     private static native void handlePinchGesture(float posX, float posY, float scale);
 
-	private long time = System.nanoTime();
-	private float[] viewCenter = new float[2];
+    private long time = System.nanoTime();
+    private float[] viewCenter = new float[2];
     private float scaleFactor = 1.0f;
     private float scalePosX = 0.0f;
     private float scalePosY = 0.0f;
@@ -44,12 +44,12 @@ public class Tangram extends GLSurfaceView implements Renderer, OnScaleGestureLi
     private ScaleGestureDetector scaleGestureDetector;
 
     public Tangram(Context mainApp) {
-    	super(mainApp);
-    	
-    	setEGLContextClientVersion(2);
-    	setRenderer(this);
-    	//setPreserveEGLContextOnPause(true);	
-    	
+        super(mainApp);
+        
+        setEGLContextClientVersion(2);
+        setRenderer(this);
+        //setPreserveEGLContextOnPause(true);   
+        
         this.assetManager = mainApp.getAssets();
         this.gestureDetector = new GestureDetector(mainApp, this);
         this.scaleGestureDetector = new ScaleGestureDetector(mainApp, this);
@@ -58,37 +58,38 @@ public class Tangram extends GLSurfaceView implements Renderer, OnScaleGestureLi
     
     @Override
     public void onResume() {
-    	
-    	super.onResume();
+        super.onResume();
     }
     
     public void onDestroy() {
-    	teardown();
+        teardown();
     }
     
     @Override
     public void surfaceDestroyed(SurfaceHolder holder) {
-    	contextDestroyed = true;
-    	super.surfaceDestroyed(holder);
+        contextDestroyed = true;
+        super.surfaceDestroyed(holder);
     }
-	
-	@Override
-	public boolean onTouchEvent(MotionEvent event) { 
-        //Pass the event to gestureDetector and scaleDetector
+    
+    @Override
+    public boolean onTouchEvent(MotionEvent event) { 
         
-    	boolean retVal;
-        retVal = this.scaleGestureDetector.onTouchEvent(event);
-        if(!this.scaleGestureDetector.isInProgress()) {
-            retVal = this.gestureDetector.onTouchEvent(event);
-            if(!this.gestureDetector.onTouchEvent(event)) {
+        //Pass the event to gestureDetector and scaleDetector
+        boolean retVal;
+        retVal = scaleGestureDetector.onTouchEvent(event);
+        if (!scaleGestureDetector.isInProgress()) {
+            retVal = gestureDetector.onTouchEvent(event);
+            if (!gestureDetector.onTouchEvent(event)) {
                 retVal = super.onTouchEvent(event);
             }
         }
         return retVal;
+        
     }
-	
-	// GLSurfaceView.Renderer methods
-	// ==============================
+    
+    
+    // GLSurfaceView.Renderer methods
+    // ==============================
 
     public void onDrawFrame(GL10 gl) {
         long newTime = System.nanoTime();
@@ -99,26 +100,26 @@ public class Tangram extends GLSurfaceView implements Renderer, OnScaleGestureLi
         render();
     }
 
-	public void onSurfaceChanged(GL10 gl, int width, int height) {
+    public void onSurfaceChanged(GL10 gl, int width, int height) {
         //set the view center for gesture handling
         viewCenter[0] = (float)width * 0.5f;
         viewCenter[1] = (float)height * 0.5f;
-		resize(width, height);
-	}
+        resize(width, height);
+    }
 
-	public void onSurfaceCreated(GL10 gl, EGLConfig config) {
-		
-		if (contextDestroyed) {
-    		onContextDestroyed();
-    		contextDestroyed = false;
-    	}
-    	
-		init(assetManager);
-	}
+    public void onSurfaceCreated(GL10 gl, EGLConfig config) {
+        
+        if (contextDestroyed) {
+            onContextDestroyed();
+            contextDestroyed = false;
+        }
+        
+        init(assetManager);
+    }
 
     // GestureDetetor.OnGestureListener methods
-	// ========================================
-	
+    // ========================================
+    
     public boolean onDown(MotionEvent event) {
         return true;
     }
