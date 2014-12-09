@@ -28,7 +28,7 @@ void PolygonStyle::constructShaderProgram() {
     m_shaderProgram = std::make_shared<ShaderProgram>();
     m_shaderProgram->buildFromSourceStrings(fragShaderSrcStr, vertShaderSrcStr);
 
-    m_shaderProgram->replaceAndRebuild("material",stringFromResource("material.glsl"));
+    m_shaderProgram->replaceAndRebuild("material",m_material.getTransform());
     
 }
 

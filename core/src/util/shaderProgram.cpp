@@ -1,4 +1,5 @@
 #include "shaderProgram.h"
+#include "util/stringsOp.h"
 
 GLint ShaderProgram::s_activeGlProgram = 0;
 
@@ -68,27 +69,27 @@ void ShaderProgram::use() const {
 
 //  This should be on the common string operations functions
 //
-std::vector<std::string> splitString(const std::string &_source, const std::string &_delimiter = "", bool _ignoreEmpty = false) {
-    std::vector<std::string> result;
-    if (_delimiter.empty()) {
-        result.push_back(_source);
-        return result;
-    }
-    std::string::const_iterator substart = _source.begin(), subend;
-    while (true) {
-        subend = search(substart, _source.end(), _delimiter.begin(), _delimiter.end());
-        std::string sub(substart, subend);
+// std::vector<std::string> splitString(const std::string &_source, const std::string &_delimiter = "", bool _ignoreEmpty = false) {
+//     std::vector<std::string> result;
+//     if (_delimiter.empty()) {
+//         result.push_back(_source);
+//         return result;
+//     }
+//     std::string::const_iterator substart = _source.begin(), subend;
+//     while (true) {
+//         subend = search(substart, _source.end(), _delimiter.begin(), _delimiter.end());
+//         std::string sub(substart, subend);
         
-        if (!_ignoreEmpty || !sub.empty()) {
-            result.push_back(sub);
-        }
-        if (subend == _source.end()) {
-            break;
-        }
-        substart = subend + _delimiter.size();
-    }
-    return result;
-}
+//         if (!_ignoreEmpty || !sub.empty()) {
+//             result.push_back(sub);
+//         }
+//         if (subend == _source.end()) {
+//             break;
+//         }
+//         substart = subend + _delimiter.size();
+//     }
+//     return result;
+// }
 
 bool ShaderProgram::replace(std::string& _glslToParse, const std::string& _tagNameToSearch, const std::string& _glslToInject){
 
@@ -226,7 +227,8 @@ GLuint ShaderProgram::makeCompiledShader(const std::string& _src, GLenum _type) 
             std::vector<GLchar> infoLog(infoLength);
             glGetShaderInfoLog(shader, infoLength, NULL, &infoLog[0]);
             logMsg("Error compiling shader:\n%s\n", &infoLog[0]);
-            logMsg("%s\n",_src.c_str());
+
+            // logMsg("\n>>\n%s\n",_src.c_str());
         }
         glDeleteShader(shader);
         return 0;

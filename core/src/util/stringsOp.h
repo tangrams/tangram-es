@@ -30,27 +30,49 @@ inline std::istream& operator>>(std::istream& is, glm::vec3& vec) {
 }
 
 //----------------------------------------  String operations
-// std::vector<std::string> splitString(const std::string &_source, const std::string &_delimiter = "", bool _ignoreEmpty = false) {
-//     std::vector<std::string> result;
-//     if (_delimiter.empty()) {
-//         result.push_back(_source);
-//         return result;
-//     }
-//     std::string::const_iterator substart = _source.begin(), subend;
-//     while (true) {
-//         subend = search(substart, _source.end(), _delimiter.begin(), _delimiter.end());
-//         std::string sub(substart, subend);
+std::vector<std::string> splitString(const std::string &_source, const std::string &_delimiter = "", bool _ignoreEmpty = false) {
+    std::vector<std::string> result;
+    if (_delimiter.empty()) {
+        result.push_back(_source);
+        return result;
+    }
+    std::string::const_iterator substart = _source.begin(), subend;
+    while (true) {
+        subend = search(substart, _source.end(), _delimiter.begin(), _delimiter.end());
+        std::string sub(substart, subend);
         
-//         if (!_ignoreEmpty || !sub.empty()) {
-//             result.push_back(sub);
-//         }
-//         if (subend == _source.end()) {
-//             break;
-//         }
-//         substart = subend + _delimiter.size();
-//     }
-//     return result;
-// }
+        if (!_ignoreEmpty || !sub.empty()) {
+            result.push_back(sub);
+        }
+        if (subend == _source.end()) {
+            break;
+        }
+        substart = subend + _delimiter.size();
+    }
+    return result;
+}
+
+static std::string getLine(int _lineNumber, const std::string& _source){
+    int index = 0;
+
+    std::string delimiter = "\n";
+    std::string::const_iterator substart = _source.begin(), subend;
+
+    std::string sub; 
+    while(subend != _source.end()){
+        subend = search(substart, _source.end(), delimiter.begin(), delimiter.end());
+        sub = std::string(substart, subend);
+
+        if (!sub.empty()) {
+            if(index == _lineNumber){
+                return sub;
+            }
+            index++;
+        }
+    }
+
+    return sub;
+}
 
 inline void stringPurifier( std::string &_s ){
     for ( std::string::iterator it = _s.begin(), itEnd = _s.end(); it!=itEnd; ++it){

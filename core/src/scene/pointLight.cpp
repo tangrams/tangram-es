@@ -6,7 +6,7 @@ void PointLight::setPosition(const glm::vec3 &_pos){
     m_position.x = _pos.x;
     m_position.y = _pos.y;
     m_position.z = _pos.z;
-    m_position.w = 0.0;
+    m_position.w = 1.0;
 }
 
 void PointLight::setupProgram( ShaderProgram &_shader ){

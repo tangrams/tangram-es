@@ -91,7 +91,7 @@ void Scene::injectLightning(){
             std::string dirLigths = "";
 
             for(int i = 0; i < m_directionalLights.size(); i++){
-                dirLigths += "calculateDirectionalLight(u_directionalLights["+getString(i)+"], _normal, amb, diff, spec);\n";
+                dirLigths += "calculateLight("+m_directionalLights[i]->getUniformName()+", eye, _ecPosition, _normal, amb, diff, spec);\n";
             }
 
             for(int i = 0; i < m_styles.size(); i++){
@@ -103,7 +103,7 @@ void Scene::injectLightning(){
             std::string pntLigths = "";
             
             for(int i = 0; i < m_pointLights.size(); i++){
-                pntLigths += "calculatePointLight(u_pointLights["+getString(i)+"], eye, _ecPosition, _normal, amb, diff, spec);\n";
+                pntLigths += "calculateLight("+m_pointLights[i]->getUniformName()+", eye, _ecPosition, _normal, amb, diff, spec);\n";
             }
 
             for(int i = 0; i < m_styles.size(); i++){
@@ -115,7 +115,7 @@ void Scene::injectLightning(){
             std::string sptLigths = "";
             
             for(int i = 0; i < m_spotLights.size(); i++){
-                sptLigths += "calculateSpotLight(u_spotLights["+getString(i)+"], eye, _ecPosition, _normal, amb, diff, spec);\n";
+                sptLigths += "calculateLight("+m_spotLights[i]->getUniformName()+", eye, _ecPosition, _normal, amb, diff, spec);\n";
             }
 
             for(int i = 0; i < m_styles.size(); i++){
