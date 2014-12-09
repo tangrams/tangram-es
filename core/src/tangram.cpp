@@ -2,12 +2,15 @@
 
 #include <memory>
 #include <utility>
+#include <cmath>
 
 #include "platform.h"
 #include "tile/tileManager.h"
 #include "view/view.h"
 #include "data/dataSource.h"
-#include "style/style.h"
+
+#include "style/polygonStyle.h"
+#include "style/polylineStyle.h"
 #include "scene/scene.h"
 #include "util/error.h"
 
@@ -40,12 +43,13 @@ void initialize() {
             "buildings",
             "water",
             "earth",
-            "landuse",
-            "roads"
+            "landuse"
         });
-        
         m_scene->addStyle(std::move(polyStyle));
         
+        std::unique_ptr<Style> linesStyle(new PolylineStyle("Polyline"));
+        linesStyle->addLayers({"roads"});
+        m_scene->addStyle(std::move(linesStyle));
     }
 
     // Create a tileManager
@@ -141,8 +145,9 @@ void handleDoubleTapGesture(float _posX, float _posY) {
 }
 
 void handlePanGesture(float _velX, float _velY) {
-    // TODO: Pan distance should be a function of zoom
-    m_view->translate(-_velX * 0.2, _velY * 0.2);
+    // Scaled with reference to 16 zoom level
+    float invZoomScale = 0.1 * pow(2,(16 - m_view->getZoom()));
+    m_view->translate(-_velX * invZoomScale, _velY * invZoomScale);
     logMsg("Pan Velocity: (%f,%f)\n", _velX, _velY);
 }
 
