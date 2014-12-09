@@ -133,9 +133,9 @@ void VboMesh::upload() {
         glBufferData(GL_ELEMENT_ARRAY_BUFFER, m_indices.size() * sizeof(GLushort), m_indices.data(), GL_STATIC_DRAW);
     }
 
-    // Release copies of geometry in CPU memory
-    m_vertexData.clear();
-    m_indices.clear();
+    // Retaining CPU buffers for now
+    //m_vertexData.clear();
+    //m_indices.clear();
 
     m_isUploaded = true;
 
@@ -184,9 +184,15 @@ void VboMesh::invalidateAllVBOs() {
     
     for (auto vbo : s_managedVBOs) {
         vbo->m_isUploaded = false;
-        vbo->m_nVertices = 0;
-        vbo->m_nIndices = 0;
-        // TODO: signal to re-build vertices!
+        
+        // Retaining CPU buffers for now
+        //vbo->m_nVertices = 0;
+        //vbo->m_nIndices = 0;
+
+        vbo->m_glVertexBuffer = 0;
+        vbo->m_glIndexBuffer = 0;
+
+        // TODO: re-build vertices!
     }
     
 }
