@@ -87,7 +87,6 @@ public class Tangram extends GLSurfaceView implements Renderer, OnScaleGestureLi
         
     }
     
-    
     // GLSurfaceView.Renderer methods
     // ==============================
 
