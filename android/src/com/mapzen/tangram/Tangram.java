@@ -45,7 +45,7 @@ public class Tangram extends GLSurfaceView implements Renderer, OnScaleGestureLi
     	
     	setEGLContextClientVersion(2);
     	setRenderer(this);
-    	setPreserveEGLContextOnPause(true);
+    	//setPreserveEGLContextOnPause(true);
     	
         this.assetManager = mainApp.getAssets();
         this.gestureDetector = new GestureDetector(mainApp, this);
