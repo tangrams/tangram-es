@@ -8,6 +8,9 @@
 #include "glm/glm.hpp"
 #include "util/shaderProgram.h"
 
+//  TODO:
+//          - RENAME this to Light
+//
 class AbstractLight {
 public:
     

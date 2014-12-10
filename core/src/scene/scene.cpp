@@ -54,6 +54,9 @@ void Scene::injectLightning(){
 
     bool isLights = false;
 
+    // TODO:    - Add Type to ABSTRACT_LIGHT 
+    //          - Add more encapsulation to do this on one single loop.
+    //  
     if(m_directionalLights.size() > 0){
         lights += m_directionalLights[0]->getTransform()+"\n";
         lights += "#define NUM_DIRECTIONAL_LIGHTS " + getString(m_directionalLights.size()) + "\n";

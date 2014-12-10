@@ -55,7 +55,7 @@ void initialize() {
     //  Directional
     std::unique_ptr<DirectionalLight> directionalLight(new DirectionalLight());
     directionalLight->setDirection(glm::vec3(-1.0, -1.0, 1.0));
-    // m_scene->addLight(std::move(directionalLight));
+    m_scene->addLight(std::move(directionalLight));
     
     //  Point
     std::unique_ptr<PointLight> pointLight(new PointLight());

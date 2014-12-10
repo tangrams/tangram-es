@@ -6,6 +6,10 @@ vec4 calculateLighting(in vec3 _ecPosition, in vec3 _normal) {
   vec4 diff = vec4(0.0);
   vec4 spec = vec4(0.0);
 
+//  TODO:
+//        - UNROLL single LOOP of LIGHTS
+//
+
 //  COMPUTE DIRECTIONAL LIGHTS
 #pragma tangram: directional_lights
 
