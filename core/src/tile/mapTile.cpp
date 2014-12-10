@@ -91,14 +91,8 @@ void MapTile::draw( Scene& _scene, const Style& _style, const View& _view){
         
         //  Pass need lights
         //
-        for (auto &directionalLight : _scene.getDirectionalLights()){
-            directionalLight->setupProgram(*shader);
-        }
-        for (auto &pointLight : _scene.getPointLights()){
-            pointLight->setupProgram(*shader);
-        }
-        for (auto &spotLight : _scene.getSpotLights()){
-            spotLight->setupProgram(*shader);
+        for (auto &light : _scene.getLights()){
+            light->setupProgram(*shader);
         }
         
         styleMesh->draw(shader);

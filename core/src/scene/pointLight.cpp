@@ -1,7 +1,8 @@
 #include "pointLight.h"
 
 PointLight::PointLight():m_position(0.0),m_constantAttenuation(0.0),m_linearAttenuation(0.0),m_quadraticAttenuation(0.0){
-
+    m_name = "pointLigth";
+    m_type = LIGHT_POINT;
 }
 
 PointLight::~PointLight(){
@@ -22,7 +23,7 @@ void PointLight::setAttenuation(float _constant, float _linear, float _quadratic
 }
 
 void PointLight::setupProgram( ShaderProgram &_shader ){
-    AbstractLight::setupProgram(_shader);
+    Light::setupProgram(_shader);
     _shader.setUniformf(getUniformName()+".position", glm::vec4(m_position) );
 
     if(m_constantAttenuation!=0.0){
@@ -38,7 +39,7 @@ void PointLight::setupProgram( ShaderProgram &_shader ){
     }
 }
 
-std::string PointLight::getTransform(){
+std::string PointLight::getBlock(){
     std::string defines = "\n";
 
     if(m_constantAttenuation!=0.0){

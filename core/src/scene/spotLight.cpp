@@ -1,6 +1,14 @@
 #include "spotLight.h"
 
-#define STRINGIFY(A) #A
+
+SpotLight::SpotLight():m_position(0.0),m_direction(1.0,0.0,0.0),m_spotExponent(0.0),m_spotCutoff(0.0),m_spotCosCutoff(0.0){
+    m_name = "spotLigth";
+    m_type = LIGHT_SPOT;
+}
+
+SpotLight::~SpotLight(){
+
+}
 
 void SpotLight::setPosition(const glm::vec3 &_pos){
     m_position.x = _pos.x;
@@ -20,7 +28,7 @@ void SpotLight::setCutOff(float _cutoff, float _exponent){
 }
 
 void SpotLight::setupProgram( ShaderProgram &_shader ){
-    AbstractLight::setupProgram(_shader);
+    Light::setupProgram(_shader);
     _shader.setUniformf(getUniformName()+".position", m_position);
     _shader.setUniformf(getUniformName()+".direction", m_direction);
     _shader.setUniformf(getUniformName()+".spotExponent", m_spotExponent);
@@ -28,7 +36,6 @@ void SpotLight::setupProgram( ShaderProgram &_shader ){
     _shader.setUniformf(getUniformName()+".spotCosCutoff", m_spotCosCutoff);
 }
 
-std::string SpotLight::getTransform(){
-    // return stringFromResource("modules/spot_light.glsl");
+std::string SpotLight::getBlock(){
     return stringFromResource("spot_light.glsl");
 }

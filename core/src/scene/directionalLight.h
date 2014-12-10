@@ -1,21 +1,16 @@
 #pragma once
 
-#include "abstractLight.h"
+#include "light.h"
 
-class DirectionalLight : public AbstractLight {
+class DirectionalLight : public Light {
 public:
     
-    void setDirection(const glm::vec3 &_dir);
+    DirectionalLight();
+    virtual ~DirectionalLight();
+
+    virtual void setDirection(const glm::vec3 &_dir);
     
-    //	TODO:
-    // 			- RETHINK name
-    //
-    // std::string getGLSLCode();
-    // std::string getPragmaCode();
-    // std::string getShaderBlock();
-    // std::string getShaderBlock();
-    //
-    virtual std::string getTransform();
+    static std::string getBlock();
     virtual void setupProgram( ShaderProgram &_program );
     
 protected:

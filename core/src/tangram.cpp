@@ -53,25 +53,28 @@ void initialize() {
     //
 
     //  Directional
-    std::unique_ptr<DirectionalLight> directionalLight(new DirectionalLight());
-    directionalLight->setDirection(glm::vec3(-1.0, -1.0, 1.0));
-    m_scene->addLight(std::move(directionalLight));
+    // DirectionalLight* dlight = new DirectionalLight();
+    // dlight->setDirection(glm::vec3(-1.0, -1.0, 1.0));
+    // std::unique_ptr<Light> directionLight(dlight);
+    // m_scene->addLight(std::move(directionalLight));
     
     //  Point
-    std::unique_ptr<PointLight> pointLight(new PointLight());
-    pointLight->setDiffuseColor(glm::vec4(0.0,1.0,0.0,1.0));
-    pointLight->setSpecularColor(glm::vec4(0.5,0.0,1.0,1.0));
-    pointLight->setAttenuation(0.0,0.01);
-    pointLight->setPosition(glm::vec3(0.0));
+    PointLight * pLight = new PointLight();
+    pLight->setDiffuseColor(glm::vec4(0.0,1.0,0.0,1.0));
+    pLight->setSpecularColor(glm::vec4(0.5,0.0,1.0,1.0));
+    pLight->setAttenuation(0.0,0.01);
+    pLight->setPosition(glm::vec3(0.0));
+    std::unique_ptr<Light> pointLight(pLight);
     m_scene->addLight(std::move(pointLight));
 
     //  Spot
-    std::unique_ptr<SpotLight> spotLight(new SpotLight());
-    spotLight->setSpecularColor(glm::vec4(0.5,0.5,0.0,1.0));
-    spotLight->setPosition(glm::vec3(0.0));
-    spotLight->setDirection(glm::vec3(0,PI*0.25,0.0));
-    spotLight->setCutOff(PI*0.51, 2.0);
-    //m_scene->addLight(std::move(spotLight));
+    // SpotLight * sLight = new SpotLight();
+    // sLight->setSpecularColor(glm::vec4(0.5,0.5,0.0,1.0));
+    // sLight->setPosition(glm::vec3(0.0));
+    // sLight->setDirection(glm::vec3(0,PI*0.25,0.0));
+    // sLight->setCutOff(PI*0.51, 2.0);
+    // std::unique_ptr<Light> spotLight(sLight);
+    // m_scene->addLight(std::move(spotLight));
 
     m_scene->injectLightning();
     //
@@ -125,20 +128,20 @@ void update(float _dt) {
 
     //------ TESTING LIGHTS
     //
-    float time = ((float)clock())/CLOCKS_PER_SEC;
-    if(m_scene->getDirectionalLights().size()){
-        m_scene->getDirectionalLights()[0]->setDirection(glm::vec3(time,time*0.5,time*0.25));
-    }
+    // float time = ((float)clock())/CLOCKS_PER_SEC;
+    // if(m_scene->getDirectionalLights().size()){
+    //     m_scene->getDirectionalLights()[0]->setDirection(glm::vec3(time,time*0.5,time*0.25));
+    // }
 
-    if(m_scene->getPointLights().size()){
-        m_scene->getPointLights()[0]->setPosition(glm::vec3(100*cos(time),
-                                                            100*sin(time), 
-                                                            -m_view->getPosition().z+100));
-    }
+    // if(m_scene->getPointLights().size()){
+    //     m_scene->getPointLights()[0]->setPosition(glm::vec3(100*cos(time),
+    //                                                         100*sin(time), 
+    //                                                         -m_view->getPosition().z+100));
+    // }
 
-    if(m_scene->getSpotLights().size()){
-        m_scene->getSpotLights()[0]->setDirection(glm::vec3(time,time*0.5,time*0.25));
-    }
+    // if(m_scene->getSpotLights().size()){
+    //     m_scene->getSpotLights()[0]->setDirection(glm::vec3(time,time*0.5,time*0.25));
+    // }
     //
     //-----------------------
 }

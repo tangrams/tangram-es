@@ -1,16 +1,19 @@
 #pragma once
 
-#include "abstractLight.h"
+#include "light.h"
 
-class SpotLight : public AbstractLight {
+class SpotLight : public Light {
 public:
     
+    SpotLight();
+    virtual ~SpotLight();
+
     void setPosition(const glm::vec3 &_pos);
     void setDirection(const glm::vec3 &_dir);
     
     void setCutOff(float _cutoff, float _exponent);
     
-    virtual std::string getTransform();
+    static  std::string getBlock();
     virtual void setupProgram( ShaderProgram &_program );
     
 protected:

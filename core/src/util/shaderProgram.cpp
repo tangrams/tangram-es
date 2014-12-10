@@ -112,6 +112,20 @@ bool ShaderProgram::replace(std::string& _glslToParse, const std::string& _tagNa
     return bFound; 
 }
 
+// each ShaderProgram instance has a map of <string, vector<string>> pairs
+// the string identifies the tag to replace, the vector is a list of strings of GLSL to inject
+// the ShaderProgram class also has a static map of <string, vector<string>> pairs, that are injected in ALL program instances
+// class-level blocks are injected before instance-level blocks
+
+// addBlock(string tagName, string glslSource) {
+//     blocks[tagName].push(glslSource);
+// }
+
+// build() {
+//     injectSource
+//     buildFromSourceStrings(...)   
+// }
+
 bool ShaderProgram::replaceAndRebuild(const std::string& _tagName, const std::string& _glslSourceCode){
 
     // TODO: - do some pre-checking
@@ -227,7 +241,7 @@ GLuint ShaderProgram::makeCompiledShader(const std::string& _src, GLenum _type) 
             std::vector<GLchar> infoLog(infoLength);
             glGetShaderInfoLog(shader, infoLength, NULL, &infoLog[0]);
             logMsg("Error compiling shader:\n%s\n", &infoLog[0]);
-            // logMsg("\n> Error ----------------------->>\n%s\n",_src.c_str());
+            logMsg("\n> Error ----------------------->>\n%s\n",_src.c_str());
         }
         glDeleteShader(shader);
         return 0;
