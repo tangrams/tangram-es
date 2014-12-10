@@ -1,12 +1,15 @@
 #include "shaderProgram.h"
 
-GLint ShaderProgram::s_activeGlProgram = 0;
+GLuint ShaderProgram::s_activeGlProgram = 0;
+std::unordered_set<ShaderProgram*> ShaderProgram::s_managedPrograms;
 
 ShaderProgram::ShaderProgram() {
 
     m_glProgram = 0;
     m_glFragmentShader = 0;
     m_glVertexShader = 0;
+    
+    addManagedProgram(this);
 
 }
 
@@ -25,6 +28,8 @@ ShaderProgram::~ShaderProgram() {
     }
 
     m_attribMap.clear();
+    
+    removeManagedProgram(this);
 
 }
 
@@ -48,7 +53,7 @@ const GLint ShaderProgram::getUniformLocation(const std::string& _uniformName) {
     // Get uniform location at this key, or create one valued at -2 if absent
     GLint& location = m_uniformMap[_uniformName].loc;
 
-    // Zero means this is a new entry
+    // -2 means this is a new entry
     if (location == -2) {
         // Get the actual location from OpenGL
         location = glGetUniformLocation(m_glProgram, _uniformName.c_str());
@@ -61,9 +66,12 @@ const GLint ShaderProgram::getUniformLocation(const std::string& _uniformName) {
 void ShaderProgram::use() const {
 
     if (m_glProgram != 0 && m_glProgram != s_activeGlProgram) {
+
         glUseProgram(m_glProgram);
         s_activeGlProgram = m_glProgram;
+
     }
+
 }
 
 bool ShaderProgram::buildFromSourceStrings(const std::string& _fragSrc, const std::string& _vertSrc) {
@@ -99,6 +107,8 @@ bool ShaderProgram::buildFromSourceStrings(const std::string& _fragSrc, const st
         glUseProgram(0);
         s_activeGlProgram = 0;
     }
+
+    // Delete handles for old shaders and program; values of 0 are silently ignored
 
     glDeleteShader(m_glFragmentShader);
     glDeleteShader(m_glVertexShader);
@@ -171,6 +181,36 @@ GLuint ShaderProgram::makeCompiledShader(const std::string& _src, GLenum _type) 
 
     return shader;
 
+}
+
+void ShaderProgram::addManagedProgram(ShaderProgram* _program) {
+    
+    s_managedPrograms.insert(_program);
+    
+}
+
+void ShaderProgram::removeManagedProgram(ShaderProgram* _program) {
+    
+    s_managedPrograms.erase(_program);
+    
+}
+
+void ShaderProgram::invalidateAllPrograms() {
+    
+    s_activeGlProgram = 0;
+    
+    for (auto prog : s_managedPrograms) {
+        
+        // Set all OpenGL handles to invalidated values
+        prog->m_glFragmentShader = 0;
+        prog->m_glVertexShader = 0;
+        prog->m_glProgram = 0;
+
+        // Generate new handles by recompiling from saved source strings
+        prog->buildFromSourceStrings(prog->m_fragmentShaderSource, prog->m_vertexShaderSource);
+        
+    }
+    
 }
 
 void ShaderProgram::setUniformi(const std::string& _name, int _value) {

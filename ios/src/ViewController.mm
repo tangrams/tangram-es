@@ -147,6 +147,11 @@
     Tangram::teardown();
 }
 
+- (void)viewWillTransitionToSize:(CGSize)size withTransitionCoordinator:(id<UIViewControllerTransitionCoordinator>)coordinator
+{
+    Tangram::resize(size.width, size.height);
+}
+
 #pragma mark - GLKView and GLKViewController delegate methods
 
 - (void)update

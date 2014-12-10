@@ -67,7 +67,7 @@ void PolylineStyle::buildLine(Line& _line, std::string& _layer, Properties& _pro
     
     Builders::buildScalablePolyLine(_line, points, scalingVecs, indices, texcoords);
     
-    for (int i = 0; i < points.size(); i++) {
+    for (size_t i = 0; i < points.size(); i++) {
         glm::vec3 p = points[i];
         glm::vec2 uv = texcoords[i];
         glm::vec2 en = scalingVecs[i];
