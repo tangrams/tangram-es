@@ -35,6 +35,9 @@ VboMesh::~VboMesh() {
     glDeleteBuffers(1, &m_glVertexBuffer);
     glDeleteBuffers(1, &m_glIndexBuffer);
     
+    m_vertexData.clear();
+    m_indices.clear();
+    
     removeManagedVBO(this);
 
 }
@@ -183,16 +186,22 @@ void VboMesh::removeManagedVBO(VboMesh* _vbo) {
 void VboMesh::invalidateAllVBOs() {
     
     for (auto vbo : s_managedVBOs) {
-        vbo->m_isUploaded = false;
         
-        // Retaining CPU buffers for now
-        //vbo->m_nVertices = 0;
-        //vbo->m_nIndices = 0;
+        // Only uploaded buffers need to be invalidated
+        if (vbo->m_isUploaded) {
+            
+            vbo->m_isUploaded = false;
+            
+            vbo->m_glVertexBuffer = 0;
+            vbo->m_glIndexBuffer = 0;
+        }
+        
 
-        vbo->m_glVertexBuffer = 0;
-        vbo->m_glIndexBuffer = 0;
-
-        // TODO: re-build vertices!
+        // TODO: For now, we retain copies of the vertex and index data in CPU memory to allow VBOs
+        // to easily rebuild themselves after GL context loss. For optimizing memory usage (and for
+        // other reasons) we'll want to change this in the future. This probably means going back to
+        // data sources and styles to rebuild the vertex data.
+        
     }
     
 }
