@@ -2,6 +2,7 @@
 
 #include <vector>
 #include <memory>
+#include <unordered_set>
 
 #include "gl.h"
 #include "vertexLayout.h"
@@ -74,9 +75,17 @@ public:
      * been uploaded it will be uploaded at this point
      */
     void draw(const std::shared_ptr<ShaderProgram> _shader);
+    
+    static void addManagedVBO(VboMesh* _vbo);
+    
+    static void removeManagedVBO(VboMesh* _vbo);
+    
+    static void invalidateAllVBOs();
 
 private:
 
+    static std::unordered_set<VboMesh*> s_managedVBOs;
+    
     std::shared_ptr<VertexLayout> m_vertexLayout;
     
     std::vector<GLbyte> m_vertexData; // Raw interleaved vertex data in the format specified by the vertex layout
