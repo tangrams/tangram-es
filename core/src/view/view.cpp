@@ -86,6 +86,7 @@ void View::setZoom(int _z) {
     m_pos.z = m_height * 0.5 / tan(fovy * 0.5);
     
     // set near clipping distance as a function of camera z
+    // TODO: this is a simple heuristic that deserves more thought
     double near = m_pos.z / 50.0;
     
     // update view and projection matrices
