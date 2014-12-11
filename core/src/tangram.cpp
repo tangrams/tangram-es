@@ -56,29 +56,29 @@ void initialize() {
         //------ TESTING LIGHTS
 
         //  Directional
-        // DirectionalLight* dlight = new DirectionalLight();
-        // dlight->setDirection(glm::vec3(-1.0, -1.0, 1.0));
-        // std::unique_ptr<Light> directionLight(dlight);
-        // m_scene->addLight(std::move(directionalLight));
+        DirectionalLight* dlight = new DirectionalLight();
+        dlight->setDirection(glm::vec3(-1.0, -1.0, 1.0));
+        std::shared_ptr<Light> directionalLight(dlight);
+        m_scene->addLight(directionalLight);
     
         //  Point
-        PointLight * pLight = new PointLight();
-        pLight->setDiffuseColor(glm::vec4(0.0,1.0,0.0,1.0));
-        pLight->setSpecularColor(glm::vec4(0.5,0.0,1.0,1.0));
-        pLight->setAttenuation(0.0,0.01);
-        pLight->setPosition(glm::vec3(0.0));
-        std::shared_ptr<Light> pointLight(pLight);
-        m_scene->addLight(pointLight);
+        // PointLight * pLight = new PointLight();
+        // pLight->setDiffuseColor(glm::vec4(0.0,1.0,0.0,1.0));
+        // pLight->setSpecularColor(glm::vec4(0.5,0.0,1.0,1.0));
+        // pLight->setAttenuation(0.0,0.01);
+        // pLight->setPosition(glm::vec3(0.0));
+        // std::shared_ptr<Light> pointLight(pLight);
+        // m_scene->addLight(pointLight);
 
-        //  Spot
-        SpotLight * sLight = new SpotLight();
-        sLight->setSpecularColor(glm::vec4(0.5,0.5,0.0,1.0));
-        sLight->setPosition(glm::vec3(0.0));
-        sLight->setDirection(glm::vec3(0,PI*0.25,0.0));
-        sLight->setCutOff(PI*0.1, 0.2);
-        sLight->setAttenuation(0.0,0.02);
-        std::unique_ptr<Light> spotLight(sLight);
-        m_scene->addLight(std::move(spotLight));
+        // //  Spot
+        // SpotLight * sLight = new SpotLight();
+        // sLight->setSpecularColor(glm::vec4(0.5,0.5,0.0,1.0));
+        // sLight->setPosition(glm::vec3(0.0));
+        // sLight->setDirection(glm::vec3(0,PI*0.25,0.0));
+        // sLight->setCutOff(PI*0.1, 0.2);
+        // sLight->setAttenuation(0.0,0.02);
+        // std::unique_ptr<Light> spotLight(sLight);
+        // m_scene->addLight(std::move(spotLight));
         
         //-----------------------
 
@@ -142,7 +142,12 @@ void update(float _dt) {
         float time = ((float)clock())/CLOCKS_PER_SEC;
         for(int i = 0 ; i < m_scene->getLights().size(); i++){
 
-            if(m_scene->getLights()[i]->getType() == LIGHT_POINT){
+            if(m_scene->getLights()[i]->getType() == LIGHT_DIRECTIONAL){
+                DirectionalLight* tmp = dynamic_cast<DirectionalLight*>( (m_scene->getLights()[i]).get() );
+                tmp->setDirection(glm::vec3(cos(time),
+                                            sin(time), 
+                                            1.0));
+            } else if(m_scene->getLights()[i]->getType() == LIGHT_POINT){
                 PointLight* tmp = dynamic_cast<PointLight*>( (m_scene->getLights()[i]).get() );
                 tmp->setPosition(glm::vec3( 100*cos(time),
                                             100*sin(time), 

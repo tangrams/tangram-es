@@ -18,7 +18,7 @@ void Scene::addStyle(std::unique_ptr<Style> _style) {
 void Scene::addLight(std::shared_ptr<Light> _light){
     
     if( _light->getType() == LIGHT_DIRECTIONAL &&   //  If is DIRECTIONAL and
-        _light->getName() == "directionaLight"){    //  have the default name, can be set to be add to the array.
+        _light->getName() == "directionalLight"){    //  have the default name, can be set to be add to the array.
         _light->setIndexPos(m_directionaLightCounter);
         m_directionaLightCounter++;
     } else if( _light->getType() == LIGHT_POINT &&  //  If is POINT and

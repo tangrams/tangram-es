@@ -21,7 +21,7 @@ float nDotVP =  max(0.0,dot(_normal,normalize(vec3(_light.direction))));
     float pf = 0.0;
     if (nDotVP != 0.0){
     	vec3 halfVector = normalize(vec3(_light.direction) + _eye);
-		float nDotHV = max(0.0, dot(_normal, halfVector));
+		float nDotHV = min(max(0.0, dot(_normal, halfVector)),1.0);
     	pf = pow(nDotHV, u_material.shininess);
     }
     _specular   += _light.specular * pf;

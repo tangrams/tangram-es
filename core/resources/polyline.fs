@@ -6,8 +6,8 @@ uniform mat4 u_modelView;
 uniform mat4 u_modelViewProj;
 uniform float u_time;
 
-#pragma tangram: material
-#pragma tangram: lighting
+// #pragma tangram: material
+// #pragma tangram: lighting
 
 varying vec4 v_pos;
 varying vec4 v_color;
@@ -32,8 +32,7 @@ void main(void) {
     
     darken = clamp(darken, 0.5, 1.0); // reduce color values by 1/2 in darkened fragments
     
-
-    color *= calculateLighting(v_ecPosition,v_normal);
+    // color *= calculateLighting(v_ecPosition,v_normal);
 
   	gl_FragColor = color * darken;
 	gl_FragColor.a = 1.0;    
