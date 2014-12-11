@@ -139,8 +139,15 @@ void View::updateMatrices() {
     m_height = (float)m_vpHeight * worldTileSize / screenTileSize;
     m_width = m_height * m_aspect;
     
-    // set vertical field-of-view to 90 deg
+    // set vertical field-of-view
     double fovy = PI * 0.5;
+    
+    // we assume portrait orientation by default, so in landscape
+    // mode we scale the vertical FOV such that the wider dimension
+    // gets the intended FOV
+    if (m_width > m_height) {
+        fovy /= m_aspect;
+    }
     
     // set camera z to produce desired viewable area
     m_pos.z = m_height * 0.5 / tan(fovy * 0.5);
