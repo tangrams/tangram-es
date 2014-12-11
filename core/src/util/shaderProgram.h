@@ -52,15 +52,6 @@ public:
      */
     const GLint getUniformLocation(const std::string& _uniformName);
 
-    /* Compile and link a shader program
-     * 
-     * Attempts to compile a fragment shader and vertex shader from strings representing the 
-     * source code for each, then links them into a complete program; if compiling or linking 
-     * fails it prints the compiler log, returns false, and keeps the program's previous state; 
-     * if successful it returns true
-     */
-    bool buildFromSourceStrings(const std::string& _fragSrc, const std::string& _vertSrc);
-
     // TODO: Once we have file system abstractions, provide a method to build a program from file names
 
     /* 
@@ -85,6 +76,10 @@ public:
     void setUniformf(const std::string& _name, float _value0, float _value1);
     void setUniformf(const std::string& _name, float _value0, float _value1, float _value2);
     void setUniformf(const std::string& _name, float _value0, float _value1, float _value2, float _value3);
+
+    void setUniformf(const std::string& _name, glm::vec2 _value){setUniformf(_name,_value.x,_value.y);}
+    void setUniformf(const std::string& _name, glm::vec3 _value){setUniformf(_name,_value.x,_value.y,_value.z);}
+    void setUniformf(const std::string& _name, glm::vec4 _value){setUniformf(_name,_value.x,_value.y,_value.z,_value.w);}
 
     /* 
      * Ensures the program is bound and then sets the named uniform to the values
@@ -132,7 +127,6 @@ private:
      * program's previous state; if successful it returns true.
      */
     bool buildFromSourceStrings(const std::string& _fragSrc, const std::string& _vertSrc);
-    static GLuint s_activeGlProgram;
     
     static std::unordered_set<ShaderProgram*> s_managedPrograms;
 
@@ -144,7 +138,7 @@ private:
     std::string m_fragmentShaderSource;
     std::string m_vertexShaderSource;
 
-    static GLint s_activeGlProgram;
+    static GLuint s_activeGlProgram;
 
     GLuint m_glProgram;
     GLuint m_glFragmentShader;
