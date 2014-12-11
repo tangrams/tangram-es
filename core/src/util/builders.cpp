@@ -91,7 +91,7 @@ void Builders::buildPolygonExtrusion(const Polygon& _polygon, const float& _minH
     
     for(auto& line : _polygon) {
         
-        for(int i = 0; i < line.size() - 1; i++) {
+        for(size_t i = 0; i < line.size() - 1; i++) {
             
             normalVector = glm::cross(upVector, (line[i+1] - line[i]));
             normalVector = glm::normalize(normalVector);
@@ -177,7 +177,7 @@ void buildGeneralPolyLine(const Line& _line, float _halfWidth, std::vector<glm::
     }
     
     // Loop over intermediate points in the polyline
-    for (int i = 1; i < _line.size() - 1; i++) {
+    for (size_t i = 1; i < _line.size() - 1; i++) {
         prevCoord = currCoord;
         currCoord = nextCoord;
         nextCoord = _line[i+1];
@@ -227,7 +227,7 @@ void buildGeneralPolyLine(const Line& _line, float _halfWidth, std::vector<glm::
         _texCoordOut.push_back(glm::vec2(0.0,1.0));
     }
     
-    for (int i = 0; i < _line.size() - 1; i++) {
+    for (size_t i = 0; i < _line.size() - 1; i++) {
         _indicesOut.push_back(vertexDataOffset + 2*i+2);
         _indicesOut.push_back(vertexDataOffset + 2*i+1);
         _indicesOut.push_back(vertexDataOffset + 2*i);

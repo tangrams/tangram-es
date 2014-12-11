@@ -3,6 +3,8 @@
 
 #define MAX_INDEX_VALUE 65535 // Maximum value of GLushort
 
+std::unordered_set<VboMesh*> VboMesh::s_managedVBOs;
+
 VboMesh::VboMesh(std::shared_ptr<VertexLayout> _vertexLayout, GLenum _drawMode) : m_vertexLayout(_vertexLayout) {
 
     m_glVertexBuffer = 0;
@@ -13,6 +15,8 @@ VboMesh::VboMesh(std::shared_ptr<VertexLayout> _vertexLayout, GLenum _drawMode) 
     m_isUploaded = false;
 
     setDrawMode(_drawMode);
+    
+    addManagedVBO(this);
 }
 
 VboMesh::VboMesh() {
@@ -22,12 +26,19 @@ VboMesh::VboMesh() {
     m_nIndices = 0;
 
     m_isUploaded = false;
+    
+    addManagedVBO(this);
 }
 
 VboMesh::~VboMesh() {
 
     glDeleteBuffers(1, &m_glVertexBuffer);
     glDeleteBuffers(1, &m_glIndexBuffer);
+    
+    m_vertexData.clear();
+    m_indices.clear();
+    
+    removeManagedVBO(this);
 
 }
 
@@ -125,9 +136,9 @@ void VboMesh::upload() {
         glBufferData(GL_ELEMENT_ARRAY_BUFFER, m_indices.size() * sizeof(GLushort), m_indices.data(), GL_STATIC_DRAW);
     }
 
-    // Release copies of geometry in CPU memory
-    m_vertexData.clear();
-    m_indices.clear();
+    // Retaining CPU buffers for now
+    //m_vertexData.clear();
+    //m_indices.clear();
 
     m_isUploaded = true;
 
@@ -162,4 +173,35 @@ void VboMesh::draw(const std::shared_ptr<ShaderProgram> _shader) {
         glDrawArrays(m_drawMode, 0, m_nVertices);
     }
 
+}
+
+void VboMesh::addManagedVBO(VboMesh* _vbo) {
+    s_managedVBOs.insert(_vbo);
+}
+
+void VboMesh::removeManagedVBO(VboMesh* _vbo) {
+    s_managedVBOs.erase(_vbo);
+}
+
+void VboMesh::invalidateAllVBOs() {
+    
+    for (auto vbo : s_managedVBOs) {
+        
+        // Only uploaded buffers need to be invalidated
+        if (vbo->m_isUploaded) {
+            
+            vbo->m_isUploaded = false;
+            
+            vbo->m_glVertexBuffer = 0;
+            vbo->m_glIndexBuffer = 0;
+        }
+        
+
+        // TODO: For now, we retain copies of the vertex and index data in CPU memory to allow VBOs
+        // to easily rebuild themselves after GL context loss. For optimizing memory usage (and for
+        // other reasons) we'll want to change this in the future. This probably means going back to
+        // data sources and styles to rebuild the vertex data.
+        
+    }
+    
 }
