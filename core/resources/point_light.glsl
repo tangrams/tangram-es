@@ -5,22 +5,31 @@ struct PointLight {
    	vec4 position;
 
 #ifdef POINTLIGHT_CONSTANT_ATTENUATION
-#define POINTLIGHT_ATTENUATION
+    #define POINTLIGHT_ATTENUATION
     float constantAttenuation;
 #endif
 
 #ifdef POINTLIGHT_LINEAR_ATTENUATION
+
 #ifndef POINTLIGHT_ATTENUATION
-#define POINTLIGHT_ATTENUATION
+    #define POINTLIGHT_ATTENUATION
 #endif
+
+    #define POINTLIGHT_DISTANCE
     float linearAttenuation;
 #endif
 
 
 #ifdef POINTLIGHT_QUADRATIC_ATTENUATION
+
 #ifndef POINTLIGHT_ATTENUATION
-#define POINTLIGHT_ATTENUATION
+    #define POINTLIGHT_ATTENUATION
 #endif
+
+#ifndef POINTLIGHT_DISTANCE
+    #define POINTLIGHT_DISTANCE
+#endif
+
     float quadraticAttenuation;
 #endif
 };
@@ -30,7 +39,7 @@ void calculateLight(in PointLight _light, in vec3 _eye, in vec3 _ecPosition3, in
     // Compute vector from surface to light position
     vec3 VP = vec3(_light.position) - _ecPosition3;
 
-    #ifdef POINTLIGHT_LINEAR_ATTENUATION || POINTLIGHT_QUADRATIC_ATTENUATION
+    #ifdef POINTLIGHT_DISTANCE
     float dist = length(VP);
     #endif 
 
