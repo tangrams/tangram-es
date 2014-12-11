@@ -39,11 +39,7 @@ void PointLight::setupProgram( ShaderProgram &_shader ){
     }
 }
 
-std::string PointLight::getClassBlock(){
-    return stringFromResource("point_light.glsl");
-}
-
-std::string PointLight::getBlock(){
+std::string PointLight::getDefinesBlock(){
     std::string defines = "\n";
 
     if(m_constantAttenuation!=0.0){
@@ -57,6 +53,13 @@ std::string PointLight::getBlock(){
     if(m_quadraticAttenuation!=0.0){
         defines += "#define POINTLIGHT_QUADRATIC_ATTENUATION\n";
     }
+    return defines;
+}
 
-    return defines + getClassBlock() + "\n";
+std::string PointLight::getClassBlock(){
+    return stringFromResource("point_light.glsl");
+}
+
+std::string PointLight::getBlock(){
+    return getDefinesBlock() + "\n" + getClassBlock() + "\n";
 }

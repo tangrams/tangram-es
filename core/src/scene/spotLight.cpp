@@ -36,10 +36,16 @@ void SpotLight::setupProgram( ShaderProgram &_shader ){
     _shader.setUniformf(getUniformName()+".spotCosCutoff", m_spotCosCutoff);
 }
 
+std::string SpotLight::getDefinesBlock(){
+    return "";
+}
+
 std::string SpotLight::getClassBlock(){
     return stringFromResource("spot_light.glsl");
 }
 
 std::string SpotLight::getBlock(){
-    return getClassBlock() + "\n";
+    return getDefinesBlock() + "\n" + getClassBlock() + "\n";
 }
+
+

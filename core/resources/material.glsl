@@ -1,6 +1,7 @@
 //	TODO:
 //			- Material should be injected as global
 //
+
 struct Material {
 #ifdef MATERIAL_EMISSION
 	vec4 emission;
@@ -20,7 +21,7 @@ struct Material {
 #endif
 };
 
-uniform Material u_material
+uniform Material u_material;
 
 //
 //	BRAIN-STORIMING Posible???

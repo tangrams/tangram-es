@@ -27,7 +27,7 @@ public:
 
     /*  Once all lights are added to the scene this methods inject the glsl code for them 
     *   as long the have a "#pragma tangram: lighting" reference on the .vs and .fs shaders */
-    void injectLightning();
+    void buildShaders();
 
 private:
 

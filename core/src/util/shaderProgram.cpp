@@ -29,6 +29,15 @@ ShaderProgram::~ShaderProgram() {
 
 }
 
+void ShaderProgram::loadSourceStrings(const std::string& _fragSrc, const std::string& _vertSrc){
+    m_fragmentShaderSource = std::string(_fragSrc);
+    m_vertexShaderSource = std::string(_vertSrc);
+}
+
+void ShaderProgram::addBlock(const std::string& _tagName, const std::string &_glslSource){
+    m_blocks[_tagName].push_back(_glslSource);
+}
+
 const GLint ShaderProgram::getAttribLocation(const std::string& _attribName) {
 
     // Get uniform location at this key, or create one valued at -2 if absent
@@ -67,31 +76,7 @@ void ShaderProgram::use() const {
     }
 }
 
-//  This should be on the common string operations functions
-//
-// std::vector<std::string> splitString(const std::string &_source, const std::string &_delimiter = "", bool _ignoreEmpty = false) {
-//     std::vector<std::string> result;
-//     if (_delimiter.empty()) {
-//         result.push_back(_source);
-//         return result;
-//     }
-//     std::string::const_iterator substart = _source.begin(), subend;
-//     while (true) {
-//         subend = search(substart, _source.end(), _delimiter.begin(), _delimiter.end());
-//         std::string sub(substart, subend);
-        
-//         if (!_ignoreEmpty || !sub.empty()) {
-//             result.push_back(sub);
-//         }
-//         if (subend == _source.end()) {
-//             break;
-//         }
-//         substart = subend + _delimiter.size();
-//     }
-//     return result;
-// }
-
-bool ShaderProgram::replace(std::string& _glslToParse, const std::string& _tagNameToSearch, const std::string& _glslToInject){
+bool replace(std::string& _glslToParse, const std::string& _tagNameToSearch, const std::string& _glslToInject){
 
     std::string parsedString = "";
     std::vector<std::string> lines = splitString(_glslToParse, "\n");
@@ -112,40 +97,24 @@ bool ShaderProgram::replace(std::string& _glslToParse, const std::string& _tagNa
     return bFound; 
 }
 
-// each ShaderProgram instance has a map of <string, vector<string>> pairs
-// the string identifies the tag to replace, the vector is a list of strings of GLSL to inject
-// the ShaderProgram class also has a static map of <string, vector<string>> pairs, that are injected in ALL program instances
-// class-level blocks are injected before instance-level blocks
+bool ShaderProgram::build(){
 
-// addBlock(string tagName, string glslSource) {
-//     blocks[tagName].push(glslSource);
-// }
+    for (auto& block: m_blocks) {
+        for(int i = 0; i < block.second.size(); i++){
+            if(!replace(m_fragmentShaderSource,block.first,block.second[i])){
+//                logMsg("Tag: %s, not found\n", block.first);
+            }
+            if(!replace(m_vertexShaderSource,block.first,block.second[i])){
+//                logMsg("Tag: %s, not found\n", block.first);
+            }
+        }
+    }  
 
-// build() {
-//     injectSource
-//     buildFromSourceStrings(...)   
-// }
-
-bool ShaderProgram::replaceAndRebuild(const std::string& _tagName, const std::string& _glslSourceCode){
-
-    // TODO: - do some pre-checking
-
-    bool foundOnFrag = replace(m_fragmentShaderSource,_tagName,_glslSourceCode);
-    bool foundOnVert = replace(m_vertexShaderSource,_tagName,_glslSourceCode);
-
-    buildFromSourceStrings(m_fragmentShaderSource,m_vertexShaderSource);    
-
-    return foundOnFrag || foundOnVert;
+    return buildFromSourceStrings(m_fragmentShaderSource,m_vertexShaderSource);
 }
 
 bool ShaderProgram::buildFromSourceStrings(const std::string& _fragSrc, const std::string& _vertSrc) {
     
-    //  Moving this up in order to compose the GLSL code regardles compiles or not
-    //  TODO: find a better way to do this
-    //
-    m_fragmentShaderSource = std::string(_fragSrc);
-    m_vertexShaderSource = std::string(_vertSrc);
-
     // Try to compile vertex and fragment shaders, releasing resources and quiting on failure
 
     GLint vertexShader = makeCompiledShader(_vertSrc, GL_VERTEX_SHADER);
@@ -188,8 +157,8 @@ bool ShaderProgram::buildFromSourceStrings(const std::string& _fragSrc, const st
 
     // Make copies of the shader source code inputs, for this program to keep
 
-    // m_fragmentShaderSource = std::string(_fragSrc);
-    // m_vertexShaderSource = std::string(_vertSrc);
+    m_fragmentShaderSource = std::string(_fragSrc);
+    m_vertexShaderSource = std::string(_vertSrc);
 
     // Clear any cached shader locations
 

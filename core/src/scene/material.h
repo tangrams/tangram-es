@@ -54,8 +54,14 @@ public:
     /* Enable or disableing color properties require reloading the shader */
     void disableSpecular();
 
-    /* Inspired on Brett's webGL implementations get the glsl code to inject to define a Materials */
-    std::string getTransform();
+    /* Get defines that need to be injected on top of the shader */
+    virtual std::string getDefinesBlock();
+
+    /* Get the GLSL struct and classes need to be injected */
+    static std::string getClassBlock();
+
+    /* Inject both the defines and struct and classes need to be injected on the GLSL shaders */
+    virtual std::string getBlock();
 
     /* Method to pass it self as a uniform to the shader program */
     void        setupProgram( ShaderProgram &_shader );

@@ -43,8 +43,10 @@ public:
     /* Get the uniform name of the light */
     virtual std::string getUniformName();
 
-    /*  This method is inspired on the webgl version.
-    *   Once we have a better shader injection system we can ask for the code for a specifict light */
+    /*  GLSL Defines list need to be injected on the shaders */
+    virtual std::string getDefinesBlock() = 0;
+
+    /*  GLSL Defines and code block (struct and classes) that need to be injected per instance on the shaders*/
     virtual std::string getBlock() = 0;
 
     /*  This method is inspired on the webgl version.

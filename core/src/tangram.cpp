@@ -76,7 +76,7 @@ void initialize() {
     // std::unique_ptr<Light> spotLight(sLight);
     // m_scene->addLight(std::move(spotLight));
 
-    m_scene->injectLightning();
+    m_scene->buildShaders();
     //
     //-----------------------
 

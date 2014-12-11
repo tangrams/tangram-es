@@ -50,7 +50,7 @@ void Material::disableDiffuse(){ m_bDiffuse = false; };
 void Material::enableSpecular(){ m_bSpecular = true; };
 void Material::disableSpecular(){ m_bSpecular = false; };
 
-std::string Material::getTransform(){
+std::string Material::getDefinesBlock(){
 	std::string defines = "\n";
 
 	if(m_bEmission){
@@ -68,8 +68,16 @@ std::string Material::getTransform(){
     if(m_bSpecular){
     	defines += "#define MATERIAL_SPECULAR\n";
     }
+    
+    return defines;
+}
 
-    return defines + stringFromResource("material.glsl") + "\n";
+std::string Material::getClassBlock(){
+	return stringFromResource("material.glsl");
+}
+
+std::string Material::getBlock(){
+    return getDefinesBlock() + "\n" + getClassBlock() + "\n";
 }
 
 void Material::setupProgram(ShaderProgram &_shader){

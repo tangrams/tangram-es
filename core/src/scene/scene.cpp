@@ -36,14 +36,13 @@ void Scene::addLight(std::unique_ptr<Light> _light){
     m_lights.push_back(std::move(_light));
 }
 
-void Scene::injectLightning(){
+void Scene::buildShaders(){
     std::string lightsBlock = "";
-
-    bool isLights = false;
 
     // TODO:    
     //          - What happen if the light is not in the array? the block need to be add with 
     //          - Add #ifndef to the blocks in order to avoid collisions between in/out array lights
+    
     if(m_directionaLightCounter > 0){
         lightsBlock += DirectionalLight::getClassBlock()+"\n";
         lightsBlock += "#define NUM_DIRECTIONAL_LIGHTS " + getString(m_directionaLightCounter) + "\n";
@@ -67,11 +66,8 @@ void Scene::injectLightning(){
 
     //  Inject the light block
     for(int i = 0; i < m_styles.size(); i++){
-        m_styles[i]->getShaderProgram()->replaceAndRebuild("lighting",lightsBlock);
+        m_styles[i]->getShaderProgram()->addBlock("lighting",lightsBlock);
     }
-
-    // TODO:    
-    //          - improve injection system for not recompiling and replacing
 
     //  UNROLLED LOOP
     //
@@ -87,7 +83,11 @@ void Scene::injectLightning(){
         }
 
         for(int i = 0; i < m_styles.size(); i++){
-            m_styles[i]->getShaderProgram()->replaceAndRebuild("lights_calcualate_list",ligthsListBlock);
+            m_styles[i]->getShaderProgram()->addBlock("lights_calcualate_list",ligthsListBlock);
         }
+    }
+
+    for(int i = 0; i < m_styles.size(); i++){
+        m_styles[i]->getShaderProgram()->build();
     }
 }

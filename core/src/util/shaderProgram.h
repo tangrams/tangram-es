@@ -5,20 +5,36 @@
 #include "error.h"
 #include <string>
 #include <vector>
+#include <map>
 #include <unordered_map>
 
 #include "glm/glm.hpp"
+
+// TODO:
+// each ShaderProgram instance has a map of <string, vector<string>> pairs
+// the string identifies the tag to replace, the vector is a list of strings of GLSL to inject
+// the ShaderProgram class also has a static map of <string, vector<string>> pairs, that are injected in ALL program instances
+// class-level blocks are injected before instance-level blocks
 
 /*
  * ShaderProgram - utility class representing an OpenGL shader program
  */
 
 class ShaderProgram {
-
 public:
 
     ShaderProgram();
     virtual ~ShaderProgram();
+
+    /*  Load the string code for fragment and vertex shaders*/
+    void loadSourceStrings(const std::string& _fragSrc, const std::string& _vertSrc);
+
+    /*  Add a key to replace every "#prama tangram: [tagName]" for the strings added */
+    void addBlock(const std::string& _tagName, const std::string& _glslSource);
+
+    /*  Parser throught vert and frag shader replacing every "#prama tangram: [tagName]" 
+    * using the m_blocks key and strings */
+    bool build();
 
     /* Getters */
     const GLuint getGlProgram() const { return m_glProgram; };
@@ -34,19 +50,6 @@ public:
      * getUniformLocation - fetches the location of a shader uniform, caching the result
      */
     const GLint getUniformLocation(const std::string& _uniformName);
-
-    /*
-     * buildFromSourceStrings - attempts to compile a fragment shader and vertex shader from
-     * strings representing the source code for each, then links them into a complete program;
-     * if compiling or linking fails it prints the compiler log, returns false, and keeps the
-     * program's previous state; if successful it returns true.
-     */
-    bool buildFromSourceStrings(const std::string& _fragSrc, const std::string& _vertSrc);
-
-    /*  Parser throught vert and frag shader replacing every "#prama tangram: [tagName]" with the provided glslSourceCode
-    *   Return false if doesn't find the tagName
-    */
-    bool replaceAndRebuild(const std::string& _tagNameToSearch, const std::string& _glslToInject);
 
     // TODO: Once we have file system abstractions, provide a method to build a program from file names
 
@@ -105,22 +108,27 @@ private:
         // to a value that is not a valid uniform or attribute location. 
     };
 
-    /*  Simple parser for injecting code on special "#prama tangram: [tagName]" 
-    *   Return false if doesn't find the tagName
-    */
-    bool replace(std::string& _glslToParse, const std::string& _tagNameToSearch, const std::string& _glslToInject);
+    /*
+     * buildFromSourceStrings - attempts to compile a fragment shader and vertex shader from
+     * strings representing the source code for each, then links them into a complete program;
+     * if compiling or linking fails it prints the compiler log, returns false, and keeps the
+     * program's previous state; if successful it returns true.
+     */
+    bool buildFromSourceStrings(const std::string& _fragSrc, const std::string& _vertSrc);
+
+    GLuint makeLinkedShaderProgram(GLint _fragShader, GLint _vertShader);
+    GLuint makeCompiledShader(const std::string& _src, GLenum _type);
+
+    std::unordered_map<std::string, ShaderLocation> m_attribMap;
+    std::unordered_map<std::string, ShaderLocation> m_uniformMap;
+    std::string m_fragmentShaderSource;
+    std::string m_vertexShaderSource;
 
     static GLint s_activeGlProgram;
 
     GLuint m_glProgram;
     GLuint m_glFragmentShader;
     GLuint m_glVertexShader;
-    std::unordered_map<std::string, ShaderLocation> m_attribMap;
-    std::unordered_map<std::string, ShaderLocation> m_uniformMap;
-    std::string m_fragmentShaderSource;
-    std::string m_vertexShaderSource;
 
-    GLuint makeLinkedShaderProgram(GLint _fragShader, GLint _vertShader);
-    GLuint makeCompiledShader(const std::string& _src, GLenum _type);
-
+    std::map<std::string, std::vector<std::string>> m_blocks;
 };
