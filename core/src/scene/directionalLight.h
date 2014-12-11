@@ -10,7 +10,8 @@ public:
 
     virtual void setDirection(const glm::vec3 &_dir);
     
-    static std::string getBlock();
+    static std::string getClassBlock();
+    virtual std::string getBlock();
     virtual void setupProgram( ShaderProgram &_program );
     
 protected:

@@ -3,7 +3,7 @@
 #include "platform.h"
 #include "util/stringsOp.h"
 
-#include "directionaLight.h"
+#include "directionalLight.h"
 #include "pointLight.h"
 #include "spotLight.h"
 
@@ -45,19 +45,19 @@ void Scene::injectLightning(){
     //          - What happen if the light is not in the array? the block need to be add with 
     //          - Add #ifndef to the blocks in order to avoid collisions between in/out array lights
     if(m_directionaLightCounter > 0){
-        lightsBlock += DirectionalLigth::getBlock()+"\n";
+        lightsBlock += DirectionalLight::getClassBlock()+"\n";
         lightsBlock += "#define NUM_DIRECTIONAL_LIGHTS " + getString(m_directionaLightCounter) + "\n";
         lightsBlock += "uniform DirectionalLight u_directionalLights[NUM_DIRECTIONAL_LIGHTS];\n\n";
     }
 
     if(m_pointLightCounter > 0){
-        lightsBlock += PointLight::getBlock()+"\n";
+        lightsBlock += PointLight::getClassBlock()+"\n";
         lightsBlock += "#define NUM_POINT_LIGHTS " + getString(m_pointLightCounter) + "\n";
         lightsBlock += "uniform PointLight u_pointLights[NUM_POINT_LIGHTS];\n\n";
     }
 
     if(m_spotLightCounter > 0){
-        lightsBlock += SpotLight::getBlock()+"\n";
+        lightsBlock += SpotLight::getClassBlock()+"\n";
         lightsBlock += "#define NUM_SPOT_LIGHTS " + getString(m_spotLightCounter) + "\n";
         lightsBlock += "uniform SpotLight u_spotLights[NUM_SPOT_LIGHTS];\n\n";
     }
@@ -83,7 +83,7 @@ void Scene::injectLightning(){
         std::string ligthsListBlock = "";
 
         for(int i = 0; i < m_lights.size(); i++){
-            ligthsListBlock += "calculateLight("+m_directionalLights[i]->getUniformName()+", eye, _ecPosition, _normal, amb, diff, spec);\n";
+            ligthsListBlock += "calculateLight("+m_lights[i]->getUniformName()+", eye, _ecPosition, _normal, amb, diff, spec);\n";
         }
 
         for(int i = 0; i < m_styles.size(); i++){

@@ -7,9 +7,6 @@ uniform mat4 u_modelViewProj;
 uniform float u_time;
 
 #pragma tangram: material
-
-// Material g_material;
-
 #pragma tangram: lighting
 
 varying vec4 v_color;

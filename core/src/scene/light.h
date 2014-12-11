@@ -45,7 +45,7 @@ public:
 
     /*  This method is inspired on the webgl version.
     *   Once we have a better shader injection system we can ask for the code for a specifict light */
-    // virtual std::string getBlock() = 0;
+    virtual std::string getBlock() = 0;
 
     /*  This method is inspired on the webgl version.
     *   used to inject the uniforms for this particular light on

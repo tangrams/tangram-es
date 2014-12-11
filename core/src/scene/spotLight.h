@@ -13,7 +13,8 @@ public:
     
     void setCutOff(float _cutoff, float _exponent);
     
-    static  std::string getBlock();
+    static  std::string getClassBlock();
+    virtual  std::string getBlock();
     virtual void setupProgram( ShaderProgram &_program );
     
 protected:

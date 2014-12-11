@@ -19,6 +19,10 @@ void DirectionalLight::setupProgram( ShaderProgram &_shader ){
     _shader.setUniformf(getUniformName()+".direction", m_direction);
 }
 
-std::string DirectionalLight::getBlock(){
+std::string DirectionalLight::getClassBlock(){
     return stringFromResource("directional_light.glsl");
+}
+
+std::string DirectionalLight::getBlock(){
+    return getClassBlock() + "\n";
 }
