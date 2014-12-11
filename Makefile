@@ -87,7 +87,7 @@ clean-tests:
 	rm -rf ${TESTS_BUILD_DIR}
 
 android: install-android android/libs/${ANDROID_ARCH}/libtangram.so android/build.xml
-	ant -f android/build.xml debug
+	ant -q -f android/build.xml debug
 
 install-android: check-ndk cmake-android ${ANDROID_BUILD_DIR}/Makefile
 	cd ${ANDROID_BUILD_DIR} && \

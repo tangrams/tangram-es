@@ -103,7 +103,13 @@ bool NetworkDataSource::loadTileData(const MapTile& _tile) {
     } else {
         
         // parse fetched data
-        m_tileStore[_tile.getID()] = parse(_tile, out);
+        std::shared_ptr<TileData> tileData = parse(_tile, out);
+        
+        // Lock our mutex so that we can safely write to the tile store
+        {
+            std::lock_guard<std::mutex> lock(m_mutex);
+            m_tileStore[_tile.getID()] = tileData;
+        }
         
     }
     

@@ -72,10 +72,18 @@ To fix this, go to the Issues navigator tab in Xcode and click 'Validate Project
 ![Steps](images/ios-00-steps.png)
 
 ### Android ###
-To build for Android, ensure you have your `$ANDROID_NDK` environment variable set and pointing to your [NDK](https://developer.android.com/tools/sdk/ndk/index.html) toolset. 
+To build for Android you'll need to have installed both the [Android SDK](http://developer.android.com/sdk/installing/index.html?pkg=tools) and the [Android NDK](https://developer.android.com/tools/sdk/ndk/index.html). Set an `ANDROID_HOME` evironment variable with the root directory of your SDK and an `ANDROID_NDK` environment variable with the root directory of your NDK. 
+
+Build an APK of the demo application and optionally specify an architecture (default is armeabi-v7a):
 
 ```bash
 make android [ANDROID_ARCH=[x86|armeabi-v7a|armeabi]]
+```
+
+Then install to a connected device:
+
+```bash
+adb install android/bin/TangramAndroid-debug.apk
 ```
 
 ### Raspberry Pi ###
