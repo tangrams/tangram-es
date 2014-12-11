@@ -15,7 +15,7 @@ void Scene::addStyle(std::unique_ptr<Style> _style) {
     m_styles.push_back(std::move(_style));
 }
 
-void Scene::addLight(std::unique_ptr<Light> _light){
+void Scene::addLight(std::shared_ptr<Light> _light){
     
     if( _light->getType() == LIGHT_DIRECTIONAL &&   //  If is DIRECTIONAL and
         _light->getName() == "directionaLight"){    //  have the default name, can be set to be add to the array.
@@ -37,56 +37,56 @@ void Scene::addLight(std::unique_ptr<Light> _light){
 }
 
 void Scene::buildShaders(){
-    std::string lightsBlock = "";
-
+    
     // TODO:    
     //          - What happen if the light is not in the array? the block need to be add with 
     //          - Add #ifndef to the blocks in order to avoid collisions between in/out array lights
     
+    //  LIGHTENING INJECTION
+    //
+    std::string lightsDefines = ""; //  "#DEFINE LIGHT_..."
+    std::string lightsBlock = "";   //  Needed structs and "calculateLight()"" functions for that struct
+    std::string lightsUniforms = "";//  Uniform declaration
+    std::string calculateLightBlock = stringFromResource("lights.glsl"); // Main "calculateLighting()" function
+
     if(m_directionaLightCounter > 0){
+        lightsDefines += "#define NUM_DIRECTIONAL_LIGHTS " + getString(m_directionaLightCounter) + "\n";
         lightsBlock += DirectionalLight::getClassBlock()+"\n";
-        lightsBlock += "#define NUM_DIRECTIONAL_LIGHTS " + getString(m_directionaLightCounter) + "\n";
-        lightsBlock += "uniform DirectionalLight u_directionalLights[NUM_DIRECTIONAL_LIGHTS];\n\n";
+        lightsUniforms += "uniform DirectionalLight u_directionalLights[NUM_DIRECTIONAL_LIGHTS];\n";
     }
 
     if(m_pointLightCounter > 0){
+        lightsDefines += "#define NUM_POINT_LIGHTS " + getString(m_pointLightCounter) + "\n";
         lightsBlock += PointLight::getClassBlock()+"\n";
-        lightsBlock += "#define NUM_POINT_LIGHTS " + getString(m_pointLightCounter) + "\n";
-        lightsBlock += "uniform PointLight u_pointLights[NUM_POINT_LIGHTS];\n\n";
+        lightsUniforms += "uniform PointLight u_pointLights[NUM_POINT_LIGHTS];\n";
     }
 
     if(m_spotLightCounter > 0){
+        lightsDefines += "#define NUM_SPOT_LIGHTS " + getString(m_spotLightCounter) + "\n";
         lightsBlock += SpotLight::getClassBlock()+"\n";
-        lightsBlock += "#define NUM_SPOT_LIGHTS " + getString(m_spotLightCounter) + "\n";
-        lightsBlock += "uniform SpotLight u_spotLights[NUM_SPOT_LIGHTS];\n\n";
+        lightsUniforms += "uniform SpotLight u_spotLights[NUM_SPOT_LIGHTS];\n";
     }
 
-    //  After the headers are injected the calulatelitening function.
-    lightsBlock += stringFromResource("lights.glsl");
+    
+    if (m_lights.size() > 0){
+        std::string ligthsListBlock = "";
+        for(int i = 0; i < m_lights.size(); i++){
+            lightsDefines += m_lights[i]->getDefinesBlock();
+            ligthsListBlock += "calculateLight("+m_lights[i]->getUniformName()+", eye, _ecPosition, _normal, amb, diff, spec);\n";
+        }
+        replaceString(calculateLightBlock,"#pragma tangram: lights_unrol_loop",ligthsListBlock); 
+    }
 
     //  Inject the light block
     for(int i = 0; i < m_styles.size(); i++){
-        m_styles[i]->getShaderProgram()->addBlock("lighting",lightsBlock);
+        m_styles[i]->getShaderProgram()->addBlock("lighting",   lightsDefines+"\n"+
+                                                                lightsBlock+"\n"+
+                                                                lightsUniforms+"\n"+
+                                                                calculateLightBlock+"\n");
     }
 
-    //  UNROLLED LOOP
+    //  COMPILE ALL SHADERS
     //
-    //  This could be resolver more elegantly with for loops and ifdef inside the glsl code
-    //  BUT we prove that for loops (even of arrays of one) are extremely slow on the iOS simulator
-    //  BIG MISTERY
-    //
-    if(m_lights.size() > 0){
-        std::string ligthsListBlock = "";
-
-        for(int i = 0; i < m_lights.size(); i++){
-            ligthsListBlock += "calculateLight("+m_lights[i]->getUniformName()+", eye, _ecPosition, _normal, amb, diff, spec);\n";
-        }
-
-        for(int i = 0; i < m_styles.size(); i++){
-            m_styles[i]->getShaderProgram()->addBlock("lights_calcualate_list",ligthsListBlock);
-        }
-    }
-
     for(int i = 0; i < m_styles.size(); i++){
         m_styles[i]->getShaderProgram()->build();
     }

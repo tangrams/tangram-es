@@ -1,7 +1,7 @@
 #include "pointLight.h"
 
 PointLight::PointLight():m_position(0.0),m_constantAttenuation(0.0),m_linearAttenuation(0.0),m_quadraticAttenuation(0.0){
-    m_name = "pointLigth";
+    m_name = "pointLight";
     m_type = LIGHT_POINT;
 }
 
@@ -43,15 +43,21 @@ std::string PointLight::getDefinesBlock(){
     std::string defines = "\n";
 
     if(m_constantAttenuation!=0.0){
+        defines += "#ifndef POINTLIGHT_CONSTANT_ATTENUATION\n";
         defines += "#define POINTLIGHT_CONSTANT_ATTENUATION\n";
+        defines += "#endif\n\n";
     }
 
     if(m_linearAttenuation!=0.0){
+        defines += "#ifndef POINTLIGHT_LINEAR_ATTENUATION\n";
         defines += "#define POINTLIGHT_LINEAR_ATTENUATION\n";
+        defines += "#endif\n\n";
     }
 
     if(m_quadraticAttenuation!=0.0){
+        defines += "#ifndef POINTLIGHT_QUADRATIC_ATTENUATION\n";
         defines += "#define POINTLIGHT_QUADRATIC_ATTENUATION\n";
+        defines += "#endif\n\n";
     }
     return defines;
 }

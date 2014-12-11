@@ -16,11 +16,13 @@
 
 //-------------------------------------------------- << and >>
 
+/*  Push bit operators for cout-ing glm vec3 types */
 inline std::ostream& operator<<(std::ostream& os, const glm::vec3& vec) {
     os << vec.x << ", " << vec.y << ", " << vec.z;
     return os;
 }
 
+/*  Push bit operators for cout-ing glm vec3 types */
 inline std::istream& operator>>(std::istream& is, glm::vec3& vec) {
     is >> vec.x;
     is.ignore(2);
@@ -30,50 +32,30 @@ inline std::istream& operator>>(std::istream& is, glm::vec3& vec) {
     return is;
 }
 
-//----------------------------------------  String operations
-static std::vector<std::string> splitString(const std::string &_source, const std::string &_delimiter = "", bool _ignoreEmpty = false) {
-    std::vector<std::string> result;
-    if (_delimiter.empty()) {
-        result.push_back(_source);
-        return result;
-    }
-    std::string::const_iterator substart = _source.begin(), subend;
-    while (true) {
-        subend = search(substart, _source.end(), _delimiter.begin(), _delimiter.end());
-        std::string sub(substart, subend);
-        
-        if (!_ignoreEmpty || !sub.empty()) {
-            result.push_back(sub);
-        }
-        if (subend == _source.end()) {
-            break;
-        }
-        substart = subend + _delimiter.size();
-    }
-    return result;
-}
+//---------------------------------------- Conversions
 
-inline void stringPurifier( std::string &_s ){
-    for ( std::string::iterator it = _s.begin(), itEnd = _s.end(); it!=itEnd; ++it){
-        if ( static_cast<unsigned int>(*it) < 32 || static_cast<unsigned int>(*it) > 127 ){
-            (*it) = ' ';
-        }
-    }
-}
-
+/*  Transform the string into lower letters */
 inline void toLower( std::string &_str ){
     for (int i = 0; _str[i]; i++) {
         _str[i] = tolower(_str[i]);
     }
 }
 
-inline std::string getLower(const std::string &_str ){
+/*  Return new string with all into lower letters */
+inline std::string getLower(const std::string& _str ){
     std::string std = _str;
     toLower(std);
     return std;
 }
 
-//---------------------------------------- Conversions
+/*  Extract extrange characters from a string */
+inline void purifyString( std::string& _s ){
+    for ( std::string::iterator it = _s.begin(), itEnd = _s.end(); it!=itEnd; ++it){
+        if ( static_cast<unsigned int>(*it) < 32 || static_cast<unsigned int>(*it) > 127 ){
+            (*it) = ' ';
+        }
+    }
+}
 
 inline int getInt(const std::string &_intString) {
     int x = 0;
@@ -176,3 +158,73 @@ inline std::string getString(const glm::vec4 &_vec, char _sep = ','){
     strStream<< _vec.x << _sep << _vec.y << _sep << _vec.z << _sep << _vec.w;
     return strStream.str();
 }
+
+//----------------------------------------  String operations
+
+/*  Return a vector of string from a _source string splits it using a delimiter */
+static std::vector<std::string> splitString(const std::string& _source, const std::string& _delimiter = "", bool _ignoreEmpty = false) {
+    std::vector<std::string> result;
+    if (_delimiter.empty()) {
+        result.push_back(_source);
+        return result;
+    }
+    std::string::const_iterator substart = _source.begin(), subend;
+    while (true) {
+        subend = search(substart, _source.end(), _delimiter.begin(), _delimiter.end());
+        std::string sub(substart, subend);
+        
+        if (!_ignoreEmpty || !sub.empty()) {
+            result.push_back(sub);
+        }
+        if (subend == _source.end()) {
+            break;
+        }
+        substart = subend + _delimiter.size();
+    }
+    return result;
+}
+
+/*  Replace a specific line match from a string */
+static bool replaceString(std::string& _strToParse, const std::string& _strToSearch, const std::string& _strToInject){
+    
+    //  TODO:
+    //          - this can be more efficient, to memory copy operations
+    //          - re-do it using std library
+    //
+    std::string parsedString = "";
+    std::vector<std::string> lines = splitString(_strToParse, "\n");
+    
+    bool bFound = false;
+    
+    for (auto &line: lines) {
+        if (line == _strToSearch) {
+            parsedString += _strToInject + "\n";
+            bFound = true;
+        } else {
+            parsedString += line + "\n";
+        }
+    }
+    
+    _strToParse = parsedString;
+    
+    return bFound;
+}
+
+/*  Return a new string with the line number printed at the begining*/
+static std::string getLineNumberString(const std::string& _str){
+    //  TODO:
+    //          - this can be more efficient, to memory copy operations
+    //          - re-do it using std library
+    //
+    
+    std::string output = "";
+    std::vector<std::string> lines = splitString(_str, "\n");
+    
+    for(int i = 0; i < lines.size(); i++){
+        output += getString(i,2,'0') + " > " + lines[i] + "\n";
+    }
+    
+    return output;
+}
+
+

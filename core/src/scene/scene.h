@@ -18,12 +18,12 @@ public:
     void addStyle(std::unique_ptr<Style> _style);
     
     /*  Add a Directional Light */
-    void addLight(std::unique_ptr<Light> _light);
+    void addLight(std::shared_ptr<Light> _light);
 
     std::vector<std::unique_ptr<Style>>& getStyles() { return m_styles; };
     
     /* get all Lights */
-    std::vector<std::unique_ptr<Light>>& getLights(){ return m_lights; };
+    std::vector<std::shared_ptr<Light>>& getLights(){ return m_lights; };
 
     /*  Once all lights are added to the scene this methods inject the glsl code for them 
     *   as long the have a "#pragma tangram: lighting" reference on the .vs and .fs shaders */
@@ -32,7 +32,7 @@ public:
 private:
 
     std::vector<std::unique_ptr<Style>> m_styles;
-    std::vector<std::unique_ptr<Light>> m_lights;
+    std::vector<std::shared_ptr<Light>> m_lights;
 
     int m_directionaLightCounter;
     int m_pointLightCounter;

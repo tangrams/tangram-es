@@ -35,7 +35,7 @@ void ShaderProgram::loadSourceStrings(const std::string& _fragSrc, const std::st
 }
 
 void ShaderProgram::addBlock(const std::string& _tagName, const std::string &_glslSource){
-    m_blocks[_tagName].push_back(_glslSource);
+    m_blocks[_tagName].push_back(_glslSource+"\n");
 }
 
 const GLint ShaderProgram::getAttribLocation(const std::string& _attribName) {
@@ -76,35 +76,14 @@ void ShaderProgram::use() const {
     }
 }
 
-bool replace(std::string& _glslToParse, const std::string& _tagNameToSearch, const std::string& _glslToInject){
-
-    std::string parsedString = "";
-    std::vector<std::string> lines = splitString(_glslToParse, "\n");
-
-    bool bFound = false;
-    
-    for (auto &line: lines) {
-        if (line == "#pragma tangram: " + _tagNameToSearch) {
-            parsedString += _glslToInject + "\n";
-            bFound = true;
-        } else {
-            parsedString += line + "\n";
-        }
-    }
-    
-    _glslToParse = parsedString;
-
-    return bFound; 
-}
-
 bool ShaderProgram::build(){
 
     for (auto& block: m_blocks) {
         for(int i = 0; i < block.second.size(); i++){
-            if(!replace(m_fragmentShaderSource,block.first,block.second[i])){
+            if(!replaceString(m_fragmentShaderSource,"#pragma tangram: " + block.first,block.second[i])){
 //                logMsg("Tag: %s, not found\n", block.first);
             }
-            if(!replace(m_vertexShaderSource,block.first,block.second[i])){
+            if(!replaceString(m_vertexShaderSource,"#pragma tangram: " + block.first,block.second[i])){
 //                logMsg("Tag: %s, not found\n", block.first);
             }
         }
@@ -210,13 +189,14 @@ GLuint ShaderProgram::makeCompiledShader(const std::string& _src, GLenum _type) 
             std::vector<GLchar> infoLog(infoLength);
             glGetShaderInfoLog(shader, infoLength, NULL, &infoLog[0]);
             logMsg("Error compiling shader:\n%s\n", &infoLog[0]);
-            logMsg("\n> Error ----------------------->>\n%s\n",_src.c_str());
+            // logMsg("\n> Error ----------------------->>\n%s\n",_src.c_str());
+            logMsg("\n> Error ----------------------->>\n%s\n",getLineNumberString(_src).c_str());
         }
         glDeleteShader(shader);
         return 0;
     }
 
-    // logMsg("\n> Successs-----------------------\n%s\n",_src.c_str());
+    logMsg("\n> Successs-----------------------\n%s\n",_src.c_str());
     return shader;
 
 }

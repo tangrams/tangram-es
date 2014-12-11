@@ -6,8 +6,8 @@ uniform mat4 u_modelView;
 uniform mat4 u_modelViewProj;
 uniform float u_time;
 
-#pragma tangram: material
-#pragma tangram: lighting
+// #pragma tangram: material
+// #pragma tangram: lighting
 
 attribute vec4 a_position;
 attribute vec4 a_color;

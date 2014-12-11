@@ -2,7 +2,7 @@
 
 
 SpotLight::SpotLight():m_position(0.0),m_direction(1.0,0.0,0.0),m_spotExponent(0.0),m_spotCutoff(0.0),m_spotCosCutoff(0.0){
-    m_name = "spotLigth";
+    m_name = "spotLight";
     m_type = LIGHT_SPOT;
 }
 
