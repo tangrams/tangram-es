@@ -82,13 +82,17 @@ void resize(int _newWidth, int _newHeight) {
     glViewport(0, 0, _newWidth, _newHeight);
 
     if (m_view) {
-        m_view->setAspect(_newWidth, _newHeight);
+        m_view->setSize(_newWidth, _newHeight);
     }
 
 }
 
 void update(float _dt) {
 
+    if (m_view) {
+        m_view->update();
+    }
+    
     if (m_tileManager) {
         m_tileManager->updateTileSet();
     }
