@@ -24,9 +24,9 @@ void main() {
   	v_normal = normalize(a_normal);
   	v_texcoord = a_texcoord;
 
-  	v_ecPosition = vec3(u_modelView * a_position);
-
 	v_color = a_color;//* calculateLighting(v_eye,v_normal);
 
   	gl_Position = u_modelViewProj * a_position;
+
+  	v_ecPosition = vec3(u_modelView * a_position);
 }

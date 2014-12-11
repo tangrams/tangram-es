@@ -10,26 +10,21 @@ struct PointLight {
 #endif
 
 #ifdef POINTLIGHT_LINEAR_ATTENUATION
-
-#ifndef POINTLIGHT_ATTENUATION
-    #define POINTLIGHT_ATTENUATION
-#endif
-
+    #ifndef POINTLIGHT_ATTENUATION
+        #define POINTLIGHT_ATTENUATION
+    #endif
     #define POINTLIGHT_DISTANCE
     float linearAttenuation;
 #endif
 
 
 #ifdef POINTLIGHT_QUADRATIC_ATTENUATION
-
-#ifndef POINTLIGHT_ATTENUATION
-    #define POINTLIGHT_ATTENUATION
-#endif
-
-#ifndef POINTLIGHT_DISTANCE
-    #define POINTLIGHT_DISTANCE
-#endif
-
+    #ifndef POINTLIGHT_ATTENUATION
+        #define POINTLIGHT_ATTENUATION
+    #endif
+    #ifndef POINTLIGHT_DISTANCE
+        #define POINTLIGHT_DISTANCE
+    #endif
     float quadraticAttenuation;
 #endif
 };
@@ -37,10 +32,10 @@ struct PointLight {
 void calculateLight(in PointLight _light, in vec3 _eye, in vec3 _ecPosition3, in vec3 _normal, inout vec4 _ambient, inout vec4 _diffuse, inout vec4 _specular){
 
     // Compute vector from surface to light position
-    vec3 VP = vec3(_light.position) - _ecPosition3;
+    vec3 VP = normalize(vec3(_light.position) - _ecPosition3);
 
     #ifdef POINTLIGHT_DISTANCE
-    float dist = length(VP);
+    float dist = length(vec3(_light.position) - _ecPosition3);
     #endif 
 
     // Normalize the vector from surface to light position
@@ -50,17 +45,17 @@ void calculateLight(in PointLight _light, in vec3 _eye, in vec3 _ecPosition3, in
     #ifdef POINTLIGHT_ATTENUATION
     float atFactor = 0.0;
 
-    #ifdef POINTLIGHT_CONSTANT_ATTENUATION
-    atFactor += _light.constantAttenuation;
-    #endif
+        #ifdef POINTLIGHT_CONSTANT_ATTENUATION
+            atFactor += _light.constantAttenuation;
+        #endif
 
-    #ifdef POINTLIGHT_LINEAR_ATTENUATION
-    atFactor += _light.linearAttenuation * dist;
-    #endif
-        
-    #ifdef POINTLIGHT_QUADRATIC_ATTENUATION
-    atFactor += _light.quadraticAttenuation * dist * dist;
-    #endif
+        #ifdef POINTLIGHT_LINEAR_ATTENUATION
+            atFactor += _light.linearAttenuation * dist;
+        #endif
+            
+        #ifdef POINTLIGHT_QUADRATIC_ATTENUATION
+            atFactor += _light.quadraticAttenuation * dist * dist;
+        #endif
     
     float attenuation = 1.0 /atFactor;
     #endif

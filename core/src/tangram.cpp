@@ -54,7 +54,6 @@ void initialize() {
         m_scene->addStyle(std::move(linesStyle));
 
         //------ TESTING LIGHTS
-        //
 
         //  Directional
         // DirectionalLight* dlight = new DirectionalLight();
@@ -72,14 +71,15 @@ void initialize() {
         m_scene->addLight(pointLight);
 
         //  Spot
-        // SpotLight * sLight = new SpotLight();
-        // sLight->setSpecularColor(glm::vec4(0.5,0.5,0.0,1.0));
-        // sLight->setPosition(glm::vec3(0.0));
-        // sLight->setDirection(glm::vec3(0,PI*0.25,0.0));
-        // sLight->setCutOff(PI*0.51, 2.0);
-        // std::unique_ptr<Light> spotLight(sLight);
-        // m_scene->addLight(std::move(spotLight));
-        //
+        SpotLight * sLight = new SpotLight();
+        sLight->setSpecularColor(glm::vec4(0.5,0.5,0.0,1.0));
+        sLight->setPosition(glm::vec3(0.0));
+        sLight->setDirection(glm::vec3(0,PI*0.25,0.0));
+        sLight->setCutOff(PI*0.1, 0.2);
+        sLight->setAttenuation(0.0,0.02);
+        std::unique_ptr<Light> spotLight(sLight);
+        m_scene->addLight(std::move(spotLight));
+        
         //-----------------------
 
         m_scene->buildShaders();
@@ -141,15 +141,19 @@ void update(float _dt) {
         //
         float time = ((float)clock())/CLOCKS_PER_SEC;
         for(int i = 0 ; i < m_scene->getLights().size(); i++){
+
             if(m_scene->getLights()[i]->getType() == LIGHT_POINT){
-
                 PointLight* tmp = dynamic_cast<PointLight*>( (m_scene->getLights()[i]).get() );
-
                 tmp->setPosition(glm::vec3( 100*cos(time),
                                             100*sin(time), 
                                             -m_view->getPosition().z+100));
-
-            }
+            } else if(m_scene->getLights()[i]->getType() == LIGHT_SPOT){
+                SpotLight* tmp = dynamic_cast<SpotLight*>( (m_scene->getLights()[i]).get() );
+                tmp->setDirection(glm::vec3(cos(time),
+                                            sin(time), 
+                                            0.0));
+                tmp->setPosition(glm::vec3(0.0, 0.0, -m_view->getPosition().z+100));
+            } 
         }
     }   
 }

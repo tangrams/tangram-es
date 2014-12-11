@@ -6,6 +6,9 @@ uniform mat4 u_modelView;
 uniform mat4 u_modelViewProj;
 uniform float u_time;
 
+#pragma tangram: material
+#pragma tangram: lighting
+
 varying vec4 v_pos;
 varying vec4 v_color;
 varying vec3 v_ecPosition;
@@ -14,6 +17,8 @@ varying vec2 v_texcoord;
 
 void main(void) {
     
+    vec4 color = v_color;
+
     /* 
      * Use texture coordinates to darken fragments closer to the center of the polyline,
      * creating an outline effect.
@@ -27,6 +32,9 @@ void main(void) {
     
     darken = clamp(darken, 0.5, 1.0); // reduce color values by 1/2 in darkened fragments
     
-  	gl_FragColor = v_color * darken;
+
+    color *= calculateLighting(v_ecPosition,v_normal);
+
+  	gl_FragColor = color * darken;
 	gl_FragColor.a = 1.0;    
 }
