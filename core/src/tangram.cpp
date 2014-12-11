@@ -138,6 +138,14 @@ void render() {
     while (Error::hadGlError("Tangram::render()")) {}
 
 }
+
+void setPixelScale(float _pixelsPerPoint) {
+    
+    if (m_view) {
+        m_view->setPixelScale(_pixelsPerPoint);
+    }
+    
+}
     
 void handleTapGesture(float _posX, float _posY) {
     logMsg("Do tap: (%f,%f)\n", _posX, _posY);
