@@ -58,13 +58,14 @@ void initialize() {
         //------ TESTING LIGHTS
 
         //  Directional
-        DirectionalLight* dlight = new DirectionalLight("dLight",false);
+        DirectionalLight* dlight = new DirectionalLight("dLight");
+        // dlight->setDiffuseColor(glm::vec4(0.3,0.2,0.0,1.0));
         dlight->setDirection(glm::vec3(-1.0, -1.0, 1.0));
         std::shared_ptr<Light> directionalLight(dlight);
         m_scene->addLight(directionalLight);
     
         // //  Point
-        PointLight * pLight = new PointLight("pLight");
+        PointLight * pLight = new PointLight("pLight",true);
         pLight->setDiffuseColor(glm::vec4(0.0,1.0,0.0,1.0));
         pLight->setSpecularColor(glm::vec4(0.5,0.0,1.0,1.0));
         pLight->setLinearAttenuation(0.005);
@@ -73,7 +74,7 @@ void initialize() {
         // m_scene->addLight(pointLight);
 
         // // //  Spot
-        SpotLight * sLight = new SpotLight("sLight");
+        SpotLight * sLight = new SpotLight("sLight",true);
         sLight->setSpecularColor(glm::vec4(0.5,0.5,0.0,1.0));
         sLight->setPosition(glm::vec3(0.0));
         sLight->setDirection(glm::vec3(0,PI*0.25,0.0));

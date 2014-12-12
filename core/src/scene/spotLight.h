@@ -5,7 +5,7 @@
 class SpotLight : public PointLight {
 public:
     
-    SpotLight(const std::string& _name, bool _dynamic = true);
+    SpotLight(const std::string& _name, bool _dynamic = false);
     virtual ~SpotLight();
 
     /*  Set the direction of the light */

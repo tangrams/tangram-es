@@ -5,7 +5,7 @@
 class DirectionalLight : public Light {
 public:
     
-    DirectionalLight(const std::string& _name, bool _dynamic = true);
+    DirectionalLight(const std::string& _name, bool _dynamic = false);
     virtual ~DirectionalLight();
 
     /*	Set the direction of the light */

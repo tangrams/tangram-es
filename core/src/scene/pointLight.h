@@ -5,7 +5,7 @@
 class PointLight : public Light {
 public:
 
-	PointLight(const std::string& _name, bool _dynamic = true);
+	PointLight(const std::string& _name, bool _dynamic = false);
 	virtual ~PointLight();
     
     /*  Set the position relative to the camera */

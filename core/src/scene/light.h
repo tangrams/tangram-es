@@ -20,7 +20,7 @@ class Light {
 public:
     
     /* All lights have a name*/
-    Light(const std::string& _name, bool _dynamic = true);
+    Light(const std::string& _name, bool _dynamic = false);
 
     virtual ~Light();
     
