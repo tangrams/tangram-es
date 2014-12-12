@@ -3,15 +3,14 @@
 #include "platform.h"
 #include "glm/gtx/string_cast.hpp"
 
-const int View::s_maxZoom; // Create a stack reference to the static member variable
-
 View::View(int _width, int _height, ProjectionType _projType) {
     //Set the map projection for the view module to use.
     setMapProjection(_projType);
     
     // Set up projection matrix based on input width and height with an arbitrary zoom
     setSize(_width, _height);
-    setZoom(16); // Arbitrary zoom for testing
+    setZoom(m_initZoom); // Arbitrary zoom for testing
+    m_zoomState = false; //Assume zoom out state, prefer parent fetching
 
     // Set up view matrix
     m_pos = glm::dvec3(0, 0, 1000); // Start at 0 to begin
@@ -63,16 +62,23 @@ void View::translate(double _dx, double _dy) {
 
 }
 
-void View::zoom(int _dz) {
+void View::zoom(float _dz) {
+    if( ( (m_zoom + _dz - m_initZoom) > 0.0 )) {
+        m_zoomState = true;
+    }
+    else {
+        m_zoomState = false;
+    }
+    _dz *= 0.2;
     setZoom(m_zoom + _dz);
 }
 
-void View::setZoom(int _z) {
-
-    // ensure zoom value is allowed
-    m_zoom = glm::clamp(_z, 0, s_maxZoom);
+void View::setZoom(float _z) {
     
-    // find dimensions of tiles in world space at new zoom level
+    //ensure zoom value is allowed
+    m_zoom = glm::clamp(_z, 0.0f, (float)s_maxZoom);
+    
+    //find the dimensions of the tiles in world space at new zoom level
     float tileSize = 2 * MapProjection::HALF_CIRCUMFERENCE * pow(2, -m_zoom);
     
     // viewport height in world space is such that each tile is 256 px square in screen space
@@ -86,10 +92,8 @@ void View::setZoom(int _z) {
     m_pos.z = m_height * 0.5 / tan(fovy * 0.5);
     
     // set near clipping distance as a function of camera z
-    // TODO: this is a simple heuristic that deserves more thought
     double near = m_pos.z / 50.0;
     
-    // update view and projection matrices
     m_view = glm::lookAt(m_pos, m_pos + glm::dvec3(0, 0, -1), glm::dvec3(0, 1, 0));
     m_proj = glm::perspective(fovy, m_aspect, near, m_pos.z + 1.0);
 
@@ -116,8 +120,9 @@ const std::set<TileID>& View::getVisibleTiles() {
     }
 
     m_visibleTiles.clear();
-
-    float tileSize = 2 * MapProjection::HALF_CIRCUMFERENCE * pow(2, -m_zoom);
+    
+    // Using integral zoom here to determine actual quadtree tile size to determine visible set
+    float tileSize = 2 * MapProjection::HALF_CIRCUMFERENCE * pow(2, -(int)m_zoom);
     float invTileSize = 1.0 / tileSize;
 
     float vpLeftEdge = m_pos.x - m_width * 0.5 + MapProjection::HALF_CIRCUMFERENCE;
