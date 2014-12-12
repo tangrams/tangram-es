@@ -29,6 +29,9 @@ void teardown();
 // Invalidate and re-create all OpenGL resources
 void onContextDestroyed();
 
+// Set the ratio of hardware pixels to logical pixels (defaults to 1.0)
+void setPixelScale(float _pixelsPerPoint);
+
 // Respond to touch input
 void handleTapGesture(float _posX, float _posY);
     

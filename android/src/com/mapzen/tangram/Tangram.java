@@ -3,10 +3,11 @@ package com.mapzen.tangram;
 import javax.microedition.khronos.egl.EGLConfig;
 import javax.microedition.khronos.opengles.GL10;
 
-import android.content.Context;
+import android.app.Activity;
 import android.content.res.AssetManager;
 import android.opengl.GLSurfaceView;
 import android.opengl.GLSurfaceView.Renderer;
+import android.util.DisplayMetrics;
 import android.util.Log;
 import android.view.GestureDetector;
 import android.view.GestureDetector.OnGestureListener;
@@ -28,6 +29,7 @@ public class Tangram extends GLSurfaceView implements Renderer, OnScaleGestureLi
     private static native void render();
     private static native void teardown();
     private static native void onContextDestroyed();
+    private static native void setPixelScale(float scale);
     private static native void handleTapGesture(float posX, float posY);
     private static native void handleDoubleTapGesture(float posX, float posY);
     private static native void handlePanGesture(float velX, float velY);
@@ -42,13 +44,16 @@ public class Tangram extends GLSurfaceView implements Renderer, OnScaleGestureLi
     private AssetManager assetManager;
     private GestureDetector gestureDetector;
     private ScaleGestureDetector scaleGestureDetector;
+    private DisplayMetrics displayMetrics = new DisplayMetrics();
 
-    public Tangram(Context mainApp) {
+    public Tangram(Activity mainApp) {
         super(mainApp);
         
         setEGLContextClientVersion(2);
         setRenderer(this);
-        setPreserveEGLContextOnPause(true);   
+        setPreserveEGLContextOnPause(true);
+        
+        mainApp.getWindowManager().getDefaultDisplay().getMetrics(displayMetrics);
         
         this.assetManager = mainApp.getAssets();
         this.gestureDetector = new GestureDetector(mainApp, this);
@@ -100,9 +105,11 @@ public class Tangram extends GLSurfaceView implements Renderer, OnScaleGestureLi
     }
 
     public void onSurfaceChanged(GL10 gl, int width, int height) {
-        //set the view center for gesture handling
+        // set the view center for gesture handling
         viewCenter[0] = (float)width * 0.5f;
         viewCenter[1] = (float)height * 0.5f;
+        // update the display density
+        setPixelScale(displayMetrics.density);
         resize(width, height);
     }
 

@@ -86,7 +86,7 @@ void initialize() {
 
 void resize(int _newWidth, int _newHeight) {
     
-    logMsg("%s\n", "resize");
+    logMsg("resize: %d x %d\n", _newWidth, _newHeight);
 
     glViewport(0, 0, _newWidth, _newHeight);
 
@@ -100,6 +100,10 @@ void resize(int _newWidth, int _newHeight) {
 
 void update(float _dt) {
 
+    if (m_view) {
+        m_view->update();
+    }
+    
     if (m_tileManager) {
         m_tileManager->updateTileSet();
     }
@@ -142,6 +146,14 @@ void render() {
 
     while (Error::hadGlError("Tangram::render()")) {}
 
+}
+
+void setPixelScale(float _pixelsPerPoint) {
+    
+    if (m_view) {
+        m_view->setPixelScale(_pixelsPerPoint);
+    }
+    
 }
     
 void handleTapGesture(float _posX, float _posY) {

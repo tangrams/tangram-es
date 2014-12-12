@@ -4,6 +4,7 @@
 #include <sstream>
 #include <map>
 #include <memory>
+#include <mutex>
 
 struct TileData;
 struct TileID;
