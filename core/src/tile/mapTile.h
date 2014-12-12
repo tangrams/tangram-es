@@ -35,11 +35,14 @@ public:
     
     /* Returns the length of a side of this tile in projection units */
     float getScale() const { return m_scale; }
+
+    /* Get the loading/drawing status of this tile */
+    bool getStatus() const { return m_status; }
     
     /* Returns the reciprocal of <getScale()> */
     float getInverseScale() const { return m_inverseScale; }
-
-    /* Adds drawable geometry to the tile and associates it with a <Style> 
+    
+    /* Adds drawable geometry to the tile and associates it with a <Style>
      * 
      * Use std::move to pass in the mesh by move semantics; Geometry in the mesh must have coordinates relative to
      * the tile origin.
@@ -48,6 +51,16 @@ public:
 
     /* Draws the geometry associated with the provided <Style> and view-projection matrix */
     void draw(const Style& _style, const glm::dmat4& _viewProjMatrix);
+
+    /* Set status of this tile */
+    void setStatus(bool _status);
+    
+    /* Use to determine drawing state of this tile (drawable or not)
+     *
+     * false: this tile is possibly in a deleted state, do not draw this tile
+     * true: draw this tile, its either a visible tile or proxy tile
+     */
+    bool m_status = false;
 
 private:
 
@@ -64,6 +77,5 @@ private:
     glm::dmat4 m_modelMatrix; // Translation matrix from world origin to tile origin
 
     std::unordered_map<std::string, std::unique_ptr<VboMesh>> m_geometry; // Map of <Style>s and their associated <VboMesh>es
-
 };
 
