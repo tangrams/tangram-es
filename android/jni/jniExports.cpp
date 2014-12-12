@@ -30,6 +30,10 @@ extern "C" {
         Tangram::onContextDestroyed();
     }
 
+    JNIEXPORT void JNICALL Java_com_mapzen_tangram_Tangram_setPixelScale(JNIEnv* jniEnv, jobject obj, jfloat scale) {
+        Tangram::setPixelScale(scale);
+    }
+
     JNIEXPORT void JNICALL Java_com_mapzen_tangram_Tangram_handleTapGesture(JNIEnv* jniEnv, jobject obj, jfloat posX, jfloat posY) {
         Tangram::handleTapGesture(posX, posY);
     }
