@@ -32,13 +32,15 @@ struct TileID {
     const int y;
     const int z;
 
-    void getParent(TileID* _parent) {
+    TileID* getParent() const {
+        TileID* _parent = nullptr;
         if( (x >> 1) >= 0 && (y >> 1) >= 0 && (z-1) >= 0) {
             _parent = new TileID(x >> 1, y >> 1, z-1);
         }
+        return _parent;
     }
 
-    void getChildren(std::vector<TileID>& _children, int _maxZoomLvl) {
+    void getChildren(std::vector<TileID>& _children, int _maxZoomLvl) const {
         if((z+1) <= _maxZoomLvl) {
             for(int i = 0; i < 2; i++) {
                 int xVal = (x << 1) + i;
