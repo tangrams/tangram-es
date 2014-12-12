@@ -36,7 +36,6 @@ public class Tangram extends GLSurfaceView implements Renderer, OnScaleGestureLi
     private static native void handlePinchGesture(float posX, float posY, float scale);
 
     private long time = System.nanoTime();
-    private float[] viewCenter = new float[2];
     private float scaleFactor = 1.0f;
     private float scalePosX = 0.0f;
     private float scalePosY = 0.0f;
@@ -105,10 +104,6 @@ public class Tangram extends GLSurfaceView implements Renderer, OnScaleGestureLi
     }
 
     public void onSurfaceChanged(GL10 gl, int width, int height) {
-        // set the view center for gesture handling
-        viewCenter[0] = (float)width * 0.5f;
-        viewCenter[1] = (float)height * 0.5f;
-        // update the display density
         setPixelScale(displayMetrics.density);
         resize(width, height);
     }
@@ -129,55 +124,18 @@ public class Tangram extends GLSurfaceView implements Renderer, OnScaleGestureLi
     public boolean onDown(MotionEvent event) {
         return true;
     }
-    
-    public boolean onSingleTapConfirmed(MotionEvent event) {
-        float touchX = event.getX();
-        float touchY = event.getY();
-        Log.v("onSingleTap", touchX + "," +touchY+"\t"+viewCenter[0]+","+viewCenter[1]);
-        handleTapGesture(touchX - viewCenter[0], -(touchY - viewCenter[1]));
-        return true;
-    }
 
     public boolean onDoubleTap(MotionEvent event) {
-        float touchX = event.getX();
-        float touchY = event.getY();
-        Log.v("onSingleTap", touchX + "," +touchY+"\t"+viewCenter[0]+","+viewCenter[1]);
-        handleDoubleTapGesture(touchX - viewCenter[0], -(touchY - viewCenter[1]));
+        handleDoubleTapGesture(event.getX(), event.getY());
         return true;
     }
 
     public boolean onScroll(MotionEvent e1, MotionEvent e2, float distanceX, float distanceY) {
-        //TODO: Better velocity calculations using VelocityTracker and VelocityTrackerCompat classes
         
-        float touchX = e2.getX();
-        float touchY = e2.getY();
-        long time = e2.getEventTime();
-        
-        float prevTouchX, prevTouchY;
-        long prevTime;
-        
-        if(e2.getHistorySize() > 0) {
-            prevTouchX = e2.getHistoricalX(0);
-            prevTouchY = e2.getHistoricalY(0);
-            prevTime = e2.getHistoricalEventTime(0);
-        } else {
-            prevTouchX = e1.getX();
-            prevTouchY = e1.getY();
-            prevTime = e1.getEventTime();
-        }
-        if( (time - prevTime) == 0) {
-            return false;
-        }
-        
-        // Factor of 100 to match iOS velocity behavior
-        float invTimeDiff = 100.0f/(float)(time - prevTime);
-        float velocityX = (touchX - prevTouchX) * (invTimeDiff);
-        float velocityY = (touchY - prevTouchY) * (invTimeDiff);
-        
-        Log.v("onPanTap", touchX + "," +touchY+"\t"+prevTouchX+","+prevTouchY);
-        Log.v("\nonPanTap time:", time + "," + prevTime);
-        Log.v("\nonPanTap Velocity:", velocityX + "," + velocityY);
-        handlePanGesture(velocityX, velocityY);
+        // We flip the signs of distanceX and distanceY because onScroll provides the distances
+        // by which the material being scrolled should move, while handlePanGesture expects the 
+        // distances by which the touch point has moved on the screen (these are opposite)
+        handlePanGesture(-distanceX, -distanceY);
         return true;
     }
 
@@ -195,10 +153,7 @@ public class Tangram extends GLSurfaceView implements Renderer, OnScaleGestureLi
     }
 
     public boolean onSingleTapUp(MotionEvent event) {
-        float touchX = event.getX();
-        float touchY = event.getY();
-        Log.v("onSingleTap", touchX + "," +touchY+"\t"+viewCenter[0]+","+viewCenter[1]);
-        handleTapGesture(touchX - viewCenter[0], -(touchY - viewCenter[1]));
+        handleTapGesture(event.getX(), event.getY());
         return true;
     }
 
@@ -214,7 +169,6 @@ public class Tangram extends GLSurfaceView implements Renderer, OnScaleGestureLi
 
     public boolean onScale(ScaleGestureDetector detector) {
         scaleFactor = detector.getScaleFactor() * scaleFactor;
-        Log.v("\nPinch: ", scaleFactor + ",\t" + scalePosX + "," + scalePosY);
         // TODO: continuous zoom
         return true;
     }
