@@ -65,7 +65,7 @@ private:
     glm::dmat4 m_view;
     glm::dmat4 m_proj;
     float m_zoom;
-    float m_initZoom;
+    float m_initZoom = 16.0;
     /* +ve: zoom-in
      * -ve: zoom-out
      */
