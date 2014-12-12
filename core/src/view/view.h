@@ -35,11 +35,12 @@ public:
 
     void setSize(int _width, int _height);
     void setPosition(double _x, double _y);
-    void setZoom(int _z);
+    void setZoom(float _z);
     void translate(double _dx, double _dy);
-    void zoom(int _dz);
+    void zoom(float _dz);
 
-    int getZoom() const { return m_zoom; };
+    float getZoom() const { return m_zoom; };
+    float getZoomState() const { return m_zoomState; };
     const glm::dvec3& getPosition() const { return m_pos; };
     const glm::dmat4& getViewMatrix() const { return m_view; };
     const glm::dmat4& getProjectionMatrix() const { return m_proj; };
@@ -53,7 +54,7 @@ public:
         m_visibleTiles.clear();
     }
     
-    static const int s_maxZoom = 18;
+    constexpr static const float s_maxZoom = 18.0;
 
 private:
 
@@ -63,10 +64,16 @@ private:
     glm::dvec3 m_pos;
     glm::dmat4 m_view;
     glm::dmat4 m_proj;
-    int m_zoom;
+    float m_zoom;
+    float m_initZoom;
+    /* +ve: zoom-in
+     * -ve: zoom-out
+     */
+    bool m_zoomState;
     int m_vpWidth;
     int m_vpHeight;
     float m_width;
     float m_height;
     double m_aspect;
 };
+
