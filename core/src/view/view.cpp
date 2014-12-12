@@ -55,32 +55,30 @@ void View::setSize(int _width, int _height) {
 
 void View::setPosition(double _x, double _y) {
 
-    translate(_x - m_pos.x, _y - m_pos.y);
+    m_pos.x = _x;
+    m_pos.y = _y;
     m_dirty = true;
 
 }
 
+void View::setZoom(int _z) {
+    
+    // ensure zoom value is allowed
+    m_zoom = glm::clamp(_z, 0, s_maxZoom);
+    m_dirty = true;
+    
+}
+
 void View::translate(double _dx, double _dy) {
 
-    m_pos.x += _dx;
-    m_pos.y += _dy;
-    m_dirty = true;
+    setPosition(m_pos.x + _dx, m_pos.y + _dy);
 
 }
 
 void View::zoom(int _dz) {
     
     setZoom(m_zoom + _dz);
-    m_dirty = true;
     
-}
-
-void View::setZoom(int _z) {
-
-    // ensure zoom value is allowed
-    m_zoom = glm::clamp(_z, 0, s_maxZoom);
-    m_dirty = true;
-
 }
 
 void View::update() {
@@ -174,26 +172,20 @@ void View::updateTiles() {
     float vpBottomEdge = -m_pos.y - m_height * 0.5 + MapProjection::HALF_CIRCUMFERENCE;
     float vpTopEdge = vpBottomEdge + m_height;
     
-    int tileX = (int) vpLeftEdge * invTileSize;
-    int tileY = (int) vpBottomEdge * invTileSize;
+    int tileX = (int) fmax(0, vpLeftEdge * invTileSize);
+    int tileY = (int) fmax(0, vpBottomEdge * invTileSize);
     
     float x = tileX * tileSize;
     float y = tileY * tileSize;
     
-    while (x < vpRightEdge) {
+    int maxTileIndex = pow(2, m_zoom);
+    
+    while (x < vpRightEdge && tileX < maxTileIndex) {
         
-        if(tileX >= pow(2, m_zoom)) {
-            break;
-        }
-        
-        while (y < vpTopEdge) {
+        while (y < vpTopEdge && tileY < maxTileIndex) {
             
-            if(tileY >= pow(2, m_zoom)) {
-                break;
-            }
-            else if(tileX >= 0 && tileY >= 0) {
-                m_visibleTiles.insert(TileID(tileX, tileY, m_zoom));
-            }
+            m_visibleTiles.insert(TileID(tileX, tileY, m_zoom));
+
             tileY++;
             y += tileSize;
             
