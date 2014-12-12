@@ -6,7 +6,6 @@ struct SpotLight {
     vec4 position;
     vec3 direction;
 
-    // float spotCutoff;
     float spotCosCutoff;
     float spotExponent;
 

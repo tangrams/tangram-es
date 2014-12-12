@@ -1,34 +1,35 @@
 #pragma once
 
-#include "light.h"
+#include "pointLight.h"
 
-class SpotLight : public Light {
+class SpotLight : public PointLight {
 public:
     
     SpotLight();
     virtual ~SpotLight();
 
-    void setPosition(const glm::vec3 &_pos);
+    /*  Set the direction of the light */
     void setDirection(const glm::vec3 &_dir);
     
-    void setAttenuation(float _constant = 0.0, float _linear = 0.0, float _quadratic = 0.0);
-    void setCutOff(float _cutoff, float _exponent);
+    /*  Set the properties of the cutoff light cone */
+    void setCutOff(float _lightConeRadiants, float _lieghtExponent);
     
-    virtual std::string getDefinesBlock();
-    static  std::string getClassBlock();
+    /*  GLSL #defines with the NUMBER of lights of this type */
+    static std::string getArrayDefinesBlock(int _numberOfLights);
 
-    virtual std::string getBlock();
+    /*  GLSL #defines with the NUMBER of lights of this type */
+    static std::string getArrayUniformBlock();
+
+    /*  GLSL block code with structs and need functions for this light type */
+    static std::string getClassBlock();
+
+    virtual std::string getInstanceDefinesBlock();
 
     virtual void setupProgram( ShaderProgram &_program );
     
 protected:
-    glm::vec4 m_position;
    	glm::vec3 m_direction;
 
-    float m_constantAttenuation;
-    float m_linearAttenuation;
-    float m_quadraticAttenuation;
-    
    	float m_spotExponent;
     float m_spotCutoff;
     float m_spotCosCutoff;

@@ -1,4 +1,5 @@
 #include "pointLight.h"
+#include "util/stringsOp.h"
 
 PointLight::PointLight():m_position(0.0),m_constantAttenuation(0.0),m_linearAttenuation(0.0),m_quadraticAttenuation(0.0){
     m_name = "pointLight";
@@ -14,6 +15,18 @@ void PointLight::setPosition(const glm::vec3 &_pos){
     m_position.y = _pos.y;
     m_position.z = _pos.z;
     m_position.w = 0.0;
+}
+
+void PointLight::setConstantAttenuation(float _constantAtt){
+    m_constantAttenuation = _constantAtt;
+}
+
+void PointLight::setLinearAttenuantion(float _linearAtt){
+    m_linearAttenuation = _linearAtt;
+}
+
+void PointLight::setQuadreaticAttenuation(float _quadraticAtt){
+    m_quadraticAttenuation = _quadraticAtt;
 }
 
 void PointLight::setAttenuation(float _constant, float _linear, float _quadratic){
@@ -39,33 +52,37 @@ void PointLight::setupProgram( ShaderProgram &_shader ){
     }
 }
 
-std::string PointLight::getDefinesBlock(){
+std::string PointLight::getArrayDefinesBlock(int _numberOfLights){
+    return "#define NUM_POINT_LIGHTS " + getString(_numberOfLights) + "\n";
+}
+
+std::string PointLight::getArrayUniformBlock(){
+    return "uniform PointLight u_pointLights[NUM_POINT_LIGHTS];\n";
+}
+
+std::string PointLight::getClassBlock(){
+    return stringFromResource("point_light.glsl")+"\n";
+}
+
+std::string PointLight::getInstanceDefinesBlock(){
     std::string defines = "\n";
 
     if(m_constantAttenuation!=0.0){
         defines += "#ifndef POINTLIGHT_CONSTANT_ATTENUATION\n";
         defines += "#define POINTLIGHT_CONSTANT_ATTENUATION\n";
-        defines += "#endif\n\n";
+        defines += "#endif\n";
     }
 
     if(m_linearAttenuation!=0.0){
         defines += "#ifndef POINTLIGHT_LINEAR_ATTENUATION\n";
         defines += "#define POINTLIGHT_LINEAR_ATTENUATION\n";
-        defines += "#endif\n\n";
+        defines += "#endif\n";
     }
 
     if(m_quadraticAttenuation!=0.0){
         defines += "#ifndef POINTLIGHT_QUADRATIC_ATTENUATION\n";
         defines += "#define POINTLIGHT_QUADRATIC_ATTENUATION\n";
-        defines += "#endif\n\n";
+        defines += "#endif\n";
     }
     return defines;
-}
-
-std::string PointLight::getClassBlock(){
-    return stringFromResource("point_light.glsl");
-}
-
-std::string PointLight::getBlock(){
-    return getDefinesBlock() + "\n" + getClassBlock() + "\n";
 }

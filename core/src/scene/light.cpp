@@ -51,3 +51,7 @@ std::string Light::getUniformName(){
 		return "u_" + m_name;
 	}
 }
+
+std::string Light::getInstanceComputeBlock(){
+    return "calculateLight("+getUniformName()+", eye, _ecPosition, _normal, amb, diff, spec);\n";
+}

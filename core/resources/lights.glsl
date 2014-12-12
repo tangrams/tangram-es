@@ -7,7 +7,7 @@ vec4 calculateLighting(in vec3 _ecPosition, in vec3 _normal) {
   vec4 spec = vec4(0.0);
 
 //  COMPUTE ALL LIGHTS
-#pragma tangram: lights_unrol_loop
+#pragma tangram: lights_to_compute
 
   //  Final light intensity calculation
   //

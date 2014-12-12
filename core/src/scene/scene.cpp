@@ -50,31 +50,30 @@ void Scene::buildShaders(){
     std::string calculateLightBlock = stringFromResource("lights.glsl"); // Main "calculateLighting()" function
 
     if(m_directionaLightCounter > 0){
-        lightsDefines += "#define NUM_DIRECTIONAL_LIGHTS " + getString(m_directionaLightCounter) + "\n";
-        lightsBlock += DirectionalLight::getClassBlock()+"\n";
-        lightsUniforms += "uniform DirectionalLight u_directionalLights[NUM_DIRECTIONAL_LIGHTS];\n";
+        lightsDefines += DirectionalLight::getArrayDefinesBlock(m_directionaLightCounter);
+        lightsBlock += DirectionalLight::getClassBlock();
+        lightsUniforms += DirectionalLight::getArrayUniformBlock();
     }
 
     if(m_pointLightCounter > 0){
-        lightsDefines += "#define NUM_POINT_LIGHTS " + getString(m_pointLightCounter) + "\n";
-        lightsBlock += PointLight::getClassBlock()+"\n";
-        lightsUniforms += "uniform PointLight u_pointLights[NUM_POINT_LIGHTS];\n";
+        lightsDefines += PointLight::getArrayDefinesBlock(m_pointLightCounter);
+        lightsBlock += PointLight::getClassBlock();
+        lightsUniforms += PointLight::getArrayUniformBlock();
     }
 
     if(m_spotLightCounter > 0){
-        lightsDefines += "#define NUM_SPOT_LIGHTS " + getString(m_spotLightCounter) + "\n";
-        lightsBlock += SpotLight::getClassBlock()+"\n";
-        lightsUniforms += "uniform SpotLight u_spotLights[NUM_SPOT_LIGHTS];\n";
+        lightsDefines += SpotLight::getArrayDefinesBlock(m_spotLightCounter);
+        lightsBlock += SpotLight::getClassBlock();
+        lightsUniforms += SpotLight::getArrayUniformBlock();
     }
-
     
     if (m_lights.size() > 0){
         std::string ligthsListBlock = "";
         for(int i = 0; i < m_lights.size(); i++){
-            lightsDefines += m_lights[i]->getDefinesBlock();
-            ligthsListBlock += "calculateLight("+m_lights[i]->getUniformName()+", eye, _ecPosition, _normal, amb, diff, spec);\n";
+            lightsDefines += m_lights[i]->getInstanceDefinesBlock();
+            ligthsListBlock += m_lights[i]->getInstanceComputeBlock();
         }
-        replaceString(calculateLightBlock,"#pragma tangram: lights_unrol_loop",ligthsListBlock); 
+        replaceString(calculateLightBlock,"#pragma tangram: lights_to_compute",ligthsListBlock); 
     }
 
     //  Inject the light block

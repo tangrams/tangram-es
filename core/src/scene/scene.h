@@ -22,7 +22,7 @@ public:
 
     std::vector<std::unique_ptr<Style>>& getStyles() { return m_styles; };
     
-    /* get all Lights */
+    /*  Get all Lights */
     std::vector<std::shared_ptr<Light>>& getLights(){ return m_lights; };
 
     /*  Once all lights are added to the scene this methods inject the glsl code for them 

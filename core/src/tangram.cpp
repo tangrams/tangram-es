@@ -62,23 +62,23 @@ void initialize() {
         m_scene->addLight(directionalLight);
     
         //  Point
-        // PointLight * pLight = new PointLight();
-        // pLight->setDiffuseColor(glm::vec4(0.0,1.0,0.0,1.0));
-        // pLight->setSpecularColor(glm::vec4(0.5,0.0,1.0,1.0));
-        // pLight->setAttenuation(0.0,0.01);
-        // pLight->setPosition(glm::vec3(0.0));
-        // std::shared_ptr<Light> pointLight(pLight);
-        // m_scene->addLight(pointLight);
+        PointLight * pLight = new PointLight();
+        pLight->setDiffuseColor(glm::vec4(0.0,1.0,0.0,1.0));
+        pLight->setSpecularColor(glm::vec4(0.5,0.0,1.0,1.0));
+        pLight->setAttenuation(0.0,0.01);
+        pLight->setPosition(glm::vec3(0.0));
+        std::shared_ptr<Light> pointLight(pLight);
+        m_scene->addLight(pointLight);
 
         // //  Spot
-        // SpotLight * sLight = new SpotLight();
-        // sLight->setSpecularColor(glm::vec4(0.5,0.5,0.0,1.0));
-        // sLight->setPosition(glm::vec3(0.0));
-        // sLight->setDirection(glm::vec3(0,PI*0.25,0.0));
-        // sLight->setCutOff(PI*0.1, 0.2);
-        // sLight->setAttenuation(0.0,0.02);
-        // std::unique_ptr<Light> spotLight(sLight);
-        // m_scene->addLight(std::move(spotLight));
+        SpotLight * sLight = new SpotLight();
+        sLight->setSpecularColor(glm::vec4(0.5,0.5,0.0,1.0));
+        sLight->setPosition(glm::vec3(0.0));
+        sLight->setDirection(glm::vec3(0,PI*0.25,0.0));
+        sLight->setCutOff(PI*0.1, 0.2);
+        sLight->setAttenuation(0.0,0.02);
+        std::unique_ptr<Light> spotLight(sLight);
+        m_scene->addLight(std::move(spotLight));
         
         //-----------------------
 
@@ -144,13 +144,13 @@ void update(float _dt) {
 
             if(m_scene->getLights()[i]->getType() == LIGHT_DIRECTIONAL){
                 DirectionalLight* tmp = dynamic_cast<DirectionalLight*>( (m_scene->getLights()[i]).get() );
-                tmp->setDirection(glm::vec3(cos(time),
+                tmp->setDirection(glm::vec3(0.0,
                                             sin(time), 
                                             1.0));
             } else if(m_scene->getLights()[i]->getType() == LIGHT_POINT){
                 PointLight* tmp = dynamic_cast<PointLight*>( (m_scene->getLights()[i]).get() );
-                tmp->setPosition(glm::vec3( 100*cos(time),
-                                            100*sin(time), 
+                tmp->setPosition(glm::vec3( 200*cos(time*0.8),
+                                            200*sin(time*0.3), 
                                             -m_view->getPosition().z+100));
             } else if(m_scene->getLights()[i]->getType() == LIGHT_SPOT){
                 SpotLight* tmp = dynamic_cast<SpotLight*>( (m_scene->getLights()[i]).get() );

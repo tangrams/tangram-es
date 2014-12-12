@@ -29,29 +29,31 @@ public:
     *   Especial lights don't need to be pass on arrays. */
     virtual void setIndexPos(int _indexPos);
 
-    /* General light colors */
+    /*  Set Ambient Color. Which is constant across the scene */
     virtual void setAmbientColor(const glm::vec4 _ambient);
+
+    /*  Set Diffuse Color. What we generaly understand for color of a light */
     virtual void setDiffuseColor(const glm::vec4 _diffuse);
+
+    /*  Set Specular Color. This are the intense reflections of a light. AKA shinny spot */
     virtual void setSpecularColor(const glm::vec4 _specular);
 
-    /* Get the type of light, especially to identify the class and specific methods to it. */
+    /*  Get the type of light, especially to identify the class and specific methods to it. */
     virtual LightType getType();
 
-    /* Get the name of the light */
+    /*  Get the name of the light */
     virtual std::string getName();
 
-    /* Get the uniform name of the light */
+    /*  Get the uniform name of the light */
     virtual std::string getUniformName();
 
-    /*  GLSL Defines list need to be injected on the shaders */
-    virtual std::string getDefinesBlock() = 0;
+    /*  GLSL #defines flags for the instance of this light */
+    virtual std::string getInstanceDefinesBlock() = 0;
 
-    /*  GLSL Defines and code block (struct and classes) that need to be injected per instance on the shaders*/
-    virtual std::string getBlock() = 0;
+    /*  GLSL line to compute the specific light instance */
+    virtual std::string getInstanceComputeBlock();
 
-    /*  This method is inspired on the webgl version.
-    *   used to inject the uniforms for this particular light on
-    *   the passed shader */
+    /*  Inject the uniforms for this particular light on the passed shader */
     virtual void setupProgram( ShaderProgram &_shader );
 
 protected:
