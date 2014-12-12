@@ -4,7 +4,7 @@
 
 Material::Material():m_name("material"),
 m_emission(0.0),m_ambient(1.0),m_diffuse(0.8),m_specular(0.2),m_shininess(0.2),
-m_bEmission(false),m_bAmbient(false),m_bDiffuse(true),m_bSpecular(true){
+m_bEmission(false),m_bAmbient(false),m_bDiffuse(true),m_bSpecular(false){
     
 }
 
@@ -39,16 +39,9 @@ void Material::setSpecular(const glm::vec4 _specular, float _shinnyFactor){
 }
 
 void Material::enableEmission(){ m_bEmission = true; }
-void Material::disableEmission(){ m_bEmission = false; }
-
 void Material::enableAmbient(){ m_bAmbient = true; };
-void Material::disableAmbient(){ m_bAmbient = false; };
-
 void Material::enableDiffuse(){ m_bDiffuse = true; };
-void Material::disableDiffuse(){ m_bDiffuse = false; };
-
 void Material::enableSpecular(){ m_bSpecular = true; };
-void Material::disableSpecular(){ m_bSpecular = false; };
 
 std::string Material::getDefinesBlock(){
 	std::string defines = "\n";

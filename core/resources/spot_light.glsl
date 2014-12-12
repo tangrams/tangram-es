@@ -93,7 +93,7 @@ void calculateLight(in SpotLight _light, in vec3 _eye, in vec3 _ecPosition3, in 
 
         // normal . light half vector
         float nDotHV = min(max(0.0, dot(_normal, halfVector)),1.0);
-        pf = pow(nDotHV, u_material.shininess);
+        pf = pow(nDotHV, g_material.shininess);
     }
     _specular += _light.specular * pf * spotAttenuation;
 #endif

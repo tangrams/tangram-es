@@ -34,8 +34,8 @@ private:
     std::vector<std::unique_ptr<Style>> m_styles;
     std::vector<std::shared_ptr<Light>> m_lights;
 
-    int m_directionaLightCounter;
-    int m_pointLightCounter;
-    int m_spotLightCounter;
+    bool m_isDirectionalLights;
+    bool m_isPointLights;
+    bool m_isSpotLights;
 };
 

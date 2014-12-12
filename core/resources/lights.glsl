@@ -14,20 +14,23 @@ vec4 calculateLighting(in vec3 _ecPosition, in vec3 _normal) {
   vec4 color = vec4(0.0);
   
 #ifdef MATERIAL_EMISSION
-  color = u_material.emission;
+  color = g_material.emission;
 #endif
 
 #ifdef MATERIAL_AMBIENT
-  color += amb * u_material.ambient;
+  color += amb * g_material.ambient;
 #endif
 
 #ifdef MATERIAL_DIFFUSE
-    color += diff * u_material.diffuse;
+    color += diff * g_material.diffuse;
 #endif
 
 #ifdef MATERIAL_SPECULAR
-    color += spec * u_material.specular;
+    color += spec * g_material.specular;
 #endif
+
+  //  For the moment no alpha light (weird concept... right?)
+  color.a = 1.0;
 
   return color;
 }

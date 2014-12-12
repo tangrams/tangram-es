@@ -141,21 +141,39 @@ std::string getString(const T& _value, int _precision, int _width, char _fill ){
     return out.str();
 }
 
-inline std::string getString(const glm::vec2 &_vec, char _sep = ','){
+inline std::string getString(const glm::vec2 &_vec, float _precision = 8){
     std::ostringstream strStream;
-    strStream<< _vec.x << _sep << _vec.y << _sep;
+    strStream << "vec2(" << std::setprecision(_precision) << std::fixed << _vec.x << "," << _vec.y << ")";
     return strStream.str();
 }
 
-inline std::string getString(const glm::vec3 &_vec, char _sep = ','){
+inline std::string getString(const glm::vec2 &_vec, char _sep ){
     std::ostringstream strStream;
-    strStream<< _vec.x << _sep << _vec.y << _sep << _vec.z;
+    strStream << _vec.x << _sep << _vec.y;
     return strStream.str();
 }
 
-inline std::string getString(const glm::vec4 &_vec, char _sep = ','){
+inline std::string getString(const glm::vec3 &_vec, float _precision = 8){
     std::ostringstream strStream;
-    strStream<< _vec.x << _sep << _vec.y << _sep << _vec.z << _sep << _vec.w;
+    strStream << "vec3(" << std::setprecision(_precision) << std::fixed << _vec.x << "," << _vec.y << "," << _vec.z << ")";
+    return strStream.str();
+}
+
+inline std::string getString(const glm::vec3 &_vec, char _sep ){
+    std::ostringstream strStream;
+    strStream << _vec.x << _sep << _vec.y << _sep << _vec.z;
+    return strStream.str();
+}
+
+inline std::string getString(const glm::vec4 &_vec, float _precision = 8){
+    std::ostringstream strStream;
+    strStream << "vec4(" << std::setprecision(_precision) << std::fixed <<_vec.x << "," << _vec.y << "," << _vec.z << "," << _vec.w << ")";
+    return strStream.str();
+}
+
+inline std::string getString(const glm::vec4 &_vec, char _sep ){
+    std::ostringstream strStream;
+    strStream << _vec.x << _sep << _vec.y << _sep << _vec.z << _sep << _vec.w;
     return strStream.str();
 }
 

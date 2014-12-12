@@ -5,36 +5,31 @@
 class PointLight : public Light {
 public:
 
-	PointLight();
+	PointLight(const std::string& _name, bool _dynamic = true);
 	virtual ~PointLight();
     
     /*  Set the position relative to the camera */
-    void setPosition(const glm::vec3 &_pos );
+    virtual void setPosition(const glm::vec3& _pos );
 
     /*  Set the constant attenuation. Basically dim */
-    void setConstantAttenuation(float _constantAtt);
+    virtual void setConstantAttenuation(float _constantAtt);
 
     /*  Set the linear attenuation based on the distance */
-    void setLinearAttenuantion(float _linearAtt);
+    virtual void setLinearAttenuation(float _linearAtt);
 
     /*  Set the quadratic attenuation based on the distance */
-    void setQuadreaticAttenuation(float _quadraticAtt);
+    virtual void setQuadreaticAttenuation(float _quadraticAtt);
 
     /*  Set the the constant, linear and quadratic attenuation. */
-    void setAttenuation(float _constant , float _linear = 0.0, float _quadratic = 0.0);
-
-    /*  GLSL #defines with the NUMBER of lights of this type */
-    static std::string getArrayDefinesBlock(int _numberOfLights);
-
-    /*  GLSL #defines with the NUMBER of lights of this type */
-    static std::string getArrayUniformBlock();
+    virtual void setAttenuation(float _constant , float _linear , float _quadratic );
 
     /*  GLSL block code with structs and need functions for this light type */
     static std::string getClassBlock();
 
     virtual std::string getInstanceDefinesBlock();
-
-    virtual void setupProgram( ShaderProgram &_program );
+    virtual std::string getInstanceAssignBlock();
+    
+    virtual void setupProgram( ShaderProgram& _program );
     
 protected:
     glm::vec4	m_position;

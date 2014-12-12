@@ -15,6 +15,8 @@ varying vec3 v_normal;
 varying vec2 v_texcoord;
 
 void main(void) {
+#pragma tangram: lighting_non_dynamic_assing
+
 	vec4 color = v_color;
 
 	color *= calculateLighting(v_ecPosition,v_normal);

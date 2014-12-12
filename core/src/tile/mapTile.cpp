@@ -87,7 +87,7 @@ void MapTile::draw( Scene& _scene, const Style& _style, const View& _view){
         shader->setUniformMatrix4f("u_modelView", &fmv[0]);
         shader->setUniformMatrix4f("u_modelViewProj", &fmvp[0]);
         
-        shader->setUniformf("u_time", ((float)clock())/CLOCKS_PER_SEC);
+        // shader->setUniformf("u_time", ((float)clock())/CLOCKS_PER_SEC );
         
         //  Pass need lights
         //

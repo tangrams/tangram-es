@@ -1,8 +1,8 @@
 #include "spotLight.h"
 #include "util/stringsOp.h"
 
-SpotLight::SpotLight():m_direction(1.0,0.0,0.0),m_spotExponent(0.0),m_spotCutoff(0.0),m_spotCosCutoff(0.0){
-    m_name = "spotLight";
+SpotLight::SpotLight(const std::string& _name, bool _dynamic):PointLight(_name,_dynamic),m_direction(1.0,0.0,0.0),m_spotExponent(0.0),m_spotCutoff(0.0),m_spotCosCutoff(0.0){
+    m_typeName = "SpotLight";
     m_type = LIGHT_SPOT;
 }
 
@@ -21,10 +21,12 @@ void SpotLight::setCutOff(float _cutoff, float _exponent){
 }
 
 void SpotLight::setupProgram( ShaderProgram &_shader ){
-    PointLight::setupProgram(_shader);
-    _shader.setUniformf(getUniformName()+".direction", m_direction);
-    _shader.setUniformf(getUniformName()+".spotCosCutoff", m_spotCosCutoff);
-    _shader.setUniformf(getUniformName()+".spotExponent", m_spotExponent);
+    if(m_dynamic){
+        PointLight::setupProgram(_shader);
+        _shader.setUniformf(getUniformName()+".direction", m_direction);
+        _shader.setUniformf(getUniformName()+".spotCosCutoff", m_spotCosCutoff);
+        _shader.setUniformf(getUniformName()+".spotExponent", m_spotExponent);
+    }
 }
 
 std::string SpotLight::getArrayDefinesBlock(int _numberOfLights){
@@ -60,4 +62,14 @@ std::string SpotLight::getInstanceDefinesBlock(){
         defines += "#endif\n";
     }
     return defines;
+}
+
+std::string SpotLight::getInstanceAssignBlock(){
+    std::string block = PointLight::getInstanceAssignBlock();
+    if(!m_dynamic){
+        block += getInstanceName() + ".direction = " + getString(m_direction) + ";\n";
+        block += getInstanceName() + ".spotCosCutoff = " + getString(m_spotCosCutoff) + ";\n";
+        block += getInstanceName() + ".spotExponent = " + getString(m_spotExponent) + ";\n";
+    }
+    return block;
 }

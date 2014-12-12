@@ -5,7 +5,6 @@ PolygonStyle::PolygonStyle(std::string _name, GLenum _drawMode) : Style(_name, _
     
     constructVertexLayout();
     constructShaderProgram();
-    
 }
 
 void PolygonStyle::constructVertexLayout() {
@@ -28,8 +27,8 @@ void PolygonStyle::constructShaderProgram() {
     m_shaderProgram = std::make_shared<ShaderProgram>();
     m_shaderProgram->loadSourceStrings(fragShaderSrcStr, vertShaderSrcStr);
 
-    m_shaderProgram->addBlock("material",m_material.getBlock());
-    
+    m_material.enableSpecular();
+    m_shaderProgram->addBlock("material",m_material.getBlock());   // This is a must for lighting !!
 }
 
 void PolygonStyle::setup() {

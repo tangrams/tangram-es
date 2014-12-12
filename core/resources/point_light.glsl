@@ -81,7 +81,7 @@ void calculateLight(in PointLight _light, in vec3 _eye, in vec3 _ecPosition3, in
     if (nDotVP > 0.0){
         vec3 halfVector = normalize(VP + _eye); // Direction of maximum highlights
         float nDotHV = max(0.0, dot(_normal, halfVector));
-        pf = pow(nDotHV, u_material.shininess);
+        pf = pow(nDotHV, g_material.shininess);
     }
 
     #ifdef POINTLIGHT_ATTENUATION

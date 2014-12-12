@@ -1,8 +1,8 @@
 #include "directionalLight.h"
 #include "util/stringsOp.h"
 
-DirectionalLight::DirectionalLight():m_direction(1.0,0.0,0.0){
-	m_name = "directionalLight";
+DirectionalLight::DirectionalLight(const std::string& _name, bool _dynamic):Light(_name,_dynamic),m_direction(1.0,0.0,0.0){
+	m_typeName = "DirectionalLight";
 	m_type = LIGHT_DIRECTIONAL;
 }
 
@@ -15,16 +15,10 @@ void DirectionalLight::setDirection(const glm::vec3 &_dir){
 }
 
 void DirectionalLight::setupProgram( ShaderProgram &_shader ){
-    Light::setupProgram(_shader);
-    _shader.setUniformf(getUniformName()+".direction", m_direction);
-}
-
-std::string DirectionalLight::getArrayDefinesBlock(int _numberOfLights){
-	return "#define NUM_DIRECTIONAL_LIGHTS " + getString(_numberOfLights) + "\n";
-}
-
-std::string DirectionalLight::getArrayUniformBlock(){
-	return "uniform DirectionalLight u_directionalLights[NUM_DIRECTIONAL_LIGHTS];\n";
+	if(m_dynamic){
+		Light::setupProgram(_shader);
+    	_shader.setUniformf(getUniformName()+".direction", m_direction);
+	}
 }
 
 std::string DirectionalLight::getClassBlock(){
@@ -33,4 +27,12 @@ std::string DirectionalLight::getClassBlock(){
 
 std::string DirectionalLight::getInstanceDefinesBlock(){
 	return "\n";
+}
+
+std::string DirectionalLight::getInstanceAssignBlock(){
+    std::string block = Light::getInstanceAssignBlock();
+    if(!m_dynamic){
+        block += getInstanceName() + ".direction = " + getString(m_direction) + ";\n";
+    }
+    return block;
 }

@@ -22,6 +22,8 @@ std::unique_ptr<TileManager> m_tileManager;
 std::shared_ptr<Scene> m_scene;
 std::shared_ptr<View> m_view;
 
+static float g_time = 0.0;
+
 void initialize() {
     
     logMsg("%s\n", "initialize");
@@ -56,29 +58,28 @@ void initialize() {
         //------ TESTING LIGHTS
 
         //  Directional
-        DirectionalLight* dlight = new DirectionalLight();
+        DirectionalLight* dlight = new DirectionalLight("dLight",false);
         dlight->setDirection(glm::vec3(-1.0, -1.0, 1.0));
         std::shared_ptr<Light> directionalLight(dlight);
         m_scene->addLight(directionalLight);
     
-        //  Point
-        PointLight * pLight = new PointLight();
+        // //  Point
+        PointLight * pLight = new PointLight("pLight");
         pLight->setDiffuseColor(glm::vec4(0.0,1.0,0.0,1.0));
         pLight->setSpecularColor(glm::vec4(0.5,0.0,1.0,1.0));
-        pLight->setAttenuation(0.0,0.01);
+        pLight->setLinearAttenuation(0.005);
         pLight->setPosition(glm::vec3(0.0));
         std::shared_ptr<Light> pointLight(pLight);
-        m_scene->addLight(pointLight);
+        // m_scene->addLight(pointLight);
 
-        // //  Spot
-        SpotLight * sLight = new SpotLight();
+        // // //  Spot
+        SpotLight * sLight = new SpotLight("sLight");
         sLight->setSpecularColor(glm::vec4(0.5,0.5,0.0,1.0));
         sLight->setPosition(glm::vec3(0.0));
         sLight->setDirection(glm::vec3(0,PI*0.25,0.0));
-        sLight->setCutOff(PI*0.1, 0.2);
-        sLight->setAttenuation(0.0,0.02);
-        std::unique_ptr<Light> spotLight(sLight);
-        m_scene->addLight(std::move(spotLight));
+        sLight->setCutOff(PI*0.1, 20.0);
+        std::shared_ptr<Light> spotLight(sLight);
+        // m_scene->addLight(spotLight);
         
         //-----------------------
 
@@ -132,30 +133,27 @@ void resize(int _newWidth, int _newHeight) {
 
 void update(float _dt) {
 
+    g_time += _dt;
+
     if (m_tileManager) {
         m_tileManager->updateTileSet();
     }
     
     if(m_scene){
-        //------ TESTING LIGHTS
-        //
-        float time = ((float)clock())/CLOCKS_PER_SEC;
         for(int i = 0 ; i < m_scene->getLights().size(); i++){
 
             if(m_scene->getLights()[i]->getType() == LIGHT_DIRECTIONAL){
                 DirectionalLight* tmp = dynamic_cast<DirectionalLight*>( (m_scene->getLights()[i]).get() );
-                tmp->setDirection(glm::vec3(0.0,
-                                            sin(time), 
-                                            1.0));
+                // tmp->setDirection(glm::vec3(0.0, sin(g_time), 1.0));
             } else if(m_scene->getLights()[i]->getType() == LIGHT_POINT){
                 PointLight* tmp = dynamic_cast<PointLight*>( (m_scene->getLights()[i]).get() );
-                tmp->setPosition(glm::vec3( 200*cos(time*0.8),
-                                            200*sin(time*0.3), 
+                tmp->setPosition(glm::vec3( 200*cos(g_time*0.8),
+                                            200*sin(g_time*0.3), 
                                             -m_view->getPosition().z+100));
             } else if(m_scene->getLights()[i]->getType() == LIGHT_SPOT){
                 SpotLight* tmp = dynamic_cast<SpotLight*>( (m_scene->getLights()[i]).get() );
-                tmp->setDirection(glm::vec3(cos(time),
-                                            sin(time), 
+                tmp->setDirection(glm::vec3(cos(g_time),
+                                            sin(g_time), 
                                             0.0));
                 tmp->setPosition(glm::vec3(0.0, 0.0, -m_view->getPosition().z+100));
             } 

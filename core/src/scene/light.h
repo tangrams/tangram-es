@@ -19,15 +19,13 @@ typedef enum {
 class Light {
 public:
     
-    Light();
+    /* All lights have a name*/
+    Light(const std::string& _name, bool _dynamic = true);
+
     virtual ~Light();
     
     /*  This name is used to construct the uniform name to be pass to the shader */
     virtual void setName(const std::string &_name);
-
-    /*  Arrays of lights are manage by the scene. And this number is define on the adding lights methods.
-    *   Especial lights don't need to be pass on arrays. */
-    virtual void setIndexPos(int _indexPos);
 
     /*  Set Ambient Color. Which is constant across the scene */
     virtual void setAmbientColor(const glm::vec4 _ambient);
@@ -44,8 +42,17 @@ public:
     /*  Get the name of the light */
     virtual std::string getName();
 
-    /*  Get the uniform name of the light */
+    /*  Get the uniform name of the DYNAMICAL light */
     virtual std::string getUniformName();
+
+    /*  Get the instances light name defined on the shader */
+    virtual std::string getInstanceName();
+
+    /*  Get the instances GLSL block where the light is defined inside the shader */
+    virtual std::string getInstanceBlock();
+
+    /*  Get the instances GLSL block where NON DYNAMICAL light values are assigned inside the shader */
+    virtual std::string getInstanceAssignBlock();
 
     /*  GLSL #defines flags for the instance of this light */
     virtual std::string getInstanceDefinesBlock() = 0;
@@ -53,24 +60,24 @@ public:
     /*  GLSL line to compute the specific light instance */
     virtual std::string getInstanceComputeBlock();
 
-    /*  Inject the uniforms for this particular light on the passed shader */
+    /*  Inject the uniforms for this particular DYNAMICAL light on the passed shader */
     virtual void setupProgram( ShaderProgram &_shader );
 
 protected:
+
+    /*  The name reference to the uniform on the shader.  */
+    std::string m_name;
+
+    /*  String with the type name */
+    std::string m_typeName;
 
     /* Light Colors */
     glm::vec4 m_ambient;
     glm::vec4 m_diffuse;
     glm::vec4 m_specular;
 
-    /*  The name reference to the uniform on the shader. 
-    *  For generic names like "directionalLight", "pointLight" or "spotLight" this will become part of the array:
-    * "u_directionalLight[0]", "u_pointLight[0]" or "u_spotLight[0]"  */
-    std::string m_name;
-
     /*  This is use to identify the type of light after been pull inside a vector of uniq_ptr of this abstract class*/
     LightType   m_type;
 
-    /* If -1 is a single light not injected through the array */
-    int         m_index;
+    bool        m_dynamic;
 };

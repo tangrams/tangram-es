@@ -30,29 +30,17 @@ public:
     *   By setting the property you will enable and require to reloading the shader. */
     void setSpecular(const glm::vec4 _specular, float _shinnyFactor);
 
-    /* Enable or disableing color properties require reloading the shader */
+    /* Enable Emission colors on the shader */
     void enableEmission();
 
-    /* Enable or disableing color properties require reloading the shader */
-    void disableEmission();
-
-    /* Enable or disableing color properties require reloading the shader */
+    /* Enable ambient colors on the shader */
     void enableAmbient();
 
-    /* Enable or disableing color properties require reloading the shader */
-    void disableAmbient();
-
-    /* Enable or disableing color properties require reloading the shader */
+    /* Enable Diffuse colors on the shader */
     void enableDiffuse();
 
-    /* Enable or disableing color properties require reloading the shader */
-    void disableDiffuse();
-
-    /* Enable or disableing color properties require reloading the shader */
+    /* Enable Specular colors on the shader */
     void enableSpecular();
-
-    /* Enable or disableing color properties require reloading the shader */
-    void disableSpecular();
 
     /* Get defines that need to be injected on top of the shader */
     virtual std::string getDefinesBlock();

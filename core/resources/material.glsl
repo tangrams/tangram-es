@@ -16,4 +16,6 @@ struct Material {
 	float shininess;
 #endif
 };
+
 uniform Material u_material;
+Material g_material = u_material;

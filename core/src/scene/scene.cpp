@@ -7,7 +7,7 @@
 #include "pointLight.h"
 #include "spotLight.h"
 
-Scene::Scene():m_directionaLightCounter(0),m_pointLightCounter(0),m_spotLightCounter(0){
+Scene::Scene():m_isDirectionalLights(false),m_isPointLights(false),m_isSpotLights(false){
 
 }
 
@@ -17,60 +17,48 @@ void Scene::addStyle(std::unique_ptr<Style> _style) {
 
 void Scene::addLight(std::shared_ptr<Light> _light){
     
-    if( _light->getType() == LIGHT_DIRECTIONAL &&   //  If is DIRECTIONAL and
-        _light->getName() == "directionalLight"){    //  have the default name, can be set to be add to the array.
-        _light->setIndexPos(m_directionaLightCounter);
-        m_directionaLightCounter++;
-    } else if( _light->getType() == LIGHT_POINT &&  //  If is POINT and
-        _light->getName() == "pointLight"){    //  have the default name, can be set to be add to the array.
-        _light->setIndexPos(m_pointLightCounter);
-        m_pointLightCounter++;
-    } else if( _light->getType() == LIGHT_SPOT &&  //  If is POINT and
-        _light->getName() == "spotLight"){    //  have the default name, can be set to be add to the array.
-        _light->setIndexPos(m_spotLightCounter);
-        m_spotLightCounter++;
+    if( _light->getType() == LIGHT_DIRECTIONAL){
+        m_isDirectionalLights = true;
+    } else if( _light->getType() == LIGHT_POINT){
+        m_isPointLights = true;
+    } else if( _light->getType() == LIGHT_SPOT ){
+        m_isSpotLights = true;
     }
 
-    //  Beside the nature of the ligth add it to the vector
-    //  We pre supose that the light already know how to be injected as uniform (if is need)
-    m_lights.push_back(std::move(_light));
+    //  TODO: 
+    //          - check for name and #defines collitions
+    
+    m_lights.push_back(_light);
 }
 
 void Scene::buildShaders(){
     
-    // TODO:    
-    //          - What happen if the light is not in the array? the block need to be add with 
-    //          - Add #ifndef to the blocks in order to avoid collisions between in/out array lights
-    
     //  LIGHTENING INJECTION
     //
-    std::string lightsDefines = ""; //  "#DEFINE LIGHT_..."
-    std::string lightsBlock = "";   //  Needed structs and "calculateLight()"" functions for that struct
-    std::string lightsUniforms = "";//  Uniform declaration
+    std::string lightsDefines = "";     //  special "#DEFINE LIGHT_..." flags 
+    std::string lightsClassBlock = "";  //  Needed structs and "calculateLight()"" functions for that struct
+    std::string lightsInstance = "";    //  Uniform / Global declaration of each instance
+    std::string lightsAssing = "";      //  Assign values to non-dynamic lights
     std::string calculateLightBlock = stringFromResource("lights.glsl"); // Main "calculateLighting()" function
 
-    if(m_directionaLightCounter > 0){
-        lightsDefines += DirectionalLight::getArrayDefinesBlock(m_directionaLightCounter);
-        lightsBlock += DirectionalLight::getClassBlock();
-        lightsUniforms += DirectionalLight::getArrayUniformBlock();
+    if(m_isDirectionalLights){
+        lightsClassBlock += DirectionalLight::getClassBlock();
     }
 
-    if(m_pointLightCounter > 0){
-        lightsDefines += PointLight::getArrayDefinesBlock(m_pointLightCounter);
-        lightsBlock += PointLight::getClassBlock();
-        lightsUniforms += PointLight::getArrayUniformBlock();
+    if(m_isPointLights){
+        lightsClassBlock += PointLight::getClassBlock();
     }
 
-    if(m_spotLightCounter > 0){
-        lightsDefines += SpotLight::getArrayDefinesBlock(m_spotLightCounter);
-        lightsBlock += SpotLight::getClassBlock();
-        lightsUniforms += SpotLight::getArrayUniformBlock();
+    if(m_isSpotLights){
+        lightsClassBlock += SpotLight::getClassBlock();
     }
     
     if (m_lights.size() > 0){
         std::string ligthsListBlock = "";
         for(int i = 0; i < m_lights.size(); i++){
             lightsDefines += m_lights[i]->getInstanceDefinesBlock();
+            lightsInstance += m_lights[i]->getInstanceBlock();
+            lightsAssing += m_lights[i]->getInstanceAssignBlock();
             ligthsListBlock += m_lights[i]->getInstanceComputeBlock();
         }
         replaceString(calculateLightBlock,"#pragma tangram: lights_to_compute",ligthsListBlock); 
@@ -79,9 +67,11 @@ void Scene::buildShaders(){
     //  Inject the light block
     for(int i = 0; i < m_styles.size(); i++){
         m_styles[i]->getShaderProgram()->addBlock("lighting",   lightsDefines+"\n"+
-                                                                lightsBlock+"\n"+
-                                                                lightsUniforms+"\n"+
+                                                                lightsClassBlock+"\n"+
+                                                                lightsInstance+"\n"+
                                                                 calculateLightBlock+"\n");
+
+        m_styles[i]->getShaderProgram()->addBlock("lighting_non_dynamic_assing", lightsAssing);
     }
 
     //  COMPILE ALL SHADERS

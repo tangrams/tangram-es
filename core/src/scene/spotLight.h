@@ -5,14 +5,14 @@
 class SpotLight : public PointLight {
 public:
     
-    SpotLight();
+    SpotLight(const std::string& _name, bool _dynamic = true);
     virtual ~SpotLight();
 
     /*  Set the direction of the light */
-    void setDirection(const glm::vec3 &_dir);
-    
+    virtual void setDirection(const glm::vec3& _dir);
+
     /*  Set the properties of the cutoff light cone */
-    void setCutOff(float _lightConeRadiants, float _lieghtExponent);
+    virtual void setCutOff(float _lightConeRadiants, float _lieghtExponent);
     
     /*  GLSL #defines with the NUMBER of lights of this type */
     static std::string getArrayDefinesBlock(int _numberOfLights);
@@ -24,8 +24,9 @@ public:
     static std::string getClassBlock();
 
     virtual std::string getInstanceDefinesBlock();
+    virtual std::string getInstanceAssignBlock();
 
-    virtual void setupProgram( ShaderProgram &_program );
+    virtual void setupProgram( ShaderProgram& _program );
     
 protected:
    	glm::vec3 m_direction;
