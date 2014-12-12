@@ -121,14 +121,23 @@ void render() {
         // Loop over visible tiles
         for (const auto& mapIDandTile : m_tileManager->getVisibleTiles()) {
 
-            const std::unique_ptr<MapTile>& tile = mapIDandTile.second;
-            
+            const std::shared_ptr<MapTile>& tile = mapIDandTile.second;
             if (tile) {
                 // Draw!
                 tile->draw(*style, viewProj);
             }
-
         }
+        
+        // Loop over proxy tiles
+        for(const auto& mapIDandTile : m_tileManager->getProxyTiles()) {
+            const std::shared_ptr<MapTile>& tile = mapIDandTile.second;
+            if(tile) {
+                // Draw!
+                logMsg("Drawing Proxy Tile: [%d, %d, %d]\n", mapIDandTile.first.z, mapIDandTile.first.x, mapIDandTile.first.y);
+                tile->draw(*style, viewProj);
+            }
+        }
+        
     }
 
     while (Error::hadGlError("Tangram::render()")) {}
@@ -147,13 +156,18 @@ void handleDoubleTapGesture(float _posX, float _posY) {
 void handlePanGesture(float _velX, float _velY) {
     // Scaled with reference to 16 zoom level
     float invZoomScale = 0.1 * pow(2,(16 - m_view->getZoom()));
-    m_view->translate(-_velX * invZoomScale, _velY * invZoomScale);
+    m_view->translate(-_velX * invZoomScale * 2.0, _velY * invZoomScale * 2.0);
     logMsg("Pan Velocity: (%f,%f)\n", _velX, _velY);
 }
 
 void handlePinchGesture(float _posX, float _posY, float _scale) {
     logMsg("Do pinch, pos1: (%f, %f)\tscale: (%f)\n", _posX, _posY, _scale);
-    m_view->zoom( _scale < 1.0 ? -1 : 1);
+    if(_scale < 1.0) {
+        m_view->zoom((_scale - 1.0)*0.25);
+    }
+    else if(_scale > 1.0 && _scale < 10.0) {
+        m_view->zoom((_scale - (int)_scale)*0.25);
+    }
 }
 
 void teardown() {
