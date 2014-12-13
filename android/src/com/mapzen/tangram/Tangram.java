@@ -133,7 +133,7 @@ public class Tangram extends GLSurfaceView implements Renderer, OnScaleGestureLi
     public boolean onScroll(MotionEvent e1, MotionEvent e2, float distanceX, float distanceY) {
         
         // We flip the signs of distanceX and distanceY because onScroll provides the distances
-        // by which the material being scrolled should move, while handlePanGesture expects the 
+        // by which the view being scrolled should move, while handlePanGesture expects the 
         // distances by which the touch point has moved on the screen (these are opposite)
         handlePanGesture(-distanceX, -distanceY);
         return true;
