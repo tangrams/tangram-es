@@ -3,7 +3,7 @@
 
 DirectionalLight::DirectionalLight(const std::string& _name, bool _dynamic):Light(_name,_dynamic),m_direction(1.0,0.0,0.0){
 	m_typeName = "DirectionalLight";
-	m_type = LIGHT_DIRECTIONAL;
+	m_type = LightType::LIGHT_DIRECTIONAL;
 }
 
 DirectionalLight::~DirectionalLight(){
@@ -14,10 +14,10 @@ void DirectionalLight::setDirection(const glm::vec3 &_dir){
     m_direction = _dir;
 }
 
-void DirectionalLight::setupProgram( ShaderProgram &_shader ){
+void DirectionalLight::setupProgram( ShaderProgram* _shader ){
 	if(m_dynamic){
 		Light::setupProgram(_shader);
-    	_shader.setUniformf(getUniformName()+".direction", m_direction);
+    	_shader->setUniformf(getUniformName()+".direction", m_direction);
 	}
 }
 

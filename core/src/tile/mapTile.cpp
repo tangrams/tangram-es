@@ -92,7 +92,7 @@ void MapTile::draw( Scene& _scene, const Style& _style, const View& _view){
         //  Pass need lights
         //
         for (auto &light : _scene.getLights()){
-            light->setupProgram(*shader);
+            light->setupProgram(shader.get());
         }
         
         styleMesh->draw(shader);

@@ -26,10 +26,10 @@ public:
     /*  GLSL block code with structs and need functions for this light type */
     static std::string getClassBlock();
 
-    virtual std::string getInstanceDefinesBlock();
-    virtual std::string getInstanceAssignBlock();
+    virtual std::string getInstanceDefinesBlock() override;
+    virtual std::string getInstanceAssignBlock() override;
     
-    virtual void setupProgram( ShaderProgram& _program );
+    virtual void setupProgram( ShaderProgram* _program ) override;
     
 protected:
     glm::vec4	m_position;

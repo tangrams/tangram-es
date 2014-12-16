@@ -81,21 +81,21 @@ std::string Material::getBlock(){
     return getDefinesBlock() + "\n" + getClassBlock() + "\n";
 }
 
-void Material::setupProgram(ShaderProgram &_shader){
+void Material::setupProgram(ShaderProgram* _shader){
 	if(m_bEmission){
-		_shader.setUniformf("u_"+m_name+".emission", m_emission);
+		_shader->setUniformf("u_"+m_name+".emission", m_emission);
 	}
 	
 	if(m_bAmbient){
-		_shader.setUniformf("u_"+m_name+".ambient", m_ambient);
+		_shader->setUniformf("u_"+m_name+".ambient", m_ambient);
 	}
     
     if(m_bDiffuse){
-    	_shader.setUniformf("u_"+m_name+".diffuse", m_diffuse);
+    	_shader->setUniformf("u_"+m_name+".diffuse", m_diffuse);
     }
     
     if(m_bSpecular){
-    	_shader.setUniformf("u_"+m_name+".specular", m_specular);
-    	_shader.setUniformf("u_"+m_name+".shininess", m_shininess);
+    	_shader->setUniformf("u_"+m_name+".specular", m_specular);
+    	_shader->setUniformf("u_"+m_name+".shininess", m_shininess);
     }
 }

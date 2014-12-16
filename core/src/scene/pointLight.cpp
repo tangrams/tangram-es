@@ -3,7 +3,7 @@
 
 PointLight::PointLight(const std::string& _name, bool _dynamic):Light(_name,_dynamic),m_position(0.0),m_constantAttenuation(0.0),m_linearAttenuation(0.0),m_quadraticAttenuation(0.0){
     m_typeName = "PointLight";
-    m_type = LIGHT_POINT;
+    m_type = LightType::LIGHT_POINT;
 }
 
 PointLight::~PointLight(){
@@ -35,21 +35,21 @@ void PointLight::setAttenuation(float _constant, float _linear, float _quadratic
     m_quadraticAttenuation = _quadratic;
 }
 
-void PointLight::setupProgram( ShaderProgram &_shader ){
+void PointLight::setupProgram( ShaderProgram* _shader ){
     if(m_dynamic){
         Light::setupProgram(_shader);
-        _shader.setUniformf(getUniformName()+".position", glm::vec4(m_position) );
+        _shader->setUniformf(getUniformName()+".position", glm::vec4(m_position) );
 
         if(m_constantAttenuation!=0.0){
-            _shader.setUniformf(getUniformName()+".constantAttenuation", m_constantAttenuation);
+            _shader->setUniformf(getUniformName()+".constantAttenuation", m_constantAttenuation);
         }
 
         if(m_linearAttenuation!=0.0){
-            _shader.setUniformf(getUniformName()+".linearAttenuation", m_linearAttenuation);
+            _shader->setUniformf(getUniformName()+".linearAttenuation", m_linearAttenuation);
         }
 
         if(m_quadraticAttenuation!=0.0){
-            _shader.setUniformf(getUniformName()+".quadraticAttenuation", m_quadraticAttenuation);
+            _shader->setUniformf(getUniformName()+".quadraticAttenuation", m_quadraticAttenuation);
         }
     }
 }

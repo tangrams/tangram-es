@@ -26,7 +26,7 @@ public:
     *   If you want to disable it you have to disableDiffuse and reloading the shader. */
     void setDiffuse(const glm::vec4 _diffuse);
 
-    /*  Ambient color is by default disblable and vec4(0.2) with a shinny factor of 0.2.
+    /*  Specular color is by default disblable and vec4(0.2) with a shinny factor of 0.2.
     *   By setting the property you will enable and require to reloading the shader. */
     void setSpecular(const glm::vec4 _specular, float _shinnyFactor);
 
@@ -52,7 +52,7 @@ public:
     virtual std::string getBlock();
 
     /* Method to pass it self as a uniform to the shader program */
-    void        setupProgram( ShaderProgram &_shader );
+    void        setupProgram( ShaderProgram* _shader );
     
 private:
     std::string m_name;

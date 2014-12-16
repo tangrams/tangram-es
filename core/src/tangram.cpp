@@ -59,7 +59,7 @@ void initialize() {
 
         //  Directional
         DirectionalLight* dlight = new DirectionalLight("dLight");
-        // dlight->setDiffuseColor(glm::vec4(0.3,0.2,0.0,1.0));
+        dlight->setDiffuseColor(glm::vec4(0.3,0.2,0.0,1.0));
         dlight->setDirection(glm::vec3(-1.0, -1.0, 1.0));
         std::shared_ptr<Light> directionalLight(dlight);
         m_scene->addLight(directionalLight);
@@ -71,7 +71,7 @@ void initialize() {
         pLight->setLinearAttenuation(0.005);
         pLight->setPosition(glm::vec3(0.0));
         std::shared_ptr<Light> pointLight(pLight);
-        // m_scene->addLight(pointLight);
+        m_scene->addLight(pointLight);
 
         // // //  Spot
         SpotLight * sLight = new SpotLight("sLight",true);
@@ -80,7 +80,7 @@ void initialize() {
         sLight->setDirection(glm::vec3(0,PI*0.25,0.0));
         sLight->setCutOff(PI*0.1, 20.0);
         std::shared_ptr<Light> spotLight(sLight);
-        // m_scene->addLight(spotLight);
+        m_scene->addLight(spotLight);
         
         //-----------------------
 

@@ -3,7 +3,7 @@
 
 SpotLight::SpotLight(const std::string& _name, bool _dynamic):PointLight(_name,_dynamic),m_direction(1.0,0.0,0.0),m_spotExponent(0.0),m_spotCutoff(0.0),m_spotCosCutoff(0.0){
     m_typeName = "SpotLight";
-    m_type = LIGHT_SPOT;
+    m_type = LightType::LIGHT_SPOT;
 }
 
 SpotLight::~SpotLight(){
@@ -20,12 +20,12 @@ void SpotLight::setCutOff(float _cutoff, float _exponent){
     m_spotExponent = _exponent;
 }
 
-void SpotLight::setupProgram( ShaderProgram &_shader ){
+void SpotLight::setupProgram( ShaderProgram* _shader ){
     if(m_dynamic){
         PointLight::setupProgram(_shader);
-        _shader.setUniformf(getUniformName()+".direction", m_direction);
-        _shader.setUniformf(getUniformName()+".spotCosCutoff", m_spotCosCutoff);
-        _shader.setUniformf(getUniformName()+".spotExponent", m_spotExponent);
+        _shader->setUniformf(getUniformName()+".direction", m_direction);
+        _shader->setUniformf(getUniformName()+".spotCosCutoff", m_spotCosCutoff);
+        _shader->setUniformf(getUniformName()+".spotExponent", m_spotExponent);
     }
 }
 

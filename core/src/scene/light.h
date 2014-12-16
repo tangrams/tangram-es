@@ -8,13 +8,13 @@
 #include "glm/glm.hpp"
 #include "util/shaderProgram.h"
 
-typedef enum {
-    LIGHT_NOT_DEFINE = 0,
+enum class LightType {
+    LIGHT_NOT_DEFINE,
     LIGHT_DIRECTIONAL,
     LIGHT_POINT,
     LIGHT_SPOT,
     LIGHT_CUSTOM
-} LightType;
+};
 
 class Light {
 public:
@@ -61,7 +61,7 @@ public:
     virtual std::string getInstanceComputeBlock();
 
     /*  Inject the uniforms for this particular DYNAMICAL light on the passed shader */
-    virtual void setupProgram( ShaderProgram &_shader );
+    virtual void setupProgram( ShaderProgram* _shader );
 
 protected:
 
