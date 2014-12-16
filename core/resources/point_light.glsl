@@ -56,7 +56,10 @@ void calculateLight(in PointLight _light, in vec3 _eye, in vec3 _ecPosition3, in
 	atFactor += _light.quadraticAttenuation * dist * dist;
 	#endif
 	
-	float attenuation = 1.0 /atFactor;
+	float attenuation = 1.0;
+	if(atFactor!=0.0){
+		attenuation /= atFactor;
+	}
 	#endif
 
 	#ifdef MATERIAL_AMBIENT
