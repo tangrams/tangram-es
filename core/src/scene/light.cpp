@@ -2,7 +2,7 @@
 
 #include "util/stringsOp.h"
 
-Light::Light(const std::string& _name, bool _dynamic):m_name(_name),m_typeName("not_define_light"),m_ambient(0.0f),m_diffuse(1.0f),m_specular(0.0f),m_type(LIGHT_NOT_DEFINE),m_dynamic(_dynamic){
+Light::Light(const std::string& _name, bool _dynamic):m_name(_name),m_typeName("not_define_light"),m_ambient(0.0f),m_diffuse(1.0f),m_specular(0.0f),m_type(LightType::LIGHT_NOT_DEFINE),m_dynamic(_dynamic){
 
 }
 

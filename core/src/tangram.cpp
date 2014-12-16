@@ -147,15 +147,15 @@ void update(float _dt) {
     if(m_scene){
         for(int i = 0 ; i < m_scene->getLights().size(); i++){
 
-            if(m_scene->getLights()[i]->getType() == LIGHT_DIRECTIONAL){
+            if(m_scene->getLights()[i]->getType() == LightType::LIGHT_DIRECTIONAL){
                 DirectionalLight* tmp = dynamic_cast<DirectionalLight*>( (m_scene->getLights()[i]).get() );
                 // tmp->setDirection(glm::vec3(0.0, sin(g_time), 1.0));
-            } else if(m_scene->getLights()[i]->getType() == LIGHT_POINT){
+            } else if(m_scene->getLights()[i]->getType() == LightType::LIGHT_POINT){
                 PointLight* tmp = dynamic_cast<PointLight*>( (m_scene->getLights()[i]).get() );
                 tmp->setPosition(glm::vec3( 200*cos(g_time*0.8),
                                             200*sin(g_time*0.3), 
                                             -m_view->getPosition().z+100));
-            } else if(m_scene->getLights()[i]->getType() == LIGHT_SPOT){
+            } else if(m_scene->getLights()[i]->getType() == LightType::LIGHT_SPOT){
                 SpotLight* tmp = dynamic_cast<SpotLight*>( (m_scene->getLights()[i]).get() );
                 tmp->setDirection(glm::vec3(cos(g_time),
                                             sin(g_time), 

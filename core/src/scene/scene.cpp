@@ -17,11 +17,11 @@ void Scene::addStyle(std::unique_ptr<Style> _style) {
 
 void Scene::addLight(std::shared_ptr<Light> _light){
     
-    if( _light->getType() == LIGHT_DIRECTIONAL){
+    if( _light->getType() == LightType::LIGHT_DIRECTIONAL){
         m_isDirectionalLights = true;
-    } else if( _light->getType() == LIGHT_POINT){
+    } else if( _light->getType() == LightType::LIGHT_POINT){
         m_isPointLights = true;
-    } else if( _light->getType() == LIGHT_SPOT ){
+    } else if( _light->getType() == LightType::LIGHT_SPOT ){
         m_isSpotLights = true;
     }
 
