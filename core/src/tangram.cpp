@@ -187,7 +187,7 @@ void handlePanGesture(float _dX, float _dY) {
 }
 
 void handlePinchGesture(float _posX, float _posY, float _scale) {
-	logMsg("Pinch: (%f, %f)\tscale: (%f)\n", _posX, _posY, _scale);
+    logMsg("Pinch: (%f, %f)\tscale: (%f)\n", _posX, _posY, _scale);
     if(_scale < 1.0) {
         m_view->zoom((_scale - 1.0)*0.25);
     }

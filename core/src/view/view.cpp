@@ -3,7 +3,7 @@
 #include "platform.h"
 #include "glm/gtx/string_cast.hpp"
 
-const float View::s_maxZoom; // Create a stack reference to the static member variable
+constexpr float View::s_maxZoom; // Create a stack reference to the static member variable
 
 View::View(int _width, int _height, ProjectionType _projType) {
     
