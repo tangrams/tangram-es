@@ -4,18 +4,22 @@ all: android osx ios
 .PHONY: clean-android
 .PHONY: clean-osx
 .PHONY: clean-ios
+.PHONY: clean-rpi
 .PHONY: android
 .PHONY: osx
 .PHONY: ios
+.PHONY: rpi
 .PHONY: check-ndk
 .PHONY: cmake-osx
 .PHONY: cmake-android
 .PHONY: cmake-ios
+.PHONY: cmake-rpi
 .PHONY: install-android
 
 ANDROID_BUILD_DIR = build/android
 OSX_BUILD_DIR = build/osx
 IOS_BUILD_DIR = build/ios
+RPI_BUILD_DIR = build/rpi
 TESTS_BUILD_DIR = build/tests
 UNIT_TESTS_BUILD_DIR = ${TESTS_BUILD_DIR}/unit
 
@@ -33,6 +37,10 @@ ifndef ANDROID_API_LEVEL
 	ANDROID_API_LEVEL = android-19
 endif
 
+ifndef IOS_PLATFORM
+	IOS_PLATFORM = SIMULATOR
+endif
+
 UNIT_TESTS_CMAKE_PARAMS = \
 	-DUNIT_TESTS=1
 
@@ -46,7 +54,7 @@ ANDROID_CMAKE_PARAMS = \
 
 IOS_CMAKE_PARAMS = \
 	-DPLATFORM_TARGET=ios \
-	-DIOS_PLATFORM=SIMULATOR \
+	-DIOS_PLATFORM=${IOS_PLATFORM} \
 	-DCMAKE_TOOLCHAIN_FILE=${TOOLCHAIN_DIR}/iOS.toolchain.cmake \
 	-G Xcode
 
@@ -54,7 +62,11 @@ DARWIN_CMAKE_PARAMS = \
 	-DPLATFORM_TARGET=darwin \
 	-G Xcode
 
-clean: clean-android clean-osx clean-ios clean-tests
+RPI_CMAKE_PARAMS = \
+	-DPLATFORM_TARGET=raspberrypi \
+	-DCMAKE_TOOLCHAIN_FILE=${TOOLCHAIN_DIR}/raspberrypi.toolchain.cmake
+
+clean: clean-android clean-osx clean-ios clean-rpi clean-tests
 
 clean-android:
 	ndk-build -C android/jni clean
@@ -68,11 +80,14 @@ clean-osx:
 clean-ios:
 	rm -rf ${IOS_BUILD_DIR}
 
+clean-rpi:
+	rm -rf ${RPI_BUILD_DIR}
+
 clean-tests:
 	rm -rf ${TESTS_BUILD_DIR}
 
 android: install-android android/libs/${ANDROID_ARCH}/libtangram.so android/build.xml
-	ant -f android/build.xml debug
+	ant -q -f android/build.xml debug
 
 install-android: check-ndk cmake-android ${ANDROID_BUILD_DIR}/Makefile
 	cd ${ANDROID_BUILD_DIR} && \
@@ -102,6 +117,15 @@ ifeq ($(wildcard ${IOS_BUILD_DIR}/${IOS_XCODE_PROJ}/.*),)
 	cmake ../.. ${IOS_CMAKE_PARAMS}
 endif
 
+rpi: cmake-rpi ${RPI_BUILD_DIR}
+	cd ${RPI_BUILD_DIR} && \
+	${MAKE}
+	
+cmake-rpi:
+	mkdir -p ${RPI_BUILD_DIR}
+	cd ${RPI_BUILD_DIR} && \
+	cmake ../.. ${RPI_CMAKE_PARAMS}
+	
 tests: unit-tests
 
 unit-tests:

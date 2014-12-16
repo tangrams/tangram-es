@@ -6,7 +6,6 @@
  *
  * Primary interface for controlling and managing the lifecycle of a Tangram map surface
  * 
- * TODO: More complete lifecycle management such as onPause, onResume
  * TODO: Input functions will go here too, things like onTouchDown, onTouchMove, etc.
  */
 
@@ -24,17 +23,26 @@ void update(float _dt);
 // Render a new frame of the map view (if needed)
 void render();
 
-// Respond to touch input
-void handleTapGesture(float _posX, float _posY);
-    
-void handleDoubleTapGesture(float _posX, float _posY);
-    
-void handlePanGesture(float _velX, float _velY);
-    
-void handlePinchGesture(float _posX, float _posY, float _scale = 1.0);
-
 // Release resources and shut down renderer
 void teardown();
+
+// Invalidate and re-create all OpenGL resources
+void onContextDestroyed();
+
+// Set the ratio of hardware pixels to logical pixels (defaults to 1.0)
+void setPixelScale(float _pixelsPerPoint);
+
+// Respond to a tap at the given screen coordinates (x right, y down)
+void handleTapGesture(float _posX, float _posY);
+
+// Respond to a double tap at the given screen coordinates (x right, y down)
+void handleDoubleTapGesture(float _posX, float _posY);
+
+// Respond to a drag with the given displacement in screen coordinates (x right, y down)
+void handlePanGesture(float _dX, float _dY);
+
+// Respond to a pinch at the given position in screen coordinates with the given scale factor
+void handlePinchGesture(float _posX, float _posY, float _scale = 1.0);
 
 }
 

@@ -48,7 +48,7 @@ bool TileManager::updateTileSet() {
         }
     }
 
-    if (!(m_view->viewChanged()) && !tileSetChanged) {
+    if (!(m_view->changedSinceLastCheck()) && !tileSetChanged) {
         // No new tiles have come into view and no tiles have finished loading, 
         // so the tileset is unchanged
         return false;
@@ -109,15 +109,19 @@ void TileManager::addTile(const TileID& _tileID) {
         for (const auto& source : m_dataSources) {
             
             logMsg("Loading tile [%d, %d, %d]\n", _id.z, _id.x, _id.y);
+            
             if ( ! source->loadTileData(*tile)) {
                 logMsg("ERROR: Loading failed for tile [%d, %d, %d]\n", _id.z, _id.x, _id.y);
+            } else {
+                
+                std::shared_ptr<TileData> tileData = source->getTileData(_id);
+                
+                for (auto& style : m_scene->getStyles()) {
+                    style->addData(*tileData, *tile, m_view->getMapProjection());
+                }
+                
             }
             
-            std::shared_ptr<TileData> tileData = source->getTileData(_id);
-            
-            for (auto& style : m_scene->getStyles()) {
-                style->addData(*tileData, *tile, m_view->getMapProjection());
-            }
             
         }
 

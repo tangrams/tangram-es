@@ -8,8 +8,11 @@
 #include "tile/tileManager.h"
 #include "view/view.h"
 #include "data/dataSource.h"
-#include "style/style.h"
+
+#include "style/polygonStyle.h"
+#include "style/polylineStyle.h"
 #include "scene/scene.h"
+#include "util/error.h"
 
 namespace Tangram {
 
@@ -22,36 +25,45 @@ void initialize() {
     logMsg("%s\n", "initialize");
 
     // Create view
-    m_view = std::make_shared<View>();
+    if (!m_view) {
+        m_view = std::make_shared<View>();
+        
+        // Move the view to coordinates in Manhattan so we have something interesting to test
+        glm::dvec2 target = m_view->getMapProjection().LonLatToMeters(glm::dvec2(-74.00796, 40.70361));
+        m_view->setPosition(target.x, target.y);
+    }
 
-    // Move the view to coordinates in Manhattan so we have something interesting to test
-    glm::dvec2 target = m_view->getMapProjection().LonLatToMeters(glm::dvec2(-74.00796, 40.70361));
-    m_view->setPosition(target.x, target.y);
-
-    // Load style(s); hard-coded for now
-    std::unique_ptr<Style> polyStyle(new PolygonStyle("Polygon"));
-    polyStyle->addLayers({
-        "buildings",
-        "water",
-        "earth",
-        "landuse",
-        "roads"
-    });
-
-    // Create a scene definition and add the style
-    m_scene = std::make_shared<Scene>();
-    m_scene->addStyle(std::move(polyStyle));
+    // Create a scene object
+    if (!m_scene) {
+        m_scene = std::make_shared<Scene>();
+        
+        // Load style(s); hard-coded for now
+        std::unique_ptr<Style> polyStyle(new PolygonStyle("Polygon"));
+        polyStyle->addLayers({
+            "buildings",
+            "water",
+            "earth",
+            "landuse"
+        });
+        m_scene->addStyle(std::move(polyStyle));
+        
+        std::unique_ptr<Style> linesStyle(new PolylineStyle("Polyline"));
+        linesStyle->addLayers({"roads"});
+        m_scene->addStyle(std::move(linesStyle));
+    }
 
     // Create a tileManager
-    m_tileManager = TileManager::GetInstance();
-    
-    // Pass references to the view and scene into the tile manager
-    m_tileManager->setView(m_view);
-    m_tileManager->setScene(m_scene);
-
-    // Add a tile data source
-    std::unique_ptr<DataSource> dataSource(new MapzenVectorTileJson());
-    m_tileManager->addDataSource(std::move(dataSource));
+    if (!m_tileManager) {
+        m_tileManager = TileManager::GetInstance();
+        
+        // Pass references to the view and scene into the tile manager
+        m_tileManager->setView(m_view);
+        m_tileManager->setScene(m_scene);
+        
+        // Add a tile data source
+        std::unique_ptr<DataSource> dataSource(new MapzenVectorTileJson());
+        m_tileManager->addDataSource(std::move(dataSource));
+    }
 
     // Set up openGL state
     glDisable(GL_BLEND);
@@ -66,24 +78,32 @@ void initialize() {
     glCullFace(GL_BACK);
     glClearColor(0.3f, 0.3f, 0.3f, 1.0f);
 
+    while (Error::hadGlError("Tangram::initialize()")) {}
+
     logMsg("%s\n", "finish initialize");
 
 }
 
 void resize(int _newWidth, int _newHeight) {
     
-    logMsg("%s\n", "resize");
+    logMsg("resize: %d x %d\n", _newWidth, _newHeight);
 
     glViewport(0, 0, _newWidth, _newHeight);
 
     if (m_view) {
-        m_view->setAspect(_newWidth, _newHeight);
+        m_view->setSize(_newWidth, _newHeight);
     }
+
+    while (Error::hadGlError("Tangram::resize()")) {}
 
 }
 
 void update(float _dt) {
 
+    if (m_view) {
+        m_view->update();
+    }
+    
     if (m_tileManager) {
         m_tileManager->updateTileSet();
     }
@@ -115,38 +135,70 @@ void render() {
         }
     }
 
-    // TODO: This error checking is incomplete and only marginally useful 
-    // 1. We need to continue calling glGetError until no error states remain
-    // 2. Repeating an error message 60 times per second is not useful, try to consolidate 
-    GLenum glError = glGetError();
-    if (glError) {
-        logMsg("GL Error %d!!!\n", glError);
-    }
+    while (Error::hadGlError("Tangram::render()")) {}
 
+}
+
+void setPixelScale(float _pixelsPerPoint) {
+    
+    if (m_view) {
+        m_view->setPixelScale(_pixelsPerPoint);
+    }
+    
 }
     
 void handleTapGesture(float _posX, float _posY) {
-    logMsg("Do tap: (%f,%f)\n", _posX, _posY);
-    m_view->translate(_posX, _posY);
+    
+    float dx = m_view->toWorldDistance(_posX - 0.5 * m_view->getWidth());
+    float dy = m_view->toWorldDistance(_posY - 0.5 * m_view->getHeight());
+
+    // Flip y displacement to change from screen coordinates to world coordinates
+    m_view->translate(dx, -dy);
+    logMsg("Tap: (%f,%f)\n", _posX, _posY);
+
 }
 
 void handleDoubleTapGesture(float _posX, float _posY) {
-    logMsg("Do double tap: (%f,%f)\n", _posX, _posY);
+    
+    logMsg("Double tap: (%f,%f)\n", _posX, _posY);
+
 }
 
-void handlePanGesture(float _velX, float _velY) {
-    // TODO: Pan distance should be a function of zoom
-    m_view->translate(-_velX * 0.2, _velY * 0.2);
-    logMsg("Pan Velocity: (%f,%f)\n", _velX, _velY);
+void handlePanGesture(float _dX, float _dY) {
+    
+    float dx = m_view->toWorldDistance(_dX);
+    float dy = m_view->toWorldDistance(_dY);
+
+    // We flip the signs of dx and dy to move the camera in the opposite direction
+    // of the intended "world movement", but dy gets flipped once more because screen
+    // coordinates have y pointing down and our world coordinates have y pointing up
+    m_view->translate(-dx, dy);
+    logMsg("Drag: (%f,%f)\n", _dX, _dY);
+
 }
 
 void handlePinchGesture(float _posX, float _posY, float _scale) {
-    logMsg("Do pinch, pos1: (%f, %f)\tscale: (%f)\n", _posX, _posY, _scale);
+    
+    logMsg("Pinch: (%f, %f)\tscale: (%f)\n", _posX, _posY, _scale);
     m_view->zoom( _scale < 1.0 ? -1 : 1);
+
 }
 
 void teardown() {
     // TODO: Release resources!
+}
+
+void onContextDestroyed() {
+    
+    // The OpenGL context has been destroyed since the last time resources were created,
+    // so we invalidate all data that depends on OpenGL object handles.
+
+    // ShaderPrograms are invalidated and immediately rebuilt
+    ShaderProgram::invalidateAllPrograms();
+
+    // Buffer objects are invalidated and re-uploaded the next time they are used
+    VboMesh::invalidateAllVBOs();
+    
 }
     
 }

@@ -3,22 +3,22 @@
 #include "platform.h"
 #include "glm/gtx/string_cast.hpp"
 
-View::View(float _width, float _height, ProjectionType _projType) {
-    //Set the map projection for the view module to use.
-    setMapProjection(_projType);
-    
-    // Set up projection matrix based on input width and height with an arbitrary zoom
-    setAspect(_width, _height);
-    setZoom(16); // Arbitrary zoom for testing
+const int View::s_maxZoom; // Create a stack reference to the static member variable
 
-    // Set up view matrix
-    m_pos = glm::dvec3(0, 0, 1000); // Start at 0 to begin
-    glm::dvec3 direction = glm::dvec3(0, 0, -1); // Look straight down
-    glm::dvec3 up = glm::dvec3(0, 1, 0); // Y-axis is 'up'
-    m_view = glm::lookAt(m_pos, m_pos + direction, up);
+View::View(int _width, int _height, ProjectionType _projType) {
+    
+    setMapProjection(_projType);
+    setSize(_width, _height);
+    setZoom(16); // Arbitrary zoom for testing
+    setPosition(0.0, 0.0);
+    
+    m_changed = false;
+    m_dirty = true;
+    
 }
 
 void View::setMapProjection(ProjectionType _projType) {
+    
     switch(_projType) {
         case ProjectionType::mercator:
             m_projection.reset(new MercatorProjection());
@@ -28,65 +28,79 @@ void View::setMapProjection(ProjectionType _projType) {
             m_projection.reset(new MercatorProjection());
             break;
     }
+    
     m_dirty = true;
+    
 }
 
 const MapProjection& View::getMapProjection() {
     return *m_projection.get();
 }
 
-void View::setAspect(float _width, float _height) {
+void View::setPixelScale(float _pixelsPerPoint) {
+    
+    m_pixelScale = _pixelsPerPoint;
+    m_dirty = true;
+    
+}
 
-    m_aspect = _width / _height;
-    setZoom(m_zoom);
+void View::setSize(int _width, int _height) {
+
+    m_vpWidth = _width;
+    m_vpHeight = _height;
+    m_aspect = (float)_width / (float)_height;
     m_dirty = true;
 
 }
 
 void View::setPosition(double _x, double _y) {
 
-    translate(_x - m_pos.x, _y - m_pos.y);
+    m_pos.x = _x;
+    m_pos.y = _y;
     m_dirty = true;
 
+}
+
+void View::setZoom(int _z) {
+    
+    // ensure zoom value is allowed
+    m_zoom = glm::clamp(_z, 0, s_maxZoom);
+    m_dirty = true;
+    
 }
 
 void View::translate(double _dx, double _dy) {
 
-    m_pos.x += _dx;
-    m_pos.y += _dy;
-    m_view = glm::lookAt(m_pos, m_pos + glm::dvec3(0, 0, -1), glm::dvec3(0, 1, 0));
-    m_dirty = true;
+    setPosition(m_pos.x + _dx, m_pos.y + _dy);
 
 }
 
 void View::zoom(int _dz) {
-    setZoom(m_zoom + _dz);
-}
-
-void View::setZoom(int _z) {
-
-    // Calculate viewport dimensions
-    if(_z > s_maxZoom) {
-        _z = s_maxZoom;
-    }
-    m_zoom = _z;
-    float tileSize = 2 * MapProjection::HALF_CIRCUMFERENCE * pow(2, -m_zoom);
-    m_height = 3 * tileSize; // Set viewport size to ~3 tiles vertically
-    m_width = m_height * m_aspect; // Size viewport width to match aspect ratio
     
-    // Update camera projection
-    double fovy = PI * 0.5;
-    m_pos.z = m_height * 0.5 / tan(fovy * 0.5);
-    m_view = glm::lookAt(m_pos, m_pos + glm::dvec3(0, 0, -1), glm::dvec3(0, 1, 0));
-    m_proj = glm::perspective(fovy, m_aspect, 1.0, m_pos.z + 1.0);
-    //m_proj = glm::ortho(-m_width * 0.5, m_width * 0.5, -m_height * 0.5, m_height * 0.5, 0.1, 2000.0);
-
-    m_dirty = true;
-
+    setZoom(m_zoom + _dz);
+    
 }
 
-const glm::dmat4 View::getViewProjectionMatrix() const {
+void View::update() {
+    
+    if (!m_dirty) {
+        return;
+    }
+    
+    updateMatrices();
+    
+    updateTiles();
+    
+    m_dirty = false;
+    
+    m_changed = true;
+    
+}
+
+const glm::dmat4 View::getViewProjectionMatrix() {
+    
     return m_proj * m_view;
+    
 }
 
 glm::dmat2 View::getBoundsRect() const {
@@ -97,47 +111,96 @@ glm::dmat2 View::getBoundsRect() const {
 
 }
 
+float View::toWorldDistance(float _screenDistance) const {
+    float metersPerTile = 2 * MapProjection::HALF_CIRCUMFERENCE * pow(2, -m_zoom);
+    return _screenDistance * metersPerTile / (m_pixelScale * m_pixelsPerTile);
+}
+
 const std::set<TileID>& View::getVisibleTiles() {
 
-    if (!m_dirty) {
-        return m_visibleTiles;
+    return m_visibleTiles;
+
+}
+
+bool View::changedSinceLastCheck() {
+    
+    if (m_changed) {
+        m_changed = false;
+        return true;
     }
+    return false;
+    
+}
 
+void View::updateMatrices() {
+    
+    // find dimensions of tiles in world space at new zoom level
+    float worldTileSize = 2 * MapProjection::HALF_CIRCUMFERENCE * pow(2, -m_zoom);
+    
+    // viewport height in world space is such that each tile is [m_pixelsPerTile] px square in screen space
+    float screenTileSize = m_pixelsPerTile * m_pixelScale;
+    m_height = (float)m_vpHeight * worldTileSize / screenTileSize;
+    m_width = m_height * m_aspect;
+    
+    // set vertical field-of-view
+    double fovy = PI * 0.5;
+    
+    // we assume portrait orientation by default, so in landscape
+    // mode we scale the vertical FOV such that the wider dimension
+    // gets the intended FOV
+    if (m_width > m_height) {
+        fovy /= m_aspect;
+    }
+    
+    // set camera z to produce desired viewable area
+    m_pos.z = m_height * 0.5 / tan(fovy * 0.5);
+    
+    // set near clipping distance as a function of camera z
+    // TODO: this is a simple heuristic that deserves more thought
+    double near = m_pos.z / 50.0;
+    
+    // update view and projection matrices
+    m_view = glm::lookAt(m_pos, m_pos + glm::dvec3(0, 0, -1), glm::dvec3(0, 1, 0));
+    m_proj = glm::perspective(fovy, double(m_aspect), near, m_pos.z + 1.0);
+    
+}
+
+void View::updateTiles() {
+    
     m_visibleTiles.clear();
-
+    
     float tileSize = 2 * MapProjection::HALF_CIRCUMFERENCE * pow(2, -m_zoom);
     float invTileSize = 1.0 / tileSize;
-
+    
     float vpLeftEdge = m_pos.x - m_width * 0.5 + MapProjection::HALF_CIRCUMFERENCE;
     float vpRightEdge = vpLeftEdge + m_width;
     float vpBottomEdge = -m_pos.y - m_height * 0.5 + MapProjection::HALF_CIRCUMFERENCE;
     float vpTopEdge = vpBottomEdge + m_height;
-
-    int tileX = (int) vpLeftEdge * invTileSize;
-    int tileY = (int) vpBottomEdge * invTileSize;
-
+    
+    int tileX = (int) fmax(0, vpLeftEdge * invTileSize);
+    int tileY = (int) fmax(0, vpBottomEdge * invTileSize);
+    
     float x = tileX * tileSize;
     float y = tileY * tileSize;
-
-    while (x < vpRightEdge) {
-
-        while (y < vpTopEdge) {
-
+    
+    int maxTileIndex = pow(2, m_zoom);
+    
+    while (x < vpRightEdge && tileX < maxTileIndex) {
+        
+        while (y < vpTopEdge && tileY < maxTileIndex) {
+            
             m_visibleTiles.insert(TileID(tileX, tileY, m_zoom));
+
             tileY++;
             y += tileSize;
-
+            
         }
-
+        
         tileY = (int) vpBottomEdge * invTileSize;
         y = tileY * tileSize;
-
+        
         tileX++;
         x += tileSize;
     }
-
-    m_dirty = false;
-
-    return m_visibleTiles;
 
 }
