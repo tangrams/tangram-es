@@ -60,6 +60,25 @@ void cursor_pos_callback(GLFWwindow* window, double x, double y) {
     
 }
 
+void scroll_callback(GLFWwindow* window, double scrollx, double scrolly) {
+    
+    static double scrolled = 0.0;
+    scrolled += scrolly;
+    
+    if (scrolled * scrolled > 100.0) {
+        
+        double x, y;
+        glfwGetCursorPos(window, &x, &y);
+        
+        Tangram::handlePinchGesture(x, y, scrolled > 0 ? 1.5 : 0.5);
+        
+        scrolled = 0.0;
+    }
+}
+
+// Main program
+// ============
+
 int main(void) {
 
     GLFWwindow* window;
@@ -86,6 +105,7 @@ int main(void) {
     glfwSetWindowSizeCallback(window, window_size_callback);
     glfwSetMouseButtonCallback(window, mouse_button_callback);
     glfwSetCursorPosCallback(window, cursor_pos_callback);
+    glfwSetScrollCallback(window, scroll_callback);
     
     glfwSwapInterval(1);
     
