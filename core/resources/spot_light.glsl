@@ -35,10 +35,10 @@ struct SpotLight {
 
 void calculateLight(in SpotLight _light, in vec3 _eye, in vec3 _ecPosition3, in vec3 _normal, inout vec4 _ambient, inout vec4 _diffuse, inout vec4 _specular){
     // Compute vector from surface to light position
-    vec3 VP = normalize(vec3(_light.position) - _ecPosition3);
+    vec3 VP = normalize( vec3(_light.position) - _ecPosition3 );
 
 #ifdef SPOTLIGHT_DISTANCE
-    float dist = length(vec3(_light.position) - _ecPosition3);
+    float dist = length( vec3(_light.position) - _ecPosition3 );
 #endif 
 
     // Normalize the vector from surface to light position
@@ -48,11 +48,11 @@ void calculateLight(in SpotLight _light, in vec3 _eye, in vec3 _ecPosition3, in 
     float spotAttenuation = 0.0;
 
     // See if point on surface is inside cone of illumination
-    float spotDot = min(max(0.0,dot(-VP, normalize(_light.direction))),1.0);
+    float spotDot = min( max(0.0, dot(-VP, normalize( _light.direction ) ) ), 1.0);
     if (spotDot < _light.spotCosCutoff){
         spotAttenuation = 0.0;
     } else {
-        spotAttenuation = pow(spotDot, _light.spotExponent);
+        spotAttenuation = pow( spotDot, _light.spotExponent );
     }
 
     #ifdef SPOTLIGHT_ATTENUATION
@@ -74,7 +74,7 @@ void calculateLight(in SpotLight _light, in vec3 _eye, in vec3 _ecPosition3, in 
     #endif
 
     // normal . light direction
-    float nDotVP = min(max(0.0, dot(_normal, VP)),1.0);
+    float nDotVP = min( max(0.0, dot( _normal, VP ) ), 1.0);
 
 #ifdef MATERIAL_AMBIENT
     _ambient  += _light.ambient * spotAttenuation;
@@ -92,7 +92,7 @@ void calculateLight(in SpotLight _light, in vec3 _eye, in vec3 _ecPosition3, in 
         vec3 halfVector = normalize(VP + _eye);
 
         // normal . light half vector
-        float nDotHV = min(max(0.0, dot(_normal, halfVector)),1.0);
+        float nDotHV = min( max(0.0, dot( _normal, halfVector ) ),1.0);
         pf = pow(nDotHV, g_material.shininess);
     }
     _specular += _light.specular * pf * spotAttenuation;
