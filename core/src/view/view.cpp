@@ -109,6 +109,11 @@ glm::dmat2 View::getBoundsRect() const {
 
 }
 
+float View::toWorldDistance(float _screenDistance) const {
+    float metersPerTile = 2 * MapProjection::HALF_CIRCUMFERENCE * pow(2, -m_zoom);
+    return _screenDistance * metersPerTile / (m_pixelScale * m_pixelsPerTile);
+}
+
 const std::set<TileID>& View::getVisibleTiles() {
 
     return m_visibleTiles;
