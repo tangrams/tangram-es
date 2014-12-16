@@ -41,9 +41,6 @@ void calculateLight(in SpotLight _light, in vec3 _eye, in vec3 _ecPosition3, in 
     float dist = length( vec3(_light.position) - _ecPosition3 );
 #endif 
 
-    // Normalize the vector from surface to light position
-    VP = normalize(VP);
-
     // spotlight attenuation factor
     float spotAttenuation = 0.0;
 
