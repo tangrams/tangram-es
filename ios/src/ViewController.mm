@@ -84,8 +84,7 @@
 
 - (void)respondToPanGesture:(UIPanGestureRecognizer *)panRecognizer {
     CGPoint displacement = [panRecognizer translationInView:self.view];
-    CGPoint zero = {0, 0};
-    [panRecognizer setTranslation:zero inView:self.view];
+    [panRecognizer setTranslation:{0, 0} inView:self.view];
     Tangram::handlePanGesture(displacement.x, displacement.y);
 }
 
