@@ -71,6 +71,12 @@ public:
     /* Returns a rectangle of the current view range as [[x_min, y_min], [x_max, y_max]] */
     glm::dmat2 getBoundsRect() const;
     
+    float getWidth() const { return m_vpWidth; }
+    
+    float getHeight() const { return m_vpHeight; }
+    
+    float toWorldDistance(float _screenDistance) const;
+    
     /* Returns the set of all tiles visible at the current position and zoom */
     const std::set<TileID>& getVisibleTiles();
     

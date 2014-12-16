@@ -32,13 +32,16 @@ void onContextDestroyed();
 // Set the ratio of hardware pixels to logical pixels (defaults to 1.0)
 void setPixelScale(float _pixelsPerPoint);
 
-// Respond to touch input
+// Respond to a tap at the given screen coordinates (x right, y down)
 void handleTapGesture(float _posX, float _posY);
-    
+
+// Respond to a double tap at the given screen coordinates (x right, y down)
 void handleDoubleTapGesture(float _posX, float _posY);
-    
-void handlePanGesture(float _velX, float _velY);
-    
+
+// Respond to a drag with the given displacement in screen coordinates (x right, y down)
+void handlePanGesture(float _dX, float _dY);
+
+// Respond to a pinch at the given position in screen coordinates with the given scale factor
 void handlePinchGesture(float _posX, float _posY, float _scale = 1.0);
 
 }
