@@ -11,7 +11,7 @@ uniform float u_time;
 
 varying vec4 v_pos;
 varying vec4 v_color;
-varying vec3 v_ecPosition;
+varying vec3 v_eyeToPoint;
 varying vec3 v_normal;
 varying vec2 v_texcoord;
 
@@ -32,7 +32,7 @@ void main(void) {
     
     darken = clamp(darken, 0.5, 1.0); // reduce color values by 1/2 in darkened fragments
     
-    // color *= calculateLighting(v_ecPosition,v_normal);
+    // color *= calculateLighting(v_eyeToPoint,v_normal);
 
   	gl_FragColor = color * darken;
 	gl_FragColor.a = 1.0;    

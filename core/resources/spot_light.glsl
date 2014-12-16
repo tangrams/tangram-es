@@ -33,12 +33,12 @@ struct SpotLight {
 #endif
 };
 
-void calculateLight(in SpotLight _light, in vec3 _eye, in vec3 _ecPosition3, in vec3 _normal, inout vec4 _ambient, inout vec4 _diffuse, inout vec4 _specular){
+void calculateLight(in SpotLight _light, in vec3 _eye, in vec3 _eyeToPoint, in vec3 _normal, inout vec4 _ambient, inout vec4 _diffuse, inout vec4 _specular){
     // Compute vector from surface to light position
-    vec3 VP = normalize( vec3(_light.position) - _ecPosition3 );
+    vec3 VP = normalize( vec3(_light.position) - _eyeToPoint );
 
 #ifdef SPOTLIGHT_DISTANCE
-    float dist = length( vec3(_light.position) - _ecPosition3 );
+    float dist = length( vec3(_light.position) - _eyeToPoint );
 #endif 
 
     // spotlight attenuation factor

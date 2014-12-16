@@ -6,7 +6,7 @@ struct DirectionalLight {
 	vec3 direction;
 };
 
-void calculateLight(in DirectionalLight _light, in vec3 _eye, in vec3 _ecPosition3, in vec3 _normal, inout vec4 _ambient, inout vec4 _diffuse, inout vec4 _specular){
+void calculateLight(in DirectionalLight _light, in vec3 _eye, in vec3 _eyeToPoint, in vec3 _normal, inout vec4 _ambient, inout vec4 _diffuse, inout vec4 _specular){
 	#ifdef MATERIAL_AMBIENT
 	_ambient    += _light.ambient;
 	#endif

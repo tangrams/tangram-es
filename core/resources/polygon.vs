@@ -15,7 +15,7 @@ attribute vec3 a_normal;
 attribute vec2 a_texcoord;
 
 varying vec4 v_color;
-varying vec3 v_ecPosition;
+varying vec3 v_eyeToPoint;
 varying vec3 v_normal;
 varying vec2 v_texcoord;
 
@@ -28,5 +28,5 @@ void main() {
 
   	gl_Position = u_modelViewProj * a_position;
 
-  	v_ecPosition = vec3(u_modelView * a_position);
+  	v_eyeToPoint = vec3(u_modelView * a_position);
 }

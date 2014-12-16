@@ -1,4 +1,4 @@
-vec4 calculateLighting(in vec3 _ecPosition, in vec3 _normal) {
+vec4 calculateLighting(in vec3 _eyeToPoint, in vec3 _normal) {
 	vec3 eye = vec3(0.0, 0.0, 1.0);
 
   // Light intensity accumulators
