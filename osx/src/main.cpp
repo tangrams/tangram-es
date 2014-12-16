@@ -4,9 +4,10 @@
 #include "platform.h"
 #include "gl.h"
 
-void window_size_callback(GLFWwindow* window, int width, int height)
-{
+void window_size_callback(GLFWwindow* window, int width, int height) {
+    
     Tangram::resize(width, height);
+
 }
 
 void mouse_button_callback(GLFWwindow* window, int button, int action, int mods) {
@@ -57,8 +58,8 @@ void cursor_pos_callback(GLFWwindow* window, double x, double y) {
     
 }
 
-int main(void)
-{
+int main(void) {
+
     GLFWwindow* window;
     int width = 800;
     int height = 600;
@@ -69,8 +70,7 @@ int main(void)
 
     /* Create a windowed mode window and its OpenGL context */
     window = glfwCreateWindow(width, height, "GLFW Window", NULL, NULL);
-    if (!window)
-    {
+    if (!window) {
         glfwTerminate();
         return -1;
     }
@@ -89,8 +89,8 @@ int main(void)
     double lastTime = glfwGetTime();
 
     /* Loop until the user closes the window */
-    while (!glfwWindowShouldClose(window))
-    {
+    while (!glfwWindowShouldClose(window)) {
+        
         double currentTime = glfwGetTime();
         double delta = currentTime - lastTime;
         lastTime = currentTime;
