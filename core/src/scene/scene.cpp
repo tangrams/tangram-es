@@ -26,7 +26,18 @@ void Scene::addLight(std::shared_ptr<Light> _light){
     }
 
     //  TODO: 
-    //          - check for name and #defines collitions
+    //          - check for name and #defines collitions: manage by generic functions
+    //
+    //              - Defines are injected automatically at the top together with:
+    // 
+    //                  #ifdef GL_ES
+    //                  precision mediump float;
+    //                  #endif
+    // 
+    //          - Lights have unique names
+    //          - using std::map ??
+    //          - LightsManager() ???
+    //
     
     m_lights.push_back(_light);
 }
