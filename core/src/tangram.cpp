@@ -152,8 +152,8 @@ void handleTapGesture(float _posX, float _posY) {
     float dx = m_view->toWorldDistance(_posX - 0.5 * m_view->getWidth());
     float dy = m_view->toWorldDistance(_posY - 0.5 * m_view->getHeight());
 
-    // See note in handlePanGesture on sign change
-    m_view->translate(-dx, dy);
+    // Flip y displacement to change from screen coordinates to world coordinates
+    m_view->translate(dx, -dy);
     logMsg("Tap: (%f,%f)\n", _posX, _posY);
 
 }
