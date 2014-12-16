@@ -93,15 +93,15 @@ void View::update() {
     
     if (!m_dirty) {
         return;
-	}
+    }
     
-	updateMatrices();
+    updateMatrices();
     
     updateTiles();
     
     m_dirty = false;
     
-	m_changed = true;
+    m_changed = true;
     
 }
 
@@ -117,6 +117,11 @@ glm::dmat2 View::getBoundsRect() const {
     double hh = m_height * 0.5;
     return glm::dmat2(m_pos.x - hw, m_pos.y - hh, m_pos.x + hw, m_pos.y + hh);
 
+}
+
+float View::toWorldDistance(float _screenDistance) const {
+    float metersPerTile = 2 * MapProjection::HALF_CIRCUMFERENCE * pow(2, -m_zoom);
+    return _screenDistance * metersPerTile / (m_pixelScale * m_pixelsPerTile);
 }
 
 const std::set<TileID>& View::getVisibleTiles() {

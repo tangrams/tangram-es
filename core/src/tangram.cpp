@@ -157,23 +157,37 @@ void setPixelScale(float _pixelsPerPoint) {
 }
     
 void handleTapGesture(float _posX, float _posY) {
-    logMsg("Do tap: (%f,%f)\n", _posX, _posY);
-    m_view->translate(_posX, _posY);
+    
+    float dx = m_view->toWorldDistance(_posX - 0.5 * m_view->getWidth());
+    float dy = m_view->toWorldDistance(_posY - 0.5 * m_view->getHeight());
+
+    // Flip y displacement to change from screen coordinates to world coordinates
+    m_view->translate(dx, -dy);
+    logMsg("Tap: (%f,%f)\n", _posX, _posY);
+
 }
 
 void handleDoubleTapGesture(float _posX, float _posY) {
-    logMsg("Do double tap: (%f,%f)\n", _posX, _posY);
+    
+    logMsg("Double tap: (%f,%f)\n", _posX, _posY);
+
 }
 
-void handlePanGesture(float _velX, float _velY) {
-    // Scaled with reference to 16 zoom level
-    float invZoomScale = 0.1 * pow(2,(16 - m_view->getZoom()));
-    m_view->translate(-_velX * invZoomScale * 2.0, _velY * invZoomScale * 2.0);
-    logMsg("Pan Velocity: (%f,%f)\n", _velX, _velY);
+void handlePanGesture(float _dX, float _dY) {
+    
+    float dx = m_view->toWorldDistance(_dX);
+    float dy = m_view->toWorldDistance(_dY);
+
+    // We flip the signs of dx and dy to move the camera in the opposite direction
+    // of the intended "world movement", but dy gets flipped once more because screen
+    // coordinates have y pointing down and our world coordinates have y pointing up
+    m_view->translate(-dx, dy);
+    logMsg("Drag: (%f,%f)\n", _dX, _dY);
+
 }
 
 void handlePinchGesture(float _posX, float _posY, float _scale) {
-    logMsg("Do pinch, pos1: (%f, %f)\tscale: (%f)\n", _posX, _posY, _scale);
+	logMsg("Pinch: (%f, %f)\tscale: (%f)\n", _posX, _posY, _scale);
     if(_scale < 1.0) {
         m_view->zoom((_scale - 1.0)*0.25);
     }

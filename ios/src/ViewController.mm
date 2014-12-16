@@ -73,24 +73,19 @@
 }
 
 - (void)respondToTapGesture:(UITapGestureRecognizer *)tapRecognizer {
-    // Get the location of the tap
     CGPoint location = [tapRecognizer locationInView:self.view];
-    CGPoint viewCenter = tapRecognizer.view.center;
-    logMsg("%f,%f\n", viewCenter.x, viewCenter.y);
-    Tangram::handleTapGesture(location.x - viewCenter.x, -(location.y - viewCenter.y));
+    Tangram::handleTapGesture(location.x, location.y);
 }
 
 - (void)respondToDoubleTapGesture:(UITapGestureRecognizer *)doubleTapRecognizer {
-    //Get the location of the double tap
     CGPoint location = [doubleTapRecognizer locationInView:self.view];
     Tangram::handleDoubleTapGesture(location.x, location.y);
 }
 
 - (void)respondToPanGesture:(UIPanGestureRecognizer *)panRecognizer {
-    //velocity is relative to previous drag location
-    //not using drag position as its always relative to the initial touch point
-    CGPoint velocity = [panRecognizer velocityInView:self.view];
-    Tangram::handlePanGesture(velocity.x, velocity.y);
+    CGPoint displacement = [panRecognizer translationInView:self.view];
+    [panRecognizer setTranslation:{0, 0} inView:self.view];
+    Tangram::handlePanGesture(displacement.x, displacement.y);
 }
 
 - (void)respondToPinchGesture:(UIPinchGestureRecognizer *)pinchRecognizer {
