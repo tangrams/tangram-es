@@ -7,7 +7,10 @@
 // Input handling
 // ==============
 
+const double double_tap_time = 0.5; // seconds
+
 bool was_panning = false;
+double last_mouse_up = -double_tap_time;
 
 void window_size_callback(GLFWwindow* window, int width, int height) {
     
@@ -17,21 +20,33 @@ void window_size_callback(GLFWwindow* window, int width, int height) {
 
 void mouse_button_callback(GLFWwindow* window, int button, int action, int mods) {
     
-    if (button == GLFW_MOUSE_BUTTON_1 && action == GLFW_RELEASE) {
+    if (button != GLFW_MOUSE_BUTTON_1 || action != GLFW_RELEASE) {
+        return; // Stop here because this is a mouse event that we don't care about
+    }
+    
+    if (was_panning) {
         
-        if (!was_panning) {
-            
-            double x, y;
-            glfwGetCursorPos(window, &x, &y);
-            Tangram::handleTapGesture(x, y);
-            
-        } else {
-            
-            was_panning = false;
-            
-        }
+        was_panning = false;
+        return; // Stop here so this isn't counted as the first tap in a double-tap
         
     }
+    
+    double x, y;
+    glfwGetCursorPos(window, &x, &y);
+    double time = glfwGetTime();
+    
+    if (time - last_mouse_up < double_tap_time) {
+        
+        Tangram::handleDoubleTapGesture(x, y);
+        
+    } else {
+        
+        Tangram::handleTapGesture(x, y);
+        
+    }
+    
+    last_mouse_up = time;
+    
 }
 
 void cursor_pos_callback(GLFWwindow* window, double x, double y) {
@@ -45,13 +60,15 @@ void cursor_pos_callback(GLFWwindow* window, double x, double y) {
         
         if (!was_panning) {
             
-            last_x = x;
-            last_y = y;
+            // TODO: This ignores the first frame of panning movement; to correct this we
+            // would need to track the cursor position whenever the mouse button is pressed
             was_panning = true;
             
+        } else {
+            
+            Tangram::handlePanGesture(x - last_x, y - last_y);
+            
         }
-
-        Tangram::handlePanGesture(x - last_x, y - last_y);
         
         last_x = x;
         last_y = y;
@@ -65,6 +82,7 @@ void scroll_callback(GLFWwindow* window, double scrollx, double scrolly) {
     static double scrolled = 0.0;
     scrolled += scrolly;
     
+    // TODO: Update this for continuous zooming, using an arbitrary threshold for now
     if (scrolled * scrolled > 100.0) {
         
         double x, y;
