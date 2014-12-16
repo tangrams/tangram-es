@@ -4,6 +4,11 @@
 #include "platform.h"
 #include "gl.h"
 
+// Input handling
+// ==============
+
+bool was_panning = false;
+
 void window_size_callback(GLFWwindow* window, int width, int height) {
     
     Tangram::resize(width, height);
@@ -13,13 +18,19 @@ void window_size_callback(GLFWwindow* window, int width, int height) {
 void mouse_button_callback(GLFWwindow* window, int button, int action, int mods) {
     
     if (button == GLFW_MOUSE_BUTTON_1 && action == GLFW_RELEASE) {
-        int width, height;
-        glfwGetWindowSize(window, &width, &height);
         
-        double x, y;
-        glfwGetCursorPos(window, &x, &y);
+        if (!was_panning) {
+            
+            double x, y;
+            glfwGetCursorPos(window, &x, &y);
+            Tangram::handleTapGesture(x, y);
+            
+        } else {
+            
+            was_panning = false;
+            
+        }
         
-        Tangram::handleTapGesture(x/width, -y/height);
     }
 }
 
@@ -27,32 +38,23 @@ void cursor_pos_callback(GLFWwindow* window, double x, double y) {
     
     static double last_x = 0.0;
     static double last_y = 0.0;
-    static double last_t = 0.0;
     
     int action = glfwGetMouseButton(window, GLFW_MOUSE_BUTTON_1);
     
     if (action == GLFW_PRESS) {
         
-        double t = glfwGetTime();
-        
-        if (last_t > 0.0) {
-            float vx = (x - last_x)/(t - last_t);
-            float vy = (y - last_y)/(t - last_t);
-            if (vx > 1000 || vx < -1000 || vy > 1000 || vy < -1000) {
-                logMsg("WHOOOPS");
-                // dt here is way less than 16ms, probably getting several events per frame which... is bad?
-            }
-            Tangram::handlePanGesture(vx, vy);
+        if (!was_panning) {
+            
+            last_x = x;
+            last_y = y;
+            was_panning = true;
+            
         }
+
+        Tangram::handlePanGesture(x - last_x, y - last_y);
         
         last_x = x;
         last_y = y;
-        last_t = t;
-        
-    } else {
-        
-        
-        last_t = -1.0;
         
     }
     
@@ -82,6 +84,7 @@ int main(void) {
     Tangram::resize(width, height);
 
     glfwSetWindowSizeCallback(window, window_size_callback);
+    glfwSetMouseButtonCallback(window, mouse_button_callback);
     glfwSetCursorPosCallback(window, cursor_pos_callback);
     
     glfwSwapInterval(1);
@@ -90,7 +93,7 @@ int main(void) {
 
     /* Loop until the user closes the window */
     while (!glfwWindowShouldClose(window)) {
-        
+
         double currentTime = glfwGetTime();
         double delta = currentTime - lastTime;
         lastTime = currentTime;
