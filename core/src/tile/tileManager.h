@@ -80,13 +80,16 @@ private:
     
     /*
      * Checks and updates m_proxyTiles with proxy tiles for every new visible tile
+     *      Any proxy tile which is all ready to be drawn is passed in m_proxyTiles serially
+     *      Any proxy tile which will require tesselation is handled by the visible tile loading async thread
      *  @_tileID: TileID of the new visible tile for which proxies needs to be added
      *  @_zoomStatus: Zoom-in or Zoom-out to determine parent of child proxies
      */
-    void updateProxyTiles(const TileID& _tileID, bool _zoomStatus);
+    void updateProxyTiles(const TileID& _tileID, bool _zoomStatus, bool _serial=false);
     
     /*
      * Constructs a future (async) to load data of a new visible tile
+     *      this is also responsible for loading proxy tiles for the newly visible tiles
      * @_tileID: TileID for which new MapTile needs to be constructed
      * @_zoomState: to determine whether to add child tiles or parent tile as proxy for this new visible tile
      */
@@ -94,11 +97,11 @@ private:
     
     /*
      *  Adds parent or child proxy tiles based on the zoomState (in or out).
-     *  Grabs the MapTile from m_tileSet if this proxy tile was visible last update call
-     *  Or, constructs a new MapTile from the prewviously fetched raw tile data
+     *  Grabs the MapTile from m_tileSet if this proxy tile was visible last update call (serially)
+     *  Or, constructs a new MapTile from the prewviously fetched raw tile data (async)
      *  @ _proxyID: TileID of the proxy tile to be added to m_proxyTiles
      */
-    void addProxyTile(const TileID& _proxyID);
+    void addProxyTile(const TileID& _proxyID, bool _serial = false);
     
     /*
      *  Overloaded removeTile functions to remove items from m_tileSet or m_proxyTiles
