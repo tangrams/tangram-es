@@ -48,6 +48,11 @@ public:
      * the tile origin.
      */
     void addGeometry(const Style& _style, std::unique_ptr<VboMesh> _mesh);
+    
+    /*
+     * Method to check if this tile's vboMesh(s) are loaded and ready to be drawn
+     */
+    bool hasGeometry();
 
     /* Draws the geometry associated with the provided <Style> and view-projection matrix */
     void draw(const Style& _style, const glm::dmat4& _viewProjMatrix);
@@ -55,16 +60,16 @@ public:
     /* Set status of this tile */
     void setStatus(bool _status);
     
+private:
+
+    TileID m_id;
+ 
     /* Use to determine drawing state of this tile (drawable or not)
      *
      * false: this tile is possibly in a deleted state, do not draw this tile
      * true: draw this tile, its either a visible tile or proxy tile
      */
     bool m_status = false;
-
-private:
-
-    TileID m_id;
     
     const MapProjection* m_projection = nullptr;
     
