@@ -122,22 +122,20 @@ void render() {
 
         style->setup();
 
-        // Loop over visible tiles
-        for (const auto& mapIDandTile : m_tileManager->getVisibleTiles()) {
-
+        // Loop over proxy tiles
+        for(const auto& mapIDandTile : m_tileManager->getProxyTiles()) {
             const std::shared_ptr<MapTile>& tile = mapIDandTile.second;
-            if (tile) {
+            if(tile->hasGeometry()) {
                 // Draw!
                 tile->draw(*style, viewProj);
             }
         }
         
-        // Loop over proxy tiles
-        for(const auto& mapIDandTile : m_tileManager->getProxyTiles()) {
+        // Loop over visible tiles
+        for (const auto& mapIDandTile : m_tileManager->getVisibleTiles()) {
             const std::shared_ptr<MapTile>& tile = mapIDandTile.second;
-            if(tile) {
+            if (tile->hasGeometry()) {
                 // Draw!
-                logMsg("Drawing Proxy Tile: [%d, %d, %d]\n", mapIDandTile.first.z, mapIDandTile.first.x, mapIDandTile.first.y);
                 tile->draw(*style, viewProj);
             }
         }
@@ -164,13 +162,14 @@ void handleTapGesture(float _posX, float _posY) {
     // Flip y displacement to change from screen coordinates to world coordinates
     m_view->translate(dx, -dy);
     logMsg("Tap: (%f,%f)\n", _posX, _posY);
+    
 
 }
 
 void handleDoubleTapGesture(float _posX, float _posY) {
     
     logMsg("Double tap: (%f,%f)\n", _posX, _posY);
-
+    m_view->zoom(1.0);
 }
 
 void handlePanGesture(float _dX, float _dY) {
