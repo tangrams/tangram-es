@@ -205,7 +205,7 @@ GLuint ShaderProgram::makeCompiledShader(const std::string& _src, GLenum _type) 
         return 0;
     }
 
-    logMsg("\n> Successs-----------------------\n%s\n",_src.c_str());
+    // logMsg("\n> Successs-----------------------\n%s\n",_src.c_str());
     return shader;
 
 }

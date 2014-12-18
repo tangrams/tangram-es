@@ -103,8 +103,9 @@ std::string PointLight::getInstanceAssignBlock(){
             block += ", " + getString(m_linearAttenuation);
         }
         if(m_quadraticAttenuation!=0.0){
-            block += ", " + getString(m_quadraticAttenuation) + ")";
+            block += ", " + getString(m_quadraticAttenuation);
         }
+        block += ")";
     }
     return block;
 }
