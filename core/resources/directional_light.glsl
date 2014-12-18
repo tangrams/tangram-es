@@ -11,10 +11,10 @@ void calculateLight(in DirectionalLight _light, in vec3 _eye, in vec3 _eyeToPoin
 	_ambient    += _light.ambient;
 	#endif
 
-	float nDotVP =  max(0.0, dot(_normal, normalize( vec3(_light.direction) ) ) );
+	float nDotVP =  min( max(0.0, dot(_normal, normalize( vec3(_light.direction) ) ) ), 1.0);
 
 	#ifdef MATERIAL_DIFFUSE	
-	_diffuse    += _light.diffuse * nDotVP;
+	_diffuse += _light.diffuse * nDotVP;
 	#endif
 
 	#ifdef MATERIAL_SPECULAR

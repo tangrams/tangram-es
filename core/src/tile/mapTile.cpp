@@ -43,26 +43,6 @@ void MapTile::addGeometry(const Style& _style, std::unique_ptr<VboMesh> _mesh) {
 
 }
 
-void MapTile::draw(const Style& _style, const glm::dmat4& _viewProjMatrix) {
-
-    const std::unique_ptr<VboMesh>& styleMesh = m_geometry[_style.getName()];
-
-    if (styleMesh) {
-
-        std::shared_ptr<ShaderProgram> shader = _style.getShaderProgram();
-
-        glm::dmat4 modelViewProjMatrix = _viewProjMatrix * m_modelMatrix;
-
-        // NOTE : casting to float, but loop over the matrix values  
-        double* first = &modelViewProjMatrix[0][0];
-        std::vector<float> fmvp(first, first + 16);
-
-        shader->setUniformMatrix4f("u_modelViewProj", &fmvp[0]);
-
-        styleMesh->draw(shader);
-    }
-}
-
 void MapTile::draw( Scene& _scene, const Style& _style, const View& _view){
     const std::unique_ptr<VboMesh>& styleMesh = m_geometry[_style.getName()];
     
@@ -92,7 +72,7 @@ void MapTile::draw( Scene& _scene, const Style& _style, const View& _view){
         //  Pass need lights
         //
         for (auto &light : _scene.getLights()){
-            light->setupProgram(shader.get());
+            light->setupProgram(shader);
         }
         
         styleMesh->draw(shader);

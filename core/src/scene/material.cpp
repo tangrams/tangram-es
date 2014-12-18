@@ -81,7 +81,7 @@ std::string Material::getBlock(){
     return getDefinesBlock() + "\n" + getClassBlock() + "\n";
 }
 
-void Material::setupProgram(ShaderProgram* _shader){
+void Material::setupProgram(std::shared_ptr<ShaderProgram> _shader){
 	if(m_bEmission){
 		_shader->setUniformf("u_"+m_name+".emission", m_emission);
 	}

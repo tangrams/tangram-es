@@ -48,10 +48,7 @@ public:
      */
     void addGeometry(const Style& _style, std::unique_ptr<VboMesh> _mesh);
 
-    /* Draws the geometry associated with the provided <Style> and view-projection matrix */
-    void draw(const Style& _style, const glm::dmat4& _viewProjMatrix);
-    
-    // WIP - LIGHTS IMPLEMENTATION
+    /* Draws the geometry associated with the provided <Style>, <View>(for matrixes) and <Scene> (for lights) */
     void draw(Scene& _scene, const Style& _style, const View& _view);
 
 private:

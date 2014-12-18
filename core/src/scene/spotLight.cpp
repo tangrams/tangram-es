@@ -20,7 +20,7 @@ void SpotLight::setCutOff(float _cutoff, float _exponent){
     m_spotExponent = _exponent;
 }
 
-void SpotLight::setupProgram( ShaderProgram* _shader ){
+void SpotLight::setupProgram( std::shared_ptr<ShaderProgram> _shader ){
     if(m_dynamic){
         PointLight::setupProgram(_shader);
         _shader->setUniformf(getUniformName()+".direction", m_direction);

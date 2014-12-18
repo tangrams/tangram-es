@@ -61,7 +61,7 @@ public:
     virtual std::string getInstanceComputeBlock();
 
     /*  Inject the uniforms for this particular DYNAMICAL light on the passed shader */
-    virtual void setupProgram( ShaderProgram* _shader );
+    virtual void setupProgram( std::shared_ptr<ShaderProgram> _shader );
 
 protected:
 

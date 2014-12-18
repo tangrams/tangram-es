@@ -32,7 +32,7 @@ void PolygonStyle::constructShaderProgram() {
 }
 
 void PolygonStyle::setup() {
-    m_material.setupProgram(m_shaderProgram.get());
+    m_material.setupProgram(m_shaderProgram);
 }
 
 void PolygonStyle::buildPoint(Point& _point, std::string& _layer, Properties& _props, VboMesh& _mesh) {

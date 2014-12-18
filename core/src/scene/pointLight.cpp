@@ -35,7 +35,7 @@ void PointLight::setAttenuation(float _constant, float _linear, float _quadratic
     m_quadraticAttenuation = _quadratic;
 }
 
-void PointLight::setupProgram( ShaderProgram* _shader ){
+void PointLight::setupProgram( std::shared_ptr<ShaderProgram> _shader ){
     if(m_dynamic){
         Light::setupProgram(_shader);
         _shader->setUniformf(getUniformName()+".position", glm::vec4(m_position) );

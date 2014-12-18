@@ -32,7 +32,7 @@ void PolylineStyle::constructShaderProgram() {
 
 void PolylineStyle::setup() {
     
-    m_material.setupProgram(m_shaderProgram.get());
+    m_material.setupProgram(m_shaderProgram);
 
 }
 

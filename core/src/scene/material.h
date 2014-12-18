@@ -52,7 +52,7 @@ public:
     virtual std::string getBlock();
 
     /* Method to pass it self as a uniform to the shader program */
-    void        setupProgram( ShaderProgram* _shader );
+    void        setupProgram( std::shared_ptr<ShaderProgram> _shader );
     
 private:
     std::string m_name;

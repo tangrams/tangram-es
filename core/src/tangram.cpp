@@ -58,28 +58,24 @@ void initialize() {
         //------ TESTING LIGHTS
 
         //  Directional
-        DirectionalLight* dlight = new DirectionalLight("dLight");
-        dlight->setDiffuseColor(glm::vec4(0.3,0.2,0.0,1.0));
-        dlight->setDirection(glm::vec3(-1.0, -1.0, 1.0));
-        std::shared_ptr<Light> directionalLight(dlight);
+        auto directionalLight = std::make_shared<DirectionalLight>("dLight");
+        directionalLight->setDiffuseColor(glm::vec4(1.0,1.0,1.0,1.0));
+        directionalLight->setDirection(glm::vec3(-1.0, -1.0, 1.0));
         m_scene->addLight(directionalLight);
     
         // //  Point
-        PointLight * pLight = new PointLight("pLight",true);
-        pLight->setDiffuseColor(glm::vec4(0.0,1.0,0.0,1.0));
-        pLight->setSpecularColor(glm::vec4(0.5,0.0,1.0,1.0));
-        pLight->setLinearAttenuation(0.005);
-        pLight->setPosition(glm::vec3(0.0));
-        std::shared_ptr<Light> pointLight(pLight);
+        auto pointLight = std::make_shared<PointLight>("pLight",true);
+        pointLight->setDiffuseColor(glm::vec4(0.0,1.0,0.0,1.0));
+        pointLight->setSpecularColor(glm::vec4(0.5,0.0,1.0,1.0));
+        pointLight->setLinearAttenuation(0.005);
+        pointLight->setPosition(glm::vec3(0.0));
         m_scene->addLight(pointLight);
 
-        // // //  Spot
-        SpotLight * sLight = new SpotLight("sLight",true);
-        sLight->setSpecularColor(glm::vec4(0.5,0.5,0.0,1.0));
-        sLight->setPosition(glm::vec3(0.0));
-        sLight->setDirection(glm::vec3(0,PI*0.25,0.0));
-        sLight->setCutOff(PI*0.1, 20.0);
-        std::shared_ptr<Light> spotLight(sLight);
+        auto spotLight = std::make_shared<SpotLight>("sLight",true);
+        spotLight->setSpecularColor(glm::vec4(0.5,0.5,0.0,1.0));
+        spotLight->setPosition(glm::vec3(0.0));
+        spotLight->setDirection(glm::vec3(0,PI*0.25,0.0));
+        spotLight->setCutOff(PI*0.1, 20.0);
         m_scene->addLight(spotLight);
         
         //-----------------------
@@ -145,18 +141,18 @@ void update(float _dt) {
     }
     
     if(m_scene){
-        for(int i = 0 ; i < m_scene->getLights().size(); i++){
+        for (auto light : m_scene->getLights() ){
 
-            if(m_scene->getLights()[i]->getType() == LightType::LIGHT_DIRECTIONAL){
-                DirectionalLight* tmp = dynamic_cast<DirectionalLight*>( (m_scene->getLights()[i]).get() );
-                // tmp->setDirection(glm::vec3(0.0, sin(g_time), 1.0));
-            } else if(m_scene->getLights()[i]->getType() == LightType::LIGHT_POINT){
-                PointLight* tmp = dynamic_cast<PointLight*>( (m_scene->getLights()[i]).get() );
+            if( light->getType() == LightType::LIGHT_DIRECTIONAL){
+                DirectionalLight* tmp = dynamic_cast<DirectionalLight*>( light.get() );
+                 tmp->setDirection(glm::vec3(0.0, sin(g_time), 1.0));
+            } else if( light->getType() == LightType::LIGHT_POINT){
+                PointLight* tmp = dynamic_cast<PointLight*>( light.get() );
                 tmp->setPosition(glm::vec3( 200*cos(g_time*0.8),
                                             200*sin(g_time*0.3), 
                                             -m_view->getPosition().z+100));
-            } else if(m_scene->getLights()[i]->getType() == LightType::LIGHT_SPOT){
-                SpotLight* tmp = dynamic_cast<SpotLight*>( (m_scene->getLights()[i]).get() );
+            } else if( light->getType() == LightType::LIGHT_SPOT){
+                SpotLight* tmp = dynamic_cast<SpotLight*>( light.get() );
                 tmp->setDirection(glm::vec3(cos(g_time),
                                             sin(g_time), 
                                             0.0));

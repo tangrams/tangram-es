@@ -17,7 +17,7 @@ public:
     virtual std::string getInstanceDefinesBlock() override;
     virtual std::string	getInstanceAssignBlock() override;
     
-    virtual void setupProgram( ShaderProgram* _program ) override;
+    virtual void setupProgram( std::shared_ptr<ShaderProgram> _program ) override;
     
 protected:
     glm::vec3 m_direction;

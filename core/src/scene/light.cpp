@@ -26,7 +26,7 @@ void Light::setSpecularColor(const glm::vec4 _specular){
     m_specular = _specular;
 }
 
-void Light::setupProgram( ShaderProgram* _shader ){
+void Light::setupProgram( std::shared_ptr<ShaderProgram> _shader ){
     if(m_dynamic){
         _shader->setUniformf(getUniformName()+".ambient", m_ambient);
         _shader->setUniformf(getUniformName()+".diffuse", m_diffuse);

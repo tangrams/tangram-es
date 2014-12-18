@@ -14,7 +14,7 @@ void DirectionalLight::setDirection(const glm::vec3 &_dir){
     m_direction = _dir;
 }
 
-void DirectionalLight::setupProgram( ShaderProgram* _shader ){
+void DirectionalLight::setupProgram( std::shared_ptr<ShaderProgram> _shader ){
 	if(m_dynamic){
 		Light::setupProgram(_shader);
     	_shader->setUniformf(getUniformName()+".direction", m_direction);
