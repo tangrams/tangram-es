@@ -38,7 +38,7 @@ void Builders::buildPolygon(const Polygon& _polygon, std::vector<glm::vec3>& _po
         if (useTexCoords) {
             bBox.growToInclude(line);
         }
-        tessAddContour(tesselator, 3, line.data(), sizeof(Point), line.size());
+        tessAddContour(tesselator, 3, line.data(), sizeof(Point), (int)line.size());
     }
     
     // call the tesselator
@@ -48,6 +48,7 @@ void Builders::buildPolygon(const Polygon& _polygon, std::vector<glm::vec3>& _po
         
         const int numElements = tessGetElementCount(tesselator);
         const TESSindex* tessElements = tessGetElements(tesselator);
+        _indicesOut.reserve(_indicesOut.size() + numElements * 3); // Pre-allocate index vector
         for(int i = 0; i < numElements; i++) {
             const TESSindex* tessElement = &tessElements[i * 3];
             for(int j = 0; j < 3; j++) {
@@ -57,6 +58,11 @@ void Builders::buildPolygon(const Polygon& _polygon, std::vector<glm::vec3>& _po
         
         const int numVertices = tessGetVertexCount(tesselator);
         const float* tessVertices = tessGetVertices(tesselator);
+        _pointsOut.reserve(_pointsOut.size() + numVertices); // Pre-allocate vertex vector
+        _normalOut.reserve(_normalOut.size() + numVertices); // Pre-allocate normal vector
+        if (useTexCoords) {
+            _texcoordOut.reserve(_texcoordOut.size() + numVertices); // Pre-allocate texcoord vector
+        }
         for(int i = 0; i < numVertices; i++) {
             if (useTexCoords) {
                 float u = mapValue(tessVertices[3*i], bBox.getMinX(), bBox.getMaxX(), 0., 1.);
@@ -89,9 +95,17 @@ void Builders::buildPolygonExtrusion(const Polygon& _polygon, const float& _minH
     
     bool useTexCoords = &_texcoordOut != &NO_TEXCOORDS;
     
-    for(auto& line : _polygon) {
+    for (auto& line : _polygon) {
         
-        for(size_t i = 0; i < line.size() - 1; i++) {
+        size_t lineSize = line.size();
+        _pointsOut.reserve(_pointsOut.size() + lineSize * 4); // Pre-allocate vertex vector
+        _normalOut.reserve(_normalOut.size() + lineSize * 4); // Pre-allocate normal vector
+        _indicesOut.reserve(_indicesOut.size() + lineSize * 6); // Pre-allocate index vector
+        if (useTexCoords) {
+            _texcoordOut.reserve(_texcoordOut.size() + lineSize * 4); // Pre-allocate texcoord vector
+        }
+        
+        for (size_t i = 0; i < lineSize - 1; i++) {
             
             normalVector = glm::cross(upVector, (line[i+1] - line[i]));
             normalVector = glm::normalize(normalVector);
@@ -138,7 +152,9 @@ void buildGeneralPolyLine(const Line& _line, float _halfWidth, std::vector<glm::
 
     using Builders::ushort;
     
-    if (_line.size() < 2) {
+    size_t lineSize = _line.size();
+    
+    if (lineSize < 2) {
         return;
     }
     
@@ -146,6 +162,15 @@ void buildGeneralPolyLine(const Line& _line, float _halfWidth, std::vector<glm::
     
     bool useTexCoords = &_texCoordOut != &NO_TEXCOORDS;
     bool useScalingVecs = &_scalingVecsOut != &NO_SCALING_VECS;
+    
+    _pointsOut.reserve(_pointsOut.size() + lineSize * 2); // Pre-allocate vertex vector
+    _indicesOut.reserve(_indicesOut.size() + (lineSize - 1) * 6); // Pre-allocate index vector
+    if (useTexCoords) {
+        _texCoordOut.reserve(_texCoordOut.size() + lineSize * 2); // Pre-allocate texcoords vector
+    }
+    if (useScalingVecs) {
+        _scalingVecsOut.reserve(_scalingVecsOut.size() + lineSize * 2); // Pre-allocate scalingvec vector
+    }
     
     glm::vec2 normPrevCurr; // Right normal to segment between previous and current m_points
     glm::vec2 normCurrNext; // Right normal to segment between current and next m_points
@@ -177,7 +202,7 @@ void buildGeneralPolyLine(const Line& _line, float _halfWidth, std::vector<glm::
     }
     
     // Loop over intermediate points in the polyline
-    for (size_t i = 1; i < _line.size() - 1; i++) {
+    for (size_t i = 1; i < lineSize - 1; i++) {
         prevCoord = currCoord;
         currCoord = nextCoord;
         nextCoord = _line[i+1];
@@ -203,18 +228,18 @@ void buildGeneralPolyLine(const Line& _line, float _halfWidth, std::vector<glm::
         }
         
         if (useTexCoords) {
-            _texCoordOut.push_back(glm::vec2(1.0, i/(float)_line.size()));
-            _texCoordOut.push_back(glm::vec2(0.0, i/(float)_line.size()));
+            float frac = i/(float)lineSize;
+            _texCoordOut.push_back(glm::vec2(1.0, frac));
+            _texCoordOut.push_back(glm::vec2(0.0, frac));
         }
         
     }
     
     normCurrNext = glm::normalize(normCurrNext);
     
-    _pointsOut.push_back(nextCoord);
-    _pointsOut.push_back(nextCoord);
-    
     if (useScalingVecs) {
+        _pointsOut.push_back(nextCoord);
+        _pointsOut.push_back(nextCoord);
         _scalingVecsOut.push_back(rightNorm);
         _scalingVecsOut.push_back(-rightNorm);
     } else {
@@ -227,7 +252,7 @@ void buildGeneralPolyLine(const Line& _line, float _halfWidth, std::vector<glm::
         _texCoordOut.push_back(glm::vec2(0.0,1.0));
     }
     
-    for (size_t i = 0; i < _line.size() - 1; i++) {
+    for (size_t i = 0; i < lineSize - 1; i++) {
         _indicesOut.push_back(vertexDataOffset + 2*i+2);
         _indicesOut.push_back(vertexDataOffset + 2*i+1);
         _indicesOut.push_back(vertexDataOffset + 2*i);
