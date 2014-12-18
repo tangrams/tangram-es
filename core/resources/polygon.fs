@@ -16,10 +16,7 @@ varying vec2 v_texcoord;
 
 void main(void) {
 
-	//	TODO:
-	//			- LightType( vec4... , vec4... );
-	//
-	#pragma tangram: lighting_non_dynamic_assing
+// #pragma tangram: lighting_non_dynamic_assing
 
 	vec4 color = v_color;
 

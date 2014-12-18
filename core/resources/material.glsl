@@ -1,20 +1,20 @@
 struct Material {
-#ifdef MATERIAL_EMISSION
+	#ifdef MATERIAL_EMISSION
 	vec4 emission;
-#endif
+	#endif
 
-#ifdef MATERIAL_AMBIENT
+	#ifdef MATERIAL_AMBIENT
 	vec4 ambient;
-#endif 
+	#endif 
 
-#ifdef MATERIAL_DIFFUSE
+	#ifdef MATERIAL_DIFFUSE
 	vec4 diffuse;
-#endif
+	#endif
 
-#ifdef MATERIAL_SPECULAR
+	#ifdef MATERIAL_SPECULAR
 	vec4 specular;
 	float shininess;
-#endif
+	#endif
 };
 
 uniform Material u_material;

@@ -9,20 +9,20 @@ struct SpotLight {
     float spotCosCutoff;
     float spotExponent;
 
-#ifdef SPOTLIGHT_CONSTANT_ATTENUATION
+    #ifdef SPOTLIGHT_CONSTANT_ATTENUATION
     #define SPOTLIGHT_ATTENUATION
     float constantAttenuation;
-#endif
+    #endif
 
-#ifdef SPOTLIGHT_LINEAR_ATTENUATION
+    #ifdef SPOTLIGHT_LINEAR_ATTENUATION
     #ifndef SPOTLIGHT_ATTENUATION
         #define SPOTLIGHT_ATTENUATION
     #endif
     #define SPOTLIGHT_DISTANCE
     float linearAttenuation;
-#endif
+    #endif
 
-#ifdef SPOTLIGHT_QUADRATIC_ATTENUATION
+    #ifdef SPOTLIGHT_QUADRATIC_ATTENUATION
     #ifndef SPOTLIGHT_ATTENUATION
         #define SPOTLIGHT_ATTENUATION
     #endif
@@ -30,16 +30,16 @@ struct SpotLight {
         #define SPOTLIGHT_DISTANCE
     #endif
     float quadraticAttenuation;
-#endif
+    #endif
 };
 
 void calculateLight(in SpotLight _light, in vec3 _eye, in vec3 _eyeToPoint, in vec3 _normal, inout vec4 _ambient, inout vec4 _diffuse, inout vec4 _specular){
     // Compute vector from surface to light position
     vec3 VP = normalize( vec3(_light.position) - _eyeToPoint );
 
-#ifdef SPOTLIGHT_DISTANCE
+    #ifdef SPOTLIGHT_DISTANCE
     float dist = length( vec3(_light.position) - _eyeToPoint );
-#endif 
+    #endif 
 
     // spotlight attenuation factor
     float spotAttenuation = 0.0;
@@ -54,34 +54,34 @@ void calculateLight(in SpotLight _light, in vec3 _eye, in vec3 _eyeToPoint, in v
 
     #ifdef SPOTLIGHT_ATTENUATION
     float atFactor = 0.0;
-
+    {
         #ifdef SPOTLIGHT_CONSTANT_ATTENUATION
-            atFactor += _light.constantAttenuation;
+        atFactor += _light.constantAttenuation;
         #endif
 
         #ifdef SPOTLIGHT_LINEAR_ATTENUATION
-            atFactor += _light.linearAttenuation * dist;
+        atFactor += _light.linearAttenuation * dist;
         #endif
             
         #ifdef SPOTLIGHT_QUADRATIC_ATTENUATION
-            atFactor += _light.quadraticAttenuation * dist * dist;
+        atFactor += _light.quadraticAttenuation * dist * dist;
         #endif
-    
+    }
     spotAttenuation *= 1.0 /atFactor;
     #endif
 
     // normal . light direction
     float nDotVP = min( max(0.0, dot( _normal, VP ) ), 1.0);
 
-#ifdef MATERIAL_AMBIENT
+    #ifdef MATERIAL_AMBIENT
     _ambient  += _light.ambient * spotAttenuation;
-#endif
+    #endif
 
-#ifdef MATERIAL_DIFFUSE 
+    #ifdef MATERIAL_DIFFUSE 
     _diffuse  += _light.diffuse * nDotVP * spotAttenuation;
-#endif
+    #endif
 
-#ifdef MATERIAL_SPECULAR
+    #ifdef MATERIAL_SPECULAR
     // Power factor for shinny speculars
     float pf = 0.0;              
     if (nDotVP != 0.0){
@@ -93,6 +93,5 @@ void calculateLight(in SpotLight _light, in vec3 _eye, in vec3 _eyeToPoint, in v
         pf = pow(nDotHV, g_material.shininess);
     }
     _specular += _light.specular * pf * spotAttenuation;
-#endif
-
+    #endif
 }

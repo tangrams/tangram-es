@@ -58,7 +58,8 @@ std::string Light::getInstanceBlock(){
         block += m_typeName + " " + getInstanceName() + " = " + getUniformName() + ";\n";
     } else {
         //  If is not dynamic define the global instance of the light struct and fill the variables
-        block += m_typeName + " " + getInstanceName() + ";\n";
+        // block += m_typeName + " " + getInstanceName() + ";\n";
+        block += m_typeName + " " + getInstanceName() + getInstanceAssignBlock() +";\n";
     }
     return block;
 }
@@ -66,9 +67,13 @@ std::string Light::getInstanceBlock(){
 std::string Light::getInstanceAssignBlock(){
     std::string block = "";
     if(!m_dynamic){
-        block += getInstanceName() + ".ambient = " + getString(m_ambient) + ";\n";
-        block += getInstanceName() + ".diffuse = " + getString(m_diffuse) + ";\n";
-        block += getInstanceName() + ".specular = " + getString(m_specular) + ";\n";
+        // block += getInstanceName() + ".ambient = " + getString(m_ambient) + ";\n";
+        // block += getInstanceName() + ".diffuse = " + getString(m_diffuse) + ";\n";
+        // block += getInstanceName() + ".specular = " + getString(m_specular) + ";\n";
+
+        block += " = " + m_typeName + "(" + getString(m_ambient);
+        block += ", " + getString(m_diffuse);
+        block += ", " + getString(m_specular);
     }
     return block;
 }

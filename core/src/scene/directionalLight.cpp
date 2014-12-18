@@ -32,7 +32,7 @@ std::string DirectionalLight::getInstanceDefinesBlock(){
 std::string DirectionalLight::getInstanceAssignBlock(){
     std::string block = Light::getInstanceAssignBlock();
     if(!m_dynamic){
-        block += getInstanceName() + ".direction = " + getString(m_direction) + ";\n";
+        block += ", " + getString(m_direction) + ")";
     }
     return block;
 }

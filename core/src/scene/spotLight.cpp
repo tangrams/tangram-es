@@ -65,11 +65,31 @@ std::string SpotLight::getInstanceDefinesBlock(){
 }
 
 std::string SpotLight::getInstanceAssignBlock(){
-    std::string block = PointLight::getInstanceAssignBlock();
+    std::string block = Light::getInstanceAssignBlock();
+
     if(!m_dynamic){
-        block += getInstanceName() + ".direction = " + getString(m_direction) + ";\n";
-        block += getInstanceName() + ".spotCosCutoff = " + getString(m_spotCosCutoff) + ";\n";
-        block += getInstanceName() + ".spotExponent = " + getString(m_spotExponent) + ";\n";
+
+        block += ", " + getString(m_position);
+        block += ", " + getString(m_direction);
+
+        block += ", " + getString(m_spotCosCutoff);
+        block += ", " + getString(m_spotExponent);
+
+        if(m_constantAttenuation!=0.0){
+            block += ", " + getString(m_constantAttenuation);
+        }
+        if(m_linearAttenuation!=0.0){
+            block += ", " + getString(m_linearAttenuation);
+        }
+        if(m_quadraticAttenuation!=0.0){
+            block += ", " + getString(m_quadraticAttenuation) + ")";
+        }
+
+        // block += getInstanceName() + ".direction = " + getString(m_direction) + ";\n";
+        // block += getInstanceName() + ".spotCosCutoff = " + getString(m_spotCosCutoff) + ";\n";
+        // block += getInstanceName() + ".spotExponent = " + getString(m_spotExponent) + ";\n";
+        
+        
     }
     return block;
 }

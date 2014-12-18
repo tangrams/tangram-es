@@ -49,7 +49,6 @@ void Scene::buildShaders(){
     std::string lightsDefines = "";     //  special "#DEFINE LIGHT_..." flags 
     std::string lightsClassBlock = "";  //  Needed structs and "calculateLight()"" functions for that struct
     std::string lightsInstance = "";    //  Uniform / Global declaration of each instance
-    std::string lightsAssing = "";      //  Assign values to non-dynamic lights
     std::string calculateLightBlock = stringFromResource("lights.glsl"); // Main "calculateLighting()" function
 
     if(m_isDirectionalLights){
@@ -69,7 +68,6 @@ void Scene::buildShaders(){
         for(int i = 0; i < m_lights.size(); i++){
             lightsDefines += m_lights[i]->getInstanceDefinesBlock();
             lightsInstance += m_lights[i]->getInstanceBlock();
-            lightsAssing += m_lights[i]->getInstanceAssignBlock();
             ligthsListBlock += m_lights[i]->getInstanceComputeBlock();
         }
         replaceString(calculateLightBlock,"#pragma tangram: lights_to_compute",ligthsListBlock); 
@@ -81,8 +79,6 @@ void Scene::buildShaders(){
                                                                 lightsClassBlock+"\n"+
                                                                 lightsInstance+"\n"+
                                                                 calculateLightBlock+"\n");
-
-        m_styles[i]->getShaderProgram()->addBlock("lighting_non_dynamic_assing", lightsAssing);
     }
 
     //  COMPILE ALL SHADERS

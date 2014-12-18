@@ -61,7 +61,7 @@ void initialize() {
         auto directionalLight = std::make_shared<DirectionalLight>("dLight");
         directionalLight->setDiffuseColor(glm::vec4(1.0,1.0,1.0,1.0));
         directionalLight->setDirection(glm::vec3(-1.0, -1.0, 1.0));
-        m_scene->addLight(directionalLight);
+        // m_scene->addLight(directionalLight);
     
         // //  Point
         auto pointLight = std::make_shared<PointLight>("pLight",true);
@@ -76,7 +76,7 @@ void initialize() {
         spotLight->setPosition(glm::vec3(0.0));
         spotLight->setDirection(glm::vec3(0,PI*0.25,0.0));
         spotLight->setCutOff(PI*0.1, 20.0);
-        m_scene->addLight(spotLight);
+        // m_scene->addLight(spotLight);
         
         //-----------------------
 
