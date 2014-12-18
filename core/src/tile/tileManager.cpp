@@ -31,7 +31,7 @@ bool TileManager::updateTileSet() {
         
         while (incomingTilesIter != m_incomingTiles.end()) {
             
-            std::future<std::shared_ptr<MapTile>>& tileFuture = *incomingTilesIter;
+            auto& tileFuture = *incomingTilesIter;
             std::chrono::milliseconds span (0);
             
             // check if future's shared state is null
@@ -162,7 +162,7 @@ inline void TileManager::makeTile(std::shared_ptr<MapTile>& _mapTile, const std:
         logMsg("ERROR: Loading failed for tile [%d, %d, %d]\n", _mapTile->getID().z, _mapTile->getID().x, _mapTile->getID().y);
     }
         
-    std::shared_ptr<TileData> tileData = _dataSource->getTileData(_mapTile->getID());
+    auto tileData = _dataSource->getTileData(_mapTile->getID());
         
     for (auto& style : m_scene->getStyles()) {
         if(tileData)
@@ -239,7 +239,7 @@ void TileManager::addTile(const TileID& _tileID, bool _zoomState) {
         // Check if tile to be loaded is still required!
         // if not set the shared state of this async's future to "null"
         if(m_tileSet.find(_id) != m_tileSet.end()) {
-            std::shared_ptr<MapTile> threadTile = m_tileSet[_id];
+            auto threadTile = m_tileSet[_id];
             
             // Now Start fetching new tile
             for(const auto& dataSource : m_dataSources) {
