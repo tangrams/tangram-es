@@ -237,10 +237,9 @@ void buildGeneralPolyLine(const Line& _line, float _halfWidth, std::vector<glm::
     
     normCurrNext = glm::normalize(normCurrNext);
     
-    _pointsOut.push_back(nextCoord);
-    _pointsOut.push_back(nextCoord);
-    
     if (useScalingVecs) {
+        _pointsOut.push_back(nextCoord);
+        _pointsOut.push_back(nextCoord);
         _scalingVecsOut.push_back(rightNorm);
         _scalingVecsOut.push_back(-rightNorm);
     } else {
