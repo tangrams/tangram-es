@@ -84,7 +84,6 @@ void View::zoom(float _dz) {
     else {
         m_zoomState = false;
     }
-    _dz *= 0.2;
     setZoom(m_zoom + _dz);
     
 }
