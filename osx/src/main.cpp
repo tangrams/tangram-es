@@ -8,6 +8,7 @@
 // ==============
 
 const double double_tap_time = 0.5; // seconds
+const double scroll_multiplier = 0.05; // scaling for zoom
 
 bool was_panning = false;
 double last_mouse_up = -double_tap_time; // First click should never trigger a double tap
@@ -64,18 +65,10 @@ void cursor_pos_callback(GLFWwindow* window, double x, double y) {
 
 void scroll_callback(GLFWwindow* window, double scrollx, double scrolly) {
     
-    static double scrolled = 0.0;
-    scrolled += scrolly;
+    double x, y;
+    glfwGetCursorPos(window, &x, &y);
+    Tangram::handlePinchGesture(x, y, 1.0 + scroll_multiplier * scrolly);
     
-    // TODO: Update this for continuous zooming, using an arbitrary threshold for now
-    if (scrolled * scrolled > 100.0) {
-        
-        double x, y;
-        glfwGetCursorPos(window, &x, &y);
-        Tangram::handlePinchGesture(x, y, scrolled > 0 ? 1.5 : 0.5);
-        scrolled = 0.0;
-        
-    }
 }
 
 // Window handling
