@@ -96,7 +96,7 @@ bool TileManager::updateTileSet() {
             
             // fetch/add the tile
             else {
-                addTile(visTile, m_view->getZoomState());
+                addTile(visTile, m_view->isZoomIn());
             }
             
             tileSetChanged = true;
@@ -131,7 +131,7 @@ bool TileManager::updateTileSet() {
             removeTile(*visTilesIter, true);
         }
         else {
-            addTile(*visTilesIter, m_view->getZoomState());
+            addTile(*visTilesIter, m_view->isZoomIn());
         }
         visTilesIter++;
         tileSetChanged = true;
