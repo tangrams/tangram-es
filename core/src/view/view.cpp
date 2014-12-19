@@ -10,7 +10,6 @@ View::View(int _width, int _height, ProjectionType _projType) {
     setMapProjection(_projType);
     setSize(_width, _height);
     setZoom(m_initZoom); // Arbitrary zoom for testing
-    m_zoomState = false; //Assume zoom out state, prefer parent fetching
 
     setPosition(0.0, 0.0);
     
@@ -79,10 +78,10 @@ void View::translate(double _dx, double _dy) {
 
 void View::zoom(float _dz) {
     if( ( (m_zoom + _dz - m_initZoom) > 0.0 )) {
-        m_zoomState = true;
+        m_isZoomIn = true;
     }
     else {
-        m_zoomState = false;
+        m_isZoomIn = false;
     }
     setZoom(m_zoom + _dz);
     

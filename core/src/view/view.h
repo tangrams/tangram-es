@@ -58,8 +58,8 @@ public:
     /* Gets the current zoom */
     float getZoom() const { return m_zoom; };
 
-	/* Get the current zoomState */
-	bool getZoomState() const { return m_zoomState; };
+	/* Get the current m_zoomIn */
+	bool isZoomIn() const { return m_isZoomIn; };
     
     /* Updates the view and projection matrices if properties have changed */
     void update();
@@ -106,10 +106,7 @@ protected:
     glm::dmat4 m_proj;
     float m_zoom;
     float m_initZoom = 16.0;
-    /* +ve: zoom-in
-     * -ve: zoom-out
-     */
-    bool m_zoomState = false;
+    bool m_isZoomIn = false;
     int m_vpWidth;
     int m_vpHeight;
     float m_width;
