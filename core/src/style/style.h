@@ -62,7 +62,11 @@ protected:
      */
     virtual void buildPolygon(Polygon& _polygon, std::string& _layer, Properties& _props, VboMesh& _mesh) = 0;
 
-    virtual void onTileFetched(MapTile& _tile) {}
+    /* Can be used by the style to prepare the data processing */
+    virtual void prepareDataProcessing(MapTile& _tile) {}
+
+    /* Can be used by the style once the data has been processed */
+    virtual void finishDataProcessing(MapTile& _tile) {}
     
 public:
 

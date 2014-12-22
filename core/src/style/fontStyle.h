@@ -13,7 +13,8 @@ protected:
     virtual void buildPoint(Point& _point, std::string& _layer, Properties& _props, VboMesh& _mesh) override;
     virtual void buildLine(Line& _line, std::string& _layer, Properties& _props, VboMesh& _mesh) override;
     virtual void buildPolygon(Polygon& _polygon, std::string& _layer, Properties& _props, VboMesh& _mesh) override;
-    virtual void onTileFetched(MapTile& _tile) override;
+    virtual void prepareDataProcessing(MapTile& _tile) override;
+    virtual void finishDataProcessing(MapTile& _tile) override;
 
 public:
 

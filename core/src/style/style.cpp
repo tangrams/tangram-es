@@ -16,7 +16,7 @@ void Style::addLayers(std::vector<std::string> _layers) {
 }
 
 void Style::addData(TileData& _data, MapTile& _tile, const MapProjection& _mapProjection) {
-    onTileFetched(_tile);
+    prepareDataProcessing(_tile);
 
     VboMesh* mesh = new VboMesh(m_vertexLayout, m_drawMode);
     
@@ -54,5 +54,6 @@ void Style::addData(TileData& _data, MapTile& _tile, const MapProjection& _mapPr
     }
     
     _tile.addGeometry(*this, std::unique_ptr<VboMesh>(mesh));
-    
+
+    finishDataProcessing(_tile);
 }

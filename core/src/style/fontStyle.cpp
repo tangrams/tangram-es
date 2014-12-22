@@ -38,11 +38,15 @@ void FontStyle::buildPolygon(Polygon& _polygon, std::string& _layer, Properties&
 
 }
 
-void FontStyle::onTileFetched(MapTile &_tile) {
+void FontStyle::prepareDataProcessing(MapTile &_tile) {
     fsuint buffer;
     glfonsBufferCreate(fontContext, 32, &buffer);
     tileBuffers[_tile.getID()] = buffer;
     glfonsBindBuffer(fontContext, buffer);
+}
+
+void FontStyle::finishDataProcessing(MapTile &_tile) {
+    glfonsBindBuffer(fontContext, 0);
 }
 
 void FontStyle::setup() {
