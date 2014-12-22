@@ -37,7 +37,7 @@ public:
     /* Returns the length of a side of this tile in projection units */
     float getScale() const { return m_scale; }
 
-    /* Get the logically deleted or visible state of this tile
+    /* Get the logically deleted or visible state of this tile */
     bool getState() const { return m_state; }
     
     /* Returns the reciprocal of <getScale()> */
