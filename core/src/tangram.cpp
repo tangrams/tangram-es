@@ -126,15 +126,13 @@ void render() {
         // Loop over all tiles in m_tileSet
         for (const auto& mapIDandTile : m_tileManager->getVisibleTiles()) {
             const std::shared_ptr<MapTile>& tile = mapIDandTile.second;
-            if(tile->hasGeometry()) {
-                if (tile->getProxyCounter() > 0)
-                {
+            if (tile->hasGeometry()) {
+                if (tile->getProxyCounter() > 0) {
                     // Draw proxy tiles
                     glEnable(GL_POLYGON_OFFSET_FILL);
                     glPolygonOffset(1.0, 1.0);
                     tile->draw(*style, viewProj);
-                }
-                else {
+                } else {
                     // Draw visible tile
                     glDisable(GL_POLYGON_OFFSET_FILL);
                     tile->draw(*style, viewProj);

@@ -64,17 +64,16 @@ void MapTile::setState(bool _state) {
 }
 
 bool MapTile::hasGeometry() {
-    return (m_geometry.size() == 0) ? false : true;
+    return (m_geometry.size() != 0);
 }
 
-// NOTE: mutex not used right now (practically)
 void MapTile::incProxyCounter() {
     m_proxyCounter++;
 }
 
 void MapTile::decProxyCounter() {
     m_proxyCounter--;
-    if(m_proxyCounter < 0) {
+    if (m_proxyCounter < 0) {
         m_proxyCounter = 0;
     }
 }

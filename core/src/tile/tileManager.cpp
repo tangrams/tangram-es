@@ -36,14 +36,12 @@ bool TileManager::updateTileSet() {
             
             // check if future's shared state is null
             // i.e. The tile it was supposed to hold, is no longer part of m_tileSet and hence no longer loaded
-            if(!tileFuture.valid()) {
+            if (!tileFuture.valid()) {
                 incomingTilesIter = m_incomingTiles.erase(incomingTilesIter);
-            }
-            
-            else if (tileFuture.wait_for(span) == std::future_status::ready) {
+            } else if (tileFuture.wait_for(span) == std::future_status::ready) {
                 auto tile = tileFuture.get();
                 // possible a tile is deleted by the main thread before it gets finished
-                if(tile) {
+                if (tile) {
                     const TileID& id = tile->getID();
                     logMsg("Tile [%d, %d, %d] finished loading\n", id.z, id.x, id.y);
                     m_tileSet[id] = tile;
@@ -120,8 +118,8 @@ bool TileManager::updateTileSet() {
     
     // clean m_tileSet
     tileSetIter = m_tileSet.begin();
-    while(tileSetIter != m_tileSet.end()) {
-        if(!tileSetIter->second->getState() && tileSetIter->second->getProxyCounter() == 0) {
+    while (tileSetIter != m_tileSet.end()) {
+        if (!tileSetIter->second->getState() && tileSetIter->second->getProxyCounter() == 0) {
             removeTile(tileSetIter);
             continue;
         }
@@ -140,30 +138,30 @@ inline void TileManager::makeTile(std::shared_ptr<MapTile>& _mapTile, const std:
     auto tileData = _dataSource->getTileData(_mapTile->getID());
         
     for (auto& style : m_scene->getStyles()) {
-        if(tileData)
+        if (tileData) {
             style->addData(*tileData, *_mapTile, m_view->getMapProjection());
+        }
     }
 }
 
 inline void TileManager::updateProxyTiles(const TileID& _tileID, bool _zoomStatus) {
-    if(!_zoomStatus) {
+    if (!_zoomStatus) {
         //zoom in - add children
         std::vector<TileID> children;
         _tileID.getChildren(children, m_view->s_maxZoom);
         
-        for(auto& proxyID : children) {
+        for (auto& proxyID : children) {
             // only set a proxyTile if it has its vbos ready
-            if(m_tileSet.find(proxyID) != m_tileSet.end() && m_tileSet[proxyID]->hasGeometry()) {
+            if (m_tileSet.find(proxyID) != m_tileSet.end() && m_tileSet[proxyID]->hasGeometry()) {
                 m_tileSet[proxyID]->incProxyCounter();
             }
         }
-    }
-    else {
+    } else {
         // zoom out - add parent
         TileID* parent = _tileID.getParent();
         
-        if(parent) {
-            if(m_tileSet.find(*parent) != m_tileSet.end() && m_tileSet[*parent]->hasGeometry()) {
+        if (parent) {
+            if (m_tileSet.find(*parent) != m_tileSet.end() && m_tileSet[*parent]->hasGeometry()) {
                 m_tileSet[*parent]->incProxyCounter();
             }
         }
@@ -183,17 +181,16 @@ void TileManager::addTile(const TileID& _tileID, bool _zoomState) {
         
         // Check if tile to be loaded is still required! (either not culled from m_tileSet and not logically deleted)
         // if not set the shared state of this async's future to "null"
-        if(m_tileSet.find(_id) != m_tileSet.end() && m_tileSet[_id]->getState()) {
+        if (m_tileSet.find(_id) != m_tileSet.end() && m_tileSet[_id]->getState()) {
             auto threadTile = m_tileSet[_id];
             
             // Now Start fetching new tile
-            for(const auto& dataSource : m_dataSources) {
+            for (const auto& dataSource : m_dataSources) {
                 makeTile(threadTile, dataSource);
             }
             
             return threadTile;
-        }
-        else {
+        } else {
             // tile was deleted (went out off view) before it could load its data
             // remove its proxies also
             cleanProxyTiles(_id);
@@ -223,8 +220,8 @@ void TileManager::cleanProxyTiles(const TileID& _tileID) {
     // check if parent proxy is present
     TileID *parent = _tileID.getParent();
     
-    if(parent) {
-        if(m_tileSet.find(*parent) != m_tileSet.end()) {
+    if (parent) {
+        if (m_tileSet.find(*parent) != m_tileSet.end()) {
             m_tileSet[*parent]->decProxyCounter();
         }
     }
@@ -232,8 +229,8 @@ void TileManager::cleanProxyTiles(const TileID& _tileID) {
     // check if any child proxies are present
     std::vector<TileID> children;
     _tileID.getChildren(children, m_view->s_maxZoom);
-    for(auto& child : children) {
-        if(m_tileSet.find(child) != m_tileSet.end()) {
+    for (auto& child : children) {
+        if (m_tileSet.find(child) != m_tileSet.end()) {
             m_tileSet[child]->decProxyCounter();
         }
     }
