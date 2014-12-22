@@ -3,6 +3,7 @@
 #include <memory>
 #include <utility>
 #include <cmath>
+#include <set>
 
 #include "platform.h"
 #include "tile/tileManager.h"
@@ -111,7 +112,7 @@ void update(float _dt) {
 }
 
 void render() {
-
+    
     // Set up openGL for new frame
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
@@ -129,12 +130,13 @@ void render() {
                 if (tile->getProxyCounter() > 0)
                 {
                     // Draw proxy tiles
-                    //glPolygonOffset
-                    logMsg(" Drawing Proxy: [%d, %d, %d], having count: %d\n", tile->getID().x, tile->getID().y, tile->getID().z, tile->getProxyCounter());
+                    glEnable(GL_POLYGON_OFFSET_FILL);
+                    glPolygonOffset(1.0, 1.0);
                     tile->draw(*style, viewProj);
                 }
                 else {
                     // Draw visible tile
+                    glDisable(GL_POLYGON_OFFSET_FILL);
                     tile->draw(*style, viewProj);
                 }
             }
