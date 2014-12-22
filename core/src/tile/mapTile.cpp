@@ -66,18 +66,3 @@ void MapTile::setState(bool _state) {
 bool MapTile::hasGeometry() {
     return (m_geometry.size() != 0);
 }
-
-void MapTile::incProxyCounter() {
-    m_proxyCounter++;
-}
-
-void MapTile::decProxyCounter() {
-    m_proxyCounter--;
-    if (m_proxyCounter < 0) {
-        m_proxyCounter = 0;
-    }
-}
-
-void MapTile::resetProxyCounter() {
-    m_proxyCounter = 0;
-}

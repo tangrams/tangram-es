@@ -144,30 +144,6 @@ inline void TileManager::makeTile(std::shared_ptr<MapTile>& _mapTile, const std:
     }
 }
 
-inline void TileManager::updateProxyTiles(const TileID& _tileID, bool _zoomStatus) {
-    if (!_zoomStatus) {
-        //zoom in - add children
-        std::vector<TileID> children;
-        _tileID.getChildren(children, m_view->s_maxZoom);
-        
-        for (auto& proxyID : children) {
-            // only set a proxyTile if it has its vbos ready
-            if (m_tileSet.find(proxyID) != m_tileSet.end() && m_tileSet[proxyID]->hasGeometry()) {
-                m_tileSet[proxyID]->incProxyCounter();
-            }
-        }
-    } else {
-        // zoom out - add parent
-        TileID* parent = _tileID.getParent();
-        
-        if (parent) {
-            if (m_tileSet.find(*parent) != m_tileSet.end() && m_tileSet[*parent]->hasGeometry()) {
-                m_tileSet[*parent]->incProxyCounter();
-            }
-        }
-    }
-}
-
 void TileManager::addTile(const TileID& _tileID, bool _zoomState) {
     
     std::shared_ptr<MapTile> tile(new MapTile(_tileID, m_view->getMapProjection()));
@@ -212,8 +188,28 @@ void TileManager::removeTile(std::map< TileID, std::shared_ptr<MapTile> >::itera
     
 }
 
-void TileManager::removeTile(const TileID& _tileID) {
-    m_tileSet.erase(_tileID);
+void TileManager::updateProxyTiles(const TileID& _tileID, bool _zoomStatus) {
+    if (!_zoomStatus) {
+        //zoom in - add children
+        std::vector<TileID> children;
+        _tileID.getChildren(children, m_view->s_maxZoom);
+        
+        for (auto& proxyID : children) {
+            // only set a proxyTile if it has its vbos ready
+            if (m_tileSet.find(proxyID) != m_tileSet.end() && m_tileSet[proxyID]->hasGeometry()) {
+                m_tileSet[proxyID]->incProxyCounter();
+            }
+        }
+    } else {
+        // zoom out - add parent
+        TileID* parent = _tileID.getParent();
+        
+        if (parent) {
+            if (m_tileSet.find(*parent) != m_tileSet.end() && m_tileSet[*parent]->hasGeometry()) {
+                m_tileSet[*parent]->incProxyCounter();
+            }
+        }
+    }
 }
 
 void TileManager::cleanProxyTiles(const TileID& _tileID) {

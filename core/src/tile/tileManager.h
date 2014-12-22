@@ -69,13 +69,6 @@ private:
     std::vector< std::future<std::shared_ptr<MapTile>> > m_incomingTiles;
     
     /*
-     * Checks and updates m_tileSet with proxy tiles for every new visible tile
-     *  @_tileID: TileID of the new visible tile for which proxies needs to be added
-     *  @_zoomStatus: Zoom-in or Zoom-out to determine parent of child proxies
-     */
-    void updateProxyTiles(const TileID& _tileID, bool _zoomStatus);
-    
-    /*
      * Constructs a future (async) to load data of a new visible tile
      *      this is also responsible for loading proxy tiles for the newly visible tiles
      * @_tileID: TileID for which new MapTile needs to be constructed
@@ -84,10 +77,16 @@ private:
     void addTile(const TileID& _tileID, bool _zoomState);
     
     /*
-     *  Overloaded removeTile functions to remove items from m_tileSet
+     * Removes a tile from m_tileSet
      */
     void removeTile(std::map<TileID, std::shared_ptr<MapTile>>::iterator& _tileIter);
-    void removeTile(const TileID& _tileID);
+    
+    /*
+     * Checks and updates m_tileSet with proxy tiles for every new visible tile
+     *  @_tileID: TileID of the new visible tile for which proxies needs to be added
+     *  @_zoomStatus: Zoom-in or Zoom-out to determine parent of child proxies
+     */
+    void updateProxyTiles(const TileID& _tileID, bool _zoomStatus);
     
     /*
      *  Once a visible tile finishes loaded and is added to m_tileSet, all its proxy(ies) MapTiles are removed

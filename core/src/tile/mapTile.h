@@ -40,6 +40,9 @@ public:
     /* Get the logically deleted or visible state of this tile */
     bool getState() const { return m_state; }
     
+    /* Set status of this tile */
+    void setState(bool _state);
+    
     /* Returns the reciprocal of <getScale()> */
     float getInverseScale() const { return m_inverseScale; }
     
@@ -57,17 +60,14 @@ public:
 
     /* Draws the geometry associated with the provided <Style> and view-projection matrix */
     void draw(const Style& _style, const glm::dmat4& _viewProjMatrix);
-
-    /* Set status of this tile */
-    void setState(bool _state);
     
     /* 
      * methods to set and get proxy counter
      */
-    void incProxyCounter();
-    int getProxyCounter() {return m_proxyCounter;}
-    void decProxyCounter();
-    void resetProxyCounter();
+    int getProxyCounter() { return m_proxyCounter; }
+    void incProxyCounter() { m_proxyCounter++; }
+    void decProxyCounter() { m_proxyCounter = m_proxyCounter > 0 ? m_proxyCounter - 1 : 0; }
+    void resetProxyCounter() { m_proxyCounter = 0; }
     
 private:
 
