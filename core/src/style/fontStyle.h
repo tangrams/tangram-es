@@ -1,0 +1,41 @@
+#pragma once
+
+#include "style.h"
+#include "fontstash/glfontstash.h"
+#include <map>
+
+class FontStyle : public Style {
+
+protected:
+
+    virtual void constructVertexLayout() override;
+    virtual void constructShaderProgram() override;
+    virtual void buildPoint(Point& _point, std::string& _layer, Properties& _props, VboMesh& _mesh) override;
+    virtual void buildLine(Line& _line, std::string& _layer, Properties& _props, VboMesh& _mesh) override;
+    virtual void buildPolygon(Polygon& _polygon, std::string& _layer, Properties& _props, VboMesh& _mesh) override;
+    virtual void onTileFetched(MapTile& _tile) override;
+
+public:
+
+    FontStyle(const std::string& _fontFile, std::string _name, GLenum _drawMode = GL_TRIANGLES);
+
+    virtual void setup() override;
+
+    virtual ~FontStyle();
+
+    friend void errorCallback(void* _userPtr, GLFONSbuffer* _buffer, GLFONSError _fonsError);
+    friend void createTexTransforms(void* _userPtr, unsigned int _width, unsigned int _height);
+    friend void vertexData(void* _userPtr, unsigned int _nVerts, const float* _data);
+    friend void updateTransforms(void* _userPtr, unsigned int _xoff, unsigned int _yoff,
+                            unsigned int _width, unsigned int _height, const unsigned int* _pixels);
+    friend void updateAtlas(void* _userPtr, unsigned int _xoff, unsigned int _yoff,
+                            unsigned int _width, unsigned int _height, const unsigned int* _pixels);
+    friend void createAtlas(void* usrPtr, unsigned int width, unsigned int height);
+
+private:
+
+    void initFontContext();
+    std::map<TileID, fsuint> tileBuffers;
+    FONScontext* fontContext;
+
+};

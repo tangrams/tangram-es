@@ -11,6 +11,7 @@
 
 #include "style/polygonStyle.h"
 #include "style/polylineStyle.h"
+#include "style/fontStyle.h"
 #include "scene/scene.h"
 #include "util/error.h"
 
@@ -50,6 +51,10 @@ void initialize() {
         std::unique_ptr<Style> linesStyle(new PolylineStyle("Polyline"));
         linesStyle->addLayers({"roads"});
         m_scene->addStyle(std::move(linesStyle));
+
+        std::unique_ptr<Style> fontStyle(new FontStyle("DejaVuSeriff.ttf", "FontStyle"));
+        fontStyle->addLayers({"roads"});
+        m_scene->addStyle(std::move(fontStyle));
     }
 
     // Create a tileManager

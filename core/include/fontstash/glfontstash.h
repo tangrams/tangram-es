@@ -28,6 +28,11 @@ typedef unsigned int fsuint;
 #define N_GLYPH_VERTS 6
 
 typedef struct GLFONScontext GLFonscontext;
+typedef struct GLFONSbuffer GLFONSbuffer;
+
+enum class GLFONSError {
+    ID_OVERFLOW
+};
 
 FONScontext* glfonsCreate(int width, int height, int flags);
 void glfonsDelete(FONScontext* ctx);
@@ -57,10 +62,6 @@ unsigned int glfonsRGBA(unsigned char r, unsigned char g, unsigned char b, unsig
 
 #define FONTSTASH_IMPLEMENTATION
 #include "fontstash.h"
-
-enum class GLFONSError {
-    ID_OVERFLOW
-};
 
 struct GLFONSstash {
     int nbGlyph;
