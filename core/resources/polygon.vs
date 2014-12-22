@@ -6,8 +6,8 @@ uniform mat4 u_modelView;
 uniform mat4 u_modelViewProj;
 uniform float u_time;
 
-// #pragma tangram: material
-// #pragma tangram: lighting
+#pragma tangram: material
+#pragma tangram: lighting
 
 attribute vec4 a_position;
 attribute vec4 a_color;
@@ -24,7 +24,8 @@ void main() {
   	v_normal = normalize(a_normal);
   	v_texcoord = a_texcoord;
 
-	v_color = a_color;//* calculateLighting(v_eye,v_normal);
+	// v_color = a_color;
+	v_color = a_color * calculateLighting(v_eyeToPoint,v_normal);
 
   	gl_Position = u_modelViewProj * a_position;
 
