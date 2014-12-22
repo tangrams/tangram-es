@@ -81,7 +81,7 @@ bool TileManager::updateTileSet() {
             // visible tile is already in m_tileSet
             // Possible a proxy tile in m_tileSet is visible now (set status to true and resetProxyCounter)
             tileSetIter->second->resetProxyCounter();
-            tileSetIter->second->setStatus(true);
+            tileSetIter->second->setState(true);
             visTilesIter++;
             tileSetIter++;
         } else if (visTile < tileInSet) {
@@ -94,7 +94,7 @@ bool TileManager::updateTileSet() {
         } else {
             // visibleTiles is missing an element present in tileSet
             // logically deletion of tile
-            tileSetIter->second->setStatus(false);
+            tileSetIter->second->setState(false);
             tileSetIter++;
             tileSetChanged = true;
         }
@@ -104,7 +104,7 @@ bool TileManager::updateTileSet() {
     while (tileSetIter != m_tileSet.end()) {
         // All tiles in tileSet that haven't been covered yet are not in visibleTiles, so remove them
         // logical deletion of tiles
-        tileSetIter->second->setStatus(false);
+        tileSetIter->second->setState(false);
         tileSetIter++;
         tileSetChanged = true;
     }
@@ -121,7 +121,7 @@ bool TileManager::updateTileSet() {
     // clean m_tileSet
     tileSetIter = m_tileSet.begin();
     while(tileSetIter != m_tileSet.end()) {
-        if(!tileSetIter->second->getStatus() && tileSetIter->second->getProxyCounter() == 0) {
+        if(!tileSetIter->second->getState() && tileSetIter->second->getProxyCounter() == 0) {
             removeTile(tileSetIter);
             continue;
         }
@@ -199,7 +199,7 @@ void TileManager::addTile(const TileID& _tileID, bool _zoomState) {
     
     std::shared_ptr<MapTile> tile(new MapTile(_tileID, m_view->getMapProjection()));
     m_tileSet[_tileID] = tile;
-    m_tileSet[_tileID]->setStatus(true);
+    m_tileSet[_tileID]->setState(true);
     
     //Add Proxy if corresponding proxy MapTile ready
     updateProxyTiles(_tileID, _zoomState);
@@ -208,7 +208,7 @@ void TileManager::addTile(const TileID& _tileID, bool _zoomState) {
         
         // Check if tile to be loaded is still required! (either not culled from m_tileSet and not logically deleted)
         // if not set the shared state of this async's future to "null"
-        if(m_tileSet.find(_id) != m_tileSet.end() && m_tileSet[_id]->getStatus()) {
+        if(m_tileSet.find(_id) != m_tileSet.end() && m_tileSet[_id]->getState()) {
             auto threadTile = m_tileSet[_id];
             
             // Now Start fetching new tile

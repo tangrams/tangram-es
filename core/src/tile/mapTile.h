@@ -37,8 +37,8 @@ public:
     /* Returns the length of a side of this tile in projection units */
     float getScale() const { return m_scale; }
 
-    /* Get the loading/drawing status of this tile */
-    bool getStatus() const { return m_status; }
+    /* Get the logically deleted or visible state of this tile
+    bool getState() const { return m_state; }
     
     /* Returns the reciprocal of <getScale()> */
     float getInverseScale() const { return m_inverseScale; }
@@ -59,7 +59,7 @@ public:
     void draw(const Style& _style, const glm::dmat4& _viewProjMatrix);
 
     /* Set status of this tile */
-    void setStatus(bool _status);
+    void setState(bool _state);
     
     /* 
      * methods to set and get proxy counter
@@ -73,12 +73,12 @@ private:
 
     TileID m_id;
  
-    /* Use to determine drawing state of this tile (drawable or not)
+    /* Use to determine logical deleted state of this tile
      *
-     * false: this tile is possibly in a deleted state, do not draw this tile
-     * true: draw this tile, its either a visible tile or proxy tile
+     * false: mark this tile for deletion (unless this becomes a proxy tile, i.e. proxyCount > 0)
+     * true: this tile is visible, set its valid state to true
      */
-    bool m_status = false;
+    bool m_state = false;
     
     /*
      * A Counter for number of tiles this tile acts a proxy for
