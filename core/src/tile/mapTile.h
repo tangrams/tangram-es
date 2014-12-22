@@ -85,8 +85,6 @@ private:
      */
     int m_proxyCounter = 0;
     
-    std::mutex m_mutexProxyCounter;
-    
     const MapProjection* m_projection = nullptr;
     
     float m_scale = 1;

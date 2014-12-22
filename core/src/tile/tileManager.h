@@ -61,12 +61,6 @@ private:
     std::shared_ptr<View> m_view;
     std::shared_ptr<Scene> m_scene;
     
-    /*
-     * mutex as multiple threads could add/remove tiles (specially proxies)
-     */
-    // TODO: Adding proxy tiles by async threads (for proxy tiles having tiledata fetched but needing tesselation)
-    std::mutex m_tileSetMutex;
-
     // TODO: Might get away with using a vector of pairs here (and for searching using std:search (binary search))
     std::map<TileID, std::shared_ptr<MapTile>> m_tileSet;
     
@@ -88,14 +82,6 @@ private:
      * @_zoomState: to determine whether to add child tiles or parent tile as proxy for this new visible tile
      */
     void addTile(const TileID& _tileID, bool _zoomState);
-    
-    /*
-     *  Constructs and adds parent or child proxy tiles based on the zoomState (in or out).
-     *  Called when a proxy is not present in the tileSet, and needs tesselation for vbo construction
-     *  NOTE: this will only be called for tiles having their tileData already fetched
-     *  @ _proxyID: TileID of the proxy tile to be added
-     */
-    void addProxyTile(const TileID& _proxyID);
     
     /*
      *  Overloaded removeTile functions to remove items from m_tileSet

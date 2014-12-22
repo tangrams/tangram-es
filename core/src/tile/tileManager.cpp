@@ -145,23 +145,6 @@ inline void TileManager::makeTile(std::shared_ptr<MapTile>& _mapTile, const std:
     }
 }
 
-//TODO: Not used right now !!!!
-// TODO: proxy tiles having tiledata fetched but needing tesselation), this will need mutex on m_tileSet
-inline void TileManager::addProxyTile(const TileID& _proxyID) {
-    for(const auto& dataSource : m_dataSources) {
-        if(dataSource->hasTileData(_proxyID)) {
-            // no reference of this MapTile exists
-            // create MapTile from already loaded tileData
-            std::shared_ptr<MapTile> proxyTile(new MapTile(_proxyID, m_view->getMapProjection()));
-            makeTile(proxyTile, dataSource);
-            {
-                std::lock_guard<std::mutex> lock(m_tileSetMutex);
-                m_tileSet[_proxyID] = proxyTile;
-            }
-        }
-    }
-}
-
 inline void TileManager::updateProxyTiles(const TileID& _tileID, bool _zoomStatus) {
     if(!_zoomStatus) {
         //zoom in - add children
@@ -173,10 +156,6 @@ inline void TileManager::updateProxyTiles(const TileID& _tileID, bool _zoomStatu
             if(m_tileSet.find(proxyID) != m_tileSet.end() && m_tileSet[proxyID]->hasGeometry()) {
                 m_tileSet[proxyID]->incProxyCounter();
             }
-            // TODO: proxy tiles having tiledata fetched but needing tesselation), this will need mutex on m_tileSet
-            /*else {
-                addProxyTile(proxyID);
-            }*/
         }
     }
     else {
@@ -187,10 +166,6 @@ inline void TileManager::updateProxyTiles(const TileID& _tileID, bool _zoomStatu
             if(m_tileSet.find(*parent) != m_tileSet.end() && m_tileSet[*parent]->hasGeometry()) {
                 m_tileSet[*parent]->incProxyCounter();
             }
-            // TODO: proxy tiles having tiledata fetched but needing tesselation), this will need mutex on m_tileSet
-            /*else {
-                addProxyTile(*parent);
-            }*/
         }
     }
 }

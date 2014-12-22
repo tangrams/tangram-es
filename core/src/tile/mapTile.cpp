@@ -69,22 +69,16 @@ bool MapTile::hasGeometry() {
 
 // NOTE: mutex not used right now (practically)
 void MapTile::incProxyCounter() {
-    {
-        std::lock_guard<std::mutex> lock(m_mutexProxyCounter);
-        m_proxyCounter++;
-    }
+    m_proxyCounter++;
 }
 
 void MapTile::decProxyCounter() {
-    {
-        std::lock_guard<std::mutex> lock(m_mutexProxyCounter);
-        m_proxyCounter--;
+    m_proxyCounter--;
+    if(m_proxyCounter < 0) {
+        m_proxyCounter = 0;
     }
 }
 
 void MapTile::resetProxyCounter() {
-    {
-        std::lock_guard<std::mutex> lock(m_mutexProxyCounter);
-        m_proxyCounter = 0;
-    }
+    m_proxyCounter = 0;
 }
