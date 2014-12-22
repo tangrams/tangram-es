@@ -122,21 +122,21 @@ void render() {
 
         style->setup();
 
-        // Loop over proxy tiles
-        for(const auto& mapIDandTile : m_tileManager->getProxyTiles()) {
-            const std::shared_ptr<MapTile>& tile = mapIDandTile.second;
-            if(tile->hasGeometry()) {
-                // Draw!
-                tile->draw(*style, viewProj);
-            }
-        }
-        
-        // Loop over visible tiles
+        // Loop over all tiles in m_tileSet
         for (const auto& mapIDandTile : m_tileManager->getVisibleTiles()) {
             const std::shared_ptr<MapTile>& tile = mapIDandTile.second;
-            if (tile->hasGeometry()) {
-                // Draw!
-                tile->draw(*style, viewProj);
+            if(tile->hasGeometry()) {
+                if (tile->getProxyCounter() > 0)
+                {
+                    // Draw proxy tiles
+                    //glPolygonOffset
+                    logMsg(" Drawing Proxy: [%d, %d, %d], having count: %d\n", tile->getID().x, tile->getID().y, tile->getID().z, tile->getProxyCounter());
+                    tile->draw(*style, viewProj);
+                }
+                else {
+                    // Draw visible tile
+                    tile->draw(*style, viewProj);
+                }
             }
         }
         

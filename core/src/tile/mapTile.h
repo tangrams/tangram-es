@@ -2,6 +2,7 @@
 
 #include <unordered_map>
 #include <memory>
+#include <mutex>
 
 #include "glm/glm.hpp"
 
@@ -60,6 +61,14 @@ public:
     /* Set status of this tile */
     void setStatus(bool _status);
     
+    /* 
+     * methods to set and get proxy counter
+     */
+    void incProxyCounter();
+    int getProxyCounter() {return m_proxyCounter;}
+    void decProxyCounter();
+    void resetProxyCounter();
+    
 private:
 
     TileID m_id;
@@ -70,6 +79,13 @@ private:
      * true: draw this tile, its either a visible tile or proxy tile
      */
     bool m_status = false;
+    
+    /*
+     * A Counter for number of tiles this tile acts a proxy for
+     */
+    int m_proxyCounter = 0;
+    
+    std::mutex m_mutexProxyCounter;
     
     const MapProjection* m_projection = nullptr;
     

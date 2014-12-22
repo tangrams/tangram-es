@@ -54,9 +54,6 @@ public:
     /* Returns the set of currently visible tiles */
     const std::map<TileID, std::shared_ptr<MapTile>>& getVisibleTiles() { return m_tileSet; }
     
-    /* Returns the set of proxy tiles */
-    const std::map<TileID, std::shared_ptr<MapTile>>& getProxyTiles() { return m_proxyTiles; }
-    
 private:
 
     TileManager();
@@ -65,27 +62,24 @@ private:
     std::shared_ptr<Scene> m_scene;
     
     /*
-     * mutex as multiple threads could add/remove proxy tiles
+     * mutex as multiple threads could add/remove tiles (specially proxies)
      */
-    std::mutex m_proxyMutex;
+    // TODO: Adding proxy tiles by async threads (for proxy tiles having tiledata fetched but needing tesselation)
+    std::mutex m_tileSetMutex;
 
     // TODO: Might get away with using a vector of pairs here (and for searching using std:search (binary search))
     std::map<TileID, std::shared_ptr<MapTile>> m_tileSet;
     
-    std::map<TileID, std::shared_ptr<MapTile>> m_proxyTiles;
-
     std::vector<std::unique_ptr<DataSource>> m_dataSources;
 
     std::vector< std::future<std::shared_ptr<MapTile>> > m_incomingTiles;
     
     /*
-     * Checks and updates m_proxyTiles with proxy tiles for every new visible tile
-     *      Any proxy tile which is all ready to be drawn is passed in m_proxyTiles serially
-     *      Any proxy tile which will require tesselation is handled by the visible tile loading async thread
+     * Checks and updates m_tileSet with proxy tiles for every new visible tile
      *  @_tileID: TileID of the new visible tile for which proxies needs to be added
      *  @_zoomStatus: Zoom-in or Zoom-out to determine parent of child proxies
      */
-    void updateProxyTiles(const TileID& _tileID, bool _zoomStatus, bool _serial=false);
+    void updateProxyTiles(const TileID& _tileID, bool _zoomStatus);
     
     /*
      * Constructs a future (async) to load data of a new visible tile
@@ -96,29 +90,18 @@ private:
     void addTile(const TileID& _tileID, bool _zoomState);
     
     /*
-     *  Adds parent or child proxy tiles based on the zoomState (in or out).
-     *  Grabs the MapTile from m_tileSet if this proxy tile was visible last update call (serially)
-     *  Or, constructs a new MapTile from the prewviously fetched raw tile data (async)
-     *  @ _proxyID: TileID of the proxy tile to be added to m_proxyTiles
+     *  Constructs and adds parent or child proxy tiles based on the zoomState (in or out).
+     *  Called when a proxy is not present in the tileSet, and needs tesselation for vbo construction
+     *  NOTE: this will only be called for tiles having their tileData already fetched
+     *  @ _proxyID: TileID of the proxy tile to be added
      */
-    void addProxyTile(const TileID& _proxyID, bool _serial = false);
+    void addProxyTile(const TileID& _proxyID);
     
     /*
-     *  Overloaded removeTile functions to remove items from m_tileSet or m_proxyTiles
+     *  Overloaded removeTile functions to remove items from m_tileSet
      */
-    void removeTile(std::map<TileID, std::shared_ptr<MapTile>>::iterator& _tileIter, bool _isProxy=false);
-    void removeTile(const TileID& _tileID, bool _isProxy=false);
-    
-    /*
-     *  Sets the drawing status of the MapTile to false
-     *  --- Logical Deletion---
-     */
-    void unsetTileDrawable(std::map<TileID, std::shared_ptr<MapTile>>::iterator& _tileIter);
-    
-    /*
-     *  Sets the drawing status of the MapTile to true
-     */
-    void setTileDrawable(const TileID& _tileID, bool isProxy=false);
+    void removeTile(std::map<TileID, std::shared_ptr<MapTile>>::iterator& _tileIter);
+    void removeTile(const TileID& _tileID);
     
     /*
      *  Once a visible tile finishes loaded and is added to m_tileSet, all its proxy(ies) MapTiles are removed
