@@ -62,6 +62,8 @@ protected:
      */
     virtual void buildPolygon(Polygon& _polygon, std::string& _layer, Properties& _props, VboMesh& _mesh) = 0;
 
+    virtual void onTileFetched(MapTile& _tile) {}
+    
 public:
 
     Style(std::string _name, GLenum _drawMode);

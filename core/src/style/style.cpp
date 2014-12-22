@@ -16,7 +16,8 @@ void Style::addLayers(std::vector<std::string> _layers) {
 }
 
 void Style::addData(TileData& _data, MapTile& _tile, const MapProjection& _mapProjection) {
-    
+    onTileFetched(_tile);
+
     VboMesh* mesh = new VboMesh(m_vertexLayout, m_drawMode);
     
     for (auto& layer : _data.layers) {
