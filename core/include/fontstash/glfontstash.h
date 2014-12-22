@@ -47,7 +47,7 @@ void glfonsBufferDelete(FONScontext* gl, fsuint id);
 void glfonsBindBuffer(FONScontext* ctx, fsuint id);
 
 void glfonsRasterize(FONScontext* ctx, fsuint textId, const char* s, FONSeffectType effect);
-void glfonsUploadVertices(FONScontext* ctx);
+bool glfonsVertices(FONScontext* ctx, std::vector<float>* data);
 
 void glfonsGetBBox(FONScontext* ctx, fsuint id, float* x0, float* y0, float* x1, float* y1);
 float glfonsGetGlyphOffset(FONScontext* ctx, fsuint id, int i);
@@ -90,7 +90,6 @@ struct GLFONSparams {
                              unsigned int width, unsigned int height, const unsigned int* pixels);
     void (*updateAtlas)(void* usrPtr, unsigned int xoff, unsigned int yoff,
                         unsigned int width, unsigned int height, const unsigned int* pixels);
-    void (*vertexData)(void* usrPtr, unsigned int nVerts, const float* data);
 };
 
 struct GLFONScontext {
@@ -356,14 +355,20 @@ unsigned int glfonsRGBA(unsigned char r, unsigned char g, unsigned char b, unsig
     return (r) | (g << 8) | (b << 16) | (a << 24);
 }
 
-void glfonsUploadVertices(FONScontext* ctx) {
+bool glfonsVertices(FONScontext* ctx, std::vector<float>* data) {
     GLFONScontext* gl = (GLFONScontext*) ctx->params.userPtr;
     GLFONSbuffer* buffer = glfons__bufferBound(gl);
 
-    gl->params.vertexData(gl->userPtr, buffer->nbVerts, buffer->interleavedArray);
+    if(buffer->interleavedArray == nullptr) {
+        return false;
+    }
+
+    data->insert(data->end(), &buffer->interleavedArray[0], &buffer->interleavedArray[buffer->nbVerts]);
 
     free(buffer->interleavedArray);
     buffer->interleavedArray = nullptr;
+
+    return true;
 }
 
 void glfonsTransform(FONScontext* ctx, fsuint id, float tx, float ty, float r, float a) {

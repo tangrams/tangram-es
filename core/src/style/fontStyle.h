@@ -24,9 +24,7 @@ public:
 
     virtual ~FontStyle();
 
-    friend void errorCallback(void* _userPtr, GLFONSbuffer* _buffer, GLFONSError _fonsError);
     friend void createTexTransforms(void* _userPtr, unsigned int _width, unsigned int _height);
-    friend void vertexData(void* _userPtr, unsigned int _nVerts, const float* _data);
     friend void updateTransforms(void* _userPtr, unsigned int _xoff, unsigned int _yoff,
                             unsigned int _width, unsigned int _height, const unsigned int* _pixels);
     friend void updateAtlas(void* _userPtr, unsigned int _xoff, unsigned int _yoff,

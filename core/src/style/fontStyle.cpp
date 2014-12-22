@@ -45,6 +45,12 @@ void FontStyle::buildLine(Line& _line, std::string& _layer, Properties& _props, 
             }
         }
     }
+
+    std::vector<float> vertData;
+
+    if(glfonsVertices(m_fontContext, &vertData)) {
+        _mesh.addVertices(reinterpret_cast<GLbyte*>(&vertData[0]), vertData.size());
+    }
     
 }
 
@@ -54,6 +60,7 @@ void FontStyle::buildPolygon(Polygon& _polygon, std::string& _layer, Properties&
 
 void FontStyle::prepareDataProcessing(MapTile &_tile) {
     fsuint buffer;
+    
     glfonsBufferCreate(m_fontContext, 32, &buffer);
     m_tileBuffers[_tile.getID()] = buffer;
     glfonsBindBuffer(m_fontContext, buffer);
@@ -64,10 +71,6 @@ void FontStyle::finishDataProcessing(MapTile &_tile) {
 }
 
 void FontStyle::setup() {
-}
-
-void errorCallback(void* _userPtr, GLFONSbuffer* _buffer, GLFONSError _fonsError) {
-    logMsg("glfontstash error\n");
 }
 
 void createTexTransforms(void* _userPtr, unsigned int _width, unsigned int _height) {
@@ -84,10 +87,6 @@ void updateAtlas(void* _userPtr, unsigned int _xoff, unsigned int _yoff,
     logMsg("update atlas\n");
 }
 
-void vertexData(void* _userPtr, unsigned int _nVerts, const float* _data) {
-    logMsg("vertex data\n");
-}
-
 void createAtlas(void* _usrPtr, unsigned int _width, unsigned int _height) {
     logMsg("create atlas\n");
 }
@@ -95,12 +94,10 @@ void createAtlas(void* _usrPtr, unsigned int _width, unsigned int _height) {
 void FontStyle::initFontContext(const std::string& _fontFile) {
     GLFONSparams params;
 
-    params.errorCallback = errorCallback;
     params.createAtlas = createAtlas;
     params.createTexTransforms = createTexTransforms;
     params.updateAtlas = updateAtlas;
     params.updateTransforms = updateTransforms;
-    params.vertexData = vertexData;
 
     m_fontContext = glfonsCreate(512, 512, FONS_ZERO_TOPLEFT, params, (void*) this);
 
