@@ -5,15 +5,18 @@
 FontStyle::FontStyle(const std::string& _fontFile, std::string _name, GLenum _drawMode) : Style(_name, _drawMode) {
     constructVertexLayout();
     constructShaderProgram();
-    initFontContext();
+    initFontContext(_fontFile);
 }
 
 FontStyle::~FontStyle() {
-    glfonsDelete(fontContext);
+    glfonsDelete(m_fontContext);
 }
 
 void FontStyle::constructVertexLayout() {
     m_vertexLayout = std::shared_ptr<VertexLayout>(new VertexLayout({
+        {"a_position", 2, GL_FLOAT, false, 0},
+        {"a_texCoord", 2, GL_FLOAT, false, 0},
+        {"a_fsid", 1, GL_FLOAT, false, 0},
     }));
 }
 
@@ -32,6 +35,17 @@ void FontStyle::buildPoint(Point& _point, std::string& _layer, Properties& _prop
 
 void FontStyle::buildLine(Line& _line, std::string& _layer, Properties& _props, VboMesh& _mesh) {
 
+    if(_layer.compare("roads") == 0) {
+        for(auto prop : _props.stringProps) {
+            if(prop.first.compare("name") == 0) {
+                fsuint textId;
+
+                glfonsGenText(m_fontContext, 1, &textId);
+                glfonsRasterize(m_fontContext, textId, prop.second.c_str(), FONS_EFFECT_NONE);
+            }
+        }
+    }
+    
 }
 
 void FontStyle::buildPolygon(Polygon& _polygon, std::string& _layer, Properties& _props, VboMesh& _mesh) {
@@ -40,13 +54,13 @@ void FontStyle::buildPolygon(Polygon& _polygon, std::string& _layer, Properties&
 
 void FontStyle::prepareDataProcessing(MapTile &_tile) {
     fsuint buffer;
-    glfonsBufferCreate(fontContext, 32, &buffer);
-    tileBuffers[_tile.getID()] = buffer;
-    glfonsBindBuffer(fontContext, buffer);
+    glfonsBufferCreate(m_fontContext, 32, &buffer);
+    m_tileBuffers[_tile.getID()] = buffer;
+    glfonsBindBuffer(m_fontContext, buffer);
 }
 
 void FontStyle::finishDataProcessing(MapTile &_tile) {
-    glfonsBindBuffer(fontContext, 0);
+    glfonsBindBuffer(m_fontContext, 0);
 }
 
 void FontStyle::setup() {
@@ -74,11 +88,11 @@ void vertexData(void* _userPtr, unsigned int _nVerts, const float* _data) {
     logMsg("vertex data\n");
 }
 
-void createAtlas(void* usrPtr, unsigned int width, unsigned int height) {
+void createAtlas(void* _usrPtr, unsigned int _width, unsigned int _height) {
     logMsg("create atlas\n");
 }
 
-void FontStyle::initFontContext() {
+void FontStyle::initFontContext(const std::string& _fontFile) {
     GLFONSparams params;
 
     params.errorCallback = errorCallback;
@@ -88,5 +102,14 @@ void FontStyle::initFontContext() {
     params.updateTransforms = updateTransforms;
     params.vertexData = vertexData;
 
-    fontContext = glfonsCreate(512, 512, FONS_ZERO_TOPLEFT, params, (void*) this);
+    m_fontContext = glfonsCreate(512, 512, FONS_ZERO_TOPLEFT, params, (void*) this);
+
+    unsigned int dataSize;
+    unsigned char* data = bytesFromResource(_fontFile.c_str(), &dataSize);
+    m_font = fonsAddFont(m_fontContext, "droid-serif", data, dataSize);
+
+    if(m_font == FONS_INVALID) {
+        logMsg("Error loading font file %s\n", _fontFile.c_str());
+    }
+
 }

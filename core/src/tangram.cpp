@@ -52,7 +52,7 @@ void initialize() {
         linesStyle->addLayers({"roads"});
         m_scene->addStyle(std::move(linesStyle));
 
-        std::unique_ptr<Style> fontStyle(new FontStyle("DejaVuSeriff.ttf", "FontStyle"));
+        std::unique_ptr<Style> fontStyle(new FontStyle("DejaVuSerif.ttf", "FontStyle"));
         fontStyle->addLayers({"roads"});
         m_scene->addStyle(std::move(fontStyle));
     }

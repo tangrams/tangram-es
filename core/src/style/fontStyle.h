@@ -31,12 +31,14 @@ public:
                             unsigned int _width, unsigned int _height, const unsigned int* _pixels);
     friend void updateAtlas(void* _userPtr, unsigned int _xoff, unsigned int _yoff,
                             unsigned int _width, unsigned int _height, const unsigned int* _pixels);
-    friend void createAtlas(void* usrPtr, unsigned int width, unsigned int height);
+    friend void createAtlas(void* _usrPtr, unsigned int _width, unsigned int _height);
 
 private:
 
-    void initFontContext();
-    std::map<TileID, fsuint> tileBuffers;
-    FONScontext* fontContext;
+    void initFontContext(const std::string& _fontFile);
+
+    int m_font;
+    std::map<TileID, fsuint> m_tileBuffers;
+    FONScontext* m_fontContext;
 
 };
