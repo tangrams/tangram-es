@@ -1,7 +1,5 @@
 #pragma once
 
-#include <vector>
-
 /* An immutable identifier for a map tile 
  * 
  * Contains the x, y, and z indices of a tile in a quad tree; TileIDs are arbitrarily but strictly ordered
@@ -31,25 +29,33 @@ struct TileID {
     const int x;
     const int y;
     const int z;
-
-    TileID* getParent() const {
-        TileID* _parent = nullptr;
-        if( (x >> 1) >= 0 && (y >> 1) >= 0 && (z-1) >= 0) {
-            _parent = new TileID(x >> 1, y >> 1, z-1);
-        }
-        return _parent;
+    
+    bool isValid() const {
+        return x >= 0 && y >= 0 && z >= 0;
+    }
+    
+    bool isValid(int _maxZoom) {
+        return isValid() && z < _maxZoom;
     }
 
-    void getChildren(std::vector<TileID>& _children, int _maxZoomLvl) const {
-        if((z+1) <= _maxZoomLvl) {
-            for(int i = 0; i < 2; i++) {
-                int xVal = (x << 1) + i;
-                for(int j = 0; j < 2; j++) {
-                    int yVal = (y << 1) + j;
-                    _children.push_back(TileID(xVal, yVal, z+1));
-                }
-            }
+    TileID getParent() const {
+        return TileID(x >> 1, y >> 1, z-1);
+    }
+
+    TileID getChild(int _index) const {
+        
+        if (_index > 3) {
+            return TileID(-1, -1, -1);
         }
+        
+        int i = _index / 2;
+        int j = _index % 2;
+        
+        // _index: 0, 1, 2, 3
+        // i:      0, 0, 1, 1
+        // j:      0, 1, 0, 1
+        
+        return TileID((x<<1)+i, (y<<1)+j, z+1);
     }
 };
 

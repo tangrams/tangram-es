@@ -191,22 +191,22 @@ void TileManager::removeTile(std::map< TileID, std::shared_ptr<MapTile> >::itera
 void TileManager::updateProxyTiles(const TileID& _tileID, bool _zoomStatus) {
     if (!_zoomStatus) {
         //zoom in - add children
-        std::vector<TileID> children;
-        _tileID.getChildren(children, m_view->s_maxZoom);
-        
-        for (auto& proxyID : children) {
+        for (int i = 0; i < 4; i++) {
+            TileID child = _tileID.getChild(i);
             // only set a proxyTile if it has its vbos ready
-            if (m_tileSet.find(proxyID) != m_tileSet.end() && m_tileSet[proxyID]->hasGeometry()) {
-                m_tileSet[proxyID]->incProxyCounter();
+            if (child.isValid(m_view->s_maxZoom)) {
+                if (m_tileSet.find(child) != m_tileSet.end() && m_tileSet[child]->hasGeometry()) {
+                    m_tileSet[child]->incProxyCounter();
+                }
             }
         }
     } else {
         // zoom out - add parent
-        TileID* parent = _tileID.getParent();
+        TileID parent = _tileID.getParent();
         
-        if (parent) {
-            if (m_tileSet.find(*parent) != m_tileSet.end() && m_tileSet[*parent]->hasGeometry()) {
-                m_tileSet[*parent]->incProxyCounter();
+        if (parent.isValid()) {
+            if (m_tileSet.find(parent) != m_tileSet.end() && m_tileSet[parent]->hasGeometry()) {
+                m_tileSet[parent]->incProxyCounter();
             }
         }
     }
@@ -214,19 +214,18 @@ void TileManager::updateProxyTiles(const TileID& _tileID, bool _zoomStatus) {
 
 void TileManager::cleanProxyTiles(const TileID& _tileID) {
     // check if parent proxy is present
-    TileID *parent = _tileID.getParent();
+    TileID parent = _tileID.getParent();
     
-    if (parent) {
-        if (m_tileSet.find(*parent) != m_tileSet.end()) {
-            m_tileSet[*parent]->decProxyCounter();
+    if (parent.isValid()) {
+        if (m_tileSet.find(parent) != m_tileSet.end()) {
+            m_tileSet[parent]->decProxyCounter();
         }
     }
     
     // check if any child proxies are present
-    std::vector<TileID> children;
-    _tileID.getChildren(children, m_view->s_maxZoom);
-    for (auto& child : children) {
-        if (m_tileSet.find(child) != m_tileSet.end()) {
+    for (int i = 0; i < 4; i++) {
+        TileID child = _tileID.getChild(i);
+        if (child.isValid(m_view->s_maxZoom) && m_tileSet.find(child) != m_tileSet.end()) {
             m_tileSet[child]->decProxyCounter();
         }
     }
