@@ -10,6 +10,12 @@ FontStyle::FontStyle(const std::string& _fontFile, std::string _name, GLenum _dr
 
 FontStyle::~FontStyle() {
     glfonsDelete(m_fontContext);
+
+    for(auto pair : m_tileTexTransforms) {
+        glDeleteTextures(1, &pair.second);
+    }
+    
+    glDeleteTextures(1, &m_atlas);
 }
 
 void FontStyle::constructVertexLayout() {
