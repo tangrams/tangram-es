@@ -4,6 +4,7 @@
 PointLight::PointLight(const std::string& _name, bool _dynamic):Light(_name,_dynamic),m_position(0.0),m_constantAttenuation(0.0),m_linearAttenuation(0.0),m_quadraticAttenuation(0.0){
     m_typeName = "PointLight";
     m_type = LightType::LIGHT_POINT;
+    m_injType = FRAGMENT_INJ;
 }
 
 PointLight::~PointLight(){

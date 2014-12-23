@@ -31,7 +31,6 @@ ShaderProgram::~ShaderProgram() {
     m_attribMap.clear();
     
     removeManagedProgram(this);
-
 }
 
 void ShaderProgram::loadSourceStrings(const std::string& _fragSrc, const std::string& _vertSrc){

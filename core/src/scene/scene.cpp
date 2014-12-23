@@ -15,7 +15,7 @@ void Scene::addStyle(std::unique_ptr<Style> _style) {
     m_styles.push_back(std::move(_style));
 }
 
-void Scene::addLight(std::shared_ptr<Light> _light){
+void Scene::addLight(std::shared_ptr<Light> _light, InjectionType _type){
     
     //  Add (inject) need code blocks (defines, structs, functions and instances) 
     //  to compute this light.
@@ -23,28 +23,46 @@ void Scene::addLight(std::shared_ptr<Light> _light){
     //  NOTE:   still the MAIN "calculateLighting" function (that computes all the lights) 
     //          HAVE TO be add at the very end
     //
-    for(int i = 0; i < m_styles.size(); i++){
-        _light->injectOnProgram( m_styles[i]->getShaderProgram() );
-    }
 
-    m_lights.push_back(_light);
+
+    //  Avoid duplications
+    if(m_lights.find(_light->getName()) == m_lights.end() ){
+        for(int i = 0; i < m_styles.size(); i++){
+            _light->injectOnProgram( m_styles[i]->getShaderProgram(), _type);
+        }
+        m_lights[_light->getName()] = _light;
+    }    
 }
 
 void Scene::buildShaders(){
     
     //  INJECT the MAIN "calculateLighting" function (that computes all the lights)
     //
-    std::string calculateLightBlock = stringFromResource("lights.glsl"); // Main "calculateLighting()" function
+    std::string vertexLightBlock = stringFromResource("lights.glsl");
+    std::string fragmentLightBlock = stringFromResource("lights.glsl");
+
     if (m_lights.size() > 0){
-        std::string ligthsListBlock = "";
-        for(int i = 0; i < m_lights.size(); i++){
-            ligthsListBlock += m_lights[i]->getInstanceComputeBlock();
+        std::string vertexList = "";
+        std::string fragmentList = "";
+        for ( auto& light : m_lights ){
+            if( light.second->getInjectionType() == VERTEX_INJ || 
+                light.second->getInjectionType() == BOTH_INJ){
+                vertexList += light.second->getInstanceComputeBlock();
+            }
+            
+            if( light.second->getInjectionType() == FRAGMENT_INJ ||
+                light.second->getInjectionType() == BOTH_INJ){
+                fragmentList += light.second->getInstanceComputeBlock();
+            }
         }
-        replaceString(calculateLightBlock,"#pragma tangram: lights_to_compute",ligthsListBlock); 
+
+        replaceString(vertexLightBlock,"#pragma tangram: lights_to_compute",vertexList);
+        replaceString(fragmentLightBlock,"#pragma tangram: lights_to_compute",fragmentList); 
     }
 
     for(int i = 0; i < m_styles.size(); i++){
-        m_styles[i]->getShaderProgram()->addBlock("lighting", calculateLightBlock+"\n");
+        m_styles[i]->getShaderProgram()->addBlock("vert_lighting", vertexLightBlock+"\n");
+        m_styles[i]->getShaderProgram()->addBlock("frag_lighting", fragmentLightBlock+"\n");
     }
 
 

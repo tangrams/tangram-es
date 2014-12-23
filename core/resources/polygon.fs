@@ -3,7 +3,7 @@ uniform mat4 u_modelViewProj;
 uniform float u_time;
 
 #pragma tangram: material
-#pragma tangram: lighting
+#pragma tangram: frag_lighting
 
 varying vec4 v_color;
 varying vec3 v_eyeToPoint;
@@ -13,7 +13,7 @@ varying vec2 v_texcoord;
 void main(void) {
 	vec4 color = v_color;
 
-	// color *= calculateLighting(v_eyeToPoint,v_normal);
+	color *= calculateLighting(v_eyeToPoint,v_normal);
 
   	gl_FragColor = color;
 }

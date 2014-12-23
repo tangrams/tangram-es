@@ -69,14 +69,14 @@ void initialize() {
         pointLight->setSpecularColor(glm::vec4(0.5,0.0,1.0,1.0));
         pointLight->setLinearAttenuation(0.005);
         pointLight->setPosition(glm::vec3(0.0));
-        // m_scene->addLight(pointLight);
+        m_scene->addLight(pointLight);
 
         auto spotLight = std::make_shared<SpotLight>("sLight",true);
         spotLight->setSpecularColor(glm::vec4(0.5,0.5,0.0,1.0));
         spotLight->setPosition(glm::vec3(0.0));
         spotLight->setDirection(glm::vec3(0,PI*0.25,0.0));
         spotLight->setCutOff(PI*0.1, 20.0);
-        // m_scene->addLight(spotLight);
+        m_scene->addLight(spotLight);
         
         //-----------------------
 
@@ -141,18 +141,18 @@ void update(float _dt) {
     }
     
     if(m_scene){
-        for (auto light : m_scene->getLights() ){
+        for (auto& light : m_scene->getLights() ){
 
-            if( light->getType() == LightType::LIGHT_DIRECTIONAL){
-                DirectionalLight* tmp = dynamic_cast<DirectionalLight*>( light.get() );
+            if( light.second->getType() == LightType::LIGHT_DIRECTIONAL){
+                DirectionalLight* tmp = dynamic_cast<DirectionalLight*>( light.second.get() );
                  tmp->setDirection(glm::vec3(0.0, sin(g_time), 1.0));
-            } else if( light->getType() == LightType::LIGHT_POINT){
-                PointLight* tmp = dynamic_cast<PointLight*>( light.get() );
+            } else if( light.second->getType() == LightType::LIGHT_POINT){
+                PointLight* tmp = dynamic_cast<PointLight*>( light.second.get() );
                 tmp->setPosition(glm::vec3( 200*cos(g_time*0.8),
                                             200*sin(g_time*0.3), 
                                             -m_view->getPosition().z+100));
-            } else if( light->getType() == LightType::LIGHT_SPOT){
-                SpotLight* tmp = dynamic_cast<SpotLight*>( light.get() );
+            } else if( light.second->getType() == LightType::LIGHT_SPOT){
+                SpotLight* tmp = dynamic_cast<SpotLight*>( light.second.get() );
                 tmp->setDirection(glm::vec3(cos(g_time),
                                             sin(g_time), 
                                             0.0));

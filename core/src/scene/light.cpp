@@ -2,7 +2,7 @@
 
 #include "util/stringsOp.h"
 
-Light::Light(const std::string& _name, bool _dynamic):m_name(_name),m_typeName("not_define_light"),m_ambient(0.0f),m_diffuse(1.0f),m_specular(0.0f),m_type(LightType::LIGHT_NOT_DEFINE),m_dynamic(_dynamic){
+Light::Light(const std::string& _name, bool _dynamic):m_name(_name),m_typeName("not_define_light"),m_ambient(0.0f),m_diffuse(1.0f),m_specular(0.0f),m_type(LightType::LIGHT_NOT_DEFINE),m_injType(VERTEX_INJ),m_dynamic(_dynamic){
 
 }
 
@@ -26,11 +26,27 @@ void Light::setSpecularColor(const glm::vec4 _specular){
     m_specular = _specular;
 }
 
-void Light::injectOnProgram( std::shared_ptr<ShaderProgram> _shader ){
-    //  Each light will add the needed :
+void Light::injectOnProgram( std::shared_ptr<ShaderProgram> _shader, InjectionType _injType ){
+
+    if (_injType != DEFAULT_INJ ){
+        m_injType = _injType;
+    }
+
+    //  Each light will add the needed DEFINES
     _shader->addBlock("defines",    getInstanceDefinesBlock()); // DEFINES: depending what they need
-    _shader->addBlock("lighting",   getClassBlock() +           // STRUCT and FUNCTION calculateLight (only once)
-                                    getInstanceBlock() ); // INSTANCIATION of uniform (if dynamic) and global variable (width the data)
+
+    //  ... and depending the type of injection (vert, frag or both)
+    if( m_injType == FRAGMENT_INJ ||
+        m_injType == BOTH_INJ ){
+        _shader->addBlock("frag_lighting",  getClassBlock() + // STRUCT and FUNCTION calculateLight (only once)
+                                            getInstanceBlock() ); // INSTANCIATION of uniform (if dynamic) and global variable (width the data)
+    }
+
+    if( m_injType == VERTEX_INJ ||
+        m_injType == BOTH_INJ ){
+        _shader->addBlock("vert_lighting",  getClassBlock() + // STRUCT and FUNCTION calculateLight (only once)
+                                            getInstanceBlock() ); // INSTANCIATION of uniform (if dynamic) and global variable (width the data)
+    }
 }
 
 void Light::setupProgram( std::shared_ptr<ShaderProgram> _shader ){
@@ -47,6 +63,10 @@ std::string Light::getName(){
 
 LightType Light::getType(){
     return m_type;
+}
+
+InjectionType Light::getInjectionType(){
+    return m_injType;
 }
 
 std::string Light::getUniformName(){

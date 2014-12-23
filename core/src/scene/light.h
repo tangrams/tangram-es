@@ -9,6 +9,13 @@
 #include "glm/glm.hpp"
 #include "util/shaderProgram.h"
 
+typedef enum {
+    DEFAULT_INJ,
+    VERTEX_INJ,
+    FRAGMENT_INJ,
+    BOTH_INJ
+} InjectionType;
+
 enum class LightType {
     LIGHT_NOT_DEFINE,
     LIGHT_DIRECTIONAL,
@@ -40,6 +47,8 @@ public:
     /*  Get the type of light, especially to identify the class and specific methods to it. */
     virtual LightType getType();
 
+    virtual InjectionType getInjectionType();
+
     /*  Get the name of the light */
     virtual std::string getName();
 
@@ -47,7 +56,7 @@ public:
     virtual std::string getInstanceComputeBlock();
 
     /*  Inject the needed lines of GLSL code on the shader to make this light work */
-    virtual void injectOnProgram( std::shared_ptr<ShaderProgram> _shader );
+    virtual void injectOnProgram( std::shared_ptr<ShaderProgram> _shader, InjectionType _injType = DEFAULT_INJ);
 
     /*  Pass the uniforms for this particular DYNAMICAL light on the passed shader */
     virtual void setupProgram( std::shared_ptr<ShaderProgram> _shader );
@@ -85,6 +94,8 @@ protected:
 
     /*  This is use to identify the type of light after been pull inside a vector of uniq_ptr of this abstract class*/
     LightType   m_type;
+
+    InjectionType   m_injType;
 
     bool        m_dynamic;
 };
