@@ -84,14 +84,9 @@ private:
     /*
      * Checks and updates m_tileSet with proxy tiles for every new visible tile
      *  @_tileID: TileID of the new visible tile for which proxies needs to be added
-     *  @_zoomStatus: Zoom-in or Zoom-out to determine parent of child proxies
+     *  @_adding: True if incrementing proxy counts, false if decrementing
      */
-    void updateProxyTiles(const TileID& _tileID, bool _zoomStatus);
-    
-    /*
-     *  Once a visible tile finishes loaded and is added to m_tileSet, all its proxy(ies) MapTiles are removed
-     */
-    void cleanProxyTiles(const TileID& _tileID);
+    void updateProxyTiles(const TileID& _tileID, bool _adding);
     
     /*
      *  Makes a MapTile by fetching data from dataSource and constructing VboMeshes for this tile
