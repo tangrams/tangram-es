@@ -31,7 +31,8 @@ struct TileID {
     const int z;
     
     bool isValid() const {
-        return x >= 0 && y >= 0 && z >= 0;
+        int max = 1 << z;
+        return x >= 0 && x < max && y >= 0 && y < max && z >= 0;
     }
     
     bool isValid(int _maxZoom) {
@@ -44,7 +45,7 @@ struct TileID {
 
     TileID getChild(int _index) const {
         
-        if (_index > 3) {
+        if (_index > 3 || _index < 0) {
             return TileID(-1, -1, -1);
         }
         
