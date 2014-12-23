@@ -43,8 +43,22 @@ public:
     /*  Get the name of the light */
     virtual std::string getName();
 
+    /*  GLSL line to compute the specific light instance */
+    virtual std::string getInstanceComputeBlock();
+
+    /*  Inject the needed lines of GLSL code on the shader to make this light work */
+    virtual void injectOnProgram( std::shared_ptr<ShaderProgram> _shader );
+
+    /*  Pass the uniforms for this particular DYNAMICAL light on the passed shader */
+    virtual void setupProgram( std::shared_ptr<ShaderProgram> _shader );
+
+protected:
+
     /*  Get the uniform name of the DYNAMICAL light */
     virtual std::string getUniformName();
+
+    /*  Get the struct and function to compute a light */
+    virtual std::string getClassBlock() = 0;
 
     /*  Get the instances light name defined on the shader */
     virtual std::string getInstanceName();
@@ -57,14 +71,6 @@ public:
 
     /*  GLSL #defines flags for the instance of this light */
     virtual std::string getInstanceDefinesBlock() = 0;
-
-    /*  GLSL line to compute the specific light instance */
-    virtual std::string getInstanceComputeBlock();
-
-    /*  Inject the uniforms for this particular DYNAMICAL light on the passed shader */
-    virtual void setupProgram( std::shared_ptr<ShaderProgram> _shader );
-
-protected:
 
     /*  The name reference to the uniform on the shader.  */
     std::string m_name;

@@ -43,19 +43,20 @@ public:
     /* Enable Specular colors on the shader */
     void enableSpecular();
 
+    /*  Inject the needed lines of GLSL code on the shader to make this material work */
+    virtual void injectOnProgram( std::shared_ptr<ShaderProgram> _shader );
+
+    /*  Method to pass it self as a uniform to the shader program */
+    virtual void setupProgram( std::shared_ptr<ShaderProgram> _shader );
+    
+private:
+
     /* Get defines that need to be injected on top of the shader */
     virtual std::string getDefinesBlock();
 
     /* Get the GLSL struct and classes need to be injected */
-    static std::string getClassBlock();
+    virtual std::string getClassBlock();
 
-    /* Inject both the defines and struct and classes need to be injected on the GLSL shaders */
-    virtual std::string getBlock();
-
-    /* Method to pass it self as a uniform to the shader program */
-    void        setupProgram( std::shared_ptr<ShaderProgram> _shader );
-    
-private:
     std::string m_name;
     
     glm::vec4   m_emission;

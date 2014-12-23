@@ -11,14 +11,14 @@ public:
     /*	Set the direction of the light */
     virtual void setDirection(const glm::vec3& _dir);
     
-    /*  GLSL block code with structs and need functions for this light type */
-    static std::string getClassBlock();
-
-    virtual std::string getInstanceDefinesBlock() override;
-    virtual std::string	getInstanceAssignBlock() override;
-    
     virtual void setupProgram( std::shared_ptr<ShaderProgram> _program ) override;
     
 protected:
+
+    /*  GLSL block code with structs and need functions for this light type */
+    virtual std::string getClassBlock() override;
+    virtual std::string getInstanceDefinesBlock() override;
+    virtual std::string getInstanceAssignBlock() override;
+
     glm::vec3 m_direction;
 };

@@ -22,7 +22,13 @@ void DirectionalLight::setupProgram( std::shared_ptr<ShaderProgram> _shader ){
 }
 
 std::string DirectionalLight::getClassBlock(){
-    return stringFromResource("directional_light.glsl")+"\n";
+    static bool bFirst = true;
+    if (bFirst){
+        bFirst = false;
+        return stringFromResource("directional_light.glsl")+"\n";
+    } else {
+        return "\n";
+    }
 }
 
 std::string DirectionalLight::getInstanceDefinesBlock(){

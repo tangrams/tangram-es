@@ -29,16 +29,14 @@ void SpotLight::setupProgram( std::shared_ptr<ShaderProgram> _shader ){
     }
 }
 
-std::string SpotLight::getArrayDefinesBlock(int _numberOfLights){
-    return "#define NUM_SPOT_LIGHTS " + getString(_numberOfLights) + "\n";
-}
-
-std::string SpotLight::getArrayUniformBlock(){
-    return "uniform SpotLight u_spotLights[NUM_SPOT_LIGHTS];\n";
-}
-
 std::string SpotLight::getClassBlock(){
-    return stringFromResource("spot_light.glsl")+"\n";
+    static bool bFirst = true;
+    if (bFirst){
+        bFirst = false;
+        return stringFromResource("spot_light.glsl")+"\n";
+    } else {
+        return "\n";
+    }
 }
 
 std::string SpotLight::getInstanceDefinesBlock(){

@@ -55,7 +55,13 @@ void PointLight::setupProgram( std::shared_ptr<ShaderProgram> _shader ){
 }
 
 std::string PointLight::getClassBlock(){
-    return stringFromResource("point_light.glsl")+"\n";
+    static bool bFirst = true;
+    if (bFirst){
+        bFirst = false;
+        return stringFromResource("point_light.glsl")+"\n";
+    } else {
+        return "\n";
+    }
 }
 
 std::string PointLight::getInstanceDefinesBlock(){
@@ -84,17 +90,6 @@ std::string PointLight::getInstanceDefinesBlock(){
 std::string PointLight::getInstanceAssignBlock(){
     std::string block = Light::getInstanceAssignBlock();
     if(!m_dynamic){
-        // block += getInstanceName() + ".position = " + getString(m_position) + ";\n";
-        // if(m_constantAttenuation!=0.0){
-        //     block += getInstanceName() + ".constantAttenuation = " + getString(m_constantAttenuation) + ";\n";
-        // }
-        // if(m_linearAttenuation!=0.0){
-        //     block += getInstanceName() + ".linearAttenuation = " + getString(m_linearAttenuation) + ";\n";
-        // }
-        // if(m_quadraticAttenuation!=0.0){
-        //     block += getInstanceName() + ".quadraticAttenuation = " + getString(m_quadraticAttenuation) + ";\n";
-        // }
-
         block += ", " + getString(m_position);
         if(m_constantAttenuation!=0.0){
             block += ", " + getString(m_constantAttenuation);

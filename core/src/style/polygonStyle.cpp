@@ -28,7 +28,7 @@ void PolygonStyle::constructShaderProgram() {
     m_shaderProgram->loadSourceStrings(fragShaderSrcStr, vertShaderSrcStr);
 
     m_material.enableSpecular();
-    m_shaderProgram->addBlock("material",m_material.getBlock());   // This is a must for lighting !!
+    m_material.injectOnProgram(m_shaderProgram); // This is a must for lighting !!
 }
 
 void PolygonStyle::setup() {

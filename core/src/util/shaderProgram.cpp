@@ -86,15 +86,33 @@ void ShaderProgram::use() const {
 
 bool ShaderProgram::build(){
 
+    //  ALL shaders will have this header. The precision definition together with the defines tag that
+    //  is use by lights and materials.
+    //
+    std::string shaderHeader = "\
+#ifdef GL_ES\n\
+precision mediump float;\n\
+#endif\n\n\
+#pragma tangram: defines\n";    // HERE is where the lights defines are going to be injected
+
+    m_fragmentShaderSource = shaderHeader + m_fragmentShaderSource;
+    m_vertexShaderSource = shaderHeader + m_vertexShaderSource;
+
     for (auto& block: m_blocks) {
+
+        std::string blockSum = "";
+
         for(int i = 0; i < block.second.size(); i++){
-            if(!replaceString(m_fragmentShaderSource,"#pragma tangram: " + block.first,block.second[i])){
-//                logMsg("Tag: %s, not found\n", block.first);
-            }
-            if(!replaceString(m_vertexShaderSource,"#pragma tangram: " + block.first,block.second[i])){
-//                logMsg("Tag: %s, not found\n", block.first);
-            }
+            blockSum += block.second[i] + "\n";
         }
+
+        if(!replaceString(m_fragmentShaderSource,"#pragma tangram: " + block.first,blockSum)){
+            logMsg("Tag: %s, not found\n", block.first.c_str());
+        }
+        if(!replaceString(m_vertexShaderSource,"#pragma tangram: " + block.first,blockSum)){
+            logMsg("Tag: %s, not found\n", block.first.c_str());
+        }
+
     }  
 
     return buildFromSourceStrings(m_fragmentShaderSource,m_vertexShaderSource);

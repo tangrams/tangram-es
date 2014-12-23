@@ -26,6 +26,13 @@ void Light::setSpecularColor(const glm::vec4 _specular){
     m_specular = _specular;
 }
 
+void Light::injectOnProgram( std::shared_ptr<ShaderProgram> _shader ){
+    //  Each light will add the needed :
+    _shader->addBlock("defines",    getInstanceDefinesBlock()); // DEFINES: depending what they need
+    _shader->addBlock("lighting",   getClassBlock() +           // STRUCT and FUNCTION calculateLight (only once)
+                                    getInstanceBlock() ); // INSTANCIATION of uniform (if dynamic) and global variable (width the data)
+}
+
 void Light::setupProgram( std::shared_ptr<ShaderProgram> _shader ){
     if(m_dynamic){
         _shader->setUniformf(getUniformName()+".ambient", m_ambient);
@@ -58,7 +65,6 @@ std::string Light::getInstanceBlock(){
         block += m_typeName + " " + getInstanceName() + " = " + getUniformName() + ";\n";
     } else {
         //  If is not dynamic define the global instance of the light struct and fill the variables
-        // block += m_typeName + " " + getInstanceName() + ";\n";
         block += m_typeName + " " + getInstanceName() + getInstanceAssignBlock() +";\n";
     }
     return block;

@@ -1,7 +1,3 @@
-#ifdef GL_ES
-precision mediump float;
-#endif
-
 uniform mat4 u_modelView;
 uniform mat4 u_modelViewProj;
 uniform float u_time;
@@ -25,9 +21,10 @@ void main() {
   	v_texcoord = a_texcoord;
 
 	// v_color = a_color;
+	v_eyeToPoint = vec3(u_modelView * a_position);
 	v_color = a_color * calculateLighting(v_eyeToPoint,v_normal);
 
   	gl_Position = u_modelViewProj * a_position;
 
-  	v_eyeToPoint = vec3(u_modelView * a_position);
+  	
 }

@@ -22,16 +22,16 @@ public:
 
     /*  Set the the constant, linear and quadratic attenuation. */
     virtual void setAttenuation(float _constant , float _linear , float _quadratic );
-
-    /*  GLSL block code with structs and need functions for this light type */
-    static std::string getClassBlock();
-
-    virtual std::string getInstanceDefinesBlock() override;
-    virtual std::string getInstanceAssignBlock() override;
     
     virtual void setupProgram( std::shared_ptr<ShaderProgram> _program ) override;
     
 protected:
+
+    /*  GLSL block code with structs and need functions for this light type */
+    virtual std::string getClassBlock() override;
+    virtual std::string getInstanceDefinesBlock() override;
+    virtual std::string getInstanceAssignBlock() override;
+    
     glm::vec4	m_position;
 
     float m_constantAttenuation;

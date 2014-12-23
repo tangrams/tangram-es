@@ -61,7 +61,7 @@ void initialize() {
         auto directionalLight = std::make_shared<DirectionalLight>("dLight");
         directionalLight->setDiffuseColor(glm::vec4(1.0,1.0,1.0,1.0));
         directionalLight->setDirection(glm::vec3(-1.0, -1.0, 1.0));
-        // m_scene->addLight(directionalLight);
+        m_scene->addLight(directionalLight);
     
         // //  Point
         auto pointLight = std::make_shared<PointLight>("pLight",true);
@@ -69,7 +69,7 @@ void initialize() {
         pointLight->setSpecularColor(glm::vec4(0.5,0.0,1.0,1.0));
         pointLight->setLinearAttenuation(0.005);
         pointLight->setPosition(glm::vec3(0.0));
-        m_scene->addLight(pointLight);
+        // m_scene->addLight(pointLight);
 
         auto spotLight = std::make_shared<SpotLight>("sLight",true);
         spotLight->setSpecularColor(glm::vec4(0.5,0.5,0.0,1.0));
@@ -178,9 +178,6 @@ void render() {
             const std::unique_ptr<MapTile>& tile = mapIDandTile.second;
             
             if (tile) {
-                // Draw!
-//                tile->draw(*style, viewProj);
-                
                 //  Can we pass only the scene?
                 //
                 tile->draw(*m_scene, *style, *m_view);
