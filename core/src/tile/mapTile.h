@@ -36,12 +36,6 @@ public:
     
     /* Returns the length of a side of this tile in projection units */
     float getScale() const { return m_scale; }
-
-    /* Get the logically deleted or visible state of this tile */
-    bool isVisible() const { return m_visible; }
-    
-    /* Set status of this tile */
-    void setVisibility(bool _visible);
     
     /* Returns the reciprocal of <getScale()> */
     float getInverseScale() const { return m_inverseScale; }
@@ -72,13 +66,6 @@ public:
 private:
 
     TileID m_id;
- 
-    /* Use to determine logical deleted state of this tile
-     *
-     * false: mark this tile for deletion (unless this becomes a proxy tile, i.e. proxyCount > 0)
-     * true: this tile is visible, set its valid state to true
-     */
-    bool m_visible = false;
     
     /*
      * A Counter for number of tiles this tile acts a proxy for
