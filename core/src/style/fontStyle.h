@@ -3,6 +3,7 @@
 #include "style.h"
 #include "fontstash/glfontstash.h"
 #include <map>
+#include <stack>
 #include <mutex>
 
 class FontStyle : public Style {
@@ -38,6 +39,10 @@ private:
 
     int m_font;
     std::map<TileID, fsuint> m_tileBuffers;
+    std::map<TileID, GLuint> m_tileTexTransforms;
+    std::stack<std::pair<TileID, glm::vec2>> m_pendingTileTexTransforms;
+    MapTile* m_processedTile;
+    GLuint m_atlas;
     FONScontext* m_fontContext;
 
     std::mutex m_buildMutex;

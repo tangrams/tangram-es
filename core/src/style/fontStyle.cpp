@@ -63,25 +63,47 @@ void FontStyle::buildPolygon(Polygon& _polygon, std::string& _layer, Properties&
 void FontStyle::prepareDataProcessing(MapTile& _tile) {
     m_buildMutex.lock();
 
+    m_processedTile = &_tile;
+
     fsuint buffer;
     
     glfonsBufferCreate(m_fontContext, 32, &buffer);
     m_tileBuffers[_tile.getID()] = buffer;
     glfonsBindBuffer(m_fontContext, buffer);
-
 }
 
 void FontStyle::finishDataProcessing(MapTile& _tile) {
     glfonsBindBuffer(m_fontContext, 0);
 
+    m_processedTile = nullptr;
+
     m_buildMutex.unlock();
 }
 
 void FontStyle::setup() {
+    while(m_pendingTileTexTransforms.size() > 0) {
+        logMsg("create tex transforms\n");
+        std::pair<TileID, glm::vec2> pair = m_pendingTileTexTransforms.top();
+
+        glm::vec2 size = pair.second;
+
+        GLuint texTransform;
+        glGenTextures(1, &texTransform);
+        glBindTexture(GL_TEXTURE_2D, texTransform);
+        glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, size.x, size.y, 0, GL_RGBA, GL_UNSIGNED_BYTE, 0);
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+
+        m_tileTexTransforms.insert(std::pair<TileID, GLuint>(pair.first, texTransform));
+        m_pendingTileTexTransforms.pop();
+    }
 }
 
 void createTexTransforms(void* _userPtr, unsigned int _width, unsigned int _height) {
-    logMsg("create tex transforms\n");
+    FontStyle* fontStyle = static_cast<FontStyle*>(_userPtr);
+
+    glm::vec2 size = glm::vec2(_width, _height);
+
+    fontStyle->m_pendingTileTexTransforms.push(std::pair<TileID, glm::vec2>(fontStyle->m_processedTile->getID(), size));
 }
 
 void updateTransforms(void* _userPtr, unsigned int _xoff, unsigned int _yoff,
@@ -94,8 +116,15 @@ void updateAtlas(void* _userPtr, unsigned int _xoff, unsigned int _yoff,
     logMsg("update atlas\n");
 }
 
-void createAtlas(void* _usrPtr, unsigned int _width, unsigned int _height) {
-    logMsg("create atlas\n");
+void createAtlas(void* _userPtr, unsigned int _width, unsigned int _height) {
+    logMsg("create atlas");
+    FontStyle* fontStyle = static_cast<FontStyle*>(_userPtr);
+
+    glGenTextures(1, &fontStyle->m_atlas);
+    glBindTexture(GL_TEXTURE_2D, fontStyle->m_atlas);
+    glTexImage2D(GL_TEXTURE_2D, 0, GL_ALPHA, _width, _height, 0, GL_ALPHA, GL_UNSIGNED_BYTE, 0);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+    glBindTexture(GL_TEXTURE_2D, 0);
 }
 
 void FontStyle::initFontContext(const std::string& _fontFile) {
