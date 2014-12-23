@@ -38,8 +38,8 @@ void Scene::buildShaders(){
     
     //  INJECT the MAIN "calculateLighting" function (that computes all the lights)
     //
-    std::string vertexLightBlock = stringFromResource("lights.glsl");
-    std::string fragmentLightBlock = stringFromResource("lights.glsl");
+    std::string vertexLightBlock = stringFromResource("lights_vert.glsl");
+    std::string fragmentLightBlock = stringFromResource("lights_frag.glsl");
 
     if (m_lights.size() > 0){
         std::string vertexList = "";

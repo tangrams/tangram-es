@@ -21,7 +21,8 @@ void main() {
   	v_texcoord = a_texcoord;
 
 	v_eyeToPoint = vec3(u_modelView * a_position);
-	v_color = a_color * calculateLighting(v_eyeToPoint,v_normal);
+	calculateLighting(v_eyeToPoint,v_normal);
+	v_color = a_color;
 
   	gl_Position = u_modelViewProj * a_position;
 
