@@ -22,11 +22,13 @@ void FontStyle::constructVertexLayout() {
 
 void FontStyle::constructShaderProgram() {
     std::string vertShaderSrcStr = stringFromResource("text.vs");
-
     std::string fragShaderSrcStr = stringFromResource("text.fs");
 
     m_shaderProgram = std::make_shared<ShaderProgram>();
-    m_shaderProgram->buildFromSourceStrings(fragShaderSrcStr, vertShaderSrcStr);
+
+    if(!m_shaderProgram->buildFromSourceStrings(fragShaderSrcStr, vertShaderSrcStr)) {
+        logMsg("Error building text shader program\n");
+    }
 }
 
 void FontStyle::buildPoint(Point& _point, std::string& _layer, Properties& _props, VboMesh& _mesh) {
@@ -58,16 +60,21 @@ void FontStyle::buildPolygon(Polygon& _polygon, std::string& _layer, Properties&
 
 }
 
-void FontStyle::prepareDataProcessing(MapTile &_tile) {
+void FontStyle::prepareDataProcessing(MapTile& _tile) {
+    m_buildMutex.lock();
+
     fsuint buffer;
     
     glfonsBufferCreate(m_fontContext, 32, &buffer);
     m_tileBuffers[_tile.getID()] = buffer;
     glfonsBindBuffer(m_fontContext, buffer);
+
 }
 
-void FontStyle::finishDataProcessing(MapTile &_tile) {
+void FontStyle::finishDataProcessing(MapTile& _tile) {
     glfonsBindBuffer(m_fontContext, 0);
+
+    m_buildMutex.unlock();
 }
 
 void FontStyle::setup() {
