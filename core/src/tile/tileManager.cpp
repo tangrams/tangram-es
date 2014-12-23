@@ -86,7 +86,7 @@ bool TileManager::updateTileSet() {
             // tileSet is missing an element present in visibleTiles
             // A new tile became visible
             // fetch/add the tile
-            addTile(visTile, m_view->isZoomIn());
+            addTile(visTile);
             tileSetChanged = true;
             visTilesIter++;
         } else {
@@ -111,7 +111,7 @@ bool TileManager::updateTileSet() {
         // All tiles in visibleTiles that haven't been covered yet are not in tileSet, so add them
         // New tile(s) are now visible
         // fetch/add the tile(s)
-        addTile(*visTilesIter, m_view->isZoomIn());
+        addTile(*visTilesIter);
         tileSetChanged = true;
         visTilesIter++;
     }
@@ -144,7 +144,7 @@ inline void TileManager::makeTile(std::shared_ptr<MapTile>& _mapTile, const std:
     }
 }
 
-void TileManager::addTile(const TileID& _tileID, bool _zoomState) {
+void TileManager::addTile(const TileID& _tileID) {
     
     std::shared_ptr<MapTile> tile(new MapTile(_tileID, m_view->getMapProjection()));
     m_tileSet[_tileID] = tile;

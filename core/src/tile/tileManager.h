@@ -72,9 +72,8 @@ private:
      * Constructs a future (async) to load data of a new visible tile
      *      this is also responsible for loading proxy tiles for the newly visible tiles
      * @_tileID: TileID for which new MapTile needs to be constructed
-     * @_zoomState: to determine whether to add child tiles or parent tile as proxy for this new visible tile
      */
-    void addTile(const TileID& _tileID, bool _zoomState);
+    void addTile(const TileID& _tileID);
     
     /*
      * Removes a tile from m_tileSet
