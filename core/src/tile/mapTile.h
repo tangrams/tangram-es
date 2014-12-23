@@ -38,10 +38,10 @@ public:
     float getScale() const { return m_scale; }
 
     /* Get the logically deleted or visible state of this tile */
-    bool getState() const { return m_state; }
+    bool isVisible() const { return m_visible; }
     
     /* Set status of this tile */
-    void setState(bool _state);
+    void setVisibility(bool _visible);
     
     /* Returns the reciprocal of <getScale()> */
     float getInverseScale() const { return m_inverseScale; }
@@ -78,7 +78,7 @@ private:
      * false: mark this tile for deletion (unless this becomes a proxy tile, i.e. proxyCount > 0)
      * true: this tile is visible, set its valid state to true
      */
-    bool m_state = false;
+    bool m_visible = false;
     
     /*
      * A Counter for number of tiles this tile acts a proxy for

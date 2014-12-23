@@ -59,8 +59,8 @@ void MapTile::draw(const Style& _style, const glm::dmat4& _viewProjMatrix) {
     }
 }
 
-void MapTile::setState(bool _state) {
-    m_state = _state;
+void MapTile::setVisibility(bool _visible) {
+    m_visible = _visible;
 }
 
 bool MapTile::hasGeometry() {
