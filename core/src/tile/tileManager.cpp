@@ -46,7 +46,7 @@ bool TileManager::updateTileSet() {
                     logMsg("Tile [%d, %d, %d] finished loading\n", id.z, id.x, id.y);
                     m_tileSet[id] = tile;
                     // tile is now loaded, removed its proxies
-                    updateProxyTiles(tile->getID(), false);
+                    cleanProxyTiles(tile->getID());
                     tileSetChanged = true;
                     incomingTilesIter = m_incomingTiles.erase(incomingTilesIter);
                 }
@@ -136,7 +136,7 @@ void TileManager::addTile(const TileID& _tileID) {
     m_tileSet[_tileID]->setState(true);
     
     //Add Proxy if corresponding proxy MapTile ready
-    updateProxyTiles(_tileID, true);
+    updateProxyTiles(_tileID, m_view->isZoomIn());
 
     std::future< std::shared_ptr<MapTile> > incoming = std::async(std::launch::async, [&](TileID _id) {
         
@@ -166,7 +166,7 @@ void TileManager::addTile(const TileID& _tileID) {
         } else {
             // tile was deleted (went out off view) before it could load its data
             // remove its proxies also
-            updateProxyTiles(_id, false);
+            cleanProxyTiles(_id);
             return std::shared_ptr<MapTile> (nullptr);
         }
     
@@ -185,29 +185,35 @@ void TileManager::removeTile(std::map< TileID, std::shared_ptr<MapTile> >::itera
     
 }
 
-void TileManager::updateProxyTiles(const TileID& _tileID, bool _adding) {
-    // Children tiles
-    for (int i = 0; i < 4; i++) {
-        TileID child = _tileID.getChild(i);
-        if (child.isValid(m_view->s_maxZoom) && m_tileSet.find(child) != m_tileSet.end()) {
-            auto& childProxy = m_tileSet[child];
-            if (!_adding) {
-                childProxy->decProxyCounter();
-            } else if (childProxy->hasGeometry()) {
-                // only set a proxy tile if it is ready to draw
-                childProxy->incProxyCounter();
+void TileManager::updateProxyTiles(const TileID& _tileID, bool _zoomingIn) {
+    if (_zoomingIn) {
+        // zoom in - add parent
+        TileID parent = _tileID.getParent();
+        if (parent.isValid() && m_tileSet.find(parent) != m_tileSet.end() && m_tileSet[parent]->hasGeometry()) {
+            m_tileSet[parent]->incProxyCounter();
+        }
+    } else {
+        for(int i = 0; i < 4; i++) {
+            TileID child = _tileID.getChild(i);
+            if(child.isValid(m_view->s_maxZoom) && m_tileSet.find(child) != m_tileSet.end() && m_tileSet[child]->hasGeometry()) {
+                m_tileSet[child]->incProxyCounter();
             }
         }
     }
-    
-    // Parent tile
+}
+
+void TileManager::cleanProxyTiles(const TileID& _tileID) {
+    // check if parent proxy is present
     TileID parent = _tileID.getParent();
     if (parent.isValid() && m_tileSet.find(parent) != m_tileSet.end()) {
-        auto& parentProxy = m_tileSet[parent];
-        if (!_adding) {
-            parentProxy->decProxyCounter();
-        } else if (parentProxy->hasGeometry()) {
-            parentProxy->incProxyCounter();
+        m_tileSet[parent]->decProxyCounter();
+    }
+    
+    // check if child proxies are present
+    for(int i = 0; i < 4; i++) {
+        TileID child = _tileID.getChild(i);
+        if(child.isValid(m_view->s_maxZoom) && m_tileSet.find(child) != m_tileSet.end()) {
+            m_tileSet[child]->decProxyCounter();
         }
     }
 }
