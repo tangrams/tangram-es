@@ -86,10 +86,5 @@ private:
      *  @_adding: True if incrementing proxy counts, false if decrementing
      */
     void updateProxyTiles(const TileID& _tileID, bool _adding);
-    
-    /*
-     *  Makes a MapTile by fetching data from dataSource and constructing VboMeshes for this tile
-     */
-    void makeTile(std::shared_ptr<MapTile>& _mapTile, const std::unique_ptr<DataSource>& _dataSource);
 
 };

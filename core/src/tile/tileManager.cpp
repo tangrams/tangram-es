@@ -129,21 +129,6 @@ bool TileManager::updateTileSet() {
     return tileSetChanged;
 }
 
-inline void TileManager::makeTile(std::shared_ptr<MapTile>& _mapTile, const std::unique_ptr<DataSource>& _dataSource) {
-    logMsg("Loading tile [%d, %d, %d]\n", _mapTile->getID().z, _mapTile->getID().x, _mapTile->getID().y);
-    if ( ! _dataSource->loadTileData(*_mapTile)) {
-        logMsg("ERROR: Loading failed for tile [%d, %d, %d]\n", _mapTile->getID().z, _mapTile->getID().x, _mapTile->getID().y);
-    }
-        
-    auto tileData = _dataSource->getTileData(_mapTile->getID());
-        
-    for (auto& style : m_scene->getStyles()) {
-        if (tileData) {
-            style->addData(*tileData, *_mapTile, m_view->getMapProjection());
-        }
-    }
-}
-
 void TileManager::addTile(const TileID& _tileID) {
     
     std::shared_ptr<MapTile> tile(new MapTile(_tileID, m_view->getMapProjection()));
@@ -158,14 +143,26 @@ void TileManager::addTile(const TileID& _tileID) {
         // Check if tile to be loaded is still required! (either not culled from m_tileSet and not logically deleted)
         // if not set the shared state of this async's future to "null"
         if (m_tileSet.find(_id) != m_tileSet.end() && m_tileSet[_id]->getState()) {
-            auto threadTile = m_tileSet[_id];
+            auto tile = m_tileSet[_id];
             
             // Now Start fetching new tile
             for (const auto& dataSource : m_dataSources) {
-                makeTile(threadTile, dataSource);
+                
+                logMsg("Loading tile [%d, %d, %d]\n", _id.z, _id.x, _id.y);
+                if ( ! dataSource->loadTileData(*tile)) {
+                    logMsg("ERROR: Loading failed for tile [%d, %d, %d]\n", _id.z, _id.x, _id.y);
+                }
+                
+                auto tileData = dataSource->getTileData(_id);
+                
+                for (auto& style : m_scene->getStyles()) {
+                    if (tileData) {
+                        style->addData(*tileData, *tile, m_view->getMapProjection());
+                    }
+                }
             }
             
-            return threadTile;
+            return tile;
         } else {
             // tile was deleted (went out off view) before it could load its data
             // remove its proxies also
