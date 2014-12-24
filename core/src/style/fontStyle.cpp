@@ -115,6 +115,18 @@ void FontStyle::setup() {
 
         m_pendingTexTransformsData.pop();
     }
+
+    glBindTexture(GL_TEXTURE_2D, m_atlas);
+    while(m_pendingTexAtlasData.size() > 0) {
+        logMsg("update atlas\n");
+        AtlasTexData atlasData = m_pendingTexAtlasData.top();
+
+        glTexSubImage2D(GL_TEXTURE_2D, 0, atlasData.m_xoff, atlasData.m_yoff,
+                        atlasData.m_width, atlasData.m_height, GL_ALPHA, GL_UNSIGNED_BYTE, atlasData.m_pixels);
+
+        m_pendingTexAtlasData.pop();
+    }
+    glBindTexture(GL_TEXTURE_2D, 0);
 }
 
 void createTexTransforms(void* _userPtr, unsigned int _width, unsigned int _height) {
@@ -137,7 +149,11 @@ void updateTransforms(void* _userPtr, unsigned int _xoff, unsigned int _yoff,
 
 void updateAtlas(void* _userPtr, unsigned int _xoff, unsigned int _yoff,
                  unsigned int _width, unsigned int _height, const unsigned int* _pixels) {
-    logMsg("update atlas\n");
+    FontStyle* fontStyle = static_cast<FontStyle*>(_userPtr);
+
+    fontStyle->m_pendingTexAtlasData.push({
+        _pixels, _xoff, _yoff, _width, _height
+    });
 }
 
 void createAtlas(void* _userPtr, unsigned int _width, unsigned int _height) {
