@@ -93,10 +93,6 @@ std::string Light::getInstanceBlock(){
 std::string Light::getInstanceAssignBlock(){
     std::string block = "";
     if(!m_dynamic){
-        // block += getInstanceName() + ".ambient = " + getString(m_ambient) + ";\n";
-        // block += getInstanceName() + ".diffuse = " + getString(m_diffuse) + ";\n";
-        // block += getInstanceName() + ".specular = " + getString(m_specular) + ";\n";
-
         block += " = " + m_typeName + "(" + getString(m_ambient);
         block += ", " + getString(m_diffuse);
         block += ", " + getString(m_specular);

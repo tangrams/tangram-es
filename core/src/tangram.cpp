@@ -57,26 +57,27 @@ void initialize() {
 
         //------ TESTING LIGHTS
 
-        //  Directional
+        //  Directional light on Default (vertex) shader
         auto directionalLight = std::make_shared<DirectionalLight>("dLight");
         directionalLight->setDiffuseColor(glm::vec4(1.0,1.0,1.0,1.0));
         directionalLight->setDirection(glm::vec3(-1.0, -1.0, 1.0));
-        m_scene->addLight(directionalLight);
+        m_scene->addLight(directionalLight,DEFAULT_INJ);
     
-        // //  Point
+        //  Point light forced on vertex shader (the default is fragment)
         auto pointLight = std::make_shared<PointLight>("pLight",true);
         pointLight->setDiffuseColor(glm::vec4(0.0,1.0,0.0,1.0));
         pointLight->setSpecularColor(glm::vec4(0.5,0.0,1.0,1.0));
         pointLight->setLinearAttenuation(0.005);
         pointLight->setPosition(glm::vec3(0.0));
-        m_scene->addLight(pointLight);
+        m_scene->addLight(pointLight,VERTEX_INJ);   
 
+        //  Spot light on Default (fragment) shader
         auto spotLight = std::make_shared<SpotLight>("sLight",true);
         spotLight->setSpecularColor(glm::vec4(0.5,0.5,0.0,1.0));
         spotLight->setPosition(glm::vec3(0.0));
         spotLight->setDirection(glm::vec3(0,PI*0.25,0.0));
         spotLight->setCutOff(PI*0.1, 20.0);
-        m_scene->addLight(spotLight);
+        m_scene->addLight(spotLight,DEFAULT_INJ);
         
         //-----------------------
 
