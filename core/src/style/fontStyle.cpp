@@ -74,7 +74,7 @@ void FontStyle::prepareDataProcessing(MapTile& _tile) {
     fsuint buffer;
     
     glfonsBufferCreate(m_fontContext, 32, &buffer);
-    m_tileBuffers[_tile.getID()] = buffer;
+    _tile.setTextBuffer(buffer);
     glfonsBindBuffer(m_fontContext, buffer);
 }
 
@@ -98,9 +98,22 @@ void FontStyle::setup() {
         glBindTexture(GL_TEXTURE_2D, texTransform);
         glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, size.x, size.y, 0, GL_RGBA, GL_UNSIGNED_BYTE, 0);
         glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
-
+        
         m_tileTexTransforms.insert(std::pair<TileID, GLuint>(pair.first, texTransform));
+
         m_pendingTileTexTransforms.pop();
+    }
+
+    while(m_pendingTexTransformsData.size() > 0) {
+        logMsg("update transforms");
+        TileTexDataTransform transformData = m_pendingTexTransformsData.top();
+
+        glBindTexture(GL_TEXTURE_2D, m_tileTexTransforms[transformData.m_id]);
+        glTexSubImage2D(GL_TEXTURE_2D, 0, transformData.m_xoff, transformData.m_yoff,
+                        transformData.m_width, transformData.m_height, GL_RGBA, GL_UNSIGNED_BYTE, transformData.m_pixels);
+        glBindTexture(GL_TEXTURE_2D, 0);
+
+        m_pendingTexTransformsData.pop();
     }
 }
 
@@ -114,7 +127,12 @@ void createTexTransforms(void* _userPtr, unsigned int _width, unsigned int _heig
 
 void updateTransforms(void* _userPtr, unsigned int _xoff, unsigned int _yoff,
                       unsigned int _width, unsigned int _height, const unsigned int* _pixels) {
-    logMsg("update transforms\n");
+    FontStyle* fontStyle = static_cast<FontStyle*>(_userPtr);
+
+    fontStyle->m_pendingTexTransformsData.push({
+        fontStyle->m_processedTile->getID(),
+        _pixels, _xoff, _yoff, _width, _height
+    });
 }
 
 void updateAtlas(void* _userPtr, unsigned int _xoff, unsigned int _yoff,

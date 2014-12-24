@@ -6,6 +6,15 @@
 #include <stack>
 #include <mutex>
 
+struct TileTexDataTransform {
+    TileID m_id;
+    const unsigned int* m_pixels;
+    unsigned int m_xoff;
+    unsigned int m_yoff;
+    unsigned int m_width;
+    unsigned int m_height;
+};
+
 class FontStyle : public Style {
 
 protected:
@@ -38,8 +47,10 @@ private:
     void initFontContext(const std::string& _fontFile);
 
     int m_font;
-    std::map<TileID, fsuint> m_tileBuffers;
+
+    // TODO : move some of these into tile
     std::map<TileID, GLuint> m_tileTexTransforms;
+    std::stack<TileTexDataTransform> m_pendingTexTransformsData;
     std::stack<std::pair<TileID, glm::vec2>> m_pendingTileTexTransforms;
     MapTile* m_processedTile;
     GLuint m_atlas;

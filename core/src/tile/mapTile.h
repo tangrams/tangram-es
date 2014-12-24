@@ -7,6 +7,7 @@
 
 #include "util/vboMesh.h"
 #include "util/mapProjection.h"
+#include "fontstash/glfontstash.h"
 
 class Style;
 struct TileID;
@@ -49,6 +50,10 @@ public:
     /* Draws the geometry associated with the provided <Style> and view-projection matrix */
     void draw(const Style& _style, const glm::dmat4& _viewProjMatrix);
 
+    void setTextBuffer(fsuint _textBuffer) { m_textBuffer = _textBuffer; }
+
+    fsuint getTextBuffer() const { return m_textBuffer; }
+
 private:
 
     TileID m_id;
@@ -65,5 +70,6 @@ private:
 
     std::unordered_map<std::string, std::unique_ptr<VboMesh>> m_geometry; // Map of <Style>s and their associated <VboMesh>es
 
+    fsuint m_textBuffer;
 };
 
