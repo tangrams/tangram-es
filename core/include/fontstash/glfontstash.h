@@ -37,7 +37,7 @@ enum class GLFONSError {
 FONScontext* glfonsCreate(int width, int height, int flags);
 void glfonsDelete(FONScontext* ctx);
 
-void glfonsUploadTransforms(FONScontext* ctx);
+void glfonsUpdateTransforms(FONScontext* ctx);
 void glfonsTransform(FONScontext* ctx, fsuint id, float tx, float ty, float r, float a);
 
 void glfonsGenText(FONScontext* ctx, unsigned int nb, fsuint* textId);
@@ -149,7 +149,7 @@ GLFONSbuffer* glfons__bufferBound(GLFONScontext* gl) {
     return gl->buffers->at(gl->boundBuffer);
 }
 
-void glfonsUploadTransforms(FONScontext* ctx) {
+void glfonsUpdateTransforms(FONScontext* ctx) {
     GLFONScontext* gl = (GLFONScontext*) ctx->params.userPtr;
     GLFONSbuffer* buffer = glfons__bufferBound(gl);
 

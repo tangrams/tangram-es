@@ -54,6 +54,10 @@ public:
 
     fsuint getTextBuffer() const { return m_textBuffer; }
 
+    void setTexTransform(GLuint _textureName) { m_textureTransform = _textureName; }
+
+    GLuint getTexTansformName() const { return m_textureTransform; }
+
 private:
 
     TileID m_id;
@@ -71,5 +75,6 @@ private:
     std::unordered_map<std::string, std::unique_ptr<VboMesh>> m_geometry; // Map of <Style>s and their associated <VboMesh>es
 
     fsuint m_textBuffer;
+    GLuint m_textureTransform;
 };
 

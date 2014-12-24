@@ -50,9 +50,14 @@ void FontStyle::buildLine(Line& _line, std::string& _layer, Properties& _props, 
 
                 glfonsGenText(m_fontContext, 1, &textId);
                 glfonsRasterize(m_fontContext, textId, prop.second.c_str(), FONS_EFFECT_NONE);
+
+                // testing
+                glfonsTransform(m_fontContext, textId, 200, 200, 0, 1.0);
             }
         }
     }
+
+    glfonsUpdateTransforms(m_fontContext);
 
     std::vector<float> vertData;
 
@@ -87,30 +92,35 @@ void FontStyle::finishDataProcessing(MapTile& _tile) {
 }
 
 void FontStyle::setup() {
+
     while(m_pendingTileTexTransforms.size() > 0) {
         logMsg("create tex transforms\n");
-        std::pair<TileID, glm::vec2> pair = m_pendingTileTexTransforms.top();
+        std::pair<MapTile*, glm::vec2> pair = m_pendingTileTexTransforms.top();
 
         glm::vec2 size = pair.second;
+        MapTile* tile = pair.first;
 
         GLuint texTransform;
         glGenTextures(1, &texTransform);
         glBindTexture(GL_TEXTURE_2D, texTransform);
         glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, size.x, size.y, 0, GL_RGBA, GL_UNSIGNED_BYTE, 0);
         glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+
+        tile->setTexTransform(texTransform);
         
-        m_tileTexTransforms.insert(std::pair<TileID, GLuint>(pair.first, texTransform));
+        m_tileTexTransforms.insert(std::pair<TileID, GLuint>(tile->getID(), texTransform));
 
         m_pendingTileTexTransforms.pop();
     }
 
     while(m_pendingTexTransformsData.size() > 0) {
-        logMsg("update transforms");
+        logMsg("update transforms\n");
         TileTexDataTransform transformData = m_pendingTexTransformsData.top();
 
         glBindTexture(GL_TEXTURE_2D, m_tileTexTransforms[transformData.m_id]);
         glTexSubImage2D(GL_TEXTURE_2D, 0, transformData.m_xoff, transformData.m_yoff,
                         transformData.m_width, transformData.m_height, GL_RGBA, GL_UNSIGNED_BYTE, transformData.m_pixels);
+
         glBindTexture(GL_TEXTURE_2D, 0);
 
         m_pendingTexTransformsData.pop();
@@ -127,6 +137,39 @@ void FontStyle::setup() {
         m_pendingTexAtlasData.pop();
     }
     glBindTexture(GL_TEXTURE_2D, 0);
+
+    // for now use compute projection matrix by hand
+    GLint viewport[4];
+    glGetIntegerv(GL_VIEWPORT, viewport);
+    float projectionMatrix[16];
+    float width = (float) viewport[2];
+    float height = (float) viewport[3];
+
+    float r = width;
+    float l = 0.0;
+    float b = height;
+    float t = 0.0;
+    float n = -1.0;
+    float f = 1.0;
+
+    // could be simplified, exposing it like this for comprehension
+    projectionMatrix[0] = 2.0 / (r-l);
+    projectionMatrix[5] = 2.0 / (t-b);
+    projectionMatrix[10] = 2.0 / (f-n);
+    projectionMatrix[12] = -(r+l)/(r-l);
+    projectionMatrix[13] = -(t+b)/(t-b);
+    projectionMatrix[14] = -(f+n)/(f-n);
+    projectionMatrix[15] = 1.0;
+
+    glActiveTexture(GL_TEXTURE0);
+    glBindTexture(GL_TEXTURE_2D, m_atlas);
+
+    m_shaderProgram->setUniformi("u_tex", 0); // atlas
+    m_shaderProgram->setUniformf("u_tresolution", 32, 64); // resolution of transform texture
+    m_shaderProgram->setUniformf("u_resolution", width, height);
+    m_shaderProgram->setUniformf("u_color", 1.0, 1.0, 1.0);
+    m_shaderProgram->setUniformMatrix4f("u_proj", projectionMatrix);
+
 }
 
 void createTexTransforms(void* _userPtr, unsigned int _width, unsigned int _height) {
@@ -134,7 +177,7 @@ void createTexTransforms(void* _userPtr, unsigned int _width, unsigned int _heig
 
     glm::vec2 size = glm::vec2(_width, _height);
 
-    fontStyle->m_pendingTileTexTransforms.push(std::pair<TileID, glm::vec2>(fontStyle->m_processedTile->getID(), size));
+    fontStyle->m_pendingTileTexTransforms.push(std::pair<MapTile*, glm::vec2>(fontStyle->m_processedTile, size));
 }
 
 void updateTransforms(void* _userPtr, unsigned int _xoff, unsigned int _yoff,

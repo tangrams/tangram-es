@@ -59,7 +59,7 @@ private:
     std::map<TileID, GLuint> m_tileTexTransforms;
     std::stack<TileTexDataTransform> m_pendingTexTransformsData;
     std::stack<AtlasTexData> m_pendingTexAtlasData;
-    std::stack<std::pair<TileID, glm::vec2>> m_pendingTileTexTransforms;
+    std::stack<std::pair<MapTile*, glm::vec2>> m_pendingTileTexTransforms;
     MapTile* m_processedTile;
     GLuint m_atlas;
     FONScontext* m_fontContext;

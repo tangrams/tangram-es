@@ -24,6 +24,8 @@ MapTile::MapTile(TileID _id, const MapProjection& _projection) : m_id(_id),  m_p
     // Scale model matrix to size of tile
     m_modelMatrix = glm::scale(m_modelMatrix, glm::dvec3(m_scale));
 
+    m_textureTransform = 0;
+
 }
 
 MapTile::~MapTile() {
@@ -52,6 +54,12 @@ void MapTile::draw(const Style& _style, const glm::dmat4& _viewProjMatrix) {
         double* first = &modelViewProjMatrix[0][0];
         std::vector<float> fmvp(first, first + 16);
 
+        if(m_textureTransform != 0) {
+            glActiveTexture(GL_TEXTURE1);
+            glBindTexture(GL_TEXTURE_2D, m_textureTransform);
+        
+            shader->setUniformi("u_transforms", 1); // transform texture
+        }
         shader->setUniformMatrix4f("u_modelViewProj", &fmvp[0]);
 
         styleMesh->draw(shader);
