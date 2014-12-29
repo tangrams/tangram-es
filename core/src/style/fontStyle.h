@@ -6,20 +6,19 @@
 #include <stack>
 #include <mutex>
 
-#define TexData_StructContent \
-    const unsigned int* m_pixels; \
-    unsigned int m_xoff; \
-    unsigned int m_yoff; \
-    unsigned int m_width; \
-    unsigned int m_height;
-
-struct AtlasTexData {
-    TexData_StructContent
+struct TextureData {
+    const unsigned int* m_pixels = nullptr;
+    unsigned int m_xoff = 0;
+    unsigned int m_yoff = 0;
+    unsigned int m_width = 0;
+    unsigned int m_height = 0;
 };
 
-struct TileTexDataTransform {
+struct Atlas : TextureData { };
+
+struct TileTransform : TextureData {
     TileID m_id;
-    TexData_StructContent
+    TileTransform(TileID _tileId) : m_id(_tileId) { }
 };
 
 class FontStyle : public Style {
@@ -57,9 +56,12 @@ private:
 
     // TODO : move some of these into tile
     std::map<TileID, GLuint> m_tileTexTransforms;
-    std::stack<TileTexDataTransform> m_pendingTexTransformsData;
-    std::stack<AtlasTexData> m_pendingTexAtlasData;
+    std::map<TileID, std::vector<fsuint>> m_tileLabels;
+
+    std::stack<TileTransform> m_pendingTexTransformsData;
+    std::stack<Atlas> m_pendingTexAtlasData;
     std::stack<std::pair<MapTile*, glm::vec2>> m_pendingTileTexTransforms;
+    
     MapTile* m_processedTile;
     GLuint m_atlas;
     FONScontext* m_fontContext;

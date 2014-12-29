@@ -26,6 +26,7 @@
 typedef unsigned int fsuint;
 
 #define N_GLYPH_VERTS 6
+#define INNER_DATA_OFFSET 5 // offset between vertices
 
 typedef struct GLFONScontext GLFonscontext;
 typedef struct GLFONSbuffer GLFONSbuffer;
@@ -104,8 +105,8 @@ struct GLFONScontext {
 
 void glfons__id2ij(GLFONScontext* gl, fsuint id, int* i, int* j) {
     int* res = gl->buffers->at(gl->boundBuffer)->transformRes;
-    *i = (id*2) % (res[0]/2);
-    *j = (id*2) / (res[0]/2);
+    *i = (id*2) % res[0];
+    *j = (id*2) / res[0];
 }
 
 static int glfons__renderCreate(void* userPtr, int width, int height) {
@@ -207,14 +208,14 @@ void glfonsRasterize(FONScontext* ctx, fsuint textId, const char* s, FONSeffectT
     float* data = nullptr;
 
     if(buffer->interleavedArray == nullptr) {
-        buffer->interleavedArray = (float*) malloc(sizeof(float) * ctx->nverts * 5);
+        buffer->interleavedArray = (float*) malloc(sizeof(float) * ctx->nverts * INNER_DATA_OFFSET);
         buffer->nbVerts = 0;
         data = buffer->interleavedArray;
     } else {
         // TODO : realloc can be expensive, improve
         buffer->interleavedArray = (float*) realloc(buffer->interleavedArray,
-                                                    sizeof(float) * (buffer->nbVerts + ctx->nverts) * 5);
-        data = buffer->interleavedArray + buffer->nbVerts * 5;
+                                                    sizeof(float) * (buffer->nbVerts + ctx->nverts) * INNER_DATA_OFFSET);
+        data = buffer->interleavedArray + buffer->nbVerts * INNER_DATA_OFFSET;
     }
 
     stash->glyphsXOffset = new float[ctx->nverts / N_GLYPH_VERTS];
@@ -226,7 +227,7 @@ void glfonsRasterize(FONScontext* ctx, fsuint textId, const char* s, FONSeffectT
 
     float inf = std::numeric_limits<float>::infinity();
     float x0 = inf, x1 = -inf, y0 = inf, y1 = -inf;
-    for(int i = 0, off = 0; i < ctx->nverts * 2; i += 2, off += 5) {
+    for(int i = 0, off = 0; i < ctx->nverts * 2; i += 2, off += INNER_DATA_OFFSET) {
         GLfloat x, y, u, v;
 
         x = ctx->verts[i];
@@ -328,11 +329,13 @@ static void glfons__renderDelete(void* userPtr) {
     delete gl;
 }
 
-FONScontext* glfonsCreate(int width, int height, int flags, GLFONSparams glParams, void* userPtr) {
+FONScontext* glfonsCreate(int width, int height, int flags, GLFONSparams glParams, int screenWidth, int screenHeight, void* userPtr) {
     FONSparams params;
     GLFONScontext* gl = new GLFONScontext;
     gl->params = glParams;
     gl->userPtr = userPtr;
+    gl->screenSize[0] = screenWidth;
+    gl->screenSize[1] = screenHeight;
 
     params.width = width;
     params.height = height;
@@ -363,7 +366,7 @@ bool glfonsVertices(FONScontext* ctx, std::vector<float>* data) {
         return false;
     }
 
-    data->insert(data->end(), &buffer->interleavedArray[0], &buffer->interleavedArray[buffer->nbVerts]);
+    data->insert(data->end(), &buffer->interleavedArray[0], &buffer->interleavedArray[buffer->nbVerts * INNER_DATA_OFFSET]);
 
     free(buffer->interleavedArray);
     buffer->interleavedArray = nullptr;

@@ -54,6 +54,7 @@ void MapTile::draw(const Style& _style, const glm::dmat4& _viewProjMatrix) {
         double* first = &modelViewProjMatrix[0][0];
         std::vector<float> fmvp(first, first + 16);
 
+        // TODO : active textures only when style needs it
         if(m_textureTransform != 0) {
             glActiveTexture(GL_TEXTURE1);
             glBindTexture(GL_TEXTURE_2D, m_textureTransform);

@@ -127,6 +127,12 @@ void render() {
 
         style->setup();
 
+        if(dynamic_cast<FontStyle*>(style.get())) {
+            glEnable(GL_BLEND);
+            glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+            glDisable(GL_DEPTH_TEST);
+        }
+
         // Loop over visible tiles
         for (const auto& mapIDandTile : m_tileManager->getVisibleTiles()) {
 
@@ -137,6 +143,11 @@ void render() {
                 tile->draw(*style, viewProj);
             }
 
+        }
+        
+        if(dynamic_cast<FontStyle*>(style.get())) {
+            glDisable(GL_BLEND);
+            glEnable(GL_DEPTH_TEST);
         }
     }
 

@@ -43,6 +43,26 @@ void FontStyle::buildPoint(Point& _point, std::string& _layer, Properties& _prop
 
 void FontStyle::buildLine(Line& _line, std::string& _layer, Properties& _props, VboMesh& _mesh) {
 
+    fonsSetSize(m_fontContext, 40.0);
+    fonsSetFont(m_fontContext, m_font);
+
+    /*static bool buffered = false;
+
+    if(!buffered) {
+        for(int i = 0; i < 512; i++) {
+            fsuint textId;
+
+            glfonsGenText(m_fontContext, 1, &textId);
+            glfonsRasterize(m_fontContext, textId, "A B C D", FONS_EFFECT_NONE);
+
+            m_tileLabels[m_processedTile->getID()].push_back(textId);
+
+            // testing
+            glfonsTransform(m_fontContext, textId, 200.0, 20.0 + i * 3.0, 0.3, 1.0);
+        }
+        buffered = true;
+    }*/
+
     if(_layer.compare("roads") == 0) {
         for(auto prop : _props.stringProps) {
             if(prop.first.compare("name") == 0) {
@@ -51,13 +71,22 @@ void FontStyle::buildLine(Line& _line, std::string& _layer, Properties& _props, 
                 glfonsGenText(m_fontContext, 1, &textId);
                 glfonsRasterize(m_fontContext, textId, prop.second.c_str(), FONS_EFFECT_NONE);
 
+                logMsg("%s\n", prop.second.c_str());
+
+                m_tileLabels[m_processedTile->getID()].push_back(textId);
+
+                static int y = 0.0;
+                y++;
+
                 // testing
-                glfonsTransform(m_fontContext, textId, 200, 200, 0, 1.0);
+                glfonsTransform(m_fontContext, textId, 50.0, 200.0 + y * 5.0, 0.0, 1.0);
             }
         }
     }
 
     glfonsUpdateTransforms(m_fontContext);
+
+    fonsClearState(m_fontContext);
 
     std::vector<float> vertData;
 
@@ -108,14 +137,14 @@ void FontStyle::setup() {
 
         tile->setTexTransform(texTransform);
         
-        m_tileTexTransforms.insert(std::pair<TileID, GLuint>(tile->getID(), texTransform));
+        m_tileTexTransforms[tile->getID()] = texTransform;
 
         m_pendingTileTexTransforms.pop();
     }
 
     while(m_pendingTexTransformsData.size() > 0) {
         logMsg("update transforms\n");
-        TileTexDataTransform transformData = m_pendingTexTransformsData.top();
+        TileTransform transformData = m_pendingTexTransformsData.top();
 
         glBindTexture(GL_TEXTURE_2D, m_tileTexTransforms[transformData.m_id]);
         glTexSubImage2D(GL_TEXTURE_2D, 0, transformData.m_xoff, transformData.m_yoff,
@@ -129,7 +158,7 @@ void FontStyle::setup() {
     glBindTexture(GL_TEXTURE_2D, m_atlas);
     while(m_pendingTexAtlasData.size() > 0) {
         logMsg("update atlas\n");
-        AtlasTexData atlasData = m_pendingTexAtlasData.top();
+        Atlas atlasData = m_pendingTexAtlasData.top();
 
         glTexSubImage2D(GL_TEXTURE_2D, 0, atlasData.m_xoff, atlasData.m_yoff,
                         atlasData.m_width, atlasData.m_height, GL_ALPHA, GL_UNSIGNED_BYTE, atlasData.m_pixels);
@@ -141,7 +170,8 @@ void FontStyle::setup() {
     // for now use compute projection matrix by hand
     GLint viewport[4];
     glGetIntegerv(GL_VIEWPORT, viewport);
-    float projectionMatrix[16];
+    float projectionMatrix[16] = {0};
+    // TODO : get those values from rendering context
     float width = (float) viewport[2];
     float height = (float) viewport[3];
 
@@ -169,7 +199,6 @@ void FontStyle::setup() {
     m_shaderProgram->setUniformf("u_resolution", width, height);
     m_shaderProgram->setUniformf("u_color", 1.0, 1.0, 1.0);
     m_shaderProgram->setUniformMatrix4f("u_proj", projectionMatrix);
-
 }
 
 void createTexTransforms(void* _userPtr, unsigned int _width, unsigned int _height) {
@@ -184,19 +213,30 @@ void updateTransforms(void* _userPtr, unsigned int _xoff, unsigned int _yoff,
                       unsigned int _width, unsigned int _height, const unsigned int* _pixels) {
     FontStyle* fontStyle = static_cast<FontStyle*>(_userPtr);
 
-    fontStyle->m_pendingTexTransformsData.push({
-        fontStyle->m_processedTile->getID(),
-        _pixels, _xoff, _yoff, _width, _height
-    });
+    TileTransform texData(fontStyle->m_processedTile->getID());
+
+    texData.m_pixels = _pixels;
+    texData.m_xoff = _xoff;
+    texData.m_yoff = _yoff;
+    texData.m_width = _width;
+    texData.m_height = _height;
+
+    fontStyle->m_pendingTexTransformsData.push(texData);
 }
 
 void updateAtlas(void* _userPtr, unsigned int _xoff, unsigned int _yoff,
                  unsigned int _width, unsigned int _height, const unsigned int* _pixels) {
     FontStyle* fontStyle = static_cast<FontStyle*>(_userPtr);
 
-    fontStyle->m_pendingTexAtlasData.push({
-        _pixels, _xoff, _yoff, _width, _height
-    });
+    Atlas texData;
+
+    texData.m_pixels = _pixels;
+    texData.m_height =_height;
+    texData.m_width = _width;
+    texData.m_xoff = _xoff;
+    texData.m_yoff = _yoff;
+
+    fontStyle->m_pendingTexAtlasData.push(texData);
 }
 
 void createAtlas(void* _userPtr, unsigned int _width, unsigned int _height) {
@@ -218,7 +258,11 @@ void FontStyle::initFontContext(const std::string& _fontFile) {
     params.updateAtlas = updateAtlas;
     params.updateTransforms = updateTransforms;
 
-    m_fontContext = glfonsCreate(512, 512, FONS_ZERO_TOPLEFT, params, (void*) this);
+    // TODO : get this from platform rendering context
+    float screenWidth = 640;
+    float screenHeight = 960;
+
+    m_fontContext = glfonsCreate(512, 512, FONS_ZERO_TOPLEFT, params, screenWidth, screenHeight, (void*) this);
 
     unsigned int dataSize;
     unsigned char* data = bytesFromResource(_fontFile.c_str(), &dataSize);
