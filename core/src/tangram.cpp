@@ -39,7 +39,7 @@ void initialize() {
         m_scene = std::make_shared<Scene>();
         
         // Load style(s); hard-coded for now
-        /*std::unique_ptr<Style> polyStyle(new PolygonStyle("Polygon"));
+        std::unique_ptr<Style> polyStyle(new PolygonStyle("Polygon"));
         polyStyle->addLayers({
             "buildings",
             "water",
@@ -50,7 +50,7 @@ void initialize() {
         
         std::unique_ptr<Style> linesStyle(new PolylineStyle("Polyline"));
         linesStyle->addLayers({"roads"});
-        m_scene->addStyle(std::move(linesStyle));*/
+        m_scene->addStyle(std::move(linesStyle));
 
         std::unique_ptr<Style> fontStyle(new FontStyle("DejaVuSerif.ttf", "FontStyle"));
         fontStyle->addLayers({"roads"});

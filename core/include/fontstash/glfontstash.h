@@ -358,7 +358,7 @@ unsigned int glfonsRGBA(unsigned char r, unsigned char g, unsigned char b, unsig
     return (r) | (g << 8) | (b << 16) | (a << 24);
 }
 
-bool glfonsVertices(FONScontext* ctx, std::vector<float>* data) {
+bool glfonsVertices(FONScontext* ctx, std::vector<float>* data, int* nVerts) {
     GLFONScontext* gl = (GLFONScontext*) ctx->params.userPtr;
     GLFONSbuffer* buffer = glfons__bufferBound(gl);
 
@@ -367,6 +367,8 @@ bool glfonsVertices(FONScontext* ctx, std::vector<float>* data) {
     }
 
     data->insert(data->end(), &buffer->interleavedArray[0], &buffer->interleavedArray[buffer->nbVerts * INNER_DATA_OFFSET]);
+
+    *nVerts = data->size() / INNER_DATA_OFFSET;
 
     free(buffer->interleavedArray);
     buffer->interleavedArray = nullptr;

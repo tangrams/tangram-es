@@ -77,5 +77,5 @@ void main() {
     gl_Position = u_proj * p;
 
     f_uv = a_texCoord;
-    f_alpha = 0.5; //alpha;
+    f_alpha = alpha;
 }
