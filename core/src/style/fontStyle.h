@@ -3,7 +3,7 @@
 #include "style.h"
 #include "fontstash/glfontstash.h"
 #include <map>
-#include <stack>
+#include <queue>
 #include <mutex>
 
 struct TextureData {
@@ -70,9 +70,9 @@ private:
     std::map<TileID, std::vector<fsuint>> m_tileLabels;
 
     /* Since the fontstash callbacks are called from threads, we enqueue them */
-    std::stack<TileTransform> m_pendingTexTransformsData;
-    std::stack<Atlas> m_pendingTexAtlasData;
-    std::stack<std::pair<MapTile*, glm::vec2>> m_pendingTileTexTransforms;
+    std::queue<TileTransform> m_pendingTexTransformsData;
+    std::queue<Atlas> m_pendingTexAtlasData;
+    std::queue<std::pair<MapTile*, glm::vec2>> m_pendingTileTexTransforms;
 
     MapTile* m_processedTile;
     GLuint m_atlas;

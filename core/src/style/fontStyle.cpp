@@ -107,7 +107,7 @@ void FontStyle::setup() {
     // process pending opengl texture updates / creation
     while (m_pendingTileTexTransforms.size() > 0) {
         logMsg("Create a texture transforms\n");
-        std::pair<MapTile*, glm::vec2> pair = m_pendingTileTexTransforms.top();
+        std::pair<MapTile*, glm::vec2> pair = m_pendingTileTexTransforms.front();
 
         glm::vec2 size = pair.second;
         MapTile* tile = pair.first;
@@ -126,7 +126,7 @@ void FontStyle::setup() {
     }
 
     while (m_pendingTexTransformsData.size() > 0) {
-        TileTransform transformData = m_pendingTexTransformsData.top();
+        TileTransform transformData = m_pendingTexTransformsData.front();
 
         logMsg("Update the texture transforms for tile [%d, %d, %d], %dx%d pixels\n", transformData.m_id.x,
             transformData.m_id.y, transformData.m_id.z, transformData.m_width, transformData.m_height);
@@ -142,7 +142,7 @@ void FontStyle::setup() {
 
     glBindTexture(GL_TEXTURE_2D, m_atlas);
     while (m_pendingTexAtlasData.size() > 0) {
-        Atlas atlasData = m_pendingTexAtlasData.top();
+        Atlas atlasData = m_pendingTexAtlasData.front();
 
         logMsg("Update the atlas, %dx%d pixels\n", atlasData.m_width, atlasData.m_height);
 
