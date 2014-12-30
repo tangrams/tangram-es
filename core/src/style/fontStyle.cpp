@@ -42,44 +42,28 @@ void FontStyle::buildPoint(Point& _point, std::string& _layer, Properties& _prop
 }
 
 void FontStyle::buildLine(Line& _line, std::string& _layer, Properties& _props, VboMesh& _mesh) {
+    std::vector<float> vertData;
 
     fonsSetSize(m_fontContext, 40.0);
     fonsSetFont(m_fontContext, m_font);
 
-    /*static bool buffered = false;
-
-    if(!buffered) {
-        for(int i = 0; i < 512; i++) {
-            fsuint textId;
-
-            glfonsGenText(m_fontContext, 1, &textId);
-            glfonsRasterize(m_fontContext, textId, "A B C D", FONS_EFFECT_NONE);
-
-            m_tileLabels[m_processedTile->getID()].push_back(textId);
-
-            // testing
-            glfonsTransform(m_fontContext, textId, 200.0, 20.0 + i * 3.0, 0.3, 1.0);
-        }
-        buffered = true;
-    }*/
-
+    static bool buffered = false;
     if(_layer.compare("roads") == 0) {
         for(auto prop : _props.stringProps) {
             if(prop.first.compare("name") == 0) {
-                fsuint textId;
+                if(!buffered) {
+                    fsuint textId;
 
-                glfonsGenText(m_fontContext, 1, &textId);
-                glfonsRasterize(m_fontContext, textId, prop.second.c_str(), FONS_EFFECT_NONE);
+                    glfonsGenText(m_fontContext, 1, &textId);
+                    glfonsRasterize(m_fontContext, textId, prop.second.c_str(), FONS_EFFECT_NONE);
 
-                logMsg("%s\n", prop.second.c_str());
+                    logMsg("%s\n", prop.second.c_str());
 
-                m_tileLabels[m_processedTile->getID()].push_back(textId);
+                    m_tileLabels[m_processedTile->getID()].push_back(textId);
 
-                static int y = 0.0;
-                y++;
-
-                // testing
-                glfonsTransform(m_fontContext, textId, 50.0, 200.0 + y * 5.0, 0.0, 1.0);
+                    glfonsTransform(m_fontContext, textId, 50.0, 200.0, 0.0, 1.0);
+                    buffered = true;
+                }
             }
         }
     }
@@ -88,12 +72,13 @@ void FontStyle::buildLine(Line& _line, std::string& _layer, Properties& _props, 
 
     fonsClearState(m_fontContext);
 
-    std::vector<float> vertData;
-
     if(glfonsVertices(m_fontContext, &vertData)) {
-        _mesh.addVertices(reinterpret_cast<GLbyte*>(&vertData[0]), vertData.size());
+        _mesh.addVertices((GLbyte*)vertData.data(), vertData.size());
+
+        for(int i = 0; i < vertData.size(); i++) {
+            logMsg("%f\n", vertData[i]);
+        }
     }
-    
 }
 
 void FontStyle::buildPolygon(Polygon& _polygon, std::string& _layer, Properties& _props, VboMesh& _mesh) {

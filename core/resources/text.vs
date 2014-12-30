@@ -3,7 +3,7 @@ precision mediump float;
 #endif
 
 attribute lowp float a_fsid;
-attribute vec4 a_position;
+attribute vec2 a_position;
 attribute vec2 a_texCoord;
 
 uniform sampler2D u_transforms;
@@ -70,12 +70,12 @@ void main() {
     vec4 p = vec4(
         a_position.x * ct - a_position.y * st + tx,
         a_position.x * st + a_position.y * ct + ty,
-        a_position.z,
-        a_position.w
+        0.0,
+        1.0
     );
 
     gl_Position = u_proj * p;
 
     f_uv = a_texCoord;
-    f_alpha = alpha;
+    f_alpha = 0.5; //alpha;
 }
