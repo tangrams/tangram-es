@@ -51,9 +51,8 @@ bool TileManager::updateTileSet() {
                     incomingTilesIter = m_incomingTiles.erase(incomingTilesIter);
                 }
             } else {
-                incomingTilesIter++;
+                ++incomingTilesIter;
             }
-
         }
     }
 
@@ -64,68 +63,56 @@ bool TileManager::updateTileSet() {
     }
 
     const std::set<TileID>& visibleTiles = m_view->getVisibleTiles();
-
-    auto tileSetIter = m_tileSet.begin();
-    auto visTilesIter = visibleTiles.begin();
-
-    while (tileSetIter != m_tileSet.end() && visTilesIter != visibleTiles.end()) {
-
-        TileID visTile = *visTilesIter;
-
-        TileID tileInSet = tileSetIter->first;
-
-        if (visTile == tileInSet) {
-            // Tiles match here, nothing to do
-            // visible tile is already in m_tileSet
-            // Possible a proxy tile in m_tileSet is visible now (set status to true and resetProxyCounter)
-            tileSetIter->second->resetProxyCounter();
-            tileSetIter->second->setVisibility(true);
-            visTilesIter++;
-            tileSetIter++;
-        } else if (visTile < tileInSet) {
-            // tileSet is missing an element present in visibleTiles
-            // A new tile became visible
-            // fetch/add the tile
-            addTile(visTile);
-            tileSetChanged = true;
-            visTilesIter++;
-        } else {
-            // visibleTiles is missing an element present in tileSet
-            // logically deletion of tile
-            tileSetIter->second->setVisibility(false);
-            tileSetIter++;
-            tileSetChanged = true;
+    
+    // Loop over visibleTiles and add any needed tiles to tileSet
+    {
+        auto setTilesIter = m_tileSet.begin();
+        auto visTilesIter = visibleTiles.begin();
+        
+        while (visTilesIter != visibleTiles.end()) {
+            
+            if (setTilesIter == m_tileSet.end() || *visTilesIter < setTilesIter->first) {
+                // tileSet is missing an element present in visibleTiles
+                addTile(*visTilesIter);
+                tileSetChanged = true;
+                ++visTilesIter;
+            } else if (setTilesIter->first < *visTilesIter) {
+                // visibleTiles is missing an element present in tileSet (handled below)
+                ++setTilesIter;
+            } else {
+                // tiles in both sets match, move on
+                ++setTilesIter;
+                ++visTilesIter;
+            }
         }
-
-    }
-
-    while (tileSetIter != m_tileSet.end()) {
-        // All tiles in tileSet that haven't been covered yet are not in visibleTiles, so remove them
-        // logical deletion of tiles
-        tileSetIter->second->setVisibility(false);
-        tileSetIter++;
-        tileSetChanged = true;
-    }
-
-    while (visTilesIter != visibleTiles.end()) {
-        // All tiles in visibleTiles that haven't been covered yet are not in tileSet, so add them
-        // New tile(s) are now visible
-        // fetch/add the tile(s)
-        addTile(*visTilesIter);
-        tileSetChanged = true;
-        visTilesIter++;
     }
     
-    // clean m_tileSet
-    tileSetIter = m_tileSet.begin();
-    while (tileSetIter != m_tileSet.end()) {
-        if (!tileSetIter->second->isVisible() && tileSetIter->second->getProxyCounter() == 0) {
-            removeTile(tileSetIter);
-            continue;
+    // Loop over tileSet and remove any tiles that are neither visible nor proxies
+    {
+        auto setTilesIter = m_tileSet.begin();
+        auto visTilesIter = visibleTiles.begin();
+        
+        while (setTilesIter != m_tileSet.end()) {
+            
+            if (visTilesIter == visibleTiles.end() || setTilesIter->first < *visTilesIter) {
+                // visibleTiles is missing an element present in tileSet
+                if (setTilesIter->second->getProxyCounter() <= 0) {
+                    removeTile(setTilesIter);
+                    tileSetChanged = true;
+                } else {
+                    ++setTilesIter;
+                }
+            } else if (*visTilesIter < setTilesIter->first) {
+                // tileSet is missing an element present in visibleTiles (shouldn't occur)
+                ++visTilesIter;
+            } else {
+                // tiles in both sets match, move on
+                ++setTilesIter;
+                ++visTilesIter;
+            }
         }
-        tileSetIter++;
     }
-
+    
     return tileSetChanged;
 }
 
@@ -133,7 +120,6 @@ void TileManager::addTile(const TileID& _tileID) {
     
     std::shared_ptr<MapTile> tile(new MapTile(_tileID, m_view->getMapProjection()));
     m_tileSet[_tileID] = tile;
-    m_tileSet[_tileID]->setVisibility(true);
     
     //Add Proxy if corresponding proxy MapTile ready
     updateProxyTiles(_tileID, m_view->isZoomIn());
@@ -142,7 +128,7 @@ void TileManager::addTile(const TileID& _tileID) {
         
         // Check if tile to be loaded is still required! (either not culled from m_tileSet and not logically deleted)
         // if not set the shared state of this async's future to "null"
-        if (m_tileSet.find(_id) != m_tileSet.end() && m_tileSet[_id]->isVisible()) {
+        if (m_tileSet.find(_id) != m_tileSet.end()) {
             auto tile = m_tileSet[_id];
             
             // Now Start fetching new tile
