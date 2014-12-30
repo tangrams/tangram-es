@@ -58,7 +58,9 @@ void FontStyle::buildLine(Line& _line, std::string& _layer, Properties& _props, 
 
                 m_tileLabels[m_processedTile->getID()].push_back(textId);
 
-                glfonsTransform(m_fontContext, textId, 50.0, 200.0, 0.0, 1.0);
+                static int y = 0;
+                y++;
+                glfonsTransform(m_fontContext, textId, 50.0, 200.0 + 15.0 * y, 0.0, 1.0);
             }
         }
     }
