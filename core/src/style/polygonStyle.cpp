@@ -35,6 +35,11 @@ void PolygonStyle::setup() {
     m_shaderProgram->setUniformf("u_lightDirection", -1.0, -1.0, 1.0);
 }
 
+void PolygonStyle::setup(float _proxyZTest) {
+    setup();
+    m_shaderProgram->setUniformf("u_proxyOffset", _proxyZTest);
+}
+
 void PolygonStyle::buildPoint(Point& _point, std::string& _layer, Properties& _props, VboMesh& _mesh) {
     // No-op
 }

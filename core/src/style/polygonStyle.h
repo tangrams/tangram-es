@@ -34,6 +34,7 @@ public:
     PolygonStyle(std::string _name, GLenum _drawMode = GL_TRIANGLES);
     
     virtual void setup() override;
+    virtual void setup(float _proxyZTest) override;
     
     virtual ~PolygonStyle() {
     }
