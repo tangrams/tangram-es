@@ -30,12 +30,13 @@ typedef unsigned int fsuint;
 
 typedef struct GLFONScontext GLFonscontext;
 typedef struct GLFONSbuffer GLFONSbuffer;
+typedef struct GLFONSParams GLFONSParams;
 
 enum class GLFONSError {
     ID_OVERFLOW
 };
 
-FONScontext* glfonsCreate(int width, int height, int flags);
+FONScontext* glfonsCreate(int width, int height, int flags, GLFONSParams glParams, void* userPtr);
 void glfonsDelete(FONScontext* ctx);
 
 void glfonsUpdateTransforms(FONScontext* ctx);
@@ -54,6 +55,8 @@ void glfonsGetBBox(FONScontext* ctx, fsuint id, float* x0, float* y0, float* x1,
 float glfonsGetGlyphOffset(FONScontext* ctx, fsuint id, int i);
 float glfonsGetLength(FONScontext* ctx, fsuint id);
 int glfonsGetGlyphCount(FONScontext* ctx, fsuint id);
+void glfonsScreenSize(FONScontext* ctx, int screenWidth, int screenHeight);
+void glfonsProjection(FONScontext* ctx, float* projectionMatrix);
 
 unsigned int glfonsRGBA(unsigned char r, unsigned char g, unsigned char b, unsigned char a);
 
@@ -329,13 +332,17 @@ static void glfons__renderDelete(void* userPtr) {
     delete gl;
 }
 
-FONScontext* glfonsCreate(int width, int height, int flags, GLFONSparams glParams, int screenWidth, int screenHeight, void* userPtr) {
+void glfonsScreenSize(FONScontext* ctx, int screenWidth, int screenHeight) {
+    GLFONScontext* gl = (GLFONScontext*) ctx->params.userPtr;
+    gl->screenSize[0] = screenWidth;
+    gl->screenSize[1] = screenHeight;
+}
+
+FONScontext* glfonsCreate(int width, int height, int flags, GLFONSparams glParams, void* userPtr) {
     FONSparams params;
     GLFONScontext* gl = new GLFONScontext;
     gl->params = glParams;
     gl->userPtr = userPtr;
-    gl->screenSize[0] = screenWidth;
-    gl->screenSize[1] = screenHeight;
 
     params.width = width;
     params.height = height;
@@ -348,6 +355,29 @@ FONScontext* glfonsCreate(int width, int height, int flags, GLFONSparams glParam
     params.userPtr = gl;
     
     return fonsCreateInternal(&params);
+}
+
+void glfonsProjection(FONScontext* ctx, float* projectionMatrix) {
+    GLFONScontext* gl = (GLFONScontext*) ctx->params.userPtr;
+
+    float width = gl->screenSize[0];
+    float height = gl->screenSize[1];
+
+    float r = width;
+    float l = 0.0;
+    float b = height;
+    float t = 0.0;
+    float n = -1.0;
+    float f = 1.0;
+
+    // could be simplified, exposing it like this for comprehension
+    projectionMatrix[0] = 2.0 / (r-l);
+    projectionMatrix[5] = 2.0 / (t-b);
+    projectionMatrix[10] = 2.0 / (f-n);
+    projectionMatrix[12] = -(r+l)/(r-l);
+    projectionMatrix[13] = -(t+b)/(t-b);
+    projectionMatrix[14] = -(f+n)/(f-n);
+    projectionMatrix[15] = 1.0;
 }
 
 void glfonsDelete(FONScontext* ctx) {

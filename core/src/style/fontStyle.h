@@ -41,11 +41,22 @@ public:
 
     virtual ~FontStyle();
 
+    /* 
+     * fontstash callbacks 
+     */
+
+    /* Called by fontstash when the texture need to create a new transform textures */
     friend void createTexTransforms(void* _userPtr, unsigned int _width, unsigned int _height);
+
+    /* Called by fontsash when the texture need to be updated */
     friend void updateTransforms(void* _userPtr, unsigned int _xoff, unsigned int _yoff,
                             unsigned int _width, unsigned int _height, const unsigned int* _pixels);
+
+    /* Called by fontstash when the atlas need to update the atlas texture */
     friend void updateAtlas(void* _userPtr, unsigned int _xoff, unsigned int _yoff,
                             unsigned int _width, unsigned int _height, const unsigned int* _pixels);
+
+    /* Called by fontstash when the atlas need to be created */
     friend void createAtlas(void* _usrPtr, unsigned int _width, unsigned int _height);
 
 private:
@@ -58,10 +69,11 @@ private:
     std::map<TileID, GLuint> m_tileTexTransforms;
     std::map<TileID, std::vector<fsuint>> m_tileLabels;
 
+    /* Since the fontstash callbacks are called from threads, we enqueue them */
     std::stack<TileTransform> m_pendingTexTransformsData;
     std::stack<Atlas> m_pendingTexAtlasData;
     std::stack<std::pair<MapTile*, glm::vec2>> m_pendingTileTexTransforms;
-    
+
     MapTile* m_processedTile;
     GLuint m_atlas;
     FONScontext* m_fontContext;

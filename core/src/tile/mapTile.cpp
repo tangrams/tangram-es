@@ -61,6 +61,7 @@ void MapTile::draw(const Style& _style, const glm::dmat4& _viewProjMatrix) {
         
             shader->setUniformi("u_transforms", 1); // transform texture
         }
+
         shader->setUniformMatrix4f("u_modelViewProj", &fmvp[0]);
 
         styleMesh->draw(shader);
