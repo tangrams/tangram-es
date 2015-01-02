@@ -80,7 +80,7 @@ public:
     virtual void addData(TileData& _data, MapTile& _tile, const MapProjection& _mapProjection);
     
     /* Perform any setup needed before drawing each frame */
-    virtual void setup() = 0;
+    virtual void setup(glm::dmat4& _viewProj) = 0;
 
     std::shared_ptr<ShaderProgram> getShaderProgram() const { return m_shaderProgram; }
     std::string getName() const { return m_name; }

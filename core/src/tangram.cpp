@@ -125,7 +125,7 @@ void render() {
     // Loop over all styles
     for (const auto& style : m_scene->getStyles()) {
 
-        style->setup();
+        style->setup(viewProj);
 
         // TODO : use gl capabilities management
         if(dynamic_cast<FontStyle*>(style.get())) {

@@ -7,11 +7,11 @@
 #include <mutex>
 
 struct TextureData {
-    const unsigned int* m_pixels = nullptr;
-    unsigned int m_xoff = 0;
-    unsigned int m_yoff = 0;
-    unsigned int m_width = 0;
-    unsigned int m_height = 0;
+    const unsigned int* m_pixels;
+    unsigned int m_xoff;
+    unsigned int m_yoff;
+    unsigned int m_width;
+    unsigned int m_height;
 };
 
 struct Atlas : TextureData { };
@@ -37,7 +37,7 @@ public:
 
     FontStyle(const std::string& _fontFile, std::string _name, GLenum _drawMode = GL_TRIANGLES);
 
-    virtual void setup() override;
+    virtual void setup(glm::dmat4& _viewProj) override;
 
     virtual ~FontStyle();
 
@@ -73,6 +73,11 @@ private:
     std::queue<TileTransform> m_pendingTexTransformsData;
     std::queue<Atlas> m_pendingTexAtlasData;
     std::queue<std::pair<MapTile*, glm::vec2>> m_pendingTileTexTransforms;
+
+    glm::dmat4 m_viewProj;
+
+    int m_screenWidth;
+    int m_screenHeight;
 
     MapTile* m_processedTile;
     GLuint m_atlas;

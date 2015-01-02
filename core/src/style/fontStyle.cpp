@@ -1,6 +1,7 @@
 #include "fontStyle.h"
 #define GLFONTSTASH_IMPLEMENTATION
 #include "fontstash/glfontstash.h"
+#include "glm/gtc/matrix_transform.hpp"
 
 FontStyle::FontStyle(const std::string& _fontFile, std::string _name, GLenum _drawMode) : Style(_name, _drawMode) {
     constructVertexLayout();
@@ -50,15 +51,37 @@ void FontStyle::buildLine(Line& _line, std::string& _layer, Properties& _props, 
         for (auto prop : _props.stringProps) {
             if (prop.first.compare("name") == 0) {
                 fsuint textId;
+                float alpha = 1.0;
 
                 glfonsGenText(m_fontContext, 1, &textId);
                 glfonsRasterize(m_fontContext, textId, prop.second.c_str(), FONS_EFFECT_NONE);
 
                 m_tileLabels[m_processedTile->getID()].push_back(textId);
 
-                // TODO : actual label positioning
-                static int y = 0;
-                glfonsTransform(m_fontContext, textId, 50.0, 200.0 + 15.0 * y++, 0.0, 1.0);
+                glm::dvec4 p1 = glm::dvec4(_line[0] * m_processedTile->getScale(), 1.0);
+                glm::dvec4 p2 = glm::dvec4(_line[_line.size() - 1] * m_processedTile->getScale(), 1.0);
+
+                glm::dvec2 origin = m_processedTile->getOrigin();
+                glm::dmat4 modelMatrix = glm::translate(glm::dmat4(1.0), glm::dvec3(origin.x, origin.y, 0.0));
+
+                glm::dvec4 middle = (p1 + p2) / 2.0;
+
+                middle = m_viewProj * m_processedTile->getProjection() * middle;
+
+                middle = middle / middle.w;
+
+                middle.x =  (middle.x * m_screenWidth / 2.0) + m_screenWidth / 2.0;
+                middle.y = -(middle.y * m_screenHeight / 2.0) + m_screenHeight / 2.0;
+
+                if(middle.x > m_screenWidth || middle.x < 0) {
+                    alpha = 0.0;
+                }
+
+                if(middle.y > m_screenHeight || middle.y < 0) {
+                    alpha = 0.0;
+                }
+
+                glfonsTransform(m_fontContext, textId, middle.x, middle.y, 0.0, alpha);
             }
         }
     }
@@ -95,13 +118,19 @@ void FontStyle::finishDataProcessing(MapTile& _tile) {
     m_buildMutex.unlock();
 }
 
-void FontStyle::setup() {
+void FontStyle::setup(glm::dmat4& _viewProj) {
+    m_viewProj = _viewProj;
+
     // TODO : use the platform to get those values
     GLint viewport[4];
     float projectionMatrix[16] = {0};
 
     glGetIntegerv(GL_VIEWPORT, viewport);
-    glfonsScreenSize(m_fontContext, (int) viewport[2], (int) viewport[3]);
+
+    m_screenWidth = (int) viewport[2];
+    m_screenHeight = (int) viewport[3];
+
+    glfonsScreenSize(m_fontContext, m_screenWidth, m_screenHeight);
     glfonsProjection(m_fontContext, projectionMatrix);
 
     // process pending opengl texture updates / creation
