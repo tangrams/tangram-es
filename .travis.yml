@@ -1,0 +1,11 @@
+language: cpp
+
+matrix:
+    include:
+        - os: osx
+          compiler: clang
+
+script: make tests
+
+# Change this to your needs
+    # script: ./configure && make
