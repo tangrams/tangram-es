@@ -31,7 +31,7 @@ void PolygonStyle::constructShaderProgram() {
     
 }
 
-void PolygonStyle::setup(glm::dmat4& _viewProj) {
+void PolygonStyle::setup(View& _view) {
     m_shaderProgram->setUniformf("u_lightDirection", -1.0, -1.0, 1.0);
 }
 

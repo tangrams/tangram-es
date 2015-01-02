@@ -105,19 +105,10 @@ void FontStyle::finishDataProcessing(MapTile& _tile) {
     m_buildMutex.unlock();
 }
 
-void FontStyle::setup(glm::dmat4& _viewProj) {
-    m_viewProj = _viewProj;
-
-    // TODO : use the platform to get those values
-    GLint viewport[4];
+void FontStyle::setup(View& _view) {
     float projectionMatrix[16] = {0};
 
-    glGetIntegerv(GL_VIEWPORT, viewport);
-
-    m_screenWidth = (int) viewport[2];
-    m_screenHeight = (int) viewport[3];
-
-    glfonsScreenSize(m_fontContext, m_screenWidth, m_screenHeight);
+    glfonsScreenSize(m_fontContext, _view.getWidth(), _view.getHeight());
     glfonsProjection(m_fontContext, projectionMatrix);
 
     // process pending opengl texture updates / creation
@@ -174,7 +165,7 @@ void FontStyle::setup(glm::dmat4& _viewProj) {
 
     m_shaderProgram->setUniformi("u_tex", 0); // atlas
     m_shaderProgram->setUniformf("u_tresolution", 32, 64); // resolution of transform texture
-    m_shaderProgram->setUniformf("u_resolution", (float) viewport[2], (float) viewport[2]);
+    m_shaderProgram->setUniformf("u_resolution", _view.getWidth(), _view.getHeight());
     m_shaderProgram->setUniformf("u_color", 1.0, 1.0, 1.0);
     m_shaderProgram->setUniformMatrix4f("u_proj", projectionMatrix);
 }

@@ -33,7 +33,7 @@ void PolylineStyle::constructShaderProgram() {
     
 }
 
-void PolylineStyle::setup(glm::dmat4& _viewProj) {
+void PolylineStyle::setup(View& _view) {
     clock_t t = clock();
     m_shaderProgram->setUniformf("u_lightDirection", -1.0, -1.0, 1.0);
     m_shaderProgram->setUniformf("u_time", ((float)t)/CLOCKS_PER_SEC);

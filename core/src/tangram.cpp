@@ -39,14 +39,14 @@ void initialize() {
         m_scene = std::make_shared<Scene>();
         
         // Load style(s); hard-coded for now
-        /*std::unique_ptr<Style> polyStyle(new PolygonStyle("Polygon"));
+        std::unique_ptr<Style> polyStyle(new PolygonStyle("Polygon"));
         polyStyle->addLayers({
             "buildings",
             "water",
             "earth",
             "landuse"
         });
-        m_scene->addStyle(std::move(polyStyle));*/
+        m_scene->addStyle(std::move(polyStyle));
         
         std::unique_ptr<Style> linesStyle(new PolylineStyle("Polyline"));
         linesStyle->addLayers({"roads"});
@@ -136,7 +136,7 @@ void render() {
     // Loop over all styles
     for (const auto& style : m_scene->getStyles()) {
 
-        style->setup(viewProj);
+        style->setup(*m_view.get());
 
         // TODO : use gl capabilities management
         if(dynamic_cast<FontStyle*>(style.get())) {
