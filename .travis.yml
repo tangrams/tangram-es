@@ -5,6 +5,18 @@ matrix:
         - os: osx
           compiler: clang
 
+os: osx
+
+before_install:
+    - brew update
+    - brew install makedepend git
+
+install: ulimit -c
+
+before_script: 
+    # Set the core file limit to unlimited so a core file is generated upon crash
+    - ulimit -c unlimited -S
+
 script: make tests
 
 # Change this to your needs
