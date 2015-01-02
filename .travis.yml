@@ -25,7 +25,7 @@ before_script:
 
 # build test project
 script: 
-    - source script.sh
+    - source ./travis/script.sh
 
 # Change this to your needs
     # script: ./configure && make
