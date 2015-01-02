@@ -1,3 +1,4 @@
+#language: cpp
 language: objective-c
 
 matrix:
@@ -5,11 +6,16 @@ matrix:
         - os: osx
           compiler: clang
 
-os: osx
+# enabling multi platform build (under travis beta)
+# requires emailing support@travis-ci.com for this to be enabled for our repo
+# http://docs.travis-ci.com/user/multi-os/
+# For now cheat to set language to objective-c
+#os:
+#    - linux
+#    - osx
 
 before_install:
-    - brew update
-    - brew install makedepend git
+    - source ./travis/before_install.sh
 
 install: ulimit -c
 
@@ -17,7 +23,9 @@ before_script:
     # Set the core file limit to unlimited so a core file is generated upon crash
     - ulimit -c unlimited -S
 
-script: make tests
+# build test project
+script: 
+    - source script.sh
 
 # Change this to your needs
     # script: ./configure && make
