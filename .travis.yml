@@ -29,5 +29,10 @@ script:
     - source ./travis/script_run_tests.sh
     - source ./travis/script_build_osx.sh
 
+branches:
+  only:
+      - master
+      - ci
+
 # Change this to your needs
     # script: ./configure && make
