@@ -40,7 +40,10 @@ public:
     /* Returns the reciprocal of <getScale()> */
     float getInverseScale() const { return m_inverseScale; }
 
-    /* Adds drawable geometry to the tile and associates it with a <Style> 
+    /* Returns the model matrix */
+    const glm::dmat4& getModelMatrix() const { return m_modelMatrix; }
+
+    /* Adds drawable geometry to the tile and associates it with a <Style>
      * 
      * Use std::move to pass in the mesh by move semantics; Geometry in the mesh must have coordinates relative to
      * the tile origin.

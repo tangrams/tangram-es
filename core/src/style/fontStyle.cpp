@@ -58,15 +58,13 @@ void FontStyle::buildLine(Line& _line, std::string& _layer, Properties& _props, 
 
                 m_tileLabels[m_processedTile->getID()].push_back(textId);
 
-                glm::dvec4 p1 = glm::dvec4(_line[0] * m_processedTile->getScale(), 1.0);
-                glm::dvec4 p2 = glm::dvec4(_line[_line.size() - 1] * m_processedTile->getScale(), 1.0);
+                glm::dvec4 p1 = glm::dvec4(_line[0], 1.0);
+                glm::dvec4 p2 = glm::dvec4(_line[_line.size() - 1], 1.0);
 
                 glm::dvec2 origin = m_processedTile->getOrigin();
-                glm::dmat4 modelMatrix = glm::translate(glm::dmat4(1.0), glm::dvec3(origin.x, origin.y, 0.0));
-
                 glm::dvec4 middle = (p1 + p2) / 2.0;
 
-                middle = m_viewProj * m_processedTile->getProjection() * middle;
+                middle = m_viewProj * m_processedTile->getModelMatrix() * middle;
 
                 middle = middle / middle.w;
 
