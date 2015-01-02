@@ -40,6 +40,45 @@ void MapTile::addGeometry(const Style& _style, std::unique_ptr<VboMesh> _mesh) {
 
 }
 
+void MapTile::addLabel(std::unique_ptr<Label> _label) {
+
+    m_labels.push_back(std::move(_label));
+
+}
+
+void MapTile::update(float _dt, const glm::dmat4& _viewProjMatrix, const glm::vec2& _screenSize) {
+
+    // update label positions
+    if (m_labels.size() > 0) {
+        FONScontext* ctx = m_labels[0]->m_fontContext;
+        glfonsBindBuffer(ctx, m_textBuffer);
+
+        for (auto& label : m_labels) {
+
+            float alpha = label->m_alpha;
+
+            glm::dvec4 position = glm::dvec4(label->m_worldPosition, 0.0, 1.0);
+
+            // project to screen and perform perspective division
+            position = _viewProjMatrix * m_modelMatrix * position;
+            position = position / position.w;
+
+            // from normalized device coordinates to screen space coordinate system
+            position.x =  (position.x * _screenSize.x / 2.0) + _screenSize.x / 2.0;
+            position.y = -(position.y * _screenSize.y / 2.0) + _screenSize.y / 2.0;
+
+            alpha = position.x > _screenSize.x || position.x < 0 ? 0.0 : alpha;
+            alpha = position.y > _screenSize.y || position.y < 0 ? 0.0 : alpha;
+        
+            glfonsTransform(ctx, label->m_id, position.x, position.y, 0.0, alpha);
+        }
+
+        glfonsUpdateTransforms(ctx);
+        glfonsBindBuffer(ctx, 0);
+    }
+    
+}
+
 void MapTile::draw(const Style& _style, const glm::dmat4& _viewProjMatrix) {
 
     const std::unique_ptr<VboMesh>& styleMesh = m_geometry[_style.getName()];

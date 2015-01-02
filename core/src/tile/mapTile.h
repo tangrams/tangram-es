@@ -5,6 +5,7 @@
 
 #include "glm/glm.hpp"
 
+#include "label.h"
 #include "util/vboMesh.h"
 #include "util/mapProjection.h"
 #include "fontstash/glfontstash.h"
@@ -61,6 +62,10 @@ public:
 
     GLuint getTexTansformName() const { return m_textureTransform; }
 
+    void addLabel(std::unique_ptr<Label> _label);
+
+    void update(float _dt, const glm::dmat4& _viewProjMatrix, const glm::vec2& _screenSize);
+
 private:
 
     TileID m_id;
@@ -79,5 +84,7 @@ private:
 
     fsuint m_textBuffer;
     GLuint m_textureTransform;
+
+    std::vector<std::unique_ptr<Label>> m_labels;
 };
 

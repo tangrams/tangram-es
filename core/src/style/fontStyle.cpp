@@ -51,40 +51,29 @@ void FontStyle::buildLine(Line& _line, std::string& _layer, Properties& _props, 
         for (auto prop : _props.stringProps) {
             if (prop.first.compare("name") == 0) {
                 fsuint textId;
-                float alpha = 1.0;
 
                 glfonsGenText(m_fontContext, 1, &textId);
                 glfonsRasterize(m_fontContext, textId, prop.second.c_str(), FONS_EFFECT_NONE);
 
-                m_tileLabels[m_processedTile->getID()].push_back(textId);
+                glm::dvec2 p1 = glm::dvec2(_line[0]);
+                glm::dvec2 p2 = glm::dvec2(_line[_line.size() - 1]);
 
-                glm::dvec4 p1 = glm::dvec4(_line[0], 1.0);
-                glm::dvec4 p2 = glm::dvec4(_line[_line.size() - 1], 1.0);
+                glm::dvec2 middle = (p1 + p2) / 2.0;
 
-                glm::dvec2 origin = m_processedTile->getOrigin();
-                glm::dvec4 middle = (p1 + p2) / 2.0;
+                std::unique_ptr<Label> label(new Label {
+                    m_fontContext,
+                    textId,
+                    prop.second.c_str(),
+                    middle, // world position
+                    0.0,    // alpha
+                    0.0     // rotation
+                });
 
-                middle = m_viewProj * m_processedTile->getModelMatrix() * middle;
-
-                middle = middle / middle.w;
-
-                middle.x =  (middle.x * m_screenWidth / 2.0) + m_screenWidth / 2.0;
-                middle.y = -(middle.y * m_screenHeight / 2.0) + m_screenHeight / 2.0;
-
-                if(middle.x > m_screenWidth || middle.x < 0) {
-                    alpha = 0.0;
-                }
-
-                if(middle.y > m_screenHeight || middle.y < 0) {
-                    alpha = 0.0;
-                }
-
-                glfonsTransform(m_fontContext, textId, middle.x, middle.y, 0.0, alpha);
+                m_processedTile->addLabel(std::move(label));
             }
         }
     }
 
-    glfonsUpdateTransforms(m_fontContext);
     fonsClearState(m_fontContext);
 
     if (glfonsVertices(m_fontContext, &vertData, &nVerts)) {

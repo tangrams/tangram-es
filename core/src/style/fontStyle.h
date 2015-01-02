@@ -2,6 +2,7 @@
 
 #include "style.h"
 #include "fontstash/glfontstash.h"
+#include "label.h"
 #include <map>
 #include <queue>
 #include <mutex>
@@ -67,7 +68,6 @@ private:
 
     // TODO : move some of these into tile
     std::map<TileID, GLuint> m_tileTexTransforms;
-    std::map<TileID, std::vector<fsuint>> m_tileLabels;
 
     /* Since the fontstash callbacks are called from threads, we enqueue them */
     std::queue<TileTransform> m_pendingTexTransformsData;

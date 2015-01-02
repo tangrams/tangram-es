@@ -63,6 +63,9 @@ public:
     
     /* Gets the position of the view in projection units (z is the effective 'height' determined from zoom) */
     const glm::dvec3& getPosition() const { return m_pos; };
+
+    /* Gets a boolean indicating whether the view has changed */
+    bool hasChanged() const { return m_dirty; }
     
     const glm::dmat4& getViewMatrix() const { return m_view; }
     const glm::dmat4& getProjectionMatrix() const { return m_proj; };

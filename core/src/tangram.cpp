@@ -30,7 +30,7 @@ void initialize() {
         m_view = std::make_shared<View>();
         
         // Move the view to coordinates in Manhattan so we have something interesting to test
-        glm::dvec2 target = m_view->getMapProjection().LonLatToMeters(glm::dvec2(-74.00796, 40.70361));
+        glm::dvec2 target = m_view->getMapProjection().LonLatToMeters(glm::dvec2(-74.77294921875, 40.77638178482896));
         m_view->setPosition(target.x, target.y);
     }
 
@@ -39,14 +39,14 @@ void initialize() {
         m_scene = std::make_shared<Scene>();
         
         // Load style(s); hard-coded for now
-        std::unique_ptr<Style> polyStyle(new PolygonStyle("Polygon"));
+        /*std::unique_ptr<Style> polyStyle(new PolygonStyle("Polygon"));
         polyStyle->addLayers({
             "buildings",
             "water",
             "earth",
             "landuse"
         });
-        m_scene->addStyle(std::move(polyStyle));
+        m_scene->addStyle(std::move(polyStyle));*/
         
         std::unique_ptr<Style> linesStyle(new PolylineStyle("Polyline"));
         linesStyle->addLayers({"roads"});
@@ -105,6 +105,17 @@ void resize(int _newWidth, int _newHeight) {
 
 void update(float _dt) {
 
+    if (m_view->hasChanged()) {
+        for (const auto& mapIDandTile : m_tileManager->getVisibleTiles()) {
+            const std::unique_ptr<MapTile>& tile = mapIDandTile.second;
+
+            if (tile) {
+                tile->update(_dt, m_view->getViewProjectionMatrix(),
+                             glm::vec2(m_view->getWidth(), m_view->getHeight()));
+            }
+        }
+    }
+
     if (m_view) {
         m_view->update();
     }
@@ -112,7 +123,7 @@ void update(float _dt) {
     if (m_tileManager) {
         m_tileManager->updateTileSet();
     }
-
+    
 }
 
 void render() {

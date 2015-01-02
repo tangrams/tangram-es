@@ -20,6 +20,7 @@
 #define GLFONTSTASH_H
 
 #include <unordered_map>
+#include <vector>
 
 #include "fontstash.h"
 
