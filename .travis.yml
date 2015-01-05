@@ -1,18 +1,18 @@
-#language: cpp
-language: objective-c
+language: cpp
 
 matrix:
     include:
         - os: osx
           compiler: clang
+        - os: linux
+          compiler: gcc
 
 # enabling multi platform build (under travis beta)
 # requires emailing support@travis-ci.com for this to be enabled for our repo
 # http://docs.travis-ci.com/user/multi-os/
-# For now cheat to set language to objective-c
-#os:
-#    - linux
-#    - osx
+os:
+    - linux
+    - osx
 
 before_install:
     - source ./travis/before_install.sh
