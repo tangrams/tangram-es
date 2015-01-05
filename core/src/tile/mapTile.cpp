@@ -24,8 +24,6 @@ MapTile::MapTile(TileID _id, const MapProjection& _projection) : m_id(_id),  m_p
     // Scale model matrix to size of tile
     m_modelMatrix = glm::scale(m_modelMatrix, glm::dvec3(m_scale));
 
-    m_textureTransform = 0;
-
 }
 
 MapTile::~MapTile() {
@@ -46,6 +44,39 @@ void MapTile::addLabel(const Style& _style, std::unique_ptr<Label> _label) {
 
 }
 
+void MapTile::setTextBuffer(const Style& _style, fsuint _textBuffer) {
+
+    m_textBuffer[_style.getName()] = _textBuffer;
+
+}
+
+fsuint MapTile::getTextBuffer(const Style& _style) const {
+
+    auto it = m_textBuffer.find(_style.getName());
+
+    if (it != m_textBuffer.end()) {
+        return it->second;
+    }
+
+    return 0;
+}
+
+void MapTile::setTexTransform(const Style& _style, GLuint _textureName) {
+
+    m_textureTransform[_style.getName()] = _textureName;
+}
+
+GLuint MapTile::getTexTansformName(const Style& _style) const {
+
+    auto it = m_textureTransform.find(_style.getName());
+
+    if (it != m_textureTransform.end()) {
+        return it->second;
+    }
+
+    return 0; // non-valid texture name
+}
+
 void MapTile::update(float _dt, const Style& _style, View& _view) {
 
     // update label positions
@@ -55,7 +86,7 @@ void MapTile::update(float _dt, const Style& _style, View& _view) {
 
         ctx->m_contextMutex->lock();
 
-        glfonsBindBuffer(ctx->m_fsContext, m_textBuffer);
+        glfonsBindBuffer(ctx->m_fsContext, getTextBuffer(_style));
 
         for (auto& label : m_labels[_style.getName()]) {
 
@@ -100,9 +131,10 @@ void MapTile::draw(const Style& _style, const glm::dmat4& _viewProjMatrix) {
         std::vector<float> fmvp(first, first + 16);
 
         // TODO : active textures only when style needs it
-        if(m_textureTransform != 0) {
+        GLuint textureName = getTexTansformName(_style);
+        if(textureName != 0) {
             glActiveTexture(GL_TEXTURE1);
-            glBindTexture(GL_TEXTURE_2D, m_textureTransform);
+            glBindTexture(GL_TEXTURE_2D, textureName);
         
             shader->setUniformi("u_transforms", 1); // transform texture
         }

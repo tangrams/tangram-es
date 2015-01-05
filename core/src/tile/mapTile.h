@@ -42,9 +42,6 @@ public:
     /* Returns the reciprocal of <getScale()> */
     float getInverseScale() const { return m_inverseScale; }
 
-    /* Returns the model matrix */
-    const glm::dmat4& getModelMatrix() const { return m_modelMatrix; }
-
     /* Adds drawable geometry to the tile and associates it with a <Style>
      * 
      * Use std::move to pass in the mesh by move semantics; Geometry in the mesh must have coordinates relative to
@@ -55,13 +52,13 @@ public:
     /* Draws the geometry associated with the provided <Style> and view-projection matrix */
     void draw(const Style& _style, const glm::dmat4& _viewProjMatrix);
 
-    void setTextBuffer(fsuint _textBuffer) { m_textBuffer = _textBuffer; }
+    void setTextBuffer(const Style& _style, fsuint _textBuffer);
 
-    fsuint getTextBuffer() const { return m_textBuffer; }
+    fsuint getTextBuffer(const Style& _style) const;
 
-    void setTexTransform(GLuint _textureName) { m_textureTransform = _textureName; }
+    void setTexTransform(const Style& _style, GLuint _textureName);
 
-    GLuint getTexTansformName() const { return m_textureTransform; }
+    GLuint getTexTansformName(const Style& _style) const;
 
     void addLabel(const Style& _style, std::unique_ptr<Label> _label);
 
@@ -82,9 +79,7 @@ private:
     glm::dmat4 m_modelMatrix; // Translation matrix from world origin to tile origin
 
     std::unordered_map<std::string, std::unique_ptr<VboMesh>> m_geometry; // Map of <Style>s and their associated <VboMesh>es
-
-    fsuint m_textBuffer;
-    GLuint m_textureTransform;
-
-    std::unordered_map<std::string, std::vector<std::unique_ptr<Label>>> m_labels;
+    std::unordered_map<std::string, fsuint> m_textBuffer; // Map of <Style>s and the associated text buffer
+    std::unordered_map<std::string, GLuint> m_textureTransform; // Map of <Style>s and the associated texture transform name
+    std::unordered_map<std::string, std::vector<std::unique_ptr<Label>>> m_labels; // Map of <Style>s and their associated <Label>s
 };

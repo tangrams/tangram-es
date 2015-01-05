@@ -93,7 +93,7 @@ void FontStyle::prepareDataProcessing(MapTile& _tile) {
     fsuint buffer;
     
     glfonsBufferCreate(m_fontContext->m_fsContext, 32, &buffer);
-    _tile.setTextBuffer(buffer);
+    _tile.setTextBuffer(*this, buffer);
     glfonsBindBuffer(m_fontContext->m_fsContext, buffer);
 }
 
@@ -125,7 +125,7 @@ void FontStyle::setup(View& _view) {
         glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, size.x, size.y, 0, GL_RGBA, GL_UNSIGNED_BYTE, 0);
         glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
 
-        tile->setTexTransform(texTransform);
+        tile->setTexTransform(*this, texTransform);
         
         m_tileTexTransforms[tile->getID()] = texTransform;
 
