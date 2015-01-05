@@ -6,6 +6,7 @@ set(SOURCE_DIR src)
 
 add_subdirectory("${INCLUDE_DIR}/jsoncpp")
 add_subdirectory("${INCLUDE_DIR}/glm")
+add_subdirectory("${INCLUDE_DIR}/libtess2")
 
 file(GLOB_RECURSE FOUND_HEADERS "${SOURCE_DIR}/*.h")
 file(GLOB_RECURSE FOUND_SOURCES "${SOURCE_DIR}/*.cpp")
@@ -27,7 +28,7 @@ if(NOT DEFINED CORE_LIB_NAME)
 endif()
 
 add_library(${CORE_LIB_NAME} ${CORE_LIB_TYPE} ${FOUND_SOURCES})
-target_link_libraries(${CORE_LIB_NAME} json ${CORE_LIB_DEPS})
+target_link_libraries(${CORE_LIB_NAME} json libtess2 ${CORE_LIB_DEPS})
 
 # post build commands
 add_custom_command(TARGET ${CORE_LIB_NAME}
