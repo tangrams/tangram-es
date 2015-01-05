@@ -10,9 +10,9 @@ matrix:
 # enabling multi platform build (under travis beta)
 # requires emailing support@travis-ci.com for this to be enabled for our repo
 # http://docs.travis-ci.com/user/multi-os/
-os:
-    - linux
-    - osx
+#os:
+#    - linux
+#    - osx
 
 before_install:
     - source ./travis/before_install.sh
