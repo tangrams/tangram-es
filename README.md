@@ -1,7 +1,7 @@
 tangram-es
 ==========
 
-[![Travis CI Build Status](https://travis-ci.org/tangrams/tangram-es.svg?branch=ci)][1]
+[![Travis CI Build Status](https://travis-ci.org/tangrams/tangram-es.svg?branch=master)][1]
 
 OpenGL ES version of Tangram for mobile devices - EARLY work-in-progress!
 
