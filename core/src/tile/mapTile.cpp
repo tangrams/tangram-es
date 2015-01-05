@@ -47,7 +47,7 @@ void MapTile::addLabel(std::unique_ptr<Label> _label) {
 
 }
 
-void MapTile::update(float _dt, const glm::dmat4& _viewProjMatrix, const glm::vec2& _screenSize) {
+void MapTile::update(float _dt, View& _view) {
 
     // update label positions
     if (m_labels.size() > 0) {
@@ -65,15 +65,15 @@ void MapTile::update(float _dt, const glm::dmat4& _viewProjMatrix, const glm::ve
             glm::dvec4 position = glm::dvec4(label->m_worldPosition, 0.0, 1.0);
 
             // project to screen and perform perspective division
-            position = _viewProjMatrix * m_modelMatrix * position;
+            position = _view.getViewProjectionMatrix() * m_modelMatrix * position;
             position = position / position.w;
 
             // from normalized device coordinates to screen space coordinate system
-            position.x =  (position.x * _screenSize.x / 2.0) + _screenSize.x / 2.0;
-            position.y = -(position.y * _screenSize.y / 2.0) + _screenSize.y / 2.0;
+            position.x = (position.x * _view.getWidth() * 0.5) + _view.getWidth() * 0.5;
+            position.y = -(position.y * _view.getHeight() * 0.5) + _view.getHeight() * 0.5;
 
-            alpha = position.x > _screenSize.x || position.x < 0 ? 0.0 : alpha;
-            alpha = position.y > _screenSize.y || position.y < 0 ? 0.0 : alpha;
+            alpha = position.x > _view.getWidth() || position.x < 0 ? 0.0 : alpha;
+            alpha = position.y > _view.getHeight() || position.y < 0 ? 0.0 : alpha;
 
             glfonsTransform(ctx->m_fsContext, label->m_id, position.x, position.y, 0.0, alpha);
         }

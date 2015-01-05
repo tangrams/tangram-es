@@ -6,6 +6,7 @@
 #include "glm/glm.hpp"
 
 #include "label.h"
+#include "view/view.h"
 #include "util/vboMesh.h"
 #include "util/mapProjection.h"
 #include "fontstash/glfontstash.h"
@@ -64,7 +65,7 @@ public:
 
     void addLabel(std::unique_ptr<Label> _label);
 
-    void update(float _dt, const glm::dmat4& _viewProjMatrix, const glm::vec2& _screenSize);
+    void update(float _dt, View& _view);
 
 private:
 

@@ -114,8 +114,7 @@ void update(float _dt) {
                 const std::unique_ptr<MapTile>& tile = mapIDandTile.second;
 
                 if (tile) {
-                    tile->update(_dt, m_view->getViewProjectionMatrix(),
-                                 glm::vec2(m_view->getWidth(), m_view->getHeight()));
+                    tile->update(_dt, *m_view);
                 }
             }
         }
