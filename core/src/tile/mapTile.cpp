@@ -79,16 +79,18 @@ GLuint MapTile::getTexTansformName(const Style& _style) const {
 
 void MapTile::update(float _dt, const Style& _style, View& _view) {
 
-    // update label positions
-    if (m_labels[_style.getName()].size() > 0) {
+    auto& labels = m_labels[_style.getName()];
 
-        std::shared_ptr<FontContext> ctx = m_labels[_style.getName()][0]->m_fontContext;
+    // update label positions
+    if (labels.size() > 0) {
+
+        std::shared_ptr<FontContext> ctx = labels[0]->m_fontContext;
 
         ctx->m_contextMutex->lock();
 
         glfonsBindBuffer(ctx->m_fsContext, getTextBuffer(_style));
 
-        for (auto& label : m_labels[_style.getName()]) {
+        for (auto& label : labels) {
 
             float alpha = label->m_alpha;
 
