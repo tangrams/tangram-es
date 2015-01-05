@@ -10,7 +10,7 @@ FontStyle::FontStyle(const std::string& _fontFile, std::string _name, GLenum _dr
 }
 
 FontStyle::~FontStyle() {
-    glfonsDelete(m_fontContext);
+    glfonsDelete(m_fontContext->m_fsContext);
     for (auto pair : m_tileTexTransforms) {
         glDeleteTextures(1, &pair.second);
     }
@@ -44,16 +44,16 @@ void FontStyle::buildLine(Line& _line, std::string& _layer, Properties& _props, 
     std::vector<float> vertData;
     int nVerts = 0;
 
-    fonsSetSize(m_fontContext, 12.0);
-    fonsSetFont(m_fontContext, m_font);
+    fonsSetSize(m_fontContext->m_fsContext, 12.0);
+    fonsSetFont(m_fontContext->m_fsContext, m_font);
 
     if (_layer.compare("roads") == 0) {
         for (auto prop : _props.stringProps) {
             if (prop.first.compare("name") == 0) {
                 fsuint textId;
 
-                glfonsGenText(m_fontContext, 1, &textId);
-                glfonsRasterize(m_fontContext, textId, prop.second.c_str(), FONS_EFFECT_NONE);
+                glfonsGenText(m_fontContext->m_fsContext, 1, &textId);
+                glfonsRasterize(m_fontContext->m_fsContext, textId, prop.second.c_str(), FONS_EFFECT_NONE);
 
                 glm::dvec2 p1 = glm::dvec2(_line[0]);
                 glm::dvec2 p2 = glm::dvec2(_line[_line.size() - 1]);
@@ -74,9 +74,9 @@ void FontStyle::buildLine(Line& _line, std::string& _layer, Properties& _props, 
         }
     }
 
-    fonsClearState(m_fontContext);
+    fonsClearState(m_fontContext->m_fsContext);
 
-    if (glfonsVertices(m_fontContext, &vertData, &nVerts)) {
+    if (glfonsVertices(m_fontContext->m_fsContext, &vertData, &nVerts)) {
         _mesh.addVertices((GLbyte*)vertData.data(), nVerts);
     }
 }
@@ -86,30 +86,30 @@ void FontStyle::buildPolygon(Polygon& _polygon, std::string& _layer, Properties&
 }
 
 void FontStyle::prepareDataProcessing(MapTile& _tile) {
-    m_buildMutex.lock();
+    m_fontContext->m_contextMutex->lock();
 
     m_processedTile = &_tile;
 
     fsuint buffer;
     
-    glfonsBufferCreate(m_fontContext, 32, &buffer);
+    glfonsBufferCreate(m_fontContext->m_fsContext, 32, &buffer);
     _tile.setTextBuffer(buffer);
-    glfonsBindBuffer(m_fontContext, buffer);
+    glfonsBindBuffer(m_fontContext->m_fsContext, buffer);
 }
 
 void FontStyle::finishDataProcessing(MapTile& _tile) {
-    glfonsBindBuffer(m_fontContext, 0);
+    glfonsBindBuffer(m_fontContext->m_fsContext, 0);
 
     m_processedTile = nullptr;
 
-    m_buildMutex.unlock();
+    m_fontContext->m_contextMutex->unlock();
 }
 
 void FontStyle::setup(View& _view) {
     float projectionMatrix[16] = {0};
 
-    glfonsScreenSize(m_fontContext, _view.getWidth(), _view.getHeight());
-    glfonsProjection(m_fontContext, projectionMatrix);
+    glfonsScreenSize(m_fontContext->m_fsContext, _view.getWidth(), _view.getHeight());
+    glfonsProjection(m_fontContext->m_fsContext, projectionMatrix);
 
     // process pending opengl texture updates / creation
     while (m_pendingTileTexTransforms.size() > 0) {
@@ -232,14 +232,19 @@ void FontStyle::initFontContext(const std::string& _fontFile) {
     params.updateAtlas = updateAtlas;
     params.updateTransforms = updateTransforms;
 
-    m_fontContext = glfonsCreate(atlasWidth, atlasHeight, FONS_ZERO_TOPLEFT, params, (void*) this);
+    FONScontext* context = glfonsCreate(atlasWidth, atlasHeight, FONS_ZERO_TOPLEFT, params, (void*) this);
 
     unsigned int dataSize;
     unsigned char* data = bytesFromResource(_fontFile.c_str(), &dataSize);
-    m_font = fonsAddFont(m_fontContext, "droid-serif", data, dataSize);
+    m_font = fonsAddFont(context, "droid-serif", data, dataSize);
 
     if (m_font == FONS_INVALID) {
         logMsg("Error loading font file %s\n", _fontFile.c_str());
     }
+
+    m_fontContext = std::shared_ptr<FontContext>(new FontContext {
+        std_patch::make_unique<std::mutex>(),
+        context
+    });
 
 }

@@ -2,8 +2,11 @@
 
 #include "style.h"
 #include "fontstash/glfontstash.h"
+#include "text/fontContext.h"
 #include "label.h"
+#include "stl_util.hpp"
 #include <map>
+#include <memory>
 #include <queue>
 #include <mutex>
 
@@ -76,7 +79,5 @@ private:
 
     MapTile* m_processedTile;
     GLuint m_atlas;
-    FONScontext* m_fontContext;
-
-    std::mutex m_buildMutex;
+    std::shared_ptr<FontContext> m_fontContext;
 };

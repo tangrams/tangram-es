@@ -1,11 +1,12 @@
 #pragma once
 
 #include "fontstash/glfontstash.h"
+#include "text/fontContext.h"
 #include "glm/glm.hpp"
 #include <string>
 
 struct Label {
-    FONScontext* m_fontContext;
+    std::shared_ptr<FontContext> m_fontContext;
     fsuint m_id;
     std::string m_text;
     glm::dvec2 m_worldPosition;

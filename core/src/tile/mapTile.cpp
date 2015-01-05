@@ -42,6 +42,7 @@ void MapTile::addGeometry(const Style& _style, std::unique_ptr<VboMesh> _mesh) {
 
 void MapTile::addLabel(std::unique_ptr<Label> _label) {
 
+    // TODO : label associated with a style-name
     m_labels.push_back(std::move(_label));
 
 }
@@ -51,8 +52,11 @@ void MapTile::update(float _dt, const glm::dmat4& _viewProjMatrix, const glm::ve
     // update label positions
     if (m_labels.size() > 0) {
 
-        FONScontext* ctx = m_labels[0]->m_fontContext;
-        glfonsBindBuffer(ctx, m_textBuffer);
+        std::shared_ptr<FontContext> ctx = m_labels[0]->m_fontContext;
+
+        ctx->m_contextMutex->lock();
+
+        glfonsBindBuffer(ctx->m_fsContext, m_textBuffer);
 
         for (auto& label : m_labels) {
 
@@ -71,11 +75,13 @@ void MapTile::update(float _dt, const glm::dmat4& _viewProjMatrix, const glm::ve
             alpha = position.x > _screenSize.x || position.x < 0 ? 0.0 : alpha;
             alpha = position.y > _screenSize.y || position.y < 0 ? 0.0 : alpha;
 
-            glfonsTransform(ctx, label->m_id, position.x, position.y, 0.0, alpha);
+            glfonsTransform(ctx->m_fsContext, label->m_id, position.x, position.y, 0.0, alpha);
         }
 
-        glfonsUpdateTransforms(ctx, (void*) this);
-        glfonsBindBuffer(ctx, 0);
+        glfonsUpdateTransforms(ctx->m_fsContext, (void*) this);
+        glfonsBindBuffer(ctx->m_fsContext, 0);
+
+        ctx->m_contextMutex->unlock();
     }
     
 }
