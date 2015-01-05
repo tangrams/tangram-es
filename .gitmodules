@@ -1,0 +1,3 @@
+[submodule "core/include/libtess2/libtess2"]
+	path = core/include/libtess2/libtess2
+	url = https://github.com/memononen/libtess2.git
