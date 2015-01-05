@@ -56,7 +56,10 @@ void FontStyle::buildLine(Line& _line, std::string& _layer, Properties& _props, 
                 glfonsRasterize(m_fontContext->m_fsContext, textId, prop.second.c_str(), FONS_EFFECT_NONE);
 
                 glm::dvec2 p1 = glm::dvec2(_line[0]);
-                glm::dvec2 p2 = glm::dvec2(_line[_line.size() - 1]);
+                glm::dvec2 p2 = glm::dvec2(_line[1]);
+
+                glm::dvec2 p1p2 = glm::normalize(p1 - p2);
+                double r = atan2(p1p2.x, p1p2.y) + M_PI_2;
 
                 glm::dvec2 middle = (p1 + p2) / 2.0;
 
@@ -64,9 +67,9 @@ void FontStyle::buildLine(Line& _line, std::string& _layer, Properties& _props, 
                     m_fontContext,
                     textId,
                     prop.second.c_str(),
-                    middle, // world position
-                    1.0,    // alpha
-                    0.0     // rotation
+                    middle,     // world position
+                    1.0,        // alpha
+                    (float)r    // rotation
                 });
 
                 m_processedTile->addLabel(*this, std::move(label));

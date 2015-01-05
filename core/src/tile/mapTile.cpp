@@ -107,7 +107,7 @@ void MapTile::update(float _dt, const Style& _style, View& _view) {
             alpha = position.x > _view.getWidth() || position.x < 0 ? 0.0 : alpha;
             alpha = position.y > _view.getHeight() || position.y < 0 ? 0.0 : alpha;
 
-            glfonsTransform(ctx->m_fsContext, label->m_id, position.x, position.y, 0.0, alpha);
+            glfonsTransform(ctx->m_fsContext, label->m_id, position.x, position.y, label->m_rotation, alpha);
         }
 
         glfonsUpdateTransforms(ctx->m_fsContext, (void*) this);
