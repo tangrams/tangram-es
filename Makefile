@@ -76,7 +76,6 @@ RPI_CMAKE_PARAMS = \
 clean: clean-android clean-osx clean-ios clean-rpi clean-tests clean-osx-xcode
 
 clean-android:
-	ndk-build -C android/jni clean
 	ant -f android/build.xml clean
 	rm -rf ${ANDROID_BUILD_DIR}
 	rm -rf android/libs/${ANDROID_ARCH} android/obj
