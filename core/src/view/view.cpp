@@ -122,10 +122,13 @@ const std::set<TileID>& View::getVisibleTiles() {
 
 }
 
+bool View::resetChangedStatus() {
+    m_changed = false;
+}
+
 bool View::changedSinceLastCheck() {
     
     if (m_changed) {
-        m_changed = false;
         return true;
     }
     return false;

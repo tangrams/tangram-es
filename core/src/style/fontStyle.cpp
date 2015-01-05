@@ -44,7 +44,7 @@ void FontStyle::buildLine(Line& _line, std::string& _layer, Properties& _props, 
     std::vector<float> vertData;
     int nVerts = 0;
 
-    fonsSetSize(m_fontContext, 25.0);
+    fonsSetSize(m_fontContext, 12.0);
     fonsSetFont(m_fontContext, m_font);
 
     if (_layer.compare("roads") == 0) {
@@ -65,7 +65,7 @@ void FontStyle::buildLine(Line& _line, std::string& _layer, Properties& _props, 
                     textId,
                     prop.second.c_str(),
                     middle, // world position
-                    0.0,    // alpha
+                    1.0,    // alpha
                     0.0     // rotation
                 });
 
@@ -178,11 +178,12 @@ void createTexTransforms(void* _userPtr, unsigned int _width, unsigned int _heig
     fontStyle->m_pendingTileTexTransforms.push(std::pair<MapTile*, glm::vec2>(fontStyle->m_processedTile, size));
 }
 
-void updateTransforms(void* _userPtr, unsigned int _xoff, unsigned int _yoff,
-                      unsigned int _width, unsigned int _height, const unsigned int* _pixels) {
+void updateTransforms(void* _userPtr, unsigned int _xoff, unsigned int _yoff, unsigned int _width,
+                      unsigned int _height, const unsigned int* _pixels, void* _ownerPtr) {
     FontStyle* fontStyle = static_cast<FontStyle*>(_userPtr);
+    MapTile* tile = static_cast<MapTile*>(_ownerPtr);
 
-    TileTransform texData(fontStyle->m_processedTile->getID());
+    TileTransform texData(tile->getID());
 
     texData.m_pixels = _pixels;
     texData.m_xoff = _xoff;

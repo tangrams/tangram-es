@@ -105,20 +105,22 @@ void resize(int _newWidth, int _newHeight) {
 
 void update(float _dt) {
 
-    if (m_view->hasChanged()) {
-        for (const auto& mapIDandTile : m_tileManager->getVisibleTiles()) {
-            const std::unique_ptr<MapTile>& tile = mapIDandTile.second;
+    if (m_view) {
+        m_view->resetChangedStatus();
+        m_view->update();
 
-            if (tile) {
-                tile->update(_dt, m_view->getViewProjectionMatrix(),
-                             glm::vec2(m_view->getWidth(), m_view->getHeight()));
+        if (m_view->changedSinceLastCheck()) {
+            for (const auto& mapIDandTile : m_tileManager->getVisibleTiles()) {
+                const std::unique_ptr<MapTile>& tile = mapIDandTile.second;
+
+                if (tile) {
+                    tile->update(_dt, m_view->getViewProjectionMatrix(),
+                                 glm::vec2(m_view->getWidth(), m_view->getHeight()));
+                }
             }
         }
     }
 
-    if (m_view) {
-        m_view->update();
-    }
     
     if (m_tileManager) {
         m_tileManager->updateTileSet();

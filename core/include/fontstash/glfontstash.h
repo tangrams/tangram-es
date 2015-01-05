@@ -40,7 +40,7 @@ enum class GLFONSError {
 FONScontext* glfonsCreate(int width, int height, int flags, GLFONSParams glParams, void* userPtr);
 void glfonsDelete(FONScontext* ctx);
 
-void glfonsUpdateTransforms(FONScontext* ctx);
+void glfonsUpdateTransforms(FONScontext* ctx, void* ownerPtr);
 void glfonsTransform(FONScontext* ctx, fsuint id, float tx, float ty, float r, float a);
 
 void glfonsGenText(FONScontext* ctx, unsigned int nb, fsuint* textId);
@@ -91,8 +91,8 @@ struct GLFONSparams {
     void (*errorCallback)(void* usrPtr, GLFONSbuffer* buffer, GLFONSError error);
     void (*createTexTransforms)(void* usrPtr, unsigned int width, unsigned int height);
     void (*createAtlas)(void* usrPtr, unsigned int width, unsigned int height);
-    void (*updateTransforms)(void* usrPtr, unsigned int xoff, unsigned int yoff,
-                             unsigned int width, unsigned int height, const unsigned int* pixels);
+    void (*updateTransforms)(void* usrPtr, unsigned int xoff, unsigned int yoff, unsigned int width,
+                        unsigned int height, const unsigned int* pixels, void* ownerPtr);
     void (*updateAtlas)(void* usrPtr, unsigned int xoff, unsigned int yoff,
                         unsigned int width, unsigned int height, const unsigned int* pixels);
 };
@@ -154,7 +154,7 @@ GLFONSbuffer* glfons__bufferBound(GLFONScontext* gl) {
     return gl->buffers->at(gl->boundBuffer);
 }
 
-void glfonsUpdateTransforms(FONScontext* ctx) {
+void glfonsUpdateTransforms(FONScontext* ctx, void* ownerPtr) {
     GLFONScontext* gl = (GLFONScontext*) ctx->params.userPtr;
     GLFONSbuffer* buffer = glfons__bufferBound(gl);
 
@@ -182,7 +182,7 @@ void glfonsUpdateTransforms(FONScontext* ctx) {
     // | x | y | rot | alpha | precision_x | precision_y | Ø | Ø |
     const unsigned int* subdata;
     subdata = buffer->transformData + min * buffer->transformRes[0];
-    gl->params.updateTransforms(gl->userPtr, 0, min, buffer->transformRes[0], (max - min) + 1, subdata);
+    gl->params.updateTransforms(gl->userPtr, 0, min, buffer->transformRes[0], (max - min) + 1, subdata, ownerPtr);
     std::fill(buffer->transformDirty, buffer->transformDirty + buffer->transformRes[1], 0);
 }
 

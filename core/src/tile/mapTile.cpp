@@ -50,6 +50,7 @@ void MapTile::update(float _dt, const glm::dmat4& _viewProjMatrix, const glm::ve
 
     // update label positions
     if (m_labels.size() > 0) {
+
         FONScontext* ctx = m_labels[0]->m_fontContext;
         glfonsBindBuffer(ctx, m_textBuffer);
 
@@ -69,11 +70,11 @@ void MapTile::update(float _dt, const glm::dmat4& _viewProjMatrix, const glm::ve
 
             alpha = position.x > _screenSize.x || position.x < 0 ? 0.0 : alpha;
             alpha = position.y > _screenSize.y || position.y < 0 ? 0.0 : alpha;
-        
+
             glfonsTransform(ctx, label->m_id, position.x, position.y, 0.0, alpha);
         }
 
-        glfonsUpdateTransforms(ctx);
+        glfonsUpdateTransforms(ctx, (void*) this);
         glfonsBindBuffer(ctx, 0);
     }
     
