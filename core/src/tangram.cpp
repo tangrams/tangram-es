@@ -110,11 +110,15 @@ void update(float _dt) {
         m_view->update();
 
         if (m_view->changedSinceLastCheck()) {
-            for (const auto& mapIDandTile : m_tileManager->getVisibleTiles()) {
-                const std::unique_ptr<MapTile>& tile = mapIDandTile.second;
 
-                if (tile) {
-                    tile->update(_dt, *m_view);
+            for (const auto& style : m_scene->getStyles()) {
+
+                for (const auto& mapIDandTile : m_tileManager->getVisibleTiles()) {
+                    const std::unique_ptr<MapTile>& tile = mapIDandTile.second;
+
+                    if (tile) {
+                        tile->update(_dt, *style, *m_view);
+                    }
                 }
             }
         }

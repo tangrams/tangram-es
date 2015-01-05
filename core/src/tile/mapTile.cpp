@@ -40,25 +40,24 @@ void MapTile::addGeometry(const Style& _style, std::unique_ptr<VboMesh> _mesh) {
 
 }
 
-void MapTile::addLabel(std::unique_ptr<Label> _label) {
+void MapTile::addLabel(const Style& _style, std::unique_ptr<Label> _label) {
 
-    // TODO : label associated with a style-name
-    m_labels.push_back(std::move(_label));
+    m_labels[_style.getName()].push_back(std::move(_label));
 
 }
 
-void MapTile::update(float _dt, View& _view) {
+void MapTile::update(float _dt, const Style& _style, View& _view) {
 
     // update label positions
-    if (m_labels.size() > 0) {
+    if (m_labels[_style.getName()].size() > 0) {
 
-        std::shared_ptr<FontContext> ctx = m_labels[0]->m_fontContext;
+        std::shared_ptr<FontContext> ctx = m_labels[_style.getName()][0]->m_fontContext;
 
         ctx->m_contextMutex->lock();
 
         glfonsBindBuffer(ctx->m_fsContext, m_textBuffer);
 
-        for (auto& label : m_labels) {
+        for (auto& label : m_labels[_style.getName()]) {
 
             float alpha = label->m_alpha;
 

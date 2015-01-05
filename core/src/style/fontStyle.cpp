@@ -69,7 +69,7 @@ void FontStyle::buildLine(Line& _line, std::string& _layer, Properties& _props, 
                     0.0     // rotation
                 });
 
-                m_processedTile->addLabel(std::move(label));
+                m_processedTile->addLabel(*this, std::move(label));
             }
         }
     }

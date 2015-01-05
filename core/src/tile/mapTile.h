@@ -63,9 +63,9 @@ public:
 
     GLuint getTexTansformName() const { return m_textureTransform; }
 
-    void addLabel(std::unique_ptr<Label> _label);
+    void addLabel(const Style& _style, std::unique_ptr<Label> _label);
 
-    void update(float _dt, View& _view);
+    void update(float _dt, const Style& _style, View& _view);
 
 private:
 
@@ -86,6 +86,5 @@ private:
     fsuint m_textBuffer;
     GLuint m_textureTransform;
 
-    std::vector<std::unique_ptr<Label>> m_labels;
+    std::unordered_map<std::string, std::vector<std::unique_ptr<Label>>> m_labels;
 };
-
