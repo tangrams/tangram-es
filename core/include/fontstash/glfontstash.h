@@ -30,7 +30,6 @@ typedef unsigned int fsuint;
 #define INNER_DATA_OFFSET 5 // offset between vertices
 
 typedef struct GLFONScontext GLFonscontext;
-typedef struct GLFONSbuffer GLFONSbuffer;
 typedef struct GLFONSParams GLFONSParams;
 
 enum class GLFONSError {
@@ -88,7 +87,7 @@ struct GLFONSbuffer {
 };
 
 struct GLFONSparams {
-    void (*errorCallback)(void* usrPtr, GLFONSbuffer* buffer, GLFONSError error);
+    void (*errorCallback)(void* usrPtr, fsuint buffer, GLFONSError error);
     void (*createTexTransforms)(void* usrPtr, unsigned int width, unsigned int height);
     void (*createAtlas)(void* usrPtr, unsigned int width, unsigned int height);
     void (*updateTransforms)(void* usrPtr, unsigned int xoff, unsigned int yoff, unsigned int width,
@@ -192,7 +191,7 @@ void glfonsGenText(FONScontext* ctx, unsigned int nb, fsuint* textId) {
 
     if(buffer->idct + nb > buffer->maxId) {
         if(gl->params.errorCallback) {
-            gl->params.errorCallback(gl->userPtr, buffer, GLFONSError::ID_OVERFLOW);
+            gl->params.errorCallback(gl->userPtr, buffer->id, GLFONSError::ID_OVERFLOW);
         }
         return;
     }

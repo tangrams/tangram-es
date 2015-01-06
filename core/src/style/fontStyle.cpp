@@ -1,7 +1,6 @@
 #include "fontStyle.h"
 #define GLFONTSTASH_IMPLEMENTATION
 #include "fontstash/glfontstash.h"
-#include "glm/gtc/matrix_transform.hpp"
 
 FontStyle::FontStyle(const std::string& _fontFile, std::string _name, float _fontSize, GLenum _drawMode)
 : Style(_name, _drawMode), m_fontSize(_fontSize) {
@@ -257,6 +256,18 @@ void createAtlas(void* _userPtr, unsigned int _width, unsigned int _height) {
     glBindTexture(GL_TEXTURE_2D, 0);
 }
 
+void errorCallback(void* _userPtr, fsuint buffer, GLFONSError error) {
+    switch (error) {
+        case GLFONSError::ID_OVERFLOW:
+            logMsg("FontError : ID_OVERFLOW in text buffer %d\n", buffer);
+            break;
+
+        default:
+            logMsg("FontError : undefined error\n");
+            break;
+    }
+}
+
 void FontStyle::initFontContext(const std::string& _fontFile) {
 
     int atlasWidth = 512;
@@ -264,6 +275,7 @@ void FontStyle::initFontContext(const std::string& _fontFile) {
 
     GLFONSparams params;
 
+    params.errorCallback = errorCallback;
     params.createAtlas = createAtlas;
     params.createTexTransforms = createTexTransforms;
     params.updateAtlas = updateAtlas;
@@ -280,8 +292,7 @@ void FontStyle::initFontContext(const std::string& _fontFile) {
     }
 
     m_fontContext = std::shared_ptr<FontContext>(new FontContext {
-        std_patch::make_unique<std::mutex>(),
-        context
+        std_patch::make_unique<std::mutex>(), context
     });
 
 }

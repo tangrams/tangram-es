@@ -70,6 +70,9 @@ public:
     /* Called by fontstash when the atlas need to be created */
     friend void createAtlas(void* _usrPtr, unsigned int _width, unsigned int _height);
 
+    /* Callback on errors */
+    friend void errorCallback(void* _userPtr, fsuint buffer, GLFONSError error);
+
     GLuint textureTransformName(const TileID _tileId) const;
 
 private:
