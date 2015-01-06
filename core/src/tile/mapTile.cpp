@@ -61,22 +61,6 @@ fsuint MapTile::getTextBuffer(const Style& _style) const {
     return 0;
 }
 
-void MapTile::setTexTransform(const Style& _style, GLuint _textureName) {
-
-    m_textureTransform[_style.getName()] = _textureName;
-}
-
-GLuint MapTile::getTexTansformName(const Style& _style) const {
-
-    auto it = m_textureTransform.find(_style.getName());
-
-    if (it != m_textureTransform.end()) {
-        return it->second;
-    }
-
-    return 0; // non-valid texture name
-}
-
 void MapTile::update(float _dt, const Style& _style, View& _view) {
 
     auto& labels = m_labels[_style.getName()];
@@ -131,15 +115,6 @@ void MapTile::draw(const Style& _style, const glm::dmat4& _viewProjMatrix) {
         // NOTE : casting to float, but loop over the matrix values  
         double* first = &modelViewProjMatrix[0][0];
         std::vector<float> fmvp(first, first + 16);
-
-        // TODO : active textures only when style needs it
-        GLuint textureName = getTexTansformName(_style);
-        if(textureName != 0) {
-            glActiveTexture(GL_TEXTURE1);
-            glBindTexture(GL_TEXTURE_2D, textureName);
-        
-            shader->setUniformi("u_transforms", 1); // transform texture
-        }
 
         shader->setUniformMatrix4f("u_modelViewProj", &fmvp[0]);
 

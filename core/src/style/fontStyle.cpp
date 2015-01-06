@@ -44,7 +44,7 @@ void FontStyle::buildLine(Line& _line, std::string& _layer, Properties& _props, 
     std::vector<float> vertData;
     int nVerts = 0;
 
-    fonsSetSize(m_fontContext->m_fsContext, 12.0);
+    fonsSetSize(m_fontContext->m_fsContext, 14.0);
     fonsSetFont(m_fontContext->m_fsContext, m_font);
 
     if (_layer.compare("roads") == 0) {
@@ -108,6 +108,29 @@ void FontStyle::finishDataProcessing(MapTile& _tile) {
     m_fontContext->m_contextMutex->unlock();
 }
 
+GLuint FontStyle::textureTransformName(const TileID _tileId) const {
+
+    auto it = m_tileTexTransforms.find(_tileId);
+
+    if (it != m_tileTexTransforms.end()) {
+        return it->second;
+    }
+
+    return 0; // non-valid texture name
+}
+
+void FontStyle::setupForTile(const MapTile& _tile) {
+
+    GLuint textureName = textureTransformName(_tile.getID());
+
+    if(textureName != 0) {
+        glActiveTexture(GL_TEXTURE1);
+        glBindTexture(GL_TEXTURE_2D, textureName);
+
+        m_shaderProgram->setUniformi("u_transforms", 1); // transform texture
+    }
+}
+
 void FontStyle::setup(View& _view) {
     float projectionMatrix[16] = {0};
 
@@ -117,20 +140,21 @@ void FontStyle::setup(View& _view) {
     // process pending opengl texture updates / creation
     while (m_pendingTileTexTransforms.size() > 0) {
         logMsg("Create a texture transforms\n");
-        std::pair<MapTile*, glm::vec2> pair = m_pendingTileTexTransforms.front();
+        std::pair<TileID, glm::vec2> pair = m_pendingTileTexTransforms.front();
 
         glm::vec2 size = pair.second;
-        MapTile* tile = pair.first;
+
+        auto defaultTransforms = new unsigned int[(int)(size.x * size.y)] {0};
 
         GLuint texTransform;
         glGenTextures(1, &texTransform);
         glBindTexture(GL_TEXTURE_2D, texTransform);
-        glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, size.x, size.y, 0, GL_RGBA, GL_UNSIGNED_BYTE, 0);
+        glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, size.x, size.y, 0, GL_RGBA, GL_UNSIGNED_BYTE, defaultTransforms);
         glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
 
-        tile->setTexTransform(*this, texTransform);
+        delete[] defaultTransforms;
         
-        m_tileTexTransforms[tile->getID()] = texTransform;
+        m_tileTexTransforms[pair.first] = texTransform;
 
         m_pendingTileTexTransforms.pop();
     }
@@ -178,7 +202,7 @@ void createTexTransforms(void* _userPtr, unsigned int _width, unsigned int _heig
 
     glm::vec2 size = glm::vec2(_width, _height);
 
-    fontStyle->m_pendingTileTexTransforms.push(std::pair<MapTile*, glm::vec2>(fontStyle->m_processedTile, size));
+    fontStyle->m_pendingTileTexTransforms.push(std::pair<TileID, glm::vec2>(fontStyle->m_processedTile->getID(), size));
 }
 
 void updateTransforms(void* _userPtr, unsigned int _xoff, unsigned int _yoff, unsigned int _width,

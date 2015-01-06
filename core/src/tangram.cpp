@@ -53,7 +53,7 @@ void initialize() {
         linesStyle->addLayers({"roads"});
         m_scene->addStyle(std::move(linesStyle));
 
-        std::unique_ptr<Style> fontStyle(new FontStyle("DejaVuSerif.ttf", "FontStyle"));
+        std::unique_ptr<Style> fontStyle(new FontStyle("Roboto-Regular.ttf", "FontStyle"));
         fontStyle->addLayers({"roads"});
         m_scene->addStyle(std::move(fontStyle));
     }
@@ -157,6 +157,9 @@ void render() {
             const std::unique_ptr<MapTile>& tile = mapIDandTile.second;
             
             if (tile) {
+
+                style->setupForTile(*tile);
+
                 // Draw!
                 tile->draw(*style, viewProj);
             }

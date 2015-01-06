@@ -42,6 +42,7 @@ public:
     FontStyle(const std::string& _fontFile, std::string _name, GLenum _drawMode = GL_TRIANGLES);
 
     virtual void setup(View& _view) override;
+    virtual void setupForTile(const MapTile& _tile) override;
 
     virtual ~FontStyle();
 
@@ -63,6 +64,8 @@ public:
     /* Called by fontstash when the atlas need to be created */
     friend void createAtlas(void* _usrPtr, unsigned int _width, unsigned int _height);
 
+    GLuint textureTransformName(const TileID _tileId) const;
+
 private:
 
     void initFontContext(const std::string& _fontFile);
@@ -75,7 +78,7 @@ private:
     /* Since the fontstash callbacks are called from threads, we enqueue them */
     std::queue<TileTransform> m_pendingTexTransformsData;
     std::queue<Atlas> m_pendingTexAtlasData;
-    std::queue<std::pair<MapTile*, glm::vec2>> m_pendingTileTexTransforms;
+    std::queue<std::pair<TileID, glm::vec2>> m_pendingTileTexTransforms;
 
     MapTile* m_processedTile;
     GLuint m_atlas;

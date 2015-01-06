@@ -56,10 +56,6 @@ public:
 
     fsuint getTextBuffer(const Style& _style) const;
 
-    void setTexTransform(const Style& _style, GLuint _textureName);
-
-    GLuint getTexTansformName(const Style& _style) const;
-
     void addLabel(const Style& _style, std::unique_ptr<Label> _label);
 
     void update(float _dt, const Style& _style, View& _view);
@@ -80,6 +76,5 @@ private:
 
     std::unordered_map<std::string, std::unique_ptr<VboMesh>> m_geometry; // Map of <Style>s and their associated <VboMesh>es
     std::unordered_map<std::string, fsuint> m_textBuffer; // Map of <Style>s and the associated text buffer
-    std::unordered_map<std::string, GLuint> m_textureTransform; // Map of <Style>s and the associated texture transform name
     std::unordered_map<std::string, std::vector<std::unique_ptr<Label>>> m_labels; // Map of <Style>s and their associated <Label>s
 };
