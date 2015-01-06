@@ -32,14 +32,16 @@ if [[ ${TRAVIS_OS_NAME} == "linux" ]]; then
     wget https://dl-ssl.google.com/android/android-sdk_${ANDROID_SDK_VERSION}-linux.tgz
     tar -zxf android-sdk_${ANDROID_SDK_VERSION}-linux.tgz
     export ANDROID_HOME=$PWD/android-sdk-linux
-    # Install required Android components.
-    android update sdk --filter platform-tools,android-19,extra-android-support --no-ui --force
-
     # install android ndk
     wget http://dl.google.com/android/ndk/android-ndk-${ANDROID_NDK_VERSION}-linux-x86_64.tar.bz2
     tar -zxf android-ndk-${ANDROID_NDK_VERSION}-linux-x86_64.tar.bz2
     export ANDROID_NDK=$PWD/android-ndk-${ANDROID_NDK_VERSION}
 
+    # Update PATH
     export PATH=${PATH}:${ANDROID_HOME}/tools:${ANDROID_HOME}/platform-tools:${ANDROID_NDK}
+
+    # Install required Android components.
+    android update sdk --filter platform-tools,android-19,extra-android-support --no-ui --force
+
     echo $PATH
 fi
