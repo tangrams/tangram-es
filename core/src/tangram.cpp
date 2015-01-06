@@ -110,8 +110,6 @@ void update(float _dt) {
         m_view->resetChangedStatus();
         m_view->update();
 
-        // TODO : update tiles not only if the view has changed, but also if a tile has
-        // been fetched from a different thread
         if (m_view->changedSinceLastCheck()) {
 
             for (const auto& style : m_scene->getStyles()) {
@@ -126,7 +124,6 @@ void update(float _dt) {
             }
         }
     }
-
     
     if (m_tileManager) {
         m_tileManager->updateTileSet();

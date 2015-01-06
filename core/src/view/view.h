@@ -84,7 +84,7 @@ public:
     bool changedSinceLastCheck();
 
     /* Set the changed status to false */
-    bool resetChangedStatus();
+    void resetChangedStatus();
 
     virtual ~View() {
         m_visibleTiles.clear();
