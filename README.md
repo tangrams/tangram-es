@@ -13,7 +13,13 @@ This project uses _CMake_ (minimum version **2.8** for all platforms, except iOS
 brew install cmake
 ```
 
-Currently we are targetting three platforms (OS X, iOS and Android). Once CMake installed, you can build the project for the platform of your choice. 
+Make sure to update git submodules before you build:
+
+```bash
+git submodule init && git submodule update
+```
+
+Currently we are targetting three platforms: OS X, iOS, and Android. 
 
 ## platforms ##
 
