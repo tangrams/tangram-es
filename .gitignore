@@ -106,9 +106,9 @@ CMakeFiles
 build/android
 build/ios
 build/osx
+build/osx-xcode
 build/rpi
-build/**/Makefile
-**/include/**/Makefile
+**/Makefile
 cmake_install.cmake
 install_manifest.txt
 
