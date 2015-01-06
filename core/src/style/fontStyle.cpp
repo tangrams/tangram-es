@@ -211,6 +211,15 @@ void FontStyle::setup(View& _view) {
     m_shaderProgram->setUniformf("u_resolution", _view.getWidth(), _view.getHeight());
     m_shaderProgram->setUniformf("u_color", 1.0, 1.0, 1.0);
     m_shaderProgram->setUniformMatrix4f("u_proj", projectionMatrix);
+
+    glEnable(GL_BLEND);
+    glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+    glDisable(GL_DEPTH_TEST);
+}
+
+void FontStyle::unsetup() {
+    glDisable(GL_BLEND);
+    glEnable(GL_DEPTH_TEST);
 }
 
 void createTexTransforms(void* _userPtr, unsigned int _width, unsigned int _height) {

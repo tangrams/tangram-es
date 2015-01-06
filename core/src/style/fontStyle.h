@@ -44,6 +44,7 @@ public:
     FontStyle(const std::string& _fontFile, std::string _name, float _fontSize, GLenum _drawMode = GL_TRIANGLES);
 
     virtual void setup(View& _view) override;
+    virtual void unsetup() override;
     virtual void setupForTile(const MapTile& _tile) override;
 
     virtual ~FontStyle();

@@ -83,6 +83,9 @@ public:
     /* Perform any setup needed before drawing each frame */
     virtual void setup(View& _view) = 0;
 
+    /* Perform any unsetup needed after drawing each frame */
+    virtual void unsetup() {}
+
     /* perform any setup needed for a specific tile */
     virtual void setupForTile(const MapTile& _tile) {}
 
