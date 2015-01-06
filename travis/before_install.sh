@@ -4,8 +4,8 @@ set -e
 set -o pipefail
 
 if [[ ${TRAVIS_OS_NAME} == "linux" ]]; then
-    ANDROID_SDK_VERSION = "r24.0.2"
-    ANDROID_NDK_VERSION = "r10b"
+    ANDROID_SDK_VERSION="r24.0.2"
+    ANDROID_NDK_VERSION="r10b"
 fi
 
 if [[ ${TRAVIS_OS_NAME} == "osx" ]]; then
