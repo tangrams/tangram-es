@@ -19,7 +19,7 @@ Make sure to update git submodules before you build:
 git submodule init && git submodule update
 ```
 
-Currently we are targetting three platforms: OS X, iOS, and Android. 
+Currently we are targeting four platforms: OS X, iOS, Android, and Raspberry Pi. 
 
 ## platforms ##
 
@@ -86,7 +86,7 @@ Build an APK of the demo application and optionally specify an architecture (def
 make android [ANDROID_ARCH=[x86|armeabi-v7a|armeabi]]
 ```
 
-Then install to a connected device:
+Then install to a connected device or emulator:
 
 ```bash
 adb install android/bin/TangramAndroid-debug.apk
