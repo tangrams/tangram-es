@@ -45,7 +45,7 @@ void FontStyle::buildLine(Line& _line, std::string& _layer, Properties& _props, 
     std::vector<float> vertData;
     int nVerts = 0;
 
-    fonsSetSize(m_fontContext->m_fsContext, m_fontSize);
+    fonsSetSize(m_fontContext->m_fsContext, m_fontSize * m_pixelScale);
     fonsSetFont(m_fontContext->m_fsContext, m_font);
 
     if (_layer.compare("roads") == 0) {

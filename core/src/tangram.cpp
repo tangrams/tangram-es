@@ -53,7 +53,7 @@ void initialize() {
         linesStyle->addLayers({"roads"});
         m_scene->addStyle(std::move(linesStyle));
 
-        std::unique_ptr<Style> fontStyle(new FontStyle("Roboto-Regular.ttf", "FontStyle", 14.0f /* should consider pixel density */));
+        std::unique_ptr<Style> fontStyle(new FontStyle("Roboto-Regular.ttf", "FontStyle", 14.0f));
         fontStyle->addLayers({"roads"});
         m_scene->addStyle(std::move(fontStyle));
     }
@@ -168,6 +168,10 @@ void setPixelScale(float _pixelsPerPoint) {
     
     if (m_view) {
         m_view->setPixelScale(_pixelsPerPoint);
+    }
+
+    for (auto& style : m_scene->getStyles()) {
+        style->setPixelScale(_pixelsPerPoint);
     }
     
 }

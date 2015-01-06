@@ -26,7 +26,10 @@
 class Style {
     
 protected:
-    
+
+    /* The platform pixel scale */
+    float m_pixelScale = 1.0;
+
     /* Unique name for a style instance */
     std::string m_name;
     
@@ -88,6 +91,8 @@ public:
 
     /* perform any setup needed for a specific tile */
     virtual void setupForTile(const MapTile& _tile) {}
+
+    void setPixelScale(float _pixelScale) { m_pixelScale = _pixelScale; }
 
     std::shared_ptr<ShaderProgram> getShaderProgram() const { return m_shaderProgram; }
     std::string getName() const { return m_name; }
