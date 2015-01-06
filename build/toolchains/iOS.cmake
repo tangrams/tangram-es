@@ -58,7 +58,6 @@ endforeach()
 
 # link and build functions
 function(link_libraries)
-    #target_link_libraries(${EXECUTABLE_NAME} ${CMAKE_SOURCE_DIR}/ios/precompiled/libtess2/libtess2.a)
     target_link_libraries(${EXECUTABLE_NAME} core)
     target_link_libraries(${EXECUTABLE_NAME} ${ZLIB_LIBRARIES})
     
