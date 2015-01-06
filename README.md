@@ -13,7 +13,13 @@ This project uses _CMake_ (minimum version **2.8** for all platforms, except iOS
 brew install cmake
 ```
 
-Currently we are targetting three platforms (OS X, iOS and Android). Once CMake installed, you can build the project for the platform of your choice. 
+Make sure to update git submodules before you build:
+
+```bash
+git submodule init && git submodule update
+```
+
+Currently we are targeting four platforms: OS X, iOS, Android, and Raspberry Pi. 
 
 ## platforms ##
 
@@ -80,7 +86,7 @@ Build an APK of the demo application and optionally specify an architecture (def
 make android [ANDROID_ARCH=[x86|armeabi-v7a|armeabi]]
 ```
 
-Then install to a connected device:
+Then install to a connected device or emulator:
 
 ```bash
 adb install android/bin/TangramAndroid-debug.apk

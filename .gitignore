@@ -103,12 +103,8 @@ DerivedData
 CMakeCache.txt
 CMakeScripts
 CMakeFiles
-build/android
-build/ios
-build/osx
-build/rpi
-build/**/Makefile
-**/include/**/Makefile
+build
+**/Makefile
 cmake_install.cmake
 install_manifest.txt
 
