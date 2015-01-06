@@ -17,7 +17,13 @@ fi
 
 if [[ ${TRAVIS_OS_NAME} == "linux" ]]; then
     sudo apt-get update -y
-    sudo apt-get -y install gcc-4.8 g++-4.8
+    # install gcc-4.8 for c++11 features
+    sudo apt-get install python-software-properties
+    sudo add-apt-repository ppa:ubuntu-toolchain-r/test
+    sudo apt-get update
+    sudo apt-get install gcc-4.8
+    sudo update-alternatives --install /usr/bin/gcc gcc /usr/bin/gcc-4.8 50
+    # install other required packages
     sudo apt-get -y install git build-essential automake gdb libtool xutils-dev make cmake pkg-config libcurl4-openssl-dev
     # not installing mesa and opengl right now
 
