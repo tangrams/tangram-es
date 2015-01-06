@@ -27,7 +27,7 @@ RPI_BUILD_DIR = build/rpi
 TESTS_BUILD_DIR = build/tests
 UNIT_TESTS_BUILD_DIR = ${TESTS_BUILD_DIR}/unit
 
-TOOLCHAIN_DIR = build/toolchains
+TOOLCHAIN_DIR = toolchains
 OSX_TARGET = tangram
 IOS_TARGET = tangram
 OSX_XCODE_PROJ = tangram.xcodeproj
