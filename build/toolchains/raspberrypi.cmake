@@ -26,7 +26,6 @@ find_sources_and_include_directories(
 function(link_libraries)
 
 	target_link_libraries(${EXECUTABLE_NAME} -lcurl) #use system libcurl
-	target_link_libraries(${EXECUTABLE_NAME} ${PROJECT_SOURCE_DIR}/rpi/precompiled/libtess2/libtess2.so)
     target_link_libraries(${EXECUTABLE_NAME} core)
 
 endfunction()
