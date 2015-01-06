@@ -18,11 +18,13 @@ struct TextureData {
     unsigned int m_height;
 };
 
-struct Atlas : TextureData { };
+struct Atlas {
+    TextureData m_data;
+};
 
-struct TileTransform : TextureData {
+struct TileTransform {
     TileID m_id;
-    TileTransform(TileID _tileId) : m_id(_tileId) { }
+    TextureData m_data;
 };
 
 class FontStyle : public Style {

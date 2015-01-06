@@ -136,9 +136,7 @@ void FontStyle::setupForTile(const MapTile& _tile) {
 void FontStyle::processTileTransformCreation() {
 
     while (m_pendingTileTexTransforms.size() > 0) {
-        logMsg("Create a texture transforms\n");
-
-        std::pair<TileID, glm::vec2> pair = m_pendingTileTexTransforms.front();
+        auto pair = m_pendingTileTexTransforms.front();
 
         glm::vec2 size = pair.second;
 
@@ -164,14 +162,13 @@ void FontStyle::processTileTransformCreation() {
 void FontStyle::processTileTransformUpdate() {
 
     while (m_pendingTexTransformsData.size() > 0) {
-        TileTransform transformData = m_pendingTexTransformsData.front();
+        TileID id = m_pendingTexTransformsData.front().m_id;
+        TextureData data = m_pendingTexTransformsData.front().m_data;
 
-        logMsg("Update the texture transforms for tile [%d, %d, %d], %dx%d pixels\n", transformData.m_id.x,
-               transformData.m_id.y, transformData.m_id.z, transformData.m_width, transformData.m_height);
+        glBindTexture(GL_TEXTURE_2D, m_tileTexTransforms[id]);
 
-        glBindTexture(GL_TEXTURE_2D, m_tileTexTransforms[transformData.m_id]);
-        glTexSubImage2D(GL_TEXTURE_2D, 0, transformData.m_xoff, transformData.m_yoff,
-            transformData.m_width, transformData.m_height, GL_RGBA, GL_UNSIGNED_BYTE, transformData.m_pixels);
+        glTexSubImage2D(GL_TEXTURE_2D, 0, data.m_xoff, data.m_yoff, data.m_width, data.m_height,
+                        GL_RGBA, GL_UNSIGNED_BYTE, data.m_pixels);
 
         glBindTexture(GL_TEXTURE_2D, 0);
 
@@ -184,12 +181,10 @@ void FontStyle::processAtlasUpdate() {
 
     glBindTexture(GL_TEXTURE_2D, m_atlas);
     while (m_pendingTexAtlasData.size() > 0) {
-        Atlas atlasData = m_pendingTexAtlasData.front();
+        TextureData data = m_pendingTexAtlasData.front().m_data;
 
-        logMsg("Update the atlas, %dx%d pixels\n", atlasData.m_width, atlasData.m_height);
-
-        glTexSubImage2D(GL_TEXTURE_2D, 0, atlasData.m_xoff, atlasData.m_yoff,
-            atlasData.m_width, atlasData.m_height, GL_ALPHA, GL_UNSIGNED_BYTE, atlasData.m_pixels);
+        glTexSubImage2D(GL_TEXTURE_2D, 0, data.m_xoff, data.m_yoff, data.m_width, data.m_height,
+                        GL_ALPHA, GL_UNSIGNED_BYTE, data.m_pixels);
 
         m_pendingTexAtlasData.pop();
     }
@@ -224,38 +219,31 @@ void createTexTransforms(void* _userPtr, unsigned int _width, unsigned int _heig
 
     glm::vec2 size = glm::vec2(_width, _height);
 
-    fontStyle->m_pendingTileTexTransforms.push(std::pair<TileID, glm::vec2>(fontStyle->m_processedTile->getID(), size));
+    fontStyle->m_pendingTileTexTransforms.push({
+        fontStyle->m_processedTile->getID(), size
+    });
 }
 
 void updateTransforms(void* _userPtr, unsigned int _xoff, unsigned int _yoff, unsigned int _width,
                       unsigned int _height, const unsigned int* _pixels, void* _ownerPtr) {
+
     FontStyle* fontStyle = static_cast<FontStyle*>(_userPtr);
     MapTile* tile = static_cast<MapTile*>(_ownerPtr);
 
-    TileTransform texData(tile->getID());
-
-    texData.m_pixels = _pixels;
-    texData.m_xoff = _xoff;
-    texData.m_yoff = _yoff;
-    texData.m_width = _width;
-    texData.m_height = _height;
-
-    fontStyle->m_pendingTexTransformsData.push(texData);
+    fontStyle->m_pendingTexTransformsData.push({
+        tile->getID(),
+        { _pixels, _xoff, _yoff, _width, _height }
+    });
 }
 
 void updateAtlas(void* _userPtr, unsigned int _xoff, unsigned int _yoff,
                  unsigned int _width, unsigned int _height, const unsigned int* _pixels) {
+
     FontStyle* fontStyle = static_cast<FontStyle*>(_userPtr);
 
-    Atlas texData;
-
-    texData.m_pixels = _pixels;
-    texData.m_height =_height;
-    texData.m_width = _width;
-    texData.m_xoff = _xoff;
-    texData.m_yoff = _yoff;
-
-    fontStyle->m_pendingTexAtlasData.push(texData);
+    fontStyle->m_pendingTexAtlasData.push({
+        { _pixels, _xoff, _yoff, _width, _height }
+    });
 }
 
 void createAtlas(void* _userPtr, unsigned int _width, unsigned int _height) {
