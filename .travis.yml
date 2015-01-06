@@ -1,18 +1,14 @@
 language: cpp
 
+# enabling multi platform build (under travis beta)
+# requires emailing support@travis-ci.com for this to be enabled for our repo
+# http://docs.travis-ci.com/user/multi-os/
 matrix:
     include:
         - os: osx
           compiler: clang
         - os: linux
           compiler: gcc
-
-# enabling multi platform build (under travis beta)
-# requires emailing support@travis-ci.com for this to be enabled for our repo
-# http://docs.travis-ci.com/user/multi-os/
-#os:
-#    - linux
-#    - osx
 
 before_install:
     - source ./travis/before_install.sh
@@ -27,7 +23,7 @@ before_script:
 script: 
     - source ./travis/script_build_tests.sh
     - source ./travis/script_run_tests.sh
-    - source ./travis/script_build_osx.sh
+    - source ./travis/script_build.sh
 
 branches:
   only:
