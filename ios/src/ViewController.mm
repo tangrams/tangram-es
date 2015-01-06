@@ -133,7 +133,12 @@
     
     int width = self.view.bounds.size.width;
     int height = self.view.bounds.size.height;
-    Tangram::resize(width, height);
+
+    CGFloat scale = [[UIScreen mainScreen] scale];
+
+    Tangram::resize(width * scale, height * scale);
+
+    Tangram::setPixelScale(scale);
 }
 
 - (void)tearDownGL

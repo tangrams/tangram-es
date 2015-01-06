@@ -89,11 +89,12 @@ void MapTile::update(float _dt, const Style& _style, View& _view) {
 
             glm::dvec4 position = glm::dvec4(label->m_worldPosition, 0.0, 1.0);
 
-            // project to screen and perform perspective division
+            // mimic gpu vertex projection to screen
             position = mvp * position;
-            position = position / position.w;
+            position = position / position.w; // perspective division
 
             // from normalized device coordinates to screen space coordinate system
+            // top-left screen axis, y pointing down
             position.x = (position.x + 1) * halfWidth;
             position.y = (1 - position.y) * halfHeight;
 
