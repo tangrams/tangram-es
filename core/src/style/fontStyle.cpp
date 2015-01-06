@@ -3,7 +3,9 @@
 #include "fontstash/glfontstash.h"
 #include "glm/gtc/matrix_transform.hpp"
 
-FontStyle::FontStyle(const std::string& _fontFile, std::string _name, GLenum _drawMode) : Style(_name, _drawMode) {
+FontStyle::FontStyle(const std::string& _fontFile, std::string _name, float _fontSize, GLenum _drawMode)
+: Style(_name, _drawMode), m_fontSize(_fontSize) {
+
     constructVertexLayout();
     constructShaderProgram();
     initFontContext(_fontFile);
@@ -44,7 +46,7 @@ void FontStyle::buildLine(Line& _line, std::string& _layer, Properties& _props, 
     std::vector<float> vertData;
     int nVerts = 0;
 
-    fonsSetSize(m_fontContext->m_fsContext, 14.0);
+    fonsSetSize(m_fontContext->m_fsContext, m_fontSize);
     fonsSetFont(m_fontContext->m_fsContext, m_font);
 
     if (_layer.compare("roads") == 0) {
@@ -131,15 +133,11 @@ void FontStyle::setupForTile(const MapTile& _tile) {
     }
 }
 
-void FontStyle::setup(View& _view) {
-    float projectionMatrix[16] = {0};
+void FontStyle::processTileTransformCreation() {
 
-    glfonsScreenSize(m_fontContext->m_fsContext, _view.getWidth(), _view.getHeight());
-    glfonsProjection(m_fontContext->m_fsContext, projectionMatrix);
-
-    // process pending opengl texture updates / creation
     while (m_pendingTileTexTransforms.size() > 0) {
         logMsg("Create a texture transforms\n");
+
         std::pair<TileID, glm::vec2> pair = m_pendingTileTexTransforms.front();
 
         glm::vec2 size = pair.second;
@@ -155,17 +153,21 @@ void FontStyle::setup(View& _view) {
         glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
 
         delete[] defaultTransforms;
-        
+
         m_tileTexTransforms[pair.first] = texTransform;
 
         m_pendingTileTexTransforms.pop();
     }
 
+}
+
+void FontStyle::processTileTransformUpdate() {
+
     while (m_pendingTexTransformsData.size() > 0) {
         TileTransform transformData = m_pendingTexTransformsData.front();
 
         logMsg("Update the texture transforms for tile [%d, %d, %d], %dx%d pixels\n", transformData.m_id.x,
-            transformData.m_id.y, transformData.m_id.z, transformData.m_width, transformData.m_height);
+               transformData.m_id.y, transformData.m_id.z, transformData.m_width, transformData.m_height);
 
         glBindTexture(GL_TEXTURE_2D, m_tileTexTransforms[transformData.m_id]);
         glTexSubImage2D(GL_TEXTURE_2D, 0, transformData.m_xoff, transformData.m_yoff,
@@ -175,6 +177,10 @@ void FontStyle::setup(View& _view) {
 
         m_pendingTexTransformsData.pop();
     }
+
+}
+
+void FontStyle::processAtlasUpdate() {
 
     glBindTexture(GL_TEXTURE_2D, m_atlas);
     while (m_pendingTexAtlasData.size() > 0) {
@@ -188,6 +194,19 @@ void FontStyle::setup(View& _view) {
         m_pendingTexAtlasData.pop();
     }
     glBindTexture(GL_TEXTURE_2D, 0);
+
+}
+
+void FontStyle::setup(View& _view) {
+    float projectionMatrix[16] = {0};
+
+    // process pending opengl texture updates / creation
+    processAtlasUpdate();
+    processTileTransformCreation();
+    processTileTransformUpdate();
+
+    glfonsScreenSize(m_fontContext->m_fsContext, _view.getWidth(), _view.getHeight());
+    glfonsProjection(m_fontContext->m_fsContext, projectionMatrix);
 
     // activate the atlas on the texture slot0, the texture transform is on slot1
     glActiveTexture(GL_TEXTURE0);
