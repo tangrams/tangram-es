@@ -5,7 +5,7 @@ set -o pipefail
 
 if [[ ${TRAVIS_OS_NAME} == "linux" ]]; then
     ANDROID_SDK_VERSION="r24.0.2"
-    ANDROID_NDK_VERSION="r10b"
+    ANDROID_NDK_VERSION="r10d"
 fi
 
 if [[ ${TRAVIS_OS_NAME} == "osx" ]]; then
@@ -33,8 +33,10 @@ if [[ ${TRAVIS_OS_NAME} == "linux" ]]; then
     tar -zxf android-sdk_${ANDROID_SDK_VERSION}-linux.tgz
     export ANDROID_HOME=$PWD/android-sdk-linux
     # install android ndk
-    wget http://dl.google.com/android/ndk/android-ndk-${ANDROID_NDK_VERSION}-linux-x86_64.tar.bz2
-    tar -zxf android-ndk-${ANDROID_NDK_VERSION}-linux-x86_64.tar.bz2
+    # only binary link avaiable for r10d, no download links available for r10b
+    wget http://dl.google.com/android/ndk/android-ndk-r10d-linux-x86_64.bin
+    chmod +x android-ndk-r10d-linux-x86_64.bin
+    ./android-ndk-r10d-linux-x86_64.bin | egrep -v ^Extracting
     export ANDROID_NDK=$PWD/android-ndk-${ANDROID_NDK_VERSION}
 
     # Update PATH
