@@ -6,6 +6,8 @@ set -o pipefail
 if [[ ${TRAVIS_OS_NAME} == "linux" ]]; then
     ANDROID_SDK_VERSION="r24.0.2"
     ANDROID_NDK_VERSION="r10d"
+    ANDROID_BUILD_TOOL_VERSION="20"
+    ANDROID_PLATFORM_VERSION="19"
 fi
 
 if [[ ${TRAVIS_OS_NAME} == "osx" ]]; then
@@ -44,7 +46,7 @@ if [[ ${TRAVIS_OS_NAME} == "linux" ]]; then
 
     # Install required Android components.
     # automatically accept the license prompt
-    echo "y" | android update sdk --filter tools,platform-tools,build-tools-19.0.0,android-19,extra-android-support --no-ui --force
+    echo "y" | android update sdk --filter platform-tools,build-tools-${ANDROID_BUILD_TOOL_VERSION},android-${ANDROID_PLATFORM_VERSION},extra-android-support --no-ui --force
 
     echo $PATH
 fi
