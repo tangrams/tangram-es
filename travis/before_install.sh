@@ -43,7 +43,8 @@ if [[ ${TRAVIS_OS_NAME} == "linux" ]]; then
     export PATH=${PATH}:${ANDROID_HOME}/tools:${ANDROID_HOME}/platform-tools:${ANDROID_NDK}
 
     # Install required Android components.
-    android update sdk --filter platform-tools,android-19,extra-android-support --no-ui --force
+    # automatically accept the license prompt
+    echo "y" | android update sdk --filter platform-tools,android-19,extra-android-support --no-ui --force
 
     echo $PATH
 fi
