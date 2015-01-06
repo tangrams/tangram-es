@@ -70,6 +70,14 @@ void MapTile::update(float _dt, const Style& _style, View& _view) {
 
         std::shared_ptr<FontContext> ctx = labels[0]->m_fontContext;
 
+        float width = _view.getWidth();
+        float height = _view.getHeight();
+
+        float halfWidth = width * 0.5;
+        float halfHeight = height * 0.5;
+
+        glm::dmat4 mvp = _view.getViewProjectionMatrix() * m_modelMatrix;
+
         ctx->m_contextMutex->lock();
 
         glfonsBindBuffer(ctx->m_fsContext, getTextBuffer(_style));
@@ -81,15 +89,15 @@ void MapTile::update(float _dt, const Style& _style, View& _view) {
             glm::dvec4 position = glm::dvec4(label->m_worldPosition, 0.0, 1.0);
 
             // project to screen and perform perspective division
-            position = _view.getViewProjectionMatrix() * m_modelMatrix * position;
+            position = mvp * position;
             position = position / position.w;
 
             // from normalized device coordinates to screen space coordinate system
-            position.x = (position.x * _view.getWidth() * 0.5) + _view.getWidth() * 0.5;
-            position.y = -(position.y * _view.getHeight() * 0.5) + _view.getHeight() * 0.5;
+            position.x = (position.x + 1) * halfWidth;
+            position.y = (1 - position.y) * halfHeight;
 
-            alpha = position.x > _view.getWidth() || position.x < 0 ? 0.0 : alpha;
-            alpha = position.y > _view.getHeight() || position.y < 0 ? 0.0 : alpha;
+            alpha = position.x > width || position.x < 0 ? 0.0 : alpha;
+            alpha = position.y > height || position.y < 0 ? 0.0 : alpha;
 
             glfonsTransform(ctx->m_fsContext, label->m_id, position.x, position.y, label->m_rotation, alpha);
         }
