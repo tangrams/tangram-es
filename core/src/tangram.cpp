@@ -110,6 +110,8 @@ void update(float _dt) {
         m_view->resetChangedStatus();
         m_view->update();
 
+        // TODO : update tiles not only if the view has changed, but also if a tile has
+        // been fetched from a different thread
         if (m_view->changedSinceLastCheck()) {
 
             for (const auto& style : m_scene->getStyles()) {
@@ -157,7 +159,7 @@ void render() {
             const std::unique_ptr<MapTile>& tile = mapIDandTile.second;
             
             if (tile) {
-
+                // Some specific setup for the style considering the tile (if needed)
                 style->setupForTile(*tile);
 
                 // Draw!

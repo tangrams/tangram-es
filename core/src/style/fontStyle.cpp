@@ -144,11 +144,13 @@ void FontStyle::setup(View& _view) {
 
         glm::vec2 size = pair.second;
 
-        auto defaultTransforms = new unsigned int[(int)(size.x * size.y)] {0};
+        auto defaultTransforms = new unsigned int[(int)(size.x * size.y)] {0}; // zero filled
 
         GLuint texTransform;
         glGenTextures(1, &texTransform);
         glBindTexture(GL_TEXTURE_2D, texTransform);
+
+        // fill texture with 0
         glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, size.x, size.y, 0, GL_RGBA, GL_UNSIGNED_BYTE, defaultTransforms);
         glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
 
@@ -187,6 +189,7 @@ void FontStyle::setup(View& _view) {
     }
     glBindTexture(GL_TEXTURE_2D, 0);
 
+    // activate the atlas on the texture slot0, the texture transform is on slot1
     glActiveTexture(GL_TEXTURE0);
     glBindTexture(GL_TEXTURE_2D, m_atlas);
 
