@@ -16,7 +16,6 @@ fi
 
 
 if [[ ${TRAVIS_OS_NAME} == "linux" ]]; then
-    sudo apt-get update -y
     # gcc-4.8 should be default in travis ci now (https://github.com/travis-ci/travis-cookbooks/pull/215), but for safety
     sudo add-apt-repository ppa:ubuntu-toolchain-r/test -y
     sudo apt-get update -qq
@@ -27,7 +26,7 @@ if [[ ${TRAVIS_OS_NAME} == "linux" ]]; then
     # not installing mesa and opengl right now
 
     # install jdk
-    sudo apt-get -qq -y install openjdk-8-jdk ant lib32z1-dev lib32stdc++6
+    sudo apt-get -qq -y install openjdk-7-jdk ant lib32z1-dev lib32stdc++6
 
     # install android sdk
     wget https://dl-ssl.google.com/android/android-sdk_${ANDROID_SDK_VERSION}-linux.tgz
