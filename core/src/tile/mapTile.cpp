@@ -78,6 +78,7 @@ void MapTile::update(float _dt, const Style& _style, View& _view) {
 
         glm::dmat4 mvp = _view.getViewProjectionMatrix() * m_modelMatrix;
 
+        // lock the font context since the currently bound buffer has critical access
         ctx->m_contextMutex->lock();
 
         glfonsBindBuffer(ctx->m_fsContext, getTextBuffer(_style));
@@ -96,13 +97,19 @@ void MapTile::update(float _dt, const Style& _style, View& _view) {
             position.x = (position.x + 1) * halfWidth;
             position.y = (1 - position.y) * halfHeight;
 
+            // don't display out of screen labels, and out of screen translations or not yet
             alpha = position.x > width || position.x < 0 ? 0.0 : alpha;
             alpha = position.y > height || position.y < 0 ? 0.0 : alpha;
 
+            // cpu update of the transform texture, positionning the label in screen space
             glfonsTransform(ctx->m_fsContext, label->m_id, position.x, position.y, label->m_rotation, alpha);
         }
 
+        // ask to push the transform texture to gpu
+        // would be queued by the callback since we're not in main thread
         glfonsUpdateTransforms(ctx->m_fsContext, (void*) this);
+
+        // unbind the buffer for context integrity
         glfonsBindBuffer(ctx->m_fsContext, 0);
 
         ctx->m_contextMutex->unlock();

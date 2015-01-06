@@ -413,9 +413,10 @@ void glfonsTransform(FONScontext* ctx, fsuint id, float tx, float ty, float r, f
 
     int i, j;
 
-    // TODO : manage out of screen translations
-
     glfons__id2ij(gl, id, &i, &j);
+
+    // TODO : manage out of screen translations, the scaling step due to texture transform
+    // would happen to behave like a module width or height translation
 
     // scaling to [0..255]
     tx = (tx * 255.0) / gl->screenSize[0];
