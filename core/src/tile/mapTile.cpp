@@ -42,7 +42,7 @@ bool MapTile::addLabel(const Style& _style, std::unique_ptr<Label> _label) {
 
     m_labels[_style.getName()].push_back(std::move(_label));
 
-    return true;
+    return true; // if false, label wouldn't be rasterized
 }
 
 void MapTile::setTextBuffer(const Style& _style, fsuint _textBuffer) {

@@ -70,6 +70,10 @@ void FontStyle::buildLine(Line& _line, std::string& _layer, Properties& _props, 
                     // place the text in the middle and give more strength to p1 since text has a width
                     glm::dvec2 position = (p1 + p2) / 2.0 + p1p2 * glm::length(p1p2) * 0.2;
 
+                    // FUTURE: label logic
+                    // 1. project label on screen and compute its bbox, to do so we need the view and label model matrix
+                    // 2. ask any kind of label manager to perform label discards
+
                     std::unique_ptr<Label> label(new Label {
                         m_fontContext,
                         textId,
@@ -79,7 +83,7 @@ void FontStyle::buildLine(Line& _line, std::string& _layer, Properties& _props, 
                         (float)r    // rotation
                     });
 
-                    if (m_processedTile->addLabel(*this, std::move(label))) {
+                    if (m_processedTile->addLabel(*this, std::move(label))) { // could potentially refuse to add label
                         glfonsRasterize(m_fontContext->m_fsContext, textId, prop.second.c_str(), FONS_EFFECT_NONE);
                     }
                 }
