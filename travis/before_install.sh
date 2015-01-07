@@ -21,14 +21,17 @@ if [[ ${TRAVIS_OS_NAME} == "linux" ]]; then
     # gcc-4.8 should be default in travis ci now (https://github.com/travis-ci/travis-cookbooks/pull/215), but for safety
     sudo add-apt-repository ppa:ubuntu-toolchain-r/test -y
     sudo apt-get update -qq
-    if [ "$CXX" = "g++" ]; then sudo apt-get install -qq g++-4.8; fi
-    if [ "$CXX" = "g++" ]; then export CXX="g++-4.8" CC="gcc-4.8"; fi
+    # No linux specific build right now, for android builds, gcc bundled with ndk is used
+    # if [ "$CXX" = "g++" ]; then sudo apt-get install -qq g++-4.8; fi
+    # if [ "$CXX" = "g++" ]; then export CXX="g++-4.8" CC="gcc-4.8"; fi
+
     # install other required packages
-    sudo apt-get -y install git build-essential automake gdb libtool xutils-dev make cmake pkg-config libcurl4-openssl-dev
-    # not installing mesa and opengl right now
+    sudo apt-get -y install git build-essential automake gdb libtool make cmake pkg-config 
+
+    # not installing mesa and opengl right now, will need with linux builds though
 
     # install jdk
-    sudo apt-get -qq -y install openjdk-7-jdk ant lib32z1-dev lib32stdc++6
+    sudo apt-get -qq -y install openjdk-7-jdk ant 
 
     # install android sdk
     wget https://dl-ssl.google.com/android/android-sdk_${ANDROID_SDK_VERSION}-linux.tgz
