@@ -15,10 +15,6 @@ fi
 
 if [[ ${TRAVIS_OS_NAME} == "linux" ]]; then
     # Build android project
-    echo "Building android project"
-    # testing a weird build failing issue (refer build #38)
-    echo `pwd`
-    ls -l
     make android
 fi
 
