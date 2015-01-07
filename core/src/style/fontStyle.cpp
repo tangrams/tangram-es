@@ -50,30 +50,39 @@ void FontStyle::buildLine(Line& _line, std::string& _layer, Properties& _props, 
 
     if (_layer.compare("roads") == 0) {
         for (auto prop : _props.stringProps) {
-            if (prop.first.compare("name") == 0) {
-                fsuint textId;
-
-                glfonsGenText(m_fontContext->m_fsContext, 1, &textId);
-                glfonsRasterize(m_fontContext->m_fsContext, textId, prop.second.c_str(), FONS_EFFECT_NONE);
+            if (prop.first.compare("name") == 0 && _line.size() == 2) { // don't treat polylines
 
                 glm::dvec2 p1 = glm::dvec2(_line[0]);
                 glm::dvec2 p2 = glm::dvec2(_line[1]);
+                glm::dvec2 p1p2 = p1 - p2;
 
-                glm::dvec2 p1p2 = glm::normalize(p1 - p2);
+                if(glm::length(p1p2) < 0.5) { // some random label discard for now
+                    return;
+                }
+
+                p1p2 = glm::normalize(p1p2);
                 double r = atan2(p1p2.x, p1p2.y) + M_PI_2;
 
-                glm::dvec2 middle = (p1 + p2) / 2.0;
+                if (r <= M_PI_2 && r > -M_PI_2) { // readable labels, improve logic
+                    fsuint textId;
+                    glfonsGenText(m_fontContext->m_fsContext, 1, &textId);
 
-                std::unique_ptr<Label> label(new Label {
-                    m_fontContext,
-                    textId,
-                    prop.second.c_str(),
-                    middle,     // world position
-                    1.0,        // alpha
-                    (float)r    // rotation
-                });
+                    // place the text in the middle and give more strength to p1 since text has a width
+                    glm::dvec2 position = (p1 + p2) / 2.0 + p1p2 * glm::length(p1p2) * 0.2;
 
-                m_processedTile->addLabel(*this, std::move(label));
+                    std::unique_ptr<Label> label(new Label {
+                        m_fontContext,
+                        textId,
+                        prop.second.c_str(),
+                        position,   // world position
+                        1.0,        // alpha
+                        (float)r    // rotation
+                    });
+
+                    if (m_processedTile->addLabel(*this, std::move(label))) {
+                        glfonsRasterize(m_fontContext->m_fsContext, textId, prop.second.c_str(), FONS_EFFECT_NONE);
+                    }
+                }
             }
         }
     }

@@ -56,7 +56,7 @@ public:
 
     fsuint getTextBuffer(const Style& _style) const;
 
-    void addLabel(const Style& _style, std::unique_ptr<Label> _label);
+    bool addLabel(const Style& _style, std::unique_ptr<Label> _label);
 
     void update(float _dt, const Style& _style, View& _view);
 
