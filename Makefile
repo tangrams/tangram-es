@@ -1,16 +1,19 @@
-all: android osx ios
+all: android osx osx-xcode ios
 
 .PHONY: clean
 .PHONY: clean-android
 .PHONY: clean-osx
+.PHONY: clean-osx-xcode
 .PHONY: clean-ios
 .PHONY: clean-rpi
 .PHONY: android
 .PHONY: osx
+.PHONY: osx-xcode
 .PHONY: ios
 .PHONY: rpi
 .PHONY: check-ndk
 .PHONY: cmake-osx
+.PHONY: cmake-osx-xcode
 .PHONY: cmake-android
 .PHONY: cmake-ios
 .PHONY: cmake-rpi
@@ -18,12 +21,13 @@ all: android osx ios
 
 ANDROID_BUILD_DIR = build/android
 OSX_BUILD_DIR = build/osx
+OSX_XCODE_BUILD_DIR = build/osx-xcode
 IOS_BUILD_DIR = build/ios
 RPI_BUILD_DIR = build/rpi
 TESTS_BUILD_DIR = build/tests
 UNIT_TESTS_BUILD_DIR = ${TESTS_BUILD_DIR}/unit
 
-TOOLCHAIN_DIR = build/toolchains
+TOOLCHAIN_DIR = toolchains
 OSX_TARGET = tangram
 IOS_TARGET = tangram
 OSX_XCODE_PROJ = tangram.xcodeproj
@@ -58,18 +62,20 @@ IOS_CMAKE_PARAMS = \
 	-DCMAKE_TOOLCHAIN_FILE=${TOOLCHAIN_DIR}/iOS.toolchain.cmake \
 	-G Xcode
 
-DARWIN_CMAKE_PARAMS = \
+DARWIN_XCODE_CMAKE_PARAMS = \
 	-DPLATFORM_TARGET=darwin \
 	-G Xcode
+
+DARWIN_CMAKE_PARAMS = \
+	-DPLATFORM_TARGET=darwin
 
 RPI_CMAKE_PARAMS = \
 	-DPLATFORM_TARGET=raspberrypi \
 	-DCMAKE_TOOLCHAIN_FILE=${TOOLCHAIN_DIR}/raspberrypi.toolchain.cmake
 
-clean: clean-android clean-osx clean-ios clean-rpi clean-tests
+clean: clean-android clean-osx clean-ios clean-rpi clean-tests clean-osx-xcode
 
 clean-android:
-	ndk-build -C android/jni clean
 	ant -f android/build.xml clean
 	rm -rf ${ANDROID_BUILD_DIR}
 	rm -rf android/libs/${ANDROID_ARCH} android/obj
@@ -82,6 +88,9 @@ clean-ios:
 
 clean-rpi:
 	rm -rf ${RPI_BUILD_DIR}
+
+clean-osx-xcode:
+	rm -rf ${OSX_XCODE_BUILD_DIR}
 
 clean-tests:
 	rm -rf ${TESTS_BUILD_DIR}
@@ -99,8 +108,17 @@ cmake-android:
 	cd ${ANDROID_BUILD_DIR} && \
 	cmake ../.. ${ANDROID_CMAKE_PARAMS}
 
-osx: cmake-osx ${OSX_BUILD_DIR}/${OSX_XCODE_PROJ}
-	xcodebuild -target ${OSX_TARGET} -project ${OSX_BUILD_DIR}/${OSX_XCODE_PROJ}
+osx: cmake-osx ${OSX_BUILD_DIR}/Makefile
+	cd ${OSX_BUILD_DIR} && \
+	${MAKE}
+
+osx-xcode: cmake-osx-xcode ${OSX_XCODE_BUILD_DIR}
+	xcodebuild -target ${OSX_TARGET} -project ${OSX_XCODE_BUILD_DIR}/${OSX_XCODE_PROJ}
+
+cmake-osx-xcode:
+	mkdir -p ${OSX_XCODE_BUILD_DIR} 
+	cd ${OSX_XCODE_BUILD_DIR} && \
+	cmake ../.. ${DARWIN_XCODE_CMAKE_PARAMS}
 
 cmake-osx: 
 	mkdir -p ${OSX_BUILD_DIR} 

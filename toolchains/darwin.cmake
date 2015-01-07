@@ -46,7 +46,6 @@ function(link_libraries)
         ${GLFW})
 
     target_link_libraries(${EXECUTABLE_NAME} -lcurl) #use system libcurl
-    target_link_libraries(${EXECUTABLE_NAME} ${PROJECT_SOURCE_DIR}/osx/precompiled/libtess2/libtess2.a)
     target_link_libraries(${EXECUTABLE_NAME} core ${GLFW_LIBRARIES})
 
     # add resource files and property list
