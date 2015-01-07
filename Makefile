@@ -27,7 +27,7 @@ RPI_BUILD_DIR = build/rpi
 TESTS_BUILD_DIR = build/tests
 UNIT_TESTS_BUILD_DIR = ${TESTS_BUILD_DIR}/unit
 
-TOOLCHAIN_DIR = build/toolchains
+TOOLCHAIN_DIR = toolchains
 OSX_TARGET = tangram
 IOS_TARGET = tangram
 OSX_XCODE_PROJ = tangram.xcodeproj
@@ -76,7 +76,6 @@ RPI_CMAKE_PARAMS = \
 clean: clean-android clean-osx clean-ios clean-rpi clean-tests clean-osx-xcode
 
 clean-android:
-	ndk-build -C android/jni clean
 	ant -f android/build.xml clean
 	rm -rf ${ANDROID_BUILD_DIR}
 	rm -rf android/libs/${ANDROID_ARCH} android/obj

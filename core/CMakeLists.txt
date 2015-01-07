@@ -2,9 +2,11 @@ cmake_minimum_required(VERSION 2.8)
 project(core)
 
 set(INCLUDE_DIR include)
+set(DEPENDENCIES_DIR dependencies)
 set(SOURCE_DIR src)
 
-add_subdirectory("${INCLUDE_DIR}/jsoncpp")
+add_subdirectory("${DEPENDENCIES_DIR}/jsoncpp")
+add_subdirectory("${DEPENDENCIES_DIR}/tess2")
 add_subdirectory("${INCLUDE_DIR}/glm")
 
 file(GLOB_RECURSE FOUND_HEADERS "${SOURCE_DIR}/*.h")
@@ -15,9 +17,11 @@ foreach(_headerFile ${FOUND_HEADERS})
     get_filename_component(_dir ${_headerFile} PATH)
     list(APPEND INCLUDE_DIRS ${_dir})
 endforeach()
+list(APPEND INCLUDE_DIRS "${DEPENDENCIES_DIR}/tess2/libtess2/Include")
+list(APPEND INCLUDE_DIRS "${DEPENDENCIES_DIR}/jsoncpp")
 list(REMOVE_DUPLICATES INCLUDE_DIRS)
 
-include_directories(${INCLUDE_DIR}/jsoncpp ${INCLUDE_DIR} ${INCLUDE_DIRS})
+include_directories(${INCLUDE_DIR} ${INCLUDE_DIRS})
 
 # adding some other dependent target files if needed
 set(FOUND_SOURCES ${FOUND_SOURCES} ${ADDITIONNAL_TARGET_DEPENDENT_SRC_FILES})
@@ -27,7 +31,7 @@ if(NOT DEFINED CORE_LIB_NAME)
 endif()
 
 add_library(${CORE_LIB_NAME} ${CORE_LIB_TYPE} ${FOUND_SOURCES})
-target_link_libraries(${CORE_LIB_NAME} json ${CORE_LIB_DEPS})
+target_link_libraries(${CORE_LIB_NAME} json libtess2 ${CORE_LIB_DEPS})
 
 # post build commands
 add_custom_command(TARGET ${CORE_LIB_NAME}
