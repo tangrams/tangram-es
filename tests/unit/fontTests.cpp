@@ -2,6 +2,7 @@
 #include "catch/catch.hpp"
 
 #include <iostream>
+#include <vector>
 #include "tangram.h"
 #define GLFONTSTASH_IMPLEMENTATION
 #include "fontstash/glfontstash.h"
@@ -96,13 +97,38 @@ TEST_CASE( "Test that the overflow callback gets called for the right overflow s
     glfonsBufferCreate(context, TEXT_BUFFER_SIZE, &p.bufferId);
     glfonsBindBuffer(context, p.bufferId);
 
-    fonsSetSize(context, 15.0);
-    fonsSetFont(context, font);
-
     fsuint id[ID_OVERFLOW_SIZE + 1];
     // create an overflow
     glfonsGenText(context, ID_OVERFLOW_SIZE + 1, id);
 
     glfonsDelete(context);
 }
+
+TEST_CASE( "Test that the number of vertices correspond to the logic", "[Core][Fontstash][glfonsVertices]" ) {
+    userPtr p;  
+
+    FONScontext* context = initContext(&p);
+    int font = initFont(context);
+
+    glfonsBufferCreate(context, TEXT_BUFFER_SIZE, &p.bufferId);
+    glfonsBindBuffer(context, p.bufferId);
+
+    fonsSetSize(context, 15.0);
+    fonsSetFont(context, font);
+
+    fsuint id;
+    glfonsGenText(context, 1, &id);
+
+    std::string text("tangram");
+    glfonsRasterize(context, id, text.c_str(), FONS_EFFECT_NONE);
+
+    std::vector<float> vertices;
+    int nverts = 0;
+    glfonsVertices(context, &vertices, &nverts);
+
+    REQUIRE(nverts == text.size() * 6); // shoud have 6 vertices per glyph
+
+    glfonsDelete(context);
+}
+
 
