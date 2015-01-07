@@ -231,7 +231,7 @@ void glfonsRasterize(FONScontext* ctx, fsuint textId, const char* s, FONSeffectT
     float inf = std::numeric_limits<float>::infinity();
     float x0 = inf, x1 = -inf, y0 = inf, y1 = -inf;
     for(int i = 0, off = 0; i < ctx->nverts * 2; i += 2, off += INNER_DATA_OFFSET) {
-        GLfloat x, y, u, v;
+        float x, y, u, v;
 
         x = ctx->verts[i];
         y = ctx->verts[i+1];
