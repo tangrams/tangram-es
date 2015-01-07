@@ -30,8 +30,8 @@ if [[ ${TRAVIS_OS_NAME} == "linux" ]]; then
 
     # not installing mesa and opengl right now, will need with linux builds though
 
-    # install jdk
-    sudo apt-get -qq -y install openjdk-7-jdk ant lib32z1-dev
+    # install jdk, ant and 32bit dependencies for android sdk
+    sudo apt-get -qq -y install openjdk-7-jdk ant lib32z1-dev lib32stdc++6
 
     # install android sdk
     wget https://dl-ssl.google.com/android/android-sdk_${ANDROID_SDK_VERSION}-linux.tgz
