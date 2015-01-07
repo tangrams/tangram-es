@@ -217,7 +217,7 @@ void FontStyle::setup(View& _view) {
     glDisable(GL_DEPTH_TEST);
 }
 
-void FontStyle::unsetup() {
+void FontStyle::teardown() {
     glDisable(GL_BLEND);
     glEnable(GL_DEPTH_TEST);
 }

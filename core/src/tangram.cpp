@@ -157,7 +157,7 @@ void render() {
             }
         }
 
-        style->unsetup();
+        style->teardown();
     }
 
     while (Error::hadGlError("Tangram::render()")) {}
