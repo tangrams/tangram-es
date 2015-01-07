@@ -11,6 +11,7 @@ matrix:
           compiler: gcc
 
 before_install:
+    - git submodule init && git submodule update
     - source ./travis/before_install.sh
 
 install: ulimit -c
