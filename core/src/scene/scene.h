@@ -19,7 +19,7 @@ public:
     void addStyle(std::unique_ptr<Style> _style);
     
     /*  Add a Directional Light */
-    void addLight(std::shared_ptr<Light> _light, InjectionType _type = DEFAULT_INJ);
+    void addLight(std::shared_ptr<Light> _light, InjectionType _type = DEFAULT);
 
     std::vector<std::unique_ptr<Style>>& getStyles() { return m_styles; };
     

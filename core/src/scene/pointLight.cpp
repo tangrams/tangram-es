@@ -1,63 +1,63 @@
 #include "pointLight.h"
 #include "util/stringsOp.h"
 
-PointLight::PointLight(const std::string& _name, bool _dynamic):Light(_name,_dynamic),m_position(0.0),m_constantAttenuation(0.0),m_linearAttenuation(0.0),m_quadraticAttenuation(0.0){
+PointLight::PointLight(const std::string& _name, bool _dynamic):Light(_name,_dynamic),m_position(0.0),m_constantAttenuation(0.0),m_linearAttenuation(0.0),m_quadraticAttenuation(0.0) {
     m_typeName = "PointLight";
-    m_type = LightType::LIGHT_POINT;
-    m_injType = FRAGMENT_INJ;
+    m_type = LightType::POINT;
+    m_injType = FRAGMENT;
 }
 
-PointLight::~PointLight(){
+PointLight::~PointLight() {
 
 }
 
-void PointLight::setPosition(const glm::vec3 &_pos){
+void PointLight::setPosition(const glm::vec3 &_pos) {
     m_position.x = _pos.x;
     m_position.y = _pos.y;
     m_position.z = _pos.z;
     m_position.w = 0.0;
 }
 
-void PointLight::setConstantAttenuation(float _constantAtt){
+void PointLight::setConstantAttenuation(float _constantAtt) {
     m_constantAttenuation = _constantAtt;
 }
 
-void PointLight::setLinearAttenuation(float _linearAtt){
+void PointLight::setLinearAttenuation(float _linearAtt) {
     m_linearAttenuation = _linearAtt;
 }
 
-void PointLight::setQuadreaticAttenuation(float _quadraticAtt){
+void PointLight::setQuadreaticAttenuation(float _quadraticAtt) {
     m_quadraticAttenuation = _quadraticAtt;
 }
 
-void PointLight::setAttenuation(float _constant, float _linear, float _quadratic){
+void PointLight::setAttenuation(float _constant, float _linear, float _quadratic) {
     m_constantAttenuation = _constant;
     m_linearAttenuation = _linear;
     m_quadraticAttenuation = _quadratic;
 }
 
-void PointLight::setupProgram( std::shared_ptr<ShaderProgram> _shader ){
-    if(m_dynamic){
+void PointLight::setupProgram(std::shared_ptr<ShaderProgram> _shader) {
+    if (m_dynamic) {
         Light::setupProgram(_shader);
-        _shader->setUniformf(getUniformName()+".position", glm::vec4(m_position) );
+        _shader->setUniformf(getUniformName()+".position", glm::vec4(m_position));
 
-        if(m_constantAttenuation!=0.0){
+        if (m_constantAttenuation!=0.0) {
             _shader->setUniformf(getUniformName()+".constantAttenuation", m_constantAttenuation);
         }
 
-        if(m_linearAttenuation!=0.0){
+        if (m_linearAttenuation!=0.0) {
             _shader->setUniformf(getUniformName()+".linearAttenuation", m_linearAttenuation);
         }
 
-        if(m_quadraticAttenuation!=0.0){
+        if (m_quadraticAttenuation!=0.0) {
             _shader->setUniformf(getUniformName()+".quadraticAttenuation", m_quadraticAttenuation);
         }
     }
 }
 
-std::string PointLight::getClassBlock(){
+std::string PointLight::getClassBlock() {
     static bool bFirst = true;
-    if (bFirst){
+    if (bFirst) {
         bFirst = false;
         return stringFromResource("point_light.glsl")+"\n";
     } else {
@@ -65,22 +65,22 @@ std::string PointLight::getClassBlock(){
     }
 }
 
-std::string PointLight::getInstanceDefinesBlock(){
+std::string PointLight::getInstanceDefinesBlock() {
     std::string defines = "\n";
 
-    if(m_constantAttenuation!=0.0){
+    if (m_constantAttenuation!=0.0) {
         defines += "#ifndef POINTLIGHT_CONSTANT_ATTENUATION\n";
         defines += "#define POINTLIGHT_CONSTANT_ATTENUATION\n";
         defines += "#endif\n";
     }
 
-    if(m_linearAttenuation!=0.0){
+    if (m_linearAttenuation!=0.0) {
         defines += "#ifndef POINTLIGHT_LINEAR_ATTENUATION\n";
         defines += "#define POINTLIGHT_LINEAR_ATTENUATION\n";
         defines += "#endif\n";
     }
 
-    if(m_quadraticAttenuation!=0.0){
+    if (m_quadraticAttenuation!=0.0) {
         defines += "#ifndef POINTLIGHT_QUADRATIC_ATTENUATION\n";
         defines += "#define POINTLIGHT_QUADRATIC_ATTENUATION\n";
         defines += "#endif\n";
@@ -88,17 +88,17 @@ std::string PointLight::getInstanceDefinesBlock(){
     return defines;
 }
 
-std::string PointLight::getInstanceAssignBlock(){
+std::string PointLight::getInstanceAssignBlock() {
     std::string block = Light::getInstanceAssignBlock();
-    if(!m_dynamic){
+    if (!m_dynamic) {
         block += ", " + getString(m_position);
-        if(m_constantAttenuation!=0.0){
+        if (m_constantAttenuation!=0.0) {
             block += ", " + getString(m_constantAttenuation);
         }
-        if(m_linearAttenuation!=0.0){
+        if (m_linearAttenuation!=0.0) {
             block += ", " + getString(m_linearAttenuation);
         }
-        if(m_quadraticAttenuation!=0.0){
+        if (m_quadraticAttenuation!=0.0) {
             block += ", " + getString(m_quadraticAttenuation);
         }
         block += ")";
