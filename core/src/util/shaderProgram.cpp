@@ -41,7 +41,7 @@ void ShaderProgram::setSourceStrings(const std::string& _fragSrc, const std::str
 }
 
 void ShaderProgram::addSourceBlock(const std::string& _tagName, const std::string &_glslSource){
-    m_sourceBlocks[_tagName].push_back(_glslSource+"\n");
+    m_sourceBlocks[_tagName].push_back("\n" + _glslSource);
     m_needsBuild = true;
 }
 
@@ -100,25 +100,22 @@ bool ShaderProgram::build() {
     std::string fragSrc = m_fragmentShaderSource;
     
     for (auto& block : m_sourceBlocks) {
-
-        std::string blockSum = "\n";
-
-        for (auto& source : block.second) {
-            blockSum += source + "\n";
-        }
         
         std::string tag = "#pragma tangram: " + block.first;
         
-        int tagPos = fragSrc.find(tag);
-        
-        if (tagPos != std::string::npos) {
-            fragSrc.insert(tagPos + tag.length(), blockSum);
-        }
-        
-        tagPos = vertSrc.find(tag);
-        
-        if (tagPos != std::string::npos) {
-            vertSrc.insert(tagPos + tag.length(), blockSum);
+        for (auto& source : block.second) {
+            
+            int tagPos = fragSrc.find(tag);
+            
+            if (tagPos != std::string::npos) {
+                fragSrc.insert(tagPos + tag.length(), source);
+            }
+            
+            tagPos = vertSrc.find(tag);
+            
+            if (tagPos != std::string::npos) {
+                vertSrc.insert(tagPos + tag.length(), source);
+            }
         }
 
     }

@@ -5,6 +5,7 @@
 #include "error.h"
 #include <string>
 #include <vector>
+#include <map>
 #include <unordered_map>
 #include <unordered_set>
 
@@ -138,7 +139,7 @@ private:
     GLuint m_glFragmentShader;
     GLuint m_glVertexShader;
 
-    std::unordered_map<std::string, std::vector<std::string>> m_sourceBlocks;
+    std::map<std::string, std::vector<std::string>> m_sourceBlocks;
     
     bool m_needsBuild;
 };
