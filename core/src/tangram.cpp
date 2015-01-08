@@ -31,7 +31,6 @@ void initialize() {
         
         // Move the view to coordinates in Manhattan so we have something interesting to test
         glm::dvec2 target = m_view->getMapProjection().LonLatToMeters(glm::dvec2(-74.00796, 40.70361));
-        //glm::dvec2 target = m_view->getMapProjection().LonLatToMeters(glm::dvec2(-74.77294921875, 40.77638178482896));
         m_view->setPosition(target.x, target.y);
     }
 
