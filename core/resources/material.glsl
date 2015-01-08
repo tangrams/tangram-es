@@ -1,17 +1,17 @@
 struct Material {
-	#ifdef MATERIAL_EMISSION
+	#ifdef TANGRAM_MATERIAL_EMISSION
 	vec4 emission;
 	#endif
 
-	#ifdef MATERIAL_AMBIENT
+	#ifdef TANGRAM_MATERIAL_AMBIENT
 	vec4 ambient;
 	#endif 
 
-	#ifdef MATERIAL_DIFFUSE
+	#ifdef TANGRAM_MATERIAL_DIFFUSE
 	vec4 diffuse;
 	#endif
 
-	#ifdef MATERIAL_SPECULAR
+	#ifdef TANGRAM_MATERIAL_SPECULAR
 	vec4 specular;
 	float shininess;
 	#endif

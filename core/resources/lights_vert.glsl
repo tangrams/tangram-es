@@ -17,15 +17,15 @@ void calculateLighting(in vec3 _eyeToPoint, in vec3 _normal) {
 //  COMPUTE ALL LIGHTS
 #pragma tangram: lights_to_compute
 
-	#ifdef MATERIAL_AMBIENT
+	#ifdef TANGRAM_MATERIAL_AMBIENT
 	v_amb = amb;
 	#endif
 
-	#ifdef MATERIAL_DIFFUSE
+	#ifdef TANGRAM_MATERIAL_DIFFUSE
 	v_diff = diff;
 	#endif
 
-	#ifdef MATERIAL_SPECULAR
+	#ifdef TANGRAM_MATERIAL_SPECULAR
 	v_spec = spec;
 	#endif
 }

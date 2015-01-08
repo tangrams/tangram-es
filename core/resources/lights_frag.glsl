@@ -16,19 +16,19 @@ vec4 calculateLighting(in vec3 _eyeToPoint, in vec3 _normal) {
 	//
 	vec4 color = vec4(0.0);
   
-	#ifdef MATERIAL_EMISSION
+	#ifdef TANGRAM_MATERIAL_EMISSION
 	color = g_material.emission;
 	#endif
 
-	#ifdef MATERIAL_AMBIENT
+	#ifdef TANGRAM_MATERIAL_AMBIENT
 	color += amb * g_material.ambient;
 	#endif
 
-	#ifdef MATERIAL_DIFFUSE
+	#ifdef TANGRAM_MATERIAL_DIFFUSE
 	color += diff * g_material.diffuse;
 	#endif
 
-	#ifdef MATERIAL_SPECULAR
+	#ifdef TANGRAM_MATERIAL_SPECULAR
 	color += spec * g_material.specular;
 	#endif
 

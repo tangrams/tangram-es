@@ -9,25 +9,25 @@ struct SpotLight {
     float spotCosCutoff;
     float spotExponent;
 
-    #ifdef SPOTLIGHT_CONSTANT_ATTENUATION
-    #define SPOTLIGHT_ATTENUATION
+    #ifdef TANGRAM_SPOTLIGHT_CONSTANT_ATTENUATION
+    #define TANGRAM_SPOTLIGHT_ATTENUATION
     float constantAttenuation;
     #endif
 
-    #ifdef SPOTLIGHT_LINEAR_ATTENUATION
-    #ifndef SPOTLIGHT_ATTENUATION
-        #define SPOTLIGHT_ATTENUATION
+    #ifdef TANGRAM_SPOTLIGHT_LINEAR_ATTENUATION
+    #ifndef TANGRAM_SPOTLIGHT_ATTENUATION
+        #define TANGRAM_SPOTLIGHT_ATTENUATION
     #endif
-    #define SPOTLIGHT_DISTANCE
+    #define TANGRAM_SPOTLIGHT_DISTANCE
     float linearAttenuation;
     #endif
 
-    #ifdef SPOTLIGHT_QUADRATIC_ATTENUATION
-    #ifndef SPOTLIGHT_ATTENUATION
-        #define SPOTLIGHT_ATTENUATION
+    #ifdef TANGRAM_SPOTLIGHT_QUADRATIC_ATTENUATION
+    #ifndef TANGRAM_SPOTLIGHT_ATTENUATION
+        #define TANGRAM_SPOTLIGHT_ATTENUATION
     #endif
-    #ifndef SPOTLIGHT_DISTANCE
-        #define SPOTLIGHT_DISTANCE
+    #ifndef TANGRAM_SPOTLIGHT_DISTANCE
+        #define TANGRAM_SPOTLIGHT_DISTANCE
     #endif
     float quadraticAttenuation;
     #endif
@@ -37,7 +37,7 @@ void calculateLight(in SpotLight _light, in vec3 _eye, in vec3 _eyeToPoint, in v
     // Compute vector from surface to light position
     vec3 VP = normalize( vec3(_light.position) - _eyeToPoint );
 
-    #ifdef SPOTLIGHT_DISTANCE
+    #ifdef TANGRAM_SPOTLIGHT_DISTANCE
     float dist = length( vec3(_light.position) - _eyeToPoint );
     #endif 
 
@@ -52,18 +52,18 @@ void calculateLight(in SpotLight _light, in vec3 _eye, in vec3 _eyeToPoint, in v
         spotAttenuation = pow( spotDot, _light.spotExponent );
     }
 
-    #ifdef SPOTLIGHT_ATTENUATION
+    #ifdef TANGRAM_SPOTLIGHT_ATTENUATION
     float atFactor = 0.0;
     {
-        #ifdef SPOTLIGHT_CONSTANT_ATTENUATION
+        #ifdef TANGRAM_SPOTLIGHT_CONSTANT_ATTENUATION
         atFactor += _light.constantAttenuation;
         #endif
 
-        #ifdef SPOTLIGHT_LINEAR_ATTENUATION
+        #ifdef TANGRAM_SPOTLIGHT_LINEAR_ATTENUATION
         atFactor += _light.linearAttenuation * dist;
         #endif
             
-        #ifdef SPOTLIGHT_QUADRATIC_ATTENUATION
+        #ifdef TANGRAM_SPOTLIGHT_QUADRATIC_ATTENUATION
         atFactor += _light.quadraticAttenuation * dist * dist;
         #endif
     }
@@ -73,15 +73,15 @@ void calculateLight(in SpotLight _light, in vec3 _eye, in vec3 _eyeToPoint, in v
     // normal . light direction
     float nDotVP = min( max(0.0, dot( _normal, VP ) ), 1.0);
 
-    #ifdef MATERIAL_AMBIENT
+    #ifdef TANGRAM_MATERIAL_AMBIENT
     _ambient  += _light.ambient * spotAttenuation;
     #endif
 
-    #ifdef MATERIAL_DIFFUSE 
+    #ifdef TANGRAM_MATERIAL_DIFFUSE 
     _diffuse  += _light.diffuse * nDotVP * spotAttenuation;
     #endif
 
-    #ifdef MATERIAL_SPECULAR
+    #ifdef TANGRAM_MATERIAL_SPECULAR
     // Power factor for shinny speculars
     float pf = 0.0;              
     if (nDotVP != 0.0){

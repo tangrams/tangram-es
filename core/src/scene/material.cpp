@@ -47,26 +47,26 @@ std::string Material::getDefinesBlock(){
 	std::string defines = "\n";
 
 	if(m_bEmission){
-		defines += "#ifndef MATERIAL_EMISSION\n";
-		defines += "#define MATERIAL_EMISSION\n";
+		defines += "#ifndef TANGRAM_MATERIAL_EMISSION\n";
+		defines += "#define TANGRAM_MATERIAL_EMISSION\n";
 		defines	+= "#endif\n";
 	}
 	
 	if(m_bAmbient){
-		defines += "#ifndef MATERIAL_AMBIENT\n";
-		defines += "#define MATERIAL_AMBIENT\n";
+		defines += "#ifndef TANGRAM_MATERIAL_AMBIENT\n";
+		defines += "#define TANGRAM_MATERIAL_AMBIENT\n";
 		defines	+= "#endif\n";
 	}
     
     if(m_bDiffuse){
-    	defines += "#ifndef MATERIAL_DIFFUSE\n";
-    	defines += "#define MATERIAL_DIFFUSE\n";
+    	defines += "#ifndef TANGRAM_MATERIAL_DIFFUSE\n";
+    	defines += "#define TANGRAM_MATERIAL_DIFFUSE\n";
     	defines	+= "#endif\n";
     }
     
     if(m_bSpecular){
-    	defines += "#ifndef MATERIAL_SPECULAR\n";
-    	defines += "#define MATERIAL_SPECULAR\n";
+    	defines += "#ifndef TANGRAM_MATERIAL_SPECULAR\n";
+    	defines += "#define TANGRAM_MATERIAL_SPECULAR\n";
     	defines	+= "#endif\n";
     }
     
