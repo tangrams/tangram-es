@@ -23,8 +23,8 @@ void Scene::addLight(std::shared_ptr<Light> _light, InjectionType _type) {
         std::string fragmentLightBlock = stringFromResource("lights_frag.glsl");
         
         for (auto& style : m_styles) {
-            style->getShaderProgram()->addSourceBlock("_vert_lighting", vertexLightBlock+"\n");
-            style->getShaderProgram()->addSourceBlock("_frag_lighting", fragmentLightBlock+"\n");
+            style->getShaderProgram()->addSourceBlock("_vertex_lighting", vertexLightBlock+"\n");
+            style->getShaderProgram()->addSourceBlock("_fragment_lighting", fragmentLightBlock+"\n");
         }
     }
 

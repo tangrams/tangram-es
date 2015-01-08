@@ -9,8 +9,7 @@ vec4 calculateLighting(in vec3 _eyeToPoint, in vec3 _normal) {
 	vec4 diff = v_diff;
 	vec4 spec = v_spec;
 
-//  COMPUTE ALL LIGHTS
-#pragma tangram: frag_lights_to_compute
+#pragma tangram: fragment_lights_to_compute
 
 	//  Final light intensity calculation
 	//

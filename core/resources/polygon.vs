@@ -8,7 +8,7 @@ uniform float u_time;
 
 #pragma tangram: defines
 #pragma tangram: material
-#pragma tangram: _vert_lighting
+#pragma tangram: _vertex_lighting
 
 attribute vec4 a_position;
 attribute vec4 a_color;

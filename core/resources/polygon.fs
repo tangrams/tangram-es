@@ -8,7 +8,7 @@ uniform float u_time;
 
 #pragma tangram: defines
 #pragma tangram: material
-#pragma tangram: _frag_lighting
+#pragma tangram: _fragment_lighting
 
 varying vec4 v_color;
 varying vec3 v_eyeToPoint;
