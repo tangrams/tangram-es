@@ -1,8 +1,3 @@
-/*  This is the abstract class that other type of lights can extend from it.
- *  Another possible aproach could be something like the vertexLayout but this one
- *  let you define specific methods for subclassed lights.
- */
-
 #pragma once
  
 #include <memory>
@@ -10,20 +5,24 @@
 #include "util/shaderProgram.h"
 
 typedef enum {
-    DEFAULT_INJ,
-    VERTEX_INJ,
-    FRAGMENT_INJ,
-    BOTH_INJ
+    DEFAULT,
+    VERTEX,
+    FRAGMENT,
+    BOTH
 } InjectionType;
 
 enum class LightType {
-    LIGHT_NOT_DEFINE,
-    LIGHT_DIRECTIONAL,
-    LIGHT_POINT,
-    LIGHT_SPOT,
-    LIGHT_CUSTOM
+    UNDEFINED,
+    DIRECTIONAL,
+    POINT,
+    SPOT,
+    CUSTOM
 };
 
+/*  This is the abstract class that other type of lights can extend from it.
+ *  Another possible aproach could be something like the vertexLayout but this one
+ *  let you define specific methods for subclassed lights.
+ */
 class Light {
 public:
     
@@ -56,7 +55,7 @@ public:
     virtual std::string getInstanceComputeBlock();
 
     /*  Inject the needed lines of GLSL code on the shader to make this light work */
-    virtual void injectOnProgram( std::shared_ptr<ShaderProgram> _shader, InjectionType _injType = DEFAULT_INJ);
+    virtual void injectOnProgram( std::shared_ptr<ShaderProgram> _shader, InjectionType _injType = DEFAULT);
 
     /*  Pass the uniforms for this particular DYNAMICAL light on the passed shader */
     virtual void setupProgram( std::shared_ptr<ShaderProgram> _shader );
@@ -93,9 +92,9 @@ protected:
     glm::vec4 m_specular;
 
     /*  This is use to identify the type of light after been pull inside a vector of uniq_ptr of this abstract class*/
-    LightType   m_type;
+    LightType m_type;
 
-    InjectionType   m_injType;
+    InjectionType m_injType;
 
-    bool        m_dynamic;
+    bool m_dynamic;
 };

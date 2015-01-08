@@ -9,7 +9,7 @@ public:
 	virtual ~PointLight();
     
     /*  Set the position relative to the camera */
-    virtual void setPosition(const glm::vec3& _pos );
+    virtual void setPosition(const glm::vec3& _pos);
 
     /*  Set the constant attenuation. Basically dim */
     virtual void setConstantAttenuation(float _constantAtt);
@@ -21,9 +21,9 @@ public:
     virtual void setQuadreaticAttenuation(float _quadraticAtt);
 
     /*  Set the the constant, linear and quadratic attenuation. */
-    virtual void setAttenuation(float _constant , float _linear , float _quadratic );
+    virtual void setAttenuation(float _constant , float _linear , float _quadratic);
     
-    virtual void setupProgram( std::shared_ptr<ShaderProgram> _program ) override;
+    virtual void setupProgram(std::shared_ptr<ShaderProgram> _program) override;
     
 protected:
 
@@ -32,7 +32,7 @@ protected:
     virtual std::string getInstanceDefinesBlock() override;
     virtual std::string getInstanceAssignBlock() override;
     
-    glm::vec4	m_position;
+    glm::vec4 m_position;
 
     float m_constantAttenuation;
     float m_linearAttenuation;

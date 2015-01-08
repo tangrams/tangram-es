@@ -1,9 +1,14 @@
+#ifdef GL_ES
+precision mediump float;
+#endif
+
 uniform mat4 u_modelView;
 uniform mat4 u_modelViewProj;
 uniform float u_time;
 
+#pragma tangram: defines
 #pragma tangram: material
-#pragma tangram: frag_lighting
+#pragma tangram: _frag_lighting
 
 varying vec4 v_color;
 varying vec3 v_eyeToPoint;

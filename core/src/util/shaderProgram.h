@@ -6,8 +6,8 @@
 #include <string>
 #include <vector>
 #include <map>
-#include <unordered_set>
 #include <unordered_map>
+#include <unordered_set>
 
 #include "glm/glm.hpp"
 
@@ -27,14 +27,18 @@ public:
     ShaderProgram();
     virtual ~ShaderProgram();
 
-    /*  Load the string code for fragment and vertex shaders*/
-    void loadSourceStrings(const std::string& _fragSrc, const std::string& _vertSrc);
+    /* Set the vertex and fragment shader GLSL source to the given strings */
+    void setSourceStrings(const std::string& _fragSrc, const std::string& _vertSrc);
 
-    /*  Add a key to replace every "#prama tangram: [tagName]" for the strings added */
-    void addBlock(const std::string& _tagName, const std::string& _glslSource);
+    /*  Add a block of GLSL to be injected at "#pragma tangram: [_tagName]" in the shader sources */
+    void addSourceBlock(const std::string& _tagName, const std::string& _glslSource);
 
-    /*  Parser throught vert and frag shader replacing every "#prama tangram: [tagName]" 
-    * using the m_blocks key and strings */
+    /*
+     * Applies all source blocks to the source strings for this shader and attempts to compile
+     * and then link the resulting vertex and fragment shaders; if compiling or linking fails 
+     * it prints the compiler log, returns false, and keeps the program's previous state; if 
+     * successful it returns true.
+     */
     bool build();
 
     /* Getters */
@@ -52,17 +56,16 @@ public:
      */
     const GLint getUniformLocation(const std::string& _uniformName);
 
-    // TODO: Once we have file system abstractions, provide a method to build a program from file names
-
     /* 
      * Returns true if this object represents a valid OpenGL shader program
      */
     bool isValid() const { return m_glProgram != 0; };
 
     /* 
-     * Binds the program in openGL if it is not already bound
+     * Binds the program in openGL if it is not already bound; If the shader sources
+     * have been modified since the last time build() was called, also calls build()
      */
-    void use() const;
+    void use();
 
     /* 
      * Ensures the program is bound and then sets the named uniform to the given value(s)
@@ -119,14 +122,6 @@ private:
         // Therefore, we use a dummy structure which does nothing but initialize
         // to a value that is not a valid uniform or attribute location. 
     };
-
-    /*
-     * buildFromSourceStrings - attempts to compile a fragment shader and vertex shader from
-     * strings representing the source code for each, then links them into a complete program;
-     * if compiling or linking fails it prints the compiler log, returns false, and keeps the
-     * program's previous state; if successful it returns true.
-     */
-    bool buildFromSourceStrings(const std::string& _fragSrc, const std::string& _vertSrc);
     
     static std::unordered_set<ShaderProgram*> s_managedPrograms;
 
@@ -144,5 +139,7 @@ private:
     GLuint m_glFragmentShader;
     GLuint m_glVertexShader;
 
-    std::map<std::string, std::vector<std::string>> m_blocks;
+    std::map<std::string, std::vector<std::string>> m_sourceBlocks;
+    
+    bool m_needsBuild;
 };
