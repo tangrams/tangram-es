@@ -69,20 +69,20 @@ std::string PointLight::getInstanceDefinesBlock() {
     std::string defines = "\n";
 
     if (m_constantAttenuation!=0.0) {
-        defines += "#ifndef POINTLIGHT_CONSTANT_ATTENUATION\n";
-        defines += "#define POINTLIGHT_CONSTANT_ATTENUATION\n";
+        defines += "#ifndef TANGRAM_POINTLIGHT_CONSTANT_ATTENUATION\n";
+        defines += "#define TANGRAM_POINTLIGHT_CONSTANT_ATTENUATION\n";
         defines += "#endif\n";
     }
 
     if (m_linearAttenuation!=0.0) {
-        defines += "#ifndef POINTLIGHT_LINEAR_ATTENUATION\n";
-        defines += "#define POINTLIGHT_LINEAR_ATTENUATION\n";
+        defines += "#ifndef TANGRAM_POINTLIGHT_LINEAR_ATTENUATION\n";
+        defines += "#define TANGRAM_POINTLIGHT_LINEAR_ATTENUATION\n";
         defines += "#endif\n";
     }
 
     if (m_quadraticAttenuation!=0.0) {
-        defines += "#ifndef POINTLIGHT_QUADRATIC_ATTENUATION\n";
-        defines += "#define POINTLIGHT_QUADRATIC_ATTENUATION\n";
+        defines += "#ifndef TANGRAM_POINTLIGHT_QUADRATIC_ATTENUATION\n";
+        defines += "#define TANGRAM_POINTLIGHT_QUADRATIC_ATTENUATION\n";
         defines += "#endif\n";
     }
     return defines;

@@ -43,20 +43,20 @@ std::string SpotLight::getInstanceDefinesBlock() {
     std::string defines = "\n";
 
     if (m_constantAttenuation!=0.0) {
-        defines += "#ifndef SPOTLIGHT_CONSTANT_ATTENUATION\n";
-        defines += "#define SPOTLIGHT_CONSTANT_ATTENUATION\n";
+        defines += "#ifndef TANGRAM_SPOTLIGHT_CONSTANT_ATTENUATION\n";
+        defines += "#define TANGRAM_SPOTLIGHT_CONSTANT_ATTENUATION\n";
         defines += "#endif\n";
     }
 
     if (m_linearAttenuation!=0.0) {
-        defines += "#ifndef SPOTLIGHT_LINEAR_ATTENUATION\n";
-        defines += "#define SPOTLIGHT_LINEAR_ATTENUATION\n";
+        defines += "#ifndef TANGRAM_SPOTLIGHT_LINEAR_ATTENUATION\n";
+        defines += "#define TANGRAM_SPOTLIGHT_LINEAR_ATTENUATION\n";
         defines += "#endif\n";
     }
 
     if (m_quadraticAttenuation!=0.0) {
-        defines += "#ifndef SPOTLIGHT_QUADRATIC_ATTENUATION\n";
-        defines += "#define SPOTLIGHT_QUADRATIC_ATTENUATION\n";
+        defines += "#ifndef TANGRAM_SPOTLIGHT_QUADRATIC_ATTENUATION\n";
+        defines += "#define TANGRAM_SPOTLIGHT_QUADRATIC_ATTENUATION\n";
         defines += "#endif\n";
     }
     return defines;
