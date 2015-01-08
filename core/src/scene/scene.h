@@ -2,6 +2,7 @@
 
 #include <vector>
 #include <memory>
+#include <map>
 
 #include "style/style.h"
 #include "scene/light.h"

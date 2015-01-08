@@ -17,12 +17,16 @@ void Scene::addStyle(std::unique_ptr<Style> _style) {
 
 void Scene::addLight(std::shared_ptr<Light> _light, InjectionType _type) {
     
-    //  Add (inject) need code blocks (defines, structs, functions and instances) 
-    //  to compute this light.
-    //  
-    //  NOTE:   still the MAIN "calculateLighting" function (that computes all the lights) 
-    //          HAVE TO be add at the very end
-    //
+    // For the first light added, add the main lighting function
+    if (m_lights.size() == 0) {
+        std::string vertexLightBlock = stringFromResource("lights_vert.glsl");
+        std::string fragmentLightBlock = stringFromResource("lights_frag.glsl");
+        
+        for (auto& style : m_styles) {
+            style->getShaderProgram()->addSourceBlock("vert_lighting", vertexLightBlock+"\n");
+            style->getShaderProgram()->addSourceBlock("frag_lighting", fragmentLightBlock+"\n");
+        }
+    }
 
 
     //  Avoid duplications
@@ -31,7 +35,7 @@ void Scene::addLight(std::shared_ptr<Light> _light, InjectionType _type) {
             _light->injectOnProgram(style->getShaderProgram(), _type);
         }
         m_lights[_light->getName()] = _light;
-    }    
+    }
 }
 
 void Scene::buildShaders() {
@@ -61,8 +65,8 @@ void Scene::buildShaders() {
     }
 
     for (auto& style : m_styles) {
-        style->getShaderProgram()->addBlock("vert_lighting", vertexLightBlock+"\n");
-        style->getShaderProgram()->addBlock("frag_lighting", fragmentLightBlock+"\n");
+        style->getShaderProgram()->addSourceBlock("vert_lighting", vertexLightBlock+"\n");
+        style->getShaderProgram()->addSourceBlock("frag_lighting", fragmentLightBlock+"\n");
     }
 
 

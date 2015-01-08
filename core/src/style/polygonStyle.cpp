@@ -25,7 +25,7 @@ void PolygonStyle::constructShaderProgram() {
     std::string fragShaderSrcStr = stringFromResource("polygon.fs");
     
     m_shaderProgram = std::make_shared<ShaderProgram>();
-    m_shaderProgram->loadSourceStrings(fragShaderSrcStr, vertShaderSrcStr);
+    m_shaderProgram->setSourceStrings(fragShaderSrcStr, vertShaderSrcStr);
 
     m_material.enableSpecular();
     m_material.injectOnProgram(m_shaderProgram); // This is a must for lighting !!

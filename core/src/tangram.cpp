@@ -61,7 +61,12 @@ void initialize() {
         auto directionalLight = std::make_shared<DirectionalLight>("dLight");
         directionalLight->setDiffuseColor(glm::vec4(1.0,1.0,1.0,1.0));
         directionalLight->setDirection(glm::vec3(-1.0, -1.0, 1.0));
-        m_scene->addLight(directionalLight,DEFAULT);
+        m_scene->addLight(directionalLight);
+        
+        auto directionalLight2 = std::make_shared<DirectionalLight>("dLight2");
+        directionalLight2->setDiffuseColor(glm::vec4(1.0,1.0,1.0,1.0));
+        directionalLight2->setDirection(glm::vec3(1.0, 1.0, 1.0));
+        //m_scene->addLight(directionalLight2);
     
         //  Point light forced on vertex shader (the default is fragment)
         auto pointLight = std::make_shared<PointLight>("pLight",true);
@@ -69,7 +74,7 @@ void initialize() {
         pointLight->setSpecularColor(glm::vec4(0.5,0.0,1.0,1.0));
         pointLight->setLinearAttenuation(0.005);
         pointLight->setPosition(glm::vec3(0.0));
-        m_scene->addLight(pointLight,VERTEX);
+        //m_scene->addLight(pointLight,VERTEX);
 
         //  Spot light on Default (fragment) shader
         auto spotLight = std::make_shared<SpotLight>("sLight",true);
@@ -77,11 +82,11 @@ void initialize() {
         spotLight->setPosition(glm::vec3(0.0));
         spotLight->setDirection(glm::vec3(0,PI*0.25,0.0));
         spotLight->setCutOff(PI*0.1, 20.0);
-        m_scene->addLight(spotLight,DEFAULT);
+        //m_scene->addLight(spotLight,DEFAULT);
         
         //-----------------------
 
-        m_scene->buildShaders();
+        //m_scene->buildShaders();
     }
 
     // Create a tileManager

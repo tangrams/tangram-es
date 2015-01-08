@@ -106,8 +106,8 @@ std::string Material::getClassBlock(){
 
 void Material::injectOnProgram( std::shared_ptr<ShaderProgram> _shader ){
 	//  Each light will add the needed :
-    _shader->addBlock("defines",    getDefinesBlock()); 
-    _shader->addBlock("material",   getClassBlock() );
+    _shader->addSourceBlock("defines",    getDefinesBlock());
+    _shader->addSourceBlock("material",   getClassBlock() );
 }
 
 void Material::setupProgram(std::shared_ptr<ShaderProgram> _shader){

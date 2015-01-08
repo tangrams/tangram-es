@@ -31,21 +31,17 @@ void Light::injectOnProgram(std::shared_ptr<ShaderProgram> _shader, InjectionTyp
     if (_injType != DEFAULT) {
         m_injType = _injType;
     }
+    
+    _shader->addSourceBlock("defines", getInstanceDefinesBlock());
 
-    //  Each light will add the needed DEFINES
-    _shader->addBlock("defines",    getInstanceDefinesBlock()); // DEFINES: depending what they need
-
-    //  ... and depending the type of injection (vert, frag or both)
-    if (m_injType == FRAGMENT ||
-        m_injType == BOTH) {
-        _shader->addBlock("frag_lighting",  getClassBlock() + // STRUCT and FUNCTION calculateLight (only once)
-                                            getInstanceBlock() ); // INSTANCIATION of uniform (if dynamic) and global variable (width the data)
+    if (m_injType == FRAGMENT || m_injType == BOTH) {
+        _shader->addSourceBlock("frag_lighting", getClassBlock() + getInstanceBlock());
+        _shader->addSourceBlock("frag_lights_to_compute", getInstanceComputeBlock());
     }
 
-    if (m_injType == VERTEX ||
-        m_injType == BOTH) {
-        _shader->addBlock("vert_lighting",  getClassBlock() + // STRUCT and FUNCTION calculateLight (only once)
-                                            getInstanceBlock() ); // INSTANCIATION of uniform (if dynamic) and global variable (width the data)
+    if (m_injType == VERTEX || m_injType == BOTH) {
+        _shader->addSourceBlock("vert_lighting", getClassBlock() + getInstanceBlock());
+        _shader->addSourceBlock("vert_lights_to_compute", getInstanceComputeBlock());
     }
 }
 

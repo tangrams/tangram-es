@@ -15,7 +15,7 @@ void calculateLighting(in vec3 _eyeToPoint, in vec3 _normal) {
 	v_spec 	= vec4(0.0);
 
 //  COMPUTE ALL LIGHTS
-#pragma tangram: lights_to_compute
+#pragma tangram: vert_lights_to_compute
 
 	#ifdef MATERIAL_AMBIENT
 	v_amb = amb;

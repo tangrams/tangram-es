@@ -9,6 +9,7 @@ ShaderProgram::ShaderProgram() {
     m_glProgram = 0;
     m_glFragmentShader = 0;
     m_glVertexShader = 0;
+    m_needsBuild = true;
     
     addManagedProgram(this);
 
@@ -33,13 +34,15 @@ ShaderProgram::~ShaderProgram() {
     removeManagedProgram(this);
 }
 
-void ShaderProgram::loadSourceStrings(const std::string& _fragSrc, const std::string& _vertSrc){
+void ShaderProgram::setSourceStrings(const std::string& _fragSrc, const std::string& _vertSrc){
     m_fragmentShaderSource = std::string(_fragSrc);
     m_vertexShaderSource = std::string(_vertSrc);
+    m_needsBuild = true;
 }
 
-void ShaderProgram::addBlock(const std::string& _tagName, const std::string &_glslSource){
-    m_blocks[_tagName].push_back(_glslSource+"\n");
+void ShaderProgram::addSourceBlock(const std::string& _tagName, const std::string &_glslSource){
+    m_sourceBlocks[_tagName].push_back(_glslSource+"\n");
+    m_needsBuild = true;
 }
 
 const GLint ShaderProgram::getAttribLocation(const std::string& _attribName) {
@@ -72,8 +75,12 @@ const GLint ShaderProgram::getUniformLocation(const std::string& _uniformName) {
 
 }
 
-void ShaderProgram::use() const {
+void ShaderProgram::use() {
 
+    if (m_needsBuild) {
+        build();
+    }
+    
     if (m_glProgram != 0 && m_glProgram != s_activeGlProgram) {
 
         glUseProgram(m_glProgram);
@@ -83,51 +90,48 @@ void ShaderProgram::use() const {
 
 }
 
-bool ShaderProgram::build(){
+bool ShaderProgram::build() {
+    
+    m_needsBuild = false;
+    
+    // Inject source blocks
+    
+    std::string vertSrc = m_vertexShaderSource;
+    std::string fragSrc = m_fragmentShaderSource;
+    
+    for (auto& block : m_sourceBlocks) {
 
-    //  ALL shaders will have this header. The precision definition together with the defines tag that
-    //  is use by lights and materials.
-    //
-    std::string shaderHeader = "\
-#ifdef GL_ES\n\
-precision mediump float;\n\
-#endif\n\n\
-#pragma tangram: defines\n";    // HERE is where the lights defines are going to be injected
+        std::string blockSum = "\n";
 
-    m_fragmentShaderSource = shaderHeader + m_fragmentShaderSource;
-    m_vertexShaderSource = shaderHeader + m_vertexShaderSource;
-
-    for (auto& block: m_blocks) {
-
-        std::string blockSum = "";
-
-        for(int i = 0; i < block.second.size(); i++){
-            blockSum += block.second[i] + "\n";
+        for (auto& source : block.second) {
+            blockSum += source + "\n";
+        }
+        
+        std::string tag = "#pragma tangram: " + block.first;
+        
+        int tagPos = fragSrc.find(tag);
+        
+        if (tagPos != std::string::npos) {
+            fragSrc.insert(tagPos + tag.length(), blockSum);
+        }
+        
+        tagPos = vertSrc.find(tag);
+        
+        if (tagPos != std::string::npos) {
+            vertSrc.insert(tagPos + tag.length(), blockSum);
         }
 
-        if(!replaceString(m_fragmentShaderSource,"#pragma tangram: " + block.first,blockSum)){
-            logMsg("Tag: %s, not found\n", block.first.c_str());
-        }
-        if(!replaceString(m_vertexShaderSource,"#pragma tangram: " + block.first,blockSum)){
-            logMsg("Tag: %s, not found\n", block.first.c_str());
-        }
-
-    }  
-
-    return buildFromSourceStrings(m_fragmentShaderSource,m_vertexShaderSource);
-}
-
-bool ShaderProgram::buildFromSourceStrings(const std::string& _fragSrc, const std::string& _vertSrc) {
+    }
     
     // Try to compile vertex and fragment shaders, releasing resources and quiting on failure
 
-    GLint vertexShader = makeCompiledShader(_vertSrc, GL_VERTEX_SHADER);
+    GLint vertexShader = makeCompiledShader(vertSrc, GL_VERTEX_SHADER);
 
     if (vertexShader == 0) {
         return false;
     }
 
-    GLint fragmentShader = makeCompiledShader(_fragSrc, GL_FRAGMENT_SHADER);
+    GLint fragmentShader = makeCompiledShader(fragSrc, GL_FRAGMENT_SHADER);
 
     if (fragmentShader == 0) {
         glDeleteShader(vertexShader);
@@ -160,11 +164,9 @@ bool ShaderProgram::buildFromSourceStrings(const std::string& _fragSrc, const st
     m_glFragmentShader = fragmentShader;
     m_glVertexShader = vertexShader;
     m_glProgram = program;
-
-    // Make copies of the shader source code inputs, for this program to keep
-
-    m_fragmentShaderSource = std::string(_fragSrc);
-    m_vertexShaderSource = std::string(_vertSrc);
+    
+    logMsg("Final compiled vertex shader: \n%s\n", vertSrc.c_str());
+    logMsg("Final compiled fragment shader: \n%s\n", fragSrc.c_str());
 
     // Clear any cached shader locations
 
@@ -222,7 +224,6 @@ GLuint ShaderProgram::makeCompiledShader(const std::string& _src, GLenum _type) 
         return 0;
     }
 
-    // logMsg("\n> Successs-----------------------\n%s\n",_src.c_str());
     return shader;
 
 }
@@ -251,7 +252,7 @@ void ShaderProgram::invalidateAllPrograms() {
         prog->m_glProgram = 0;
 
         // Generate new handles by recompiling from saved source strings
-        prog->buildFromSourceStrings(prog->m_fragmentShaderSource, prog->m_vertexShaderSource);
+        prog->build();
         
     }
     
