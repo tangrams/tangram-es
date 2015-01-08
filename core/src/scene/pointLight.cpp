@@ -68,6 +68,10 @@ std::string PointLight::getClassBlock() {
 std::string PointLight::getInstanceDefinesBlock() {
     std::string defines = "\n";
 
+    //  TODO:
+    //       - the shader program class have to be inteligent enought 
+    //          to do this for us.
+    //
     if (m_constantAttenuation!=0.0) {
         defines += "#ifndef TANGRAM_POINTLIGHT_CONSTANT_ATTENUATION\n";
         defines += "#define TANGRAM_POINTLIGHT_CONSTANT_ATTENUATION\n";

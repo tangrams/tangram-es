@@ -37,6 +37,13 @@ void Light::injectOnProgram(std::shared_ptr<ShaderProgram> _shader, InjectionTyp
     if (m_injType == FRAGMENT || m_injType == BOTH) {
         _shader->addSourceBlock("_fragment_lighting", getClassBlock() + getInstanceBlock());
         _shader->addSourceBlock("fragment_lights_to_compute", getInstanceComputeBlock());
+
+        //  TODO:
+        //      - AM - After global blocks is implemented
+        //      - AM - Implement defines (and use them on the lights and materials defines)
+        //      - BM - Add a method to scene that add the main calcualtion function
+        //              from scene you pass the light to this functions Light::getFragmentLightMainFunctionBlock() 
+        //              and Light::getFVertexLightMainFunctionBlock()
     }
 
     if (m_injType == VERTEX || m_injType == BOTH) {

@@ -22,12 +22,14 @@ void Scene::addLight(std::shared_ptr<Light> _light, InjectionType _type) {
         std::string vertexLightBlock = stringFromResource("lights_vert.glsl");
         std::string fragmentLightBlock = stringFromResource("lights_frag.glsl");
         
+        //  TODO:
+        //          - BM - remove the _ on the injection points
+        //
         for (auto& style : m_styles) {
             style->getShaderProgram()->addSourceBlock("_vertex_lighting", vertexLightBlock+"\n");
             style->getShaderProgram()->addSourceBlock("_fragment_lighting", fragmentLightBlock+"\n");
         }
     }
-
 
     //  Avoid duplications
     if (m_lights.find(_light->getName()) == m_lights.end()) {
@@ -35,5 +37,9 @@ void Scene::addLight(std::shared_ptr<Light> _light, InjectionType _type) {
             _light->injectOnProgram(style->getShaderProgram(), _type);
         }
         m_lights[_light->getName()] = _light;
+    } else {
+
+        //  TODO:
+        //      - BM - add error mesg here
     }
 }

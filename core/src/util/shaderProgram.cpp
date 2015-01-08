@@ -43,6 +43,9 @@ void ShaderProgram::setSourceStrings(const std::string& _fragSrc, const std::str
 void ShaderProgram::addSourceBlock(const std::string& _tagName, const std::string &_glslSource){
     m_sourceBlocks[_tagName].push_back("\n" + _glslSource);
     m_needsBuild = true;
+
+    //  TODO:
+    //          - add Global Blocks
 }
 
 const GLint ShaderProgram::getAttribLocation(const std::string& _attribName) {
@@ -82,10 +85,8 @@ void ShaderProgram::use() {
     }
     
     if (m_glProgram != 0 && m_glProgram != s_activeGlProgram) {
-
         glUseProgram(m_glProgram);
         s_activeGlProgram = m_glProgram;
-
     }
 
 }
@@ -117,7 +118,6 @@ bool ShaderProgram::build() {
                 vertSrc.insert(tagPos + tag.length(), source);
             }
         }
-
     }
     
     // Try to compile vertex and fragment shaders, releasing resources and quiting on failure

@@ -145,11 +145,13 @@ void update(float _dt) {
             if (light.second->getType() == LightType::DIRECTIONAL) {
                 DirectionalLight* tmp = dynamic_cast<DirectionalLight*>(light.second.get());
                 tmp->setDirection(glm::vec3(0.0, sin(g_time), 1.0));
+
             } else if (light.second->getType() == LightType::POINT) {
                 PointLight* tmp = dynamic_cast<PointLight*>(light.second.get());
                 tmp->setPosition(glm::vec3( 200*cos(g_time*0.8),
                                             200*sin(g_time*0.3), 
                                             -m_view->getPosition().z+100));
+
             } else if (light.second->getType() == LightType::SPOT) {
                 SpotLight* tmp = dynamic_cast<SpotLight*>(light.second.get());
                 tmp->setDirection(glm::vec3(cos(g_time),

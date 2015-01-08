@@ -5,6 +5,15 @@ PolygonStyle::PolygonStyle(std::string _name, GLenum _drawMode) : Style(_name, _
     
     constructVertexLayout();
     constructShaderProgram();
+
+    // TODO: 
+    //      - by now show how to declare values of material. Ex:
+    //  
+    // m_material.setAmbient(glm::vec4(0.0));
+    // m_material.setEmission(glm::vec4(0.0));
+    // m_material.setDiffusion(glm::vec4(1.0));
+    // m_material.setSpeculars(glm::vec4(0.2));
+
 }
 
 void PolygonStyle::constructVertexLayout() {

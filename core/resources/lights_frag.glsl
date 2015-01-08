@@ -1,8 +1,12 @@
+#define TANGRAM_FRAGMENT_LIGHTS
+
 varying vec4 v_amb;
 varying vec4 v_diff;
 varying vec4 v_spec;
 
-#define TANGRAM_FRAGMENT_LIGHTS
+//	TODO BM:
+//		- port this to STRINGIFY on C++
+
 vec4 calculateLighting(in vec3 _eyeToPoint, in vec3 _normal) {
 	vec3 eye = vec3(0.0, 0.0, 1.0);
 
@@ -34,6 +38,9 @@ vec4 calculateLighting(in vec3 _eyeToPoint, in vec3 _normal) {
 
 	//  For the moment no alpha light (weird concept... right?)
 	color.a = 1.0;
+
+	// TODO BM:
+	//		- Clamp accumulators results to 1 ??
 
 	return color;
 }
