@@ -1508,9 +1508,9 @@ endif()
 set( CMAKE_INSTALL_PREFIX "${ANDROID_TOOLCHAIN_ROOT}/user" CACHE STRING "path for installing" )
 
 if( DEFINED LIBRARY_OUTPUT_PATH_ROOT
-      OR EXISTS "${CMAKE_SOURCE_DIR}/AndroidManifest.xml"
+      OR EXISTS "${CMAKE_SOURCE_DIR}/android/AndroidManifest.xml"
       OR (EXISTS "${CMAKE_SOURCE_DIR}/../AndroidManifest.xml" AND EXISTS "${CMAKE_SOURCE_DIR}/../jni/") )
-  set( LIBRARY_OUTPUT_PATH_ROOT ${CMAKE_SOURCE_DIR} CACHE PATH "Root for binaries output, set this to change where Android libs are installed to" )
+  set( LIBRARY_OUTPUT_PATH_ROOT ${CMAKE_SOURCE_DIR}/android CACHE PATH "Root for binaries output, set this to change where Android libs are installed to" )
   if( NOT _CMAKE_IN_TRY_COMPILE )
     if( EXISTS "${CMAKE_SOURCE_DIR}/jni/CMakeLists.txt" )
       set( EXECUTABLE_OUTPUT_PATH "${LIBRARY_OUTPUT_PATH_ROOT}/bin/${ANDROID_NDK_ABI_NAME}" CACHE PATH "Output directory for applications" )
