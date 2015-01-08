@@ -11,34 +11,35 @@ DirectionalLight::~DirectionalLight() {
 }
 
 void DirectionalLight::setDirection(const glm::vec3 &_dir) {
-    m_direction = _dir;
+	m_direction = _dir;
 }
 
 void DirectionalLight::setupProgram( std::shared_ptr<ShaderProgram> _shader ) {
 	if (m_dynamic) {
 		Light::setupProgram(_shader);
-    	_shader->setUniformf(getUniformName()+".direction", m_direction);
+		_shader->setUniformf(getUniformName()+".direction", m_direction);
 	}
 }
 
 std::string DirectionalLight::getClassBlock() {
-    static bool bFirst = true;
-    if (bFirst) {
-        bFirst = false;
-        return stringFromResource("directional_light.glsl")+"\n";
-    } else {
-        return "\n";
-    }
+	static bool bFirst = true;
+	if (bFirst) {
+		bFirst = false;
+		return stringFromResource("directional_light.glsl")+"\n";
+	} else {
+		return "\n";
+	}
 }
 
 std::string DirectionalLight::getInstanceDefinesBlock() {
+	//	Directional lights don't have defines.... yet.
 	return "\n";
 }
 
 std::string DirectionalLight::getInstanceAssignBlock() {
-    std::string block = Light::getInstanceAssignBlock();
-    if (!m_dynamic) {
-        block += ", " + getString(m_direction) + ")";
-    }
-    return block;
+	std::string block = Light::getInstanceAssignBlock();
+	if (!m_dynamic) {
+		block += ", " + getString(m_direction) + ")";
+	}
+	return block;
 }
