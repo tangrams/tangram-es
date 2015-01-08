@@ -18,7 +18,9 @@ varying vec2 v_texcoord;
 void main(void) {
 	vec4 color = v_color;
 
+#ifdef TANGRAM_FRAGMENT_LIGHTS
 	color *= calculateLighting(v_eyeToPoint,v_normal);
+#endif
 
   	gl_FragColor = color;
 }

@@ -2,6 +2,7 @@ varying vec4 v_amb;
 varying vec4 v_diff;
 varying vec4 v_spec;
 
+#define TANGRAM_FRAGMENT_LIGHTS
 vec4 calculateLighting(in vec3 _eyeToPoint, in vec3 _normal) {
 	vec3 eye = vec3(0.0, 0.0, 1.0);
 
