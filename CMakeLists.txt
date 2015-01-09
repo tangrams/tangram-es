@@ -1,13 +1,20 @@
 cmake_minimum_required(VERSION 2.8)
 project(tangram)
 
+include(${PROJECT_SOURCE_DIR}/toolchains/utils.cmake)
+
 # cmake output configuration
 set(CMAKE_ARCHIVE_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/lib)
 set(CMAKE_LIBRARY_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/lib)
 set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin)
 
+if(UNIT_TESTS) 
+    include(${PROJECT_SOURCE_DIR}/toolchains/unitTests.cmake)
+    return()
+endif()
+
 # platform lookup
-set(SUPPORTED_TARGETS darwin ios android linux)
+set(SUPPORTED_TARGETS darwin ios android raspberrypi)
 
 if(NOT PLATFORM_TARGET)
     string(TOLOWER "${CMAKE_SYSTEM_NAME}" varplatform)
@@ -37,9 +44,7 @@ set(PLATFORM ${varplatform} CACHE INTERNAL "platform" FORCE)
 
 # cmake inclusions and definitions
 # set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} ${CMAKE_SOURCE_DIR}/build/modules)
-set(CMAKE_TARGET_FILE ${PROJECT_SOURCE_DIR}/build/toolchains/${PLATFORM_TARGET}.cmake)
-
-include(${PROJECT_SOURCE_DIR}/build/utils/utils.cmake)
+set(CMAKE_TARGET_FILE ${PROJECT_SOURCE_DIR}/toolchains/${PLATFORM_TARGET}.cmake)
 
 message(STATUS "Including ${varplatform} dependent cmake file : ${CMAKE_TARGET_FILE}")
 include(${CMAKE_TARGET_FILE})

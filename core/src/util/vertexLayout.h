@@ -4,8 +4,8 @@
 #include <unordered_map>
 #include <memory>
 
-#include "platform.h"
-#include "util/shaderProgram.h"
+#include "gl.h"
+#include "shaderProgram.h"
 
 class VertexLayout {
     

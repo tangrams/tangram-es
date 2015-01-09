@@ -1,9 +1,10 @@
 #pragma once
 
 #include "platform.h"
-#include "error.h"
+#include "gl.h"
 #include <string>
 #include <vector>
+#include <unordered_set>
 #include <unordered_map>
 
 /*
@@ -23,37 +24,38 @@ public:
     const GLuint getGlVertexShader() const { return m_glVertexShader; };
 
     /*
-     * getAttribLocation - fetches the location of a shader attribute, caching the result
+     * Fetches the location of a shader attribute, caching the result
      */
     const GLint getAttribLocation(const std::string& _attribName);
 
     /*
-     * getUniformLocation - fetches the location of a shader uniform, caching the result
+     * Fetches the location of a shader uniform, caching the result
      */
     const GLint getUniformLocation(const std::string& _uniformName);
 
-    /*
-     * buildFromSourceStrings - attempts to compile a fragment shader and vertex shader from
-     * strings representing the source code for each, then links them into a complete program;
-     * if compiling or linking fails it prints the compiler log, returns false, and keeps the
-     * program's previous state; if successful it returns true.
+    /* Compile and link a shader program
+     * 
+     * Attempts to compile a fragment shader and vertex shader from strings representing the 
+     * source code for each, then links them into a complete program; if compiling or linking 
+     * fails it prints the compiler log, returns false, and keeps the program's previous state; 
+     * if successful it returns true
      */
     bool buildFromSourceStrings(const std::string& _fragSrc, const std::string& _vertSrc);
 
     // TODO: Once we have file system abstractions, provide a method to build a program from file names
 
-    /*
-     * isValid - returns true if this object represents a valid OpenGL shader program
+    /* 
+     * Returns true if this object represents a valid OpenGL shader program
      */
     bool isValid() const { return m_glProgram != 0; };
 
-    /*
-     * use - binds the program in openGL if it is not already bound.
+    /* 
+     * Binds the program in openGL if it is not already bound
      */
     void use() const;
 
-    /*
-     * setUniform - ensures the program is bound and then sets the named uniform to the given value(s)
+    /* 
+     * Ensures the program is bound and then sets the named uniform to the given value(s)
      */
     void setUniformi(const std::string& _name, int _value);
     void setUniformi(const std::string& _name, int _value0, int _value1);
@@ -65,13 +67,30 @@ public:
     void setUniformf(const std::string& _name, float _value0, float _value1, float _value2);
     void setUniformf(const std::string& _name, float _value0, float _value1, float _value2, float _value3);
 
-    /*
-     * setUniformMatrix - ensure the program is bound and then sets the named uniform to the values
+    /* 
+     * Ensures the program is bound and then sets the named uniform to the values
      * beginning at the pointer _value; 4 values are used for a 2x2 matrix, 9 values for a 3x3, etc.
      */
     void setUniformMatrix2f(const std::string& _name, float* _value, bool transpose = false);
     void setUniformMatrix3f(const std::string& _name, float* _value, bool transpose = false);
     void setUniformMatrix4f(const std::string& _name, float* _value, bool transpose = false);
+    
+    /*
+     * Allows program to be invalidated in the event of GL context loss
+     */
+    static void addManagedProgram(ShaderProgram* _program);
+    
+    /* 
+     * Removes a program from the list of managed programs
+     */
+    static void removeManagedProgram(ShaderProgram* _program);
+    
+    /* Invalidates all managed ShaderPrograms
+     * 
+     * This should be called in the event of a GL context loss; former GL shader object
+     * handles are invalidated and immediately recreated.
+     */
+    static void invalidateAllPrograms();
 
 private:
 
@@ -87,7 +106,9 @@ private:
         // to a value that is not a valid uniform or attribute location. 
     };
 
-    static GLint s_activeGlProgram;
+    static GLuint s_activeGlProgram;
+    
+    static std::unordered_set<ShaderProgram*> s_managedPrograms;
 
     GLuint m_glProgram;
     GLuint m_glFragmentShader;

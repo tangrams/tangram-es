@@ -1,25 +1,35 @@
 #pragma once
 
 #ifdef PLATFORM_ANDROID
-#include <GLES2/gl2.h>
-#include <GLES2/gl2ext.h>
-#include <android/log.h>
-#include <cstdarg>
+struct _JNIEnv;
+typedef _JNIEnv JNIEnv;
+class _jobject;
+typedef _jobject* jobject;
+void setAssetManager(JNIEnv* _jniEnv, jobject _assetManager);
 #endif
 
-#ifdef PLATFORM_IOS
-#include <OpenGLES/ES2/gl.h>
-#include <OpenGLES/ES2/glext.h>
-#include <cstdio>
-#include <cstdarg>
-#endif
+#include <string>
 
-#ifdef PLATFORM_OSX
-#define GL_GLEXT_PROTOTYPES
-#include <GLFW/glfw3.h>
-#include <cstdio>
-#include <cstdarg>
-#endif
-
+/* Print a formatted message to the console
+ *
+ * Uses printf syntax to write a string to stderr (or logcat, on Android)
+ */
 void logMsg(const char* fmt, ...);
 
+/* Read a bundled resource file as a string
+ * 
+ * Opens the file at the given relative path and returns a string with its contents.
+ * _path is the location of the file within the core/resources folder. If the file
+ * cannot be found or read, the returned string is empty. 
+ */
+std::string stringFromResource(const char* _path);
+
+/* Read and allocates size bytes of memory  
+ *
+ * Similarly to stringFromResource, _path is the location of file within 
+ * core/resources. If the file cannot be read nothing is allocated and 
+ * a nullptr is returned.
+ * _size is is an in/out parameter to retrieve the size in bytes of the 
+ * allocated file
+ */ 
+unsigned char* bytesFromResource(const char* _path, unsigned int* _size);

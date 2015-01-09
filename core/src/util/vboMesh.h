@@ -2,9 +2,10 @@
 
 #include <vector>
 #include <memory>
+#include <unordered_set>
 
+#include "gl.h"
 #include "vertexLayout.h"
-#include "platform.h"
 
 /*
  * VboMesh - Drawable collection of geometry contained in a vertex buffer and (optionally) an index buffer
@@ -48,7 +49,7 @@ public:
      */
     void addVertices(GLbyte* _vertices, int _nVertices);
 
-    bool hasVertices() const { return m_nVertices > 0; };
+    int numVertices() const { return m_nVertices; };
 
     /*
      * Adds a single index to the mesh; indices are unsigned shorts
@@ -61,7 +62,7 @@ public:
      */
     void addIndices(GLushort* _indices, int _nIndices);
 
-    bool hasIndices() const { return m_indices.size() > 0; };
+    int numIndices() const { return m_indices.size(); };
 
     /*
      * Copies all added vertices and indices into OpenGL buffer objects; After geometry is uploaded,
@@ -74,9 +75,17 @@ public:
      * been uploaded it will be uploaded at this point
      */
     void draw(const std::shared_ptr<ShaderProgram> _shader);
+    
+    static void addManagedVBO(VboMesh* _vbo);
+    
+    static void removeManagedVBO(VboMesh* _vbo);
+    
+    static void invalidateAllVBOs();
 
 private:
 
+    static std::unordered_set<VboMesh*> s_managedVBOs;
+    
     std::shared_ptr<VertexLayout> m_vertexLayout;
     
     std::vector<GLbyte> m_vertexData; // Raw interleaved vertex data in the format specified by the vertex layout
