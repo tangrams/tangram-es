@@ -84,6 +84,9 @@ void FontStyle::buildLine(Line& _line, std::string& _layer, Properties& _props, 
                     });
 
                     if (m_processedTile->addLabel(*this, std::move(label))) { // could potentially refuse to add label
+
+                        logMsg("label:%s, angle:%f\n", prop.second.c_str(), r * (180/M_PI));
+
                         glfonsRasterize(m_fontContext->m_fsContext, textId, prop.second.c_str(), FONS_EFFECT_NONE);
                     }
                 }

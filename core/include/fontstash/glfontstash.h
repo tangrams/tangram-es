@@ -421,6 +421,8 @@ void glfonsTransform(FONScontext* ctx, fsuint id, float tx, float ty, float r, f
     tx = (tx * 255.0) / gl->screenSize[0];
     ty = (ty * 255.0) / gl->screenSize[1];
 
+    r = fmod(r, 2.0 * M_PI);
+    r = (r < 0) ? r + 2.0 * M_PI : r;
     r = (r / (2.0 * M_PI)) * 255.0;
     a = a * 255.0;
 
