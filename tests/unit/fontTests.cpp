@@ -21,6 +21,7 @@ struct Text {
 };
 
 struct UserPtr {
+    int screenRes;
     fsuint bufferId;
     std::vector<Text> texts;
 };
@@ -34,9 +35,14 @@ void updateTransforms(void* _userPtr, unsigned int _xoff, unsigned int _yoff, un
                               unsigned int _height, const unsigned int* _pixels, void* _ownerPtr) {
     UserPtr* ptr = static_cast<UserPtr*>(_userPtr);
 
+    float screenRes = (float) ptr->screenRes;
+
     for(auto text : ptr->texts) {
         float i = fmod(text.textId * 2, TEXT_BUFFER_SIZE);
         float j = (text.textId * 2) / TEXT_BUFFER_SIZE;
+
+        REQUIRE(i < TEXT_BUFFER_SIZE);
+        REQUIRE(j < TEXT_BUFFER_SIZE * 2);
 
         unsigned int p = (unsigned int) (j * TEXT_BUFFER_SIZE + i);
 
@@ -58,9 +64,36 @@ void updateTransforms(void* _userPtr, unsigned int _xoff, unsigned int _yoff, un
 
         REQUIRE(px < 256); REQUIRE(px >= 0);
         REQUIRE(py < 256); REQUIRE(py >= 0);
+        
+        float txe = screenRes / 255.0; // max translation x error 
+        float tye = screenRes / 255.0; // max translation y error
 
-        REQUIRE(i < TEXT_BUFFER_SIZE);
-        REQUIRE(j < TEXT_BUFFER_SIZE * 2);
+        float rx = (x / 255.0) * screenRes;
+        float ry = (y / 255.0) * screenRes;
+
+        // tests that the original results fits inside results with its logical error
+        REQUIRE(text.x < rx + txe);
+        REQUIRE(text.y < ry + tye);
+        REQUIRE(text.x > rx - txe);
+        REQUIRE(text.y > ry - tye);
+
+        // compute the result and add the precision, see text.vs
+        rx = rx + txe * (px / 255.0);
+        ry = ry + tye * (py / 255.0);
+
+        // result error 
+        float dx = fabs(text.x - rx);
+        float dy = fabs(text.y - ry);
+ 
+        // theoritical floating point precision error on precision encoding, see glfontstash.h
+        float perror = 0.00196f; 
+
+        float epxe = txe * perror; // theoritical encoded error on translation x
+        float epye = tye * perror; // theoritical encoded error on translation y
+
+        // test that final result with its precision added is lower than the theoritical one
+        REQUIRE(dx <= epxe); 
+        REQUIRE(dy <= epye); 
     }
 }
 
@@ -180,7 +213,9 @@ TEST_CASE( "Test that unpacking the encoded transforms give expected results", "
     fonsSetSize(context, 15.0);
     fonsSetFont(context, font);
 
-    glfonsScreenSize(context, 1024, 1024);
+    p.screenRes = 1024;
+
+    glfonsScreenSize(context, p.screenRes, p.screenRes);
 
     for(int i = 0; i < 1024; ++i) {
         Text text;
