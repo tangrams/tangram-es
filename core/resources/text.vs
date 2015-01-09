@@ -53,12 +53,13 @@ void main() {
     // reads the transform data and its precision
     vec4 tdata = texture2D(u_transforms, uv1);
     vec4 tdataPrecision = texture2D(u_transforms, uv2);
-
-    float precisionScale = 1.0/255.0;
+    
+    float txe = u_resolution.x / 255.0; // max error on x
+    float txy = u_resolution.y / 255.0; // max error on y
 
     // transforms from [0..1] to [0..resolution] and add lost precision
-    tx = u_resolution.x * (tx + txp * precisionScale);
-    ty = u_resolution.y * (ty + typ * precisionScale);
+    tx = u_resolution.x * tx + (txp * txe);
+    ty = u_resolution.y * ty + (typ * txy);
 
     // scale from [0..1] to [0..2pi]
     theta = theta * 2.0 * PI;
