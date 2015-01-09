@@ -13,10 +13,10 @@ uniform lowp float u_mixFactor;
 #define minInsideD  u_sdfParams.z
 #define maxInsideD  u_sdfParams.w
 
-varying vec2 f_uv;
+varying vec2 v_uv;
 
 void main(void) {
-    float distance = texture2D(u_tex, f_uv).a;
+    float distance = texture2D(u_tex, v_uv).a;
     vec4 inside = smoothstep(minInsideD, maxInsideD, distance) * u_color;
     vec4 outline = smoothstep(minOutlineD, maxOutlineD, distance) * u_outlineColor;
 

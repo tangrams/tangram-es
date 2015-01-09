@@ -11,8 +11,8 @@ uniform lowp vec2 u_tresolution;
 uniform lowp vec2 u_resolution;
 uniform mat4 u_proj;
 
-varying vec2 f_uv;
-varying float f_alpha;
+varying vec2 v_uv;
+varying float v_alpha;
 
 #define PI 3.14159
 
@@ -27,10 +27,10 @@ varying float f_alpha;
  * Converts (i, j) pixel coordinates to the corresponding (u, v) in
  * texture space. The (u,v) targets the center of pixel
  */
-vec2 ij2uv(float i, float j, float w, float h) {
+vec2 ij2uv(float _i, float _j, float _w, float _h) {
     return vec2(
-        (2.0*i+1.0) / (2.0*w),
-        (2.0*j+1.0) / (2.0*h)
+        (2.0*_i+1.0) / (2.0*_w),
+        (2.0*_j+1.0) / (2.0*_h)
     );
 }
 
@@ -38,10 +38,10 @@ vec2 ij2uv(float i, float j, float w, float h) {
  * Decodes the id and find its place for its transform inside the texture
  * Returns the (i,j) position inside texture
  */
-vec2 id2ij(int fsid, float w) {
-    float i = mod(float(fsid * 2), w);
-    float j = floor(float(fsid * 2) / w);
-    return vec2(i, j);
+vec2 id2ij(int _fsid, float _w) {
+    float _i = mod(float(_fsid * 2), _w);
+    float _j = floor(float(_fsid * 2) / _w);
+    return vec2(_i, _j);
 }
 
 void main() {
@@ -76,6 +76,6 @@ void main() {
 
     gl_Position = u_proj * p;
 
-    f_uv = a_texCoord;
-    f_alpha = alpha;
+    v_uv = a_texCoord;
+    v_alpha = alpha;
 }
