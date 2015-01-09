@@ -83,6 +83,7 @@ void MapTile::update(float _dt, const Style& _style, View& _view) {
         ctx->m_contextMutex->lock();
 
         glfonsBindBuffer(ctx->m_fsContext, getTextBuffer(_style));
+        glfonsScreenSize(ctx->m_fsContext, _view.getWidth(), _view.getHeight());
 
         for (auto& label : labels) {
 

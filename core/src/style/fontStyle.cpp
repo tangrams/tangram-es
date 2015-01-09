@@ -33,7 +33,7 @@ void FontStyle::constructShaderProgram() {
     m_shaderProgram = std::make_shared<ShaderProgram>();
 
     if (!m_shaderProgram->buildFromSourceStrings(fragShaderSrcStr, vertShaderSrcStr)) {
-        logMsg("Error building text shader program\n");
+        logMsg("[FontStyle] Error building text shader program\n");
     }
 }
 
@@ -85,7 +85,7 @@ void FontStyle::buildLine(Line& _line, std::string& _layer, Properties& _props, 
 
                     if (m_processedTile->addLabel(*this, std::move(label))) { // could potentially refuse to add label
 
-                        logMsg("label:%s, angle:%f\n", prop.second.c_str(), r * (180/M_PI));
+                        logMsg("[FontStyle] Rasterize label: %s, angle: %f\n", prop.second.c_str(), r * (180/M_PI));
 
                         glfonsRasterize(m_fontContext->m_fsContext, textId, prop.second.c_str(), FONS_EFFECT_NONE);
                     }
@@ -151,11 +151,14 @@ void FontStyle::setupForTile(const MapTile& _tile) {
 void FontStyle::processTileTransformCreation() {
 
     while (m_pendingTileTexTransforms.size() > 0) {
+
         auto pair = m_pendingTileTexTransforms.front();
 
         glm::vec2 size = pair.second;
 
         auto defaultTransforms = new unsigned int[(int)(size.x * size.y)] {0}; // zero filled
+
+        logMsg("[FontStyle] Create texture transform %d x %d\n", (int)size.x, (int)size.y);
 
         GLuint texTransform;
         glGenTextures(1, &texTransform);
@@ -182,6 +185,8 @@ void FontStyle::processTileTransformUpdate() {
 
         glBindTexture(GL_TEXTURE_2D, m_tileTexTransforms[id]);
 
+        logMsg("[FontStyle] Update texture transform %d x %d\n", data.m_width, data.m_height);
+
         glTexSubImage2D(GL_TEXTURE_2D, 0, data.m_xoff, data.m_yoff, data.m_width, data.m_height,
                         GL_RGBA, GL_UNSIGNED_BYTE, data.m_pixels);
 
@@ -197,6 +202,8 @@ void FontStyle::processAtlasUpdate() {
     glBindTexture(GL_TEXTURE_2D, m_atlas);
     while (m_pendingTexAtlasData.size() > 0) {
         TextureData data = m_pendingTexAtlasData.front().m_data;
+
+        logMsg("[FontStyle] Update atlas texture %d x %d\n", data.m_width, data.m_height);
 
         glTexSubImage2D(GL_TEXTURE_2D, 0, data.m_xoff, data.m_yoff, data.m_width, data.m_height,
                         GL_ALPHA, GL_UNSIGNED_BYTE, data.m_pixels);
@@ -215,7 +222,6 @@ void FontStyle::setup(View& _view) {
     processTileTransformCreation();
     processTileTransformUpdate();
 
-    glfonsScreenSize(m_fontContext->m_fsContext, _view.getWidth(), _view.getHeight());
     glfonsProjection(m_fontContext->m_fsContext, projectionMatrix);
 
     // activate the atlas on the texture slot0, the texture transform is on slot1
@@ -271,7 +277,7 @@ void updateAtlas(void* _userPtr, unsigned int _xoff, unsigned int _yoff,
 }
 
 void createAtlas(void* _userPtr, unsigned int _width, unsigned int _height) {
-    logMsg("create atlas");
+    logMsg("[FontStyle] Create atlas");
     FontStyle* fontStyle = static_cast<FontStyle*>(_userPtr);
 
     glGenTextures(1, &fontStyle->m_atlas);
@@ -284,11 +290,11 @@ void createAtlas(void* _userPtr, unsigned int _width, unsigned int _height) {
 void errorCallback(void* _userPtr, fsuint buffer, GLFONSError error) {
     switch (error) {
         case GLFONSError::ID_OVERFLOW:
-            logMsg("FontError : ID_OVERFLOW in text buffer %d\n", buffer);
+            logMsg("[FontStyle] FontError : ID_OVERFLOW in text buffer %d\n", buffer);
             break;
 
         default:
-            logMsg("FontError : undefined error\n");
+            logMsg("[FontStyle] FontError : undefined error\n");
             break;
     }
 }
@@ -313,7 +319,7 @@ void FontStyle::initFontContext(const std::string& _fontFile) {
     m_font = fonsAddFont(context, "droid-serif", data, dataSize);
 
     if (m_font == FONS_INVALID) {
-        logMsg("Error loading font file %s\n", _fontFile.c_str());
+        logMsg("[FontStyle] Error loading font file %s\n", _fontFile.c_str());
     }
 
     m_fontContext = std::shared_ptr<FontContext>(new FontContext {

@@ -110,7 +110,6 @@ void update(float _dt) {
         m_view->update();
 
         if (m_view->changedSinceLastCheck()) {
-
             for (const auto& style : m_scene->getStyles()) {
 
                 for (const auto& mapIDandTile : m_tileManager->getVisibleTiles()) {
