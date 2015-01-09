@@ -12,8 +12,17 @@
 #define TEXT_BUFFER_SIZE    32
 #define ID_OVERFLOW_SIZE    TEXT_BUFFER_SIZE * TEXT_BUFFER_SIZE
 
-struct userPtr {
+struct Text {
+    fsuint textId;
+    float x;
+    float y; 
+    float rotation;
+    float alpha;
+};
+
+struct UserPtr {
     fsuint bufferId;
+    std::vector<Text> texts;
 };
 
 void createTexTransforms(void* _userPtr, unsigned int _width, unsigned int _height) {
@@ -23,7 +32,36 @@ void createTexTransforms(void* _userPtr, unsigned int _width, unsigned int _heig
 
 void updateTransforms(void* _userPtr, unsigned int _xoff, unsigned int _yoff, unsigned int _width,
                               unsigned int _height, const unsigned int* _pixels, void* _ownerPtr) {
+    UserPtr* ptr = static_cast<UserPtr*>(_userPtr);
 
+    for(auto text : ptr->texts) {
+        float i = fmod(text.textId * 2, TEXT_BUFFER_SIZE);
+        float j = (text.textId * 2) / TEXT_BUFFER_SIZE;
+
+        unsigned int p = (unsigned int) (j * TEXT_BUFFER_SIZE + i);
+
+        unsigned int packByte1 = _pixels[p];
+        unsigned int packByte2 = _pixels[p + 1];
+
+        int x = ((packByte1 & 0x000000ff) >>  0);
+        int y = ((packByte1 & 0x0000ff00) >>  8);
+        int r = ((packByte1 & 0x00ff0000) >> 16);
+        int a = ((packByte1 & 0xff000000) >> 24);
+
+        REQUIRE(a < 256); REQUIRE(a >= 0);
+        REQUIRE(r < 256); REQUIRE(r >= 0);
+        REQUIRE(x < 256); REQUIRE(x >= 0);
+        REQUIRE(y < 256); REQUIRE(y >= 0);
+
+        int px = (packByte2 & 0x000000ff) >> 0;
+        int py = (packByte2 & 0x0000ff00) >> 8;
+
+        REQUIRE(px < 256); REQUIRE(px >= 0);
+        REQUIRE(py < 256); REQUIRE(py >= 0);
+
+        REQUIRE(i < TEXT_BUFFER_SIZE);
+        REQUIRE(j < TEXT_BUFFER_SIZE * 2);
+    }
 }
 
 void updateAtlas(void* _userPtr, unsigned int _xoff, unsigned int _yoff,
@@ -37,7 +75,7 @@ void createAtlas(void* _userPtr, unsigned int _width, unsigned int _height) {
 }
 
 void errorCallback(void* _userPtr, fsuint buffer, GLFONSError error) {
-    userPtr* ptr = static_cast<userPtr*>(_userPtr);
+    UserPtr* ptr = static_cast<UserPtr*>(_userPtr);
 
     REQUIRE(error == GLFONSError::ID_OVERFLOW);
     REQUIRE(ptr->bufferId == buffer);
@@ -89,7 +127,7 @@ TEST_CASE( "Test the buffer creation and the size of the required texture transf
 }
 
 TEST_CASE( "Test that the overflow callback gets called for the right overflow size", "[Core][Fontstash][errorCallback]" ) {
-    userPtr p;
+    UserPtr p;
 
     FONScontext* context = initContext(&p);
     int font = initFont(context);
@@ -105,7 +143,7 @@ TEST_CASE( "Test that the overflow callback gets called for the right overflow s
 }
 
 TEST_CASE( "Test that the number of vertices correspond to the logic", "[Core][Fontstash][glfonsVertices]" ) {
-    userPtr p;  
+    UserPtr p;  
 
     FONScontext* context = initContext(&p);
     int font = initFont(context);
@@ -131,4 +169,41 @@ TEST_CASE( "Test that the number of vertices correspond to the logic", "[Core][F
     glfonsDelete(context);
 }
 
+TEST_CASE( "Test that unpacking the encoded transforms give expected results", "[Core][Fontstash][glfonsTransform]" ) {
+    UserPtr p;  
+    FONScontext* context = initContext(&p);
+    int font = initFont(context);
 
+    glfonsBufferCreate(context, TEXT_BUFFER_SIZE, &p.bufferId);
+    glfonsBindBuffer(context, p.bufferId);
+
+    fonsSetSize(context, 15.0);
+    fonsSetFont(context, font);
+
+    glfonsScreenSize(context, 1024, 1024);
+
+    for(int i = 0; i < 1024; ++i) {
+        Text text;
+        
+        glfonsGenText(context, 1, &text.textId);
+
+        text.x = i;
+        text.y = i / 2.0;
+        text.rotation = i * M_PI;
+        text.alpha = 0.5;
+
+        std::string str("tangram");
+        glfonsRasterize(context, text.textId, str.c_str(), FONS_EFFECT_NONE);
+        glfonsTransform(context, text.textId, text.x, text.y, text.rotation, text.alpha);
+
+        p.texts.push_back(text);
+    }
+
+    glfonsUpdateTransforms(context, nullptr);
+
+    std::vector<float> vertices;
+    int nverts = 0;
+    glfonsVertices(context, &vertices, &nverts);
+
+    glfonsDelete(context);   
+}
