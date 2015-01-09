@@ -61,34 +61,38 @@ void FontStyle::buildLine(Line& _line, std::string& _layer, Properties& _props, 
                 }
 
                 p1p2 = glm::normalize(p1p2);
-                double r = atan2(p1p2.x, p1p2.y) + M_PI_2;
+                float r = (float) atan2(p1p2.x, p1p2.y) + M_PI_2;
 
-                if (r <= M_PI_2 && r > -M_PI_2) { // readable labels, improve logic
-                    fsuint textId;
-                    glfonsGenText(m_fontContext->m_fsContext, 1, &textId);
+                double offset = 1;
+                if (r > M_PI_2 || r < -M_PI_2) {
+                    r += M_PI;
+                    offset = -1;
+                }
 
-                    // place the text in the middle and give more strength to p1 since text has a width
-                    glm::dvec2 position = (p1 + p2) / 2.0 + p1p2 * glm::length(p1p2) * 0.2;
+                fsuint textId;
+                glfonsGenText(m_fontContext->m_fsContext, 1, &textId);
 
-                    // FUTURE: label logic
-                    // 1. project label on screen and compute its bbox, to do so we need the view and label model matrix
-                    // 2. ask any kind of label manager to perform label discards
+                // place the text in the middle and give more strength to p1 since text has a width
+                glm::dvec2 position = (p1 + p2) / 2.0 + p1p2 * glm::length(p1p2) * 0.2 * offset;
 
-                    std::unique_ptr<Label> label(new Label {
-                        m_fontContext,
-                        textId,
-                        prop.second.c_str(),
-                        position,   // world position
-                        1.0,        // alpha
-                        (float)r    // rotation
-                    });
+                // FUTURE: label logic
+                // 1. project label on screen and compute its bbox, to do so we need the view and label model matrix
+                // 2. ask any kind of label manager to perform label discards
 
-                    if (m_processedTile->addLabel(*this, std::move(label))) { // could potentially refuse to add label
+                std::unique_ptr<Label> label(new Label {
+                    m_fontContext,
+                    textId,
+                    prop.second.c_str(),
+                    position,   // world position
+                    1.0,        // alpha
+                    r           // rotation
+                });
 
-                        logMsg("[FontStyle] Rasterize label: %s, angle: %f\n", prop.second.c_str(), r * (180/M_PI));
+                if (m_processedTile->addLabel(*this, std::move(label))) { // could potentially refuse to add label
 
-                        glfonsRasterize(m_fontContext->m_fsContext, textId, prop.second.c_str(), FONS_EFFECT_NONE);
-                    }
+                    logMsg("[FontStyle] Rasterize label: %s, angle: %f\n", prop.second.c_str(), r * (180/M_PI));
+
+                    glfonsRasterize(m_fontContext->m_fsContext, textId, prop.second.c_str(), FONS_EFFECT_NONE);
                 }
             }
         }
