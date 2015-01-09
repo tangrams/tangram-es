@@ -217,7 +217,7 @@ TEST_CASE( "Test that unpacking the encoded transforms give expected results", "
 
     glfonsScreenSize(context, p.screenRes, p.screenRes);
 
-    for(int i = 0; i < 1024; ++i) {
+    for(int i = 0; i < 1024; i+=24) {
         Text text;
         
         glfonsGenText(context, 1, &text.textId);
