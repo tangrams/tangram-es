@@ -39,9 +39,9 @@ vec2 ij2uv(float _i, float _j, float _w, float _h) {
  * Returns the (i,j) position inside texture
  */
 vec2 id2ij(int _fsid, float _w) {
-    float _i = mod(float(_fsid * 2), _w);
-    float _j = floor(float(_fsid * 2) / _w);
-    return vec2(_i, _j);
+    float i = mod(float(_fsid * 2), _w);
+    float j = floor(float(_fsid * 2) / _w);
+    return vec2(i, j);
 }
 
 void main() {
