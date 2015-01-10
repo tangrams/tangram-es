@@ -4,7 +4,6 @@
 #include "gl.h"
 #include <string>
 #include <vector>
-#include <unordered_set>
 #include <unordered_map>
 
 /*
@@ -52,7 +51,7 @@ public:
     /* 
      * Binds the program in openGL if it is not already bound
      */
-    void use() const;
+    void use();
 
     /* 
      * Ensures the program is bound and then sets the named uniform to the given value(s)
@@ -108,8 +107,9 @@ private:
 
     static GLuint s_activeGlProgram;
     
-    static std::unordered_set<ShaderProgram*> s_managedPrograms;
-
+    static int s_validGeneration; // Incremented when GL context is invalidated
+    int m_generation;
+    
     GLuint m_glProgram;
     GLuint m_glFragmentShader;
     GLuint m_glVertexShader;
@@ -117,7 +117,8 @@ private:
     std::unordered_map<std::string, ShaderLocation> m_uniformMap;
     std::string m_fragmentShaderSource;
     std::string m_vertexShaderSource;
-
+    
+    void checkValidity();
     GLuint makeLinkedShaderProgram(GLint _fragShader, GLint _vertShader);
     GLuint makeCompiledShader(const std::string& _src, GLenum _type);
 
