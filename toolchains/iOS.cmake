@@ -38,10 +38,8 @@ file(GLOB_RECURSE CORE_RESOURCES ${PROJECT_SOURCE_DIR}/core/resources/**)
 list(APPEND RESOURCES ${CORE_RESOURCES})
 
 # load core library
-include_directories(${PROJECT_SOURCE_DIR}/core/include/)
-include_directories(${PROJECT_SOURCE_DIR}/core/include/jsoncpp)
 add_subdirectory(${PROJECT_SOURCE_DIR}/core)
-include_recursive_dirs(${PROJECT_SOURCE_DIR}/core/*.h)
+include_directories(${CORE_INCLUDE_DIRS})
 
 find_package(ZLIB REQUIRED)
 if (ZLIB_FOUND)
