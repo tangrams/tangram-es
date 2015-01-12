@@ -17,13 +17,13 @@
 
 namespace Tangram {
 
-std::unique_ptr<TileManager> m_tileManager;    
+std::unique_ptr<TileManager> m_tileManager;
 std::shared_ptr<Scene> m_scene;
 std::shared_ptr<View> m_view;
-
+    
 void initialize() {
     
-    logMsg("%s\n", "initialize");
+    logMsg("initialize\n");
 
     // Create view
     if (!m_view) {
@@ -81,7 +81,7 @@ void initialize() {
 
     while (Error::hadGlError("Tangram::initialize()")) {}
 
-    logMsg("%s\n", "finish initialize");
+    logMsg("finish initialize\n");
 
 }
 
@@ -188,10 +188,16 @@ void handlePinchGesture(float _posX, float _posY, float _scale) {
 }
 
 void teardown() {
-    // TODO: Release resources!
+    // Release resources!
+    logMsg("teardown\n");
+    m_tileManager.reset();
+    m_scene.reset();
+    m_view.reset();
 }
 
 void onContextDestroyed() {
+    
+    logMsg("context destroyed\n");
     
     // The OpenGL context has been destroyed since the last time resources were created,
     // so we invalidate all data that depends on OpenGL object handles.
@@ -201,6 +207,7 @@ void onContextDestroyed() {
 
     // Buffer objects are invalidated and re-uploaded the next time they are used
     VboMesh::invalidateAllVBOs();
+    
     
 }
     

@@ -1,15 +1,13 @@
 #include "shaderProgram.h"
 
 GLuint ShaderProgram::s_activeGlProgram = 0;
-std::unordered_set<ShaderProgram*> ShaderProgram::s_managedPrograms;
+int ShaderProgram::s_validGeneration = 0;
 
 ShaderProgram::ShaderProgram() {
 
     m_glProgram = 0;
     m_glFragmentShader = 0;
     m_glVertexShader = 0;
-    
-    addManagedProgram(this);
 
 }
 
@@ -28,8 +26,6 @@ ShaderProgram::~ShaderProgram() {
     }
 
     m_attribMap.clear();
-    
-    removeManagedProgram(this);
 
 }
 
@@ -63,8 +59,10 @@ const GLint ShaderProgram::getUniformLocation(const std::string& _uniformName) {
 
 }
 
-void ShaderProgram::use() const {
+void ShaderProgram::use() {
 
+    checkValidity();
+    
     if (m_glProgram != 0 && m_glProgram != s_activeGlProgram) {
 
         glUseProgram(m_glProgram);
@@ -76,6 +74,8 @@ void ShaderProgram::use() const {
 
 bool ShaderProgram::buildFromSourceStrings(const std::string& _fragSrc, const std::string& _vertSrc) {
 
+    m_generation = s_validGeneration;
+    
     // Try to compile vertex and fragment shaders, releasing resources and quiting on failure
 
     GLint vertexShader = makeCompiledShader(_vertSrc, GL_VERTEX_SHADER);
@@ -183,33 +183,21 @@ GLuint ShaderProgram::makeCompiledShader(const std::string& _src, GLenum _type) 
 
 }
 
-void ShaderProgram::addManagedProgram(ShaderProgram* _program) {
+void ShaderProgram::checkValidity() {
     
-    s_managedPrograms.insert(_program);
-    
-}
-
-void ShaderProgram::removeManagedProgram(ShaderProgram* _program) {
-    
-    s_managedPrograms.erase(_program);
+    if (m_generation != s_validGeneration) {
+        m_glFragmentShader = 0;
+        m_glVertexShader = 0;
+        m_glProgram = 0;
+        buildFromSourceStrings(m_fragmentShaderSource, m_vertexShaderSource);
+    }
     
 }
 
 void ShaderProgram::invalidateAllPrograms() {
     
     s_activeGlProgram = 0;
-    
-    for (auto prog : s_managedPrograms) {
-        
-        // Set all OpenGL handles to invalidated values
-        prog->m_glFragmentShader = 0;
-        prog->m_glVertexShader = 0;
-        prog->m_glProgram = 0;
-
-        // Generate new handles by recompiling from saved source strings
-        prog->buildFromSourceStrings(prog->m_fragmentShaderSource, prog->m_vertexShaderSource);
-        
-    }
+    ++s_validGeneration;
     
 }
 

@@ -2,7 +2,6 @@
 
 #include <vector>
 #include <memory>
-#include <unordered_set>
 
 #include "gl.h"
 #include "vertexLayout.h"
@@ -83,8 +82,9 @@ public:
     static void invalidateAllVBOs();
 
 private:
-
-    static std::unordered_set<VboMesh*> s_managedVBOs;
+    
+    static int s_validGeneration; // Incremented when the GL context is invalidated
+    int m_generation;
     
     std::shared_ptr<VertexLayout> m_vertexLayout;
     
@@ -99,5 +99,7 @@ private:
     GLenum m_drawMode;
 
     bool m_isUploaded;
+    
+    void checkValidity();
 
 };
