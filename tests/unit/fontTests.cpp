@@ -5,7 +5,7 @@
 #include <vector>
 #include "tangram.h"
 #define GLFONTSTASH_IMPLEMENTATION
-#include "fontstash/glfontstash.h"
+#include "glfontstash.h"
 
 #define ATLAS_WIDTH         512
 #define ATLAS_HEIGHT        512
