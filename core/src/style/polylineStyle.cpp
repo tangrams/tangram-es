@@ -1,8 +1,6 @@
 #include "polylineStyle.h"
 #include "util/builders.h"
 
-#include <time.h>
-
 PolylineStyle::PolylineStyle(std::string _name, GLenum _drawMode) : Style(_name, _drawMode) {
     
     constructVertexLayout();
