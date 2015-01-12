@@ -1,6 +1,6 @@
 #include "fontStyle.h"
 #define GLFONTSTASH_IMPLEMENTATION
-#include "fontstash/glfontstash.h"
+#include "glfontstash.h"
 
 FontStyle::FontStyle(const std::string& _fontFile, std::string _name, float _fontSize, GLenum _drawMode)
 : Style(_name, _drawMode), m_fontSize(_fontSize) {
@@ -73,7 +73,7 @@ void FontStyle::buildLine(Line& _line, std::string& _layer, Properties& _props, 
                 glfonsGenText(m_fontContext->m_fsContext, 1, &textId);
 
                 // place the text in the middle and give more strength to p1 since text has a width
-                glm::dvec2 position = (p1 + p2) / 2.0 + p1p2 * glm::length(p1p2) * 0.2 * offset;
+                glm::dvec2 position = (p1 + p2) / 2.0 + p1p2 * 0.2 * offset;
 
                 // FUTURE: label logic
                 // 1. project label on screen and compute its bbox, to do so we need the view and label model matrix
@@ -189,7 +189,7 @@ void FontStyle::processTileTransformUpdate() {
 
         glBindTexture(GL_TEXTURE_2D, m_tileTexTransforms[id]);
 
-        logMsg("[FontStyle] Update texture transform %d x %d\n", data.m_width, data.m_height);
+        logMsg("[FontStyle][%d %d %d] Update texture transform %d x %d\n", id.x, id.y, id.z, data.m_width, data.m_height);
 
         glTexSubImage2D(GL_TEXTURE_2D, 0, data.m_xoff, data.m_yoff, data.m_width, data.m_height,
                         GL_RGBA, GL_UNSIGNED_BYTE, data.m_pixels);

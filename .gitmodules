@@ -1,3 +1,7 @@
 [submodule "core/include/libtess2/libtess2"]
 	path = core/dependencies/tess2/libtess2
 	url = https://github.com/memononen/libtess2.git
+[submodule "core/dependencies/fontstash"]
+	path = core/dependencies/fontstash
+	url = https://github.com/tangrams/fontstash-es.git
+	branch = refactoring

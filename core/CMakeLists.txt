@@ -19,6 +19,7 @@ foreach(_headerFile ${FOUND_HEADERS})
 endforeach()
 list(APPEND INCLUDE_DIRS "${DEPENDENCIES_DIR}/tess2/libtess2/Include")
 list(APPEND INCLUDE_DIRS "${DEPENDENCIES_DIR}/jsoncpp")
+list(APPEND INCLUDE_DIRS "${DEPENDENCIES_DIR}/fontstash/fontstash")
 list(REMOVE_DUPLICATES INCLUDE_DIRS)
 
 include_directories(${INCLUDE_DIR} ${INCLUDE_DIRS})

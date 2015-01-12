@@ -1,7 +1,7 @@
 #pragma once
 
 #include "style.h"
-#include "fontstash/glfontstash.h"
+#include "glfontstash.h"
 #include "text/fontContext.h"
 #include "label.h"
 #include "stl_util.hpp"
