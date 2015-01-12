@@ -9,7 +9,7 @@
 #include "view/view.h"
 #include "util/vboMesh.h"
 #include "util/mapProjection.h"
-#include "fontstash/glfontstash.h"
+#include "glfontstash.h"
 
 class Style;
 struct TileID;

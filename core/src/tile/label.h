@@ -1,6 +1,6 @@
 #pragma once
 
-#include "fontstash/glfontstash.h"
+#include "glfontstash.h"
 #include "text/fontContext.h"
 #include "glm/glm.hpp"
 #include <string>
