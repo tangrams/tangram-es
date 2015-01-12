@@ -11,6 +11,7 @@ add_subdirectory(${PROJECT_SOURCE_DIR}/core)
 include_directories(${CORE_INCLUDE_DIRS})
 
 # for testing purposes include those folders
+include_directories(${PROJECT_SOURCE_DIR}/core/include/)
 include_directories(${PROJECT_SOURCE_DIR}/core/include/catch/)
 include_directories(${PROJECT_SOURCE_DIR}/core/include/jsoncpp/)
 
