@@ -10,7 +10,7 @@ set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS}
     -std=gnu++11 
     -stdlib=libc++ 
     -isysroot ${CMAKE_IOS_SDK_ROOT}")
-set(CXX_FLAGS_DEBUG "-g -O0")
+set(CMAKE_CXX_FLAGS_DEBUG "-g -O0")
 
 set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} 
     -fobjc-abi-version=2 
