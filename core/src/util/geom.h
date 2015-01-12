@@ -4,9 +4,7 @@
 #include <cmath>
 #include <iostream>
 
-#include "glm/glm.hpp"
-
-#include "glm/gtc/matrix_transform.hpp"
+#include "glm/vec3.hpp"
 
 #ifndef PI
 #define PI 3.14159265358979323846

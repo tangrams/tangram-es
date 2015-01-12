@@ -1,4 +1,5 @@
 #include "geom.h"
+#include <cfloat>
 
 int signValue(float _n) {
     if( _n > 0 ) return 1;

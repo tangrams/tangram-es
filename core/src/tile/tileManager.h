@@ -5,8 +5,6 @@
 #include <memory>
 #include <future>
 
-#include "glm/glm.hpp"
-
 #include "util/tileID.h"
 #include "data/dataSource.h"
 
