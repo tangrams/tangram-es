@@ -17,6 +17,7 @@ foreach(_headerFile ${FOUND_HEADERS})
     get_filename_component(_dir ${_headerFile} PATH)
     list(APPEND INCLUDE_DIRS ${_dir})
 endforeach()
+set(CORE_INCLUDE_DIRS ${INCLUDE_DIRS} CACHE INTERNAL "core include directories" FORCE)
 list(APPEND INCLUDE_DIRS "${DEPENDENCIES_DIR}/tess2/libtess2/Include")
 list(APPEND INCLUDE_DIRS "${DEPENDENCIES_DIR}/jsoncpp")
 list(REMOVE_DUPLICATES INCLUDE_DIRS)
@@ -30,7 +31,7 @@ if(NOT DEFINED CORE_LIB_NAME)
     set(CORE_LIB_NAME core)
 endif()
 
-add_library(${CORE_LIB_NAME} ${CORE_LIB_TYPE} ${FOUND_SOURCES})
+add_library(${CORE_LIB_NAME} ${CORE_LIB_TYPE} ${FOUND_SOURCES} ${FOUND_HEADERS})
 target_link_libraries(${CORE_LIB_NAME} json libtess2 ${CORE_LIB_DEPS})
 
 # post build commands
