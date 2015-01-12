@@ -9,6 +9,7 @@ include_directories(/usr/local/include)
 # load core library
 include_directories(${PROJECT_SOURCE_DIR}/core/include/)
 include_directories(${PROJECT_SOURCE_DIR}/core/include/jsoncpp/)
+include_directories(${PROJECT_SOURCE_DIR}/core/dependencies/fontstash/fontstash/)
 add_subdirectory(${PROJECT_SOURCE_DIR}/core)
 include_recursive_dirs(${PROJECT_SOURCE_DIR}/core/src/*.h)
 
