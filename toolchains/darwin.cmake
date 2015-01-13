@@ -9,10 +9,8 @@ add_definitions(-DPLATFORM_OSX)
 include_directories(/usr/local/include)
 
 # load core library
-include_directories(${PROJECT_SOURCE_DIR}/core/include/)
-include_directories(${PROJECT_SOURCE_DIR}/core/include/jsoncpp/)
 add_subdirectory(${PROJECT_SOURCE_DIR}/core)
-include_recursive_dirs(${PROJECT_SOURCE_DIR}/core/src/*.h)
+include_directories(${CORE_INCLUDE_DIRS})
 
 # add sources and include headers
 set(OSX_EXTENSIONS_FILES *.mm *.cpp)
