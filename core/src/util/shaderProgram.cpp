@@ -2,7 +2,7 @@
 #include "util/stringsOp.h"
 
 GLuint ShaderProgram::s_activeGlProgram = 0;
-std::unordered_set<ShaderProgram*> ShaderProgram::s_managedPrograms;
+int ShaderProgram::s_validGeneration = 0;
 
 ShaderProgram::ShaderProgram() {
 
@@ -10,8 +10,6 @@ ShaderProgram::ShaderProgram() {
     m_glFragmentShader = 0;
     m_glVertexShader = 0;
     m_needsBuild = true;
-    
-    addManagedProgram(this);
 
 }
 
@@ -31,7 +29,6 @@ ShaderProgram::~ShaderProgram() {
 
     m_attribMap.clear();
     
-    removeManagedProgram(this);
 }
 
 void ShaderProgram::setSourceStrings(const std::string& _fragSrc, const std::string& _vertSrc){
@@ -80,6 +77,8 @@ const GLint ShaderProgram::getUniformLocation(const std::string& _uniformName) {
 
 void ShaderProgram::use() {
 
+    checkValidity();
+    
     if (m_needsBuild) {
         build();
     }
@@ -94,6 +93,7 @@ void ShaderProgram::use() {
 bool ShaderProgram::build() {
     
     m_needsBuild = false;
+    m_generation = s_validGeneration;
     
     // Inject source blocks
     
@@ -161,9 +161,6 @@ bool ShaderProgram::build() {
     m_glFragmentShader = fragmentShader;
     m_glVertexShader = vertexShader;
     m_glProgram = program;
-    
-    logMsg("Final compiled vertex shader: \n%s\n", vertSrc.c_str());
-    logMsg("Final compiled fragment shader: \n%s\n", fragSrc.c_str());
 
     // Clear any cached shader locations
 
@@ -215,7 +212,6 @@ GLuint ShaderProgram::makeCompiledShader(const std::string& _src, GLenum _type) 
             std::vector<GLchar> infoLog(infoLength);
             glGetShaderInfoLog(shader, infoLength, NULL, &infoLog[0]);
             logMsg("Error compiling shader:\n%s\n", &infoLog[0]);
-            logMsg("\n> Error ----------------------->>\n%s\n",getLineNumberString(_src).c_str());
         }
         glDeleteShader(shader);
         return 0;
@@ -225,33 +221,21 @@ GLuint ShaderProgram::makeCompiledShader(const std::string& _src, GLenum _type) 
 
 }
 
-void ShaderProgram::addManagedProgram(ShaderProgram* _program) {
+void ShaderProgram::checkValidity() {
     
-    s_managedPrograms.insert(_program);
-    
-}
-
-void ShaderProgram::removeManagedProgram(ShaderProgram* _program) {
-    
-    s_managedPrograms.erase(_program);
+    if (m_generation != s_validGeneration) {
+        m_glFragmentShader = 0;
+        m_glVertexShader = 0;
+        m_glProgram = 0;
+        m_needsBuild = true;
+    }
     
 }
 
 void ShaderProgram::invalidateAllPrograms() {
     
     s_activeGlProgram = 0;
-    
-    for (auto prog : s_managedPrograms) {
-        
-        // Set all OpenGL handles to invalidated values
-        prog->m_glFragmentShader = 0;
-        prog->m_glVertexShader = 0;
-        prog->m_glProgram = 0;
-
-        // Generate new handles by recompiling from saved source strings
-        prog->build();
-        
-    }
+    ++s_validGeneration;
     
 }
 

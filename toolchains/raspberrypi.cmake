@@ -12,10 +12,8 @@ include_directories(/opt/vc/include/interface/vcos/pthreads)
 include_directories(/opt/vc/include/interface/vmcs_host/linux)
 
 # load core library
-include_directories(${PROJECT_SOURCE_DIR}/core/include/)
-include_directories(${PROJECT_SOURCE_DIR}/core/include/jsoncpp/)
 add_subdirectory(${PROJECT_SOURCE_DIR}/core)
-include_recursive_dirs(${PROJECT_SOURCE_DIR}/core/src/*.h)
+include_directories(${CORE_INCLUDE_DIRS})
 
 # add sources and include headers
 find_sources_and_include_directories(

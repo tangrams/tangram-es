@@ -2,12 +2,10 @@
 
 #include "platform.h"
 #include "gl.h"
-#include "error.h"
 #include <string>
 #include <vector>
 #include <map>
 #include <unordered_map>
-#include <unordered_set>
 
 #include "glm/glm.hpp"
 
@@ -22,6 +20,7 @@
  */
 
 class ShaderProgram {
+
 public:
 
     ShaderProgram();
@@ -92,16 +91,6 @@ public:
     void setUniformMatrix3f(const std::string& _name, float* _value, bool transpose = false);
     void setUniformMatrix4f(const std::string& _name, float* _value, bool transpose = false);
     
-    /*
-     * Allows program to be invalidated in the event of GL context loss
-     */
-    static void addManagedProgram(ShaderProgram* _program);
-    
-    /* 
-     * Removes a program from the list of managed programs
-     */
-    static void removeManagedProgram(ShaderProgram* _program);
-    
     /* Invalidates all managed ShaderPrograms
      * 
      * This should be called in the event of a GL context loss; former GL shader object
@@ -123,23 +112,24 @@ private:
         // to a value that is not a valid uniform or attribute location. 
     };
     
-    static std::unordered_set<ShaderProgram*> s_managedPrograms;
-
-    GLuint makeLinkedShaderProgram(GLint _fragShader, GLint _vertShader);
-    GLuint makeCompiledShader(const std::string& _src, GLenum _type);
-
+    static GLuint s_activeGlProgram;
+    static int s_validGeneration; // Incremented when GL context is invalidated
+    
+    int m_generation;
+    GLuint m_glProgram;
+    GLuint m_glFragmentShader;
+    GLuint m_glVertexShader;
     std::unordered_map<std::string, ShaderLocation> m_attribMap;
     std::unordered_map<std::string, ShaderLocation> m_uniformMap;
     std::string m_fragmentShaderSource;
     std::string m_vertexShaderSource;
-
-    static GLuint s_activeGlProgram;
-
-    GLuint m_glProgram;
-    GLuint m_glFragmentShader;
-    GLuint m_glVertexShader;
-
+    
     std::map<std::string, std::vector<std::string>> m_sourceBlocks;
     
     bool m_needsBuild;
+    
+    void checkValidity();
+    GLuint makeLinkedShaderProgram(GLint _fragShader, GLint _vertShader);
+    GLuint makeCompiledShader(const std::string& _src, GLenum _type);
+    
 };

@@ -31,9 +31,8 @@ set(CORE_INSTALLATION_PATH ${CMAKE_SOURCE_DIR}/android/libs/${ANDROID_ABI})
 set(CORE_LIB_DEPS GLESv2 ${LIBCURL_PRECOMPILED_LIB})
 set(CORE_LIB_NAME tangram) # in order to have libtangram.so
 
-include_directories(${PROJECT_SOURCE_DIR}/core/include/)
 add_subdirectory(${PROJECT_SOURCE_DIR}/core)
-include_recursive_dirs(${PROJECT_SOURCE_DIR}/core/*.h)
+include_directories(${CORE_INCLUDE_DIRS})
 
 # link and build functions
 function(link_libraries)
