@@ -10,7 +10,7 @@ set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS}
     -std=gnu++11 
     -stdlib=libc++ 
     -isysroot ${CMAKE_IOS_SDK_ROOT}")
-set(CXX_FLAGS_DEBUG "-g -O0")
+set(CMAKE_CXX_FLAGS_DEBUG "-g -O0")
 
 set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} 
     -fobjc-abi-version=2 
@@ -38,10 +38,8 @@ file(GLOB_RECURSE CORE_RESOURCES ${PROJECT_SOURCE_DIR}/core/resources/**)
 list(APPEND RESOURCES ${CORE_RESOURCES})
 
 # load core library
-include_directories(${PROJECT_SOURCE_DIR}/core/include/)
-include_directories(${PROJECT_SOURCE_DIR}/core/include/jsoncpp)
 add_subdirectory(${PROJECT_SOURCE_DIR}/core)
-include_recursive_dirs(${PROJECT_SOURCE_DIR}/core/*.h)
+include_directories(${CORE_INCLUDE_DIRS})
 
 find_package(ZLIB REQUIRED)
 if (ZLIB_FOUND)

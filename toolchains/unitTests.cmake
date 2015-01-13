@@ -7,11 +7,14 @@ add_definitions(-DPLATFORM_OSX)
 include_directories(/usr/local/include)
 
 # load core library
+add_subdirectory(${PROJECT_SOURCE_DIR}/core)
+include_directories(${CORE_INCLUDE_DIRS})
+
+# for testing purposes include those folders
 include_directories(${PROJECT_SOURCE_DIR}/core/include/)
+include_directories(${PROJECT_SOURCE_DIR}/core/include/catch/)
 include_directories(${PROJECT_SOURCE_DIR}/core/include/jsoncpp/)
 include_directories(${PROJECT_SOURCE_DIR}/core/dependencies/fontstash/fontstash/)
-add_subdirectory(${PROJECT_SOURCE_DIR}/core)
-include_recursive_dirs(${PROJECT_SOURCE_DIR}/core/src/*.h)
 
 set(OSX_PLATFORM_SRC ${PROJECT_SOURCE_DIR}/osx/src/platform_osx.mm)
 
