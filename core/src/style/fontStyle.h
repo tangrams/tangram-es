@@ -46,10 +46,6 @@ public:
 
     virtual ~FontStyle();
 
-    /* 
-     * fontstash callbacks, non thread-safe
-     */
-
     /* Called by fontstash when the texture need to create a new transform textures */
     friend void createTexTransforms(void* _userPtr, unsigned int _width, unsigned int _height);
 
@@ -60,10 +56,6 @@ public:
     /* Called by fontstash when the atlas need to update the atlas texture */
     friend void updateAtlas(void* _userPtr, unsigned int _xoff, unsigned int _yoff,
                             unsigned int _width, unsigned int _height, const unsigned int* _pixels);
-
-    /*
-     * fontstash callbacks, thread-safe
-     */
 
     /* Called by fontstash when the atlas need to be created */
     friend void createAtlas(void* _usrPtr, unsigned int _width, unsigned int _height);

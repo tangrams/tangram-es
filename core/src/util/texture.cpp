@@ -10,6 +10,10 @@ Texture::Texture(unsigned int _width, unsigned int _height, GLuint _slot, Textur
 }
 
 Texture::~Texture() {
+
+}
+
+void Texture::destroy() {
     glDeleteTextures(1, &m_name);
 }
 

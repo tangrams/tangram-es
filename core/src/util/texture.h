@@ -46,6 +46,8 @@ public:
     void setData(const GLuint* _data, unsigned int _dataSize);
     void setSubData(const GLuint* _subData, unsigned int _xoff, unsigned int _yoff, unsigned int _width, unsigned int _height);
 
+    void destroy();
+
 protected:
 
     struct TextureSubData {
