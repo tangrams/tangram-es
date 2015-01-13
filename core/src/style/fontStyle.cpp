@@ -12,9 +12,6 @@ FontStyle::FontStyle(const std::string& _fontFile, std::string _name, float _fon
 
 FontStyle::~FontStyle() {
     glfonsDelete(m_fontContext->m_fsContext);
-    for (auto pair : m_tileTexTransforms) {
-        glDeleteTextures(1, &pair.second);
-    }
 }
 
 void FontStyle::constructVertexLayout() {
@@ -128,86 +125,22 @@ void FontStyle::finishDataProcessing(MapTile& _tile) {
     m_fontContext->m_contextMutex->unlock();
 }
 
-GLuint FontStyle::textureTransformName(const TileID _tileId) const {
-
-    auto it = m_tileTexTransforms.find(_tileId);
-
-    if (it != m_tileTexTransforms.end()) {
-        return it->second;
-    }
-
-    return 0; // non-valid texture name
-}
-
 void FontStyle::setupForTile(const MapTile& _tile) {
+    std::unique_ptr<Texture>& texture = m_transformTileTextures[_tile.getID()];
 
-    GLuint textureName = textureTransformName(_tile.getID());
-
-    if(textureName != 0) {
-        glActiveTexture(GL_TEXTURE1);
-        glBindTexture(GL_TEXTURE_2D, textureName);
-
-        m_shaderProgram->setUniformi("u_transforms", 1); // transform texture
-    }
-}
-
-void FontStyle::processTileTransformCreation() {
-
-    while (m_pendingTileTexTransforms.size() > 0) {
-
-        auto pair = m_pendingTileTexTransforms.front();
-
-        glm::vec2 size = pair.second;
-
-        auto defaultTransforms = new unsigned int[(int)(size.x * size.y)] {0}; // zero filled
-
-        logMsg("[FontStyle] Create texture transform %d x %d\n", (int)size.x, (int)size.y);
-
-        GLuint texTransform;
-        glGenTextures(1, &texTransform);
-        glBindTexture(GL_TEXTURE_2D, texTransform);
-
-        // fill texture with 0
-        glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, size.x, size.y, 0, GL_RGBA, GL_UNSIGNED_BYTE, defaultTransforms);
-        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
-
-        delete[] defaultTransforms;
-
-        m_tileTexTransforms[pair.first] = texTransform;
-
-        m_pendingTileTexTransforms.pop();
-    }
-
-}
-
-void FontStyle::processTileTransformUpdate() {
-
-    while (m_pendingTexTransformsData.size() > 0) {
-        TileID id = m_pendingTexTransformsData.front().m_id;
-        TextureData data = m_pendingTexTransformsData.front().m_data;
-
-        glBindTexture(GL_TEXTURE_2D, m_tileTexTransforms[id]);
-
-        logMsg("[FontStyle][%d %d %d] Update texture transform %d x %d\n", id.x, id.y, id.z, data.m_width, data.m_height);
-
-        glTexSubImage2D(GL_TEXTURE_2D, 0, data.m_xoff, data.m_yoff, data.m_width, data.m_height,
-                        GL_RGBA, GL_UNSIGNED_BYTE, data.m_pixels);
-
-        glBindTexture(GL_TEXTURE_2D, 0);
-
-        m_pendingTexTransformsData.pop();
-    }
-
+    texture->bind();
+    
+    m_shaderProgram->setUniformi("u_transforms", texture->getTextureSlot()); // transform texture
 }
 
 void FontStyle::setup(View& _view) {
     float projectionMatrix[16] = {0};
 
-    // process pending opengl texture updates / creation
-    processTileTransformCreation();
-    processTileTransformUpdate();
-
     glfonsProjection(m_fontContext->m_fsContext, projectionMatrix);
+
+    for (auto& pair : m_transformTileTextures) {
+        pair.second->update();
+    }
 
     m_atlas->update();
     m_atlas->bind();
@@ -231,11 +164,11 @@ void FontStyle::teardown() {
 void createTexTransforms(void* _userPtr, unsigned int _width, unsigned int _height) {
     FontStyle* fontStyle = static_cast<FontStyle*>(_userPtr);
 
-    glm::vec2 size = glm::vec2(_width, _height);
+    TextureOptions options = {GL_RGBA, GL_RGBA, {GL_LINEAR, GL_LINEAR}, {GL_CLAMP_TO_EDGE, GL_CLAMP_TO_EDGE}};
 
-    fontStyle->m_pendingTileTexTransforms.push({
-        fontStyle->m_processedTile->getID(), size
-    });
+    std::unique_ptr<Texture> texture(new Texture(_width, _height, 1, options));
+
+    fontStyle->m_transformTileTextures[fontStyle->m_processedTile->getID()] = std::move(texture);
 }
 
 void updateTransforms(void* _userPtr, unsigned int _xoff, unsigned int _yoff, unsigned int _width,
@@ -244,10 +177,7 @@ void updateTransforms(void* _userPtr, unsigned int _xoff, unsigned int _yoff, un
     FontStyle* fontStyle = static_cast<FontStyle*>(_userPtr);
     MapTile* tile = static_cast<MapTile*>(_ownerPtr);
 
-    fontStyle->m_pendingTexTransformsData.push({
-        tile->getID(),
-        { _pixels, _xoff, _yoff, _width, _height }
-    });
+    fontStyle->m_transformTileTextures[tile->getID()]->setSubData(reinterpret_cast<const GLuint*>(_pixels), _xoff, _yoff, _width, _height);
 }
 
 void updateAtlas(void* _userPtr, unsigned int _xoff, unsigned int _yoff,

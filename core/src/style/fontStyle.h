@@ -71,26 +71,16 @@ public:
     /* Callback on errors */
     friend void errorCallback(void* _userPtr, fsuint buffer, GLFONSError error);
 
-    GLuint textureTransformName(const TileID _tileId) const;
-
 private:
-
-    void processTileTransformCreation();
-    void processTileTransformUpdate();
 
     void initFontContext(const std::string& _fontFile);
 
     float m_fontSize;
     int m_font;
 
-    std::map<TileID, GLuint> m_tileTexTransforms;
-
-    /* Since the fontstash callbacks are called from threads, we enqueue them */
-    std::queue<TileTransform> m_pendingTexTransformsData;
-    std::queue<std::pair<TileID, glm::vec2>> m_pendingTileTexTransforms;
-
     // pointer to the currently processed tile by build* methods, nullptr if not
     MapTile* m_processedTile;
+    std::map<TileID, std::unique_ptr<Texture>> m_transformTileTextures;
     std::unique_ptr<Texture> m_atlas;
     std::shared_ptr<FontContext> m_fontContext;
 };

@@ -17,6 +17,8 @@ struct TextureWrapping {
 };
 
 struct TextureOptions {
+    GLenum m_internalFormat;
+    GLenum m_format;
     TextureFiltering m_filtering;
     TextureWrapping m_wrapping;
 };
@@ -26,7 +28,7 @@ class Texture {
 public:
 
     Texture(unsigned int _width, unsigned int _height, GLuint _slot = 0,
-            TextureOptions _options = {{GL_LINEAR, GL_LINEAR}, {GL_CLAMP_TO_EDGE, GL_CLAMP_TO_EDGE}});
+            TextureOptions _options = {GL_ALPHA, GL_ALPHA, {GL_LINEAR, GL_LINEAR}, {GL_CLAMP_TO_EDGE, GL_CLAMP_TO_EDGE}});
     
     ~Texture();
 

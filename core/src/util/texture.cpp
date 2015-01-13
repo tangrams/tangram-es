@@ -29,7 +29,7 @@ void Texture::unbind() {
 
 void Texture::setData(const GLuint* _data, unsigned int _dataSize) {
 
-    if(m_data.size() > 0) {
+    if (m_data.size() > 0) {
         m_data.clear();
     }
 
@@ -53,11 +53,11 @@ void Texture::setSubData(const GLuint* _subData, unsigned int _xoff, unsigned in
 
 void Texture::update() {
 
-    if(!m_dirty) {
+    if (!m_dirty) {
         return;
     }
 
-    if(m_name == 0) {
+    if (m_name == 0) {
         glGenTextures(1, &m_name);
 
         bind();
@@ -74,20 +74,20 @@ void Texture::update() {
 
     GLuint* data;
 
-    if(m_shouldResize) {
+    if (m_shouldResize) {
         data = nullptr;
         m_shouldResize = false;
     } else {
         data = m_data.data();
     }
 
-    glTexImage2D(GL_TEXTURE_2D, 0, GL_ALPHA, m_width, m_height, 0, GL_ALPHA, GL_UNSIGNED_BYTE, data);
+    glTexImage2D(GL_TEXTURE_2D, 0, m_options.m_internalFormat, m_width, m_height, 0, m_options.m_format, GL_UNSIGNED_BYTE, data);
 
-    while(m_subData.size() > 0) {
+    while (m_subData.size() > 0) {
         const TextureSubData* subData = m_subData.front().get();
             
         glTexSubImage2D(GL_TEXTURE_2D, 0, subData->m_xoff, subData->m_yoff, subData->m_width, subData->m_height,
-                        GL_ALPHA, GL_UNSIGNED_BYTE, subData->m_data->data());
+                        m_options.m_format, GL_UNSIGNED_BYTE, subData->m_data->data());
 
         m_subData.pop();
     }
@@ -100,7 +100,7 @@ void Texture::update() {
 void Texture::resize(const unsigned int _width, const unsigned int _height) {
 
     // don't treat those textures for now
-    if(!isPowerOf2(_width) || !isPowerOf2(_height)) {
+    if (!isPowerOf2(_width) || !isPowerOf2(_height)) {
         logMsg("[Texture] non-power of two textures not implemented yet");
         return;
     }
