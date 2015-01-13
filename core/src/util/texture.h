@@ -26,7 +26,7 @@ class Texture {
 public:
 
     Texture(unsigned int _width, unsigned int _height, GLuint _slot = 0,
-            TextureOptions _options = {{GL_LINEAR, GL_LINEAR}, {GL_CLAMP_TO_BORDER, GL_CLAMP_TO_BORDER}});
+            TextureOptions _options = {{GL_LINEAR, GL_LINEAR}, {GL_CLAMP_TO_EDGE, GL_CLAMP_TO_EDGE}});
     
     ~Texture();
 
