@@ -35,6 +35,23 @@ void Scene::addLight(std::shared_ptr<Light> _light, InjectionType _type) {
     if (m_lights.find(_light->getName()) == m_lights.end()) {
         for (auto& style : m_styles) {
             _light->injectOnProgram(style->getShaderProgram(), _type);
+
+            //  TODO:
+            //          - define injection should make this simpler checking duplications
+
+            std::string define = "";
+            if( _light->getInjectionType() == FRAGMENT || _light->getInjectionType() == BOTH){
+                define += "#ifndef TANGRAM_FRAGMENT_LIGHTS\n";
+                define += "#define TANGRAM_FRAGMENT_LIGHTS\n";
+                define += "#endif\n";
+            } 
+
+            if( _light->getInjectionType() == VERTEX || _light->getInjectionType() == BOTH){
+                define += "#ifndef TANGRAM_VERTEX_LIGHTS\n";
+                define += "#define TANGRAM_VERTEX_LIGHTS\n";
+                define += "#endif\n";
+            }
+            style->getShaderProgram()->addSourceBlock("defines",define);
         }
         m_lights[_light->getName()] = _light;
     } else {

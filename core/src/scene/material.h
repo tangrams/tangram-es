@@ -34,14 +34,26 @@ public:
     /* Enable Emission colors on the shader */
     void enableEmission();
 
+    /* Disable Emission colors on the shader */
+    void disableEmission();
+
     /* Enable ambient colors on the shader */
     void enableAmbient();
+
+    /* Disable ambient colors on the shader */
+    void disableAmbient();
 
     /* Enable Diffuse colors on the shader */
     void enableDiffuse();
 
+    /* Disable Diffuse colors on the shader */
+    void disableDiffuse();
+
     /* Enable Specular colors on the shader */
     void enableSpecular();
+
+    /* Disable Specular colors on the shader */
+    void disableSpecular();
 
     /*  Inject the needed lines of GLSL code on the shader to make this material work */
     virtual void injectOnProgram( std::shared_ptr<ShaderProgram> _shader );

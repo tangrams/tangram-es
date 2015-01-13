@@ -2,18 +2,19 @@
 #include "util/builders.h"
 
 PolygonStyle::PolygonStyle(std::string _name, GLenum _drawMode) : Style(_name, _drawMode) {
-    
     constructVertexLayout();
     constructShaderProgram();
 
-    // TODO: 
-    //      - by now show how to declare values of material. Ex:
-    //  
-    // m_material.setAmbient(glm::vec4(0.0));
     // m_material.setEmission(glm::vec4(0.0));
-    // m_material.setDiffusion(glm::vec4(1.0));
-    // m_material.setSpeculars(glm::vec4(0.2));
-
+    m_material.disableEmission();
+    // m_material.setAmbient(glm::vec4(0.0));
+    m_material.disableAmbient();
+    
+    m_material.setDiffuse(glm::vec4(1.0));
+    // m_material.disableDiffuse();
+    
+    // m_material.setSpeculars(glm::vec4(0.2),0.2);
+    m_material.disableSpecular();
 }
 
 void PolygonStyle::constructVertexLayout() {
@@ -36,7 +37,6 @@ void PolygonStyle::constructShaderProgram() {
     m_shaderProgram = std::make_shared<ShaderProgram>();
     m_shaderProgram->setSourceStrings(fragShaderSrcStr, vertShaderSrcStr);
 
-    m_material.enableSpecular();
     m_material.injectOnProgram(m_shaderProgram); // This is a must for lighting !!
 }
 

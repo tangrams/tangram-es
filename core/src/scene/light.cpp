@@ -104,5 +104,5 @@ std::string Light::getInstanceAssignBlock() {
 }
 
 std::string Light::getInstanceComputeBlock() {
-    return "calculateLight("+getInstanceName()+", eye, _eyeToPoint, _normal, amb, diff, spec);\n";
+    return "calculateLight("+getInstanceName()+", eye, _eyeToPoint, _normal);\n";
 }

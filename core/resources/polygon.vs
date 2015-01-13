@@ -27,11 +27,15 @@ void main() {
 
 	v_eyeToPoint = vec3(u_modelView * a_position);
 
-#ifdef TANGRAM_VERTEX_LIGHTS
-	calculateLighting(v_eyeToPoint,v_normal);
-#endif
-
 	v_color = a_color;
+
+#ifdef TANGRAM_VERTEX_LIGHTS
+	#ifdef TANGRAM_FRAGMENT_LIGHTS
+	calculateLighting(v_eyeToPoint, v_normal);
+	#else
+	v_color *= calculateLighting(v_eyeToPoint, v_normal);
+	#endif
+#endif
 
   	gl_Position = u_modelViewProj * a_position;
 

@@ -1,3 +1,5 @@
+// MATERIALS
+//
 struct Material {
 	#ifdef TANGRAM_MATERIAL_EMISSION
 	vec4 emission;
@@ -17,7 +19,21 @@ struct Material {
 	#endif
 };
 
+// Note: uniforms (u_[name]) and varyings (v_[name]) are 
+// 		copy to global instances ( g_[name] ) to allow 
+//		modifications
+//
 uniform Material u_material;
 Material g_material = u_material;
 
-// Note: uniforms (u_material and u_ligth) are copy to global instances (g_material and g_light) to let the user modify them in the shader
+// GLOBAL LIGHTS ACCUMULATORS for each enable MATERIAL property
+//
+#ifdef TANGRAM_MATERIAL_AMBIENT
+vec4 g_light_accumulator_ambient;
+#endif
+#ifdef TANGRAM_MATERIAL_DIFFUSE
+vec4 g_light_accumulator_diffuse;
+#endif
+#ifdef TANGRAM_MATERIAL_SPECULAR
+vec4 g_light_accumulator_specular;
+#endif

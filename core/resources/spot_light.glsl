@@ -33,7 +33,7 @@ struct SpotLight {
     #endif
 };
 
-void calculateLight(in SpotLight _light, in vec3 _eye, in vec3 _eyeToPoint, in vec3 _normal, inout vec4 _ambient, inout vec4 _diffuse, inout vec4 _specular){
+void calculateLight(in SpotLight _light, in vec3 _eye, in vec3 _eyeToPoint, in vec3 _normal){
     // Compute vector from surface to light position
     vec3 VP = normalize( vec3(_light.position) - _eyeToPoint );
 
@@ -74,11 +74,11 @@ void calculateLight(in SpotLight _light, in vec3 _eye, in vec3 _eyeToPoint, in v
     float nDotVP = min( max(0.0, dot( _normal, VP ) ), 1.0);
 
     #ifdef TANGRAM_MATERIAL_AMBIENT
-    _ambient  += _light.ambient * spotAttenuation;
+    g_light_accumulator_ambient  += _light.ambient * spotAttenuation;
     #endif
 
     #ifdef TANGRAM_MATERIAL_DIFFUSE 
-    _diffuse  += _light.diffuse * nDotVP * spotAttenuation;
+    g_light_accumulator_diffuse  += _light.diffuse * nDotVP * spotAttenuation;
     #endif
 
     #ifdef TANGRAM_MATERIAL_SPECULAR
@@ -92,6 +92,6 @@ void calculateLight(in SpotLight _light, in vec3 _eye, in vec3 _eyeToPoint, in v
         float nDotHV = min( max(0.0, dot( _normal, halfVector ) ),1.0);
         pf = pow(nDotHV, g_material.shininess);
     }
-    _specular += _light.specular * pf * spotAttenuation;
+    g_light_accumulator_specular += _light.specular * pf * spotAttenuation;
     #endif
 }

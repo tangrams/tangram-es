@@ -43,6 +43,11 @@ void Material::enableAmbient(){ m_bAmbient = true; };
 void Material::enableDiffuse(){ m_bDiffuse = true; };
 void Material::enableSpecular(){ m_bSpecular = true; };
 
+void Material::disableEmission(){ m_bEmission = false; }
+void Material::disableAmbient(){ m_bAmbient = false; };
+void Material::disableDiffuse(){ m_bDiffuse = false; };
+void Material::disableSpecular(){ m_bSpecular = false; };
+
 std::string Material::getDefinesBlock(){
 	std::string defines = "\n";
 
@@ -76,33 +81,6 @@ std::string Material::getDefinesBlock(){
 std::string Material::getClassBlock(){
 	return stringFromResource("material.glsl") + "\n";
 }
-
-// std::string Material::getInstanceBlock(){
-//     std::string block = "";
-//     if(m_dynamic){    
-//         //  If is dynamic, define the uniform and copy it to the global instance of the light struct
-//         block += "uniform " + m_typeName + " " + getUniformName() + ";\n";
-//         block += m_typeName + " " + getInstanceName() + " = " + getUniformName() + ";\n";
-//     } else {
-//         //  If is not dynamic define the global instance of the light struct and fill the variables
-//         block += m_typeName + " " + getInstanceName() + getInstanceAssignBlock() +";\n";
-//     }
-//     return block;
-// }
-
-// std::string Material::getInstanceAssignBlock(){
-//     std::string block = "";
-//     if(!m_dynamic){
-//         // block += getInstanceName() + ".ambient = " + getString(m_ambient) + ";\n";
-//         // block += getInstanceName() + ".diffuse = " + getString(m_diffuse) + ";\n";
-//         // block += getInstanceName() + ".specular = " + getString(m_specular) + ";\n";
-
-//         block += " = " + m_typeName + "(" + getString(m_ambient);
-//         block += ", " + getString(m_diffuse);
-//         block += ", " + getString(m_specular);
-//     }
-//     return block;
-// }
 
 void Material::injectOnProgram( std::shared_ptr<ShaderProgram> _shader ){
 	//  Each light will add the needed :

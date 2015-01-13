@@ -29,7 +29,7 @@ struct PointLight {
 	#endif
 };
 
-void calculateLight(in PointLight _light, in vec3 _eye, in vec3 _eyeToPoint, in vec3 _normal, inout vec4 _ambient, inout vec4 _diffuse, inout vec4 _specular){
+void calculateLight(in PointLight _light, in vec3 _eye, in vec3 _eyeToPoint, in vec3 _normal){
 
 	// Compute vector from surface to light position
 	vec3 VP = normalize( vec3(_light.position) - _eyeToPoint );
@@ -64,17 +64,17 @@ void calculateLight(in PointLight _light, in vec3 _eye, in vec3 _eyeToPoint, in 
 
 	#ifdef TANGRAM_MATERIAL_AMBIENT
 	#ifdef TANGRAM_POINTLIGHT_ATTENUATION
-	_ambient += _light.ambient * attenuation;
+	g_light_accumulator_ambient += _light.ambient * attenuation;
 	#else
-	_ambient += _light.ambient;
+	g_light_accumulator_ambient += _light.ambient;
 	#endif
 	#endif
 	
 	#ifdef TANGRAM_MATERIAL_DIFFUSE 
 	#ifdef TANGRAM_POINTLIGHT_ATTENUATION
-	_diffuse += _light.diffuse * nDotVP * attenuation;
+	g_light_accumulator_diffuse += _light.diffuse * nDotVP * attenuation;
 	#else
-	_diffuse += _light.diffuse * nDotVP;
+	g_light_accumulator_diffuse += _light.diffuse * nDotVP;
 	#endif
 	#endif
 
@@ -87,9 +87,9 @@ void calculateLight(in PointLight _light, in vec3 _eye, in vec3 _eyeToPoint, in 
 	}
 
 	#ifdef TANGRAM_POINTLIGHT_ATTENUATION
-	_specular += _light.specular * pf * attenuation;
+	g_light_accumulator_specular += _light.specular * pf * attenuation;
 	#else
-	_specular += _light.specular * pf;
+	g_light_accumulator_specular += _light.specular * pf;
 	#endif
 
 	#endif

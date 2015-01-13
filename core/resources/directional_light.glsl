@@ -6,15 +6,15 @@ struct DirectionalLight {
 	vec3 direction;
 };
 
-void calculateLight(in DirectionalLight _light, in vec3 _eye, in vec3 _eyeToPoint, in vec3 _normal, inout vec4 _ambient, inout vec4 _diffuse, inout vec4 _specular){
+void calculateLight(in DirectionalLight _light, in vec3 _eye, in vec3 _eyeToPoint, in vec3 _normal){
 	#ifdef TANGRAM_MATERIAL_AMBIENT
-	_ambient    += _light.ambient;
+	g_light_accumulator_ambient += _light.ambient;
 	#endif
 
 	float nDotVP =  min( max(0.0, dot(_normal, normalize( vec3(_light.direction) ) ) ), 1.0);
 
 	#ifdef TANGRAM_MATERIAL_DIFFUSE	
-	_diffuse += _light.diffuse * nDotVP;
+	g_light_accumulator_diffuse += _light.diffuse * nDotVP;
 	#endif
 
 	#ifdef TANGRAM_MATERIAL_SPECULAR
@@ -24,6 +24,6 @@ void calculateLight(in DirectionalLight _light, in vec3 _eye, in vec3 _eyeToPoin
 		float nDotHV = min( max(0.0, dot(_normal, halfVector) ), 1.0 );
 		pf = pow(nDotHV, g_material.shininess);
 	}
-	_specular   += _light.specular * pf;
+	g_light_accumulator_specular += _light.specular * pf;
 	#endif
 }
