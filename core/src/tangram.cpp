@@ -126,12 +126,17 @@ void render() {
         for (const auto& mapIDandTile : m_tileManager->getVisibleTiles()) {
             const std::shared_ptr<MapTile>& tile = mapIDandTile.second;
             if (tile->hasGeometry()) {
-                style->setup(1.0f + log(tile->getID().z));
                 if (tile->getProxyCounter() > 0) {
-                    // Draw proxy tiles
+                    // Draw proxy tiles:
+                    // each proxy tile is drawn at a specific depth plane depending on the zoom level of the tile
+                    // higher zoom level are drawn above
+                    style->setup(1.0f + log( (m_view->s_maxZoom+1)/(m_view->s_maxZoom + 1 - tile->getID().z)));
+                    logMsg("Proxy: (%d, %d, %d)\n", tile->getID().x, tile->getID().y, tile->getID().z);
                     tile->draw(*style, viewProj);
                 } else {
-                    // Draw visible tile
+                    // Draw visible tile:
+                    // always drawn in the same z place above all proxy tiles
+                    style->setup(1.0f + log(m_view->s_maxZoom+2));
                     tile->draw(*style, viewProj);
                 }
             }
