@@ -84,3 +84,5 @@ void setLength(glm::vec3& _vec, float _length);
 
 /* Gets a copy of _vec scaled to have length _length */
 glm::vec3 getWithLength(const glm::vec3& _vec, float _length);
+
+bool isPowerOf2(unsigned int _val);

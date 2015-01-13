@@ -54,3 +54,7 @@ glm::vec3 getWithLength(const glm::vec3& _vec, float _length) {
     else
         return glm::vec3();
 }
+
+bool isPowerOf2(unsigned int _val) {
+    return (_val & _val - 1) == 0;
+}

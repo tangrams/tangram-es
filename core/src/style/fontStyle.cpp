@@ -15,7 +15,6 @@ FontStyle::~FontStyle() {
     for (auto pair : m_tileTexTransforms) {
         glDeleteTextures(1, &pair.second);
     }
-    glDeleteTextures(1, &m_atlas);
 }
 
 void FontStyle::constructVertexLayout() {
@@ -201,38 +200,19 @@ void FontStyle::processTileTransformUpdate() {
 
 }
 
-void FontStyle::processAtlasUpdate() {
-
-    glBindTexture(GL_TEXTURE_2D, m_atlas);
-    while (m_pendingTexAtlasData.size() > 0) {
-        TextureData data = m_pendingTexAtlasData.front().m_data;
-
-        logMsg("[FontStyle] Update atlas texture %d x %d\n", data.m_width, data.m_height);
-
-        glTexSubImage2D(GL_TEXTURE_2D, 0, data.m_xoff, data.m_yoff, data.m_width, data.m_height,
-                        GL_ALPHA, GL_UNSIGNED_BYTE, data.m_pixels);
-
-        m_pendingTexAtlasData.pop();
-    }
-    glBindTexture(GL_TEXTURE_2D, 0);
-
-}
-
 void FontStyle::setup(View& _view) {
     float projectionMatrix[16] = {0};
 
     // process pending opengl texture updates / creation
-    processAtlasUpdate();
     processTileTransformCreation();
     processTileTransformUpdate();
 
     glfonsProjection(m_fontContext->m_fsContext, projectionMatrix);
 
-    // activate the atlas on the texture slot0, the texture transform is on slot1
-    glActiveTexture(GL_TEXTURE0);
-    glBindTexture(GL_TEXTURE_2D, m_atlas);
+    m_atlas->update();
+    m_atlas->bind();
 
-    m_shaderProgram->setUniformi("u_tex", 0); // atlas
+    m_shaderProgram->setUniformi("u_tex", m_atlas->getTextureSlot()); // atlas
     m_shaderProgram->setUniformf("u_tresolution", 32, 64); // resolution of transform texture
     m_shaderProgram->setUniformf("u_resolution", _view.getWidth(), _view.getHeight());
     m_shaderProgram->setUniformf("u_color", 1.0, 1.0, 1.0);
@@ -274,24 +254,17 @@ void updateAtlas(void* _userPtr, unsigned int _xoff, unsigned int _yoff,
                  unsigned int _width, unsigned int _height, const unsigned int* _pixels) {
 
     FontStyle* fontStyle = static_cast<FontStyle*>(_userPtr);
-
-    fontStyle->m_pendingTexAtlasData.push({
-        { _pixels, _xoff, _yoff, _width, _height }
-    });
+    fontStyle->m_atlas->setSubData(reinterpret_cast<const GLuint*>(_pixels), _xoff, _yoff, _width, _height);
 }
 
 void createAtlas(void* _userPtr, unsigned int _width, unsigned int _height) {
-    logMsg("[FontStyle] Create atlas");
-    FontStyle* fontStyle = static_cast<FontStyle*>(_userPtr);
 
-    glGenTextures(1, &fontStyle->m_atlas);
-    glBindTexture(GL_TEXTURE_2D, fontStyle->m_atlas);
-    glTexImage2D(GL_TEXTURE_2D, 0, GL_ALPHA, _width, _height, 0, GL_ALPHA, GL_UNSIGNED_BYTE, 0);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-    glBindTexture(GL_TEXTURE_2D, 0);
+    FontStyle* fontStyle = static_cast<FontStyle*>(_userPtr);
+    fontStyle->m_atlas = std::unique_ptr<Texture>(new Texture(_width, _height));
 }
 
 void errorCallback(void* _userPtr, fsuint buffer, GLFONSError error) {
+
     switch (error) {
         case GLFONSError::ID_OVERFLOW:
             logMsg("[FontStyle] FontError : ID_OVERFLOW in text buffer %d\n", buffer);

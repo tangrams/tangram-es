@@ -5,6 +5,7 @@
 #include "text/fontContext.h"
 #include "label.h"
 #include "stl_util.hpp"
+#include "texture.h"
 #include <map>
 #include <memory>
 #include <queue>
@@ -16,10 +17,6 @@ struct TextureData {
     unsigned int m_yoff;
     unsigned int m_width;
     unsigned int m_height;
-};
-
-struct Atlas {
-    TextureData m_data;
 };
 
 struct TileTransform {
@@ -80,7 +77,6 @@ private:
 
     void processTileTransformCreation();
     void processTileTransformUpdate();
-    void processAtlasUpdate();
 
     void initFontContext(const std::string& _fontFile);
 
@@ -91,11 +87,10 @@ private:
 
     /* Since the fontstash callbacks are called from threads, we enqueue them */
     std::queue<TileTransform> m_pendingTexTransformsData;
-    std::queue<Atlas> m_pendingTexAtlasData;
     std::queue<std::pair<TileID, glm::vec2>> m_pendingTileTexTransforms;
 
     // pointer to the currently processed tile by build* methods, nullptr if not
     MapTile* m_processedTile;
-    GLuint m_atlas;
+    std::unique_ptr<Texture> m_atlas;
     std::shared_ptr<FontContext> m_fontContext;
 };
