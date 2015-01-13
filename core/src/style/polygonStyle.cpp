@@ -31,13 +31,9 @@ void PolygonStyle::constructShaderProgram() {
     
 }
 
-void PolygonStyle::setup() {
+void PolygonStyle::setup(float _tileDepthOffset) {
     m_shaderProgram->setUniformf("u_lightDirection", -1.0, -1.0, 1.0);
-}
-
-void PolygonStyle::setup(float _proxyZTest) {
-    setup();
-    m_shaderProgram->setUniformf("u_proxyOffset", _proxyZTest);
+    m_shaderProgram->setUniformf("u_tileDepthOffset", _tileDepthOffset);
 }
 
 void PolygonStyle::buildPoint(Point& _point, std::string& _layer, Properties& _props, VboMesh& _mesh) {

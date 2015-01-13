@@ -5,7 +5,7 @@ precision mediump float;
 uniform mat4 u_modelViewProj;
 uniform vec3 u_lightDirection;
 uniform float u_time;
-uniform float u_proxyOffset;
+uniform float u_tileDepthOffset;
 
 attribute vec4 a_position;
 attribute vec2 a_texcoord;
@@ -36,5 +36,5 @@ void main() {
 
 	gl_Position = u_modelViewProj * v_pos;
     
-    gl_Position.z /= u_proxyOffset;
+    gl_Position.z /= u_tileDepthOffset;
 }
