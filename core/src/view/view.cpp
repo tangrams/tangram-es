@@ -77,7 +77,7 @@ void View::translate(double _dx, double _dy) {
 }
 
 void View::zoom(float _dz) {
-    if( ( (m_zoom + _dz - m_initZoom) > 0.0 )) {
+    if(_dz > 0.0) {
         m_isZoomIn = true;
     }
     else {
