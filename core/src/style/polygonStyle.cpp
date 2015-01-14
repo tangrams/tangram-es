@@ -5,16 +5,10 @@ PolygonStyle::PolygonStyle(std::string _name, GLenum _drawMode) : Style(_name, _
     constructVertexLayout();
     constructShaderProgram();
 
-    // m_material.setEmission(glm::vec4(0.0));
-    m_material.disableEmission();
-    // m_material.setAmbient(glm::vec4(0.0));
-    m_material.disableAmbient();
-    
+    m_material.setEmissionEnabled(false);
+    m_material.setAmbientEnabled(true);
     m_material.setDiffuse(glm::vec4(1.0));
-    // m_material.disableDiffuse();
-    
-    // m_material.setSpeculars(glm::vec4(0.2),0.2);
-    m_material.disableSpecular();
+    m_material.setSpecularEnabled(false);
 }
 
 void PolygonStyle::constructVertexLayout() {

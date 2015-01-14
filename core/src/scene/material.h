@@ -31,29 +31,17 @@ public:
     *   By setting the property you will enable and require to reloading the shader. */
     void setSpecular(const glm::vec4 _specular, float _shinnyFactor);
 
-    /* Enable Emission colors on the shader */
-    void enableEmission();
+    /* Enable or disable emission colors */
+    void setEmissionEnabled(bool _enable);
 
-    /* Disable Emission colors on the shader */
-    void disableEmission();
+    /* Enable or disable ambient colors */
+    void setAmbientEnabled(bool _enable);
 
-    /* Enable ambient colors on the shader */
-    void enableAmbient();
+    /* Enable or disable diffuse colors */
+    void setDiffuseEnabled(bool _enable);
 
-    /* Disable ambient colors on the shader */
-    void disableAmbient();
-
-    /* Enable Diffuse colors on the shader */
-    void enableDiffuse();
-
-    /* Disable Diffuse colors on the shader */
-    void disableDiffuse();
-
-    /* Enable Specular colors on the shader */
-    void enableSpecular();
-
-    /* Disable Specular colors on the shader */
-    void disableSpecular();
+    /* Enable or disable specular colors */
+    void setSpecularEnabled(bool _enable);
 
     /*  Inject the needed lines of GLSL code on the shader to make this material work */
     virtual void injectOnProgram( std::shared_ptr<ShaderProgram> _shader );
