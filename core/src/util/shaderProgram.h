@@ -30,7 +30,7 @@ public:
     void setSourceStrings(const std::string& _fragSrc, const std::string& _vertSrc);
 
     /*  Add a block of GLSL to be injected at "#pragma tangram: [_tagName]" in the shader sources */
-    void addSourceBlock(const std::string& _tagName, const std::string& _glslSource);
+    void addSourceBlock(const std::string& _tagName, const std::string& _glslSource, bool _allowDuplicate = true);
 
     /*
      * Applies all source blocks to the source strings for this shader and attempts to compile

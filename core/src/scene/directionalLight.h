@@ -20,5 +20,7 @@ protected:
     virtual std::string getInstanceDefinesBlock() override;
     virtual std::string getInstanceAssignBlock() override;
 
+    static std::string s_classBlock;
+    
     glm::vec3 m_direction;
 };
