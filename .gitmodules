@@ -4,4 +4,3 @@
 [submodule "core/dependencies/fontstash"]
 	path = core/dependencies/fontstash
 	url = https://github.com/tangrams/fontstash-es.git
-	branch = refactoring
