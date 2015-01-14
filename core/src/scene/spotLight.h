@@ -12,7 +12,7 @@ public:
     virtual void setDirection(const glm::vec3& _dir);
 
     /*  Set the properties of the cutoff light cone */
-    virtual void setCutOff(float _lightConeRadians, float _lightExponent);
+    virtual void setCutOff(float _cutoffConeDegrees, float _lightExponent);
     
     virtual void setupProgram(std::shared_ptr<ShaderProgram> _program) override;
     

@@ -68,14 +68,15 @@ void initialize() {
         pointLight->setSpecularColor(glm::vec4(0.5,0.0,1.0,1.0));
         pointLight->setLinearAttenuation(0.005);
         pointLight->setPosition(glm::vec3(0.0));
-        m_scene->addLight(pointLight,VERTEX);
+        // m_scene->addLight(pointLight,VERTEX);
 
         //  Spot light on Default (fragment) shader
         auto spotLight = std::make_shared<SpotLight>("sLight",true);
-        spotLight->setSpecularColor(glm::vec4(0.5,0.5,0.0,1.0));
-        spotLight->setPosition(glm::vec3(0.0));
-        spotLight->setDirection(glm::vec3(0,PI*0.25,0.0));
-        spotLight->setCutOff(PI*0.1, 20.0);
+        // spotLight->setSpecularColor(glm::vec4(0.5,0.5,0.0,1.0));
+        // spotLight->setPosition(glm::vec3(0.0));
+        // spotLight->setDirection(glm::vec3(0,PI*0.25,0.0));
+        spotLight->setCutOff(30.0, 20.0);
+        // spotLight->setLinearAttenuation(0.005);
         m_scene->addLight(spotLight,DEFAULT);
         
         //-----------------------

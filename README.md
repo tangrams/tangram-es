@@ -94,6 +94,12 @@ Then install to a connected device or emulator:
 adb install android/bin/TangramAndroid-debug.apk
 ```
 
+For updating your app you need to uninstall first. You can do it all in one line by:
+
+```bash
+adb uninstall com.mapzen.tangram && make android && adb install android/bin/TangramAndroid-debug.apk 
+```
+
 ### Raspberry Pi ###
 
 Install a C++11 compatible compiler and libcurl:

@@ -42,7 +42,7 @@ void Light::injectOnProgram(std::shared_ptr<ShaderProgram> _shader, InjectionTyp
         //  TODO:
         //      - AM - After global blocks is implemented
         //      - AM - Implement defines (and use them on the lights and materials defines)
-        //      - BM - Add a method to scene that add the main calcualtion function
+        //      - AM - Add a method to scene that add the main calcualtion function
         //              from scene you pass the light to this functions Light::getFragmentLightMainFunctionBlock() 
         //              and Light::getFVertexLightMainFunctionBlock()
     }
