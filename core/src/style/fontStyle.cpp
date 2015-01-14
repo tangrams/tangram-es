@@ -12,6 +12,10 @@ FontStyle::FontStyle(const std::string& _fontFile, std::string _name, float _fon
 
 FontStyle::~FontStyle() {
     glfonsDelete(m_fontContext->m_fsContext);
+
+    for (auto& pair : m_transformTileTextures) {
+        pair.second->destroy();
+    }
 }
 
 void FontStyle::constructVertexLayout() {
