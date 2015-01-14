@@ -32,7 +32,7 @@ void Light::injectOnProgram(std::shared_ptr<ShaderProgram> _shader, InjectionTyp
         m_injType = _injType;
     }
     
-    _shader->addSourceBlock("defines", getInstanceDefinesBlock());
+    _shader->addSourceBlock("defines", getInstanceDefinesBlock(), false);
 
     if (m_injType == FRAGMENT || m_injType == BOTH) {
         _shader->addSourceBlock("_fragment_lighting", getInstanceBlock());
