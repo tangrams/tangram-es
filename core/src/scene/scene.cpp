@@ -55,8 +55,6 @@ void Scene::addLight(std::shared_ptr<Light> _light, InjectionType _type) {
         }
         m_lights[_light->getName()] = _light;
     } else {
-
-        //  TODO:
-        //      - BM - add error mesg here
+        logMsg("ERROR, Can't add the same light twice. Try using another the name instead.\n");
     }
 }

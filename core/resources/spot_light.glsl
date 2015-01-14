@@ -15,37 +15,39 @@ struct SpotLight {
     #endif
 
     #ifdef TANGRAM_SPOTLIGHT_LINEAR_ATTENUATION
-    #ifndef TANGRAM_SPOTLIGHT_ATTENUATION
-        #define TANGRAM_SPOTLIGHT_ATTENUATION
-    #endif
-    #define TANGRAM_SPOTLIGHT_DISTANCE
+        #ifndef TANGRAM_SPOTLIGHT_ATTENUATION
+            #define TANGRAM_SPOTLIGHT_ATTENUATION
+        #endif
+        #define TANGRAM_SPOTLIGHT_DISTANCE
     float linearAttenuation;
     #endif
 
     #ifdef TANGRAM_SPOTLIGHT_QUADRATIC_ATTENUATION
-    #ifndef TANGRAM_SPOTLIGHT_ATTENUATION
-        #define TANGRAM_SPOTLIGHT_ATTENUATION
-    #endif
-    #ifndef TANGRAM_SPOTLIGHT_DISTANCE
-        #define TANGRAM_SPOTLIGHT_DISTANCE
-    #endif
+        #ifndef TANGRAM_SPOTLIGHT_ATTENUATION
+            #define TANGRAM_SPOTLIGHT_ATTENUATION
+        #endif
+        #ifndef TANGRAM_SPOTLIGHT_DISTANCE
+            #define TANGRAM_SPOTLIGHT_DISTANCE
+        #endif
     float quadraticAttenuation;
     #endif
 };
 
 void calculateLight(in SpotLight _light, in vec3 _eye, in vec3 _eyeToPoint, in vec3 _normal){
     // Compute vector from surface to light position
-    vec3 VP = normalize( vec3(_light.position) - _eyeToPoint );
+    vec3 VP = normalize( _light.position.xyz - _eyeToPoint );
 
     #ifdef TANGRAM_SPOTLIGHT_DISTANCE
-    float dist = length( vec3(_light.position) - _eyeToPoint );
+    float dist = length( _light.position.xyz - _eyeToPoint );
     #endif 
 
     // spotlight attenuation factor
     float spotAttenuation = 0.0;
 
     // See if point on surface is inside cone of illumination
-    float spotDot = min( max(0.0, dot(-VP, normalize( _light.direction ) ) ), 1.0);
+    float spotDot = clamp(0.0,1.0, dot(normalize(-VP), normalize( _light.direction ) ) );
+
+    
     if (spotDot < _light.spotCosCutoff){
         spotAttenuation = 0.0;
     } else {
@@ -67,11 +69,11 @@ void calculateLight(in SpotLight _light, in vec3 _eye, in vec3 _eyeToPoint, in v
         atFactor += _light.quadraticAttenuation * dist * dist;
         #endif
     }
-    spotAttenuation *= 1.0 /atFactor;
+    spotAttenuation *= 1.0/atFactor;
     #endif
 
     // normal . light direction
-    float nDotVP = min( max(0.0, dot( _normal, VP ) ), 1.0);
+    float nDotVP = clamp(0.0,1.0, dot( normalize(_normal), VP ) );
 
     #ifdef TANGRAM_MATERIAL_AMBIENT
     g_light_accumulator_ambient  += _light.ambient * spotAttenuation;
@@ -89,7 +91,7 @@ void calculateLight(in SpotLight _light, in vec3 _eye, in vec3 _eyeToPoint, in v
         vec3 halfVector = normalize(VP + _eye);
 
         // normal . light half vector
-        float nDotHV = min( max(0.0, dot( _normal, halfVector ) ),1.0);
+        float nDotHV = clamp(0.0,1.0, dot( _normal, halfVector ) );
         pf = pow(nDotHV, g_material.shininess);
     }
     g_light_accumulator_specular += _light.specular * pf * spotAttenuation;

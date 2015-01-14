@@ -13,7 +13,7 @@ PolygonStyle::PolygonStyle(std::string _name, GLenum _drawMode) : Style(_name, _
     m_material.setDiffuse(glm::vec4(1.0));
     // m_material.disableDiffuse();
     
-    // m_material.setSpeculars(glm::vec4(0.2),0.2);
+    // m_material.setSpecular(glm::vec4(0.2),0.2);
     m_material.disableSpecular();
 }
 
