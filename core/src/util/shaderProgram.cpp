@@ -37,7 +37,16 @@ void ShaderProgram::setSourceStrings(const std::string& _fragSrc, const std::str
     m_needsBuild = true;
 }
 
-void ShaderProgram::addSourceBlock(const std::string& _tagName, const std::string &_glslSource){
+void ShaderProgram::addSourceBlock(const std::string& _tagName, const std::string &_glslSource, bool _allowDuplicate){
+    
+    if (!_allowDuplicate) {
+        for (auto& source : m_sourceBlocks[_tagName]) {
+            if (_glslSource == source) {
+                return;
+            }
+        }
+    }
+    
     m_sourceBlocks[_tagName].push_back("\n" + _glslSource);
     m_needsBuild = true;
 
@@ -104,20 +113,20 @@ bool ShaderProgram::build() {
         
         std::string tag = "#pragma tangram: " + block.first;
         
-        for (auto& source : block.second) {
-            
-            int tagPos = fragSrc.find(tag);
-            
-            if (tagPos != std::string::npos) {
-                fragSrc.insert(tagPos + tag.length(), source);
-            }
-            
-            tagPos = vertSrc.find(tag);
-            
-            if (tagPos != std::string::npos) {
-                vertSrc.insert(tagPos + tag.length(), source);
+        int pos = fragSrc.find(tag);
+        if (pos != std::string::npos) {
+            for (auto& source : block.second) {
+                fragSrc.insert(pos + tag.length(), source);
             }
         }
+        
+        pos = vertSrc.find(tag);
+        if (pos != std::string::npos) {
+            for (auto& source : block.second) {
+                vertSrc.insert(pos + tag.length(), source);
+            }
+        }
+        
     }
     
     // Try to compile vertex and fragment shaders, releasing resources and quiting on failure

@@ -1,6 +1,8 @@
 #include "spotLight.h"
 #include "util/stringsOp.h"
 
+std::string SpotLight::s_classBlock;
+
 SpotLight::SpotLight(const std::string& _name, bool _dynamic):PointLight(_name,_dynamic),m_direction(1.0,0.0,0.0),m_spotExponent(0.0),m_spotCutoff(0.0),m_spotCosCutoff(0.0) {
     m_typeName = "SpotLight";
     m_type = LightType::SPOT;
@@ -30,13 +32,10 @@ void SpotLight::setupProgram( std::shared_ptr<ShaderProgram> _shader ) {
 }
 
 std::string SpotLight::getClassBlock() {
-    static bool bFirst = true;
-    if (bFirst) {
-        bFirst = false;
-        return stringFromResource("spot_light.glsl")+"\n";
-    } else {
-        return "\n";
+    if (s_classBlock.empty()) {
+        s_classBlock = stringFromResource("spot_light.glsl")+"\n";
     }
+    return s_classBlock;
 }
 
 std::string SpotLight::getInstanceDefinesBlock() {

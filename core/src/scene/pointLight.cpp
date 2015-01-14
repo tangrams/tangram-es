@@ -1,6 +1,8 @@
 #include "pointLight.h"
 #include "util/stringsOp.h"
 
+std::string PointLight::s_classBlock;
+
 PointLight::PointLight(const std::string& _name, bool _dynamic):Light(_name,_dynamic),m_position(0.0),m_constantAttenuation(0.0),m_linearAttenuation(0.0),m_quadraticAttenuation(0.0) {
     m_typeName = "PointLight";
     m_type = LightType::POINT;
@@ -56,13 +58,10 @@ void PointLight::setupProgram(std::shared_ptr<ShaderProgram> _shader) {
 }
 
 std::string PointLight::getClassBlock() {
-    static bool bFirst = true;
-    if (bFirst) {
-        bFirst = false;
-        return stringFromResource("point_light.glsl")+"\n";
-    } else {
-        return "\n";
+    if (s_classBlock.empty()) {
+        s_classBlock = stringFromResource("point_light.glsl")+"\n";
     }
+    return s_classBlock;
 }
 
 std::string PointLight::getInstanceDefinesBlock() {
