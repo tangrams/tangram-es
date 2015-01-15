@@ -2,13 +2,13 @@
 #include "util/builders.h"
 
 PolygonStyle::PolygonStyle(std::string _name, GLenum _drawMode) : Style(_name, _drawMode) {
-    constructVertexLayout();
-    constructShaderProgram();
-
     m_material.setEmissionEnabled(false);
     m_material.setAmbientEnabled(true);
     m_material.setDiffuse(glm::vec4(1.0));
-    m_material.setSpecularEnabled(false);
+    m_material.setSpecularEnabled(true);
+    
+    constructVertexLayout();
+    constructShaderProgram();
 }
 
 void PolygonStyle::constructVertexLayout() {
