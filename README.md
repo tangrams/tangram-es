@@ -88,10 +88,10 @@ Build an APK of the demo application and optionally specify an architecture (def
 make android [ANDROID_ARCH=[x86|armeabi-v7a|armeabi]]
 ```
 
-Then install to a connected device or emulator:
+Then install to a connected device or emulator. You can (re)install and run the APK with a small script:
 
 ```bash
-adb install android/bin/TangramAndroid-debug.apk
+./android/run.sh
 ```
 
 ### Raspberry Pi ###
