@@ -18,7 +18,6 @@ struct SpotLight {
         #ifndef TANGRAM_SPOTLIGHT_ATTENUATION
             #define TANGRAM_SPOTLIGHT_ATTENUATION
         #endif
-        #define TANGRAM_SPOTLIGHT_DISTANCE
     float linearAttenuation;
     #endif
 
@@ -26,32 +25,26 @@ struct SpotLight {
         #ifndef TANGRAM_SPOTLIGHT_ATTENUATION
             #define TANGRAM_SPOTLIGHT_ATTENUATION
         #endif
-        #ifndef TANGRAM_SPOTLIGHT_DISTANCE
-            #define TANGRAM_SPOTLIGHT_DISTANCE
-        #endif
     float quadraticAttenuation;
     #endif
 };
 
-void calculateLight(in SpotLight _light, in vec3 _eye, in vec3 _eyeToPoint, in vec3 _normal){
-    // Compute vector from surface to light position
-    vec3 VP = normalize( _light.position.xyz - _eyeToPoint );
+void calculateLight(in SpotLight _light, in vec3 _eye, in vec3 _eyeToPoint, in vec3 _normal) {
 
-    #ifdef TANGRAM_SPOTLIGHT_DISTANCE
-    float dist = length( _light.position.xyz - _eyeToPoint );
-    #endif 
+    float dist = length(_light.position.xyz - _eyeToPoint);
+
+    // Compute vector from surface to light position
+    vec3 VP = (_light.position.xyz - _eyeToPoint) / dist;
 
     // spotlight attenuation factor
     float spotAttenuation = 0.0;
 
     // See if point on surface is inside cone of illumination
-    float spotDot = clamp(dot(normalize(-VP), normalize( _light.direction ) ), 0.0, 1.0 );
+    float spotDot = clamp(dot(-VP, normalize(_light.direction)), 0.0, 1.0);
 
     
-    if (spotDot < _light.spotCosCutoff){
-        spotAttenuation = 0.0;
-    } else {
-        spotAttenuation = pow( spotDot, _light.spotExponent );
+    if (spotDot >= _light.spotCosCutoff) {
+        spotAttenuation = pow(spotDot, _light.spotExponent);
     }
 
     #ifdef TANGRAM_SPOTLIGHT_ATTENUATION
@@ -69,29 +62,29 @@ void calculateLight(in SpotLight _light, in vec3 _eye, in vec3 _eyeToPoint, in v
         atFactor += _light.quadraticAttenuation * dist * dist;
         #endif
     }
-    spotAttenuation *= 1.0/atFactor;
+    spotAttenuation /= atFactor;
     #endif
 
     // normal . light direction
-    float nDotVP = clamp(dot( normalize(_normal), VP ), 0.0,1.0 );
+    float nDotVP = clamp(dot(_normal, VP), 0.0, 1.0);
 
     #ifdef TANGRAM_MATERIAL_AMBIENT
-    g_light_accumulator_ambient  += _light.ambient * spotAttenuation;
+    g_light_accumulator_ambient += _light.ambient * spotAttenuation;
     #endif
 
     #ifdef TANGRAM_MATERIAL_DIFFUSE 
-    g_light_accumulator_diffuse  += _light.diffuse * nDotVP * spotAttenuation;
+    g_light_accumulator_diffuse += _light.diffuse * nDotVP * spotAttenuation;
     #endif
 
     #ifdef TANGRAM_MATERIAL_SPECULAR
     // Power factor for shinny speculars
     float pf = 0.0;              
-    if (nDotVP != 0.0){
+    if (nDotVP != 0.0) {
         // Direction of maximum highlights
         vec3 halfVector = normalize(VP + _eye);
 
         // normal . light half vector
-        float nDotHV = clamp(dot( _normal, halfVector ), 0.0,1.0 );
+        float nDotHV = clamp(dot(_normal, halfVector), 0.0, 1.0);
         pf = pow(nDotHV, g_material.shininess);
     }
     g_light_accumulator_specular += _light.specular * pf * spotAttenuation;

@@ -13,7 +13,6 @@ struct PointLight {
 	#ifndef TANGRAM_POINTLIGHT_ATTENUATION
 	#define TANGRAM_POINTLIGHT_ATTENUATION
 	#endif
-	#define TANGRAM_POINTLIGHT_DISTANCE
 	float linearAttenuation;
 	#endif
 
@@ -22,24 +21,19 @@ struct PointLight {
 	#ifndef TANGRAM_POINTLIGHT_ATTENUATION
 	#define TANGRAM_POINTLIGHT_ATTENUATION
 	#endif
-	#ifndef TANGRAM_POINTLIGHT_DISTANCE
-	#define TANGRAM_POINTLIGHT_DISTANCE
-	#endif
 	float quadraticAttenuation;
 	#endif
 };
 
-void calculateLight(in PointLight _light, in vec3 _eye, in vec3 _eyeToPoint, in vec3 _normal){
+void calculateLight(in PointLight _light, in vec3 _eye, in vec3 _eyeToPoint, in vec3 _normal) {
+
+	float dist = length(vec3(_light.position) - _eyeToPoint);
 
 	// Compute vector from surface to light position
-	vec3 VP = normalize( vec3(_light.position) - _eyeToPoint );
-
-	#ifdef TANGRAM_POINTLIGHT_DISTANCE
-	float dist = length( vec3(_light.position) - _eyeToPoint );
-	#endif 
+	vec3 VP = (vec3(_light.position) - _eyeToPoint) / dist;
 
 	// Normalize the vector from surface to light position
-	float nDotVP = clamp(dot(VP, _normal),0.0,1.0);
+	float nDotVP = clamp(dot(VP, _normal), 0.0, 1.0);
 
 	#ifdef TANGRAM_POINTLIGHT_ATTENUATION
 	float atFactor = 0.0;
