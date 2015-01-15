@@ -108,26 +108,7 @@ bool ShaderProgram::build() {
     
     std::string vertSrc = m_vertexShaderSource;
     std::string fragSrc = m_fragmentShaderSource;
-    
-    for (auto& block : m_sourceBlocks) {
-        
-        std::string tag = "#pragma tangram: " + block.first;
-        
-        int pos = fragSrc.find(tag);
-        if (pos != std::string::npos) {
-            for (auto& source : block.second) {
-                fragSrc.insert(pos + tag.length(), source);
-            }
-        }
-        
-        pos = vertSrc.find(tag);
-        if (pos != std::string::npos) {
-            for (auto& source : block.second) {
-                vertSrc.insert(pos + tag.length(), source);
-            }
-        }
-        
-    }
+    applySourceBlocks(vertSrc, fragSrc);
     
     // Try to compile vertex and fragment shaders, releasing resources and quiting on failure
 
@@ -228,6 +209,35 @@ GLuint ShaderProgram::makeCompiledShader(const std::string& _src, GLenum _type) 
 
     return shader;
 
+}
+
+void ShaderProgram::applySourceBlocks(std::string& _vertSrcOut, std::string& _fragSrcOut) {
+    
+    _vertSrcOut.insert(0, "#pragma tangram: defines\n");
+    
+    _fragSrcOut.insert(0, "#pragma tangram: defines\n");
+    
+    for (auto& block : m_sourceBlocks) {
+        
+        std::string tag = "#pragma tangram: " + block.first;
+        
+        int vertSrcPos = _vertSrcOut.find(tag);
+        int fragSrcPos = _fragSrcOut.find(tag);
+        
+        if (vertSrcPos != std::string::npos) {
+            vertSrcPos += tag.length();
+            for (auto& source : block.second) {
+                _vertSrcOut.insert(vertSrcPos, source);
+            }
+        }
+        if (fragSrcPos != std::string::npos) {
+            fragSrcPos += tag.length();
+            for (auto& source : block.second) {
+                _fragSrcOut.insert(fragSrcPos, source);
+            }
+        }
+    }
+    
 }
 
 void ShaderProgram::checkValidity() {

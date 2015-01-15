@@ -132,4 +132,6 @@ private:
     GLuint makeLinkedShaderProgram(GLint _fragShader, GLint _vertShader);
     GLuint makeCompiledShader(const std::string& _src, GLenum _type);
     
+    void applySourceBlocks(std::string& _vertSrcOut, std::string& _fragSrcOut);
+    
 };

@@ -6,7 +6,6 @@ uniform mat4 u_modelView;
 uniform mat4 u_modelViewProj;
 uniform float u_time;
 
-#pragma tangram: defines
 #pragma tangram: material
 #pragma tangram: _vertex_lighting
 
