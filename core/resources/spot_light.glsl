@@ -45,7 +45,7 @@ void calculateLight(in SpotLight _light, in vec3 _eye, in vec3 _eyeToPoint, in v
     float spotAttenuation = 0.0;
 
     // See if point on surface is inside cone of illumination
-    float spotDot = clamp(0.0,1.0, dot(normalize(-VP), normalize( _light.direction ) ) );
+    float spotDot = clamp(dot(normalize(-VP), normalize( _light.direction ) ), 0.0, 1.0 );
 
     
     if (spotDot < _light.spotCosCutoff){
@@ -73,7 +73,7 @@ void calculateLight(in SpotLight _light, in vec3 _eye, in vec3 _eyeToPoint, in v
     #endif
 
     // normal . light direction
-    float nDotVP = clamp(0.0,1.0, dot( normalize(_normal), VP ) );
+    float nDotVP = clamp(dot( normalize(_normal), VP ), 0.0,1.0 );
 
     #ifdef TANGRAM_MATERIAL_AMBIENT
     g_light_accumulator_ambient  += _light.ambient * spotAttenuation;
@@ -91,7 +91,7 @@ void calculateLight(in SpotLight _light, in vec3 _eye, in vec3 _eyeToPoint, in v
         vec3 halfVector = normalize(VP + _eye);
 
         // normal . light half vector
-        float nDotHV = clamp(0.0,1.0, dot( _normal, halfVector ) );
+        float nDotHV = clamp(dot( _normal, halfVector ), 0.0,1.0 );
         pf = pow(nDotHV, g_material.shininess);
     }
     g_light_accumulator_specular += _light.specular * pf * spotAttenuation;

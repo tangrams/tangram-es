@@ -69,10 +69,10 @@ vec4 calculateLighting(in vec3 _eyeToPoint, in vec3 _normal ) {
 	color += g_light_accumulator_specular * g_material.specular;
 	#endif
 
-	color.r = clamp(0.0,1.0,color.r);
-	color.g = clamp(0.0,1.0,color.g);
-	color.b = clamp(0.0,1.0,color.b);
-	color.a = clamp(0.0,1.0,color.a);
+	color.r = clamp(color.r,0.0,1.0);
+	color.g = clamp(color.g,0.0,1.0);
+	color.b = clamp(color.b,0.0,1.0);
+	color.a = clamp(color.a,0.0,1.0);
 	
 	return color;
 #endif

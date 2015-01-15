@@ -11,7 +11,7 @@ void calculateLight(in DirectionalLight _light, in vec3 _eye, in vec3 _eyeToPoin
 	g_light_accumulator_ambient += _light.ambient;
 	#endif
 
-	float nDotVP =  min( max(0.0, dot(_normal, normalize( vec3(_light.direction) ) ) ), 1.0);
+	float nDotVP =  clamp( dot(_normal, normalize( vec3(_light.direction))), 0.0, 1.0);
 
 	#ifdef TANGRAM_MATERIAL_DIFFUSE	
 	g_light_accumulator_diffuse += _light.diffuse * nDotVP;
@@ -21,7 +21,7 @@ void calculateLight(in DirectionalLight _light, in vec3 _eye, in vec3 _eyeToPoin
 	float pf = 0.0;
 	if (nDotVP != 0.0){
 		vec3 halfVector = normalize( vec3(_light.direction) + _eye );
-		float nDotHV = min( max(0.0, dot(_normal, halfVector) ), 1.0 );
+		float nDotHV = clamp(dot(_normal, halfVector),0.0,1.0);
 		pf = pow(nDotHV, g_material.shininess);
 	}
 	g_light_accumulator_specular += _light.specular * pf;

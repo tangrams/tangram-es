@@ -39,7 +39,7 @@ void calculateLight(in PointLight _light, in vec3 _eye, in vec3 _eyeToPoint, in 
 	#endif 
 
 	// Normalize the vector from surface to light position
-	float nDotVP = min( max(0.0, dot(VP, _normal) ),1.0);
+	float nDotVP = clamp(dot(VP, _normal),0.0,1.0);
 
 	#ifdef TANGRAM_POINTLIGHT_ATTENUATION
 	float atFactor = 0.0;
