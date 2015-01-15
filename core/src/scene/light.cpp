@@ -34,7 +34,7 @@ void Light::injectOnProgram(std::shared_ptr<ShaderProgram> _shader, InjectionTyp
     
     _shader->addSourceBlock("defines", getInstanceDefinesBlock(), false);
 
-    if (m_injType == FRAGMENT || m_injType == BOTH) {
+    if (m_injType == FRAGMENT) {
         _shader->addSourceBlock("_fragment_lighting", getInstanceBlock());
         _shader->addSourceBlock("_fragment_lighting", getClassBlock(), false);
         _shader->addSourceBlock("fragment_lights_to_compute", getInstanceComputeBlock());
@@ -47,7 +47,7 @@ void Light::injectOnProgram(std::shared_ptr<ShaderProgram> _shader, InjectionTyp
         //              and Light::getFVertexLightMainFunctionBlock()
     }
 
-    if (m_injType == VERTEX || m_injType == BOTH) {
+    if (m_injType == VERTEX) {
         _shader->addSourceBlock("_vertex_lighting", getInstanceBlock());
         _shader->addSourceBlock("_vertex_lighting", getClassBlock(), false);
         _shader->addSourceBlock("vertex_lights_to_compute", getInstanceComputeBlock());

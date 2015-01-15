@@ -37,12 +37,12 @@ void Scene::addLight(std::shared_ptr<Light> _light, InjectionType _type) {
             _light->injectOnProgram(style->getShaderProgram(), _type);
 
             std::string define = "";
-            if( _light->getInjectionType() == FRAGMENT || _light->getInjectionType() == BOTH){
+            if( _light->getInjectionType() == FRAGMENT){
                 style->getShaderProgram()->addSourceBlock("defines", "#define TANGRAM_FRAGMENT_LIGHTS\n", false);
             }
             
 
-            if( _light->getInjectionType() == VERTEX || _light->getInjectionType() == BOTH){
+            if( _light->getInjectionType() == VERTEX){
                 style->getShaderProgram()->addSourceBlock("defines", "#define TANGRAM_VERTEX_LIGHTS\n", false);
             }
             

@@ -7,8 +7,7 @@
 typedef enum {
     DEFAULT,
     VERTEX,
-    FRAGMENT,
-    BOTH
+    FRAGMENT
 } InjectionType;
 
 enum class LightType {
