@@ -107,11 +107,13 @@ void createAtlas(void* _userPtr, unsigned int _width, unsigned int _height) {
     REQUIRE(_height == ATLAS_HEIGHT);
 }
 
-void errorCallback(void* _userPtr, fsuint buffer, GLFONSError error) {
+bool errorCallback(void* _userPtr, fsuint buffer, GLFONSError error) {
     UserPtr* ptr = static_cast<UserPtr*>(_userPtr);
 
     REQUIRE(error == GLFONSError::ID_OVERFLOW);
     REQUIRE(ptr->bufferId == buffer);
+
+    return false;
 }
 
 FONScontext* initContext(void* _usrPtr) {
