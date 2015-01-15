@@ -2,7 +2,7 @@
 
 Material::Material():m_name("material"),
 m_emission(0.0),m_ambient(1.0),m_diffuse(0.8),m_specular(0.2),m_shininess(0.2),
-m_bEmission(false),m_bAmbient(false),m_bDiffuse(true),m_bSpecular(false){
+m_bEmission(false),m_bAmbient(false),m_bDiffuse(true),m_bSpecular(false) {
     
 }
 
@@ -29,7 +29,7 @@ void Material::setSpecular(const glm::vec4 _specular, float _shinnyFactor){
 
 void Material::setEmissionEnabled(bool _enable) { m_bEmission = _enable; }
 void Material::setAmbientEnabled(bool _enable) { m_bAmbient = _enable; }
-void Material::setDiffuseEnabled(bool _enable) { m_bAmbient = _enable; }
+void Material::setDiffuseEnabled(bool _enable) { m_bDiffuse = _enable; }
 void Material::setSpecularEnabled(bool _enable) { m_bSpecular = _enable; }
 
 std::string Material::getDefinesBlock(){
@@ -47,7 +47,7 @@ std::string Material::getDefinesBlock(){
     	defines += "#define TANGRAM_MATERIAL_DIFFUSE\n";
     }
     
-    if (m_bSpecular) {;
+    if (m_bSpecular) {
     	defines += "#define TANGRAM_MATERIAL_SPECULAR\n";
     }
     
