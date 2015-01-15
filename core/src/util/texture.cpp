@@ -76,16 +76,16 @@ void Texture::update() {
         bind();
     }
 
-    GLuint* data;
+    GLuint* data = m_data.size() > 0 ? m_data.data() : nullptr;
 
-    if (m_shouldResize) {
-        data = nullptr;
+    if (data || m_shouldResize) {
+        glTexImage2D(GL_TEXTURE_2D, 0, m_options.m_internalFormat, m_width, m_height, 0, m_options.m_format, GL_UNSIGNED_BYTE, data);
         m_shouldResize = false;
-    } else {
-        data = m_data.data();
     }
 
-    glTexImage2D(GL_TEXTURE_2D, 0, m_options.m_internalFormat, m_width, m_height, 0, m_options.m_format, GL_UNSIGNED_BYTE, data);
+    if (data) {
+        m_data.clear();
+    }
 
     while (m_subData.size() > 0) {
         const TextureSubData* subData = m_subData.front().get();
