@@ -116,7 +116,9 @@ void FontStyle::prepareDataProcessing(MapTile& _tile) {
 
     fsuint buffer;
     
-    glfonsBufferCreate(m_fontContext->m_fsContext, 2, &buffer);
+    int transformTextureSize = 2; // start with a transform texture of size 2x4 
+
+    glfonsBufferCreate(m_fontContext->m_fsContext, transformTextureSize, &buffer);
     _tile.setTextBuffer(*this, buffer);
     glfonsBindBuffer(m_fontContext->m_fsContext, buffer);
 }
@@ -134,8 +136,10 @@ void FontStyle::setupForTile(const MapTile& _tile) {
 
     texture->bind();
     
-    m_shaderProgram->setUniformi("u_transforms", texture->getTextureSlot()); // transform texture
-    m_shaderProgram->setUniformf("u_tresolution", texture->getWidth(), texture->getHeight()); // resolution of transform texture
+    // transform texture
+    m_shaderProgram->setUniformi("u_transforms", texture->getTextureSlot()); 
+    // resolution of the transform texture
+    m_shaderProgram->setUniformf("u_tresolution", texture->getWidth(), texture->getHeight()); 
 }
 
 void FontStyle::setup(View& _view) {
@@ -170,7 +174,7 @@ void createTexTransforms(void* _userPtr, unsigned int _width, unsigned int _heig
 
     TextureOptions options = {GL_RGBA, GL_RGBA, {GL_LINEAR, GL_LINEAR}, {GL_CLAMP_TO_EDGE, GL_CLAMP_TO_EDGE}};
 
-    std::unique_ptr<Texture> texture(new Texture(_width, _height, 1, options));
+    std::unique_ptr<Texture> texture(new Texture(_width, _height, 1 /* gpu slot */ , options));
 
     fontStyle->m_transformTileTextures[fontStyle->m_processedTile->getID()] = std::move(texture);
 }
@@ -181,7 +185,9 @@ void updateTransforms(void* _userPtr, unsigned int _xoff, unsigned int _yoff, un
     FontStyle* fontStyle = static_cast<FontStyle*>(_userPtr);
     MapTile* tile = static_cast<MapTile*>(_ownerPtr);
 
-    fontStyle->m_transformTileTextures[tile->getID()]->setSubData(reinterpret_cast<const GLuint*>(_pixels), _xoff, _yoff, _width, _height);
+    const GLuint* subData = reinterpret_cast<const GLuint*>(_pixels);
+
+    fontStyle->m_transformTileTextures[tile->getID()]->setSubData(subData, _xoff, _yoff, _width, _height);
 }
 
 void updateAtlas(void* _userPtr, unsigned int _xoff, unsigned int _yoff,
@@ -207,12 +213,15 @@ bool errorCallback(void* _userPtr, fsuint buffer, GLFONSError error) {
 
             logMsg("[FontStyle] FontError : ID_OVERFLOW in text buffer %d\n", buffer);
 
-            Texture* texture = fontStyle->m_transformTileTextures[fontStyle->m_processedTile->getID()].get();
+            std::unique_ptr<Texture>& texture = fontStyle->m_transformTileTextures[fontStyle->m_processedTile->getID()];
 
+            // expand the transform texture in cpu side
             glfonsExpandTransform(fontStyle->m_fontContext->m_fsContext, buffer, texture->getWidth() * 2);
+
+            // double size of texture
             texture->resize(texture->getWidth() * 2, texture->getHeight() * 2);
 
-            solved = true;
+            solved = true; // error solved
             
             break;
         }

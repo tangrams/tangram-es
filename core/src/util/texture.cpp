@@ -1,6 +1,7 @@
 #include "texture.h"
 
-Texture::Texture(unsigned int _width, unsigned int _height, GLuint _slot, TextureOptions _options) : m_options(_options), m_slot(_slot) {
+Texture::Texture(unsigned int _width, unsigned int _height, GLuint _slot, TextureOptions _options) 
+: m_options(_options), m_slot(_slot) {
 
     m_name = 0;
     m_dirty = false;
@@ -61,7 +62,8 @@ void Texture::update() {
         return;
     }
 
-    if (m_name == 0) {
+    if (m_name == 0) { // textures hasn't be initialized yet, generate it
+
         glGenTextures(1, &m_name);
 
         bind();
@@ -78,15 +80,18 @@ void Texture::update() {
 
     GLuint* data = m_data.size() > 0 ? m_data.data() : nullptr;
 
+    // resize or push data
     if (data || m_shouldResize) {
         glTexImage2D(GL_TEXTURE_2D, 0, m_options.m_internalFormat, m_width, m_height, 0, m_options.m_format, GL_UNSIGNED_BYTE, data);
         m_shouldResize = false;
     }
 
+    // clear cpu data
     if (data) {
         m_data.clear();
     }
 
+    // process queued sub data updates
     while (m_subData.size() > 0) {
         const TextureSubData* subData = m_subData.front().get();
             
