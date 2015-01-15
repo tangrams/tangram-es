@@ -116,7 +116,7 @@ void FontStyle::prepareDataProcessing(MapTile& _tile) {
 
     fsuint buffer;
     
-    glfonsBufferCreate(m_fontContext->m_fsContext, 32, &buffer);
+    glfonsBufferCreate(m_fontContext->m_fsContext, 2, &buffer);
     _tile.setTextBuffer(*this, buffer);
     glfonsBindBuffer(m_fontContext->m_fsContext, buffer);
 }
@@ -135,6 +135,7 @@ void FontStyle::setupForTile(const MapTile& _tile) {
     texture->bind();
     
     m_shaderProgram->setUniformi("u_transforms", texture->getTextureSlot()); // transform texture
+    m_shaderProgram->setUniformf("u_tresolution", texture->getWidth(), texture->getHeight()); // resolution of transform texture
 }
 
 void FontStyle::setup(View& _view) {
@@ -150,7 +151,6 @@ void FontStyle::setup(View& _view) {
     m_atlas->bind();
 
     m_shaderProgram->setUniformi("u_tex", m_atlas->getTextureSlot()); // atlas
-    m_shaderProgram->setUniformf("u_tresolution", 32, 64); // resolution of transform texture
     m_shaderProgram->setUniformf("u_resolution", _view.getWidth(), _view.getHeight());
     m_shaderProgram->setUniformf("u_color", 1.0, 1.0, 1.0);
     m_shaderProgram->setUniformMatrix4f("u_proj", projectionMatrix);
@@ -197,17 +197,32 @@ void createAtlas(void* _userPtr, unsigned int _width, unsigned int _height) {
     fontStyle->m_atlas = std::unique_ptr<Texture>(new Texture(_width, _height));
 }
 
-void errorCallback(void* _userPtr, fsuint buffer, GLFONSError error) {
+bool errorCallback(void* _userPtr, fsuint buffer, GLFONSError error) {
+    FontStyle* fontStyle = static_cast<FontStyle*>(_userPtr);
+
+    bool solved = false;
 
     switch (error) {
-        case GLFONSError::ID_OVERFLOW:
+        case GLFONSError::ID_OVERFLOW: {
+
             logMsg("[FontStyle] FontError : ID_OVERFLOW in text buffer %d\n", buffer);
+
+            Texture* texture = fontStyle->m_transformTileTextures[fontStyle->m_processedTile->getID()].get();
+
+            glfonsExpandTransform(fontStyle->m_fontContext->m_fsContext, buffer, texture->getWidth() * 2);
+            texture->resize(texture->getWidth() * 2, texture->getHeight() * 2);
+
+            solved = true;
+            
             break;
+        }
 
         default:
             logMsg("[FontStyle] FontError : undefined error\n");
             break;
     }
+
+    return solved;
 }
 
 void FontStyle::initFontContext(const std::string& _fontFile) {

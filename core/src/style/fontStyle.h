@@ -61,7 +61,7 @@ public:
     friend void createAtlas(void* _usrPtr, unsigned int _width, unsigned int _height);
 
     /* Callback on errors */
-    friend void errorCallback(void* _userPtr, fsuint buffer, GLFONSError error);
+    friend bool errorCallback(void* _userPtr, fsuint buffer, GLFONSError error);
 
 private:
 
