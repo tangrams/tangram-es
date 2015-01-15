@@ -72,7 +72,6 @@ void FontStyle::buildLine(Line& _line, std::string& _layer, Properties& _props, 
                 fsuint textId;
                 glfonsGenText(m_fontContext->m_fsContext, 1, &textId);
 
-                // place the text in the middle and give more strength to p1 since text has a width
                 glm::dvec2 position = (p1 + p2) / 2.0 + p1p2 * 0.2 * offset;
 
                 // FUTURE: label logic
@@ -185,7 +184,7 @@ void updateTransforms(void* _userPtr, unsigned int _xoff, unsigned int _yoff, un
     FontStyle* fontStyle = static_cast<FontStyle*>(_userPtr);
     MapTile* tile = static_cast<MapTile*>(_ownerPtr);
 
-    const GLuint* subData = reinterpret_cast<const GLuint*>(_pixels);
+    const GLuint* subData = static_cast<const GLuint*>(_pixels);
 
     fontStyle->m_transformTileTextures[tile->getID()]->setSubData(subData, _xoff, _yoff, _width, _height);
 }
@@ -194,7 +193,7 @@ void updateAtlas(void* _userPtr, unsigned int _xoff, unsigned int _yoff,
                  unsigned int _width, unsigned int _height, const unsigned int* _pixels) {
 
     FontStyle* fontStyle = static_cast<FontStyle*>(_userPtr);
-    fontStyle->m_atlas->setSubData(reinterpret_cast<const GLuint*>(_pixels), _xoff, _yoff, _width, _height);
+    fontStyle->m_atlas->setSubData(static_cast<const GLuint*>(_pixels), _xoff, _yoff, _width, _height);
 }
 
 void createAtlas(void* _userPtr, unsigned int _width, unsigned int _height) {

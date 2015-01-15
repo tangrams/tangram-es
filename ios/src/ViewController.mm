@@ -149,7 +149,9 @@
 
 - (void)viewWillTransitionToSize:(CGSize)size withTransitionCoordinator:(id<UIViewControllerTransitionCoordinator>)coordinator
 {
-    Tangram::resize(size.width, size.height);
+    CGFloat scale = [[UIScreen mainScreen] scale];
+
+    Tangram::resize(size.width * scale, size.height * scale);
 }
 
 #pragma mark - GLKView and GLKViewController delegate methods
