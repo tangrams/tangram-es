@@ -10,22 +10,22 @@ struct SpotLight {
     float spotExponent;
 
     #ifdef TANGRAM_SPOTLIGHT_CONSTANT_ATTENUATION
-    #define TANGRAM_SPOTLIGHT_ATTENUATION
-    float constantAttenuation;
+        #define TANGRAM_SPOTLIGHT_ATTENUATION
+        float constantAttenuation;
     #endif
 
     #ifdef TANGRAM_SPOTLIGHT_LINEAR_ATTENUATION
         #ifndef TANGRAM_SPOTLIGHT_ATTENUATION
             #define TANGRAM_SPOTLIGHT_ATTENUATION
         #endif
-    float linearAttenuation;
+        float linearAttenuation;
     #endif
 
     #ifdef TANGRAM_SPOTLIGHT_QUADRATIC_ATTENUATION
         #ifndef TANGRAM_SPOTLIGHT_ATTENUATION
             #define TANGRAM_SPOTLIGHT_ATTENUATION
         #endif
-    float quadraticAttenuation;
+        float quadraticAttenuation;
     #endif
 };
 
@@ -48,45 +48,43 @@ void calculateLight(in SpotLight _light, in vec3 _eye, in vec3 _eyeToPoint, in v
     }
 
     #ifdef TANGRAM_SPOTLIGHT_ATTENUATION
-    float atFactor = 0.0;
-    {
+        float atFactor = 0.0;
         #ifdef TANGRAM_SPOTLIGHT_CONSTANT_ATTENUATION
-        atFactor += _light.constantAttenuation;
+            atFactor += _light.constantAttenuation;
         #endif
 
         #ifdef TANGRAM_SPOTLIGHT_LINEAR_ATTENUATION
-        atFactor += _light.linearAttenuation * dist;
+            atFactor += _light.linearAttenuation * dist;
         #endif
             
         #ifdef TANGRAM_SPOTLIGHT_QUADRATIC_ATTENUATION
-        atFactor += _light.quadraticAttenuation * dist * dist;
+            atFactor += _light.quadraticAttenuation * dist * dist;
         #endif
-    }
-    spotAttenuation /= atFactor;
+        spotAttenuation /= atFactor;
     #endif
 
     // normal . light direction
     float nDotVP = clamp(dot(_normal, VP), 0.0, 1.0);
 
     #ifdef TANGRAM_MATERIAL_AMBIENT
-    g_light_accumulator_ambient += _light.ambient * spotAttenuation;
+        g_light_accumulator_ambient += _light.ambient * spotAttenuation;
     #endif
 
     #ifdef TANGRAM_MATERIAL_DIFFUSE 
-    g_light_accumulator_diffuse += _light.diffuse * nDotVP * spotAttenuation;
+        g_light_accumulator_diffuse += _light.diffuse * nDotVP * spotAttenuation;
     #endif
 
     #ifdef TANGRAM_MATERIAL_SPECULAR
-    // Power factor for shinny speculars
-    float pf = 0.0;              
-    if (nDotVP != 0.0) {
-        // Direction of maximum highlights
-        vec3 halfVector = normalize(VP + _eye);
+        // Power factor for shinny speculars
+        float pf = 0.0;              
+        if (nDotVP != 0.0) {
+            // Direction of maximum highlights
+            vec3 halfVector = normalize(VP + _eye);
 
-        // normal . light half vector
-        float nDotHV = clamp(dot(_normal, halfVector), 0.0, 1.0);
-        pf = pow(nDotHV, g_material.shininess);
-    }
-    g_light_accumulator_specular += _light.specular * pf * spotAttenuation;
+            // normal . light half vector
+            float nDotHV = clamp(dot(_normal, halfVector), 0.0, 1.0);
+            pf = pow(nDotHV, g_material.shininess);
+        }
+        g_light_accumulator_specular += _light.specular * pf * spotAttenuation;
     #endif
 }
