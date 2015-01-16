@@ -4,7 +4,8 @@
 #include <memory>
 #include <mutex>
 
-#include "glm/glm.hpp"
+#include "glm/vec2.hpp"
+#include "glm/mat4x4.hpp"
 
 #include "util/vboMesh.h"
 #include "util/mapProjection.h"
