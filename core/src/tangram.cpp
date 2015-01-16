@@ -163,14 +163,12 @@ void handleTapGesture(float _posX, float _posY) {
 
     // Flip y displacement to change from screen coordinates to world coordinates
     m_view->translate(dx, -dy);
-    logMsg("Tap: (%f,%f)\n", _posX, _posY);
     
 
 }
 
 void handleDoubleTapGesture(float _posX, float _posY) {
     
-    logMsg("Double tap: (%f,%f)\n", _posX, _posY);
     m_view->zoom(1.0);
 }
 
@@ -183,12 +181,10 @@ void handlePanGesture(float _dX, float _dY) {
     // of the intended "world movement", but dy gets flipped once more because screen
     // coordinates have y pointing down and our world coordinates have y pointing up
     m_view->translate(-dx, dy);
-    logMsg("Drag: (%f,%f)\n", _dX, _dY);
 
 }
 
 void handlePinchGesture(float _posX, float _posY, float _scale) {
-    logMsg("Pinch: (%f, %f)\tscale: (%f)\n", _posX, _posY, _scale);
     m_view->zoom(log2f(_scale));
 }
 
