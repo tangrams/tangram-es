@@ -116,9 +116,11 @@ osx-xcode: cmake-osx-xcode ${OSX_XCODE_BUILD_DIR}
 	xcodebuild -target ${OSX_TARGET} -project ${OSX_XCODE_BUILD_DIR}/${OSX_XCODE_PROJ}
 
 cmake-osx-xcode:
+ifeq ($(wildcard ${OSX_XCODE_BUILD_DIR}/${OSX_XCODE_PROJ}/.*),)
 	mkdir -p ${OSX_XCODE_BUILD_DIR} 
 	cd ${OSX_XCODE_BUILD_DIR} && \
 	cmake ../.. ${DARWIN_XCODE_CMAKE_PARAMS}
+endif
 
 cmake-osx: 
 	mkdir -p ${OSX_BUILD_DIR} 
