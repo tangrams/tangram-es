@@ -2,8 +2,8 @@
 #define GLFONTSTASH_IMPLEMENTATION
 #include "glfontstash.h"
 
-FontStyle::FontStyle(const std::string& _fontFile, std::string _name, float _fontSize, GLenum _drawMode)
-: Style(_name, _drawMode), m_fontSize(_fontSize) {
+FontStyle::FontStyle(const std::string& _fontFile, std::string _name, float _fontSize, bool _sdf, GLenum _drawMode)
+: Style(_name, _drawMode), m_fontSize(_fontSize), m_sdf(_sdf) {
 
     constructVertexLayout();
     constructShaderProgram();
@@ -27,8 +27,10 @@ void FontStyle::constructVertexLayout() {
 }
 
 void FontStyle::constructShaderProgram() {
+    std::string frag = m_sdf ? "sdf.fs" : "text.fs";
+
     std::string vertShaderSrcStr = stringFromResource("text.vs");
-    std::string fragShaderSrcStr = stringFromResource("text.fs");
+    std::string fragShaderSrcStr = stringFromResource(frag.c_str());
 
     m_shaderProgram = std::make_shared<ShaderProgram>();
 
@@ -47,6 +49,12 @@ void FontStyle::buildLine(Line& _line, std::string& _layer, Properties& _props, 
 
     fonsSetSize(m_fontContext->m_fsContext, m_fontSize * m_pixelScale);
     fonsSetFont(m_fontContext->m_fsContext, m_font);
+
+    if(m_sdf) {
+        float blurSpread = 2.5;
+        fonsSetBlur(m_fontContext->m_fsContext, blurSpread);
+        fonsSetBlurType(m_fontContext->m_fsContext, FONS_EFFECT_DISTANCE_FIELD);
+    }
 
     if (_layer.compare("roads") == 0) {
         for (auto prop : _props.stringProps) {

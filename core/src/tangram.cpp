@@ -52,7 +52,7 @@ void initialize() {
         linesStyle->addLayers({"roads"});
         m_scene->addStyle(std::move(linesStyle));
 
-        std::unique_ptr<Style> fontStyle(new FontStyle("Roboto-Regular.ttf", "FontStyle", 14.0f));
+        std::unique_ptr<Style> fontStyle(new FontStyle("Roboto-Regular.ttf", "FontStyle", 14.0f, true));
         fontStyle->addLayers({"roads"});
         m_scene->addStyle(std::move(fontStyle));
     }

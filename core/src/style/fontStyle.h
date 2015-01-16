@@ -38,7 +38,7 @@ protected:
 
 public:
 
-    FontStyle(const std::string& _fontFile, std::string _name, float _fontSize, GLenum _drawMode = GL_TRIANGLES);
+    FontStyle(const std::string& _fontFile, std::string _name, float _fontSize, bool _sdf = false, GLenum _drawMode = GL_TRIANGLES);
 
     virtual void setup(View& _view) override;
     virtual void teardown() override;
@@ -69,6 +69,7 @@ private:
 
     float m_fontSize;
     int m_font;
+    bool m_sdf;
 
     // pointer to the currently processed tile by build* methods, nullptr if not
     MapTile* m_processedTile;
