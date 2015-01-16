@@ -175,13 +175,13 @@ void TileManager::updateProxyTiles(const TileID& _tileID, bool _zoomingIn) {
     if (_zoomingIn) {
         // zoom in - add parent
         TileID parent = _tileID.getParent();
-        if (parent.isValid() && m_tileSet.find(parent) != m_tileSet.end() && m_tileSet[parent]->hasGeometry()) {
+        if (parent.isValid() && m_tileSet.find(parent) != m_tileSet.end()) {
             m_tileSet[parent]->incProxyCounter();
         }
     } else {
         for(int i = 0; i < 4; i++) {
             TileID child = _tileID.getChild(i);
-            if(child.isValid(m_view->s_maxZoom) && m_tileSet.find(child) != m_tileSet.end() && m_tileSet[child]->hasGeometry()) {
+            if(child.isValid(m_view->s_maxZoom) && m_tileSet.find(child) != m_tileSet.end()) {
                 m_tileSet[child]->incProxyCounter();
             }
         }
