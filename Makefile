@@ -119,9 +119,11 @@ osx-xcode: cmake-osx-xcode ${OSX_XCODE_BUILD_DIR}
 	xcodebuild -target ${OSX_TARGET} -project ${OSX_XCODE_BUILD_DIR}/${OSX_XCODE_PROJ}
 
 cmake-osx-xcode:
+ifeq ($(wildcard ${OSX_XCODE_BUILD_DIR}/${OSX_XCODE_PROJ}/.*),)
 	@mkdir -p ${OSX_XCODE_BUILD_DIR} 
 	@cd ${OSX_XCODE_BUILD_DIR} && \
 	cmake ../.. ${DARWIN_XCODE_CMAKE_PARAMS}
+endif
 
 cmake-osx: 
 	@mkdir -p ${OSX_BUILD_DIR} 
@@ -133,7 +135,7 @@ ios: cmake-ios ${IOS_BUILD_DIR}/${IOS_XCODE_PROJ}
 
 cmake-ios:
 ifeq ($(wildcard ${IOS_BUILD_DIR}/${IOS_XCODE_PROJ}/.*),)
-	mkdir -p ${IOS_BUILD_DIR}
+	@mkdir -p ${IOS_BUILD_DIR}
 	@cd ${IOS_BUILD_DIR} && \
 	cmake ../.. ${IOS_CMAKE_PARAMS}
 endif

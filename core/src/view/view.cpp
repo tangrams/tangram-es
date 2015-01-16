@@ -2,6 +2,7 @@
 #include "util/tileID.h"
 #include "platform.h"
 #include "glm/gtx/string_cast.hpp"
+#include "glm/gtc/matrix_transform.hpp"
 
 const int View::s_maxZoom; // Create a stack reference to the static member variable
 

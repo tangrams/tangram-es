@@ -1,3 +1,4 @@
+#include <limits>
 #include "geom.h"
 
 int signValue(float _n) {
@@ -12,7 +13,7 @@ void wrapRad(double& _angle){
 }
 
 float mapValue(const float& _value, const float& _inputMin, const float& _inputMax, const float& _outputMin, const float& _outputMax, bool _clamp ) {
-    if (fabs(_inputMin - _inputMax) < FLT_EPSILON){
+    if (fabs(_inputMin - _inputMax) < std::numeric_limits<float>::epsilon()){
         return _outputMin;
     } else {
         float outVal = ((_value - _inputMin) / (_inputMax - _inputMin) * (_outputMax - _outputMin) + _outputMin);
