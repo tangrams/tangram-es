@@ -28,13 +28,9 @@ void main() {
 
 	v_color = a_color;
 
-#ifdef TANGRAM_VERTEX_LIGHTS
-	#ifdef TANGRAM_FRAGMENT_LIGHTS
-	calculateLighting(v_eyeToPoint, v_normal);
-	#else
-	v_color *= calculateLighting(v_eyeToPoint, v_normal);
-	#endif
-#endif
+	#ifdef TANGRAM_LIGHTS
+	   calculateLighting(v_eyeToPoint, v_normal, v_color);
+    #endif
 
   	gl_Position = u_modelViewProj * a_position;
 

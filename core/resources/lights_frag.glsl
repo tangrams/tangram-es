@@ -14,36 +14,36 @@
     #endif
 #endif
 
-vec4 calculateLighting(in vec3 _eyeToPoint, in vec3 _normal) {
+void calculateLighting(in vec3 _eyeToPoint, in vec3 _normal, inout vec4 _colorOut) {
     vec3 eye = vec3(0.0, 0.0, 1.0);
 
-#ifdef TANGRAM_VERTEX_LIGHTS
-    #ifdef TANGRAM_MATERIAL_AMBIENT
-        g_light_accumulator_ambient = v_light_accumulator_ambient;
+    #ifdef TANGRAM_VERTEX_LIGHTS
+        #ifdef TANGRAM_MATERIAL_AMBIENT
+            g_light_accumulator_ambient = v_light_accumulator_ambient;
+        #endif
+
+        #ifdef TANGRAM_MATERIAL_DIFFUSE
+            g_light_accumulator_diffuse = v_light_accumulator_diffuse;
+        #endif
+
+        #ifdef TANGRAM_MATERIAL_SPECULAR
+            g_light_accumulator_specular = v_light_accumulator_specular;
+        #endif
+    #else
+        #ifdef TANGRAM_MATERIAL_AMBIENT
+            g_light_accumulator_ambient = vec4(0.0);
+        #endif
+
+        #ifdef TANGRAM_MATERIAL_DIFFUSE
+            g_light_accumulator_diffuse = vec4(0.0);
+        #endif
+
+        #ifdef TANGRAM_MATERIAL_SPECULAR
+            g_light_accumulator_specular = vec4(0.0);
+        #endif
     #endif
 
-    #ifdef TANGRAM_MATERIAL_DIFFUSE
-        g_light_accumulator_diffuse = v_light_accumulator_diffuse;
-    #endif
-
-    #ifdef TANGRAM_MATERIAL_SPECULAR
-        g_light_accumulator_specular = v_light_accumulator_specular;
-    #endif
-#else
-    #ifdef TANGRAM_MATERIAL_AMBIENT
-        g_light_accumulator_ambient = vec4(0.0);
-    #endif
-
-    #ifdef TANGRAM_MATERIAL_DIFFUSE
-        g_light_accumulator_diffuse = vec4(0.0);
-    #endif
-
-    #ifdef TANGRAM_MATERIAL_SPECULAR
-        g_light_accumulator_specular = vec4(0.0);
-    #endif
-#endif
-
-#pragma tangram: fragment_lights_to_compute
+    #pragma tangram: fragment_lights_to_compute
 
     //  Final light intensity calculation
     //
@@ -70,5 +70,5 @@ vec4 calculateLighting(in vec3 _eyeToPoint, in vec3 _normal) {
     color.b = clamp(color.b,0.0,1.0);
     color.a = clamp(color.a,0.0,1.0);
 
-    return color;
+    _colorOut *= color;
 }
