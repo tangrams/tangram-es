@@ -14,6 +14,7 @@ include_directories(${CORE_INCLUDE_DIRS})
 include_directories(${PROJECT_SOURCE_DIR}/core/include/)
 include_directories(${PROJECT_SOURCE_DIR}/core/include/catch/)
 include_directories(${PROJECT_SOURCE_DIR}/core/include/jsoncpp/)
+include_directories(${PROJECT_SOURCE_DIR}/core/dependencies/glm/)
 
 set(OSX_PLATFORM_SRC ${PROJECT_SOURCE_DIR}/osx/src/platform_osx.mm)
 
