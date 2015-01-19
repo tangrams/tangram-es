@@ -14,6 +14,7 @@ if [[ ${TRAVIS_OS_NAME} == "osx" ]]; then
     brew update
     brew tap homebrew/versions
     brew install glfw3
+    ls -l -a /usr/local/include/GLFW/
 fi
 
 
