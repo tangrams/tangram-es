@@ -5,8 +5,8 @@ set(EXECUTABLE_NAME "tangram")
 
 add_definitions(-DPLATFORM_OSX)
 
-# include headers for homebrew-installed libraries
-include_directories(/usr/local/include)
+# include headers from homebrew-installed libraries
+include_directories(/usr/local/include/GLFW)
 
 # load core library
 add_subdirectory(${PROJECT_SOURCE_DIR}/core)
