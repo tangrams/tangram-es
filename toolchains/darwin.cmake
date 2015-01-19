@@ -5,9 +5,6 @@ set(EXECUTABLE_NAME "tangram")
 
 add_definitions(-DPLATFORM_OSX)
 
-# include headers from homebrew-installed libraries
-# include_directories(/usr/local/include/GLFW)
-
 # load core library
 add_subdirectory(${PROJECT_SOURCE_DIR}/core)
 include_directories(${CORE_INCLUDE_DIRS})
@@ -36,7 +33,14 @@ function(link_libraries)
     find_library(GLFW glfw3)
 
     find_package(GLFW REQUIRED)
-    include_directories(${GLFW_INCLUDE_DIRS})
+
+    if(NOT GLFW_FOUND)
+        message(SEND_ERROR "GLFW not found")
+        return()
+    else()
+        include_directories(${GLFW_INCLUDE_DIRS})
+        message(STATUS "Found GLFW ${GLFW_INCLUDE_DIRS}")
+    endif()
     
     list(APPEND GLFW_LIBRARIES 
         ${OPENGL_FRAMEWORK} 
