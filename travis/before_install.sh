@@ -10,11 +10,11 @@ if [[ ${TRAVIS_OS_NAME} == "linux" ]]; then
     ANDROID_PLATFORM_VERSION="19"
 fi
 
-if [[ ${TRAVIS_OS_NAME} == "osx" ]]; then
+#if [[ ${TRAVIS_OS_NAME} == "osx" ]]; then
     #brew update
     #brew tap homebrew/versions
     #brew install glfw3
-fi
+#fi
 
 
 if [[ ${TRAVIS_OS_NAME} == "linux" ]]; then
