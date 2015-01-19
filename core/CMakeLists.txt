@@ -1,3 +1,7 @@
+# Defines the following cached variables
+#   - CORE_INCLUDE_DIRS, the path where to CORE headers are located
+#   - CORE_LIBRARIES_INCLUDE_DIRS, the path to CORE libraries headers
+
 cmake_minimum_required(VERSION 2.8)
 project(core)
 
@@ -24,6 +28,14 @@ list(APPEND INCLUDE_DIRS "${DEPENDENCIES_DIR}/jsoncpp")
 list(REMOVE_DUPLICATES INCLUDE_DIRS)
 
 include_directories(${INCLUDE_DIR} ${INCLUDE_DIRS})
+
+set(CORE_LIBRARIES_INCLUDE_DIRS 
+    ${PROJECT_SOURCE_DIR}/${DEPENDENCIES_DIR}/tess2/libtess2/Include/
+    ${PROJECT_SOURCE_DIR}/${DEPENDENCIES_DIR}/glm/
+    ${PROJECT_SOURCE_DIR}/${INCLUDE_DIR}/
+    ${PROJECT_SOURCE_DIR}/${INCLUDE_DIR}/catch/
+    ${PROJECT_SOURCE_DIR}/${INCLUDE_DIR}/jsoncpp/
+    CACHE INTERNAL "core libraries include directories" FORCE)
 
 # adding some other dependent target files if needed
 set(FOUND_SOURCES ${FOUND_SOURCES} ${ADDITIONNAL_TARGET_DEPENDENT_SRC_FILES})
