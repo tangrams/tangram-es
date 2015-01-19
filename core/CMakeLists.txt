@@ -7,7 +7,7 @@ set(SOURCE_DIR src)
 
 add_subdirectory("${DEPENDENCIES_DIR}/jsoncpp")
 add_subdirectory("${DEPENDENCIES_DIR}/tess2")
-add_subdirectory("${INCLUDE_DIR}/glm")
+add_subdirectory("${DEPENDENCIES_DIR}/glm")
 
 file(GLOB_RECURSE FOUND_HEADERS "${SOURCE_DIR}/*.h")
 file(GLOB_RECURSE FOUND_SOURCES "${SOURCE_DIR}/*.cpp")
