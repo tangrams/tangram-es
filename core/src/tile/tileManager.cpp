@@ -34,19 +34,19 @@ bool TileManager::updateTileSet() {
             auto& tileFuture = *incomingTilesIter;
             std::chrono::milliseconds span (0);
             
-            // check if future's shared state is null
-            // i.e. The tile it was supposed to hold, is no longer part of m_tileSet and hence no longer loaded
             if (tileFuture.wait_for(span) == std::future_status::ready) {
                 auto tile = tileFuture.get();
-                // possible a tile is deleted by the main thread before it gets finished
-                if (tile) {
+                // Tile may have been culled if it went out of view before loading finished,
+                // so check if any data was added
+                if (tile->hasGeometry()) {
                     const TileID& id = tile->getID();
                     logMsg("Tile [%d, %d, %d] finished loading\n", id.z, id.x, id.y);
                     m_tileSet[id] = tile;
                     // tile is now loaded, removed its proxies
-                    cleanProxyTiles(tile->getID());
+                    //cleanProxyTiles(tile->getID());
                     tileSetChanged = true;
                 }
+                cleanProxyTiles(tile->getID());
                 incomingTilesIter = m_incomingTiles.erase(incomingTilesIter);
             } else {
                 ++incomingTilesIter;
@@ -124,10 +124,11 @@ void TileManager::addTile(const TileID& _tileID) {
 
     std::future< std::shared_ptr<MapTile> > incoming = std::async(std::launch::async, [&](TileID _id) {
         
-        // Check if tile to be loaded is still required! (either not culled from m_tileSet and not logically deleted)
-        // if not set the shared state of this async's future to "null"
-        if (m_tileSet.find(_id) != m_tileSet.end()) {
-            auto tile = m_tileSet[_id];
+        // This task will be launched some time after initially requesting the tile, so we make sure the tile to be loaded
+        // is still required for the current view (if not, we return an empty tile)
+        const auto& it = m_tileSet.find(_id);
+        if (it != m_tileSet.end()) {
+            auto tile = it->second; // m_tileSet[_id]
             
             // Now Start fetching new tile
             for (const auto& dataSource : m_dataSources) {
@@ -148,10 +149,7 @@ void TileManager::addTile(const TileID& _tileID) {
             
             return tile;
         } else {
-            // tile was deleted (went out off view) before it could load its data
-            // remove its proxies also
-            cleanProxyTiles(_id);
-            return std::shared_ptr<MapTile> (nullptr);
+            return std::make_shared<MapTile>(_id, m_view->getMapProjection());
         }
     
     }, _tileID);
