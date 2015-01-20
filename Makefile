@@ -78,7 +78,7 @@ clean: clean-android clean-osx clean-ios clean-rpi clean-tests clean-osx-xcode
 clean-android:
 	ant -f android/build.xml clean
 	rm -rf ${ANDROID_BUILD_DIR}
-	rm -rf android/libs/${ANDROID_ARCH} android/obj
+	rm -rf android/libs android/obj
 
 clean-osx:
 	rm -rf ${OSX_BUILD_DIR}
