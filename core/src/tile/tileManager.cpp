@@ -36,9 +36,7 @@ bool TileManager::updateTileSet() {
             
             // check if future's shared state is null
             // i.e. The tile it was supposed to hold, is no longer part of m_tileSet and hence no longer loaded
-            if (!tileFuture.valid()) {
-                incomingTilesIter = m_incomingTiles.erase(incomingTilesIter);
-            } else if (tileFuture.wait_for(span) == std::future_status::ready) {
+            if (tileFuture.wait_for(span) == std::future_status::ready) {
                 auto tile = tileFuture.get();
                 // possible a tile is deleted by the main thread before it gets finished
                 if (tile) {
@@ -48,8 +46,8 @@ bool TileManager::updateTileSet() {
                     // tile is now loaded, removed its proxies
                     cleanProxyTiles(tile->getID());
                     tileSetChanged = true;
-                    incomingTilesIter = m_incomingTiles.erase(incomingTilesIter);
                 }
+                incomingTilesIter = m_incomingTiles.erase(incomingTilesIter);
             } else {
                 ++incomingTilesIter;
             }
