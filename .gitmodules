@@ -1,6 +1,6 @@
 [submodule "core/include/libtess2/libtess2"]
 	path = core/dependencies/tess2/libtess2
 	url = https://github.com/memononen/libtess2.git
-[submodule "core/dependencies/glm"]
-	path = core/dependencies/glm
+[submodule "core/include/glm"]
+	path = core/include/glm
 	url = https://github.com/g-truc/glm.git
