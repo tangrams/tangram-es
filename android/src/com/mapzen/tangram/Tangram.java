@@ -8,7 +8,6 @@ import android.content.res.AssetManager;
 import android.opengl.GLSurfaceView;
 import android.opengl.GLSurfaceView.Renderer;
 import android.util.DisplayMetrics;
-import android.util.Log;
 import android.view.GestureDetector;
 import android.view.GestureDetector.OnGestureListener;
 import android.view.MotionEvent;
@@ -36,9 +35,6 @@ public class Tangram extends GLSurfaceView implements Renderer, OnScaleGestureLi
     private static native void handlePinchGesture(float posX, float posY, float scale);
 
     private long time = System.nanoTime();
-    private float scaleFactor = 1.0f;
-    private float scalePosX = 0.0f;
-    private float scalePosY = 0.0f;
     private boolean contextDestroyed = false;
     private AssetManager assetManager;
     private GestureDetector gestureDetector;
@@ -161,22 +157,16 @@ public class Tangram extends GLSurfaceView implements Renderer, OnScaleGestureLi
     // ===================================================
     
     public boolean onScaleBegin(ScaleGestureDetector detector) {
-        scaleFactor = 1.0f;
-        scalePosX = detector.getFocusX();
-        scalePosY = detector.getFocusY();
         return true;
     }
 
     public boolean onScale(ScaleGestureDetector detector) {
-        scaleFactor = detector.getScaleFactor() * scaleFactor;
-        // TODO: continuous zoom
+        handlePinchGesture(detector.getFocusX(), detector.getFocusY(), detector.getScaleFactor());
         return true;
     }
 
     public void onScaleEnd(ScaleGestureDetector detector) {
-        // Only process the pinch gesture at the end (discrete zoom)
-        handlePinchGesture(scalePosX, scalePosY, scaleFactor);
-        scaleFactor = 1.0f;
+        return;
     }
 }
 

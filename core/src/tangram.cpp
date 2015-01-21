@@ -3,6 +3,7 @@
 #include <memory>
 #include <utility>
 #include <cmath>
+#include <set>
 
 #include "platform.h"
 #include "tile/tileManager.h"
@@ -111,7 +112,7 @@ void update(float _dt) {
 }
 
 void render() {
-
+    
     // Set up openGL for new frame
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
@@ -120,19 +121,24 @@ void render() {
     // Loop over all styles
     for (const auto& style : m_scene->getStyles()) {
 
-        style->setup();
 
-        // Loop over visible tiles
+        // Loop over all tiles in m_tileSet
         for (const auto& mapIDandTile : m_tileManager->getVisibleTiles()) {
-
-            const std::unique_ptr<MapTile>& tile = mapIDandTile.second;
-            
-            if (tile) {
-                // Draw!
-                tile->draw(*style, viewProj);
+            const std::shared_ptr<MapTile>& tile = mapIDandTile.second;
+            if (tile->hasGeometry()) {
+                if (tile->getProxyCounter() > 0) {
+                    // Draw proxy tiles at a specific depth plane depending on the zoom level of the tile
+                    // (higher zoom levels are drawn above)
+                    style->setup(1.0f + log( (m_view->s_maxZoom+1)/(m_view->s_maxZoom + 1 - tile->getID().z)));
+                    tile->draw(*style, viewProj);
+                } else {
+                    // Draw visible tiles in a single z plane above all proxy tiles
+                    style->setup(1.0f + log(m_view->s_maxZoom+2));
+                    tile->draw(*style, viewProj);
+                }
             }
-
         }
+        
     }
 
     while (Error::hadGlError("Tangram::render()")) {}
@@ -154,14 +160,13 @@ void handleTapGesture(float _posX, float _posY) {
 
     // Flip y displacement to change from screen coordinates to world coordinates
     m_view->translate(dx, -dy);
-    logMsg("Tap: (%f,%f)\n", _posX, _posY);
+    
 
 }
 
 void handleDoubleTapGesture(float _posX, float _posY) {
     
-    logMsg("Double tap: (%f,%f)\n", _posX, _posY);
-
+    m_view->zoom(1.0);
 }
 
 void handlePanGesture(float _dX, float _dY) {
@@ -173,15 +178,11 @@ void handlePanGesture(float _dX, float _dY) {
     // of the intended "world movement", but dy gets flipped once more because screen
     // coordinates have y pointing down and our world coordinates have y pointing up
     m_view->translate(-dx, dy);
-    logMsg("Drag: (%f,%f)\n", _dX, _dY);
 
 }
 
 void handlePinchGesture(float _posX, float _posY, float _scale) {
-    
-    logMsg("Pinch: (%f, %f)\tscale: (%f)\n", _posX, _posY, _scale);
-    m_view->zoom( _scale < 1.0 ? -1 : 1);
-
+    m_view->zoom(log2f(_scale));
 }
 
 void teardown() {

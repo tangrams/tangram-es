@@ -47,16 +47,19 @@ public:
     void setPosition(double _x, double _y);
     
     /* Sets the zoom level of the view */
-    void setZoom(int _z);
+    void setZoom(float _z);
     
     /* Moves the position of the view */
     void translate(double _dx, double _dy);
     
     /* Changes zoom by the given amount */
-    void zoom(int _dz);
+    void zoom(float _dz);
     
     /* Gets the current zoom */
-    int getZoom() const { return m_zoom; };
+    float getZoom() const { return m_zoom; };
+
+	/* Get the current m_zoomIn */
+	bool isZoomIn() const { return m_isZoomIn; };
     
     /* Updates the view and projection matrices if properties have changed */
     void update();
@@ -87,7 +90,7 @@ public:
         m_visibleTiles.clear();
     }
     
-    static const int s_maxZoom = 18;
+    constexpr static float s_maxZoom = 18.0;
 
 protected:
     
@@ -101,7 +104,9 @@ protected:
     glm::dvec3 m_pos;
     glm::dmat4 m_view;
     glm::dmat4 m_proj;
-    int m_zoom;
+    float m_zoom;
+    float m_initZoom = 16.0;
+    bool m_isZoomIn = false;
     int m_vpWidth;
     int m_vpHeight;
     float m_width;

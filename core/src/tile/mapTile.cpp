@@ -38,6 +38,7 @@ void MapTile::addGeometry(const Style& _style, std::unique_ptr<VboMesh> _mesh) {
 }
 
 void MapTile::draw(const Style& _style, const glm::dmat4& _viewProjMatrix) {
+    
 
     const std::unique_ptr<VboMesh>& styleMesh = m_geometry[_style.getName()];
 
@@ -47,7 +48,7 @@ void MapTile::draw(const Style& _style, const glm::dmat4& _viewProjMatrix) {
 
         glm::dmat4 modelViewProjMatrix = _viewProjMatrix * m_modelMatrix;
 
-        // NOTE : casting to float, but loop over the matrix values  
+        // NOTE : casting to float, but loop over the matrix values
         double* first = &modelViewProjMatrix[0][0];
         std::vector<float> fmvp(first, first + 16);
 
@@ -57,3 +58,6 @@ void MapTile::draw(const Style& _style, const glm::dmat4& _viewProjMatrix) {
     }
 }
 
+bool MapTile::hasGeometry() {
+    return (m_geometry.size() != 0);
+}

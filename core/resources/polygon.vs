@@ -4,6 +4,7 @@ precision mediump float;
 
 uniform mat4 u_modelViewProj;
 uniform vec3 u_lightDirection;
+uniform float u_tileDepthOffset;
 
 attribute vec4 a_position;
 attribute vec4 a_color;
@@ -27,4 +28,6 @@ void main() {
 	v_texcoord = a_texcoord;
 
   	gl_Position = u_modelViewProj * a_position;
+    
+    gl_Position.z /= u_tileDepthOffset;
 }

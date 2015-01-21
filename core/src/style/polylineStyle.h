@@ -33,7 +33,7 @@ public:
     PolylineStyle(GLenum _drawMode = GL_TRIANGLES);
     PolylineStyle(std::string _name, GLenum _drawMode = GL_TRIANGLES);
     
-    virtual void setup() override;
+    virtual void setup(float _tileDepthOffset) override;
     
     virtual ~PolylineStyle() {
     }

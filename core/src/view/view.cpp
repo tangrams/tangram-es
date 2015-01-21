@@ -4,13 +4,14 @@
 #include "glm/gtx/string_cast.hpp"
 #include "glm/gtc/matrix_transform.hpp"
 
-const int View::s_maxZoom; // Create a stack reference to the static member variable
+constexpr float View::s_maxZoom; // Create a stack reference to the static member variable
 
 View::View(int _width, int _height, ProjectionType _projType) {
     
     setMapProjection(_projType);
     setSize(_width, _height);
-    setZoom(16); // Arbitrary zoom for testing
+    setZoom(m_initZoom); // Arbitrary zoom for testing
+
     setPosition(0.0, 0.0);
     
     m_changed = false;
@@ -62,10 +63,10 @@ void View::setPosition(double _x, double _y) {
 
 }
 
-void View::setZoom(int _z) {
+void View::setZoom(float _z) {
     
     // ensure zoom value is allowed
-    m_zoom = glm::clamp(_z, 0, s_maxZoom);
+    m_zoom = glm::clamp(_z, 0.0f, s_maxZoom);
     m_dirty = true;
     
 }
@@ -76,8 +77,13 @@ void View::translate(double _dx, double _dy) {
 
 }
 
-void View::zoom(int _dz) {
-    
+void View::zoom(float _dz) {
+    if(_dz > 0.0) {
+        m_isZoomIn = true;
+    }
+    else {
+        m_isZoomIn = false;
+    }
     setZoom(m_zoom + _dz);
     
 }
@@ -170,7 +176,7 @@ void View::updateTiles() {
     
     m_visibleTiles.clear();
     
-    float tileSize = 2 * MapProjection::HALF_CIRCUMFERENCE * pow(2, -m_zoom);
+    float tileSize = 2 * MapProjection::HALF_CIRCUMFERENCE * pow(2, -(int)m_zoom);
     float invTileSize = 1.0 / tileSize;
     
     float vpLeftEdge = m_pos.x - m_width * 0.5 + MapProjection::HALF_CIRCUMFERENCE;
