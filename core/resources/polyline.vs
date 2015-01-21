@@ -5,6 +5,7 @@ precision mediump float;
 uniform mat4 u_modelView;
 uniform mat4 u_modelViewProj;
 uniform float u_time;
+uniform float u_tileDepthOffset;
 
 attribute vec4 a_position;
 attribute vec4 a_color;
@@ -30,7 +31,8 @@ void main() {
 	vec4 v_pos = a_position;
   	v_pos.xyz += a_extrudeNormal * a_extrudeWidth;
 
-	gl_Position = u_modelViewProj * v_pos;
-
 	v_eyeToPoint = vec3(u_modelView * a_position);
+
+	gl_Position = u_modelViewProj * v_pos;
+    gl_Position.z /= u_tileDepthOffset;
 }

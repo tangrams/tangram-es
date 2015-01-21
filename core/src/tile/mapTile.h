@@ -9,9 +9,8 @@
 #include "util/vboMesh.h"
 #include "util/mapProjection.h"
 
-class View;
-class Scene;
 class Style;
+class View;
 struct TileID;
 
 /* Tile of vector map data
@@ -41,20 +40,38 @@ public:
     
     /* Returns the reciprocal of <getScale()> */
     float getInverseScale() const { return m_inverseScale; }
-
-    /* Adds drawable geometry to the tile and associates it with a <Style> 
+    
+    /* Adds drawable geometry to the tile and associates it with a <Style>
      * 
      * Use std::move to pass in the mesh by move semantics; Geometry in the mesh must have coordinates relative to
      * the tile origin.
      */
     void addGeometry(const Style& _style, std::unique_ptr<VboMesh> _mesh);
+    
+    /*
+     * Method to check if this tile's vboMesh(s) are loaded and ready to be drawn
+     */
+    bool hasGeometry();
 
-    /* Draws the geometry associated with the provided <Style>, <View>(for matrixes) and <Scene> (for lights) */
-    void draw(Scene& _scene, const Style& _style, const View& _view);
-
+    /* Draws the geometry associated with the provided <Style> and view-projection matrix */
+    void draw(const Style& _style, const View& _view);
+    
+    /* 
+     * methods to set and get proxy counter
+     */
+    int getProxyCounter() { return m_proxyCounter; }
+    void incProxyCounter() { m_proxyCounter++; }
+    void decProxyCounter() { m_proxyCounter = m_proxyCounter > 0 ? m_proxyCounter - 1 : 0; }
+    void resetProxyCounter() { m_proxyCounter = 0; }
+    
 private:
 
     TileID m_id;
+    
+    /*
+     * A Counter for number of tiles this tile acts a proxy for
+     */
+    int m_proxyCounter = 0;
     
     const MapProjection* m_projection = nullptr;
     
@@ -67,6 +84,5 @@ private:
     glm::dmat4 m_modelMatrix; // Translation matrix from world origin to tile origin
 
     std::unordered_map<std::string, std::unique_ptr<VboMesh>> m_geometry; // Map of <Style>s and their associated <VboMesh>es
-
 };
 

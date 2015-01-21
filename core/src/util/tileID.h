@@ -29,5 +29,34 @@ struct TileID {
     const int x;
     const int y;
     const int z;
+    
+    bool isValid() const {
+        int max = 1 << z;
+        return x >= 0 && x < max && y >= 0 && y < max && z >= 0;
+    }
+    
+    bool isValid(int _maxZoom) {
+        return isValid() && z < _maxZoom;
+    }
+
+    TileID getParent() const {
+        return TileID(x >> 1, y >> 1, z-1);
+    }
+
+    TileID getChild(int _index) const {
+        
+        if (_index > 3 || _index < 0) {
+            return TileID(-1, -1, -1);
+        }
+        
+        int i = _index / 2;
+        int j = _index % 2;
+        
+        // _index: 0, 1, 2, 3
+        // i:      0, 0, 1, 1
+        // j:      0, 1, 0, 1
+        
+        return TileID((x<<1)+i, (y<<1)+j, z+1);
+    }
 };
 

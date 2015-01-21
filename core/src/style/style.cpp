@@ -1,4 +1,5 @@
 #include "style.h"
+#include "scene/scene.h"
 
 /*
  * Style Class Methods
@@ -54,4 +55,20 @@ void Style::addData(TileData& _data, MapTile& _tile, const MapProjection& _mapPr
     
     _tile.addGeometry(*this, std::unique_ptr<VboMesh>(mesh));
     
+}
+
+void Style::setupFrame(const std::shared_ptr<Scene>& _scene) {
+    
+    // Set up material
+    m_material.setupProgram(m_shaderProgram);
+    
+    // Set up lights
+    for (const auto& light : _scene->getLights()) {
+        light.second->setupProgram(m_shaderProgram);
+    }
+    
+}
+
+void Style::setupTile(const std::shared_ptr<MapTile>& _tile) {
+    // No-op by default
 }

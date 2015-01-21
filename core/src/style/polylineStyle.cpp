@@ -29,12 +29,6 @@ void PolylineStyle::constructShaderProgram() {
     m_shaderProgram->setSourceStrings(fragShaderSrcStr, vertShaderSrcStr);
 }
 
-void PolylineStyle::setup() {
-    
-    m_material.setupProgram(m_shaderProgram);
-
-}
-
 void PolylineStyle::buildPoint(Point& _point, std::string& _layer, Properties& _props, VboMesh& _mesh) {
     // No-op
 }

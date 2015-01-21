@@ -6,6 +6,7 @@ uniform mat4 u_modelView;
 uniform mat4 u_modelViewProj;
 uniform mat3 u_normalMatrix;
 uniform float u_time;
+uniform float u_tileDepthOffset;
 
 #pragma tangram: material
 #pragma tangram: _vertex_lighting
@@ -35,6 +36,6 @@ void main() {
     #endif
 
     gl_Position = u_modelViewProj * a_position;
-
     
+    gl_Position.z /= u_tileDepthOffset;
 }

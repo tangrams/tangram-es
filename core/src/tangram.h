@@ -41,8 +41,8 @@ void handleDoubleTapGesture(float _posX, float _posY);
 // Respond to a drag with the given displacement in screen coordinates (x right, y down)
 void handlePanGesture(float _dX, float _dY);
 
-// Respond to a pinch at the given position in screen coordinates with the given scale factor
-void handlePinchGesture(float _posX, float _posY, float _scale = 1.0);
+// Respond to a pinch at the given position in screen coordinates with the given incremental scale
+void handlePinchGesture(float _posX, float _posY, float _scale);
 
 }
 

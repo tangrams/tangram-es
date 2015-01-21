@@ -1,11 +1,7 @@
 #include "mapTile.h"
-
-#include <time.h>
-
 #include "style/style.h"
-#include "util/tileID.h"
-#include "scene/scene.h"
 #include "view/view.h"
+#include "util/tileID.h"
 
 #include "glm/gtc/matrix_transform.hpp"
 #include "glm/gtc/type_ptr.hpp"
@@ -42,7 +38,9 @@ void MapTile::addGeometry(const Style& _style, std::unique_ptr<VboMesh> _mesh) {
 
 }
 
-void MapTile::draw( Scene& _scene, const Style& _style, const View& _view){
+void MapTile::draw(const Style& _style, const View& _view) {
+    
+
     const std::unique_ptr<VboMesh>& styleMesh = m_geometry[_style.getName()];
     
     if (styleMesh) {
@@ -72,12 +70,20 @@ void MapTile::draw( Scene& _scene, const Style& _style, const View& _view){
         shader->setUniformMatrix4f("u_modelView", &fmv[0]);
         shader->setUniformMatrix4f("u_modelViewProj", &fmvp[0]);
         shader->setUniformMatrix3f("u_normalMatrix", &fnm[0]);
-        
-        for (auto &light : _scene.getLights()){
-            light.second->setupProgram(shader);
+
+        // Set tile offset for proxy tiles
+        float offset = 0;
+        if (m_proxyCounter > 0) {
+            offset = 1.0f + log((_view.s_maxZoom + 1) / (_view.s_maxZoom + 1 - m_id.z));
+        } else {
+            offset = 1.0f + log(_view.s_maxZoom + 2);
         }
-        
+        shader->setUniformf("u_tileDepthOffset", offset);
+
         styleMesh->draw(shader);
     }
 }
 
+bool MapTile::hasGeometry() {
+    return (m_geometry.size() != 0);
+}

@@ -8,11 +8,14 @@
 #include "util/shaderProgram.h"
 #include "util/mapProjection.h"
 #include "tile/mapTile.h"
+//#include "scene/scene.h"
 #include "tileData.h"
 #include "platform.h"
 #include "gl.h"
 
 #include "scene/material.h"
+
+class Scene;
 
 /* Means of constructing and rendering map geometry
  *
@@ -75,7 +78,10 @@ public:
     virtual void addData(TileData& _data, MapTile& _tile, const MapProjection& _mapProjection);
     
     /* Perform any setup needed before drawing each frame */
-    virtual void setup() = 0;
+    virtual void setupFrame(const std::shared_ptr<Scene>& _scene);
+
+    /* Perform any setup needed before drawing each tile */
+    virtual void setupTile(const std::shared_ptr<MapTile>& _tile);
 
     std::shared_ptr<ShaderProgram> getShaderProgram() const { return m_shaderProgram; }
     std::string getName() const { return m_name; }

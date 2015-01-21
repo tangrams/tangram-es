@@ -34,10 +34,6 @@ void PolygonStyle::constructShaderProgram() {
     m_material.injectOnProgram(m_shaderProgram); // This is a must for lighting !!
 }
 
-void PolygonStyle::setup() {
-    m_material.setupProgram(m_shaderProgram);
-}
-
 void PolygonStyle::buildPoint(Point& _point, std::string& _layer, Properties& _props, VboMesh& _mesh) {
     // No-op
 }
