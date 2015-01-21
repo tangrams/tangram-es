@@ -82,9 +82,6 @@ public:
     
     /* Add styled geometry from the given Json object to the given <MapTile> */
     virtual void addData(TileData& _data, MapTile& _tile, const MapProjection& _mapProjection);
-    
-    /* Perform any setup needed before drawing each frame */
-    virtual void setup(View& _view) = 0;
 
     /* Perform any unsetup needed after drawing each frame */
     virtual void teardown() {}
@@ -93,6 +90,12 @@ public:
     virtual void setupForTile(const MapTile& _tile) {}
 
     void setPixelScale(float _pixelScale) { m_pixelScale = _pixelScale; }
+
+    /* Perform any setup needed before drawing each frame */
+    virtual void setupFrame(const std::shared_ptr<View>& _view);
+
+    /* Perform any setup needed before drawing each tile */
+    virtual void setupTile(const std::shared_ptr<MapTile>& _tile);
 
     std::shared_ptr<ShaderProgram> getShaderProgram() const { return m_shaderProgram; }
     std::string getName() const { return m_name; }

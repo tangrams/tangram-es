@@ -33,7 +33,7 @@ public:
     PolygonStyle(GLenum _drawMode = GL_TRIANGLES);
     PolygonStyle(std::string _name, GLenum _drawMode = GL_TRIANGLES);
     
-    virtual void setup(View& _view) override;
+    virtual void setupFrame(const std::shared_ptr<View>& _view) override;
     
     virtual ~PolygonStyle() {
     }

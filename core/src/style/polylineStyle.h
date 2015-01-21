@@ -33,7 +33,7 @@ public:
     PolylineStyle(GLenum _drawMode = GL_TRIANGLES);
     PolylineStyle(std::string _name, GLenum _drawMode = GL_TRIANGLES);
     
-    virtual void setup(View& _view) override;
+    virtual void setupFrame(const std::shared_ptr<View>& _view) override;
     
     virtual ~PolylineStyle() {
     }

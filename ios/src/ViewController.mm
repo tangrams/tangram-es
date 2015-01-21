@@ -91,11 +91,8 @@
 - (void)respondToPinchGesture:(UIPinchGestureRecognizer *)pinchRecognizer {
     CGPoint location = [pinchRecognizer locationInView:self.view];
     CGFloat scale = pinchRecognizer.scale;
-    //Do discrete zoom (only handle the pinch gesture, when it ends
-    //TODO: continous zoom
-    if(pinchRecognizer.state == UIGestureRecognizerStateEnded) {
-        Tangram::handlePinchGesture(location.x, location.y, scale);
-    }
+    [pinchRecognizer setScale:1.0];
+    Tangram::handlePinchGesture(location.x, location.y, scale);
 }
 
 - (void)dealloc

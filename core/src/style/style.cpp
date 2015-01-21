@@ -57,3 +57,11 @@ void Style::addData(TileData& _data, MapTile& _tile, const MapProjection& _mapPr
 
     finishDataProcessing(_tile);
 }
+
+void Style::setupFrame(const std::shared_ptr<View>& _view) {
+    // No-op by default
+}
+
+void Style::setupTile(const std::shared_ptr<MapTile>& _tile) {
+    // No-op by default
+}

@@ -2,6 +2,7 @@
 
 #include <unordered_map>
 #include <memory>
+#include <mutex>
 
 #include "glm/vec2.hpp"
 #include "glm/mat4x4.hpp"
@@ -13,6 +14,7 @@
 #include "glfontstash.h"
 
 class Style;
+class View;
 struct TileID;
 
 /* Tile of vector map data
@@ -49,9 +51,11 @@ public:
      * the tile origin.
      */
     void addGeometry(const Style& _style, std::unique_ptr<VboMesh> _mesh);
-
-    /* Draws the geometry associated with the provided <Style> and view-projection matrix */
-    void draw(const Style& _style, const glm::dmat4& _viewProjMatrix);
+    
+    /*
+     * Method to check if this tile's vboMesh(s) are loaded and ready to be drawn
+     */
+    bool hasGeometry();
 
     void setTextBuffer(const Style& _style, fsuint _textBuffer);
 
@@ -61,9 +65,25 @@ public:
 
     void update(float _dt, const Style& _style, View& _view);
 
+    /* Draws the geometry associated with the provided <Style> and view-projection matrix */
+    void draw(const Style& _style, const View& _view);
+    
+    /* 
+     * methods to set and get proxy counter
+     */
+    int getProxyCounter() { return m_proxyCounter; }
+    void incProxyCounter() { m_proxyCounter++; }
+    void decProxyCounter() { m_proxyCounter = m_proxyCounter > 0 ? m_proxyCounter - 1 : 0; }
+    void resetProxyCounter() { m_proxyCounter = 0; }
+
 private:
 
     TileID m_id;
+    
+    /*
+     * A Counter for number of tiles this tile acts a proxy for
+     */
+    int m_proxyCounter = 0;
     
     const MapProjection* m_projection = nullptr;
     
@@ -78,4 +98,5 @@ private:
     std::unordered_map<std::string, std::unique_ptr<VboMesh>> m_geometry; // Map of <Style>s and their associated <VboMesh>es
     std::unordered_map<std::string, fsuint> m_textBuffer; // Map of <Style>s and the associated text buffer
     std::unordered_map<std::string, std::vector<std::unique_ptr<Label>>> m_labels; // Map of <Style>s and their associated <Label>s
+
 };

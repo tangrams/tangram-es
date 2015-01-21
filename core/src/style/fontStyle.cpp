@@ -138,8 +138,8 @@ void FontStyle::finishDataProcessing(MapTile& _tile) {
     m_fontContext->m_contextMutex->unlock();
 }
 
-void FontStyle::setupForTile(const MapTile& _tile) {
-    std::unique_ptr<Texture>& texture = m_transformTileTextures[_tile.getID()];
+void FontStyle::setupTile(const std::shared_ptr<MapTile>& _tile) {
+    std::unique_ptr<Texture>& texture = m_transformTileTextures[_tile->getID()];
 
     texture->bind();
     
@@ -149,7 +149,7 @@ void FontStyle::setupForTile(const MapTile& _tile) {
     m_shaderProgram->setUniformf("u_tresolution", texture->getWidth(), texture->getHeight()); 
 }
 
-void FontStyle::setup(View& _view) {
+void FontStyle::setupFrame(const std::shared_ptr<View>& _view) {
     float projectionMatrix[16] = {0};
 
     glfonsProjection(m_fontContext->m_fsContext, projectionMatrix);
@@ -162,7 +162,7 @@ void FontStyle::setup(View& _view) {
     m_atlas->bind();
 
     m_shaderProgram->setUniformi("u_tex", m_atlas->getTextureSlot()); // atlas
-    m_shaderProgram->setUniformf("u_resolution", _view.getWidth(), _view.getHeight());
+    m_shaderProgram->setUniformf("u_resolution", _view->getWidth(), _view->getHeight());
     m_shaderProgram->setUniformf("u_color", 1.0, 1.0, 1.0);
     m_shaderProgram->setUniformMatrix4f("u_proj", projectionMatrix);
 

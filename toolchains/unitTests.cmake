@@ -9,12 +9,7 @@ include_directories(/usr/local/include)
 # load core library
 add_subdirectory(${PROJECT_SOURCE_DIR}/core)
 include_directories(${CORE_INCLUDE_DIRS})
-
-# for testing purposes include those folders
-include_directories(${PROJECT_SOURCE_DIR}/core/include/)
-include_directories(${PROJECT_SOURCE_DIR}/core/include/catch/)
-include_directories(${PROJECT_SOURCE_DIR}/core/include/jsoncpp/)
-include_directories(${PROJECT_SOURCE_DIR}/core/dependencies/fontstash/fontstash/)
+include_directories(${CORE_LIBRARIES_INCLUDE_DIRS})
 
 set(OSX_PLATFORM_SRC ${PROJECT_SOURCE_DIR}/osx/src/platform_osx.mm)
 
