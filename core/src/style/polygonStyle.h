@@ -34,7 +34,6 @@ public:
     PolygonStyle(std::string _name, GLenum _drawMode = GL_TRIANGLES);
     
     virtual void setupFrame() override;
-    virtual void setupTile(const std::shared_ptr<MapTile>& _tile) override;
     
     virtual ~PolygonStyle() {
     }

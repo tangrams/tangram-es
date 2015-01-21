@@ -38,10 +38,6 @@ void PolylineStyle::setupFrame() {
     m_shaderProgram->setUniformf("u_time", ((float)t)/CLOCKS_PER_SEC);
 }
 
-void PolylineStyle::setupTile(const std::shared_ptr<MapTile>& _tile) {
-    // No-op
-}
-
 void PolylineStyle::buildPoint(Point& _point, std::string& _layer, Properties& _props, VboMesh& _mesh) {
     // No-op
 }

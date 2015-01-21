@@ -74,10 +74,10 @@ public:
     virtual void addData(TileData& _data, MapTile& _tile, const MapProjection& _mapProjection);
     
     /* Perform any setup needed before drawing each frame */
-    virtual void setupFrame() = 0;
+    virtual void setupFrame();
 
     /* Perform any setup needed before drawing each tile */
-    virtual void setupTile(const std::shared_ptr<MapTile>& _tile) = 0;
+    virtual void setupTile(const std::shared_ptr<MapTile>& _tile);
 
     std::shared_ptr<ShaderProgram> getShaderProgram() const { return m_shaderProgram; }
     std::string getName() const { return m_name; }

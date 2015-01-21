@@ -35,10 +35,6 @@ void PolygonStyle::setupFrame() {
     m_shaderProgram->setUniformf("u_lightDirection", -1.0, -1.0, 1.0);
 }
 
-void PolygonStyle::setupTile(const std::shared_ptr<MapTile>& _tile) {
-    // No-op
-}
-
 void PolygonStyle::buildPoint(Point& _point, std::string& _layer, Properties& _props, VboMesh& _mesh) {
     // No-op
 }
