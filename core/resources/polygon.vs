@@ -9,7 +9,7 @@ uniform float u_time;
 uniform float u_tileDepthOffset;
 
 #pragma tangram: material
-#pragma tangram: _vertex_lighting
+#pragma tangram: vertex_lighting
 
 attribute vec4 a_position;
 attribute vec4 a_color;

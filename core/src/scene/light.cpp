@@ -2,6 +2,9 @@
 
 #include "util/stringsOp.h"
 
+std::string Light::s_vertexLightingBlock;
+std::string Light::s_fragmentLightingBlock;
+
 Light::Light(const std::string& _name, bool _dynamic):m_name(_name),m_typeName("undefined_light"),m_ambient(0.0f),m_diffuse(1.0f),m_specular(0.0f),m_type(LightType::UNDEFINED),m_injType(VERTEX),m_dynamic(_dynamic) {
 
 }
@@ -36,22 +39,15 @@ void Light::injectOnProgram(std::shared_ptr<ShaderProgram> _shader, InjectionTyp
     _shader->addSourceBlock("defines", getInstanceDefinesBlock(), false);
 
     if (m_injType == FRAGMENT) {
-        _shader->addSourceBlock("_fragment_lighting", getInstanceBlock());
-        _shader->addSourceBlock("_fragment_lighting", getClassBlock(), false);
-        _shader->addSourceBlock("fragment_lights_to_compute", getInstanceComputeBlock());
-
-        //  TODO:
-        //      - AM - After global blocks is implemented
-        //      - AM - Implement defines (and use them on the lights and materials defines)
-        //      - AM - Add a method to scene that add the main calcualtion function
-        //              from scene you pass the light to this functions Light::getFragmentLightMainFunctionBlock() 
-        //              and Light::getFVertexLightMainFunctionBlock()
+        _shader->addSourceBlock("__fragment_lighting", getClassBlock(), false);
+        _shader->addSourceBlock("__fragment_lighting", getInstanceBlock());
+        _shader->addSourceBlock("__fragment_lights_to_compute", getInstanceComputeBlock());
     }
 
     if (m_injType == VERTEX) {
-        _shader->addSourceBlock("_vertex_lighting", getInstanceBlock());
-        _shader->addSourceBlock("_vertex_lighting", getClassBlock(), false);
-        _shader->addSourceBlock("vertex_lights_to_compute", getInstanceComputeBlock());
+        _shader->addSourceBlock("__vertex_lighting", getClassBlock(), false);
+        _shader->addSourceBlock("__vertex_lighting", getInstanceBlock());
+        _shader->addSourceBlock("__vertex_lights_to_compute", getInstanceComputeBlock());
     }
 }
 
@@ -61,6 +57,49 @@ void Light::setupProgram(std::shared_ptr<ShaderProgram> _shader) {
         _shader->setUniformf(getUniformName()+".diffuse", m_diffuse);
         _shader->setUniformf(getUniformName()+".specular", m_specular);
     }
+}
+
+void Light::assembleLights(std::map<std::string, std::vector<std::string>>& _sourceBlocks) {
+    
+    if (s_vertexLightingBlock.empty()) {
+        s_vertexLightingBlock = stringFromResource("lights_vert.glsl");
+    }
+    
+    if (s_fragmentLightingBlock.empty()) {
+        s_fragmentLightingBlock = stringFromResource("lights_frag.glsl");
+    }
+    
+    std::string vertexLighting;
+    std::string fragmentLighting;
+    
+    for (const auto& string : _sourceBlocks["__vertex_lighting"]) {
+        vertexLighting += string;
+    }
+    
+    for (const auto& string : _sourceBlocks["__fragment_lighting"]) {
+        fragmentLighting += string;
+    }
+    
+    vertexLighting += s_vertexLightingBlock;
+    fragmentLighting += s_fragmentLightingBlock;
+    
+    std::string tag = "#pragma tangram: vertex_lights_to_compute";
+    int pos = vertexLighting.find(tag) + tag.length();
+    for (const auto& string : _sourceBlocks["__vertex_lights_to_compute"]) {
+        vertexLighting.insert(pos, string);
+        pos += string.length();
+    }
+    
+    tag = "#pragma tangram: fragment_lights_to_compute";
+    pos = fragmentLighting.find(tag) + tag.length();
+    for (const auto& string : _sourceBlocks["__fragment_lights_to_compute"]) {
+        fragmentLighting.insert(pos, string);
+        pos += string.length();
+    }
+    
+    _sourceBlocks["vertex_lighting"].push_back(vertexLighting);
+    _sourceBlocks["fragment_lighting"].push_back(fragmentLighting);
+    
 }
 
 std::string Light::getName() {

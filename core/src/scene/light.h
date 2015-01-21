@@ -58,6 +58,8 @@ public:
 
     /*  Pass the uniforms for this particular DYNAMICAL light on the passed shader */
     virtual void setupProgram( std::shared_ptr<ShaderProgram> _shader );
+    
+    static void assembleLights(std::map<std::string, std::vector<std::string>>& _sourceBlocks);
 
 protected:
 
@@ -96,4 +98,10 @@ protected:
     InjectionType m_injType;
 
     bool m_dynamic;
+    
+private:
+    
+    static std::string s_vertexLightingBlock;
+    static std::string s_fragmentLightingBlock;
+    
 };

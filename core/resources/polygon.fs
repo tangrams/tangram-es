@@ -7,7 +7,7 @@ uniform mat4 u_modelViewProj;
 uniform float u_time;
 
 #pragma tangram: material
-#pragma tangram: _fragment_lighting
+#pragma tangram: fragment_lighting
 
 varying vec4 v_color;
 varying vec3 v_eyeToPoint;

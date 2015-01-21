@@ -16,40 +16,27 @@ void Scene::addStyle(std::unique_ptr<Style> _style) {
 }
 
 void Scene::addLight(std::shared_ptr<Light> _light, InjectionType _type) {
-    
-    // For the first light added, add the main lighting function
-    if (m_lights.size() == 0) {
-        std::string vertexLightBlock = stringFromResource("lights_vert.glsl");
-        std::string fragmentLightBlock = stringFromResource("lights_frag.glsl");
-        
-        //  TODO:
-        //          - BM - remove the _ on the injection points
-        //
-        for (auto& style : m_styles) {
-            style->getShaderProgram()->addSourceBlock("_vertex_lighting", vertexLightBlock+"\n");
-            style->getShaderProgram()->addSourceBlock("_fragment_lighting", fragmentLightBlock+"\n");
-        }
-    }
 
     //  Avoid duplications
-    if (m_lights.find(_light->getName()) == m_lights.end()) {
-        for (auto& style : m_styles) {
-            _light->injectOnProgram(style->getShaderProgram(), _type);
-
-            std::string define = "";
-            if( _light->getInjectionType() == FRAGMENT){
-                style->getShaderProgram()->addSourceBlock("defines", "#define TANGRAM_FRAGMENT_LIGHTS\n", false);
-            }
-            
-
-            if( _light->getInjectionType() == VERTEX){
-                style->getShaderProgram()->addSourceBlock("defines", "#define TANGRAM_VERTEX_LIGHTS\n", false);
-            }
-            
-            
-        }
-        m_lights[_light->getName()] = _light;
-    } else {
-        logMsg("ERROR, Can't add the same light twice. Try using another the name instead.\n");
+    if (m_lights.find(_light->getName()) != m_lights.end()) {
+        logMsg("ERROR: Can't add the same light twice. Try using another the name instead.\n");
+        return;
     }
+    
+    for (auto& style : m_styles) {
+        _light->injectOnProgram(style->getShaderProgram(), _type);
+        
+        if( _light->getInjectionType() == FRAGMENT){
+            style->getShaderProgram()->addSourceBlock("defines", "#define TANGRAM_FRAGMENT_LIGHTS\n", false);
+        }
+        
+
+        if( _light->getInjectionType() == VERTEX){
+            style->getShaderProgram()->addSourceBlock("defines", "#define TANGRAM_VERTEX_LIGHTS\n", false);
+        }
+        
+        
+    }
+    
+    m_lights[_light->getName()] = _light;
 }

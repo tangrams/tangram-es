@@ -1,5 +1,6 @@
 #include "shaderProgram.h"
 #include "util/stringsOp.h"
+#include "scene/light.h"
 
 GLuint ShaderProgram::s_activeGlProgram = 0;
 int ShaderProgram::s_validGeneration = 0;
@@ -214,8 +215,9 @@ GLuint ShaderProgram::makeCompiledShader(const std::string& _src, GLenum _type) 
 void ShaderProgram::applySourceBlocks(std::string& _vertSrcOut, std::string& _fragSrcOut) {
     
     _vertSrcOut.insert(0, "#pragma tangram: defines\n");
-    
     _fragSrcOut.insert(0, "#pragma tangram: defines\n");
+    
+    Light::assembleLights(m_sourceBlocks);
     
     for (auto& block : m_sourceBlocks) {
         
@@ -228,12 +230,14 @@ void ShaderProgram::applySourceBlocks(std::string& _vertSrcOut, std::string& _fr
             vertSrcPos += tag.length();
             for (auto& source : block.second) {
                 _vertSrcOut.insert(vertSrcPos, source);
+                vertSrcPos += source.length();
             }
         }
         if (fragSrcPos != std::string::npos) {
             fragSrcPos += tag.length();
             for (auto& source : block.second) {
                 _fragSrcOut.insert(fragSrcPos, source);
+                fragSrcPos += source.length();
             }
         }
     }
