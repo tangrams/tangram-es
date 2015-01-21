@@ -55,3 +55,11 @@ void Style::addData(TileData& _data, MapTile& _tile, const MapProjection& _mapPr
     _tile.addGeometry(*this, std::unique_ptr<VboMesh>(mesh));
     
 }
+
+void Style::setupFrame() {
+    // No-op by default
+}
+
+void Style::setupTile(const std::shared_ptr<MapTile>& _tile) {
+    // No-op by default
+}

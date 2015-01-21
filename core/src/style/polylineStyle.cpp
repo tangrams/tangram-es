@@ -32,7 +32,7 @@ void PolylineStyle::constructShaderProgram() {
     
 }
 
-void PolylineStyle::setup() {
+void PolylineStyle::setupFrame() {
     clock_t t = clock();
     m_shaderProgram->setUniformf("u_lightDirection", -1.0, -1.0, 1.0);
     m_shaderProgram->setUniformf("u_time", ((float)t)/CLOCKS_PER_SEC);
