@@ -104,12 +104,6 @@ void View::update() {
     
 }
 
-const glm::dmat4 View::getViewProjectionMatrix() {
-    
-    return m_proj * m_view;
-    
-}
-
 glm::dmat2 View::getBoundsRect() const {
 
     double hw = m_width * 0.5;
@@ -169,6 +163,7 @@ void View::updateMatrices() {
     // update view and projection matrices
     m_view = glm::lookAt(m_pos, m_pos + glm::dvec3(0, 0, -1), glm::dvec3(0, 1, 0));
     m_proj = glm::perspective(fovy, double(m_aspect), near, m_pos.z + 1.0);
+    m_viewProj = m_proj * m_view;
     
 }
 
