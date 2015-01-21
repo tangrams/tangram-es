@@ -141,22 +141,21 @@ void FontStyle::finishDataProcessing(MapTile& _tile) {
 void FontStyle::setupTile(const std::shared_ptr<MapTile>& _tile) {
     std::unique_ptr<Texture>& texture = m_transformTileTextures[_tile->getID()];
 
-    texture->bind();
+    if(texture) {
+        texture->update();
+        texture->bind();
     
-    // transform texture
-    m_shaderProgram->setUniformi("u_transforms", texture->getTextureSlot()); 
-    // resolution of the transform texture
-    m_shaderProgram->setUniformf("u_tresolution", texture->getWidth(), texture->getHeight()); 
+        // transform texture
+        m_shaderProgram->setUniformi("u_transforms", texture->getTextureSlot());
+        // resolution of the transform texture
+        m_shaderProgram->setUniformf("u_tresolution", texture->getWidth(), texture->getHeight());
+    }
 }
 
 void FontStyle::setupFrame(const std::shared_ptr<View>& _view) {
     float projectionMatrix[16] = {0};
 
     glfonsProjection(m_fontContext->m_fsContext, projectionMatrix);
-
-    for (auto& pair : m_transformTileTextures) {
-        pair.second->update();
-    }
 
     m_atlas->update();
     m_atlas->bind();
