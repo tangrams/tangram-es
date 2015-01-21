@@ -63,13 +63,16 @@ void MapTile::draw( Scene& _scene, const Style& _style, const View& _view){
         double* second = &modelViewMatrix[0][0];
         std::vector<float> fmv(second, second + 16);
         
+        glm::dmat3 normalMatrix = glm::dmat3(modelViewMatrix); // Transforms surface normals into camera space
+        normalMatrix = glm::transpose(glm::inverse(normalMatrix));
+        
+        double* third = &normalMatrix[0][0];
+        std::vector<float> fnm(third, third + 9);
+        
         shader->setUniformMatrix4f("u_modelView", &fmv[0]);
         shader->setUniformMatrix4f("u_modelViewProj", &fmvp[0]);
+        shader->setUniformMatrix3f("u_normalMatrix", &fnm[0]);
         
-        // shader->setUniformf("u_time", ((float)clock())/CLOCKS_PER_SEC );
-        
-        //  Pass need lights
-        //
         for (auto &light : _scene.getLights()){
             light.second->setupProgram(shader);
         }

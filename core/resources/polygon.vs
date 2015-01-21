@@ -4,6 +4,7 @@ precision mediump float;
 
 uniform mat4 u_modelView;
 uniform mat4 u_modelViewProj;
+uniform mat3 u_normalMatrix;
 uniform float u_time;
 
 #pragma tangram: material
@@ -21,18 +22,19 @@ varying vec2 v_texcoord;
 
 void main() {
 
-  	v_normal = normalize(a_normal);
-  	v_texcoord = a_texcoord;
+    v_normal = normalize(a_normal);
+    v_texcoord = a_texcoord;
 
-	v_eyeToPoint = vec3(u_modelView * a_position);
+    v_eyeToPoint = vec3(u_modelView * a_position);
 
-	v_color = a_color;
+    v_color = a_color;
 
-	#ifdef TANGRAM_LIGHTS
-	   calculateLighting(v_eyeToPoint, v_normal, v_color);
+    #ifdef TANGRAM_LIGHTS
+        v_normal = normalize(u_normalMatrix * v_normal);
+        calculateLighting(v_eyeToPoint, v_normal, v_color);
     #endif
 
-  	gl_Position = u_modelViewProj * a_position;
+    gl_Position = u_modelViewProj * a_position;
 
-  	
+    
 }

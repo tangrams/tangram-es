@@ -13,7 +13,7 @@ DirectionalLight::~DirectionalLight() {
 }
 
 void DirectionalLight::setDirection(const glm::vec3 &_dir) {
-	m_direction = _dir;
+    m_direction = glm::normalize(_dir);
 }
 
 void DirectionalLight::setupProgram( std::shared_ptr<ShaderProgram> _shader ) {

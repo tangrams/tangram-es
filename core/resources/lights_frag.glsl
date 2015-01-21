@@ -15,7 +15,6 @@
 #endif
 
 void calculateLighting(in vec3 _eyeToPoint, in vec3 _normal, inout vec4 _colorOut) {
-    vec3 eye = vec3(0.0, 0.0, 1.0);
 
     #ifdef TANGRAM_VERTEX_LIGHTS
         #ifdef TANGRAM_MATERIAL_AMBIENT

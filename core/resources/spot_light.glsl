@@ -29,7 +29,7 @@ struct SpotLight {
     #endif
 };
 
-void calculateLight(in SpotLight _light, in vec3 _eye, in vec3 _eyeToPoint, in vec3 _normal) {
+void calculateLight(in SpotLight _light, in vec3 _eyeToPoint, in vec3 _normal) {
 
     float dist = length(_light.position.xyz - _eyeToPoint);
 
@@ -75,15 +75,12 @@ void calculateLight(in SpotLight _light, in vec3 _eye, in vec3 _eyeToPoint, in v
     #endif
 
     #ifdef TANGRAM_MATERIAL_SPECULAR
-        // Power factor for shinny speculars
-        float pf = 0.0;              
-        if (nDotVP != 0.0) {
-            // Direction of maximum highlights
-            vec3 halfVector = normalize(VP + _eye);
-
-            // normal . light half vector
-            float nDotHV = clamp(dot(_normal, halfVector), 0.0, 1.0);
-            pf = pow(nDotHV, g_material.shininess);
+        // Power factor for shiny speculars
+        float pf = 0.0;
+        if (nDotVP > 0.0) {
+            vec3 reflectVector = reflect(-VP, _normal);
+            float eyeDotR = max(dot(-normalize(_eyeToPoint), reflectVector), 0.0);
+            pf = pow(eyeDotR, g_material.shininess);
         }
         g_light_accumulator_specular += _light.specular * pf * spotAttenuation;
     #endif

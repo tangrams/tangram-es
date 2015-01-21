@@ -56,26 +56,27 @@ void initialize() {
 
         //------ TESTING LIGHTS
 
-        //  Directional light on Default (vertex) shader
+        //  Directional light with white diffuse color pointing Northeast and down
         auto directionalLight = std::make_shared<DirectionalLight>("dLight");
-        directionalLight->setDiffuseColor(glm::vec4(1.0,1.0,1.0,1.0));
-        directionalLight->setDirection(glm::vec3(-1.0, -1.0, 1.0));
-        // m_scene->addLight(directionalLight);
+        directionalLight->setAmbientColor({0.4, 0.4, 0.4, 1.0});
+        directionalLight->setDiffuseColor({0.8, 0.8, 0.8, 1.0});
+        directionalLight->setDirection({1.0, 1.0, -1.0});
+        m_scene->addLight(directionalLight);
     
-        //  Point light forced on vertex shader (the default is fragment)
+        //  Point light with red diffuse light and blue specular light
         auto pointLight = std::make_shared<PointLight>("pLight",true);
-        pointLight->setDiffuseColor(glm::vec4(0.0,1.0,0.0,1.0));
-        pointLight->setSpecularColor(glm::vec4(0.5,0.0,1.0,1.0));
+        pointLight->setDiffuseColor({1.0, 0.0, 0.0, 1.0});
+        pointLight->setSpecularColor({0.0, 0.0, 1.0, 1.0});
         pointLight->setLinearAttenuation(0.005);
-        // m_scene->addLight(pointLight,VERTEX);
-        // m_scene->addLight(pointLight);
+        //m_scene->addLight(pointLight);
 
-        //  Spot light on Default (fragment) shader
+        //  Spot light with blue-green specular color
         auto spotLight = std::make_shared<SpotLight>("sLight",true);
-        spotLight->setSpecularColor(glm::vec4(0.0,1.0,1.0,1.0));
+        spotLight->setDiffuseColor({1.0, 1.0, 1.0, 1.0});
+        spotLight->setSpecularColor({0.0, 0.0, 1.0, 1.0});
         spotLight->setCutOff(30.0, 20.0);
         spotLight->setLinearAttenuation(0.005);
-        m_scene->addLight(spotLight,DEFAULT);
+        //m_scene->addLight(spotLight);
         
         //-----------------------
     }
@@ -138,7 +139,8 @@ void update(float _dt) {
         m_tileManager->updateTileSet();
     }
     
-    if(m_scene){
+    if(m_scene) {
+
         for (auto& light : m_scene->getLights()) {
 
             if (light.second->getType() == LightType::DIRECTIONAL) {

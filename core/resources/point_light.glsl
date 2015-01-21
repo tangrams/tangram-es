@@ -25,12 +25,12 @@ struct PointLight {
     #endif
 };
 
-void calculateLight(in PointLight _light, in vec3 _eye, in vec3 _eyeToPoint, in vec3 _normal) {
+void calculateLight(in PointLight _light, in vec3 _eyeToPoint, in vec3 _normal) {
 
-    float dist = length(vec3(_light.position) - _eyeToPoint);
+    float dist = length(_light.position.xyz - _eyeToPoint);
 
     // Compute vector from surface to light position
-    vec3 VP = (vec3(_light.position) - _eyeToPoint) / dist;
+    vec3 VP = (_light.position.xyz - _eyeToPoint) / dist;
 
     // Normalize the vector from surface to light position
     float nDotVP = clamp(dot(VP, _normal), 0.0, 1.0);
@@ -73,11 +73,11 @@ void calculateLight(in PointLight _light, in vec3 _eye, in vec3 _eyeToPoint, in 
     #endif
 
     #ifdef TANGRAM_MATERIAL_SPECULAR
-        float pf = 0.0; // power factor for shinny speculars
-        if (nDotVP > 0.0){
-            vec3 halfVector = normalize(VP + _eye); // Direction of maximum highlights
-            float nDotHV = max(0.0, dot(_normal, halfVector) );
-            pf = pow(nDotHV, g_material.shininess);
+        float pf = 0.0; // power factor for shiny speculars
+        if (nDotVP > 0.0) {
+            vec3 reflectVector = reflect(-VP, _normal);
+            float eyeDotR = max(0.0, dot(-normalize(_eyeToPoint), reflectVector));
+            pf = pow(eyeDotR, g_material.shininess);
         }
 
         #ifdef TANGRAM_POINTLIGHT_ATTENUATION

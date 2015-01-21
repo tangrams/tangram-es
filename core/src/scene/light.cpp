@@ -32,6 +32,7 @@ void Light::injectOnProgram(std::shared_ptr<ShaderProgram> _shader, InjectionTyp
         m_injType = _injType;
     }
     
+    _shader->addSourceBlock("defines", "#define TANGRAM_LIGHTS", false);
     _shader->addSourceBlock("defines", getInstanceDefinesBlock(), false);
 
     if (m_injType == FRAGMENT) {
@@ -106,5 +107,5 @@ std::string Light::getInstanceAssignBlock() {
 }
 
 std::string Light::getInstanceComputeBlock() {
-    return "calculateLight("+getInstanceName()+", eye, _eyeToPoint, _normal);\n";
+    return "calculateLight("+getInstanceName()+", _eyeToPoint, _normal);\n";
 }
