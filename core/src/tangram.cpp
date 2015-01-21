@@ -116,29 +116,20 @@ void render() {
     // Set up openGL for new frame
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
-    glm::dmat4 viewProj = m_view->getViewProjectionMatrix();
-
     // Loop over all styles
     for (const auto& style : m_scene->getStyles()) {
 
+        style->setupFrame();
 
         // Loop over all tiles in m_tileSet
         for (const auto& mapIDandTile : m_tileManager->getVisibleTiles()) {
             const std::shared_ptr<MapTile>& tile = mapIDandTile.second;
             if (tile->hasGeometry()) {
-                if (tile->getProxyCounter() > 0) {
-                    // Draw proxy tiles at a specific depth plane depending on the zoom level of the tile
-                    // (higher zoom levels are drawn above)
-                    style->setup(1.0f + log( (m_view->s_maxZoom+1)/(m_view->s_maxZoom + 1 - tile->getID().z)));
-                    tile->draw(*style, viewProj);
-                } else {
-                    // Draw visible tiles in a single z plane above all proxy tiles
-                    style->setup(1.0f + log(m_view->s_maxZoom+2));
-                    tile->draw(*style, viewProj);
-                }
+                // Draw tile!
+                style->setupTile(tile);
+                tile->draw(*style, *m_view);
             }
         }
-        
     }
 
     while (Error::hadGlError("Tangram::render()")) {}

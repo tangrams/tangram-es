@@ -104,7 +104,7 @@ void View::update() {
     
 }
 
-const glm::dmat4 View::getViewProjectionMatrix() {
+const glm::dmat4 View::getViewProjectionMatrix() const {
     
     return m_proj * m_view;
     

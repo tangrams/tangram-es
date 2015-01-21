@@ -11,6 +11,7 @@
 #include "util/mapProjection.h"
 
 class Style;
+class View;
 struct TileID;
 
 /* Tile of vector map data
@@ -54,7 +55,7 @@ public:
     bool hasGeometry();
 
     /* Draws the geometry associated with the provided <Style> and view-projection matrix */
-    void draw(const Style& _style, const glm::dmat4& _viewProjMatrix);
+    void draw(const Style& _style, const View& _view);
     
     /* 
      * methods to set and get proxy counter

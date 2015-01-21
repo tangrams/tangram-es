@@ -69,7 +69,7 @@ public:
     
     const glm::dmat4& getViewMatrix() const { return m_view; }
     const glm::dmat4& getProjectionMatrix() const { return m_proj; };
-    const glm::dmat4 getViewProjectionMatrix();
+    const glm::dmat4 getViewProjectionMatrix() const;
 
     /* Returns a rectangle of the current view range as [[x_min, y_min], [x_max, y_max]] */
     glm::dmat2 getBoundsRect() const;
