@@ -152,22 +152,23 @@ void MapTile::update(float _dt, const Style& _style, View& _view) {
 void MapTile::draw(const Style& _style, const View& _view) {
 
     const std::unique_ptr<VboMesh>& styleMesh = m_geometry[_style.getName()];
-    const std::unique_ptr<Texture>& texture = m_transformTextures[_style.getName()];
-
-    std::shared_ptr<ShaderProgram> shader = _style.getShaderProgram();
-
-    if (texture) {
-
-        texture->update();
-        texture->bind();
-
-        // transform texture
-        shader->setUniformi("u_transforms", texture->getTextureSlot());
-        // resolution of the transform texture
-        shader->setUniformf("u_tresolution", texture->getWidth(), texture->getHeight());
-    }
 
     if (styleMesh) {
+
+        std::shared_ptr<ShaderProgram> shader = _style.getShaderProgram();
+
+        const std::unique_ptr<Texture>& texture = m_transformTextures[_style.getName()];
+
+        if (texture) {
+
+            texture->update();
+            texture->bind();
+
+            // transform texture
+            shader->setUniformi("u_transforms", texture->getTextureSlot());
+            // resolution of the transform texture
+            shader->setUniformf("u_tresolution", texture->getWidth(), texture->getHeight());
+        }
 
         glm::dmat4 modelViewProjMatrix = _view.getViewProjectionMatrix() * m_modelMatrix;
 
