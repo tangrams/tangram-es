@@ -2,10 +2,8 @@ struct SpotLight {
     vec4 ambient;
     vec4 diffuse;
     vec4 specular;
-
     vec4 position;
     vec3 direction;
-
     float spotCosCutoff;
     float spotExponent;
 

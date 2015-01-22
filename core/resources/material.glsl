@@ -29,11 +29,11 @@ Material g_material = u_material;
 // GLOBAL LIGHTS ACCUMULATORS for each enable MATERIAL property
 //
 #ifdef TANGRAM_MATERIAL_AMBIENT
-    vec4 g_light_accumulator_ambient;
+    vec4 g_light_accumulator_ambient = vec4(0.0);
 #endif
 #ifdef TANGRAM_MATERIAL_DIFFUSE
-    vec4 g_light_accumulator_diffuse;
+    vec4 g_light_accumulator_diffuse = vec4(0.0);
 #endif
 #ifdef TANGRAM_MATERIAL_SPECULAR
-    vec4 g_light_accumulator_specular;
+    vec4 g_light_accumulator_specular = vec4(0.0);
 #endif
