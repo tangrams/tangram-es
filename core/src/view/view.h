@@ -67,9 +67,9 @@ public:
     /* Gets the position of the view in projection units (z is the effective 'height' determined from zoom) */
     const glm::dvec3& getPosition() const { return m_pos; }
     
-    const glm::dmat4& getViewMatrix() const { return m_view; }
-    const glm::dmat4& getProjectionMatrix() const { return m_proj; }
-    const glm::dmat4 getViewProjectionMatrix() const { return m_viewProj; }
+    const glm::mat4& getViewMatrix() const { return m_view; }
+    const glm::mat4& getProjectionMatrix() const { return m_proj; }
+    const glm::mat4 getViewProjectionMatrix() const { return m_viewProj; }
 
     /* Returns a rectangle of the current view range as [[x_min, y_min], [x_max, y_max]] */
     glm::dmat2 getBoundsRect() const;
@@ -102,9 +102,9 @@ protected:
     bool m_changed;
     std::set<TileID> m_visibleTiles;
     glm::dvec3 m_pos;
-    glm::dmat4 m_view;
-    glm::dmat4 m_proj;
-    glm::dmat4 m_viewProj;
+    glm::mat4 m_view;
+    glm::mat4 m_proj;
+    glm::mat4 m_viewProj;
     float m_zoom;
     float m_initZoom = 16.0;
     bool m_isZoomIn = false;

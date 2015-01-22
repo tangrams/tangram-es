@@ -144,7 +144,7 @@ void View::updateMatrices() {
     m_width = m_height * m_aspect;
     
     // set vertical field-of-view
-    double fovy = PI * 0.5;
+    float fovy = PI * 0.5;
     
     // we assume portrait orientation by default, so in landscape
     // mode we scale the vertical FOV such that the wider dimension
@@ -158,11 +158,11 @@ void View::updateMatrices() {
     
     // set near clipping distance as a function of camera z
     // TODO: this is a simple heuristic that deserves more thought
-    double near = m_pos.z / 50.0;
+    float near = m_pos.z / 50.0;
     
     // update view and projection matrices
-    m_view = glm::lookAt(m_pos, m_pos + glm::dvec3(0, 0, -1), glm::dvec3(0, 1, 0));
-    m_proj = glm::perspective(fovy, double(m_aspect), near, m_pos.z + 1.0);
+    m_view = glm::lookAt(glm::vec3(0.0, 0.0, 0.0), glm::vec3(0.0, 0.0, -1.0), glm::vec3(0.0, 1.0, 0.0));
+    m_proj = glm::perspective(fovy, m_aspect, near, (float)m_pos.z + 1.0f);
     m_viewProj = m_proj * m_view;
     
 }
