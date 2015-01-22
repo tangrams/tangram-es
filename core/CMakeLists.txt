@@ -36,6 +36,7 @@ set(CORE_LIBRARIES_INCLUDE_DIRS
     ${PROJECT_SOURCE_DIR}/${INCLUDE_DIR}/glm/
     ${PROJECT_SOURCE_DIR}/${INCLUDE_DIR}/catch/
     ${PROJECT_SOURCE_DIR}/${INCLUDE_DIR}/jsoncpp/
+    ${PROJECT_SOURCE_DIR}/${INCLUDE_DIR}/fontstash-es/fontstash/
     CACHE INTERNAL "core libraries include directories" FORCE)
 
 # adding some other dependent target files if needed
