@@ -71,3 +71,8 @@ void MapTile::draw(const Style& _style, const View& _view) {
 bool MapTile::hasGeometry() {
     return (m_geometry.size() != 0);
 }
+
+bool MapTile::hasGeometry(std::string _styleName) {
+    return (m_geometry.find(_styleName) != m_geometry.end()) ? true : false;
+}
+

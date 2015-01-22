@@ -124,7 +124,7 @@ void render() {
         // Loop over all tiles in m_tileSet
         for (const auto& mapIDandTile : m_tileManager->getVisibleTiles()) {
             const std::shared_ptr<MapTile>& tile = mapIDandTile.second;
-            if (tile->hasGeometry()) {
+            if (tile->hasGeometry(style->getName())) {
                 // Draw tile!
                 style->setupTile(tile);
                 tile->draw(*style, *m_view);

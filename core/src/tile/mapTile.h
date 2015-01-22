@@ -53,6 +53,11 @@ public:
      * Method to check if this tile's vboMesh(s) are loaded and ready to be drawn
      */
     bool hasGeometry();
+    
+    /*
+     * Overloaded function to check if geometry exists for a specific style
+     */
+    bool hasGeometry(std::string _styleName);
 
     /* Draws the geometry associated with the provided <Style> and view-projection matrix */
     void draw(const Style& _style, const View& _view);
