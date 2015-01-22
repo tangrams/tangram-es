@@ -58,7 +58,7 @@ public:
      */
     bool hasGeometry();
 
-    void setTextBuffer(const Style& _style, fsuint _textBuffer);
+    fsuint createTextBuffer(const Style& _style, std::shared_ptr<FontContext> _context, int _size);
 
     fsuint getTextBuffer(const Style& _style) const;
 

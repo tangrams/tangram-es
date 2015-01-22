@@ -40,7 +40,6 @@ MapTile::~MapTile() {
         auto& labels = pair.second;
         if (labels.size() > 0) {
             std::shared_ptr<FontContext> ctx = labels[0]->m_fontContext;
-            // TODO : delete the buffer, but is not in charge of creating it, try to consolidate
             glfonsBufferDelete(ctx->m_fsContext, m_textBuffer[pair.first]);
         }
     }
@@ -63,9 +62,13 @@ bool MapTile::addLabel(const Style& _style, std::unique_ptr<Label> _label) {
     return true; // if false, label wouldn't be rasterized
 }
 
-void MapTile::setTextBuffer(const Style& _style, fsuint _textBuffer) {
+fsuint MapTile::createTextBuffer(const Style& _style, std::shared_ptr<FontContext> _context, int _size) {
+    fsuint buffer;
 
-    m_textBuffer[_style.getName()] = _textBuffer;
+    glfonsBufferCreate(_context->m_fsContext, _size, &buffer);
+    m_textBuffer[_style.getName()] = buffer;
+
+    return buffer;
 }
 
 void MapTile::setTextureTransform(const Style& _style, std::unique_ptr<Texture> _texture) {

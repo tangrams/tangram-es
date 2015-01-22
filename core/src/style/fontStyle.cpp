@@ -117,12 +117,9 @@ void FontStyle::prepareDataProcessing(MapTile& _tile) {
 
     m_processedTile = &_tile;
 
-    fsuint buffer;
-    
-    int transformTextureSize = 2; // start with a transform texture of size 2x4 
-
-    glfonsBufferCreate(m_fontContext->m_fsContext, transformTextureSize, &buffer);
-    _tile.setTextBuffer(*this, buffer);
+    // start naively with a transform texture of size 2x4, asumption can be done querying the props
+    int transformTextureSize = 2;
+    fsuint buffer = _tile.createTextBuffer(*this, m_fontContext, transformTextureSize);
     glfonsBindBuffer(m_fontContext->m_fsContext, buffer);
 }
 
