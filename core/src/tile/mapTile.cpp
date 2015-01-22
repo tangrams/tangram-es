@@ -39,35 +39,36 @@ void MapTile::addGeometry(const Style& _style, std::unique_ptr<VboMesh> _mesh) {
 }
 
 void MapTile::draw(const Style& _style, const View& _view) {
-    
 
     const std::unique_ptr<VboMesh>& styleMesh = m_geometry[_style.getName()];
 
-    if (styleMesh) {
+    std::shared_ptr<ShaderProgram> shader = _style.getShaderProgram();
 
-        std::shared_ptr<ShaderProgram> shader = _style.getShaderProgram();
+    glm::dmat4 modelViewProjMatrix = _view.getViewProjectionMatrix() * m_modelMatrix;
 
-        glm::dmat4 modelViewProjMatrix = _view.getViewProjectionMatrix() * m_modelMatrix;
+    // NOTE : casting to float, but loop over the matrix values
+    double* first = &modelViewProjMatrix[0][0];
+    std::vector<float> fmvp(first, first + 16);
 
-        // NOTE : casting to float, but loop over the matrix values
-        double* first = &modelViewProjMatrix[0][0];
-        std::vector<float> fmvp(first, first + 16);
+    shader->setUniformMatrix4f("u_modelViewProj", &fmvp[0]);
 
-        shader->setUniformMatrix4f("u_modelViewProj", &fmvp[0]);
-
-        // Set tile offset for proxy tiles
-        float offset = 0;
-        if (m_proxyCounter > 0) {
-            offset = 1.0f + log((_view.s_maxZoom + 1) / (_view.s_maxZoom + 1 - m_id.z));
-        } else {
-            offset = 1.0f + log(_view.s_maxZoom + 2);
-        }
-        shader->setUniformf("u_tileDepthOffset", offset);
-
-        styleMesh->draw(shader);
+    // Set tile offset for proxy tiles
+    float offset = 0;
+    if (m_proxyCounter > 0) {
+        offset = 1.0f + log((_view.s_maxZoom + 1) / (_view.s_maxZoom + 1 - m_id.z));
+    } else {
+        offset = 1.0f + log(_view.s_maxZoom + 2);
     }
+    shader->setUniformf("u_tileDepthOffset", offset);
+
+    styleMesh->draw(shader);
 }
 
 bool MapTile::hasGeometry() {
     return (m_geometry.size() != 0);
 }
+
+bool MapTile::hasGeometry(std::string _styleName) {
+    return (m_geometry.find(_styleName) != m_geometry.end()) ? true : false;
+}
+
