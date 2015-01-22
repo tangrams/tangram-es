@@ -1,5 +1,5 @@
 #include "spotLight.h"
-#include "util/stringsOp.h"
+#include "glm/gtx/string_cast.hpp"
 
 std::string SpotLight::s_classBlock;
 
@@ -60,20 +60,20 @@ std::string SpotLight::getInstanceAssignBlock() {
 
     if (!m_dynamic) {
 
-        block += ", " + getString(m_position);
-        block += ", " + getString(m_direction);
+        block += ", " + glm::to_string(m_position);
+        block += ", " + glm::to_string(m_direction);
 
-        block += ", " + getString(m_spotCosCutoff);
-        block += ", " + getString(m_spotExponent,8);
+        block += ", " + std::to_string(m_spotCosCutoff);
+        block += ", " + std::to_string(m_spotExponent);
 
         if (m_constantAttenuation!=0.0) {
-            block += ", " + getString(m_constantAttenuation);
+            block += ", " + std::to_string(m_constantAttenuation);
         }
         if (m_linearAttenuation!=0.0) {
-            block += ", " + getString(m_linearAttenuation);
+            block += ", " + std::to_string(m_linearAttenuation);
         }
         if (m_quadraticAttenuation!=0.0) {
-            block += ", " + getString(m_quadraticAttenuation);
+            block += ", " + std::to_string(m_quadraticAttenuation);
         }
 
         block += ")";

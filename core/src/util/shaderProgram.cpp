@@ -1,5 +1,4 @@
 #include "shaderProgram.h"
-#include "util/stringsOp.h"
 #include "scene/light.h"
 
 GLuint ShaderProgram::s_activeGlProgram = 0;

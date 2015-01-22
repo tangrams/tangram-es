@@ -1,5 +1,5 @@
 #include "directionalLight.h"
-#include "util/stringsOp.h"
+#include "glm/gtx/string_cast.hpp"
 
 std::string DirectionalLight::s_classBlock;
 
@@ -38,7 +38,7 @@ std::string DirectionalLight::getInstanceDefinesBlock() {
 std::string DirectionalLight::getInstanceAssignBlock() {
 	std::string block = Light::getInstanceAssignBlock();
 	if (!m_dynamic) {
-		block += ", " + getString(m_direction) + ")";
+        block += ", " + glm::to_string(m_direction) + ")";
 	}
 	return block;
 }

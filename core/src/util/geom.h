@@ -2,7 +2,6 @@
 
 #include <vector>
 #include <cmath>
-#include <iostream>
 
 #include "glm/vec3.hpp"
 

@@ -1,5 +1,5 @@
 #include "pointLight.h"
-#include "util/stringsOp.h"
+#include "glm/gtx/string_cast.hpp"
 
 std::string PointLight::s_classBlock;
 
@@ -84,15 +84,15 @@ std::string PointLight::getInstanceDefinesBlock() {
 std::string PointLight::getInstanceAssignBlock() {
     std::string block = Light::getInstanceAssignBlock();
     if (!m_dynamic) {
-        block += ", " + getString(m_position);
+        block += ", " + glm::to_string(m_position);
         if (m_constantAttenuation!=0.0) {
-            block += ", " + getString(m_constantAttenuation);
+            block += ", " + std::to_string(m_constantAttenuation);
         }
         if (m_linearAttenuation!=0.0) {
-            block += ", " + getString(m_linearAttenuation);
+            block += ", " + std::to_string(m_linearAttenuation);
         }
         if (m_quadraticAttenuation!=0.0) {
-            block += ", " + getString(m_quadraticAttenuation);
+            block += ", " + std::to_string(m_quadraticAttenuation);
         }
         block += ")";
     }

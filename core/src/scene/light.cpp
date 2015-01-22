@@ -1,6 +1,5 @@
 #include "light.h"
-
-#include "util/stringsOp.h"
+#include "glm/gtx/string_cast.hpp"
 
 std::string Light::s_vertexLightingBlock;
 std::string Light::s_fragmentLightingBlock;
@@ -177,9 +176,9 @@ std::string Light::getInstanceBlock() {
 std::string Light::getInstanceAssignBlock() {
     std::string block = "";
     if (!m_dynamic) {
-        block += " = " + m_typeName + "(" + getString(m_ambient);
-        block += ", " + getString(m_diffuse);
-        block += ", " + getString(m_specular);
+        block += " = " + m_typeName + "(" + glm::to_string(m_ambient);
+        block += ", " + glm::to_string(m_diffuse);
+        block += ", " + glm::to_string(m_specular);
     }
     return block;
 }

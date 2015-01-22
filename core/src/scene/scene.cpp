@@ -1,8 +1,6 @@
 #include "scene.h"
 
 #include "platform.h"
-#include "util/stringsOp.h"
-
 #include "directionalLight.h"
 #include "pointLight.h"
 #include "spotLight.h"

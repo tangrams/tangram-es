@@ -8,7 +8,6 @@
 #include "util/shaderProgram.h"
 #include "util/mapProjection.h"
 #include "tile/mapTile.h"
-//#include "scene/scene.h"
 #include "tileData.h"
 #include "platform.h"
 #include "gl.h"
