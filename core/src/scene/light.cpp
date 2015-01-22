@@ -135,8 +135,8 @@ void Light::assembleLights(std::map<std::string, std::vector<std::string>>& _sou
     // The assembled strings will then be injected into a shader at the "vertex_lighting"
     // and "fragment_lighting" tags
     
-    _sourceBlocks["vertex_lighting"].push_back(vertexLighting);
-    _sourceBlocks["fragment_lighting"].push_back(fragmentLighting);
+    _sourceBlocks["vertex_lighting"] = { vertexLighting };
+    _sourceBlocks["fragment_lighting"]= { fragmentLighting };
     
 }
 
