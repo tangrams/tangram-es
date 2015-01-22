@@ -30,6 +30,24 @@ MapTile::~MapTile() {
 
     m_geometry.clear();
 
+    for (auto& pair : m_transformTextures) {
+        if (pair.second) {
+            pair.second->destroy();
+        }
+    }
+
+    for (auto& pair : m_labels) {
+        auto& labels = pair.second;
+        if (labels.size() > 0) {
+            std::shared_ptr<FontContext> ctx = labels[0]->m_fontContext;
+            // TODO : delete the buffer, but is not in charge of creating it, try to consolidate
+            glfonsBufferDelete(ctx->m_fsContext, m_textBuffer[pair.first]);
+        }
+    }
+
+    m_labels.clear();
+    m_transformTextures.clear();
+
 }
 
 void MapTile::addGeometry(const Style& _style, std::unique_ptr<VboMesh> _mesh) {
@@ -48,7 +66,16 @@ bool MapTile::addLabel(const Style& _style, std::unique_ptr<Label> _label) {
 void MapTile::setTextBuffer(const Style& _style, fsuint _textBuffer) {
 
     m_textBuffer[_style.getName()] = _textBuffer;
+}
 
+void MapTile::setTextureTransform(const Style& _style, std::unique_ptr<Texture> _texture) {
+
+    m_transformTextures[_style.getName()] = std::move(_texture);
+}
+
+const std::unique_ptr<Texture>& MapTile::getTextureTransform(const Style& _style) {
+
+    return m_transformTextures[_style.getName()];
 }
 
 fsuint MapTile::getTextBuffer(const Style& _style) const {
@@ -100,7 +127,7 @@ void MapTile::update(float _dt, const Style& _style, View& _view) {
             position.x = (position.x + 1) * halfWidth;
             position.y = (1 - position.y) * halfHeight;
 
-            // don't display out of screen labels, and out of screen translations or not yet
+            // don't display out of screen labels, and out of screen translations or not yet implemented in fstash
             alpha = position.x > width || position.x < 0 ? 0.0 : alpha;
             alpha = position.y > height || position.y < 0 ? 0.0 : alpha;
 
@@ -109,7 +136,6 @@ void MapTile::update(float _dt, const Style& _style, View& _view) {
         }
 
         // ask to push the transform texture to gpu
-        // would be queued by the callback since we're not in main thread
         glfonsUpdateTransforms(ctx->m_fsContext, (void*) this);
 
         // unbind the buffer for context integrity
@@ -123,10 +149,22 @@ void MapTile::update(float _dt, const Style& _style, View& _view) {
 void MapTile::draw(const Style& _style, const View& _view) {
 
     const std::unique_ptr<VboMesh>& styleMesh = m_geometry[_style.getName()];
+    const std::unique_ptr<Texture>& texture = m_transformTextures[_style.getName()];
+
+    std::shared_ptr<ShaderProgram> shader = _style.getShaderProgram();
+
+    if (texture) {
+
+        texture->update();
+        texture->bind();
+
+        // transform texture
+        shader->setUniformi("u_transforms", texture->getTextureSlot());
+        // resolution of the transform texture
+        shader->setUniformf("u_tresolution", texture->getWidth(), texture->getHeight());
+    }
 
     if (styleMesh) {
-
-        std::shared_ptr<ShaderProgram> shader = _style.getShaderProgram();
 
         glm::dmat4 modelViewProjMatrix = _view.getViewProjectionMatrix() * m_modelMatrix;
 

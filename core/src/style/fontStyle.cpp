@@ -12,10 +12,6 @@ FontStyle::FontStyle(const std::string& _fontFile, std::string _name, float _fon
 
 FontStyle::~FontStyle() {
     glfonsDelete(m_fontContext->m_fsContext);
-
-    for (auto& pair : m_transformTileTextures) {
-        pair.second->destroy();
-    }
 }
 
 void FontStyle::constructVertexLayout() {
@@ -138,20 +134,6 @@ void FontStyle::finishDataProcessing(MapTile& _tile) {
     m_fontContext->m_contextMutex->unlock();
 }
 
-void FontStyle::setupTile(const std::shared_ptr<MapTile>& _tile) {
-    std::unique_ptr<Texture>& texture = m_transformTileTextures[_tile->getID()];
-
-    if(texture) {
-        texture->update();
-        texture->bind();
-    
-        // transform texture
-        m_shaderProgram->setUniformi("u_transforms", texture->getTextureSlot());
-        // resolution of the transform texture
-        m_shaderProgram->setUniformf("u_tresolution", texture->getWidth(), texture->getHeight());
-    }
-}
-
 void FontStyle::setupFrame(const std::shared_ptr<View>& _view) {
     float projectionMatrix[16] = {0};
 
@@ -182,7 +164,7 @@ void createTexTransforms(void* _userPtr, unsigned int _width, unsigned int _heig
 
     std::unique_ptr<Texture> texture(new Texture(_width, _height, 1 /* gpu slot */ , options));
 
-    fontStyle->m_transformTileTextures[fontStyle->m_processedTile->getID()] = std::move(texture);
+    fontStyle->m_processedTile->setTextureTransform(*fontStyle, std::move(texture));
 }
 
 void updateTransforms(void* _userPtr, unsigned int _xoff, unsigned int _yoff, unsigned int _width,
@@ -193,7 +175,11 @@ void updateTransforms(void* _userPtr, unsigned int _xoff, unsigned int _yoff, un
 
     const GLuint* subData = static_cast<const GLuint*>(_pixels);
 
-    fontStyle->m_transformTileTextures[tile->getID()]->setSubData(subData, _xoff, _yoff, _width, _height);
+    const std::unique_ptr<Texture>& texture = tile->getTextureTransform(*fontStyle);
+
+    if (texture) {
+        texture->setSubData(subData, _xoff, _yoff, _width, _height);
+    }
 }
 
 void updateAtlas(void* _userPtr, unsigned int _xoff, unsigned int _yoff,
@@ -219,15 +205,18 @@ bool errorCallback(void* _userPtr, fsuint buffer, GLFONSError error) {
 
             logMsg("[FontStyle] FontError : ID_OVERFLOW in text buffer %d\n", buffer);
 
-            std::unique_ptr<Texture>& texture = fontStyle->m_transformTileTextures[fontStyle->m_processedTile->getID()];
+            const std::unique_ptr<Texture>& texture = fontStyle->m_processedTile->getTextureTransform(*fontStyle);
 
-            // expand the transform texture in cpu side
-            glfonsExpandTransform(fontStyle->m_fontContext->m_fsContext, buffer, texture->getWidth() * 2);
+            if (texture) {
 
-            // double size of texture
-            texture->resize(texture->getWidth() * 2, texture->getHeight() * 2);
+                // expand the transform texture in cpu side
+                glfonsExpandTransform(fontStyle->m_fontContext->m_fsContext, buffer, texture->getWidth() * 2);
 
-            solved = true; // error solved
+                // double size of texture
+                texture->resize(texture->getWidth() * 2, texture->getHeight() * 2);
+
+                solved = true; // error solved
+            }
             
             break;
         }

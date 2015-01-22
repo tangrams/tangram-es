@@ -41,7 +41,6 @@ public:
     FontStyle(const std::string& _fontFile, std::string _name, float _fontSize, bool _sdf = false, GLenum _drawMode = GL_TRIANGLES);
 
     virtual void setupFrame(const std::shared_ptr<View>& _view) override;
-    virtual void setupTile(const std::shared_ptr<MapTile>& _tile) override;
     virtual void teardown() override;
 
     virtual ~FontStyle();
@@ -73,7 +72,6 @@ private:
 
     // pointer to the currently processed tile by build* methods, nullptr if not
     MapTile* m_processedTile;
-    std::map<TileID, std::unique_ptr<Texture>> m_transformTileTextures;
     std::unique_ptr<Texture> m_atlas;
     std::shared_ptr<FontContext> m_fontContext;
 };
