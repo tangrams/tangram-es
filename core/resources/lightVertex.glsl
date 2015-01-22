@@ -11,7 +11,7 @@
     #endif
 #endif
 
-void calculateLighting(in vec3 _eyeToPoint, in vec3 _normal, inout vec4 _colorOut) {
+void lightVertex(in vec3 _eyeToPoint, in vec3 _normal, inout vec4 _colorOut) {
     
     #pragma tangram: vertex_lights_to_compute
 

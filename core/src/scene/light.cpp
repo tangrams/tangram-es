@@ -62,11 +62,11 @@ void Light::setupProgram(std::shared_ptr<ShaderProgram> _shader) {
 void Light::assembleLights(std::map<std::string, std::vector<std::string>>& _sourceBlocks) {
     
     if (s_vertexLightingBlock.empty()) {
-        s_vertexLightingBlock = stringFromResource("lights_vert.glsl");
+        s_vertexLightingBlock = stringFromResource("lightVertex.glsl");
     }
     
     if (s_fragmentLightingBlock.empty()) {
-        s_fragmentLightingBlock = stringFromResource("lights_frag.glsl");
+        s_fragmentLightingBlock = stringFromResource("lightFragment.glsl");
     }
     
     std::string vertexLighting;

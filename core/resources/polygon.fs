@@ -18,7 +18,7 @@ void main(void) {
 	vec4 color = v_color;
 
     #ifdef TANGRAM_FRAGMENT_LIGHTS
-	   calculateLighting(v_eyeToPoint, v_normal, color);
+	   lightFragment(v_eyeToPoint, v_normal, color);
     #endif
 
   	gl_FragColor = color;

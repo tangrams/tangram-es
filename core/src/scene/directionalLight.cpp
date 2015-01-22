@@ -25,7 +25,7 @@ void DirectionalLight::setupProgram( std::shared_ptr<ShaderProgram> _shader ) {
 
 std::string DirectionalLight::getClassBlock() {
     if (s_classBlock.empty()) {
-        s_classBlock = stringFromResource("directional_light.glsl")+"\n";
+        s_classBlock = stringFromResource("directionalLight.glsl")+"\n";
     }
     return s_classBlock;
 }

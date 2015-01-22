@@ -11,7 +11,7 @@
     #endif
 #endif
 
-void calculateLighting(in vec3 _eyeToPoint, in vec3 _normal, inout vec4 _colorOut) {
+void lightFragment(in vec3 _eyeToPoint, in vec3 _normal, inout vec4 _colorOut) {
 
     #ifdef TANGRAM_VERTEX_LIGHTS
         #ifdef TANGRAM_MATERIAL_AMBIENT

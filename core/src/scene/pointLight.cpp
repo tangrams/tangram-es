@@ -59,7 +59,7 @@ void PointLight::setupProgram(std::shared_ptr<ShaderProgram> _shader) {
 
 std::string PointLight::getClassBlock() {
     if (s_classBlock.empty()) {
-        s_classBlock = stringFromResource("point_light.glsl")+"\n";
+        s_classBlock = stringFromResource("pointLight.glsl")+"\n";
     }
     return s_classBlock;
 }

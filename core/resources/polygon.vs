@@ -32,7 +32,7 @@ void main() {
 
     #ifdef TANGRAM_LIGHTS
         v_normal = normalize(u_normalMatrix * v_normal);
-        calculateLighting(v_eyeToPoint, v_normal, v_color);
+        lightVertex(v_eyeToPoint, v_normal, v_color);
     #endif
 
     gl_Position = u_modelViewProj * a_position;
