@@ -16,7 +16,7 @@ void Style::addLayers(std::vector<std::string> _layers) {
     m_layers.insert(_layers.cbegin(), _layers.cend());
 }
 
-void Style::addData(TileData& _data, MapTile& _tile, const MapProjection& _mapProjection) {
+void Style::addData(TileData& _data, MapTile& _tile, const MapProjection& _mapProjection) const {
     
     VboMesh* mesh = new VboMesh(m_vertexLayout, m_drawMode);
     

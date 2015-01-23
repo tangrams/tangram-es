@@ -34,11 +34,11 @@ void PolygonStyle::constructShaderProgram() {
     m_material.injectOnProgram(m_shaderProgram); // This is a must for lighting !!
 }
 
-void PolygonStyle::buildPoint(Point& _point, std::string& _layer, Properties& _props, VboMesh& _mesh) {
+void PolygonStyle::buildPoint(Point& _point, std::string& _layer, Properties& _props, VboMesh& _mesh) const {
     // No-op
 }
 
-void PolygonStyle::buildLine(Line& _line, std::string& _layer, Properties& _props, VboMesh& _mesh) {
+void PolygonStyle::buildLine(Line& _line, std::string& _layer, Properties& _props, VboMesh& _mesh) const {
     std::vector<PosNormColVertex> vertices;
     std::vector<GLushort> indices;
     std::vector<glm::vec3> points;
@@ -66,7 +66,7 @@ void PolygonStyle::buildLine(Line& _line, std::string& _layer, Properties& _prop
     _mesh.addIndices(indices.data(), indices.size());
 }
 
-void PolygonStyle::buildPolygon(Polygon& _polygon, std::string& _layer, Properties& _props, VboMesh& _mesh) {
+void PolygonStyle::buildPolygon(Polygon& _polygon, std::string& _layer, Properties& _props, VboMesh& _mesh) const {
     
     std::vector<PosNormColVertex> vertices;
     std::vector<GLushort> indices;

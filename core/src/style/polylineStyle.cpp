@@ -29,11 +29,11 @@ void PolylineStyle::constructShaderProgram() {
     m_shaderProgram->setSourceStrings(fragShaderSrcStr, vertShaderSrcStr);
 }
 
-void PolylineStyle::buildPoint(Point& _point, std::string& _layer, Properties& _props, VboMesh& _mesh) {
+void PolylineStyle::buildPoint(Point& _point, std::string& _layer, Properties& _props, VboMesh& _mesh) const {
     // No-op
 }
 
-void PolylineStyle::buildLine(Line& _line, std::string& _layer, Properties& _props, VboMesh& _mesh) {
+void PolylineStyle::buildLine(Line& _line, std::string& _layer, Properties& _props, VboMesh& _mesh) const {
     std::vector<PosNormEnormColVertex> vertices;
     std::vector<GLushort> indices;
     std::vector<glm::vec3> points;
@@ -74,6 +74,6 @@ void PolylineStyle::buildLine(Line& _line, std::string& _layer, Properties& _pro
     _mesh.addIndices(indices.data(), indices.size());
 }
 
-void PolylineStyle::buildPolygon(Polygon& _polygon, std::string& _layer, Properties& _props, VboMesh& _mesh) {
+void PolylineStyle::buildPolygon(Polygon& _polygon, std::string& _layer, Properties& _props, VboMesh& _mesh) const {
     // No-op
 }
