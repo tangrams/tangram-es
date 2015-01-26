@@ -8,7 +8,7 @@
 #include "platform.h"
 #include "tile/tileManager.h"
 #include "view/view.h"
-#include "data/dataSource.h"
+#include "data/mapzenVectorTileJson.h"
 
 #include "style/polygonStyle.h"
 #include "style/polylineStyle.h"
