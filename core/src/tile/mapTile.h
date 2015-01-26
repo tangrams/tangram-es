@@ -58,18 +58,7 @@ public:
      */
     bool hasGeometry();
 
-    fsuint createTextBuffer(const Style& _style, std::shared_ptr<FontContext> _context, int _size);
-
-    fsuint getTextBuffer(const Style& _style) const;
-
-    bool addLabel(const Style& _style, std::unique_ptr<Label> _label);
-
     void update(float _dt, const Style& _style, View& _view);
-
-    /* 
-     * Sets the transform label texture for a specific style
-     */
-    void setTextureTransform(const Style& _style, std::unique_ptr<Texture> _texture);
 
     /* 
      * Gets the transform label texture for a specific style, nullptr if it doesn't exist

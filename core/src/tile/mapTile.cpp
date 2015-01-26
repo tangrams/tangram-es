@@ -29,24 +29,6 @@ MapTile::MapTile(TileID _id, const MapProjection& _projection) : m_id(_id),  m_p
 MapTile::~MapTile() {
 
     m_geometry.clear();
-
-    for (auto& pair : m_transformTextures) {
-        if (pair.second) {
-            pair.second->destroy();
-        }
-    }
-
-    for (auto& pair : m_labels) {
-        auto& labels = pair.second;
-        if (labels.size() > 0) {
-            std::shared_ptr<FontContext> ctx = labels[0]->m_fontContext;
-            glfonsBufferDelete(ctx->m_fsContext, m_textBuffer[pair.first]);
-        }
-    }
-
-    m_labels.clear();
-    m_transformTextures.clear();
-
 }
 
 void MapTile::addGeometry(const Style& _style, std::unique_ptr<VboMesh> _mesh) {
@@ -55,97 +37,61 @@ void MapTile::addGeometry(const Style& _style, std::unique_ptr<VboMesh> _mesh) {
 
 }
 
-bool MapTile::addLabel(const Style& _style, std::unique_ptr<Label> _label) {
-
-    m_labels[_style.getName()].push_back(std::move(_label));
-
-    return true; // if false, label wouldn't be rasterized
-}
-
-fsuint MapTile::createTextBuffer(const Style& _style, std::shared_ptr<FontContext> _context, int _size) {
-    fsuint buffer;
-
-    glfonsBufferCreate(_context->m_fsContext, _size, &buffer);
-    m_textBuffer[_style.getName()] = buffer;
-
-    return buffer;
-}
-
-void MapTile::setTextureTransform(const Style& _style, std::unique_ptr<Texture> _texture) {
-
-    m_transformTextures[_style.getName()] = std::move(_texture);
-}
-
-const std::unique_ptr<Texture>& MapTile::getTextureTransform(const Style& _style) {
-
-    return m_transformTextures[_style.getName()];
-}
-
-fsuint MapTile::getTextBuffer(const Style& _style) const {
-
-    auto it = m_textBuffer.find(_style.getName());
-
-    if (it != m_textBuffer.end()) {
-        return it->second;
-    }
-
-    return 0;
-}
-
 void MapTile::update(float _dt, const Style& _style, View& _view) {
 
-    auto& labels = m_labels[_style.getName()];
+    // TODO : refactor update of tile
+    // auto& labels = m_labels[_style.getName()];
 
-    // update label positions
-    if (labels.size() > 0) {
+    // // update label positions
+    // if (labels.size() > 0) {
 
-        std::shared_ptr<FontContext> ctx = labels[0]->m_fontContext;
+    //     std::shared_ptr<FontContext> ctx = labels[0]->m_fontContext;
 
-        float width = _view.getWidth();
-        float height = _view.getHeight();
+    //     float width = _view.getWidth();
+    //     float height = _view.getHeight();
 
-        float halfWidth = width * 0.5;
-        float halfHeight = height * 0.5;
+    //     float halfWidth = width * 0.5;
+    //     float halfHeight = height * 0.5;
 
-        glm::dmat4 mvp = _view.getViewProjectionMatrix() * m_modelMatrix;
+    //     glm::dmat4 mvp = _view.getViewProjectionMatrix() * m_modelMatrix;
 
-        // lock the font context since the currently bound buffer has critical access
-        ctx->m_contextMutex->lock();
+    //     // lock the font context since the currently bound buffer has critical access
+    //     ctx->m_contextMutex->lock();
 
-        glfonsBindBuffer(ctx->m_fsContext, getTextBuffer(_style));
-        glfonsScreenSize(ctx->m_fsContext, _view.getWidth(), _view.getHeight());
+    //     glfonsBindBuffer(ctx->m_fsContext, getTextBuffer(_style));
+    //     glfonsScreenSize(ctx->m_fsContext, _view.getWidth(), _view.getHeight());
 
-        for (auto& label : labels) {
+    //     for (auto& label : labels) {
 
-            float alpha = label->m_alpha;
+    //         float alpha = label->m_alpha;
 
-            glm::dvec4 position = glm::dvec4(label->m_worldPosition, 0.0, 1.0);
+    //         glm::dvec4 position = glm::dvec4(label->m_worldPosition, 0.0, 1.0);
 
-            // mimic gpu vertex projection to screen
-            position = mvp * position;
-            position = position / position.w; // perspective division
+    //         // mimic gpu vertex projection to screen
+    //         position = mvp * position;
+    //         position = position / position.w; // perspective division
 
-            // from normalized device coordinates to screen space coordinate system
-            // top-left screen axis, y pointing down
-            position.x = (position.x + 1) * halfWidth;
-            position.y = (1 - position.y) * halfHeight;
+    //         // from normalized device coordinates to screen space coordinate system
+    //         // top-left screen axis, y pointing down
+    //         position.x = (position.x + 1) * halfWidth;
+    //         position.y = (1 - position.y) * halfHeight;
 
-            // don't display out of screen labels, and out of screen translations or not yet implemented in fstash
-            alpha = position.x > width || position.x < 0 ? 0.0 : alpha;
-            alpha = position.y > height || position.y < 0 ? 0.0 : alpha;
+    //         // don't display out of screen labels, and out of screen translations or not yet implemented in fstash
+    //         alpha = position.x > width || position.x < 0 ? 0.0 : alpha;
+    //         alpha = position.y > height || position.y < 0 ? 0.0 : alpha;
 
-            // cpu update of the transform texture, positionning the label in screen space
-            glfonsTransform(ctx->m_fsContext, label->m_id, position.x, position.y, label->m_rotation, alpha);
-        }
+    //         // cpu update of the transform texture, positionning the label in screen space
+    //         glfonsTransform(ctx->m_fsContext, label->m_id, position.x, position.y, label->m_rotation, alpha);
+    //     }
 
-        // ask to push the transform texture to gpu
-        glfonsUpdateTransforms(ctx->m_fsContext, (void*) this);
+    //     // ask to push the transform texture to gpu
+    //     glfonsUpdateTransforms(ctx->m_fsContext, (void*) this);
 
-        // unbind the buffer for context integrity
-        glfonsBindBuffer(ctx->m_fsContext, 0);
+    //     // unbind the buffer for context integrity
+    //     glfonsBindBuffer(ctx->m_fsContext, 0);
 
-        ctx->m_contextMutex->unlock();
-    }
+    //     ctx->m_contextMutex->unlock();
+    // }
     
 }
 
@@ -157,18 +103,19 @@ void MapTile::draw(const Style& _style, const View& _view) {
 
         std::shared_ptr<ShaderProgram> shader = _style.getShaderProgram();
 
-        const std::unique_ptr<Texture>& texture = m_transformTextures[_style.getName()];
+        // TODO : find association tile/text buffer and update texture transform of it
+        // const std::unique_ptr<Texture>& texture = m_transformTextures[_style.getName()];
 
-        if (texture) {
+        // if (texture) {
 
-            texture->update();
-            texture->bind();
+        //     texture->update();
+        //     texture->bind();
 
-            // transform texture
-            shader->setUniformi("u_transforms", texture->getTextureSlot());
-            // resolution of the transform texture
-            shader->setUniformf("u_tresolution", texture->getWidth(), texture->getHeight());
-        }
+        //     // transform texture
+        //     shader->setUniformi("u_transforms", texture->getTextureSlot());
+        //     // resolution of the transform texture
+        //     shader->setUniformf("u_tresolution", texture->getWidth(), texture->getHeight());
+        // }
 
         glm::dmat4 modelViewProjMatrix = _view.getViewProjectionMatrix() * m_modelMatrix;
 
