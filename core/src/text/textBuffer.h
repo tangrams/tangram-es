@@ -14,6 +14,7 @@ public:
     void transformID(fsuint _textID, float _x, float _y, float _rot, float _alpha);
     void triggerTransformUpdate();
 
+    void setTextureTransform(std::unique_ptr<Texture> _texture);
     const std::unique_ptr<Texture>& getTextureTransform() const;
 
 private:

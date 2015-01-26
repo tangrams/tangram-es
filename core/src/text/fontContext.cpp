@@ -33,14 +33,20 @@ void FontContext::setScreenSize(int _width, int _height) {
     glfonsScreenSize(m_fsContext, _width, _height);
 }
 
+void FontContext::bindTextBuffer(const std::shared_ptr<TextBuffer>& _textBuffer) {
+    m_boundBuffer = _textBuffer;
+}
+
 void createTexTransforms(void* _userPtr, unsigned int _width, unsigned int _height) {
     FontContext* fontContext = static_cast<FontContext*>(_userPtr);
 
     TextureOptions options = {GL_RGBA, GL_RGBA, {GL_LINEAR, GL_LINEAR}, {GL_CLAMP_TO_EDGE, GL_CLAMP_TO_EDGE}};
-
     std::unique_ptr<Texture> texture(new Texture(_width, _height, 1 /* gpu slot */ , options));
+    std::shared_ptr<TextBuffer> textBuffer = fontContext->m_boundBuffer.lock();
 
-    // TODO : add texture to currently bound text buffer
+    if(textBuffer) {
+        textBuffer->setTextureTransform(std::move(texture));
+    }
 }
 
 void updateTransforms(void* _userPtr, unsigned int _xoff, unsigned int _yoff, unsigned int _width,
@@ -48,12 +54,9 @@ void updateTransforms(void* _userPtr, unsigned int _xoff, unsigned int _yoff, un
 
     FontContext* fontContext = static_cast<FontContext*>(_userPtr);
     TextBuffer* buffer = static_cast<TextBuffer*>(_ownerPtr);
-
     const GLuint* subData = static_cast<const GLuint*>(_pixels);
-
-    // TODO : get the texture from currently bound text buffer
-    // const std::unique_ptr<Texture>& texture = buffer->getTextureTransform();
-    // texture->setSubData(subData, _xoff, _yoff, _width, _height);
+    const auto& texture = buffer->getTextureTransform();
+    texture->setSubData(subData, _xoff, _yoff, _width, _height);
 }
 
 void updateAtlas(void* _userPtr, unsigned int _xoff, unsigned int _yoff,
@@ -78,20 +81,18 @@ bool errorCallback(void* _userPtr, fsuint buffer, GLFONSError error) {
         case GLFONSError::ID_OVERFLOW: {
 
             // TODO : get texture from currently bound text buffer
-            // logMsg("[FontStyle] FontError : ID_OVERFLOW in text buffer %d\n", buffer);
+            logMsg("[FontStyle] FontError : ID_OVERFLOW in text buffer %d\n", buffer);
+            std::shared_ptr<TextBuffer> textBuffer = fontContext->m_boundBuffer.lock();
 
-            // const std::unique_ptr<Texture>& texture = fontStyle->m_processedTile->getTextureTransform(*fontStyle);
+            if (textBuffer) {
+                const auto& texture = textBuffer->getTextureTransform();
+                // expand the transform texture in cpu side
+                glfonsExpandTransform(fontContext->m_fsContext, buffer, texture->getWidth() * 2);
+                // double size of texture
+                texture->resize(texture->getWidth() * 2, texture->getHeight() * 2);
 
-            // if (texture) {
-
-            //     // expand the transform texture in cpu side
-            //     glfonsExpandTransform(fontStyle->m_fontContext->m_fsContext, buffer, texture->getWidth() * 2);
-
-            //     // double size of texture
-            //     texture->resize(texture->getWidth() * 2, texture->getHeight() * 2);
-
-            //     solved = true; // error solved
-            // }
+                solved = true; // error solved
+            }
             
             break;
         }

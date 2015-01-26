@@ -23,6 +23,8 @@ public:
     std::shared_ptr<TextBuffer> genTextBuffer() const;
     std::shared_ptr<TextBuffer> genTextBuffer(int _size) const;
 
+    void bindTextBuffer(const std::shared_ptr<TextBuffer>& _textBuffer);
+
     const std::unique_ptr<Texture>& getAtlas() const;
 
     /* Called by fontstash when the texture need to create a new transform textures */
@@ -45,6 +47,7 @@ public:
 private:
     void initFontContext(const std::string& _fontFile, int _atlasSize);
 
+    std::weak_ptr<TextBuffer> m_boundBuffer;
     std::unique_ptr<Texture> m_atlas;
     FONScontext* m_fsContext;
     int m_font;
