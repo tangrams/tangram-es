@@ -2,7 +2,6 @@
 
 #include <unordered_map>
 #include <memory>
-#include <mutex>
 
 #include "glm/vec2.hpp"
 #include "glm/mat4x4.hpp"

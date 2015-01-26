@@ -12,6 +12,10 @@
 #include "platform.h"
 #include "gl.h"
 
+#include "scene/material.h"
+
+class Scene;
+
 /* Means of constructing and rendering map geometry
  *
  * A Style defines a way to 
@@ -23,7 +27,6 @@
  * geometry into meshes. See <PolygonStyle> for a basic implementation.
  */
 class Style {
-    
 protected:
     
     /* Unique name for a style instance */
@@ -74,7 +77,7 @@ public:
     virtual void addData(TileData& _data, MapTile& _tile, const MapProjection& _mapProjection) const;
     
     /* Perform any setup needed before drawing each frame */
-    virtual void setupFrame();
+    virtual void setupFrame(const std::shared_ptr<Scene>& _scene);
 
     /* Perform any setup needed before drawing each tile */
     virtual void setupTile(const std::shared_ptr<MapTile>& _tile);
@@ -83,4 +86,6 @@ public:
     std::string getName() const { return m_name; }
 
     virtual ~Style();
+    
+    Material    m_material;
 };
