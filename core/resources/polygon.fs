@@ -20,6 +20,6 @@ void main(void) {
     #ifdef TANGRAM_FRAGMENT_LIGHTS
 	   lightFragment(v_eyeToPoint, v_normal, color);
     #endif
-
+    //color.rgb = pow(color.rgb, vec3(1.0/2.2)); // gamma correction
   	gl_FragColor = color;
 }

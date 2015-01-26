@@ -55,31 +55,13 @@ void initialize() {
         linesStyle->addLayers({"roads"});
         m_scene->addStyle(std::move(linesStyle));
 
-        //------ TESTING LIGHTS
-
         //  Directional light with white diffuse color pointing Northeast and down
         auto directionalLight = std::make_shared<DirectionalLight>("dLight");
-        directionalLight->setAmbientColor({0.4, 0.4, 0.4, 1.0});
-        directionalLight->setDiffuseColor({0.8, 0.8, 0.8, 1.0});
+        directionalLight->setAmbientColor({0.3, 0.3, 0.3, 1.0});
+        directionalLight->setDiffuseColor({0.7, 0.7, 0.7, 1.0});
         directionalLight->setDirection({1.0, 1.0, -1.0});
         m_scene->addLight(directionalLight);
-    
-        //  Point light with red diffuse light and blue specular light
-        auto pointLight = std::make_shared<PointLight>("pLight",true);
-        pointLight->setDiffuseColor({1.0, 0.0, 0.0, 1.0});
-        pointLight->setSpecularColor({0.0, 0.0, 1.0, 1.0});
-        pointLight->setLinearAttenuation(0.005);
-        //m_scene->addLight(pointLight);
-
-        //  Spot light with blue-green specular color
-        auto spotLight = std::make_shared<SpotLight>("sLight",true);
-        spotLight->setDiffuseColor({1.0, 1.0, 1.0, 1.0});
-        spotLight->setSpecularColor({0.0, 0.0, 1.0, 1.0});
-        spotLight->setCutOff(30.0, 20.0);
-        spotLight->setLinearAttenuation(0.005);
-        //m_scene->addLight(spotLight);
         
-        //-----------------------
     }
 
     // Create a tileManager
@@ -141,27 +123,7 @@ void update(float _dt) {
     }
     
     if(m_scene) {
-
-        for (auto& light : m_scene->getLights()) {
-
-            if (light.second->getType() == LightType::DIRECTIONAL) {
-                DirectionalLight* tmp = dynamic_cast<DirectionalLight*>(light.second.get());
-                tmp->setDirection(glm::vec3(0.0, sin(g_time), 1.0));
-
-            } else if (light.second->getType() == LightType::POINT) {
-                PointLight* tmp = dynamic_cast<PointLight*>(light.second.get());
-                tmp->setPosition(glm::vec3( 200*cos(g_time*0.8),
-                                            200*sin(g_time*0.3), 
-                                            -m_view->getPosition().z+100));
-
-            } else if (light.second->getType() == LightType::SPOT) {
-                SpotLight* tmp = dynamic_cast<SpotLight*>(light.second.get());
-                tmp->setDirection(glm::vec3(cos(g_time),
-                                            sin(g_time), 
-                                            0.0));
-                tmp->setPosition(glm::vec3(0.0, 0.0, -m_view->getPosition().z+100));
-            } 
-        }
+        // Update lights and styles
     }   
 }
 
