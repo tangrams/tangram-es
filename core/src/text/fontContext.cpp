@@ -33,11 +33,16 @@ void FontContext::setScreenSize(int _width, int _height) {
     glfonsScreenSize(m_fsContext, _width, _height);
 }
 
-void FontContext::bindTextBuffer(const std::shared_ptr<TextBuffer>& _textBuffer) {
-    m_boundBuffer = _textBuffer;
+void FontContext::useBuffer(const std::shared_ptr<TextBuffer>& _textBuffer) {
+    m_currentBuffer = _textBuffer;
 }
 
-bool FontContext::addFont(std::string _fontFile) {
+void FontContext::setSignedDistanceField(float _blurSpread) {
+    fonsSetBlur(m_fsContext, _blurSpread);
+    fonsSetBlurType(m_fsContext, FONS_EFFECT_DISTANCE_FIELD);
+}
+
+bool FontContext::addFont(std::string _fontFile, std::string _name) {
     unsigned int dataSize;
     unsigned char* data = bytesFromResource(_fontFile.c_str(), &dataSize);
     m_font = fonsAddFont(m_fsContext, "droid-serif", data, dataSize);
@@ -47,7 +52,20 @@ bool FontContext::addFont(std::string _fontFile) {
         return false;
     }
 
+    m_fonts[_name] = m_font;
+
     return true;
+}
+
+void FontContext::setFont(std::string _name, int size) {
+    auto it = m_fonts.find(_name);
+
+    if (it != m_fonts.end()) {
+        fonsSetSize(m_fsContext, size);
+        fonsSetFont(m_fsContext, it->second);
+    } else {
+        logMsg("[FontContext] Could not find font %s\n", _name.c_str());
+    }
 }
 
 void createTexTransforms(void* _userPtr, unsigned int _width, unsigned int _height) {
@@ -55,7 +73,7 @@ void createTexTransforms(void* _userPtr, unsigned int _width, unsigned int _heig
 
     TextureOptions options = {GL_RGBA, GL_RGBA, {GL_LINEAR, GL_LINEAR}, {GL_CLAMP_TO_EDGE, GL_CLAMP_TO_EDGE}};
     std::unique_ptr<Texture> texture(new Texture(_width, _height, 1 /* gpu slot */ , options));
-    std::shared_ptr<TextBuffer> textBuffer = fontContext->m_boundBuffer.lock();
+    std::shared_ptr<TextBuffer> textBuffer = fontContext->m_currentBuffer.lock();
 
     if(textBuffer) {
         textBuffer->setTextureTransform(std::move(texture));
@@ -95,7 +113,7 @@ bool errorCallback(void* _userPtr, fsuint buffer, GLFONSError error) {
 
             // TODO : get texture from currently bound text buffer
             logMsg("[FontStyle] FontError : ID_OVERFLOW in text buffer %d\n", buffer);
-            std::shared_ptr<TextBuffer> textBuffer = fontContext->m_boundBuffer.lock();
+            std::shared_ptr<TextBuffer> textBuffer = fontContext->m_currentBuffer.lock();
 
             if (textBuffer) {
                 const auto& texture = textBuffer->getTextureTransform();

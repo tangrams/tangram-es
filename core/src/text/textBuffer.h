@@ -11,6 +11,8 @@ public:
     TextBuffer(FONScontext* _fsContext, int _size);
     ~TextBuffer();
 
+    fsuint genTextID();
+    void rasterize(const std::string& _text, fsuint _id) const;
     void transformID(fsuint _textID, float _x, float _y, float _rot, float _alpha);
     void triggerTransformUpdate();
 
@@ -18,6 +20,7 @@ public:
     const std::unique_ptr<Texture>& getTextureTransform() const;
 
 private:
+    bool validateBinding();
     void bind();
     void unbind();
 
@@ -27,6 +30,6 @@ private:
     fsuint m_fsBuffer;
     FONScontext* m_fsContext;
 
-    static std::unique_ptr<std::mutex> m_contextMutex;
+    static std::unique_ptr<std::mutex> s_contextMutex;
 
 };

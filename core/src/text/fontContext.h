@@ -7,6 +7,7 @@
 #include <memory>
 #include <mutex>
 #include <string>
+#include <map>
 
 class TextBuffer;
 
@@ -17,14 +18,16 @@ public:
     FontContext(int _atlasSize);
     ~FontContext();
 
-    bool addFont(std::string _fontFile);
+    bool addFont(std::string _fontFile, std::string _name);
+    void setFont(std::string _name, int size);
+    void setSignedDistanceField(float _blurSpread);
     void setScreenSize(int _width, int _height);
     void getViewProjection(float* _projectionMatrix) const;
 
     std::shared_ptr<TextBuffer> genTextBuffer() const;
     std::shared_ptr<TextBuffer> genTextBuffer(int _size) const;
 
-    void bindTextBuffer(const std::shared_ptr<TextBuffer>& _textBuffer);
+    void useBuffer(const std::shared_ptr<TextBuffer>& _textBuffer);
 
     const std::unique_ptr<Texture>& getAtlas() const;
 
@@ -48,7 +51,8 @@ public:
 private:
     void initFontContext(int _atlasSize);
 
-    std::weak_ptr<TextBuffer> m_boundBuffer;
+    std::map<std::string, int> m_fonts;
+    std::weak_ptr<TextBuffer> m_currentBuffer;
     std::unique_ptr<Texture> m_atlas;
     FONScontext* m_fsContext;
     int m_font;

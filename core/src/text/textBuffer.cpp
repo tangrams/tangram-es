@@ -23,21 +23,39 @@ const std::unique_ptr<Texture>& TextBuffer::getTextureTransform() const {
 
 void TextBuffer::bind() {
     m_bound = true;
-    m_contextMutex->lock();
+    s_contextMutex->lock();
     glfonsBindBuffer(m_fsContext, m_fsBuffer);
 }
 
+fsuint TextBuffer::genTextID() {    
+    if (!m_bound) {
+        bind();
+    }
+
+    fsuint id;
+    glfonsGenText(m_fsContext, 1, &id);
+    
+    return id;
+}
+    
+void TextBuffer::rasterize(const std::string& _text, fsuint _id) const {
+    if (!m_bound) {
+        bind();
+    }
+
+    glfonsRasterize(m_fsContext, _id, _text.c_str(), FONS_EFFECT_NONE /* TODO : update signature, remove effect */);
+}
+
 void TextBuffer::triggerTransformUpdate() {
-    if(m_dirty && m_bound) {
+    if (m_dirty && m_bound) {
         glfonsUpdateTransforms(m_fsContext, (void*) this);
         unbind();
     }
 }
 
 void TextBuffer::transformID(fsuint _textID, float _x, float _y, float _rot, float _alpha) {
-
-    if(!m_bound) {
-        if(m_dirty) {
+    if (!m_bound) {
+        if (m_dirty) {
             logMsg("[WARNING][TextBuffer] Inconsistent buffer usage, shoud trigger transform updates first");
             return;
         }
@@ -51,6 +69,6 @@ void TextBuffer::transformID(fsuint _textID, float _x, float _y, float _rot, flo
 
 void TextBuffer::unbind() {
     glfonsBindBuffer(m_fsContext, 0);
-    m_contextMutex->unlock();
+    s_contextMutex->unlock();
     m_bound = false;
 }
