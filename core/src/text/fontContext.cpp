@@ -2,10 +2,10 @@
 #define GLFONTSTASH_IMPLEMENTATION
 #include "glfontstash.h"
 
-FontContext::FontContext(std::string _fontFile) : FontContext(_fontFile, 512) {}
+FontContext::FontContext() : FontContext(512) {}
 
-FontContext::FontContext(std::string _fontFile, int _atlasSize) {
-    initFontContext(_fontFile, _atlasSize);
+FontContext::FontContext(int _atlasSize) {
+    initFontContext(_atlasSize);
 }
 
 FontContext::~FontContext() {
@@ -35,6 +35,19 @@ void FontContext::setScreenSize(int _width, int _height) {
 
 void FontContext::bindTextBuffer(const std::shared_ptr<TextBuffer>& _textBuffer) {
     m_boundBuffer = _textBuffer;
+}
+
+bool FontContext::addFont(std::string _fontFile) {
+    unsigned int dataSize;
+    unsigned char* data = bytesFromResource(_fontFile.c_str(), &dataSize);
+    m_font = fonsAddFont(m_fsContext, "droid-serif", data, dataSize);
+
+    if (m_font == FONS_INVALID) {
+        logMsg("[FontContext] Error loading font file %s\n", _fontFile.c_str());
+        return false;
+    }
+
+    return true;
 }
 
 void createTexTransforms(void* _userPtr, unsigned int _width, unsigned int _height) {
@@ -105,7 +118,7 @@ bool errorCallback(void* _userPtr, fsuint buffer, GLFONSError error) {
     return solved;
 }
 
-void FontContext::initFontContext(const std::string& _fontFile, int _atlasSize) {
+void FontContext::initFontContext(int _atlasSize) {
     GLFONSparams params;
 
     params.errorCallback = errorCallback;
@@ -115,12 +128,4 @@ void FontContext::initFontContext(const std::string& _fontFile, int _atlasSize) 
     params.updateTransforms = updateTransforms;
 
     m_fsContext = glfonsCreate(_atlasSize, _atlasSize, FONS_ZERO_TOPLEFT, params, (void*) this);
-
-    unsigned int dataSize;
-    unsigned char* data = bytesFromResource(_fontFile.c_str(), &dataSize);
-    m_font = fonsAddFont(m_fsContext, "droid-serif", data, dataSize);
-
-    if (m_font == FONS_INVALID) {
-        logMsg("[FontContext] Error loading font file %s\n", _fontFile.c_str());
-    }
 }

@@ -13,10 +13,11 @@ class TextBuffer;
 class FontContext {
 
 public:
-    FontContext(std::string _fontFile);
-    FontContext(std::string _fontFile, int _atlasSize);
+    FontContext();
+    FontContext(int _atlasSize);
     ~FontContext();
 
+    bool addFont(std::string _fontFile);
     void setScreenSize(int _width, int _height);
     void getViewProjection(float* _projectionMatrix) const;
 
@@ -45,7 +46,7 @@ public:
     friend bool errorCallback(void* _userPtr, fsuint buffer, GLFONSError error);
 
 private:
-    void initFontContext(const std::string& _fontFile, int _atlasSize);
+    void initFontContext(int _atlasSize);
 
     std::weak_ptr<TextBuffer> m_boundBuffer;
     std::unique_ptr<Texture> m_atlas;
