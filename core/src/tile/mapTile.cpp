@@ -39,9 +39,9 @@ void MapTile::draw(const Style& _style, const View& _view) {
     
 
     const std::unique_ptr<VboMesh>& styleMesh = m_geometry[_style.getName()];
-
+    
     if (styleMesh) {
-
+        
         std::shared_ptr<ShaderProgram> shader = _style.getShaderProgram();
 
         // Apply tile-view translation to the model matrix
@@ -50,9 +50,15 @@ void MapTile::draw(const Style& _style, const View& _view) {
         m_modelMatrix[3][1] = m_tileOrigin.y - viewOrigin.y;
         m_modelMatrix[3][2] = -viewOrigin.z;
 
+        glm::mat4 modelViewMatrix = _view.getViewMatrix() * m_modelMatrix;
         glm::mat4 modelViewProjMatrix = _view.getViewProjectionMatrix() * m_modelMatrix;
-
+        
+        glm::mat3 normalMatrix = glm::mat3(modelViewMatrix); // Transforms surface normals into camera space
+        normalMatrix = glm::transpose(glm::inverse(normalMatrix));
+        
+        shader->setUniformMatrix4f("u_modelView", glm::value_ptr(modelViewMatrix));
         shader->setUniformMatrix4f("u_modelViewProj", glm::value_ptr(modelViewProjMatrix));
+        shader->setUniformMatrix3f("u_normalMatrix", glm::value_ptr(normalMatrix));
 
         // Set tile offset for proxy tiles
         float offset = 0;
