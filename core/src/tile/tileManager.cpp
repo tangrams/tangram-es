@@ -6,19 +6,22 @@
 #include <chrono>
 
 TileManager::TileManager() {
+    
+    // Instantiate workers
+    for (int i = 0; i < MAX_WORKERS; i++) {
+        m_freeWorkers.push_back(std::unique_ptr<TileWorker>(new TileWorker()));
+    }
 }
 
 TileManager::TileManager(TileManager&& _other) :
     m_view(std::move(_other.m_view)),
     m_tileSet(std::move(_other.m_tileSet)),
-    m_dataSources(std::move(_other.m_dataSources)),
-    m_incomingTiles(std::move(_other.m_incomingTiles)) {
+    m_dataSources(std::move(_other.m_dataSources)) {
 }
 
 TileManager::~TileManager() {
     m_dataSources.clear();
     m_tileSet.clear();
-    m_incomingTiles.clear();
 }
 
 bool TileManager::updateTileSet() {
@@ -27,39 +30,31 @@ bool TileManager::updateTileSet() {
     
     // Check if any incoming tiles are finished
     {
-        auto incomingTilesIter = m_incomingTiles.begin();
+        auto busyWorkersIter = m_busyWorkers.begin();
         
-        while (incomingTilesIter != m_incomingTiles.end()) {
+        while (busyWorkersIter != m_busyWorkers.end()) {
             
-            auto& tileFuture = *incomingTilesIter;
-            std::chrono::milliseconds span (0);
+            auto& worker = *busyWorkersIter;
             
-            if (tileFuture.wait_for(span) == std::future_status::ready) {
-                auto tile = tileFuture.get();
-                // Tile may have been culled if it went out of view before loading finished,
-                // so check if any data was added
-                if (tile->hasGeometry()) {
-                    const TileID& id = tile->getID();
-                    logMsg("Tile [%d, %d, %d] finished loading\n", id.z, id.x, id.y);
-                    m_tileSet[id] = tile;
-                    // tile is now loaded, removed its proxies
-                    //cleanProxyTiles(tile->getID());
-                    tileSetChanged = true;
-                }
-                cleanProxyTiles(tile->getID());
-                incomingTilesIter = m_incomingTiles.erase(incomingTilesIter);
-            } else {
-                ++incomingTilesIter;
+            if (worker->isFinished()) {
+                auto tile = worker->getTileResult();
+                const TileID& id = tile->getID();
+                logMsg("Tile [%d, %d, %d] finished loading\n", id.z, id.x, id.y);
+                std::swap(m_tileSet[id], tile);
+                cleanProxyTiles(id);
+                tileSetChanged = true;
+                m_freeWorkers.push_back(std::move(worker));
+                busyWorkersIter = m_busyWorkers.erase(busyWorkersIter);
             }
         }
     }
-
+    
     if (! (m_view->changedSinceLastCheck() || tileSetChanged) ) {
         // No new tiles have come into view and no tiles have finished loading, 
         // so the tileset is unchanged
         return false;
     }
-
+    
     const std::set<TileID>& visibleTiles = m_view->getVisibleTiles();
     
     // Loop over visibleTiles and add any needed tiles to tileSet
@@ -111,59 +106,56 @@ bool TileManager::updateTileSet() {
         }
     }
     
+    // Dispatch workers for queued tiles
+    {
+        auto freeWorkersIter = m_freeWorkers.begin();
+        auto queuedTilesIter = m_queuedTiles.begin();
+        
+        while (freeWorkersIter != m_freeWorkers.end() && queuedTilesIter != m_queuedTiles.end()) {
+            
+            TileID id = *queuedTilesIter;
+            auto& worker = *freeWorkersIter;
+            
+            worker->load(id, m_dataSources, m_scene->getStyles(), *m_view);
+            m_busyWorkers.push_back(std::move(worker));
+            
+            freeWorkersIter = m_freeWorkers.erase(freeWorkersIter);
+            queuedTilesIter = m_queuedTiles.erase(queuedTilesIter);
+        }
+    }
+    
     return tileSetChanged;
 }
 
 void TileManager::addTile(const TileID& _tileID) {
     
     std::shared_ptr<MapTile> tile(new MapTile(_tileID, m_view->getMapProjection()));
-    m_tileSet[_tileID] = tile;
+    m_tileSet[_tileID] = std::move(tile);
     
     //Add Proxy if corresponding proxy MapTile ready
     updateProxyTiles(_tileID, m_view->isZoomIn());
-
-    std::future< std::shared_ptr<MapTile> > incoming = std::async(std::launch::async, [&](TileID _id) {
-        
-        // This task will be launched some time after initially requesting the tile, so we make sure the tile to be loaded
-        // is still required for the current view (if not, we return an empty tile)
-        const auto& it = m_tileSet.find(_id);
-        if (it != m_tileSet.end()) {
-            auto tile = it->second; // m_tileSet[_id]
-            
-            // Now Start fetching new tile
-            for (const auto& dataSource : m_dataSources) {
-                
-                logMsg("Loading tile [%d, %d, %d]\n", _id.z, _id.x, _id.y);
-                if ( ! dataSource->loadTileData(*tile)) {
-                    logMsg("ERROR: Loading failed for tile [%d, %d, %d]\n", _id.z, _id.x, _id.y);
-                }
-                
-                auto tileData = dataSource->getTileData(_id);
-                
-                for (const auto& style : m_scene->getStyles()) {
-                    if (tileData) {
-                        style->addData(*tileData, *tile, m_view->getMapProjection());
-                    }
-                }
-            }
-            
-            return tile;
-        } else {
-            return std::make_shared<MapTile>(_id, m_view->getMapProjection());
-        }
     
-    }, _tileID);
-    
-    m_incomingTiles.push_back(std::move(incoming));
+    // Queue tile for workers
+    m_queuedTiles.push_back(_tileID);
     
 }
 
 void TileManager::removeTile(std::map< TileID, std::shared_ptr<MapTile> >::iterator& _tileIter) {
     
+    const TileID& id = _tileIter->first;
+    
+    // Remove tile from queue, if present
+    m_queuedTiles.remove(id);
+    
+    // If a worker is loading this tile, abort it
+    for (const auto& worker : m_busyWorkers) {
+        if (worker->getTileID() == id) {
+            worker->abort();
+        }
+    }
+    
+    // Remove tile from set
     _tileIter = m_tileSet.erase(_tileIter);
-
-    // TODO: if tile is being loaded, cancel loading; For now they continue to load
-    // and will be culled the next time that updateTileSet is called
     
 }
 

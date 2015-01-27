@@ -31,7 +31,7 @@ public:
     void setMapProjection(ProjectionType _projType);
     
     /* Gets the current map projection */
-    const MapProjection& getMapProjection();
+    const MapProjection& getMapProjection() const;
     
     /* Sets the ratio of hardware pixels to logical pixels (for high-density screens)
      * 
