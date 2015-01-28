@@ -23,11 +23,15 @@ TileManager::TileManager(TileManager&& _other) :
 }
 
 TileManager::~TileManager() {
-    m_dataSources.clear();
-    m_tileSet.clear();
     for (auto& worker : m_busyWorkers) {
         worker->abort();
+        worker->getTileResult();
+        // We stop all workers before we destroy the resources they use.
+        // TODO: This will wait for any pending network requests to finish,
+        // which could delay closing of the application. 
     }
+    m_dataSources.clear();
+    m_tileSet.clear();
 }
 
 bool TileManager::updateTileSet() {
