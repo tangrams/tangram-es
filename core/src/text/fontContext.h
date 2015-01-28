@@ -61,7 +61,6 @@ private:
 
     std::map<std::string, int> m_fonts;
     std::weak_ptr<TextBuffer> m_currentBuffer;
-    std::vector<std::shared_ptr<TextBuffer>> m_buffers;
     std::unique_ptr<Texture> m_atlas;
     std::unique_ptr<std::mutex> m_contextMutex;
     FONScontext* m_fsContext;

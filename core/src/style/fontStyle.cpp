@@ -41,7 +41,7 @@ void FontStyle::buildLine(Line& _line, std::string& _layer, Properties& _props, 
     auto labelContainer = LabelContainer::GetInstance();
     auto ftContext = labelContainer->getFontContext();
     auto textBuffer = ftContext->getCurrentBuffer();
-    
+
     if (!textBuffer) {
         return;
     }
@@ -97,7 +97,7 @@ void FontStyle::buildPolygon(Polygon& _polygon, std::string& _layer, Properties&
 void FontStyle::prepareDataProcessing(MapTile& _tile) {
     auto ftContext = LabelContainer::GetInstance()->getFontContext();
     auto buffer = ftContext->genTextBuffer();
-    // TODO : associate text buffer with tile
+    _tile.setTextBuffer(*this, buffer);
     ftContext->lock();
     ftContext->useBuffer(buffer);
 }

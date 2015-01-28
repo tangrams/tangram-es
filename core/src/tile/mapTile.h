@@ -8,10 +8,10 @@
 #include "glm/mat4x4.hpp"
 
 #include "label.h"
+#include "text/textBuffer.h"
 #include "view/view.h"
 #include "util/vboMesh.h"
 #include "util/mapProjection.h"
-#include "glfontstash.h"
 #include "util/texture.h"
 
 class Style;
@@ -60,6 +60,8 @@ public:
 
     void update(float _dt, const Style& _style, View& _view);
 
+    void setTextBuffer(const Style& _style, std::shared_ptr<TextBuffer> _buffer);
+
     /* 
      * Gets the transform label texture for a specific style, nullptr if it doesn't exist
      */
@@ -95,9 +97,7 @@ private:
 
     glm::dmat4 m_modelMatrix; // Translation matrix from world origin to tile origin
 
-    std::unordered_map<std::string, std::unique_ptr<Texture>> m_transformTextures;
     std::unordered_map<std::string, std::unique_ptr<VboMesh>> m_geometry; // Map of <Style>s and their associated <VboMesh>es
-    std::unordered_map<std::string, fsuint> m_textBuffer; // Map of <Style>s and the associated text buffer
-    std::unordered_map<std::string, std::vector<std::unique_ptr<Label>>> m_labels; // Map of <Style>s and their associated <Label>s
+    std::map<std::string, std::shared_ptr<TextBuffer>> m_buffers; // Map of <Style>s and the associated text buffer
 
 };

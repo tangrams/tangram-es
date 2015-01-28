@@ -10,7 +10,10 @@ TextBuffer::TextBuffer(FONScontext* _fsContext, int _size) : m_fsContext(_fsCont
 
 TextBuffer::~TextBuffer() {
     glfonsBufferDelete(m_fsContext, m_fsBuffer);
-    m_transform->destroy();
+
+    if(m_transform) {
+        m_transform->destroy();
+    }
 }
 
 void TextBuffer::setTextureTransform(std::unique_ptr<Texture> _texture) {

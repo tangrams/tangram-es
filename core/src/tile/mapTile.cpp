@@ -29,6 +29,7 @@ MapTile::MapTile(TileID _id, const MapProjection& _projection) : m_id(_id),  m_p
 MapTile::~MapTile() {
 
     m_geometry.clear();
+    m_buffers.clear();
 }
 
 void MapTile::addGeometry(const Style& _style, std::unique_ptr<VboMesh> _mesh) {
@@ -36,6 +37,12 @@ void MapTile::addGeometry(const Style& _style, std::unique_ptr<VboMesh> _mesh) {
     m_geometry[_style.getName()] = std::move(_mesh); // Move-construct a unique_ptr at the value associated with the given style
 
 }
+
+void MapTile::setTextBuffer(const Style& _style, std::shared_ptr<TextBuffer> _buffer) {
+
+    m_buffers[_style.getName()] = _buffer;
+}
+
 
 void MapTile::update(float _dt, const Style& _style, View& _view) {
 
@@ -68,20 +75,21 @@ void MapTile::draw(const Style& _style, const View& _view) {
     if (styleMesh) {
 
         std::shared_ptr<ShaderProgram> shader = _style.getShaderProgram();
+        auto buffer = m_buffers[_style.getName()];
+        
+        if (buffer) {
+            const auto& texture = m_buffers[_style.getName()]->getTextureTransform();
 
-        // TODO : find association tile/text buffer and update texture transform of it
-        // const std::unique_ptr<Texture>& texture = m_transformTextures[_style.getName()];
+            if (texture) {
+                texture->update();
+                texture->bind();
 
-        // if (texture) {
-
-        //     texture->update();
-        //     texture->bind();
-
-        //     // transform texture
-        //     shader->setUniformi("u_transforms", texture->getTextureSlot());
-        //     // resolution of the transform texture
-        //     shader->setUniformf("u_tresolution", texture->getWidth(), texture->getHeight());
-        // }
+                // transform texture
+                shader->setUniformi("u_transforms", texture->getTextureSlot());
+                // resolution of the transform texture
+                shader->setUniformf("u_tresolution", texture->getWidth(), texture->getHeight());
+            }
+        }
 
         glm::dmat4 modelViewProjMatrix = _view.getViewProjectionMatrix() * m_modelMatrix;
 

@@ -14,15 +14,11 @@ FontContext::~FontContext() {
 }
 
 std::shared_ptr<TextBuffer> FontContext::genTextBuffer() {
-    // TODO : remove this, just to retain the shared pointer
-    m_buffers.push_back(std::shared_ptr<TextBuffer>(new TextBuffer(m_fsContext)));
-    return m_buffers.back();
+    return std::shared_ptr<TextBuffer>(new TextBuffer(m_fsContext));
 }
 
 std::shared_ptr<TextBuffer> FontContext::genTextBuffer(int _size) {
-    // TODO : remove this, just to retain the shared pointer
-    m_buffers.push_back(std::shared_ptr<TextBuffer>(new TextBuffer(m_fsContext, _size)));
-    return m_buffers.back();
+    return std::shared_ptr<TextBuffer>(new TextBuffer(m_fsContext, _size));
 }
 
 const std::unique_ptr<Texture>& FontContext::getAtlas() const {
