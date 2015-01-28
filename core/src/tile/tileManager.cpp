@@ -22,6 +22,9 @@ TileManager::TileManager(TileManager&& _other) :
 TileManager::~TileManager() {
     m_dataSources.clear();
     m_tileSet.clear();
+    for (auto& worker : m_busyWorkers) {
+        worker->abort();
+    }
 }
 
 bool TileManager::updateTileSet() {
@@ -43,8 +46,12 @@ bool TileManager::updateTileSet() {
                 std::swap(m_tileSet[id], tile);
                 cleanProxyTiles(id);
                 tileSetChanged = true;
+                //auto freedWorkerIter = busyWorkersIter++;
+                //m_freeWorkers.splice(m_freeWorkers.end(), m_busyWorkers, freedWorkerIter);
                 m_freeWorkers.push_back(std::move(worker));
                 busyWorkersIter = m_busyWorkers.erase(busyWorkersIter);
+            } else {
+                ++busyWorkersIter;
             }
         }
     }

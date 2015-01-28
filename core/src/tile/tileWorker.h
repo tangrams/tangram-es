@@ -20,7 +20,7 @@ public:
     
     void abort();
     
-    bool isFinished();
+    bool isFinished() const { return m_finished; }
     
     const TileID& getTileID() const { return m_tileID ? *m_tileID : NOT_A_TILE; }
     
@@ -31,6 +31,7 @@ private:
     std::unique_ptr<TileID> m_tileID;
     
     bool m_aborted;
+    bool m_finished;
     
     std::future< std::shared_ptr<MapTile> > m_future;
 };

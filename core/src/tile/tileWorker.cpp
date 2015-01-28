@@ -8,17 +8,11 @@
 TileWorker::TileWorker() {
     m_tileID.reset(new TileID(NOT_A_TILE));
     m_aborted = false;
+    m_finished = false;
 }
 
 void TileWorker::abort() {
     m_aborted = true;
-}
-
-bool TileWorker::isFinished() {
-    
-    std::chrono::milliseconds span(0);
-    return m_future.wait_for(span) == std::future_status::ready;
-    
 }
 
 void TileWorker::load(const TileID &_tile,
@@ -27,6 +21,7 @@ void TileWorker::load(const TileID &_tile,
                       const View& _view) {
     
     m_tileID.reset(new TileID(_tile));
+    m_finished = false;
     m_aborted = false;
     
     std::future<std::shared_ptr<MapTile>> future = std::async(std::launch::async, [&](const TileID& _id) {
@@ -58,6 +53,8 @@ void TileWorker::load(const TileID &_tile,
             }
         }
         
+        m_finished = true;
+        
         // Return finished tile
         return std::move(tile);
                                         
@@ -68,7 +65,7 @@ void TileWorker::load(const TileID &_tile,
 }
 
 std::shared_ptr<MapTile> TileWorker::getTileResult() {
-    
+
     return std::move(m_future.get());
     
 }
