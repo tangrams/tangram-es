@@ -28,13 +28,13 @@ void TileWorker::load(const TileID &_tile,
         
         auto tile = std::shared_ptr<MapTile>(new MapTile(_id, _view.getMapProjection()));
         
-        if (m_aborted) {
-            return std::move(tile); // Early return
-        }
-        
         // Fetch tile data from data sources
         logMsg("Loading Tile [%d, %d, %d]\n", _id.z, _id.x, _id.y);
         for (const auto& dataSource : _dataSources) {
+            if (m_aborted) {
+                m_finished = true;
+                return std::move(tile); // Early return
+            }
             if (! dataSource->loadTileData(*tile)) {
                 logMsg("ERROR: Loading failed for tile [%d, %d, %d]\n", _id.z, _id.x, _id.y);
                 continue;
@@ -45,6 +45,7 @@ void TileWorker::load(const TileID &_tile,
             // Process data for all styles
             for (const auto& style : _styles) {
                 if (m_aborted) {
+                    m_finished = true;
                     return std::move(tile); // Early return
                 }
                 if (tileData) {
