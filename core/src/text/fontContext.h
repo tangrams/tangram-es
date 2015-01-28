@@ -4,9 +4,11 @@
 #include "texture.h"
 #include "platform.h"
 #include "textBuffer.h"
+#include "stl_util.hpp"
 #include <memory>
 #include <mutex>
 #include <string>
+#include <vector>
 #include <map>
 
 class TextBuffer;
@@ -25,8 +27,8 @@ public:
     void setScreenSize(int _width, int _height);
     void getViewProjection(float* _projectionMatrix) const;
 
-    std::shared_ptr<TextBuffer> genTextBuffer() const;
-    std::shared_ptr<TextBuffer> genTextBuffer(int _size) const;
+    std::shared_ptr<TextBuffer> genTextBuffer();
+    std::shared_ptr<TextBuffer> genTextBuffer(int _size);
 
     void useBuffer(const std::shared_ptr<TextBuffer>& _textBuffer);
     std::shared_ptr<TextBuffer> getCurrentBuffer(); 
@@ -59,6 +61,7 @@ private:
 
     std::map<std::string, int> m_fonts;
     std::weak_ptr<TextBuffer> m_currentBuffer;
+    std::vector<std::shared_ptr<TextBuffer>> m_buffers;
     std::unique_ptr<Texture> m_atlas;
     std::unique_ptr<std::mutex> m_contextMutex;
     FONScontext* m_fsContext;

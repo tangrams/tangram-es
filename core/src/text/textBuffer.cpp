@@ -22,7 +22,13 @@ const std::unique_ptr<Texture>& TextBuffer::getTextureTransform() const {
 }
 
 bool TextBuffer::getVertices(std::vector<float>* _vertices, int* _nVerts) {
-    return glfonsVertices(m_fsContext, _vertices, _nVerts);
+    bool res;
+
+    bind();
+    res = glfonsVertices(m_fsContext, _vertices, _nVerts);
+    unbind();
+
+    return res;
 }
 
 void TextBuffer::bind() {
@@ -32,9 +38,10 @@ void TextBuffer::bind() {
     }
 }
 
-fsuint TextBuffer::genTextID() {    
-    bind();
+fsuint TextBuffer::genTextID() {
     fsuint id;
+
+    bind();
     glfonsGenText(m_fsContext, 1, &id);
     unbind();
     
@@ -58,8 +65,9 @@ void TextBuffer::triggerTransformUpdate() {
 void TextBuffer::transformID(fsuint _textID, float _x, float _y, float _rot, float _alpha) {
     bind(); 
     glfonsTransform(m_fsContext, _textID, _x, _y, _rot, _alpha);
-    m_dirty = true;
     unbind();
+
+    m_dirty = true;
 }
 
 void TextBuffer::unbind() {

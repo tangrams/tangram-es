@@ -4,7 +4,7 @@
 
 FontContext::FontContext() : FontContext(512) {}
 
-FontContext::FontContext(int _atlasSize) {
+FontContext::FontContext(int _atlasSize) : m_contextMutex(std_patch::make_unique<std::mutex>()) {
     initFontContext(_atlasSize);
 }
 
@@ -13,12 +13,16 @@ FontContext::~FontContext() {
     glfonsDelete(m_fsContext);
 }
 
-std::shared_ptr<TextBuffer> FontContext::genTextBuffer() const {
-    return std::shared_ptr<TextBuffer>(new TextBuffer(m_fsContext));
+std::shared_ptr<TextBuffer> FontContext::genTextBuffer() {
+    // TODO : remove this, just to retain the shared pointer
+    m_buffers.push_back(std::shared_ptr<TextBuffer>(new TextBuffer(m_fsContext)));
+    return m_buffers.back();
 }
 
-std::shared_ptr<TextBuffer> FontContext::genTextBuffer(int _size) const {
-    return std::shared_ptr<TextBuffer>(new TextBuffer(m_fsContext, _size));
+std::shared_ptr<TextBuffer> FontContext::genTextBuffer(int _size) {
+    // TODO : remove this, just to retain the shared pointer
+    m_buffers.push_back(std::shared_ptr<TextBuffer>(new TextBuffer(m_fsContext, _size)));
+    return m_buffers.back();
 }
 
 const std::unique_ptr<Texture>& FontContext::getAtlas() const {

@@ -1,7 +1,7 @@
 #include "fontStyle.h"
 
-FontStyle::FontStyle(const std::string& _fontFile, std::string _name, float _fontSize, bool _sdf, GLenum _drawMode)
-: Style(_name, _drawMode), m_fontFile(_fontFile), m_fontSize(_fontSize), m_sdf(_sdf) {
+FontStyle::FontStyle(const std::string& _fontName, std::string _name, float _fontSize, bool _sdf, GLenum _drawMode)
+: Style(_name, _drawMode), m_fontName(_fontName), m_fontSize(_fontSize), m_sdf(_sdf) {
 
     constructVertexLayout();
     constructShaderProgram();
@@ -41,12 +41,12 @@ void FontStyle::buildLine(Line& _line, std::string& _layer, Properties& _props, 
     auto labelContainer = LabelContainer::GetInstance();
     auto ftContext = labelContainer->getFontContext();
     auto textBuffer = ftContext->getCurrentBuffer();
-
+    
     if (!textBuffer) {
         return;
     }
 
-    ftContext->setFont(m_fontFile, m_fontSize * m_pixelScale);
+    ftContext->setFont(m_fontName, m_fontSize * m_pixelScale);
 
     if (m_sdf) {
         float blurSpread = 2.5;

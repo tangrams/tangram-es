@@ -54,7 +54,11 @@ void initialize() {
         linesStyle->addLayers({"roads"});
         m_scene->addStyle(std::move(linesStyle));
 
-        std::unique_ptr<Style> fontStyle(new FontStyle("Roboto-Regular.ttf", "FontStyle", 14.0f, true));
+        std::shared_ptr<FontContext> ftContext(new FontContext);
+        ftContext->addFont("Roboto-Regular.ttf", "Roboto-Regular");
+        LabelContainer::GetInstance()->setFontContext(ftContext);
+
+        std::unique_ptr<Style> fontStyle(new FontStyle("Roboto-Regular", "FontStyle", 14.0f, true));
         fontStyle->addLayers({"roads"});
         m_scene->addStyle(std::move(fontStyle));
     }
