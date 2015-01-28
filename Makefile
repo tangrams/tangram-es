@@ -85,7 +85,7 @@ clean: clean-android clean-osx clean-ios clean-rpi clean-tests clean-osx-xcode c
 clean-android:
 	ant -f android/build.xml clean
 	rm -rf ${ANDROID_BUILD_DIR}
-	rm -rf android/libs/${ANDROID_ARCH} android/obj
+	rm -rf android/libs android/obj
 
 clean-osx:
 	rm -rf ${OSX_BUILD_DIR}
@@ -126,9 +126,11 @@ osx-xcode: cmake-osx-xcode ${OSX_XCODE_BUILD_DIR}
 	xcodebuild -target ${OSX_TARGET} -project ${OSX_XCODE_BUILD_DIR}/${OSX_XCODE_PROJ}
 
 cmake-osx-xcode:
+ifeq ($(wildcard ${OSX_XCODE_BUILD_DIR}/${OSX_XCODE_PROJ}/.*),)
 	mkdir -p ${OSX_XCODE_BUILD_DIR} 
 	cd ${OSX_XCODE_BUILD_DIR} && \
 	cmake ../.. ${DARWIN_XCODE_CMAKE_PARAMS}
+endif
 
 cmake-osx: 
 	mkdir -p ${OSX_BUILD_DIR} 

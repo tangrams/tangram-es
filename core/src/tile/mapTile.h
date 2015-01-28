@@ -3,12 +3,14 @@
 #include <unordered_map>
 #include <memory>
 
-#include "glm/glm.hpp"
+#include "glm/vec2.hpp"
+#include "glm/mat4x4.hpp"
 
 #include "util/vboMesh.h"
 #include "util/mapProjection.h"
 
 class Style;
+class View;
 struct TileID;
 
 /* Tile of vector map data
@@ -38,20 +40,38 @@ public:
     
     /* Returns the reciprocal of <getScale()> */
     float getInverseScale() const { return m_inverseScale; }
-
-    /* Adds drawable geometry to the tile and associates it with a <Style> 
+    
+    /* Adds drawable geometry to the tile and associates it with a <Style>
      * 
      * Use std::move to pass in the mesh by move semantics; Geometry in the mesh must have coordinates relative to
      * the tile origin.
      */
     void addGeometry(const Style& _style, std::unique_ptr<VboMesh> _mesh);
+    
+    /*
+     * Method to check if this tile's vboMesh(s) are loaded and ready to be drawn
+     */
+    bool hasGeometry();
 
     /* Draws the geometry associated with the provided <Style> and view-projection matrix */
-    void draw(const Style& _style, const glm::dmat4& _viewProjMatrix);
-
+    void draw(const Style& _style, const View& _view);
+    
+    /* 
+     * methods to set and get proxy counter
+     */
+    int getProxyCounter() { return m_proxyCounter; }
+    void incProxyCounter() { m_proxyCounter++; }
+    void decProxyCounter() { m_proxyCounter = m_proxyCounter > 0 ? m_proxyCounter - 1 : 0; }
+    void resetProxyCounter() { m_proxyCounter = 0; }
+    
 private:
 
     TileID m_id;
+    
+    /*
+     * A Counter for number of tiles this tile acts a proxy for
+     */
+    int m_proxyCounter = 0;
     
     const MapProjection* m_projection = nullptr;
     
@@ -61,9 +81,11 @@ private:
 
     glm::dvec2 m_tileOrigin; // Center of the tile in 2D projection space in meters (e.g. mercator meters)
 
-    glm::dmat4 m_modelMatrix; // Translation matrix from world origin to tile origin
+    glm::mat4 m_modelMatrix; // Matrix relating tile-local coordinates to global projection space coordinates;
+    // Note that this matrix does not contain the relative translation from the global origin to the tile origin.
+    // Distances from the global origin are too large to represent precisely in 32-bit floats, so we only apply the
+    // relative translation from the view origin to the model origin immediately before drawing the tile. 
 
     std::unordered_map<std::string, std::unique_ptr<VboMesh>> m_geometry; // Map of <Style>s and their associated <VboMesh>es
-
 };
 

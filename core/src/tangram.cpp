@@ -3,6 +3,7 @@
 #include <memory>
 #include <utility>
 #include <cmath>
+#include <set>
 
 #include "platform.h"
 #include "tile/tileManager.h"
@@ -12,17 +13,20 @@
 #include "style/polygonStyle.h"
 #include "style/polylineStyle.h"
 #include "scene/scene.h"
+#include "scene/lights.h"
 #include "util/error.h"
 
 namespace Tangram {
 
-std::unique_ptr<TileManager> m_tileManager;    
+std::unique_ptr<TileManager> m_tileManager;
 std::shared_ptr<Scene> m_scene;
 std::shared_ptr<View> m_view;
 
+static float g_time = 0.0;
+
 void initialize() {
     
-    logMsg("%s\n", "initialize");
+    logMsg("initialize\n");
 
     // Create view
     if (!m_view) {
@@ -50,6 +54,14 @@ void initialize() {
         std::unique_ptr<Style> linesStyle(new PolylineStyle("Polyline"));
         linesStyle->addLayers({"roads"});
         m_scene->addStyle(std::move(linesStyle));
+
+        //  Directional light with white diffuse color pointing Northeast and down
+        auto directionalLight = std::make_shared<DirectionalLight>("dLight");
+        directionalLight->setAmbientColor({0.3, 0.3, 0.3, 1.0});
+        directionalLight->setDiffuseColor({0.7, 0.7, 0.7, 1.0});
+        directionalLight->setDirection({1.0, 1.0, -1.0});
+        m_scene->addLight(directionalLight);
+        
     }
 
     // Create a tileManager
@@ -80,7 +92,7 @@ void initialize() {
 
     while (Error::hadGlError("Tangram::initialize()")) {}
 
-    logMsg("%s\n", "finish initialize");
+    logMsg("finish initialize\n");
 
 }
 
@@ -100,6 +112,8 @@ void resize(int _newWidth, int _newHeight) {
 
 void update(float _dt) {
 
+    g_time += _dt;
+
     if (m_view) {
         m_view->update();
     }
@@ -107,31 +121,30 @@ void update(float _dt) {
     if (m_tileManager) {
         m_tileManager->updateTileSet();
     }
-
+    
+    if(m_scene) {
+        // Update lights and styles
+    }   
 }
 
 void render() {
-
+    
     // Set up openGL for new frame
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-
-    glm::dmat4 viewProj = m_view->getViewProjectionMatrix();
 
     // Loop over all styles
     for (const auto& style : m_scene->getStyles()) {
 
-        style->setup();
+        style->setupFrame(m_scene);
 
-        // Loop over visible tiles
+        // Loop over all tiles in m_tileSet
         for (const auto& mapIDandTile : m_tileManager->getVisibleTiles()) {
-
-            const std::unique_ptr<MapTile>& tile = mapIDandTile.second;
-            
-            if (tile) {
-                // Draw!
-                tile->draw(*style, viewProj);
+            const std::shared_ptr<MapTile>& tile = mapIDandTile.second;
+            if (tile->hasGeometry()) {
+                // Draw tile!
+                style->setupTile(tile);
+                tile->draw(*style, *m_view);
             }
-
         }
     }
 
@@ -154,14 +167,13 @@ void handleTapGesture(float _posX, float _posY) {
 
     // Flip y displacement to change from screen coordinates to world coordinates
     m_view->translate(dx, -dy);
-    logMsg("Tap: (%f,%f)\n", _posX, _posY);
+    
 
 }
 
 void handleDoubleTapGesture(float _posX, float _posY) {
     
-    logMsg("Double tap: (%f,%f)\n", _posX, _posY);
-
+    m_view->zoom(1.0);
 }
 
 void handlePanGesture(float _dX, float _dY) {
@@ -173,22 +185,24 @@ void handlePanGesture(float _dX, float _dY) {
     // of the intended "world movement", but dy gets flipped once more because screen
     // coordinates have y pointing down and our world coordinates have y pointing up
     m_view->translate(-dx, dy);
-    logMsg("Drag: (%f,%f)\n", _dX, _dY);
 
 }
 
 void handlePinchGesture(float _posX, float _posY, float _scale) {
-    
-    logMsg("Pinch: (%f, %f)\tscale: (%f)\n", _posX, _posY, _scale);
-    m_view->zoom( _scale < 1.0 ? -1 : 1);
-
+    m_view->zoom(log2f(_scale));
 }
 
 void teardown() {
-    // TODO: Release resources!
+    // Release resources!
+    logMsg("teardown\n");
+    m_tileManager.reset();
+    m_scene.reset();
+    m_view.reset();
 }
 
 void onContextDestroyed() {
+    
+    logMsg("context destroyed\n");
     
     // The OpenGL context has been destroyed since the last time resources were created,
     // so we invalidate all data that depends on OpenGL object handles.

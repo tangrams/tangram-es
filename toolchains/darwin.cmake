@@ -5,14 +5,19 @@ set(EXECUTABLE_NAME "tangram")
 
 add_definitions(-DPLATFORM_OSX)
 
-# include headers for homebrew-installed libraries
-include_directories(/usr/local/include)
+find_package(GLFW REQUIRED)
 
+if(NOT GLFW_FOUND)
+    message(SEND_ERROR "GLFW not found")
+    return()
+else()
+    include_directories(${GLFW_INCLUDE_DIR})
+    message(STATUS "Found GLFW ${GLFW_INCLUDE_DIR}")
+endif()
+    
 # load core library
-include_directories(${PROJECT_SOURCE_DIR}/core/include/)
-include_directories(${PROJECT_SOURCE_DIR}/core/include/jsoncpp/)
 add_subdirectory(${PROJECT_SOURCE_DIR}/core)
-include_recursive_dirs(${PROJECT_SOURCE_DIR}/core/src/*.h)
+include_directories(${CORE_INCLUDE_DIRS})
 
 # add sources and include headers
 set(OSX_EXTENSIONS_FILES *.mm *.cpp)
@@ -36,7 +41,7 @@ function(link_libraries)
     find_library(CORE_FOUNDATION_FRAMEWORK CoreFoundation)
     find_library(CORE_VIDEO_FRAMEWORK CoreVideo)
     find_library(GLFW glfw3)
-    
+
     list(APPEND GLFW_LIBRARIES 
         ${OPENGL_FRAMEWORK} 
         ${COCOA_FRAMEWORK} 

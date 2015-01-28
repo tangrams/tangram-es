@@ -3,7 +3,6 @@
 #include <vector>
 
 #include "json/json.h"
-#include "glm/glm.hpp"
 
 #include "mapTile.h"
 #include "tileData.h"

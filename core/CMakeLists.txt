@@ -1,3 +1,7 @@
+# Defines the following cached variables
+#   - CORE_INCLUDE_DIRS, the path where to CORE headers are located
+#   - CORE_LIBRARIES_INCLUDE_DIRS, the path to CORE libraries headers
+
 cmake_minimum_required(VERSION 2.8)
 project(core)
 
@@ -17,11 +21,21 @@ foreach(_headerFile ${FOUND_HEADERS})
     get_filename_component(_dir ${_headerFile} PATH)
     list(APPEND INCLUDE_DIRS ${_dir})
 endforeach()
+set(CORE_INCLUDE_DIRS ${INCLUDE_DIRS} CACHE INTERNAL "core include directories" FORCE)
 list(APPEND INCLUDE_DIRS "${DEPENDENCIES_DIR}/tess2/libtess2/Include")
+list(APPEND INCLUDE_DIRS "${INCLUDE_DIR}/glm")
 list(APPEND INCLUDE_DIRS "${DEPENDENCIES_DIR}/jsoncpp")
 list(REMOVE_DUPLICATES INCLUDE_DIRS)
 
 include_directories(${INCLUDE_DIR} ${INCLUDE_DIRS})
+
+set(CORE_LIBRARIES_INCLUDE_DIRS 
+    ${PROJECT_SOURCE_DIR}/${DEPENDENCIES_DIR}/tess2/libtess2/Include/
+    ${PROJECT_SOURCE_DIR}/${INCLUDE_DIR}/
+    ${PROJECT_SOURCE_DIR}/${INCLUDE_DIR}/glm/
+    ${PROJECT_SOURCE_DIR}/${INCLUDE_DIR}/catch/
+    ${PROJECT_SOURCE_DIR}/${INCLUDE_DIR}/jsoncpp/
+    CACHE INTERNAL "core libraries include directories" FORCE)
 
 # adding some other dependent target files if needed
 set(FOUND_SOURCES ${FOUND_SOURCES} ${ADDITIONNAL_TARGET_DEPENDENT_SRC_FILES})
@@ -30,7 +44,7 @@ if(NOT DEFINED CORE_LIB_NAME)
     set(CORE_LIB_NAME core)
 endif()
 
-add_library(${CORE_LIB_NAME} ${CORE_LIB_TYPE} ${FOUND_SOURCES})
+add_library(${CORE_LIB_NAME} ${CORE_LIB_TYPE} ${FOUND_SOURCES} ${FOUND_HEADERS})
 target_link_libraries(${CORE_LIB_NAME} json libtess2 ${CORE_LIB_DEPS})
 
 # post build commands

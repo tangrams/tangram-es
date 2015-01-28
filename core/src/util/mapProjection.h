@@ -4,9 +4,8 @@
 #define PI 3.14159265358979323846264
 #define R_EARTH 6378137.0
 
-#include "glm/fwd.hpp"
-#include "glm/glm.hpp"
-
+#include "glm/vec2.hpp"
+#include "glm/vec4.hpp"
 #include "tileID.h"
 
 enum class ProjectionType {

@@ -1,15 +1,19 @@
 #include "view.h"
+
+#include <cmath>
+
 #include "util/tileID.h"
 #include "platform.h"
-#include "glm/gtx/string_cast.hpp"
+#include "glm/gtc/matrix_transform.hpp"
 
-const int View::s_maxZoom; // Create a stack reference to the static member variable
+constexpr float View::s_maxZoom; // Create a stack reference to the static member variable
 
 View::View(int _width, int _height, ProjectionType _projType) {
     
     setMapProjection(_projType);
     setSize(_width, _height);
-    setZoom(16); // Arbitrary zoom for testing
+    setZoom(m_initZoom); // Arbitrary zoom for testing
+
     setPosition(0.0, 0.0);
     
     m_changed = false;
@@ -61,10 +65,10 @@ void View::setPosition(double _x, double _y) {
 
 }
 
-void View::setZoom(int _z) {
+void View::setZoom(float _z) {
     
     // ensure zoom value is allowed
-    m_zoom = glm::clamp(_z, 0, s_maxZoom);
+    m_zoom = glm::clamp(_z, 0.0f, s_maxZoom);
     m_dirty = true;
     
 }
@@ -75,8 +79,13 @@ void View::translate(double _dx, double _dy) {
 
 }
 
-void View::zoom(int _dz) {
-    
+void View::zoom(float _dz) {
+    if(_dz > 0.0) {
+        m_isZoomIn = true;
+    }
+    else {
+        m_isZoomIn = false;
+    }
     setZoom(m_zoom + _dz);
     
 }
@@ -94,12 +103,6 @@ void View::update() {
     m_dirty = false;
     
     m_changed = true;
-    
-}
-
-const glm::dmat4 View::getViewProjectionMatrix() {
-    
-    return m_proj * m_view;
     
 }
 
@@ -143,7 +146,7 @@ void View::updateMatrices() {
     m_width = m_height * m_aspect;
     
     // set vertical field-of-view
-    double fovy = PI * 0.5;
+    float fovy = PI * 0.5;
     
     // we assume portrait orientation by default, so in landscape
     // mode we scale the vertical FOV such that the wider dimension
@@ -157,11 +160,12 @@ void View::updateMatrices() {
     
     // set near clipping distance as a function of camera z
     // TODO: this is a simple heuristic that deserves more thought
-    double near = m_pos.z / 50.0;
+    float near = m_pos.z / 50.0;
     
     // update view and projection matrices
-    m_view = glm::lookAt(m_pos, m_pos + glm::dvec3(0, 0, -1), glm::dvec3(0, 1, 0));
-    m_proj = glm::perspective(fovy, double(m_aspect), near, m_pos.z + 1.0);
+    m_view = glm::lookAt(glm::vec3(0.0, 0.0, 0.0), glm::vec3(0.0, 0.0, -1.0), glm::vec3(0.0, 1.0, 0.0));
+    m_proj = glm::perspective(fovy, m_aspect, near, (float)m_pos.z + 1.0f);
+    m_viewProj = m_proj * m_view;
     
 }
 
@@ -169,7 +173,7 @@ void View::updateTiles() {
     
     m_visibleTiles.clear();
     
-    float tileSize = 2 * MapProjection::HALF_CIRCUMFERENCE * pow(2, -m_zoom);
+    float tileSize = 2 * MapProjection::HALF_CIRCUMFERENCE * pow(2, -(int)m_zoom);
     float invTileSize = 1.0 / tileSize;
     
     float vpLeftEdge = m_pos.x - m_width * 0.5 + MapProjection::HALF_CIRCUMFERENCE;

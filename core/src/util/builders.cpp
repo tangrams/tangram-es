@@ -235,7 +235,7 @@ void buildGeneralPolyLine(const Line& _line, float _halfWidth, std::vector<glm::
         
     }
     
-    normCurrNext = glm::normalize(normCurrNext);
+    rightNorm = glm::normalize(normCurrNext);
     
     if (useScalingVecs) {
         _pointsOut.push_back(nextCoord);
@@ -243,8 +243,8 @@ void buildGeneralPolyLine(const Line& _line, float _halfWidth, std::vector<glm::
         _scalingVecsOut.push_back(rightNorm);
         _scalingVecsOut.push_back(-rightNorm);
     } else {
-        _pointsOut.push_back(glm::vec3(currCoord.x + rightNorm.x * _halfWidth, currCoord.y + rightNorm.y * _halfWidth, currCoord.z));
-        _pointsOut.push_back(glm::vec3(currCoord.x - rightNorm.x * _halfWidth, currCoord.y - rightNorm.y * _halfWidth, currCoord.z));
+        _pointsOut.push_back(glm::vec3(nextCoord.x + rightNorm.x * _halfWidth, nextCoord.y + rightNorm.y * _halfWidth, nextCoord.z));
+        _pointsOut.push_back(glm::vec3(nextCoord.x - rightNorm.x * _halfWidth, nextCoord.y - rightNorm.y * _halfWidth, nextCoord.z));
     }
     
     if (useTexCoords) {

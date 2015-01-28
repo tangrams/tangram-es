@@ -2,12 +2,11 @@
 
 #include <vector>
 #include <set>
-#include <cmath>
 #include <memory>
 
-#define GLM_FORCE_RADIANS
-#include <glm/glm.hpp>
-#include <glm/gtc/matrix_transform.hpp>
+#include "glm/mat4x4.hpp"
+#include "glm/vec4.hpp"
+#include "glm/vec3.hpp"
 
 #include "util/mapProjection.h"
 #include "util/tileID.h"
@@ -47,26 +46,35 @@ public:
     void setPosition(double _x, double _y);
     
     /* Sets the zoom level of the view */
-    void setZoom(int _z);
+    void setZoom(float _z);
     
     /* Moves the position of the view */
     void translate(double _dx, double _dy);
     
     /* Changes zoom by the given amount */
-    void zoom(int _dz);
+    void zoom(float _dz);
     
     /* Gets the current zoom */
-    int getZoom() const { return m_zoom; };
+    float getZoom() const { return m_zoom; }
+
+	/* Get the current m_zoomIn */
+	bool isZoomIn() const { return m_isZoomIn; }
     
     /* Updates the view and projection matrices if properties have changed */
     void update();
     
     /* Gets the position of the view in projection units (z is the effective 'height' determined from zoom) */
-    const glm::dvec3& getPosition() const { return m_pos; };
+    const glm::dvec3& getPosition() const { return m_pos; }
     
-    const glm::dmat4& getViewMatrix() const { return m_view; }
-    const glm::dmat4& getProjectionMatrix() const { return m_proj; };
-    const glm::dmat4 getViewProjectionMatrix();
+    /* Gets the transformation from global space into view (camera) space; Due to precision limits, this 
+       does not contain the translation of the view from the global origin (you must apply that separately) */
+    const glm::mat4& getViewMatrix() const { return m_view; }
+
+    /* Gets the transformation from view space into screen space */
+    const glm::mat4& getProjectionMatrix() const { return m_proj; }
+
+    /* Gets the combined view and projection transformation */
+    const glm::mat4 getViewProjectionMatrix() const { return m_viewProj; }
 
     /* Returns a rectangle of the current view range as [[x_min, y_min], [x_max, y_max]] */
     glm::dmat2 getBoundsRect() const;
@@ -75,6 +83,7 @@ public:
     
     float getHeight() const { return m_vpHeight; }
     
+    /* Calculate the distance in map projection units represented by the given distance in screen space */
     float toWorldDistance(float _screenDistance) const;
     
     /* Returns the set of all tiles visible at the current position and zoom */
@@ -87,7 +96,7 @@ public:
         m_visibleTiles.clear();
     }
     
-    static const int s_maxZoom = 18;
+    constexpr static float s_maxZoom = 18.0;
 
 protected:
     
@@ -95,20 +104,29 @@ protected:
     void updateTiles();
 
     std::unique_ptr<MapProjection> m_projection;
-    bool m_dirty;
-    bool m_changed;
     std::set<TileID> m_visibleTiles;
+
     glm::dvec3 m_pos;
-    glm::dmat4 m_view;
-    glm::dmat4 m_proj;
-    int m_zoom;
-    int m_vpWidth;
-    int m_vpHeight;
+
+    glm::mat4 m_view;
+    glm::mat4 m_proj;
+    glm::mat4 m_viewProj;
+    
+    float m_zoom;
+    float m_initZoom = 16.0;
+    bool m_isZoomIn = false;
+
     float m_width;
     float m_height;
+    
+    int m_vpWidth;
+    int m_vpHeight;
     float m_aspect;
     float m_pixelScale = 1.0f;
     float m_pixelsPerTile = 256.0;
+
+    bool m_dirty;
+    bool m_changed;
     
 };
 

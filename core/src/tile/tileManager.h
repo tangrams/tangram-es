@@ -4,8 +4,8 @@
 #include <vector>
 #include <memory>
 #include <future>
-
-#include "glm/glm.hpp"
+#include <set>
+#include <mutex>
 
 #include "util/tileID.h"
 #include "data/dataSource.h"
@@ -48,24 +48,46 @@ public:
      * constructs or disposes tiles as needed and returns true
      */
     bool updateTileSet();
-
+    
     /* Returns the set of currently visible tiles */
-    const std::map<TileID, std::unique_ptr<MapTile>>& getVisibleTiles() { return m_tileSet; }
-
+    const std::map<TileID, std::shared_ptr<MapTile>>& getVisibleTiles() { return m_tileSet; }
+    
 private:
 
     TileManager();
 
     std::shared_ptr<View> m_view;
     std::shared_ptr<Scene> m_scene;
-
-    std::map<TileID, std::unique_ptr<MapTile>> m_tileSet;
-
+    
+    // TODO: Might get away with using a vector of pairs here (and for searching using std:search (binary search))
+    std::map<TileID, std::shared_ptr<MapTile>> m_tileSet;
+    
     std::vector<std::unique_ptr<DataSource>> m_dataSources;
 
-    std::vector< std::future<MapTile*> > m_incomingTiles;
-
+    std::vector< std::future<std::shared_ptr<MapTile>> > m_incomingTiles;
+    
+    /*
+     * Constructs a future (async) to load data of a new visible tile
+     *      this is also responsible for loading proxy tiles for the newly visible tiles
+     * @_tileID: TileID for which new MapTile needs to be constructed
+     */
     void addTile(const TileID& _tileID);
-    void removeTile(std::map<TileID, std::unique_ptr<MapTile>>::iterator& _tileIter);
+    
+    /*
+     * Removes a tile from m_tileSet
+     */
+    void removeTile(std::map<TileID, std::shared_ptr<MapTile>>::iterator& _tileIter);
+    
+    /*
+     * Checks and updates m_tileSet with proxy tiles for every new visible tile
+     *  @_tileID: TileID of the new visible tile for which proxies needs to be added
+     *  @_zoomingIn: Zoom-in or Zoom-out to determine parent of child proxies
+     */
+    void updateProxyTiles(const TileID& _tileID, bool _zoomingIn);
+    
+    /*
+     *  Once a visible tile finishes loaded and is added to m_tileSet, all its proxy(ies) MapTiles are removed
+     */
+    void cleanProxyTiles(const TileID& _tileID);
 
 };
