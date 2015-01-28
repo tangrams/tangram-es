@@ -11,12 +11,18 @@
 #endif
 
 #ifdef PLATFORM_OSX
+#define GL_GLEXT_PROTOTYPES
 #include <GLFW/glfw3.h>
 /*
  * typedef to resolve name conflict in osx
  */
 #define glClearDepthf glClearDepth
 #define glDepthRangef glDepthRange
+#endif
+
+#ifdef PLATFORM_LINUX
+#define GL_GLEXT_PROTOTYPES
+#include <GLFW/glfw3.h>
 #endif
 
 #ifdef PLATFORM_RPI
