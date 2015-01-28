@@ -34,6 +34,17 @@ bool TextBuffer::getVertices(std::vector<float>* _vertices, int* _nVerts) {
     return res;
 }
 
+void TextBuffer::expand() {
+    if (m_transform) {
+        bind();
+        // expand the transform texture in cpu side
+        glfonsExpandTransform(m_fsContext, m_fsBuffer, m_transform->getWidth() * 2);
+        // double size of texture
+        m_transform->resize(m_transform->getWidth() * 2, m_transform->getHeight() * 2);
+        unbind();
+    }
+}
+
 void TextBuffer::bind() {
     if (!m_bound) {
         m_bound = true;
@@ -74,6 +85,8 @@ void TextBuffer::transformID(fsuint _textID, float _x, float _y, float _rot, flo
 }
 
 void TextBuffer::unbind() {
-    glfonsBindBuffer(m_fsContext, 0);
-    m_bound = false;
+    if (m_bound) {
+        glfonsBindBuffer(m_fsContext, 0);
+        m_bound = false;
+    }
 }

@@ -19,6 +19,7 @@ public:
     void setTextureTransform(std::unique_ptr<Texture> _texture);
     const std::unique_ptr<Texture>& getTextureTransform() const;
     bool getVertices(std::vector<float>* _vertices, int* _nVerts);
+    void expand();
 
 private:
 

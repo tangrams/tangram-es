@@ -125,19 +125,12 @@ bool errorCallback(void* _userPtr, fsuint buffer, GLFONSError error) {
 
     switch (error) {
         case GLFONSError::ID_OVERFLOW: {
-
-            // TODO : get texture from currently bound text buffer
             logMsg("[FontStyle] FontError : ID_OVERFLOW in text buffer %d\n", buffer);
-            std::shared_ptr<TextBuffer> textBuffer = fontContext->m_currentBuffer.lock();
+            auto textBuffer = fontContext->m_currentBuffer.lock();
 
             if (textBuffer) {
-                const auto& texture = textBuffer->getTextureTransform();
-                // expand the transform texture in cpu side
-                glfonsExpandTransform(fontContext->m_fsContext, buffer, texture->getWidth() * 2);
-                // double size of texture
-                texture->resize(texture->getWidth() * 2, texture->getHeight() * 2);
-
-                solved = true; // error solved
+                textBuffer->expand();
+                solved = true;
             }
             
             break;
