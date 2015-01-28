@@ -16,7 +16,10 @@ TileManager::TileManager() {
 TileManager::TileManager(TileManager&& _other) :
     m_view(std::move(_other.m_view)),
     m_tileSet(std::move(_other.m_tileSet)),
-    m_dataSources(std::move(_other.m_dataSources)) {
+    m_dataSources(std::move(_other.m_dataSources)),
+    m_freeWorkers(std::move(_other.m_freeWorkers)),
+    m_busyWorkers(std::move(_other.m_busyWorkers)),
+    m_queuedTiles(std::move(_other.m_queuedTiles)) {
 }
 
 TileManager::~TileManager() {
@@ -40,16 +43,19 @@ bool TileManager::updateTileSet() {
             auto& worker = *busyWorkersIter;
             
             if (worker->isFinished()) {
+                
+                // Get result from worker and move it into tile set
                 auto tile = worker->getTileResult();
                 const TileID& id = tile->getID();
                 logMsg("Tile [%d, %d, %d] finished loading\n", id.z, id.x, id.y);
                 std::swap(m_tileSet[id], tile);
                 cleanProxyTiles(id);
                 tileSetChanged = true;
-                //auto freedWorkerIter = busyWorkersIter++;
-                //m_freeWorkers.splice(m_freeWorkers.end(), m_busyWorkers, freedWorkerIter);
-                m_freeWorkers.push_back(std::move(worker));
-                busyWorkersIter = m_busyWorkers.erase(busyWorkersIter);
+                
+                // Move the worker from the busy list to the free list
+                auto finishedWorkerIter = busyWorkersIter++; // Copy the iter to the worker just freed, then increment
+                m_freeWorkers.splice(m_freeWorkers.end(), m_busyWorkers, finishedWorkerIter);
+                
             } else {
                 ++busyWorkersIter;
             }
@@ -124,10 +130,12 @@ bool TileManager::updateTileSet() {
             auto& worker = *freeWorkersIter;
             
             worker->load(id, m_dataSources, m_scene->getStyles(), *m_view);
-            m_busyWorkers.push_back(std::move(worker));
-            
-            freeWorkersIter = m_freeWorkers.erase(freeWorkersIter);
             queuedTilesIter = m_queuedTiles.erase(queuedTilesIter);
+            
+            // Move the worker from the free to the busy list
+            auto startedWorkerIter = freeWorkersIter++; // Copy the iterator to the worker just started, then increment
+            m_busyWorkers.splice(m_busyWorkers.begin(), m_freeWorkers, startedWorkerIter);
+            
         }
     }
     
