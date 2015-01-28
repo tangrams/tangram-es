@@ -21,8 +21,8 @@ const std::unique_ptr<Texture>& TextBuffer::getTextureTransform() const {
     return m_transform;
 }
 
-void TextBuffer::getVertices(std::vector<float>* _vertices, int* _nVerts) {
-    glfonsVertices(m_fsContext, _vertices, _nVerts);
+bool TextBuffer::getVertices(std::vector<float>* _vertices, int* _nVerts) {
+    return glfonsVertices(m_fsContext, _vertices, _nVerts);
 }
 
 void TextBuffer::bind() {

@@ -28,7 +28,8 @@ public:
 
 private:
 
+    std::string m_fontFile;
     float m_fontSize;
     bool m_sdf;
-    
+
 };

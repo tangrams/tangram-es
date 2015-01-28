@@ -99,7 +99,6 @@ void createTexTransforms(void* _userPtr, unsigned int _width, unsigned int _heig
 void updateTransforms(void* _userPtr, unsigned int _xoff, unsigned int _yoff, unsigned int _width,
                       unsigned int _height, const unsigned int* _pixels, void* _ownerPtr) {
 
-    FontContext* fontContext = static_cast<FontContext*>(_userPtr);
     TextBuffer* buffer = static_cast<TextBuffer*>(_ownerPtr);
     const GLuint* subData = static_cast<const GLuint*>(_pixels);
     const auto& texture = buffer->getTextureTransform();

@@ -24,6 +24,7 @@ public:
     const std::shared_ptr<FontContext>& getFontContext() { return m_ftContext; }
 
 private:
+    
     LabelContainer();
     std::set<std::shared_ptr<Label>> m_labels;
     std::shared_ptr<FontContext> m_ftContext;

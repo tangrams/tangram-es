@@ -1,7 +1,7 @@
 #include "fontStyle.h"
 
 FontStyle::FontStyle(const std::string& _fontFile, std::string _name, float _fontSize, bool _sdf, GLenum _drawMode)
-: Style(_name, _drawMode), m_fontSize(_fontSize), m_sdf(_sdf) {
+: Style(_name, _drawMode), m_fontFile(_fontFile), m_fontSize(_fontSize), m_sdf(_sdf) {
 
     constructVertexLayout();
     constructShaderProgram();
@@ -38,16 +38,20 @@ void FontStyle::buildPoint(Point& _point, std::string& _layer, Properties& _prop
 void FontStyle::buildLine(Line& _line, std::string& _layer, Properties& _props, VboMesh& _mesh) {
     std::vector<float> vertData;
     int nVerts = 0;
+    auto labelContainer = LabelContainer::GetInstance();
+    auto ftContext = labelContainer->getFontContext();
+    auto textBuffer = ftContext->getCurrentBuffer();
 
-    // TODO : move to font context
-    // fonsSetSize(m_fontContext->m_fsContext, m_fontSize * m_pixelScale);
-    // fonsSetFont(m_fontContext->m_fsContext, m_font);
+    if (!textBuffer) {
+        return;
+    }
 
-    // if(m_sdf) {
-    //     float blurSpread = 2.5;
-    //     fonsSetBlur(m_fontContext->m_fsContext, blurSpread);
-    //     fonsSetBlurType(m_fontContext->m_fsContext, FONS_EFFECT_DISTANCE_FIELD);
-    // }
+    ftContext->setFont(m_fontFile, m_fontSize * m_pixelScale);
+
+    if (m_sdf) {
+        float blurSpread = 2.5;
+        ftContext->setSignedDistanceField(blurSpread);
+    }
 
     if (_layer.compare("roads") == 0) {
         for (auto prop : _props.stringProps) {
@@ -72,19 +76,18 @@ void FontStyle::buildLine(Line& _line, std::string& _layer, Properties& _props, 
 
                 glm::dvec2 position = (p1 + p2) / 2.0 + p1p2 * 0.2 * offset;
 
-                auto label = LabelContainer::GetInstance()->addLabel({ position, 1.0, rot }, prop.second);
-                
+                auto label = labelContainer->addLabel({ position, 1.0, rot }, prop.second);
+
                 label->rasterize();
             }
         }
     }
 
     // fonsClearState(m_fontContext->m_fsContext);
-
-    // TODO : ask font context to generate those vertices for currently bound text buffer
-    // if (glfonsVertices(m_fontContext->m_fsContext, &vertData, &nVerts)) {
-    //     _mesh.addVertices((GLbyte*)vertData.data(), nVerts);
-    // }
+    
+    if (textBuffer->getVertices(&vertData, &nVerts)) {
+         _mesh.addVertices((GLbyte*)vertData.data(), nVerts);
+    }
 }
 
 void FontStyle::buildPolygon(Polygon& _polygon, std::string& _layer, Properties& _props, VboMesh& _mesh) {
