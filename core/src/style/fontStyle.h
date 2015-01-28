@@ -2,14 +2,8 @@
 
 #include "style.h"
 #include "glfontstash.h"
-#include "text/fontContext.h"
-#include "label.h"
-#include "stl_util.hpp"
-#include "texture.h"
-#include <map>
+#include "tile/labels/labelContainer.h"
 #include <memory>
-#include <queue>
-#include <mutex>
 
 class FontStyle : public Style {
 
@@ -36,4 +30,5 @@ private:
 
     float m_fontSize;
     bool m_sdf;
+    
 };

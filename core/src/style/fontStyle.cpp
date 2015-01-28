@@ -1,6 +1,4 @@
 #include "fontStyle.h"
-#define GLFONTSTASH_IMPLEMENTATION
-#include "glfontstash.h"
 
 FontStyle::FontStyle(const std::string& _fontFile, std::string _name, float _fontSize, bool _sdf, GLenum _drawMode)
 : Style(_name, _drawMode), m_fontSize(_fontSize), m_sdf(_sdf) {
@@ -64,39 +62,19 @@ void FontStyle::buildLine(Line& _line, std::string& _layer, Properties& _props, 
                 }
 
                 p1p2 = glm::normalize(p1p2);
-                float r = (float) atan2(p1p2.x, p1p2.y) + M_PI_2;
+                float rot = (float) atan2(p1p2.x, p1p2.y) + M_PI_2;
 
                 double offset = 1;
-                if (r > M_PI_2 || r < -M_PI_2) {
-                    r += M_PI;
+                if (rot > M_PI_2 || rot < -M_PI_2) {
+                    rot += M_PI;
                     offset = -1;
                 }
 
-                // TODO : ask label manager to generate a label in current text buffer, and add it
-                // fsuint textId;
-                // glfonsGenText(m_fontContext->m_fsContext, 1, &textId);
+                glm::dvec2 position = (p1 + p2) / 2.0 + p1p2 * 0.2 * offset;
 
-                // glm::dvec2 position = (p1 + p2) / 2.0 + p1p2 * 0.2 * offset;
-
-                // // FUTURE: label logic
-                // // 1. project label on screen and compute its bbox, to do so we need the view and label model matrix
-                // // 2. ask any kind of label manager to perform label discards
-
-                // std::unique_ptr<Label> label(new Label {
-                //     m_fontContext,
-                //     textId,
-                //     prop.second.c_str(),
-                //     position,   // world position
-                //     1.0,        // alpha
-                //     r           // rotation
-                // });
-
-                // if (m_processedTile->addLabel(*this, std::move(label))) { // could potentially refuse to add label
-
-                //     logMsg("[FontStyle] Rasterize label: %s, angle: %f\n", prop.second.c_str(), r * (180/M_PI));
-
-                //     glfonsRasterize(m_fontContext->m_fsContext, textId, prop.second.c_str(), FONS_EFFECT_NONE);
-                // }
+                auto label = LabelContainer::GetInstance()->addLabel({ position, 1.0, rot }, prop.second);
+                
+                label->rasterize();
             }
         }
     }

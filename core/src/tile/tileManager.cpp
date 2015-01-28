@@ -143,9 +143,6 @@ void TileManager::addTile(const TileID& _tileID) {
                 for (auto& style : m_scene->getStyles()) {
                     if (tileData) {
                         style->addData(*tileData, *tile, m_view->getMapProjection());
-                        if (tile) {
-                            tile->update(0.0, *style, *m_view);
-                        }
                     }
                 }
             }

@@ -14,6 +14,7 @@ class TextBuffer;
 class FontContext {
 
 public:
+
     FontContext();
     FontContext(int _atlasSize);
     ~FontContext();
@@ -28,6 +29,10 @@ public:
     std::shared_ptr<TextBuffer> genTextBuffer(int _size) const;
 
     void useBuffer(const std::shared_ptr<TextBuffer>& _textBuffer);
+    std::shared_ptr<TextBuffer> getCurrentBuffer(); 
+
+    void lock();
+    void unlock();
 
     const std::unique_ptr<Texture>& getAtlas() const;
 
@@ -49,11 +54,15 @@ public:
     friend bool errorCallback(void* _userPtr, fsuint buffer, GLFONSError error);
 
 private:
+
     void initFontContext(int _atlasSize);
 
     std::map<std::string, int> m_fonts;
     std::weak_ptr<TextBuffer> m_currentBuffer;
     std::unique_ptr<Texture> m_atlas;
+    std::unique_ptr<std::mutex> m_contextMutex;
     FONScontext* m_fsContext;
+
     int m_font;
+    
 };

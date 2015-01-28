@@ -42,7 +42,23 @@ void FontContext::setSignedDistanceField(float _blurSpread) {
     fonsSetBlurType(m_fsContext, FONS_EFFECT_DISTANCE_FIELD);
 }
 
+void FontContext::lock() {
+    m_contextMutex->lock();
+}
+
+void FontContext::unlock() {
+    m_contextMutex->unlock();
+}
+
+std::shared_ptr<TextBuffer> FontContext::getCurrentBuffer() {
+    return m_currentBuffer.lock();
+}
+
 bool FontContext::addFont(std::string _fontFile, std::string _name) {
+    if (m_fonts.find(_name) != m_fonts.end()) {
+        return true;
+    }
+
     unsigned int dataSize;
     unsigned char* data = bytesFromResource(_fontFile.c_str(), &dataSize);
     m_font = fonsAddFont(m_fsContext, "droid-serif", data, dataSize);
@@ -75,7 +91,7 @@ void createTexTransforms(void* _userPtr, unsigned int _width, unsigned int _heig
     std::unique_ptr<Texture> texture(new Texture(_width, _height, 1 /* gpu slot */ , options));
     std::shared_ptr<TextBuffer> textBuffer = fontContext->m_currentBuffer.lock();
 
-    if(textBuffer) {
+    if (textBuffer) {
         textBuffer->setTextureTransform(std::move(texture));
     }
 }

@@ -15,7 +15,7 @@ class Label {
 
 public:
 
-    Label(LabelTransform _transform, std::string _text, std::shared_ptr<FontContext> _fontContext, std::shared_ptr<TextBuffer> _buffer);
+    Label(LabelTransform _transform, std::string _text, std::shared_ptr<TextBuffer> _buffer);
     ~Label();
 
     void rasterize();
@@ -27,7 +27,7 @@ private:
 
     LabelTransform m_transform;
     std::string m_text;
-    std::shared_ptr<FontContext> m_fontContext;
     std::shared_ptr<TextBuffer> m_buffer;
     fsuint m_id;
+    
 };

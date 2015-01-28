@@ -1,13 +1,12 @@
 #pragma once
 
 #include "texture.h"
-#include "fontContext.h"
 #include "glfontstash.h"
-#include "stl_util.hpp"
 
 class TextBuffer {
 
 public:
+
     TextBuffer(FONScontext* _fsContext);
     TextBuffer(FONScontext* _fsContext, int _size);
     ~TextBuffer();
@@ -19,9 +18,10 @@ public:
 
     void setTextureTransform(std::unique_ptr<Texture> _texture);
     const std::unique_ptr<Texture>& getTextureTransform() const;
+    void getVertices(std::vector<float>* _vertices, int* _nVerts);
 
 private:
-    bool validateBinding();
+
     void bind();
     void unbind();
 
@@ -30,7 +30,5 @@ private:
     std::unique_ptr<Texture> m_transform;
     fsuint m_fsBuffer;
     FONScontext* m_fsContext;
-
-    static std::unique_ptr<std::mutex> s_contextMutex; 
 
 };

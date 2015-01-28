@@ -15,6 +15,7 @@
 #include "style/fontStyle.h"
 #include "scene/scene.h"
 #include "util/error.h"
+#include "stl_util.hpp"
 
 namespace Tangram {
 
