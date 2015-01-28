@@ -95,39 +95,33 @@ void FontStyle::buildPolygon(Polygon& _polygon, std::string& _layer, Properties&
 }
 
 void FontStyle::prepareDataProcessing(MapTile& _tile) {
-    // TODO : generate a text buffer from font context
-    // m_fontContext->m_contextMutex->lock();
-
-    // m_processedTile = &_tile;
-
-    // // start naively with a transform texture of size 2x4, asumption can be done querying the props
-    // int transformTextureSize = 2;
-    // fsuint buffer = _tile.createTextBuffer(*this, m_fontContext, transformTextureSize);
-    // glfonsBindBuffer(m_fontContext->m_fsContext, buffer);
+    auto ftContext = LabelContainer::GetInstance()->getFontContext();
+    auto buffer = ftContext->genTextBuffer();
+    // TODO : associate text buffer with tile
+    ftContext->lock();
+    ftContext->useBuffer(buffer);
 }
 
 void FontStyle::finishDataProcessing(MapTile& _tile) {
-    // TODO : unbind the text buffer
-    // glfonsBindBuffer(m_fontContext->m_fsContext, 0);
-
-    // m_processedTile = nullptr;
-
-    // m_fontContext->m_contextMutex->unlock();
+    auto ftContext = LabelContainer::GetInstance()->getFontContext();
+    ftContext->useBuffer(nullptr);
+    ftContext->unlock();
 }
 
 void FontStyle::setupFrame(const std::shared_ptr<View>& _view) {
-    // TODO : ask font context for atlas and projection matrix
-    // float projectionMatrix[16] = {0};
+    auto ftContext = LabelContainer::GetInstance()->getFontContext();
+    const auto& atlas = ftContext->getAtlas();
+    float projectionMatrix[16];
 
-    // glfonsProjection(m_fontContext->m_fsContext, projectionMatrix);
+    ftContext->getViewProjection(projectionMatrix);
 
-    // m_atlas->update();
-    // m_atlas->bind();
+    atlas->update();
+    atlas->bind();
 
-    // m_shaderProgram->setUniformi("u_tex", m_atlas->getTextureSlot()); // atlas
+    m_shaderProgram->setUniformi("u_tex", atlas->getTextureSlot()); 
     m_shaderProgram->setUniformf("u_resolution", _view->getWidth(), _view->getHeight());
     m_shaderProgram->setUniformf("u_color", 1.0, 1.0, 1.0);
-    // m_shaderProgram->setUniformMatrix4f("u_proj", projectionMatrix);
+    m_shaderProgram->setUniformMatrix4f("u_proj", projectionMatrix);
 
     glEnable(GL_BLEND);
     glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
@@ -138,4 +132,3 @@ void FontStyle::teardown() {
     glDisable(GL_BLEND);
     glEnable(GL_DEPTH_TEST);
 }
-
