@@ -3,6 +3,7 @@
 #include "texture.h"
 #include "fontContext.h"
 #include "glfontstash.h"
+#include "stl_util.hpp"
 
 class TextBuffer {
 
@@ -12,7 +13,7 @@ public:
     ~TextBuffer();
 
     fsuint genTextID();
-    void rasterize(const std::string& _text, fsuint _id) const;
+    void rasterize(const std::string& _text, fsuint _id);
     void transformID(fsuint _textID, float _x, float _y, float _rot, float _alpha);
     void triggerTransformUpdate();
 
@@ -30,6 +31,6 @@ private:
     fsuint m_fsBuffer;
     FONScontext* m_fsContext;
 
-    static std::unique_ptr<std::mutex> s_contextMutex;
+    static std::unique_ptr<std::mutex> s_contextMutex; 
 
 };

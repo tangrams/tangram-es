@@ -1,5 +1,7 @@
 #include "textBuffer.h"
 
+std::unique_ptr<std::mutex> TextBuffer::s_contextMutex = std_patch::make_unique<std::mutex>();
+
 TextBuffer::TextBuffer(FONScontext* _fsContext) : TextBuffer(_fsContext, 2) {}
 
 TextBuffer::TextBuffer(FONScontext* _fsContext, int _size) : m_fsContext(_fsContext) {
@@ -38,7 +40,7 @@ fsuint TextBuffer::genTextID() {
     return id;
 }
     
-void TextBuffer::rasterize(const std::string& _text, fsuint _id) const {
+void TextBuffer::rasterize(const std::string& _text, fsuint _id) {
     if (!m_bound) {
         bind();
     }

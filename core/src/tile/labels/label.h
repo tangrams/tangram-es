@@ -7,7 +7,6 @@
 
 struct LabelTransform {
     glm::dvec2 m_worldPosition;
-    glm::dvec2 m_screenPosition;
     float m_alpha;
     float m_rotation;
 };
@@ -18,6 +17,11 @@ public:
 
     Label(LabelTransform _transform, std::string _text, std::shared_ptr<FontContext> _fontContext, std::shared_ptr<TextBuffer> _buffer);
     ~Label();
+
+    void rasterize();
+
+    LabelTransform getTransform() const { return m_transform; }
+    void updateTransform(LabelTransform _transform, glm::dmat4 _mvp, glm::dvec2 _screenSize);
 
 private:
 

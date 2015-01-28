@@ -11,19 +11,6 @@
 #include <queue>
 #include <mutex>
 
-struct TextureData {
-    const unsigned int* m_pixels;
-    unsigned int m_xoff;
-    unsigned int m_yoff;
-    unsigned int m_width;
-    unsigned int m_height;
-};
-
-struct TileTransform {
-    TileID m_id;
-    TextureData m_data;
-};
-
 class FontStyle : public Style {
 
 protected:
@@ -49,9 +36,4 @@ private:
 
     float m_fontSize;
     bool m_sdf;
-
-    // pointer to the currently processed tile by build* methods, nullptr if not
-    MapTile* m_processedTile;
-    std::unique_ptr<Texture> m_atlas;
-    std::shared_ptr<FontContext> m_fontContext;
 };
