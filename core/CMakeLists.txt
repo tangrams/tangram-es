@@ -9,7 +9,6 @@ set(INCLUDE_DIR include)
 set(DEPENDENCIES_DIR dependencies)
 set(SOURCE_DIR src)
 
-add_subdirectory("${DEPENDENCIES_DIR}/jsoncpp")
 add_subdirectory("${DEPENDENCIES_DIR}/tess2")
 add_subdirectory("${INCLUDE_DIR}/glm")
 
@@ -24,7 +23,6 @@ endforeach()
 set(CORE_INCLUDE_DIRS ${INCLUDE_DIRS} CACHE INTERNAL "core include directories" FORCE)
 list(APPEND INCLUDE_DIRS "${DEPENDENCIES_DIR}/tess2/libtess2/Include")
 list(APPEND INCLUDE_DIRS "${INCLUDE_DIR}/glm")
-list(APPEND INCLUDE_DIRS "${DEPENDENCIES_DIR}/jsoncpp")
 list(REMOVE_DUPLICATES INCLUDE_DIRS)
 
 include_directories(${INCLUDE_DIR} ${INCLUDE_DIRS})
@@ -34,7 +32,7 @@ set(CORE_LIBRARIES_INCLUDE_DIRS
     ${PROJECT_SOURCE_DIR}/${INCLUDE_DIR}/
     ${PROJECT_SOURCE_DIR}/${INCLUDE_DIR}/glm/
     ${PROJECT_SOURCE_DIR}/${INCLUDE_DIR}/catch/
-    ${PROJECT_SOURCE_DIR}/${INCLUDE_DIR}/jsoncpp/
+    ${PROJECT_SOURCE_DIR}/${INCLUDE_DIR}/rapidjson/
     CACHE INTERNAL "core libraries include directories" FORCE)
 
 # adding some other dependent target files if needed
@@ -45,7 +43,7 @@ if(NOT DEFINED CORE_LIB_NAME)
 endif()
 
 add_library(${CORE_LIB_NAME} ${CORE_LIB_TYPE} ${FOUND_SOURCES} ${FOUND_HEADERS})
-target_link_libraries(${CORE_LIB_NAME} json libtess2 ${CORE_LIB_DEPS})
+target_link_libraries(${CORE_LIB_NAME} libtess2 ${CORE_LIB_DEPS})
 
 # post build commands
 add_custom_command(TARGET ${CORE_LIB_NAME}
