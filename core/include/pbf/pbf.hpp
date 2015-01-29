@@ -54,6 +54,8 @@ public:
     PBF_INLINE void skipValue(uint64_t val);
     PBF_INLINE void skipBytes(uint64_t bytes);
     PBF_INLINE value_type getData();
+    PBF_INLINE message getMessage();
+    PBF_INLINE operator bool() const;
 };
 
 message::message(value_type data, std::size_t length)
@@ -206,6 +208,17 @@ void message::skipBytes(uint64_t bytes)
 message::value_type message::getData()
 {
   return data_;
+}u
+    
+message message::getMessage() {
+    uint32_t bytes = static_cast<uint32_t>(varint());
+    value_type pos = data_;
+    skipBytes(bytes);
+    return message(pos, bytes);
+}
+    
+message::operator bool() const {
+    return data_ < end_;
 }
 
 }
