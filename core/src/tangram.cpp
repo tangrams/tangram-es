@@ -23,6 +23,7 @@ namespace Tangram {
 std::unique_ptr<TileManager> m_tileManager;
 std::shared_ptr<Scene> m_scene;
 std::shared_ptr<View> m_view;
+std::shared_ptr<FontContext> m_ftContext;
 
 static float g_time = 0.0;
 
@@ -57,9 +58,9 @@ void initialize() {
         linesStyle->addLayers({"roads"});
         m_scene->addStyle(std::move(linesStyle));
 
-        std::shared_ptr<FontContext> ftContext(new FontContext);
-        ftContext->addFont("Roboto-Regular.ttf", "Roboto-Regular");
-        LabelContainer::GetInstance()->setFontContext(ftContext);
+        m_ftContext = std::make_shared<FontContext>();
+        m_ftContext->addFont("Roboto-Regular.ttf", "Roboto-Regular");
+        LabelContainer::GetInstance()->setFontContext(m_ftContext);
 
         std::unique_ptr<Style> fontStyle(new FontStyle("Roboto-Regular", "FontStyle", 14.0f, true));
         fontStyle->addLayers({"roads"});
@@ -128,7 +129,9 @@ void update(float _dt) {
         m_view->update();
 
         if (m_view->changedSinceLastCheck()) {
-            LabelContainer::GetInstance()->getFontContext()->setScreenSize(m_view->getWidth(), m_view->getHeight());
+            if (m_ftContext) {
+                m_ftContext->setScreenSize(m_view->getWidth(), m_view->getHeight());
+            }
 
             for (const auto& style : m_scene->getStyles()) {
 
