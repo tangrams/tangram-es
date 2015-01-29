@@ -141,7 +141,7 @@ void FontStyle::setupFrame(const std::shared_ptr<View>& _view) {
     float projectionMatrix[16];
 
     ftContext->setScreenSize(_view->getWidth(), _view->getHeight());
-    ftContext->getViewProjection(projectionMatrix);
+    ftContext->getProjection(projectionMatrix);
 
     atlas->update();
     atlas->bind();

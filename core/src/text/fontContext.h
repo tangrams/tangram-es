@@ -25,7 +25,7 @@ public:
     void setFont(std::string _name, int size);
     void setSignedDistanceField(float _blurSpread);
     void setScreenSize(int _width, int _height);
-    void getViewProjection(float* _projectionMatrix) const;
+    void getProjection(float* _projectionMatrix) const;
 
     std::shared_ptr<TextBuffer> genTextBuffer();
 

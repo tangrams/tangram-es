@@ -21,7 +21,7 @@ const std::unique_ptr<Texture>& FontContext::getAtlas() const {
     return m_atlas;
 }
 
-void FontContext::getViewProjection(float* _projectionMatrix) const {
+void FontContext::getProjection(float* _projectionMatrix) const {
     glfonsProjection(m_fsContext, _projectionMatrix);
 }
 
