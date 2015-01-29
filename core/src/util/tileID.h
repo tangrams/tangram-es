@@ -8,8 +8,7 @@
 struct TileID {
 
     TileID(int _x, int _y, int _z) : x(_x), y(_y), z(_z) {};
-
-
+    
     bool operator< (const TileID& _rhs) const {
         if(x != _rhs.x) {
             return (x < _rhs.x);

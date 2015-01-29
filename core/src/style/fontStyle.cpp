@@ -100,11 +100,13 @@ void FontStyle::prepareDataProcessing(MapTile& _tile) {
     _tile.setTextBuffer(*this, buffer);
     ftContext->lock();
     ftContext->useBuffer(buffer);
+    LabelContainer::GetInstance()->processedTile = &_tile;
 }
 
 void FontStyle::finishDataProcessing(MapTile& _tile) {
     auto ftContext = LabelContainer::GetInstance()->getFontContext();
-    ftContext->useBuffer(nullptr);
+    LabelContainer::GetInstance()->processedTile = nullptr;
+    ftContext->useBuffer(nullptr);;
     ftContext->unlock();
 }
 

@@ -10,6 +10,7 @@
 #include "label.h"
 #include "text/textBuffer.h"
 #include "view/view.h"
+#include "labels/labelContainer.h"
 #include "util/vboMesh.h"
 #include "util/mapProjection.h"
 #include "util/texture.h"

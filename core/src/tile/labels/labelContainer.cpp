@@ -1,4 +1,5 @@
 #include "labelContainer.h"
+#include "tile/mapTile.h"
 
 LabelContainer::LabelContainer() {}
 
@@ -9,10 +10,14 @@ std::shared_ptr<Label> LabelContainer::addLabel(LabelTransform _transform, std::
 
     if (currentBuffer) {
         std::shared_ptr<Label> label(new Label(_transform, _text, currentBuffer));
-        m_labels.insert(label);
+        m_labels[processedTile->getID()].push_back(label);
 
         return label;
     } 
 
     return nullptr;
+}
+
+const std::vector<std::shared_ptr<Label>>& LabelContainer::getLabels(const TileID& _tileID) {
+    return m_labels[_tileID];
 }

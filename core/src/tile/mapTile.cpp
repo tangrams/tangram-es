@@ -46,6 +46,17 @@ void MapTile::setTextBuffer(const Style& _style, std::shared_ptr<TextBuffer> _bu
 
 void MapTile::update(float _dt, const Style& _style, View& _view) {
 
+    auto labelContainer = LabelContainer::GetInstance();
+
+    // TODO : this would be called for each style now, improve
+
+    labelContainer->getFontContext()->setScreenSize(_view.getWidth(), _view.getHeight());
+
+    for(auto label : labelContainer->getLabels(getID())) {
+        glm::dmat4 mvp = _view.getViewProjectionMatrix() * m_modelMatrix;
+        label->updateTransform(label->getTransform(), mvp, glm::dvec2(_view.getWidth(), _view.getHeight()));
+    }
+
     // TODO : refactor update of tile
     // auto& labels = m_labels[_style.getName()];
 

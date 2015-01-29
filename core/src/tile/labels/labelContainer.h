@@ -1,9 +1,13 @@
 #pragma once
 
 #include "label.h"
+#include "util/tileID.h"
 #include "text/fontContext.h"
 #include <memory>
-#include <set>
+#include <vector>
+#include <map>
+
+class MapTile;
 
 class LabelContainer {
 
@@ -22,11 +26,14 @@ public:
     // QuadTree structure used to iterate through labels
 
     const std::shared_ptr<FontContext>& getFontContext() { return m_ftContext; }
+    const std::vector<std::shared_ptr<Label>>& getLabels(const TileID& _tileID);
+
+    MapTile* processedTile;
 
 private:
-    
+
     LabelContainer();
-    std::set<std::shared_ptr<Label>> m_labels;
+    std::map<TileID, std::vector<std::shared_ptr<Label>>> m_labels;
     std::shared_ptr<FontContext> m_ftContext;
 
 };
