@@ -113,7 +113,7 @@ void FontStyle::finishDataProcessing(MapTile& _tile) {
 
     LabelContainer::GetInstance()->processedTile = nullptr;
 
-    ftContext->useBuffer(nullptr);;
+    ftContext->useBuffer(nullptr);
     ftContext->unlock();
 }
 
@@ -138,7 +138,7 @@ void FontStyle::setupTile(const std::shared_ptr<MapTile>& _tile) {
 void FontStyle::setupFrame(const std::shared_ptr<View>& _view) {
     auto ftContext = LabelContainer::GetInstance()->getFontContext();
     const auto& atlas = ftContext->getAtlas();
-    float projectionMatrix[16];
+    float projectionMatrix[16] = {0};
 
     ftContext->setScreenSize(_view->getWidth(), _view->getHeight());
     ftContext->getProjection(projectionMatrix);
