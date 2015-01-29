@@ -25,17 +25,14 @@ void FontStyle::constructShaderProgram() {
     std::string fragShaderSrcStr = stringFromResource(frag.c_str());
 
     m_shaderProgram = std::make_shared<ShaderProgram>();
-
-    if (!m_shaderProgram->buildFromSourceStrings(fragShaderSrcStr, vertShaderSrcStr)) {
-        logMsg("[FontStyle] Error building text shader program\n");
-    }
+    m_shaderProgram->setSourceStrings(fragShaderSrcStr, vertShaderSrcStr);
 }
 
-void FontStyle::buildPoint(Point& _point, std::string& _layer, Properties& _props, VboMesh& _mesh) {
+void FontStyle::buildPoint(Point& _point, std::string& _layer, Properties& _props, VboMesh& _mesh) const {
 
 }
 
-void FontStyle::buildLine(Line& _line, std::string& _layer, Properties& _props, VboMesh& _mesh) {
+void FontStyle::buildLine(Line& _line, std::string& _layer, Properties& _props, VboMesh& _mesh) const {
     std::vector<float> vertData;
     int nVerts = 0;
     auto labelContainer = LabelContainer::GetInstance();
@@ -90,11 +87,11 @@ void FontStyle::buildLine(Line& _line, std::string& _layer, Properties& _props, 
     }
 }
 
-void FontStyle::buildPolygon(Polygon& _polygon, std::string& _layer, Properties& _props, VboMesh& _mesh) {
+void FontStyle::buildPolygon(Polygon& _polygon, std::string& _layer, Properties& _props, VboMesh& _mesh) const {
 
 }
 
-void FontStyle::prepareDataProcessing(MapTile& _tile) {
+void FontStyle::prepareDataProcessing(MapTile& _tile) const {
     auto ftContext = LabelContainer::GetInstance()->getFontContext();
     auto buffer = ftContext->genTextBuffer();
 
@@ -108,7 +105,7 @@ void FontStyle::prepareDataProcessing(MapTile& _tile) {
     LabelContainer::GetInstance()->processedTile = &_tile;
 }
 
-void FontStyle::finishDataProcessing(MapTile& _tile) {
+void FontStyle::finishDataProcessing(MapTile& _tile) const {
     auto ftContext = LabelContainer::GetInstance()->getFontContext();
 
     LabelContainer::GetInstance()->processedTile = nullptr;
@@ -135,7 +132,7 @@ void FontStyle::setupTile(const std::shared_ptr<MapTile>& _tile) {
     }
 }
 
-void FontStyle::setupFrame(const std::shared_ptr<View>& _view) {
+void FontStyle::setupFrame(const std::shared_ptr<View>& _view, const std::shared_ptr<Scene>& _scene) {
     auto ftContext = LabelContainer::GetInstance()->getFontContext();
     const auto& atlas = ftContext->getAtlas();
     float projectionMatrix[16] = {0};

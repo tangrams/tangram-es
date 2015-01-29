@@ -16,13 +16,10 @@ MapTile::MapTile(TileID _id, const MapProjection& _projection) : m_id(_id),  m_p
     // negative y coordinate: to change from y down to y up (tile system has y down and gl context we use has y up).
     m_tileOrigin = glm::dvec2(0.5*(bounds.x + bounds.z), -0.5*(bounds.y + bounds.w));
     
-    m_modelMatrix = glm::dmat4(1.0);
-    
-    // Translate model matrix to origin of tile
-    m_modelMatrix = glm::translate(m_modelMatrix, glm::dvec3(m_tileOrigin.x, m_tileOrigin.y, 0.0));
+    m_modelMatrix = glm::mat4(1.0);
     
     // Scale model matrix to size of tile
-    m_modelMatrix = glm::scale(m_modelMatrix, glm::dvec3(m_scale));
+    m_modelMatrix = glm::scale(m_modelMatrix, glm::vec3(m_scale));
 
 }
 
@@ -55,6 +52,12 @@ std::shared_ptr<TextBuffer> MapTile::getTextBuffer(const Style& _style) const {
 
 void MapTile::update(float _dt, const Style& _style, View& _view) {
 
+    // Apply tile-view translation to the model matrix
+    const auto& viewOrigin = _view.getPosition();
+    m_modelMatrix[3][0] = m_tileOrigin.x - viewOrigin.x;
+    m_modelMatrix[3][1] = m_tileOrigin.y - viewOrigin.y;
+    m_modelMatrix[3][2] = -viewOrigin.z;
+
     if(m_buffers[_style.getName()]) {
         auto labelContainer = LabelContainer::GetInstance();
         auto ftContext = labelContainer->getFontContext();
@@ -75,18 +78,20 @@ void MapTile::update(float _dt, const Style& _style, View& _view) {
 void MapTile::draw(const Style& _style, const View& _view) {
 
     const std::unique_ptr<VboMesh>& styleMesh = m_geometry[_style.getName()];
-
+    
     if (styleMesh) {
-
+        
         std::shared_ptr<ShaderProgram> shader = _style.getShaderProgram();
 
-        glm::dmat4 modelViewProjMatrix = _view.getViewProjectionMatrix() * m_modelMatrix;
-
-        // NOTE : casting to float, but loop over the matrix values
-        double* first = &modelViewProjMatrix[0][0];
-        std::vector<float> fmvp(first, first + 16);
-
-        shader->setUniformMatrix4f("u_modelViewProj", &fmvp[0]);
+        glm::mat4 modelViewMatrix = _view.getViewMatrix() * m_modelMatrix;
+        glm::mat4 modelViewProjMatrix = _view.getViewProjectionMatrix() * m_modelMatrix;
+        
+        glm::mat3 normalMatrix = glm::mat3(modelViewMatrix); // Transforms surface normals into camera space
+        normalMatrix = glm::transpose(glm::inverse(normalMatrix));
+        
+        shader->setUniformMatrix4f("u_modelView", glm::value_ptr(modelViewMatrix));
+        shader->setUniformMatrix4f("u_modelViewProj", glm::value_ptr(modelViewProjMatrix));
+        shader->setUniformMatrix3f("u_normalMatrix", glm::value_ptr(normalMatrix));
 
         // Set tile offset for proxy tiles
         float offset = 0;

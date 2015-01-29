@@ -140,7 +140,7 @@ void TileManager::addTile(const TileID& _tileID) {
                 
                 auto tileData = dataSource->getTileData(_id);
                 
-                for (auto& style : m_scene->getStyles()) {
+                for (const auto& style : m_scene->getStyles()) {
                     if (tileData) {
                         style->addData(*tileData, *tile, m_view->getMapProjection());
 

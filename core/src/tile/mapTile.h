@@ -2,7 +2,6 @@
 
 #include <unordered_map>
 #include <memory>
-#include <mutex>
 
 #include "glm/vec2.hpp"
 #include "glm/mat4x4.hpp"
@@ -92,7 +91,10 @@ private:
 
     glm::dvec2 m_tileOrigin; // Center of the tile in 2D projection space in meters (e.g. mercator meters)
 
-    glm::dmat4 m_modelMatrix; // Translation matrix from world origin to tile origin
+    glm::mat4 m_modelMatrix; // Matrix relating tile-local coordinates to global projection space coordinates;
+    // Note that this matrix does not contain the relative translation from the global origin to the tile origin.
+    // Distances from the global origin are too large to represent precisely in 32-bit floats, so we only apply the
+    // relative translation from the view origin to the model origin immediately before drawing the tile. 
 
     std::unordered_map<std::string, std::unique_ptr<VboMesh>> m_geometry; // Map of <Style>s and their associated <VboMesh>es
     std::map<std::string, std::shared_ptr<TextBuffer>> m_buffers; // Map of <Style>s and the associated text buffer
