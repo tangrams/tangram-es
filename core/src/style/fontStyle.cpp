@@ -110,11 +110,25 @@ void FontStyle::prepareDataProcessing(MapTile& _tile) {
 
 void FontStyle::finishDataProcessing(MapTile& _tile) {
     auto ftContext = LabelContainer::GetInstance()->getFontContext();
-    
+
     LabelContainer::GetInstance()->processedTile = nullptr;
 
     ftContext->useBuffer(nullptr);;
     ftContext->unlock();
+}
+
+void FontStyle::setupTile(const std::shared_ptr<MapTile>& _tile) {
+    const auto& texture = _tile->getTextBuffer(*this)->getTextureTransform();
+
+    if (texture) {
+        texture->update();
+        texture->bind();
+
+        // transform texture
+        m_shaderProgram->setUniformi("u_transforms", texture->getTextureSlot());
+        // resolution of the transform texture
+        m_shaderProgram->setUniformf("u_tresolution", texture->getWidth(), texture->getHeight());
+    }
 }
 
 void FontStyle::setupFrame(const std::shared_ptr<View>& _view) {
@@ -122,6 +136,7 @@ void FontStyle::setupFrame(const std::shared_ptr<View>& _view) {
     const auto& atlas = ftContext->getAtlas();
     float projectionMatrix[16];
 
+    ftContext->setScreenSize(_view->getWidth(), _view->getHeight());
     ftContext->getViewProjection(projectionMatrix);
 
     atlas->update();

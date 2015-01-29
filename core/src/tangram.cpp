@@ -116,6 +116,8 @@ void update(float _dt) {
         m_view->update();
 
         if (m_view->changedSinceLastCheck()) {
+            LabelContainer::GetInstance()->getFontContext()->setScreenSize(m_view->getWidth(), m_view->getHeight());
+
             for (const auto& style : m_scene->getStyles()) {
 
                 for (const auto& mapIDandTile : m_tileManager->getVisibleTiles()) {

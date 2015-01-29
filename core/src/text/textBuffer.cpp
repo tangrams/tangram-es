@@ -74,6 +74,7 @@ void TextBuffer::triggerTransformUpdate() {
         bind();
         glfonsUpdateTransforms(m_fsContext, (void*) this);
         unbind();
+        m_dirty = false;
     }
 }
 

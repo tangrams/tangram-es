@@ -43,14 +43,16 @@ void MapTile::setTextBuffer(const Style& _style, std::shared_ptr<TextBuffer> _bu
     m_buffers[_style.getName()] = _buffer;
 }
 
+const std::shared_ptr<TextBuffer>& MapTile::getTextBuffer(const Style& _style) const {
+    
+    return m_buffers.find(_style.getName())->second;
+}
 
 void MapTile::update(float _dt, const Style& _style, View& _view) {
 
     if(m_buffers[_style.getName()]) {
 
         auto labelContainer = LabelContainer::GetInstance();
-
-        labelContainer->getFontContext()->setScreenSize(_view.getWidth(), _view.getHeight());
 
         for(auto label : labelContainer->getLabels(_style.getName(), getID())) {
             glm::dmat4 mvp = _view.getViewProjectionMatrix() * m_modelMatrix;
@@ -68,21 +70,6 @@ void MapTile::draw(const Style& _style, const View& _view) {
     if (styleMesh) {
 
         std::shared_ptr<ShaderProgram> shader = _style.getShaderProgram();
-        auto buffer = m_buffers[_style.getName()];
-        
-        if (buffer) {
-            const auto& texture = m_buffers[_style.getName()]->getTextureTransform();
-
-            if (texture) {
-                texture->update();
-                texture->bind();
-
-                // transform texture
-                shader->setUniformi("u_transforms", texture->getTextureSlot());
-                // resolution of the transform texture
-                shader->setUniformf("u_tresolution", texture->getWidth(), texture->getHeight());
-            }
-        }
 
         glm::dmat4 modelViewProjMatrix = _view.getViewProjectionMatrix() * m_modelMatrix;
 
