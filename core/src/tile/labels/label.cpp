@@ -16,7 +16,7 @@ void Label::rasterize() {
     m_buffer->rasterize(m_text, m_id);
 }
 
-void Label::updateTransform(LabelTransform _transform, glm::dmat4 _mvp, glm::dvec2 _screenSize) {
+void Label::updateTransform(const LabelTransform& _transform, const glm::dmat4& _mvp, const glm::dvec2& _screenSize) {
     m_transform = _transform;
 
     float halfWidth = _screenSize.x * 0.5;
@@ -36,8 +36,8 @@ void Label::updateTransform(LabelTransform _transform, glm::dmat4 _mvp, glm::dve
     screenPosition.y = (1 - screenPosition.y) * halfHeight;
 
     // don't display out of screen labels, and out of screen translations or not yet implemented in fstash
-    alpha = screenPosition.x > _screenSize.x || screenPosition.x < 0 ? 0.0 : m_transform.m_alpha;
-    alpha = screenPosition.y > _screenSize.y || screenPosition.y < 0 ? 0.0 : m_transform.m_alpha;
+    alpha = screenPosition.x > _screenSize.x || screenPosition.x < 0 ? 0.0 : alpha;
+    alpha = screenPosition.y > _screenSize.y || screenPosition.y < 0 ? 0.0 : alpha;
 
     m_buffer->transformID(m_id, screenPosition.x, screenPosition.y, m_transform.m_rotation, alpha);
 }

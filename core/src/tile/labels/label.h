@@ -21,7 +21,7 @@ public:
     void rasterize();
 
     LabelTransform getTransform() const { return m_transform; }
-    void updateTransform(LabelTransform _transform, glm::dmat4 _mvp, glm::dvec2 _screenSize);
+    void updateTransform(const LabelTransform& _transform, const glm::dmat4& _mvp, const glm::dvec2& _screenSize);
 
 private:
 
