@@ -76,14 +76,14 @@ void FontStyle::buildLine(Line& _line, std::string& _layer, Properties& _props, 
 
                 glm::dvec2 position = (p1 + p2) / 2.0 + p1p2 * 0.2 * offset;
 
-                auto label = labelContainer->addLabel({ position, 1.0, rot }, prop.second);
+                auto label = labelContainer->addLabel(m_name, { position, 1.0, rot }, prop.second);
 
                 label->rasterize();
             }
         }
     }
 
-    // fonsClearState(m_fontContext->m_fsContext);
+    ftContext->clearState();
     
     if (textBuffer->getVertices(&vertData, &nVerts)) {
          _mesh.addVertices((GLbyte*)vertData.data(), nVerts);
@@ -97,15 +97,22 @@ void FontStyle::buildPolygon(Polygon& _polygon, std::string& _layer, Properties&
 void FontStyle::prepareDataProcessing(MapTile& _tile) {
     auto ftContext = LabelContainer::GetInstance()->getFontContext();
     auto buffer = ftContext->genTextBuffer();
+
     _tile.setTextBuffer(*this, buffer);
+
     ftContext->lock();
     ftContext->useBuffer(buffer);
+
+    buffer->init();
+
     LabelContainer::GetInstance()->processedTile = &_tile;
 }
 
 void FontStyle::finishDataProcessing(MapTile& _tile) {
     auto ftContext = LabelContainer::GetInstance()->getFontContext();
+    
     LabelContainer::GetInstance()->processedTile = nullptr;
+
     ftContext->useBuffer(nullptr);;
     ftContext->unlock();
 }

@@ -8,10 +8,10 @@ class TextBuffer {
 public:
 
     TextBuffer(FONScontext* _fsContext);
-    TextBuffer(FONScontext* _fsContext, int _size);
     ~TextBuffer();
 
     fsuint genTextID();
+    void init(int _size = 2);
     void rasterize(const std::string& _text, fsuint _id);
     void transformID(fsuint _textID, float _x, float _y, float _rot, float _alpha);
     void triggerTransformUpdate();

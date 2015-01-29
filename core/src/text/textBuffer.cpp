@@ -1,11 +1,12 @@
 #include "textBuffer.h"
 
-TextBuffer::TextBuffer(FONScontext* _fsContext) : TextBuffer(_fsContext, 2) {}
-
-TextBuffer::TextBuffer(FONScontext* _fsContext, int _size) : m_fsContext(_fsContext) {
+TextBuffer::TextBuffer(FONScontext* _fsContext) : m_fsContext(_fsContext) {
     m_dirty = false;
     m_bound = false;
-    glfonsBufferCreate(_fsContext, _size, &m_fsBuffer);
+}
+
+void TextBuffer::init(int _size) {
+    glfonsBufferCreate(m_fsContext, _size, &m_fsBuffer);
 }
 
 TextBuffer::~TextBuffer() {

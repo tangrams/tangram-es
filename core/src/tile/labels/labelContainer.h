@@ -19,21 +19,21 @@ public:
     }
 
     virtual ~LabelContainer();
-    std::shared_ptr<Label> addLabel(LabelTransform _transform, std::string _text);
+    std::shared_ptr<Label> addLabel(const std::string& _styleName, LabelTransform _transform, std::string _text);
     void setFontContext(std::shared_ptr<FontContext> _ftContext) { m_ftContext = _ftContext; }
 
     // FUTURE : 
     // QuadTree structure used to iterate through labels
 
     const std::shared_ptr<FontContext>& getFontContext() { return m_ftContext; }
-    const std::vector<std::shared_ptr<Label>>& getLabels(const TileID& _tileID);
+    const std::vector<std::shared_ptr<Label>>& getLabels(const std::string& _styleName, const TileID& _tileID);
 
     MapTile* processedTile;
 
 private:
 
     LabelContainer();
-    std::map<TileID, std::vector<std::shared_ptr<Label>>> m_labels;
+    std::map<std::string, std::map<TileID, std::vector<std::shared_ptr<Label>>>> m_labels;
     std::shared_ptr<FontContext> m_ftContext;
 
 };

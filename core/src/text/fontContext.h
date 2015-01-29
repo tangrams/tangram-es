@@ -28,10 +28,11 @@ public:
     void getViewProjection(float* _projectionMatrix) const;
 
     std::shared_ptr<TextBuffer> genTextBuffer();
-    std::shared_ptr<TextBuffer> genTextBuffer(int _size);
 
     void useBuffer(const std::shared_ptr<TextBuffer>& _textBuffer);
     std::shared_ptr<TextBuffer> getCurrentBuffer(); 
+
+    void clearState();
 
     void lock();
     void unlock();

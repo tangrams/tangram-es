@@ -17,10 +17,6 @@ std::shared_ptr<TextBuffer> FontContext::genTextBuffer() {
     return std::shared_ptr<TextBuffer>(new TextBuffer(m_fsContext));
 }
 
-std::shared_ptr<TextBuffer> FontContext::genTextBuffer(int _size) {
-    return std::shared_ptr<TextBuffer>(new TextBuffer(m_fsContext, _size));
-}
-
 const std::unique_ptr<Texture>& FontContext::getAtlas() const {
     return m_atlas;
 }
@@ -31,6 +27,10 @@ void FontContext::getViewProjection(float* _projectionMatrix) const {
 
 void FontContext::setScreenSize(int _width, int _height) {
     glfonsScreenSize(m_fsContext, _width, _height);
+}
+
+void FontContext::clearState() {
+    fonsClearState(m_fsContext);
 }
 
 void FontContext::useBuffer(const std::shared_ptr<TextBuffer>& _textBuffer) {

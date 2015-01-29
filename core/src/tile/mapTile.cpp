@@ -46,37 +46,19 @@ void MapTile::setTextBuffer(const Style& _style, std::shared_ptr<TextBuffer> _bu
 
 void MapTile::update(float _dt, const Style& _style, View& _view) {
 
-    auto labelContainer = LabelContainer::GetInstance();
+    if(m_buffers[_style.getName()]) {
 
-    // TODO : this would be called for each style now, improve
+        auto labelContainer = LabelContainer::GetInstance();
 
-    labelContainer->getFontContext()->setScreenSize(_view.getWidth(), _view.getHeight());
+        labelContainer->getFontContext()->setScreenSize(_view.getWidth(), _view.getHeight());
 
-    for(auto label : labelContainer->getLabels(getID())) {
-        glm::dmat4 mvp = _view.getViewProjectionMatrix() * m_modelMatrix;
-        label->updateTransform(label->getTransform(), mvp, glm::dvec2(_view.getWidth(), _view.getHeight()));
+        for(auto label : labelContainer->getLabels(_style.getName(), getID())) {
+            glm::dmat4 mvp = _view.getViewProjectionMatrix() * m_modelMatrix;
+            label->updateTransform(label->getTransform(), mvp, glm::dvec2(_view.getWidth(), _view.getHeight()));
+        }
+
+        m_buffers[_style.getName()]->triggerTransformUpdate();
     }
-
-    // TODO : refactor update of tile
-    // auto& labels = m_labels[_style.getName()];
-
-    // // update label positions
-    // if (labels.size() > 0) {
-
-    //     glm::dmat4 mvp = _view.getViewProjectionMatrix() * m_modelMatrix;
-    //     glfonsScreenSize(ctx->m_fsContext, _view.getWidth(), _view.getHeight());
-
-    //     for (auto& label : labels) {
-    // 
-    //     }
-
-    //     // ask to push the transform texture to gpu
-    //     glfonsUpdateTransforms(ctx->m_fsContext, (void*) this);
-
-    //     // unbind the buffer for context integrity
-    //     glfonsBindBuffer(ctx->m_fsContext, 0);
-    // }
-    
 }
 
 void MapTile::draw(const Style& _style, const View& _view) {
