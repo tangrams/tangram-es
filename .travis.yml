@@ -6,8 +6,10 @@ language: cpp
 matrix:
     include:
         - os: osx
+          env: PLATFORM=osx
           compiler: clang
-        - os: linux
+        - os: osx
+          env: PLATFORM=android
           compiler: gcc
 
 before_install:

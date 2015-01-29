@@ -3,40 +3,43 @@
 set -e
 set -o pipefail
 
-if [[ ${TRAVIS_OS_NAME} == "linux" ]]; then
-    ANDROID_SDK_VERSION="r24.0.2"
-    ANDROID_NDK_VERSION="r10d"
-    ANDROID_BUILD_TOOL_VERSION="21.1.2"
-    ANDROID_PLATFORM_VERSION="19"
-fi
-
 if [[ ${TRAVIS_OS_NAME} == "osx" ]]; then
     brew update
+fi
+
+if [[ ${PLATFORM} == "osx" ]]; then
     brew tap homebrew/versions
     brew install glfw3
 fi
 
+if [[ ${PLATFORM} == "android" ]]; then
 
-if [[ ${TRAVIS_OS_NAME} == "linux" ]]; then
+    ANDROID_SDK_VERSION="r24.0.2"
+    ANDROID_NDK_VERSION="r10d"
+    ANDROID_BUILD_TOOL_VERSION="21.1.2"
+    ANDROID_PLATFORM_VERSION="19"
+
     # gcc-4.8 should be default in travis ci now (https://github.com/travis-ci/travis-cookbooks/pull/215), but for safety
-    sudo add-apt-repository ppa:ubuntu-toolchain-r/test -y
-    sudo apt-get update -qq
+    #sudo add-apt-repository ppa:ubuntu-toolchain-r/test -y
+    #sudo apt-get update -qq
     # No linux specific build right now, for android builds, gcc bundled with ndk is used
     # if [ "$CXX" = "g++" ]; then sudo apt-get install -qq g++-4.8; fi
     # if [ "$CXX" = "g++" ]; then export CXX="g++-4.8" CC="gcc-4.8"; fi
 
     # install other required packages
-    sudo apt-get -y install git build-essential automake gdb libtool make cmake pkg-config 
+    #sudo apt-get -y install git build-essential automake gdb libtool make cmake pkg-config 
 
     # not installing mesa and opengl right now, will need with linux builds though
 
     # install jdk, ant and 32bit dependencies for android sdk
-    sudo apt-get -qq -y install openjdk-7-jdk ant lib32z1-dev lib32stdc++6
+    #sudo apt-get -qq -y install openjdk-7-jdk ant lib32z1-dev lib32stdc++6
+    brew install ant
 
     # install android sdk
-    wget https://dl-ssl.google.com/android/android-sdk_${ANDROID_SDK_VERSION}-linux.tgz
-    tar -zxf android-sdk_${ANDROID_SDK_VERSION}-linux.tgz
-    export ANDROID_HOME=$PWD/android-sdk-linux
+    wget https://dl-ssl.google.com/android/android-sdk_${ANDROID_SDK_VERSION}-macosx.zip
+    tar -zxf android-sdk_${ANDROID_SDK_VERSION}-macosx.zip
+    export ANDROID_HOME=$PWD/android-sdk-mac_x86
+    
     # install android ndk
     # only binary link avaiable for r10d, no download links available for r10b
     wget http://dl.google.com/android/ndk/android-ndk-r10d-linux-x86_64.bin
