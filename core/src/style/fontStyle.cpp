@@ -118,16 +118,20 @@ void FontStyle::finishDataProcessing(MapTile& _tile) {
 }
 
 void FontStyle::setupTile(const std::shared_ptr<MapTile>& _tile) {
-    const auto& texture = _tile->getTextBuffer(*this)->getTextureTransform();
+    auto buffer = _tile->getTextBuffer(*this);
 
-    if (texture) {
-        texture->update();
-        texture->bind();
+    if (buffer) {
+        auto texture = buffer->getTextureTransform();
 
-        // transform texture
-        m_shaderProgram->setUniformi("u_transforms", texture->getTextureSlot());
-        // resolution of the transform texture
-        m_shaderProgram->setUniformf("u_tresolution", texture->getWidth(), texture->getHeight());
+        if (texture) {
+            texture->update();
+            texture->bind();
+
+            // transform texture
+            m_shaderProgram->setUniformi("u_transforms", texture->getTextureSlot());
+            // resolution of the transform texture
+            m_shaderProgram->setUniformf("u_tresolution", texture->getWidth(), texture->getHeight());
+        }
     }
 }
 

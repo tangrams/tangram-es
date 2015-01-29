@@ -62,12 +62,7 @@ public:
     void update(float _dt, const Style& _style, View& _view);
 
     void setTextBuffer(const Style& _style, std::shared_ptr<TextBuffer> _buffer);
-    const std::shared_ptr<TextBuffer>& getTextBuffer(const Style& _style) const;
-
-    /* 
-     * Gets the transform label texture for a specific style, nullptr if it doesn't exist
-     */
-    const std::unique_ptr<Texture>& getTextureTransform(const Style& _style);
+    std::shared_ptr<TextBuffer> getTextBuffer(const Style& _style) const;
 
     /* Draws the geometry associated with the provided <Style> and view-projection matrix */
     void draw(const Style& _style, const View& _view);

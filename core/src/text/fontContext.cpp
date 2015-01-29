@@ -101,7 +101,7 @@ void updateTransforms(void* _userPtr, unsigned int _xoff, unsigned int _yoff, un
 
     TextBuffer* buffer = static_cast<TextBuffer*>(_ownerPtr);
     const GLuint* subData = static_cast<const GLuint*>(_pixels);
-    const auto& texture = buffer->getTextureTransform();
+    auto texture = buffer->getTextureTransform();
     texture->setSubData(subData, _xoff, _yoff, _width, _height);
 }
 

@@ -21,7 +21,7 @@ void TextBuffer::setTextureTransform(std::unique_ptr<Texture> _texture) {
     m_transform = std::move(_texture);
 }
 
-const std::unique_ptr<Texture>& TextBuffer::getTextureTransform() const {
+std::shared_ptr<Texture> TextBuffer::getTextureTransform() const {
     return m_transform;
 }
 

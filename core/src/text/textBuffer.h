@@ -17,7 +17,7 @@ public:
     void triggerTransformUpdate();
 
     void setTextureTransform(std::unique_ptr<Texture> _texture);
-    const std::unique_ptr<Texture>& getTextureTransform() const;
+    std::shared_ptr<Texture> getTextureTransform() const;
     bool getVertices(std::vector<float>* _vertices, int* _nVerts);
     void expand();
 
@@ -28,7 +28,7 @@ private:
 
     bool m_dirty;
     bool m_bound;
-    std::unique_ptr<Texture> m_transform;
+    std::shared_ptr<Texture> m_transform;
     fsuint m_fsBuffer;
     FONScontext* m_fsContext;
 
