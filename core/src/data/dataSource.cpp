@@ -141,8 +141,7 @@ std::shared_ptr<TileData> MapzenVectorTileJson::parse(const MapTile& _tile, std:
     
     // transform JSON data into a TileData using GeoJson functions
     for (auto layer = doc.MemberBegin(); layer != doc.MemberEnd(); ++layer) {
-        std::string layerName = std::string(layer->name.GetString());
-        tileData->layers.emplace_back(layerName);
+        tileData->layers.emplace_back(std::string(layer->name.GetString()));
         GeoJson::extractLayer(layer->value, tileData->layers.back(), _tile);
     }
     
