@@ -22,15 +22,17 @@ public:
     }
 
     virtual ~LabelContainer();
+
+    /* 
+     * Creates a label for and associate it with the current processed <MapTile> TileID for a specific syle name 
+     * Returns nullptr if no text buffer are currently used by the FontContext
+     */
     std::shared_ptr<Label> addLabel(const std::string& _styleName, LabelTransform _transform, std::string _text);
 
     /* Clean all labels for a specific <tileID> */
     void removeLabels(const TileID& _tileID);
 
     void setFontContext(std::shared_ptr<FontContext> _ftContext) { m_ftContext = _ftContext; }
-
-    // FUTURE : 
-    // QuadTree structure used to iterate through labels
 
     /* Returns a const reference to a pointer of the font context */
     const std::shared_ptr<FontContext>& getFontContext() { return m_ftContext; }
@@ -43,6 +45,9 @@ public:
      * nullptr if no tile is being processed
      */
     MapTile* processedTile;
+
+    // FUTURE : 
+    // QuadTree structure used to iterate through labels
 
 private:
 
