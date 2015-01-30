@@ -28,8 +28,7 @@ MapTile::~MapTile() {
     m_geometry.clear();
     m_buffers.clear();
 
-    auto labelContainer = LabelContainer::GetInstance();
-    labelContainer->removeLabels(m_id);
+    LabelContainer::GetInstance()->removeLabels(m_id);
 }
 
 void MapTile::addGeometry(const Style& _style, std::unique_ptr<VboMesh> _mesh) {

@@ -23,6 +23,7 @@ namespace Tangram {
 std::unique_ptr<TileManager> m_tileManager;
 std::shared_ptr<Scene> m_scene;
 std::shared_ptr<View> m_view;
+std::shared_ptr<LabelContainer> m_labelContainer;
 std::shared_ptr<FontContext> m_ftContext;
 
 static float g_time = 0.0;
@@ -60,7 +61,8 @@ void initialize() {
 
         m_ftContext = std::make_shared<FontContext>();
         m_ftContext->addFont("Roboto-Regular.ttf", "Roboto-Regular");
-        LabelContainer::GetInstance()->setFontContext(m_ftContext);
+        m_labelContainer = LabelContainer::GetInstance();
+        m_labelContainer->setFontContext(m_ftContext);
 
         std::unique_ptr<Style> fontStyle(new FontStyle("Roboto-Regular", "FontStyle", 14.0f, true));
         fontStyle->addLayers({"roads"});
