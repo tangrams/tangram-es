@@ -42,9 +42,10 @@ if [[ ${PLATFORM} == "android" ]]; then
     
     # install android ndk
     # only binary link avaiable for r10d, no download links available for r10b
-    wget http://dl.google.com/android/ndk/android-ndk-r10d-linux-x86_64.bin
-    chmod +x android-ndk-r10d-linux-x86_64.bin
-    ./android-ndk-r10d-linux-x86_64.bin | egrep -v ^Extracting
+    ANDROID_NDK_NAME="android-ndk-${ANDROID_NDK_VERSION}-darwin-x86_64.bin"
+    wget http://dl.google.com/android/ndk/${ANDROID_NDK_NAME}
+    chmod a+x ${ANDROID_NDK_NAME}
+    ./android-ndk-r10d-darwin-x86_64.bin | egrep -v ^Extracting
     export ANDROID_NDK=$PWD/android-ndk-${ANDROID_NDK_VERSION}
 
     # Update PATH
