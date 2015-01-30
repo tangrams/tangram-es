@@ -4,7 +4,7 @@ set -e
 set -o pipefail
 
 if [[ ${TRAVIS_OS_NAME} == "osx" ]]; then
-    brew update
+    brew update >/dev/null
 fi
 
 if [[ ${PLATFORM} == "osx" ]]; then
@@ -38,7 +38,7 @@ if [[ ${PLATFORM} == "android" ]]; then
     # install android sdk
     wget https://dl-ssl.google.com/android/android-sdk_${ANDROID_SDK_VERSION}-macosx.zip
     tar -zxf android-sdk_${ANDROID_SDK_VERSION}-macosx.zip
-    export ANDROID_HOME=$PWD/android-sdk-mac_x86
+    export ANDROID_HOME=$PWD/android-sdk-macosx
     
     # install android ndk
     # only binary link avaiable for r10d, no download links available for r10b
@@ -49,7 +49,7 @@ if [[ ${PLATFORM} == "android" ]]; then
     export ANDROID_NDK=$PWD/android-ndk-${ANDROID_NDK_VERSION}
 
     # Update PATH
-    export PATH=${PATH}:${ANDROID_HOME}/tools:${ANDROID_HOME}/platform-tools:${ANDROID_NDK}
+    export PATH=${PATH}:${ANDROID_HOME}/tools:${ANDROID_NDK}
 
     # Install required Android components.
     # automatically accept the license prompt
