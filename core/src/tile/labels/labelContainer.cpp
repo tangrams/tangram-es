@@ -21,7 +21,7 @@ std::shared_ptr<Label> LabelContainer::addLabel(const std::string& _styleName, L
 }
 
 void LabelContainer::removeLabels(const TileID& _tileID) {
-    if(m_labels.size() > 0) {
+    if (m_labels.size() > 0) {
         for (auto styleTilepair : m_labels) {
             std::string styleName = styleTilepair.first;
             for (auto tileLabelsPair : m_labels[styleName]) {
