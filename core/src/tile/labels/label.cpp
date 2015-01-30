@@ -8,9 +8,7 @@ Label::Label(LabelTransform _transform, std::string _text, std::shared_ptr<TextB
     m_id = m_buffer->genTextID();
 }
 
-Label::~Label() {
-
-}
+Label::~Label() {}
 
 void Label::rasterize() {
     m_buffer->rasterize(m_text, m_id);
