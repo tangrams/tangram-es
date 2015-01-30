@@ -35,7 +35,7 @@ void PolylineStyle::buildPoint(Point& _point, std::string& _layer, Properties& _
 
 void PolylineStyle::buildLine(Line& _line, std::string& _layer, Properties& _props, VboMesh& _mesh) const {
     std::vector<PosNormEnormColVertex> vertices;
-    std::vector<GLushort> indices;
+    std::vector<int> indices;
     std::vector<glm::vec3> points;
     std::vector<glm::vec2> texcoords;
     std::vector<glm::vec2> scalingVecs;

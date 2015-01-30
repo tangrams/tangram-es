@@ -85,13 +85,13 @@ void VboMesh::addVertices(GLbyte* _vertices, int _nVertices) {
 
 }
 
-void VboMesh::addIndex(GLushort* _index) {
+void VboMesh::addIndex(int* _index) {
 
     addIndices(_index, 1);
 
 }
 
-void VboMesh::addIndices(GLushort* _indices, int _nIndices) {
+void VboMesh::addIndices(int* _indices, int _nIndices) {
     
     if (m_isUploaded) {
         logMsg("%s\n", "VboMesh cannot add indices after upload!");

@@ -53,13 +53,13 @@ public:
     /*
      * Adds a single index to the mesh; indices are unsigned shorts
      */
-    void addIndex(GLushort* _index);
+    void addIndex(int* _index);
 
     /*
      * Adds _nIndices indices to the mesh; _indices must be a pointer to the beginning of a contiguous
      * block of _nIndices unsigned short indices
      */
-    void addIndices(GLushort* _indices, int _nIndices);
+    void addIndices(int* _indices, int _nIndices);
 
     int numIndices() const { return m_indices.size(); };
 
