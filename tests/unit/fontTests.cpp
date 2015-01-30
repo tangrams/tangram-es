@@ -193,7 +193,7 @@ TEST_CASE( "Test that the number of vertices correspond to the logic", "[Core][F
     glfonsGenText(context, 1, &id);
 
     std::string text("tangram");
-    glfonsRasterize(context, id, text.c_str(), FONS_EFFECT_NONE);
+    glfonsRasterize(context, id, text.c_str());
 
     std::vector<float> vertices;
     int nverts = 0;
@@ -230,7 +230,7 @@ TEST_CASE( "Test that unpacking the encoded transforms give expected results", "
         text.alpha = 0.5;
 
         std::string str("tangram");
-        glfonsRasterize(context, text.textId, str.c_str(), FONS_EFFECT_NONE);
+        glfonsRasterize(context, text.textId, str.c_str());
         glfonsTransform(context, text.textId, text.x, text.y, text.rotation, text.alpha);
 
         p.texts.push_back(text);
