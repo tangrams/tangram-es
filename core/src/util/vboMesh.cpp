@@ -54,7 +54,7 @@ void VboMesh::setDrawMode(GLenum _drawMode) {
             m_drawMode = _drawMode;
             break;
         default:
-            logMsg("%s\n","Invalid draw mode for mesh! Defaulting to GL_TRIANGLES");
+            logMsg("WARNING: Invalid draw mode for mesh! Defaulting to GL_TRIANGLES\n");
             m_drawMode = GL_TRIANGLES;
     }
 }
@@ -68,21 +68,31 @@ void VboMesh::addVertex(GLbyte* _vertex) {
 void VboMesh::addVertices(GLbyte* _vertices, int _nVertices) {
 
     if (m_isUploaded) {
-        logMsg("%s\n", "VboMesh cannot add vertices after upload!");
+        logMsg("ERROR: VboMesh cannot add vertices after upload!\n");
         return;
     }
     
     // Only add up to 65535 vertices, any more will overflow our 16-bit indices
     int indexSpace = MAX_INDEX_VALUE - m_nVertices;
-    if (_nVertices > indexSpace) {
-        _nVertices = indexSpace;
-        logMsg("WARNING: Tried to add more vertices than available in index space\n");
+    if (_nVertices > indexSpace || m_backupMesh) {
+        if (!m_backupMesh) {
+            m_backupMesh.reset(new VboMesh(m_vertexLayout, m_drawMode));
+        }
+        m_backupMesh->addVertices(_vertices, _nVertices);
+        return;
     }
 
     int vertexBytes = m_vertexLayout->getStride() * _nVertices;
     m_vertexData.insert(m_vertexData.end(), _vertices, _vertices + vertexBytes);
     m_nVertices += _nVertices;
 
+}
+
+int VboMesh::numVertices() const {
+    if (m_backupMesh) {
+        return m_nVertices + m_backupMesh->numVertices();
+    }
+    return m_nVertices;
 }
 
 void VboMesh::addIndex(int* _index) {
@@ -94,18 +104,28 @@ void VboMesh::addIndex(int* _index) {
 void VboMesh::addIndices(int* _indices, int _nIndices) {
     
     if (m_isUploaded) {
-        logMsg("%s\n", "VboMesh cannot add indices after upload!");
+        logMsg("ERROR: VboMesh cannot add indices after upload!\n");
         return;
     }
     
-    if (m_nVertices >= MAX_INDEX_VALUE) {
-        logMsg("WARNING: Vertex buffer full, not adding indices\n");
+    if (m_backupMesh) {
+        for (int i = 0; i < _nIndices; i++) {
+            _indices[i] -= m_nVertices;
+        }
+        m_backupMesh->addIndices(_indices, _nIndices);
         return;
     }
 
     m_indices.insert(m_indices.end(), _indices, _indices + _nIndices);
     m_nIndices += _nIndices;
 
+}
+
+int VboMesh::numIndices() const {
+    if (m_backupMesh) {
+        return m_nIndices + m_backupMesh->numIndices();
+    }
+    return m_nIndices;
 }
 
 void VboMesh::upload() {
@@ -138,6 +158,10 @@ void VboMesh::upload() {
     // to easily rebuild themselves after GL context loss. For optimizing memory usage (and for
     // other reasons) we'll want to change this in the future. This probably means going back to
     // data sources and styles to rebuild the vertex data.
+    
+    if (m_backupMesh) {
+        m_backupMesh->upload();
+    }
     
     m_generation = s_validGeneration;
 
@@ -174,6 +198,10 @@ void VboMesh::draw(const std::shared_ptr<ShaderProgram> _shader) {
         glDrawElements(m_drawMode, m_nIndices, GL_UNSIGNED_SHORT, 0);
     } else if (m_nVertices > 0) {
         glDrawArrays(m_drawMode, 0, m_nVertices);
+    }
+    
+    if (m_backupMesh) {
+        m_backupMesh->draw(_shader);
     }
 
 }
