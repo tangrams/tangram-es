@@ -3,7 +3,7 @@
 set -e
 set -o pipefail
 
-if [[ ${TRAVIS_OS_NAME} == "osx" ]]; then
+if [[ ${PLATFORM} == "osx" ]]; then
     # Build osx project
     echo "Building osx project"
     make osx
@@ -13,8 +13,9 @@ if [[ ${TRAVIS_OS_NAME} == "osx" ]]; then
     make ios
 fi
 
-if [[ ${TRAVIS_OS_NAME} == "linux" ]]; then
+if [[ ${PLATFORM} == "android" ]]; then
     # Build android project
+    echo "Building android project"
     make android
 fi
 
