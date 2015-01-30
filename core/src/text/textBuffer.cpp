@@ -65,7 +65,7 @@ fsuint TextBuffer::genTextID() {
     
 void TextBuffer::rasterize(const std::string& _text, fsuint _id) {
     bind();
-    glfonsRasterize(m_fsContext, _id, _text.c_str(), FONS_EFFECT_NONE /* TODO : update signature, remove effect */);
+    glfonsRasterize(m_fsContext, _id, _text.c_str());
     unbind();
 }
 
