@@ -4,8 +4,31 @@
 #include "rectangle.h"
 #include "geom.h"
 
+#include <memory>
+
 static auto& NO_TEXCOORDS = *(new std::vector<glm::vec2>); // denotes that texture coordinates should not be used
 static auto& NO_SCALING_VECS = *(new std::vector<glm::vec2>); // denotes that scaling vectors should not be used
+
+void* alloc(void* _userData, unsigned int _size) {
+    return malloc(_size);
+}
+
+void* realloc(void* _userData, void* _ptr, unsigned int _size) {
+    return realloc(_ptr, _size);
+}
+
+void free(void* _userData, void* _ptr) {
+    free(_ptr);
+}
+
+static TESSalloc allocator = {&alloc, &realloc, &free, nullptr,
+                              128, // meshEdgeBucketSize
+                              128, // meshVertexBucketSize
+                              64,  // meshFaceBucketSize
+                              128, // dictNodeBucketSize
+                              64,  // regionBucketSize
+                              128  // extraVertices
+                             };
 
 void Builders::buildPolygon(const Polygon& _polygon, std::vector<glm::vec3>& _pointsOut, std::vector<glm::vec3>& _normalOut, std::vector<ushort>& _indicesOut) {
     
@@ -15,7 +38,7 @@ void Builders::buildPolygon(const Polygon& _polygon, std::vector<glm::vec3>& _po
 
 void Builders::buildPolygon(const Polygon& _polygon, std::vector<glm::vec3>& _pointsOut, std::vector<glm::vec3>& _normalOut, std::vector<ushort>& _indicesOut, std::vector<glm::vec2>& _texcoordOut) {
     
-    TESStesselator* tesselator = tessNewTess(nullptr);
+    TESStesselator* tesselator = tessNewTess(&allocator);
     
     bool useTexCoords = &_texcoordOut != &NO_TEXCOORDS;
     
