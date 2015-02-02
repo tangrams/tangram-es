@@ -17,8 +17,7 @@ std::shared_ptr<TileData> MapboxProtoBuffSrc::parse(const MapTile& _tile, std::s
     
     std::string filename("/Users/Varun/Downloads/0.pbf");
     std::ifstream stream(filename.c_str(),std::ios_base::in|std::ios_base::binary);
-    if (!stream.is_open())
-    {
+    if (!stream.is_open()) {
         throw std::runtime_error("could not open: '" + filename + "'");
     }
     std::string buffer(std::istreambuf_iterator<char>(stream.rdbuf()),(std::istreambuf_iterator<char>()));
@@ -35,7 +34,6 @@ std::shared_ptr<TileData> MapboxProtoBuffSrc::parse(const MapTile& _tile, std::s
             while (layerItr.next()) {
                 if (layerItr.tag == 1) {
                     auto layerName = layerItr.string();
-                    logMsg("Layer string: %s\n", layerName.c_str());
                     tileData->layers.emplace_back(layerName);
                     PbfParser::extractLayer(layerMsg, tileData->layers.back(), _tile);
                 } else {
@@ -47,5 +45,4 @@ std::shared_ptr<TileData> MapboxProtoBuffSrc::parse(const MapTile& _tile, std::s
         }
     }
     return tileData;
-    
 }

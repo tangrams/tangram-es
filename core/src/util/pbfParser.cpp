@@ -2,7 +2,7 @@
 #include "platform.h"
 
 
-void PbfParser::extractGeometry(const protobuf::message& _in, uint32_t _tileExtent, std::vector<Line>& _out, const MapTile& _tile) {
+void PbfParser::extractGeometry(const protobuf::message& _in, int _tileExtent, std::vector<Line>& _out, const MapTile& _tile) {
     
     pbfGeomCmd cmd = pbfGeomCmd::moveTo;
     uint32_t cmdRepeat = 0;
@@ -12,6 +12,10 @@ void PbfParser::extractGeometry(const protobuf::message& _in, uint32_t _tileExte
     
     int x = 0.0f;
     int y = 0.0f;
+    
+    uint64_t xZigZag = 0;
+    uint64_t yZigZag = 0;
+    
     
     while(geomItr.getData() < geomItr.getEnd()) {
         
@@ -32,21 +36,23 @@ void PbfParser::extractGeometry(const protobuf::message& _in, uint32_t _tileExte
             
             // Decode zig-zag encoded paramters
             
-            uint64_t xZigZag = geomItr.svarint();
-            uint64_t yZigZag = geomItr.svarint();
+            xZigZag += geomItr.svarint();
+            yZigZag += geomItr.svarint();
             
-            x += int((xZigZag >> 1) ^ -(xZigZag & 1));
-            y += int((yZigZag >> 1) ^ -(yZigZag & 1));
+            x = int((xZigZag << 1) ^ (xZigZag >> 31));
+            y = int((yZigZag << 1) ^ (yZigZag >> 31));
             
             // bring the points in -1 to 1 space
-            double pointX = (double)(x - _tileExtent)/_tileExtent;
-            double pointY = (double)(y - _tileExtent)/_tileExtent;
+            Point p;
+            p.x = (1.0/(double)_tileExtent) * (double)(x - _tileExtent);
+            p.y = (1.0/(double)_tileExtent) * (double)(_tileExtent - y);
             
             // apply projection
-            Point p;
+            /*Point p;
             glm::dvec2 tmp = _tile.getProjection()->LonLatToMeters(glm::dvec2(pointX, pointY));
             p.x = (tmp.x - _tile.getOrigin().x) * _tile.getInverseScale();
-            p.y = (tmp.y - _tile.getOrigin().y) * _tile.getInverseScale();
+            p.y = (tmp.y - _tile.getOrigin().y) * _tile.getInverseScale();*/
+            logMsg("Point: (%f, %f)\n", p.x, p.y);
             line.emplace_back(p);
         } else if( cmd == pbfGeomCmd::closePath) { // end of a polygon, push first point in this line as last and push line to poly
             line.push_back(line[0]);
@@ -59,7 +65,7 @@ void PbfParser::extractGeometry(const protobuf::message& _in, uint32_t _tileExte
     
 }
 
-void PbfParser::extractFeature(const protobuf::message& _in, Feature& _out, const MapTile& _tile, std::vector<std::string>& _keys, std::unordered_map<int, float>& _numericValues, std::unordered_map<int, std::string>& _stringValues, uint32_t _tileExtent) {
+void PbfParser::extractFeature(const protobuf::message& _in, Feature& _out, const MapTile& _tile, std::vector<std::string>& _keys, std::unordered_map<int, float>& _numericValues, std::unordered_map<int, std::string>& _stringValues, int _tileExtent) {
 
     //Iterate through this feature
     std::vector<Line> geometryLines;
@@ -96,7 +102,7 @@ void PbfParser::extractFeature(const protobuf::message& _in, Feature& _out, cons
                             
                             // height and minheight need to be handled separately so that their dimensions are normalized
                             if(_keys[tagKey].compare("height") == 0 || _keys[tagKey].compare("min_height") == 0) {
-                                _out.props.numericProps[_keys[tagKey]] = _numericValues[valueKey] * _tile.getInverseScale();
+                                _out.props.numericProps[_keys[tagKey]] = _numericValues[valueKey] * _tileExtent;
                             } else {
                                 _out.props.numericProps[_keys[tagKey]] = _numericValues[valueKey];
                             }
@@ -160,7 +166,7 @@ void PbfParser::extractLayer(const protobuf::message& _in, Layer& _out, const Ma
     std::vector<std::string> keys;
     std::unordered_map<int, float> numericValues;
     std::unordered_map<int, std::string> stringValues;
-    uint32_t tileExtent = 0;
+    int tileExtent = 0;
     
     //iterate layer to populate keys and values
     int valueCount = 0;
@@ -207,7 +213,7 @@ void PbfParser::extractLayer(const protobuf::message& _in, Layer& _out, const Ma
                 break;
             }
             case 5: //extent
-                tileExtent = static_cast<uint32_t>(layerItr.varint());
+                tileExtent = static_cast<int>(layerItr.int64());
                 break;
                 
             default: // skip
@@ -222,18 +228,11 @@ void PbfParser::extractLayer(const protobuf::message& _in, Layer& _out, const Ma
     
     // iterate layer to extract features
     while(layerItr.next()) {
-        if(layerItr.tag == 1) {
-            auto layerName = layerItr.string();
-            logMsg("LayerName: %s", layerName.c_str());
-        }
-        else if(layerItr.tag == 2) {
+        if(layerItr.tag == 2) {
             protobuf::message featureMsg = layerItr.getMessage();
             _out.features.emplace_back();
             extractFeature(featureMsg, _out.features.back(), _tile, keys, numericValues, stringValues, tileExtent);
-        } else if(layerItr.tag == 4) {
-            layerItr.skip();
-        } else if(layerItr.tag == 5) {
-            layerItr.skip();
+            
         } else {
             layerItr.skip();
         }
