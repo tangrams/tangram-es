@@ -2,164 +2,153 @@
 #include "platform.h"
 
 
-void PBFHelper::extractMessage(protobuf::message& _in, protobuf::message& _out) {
-    uint64_t len = _in.varint();
-    _out = protobuf::message _in.getData(),static_cast<std::size_t>(len));
-}
-
-void PbfParser::extractPoint(const protobuf::message& _in, Point& _out, const MapTile& _tile) {
+void PbfParser::extractGeometry(const protobuf::message& _in, uint32_t _tileExtent, std::vector<Line>& _out, const MapTile& _tile) {
     
-    glm::dvec2 tmp = _tile.getProjection()->LonLatToMeters(glm::dvec2(_in[0].asDouble(), _in[1].asDouble()));
-    _out.x = (tmp.x - _tile.getOrigin().x) * _tile.getInverseScale();
-    _out.y = (tmp.y - _tile.getOrigin().y) * _tile.getInverseScale();
+    pbfGeomCmd cmd = pbfGeomCmd::moveTo;
+    uint32_t cmdRepeat = 0;
+    protobuf::message geomItr = _in;
     
-}
-
-void PbfParser::extractLine(const protobuf::message& _in, Line& _out, const MapTile& _tile) {
+    std::vector<Point> line;
     
-    for (auto& point : _in) {
-        _out.emplace_back();
-        extractPoint(point, _out.back(), _tile);
+    int x = 0.0f;
+    int y = 0.0f;
+    
+    while(geomItr.getData() < geomItr.getEnd()) {
+        
+        if(cmdRepeat == 0) { // get new command, lengh and parameters..
+            uint32_t cmdData = static_cast<uint32_t>(geomItr.varint());
+            cmd = static_cast<pbfGeomCmd>(cmdData & 0x7); //first 3 bits of the cmdData
+            cmdRepeat = cmdData >> 3; //last 5 bits
+        }
+        
+        if(cmd == pbfGeomCmd::moveTo || cmd == pbfGeomCmd::lineTo) { // get parameters/points
+            // if cmd is move then move to a new line/set of points and save this line
+            if(cmd == pbfGeomCmd::moveTo) {
+                if(line.size() > 0) {
+                    _out.emplace_back(line);
+                }
+                line.clear();
+            }
+            
+            // Decode zig-zag encoded paramters
+            
+            uint64_t xZigZag = geomItr.svarint();
+            uint64_t yZigZag = geomItr.svarint();
+            
+            x += int((xZigZag >> 1) ^ -(xZigZag & 1));
+            y += int((yZigZag >> 1) ^ -(yZigZag & 1));
+            
+            // bring the points in -1 to 1 space
+            double pointX = (double)(x - _tileExtent)/_tileExtent;
+            double pointY = (double)(y - _tileExtent)/_tileExtent;
+            
+            // apply projection
+            Point p;
+            glm::dvec2 tmp = _tile.getProjection()->LonLatToMeters(glm::dvec2(pointX, pointY));
+            p.x = (tmp.x - _tile.getOrigin().x) * _tile.getInverseScale();
+            p.y = (tmp.y - _tile.getOrigin().y) * _tile.getInverseScale();
+            line.emplace_back(p);
+        } else if( cmd == pbfGeomCmd::closePath) { // end of a polygon, push first point in this line as last and push line to poly
+            line.push_back(line[0]);
+            _out.emplace_back(line);
+            line.clear();
+        }
+        
+        cmdRepeat--;
     }
     
 }
 
-void PbfParser::extractPoly(const protobuf::message& _in, Polygon& _out, const MapTile& _tile) {
-    
-    for (auto& line : _in) {
-        _out.emplace_back();
-        extractLine(line, _out.back(), _tile);
-    }
-    
-}
-
-void PbfParser::extractFeature(const protobuf::message& _in, Feature& _out, const MapTile& _tile, std::vector<std::string>& _keys, std::unordered_map<int, float>& _numericValues, std::unordered_map<int, std::string>& _stringValues) {
+void PbfParser::extractFeature(const protobuf::message& _in, Feature& _out, const MapTile& _tile, std::vector<std::string>& _keys, std::unordered_map<int, float>& _numericValues, std::unordered_map<int, std::string>& _stringValues, uint32_t _tileExtent) {
 
     //Iterate through this feature
+    std::vector<Line> geometryLines;
     protobuf::message featureItr = _in;
+    protobuf::message geometry; // By default data_ and end_ are nullptr
     while(featureItr.next()) {
         switch(featureItr.tag) {
             // Feature ID
             case 1:
                 // ignored for now, also not used in json parsing
+                featureItr.skip();
                 break;
             // Feature tags (properties)
             case 2:
+            {
                 // extract tags message
                 protobuf::message tagsMsg = featureItr.getMessage();
                 
                 while(tagsMsg) {
                     std::size_t tagKey = tagsMsg.varint();
                     
-                    if(_keys.size() < tagKey) {
+                    if(_keys.size() <= tagKey) {
                         logMsg("ERROR: accessing out of bound key\n");
                     }
                     
                     if(tagsMsg) {
                         std::size_t valueKey = tagsMsg.varint();
                         
-                        if( (_numericValues.size() + _stringValues.size()) < valueKey ) {
+                        if( (_numericValues.size() + _stringValues.size()) <= valueKey ) {
                             logMsg("ERROR: accessing out of bound values\n");
                         }
                         
                         if(_numericValues.find(valueKey) != _numericValues.end()) {
-                            _out.props.numericProps[_keys[tagKey]] = _numericValues[valueKey];
+                            
+                            // height and minheight need to be handled separately so that their dimensions are normalized
+                            if(_keys[tagKey].compare("height") == 0 || _keys[tagKey].compare("min_height") == 0) {
+                                _out.props.numericProps[_keys[tagKey]] = _numericValues[valueKey] * _tile.getInverseScale();
+                            } else {
+                                _out.props.numericProps[_keys[tagKey]] = _numericValues[valueKey];
+                            }
+                            
                         } else if(_stringValues.find(valueKey) != _stringValues.end()) {
                             _out.props.stringProps[_keys[tagKey]] = _stringValues[valueKey];
                         } else {
-                            logMsg(")
+                            logMsg("ERROR: Tag is missing, should not be!!");
                         }
-                        
+                    } else {
+                        logMsg("uneven number of feature tag ids");
+                        throw std::runtime_error("uneven number of feature tag ids");
                     }
                 }
-                
+            }
                 break;
             // Feature Type
             case 3:
+                _out.geometryType = (GeometryType)featureItr.varint();
                 break;
             // Actual geometry data
             case 4:
+                geometry = featureItr.getMessage();
+                extractGeometry(geometry, _tileExtent, geometryLines, _tile);
                 break;
             // None.. skip
             default:
+                featureItr.skip();
                 break;
         }
     }
     
-    // Copy properties into tile data
-    
-    const Json::Value& properties = _in["properties"];
-    
-    for (auto& member : properties.getMemberNames()) {
-        
-        const Json::Value& prop = properties[member];
-        
-        // height and minheight need to be handled separately so that their dimensions are normalized
-        if (member.compare("height") == 0) {
-            _out.props.numericProps[member] = prop.asFloat() * _tile.getInverseScale();
-            continue;
-        }
-        
-        if (member.compare("min_height") == 0) {
-            _out.props.numericProps[member] = prop.asFloat() * _tile.getInverseScale();
-            continue;
-        }
-        
-        
-        if (prop.isNumeric()) {
-            _out.props.numericProps[member] = prop.asFloat();
-        } else if (prop.isString()) {
-            _out.props.stringProps[member] = prop.asString();
-        }
-        
-    }
-    
-    // Copy geometry into tile data
-    
-    const Json::Value& geometry = _in["geometry"];
-    const Json::Value& coords = geometry["coordinates"];
-    const std::string& geometryType = geometry["type"].asString();
-    
-    if (geometryType.compare("Point") == 0) {
-        
-        _out.geometryType = GeometryType::POINTS;
-        _out.points.emplace_back();
-        extractPoint(coords, _out.points.back(), _tile);
-        
-    } else if (geometryType.compare("MultiPoint") == 0) {
-        
-        _out.geometryType= GeometryType::POINTS;
-        for (const auto& pointCoords : coords) {
-            _out.points.emplace_back();
-            extractPoint(pointCoords, _out.points.back(), _tile);
-        }
-        
-    } else if (geometryType.compare("LineString") == 0) {
-        _out.geometryType = GeometryType::LINES;
-        _out.lines.emplace_back();
-        extractLine(coords, _out.lines.back(), _tile);
-        
-    } else if (geometryType.compare("MultiLineString") == 0) {
-        _out.geometryType = GeometryType::LINES;
-        for (const auto& lineCoords : coords) {
-            _out.lines.emplace_back();
-            extractLine(lineCoords, _out.lines.back(), _tile);
-        }
-        
-    } else if (geometryType.compare("Polygon") == 0) {
-        
-        _out.geometryType = GeometryType::POLYGONS;
-        _out.polygons.emplace_back();
-        extractPoly(coords, _out.polygons.back(), _tile);
-        
-    } else if (geometryType.compare("MultiPolygon") == 0) {
-        
-        _out.geometryType = GeometryType::POLYGONS;
-        for (const auto& polyCoords : coords) {
-            _out.polygons.emplace_back();
-            extractPoly(polyCoords, _out.polygons.back(), _tile);
-        }
-        
+    switch(_out.geometryType) {
+        case GeometryType::POINTS:
+            for(auto& line : geometryLines) {
+                for(auto& point : line) {
+                    _out.points.emplace_back(point);
+                }
+            }
+            break;
+        case GeometryType::LINES:
+            for(auto& line : geometryLines) {
+                _out.lines.emplace_back(line);
+            }
+            break;
+        case GeometryType::POLYGONS:
+            _out.polygons.emplace_back(geometryLines);
+            break;
+        case GeometryType::UNKNOWN:
+            break;
+        default:
+            break;
     }
     
 }
@@ -171,6 +160,7 @@ void PbfParser::extractLayer(const protobuf::message& _in, Layer& _out, const Ma
     std::vector<std::string> keys;
     std::unordered_map<int, float> numericValues;
     std::unordered_map<int, std::string> stringValues;
+    uint32_t tileExtent = 0;
     
     //iterate layer to populate keys and values
     int valueCount = 0;
@@ -216,7 +206,10 @@ void PbfParser::extractLayer(const protobuf::message& _in, Layer& _out, const Ma
                 valueCount++;
                 break;
             }
-        
+            case 5: //extent
+                tileExtent = static_cast<uint32_t>(layerItr.varint());
+                break;
+                
             default: // skip
                 layerItr.skip();
                 break;
@@ -229,10 +222,18 @@ void PbfParser::extractLayer(const protobuf::message& _in, Layer& _out, const Ma
     
     // iterate layer to extract features
     while(layerItr.next()) {
-        if(layerItr.tag == 2) {
+        if(layerItr.tag == 1) {
+            auto layerName = layerItr.string();
+            logMsg("LayerName: %s", layerName.c_str());
+        }
+        else if(layerItr.tag == 2) {
             protobuf::message featureMsg = layerItr.getMessage();
             _out.features.emplace_back();
-            extractFeature(featureMsg, _out.features.back(), _tile, keys, numericValues, stringValues);
+            extractFeature(featureMsg, _out.features.back(), _tile, keys, numericValues, stringValues, tileExtent);
+        } else if(layerItr.tag == 4) {
+            layerItr.skip();
+        } else if(layerItr.tag == 5) {
+            layerItr.skip();
         } else {
             layerItr.skip();
         }

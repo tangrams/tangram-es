@@ -15,7 +15,7 @@ std::shared_ptr<TileData> MapboxProtoBuffSrc::parse(const MapTile& _tile, std::s
     
     std::shared_ptr<TileData> tileData = std::make_shared<TileData>();
     
-    std::string filename("/Users/Varun/Downloads/24641.pbf");
+    std::string filename("/Users/Varun/Downloads/0.pbf");
     std::ifstream stream(filename.c_str(),std::ios_base::in|std::ios_base::binary);
     if (!stream.is_open())
     {
@@ -26,8 +26,6 @@ std::shared_ptr<TileData> MapboxProtoBuffSrc::parse(const MapTile& _tile, std::s
     
     //std::string buffer(std::istreambuf_iterator<char>(_in.rdbuf()), (std::istreambuf_iterator<char>()));
     
-    size_t bufferSize = buffer.size();
-    
     protobuf::message item(buffer.data(), buffer.size());
     
     while(item.next()) {
@@ -36,8 +34,8 @@ std::shared_ptr<TileData> MapboxProtoBuffSrc::parse(const MapTile& _tile, std::s
             protobuf::message layerItr = layerMsg;
             while (layerItr.next()) {
                 if (layerItr.tag == 1) {
-                    logMsg("Layer string: %s\n", layerItr.string().c_str());
                     auto layerName = layerItr.string();
+                    logMsg("Layer string: %s\n", layerName.c_str());
                     tileData->layers.emplace_back(layerName);
                     PbfParser::extractLayer(layerMsg, tileData->layers.back(), _tile);
                 } else {
