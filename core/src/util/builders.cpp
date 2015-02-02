@@ -4,8 +4,22 @@
 #include "rectangle.h"
 #include "geom.h"
 
+#include <memory>
+
 static auto& NO_TEXCOORDS = *(new std::vector<glm::vec2>); // denotes that texture coordinates should not be used
 static auto& NO_SCALING_VECS = *(new std::vector<glm::vec2>); // denotes that scaling vectors should not be used
+
+void* alloc(void* _userData, unsigned int _size) {
+    return malloc(_size);
+}
+
+void* realloc(void* _userData, void* _ptr, unsigned int _size) {
+    return realloc(_ptr, _size);
+}
+
+void free(void* _userData, void* _ptr) {
+    free(_ptr);
+}
 
 void Builders::buildPolygon(const Polygon& _polygon, std::vector<glm::vec3>& _pointsOut, std::vector<glm::vec3>& _normalOut, std::vector<int>& _indicesOut) {
     
@@ -20,7 +34,7 @@ void Builders::buildPolygon(const Polygon& _polygon, std::vector<glm::vec3>& _po
     bool useTexCoords = &_texcoordOut != &NO_TEXCOORDS;
     
     // get the number of vertices already added
-    int vertexDataOffset = _pointsOut.size();
+    int vertexDataOffset = (int)_pointsOut.size();
     
     Rectangle bBox;
     
@@ -88,7 +102,7 @@ void Builders::buildPolygonExtrusion(const Polygon& _polygon, const float& _minH
 
 void Builders::buildPolygonExtrusion(const Polygon& _polygon, const float& _minHeight, std::vector<glm::vec3>& _pointsOut, std::vector<glm::vec3>& _normalOut, std::vector<int>& _indicesOut, std::vector<glm::vec2>& _texcoordOut) {
     
-    int vertexDataOffset = _pointsOut.size();
+    int vertexDataOffset = (int)_pointsOut.size();
     
     glm::vec3 upVector(0.0f, 0.0f, 1.0f);
     glm::vec3 normalVector;
@@ -156,7 +170,7 @@ void buildGeneralPolyLine(const Line& _line, float _halfWidth, std::vector<glm::
         return;
     }
     
-    int vertexDataOffset = _pointsOut.size();
+    int vertexDataOffset = (int)_pointsOut.size();
     
     bool useTexCoords = &_texCoordOut != &NO_TEXCOORDS;
     bool useScalingVecs = &_scalingVecsOut != &NO_SCALING_VECS;
@@ -250,7 +264,7 @@ void buildGeneralPolyLine(const Line& _line, float _halfWidth, std::vector<glm::
         _texCoordOut.push_back(glm::vec2(0.0,1.0));
     }
     
-    for (size_t i = 0; i < lineSize - 1; i++) {
+    for (int i = 0; i < lineSize - 1; i++) {
         _indicesOut.push_back(vertexDataOffset + 2*i+2);
         _indicesOut.push_back(vertexDataOffset + 2*i+1);
         _indicesOut.push_back(vertexDataOffset + 2*i);

@@ -70,8 +70,8 @@ void PolylineStyle::buildLine(Line& _line, std::string& _layer, Properties& _pro
         ind += vertOffset;
     }
     
-    _mesh.addVertices((GLbyte*)vertices.data(), vertices.size());
-    _mesh.addIndices(indices.data(), indices.size());
+    _mesh.addVertices((GLbyte*)vertices.data(), (int)vertices.size());
+    _mesh.addIndices(indices.data(), (int)indices.size());
 }
 
 void PolylineStyle::buildPolygon(Polygon& _polygon, std::string& _layer, Properties& _props, VboMesh& _mesh) const {
