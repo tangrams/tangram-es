@@ -39,7 +39,7 @@ std::shared_ptr<TileData> MapboxProtoBuffSrc::parse(const MapTile& _tile, std::s
                     tileData->layers.emplace_back(layerName);
                     PbfParser::extractLayer(layerMsg, tileData->layers.back(), _tile);
                 } else {
-                    layerMsg.skip();
+                    layerItr.skip();
                 }
             }
         } else {
