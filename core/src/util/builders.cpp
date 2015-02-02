@@ -9,18 +9,6 @@
 static auto& NO_TEXCOORDS = *(new std::vector<glm::vec2>); // denotes that texture coordinates should not be used
 static auto& NO_SCALING_VECS = *(new std::vector<glm::vec2>); // denotes that scaling vectors should not be used
 
-void* alloc(void* _userData, unsigned int _size) {
-    return malloc(_size);
-}
-
-void* realloc(void* _userData, void* _ptr, unsigned int _size) {
-    return realloc(_ptr, _size);
-}
-
-void free(void* _userData, void* _ptr) {
-    free(_ptr);
-}
-
 void Builders::buildPolygon(const Polygon& _polygon, std::vector<glm::vec3>& _pointsOut, std::vector<glm::vec3>& _normalOut, std::vector<int>& _indicesOut) {
     
     buildPolygon(_polygon, _pointsOut, _normalOut, _indicesOut, NO_TEXCOORDS);
