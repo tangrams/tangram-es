@@ -41,3 +41,29 @@ function(check_and_link_libraries TARGET)
         endif ()
     endforeach()
 endfunction(check_and_link_libraries)
+
+macro(group_recursive_sources CURDIR CURGROUP)
+    file(GLOB children ${CURDIR}/*)
+
+    foreach(child ${children})
+        if(IS_DIRECTORY ${child})
+            file(GLOB FOUND_HEADERS ${child}/*.h)
+            file(GLOB FOUND_SOURCES ${child}/*.cpp)
+            string(REGEX MATCH "([^/]+)$" group ${child})
+
+            if("${CURGROUP}" STREQUAL "")
+                source_group(${group} FILES ${FOUND_HEADERS} ${FOUND_SOURCES})
+            else()
+                source_group(${CURGROUP}\\${group} FILES ${FOUND_HEADERS} ${FOUND_SOURCES})
+                set(group ${CURGROUP}\\\\${group})
+            endif()
+
+            group_recursive_sources(${child} ${group})
+        endif()
+    endforeach()
+
+    # add files from top level group
+    file(GLOB FOUND_HEADERS ${CURGROUP}/*.h)
+    file(GLOB FOUND_SOURCES ${CURGROUP}/*.cpp)
+    source_group(${CURGROUP} FILES ${FOUND_HEADERS} ${FOUND_SOURCES})
+endmacro()
