@@ -40,6 +40,7 @@ public:
     uint32_t tag;
 
     PBF_INLINE message(value_type data, std::size_t length);
+    PBF_INLINE message();
 
     PBF_INLINE bool next();
     PBF_INLINE uint64_t varint();
@@ -54,6 +55,7 @@ public:
     PBF_INLINE void skipValue(uint64_t val);
     PBF_INLINE void skipBytes(uint64_t bytes);
     PBF_INLINE value_type getData();
+    PBF_INLINE value_type getEnd();
     PBF_INLINE message getMessage();
     PBF_INLINE operator bool() const;
 };
@@ -62,6 +64,11 @@ message::message(value_type data, std::size_t length)
     : data_(data),
       end_(data + length)
 {
+}
+    
+message::message() {
+    data_ = nullptr;
+    end_ = nullptr;
 }
 
 bool message::next()
@@ -208,7 +215,12 @@ void message::skipBytes(uint64_t bytes)
 message::value_type message::getData()
 {
   return data_;
-}u
+}
+
+message::value_type message::getEnd()
+{
+  return end_;
+}
     
 message message::getMessage() {
     uint32_t bytes = static_cast<uint32_t>(varint());
