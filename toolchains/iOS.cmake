@@ -77,6 +77,7 @@ function(build)
     set_xcode_property(${EXECUTABLE_NAME} SUPPORTED_PLATFORMS "iphonesimulator iphoneos")
     set_xcode_property(${EXECUTABLE_NAME} ONLY_ACTIVE_ARCH "NO")
     set_xcode_property(${EXECUTABLE_NAME} VALID_ARCHS "${ARCH}")
+    set_xcode_property(${EXECUTABLE_NAME} TARGETED_DEVICE_FAMILY "1,2")
 endfunction()
 
 macro(add_framework FWNAME APPNAME LIBPATH)
