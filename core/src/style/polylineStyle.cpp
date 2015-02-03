@@ -3,10 +3,8 @@
 #include <ctime>
 
 PolylineStyle::PolylineStyle(std::string _name, GLenum _drawMode) : Style(_name, _drawMode) {
-    
     constructVertexLayout();
     constructShaderProgram();
-    
 }
 
 void PolylineStyle::constructVertexLayout() {
@@ -28,21 +26,14 @@ void PolylineStyle::constructShaderProgram() {
     std::string fragShaderSrcStr = stringFromResource("polyline.fs");
     
     m_shaderProgram = std::make_shared<ShaderProgram>();
-    m_shaderProgram->buildFromSourceStrings(fragShaderSrcStr, vertShaderSrcStr);
-    
+    m_shaderProgram->setSourceStrings(fragShaderSrcStr, vertShaderSrcStr);
 }
 
-void PolylineStyle::setupFrame() {
-    clock_t t = clock();
-    m_shaderProgram->setUniformf("u_lightDirection", -1.0, -1.0, 1.0);
-    m_shaderProgram->setUniformf("u_time", ((float)t)/CLOCKS_PER_SEC);
-}
-
-void PolylineStyle::buildPoint(Point& _point, std::string& _layer, Properties& _props, VboMesh& _mesh) {
+void PolylineStyle::buildPoint(Point& _point, std::string& _layer, Properties& _props, VboMesh& _mesh) const {
     // No-op
 }
 
-void PolylineStyle::buildLine(Line& _line, std::string& _layer, Properties& _props, VboMesh& _mesh) {
+void PolylineStyle::buildLine(Line& _line, std::string& _layer, Properties& _props, VboMesh& _mesh) const {
     std::vector<PosNormEnormColVertex> vertices;
     std::vector<GLushort> indices;
     std::vector<glm::vec3> points;
@@ -83,6 +74,6 @@ void PolylineStyle::buildLine(Line& _line, std::string& _layer, Properties& _pro
     _mesh.addIndices(indices.data(), indices.size());
 }
 
-void PolylineStyle::buildPolygon(Polygon& _polygon, std::string& _layer, Properties& _props, VboMesh& _mesh) {
+void PolylineStyle::buildPolygon(Polygon& _polygon, std::string& _layer, Properties& _props, VboMesh& _mesh) const {
     // No-op
 }

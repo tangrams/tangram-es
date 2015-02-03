@@ -12,6 +12,10 @@
 #include "platform.h"
 #include "gl.h"
 
+#include "scene/material.h"
+
+class Scene;
+
 /* Means of constructing and rendering map geometry
  *
  * A Style defines a way to 
@@ -23,7 +27,6 @@
  * geometry into meshes. See <PolygonStyle> for a basic implementation.
  */
 class Style {
-    
 protected:
     
     /* Unique name for a style instance */
@@ -48,10 +51,10 @@ protected:
     virtual void constructShaderProgram() = 0;
     
     /* Build styled vertex data for point geometry and add it to the given <VboMesh> */
-    virtual void buildPoint(Point& _point, std::string& _layer, Properties& _props, VboMesh& _mesh) = 0;
+    virtual void buildPoint(Point& _point, std::string& _layer, Properties& _props, VboMesh& _mesh) const = 0;
     
     /* Build styled vertex data for line geometry and add it to the given <VboMesh> */
-    virtual void buildLine(Line& _line, std::string& _layer, Properties& _props, VboMesh& _mesh) = 0;
+    virtual void buildLine(Line& _line, std::string& _layer, Properties& _props, VboMesh& _mesh) const = 0;
     
     /* Build styled vertex data for polygon geometry and add it to the given <VboMesh> 
      * 
@@ -60,7 +63,7 @@ protected:
      * simple polygon (in the mathematical sense), _sizes will have one element which is
      * the number of points in the first vector.
      */
-    virtual void buildPolygon(Polygon& _polygon, std::string& _layer, Properties& _props, VboMesh& _mesh) = 0;
+    virtual void buildPolygon(Polygon& _polygon, std::string& _layer, Properties& _props, VboMesh& _mesh) const = 0;
 
 public:
 
@@ -71,10 +74,10 @@ public:
     virtual void addLayers(std::vector<std::string> _layers);
     
     /* Add styled geometry from the given Json object to the given <MapTile> */
-    virtual void addData(TileData& _data, MapTile& _tile, const MapProjection& _mapProjection);
+    virtual void addData(TileData& _data, MapTile& _tile, const MapProjection& _mapProjection) const;
     
     /* Perform any setup needed before drawing each frame */
-    virtual void setupFrame();
+    virtual void setupFrame(const std::shared_ptr<Scene>& _scene);
 
     /* Perform any setup needed before drawing each tile */
     virtual void setupTile(const std::shared_ptr<MapTile>& _tile);
@@ -83,4 +86,6 @@ public:
     std::string getName() const { return m_name; }
 
     virtual ~Style();
+    
+    Material    m_material;
 };

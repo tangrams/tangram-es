@@ -1,4 +1,5 @@
 #include "shaderProgram.h"
+#include "scene/light.h"
 
 GLuint ShaderProgram::s_activeGlProgram = 0;
 int ShaderProgram::s_validGeneration = 0;
@@ -8,6 +9,7 @@ ShaderProgram::ShaderProgram() {
     m_glProgram = 0;
     m_glFragmentShader = 0;
     m_glVertexShader = 0;
+    m_needsBuild = true;
 
 }
 
@@ -26,7 +28,30 @@ ShaderProgram::~ShaderProgram() {
     }
 
     m_attribMap.clear();
+    
+}
 
+void ShaderProgram::setSourceStrings(const std::string& _fragSrc, const std::string& _vertSrc){
+    m_fragmentShaderSource = std::string(_fragSrc);
+    m_vertexShaderSource = std::string(_vertSrc);
+    m_needsBuild = true;
+}
+
+void ShaderProgram::addSourceBlock(const std::string& _tagName, const std::string &_glslSource, bool _allowDuplicate){
+    
+    if (!_allowDuplicate) {
+        for (auto& source : m_sourceBlocks[_tagName]) {
+            if (_glslSource == source) {
+                return;
+            }
+        }
+    }
+    
+    m_sourceBlocks[_tagName].push_back("\n" + _glslSource);
+    m_needsBuild = true;
+
+    //  TODO:
+    //          - add Global Blocks
 }
 
 const GLint ShaderProgram::getAttribLocation(const std::string& _attribName) {
@@ -63,28 +88,37 @@ void ShaderProgram::use() {
 
     checkValidity();
     
+    if (m_needsBuild) {
+        build();
+    }
+    
     if (m_glProgram != 0 && m_glProgram != s_activeGlProgram) {
-
         glUseProgram(m_glProgram);
         s_activeGlProgram = m_glProgram;
-
     }
 
 }
 
-bool ShaderProgram::buildFromSourceStrings(const std::string& _fragSrc, const std::string& _vertSrc) {
-
+bool ShaderProgram::build() {
+    
+    m_needsBuild = false;
     m_generation = s_validGeneration;
+    
+    // Inject source blocks
+    
+    std::string vertSrc = m_vertexShaderSource;
+    std::string fragSrc = m_fragmentShaderSource;
+    applySourceBlocks(vertSrc, fragSrc);
     
     // Try to compile vertex and fragment shaders, releasing resources and quiting on failure
 
-    GLint vertexShader = makeCompiledShader(_vertSrc, GL_VERTEX_SHADER);
+    GLint vertexShader = makeCompiledShader(vertSrc, GL_VERTEX_SHADER);
 
     if (vertexShader == 0) {
         return false;
     }
 
-    GLint fragmentShader = makeCompiledShader(_fragSrc, GL_FRAGMENT_SHADER);
+    GLint fragmentShader = makeCompiledShader(fragSrc, GL_FRAGMENT_SHADER);
 
     if (fragmentShader == 0) {
         glDeleteShader(vertexShader);
@@ -118,18 +152,12 @@ bool ShaderProgram::buildFromSourceStrings(const std::string& _fragSrc, const st
     m_glVertexShader = vertexShader;
     m_glProgram = program;
 
-    // Make copies of the shader source code inputs, for this program to keep
-
-    m_fragmentShaderSource = std::string(_fragSrc);
-    m_vertexShaderSource = std::string(_vertSrc);
-
     // Clear any cached shader locations
 
     m_attribMap.clear();
     m_uniformMap.clear();
 
     return true;
-
 }
 
 GLuint ShaderProgram::makeLinkedShaderProgram(GLint _fragShader, GLint _vertShader) {
@@ -183,13 +211,45 @@ GLuint ShaderProgram::makeCompiledShader(const std::string& _src, GLenum _type) 
 
 }
 
+void ShaderProgram::applySourceBlocks(std::string& _vertSrcOut, std::string& _fragSrcOut) {
+    
+    _vertSrcOut.insert(0, "#pragma tangram: defines\n");
+    _fragSrcOut.insert(0, "#pragma tangram: defines\n");
+    
+    Light::assembleLights(m_sourceBlocks);
+    
+    for (auto& block : m_sourceBlocks) {
+        
+        std::string tag = "#pragma tangram: " + block.first;
+        
+        int vertSrcPos = _vertSrcOut.find(tag);
+        int fragSrcPos = _fragSrcOut.find(tag);
+        
+        if (vertSrcPos != std::string::npos) {
+            vertSrcPos += tag.length();
+            for (auto& source : block.second) {
+                _vertSrcOut.insert(vertSrcPos, source);
+                vertSrcPos += source.length();
+            }
+        }
+        if (fragSrcPos != std::string::npos) {
+            fragSrcPos += tag.length();
+            for (auto& source : block.second) {
+                _fragSrcOut.insert(fragSrcPos, source);
+                fragSrcPos += source.length();
+            }
+        }
+    }
+    
+}
+
 void ShaderProgram::checkValidity() {
     
     if (m_generation != s_validGeneration) {
         m_glFragmentShader = 0;
         m_glVertexShader = 0;
         m_glProgram = 0;
-        buildFromSourceStrings(m_fragmentShaderSource, m_vertexShaderSource);
+        m_needsBuild = true;
     }
     
 }

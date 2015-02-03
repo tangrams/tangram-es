@@ -245,7 +245,7 @@ int main(int argc, char **argv){
         
         if(updateMouse()){
             if( mouse.button == 1 ){
-                Tangram::handleTapGesture(	mouse.x, mouse.y );
+                Tangram::handleTapGesture( mouse.x, mouse.y );
             } else {
                 Tangram::handlePanGesture( mouse.velX*10.0, -mouse.velY*10.0);
             }

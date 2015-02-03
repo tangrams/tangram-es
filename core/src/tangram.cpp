@@ -13,6 +13,7 @@
 #include "style/polygonStyle.h"
 #include "style/polylineStyle.h"
 #include "scene/scene.h"
+#include "scene/lights.h"
 #include "util/error.h"
 
 namespace Tangram {
@@ -20,7 +21,9 @@ namespace Tangram {
 std::unique_ptr<TileManager> m_tileManager;
 std::shared_ptr<Scene> m_scene;
 std::shared_ptr<View> m_view;
-    
+
+static float g_time = 0.0;
+
 void initialize() {
     
     logMsg("initialize\n");
@@ -51,6 +54,14 @@ void initialize() {
         std::unique_ptr<Style> linesStyle(new PolylineStyle("Polyline"));
         linesStyle->addLayers({"roads"});
         m_scene->addStyle(std::move(linesStyle));
+
+        //  Directional light with white diffuse color pointing Northeast and down
+        auto directionalLight = std::make_shared<DirectionalLight>("dLight");
+        directionalLight->setAmbientColor({0.3, 0.3, 0.3, 1.0});
+        directionalLight->setDiffuseColor({0.7, 0.7, 0.7, 1.0});
+        directionalLight->setDirection({1.0, 1.0, -1.0});
+        m_scene->addLight(directionalLight);
+        
     }
 
     // Create a tileManager
@@ -101,6 +112,8 @@ void resize(int _newWidth, int _newHeight) {
 
 void update(float _dt) {
 
+    g_time += _dt;
+
     if (m_view) {
         m_view->update();
     }
@@ -108,7 +121,10 @@ void update(float _dt) {
     if (m_tileManager) {
         m_tileManager->updateTileSet();
     }
-
+    
+    if(m_scene) {
+        // Update lights and styles
+    }   
 }
 
 void render() {
@@ -119,7 +135,7 @@ void render() {
     // Loop over all styles
     for (const auto& style : m_scene->getStyles()) {
 
-        style->setupFrame();
+        style->setupFrame(m_scene);
 
         // Loop over all tiles in m_tileSet
         for (const auto& mapIDandTile : m_tileManager->getVisibleTiles()) {
@@ -196,7 +212,6 @@ void onContextDestroyed() {
 
     // Buffer objects are invalidated and re-uploaded the next time they are used
     VboMesh::invalidateAllVBOs();
-    
     
 }
     

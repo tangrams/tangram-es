@@ -2,10 +2,13 @@
 #include "util/builders.h"
 
 PolygonStyle::PolygonStyle(std::string _name, GLenum _drawMode) : Style(_name, _drawMode) {
+    m_material.setEmissionEnabled(false);
+    m_material.setAmbientEnabled(true);
+    m_material.setDiffuse(glm::vec4(1.0));
+    m_material.setSpecularEnabled(true);
     
     constructVertexLayout();
     constructShaderProgram();
-    
 }
 
 void PolygonStyle::constructVertexLayout() {
@@ -23,23 +26,19 @@ void PolygonStyle::constructVertexLayout() {
 void PolygonStyle::constructShaderProgram() {
     
     std::string vertShaderSrcStr = stringFromResource("polygon.vs");
-    
     std::string fragShaderSrcStr = stringFromResource("polygon.fs");
     
     m_shaderProgram = std::make_shared<ShaderProgram>();
-    m_shaderProgram->buildFromSourceStrings(fragShaderSrcStr, vertShaderSrcStr);
-    
+    m_shaderProgram->setSourceStrings(fragShaderSrcStr, vertShaderSrcStr);
+
+    m_material.injectOnProgram(m_shaderProgram); // This is a must for lighting !!
 }
 
-void PolygonStyle::setupFrame() {
-    m_shaderProgram->setUniformf("u_lightDirection", -1.0, -1.0, 1.0);
-}
-
-void PolygonStyle::buildPoint(Point& _point, std::string& _layer, Properties& _props, VboMesh& _mesh) {
+void PolygonStyle::buildPoint(Point& _point, std::string& _layer, Properties& _props, VboMesh& _mesh) const {
     // No-op
 }
 
-void PolygonStyle::buildLine(Line& _line, std::string& _layer, Properties& _props, VboMesh& _mesh) {
+void PolygonStyle::buildLine(Line& _line, std::string& _layer, Properties& _props, VboMesh& _mesh) const {
     std::vector<PosNormColVertex> vertices;
     std::vector<GLushort> indices;
     std::vector<glm::vec3> points;
@@ -67,7 +66,7 @@ void PolygonStyle::buildLine(Line& _line, std::string& _layer, Properties& _prop
     _mesh.addIndices(indices.data(), indices.size());
 }
 
-void PolygonStyle::buildPolygon(Polygon& _polygon, std::string& _layer, Properties& _props, VboMesh& _mesh) {
+void PolygonStyle::buildPolygon(Polygon& _polygon, std::string& _layer, Properties& _props, VboMesh& _mesh) const {
     
     std::vector<PosNormColVertex> vertices;
     std::vector<GLushort> indices;
@@ -118,5 +117,4 @@ void PolygonStyle::buildPolygon(Polygon& _polygon, std::string& _layer, Properti
     
     _mesh.addVertices((GLbyte*)vertices.data(), vertices.size());
     _mesh.addIndices(indices.data(), indices.size());
-    
 }

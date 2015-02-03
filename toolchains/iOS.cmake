@@ -72,7 +72,6 @@ function(build)
         MACOSX_BUNDLE_INFO_PLIST ${PROJECT_SOURCE_DIR}/ios/resources/tangram-Info.plist
         RESOURCE "${RESOURCES}")
 
-    set_xcode_property(json GCC_GENERATE_DEBUGGING_SYMBOLS YES)
     set_xcode_property(${EXECUTABLE_NAME} GCC_GENERATE_DEBUGGING_SYMBOLS YES)
     set_xcode_property(${EXECUTABLE_NAME} SUPPORTED_PLATFORMS "iphonesimulator iphoneos")
     set_xcode_property(${EXECUTABLE_NAME} ONLY_ACTIVE_ARCH "NO")
