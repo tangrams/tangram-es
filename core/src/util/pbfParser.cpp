@@ -71,6 +71,7 @@ void PbfParser::extractFeature(const protobuf::message& _in, Feature& _out, cons
     std::vector<Line> geometryLines;
     protobuf::message featureItr = _in;
     protobuf::message geometry; // By default data_ and end_ are nullptr
+    
     while(featureItr.next()) {
         switch(featureItr.tag) {
             // Feature ID
@@ -166,12 +167,20 @@ void PbfParser::extractLayer(const protobuf::message& _in, Layer& _out, const Ma
     std::vector<std::string> keys;
     std::unordered_map<int, float> numericValues;
     std::unordered_map<int, std::string> stringValues;
+    std::vector<protobuf::message> featureMsgs;
     int tileExtent = 0;
     
-    //iterate layer to populate keys and values
+    //iterate layer to populate featureMsgs, keys and values
     int valueCount = 0;
     while(layerItr.next()) {
         switch(layerItr.tag) {
+            case 2: // features
+            {
+                protobuf::message featureMsg = layerItr.getMessage();
+                featureMsgs.emplace_back(featureMsg);
+                break;
+            }
+                
             case 3: // key string
                 keys.emplace_back(layerItr.string());
                 break;
@@ -212,6 +221,7 @@ void PbfParser::extractLayer(const protobuf::message& _in, Layer& _out, const Ma
                 valueCount++;
                 break;
             }
+                
             case 5: //extent
                 tileExtent = static_cast<int>(layerItr.int64());
                 break;
@@ -223,18 +233,8 @@ void PbfParser::extractLayer(const protobuf::message& _in, Layer& _out, const Ma
         }
     }
     
-    //reset layer iterator
-    layerItr = _in;
-    
-    // iterate layer to extract features
-    while(layerItr.next()) {
-        if(layerItr.tag == 2) {
-            protobuf::message featureMsg = layerItr.getMessage();
-            _out.features.emplace_back();
-            extractFeature(featureMsg, _out.features.back(), _tile, keys, numericValues, stringValues, tileExtent);
-            
-        } else {
-            layerItr.skip();
-        }
+    for(auto& featureMsg : featureMsgs) {
+        _out.features.emplace_back();
+        extractFeature(featureMsg, _out.features.back(), _tile, keys, numericValues, stringValues, tileExtent);
     }
 }
