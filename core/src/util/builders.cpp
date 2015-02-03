@@ -22,12 +22,12 @@ void free(void* _userData, void* _ptr) {
 }
 
 static TESSalloc allocator = {&alloc, &realloc, &free, nullptr,
-                              128, // meshEdgeBucketSize
-                              128, // meshVertexBucketSize
-                              64,  // meshFaceBucketSize
-                              128, // dictNodeBucketSize
-                              64,  // regionBucketSize
-                              128  // extraVertices
+                              64, // meshEdgeBucketSize
+                              64, // meshVertexBucketSize
+                              16,  // meshFaceBucketSize
+                              64, // dictNodeBucketSize
+                              16,  // regionBucketSize
+                              64  // extraVertices
                              };
 
 void Builders::buildPolygon(const Polygon& _polygon, std::vector<glm::vec3>& _pointsOut, std::vector<glm::vec3>& _normalOut, std::vector<ushort>& _indicesOut) {
