@@ -3,7 +3,7 @@
 set -e
 set -o pipefail
 
-if [[ ${TRAVIS_OS_NAME} == "osx" ]]; then
+if [[ ${PLATFORM} == "osx" ]]; then
     # Run unit tests
     echo "Running Unit Tests"
     for file in ./build/tests/unit/bin/*
