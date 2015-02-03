@@ -78,6 +78,10 @@ void VboMesh::addVertices(GLbyte* _vertices, int _nVertices) {
         if (!m_backupMesh) {
             m_backupMesh.reset(new VboMesh(m_vertexLayout, m_drawMode));
         }
+        if (_nVertices > MAX_INDEX_VALUE) {
+            logMsg("WARNING: Cannot add > %d vertices in one call, truncating mesh\n", MAX_INDEX_VALUE);
+            _nVertices = MAX_INDEX_VALUE;
+        }
         m_backupMesh->addVertices(_vertices, _nVertices);
         return;
     }
