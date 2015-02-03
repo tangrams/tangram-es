@@ -77,15 +77,15 @@ void PolygonStyle::buildPolygon(Polygon& _polygon, std::string& _layer, Properti
     GLuint abgr = 0xffaaaaaa; // Default color
     
     if (_layer.compare("buildings") == 0) {
-        abgr = 0xffcedcde;
+        abgr = 0xffe6f0f2;
     } else if (_layer.compare("water") == 0) {
         abgr = 0xff917d1a;
     } else if (_layer.compare("roads") == 0) {
         abgr = 0xff969696;
     } else if (_layer.compare("earth") == 0) {
-        abgr = 0xff669171;
+        abgr = 0xffa9b9c2;
     } else if (_layer.compare("landuse") == 0) {
-        abgr = 0xff507480;
+        abgr = 0xff669171;
     }
     
     float height = _props.numericProps["height"]; // Inits to zero if not present in data
