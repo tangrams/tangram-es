@@ -300,6 +300,7 @@ void addCap (const glm::vec3& _coord, const glm::vec2& _normal,
             _halfWidth, _pointsOut, _scalingVecsOut, _indicesOut, _texCoordOut);
 }
 
+//  Cross product
 float signed_area (const glm::vec3& _v1, const glm::vec3& _v2, const glm::vec3& _v3) {
     return (_v2.x-_v1.x)*(_v3.y-_v1.y) - (_v3.x-_v1.x)*(_v2.y-_v1.y);
 };
@@ -361,6 +362,8 @@ void buildGeneralPolyLine(const Line& _line, float _halfWidth, std::vector<glm::
     
     // TODO:
     //      - pre-allocate vectors?? how?
+    //      - Solution: 
+    //                  1. calculate the worst scenerio
     //
     // _pointsOut.reserve(_pointsOut.size() + lineSize * 2); // Pre-allocate vertex vector
     // _indicesOut.reserve(_indicesOut.size() + (lineSize - 1) * 6); // Pre-allocate index vector
