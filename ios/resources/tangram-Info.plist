@@ -32,6 +32,7 @@
 	<string>Main_iPad</string>
 	<key>UIRequiredDeviceCapabilities</key>
 	<array>
+		<string>opengles-2</string>
 		<string>armv7</string>
 	</array>
 	<key>UIStatusBarHidden</key>
