@@ -9,6 +9,9 @@ matrix:
           env: PLATFORM=osx
           compiler: clang
         - os: osx
+          env: PLATFORM=ios
+          compiler: clang
+        - os: osx
           env: PLATFORM=android
           compiler: gcc
 
