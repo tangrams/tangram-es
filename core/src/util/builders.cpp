@@ -262,11 +262,11 @@ void addFan (const glm::vec3& _coord,
     for (int i = 0; i < _numTriangles; i++) {
         if (_isSigned) {
             _indicesOut.push_back(vertexDataOffset + i+2);
-            _indicesOut.push_back(vertexDataOffset + i);
+            _indicesOut.push_back(vertexDataOffset );
             _indicesOut.push_back(vertexDataOffset + i+1);
         } else {
             _indicesOut.push_back(vertexDataOffset + i+1);
-            _indicesOut.push_back(vertexDataOffset + i);
+            _indicesOut.push_back(vertexDataOffset );
             _indicesOut.push_back(vertexDataOffset + i+2);
         }
     }
@@ -424,8 +424,8 @@ void buildGeneralPolyLine(const Line& _line, float _halfWidth, std::vector<glm::
     glm::vec3 coordPrev, coordCurr, coordNext;
     glm::vec2 normPrev, normCurr, normNext;
 
-    int cornersOnCap = 5;//(cap == "square")? 2 : ((cap == "round")? 4 : 0);  // Butt is the implicit default
-    int trianglesOnJoin = (join == "bevel")? 1 : ((join == "round")? 5 : 0);  // Miter is the implicit default
+    int cornersOnCap = (cap == "square")? 2 : ((cap == "round")? 4 : 0);  // Butt is the implicit default
+    int trianglesOnJoin = 1;//(join == "bevel")? 1 : ((join == "round")? 5 : 0);  // Miter is the implicit default
 
     ushort vertexDataOffset = (ushort)_pointsOut.size();
     ushort nPairs = 0;
