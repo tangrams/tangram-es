@@ -29,7 +29,7 @@ void main() {
   	v_texcoord = a_texcoord;
 
 	vec4 v_pos = a_position;
-  	v_pos.xyz += a_extrudeNormal * 0.1;//a_extrudeWidth;
+  	v_pos.xyz += a_extrudeNormal * a_extrudeWidth;
 
 	v_eyeToPoint = vec3(u_modelView * a_position);
 

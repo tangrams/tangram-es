@@ -304,61 +304,11 @@ float signed_area (const glm::vec3& _v1, const glm::vec3& _v2, const glm::vec3& 
     return (_v2.x-_v1.x)*(_v3.y-_v1.y) - (_v3.x-_v1.x)*(_v2.y-_v1.y);
 };
 
-//  Add speccials joins (not miter) tipes that require FAN tessalations  
-//  Using this ( http://www.codeproject.com/Articles/226569/Drawing-polylines-by-tessellation ) as reference
-void addJoin (  const glm::vec3& _coordPrev, const glm::vec3& _coordCurr, const glm::vec3& _coordNext, 
-                const glm::vec2& _normalPrev, const glm::vec2& _normalCurr, const glm::vec2& _normalNext,  
-                float _pct, int _nTriangles, 
-                float _halfWidth, std::vector<glm::vec3>& _pointsOut, std::vector<glm::vec2>& _scalingVecsOut, std::vector<Builders::ushort>& _indicesOut, std::vector<glm::vec2>& _texCoordOut) {
-
-    bool isSigned = signed_area(_coordPrev, _coordCurr, _coordNext) > 0;
-
-    int vertexDataOffset = _pointsOut.size();
-
-    glm::vec2 nA = _normalPrev;     // normal to point A (aT)
-    glm::vec2 nC = -_normalCurr;    // normal to center (-vP)
-    glm::vec2 nB = _normalNext;     // normal to point B (bT)
-
-    glm::vec2 uA = glm::vec2(1.0,_pct);
-    glm::vec2 uC = glm::vec2(0.0,_pct);
-    glm::vec2 uB = glm::vec2(1.0,_pct);
-    
-    if (isSigned) {
-        addVertex(_coordCurr, nA, uA, _halfWidth, _pointsOut, _scalingVecsOut, _texCoordOut);
-        addVertex(_coordCurr, nC, uC, _halfWidth, _pointsOut, _scalingVecsOut, _texCoordOut);
-    } else {
-        nA = -_normalPrev;
-        nC = _normalCurr;
-        nB = -_normalNext;
-        addVertex(_coordCurr, nC, uC, _halfWidth, _pointsOut, _scalingVecsOut, _texCoordOut);
-        addVertex(_coordCurr, nA, uA, _halfWidth, _pointsOut, _scalingVecsOut, _texCoordOut);
-    }
-
-    _indicesOut.push_back(vertexDataOffset + 0);
-    _indicesOut.push_back(vertexDataOffset + 1);
-
-    addFan( _coordCurr, nA, nC, nB, uA, uC, uB, isSigned, _nTriangles, 
-            _halfWidth, _pointsOut, _scalingVecsOut, _indicesOut, _texCoordOut);
-
-    vertexDataOffset = _pointsOut.size();
-
-    if (isSigned) {
-        addVertex(_coordCurr, nB, uB, _halfWidth, _pointsOut, _scalingVecsOut, _texCoordOut);
-        addVertex(_coordCurr, nC, uC, _halfWidth, _pointsOut, _scalingVecsOut, _texCoordOut);
-    } else {
-        addVertex(_coordCurr, nC, uC, _halfWidth, _pointsOut, _scalingVecsOut, _texCoordOut);
-        addVertex(_coordCurr, nB, uB, _halfWidth, _pointsOut, _scalingVecsOut, _texCoordOut);
-    }
-
-    _indicesOut.push_back(vertexDataOffset + 0);
-    _indicesOut.push_back(vertexDataOffset + 1);
-}
-
 /* TODO:
  *      - this is taken from WebGL needs a better adaptation
  *      - Take a look to https://github.com/tangrams/tangram/blob/master/src/gl/gl_builders.js#L581
  */ 
-float  valuesWithinTolerance( float _a, float _b, float _tolerance = 1.0) {
+float valuesWithinTolerance ( float _a, float _b, float _tolerance = 1.0) {
     return std::abs(_a - _b) < _tolerance;
 }
 
@@ -425,7 +375,7 @@ void buildGeneralPolyLine(const Line& _line, float _halfWidth, std::vector<glm::
     glm::vec2 normPrev, normCurr, normNext;
 
     int cornersOnCap = (cap == "square")? 2 : ((cap == "round")? 4 : 0);  // Butt is the implicit default
-    int trianglesOnJoin = 1;//(join == "bevel")? 1 : ((join == "round")? 5 : 0);  // Miter is the implicit default
+    int trianglesOnJoin = (join == "bevel")? 1 : ((join == "round")? 5 : 0);  // Miter is the implicit default
 
     ushort vertexDataOffset = (ushort)_pointsOut.size();
     ushort nPairs = 0;
@@ -537,15 +487,51 @@ void buildGeneralPolyLine(const Line& _line, float _halfWidth, std::vector<glm::
             if(trianglesOnJoin != 0 && isPrev && isNext) {
                 // Add previus vertices to buffer and reset the index pairs counter
                 // Because we are going to add more triangles.
+
+                bool isSigned = signed_area(coordPrev, coordCurr, coordNext) > 0;
+
+                glm::vec2 nA = normPrev;     // normal to point A (aT)
+                glm::vec2 nC = -normCurr;    // normal to center (-vP)
+                glm::vec2 nB = normNext;     // normal to point B (bT)
+
+                float pct = (float)i/(float)lineSize;
+
+                glm::vec2 uA = glm::vec2(1.0,pct);
+                glm::vec2 uC = glm::vec2(0.0,pct);
+                glm::vec2 uB = glm::vec2(1.0,pct);
+                
+                if (isSigned) {
+                    addVertex(coordCurr, nA, uA, _halfWidth, _pointsOut, _scalingVecsOut, _texCoordOut);
+                    addVertex(coordCurr, nC, uC, _halfWidth, _pointsOut, _scalingVecsOut, _texCoordOut);
+                } else {
+                    nA = -normPrev;
+                    nC = normCurr;
+                    nB = -normNext;
+                    uA = glm::vec2(0.0,pct);
+                    uC = glm::vec2(1.0,pct);
+                    uB = glm::vec2(0.0,pct);
+                    addVertex(coordCurr, nC, uC, _halfWidth, _pointsOut, _scalingVecsOut, _texCoordOut);
+                    addVertex(coordCurr, nA, uA, _halfWidth, _pointsOut, _scalingVecsOut, _texCoordOut);
+                }
+
+                // nPairs++;
+
                 indexPairs(nPairs, vertexDataOffset, _indicesOut);
-            
-                addJoin(coordPrev, coordCurr, coordNext, 
-                        normPrev, normCurr, normNext, 
-                        i/lineSize, trianglesOnJoin, 
+
+                addFan( coordCurr, nA, nC, nB, uA, uC, uB, isSigned, trianglesOnJoin, 
                         _halfWidth, _pointsOut, _scalingVecsOut, _indicesOut, _texCoordOut);
 
                 vertexDataOffset = (ushort)_pointsOut.size();
                 nPairs = 0;
+
+                if (isSigned) {
+                    addVertex(coordCurr, nB, uB, _halfWidth, _pointsOut, _scalingVecsOut, _texCoordOut);
+                    addVertex(coordCurr, nC, uC, _halfWidth, _pointsOut, _scalingVecsOut, _texCoordOut);
+                } else {
+                    addVertex(coordCurr, nC, uC, _halfWidth, _pointsOut, _scalingVecsOut, _texCoordOut);
+                    addVertex(coordCurr, nB, uB, _halfWidth, _pointsOut, _scalingVecsOut, _texCoordOut);
+                }
+                
             } else {
                 addVertexPair(  coordCurr, normCurr, 
                                 (float)i/((float)lineSize-1.0), 

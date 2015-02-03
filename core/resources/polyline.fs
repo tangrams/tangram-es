@@ -14,7 +14,7 @@ varying vec2 v_texcoord;
 
 void main(void) {
     
-    vec4 color = vec4(v_texcoord.x,v_texcoord.y,0.0,1.0);//v_color;
+    vec4 color = v_color;
 
     /* 
      * Use texture coordinates to darken fragments closer to the center of the polyline,
@@ -29,7 +29,7 @@ void main(void) {
     
     darken = clamp(darken, 0.5, 1.0); // reduce color values by 1/2 in darkened fragments
 
-  	// color.rgb = color.rgb * darken;
-    //color.rgb = pow(color.rgb, vec3(1.0/2.2)); // gamma correction
+  	color.rgb = color.rgb * darken;
+    // color.rgb = pow(color.rgb, vec3(1.0/2.2)); // gamma correction
 	gl_FragColor = color;
 }
