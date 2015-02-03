@@ -129,10 +129,10 @@ std::shared_ptr<TileData> MapzenVectorTileJson::parse(const MapTile& _tile, std:
     std::shared_ptr<TileData> tileData = std::make_shared<TileData>();
     
     // parse written data into a JSON object
-    Json::Reader jsonReader;
-    Json::Value jsonValue;
+    rapidjson::Document doc;
+    doc.Parse(_in.str().c_str());
     
-    if (! jsonReader.parse(_in, jsonValue)) {
+    if (doc.HasParseError()) {
         
         logMsg("Json parsing failed on tile [%d, %d, %d]\n", _tile.getID().z, _tile.getID().x, _tile.getID().y);
         return tileData;
@@ -140,9 +140,9 @@ std::shared_ptr<TileData> MapzenVectorTileJson::parse(const MapTile& _tile, std:
     }
     
     // transform JSON data into a TileData using GeoJson functions
-    for (const auto& layerName : jsonValue.getMemberNames()) {
-        tileData->layers.emplace_back(layerName);
-        GeoJson::extractLayer(jsonValue[layerName], tileData->layers.back(), _tile);
+    for (auto layer = doc.MemberBegin(); layer != doc.MemberEnd(); ++layer) {
+        tileData->layers.emplace_back(std::string(layer->name.GetString()));
+        GeoJson::extractLayer(layer->value, tileData->layers.back(), _tile);
     }
     
     
