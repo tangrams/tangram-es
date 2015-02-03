@@ -8,6 +8,8 @@ void PbfParser::extractGeometry(const protobuf::message& _in, int _tileExtent, s
     uint32_t cmdRepeat = 0;
     protobuf::message geomItr = _in;
     
+    double invTileExtent = (1.0/(double)_tileExtent);
+    
     std::vector<Point> line;
     
     int x = 0.0f;
@@ -44,8 +46,8 @@ void PbfParser::extractGeometry(const protobuf::message& _in, int _tileExtent, s
             
             // bring the points in -1 to 1 space
             Point p;
-            p.x = (1.0/(double)_tileExtent) * (double)(x - _tileExtent);
-            p.y = (1.0/(double)_tileExtent) * (double)(_tileExtent - y);
+            p.x = invTileExtent * (double)(x - _tileExtent);
+            p.y = invTileExtent * (double)(_tileExtent - y);
             
             // apply projection
             /*Point p;
@@ -71,6 +73,8 @@ void PbfParser::extractFeature(const protobuf::message& _in, Feature& _out, cons
     std::vector<Line> geometryLines;
     protobuf::message featureItr = _in;
     protobuf::message geometry; // By default data_ and end_ are nullptr
+    
+    double invTileExtent = 1.0/(double)(_tileExtent);
     
     while(featureItr.next()) {
         switch(featureItr.tag) {
@@ -103,7 +107,7 @@ void PbfParser::extractFeature(const protobuf::message& _in, Feature& _out, cons
                             
                             // height and minheight need to be handled separately so that their dimensions are normalized
                             if(_keys[tagKey].compare("height") == 0 || _keys[tagKey].compare("min_height") == 0) {
-                                _out.props.numericProps[_keys[tagKey]] = _numericValues[valueKey] * _tileExtent;
+                                _out.props.numericProps[_keys[tagKey]] = _numericValues[valueKey] * invTileExtent;
                             } else {
                                 _out.props.numericProps[_keys[tagKey]] = _numericValues[valueKey];
                             }
