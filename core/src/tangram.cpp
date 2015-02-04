@@ -75,9 +75,9 @@ void initialize() {
         
         // Add a tile data source
         // json tile source
-        std::unique_ptr<DataSource> dataSource(new MapzenVectorTileJson());
+        //std::unique_ptr<DataSource> dataSource(new MapzenVectorTileJson());
         // protobuf tile source
-        //std::unique_ptr<DataSource> dataSource(new MapboxProtoBuffSrc());
+        std::unique_ptr<DataSource> dataSource(new MapboxProtoBuffSrc());
         m_tileManager->addDataSource(std::move(dataSource));
     }
 
