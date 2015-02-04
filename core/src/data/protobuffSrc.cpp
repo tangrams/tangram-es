@@ -15,15 +15,7 @@ std::shared_ptr<TileData> MapboxProtoBuffSrc::parse(const MapTile& _tile, std::s
     
     std::shared_ptr<TileData> tileData = std::make_shared<TileData>();
     
-    std::string filename("/Users/Varun/Downloads/0.pbf");
-    std::ifstream stream(filename.c_str(),std::ios_base::in|std::ios_base::binary);
-    if (!stream.is_open()) {
-        throw std::runtime_error("could not open: '" + filename + "'");
-    }
-    std::string buffer(std::istreambuf_iterator<char>(stream.rdbuf()),(std::istreambuf_iterator<char>()));
-    stream.close();
-    
-    //std::string buffer(std::istreambuf_iterator<char>(_in.rdbuf()), (std::istreambuf_iterator<char>()));
+    std::string buffer(std::istreambuf_iterator<char>(_in.rdbuf()), (std::istreambuf_iterator<char>()));
     
     protobuf::message item(buffer.data(), buffer.size());
     
