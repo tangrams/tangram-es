@@ -49,12 +49,6 @@ void PbfParser::extractGeometry(const protobuf::message& _in, int _tileExtent, s
             p.x = invTileExtent * (double)(x - _tileExtent);
             p.y = invTileExtent * (double)(_tileExtent - y);
             
-            // apply projection
-            /*Point p;
-            glm::dvec2 tmp = _tile.getProjection()->LonLatToMeters(glm::dvec2(pointX, pointY));
-            p.x = (tmp.x - _tile.getOrigin().x) * _tile.getInverseScale();
-            p.y = (tmp.y - _tile.getOrigin().y) * _tile.getInverseScale();*/
-            logMsg("Point: (%f, %f)\n", p.x, p.y);
             line.emplace_back(p);
         } else if( cmd == pbfGeomCmd::closePath) { // end of a polygon, push first point in this line as last and push line to poly
             line.push_back(line[0]);
@@ -73,8 +67,6 @@ void PbfParser::extractFeature(const protobuf::message& _in, Feature& _out, cons
     std::vector<Line> geometryLines;
     protobuf::message featureItr = _in;
     protobuf::message geometry; // By default data_ and end_ are nullptr
-    
-    double invTileExtent = 1.0/(double)(_tileExtent);
     
     while(featureItr.next()) {
         switch(featureItr.tag) {
@@ -107,7 +99,7 @@ void PbfParser::extractFeature(const protobuf::message& _in, Feature& _out, cons
                             
                             // height and minheight need to be handled separately so that their dimensions are normalized
                             if(_keys[tagKey].compare("height") == 0 || _keys[tagKey].compare("min_height") == 0) {
-                                _out.props.numericProps[_keys[tagKey]] = _numericValues[valueKey] * invTileExtent;
+                                _out.props.numericProps[_keys[tagKey]] = _numericValues[valueKey] * _tile.getInverseScale();
                             } else {
                                 _out.props.numericProps[_keys[tagKey]] = _numericValues[valueKey];
                             }
