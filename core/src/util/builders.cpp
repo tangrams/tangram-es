@@ -341,16 +341,13 @@ bool isOnTileEdge (const glm::vec3& _pa, const glm::vec3& _pb) {
     return false;
 }
 
-void buildGeneralPolyLine(const Line& _line, float _halfWidth, std::vector<glm::vec3>& _pointsOut, std::vector<glm::vec2>& _scalingVecsOut, std::vector<Builders::ushort>& _indicesOut, std::vector<glm::vec2>& _texCoordOut) {
+void buildGeneralPolyLine(const Line& _line, float _halfWidth, 
+                          std::vector<glm::vec3>& _pointsOut, std::vector<glm::vec2>& _scalingVecsOut, std::vector<Builders::ushort>& _indicesOut, std::vector<glm::vec2>& _texCoordOut, 
+                          const std::string& _cap, const std::string& _join, bool _closed_polygon, bool _remove_tile_edges) {
 
     // TODO:
     //      This flags have to be pass from the style:
     //
-    bool closed_polygon = false;
-    bool remove_tile_edges = false;
-
-    std::string join = "butt";
-    std::string cap = "miter";
 
     using Builders::ushort;
     
@@ -377,8 +374,8 @@ void buildGeneralPolyLine(const Line& _line, float _halfWidth, std::vector<glm::
     glm::vec3 coordPrev, coordCurr, coordNext;
     glm::vec2 normPrev, normCurr, normNext;
 
-    int cornersOnCap = (cap == "square")? 2 : ((cap == "round")? 4 : 0);  // Butt is the implicit default
-    int trianglesOnJoin = (join == "bevel")? 1 : ((join == "round")? 5 : 0);  // Miter is the implicit default
+    int cornersOnCap = (_cap == "square")? 2 : ((_cap == "round")? 4 : 0);  // Butt is the implicit default
+    int trianglesOnJoin = (_join == "bevel")? 1 : ((_join == "round")? 5 : 0);  // Miter is the implicit default
 
     ushort vertexDataOffset = (ushort)_pointsOut.size();
     ushort nPairs = 0;
@@ -396,11 +393,11 @@ void buildGeneralPolyLine(const Line& _line, float _halfWidth, std::vector<glm::
             coordPrev = coordCurr;
             normPrev = glm::normalize( perp(coordPrev, _line[i]) );
         }
-        else if (i == 0 && closed_polygon){
+        else if (i == 0 && _closed_polygon){
             // If is the first point and is a close polygon
             // TODO   
             bool needToClose = true;
-            if (remove_tile_edges) {
+            if (_remove_tile_edges) {
                 if( isOnTileEdge(_line[i], _line[lineSize-2])) {
                     needToClose = false;
                 }
@@ -419,7 +416,7 @@ void buildGeneralPolyLine(const Line& _line, float _halfWidth, std::vector<glm::
         if (isNext) {
             coordNext = _line[i+1];
         } 
-        else if (closed_polygon) {
+        else if (_closed_polygon) {
             // If is the last point a close polygon
             coordNext = _line[1];
             isNext = true;
@@ -429,7 +426,7 @@ void buildGeneralPolyLine(const Line& _line, float _halfWidth, std::vector<glm::
             // If is not the last one get next coordinates and calculate the right normal
 
             normNext = glm::normalize(perp(coordCurr, coordNext));
-            if (remove_tile_edges) {
+            if (_remove_tile_edges) {
                 if (isOnTileEdge(coordCurr, coordNext) ) {
                     normCurr = glm::normalize(perp(coordPrev, coordCurr));
                     if (isPrev) {
@@ -473,7 +470,7 @@ void buildGeneralPolyLine(const Line& _line, float _halfWidth, std::vector<glm::
 
         if (isPrev || isNext) {
             // If is the BEGINING of a LINE
-            if (i == 0 && !isPrev && !closed_polygon) {
+            if (i == 0 && !isPrev && !_closed_polygon) {
                 // Add previus vertices to buffer and reset the index pairs counter
                 // Because we are going to add more triangles.
                 indexPairs(nPairs, vertexDataOffset, _indicesOut);
@@ -555,34 +552,42 @@ void buildGeneralPolyLine(const Line& _line, float _halfWidth, std::vector<glm::
     nPairs = 0;
 
     // If is the END OF a LINE
-    if(!closed_polygon) {
+    if(!_closed_polygon) {
         addCap(coordCurr, normCurr, cornersOnCap , false, _halfWidth, _pointsOut, _scalingVecsOut, _indicesOut, _texCoordOut);
         vertexDataOffset = (ushort)_pointsOut.size();
         nPairs = 0;
     }
 }
 
-void Builders::buildPolyLine(const Line& _line, float _halfWidth, std::vector<glm::vec3>& _pointsOut, std::vector<ushort>& _indicesOut) {
+void Builders::buildPolyLine(const Line& _line, float _halfWidth, 
+                             std::vector<glm::vec3>& _pointsOut, std::vector<ushort>& _indicesOut,
+                             const std::string& _cap, const std::string& _join, bool _closed_polygon, bool _remove_tile_edges) {
 
-    buildGeneralPolyLine(_line, _halfWidth, _pointsOut, NO_SCALING_VECS, _indicesOut, NO_TEXCOORDS);
+    buildGeneralPolyLine(_line, _halfWidth, _pointsOut, NO_SCALING_VECS, _indicesOut, NO_TEXCOORDS, _cap, _join, _closed_polygon, _remove_tile_edges);
     
 }
 
-void Builders::buildPolyLine(const Line& _line, float _halfWidth, std::vector<glm::vec3>& _pointsOut, std::vector<ushort>& _indicesOut, std::vector<glm::vec2>& _texcoordOut) {
+void Builders::buildPolyLine(const Line& _line, float _halfWidth, 
+                             std::vector<glm::vec3>& _pointsOut, std::vector<ushort>& _indicesOut, std::vector<glm::vec2>& _texcoordOut,
+                             const std::string& _cap, const std::string& _join, bool _closed_polygon, bool _remove_tile_edges) {
     
-    buildGeneralPolyLine(_line, _halfWidth, _pointsOut, NO_SCALING_VECS, _indicesOut, _texcoordOut);
-    
-}
-
-void Builders::buildScalablePolyLine(const Line& _line, std::vector<glm::vec3>& _pointsOut, std::vector<glm::vec2>& _scalingVecsOut, std::vector<ushort>& _indicesOut) {
-    
-    buildGeneralPolyLine(_line, 0, _pointsOut, _scalingVecsOut, _indicesOut, NO_TEXCOORDS);
+    buildGeneralPolyLine(_line, _halfWidth, _pointsOut, NO_SCALING_VECS, _indicesOut, _texcoordOut, _cap, _join, _closed_polygon, _remove_tile_edges);
     
 }
 
-void Builders::buildScalablePolyLine(const Line& _line, std::vector<glm::vec3>& _pointsOut, std::vector<glm::vec2>& _scalingVecsOut, std::vector<ushort>& _indicesOut, std::vector<glm::vec2>& _texcoordOut) {
+void Builders::buildScalablePolyLine(const Line& _line, 
+                                     std::vector<glm::vec3>& _pointsOut, std::vector<glm::vec2>& _scalingVecsOut, std::vector<ushort>& _indicesOut,
+                                     const std::string& _cap, const std::string& _join, bool _closed_polygon, bool _remove_tile_edges) {
     
-    buildGeneralPolyLine(_line, 0, _pointsOut, _scalingVecsOut, _indicesOut, _texcoordOut);
+    buildGeneralPolyLine(_line, 0, _pointsOut, _scalingVecsOut, _indicesOut, NO_TEXCOORDS, _cap, _join, _closed_polygon, _remove_tile_edges);
+    
+}
+
+void Builders::buildScalablePolyLine(const Line& _line, 
+                                     std::vector<glm::vec3>& _pointsOut, std::vector<glm::vec2>& _scalingVecsOut, std::vector<ushort>& _indicesOut, std::vector<glm::vec2>& _texcoordOut,
+                                     const std::string& _cap, const std::string& _join, bool _closed_polygon, bool _remove_tile_edges) {
+    
+    buildGeneralPolyLine(_line, 0, _pointsOut, _scalingVecsOut, _indicesOut, _texcoordOut, _cap, _join, _closed_polygon, _remove_tile_edges);
 }
 
 void Builders::buildQuadAtPoint(const Point& _point, const glm::vec3& _normal, float halfWidth, float height, std::vector<glm::vec3>& _pointsOut, std::vector<ushort>& _indicesOut) {
