@@ -12,6 +12,24 @@ if [[ ${PLATFORM} == "osx" ]]; then
     brew install glfw3
 fi
 
+if [[ ${PLATFORM} == "linux" ]]; then
+    
+    GLFW_VERSION="3.0.4"
+
+    sudo apt-get update -qq
+    
+    #Install X11 and OpenGL for GLFW
+    sudo apt-get install -y xorg-dev libglu1-mesa-dev
+
+    # Download and install GLFW from source
+    wget http://downloads.sourceforge.net/project/glfw/glfw/${GLFW_VERSION}/glfw-${GLFW_VERSION}.zip
+    unzip glfw-${GLFW_VERSION}.zip
+    cd glfw-${GLFW_VERSION}
+    cmake .
+    make install
+    cd ../
+fi
+
 if [[ ${PLATFORM} == "android" ]]; then
 
     ANDROID_SDK_VERSION="r24.0.2"
