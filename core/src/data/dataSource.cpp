@@ -35,8 +35,8 @@ void DataSource::clearData() {
 
 //write_data call back from CURLOPT_WRITEFUNCTION
 //responsible to read and fill "stream" with the data.
-static size_t write_data(char *_ptr, size_t _size, size_t _nmemb, void *_stream) {
-    ((std::stringstream*) _stream)->write(_ptr, _size * _nmemb);
+static size_t write_data(void *_ptr, size_t _size, size_t _nmemb, void *_stream) {
+    ((std::stringstream*) _stream)->write(reinterpret_cast<char *>(_ptr), _size * _nmemb);
     return _size * _nmemb;
 }
 
@@ -90,6 +90,7 @@ bool NetworkDataSource::loadTileData(const MapTile& _tile) {
     curl_easy_setopt(curlHandle, CURLOPT_URL, url->c_str());
     curl_easy_setopt(curlHandle, CURLOPT_HEADER, 0L);
     curl_easy_setopt(curlHandle, CURLOPT_VERBOSE, 0L);
+    curl_easy_setopt(curlHandle, CURLOPT_ACCEPT_ENCODING, "gzip");
     
     logMsg("Fetching URL with curl: %s\n", url->c_str());
 
