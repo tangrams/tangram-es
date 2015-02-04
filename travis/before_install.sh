@@ -26,7 +26,7 @@ if [[ ${PLATFORM} == "linux" ]]; then
     unzip glfw-${GLFW_VERSION}.zip
     cd glfw-${GLFW_VERSION}
     cmake .
-    make install
+    sudo make install
     cd ../
 fi
 
