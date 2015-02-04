@@ -16,7 +16,7 @@ matrix:
           compiler: gcc
         - os: linux
           env: PLATFORM=linux
-          compiler: clang
+          compiler: gcc
 
 before_install:
     - git submodule init && git submodule update

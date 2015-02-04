@@ -15,8 +15,12 @@ fi
 if [[ ${PLATFORM} == "linux" ]]; then
     
     GLFW_VERSION="3.0.4"
-
+    
+    sudo add-apt-repository --yes ppa:ubuntu-toolchain-r/test
     sudo apt-get update -qq
+    
+    #Install a c++11 compatible compiler
+    sudo apt-get install -y -qq gcc-4.8
     
     #Install X11 and OpenGL for GLFW
     sudo apt-get install -y -qq xorg-dev libglu1-mesa-dev
@@ -28,6 +32,7 @@ if [[ ${PLATFORM} == "linux" ]]; then
     cmake .
     sudo make install
     cd ../
+    
 fi
 
 if [[ ${PLATFORM} == "android" ]]; then
