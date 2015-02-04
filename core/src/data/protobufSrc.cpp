@@ -5,7 +5,7 @@
 #include <sstream>
 #include <fstream>
 
-#include "protobuffSrc.h"
+#include "protobufSrc.h"
 
 MapboxProtoBuffSrc::MapboxProtoBuffSrc() {
     m_urlTemplate = "http://vector.mapzen.com/osm/all/[z]/[x]/[y].mapbox";
