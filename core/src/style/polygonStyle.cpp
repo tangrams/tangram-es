@@ -40,7 +40,7 @@ void PolygonStyle::buildPoint(Point& _point, std::string& _layer, Properties& _p
 
 void PolygonStyle::buildLine(Line& _line, std::string& _layer, Properties& _props, VboMesh& _mesh) const {
     std::vector<PosNormColVertex> vertices;
-    std::vector<GLushort> indices;
+    std::vector<int> indices;
     std::vector<glm::vec3> points;
     std::vector<glm::vec2> texcoords;
     
@@ -62,14 +62,14 @@ void PolygonStyle::buildLine(Line& _line, std::string& _layer, Properties& _prop
         ind += vertOffset;
     }
     
-    _mesh.addVertices((GLbyte*)vertices.data(), vertices.size());
-    _mesh.addIndices(indices.data(), indices.size());
+    _mesh.addVertices((GLbyte*)vertices.data(), (int)vertices.size());
+    _mesh.addIndices(indices.data(), (int)indices.size());
 }
 
 void PolygonStyle::buildPolygon(Polygon& _polygon, std::string& _layer, Properties& _props, VboMesh& _mesh) const {
     
     std::vector<PosNormColVertex> vertices;
-    std::vector<GLushort> indices;
+    std::vector<int> indices;
     std::vector<glm::vec3> points;
     std::vector<glm::vec3> normals;
     std::vector<glm::vec2> texcoords;
@@ -115,6 +115,6 @@ void PolygonStyle::buildPolygon(Polygon& _polygon, std::string& _layer, Properti
         ind += vertOffset;
     }
     
-    _mesh.addVertices((GLbyte*)vertices.data(), vertices.size());
-    _mesh.addIndices(indices.data(), indices.size());
+    _mesh.addVertices((GLbyte*)vertices.data(), (int)vertices.size());
+    _mesh.addIndices(indices.data(), (int)indices.size());
 }

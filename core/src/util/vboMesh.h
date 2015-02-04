@@ -48,20 +48,20 @@ public:
      */
     void addVertices(GLbyte* _vertices, int _nVertices);
 
-    int numVertices() const { return m_nVertices; };
+    int numVertices() const;
 
     /*
      * Adds a single index to the mesh; indices are unsigned shorts
      */
-    void addIndex(GLushort* _index);
+    void addIndex(int* _index);
 
     /*
      * Adds _nIndices indices to the mesh; _indices must be a pointer to the beginning of a contiguous
      * block of _nIndices unsigned short indices
      */
-    void addIndices(GLushort* _indices, int _nIndices);
+    void addIndices(int* _indices, int _nIndices);
 
-    int numIndices() const { return m_indices.size(); };
+    int numIndices() const;
 
     /*
      * Copies all added vertices and indices into OpenGL buffer objects; After geometry is uploaded,
@@ -85,6 +85,8 @@ private:
     
     static int s_validGeneration; // Incremented when the GL context is invalidated
     int m_generation;
+    
+    std::unique_ptr<VboMesh> m_backupMesh;
     
     std::shared_ptr<VertexLayout> m_vertexLayout;
     
