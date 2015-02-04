@@ -59,6 +59,11 @@ void PbfParser::extractGeometry(const protobuf::message& _in, int _tileExtent, s
         cmdRepeat--;
     }
     
+    // Enter the last line
+    if(line.size() > 0) {
+        _out.emplace_back(line);
+    }
+    
 }
 
 void PbfParser::extractFeature(const protobuf::message& _in, Feature& _out, const MapTile& _tile, std::vector<std::string>& _keys, std::unordered_map<int, float>& _numericValues, std::unordered_map<int, std::string>& _stringValues, int _tileExtent) {
