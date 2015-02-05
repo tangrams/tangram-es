@@ -173,7 +173,7 @@ void Builders::buildPolygonExtrusion(const Polygon& _polygon, const float& _minH
 
 void buildGeneralPolyLine(const Line& _line, float _halfWidth, std::vector<glm::vec3>& _pointsOut, std::vector<glm::vec2>& _scalingVecsOut, std::vector<int>& _indicesOut, std::vector<glm::vec2>& _texCoordOut) {
     
-    size_t lineSize = _line.size();
+    int lineSize = (int)_line.size();
     
     if (lineSize < 2) {
         return;
@@ -223,7 +223,7 @@ void buildGeneralPolyLine(const Line& _line, float _halfWidth, std::vector<glm::
     }
     
     // Loop over intermediate points in the polyline
-    for (size_t i = 1; i < lineSize - 1; i++) {
+    for (int i = 1; i < lineSize - 1; i++) {
         prevCoord = currCoord;
         currCoord = nextCoord;
         nextCoord = _line[i+1];
@@ -274,13 +274,13 @@ void buildGeneralPolyLine(const Line& _line, float _halfWidth, std::vector<glm::
     }
     
     for (int i = 0; i < lineSize - 1; i++) {
-        _indicesOut.push_back(vertexDataOffset + 2*i+2);
-        _indicesOut.push_back(vertexDataOffset + 2*i+1);
+        _indicesOut.push_back(vertexDataOffset + 2*i + 2);
+        _indicesOut.push_back(vertexDataOffset + 2*i + 1);
         _indicesOut.push_back(vertexDataOffset + 2*i);
         
-        _indicesOut.push_back(vertexDataOffset + 2*i+2);
-        _indicesOut.push_back(vertexDataOffset + 2*i+3);
-        _indicesOut.push_back(vertexDataOffset + 2*i+1);
+        _indicesOut.push_back(vertexDataOffset + 2*i + 2);
+        _indicesOut.push_back(vertexDataOffset + 2*i + 3);
+        _indicesOut.push_back(vertexDataOffset + 2*i + 1);
     }
     
 }
