@@ -330,13 +330,13 @@ float signed_area (const glm::vec3& _v1, const glm::vec3& _v2, const glm::vec3& 
  *      - this is taken from WebGL needs a better adaptation
  *      - Take a look to https://github.com/tangrams/tangram/blob/master/src/gl/gl_builders.js#L581
  */ 
-float valuesWithinTolerance ( float _a, float _b, float _tolerance = 1.0) {
+float valuesWithinTolerance ( float _a, float _b, float _tolerance = 0.001) {
     return std::abs(_a - _b) < _tolerance;
 }
 
 // Tests if a line segment (from point A to B) is nearly coincident with the edge of a tile
 bool isOnTileEdge (const glm::vec3& _pa, const glm::vec3& _pb) {
-    float tolerance = 3.0; // tweak this adjust if catching too few/many line segments near tile edges
+    float tolerance = 0.0002; // tweak this adjust if catching too few/many line segments near tile edges
                                             // TODO: make tolerance configurable by source if necessary
     glm::vec2 tile_min = glm::vec2(-1.0,-1.0);
     glm::vec2 tile_max = glm::vec2(1.0,1.0);
@@ -410,8 +410,7 @@ void buildGeneralPolyLine(const Line& _line, float _halfWidth,
             // If there is a previus one, copy the current (previous) values on *Prev values
             coordPrev = coordCurr;
             normPrev = glm::normalize( perp(coordPrev, _line[i]) );
-        }
-        else if (i == 0 && _closed_polygon){
+        } else if (i == 0 && _closed_polygon){
             // If is the first point and is a close polygon
             // TODO   
             bool needToClose = true;
@@ -433,8 +432,7 @@ void buildGeneralPolyLine(const Line& _line, float _halfWidth,
 
         if (isNext) {
             coordNext = _line[i+1];
-        } 
-        else if (_closed_polygon) {
+        } else if (_closed_polygon) {
             // If is the last point a close polygon
             coordNext = _line[1];
             isNext = true;
@@ -447,12 +445,13 @@ void buildGeneralPolyLine(const Line& _line, float _halfWidth,
             if (_remove_tile_edges) {
                 if (isOnTileEdge(coordCurr, coordNext) ) {
                     normCurr = glm::normalize(perp(coordPrev, coordCurr));
+                    
                     if (isPrev) {
                         addVertexPair(coordCurr, normCurr, (float)i/(float)lineSize, _halfWidth, _pointsOut, _scalingVecsOut, _texCoordOut);
-                        nPairs++;
 
                         // Add vertices to buffer acording their index
                         indexPairs(nPairs, vertexDataOffset, _indicesOut);
+                        
                         vertexDataOffset = (int)_pointsOut.size();
                         nPairs = 0;
                     }
@@ -487,6 +486,7 @@ void buildGeneralPolyLine(const Line& _line, float _halfWidth,
         }
 
         if (isPrev || isNext) {
+            
             // If is the BEGINING of a LINE
             if (i == 0 && !isPrev && !_closed_polygon) {
                 // Add previus vertices to buffer and reset the index pairs counter
@@ -502,7 +502,7 @@ void buildGeneralPolyLine(const Line& _line, float _halfWidth,
             }
 
             // If is a JOIN
-            if(trianglesOnJoin != 0 && isPrev && isNext) {
+            if(trianglesOnJoin != 0 ) {
                 // Add previus vertices to buffer and reset the index pairs counter
                 // Because we are going to add more triangles.
 
@@ -531,9 +531,7 @@ void buildGeneralPolyLine(const Line& _line, float _halfWidth,
                     addVertex(coordCurr, nC, uC, _halfWidth, _pointsOut, _scalingVecsOut, _texCoordOut);
                     addVertex(coordCurr, nA, uA, _halfWidth, _pointsOut, _scalingVecsOut, _texCoordOut);
                 }
-
-                // nPairs++;
-
+            
                 indexPairs(nPairs, vertexDataOffset, _indicesOut);
 
                 addFan( coordCurr, nA, nC, nB, uA, uC, uB, isSigned, trianglesOnJoin, 
@@ -556,24 +554,22 @@ void buildGeneralPolyLine(const Line& _line, float _halfWidth,
                                 _halfWidth, _pointsOut, _scalingVecsOut, _texCoordOut);
             }
             
-            if (isNext) {
+            if (i+1 < lineSize) {
                nPairs++;
             }
 
             isPrev = true;
         }
     }
-
+    
     // Add vertices to buffer acording their index
     indexPairs(nPairs, vertexDataOffset, _indicesOut);
-    vertexDataOffset = (int)_pointsOut.size();
-    nPairs = 0;
+    
 
     // If is the END OF a LINE
     if(!_closed_polygon) {
-        addCap(coordCurr, normCurr, cornersOnCap , false, _halfWidth, _pointsOut, _scalingVecsOut, _indicesOut, _texCoordOut);
         vertexDataOffset = (int)_pointsOut.size();
-        nPairs = 0;
+        addCap(coordCurr, normCurr, cornersOnCap , false, _halfWidth, _pointsOut, _scalingVecsOut, _indicesOut, _texCoordOut);
     }
 }
 
