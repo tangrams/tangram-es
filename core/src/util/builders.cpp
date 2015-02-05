@@ -369,7 +369,7 @@ void buildGeneralPolyLine(const Line& _line, float _halfWidth,
     // TODO:
     //      This flags have to be pass from the style:
     //    
-    size_t lineSize = _line.size();
+    int lineSize = (int)_line.size();
     
     if (lineSize < 2) {
         return;
