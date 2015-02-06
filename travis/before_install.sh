@@ -15,7 +15,6 @@ fi
 if [[ ${PLATFORM} == "android" ]]; then
 
     ANDROID_SDK_VERSION="r24.0.2"
-    ANDROID_NDK_VERSION="r10d"
     ANDROID_BUILD_TOOL_VERSION="21.1.2"
     ANDROID_PLATFORM_VERSION="19"
 
@@ -41,12 +40,8 @@ if [[ ${PLATFORM} == "android" ]]; then
     export ANDROID_HOME=$PWD/android-sdk-macosx
     
     # install android ndk
-    # only binary link avaiable for r10d, no download links available for r10b
-    ANDROID_NDK_NAME="android-ndk-${ANDROID_NDK_VERSION}-darwin-x86_64.bin"
-    wget http://dl.google.com/android/ndk/${ANDROID_NDK_NAME}
-    chmod a+x ${ANDROID_NDK_NAME}
-    ./android-ndk-r10d-darwin-x86_64.bin | egrep -v ^Extracting
-    export ANDROID_NDK=$PWD/android-ndk-${ANDROID_NDK_VERSION}
+    git clone --quiet --depth 1 https://github.com/tangrams/mindk.git
+    export ANDROID_NDK=$PWD/mindk/android-ndk-r10d
 
     # Update PATH
     export PATH=${PATH}:${ANDROID_HOME}/tools:${ANDROID_NDK}
