@@ -26,11 +26,6 @@ if [[ ${PLATFORM} == "android" ]]; then
     tar -zxf android-sdk_${ANDROID_SDK_VERSION}-macosx.zip
     export ANDROID_HOME=$PWD/android-sdk-macosx
 
-    # Install required Android components; automatically accept the license prompt
-    echo "Updating Android SDK..."
-    echo "y" | android update sdk --filter platform-tools,build-tools-${ANDROID_BUILD_TOOL_VERSION},android-${ANDROID_PLATFORM_VERSION},extra-android-support --no-ui --force >/dev/null
-    echo "Done."
-
     # Install android ndk
     echo "Cloning mindk..."
     git clone --quiet --depth 1 https://github.com/tangrams/mindk.git
@@ -41,5 +36,10 @@ if [[ ${PLATFORM} == "android" ]]; then
     echo "Updating PATH..."
     export PATH=${PATH}:${ANDROID_HOME}/tools:${ANDROID_NDK}
     echo $PATH
+    echo "Done."
+
+    # Install required Android components; automatically accept the license prompt
+    echo "Updating Android SDK..."
+    echo "y" | android update sdk --filter platform-tools,build-tools-${ANDROID_BUILD_TOOL_VERSION},android-${ANDROID_PLATFORM_VERSION},extra-android-support --no-ui --force >/dev/null
     echo "Done."
 fi
