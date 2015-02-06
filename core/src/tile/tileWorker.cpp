@@ -7,6 +7,7 @@
 
 TileWorker::TileWorker() {
     m_tileID.reset(new TileID(NOT_A_TILE));
+    m_free = true;
     m_aborted = false;
     m_finished = false;
 }
@@ -21,6 +22,7 @@ void TileWorker::load(const TileID &_tile,
                       const View& _view) {
     
     m_tileID.reset(new TileID(_tile));
+    m_free = false;
     m_finished = false;
     m_aborted = false;
     
@@ -67,6 +69,7 @@ void TileWorker::load(const TileID &_tile,
 
 std::shared_ptr<MapTile> TileWorker::getTileResult() {
 
+    m_free = true;
     return std::move(m_future.get());
     
 }

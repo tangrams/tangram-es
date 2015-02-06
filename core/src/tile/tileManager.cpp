@@ -9,7 +9,7 @@ TileManager::TileManager() {
     
     // Instantiate workers
     for (int i = 0; i < MAX_WORKERS; i++) {
-        m_freeWorkers.push_back(std::unique_ptr<TileWorker>(new TileWorker()));
+        m_workers.push_back(std::unique_ptr<TileWorker>(new TileWorker()));
     }
 }
 
@@ -17,15 +17,16 @@ TileManager::TileManager(TileManager&& _other) :
     m_view(std::move(_other.m_view)),
     m_tileSet(std::move(_other.m_tileSet)),
     m_dataSources(std::move(_other.m_dataSources)),
-    m_freeWorkers(std::move(_other.m_freeWorkers)),
-    m_busyWorkers(std::move(_other.m_busyWorkers)),
+    m_workers(std::move(_other.m_workers)),
     m_queuedTiles(std::move(_other.m_queuedTiles)) {
 }
 
 TileManager::~TileManager() {
-    for (auto& worker : m_busyWorkers) {
-        worker->abort();
-        worker->getTileResult();
+    for (auto& worker : m_workers) {
+        if (!worker->isFree()) {
+            worker->abort();
+            worker->getTileResult();
+        }
         // We stop all workers before we destroy the resources they use.
         // TODO: This will wait for any pending network requests to finish,
         // which could delay closing of the application. 
@@ -40,13 +41,13 @@ bool TileManager::updateTileSet() {
     
     // Check if any incoming tiles are finished
     {
-        auto busyWorkersIter = m_busyWorkers.begin();
+        auto workersIter = m_workers.begin();
         
-        while (busyWorkersIter != m_busyWorkers.end()) {
+        while (workersIter != m_workers.end()) {
             
-            auto& worker = *busyWorkersIter;
+            auto& worker = *workersIter;
             
-            if (worker->isFinished()) {
+            if (!worker->isFree() && worker->isFinished()) {
                 
                 // Get result from worker and move it into tile set
                 auto tile = worker->getTileResult();
@@ -56,13 +57,9 @@ bool TileManager::updateTileSet() {
                 cleanProxyTiles(id);
                 tileSetChanged = true;
                 
-                // Move the worker from the busy list to the free list
-                auto finishedWorkerIter = busyWorkersIter++; // Copy the iter to the worker just freed, then increment
-                m_freeWorkers.splice(m_freeWorkers.end(), m_busyWorkers, finishedWorkerIter);
-                
-            } else {
-                ++busyWorkersIter;
             }
+            
+            ++workersIter;
         }
     }
     
@@ -125,21 +122,20 @@ bool TileManager::updateTileSet() {
     
     // Dispatch workers for queued tiles
     {
-        auto freeWorkersIter = m_freeWorkers.begin();
+        auto workersIter = m_workers.begin();
         auto queuedTilesIter = m_queuedTiles.begin();
         
-        while (freeWorkersIter != m_freeWorkers.end() && queuedTilesIter != m_queuedTiles.end()) {
+        while (workersIter != m_workers.end() && queuedTilesIter != m_queuedTiles.end()) {
             
             TileID id = *queuedTilesIter;
-            auto& worker = *freeWorkersIter;
+            auto& worker = *workersIter;
             
-            worker->load(id, m_dataSources, m_scene->getStyles(), *m_view);
-            queuedTilesIter = m_queuedTiles.erase(queuedTilesIter);
+            if (worker->isFree()) {
+                worker->load(id, m_dataSources, m_scene->getStyles(), *m_view);
+                queuedTilesIter = m_queuedTiles.erase(queuedTilesIter);
+            }
             
-            // Move the worker from the free to the busy list
-            auto startedWorkerIter = freeWorkersIter++; // Copy the iterator to the worker just started, then increment
-            m_busyWorkers.splice(m_busyWorkers.begin(), m_freeWorkers, startedWorkerIter);
-            
+            ++workersIter;
         }
     }
     
@@ -167,8 +163,8 @@ void TileManager::removeTile(std::map< TileID, std::shared_ptr<MapTile> >::itera
     m_queuedTiles.remove(id);
     
     // If a worker is loading this tile, abort it
-    for (const auto& worker : m_busyWorkers) {
-        if (worker->getTileID() == id) {
+    for (const auto& worker : m_workers) {
+        if (!worker->isFree() && worker->getTileID() == id) {
             worker->abort();
         }
     }

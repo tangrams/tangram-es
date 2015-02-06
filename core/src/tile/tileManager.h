@@ -67,8 +67,7 @@ private:
     std::vector<std::unique_ptr<DataSource>> m_dataSources;
 
     const static size_t MAX_WORKERS = 4;
-    std::list<std::unique_ptr<TileWorker> > m_freeWorkers;
-    std::list<std::unique_ptr<TileWorker> > m_busyWorkers;
+    std::list<std::unique_ptr<TileWorker> > m_workers;
     
     std::list<TileID> m_queuedTiles;
     
