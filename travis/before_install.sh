@@ -48,7 +48,7 @@ if [[ ${PLATFORM} == "android" ]]; then
 
     # Install required Android components.
     # automatically accept the license prompt
-    echo "y" | android update sdk --filter platform-tools,build-tools-${ANDROID_BUILD_TOOL_VERSION},android-${ANDROID_PLATFORM_VERSION},extra-android-support --no-ui --force
+    echo "y" | android update sdk --filter platform-tools,build-tools-${ANDROID_BUILD_TOOL_VERSION},android-${ANDROID_PLATFORM_VERSION},extra-android-support --no-ui --force >/dev/null
 
     echo $PATH
 fi
