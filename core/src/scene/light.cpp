@@ -118,7 +118,7 @@ void Light::assembleLights(std::map<std::string, std::vector<std::string>>& _sou
     // Insert all of our "lights_to_compute" at this tag
     
     std::string tag = "#pragma tangram: vertex_lights_to_compute";
-    int pos = vertexLighting.find(tag) + tag.length();
+    size_t pos = vertexLighting.find(tag) + tag.length();
     for (const auto& string : _sourceBlocks["__vertex_lights_to_compute"]) {
         vertexLighting.insert(pos, string);
         pos += string.length();
