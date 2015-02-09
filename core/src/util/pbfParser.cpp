@@ -12,11 +12,11 @@ void PbfParser::extractGeometry(const protobuf::message& _in, int _tileExtent, s
     
     std::vector<Point> line;
     
-    int x = 0.0f;
-    int y = 0.0f;
+    int x = 0;
+    int y = 0;
     
-    uint64_t xZigZag = 0;
-    uint64_t yZigZag = 0;
+    uint32_t xZigZag = 0;
+    uint32_t yZigZag = 0;
     
     
     while(geomItr.getData() < geomItr.getEnd()) {
