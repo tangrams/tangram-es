@@ -100,19 +100,29 @@ void PbfParser::extractFeature(const protobuf::message& _in, Feature& _out, cons
                             logMsg("ERROR: accessing out of bound values\n");
                         }
                         
-                        if(_numericValues.find(valueKey) != _numericValues.end()) {
+                        const auto& key = _keys[tagKey];
+                        const auto& numVal = _numericValues.find(valueKey);
+                        
+                        if(numVal != _numericValues.end()) {
                             
                             // height and minheight need to be handled separately so that their dimensions are normalized
-                            if(_keys[tagKey].compare("height") == 0 || _keys[tagKey].compare("min_height") == 0) {
-                                _out.props.numericProps[_keys[tagKey]] = _numericValues[valueKey] * _tile.getInverseScale();
+                            if(key.compare("height") == 0 || key.compare("min_height") == 0) {
+                                _out.props.numericProps[key] = numVal->second * _tile.getInverseScale();
                             } else {
-                                _out.props.numericProps[_keys[tagKey]] = _numericValues[valueKey];
+                                _out.props.numericProps[key] = numVal->second;
                             }
                             
-                        } else if(_stringValues.find(valueKey) != _stringValues.end()) {
-                            _out.props.stringProps[_keys[tagKey]] = _stringValues[valueKey];
                         } else {
-                            logMsg("ERROR: Tag is missing, should not be!!");
+                            
+                            const auto& strVal = _stringValues.find(valueKey);
+                            if(strVal != _stringValues.end()) {
+                                
+                                _out.props.stringProps[key] = strVal->second;
+                                
+                            } else {
+                                logMsg("ERROR: Tag is missing, should not be!!");
+                            }
+                            
                         }
                     } else {
                         logMsg("uneven number of feature tag ids");
