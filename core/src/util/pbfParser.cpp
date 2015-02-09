@@ -12,12 +12,8 @@ void PbfParser::extractGeometry(const protobuf::message& _in, int _tileExtent, s
     
     std::vector<Point> line;
     
-    int x = 0;
-    int y = 0;
-    
-    uint32_t xZigZag = 0;
-    uint32_t yZigZag = 0;
-    
+    int64_t x = 0;
+    int64_t y = 0;
     
     while(geomItr.getData() < geomItr.getEnd()) {
         
@@ -36,18 +32,13 @@ void PbfParser::extractGeometry(const protobuf::message& _in, int _tileExtent, s
                 line.clear();
             }
             
-            // Decode zig-zag encoded paramters
-            
-            xZigZag += geomItr.svarint();
-            yZigZag += geomItr.svarint();
-            
-            x = int((xZigZag << 1) ^ (xZigZag >> 31));
-            y = int((yZigZag << 1) ^ (yZigZag >> 31));
+            x += geomItr.svarint();
+            y += geomItr.svarint();
             
             // bring the points in -1 to 1 space
             Point p;
-            p.x = invTileExtent * (double)(x - _tileExtent);
-            p.y = invTileExtent * (double)(_tileExtent - y);
+            p.x = invTileExtent * (double)(2 * x - _tileExtent);
+            p.y = invTileExtent * (double)(_tileExtent - 2 * y);
             
             line.emplace_back(p);
         } else if( cmd == pbfGeomCmd::closePath) { // end of a polygon, push first point in this line as last and push line to poly
