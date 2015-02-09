@@ -219,8 +219,8 @@ void PbfParser::extractLayer(const protobuf::message& _in, Layer& _out, const Ma
                             valueItr.skip();
                             break;
                     }
+                    valueCount++;
                 }
-                valueCount++;
                 break;
             }
                 
