@@ -111,9 +111,6 @@ cmake-android:
 osx: cmake-osx ${OSX_BUILD_DIR}/Makefile
 	@cd ${OSX_BUILD_DIR} && \
 	${MAKE}
-	@for f in `find build/osx/bin/ -name '*.vs' -or -name '*.fs'` ; do \
-		awk '{if (NR!=2) gsub(/ mediump| lowp| highp/,"")}1' $$f > $$f.tmp && mv $$f.tmp $$f ; \
-	done
 
 osx-xcode: cmake-osx-xcode ${OSX_XCODE_BUILD_DIR}
 	xcodebuild -target ${OSX_TARGET} -project ${OSX_XCODE_BUILD_DIR}/${OSX_XCODE_PROJ}
