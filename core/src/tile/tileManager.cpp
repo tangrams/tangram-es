@@ -56,7 +56,7 @@ bool TileManager::updateTileSet() {
         
     }
     
-    if (! (m_view->changedSinceLastCheck() || tileSetChanged) ) {
+    if (! (m_view->changedOnLastUpdate() || tileSetChanged) ) {
         // No new tiles have come into view and no tiles have finished loading, 
         // so the tileset is unchanged
         return false;
