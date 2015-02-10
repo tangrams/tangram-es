@@ -1,9 +1,12 @@
 #ifdef GL_ES
 precision mediump float;
+#define LOWP lowp
+#else
+#define LOWP 
 #endif
 
 uniform sampler2D u_tex;
-uniform lowp vec3 u_color;
+uniform LOWP vec3 u_color;
 
 varying vec2 v_uv;
 varying float v_alpha;

@@ -1,14 +1,17 @@
 #ifdef GL_ES
 precision mediump float;
+#define LOWP lowp
+#else
+#define LOWP 
 #endif
 
-attribute lowp float a_fsid;
+attribute LOWP float a_fsid;
 attribute vec2 a_position;
 attribute vec2 a_texCoord;
 
 uniform sampler2D u_transforms;
-uniform lowp vec2 u_tresolution;
-uniform lowp vec2 u_resolution;
+uniform LOWP vec2 u_tresolution;
+uniform LOWP vec2 u_resolution;
 uniform mat4 u_proj;
 
 varying vec2 v_uv;
