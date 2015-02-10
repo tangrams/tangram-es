@@ -7,27 +7,22 @@
 
 struct TileID {
 
-    TileID(int _x, int _y, int _z) : x(_x), y(_y), z(_z) {};
+    const int x;
+    const int y;
+    const int z;
     
+    TileID(int _x, int _y, int _z) : x(_x), y(_y), z(_z) {};
+    TileID(const TileID& _rhs): x(_rhs.x), y(_rhs.y), z(_rhs.z) {};
+
     bool operator< (const TileID& _rhs) const {
-        if(x != _rhs.x) {
-            return (x < _rhs.x);
-        }
-        else if(y != _rhs.y) {
-            return (y < _rhs.y);
-        }
-        else {
-            return (z < _rhs.z);
-        }
+        return x < _rhs.x || (x == _rhs.x && (y < _rhs.y || (y == _rhs.y && z < _rhs.z)));
     }
     bool operator> (const TileID& _rhs) const { return _rhs < const_cast<TileID&>(*this); }
     bool operator<=(const TileID& _rhs) const { return !(*this > _rhs); }
     bool operator>=(const TileID& _rhs) const { return !(*this < _rhs); }
     bool operator==(const TileID& _rhs) const { return x == _rhs.x && y == _rhs.y && z == _rhs.z; }
-
-    const int x;
-    const int y;
-    const int z;
+    
+    TileID& operator=(const TileID& _rhs) = delete;
     
     bool isValid() const {
         int max = 1 << z;
@@ -57,5 +52,7 @@ struct TileID {
         
         return TileID((x<<1)+i, (y<<1)+j, z+1);
     }
+    
 };
 
+static TileID NOT_A_TILE(-1, -1, -1);

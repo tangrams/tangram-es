@@ -37,7 +37,7 @@ void View::setMapProjection(ProjectionType _projType) {
     
 }
 
-const MapProjection& View::getMapProjection() {
+const MapProjection& View::getMapProjection() const {
     return *m_projection.get();
 }
 

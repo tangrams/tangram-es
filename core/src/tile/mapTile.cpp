@@ -28,7 +28,6 @@ MapTile::~MapTile() {
     m_geometry.clear();
     m_buffers.clear();
 
-    LabelContainer::GetInstance()->removeLabels(m_id);
 }
 
 void MapTile::addGeometry(const Style& _style, std::unique_ptr<VboMesh> _mesh) {
@@ -52,7 +51,7 @@ std::shared_ptr<TextBuffer> MapTile::getTextBuffer(const Style& _style) const {
     return nullptr;
 }
 
-void MapTile::update(float _dt, const Style& _style, View& _view) {
+void MapTile::update(float _dt, const Style& _style, const View& _view) {
 
     // Apply tile-view translation to the model matrix
     const auto& viewOrigin = _view.getPosition();
