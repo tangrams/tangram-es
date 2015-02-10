@@ -40,27 +40,20 @@ bool TileManager::updateTileSet() {
     bool tileSetChanged = false;
     
     // Check if any incoming tiles are finished
-    {
-        auto workersIter = m_workers.begin();
+    for (auto& worker : m_workers) {
         
-        while (workersIter != m_workers.end()) {
+        if (!worker->isFree() && worker->isFinished()) {
             
-            auto& worker = *workersIter;
+            // Get result from worker and move it into tile set
+            auto tile = worker->getTileResult();
+            const TileID& id = tile->getID();
+            logMsg("Tile [%d, %d, %d] finished loading\n", id.z, id.x, id.y);
+            std::swap(m_tileSet[id], tile);
+            cleanProxyTiles(id);
+            tileSetChanged = true;
             
-            if (!worker->isFree() && worker->isFinished()) {
-                
-                // Get result from worker and move it into tile set
-                auto tile = worker->getTileResult();
-                const TileID& id = tile->getID();
-                logMsg("Tile [%d, %d, %d] finished loading\n", id.z, id.x, id.y);
-                std::swap(m_tileSet[id], tile);
-                cleanProxyTiles(id);
-                tileSetChanged = true;
-                
-            }
-            
-            ++workersIter;
         }
+        
     }
     
     if (! (m_view->changedSinceLastCheck() || tileSetChanged) ) {
