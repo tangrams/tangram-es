@@ -13,13 +13,13 @@
 #include "platform.h"
 #include "gl.h"
 
-#define KEY_ESC		113
-#define KEY_ZOOM_IN 45
-#define KEY_ZOOM_OUT 61
-#define KEY_UP 		119
-#define KEY_LEFT 	97
-#define KEY_RIGHT 	115
-#define KEY_DOWN 	122
+#define KEY_ESC		113    // q
+#define KEY_ZOOM_IN 45     // - 
+#define KEY_ZOOM_OUT 61    // =
+#define KEY_UP 		119    // w
+#define KEY_LEFT 	97     // a
+#define KEY_RIGHT 	115    // s
+#define KEY_DOWN 	122    // z
 
 struct timeval tv;
 
@@ -246,9 +246,9 @@ int main(int argc, char **argv){
         
         if(updateMouse()){
             if( mouse.button == 1 ){
-                Tangram::handlePanGesture( mouse.velX*10.0, -mouse.velY*10.0);
+                Tangram::handlePanGesture( mouse.velX*5.0, -mouse.velY*5.0);
             } else if( mouse.button == 2 ){
-                Tangram::handlePinchGesture( 0.0, 0.0, 1.0 + mouse.velY*0.01 );
+                Tangram::handlePinchGesture( 0.0, 0.0, 1.0 + mouse.velY*0.005 );
             } 
         }
 
