@@ -13,7 +13,7 @@
 #include "platform.h"
 #include "gl.h"
 
-#define KEY_ESC		27
+#define KEY_ESC		113
 #define KEY_ZOOM_IN 45
 #define KEY_ZOOM_OUT 61
 #define KEY_UP 		119
@@ -233,7 +233,8 @@ int main(int argc, char **argv){
     unsigned long long timePrev = 	(unsigned long long)(tv.tv_sec) * 1000 +
     (unsigned long long)(tv.tv_usec) / 1000;
     
-    while (1) {
+    bool bContinue = true;
+    while (bContinue) {
         
         // Update
         unsigned long long timeNow = 	(unsigned long long)(tv.tv_sec) * 1000 +
@@ -245,10 +246,10 @@ int main(int argc, char **argv){
         
         if(updateMouse()){
             if( mouse.button == 1 ){
-                Tangram::handleTapGesture( mouse.x, mouse.y );
-            } else {
                 Tangram::handlePanGesture( mouse.velX*10.0, -mouse.velY*10.0);
-            }
+            } else if( mouse.button == 2 ){
+                Tangram::handlePinchGesture( 0.0, 0.0, 1.0 + mouse.velY*0.01 );
+            } 
         }
 
 		int key = getkey();
@@ -272,6 +273,9 @@ int main(int argc, char **argv){
 				case KEY_RIGHT:
 					Tangram::handlePanGesture(-100.0,0.0);
 					break;
+                case KEY_ESC:
+                    bContinue = false;
+                    break;
 				default:
 					logMsg(" -> %i\n",key);
 			}	
