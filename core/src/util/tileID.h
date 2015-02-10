@@ -29,7 +29,7 @@ struct TileID {
         return x >= 0 && x < max && y >= 0 && y < max && z >= 0;
     }
     
-    bool isValid(int _maxZoom) {
+    bool isValid(int _maxZoom) const {
         return isValid() && z < _maxZoom;
     }
 

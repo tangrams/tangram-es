@@ -93,6 +93,7 @@ void View::zoom(float _dz) {
 void View::update() {
     
     if (!m_dirty) {
+        m_changed = false;
         return;
     }
     
@@ -123,19 +124,6 @@ const std::set<TileID>& View::getVisibleTiles() {
 
     return m_visibleTiles;
 
-}
-
-void View::resetChangedStatus() {
-    m_changed = false;
-}
-
-bool View::changedSinceLastCheck() {
-    
-    if (m_changed) {
-        return true;
-    }
-    return false;
-    
 }
 
 void View::updateMatrices() {

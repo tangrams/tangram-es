@@ -127,10 +127,9 @@ void update(float _dt) {
     g_time += _dt;
 
     if (m_view) {
-        m_view->resetChangedStatus();
         m_view->update();
 
-        if (m_view->changedSinceLastCheck()) {
+        if (m_view->changedOnLastUpdate()) {
             if (m_ftContext) {
                 m_ftContext->setScreenSize(m_view->getWidth(), m_view->getHeight());
             }
