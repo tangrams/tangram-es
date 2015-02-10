@@ -153,12 +153,17 @@ void TileManager::removeTile(std::map< TileID, std::shared_ptr<MapTile> >::itera
     const TileID& id = _tileIter->first;
     
     // Remove tile from queue, if present
-    m_queuedTiles.remove(id);
+    const auto& found = std::find(m_queuedTiles.begin(), m_queuedTiles.end(), id);
+    if (found != m_queuedTiles.end()) {
+        m_queuedTiles.erase(found);
+        cleanProxyTiles(id);
+    }
     
     // If a worker is loading this tile, abort it
     for (const auto& worker : m_workers) {
         if (!worker->isFree() && worker->getTileID() == id) {
             worker->abort();
+            // Proxy tiles will be cleaned in update loop
         }
     }
     
