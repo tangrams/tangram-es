@@ -14,6 +14,7 @@ include_directories(/opt/vc/include/interface/vmcs_host/linux)
 # load core library
 add_subdirectory(${PROJECT_SOURCE_DIR}/core)
 include_directories(${CORE_INCLUDE_DIRS})
+include_directories(${CORE_LIBRARIES_INCLUDE_DIRS})
 
 # add sources and include headers
 find_sources_and_include_directories(
