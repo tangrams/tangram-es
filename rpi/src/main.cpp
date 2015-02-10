@@ -13,6 +13,11 @@
 #include "platform.h"
 #include "gl.h"
 
+#include "util/shaderProgram.h"
+#include "util/vertexLayout.h"
+#include "util/vboMesh.h"
+#include "util/geom.h"
+
 #define KEY_ESC		113    // q
 #define KEY_ZOOM_IN 45     // - 
 #define KEY_ZOOM_OUT 61    // =
@@ -33,8 +38,50 @@ typedef struct {
     EGLContext context;
     
 } CUBE_STATE_T;
-
 static CUBE_STATE_T _state, *state=&_state;
+
+typedef struct Mouse {
+    Mouse():x(0),y(0),button(0){};
+    
+    float   x,y;
+    float   velX,velY;
+    int     button;
+};
+static Mouse mouse;
+
+ShaderProgram mouseShader;
+std::string mouseVertex = 
+"precision mediump float;\n"
+"uniform float u_time;\n"
+"uniform vec2 u_mouse;\n"
+"uniform vec2 u_resolution;\n"
+"attribute vec4 a_position;\n"
+"attribute vec4 a_color;\n"
+"varying vec4 v_color;\n"
+"void main(void) {\n"
+"    gl_Position = (a_position*0.5);\n"
+"    v_color = a_color;\n"
+"}\n";
+
+std::string mouseFragment =
+"precision mediump float;\n"
+"uniform float u_time;\n"
+"uniform vec2 u_mouse;\n"
+"uniform vec2 u_resolution;\n"
+"varying vec4 v_color;\n"
+"void main(void) {\n"
+"    gl_FragColor = v_color;\n"
+"}\n";
+
+struct PosColorVertex {
+    // Position Data
+    GLfloat pos_x;
+    GLfloat pos_y;
+    GLfloat pos_z;
+    // Color Data
+    GLuint abgr;
+};
+VboMesh* mouseMesh;
 
 static void initOpenGL(){
     bcm_host_init();
@@ -129,17 +176,39 @@ static void initOpenGL(){
     
     // Prepare viewport
     glViewport( 0, 0, state->screen_width, state->screen_height );
-}
 
-typedef struct Mouse {
-    Mouse():x(0),y(0),button(0){};
+    // Prepair Mouse Shader
+    mouseShader.setSourceStrings(mouseVertex,mouseFragment);
+
+    std::vector<VertexLayout::VertexAttrib> attribs;
+    attribs.push_back({"a_position", 3, GL_FLOAT, false, 0});
+    attribs.push_back({"a_color", 4, GL_UNSIGNED_BYTE, true, 0});
+    VertexLayout* vertexLayout = new VertexLayout(attribs);
+
+    std::vector<PosColorVertex> vertices;
+    std::vector<GLushort> indices;
+
+    // Small billboard for the mouse
+    float size = 10.0;
+    {
+        float x = mapValue(state->screen_width*0.5f-size*0.5f,0,state->screen_width,-1.0f,1.0f);
+        float y = mapValue(state->screen_height*0.5f-size*0.5f,0,state->screen_height,-1,1);
+        float w = mapValue(size,0,state->screen_width,0,2.0);
+        float h = mapValue(size,0,state->screen_height,0,2.0);
+
+        vertices.push_back({ x, y, 1.0, 0.0, 0.0 });
+        vertices.push_back({ x+w, y, 1.0, 1.0, 0.0 });
+        vertices.push_back({ x+w, y+h, 1.0, 1.0, 1.0 });
+        vertices.push_back({ x, y+h, 1.0, 0.0, 1.0 });
+        
+        indices.push_back(0); indices.push_back(1); indices.push_back(2);
+        indices.push_back(2); indices.push_back(3); indices.push_back(0);
+    }
     
-    float 	x,y;
-    float 	velX,velY;
-    int 	button;
-};
-
-static Mouse mouse;
+    mouseMesh = new VboMesh(vertexLayout);
+    mouseMesh->addVertices((GLbyte*)vertices.data(), vertices.size());
+    mouseMesh->addIndices(indices.data(), indices.size());
+}
 
 static bool updateMouse(){
     static int fd = -1;
