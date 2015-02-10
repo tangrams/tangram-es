@@ -401,7 +401,7 @@ void buildGeneralPolyLine(const Line& _line, float _halfWidth,
     bool isPrev = false;
     bool isNext = false;;
     
-    for (size_t i = 0; i < lineSize; i++) {
+    for (int i = 0; i < lineSize; i++) {
 
         //  There is an next one?
         isNext = i+1 < lineSize;

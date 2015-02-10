@@ -102,26 +102,28 @@ void PolygonStyle::buildPolygon(Polygon& _polygon, std::string& _layer, Properti
     
     Builders::buildPolygon(_polygon, points, normals, indices, texcoords);
     
-    unsigned long outlineIndex = points.size();
-    if (_layer.compare("water") == 0) {
-        for(int i = 0; i < _polygon.size(); i++){
-            Builders::buildPolyLine(_polygon[i], 0.01, points, indices, texcoords, "butt", "round", true, true);
-        }
-    }
+    // TESTING OUTLINES arround watter
+    //
+    // unsigned long outlineIndex = points.size();
+    // if (_layer.compare("water") == 0) {
+    //     for(int i = 0; i < _polygon.size(); i++){
+    //         Builders::buildPolyLine(_polygon[i], 0.01, points, indices, texcoords, "butt", "round", true, true);
+    //     }
+    // }
     
     for (size_t i = 0; i < points.size(); i++) {
-        if(i<outlineIndex){
+        // if(i<outlineIndex){
             glm::vec3 p = points[i];
             glm::vec3 n = normals[i];
             glm::vec2 u = texcoords[i];
             vertices.push_back({ p.x, p.y, p.z, n.x, n.y, n.z, u.x, u.y, abgr });
-        } else {
-            glm::vec3 p = points[i];
-            glm::vec3 n = glm::vec3(0.0,0.0,0.1);
-            glm::vec2 u = texcoords[i];
-            p.z += 0.01f;
-            vertices.push_back({ p.x, p.y, p.z, n.x, n.y, n.z, u.x, u.y, 0xff5b2c0f}); // 0xffddc79b
-        }
+        // } else {
+        //     glm::vec3 p = points[i];
+        //     glm::vec3 n = glm::vec3(0.0,0.0,0.1);
+        //     glm::vec2 u = texcoords[i];
+        //     p.z += 0.01f;
+        //     vertices.push_back({ p.x, p.y, p.z, n.x, n.y, n.z, u.x, u.y, 0xff5b2c0f}); // 0xffddc79b
+        // }
     }
     
     // Make sure indices get correctly offset

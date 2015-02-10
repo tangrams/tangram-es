@@ -1,12 +1,14 @@
 #pragma once
 
 #include <map>
+#include <list>
 #include <vector>
 #include <memory>
 #include <future>
 #include <set>
 #include <mutex>
 
+#include "tileWorker.h"
 #include "util/tileID.h"
 #include "data/dataSource.h"
 
@@ -64,7 +66,10 @@ private:
     
     std::vector<std::unique_ptr<DataSource>> m_dataSources;
 
-    std::vector< std::future<std::shared_ptr<MapTile>> > m_incomingTiles;
+    const static size_t MAX_WORKERS = 4;
+    std::list<std::unique_ptr<TileWorker> > m_workers;
+    
+    std::list<TileID> m_queuedTiles;
     
     /*
      * Constructs a future (async) to load data of a new visible tile
