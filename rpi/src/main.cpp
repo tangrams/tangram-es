@@ -49,7 +49,7 @@ typedef struct Mouse {
 };
 static Mouse mouse;
 
-ShaderProgram mouseShader;
+std::shared_ptr<ShaderProgram> mouseShader;
 std::string mouseVertex = 
 "precision mediump float;\n"
 "uniform float u_time;\n"
@@ -59,7 +59,7 @@ std::string mouseVertex =
 "attribute vec4 a_color;\n"
 "varying vec4 v_color;\n"
 "void main(void) {\n"
-"    gl_Position = (a_position*0.5);\n"
+"    gl_Position = (a_position*0.5)+vec4(vec2(u_mouse/u_resolution),0.0,0.0);\n"
 "    v_color = a_color;\n"
 "}\n";
 
@@ -81,7 +81,7 @@ struct PosColorVertex {
     // Color Data
     GLuint abgr;
 };
-VboMesh* mouseMesh;
+std::shared_ptr<VboMesh> mouseMesh;
 
 static void initOpenGL(){
     bcm_host_init();
@@ -178,34 +178,41 @@ static void initOpenGL(){
     glViewport( 0, 0, state->screen_width, state->screen_height );
 
     // Prepair Mouse Shader
-    mouseShader.setSourceStrings(mouseVertex,mouseFragment);
+    mouseShader = std::shared_ptr<ShaderProgram>(new ShaderProgram());
+    mouseShader->setSourceStrings(mouseVertex,mouseFragment);
 
-    std::vector<VertexLayout::VertexAttrib> attribs;
-    attribs.push_back({"a_position", 3, GL_FLOAT, false, 0});
-    attribs.push_back({"a_color", 4, GL_UNSIGNED_BYTE, true, 0});
-    VertexLayout* vertexLayout = new VertexLayout(attribs);
+    std::shared_ptr<VertexLayout> vertexLayout = std::shared_ptr<VertexLayout>(new VertexLayout({
+        {"a_position", 3, GL_FLOAT, false, 0},
+        {"a_color", 4, GL_UNSIGNED_BYTE, true, 0}
+    }));
 
     std::vector<PosColorVertex> vertices;
-    std::vector<GLushort> indices;
+    std::vector<int> indices;
 
     // Small billboard for the mouse
     float size = 10.0;
+    GLuint color = 0xffe6f0f2;
     {
-        float x = mapValue(state->screen_width*0.5f-size*0.5f,0,state->screen_width,-1.0f,1.0f);
-        float y = mapValue(state->screen_height*0.5f-size*0.5f,0,state->screen_height,-1,1);
-        float w = mapValue(size,0,state->screen_width,0,2.0);
-        float h = mapValue(size,0,state->screen_height,0,2.0);
+        // float x = mapValue(state->screen_width*0.5f-size*0.5f,0,state->screen_width,-1.0f,1.0f);
+        // float y = mapValue(state->screen_height*0.5f-size*0.5f,0,state->screen_height,-1,1);
+        // float w = mapValue(size,0,state->screen_width,0,2.0);
+        // float h = mapValue(size,0,state->screen_height,0,2.0);
 
-        vertices.push_back({ x, y, 1.0, 0.0, 0.0 });
-        vertices.push_back({ x+w, y, 1.0, 1.0, 0.0 });
-        vertices.push_back({ x+w, y+h, 1.0, 1.0, 1.0 });
-        vertices.push_back({ x, y+h, 1.0, 0.0, 1.0 });
+        float x = mapValue(0.0f,0.0f,state->screen_width,-1.0f,1.0f);
+        float y = mapValue(0.0f,0.0f,state->screen_height,-1.0f,1.0f);
+        float w = mapValue(size,0.0f,state->screen_width,0.0f,2.0f);
+        float h = mapValue(size,0.0f,state->screen_height,0.0f,2.0f);
+
+        vertices.push_back({ x, y, 0.0, color});
+        vertices.push_back({ x+w, y, 0.0, color});
+        vertices.push_back({ x+w, y+h, 0.0, color });
+        vertices.push_back({ x, y+h, 0.0, color });
         
         indices.push_back(0); indices.push_back(1); indices.push_back(2);
         indices.push_back(2); indices.push_back(3); indices.push_back(0);
     }
     
-    mouseMesh = new VboMesh(vertexLayout);
+    mouseMesh = std::shared_ptr<VboMesh>(new VboMesh(vertexLayout));
     mouseMesh->addVertices((GLbyte*)vertices.data(), vertices.size());
     mouseMesh->addIndices(indices.data(), indices.size());
 }
@@ -352,6 +359,12 @@ int main(int argc, char **argv){
 
         // Render        
         Tangram::render();
+
+        mouseShader->use();
+        mouseShader->setUniformf("u_time", timeNow*0.001);
+        mouseShader->setUniformf("u_mouse", mouse.x, mouse.y);
+        mouseShader->setUniformf("u_resolution",state->screen_width, state->screen_height);
+        mouseMesh->draw(mouseShader);
         
         eglSwapBuffers(state->display, state->surface); 
     }
