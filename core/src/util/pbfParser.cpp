@@ -2,15 +2,15 @@
 #include "platform.h"
 
 
-void PbfParser::extractGeometry(const protobuf::message& _in, int _tileExtent, std::vector<Line>& _out, const MapTile& _tile) {
+void PbfParser::extractGeometry(protobuf::message& _in, int _tileExtent, std::vector<Line>& _out, const MapTile& _tile) {
     
     pbfGeomCmd cmd = pbfGeomCmd::moveTo;
     uint32_t cmdRepeat = 0;
-    protobuf::message geomItr = _in;
+    protobuf::message& geomItr = _in;
     
     double invTileExtent = (1.0/(double)_tileExtent);
     
-    std::vector<Point> line;
+    Line line;
     
     int64_t x = 0;
     int64_t y = 0;
@@ -27,7 +27,7 @@ void PbfParser::extractGeometry(const protobuf::message& _in, int _tileExtent, s
             // if cmd is move then move to a new line/set of points and save this line
             if(cmd == pbfGeomCmd::moveTo) {
                 if(line.size() > 0) {
-                    _out.emplace_back(line);
+                    _out.push_back(line);
                 }
                 line.clear();
             }
@@ -40,10 +40,11 @@ void PbfParser::extractGeometry(const protobuf::message& _in, int _tileExtent, s
             p.x = invTileExtent * (double)(2 * x - _tileExtent);
             p.y = invTileExtent * (double)(_tileExtent - 2 * y);
             
-            line.emplace_back(p);
+            line.push_back(p);
+            
         } else if( cmd == pbfGeomCmd::closePath) { // end of a polygon, push first point in this line as last and push line to poly
             line.push_back(line[0]);
-            _out.emplace_back(line);
+            _out.push_back(line);
             line.clear();
         }
         
@@ -52,12 +53,12 @@ void PbfParser::extractGeometry(const protobuf::message& _in, int _tileExtent, s
     
     // Enter the last line
     if(line.size() > 0) {
-        _out.emplace_back(line);
+        _out.push_back(line);
     }
     
 }
 
-void PbfParser::extractFeature(const protobuf::message& _in, Feature& _out, const MapTile& _tile, std::vector<std::string>& _keys, std::unordered_map<int, float>& _numericValues, std::unordered_map<int, std::string>& _stringValues, int _tileExtent) {
+void PbfParser::extractFeature(protobuf::message& _in, Feature& _out, const MapTile& _tile, std::vector<std::string>& _keys, std::unordered_map<int, float>& _numericValues, std::unordered_map<int, std::string>& _stringValues, int _tileExtent) {
 
     //Iterate through this feature
     std::vector<Line> geometryLines;
@@ -82,46 +83,46 @@ void PbfParser::extractFeature(const protobuf::message& _in, Feature& _out, cons
                     
                     if(_keys.size() <= tagKey) {
                         logMsg("ERROR: accessing out of bound key\n");
+                        return;
                     }
                     
-                    if(tagsMsg) {
-                        std::size_t valueKey = tagsMsg.varint();
+                    if(!tagsMsg) {
+                        logMsg("ERROR: uneven number of feature tag ids\n");
+                        return;
+                    }
+                    
+                    std::size_t valueKey = tagsMsg.varint();
+                    
+                    if( (_numericValues.size() + _stringValues.size()) <= valueKey ) {
+                        logMsg("ERROR: accessing out of bound values\n");
+                        return;
+                    }
+                    
+                    const auto& key = _keys[tagKey];
+                    const auto& numVal = _numericValues.find(valueKey);
+                    
+                    if(numVal != _numericValues.end()) {
                         
-                        if( (_numericValues.size() + _stringValues.size()) <= valueKey ) {
-                            logMsg("ERROR: accessing out of bound values\n");
-                        }
-                        
-                        const auto& key = _keys[tagKey];
-                        const auto& numVal = _numericValues.find(valueKey);
-                        
-                        if(numVal != _numericValues.end()) {
-                            
-                            // height and minheight need to be handled separately so that their dimensions are normalized
-                            if(key.compare("height") == 0 || key.compare("min_height") == 0) {
-                                _out.props.numericProps[key] = numVal->second * _tile.getInverseScale();
-                            } else {
-                                _out.props.numericProps[key] = numVal->second;
-                            }
-                            
+                        // height and minheight need to be handled separately so that their dimensions are normalized
+                        if(key.compare("height") == 0 || key.compare("min_height") == 0) {
+                            _out.props.numericProps[key] = numVal->second * _tile.getInverseScale();
                         } else {
-                            
-                            const auto& strVal = _stringValues.find(valueKey);
-                            if(strVal != _stringValues.end()) {
-                                
-                                _out.props.stringProps[key] = strVal->second;
-                                
-                            } else {
-                                logMsg("ERROR: Tag is missing, should not be!!");
-                            }
-                            
+                            _out.props.numericProps[key] = numVal->second;
                         }
+                        
                     } else {
-                        logMsg("uneven number of feature tag ids");
-                        throw std::runtime_error("uneven number of feature tag ids");
+                        
+                        const auto& strVal = _stringValues.find(valueKey);
+                        if(strVal != _stringValues.end()) {
+                            _out.props.stringProps[key] = strVal->second;
+                        } else {
+                            logMsg("ERROR: tag is missing\n");
+                        }
+                        
                     }
                 }
-            }
                 break;
+            }
             // Feature Type
             case 3:
                 _out.geometryType = (GeometryType)featureItr.varint();
@@ -162,9 +163,9 @@ void PbfParser::extractFeature(const protobuf::message& _in, Feature& _out, cons
     
 }
 
-void PbfParser::extractLayer(const protobuf::message& _in, Layer& _out, const MapTile& _tile) {
+void PbfParser::extractLayer(protobuf::message& _in, Layer& _out, const MapTile& _tile) {
 
-    protobuf::message layerItr = _in;
+    protobuf::message& layerItr = _in;
     
     std::vector<std::string> keys;
     std::unordered_map<int, float> numericValues;
@@ -178,19 +179,17 @@ void PbfParser::extractLayer(const protobuf::message& _in, Layer& _out, const Ma
         switch(layerItr.tag) {
             case 2: // features
             {
-                protobuf::message featureMsg = layerItr.getMessage();
-                featureMsgs.emplace_back(featureMsg);
+                featureMsgs.push_back(layerItr.getMessage());
                 break;
             }
                 
             case 3: // key string
-                keys.emplace_back(layerItr.string());
+                keys.push_back(layerItr.string());
                 break;
                 
             case 4: // values
             {
-                protobuf::message valueMsg = layerItr.getMessage();
-                protobuf::message valueItr = valueMsg;
+                protobuf::message valueItr = layerItr.getMessage();
                 
                 while (valueItr.next()) {
                     switch (valueItr.tag) {
