@@ -7,13 +7,14 @@
  * This class represents a text buffer, each text buffer has several text ids and a single 
  * transform texture. The transform texture is a texture containing the text ids transformations 
  * in screen space. 
- * They three callbacks that the usage of this class could potentially trigger
+ * There are three callbacks that the usage of this class could potentially trigger (those are 
+ * defined in <FontContext>:
  *  - texture transform creation : lets you create the gpu transform texture, called after
  *  TextBuffer::init.
  *  - texture transform update : lets you update the gpu transform texture, called after 
  *  TextBuffer::triggerTransformUpdate.
  *  - an error callback : usually when you asked to generate too many text ids, this would lets 
- *  you expand the text buffer transform texture
+ *  you expand the text buffer transform texture.
  *
  */
 class TextBuffer {
