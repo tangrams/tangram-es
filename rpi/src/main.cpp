@@ -48,6 +48,8 @@ typedef struct Mouse {
     int     button;
 };
 static Mouse mouse;
+bool bMouse = false;
+float mouseSize = 100.0f;
 
 std::shared_ptr<ShaderProgram> mouseShader;
 std::string mouseVertex = 
@@ -197,39 +199,40 @@ static void initOpenGL(){
     glViewport( 0, 0, state->screen_width, state->screen_height );
 
     // Prepair Mouse Shader
-    mouseShader = std::shared_ptr<ShaderProgram>(new ShaderProgram());
-    mouseShader->setSourceStrings(mouseFragment, mouseVertex );
+    if (bMouse) {
+        mouseShader = std::shared_ptr<ShaderProgram>(new ShaderProgram());
+        mouseShader->setSourceStrings(mouseFragment, mouseVertex );
 
-    std::shared_ptr<VertexLayout> vertexLayout = std::shared_ptr<VertexLayout>(new VertexLayout({
-        {"a_position", 3, GL_FLOAT, false, 0},
-        {"a_texcoord", 2, GL_FLOAT, false, 0},
-        {"a_color", 4, GL_UNSIGNED_BYTE, true, 0}
-    }));
+        std::shared_ptr<VertexLayout> vertexLayout = std::shared_ptr<VertexLayout>(new VertexLayout({
+            {"a_position", 3, GL_FLOAT, false, 0},
+            {"a_texcoord", 2, GL_FLOAT, false, 0},
+            {"a_color", 4, GL_UNSIGNED_BYTE, true, 0}
+        }));
 
-    std::vector<PosUVColorVertex> vertices;
-    std::vector<int> indices;
+        std::vector<PosUVColorVertex> vertices;
+        std::vector<int> indices;
 
-    // Small billboard for the mouse
-    float size = 100.0;
-    GLuint color = 0xffffffff;
-    {
-        float x = -size*0.5f/state->screen_width;
-        float y = -size*0.5f/state->screen_height;
-        float w = size/state->screen_width;
-        float h = size/state->screen_height;
+        // Small billboard for the mouse
+        GLuint color = 0xffffffff;
+        {
+            float x = -mouseSize*0.5f/state->screen_width;
+            float y = -mouseSize*0.5f/state->screen_height;
+            float w = mouseSize/state->screen_width;
+            float h = mouseSize/state->screen_height;
 
-        vertices.push_back({ x, y, 0.0, 0.0, 0.0, color});
-        vertices.push_back({ x+w, y, 0.0, 0.0, 1.0, color});
-        vertices.push_back({ x+w, y+h, 0.0, 1.0, 1.0, color});
-        vertices.push_back({ x, y+h, 0.0, 0.0, 1.0, color });
+            vertices.push_back({ x, y, 0.0, 0.0, 0.0, color});
+            vertices.push_back({ x+w, y, 0.0, 0.0, 1.0, color});
+            vertices.push_back({ x+w, y+h, 0.0, 1.0, 1.0, color});
+            vertices.push_back({ x, y+h, 0.0, 0.0, 1.0, color });
+            
+            indices.push_back(0); indices.push_back(1); indices.push_back(2);
+            indices.push_back(2); indices.push_back(3); indices.push_back(0);
+        }
         
-        indices.push_back(0); indices.push_back(1); indices.push_back(2);
-        indices.push_back(2); indices.push_back(3); indices.push_back(0);
+        mouseMesh = std::shared_ptr<VboMesh>(new VboMesh(vertexLayout));
+        mouseMesh->addVertices((GLbyte*)vertices.data(), vertices.size());
+        mouseMesh->addIndices(indices.data(), indices.size());
     }
-    
-    mouseMesh = std::shared_ptr<VboMesh>(new VboMesh(vertexLayout));
-    mouseMesh->addVertices((GLbyte*)vertices.data(), vertices.size());
-    mouseMesh->addIndices(indices.data(), indices.size());
 }
 
 static bool updateMouse(){
@@ -311,6 +314,12 @@ int getkey() {
 
 //==============================================================================
 int main(int argc, char **argv){
+
+    for (int i = 1; i < argc ; i++){
+        if ( std::string(argv[i]) == "-m" ){
+            bMouse = true;
+        }
+    }
     
     // Start OpenGL context
     initOpenGL();
@@ -375,17 +384,18 @@ int main(int argc, char **argv){
         // Render        
         Tangram::render();
 
-        // glDisable(GL_CULL_FACE);
-        glEnable(GL_BLEND);
-        glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
-        glDisable(GL_DEPTH_TEST);
-        mouseShader->use();
-        mouseShader->setUniformf("u_time", time);
-        mouseShader->setUniformf("u_mouse", mouse.x, mouse.y);
-        mouseShader->setUniformf("u_resolution",state->screen_width, state->screen_height);
-        mouseMesh->draw(mouseShader);
-        glDisable(GL_BLEND);
-        glEnable(GL_DEPTH_TEST);
+        if (bMouse) {
+            glEnable(GL_BLEND);
+            glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+            glDisable(GL_DEPTH_TEST);
+            mouseShader->use();
+            mouseShader->setUniformf("u_time", time);
+            mouseShader->setUniformf("u_mouse", mouse.x, mouse.y);
+            mouseShader->setUniformf("u_resolution",state->screen_width, state->screen_height);
+            mouseMesh->draw(mouseShader);
+            glDisable(GL_BLEND);
+            glEnable(GL_DEPTH_TEST);
+        }
         
         eglSwapBuffers(state->display, state->surface); 
     }
