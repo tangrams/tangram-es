@@ -4,6 +4,7 @@
 #include "view/view.h"
 
 #include <chrono>
+#include <algorithm>
 
 TileManager::TileManager() {
     
@@ -40,30 +41,23 @@ bool TileManager::updateTileSet() {
     bool tileSetChanged = false;
     
     // Check if any incoming tiles are finished
-    {
-        auto workersIter = m_workers.begin();
+    for (auto& worker : m_workers) {
         
-        while (workersIter != m_workers.end()) {
+        if (!worker->isFree() && worker->isFinished()) {
             
-            auto& worker = *workersIter;
+            // Get result from worker and move it into tile set
+            auto tile = worker->getTileResult();
+            const TileID& id = tile->getID();
+            logMsg("Tile [%d, %d, %d] finished loading\n", id.z, id.x, id.y);
+            std::swap(m_tileSet[id], tile);
+            cleanProxyTiles(id);
+            tileSetChanged = true;
             
-            if (!worker->isFree() && worker->isFinished()) {
-                
-                // Get result from worker and move it into tile set
-                auto tile = worker->getTileResult();
-                const TileID& id = tile->getID();
-                logMsg("Tile [%d, %d, %d] finished loading\n", id.z, id.x, id.y);
-                std::swap(m_tileSet[id], tile);
-                cleanProxyTiles(id);
-                tileSetChanged = true;
-                
-            }
-            
-            ++workersIter;
         }
+        
     }
     
-    if (! (m_view->changedSinceLastCheck() || tileSetChanged) ) {
+    if (! (m_view->changedOnLastUpdate() || tileSetChanged) ) {
         // No new tiles have come into view and no tiles have finished loading, 
         // so the tileset is unchanged
         return false;
@@ -160,12 +154,17 @@ void TileManager::removeTile(std::map< TileID, std::shared_ptr<MapTile> >::itera
     const TileID& id = _tileIter->first;
     
     // Remove tile from queue, if present
-    m_queuedTiles.remove(id);
+    const auto& found = std::find(m_queuedTiles.begin(), m_queuedTiles.end(), id);
+    if (found != m_queuedTiles.end()) {
+        m_queuedTiles.erase(found);
+        cleanProxyTiles(id);
+    }
     
     // If a worker is loading this tile, abort it
     for (const auto& worker : m_workers) {
         if (!worker->isFree() && worker->getTileID() == id) {
             worker->abort();
+            // Proxy tiles will be cleaned in update loop
         }
     }
     
@@ -177,15 +176,17 @@ void TileManager::removeTile(std::map< TileID, std::shared_ptr<MapTile> >::itera
 void TileManager::updateProxyTiles(const TileID& _tileID, bool _zoomingIn) {
     if (_zoomingIn) {
         // zoom in - add parent
-        TileID parent = _tileID.getParent();
-        if (parent.isValid() && m_tileSet.find(parent) != m_tileSet.end()) {
-            m_tileSet[parent]->incProxyCounter();
+        const auto& parentID = _tileID.getParent();
+        const auto& parentTileIter = m_tileSet.find(parentID);
+        if (parentID.isValid() && parentTileIter != m_tileSet.end()) {
+            parentTileIter->second->incProxyCounter();
         }
     } else {
         for(int i = 0; i < 4; i++) {
-            TileID child = _tileID.getChild(i);
-            if(child.isValid(m_view->s_maxZoom) && m_tileSet.find(child) != m_tileSet.end()) {
-                m_tileSet[child]->incProxyCounter();
+            const auto& childID = _tileID.getChild(i);
+            const auto& childTileIter = m_tileSet.find(childID);
+            if(childID.isValid(m_view->s_maxZoom) && childTileIter != m_tileSet.end()) {
+                childTileIter->second->incProxyCounter();
             }
         }
     }
@@ -193,16 +194,18 @@ void TileManager::updateProxyTiles(const TileID& _tileID, bool _zoomingIn) {
 
 void TileManager::cleanProxyTiles(const TileID& _tileID) {
     // check if parent proxy is present
-    TileID parent = _tileID.getParent();
-    if (parent.isValid() && m_tileSet.find(parent) != m_tileSet.end()) {
-        m_tileSet[parent]->decProxyCounter();
+    const auto& parentID = _tileID.getParent();
+    const auto& parentTileIter = m_tileSet.find(parentID);
+    if (parentID.isValid() && parentTileIter != m_tileSet.end()) {
+        parentTileIter->second->decProxyCounter();
     }
     
     // check if child proxies are present
     for(int i = 0; i < 4; i++) {
-        TileID child = _tileID.getChild(i);
-        if(child.isValid(m_view->s_maxZoom) && m_tileSet.find(child) != m_tileSet.end()) {
-            m_tileSet[child]->decProxyCounter();
+        const auto& childID = _tileID.getChild(i);
+        const auto& childTileIter = m_tileSet.find(childID);
+        if(childID.isValid(m_view->s_maxZoom) && childTileIter != m_tileSet.end()) {
+            childTileIter->second->decProxyCounter();
         }
     }
 }
