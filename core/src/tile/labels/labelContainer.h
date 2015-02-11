@@ -46,7 +46,10 @@ public:
 private:
 
     LabelContainer();
-    std::map<std::string, std::map<TileID, std::vector<std::shared_ptr<Label>>>> m_labels;
+    // map of <Style>s containing all <Label>s by <TileID>s
+    std::map<std::string, std::map<TileID, std::vector<std::shared_ptr<Label>>>> m_labels; 
+
+    // reference to the <FontContext>
     std::shared_ptr<FontContext> m_ftContext;
 
 };
