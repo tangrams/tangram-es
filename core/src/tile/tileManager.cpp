@@ -4,6 +4,7 @@
 #include "view/view.h"
 
 #include <chrono>
+#include <algorithm>
 
 TileManager::TileManager() {
     
