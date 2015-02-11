@@ -7,12 +7,12 @@ LabelContainer::~LabelContainer() {
     m_labels.clear();
 }
 
-std::shared_ptr<Label> LabelContainer::addLabel(const std::string& _styleName, LabelTransform _transform, std::string _text) {
+std::shared_ptr<Label> LabelContainer::addLabel(const TileID& _tileID, const std::string& _styleName, LabelTransform _transform, std::string _text) {
     auto currentBuffer = m_ftContext->getCurrentBuffer();
 
     if (currentBuffer) {
         std::shared_ptr<Label> label(new Label(_transform, _text, currentBuffer));
-        m_labels[_styleName][processedTile->getID()].push_back(label);
+        m_labels[_styleName][_tileID].push_back(label);
 
         return label;
     } 

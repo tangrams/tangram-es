@@ -1,5 +1,7 @@
 #include "fontStyle.h"
 
+MapTile* FontStyle::processedTile = nullptr;
+
 FontStyle::FontStyle(const std::string& _fontName, std::string _name, float _fontSize, bool _sdf, GLenum _drawMode)
 : Style(_name, _drawMode), m_fontName(_fontName), m_fontSize(_fontSize), m_sdf(_sdf) {
 
@@ -73,7 +75,7 @@ void FontStyle::buildLine(Line& _line, std::string& _layer, Properties& _props, 
 
                 glm::dvec2 position = (p1 + p2) / 2.0 + p1p2 * 0.2 * offset;
 
-                auto label = labelContainer->addLabel(m_name, { position, 1.0, rot }, prop.second);
+                auto label = labelContainer->addLabel(FontStyle::processedTile->getID(), m_name, { position, 1.0, rot }, prop.second);
 
                 label->rasterize();
             }
@@ -102,13 +104,13 @@ void FontStyle::prepareDataProcessing(MapTile& _tile) const {
 
     buffer->init();
 
-    LabelContainer::GetInstance()->processedTile = &_tile;
+    FontStyle::processedTile = &_tile;
 }
 
 void FontStyle::finishDataProcessing(MapTile& _tile) const {
     auto ftContext = LabelContainer::GetInstance()->getFontContext();
 
-    LabelContainer::GetInstance()->processedTile = nullptr;
+    FontStyle::processedTile = nullptr;
 
     ftContext->useBuffer(nullptr);
     ftContext->unlock();

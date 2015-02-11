@@ -27,7 +27,7 @@ public:
      * Creates a label for and associate it with the current processed <MapTile> TileID for a specific syle name 
      * Returns nullptr if no text buffer are currently used by the FontContext
      */
-    std::shared_ptr<Label> addLabel(const std::string& _styleName, LabelTransform _transform, std::string _text);
+    std::shared_ptr<Label> addLabel(const TileID& _tileID, const std::string& _styleName, LabelTransform _transform, std::string _text);
 
     /* Clean all labels for a specific <tileID> */
     void removeLabels(const TileID& _tileID);
@@ -39,12 +39,6 @@ public:
 
     /* Returns a const list of labels for a <TileID> and a style name */
     const std::vector<std::shared_ptr<Label>>& getLabels(const std::string& _styleName, const TileID& _tileID);
-
-    /*
-     * A pointer to the tile being currently processed, e.g. the tile which data is being added to 
-     * nullptr if no tile is being processed
-     */
-    MapTile* processedTile;
 
     // FUTURE : 
     // QuadTree structure used to iterate through labels
