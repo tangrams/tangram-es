@@ -8,7 +8,8 @@
 #include "platform.h"
 #include "tile/tileManager.h"
 #include "view/view.h"
-#include "data/dataSource.h"
+#include "data/mapzenVectorTileJson.h"
+#include "data/protobufSrc.h"
 
 #include "style/polygonStyle.h"
 #include "style/polylineStyle.h"
@@ -73,7 +74,10 @@ void initialize() {
         m_tileManager->setScene(m_scene);
         
         // Add a tile data source
-        std::unique_ptr<DataSource> dataSource(new MapzenVectorTileJson());
+        // json tile source
+        //std::unique_ptr<DataSource> dataSource(new MapzenVectorTileJson());
+        // protobuf tile source
+        std::unique_ptr<DataSource> dataSource(new MapboxProtoBuffSrc());
         m_tileManager->addDataSource(std::move(dataSource));
     }
 

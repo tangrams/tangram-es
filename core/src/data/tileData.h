@@ -51,6 +51,7 @@ Data heirarchy:
 */
 
 enum GeometryType {
+    UNKNOWN,
     POINTS,
     LINES,
     POLYGONS
