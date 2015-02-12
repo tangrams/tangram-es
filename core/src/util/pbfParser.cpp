@@ -1,6 +1,8 @@
 #include "pbfParser.h"
 #include "platform.h"
 
+#include <cmath>
+
 
 void PbfParser::extractGeometry(protobuf::message& _in, int _tileExtent, std::vector<Line>& _out, const MapTile& _tile) {
     
@@ -58,7 +60,7 @@ void PbfParser::extractGeometry(protobuf::message& _in, int _tileExtent, std::ve
     
 }
 
-void PbfParser::extractFeature(protobuf::message& _in, Feature& _out, const MapTile& _tile, std::vector<std::string>& _keys, std::unordered_map<int, float>& _numericValues, std::unordered_map<int, std::string>& _stringValues, int _tileExtent) {
+void PbfParser::extractFeature(protobuf::message& _in, Feature& _out, const MapTile& _tile, std::vector<std::string>& _keys, std::vector<float>& _numericValues, std::vector<std::string>& _stringValues, int _tileExtent) {
 
     //Iterate through this feature
     std::vector<Line> geometryLines;
@@ -93,31 +95,30 @@ void PbfParser::extractFeature(protobuf::message& _in, Feature& _out, const MapT
                     
                     std::size_t valueKey = tagsMsg.varint();
                     
-                    if( (_numericValues.size() + _stringValues.size()) <= valueKey ) {
+                    if( _numericValues.size() <= valueKey ) {
                         logMsg("ERROR: accessing out of bound values\n");
                         return;
                     }
                     
                     const auto& key = _keys[tagKey];
-                    const auto& numVal = _numericValues.find(valueKey);
+                    float numVal = _numericValues[valueKey];
+                    const auto& strVal = _stringValues[valueKey];
                     
-                    if(numVal != _numericValues.end()) {
+                    if(numVal != NAN) {
                         
                         // height and minheight need to be handled separately so that their dimensions are normalized
                         if(key.compare("height") == 0 || key.compare("min_height") == 0) {
-                            _out.props.numericProps[key] = numVal->second * _tile.getInverseScale();
-                        } else {
-                            _out.props.numericProps[key] = numVal->second;
+                            numVal *= _tile.getInverseScale();
                         }
+                        _out.props.numericProps[key] = numVal;
+                        
+                    } else if (!strVal.empty()) {
+                        
+                        _out.props.stringProps[key] = strVal;
                         
                     } else {
                         
-                        const auto& strVal = _stringValues.find(valueKey);
-                        if(strVal != _stringValues.end()) {
-                            _out.props.stringProps[key] = strVal->second;
-                        } else {
-                            logMsg("ERROR: tag is missing\n");
-                        }
+                        logMsg("ERROR: tag missing\n");
                         
                     }
                 }
@@ -168,13 +169,12 @@ void PbfParser::extractLayer(protobuf::message& _in, Layer& _out, const MapTile&
     protobuf::message& layerItr = _in;
     
     std::vector<std::string> keys;
-    std::unordered_map<int, float> numericValues;
-    std::unordered_map<int, std::string> stringValues;
+    std::vector<float> numericValues;
+    std::vector<std::string> stringValues;
     std::vector<protobuf::message> featureMsgs;
     int tileExtent = 0;
     
     //iterate layer to populate featureMsgs, keys and values
-    int valueCount = 0;
     while(layerItr.next()) {
         switch(layerItr.tag) {
             case 2: // features
@@ -184,9 +184,11 @@ void PbfParser::extractLayer(protobuf::message& _in, Layer& _out, const MapTile&
             }
                 
             case 3: // key string
+            {
                 keys.push_back(layerItr.string());
                 break;
-                
+            }
+
             case 4: // values
             {
                 protobuf::message valueItr = layerItr.getMessage();
@@ -194,31 +196,39 @@ void PbfParser::extractLayer(protobuf::message& _in, Layer& _out, const MapTile&
                 while (valueItr.next()) {
                     switch (valueItr.tag) {
                         case 1: // string value
-                            stringValues[valueCount] = valueItr.string();
+                            stringValues.push_back(valueItr.string());
+                            numericValues.push_back(NAN);
                             break;
                         case 2: // float value
-                            numericValues[valueCount] = valueItr.float32();
+                            numericValues.push_back(valueItr.float32());
+                            stringValues.push_back("");
                             break;
                         case 3: // double value
-                            numericValues[valueCount] = valueItr.float64();
+                            numericValues.push_back(valueItr.float64());
+                            stringValues.push_back("");
                             break;
                         case 4: // int value
-                            numericValues[valueCount] = valueItr.int64();
+                            numericValues.push_back(valueItr.int64());
+                            stringValues.push_back("");
                             break;
                         case 5: // uint value
-                            numericValues[valueCount] = valueItr.varint();
+                            numericValues.push_back(valueItr.varint());
+                            stringValues.push_back("");
                             break;
                         case 6: // sint value
-                            numericValues[valueCount] = valueItr.int64();
+                            numericValues.push_back(valueItr.int64());
+                            stringValues.push_back("");
                             break;
                         case 7: // bool value
-                            numericValues[valueCount] = valueItr.boolean();
+                            numericValues.push_back(valueItr.boolean());
+                            stringValues.push_back("");
                             break;
                         default:
+                            numericValues.push_back(NAN);
+                            stringValues.push_back("");
                             valueItr.skip();
                             break;
                     }
-                    valueCount++;
                 }
                 break;
             }
