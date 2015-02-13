@@ -100,9 +100,9 @@ void PbfParser::extractFeature(protobuf::message& _in, Feature& _out, const MapT
                         return;
                     }
                     
-                    const auto& key = _keys[tagKey];
+                    const std::string& key = _keys[tagKey];
+                    const std::string& strVal = _stringValues[valueKey];
                     float numVal = _numericValues[valueKey];
-                    const auto& strVal = _stringValues[valueKey];
                     
                     if(!isnan(numVal)) {
                         
@@ -112,13 +112,9 @@ void PbfParser::extractFeature(protobuf::message& _in, Feature& _out, const MapT
                         }
                         _out.props.numericProps[key] = numVal;
                         
-                    } else if (!strVal.empty()) {
-                        
-                        _out.props.stringProps[key] = strVal;
-                        
                     } else {
                         
-                        logMsg("ERROR: tag missing\n");
+                        _out.props.stringProps[key] = strVal;
                         
                     }
                 }
