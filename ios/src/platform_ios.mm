@@ -51,7 +51,7 @@ unsigned char* bytesFromResource(const char* _path, unsigned int* _size) {
         return nullptr;
     }
 
-    *_size = resource.tellg();
+    *_size = (unsigned int)resource.tellg();
 
     resource.seekg(std::ifstream::beg);
 

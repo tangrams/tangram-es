@@ -36,6 +36,7 @@ set(CORE_LIB_DEPS ${CMAKE_SOURCE_DIR}/ios/precompiled/libcurl/libcurl.a)
 file(GLOB_RECURSE RESOURCES ${PROJECT_SOURCE_DIR}/ios/resources/**)
 file(GLOB_RECURSE CORE_RESOURCES ${PROJECT_SOURCE_DIR}/core/resources/**)
 list(APPEND RESOURCES ${CORE_RESOURCES})
+string(REGEX REPLACE "[.]DS_Store" "" RESOURCES "${RESOURCES}")
 
 # load core library
 add_subdirectory(${PROJECT_SOURCE_DIR}/core)

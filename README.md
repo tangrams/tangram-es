@@ -112,7 +112,7 @@ Then install to a connected device or emulator. You can (re)install and run the 
 Install a C++11 compatible compiler and libcurl:
 
 ```
-sudo apt-get install g++-4.7 libcurl4-openssl-dev
+sudo apt-get install cmake g++-4.7 libcurl4-openssl-dev
 ```
 
 Then compile and run:

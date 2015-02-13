@@ -111,8 +111,14 @@ void GeoJson::extractFeature(const rapidjson::Value& _in, Feature& _out, const M
 
 void GeoJson::extractLayer(const rapidjson::Value& _in, Layer& _out, const MapTile& _tile) {
     
-    const rapidjson::Value& features = _in["features"];
+    const auto& featureIter = _in.FindMember("features");
     
+    if (featureIter == _in.MemberEnd()) {
+        logMsg("ERROR: GeoJSON missing 'features' member\n");
+        return;
+    }
+    
+    const auto& features = featureIter->value;
     for (auto featureJson = features.Begin(); featureJson != features.End(); ++featureJson) {
         _out.features.emplace_back();
         extractFeature(*featureJson, _out.features.back(), _tile);

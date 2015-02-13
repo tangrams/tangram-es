@@ -109,17 +109,17 @@ android: install-android android/libs/${ANDROID_ARCH}/libtangram.so android/buil
 	ant -q -f android/build.xml debug
 
 install-android: check-ndk cmake-android ${ANDROID_BUILD_DIR}/Makefile
-	cd ${ANDROID_BUILD_DIR} && \
+	@cd ${ANDROID_BUILD_DIR} && \
 	${MAKE} && \
 	${MAKE} install
 
 cmake-android:
-	mkdir -p ${ANDROID_BUILD_DIR} 
-	cd ${ANDROID_BUILD_DIR} && \
+	@mkdir -p ${ANDROID_BUILD_DIR} 
+	@cd ${ANDROID_BUILD_DIR} && \
 	cmake ../.. ${ANDROID_CMAKE_PARAMS}
 
 osx: cmake-osx ${OSX_BUILD_DIR}/Makefile
-	cd ${OSX_BUILD_DIR} && \
+	@cd ${OSX_BUILD_DIR} && \
 	${MAKE}
 
 osx-xcode: cmake-osx-xcode ${OSX_XCODE_BUILD_DIR}
@@ -127,14 +127,14 @@ osx-xcode: cmake-osx-xcode ${OSX_XCODE_BUILD_DIR}
 
 cmake-osx-xcode:
 ifeq ($(wildcard ${OSX_XCODE_BUILD_DIR}/${OSX_XCODE_PROJ}/.*),)
-	mkdir -p ${OSX_XCODE_BUILD_DIR} 
-	cd ${OSX_XCODE_BUILD_DIR} && \
+	@mkdir -p ${OSX_XCODE_BUILD_DIR} 
+	@cd ${OSX_XCODE_BUILD_DIR} && \
 	cmake ../.. ${DARWIN_XCODE_CMAKE_PARAMS}
 endif
 
 cmake-osx: 
-	mkdir -p ${OSX_BUILD_DIR} 
-	cd ${OSX_BUILD_DIR} && \
+	@mkdir -p ${OSX_BUILD_DIR} 
+	@cd ${OSX_BUILD_DIR} && \
 	cmake ../.. ${DARWIN_CMAKE_PARAMS}
 
 ios: cmake-ios ${IOS_BUILD_DIR}/${IOS_XCODE_PROJ}
@@ -142,18 +142,18 @@ ios: cmake-ios ${IOS_BUILD_DIR}/${IOS_XCODE_PROJ}
 
 cmake-ios:
 ifeq ($(wildcard ${IOS_BUILD_DIR}/${IOS_XCODE_PROJ}/.*),)
-	mkdir -p ${IOS_BUILD_DIR}
-	cd ${IOS_BUILD_DIR} && \
+	@mkdir -p ${IOS_BUILD_DIR}
+	@cd ${IOS_BUILD_DIR} && \
 	cmake ../.. ${IOS_CMAKE_PARAMS}
 endif
 
 rpi: cmake-rpi ${RPI_BUILD_DIR}
-	cd ${RPI_BUILD_DIR} && \
+	@cd ${RPI_BUILD_DIR} && \
 	${MAKE}
 	
 cmake-rpi:
-	mkdir -p ${RPI_BUILD_DIR}
-	cd ${RPI_BUILD_DIR} && \
+	@mkdir -p ${RPI_BUILD_DIR}
+	@cd ${RPI_BUILD_DIR} && \
 	cmake ../.. ${RPI_CMAKE_PARAMS}
 
 linux: cmake-linux ${LINUX_BUILD_DIR}
@@ -168,8 +168,8 @@ cmake-linux:
 tests: unit-tests
 
 unit-tests:
-	mkdir -p ${UNIT_TESTS_BUILD_DIR} 
-	cd ${UNIT_TESTS_BUILD_DIR} && \
+	@mkdir -p ${UNIT_TESTS_BUILD_DIR} 
+	@cd ${UNIT_TESTS_BUILD_DIR} && \
 	cmake ../../.. ${UNIT_TESTS_CMAKE_PARAMS} && \
 	${MAKE}
 
