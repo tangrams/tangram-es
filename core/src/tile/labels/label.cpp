@@ -22,7 +22,7 @@ void Label::updateTransform(const LabelTransform& _transform, const glm::mat4& _
 
     float alpha = m_transform.m_alpha;
 
-    glm::vec4 screenPosition = glm::vec4(m_transform.m_worldPosition, 0.0f, 1.0f);
+    glm::vec4 screenPosition = glm::vec4(m_transform.m_modelPosition, 0.0f, 1.0f);
 
     // mimic gpu vertex projection to screen
     screenPosition = _mvp * screenPosition;

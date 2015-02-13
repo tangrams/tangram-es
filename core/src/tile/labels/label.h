@@ -6,7 +6,7 @@
 #include <string>
 
 struct LabelTransform {
-    glm::vec2 m_worldPosition;
+    glm::vec2 m_modelPosition;
     float m_alpha;
     float m_rotation;
 };
