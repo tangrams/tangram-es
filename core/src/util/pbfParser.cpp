@@ -104,7 +104,7 @@ void PbfParser::extractFeature(protobuf::message& _in, Feature& _out, const MapT
                     float numVal = _numericValues[valueKey];
                     const auto& strVal = _stringValues[valueKey];
                     
-                    if(numVal != NAN) {
+                    if(!isnan(numVal)) {
                         
                         // height and minheight need to be handled separately so that their dimensions are normalized
                         if(key.compare("height") == 0 || key.compare("min_height") == 0) {

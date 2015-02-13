@@ -11,6 +11,7 @@
 #include "tileData.h"
 #include "platform.h"
 #include "gl.h"
+#include "view/view.h"
 
 #include "scene/material.h"
 
@@ -28,7 +29,10 @@ class Scene;
  */
 class Style {
 protected:
-    
+
+    /* The platform pixel scale */
+    float m_pixelScale = 1.0;
+
     /* Unique name for a style instance */
     std::string m_name;
     
@@ -65,6 +69,12 @@ protected:
      */
     virtual void buildPolygon(Polygon& _polygon, std::string& _layer, Properties& _props, VboMesh& _mesh) const = 0;
 
+    /* Can be used by the style to prepare the data processing */
+    virtual void prepareDataProcessing(MapTile& _tile) const;
+
+    /* Can be used by the style once the data has been processed */
+    virtual void finishDataProcessing(MapTile& _tile) const;
+    
 public:
 
     Style(std::string _name, GLenum _drawMode);
@@ -75,9 +85,14 @@ public:
     
     /* Add styled geometry from the given Json object to the given <MapTile> */
     virtual void addData(TileData& _data, MapTile& _tile, const MapProjection& _mapProjection) const;
+
+    /* Perform any unsetup needed after drawing each frame */
+    virtual void teardown() {}
+
+    void setPixelScale(float _pixelScale) { m_pixelScale = _pixelScale; }
     
     /* Perform any setup needed before drawing each frame */
-    virtual void setupFrame(const std::shared_ptr<Scene>& _scene);
+    virtual void setupFrame(const std::shared_ptr<View>& _view, const std::shared_ptr<Scene>& _scene);
 
     /* Perform any setup needed before drawing each tile */
     virtual void setupTile(const std::shared_ptr<MapTile>& _tile);
