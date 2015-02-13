@@ -5,13 +5,13 @@
 #include <sstream>
 #include <fstream>
 
-#include "protobufSrc.h"
+#include "protobufSource.h"
 
-MapboxProtoBuffSrc::MapboxProtoBuffSrc() {
+ProtobufSource::ProtobufSource() {
     m_urlTemplate = "http://vector.mapzen.com/osm/all/[z]/[x]/[y].mapbox";
 }
 
-std::shared_ptr<TileData> MapboxProtoBuffSrc::parse(const MapTile& _tile, std::stringstream& _in) {
+std::shared_ptr<TileData> ProtobufSource::parse(const MapTile& _tile, std::stringstream& _in) {
     
     std::shared_ptr<TileData> tileData = std::make_shared<TileData>();
     

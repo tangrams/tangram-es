@@ -2,14 +2,14 @@
 #include "platform.h"
 #include "tileID.h"
 
-#include "mapzenVectorTileJson.h"
+#include "geoJsonSource.h"
 
 
-MapzenVectorTileJson::MapzenVectorTileJson() {
+GeoJsonSource::GeoJsonSource() {
     m_urlTemplate = "http://vector.mapzen.com/osm/all/[z]/[x]/[y].json";
 }
 
-std::shared_ptr<TileData> MapzenVectorTileJson::parse(const MapTile& _tile, std::stringstream& _in) {
+std::shared_ptr<TileData> GeoJsonSource::parse(const MapTile& _tile, std::stringstream& _in) {
 
     std::shared_ptr<TileData> tileData = std::make_shared<TileData>();
 

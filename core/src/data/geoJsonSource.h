@@ -5,7 +5,8 @@
 #include "tileData.h"
 
 
-class MapboxProtoBuffSrc : public NetworkDataSource {
+/* Extends NetworkDataSource class to read Mapzen's GeoJSON vector tiles */
+class GeoJsonSource: public NetworkDataSource {
     
 protected:
     
@@ -13,6 +14,6 @@ protected:
     
 public:
     
-    MapboxProtoBuffSrc();
+    GeoJsonSource();
     
 };
