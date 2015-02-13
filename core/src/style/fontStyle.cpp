@@ -56,9 +56,9 @@ void FontStyle::buildLine(Line& _line, std::string& _layer, Properties& _props, 
         for (auto prop : _props.stringProps) {
             if (prop.first.compare("name") == 0 && _line.size() == 2) { // don't treat polylines
 
-                glm::dvec2 p1 = glm::dvec2(_line[0]);
-                glm::dvec2 p2 = glm::dvec2(_line[1]);
-                glm::dvec2 p1p2 = p1 - p2;
+                glm::vec2 p1 = glm::vec2(_line[0]);
+                glm::vec2 p2 = glm::vec2(_line[1]);
+                glm::vec2 p1p2 = p1 - p2;
 
                 if(glm::length(p1p2) < 0.5) { // some random label discard for now
                     return;
@@ -67,15 +67,15 @@ void FontStyle::buildLine(Line& _line, std::string& _layer, Properties& _props, 
                 p1p2 = glm::normalize(p1p2);
                 float rot = (float) atan2(p1p2.x, p1p2.y) + M_PI_2;
 
-                double offset = 1;
+                float offset = 1.0f;
                 if (rot > M_PI_2 || rot < -M_PI_2) {
                     rot += M_PI;
                     offset = -1;
                 }
 
-                glm::dvec2 position = (p1 + p2) / 2.0 + p1p2 * 0.2 * offset;
+                glm::vec2 position = (p1 + p2) / 2.0f + p1p2 * 0.2f * offset;
 
-                auto label = labelContainer->addLabel(FontStyle::processedTile->getID(), m_name, { position, 1.0, rot }, prop.second);
+                auto label = labelContainer->addLabel(FontStyle::processedTile->getID(), m_name, { position, 1.0f, rot }, prop.second);
 
                 label->rasterize();
             }

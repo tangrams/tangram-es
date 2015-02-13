@@ -6,7 +6,7 @@
 #include <string>
 
 struct LabelTransform {
-    glm::dvec2 m_worldPosition;
+    glm::vec2 m_worldPosition;
     float m_alpha;
     float m_rotation;
 };
@@ -24,7 +24,7 @@ public:
     LabelTransform getTransform() const { return m_transform; }
 
     /* Update the transform of the label in world space, and project it to screen space */
-    void updateTransform(const LabelTransform& _transform, const glm::dmat4& _mvp, const glm::dvec2& _screenSize);
+    void updateTransform(const LabelTransform& _transform, const glm::mat4& _mvp, const glm::vec2& _screenSize);
 
 private:
 

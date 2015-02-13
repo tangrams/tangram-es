@@ -62,12 +62,12 @@ void MapTile::update(float _dt, const Style& _style, const View& _view) {
     if(m_buffers[_style.getName()]) {
         auto labelContainer = LabelContainer::GetInstance();
         auto ftContext = labelContainer->getFontContext();
-        glm::dmat4 mvp = _view.getViewProjectionMatrix() * m_modelMatrix;
+        glm::mat4 mvp = _view.getViewProjectionMatrix() * m_modelMatrix;
 
         ftContext->lock();
 
         for(auto label : labelContainer->getLabels(_style.getName(), getID())) {
-            label->updateTransform(label->getTransform(), mvp, glm::dvec2(_view.getWidth(), _view.getHeight()));
+            label->updateTransform(label->getTransform(), mvp, glm::vec2(_view.getWidth(), _view.getHeight()));
         }
 
         m_buffers[_style.getName()]->triggerTransformUpdate();

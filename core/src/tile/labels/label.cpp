@@ -14,15 +14,15 @@ void Label::rasterize() {
     m_buffer->rasterize(m_text, m_id);
 }
 
-void Label::updateTransform(const LabelTransform& _transform, const glm::dmat4& _mvp, const glm::dvec2& _screenSize) {
+void Label::updateTransform(const LabelTransform& _transform, const glm::mat4& _mvp, const glm::vec2& _screenSize) {
     m_transform = _transform;
 
-    float halfWidth = _screenSize.x * 0.5;
-    float halfHeight = _screenSize.y * 0.5;
+    float halfWidth = _screenSize.x * 0.5f;
+    float halfHeight = _screenSize.y * 0.5f;
 
     float alpha = m_transform.m_alpha;
 
-    glm::dvec4 screenPosition = glm::dvec4(m_transform.m_worldPosition, 0.0, 1.0);
+    glm::vec4 screenPosition = glm::vec4(m_transform.m_worldPosition, 0.0f, 1.0f);
 
     // mimic gpu vertex projection to screen
     screenPosition = _mvp * screenPosition;
