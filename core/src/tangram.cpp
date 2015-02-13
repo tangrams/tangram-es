@@ -121,6 +121,10 @@ void resize(int _newWidth, int _newHeight) {
     if (m_view) {
         m_view->setSize(_newWidth, _newHeight);
     }
+    
+    if (m_ftContext) {
+        m_ftContext->setScreenSize(m_view->getWidth(), m_view->getHeight());
+    }
 
     while (Error::hadGlError("Tangram::resize()")) {}
 
@@ -134,18 +138,12 @@ void update(float _dt) {
         m_view->update();
 
         if (m_view->changedOnLastUpdate()) {
-            if (m_ftContext) {
-                m_ftContext->setScreenSize(m_view->getWidth(), m_view->getHeight());
-            }
 
             for (const auto& style : m_scene->getStyles()) {
 
                 for (const auto& mapIDandTile : m_tileManager->getVisibleTiles()) {
                     const std::shared_ptr<MapTile>& tile = mapIDandTile.second;
-
-                    if (tile) {
-                        tile->update(_dt, *style, *m_view);
-                    }
+                    tile->update(_dt, *style, *m_view);
                 }
             }
         }
