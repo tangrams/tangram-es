@@ -26,6 +26,7 @@ MapTile::MapTile(TileID _id, const MapProjection& _projection) : m_id(_id),  m_p
 MapTile::~MapTile() {
 
     m_geometry.clear();
+    m_buffers.clear();
 
 }
 
@@ -35,20 +36,53 @@ void MapTile::addGeometry(const Style& _style, std::unique_ptr<VboMesh> _mesh) {
 
 }
 
+void MapTile::setTextBuffer(const Style& _style, std::shared_ptr<TextBuffer> _buffer) {
+
+    m_buffers[_style.getName()] = _buffer;
+}
+
+std::shared_ptr<TextBuffer> MapTile::getTextBuffer(const Style& _style) const {
+    auto it = m_buffers.find(_style.getName());
+
+    if (it != m_buffers.end()) {
+        return it->second;
+    }
+
+    return nullptr;
+}
+
+void MapTile::update(float _dt, const Style& _style, const View& _view) {
+
+    // Apply tile-view translation to the model matrix
+    const auto& viewOrigin = _view.getPosition();
+    m_modelMatrix[3][0] = m_tileOrigin.x - viewOrigin.x;
+    m_modelMatrix[3][1] = m_tileOrigin.y - viewOrigin.y;
+    m_modelMatrix[3][2] = -viewOrigin.z;
+
+    if(m_buffers[_style.getName()]) {
+        auto labelContainer = LabelContainer::GetInstance();
+        auto ftContext = labelContainer->getFontContext();
+        glm::mat4 mvp = _view.getViewProjectionMatrix() * m_modelMatrix;
+
+        ftContext->lock();
+
+        for(auto label : labelContainer->getLabels(_style.getName(), getID())) {
+            label->updateTransform(label->getTransform(), mvp, glm::vec2(_view.getWidth(), _view.getHeight()));
+        }
+
+        m_buffers[_style.getName()]->triggerTransformUpdate();
+        
+        ftContext->unlock();
+    }
+}
+
 void MapTile::draw(const Style& _style, const View& _view) {
-    
 
     const std::unique_ptr<VboMesh>& styleMesh = m_geometry[_style.getName()];
     
     if (styleMesh) {
         
         std::shared_ptr<ShaderProgram> shader = _style.getShaderProgram();
-
-        // Apply tile-view translation to the model matrix
-        const auto& viewOrigin = _view.getPosition();
-        m_modelMatrix[3][0] = m_tileOrigin.x - viewOrigin.x;
-        m_modelMatrix[3][1] = m_tileOrigin.y - viewOrigin.y;
-        m_modelMatrix[3][2] = -viewOrigin.z;
 
         glm::mat4 modelViewMatrix = _view.getViewMatrix() * m_modelMatrix;
         glm::mat4 modelViewProjMatrix = _view.getViewProjectionMatrix() * m_modelMatrix;

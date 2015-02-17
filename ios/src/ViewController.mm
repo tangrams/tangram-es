@@ -130,7 +130,12 @@
     
     int width = self.view.bounds.size.width;
     int height = self.view.bounds.size.height;
-    Tangram::resize(width, height);
+
+    CGFloat scale = [[UIScreen mainScreen] scale];
+
+    Tangram::resize(width * scale, height * scale);
+
+    Tangram::setPixelScale(scale);
 }
 
 - (void)tearDownGL
@@ -141,7 +146,9 @@
 
 - (void)viewWillTransitionToSize:(CGSize)size withTransitionCoordinator:(id<UIViewControllerTransitionCoordinator>)coordinator
 {
-    Tangram::resize(size.width, size.height);
+    CGFloat scale = [[UIScreen mainScreen] scale];
+
+    Tangram::resize(size.width * scale, size.height * scale);
 }
 
 #pragma mark - GLKView and GLKViewController delegate methods
