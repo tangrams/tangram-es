@@ -1,12 +1,12 @@
 #pragma once
 
 //Define global constants
-#define PI 3.14159265358979323846264
 #define R_EARTH 6378137.0
 
 #include "glm/vec2.hpp"
 #include "glm/vec4.hpp"
 #include "tileID.h"
+#include "geom.h"
 
 enum class ProjectionType {
     mercator

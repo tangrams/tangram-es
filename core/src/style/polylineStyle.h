@@ -32,7 +32,7 @@ public:
     
     PolylineStyle(GLenum _drawMode = GL_TRIANGLES);
     PolylineStyle(std::string _name, GLenum _drawMode = GL_TRIANGLES);
-    
+
     virtual ~PolylineStyle() {
     }
 };

@@ -6,8 +6,13 @@
 #include "glm/vec2.hpp"
 #include "glm/mat4x4.hpp"
 
+#include "label.h"
+#include "text/textBuffer.h"
+#include "view/view.h"
+#include "labels/labelContainer.h"
 #include "util/vboMesh.h"
 #include "util/mapProjection.h"
+#include "util/texture.h"
 
 class Style;
 class View;
@@ -40,7 +45,7 @@ public:
     
     /* Returns the reciprocal of <getScale()> */
     float getInverseScale() const { return m_inverseScale; }
-    
+
     /* Adds drawable geometry to the tile and associates it with a <Style>
      * 
      * Use std::move to pass in the mesh by move semantics; Geometry in the mesh must have coordinates relative to
@@ -53,6 +58,11 @@ public:
      */
     bool hasGeometry();
 
+    void update(float _dt, const Style& _style, const View& _view);
+
+    void setTextBuffer(const Style& _style, std::shared_ptr<TextBuffer> _buffer);
+    std::shared_ptr<TextBuffer> getTextBuffer(const Style& _style) const;
+
     /* Draws the geometry associated with the provided <Style> and view-projection matrix */
     void draw(const Style& _style, const View& _view);
     
@@ -63,7 +73,7 @@ public:
     void incProxyCounter() { m_proxyCounter++; }
     void decProxyCounter() { m_proxyCounter = m_proxyCounter > 0 ? m_proxyCounter - 1 : 0; }
     void resetProxyCounter() { m_proxyCounter = 0; }
-    
+
 private:
 
     TileID m_id;
@@ -87,5 +97,6 @@ private:
     // relative translation from the view origin to the model origin immediately before drawing the tile. 
 
     std::unordered_map<std::string, std::unique_ptr<VboMesh>> m_geometry; // Map of <Style>s and their associated <VboMesh>es
-};
+    std::map<std::string, std::shared_ptr<TextBuffer>> m_buffers; // Map of <Style>s and the associated text buffer
 
+};

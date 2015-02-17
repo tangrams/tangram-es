@@ -31,6 +31,7 @@ endforeach()
 file(GLOB_RECURSE RESOURCES ${PROJECT_SOURCE_DIR}/osx/resources/**)
 file(GLOB_RECURSE CORE_RESOURCES ${PROJECT_SOURCE_DIR}/core/resources/**)
 list(APPEND RESOURCES ${CORE_RESOURCES})
+string(REGEX REPLACE "[.]DS_Store" "" RESOURCES "${RESOURCES}")
 
 # link and build functions
 function(link_libraries)

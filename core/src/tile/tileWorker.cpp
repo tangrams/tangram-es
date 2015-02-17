@@ -26,7 +26,7 @@ void TileWorker::load(const TileID &_tile,
     m_finished = false;
     m_aborted = false;
     
-    std::future<std::shared_ptr<MapTile>> future = std::async(std::launch::async, [&](const TileID& _id) {
+    m_future = std::async(std::launch::async, [&](const TileID& _id) {
         
         auto tile = std::shared_ptr<MapTile>(new MapTile(_id, _view.getMapProjection()));
         
@@ -53,6 +53,7 @@ void TileWorker::load(const TileID &_tile,
                 if (tileData) {
                     style->addData(*tileData, *tile, _view.getMapProjection());
                 }
+                tile->update(0, *style, _view);
             }
         }
         
@@ -62,8 +63,6 @@ void TileWorker::load(const TileID &_tile,
         return std::move(tile);
                                         
     }, *m_tileID);
-    
-    m_future = std::move(future);
     
 }
 

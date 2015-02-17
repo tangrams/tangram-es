@@ -8,19 +8,24 @@
 #include "platform.h"
 #include "tile/tileManager.h"
 #include "view/view.h"
-#include "data/dataSource.h"
+#include "data/geoJsonSource.h"
+#include "data/protobufSource.h"
 
 #include "style/polygonStyle.h"
 #include "style/polylineStyle.h"
+#include "style/fontStyle.h"
 #include "scene/scene.h"
 #include "scene/lights.h"
 #include "util/error.h"
+#include "stl_util.hpp"
 
 namespace Tangram {
 
 std::unique_ptr<TileManager> m_tileManager;
 std::shared_ptr<Scene> m_scene;
 std::shared_ptr<View> m_view;
+std::shared_ptr<LabelContainer> m_labelContainer;
+std::shared_ptr<FontContext> m_ftContext;
 
 static float g_time = 0.0;
 
@@ -55,13 +60,21 @@ void initialize() {
         linesStyle->addLayers({"roads"});
         m_scene->addStyle(std::move(linesStyle));
 
+        m_ftContext = std::make_shared<FontContext>();
+        m_ftContext->addFont("Roboto-Regular.ttf", "Roboto-Regular");
+        m_labelContainer = LabelContainer::GetInstance();
+        m_labelContainer->setFontContext(m_ftContext);
+
+        std::unique_ptr<Style> fontStyle(new FontStyle("Roboto-Regular", "FontStyle", 14.0f, true));
+        fontStyle->addLayers({"roads"});
+        m_scene->addStyle(std::move(fontStyle));
+
         //  Directional light with white diffuse color pointing Northeast and down
         auto directionalLight = std::make_shared<DirectionalLight>("dLight");
         directionalLight->setAmbientColor({0.3, 0.3, 0.3, 1.0});
         directionalLight->setDiffuseColor({0.7, 0.7, 0.7, 1.0});
         directionalLight->setDirection({1.0, 1.0, -1.0});
         m_scene->addLight(directionalLight);
-        
     }
 
     // Create a tileManager
@@ -73,7 +86,10 @@ void initialize() {
         m_tileManager->setScene(m_scene);
         
         // Add a tile data source
-        std::unique_ptr<DataSource> dataSource(new MapzenVectorTileJson());
+        // json tile source
+        // std::unique_ptr<DataSource> dataSource(new GeoJsonTile());
+        // protobuf tile source
+        std::unique_ptr<DataSource> dataSource(new ProtobufSource());
         m_tileManager->addDataSource(std::move(dataSource));
     }
 
@@ -105,6 +121,10 @@ void resize(int _newWidth, int _newHeight) {
     if (m_view) {
         m_view->setSize(_newWidth, _newHeight);
     }
+    
+    if (m_ftContext) {
+        m_ftContext->setScreenSize(m_view->getWidth(), m_view->getHeight());
+    }
 
     while (Error::hadGlError("Tangram::resize()")) {}
 
@@ -116,6 +136,17 @@ void update(float _dt) {
 
     if (m_view) {
         m_view->update();
+
+        if (m_view->changedOnLastUpdate()) {
+
+            for (const auto& style : m_scene->getStyles()) {
+
+                for (const auto& mapIDandTile : m_tileManager->getVisibleTiles()) {
+                    const std::shared_ptr<MapTile>& tile = mapIDandTile.second;
+                    tile->update(_dt, *style, *m_view);
+                }
+            }
+        }
     }
     
     if (m_tileManager) {
@@ -134,8 +165,7 @@ void render() {
 
     // Loop over all styles
     for (const auto& style : m_scene->getStyles()) {
-
-        style->setupFrame(m_scene);
+        style->setupFrame(m_view, m_scene);
 
         // Loop over all tiles in m_tileSet
         for (const auto& mapIDandTile : m_tileManager->getVisibleTiles()) {
@@ -146,6 +176,8 @@ void render() {
                 tile->draw(*style, *m_view);
             }
         }
+
+        style->teardown();
     }
 
     while (Error::hadGlError("Tangram::render()")) {}
@@ -156,6 +188,10 @@ void setPixelScale(float _pixelsPerPoint) {
     
     if (m_view) {
         m_view->setPixelScale(_pixelsPerPoint);
+    }
+
+    for (auto& style : m_scene->getStyles()) {
+        style->setPixelScale(_pixelsPerPoint);
     }
     
 }
