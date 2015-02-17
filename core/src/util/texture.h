@@ -5,6 +5,7 @@
 #include "geom.h"
 #include <vector>
 #include <queue>
+#include <memory>
 
 struct TextureFiltering {
     GLenum m_min;
