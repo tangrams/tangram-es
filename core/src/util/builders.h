@@ -8,15 +8,15 @@
 namespace Builders {
     
     enum class CapTypes {
-        BUTT,
-        SQUARE,
-        ROUND
+        BUTT = 0, // No points added to end of line
+        SQUARE = 2, // Two points added to make a square extension
+        ROUND = 4 // Four points added in a fan to make a round cap
     };
     
     enum class JoinTypes {
-        MITER,
-        BEVEL,
-        ROUND
+        MITER = 0, // No points added at line join
+        BEVEL = 1, // One point added to flatten the corner of a join
+        ROUND = 5 // Five points added in a fan to make a round outer join
     };
     
     struct PolyLineStyle {

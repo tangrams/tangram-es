@@ -413,8 +413,8 @@ void buildGeneralPolyLine(const Line& _line,
     glm::vec3 coordPrev, coordCurr, coordNext;
     glm::vec2 normPrev, normCurr, normNext;
 
-    int cornersOnCap = (_style.cap == CapTypes::SQUARE)? 2 : ((_style.cap == CapTypes::ROUND)? 4 : 0);  // Butt is the implicit default
-    int trianglesOnJoin = (_style.join == JoinTypes::BEVEL)? 1 : ((_style.join == JoinTypes::ROUND)? 5 : 0);  // Miter is the implicit default
+    int cornersOnCap = (int)_style.cap;
+    int trianglesOnJoin = (int)_style.join;
 
     int vertexDataOffset = (int)_pointsOut.size();
     int nPairs = 0;
