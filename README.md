@@ -122,3 +122,10 @@ make rpi
 cd build/rpi/bin
 ./tangram
 ```
+
+Tangram will be rendered directly to the screen without a window manager, in the case you want see the mouse cursor run the application with the ```-m``` argument like this:
+
+```
+cd build/rpi/bin
+./tangram -m
+```
