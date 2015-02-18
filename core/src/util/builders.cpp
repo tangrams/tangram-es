@@ -171,8 +171,8 @@ void Builders::buildPolygonExtrusion(const Polygon& _polygon, const float& _minH
     }
 }
 
-// Get 2D perpendicular of to points
-glm::vec2 perp(const glm::vec3& _v1, const glm::vec3& _v2 ){
+// Get 2D perpendicular of two points
+glm::vec2 perp2d(const glm::vec3& _v1, const glm::vec3& _v2 ){
     return glm::vec2(_v2.y - _v1.y, _v1.x - _v2.x);
 }
 
@@ -184,17 +184,20 @@ glm::vec2 rotate (const glm::vec2& _v,float _angle) {
                       vr * std::sin(va+_angle) );
 }
 
-// Add a single vertex acording the information it have and need
-void addVertex(const glm::vec3& _coord, const glm::vec2& _normal, const glm::vec2& _uv, float _halfWidth,
-                std::vector<glm::vec3>& _pointsOut, std::vector<glm::vec2>& _scalingVecsOut, std::vector<glm::vec2>& _texCoordOut){
+// Add a single vertex according the information it have and need
+void addVertex(const glm::vec3& _coord,
+               const glm::vec2& _normal,
+               const glm::vec2& _uv,
+               float _halfWidth,
+               std::vector<glm::vec3>& _pointsOut,
+               std::vector<glm::vec2>& _scalingVecsOut,
+               std::vector<glm::vec2>& _texCoordOut) {
 
-    if(&_scalingVecsOut != &NO_SCALING_VECS){
+    if (&_scalingVecsOut != &NO_SCALING_VECS) {
         _pointsOut.push_back(_coord);
         _scalingVecsOut.push_back(_normal);
     } else {
-        _pointsOut.push_back(glm::vec3( _coord.x + _normal.x * _halfWidth, 
-                                        _coord.y + _normal.y * _halfWidth, 
-                                        _coord.z ));
+        _pointsOut.push_back(glm::vec3( _coord.x + _normal.x * _halfWidth, _coord.y + _normal.y * _halfWidth, _coord.z));
     }
 
     if(&_texCoordOut != &NO_TEXCOORDS){
@@ -203,8 +206,13 @@ void addVertex(const glm::vec3& _coord, const glm::vec2& _normal, const glm::vec
 }
 
 //  Add to equidistant pairs of vertices to then be indexed in LINE_STRIP indexes
-void addVertexPair (const glm::vec3& _coord, const glm::vec2& _normal, float _pct, float _halfWidth,
-                    std::vector<glm::vec3>& _pointsOut, std::vector<glm::vec2>& _scalingVecsOut, std::vector<glm::vec2>& _texCoordOut){
+void addVertexPair (const glm::vec3& _coord,
+                    const glm::vec2& _normal,
+                    float _pct,
+                    float _halfWidth,
+                    std::vector<glm::vec3>& _pointsOut,
+                    std::vector<glm::vec2>& _scalingVecsOut,
+                    std::vector<glm::vec2>& _texCoordOut){
 
     addVertex(_coord, _normal, glm::vec2(1.0,_pct*1.0), _halfWidth, _pointsOut, _scalingVecsOut, _texCoordOut);
     addVertex(_coord, -_normal, glm::vec2(0.0,_pct*1.0), _halfWidth, _pointsOut, _scalingVecsOut, _texCoordOut);
@@ -231,8 +239,11 @@ void indexPairs ( int _nPairs, int _vertexDataOffset, std::vector<int>& _indices
 void addFan (const glm::vec3& _coord, 
              const glm::vec2& _nA, const glm::vec2& _nC, const glm::vec2& _nB, 
              const glm::vec2& _uA, const glm::vec2& _uC, const glm::vec2& _uB, 
-             bool _isSigned, int _numTriangles, 
-             float _halfWidth, std::vector<glm::vec3>& _pointsOut, std::vector<glm::vec2>& _scalingVecsOut, std::vector<int>& _indicesOut, std::vector<glm::vec2>& _texCoordOut) {
+             bool _isSigned, int _numTriangles, float _halfWidth,
+             std::vector<glm::vec3>& _pointsOut,
+             std::vector<glm::vec2>& _scalingVecsOut,
+             std::vector<int>& _indicesOut,
+             std::vector<glm::vec2>& _texCoordOut) {
 
     int vertexDataOffset = _pointsOut.size();
 
@@ -295,9 +306,13 @@ void addFan (const glm::vec3& _coord,
 
 //  Function to add the vertex need for line caps,
 //  because re-use the buffers needs to be at the end
-void addCap (const glm::vec3& _coord, const glm::vec2& _normal, 
-             int _numCorners, bool _isBeginning,
-             float _halfWidth, std::vector<glm::vec3>& _pointsOut, std::vector<glm::vec2>& _scalingVecsOut, std::vector<int>& _indicesOut, std::vector<glm::vec2>& _texCoordOut ) {
+void addCap (const glm::vec3& _coord,
+             const glm::vec2& _normal,
+             int _numCorners, bool _isBeginning, float _halfWidth,
+             std::vector<glm::vec3>& _pointsOut,
+             std::vector<glm::vec2>& _scalingVecsOut,
+             std::vector<int>& _indicesOut,
+             std::vector<glm::vec2>& _texCoordOut ) {
 
     if (_numCorners < 1) {
         return;
@@ -362,9 +377,16 @@ bool isOnTileEdge (const glm::vec3& _pa, const glm::vec3& _pb) {
     return false;
 }
 
-void buildGeneralPolyLine(const Line& _line, float _halfWidth, 
-                          std::vector<glm::vec3>& _pointsOut, std::vector<glm::vec2>& _scalingVecsOut, std::vector<int>& _indicesOut, std::vector<glm::vec2>& _texCoordOut, 
-                          const std::string& _cap, const std::string& _join, bool _closed_polygon, bool _remove_tile_edges) {
+void buildGeneralPolyLine(const Line& _line,
+                          float _halfWidth,
+                          std::vector<glm::vec3>& _pointsOut,
+                          std::vector<glm::vec2>& _scalingVecsOut,
+                          std::vector<int>& _indicesOut,
+                          std::vector<glm::vec2>& _texCoordOut,
+                          const std::string& _cap,
+                          const std::string& _join,
+                          bool _closed_polygon,
+                          bool _remove_tile_edges) {
 
     // TODO:
     //      This flags have to be pass from the style:
@@ -398,55 +420,55 @@ void buildGeneralPolyLine(const Line& _line, float _halfWidth,
     int vertexDataOffset = (int)_pointsOut.size();
     int nPairs = 0;
     
-    bool isPrev = false;
-    bool isNext = false;;
+    bool hasPrev = false;
+    bool hasNext = false;
     
     for (int i = 0; i < lineSize; i++) {
 
-        //  There is an next one?
-        isNext = i+1 < lineSize;
+        // There is a next one?
+        hasNext = i+1 < lineSize;
 
-        if (isPrev) {
-            // If there is a previus one, copy the current (previous) values on *Prev values
+        if (hasPrev) {
+            // If there is a previous one, copy the current (previous) values on *Prev values
             coordPrev = coordCurr;
-            normPrev = glm::normalize( perp(coordPrev, _line[i]) );
-        } else if (i == 0 && _closed_polygon){
+            normPrev = glm::normalize(perp2d(coordPrev, _line[i]) );
+        } else if (i == 0 && _closed_polygon) {
             // If is the first point and is a close polygon
             // TODO   
             bool needToClose = true;
             if (_remove_tile_edges) {
-                if( isOnTileEdge(_line[i], _line[lineSize-2])) {
+                if(isOnTileEdge(_line[i], _line[lineSize-2])) {
                     needToClose = false;
                 }
             }
 
             if (needToClose) {
                 coordPrev = _line[lineSize-2];
-                normPrev = glm::normalize(perp(coordPrev, _line[i]));
-                isPrev = true;
+                normPrev = glm::normalize(perp2d(coordPrev, _line[i]));
+                hasPrev = true;
             }
         }
 
         // Assign current coordinate
         coordCurr = _line[i];
 
-        if (isNext) {
+        if (hasNext) {
             coordNext = _line[i+1];
         } else if (_closed_polygon) {
             // If is the last point a close polygon
             coordNext = _line[1];
-            isNext = true;
+            hasNext = true;
         }
 
-        if (isNext) {
+        if (hasNext) {
             // If is not the last one get next coordinates and calculate the right normal
 
-            normNext = glm::normalize(perp(coordCurr, coordNext));
+            normNext = glm::normalize(perp2d(coordCurr, coordNext));
             if (_remove_tile_edges) {
                 if (isOnTileEdge(coordCurr, coordNext) ) {
-                    normCurr = glm::normalize(perp(coordPrev, coordCurr));
+                    normCurr = glm::normalize(perp2d(coordPrev, coordCurr));
                     
-                    if (isPrev) {
+                    if (hasPrev) {
                         addVertexPair(coordCurr, normCurr, (float)i/(float)lineSize, _halfWidth, _pointsOut, _scalingVecsOut, _texCoordOut);
 
                         // Add vertices to buffer acording their index
@@ -455,29 +477,29 @@ void buildGeneralPolyLine(const Line& _line, float _halfWidth,
                         vertexDataOffset = (int)_pointsOut.size();
                         nPairs = 0;
                     }
-                    isPrev = false;
+                    hasPrev = false;
                     continue;
                 }
             }
         }
 
         //  Compute current normal
-        if (isPrev) {
+        if (hasPrev) {
             //  If there is a PREVIUS ...
-            if (isNext) {
+            if (hasNext) {
                 // ... and a NEXT ONE, compute previus and next normals (scaled by the angle with the last prev)
                 normCurr = glm::normalize(normPrev + normNext);
                 float scale = 2.0f / (1.0f + std::fabs(glm::dot(normPrev, normCurr)));
                 normCurr *= scale*scale;
             } else {
                 // ... and there is NOT a NEXT ONE, copy the previus next one (which is the current one)
-                normCurr = glm::normalize(perp(coordPrev, coordCurr));
+                normCurr = glm::normalize(perp2d(coordPrev, coordCurr));
             }
         } else {
             // If is NOT a PREVIUS ...
-            if (isNext) {
+            if (hasNext) {
                 // ... and a NEXT ONE,
-                normNext = glm::normalize(perp(coordCurr, coordNext));
+                normNext = glm::normalize(perp2d(coordCurr, coordNext));
                 normCurr = normNext;
             } else {
                 // ... and NOT a NEXT ONE, nothing to do (without prev or next one this is just a point)
@@ -485,10 +507,10 @@ void buildGeneralPolyLine(const Line& _line, float _halfWidth,
             }
         }
 
-        if (isPrev || isNext) {
+        if (hasPrev || hasNext) {
             
             // If is the BEGINING of a LINE
-            if (i == 0 && !isPrev && !_closed_polygon) {
+            if (i == 0 && !hasPrev && !_closed_polygon) {
                 // Add previus vertices to buffer and reset the index pairs counter
                 // Because we are going to add more triangles.
                 indexPairs(nPairs, vertexDataOffset, _indicesOut);
@@ -558,7 +580,7 @@ void buildGeneralPolyLine(const Line& _line, float _halfWidth,
                nPairs++;
             }
 
-            isPrev = true;
+            hasPrev = true;
         }
     }
     
