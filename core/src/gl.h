@@ -19,6 +19,11 @@
 #define glDepthRangef glDepthRange
 #endif
 
+#ifdef PLATFORM_LINUX
+#define GL_GLEXT_PROTOTYPES
+#include <GLFW/glfw3.h>
+#endif
+
 #ifdef PLATFORM_RPI
 //  Broadcom hardware library for hijacking the GPU card without window manager
 //
