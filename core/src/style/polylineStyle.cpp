@@ -55,7 +55,9 @@ void PolylineStyle::buildLine(Line& _line, std::string& _layer, Properties& _pro
         halfWidth = 0.005;
     }
     
-    Builders::buildScalablePolyLine(_line, points, scalingVecs, indices, texcoords, Builders::CapTypes::ROUND, Builders::JoinTypes::ROUND);
+    Builders::PolyLineStyle lineStyle = { Builders::CapTypes::ROUND, Builders::JoinTypes::ROUND, halfWidth, false, false };
+    
+    Builders::buildScalablePolyLine(_line, points, scalingVecs, indices, texcoords, lineStyle);
     
     for (size_t i = 0; i < points.size(); i++) {
         glm::vec3 p = points[i];

@@ -11,6 +11,7 @@ static auto& NO_SCALING_VECS = *(new std::vector<glm::vec2>); // denotes that sc
 
 using Builders::CapTypes;
 using Builders::JoinTypes;
+using Builders::PolyLineStyle;
 
 void* alloc(void* _userData, unsigned int _size) {
     return malloc(_size);
@@ -380,15 +381,11 @@ bool isOnTileEdge (const glm::vec3& _pa, const glm::vec3& _pb) {
 }
 
 void buildGeneralPolyLine(const Line& _line,
-                          float _halfWidth,
                           std::vector<glm::vec3>& _pointsOut,
                           std::vector<glm::vec2>& _scalingVecsOut,
                           std::vector<int>& _indicesOut,
                           std::vector<glm::vec2>& _texCoordOut,
-                          CapTypes _cap,
-                          JoinTypes _join,
-                          bool _closed_polygon,
-                          bool _remove_tile_edges) {
+                          const PolyLineStyle& _style) {
 
     // TODO:
     //      This flags have to be pass from the style:
@@ -416,8 +413,8 @@ void buildGeneralPolyLine(const Line& _line,
     glm::vec3 coordPrev, coordCurr, coordNext;
     glm::vec2 normPrev, normCurr, normNext;
 
-    int cornersOnCap = (_cap == CapTypes::SQUARE)? 2 : ((_cap == CapTypes::ROUND)? 4 : 0);  // Butt is the implicit default
-    int trianglesOnJoin = (_join == JoinTypes::BEVEL)? 1 : ((_join == JoinTypes::ROUND)? 5 : 0);  // Miter is the implicit default
+    int cornersOnCap = (_style.cap == CapTypes::SQUARE)? 2 : ((_style.cap == CapTypes::ROUND)? 4 : 0);  // Butt is the implicit default
+    int trianglesOnJoin = (_style.join == JoinTypes::BEVEL)? 1 : ((_style.join == JoinTypes::ROUND)? 5 : 0);  // Miter is the implicit default
 
     int vertexDataOffset = (int)_pointsOut.size();
     int nPairs = 0;
@@ -434,11 +431,11 @@ void buildGeneralPolyLine(const Line& _line,
             // If there is a previous one, copy the current (previous) values on *Prev values
             coordPrev = coordCurr;
             normPrev = glm::normalize(perp2d(coordPrev, _line[i]) );
-        } else if (i == 0 && _closed_polygon) {
+        } else if (i == 0 && _style.closePolygon) {
             // If is the first point and is a close polygon
             // TODO   
             bool needToClose = true;
-            if (_remove_tile_edges) {
+            if (_style.removeTileEdges) {
                 if(isOnTileEdge(_line[i], _line[lineSize-2])) {
                     needToClose = false;
                 }
@@ -456,7 +453,7 @@ void buildGeneralPolyLine(const Line& _line,
 
         if (hasNext) {
             coordNext = _line[i+1];
-        } else if (_closed_polygon) {
+        } else if (_style.closePolygon) {
             // If is the last point a close polygon
             coordNext = _line[1];
             hasNext = true;
@@ -466,12 +463,12 @@ void buildGeneralPolyLine(const Line& _line,
             // If is not the last one get next coordinates and calculate the right normal
 
             normNext = glm::normalize(perp2d(coordCurr, coordNext));
-            if (_remove_tile_edges) {
+            if (_style.removeTileEdges) {
                 if (isOnTileEdge(coordCurr, coordNext) ) {
                     normCurr = glm::normalize(perp2d(coordPrev, coordCurr));
                     
                     if (hasPrev) {
-                        addVertexPair(coordCurr, normCurr, (float)i/(float)lineSize, _halfWidth, _pointsOut, _scalingVecsOut, _texCoordOut);
+                        addVertexPair(coordCurr, normCurr, (float)i/(float)lineSize, _style.halfWidth, _pointsOut, _scalingVecsOut, _texCoordOut);
 
                         // Add vertices to buffer acording their index
                         indexPairs(nPairs, vertexDataOffset, _indicesOut);
@@ -512,14 +509,14 @@ void buildGeneralPolyLine(const Line& _line,
         if (hasPrev || hasNext) {
             
             // If is the BEGINING of a LINE
-            if (i == 0 && !hasPrev && !_closed_polygon) {
+            if (i == 0 && !hasPrev && !_style.closePolygon) {
                 // Add previus vertices to buffer and reset the index pairs counter
                 // Because we are going to add more triangles.
                 indexPairs(nPairs, vertexDataOffset, _indicesOut);
                 
                 addCap( coordCurr, normCurr,
                         cornersOnCap, true, 
-                        _halfWidth, _pointsOut, _scalingVecsOut, _indicesOut, _texCoordOut);
+                        _style.halfWidth, _pointsOut, _scalingVecsOut, _indicesOut, _texCoordOut);
 
                 vertexDataOffset = (int)_pointsOut.size();
                 nPairs = 0;
@@ -543,8 +540,8 @@ void buildGeneralPolyLine(const Line& _line,
                 glm::vec2 uB = glm::vec2(1.0,pct);
                 
                 if (isSigned) {
-                    addVertex(coordCurr, nA, uA, _halfWidth, _pointsOut, _scalingVecsOut, _texCoordOut);
-                    addVertex(coordCurr, nC, uC, _halfWidth, _pointsOut, _scalingVecsOut, _texCoordOut);
+                    addVertex(coordCurr, nA, uA, _style.halfWidth, _pointsOut, _scalingVecsOut, _texCoordOut);
+                    addVertex(coordCurr, nC, uC, _style.halfWidth, _pointsOut, _scalingVecsOut, _texCoordOut);
                 } else {
                     nA = -normPrev;
                     nC = normCurr;
@@ -552,30 +549,30 @@ void buildGeneralPolyLine(const Line& _line,
                     uA = glm::vec2(0.0,pct);
                     uC = glm::vec2(1.0,pct);
                     uB = glm::vec2(0.0,pct);
-                    addVertex(coordCurr, nC, uC, _halfWidth, _pointsOut, _scalingVecsOut, _texCoordOut);
-                    addVertex(coordCurr, nA, uA, _halfWidth, _pointsOut, _scalingVecsOut, _texCoordOut);
+                    addVertex(coordCurr, nC, uC, _style.halfWidth, _pointsOut, _scalingVecsOut, _texCoordOut);
+                    addVertex(coordCurr, nA, uA, _style.halfWidth, _pointsOut, _scalingVecsOut, _texCoordOut);
                 }
             
                 indexPairs(nPairs, vertexDataOffset, _indicesOut);
 
                 addFan( coordCurr, nA, nC, nB, uA, uC, uB, isSigned, trianglesOnJoin, 
-                        _halfWidth, _pointsOut, _scalingVecsOut, _indicesOut, _texCoordOut);
+                       _style.halfWidth, _pointsOut, _scalingVecsOut, _indicesOut, _texCoordOut);
 
                 vertexDataOffset = (int)_pointsOut.size();
                 nPairs = 0;
 
                 if (isSigned) {
-                    addVertex(coordCurr, nB, uB, _halfWidth, _pointsOut, _scalingVecsOut, _texCoordOut);
-                    addVertex(coordCurr, nC, uC, _halfWidth, _pointsOut, _scalingVecsOut, _texCoordOut);
+                    addVertex(coordCurr, nB, uB, _style.halfWidth, _pointsOut, _scalingVecsOut, _texCoordOut);
+                    addVertex(coordCurr, nC, uC, _style.halfWidth, _pointsOut, _scalingVecsOut, _texCoordOut);
                 } else {
-                    addVertex(coordCurr, nC, uC, _halfWidth, _pointsOut, _scalingVecsOut, _texCoordOut);
-                    addVertex(coordCurr, nB, uB, _halfWidth, _pointsOut, _scalingVecsOut, _texCoordOut);
+                    addVertex(coordCurr, nC, uC, _style.halfWidth, _pointsOut, _scalingVecsOut, _texCoordOut);
+                    addVertex(coordCurr, nB, uB, _style.halfWidth, _pointsOut, _scalingVecsOut, _texCoordOut);
                 }
                 
             } else {
                 addVertexPair(  coordCurr, normCurr, 
                                 (float)i/((float)lineSize-1.0), 
-                                _halfWidth, _pointsOut, _scalingVecsOut, _texCoordOut);
+                                _style.halfWidth, _pointsOut, _scalingVecsOut, _texCoordOut);
             }
             
             if (i+1 < lineSize) {
@@ -591,41 +588,33 @@ void buildGeneralPolyLine(const Line& _line,
     
 
     // If is the END OF a LINE
-    if(!_closed_polygon) {
+    if(!_style.closePolygon) {
         vertexDataOffset = (int)_pointsOut.size();
-        addCap(coordCurr, normCurr, cornersOnCap , false, _halfWidth, _pointsOut, _scalingVecsOut, _indicesOut, _texCoordOut);
+        addCap(coordCurr, normCurr, cornersOnCap , false, _style.halfWidth, _pointsOut, _scalingVecsOut, _indicesOut, _texCoordOut);
     }
 }
 
-void Builders::buildPolyLine(const Line& _line, float _halfWidth, 
-                             std::vector<glm::vec3>& _pointsOut, std::vector<int>& _indicesOut,
-                             CapTypes _cap, JoinTypes _join, bool _closed_polygon, bool _remove_tile_edges) {
+void Builders::buildPolyLine(const Line& _line, std::vector<glm::vec3>& _pointsOut, std::vector<int>& _indicesOut, const PolyLineStyle& _style) {
 
-    buildGeneralPolyLine(_line, _halfWidth, _pointsOut, NO_SCALING_VECS, _indicesOut, NO_TEXCOORDS, _cap, _join, _closed_polygon, _remove_tile_edges);
+    buildGeneralPolyLine(_line, _pointsOut, NO_SCALING_VECS, _indicesOut, NO_TEXCOORDS, _style);
     
 }
 
-void Builders::buildPolyLine(const Line& _line, float _halfWidth, 
-                             std::vector<glm::vec3>& _pointsOut, std::vector<int>& _indicesOut, std::vector<glm::vec2>& _texcoordOut,
-                             CapTypes _cap, JoinTypes _join, bool _closed_polygon, bool _remove_tile_edges) {
+void Builders::buildPolyLine(const Line& _line, std::vector<glm::vec3>& _pointsOut, std::vector<int>& _indicesOut, std::vector<glm::vec2>& _texcoordOut, const PolyLineStyle& _style) {
     
-    buildGeneralPolyLine(_line, _halfWidth, _pointsOut, NO_SCALING_VECS, _indicesOut, _texcoordOut, _cap, _join, _closed_polygon, _remove_tile_edges);
+    buildGeneralPolyLine(_line, _pointsOut, NO_SCALING_VECS, _indicesOut, _texcoordOut, _style);
     
 }
 
-void Builders::buildScalablePolyLine(const Line& _line, 
-                                     std::vector<glm::vec3>& _pointsOut, std::vector<glm::vec2>& _scalingVecsOut, std::vector<int>& _indicesOut,
-                                     CapTypes _cap, JoinTypes _join, bool _closed_polygon, bool _remove_tile_edges) {
+void Builders::buildScalablePolyLine(const Line& _line, std::vector<glm::vec3>& _pointsOut, std::vector<glm::vec2>& _scalingVecsOut, std::vector<int>& _indicesOut, const PolyLineStyle& _style) {
     
-    buildGeneralPolyLine(_line, 0, _pointsOut, _scalingVecsOut, _indicesOut, NO_TEXCOORDS, _cap, _join, _closed_polygon, _remove_tile_edges);
+    buildGeneralPolyLine(_line, _pointsOut, _scalingVecsOut, _indicesOut, NO_TEXCOORDS, _style);
     
 }
 
-void Builders::buildScalablePolyLine(const Line& _line, 
-                                     std::vector<glm::vec3>& _pointsOut, std::vector<glm::vec2>& _scalingVecsOut, std::vector<int>& _indicesOut, std::vector<glm::vec2>& _texcoordOut,
-                                     CapTypes _cap, JoinTypes _join, bool _closed_polygon, bool _remove_tile_edges) {
+void Builders::buildScalablePolyLine(const Line& _line, std::vector<glm::vec3>& _pointsOut, std::vector<glm::vec2>& _scalingVecsOut, std::vector<int>& _indicesOut, std::vector<glm::vec2>& _texcoordOut, const PolyLineStyle& _style) {
     
-    buildGeneralPolyLine(_line, 0, _pointsOut, _scalingVecsOut, _indicesOut, _texcoordOut, _cap, _join, _closed_polygon, _remove_tile_edges);
+    buildGeneralPolyLine(_line, _pointsOut, _scalingVecsOut, _indicesOut, _texcoordOut, _style);
 }
 
 void Builders::buildQuadAtPoint(const Point& _point, const glm::vec3& _normal, float halfWidth, float height, std::vector<glm::vec3>& _pointsOut, std::vector<int>& _indicesOut) {
