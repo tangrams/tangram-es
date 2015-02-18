@@ -9,6 +9,9 @@
 static auto& NO_TEXCOORDS = *(new std::vector<glm::vec2>); // denotes that texture coordinates should not be used
 static auto& NO_SCALING_VECS = *(new std::vector<glm::vec2>); // denotes that scaling vectors should not be used
 
+using Builders::CapTypes;
+using Builders::JoinTypes;
+
 void* alloc(void* _userData, unsigned int _size) {
     return malloc(_size);
 }
@@ -382,8 +385,8 @@ void buildGeneralPolyLine(const Line& _line,
                           std::vector<glm::vec2>& _scalingVecsOut,
                           std::vector<int>& _indicesOut,
                           std::vector<glm::vec2>& _texCoordOut,
-                          const std::string& _cap,
-                          const std::string& _join,
+                          CapTypes _cap,
+                          JoinTypes _join,
                           bool _closed_polygon,
                           bool _remove_tile_edges) {
 
@@ -413,8 +416,8 @@ void buildGeneralPolyLine(const Line& _line,
     glm::vec3 coordPrev, coordCurr, coordNext;
     glm::vec2 normPrev, normCurr, normNext;
 
-    int cornersOnCap = (_cap == "square")? 2 : ((_cap == "round")? 4 : 0);  // Butt is the implicit default
-    int trianglesOnJoin = (_join == "bevel")? 1 : ((_join == "round")? 5 : 0);  // Miter is the implicit default
+    int cornersOnCap = (_cap == CapTypes::SQUARE)? 2 : ((_cap == CapTypes::ROUND)? 4 : 0);  // Butt is the implicit default
+    int trianglesOnJoin = (_join == JoinTypes::BEVEL)? 1 : ((_join == JoinTypes::ROUND)? 5 : 0);  // Miter is the implicit default
 
     int vertexDataOffset = (int)_pointsOut.size();
     int nPairs = 0;
@@ -596,7 +599,7 @@ void buildGeneralPolyLine(const Line& _line,
 
 void Builders::buildPolyLine(const Line& _line, float _halfWidth, 
                              std::vector<glm::vec3>& _pointsOut, std::vector<int>& _indicesOut,
-                             const std::string& _cap, const std::string& _join, bool _closed_polygon, bool _remove_tile_edges) {
+                             CapTypes _cap, JoinTypes _join, bool _closed_polygon, bool _remove_tile_edges) {
 
     buildGeneralPolyLine(_line, _halfWidth, _pointsOut, NO_SCALING_VECS, _indicesOut, NO_TEXCOORDS, _cap, _join, _closed_polygon, _remove_tile_edges);
     
@@ -604,7 +607,7 @@ void Builders::buildPolyLine(const Line& _line, float _halfWidth,
 
 void Builders::buildPolyLine(const Line& _line, float _halfWidth, 
                              std::vector<glm::vec3>& _pointsOut, std::vector<int>& _indicesOut, std::vector<glm::vec2>& _texcoordOut,
-                             const std::string& _cap, const std::string& _join, bool _closed_polygon, bool _remove_tile_edges) {
+                             CapTypes _cap, JoinTypes _join, bool _closed_polygon, bool _remove_tile_edges) {
     
     buildGeneralPolyLine(_line, _halfWidth, _pointsOut, NO_SCALING_VECS, _indicesOut, _texcoordOut, _cap, _join, _closed_polygon, _remove_tile_edges);
     
@@ -612,7 +615,7 @@ void Builders::buildPolyLine(const Line& _line, float _halfWidth,
 
 void Builders::buildScalablePolyLine(const Line& _line, 
                                      std::vector<glm::vec3>& _pointsOut, std::vector<glm::vec2>& _scalingVecsOut, std::vector<int>& _indicesOut,
-                                     const std::string& _cap, const std::string& _join, bool _closed_polygon, bool _remove_tile_edges) {
+                                     CapTypes _cap, JoinTypes _join, bool _closed_polygon, bool _remove_tile_edges) {
     
     buildGeneralPolyLine(_line, 0, _pointsOut, _scalingVecsOut, _indicesOut, NO_TEXCOORDS, _cap, _join, _closed_polygon, _remove_tile_edges);
     
@@ -620,7 +623,7 @@ void Builders::buildScalablePolyLine(const Line& _line,
 
 void Builders::buildScalablePolyLine(const Line& _line, 
                                      std::vector<glm::vec3>& _pointsOut, std::vector<glm::vec2>& _scalingVecsOut, std::vector<int>& _indicesOut, std::vector<glm::vec2>& _texcoordOut,
-                                     const std::string& _cap, const std::string& _join, bool _closed_polygon, bool _remove_tile_edges) {
+                                     CapTypes _cap, JoinTypes _join, bool _closed_polygon, bool _remove_tile_edges) {
     
     buildGeneralPolyLine(_line, 0, _pointsOut, _scalingVecsOut, _indicesOut, _texcoordOut, _cap, _join, _closed_polygon, _remove_tile_edges);
 }
