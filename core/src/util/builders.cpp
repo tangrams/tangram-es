@@ -177,11 +177,10 @@ glm::vec2 perp2d(const glm::vec3& _v1, const glm::vec3& _v2 ){
 }
 
 // Get 2D vector rotated 
-glm::vec2 rotate (const glm::vec2& _v,float _angle) {
-    float vr = glm::length(_v);
-    float va = std::atan2(_v.y,_v.x);
-    return glm::vec2( vr * std::cos(va+_angle),
-                      vr * std::sin(va+_angle) );
+glm::vec2 rotate (const glm::vec2& _v, float _radians) {
+    float cos = std::cos(_radians);
+    float sin = std::sin(_radians);
+    return glm::vec2(_v.x * cos - _v.y * sin, _v.x * sin + _v.y * cos);
 }
 
 // Add a single vertex according the information it have and need
