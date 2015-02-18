@@ -31,7 +31,7 @@ public:
     void setMapProjection(ProjectionType _projType);
     
     /* Gets the current map projection */
-    const MapProjection& getMapProjection();
+    const MapProjection& getMapProjection() const;
     
     /* Sets the ratio of hardware pixels to logical pixels (for high-density screens)
      * 
@@ -89,8 +89,8 @@ public:
     /* Returns the set of all tiles visible at the current position and zoom */
     const std::set<TileID>& getVisibleTiles();
     
-    /* Returns true if the view properties have changed since this function was last called */
-    bool changedSinceLastCheck();
+    /* Returns true if the view properties have changed since the last call to update() */
+    bool changedOnLastUpdate() const { return m_changed; }
 
     virtual ~View() {
         m_visibleTiles.clear();

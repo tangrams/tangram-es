@@ -112,7 +112,7 @@ Then install to a connected device or emulator. You can (re)install and run the 
 Install a C++11 compatible compiler and libcurl:
 
 ```
-sudo apt-get install g++-4.7 libcurl4-openssl-dev
+sudo apt-get install cmake g++-4.7 libcurl4-openssl-dev
 ```
 
 Then compile and run:
@@ -121,4 +121,11 @@ Then compile and run:
 make rpi
 cd build/rpi/bin
 ./tangram
+```
+
+Tangram will be rendered directly to the screen without a window manager, in the case you want see the mouse cursor run the application with the ```-m``` argument like this:
+
+```
+cd build/rpi/bin
+./tangram -m
 ```

@@ -222,8 +222,8 @@ void ShaderProgram::applySourceBlocks(std::string& _vertSrcOut, std::string& _fr
         
         std::string tag = "#pragma tangram: " + block.first;
         
-        int vertSrcPos = _vertSrcOut.find(tag);
-        int fragSrcPos = _fragSrcOut.find(tag);
+        size_t vertSrcPos = _vertSrcOut.find(tag);
+        size_t fragSrcPos = _fragSrcOut.find(tag);
         
         if (vertSrcPos != std::string::npos) {
             vertSrcPos += tag.length();

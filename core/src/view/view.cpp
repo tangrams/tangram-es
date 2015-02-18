@@ -37,7 +37,7 @@ void View::setMapProjection(ProjectionType _projType) {
     
 }
 
-const MapProjection& View::getMapProjection() {
+const MapProjection& View::getMapProjection() const {
     return *m_projection.get();
 }
 
@@ -93,6 +93,7 @@ void View::zoom(float _dz) {
 void View::update() {
     
     if (!m_dirty) {
+        m_changed = false;
         return;
     }
     
@@ -123,16 +124,6 @@ const std::set<TileID>& View::getVisibleTiles() {
 
     return m_visibleTiles;
 
-}
-
-bool View::changedSinceLastCheck() {
-    
-    if (m_changed) {
-        m_changed = false;
-        return true;
-    }
-    return false;
-    
 }
 
 void View::updateMatrices() {

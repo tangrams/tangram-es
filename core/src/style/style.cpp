@@ -16,8 +16,9 @@ void Style::addLayers(std::vector<std::string> _layers) {
     m_layers.insert(_layers.cbegin(), _layers.cend());
 }
 
-void Style::addData(TileData& _data, MapTile& _tile, const MapProjection& _mapProjection) const {
-    
+void Style::addData(TileData& _data, MapTile& _tile, const MapProjection& _mapProjection)  const {
+    prepareDataProcessing(_tile);
+
     VboMesh* mesh = new VboMesh(m_vertexLayout, m_drawMode);
     
     for (auto& layer : _data.layers) {
@@ -54,11 +55,11 @@ void Style::addData(TileData& _data, MapTile& _tile, const MapProjection& _mapPr
     }
     
     _tile.addGeometry(*this, std::unique_ptr<VboMesh>(mesh));
-    
+
+    finishDataProcessing(_tile);
 }
 
-void Style::setupFrame(const std::shared_ptr<Scene>& _scene) {
-    
+void Style::setupFrame(const std::shared_ptr<View>& _view, const std::shared_ptr<Scene>& _scene) {
     // Set up material
     m_material.setupProgram(m_shaderProgram);
     
@@ -66,9 +67,16 @@ void Style::setupFrame(const std::shared_ptr<Scene>& _scene) {
     for (const auto& light : _scene->getLights()) {
         light.second->setupProgram(m_shaderProgram);
     }
-    
 }
 
 void Style::setupTile(const std::shared_ptr<MapTile>& _tile) {
+    // No-op by default
+}
+
+void Style::prepareDataProcessing(MapTile& _tile) const {
+    // No-op by default
+}
+
+void Style::finishDataProcessing(MapTile& _tile) const {
     // No-op by default
 }
