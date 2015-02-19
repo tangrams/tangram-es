@@ -87,7 +87,7 @@ void FontContext::setFont(std::string _name, int size) {
 void createTexTransforms(void* _userPtr, unsigned int _width, unsigned int _height) {
     FontContext* fontContext = static_cast<FontContext*>(_userPtr);
 
-    TextureOptions options = {GL_RGBA, GL_RGBA, {GL_LINEAR, GL_LINEAR}, {GL_CLAMP_TO_EDGE, GL_CLAMP_TO_EDGE}};
+    TextureOptions options = {GL_RGBA, GL_RGBA, {GL_NEAREST, GL_NEAREST}, {GL_CLAMP_TO_EDGE, GL_CLAMP_TO_EDGE}};
     std::unique_ptr<Texture> texture(new Texture(_width, _height, 1 /* gpu slot */ , options));
     std::shared_ptr<TextBuffer> textBuffer = fontContext->m_currentBuffer.lock();
 
@@ -132,7 +132,7 @@ bool errorCallback(void* _userPtr, fsuint buffer, GLFONSError error) {
                 textBuffer->expand();
                 solved = true;
             }
-            
+
             break;
         }
 
