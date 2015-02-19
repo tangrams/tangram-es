@@ -61,12 +61,16 @@
     UIPinchGestureRecognizer *pinchRecognizer = [[UIPinchGestureRecognizer alloc]
                                                  initWithTarget:self action:@selector(respondToPinchGesture:)];
     
+    //5. Rotate
+    UIRotationGestureRecognizer *rotationRecognizer = [[UIRotationGestureRecognizer alloc]
+                                                        initWithTarget:self action:@selector(respondToRotationGesture:)];
     
     /* Setup gesture recognizers */
     [self.view addGestureRecognizer:tapRecognizer];
     [self.view addGestureRecognizer:doubleTapRecognizer];
     [self.view addGestureRecognizer:panRecognizer];
     [self.view addGestureRecognizer:pinchRecognizer];
+    [self.view addGestureRecognizer:rotationRecognizer];
     
     [self setupGL];
     
@@ -93,6 +97,12 @@
     CGFloat scale = pinchRecognizer.scale;
     [pinchRecognizer setScale:1.0];
     Tangram::handlePinchGesture(location.x, location.y, scale);
+}
+
+- (void)respondToRotationGesture:(UIRotationGestureRecognizer *)rotationRecognizer {
+    CGFloat rotation = rotationRecognizer.rotation;
+    [rotationRecognizer setRotation:0.0];
+    Tangram::handleRotateGesture(rotation);
 }
 
 - (void)dealloc
