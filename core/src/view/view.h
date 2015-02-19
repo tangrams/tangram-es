@@ -48,17 +48,26 @@ public:
     /* Sets the zoom level of the view */
     void setZoom(float _z);
     
+    /* Sets the roll angle of the view in radians (default is 0) */
+    void setRoll(float _rad);
+    
     /* Moves the position of the view */
     void translate(double _dx, double _dy);
     
     /* Changes zoom by the given amount */
     void zoom(float _dz);
     
+    /* Changes the roll angle by the given amount in radians */
+    void roll(float _drad);
+    
     /* Gets the current zoom */
     float getZoom() const { return m_zoom; }
 
 	/* Get the current m_zoomIn */
 	bool isZoomIn() const { return m_isZoomIn; }
+    
+    /* Get the current roll angle in radians */
+    float getRoll() const { return m_roll; }
     
     /* Updates the view and projection matrices if properties have changed */
     void update();
@@ -86,6 +95,8 @@ public:
     /* Calculate the distance in map projection units represented by the given distance in screen space */
     float toWorldDistance(float _screenDistance) const;
     
+    void toWorldDisplacement(float& _screenX, float& _screenY) const;
+    
     /* Returns the set of all tiles visible at the current position and zoom */
     const std::set<TileID>& getVisibleTiles();
     
@@ -111,6 +122,8 @@ protected:
     glm::mat4 m_view;
     glm::mat4 m_proj;
     glm::mat4 m_viewProj;
+    
+    float m_roll = 0;
     
     float m_zoom;
     float m_initZoom = 16.0;

@@ -73,6 +73,13 @@ void View::setZoom(float _z) {
     
 }
 
+void View::setRoll(float _roll) {
+    
+    m_roll = glm::mod(_roll, (float)TWO_PI);
+    m_dirty = true;
+    
+}
+
 void View::translate(double _dx, double _dy) {
 
     setPosition(m_pos.x + _dx, m_pos.y + _dy);
@@ -87,6 +94,12 @@ void View::zoom(float _dz) {
         m_isZoomIn = false;
     }
     setZoom(m_zoom + _dz);
+    
+}
+
+void View::roll(float _droll) {
+    
+    setRoll(m_roll + _droll);
     
 }
 
@@ -118,6 +131,20 @@ glm::dmat2 View::getBoundsRect() const {
 float View::toWorldDistance(float _screenDistance) const {
     float metersPerTile = 2 * MapProjection::HALF_CIRCUMFERENCE * pow(2, -m_zoom);
     return _screenDistance * metersPerTile / (m_pixelScale * m_pixelsPerTile);
+}
+
+void View::toWorldDisplacement(float& _screenX, float& _screenY) const {
+    
+    float metersPerPixel = toWorldDistance(1);
+    
+    // Rotate screen displacement into world space
+    float cos_r = cos(m_roll);
+    float sin_r = sin(m_roll);
+    float x = (_screenX * cos_r + _screenY * sin_r) * metersPerPixel;
+    float y = (_screenX * -sin_r + _screenY * cos_r) * metersPerPixel;
+    
+    _screenX = x;
+    _screenY = y;
 }
 
 const std::set<TileID>& View::getVisibleTiles() {
@@ -153,8 +180,10 @@ void View::updateMatrices() {
     // TODO: this is a simple heuristic that deserves more thought
     float near = m_pos.z / 50.0;
     
+    glm::vec3 up = {cos(m_roll + HALF_PI), sin(m_roll + HALF_PI), 0.0f};
+    
     // update view and projection matrices
-    m_view = glm::lookAt(glm::vec3(0.0, 0.0, 0.0), glm::vec3(0.0, 0.0, -1.0), glm::vec3(0.0, 1.0, 0.0));
+    m_view = glm::lookAt(glm::vec3(0.0, 0.0, 0.0), glm::vec3(0.0, 0.0, -1.0), up);
     m_proj = glm::perspective(fovy, m_aspect, near, (float)m_pos.z + 1.0f);
     m_viewProj = m_proj * m_view;
     
@@ -167,10 +196,17 @@ void View::updateTiles() {
     float tileSize = 2 * MapProjection::HALF_CIRCUMFERENCE * pow(2, -(int)m_zoom);
     float invTileSize = 1.0 / tileSize;
     
-    float vpLeftEdge = m_pos.x - m_width * 0.5 + MapProjection::HALF_CIRCUMFERENCE;
-    float vpRightEdge = vpLeftEdge + m_width;
-    float vpBottomEdge = -m_pos.y - m_height * 0.5 + MapProjection::HALF_CIRCUMFERENCE;
-    float vpTopEdge = vpBottomEdge + m_height;
+    // Adjust width and height for view rotation
+    float cos_r = cos(m_roll);
+    float sin_r = sin(m_roll);
+    float width = fabsf(m_height * sin_r) + fabsf(m_width * cos_r);
+    float height = fabsf(m_width * sin_r) + fabsf(m_height * cos_r);
+    
+    // Find bounds of viewable area in map space
+    float vpLeftEdge = m_pos.x - width * 0.5 + MapProjection::HALF_CIRCUMFERENCE;
+    float vpRightEdge = vpLeftEdge + width;
+    float vpBottomEdge = -m_pos.y - height * 0.5 + MapProjection::HALF_CIRCUMFERENCE;
+    float vpTopEdge = vpBottomEdge + height;
     
     int tileX = (int) fmax(0, vpLeftEdge * invTileSize);
     int tileY = (int) fmax(0, vpBottomEdge * invTileSize);
