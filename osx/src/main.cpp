@@ -9,6 +9,7 @@ const double double_tap_time = 0.5; // seconds
 const double scroll_multiplier = 0.05; // scaling for zoom
 
 bool was_panning = false;
+bool rotating = false;
 double last_mouse_up = -double_tap_time; // First click should never trigger a double tap
 double last_x_down = 0.0;
 double last_y_down = 0.0;
@@ -65,19 +66,17 @@ void scroll_callback(GLFWwindow* window, double scrollx, double scrolly) {
     
     double x, y;
     glfwGetCursorPos(window, &x, &y);
-    Tangram::handlePinchGesture(x, y, 1.0 + scroll_multiplier * scrolly);
+    if (rotating) {
+        Tangram::handleRotateGesture(scroll_multiplier * scrolly);
+    } else {
+        Tangram::handlePinchGesture(x, y, 1.0 + scroll_multiplier * scrolly);
+    }
     
 }
 
 void key_callback(GLFWwindow* window, int key, int scancode, int action, int mods)
 {
-    if (key == GLFW_KEY_E && (action == GLFW_PRESS || action == GLFW_REPEAT)) {
-        Tangram::handleRotateGesture(-0.1f);
-    }
-    
-    if (key == GLFW_KEY_Q && (action == GLFW_PRESS || action == GLFW_REPEAT)) {
-        Tangram::handleRotateGesture(0.1f);
-    }
+    rotating = (mods & GLFW_MOD_SHIFT) != 0; // Whether one or more shift keys is down
 }
 
 
