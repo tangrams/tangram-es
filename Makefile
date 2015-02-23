@@ -83,7 +83,8 @@ LINUX_CMAKE_PARAMS = \
 clean: clean-android clean-osx clean-ios clean-rpi clean-tests clean-osx-xcode clean-linux
 
 clean-android:
-	ant -f android/build.xml clean
+	@cd android/ && \
+	./gradlew clean
 	rm -rf ${ANDROID_BUILD_DIR}
 	rm -rf android/libs android/obj
 
@@ -106,7 +107,8 @@ clean-tests:
 	rm -rf ${TESTS_BUILD_DIR}
 
 android: install-android android/libs/${ANDROID_ARCH}/libtangram.so android/build.xml
-	ant -q -f android/build.xml debug
+	@cd android/ && \
+	./gradlew assembleDebug
 
 install-android: check-ndk cmake-android ${ANDROID_BUILD_DIR}/Makefile
 	@cd ${ANDROID_BUILD_DIR} && \
