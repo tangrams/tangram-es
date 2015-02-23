@@ -75,15 +75,11 @@ public class Tangram extends GLSurfaceView implements Renderer, OnScaleGestureLi
     public boolean onTouchEvent(MotionEvent event) { 
         
         //Pass the event to gestureDetector and scaleDetector
-        boolean retVal;
-        retVal = scaleGestureDetector.onTouchEvent(event);
-        if (!scaleGestureDetector.isInProgress()) {
-            retVal = gestureDetector.onTouchEvent(event);
-            if (!gestureDetector.onTouchEvent(event)) {
-                retVal = super.onTouchEvent(event);
-            }
+        if (gestureDetector.onTouchEvent(event) | scaleGestureDetector.onTouchEvent(event)) {
+            return true;
+        } else {
+            return super.onTouchEvent(event);
         }
-        return retVal;
         
     }
     
