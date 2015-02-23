@@ -65,6 +65,11 @@
     UIRotationGestureRecognizer *rotationRecognizer = [[UIRotationGestureRecognizer alloc]
                                                         initWithTarget:self action:@selector(respondToRotationGesture:)];
     
+    // Use the delegate method 'shouldRecognizeSimultaneouslyWithGestureRecognizer' for gestures that can be concurrent
+    panRecognizer.delegate = self;
+    pinchRecognizer.delegate = self;
+    rotationRecognizer.delegate = self;
+    
     /* Setup gesture recognizers */
     [self.view addGestureRecognizer:tapRecognizer];
     [self.view addGestureRecognizer:doubleTapRecognizer];
@@ -74,6 +79,10 @@
     
     [self setupGL];
     
+}
+
+- (BOOL)gestureRecognizer:(UIGestureRecognizer *)gestureRecognizer shouldRecognizeSimultaneouslyWithGestureRecognizer:(UIGestureRecognizer *)otherGestureRecognizer {
+    return YES;
 }
 
 - (void)respondToTapGesture:(UITapGestureRecognizer *)tapRecognizer {
