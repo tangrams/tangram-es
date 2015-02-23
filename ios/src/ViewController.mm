@@ -12,6 +12,7 @@
     
 }
 @property (strong, nonatomic) EAGLContext *context;
+@property CGFloat pixelScale;
 
 - (void)setupGL;
 - (void)tearDownGL;
@@ -22,12 +23,14 @@
 
 @end
 
+
 @implementation ViewController
 
 - (void)viewDidLoad
 {
     [super viewDidLoad];
     
+    self.pixelScale = [[UIScreen mainScreen] scale];
     self.context = [[EAGLContext alloc] initWithAPI:kEAGLRenderingAPIOpenGLES2];
 
     if (!self.context) {
@@ -74,25 +77,25 @@
 
 - (void)respondToTapGesture:(UITapGestureRecognizer *)tapRecognizer {
     CGPoint location = [tapRecognizer locationInView:self.view];
-    Tangram::handleTapGesture(location.x, location.y);
+    Tangram::handleTapGesture(location.x * self.pixelScale, location.y * self.pixelScale);
 }
 
 - (void)respondToDoubleTapGesture:(UITapGestureRecognizer *)doubleTapRecognizer {
     CGPoint location = [doubleTapRecognizer locationInView:self.view];
-    Tangram::handleDoubleTapGesture(location.x, location.y);
+    Tangram::handleDoubleTapGesture(location.x * self.pixelScale, location.y * self.pixelScale);
 }
 
 - (void)respondToPanGesture:(UIPanGestureRecognizer *)panRecognizer {
     CGPoint displacement = [panRecognizer translationInView:self.view];
     [panRecognizer setTranslation:{0, 0} inView:self.view];
-    Tangram::handlePanGesture(displacement.x, displacement.y);
+    Tangram::handlePanGesture(displacement.x * self.pixelScale, displacement.y * self.pixelScale);
 }
 
 - (void)respondToPinchGesture:(UIPinchGestureRecognizer *)pinchRecognizer {
     CGPoint location = [pinchRecognizer locationInView:self.view];
     CGFloat scale = pinchRecognizer.scale;
     [pinchRecognizer setScale:1.0];
-    Tangram::handlePinchGesture(location.x, location.y, scale);
+    Tangram::handlePinchGesture(location.x * self.pixelScale, location.y * self.pixelScale, scale);
 }
 
 - (void)dealloc
@@ -131,11 +134,9 @@
     int width = self.view.bounds.size.width;
     int height = self.view.bounds.size.height;
 
-    CGFloat scale = [[UIScreen mainScreen] scale];
+    Tangram::resize(width * self.pixelScale, height * self.pixelScale);
 
-    Tangram::resize(width * scale, height * scale);
-
-    Tangram::setPixelScale(scale);
+    Tangram::setPixelScale(self.pixelScale);
 }
 
 - (void)tearDownGL
@@ -146,9 +147,7 @@
 
 - (void)viewWillTransitionToSize:(CGSize)size withTransitionCoordinator:(id<UIViewControllerTransitionCoordinator>)coordinator
 {
-    CGFloat scale = [[UIScreen mainScreen] scale];
-
-    Tangram::resize(size.width * scale, size.height * scale);
+    Tangram::resize(size.width * self.pixelScale, size.height * self.pixelScale);
 }
 
 #pragma mark - GLKView and GLKViewController delegate methods
