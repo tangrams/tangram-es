@@ -16,7 +16,7 @@ bool Error::hadGlError(const std::string& _locationTag) {
 
         std::string errorString = s_GlErrorCodesToStrings[error];
 
-        logMsg("OpenGL Error: %s at %s", errorString.c_str(), _locationTag.c_str());
+        logMsg("OpenGL Error: %s at %s\n", errorString.c_str(), _locationTag.c_str());
 
         return true;
     }

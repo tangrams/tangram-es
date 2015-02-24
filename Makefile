@@ -6,17 +6,20 @@ all: android osx osx-xcode ios
 .PHONY: clean-osx-xcode
 .PHONY: clean-ios
 .PHONY: clean-rpi
+.PHONY: clean-linux
 .PHONY: android
 .PHONY: osx
 .PHONY: osx-xcode
 .PHONY: ios
 .PHONY: rpi
+.PHONY: linux
 .PHONY: check-ndk
 .PHONY: cmake-osx
 .PHONY: cmake-osx-xcode
 .PHONY: cmake-android
 .PHONY: cmake-ios
 .PHONY: cmake-rpi
+.PHONY: cmake-linux
 .PHONY: install-android
 
 ANDROID_BUILD_DIR = build/android
@@ -24,6 +27,7 @@ OSX_BUILD_DIR = build/osx
 OSX_XCODE_BUILD_DIR = build/osx-xcode
 IOS_BUILD_DIR = build/ios
 RPI_BUILD_DIR = build/rpi
+LINUX_BUILD_DIR = build/linux
 TESTS_BUILD_DIR = build/tests
 UNIT_TESTS_BUILD_DIR = ${TESTS_BUILD_DIR}/unit
 
@@ -73,10 +77,14 @@ RPI_CMAKE_PARAMS = \
 	-DPLATFORM_TARGET=raspberrypi \
 	-DCMAKE_TOOLCHAIN_FILE=${TOOLCHAIN_DIR}/raspberrypi.toolchain.cmake
 
-clean: clean-android clean-osx clean-ios clean-rpi clean-tests clean-osx-xcode
+LINUX_CMAKE_PARAMS = \
+	-DPLATFORM_TARGET=linux
+
+clean: clean-android clean-osx clean-ios clean-rpi clean-tests clean-osx-xcode clean-linux
 
 clean-android:
-	ant -f android/build.xml clean
+	@cd android/ && \
+	./gradlew clean
 	rm -rf ${ANDROID_BUILD_DIR}
 	rm -rf android/libs android/obj
 
@@ -89,6 +97,9 @@ clean-ios:
 clean-rpi:
 	rm -rf ${RPI_BUILD_DIR}
 
+clean-linux:
+	rm -rf ${LINUX_BUILD_DIR}
+
 clean-osx-xcode:
 	rm -rf ${OSX_XCODE_BUILD_DIR}
 
@@ -96,7 +107,8 @@ clean-tests:
 	rm -rf ${TESTS_BUILD_DIR}
 
 android: install-android android/libs/${ANDROID_ARCH}/libtangram.so android/build.xml
-	ant -q -f android/build.xml debug
+	@cd android/ && \
+	./gradlew assembleDebug
 
 install-android: check-ndk cmake-android ${ANDROID_BUILD_DIR}/Makefile
 	@cd ${ANDROID_BUILD_DIR} && \
@@ -145,6 +157,15 @@ cmake-rpi:
 	@mkdir -p ${RPI_BUILD_DIR}
 	@cd ${RPI_BUILD_DIR} && \
 	cmake ../.. ${RPI_CMAKE_PARAMS}
+
+linux: cmake-linux ${LINUX_BUILD_DIR}
+	cd ${LINUX_BUILD_DIR} && \
+	${MAKE}
+
+cmake-linux: 
+	mkdir -p ${LINUX_BUILD_DIR}
+	cd ${LINUX_BUILD_DIR} &&\
+	cmake ../.. ${LINUX_CMAKE_PARAMS}
 	
 tests: unit-tests
 
