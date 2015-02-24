@@ -12,8 +12,8 @@ if(NOT GLFW_FOUND)
     message(SEND_ERROR "GLFW not found")
     return()
 else()
-    include_directories(${GLFW_INCLUDE_DIR})
-    message(STATUS "Found GLFW ${GLFW_INCLUDE_DIR}")
+    include_directories(${GLFW_INCLUDE_DIRS})
+    message(STATUS "Found GLFW ${GLFW_PREFIX}")
 endif()
     
 # load core library
@@ -37,21 +37,15 @@ string(REGEX REPLACE "[.]DS_Store" "" RESOURCES "${RESOURCES}")
 # link and build functions
 function(link_libraries)
 
-    find_library(OPENGL_FRAMEWORK OpenGL)
-    find_library(COCOA_FRAMEWORK Cocoa)
-    find_library(IOKIT_FRAMEWORK IOKit)
-    find_library(CORE_FOUNDATION_FRAMEWORK CoreFoundation)
-    find_library(CORE_VIDEO_FRAMEWORK CoreVideo)
-
-    list(APPEND GLFW_LIBRARIES 
-        ${OPENGL_FRAMEWORK} 
-        ${COCOA_FRAMEWORK} 
-        ${IOKIT_FRAMEWORK} 
-        ${CORE_FOUNDATION_FRAMEWORK}   
-        ${CORE_VIDEO_FRAMEWORK})
+    list(APPEND GLFW_LDFLAGS
+        "-framework OpenGL" 
+        "-framework Cocoa" 
+        "-framework IOKit" 
+        "-framework CoreFoundation"   
+        "-framework CoreVideo")
 
     target_link_libraries(${EXECUTABLE_NAME} -lcurl) #use system libcurl
-    target_link_libraries(${EXECUTABLE_NAME} core ${GLFW_LIBRARIES})
+    target_link_libraries(${EXECUTABLE_NAME} core ${GLFW_LDFLAGS})
 
     # add resource files and property list
     set_target_properties(${EXECUTABLE_NAME} PROPERTIES
