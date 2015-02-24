@@ -42,15 +42,13 @@ function(link_libraries)
     find_library(IOKIT_FRAMEWORK IOKit)
     find_library(CORE_FOUNDATION_FRAMEWORK CoreFoundation)
     find_library(CORE_VIDEO_FRAMEWORK CoreVideo)
-    find_library(GLFW glfw3)
 
     list(APPEND GLFW_LIBRARIES 
         ${OPENGL_FRAMEWORK} 
         ${COCOA_FRAMEWORK} 
         ${IOKIT_FRAMEWORK} 
         ${CORE_FOUNDATION_FRAMEWORK}   
-        ${CORE_VIDEO_FRAMEWORK} 
-        ${GLFW})
+        ${CORE_VIDEO_FRAMEWORK})
 
     target_link_libraries(${EXECUTABLE_NAME} -lcurl) #use system libcurl
     target_link_libraries(${EXECUTABLE_NAME} core ${GLFW_LIBRARIES})
