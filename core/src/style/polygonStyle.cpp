@@ -43,10 +43,11 @@ void PolygonStyle::buildLine(Line& _line, std::string& _layer, Properties& _prop
     std::vector<int> indices;
     std::vector<glm::vec3> points;
     std::vector<glm::vec2> texcoords;
+    Builders::PolyLineOutput output = { points, indices, Builders::NO_SCALING_VECS, texcoords };
     
     GLuint abgr = 0xff969696; // Default road color
     
-    Builders::buildPolyLine(_line, points, indices, texcoords, Builders::PolyLineStyle());
+    Builders::buildPolyLine(_line, Builders::PolyLineOptions(), output);
     
     for (size_t i = 0; i < points.size(); i++) {
         glm::vec3 p = points[i];
@@ -72,6 +73,7 @@ void PolygonStyle::buildPolygon(Polygon& _polygon, std::string& _layer, Properti
     std::vector<glm::vec3> points;
     std::vector<glm::vec3> normals;
     std::vector<glm::vec2> texcoords;
+    Builders::PolygonOutput output = { points, indices, normals, texcoords };
     
     GLuint abgr = 0xffaaaaaa; // Default color
     
@@ -96,10 +98,10 @@ void PolygonStyle::buildPolygon(Polygon& _polygon, std::string& _layer, Properti
                 point.z = height;
             }
         }
-        Builders::buildPolygonExtrusion(_polygon, minHeight, points, normals, indices, texcoords);
+        Builders::buildPolygonExtrusion(_polygon, minHeight, output);
     }
     
-    Builders::buildPolygon(_polygon, points, normals, indices, texcoords);
+    Builders::buildPolygon(_polygon, output);
     
     // TESTING OUTLINES arround watter
     //
