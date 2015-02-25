@@ -176,12 +176,8 @@ glm::vec2 rotate (const glm::vec2& _v, float _radians) {
     return glm::vec2(_v.x * cos - _v.y * sin, _v.x * sin + _v.y * cos);
 }
 
-// Add a single vertex according the information it have and need
-void addVertex(const glm::vec3& _coord,
-               const glm::vec2& _normal,
-               const glm::vec2& _uv,
-               float _halfWidth,
-               PolyLineOutput _out) {
+// Helper function for polyline tesselation
+void addPolyLineVertex(const glm::vec3& _coord, const glm::vec2& _normal, const glm::vec2& _uv, float _halfWidth, PolyLineOutput _out) {
 
     if (&_out.scalingVecs != &NO_SCALING_VECS) {
         _out.points.push_back(_coord);
@@ -195,18 +191,7 @@ void addVertex(const glm::vec3& _coord,
     }
 }
 
-//  Add to equidistant pairs of vertices to then be indexed in LINE_STRIP indexes
-void addVertexPair (const glm::vec3& _coord,
-                    const glm::vec2& _normal,
-                    float _pct,
-                    float _halfWidth,
-                    PolyLineOutput _out){
-
-    addVertex(_coord, _normal, glm::vec2(1.0,_pct*1.0), _halfWidth, _out);
-    addVertex(_coord, -_normal, glm::vec2(0.0,_pct*1.0), _halfWidth, _out);
-}
-
-// Index pairs of vertices to make triangles based like LINE_STRIP
+// Helper function for polyline tesselation; adds indices for pairs of vertices arranged like a line strip
 void indexPairs ( int _nPairs, int _vertexDataOffset, std::vector<int>& _indicesOut) {
     for (int i = 0; i < _nPairs; i++) {
         _indicesOut.push_back(_vertexDataOffset + 2*i+2);
@@ -256,10 +241,10 @@ void addFan (const glm::vec3& _coord,
 
     //  Add the first and CENTER vertex 
     //  The triangles will be composed on FAN style arround it
-    addVertex(_coord, _nC, _uC, _halfWidth, _out);
+    addPolyLineVertex(_coord, _nC, _uC, _halfWidth, _out);
 
     //  Add first corner
-    addVertex(_coord, normCurr, _uA, _halfWidth, _out);
+    addPolyLineVertex(_coord, normCurr, _uA, _halfWidth, _out);
 
     // Iterate through the rest of the coorners
     for (int i = 0; i < _numTriangles; i++) {
@@ -273,7 +258,7 @@ void addFan (const glm::vec3& _coord,
 
         uvCurr = uvCurr+uv_delta;
 
-        addVertex(_coord, normCurr, uvCurr, _halfWidth, _out);      //  Add computed corner
+        addPolyLineVertex(_coord, normCurr, uvCurr, _halfWidth, _out);      //  Add computed corner
     }
 
     for (int i = 0; i < _numTriangles; i++) {
@@ -291,10 +276,7 @@ void addFan (const glm::vec3& _coord,
 
 //  Function to add the vertex need for line caps,
 //  because re-use the buffers needs to be at the end
-void addCap (const glm::vec3& _coord,
-             const glm::vec2& _normal,
-             int _numCorners, bool _isBeginning, float _halfWidth,
-             PolyLineOutput _out) {
+void addCap (const glm::vec3& _coord, const glm::vec2& _normal, int _numCorners, bool _isBeginning, float _halfWidth, PolyLineOutput _out) {
 
     if (_numCorners < 1) {
         return;
@@ -323,10 +305,6 @@ float signed_area (const glm::vec3& _v1, const glm::vec3& _v2, const glm::vec3& 
     return (_v2.x-_v1.x)*(_v3.y-_v1.y) - (_v3.x-_v1.x)*(_v2.y-_v1.y);
 };
 
-/* TODO:
- *      - this is taken from WebGL needs a better adaptation
- *      - Take a look to https://github.com/tangrams/tangram/blob/master/src/gl/gl_builders.js#L581
- */ 
 float valuesWithinTolerance ( float _a, float _b, float _tolerance = 0.001) {
     return std::abs(_a - _b) < _tolerance;
 }
@@ -338,51 +316,27 @@ bool isOnTileEdge (const glm::vec3& _pa, const glm::vec3& _pb) {
     glm::vec2 tile_min = glm::vec2(-1.0,-1.0);
     glm::vec2 tile_max = glm::vec2(1.0,1.0);
 
-    // std::string edge = "";
     if (valuesWithinTolerance(_pa.x, tile_min.x, tolerance) && valuesWithinTolerance(_pb.x, tile_min.x, tolerance)) {
-        // edge = 'left';
+        return true;
+    } else if (valuesWithinTolerance(_pa.x, tile_max.x, tolerance) && valuesWithinTolerance(_pb.x, tile_max.x, tolerance)) {
+        return true;
+    } else if (valuesWithinTolerance(_pa.y, tile_min.y, tolerance) && valuesWithinTolerance(_pb.y, tile_min.y, tolerance)) {
+        return true;
+    } else if (valuesWithinTolerance(_pa.y, tile_max.y, tolerance) && valuesWithinTolerance(_pb.y, tile_max.y, tolerance)) {
         return true;
     }
-    else if (valuesWithinTolerance(_pa.x, tile_max.x, tolerance) && valuesWithinTolerance(_pb.x, tile_max.x, tolerance)) {
-        // edge = 'right';
-        return true;
-    }
-    else if (valuesWithinTolerance(_pa.y, tile_min.y, tolerance) && valuesWithinTolerance(_pb.y, tile_min.y, tolerance)) {
-        // edge = 'top';
-        return true;
-    }
-    else if (valuesWithinTolerance(_pa.y, tile_max.y, tolerance) && valuesWithinTolerance(_pb.y, tile_max.y, tolerance)) {
-        // edge = 'bottom';
-        return true;
-    }
-    // return edge;
     return false;
 }
 
 void Builders::buildPolyLine(const Line& _line, const PolyLineOptions& _options, PolyLineOutput& _out) {
-
-    // TODO:
-    //      This flags have to be pass from the style:
-    //    
+ 
     int lineSize = (int)_line.size();
     
     if (lineSize < 2) {
         return;
     }
     
-    // TODO:
-    //      - pre-allocate vectors?? how?
-    //      - Solution: 
-    //                  1. calculate the worst scenerio
-    //
-    // _pointsOut.reserve(_pointsOut.size() + lineSize * 2); // Pre-allocate vertex vector
-    // _indicesOut.reserve(_indicesOut.size() + (lineSize - 1) * 6); // Pre-allocate index vector
-    // if (useTexCoords) {
-    //     _texCoordOut.reserve(_texCoordOut.size() + lineSize * 2); // Pre-allocate texcoords vector
-    // }
-    // if (useScalingVecs) {
-    //     _scalingVecsOut.reserve(_scalingVecsOut.size() + lineSize * 2); // Pre-allocate scalingvec vector
-    // }
+    // TODO: pre-allocate output vectors; try estimating worst-case space usage
     
     glm::vec3 coordPrev, coordCurr, coordNext;
     glm::vec2 normPrev, normCurr, normNext;
@@ -442,7 +396,8 @@ void Builders::buildPolyLine(const Line& _line, const PolyLineOptions& _options,
                     normCurr = glm::normalize(perp2d(coordPrev, coordCurr));
                     
                     if (hasPrev) {
-                        addVertexPair(coordCurr, normCurr, (float)i/(float)lineSize, _options.halfWidth, _out);
+                        addPolyLineVertex(coordCurr, normCurr, {1.0, i/(float)lineSize}, _options.halfWidth, _out);
+                        addPolyLineVertex(coordCurr, normCurr, {0.0, i/(float)lineSize}, _options.halfWidth, _out);
 
                         // Add vertices to buffer acording their index
                         indexPairs(nPairs, vertexDataOffset, _out.indices);
@@ -514,8 +469,8 @@ void Builders::buildPolyLine(const Line& _line, const PolyLineOptions& _options,
                 glm::vec2 uB = glm::vec2(1.0,pct);
                 
                 if (isSigned) {
-                    addVertex(coordCurr, nA, uA, _options.halfWidth, _out);
-                    addVertex(coordCurr, nC, uC, _options.halfWidth, _out);
+                    addPolyLineVertex(coordCurr, nA, uA, _options.halfWidth, _out);
+                    addPolyLineVertex(coordCurr, nC, uC, _options.halfWidth, _out);
                 } else {
                     nA = -normPrev;
                     nC = normCurr;
@@ -523,8 +478,8 @@ void Builders::buildPolyLine(const Line& _line, const PolyLineOptions& _options,
                     uA = glm::vec2(0.0,pct);
                     uC = glm::vec2(1.0,pct);
                     uB = glm::vec2(0.0,pct);
-                    addVertex(coordCurr, nC, uC, _options.halfWidth, _out);
-                    addVertex(coordCurr, nA, uA, _options.halfWidth, _out);
+                    addPolyLineVertex(coordCurr, nC, uC, _options.halfWidth, _out);
+                    addPolyLineVertex(coordCurr, nA, uA, _options.halfWidth, _out);
                 }
             
                 indexPairs(nPairs, vertexDataOffset, _out.indices);
@@ -536,17 +491,16 @@ void Builders::buildPolyLine(const Line& _line, const PolyLineOptions& _options,
                 nPairs = 0;
 
                 if (isSigned) {
-                    addVertex(coordCurr, nB, uB, _options.halfWidth, _out);
-                    addVertex(coordCurr, nC, uC, _options.halfWidth, _out);
+                    addPolyLineVertex(coordCurr, nB, uB, _options.halfWidth, _out);
+                    addPolyLineVertex(coordCurr, nC, uC, _options.halfWidth, _out);
                 } else {
-                    addVertex(coordCurr, nC, uC, _options.halfWidth, _out);
-                    addVertex(coordCurr, nB, uB, _options.halfWidth, _out);
+                    addPolyLineVertex(coordCurr, nC, uC, _options.halfWidth, _out);
+                    addPolyLineVertex(coordCurr, nB, uB, _options.halfWidth, _out);
                 }
                 
             } else {
-                addVertexPair(  coordCurr, normCurr, 
-                                (float)i/((float)lineSize-1.0), 
-                                _options.halfWidth, _out);
+                addPolyLineVertex( coordCurr, normCurr, {1.0, i/((float)lineSize-1.0)}, _options.halfWidth, _out);
+                addPolyLineVertex( coordCurr, normCurr, {0.0, i/((float)lineSize-1.0)}, _options.halfWidth, _out);
             }
             
             if (i+1 < lineSize) {
