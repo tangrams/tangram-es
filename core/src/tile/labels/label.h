@@ -6,9 +6,9 @@
 #include <string>
 
 struct LabelTransform {
-    glm::vec2 m_modelPosition;
+    glm::vec2 m_modelPosition1;
+    glm::vec2 m_modelPosition2;
     float m_alpha;
-    float m_rotation;
 };
 
 class Label {
@@ -28,9 +28,11 @@ public:
 
 private:
 
+    glm::vec4 projectToScreen(const glm::mat4& _mvp, glm::vec4 _worldPosition);
+
     LabelTransform m_transform;
     std::string m_text;
     std::shared_ptr<TextBuffer> m_buffer; // the buffer in which this label text id is associated to
     fsuint m_id;
-    
+
 };
