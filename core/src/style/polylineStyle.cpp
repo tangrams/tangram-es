@@ -56,7 +56,7 @@ void PolylineStyle::buildLine(Line& _line, std::string& _layer, Properties& _pro
     }
     
     Builders::PolyLineOutput lineOutput = { points, indices, scalingVecs, texcoords };
-    Builders::PolyLineOptions lineOptions = { Builders::CapTypes::BUTT, Builders::JoinTypes::MITER, halfWidth, false, false };
+    Builders::PolyLineOptions lineOptions = { Builders::CapTypes::ROUND, Builders::JoinTypes::ROUND, halfWidth, false, false };
     Builders::buildPolyLine(_line, lineOptions, lineOutput);
     
     for (size_t i = 0; i < points.size(); i++) {

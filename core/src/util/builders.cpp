@@ -209,7 +209,7 @@ void indexPairs( int _nPairs, int _nVertices, std::vector<int>& _indicesOut) {
 //  and interpolating their UVs               \ p /
 //                                             \./
 //                                              C
-void addFan(const glm::vec3& _C, const glm::vec2& _CA, const glm::vec2& _CB, const glm::vec2& _uv,
+void addFan(const glm::vec3& _C, const glm::vec2& _CA, const glm::vec2& _CB, const glm::vec2& _nC, const glm::vec2& _uv,
              int _numTriangles, float _halfWidth, PolyLineOutput _out) {
     
     // Find angle difference
@@ -220,7 +220,7 @@ void addFan(const glm::vec3& _C, const glm::vec2& _CA, const glm::vec2& _CB, con
     int startIndex = _out.points.size();
     
     // Add center vertex
-    addPolyLineVertex(_C, {0.0f, 0.0f}, _uv, _halfWidth, _out);
+    addPolyLineVertex(_C, _nC, _uv, _halfWidth, _out);
     
     // Add vertex for point A
     addPolyLineVertex(_C, _CA, _uv, _halfWidth, _out);
@@ -236,11 +236,11 @@ void addFan(const glm::vec3& _C, const glm::vec2& _CA, const glm::vec2& _CB, con
     for (int i = 0; i < _numTriangles; i++) {
         _out.indices.push_back(startIndex); // center vertex
         if (angle > 0) {
-            _out.indices.push_back(startIndex + i + 2);
             _out.indices.push_back(startIndex + i + 1);
+            _out.indices.push_back(startIndex + i + 2);
         } else {
-            _out.indices.push_back(startIndex + i + 1);
             _out.indices.push_back(startIndex + i + 2);
+            _out.indices.push_back(startIndex + i + 1);
         }
     }
     
@@ -256,7 +256,7 @@ void addCap(const glm::vec3& _coord, const glm::vec2& _normal, int _numCorners, 
     glm::vec2 uv = glm::vec2(0.5, _isBeginning ? 0.0 : 1.0); // center point UVs
     float sign = _isBeginning ? 1.0f : -1.0f; // caps at beginning and end fan in opposite directions
 
-    addFan(_coord, -sign * _normal, sign * _normal, uv, _numCorners * 2, _halfWidth, _out);
+    addFan(_coord, -sign * _normal, sign * _normal, {0.f, 0.f}, uv, _numCorners * 2, _halfWidth, _out);
 }
 
 float valuesWithinTolerance(float _a, float _b, float _tolerance = 0.001) {
@@ -300,8 +300,8 @@ void Builders::buildPolyLine(const Line& _line, const PolyLineOptions& _options,
     coordNext = _line[1];
     normNext = glm::normalize(perp2d(coordCurr, coordNext));
     addCap(coordCurr, normNext, cornersOnCap, true, _options.halfWidth, _out);
-    addPolyLineVertex(coordCurr, normNext, {1.0f, 0.0f}, _options.halfWidth, _out);
-    addPolyLineVertex(coordCurr, -normNext, {0.0f, 0.0f}, _options.halfWidth, _out);
+    addPolyLineVertex(coordCurr, normNext, {1.0f, 0.0f}, _options.halfWidth, _out); // right corner
+    addPolyLineVertex(coordCurr, -normNext, {0.0f, 0.0f}, _options.halfWidth, _out); // left corner
     
     // Process intermediate points
     for (int i = 1; i < lineSize - 1; i++) {
@@ -323,37 +323,37 @@ void Builders::buildPolyLine(const Line& _line, const PolyLineOptions& _options,
         if (trianglesOnJoin == 0) {
             // Join type is a simple miter
             
-            addPolyLineVertex(coordCurr, miterVec, {1.0, v}, _options.halfWidth, _out);
-            addPolyLineVertex(coordCurr, -miterVec, {0.0, v}, _options.halfWidth, _out);
+            addPolyLineVertex(coordCurr, miterVec, {1.0, v}, _options.halfWidth, _out); // right corner
+            addPolyLineVertex(coordCurr, -miterVec, {0.0, v}, _options.halfWidth, _out); // left corner
             indexPairs(1, _out.points.size(), _out.indices);
             
         } else {
-            // Join type uses a fan of triangles
+            // Join type is a fan of triangles
             
             bool isRightTurn = (normNext.x * normPrev.y - normNext.y * normPrev.x) > 0; // z component of cross(normNext, normPrev)
             
             if (isRightTurn) {
                 
-                addPolyLineVertex(coordCurr, miterVec, {1.0f, v}, _options.halfWidth, _out);
-                addPolyLineVertex(coordCurr, -normPrev, {0.0f, v}, _options.halfWidth, _out);
+                addPolyLineVertex(coordCurr, miterVec, {1.0f, v}, _options.halfWidth, _out); // right (inner) corner
+                addPolyLineVertex(coordCurr, -normPrev, {0.0f, v}, _options.halfWidth, _out); // left (outer) corner
                 indexPairs(1, _out.points.size(), _out.indices);
                 
-                addFan(coordCurr, -normPrev, -normNext, {0.0f, v}, trianglesOnJoin, _options.halfWidth, _out);
+                addFan(coordCurr, -normPrev, -normNext, miterVec, {0.0f, v}, trianglesOnJoin, _options.halfWidth, _out);
                 
-                addPolyLineVertex(coordCurr, miterVec, {1.0f, v}, _options.halfWidth, _out);
-                addPolyLineVertex(coordCurr, -normNext, {0.0f, v}, _options.halfWidth, _out);
+                addPolyLineVertex(coordCurr, miterVec, {1.0f, v}, _options.halfWidth, _out); // right (inner) corner
+                addPolyLineVertex(coordCurr, -normNext, {0.0f, v}, _options.halfWidth, _out); // left (outer) corner
                 indexPairs(1, _out.points.size(), _out.indices);
                 
             } else {
                 
-                addPolyLineVertex(coordCurr, normPrev, {1.0f, v}, _options.halfWidth, _out);
-                addPolyLineVertex(coordCurr, -miterVec, {0.0f, v}, _options.halfWidth, _out);
+                addPolyLineVertex(coordCurr, normPrev, {1.0f, v}, _options.halfWidth, _out); // right (outer) corner
+                addPolyLineVertex(coordCurr, -miterVec, {0.0f, v}, _options.halfWidth, _out); // left (inner) corner
                 indexPairs(1, _out.points.size(), _out.indices);
                 
-                addFan(coordCurr, normPrev, normNext, {0.0f, v}, trianglesOnJoin, _options.halfWidth, _out);
+                addFan(coordCurr, normPrev, normNext, -miterVec, {0.0f, v}, trianglesOnJoin, _options.halfWidth, _out);
                 
-                addPolyLineVertex(coordCurr, normNext, {1.0f, v}, _options.halfWidth, _out);
-                addPolyLineVertex(coordCurr, -miterVec, {0.0f, v}, _options.halfWidth, _out);
+                addPolyLineVertex(coordCurr, normNext, {1.0f, v}, _options.halfWidth, _out); // right (outer) corner
+                addPolyLineVertex(coordCurr, -miterVec, {0.0f, v}, _options.halfWidth, _out); // left (inner) corner
                 indexPairs(1, _out.points.size(), _out.indices);
                 
             }
@@ -362,8 +362,8 @@ void Builders::buildPolyLine(const Line& _line, const PolyLineOptions& _options,
     }
     
     // Process last point in line with a cap
-    addPolyLineVertex(coordNext, normNext, {1.0f, 1.0f}, _options.halfWidth, _out);
-    addPolyLineVertex(coordNext, -normNext, {0.0f, 1.0f}, _options.halfWidth, _out);
+    addPolyLineVertex(coordNext, normNext, {1.0f, 1.0f}, _options.halfWidth, _out); // right corner
+    addPolyLineVertex(coordNext, -normNext, {0.0f, 1.0f}, _options.halfWidth, _out); // left corner
     indexPairs(1, _out.points.size(), _out.indices);
     addCap(coordNext, normNext, cornersOnCap , false, _options.halfWidth, _out);
     
