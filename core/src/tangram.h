@@ -44,5 +44,8 @@ void handlePanGesture(float _dX, float _dY);
 // Respond to a pinch at the given position in screen coordinates with the given incremental scale
 void handlePinchGesture(float _posX, float _posY, float _scale);
 
+// Respond to a rotation gesture with the given incremental rotation in radians
+void handleRotateGesture(float _rotation);
+
 }
 

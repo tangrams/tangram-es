@@ -64,15 +64,28 @@
     UIPinchGestureRecognizer *pinchRecognizer = [[UIPinchGestureRecognizer alloc]
                                                  initWithTarget:self action:@selector(respondToPinchGesture:)];
     
+    //5. Rotate
+    UIRotationGestureRecognizer *rotationRecognizer = [[UIRotationGestureRecognizer alloc]
+                                                        initWithTarget:self action:@selector(respondToRotationGesture:)];
+    
+    // Use the delegate method 'shouldRecognizeSimultaneouslyWithGestureRecognizer' for gestures that can be concurrent
+    panRecognizer.delegate = self;
+    pinchRecognizer.delegate = self;
+    rotationRecognizer.delegate = self;
     
     /* Setup gesture recognizers */
     [self.view addGestureRecognizer:tapRecognizer];
     [self.view addGestureRecognizer:doubleTapRecognizer];
     [self.view addGestureRecognizer:panRecognizer];
     [self.view addGestureRecognizer:pinchRecognizer];
+    [self.view addGestureRecognizer:rotationRecognizer];
     
     [self setupGL];
     
+}
+
+- (BOOL)gestureRecognizer:(UIGestureRecognizer *)gestureRecognizer shouldRecognizeSimultaneouslyWithGestureRecognizer:(UIGestureRecognizer *)otherGestureRecognizer {
+    return YES;
 }
 
 - (void)respondToTapGesture:(UITapGestureRecognizer *)tapRecognizer {
@@ -96,6 +109,12 @@
     CGFloat scale = pinchRecognizer.scale;
     [pinchRecognizer setScale:1.0];
     Tangram::handlePinchGesture(location.x * self.pixelScale, location.y * self.pixelScale, scale);
+}
+
+- (void)respondToRotationGesture:(UIRotationGestureRecognizer *)rotationRecognizer {
+    CGFloat rotation = rotationRecognizer.rotation;
+    [rotationRecognizer setRotation:0.0];
+    Tangram::handleRotateGesture(rotation);
 }
 
 - (void)dealloc
