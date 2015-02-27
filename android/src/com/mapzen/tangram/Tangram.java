@@ -13,9 +13,11 @@ import android.view.GestureDetector.OnGestureListener;
 import android.view.MotionEvent;
 import android.view.ScaleGestureDetector;
 import android.view.ScaleGestureDetector.OnScaleGestureListener;
+import com.almeros.android.multitouch.RotateGestureDetector;
+import com.almeros.android.multitouch.RotateGestureDetector.OnRotateGestureListener;
 import android.view.SurfaceHolder;
 
-public class Tangram extends GLSurfaceView implements Renderer, OnScaleGestureListener, OnGestureListener {
+public class Tangram extends GLSurfaceView implements Renderer, OnScaleGestureListener, OnRotateGestureListener, OnGestureListener {
 
     static {
         System.loadLibrary("c++_shared");
@@ -33,12 +35,14 @@ public class Tangram extends GLSurfaceView implements Renderer, OnScaleGestureLi
     private static native void handleDoubleTapGesture(float posX, float posY);
     private static native void handlePanGesture(float velX, float velY);
     private static native void handlePinchGesture(float posX, float posY, float scale);
+    private static native void handleRotateGesture(float rotation);
 
     private long time = System.nanoTime();
     private boolean contextDestroyed = false;
     private AssetManager assetManager;
     private GestureDetector gestureDetector;
     private ScaleGestureDetector scaleGestureDetector;
+    private RotateGestureDetector rotateGestureDetector;
     private DisplayMetrics displayMetrics = new DisplayMetrics();
 
     public Tangram(Activity mainApp) {
@@ -53,6 +57,7 @@ public class Tangram extends GLSurfaceView implements Renderer, OnScaleGestureLi
         this.assetManager = mainApp.getAssets();
         this.gestureDetector = new GestureDetector(mainApp, this);
         this.scaleGestureDetector = new ScaleGestureDetector(mainApp, this);
+        this.rotateGestureDetector = new RotateGestureDetector(mainApp, this);
         
     }
     
@@ -75,7 +80,9 @@ public class Tangram extends GLSurfaceView implements Renderer, OnScaleGestureLi
     public boolean onTouchEvent(MotionEvent event) { 
         
         //Pass the event to gestureDetector and scaleDetector
-        if (gestureDetector.onTouchEvent(event) | scaleGestureDetector.onTouchEvent(event)) {
+        if (gestureDetector.onTouchEvent(event) |
+            scaleGestureDetector.onTouchEvent(event) |
+            rotateGestureDetector.onTouchEvent(event)) {
             return true;
         } else {
             return super.onTouchEvent(event);
@@ -162,6 +169,22 @@ public class Tangram extends GLSurfaceView implements Renderer, OnScaleGestureLi
     }
 
     public void onScaleEnd(ScaleGestureDetector detector) {
+        return;
+    }
+
+    // RotateGestureDetector.OnRotateGestureListener methods
+    // =====================================================
+
+    public boolean onRotateBegin(RotateGestureDetector detector) {
+        return true;
+    }
+
+    public boolean onRotate(RotateGestureDetector detector) {
+        handleRotateGesture(-detector.getRotationDegreesDelta() * (float)(Math.PI / 180));
+        return true;
+    }
+
+    public void onRotateEnd(RotateGestureDetector detector) {
         return;
     }
 }

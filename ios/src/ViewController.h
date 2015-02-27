@@ -10,6 +10,6 @@
 #import <GLKit/GLKit.h>
 #include "tangram.h"
 
-@interface ViewController : GLKViewController
+@interface ViewController : GLKViewController <UIGestureRecognizerDelegate>
 
 @end

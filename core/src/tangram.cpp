@@ -214,18 +214,24 @@ void handleDoubleTapGesture(float _posX, float _posY) {
 
 void handlePanGesture(float _dX, float _dY) {
     
-    float dx = m_view->toWorldDistance(_dX);
-    float dy = m_view->toWorldDistance(_dY);
+    
+    m_view->toWorldDisplacement(_dX, _dY);
 
     // We flip the signs of dx and dy to move the camera in the opposite direction
     // of the intended "world movement", but dy gets flipped once more because screen
     // coordinates have y pointing down and our world coordinates have y pointing up
-    m_view->translate(-dx, dy);
+    m_view->translate(-_dX, _dY);
 
 }
 
 void handlePinchGesture(float _posX, float _posY, float _scale) {
     m_view->zoom(log2f(_scale));
+}
+    
+void handleRotateGesture(float _radians) {
+    
+    m_view->roll(_radians);
+    
 }
 
 void teardown() {
