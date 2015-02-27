@@ -204,7 +204,7 @@ void indexPairs( int _nPairs, int _nVertices, std::vector<int>& _indicesOut) {
 //  and interpolating their UVs               \ p /
 //                                             \./
 //                                              C
-void addFan(const glm::vec3& _C, const glm::vec2& _CA, const glm::vec2& _CB, const glm::vec2& _nC, const glm::vec2& _uv,
+void addFan(const glm::vec3& _pC, const glm::vec2& _CA, const glm::vec2& _CB, const glm::vec2& _nC, const glm::vec2& _uv,
              int _numTriangles, float _halfWidth, PolyLineOutput _out) {
     
     // Find angle difference
@@ -215,16 +215,16 @@ void addFan(const glm::vec3& _C, const glm::vec2& _CA, const glm::vec2& _CB, con
     int startIndex = _out.points.size();
     
     // Add center vertex
-    addPolyLineVertex(_C, _nC, _uv, _halfWidth, _out);
+    addPolyLineVertex(_pC, _nC, _uv, _halfWidth, _out);
     
     // Add vertex for point A
-    addPolyLineVertex(_C, _CA, _uv, _halfWidth, _out);
+    addPolyLineVertex(_pC, _CA, _uv, _halfWidth, _out);
     
     // Add radial vertices
     glm::vec2 radial = _CA;
     for (int i = 0; i < _numTriangles; i++) {
         radial = rotate(radial, dAngle);
-        addPolyLineVertex(_C, radial, _uv, _halfWidth, _out);
+        addPolyLineVertex(_pC, radial, _uv, _halfWidth, _out);
     }
     
     // Add indices
