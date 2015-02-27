@@ -23,18 +23,9 @@ namespace Builders {
     };
     
     struct PolyLineOptions {
-        
-        PolyLineOptions() :
-            cap(CapTypes::BUTT), join(JoinTypes::MITER), halfWidth(0.05), closePolygon(false), removeTileEdges(false) {}
-        
-        PolyLineOptions(CapTypes _cap, JoinTypes _join, float _hw, bool _close, bool _rmEdges) :
-            cap(_cap), join(_join), halfWidth(_hw), closePolygon(_close), removeTileEdges(_rmEdges) {}
-        
         CapTypes cap;
         JoinTypes join;
         float halfWidth;
-        bool closePolygon;
-        bool removeTileEdges;
     };
     
     struct PolygonOutput {
@@ -70,6 +61,9 @@ namespace Builders {
      * @_out output vectors, see <PolyLineOutput>
      */
     void buildPolyLine(const Line& _line, const PolyLineOptions& _options, PolyLineOutput& _out);
+    
+    /* Build a tesselated polyline that forms an outline of the given polygon */
+    void buildOutline(const Polygon& _polygon, const PolyLineOptions& _options, PolygonOutput& _out);
     
     /* Build a tesselated square centered on a point coordinate
      * 

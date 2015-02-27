@@ -369,6 +369,30 @@ void Builders::buildPolyLine(const Line& _line, const PolyLineOptions& _options,
     
 }
 
+void Builders::buildOutline(const Polygon& _polygon, const PolyLineOptions& _options, PolygonOutput& _out) {
+    
+    const Line& outer = _polygon[0];
+    PolyLineOutput lineOutput = { _out.points, _out.indices, NO_SCALING_VECS, _out.texcoords };
+    int cut = 0;
+    
+    for (int i = 0; i < outer.size() - 1; i++) {
+        const glm::vec3& coordCurr = outer[i];
+        const glm::vec3& coordNext = outer[i+1];
+        if (isOnTileEdge(coordCurr, coordNext)) {
+            Line line = Line(&outer[cut], &outer[i+1]);
+            buildPolyLine(line, _options, lineOutput);
+            cut = i + 1;
+        }
+    }
+    
+    Line line = Line(&outer[cut], &outer[outer.size()]);
+    buildPolyLine(line, _options, lineOutput);
+    
+    glm::vec3 normal = {0.f, 0.f, 1.f};
+    _out.normals.insert(_out.normals.end(), _out.points.size() - _out.normals.size(), normal);
+    
+}
+
 void Builders::buildQuadAtPoint(const Point& _point, const glm::vec3& _normal, float halfWidth, float height, PolygonOutput& _out) {
 
 }
