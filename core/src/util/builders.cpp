@@ -309,7 +309,7 @@ void Builders::buildPolyLine(const Line& _line, const PolyLineOptions& _options,
         // Compute "normal" for miter joint
         miterVec = normPrev + normNext;
         float scale = sqrtf(2.0f / (1.0f + glm::dot(normPrev, normNext)) / glm::dot(miterVec, miterVec) );
-        miterVec *= scale;
+        miterVec *= fminf(scale, 5.0f);
         
         float v = i / (float)lineSize;
         
