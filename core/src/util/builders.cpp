@@ -46,13 +46,9 @@ void Builders::buildPolygon(const Polygon& _polygon, PolygonOutput& _out) {
     
     Rectangle bBox;
     
-    if (useTexCoords) {
+    if (useTexCoords && _polygon.size() > 0 && _polygon[0].size() > 0) {
         // initialize the axis-aligned bounding box of the polygon
-        if(_polygon.size() > 0) {
-            if(_polygon[0].size() > 0) {
-                bBox.set(_polygon[0][0].x, _polygon[0][0].y, 0, 0);
-            }
-        }
+        bBox.set(_polygon[0][0].x, _polygon[0][0].y, 0, 0);
     }
     
     // add polygon contour for every ring
@@ -66,14 +62,14 @@ void Builders::buildPolygon(const Polygon& _polygon, PolygonOutput& _out) {
     // call the tesselator
     glm::vec3 normal(0.0, 0.0, 1.0);
     
-    if( tessTesselate(tesselator, TessWindingRule::TESS_WINDING_NONZERO, TessElementType::TESS_POLYGONS, 3, 3, &normal[0]) ) {
+    if ( tessTesselate(tesselator, TessWindingRule::TESS_WINDING_NONZERO, TessElementType::TESS_POLYGONS, 3, 3, &normal[0]) ) {
         
         const int numElements = tessGetElementCount(tesselator);
         const TESSindex* tessElements = tessGetElements(tesselator);
         _out.indices.reserve(_out.indices.size() + numElements * 3); // Pre-allocate index vector
-        for(int i = 0; i < numElements; i++) {
+        for (int i = 0; i < numElements; i++) {
             const TESSindex* tessElement = &tessElements[i * 3];
-            for(int j = 0; j < 3; j++) {
+            for (int j = 0; j < 3; j++) {
                 _out.indices.push_back(tessElement[j] + vertexDataOffset);
             }
         }
@@ -85,7 +81,7 @@ void Builders::buildPolygon(const Polygon& _polygon, PolygonOutput& _out) {
         if (useTexCoords) {
             _out.texcoords.reserve(_out.texcoords.size() + numVertices); // Pre-allocate texcoord vector
         }
-        for(int i = 0; i < numVertices; i++) {
+        for (int i = 0; i < numVertices; i++) {
             if (useTexCoords) {
                 float u = mapValue(tessVertices[3*i], bBox.getMinX(), bBox.getMaxX(), 0., 1.);
                 float v = mapValue(tessVertices[3*i+1], bBox.getMinY(), bBox.getMaxY(), 0., 1.);
@@ -94,8 +90,7 @@ void Builders::buildPolygon(const Polygon& _polygon, PolygonOutput& _out) {
             _out.points.push_back(glm::vec3(tessVertices[3*i], tessVertices[3*i+1], tessVertices[3*i+2]));
             _out.normals.push_back(normal);
         }
-    }
-    else {
+    } else {
         logMsg("Tesselator cannot tesselate!!\n");
     }
     
@@ -278,8 +273,6 @@ bool isOnTileEdge(const glm::vec3& _pa, const glm::vec3& _pb) {
 }
 
 void Builders::buildPolyLine(const Line& _line, const PolyLineOptions& _options, PolyLineOutput& _out) {
-    
-    // TODO: For outlines, we'll want another function which pre-processes the points into distinct line segments and then calls buildPolyLine as needed
     
     int lineSize = (int)_line.size();
     
