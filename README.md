@@ -40,7 +40,7 @@ make osx
 ```
 
 ### Ubuntu Linux ###
-To build on Ubuntu you will again need [GLFW](http://www.gflw.org/) and on linux platforms it's best to compile from source. GLFW provides [instructions for compiling the library](http://www.glfw.org/docs/latest/compile.html). Once you've installed GLFW, build Tangram from the project root using GNU Make:
+To build on Ubuntu you will again need [GLFW](http://www.glfw.org/) and on linux platforms it's best to compile from source. GLFW provides [instructions for compiling the library](http://www.glfw.org/docs/latest/compile.html). Once you've installed GLFW, build Tangram from the project root using GNU Make:
 
 ```bash
 make linux
