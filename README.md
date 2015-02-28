@@ -123,9 +123,11 @@ cd build/rpi/bin
 ./tangram
 ```
 
-Tangram will be rendered directly to the screen without a window manager, in the case you want see the mouse cursor run the application with the ```-m``` argument like this:
+Tangram will be rendered directly to the screen without a window manager, if you want see the mouse cursor run the application with the ```-m``` argument like this:
 
 ```
 cd build/rpi/bin
 ./tangram -m
 ```
+
+You can also move the map with `w`, `a`, `s`, and `z`, zoom in and out with `-` and `=`, and quit with `q`.
