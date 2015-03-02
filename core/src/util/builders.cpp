@@ -166,9 +166,9 @@ glm::vec2 perp2d(const glm::vec3& _v1, const glm::vec3& _v2 ){
 
 // Get 2D vector rotated 
 glm::vec2 rotate(const glm::vec2& _v, float _radians) {
-    float cos = std::cos(_radians);
-    float sin = std::sin(_radians);
-    return glm::vec2(_v.x * cos - _v.y * sin, _v.x * sin + _v.y * cos);
+    float cosine = cos(_radians);
+    float sine = sin(_radians);
+    return glm::vec2(_v.x * cosine - _v.y * sine, _v.x * sine + _v.y * cosine);
 }
 
 // Helper function for polyline tesselation
@@ -268,7 +268,7 @@ void addCap(const glm::vec3& _coord, const glm::vec2& _normal, int _numCorners, 
 }
 
 float valuesWithinTolerance(float _a, float _b, float _tolerance = 0.001) {
-    return fabs(_a - _b) < _tolerance;
+    return fabsf(_a - _b) < _tolerance;
 }
 
 // Tests if a line segment (from point A to B) is nearly coincident with the edge of a tile
@@ -276,8 +276,8 @@ bool isOnTileEdge(const glm::vec3& _pa, const glm::vec3& _pb) {
     
     float tolerance = 0.0002; // tweak this adjust if catching too few/many line segments near tile edges
     // TODO: make tolerance configurable by source if necessary
-    glm::vec2 tile_min = glm::vec2(-1.0,-1.0);
-    glm::vec2 tile_max = glm::vec2(1.0,1.0);
+    glm::vec2 tile_min(-1.0, -1.0);
+    glm::vec2 tile_max(1.0, 1.0);
 
     return (valuesWithinTolerance(_pa.x, tile_min.x, tolerance) && valuesWithinTolerance(_pb.x, tile_min.x, tolerance)) ||
            (valuesWithinTolerance(_pa.x, tile_max.x, tolerance) && valuesWithinTolerance(_pb.x, tile_max.x, tolerance)) ||
@@ -295,15 +295,13 @@ void Builders::buildPolyLine(const Line& _line, const PolyLineOptions& _options,
     
     // TODO: pre-allocate output vectors; try estimating worst-case space usage
     
-    glm::vec3 coordPrev, coordCurr, coordNext;
+    glm::vec3 coordPrev(_line[0]), coordCurr(_line[0]), coordNext(_line[1]);
     glm::vec2 normPrev, normNext, miterVec;
 
     int cornersOnCap = (int)_options.cap;
     int trianglesOnJoin = (int)_options.join;
     
     // Process first point in line with an end cap
-    coordCurr = _line[0];
-    coordNext = _line[1];
     normNext = glm::normalize(perp2d(coordCurr, coordNext));
     addCap(coordCurr, normNext, cornersOnCap, true, _options.halfWidth, _out);
     addPolyLineVertex(coordCurr, normNext, {1.0f, 0.0f}, _options.halfWidth, _out); // right corner
@@ -322,7 +320,7 @@ void Builders::buildPolyLine(const Line& _line, const PolyLineOptions& _options,
         // Compute "normal" for miter joint
         miterVec = normPrev + normNext;
         float scale = sqrtf(2.0f / (1.0f + glm::dot(normPrev, normNext)) / glm::dot(miterVec, miterVec) );
-        miterVec *= fminf(scale, 5.0f);
+        miterVec *= fminf(scale, 5.0f); // clamps our miter vector to an arbitrary length
         
         float v = i / (float)lineSize;
         
