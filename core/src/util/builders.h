@@ -13,7 +13,7 @@ namespace Builders {
     enum class CapTypes {
         BUTT = 0, // No points added to end of line
         SQUARE = 2, // Two points added to make a square extension
-        ROUND = 4 // Four points added in a fan to make a round cap
+        ROUND = 6 // Six points added in a fan to make a round cap
     };
     
     enum class JoinTypes {
