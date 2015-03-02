@@ -30,6 +30,6 @@ void main(void) {
     darken = clamp(darken, 0.5, 1.0); // reduce color values by 1/2 in darkened fragments
 
   	color.rgb = color.rgb * darken;
-    //color.rgb = pow(color.rgb, vec3(1.0/2.2)); // gamma correction
+    // color.rgb = pow(color.rgb, vec3(1.0/2.2)); // gamma correction
 	gl_FragColor = color;
 }

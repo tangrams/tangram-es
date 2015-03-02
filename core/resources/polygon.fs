@@ -15,7 +15,7 @@ varying vec3 v_normal;
 varying vec2 v_texcoord;
 
 void main(void) {
-	vec4 color = v_color;
+    vec4 color = v_color;
 
     #ifdef TANGRAM_FRAGMENT_LIGHTS
 	   lightFragment(v_eyeToPoint, v_normal, color);
