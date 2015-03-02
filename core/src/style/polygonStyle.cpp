@@ -111,6 +111,7 @@ void PolygonStyle::buildPolygon(Polygon& _polygon, std::string& _layer, Properti
     }
     
     // Outlines for water polygons
+    /*
     if (_layer == "water") {
         abgr = 0xfff2cc6c;
         size_t outlineStart = points.size();
@@ -126,6 +127,7 @@ void PolygonStyle::buildPolygon(Polygon& _polygon, std::string& _layer, Properti
             vertices.push_back({ p.x, p.y, p.z + .02f, n.x, n.y, n.z, u.x, u.y, abgr });
         }
     }
+    */
     
     // Make sure indices get correctly offset
     int vertOffset = _mesh.numVertices();
