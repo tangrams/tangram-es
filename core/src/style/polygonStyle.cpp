@@ -43,11 +43,11 @@ void PolygonStyle::buildLine(Line& _line, std::string& _layer, Properties& _prop
     std::vector<int> indices;
     std::vector<glm::vec3> points;
     std::vector<glm::vec2> texcoords;
-    Builders::PolyLineOutput output = { points, indices, Builders::NO_SCALING_VECS, texcoords };
+    PolyLineOutput output = { points, indices, Builders::NO_SCALING_VECS, texcoords };
     
     GLuint abgr = 0xff969696; // Default road color
     
-    Builders::buildPolyLine(_line, Builders::PolyLineOptions(), output);
+    Builders::buildPolyLine(_line, PolyLineOptions(), output);
     
     for (size_t i = 0; i < points.size(); i++) {
         glm::vec3 p = points[i];
@@ -73,7 +73,7 @@ void PolygonStyle::buildPolygon(Polygon& _polygon, std::string& _layer, Properti
     std::vector<glm::vec3> points;
     std::vector<glm::vec3> normals;
     std::vector<glm::vec2> texcoords;
-    Builders::PolygonOutput output = { points, indices, normals, texcoords };
+    PolygonOutput output = { points, indices, normals, texcoords };
     
     GLuint abgr = 0xffaaaaaa; // Default color
     
@@ -114,8 +114,11 @@ void PolygonStyle::buildPolygon(Polygon& _polygon, std::string& _layer, Properti
     if (_layer == "water") {
         abgr = 0xfff2cc6c;
         size_t outlineStart = points.size();
-        Builders::PolyLineOptions outlineOptions = { Builders::CapTypes::ROUND, Builders::JoinTypes::ROUND, 0.02f };
-        Builders::buildOutline(_polygon, outlineOptions, output);
+        PolyLineOutput lineOutput = { points, indices, Builders::NO_SCALING_VECS, texcoords };
+        PolyLineOptions outlineOptions = { CapTypes::ROUND, JoinTypes::ROUND, 0.02f };
+        Builders::buildOutline(_polygon[0], outlineOptions, lineOutput);
+        glm::vec3 normal(0.f, 0.f, 1.f); // The outline builder doesn't produce normals, so we'll add those now
+        normals.insert(normals.end(), points.size() - normals.size(), normal);
         for (size_t i = outlineStart; i < points.size(); i++) {
             glm::vec3& p = points[i];
             glm::vec3& n = normals[i];

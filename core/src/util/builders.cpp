@@ -6,13 +6,8 @@
 
 #include <memory>
 
-using Builders::CapTypes;
-using Builders::JoinTypes;
-using Builders::PolyLineOptions;
-using Builders::PolygonOutput;
-using Builders::PolyLineOutput;
-using Builders::NO_TEXCOORDS;
-using Builders::NO_SCALING_VECS;
+std::vector<glm::vec2> Builders::NO_TEXCOORDS;
+std::vector<glm::vec2> Builders::NO_SCALING_VECS;
 
 void* alloc(void* _userData, unsigned int _size) {
     return malloc(_size);
@@ -174,14 +169,14 @@ glm::vec2 rotate(const glm::vec2& _v, float _radians) {
 // Helper function for polyline tesselation
 void addPolyLineVertex(const glm::vec3& _coord, const glm::vec2& _normal, const glm::vec2& _uv, float _halfWidth, PolyLineOutput _out) {
 
-    if (&_out.scalingVecs != &NO_SCALING_VECS) {
+    if (&_out.scalingVecs != &Builders::NO_SCALING_VECS) {
         _out.points.push_back(_coord);
         _out.scalingVecs.push_back(_normal);
     } else {
         _out.points.push_back(glm::vec3( _coord.x + _normal.x * _halfWidth, _coord.y + _normal.y * _halfWidth, _coord.z));
     }
 
-    if(&_out.texcoords != &NO_TEXCOORDS){
+    if(&_out.texcoords != &Builders::NO_TEXCOORDS){
          _out.texcoords.push_back(_uv);
     }
 }
@@ -371,27 +366,22 @@ void Builders::buildPolyLine(const Line& _line, const PolyLineOptions& _options,
     
 }
 
-void Builders::buildOutline(const Polygon& _polygon, const PolyLineOptions& _options, PolygonOutput& _out) {
+void Builders::buildOutline(const Line& _line, const PolyLineOptions& _options, PolyLineOutput& _out) {
     
-    const Line& outer = _polygon[0];
-    PolyLineOutput lineOutput = { _out.points, _out.indices, NO_SCALING_VECS, _out.texcoords };
     int cut = 0;
     
-    for (int i = 0; i < outer.size() - 1; i++) {
-        const glm::vec3& coordCurr = outer[i];
-        const glm::vec3& coordNext = outer[i+1];
+    for (int i = 0; i < _line.size() - 1; i++) {
+        const glm::vec3& coordCurr = _line[i];
+        const glm::vec3& coordNext = _line[i+1];
         if (isOnTileEdge(coordCurr, coordNext)) {
-            Line line = Line(&outer[cut], &outer[i+1]);
-            buildPolyLine(line, _options, lineOutput);
+            Line line = Line(&_line[cut], &_line[i+1]);
+            buildPolyLine(line, _options, _out);
             cut = i + 1;
         }
     }
     
-    Line line = Line(&outer[cut], &outer[outer.size()]);
-    buildPolyLine(line, _options, lineOutput);
-    
-    glm::vec3 normal = {0.f, 0.f, 1.f};
-    _out.normals.insert(_out.normals.end(), _out.points.size() - _out.normals.size(), normal);
+    Line line = Line(&_line[cut], &_line[_line.size()]);
+    buildPolyLine(line, _options, _out);
     
 }
 
