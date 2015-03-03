@@ -59,6 +59,7 @@
     //3. Pan
     UIPanGestureRecognizer *panRecognizer = [[UIPanGestureRecognizer alloc]
                                             initWithTarget:self action:@selector(respondToPanGesture:)];
+    panRecognizer.maximumNumberOfTouches = 1;
     
     //4. Pinch
     UIPinchGestureRecognizer *pinchRecognizer = [[UIPinchGestureRecognizer alloc]
@@ -67,6 +68,11 @@
     //5. Rotate
     UIRotationGestureRecognizer *rotationRecognizer = [[UIRotationGestureRecognizer alloc]
                                                         initWithTarget:self action:@selector(respondToRotationGesture:)];
+    
+    //6. Shove
+    UIPanGestureRecognizer *shoveRecognizer = [[UIPanGestureRecognizer alloc]
+                                             initWithTarget:self action:@selector(respondToShoveGesture:)];
+    shoveRecognizer.minimumNumberOfTouches = 2;
     
     // Use the delegate method 'shouldRecognizeSimultaneouslyWithGestureRecognizer' for gestures that can be concurrent
     panRecognizer.delegate = self;
@@ -79,6 +85,7 @@
     [self.view addGestureRecognizer:panRecognizer];
     [self.view addGestureRecognizer:pinchRecognizer];
     [self.view addGestureRecognizer:rotationRecognizer];
+    [self.view addGestureRecognizer:shoveRecognizer];
     
     [self setupGL];
     
@@ -115,6 +122,12 @@
     CGFloat rotation = rotationRecognizer.rotation;
     [rotationRecognizer setRotation:0.0];
     Tangram::handleRotateGesture(rotation);
+}
+
+- (void)respondToShoveGesture:(UIPanGestureRecognizer *)shoveRecognizer {
+    CGPoint displacement = [shoveRecognizer translationInView:self.view];
+    [shoveRecognizer setTranslation:{0, 0} inView:self.view];
+    Tangram::handleShoveGesture(displacement.y / self.view.bounds.size.height);
 }
 
 - (void)dealloc
