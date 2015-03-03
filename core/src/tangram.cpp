@@ -234,6 +234,12 @@ void handleRotateGesture(float _radians) {
     
 }
 
+void handleShoveGesture(float _distance) {
+    
+    m_view->pitch(_distance);
+    
+}
+
 void teardown() {
     // Release resources!
     logMsg("teardown\n");
