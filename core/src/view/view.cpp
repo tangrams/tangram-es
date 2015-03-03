@@ -5,6 +5,7 @@
 #include "util/tileID.h"
 #include "platform.h"
 #include "glm/gtc/matrix_transform.hpp"
+#include "glm/gtx/rotate_vector.hpp"
 
 constexpr float View::s_maxZoom; // Create a stack reference to the static member variable
 
@@ -80,6 +81,13 @@ void View::setRoll(float _roll) {
     
 }
 
+void View::setPitch(float _pitch) {
+
+    m_pitch = glm::mod(_pitch, (float)TWO_PI);
+    m_dirty = true;
+
+}
+
 void View::translate(double _dx, double _dy) {
 
     setPosition(m_pos.x + _dx, m_pos.y + _dy);
@@ -101,6 +109,12 @@ void View::roll(float _droll) {
     
     setRoll(m_roll + _droll);
     
+}
+
+void View::pitch(float _dpitch) {
+
+    setPitch(m_pitch + _dpitch);
+
 }
 
 void View::update() {
@@ -180,10 +194,11 @@ void View::updateMatrices() {
     // TODO: this is a simple heuristic that deserves more thought
     float near = m_pos.z / 50.0;
     
-    glm::vec3 up = {cos(m_roll + HALF_PI), sin(m_roll + HALF_PI), 0.0f};
+    glm::vec3 up = glm::rotateZ(glm::rotateX(glm::vec3(0.f, 1.f, 0.f), m_pitch), m_roll);
+    glm::vec3 at = glm::rotateZ(glm::rotateX(glm::vec3(0.f, 0.f, -1.f), m_pitch), m_roll);
     
     // update view and projection matrices
-    m_view = glm::lookAt(glm::vec3(0.0, 0.0, 0.0), glm::vec3(0.0, 0.0, -1.0), up);
+    m_view = glm::lookAt(glm::vec3(0.f, 0.f, 0.f), at, up);
     m_proj = glm::perspective(fovy, m_aspect, near, (float)m_pos.z + 1.0f);
     m_viewProj = m_proj * m_view;
     

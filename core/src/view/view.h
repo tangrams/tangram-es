@@ -50,6 +50,9 @@ public:
     
     /* Sets the roll angle of the view in radians (default is 0) */
     void setRoll(float _rad);
+
+    /* Sets the pitch angle of the view in radians (default is 0) */
+    void setPitch(float _rad);
     
     /* Moves the position of the view */
     void translate(double _dx, double _dy);
@@ -59,6 +62,9 @@ public:
     
     /* Changes the roll angle by the given amount in radians */
     void roll(float _drad);
+
+    /* Changes the pitch angle by the given amount in radians */
+    void pitch(float _drad);
     
     /* Gets the current zoom */
     float getZoom() const { return m_zoom; }
@@ -68,6 +74,9 @@ public:
     
     /* Get the current roll angle in radians */
     float getRoll() const { return m_roll; }
+    
+    /* Get the current pitch angle in radians */
+    float getPitch() const { return m_pitch; }
     
     /* Updates the view and projection matrices if properties have changed */
     void update();
@@ -124,6 +133,7 @@ protected:
     glm::mat4 m_viewProj;
     
     float m_roll = 0;
+    float m_pitch = 0;
     
     float m_zoom;
     float m_initZoom = 16.0;
