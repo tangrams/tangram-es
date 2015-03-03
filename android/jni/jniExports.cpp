@@ -53,6 +53,10 @@ extern "C" {
     JNIEXPORT void JNICALL Java_com_mapzen_tangram_Tangram_handleRotateGesture(JNIEnv* jniEnv, jobject obj, jfloat rotation) {
         Tangram::handleRotateGesture(rotation);
     }
+
+    JNIEXPORT void JNICALL Java_com_mapzen_tangram_Tangram_handleShoveGesture(JNIEnv* jniEnv, jobject obj, jfloat distance) {
+        Tangram::handleShoveGesture(distance);
+    }
     
 }
 
