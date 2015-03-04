@@ -206,6 +206,18 @@ void View::updateMatrices() {
 
 void View::updateTiles() {
     
+    /* To extend this tile updating step to account for an arbitrary view frustrum, we'll take advantage of the
+     * fact that this process is essentially rasterization; the projection of the view frustrum is the geometry
+     * and the tiles are our raster grid. Thus, we'll approach the problem by treating the projection of the view
+     * frustrum onto the tile plane (the view trapezoid) as two triangles, then rasterizing those triangles into tiles.
+     * 
+     * Implementation steps:
+     * 1. Represent the existing view rectangle as two triangles and rasterize those into a set of tiles that should
+     *    match the existing visible tile set.
+     * 2. Calculate the view trapezoid from the view frustrum, use the trapezoid to form the two triangles and then
+     *    rasterize those into tiles which should fully cover the visible space. 
+     */
+    
     m_visibleTiles.clear();
     
     float tileSize = 2 * MapProjection::HALF_CIRCUMFERENCE * pow(2, -(int)m_zoom);
