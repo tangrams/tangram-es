@@ -9,7 +9,7 @@
 TileManager::TileManager() {
     
     // Instantiate workers
-    for (int i = 0; i < MAX_WORKERS; i++) {
+    for (size_t i = 0; i < MAX_WORKERS; i++) {
         m_workers.push_back(std::unique_ptr<TileWorker>(new TileWorker()));
     }
 }
