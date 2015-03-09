@@ -370,7 +370,7 @@ void Builders::buildOutline(const Line& _line, const PolyLineOptions& _options, 
     
     int cut = 0;
     
-    for (int i = 0; i < _line.size() - 1; i++) {
+    for (size_t i = 0; i < _line.size() - 1; i++) {
         const glm::vec3& coordCurr = _line[i];
         const glm::vec3& coordNext = _line[i+1];
         if (isOnTileEdge(coordCurr, coordNext)) {
