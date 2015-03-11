@@ -142,39 +142,24 @@ glm::dmat2 View::getBoundsRect() const {
 
 }
 
-float View::toWorldDistance(float _screenDistance) const {
-    float metersPerTile = 2 * MapProjection::HALF_CIRCUMFERENCE * pow(2, -m_zoom);
-    return _screenDistance * metersPerTile / (m_pixelScale * m_pixelsPerTile);
-}
-
-glm::vec2 View::toWorldDisplacement(float _startX, float _startY, float _endX, float _endY) const {
+void View::screenToGroundPlane(float& _screenX, float& _screenY) const {
     
-    glm::mat4 invView = glm::inverse(m_view);
-    glm::mat4 invProj = glm::inverse(m_proj);
+    // Cast a ray and find its intersection with the z = 0 plane,
+    // following the technique described here: http://antongerdelan.net/opengl/raycasting.html
     
-    glm::vec4 ray_start_clip = { 2.f * _startX / m_vpWidth - 1.f, 1.f - 2.f * _startY / m_vpHeight, -1.f, 1.f };
-    glm::vec4 ray_start_eye = invProj * ray_start_clip;
-    ray_start_eye.z = -1.f;
-    ray_start_eye.w = 1.f;
-    glm::vec3 ray_start_world = glm::vec3(invView * ray_start_eye);
+    glm::vec4 ray_clip = { 2.f * _screenX / m_vpWidth - 1.f, 1.f - 2.f * _screenY / m_vpHeight, -1.f, 1.f }; // Ray from camera in clip space
+    glm::vec3 ray_world = glm::vec3(m_invViewProj * ray_clip); // Ray from camera in world space
     
-    glm::vec4 ray_end_clip = { 2.f * _endX / m_vpWidth - 1.f, 1.f - 2.f * _endY / m_vpHeight, -1.f, 1.f };
-    glm::vec4 ray_end_eye = invProj * ray_end_clip;
-    ray_end_eye.z = -1.f;
-    ray_end_eye.w = 1.f;
-    glm::vec3 ray_end_world = glm::vec3(invView * ray_end_eye);
+    float t; // Distance along ray to ground plane
+    if (ray_world.z != 0.f) {
+        t = -m_pos.z / ray_world.z;
+    } else {
+        t = 0;
+    }
     
-    glm::vec3 ray_origin_world = m_pos;
-    glm::vec3 plane_normal = { 0.f, 0.f, 1.f };
-    
-    float t_start = -glm::dot(ray_origin_world, plane_normal) / glm::dot(ray_start_world, plane_normal);
-    glm::vec3 world_start = ray_origin_world + ray_start_world * t_start;
-    
-    float t_end = -glm::dot(ray_origin_world, plane_normal) / glm::dot(ray_start_world, plane_normal);
-    glm::vec3 world_end = ray_origin_world + ray_end_world * t_end;
-    
-    return glm::vec2(world_end - world_start);
-    
+    ray_world *= t;
+    _screenX = ray_world.x;
+    _screenY = ray_world.y;
 }
 
 const std::set<TileID>& View::getVisibleTiles() {
@@ -219,6 +204,7 @@ void View::updateMatrices() {
     m_view = glm::lookAt(eye, at, up);
     m_proj = glm::perspective(fovy, m_aspect, near, far);
     m_viewProj = m_proj * m_view;
+    m_invViewProj = glm::inverse(m_viewProj);
     
 }
 

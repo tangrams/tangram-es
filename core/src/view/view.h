@@ -101,10 +101,9 @@ public:
     
     float getHeight() const { return m_vpHeight; }
     
-    /* Calculate the distance in map projection units represented by the given distance in screen space */
-    float toWorldDistance(float _screenDistance) const;
-    
-    glm::vec2 toWorldDisplacement(float _startX, float _startY, float _endX, float _endY) const;
+    /* Calculate the position on the ground plane (z = 0) under the given screen space coordinates, 
+       replacing the inputs coordinates with world-space coordinates */
+    void screenToGroundPlane(float& _screenX, float& _screenY) const;
     
     /* Returns the set of all tiles visible at the current position and zoom */
     const std::set<TileID>& getVisibleTiles();
@@ -131,6 +130,7 @@ protected:
     glm::mat4 m_view;
     glm::mat4 m_proj;
     glm::mat4 m_viewProj;
+    glm::mat4 m_invViewProj;
     
     float m_roll = 0.f;
     float m_pitch = 0.f;

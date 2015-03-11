@@ -198,12 +198,13 @@ void setPixelScale(float _pixelsPerPoint) {
     
 void handleTapGesture(float _posX, float _posY) {
     
-    float dx = m_view->toWorldDistance(_posX - 0.5 * m_view->getWidth());
-    float dy = m_view->toWorldDistance(_posY - 0.5 * m_view->getHeight());
-
-    // Flip y displacement to change from screen coordinates to world coordinates
-    m_view->translate(dx, -dy);
+    float viewCenterX = 0.5f * m_view->getWidth();
+    float viewCenterY = 0.5f * m_view->getHeight();
     
+    m_view->screenToGroundPlane(viewCenterX, viewCenterY);
+    m_view->screenToGroundPlane(_posX, _posY);
+
+    m_view->translate((_posX - viewCenterX), (_posY - viewCenterY));
 
 }
 
@@ -214,12 +215,10 @@ void handleDoubleTapGesture(float _posX, float _posY) {
 
 void handlePanGesture(float _startX, float _startY, float _endX, float _endY) {
     
-    glm::vec2 displacement = m_view->toWorldDisplacement(_startX, _startY, _endX, _endY);
+    m_view->screenToGroundPlane(_startX, _startY);
+    m_view->screenToGroundPlane(_endX, _endY);
 
-    // We flip the signs of dx and dy to move the camera in the opposite direction
-    // of the intended "world movement", but dy gets flipped once more because screen
-    // coordinates have y pointing down and our world coordinates have y pointing up
-    m_view->translate(-displacement.x, -displacement.y);
+    m_view->translate(_startX - _endX, _startY - _endY);
 
 }
 
