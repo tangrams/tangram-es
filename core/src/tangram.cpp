@@ -226,9 +226,10 @@ void handlePinchGesture(float _posX, float _posY, float _scale) {
     m_view->zoom(log2f(_scale));
 }
     
-void handleRotateGesture(float _radians) {
+void handleRotateGesture(float _posX, float _posY, float _radians) {
     
-    m_view->roll(_radians);
+    m_view->screenToGroundPlane(_posX, _posY);
+    m_view->orbit(_posX, _posY, _radians);
     
 }
 

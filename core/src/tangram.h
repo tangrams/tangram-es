@@ -45,7 +45,7 @@ void handlePanGesture(float _startX, float _startY, float _endX, float _endY);
 void handlePinchGesture(float _posX, float _posY, float _scale);
 
 // Respond to a rotation gesture with the given incremental rotation in radians
-void handleRotateGesture(float _rotation);
+void handleRotateGesture(float _posX, float _posY, float _rotation);
 
 // Respond to a two-finger shove with the given distance
 void handleShoveGesture(float _distance);
