@@ -53,7 +53,7 @@ void cursor_pos_callback(GLFWwindow* window, double x, double y) {
     if (action == GLFW_PRESS) {
         
         if (was_panning) {
-            Tangram::handlePanGesture(x - last_x_down, y - last_y_down);
+            Tangram::handlePanGesture(last_x_down, last_y_down, x, y);
         }
         
         was_panning = true;
