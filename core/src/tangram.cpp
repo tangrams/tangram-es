@@ -212,15 +212,14 @@ void handleDoubleTapGesture(float _posX, float _posY) {
     m_view->zoom(1.0);
 }
 
-void handlePanGesture(float _dX, float _dY) {
+void handlePanGesture(float _startX, float _startY, float _endX, float _endY) {
     
-    
-    m_view->toWorldDisplacement(_dX, _dY);
+    glm::vec2 displacement = m_view->toWorldDisplacement(_startX, _startY, _endX, _endY);
 
     // We flip the signs of dx and dy to move the camera in the opposite direction
     // of the intended "world movement", but dy gets flipped once more because screen
     // coordinates have y pointing down and our world coordinates have y pointing up
-    m_view->translate(-_dX, _dY);
+    m_view->translate(-displacement.x, -displacement.y);
 
 }
 
