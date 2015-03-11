@@ -147,18 +147,34 @@ float View::toWorldDistance(float _screenDistance) const {
     return _screenDistance * metersPerTile / (m_pixelScale * m_pixelsPerTile);
 }
 
-void View::toWorldDisplacement(float& _screenX, float& _screenY) const {
+glm::vec2 View::toWorldDisplacement(float _startX, float _startY, float _endX, float _endY) const {
     
-    float metersPerPixel = toWorldDistance(1);
+    glm::mat4 invView = glm::inverse(m_view);
+    glm::mat4 invProj = glm::inverse(m_proj);
     
-    // Rotate screen displacement into world space
-    float cos_r = cos(m_roll);
-    float sin_r = sin(m_roll);
-    float x = (_screenX * cos_r + _screenY * sin_r) * metersPerPixel;
-    float y = (_screenX * -sin_r + _screenY * cos_r) * metersPerPixel;
+    glm::vec4 ray_start_clip = { 2.f * _startX / m_vpWidth - 1.f, 1.f - 2.f * _startY / m_vpHeight, -1.f, 1.f };
+    glm::vec4 ray_start_eye = invProj * ray_start_clip;
+    ray_start_eye.z = -1.f;
+    ray_start_eye.w = 1.f;
+    glm::vec3 ray_start_world = glm::vec3(invView * ray_start_eye);
     
-    _screenX = x;
-    _screenY = y;
+    glm::vec4 ray_end_clip = { 2.f * _endX / m_vpWidth - 1.f, 1.f - 2.f * _endY / m_vpHeight, -1.f, 1.f };
+    glm::vec4 ray_end_eye = invProj * ray_end_clip;
+    ray_end_eye.z = -1.f;
+    ray_end_eye.w = 1.f;
+    glm::vec3 ray_end_world = glm::vec3(invView * ray_end_eye);
+    
+    glm::vec3 ray_origin_world = m_pos;
+    glm::vec3 plane_normal = { 0.f, 0.f, 1.f };
+    
+    float t_start = -glm::dot(ray_origin_world, plane_normal) / glm::dot(ray_start_world, plane_normal);
+    glm::vec3 world_start = ray_origin_world + ray_start_world * t_start;
+    
+    float t_end = -glm::dot(ray_origin_world, plane_normal) / glm::dot(ray_start_world, plane_normal);
+    glm::vec3 world_end = ray_origin_world + ray_end_world * t_end;
+    
+    return glm::vec2(world_end - world_start);
+    
 }
 
 const std::set<TileID>& View::getVisibleTiles() {
@@ -190,16 +206,18 @@ void View::updateMatrices() {
     // set camera z to produce desired viewable area
     m_pos.z = m_height * 0.5 / tan(fovy * 0.5);
     
-    // set near clipping distance as a function of camera z
+    // set near and far clipping distances as a function of camera z
     // TODO: this is a simple heuristic that deserves more thought
     float near = m_pos.z / 50.0;
+    float far = m_pos.z + 1.f;
     
-    glm::vec3 up = glm::rotateZ(glm::rotateX(glm::vec3(0.f, 1.f, 0.f), m_pitch), m_roll);
+    glm::vec3 eye = { 0.f, 0.f, 0.f };
     glm::vec3 at = glm::rotateZ(glm::rotateX(glm::vec3(0.f, 0.f, -1.f), m_pitch), m_roll);
+    glm::vec3 up = glm::rotateZ(glm::rotateX(glm::vec3(0.f, 1.f, 0.f), m_pitch), m_roll);
     
     // update view and projection matrices
-    m_view = glm::lookAt(glm::vec3(0.f, 0.f, 0.f), at, up);
-    m_proj = glm::perspective(fovy, m_aspect, near, (float)m_pos.z + 1.0f);
+    m_view = glm::lookAt(eye, at, up);
+    m_proj = glm::perspective(fovy, m_aspect, near, far);
     m_viewProj = m_proj * m_view;
     
 }
