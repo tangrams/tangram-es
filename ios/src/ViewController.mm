@@ -121,9 +121,10 @@
 }
 
 - (void)respondToRotationGesture:(UIRotationGestureRecognizer *)rotationRecognizer {
+    CGPoint position = [rotationRecognizer locationInView:self.view];
     CGFloat rotation = rotationRecognizer.rotation;
     [rotationRecognizer setRotation:0.0];
-    Tangram::handleRotateGesture(rotation);
+    Tangram::handleRotateGesture(position.x * self.pixelScale, position.y * self.pixelScale, rotation);
 }
 
 - (void)respondToShoveGesture:(UIPanGestureRecognizer *)shoveRecognizer {
