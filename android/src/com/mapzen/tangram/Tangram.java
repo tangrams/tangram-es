@@ -35,7 +35,7 @@ public class Tangram extends GLSurfaceView implements Renderer, OnScaleGestureLi
     private static native void setPixelScale(float scale);
     private static native void handleTapGesture(float posX, float posY);
     private static native void handleDoubleTapGesture(float posX, float posY);
-    private static native void handlePanGesture(float velX, float velY);
+    private static native void handlePanGesture(float startX, float startY, float endX, float endY);
     private static native void handlePinchGesture(float posX, float posY, float scale);
     private static native void handleRotateGesture(float rotation);
     private static native void handleShoveGesture(float distance);
@@ -142,7 +142,9 @@ public class Tangram extends GLSurfaceView implements Renderer, OnScaleGestureLi
             // We flip the signs of distanceX and distanceY because onScroll provides the distances
             // by which the view being scrolled should move, while handlePanGesture expects the 
             // distances by which the touch point has moved on the screen (these are opposite)
-            handlePanGesture(-distanceX, -distanceY);
+            float x = e2.getX();
+            float y = e2.getY();
+            handlePanGesture(x + distanceX, y + distanceY, x, y);
         }
         return true;
     }

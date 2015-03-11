@@ -42,8 +42,8 @@ extern "C" {
         Tangram::handleDoubleTapGesture(posX, posY);
     }
 
-    JNIEXPORT void JNICALL Java_com_mapzen_tangram_Tangram_handlePanGesture(JNIEnv* jniEnv, jobject obj, jfloat velX, jfloat velY) {
-        Tangram::handlePanGesture(velX, velY);
+    JNIEXPORT void JNICALL Java_com_mapzen_tangram_Tangram_handlePanGesture(JNIEnv* jniEnv, jobject obj, jfloat startX, jfloat startY, jfloat endX, jfloat endY) {
+        Tangram::handlePanGesture(startX, startY, endX, endY);
     }
 
     JNIEXPORT void JNICALL Java_com_mapzen_tangram_Tangram_handlePinchGesture(JNIEnv* jniEnv, jobject obj, jfloat posX, jfloat posY, jfloat scale) {
