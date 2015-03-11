@@ -26,11 +26,11 @@ Currently we are targeting five platforms: OS X, Ubuntu Linux, iOS, Android, and
 ## platforms ##
 
 ### OS X ###
-To build for OS X, you will need to install [GLFW](http://www.glfw.org/): 
+To build for OS X, you will need to install [GLFW](http://www.glfw.org/) and [pkg-config](http://www.freedesktop.org/wiki/Software/pkg-config/): 
 
 ```bash
 brew tap homebrew/versions
-brew install glfw3
+brew install glfw3 pkg-config
 ```
 
 Then build using GNU Make:
