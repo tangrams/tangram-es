@@ -66,6 +66,10 @@ public:
     /* Changes the pitch angle by the given amount in radians */
     void pitch(float _drad);
     
+    /* Rotates the view by the given amount in radians and translates the view such that 
+       the given position on the ground plane remains stationary in screen space */
+    void orbit(float _x, float _y, float _radians);
+    
     /* Gets the current zoom */
     float getZoom() const { return m_zoom; }
 

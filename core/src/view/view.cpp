@@ -117,6 +117,15 @@ void View::pitch(float _dpitch) {
 
 }
 
+void View::orbit(float _x, float _y, float _radians) {
+    
+    glm::vec2 radial = { _x, _y };
+    glm::vec2 displacement = glm::rotate(radial, _radians) - radial;
+    translate(-displacement.x, -displacement.y);
+    roll(_radians);
+    
+}
+
 void View::update() {
     
     if (!m_dirty) {
