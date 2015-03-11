@@ -108,7 +108,9 @@
 - (void)respondToPanGesture:(UIPanGestureRecognizer *)panRecognizer {
     CGPoint displacement = [panRecognizer translationInView:self.view];
     [panRecognizer setTranslation:{0, 0} inView:self.view];
-    Tangram::handlePanGesture(displacement.x * self.pixelScale, displacement.y * self.pixelScale);
+    CGPoint end = [panRecognizer locationInView:self.view];
+    CGPoint start = {end.x - displacement.x, end.y -    displacement.y};
+    Tangram::handlePanGesture(start.x * self.pixelScale, start.y * self.pixelScale, end.x * self.pixelScale, end.y * self.pixelScale);
 }
 
 - (void)respondToPinchGesture:(UIPinchGestureRecognizer *)pinchRecognizer {
