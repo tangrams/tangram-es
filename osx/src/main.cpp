@@ -70,7 +70,7 @@ void scroll_callback(GLFWwindow* window, double scrollx, double scrolly) {
     if (shoving) {
         Tangram::handleShoveGesture(scroll_multiplier * scrolly);
     } else if (rotating) {
-        Tangram::handleRotateGesture(scroll_multiplier * scrolly);
+        Tangram::handleRotateGesture(x, y, scroll_multiplier * scrolly);
     } else {
         Tangram::handlePinchGesture(x, y, 1.0 + scroll_multiplier * scrolly);
     }
