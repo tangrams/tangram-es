@@ -37,7 +37,7 @@ public class Tangram extends GLSurfaceView implements Renderer, OnScaleGestureLi
     private static native void handleDoubleTapGesture(float posX, float posY);
     private static native void handlePanGesture(float startX, float startY, float endX, float endY);
     private static native void handlePinchGesture(float posX, float posY, float scale);
-    private static native void handleRotateGesture(float rotation);
+    private static native void handleRotateGesture(float posX, float posY, float rotation);
     private static native void handleShoveGesture(float distance);
 
     private long time = System.nanoTime();
@@ -191,7 +191,10 @@ public class Tangram extends GLSurfaceView implements Renderer, OnScaleGestureLi
     }
 
     public boolean onRotate(RotateGestureDetector detector) {
-        handleRotateGesture(-detector.getRotationDegreesDelta() * (float)(Math.PI / 180));
+        float x = scaleGestureDetector.getFocusX();
+        float y = scaleGestureDetector.getFocusY();
+        float rotation = -detector.getRotationDegreesDelta() * (float)(Math.PI / 180);
+        handleRotateGesture(x, y, rotation);
         return true;
     }
 
