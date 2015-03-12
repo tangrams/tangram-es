@@ -106,7 +106,7 @@ public:
     float getHeight() const { return m_vpHeight; }
     
     /* Calculate the position on the ground plane (z = 0) under the given screen space coordinates, 
-       replacing the inputs coordinates with world-space coordinates */
+       replacing the input coordinates with world-space coordinates */
     void screenToGroundPlane(float& _screenX, float& _screenY) const;
     
     /* Returns the set of all tiles visible at the current position and zoom */
