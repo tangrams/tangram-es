@@ -83,7 +83,8 @@ void View::setRoll(float _roll) {
 
 void View::setPitch(float _pitch) {
 
-    m_pitch = glm::mod(_pitch, (float)TWO_PI);
+    // Clamp pitch angle (until LoD tile coverage is implemented)
+    m_pitch = glm::clamp(_pitch, 0.f, 0.7f);
     m_dirty = true;
 
 }
@@ -236,17 +237,27 @@ void View::updateTiles() {
     float tileSize = 2 * MapProjection::HALF_CIRCUMFERENCE * pow(2, -(int)m_zoom);
     float invTileSize = 1.0 / tileSize;
     
-    // Adjust width and height for view rotation
-    float cos_r = cos(m_roll);
-    float sin_r = sin(m_roll);
-    float width = fabsf(m_height * sin_r) + fabsf(m_width * cos_r);
-    float height = fabsf(m_width * sin_r) + fabsf(m_height * cos_r);
+    // Find bounds of view frustum in world space (i.e. project view frustum onto z = 0 plane)
+    glm::vec2 bottomLeft = { 0.f, 0.f };
+    glm::vec2 bottomRight = { m_vpWidth, 0.f };
+    glm::vec2 topRight = { m_vpWidth, m_vpHeight };
+    glm::vec2 topLeft = { 0.f, m_vpHeight };
+    screenToGroundPlane(bottomLeft.x, bottomLeft.y);
+    screenToGroundPlane(bottomRight.x, bottomRight.y);
+    screenToGroundPlane(topRight.x, topRight.y);
+    screenToGroundPlane(topLeft.x, topLeft.y);
+    
+    // Find axis-aligned bounding box of projected frustum
+    float left = fminf(fminf(fminf(bottomLeft.x, bottomRight.x), topLeft.x), topRight.x);
+    float right = fmaxf(fmaxf(fmaxf(bottomLeft.x, bottomRight.x), topLeft.x), topRight.x);
+    float bottom = fminf(fminf(fminf(bottomLeft.y, bottomRight.y), topLeft.y), topRight.y);
+    float top = fmaxf(fmaxf(fmaxf(bottomLeft.y, bottomRight.y), topLeft.y), topRight.y);
     
     // Find bounds of viewable area in map space
-    float vpLeftEdge = m_pos.x - width * 0.5 + MapProjection::HALF_CIRCUMFERENCE;
-    float vpRightEdge = vpLeftEdge + width;
-    float vpBottomEdge = -m_pos.y - height * 0.5 + MapProjection::HALF_CIRCUMFERENCE;
-    float vpTopEdge = vpBottomEdge + height;
+    float vpLeftEdge = m_pos.x + left + MapProjection::HALF_CIRCUMFERENCE;
+    float vpRightEdge = m_pos.x + right + MapProjection::HALF_CIRCUMFERENCE;
+    float vpBottomEdge = -m_pos.y - top + MapProjection::HALF_CIRCUMFERENCE;
+    float vpTopEdge = -m_pos.y - bottom + MapProjection::HALF_CIRCUMFERENCE;
     
     int tileX = (int) fmax(0, vpLeftEdge * invTileSize);
     int tileY = (int) fmax(0, vpBottomEdge * invTileSize);
