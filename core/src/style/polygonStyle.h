@@ -20,6 +20,8 @@ protected:
         GLfloat texcoord_y;
         // Color Data
         GLuint abgr;
+        // Layer Data
+        GLfloat layer;
     };
     
     virtual void constructVertexLayout() override;

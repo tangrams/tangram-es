@@ -15,7 +15,8 @@ void PolylineStyle::constructVertexLayout() {
         {"a_texcoord", 2, GL_FLOAT, false, 0},
         {"a_extrudeNormal", 2, GL_FLOAT, false, 0},
         {"a_extrudeWidth", 1, GL_FLOAT, false, 0},
-        {"a_color", 4, GL_UNSIGNED_BYTE, true, 0}
+        {"a_color", 4, GL_UNSIGNED_BYTE, true, 0},
+        {"a_layer", 1, GL_FLOAT, false, 0}
     }));
     
 }
@@ -41,6 +42,7 @@ void PolylineStyle::buildLine(Line& _line, std::string& _layer, Properties& _pro
     std::vector<glm::vec2> scalingVecs;
     
     GLuint abgr = 0xff969696; // Default road color
+    GLfloat layer = 3;
     float halfWidth = 0.02;
     
     if(_props.stringProps["kind"] == "highway"){
@@ -63,7 +65,7 @@ void PolylineStyle::buildLine(Line& _line, std::string& _layer, Properties& _pro
         glm::vec3 p = points[i];
         glm::vec2 uv = texcoords[i];
         glm::vec2 en = scalingVecs[i];
-        vertices.push_back({ p.x, p.y, p.z, uv.x, uv.y, en.x, en.y, halfWidth, abgr });
+        vertices.push_back({ p.x, p.y, p.z, uv.x, uv.y, en.x, en.y, halfWidth, abgr, layer });
     }
     
     // Make sure indices get correctly offset
