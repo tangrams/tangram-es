@@ -3,6 +3,7 @@
 #include "tesselator.h"
 #include "rectangle.h"
 #include "geom.h"
+#include "glm/gtx/rotate_vector.hpp"
 
 #include <memory>
 
@@ -159,13 +160,6 @@ glm::vec2 perp2d(const glm::vec3& _v1, const glm::vec3& _v2 ){
     return glm::vec2(_v2.y - _v1.y, _v1.x - _v2.x);
 }
 
-// Get 2D vector rotated 
-glm::vec2 rotate(const glm::vec2& _v, float _radians) {
-    float cosine = cos(_radians);
-    float sine = sin(_radians);
-    return glm::vec2(_v.x * cosine - _v.y * sine, _v.x * sine + _v.y * cosine);
-}
-
 // Helper function for polyline tesselation
 void addPolyLineVertex(const glm::vec3& _coord, const glm::vec2& _normal, const glm::vec2& _uv, float _halfWidth, PolyLineOutput _out) {
 
@@ -220,7 +214,7 @@ void addFan(const glm::vec3& _pC,
     glm::vec2 radial = _nA;
     for (int i = 0; i < _numTriangles; i++) {
         float frac = (i + 1)/(float)_numTriangles;
-        radial = rotate(_nA, angle * frac);
+        radial = glm::rotate(_nA, angle * frac);
         glm::vec2 uv = (1.f - frac) * _uA + frac * _uB;
         addPolyLineVertex(_pC, radial, uv, _halfWidth, _out);
         

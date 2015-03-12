@@ -74,13 +74,15 @@ void VboMesh::addVertices(GLbyte* _vertices, int _nVertices) {
     
     // Only add up to 65535 vertices, any more will overflow our 16-bit indices
     int indexSpace = MAX_INDEX_VALUE - m_nVertices;
+    
+    if (_nVertices > MAX_INDEX_VALUE) {
+        logMsg("WARNING: Cannot add > %d vertices in one call, truncating mesh\n", MAX_INDEX_VALUE);
+        _nVertices = indexSpace;
+    }
+    
     if (_nVertices > indexSpace || m_backupMesh) {
         if (!m_backupMesh) {
             m_backupMesh.reset(new VboMesh(m_vertexLayout, m_drawMode));
-        }
-        if (_nVertices > MAX_INDEX_VALUE) {
-            logMsg("WARNING: Cannot add > %d vertices in one call, truncating mesh\n", MAX_INDEX_VALUE);
-            _nVertices = MAX_INDEX_VALUE;
         }
         m_backupMesh->addVertices(_vertices, _nVertices);
         return;

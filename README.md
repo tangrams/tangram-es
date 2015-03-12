@@ -26,11 +26,11 @@ Currently we are targeting five platforms: OS X, Ubuntu Linux, iOS, Android, and
 ## platforms ##
 
 ### OS X ###
-To build for OS X, you will need to install [GLFW](http://www.glfw.org/): 
+To build for OS X, you will need to install [GLFW](http://www.glfw.org/) and [pkg-config](http://www.freedesktop.org/wiki/Software/pkg-config/): 
 
 ```bash
 brew tap homebrew/versions
-brew install glfw3
+brew install glfw3 pkg-config
 ```
 
 Then build using GNU Make:
@@ -76,21 +76,13 @@ First generate an XCode project without compiling:
 make cmake-ios IOS_PLATFORM=OS
 ```
 
-Then open the Xcode project:
+Then open the Xcode project and set up your developer account information to run on a device:
 
 ```bash
 open build/ios/tangram.xcodeproj
 ```
 
-In the project settings for the target named 'tangram', set 'Team' to your developer account. Now you can build and run the demo on a connected device.
-
-When you run on a device for the first time you may encounter an error with a message similar to:
-
-![`The file ... couldn’t be opened because you don’t have permission to view it.`](images/ios-00-error.png)
-
-To fix this, go to the Issues navigator tab in Xcode and click 'Validate Project Settings' under 'tangram.xcodeproj', then allow Xcode to perform any needed changes.
-
-![Steps](images/ios-00-steps.png)
+If you run into problems deploying to an iOS device, see [this note](https://github.com/tangrams/tangram-es/wiki/iOS-Notes).
 
 ### Android ###
 To build for Android you'll need to have installed both the [Android SDK](http://developer.android.com/sdk/installing/index.html?pkg=tools) and the [Android NDK](https://developer.android.com/tools/sdk/ndk/index.html). Set an `ANDROID_HOME` evironment variable with the root directory of your SDK and an `ANDROID_NDK` environment variable with the root directory of your NDK. 
