@@ -16,6 +16,8 @@ attribute float a_extrudeWidth;
 attribute vec3 a_normal;
 attribute vec2 a_texcoord;
 
+attribute float a_layer;
+
 varying vec4 v_color;
 varying vec3 v_eyeToPoint;
 varying vec3 v_normal;
@@ -35,4 +37,5 @@ void main() {
 
 	gl_Position = u_modelViewProj * v_pos;
     gl_Position.z /= u_tileDepthOffset;
+    gl_Position.z -= a_layer * DEPTH_DELTA * gl_Position.w;
 }

@@ -15,6 +15,7 @@ attribute vec4 a_position;
 attribute vec4 a_color;
 attribute vec3 a_normal;
 attribute vec2 a_texcoord;
+attribute float a_layer;
 
 varying vec4 v_color;
 varying vec3 v_eyeToPoint;
@@ -38,4 +39,5 @@ void main() {
     gl_Position = u_modelViewProj * a_position;
     
     gl_Position.z /= u_tileDepthOffset;
+    gl_Position.z -= a_layer * DEPTH_DELTA * gl_Position.w;
 }
