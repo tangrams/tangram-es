@@ -21,6 +21,9 @@ struct PolyLineOptions {
     CapTypes cap;
     JoinTypes join;
     float halfWidth;
+    
+    PolyLineOptions() : cap(CapTypes::BUTT), join(JoinTypes::MITER), halfWidth(0.02f) {};
+    PolyLineOptions(CapTypes _c, JoinTypes _j, float _hw) : cap(_c), join(_j), halfWidth(_hw) {};
 };
 
 struct PolygonOutput {
