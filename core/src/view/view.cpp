@@ -238,38 +238,38 @@ void View::updateTiles() {
     float invTileSize = 1.0 / tileSize;
     
     // Find bounds of view frustum in world space (i.e. project view frustum onto z = 0 plane)
-    glm::vec2 bottomLeft = { 0.f, 0.f };
-    glm::vec2 bottomRight = { m_vpWidth, 0.f };
-    glm::vec2 topRight = { m_vpWidth, m_vpHeight };
-    glm::vec2 topLeft = { 0.f, m_vpHeight };
-    screenToGroundPlane(bottomLeft.x, bottomLeft.y);
-    screenToGroundPlane(bottomRight.x, bottomRight.y);
-    screenToGroundPlane(topRight.x, topRight.y);
-    screenToGroundPlane(topLeft.x, topLeft.y);
+    glm::vec2 viewBottomLeft = { 0.f, 0.f };
+    glm::vec2 viewBottomRight = { m_vpWidth, 0.f };
+    glm::vec2 viewTopRight = { m_vpWidth, m_vpHeight };
+    glm::vec2 viewTopLeft = { 0.f, m_vpHeight };
+    screenToGroundPlane(viewBottomLeft.x, viewBottomLeft.y);
+    screenToGroundPlane(viewBottomRight.x, viewBottomRight.y);
+    screenToGroundPlane(viewTopRight.x, viewTopRight.y);
+    screenToGroundPlane(viewTopLeft.x, viewTopLeft.y);
     
-    // Find axis-aligned bounding box of projected frustum
-    float left = fminf(fminf(fminf(bottomLeft.x, bottomRight.x), topLeft.x), topRight.x);
-    float right = fmaxf(fmaxf(fmaxf(bottomLeft.x, bottomRight.x), topLeft.x), topRight.x);
-    float bottom = fminf(fminf(fminf(bottomLeft.y, bottomRight.y), topLeft.y), topRight.y);
-    float top = fmaxf(fmaxf(fmaxf(bottomLeft.y, bottomRight.y), topLeft.y), topRight.y);
+    // Find axis-aligned bounding box of projected frustum (in coordinates relative to camera position)
+    float aabbLeft = fminf(fminf(fminf(viewBottomLeft.x, viewBottomRight.x), viewTopLeft.x), viewTopRight.x);
+    float aabbRight = fmaxf(fmaxf(fmaxf(viewBottomLeft.x, viewBottomRight.x), viewTopLeft.x), viewTopRight.x);
+    float aabbBottom = fminf(fminf(fminf(viewBottomLeft.y, viewBottomRight.y), viewTopLeft.y), viewTopRight.y);
+    float aabbTop = fmaxf(fmaxf(fmaxf(viewBottomLeft.y, viewBottomRight.y), viewTopLeft.y), viewTopRight.y);
     
-    // Find bounds of viewable area in map space
-    float vpLeftEdge = m_pos.x + left + MapProjection::HALF_CIRCUMFERENCE;
-    float vpRightEdge = m_pos.x + right + MapProjection::HALF_CIRCUMFERENCE;
-    float vpBottomEdge = -m_pos.y - top + MapProjection::HALF_CIRCUMFERENCE;
-    float vpTopEdge = -m_pos.y - bottom + MapProjection::HALF_CIRCUMFERENCE;
+    // Find bounds of viewable area in tile space
+    float tileLeftEdge = m_pos.x + aabbLeft + MapProjection::HALF_CIRCUMFERENCE;
+    float tileRightEdge = m_pos.x + aabbRight + MapProjection::HALF_CIRCUMFERENCE;
+    float tileBottomEdge = -m_pos.y - aabbTop + MapProjection::HALF_CIRCUMFERENCE;
+    float tileTopEdge = -m_pos.y - aabbBottom + MapProjection::HALF_CIRCUMFERENCE;
     
-    int tileX = (int) fmax(0, vpLeftEdge * invTileSize);
-    int tileY = (int) fmax(0, vpBottomEdge * invTileSize);
+    int tileX = (int) fmax(0, tileLeftEdge * invTileSize);
+    int tileY = (int) fmax(0, tileBottomEdge * invTileSize);
     
     float x = tileX * tileSize;
     float y = tileY * tileSize;
     
     int maxTileIndex = pow(2, m_zoom);
     
-    while (x < vpRightEdge && tileX < maxTileIndex) {
+    while (x < tileRightEdge && tileX < maxTileIndex) {
         
-        while (y < vpTopEdge && tileY < maxTileIndex) {
+        while (y < tileTopEdge && tileY < maxTileIndex) {
             
             m_visibleTiles.insert(TileID(tileX, tileY, m_zoom));
 
@@ -278,7 +278,7 @@ void View::updateTiles() {
             
         }
         
-        tileY = (int) vpBottomEdge * invTileSize;
+        tileY = (int) tileBottomEdge * invTileSize;
         y = tileY * tileSize;
         
         tileX++;
