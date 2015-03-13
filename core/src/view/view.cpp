@@ -226,7 +226,7 @@ void View::updateTiles() {
      * frustrum onto the tile plane (the view trapezoid) as two triangles, then rasterizing those triangles into tiles.
      * 
      * Implementation steps:
-     * 1. Represent the existing view rectangle as two triangles and rasterize those into a set of tiles that should
+     * 1. Represent the existing view trapezoid as two triangles and rasterize those into a set of tiles that should
      *    match the existing visible tile set.
      * 2. Calculate the view trapezoid from the view frustrum, use the trapezoid to form the two triangles and then
      *    rasterize those into tiles which should fully cover the visible space. 
