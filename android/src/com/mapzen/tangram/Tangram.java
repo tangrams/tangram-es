@@ -202,7 +202,7 @@ public class Tangram extends GLSurfaceView implements Renderer, OnScaleGestureLi
         return;
     }
 
-    // ShoveGestureDetecrot.OnShoveGestureListener methods
+    // ShoveGestureDetector.OnShoveGestureListener methods
     // ===================================================
 
     public boolean onShoveBegin(ShoveGestureDetector detector) {
