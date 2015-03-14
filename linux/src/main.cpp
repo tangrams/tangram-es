@@ -6,8 +6,11 @@
 // ==============
 
 const double double_tap_time = 0.5; // seconds
+const double scroll_multiplier = 0.05; // scaling for zoom
 
 bool was_panning = false;
+bool rotating = false;
+bool shoving = false;
 double last_mouse_up = -double_tap_time; // First click should never trigger a double tap
 double last_x_down = 0.0;
 double last_y_down = 0.0;
@@ -50,7 +53,7 @@ void cursor_pos_callback(GLFWwindow* window, double x, double y) {
     if (action == GLFW_PRESS) {
         
         if (was_panning) {
-            Tangram::handlePanGesture(x - last_x_down, y - last_y_down);
+            Tangram::handlePanGesture(last_x_down, last_y_down, x, y);
         }
         
         was_panning = true;
@@ -62,19 +65,24 @@ void cursor_pos_callback(GLFWwindow* window, double x, double y) {
 
 void scroll_callback(GLFWwindow* window, double scrollx, double scrolly) {
     
-    static double scrolled = 0.0;
-    scrolled += scrolly;
-    
-    // TODO: Update this for continuous zooming, using an arbitrary threshold for now
-    if (scrolled * scrolled > 100.0) {
-        
-        double x, y;
-        glfwGetCursorPos(window, &x, &y);
-        Tangram::handlePinchGesture(x, y, scrolled > 0 ? 1.5 : 0.5);
-        scrolled = 0.0;
-        
+    double x, y;
+    glfwGetCursorPos(window, &x, &y);
+    if (shoving) {
+        Tangram::handleShoveGesture(scroll_multiplier * scrolly);
+    } else if (rotating) {
+        Tangram::handleRotateGesture(x, y, scroll_multiplier * scrolly);
+    } else {
+        Tangram::handlePinchGesture(x, y, 1.0 + scroll_multiplier * scrolly);
     }
+    
 }
+
+void key_callback(GLFWwindow* window, int key, int scancode, int action, int mods)
+{
+    rotating = (mods & GLFW_MOD_SHIFT) != 0; // Whether one or more shift keys is down
+    shoving = (mods & GLFW_MOD_CONTROL) != 0; // Whether one or more control keys is down
+}
+
 
 // Window handling
 // ===============
@@ -99,6 +107,7 @@ int main(void) {
         return -1;
 
     /* Create a windowed mode window and its OpenGL context */
+    glfwWindowHint(GLFW_SAMPLES, 2);
     window = glfwCreateWindow(width, height, "GLFW Window", NULL, NULL);
     if (!window) {
         glfwTerminate();
@@ -115,6 +124,7 @@ int main(void) {
     glfwSetMouseButtonCallback(window, mouse_button_callback);
     glfwSetCursorPosCallback(window, cursor_pos_callback);
     glfwSetScrollCallback(window, scroll_callback);
+    glfwSetKeyCallback(window, key_callback);
     
     glfwSwapInterval(1);
     

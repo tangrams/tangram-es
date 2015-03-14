@@ -15,9 +15,11 @@ import android.view.ScaleGestureDetector;
 import android.view.ScaleGestureDetector.OnScaleGestureListener;
 import com.almeros.android.multitouch.RotateGestureDetector;
 import com.almeros.android.multitouch.RotateGestureDetector.OnRotateGestureListener;
+import com.almeros.android.multitouch.ShoveGestureDetector;
+import com.almeros.android.multitouch.ShoveGestureDetector.OnShoveGestureListener;
 import android.view.SurfaceHolder;
 
-public class Tangram extends GLSurfaceView implements Renderer, OnScaleGestureListener, OnRotateGestureListener, OnGestureListener {
+public class Tangram extends GLSurfaceView implements Renderer, OnScaleGestureListener, OnRotateGestureListener, OnGestureListener, OnShoveGestureListener {
 
     static {
         System.loadLibrary("c++_shared");
@@ -33,9 +35,10 @@ public class Tangram extends GLSurfaceView implements Renderer, OnScaleGestureLi
     private static native void setPixelScale(float scale);
     private static native void handleTapGesture(float posX, float posY);
     private static native void handleDoubleTapGesture(float posX, float posY);
-    private static native void handlePanGesture(float velX, float velY);
+    private static native void handlePanGesture(float startX, float startY, float endX, float endY);
     private static native void handlePinchGesture(float posX, float posY, float scale);
-    private static native void handleRotateGesture(float rotation);
+    private static native void handleRotateGesture(float posX, float posY, float rotation);
+    private static native void handleShoveGesture(float distance);
 
     private long time = System.nanoTime();
     private boolean contextDestroyed = false;
@@ -43,6 +46,7 @@ public class Tangram extends GLSurfaceView implements Renderer, OnScaleGestureLi
     private GestureDetector gestureDetector;
     private ScaleGestureDetector scaleGestureDetector;
     private RotateGestureDetector rotateGestureDetector;
+    private ShoveGestureDetector shoveGestureDetector;
     private DisplayMetrics displayMetrics = new DisplayMetrics();
 
     public Tangram(Activity mainApp) {
@@ -58,6 +62,7 @@ public class Tangram extends GLSurfaceView implements Renderer, OnScaleGestureLi
         this.gestureDetector = new GestureDetector(mainApp, this);
         this.scaleGestureDetector = new ScaleGestureDetector(mainApp, this);
         this.rotateGestureDetector = new RotateGestureDetector(mainApp, this);
+        this.shoveGestureDetector = new ShoveGestureDetector(mainApp, this);
         
     }
     
@@ -79,10 +84,11 @@ public class Tangram extends GLSurfaceView implements Renderer, OnScaleGestureLi
     @Override
     public boolean onTouchEvent(MotionEvent event) { 
         
-        //Pass the event to gestureDetector and scaleDetector
+        //Pass the event to gesture detectors
         if (gestureDetector.onTouchEvent(event) |
             scaleGestureDetector.onTouchEvent(event) |
-            rotateGestureDetector.onTouchEvent(event)) {
+            rotateGestureDetector.onTouchEvent(event) |
+            shoveGestureDetector.onTouchEvent(event)) {
             return true;
         } else {
             return super.onTouchEvent(event);
@@ -130,11 +136,16 @@ public class Tangram extends GLSurfaceView implements Renderer, OnScaleGestureLi
     }
 
     public boolean onScroll(MotionEvent e1, MotionEvent e2, float distanceX, float distanceY) {
-        
-        // We flip the signs of distanceX and distanceY because onScroll provides the distances
-        // by which the view being scrolled should move, while handlePanGesture expects the 
-        // distances by which the touch point has moved on the screen (these are opposite)
-        handlePanGesture(-distanceX, -distanceY);
+        // Only pan for scrolling events with just one pointer; otherwise vertical scrolling will
+        // cause a simultaneous shove gesture
+        if (e1.getPointerCount() == 1 && e2.getPointerCount() == 1) {
+            // We flip the signs of distanceX and distanceY because onScroll provides the distances
+            // by which the view being scrolled should move, while handlePanGesture expects the 
+            // distances by which the touch point has moved on the screen (these are opposite)
+            float x = e2.getX();
+            float y = e2.getY();
+            handlePanGesture(x + distanceX, y + distanceY, x, y);
+        }
         return true;
     }
 
@@ -180,11 +191,30 @@ public class Tangram extends GLSurfaceView implements Renderer, OnScaleGestureLi
     }
 
     public boolean onRotate(RotateGestureDetector detector) {
-        handleRotateGesture(-detector.getRotationDegreesDelta() * (float)(Math.PI / 180));
+        float x = scaleGestureDetector.getFocusX();
+        float y = scaleGestureDetector.getFocusY();
+        float rotation = -detector.getRotationDegreesDelta() * (float)(Math.PI / 180);
+        handleRotateGesture(x, y, rotation);
         return true;
     }
 
     public void onRotateEnd(RotateGestureDetector detector) {
+        return;
+    }
+
+    // ShoveGestureDetector.OnShoveGestureListener methods
+    // ===================================================
+
+    public boolean onShoveBegin(ShoveGestureDetector detector) {
+        return true;
+    }
+
+    public boolean onShove(ShoveGestureDetector detector) {
+        handleShoveGesture(detector.getShovePixelsDelta() / displayMetrics.heightPixels);
+        return true;
+    }
+
+    public void onShoveEnd(ShoveGestureDetector detector) {
         return;
     }
 }

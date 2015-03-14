@@ -5,6 +5,7 @@
 #include "util/tileID.h"
 #include "platform.h"
 #include "glm/gtc/matrix_transform.hpp"
+#include "glm/gtx/rotate_vector.hpp"
 
 constexpr float View::s_maxZoom; // Create a stack reference to the static member variable
 
@@ -80,6 +81,14 @@ void View::setRoll(float _roll) {
     
 }
 
+void View::setPitch(float _pitch) {
+
+    // Clamp pitch angle (until LoD tile coverage is implemented)
+    m_pitch = glm::clamp(_pitch, 0.f, 0.7f);
+    m_dirty = true;
+
+}
+
 void View::translate(double _dx, double _dy) {
 
     setPosition(m_pos.x + _dx, m_pos.y + _dy);
@@ -100,6 +109,21 @@ void View::zoom(float _dz) {
 void View::roll(float _droll) {
     
     setRoll(m_roll + _droll);
+    
+}
+
+void View::pitch(float _dpitch) {
+
+    setPitch(m_pitch + _dpitch);
+
+}
+
+void View::orbit(float _x, float _y, float _radians) {
+    
+    glm::vec2 radial = { _x, _y };
+    glm::vec2 displacement = glm::rotate(radial, _radians) - radial;
+    translate(-displacement.x, -displacement.y);
+    roll(_radians);
     
 }
 
@@ -128,23 +152,24 @@ glm::dmat2 View::getBoundsRect() const {
 
 }
 
-float View::toWorldDistance(float _screenDistance) const {
-    float metersPerTile = 2 * MapProjection::HALF_CIRCUMFERENCE * pow(2, -m_zoom);
-    return _screenDistance * metersPerTile / (m_pixelScale * m_pixelsPerTile);
-}
-
-void View::toWorldDisplacement(float& _screenX, float& _screenY) const {
+void View::screenToGroundPlane(float& _screenX, float& _screenY) const {
     
-    float metersPerPixel = toWorldDistance(1);
+    // Cast a ray and find its intersection with the z = 0 plane,
+    // following the technique described here: http://antongerdelan.net/opengl/raycasting.html
     
-    // Rotate screen displacement into world space
-    float cos_r = cos(m_roll);
-    float sin_r = sin(m_roll);
-    float x = (_screenX * cos_r + _screenY * sin_r) * metersPerPixel;
-    float y = (_screenX * -sin_r + _screenY * cos_r) * metersPerPixel;
+    glm::vec4 ray_clip = { 2.f * _screenX / m_vpWidth - 1.f, 1.f - 2.f * _screenY / m_vpHeight, -1.f, 1.f }; // Ray from camera in clip space
+    glm::vec3 ray_world = glm::vec3(m_invViewProj * ray_clip); // Ray from camera in world space
     
-    _screenX = x;
-    _screenY = y;
+    float t; // Distance along ray to ground plane
+    if (ray_world.z != 0.f) {
+        t = -m_pos.z / ray_world.z;
+    } else {
+        t = 0;
+    }
+    
+    ray_world *= t;
+    _screenX = ray_world.x;
+    _screenY = ray_world.y;
 }
 
 const std::set<TileID>& View::getVisibleTiles() {
@@ -176,49 +201,75 @@ void View::updateMatrices() {
     // set camera z to produce desired viewable area
     m_pos.z = m_height * 0.5 / tan(fovy * 0.5);
     
-    // set near clipping distance as a function of camera z
+    // set near and far clipping distances as a function of camera z
     // TODO: this is a simple heuristic that deserves more thought
     float near = m_pos.z / 50.0;
+    float far = m_pos.z + 1.f;
     
-    glm::vec3 up = {cos(m_roll + HALF_PI), sin(m_roll + HALF_PI), 0.0f};
+    glm::vec3 eye = { 0.f, 0.f, 0.f };
+    glm::vec3 at = glm::rotateZ(glm::rotateX(glm::vec3(0.f, 0.f, -1.f), m_pitch), m_roll);
+    glm::vec3 up = glm::rotateZ(glm::rotateX(glm::vec3(0.f, 1.f, 0.f), m_pitch), m_roll);
     
     // update view and projection matrices
-    m_view = glm::lookAt(glm::vec3(0.0, 0.0, 0.0), glm::vec3(0.0, 0.0, -1.0), up);
-    m_proj = glm::perspective(fovy, m_aspect, near, (float)m_pos.z + 1.0f);
+    m_view = glm::lookAt(eye, at, up);
+    m_proj = glm::perspective(fovy, m_aspect, near, far);
     m_viewProj = m_proj * m_view;
+    m_invViewProj = glm::inverse(m_viewProj);
     
 }
 
 void View::updateTiles() {
+    
+    /* To extend this tile updating step to account for an arbitrary view frustrum, we'll take advantage of the
+     * fact that this process is essentially rasterization; the projection of the view frustrum is the geometry
+     * and the tiles are our raster grid. Thus, we'll approach the problem by treating the projection of the view
+     * frustrum onto the tile plane (the view trapezoid) as two triangles, then rasterizing those triangles into tiles.
+     * 
+     * Implementation steps:
+     * 1. Represent the existing view trapezoid as two triangles and rasterize those into a set of tiles that should
+     *    match the existing visible tile set.
+     * 2. Calculate the view trapezoid from the view frustrum, use the trapezoid to form the two triangles and then
+     *    rasterize those into tiles which should fully cover the visible space. 
+     */
     
     m_visibleTiles.clear();
     
     float tileSize = 2 * MapProjection::HALF_CIRCUMFERENCE * pow(2, -(int)m_zoom);
     float invTileSize = 1.0 / tileSize;
     
-    // Adjust width and height for view rotation
-    float cos_r = cos(m_roll);
-    float sin_r = sin(m_roll);
-    float width = fabsf(m_height * sin_r) + fabsf(m_width * cos_r);
-    float height = fabsf(m_width * sin_r) + fabsf(m_height * cos_r);
+    // Find bounds of view frustum in world space (i.e. project view frustum onto z = 0 plane)
+    glm::vec2 viewBottomLeft = { 0.f, 0.f };
+    glm::vec2 viewBottomRight = { m_vpWidth, 0.f };
+    glm::vec2 viewTopRight = { m_vpWidth, m_vpHeight };
+    glm::vec2 viewTopLeft = { 0.f, m_vpHeight };
+    screenToGroundPlane(viewBottomLeft.x, viewBottomLeft.y);
+    screenToGroundPlane(viewBottomRight.x, viewBottomRight.y);
+    screenToGroundPlane(viewTopRight.x, viewTopRight.y);
+    screenToGroundPlane(viewTopLeft.x, viewTopLeft.y);
     
-    // Find bounds of viewable area in map space
-    float vpLeftEdge = m_pos.x - width * 0.5 + MapProjection::HALF_CIRCUMFERENCE;
-    float vpRightEdge = vpLeftEdge + width;
-    float vpBottomEdge = -m_pos.y - height * 0.5 + MapProjection::HALF_CIRCUMFERENCE;
-    float vpTopEdge = vpBottomEdge + height;
+    // Find axis-aligned bounding box of projected frustum (in coordinates relative to camera position)
+    float aabbLeft = fminf(fminf(fminf(viewBottomLeft.x, viewBottomRight.x), viewTopLeft.x), viewTopRight.x);
+    float aabbRight = fmaxf(fmaxf(fmaxf(viewBottomLeft.x, viewBottomRight.x), viewTopLeft.x), viewTopRight.x);
+    float aabbBottom = fminf(fminf(fminf(viewBottomLeft.y, viewBottomRight.y), viewTopLeft.y), viewTopRight.y);
+    float aabbTop = fmaxf(fmaxf(fmaxf(viewBottomLeft.y, viewBottomRight.y), viewTopLeft.y), viewTopRight.y);
     
-    int tileX = (int) fmax(0, vpLeftEdge * invTileSize);
-    int tileY = (int) fmax(0, vpBottomEdge * invTileSize);
+    // Find bounds of viewable area in tile space
+    float tileLeftEdge = m_pos.x + aabbLeft + MapProjection::HALF_CIRCUMFERENCE;
+    float tileRightEdge = m_pos.x + aabbRight + MapProjection::HALF_CIRCUMFERENCE;
+    float tileBottomEdge = -m_pos.y - aabbTop + MapProjection::HALF_CIRCUMFERENCE;
+    float tileTopEdge = -m_pos.y - aabbBottom + MapProjection::HALF_CIRCUMFERENCE;
+    
+    int tileX = (int) fmax(0, tileLeftEdge * invTileSize);
+    int tileY = (int) fmax(0, tileBottomEdge * invTileSize);
     
     float x = tileX * tileSize;
     float y = tileY * tileSize;
     
     int maxTileIndex = pow(2, m_zoom);
     
-    while (x < vpRightEdge && tileX < maxTileIndex) {
+    while (x < tileRightEdge && tileX < maxTileIndex) {
         
-        while (y < vpTopEdge && tileY < maxTileIndex) {
+        while (y < tileTopEdge && tileY < maxTileIndex) {
             
             m_visibleTiles.insert(TileID(tileX, tileY, m_zoom));
 
@@ -227,7 +278,7 @@ void View::updateTiles() {
             
         }
         
-        tileY = (int) vpBottomEdge * invTileSize;
+        tileY = (int) tileBottomEdge * invTileSize;
         y = tileY * tileSize;
         
         tileX++;
