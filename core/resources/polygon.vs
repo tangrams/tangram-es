@@ -39,5 +39,8 @@ void main() {
     gl_Position = u_modelViewProj * a_position;
     
     gl_Position.z /= u_tileDepthOffset;
-    gl_Position.z -= a_layer * DEPTH_DELTA * gl_Position.w;
+    
+    #ifdef TANGRAM_DEPTH_DELTA
+        gl_Position.z -= a_layer * TANGRAM_DEPTH_DELTA * gl_Position.w;
+    #endif
 }
