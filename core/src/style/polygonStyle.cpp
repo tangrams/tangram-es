@@ -79,19 +79,19 @@ void PolygonStyle::buildPolygon(Polygon& _polygon, std::string& _layer, Properti
     GLuint abgr = 0xffaaaaaa; // Default color
     GLfloat layer = 0;
     
-    if (_layer.compare("buildings") == 0) {
+    if (_layer == "buildings") {
         layer = 4;
         abgr = 0xffe6f0f2;
-    } else if (_layer.compare("water") == 0) {
+    } else if (_layer == "water") {
         layer = 2;
         abgr = 0xff917d1a;
-    } else if (_layer.compare("roads") == 0) {
+    } else if (_layer == "roads") {
         layer = 3;
         abgr = 0xff969696;
-    } else if (_layer.compare("earth") == 0) {
+    } else if (_layer == "earth") {
         layer = 0;
         abgr = 0xffa9b9c2;
-    } else if (_layer.compare("landuse") == 0) {
+    } else if (_layer == "landuse") {
         layer = 1;
         abgr = 0xff669171;
     }
