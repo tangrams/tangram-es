@@ -198,12 +198,13 @@ void setPixelScale(float _pixelsPerPoint) {
     
 void handleTapGesture(float _posX, float _posY) {
     
-    float dx = m_view->toWorldDistance(_posX - 0.5 * m_view->getWidth());
-    float dy = m_view->toWorldDistance(_posY - 0.5 * m_view->getHeight());
-
-    // Flip y displacement to change from screen coordinates to world coordinates
-    m_view->translate(dx, -dy);
+    float viewCenterX = 0.5f * m_view->getWidth();
+    float viewCenterY = 0.5f * m_view->getHeight();
     
+    m_view->screenToGroundPlane(viewCenterX, viewCenterY);
+    m_view->screenToGroundPlane(_posX, _posY);
+
+    m_view->translate((_posX - viewCenterX), (_posY - viewCenterY));
 
 }
 
@@ -212,15 +213,12 @@ void handleDoubleTapGesture(float _posX, float _posY) {
     m_view->zoom(1.0);
 }
 
-void handlePanGesture(float _dX, float _dY) {
+void handlePanGesture(float _startX, float _startY, float _endX, float _endY) {
     
-    
-    m_view->toWorldDisplacement(_dX, _dY);
+    m_view->screenToGroundPlane(_startX, _startY);
+    m_view->screenToGroundPlane(_endX, _endY);
 
-    // We flip the signs of dx and dy to move the camera in the opposite direction
-    // of the intended "world movement", but dy gets flipped once more because screen
-    // coordinates have y pointing down and our world coordinates have y pointing up
-    m_view->translate(-_dX, _dY);
+    m_view->translate(_startX - _endX, _startY - _endY);
 
 }
 
@@ -228,9 +226,16 @@ void handlePinchGesture(float _posX, float _posY, float _scale) {
     m_view->zoom(log2f(_scale));
 }
     
-void handleRotateGesture(float _radians) {
+void handleRotateGesture(float _posX, float _posY, float _radians) {
     
-    m_view->roll(_radians);
+    m_view->screenToGroundPlane(_posX, _posY);
+    m_view->orbit(_posX, _posY, _radians);
+    
+}
+
+void handleShoveGesture(float _distance) {
+    
+    m_view->pitch(_distance);
     
 }
 
