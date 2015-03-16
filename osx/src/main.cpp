@@ -9,8 +9,6 @@ const double double_tap_time = 0.5; // seconds
 const double scroll_multiplier = 0.05; // scaling for zoom
 
 bool was_panning = false;
-bool rotating = false;
-bool shoving = false;
 double last_mouse_up = -double_tap_time; // First click should never trigger a double tap
 double last_x_down = 0.0;
 double last_y_down = 0.0;
@@ -67,6 +65,10 @@ void scroll_callback(GLFWwindow* window, double scrollx, double scrolly) {
     
     double x, y;
     glfwGetCursorPos(window, &x, &y);
+
+    bool rotating = glfwGetKey(window, GLFW_KEY_LEFT_SHIFT) == GLFW_PRESS || glfwGetKey(window, GLFW_KEY_RIGHT_SHIFT) == GLFW_PRESS;
+    bool shoving = glfwGetKey(window, GLFW_KEY_LEFT_CONTROL) == GLFW_PRESS || glfwGetKey(window, GLFW_KEY_RIGHT_CONTROL) == GLFW_PRESS;
+
     if (shoving) {
         Tangram::handleShoveGesture(scroll_multiplier * scrolly);
     } else if (rotating) {
@@ -75,12 +77,6 @@ void scroll_callback(GLFWwindow* window, double scrollx, double scrolly) {
         Tangram::handlePinchGesture(x, y, 1.0 + scroll_multiplier * scrolly);
     }
     
-}
-
-void key_callback(GLFWwindow* window, int key, int scancode, int action, int mods)
-{
-    rotating = (mods & GLFW_MOD_SHIFT) != 0; // Whether one or more shift keys is down
-    shoving = (mods & GLFW_MOD_CONTROL) != 0; // Whether one or more control keys is down
 }
 
 
@@ -124,7 +120,6 @@ int main(void) {
     glfwSetMouseButtonCallback(window, mouse_button_callback);
     glfwSetCursorPosCallback(window, cursor_pos_callback);
     glfwSetScrollCallback(window, scroll_callback);
-    glfwSetKeyCallback(window, key_callback);
     
     glfwSwapInterval(1);
     
