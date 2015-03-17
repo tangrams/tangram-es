@@ -41,19 +41,27 @@ void PolylineStyle::buildLine(Line& _line, std::string& _layer, Properties& _pro
     std::vector<glm::vec2> texcoords;
     std::vector<glm::vec2> scalingVecs;
     
-    GLuint abgr = 0xff969696; // Default road color
-    GLfloat layer = 3;
+    GLuint abgr = 0xff767676; // Default road color
+    GLfloat sort_key = _props.numericProps["sort_key"];
+    int thousands = sort_key / 1000;
+    int hundreds = fmodf(sort_key, 1000.f) / 100;
+    int ones = fmodf(sort_key, 10.f);
+    float reduced_sort_key = 30.f*thousands + 10.f*hundreds + ones;
+    GLfloat layer = 110.f + reduced_sort_key;
+    
     float halfWidth = 0.02;
     
-    if(_props.stringProps["kind"] == "highway"){
+    const std::string& kind = _props.stringProps["kind"];
+    
+    if (kind == "highway") {
         halfWidth = 0.02;
-    } else if(_props.stringProps["kind"] == "major_road"){
+    } else if (kind == "major_road") {
         halfWidth = 0.015;
-    } else if(_props.stringProps["kind"] == "minor_road"){
+    } else if (kind == "minor_road") {
         halfWidth = 0.01;
-    } else if(_props.stringProps["kind"] == "rail"){
+    } else if (kind == "rail") {
         halfWidth = 0.002;
-    } else if(_props.stringProps["kind"] == "path"){
+    } else if (kind == "path") {
         halfWidth = 0.005;
     }
     
@@ -62,9 +70,9 @@ void PolylineStyle::buildLine(Line& _line, std::string& _layer, Properties& _pro
     Builders::buildPolyLine(_line, lineOptions, lineOutput);
     
     for (size_t i = 0; i < points.size(); i++) {
-        glm::vec3 p = points[i];
-        glm::vec2 uv = texcoords[i];
-        glm::vec2 en = scalingVecs[i];
+        const glm::vec3& p = points[i];
+        const glm::vec2& uv = texcoords[i];
+        const glm::vec2& en = scalingVecs[i];
         vertices.push_back({ p.x, p.y, p.z, uv.x, uv.y, en.x, en.y, halfWidth, abgr, layer });
     }
     

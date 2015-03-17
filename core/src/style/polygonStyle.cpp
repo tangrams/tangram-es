@@ -80,7 +80,7 @@ void PolygonStyle::buildPolygon(Polygon& _polygon, std::string& _layer, Properti
     GLfloat layer = 0;
     
     if (_layer == "buildings") {
-        layer = 4;
+        layer = 250;
         abgr = 0xffe6f0f2;
     } else if (_layer == "water") {
         layer = 2;
