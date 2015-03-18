@@ -225,7 +225,7 @@ void View::updateTiles() {
     //
     // 1. Conservatively estimate the visible tile set with a bounding box:
     //
-    //   To find this bounding box, we project the corners of the view frustrum onto the ground (z = 0) plane.
+    //   To find this bounding box, we project the corners of the view frustum onto the ground (z = 0) plane.
     //   This creates a trapezoid (the 'view trapezoid') that we can easily create a bounding box around. Then
     //   to find the tiles in this bounding box we can simply 'scan' in x and y until we exhaust the area.
     //
