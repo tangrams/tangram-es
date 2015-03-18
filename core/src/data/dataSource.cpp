@@ -78,48 +78,52 @@ bool NetworkDataSource::loadTileData(const MapTile& _tile) {
     }
     
     std::unique_ptr<std::string> url = constructURL(_tile.getID());
-
-    CURL* curlHandle = curl_easy_init();
-
-    // out will store the stringStream contents from curl
-    std::stringstream out;
     
-    // set up curl to perform fetch
-    curl_easy_setopt(curlHandle, CURLOPT_WRITEFUNCTION, write_data);
-    curl_easy_setopt(curlHandle, CURLOPT_WRITEDATA, &out);
-    curl_easy_setopt(curlHandle, CURLOPT_URL, url->c_str());
-    curl_easy_setopt(curlHandle, CURLOPT_HEADER, 0L);
-    curl_easy_setopt(curlHandle, CURLOPT_VERBOSE, 0L);
-    curl_easy_setopt(curlHandle, CURLOPT_ACCEPT_ENCODING, "gzip");
-    
-    logMsg("Fetching URL with curl: %s\n", url->c_str());
+    std::stringstream rawData;
 
-    CURLcode result = curl_easy_perform(curlHandle);
-    
-    if (result != CURLE_OK) {
-        
-        logMsg("curl_easy_perform failed: %s\n", curl_easy_strerror(result));
-        success = false;
-        
-    } else {
-        
+    success = fetchData(std::move(url), rawData);
+
+    if(rawData) {
+
         // parse fetched data
-        std::shared_ptr<TileData> tileData = parse(_tile, out);
+        std::shared_ptr<TileData> tileData = parse(_tile, rawData);
         
         // Lock our mutex so that we can safely write to the tile store
         {
             std::lock_guard<std::mutex> lock(m_mutex);
             m_tileStore[_tile.getID()] = tileData;
         }
-        
+
+    } else {
+        success = false;
     }
     
-    curl_easy_cleanup(curlHandle);
     
     return success;
 }
 
-//---- MapzenVectorTileJson Implementation----
+bool NetworkDataSource::fetchData(std::unique_ptr<std::string> _url, std::stringstream& _rawData) {
 
+    CURL* curlHandle = curl_easy_init();
 
+    // set up curl to perform fetch
+    curl_easy_setopt(curlHandle, CURLOPT_WRITEFUNCTION, write_data);
+    curl_easy_setopt(curlHandle, CURLOPT_WRITEDATA, &_rawData);
+    curl_easy_setopt(curlHandle, CURLOPT_URL, _url->c_str());
+    curl_easy_setopt(curlHandle, CURLOPT_HEADER, 0L);
+    curl_easy_setopt(curlHandle, CURLOPT_VERBOSE, 0L);
+    curl_easy_setopt(curlHandle, CURLOPT_ACCEPT_ENCODING, "gzip");
+    
+    logMsg("Fetching URL with curl: %s\n", _url->c_str());
+
+    CURLcode result = curl_easy_perform(curlHandle);
+    
+    curl_easy_cleanup(curlHandle);
+    if (result != CURLE_OK) {
+        logMsg("curl_easy_perform failed: %s\n", curl_easy_strerror(result));
+        return false;
+    } else {
+        return true;
+    }
+}
 
