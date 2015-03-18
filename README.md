@@ -5,7 +5,7 @@ tangram-es
 
 OpenGL ES version of Tangram for mobile devices - EARLY work-in-progress!
 
-tangram-es is a library for rendering 2D and 3D maps using OpenGL ES 2 with custom styling and interactions. We also maintain sample client applications that use the library to render on Android, iOS, and Mac OS X. 
+tangram-es is a library for rendering 2D and 3D maps using OpenGL ES 2 with custom styling and interactions. We maintain sample client applications that use the library to render on Android, iOS, Mac OS X, Ubuntu, and Rasberry Pi. 
 
 build
 =====
@@ -26,11 +26,11 @@ Currently we are targeting five platforms: OS X, Ubuntu Linux, iOS, Android, and
 ## platforms ##
 
 ### OS X ###
-To build for OS X, you will need to install [GLFW](http://www.glfw.org/): 
+To build for OS X, you will need to install [GLFW](http://www.glfw.org/) and [pkg-config](http://www.freedesktop.org/wiki/Software/pkg-config/): 
 
 ```bash
 brew tap homebrew/versions
-brew install glfw3
+brew install glfw3 pkg-config
 ```
 
 Then build using GNU Make:
@@ -49,7 +49,7 @@ make linux
 Then run the binary from the output folder:
 
 ```bash
-cd build/linux/bin/ && ./tangram.out
+cd build/linux/bin/ && ./tangram
 ```
 
 ### iOS Simulator ###

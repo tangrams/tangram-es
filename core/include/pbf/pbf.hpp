@@ -8,7 +8,7 @@
  * Author: Josh Haberman <jhaberman@gmail.com>
  */
 
-#include <stdint.h>
+#include <cstdint>
 #include <stdexcept>
 #include <string>
 #include <cstring>
@@ -199,7 +199,7 @@ void message::skipValue(uint64_t val)
             break;
         default:
             char msg[80];
-            snprintf(msg, 80, "cannot skip unknown type %lld", val & 0x7);
+            snprintf(msg, 80, "cannot skip unknown type %lld", (unsigned long long)(val & 0x7));
             throw std::runtime_error(msg);
     }
 }
