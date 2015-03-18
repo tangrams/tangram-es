@@ -278,7 +278,9 @@ void View::updateTiles() {
             
             glm::dvec4 bounds_abs = m_projection->TileBounds(id);
             glm::vec4 bounds_rel = glm::vec4(bounds_abs.x - m_pos.x, -bounds_abs.w - m_pos.y, bounds_abs.z - m_pos.x,  -bounds_abs.y - m_pos.y);
-            
+            // The result of TileBounds is in y-down coordinates, so to make it relative to the view position we flip the sign on y and w (ymin and ymax)
+            // and then swap y and w (so that the min/max relationship remains). Finally, we subtract the view position in x and y.
+
             if (AABBIntersectsTrapezoid(bounds_rel, viewTopLeft, viewTopRight, viewBottomLeft, viewBottomRight)) {
                 m_visibleTiles.insert(id);
             }
