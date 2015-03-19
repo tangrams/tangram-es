@@ -1,5 +1,3 @@
-#include <curl/curl.h>
-
 #include "geoJson.h"
 #include "dataSource.h"
 #include "platform.h"
@@ -33,19 +31,10 @@ void DataSource::clearData() {
 
 //---- NetworkDataSource Implementation----
 
-//write_data call back from CURLOPT_WRITEFUNCTION
-//responsible to read and fill "stream" with the data.
-static size_t write_data(void *_ptr, size_t _size, size_t _nmemb, void *_stream) {
-    ((std::stringstream*) _stream)->write(reinterpret_cast<char *>(_ptr), _size * _nmemb);
-    return _size * _nmemb;
-}
-
 NetworkDataSource::NetworkDataSource() {
-    curl_global_init(CURL_GLOBAL_DEFAULT);
 }
 
 NetworkDataSource::~NetworkDataSource() {
-    curl_global_cleanup();
 }
 
 std::unique_ptr<std::string> NetworkDataSource::constructURL(const TileID& _tileCoord) {
@@ -100,30 +89,5 @@ bool NetworkDataSource::loadTileData(const MapTile& _tile) {
     
     
     return success;
-}
-
-bool NetworkDataSource::fetchData(std::unique_ptr<std::string> _url, std::stringstream& _rawData) {
-
-    CURL* curlHandle = curl_easy_init();
-
-    // set up curl to perform fetch
-    curl_easy_setopt(curlHandle, CURLOPT_WRITEFUNCTION, write_data);
-    curl_easy_setopt(curlHandle, CURLOPT_WRITEDATA, &_rawData);
-    curl_easy_setopt(curlHandle, CURLOPT_URL, _url->c_str());
-    curl_easy_setopt(curlHandle, CURLOPT_HEADER, 0L);
-    curl_easy_setopt(curlHandle, CURLOPT_VERBOSE, 0L);
-    curl_easy_setopt(curlHandle, CURLOPT_ACCEPT_ENCODING, "gzip");
-    
-    logMsg("Fetching URL with curl: %s\n", _url->c_str());
-
-    CURLcode result = curl_easy_perform(curlHandle);
-    
-    curl_easy_cleanup(curlHandle);
-    if (result != CURLE_OK) {
-        logMsg("curl_easy_perform failed: %s\n", curl_easy_strerror(result));
-        return false;
-    } else {
-        return true;
-    }
 }
 

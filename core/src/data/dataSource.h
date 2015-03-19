@@ -31,7 +31,6 @@ public:
      * from the main thread. 
      */
     virtual bool loadTileData(const MapTile& _tile) = 0;
-    virtual bool fetchData(std::unique_ptr<std::string> _url, std::stringstream& _rawData) = 0;
 
     /* Returns the data corresponding to a <TileID> */
     virtual std::shared_ptr<TileData> getTileData(const TileID& _tileID);
@@ -67,7 +66,6 @@ public:
     virtual ~NetworkDataSource();
 
     virtual bool loadTileData(const MapTile& _tile) override;
-    virtual bool fetchData(std::unique_ptr<std::string> _url, std::stringstream& _rawData) override;
 
 };
 
