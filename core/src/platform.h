@@ -10,6 +10,7 @@ void setAssetManager(JNIEnv* _jniEnv, jobject _assetManager);
 
 #include <string>
 #include <sstream>
+#include <memory>
 
 /* Print a formatted message to the console
  *
