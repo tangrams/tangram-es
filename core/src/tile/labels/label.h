@@ -28,8 +28,6 @@ public:
 
 private:
 
-    glm::vec4 projectToScreen(const glm::mat4& _mvp, glm::vec4 _worldPosition);
-
     LabelTransform m_transform;
     std::string m_text;
     std::shared_ptr<TextBuffer> m_buffer; // the buffer in which this label text id is associated to
