@@ -9,6 +9,7 @@ void setAssetManager(JNIEnv* _jniEnv, jobject _assetManager);
 #endif
 
 #include <string>
+#include <sstream>
 
 /* Print a formatted message to the console
  *
@@ -33,3 +34,6 @@ std::string stringFromResource(const char* _path);
  * allocated file
  */ 
 unsigned char* bytesFromResource(const char* _path, unsigned int* _size);
+
+bool fetchData(std::unique_ptr<std::string> _url, std::stringstream& _rawData);
+
