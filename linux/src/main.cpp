@@ -6,6 +6,7 @@
 // ==============
 
 const double double_tap_time = 0.5; // seconds
+const double scroll_multiplier = 0.05; // scaling for zoom
 
 bool was_panning = false;
 double last_mouse_up = -double_tap_time; // First click should never trigger a double tap
@@ -50,7 +51,7 @@ void cursor_pos_callback(GLFWwindow* window, double x, double y) {
     if (action == GLFW_PRESS) {
         
         if (was_panning) {
-            Tangram::handlePanGesture(x - last_x_down, y - last_y_down);
+            Tangram::handlePanGesture(last_x_down, last_y_down, x, y);
         }
         
         was_panning = true;
@@ -62,19 +63,22 @@ void cursor_pos_callback(GLFWwindow* window, double x, double y) {
 
 void scroll_callback(GLFWwindow* window, double scrollx, double scrolly) {
     
-    static double scrolled = 0.0;
-    scrolled += scrolly;
-    
-    // TODO: Update this for continuous zooming, using an arbitrary threshold for now
-    if (scrolled * scrolled > 100.0) {
-        
-        double x, y;
-        glfwGetCursorPos(window, &x, &y);
-        Tangram::handlePinchGesture(x, y, scrolled > 0 ? 1.5 : 0.5);
-        scrolled = 0.0;
-        
+    double x, y;
+    glfwGetCursorPos(window, &x, &y);
+
+    bool rotating = glfwGetKey(window, GLFW_KEY_LEFT_SHIFT) == GLFW_PRESS || glfwGetKey(window, GLFW_KEY_RIGHT_SHIFT) == GLFW_PRESS;
+    bool shoving = glfwGetKey(window, GLFW_KEY_LEFT_CONTROL) == GLFW_PRESS || glfwGetKey(window, GLFW_KEY_RIGHT_CONTROL) == GLFW_PRESS;
+
+    if (shoving) {
+        Tangram::handleShoveGesture(scroll_multiplier * scrolly);
+    } else if (rotating) {
+        Tangram::handleRotateGesture(x, y, scroll_multiplier * scrolly);
+    } else {
+        Tangram::handlePinchGesture(x, y, 1.0 + scroll_multiplier * scrolly);
     }
+    
 }
+
 
 // Window handling
 // ===============
@@ -99,6 +103,7 @@ int main(void) {
         return -1;
 
     /* Create a windowed mode window and its OpenGL context */
+    glfwWindowHint(GLFW_SAMPLES, 2);
     window = glfwCreateWindow(width, height, "GLFW Window", NULL, NULL);
     if (!window) {
         glfwTerminate();

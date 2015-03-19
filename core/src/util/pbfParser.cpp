@@ -4,11 +4,10 @@
 #include <cmath>
 
 
-void PbfParser::extractGeometry(protobuf::message& _in, int _tileExtent, std::vector<Line>& _out, const MapTile& _tile) {
+void PbfParser::extractGeometry(protobuf::message& _geomIn, int _tileExtent, std::vector<Line>& _out, const MapTile& _tile) {
     
     pbfGeomCmd cmd = pbfGeomCmd::moveTo;
     uint32_t cmdRepeat = 0;
-    protobuf::message& geomItr = _in;
     
     double invTileExtent = (1.0/(double)_tileExtent);
     
@@ -17,10 +16,10 @@ void PbfParser::extractGeometry(protobuf::message& _in, int _tileExtent, std::ve
     int64_t x = 0;
     int64_t y = 0;
     
-    while(geomItr.getData() < geomItr.getEnd()) {
+    while(_geomIn.getData() < _geomIn.getEnd()) {
         
         if(cmdRepeat == 0) { // get new command, lengh and parameters..
-            uint32_t cmdData = static_cast<uint32_t>(geomItr.varint());
+            uint32_t cmdData = static_cast<uint32_t>(_geomIn.varint());
             cmd = static_cast<pbfGeomCmd>(cmdData & 0x7); //first 3 bits of the cmdData
             cmdRepeat = cmdData >> 3; //last 5 bits
         }
@@ -34,8 +33,8 @@ void PbfParser::extractGeometry(protobuf::message& _in, int _tileExtent, std::ve
                 line.clear();
             }
             
-            x += geomItr.svarint();
-            y += geomItr.svarint();
+            x += _geomIn.svarint();
+            y += _geomIn.svarint();
             
             // bring the points in -1 to 1 space
             Point p;
@@ -60,25 +59,24 @@ void PbfParser::extractGeometry(protobuf::message& _in, int _tileExtent, std::ve
     
 }
 
-void PbfParser::extractFeature(protobuf::message& _in, Feature& _out, const MapTile& _tile, std::vector<std::string>& _keys, std::vector<float>& _numericValues, std::vector<std::string>& _stringValues, int _tileExtent) {
+void PbfParser::extractFeature(protobuf::message& _featureIn, Feature& _out, const MapTile& _tile, std::vector<std::string>& _keys, std::vector<float>& _numericValues, std::vector<std::string>& _stringValues, int _tileExtent) {
 
     //Iterate through this feature
     std::vector<Line> geometryLines;
-    protobuf::message featureItr = _in;
     protobuf::message geometry; // By default data_ and end_ are nullptr
     
-    while(featureItr.next()) {
-        switch(featureItr.tag) {
+    while(_featureIn.next()) {
+        switch(_featureIn.tag) {
             // Feature ID
             case 1:
                 // ignored for now, also not used in json parsing
-                featureItr.skip();
+                _featureIn.skip();
                 break;
             // Feature tags (properties)
             case 2:
             {
                 // extract tags message
-                protobuf::message tagsMsg = featureItr.getMessage();
+                protobuf::message tagsMsg = _featureIn.getMessage();
                 
                 while(tagsMsg) {
                     std::size_t tagKey = tagsMsg.varint();
@@ -122,16 +120,16 @@ void PbfParser::extractFeature(protobuf::message& _in, Feature& _out, const MapT
             }
             // Feature Type
             case 3:
-                _out.geometryType = (GeometryType)featureItr.varint();
+                _out.geometryType = (GeometryType)_featureIn.varint();
                 break;
             // Actual geometry data
             case 4:
-                geometry = featureItr.getMessage();
+                geometry = _featureIn.getMessage();
                 extractGeometry(geometry, _tileExtent, geometryLines, _tile);
                 break;
             // None.. skip
             default:
-                featureItr.skip();
+                _featureIn.skip();
                 break;
         }
     }
@@ -160,9 +158,7 @@ void PbfParser::extractFeature(protobuf::message& _in, Feature& _out, const MapT
     
 }
 
-void PbfParser::extractLayer(protobuf::message& _in, Layer& _out, const MapTile& _tile) {
-
-    protobuf::message& layerItr = _in;
+void PbfParser::extractLayer(protobuf::message& _layerIn, Layer& _out, const MapTile& _tile) {
     
     std::vector<std::string> keys;
     std::vector<float> numericValues;
@@ -171,23 +167,23 @@ void PbfParser::extractLayer(protobuf::message& _in, Layer& _out, const MapTile&
     int tileExtent = 0;
     
     //iterate layer to populate featureMsgs, keys and values
-    while(layerItr.next()) {
-        switch(layerItr.tag) {
+    while(_layerIn.next()) {
+        switch(_layerIn.tag) {
             case 2: // features
             {
-                featureMsgs.push_back(layerItr.getMessage());
+                featureMsgs.push_back(_layerIn.getMessage());
                 break;
             }
                 
             case 3: // key string
             {
-                keys.push_back(layerItr.string());
+                keys.push_back(_layerIn.string());
                 break;
             }
 
             case 4: // values
             {
-                protobuf::message valueItr = layerItr.getMessage();
+                protobuf::message valueItr = _layerIn.getMessage();
                 
                 while (valueItr.next()) {
                     switch (valueItr.tag) {
@@ -230,11 +226,11 @@ void PbfParser::extractLayer(protobuf::message& _in, Layer& _out, const MapTile&
             }
                 
             case 5: //extent
-                tileExtent = static_cast<int>(layerItr.int64());
+                tileExtent = static_cast<int>(_layerIn.int64());
                 break;
                 
             default: // skip
-                layerItr.skip();
+                _layerIn.skip();
                 break;
                 
         }

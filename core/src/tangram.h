@@ -39,13 +39,16 @@ void handleTapGesture(float _posX, float _posY);
 void handleDoubleTapGesture(float _posX, float _posY);
 
 // Respond to a drag with the given displacement in screen coordinates (x right, y down)
-void handlePanGesture(float _dX, float _dY);
+void handlePanGesture(float _startX, float _startY, float _endX, float _endY);
 
 // Respond to a pinch at the given position in screen coordinates with the given incremental scale
 void handlePinchGesture(float _posX, float _posY, float _scale);
 
 // Respond to a rotation gesture with the given incremental rotation in radians
-void handleRotateGesture(float _rotation);
+void handleRotateGesture(float _posX, float _posY, float _rotation);
+
+// Respond to a two-finger shove with the given distance
+void handleShoveGesture(float _distance);
 
 }
 

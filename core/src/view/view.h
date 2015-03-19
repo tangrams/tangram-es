@@ -50,6 +50,9 @@ public:
     
     /* Sets the roll angle of the view in radians (default is 0) */
     void setRoll(float _rad);
+
+    /* Sets the pitch angle of the view in radians (default is 0) */
+    void setPitch(float _rad);
     
     /* Moves the position of the view */
     void translate(double _dx, double _dy);
@@ -59,6 +62,13 @@ public:
     
     /* Changes the roll angle by the given amount in radians */
     void roll(float _drad);
+
+    /* Changes the pitch angle by the given amount in radians */
+    void pitch(float _drad);
+    
+    /* Rotates the view by the given amount in radians and translates the view such that 
+       the given position on the ground plane remains stationary in screen space */
+    void orbit(float _x, float _y, float _radians);
     
     /* Gets the current zoom */
     float getZoom() const { return m_zoom; }
@@ -68,6 +78,9 @@ public:
     
     /* Get the current roll angle in radians */
     float getRoll() const { return m_roll; }
+    
+    /* Get the current pitch angle in radians */
+    float getPitch() const { return m_pitch; }
     
     /* Updates the view and projection matrices if properties have changed */
     void update();
@@ -92,10 +105,9 @@ public:
     
     float getHeight() const { return m_vpHeight; }
     
-    /* Calculate the distance in map projection units represented by the given distance in screen space */
-    float toWorldDistance(float _screenDistance) const;
-    
-    void toWorldDisplacement(float& _screenX, float& _screenY) const;
+    /* Calculate the position on the ground plane (z = 0) under the given screen space coordinates, 
+       replacing the input coordinates with world-space coordinates */
+    void screenToGroundPlane(float& _screenX, float& _screenY) const;
     
     /* Returns the set of all tiles visible at the current position and zoom */
     const std::set<TileID>& getVisibleTiles();
@@ -122,8 +134,10 @@ protected:
     glm::mat4 m_view;
     glm::mat4 m_proj;
     glm::mat4 m_viewProj;
+    glm::mat4 m_invViewProj;
     
-    float m_roll = 0;
+    float m_roll = 0.f;
+    float m_pitch = 0.f;
     
     float m_zoom;
     float m_initZoom = 16.0;

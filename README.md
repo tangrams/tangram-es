@@ -9,7 +9,7 @@ tangram-es is a library for rendering 2D and 3D maps using OpenGL ES 2 with cust
 
 build
 =====
-This project uses _CMake_ (minimum version **2.8** for all platforms, except iOS platform that uses cmake **3.0**), you can download it [here](http://www.cmake.org/download/) or use your favorite installation package tool like [homebrew](http://brew.sh/).
+This project uses _CMake_ (minimum version **3.0**), you can download it [here](http://www.cmake.org/download/) or use your favorite installation package tool like [homebrew](http://brew.sh/).
 
 ```bash
 brew install cmake
@@ -21,16 +21,16 @@ Make sure to update git submodules before you build:
 git submodule init && git submodule update
 ```
 
-Currently we are targeting four platforms: OS X, iOS, Android, and Raspberry Pi. 
+Currently we are targeting five platforms: OS X, Ubuntu Linux, iOS, Android, and Raspberry Pi. 
 
 ## platforms ##
 
 ### OS X ###
-To build for OS X, you will need to install [GLFW](http://www.glfw.org/): 
+To build for OS X, you will need to install [GLFW](http://www.glfw.org/) and [pkg-config](http://www.freedesktop.org/wiki/Software/pkg-config/): 
 
 ```bash
 brew tap homebrew/versions
-brew install glfw3
+brew install glfw3 pkg-config
 ```
 
 Then build using GNU Make:
@@ -40,7 +40,7 @@ make osx
 ```
 
 ### Ubuntu Linux ###
-To build on Ubuntu you will again need [GLFW](http://www.gflw.org/) and on linux platforms it's best to compile from source. GLFW provides [instructions for compiling the library](http://www.glfw.org/docs/latest/compile.html). Once you've installed GLFW, build Tangram from the project root using GNU Make:
+To build on Ubuntu you will again need [GLFW](http://www.glfw.org/) and on linux platforms it's best to compile from source. GLFW provides [instructions for compiling the library](http://www.glfw.org/docs/latest/compile.html). Once you've installed GLFW, build Tangram from the project root using GNU Make:
 
 ```bash
 make linux
@@ -76,21 +76,13 @@ First generate an XCode project without compiling:
 make cmake-ios IOS_PLATFORM=OS
 ```
 
-Then open the Xcode project:
+Then open the Xcode project and set up your developer account information to run on a device:
 
 ```bash
 open build/ios/tangram.xcodeproj
 ```
 
-In the project settings for the target named 'tangram', set 'Team' to your developer account. Now you can build and run the demo on a connected device.
-
-When you run on a device for the first time you may encounter an error with a message similar to:
-
-![`The file ... couldn’t be opened because you don’t have permission to view it.`](images/ios-00-error.png)
-
-To fix this, go to the Issues navigator tab in Xcode and click 'Validate Project Settings' under 'tangram.xcodeproj', then allow Xcode to perform any needed changes.
-
-![Steps](images/ios-00-steps.png)
+If you run into problems deploying to an iOS device, see [this note](https://github.com/tangrams/tangram-es/wiki/iOS-Notes).
 
 ### Android ###
 To build for Android you'll need to have installed both the [Android SDK](http://developer.android.com/sdk/installing/index.html?pkg=tools) and the [Android NDK](https://developer.android.com/tools/sdk/ndk/index.html). Set an `ANDROID_HOME` evironment variable with the root directory of your SDK and an `ANDROID_NDK` environment variable with the root directory of your NDK. 
@@ -123,9 +115,11 @@ cd build/rpi/bin
 ./tangram
 ```
 
-Tangram will be rendered directly to the screen without a window manager, in the case you want see the mouse cursor run the application with the ```-m``` argument like this:
+Tangram will be rendered directly to the screen without a window manager, if you want see the mouse cursor run the application with the ```-m``` argument like this:
 
 ```
 cd build/rpi/bin
 ./tangram -m
 ```
+
+You can also move the map with `w`, `a`, `s`, and `z`, zoom in and out with `-` and `=`, and quit with `q`.
