@@ -1,5 +1,6 @@
 #include "polylineStyle.h"
 #include "util/builders.h"
+#include "roadLayers.h"
 #include <ctime>
 
 PolylineStyle::PolylineStyle(std::string _name, GLenum _drawMode) : Style(_name, _drawMode) {
@@ -42,12 +43,8 @@ void PolylineStyle::buildLine(Line& _line, std::string& _layer, Properties& _pro
     std::vector<glm::vec2> scalingVecs;
     
     GLuint abgr = 0xff767676; // Default road color
-    GLfloat sort_key = _props.numericProps["sort_key"];
-    int thousands = sort_key / 1000;
-    int hundreds = fmodf(sort_key, 1000.f) / 100;
-    int ones = fmodf(sort_key, 10.f);
-    float reduced_sort_key = 30.f*thousands + 10.f*hundreds + ones;
-    GLfloat layer = 110.f + reduced_sort_key;
+    float reduced_sort_key = reduceSortKey(_props.numericProps["sort_key"]);
+    GLfloat layer = reduced_sort_key - MIN_ROAD_LAYER + 3;
     
     float halfWidth = 0.02;
     

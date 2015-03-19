@@ -1,5 +1,6 @@
 #include "polygonStyle.h"
 #include "util/builders.h"
+#include "roadLayers.h"
 
 PolygonStyle::PolygonStyle(std::string _name, GLenum _drawMode) : Style(_name, _drawMode) {
     m_material.setEmissionEnabled(false);
@@ -80,7 +81,7 @@ void PolygonStyle::buildPolygon(Polygon& _polygon, std::string& _layer, Properti
     GLfloat layer = 0;
     
     if (_layer == "buildings") {
-        layer = 250;
+        layer = ROAD_LAYER_OFFSET + 4;
         abgr = 0xffe6f0f2;
     } else if (_layer == "water") {
         layer = 2;
