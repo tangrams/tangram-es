@@ -60,7 +60,7 @@ bool isPowerOf2(unsigned int _val) {
     return _val > 0 && (_val & (_val - 1)) == 0;
 }
 
-float angleBetween(const glm::vec2& _p1, const glm::vec2& _p2) {
+float angleBetweenPoints(const glm::vec2& _p1, const glm::vec2& _p2) {
     glm::vec2 p1p2 = _p2 - _p1;
     p1p2 = glm::normalize(p1p2);
     return (float) atan2(p1p2.x, -p1p2.y);

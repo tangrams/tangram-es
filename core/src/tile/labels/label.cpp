@@ -21,11 +21,8 @@ void Label::updateTransform(const LabelTransform& _transform, const glm::mat4& _
 
     glm::vec2 p1 = worldToScreenSpace(_mvp, glm::vec4(m_transform.m_modelPosition1, 0.0, 1.0), _screenSize);
     glm::vec2 p2 = worldToScreenSpace(_mvp, glm::vec4(m_transform.m_modelPosition2, 0.0, 1.0), _screenSize);
-    glm::vec2 p1p2 = p2 - p1;
 
-    p1p2 = glm::normalize(p1p2);
-
-    float rot = angleBetween(p1, p2) + M_PI_2;
+    float rot = angleBetweenPoints(p1, p2) + M_PI_2;
 
     if (rot > M_PI_2 || rot < -M_PI_2) { // un-readable labels
         rot += M_PI;

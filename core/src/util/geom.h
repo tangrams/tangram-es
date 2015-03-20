@@ -86,8 +86,8 @@ glm::vec3 getWithLength(const glm::vec3& _vec, float _length);
 
 bool isPowerOf2(unsigned int _val);
 
-/* Computes the angle in radians between two points in 2d space */
-float angleBetween(const glm::vec2& _p1, const glm::vec2& _p2);
+/* Computes the angle in radians between two points with the axis y = 0 in 2d space */
+float angleBetweenPoints(const glm::vec2& _p1, const glm::vec2& _p2);
 
 glm::vec2 worldToScreenSpace(const glm::mat4& _mvp, const glm::vec4& _worldPosition, const glm::vec2& _screenSize);
 
