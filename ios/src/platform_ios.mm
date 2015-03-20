@@ -7,6 +7,7 @@
 #import <fstream>
 
 #include "platform.h"
+#include <curl/curl.h>
 
 void logMsg(const char* fmt, ...) {
 
@@ -61,6 +62,39 @@ unsigned char* bytesFromResource(const char* _path, unsigned int* _size) {
     resource.close();
 
     return reinterpret_cast<unsigned char *>(cdata);
+}
+
+//write_data call back from CURLOPT_WRITEFUNCTION
+//responsible to read and fill "stream" with the data.
+static size_t write_data(void *_ptr, size_t _size, size_t _nmemb, void *_stream) {
+
+    ((std::stringstream*) _stream)->write(reinterpret_cast<char *>(_ptr), _size * _nmemb);
+    return _size * _nmemb;
+}
+
+bool fetchData(std::unique_ptr<std::string> _url, std::stringstream& _rawData) {
+
+    CURL* curlHandle = curl_easy_init();
+
+    // set up curl to perform fetch
+    curl_easy_setopt(curlHandle, CURLOPT_WRITEFUNCTION, write_data);
+    curl_easy_setopt(curlHandle, CURLOPT_WRITEDATA, &_rawData);
+    curl_easy_setopt(curlHandle, CURLOPT_URL, _url->c_str());
+    curl_easy_setopt(curlHandle, CURLOPT_HEADER, 0L);
+    curl_easy_setopt(curlHandle, CURLOPT_VERBOSE, 0L);
+    curl_easy_setopt(curlHandle, CURLOPT_ACCEPT_ENCODING, "gzip");
+
+    logMsg("Fetching URL with curl: %s\n", _url->c_str());
+
+    CURLcode result = curl_easy_perform(curlHandle);
+
+    curl_easy_cleanup(curlHandle);
+    if (result != CURLE_OK) {
+        logMsg("curl_easy_perform failed: %s\n", curl_easy_strerror(result));
+        return false;
+    } else {
+        return true;
+    }
 }
 
 #endif //PLATFORM_IOS

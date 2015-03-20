@@ -8,6 +8,8 @@
 
 #import "ViewController.h"
 
+#include <curl/curl.h>
+
 @interface ViewController () {
     
 }
@@ -36,6 +38,9 @@
     if (!self.context) {
         NSLog(@"Failed to create ES context");
     }
+
+    /* Do Curl Init */
+    curl_global_init(CURL_GLOBAL_DEFAULT);
     
     GLKView *view = (GLKView *)self.view;
     view.context = self.context;
@@ -136,6 +141,8 @@
 - (void)dealloc
 {    
     [self tearDownGL];
+
+    curl_global_cleanup();
     
     if ([EAGLContext currentContext] == self.context) {
         [EAGLContext setCurrentContext:nil];
