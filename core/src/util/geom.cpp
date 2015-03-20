@@ -17,7 +17,7 @@ float mapValue(const float& _value, const float& _inputMin, const float& _inputM
         return _outputMin;
     } else {
         float outVal = ((_value - _inputMin) / (_inputMax - _inputMin) * (_outputMax - _outputMin) + _outputMin);
-        
+
         if( _clamp ){
             if(_outputMax < _outputMin){
                 if( outVal < _outputMax )outVal = _outputMax;
@@ -59,3 +59,26 @@ glm::vec3 getWithLength(const glm::vec3& _vec, float _length) {
 bool isPowerOf2(unsigned int _val) {
     return _val > 0 && (_val & (_val - 1)) == 0;
 }
+
+float angleBetweenPoints(const glm::vec2& _p1, const glm::vec2& _p2) {
+    glm::vec2 p1p2 = _p2 - _p1;
+    p1p2 = glm::normalize(p1p2);
+    return (float) atan2(p1p2.x, -p1p2.y);
+}
+
+glm::vec2 worldToScreenSpace(const glm::mat4& _mvp, const glm::vec4& _worldPosition, const glm::vec2& _screenSize) {
+    float halfWidth = _screenSize.x * 0.5f;
+    float halfHeight = _screenSize.y * 0.5f;
+
+    // mimic gpu vertex projection to screen
+    glm::vec4 screenPosition = _mvp * _worldPosition;
+    screenPosition = screenPosition / screenPosition.w; // perspective division
+
+    // from normalized device coordinates to screen space coordinate system
+    // top-left screen axis, y pointing down
+    screenPosition.x = (screenPosition.x + 1) * halfWidth;
+    screenPosition.y = (1 - screenPosition.y) * halfHeight;
+
+    return glm::vec2(screenPosition);
+}
+

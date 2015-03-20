@@ -17,25 +17,23 @@ void Label::rasterize() {
 void Label::updateTransform(const LabelTransform& _transform, const glm::mat4& _mvp, const glm::vec2& _screenSize) {
     m_transform = _transform;
 
-    float halfWidth = _screenSize.x * 0.5f;
-    float halfHeight = _screenSize.y * 0.5f;
-
     float alpha = m_transform.m_alpha;
 
-    glm::vec4 screenPosition = glm::vec4(m_transform.m_modelPosition, 0.0f, 1.0f);
+    glm::vec2 p1 = worldToScreenSpace(_mvp, glm::vec4(m_transform.m_modelPosition1, 0.0, 1.0), _screenSize);
+    glm::vec2 p2 = worldToScreenSpace(_mvp, glm::vec4(m_transform.m_modelPosition2, 0.0, 1.0), _screenSize);
 
-    // mimic gpu vertex projection to screen
-    screenPosition = _mvp * screenPosition;
-    screenPosition = screenPosition / screenPosition.w; // perspective division
+    float rot = angleBetweenPoints(p1, p2) + M_PI_2;
 
-    // from normalized device coordinates to screen space coordinate system
-    // top-left screen axis, y pointing down
-    screenPosition.x = (screenPosition.x + 1) * halfWidth;
-    screenPosition.y = (1 - screenPosition.y) * halfHeight;
+    if (rot > M_PI_2 || rot < -M_PI_2) { // un-readable labels
+        rot += M_PI;
+    }
+
+    glm::vec2 screenPosition = (p1 + p2) / 2.0f;
 
     // don't display out of screen labels, and out of screen translations or not yet implemented in fstash
     alpha = screenPosition.x > _screenSize.x || screenPosition.x < 0 ? 0.0 : alpha;
     alpha = screenPosition.y > _screenSize.y || screenPosition.y < 0 ? 0.0 : alpha;
 
-    m_buffer->transformID(m_id, screenPosition.x, screenPosition.y, m_transform.m_rotation, alpha);
+    m_buffer->transformID(m_id, screenPosition.x, screenPosition.y, rot, alpha);
 }
+
