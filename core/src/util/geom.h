@@ -3,7 +3,10 @@
 #include <vector>
 #include <cmath>
 
+#include "glm/glm.hpp"
 #include "glm/vec3.hpp"
+#include "glm/vec2.hpp"
+#include "glm/mat4x4.hpp"
 
 #ifndef PI
 #define PI 3.14159265358979323846
@@ -68,7 +71,7 @@ void wrapRad(double& _rads);
 
 /* Map a value from the range [_inputMin, _inputMax] into the range [_outputMin, _outputMax];
  * If _clamp is true, the output is strictly within the output range.
- * Ex: mapValue(5, 0, 10, 0, 360) == 180 
+ * Ex: mapValue(5, 0, 10, 0, 360) == 180
  */
 float mapValue(const float& _value, const float& _inputMin, const float& _inputMax, const float& _outputMin, const float& _outputMax, bool _clamp = true);
 
@@ -82,3 +85,9 @@ void setLength(glm::vec3& _vec, float _length);
 glm::vec3 getWithLength(const glm::vec3& _vec, float _length);
 
 bool isPowerOf2(unsigned int _val);
+
+/* Computes the angle in radians between two points with the axis y = 0 in 2d space */
+float angleBetweenPoints(const glm::vec2& _p1, const glm::vec2& _p2);
+
+glm::vec2 worldToScreenSpace(const glm::mat4& _mvp, const glm::vec4& _worldPosition, const glm::vec2& _screenSize);
+

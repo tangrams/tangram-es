@@ -64,18 +64,7 @@ void FontStyle::buildLine(Line& _line, std::string& _layer, Properties& _props, 
                     return;
                 }
 
-                p1p2 = glm::normalize(p1p2);
-                float rot = (float) atan2(p1p2.x, p1p2.y) + M_PI_2;
-
-                float offset = 1.0f;
-                if (rot > M_PI_2 || rot < -M_PI_2) {
-                    rot += M_PI;
-                    offset = -1;
-                }
-
-                glm::vec2 position = (p1 + p2) / 2.0f + p1p2 * 0.2f * offset;
-
-                auto label = labelContainer->addLabel(FontStyle::processedTile->getID(), m_name, { position, 1.0f, rot }, prop.second);
+                auto label = labelContainer->addLabel(FontStyle::processedTile->getID(), m_name, { p1, p2, 1.0f }, prop.second);
 
                 label->rasterize();
             }
@@ -83,7 +72,7 @@ void FontStyle::buildLine(Line& _line, std::string& _layer, Properties& _props, 
     }
 
     ftContext->clearState();
-    
+
     if (textBuffer->getVertices(&vertData, &nVerts)) {
          _mesh.addVertices((GLbyte*)vertData.data(), nVerts);
     }
@@ -145,7 +134,7 @@ void FontStyle::setupFrame(const std::shared_ptr<View>& _view, const std::shared
     atlas->update();
     atlas->bind();
 
-    m_shaderProgram->setUniformi("u_tex", atlas->getTextureSlot()); 
+    m_shaderProgram->setUniformi("u_tex", atlas->getTextureSlot());
     m_shaderProgram->setUniformf("u_resolution", _view->getWidth(), _view->getHeight());
     m_shaderProgram->setUniformf("u_color", 1.0, 1.0, 1.0);
     m_shaderProgram->setUniformMatrix4f("u_proj", projectionMatrix);

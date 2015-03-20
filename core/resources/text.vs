@@ -2,7 +2,7 @@
 precision mediump float;
 #define LOWP lowp
 #else
-#define LOWP 
+#define LOWP
 #endif
 
 attribute LOWP float a_fsid;
@@ -25,6 +25,7 @@ varying float v_alpha;
 #define theta   tdata.z
 #define txp     tdataPrecision.x
 #define typ     tdataPrecision.y
+#define trp     tdataPrecision.z
 
 /*
  * Converts (i, j) pixel coordinates to the corresponding (u, v) in
@@ -56,16 +57,17 @@ void main() {
     // reads the transform data and its precision
     vec4 tdata = texture2D(u_transforms, uv1);
     vec4 tdataPrecision = texture2D(u_transforms, uv2);
-    
+
     float txe = u_resolution.x / 255.0; // max error on x
-    float txy = u_resolution.y / 255.0; // max error on y
+    float tye = u_resolution.y / 255.0; // max error on y
+    float tre = (2.0 * PI) / 255.0;
 
     // transforms from [0..1] to [0..resolution] and add lost precision
     tx = u_resolution.x * tx + (txp * txe);
-    ty = u_resolution.y * ty + (typ * txy);
+    ty = u_resolution.y * ty + (typ * tye);
 
     // scale from [0..1] to [0..2pi]
-    theta = theta * 2.0 * PI;
+    theta = theta * 2.0 * PI + (trp * tre);
 
     float st = sin(theta);
     float ct = cos(theta);
