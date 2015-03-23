@@ -18,8 +18,10 @@ protected:
         GLfloat enorm_x;
         GLfloat enorm_y;
         GLfloat ewidth;
-        //Color Data
+        // Color Data
         GLuint abgr;
+        // Layer Data
+        GLfloat layer;
     };
     
     virtual void constructVertexLayout() override;
