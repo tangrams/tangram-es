@@ -43,8 +43,7 @@ void PolylineStyle::buildLine(Line& _line, std::string& _layer, Properties& _pro
     std::vector<glm::vec2> scalingVecs;
     
     GLuint abgr = 0xff767676; // Default road color
-    float reduced_sort_key = reduceSortKey(_props.numericProps["sort_key"]);
-    GLfloat layer = reduced_sort_key - MIN_ROAD_LAYER + 3;
+    GLfloat layer = sortKeyToLayer(_props.numericProps["sort_key"]) + 3;
     
     float halfWidth = 0.02;
     
