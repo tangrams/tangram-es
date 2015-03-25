@@ -346,7 +346,10 @@ int main(int argc, char **argv){
         
         if(updateMouse()){
             if( mouse.button == 1 ){
-                Tangram::handlePanGesture( mouse.velX*1.0, -mouse.velY*1.0);
+                Tangram::handlePanGesture(  mouse.x-mouse.velX*1.0, 
+                                            mouse.y+mouse.velY*1.0, 
+                                            mouse.x,
+                                            mouse.y);
             } else if( mouse.button == 2 ){
                 Tangram::handlePinchGesture( 0.0, 0.0, 1.0 + mouse.velY*0.001);
             } 
@@ -362,16 +365,16 @@ int main(int argc, char **argv){
                     Tangram::handlePinchGesture(0.0,0.0,2.0);
                     break;
                 case KEY_UP:
-                    Tangram::handlePanGesture(0.0,100.0);
+                    Tangram::handlePanGesture(0.0,0.0,0.0,100.0);
                     break;
                 case KEY_DOWN:
-                    Tangram::handlePanGesture(0.0,-100.0);
+                    Tangram::handlePanGesture(0.0,0.0,0.0,-100.0);
                     break;
                 case KEY_LEFT:
-                    Tangram::handlePanGesture(100.0,0.0);
+                    Tangram::handlePanGesture(0.0,0.0,100.0,0.0);
                     break;
                 case KEY_RIGHT:
-                    Tangram::handlePanGesture(-100.0,0.0);
+                    Tangram::handlePanGesture(0.0,0.0,-100.0,0.0);
                     break;
                 case KEY_ESC:
                     bContinue = false;
