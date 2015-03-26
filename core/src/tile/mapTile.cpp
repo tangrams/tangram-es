@@ -102,6 +102,7 @@ void MapTile::draw(const Style& _style, const View& _view) {
             offset = 1.0f + log(_view.s_maxZoom + 2);
         }
         shader->setUniformf("u_tileDepthOffset", offset);
+        shader->setUniformf("u_tile_zoom", m_id.z);
 
         styleMesh->draw(shader);
     }

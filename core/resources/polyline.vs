@@ -6,6 +6,8 @@ uniform mat4 u_modelView;
 uniform mat4 u_modelViewProj;
 uniform mat3 u_normalMatrix;
 uniform float u_time;
+uniform float u_zoom;
+uniform float u_tile_zoom;
 uniform float u_tileDepthOffset;
 
 #pragma tangram: material
@@ -34,8 +36,8 @@ void main() {
     v_color = a_color;
     v_texcoord = a_texcoord;
 
-	vec4 v_pos = a_position;
-  	v_pos.xyz += a_extrudeNormal * (a_extrudeWidth*2.0);
+    vec4 v_pos = a_position;
+    v_pos.xyz += a_extrudeNormal * (a_extrudeWidth * 2.) * pow(2., u_tile_zoom - u_zoom);
 
     v_eyeToPoint = vec3(u_modelView * a_position);
     
