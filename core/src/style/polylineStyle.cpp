@@ -82,7 +82,7 @@ void PolylineStyle::buildLine(Line& _line, std::string& _layer, Properties& _pro
     
     size_t outlineStart = points.size();
     
-    Builders::buildOutline(_line, lineOptions, lineOutput);
+    Builders::buildPolyLine(_line, lineOptions, lineOutput);
     
     for (size_t i = outlineStart; i < points.size(); i++) {
         const glm::vec3& p = points[i];
