@@ -8,7 +8,6 @@ uniform mat3 u_normalMatrix;
 uniform float u_time;
 uniform float u_zoom;
 uniform float u_tile_zoom;
-uniform float u_tileDepthOffset;
 
 #pragma tangram: material
 #pragma tangram: vertex_lighting
@@ -37,7 +36,7 @@ void main() {
     v_texcoord = a_texcoord;
 
     vec4 v_pos = a_position;
-    v_pos.xyz += a_extrudeNormal * (a_extrudeWidth * 2.) * pow(2., u_tile_zoom - u_zoom);
+    v_pos.xyz += a_extrudeNormal * (a_extrudeWidth * 2.) * pow(2., abs(u_tile_zoom) - u_zoom);
 
     v_eyeToPoint = vec3(u_modelView * a_position);
     
@@ -47,7 +46,10 @@ void main() {
     #endif
 
     gl_Position = u_modelViewProj * v_pos;
-    gl_Position.z /= u_tileDepthOffset;
+    
+    // Proxy tiles have u_tile_zoom < 0, so this re-scaling will place proxy tiles deeper in
+    // the depth buffer than non-proxy tiles by a distance that increases with tile zoom
+    gl_Position.z /= 1. + .1 * (abs(u_tile_zoom) + u_tile_zoom);
     
     #ifdef TANGRAM_DEPTH_DELTA
         gl_Position.z -= a_layer * TANGRAM_DEPTH_DELTA * gl_Position.w;
