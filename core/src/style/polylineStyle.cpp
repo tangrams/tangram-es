@@ -1,6 +1,7 @@
 #include "polylineStyle.h"
 #include "util/builders.h"
 #include "roadLayers.h"
+#include "tangram.h"
 #include <ctime>
 
 PolylineStyle::PolylineStyle(std::string _name, GLenum _drawMode) : Style(_name, _drawMode) {
@@ -43,6 +44,11 @@ void PolylineStyle::buildLine(Line& _line, std::string& _layer, Properties& _pro
     std::vector<glm::vec2> scalingVecs;
     
     GLuint abgr = 0xff767676; // Default road color
+    
+    if ((Tangram::getDebugFlags() & TANGRAM_PROXY_COLORS) != 0) {
+        abgr = int(_props.numericProps["zoom"]) % 2 == 0 ? abgr : ~abgr;
+    }
+    
     GLfloat layer = sortKeyToLayer(_props.numericProps["sort_key"]) + 3;
     
     float halfWidth = 0.02;

@@ -29,6 +29,8 @@ void Style::addData(TileData& _data, MapTile& _tile, const MapProjection& _mapPr
         
         for (auto& feature : layer.features) {
 
+            feature.props.numericProps["zoom"] = _tile.getID().z;
+            
             switch (feature.geometryType) {
                 case GeometryType::POINTS:
                     // Build points
