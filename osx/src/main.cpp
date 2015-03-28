@@ -79,6 +79,22 @@ void scroll_callback(GLFWwindow* window, double scrollx, double scrolly) {
     
 }
 
+void key_callback(GLFWwindow* window, int key, int scancode, int action, int mods) {
+    
+    if (action == GLFW_PRESS) {
+        switch (key) {
+            case GLFW_KEY_1:
+                Tangram::setDebugFlags(Tangram::getDebugFlags() ^ TANGRAM_FREEZE_TILES);
+                break;
+            case GLFW_KEY_2:
+                Tangram::setDebugFlags(Tangram::getDebugFlags() ^ TANGRAM_PROXY_COLORS);
+                break;
+            default:
+                break;
+        }
+    }
+}
+
 
 // Window handling
 // ===============
@@ -120,6 +136,7 @@ int main(void) {
     glfwSetMouseButtonCallback(window, mouse_button_callback);
     glfwSetCursorPosCallback(window, cursor_pos_callback);
     glfwSetScrollCallback(window, scroll_callback);
+    glfwSetKeyCallback(window, key_callback);
     
     glfwSwapInterval(1);
     
