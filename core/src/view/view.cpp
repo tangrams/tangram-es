@@ -4,6 +4,7 @@
 
 #include "util/tileID.h"
 #include "platform.h"
+#include "tangram.h"
 #include "glm/gtc/matrix_transform.hpp"
 #include "glm/gtx/rotate_vector.hpp"
 
@@ -136,11 +137,15 @@ void View::update() {
     
     updateMatrices();
     
-    updateTiles();
-    
-    m_dirty = false;
+    if ((Tangram::getDebugFlags() & TANGRAM_FREEZE_TILES) == 0) {
+        
+        updateTiles();
+        
+    }
     
     m_changed = true;
+    
+    m_dirty = false;
     
 }
 
