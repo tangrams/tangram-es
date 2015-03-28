@@ -28,6 +28,7 @@ namespace Tangram {
     std::shared_ptr<FontContext> m_ftContext;
 
     static float g_time = 0.0;
+    static flag_t g_flags = 0;
 
     void initialize() {
         
@@ -236,6 +237,18 @@ namespace Tangram {
     void handleShoveGesture(float _distance) {
         
         m_view->pitch(_distance);
+        
+    }
+    
+    void setDebugFlags(flag_t _flags) {
+        
+        g_flags = _flags;
+        
+    }
+    
+    flag_t getDebugFlags() {
+        
+        return g_flags;
         
     }
 
