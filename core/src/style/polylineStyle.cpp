@@ -73,6 +73,9 @@ void PolylineStyle::buildLine(Line& _line, std::string& _layer, Properties& _pro
     PolyLineOptions lineOptions = { CapTypes::ROUND, JoinTypes::MITER, halfWidth };
     Builders::buildPolyLine(_line, lineOptions, lineOutput);
     
+    /*
+     * Populate polyline vertices
+     */
     for (size_t i = 0; i < points.size(); i++) {
         const glm::vec3& p = points[i];
         const glm::vec2& uv = texcoords[i];
@@ -80,18 +83,25 @@ void PolylineStyle::buildLine(Line& _line, std::string& _layer, Properties& _pro
         vertices.push_back({ p.x, p.y, p.z, uv.x, uv.y, en.x, en.y, 0.6f * halfWidth, abgr, layer });
     }
     
-    size_t outlineStart = points.size();
-    
-    Builders::buildPolyLine(_line, lineOptions, lineOutput);
-    
-    for (size_t i = outlineStart; i < points.size(); i++) {
+    /*
+     * Populate outline vertices
+     */
+    for (size_t i = 0; i < points.size(); i++) {
         const glm::vec3& p = points[i];
         const glm::vec2& uv = texcoords[i];
         const glm::vec2& en = scalingVecs[i];
         vertices.push_back({ p.x, p.y, p.z, uv.x, uv.y, en.x, en.y, halfWidth, abgrOutline, layer - 1.f });
     }
     
-    
+    /*
+     * add outline indices with apt offset
+     */
+    size_t oldSize = indices.size();
+    indices.reserve(2 * oldSize);
+    for(int i = 0; i < oldSize; i++) {
+        indices.push_back(points.size() + indices[i]);
+    }
+
     // Make sure indices get correctly offset
     int vertOffset = _mesh.numVertices();
     for (auto& ind : indices) {
