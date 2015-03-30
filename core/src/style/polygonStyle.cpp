@@ -99,7 +99,7 @@ void PolygonStyle::buildPolygon(Polygon& _polygon, std::string& _layer, Properti
     }
     
     if ((Tangram::getDebugFlags() & TANGRAM_PROXY_COLORS) != 0) {
-        abgr = int(_props.numericProps["zoom"]) % 2 == 0 ? abgr : ~abgr;
+        abgr = abgr << (int(_props.numericProps["zoom"]) % 6);
     }
     
     float height = _props.numericProps["height"]; // Inits to zero if not present in data

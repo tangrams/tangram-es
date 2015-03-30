@@ -46,7 +46,7 @@ void PolylineStyle::buildLine(Line& _line, std::string& _layer, Properties& _pro
     GLuint abgr = 0xff767676; // Default road color
     
     if ((Tangram::getDebugFlags() & TANGRAM_PROXY_COLORS) != 0) {
-        abgr = int(_props.numericProps["zoom"]) % 2 == 0 ? abgr : ~abgr;
+        abgr = abgr << (int(_props.numericProps["zoom"]) % 6);
     }
     
     GLfloat layer = sortKeyToLayer(_props.numericProps["sort_key"]) + 3;
