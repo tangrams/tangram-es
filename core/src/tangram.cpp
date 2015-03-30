@@ -257,6 +257,8 @@ namespace Tangram {
         
         g_flags = _flags;
         
+        m_view->setZoom(m_view->getZoom()); // Force the view to refresh
+        
     }
     
     flag_t getDebugFlags() {
