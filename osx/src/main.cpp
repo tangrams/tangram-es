@@ -89,6 +89,8 @@ void key_callback(GLFWwindow* window, int key, int scancode, int action, int mod
             case GLFW_KEY_2:
                 Tangram::setDebugFlags(Tangram::getDebugFlags() ^ TANGRAM_PROXY_COLORS);
                 break;
+            case GLFW_KEY_3:
+                Tangram::setDebugFlags(Tangram::getDebugFlags() ^ TANGRAM_TILE_BOUNDS);
             default:
                 break;
         }
