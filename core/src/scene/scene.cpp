@@ -13,6 +13,16 @@ void Scene::addStyle(std::unique_ptr<Style> _style) {
     m_styles.push_back(std::move(_style));
 }
 
+void Scene::removeStyle(const std::string& _name) {
+    
+    for (auto iter = m_styles.begin(); iter != m_styles.end(); ++iter) {
+        if ((*iter)->getName() == _name) {
+            m_styles.erase(iter);
+            break;
+        }
+    }
+}
+
 void Scene::addLight(std::shared_ptr<Light> _light, InjectionType _type) {
 
     // Avoid duplications

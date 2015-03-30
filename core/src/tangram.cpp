@@ -14,6 +14,7 @@
 #include "style/polygonStyle.h"
 #include "style/polylineStyle.h"
 #include "style/fontStyle.h"
+#include "style/debugStyle.h"
 #include "scene/scene.h"
 #include "scene/lights.h"
 #include "util/error.h"
@@ -26,6 +27,7 @@ namespace Tangram {
     std::shared_ptr<View> m_view;
     std::shared_ptr<LabelContainer> m_labelContainer;
     std::shared_ptr<FontContext> m_ftContext;
+    std::shared_ptr<DebugStyle> m_debugStyle;
 
     static float g_time = 0.0;
     static flag_t g_flags = 0;
@@ -241,6 +243,17 @@ namespace Tangram {
     }
     
     void setDebugFlags(flag_t _flags) {
+        
+        flag_t toggledOn = (g_flags ^ _flags) & _flags;
+        flag_t toggledOff = (g_flags ^ _flags) & g_flags;
+        
+        if ((toggledOn & TANGRAM_TILE_BOUNDS) != 0) {
+            m_scene->addStyle(std::unique_ptr<DebugStyle>(new DebugStyle("Debug")));
+        }
+        
+        if ((toggledOff & TANGRAM_TILE_BOUNDS) != 0) {
+            m_scene->removeStyle("Debug");
+        }
         
         g_flags = _flags;
         
