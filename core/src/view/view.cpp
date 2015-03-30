@@ -204,7 +204,7 @@ void View::updateMatrices() {
     // set near and far clipping distances as a function of camera z
     // TODO: this is a simple heuristic that deserves more thought
     float near = m_pos.z / 50.0;
-    float far = m_pos.z + 1.f;
+    float far = 3. * m_pos.z / cos(m_pitch) + 1.f;
     
     glm::vec3 eye = { 0.f, 0.f, 0.f };
     glm::vec3 at = glm::rotateZ(glm::rotateX(glm::vec3(0.f, 0.f, -1.f), m_pitch), m_roll);
