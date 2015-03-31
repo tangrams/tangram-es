@@ -20,6 +20,7 @@ static JavaVM* jvm; //store the only jvm instance for android to be used to atta
 
 /* We will also cache the class instance since JavaVM is not happy when we try to do a findClass from within a native thread.
  * So we will store an instance of the class (jobject) and use it to find the class itself (jclass).
+ * NOTE: this will change when we have async OKHTTP, which will only require a single instance of the OkHttpInterface
  */
 const char* okHttpInterfacePath = "com/mapzen/tangram/OkHttpInterface";
 static jobject okHttpInterfaceObj;
