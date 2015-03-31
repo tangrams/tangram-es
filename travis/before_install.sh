@@ -29,7 +29,7 @@ if [[ ${PLATFORM} == "linux" ]]; then
     sudo apt-get install -y -qq xorg-dev libglu1-mesa-dev
 
     # Download and install GLFW from source
-    wget http://downloads.sourceforge.net/project/glfw/glfw/${GLFW_VERSION}/glfw-${GLFW_VERSION}.zip
+    wget https://github.com/glfw/glfw/releases/download/${GLFW_VERSION}/glfw-${GLFW_VERSION}.zip
     unzip -qq glfw-${GLFW_VERSION}.zip
     cd glfw-${GLFW_VERSION}
     cmake .
