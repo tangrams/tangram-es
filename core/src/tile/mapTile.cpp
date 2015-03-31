@@ -94,14 +94,8 @@ void MapTile::draw(const Style& _style, const View& _view) {
         shader->setUniformMatrix4f("u_modelViewProj", glm::value_ptr(modelViewProjMatrix));
         shader->setUniformMatrix3f("u_normalMatrix", glm::value_ptr(normalMatrix));
 
-        // Set tile offset for proxy tiles
-        float offset = 0;
-        if (m_proxyCounter > 0) {
-            offset = 1.0f + log((_view.s_maxZoom + 1) / (_view.s_maxZoom + 1 - m_id.z));
-        } else {
-            offset = 1.0f + log(_view.s_maxZoom + 2);
-        }
-        shader->setUniformf("u_tileDepthOffset", offset);
+        // Set the tile zoom level, using the sign to indicate whether the tile is a proxy
+        shader->setUniformf("u_tile_zoom", m_proxyCounter > 0 ? -m_id.z : m_id.z);
 
         styleMesh->draw(shader);
     }
