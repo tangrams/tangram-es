@@ -14,7 +14,7 @@ fi
 
 if [[ ${PLATFORM} == "linux" ]]; then
     
-    GLFW_VERSION="3.0.4"
+    GLFW_VERSION="3.1"
     
     #Add PPA for gcc-4.8
     sudo add-apt-repository -y ppa:ubuntu-toolchain-r/test > /dev/null
