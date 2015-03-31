@@ -208,6 +208,7 @@ bool fetchData(std::unique_ptr<std::string> _url, std::stringstream& _rawData) {
         if(isAttached) {
             jvm->DetachCurrentThread();
         }
+        return false;
     }
 
     /* 
