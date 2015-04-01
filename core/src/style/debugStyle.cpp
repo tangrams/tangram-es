@@ -1,5 +1,7 @@
 #include "debugStyle.h"
 
+#include "tangram.h"
+
 #include <vector>
 #include <memory>
 #include <string>
@@ -32,23 +34,27 @@ void DebugStyle::constructShaderProgram() {
 
 void DebugStyle::addData(TileData &_data, MapTile &_tile, const MapProjection &_mapProjection) const {
     
-    VboMesh* mesh = new VboMesh(m_vertexLayout, m_drawMode);
-    
-    // Add four vertices to draw the outline of the tile in red
-    
-    std::vector<PosColVertex> vertices;
-    
-    GLuint abgr = 0xff0000ff;
-    
-    vertices.reserve(4);
-    vertices.push_back({ -1.f, -1.f, 0.f, abgr });
-    vertices.push_back({  1.f, -1.f, 0.f, abgr });
-    vertices.push_back({  1.f,  1.f, 0.f, abgr });
-    vertices.push_back({ -1.f,  1.f, 0.f, abgr });
-    
-    mesh->addVertices((GLbyte*)vertices.data(), (int)vertices.size());
-    
-    _tile.addGeometry(*this, std::unique_ptr<VboMesh>(mesh));
+    if (Tangram::getDebugFlag(TangramFlags::TILE_BOUNDS)) {
+        
+        VboMesh* mesh = new VboMesh(m_vertexLayout, m_drawMode);
+        
+        // Add four vertices to draw the outline of the tile in red
+        
+        std::vector<PosColVertex> vertices;
+        
+        GLuint abgr = 0xff0000ff;
+        
+        vertices.reserve(4);
+        vertices.push_back({ -1.f, -1.f, 0.f, abgr });
+        vertices.push_back({  1.f, -1.f, 0.f, abgr });
+        vertices.push_back({  1.f,  1.f, 0.f, abgr });
+        vertices.push_back({ -1.f,  1.f, 0.f, abgr });
+        
+        mesh->addVertices((GLbyte*)vertices.data(), (int)vertices.size());
+        
+        _tile.addGeometry(*this, std::unique_ptr<VboMesh>(mesh));
+        
+    }
     
 }
 

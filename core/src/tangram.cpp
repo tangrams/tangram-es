@@ -71,6 +71,9 @@ namespace Tangram {
             std::unique_ptr<Style> fontStyle(new FontStyle("Roboto-Regular", "FontStyle", 14.0f, true));
             fontStyle->addLayers({"roads"});
             m_scene->addStyle(std::move(fontStyle));
+            
+            std::unique_ptr<DebugStyle> debugStyle(new DebugStyle("Debug"));
+            m_scene->addStyle(std::move(debugStyle));
 
             //  Directional light with white diffuse color pointing Northeast and down
             auto directionalLight = std::make_shared<DirectionalLight>("dLight");
@@ -243,14 +246,6 @@ namespace Tangram {
     }
     
     void setDebugFlag(TangramFlags _flag, bool _on) {
-        
-        if (_flag == TangramFlags::TILE_BOUNDS) {
-            if (_on && !getDebugFlag(TangramFlags::TILE_BOUNDS)) {
-                m_scene->addStyle(std::unique_ptr<DebugStyle>(new DebugStyle("Debug")));
-            } else if (!_on && getDebugFlag(TangramFlags::TILE_BOUNDS)) {
-                m_scene->removeStyle("Debug");
-            }
-        }
         
         if (_on) {
             g_flags |= (1 << _flag); // |ing with a bitfield that is 0 everywhere except index _flag; sets index _flag to 1
