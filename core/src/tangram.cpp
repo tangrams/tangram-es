@@ -253,9 +253,9 @@ namespace Tangram {
         }
         
         if (_on) {
-            g_flags |= (1 << _flag);
+            g_flags |= (1 << _flag); // |ing with a bitfield that is 0 everywhere except index _flag; sets index _flag to 1
         } else {
-            g_flags &= ~(1 << _flag);
+            g_flags &= ~(1 << _flag); // &ing with a bitfield that is 1 everywhere except index _flag; sets index _flag to 0
         }
 
         m_view->setZoom(m_view->getZoom()); // Force the view to refresh
@@ -264,7 +264,7 @@ namespace Tangram {
     
     bool getDebugFlag(TangramFlags _flag) {
         
-        return (g_flags & (1 << _flag)) != 0;
+        return (g_flags & (1 << _flag)) != 0; // &ing with a bitfield that is 0 everywhere except index _flag will yield 0 iff index _flag is 0
         
     }
 
