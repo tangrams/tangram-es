@@ -49,11 +49,11 @@ namespace Tangram {
     // Respond to a two-finger shove with the given distance
     void handleShoveGesture(float _distance);
     
-    // Set debug features on or off using a bitfield of boolean flags (see debug.h)
-    void setDebugFlags(flag_t _flags);
+    // Set debug features on or off using a boolean (see debug.h)
+    void setDebugFlag(TangramFlags _flag, bool _on);
     
-    // Get the state of debug features as a bitfield of boolean flags (see debug.h)
-    flag_t getDebugFlags();
+    // Get the boolean state of a debug feature (see debug.h)
+    bool getDebugFlag(TangramFlags _flag);
 
 }
 

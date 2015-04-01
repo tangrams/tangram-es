@@ -84,13 +84,13 @@ void key_callback(GLFWwindow* window, int key, int scancode, int action, int mod
     if (action == GLFW_PRESS) {
         switch (key) {
             case GLFW_KEY_1:
-                Tangram::setDebugFlags(Tangram::getDebugFlags() ^ TANGRAM_FREEZE_TILES);
+                Tangram::setDebugFlag(TangramFlags::FREEZE_TILES, !Tangram::getDebugFlag(TangramFlags::FREEZE_TILES));
                 break;
             case GLFW_KEY_2:
-                Tangram::setDebugFlags(Tangram::getDebugFlags() ^ TANGRAM_PROXY_COLORS);
+                Tangram::setDebugFlag(TangramFlags::PROXY_COLORS, !Tangram::getDebugFlag(TangramFlags::PROXY_COLORS));
                 break;
             case GLFW_KEY_3:
-                Tangram::setDebugFlags(Tangram::getDebugFlags() ^ TANGRAM_TILE_BOUNDS);
+                Tangram::setDebugFlag(TangramFlags::TILE_BOUNDS, !Tangram::getDebugFlag(TangramFlags::TILE_BOUNDS));
             default:
                 break;
         }

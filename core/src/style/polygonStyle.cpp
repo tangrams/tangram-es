@@ -98,7 +98,7 @@ void PolygonStyle::buildPolygon(Polygon& _polygon, std::string& _layer, Properti
         abgr = 0xff669171;
     }
     
-    if ((Tangram::getDebugFlags() & TANGRAM_PROXY_COLORS) != 0) {
+    if (Tangram::getDebugFlag(TangramFlags::PROXY_COLORS)) {
         abgr = abgr << (int(_props.numericProps["zoom"]) % 6);
     }
     

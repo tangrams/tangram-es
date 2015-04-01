@@ -30,7 +30,7 @@ namespace Tangram {
     std::shared_ptr<DebugStyle> m_debugStyle;
 
     static float g_time = 0.0;
-    static flag_t g_flags = 0;
+    static unsigned long g_flags = 0;
 
     void initialize() {
         
@@ -242,28 +242,29 @@ namespace Tangram {
         
     }
     
-    void setDebugFlags(flag_t _flags) {
+    void setDebugFlag(TangramFlags _flag, bool _on) {
         
-        flag_t toggledOn = (g_flags ^ _flags) & _flags;
-        flag_t toggledOff = (g_flags ^ _flags) & g_flags;
-        
-        if ((toggledOn & TANGRAM_TILE_BOUNDS) != 0) {
-            m_scene->addStyle(std::unique_ptr<DebugStyle>(new DebugStyle("Debug")));
+        if (_flag == TangramFlags::TILE_BOUNDS) {
+            if (_on && !getDebugFlag(TangramFlags::TILE_BOUNDS)) {
+                m_scene->addStyle(std::unique_ptr<DebugStyle>(new DebugStyle("Debug")));
+            } else if (!_on && getDebugFlag(TangramFlags::TILE_BOUNDS)) {
+                m_scene->removeStyle("Debug");
+            }
         }
         
-        if ((toggledOff & TANGRAM_TILE_BOUNDS) != 0) {
-            m_scene->removeStyle("Debug");
+        if (_on) {
+            g_flags |= (1 << _flag);
+        } else {
+            g_flags &= ~(1 << _flag);
         }
-        
-        g_flags = _flags;
-        
+
         m_view->setZoom(m_view->getZoom()); // Force the view to refresh
         
     }
     
-    flag_t getDebugFlags() {
+    bool getDebugFlag(TangramFlags _flag) {
         
-        return g_flags;
+        return (g_flags & (1 << _flag)) != 0;
         
     }
 
