@@ -1,9 +1,15 @@
 #include "polylineStyle.h"
 #include "util/builders.h"
 #include "roadLayers.h"
+#include "tangram.h"
 #include <ctime>
 
 PolylineStyle::PolylineStyle(std::string _name, GLenum _drawMode) : Style(_name, _drawMode) {
+    m_material.setEmissionEnabled(false);
+    m_material.setAmbientEnabled(true);
+    m_material.setDiffuse(glm::vec4(1.0));
+    m_material.setSpecularEnabled(true);
+    
     constructVertexLayout();
     constructShaderProgram();
 }
@@ -29,6 +35,8 @@ void PolylineStyle::constructShaderProgram() {
     
     m_shaderProgram = std::make_shared<ShaderProgram>();
     m_shaderProgram->setSourceStrings(fragShaderSrcStr, vertShaderSrcStr);
+    
+    m_material.injectOnProgram(m_shaderProgram);
 }
 
 void PolylineStyle::buildPoint(Point& _point, std::string& _layer, Properties& _props, VboMesh& _mesh) const {
@@ -42,7 +50,13 @@ void PolylineStyle::buildLine(Line& _line, std::string& _layer, Properties& _pro
     std::vector<glm::vec2> texcoords;
     std::vector<glm::vec2> scalingVecs;
     
-    GLuint abgr = 0xff767676; // Default road color
+    GLuint abgr = 0xff686868; // Default road color
+    GLuint abgrOutline = 0xff777777;
+    
+    if (Tangram::getDebugFlag(Tangram::DebugFlags::PROXY_COLORS)) {
+        abgr = abgr << (int(_props.numericProps["zoom"]) % 6);
+    }
+    
     GLfloat layer = sortKeyToLayer(_props.numericProps["sort_key"]) + 3;
     
     float halfWidth = 0.02;
@@ -62,16 +76,38 @@ void PolylineStyle::buildLine(Line& _line, std::string& _layer, Properties& _pro
     }
     
     PolyLineOutput lineOutput = { points, indices, scalingVecs, texcoords };
-    PolyLineOptions lineOptions = { CapTypes::ROUND, JoinTypes::ROUND, halfWidth };
+    PolyLineOptions lineOptions = { CapTypes::ROUND, JoinTypes::MITER, halfWidth };
     Builders::buildPolyLine(_line, lineOptions, lineOutput);
     
+    /*
+     * Populate polyline vertices
+     */
     for (size_t i = 0; i < points.size(); i++) {
         const glm::vec3& p = points[i];
         const glm::vec2& uv = texcoords[i];
         const glm::vec2& en = scalingVecs[i];
-        vertices.push_back({ p.x, p.y, p.z, uv.x, uv.y, en.x, en.y, halfWidth, abgr, layer });
+        vertices.push_back({ p.x, p.y, p.z, uv.x, uv.y, en.x, en.y, 0.6f * halfWidth, abgr, layer });
     }
     
+    /*
+     * Populate outline vertices
+     */
+    for (size_t i = 0; i < points.size(); i++) {
+        const glm::vec3& p = points[i];
+        const glm::vec2& uv = texcoords[i];
+        const glm::vec2& en = scalingVecs[i];
+        vertices.push_back({ p.x, p.y, p.z, uv.x, uv.y, en.x, en.y, halfWidth, abgrOutline, layer - 1.f });
+    }
+    
+    /*
+     * add outline indices with apt offset
+     */
+    size_t oldSize = indices.size();
+    indices.reserve(2 * oldSize);
+    for(int i = 0; i < oldSize; i++) {
+        indices.push_back(points.size() + indices[i]);
+    }
+
     // Make sure indices get correctly offset
     int vertOffset = _mesh.numVertices();
     for (auto& ind : indices) {

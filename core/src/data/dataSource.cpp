@@ -91,6 +91,7 @@ bool NetworkDataSource::loadTileData(const MapTile& _tile) {
     curl_easy_setopt(curlHandle, CURLOPT_HEADER, 0L);
     curl_easy_setopt(curlHandle, CURLOPT_VERBOSE, 0L);
     curl_easy_setopt(curlHandle, CURLOPT_ACCEPT_ENCODING, "gzip");
+    curl_easy_setopt(curlHandle, CURLOPT_NOSIGNAL, 1L);
     
     logMsg("Fetching URL with curl: %s\n", url->c_str());
 

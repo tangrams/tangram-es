@@ -5,6 +5,7 @@
 #include "util/tileID.h"
 #include "util/intersect.h"
 #include "platform.h"
+#include "tangram.h"
 #include "glm/gtc/matrix_transform.hpp"
 #include "glm/gtx/rotate_vector.hpp"
 
@@ -137,11 +138,15 @@ void View::update() {
     
     updateMatrices();
     
-    updateTiles();
-    
-    m_dirty = false;
+    if (!Tangram::getDebugFlag(Tangram::DebugFlags::FREEZE_TILES)) {
+        
+        updateTiles();
+        
+    }
     
     m_changed = true;
+    
+    m_dirty = false;
     
 }
 
@@ -205,7 +210,7 @@ void View::updateMatrices() {
     // set near and far clipping distances as a function of camera z
     // TODO: this is a simple heuristic that deserves more thought
     float near = m_pos.z / 50.0;
-    float far = m_pos.z + 1.f;
+    float far = 3. * m_pos.z / cos(m_pitch) + 1.f;
     
     glm::vec3 eye = { 0.f, 0.f, 0.f };
     glm::vec3 at = glm::rotateZ(glm::rotateX(glm::vec3(0.f, 0.f, -1.f), m_pitch), m_roll);
@@ -268,7 +273,7 @@ void View::updateTiles() {
     float x = tileX * tileSize;
     float y = tileY * tileSize;
     
-    int maxTileIndex = pow(2, m_zoom);
+    int maxTileIndex = 1 << int(m_zoom);
     
     while (x < tileRightEdge && tileX < maxTileIndex) {
         
@@ -290,7 +295,7 @@ void View::updateTiles() {
             
         }
         
-        tileY = (int) tileBottomEdge * invTileSize;
+        tileY = (int) fmax(0, tileBottomEdge * invTileSize);
         y = tileY * tileSize;
         
         tileX++;
