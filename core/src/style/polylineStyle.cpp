@@ -53,7 +53,7 @@ void PolylineStyle::buildLine(Line& _line, std::string& _layer, Properties& _pro
     GLuint abgr = 0xff686868; // Default road color
     GLuint abgrOutline = 0xff777777;
     
-    if (Tangram::getDebugFlag(TangramFlags::PROXY_COLORS)) {
+    if (Tangram::getDebugFlag(Tangram::DebugFlags::PROXY_COLORS)) {
         abgr = abgr << (int(_props.numericProps["zoom"]) % 6);
     }
     

@@ -50,10 +50,10 @@ namespace Tangram {
     void handleShoveGesture(float _distance);
     
     // Set debug features on or off using a boolean (see debug.h)
-    void setDebugFlag(TangramFlags _flag, bool _on);
+    void setDebugFlag(DebugFlags _flag, bool _on);
     
     // Get the boolean state of a debug feature (see debug.h)
-    bool getDebugFlag(TangramFlags _flag);
+    bool getDebugFlag(DebugFlags _flag);
 
 }
 

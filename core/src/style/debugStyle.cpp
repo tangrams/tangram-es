@@ -34,7 +34,7 @@ void DebugStyle::constructShaderProgram() {
 
 void DebugStyle::addData(TileData &_data, MapTile &_tile, const MapProjection &_mapProjection) const {
     
-    if (Tangram::getDebugFlag(TangramFlags::TILE_BOUNDS)) {
+    if (Tangram::getDebugFlag(Tangram::DebugFlags::TILE_BOUNDS)) {
         
         VboMesh* mesh = new VboMesh(m_vertexLayout, m_drawMode);
         

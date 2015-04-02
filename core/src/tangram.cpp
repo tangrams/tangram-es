@@ -245,7 +245,7 @@ namespace Tangram {
         
     }
     
-    void setDebugFlag(TangramFlags _flag, bool _on) {
+    void setDebugFlag(DebugFlags _flag, bool _on) {
         
         if (_on) {
             g_flags |= (1 << _flag); // |ing with a bitfield that is 0 everywhere except index _flag; sets index _flag to 1
@@ -257,7 +257,7 @@ namespace Tangram {
         
     }
     
-    bool getDebugFlag(TangramFlags _flag) {
+    bool getDebugFlag(DebugFlags _flag) {
         
         return (g_flags & (1 << _flag)) != 0; // &ing with a bitfield that is 0 everywhere except index _flag will yield 0 iff index _flag is 0
         
