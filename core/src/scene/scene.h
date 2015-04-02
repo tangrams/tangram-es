@@ -19,8 +19,6 @@ public:
 
     void addStyle(std::unique_ptr<Style> _style);
     
-    void removeStyle(const std::string& _name);
-    
     /*  Add a Directional Light */
     void addLight(std::shared_ptr<Light> _light, InjectionType _type = DEFAULT);
 
