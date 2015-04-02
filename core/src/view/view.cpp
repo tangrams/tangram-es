@@ -270,7 +270,7 @@ void View::updateTiles() {
     float x = tileX * tileSize;
     float y = tileY * tileSize;
     
-    int maxTileIndex = pow(2, m_zoom);
+    int maxTileIndex = 1 << int(m_zoom);
     
     while (x < tileRightEdge && tileX < maxTileIndex) {
         
@@ -283,7 +283,7 @@ void View::updateTiles() {
             
         }
         
-        tileY = (int) tileBottomEdge * invTileSize;
+        tileY = (int) fmax(0, tileBottomEdge * invTileSize);
         y = tileY * tileSize;
         
         tileX++;
