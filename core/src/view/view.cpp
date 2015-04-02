@@ -137,7 +137,7 @@ void View::update() {
     
     updateMatrices();
     
-    if (!Tangram::getDebugFlag(TangramFlags::FREEZE_TILES)) {
+    if (!Tangram::getDebugFlag(Tangram::DebugFlags::FREEZE_TILES)) {
         
         updateTiles();
         
