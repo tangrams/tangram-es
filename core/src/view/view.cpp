@@ -4,6 +4,7 @@
 
 #include "util/tileID.h"
 #include "platform.h"
+#include "tangram.h"
 #include "glm/gtc/matrix_transform.hpp"
 #include "glm/gtx/rotate_vector.hpp"
 
@@ -136,11 +137,15 @@ void View::update() {
     
     updateMatrices();
     
-    updateTiles();
-    
-    m_dirty = false;
+    if (!Tangram::getDebugFlag(Tangram::DebugFlags::FREEZE_TILES)) {
+        
+        updateTiles();
+        
+    }
     
     m_changed = true;
+    
+    m_dirty = false;
     
 }
 
@@ -265,7 +270,7 @@ void View::updateTiles() {
     float x = tileX * tileSize;
     float y = tileY * tileSize;
     
-    int maxTileIndex = pow(2, m_zoom);
+    int maxTileIndex = 1 << int(m_zoom);
     
     while (x < tileRightEdge && tileX < maxTileIndex) {
         
@@ -278,7 +283,7 @@ void View::updateTiles() {
             
         }
         
-        tileY = (int) tileBottomEdge * invTileSize;
+        tileY = (int) fmax(0, tileBottomEdge * invTileSize);
         y = tileY * tileSize;
         
         tileX++;

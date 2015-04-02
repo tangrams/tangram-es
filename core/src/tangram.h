@@ -1,6 +1,7 @@
 #pragma once
 
 #include "platform.h"
+#include "debug.h"
 
 /* Tangram API
  *
@@ -47,6 +48,12 @@ namespace Tangram {
 
     // Respond to a two-finger shove with the given distance
     void handleShoveGesture(float _distance);
+    
+    // Set debug features on or off using a boolean (see debug.h)
+    void setDebugFlag(DebugFlags _flag, bool _on);
+    
+    // Get the boolean state of a debug feature (see debug.h)
+    bool getDebugFlag(DebugFlags _flag);
 
 }
 
