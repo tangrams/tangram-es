@@ -39,5 +39,5 @@ std::string stringFromResource(const char* _path);
  */ 
 unsigned char* bytesFromResource(const char* _path, unsigned int* _size);
 
-bool fetchData(std::unique_ptr<std::string> _url, std::stringstream& _rawData);
+bool streamFromHttpSync(const std::string& _url, std::stringstream& _rawData);
 

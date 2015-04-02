@@ -72,19 +72,19 @@ static size_t write_data(void *_ptr, size_t _size, size_t _nmemb, void *_stream)
     return _size * _nmemb;
 }
 
-bool fetchData(std::unique_ptr<std::string> _url, std::stringstream& _rawData) {
+bool streamFromHttpSync(const std::string& _url, std::stringstream& _rawData) {
 
     CURL* curlHandle = curl_easy_init();
 
     // set up curl to perform fetch
     curl_easy_setopt(curlHandle, CURLOPT_WRITEFUNCTION, write_data);
     curl_easy_setopt(curlHandle, CURLOPT_WRITEDATA, &_rawData);
-    curl_easy_setopt(curlHandle, CURLOPT_URL, _url->c_str());
+    curl_easy_setopt(curlHandle, CURLOPT_URL, _url.c_str());
     curl_easy_setopt(curlHandle, CURLOPT_HEADER, 0L);
     curl_easy_setopt(curlHandle, CURLOPT_VERBOSE, 0L);
     curl_easy_setopt(curlHandle, CURLOPT_ACCEPT_ENCODING, "gzip");
     
-    logMsg("Fetching URL with curl: %s\n", _url->c_str());
+    logMsg("Fetching URL with curl: %s\n", _url.c_str());
 
     CURLcode result = curl_easy_perform(curlHandle);
     

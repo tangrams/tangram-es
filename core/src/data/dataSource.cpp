@@ -37,24 +37,22 @@ NetworkDataSource::NetworkDataSource() {
 NetworkDataSource::~NetworkDataSource() {
 }
 
-std::unique_ptr<std::string> NetworkDataSource::constructURL(const TileID& _tileCoord) {
+void NetworkDataSource::constructURL(const TileID& _tileCoord, std::string& _url) {
 
-    std::unique_ptr<std::string> urlPtr(new std::string(m_urlTemplate)); // Make a copy of our template
+    _url.assign(m_urlTemplate);
 
-    size_t xpos = urlPtr->find("[x]");
-    urlPtr->replace(xpos, 3, std::to_string(_tileCoord.x));
+    size_t xpos = _url.find("[x]");
+    _url.replace(xpos, 3, std::to_string(_tileCoord.x));
     
-    size_t ypos = urlPtr->find("[y]");
-    urlPtr->replace(ypos, 3, std::to_string(_tileCoord.y));
+    size_t ypos = _url.find("[y]");
+    _url.replace(ypos, 3, std::to_string(_tileCoord.y));
     
-    size_t zpos = urlPtr->find("[z]");
-    urlPtr->replace(zpos, 3, std::to_string(_tileCoord.z));
+    size_t zpos = _url.find("[z]");
+    _url.replace(zpos, 3, std::to_string(_tileCoord.z));
     
     if (xpos == std::string::npos || ypos == std::string::npos || zpos == std::string::npos) {
         logMsg("Bad URL template!!\n");
     }
-    
-    return std::move(urlPtr);
 }
 
 bool NetworkDataSource::loadTileData(const MapTile& _tile) {
@@ -65,12 +63,14 @@ bool NetworkDataSource::loadTileData(const MapTile& _tile) {
         // Tile has been fetched already!
         return success;
     }
+
+    std::string url;
     
-    std::unique_ptr<std::string> url = constructURL(_tile.getID());
+    constructURL(_tile.getID(), url);
     
     std::stringstream rawData;
 
-    success = fetchData(std::move(url), rawData);
+    success = streamFromHttpSync(url, rawData);
 
     if(rawData) {
 

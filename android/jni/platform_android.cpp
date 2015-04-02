@@ -128,7 +128,7 @@ unsigned char* bytesFromResource(const char* _path, unsigned int* _size) {
     return data;
 }
 
-bool fetchData(std::unique_ptr<std::string> _url, std::stringstream& _rawData) {
+bool streamFromHttpSync(const std::string& _url, std::stringstream& _rawData) {
     int status;
     JNIEnv *jniEnv;
     bool isAttached = false;
@@ -200,7 +200,7 @@ bool fetchData(std::unique_ptr<std::string> _url, std::stringstream& _rawData) {
     /* 
      * construct jstring for url
      */
-    jUrl = jniEnv->NewStringUTF(_url->c_str());
+    jUrl = jniEnv->NewStringUTF(_url.c_str());
 
     methodResult = jniEnv->CallBooleanMethod(obj, method, jUrl);
 
