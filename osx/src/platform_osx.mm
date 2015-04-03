@@ -7,6 +7,7 @@
 #import <fstream>
 
 #include "platform.h"
+#include "gl.h"
 
 void logMsg(const char* fmt, ...) {
     
@@ -14,6 +15,12 @@ void logMsg(const char* fmt, ...) {
     va_start(args, fmt);
     vfprintf(stderr, fmt, args);
     va_end(args);
+    
+}
+
+void requestRender() {
+    
+    glfwPostEmptyEvent();
     
 }
 

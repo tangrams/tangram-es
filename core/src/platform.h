@@ -16,6 +16,10 @@ void setAssetManager(JNIEnv* _jniEnv, jobject _assetManager);
  */
 void logMsg(const char* fmt, ...);
 
+/* Request that a new frame be rendered by the windowing system
+ */
+void requestRender();
+
 /* Read a bundled resource file as a string
  * 
  * Opens the file at the given relative path and returns a string with its contents.
