@@ -143,6 +143,8 @@ namespace Tangram {
         if (m_view) {
             m_view->update();
 
+            m_tileManager->updateTileSet();
+
             if (m_view->changedOnLastUpdate()) {
 
                 for (const auto& style : m_scene->getStyles()) {
@@ -153,10 +155,6 @@ namespace Tangram {
                     }
                 }
             }
-        }
-        
-        if (m_tileManager) {
-            m_tileManager->updateTileSet();
         }
         
         if(m_scene) {
