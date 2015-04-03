@@ -104,7 +104,7 @@ void PolylineStyle::buildLine(Line& _line, std::string& _layer, Properties& _pro
      */
     size_t oldSize = indices.size();
     indices.reserve(2 * oldSize);
-    for(int i = 0; i < oldSize; i++) {
+    for(size_t i = 0; i < oldSize; i++) {
         indices.push_back(points.size() + indices[i]);
     }
 
