@@ -1,6 +1,7 @@
 #include "tangram.h"
 #include "platform.h"
 #include "gl.h"
+#include <cmath>
 
 // Input handling
 // ==============
@@ -63,6 +64,8 @@ void cursor_pos_callback(GLFWwindow* window, double x, double y) {
 
 void scroll_callback(GLFWwindow* window, double scrollx, double scrolly) {
     
+    double scroll = fabs(scrolly) > fabs(scrollx) ? scrolly : scrollx;
+    
     double x, y;
     glfwGetCursorPos(window, &x, &y);
 
@@ -70,11 +73,11 @@ void scroll_callback(GLFWwindow* window, double scrollx, double scrolly) {
     bool shoving = glfwGetKey(window, GLFW_KEY_LEFT_CONTROL) == GLFW_PRESS || glfwGetKey(window, GLFW_KEY_RIGHT_CONTROL) == GLFW_PRESS;
 
     if (shoving) {
-        Tangram::handleShoveGesture(scroll_multiplier * scrolly);
+        Tangram::handleShoveGesture(scroll_multiplier * scroll);
     } else if (rotating) {
-        Tangram::handleRotateGesture(x, y, scroll_multiplier * scrolly);
+        Tangram::handleRotateGesture(x, y, scroll_multiplier * scroll);
     } else {
-        Tangram::handlePinchGesture(x, y, 1.0 + scroll_multiplier * scrolly);
+        Tangram::handlePinchGesture(x, y, 1.0 + scroll_multiplier * scroll);
     }
     
 }
