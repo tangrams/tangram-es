@@ -3,6 +3,7 @@
 #include <cmath>
 
 #include "util/tileID.h"
+#include "util/intersect.h"
 #include "platform.h"
 #include "tangram.h"
 #include "glm/gtc/matrix_transform.hpp"
@@ -225,17 +226,19 @@ void View::updateMatrices() {
 
 void View::updateTiles() {
     
-    /* To extend this tile updating step to account for an arbitrary view frustrum, we'll take advantage of the
-     * fact that this process is essentially rasterization; the projection of the view frustrum is the geometry
-     * and the tiles are our raster grid. Thus, we'll approach the problem by treating the projection of the view
-     * frustrum onto the tile plane (the view trapezoid) as two triangles, then rasterizing those triangles into tiles.
-     * 
-     * Implementation steps:
-     * 1. Represent the existing view trapezoid as two triangles and rasterize those into a set of tiles that should
-     *    match the existing visible tile set.
-     * 2. Calculate the view trapezoid from the view frustrum, use the trapezoid to form the two triangles and then
-     *    rasterize those into tiles which should fully cover the visible space. 
-     */
+    // The tile update process happens in two conceptual phases
+    //
+    // 1. Conservatively estimate the visible tile set with a bounding box:
+    //
+    //   To find this bounding box, we project the corners of the view frustum onto the ground (z = 0) plane.
+    //   This creates a trapezoid (the 'view trapezoid') that we can easily create a bounding box around. Then
+    //   to find the tiles in this bounding box we can simply 'scan' in x and y until we exhaust the area.
+    //
+    // 2. Check each tile in the bounding box for intersection with the view frustrum:
+    //
+    //   As we pass over each tile in the bounding box, we can take the bounds of the tile and check whether
+    //   it intersects the 'view trapezoid'. Tiles that intersect the view are then added to our output list.
+    //
     
     m_visibleTiles.clear();
     
@@ -243,10 +246,10 @@ void View::updateTiles() {
     float invTileSize = 1.0 / tileSize;
     
     // Find bounds of view frustum in world space (i.e. project view frustum onto z = 0 plane)
-    glm::vec2 viewBottomLeft = { 0.f, 0.f };
-    glm::vec2 viewBottomRight = { m_vpWidth, 0.f };
-    glm::vec2 viewTopRight = { m_vpWidth, m_vpHeight };
-    glm::vec2 viewTopLeft = { 0.f, m_vpHeight };
+    glm::vec2 viewBottomLeft = { 0.f, m_vpHeight };
+    glm::vec2 viewBottomRight = { m_vpWidth, m_vpHeight };
+    glm::vec2 viewTopRight = { m_vpWidth, 0.f };
+    glm::vec2 viewTopLeft = { 0.f, 0.f };
     screenToGroundPlane(viewBottomLeft.x, viewBottomLeft.y);
     screenToGroundPlane(viewBottomRight.x, viewBottomRight.y);
     screenToGroundPlane(viewTopRight.x, viewTopRight.y);
@@ -276,7 +279,16 @@ void View::updateTiles() {
         
         while (y < tileTopEdge && tileY < maxTileIndex) {
             
-            m_visibleTiles.insert(TileID(tileX, tileY, m_zoom));
+            TileID id(tileX, tileY, m_zoom);
+            
+            glm::dvec4 bounds_abs = m_projection->TileBounds(id);
+            glm::vec4 bounds_rel = glm::vec4(bounds_abs.x - m_pos.x, -bounds_abs.w - m_pos.y, bounds_abs.z - m_pos.x,  -bounds_abs.y - m_pos.y);
+            // The result of TileBounds is in y-down coordinates, so to make it relative to the view position we flip the sign on y and w (ymin and ymax)
+            // and then swap y and w (so that the min/max relationship remains). Finally, we subtract the view position in x and y.
+
+            if (AABBIntersectsTrapezoid(bounds_rel, viewTopLeft, viewTopRight, viewBottomLeft, viewBottomRight)) {
+                m_visibleTiles.insert(id);
+            }
 
             tileY++;
             y += tileSize;
