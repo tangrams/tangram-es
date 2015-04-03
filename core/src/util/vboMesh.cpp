@@ -117,18 +117,14 @@ void VboMesh::draw(const std::shared_ptr<ShaderProgram> _shader) {
     size_t indiceOffset = 0;
     size_t vertexOffset = 0;
 
-    uint32_t sumVertices, sumIndices;
-
-    for (auto o : m_vertexOffsets) {
-      std::tie(sumIndices, sumVertices) = o;
+    for (auto& o : m_vertexOffsets) {
+      uint32_t nIndices = o.first;
+      uint32_t nVertices = o.second;
 
       size_t byteOffset = vertexOffset * m_vertexLayout->getStride();
 
       // Enable vertex attribs via vertex layout object
       m_vertexLayout->enable(_shader, byteOffset);
-
-      size_t nIndices = sumIndices - indiceOffset;
-      size_t nVertices = sumVertices - vertexOffset;
 
       // Draw as elements or arrays
       if (nIndices > 0) {
@@ -139,8 +135,8 @@ void VboMesh::draw(const std::shared_ptr<ShaderProgram> _shader) {
         glDrawArrays(m_drawMode, 0, nVertices);
       }
 
-      vertexOffset = sumVertices;
-      indiceOffset = sumIndices;
+      vertexOffset += nVertices;
+      indiceOffset += nIndices;
     }
 }
 

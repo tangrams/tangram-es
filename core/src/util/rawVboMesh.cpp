@@ -42,47 +42,6 @@ void RawVboMesh::addIndices(int* _indices, int _nIndices) {
 }
 
 VboMesh::ByteBuffers RawVboMesh::compileVertexBuffer() {
-    // shift indices by previous mesh vertices offset
-    int indiceOffset = 0;
-    int sumVertices = 0;
-    int vPos = 0, iPos = 0;
-
-    bool useIndices = m_nIndices > 0;
-
     int stride = m_vertexLayout->getStride();
-    GLbyte* vBuffer = new GLbyte[stride * m_nVertices];
-    GLushort* iBuffer = nullptr;
-
-    if (useIndices) iBuffer = new GLushort[m_nIndices];
-
-    for (size_t i = 0; i < m_vertices.size(); i++) {
-        auto verts = m_vertices[i];
-        int nBytes = verts.size();
-        size_t nVertices = verts.size() / stride;
-
-        std::memcpy(vBuffer + vPos, verts.data(), nBytes);
-        vPos += nBytes;
-
-        if (useIndices) {
-            if (indiceOffset + nVertices > MAX_INDEX_VALUE) {
-                logMsg("NOTICE: >>>>>> BIG MESH %d <<<<<<\n",
-                       indiceOffset + nVertices);
-                m_vertexOffsets.emplace_back(iPos, sumVertices);
-                indiceOffset = 0;
-            }
-            auto ids = m_indices[i];
-            int nElem = ids.size();
-            for (int j = 0; j < nElem; j++) {
-                iBuffer[iPos++] = ids[j] + indiceOffset;
-            }
-            ids.clear();
-            indiceOffset += verts.size();
-        }
-        sumVertices += nVertices;
-        verts.clear();
-    }
-
-    m_vertexOffsets.emplace_back(iPos, sumVertices);
-
-    return { iBuffer, vBuffer };
+    return compile(m_vertices, m_indices, stride);
 }

@@ -94,45 +94,53 @@ public:
 
     template <typename T>
     ByteBuffers compile(std::vector<std::vector<T>> vertices,
-                        std::vector<std::vector<int>> indices) {
+                        std::vector<std::vector<int>> indices,
+                         int divider = 1) {
+
+        int vertexOffset = 0;
+        int indiceOffset = 0;
+
+        // Buffer positions: vertex byte and index short
+        int vPos = 0, iPos = 0;
 
         int stride = m_vertexLayout->getStride();
         GLbyte* vBuffer = new GLbyte[stride * m_nVertices];
-        GLushort* iBuffer = new GLushort[m_nIndices];
 
-        // shift indices by previous mesh vertices offset
-        int indiceOffset = 0;
-        int sumVertices = 0;
-        int vPos = 0, iPos = 0;
+        GLushort* iBuffer = nullptr;
+        bool useIndices = m_nIndices > 0;
+        if (useIndices)
+          iBuffer = new GLushort[m_nIndices];
 
         for (size_t i = 0; i < vertices.size(); i++) {
-            auto verts = vertices[i];
-            int nBytes = verts.size() * stride;
+            auto curVertices = vertices[i];
+            size_t nVertices = curVertices.size() / divider;
+            int nBytes = curVertices.size() * (stride / divider);
 
-            std::memcpy(vBuffer + vPos, (GLbyte*)verts.data(), nBytes);
+            std::memcpy(vBuffer + vPos, (GLbyte*)curVertices.data(), nBytes);
             vPos += nBytes;
 
-            if (indiceOffset + verts.size() > MAX_INDEX_VALUE) {
-                logMsg("NOTICE: >>>>>> BIG MESH %d <<<<<<\n",
-                       indiceOffset + verts.size());
-                m_vertexOffsets.emplace_back(iPos, sumVertices);
-                indiceOffset = 0;
+            if (useIndices) {
+                if (vertexOffset + nVertices > MAX_INDEX_VALUE) {
+                    logMsg("NOTICE: Big Mesh %d\n",
+                           vertexOffset + nVertices);
+
+                    m_vertexOffsets.emplace_back(indiceOffset, vertexOffset);
+                    vertexOffset = 0;
+                    indiceOffset = 0;
+                }
+
+                for (int idx : indices[i])
+                    iBuffer[iPos++] = idx + vertexOffset;
+
+                indiceOffset += indices[i].size();
+
+                indices[i].clear();
             }
-
-            auto ids = indices[i];
-            int nElem = ids.size();
-            for (int j = 0; j < nElem; j++) {
-                iBuffer[iPos++] = ids[j] + indiceOffset;
-            }
-
-            sumVertices += verts.size();
-            indiceOffset += verts.size();
-
-            verts.clear();
-            ids.clear();
+            vertexOffset += nVertices;
+            curVertices.clear();
         }
 
-        m_vertexOffsets.emplace_back(iPos, sumVertices);
+        m_vertexOffsets.emplace_back(indiceOffset, vertexOffset);
 
         return { iBuffer, vBuffer };
     }
