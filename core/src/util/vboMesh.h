@@ -67,7 +67,7 @@ public:
  protected:
 
   // Compiled vertices + indices ready for upload
-  typedef std::pair<GLushort*, GLubyte*> ByteBuffers;
+  typedef std::pair<GLushort*, GLbyte*> ByteBuffers;
 
   virtual ByteBuffers compileVertexBuffer() = 0;
 
@@ -95,16 +95,15 @@ public:
     template <typename T>
     ByteBuffers compile(std::vector<std::vector<T>> vertices,
                         std::vector<std::vector<int>> indices) {
+
         int stride = m_vertexLayout->getStride();
-
-        GLubyte* vBuffer = new GLubyte[stride * m_nVertices];
+        GLbyte* vBuffer = new GLbyte[stride * m_nVertices];
         GLushort* iBuffer = new GLushort[m_nIndices];
-
-        int vPos = 0, iPos = 0;
 
         // shift indices by previous mesh vertices offset
         int indiceOffset = 0;
         int sumVertices = 0;
+        int vPos = 0, iPos = 0;
 
         for (size_t i = 0; i < vertices.size(); i++) {
             auto verts = vertices[i];

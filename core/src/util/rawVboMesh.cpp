@@ -21,10 +21,8 @@ void RawVboMesh::addVertices(GLbyte* _vertices, int _nVertices) {
     }
 
     int vertexBytes = m_vertexLayout->getStride() * _nVertices;
-    auto vertices = new GLubyte[vertexBytes];
-    std::memcpy(vertices, _vertices, vertexBytes);
 
-    m_newVertices.emplace_back(vertices, vertexBytes);
+    m_vertices.emplace_back(_vertices, _vertices + vertexBytes);
     m_nVertices += _nVertices;
 }
 
@@ -39,43 +37,52 @@ void RawVboMesh::addIndices(int* _indices, int _nIndices) {
         return;
     }
 
-    auto indices = new GLushort[_nIndices];
-    for (int i = 0; i < _nIndices; i++) indices[i] = _indices[i];
-
-    m_newIndices.emplace_back(indices, _nIndices);
+    m_indices.emplace_back(_indices, _indices + _nIndices);
     m_nIndices += _nIndices;
 }
 
-VboMesh::ByteBuffers
-RawVboMesh::compileVertexBuffer() {
-    int vertexBytes = m_vertexLayout->getStride() * m_nVertices;
-    auto vertices = new GLubyte[vertexBytes];
-    int offset = 0;
-    for (auto p : m_newVertices) {
-        std::memcpy(vertices + offset, p.first, p.second);
-        offset += p.second;
-        delete[] p.first;
+VboMesh::ByteBuffers RawVboMesh::compileVertexBuffer() {
+    // shift indices by previous mesh vertices offset
+    int indiceOffset = 0;
+    int sumVertices = 0;
+    int vPos = 0, iPos = 0;
+
+    bool useIndices = m_nIndices > 0;
+
+    int stride = m_vertexLayout->getStride();
+    GLbyte* vBuffer = new GLbyte[stride * m_nVertices];
+    GLushort* iBuffer = nullptr;
+
+    if (useIndices) iBuffer = new GLushort[m_nIndices];
+
+    for (size_t i = 0; i < m_vertices.size(); i++) {
+        auto verts = m_vertices[i];
+        int nBytes = verts.size();
+        size_t nVertices = verts.size() / stride;
+
+        std::memcpy(vBuffer + vPos, verts.data(), nBytes);
+        vPos += nBytes;
+
+        if (useIndices) {
+            if (indiceOffset + nVertices > MAX_INDEX_VALUE) {
+                logMsg("NOTICE: >>>>>> BIG MESH %d <<<<<<\n",
+                       indiceOffset + nVertices);
+                m_vertexOffsets.emplace_back(iPos, sumVertices);
+                indiceOffset = 0;
+            }
+            auto ids = m_indices[i];
+            int nElem = ids.size();
+            for (int j = 0; j < nElem; j++) {
+                iBuffer[iPos++] = ids[j] + indiceOffset;
+            }
+            ids.clear();
+            indiceOffset += verts.size();
+        }
+        sumVertices += nVertices;
+        verts.clear();
     }
-    m_newVertices.clear();
 
-    auto indices = new GLushort[m_nIndices];
-    offset = 0;
-    for (auto p : m_newIndices) {
-      std::memcpy(indices + offset, p.first, p.second * sizeof(GLushort));
-      offset += p.second;
-      delete[] p.first;
-    }
-    m_newIndices.clear();
+    m_vertexOffsets.emplace_back(iPos, sumVertices);
 
-    m_vertexOffsets.emplace_back(m_nIndices, m_nVertices);
-
-    return { indices, vertices };
-}
-
-RawVboMesh::~RawVboMesh() {
-    for (auto p : m_newVertices)
-      delete[] p.first;
-
-    for (auto p : m_newIndices)
-      delete[] p.first;
+    return { iBuffer, vBuffer };
 }

@@ -31,13 +31,9 @@ class RawVboMesh : public VboMesh {
 
    protected:
     // Raw interleaved vertex data in the format specified by the vertex layout
-    std::vector<std::pair<GLubyte*, int>> m_newVertices;
+    std::vector<std::vector<GLubyte>> m_vertices;
 
-    std::vector<GLubyte> m_vertexData;
-
-    std::vector<std::pair<GLushort*, int>> m_newIndices;
+    std::vector<std::vector<int>> m_indices;
 
     virtual ByteBuffers compileVertexBuffer() override;
-
-    virtual ~RawVboMesh();
 };

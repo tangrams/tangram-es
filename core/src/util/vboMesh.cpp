@@ -59,7 +59,7 @@ void VboMesh::upload() {
     // Generate vertex buffer, if needed
     if (m_glVertexBuffer == 0) glGenBuffers(1, &m_glVertexBuffer);
 
-    GLubyte *vertices;
+    GLbyte *vertices;
     GLushort *indices;
     std::tie (indices, vertices) = compileVertexBuffer();
 
