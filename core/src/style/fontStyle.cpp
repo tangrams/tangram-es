@@ -74,7 +74,8 @@ void FontStyle::buildLine(Line& _line, std::string& _layer, Properties& _props, 
     ftContext->clearState();
 
     if (textBuffer->getVertices(&vertData, &nVerts)) {
-         _mesh.addVertices((GLbyte*)vertData.data(), nVerts);
+          auto& mesh = static_cast<RawVboMesh&>(_mesh);
+          mesh.addVertices((GLbyte*)vertData.data(), nVerts);
     }
 }
 

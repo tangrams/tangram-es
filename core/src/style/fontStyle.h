@@ -1,6 +1,7 @@
 #pragma once
 
 #include "style.h"
+#include "rawVboMesh.h"
 #include "glfontstash.h"
 #include "tile/labels/labelContainer.h"
 #include <memory>
@@ -16,6 +17,10 @@ protected:
     virtual void buildPolygon(Polygon& _polygon, std::string& _layer, Properties& _props, VboMesh& _mesh) const override;
     virtual void prepareDataProcessing(MapTile& _tile) const override;
     virtual void finishDataProcessing(MapTile& _tile) const override;
+
+    virtual VboMesh* newMesh() const override {
+      return new RawVboMesh(m_vertexLayout, m_drawMode);
+    };
 
 public:
 

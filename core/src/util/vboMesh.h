@@ -5,6 +5,9 @@
 
 #include "gl.h"
 #include "vertexLayout.h"
+#include <cstring>
+
+#define MAX_INDEX_VALUE 65535
 
 /*
  * VboMesh - Drawable collection of geometry contained in a vertex buffer and (optionally) an index buffer
@@ -36,32 +39,13 @@ public:
      */
     virtual ~VboMesh();
 
-    /*
-     * Adds a single vertex to the mesh; _vertex must be a pointer to the beginning of a vertex structured
-     * according to the VertexLayout associated with this mesh
-     */
-    void addVertex(GLbyte* _vertex);
+    int numVertices() const {
+        return m_nVertices;
+    }
 
-    /*
-     * Adds _nVertices vertices to the mesh; _vertices must be a pointer to the beginning of a contiguous
-     * block of _nVertices vertices structured according to the VertexLayout associated with this mesh
-     */
-    void addVertices(GLbyte* _vertices, int _nVertices);
-
-    int numVertices() const;
-
-    /*
-     * Adds a single index to the mesh; indices are unsigned shorts
-     */
-    void addIndex(int* _index);
-
-    /*
-     * Adds _nIndices indices to the mesh; _indices must be a pointer to the beginning of a contiguous
-     * block of _nIndices unsigned short indices
-     */
-    void addIndices(int* _indices, int _nIndices);
-
-    int numIndices() const;
+    int numIndices() const {
+        return m_nIndices;
+    }
 
     /*
      * Copies all added vertices and indices into OpenGL buffer objects; After geometry is uploaded,
@@ -80,21 +64,25 @@ public:
     static void removeManagedVBO(VboMesh* _vbo);
     
     static void invalidateAllVBOs();
+ protected:
 
-private:
-    
+  // Compiled vertices + indices ready for upload
+  typedef std::pair<GLushort*, GLubyte*> ByteBuffers;
+
+  virtual ByteBuffers compileVertexBuffer() = 0;
+
     static int s_validGeneration; // Incremented when the GL context is invalidated
     int m_generation;
-    
-    std::unique_ptr<VboMesh> m_backupMesh;
-    
+
+    // Used in draw for legth and offsets: sumIndices, sumVertices
+    // needs to be set by compileVertexBuffers()
+    std::vector<std::pair<uint32_t, uint32_t>> m_vertexOffsets;
+
     std::shared_ptr<VertexLayout> m_vertexLayout;
-    
-    std::vector<GLbyte> m_vertexData; // Raw interleaved vertex data in the format specified by the vertex layout
+
     int m_nVertices;
     GLuint m_glVertexBuffer;
 
-    std::vector<GLushort> m_indices;
     int m_nIndices;
     GLuint m_glIndexBuffer;
 
@@ -104,4 +92,49 @@ private:
     
     void checkValidity();
 
+    template <typename T>
+    ByteBuffers compile(std::vector<std::vector<T>> vertices,
+                        std::vector<std::vector<int>> indices) {
+        int stride = m_vertexLayout->getStride();
+
+        GLubyte* vBuffer = new GLubyte[stride * m_nVertices];
+        GLushort* iBuffer = new GLushort[m_nIndices];
+
+        int vPos = 0, iPos = 0;
+
+        // shift indices by previous mesh vertices offset
+        int indiceOffset = 0;
+        int sumVertices = 0;
+
+        for (size_t i = 0; i < vertices.size(); i++) {
+            auto verts = vertices[i];
+            int nBytes = verts.size() * stride;
+
+            std::memcpy(vBuffer + vPos, (GLbyte*)verts.data(), nBytes);
+            vPos += nBytes;
+
+            if (indiceOffset + verts.size() > MAX_INDEX_VALUE) {
+                logMsg("NOTICE: >>>>>> BIG MESH %d <<<<<<\n",
+                       indiceOffset + verts.size());
+                m_vertexOffsets.emplace_back(iPos, sumVertices);
+                indiceOffset = 0;
+            }
+
+            auto ids = indices[i];
+            int nElem = ids.size();
+            for (int j = 0; j < nElem; j++) {
+                iBuffer[iPos++] = ids[j] + indiceOffset;
+            }
+
+            sumVertices += verts.size();
+            indiceOffset += verts.size();
+
+            verts.clear();
+            ids.clear();
+        }
+
+        m_vertexOffsets.emplace_back(iPos, sumVertices);
+
+        return { iBuffer, vBuffer };
+    }
 };

@@ -5,7 +5,8 @@
 
 int VboMesh::s_validGeneration = 0;
 
-VboMesh::VboMesh(std::shared_ptr<VertexLayout> _vertexLayout, GLenum _drawMode) : m_vertexLayout(_vertexLayout) {
+VboMesh::VboMesh(std::shared_ptr<VertexLayout> _vertexLayout, GLenum _drawMode)
+  : m_vertexLayout(_vertexLayout) {
 
     m_glVertexBuffer = 0;
     m_glIndexBuffer = 0;
@@ -29,13 +30,8 @@ VboMesh::VboMesh() {
 }
 
 VboMesh::~VboMesh() {
-
-    glDeleteBuffers(1, &m_glVertexBuffer);
-    glDeleteBuffers(1, &m_glIndexBuffer);
-    
-    m_vertexData.clear();
-    m_indices.clear();
-
+    if (m_glVertexBuffer) glDeleteBuffers(1, &m_glVertexBuffer);
+    if (m_glIndexBuffer) glDeleteBuffers(1, &m_glIndexBuffer);
 }
 
 void VboMesh::setVertexLayout(std::shared_ptr<VertexLayout> _vertexLayout) {
@@ -59,103 +55,29 @@ void VboMesh::setDrawMode(GLenum _drawMode) {
     }
 }
 
-void VboMesh::addVertex(GLbyte* _vertex) {
-
-    addVertices(_vertex, 1);
-
-}
-
-void VboMesh::addVertices(GLbyte* _vertices, int _nVertices) {
-
-    if (m_isUploaded) {
-        logMsg("ERROR: VboMesh cannot add vertices after upload!\n");
-        return;
-    }
-    
-    // Only add up to 65535 vertices, any more will overflow our 16-bit indices
-    int indexSpace = MAX_INDEX_VALUE - m_nVertices;
-    
-    if (_nVertices > MAX_INDEX_VALUE) {
-        logMsg("WARNING: Cannot add > %d vertices in one call, truncating mesh\n", MAX_INDEX_VALUE);
-        _nVertices = indexSpace;
-    }
-    
-    if (_nVertices > indexSpace || m_backupMesh) {
-        if (!m_backupMesh) {
-            m_backupMesh.reset(new VboMesh(m_vertexLayout, m_drawMode));
-        }
-        m_backupMesh->addVertices(_vertices, _nVertices);
-        return;
-    }
-
-    int vertexBytes = m_vertexLayout->getStride() * _nVertices;
-    m_vertexData.insert(m_vertexData.end(), _vertices, _vertices + vertexBytes);
-    m_nVertices += _nVertices;
-
-}
-
-int VboMesh::numVertices() const {
-    if (m_backupMesh) {
-        return m_nVertices + m_backupMesh->numVertices();
-    }
-    return m_nVertices;
-}
-
-void VboMesh::addIndex(int* _index) {
-
-    addIndices(_index, 1);
-
-}
-
-void VboMesh::addIndices(int* _indices, int _nIndices) {
-    
-    if (m_isUploaded) {
-        logMsg("ERROR: VboMesh cannot add indices after upload!\n");
-        return;
-    }
-    
-    if (m_backupMesh) {
-        for (int i = 0; i < _nIndices; i++) {
-            _indices[i] -= m_nVertices;
-        }
-        m_backupMesh->addIndices(_indices, _nIndices);
-        return;
-    }
-
-    m_indices.insert(m_indices.end(), _indices, _indices + _nIndices);
-    m_nIndices += _nIndices;
-
-}
-
-int VboMesh::numIndices() const {
-    if (m_backupMesh) {
-        return m_nIndices + m_backupMesh->numIndices();
-    }
-    return m_nIndices;
-}
-
 void VboMesh::upload() {
-    
-    if (m_nVertices > 0) {
-        // Generate vertex buffer, if needed
-        if (m_glVertexBuffer == 0) {
-            glGenBuffers(1, &m_glVertexBuffer);
-        }
-        
-        // Buffer vertex data
-        glBindBuffer(GL_ARRAY_BUFFER, m_glVertexBuffer);
-        glBufferData(GL_ARRAY_BUFFER, m_vertexData.size(), m_vertexData.data(), GL_STATIC_DRAW);
-    }
+    // Generate vertex buffer, if needed
+    if (m_glVertexBuffer == 0) glGenBuffers(1, &m_glVertexBuffer);
 
-    if (m_nIndices > 0) {
-        // Generate index buffer, if needed
-        if (m_glIndexBuffer == 0) {
-            glGenBuffers(1, &m_glIndexBuffer);
-        }
+    GLubyte *vertices;
+    GLushort *indices;
+    std::tie (indices, vertices) = compileVertexBuffer();
+
+    // Buffer vertex data
+    int vertexBytes = m_vertexLayout->getStride() * m_nVertices;
+
+    glBindBuffer(GL_ARRAY_BUFFER, m_glVertexBuffer);
+    glBufferData(GL_ARRAY_BUFFER, vertexBytes, vertices, GL_STATIC_DRAW);
+    delete[] vertices;
+
+    if (indices) {
+        if (m_glIndexBuffer == 0) glGenBuffers(1, &m_glIndexBuffer);
 
         // Buffer element index data
         glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, m_glIndexBuffer);
-        glBufferData(GL_ELEMENT_ARRAY_BUFFER, m_indices.size() * sizeof(GLushort), m_indices.data(), GL_STATIC_DRAW);
+        glBufferData(GL_ELEMENT_ARRAY_BUFFER, m_nIndices * sizeof(GLushort),
+                     indices, GL_STATIC_DRAW);
+        delete[] indices;
     }
 
     //m_vertexData.clear();
@@ -164,10 +86,6 @@ void VboMesh::upload() {
     // to easily rebuild themselves after GL context loss. For optimizing memory usage (and for
     // other reasons) we'll want to change this in the future. This probably means going back to
     // data sources and styles to rebuild the vertex data.
-    
-    if (m_backupMesh) {
-        m_backupMesh->upload();
-    }
     
     m_generation = s_validGeneration;
 
@@ -178,16 +96,16 @@ void VboMesh::upload() {
 void VboMesh::draw(const std::shared_ptr<ShaderProgram> _shader) {
 
     checkValidity();
-    
+
+    if (m_nVertices == 0) return;
+
     // Ensure that geometry is buffered into GPU
     if (!m_isUploaded) {
         upload();
     }
-    
+
     // Bind buffers for drawing
-    if (m_nVertices > 0) {
-        glBindBuffer(GL_ARRAY_BUFFER, m_glVertexBuffer);
-    }
+    glBindBuffer(GL_ARRAY_BUFFER, m_glVertexBuffer);
 
     if (m_nIndices > 0) {
         glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, m_glIndexBuffer);
@@ -196,20 +114,34 @@ void VboMesh::draw(const std::shared_ptr<ShaderProgram> _shader) {
     // Enable shader program
     _shader->use();
 
-    // Enable vertex attribs via vertex layout object
-    m_vertexLayout->enable(_shader);
+    size_t indiceOffset = 0;
+    size_t vertexOffset = 0;
 
-    // Draw as elements or arrays
-    if (m_nIndices > 0) {
-        glDrawElements(m_drawMode, m_nIndices, GL_UNSIGNED_SHORT, 0);
-    } else if (m_nVertices > 0) {
-        glDrawArrays(m_drawMode, 0, m_nVertices);
-    }
-    
-    if (m_backupMesh) {
-        m_backupMesh->draw(_shader);
-    }
+    uint32_t sumVertices, sumIndices;
 
+    for (auto o : m_vertexOffsets) {
+      std::tie(sumIndices, sumVertices) = o;
+
+      size_t byteOffset = vertexOffset * m_vertexLayout->getStride();
+
+      // Enable vertex attribs via vertex layout object
+      m_vertexLayout->enable(_shader, byteOffset);
+
+      size_t nIndices = sumIndices - indiceOffset;
+      size_t nVertices = sumVertices - vertexOffset;
+
+      // Draw as elements or arrays
+      if (nIndices > 0) {
+        glDrawElements(m_drawMode, nIndices, GL_UNSIGNED_SHORT,
+                       (void*)(indiceOffset * sizeof(GLushort)));
+
+      } else if (nVertices > 0) {
+        glDrawArrays(m_drawMode, 0, nVertices);
+      }
+
+      vertexOffset = sumVertices;
+      indiceOffset = sumIndices;
+    }
 }
 
 void VboMesh::checkValidity() {
