@@ -295,7 +295,7 @@ void View::updateTiles() {
     
     m_visibleTiles.clear();
     
-    // Bounds of view frustum in world space (i.e. view frustum projected onto z = 0 plane)
+    // Bounds of view trapezoid in world space (i.e. view frustum projected onto z = 0 plane)
     glm::vec2 viewBL = { 0.f, m_vpHeight };       // bottom left
     glm::vec2 viewBR = { m_vpWidth, m_vpHeight }; // bottom right
     glm::vec2 viewTR = { m_vpWidth, 0.f };        // top right
@@ -306,19 +306,19 @@ void View::updateTiles() {
     screenToGroundPlane(viewTR.x, viewTR.y);
     screenToGroundPlane(viewTL.x, viewTL.y);
     
-    // Transformation from projection space into tile space
+    // Transformation from world space to tile space
     double hc = MapProjection::HALF_CIRCUMFERENCE;
     double invTileSize = double(1 << int(m_zoom)) / (hc * 2);
     glm::dvec2 tileSpaceOrigin(-hc, hc);
     glm::dvec2 tileSpaceAxes(invTileSize, -invTileSize);
     
-    // Bounds of view frustum in tile space
+    // Bounds of view trapezoid in tile space
     glm::dvec2 a = (glm::dvec2(viewBL.x + m_pos.x, viewBL.y + m_pos.y) - tileSpaceOrigin) * tileSpaceAxes;
     glm::dvec2 b = (glm::dvec2(viewBR.x + m_pos.x, viewBR.y + m_pos.y) - tileSpaceOrigin) * tileSpaceAxes;
     glm::dvec2 c = (glm::dvec2(viewTR.x + m_pos.x, viewTR.y + m_pos.y) - tileSpaceOrigin) * tileSpaceAxes;
     glm::dvec2 d = (glm::dvec2(viewTL.x + m_pos.x, viewTL.y + m_pos.y) - tileSpaceOrigin) * tileSpaceAxes;
     
-    // Rasterize view frustum into tiles
+    // Rasterize view trapezoid into tiles
     int maxTileIndex = 1 << int(m_zoom);
     scanTriangle(a, b, c, 0, maxTileIndex, int(m_zoom), m_visibleTiles);
     scanTriangle(c, d, a, 0, maxTileIndex, int(m_zoom), m_visibleTiles);
