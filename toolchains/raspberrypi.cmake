@@ -1,10 +1,25 @@
 # options
-set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wall -std=c++11 -fpermissive -g")
+set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wall -fpermissive -g")
 set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_CXX_FLAGS} -L/opt/vc/lib/ -lGLESv2 -lEGL -lbcm_host -lvchiq_arm -lvcos -lrt")
 set(CXX_FLAGS_DEBUG "-g -O0")
 set(EXECUTABLE_NAME "tangram")
 
 add_definitions(-DPLATFORM_RPI)
+
+# check for c++11 compiler
+execute_process(COMMAND ${CMAKE_CXX_COMPILER} -dumpversion OUTPUT_VARIABLE GCC_VERSION)
+
+if("${CMAKE_CXX_COMPILER_ID}" MATCHES "GNU")
+	if(NOT (GCC_VERSION VERSION_GREATER 4.7 OR GCC_VERSION VERSION_EQUAL 4.7))
+		message(FATAL_ERROR "Please install g++ version 4.7 or greater")
+	else()
+		set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++11")
+	endif()
+elseif("${CMAKE_CXX_COMPILER_ID}" MATCHES "Clang")
+		set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -stdlib=libc++")
+else()
+	message(FATAL_ERROR "Please install a C++11 compatible compiler")
+endif()
 
 # include headers for rpi-installed libraries
 include_directories(/opt/vc/include/)
