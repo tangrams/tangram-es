@@ -14,6 +14,7 @@
 #include "style/polygonStyle.h"
 #include "style/polylineStyle.h"
 #include "style/fontStyle.h"
+#include "style/debugStyle.h"
 #include "scene/scene.h"
 #include "scene/lights.h"
 #include "util/error.h"
@@ -26,8 +27,10 @@ namespace Tangram {
     std::shared_ptr<View> m_view;
     std::shared_ptr<LabelContainer> m_labelContainer;
     std::shared_ptr<FontContext> m_ftContext;
+    std::shared_ptr<DebugStyle> m_debugStyle;
 
     static float g_time = 0.0;
+    static unsigned long g_flags = 0;
 
     void initialize() {
         
@@ -68,6 +71,9 @@ namespace Tangram {
             std::unique_ptr<Style> fontStyle(new FontStyle("Roboto-Regular", "FontStyle", 14.0f, true));
             fontStyle->addLayers({"roads"});
             m_scene->addStyle(std::move(fontStyle));
+            
+            std::unique_ptr<DebugStyle> debugStyle(new DebugStyle("Debug"));
+            m_scene->addStyle(std::move(debugStyle));
 
             //  Directional light with white diffuse color pointing Northeast and down
             auto directionalLight = std::make_shared<DirectionalLight>("dLight");
@@ -137,6 +143,8 @@ namespace Tangram {
         if (m_view) {
             m_view->update();
 
+            m_tileManager->updateTileSet();
+
             if (m_view->changedOnLastUpdate()) {
 
                 for (const auto& style : m_scene->getStyles()) {
@@ -147,10 +155,6 @@ namespace Tangram {
                     }
                 }
             }
-        }
-        
-        if (m_tileManager) {
-            m_tileManager->updateTileSet();
         }
         
         if(m_scene) {
@@ -236,6 +240,24 @@ namespace Tangram {
     void handleShoveGesture(float _distance) {
         
         m_view->pitch(_distance);
+        
+    }
+    
+    void setDebugFlag(DebugFlags _flag, bool _on) {
+        
+        if (_on) {
+            g_flags |= (1 << _flag); // |ing with a bitfield that is 0 everywhere except index _flag; sets index _flag to 1
+        } else {
+            g_flags &= ~(1 << _flag); // &ing with a bitfield that is 1 everywhere except index _flag; sets index _flag to 0
+        }
+
+        m_view->setZoom(m_view->getZoom()); // Force the view to refresh
+        
+    }
+    
+    bool getDebugFlag(DebugFlags _flag) {
+        
+        return (g_flags & (1 << _flag)) != 0; // &ing with a bitfield that is 0 everywhere except index _flag will yield 0 iff index _flag is 0
         
     }
 

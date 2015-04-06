@@ -1,6 +1,7 @@
 #include "polygonStyle.h"
 #include "util/builders.h"
 #include "roadLayers.h"
+#include "tangram.h"
 
 PolygonStyle::PolygonStyle(std::string _name, GLenum _drawMode) : Style(_name, _drawMode) {
     m_material.setEmissionEnabled(false);
@@ -95,6 +96,10 @@ void PolygonStyle::buildPolygon(Polygon& _polygon, std::string& _layer, Properti
     } else if (_layer == "landuse") {
         layer = 1;
         abgr = 0xff669171;
+    }
+    
+    if (Tangram::getDebugFlag(Tangram::DebugFlags::PROXY_COLORS)) {
+        abgr = abgr << (int(_props.numericProps["zoom"]) % 6);
     }
     
     float height = _props.numericProps["height"]; // Inits to zero if not present in data
