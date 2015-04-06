@@ -9,6 +9,8 @@
 #include <string.h>
 #include <termios.h>
 
+#include <curl/curl.h>
+
 #include "tangram.h"
 #include "platform.h"
 #include "gl.h"
@@ -323,6 +325,9 @@ int main(int argc, char **argv){
     
     // Start OpenGL context
     initOpenGL();
+
+    /* Do Curl Init */
+    curl_global_init(CURL_GLOBAL_DEFAULT);
     
     // Set background color and clear buffers
     Tangram::initialize();
@@ -404,5 +409,6 @@ int main(int argc, char **argv){
     }
     
     Tangram::teardown();
+    curl_global_cleanup();
     return 0;
 }

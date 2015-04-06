@@ -5,10 +5,15 @@ struct _JNIEnv;
 typedef _JNIEnv JNIEnv;
 class _jobject;
 typedef _jobject* jobject;
+void cacheJavaVM(JNIEnv* _jniEnv);
+void cacheClassInstance(JNIEnv* _jniEnv);
 void setAssetManager(JNIEnv* _jniEnv, jobject _assetManager);
+void deleteClassInstance(JNIEnv* _jniEnv);
 #endif
 
 #include <string>
+#include <sstream>
+#include <memory>
 
 /* Print a formatted message to the console
  *
@@ -33,3 +38,6 @@ std::string stringFromResource(const char* _path);
  * allocated file
  */ 
 unsigned char* bytesFromResource(const char* _path, unsigned int* _size);
+
+bool streamFromHttpSync(const std::string& _url, std::stringstream& _rawData);
+

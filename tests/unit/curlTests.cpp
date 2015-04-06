@@ -12,11 +12,15 @@
 TEST_CASE( "URL Name Check for MapzenVectorTileJson", "[CURL][DataSource][MapzenVectorTileJson]" ) {
     /*MapzenVectorTileJson dataSource;
     TileID tileCoord = TileID(0,0,0);
-    REQUIRE( *dataSource.constructURL(tileCoord) == "http://vector.mapzen.com/osm/all/0/0/0.json");
+    std::string url;
+    *dataSource.constructURL(tileCoord, url);
+    REQUIRE( url == "http://vector.mapzen.com/osm/all/0/0/0.json");
     TileID tileCoord2 = TileID(19293,24641,16);
-    REQUIRE( *dataSource.constructURL(tileCoord2) == "http://vector.mapzen.com/osm/all/16/19293/24641.json");
+    *dataSource.constructURL(tileCoord2, url);
+    REQUIRE( url == "http://vector.mapzen.com/osm/all/16/19293/24641.json");
     TileID tileCoord3 = TileID(19293,24641,14);
-    REQUIRE( *dataSource.constructURL(tileCoord3) == "http://vector.mapzen.com/osm/all/14/19293/24641.json");*/
+    *dataSource.constructURL(tileCoord3, url);
+    REQUIRE( url == "http://vector.mapzen.com/osm/all/14/19293/24641.json");*/
 }
 
 TEST_CASE( "Extract tile coordinates from URL check for MapzenVectorTileJson", "[CURL][DataSource][MapzenVectorTileJson]" ) {
