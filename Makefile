@@ -105,23 +105,29 @@ clean-osx-xcode:
 clean-tests:
 	rm -rf ${TESTS_BUILD_DIR}
 
-android: install-android android/libs/${ANDROID_ARCH}/libtangram.so android/build.xml
+android: android/libs/${ANDROID_ARCH}/libtangram.so android/build.gradle
 	@cd android/ && \
 	./gradlew assembleDebug
 
-install-android: check-ndk cmake-android ${ANDROID_BUILD_DIR}/Makefile
+android/libs/${ANDROID_ARCH}/libtangram.so: install-android
+
+install-android: ${ANDROID_BUILD_DIR}/Makefile
 	@cd ${ANDROID_BUILD_DIR} && \
 	${MAKE} && \
 	${MAKE} install
+
+${ANDROID_BUILD_DIR}/Makefile: check-ndk cmake-android
 
 cmake-android:
 	@mkdir -p ${ANDROID_BUILD_DIR} 
 	@cd ${ANDROID_BUILD_DIR} && \
 	cmake ../.. ${ANDROID_CMAKE_PARAMS}
 
-osx: cmake-osx ${OSX_BUILD_DIR}/Makefile
+osx: ${OSX_BUILD_DIR}/Makefile
 	@cd ${OSX_BUILD_DIR} && \
 	${MAKE}
+
+${OSX_BUILD_DIR}/Makefile: cmake-osx
 
 osx-xcode: cmake-osx-xcode ${OSX_XCODE_BUILD_DIR}
 	xcodebuild -target ${OSX_TARGET} -project ${OSX_XCODE_BUILD_DIR}/${OSX_XCODE_PROJ}
@@ -138,8 +144,10 @@ cmake-osx:
 	@cd ${OSX_BUILD_DIR} && \
 	cmake ../.. ${DARWIN_CMAKE_PARAMS}
 
-ios: cmake-ios ${IOS_BUILD_DIR}/${IOS_XCODE_PROJ}
+ios: ${IOS_BUILD_DIR}/${IOS_XCODE_PROJ}
 	xcodebuild -target ${IOS_TARGET} -project ${IOS_BUILD_DIR}/${IOS_XCODE_PROJ}
+
+${IOS_BUILD_DIR}/${IOS_XCODE_PROJ}: cmake-ios
 
 cmake-ios:
 ifeq ($(wildcard ${IOS_BUILD_DIR}/${IOS_XCODE_PROJ}/.*),)
@@ -148,7 +156,7 @@ ifeq ($(wildcard ${IOS_BUILD_DIR}/${IOS_XCODE_PROJ}/.*),)
 	cmake ../.. ${IOS_CMAKE_PARAMS}
 endif
 
-rpi: cmake-rpi ${RPI_BUILD_DIR}
+rpi: cmake-rpi
 	@cd ${RPI_BUILD_DIR} && \
 	${MAKE}
 	
@@ -157,7 +165,7 @@ cmake-rpi:
 	@cd ${RPI_BUILD_DIR} && \
 	cmake ../.. ${RPI_CMAKE_PARAMS}
 
-linux: cmake-linux ${LINUX_BUILD_DIR}
+linux: cmake-linux
 	cd ${LINUX_BUILD_DIR} && \
 	${MAKE}
 
