@@ -1,6 +1,7 @@
 #include "view.h"
 
 #include <cmath>
+#include <functional>
 
 #include "util/tileID.h"
 #include "platform.h"
@@ -85,7 +86,7 @@ void View::setRoll(float _roll) {
 void View::setPitch(float _pitch) {
 
     // Clamp pitch angle (until LoD tile coverage is implemented)
-    m_pitch = glm::clamp(_pitch, 0.f, 0.7f);
+    m_pitch = glm::clamp(_pitch, 0.f, 1.f);
     m_dirty = true;
 
 }
@@ -167,7 +168,7 @@ void View::screenToGroundPlane(float& _screenX, float& _screenY) const {
     
     float t; // Distance along ray to ground plane
     if (ray_world.z != 0.f) {
-        t = -m_pos.z / ray_world.z;
+        t = abs(m_pos.z / ray_world.z);
     } else {
         t = 0;
     }
@@ -241,15 +242,16 @@ struct edge { // An edge between two points; oriented such that y is non-decreas
     }
 };
 
-static void scanLine(int _x0, int _x1, int _y, int _z, std::set<TileID>& _tiles) {
+typedef std::function<void (int, int)> Scan;
+
+static void scanLine(int _x0, int _x1, int _y, Scan _s) {
     
     for (int x = _x0; x < _x1; x++) {
-        _tiles.emplace(x, _y, _z);
+        _s(x, _y);
     }
-    
 }
 
-static void scanSpan(edge _e0, edge _e1, int _yMin, int _yMax, int _z, std::set<TileID>& _tiles) {
+static void scanSpan(edge _e0, edge _e1, int _yMin, int _yMax, Scan& _s) {
     
     // _e1 has a shorter y-span, so we'll use it to limit our y coverage
     int y0 = fmax(_yMin, floor(_e1.y0));
@@ -270,12 +272,12 @@ static void scanSpan(edge _e0, edge _e1, int _yMin, int _yMax, int _z, std::set<
     for (int y = y0; y < y1; y++) {
         double x0 = m0 * fmax(0.0, fmin(_e0.dy, y + d0 - _e0.y0)) + _e0.x0;
         double x1 = m1 * fmax(0.0, fmin(_e1.dy, y + d1 - _e1.y0)) + _e1.x0;
-        scanLine(floor(x1), ceil(x0), y, _z, _tiles);
+        scanLine(floor(x1), ceil(x0), y, _s);
     }
     
 }
 
-static void scanTriangle(glm::dvec2& _a, glm::dvec2& _b, glm::dvec2& _c, int _min, int _max, int _z, std::set<TileID>& _tiles) {
+static void scanTriangle(glm::dvec2& _a, glm::dvec2& _b, glm::dvec2& _c, int _min, int _max, Scan& _s) {
     
     edge ab = edge(_a, _b);
     edge bc = edge(_b, _c);
@@ -286,8 +288,8 @@ static void scanTriangle(glm::dvec2& _a, glm::dvec2& _b, glm::dvec2& _c, int _mi
     if (bc.dy > ca.dy) { std::swap(bc, ca); }
     
     // scan span! scan span!
-    if (ab.dy > 0) { scanSpan(ca, ab, _min, _max, _z, _tiles); }
-    if (bc.dy > 0) { scanSpan(ca, bc, _min, _max, _z, _tiles); }
+    if (ab.dy > 0) { scanSpan(ca, ab, _min, _max, _s); }
+    if (bc.dy > 0) { scanSpan(ca, bc, _min, _max, _s); }
     
 }
 
@@ -318,10 +320,30 @@ void View::updateTiles() {
     glm::dvec2 c = (glm::dvec2(viewTR.x + m_pos.x, viewTR.y + m_pos.y) - tileSpaceOrigin) * tileSpaceAxes;
     glm::dvec2 d = (glm::dvec2(viewTL.x + m_pos.x, viewTL.y + m_pos.y) - tileSpaceOrigin) * tileSpaceAxes;
     
-    // Rasterize view trapezoid into tiles
+    // Determine zoom reduction for tiles far from the center of view
     int maxTileIndex = 1 << int(m_zoom);
-    scanTriangle(a, b, c, 0, maxTileIndex, int(m_zoom), m_visibleTiles);
-    scanTriangle(c, d, a, 0, maxTileIndex, int(m_zoom), m_visibleTiles);
+    double tilesAtFullZoom = ceil(fmax(m_width, m_height) * invTileSize * 0.5);
+    double viewCenterX = (m_pos.x + hc) * invTileSize;
+    double viewCenterY = (m_pos.y - hc) * -invTileSize;
+    
+    Scan s = [&](int x, int y) {
+        
+        int z = int(m_zoom);
+        
+        int lod = floor(log2f(fmax(fmax(abs(x - viewCenterX) - tilesAtFullZoom, abs(y - viewCenterY) - tilesAtFullZoom), 1)));
+        
+        x >>= lod;
+        y >>= lod;
+        z -= lod;
+        
+        m_visibleTiles.emplace(x, y, z);
+        
+        
+    };
+    
+    // Rasterize view trapezoid into tiles
+    scanTriangle(a, b, c, 0, maxTileIndex, s);
+    scanTriangle(c, d, a, 0, maxTileIndex, s);
     
 
 }
