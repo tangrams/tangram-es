@@ -6,6 +6,8 @@
 
 extern "C" {
     JNIEXPORT void JNICALL Java_com_mapzen_tangram_Tangram_init(JNIEnv* jniEnv, jobject obj, jobject assetManager) {
+        cacheJavaVM(jniEnv);
+        cacheClassInstance(jniEnv);
         setAssetManager(jniEnv, assetManager);
         Tangram::initialize();
     }
@@ -24,6 +26,7 @@ extern "C" {
 
     JNIEXPORT void JNICALL Java_com_mapzen_tangram_Tangram_teardown(JNIEnv* jniEnv, jobject obj) {
         Tangram::teardown();
+        deleteClassInstance(jniEnv);
     }
 
     JNIEXPORT void JNICALL Java_com_mapzen_tangram_Tangram_onContextDestroyed(JNIEnv* jniEnv, jobject obj) {
@@ -57,6 +60,6 @@ extern "C" {
     JNIEXPORT void JNICALL Java_com_mapzen_tangram_Tangram_handleShoveGesture(JNIEnv* jniEnv, jobject obj, jfloat distance) {
         Tangram::handleShoveGesture(distance);
     }
-    
+
 }
 

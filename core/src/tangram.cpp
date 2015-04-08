@@ -93,7 +93,7 @@ namespace Tangram {
             
             // Add a tile data source
             // json tile source
-            // std::unique_ptr<DataSource> dataSource(new GeoJsonTile());
+            //std::unique_ptr<DataSource> dataSource(new GeoJsonSource());
             // protobuf tile source
             std::unique_ptr<DataSource> dataSource(new ProtobufSource());
             m_tileManager->addDataSource(std::move(dataSource));

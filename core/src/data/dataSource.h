@@ -58,7 +58,7 @@ protected:
     std::string m_urlTemplate;
 
     /* Constructs the URL of a tile using <m_urlTemplate> */
-    virtual std::unique_ptr<std::string> constructURL(const TileID& _tileCoord);
+    virtual void constructURL(const TileID& _tileCoord, std::string& _url);
 
 public:
 
