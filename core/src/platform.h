@@ -5,10 +5,9 @@ struct _JNIEnv;
 typedef _JNIEnv JNIEnv;
 class _jobject;
 typedef _jobject* jobject;
-void cacheJavaVM(JNIEnv* _jniEnv);
-void cacheClassInstance(JNIEnv* _jniEnv);
-void setAssetManager(JNIEnv* _jniEnv, jobject _assetManager);
-void deleteClassInstance(JNIEnv* _jniEnv);
+void cacheTangramInstance(jobject _tangramInstance);
+void cacheJniEnv(JNIEnv* _jniEnv);
+void setAssetManager(jobject _assetManager);
 #endif
 
 #include <string>
@@ -39,5 +38,5 @@ std::string stringFromResource(const char* _path);
  */ 
 unsigned char* bytesFromResource(const char* _path, unsigned int* _size);
 
-bool streamFromHttpSync(const std::string& _url, std::stringstream& _rawData);
+bool streamFromHttpASync(const std::string& _url, const int _tileIDx, const int _tileIDy, const int _tileIDz, const int _dataSourceID);
 
