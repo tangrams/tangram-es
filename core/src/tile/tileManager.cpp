@@ -7,7 +7,6 @@
 #include <algorithm>
 
 TileManager::TileManager() {
-    
     // Instantiate workers
     for (size_t i = 0; i < MAX_WORKERS; i++) {
         m_workers.push_back(std::unique_ptr<TileWorker>(new TileWorker()));
@@ -36,10 +35,34 @@ TileManager::~TileManager() {
     m_tileSet.clear();
 }
 
+void TileManager::addToWorkerQueue(const std::string& _rawData, const TileID& _tileId, const int _dataSourceID) {
+    m_queuedTiles.push_front(WorkerData(_rawData, _tileId, _dataSourceID));
+}
+
 bool TileManager::updateTileSet() {
     
     bool tileSetChanged = false;
     
+    // Check if any native worker needs to be dispatched i.e. queuedTiles is not empty
+    {
+        auto workersIter = m_workers.begin();
+        auto queuedTilesIter = m_queuedTiles.begin();
+
+        while (workersIter != m_workers.end() && queuedTilesIter != m_queuedTiles.end()) {
+
+            auto& workerData = *queuedTilesIter;
+            auto& worker = *workersIter;
+
+            if (worker->isFree()) {
+                logMsg("Dispatched worker for tile: [%d, %d, %d]\n", workerData.tileID->x, workerData.tileID->y, workerData.tileID->z);
+                worker->processTileData(workerData, m_dataSources, m_scene->getStyles(), *m_view);
+                queuedTilesIter = m_queuedTiles.erase(queuedTilesIter);
+            }
+
+            ++workersIter;
+        }
+    }
+
     // Check if any incoming tiles are finished
     for (auto& worker : m_workers) {
         
@@ -114,25 +137,6 @@ bool TileManager::updateTileSet() {
         }
     }
     
-    // Dispatch workers for queued tiles
-    {
-        auto workersIter = m_workers.begin();
-        auto queuedTilesIter = m_queuedTiles.begin();
-        
-        while (workersIter != m_workers.end() && queuedTilesIter != m_queuedTiles.end()) {
-            
-            TileID id = *queuedTilesIter;
-            auto& worker = *workersIter;
-            
-            if (worker->isFree()) {
-                worker->load(id, m_dataSources, m_scene->getStyles(), *m_view);
-                queuedTilesIter = m_queuedTiles.erase(queuedTilesIter);
-            }
-            
-            ++workersIter;
-        }
-    }
-    
     return tileSetChanged;
 }
 
@@ -140,21 +144,30 @@ void TileManager::addTile(const TileID& _tileID) {
     
     std::shared_ptr<MapTile> tile(new MapTile(_tileID, m_view->getMapProjection()));
     m_tileSet[_tileID] = std::move(tile);
+
+    for(int dsIndex = 0; dsIndex < m_dataSources.size(); dsIndex++) {
+        // ByPass Network Request if data already loaded/parsed
+        // Create workerData with empty "rawData", parsed data will be fetched in the Worker::processTileData
+        if(m_dataSources[dsIndex]->hasTileData(_tileID)) {
+            addToWorkerQueue(std::string(""), _tileID, dsIndex);
+        } else if( !m_dataSources[dsIndex]->loadTileData(_tileID, dsIndex) ) {
+            logMsg("ERROR: Loading failed for tile [%d, %d, %d]\n", _tileID.z, _tileID.x, _tileID.y);
+        }
+    }
     
     //Add Proxy if corresponding proxy MapTile ready
     updateProxyTiles(_tileID, m_view->isZoomIn());
-    
-    // Queue tile for workers
-    m_queuedTiles.push_front(_tileID);
-    
 }
 
 void TileManager::removeTile(std::map< TileID, std::shared_ptr<MapTile> >::iterator& _tileIter) {
     
     const TileID& id = _tileIter->first;
+
+    // tmp workerData required as "compare value" for std::find.
+    WorkerData tmp = WorkerData(std::string(""), id, 0);
     
     // Remove tile from queue, if present
-    const auto& found = std::find(m_queuedTiles.begin(), m_queuedTiles.end(), id);
+    const auto& found = std::find(m_queuedTiles.begin(), m_queuedTiles.end(), tmp);
     if (found != m_queuedTiles.end()) {
         m_queuedTiles.erase(found);
         cleanProxyTiles(id);
@@ -163,6 +176,7 @@ void TileManager::removeTile(std::map< TileID, std::shared_ptr<MapTile> >::itera
     // If a worker is loading this tile, abort it
     for (const auto& worker : m_workers) {
         if (!worker->isFree() && worker->getTileID() == id) {
+            //TODO: Before aborting worker, call DataSource->cancel to make platform specific http cancel request.
             worker->abort();
             // Proxy tiles will be cleaned in update loop
         }
