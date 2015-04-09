@@ -29,6 +29,12 @@ void DataSource::clearData() {
     m_tileStore.clear();
 }
 
+void DataSource::setTileData(const TileID& _tileID, const std::shared_ptr<TileData>& _tileData) {
+    
+        std::lock_guard<std::mutex> lock(m_mutex);
+        m_tileStore[_tileID] = _tileData;
+}
+
 //---- NetworkDataSource Implementation----
 
 NetworkDataSource::NetworkDataSource() {
@@ -55,19 +61,21 @@ void NetworkDataSource::constructURL(const TileID& _tileCoord, std::string& _url
     }
 }
 
-bool NetworkDataSource::loadTileData(const MapTile& _tile) {
+bool NetworkDataSource::loadTileData(const TileID& _tileID, const int _dataSourceID) {
     
     bool success = true; // Begin optimistically
     
-    if (hasTileData(_tile.getID())) {
+    if (hasTileData(_tileID)){
         // Tile has been fetched already!
         return success;
     }
 
     std::string url;
     
-    constructURL(_tile.getID(), url);
-    
+    constructURL(_tileID, url);
+
+    success = streamFromHttpASync(url, _tileID.x, _tileID.y, _tileID.z, _dataSourceID);
+    /*
     std::stringstream rawData;
 
     success = streamFromHttpSync(url, rawData);
@@ -85,8 +93,7 @@ bool NetworkDataSource::loadTileData(const MapTile& _tile) {
 
     } else {
         success = false;
-    }
-    
+    }*/
     
     return success;
 }
