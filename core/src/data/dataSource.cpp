@@ -74,7 +74,7 @@ bool NetworkDataSource::loadTileData(const TileID& _tileID, const int _dataSourc
     
     constructURL(_tileID, url);
 
-    success = streamFromHttpASync(url, _tileID.x, _tileID.y, _tileID.z, _dataSourceID);
+    success = streamFromHttpASync(url, _tileID, _dataSourceID);
     /*
     std::stringstream rawData;
 

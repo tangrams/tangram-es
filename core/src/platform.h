@@ -14,6 +14,8 @@ void setAssetManager(jobject _assetManager);
 #include <sstream>
 #include <memory>
 
+#include "tileID.h"
+
 /* Print a formatted message to the console
  *
  * Uses printf syntax to write a string to stderr (or logcat, on Android)
@@ -38,5 +40,5 @@ std::string stringFromResource(const char* _path);
  */ 
 unsigned char* bytesFromResource(const char* _path, unsigned int* _size);
 
-bool streamFromHttpASync(const std::string& _url, const int _tileIDx, const int _tileIDy, const int _tileIDz, const int _dataSourceID);
+bool streamFromHttpASync(const std::string& _url, const TileID& _tileID, const int _dataSourceID);
 

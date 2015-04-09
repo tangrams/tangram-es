@@ -104,7 +104,7 @@ unsigned char* bytesFromResource(const char* _path, unsigned int* _size) {
     return data;
 }
 
-bool streamFromHttpASync(const std::string& _url, const int _tileIDx, const int _tileIDy, const int _tileIDz, const int _dataSourceID) {
+bool streamFromHttpASync(const std::string& _url, const TileID& _tileID, const int _dataSourceID) {
     jstring jUrl;
     jboolean methodResult;
 
@@ -114,7 +114,7 @@ bool streamFromHttpASync(const std::string& _url, const int _tileIDx, const int 
 
     jUrl = jniEnv->NewStringUTF(_url.c_str());
 
-    methodResult = jniEnv->CallBooleanMethod(tangramInstance, method, jUrl, (jint)_tileIDx, (jint)_tileIDy, (jint)_tileIDz, (jint)_dataSourceID);
+    methodResult = jniEnv->CallBooleanMethod(tangramInstance, method, jUrl, (jint)_tileID.x, (jint)_tileID.y, (jint)_tileID.z, (jint)_dataSourceID);
 
     if(!methodResult) {
         logMsg("\"networkRequest\" returned false");
