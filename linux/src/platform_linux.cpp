@@ -64,8 +64,9 @@ static size_t write_data(void *_ptr, size_t _size, size_t _nmemb, void *_stream)
     return _size * _nmemb;
 }
 
-bool streamFromHttpSync(const std::string& _url, std::stringstream& _rawData) {
+bool streamFromHttpASync(const std::string& _url, const TileID& _tileID, const int _dataSourceID) {
 
+    std::stringstream _rawData;
     CURL* curlHandle = curl_easy_init();
 
     // set up curl to perform fetch
