@@ -145,7 +145,7 @@ void TileManager::addTile(const TileID& _tileID) {
     std::shared_ptr<MapTile> tile(new MapTile(_tileID, m_view->getMapProjection()));
     m_tileSet[_tileID] = std::move(tile);
 
-    for(int dsIndex = 0; dsIndex < m_dataSources.size(); dsIndex++) {
+    for(size_t dsIndex = 0; dsIndex < m_dataSources.size(); dsIndex++) {
         // ByPass Network Request if data already loaded/parsed
         // Create workerData with empty "rawData", parsed data will be fetched in the Worker::processTileData
         if(m_dataSources[dsIndex]->hasTileData(_tileID)) {
