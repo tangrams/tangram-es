@@ -8,7 +8,7 @@ typedef _jobject* jobject;
 void setAssetManager(JNIEnv* _jniEnv, jobject _assetManager);
 #endif
 
-#ifdef __OBJC__
+#if (defined PLATFORM_IOS) && (defined __OBJC__)
 #import "ViewController.h"
 void setViewController(ViewController* _controller);
 #endif
