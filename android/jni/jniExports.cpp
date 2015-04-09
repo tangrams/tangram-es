@@ -1,14 +1,13 @@
-
 #include <jni.h>
 #include "tangram.h"
 // Includes platform.h for setAssetManager reference
 #include "platform.h"
 
 extern "C" {
-    JNIEXPORT void JNICALL Java_com_mapzen_tangram_Tangram_init(JNIEnv* jniEnv, jobject obj, jobject assetManager) {
-        cacheJavaVM(jniEnv);
-        cacheClassInstance(jniEnv);
-        setAssetManager(jniEnv, assetManager);
+    JNIEXPORT void JNICALL Java_com_mapzen_tangram_Tangram_init(JNIEnv* jniEnv, jobject obj, jobject assetManager, jobject tangramInstance) {
+        cacheJniEnv(jniEnv);
+        cacheTangramInstance(tangramInstance);
+        setAssetManager(assetManager);
         Tangram::initialize();
     }
 
@@ -26,7 +25,6 @@ extern "C" {
 
     JNIEXPORT void JNICALL Java_com_mapzen_tangram_Tangram_teardown(JNIEnv* jniEnv, jobject obj) {
         Tangram::teardown();
-        deleteClassInstance(jniEnv);
     }
 
     JNIEXPORT void JNICALL Java_com_mapzen_tangram_Tangram_onContextDestroyed(JNIEnv* jniEnv, jobject obj) {
@@ -59,6 +57,15 @@ extern "C" {
 
     JNIEXPORT void JNICALL Java_com_mapzen_tangram_Tangram_handleShoveGesture(JNIEnv* jniEnv, jobject obj, jfloat distance) {
         Tangram::handleShoveGesture(distance);
+    }
+
+    JNIEXPORT void JNICALL Java_com_mapzen_tangram_Tangram_networkDataBridge(JNIEnv* jniEnv, jobject obj, jbyteArray jFetchedBytes, jint tileIDx, jint tileIDy, jint tileIDz, jint dataSourceID) {
+        int dataLength = jniEnv->GetArrayLength(jFetchedBytes);
+        jbyte* const byteArrayStart = jniEnv->GetByteArrayElements(jFetchedBytes, 0);
+        const char* byteCVal = (const char*)byteArrayStart;
+        std::string rawData = std::string(byteCVal, dataLength);
+        jniEnv->ReleaseByteArrayElements(jFetchedBytes, byteArrayStart, 0);
+        Tangram::networkDataBridge(rawData, tileIDx, tileIDy, tileIDz, dataSourceID);
     }
 
 }
