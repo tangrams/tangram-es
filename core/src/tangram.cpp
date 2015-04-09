@@ -19,6 +19,7 @@
 #include "scene/lights.h"
 #include "util/error.h"
 #include "stl_util.hpp"
+#include "util/tileID.h"
 
 namespace Tangram {
 
@@ -283,5 +284,14 @@ namespace Tangram {
         VboMesh::invalidateAllVBOs();
         
     }
+
+    // NOTE: what happens when you have multiple data source???
+    // -- use m_dataSources index values to id data sources. However this will not work if we allow removal of dataSources on the fly
+    // -- TODO: use explicit id and use a set in m_tileManager for dataSources.
+    void networkDataBridge(std::string _rawData, int _tileIDx, int _tileIDy, int _tileIDz, int _dataSourceID) {
+        TileID tileID(_tileIDx, _tileIDy, _tileIDz);
+        m_tileManager->addToWorkerQueue(_rawData, tileID, _dataSourceID);
+    }
     
 }
+

@@ -55,5 +55,7 @@ namespace Tangram {
     // Get the boolean state of a debug feature (see debug.h)
     bool getDebugFlag(DebugFlags _flag);
 
+    void networkDataBridge(std::string _rawData, int _tileIDx, int _tileIDy, int _tileIDz, int _dataSourceID);
+
 }
 
