@@ -114,7 +114,7 @@ public:
         for (size_t i = 0; i < vertices.size(); i++) {
             auto curVertices = vertices[i];
             size_t nVertices = curVertices.size() / divider;
-            int nBytes = curVertices.size() * (stride / divider);
+            int nBytes = nVertices * stride;
 
             std::memcpy(vBuffer + vPos, (GLbyte*)curVertices.data(), nBytes);
             vPos += nBytes;
