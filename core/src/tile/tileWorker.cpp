@@ -31,15 +31,15 @@ void TileWorker::processTileData(const WorkerData& _workerData,
         TileID tileID = *(m_workerData->tileID);
         std::stringstream rawDataStream;
         rawDataStream << m_workerData->rawTileData;
-        int dataSourceID = m_workerData->dataSourceID;
+        auto& dataSource = _dataSources[m_workerData->dataSourceID];
 
         auto tile = std::shared_ptr<MapTile>(new MapTile(tileID, _view.getMapProjection()));
 
-        if( !(_dataSources[dataSourceID]->hasTileData(tileID)) ) {
-            _dataSources[dataSourceID]->setTileData( tileID, _dataSources[dataSourceID]->parse(*tile, rawDataStream));
+        if( !(dataSource->hasTileData(tileID)) ) {
+            dataSource->setTileData( tileID, dataSource->parse(*tile, rawDataStream));
         }
 
-        auto tileData = _dataSources[dataSourceID]->getTileData(tileID);
+        auto tileData = dataSource->getTileData(tileID);
         
         //Process data for all styles
         for(const auto& style : _styles) {
