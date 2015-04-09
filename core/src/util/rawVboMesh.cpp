@@ -41,7 +41,7 @@ void RawVboMesh::addIndices(int* _indices, int _nIndices) {
     m_nIndices += _nIndices;
 }
 
-VboMesh::ByteBuffers RawVboMesh::compileVertexBuffer() {
+void RawVboMesh::compileVertexBuffer() {
     int stride = m_vertexLayout->getStride();
-    return compile(m_vertices, m_indices, stride);
+    compile(m_vertices, m_indices, stride);
 }

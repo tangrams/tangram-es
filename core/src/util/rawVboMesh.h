@@ -29,11 +29,11 @@ class RawVboMesh : public VboMesh {
      */
     void addIndices(int* _indices, int _nIndices);
 
+    virtual void compileVertexBuffer() override;
+
    protected:
     // Raw interleaved vertex data in the format specified by the vertex layout
     std::vector<std::vector<GLubyte>> m_vertices;
 
     std::vector<std::vector<int>> m_indices;
-
-    virtual ByteBuffers compileVertexBuffer() override;
 };

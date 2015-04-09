@@ -47,6 +47,8 @@ public:
         return m_nIndices;
     }
 
+    virtual void compileVertexBuffer() = 0;
+
     /*
      * Copies all added vertices and indices into OpenGL buffer objects; After geometry is uploaded,
      * no more vertices or indices can be added
@@ -64,12 +66,10 @@ public:
     static void removeManagedVBO(VboMesh* _vbo);
     
     static void invalidateAllVBOs();
+
  protected:
 
-  // Compiled vertices + indices ready for upload
-  typedef std::pair<GLushort*, GLbyte*> ByteBuffers;
-
-  virtual ByteBuffers compileVertexBuffer() = 0;
+    //typedef std::pair<GLushort*, GLbyte*> ByteBuffers;
 
     static int s_validGeneration; // Incremented when the GL context is invalidated
     int m_generation;
@@ -82,20 +82,25 @@ public:
 
     int m_nVertices;
     GLuint m_glVertexBuffer;
+    // Compiled vertices for upload
+    std::vector<GLbyte> m_glVertexData;
 
     int m_nIndices;
     GLuint m_glIndexBuffer;
+    // Compiled  indices for upload
+    std::vector<GLushort> m_glIndexData;
 
     GLenum m_drawMode;
 
     bool m_isUploaded;
+    bool m_isCompiled;
     
     void checkValidity();
 
     template <typename T>
-    ByteBuffers compile(std::vector<std::vector<T>> vertices,
-                        std::vector<std::vector<int>> indices,
-                         int divider = 1) {
+    void compile(std::vector<std::vector<T>> vertices,
+                 std::vector<std::vector<int>> indices,
+                 int divider = 1) {
 
         int vertexOffset = 0;
         int indiceOffset = 0;
@@ -104,12 +109,15 @@ public:
         int vPos = 0, iPos = 0;
 
         int stride = m_vertexLayout->getStride();
-        GLbyte* vBuffer = new GLbyte[stride * m_nVertices];
+        m_glVertexData.resize(stride * m_nVertices);
+        GLbyte* vBuffer = m_glVertexData.data();
 
         GLushort* iBuffer = nullptr;
         bool useIndices = m_nIndices > 0;
-        if (useIndices)
-          iBuffer = new GLushort[m_nIndices];
+        if (useIndices) {
+          m_glIndexData.resize(m_nIndices);
+          iBuffer = m_glIndexData.data();
+        }
 
         for (size_t i = 0; i < vertices.size(); i++) {
             auto curVertices = vertices[i];
@@ -142,6 +150,6 @@ public:
 
         m_vertexOffsets.emplace_back(indiceOffset, vertexOffset);
 
-        return { iBuffer, vBuffer };
+        m_isCompiled = true;
     }
 };

@@ -14,9 +14,9 @@ VboMesh::VboMesh(std::shared_ptr<VertexLayout> _vertexLayout, GLenum _drawMode)
     m_nIndices = 0;
 
     m_isUploaded = false;
+    m_isCompiled = false;
 
     setDrawMode(_drawMode);
-    
 }
 
 VboMesh::VboMesh() {
@@ -26,7 +26,7 @@ VboMesh::VboMesh() {
     m_nIndices = 0;
 
     m_isUploaded = false;
-    
+    m_isCompiled = false;
 }
 
 VboMesh::~VboMesh() {
@@ -57,31 +57,29 @@ void VboMesh::setDrawMode(GLenum _drawMode) {
 
 void VboMesh::upload() {
     // Generate vertex buffer, if needed
-    if (m_glVertexBuffer == 0) glGenBuffers(1, &m_glVertexBuffer);
+    if (m_glVertexBuffer == 0)
+      glGenBuffers(1, &m_glVertexBuffer);
 
-    GLbyte *vertices;
-    GLushort *indices;
-    std::tie (indices, vertices) = compileVertexBuffer();
-
+    // TODO check if compiled?
     // Buffer vertex data
-    int vertexBytes = m_vertexLayout->getStride() * m_nVertices;
+    int vertexBytes = m_glVertexData.size();
 
     glBindBuffer(GL_ARRAY_BUFFER, m_glVertexBuffer);
-    glBufferData(GL_ARRAY_BUFFER, vertexBytes, vertices, GL_STATIC_DRAW);
-    delete[] vertices;
+    glBufferData(GL_ARRAY_BUFFER, vertexBytes, m_glVertexData.data(), GL_STATIC_DRAW);
 
-    if (indices) {
-        if (m_glIndexBuffer == 0) glGenBuffers(1, &m_glIndexBuffer);
+    if (!m_glIndexData.empty()) {
+        if (m_glIndexBuffer == 0)
+          glGenBuffers(1, &m_glIndexBuffer);
 
         // Buffer element index data
         glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, m_glIndexBuffer);
-        glBufferData(GL_ELEMENT_ARRAY_BUFFER, m_nIndices * sizeof(GLushort),
-                     indices, GL_STATIC_DRAW);
-        delete[] indices;
+        glBufferData(GL_ELEMENT_ARRAY_BUFFER, m_glIndexData.size() * sizeof(GLushort),
+                     m_glIndexData.data(), GL_STATIC_DRAW);
     }
 
-    //m_vertexData.clear();
-    //m_indices.clear();
+    // m_glVertexData.resize(0);
+    // m_glIndexData.resize(0);
+
     // TODO: For now, we retain copies of the vertex and index data in CPU memory to allow VBOs
     // to easily rebuild themselves after GL context loss. For optimizing memory usage (and for
     // other reasons) we'll want to change this in the future. This probably means going back to
@@ -96,6 +94,8 @@ void VboMesh::upload() {
 void VboMesh::draw(const std::shared_ptr<ShaderProgram> _shader) {
 
     checkValidity();
+
+    if (!m_isCompiled) return;
 
     if (m_nVertices == 0) return;
 

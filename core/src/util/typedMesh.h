@@ -17,11 +17,11 @@ class TypedMesh : public VboMesh {
         m_nIndices += _indices.size();
     }
 
-   protected:
+    virtual void compileVertexBuffer() override {
+        compile(vertices, indices);
+    }
+
+ protected:
     std::vector<std::vector<T>> vertices;
     std::vector<std::vector<int>> indices;
-
-    virtual ByteBuffers compileVertexBuffer() override {
-        return compile(vertices, indices);
-    }
 };
