@@ -8,8 +8,10 @@
 
 #import <UIKit/UIKit.h>
 #import <GLKit/GLKit.h>
-#include "tangram.h"
 
 @interface ViewController : GLKViewController <UIGestureRecognizerDelegate>
+
+- (void)renderOnce;
+- (void)setContinuous:(bool)c;
 
 @end

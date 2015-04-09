@@ -8,6 +8,11 @@ typedef _jobject* jobject;
 void setAssetManager(JNIEnv* _jniEnv, jobject _assetManager);
 #endif
 
+#ifdef __OBJC__
+#import "ViewController.h"
+void setViewController(ViewController* _controller);
+#endif
+
 #include <string>
 
 /* Print a formatted message to the console

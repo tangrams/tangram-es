@@ -7,6 +7,15 @@
 #import <fstream>
 
 #include "platform.h"
+#include "ViewController.h"
+
+static ViewController* viewController;
+
+void setViewController(ViewController* _controller) {
+    
+    viewController = _controller;
+    
+}
 
 void logMsg(const char* fmt, ...) {
 
@@ -15,6 +24,12 @@ void logMsg(const char* fmt, ...) {
     vfprintf(stderr, fmt, args);
     va_end(args);
 
+}
+
+void requestRender() {
+    
+    [viewController renderOnce];
+    
 }
 
 NSString* resolveResourcePath(const char* _path) {
