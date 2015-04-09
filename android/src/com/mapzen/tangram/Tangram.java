@@ -3,6 +3,9 @@ package com.mapzen.tangram;
 import javax.microedition.khronos.egl.EGLConfig;
 import javax.microedition.khronos.opengles.GL10;
 
+import java.io.IOException;
+import java.util.concurrent.TimeUnit;
+
 import android.app.Activity;
 import android.content.res.AssetManager;
 import android.opengl.GLSurfaceView;
@@ -19,6 +22,14 @@ import com.almeros.android.multitouch.ShoveGestureDetector;
 import com.almeros.android.multitouch.ShoveGestureDetector.OnShoveGestureListener;
 import android.view.SurfaceHolder;
 
+import com.squareup.okhttp.Callback;
+import com.squareup.okhttp.OkHttpClient;
+import com.squareup.okhttp.Request;
+import com.squareup.okhttp.RequestBody;
+import com.squareup.okhttp.Response;
+import com.squareup.okhttp.Call;
+import okio.BufferedSource;
+
 public class Tangram extends GLSurfaceView implements Renderer, OnScaleGestureListener, OnRotateGestureListener, OnGestureListener, OnShoveGestureListener {
 
     static {
@@ -26,7 +37,9 @@ public class Tangram extends GLSurfaceView implements Renderer, OnScaleGestureLi
         System.loadLibrary("tangram");
     }
 
-    private static native void init(AssetManager assetManager);
+    private OkHttpClient okClient;
+
+    private static native void init(AssetManager assetManager, Tangram tangramInst);
     private static native void resize(int width, int height);
     private static native void update(float dt);
     private static native void render();
@@ -39,6 +52,7 @@ public class Tangram extends GLSurfaceView implements Renderer, OnScaleGestureLi
     private static native void handlePinchGesture(float posX, float posY, float scale);
     private static native void handleRotateGesture(float posX, float posY, float rotation);
     private static native void handleShoveGesture(float distance);
+    private static native void networkDataBridge(byte[] rawDataBytes, int tileIDx, int tileIDy, int tileIDz, int dataSourceID);
 
     private long time = System.nanoTime();
     private boolean contextDestroyed = false;
@@ -64,6 +78,11 @@ public class Tangram extends GLSurfaceView implements Renderer, OnScaleGestureLi
         this.scaleGestureDetector = new ScaleGestureDetector(mainApp, this);
         this.rotateGestureDetector = new RotateGestureDetector(mainApp, this);
         this.shoveGestureDetector = new ShoveGestureDetector(mainApp, this);
+
+        this.okClient = new OkHttpClient();
+        okClient.setConnectTimeout(10, TimeUnit.SECONDS);
+        okClient.setReadTimeout(30, TimeUnit.SECONDS);
+        //TODO: set the okHttpClient cache path here ... use the cache dir from the android activity
         
     }
     
@@ -121,7 +140,7 @@ public class Tangram extends GLSurfaceView implements Renderer, OnScaleGestureLi
             contextDestroyed = false;
         }
         
-        init(assetManager);
+        init(assetManager, this);
     }
 
     // GestureDetetor.OnGestureListener methods
@@ -217,6 +236,28 @@ public class Tangram extends GLSurfaceView implements Renderer, OnScaleGestureLi
 
     public void onShoveEnd(ShoveGestureDetector detector) {
         return;
+    }
+
+    // Network requests using okHttp
+    public boolean networkRequest(String url, final int tileIDx, final int tileIDy, final int tileIDz, final int dataSourceID) throws Exception {
+        Request request = new Request.Builder().url(url).build();
+
+        okClient.newCall(request).enqueue(new Callback() {
+            @Override public void onFailure(Request request, IOException e) {
+                e.printStackTrace();
+            }
+
+            @Override public void onResponse(Response response) throws IOException {
+                byte[] rawDataBytes;
+
+                if(!response.isSuccessful()) throw new IOException("Unexpected code " + response);
+
+                BufferedSource src = response.body().source();
+                rawDataBytes = src.readByteArray();
+                networkDataBridge(rawDataBytes, tileIDx, tileIDy, tileIDz, dataSourceID);
+            }
+        });
+        return true;
     }
 }
 
