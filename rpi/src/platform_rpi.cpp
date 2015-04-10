@@ -90,3 +90,7 @@ bool streamFromHttpSync(const std::string& _url, const TileID& _tileID, const in
     }
 }
 
+void cancelNetworkRequest(const std::string& _url) {
+
+}
+
