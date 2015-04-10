@@ -61,6 +61,9 @@ public:
 
     /* double the size of the related texture transform of the text buffer */ 
     void expand();
+    
+    /* get the axis aligned bounding box for a text */
+    glm::vec4 getBBox(fsuint _textID);
 
 private:
 

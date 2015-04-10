@@ -92,3 +92,11 @@ void TextBuffer::unbind() {
         m_bound = false;
     }
 }
+
+glm::vec4 TextBuffer::getBBox(fsuint _textID) {
+    glm::vec4 bbox;
+    bind();
+    glfonsGetBBox(m_fsContext, _textID, &bbox.x, &bbox.y, &bbox.z, &bbox.w);
+    unbind();
+    return bbox;
+}

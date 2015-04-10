@@ -6,6 +6,7 @@
 #include "isect2d.h"
 #include <memory>
 #include <vector>
+#include <set>
 #include <map>
 
 class MapTile;
@@ -40,9 +41,8 @@ public:
 
     /* Returns a const list of labels for a <TileID> and a style name */
     const std::vector<std::shared_ptr<Label>>& getLabels(const std::string& _styleName, const TileID& _tileID);
-
-    // FUTURE :
-    // QuadTree structure used to iterate through labels
+    
+    std::set<std::pair<std::shared_ptr<Label>, std::shared_ptr<Label>>> getOcclusions();
 
 private:
 
