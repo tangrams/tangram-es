@@ -22,10 +22,6 @@ if [[ ${PLATFORM} == "linux" ]]; then
     sudo add-apt-repository -y ppa:kalakris/cmake > /dev/null
     sudo apt-get update -qq
     
-    #Use a c++11 compatible compiler
-    export CXX=clang++-3.4
-    export CC=clang-3.4
-    
     #Install X11, OpenGL, Doxygen, and CMake for GLFW
     sudo apt-get install -y -qq xorg-dev libglu1-mesa-dev doxygen cmake
 
