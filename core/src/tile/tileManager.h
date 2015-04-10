@@ -63,6 +63,8 @@ private:
     std::shared_ptr<View> m_view;
     std::shared_ptr<Scene> m_scene;
     
+    std::mutex m_queueTileMutex;
+    
     // TODO: Might get away with using a vector of pairs here (and for searching using std:search (binary search))
     std::map<TileID, std::shared_ptr<MapTile>> m_tileSet;
     
