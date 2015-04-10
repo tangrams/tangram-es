@@ -16,14 +16,17 @@ if [[ ${PLATFORM} == "linux" ]]; then
     
     GLFW_VERSION="3.1.1"
     
-    #Add PPA for libc++
-    sudo add-apt-repository -y ppa:jhe/libc++ > /dev/null
     #Add PPA for CMake 2.8.11
     sudo add-apt-repository -y ppa:kalakris/cmake > /dev/null
     sudo apt-get update -qq
+
+    #Install a c++11 compatible compiler
+    sudo apt-get install -y -qq gcc-4.8 g++-4.8
+    export CXX=g++-4.8
+    export CC=gcc-4.8
     
-    #Install X11, OpenGL, Doxygen, and CMake for GLFW
-    sudo apt-get install -y -qq xorg-dev libglu1-mesa-dev cmake libc++
+    #Install X11, OpenGL, and CMake for GLFW
+    sudo apt-get install -y -qq xorg-dev libglu1-mesa-dev cmake
 
     # Download and install GLFW from source
     wget https://github.com/glfw/glfw/releases/download/${GLFW_VERSION}/glfw-${GLFW_VERSION}.zip
