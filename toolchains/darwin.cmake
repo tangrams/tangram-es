@@ -49,7 +49,7 @@ function(link_libraries)
 
     # add resource files and property list
     set_target_properties(${EXECUTABLE_NAME} PROPERTIES
-        MACOSX_BUNDLE_INFO_PLIST ${PROJECT_SOURCE_DIR}/osx/resources/tangram-Info.plist
+        MACOSX_BUNDLE_INFO_PLIST "${PROJECT_SOURCE_DIR}/osx/resources/tangram-Info.plist"
         RESOURCE "${RESOURCES}")
 
 endfunction()
