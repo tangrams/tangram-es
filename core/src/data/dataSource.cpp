@@ -98,3 +98,9 @@ bool NetworkDataSource::loadTileData(const TileID& _tileID, const int _dataSourc
     return success;
 }
 
+void NetworkDataSource::cancelLoadingTile(const TileID& _tileID) {
+    std::string url;
+    constructURL(_tileID, url);
+    cancelNetworkRequest(url);
+}
+

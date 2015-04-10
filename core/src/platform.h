@@ -5,8 +5,8 @@ struct _JNIEnv;
 typedef _JNIEnv JNIEnv;
 class _jobject;
 typedef _jobject* jobject;
-void cacheTangramInstance(jobject _tangramInstance);
 void cacheJniEnv(JNIEnv* _jniEnv);
+void cacheTangramInstance(jobject _tangramInstance);
 void setAssetManager(jobject _assetManager);
 #endif
 
@@ -41,4 +41,6 @@ std::string stringFromResource(const char* _path);
 unsigned char* bytesFromResource(const char* _path, unsigned int* _size);
 
 bool streamFromHttpASync(const std::string& _url, const TileID& _tileID, const int _dataSourceID);
+
+void cancelNetworkRequest(const std::string& _url);
 

@@ -54,7 +54,7 @@ bool TileManager::updateTileSet() {
             auto& worker = *workersIter;
 
             if (worker->isFree()) {
-                logMsg("Dispatched worker for tile: [%d, %d, %d]\n", workerData.tileID->x, workerData.tileID->y, workerData.tileID->z);
+                logMsg("Dispatched worker for processing tile: [%d, %d, %d]\n", workerData.tileID->x, workerData.tileID->y, workerData.tileID->z);
                 worker->processTileData(workerData, m_dataSources, m_scene->getStyles(), *m_view);
                 queuedTilesIter = m_queuedTiles.erase(queuedTilesIter);
             }
@@ -148,6 +148,7 @@ void TileManager::addTile(const TileID& _tileID) {
     for(size_t dsIndex = 0; dsIndex < m_dataSources.size(); dsIndex++) {
         // ByPass Network Request if data already loaded/parsed
         // Create workerData with empty "rawData", parsed data will be fetched in the Worker::processTileData
+        logMsg("Initiate network request for tile: [%d, %d, %d]\n", _tileID.x, _tileID.y, _tileID.z);
         if(m_dataSources[dsIndex]->hasTileData(_tileID)) {
             addToWorkerQueue(std::string(""), _tileID, dsIndex);
         } else if( !m_dataSources[dsIndex]->loadTileData(_tileID, dsIndex) ) {
@@ -163,6 +164,11 @@ void TileManager::removeTile(std::map< TileID, std::shared_ptr<MapTile> >::itera
     
     const TileID& id = _tileIter->first;
 
+    // Make sure to cancel the network request associated with this tile, then if already fetched remove it from the proocessing queue and the worker managing this tile, if applicable
+    for(auto& dataSource : m_dataSources) {
+        dataSource->cancelLoadingTile(id);
+    }
+
     // tmp workerData required as "compare value" for std::find.
     WorkerData tmp = WorkerData(std::string(""), id, 0);
     
@@ -173,10 +179,9 @@ void TileManager::removeTile(std::map< TileID, std::shared_ptr<MapTile> >::itera
         cleanProxyTiles(id);
     }
     
-    // If a worker is loading this tile, abort it
+    // If a worker is processing this tile, abort it
     for (const auto& worker : m_workers) {
         if (!worker->isFree() && worker->getTileID() == id) {
-            //TODO: Before aborting worker, call DataSource->cancel to make platform specific http cancel request.
             worker->abort();
             // Proxy tiles will be cleaned in update loop
         }

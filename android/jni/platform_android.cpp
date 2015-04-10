@@ -109,7 +109,6 @@ bool streamFromHttpASync(const std::string& _url, const TileID& _tileID, const i
     jboolean methodResult;
 
     jclass tangramClass = jniEnv->FindClass("com/mapzen/tangram/Tangram");
-
     jmethodID method = jniEnv->GetMethodID(tangramClass, "networkRequest", "(Ljava/lang/String;IIII)Z");
 
     jUrl = jniEnv->NewStringUTF(_url.c_str());
@@ -122,6 +121,16 @@ bool streamFromHttpASync(const std::string& _url, const TileID& _tileID, const i
     }
 
     return methodResult;
+}
+
+void cancelNetworkRequest(const std::string& _url) {
+    jstring jUrl;
+
+    jclass tangramClass = jniEnv->FindClass("com/mapzen/tangram/Tangram");
+    jmethodID method = jniEnv->GetMethodID(tangramClass, "cancelNetworkRequest", "(Ljava/lang/String;)V");
+
+    jUrl = jniEnv->NewStringUTF(_url.c_str());
+    jniEnv->CallVoidMethod(tangramInstance, method, jUrl);
 }
 
 

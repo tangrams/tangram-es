@@ -246,9 +246,13 @@ public class Tangram extends GLSurfaceView implements Renderer, OnScaleGestureLi
         return;
     }
 
+    public void cancelNetworkRequest(String url) {
+        okClient.cancel(url);
+    }
+
     // Network requests using okHttp
     public boolean networkRequest(String url, final int tileIDx, final int tileIDy, final int tileIDz, final int dataSourceID) throws Exception {
-        Request request = new Request.Builder().url(url).build();
+        Request request = new Request.Builder().tag(url).url(url).build();
 
         okClient.newCall(request).enqueue(new Callback() {
             @Override public void onFailure(Request request, IOException e) {

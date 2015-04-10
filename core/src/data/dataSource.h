@@ -27,7 +27,8 @@ public:
      * then stores it to be accessed via <GetTileData>. This method SHALL NOT be called
      * from the main thread. 
      */
-    virtual bool loadTileData(const TileID& _tile, const int _dataSourceID) = 0;
+    virtual bool loadTileData(const TileID& _tileID, const int _dataSourceID) = 0;
+    virtual void cancelLoadingTile(const TileID& _tile) = 0;
 
     /* Returns the data corresponding to a <TileID> */
     virtual std::shared_ptr<TileData> getTileData(const TileID& _tileID);
@@ -69,6 +70,7 @@ public:
     virtual ~NetworkDataSource();
 
     virtual bool loadTileData(const TileID& _tileID, const int _dataSourceID) override;
+    virtual void cancelLoadingTile(const TileID& _tile) override;
 
 };
 
