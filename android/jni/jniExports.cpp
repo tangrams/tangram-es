@@ -5,8 +5,8 @@
 #include "platform.h"
 
 extern "C" {
-    JNIEXPORT void JNICALL Java_com_mapzen_tangram_Tangram_init(JNIEnv* jniEnv, jobject obj, jobject assetManager) {
-        jniInit(jniEnv, obj, assetManager);
+    JNIEXPORT void JNICALL Java_com_mapzen_tangram_Tangram_init(JNIEnv* jniEnv, jobject obj, jobject assetManager, jobject tangramInstance) {
+        jniInit(jniEnv, tangramInstance, assetManager);
         Tangram::initialize();
     }
 

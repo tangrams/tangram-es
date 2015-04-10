@@ -8,14 +8,12 @@
 #include <android/asset_manager_jni.h>
 #include <cstdarg>
 
-static JNIEnv* jniEnv;
 static JavaVM* jvm;
-static jobject rendererObj;
-static jclass rendererClass;
+static jobject tangramObj;
 static jmethodID requestRenderMethodID;
 static AAssetManager* assetManager;
 
-void jniInit(JNIEnv* _jniEnv, jobject _renderer, jobject _assetManager) {
+void jniInit(JNIEnv* _jniEnv, jobject _tangramInstance, jobject _assetManager) {
 
     assetManager = AAssetManager_fromJava(_jniEnv, _assetManager);
 
@@ -24,8 +22,7 @@ void jniInit(JNIEnv* _jniEnv, jobject _renderer, jobject _assetManager) {
     }
 
     _jniEnv->GetJavaVM(&jvm);
-    jniEnv = _jniEnv;
-    rendererObj = _jniEnv->NewGlobalRef(_renderer);
+    tangramObj = _jniEnv->NewGlobalRef(_tangramInstance);
     
 }
 
@@ -39,14 +36,21 @@ void logMsg(const char* fmt, ...) {
 }
 
 void requestRender() {
+    
+    JNIEnv *jniEnv;
 
-    jvm->GetEnv((void**)&jniEnv, JNI_VERSION_1_6);
-    jvm->AttachCurrentThread(&jniEnv, NULL);
-    rendererClass = jniEnv->GetObjectClass(rendererObj);
-    requestRenderMethodID = jniEnv->GetMethodID(rendererClass, "requestRender", "()V");
-    jniEnv->CallVoidMethod(rendererObj, requestRenderMethodID);
-    jvm->DetachCurrentThread();
-
+    bool isAttached = false;
+    int status = jvm->GetEnv((void**)&jniEnv, JNI_VERSION_1_6);
+    if(status == JNI_EDETACHED) {
+        status = jvm->AttachCurrentThread(&jniEnv, NULL);
+        isAttached = true;
+    }
+    jclass tangramClass = jniEnv->GetObjectClass(tangramObj);
+    requestRenderMethodID = jniEnv->GetMethodID(tangramClass, "requestRender", "()V");
+    jniEnv->CallVoidMethod(tangramObj, requestRenderMethodID);
+    if(isAttached) {
+        jvm->DetachCurrentThread();
+    }
 }
 
 std::string stringFromResource(const char* _path) {

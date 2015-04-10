@@ -26,7 +26,7 @@ public class Tangram extends GLSurfaceView implements Renderer, OnScaleGestureLi
         System.loadLibrary("tangram");
     }
 
-    private static native void init(AssetManager assetManager);
+    private static native void init(AssetManager assetManager, Tangram tangramInst);
     private static native void resize(int width, int height);
     private static native void update(float dt);
     private static native void render();
@@ -98,7 +98,7 @@ public class Tangram extends GLSurfaceView implements Renderer, OnScaleGestureLi
         }
         
     }
-    
+
     // GLSurfaceView.Renderer methods
     // ==============================
 
@@ -123,7 +123,7 @@ public class Tangram extends GLSurfaceView implements Renderer, OnScaleGestureLi
             contextDestroyed = false;
         }
         
-        init(assetManager);
+        init(assetManager, this);
     }
 
     // GestureDetetor.OnGestureListener methods
