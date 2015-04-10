@@ -3,6 +3,7 @@
 #include "label.h"
 #include "util/tileID.h"
 #include "text/fontContext.h"
+#include "isect2d.h"
 #include <memory>
 #include <vector>
 #include <map>
@@ -15,7 +16,7 @@ class MapTile;
 class LabelContainer {
 
 public:
-    
+
     static std::shared_ptr<LabelContainer> GetInstance() {
         static std::shared_ptr<LabelContainer> instance(new LabelContainer());
         return instance;
@@ -23,8 +24,8 @@ public:
 
     virtual ~LabelContainer();
 
-    /* 
-     * Creates a label for and associate it with the current processed <MapTile> TileID for a specific syle name 
+    /*
+     * Creates a label for and associate it with the current processed <MapTile> TileID for a specific syle name
      * Returns nullptr if no text buffer are currently used by the FontContext
      */
     std::shared_ptr<Label> addLabel(const TileID& _tileID, const std::string& _styleName, LabelTransform _transform, std::string _text);
@@ -40,14 +41,14 @@ public:
     /* Returns a const list of labels for a <TileID> and a style name */
     const std::vector<std::shared_ptr<Label>>& getLabels(const std::string& _styleName, const TileID& _tileID);
 
-    // FUTURE : 
+    // FUTURE :
     // QuadTree structure used to iterate through labels
 
 private:
 
     LabelContainer();
     // map of <Style>s containing all <Label>s by <TileID>s
-    std::map<std::string, std::map<TileID, std::vector<std::shared_ptr<Label>>>> m_labels; 
+    std::map<std::string, std::map<TileID, std::vector<std::shared_ptr<Label>>>> m_labels;
 
     // reference to the <FontContext>
     std::shared_ptr<FontContext> m_ftContext;
