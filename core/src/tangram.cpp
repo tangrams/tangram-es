@@ -214,6 +214,14 @@ namespace Tangram {
 
     void handleDoubleTapGesture(float _posX, float _posY) {
         
+        float viewCenterX = 0.5f * m_view->getWidth();
+        float viewCenterY = 0.5f * m_view->getHeight();
+        
+        m_view->screenToGroundPlane(viewCenterX, viewCenterY);
+        m_view->screenToGroundPlane(_posX, _posY);
+        
+        m_view->translate((_posX - viewCenterX)*(1-1/2.0), (_posY - viewCenterY)*(1-1/2.0));
+        
         m_view->zoom(1.0);
     }
 
@@ -227,6 +235,15 @@ namespace Tangram {
     }
 
     void handlePinchGesture(float _posX, float _posY, float _scale) {
+        
+        float viewCenterX = 0.5f * m_view->getWidth();
+        float viewCenterY = 0.5f * m_view->getHeight();
+        
+        m_view->screenToGroundPlane(viewCenterX, viewCenterY);
+        m_view->screenToGroundPlane(_posX, _posY);
+        
+        m_view->translate((_posX - viewCenterX)*(1-1/_scale), (_posY - viewCenterY)*(1-1/_scale));
+        
         m_view->zoom(log2f(_scale));
     }
         
