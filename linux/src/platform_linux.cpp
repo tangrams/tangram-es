@@ -1,3 +1,5 @@
+#ifdef PLATFORM_LINUX
+
 #include <stdio.h>
 #include <stdarg.h>
 #include <iostream>
@@ -61,3 +63,5 @@ unsigned char* bytesFromResource(const char* _path, unsigned int* _size) {
 
     return reinterpret_cast<unsigned char *>(cdata);
 }
+
+#endif
