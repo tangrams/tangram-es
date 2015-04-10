@@ -56,6 +56,7 @@ public class Tangram extends GLSurfaceView implements Renderer, OnScaleGestureLi
         setPreserveEGLContextOnPause(true);
         setEGLConfigChooser(8, 8, 8, 8, 24, 0);
         setRenderer(this);
+        setRenderMode(RENDERMODE_WHEN_DIRTY);
         
         mainApp.getWindowManager().getDefaultDisplay().getMetrics(displayMetrics);
         
@@ -90,6 +91,7 @@ public class Tangram extends GLSurfaceView implements Renderer, OnScaleGestureLi
             scaleGestureDetector.onTouchEvent(event) |
             rotateGestureDetector.onTouchEvent(event) |
             shoveGestureDetector.onTouchEvent(event)) {
+            requestRender();
             return true;
         } else {
             return super.onTouchEvent(event);

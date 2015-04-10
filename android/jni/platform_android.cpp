@@ -2,14 +2,20 @@
 
 #include "platform.h"
 
+#include <jni.h>
 #include <android/log.h>
 #include <android/asset_manager.h>
 #include <android/asset_manager_jni.h>
 #include <cstdarg>
 
+static JNIEnv* jniEnv;
+static JavaVM* jvm;
+static jobject rendererObj;
+static jclass rendererClass;
+static jmethodID requestRenderMethodID;
 static AAssetManager* assetManager;
 
-void setAssetManager(JNIEnv* _jniEnv, jobject _assetManager) {
+void jniInit(JNIEnv* _jniEnv, jobject _renderer, jobject _assetManager) {
 
     assetManager = AAssetManager_fromJava(_jniEnv, _assetManager);
 
@@ -17,6 +23,10 @@ void setAssetManager(JNIEnv* _jniEnv, jobject _assetManager) {
         logMsg("ERROR: Could not obtain Asset Manager reference\n");
     }
 
+    _jniEnv->GetJavaVM(&jvm);
+    jniEnv = _jniEnv;
+    rendererObj = _jniEnv->NewGlobalRef(_renderer);
+    
 }
 
 void logMsg(const char* fmt, ...) {
@@ -25,6 +35,17 @@ void logMsg(const char* fmt, ...) {
     va_start(args, fmt);
     __android_log_vprint(ANDROID_LOG_DEBUG, "Tangram", fmt, args);
     va_end(args);
+
+}
+
+void requestRender() {
+
+    jvm->GetEnv((void**)&jniEnv, JNI_VERSION_1_6);
+    jvm->AttachCurrentThread(&jniEnv, NULL);
+    rendererClass = jniEnv->GetObjectClass(rendererObj);
+    requestRenderMethodID = jniEnv->GetMethodID(rendererClass, "requestRender", "()V");
+    jniEnv->CallVoidMethod(rendererObj, requestRenderMethodID);
+    jvm->DetachCurrentThread();
 
 }
 

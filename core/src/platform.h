@@ -5,7 +5,7 @@ struct _JNIEnv;
 typedef _JNIEnv JNIEnv;
 class _jobject;
 typedef _jobject* jobject;
-void setAssetManager(JNIEnv* _jniEnv, jobject _assetManager);
+void jniInit(JNIEnv* _jniEnv, jobject obj, jobject _assetManager);
 #endif
 
 #if (defined PLATFORM_IOS) && (defined __OBJC__)
