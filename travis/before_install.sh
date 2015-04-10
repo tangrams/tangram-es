@@ -28,7 +28,7 @@ if [[ ${PLATFORM} == "linux" ]]; then
     export CC=gcc-4.8
     
     #Install X11, OpenGL, Doxygen, and CMake for GLFW
-    sudo apt-get install -y -qq xorg-dev libglu1-mesa-dev doxygen kalakris/cmake
+    sudo apt-get install -y -qq xorg-dev libglu1-mesa-dev doxygen cmake
 
     # Download and install GLFW from source
     wget https://github.com/glfw/glfw/releases/download/${GLFW_VERSION}/glfw-${GLFW_VERSION}.zip
