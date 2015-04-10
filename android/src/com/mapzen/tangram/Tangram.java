@@ -3,6 +3,7 @@ package com.mapzen.tangram;
 import javax.microedition.khronos.egl.EGLConfig;
 import javax.microedition.khronos.opengles.GL10;
 
+import java.io.File;
 import java.io.IOException;
 import java.util.concurrent.TimeUnit;
 
@@ -24,6 +25,7 @@ import android.view.SurfaceHolder;
 
 import com.squareup.okhttp.Callback;
 import com.squareup.okhttp.OkHttpClient;
+import com.squareup.okhttp.Cache;
 import com.squareup.okhttp.Request;
 import com.squareup.okhttp.RequestBody;
 import com.squareup.okhttp.Response;
@@ -38,6 +40,7 @@ public class Tangram extends GLSurfaceView implements Renderer, OnScaleGestureLi
     }
 
     private OkHttpClient okClient;
+    public static final int TILE_CACHE_SIZE = 1024 * 1024 * 30; // 30 Mgs
 
     private static native void init(AssetManager assetManager, Tangram tangramInst);
     private static native void resize(int width, int height);
@@ -82,8 +85,13 @@ public class Tangram extends GLSurfaceView implements Renderer, OnScaleGestureLi
         this.okClient = new OkHttpClient();
         okClient.setConnectTimeout(10, TimeUnit.SECONDS);
         okClient.setReadTimeout(30, TimeUnit.SECONDS);
-        //TODO: set the okHttpClient cache path here ... use the cache dir from the android activity
-        
+        File cacheDir = new File(mainApp.getExternalCacheDir().getAbsolutePath() + "/tile_cache");
+        try {
+            Cache okTileCache = new Cache(cacheDir, TILE_CACHE_SIZE);
+            okClient.setCache(okTileCache);
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
     }
     
     @Override
