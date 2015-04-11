@@ -18,6 +18,9 @@ if [[ ${PLATFORM} == "linux" ]]; then
     
     #Add PPA for CMake 2.8.11
     sudo add-apt-repository -y ppa:kalakris/cmake > /dev/null
+    #Add PPA for gcc-4.8
+    sudo add-apt-repository -y ppa:ubuntu-toolchain-r/test > /dev/null
+    
     sudo apt-get update -qq
 
     #Install a c++11 compatible compiler
