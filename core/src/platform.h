@@ -25,6 +25,13 @@ void logMsg(const char* fmt, ...);
  */
 void requestRender();
 
+/* If called with 'true', the windowing system will re-draw frames continuously;
+ * otherwise new frames will only be drawn when 'requestRender' is called. 
+ */
+void setContinuousRendering(bool _isContinuous);
+
+bool isContinuousRendering();
+
 /* Read a bundled resource file as a string
  * 
  * Opens the file at the given relative path and returns a string with its contents.
