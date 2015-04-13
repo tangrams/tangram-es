@@ -36,6 +36,17 @@ void Label::updateScreenPosition(const glm::mat4& _mvp, const glm::vec2& _screen
         glm::vec2 p1 = worldToScreenSpace(_mvp, glm::vec4(m_transform.m_modelPosition1, 0.0, 1.0), _screenSize);
         glm::vec2 p2 = worldToScreenSpace(_mvp, glm::vec4(m_transform.m_modelPosition2, 0.0, 1.0), _screenSize);
         
+        glm::vec2 p1p2 = p2 - p1;
+        
+        float length = glm::length(p1p2);
+        
+        float exceedHeuristic = 40; // default heuristic : 40%
+        
+        if (m_width > length) {
+            float exceed = (1 - (length / m_width)) * 100;
+            m_visible = exceed < exceedHeuristic;
+        }
+        
         rot = angleBetweenPoints(p1, p2) + M_PI_2;
         
         if (rot > M_PI_2 || rot < -M_PI_2) { // un-readable labels

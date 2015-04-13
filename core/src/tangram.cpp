@@ -70,9 +70,9 @@ namespace Tangram {
 
             std::unique_ptr<Style> fontStyle(new FontStyle("Roboto-Regular", "FontStyle", 14.0f, true));
             fontStyle->addLayers({
-                "buildings",
                 "roads",
-                "pois"
+                "pois",
+                "water"
             });
             m_scene->addStyle(std::move(fontStyle));
             
