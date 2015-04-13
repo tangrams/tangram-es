@@ -75,6 +75,8 @@ protected:
     /* Can be used by the style once the data has been processed */
     virtual void finishDataProcessing(MapTile& _tile) const;
     
+    virtual VboMesh* newMesh() const = 0;
+
 public:
 
     Style(std::string _name, GLenum _drawMode);

@@ -104,18 +104,12 @@ void PolylineStyle::buildLine(Line& _line, std::string& _layer, Properties& _pro
      */
     size_t oldSize = indices.size();
     indices.reserve(2 * oldSize);
-    for(int i = 0; i < oldSize; i++) {
+    for(size_t i = 0; i < oldSize; i++) {
         indices.push_back(points.size() + indices[i]);
     }
 
-    // Make sure indices get correctly offset
-    int vertOffset = _mesh.numVertices();
-    for (auto& ind : indices) {
-        ind += vertOffset;
-    }
-    
-    _mesh.addVertices((GLbyte*)vertices.data(), (int)vertices.size());
-    _mesh.addIndices(indices.data(), (int)indices.size());
+    auto& mesh = static_cast<PolylineStyle::Mesh&>(_mesh);
+    mesh.addVertices(std::move(vertices), std::move(indices));
 }
 
 void PolylineStyle::buildPolygon(Polygon& _polygon, std::string& _layer, Properties& _props, VboMesh& _mesh) const {
