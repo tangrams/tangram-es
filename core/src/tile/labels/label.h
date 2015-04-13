@@ -35,6 +35,8 @@ public:
     
     std::string getText() { return m_text; }
     
+    
+    
     bool isOutOfScreen() { return m_outOfScreen; }
 
 private:

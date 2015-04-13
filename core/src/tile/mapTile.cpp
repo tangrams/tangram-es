@@ -84,13 +84,13 @@ void MapTile::update(float _dt, const Style& _style, const View& _view) {
             LabelTransform t1 = l1->getTransform();
             LabelTransform t2 = l2->getTransform();
             
-            t1.m_alpha = 0.5;
-            t2.m_alpha = 0.5;
+            t1.m_alpha = 0.0;
+            t2.m_alpha = 0.0;
             
             l1->updateTransform(t1, mvp, screenSize);
             l2->updateTransform(t2, mvp, screenSize);
             
-            logMsg("%s occluding with %s\n", l1->getText().c_str(), l2->getText().c_str());
+            //logMsg("%s occluding with %s\n", l1->getText().c_str(), l2->getText().c_str());
         }
 
         m_buffers[_style.getName()]->triggerTransformUpdate();

@@ -31,6 +31,38 @@ void FontStyle::constructShaderProgram() {
 }
 
 void FontStyle::buildPoint(Point& _point, std::string& _layer, Properties& _props, VboMesh& _mesh) const {
+    std::vector<float> vertData;
+    int nVerts = 0;
+    auto labelContainer = LabelContainer::GetInstance();
+    auto ftContext = labelContainer->getFontContext();
+    auto textBuffer = ftContext->getCurrentBuffer();
+    
+    if (!textBuffer) {
+        return;
+    }
+    
+    ftContext->setFont(m_fontName, m_fontSize * m_pixelScale);
+    
+    if (m_sdf) {
+        float blurSpread = 2.5;
+        ftContext->setSignedDistanceField(blurSpread);
+    }
+    
+    if (_layer == "pois") {
+        for (auto prop : _props.stringProps) {
+            if (prop.first == "name") {
+                auto label = labelContainer->addLabel(FontStyle::processedTile->getID(), m_name, { glm::vec2(_point), glm::vec2(_point), 1.0f }, prop.second);
+                
+                label->rasterize();
+            }
+        }
+    }
+    
+    ftContext->clearState();
+    
+    if (textBuffer->getVertices(&vertData, &nVerts)) {
+        _mesh.addVertices((GLbyte*)vertData.data(), nVerts);
+    }
 
 }
 
@@ -52,17 +84,13 @@ void FontStyle::buildLine(Line& _line, std::string& _layer, Properties& _props, 
         ftContext->setSignedDistanceField(blurSpread);
     }
 
-    if (_layer.compare("roads") == 0) {
+    if (_layer == "roads") {
         for (auto prop : _props.stringProps) {
-            if (prop.first.compare("name") == 0 && _line.size() == 2) { // don't treat polylines
+            if (prop.first.compare("name") == 0 && _line.size() <= 2) { // don't treat polylines
 
                 glm::vec2 p1 = glm::vec2(_line[0]);
                 glm::vec2 p2 = glm::vec2(_line[1]);
                 glm::vec2 p1p2 = p1 - p2;
-
-                if(glm::length(p1p2) < 0.5) { // some random label discard for now
-                    return;
-                }
 
                 auto label = labelContainer->addLabel(FontStyle::processedTile->getID(), m_name, { p1, p2, 1.0f }, prop.second);
 

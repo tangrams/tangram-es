@@ -69,7 +69,11 @@ namespace Tangram {
             m_labelContainer->setFontContext(m_ftContext);
 
             std::unique_ptr<Style> fontStyle(new FontStyle("Roboto-Regular", "FontStyle", 14.0f, true));
-            fontStyle->addLayers({"roads"});
+            fontStyle->addLayers({
+                "buildings",
+                "roads",
+                "pois"
+            });
             m_scene->addStyle(std::move(fontStyle));
             
             std::unique_ptr<DebugStyle> debugStyle(new DebugStyle("Debug"));
@@ -145,7 +149,7 @@ namespace Tangram {
 
             m_tileManager->updateTileSet();
 
-            if (m_view->changedOnLastUpdate()) {
+            //if (m_view->changedOnLastUpdate()) {
 
                 for (const auto& style : m_scene->getStyles()) {
 
@@ -154,7 +158,7 @@ namespace Tangram {
                         tile->update(_dt, *style, *m_view);
                     }
                 }
-            }
+            //}
         }
         
         if(m_scene) {
@@ -185,7 +189,6 @@ namespace Tangram {
         }
 
         while (Error::hadGlError("Tangram::render()")) {}
-
     }
 
     void setPixelScale(float _pixelsPerPoint) {

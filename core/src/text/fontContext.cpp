@@ -125,7 +125,6 @@ bool errorCallback(void* _userPtr, fsuint buffer, GLFONSError error) {
 
     switch (error) {
         case GLFONSError::ID_OVERFLOW: {
-            logMsg("[FontStyle] FontError : ID_OVERFLOW in text buffer %d\n", buffer);
             auto textBuffer = fontContext->m_currentBuffer.lock();
 
             if (textBuffer) {

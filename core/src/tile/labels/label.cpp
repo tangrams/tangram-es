@@ -1,4 +1,5 @@
 #include "label.h"
+#include "labelContainer.h"
 
 Label::Label(LabelTransform _transform, std::string _text, std::shared_ptr<TextBuffer> _buffer) :
     m_transform(_transform),
@@ -25,17 +26,23 @@ void Label::updateTransform(const LabelTransform& _transform, const glm::mat4& _
     m_outOfScreen = false;
 
     float alpha = m_transform.m_alpha;
+    glm::vec2 screenPosition;
+    float rot = 0;
+    
+    if (m_transform.m_modelPosition1 != m_transform.m_modelPosition2) {
+        glm::vec2 p1 = worldToScreenSpace(_mvp, glm::vec4(m_transform.m_modelPosition1, 0.0, 1.0), _screenSize);
+        glm::vec2 p2 = worldToScreenSpace(_mvp, glm::vec4(m_transform.m_modelPosition2, 0.0, 1.0), _screenSize);
 
-    glm::vec2 p1 = worldToScreenSpace(_mvp, glm::vec4(m_transform.m_modelPosition1, 0.0, 1.0), _screenSize);
-    glm::vec2 p2 = worldToScreenSpace(_mvp, glm::vec4(m_transform.m_modelPosition2, 0.0, 1.0), _screenSize);
+        rot = angleBetweenPoints(p1, p2) + M_PI_2;
 
-    float rot = angleBetweenPoints(p1, p2) + M_PI_2;
-
-    if (rot > M_PI_2 || rot < -M_PI_2) { // un-readable labels
-        rot += M_PI;
+        if (rot > M_PI_2 || rot < -M_PI_2) { // un-readable labels
+            rot += M_PI;
+        }
+        
+        screenPosition = (p1 + p2) / 2.0f;
+    } else {
+        screenPosition = worldToScreenSpace(_mvp, glm::vec4(m_transform.m_modelPosition1, 0.0, 1.0), _screenSize);
     }
-
-    glm::vec2 screenPosition = (p1 + p2) / 2.0f;
 
     // don't display out of screen labels, and out of screen translations or not yet implemented in fstash
     
@@ -49,10 +56,14 @@ void Label::updateTransform(const LabelTransform& _transform, const glm::mat4& _
     if (m_outOfScreen)
         return;
     
-    glm::vec2 center = (glm::vec2(m_bbox.x, m_bbox.y) + glm::vec2(m_bbox.z, m_bbox.w)) * 0.5f;
-    center += screenPosition;
+    glm::vec2 t = glm::vec2(cos(rot), sin(rot));
+    glm::vec2 tperp = glm::vec2(-t.y, t.x);
     
-    m_obb = isect2d::OBB(center.x, center.y, rot, m_width, m_height);
+    screenPosition = screenPosition + t * (m_width / 2);
+    screenPosition = screenPosition - tperp * (m_height / 8);
+    
+    m_obb = isect2d::OBB(screenPosition.x, screenPosition.y, rot, m_width, m_height);
+    
     m_aabb = m_obb.getExtent();
 }
 

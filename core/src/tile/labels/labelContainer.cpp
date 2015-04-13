@@ -47,12 +47,12 @@ std::set<std::pair<std::shared_ptr<Label>, std::shared_ptr<Label>>> LabelContain
         for (auto& tileLabelsPair : m_labels[styleName]) {
             auto& labels = tileLabelsPair.second;
             for(auto& label : labels) {
-                if (label->isOutOfScreen()) {
+                if (label->isOutOfScreen() || label->getTransform().m_alpha == 0) {
                     continue;
                 }
                 
                 isect2d::AABB aabb = label->getAABB();
-                aabb.m_userData = &label;
+                aabb.m_userData = (void*) &label;
                 aabbs.push_back(aabb);
             }
         }
