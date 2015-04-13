@@ -47,7 +47,7 @@ std::set<std::pair<std::shared_ptr<Label>, std::shared_ptr<Label>>> LabelContain
         for (auto& tileLabelsPair : m_labels[styleName]) {
             auto& labels = tileLabelsPair.second;
             for(auto& label : labels) {
-                if (label->isOutOfScreen() || label->getTransform().m_alpha == 0) {
+                if (!label->isVisible()) {
                     continue;
                 }
                 

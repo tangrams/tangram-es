@@ -51,7 +51,7 @@ void FontStyle::buildPoint(Point& _point, std::string& _layer, Properties& _prop
     if (_layer == "pois") {
         for (auto prop : _props.stringProps) {
             if (prop.first == "name") {
-                auto label = labelContainer->addLabel(FontStyle::processedTile->getID(), m_name, { glm::vec2(_point), glm::vec2(_point), 1.0f }, prop.second);
+                auto label = labelContainer->addLabel(FontStyle::processedTile->getID(), m_name, { glm::vec2(_point), glm::vec2(_point) }, prop.second);
                 
                 label->rasterize();
             }
@@ -92,7 +92,7 @@ void FontStyle::buildLine(Line& _line, std::string& _layer, Properties& _props, 
                 glm::vec2 p2 = glm::vec2(_line[1]);
                 glm::vec2 p1p2 = p1 - p2;
 
-                auto label = labelContainer->addLabel(FontStyle::processedTile->getID(), m_name, { p1, p2, 1.0f }, prop.second);
+                auto label = labelContainer->addLabel(FontStyle::processedTile->getID(), m_name, { p1, p2 }, prop.second);
 
                 label->rasterize();
             }
