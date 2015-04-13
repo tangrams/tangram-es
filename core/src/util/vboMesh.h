@@ -5,6 +5,9 @@
 
 #include "gl.h"
 #include "vertexLayout.h"
+#include <cstring>
+
+#define MAX_INDEX_VALUE 65535
 
 /*
  * VboMesh - Drawable collection of geometry contained in a vertex buffer and (optionally) an index buffer
@@ -36,32 +39,15 @@ public:
      */
     virtual ~VboMesh();
 
-    /*
-     * Adds a single vertex to the mesh; _vertex must be a pointer to the beginning of a vertex structured
-     * according to the VertexLayout associated with this mesh
-     */
-    void addVertex(GLbyte* _vertex);
+    int numVertices() const {
+        return m_nVertices;
+    }
 
-    /*
-     * Adds _nVertices vertices to the mesh; _vertices must be a pointer to the beginning of a contiguous
-     * block of _nVertices vertices structured according to the VertexLayout associated with this mesh
-     */
-    void addVertices(GLbyte* _vertices, int _nVertices);
+    int numIndices() const {
+        return m_nIndices;
+    }
 
-    int numVertices() const;
-
-    /*
-     * Adds a single index to the mesh; indices are unsigned shorts
-     */
-    void addIndex(int* _index);
-
-    /*
-     * Adds _nIndices indices to the mesh; _indices must be a pointer to the beginning of a contiguous
-     * block of _nIndices unsigned short indices
-     */
-    void addIndices(int* _indices, int _nIndices);
-
-    int numIndices() const;
+    virtual void compileVertexBuffer() = 0;
 
     /*
      * Copies all added vertices and indices into OpenGL buffer objects; After geometry is uploaded,
@@ -81,27 +67,85 @@ public:
     
     static void invalidateAllVBOs();
 
-private:
-    
+protected:
+
     static int s_validGeneration; // Incremented when the GL context is invalidated
-    int m_generation;
-    
-    std::unique_ptr<VboMesh> m_backupMesh;
-    
+    int m_generation; // Generation in which this mesh's GL handles were created
+
+    // Used in draw for legth and offsets: sumIndices, sumVertices
+    // needs to be set by compileVertexBuffers()
+    std::vector<std::pair<uint32_t, uint32_t>> m_vertexOffsets;
+
     std::shared_ptr<VertexLayout> m_vertexLayout;
-    
-    std::vector<GLbyte> m_vertexData; // Raw interleaved vertex data in the format specified by the vertex layout
+
     int m_nVertices;
     GLuint m_glVertexBuffer;
+    // Compiled vertices for upload
+    std::vector<GLbyte> m_glVertexData;
 
-    std::vector<GLushort> m_indices;
     int m_nIndices;
     GLuint m_glIndexBuffer;
+    // Compiled  indices for upload
+    std::vector<GLushort> m_glIndexData;
 
     GLenum m_drawMode;
 
     bool m_isUploaded;
+    bool m_isCompiled;
     
     void checkValidity();
 
+    template <typename T>
+    void compile(std::vector<std::vector<T>> vertices,
+                 std::vector<std::vector<int>> indices,
+                 int divider = 1) {
+
+        int vertexOffset = 0, indexOffset = 0;
+
+        // Buffer positions: vertex byte and index short
+        int vPos = 0, iPos = 0;
+
+        int stride = m_vertexLayout->getStride();
+        m_glVertexData.resize(stride * m_nVertices);
+        GLbyte* vBuffer = m_glVertexData.data();
+
+        GLushort* iBuffer = nullptr;
+        bool useIndices = m_nIndices > 0;
+        if (useIndices) {
+            m_glIndexData.resize(m_nIndices);
+            iBuffer = m_glIndexData.data();
+        }
+
+        for (size_t i = 0; i < vertices.size(); i++) {
+            auto curVertices = vertices[i];
+            size_t nVertices = curVertices.size() / divider;
+            int nBytes = nVertices * stride;
+
+            std::memcpy(vBuffer + vPos, (GLbyte*)curVertices.data(), nBytes);
+            vPos += nBytes;
+
+            if (useIndices) {
+                if (vertexOffset + nVertices > MAX_INDEX_VALUE) {
+                    logMsg("NOTICE: Big Mesh %d\n", vertexOffset + nVertices);
+
+                    m_vertexOffsets.emplace_back(indexOffset, vertexOffset);
+                    vertexOffset = 0;
+                    indexOffset = 0;
+                }
+
+                for (int idx : indices[i]) {
+                    iBuffer[iPos++] = idx + vertexOffset;
+                }
+                indexOffset += indices[i].size();
+
+                indices[i].clear();
+            }
+            vertexOffset += nVertices;
+            curVertices.clear();
+        }
+
+        m_vertexOffsets.emplace_back(indexOffset, vertexOffset);
+
+        m_isCompiled = true;
+    }
 };

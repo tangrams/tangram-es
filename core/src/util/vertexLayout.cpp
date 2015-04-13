@@ -40,7 +40,7 @@ VertexLayout::~VertexLayout() {
 
 }
 
-void VertexLayout::enable(const std::shared_ptr<ShaderProgram> _program) {
+void VertexLayout::enable(const std::shared_ptr<ShaderProgram> _program, size_t byteOffset) {
 
     GLuint glProgram = _program->getGlProgram();
 
@@ -51,7 +51,8 @@ void VertexLayout::enable(const std::shared_ptr<ShaderProgram> _program) {
 
         if (location != -1) {
             glEnableVertexAttribArray(location);
-            glVertexAttribPointer(location, attrib.size, attrib.type, attrib.normalized, m_stride, attrib.offset);
+            glVertexAttribPointer(location, attrib.size, attrib.type, attrib.normalized, m_stride,
+                                  ((unsigned char*) attrib.offset) + byteOffset);
             s_enabledAttribs[location] = glProgram; // Track currently enabled attribs by the program to which they are bound
         }
 
