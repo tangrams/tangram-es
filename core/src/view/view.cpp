@@ -223,71 +223,105 @@ void View::updateMatrices() {
     
 }
 
-void View::updateTiles() {
+// Triangle rasterization adapted from Polymaps: https://github.com/simplegeo/polymaps/blob/master/src/Layer.js#L333-L383
+
+struct edge { // An edge between two points; oriented such that y is non-decreasing
+    double x0 = 0, y0 = 0;
+    double x1 = 0, y1 = 0;
+    double dx = 0, dy = 0;
     
-    /* To extend this tile updating step to account for an arbitrary view frustrum, we'll take advantage of the
-     * fact that this process is essentially rasterization; the projection of the view frustrum is the geometry
-     * and the tiles are our raster grid. Thus, we'll approach the problem by treating the projection of the view
-     * frustrum onto the tile plane (the view trapezoid) as two triangles, then rasterizing those triangles into tiles.
-     * 
-     * Implementation steps:
-     * 1. Represent the existing view trapezoid as two triangles and rasterize those into a set of tiles that should
-     *    match the existing visible tile set.
-     * 2. Calculate the view trapezoid from the view frustrum, use the trapezoid to form the two triangles and then
-     *    rasterize those into tiles which should fully cover the visible space. 
-     */
+    edge(glm::dvec2 _a, glm::dvec2 _b) {
+        if (_a.y > _b.y) { std::swap(_a, _b); }
+        x0 = _a.x;
+        y0 = _a.y;
+        x1 = _b.x;
+        y1 = _b.y;
+        dx = x1 - x0;
+        dy = y1 - y0;
+    }
+};
+
+static void scanLine(int _x0, int _x1, int _y, int _z, std::set<TileID>& _tiles) {
+    
+    for (int x = _x0; x < _x1; x++) {
+        _tiles.emplace(x, _y, _z);
+    }
+    
+}
+
+static void scanSpan(edge _e0, edge _e1, int _yMin, int _yMax, int _z, std::set<TileID>& _tiles) {
+    
+    // _e1 has a shorter y-span, so we'll use it to limit our y coverage
+    int y0 = fmax(_yMin, floor(_e1.y0));
+    int y1 = fmin(_yMax, ceil(_e1.y1));
+    
+    // sort edges by x-coordinate
+    if (_e0.x0 == _e1.x0 && _e0.y0 == _e1.y0) {
+        if (_e0.x0 + _e1.dy / _e0.dy * _e0.dx < _e1.x1) { std::swap(_e0, _e1); }
+    } else {
+        if (_e0.x1 - _e1.dy / _e0.dy * _e0.dx < _e1.x0) { std::swap(_e0, _e1); }
+    }
+    
+    // scan lines!
+    double m0 = _e0.dx / _e0.dy;
+    double m1 = _e1.dx / _e1.dy;
+    double d0 = _e0.dx > 0 ? 1.0 : 0.0;
+    double d1 = _e1.dx < 0 ? 1.0 : 0.0;
+    for (int y = y0; y < y1; y++) {
+        double x0 = m0 * fmax(0.0, fmin(_e0.dy, y + d0 - _e0.y0)) + _e0.x0;
+        double x1 = m1 * fmax(0.0, fmin(_e1.dy, y + d1 - _e1.y0)) + _e1.x0;
+        scanLine(floor(x1), ceil(x0), y, _z, _tiles);
+    }
+    
+}
+
+static void scanTriangle(glm::dvec2& _a, glm::dvec2& _b, glm::dvec2& _c, int _min, int _max, int _z, std::set<TileID>& _tiles) {
+    
+    edge ab = edge(_a, _b);
+    edge bc = edge(_b, _c);
+    edge ca = edge(_c, _a);
+    
+    // place edge with greatest y distance in ca
+    if (ab.dy > ca.dy) { std::swap(ab, ca); }
+    if (bc.dy > ca.dy) { std::swap(bc, ca); }
+    
+    // scan span! scan span!
+    if (ab.dy > 0) { scanSpan(ca, ab, _min, _max, _z, _tiles); }
+    if (bc.dy > 0) { scanSpan(ca, bc, _min, _max, _z, _tiles); }
+    
+}
+
+void View::updateTiles() {
     
     m_visibleTiles.clear();
     
-    float tileSize = 2 * MapProjection::HALF_CIRCUMFERENCE * pow(2, -(int)m_zoom);
-    float invTileSize = 1.0 / tileSize;
+    // Bounds of view trapezoid in world space (i.e. view frustum projected onto z = 0 plane)
+    glm::vec2 viewBL = { 0.f, m_vpHeight };       // bottom left
+    glm::vec2 viewBR = { m_vpWidth, m_vpHeight }; // bottom right
+    glm::vec2 viewTR = { m_vpWidth, 0.f };        // top right
+    glm::vec2 viewTL = { 0.f, 0.f };              // top left
     
-    // Find bounds of view frustum in world space (i.e. project view frustum onto z = 0 plane)
-    glm::vec2 viewBottomLeft = { 0.f, 0.f };
-    glm::vec2 viewBottomRight = { m_vpWidth, 0.f };
-    glm::vec2 viewTopRight = { m_vpWidth, m_vpHeight };
-    glm::vec2 viewTopLeft = { 0.f, m_vpHeight };
-    screenToGroundPlane(viewBottomLeft.x, viewBottomLeft.y);
-    screenToGroundPlane(viewBottomRight.x, viewBottomRight.y);
-    screenToGroundPlane(viewTopRight.x, viewTopRight.y);
-    screenToGroundPlane(viewTopLeft.x, viewTopLeft.y);
+    screenToGroundPlane(viewBL.x, viewBL.y);
+    screenToGroundPlane(viewBR.x, viewBR.y);
+    screenToGroundPlane(viewTR.x, viewTR.y);
+    screenToGroundPlane(viewTL.x, viewTL.y);
     
-    // Find axis-aligned bounding box of projected frustum (in coordinates relative to camera position)
-    float aabbLeft = fminf(fminf(fminf(viewBottomLeft.x, viewBottomRight.x), viewTopLeft.x), viewTopRight.x);
-    float aabbRight = fmaxf(fmaxf(fmaxf(viewBottomLeft.x, viewBottomRight.x), viewTopLeft.x), viewTopRight.x);
-    float aabbBottom = fminf(fminf(fminf(viewBottomLeft.y, viewBottomRight.y), viewTopLeft.y), viewTopRight.y);
-    float aabbTop = fmaxf(fmaxf(fmaxf(viewBottomLeft.y, viewBottomRight.y), viewTopLeft.y), viewTopRight.y);
+    // Transformation from world space to tile space
+    double hc = MapProjection::HALF_CIRCUMFERENCE;
+    double invTileSize = double(1 << int(m_zoom)) / (hc * 2);
+    glm::dvec2 tileSpaceOrigin(-hc, hc);
+    glm::dvec2 tileSpaceAxes(invTileSize, -invTileSize);
     
-    // Find bounds of viewable area in tile space
-    float tileLeftEdge = m_pos.x + aabbLeft + MapProjection::HALF_CIRCUMFERENCE;
-    float tileRightEdge = m_pos.x + aabbRight + MapProjection::HALF_CIRCUMFERENCE;
-    float tileBottomEdge = -m_pos.y - aabbTop + MapProjection::HALF_CIRCUMFERENCE;
-    float tileTopEdge = -m_pos.y - aabbBottom + MapProjection::HALF_CIRCUMFERENCE;
+    // Bounds of view trapezoid in tile space
+    glm::dvec2 a = (glm::dvec2(viewBL.x + m_pos.x, viewBL.y + m_pos.y) - tileSpaceOrigin) * tileSpaceAxes;
+    glm::dvec2 b = (glm::dvec2(viewBR.x + m_pos.x, viewBR.y + m_pos.y) - tileSpaceOrigin) * tileSpaceAxes;
+    glm::dvec2 c = (glm::dvec2(viewTR.x + m_pos.x, viewTR.y + m_pos.y) - tileSpaceOrigin) * tileSpaceAxes;
+    glm::dvec2 d = (glm::dvec2(viewTL.x + m_pos.x, viewTL.y + m_pos.y) - tileSpaceOrigin) * tileSpaceAxes;
     
-    int tileX = (int) fmax(0, tileLeftEdge * invTileSize);
-    int tileY = (int) fmax(0, tileBottomEdge * invTileSize);
-    
-    float x = tileX * tileSize;
-    float y = tileY * tileSize;
-    
+    // Rasterize view trapezoid into tiles
     int maxTileIndex = 1 << int(m_zoom);
+    scanTriangle(a, b, c, 0, maxTileIndex, int(m_zoom), m_visibleTiles);
+    scanTriangle(c, d, a, 0, maxTileIndex, int(m_zoom), m_visibleTiles);
     
-    while (x < tileRightEdge && tileX < maxTileIndex) {
-        
-        while (y < tileTopEdge && tileY < maxTileIndex) {
-            
-            m_visibleTiles.insert(TileID(tileX, tileY, m_zoom));
-
-            tileY++;
-            y += tileSize;
-            
-        }
-        
-        tileY = (int) fmax(0, tileBottomEdge * invTileSize);
-        y = tileY * tileSize;
-        
-        tileX++;
-        x += tileSize;
-    }
 
 }

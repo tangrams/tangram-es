@@ -137,6 +137,12 @@ int main(void) {
     Tangram::initialize();
     Tangram::resize(width, height);
 
+    /* Work-around for a bug in GLFW on retina displays */
+    int fbWidth = 0, fbHeight = 0;
+    glfwGetFramebufferSize(window, &fbWidth, &fbHeight);
+    glViewport(0, 0, fbWidth, fbHeight);
+
+    /* Set input callbacks */
     glfwSetWindowSizeCallback(window, window_size_callback);
     glfwSetMouseButtonCallback(window, mouse_button_callback);
     glfwSetCursorPosCallback(window, cursor_pos_callback);
