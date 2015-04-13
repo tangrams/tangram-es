@@ -19,7 +19,7 @@ protected:
     virtual void finishDataProcessing(MapTile& _tile) const override;
 
     virtual VboMesh* newMesh() const override {
-      return new RawVboMesh(m_vertexLayout, m_drawMode);
+        return new RawVboMesh(m_vertexLayout, m_drawMode);
     };
 
 public:

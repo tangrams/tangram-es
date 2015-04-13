@@ -4,7 +4,9 @@
 
 template<class T>
 class TypedMesh : public VboMesh {
-   public:
+
+public:
+    
     TypedMesh(std::shared_ptr<VertexLayout> _vertexLayout, GLenum _drawMode)
         : VboMesh(_vertexLayout, _drawMode){};
 
@@ -21,7 +23,9 @@ class TypedMesh : public VboMesh {
         compile(vertices, indices);
     }
 
- protected:
+protected:
+    
     std::vector<std::vector<T>> vertices;
     std::vector<std::vector<int>> indices;
+    
 };

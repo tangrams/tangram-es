@@ -6,7 +6,7 @@
 int VboMesh::s_validGeneration = 0;
 
 VboMesh::VboMesh(std::shared_ptr<VertexLayout> _vertexLayout, GLenum _drawMode)
-  : m_vertexLayout(_vertexLayout) {
+    : m_vertexLayout(_vertexLayout) {
 
     m_glVertexBuffer = 0;
     m_glIndexBuffer = 0;
@@ -57,8 +57,9 @@ void VboMesh::setDrawMode(GLenum _drawMode) {
 
 void VboMesh::upload() {
     // Generate vertex buffer, if needed
-    if (m_glVertexBuffer == 0)
-      glGenBuffers(1, &m_glVertexBuffer);
+    if (m_glVertexBuffer == 0) {
+        glGenBuffers(1, &m_glVertexBuffer);
+    }
 
     // TODO check if compiled?
     // Buffer vertex data
@@ -68,8 +69,10 @@ void VboMesh::upload() {
     glBufferData(GL_ARRAY_BUFFER, vertexBytes, m_glVertexData.data(), GL_STATIC_DRAW);
 
     if (!m_glIndexData.empty()) {
-        if (m_glIndexBuffer == 0)
-          glGenBuffers(1, &m_glIndexBuffer);
+        
+        if (m_glIndexBuffer == 0) {
+            glGenBuffers(1, &m_glIndexBuffer);
+        }
 
         // Buffer element index data
         glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, m_glIndexBuffer);
@@ -118,25 +121,24 @@ void VboMesh::draw(const std::shared_ptr<ShaderProgram> _shader) {
     size_t vertexOffset = 0;
 
     for (auto& o : m_vertexOffsets) {
-      uint32_t nIndices = o.first;
-      uint32_t nVertices = o.second;
+        uint32_t nIndices = o.first;
+        uint32_t nVertices = o.second;
 
-      size_t byteOffset = vertexOffset * m_vertexLayout->getStride();
+        size_t byteOffset = vertexOffset * m_vertexLayout->getStride();
 
-      // Enable vertex attribs via vertex layout object
-      m_vertexLayout->enable(_shader, byteOffset);
+        // Enable vertex attribs via vertex layout object
+        m_vertexLayout->enable(_shader, byteOffset);
 
-      // Draw as elements or arrays
-      if (nIndices > 0) {
-        glDrawElements(m_drawMode, nIndices, GL_UNSIGNED_SHORT,
-                       (void*)(indiceOffset * sizeof(GLushort)));
+        // Draw as elements or arrays
+        if (nIndices > 0) {
+            glDrawElements(m_drawMode, nIndices, GL_UNSIGNED_SHORT,
+                           (void*)(indiceOffset * sizeof(GLushort)));
+        } else if (nVertices > 0) {
+            glDrawArrays(m_drawMode, 0, nVertices);
+        }
 
-      } else if (nVertices > 0) {
-        glDrawArrays(m_drawMode, 0, nVertices);
-      }
-
-      vertexOffset += nVertices;
-      indiceOffset += nIndices;
+        vertexOffset += nVertices;
+        indiceOffset += nIndices;
     }
 }
 

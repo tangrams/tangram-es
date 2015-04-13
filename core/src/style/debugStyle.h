@@ -23,7 +23,7 @@ protected:
     virtual void addData(TileData& _data, MapTile& _tile, const MapProjection& _mapProjection) const override;
     
     virtual VboMesh* newMesh() const override {
-      return nullptr;
+        return nullptr;
     };
 
 public:

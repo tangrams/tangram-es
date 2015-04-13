@@ -136,6 +136,6 @@ void PolygonStyle::buildPolygon(Polygon& _polygon, std::string& _layer, Properti
     }
     */
     
-     auto& mesh = static_cast<PolygonStyle::Mesh&>(_mesh);
-     mesh.addVertices(std::move(vertices),std::move(indices));
+    auto& mesh = static_cast<PolygonStyle::Mesh&>(_mesh);
+    mesh.addVertices(std::move(vertices), std::move(indices));
 }

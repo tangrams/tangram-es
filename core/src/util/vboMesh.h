@@ -67,12 +67,10 @@ public:
     
     static void invalidateAllVBOs();
 
- protected:
-
-    //typedef std::pair<GLushort*, GLbyte*> ByteBuffers;
+protected:
 
     static int s_validGeneration; // Incremented when the GL context is invalidated
-    int m_generation;
+    int m_generation; // Generation in which this mesh's GL handles were created
 
     // Used in draw for legth and offsets: sumIndices, sumVertices
     // needs to be set by compileVertexBuffers()
@@ -102,8 +100,7 @@ public:
                  std::vector<std::vector<int>> indices,
                  int divider = 1) {
 
-        int vertexOffset = 0;
-        int indiceOffset = 0;
+        int vertexOffset = 0, indexOffset = 0;
 
         // Buffer positions: vertex byte and index short
         int vPos = 0, iPos = 0;
@@ -115,8 +112,8 @@ public:
         GLushort* iBuffer = nullptr;
         bool useIndices = m_nIndices > 0;
         if (useIndices) {
-          m_glIndexData.resize(m_nIndices);
-          iBuffer = m_glIndexData.data();
+            m_glIndexData.resize(m_nIndices);
+            iBuffer = m_glIndexData.data();
         }
 
         for (size_t i = 0; i < vertices.size(); i++) {
@@ -129,18 +126,17 @@ public:
 
             if (useIndices) {
                 if (vertexOffset + nVertices > MAX_INDEX_VALUE) {
-                    logMsg("NOTICE: Big Mesh %d\n",
-                           vertexOffset + nVertices);
+                    logMsg("NOTICE: Big Mesh %d\n", vertexOffset + nVertices);
 
-                    m_vertexOffsets.emplace_back(indiceOffset, vertexOffset);
+                    m_vertexOffsets.emplace_back(indexOffset, vertexOffset);
                     vertexOffset = 0;
-                    indiceOffset = 0;
+                    indexOffset = 0;
                 }
 
-                for (int idx : indices[i])
+                for (int idx : indices[i]) {
                     iBuffer[iPos++] = idx + vertexOffset;
-
-                indiceOffset += indices[i].size();
+                }
+                indexOffset += indices[i].size();
 
                 indices[i].clear();
             }
@@ -148,7 +144,7 @@ public:
             curVertices.clear();
         }
 
-        m_vertexOffsets.emplace_back(indiceOffset, vertexOffset);
+        m_vertexOffsets.emplace_back(indexOffset, vertexOffset);
 
         m_isCompiled = true;
     }

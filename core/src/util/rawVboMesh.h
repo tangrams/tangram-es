@@ -2,9 +2,10 @@
 
 class RawVboMesh : public VboMesh {
 
- public:
-  RawVboMesh(std::shared_ptr<VertexLayout> _vertexLayout, GLenum _drawMode = GL_TRIANGLES)
-    : VboMesh(_vertexLayout, _drawMode){}
+public:
+    
+    RawVboMesh(std::shared_ptr<VertexLayout> _vertexLayout, GLenum _drawMode = GL_TRIANGLES)
+        : VboMesh(_vertexLayout, _drawMode){}
 
     /*
      * Adds a single vertex to the mesh; _vertex must be a pointer to the beginning of a vertex structured
@@ -31,7 +32,8 @@ class RawVboMesh : public VboMesh {
 
     virtual void compileVertexBuffer() override;
 
-   protected:
+protected:
+    
     // Raw interleaved vertex data in the format specified by the vertex layout
     std::vector<std::vector<GLubyte>> m_vertices;
 

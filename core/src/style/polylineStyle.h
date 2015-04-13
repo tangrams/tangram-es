@@ -34,7 +34,7 @@ protected:
     typedef TypedMesh<PosNormEnormColVertex> Mesh;
     
     virtual VboMesh* newMesh() const override {
-      return new Mesh(m_vertexLayout, m_drawMode);
+        return new Mesh(m_vertexLayout, m_drawMode);
     };
 
 public:
