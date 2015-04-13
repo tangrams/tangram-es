@@ -74,11 +74,8 @@ void MapTile::update(float _dt, const Style& _style, const View& _view) {
         auto occlusions = labelContainer->getOcclusions();
         
         for (auto& pair : occlusions) {
-            auto l1 = pair.first;
-            auto l2 = pair.second;
-            
-            l1->setVisible(false);
-            l2->setVisible(false);
+            auto label = pair.first;
+            label->setVisible(false);
         }
         
         m_buffers[_style.getName()]->triggerTransformUpdate();

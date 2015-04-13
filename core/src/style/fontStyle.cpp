@@ -90,7 +90,6 @@ void FontStyle::buildLine(Line& _line, std::string& _layer, Properties& _props, 
 
                 glm::vec2 p1 = glm::vec2(_line[0]);
                 glm::vec2 p2 = glm::vec2(_line[1]);
-                glm::vec2 p1p2 = p1 - p2;
 
                 auto label = labelContainer->addLabel(FontStyle::processedTile->getID(), m_name, { p1, p2 }, prop.second);
 
