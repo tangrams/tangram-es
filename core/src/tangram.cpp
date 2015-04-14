@@ -15,11 +15,11 @@
 #include "style/polylineStyle.h"
 #include "style/fontStyle.h"
 #include "style/debugStyle.h"
+#include "style/spriteStyle.h"
 #include "scene/scene.h"
 #include "scene/lights.h"
 #include "util/error.h"
 #include "stl_util.hpp"
-#include "textureImage.h"
 
 namespace Tangram {
 
@@ -29,10 +29,6 @@ namespace Tangram {
     std::shared_ptr<LabelContainer> m_labelContainer;
     std::shared_ptr<FontContext> m_ftContext;
     std::shared_ptr<DebugStyle> m_debugStyle;
-
-    std::shared_ptr<RawVboMesh> m_textureMesh;
-    std::shared_ptr<Texture> m_texture;
-    std::shared_ptr<ShaderProgram> m_textureShader;
 
     static float g_time = 0.0;
     static unsigned long g_flags = 0;
@@ -86,6 +82,9 @@ namespace Tangram {
             directionalLight->setDiffuseColor({0.7, 0.7, 0.7, 1.0});
             directionalLight->setDirection({1.0, 1.0, -1.0});
             m_scene->addLight(directionalLight);
+            
+            std::unique_ptr<Style> spriteStyle(new SpriteStyle("Sprite"));
+            m_scene->addStyle(std::move(spriteStyle));
         }
 
         // Create a tileManager
@@ -102,36 +101,6 @@ namespace Tangram {
             // protobuf tile source
             std::unique_ptr<DataSource> dataSource(new ProtobufSource());
             m_tileManager->addDataSource(std::move(dataSource));
-        }
-
-        // test on texture loading
-        { 
-            std::string frag = stringFromResource("texture.fs");
-            std::string vert = stringFromResource("texture.vs");
-
-            m_textureShader = std::make_shared<ShaderProgram>();
-            m_textureShader->setSourceStrings(frag, vert);
-
-            m_texture = std::shared_ptr<Texture>(new TextureImage("mapzen-logo.png"));
-
-            float size = 0.2;
-            std::vector<float> textureMeshVerts = {
-                 size,  size, 0.0,  0.0,  0.0,
-                -size,  size, 0.0,  1.0,  0.0,
-                -size, -size, 0.0,  1.0,  1.0,
-                -size, -size, 0.0,  1.0,  1.0,
-                 size, -size, 0.0,  0.0,  1.0,
-                 size,  size, 0.0,  0.0,  0.0
-            };
-
-            std::shared_ptr<VertexLayout> layout(new VertexLayout({
-                {"a_position", 3, GL_FLOAT, false, 0},
-                {"a_uv", 2, GL_FLOAT, false, 0},
-            }));
-
-            m_textureMesh = std::make_shared<RawVboMesh>(layout, GL_TRIANGLES);
-            m_textureMesh->addVertices((GLbyte*)textureMeshVerts.data(), 6);
-            m_textureMesh->compileVertexBuffer();
         }
 
         // Set up openGL state
@@ -219,14 +188,6 @@ namespace Tangram {
             style->teardown();
         }
         
-        // test on texture loading
-        {
-            m_texture->bind();
-            m_textureShader->use();
-            m_textureShader->setUniformi("u_tex", m_texture->getTextureSlot());
-            m_textureMesh->draw(m_textureShader);
-        }
-
         while (Error::hadGlError("Tangram::render()")) {}
 
     }
