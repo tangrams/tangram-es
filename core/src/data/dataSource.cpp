@@ -75,25 +75,6 @@ bool NetworkDataSource::loadTileData(const TileID& _tileID, const int _dataSourc
     constructURL(_tileID, url);
 
     success = streamFromHttpASync(url, _tileID, _dataSourceID);
-    /*
-    std::stringstream rawData;
-
-    success = streamFromHttpSync(url, rawData);
-
-    if(rawData) {
-
-        // parse fetched data
-        std::shared_ptr<TileData> tileData = parse(_tile, rawData);
-        
-        // Lock our mutex so that we can safely write to the tile store
-        {
-            std::lock_guard<std::mutex> lock(m_mutex);
-            m_tileStore[_tile.getID()] = tileData;
-        }
-
-    } else {
-        success = false;
-    }*/
     
     return success;
 }
