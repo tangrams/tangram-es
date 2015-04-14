@@ -11,7 +11,7 @@
 
 @interface ViewController : GLKViewController <UIGestureRecognizerDelegate>
 
+@property bool continuous;
 - (void)renderOnce;
-- (void)setContinuous:(bool)c;
 
 @end

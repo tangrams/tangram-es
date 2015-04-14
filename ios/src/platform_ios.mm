@@ -32,6 +32,18 @@ void requestRender() {
     
 }
 
+void setContinuousRendering(bool _isContinuous) {
+    
+    [viewController setContinuous:_isContinuous];
+    
+}
+
+bool isContinuousRendering() {
+    
+    return [viewController continuous];
+    
+}
+
 NSString* resolveResourcePath(const char* _path) {
     
     NSString* resourcePath = [[[NSBundle mainBundle] resourcePath] stringByAppendingString:@"/"];

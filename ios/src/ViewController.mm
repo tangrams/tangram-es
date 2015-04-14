@@ -15,7 +15,6 @@
 @property (strong, nonatomic) EAGLContext *context;
 @property CGFloat pixelScale;
 @property bool renderRequested;
-@property bool isContinuous;
 
 - (void)setupGL;
 - (void)tearDownGL;
@@ -33,10 +32,10 @@
 {
     [super viewDidLoad];
     
-    self.pixelScale = [[UIScreen mainScreen] scale];
     self.context = [[EAGLContext alloc] initWithAPI:kEAGLRenderingAPIOpenGLES2];
+    self.pixelScale = [[UIScreen mainScreen] scale];
     self.renderRequested = true;
-    self.isContinuous = false;
+    self.continuous = false;
 
     if (!self.context) {
         NSLog(@"Failed to create ES context");
@@ -200,7 +199,7 @@
 
 - (void)renderOnce
 {
-    if (!self.isContinuous) {
+    if (!self.continuous) {
         self.renderRequested = true;
         self.paused = false;
     }
@@ -208,7 +207,7 @@
 
 - (void)setContinuous:(bool)c
 {
-    self.isContinuous = c;
+    _continuous = c;
     self.paused = !c;
 }
 
@@ -218,7 +217,7 @@
 {
     Tangram::update([self timeSinceLastUpdate]);
     
-    if (!self.isContinuous && !self.renderRequested) {
+    if (!self.continuous && !self.renderRequested) {
         self.paused = true;
     }
     self.renderRequested = false;
