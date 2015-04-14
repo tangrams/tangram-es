@@ -12,6 +12,7 @@ static JavaVM* jvm;
 static jobject tangramObj;
 static jmethodID requestRenderMethodID;
 static AAssetManager* assetManager;
+static bool s_isContinuousRendering = false;
 
 void jniInit(JNIEnv* _jniEnv, jobject _tangramInstance, jobject _assetManager) {
 
@@ -51,6 +52,33 @@ void requestRender() {
     if(isAttached) {
         jvm->DetachCurrentThread();
     }
+}
+
+void setContinuousRendering(bool _isContinuous) {
+
+    s_isContinuousRendering = _isContinuous;
+
+    JNIEnv *jniEnv;
+
+    bool isAttached = false;
+    int status = jvm->GetEnv((void**)&jniEnv, JNI_VERSION_1_6);
+    if(status == JNI_EDETACHED) {
+        status = jvm->AttachCurrentThread(&jniEnv, NULL);
+        isAttached = true;
+    }
+    jclass tangramClass = jniEnv->GetObjectClass(tangramObj);
+    requestRenderMethodID = jniEnv->GetMethodID(tangramClass, "setRenderMode", "(I)V");
+    jniEnv->CallVoidMethod(tangramObj, requestRenderMethodID, _isContinuous ? 1 : 0);
+    if(isAttached) {
+        jvm->DetachCurrentThread();
+    }
+
+}
+
+bool isContinuousRendering() {
+
+    return s_isContinuousRendering;
+
 }
 
 std::string stringFromResource(const char* _path) {
