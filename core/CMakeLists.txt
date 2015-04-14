@@ -10,6 +10,7 @@ set(DEPENDENCIES_DIR dependencies)
 set(SOURCE_DIR src)
 
 add_subdirectory("${DEPENDENCIES_DIR}/tess2")
+add_subdirectory("${DEPENDENCIES_DIR}/lodepng")
 
 file(GLOB_RECURSE FOUND_HEADERS "${SOURCE_DIR}/*.h")
 file(GLOB_RECURSE FOUND_SOURCES "${SOURCE_DIR}/*.cpp")
@@ -21,6 +22,7 @@ foreach(_headerFile ${FOUND_HEADERS})
 endforeach()
 set(CORE_INCLUDE_DIRS ${INCLUDE_DIRS} CACHE INTERNAL "core include directories" FORCE)
 list(APPEND INCLUDE_DIRS "${DEPENDENCIES_DIR}/tess2/libtess2/Include")
+list(APPEND INCLUDE_DIRS "${DEPENDENCIES_DIR}/lodepng/include")
 list(APPEND INCLUDE_DIRS "${INCLUDE_DIR}/glm")
 list(APPEND INCLUDE_DIRS "${INCLUDE_DIR}/fontstash-es/fontstash")
 list(REMOVE_DUPLICATES INCLUDE_DIRS)
@@ -29,6 +31,7 @@ include_directories(${INCLUDE_DIR} ${INCLUDE_DIRS})
 
 set(CORE_LIBRARIES_INCLUDE_DIRS 
     ${PROJECT_SOURCE_DIR}/${DEPENDENCIES_DIR}/tess2/libtess2/Include/
+    ${PROJECT_SOURCE_DIR}/${DEPENDENCIES_DIR}/lodepng/include/
     ${PROJECT_SOURCE_DIR}/${INCLUDE_DIR}/
     ${PROJECT_SOURCE_DIR}/${INCLUDE_DIR}/glm/
     ${PROJECT_SOURCE_DIR}/${INCLUDE_DIR}/catch/
@@ -45,7 +48,7 @@ if(NOT DEFINED CORE_LIB_NAME)
 endif()
 
 add_library(${CORE_LIB_NAME} ${CORE_LIB_TYPE} ${FOUND_SOURCES} ${FOUND_HEADERS})
-target_link_libraries(${CORE_LIB_NAME} libtess2 ${CORE_LIB_DEPS})
+target_link_libraries(${CORE_LIB_NAME} libtess2 lodepng ${CORE_LIB_DEPS})
 
 # make groups for xcode
 group_recursive_sources(src "src")
