@@ -1,5 +1,12 @@
 #pragma once
 
+#include <string>
+#include <sstream>
+#include <memory>
+#include <functional>
+
+#include "tileID.h"
+
 #ifdef PLATFORM_ANDROID
 struct _JNIEnv;
 typedef _JNIEnv JNIEnv;
@@ -8,13 +15,8 @@ typedef _jobject* jobject;
 void cacheJniEnv(JNIEnv* _jniEnv);
 void cacheTangramInstance(jobject _tangramInstance);
 void setAssetManager(jobject _assetManager);
+void networkDataBridge(std::string _rawData, int _tileIDx, int _tileIDy, int _tileIDz, int _dataSourceID);
 #endif
-
-#include <string>
-#include <sstream>
-#include <memory>
-
-#include "tileID.h"
 
 /* Print a formatted message to the console
  *
@@ -43,4 +45,6 @@ unsigned char* bytesFromResource(const char* _path, unsigned int* _size);
 bool streamFromHttpASync(const std::string& _url, const TileID& _tileID, const int _dataSourceID);
 
 void cancelNetworkRequest(const std::string& _url);
+
+void setNetworkRequestCallback(std::function<void(std::string, TileID, int)>&& _callback);
 

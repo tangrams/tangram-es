@@ -22,6 +22,8 @@ static jobject tangramInstance;
 static jmethodID networkRequestMID;
 static jmethodID cancelNetworkRequestMID;
 
+std::function<void(std::string, TileID, int)> networkCallback;
+
 void cacheJniEnv(JNIEnv* _jniEnv) {
     jniEnv = _jniEnv;
 }
@@ -129,6 +131,18 @@ void cancelNetworkRequest(const std::string& _url) {
 
     jstring jUrl = jniEnv->NewStringUTF(_url.c_str());
     jniEnv->CallVoidMethod(tangramInstance, cancelNetworkRequestMID, jUrl);
+
+}
+
+void setNetworkRequestCallback(std::function<void(std::string, TileID, int)>&& _callback) {
+
+    networkCallback = _callback;
+
+}
+
+void networkDataBridge(std::string _rawData, int _tileIDx, int _tileIDy, int _tileIDz, int _dataSourceID) {
+
+    networkCallback(_rawData, TileID(_tileIDx, _tileIDy, _tileIDz), _dataSourceID);
 
 }
 

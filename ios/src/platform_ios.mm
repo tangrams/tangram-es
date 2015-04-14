@@ -100,7 +100,11 @@ bool streamFromHttpASync(const std::string& _url, const TileID& _tileID, const i
 }
 
 void cancelNetworkRequest(const std::string& _url) {
+    //TODO
+}
 
+void setNetworkRequestCallback(std::function<void(std::string, TileID, int)>&& _callback) {
+    //TODO
 }
 
 #endif //PLATFORM_IOS

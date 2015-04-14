@@ -100,6 +100,12 @@ namespace Tangram {
             m_tileManager->addDataSource(std::move(dataSource));
         }
 
+        setNetworkRequestCallback([&](std::string _rawData, TileID _id, int _dataSourceID) {
+
+            m_tileManager->addToWorkerQueue(_rawData, _id, _dataSourceID);
+
+        });
+
         // Set up openGL state
         glDisable(GL_BLEND);
         glDisable(GL_STENCIL_TEST);

@@ -65,7 +65,7 @@ extern "C" {
         const char* byteCVal = (const char*)byteArrayStart;
         std::string rawData = std::string(byteCVal, dataLength);
         jniEnv->ReleaseByteArrayElements(jFetchedBytes, byteArrayStart, 0);
-        Tangram::networkDataBridge(rawData, tileIDx, tileIDy, tileIDz, dataSourceID);
+        networkDataBridge(rawData, tileIDx, tileIDy, tileIDz, dataSourceID);
     }
 
 }
