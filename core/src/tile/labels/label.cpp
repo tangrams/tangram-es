@@ -22,21 +22,34 @@ void Label::rasterize() {
     m_height = abs(m_bbox.w - m_bbox.y);
 }
 
-void Label::updateScreenPosition(const glm::mat4& _mvp, const glm::vec2& _screenSize) {
+void Label::updateBBoxes(glm::vec2 _screenPosition, float _rot) {
+    glm::vec2 t = glm::vec2(cos(_rot), sin(_rot));
+    glm::vec2 tperp = glm::vec2(-t.y, t.x);
+    
+    _screenPosition = _screenPosition + t * (m_width / 2);
+    _screenPosition = _screenPosition - tperp * (m_height / 8);
+    
+    m_obb = isect2d::OBB(_screenPosition.x, _screenPosition.y, _rot, m_width, m_height);
+    
+    m_aabb = m_obb.getExtent();
+}
+
+void Label::updateScreenPosition(const glm::mat4& _mvp, const glm::vec2& _screenSize, float _dt) {
     
     if (!m_visible) {
-        m_buffer->transformID(m_id, 0, 0, 0, 0);
+        m_buffer->transformID(m_id, 0, 0, 0, 0.0);
         return;
     }
     
     glm::vec2 screenPosition;
     float rot = 0;
     
-    if (m_transform.m_modelPosition1 != m_transform.m_modelPosition2) {
+    if (m_transform.m_modelPosition1 != m_transform.m_modelPosition2) { // label fitting to a line
         glm::vec2 p1 = worldToScreenSpace(_mvp, glm::vec4(m_transform.m_modelPosition1, 0.0, 1.0), _screenSize);
         glm::vec2 p2 = worldToScreenSpace(_mvp, glm::vec4(m_transform.m_modelPosition2, 0.0, 1.0), _screenSize);
         
         glm::vec2 p1p2 = p2 - p1;
+        glm::vec2 t = glm::normalize(-p1p2);
         
         float length = glm::length(p1p2);
         
@@ -54,8 +67,10 @@ void Label::updateScreenPosition(const glm::mat4& _mvp, const glm::vec2& _screen
         }
         
         screenPosition = (p1 + p2) / 2.0f;
-    } else {
+        screenPosition += t * (m_width / 2);
+    } else { // label sticking to a point
         screenPosition = worldToScreenSpace(_mvp, glm::vec4(m_transform.m_modelPosition1, 0.0, 1.0), _screenSize);
+        screenPosition.x -= m_width / 2;
     }
     
     // don't display out of screen labels, and out of screen translations or not yet implemented in fstash
@@ -68,14 +83,6 @@ void Label::updateScreenPosition(const glm::mat4& _mvp, const glm::vec2& _screen
     
     m_buffer->transformID(m_id, screenPosition.x, screenPosition.y, rot, m_alpha);
     
-    glm::vec2 t = glm::vec2(cos(rot), sin(rot));
-    glm::vec2 tperp = glm::vec2(-t.y, t.x);
-    
-    screenPosition = screenPosition + t * (m_width / 2);
-    screenPosition = screenPosition - tperp * (m_height / 8);
-    
-    m_obb = isect2d::OBB(screenPosition.x, screenPosition.y, rot, m_width, m_height);
-    
-    m_aabb = m_obb.getExtent();
+    updateBBoxes(screenPosition, rot);
 }
 

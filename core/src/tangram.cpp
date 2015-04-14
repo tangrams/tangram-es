@@ -72,7 +72,11 @@ namespace Tangram {
             fontStyle->addLayers({
                 "roads",
                 "pois",
-                "water"
+                "water",
+                "earth",
+                "landuse",
+                "water",
+                "administrative"
             });
             m_scene->addStyle(std::move(fontStyle));
             

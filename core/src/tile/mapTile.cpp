@@ -68,7 +68,7 @@ void MapTile::update(float _dt, const Style& _style, const View& _view) {
         ftContext->lock();
 
         for(auto label : labelContainer->getLabels(_style.getName(), getID())) {
-            label->updateScreenPosition(mvp, screenSize);
+            label->updateScreenPosition(mvp, screenSize, _dt);
         }
         
         auto occlusions = labelContainer->getOcclusions();

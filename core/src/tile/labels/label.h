@@ -40,7 +40,9 @@ public:
     
     void setAlpha(float _alpha) { m_alpha = _alpha; };
     
-    void updateScreenPosition(const glm::mat4& _mvp, const glm::vec2& _screenSize);
+    void updateScreenPosition(const glm::mat4& _mvp, const glm::vec2& _screenSize, float _dt);
+    
+    void updateBBoxes(glm::vec2 _screenPosition, float _rot);
 
 private:
 

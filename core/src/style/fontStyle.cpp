@@ -86,14 +86,16 @@ void FontStyle::buildLine(Line& _line, std::string& _layer, Properties& _props, 
 
     if (_layer == "roads") {
         for (auto prop : _props.stringProps) {
-            if (prop.first.compare("name") == 0 && _line.size() <= 2) { // don't treat polylines
+            if (prop.first.compare("name") == 0) {
+                
+                for (int i = 0; i < _line.size() - 1; ++i) {
+                    glm::vec2 p1 = glm::vec2(_line[i]);
+                    glm::vec2 p2 = glm::vec2(_line[i + 1]);
 
-                glm::vec2 p1 = glm::vec2(_line[0]);
-                glm::vec2 p2 = glm::vec2(_line[1]);
+                    auto label = labelContainer->addLabel(FontStyle::processedTile->getID(), m_name, { p1, p2 }, prop.second);
 
-                auto label = labelContainer->addLabel(FontStyle::processedTile->getID(), m_name, { p1, p2 }, prop.second);
-
-                label->rasterize();
+                    label->rasterize();
+                }
             }
         }
     }
@@ -106,7 +108,51 @@ void FontStyle::buildLine(Line& _line, std::string& _layer, Properties& _props, 
 }
 
 void FontStyle::buildPolygon(Polygon& _polygon, std::string& _layer, Properties& _props, VboMesh& _mesh) const {
+    
+    glm::vec3 centroid;
+    int n = 0;
+    
+    for (auto& l : _polygon) {
+        for (auto& p : l) {
+            centroid.x += p.x;
+            centroid.y += p.y;
+            n++;
+        }
+    }
+    
+    centroid /= n;
+    
+    std::vector<float> vertData;
+    int nVerts = 0;
+    auto labelContainer = LabelContainer::GetInstance();
+    auto ftContext = labelContainer->getFontContext();
+    auto textBuffer = ftContext->getCurrentBuffer();
+    
+    if (!textBuffer) {
+        return;
+    }
+    
+    ftContext->setFont(m_fontName, m_fontSize * m_pixelScale * 1.5);
+    
+    if (m_sdf) {
+        float blurSpread = 2.5;
+        ftContext->setSignedDistanceField(blurSpread);
+    }
 
+    if (_layer == "landuse" || _layer == "earth") {
+        for (auto prop : _props.stringProps) {
+            if (prop.first == "name") {
+                auto label = labelContainer->addLabel(FontStyle::processedTile->getID(), m_name, { glm::vec2(centroid), glm::vec2(centroid) }, prop.second);
+                label->rasterize();
+            }
+        }
+    }
+    
+    ftContext->clearState();
+    
+    if (textBuffer->getVertices(&vertData, &nVerts)) {
+        _mesh.addVertices((GLbyte*)vertData.data(), nVerts);
+    }
 }
 
 void FontStyle::prepareDataProcessing(MapTile& _tile) const {
