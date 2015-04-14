@@ -19,17 +19,18 @@ matrix:
           compiler: gcc
 
 before_install:
+    - sed -i 's/git@github.com:/https:\/\/github.com\//' .gitmodules
     - git submodule init && git submodule update
     - source ./travis/before_install.sh
 
 install: ulimit -c
 
-before_script: 
+before_script:
     # Set the core file limit to unlimited so a core file is generated upon crash
     - ulimit -c unlimited -S
 
 # build test project
-script: 
+script:
     - source ./travis/script_build_tests.sh
     - source ./travis/script_run_tests.sh
     - source ./travis/script_build.sh
