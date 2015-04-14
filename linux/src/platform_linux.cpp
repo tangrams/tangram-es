@@ -9,6 +9,8 @@
 #include "platform.h"
 #include "gl.h"
 
+static bool s_isContinuousRendering = false;
+
 void logMsg(const char* fmt, ...) {
     va_list args;
     va_start(args, fmt);
@@ -19,6 +21,18 @@ void logMsg(const char* fmt, ...) {
 void requestRender() {
     
     glfwPostEmptyEvent();
+    
+}
+
+void setContinuousRendering(bool _isContinuous) {
+    
+    s_isContinuousRendering = _isContinuous;
+    
+}
+
+bool isContinuousRendering() {
+    
+    return s_isContinuousRendering;
     
 }
 
