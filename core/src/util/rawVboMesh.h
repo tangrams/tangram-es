@@ -1,3 +1,5 @@
+#pragma once
+
 #include "vboMesh.h"
 
 class RawVboMesh : public VboMesh {
