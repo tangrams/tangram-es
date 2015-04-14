@@ -255,17 +255,18 @@ public class Tangram extends GLSurfaceView implements Renderer, OnScaleGestureLi
         Request request = new Request.Builder().tag(url).url(url).build();
 
         okClient.newCall(request).enqueue(new Callback() {
-            @Override public void onFailure(Request request, IOException e) {
+            @Override 
+            public void onFailure(Request request, IOException e) {
                 e.printStackTrace();
             }
 
-            @Override public void onResponse(Response response) throws IOException {
-                byte[] rawDataBytes;
+            @Override 
+            public void onResponse(Response response) throws IOException {
 
                 if(!response.isSuccessful()) throw new IOException("Unexpected code " + response);
 
                 BufferedSource src = response.body().source();
-                rawDataBytes = src.readByteArray();
+                byte[] rawDataBytes = src.readByteArray();
                 networkDataBridge(rawDataBytes, tileIDx, tileIDy, tileIDz, dataSourceID);
             }
         });
