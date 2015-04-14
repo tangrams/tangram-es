@@ -11,6 +11,7 @@
 static JavaVM* jvm;
 static jobject tangramObj;
 static jmethodID requestRenderMethodID;
+static jmethodID setRenderModeMethodID;
 static AAssetManager* assetManager;
 static bool s_isContinuousRendering = false;
 
@@ -24,6 +25,9 @@ void jniInit(JNIEnv* _jniEnv, jobject _tangramInstance, jobject _assetManager) {
 
     _jniEnv->GetJavaVM(&jvm);
     tangramObj = _jniEnv->NewGlobalRef(_tangramInstance);
+    jclass tangramClass = _jniEnv->GetObjectClass(tangramObj);
+    requestRenderMethodID = _jniEnv->GetMethodID(tangramClass, "requestRender", "()V");
+    setRenderModeMethodID = _jniEnv->GetMethodID(tangramClass, "setRenderMode", "(I)V");
     
 }
 
@@ -39,17 +43,14 @@ void logMsg(const char* fmt, ...) {
 void requestRender() {
     
     JNIEnv *jniEnv;
-
-    bool isAttached = false;
     int status = jvm->GetEnv((void**)&jniEnv, JNI_VERSION_1_6);
     if(status == JNI_EDETACHED) {
-        status = jvm->AttachCurrentThread(&jniEnv, NULL);
-        isAttached = true;
+        jvm->AttachCurrentThread(&jniEnv, NULL);
     }
-    jclass tangramClass = jniEnv->GetObjectClass(tangramObj);
-    requestRenderMethodID = jniEnv->GetMethodID(tangramClass, "requestRender", "()V");
+
     jniEnv->CallVoidMethod(tangramObj, requestRenderMethodID);
-    if(isAttached) {
+
+    if(status == JNI_EDETACHED) {
         jvm->DetachCurrentThread();
     }
 }
@@ -59,17 +60,14 @@ void setContinuousRendering(bool _isContinuous) {
     s_isContinuousRendering = _isContinuous;
 
     JNIEnv *jniEnv;
-
-    bool isAttached = false;
     int status = jvm->GetEnv((void**)&jniEnv, JNI_VERSION_1_6);
     if(status == JNI_EDETACHED) {
-        status = jvm->AttachCurrentThread(&jniEnv, NULL);
-        isAttached = true;
+        jvm->AttachCurrentThread(&jniEnv, NULL);
     }
-    jclass tangramClass = jniEnv->GetObjectClass(tangramObj);
-    requestRenderMethodID = jniEnv->GetMethodID(tangramClass, "setRenderMode", "(I)V");
+
     jniEnv->CallVoidMethod(tangramObj, requestRenderMethodID, _isContinuous ? 1 : 0);
-    if(isAttached) {
+
+    if(status == JNI_EDETACHED) {
         jvm->DetachCurrentThread();
     }
 
