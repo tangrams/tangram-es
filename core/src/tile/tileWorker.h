@@ -8,7 +8,8 @@
 #include "mapTile.h"
 
 struct WorkerData {
-    std::string rawTileData;
+    const char* rawTileData;
+    int dataSize;
     int dataSourceID;
     std::unique_ptr<TileID> tileID;
 
@@ -16,28 +17,22 @@ struct WorkerData {
         tileID.reset(new TileID(NOT_A_TILE));
     }
 
-    WorkerData(const std::string& _rawTileData, const TileID& _tileID, const int _dataSourceID) : 
-                                                                rawTileData(_rawTileData),
+    WorkerData(const char* _rawTileData, const int _dataSize, const TileID& _tileID, const int _dataSourceID) :
+                                                                rawTileData(_rawTileData), dataSize(_dataSize),
                                                                 dataSourceID(_dataSourceID) {
         tileID.reset(new TileID(_tileID));
     }
 
-    WorkerData(const WorkerData&& _other) {
+    WorkerData(const WorkerData&& _other) : rawTileData(_other.rawTileData) {
         tileID.reset(new TileID(*(_other.tileID)));
-        rawTileData = std::move(_other.rawTileData);
         dataSourceID = std::move(_other.dataSourceID);
-    }
-
-    WorkerData& operator=(WorkerData&& _other) {
-        tileID.reset(new TileID(*(_other.tileID)));
-        rawTileData = std::move(_other.rawTileData);
-        dataSourceID = std::move(_other.dataSourceID);
-        return *this;
+        dataSize = std::move(_other.dataSize);
     }
 
     bool operator==(const WorkerData& _rhs) const {
          return tileID == _rhs.tileID;
     }
+
 };
 
 class TileWorker {

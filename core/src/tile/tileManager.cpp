@@ -35,9 +35,9 @@ TileManager::~TileManager() {
     m_tileSet.clear();
 }
 
-void TileManager::addToWorkerQueue(const std::string& _rawData, const TileID& _tileId, const int _dataSourceID) {
+void TileManager::addToWorkerQueue(const char* _rawData, const int _dataSize, const TileID& _tileId, const int _dataSourceID) {
     std::lock_guard<std::mutex> lock(m_queueTileMutex);
-    m_queuedTiles.push_front(WorkerData(_rawData, _tileId, _dataSourceID));
+    m_queuedTiles.push_front(WorkerData(_rawData, _dataSize, _tileId, _dataSourceID));
     
 }
 
@@ -152,7 +152,7 @@ void TileManager::addTile(const TileID& _tileID) {
         // Create workerData with empty "rawData", parsed data will be fetched in the Worker::processTileData
         logMsg("Initiate network request for tile: [%d, %d, %d]\n", _tileID.x, _tileID.y, _tileID.z);
         if(m_dataSources[dsIndex]->hasTileData(_tileID)) {
-            addToWorkerQueue(std::string(""), _tileID, dsIndex);
+            addToWorkerQueue("", 0, _tileID, dsIndex);
         } else if( !m_dataSources[dsIndex]->loadTileData(_tileID, dsIndex) ) {
             logMsg("ERROR: Loading failed for tile [%d, %d, %d]\n", _tileID.z, _tileID.x, _tileID.y);
         }
@@ -172,7 +172,7 @@ void TileManager::removeTile(std::map< TileID, std::shared_ptr<MapTile> >::itera
     }
 
     // tmp workerData required as "compare value" for std::find.
-    WorkerData tmp = WorkerData(std::string(""), id, 0);
+    WorkerData tmp = WorkerData("", 0, id, 0);
     
     // Remove tile from queue, if present
     const auto& found = std::find(m_queuedTiles.begin(), m_queuedTiles.end(), tmp);

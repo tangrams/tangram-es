@@ -37,7 +37,7 @@ public:
     virtual bool hasTileData(const TileID& _tileID);
     
     /* Parse an I/O response into a <TileData>, returning an empty TileData on failure */
-    virtual std::shared_ptr<TileData> parse(const MapTile& _tile, std::stringstream& _in) = 0;
+    virtual std::shared_ptr<TileData> parse(const MapTile& _tile, const char* _in, const int _dataSize) = 0;
 
     /* Stores tileData in m_tileStore */
     virtual void setTileData(const TileID& _tileID, const std::shared_ptr<TileData>& _tileData);

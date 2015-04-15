@@ -29,14 +29,15 @@ void TileWorker::processTileData(const WorkerData& _workerData,
     m_future = std::async(std::launch::async, [&]() {
         
         TileID tileID = *(m_workerData->tileID);
-        std::stringstream rawDataStream;
-        rawDataStream << m_workerData->rawTileData;
+        const char* rawData = m_workerData->rawTileData;
+        int dataSize = m_workerData->dataSize;
         auto& dataSource = _dataSources[m_workerData->dataSourceID];
-
+        
         auto tile = std::shared_ptr<MapTile>(new MapTile(tileID, _view.getMapProjection()));
 
         if( !(dataSource->hasTileData(tileID)) ) {
-            dataSource->setTileData( tileID, dataSource->parse(*tile, rawDataStream));
+            dataSource->setTileData( tileID, dataSource->parse(*tile, rawData, dataSize));
+            delete rawData;
         }
 
         auto tileData = dataSource->getTileData(tileID);

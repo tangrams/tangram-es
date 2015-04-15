@@ -22,7 +22,7 @@ static jobject tangramInstance;
 static jmethodID networkRequestMID;
 static jmethodID cancelNetworkRequestMID;
 
-std::function<void(std::string, TileID, int)> networkCallback;
+std::function<void(const char*, const int, TileID, int)> networkCallback;
 
 void cacheJniEnv(JNIEnv* _jniEnv) {
     jniEnv = _jniEnv;
@@ -134,15 +134,18 @@ void cancelNetworkRequest(const std::string& _url) {
 
 }
 
-void setNetworkRequestCallback(std::function<void(std::string, TileID, int)>&& _callback) {
+void setNetworkRequestCallback(std::function<void(const char*, const int, TileID, int)>&& _callback) {
 
     networkCallback = _callback;
 
 }
 
-void networkDataBridge(std::string _rawData, int _tileIDx, int _tileIDy, int _tileIDz, int _dataSourceID) {
+void networkDataBridge(JNIEnv* _jniEnv, jbyteArray _jFetchedBytes, int _tileIDx, int _tileIDy, int _tileIDz, int _dataSourceID) {
 
-    networkCallback(_rawData, TileID(_tileIDx, _tileIDy, _tileIDz), _dataSourceID);
+    int dataLength = _jniEnv->GetArrayLength(_jFetchedBytes);
+    char* rawData = new char[dataLength];
+    _jniEnv->GetByteArrayRegion(_jFetchedBytes, 0, dataLength, reinterpret_cast<jbyte*>(rawData));
+    networkCallback(rawData, dataLength, TileID(_tileIDx, _tileIDy, _tileIDz), _dataSourceID);
 
 }
 

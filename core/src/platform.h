@@ -8,14 +8,18 @@
 #include "tileID.h"
 
 #ifdef PLATFORM_ANDROID
+
 struct _JNIEnv;
 typedef _JNIEnv JNIEnv;
 class _jobject;
 typedef _jobject* jobject;
+class _jbyteArray;
+typedef _jbyteArray* jbyteArray;
+
 void cacheJniEnv(JNIEnv* _jniEnv);
 void cacheTangramInstance(jobject _tangramInstance);
 void setAssetManager(jobject _assetManager);
-void networkDataBridge(std::string _rawData, int _tileIDx, int _tileIDy, int _tileIDz, int _dataSourceID);
+void networkDataBridge(JNIEnv* jniEnv, jbyteArray jFetchedBytes, int tileIDx, int tileIDy, int tileIDz, int dataSourceID);
 #endif
 
 /* Print a formatted message to the console
@@ -46,5 +50,5 @@ bool streamFromHttpASync(const std::string& _url, const TileID& _tileID, const i
 
 void cancelNetworkRequest(const std::string& _url);
 
-void setNetworkRequestCallback(std::function<void(std::string, TileID, int)>&& _callback);
+void setNetworkRequestCallback(std::function<void(const char*, const int, TileID, int)>&& _callback);
 

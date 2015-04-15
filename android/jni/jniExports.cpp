@@ -60,12 +60,7 @@ extern "C" {
     }
 
     JNIEXPORT void JNICALL Java_com_mapzen_tangram_Tangram_networkDataBridge(JNIEnv* jniEnv, jobject obj, jbyteArray jFetchedBytes, jint tileIDx, jint tileIDy, jint tileIDz, jint dataSourceID) {
-        int dataLength = jniEnv->GetArrayLength(jFetchedBytes);
-        jbyte* const byteArrayStart = jniEnv->GetByteArrayElements(jFetchedBytes, 0);
-        const char* byteCVal = (const char*)byteArrayStart;
-        std::string rawData = std::string(byteCVal, dataLength);
-        jniEnv->ReleaseByteArrayElements(jFetchedBytes, byteArrayStart, 0);
-        networkDataBridge(rawData, tileIDx, tileIDy, tileIDz, dataSourceID);
+        networkDataBridge(jniEnv, jFetchedBytes, tileIDx, tileIDy, tileIDz, dataSourceID);
     }
 
 }
