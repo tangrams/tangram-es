@@ -94,7 +94,7 @@ void cancelNetworkRequest(const std::string& _url) {
     //TODO
 }
 
-void setNetworkRequestCallback(std::function<void(std::string, TileID, int)>&& _callback) {
+void setNetworkRequestCallback(std::function<void(std::vector<char>&&, TileID, int)>&& _callback) {
     //TODO
 }
 

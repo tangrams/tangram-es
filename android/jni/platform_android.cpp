@@ -22,7 +22,7 @@ static jobject tangramInstance;
 static jmethodID networkRequestMID;
 static jmethodID cancelNetworkRequestMID;
 
-std::function<void(const char*, const int, TileID, int)> networkCallback;
+std::function<void(std::vector<char>&&, TileID, int)> networkCallback;
 
 void setupJniEnv(JNIEnv* _jniEnv, jobject _tangramInstance, jobject _assetManager) {
     jniEnv = _jniEnv;
@@ -127,7 +127,7 @@ void cancelNetworkRequest(const std::string& _url) {
 
 }
 
-void setNetworkRequestCallback(std::function<void(const char*, const int, TileID, int)>&& _callback) {
+void setNetworkRequestCallback(std::function<void(std::vector<char>&&, TileID, int)>&& _callback) {
 
     networkCallback = _callback;
 
@@ -136,9 +136,13 @@ void setNetworkRequestCallback(std::function<void(const char*, const int, TileID
 void networkDataBridge(JNIEnv* _jniEnv, jbyteArray _jFetchedBytes, int _tileIDx, int _tileIDy, int _tileIDz, int _dataSourceID) {
 
     int dataLength = _jniEnv->GetArrayLength(_jFetchedBytes);
-    char* rawData = new char[dataLength];
-    _jniEnv->GetByteArrayRegion(_jFetchedBytes, 0, dataLength, reinterpret_cast<jbyte*>(rawData));
-    networkCallback(rawData, dataLength, TileID(_tileIDx, _tileIDy, _tileIDz), _dataSourceID);
+
+    std::vector<char> rawData;
+    rawData.resize(dataLength);
+
+    _jniEnv->GetByteArrayRegion(_jFetchedBytes, 0, dataLength, reinterpret_cast<jbyte*>(rawData.data()));
+
+    networkCallback(std::move(rawData), TileID(_tileIDx, _tileIDy, _tileIDz), _dataSourceID);
 
 }
 

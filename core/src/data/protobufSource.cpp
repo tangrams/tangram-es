@@ -11,12 +11,12 @@ ProtobufSource::ProtobufSource() {
     m_urlTemplate = "http://vector.mapzen.com/osm/all/[z]/[x]/[y].mapbox";
 }
 
-std::shared_ptr<TileData> ProtobufSource::parse(const MapTile& _tile, const char* _rawData, const int _dataSize) {
+std::shared_ptr<TileData> ProtobufSource::parse(const MapTile& _tile, std::vector<char>& _rawData) {
     
     std::shared_ptr<TileData> tileData = std::make_shared<TileData>();
     
-    protobuf::message item(_rawData, _dataSize);
-    
+    protobuf::message item(_rawData.data(), _rawData.size());
+
     while(item.next()) {
         if(item.tag == 3) {
             protobuf::message layerMsg = item.getMessage();
@@ -36,3 +36,4 @@ std::shared_ptr<TileData> ProtobufSource::parse(const MapTile& _tile, const char
     }
     return tileData;
 }
+

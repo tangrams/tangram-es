@@ -2,6 +2,7 @@
 
 #include <string>
 #include <sstream>
+#include <vector>
 #include <memory>
 #include <functional>
 
@@ -48,5 +49,5 @@ bool streamFromHttpASync(const std::string& _url, const TileID& _tileID, const i
 
 void cancelNetworkRequest(const std::string& _url);
 
-void setNetworkRequestCallback(std::function<void(const char*, const int, TileID, int)>&& _callback);
+void setNetworkRequestCallback(std::function<void(std::vector<char>&&, TileID, int)>&& _callback);
 
