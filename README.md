@@ -101,10 +101,20 @@ Then install to a connected device or emulator. You can (re)install and run the 
 
 ### Raspberry Pi ###
 
-Install a C++11 compatible compiler and libcurl:
+First, install cmake and libcurl:
 
 ```
-sudo apt-get install cmake g++-4.7 libcurl4-openssl-dev
+sudo apt-get install cmake libcurl4-openssl-dev
+```
+
+To build the project, you will need to have C++11 compatible compiler installed, for example GNU g++-4.7 or greater:
+```
+sudo apt-get install g++-4.7
+```
+
+Before compiling, choose which compiler to use by running the following:
+```
+export CXX=/usr/bin/g++-4.7
 ```
 
 Then compile and run:

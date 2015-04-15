@@ -1,6 +1,7 @@
 #include "debugStyle.h"
 
 #include "tangram.h"
+#include "rawVboMesh.h"
 
 #include <vector>
 #include <memory>
@@ -36,7 +37,7 @@ void DebugStyle::addData(TileData &_data, MapTile &_tile, const MapProjection &_
     
     if (Tangram::getDebugFlag(Tangram::DebugFlags::TILE_BOUNDS)) {
         
-        VboMesh* mesh = new VboMesh(m_vertexLayout, m_drawMode);
+        RawVboMesh* mesh = new RawVboMesh(m_vertexLayout, m_drawMode);
         
         // Add four vertices to draw the outline of the tile in red
         

@@ -23,7 +23,7 @@ public:
 
     virtual ~VertexLayout();
 
-    void enable(const std::shared_ptr<ShaderProgram> _program);
+    void enable(const std::shared_ptr<ShaderProgram> _program, size_t byteOffset);
 
     GLint getStride() const { return m_stride; };
 
