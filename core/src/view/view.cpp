@@ -293,6 +293,10 @@ static void scanTriangle(glm::dvec2& _a, glm::dvec2& _b, glm::dvec2& _c, int _mi
     
 }
 
+int lodFunc(int d) {
+    return floor(log2f(std::max(d, 1)));
+}
+
 void View::updateTiles() {
     
     m_visibleTiles.clear();
@@ -322,15 +326,19 @@ void View::updateTiles() {
     
     // Determine zoom reduction for tiles far from the center of view
     int maxTileIndex = 1 << int(m_zoom);
-    double tilesAtFullZoom = ceil(fmax(m_width, m_height) * invTileSize * 0.5);
+    double tilesAtFullZoom = ceil(std::max(m_width, m_height) * invTileSize * 0.5);
     double viewCenterX = (m_pos.x + hc) * invTileSize;
     double viewCenterY = (m_pos.y - hc) * -invTileSize;
     
     Scan s = [&](int x, int y) {
         
         int z = int(m_zoom);
+
+        int lod_x = lodFunc(std::abs(x - viewCenterX) - tilesAtFullZoom);
+
+        int lod_y = lodFunc(std::abs(y - viewCenterY) - tilesAtFullZoom);
         
-        int lod = floor(log2f(fmax(fmax(abs(x - viewCenterX) - tilesAtFullZoom, abs(y - viewCenterY) - tilesAtFullZoom), 1)));
+        int lod = std::max(lod_x, lod_y);
         
         x >>= lod;
         y >>= lod;
