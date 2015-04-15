@@ -16,9 +16,7 @@ typedef _jobject* jobject;
 class _jbyteArray;
 typedef _jbyteArray* jbyteArray;
 
-void cacheJniEnv(JNIEnv* _jniEnv);
-void cacheTangramInstance(jobject _tangramInstance);
-void setAssetManager(jobject _assetManager);
+void setupJniEnv(JNIEnv* _jniEnv, jobject _tangramInstance, jobject _assetManager);
 void networkDataBridge(JNIEnv* jniEnv, jbyteArray jFetchedBytes, int tileIDx, int tileIDy, int tileIDz, int dataSourceID);
 #endif
 

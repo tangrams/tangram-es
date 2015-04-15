@@ -24,20 +24,13 @@ static jmethodID cancelNetworkRequestMID;
 
 std::function<void(const char*, const int, TileID, int)> networkCallback;
 
-void cacheJniEnv(JNIEnv* _jniEnv) {
+void setupJniEnv(JNIEnv* _jniEnv, jobject _tangramInstance, jobject _assetManager) {
     jniEnv = _jniEnv;
-}
 
-void cacheTangramInstance(jobject _tangramInstance) {
     tangramInstance = jniEnv->NewGlobalRef(_tangramInstance);
-
     jclass tangramClass = jniEnv->FindClass("com/mapzen/tangram/Tangram");
     networkRequestMID = jniEnv->GetMethodID(tangramClass, "networkRequest", "(Ljava/lang/String;IIII)Z");
     cancelNetworkRequestMID = jniEnv->GetMethodID(tangramClass, "cancelNetworkRequest", "(Ljava/lang/String;)V");
-
-}
-
-void setAssetManager(jobject _assetManager) {
 
     assetManager = AAssetManager_fromJava(jniEnv, _assetManager);
 
