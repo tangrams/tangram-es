@@ -168,7 +168,7 @@ void View::screenToGroundPlane(float& _screenX, float& _screenY) const {
     
     float t; // Distance along ray to ground plane
     if (ray_world.z != 0.f) {
-        t = abs(m_pos.z / ray_world.z);
+        t = std::abs(m_pos.z / ray_world.z);
     } else {
         t = 0;
     }
