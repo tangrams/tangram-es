@@ -51,13 +51,17 @@ std::shared_ptr<TextBuffer> MapTile::getTextBuffer(const Style& _style) const {
     return nullptr;
 }
 
-void MapTile::update(float _dt, const Style& _style, const View& _view) {
+void MapTile::update(float _dt, const View& _view) {
 
     // Apply tile-view translation to the model matrix
     const auto& viewOrigin = _view.getPosition();
     m_modelMatrix[3][0] = m_tileOrigin.x - viewOrigin.x;
     m_modelMatrix[3][1] = m_tileOrigin.y - viewOrigin.y;
     m_modelMatrix[3][2] = -viewOrigin.z;
+
+}
+
+void MapTile::updateStyle(float _dt, const Style& _style, const View& _view) {
 
     if(m_buffers[_style.getName()]) {
         auto labelContainer = LabelContainer::GetInstance();
@@ -82,6 +86,7 @@ void MapTile::update(float _dt, const Style& _style, const View& _view) {
         
         ftContext->unlock();
     }
+    
 }
 
 void MapTile::draw(const Style& _style, const View& _view) {

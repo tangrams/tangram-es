@@ -58,7 +58,10 @@ public:
      */
     bool hasGeometry();
 
-    void update(float _dt, const Style& _style, const View& _view);
+    void update(float _dt, const View& _view);
+
+    /* Perfom style specific tile update */
+    void updateStyle(float _dt, const Style& _style, const View& _view);
 
     void setTextBuffer(const Style& _style, std::shared_ptr<TextBuffer> _buffer);
     std::shared_ptr<TextBuffer> getTextBuffer(const Style& _style) const;
