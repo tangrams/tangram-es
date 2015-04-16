@@ -42,7 +42,7 @@ public class Tangram extends GLSurfaceView implements Renderer, OnScaleGestureLi
     private OkHttpClient okClient;
     public static final int TILE_CACHE_SIZE = 1024 * 1024 * 30; // 30 Mgs
 
-    private static native void init(AssetManager assetManager, Tangram tangramInst);
+    private static native void init(Tangram tangramInst, AssetManager assetManager);
     private static native void resize(int width, int height);
     private static native void update(float dt);
     private static native void render();
@@ -73,6 +73,7 @@ public class Tangram extends GLSurfaceView implements Renderer, OnScaleGestureLi
         setPreserveEGLContextOnPause(true);
         setEGLConfigChooser(8, 8, 8, 8, 24, 0);
         setRenderer(this);
+        setRenderMode(RENDERMODE_WHEN_DIRTY);
         
         mainApp.getWindowManager().getDefaultDisplay().getMetrics(displayMetrics);
         
@@ -117,13 +118,14 @@ public class Tangram extends GLSurfaceView implements Renderer, OnScaleGestureLi
             scaleGestureDetector.onTouchEvent(event) |
             rotateGestureDetector.onTouchEvent(event) |
             shoveGestureDetector.onTouchEvent(event)) {
+            requestRender();
             return true;
         } else {
             return super.onTouchEvent(event);
         }
         
     }
-    
+
     // GLSurfaceView.Renderer methods
     // ==============================
 
@@ -148,7 +150,7 @@ public class Tangram extends GLSurfaceView implements Renderer, OnScaleGestureLi
             contextDestroyed = false;
         }
         
-        init(assetManager, this);
+        init(this, assetManager);
     }
 
     // GestureDetetor.OnGestureListener methods

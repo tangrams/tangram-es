@@ -7,7 +7,16 @@
 #import <fstream>
 
 #include "platform.h"
+#include "ViewController.h"
 #include <curl/curl.h>
+
+static ViewController* viewController;
+
+void setViewController(ViewController* _controller) {
+    
+    viewController = _controller;
+    
+}
 
 void logMsg(const char* fmt, ...) {
 
@@ -16,6 +25,24 @@ void logMsg(const char* fmt, ...) {
     vfprintf(stderr, fmt, args);
     va_end(args);
 
+}
+
+void requestRender() {
+    
+    [viewController renderOnce];
+    
+}
+
+void setContinuousRendering(bool _isContinuous) {
+    
+    [viewController setContinuous:_isContinuous];
+    
+}
+
+bool isContinuousRendering() {
+    
+    return [viewController continuous];
+    
 }
 
 NSString* resolveResourcePath(const char* _path) {

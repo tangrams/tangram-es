@@ -15,22 +15,29 @@
  * http://docs.oracle.com/javase/7/docs/technotes/guides/jni/spec/invocation.html
  */
 
-static AAssetManager* assetManager;
-
+static JavaVM* jvm;
 static JNIEnv* jniEnv;
 static jobject tangramInstance;
+static jmethodID requestRenderMethodID;
+static jmethodID setRenderModeMethodID;
 static jmethodID networkRequestMID;
 static jmethodID cancelNetworkRequestMID;
+static AAssetManager* assetManager;
+
+static bool s_isContinuousRendering = false;
 
 std::function<void(std::vector<char>&&, TileID, int)> networkCallback;
 
 void setupJniEnv(JNIEnv* _jniEnv, jobject _tangramInstance, jobject _assetManager) {
+	_jniEnv->GetJavaVM(&jvm);
     jniEnv = _jniEnv;
 
     tangramInstance = jniEnv->NewGlobalRef(_tangramInstance);
     jclass tangramClass = jniEnv->FindClass("com/mapzen/tangram/Tangram");
     networkRequestMID = jniEnv->GetMethodID(tangramClass, "networkRequest", "(Ljava/lang/String;IIII)Z");
     cancelNetworkRequestMID = jniEnv->GetMethodID(tangramClass, "cancelNetworkRequest", "(Ljava/lang/String;)V");
+	requestRenderMethodID = _jniEnv->GetMethodID(tangramClass, "requestRender", "()V");
+    setRenderModeMethodID = _jniEnv->GetMethodID(tangramClass, "setRenderMode", "(I)V");
 
     assetManager = AAssetManager_fromJava(jniEnv, _assetManager);
 
@@ -46,6 +53,45 @@ void logMsg(const char* fmt, ...) {
     va_start(args, fmt);
     __android_log_vprint(ANDROID_LOG_DEBUG, "Tangram", fmt, args);
     va_end(args);
+
+}
+
+void requestRender() {
+    
+    JNIEnv *jniEnv;
+    int status = jvm->GetEnv((void**)&jniEnv, JNI_VERSION_1_6);
+    if(status == JNI_EDETACHED) {
+        jvm->AttachCurrentThread(&jniEnv, NULL);
+    }
+
+    jniEnv->CallVoidMethod(tangramObj, requestRenderMethodID);
+
+    if(status == JNI_EDETACHED) {
+        jvm->DetachCurrentThread();
+    }
+}
+
+void setContinuousRendering(bool _isContinuous) {
+
+    s_isContinuousRendering = _isContinuous;
+
+    JNIEnv *jniEnv;
+    int status = jvm->GetEnv((void**)&jniEnv, JNI_VERSION_1_6);
+    if(status == JNI_EDETACHED) {
+        jvm->AttachCurrentThread(&jniEnv, NULL);
+    }
+
+    jniEnv->CallVoidMethod(tangramObj, requestRenderMethodID, _isContinuous ? 1 : 0);
+
+    if(status == JNI_EDETACHED) {
+        jvm->DetachCurrentThread();
+    }
+
+}
+
+bool isContinuousRendering() {
+
+    return s_isContinuousRendering;
 
 }
 

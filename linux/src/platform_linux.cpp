@@ -1,3 +1,5 @@
+#ifdef PLATFORM_LINUX
+
 #include <stdio.h>
 #include <stdarg.h>
 #include <iostream>
@@ -7,12 +9,33 @@
 #include <curl/curl.h>
 
 #include "platform.h"
+#include "gl.h"
+
+static bool s_isContinuousRendering = false;
 
 void logMsg(const char* fmt, ...) {
     va_list args;
     va_start(args, fmt);
     vfprintf(stderr, fmt, args);
     va_end(args);
+}
+
+void requestRender() {
+    
+    glfwPostEmptyEvent();
+    
+}
+
+void setContinuousRendering(bool _isContinuous) {
+    
+    s_isContinuousRendering = _isContinuous;
+    
+}
+
+bool isContinuousRendering() {
+    
+    return s_isContinuousRendering;
+    
 }
 
 std::string stringFromResource(const char* _path) {
@@ -98,3 +121,5 @@ void setNetworkRequestCallback(std::function<void(std::vector<char>&&, TileID, i
     //TODO
 }
 
+
+#endif

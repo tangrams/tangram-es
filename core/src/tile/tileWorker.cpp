@@ -4,7 +4,6 @@
 #include "style/style.h"
 
 #include <chrono>
-#include <sstream>
 
 TileWorker::TileWorker() {
     m_free = true;
@@ -51,7 +50,9 @@ void TileWorker::processTileData(std::unique_ptr<WorkerData> _workerData,
             tile->update(0, *style, _view);
         }
         m_finished = true;
-
+        
+        requestRender();
+        
         // Return finished tile
         return std::move(tile);
 

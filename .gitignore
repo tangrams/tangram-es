@@ -110,3 +110,4 @@ install_manifest.txt
 
 # vim 
 *.swp
+*.swo
