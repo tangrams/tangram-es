@@ -7,6 +7,9 @@
 #import <fstream>
 
 #include "platform.h"
+#include "gl.h"
+
+static bool s_isContinuousRendering = false;
 
 void logMsg(const char* fmt, ...) {
     
@@ -14,6 +17,24 @@ void logMsg(const char* fmt, ...) {
     va_start(args, fmt);
     vfprintf(stderr, fmt, args);
     va_end(args);
+    
+}
+
+void requestRender() {
+    
+    glfwPostEmptyEvent();
+    
+}
+
+void setContinuousRendering(bool _isContinuous) {
+    
+    s_isContinuousRendering = _isContinuous;
+    
+}
+
+bool isContinuousRendering() {
+    
+    return s_isContinuousRendering;
     
 }
 

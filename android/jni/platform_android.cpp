@@ -2,14 +2,20 @@
 
 #include "platform.h"
 
+#include <jni.h>
 #include <android/log.h>
 #include <android/asset_manager.h>
 #include <android/asset_manager_jni.h>
 #include <cstdarg>
 
+static JavaVM* jvm;
+static jobject tangramObj;
+static jmethodID requestRenderMethodID;
+static jmethodID setRenderModeMethodID;
 static AAssetManager* assetManager;
+static bool s_isContinuousRendering = false;
 
-void setAssetManager(JNIEnv* _jniEnv, jobject _assetManager) {
+void jniInit(JNIEnv* _jniEnv, jobject _tangramInstance, jobject _assetManager) {
 
     assetManager = AAssetManager_fromJava(_jniEnv, _assetManager);
 
@@ -17,6 +23,12 @@ void setAssetManager(JNIEnv* _jniEnv, jobject _assetManager) {
         logMsg("ERROR: Could not obtain Asset Manager reference\n");
     }
 
+    _jniEnv->GetJavaVM(&jvm);
+    tangramObj = _jniEnv->NewGlobalRef(_tangramInstance);
+    jclass tangramClass = _jniEnv->GetObjectClass(tangramObj);
+    requestRenderMethodID = _jniEnv->GetMethodID(tangramClass, "requestRender", "()V");
+    setRenderModeMethodID = _jniEnv->GetMethodID(tangramClass, "setRenderMode", "(I)V");
+    
 }
 
 void logMsg(const char* fmt, ...) {
@@ -25,6 +37,45 @@ void logMsg(const char* fmt, ...) {
     va_start(args, fmt);
     __android_log_vprint(ANDROID_LOG_DEBUG, "Tangram", fmt, args);
     va_end(args);
+
+}
+
+void requestRender() {
+    
+    JNIEnv *jniEnv;
+    int status = jvm->GetEnv((void**)&jniEnv, JNI_VERSION_1_6);
+    if(status == JNI_EDETACHED) {
+        jvm->AttachCurrentThread(&jniEnv, NULL);
+    }
+
+    jniEnv->CallVoidMethod(tangramObj, requestRenderMethodID);
+
+    if(status == JNI_EDETACHED) {
+        jvm->DetachCurrentThread();
+    }
+}
+
+void setContinuousRendering(bool _isContinuous) {
+
+    s_isContinuousRendering = _isContinuous;
+
+    JNIEnv *jniEnv;
+    int status = jvm->GetEnv((void**)&jniEnv, JNI_VERSION_1_6);
+    if(status == JNI_EDETACHED) {
+        jvm->AttachCurrentThread(&jniEnv, NULL);
+    }
+
+    jniEnv->CallVoidMethod(tangramObj, requestRenderMethodID, _isContinuous ? 1 : 0);
+
+    if(status == JNI_EDETACHED) {
+        jvm->DetachCurrentThread();
+    }
+
+}
+
+bool isContinuousRendering() {
+
+    return s_isContinuousRendering;
 
 }
 
