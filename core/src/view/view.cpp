@@ -335,7 +335,7 @@ void View::updateTiles() {
     glm::dvec2 d = (glm::dvec2(viewTL.x + m_pos.x, viewTL.y + m_pos.y) - tileSpaceOrigin) * tileSpaceAxes;
     
     // Determine zoom reduction for tiles far from the center of view
-    //double tilesAtFullZoom = 0; //ceil(std::max(m_width, m_height) * invTileSize * 0.5);
+    double tilesAtFullZoom = std::max(m_width, m_height) * invTileSize * 0.5;
     double viewCenterX = (m_pos.x + hc) * invTileSize;
     double viewCenterY = (m_pos.y - hc) * -invTileSize;
     
@@ -345,19 +345,19 @@ void View::updateTiles() {
     int y_l_pos[MAX_LOD] = { 0 };
     
     for (int i = 0; i < MAX_LOD; i++) {
-        x_l_pos[i] = (next_even(int(viewCenterX + invLodFunc(i)) >> i)) << i;
+        x_l_pos[i] = (next_even(int(viewCenterX + tilesAtFullZoom + invLodFunc(i)) >> i)) << i;
     }
     
     for (int i = 0; i < MAX_LOD; i++) {
-        x_l_neg[i] = (prev_even(int(viewCenterX - invLodFunc(i)) >> i)) << i;
+        x_l_neg[i] = (prev_even(int(viewCenterX - tilesAtFullZoom - invLodFunc(i)) >> i)) << i;
     }
     
     for (int i = 0; i < MAX_LOD; i++) {
-        y_l_pos[i] = (next_even(int(viewCenterY + invLodFunc(i)) >> i)) << i;
+        y_l_pos[i] = (next_even(int(viewCenterY + tilesAtFullZoom + invLodFunc(i)) >> i)) << i;
     }
     
     for (int i = 0; i < MAX_LOD; i++) {
-        y_l_neg[i] = (prev_even(int(viewCenterY - invLodFunc(i)) >> i)) << i;
+        y_l_neg[i] = (prev_even(int(viewCenterY  - tilesAtFullZoom - invLodFunc(i)) >> i)) << i;
     }
     
     Scan s = [&](int x, int y) {
