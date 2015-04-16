@@ -5,7 +5,12 @@ struct _JNIEnv;
 typedef _JNIEnv JNIEnv;
 class _jobject;
 typedef _jobject* jobject;
-void setAssetManager(JNIEnv* _jniEnv, jobject _assetManager);
+void jniInit(JNIEnv* _jniEnv, jobject obj, jobject _assetManager);
+#endif
+
+#if (defined PLATFORM_IOS) && (defined __OBJC__)
+#import "ViewController.h"
+void setViewController(ViewController* _controller);
 #endif
 
 #include <string>
@@ -15,6 +20,17 @@ void setAssetManager(JNIEnv* _jniEnv, jobject _assetManager);
  * Uses printf syntax to write a string to stderr (or logcat, on Android)
  */
 void logMsg(const char* fmt, ...);
+
+/* Request that a new frame be rendered by the windowing system
+ */
+void requestRender();
+
+/* If called with 'true', the windowing system will re-draw frames continuously;
+ * otherwise new frames will only be drawn when 'requestRender' is called. 
+ */
+void setContinuousRendering(bool _isContinuous);
+
+bool isContinuousRendering();
 
 /* Read a bundled resource file as a string
  * 

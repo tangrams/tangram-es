@@ -1,3 +1,5 @@
+#ifdef PLATFORM_LINUX
+
 #include <stdio.h>
 #include <stdarg.h>
 #include <iostream>
@@ -5,12 +7,33 @@
 #include <string>
 
 #include "platform.h"
+#include "gl.h"
+
+static bool s_isContinuousRendering = false;
 
 void logMsg(const char* fmt, ...) {
     va_list args;
     va_start(args, fmt);
     vfprintf(stderr, fmt, args);
     va_end(args);
+}
+
+void requestRender() {
+    
+    glfwPostEmptyEvent();
+    
+}
+
+void setContinuousRendering(bool _isContinuous) {
+    
+    s_isContinuousRendering = _isContinuous;
+    
+}
+
+bool isContinuousRendering() {
+    
+    return s_isContinuousRendering;
+    
 }
 
 std::string stringFromResource(const char* _path) {
@@ -54,3 +77,5 @@ unsigned char* bytesFromResource(const char* _path, unsigned int* _size) {
 
     return reinterpret_cast<unsigned char *>(cdata);
 }
+
+#endif
