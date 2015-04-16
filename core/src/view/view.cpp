@@ -297,6 +297,22 @@ int lodFunc(int d) {
     return floor(log2f(std::max(d, 1)));
 }
 
+double invLodFunc(double d) {
+    return exp2(d);
+}
+
+int odd_ceil(double i) {
+    return (int(i) % 2 == 0) ? (i + 1) : i;
+}
+
+int next_even(int i) {
+    return (i % 2 == 0) ? (i + 2) : (i + 1);
+}
+
+int prev_even(int i) {
+    return (i % 2 == 0) ? (i - 2) : (i - 1);
+}
+
 void View::updateTiles() {
     
     m_visibleTiles.clear();
@@ -325,34 +341,44 @@ void View::updateTiles() {
     glm::dvec2 d = (glm::dvec2(viewTL.x + m_pos.x, viewTL.y + m_pos.y) - tileSpaceOrigin) * tileSpaceAxes;
     
     // Determine zoom reduction for tiles far from the center of view
-    int maxTileIndex = 1 << int(m_zoom);
-    double tilesAtFullZoom = ceil(std::max(m_width, m_height) * invTileSize * 0.5);
+    //double tilesAtFullZoom = 0; //ceil(std::max(m_width, m_height) * invTileSize * 0.5);
     double viewCenterX = (m_pos.x + hc) * invTileSize;
     double viewCenterY = (m_pos.y - hc) * -invTileSize;
+    
+    int x_l_pos[4] = { 0 };
+    int x_l_neg[4] = { 0 };
+    int y_l_neg[4] = { 0 };
+    int y_l_pos[4] = { 0 };
+    
+    for (int i = 0; i < 4; i++) {
+        x_l_pos[i] = (next_even(int(viewCenterX + invLodFunc(i)) >> i)) << i;
+    }
+    
+    for (int i = 0; i < 4; i++) {
+        x_l_neg[i] = (prev_even(int(viewCenterX - invLodFunc(i)) >> i)) << i;
+    }
+    
+    for (int i = 0; i < 4; i++) {
+        y_l_pos[i] = (next_even(int(viewCenterY + invLodFunc(i)) >> i)) << i;
+    }
+    
+    for (int i = 0; i < 4; i++) {
+        y_l_neg[i] = (prev_even(int(viewCenterY - invLodFunc(i)) >> i)) << i;
+    }
     
     Scan s = [&](int x, int y) {
         
         int z = int(m_zoom);
-        
-        int dx = std::abs(x - viewCenterX) - tilesAtFullZoom;
-        int dy = std::abs(y - viewCenterY) - tilesAtFullZoom;
 
-        int lod_x = lodFunc(dx);
-        int lod_y = lodFunc(dy);
+        int lod = 0;
+        while (lod < 4 && x_l_pos[lod] <= x) { lod++; }
+        while (lod < 4 && x_l_neg[lod] > x) { lod++; }
+        while (lod < 4 && y_l_pos[lod] <= y) { lod++; }
+        while (lod < 4 && y_l_neg[lod] > y) { lod++; }
         
-        if (x % (1 << lod_x) != (x > viewCenterX ? 0 : 1)) {
-            if (lodFunc(dx - 1) < lod_x) {
-                lod_x = std::max(lod_x - 1, 0);
-            }
+        if (x > x_l_pos[3] || x < x_l_neg[3] || y > y_l_pos[3] || y < y_l_neg[3]) {
+            return;
         }
-        
-        if (y % (1 << lod_y) != (y > viewCenterY ? 0 : 1)) {
-            if (lodFunc(dy - 1) < lod_y) {
-                lod_y = std::max(lod_y - 1, 0);
-            }
-        }
-        
-        int lod = std::max(lod_x, lod_y);
         
         x >>= lod;
         y >>= lod;
@@ -363,6 +389,7 @@ void View::updateTiles() {
     };
     
     // Rasterize view trapezoid into tiles
+    int maxTileIndex = 1 << int(m_zoom);
     scanTriangle(a, b, c, 0, maxTileIndex, s);
     scanTriangle(c, d, a, 0, maxTileIndex, s);
     
