@@ -68,12 +68,12 @@ namespace Tangram {
             m_labelContainer = LabelContainer::GetInstance();
             m_labelContainer->setFontContext(m_ftContext);
 
-            std::unique_ptr<Style> fontStyle(new FontStyle("Roboto-Regular", "FontStyle", 14.0f, true));
+            std::unique_ptr<Style> fontStyle(new FontStyle("Roboto-Regular", "FontStyle", 15.0f, true));
             fontStyle->addLayers({
                 "roads",
-                "pois",
-                "earth",
-                "landuse"
+                "landuse",
+                "places",
+                "pois"
             });
             m_scene->addStyle(std::move(fontStyle));
             
