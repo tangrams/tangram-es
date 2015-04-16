@@ -103,6 +103,8 @@ namespace Tangram {
         setNetworkRequestCallback([&](std::vector<char>&& _rawData, TileID _tileId, int _dataSourceID) {
 
             m_tileManager->addToWorkerQueue(std::move(_rawData), _tileId, _dataSourceID);
+            requestRender();
+
 
         });
 
