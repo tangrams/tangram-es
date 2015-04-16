@@ -52,6 +52,7 @@ void DebugStyle::addData(TileData &_data, MapTile &_tile, const MapProjection &_
         vertices.push_back({ -1.f,  1.f, 0.f, abgr });
         
         mesh->addVertices(std::move(vertices), { 0, 1, 2, 3, 0 });
+        mesh->compileVertexBuffer();
         
         _tile.addGeometry(*this, std::unique_ptr<VboMesh>(mesh));
         
