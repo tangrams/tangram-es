@@ -1,6 +1,7 @@
 #pragma once
 
 #include "style.h"
+#include "typedMesh.h"
 
 class PolylineStyle : public Style {
     
@@ -29,7 +30,13 @@ protected:
     virtual void buildPoint(Point& _point, std::string& _layer, Properties& _props, VboMesh& _mesh) const override;
     virtual void buildLine(Line& _line, std::string& _layer, Properties& _props, VboMesh& _mesh) const override;
     virtual void buildPolygon(Polygon& _polygon, std::string& _layer, Properties& _props, VboMesh& _mesh) const override;
+
+    typedef TypedMesh<PosNormEnormColVertex> Mesh;
     
+    virtual VboMesh* newMesh() const override {
+        return new Mesh(m_vertexLayout, m_drawMode);
+    };
+
 public:
     
     PolylineStyle(GLenum _drawMode = GL_TRIANGLES);

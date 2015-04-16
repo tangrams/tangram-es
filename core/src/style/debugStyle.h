@@ -1,6 +1,7 @@
 #pragma once
 
 #include "style.h"
+#include "typedMesh.h"
 
 class DebugStyle : public Style {
     
@@ -22,6 +23,12 @@ protected:
     virtual void buildPolygon(Polygon& _polygon, std::string& _layer, Properties& _props, VboMesh& _mesh) const override;
     virtual void addData(TileData& _data, MapTile& _tile, const MapProjection& _mapProjection) const override;
     
+    typedef TypedMesh<PosColVertex> Mesh;
+    
+    virtual VboMesh* newMesh() const override {
+        return nullptr;
+    };
+
 public:
     
     DebugStyle(GLenum _drawMode = GL_LINE_LOOP);
