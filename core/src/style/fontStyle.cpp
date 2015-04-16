@@ -139,12 +139,10 @@ void FontStyle::buildPolygon(Polygon& _polygon, std::string& _layer, Properties&
         ftContext->setSignedDistanceField(blurSpread);
     }
 
-    if (_layer == "landuse" || _layer == "earth") {
-        for (auto prop : _props.stringProps) {
-            if (prop.first == "name") {
-                auto label = labelContainer->addLabel(FontStyle::processedTile->getID(), m_name, { glm::vec2(centroid), glm::vec2(centroid) }, prop.second);
-                label->rasterize();
-            }
+    for (auto prop : _props.stringProps) {
+        if (prop.first == "name") {
+            auto label = labelContainer->addLabel(FontStyle::processedTile->getID(), m_name, { glm::vec2(centroid), glm::vec2(centroid) }, prop.second);
+            label->rasterize();
         }
     }
     

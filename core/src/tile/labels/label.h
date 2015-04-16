@@ -36,15 +36,15 @@ public:
     
     void setVisible(bool _visible) { m_visible = _visible; }
     
+    bool isOutOfScreen() const { return m_outOfScreen; }
+    
     bool isVisible() const { return m_visible; }
     
-    void setAlpha(float _alpha) { m_alpha = _alpha; };
-    
-    void updateScreenPosition(const glm::mat4& _mvp, const glm::vec2& _screenSize, float _dt);
-    
-    void updateBBoxes(glm::vec2 _screenPosition, float _rot);
+    void update(const glm::mat4& _mvp, const glm::vec2& _screenSize, float _dt);
 
 private:
+
+    void updateBBoxes(glm::vec2 _screenPosition, float _rot);
 
     LabelTransform m_transform;
     std::string m_text;
@@ -52,6 +52,7 @@ private:
     fsuint m_id;
     
     bool m_visible;
+    bool m_outOfScreen;
     
     float m_alpha;
     

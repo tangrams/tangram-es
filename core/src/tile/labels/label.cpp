@@ -34,12 +34,7 @@ void Label::updateBBoxes(glm::vec2 _screenPosition, float _rot) {
     m_aabb = m_obb.getExtent();
 }
 
-void Label::updateScreenPosition(const glm::mat4& _mvp, const glm::vec2& _screenSize, float _dt) {
-    
-    if (!m_visible) {
-        m_buffer->transformID(m_id, 0, 0, 0, 0.0);
-        return;
-    }
+void Label::update(const glm::mat4& _mvp, const glm::vec2& _screenSize, float _dt) {
     
     glm::vec2 screenPosition;
     float rot = 0;
@@ -65,7 +60,7 @@ void Label::updateScreenPosition(const glm::mat4& _mvp, const glm::vec2& _screen
         
         if (m_width > length) {
             float exceed = (1 - (length / m_width)) * 100;
-            m_visible = exceed < exceedHeuristic;
+            m_visible &= exceed < exceedHeuristic;
         }
         
         screenPosition = (p1 + p2) / 2.0f;
@@ -75,16 +70,14 @@ void Label::updateScreenPosition(const glm::mat4& _mvp, const glm::vec2& _screen
         screenPosition.x -= m_width / 2;
     }
     
-    // don't display out of screen labels, and out of screen translations or not yet implemented in fstash
-    bool outOfScreen;
+    m_outOfScreen = screenPosition.x > _screenSize.x || screenPosition.x < 0;
+    m_outOfScreen = m_outOfScreen || screenPosition.y > _screenSize.y || screenPosition.y < 0;
     
-    outOfScreen = screenPosition.x > _screenSize.x || screenPosition.x < 0;
-    outOfScreen = outOfScreen || screenPosition.y > _screenSize.y || screenPosition.y < 0;
-    
-    m_alpha = !outOfScreen && m_visible ? 1.0 : 0.0;
+    m_alpha = m_alpha = !m_outOfScreen && m_visible ? 1.0 : 0.0;
     
     m_buffer->transformID(m_id, screenPosition.x, screenPosition.y, rot, m_alpha);
     
     updateBBoxes(screenPosition, rot);
+    
 }
 

@@ -75,8 +75,6 @@ namespace Tangram {
                 "water",
                 "earth",
                 "landuse",
-                "water",
-                "administrative"
             });
             m_scene->addStyle(std::move(fontStyle));
             

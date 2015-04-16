@@ -70,9 +70,9 @@ void MapTile::updateStyle(float _dt, const Style& _style, const View& _view) {
         glm::vec2 screenSize = glm::vec2(_view.getWidth(), _view.getHeight());
         
         ftContext->lock();
-
+        
         for(auto label : labelContainer->getLabels(_style.getName(), getID())) {
-            label->updateScreenPosition(mvp, screenSize, _dt);
+            label->update(mvp, screenSize, _dt);
         }
         
         auto occlusions = labelContainer->getOcclusions();
@@ -80,6 +80,7 @@ void MapTile::updateStyle(float _dt, const Style& _style, const View& _view) {
         for (auto& pair : occlusions) {
             auto label = pair.first;
             label->setVisible(false);
+            label->update(mvp, screenSize, _dt);
         }
         
         m_buffers[_style.getName()]->triggerTransformUpdate();
