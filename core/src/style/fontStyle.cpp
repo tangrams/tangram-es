@@ -59,7 +59,8 @@ void FontStyle::buildPoint(Point& _point, std::string& _layer, Properties& _prop
     ftContext->clearState();
     
     if (textBuffer->getVertices(&vertData, &nVerts)) {
-        _mesh.addVertices((GLbyte*)vertData.data(), nVerts);
+        auto& mesh = static_cast<RawVboMesh&>(_mesh);
+        mesh.addVertices((GLbyte*)vertData.data(), nVerts);
     }
 
 }
@@ -145,7 +146,8 @@ void FontStyle::buildPolygon(Polygon& _polygon, std::string& _layer, Properties&
     ftContext->clearState();
     
     if (textBuffer->getVertices(&vertData, &nVerts)) {
-        _mesh.addVertices((GLbyte*)vertData.data(), nVerts);
+        auto& mesh = static_cast<RawVboMesh&>(_mesh);
+        mesh.addVertices((GLbyte*)vertData.data(), nVerts);
     }
 }
 
