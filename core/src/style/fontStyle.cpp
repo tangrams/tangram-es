@@ -83,13 +83,24 @@ void FontStyle::buildLine(Line& _line, std::string& _layer, Properties& _props, 
         ftContext->setSignedDistanceField(blurSpread);
     }
 
+    int lineLength = _line.size();
+    int skipOffset = floor(lineLength / 2);
+    float minLength = 0.15; // default, probably need some more thoughts
+    
     if (_layer == "roads") {
         for (auto prop : _props.stringProps) {
             if (prop.first.compare("name") == 0) {
                 
-                for (int i = 0; i < _line.size() - 1; ++i) {
+                for (int i = 0; i < _line.size() - 1; i += skipOffset) {
                     glm::vec2 p1 = glm::vec2(_line[i]);
                     glm::vec2 p2 = glm::vec2(_line[i + 1]);
+                    
+                    glm::vec2 p1p2 = p2 - p1;
+                    float length = glm::length(p1p2);
+                    
+                    if (length < minLength) {
+                        continue;
+                    }
 
                     labelContainer->addLabel(FontStyle::processedTile->getID(), m_name, { p1, p2 }, prop.second);
                 }
