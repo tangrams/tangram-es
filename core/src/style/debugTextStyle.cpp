@@ -1,3 +1,4 @@
+#include <cstdio>
 #include "debugTextStyle.h"
 
 DebugTextStyle::DebugTextStyle(const std::string& _fontName, std::string _name, float _fontSize, bool _sdf, GLenum _drawMode)
@@ -10,7 +11,7 @@ void DebugTextStyle::addData(TileData& _data, MapTile& _tile, const MapProjectio
     if (Tangram::getDebugFlag(Tangram::DebugFlags::TILE_INFOS)) {
         prepareDataProcessing(_tile);
 
-        RawVboMesh* mesh = new RawVboMesh(m_vertexLayout, m_drawMode);
+        Mesh* mesh = new Mesh(m_vertexLayout, m_drawMode);
 
         int nVerts;
         auto labelContainer = LabelContainer::GetInstance();
@@ -30,9 +31,12 @@ void DebugTextStyle::addData(TileData& _data, MapTile& _tile, const MapProjectio
         label->rasterize();
 
         std::vector<float> vertData;
+        std::vector<PosTexID> bundledVertData;
 
         if (textBuffer->getVertices(&vertData, &nVerts)) {
-            mesh->addVertices((GLbyte*)vertData.data(), nVerts);
+            bundledVertData.resize(vertData.size() * sizeof(float)/m_vertexLayout->getStride());
+            memcpy(bundledVertData.data(), vertData.data(), vertData.size()*sizeof(float));
+            mesh->addVertices(std::move(bundledVertData), {});
         }
 
         mesh->compileVertexBuffer();
