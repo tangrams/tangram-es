@@ -61,6 +61,9 @@ bool TileManager::updateTileSet() {
         // No new tiles have come into view and no tiles have finished loading, 
         // so the tileset is unchanged
         return false;
+    } else {
+        // set view dirty
+        m_view->setChanged(true);
     }
     
     const std::set<TileID>& visibleTiles = m_view->getVisibleTiles();

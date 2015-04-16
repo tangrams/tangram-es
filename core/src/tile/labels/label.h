@@ -9,6 +9,11 @@
 struct LabelTransform {
     glm::vec2 m_modelPosition1;
     glm::vec2 m_modelPosition2;
+    
+    glm::vec2 m_screenPosition;
+    
+    float m_alpha;
+    float m_rotation;
 };
 
 class Label {
@@ -34,7 +39,7 @@ public:
     
     std::string getText() { return m_text; }
     
-    void setVisible(bool _visible) { m_visible = _visible; }
+    void setVisible(bool _visible);
     
     bool isOutOfScreen() const { return m_outOfScreen; }
     
@@ -42,19 +47,22 @@ public:
     
     void update(const glm::mat4& _mvp, const glm::vec2& _screenSize, float _dt);
 
-private:
+    void pushTransform();
+    
+    void updateScreenTransform(const glm::mat4& _mvp, const glm::vec2& _screenSize);
 
-    void updateBBoxes(glm::vec2 _screenPosition, float _rot);
+private:
+    
+    void updateBBoxes();
 
     LabelTransform m_transform;
     std::string m_text;
     std::shared_ptr<TextBuffer> m_buffer; // the buffer in which this label text id is associated to
     fsuint m_id;
     
+    bool m_dirty;
     bool m_visible;
     bool m_outOfScreen;
-    
-    float m_alpha;
     
     isect2d::OBB m_obb;
     isect2d::AABB m_aabb;

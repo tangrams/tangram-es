@@ -61,8 +61,8 @@ void MapTile::update(float _dt, const View& _view) {
 
 }
 
-void MapTile::updateStyle(float _dt, const Style& _style, const View& _view) {
-
+void MapTile::updateLabels(float _dt, const Style& _style, const View& _view) {
+    
     if(m_buffers[_style.getName()]) {
         auto labelContainer = LabelContainer::GetInstance();
         auto ftContext = labelContainer->getFontContext();
@@ -75,12 +75,20 @@ void MapTile::updateStyle(float _dt, const Style& _style, const View& _view) {
             label->update(mvp, screenSize, _dt);
         }
         
-        auto occlusions = labelContainer->getOcclusions();
+        ftContext->unlock();
+    }
+}
+
+void MapTile::pushLabelTransforms(const Style& _style) {
+
+    if(m_buffers[_style.getName()]) {
+        auto labelContainer = LabelContainer::GetInstance();
+        auto ftContext = labelContainer->getFontContext();
+
+        ftContext->lock();
         
-        for (auto& pair : occlusions) {
-            auto label = pair.first;
-            label->setVisible(false);
-            label->update(mvp, screenSize, _dt);
+        for(auto label : labelContainer->getLabels(_style.getName(), getID())) {
+            label->pushTransform();
         }
         
         m_buffers[_style.getName()]->triggerTransformUpdate();

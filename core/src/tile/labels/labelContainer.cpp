@@ -7,17 +7,19 @@ LabelContainer::~LabelContainer() {
     m_labels.clear();
 }
 
-std::shared_ptr<Label> LabelContainer::addLabel(const TileID& _tileID, const std::string& _styleName, LabelTransform _transform, std::string _text) {
+bool LabelContainer::addLabel(const TileID& _tileID, const std::string& _styleName, LabelTransform _transform, std::string _text) {
     auto currentBuffer = m_ftContext->getCurrentBuffer();
 
     if (currentBuffer) {
         std::shared_ptr<Label> label(new Label(_transform, _text, currentBuffer));
+        label->rasterize();
+        
         m_labels[_styleName][_tileID].push_back(label);
 
-        return label;
+        return true;
     } 
 
-    return nullptr;
+    return false;
 }
 
 void LabelContainer::removeLabels(const TileID& _tileID) {
@@ -38,7 +40,7 @@ const std::vector<std::shared_ptr<Label>>& LabelContainer::getLabels(const std::
     return m_labels[_styleName][_tileID];
 }
 
-std::set<std::pair<std::shared_ptr<Label>, std::shared_ptr<Label>>> LabelContainer::getOcclusions() {
+void LabelContainer::updateOcclusions() {
     std::set<std::pair<std::shared_ptr<Label>, std::shared_ptr<Label>>> occlusions;
     std::vector<isect2d::AABB> aabbs;
     
@@ -74,5 +76,8 @@ std::set<std::pair<std::shared_ptr<Label>, std::shared_ptr<Label>>> LabelContain
         }
     }
     
-    return occlusions;
+    // no priorities, only occlude one of the two occluded label
+    for (auto& pair : occlusions) {
+        pair.first->setVisible(false);
+    }
 }
