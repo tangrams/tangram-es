@@ -5,7 +5,7 @@
 
 extern "C" {
     JNIEXPORT void JNICALL Java_com_mapzen_tangram_Tangram_init(JNIEnv* jniEnv, jobject obj, jobject tangramInstance, jobject assetManager) {
-        jniInit(jniEnv, tangramInstance, assetManager);
+        setupJniEnv(jniEnv, tangramInstance, assetManager);
         Tangram::initialize();
     }
 

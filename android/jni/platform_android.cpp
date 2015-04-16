@@ -64,7 +64,7 @@ void requestRender() {
         jvm->AttachCurrentThread(&jniEnv, NULL);
     }
 
-    jniEnv->CallVoidMethod(tangramObj, requestRenderMethodID);
+    jniEnv->CallVoidMethod(tangramInstance, requestRenderMethodID);
 
     if(status == JNI_EDETACHED) {
         jvm->DetachCurrentThread();
@@ -81,7 +81,7 @@ void setContinuousRendering(bool _isContinuous) {
         jvm->AttachCurrentThread(&jniEnv, NULL);
     }
 
-    jniEnv->CallVoidMethod(tangramObj, requestRenderMethodID, _isContinuous ? 1 : 0);
+    jniEnv->CallVoidMethod(tangramInstance, requestRenderMethodID, _isContinuous ? 1 : 0);
 
     if(status == JNI_EDETACHED) {
         jvm->DetachCurrentThread();
