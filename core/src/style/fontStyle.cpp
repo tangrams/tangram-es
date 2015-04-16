@@ -36,6 +36,7 @@ void FontStyle::buildPoint(Point& _point, std::string& _layer, Properties& _prop
 
 void FontStyle::buildLine(Line& _line, std::string& _layer, Properties& _props, VboMesh& _mesh) const {
     std::vector<float> vertData;
+    std::vector<PosTexID> bundledVertData;
     int nVerts = 0;
     auto labelContainer = LabelContainer::GetInstance();
     auto ftContext = labelContainer->getFontContext();
@@ -74,8 +75,10 @@ void FontStyle::buildLine(Line& _line, std::string& _layer, Properties& _props, 
     ftContext->clearState();
 
     if (textBuffer->getVertices(&vertData, &nVerts)) {
-        auto& mesh = static_cast<RawVboMesh&>(_mesh);
-        mesh.addVertices((GLbyte*)vertData.data(), nVerts);
+        bundledVertData.resize(vertData.size() * sizeof(float)/m_vertexLayout->getStride());
+        memcpy(bundledVertData.data(), vertData.data(), vertData.size()*sizeof(float));
+        auto& mesh = static_cast<FontStyle::Mesh&>(_mesh);
+        mesh.addVertices(std::move(bundledVertData), {});
     }
 }
 
