@@ -117,6 +117,7 @@ namespace Tangram {
         logMsg("finish initialize\n");
         
         m_view->pitch(0.75);
+        m_view->roll(-3.1415926 / 2.0);
         setDebugFlag(DebugFlags::TILE_BOUNDS, true);
         setDebugFlag(DebugFlags::PROXY_COLORS, true);
 

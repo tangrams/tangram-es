@@ -333,10 +333,24 @@ void View::updateTiles() {
     Scan s = [&](int x, int y) {
         
         int z = int(m_zoom);
+        
+        int dx = std::abs(x - viewCenterX) - tilesAtFullZoom;
+        int dy = std::abs(y - viewCenterY) - tilesAtFullZoom;
 
-        int lod_x = lodFunc(std::abs(x - viewCenterX) - tilesAtFullZoom);
-
-        int lod_y = lodFunc(std::abs(y - viewCenterY) - tilesAtFullZoom);
+        int lod_x = lodFunc(dx);
+        int lod_y = lodFunc(dy);
+        
+        if (x % (1 << lod_x) != (x > viewCenterX ? 0 : 1)) {
+            if (lodFunc(dx - 1) < lod_x) {
+                lod_x = std::max(lod_x - 1, 0);
+            }
+        }
+        
+        if (y % (1 << lod_y) != (y > viewCenterY ? 0 : 1)) {
+            if (lodFunc(dy - 1) < lod_y) {
+                lod_y = std::max(lod_y - 1, 0);
+            }
+        }
         
         int lod = std::max(lod_x, lod_y);
         
@@ -345,7 +359,6 @@ void View::updateTiles() {
         z -= lod;
         
         m_visibleTiles.emplace(x, y, z);
-        
         
     };
     
