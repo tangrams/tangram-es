@@ -1,7 +1,6 @@
 #include "debugStyle.h"
 
 #include "tangram.h"
-#include "rawVboMesh.h"
 
 #include <vector>
 #include <memory>
