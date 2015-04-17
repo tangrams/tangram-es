@@ -31,8 +31,7 @@ void FontStyle::constructShaderProgram() {
 }
 
 void FontStyle::buildPoint(Point& _point, std::string& _layer, Properties& _props, VboMesh& _mesh) const {
-    std::vector<float> vertData;
-    int nVerts = 0;
+    std::vector<PosTexID> vertices;
     auto labelContainer = LabelContainer::GetInstance();
     auto ftContext = labelContainer->getFontContext();
     auto textBuffer = ftContext->getCurrentBuffer();
@@ -58,9 +57,11 @@ void FontStyle::buildPoint(Point& _point, std::string& _layer, Properties& _prop
     
     ftContext->clearState();
     
-    if (textBuffer->getVertices(&vertData, &nVerts)) {
-        auto& mesh = static_cast<RawVboMesh&>(_mesh);
-        mesh.addVertices((GLbyte*)vertData.data(), nVerts);
+    vertices.resize(textBuffer->getVerticesSize());
+    
+    if (textBuffer->getVertices(reinterpret_cast<float*>(vertices.data()))) {
+        auto& mesh = static_cast<FontStyle::Mesh&>(_mesh);
+        mesh.addVertices(std::move(vertices), {});
     }
 
 }
@@ -132,8 +133,7 @@ void FontStyle::buildPolygon(Polygon& _polygon, std::string& _layer, Properties&
     
     centroid /= n;
     
-    std::vector<float> vertData;
-    int nVerts = 0;
+    std::vector<PosTexID> vertices;
     auto labelContainer = LabelContainer::GetInstance();
     auto ftContext = labelContainer->getFontContext();
     auto textBuffer = ftContext->getCurrentBuffer();
@@ -157,9 +157,11 @@ void FontStyle::buildPolygon(Polygon& _polygon, std::string& _layer, Properties&
     
     ftContext->clearState();
     
-    if (textBuffer->getVertices(&vertData, &nVerts)) {
-        auto& mesh = static_cast<RawVboMesh&>(_mesh);
-        mesh.addVertices((GLbyte*)vertData.data(), nVerts);
+    vertices.resize(textBuffer->getVerticesSize());
+    
+    if (textBuffer->getVertices(reinterpret_cast<float*>(vertices.data()))) {
+        auto& mesh = static_cast<FontStyle::Mesh&>(_mesh);
+        mesh.addVertices(std::move(vertices), {});
     }
 }
 
