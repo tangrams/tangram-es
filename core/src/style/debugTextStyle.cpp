@@ -13,7 +13,6 @@ void DebugTextStyle::addData(TileData& _data, MapTile& _tile, const MapProjectio
 
         Mesh* mesh = new Mesh(m_vertexLayout, m_drawMode);
 
-        int nVerts;
         auto labelContainer = LabelContainer::GetInstance();
         auto ftContext = labelContainer->getFontContext();
         auto textBuffer = _tile.getTextBuffer(*this);
@@ -30,13 +29,11 @@ void DebugTextStyle::addData(TileData& _data, MapTile& _tile, const MapProjectio
 
         label->rasterize();
 
-        std::vector<float> vertData;
-        std::vector<PosTexID> bundledVertData;
+        std::vector<PosTexID> vertices;
+        vertices.resize(textBuffer->getVerticesSize());
 
-        if (textBuffer->getVertices(&vertData, &nVerts)) {
-            bundledVertData.resize(vertData.size() * sizeof(float)/m_vertexLayout->getStride());
-            memcpy(bundledVertData.data(), vertData.data(), vertData.size()*sizeof(float));
-            mesh->addVertices(std::move(bundledVertData), {});
+        if (textBuffer->getVertices(reinterpret_cast<float*>(vertices.data()))) {
+            mesh->addVertices(std::move(vertices), {});
         }
 
         mesh->compileVertexBuffer();
