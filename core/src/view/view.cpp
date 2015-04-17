@@ -13,6 +13,10 @@
 
 constexpr float View::s_maxZoom; // Create a stack reference to the static member variable
 
+double invLodFunc(double d) {
+    return exp2(d);
+}
+
 View::View(int _width, int _height, ProjectionType _projType) {
     
     setMapProjection(_projType);
@@ -88,7 +92,7 @@ void View::setRoll(float _roll) {
 void View::setPitch(float _pitch) {
 
     // Clamp pitch angle (until LoD tile coverage is implemented)
-    m_pitch = glm::clamp(_pitch, 0.f, 1.f);
+    m_pitch = glm::clamp(_pitch, 0.f, (float)M_PI);
     m_dirty = true;
 
 }
@@ -168,14 +172,18 @@ void View::screenToGroundPlane(float& _screenX, float& _screenY) const {
     glm::vec4 ray_clip = { 2.f * _screenX / m_vpWidth - 1.f, 1.f - 2.f * _screenY / m_vpHeight, -1.f, 1.f }; // Ray from camera in clip space
     glm::vec3 ray_world = glm::vec3(m_invViewProj * ray_clip); // Ray from camera in world space
     
-    float t; // Distance along ray to ground plane
+    float t = 0; // Distance along ray to ground plane
     if (ray_world.z != 0.f) {
-        t = std::abs(m_pos.z / ray_world.z);
-    } else {
-        t = 0;
+        t = -m_pos.z / ray_world.z;
     }
     
-    ray_world *= t;
+    if (t >= 0) {
+        ray_world *= t;
+    } else {
+        float maxTileDistance = invLodFunc(MAX_LOD + 1) * 2 * MapProjection::HALF_CIRCUMFERENCE * pow(2, -m_zoom);
+        ray_world *= maxTileDistance / sqrtf(ray_world.x * ray_world.x + ray_world.y * ray_world.y);
+    }
+    
     _screenX = ray_world.x;
     _screenY = ray_world.y;
 }
@@ -184,10 +192,6 @@ const std::set<TileID>& View::getVisibleTiles() {
 
     return m_visibleTiles;
 
-}
-
-double invLodFunc(double d) {
-    return exp2(d);
 }
 
 void View::updateMatrices() {
@@ -223,7 +227,7 @@ void View::updateMatrices() {
     
     // limit the far clipping distance to be no greater than the maximum
     // distance of visible tiles
-    float maxTileDistance = worldTileSize * invLodFunc(MAX_LOD);
+    float maxTileDistance = worldTileSize * invLodFunc(MAX_LOD + 1);
     far = std::min(far, maxTileDistance);
     
     glm::vec3 eye = { 0.f, 0.f, 0.f };
@@ -349,8 +353,8 @@ void View::updateTiles() {
     
     int x_l_pos[MAX_LOD] = { 0 };
     int x_l_neg[MAX_LOD] = { 0 };
-    int y_l_neg[MAX_LOD] = { 0 };
     int y_l_pos[MAX_LOD] = { 0 };
+    int y_l_neg[MAX_LOD] = { 0 };
     
     for (int i = 0; i < MAX_LOD; i++) {
         x_l_pos[i] = (next_even(int(viewCenterX + tilesAtFullZoom + invLodFunc(i)) >> i)) << i;
@@ -362,10 +366,10 @@ void View::updateTiles() {
     Scan s = [&](int x, int y) {
 
         int lod = 0;
-        while (lod < MAX_LOD && x_l_pos[lod] <= x) { lod++; }
-        while (lod < MAX_LOD && x_l_neg[lod] > x) { lod++; }
-        while (lod < MAX_LOD && y_l_pos[lod] <= y) { lod++; }
-        while (lod < MAX_LOD && y_l_neg[lod] > y) { lod++; }
+        while (lod < MAX_LOD && x >= x_l_pos[lod]) { lod++; }
+        while (lod < MAX_LOD && x <  x_l_neg[lod]) { lod++; }
+        while (lod < MAX_LOD && y >= y_l_pos[lod]) { lod++; }
+        while (lod < MAX_LOD && y <  y_l_neg[lod]) { lod++; }
         
         if (x > x_l_pos[MAX_LOD - 1] || x < x_l_neg[MAX_LOD - 1] || y > y_l_pos[MAX_LOD - 1] || y < y_l_neg[MAX_LOD - 1]) {
             return;
