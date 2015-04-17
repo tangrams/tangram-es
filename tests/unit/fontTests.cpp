@@ -1,4 +1,4 @@
-#define CATCH_CONFIG_MAIN 
+#define CATCH_CONFIG_MAIN
 #include "catch/catch.hpp"
 
 #include <iostream>
@@ -15,7 +15,7 @@
 struct Text {
     fsuint textId;
     float x;
-    float y; 
+    float y;
     float rotation;
     float alpha;
 };
@@ -64,8 +64,8 @@ void updateTransforms(void* _userPtr, unsigned int _xoff, unsigned int _yoff, un
 
         REQUIRE(px < 256); REQUIRE(px >= 0);
         REQUIRE(py < 256); REQUIRE(py >= 0);
-        
-        float txe = screenRes / 255.0; // max translation x error 
+
+        float txe = screenRes / 255.0; // max translation x error
         float tye = screenRes / 255.0; // max translation y error
 
         float rx = (x / 255.0) * screenRes;
@@ -81,19 +81,19 @@ void updateTransforms(void* _userPtr, unsigned int _xoff, unsigned int _yoff, un
         rx = rx + txe * (px / 255.0);
         ry = ry + tye * (py / 255.0);
 
-        // result error 
+        // result error
         float dx = fabs(text.x - rx);
         float dy = fabs(text.y - ry);
- 
+
         // theoritical floating point precision error on precision encoding, see glfontstash.h
-        float perror = 0.00196f; 
+        float perror = 0.00196f;
 
         float epxe = txe * perror; // theoritical encoded error on translation x
         float epye = tye * perror; // theoritical encoded error on translation y
 
         // test that final result with its precision added is lower than the theoritical one
-        REQUIRE(dx <= epxe); 
-        REQUIRE(dy <= epye); 
+        REQUIRE(dx <= epxe);
+        REQUIRE(dy <= epye);
     }
 }
 
@@ -178,7 +178,7 @@ TEST_CASE( "Test that the overflow callback gets called for the right overflow s
 }
 
 TEST_CASE( "Test that the number of vertices correspond to the logic", "[Core][Fontstash][glfonsVertices]" ) {
-    UserPtr p;  
+    UserPtr p;
 
     FONScontext* context = initContext(&p);
     int font = initFont(context);
@@ -196,16 +196,17 @@ TEST_CASE( "Test that the number of vertices correspond to the logic", "[Core][F
     glfonsRasterize(context, id, text.c_str());
 
     std::vector<float> vertices;
-    int nverts = 0;
-    glfonsVertices(context, &vertices, &nverts);
+    int size = glfonsVerticesSize(context);
+    vertices.resize(size * INNER_DATA_OFFSET);
+    glfonsVertices(context, reinterpret_cast<float*>(vertices.data()));
 
-    REQUIRE(nverts == text.size() * 6); // shoud have 6 vertices per glyph
+    REQUIRE(size == text.size() * 6); // shoud have 6 vertices per glyph
 
     glfonsDelete(context);
 }
 
 TEST_CASE( "Test that unpacking the encoded transforms give expected results", "[Core][Fontstash][glfonsTransform]" ) {
-    UserPtr p;  
+    UserPtr p;
     FONScontext* context = initContext(&p);
     int font = initFont(context);
 
@@ -221,7 +222,7 @@ TEST_CASE( "Test that unpacking the encoded transforms give expected results", "
 
     for(int i = 0; i < 1024; i+=24) {
         Text text;
-        
+
         glfonsGenText(context, 1, &text.textId);
 
         text.x = i;
@@ -239,8 +240,9 @@ TEST_CASE( "Test that unpacking the encoded transforms give expected results", "
     glfonsUpdateTransforms(context, nullptr);
 
     std::vector<float> vertices;
-    int nverts = 0;
-    glfonsVertices(context, &vertices, &nverts);
+    int size = glfonsVerticesSize(context);
+    vertices.resize(size * INNER_DATA_OFFSET);
+    glfonsVertices(context, reinterpret_cast<float*>(vertices.data()));
 
-    glfonsDelete(context);   
+    glfonsDelete(context);
 }
