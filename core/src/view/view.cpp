@@ -9,7 +9,7 @@
 #include "glm/gtc/matrix_transform.hpp"
 #include "glm/gtx/rotate_vector.hpp"
 
-#define MAX_LOD 4
+#define MAX_LOD 5
 
 constexpr float View::s_maxZoom; // Create a stack reference to the static member variable
 
@@ -186,6 +186,10 @@ const std::set<TileID>& View::getVisibleTiles() {
 
 }
 
+double invLodFunc(double d) {
+    return exp2(d);
+}
+
 void View::updateMatrices() {
     
     // find dimensions of tiles in world space at new zoom level
@@ -209,10 +213,18 @@ void View::updateMatrices() {
     // set camera z to produce desired viewable area
     m_pos.z = m_height * 0.5 / tan(fovy * 0.5);
     
-    // set near and far clipping distances as a function of camera z
+    // set near clipping distance as a function of camera z
     // TODO: this is a simple heuristic that deserves more thought
     float near = m_pos.z / 50.0;
-    float far = 3. * m_pos.z / cos(m_pitch) + 1.f;
+    
+    // set far clipping distance to the distance of the intersection of
+    // the "top" face of the view frustum with the ground plane
+    float far = m_pos.z / cos(m_pitch + 0.5 * fovy);
+    
+    // limit the far clipping distance to be no greater than the maximum
+    // distance of visible tiles
+    float maxTileDistance = worldTileSize * invLodFunc(MAX_LOD);
+    far = std::min(far, maxTileDistance);
     
     glm::vec3 eye = { 0.f, 0.f, 0.f };
     glm::vec3 at = glm::rotateZ(glm::rotateX(glm::vec3(0.f, 0.f, -1.f), m_pitch), m_roll);
@@ -295,10 +307,6 @@ static void scanTriangle(glm::dvec2& _a, glm::dvec2& _b, glm::dvec2& _c, int _mi
     
 }
 
-double invLodFunc(double d) {
-    return exp2(d);
-}
-
 int next_even(int i) {
     return (i % 2 == 0) ? (i + 2) : (i + 1);
 }
@@ -312,10 +320,10 @@ void View::updateTiles() {
     m_visibleTiles.clear();
     
     // Bounds of view trapezoid in world space (i.e. view frustum projected onto z = 0 plane)
-    glm::vec2 viewBL = { 0.f, m_vpHeight };       // bottom left
+    glm::vec2 viewBL = { 0.f,       m_vpHeight }; // bottom left
     glm::vec2 viewBR = { m_vpWidth, m_vpHeight }; // bottom right
-    glm::vec2 viewTR = { m_vpWidth, 0.f };        // top right
-    glm::vec2 viewTL = { 0.f, 0.f };              // top left
+    glm::vec2 viewTR = { m_vpWidth, 0.f        }; // top right
+    glm::vec2 viewTL = { 0.f,       0.f        }; // top left
     
     screenToGroundPlane(viewBL.x, viewBL.y);
     screenToGroundPlane(viewBR.x, viewBR.y);
@@ -346,23 +354,12 @@ void View::updateTiles() {
     
     for (int i = 0; i < MAX_LOD; i++) {
         x_l_pos[i] = (next_even(int(viewCenterX + tilesAtFullZoom + invLodFunc(i)) >> i)) << i;
-    }
-    
-    for (int i = 0; i < MAX_LOD; i++) {
         x_l_neg[i] = (prev_even(int(viewCenterX - tilesAtFullZoom - invLodFunc(i)) >> i)) << i;
-    }
-    
-    for (int i = 0; i < MAX_LOD; i++) {
         y_l_pos[i] = (next_even(int(viewCenterY + tilesAtFullZoom + invLodFunc(i)) >> i)) << i;
-    }
-    
-    for (int i = 0; i < MAX_LOD; i++) {
-        y_l_neg[i] = (prev_even(int(viewCenterY  - tilesAtFullZoom - invLodFunc(i)) >> i)) << i;
+        y_l_neg[i] = (prev_even(int(viewCenterY - tilesAtFullZoom - invLodFunc(i)) >> i)) << i;
     }
     
     Scan s = [&](int x, int y) {
-        
-        int z = int(m_zoom);
 
         int lod = 0;
         while (lod < MAX_LOD && x_l_pos[lod] <= x) { lod++; }
@@ -373,6 +370,8 @@ void View::updateTiles() {
         if (x > x_l_pos[MAX_LOD - 1] || x < x_l_neg[MAX_LOD - 1] || y > y_l_pos[MAX_LOD - 1] || y < y_l_neg[MAX_LOD - 1]) {
             return;
         }
+        
+        int z = int(m_zoom);
         
         x >>= lod;
         y >>= lod;
