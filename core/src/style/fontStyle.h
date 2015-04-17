@@ -24,7 +24,7 @@ protected:
 
 public:
 
-    FontStyle(const std::string& _fontName, std::string _name, float _fontSize, bool _sdf = false, GLenum _drawMode = GL_TRIANGLES);
+    FontStyle(const std::string& _fontName, std::string _name, float _fontSize, unsigned int _color = 0xffffff, bool _sdf = false, GLenum _drawMode = GL_TRIANGLES);
 
     virtual void setupFrame(const std::shared_ptr<View>& _view, const std::shared_ptr<Scene>& _scene) override;
     virtual void setupTile(const std::shared_ptr<MapTile>& _tile) override;
@@ -42,6 +42,7 @@ private:
 
     std::string m_fontName;
     float m_fontSize;
+    int m_color;
     bool m_sdf;
 
 };

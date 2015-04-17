@@ -64,18 +64,23 @@ namespace Tangram {
             m_scene->addStyle(std::move(linesStyle));
 
             m_ftContext = std::make_shared<FontContext>();
-            m_ftContext->addFont("Roboto-Regular.ttf", "Roboto-Regular");
+            m_ftContext->addFont("FiraSans-Medium.ttf", "FiraSans");
+            m_ftContext->addFont("FuturaStd-Condensed.ttf", "Futura");
             m_labelContainer = LabelContainer::GetInstance();
             m_labelContainer->setFontContext(m_ftContext);
 
-            std::unique_ptr<Style> fontStyle(new FontStyle("Roboto-Regular", "FontStyle", 15.0f, true));
-            fontStyle->addLayers({
+            std::unique_ptr<Style> textStyle0(new FontStyle("FiraSans", "textstyle0", 15.0f, 0xF7F0E1, true));
+            textStyle0->addLayers({
                 "roads",
-                "landuse",
                 "places",
                 "pois"
             });
-            m_scene->addStyle(std::move(fontStyle));
+            m_scene->addStyle(std::move(textStyle0));
+            std::unique_ptr<Style> textStyle1(new FontStyle("Futura", "textstyle1", 18.0f, 0x26241F, true));
+            textStyle1->addLayers({
+                "landuse",
+            });
+            m_scene->addStyle(std::move(textStyle1));
             
             std::unique_ptr<DebugStyle> debugStyle(new DebugStyle("Debug"));
             m_scene->addStyle(std::move(debugStyle));

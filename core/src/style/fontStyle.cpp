@@ -2,8 +2,8 @@
 
 MapTile* FontStyle::processedTile = nullptr;
 
-FontStyle::FontStyle(const std::string& _fontName, std::string _name, float _fontSize, bool _sdf, GLenum _drawMode)
-: Style(_name, _drawMode), m_fontName(_fontName), m_fontSize(_fontSize), m_sdf(_sdf) {
+FontStyle::FontStyle(const std::string& _fontName, std::string _name, float _fontSize, unsigned int _color, bool _sdf, GLenum _drawMode)
+: Style(_name, _drawMode), m_fontName(_fontName), m_fontSize(_fontSize), m_color(_color), m_sdf(_sdf) {
 
     constructVertexLayout();
     constructShaderProgram();
@@ -141,7 +141,7 @@ void FontStyle::buildPolygon(Polygon& _polygon, std::string& _layer, Properties&
         return;
     }
     
-    ftContext->setFont(m_fontName, m_fontSize * m_pixelScale * 1.5);
+    ftContext->setFont(m_fontName, m_fontSize * m_pixelScale);
     
     if (m_sdf) {
         float blurSpread = 2.5;
@@ -216,7 +216,12 @@ void FontStyle::setupFrame(const std::shared_ptr<View>& _view, const std::shared
 
     m_shaderProgram->setUniformi("u_tex", atlas->getTextureSlot());
     m_shaderProgram->setUniformf("u_resolution", _view->getWidth(), _view->getHeight());
-    m_shaderProgram->setUniformf("u_color", 1.0, 1.0, 1.0);
+    
+    float r = (m_color >> 16 & 0xff) / 255.0;
+    float g = (m_color >> 8  & 0xff) / 255.0;
+    float b = (m_color       & 0xff) / 255.0;
+    
+    m_shaderProgram->setUniformf("u_color", r, g, b);
     m_shaderProgram->setUniformMatrix4f("u_proj", projectionMatrix);
 
     glEnable(GL_BLEND);

@@ -12,6 +12,7 @@ varying vec2 v_uv;
 varying float v_alpha;
 
 const float gamma = 2.2;
+const float tint = 1.8;
 const float sdf = 0.8;
 
 float contour(in float d, in float w, in float off) {
@@ -34,13 +35,13 @@ float sampleAlpha(in vec2 uv, float distance, in float off) {
                + sample(box.zy, distance, off);
     
     alpha = (alpha + 0.5 * asum) / 2.0;
-    alpha = pow(alpha, 1.0 / gamma);
 
     return alpha;
 }
 
 void main(void) {
     float distance = texture2D(u_tex, v_uv).a;
-    float alpha = sampleAlpha(v_uv, distance, sdf);
+    float alpha = sampleAlpha(v_uv, distance, sdf) * tint;
+    alpha = pow(alpha, 1.0 / gamma);
     gl_FragColor = vec4(u_color, v_alpha * alpha);
 }
