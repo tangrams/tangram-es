@@ -14,6 +14,7 @@
 #include "style/polygonStyle.h"
 #include "style/polylineStyle.h"
 #include "style/fontStyle.h"
+#include "style/debugTextStyle.h"
 #include "style/debugStyle.h"
 #include "scene/scene.h"
 #include "scene/lights.h"
@@ -71,7 +72,10 @@ namespace Tangram {
             std::unique_ptr<Style> fontStyle(new FontStyle("Roboto-Regular", "FontStyle", 14.0f, true));
             fontStyle->addLayers({"roads"});
             m_scene->addStyle(std::move(fontStyle));
-            
+
+            std::unique_ptr<Style> debugTextStyle(new DebugTextStyle("Roboto-Regular", "DebugTextStyle", 30.0f, true));
+            m_scene->addStyle(std::move(debugTextStyle));
+
             std::unique_ptr<DebugStyle> debugStyle(new DebugStyle("Debug"));
             m_scene->addStyle(std::move(debugStyle));
 
