@@ -42,7 +42,7 @@ namespace Tangram {
             m_view = std::make_shared<View>();
             
             // Move the view to coordinates in Manhattan so we have something interesting to test
-            glm::dvec2 target = m_view->getMapProjection().LonLatToMeters(glm::dvec2(-1, -1));
+            glm::dvec2 target = m_view->getMapProjection().LonLatToMeters(glm::dvec2(-74.00796, 40.70361));
             m_view->setPosition(target.x, target.y);
         }
 
@@ -119,11 +119,6 @@ namespace Tangram {
         while (Error::hadGlError("Tangram::initialize()")) {}
 
         logMsg("finish initialize\n");
-        
-        m_view->pitch(0.75);
-        m_view->roll(-3.1415926 / 2.0);
-        setDebugFlag(DebugFlags::TILE_BOUNDS, true);
-        setDebugFlag(DebugFlags::PROXY_COLORS, true);
 
     }
 
