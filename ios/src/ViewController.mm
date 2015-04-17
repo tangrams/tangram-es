@@ -7,12 +7,14 @@
 //
 
 #import "ViewController.h"
+#import "tangram.h"
 
 @interface ViewController () {
     
 }
 @property (strong, nonatomic) EAGLContext *context;
 @property CGFloat pixelScale;
+@property bool renderRequested;
 
 - (void)setupGL;
 - (void)tearDownGL;
@@ -30,12 +32,16 @@
 {
     [super viewDidLoad];
     
-    self.pixelScale = [[UIScreen mainScreen] scale];
     self.context = [[EAGLContext alloc] initWithAPI:kEAGLRenderingAPIOpenGLES2];
+    self.pixelScale = [[UIScreen mainScreen] scale];
+    self.renderRequested = true;
+    self.continuous = false;
 
     if (!self.context) {
         NSLog(@"Failed to create ES context");
     }
+    
+    setViewController(self);
     
     GLKView *view = (GLKView *)self.view;
     view.context = self.context;
@@ -98,11 +104,13 @@
 - (void)respondToTapGesture:(UITapGestureRecognizer *)tapRecognizer {
     CGPoint location = [tapRecognizer locationInView:self.view];
     Tangram::handleTapGesture(location.x * self.pixelScale, location.y * self.pixelScale);
+    [self renderOnce];
 }
 
 - (void)respondToDoubleTapGesture:(UITapGestureRecognizer *)doubleTapRecognizer {
     CGPoint location = [doubleTapRecognizer locationInView:self.view];
     Tangram::handleDoubleTapGesture(location.x * self.pixelScale, location.y * self.pixelScale);
+    [self renderOnce];
 }
 
 - (void)respondToPanGesture:(UIPanGestureRecognizer *)panRecognizer {
@@ -111,6 +119,7 @@
     CGPoint end = [panRecognizer locationInView:self.view];
     CGPoint start = {end.x - displacement.x, end.y - displacement.y};
     Tangram::handlePanGesture(start.x * self.pixelScale, start.y * self.pixelScale, end.x * self.pixelScale, end.y * self.pixelScale);
+    [self renderOnce];
 }
 
 - (void)respondToPinchGesture:(UIPinchGestureRecognizer *)pinchRecognizer {
@@ -118,6 +127,7 @@
     CGFloat scale = pinchRecognizer.scale;
     [pinchRecognizer setScale:1.0];
     Tangram::handlePinchGesture(location.x * self.pixelScale, location.y * self.pixelScale, scale);
+    [self renderOnce];
 }
 
 - (void)respondToRotationGesture:(UIRotationGestureRecognizer *)rotationRecognizer {
@@ -125,12 +135,14 @@
     CGFloat rotation = rotationRecognizer.rotation;
     [rotationRecognizer setRotation:0.0];
     Tangram::handleRotateGesture(position.x * self.pixelScale, position.y * self.pixelScale, rotation);
+    [self renderOnce];
 }
 
 - (void)respondToShoveGesture:(UIPanGestureRecognizer *)shoveRecognizer {
     CGPoint displacement = [shoveRecognizer translationInView:self.view];
     [shoveRecognizer setTranslation:{0, 0} inView:self.view];
     Tangram::handleShoveGesture(displacement.y / self.view.bounds.size.height);
+    [self renderOnce];
 }
 
 - (void)dealloc
@@ -185,11 +197,30 @@
     Tangram::resize(size.width * self.pixelScale, size.height * self.pixelScale);
 }
 
+- (void)renderOnce
+{
+    if (!self.continuous) {
+        self.renderRequested = true;
+        self.paused = false;
+    }
+}
+
+- (void)setContinuous:(bool)c
+{
+    _continuous = c;
+    self.paused = !c;
+}
+
 #pragma mark - GLKView and GLKViewController delegate methods
 
 - (void)update
 {
     Tangram::update([self timeSinceLastUpdate]);
+    
+    if (!self.continuous && !self.renderRequested) {
+        self.paused = true;
+    }
+    self.renderRequested = false;
 }
 
 - (void)glkView:(GLKView *)view drawInRect:(CGRect)rect

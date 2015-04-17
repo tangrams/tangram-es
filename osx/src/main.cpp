@@ -168,7 +168,11 @@ int main(void) {
         glfwSwapBuffers(window);
 
         /* Poll for and process events */
-        glfwPollEvents();
+        if (isContinuousRendering()) {
+            glfwPollEvents();
+        } else {
+            glfwWaitEvents();
+        }
     }
     
     Tangram::teardown();
