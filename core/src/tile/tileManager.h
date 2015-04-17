@@ -51,7 +51,7 @@ public:
      */
     bool updateTileSet();
 
-    void addToWorkerQueue(const std::string& _rawData, const TileID& _id, const int _dataSourceID);
+    void addToWorkerQueue(std::vector<char>&& _rawData, const TileID& _id, const int _dataSourceID);
     
     /* Returns the set of currently visible tiles */
     const std::map<TileID, std::shared_ptr<MapTile>>& getVisibleTiles() { return m_tileSet; }
@@ -73,7 +73,7 @@ private:
     const static size_t MAX_WORKERS = 4;
     std::list<std::unique_ptr<TileWorker> > m_workers;
     
-    std::list<WorkerData> m_queuedTiles;
+    std::list<std::unique_ptr<WorkerData>> m_queuedTiles;
     
     /*
      * Constructs a future (async) to load data of a new visible tile

@@ -15,20 +15,29 @@
  * http://docs.oracle.com/javase/7/docs/technotes/guides/jni/spec/invocation.html
  */
 
-static AAssetManager* assetManager;
-
+static JavaVM* jvm;
 static JNIEnv* jniEnv;
 static jobject tangramInstance;
+static jmethodID requestRenderMethodID;
+static jmethodID setRenderModeMethodID;
+static jmethodID networkRequestMID;
+static jmethodID cancelNetworkRequestMID;
+static AAssetManager* assetManager;
 
-void cacheJniEnv(JNIEnv* _jniEnv) {
+static bool s_isContinuousRendering = false;
+
+std::function<void(std::vector<char>&&, TileID, int)> networkCallback;
+
+void setupJniEnv(JNIEnv* _jniEnv, jobject _tangramInstance, jobject _assetManager) {
+	_jniEnv->GetJavaVM(&jvm);
     jniEnv = _jniEnv;
-}
 
-void cacheTangramInstance(jobject _tangramInstance) {
     tangramInstance = jniEnv->NewGlobalRef(_tangramInstance);
-}
-
-void setAssetManager(jobject _assetManager) {
+    jclass tangramClass = jniEnv->FindClass("com/mapzen/tangram/Tangram");
+    networkRequestMID = jniEnv->GetMethodID(tangramClass, "networkRequest", "(Ljava/lang/String;IIII)Z");
+    cancelNetworkRequestMID = jniEnv->GetMethodID(tangramClass, "cancelNetworkRequest", "(Ljava/lang/String;)V");
+	requestRenderMethodID = _jniEnv->GetMethodID(tangramClass, "requestRender", "()V");
+    setRenderModeMethodID = _jniEnv->GetMethodID(tangramClass, "setRenderMode", "(I)V");
 
     assetManager = AAssetManager_fromJava(jniEnv, _assetManager);
 
@@ -44,6 +53,45 @@ void logMsg(const char* fmt, ...) {
     va_start(args, fmt);
     __android_log_vprint(ANDROID_LOG_DEBUG, "Tangram", fmt, args);
     va_end(args);
+
+}
+
+void requestRender() {
+    
+    JNIEnv *jniEnv;
+    int status = jvm->GetEnv((void**)&jniEnv, JNI_VERSION_1_6);
+    if(status == JNI_EDETACHED) {
+        jvm->AttachCurrentThread(&jniEnv, NULL);
+    }
+
+    jniEnv->CallVoidMethod(tangramInstance, requestRenderMethodID);
+
+    if(status == JNI_EDETACHED) {
+        jvm->DetachCurrentThread();
+    }
+}
+
+void setContinuousRendering(bool _isContinuous) {
+
+    s_isContinuousRendering = _isContinuous;
+
+    JNIEnv *jniEnv;
+    int status = jvm->GetEnv((void**)&jniEnv, JNI_VERSION_1_6);
+    if(status == JNI_EDETACHED) {
+        jvm->AttachCurrentThread(&jniEnv, NULL);
+    }
+
+    jniEnv->CallVoidMethod(tangramInstance, requestRenderMethodID, _isContinuous ? 1 : 0);
+
+    if(status == JNI_EDETACHED) {
+        jvm->DetachCurrentThread();
+    }
+
+}
+
+bool isContinuousRendering() {
+
+    return s_isContinuousRendering;
 
 }
 
@@ -105,15 +153,10 @@ unsigned char* bytesFromResource(const char* _path, unsigned int* _size) {
 }
 
 bool streamFromHttpASync(const std::string& _url, const TileID& _tileID, const int _dataSourceID) {
-    jstring jUrl;
-    jboolean methodResult;
+    
+    jstring jUrl = jniEnv->NewStringUTF(_url.c_str());
 
-    jclass tangramClass = jniEnv->FindClass("com/mapzen/tangram/Tangram");
-    jmethodID method = jniEnv->GetMethodID(tangramClass, "networkRequest", "(Ljava/lang/String;IIII)Z");
-
-    jUrl = jniEnv->NewStringUTF(_url.c_str());
-
-    methodResult = jniEnv->CallBooleanMethod(tangramInstance, method, jUrl, (jint)_tileID.x, (jint)_tileID.y, (jint)_tileID.z, (jint)_dataSourceID);
+    jboolean methodResult = jniEnv->CallBooleanMethod(tangramInstance, networkRequestMID, jUrl, (jint)_tileID.x, (jint)_tileID.y, (jint)_tileID.z, (jint)_dataSourceID);
 
     if(!methodResult) {
         logMsg("\"networkRequest\" returned false");
@@ -124,13 +167,29 @@ bool streamFromHttpASync(const std::string& _url, const TileID& _tileID, const i
 }
 
 void cancelNetworkRequest(const std::string& _url) {
-    jstring jUrl;
 
-    jclass tangramClass = jniEnv->FindClass("com/mapzen/tangram/Tangram");
-    jmethodID method = jniEnv->GetMethodID(tangramClass, "cancelNetworkRequest", "(Ljava/lang/String;)V");
+    jstring jUrl = jniEnv->NewStringUTF(_url.c_str());
+    jniEnv->CallVoidMethod(tangramInstance, cancelNetworkRequestMID, jUrl);
 
-    jUrl = jniEnv->NewStringUTF(_url.c_str());
-    jniEnv->CallVoidMethod(tangramInstance, method, jUrl);
+}
+
+void setNetworkRequestCallback(std::function<void(std::vector<char>&&, TileID, int)>&& _callback) {
+
+    networkCallback = _callback;
+
+}
+
+void networkDataBridge(JNIEnv* _jniEnv, jbyteArray _jFetchedBytes, int _tileIDx, int _tileIDy, int _tileIDz, int _dataSourceID) {
+
+    int dataLength = _jniEnv->GetArrayLength(_jFetchedBytes);
+
+    std::vector<char> rawData;
+    rawData.resize(dataLength);
+
+    _jniEnv->GetByteArrayRegion(_jFetchedBytes, 0, dataLength, reinterpret_cast<jbyte*>(rawData.data()));
+
+    networkCallback(std::move(rawData), TileID(_tileIDx, _tileIDy, _tileIDz), _dataSourceID);
+
 }
 
 

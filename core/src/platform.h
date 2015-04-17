@@ -1,26 +1,49 @@
 #pragma once
 
+#include <string>
+#include <sstream>
+#include <vector>
+#include <memory>
+#include <functional>
+
+#include "tileID.h"
+
 #ifdef PLATFORM_ANDROID
+
 struct _JNIEnv;
 typedef _JNIEnv JNIEnv;
 class _jobject;
 typedef _jobject* jobject;
-void cacheJniEnv(JNIEnv* _jniEnv);
-void cacheTangramInstance(jobject _tangramInstance);
-void setAssetManager(jobject _assetManager);
+class _jbyteArray;
+typedef _jbyteArray* jbyteArray;
+
+void setupJniEnv(JNIEnv* _jniEnv, jobject _tangramInstance, jobject _assetManager);
+void networkDataBridge(JNIEnv* jniEnv, jbyteArray jFetchedBytes, int tileIDx, int tileIDy, int tileIDz, int dataSourceID);
+#endif
+
+#if (defined PLATFORM_IOS) && (defined __OBJC__)
+#import "ViewController.h"
+void setViewController(ViewController* _controller);
 #endif
 
 #include <string>
-#include <sstream>
-#include <memory>
-
-#include "tileID.h"
 
 /* Print a formatted message to the console
  *
  * Uses printf syntax to write a string to stderr (or logcat, on Android)
  */
 void logMsg(const char* fmt, ...);
+
+/* Request that a new frame be rendered by the windowing system
+ */
+void requestRender();
+
+/* If called with 'true', the windowing system will re-draw frames continuously;
+ * otherwise new frames will only be drawn when 'requestRender' is called. 
+ */
+void setContinuousRendering(bool _isContinuous);
+
+bool isContinuousRendering();
 
 /* Read a bundled resource file as a string
  * 
@@ -43,4 +66,6 @@ unsigned char* bytesFromResource(const char* _path, unsigned int* _size);
 bool streamFromHttpASync(const std::string& _url, const TileID& _tileID, const int _dataSourceID);
 
 void cancelNetworkRequest(const std::string& _url);
+
+void setNetworkRequestCallback(std::function<void(std::vector<char>&&, TileID, int)>&& _callback);
 

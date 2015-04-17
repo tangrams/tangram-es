@@ -100,6 +100,14 @@ namespace Tangram {
             m_tileManager->addDataSource(std::move(dataSource));
         }
 
+        setNetworkRequestCallback([&](std::vector<char>&& _rawData, TileID _tileId, int _dataSourceID) {
+
+            m_tileManager->addToWorkerQueue(std::move(_rawData), _tileId, _dataSourceID);
+            requestRender();
+
+
+        });
+
         // Set up openGL state
         glDisable(GL_BLEND);
         glDisable(GL_STENCIL_TEST);
@@ -295,13 +303,5 @@ namespace Tangram {
         
     }
 
-    // NOTE: what happens when you have multiple data source???
-    // -- use m_dataSources index values to id data sources. However this will not work if we allow removal of dataSources on the fly
-    // -- TODO: use explicit id and use a set in m_tileManager for dataSources.
-    void networkDataBridge(std::string _rawData, int _tileIDx, int _tileIDy, int _tileIDz, int _dataSourceID) {
-        TileID tileID(_tileIDx, _tileIDy, _tileIDz);
-        m_tileManager->addToWorkerQueue(_rawData, tileID, _dataSourceID);
-    }
-    
 }
 

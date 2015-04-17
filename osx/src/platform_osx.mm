@@ -9,6 +9,9 @@
 #include <curl/curl.h>
 
 #include "platform.h"
+#include "gl.h"
+
+static bool s_isContinuousRendering = false;
 
 void logMsg(const char* fmt, ...) {
     
@@ -16,6 +19,24 @@ void logMsg(const char* fmt, ...) {
     va_start(args, fmt);
     vfprintf(stderr, fmt, args);
     va_end(args);
+    
+}
+
+void requestRender() {
+    
+    glfwPostEmptyEvent();
+    
+}
+
+void setContinuousRendering(bool _isContinuous) {
+    
+    s_isContinuousRendering = _isContinuous;
+    
+}
+
+bool isContinuousRendering() {
+    
+    return s_isContinuousRendering;
     
 }
 
@@ -100,7 +121,11 @@ bool streamFromHttpASync(const std::string& _url, const TileID& _tileID, const i
 }
 
 void cancelNetworkRequest(const std::string& _url) {
+    //TODO
+}
 
+void setNetworkRequestCallback(std::function<void(std::vector<char>&&, TileID, int)>&& _callback) {
+    //TODO
 }
 
 #endif //PLATFORM_OSX

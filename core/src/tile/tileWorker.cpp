@@ -4,7 +4,6 @@
 #include "style/style.h"
 
 #include <chrono>
-#include <sstream>
 
 TileWorker::TileWorker() {
     m_free = true;
@@ -16,12 +15,12 @@ void TileWorker::abort() {
     m_aborted = true;
 }
 
-void TileWorker::processTileData(const WorkerData& _workerData, 
+void TileWorker::processTileData(std::unique_ptr<WorkerData> _workerData, 
                                  const std::vector<std::unique_ptr<DataSource>>& _dataSources,
                                  const std::vector<std::unique_ptr<Style>>& _styles,
                                  const View& _view) {
 
-    m_workerData.reset(new WorkerData(std::move(_workerData)));
+    m_workerData = std::move(_workerData);
     m_free = false;
     m_finished = false;
     m_aborted = false;
@@ -29,14 +28,12 @@ void TileWorker::processTileData(const WorkerData& _workerData,
     m_future = std::async(std::launch::async, [&]() {
         
         TileID tileID = *(m_workerData->tileID);
-        std::stringstream rawDataStream;
-        rawDataStream << m_workerData->rawTileData;
         auto& dataSource = _dataSources[m_workerData->dataSourceID];
-
+        
         auto tile = std::shared_ptr<MapTile>(new MapTile(tileID, _view.getMapProjection()));
 
         if( !(dataSource->hasTileData(tileID)) ) {
-            dataSource->setTileData( tileID, dataSource->parse(*tile, rawDataStream));
+            dataSource->setTileData( tileID, dataSource->parse(*tile, m_workerData->rawTileData));
         }
 
         auto tileData = dataSource->getTileData(tileID);
@@ -53,7 +50,9 @@ void TileWorker::processTileData(const WorkerData& _workerData,
             tile->update(0, *style, _view);
         }
         m_finished = true;
-
+        
+        requestRender();
+        
         // Return finished tile
         return std::move(tile);
 

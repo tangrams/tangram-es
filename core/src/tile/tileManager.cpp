@@ -35,10 +35,9 @@ TileManager::~TileManager() {
     m_tileSet.clear();
 }
 
-void TileManager::addToWorkerQueue(const std::string& _rawData, const TileID& _tileId, const int _dataSourceID) {
+void TileManager::addToWorkerQueue(std::vector<char>&& _rawData, const TileID& _tileId, const int _dataSourceID) {
     std::lock_guard<std::mutex> lock(m_queueTileMutex);
-    m_queuedTiles.push_front(WorkerData(_rawData, _tileId, _dataSourceID));
-    
+    m_queuedTiles.push_front(std::unique_ptr<WorkerData>(new WorkerData(std::move(_rawData), _tileId, _dataSourceID)));
 }
 
 bool TileManager::updateTileSet() {
@@ -52,12 +51,11 @@ bool TileManager::updateTileSet() {
 
         while (workersIter != m_workers.end() && queuedTilesIter != m_queuedTiles.end()) {
 
-            auto& workerData = *queuedTilesIter;
             auto& worker = *workersIter;
 
             if (worker->isFree()) {
-                logMsg("Dispatched worker for processing tile: [%d, %d, %d]\n", workerData.tileID->x, workerData.tileID->y, workerData.tileID->z);
-                worker->processTileData(workerData, m_dataSources, m_scene->getStyles(), *m_view);
+                logMsg("Dispatched worker for processing tile: [%d, %d, %d]\n", (*queuedTilesIter)->tileID->x, (*queuedTilesIter)->tileID->y, (*queuedTilesIter)->tileID->z);
+                worker->processTileData(std::move(*queuedTilesIter), m_dataSources, m_scene->getStyles(), *m_view);
                 queuedTilesIter = m_queuedTiles.erase(queuedTilesIter);
             }
 
@@ -152,7 +150,7 @@ void TileManager::addTile(const TileID& _tileID) {
         // Create workerData with empty "rawData", parsed data will be fetched in the Worker::processTileData
         logMsg("Initiate network request for tile: [%d, %d, %d]\n", _tileID.x, _tileID.y, _tileID.z);
         if(m_dataSources[dsIndex]->hasTileData(_tileID)) {
-            addToWorkerQueue(std::string(""), _tileID, dsIndex);
+            addToWorkerQueue(std::move(std::vector<char>()), _tileID, dsIndex);
         } else if( !m_dataSources[dsIndex]->loadTileData(_tileID, dsIndex) ) {
             logMsg("ERROR: Loading failed for tile [%d, %d, %d]\n", _tileID.z, _tileID.x, _tileID.y);
         }
@@ -171,12 +169,14 @@ void TileManager::removeTile(std::map< TileID, std::shared_ptr<MapTile> >::itera
         dataSource->cancelLoadingTile(id);
     }
 
-    // tmp workerData required as "compare value" for std::find.
-    WorkerData tmp = WorkerData(std::string(""), id, 0);
-    
     // Remove tile from queue, if present
-    const auto& found = std::find(m_queuedTiles.begin(), m_queuedTiles.end(), tmp);
+    const auto& found = std::find_if(m_queuedTiles.begin(), m_queuedTiles.end(), 
+                                        [&](std::unique_ptr<WorkerData>& p) {
+                                            return ( *(p->tileID) == id);
+                                        });
+
     if (found != m_queuedTiles.end()) {
+        logMsg("Erasing tile: [%d,%d,%d]\n", id.x, id.y, id.z);
         m_queuedTiles.erase(found);
         cleanProxyTiles(id);
     }

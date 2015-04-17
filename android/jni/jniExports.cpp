@@ -4,10 +4,8 @@
 #include "platform.h"
 
 extern "C" {
-    JNIEXPORT void JNICALL Java_com_mapzen_tangram_Tangram_init(JNIEnv* jniEnv, jobject obj, jobject assetManager, jobject tangramInstance) {
-        cacheJniEnv(jniEnv);
-        cacheTangramInstance(tangramInstance);
-        setAssetManager(assetManager);
+    JNIEXPORT void JNICALL Java_com_mapzen_tangram_Tangram_init(JNIEnv* jniEnv, jobject obj, jobject tangramInstance, jobject assetManager) {
+        setupJniEnv(jniEnv, tangramInstance, assetManager);
         Tangram::initialize();
     }
 
@@ -60,12 +58,7 @@ extern "C" {
     }
 
     JNIEXPORT void JNICALL Java_com_mapzen_tangram_Tangram_networkDataBridge(JNIEnv* jniEnv, jobject obj, jbyteArray jFetchedBytes, jint tileIDx, jint tileIDy, jint tileIDz, jint dataSourceID) {
-        int dataLength = jniEnv->GetArrayLength(jFetchedBytes);
-        jbyte* const byteArrayStart = jniEnv->GetByteArrayElements(jFetchedBytes, 0);
-        const char* byteCVal = (const char*)byteArrayStart;
-        std::string rawData = std::string(byteCVal, dataLength);
-        jniEnv->ReleaseByteArrayElements(jFetchedBytes, byteArrayStart, 0);
-        Tangram::networkDataBridge(rawData, tileIDx, tileIDy, tileIDz, dataSourceID);
+        networkDataBridge(jniEnv, jFetchedBytes, tileIDx, tileIDy, tileIDz, dataSourceID);
     }
 
 }

@@ -8,36 +8,32 @@
 #include "mapTile.h"
 
 struct WorkerData {
-    std::string rawTileData;
-    int dataSourceID;
+    std::vector<char> rawTileData;
     std::unique_ptr<TileID> tileID;
+    int dataSourceID;
 
     WorkerData() {
         tileID.reset(new TileID(NOT_A_TILE));
     }
 
-    WorkerData(const std::string& _rawTileData, const TileID& _tileID, const int _dataSourceID) : 
-                                                                rawTileData(_rawTileData),
+    WorkerData(std::vector<char>&& _rawTileData, const TileID& _tileID, const int _dataSourceID) :
+                                                                rawTileData(std::move(_rawTileData)), 
                                                                 dataSourceID(_dataSourceID) {
         tileID.reset(new TileID(_tileID));
     }
 
-    WorkerData(const WorkerData&& _other) {
+    WorkerData(WorkerData&& _other) : rawTileData(std::move(_other.rawTileData)),
+                                      dataSourceID(std::move(_other.dataSourceID)) {
         tileID.reset(new TileID(*(_other.tileID)));
-        rawTileData = std::move(_other.rawTileData);
-        dataSourceID = std::move(_other.dataSourceID);
     }
 
     WorkerData& operator=(WorkerData&& _other) {
-        tileID.reset(new TileID(*(_other.tileID)));
         rawTileData = std::move(_other.rawTileData);
+        tileID.reset(new TileID(*(_other.tileID)));
         dataSourceID = std::move(_other.dataSourceID);
         return *this;
     }
 
-    bool operator==(const WorkerData& _rhs) const {
-         return tileID == _rhs.tileID;
-    }
 };
 
 class TileWorker {
@@ -46,7 +42,7 @@ public:
     
     TileWorker();
     
-    void processTileData(const WorkerData& _workerData, 
+    void processTileData(std::unique_ptr<WorkerData> _workerData, 
                          const std::vector<std::unique_ptr<DataSource>>& _dataSources,
                          const std::vector<std::unique_ptr<Style>>& _styles,
                          const View& _view);
