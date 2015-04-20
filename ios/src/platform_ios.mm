@@ -109,7 +109,7 @@ bool streamFromHttpASync(const std::string& _url, const TileID& _tileID, const i
 }
 
 void cancelNetworkRequest(const std::string& _url) {
-    NSString *nsUrl = [NSString stringWithUTF8String:_url.c_str()];
+    NSString* nsUrl = [NSString stringWithUTF8String:_url.c_str()];
     [viewController cancelNetworkRequestWithUrl:nsUrl];
 }
 
