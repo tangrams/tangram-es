@@ -52,12 +52,12 @@ void main() {
     // decode the uv from a text id
     vec2 ij = id2ij(int(a_fsid), u_tresolution.x);
     vec2 uv1 = ij2uv(ij.x, ij.y, u_tresolution.x, u_tresolution.y);
-    vec2 uv2 = ij2uv(ij.x+1.0, ij.y, u_tresolution.x, u_tresolution.y);
 
     // reads the transform data and its precision
     vec4 tdata = texture2D(u_transforms, uv1);
     
     if (alpha != 0.0) {
+        vec2 uv2 = ij2uv(ij.x+1.0, ij.y, u_tresolution.x, u_tresolution.y);
         vec4 tdataPrecision = texture2D(u_transforms, uv2);
 
         float txe = u_resolution.x / 255.0; // max error on x
