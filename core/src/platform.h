@@ -21,10 +21,15 @@ void setupJniEnv(JNIEnv* _jniEnv, jobject _tangramInstance, jobject _assetManage
 void networkDataBridge(JNIEnv* jniEnv, jbyteArray jFetchedBytes, int tileIDx, int tileIDy, int tileIDz, int dataSourceID);
 #endif
 
+
 #if (defined PLATFORM_IOS) && (defined __OBJC__)
 #import "ViewController.h"
 void setViewController(ViewController* _controller);
 void networkDataBridge(std::vector<char>& _rawData, TileID _tileID, int _dataSource);
+#endif
+
+#ifdef PLATFORM_OSX
+void NSurlInit();
 #endif
 
 #include <string>

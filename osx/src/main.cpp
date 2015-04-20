@@ -1,5 +1,3 @@
-#include <curl/curl.h>
-
 #include "tangram.h"
 #include "platform.h"
 #include "gl.h"
@@ -140,8 +138,7 @@ int main(void) {
     /* Make the window's context current */
     glfwMakeContextCurrent(window);
 
-    /* Do Curl Init */
-    curl_global_init(CURL_GLOBAL_DEFAULT);
+    NSurlInit();
 
     Tangram::initialize();
     Tangram::resize(width, height);
@@ -185,7 +182,6 @@ int main(void) {
     }
     
     Tangram::teardown();
-    curl_global_cleanup();
     glfwTerminate();
     return 0;
 }

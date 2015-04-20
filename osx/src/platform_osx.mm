@@ -6,12 +6,13 @@
 #import <cstdarg>
 #import <fstream>
 
-#include <curl/curl.h>
-
 #include "platform.h"
 #include "gl.h"
 
 static bool s_isContinuousRendering = false;
+static std::function<void(std::vector<char>&&, TileID, int)> networkCallback;
+
+NSURLSession* defaultSession;
 
 void logMsg(const char* fmt, ...) {
     
@@ -86,46 +87,57 @@ unsigned char* bytesFromResource(const char* _path, unsigned int* _size) {
     return reinterpret_cast<unsigned char *>(cdata);
 }
 
-//write_data call back from CURLOPT_WRITEFUNCTION
-//responsible to read and fill "stream" with the data.
-static size_t write_data(void *_ptr, size_t _size, size_t _nmemb, void *_stream) {
-    ((std::stringstream*) _stream)->write(reinterpret_cast<char *>(_ptr), _size * _nmemb);
-    return _size * _nmemb;
+void NSurlInit() {
+    NSURLSessionConfiguration *defaultConfigObject = [NSURLSessionConfiguration defaultSessionConfiguration];
+    NSString *cachePath = [NSTemporaryDirectory() stringByAppendingPathComponent:@"/tile_cache"];
+    NSURLCache *tileCache = [[NSURLCache alloc] initWithMemoryCapacity: 4 * 1024 * 1024 diskCapacity: 30 * 1024 * 1024 diskPath: cachePath];
+    defaultConfigObject.URLCache = tileCache;
+    defaultConfigObject.requestCachePolicy = NSURLRequestUseProtocolCachePolicy;
+    defaultConfigObject.timeoutIntervalForRequest = 30;
+    defaultConfigObject.timeoutIntervalForResource = 60;
+    
+    defaultSession = [NSURLSession sessionWithConfiguration: defaultConfigObject];
 }
 
 bool streamFromHttpASync(const std::string& _url, const TileID& _tileID, const int _dataSourceID) {
 
-    std::stringstream _rawData;
-
-    CURL* curlHandle = curl_easy_init();
-
-    // set up curl to perform fetch
-    curl_easy_setopt(curlHandle, CURLOPT_WRITEFUNCTION, write_data);
-    curl_easy_setopt(curlHandle, CURLOPT_WRITEDATA, &_rawData);
-    curl_easy_setopt(curlHandle, CURLOPT_URL, _url.c_str());
-    curl_easy_setopt(curlHandle, CURLOPT_HEADER, 0L);
-    curl_easy_setopt(curlHandle, CURLOPT_VERBOSE, 0L);
-    curl_easy_setopt(curlHandle, CURLOPT_ACCEPT_ENCODING, "gzip");
+    NSString* nsUrl = [NSString stringWithUTF8String:_url.c_str()];
+    const TileID id = _tileID;
+    const int dataSourceID = _dataSourceID;
     
-    logMsg("Fetching URL with curl: %s\n", _url.c_str());
-
-    CURLcode result = curl_easy_perform(curlHandle);
+    NSURLSessionDataTask* dataTask = [defaultSession dataTaskWithURL:[NSURL URLWithString:nsUrl]
+                                                    completionHandler:^(NSData* data, NSURLResponse* response, NSError* error) {
+                                                        if(error == nil) {
+                                                            const char* rawData = (char *)[data bytes];
+                                                            int dataLength = [data length];
+                                                            std::vector<char> rawDataVec;
+                                                            rawDataVec.resize(dataLength);
+                                                            memcpy(rawDataVec.data(), rawData, dataLength);
+                                                            networkCallback(std::move(rawDataVec), id, dataSourceID);
+                                                        }
+                                                        else {
+                                                            logMsg("Got a response \"%s\" with error \"%s\".\n", response, error);
+                                                        }
+                                                    }];
+    [dataTask resume];
     
-    curl_easy_cleanup(curlHandle);
-    if (result != CURLE_OK) {
-        logMsg("curl_easy_perform failed: %s\n", curl_easy_strerror(result));
-        return false;
-    } else {
-        return true;
-    }
+    return true;
+    
 }
 
 void cancelNetworkRequest(const std::string& _url) {
-    //TODO
-}
-
-void setNetworkRequestCallback(std::function<void(std::vector<char>&&, TileID, int)>&& _callback) {
-    //TODO
+    
+    
+    NSString* nsUrl = [NSString stringWithUTF8String:_url.c_str()];
+   
+    [defaultSession getTasksWithCompletionHandler:^(NSArray* dataTasks, NSArray* uploadTasks, NSArray* downloadTasks) {
+        for(NSURLSessionTask* task in dataTasks) {
+            if([[task originalRequest].URL.absoluteString isEqualToString:nsUrl]) {
+                [task cancel];
+                break;
+            }
+        }
+    }];
 }
 
 #endif //PLATFORM_OSX
