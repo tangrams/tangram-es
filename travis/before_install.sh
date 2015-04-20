@@ -48,6 +48,7 @@ if [[ ${PLATFORM} == "android" ]]; then
     ANDROID_PLATFORM_VERSION="19"
 
     # install jdk7 and 32bit dependencies for android sdk
+    sudo apt-get update -qq
     sudo apt-get -qq -y install openjdk-7-jdk lib32z1-dev lib32stdc++6
 
     # Install android sdk
