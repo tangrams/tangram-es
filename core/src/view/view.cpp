@@ -269,11 +269,11 @@ static void scanLine(int _x0, int _x1, int _y, Scan _s) {
     }
 }
 
-static void scanSpan(edge _e0, edge _e1, int _yMin, int _yMax, Scan& _s) {
+static void scanSpan(edge _e0, edge _e1, int _min, int _max, Scan& _s) {
     
     // _e1 has a shorter y-span, so we'll use it to limit our y coverage
-    int y0 = fmax(_yMin, floor(_e1.y0));
-    int y1 = fmin(_yMax, ceil(_e1.y1));
+    int y0 = fmax(_min, floor(_e1.y0));
+    int y1 = fmin(_max, ceil(_e1.y1));
     
     // sort edges by x-coordinate
     if (_e0.x0 == _e1.x0 && _e0.y0 == _e1.y0) {
@@ -290,7 +290,7 @@ static void scanSpan(edge _e0, edge _e1, int _yMin, int _yMax, Scan& _s) {
     for (int y = y0; y < y1; y++) {
         double x0 = m0 * fmax(0.0, fmin(_e0.dy, y + d0 - _e0.y0)) + _e0.x0;
         double x1 = m1 * fmax(0.0, fmin(_e1.dy, y + d1 - _e1.y0)) + _e1.x0;
-        scanLine(floor(x1), ceil(x0), y, _s);
+        scanLine(fmax(_min, floor(x1)), fmin(_max, ceil(x0)), y, _s);
     }
     
 }
