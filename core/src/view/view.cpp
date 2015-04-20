@@ -371,10 +371,6 @@ void View::updateTiles() {
         while (lod < MAX_LOD && y >= y_l_pos[lod]) { lod++; }
         while (lod < MAX_LOD && y <  y_l_neg[lod]) { lod++; }
         
-        if (x > x_l_pos[MAX_LOD - 1] || x < x_l_neg[MAX_LOD - 1] || y > y_l_pos[MAX_LOD - 1] || y < y_l_neg[MAX_LOD - 1]) {
-            return;
-        }
-        
         int z = int(m_zoom);
         
         x >>= lod;
