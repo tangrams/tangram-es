@@ -47,6 +47,9 @@ if [[ ${PLATFORM} == "android" ]]; then
     ANDROID_BUILD_TOOL_VERSION="21.1.2"
     ANDROID_PLATFORM_VERSION="19"
 
+    # install jdk7 and 32bit dependencies for android sdk
+    sudo apt-get -qq -y install openjdk-7-jdk lib32z1-dev lib32stdc++6
+
     # Install android sdk
     wget https://dl-ssl.google.com/android/android-sdk_${ANDROID_SDK_VERSION}-linux.tgz
     tar -zxf android-sdk_${ANDROID_SDK_VERSION}-linux.tgz
@@ -69,6 +72,7 @@ if [[ ${PLATFORM} == "android" ]]; then
     echo "y" | android update sdk --all --filter platform-tools,build-tools-${ANDROID_BUILD_TOOL_VERSION},android-${ANDROID_PLATFORM_VERSION},extra-android-support --no-ui --force >/dev/null
     echo "Done."
 
-    # Make gradle executable
-    chmod +x gradlew
+    # Make sure gradlew is executable
+    chmod +x android/gradlew
+
 fi
