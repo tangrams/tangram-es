@@ -1,10 +1,10 @@
 #pragma once
 
-#include "fontStyle.h"
+#include "textStyle.h"
 #include "tangram.h"
 #include "typedMesh.h"
 
-class DebugTextStyle : public FontStyle {
+class DebugTextStyle : public TextStyle {
 
 protected:
 

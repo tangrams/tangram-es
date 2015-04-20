@@ -2,7 +2,7 @@
 #include "debugTextStyle.h"
 
 DebugTextStyle::DebugTextStyle(const std::string& _fontName, std::string _name, float _fontSize, unsigned int _color, bool _sdf, GLenum _drawMode)
-: FontStyle(_fontName, _name, _fontSize, _color, _sdf, _drawMode) {
+: TextStyle(_fontName, _name, _fontSize, _color, _sdf, _drawMode) {
 
 }
 
@@ -25,7 +25,7 @@ void DebugTextStyle::addData(TileData& _data, MapTile& _tile, const MapProjectio
         }
 
         std::string tileID = std::to_string(_tile.getID().x) + "/" + std::to_string(_tile.getID().y) + "/" + std::to_string(_tile.getID().z);
-       labelContainer->addLabel(_tile.getID(), m_name, { glm::vec2(0), glm::vec2(0) }, tileID, Label::Type::DEBUG);
+        labelContainer->addLabel(_tile.getID(), m_name, { glm::vec2(0), glm::vec2(0) }, tileID, Label::Type::DEBUG);
 
         std::vector<PosTexID> vertices;
         vertices.resize(textBuffer->getVerticesSize());

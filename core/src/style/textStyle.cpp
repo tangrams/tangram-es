@@ -1,18 +1,18 @@
-#include "fontStyle.h"
+#include "textStyle.h"
 
-MapTile* FontStyle::processedTile = nullptr;
+MapTile* TextStyle::processedTile = nullptr;
 
-FontStyle::FontStyle(const std::string& _fontName, std::string _name, float _fontSize, unsigned int _color, bool _sdf, GLenum _drawMode)
+TextStyle::TextStyle(const std::string& _fontName, std::string _name, float _fontSize, unsigned int _color, bool _sdf, GLenum _drawMode)
 : Style(_name, _drawMode), m_fontName(_fontName), m_fontSize(_fontSize), m_color(_color), m_sdf(_sdf) {
 
     constructVertexLayout();
     constructShaderProgram();
 }
 
-FontStyle::~FontStyle() {
+TextStyle::~TextStyle() {
 }
 
-void FontStyle::constructVertexLayout() {
+void TextStyle::constructVertexLayout() {
     m_vertexLayout = std::shared_ptr<VertexLayout>(new VertexLayout({
         {"a_position", 2, GL_FLOAT, false, 0},
         {"a_texCoord", 2, GL_FLOAT, false, 0},
@@ -20,7 +20,7 @@ void FontStyle::constructVertexLayout() {
     }));
 }
 
-void FontStyle::constructShaderProgram() {
+void TextStyle::constructShaderProgram() {
     std::string frag = m_sdf ? "sdf.fs" : "text.fs";
 
     std::string vertShaderSrcStr = stringFromResource("text.vs");
@@ -30,7 +30,7 @@ void FontStyle::constructShaderProgram() {
     m_shaderProgram->setSourceStrings(fragShaderSrcStr, vertShaderSrcStr);
 }
 
-void FontStyle::buildPoint(Point& _point, std::string& _layer, Properties& _props, VboMesh& _mesh) const {
+void TextStyle::buildPoint(Point& _point, std::string& _layer, Properties& _props, VboMesh& _mesh) const {
     std::vector<PosTexID> vertices;
     auto labelContainer = LabelContainer::GetInstance();
     auto ftContext = labelContainer->getFontContext();
@@ -50,7 +50,7 @@ void FontStyle::buildPoint(Point& _point, std::string& _layer, Properties& _prop
     if (_layer == "pois") {
         for (auto prop : _props.stringProps) {
             if (prop.first == "name") {
-                labelContainer->addLabel(FontStyle::processedTile->getID(), m_name, { glm::vec2(_point), glm::vec2(_point) }, prop.second, Label::Type::POINT);
+                labelContainer->addLabel(TextStyle::processedTile->getID(), m_name, { glm::vec2(_point), glm::vec2(_point) }, prop.second, Label::Type::POINT);
             }
         }
     }
@@ -60,13 +60,13 @@ void FontStyle::buildPoint(Point& _point, std::string& _layer, Properties& _prop
     vertices.resize(textBuffer->getVerticesSize());
     
     if (textBuffer->getVertices(reinterpret_cast<float*>(vertices.data()))) {
-        auto& mesh = static_cast<FontStyle::Mesh&>(_mesh);
+        auto& mesh = static_cast<TextStyle::Mesh&>(_mesh);
         mesh.addVertices(std::move(vertices), {});
     }
 
 }
 
-void FontStyle::buildLine(Line& _line, std::string& _layer, Properties& _props, VboMesh& _mesh) const {
+void TextStyle::buildLine(Line& _line, std::string& _layer, Properties& _props, VboMesh& _mesh) const {
     std::vector<PosTexID> vertices;
     auto labelContainer = LabelContainer::GetInstance();
     auto ftContext = labelContainer->getFontContext();
@@ -102,7 +102,7 @@ void FontStyle::buildLine(Line& _line, std::string& _layer, Properties& _props, 
                         continue;
                     }
 
-                    labelContainer->addLabel(FontStyle::processedTile->getID(), m_name, { p1, p2 }, prop.second, Label::Type::LINE);
+                    labelContainer->addLabel(TextStyle::processedTile->getID(), m_name, { p1, p2 }, prop.second, Label::Type::LINE);
                 }
             }
         }
@@ -113,12 +113,12 @@ void FontStyle::buildLine(Line& _line, std::string& _layer, Properties& _props, 
     vertices.resize(textBuffer->getVerticesSize());
     
     if (textBuffer->getVertices(reinterpret_cast<float*>(vertices.data()))) {
-        auto& mesh = static_cast<FontStyle::Mesh&>(_mesh);
+        auto& mesh = static_cast<TextStyle::Mesh&>(_mesh);
         mesh.addVertices(std::move(vertices), {});
     }
 }
 
-void FontStyle::buildPolygon(Polygon& _polygon, std::string& _layer, Properties& _props, VboMesh& _mesh) const {
+void TextStyle::buildPolygon(Polygon& _polygon, std::string& _layer, Properties& _props, VboMesh& _mesh) const {
     
     glm::vec3 centroid;
     int n = 0;
@@ -151,7 +151,7 @@ void FontStyle::buildPolygon(Polygon& _polygon, std::string& _layer, Properties&
 
     for (auto prop : _props.stringProps) {
         if (prop.first == "name") {
-            labelContainer->addLabel(FontStyle::processedTile->getID(), m_name, { glm::vec2(centroid), glm::vec2(centroid) }, prop.second, Label::Type::POINT);
+            labelContainer->addLabel(TextStyle::processedTile->getID(), m_name, { glm::vec2(centroid), glm::vec2(centroid) }, prop.second, Label::Type::POINT);
         }
     }
     
@@ -160,12 +160,12 @@ void FontStyle::buildPolygon(Polygon& _polygon, std::string& _layer, Properties&
     vertices.resize(textBuffer->getVerticesSize());
     
     if (textBuffer->getVertices(reinterpret_cast<float*>(vertices.data()))) {
-        auto& mesh = static_cast<FontStyle::Mesh&>(_mesh);
+        auto& mesh = static_cast<TextStyle::Mesh&>(_mesh);
         mesh.addVertices(std::move(vertices), {});
     }
 }
 
-void FontStyle::prepareDataProcessing(MapTile& _tile) const {
+void TextStyle::prepareDataProcessing(MapTile& _tile) const {
     auto ftContext = LabelContainer::GetInstance()->getFontContext();
     auto buffer = ftContext->genTextBuffer();
 
@@ -176,19 +176,19 @@ void FontStyle::prepareDataProcessing(MapTile& _tile) const {
 
     buffer->init();
 
-    FontStyle::processedTile = &_tile;
+    TextStyle::processedTile = &_tile;
 }
 
-void FontStyle::finishDataProcessing(MapTile& _tile) const {
+void TextStyle::finishDataProcessing(MapTile& _tile) const {
     auto ftContext = LabelContainer::GetInstance()->getFontContext();
 
-    FontStyle::processedTile = nullptr;
+    TextStyle::processedTile = nullptr;
 
     ftContext->useBuffer(nullptr);
     ftContext->unlock();
 }
 
-void FontStyle::setupTile(const std::shared_ptr<MapTile>& _tile) {
+void TextStyle::setupTile(const std::shared_ptr<MapTile>& _tile) {
     auto buffer = _tile->getTextBuffer(*this);
 
     if (buffer) {
@@ -206,7 +206,7 @@ void FontStyle::setupTile(const std::shared_ptr<MapTile>& _tile) {
     }
 }
 
-void FontStyle::setupFrame(const std::shared_ptr<View>& _view, const std::shared_ptr<Scene>& _scene) {
+void TextStyle::setupFrame(const std::shared_ptr<View>& _view, const std::shared_ptr<Scene>& _scene) {
     auto ftContext = LabelContainer::GetInstance()->getFontContext();
     const auto& atlas = ftContext->getAtlas();
     float projectionMatrix[16] = {0};
@@ -232,7 +232,7 @@ void FontStyle::setupFrame(const std::shared_ptr<View>& _view, const std::shared
     glDisable(GL_DEPTH_TEST);
 }
 
-void FontStyle::teardown() {
+void TextStyle::teardown() {
     glDisable(GL_BLEND);
     glEnable(GL_DEPTH_TEST);
 }
