@@ -50,7 +50,7 @@ void FontStyle::buildPoint(Point& _point, std::string& _layer, Properties& _prop
     if (_layer == "pois") {
         for (auto prop : _props.stringProps) {
             if (prop.first == "name") {
-                labelContainer->addLabel(FontStyle::processedTile->getID(), m_name, { glm::vec2(_point), glm::vec2(_point) }, prop.second);
+                labelContainer->addLabel(FontStyle::processedTile->getID(), m_name, { glm::vec2(_point), glm::vec2(_point) }, prop.second, Label::Type::POINT);
             }
         }
     }
@@ -102,7 +102,7 @@ void FontStyle::buildLine(Line& _line, std::string& _layer, Properties& _props, 
                         continue;
                     }
 
-                    labelContainer->addLabel(FontStyle::processedTile->getID(), m_name, { p1, p2 }, prop.second);
+                    labelContainer->addLabel(FontStyle::processedTile->getID(), m_name, { p1, p2 }, prop.second, Label::Type::LINE);
                 }
             }
         }
@@ -151,7 +151,7 @@ void FontStyle::buildPolygon(Polygon& _polygon, std::string& _layer, Properties&
 
     for (auto prop : _props.stringProps) {
         if (prop.first == "name") {
-            labelContainer->addLabel(FontStyle::processedTile->getID(), m_name, { glm::vec2(centroid), glm::vec2(centroid) }, prop.second);
+            labelContainer->addLabel(FontStyle::processedTile->getID(), m_name, { glm::vec2(centroid), glm::vec2(centroid) }, prop.second, Label::Type::POINT);
         }
     }
     

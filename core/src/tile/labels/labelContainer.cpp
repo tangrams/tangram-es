@@ -7,11 +7,11 @@ LabelContainer::~LabelContainer() {
     m_labels.clear();
 }
 
-bool LabelContainer::addLabel(const TileID& _tileID, const std::string& _styleName, LabelTransform _transform, std::string _text) {
+bool LabelContainer::addLabel(const TileID& _tileID, const std::string& _styleName, LabelTransform _transform, std::string _text, Label::Type _type) {
     auto currentBuffer = m_ftContext->getCurrentBuffer();
 
     if (currentBuffer) {
-        std::shared_ptr<Label> label(new Label(_transform, _text, currentBuffer));
+        std::shared_ptr<Label> label(new Label(_transform, _text, currentBuffer, _type));
         label->rasterize();
         
         m_labels[_styleName][_tileID].push_back(label);

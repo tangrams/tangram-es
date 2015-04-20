@@ -30,7 +30,7 @@ public:
      * Creates a label for and associate it with the current processed <MapTile> TileID for a specific syle name
      * Returns nullptr if no text buffer are currently used by the FontContext
      */
-    bool addLabel(const TileID& _tileID, const std::string& _styleName, LabelTransform _transform, std::string _text);
+    bool addLabel(const TileID& _tileID, const std::string& _styleName, LabelTransform _transform, std::string _text, Label::Type _type);
 
     /* Clean all labels for a specific <tileID> */
     void removeLabels(const TileID& _tileID);

@@ -15,12 +15,17 @@ struct LabelTransform {
     float m_alpha;
     float m_rotation;
 };
-
 class Label {
 
 public:
+    
+    enum class Type {
+        POINT,
+        LINE
+    };
 
-    Label(LabelTransform _transform, std::string _text, std::shared_ptr<TextBuffer> _buffer);
+
+    Label(LabelTransform _transform, std::string _text, std::shared_ptr<TextBuffer> _buffer, Type _type);
     ~Label();
 
     /* Call the font context to rasterize the label string */
@@ -55,6 +60,7 @@ private:
     
     void updateBBoxes();
 
+    Type m_type;
     LabelTransform m_transform;
     std::string m_text;
     std::shared_ptr<TextBuffer> m_buffer; // the buffer in which this label text id is associated to
