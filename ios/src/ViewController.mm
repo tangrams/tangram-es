@@ -7,9 +7,7 @@
 //
 
 #import "ViewController.h"
-#import "tangram.h"
-
-#include <curl/curl.h>
+#include "tangram.h"
 
 @interface ViewController () {
     
@@ -17,6 +15,8 @@
 @property (strong, nonatomic) EAGLContext *context;
 @property CGFloat pixelScale;
 @property bool renderRequested;
+@property NSURLSession* defaultSession;
+@property NSMutableDictionary* completionHandlerDictionary;
 
 - (void)setupGL;
 - (void)tearDownGL;
@@ -34,6 +34,20 @@
 {
     [super viewDidLoad];
     
+    /* Setup NSURLSession configuration : cache path and size */
+    self.completionHandlerDictionary = [NSMutableDictionary dictionaryWithCapacity:0];
+
+    NSURLSessionConfiguration *defaultConfigObject = [NSURLSessionConfiguration defaultSessionConfiguration];
+    NSString *cachePath = @"/tile_cache";
+    NSURLCache *tileCache = [[NSURLCache alloc] initWithMemoryCapacity: 4 * 1024 * 1024 diskCapacity: 30 * 1024 * 1024 diskPath: cachePath];
+    defaultConfigObject.URLCache = tileCache;
+    defaultConfigObject.requestCachePolicy = NSURLRequestUseProtocolCachePolicy;
+    defaultConfigObject.timeoutIntervalForRequest = 30;
+    defaultConfigObject.timeoutIntervalForResource = 60;
+
+    /* create a default NSURLSession using the defaultConfigObject*/
+    self.defaultSession = [NSURLSession sessionWithConfiguration: defaultConfigObject ];
+
     self.context = [[EAGLContext alloc] initWithAPI:kEAGLRenderingAPIOpenGLES2];
     self.pixelScale = [[UIScreen mainScreen] scale];
     self.renderRequested = true;
@@ -43,9 +57,6 @@
         NSLog(@"Failed to create ES context");
     }
 
-    /* Do Curl Init */
-    curl_global_init(CURL_GLOBAL_DEFAULT);
-    
     setViewController(self);
     
     GLKView *view = (GLKView *)self.view;
@@ -154,8 +165,6 @@
 {    
     [self tearDownGL];
 
-    curl_global_cleanup();
-    
     if ([EAGLContext currentContext] == self.context) {
         [EAGLContext setCurrentContext:nil];
     }
@@ -210,6 +219,38 @@
         self.renderRequested = true;
         self.paused = false;
     }
+}
+
+- (void)cancelNetworkRequestWithUrl:(NSString *)url
+{
+    [_defaultSession getTasksWithCompletionHandler:^(NSArray *dataTasks, NSArray *uploadTasks, NSArray *downloadTaks) {
+        for(NSURLSessionTask *_task in dataTasks) {
+            if ([[_task originalRequest].URL.absoluteString isEqualToString:url]) {
+                [_task cancel];
+                break;
+            }
+        }
+    }];
+}
+
+- (BOOL)networkRequestWithUrl:(NSString *)url TileID:(TileID)tileID DataSourceID:(NSNumber*)dataSourceID
+{
+    NSURLSessionDataTask *dataTask = [_defaultSession dataTaskWithURL:[NSURL URLWithString:url]
+                                                     completionHandler:^(NSData *data, NSURLResponse *response, NSError *error) {
+                                                         if(error == nil) {
+                                                             const char* rawData = (char *)[data bytes];
+                                                             int dataLength = [data length];
+                                                             std::vector<char> rawDataVec;
+                                                             rawDataVec.resize(dataLength);
+                                                             memcpy(rawDataVec.data(), rawData, dataLength);
+                                                             networkDataBridge(rawDataVec, tileID, [dataSourceID intValue]);
+                                                         }
+                                                         else {
+                                                             logMsg("Got a response \"%s\" with error \"%s\".\n", response, error);
+                                                         }
+                                                     }];
+    [dataTask resume];
+    return true;
 }
 
 - (void)setContinuous:(bool)c
