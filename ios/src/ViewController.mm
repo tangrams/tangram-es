@@ -16,7 +16,6 @@
 @property CGFloat pixelScale;
 @property bool renderRequested;
 @property NSURLSession* defaultSession;
-@property NSMutableDictionary* completionHandlerDictionary;
 
 - (void)setupGL;
 - (void)tearDownGL;
@@ -35,7 +34,6 @@
     [super viewDidLoad];
     
     /* Setup NSURLSession configuration : cache path and size */
-    self.completionHandlerDictionary = [NSMutableDictionary dictionaryWithCapacity:0];
 
     NSURLSessionConfiguration *defaultConfigObject = [NSURLSessionConfiguration defaultSessionConfiguration];
     NSString *cachePath = @"/tile_cache";
