@@ -9,4 +9,4 @@
 	url = https://github.com/g-truc/glm.git
 [submodule "core/include/isect2d"]
 	path = core/include/isect2d
-	url = git@github.com:tangrams/isect2d.git
+	url = https://github.com/tangrams/isect2d.git
