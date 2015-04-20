@@ -54,6 +54,7 @@ void Label::updateScreenTransform(const glm::mat4& _mvp, const glm::vec2& _scree
     float rot = 0;
     
     switch (m_type) {
+        case Type::DEBUG:
         case Type::POINT:
         {
             screenPosition = worldToScreenSpace(_mvp, glm::vec4(m_transform.m_modelPosition1, 0.0, 1.0), _screenSize);

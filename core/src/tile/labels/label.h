@@ -21,7 +21,8 @@ public:
     
     enum class Type {
         POINT,
-        LINE
+        LINE,
+        DEBUG
     };
 
 
@@ -55,6 +56,8 @@ public:
     void pushTransform();
     
     void updateScreenTransform(const glm::mat4& _mvp, const glm::vec2& _screenSize);
+    
+    Type getType() const { return m_type; }
 
 private:
     

@@ -14,6 +14,7 @@
 #include "style/polygonStyle.h"
 #include "style/polylineStyle.h"
 #include "style/fontStyle.h"
+#include "style/debugTextStyle.h"
 #include "style/debugStyle.h"
 #include "scene/scene.h"
 #include "scene/lights.h"
@@ -69,19 +70,22 @@ namespace Tangram {
             m_labelContainer = LabelContainer::GetInstance();
             m_labelContainer->setFontContext(m_ftContext);
 
-            std::unique_ptr<Style> textStyle0(new FontStyle("FiraSans", "textstyle0", 15.0f, 0xF7F0E1, true));
+            std::unique_ptr<Style> textStyle0(new FontStyle("FiraSans", "Textstyle0", 15.0f, 0xF7F0E1, true));
             textStyle0->addLayers({
                 "roads",
                 "places",
                 "pois"
             });
             m_scene->addStyle(std::move(textStyle0));
-            std::unique_ptr<Style> textStyle1(new FontStyle("Futura", "textstyle1", 18.0f, 0x26241F, true));
+            std::unique_ptr<Style> textStyle1(new FontStyle("Futura", "Textstyle1", 18.0f, 0x26241F, true));
             textStyle1->addLayers({
                 "landuse",
             });
             m_scene->addStyle(std::move(textStyle1));
             
+            std::unique_ptr<Style> debugTextStyle(new DebugTextStyle("FiraSans", "DebugTextStyle", 30.0f, 0xDC3522, true));
+            m_scene->addStyle(std::move(debugTextStyle));
+
             std::unique_ptr<DebugStyle> debugStyle(new DebugStyle("Debug"));
             m_scene->addStyle(std::move(debugStyle));
 

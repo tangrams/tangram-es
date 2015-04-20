@@ -32,6 +32,11 @@ protected:
         return new Mesh(m_vertexLayout, m_drawMode);
     };
 
+    std::string m_fontName;
+    float m_fontSize;
+    int m_color;
+    bool m_sdf;
+
 public:
 
     FontStyle(const std::string& _fontName, std::string _name, float _fontSize, unsigned int _color = 0xffffff, bool _sdf = false, GLenum _drawMode = GL_TRIANGLES);
@@ -48,11 +53,4 @@ public:
      */
     static MapTile* processedTile;
     
-private:
-
-    std::string m_fontName;
-    float m_fontSize;
-    int m_color;
-    bool m_sdf;
-
 };

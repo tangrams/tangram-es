@@ -49,7 +49,7 @@ void LabelContainer::updateOcclusions() {
         for (auto& tileLabelsPair : m_labels[styleName]) {
             auto& labels = tileLabelsPair.second;
             for(auto& label : labels) {
-                if (!label->isVisible() || label->isOutOfScreen()) {
+                if (!label->isVisible() || label->isOutOfScreen() || label->getType() == Label::Type::DEBUG) {
                     continue;
                 }
                 
