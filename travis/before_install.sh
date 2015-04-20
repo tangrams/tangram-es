@@ -68,4 +68,7 @@ if [[ ${PLATFORM} == "android" ]]; then
     echo "Updating Android SDK..."
     echo "y" | android update sdk --all --filter platform-tools,build-tools-${ANDROID_BUILD_TOOL_VERSION},android-${ANDROID_PLATFORM_VERSION},extra-android-support --no-ui --force >/dev/null
     echo "Done."
+
+    # Make gradle executable
+    chmod +x gradlew
 fi
