@@ -48,9 +48,9 @@ if [[ ${PLATFORM} == "android" ]]; then
     ANDROID_PLATFORM_VERSION="19"
 
     # Install android sdk
-    wget https://dl-ssl.google.com/android/android-sdk_${ANDROID_SDK_VERSION}-macosx.zip
-    tar -zxf android-sdk_${ANDROID_SDK_VERSION}-macosx.zip
-    export ANDROID_HOME=$PWD/android-sdk-macosx
+    wget https://dl-ssl.google.com/android/android-sdk_${ANDROID_SDK_VERSION}-linux.tgz
+    tar -zxf android-sdk_${ANDROID_SDK_VERSION}-linux.tgz
+    export ANDROID_HOME=$PWD/android-sdk-linux
 
     # Install android ndk
     echo "Cloning mindk..."
