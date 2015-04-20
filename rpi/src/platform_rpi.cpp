@@ -15,6 +15,18 @@ void logMsg(const char* fmt, ...) {
     va_end(args);
 }
 
+void requestRender() {
+    // TODO: implement non-continuous rendering on RPi
+}
+
+void setContinuousRendering(bool _isContinuous) {
+    // TODO: implement non-continuous rendering on RPi
+}
+
+bool isContinuousRendering() {
+    // TODO: implement non-continuous rendering on RPi
+}
+
 std::string stringFromResource(const char* _path) {
     std::string into;
 
