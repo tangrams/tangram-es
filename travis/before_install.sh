@@ -47,9 +47,6 @@ if [[ ${PLATFORM} == "android" ]]; then
     ANDROID_BUILD_TOOL_VERSION="21.1.2"
     ANDROID_PLATFORM_VERSION="19"
 
-    # Install ant
-    brew install ant
-
     # Install android sdk
     wget https://dl-ssl.google.com/android/android-sdk_${ANDROID_SDK_VERSION}-macosx.zip
     tar -zxf android-sdk_${ANDROID_SDK_VERSION}-macosx.zip
