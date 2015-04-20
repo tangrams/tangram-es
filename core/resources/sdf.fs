@@ -40,8 +40,13 @@ float sampleAlpha(in vec2 uv, float distance, in float off) {
 }
 
 void main(void) {
+    if (v_alpha == 0.0) {
+        discard;
+    }
+    
     float distance = texture2D(u_tex, v_uv).a;
     float alpha = sampleAlpha(v_uv, distance, sdf) * tint;
     alpha = pow(alpha, 1.0 / gamma);
+    
     gl_FragColor = vec4(u_color, v_alpha * alpha);
 }
