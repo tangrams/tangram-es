@@ -24,6 +24,7 @@ void networkDataBridge(JNIEnv* jniEnv, jbyteArray jFetchedBytes, int tileIDx, in
 #if (defined PLATFORM_IOS) && (defined __OBJC__)
 #import "ViewController.h"
 void setViewController(ViewController* _controller);
+void networkDataBridge(std::vector<char>& _rawData, TileID _tileID, int _dataSource);
 #endif
 
 #include <string>
