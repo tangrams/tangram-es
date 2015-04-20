@@ -93,7 +93,7 @@ unsigned char* bytesFromResource(const char* _path, unsigned int* _size) {
 
 bool streamFromHttpASync(const std::string& _url, const TileID& _tileID, const int _dataSourceID) {
 
-    NSString *nsUrl = [NSString stringWithUTF8String:_url.c_str()];
+    NSString* nsUrl = [NSString stringWithUTF8String:_url.c_str()];
     
     if(! [viewController networkRequestWithUrl:nsUrl
                          TileID:_tileID

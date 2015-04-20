@@ -221,8 +221,8 @@
 
 - (void)cancelNetworkRequestWithUrl:(NSString *)url
 {
-    [_defaultSession getTasksWithCompletionHandler:^(NSArray *dataTasks, NSArray *uploadTasks, NSArray *downloadTaks) {
-        for(NSURLSessionTask *_task in dataTasks) {
+    [_defaultSession getTasksWithCompletionHandler:^(NSArray* dataTasks, NSArray* uploadTasks, NSArray* downloadTasks) {
+        for(NSURLSessionTask* _task in dataTasks) {
             if ([[_task originalRequest].URL.absoluteString isEqualToString:url]) {
                 [_task cancel];
                 break;
@@ -233,8 +233,8 @@
 
 - (BOOL)networkRequestWithUrl:(NSString *)url TileID:(TileID)tileID DataSourceID:(NSNumber*)dataSourceID
 {
-    NSURLSessionDataTask *dataTask = [_defaultSession dataTaskWithURL:[NSURL URLWithString:url]
-                                                     completionHandler:^(NSData *data, NSURLResponse *response, NSError *error) {
+    NSURLSessionDataTask* dataTask = [_defaultSession dataTaskWithURL:[NSURL URLWithString:url]
+                                                     completionHandler:^(NSData* data, NSURLResponse* response, NSError* error) {
                                                          if(error == nil) {
                                                              const char* rawData = (char *)[data bytes];
                                                              int dataLength = [data length];
