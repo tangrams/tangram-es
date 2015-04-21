@@ -120,7 +120,7 @@ int main(void) {
 
     /* Create a windowed mode window and its OpenGL context */
     glfwWindowHint(GLFW_SAMPLES, 2);
-    window = glfwCreateWindow(width, height, "GLFW Window", NULL, NULL);
+    window = glfwCreateWindow(width, height, "Tangram ES", NULL, NULL);
     if (!window) {
         glfwTerminate();
         return -1;
