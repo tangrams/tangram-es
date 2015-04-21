@@ -25,6 +25,6 @@ if [[ ${PLATFORM} == "android" ]]; then
     # Build android project
     echo "Building android project"
     export TERM=dumb
-    make -j android
+    make android
 fi
 
