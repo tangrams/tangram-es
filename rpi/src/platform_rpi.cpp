@@ -22,6 +22,7 @@ void setContinuousRendering(bool _isContinuous) {
 }
 
 bool isContinuousRendering() {
+    return false;
     // TODO: implement non-continuous rendering on RPi
 }
 
