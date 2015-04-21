@@ -349,6 +349,9 @@ void View::updateTiles() {
     glm::dvec2 b = (glm::dvec2(viewBR.x + m_pos.x, viewBR.y + m_pos.y) - tileSpaceOrigin) * tileSpaceAxes;
     glm::dvec2 c = (glm::dvec2(viewTR.x + m_pos.x, viewTR.y + m_pos.y) - tileSpaceOrigin) * tileSpaceAxes;
     glm::dvec2 d = (glm::dvec2(viewTL.x + m_pos.x, viewTL.y + m_pos.y) - tileSpaceOrigin) * tileSpaceAxes;
+
+    // Location of the view center in tile space
+    glm::dvec2 e = (glm::dvec2(m_pos.x, m_pos.y) - tileSpaceOrigin) * tileSpaceAxes;
     
     // Determine zoom reduction for tiles far from the center of view
     double tilesAtFullZoom = std::max(m_width, m_height) * invTileSize * 0.5;
@@ -389,6 +392,10 @@ void View::updateTiles() {
     int maxTileIndex = 1 << int(m_zoom);
     scanTriangle(a, b, c, 0, maxTileIndex, s);
     scanTriangle(c, d, a, 0, maxTileIndex, s);
-    
+
+    // Rasterize the area bounded by the point under the view center and the two nearest corners 
+    // of the view trapezoid. This is necessary to not cull any geometry with height in these tiles
+    // (which should remain visible, even though the base of the tile is not).
+    scanTriangle(a, b, e, 0, maxTileIndex, s);
 
 }
