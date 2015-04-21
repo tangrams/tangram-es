@@ -176,12 +176,16 @@ void View::screenToGroundPlane(float& _screenX, float& _screenY) const {
     if (ray_world.z != 0.f) {
         t = -m_pos.z / ray_world.z;
     }
+
+    ray_world *= fabs(t);
     
-    if (t >= 0) {
-        ray_world *= t;
-    } else {
-        float maxTileDistance = invLodFunc(MAX_LOD + 1) * 2 * MapProjection::HALF_CIRCUMFERENCE * pow(2, -m_zoom);
-        ray_world *= maxTileDistance / sqrtf(ray_world.x * ray_world.x + ray_world.y * ray_world.y);
+    // Determine the maximum distance from the view position at which tiles can be drawn; If the projected point 
+    // is farther than this maximum or if the point is above the horizon (t < 0) then we set the distance of the
+    // point to always be this maximum distance. 
+    float maxTileDistance = invLodFunc(MAX_LOD + 1) * 2 * MapProjection::HALF_CIRCUMFERENCE * pow(2, -m_zoom);
+    float rayDistanceXY = sqrtf(ray_world.x * ray_world.x + ray_world.y * ray_world.y);
+    if (rayDistanceXY > maxTileDistance || t < 0) {
+        ray_world *= maxTileDistance / rayDistanceXY;
     }
     
     _screenX = ray_world.x;
