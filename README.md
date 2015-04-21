@@ -107,14 +107,14 @@ First, install cmake and libcurl:
 sudo apt-get install cmake libcurl4-openssl-dev
 ```
 
-To build the project, you will need to have C++11 compatible compiler installed, for example GNU g++-4.7 or greater:
+To build the project, you will need to have C++11 compatible compiler installed, for example GNU g++-4.8 or greater:
 ```
-sudo apt-get install g++-4.7
+sudo apt-get install g++-4.8
 ```
 
 Before compiling, choose which compiler to use by running the following:
 ```
-export CXX=/usr/bin/g++-4.7
+export CXX=/usr/bin/g++-4.8
 ```
 
 Then compile and run:
