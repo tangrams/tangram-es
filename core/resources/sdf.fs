@@ -5,7 +5,9 @@ precision mediump float;
 #define LOWP 
 #endif
 
-#pragma tangram: defines
+#ifdef TANGRAM_SDF_MULTISAMPLING
+#extension GL_OES_standard_derivatives : enable
+#endif
 
 uniform sampler2D u_tex;
 uniform LOWP vec3 u_color;
