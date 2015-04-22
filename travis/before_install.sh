@@ -47,17 +47,18 @@ if [[ ${PLATFORM} == "android" ]]; then
     ANDROID_BUILD_TOOL_VERSION="21.1.2"
     ANDROID_PLATFORM_VERSION="19"
 
-    # Install ant
-    brew install ant
+    # install jdk7 and 32bit dependencies for android sdk
+    sudo apt-get update -qq
+    sudo apt-get -qq -y install openjdk-7-jdk lib32z1-dev lib32stdc++6
 
     # Install android sdk
-    wget https://dl-ssl.google.com/android/android-sdk_${ANDROID_SDK_VERSION}-macosx.zip
-    tar -zxf android-sdk_${ANDROID_SDK_VERSION}-macosx.zip
-    export ANDROID_HOME=$PWD/android-sdk-macosx
+    wget https://dl-ssl.google.com/android/android-sdk_${ANDROID_SDK_VERSION}-linux.tgz
+    tar -zxf android-sdk_${ANDROID_SDK_VERSION}-linux.tgz
+    export ANDROID_HOME=$PWD/android-sdk-linux
 
     # Install android ndk
     echo "Cloning mindk..."
-    git clone --quiet --depth 1 https://github.com/tangrams/mindk.git
+    git clone --quiet --depth 1 --branch linux https://github.com/tangrams/mindk.git
     export ANDROID_NDK=$PWD/mindk/android-ndk-r10d
     echo "Done."
 
@@ -71,4 +72,8 @@ if [[ ${PLATFORM} == "android" ]]; then
     echo "Updating Android SDK..."
     echo "y" | android update sdk --all --filter platform-tools,build-tools-${ANDROID_BUILD_TOOL_VERSION},android-${ANDROID_PLATFORM_VERSION},extra-android-support --no-ui --force >/dev/null
     echo "Done."
+
+    # Make sure gradlew is executable
+    chmod +x android/gradlew
+
 fi
