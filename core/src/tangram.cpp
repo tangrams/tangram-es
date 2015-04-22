@@ -21,6 +21,7 @@
 #include "scene/lights.h"
 #include "util/error.h"
 #include "stl_util.hpp"
+#include "glm/gtc/type_ptr.hpp"
 
 namespace Tangram {
 
@@ -30,6 +31,18 @@ namespace Tangram {
     std::shared_ptr<LabelContainer> m_labelContainer;
     std::shared_ptr<FontContext> m_ftContext;
     std::shared_ptr<DebugStyle> m_debugStyle;
+    
+    struct PosVertex {
+        // Position Data
+        GLfloat pos_x;
+        GLfloat pos_y;
+        GLfloat pos_z;
+    };
+    typedef TypedMesh<PosVertex> Mesh;
+    
+    std::shared_ptr<ShaderProgram> m_skyboxShader;
+    std::shared_ptr<Texture> m_skyboxTexture;
+    Mesh* m_skyboxMesh;
 
     static float g_time = 0.0;
     static unsigned long g_flags = 0;
@@ -87,8 +100,44 @@ namespace Tangram {
             directionalLight->setDirection({1.0, 1.0, -1.0});
             m_scene->addLight(directionalLight);
             
-            std::unique_ptr<Style> spriteStyle(new SpriteStyle("Sprite"));
-            m_scene->addStyle(std::move(spriteStyle));
+            //std::unique_ptr<Style> spriteStyle(new SpriteStyle("Sprite"));
+            //m_scene->addStyle(std::move(spriteStyle));
+            
+            // Skybox test
+            {
+                std::string fragShaderSrcStr = stringFromResource("cubemap.fs");
+                std::string vertShaderSrcStr = stringFromResource("cubemap.vs");
+            
+                m_skyboxShader = std::make_shared<ShaderProgram>();
+                m_skyboxShader->setSourceStrings(fragShaderSrcStr, vertShaderSrcStr);
+            
+                m_skyboxTexture = std::shared_ptr<Texture>(new TextureCube("cubemap.png"));
+                auto layout = std::shared_ptr<VertexLayout>(new VertexLayout({
+                    {"a_position", 3, GL_FLOAT, false, 0},
+                }));
+                
+                m_skyboxMesh = new Mesh(layout, GL_TRIANGLES);
+                
+                std::vector<PosVertex> vertices;
+                std::vector<int> indices = {
+                    0, 1, 2, 0, 2, 3, 3, 2, 6,
+                    3, 6, 7, 0, 4, 7, 0, 7, 3,
+                    4, 6, 7, 4, 6, 5, 0, 5, 4,
+                    0, 5, 1, 1, 6, 5, 1, 6, 2,
+                };
+                
+                vertices.push_back({ -1.0, 1.0, 1.0});
+                vertices.push_back({ -1.0, -1.0, 1.0});
+                vertices.push_back({ 1.0, -1.0, 1.0});
+                vertices.push_back({ 1.0, 1.0, 1.0 });
+                vertices.push_back({ -1.0, 1.0, -1.0 });
+                vertices.push_back({ -1.0, -1.0, -1.0 });
+                vertices.push_back({ 1.0, -1.0, -1.0 });
+                vertices.push_back({ 1.0,  1.0, -1.0 });
+                
+                m_skyboxMesh->addVertices(std::move(vertices), {});
+                m_skyboxMesh->compileVertexBuffer();
+            }
         }
 
         // Create a tileManager
@@ -174,7 +223,19 @@ namespace Tangram {
         
         // Set up openGL for new frame
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-
+        
+        // Skybox test
+        {
+            glDisable(GL_DEPTH_TEST);
+            m_skyboxTexture->bind();
+        
+            glm::mat4 modelViewProjMatrix = m_view->getViewProjectionMatrix();
+            m_skyboxShader->setUniformMatrix4f("u_modelViewProj", glm::value_ptr(modelViewProjMatrix));
+            m_skyboxShader->setUniformi("u_tex", m_skyboxTexture->getTextureSlot());
+            //m_skyboxMesh->draw(m_skyboxShader);
+            glEnable(GL_DEPTH_TEST);
+        }
+        
         // Loop over all styles
         for (const auto& style : m_scene->getStyles()) {
             style->setupFrame(m_view, m_scene);
