@@ -18,8 +18,8 @@ void Label::rasterize() {
     
     m_bbox = m_buffer->getBBox(m_id);
     
-    m_width = abs(m_bbox.z - m_bbox.x);
-    m_height = abs(m_bbox.w - m_bbox.y);
+    m_width = std::abs(m_bbox.z - m_bbox.x);
+    m_height = std::abs(m_bbox.w - m_bbox.y);
 }
 
 void Label::setVisible(bool _visible) {
