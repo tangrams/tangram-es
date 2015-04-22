@@ -3,6 +3,7 @@
 #include "style.h"
 #include "util/typedMesh.h"
 #include "textureImage.h"
+#include "textureCube.h"
 
 class SpriteStyle : public Style {
     

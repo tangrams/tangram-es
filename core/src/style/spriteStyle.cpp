@@ -30,8 +30,8 @@ void SpriteStyle::constructShaderProgram() {
     m_shaderProgram = std::make_shared<ShaderProgram>();
     m_shaderProgram->setSourceStrings(fragShaderSrcStr, vertShaderSrcStr);
     
-    m_texture = std::shared_ptr<Texture>(new TextureImage("mapzen-logo.png"));
-    
+    //m_texture = std::shared_ptr<Texture>(new TextureImage("cubemap.png"));
+    m_texture = std::shared_ptr<Texture>(new TextureCube("cubemap.png"));
 }
 
 void SpriteStyle::buildPoint(Point& _point, std::string& _layer, Properties& _props, VboMesh& _mesh) const {

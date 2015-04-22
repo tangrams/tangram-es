@@ -15,6 +15,7 @@ struct TextureFiltering {
 struct TextureWrapping {
     GLenum m_wraps;
     GLenum m_wrapt;
+    GLenum m_wrapr;
 };
 
 struct TextureOptions {
@@ -28,19 +29,20 @@ class Texture {
 
 public:
 
+    Texture() {}
     Texture(unsigned int _width, unsigned int _height, GLuint _slot = 0,
-            TextureOptions _options = {GL_ALPHA, GL_ALPHA, {GL_LINEAR, GL_LINEAR}, {GL_CLAMP_TO_EDGE, GL_CLAMP_TO_EDGE}});
+            TextureOptions _options = {GL_ALPHA, GL_ALPHA, {GL_LINEAR, GL_LINEAR}, {GL_CLAMP_TO_EDGE, GL_CLAMP_TO_EDGE, GL_CLAMP_TO_EDGE}});
     
     ~Texture();
 
     /* Binds the texture to GPU */
-    void bind();
+    virtual void bind();
 
     /* Unbinds the texture from GPU */
-    void unbind();
+    virtual void unbind();
 
     /* Perform texture updates, should be called at least once and after adding data or resizing */
-    void update();
+    virtual void update();
 
     /* Resize the texture 
      * 
@@ -65,7 +67,7 @@ public:
     void setSubData(const GLuint* _subData, unsigned int _xoff, unsigned int _yoff, unsigned int _width, unsigned int _height);
 
     /* GPU delete of the texture */
-    void destroy();
+    virtual void destroy();
 
 protected:
 
