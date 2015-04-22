@@ -14,7 +14,7 @@
 constexpr float View::s_maxZoom; // Create a stack reference to the static member variable
 
 double invLodFunc(double d) {
-    return exp2(d);
+    return exp2(d) - 1.0;
 }
 
 View::View(int _width, int _height, ProjectionType _projType) {
@@ -315,14 +315,6 @@ static void scanTriangle(glm::dvec2& _a, glm::dvec2& _b, glm::dvec2& _c, int _mi
     
 }
 
-int next_even(int i) {
-    return (i % 2 == 0) ? (i + 2) : (i + 1);
-}
-
-int prev_even(int i) {
-    return (i % 2 == 0) ? (i - 2) : (i - 1);
-}
-
 void View::updateTiles() {
     
     m_visibleTiles.clear();
@@ -364,10 +356,11 @@ void View::updateTiles() {
     int y_l_neg[MAX_LOD] = { 0 };
     
     for (int i = 0; i < MAX_LOD; i++) {
-        x_l_pos[i] = (next_even(int(viewCenterX + tilesAtFullZoom + invLodFunc(i)) >> i)) << i;
-        x_l_neg[i] = (prev_even(int(viewCenterX - tilesAtFullZoom - invLodFunc(i)) >> i)) << i;
-        y_l_pos[i] = (next_even(int(viewCenterY + tilesAtFullZoom + invLodFunc(i)) >> i)) << i;
-        y_l_neg[i] = (prev_even(int(viewCenterY - tilesAtFullZoom - invLodFunc(i)) >> i)) << i;
+        int j = i + 1;
+        x_l_neg[i] = ((int(viewCenterX - tilesAtFullZoom - invLodFunc(i)) >> j) - 1) << j;
+        y_l_pos[i] = ((int(viewCenterY + tilesAtFullZoom + invLodFunc(i)) >> j) + 1) << j;
+        y_l_neg[i] = ((int(viewCenterY - tilesAtFullZoom - invLodFunc(i)) >> j) - 1) << j;
+        x_l_pos[i] = ((int(viewCenterX + tilesAtFullZoom + invLodFunc(i)) >> j) + 1) << j;
     }
     
     Scan s = [&](int x, int y) {
