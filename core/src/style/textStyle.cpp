@@ -99,7 +99,7 @@ void TextStyle::buildLine(Line& _line, std::string& _layer, Properties& _props, 
         for (auto prop : _props.stringProps) {
             if (prop.first.compare("name") == 0) {
                 
-                for (int i = 0; i < _line.size() - 1; i += skipOffset) {
+                for (size_t i = 0; i < _line.size() - 1; i += skipOffset) {
                     glm::vec2 p1 = glm::vec2(_line[i]);
                     glm::vec2 p2 = glm::vec2(_line[i + 1]);
                     
