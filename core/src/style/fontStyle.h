@@ -1,7 +1,7 @@
 #pragma once
 
 #include "style.h"
-#include "rawVboMesh.h"
+#include "typedMesh.h"
 #include "glfontstash.h"
 #include "tile/labels/labelContainer.h"
 #include <memory>
@@ -9,6 +9,14 @@
 class FontStyle : public Style {
 
 protected:
+
+    struct PosTexID {
+        float pos_x;
+        float pos_y;
+        float tex_u;
+        float tex_v;
+        float fsID;
+    };
 
     virtual void constructVertexLayout() override;
     virtual void constructShaderProgram() override;
@@ -18,9 +26,15 @@ protected:
     virtual void prepareDataProcessing(MapTile& _tile) const override;
     virtual void finishDataProcessing(MapTile& _tile) const override;
 
+    typedef TypedMesh<PosTexID> Mesh;
+
     virtual VboMesh* newMesh() const override {
-        return new RawVboMesh(m_vertexLayout, m_drawMode);
+        return new Mesh(m_vertexLayout, m_drawMode);
     };
+
+    std::string m_fontName;
+    float m_fontSize;
+    bool m_sdf;
 
 public:
 
@@ -38,10 +52,4 @@ public:
      */
     static MapTile* processedTile;
     
-private:
-
-    std::string m_fontName;
-    float m_fontSize;
-    bool m_sdf;
-
 };

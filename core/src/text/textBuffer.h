@@ -57,7 +57,9 @@ public:
      * fills the vector of float with the rasterized text ids linked to the text buffer 
      * nVerts is the number of vertices inside the vector
      */
-    bool getVertices(std::vector<float>* _vertices, int* _nVerts);
+    bool getVertices(float* _vertices);
+    
+    int getVerticesSize();
 
     /* double the size of the related texture transform of the text buffer */ 
     void expand();

@@ -64,20 +64,18 @@ void cursor_pos_callback(GLFWwindow* window, double x, double y) {
 
 void scroll_callback(GLFWwindow* window, double scrollx, double scrolly) {
     
-    double scroll = fabs(scrolly) > fabs(scrollx) ? scrolly : scrollx;
-    
     double x, y;
     glfwGetCursorPos(window, &x, &y);
 
-    bool rotating = glfwGetKey(window, GLFW_KEY_LEFT_SHIFT) == GLFW_PRESS || glfwGetKey(window, GLFW_KEY_RIGHT_SHIFT) == GLFW_PRESS;
+    bool rotating = glfwGetKey(window, GLFW_KEY_LEFT_ALT) == GLFW_PRESS || glfwGetKey(window, GLFW_KEY_RIGHT_ALT) == GLFW_PRESS;
     bool shoving = glfwGetKey(window, GLFW_KEY_LEFT_CONTROL) == GLFW_PRESS || glfwGetKey(window, GLFW_KEY_RIGHT_CONTROL) == GLFW_PRESS;
 
     if (shoving) {
-        Tangram::handleShoveGesture(scroll_multiplier * scroll);
+        Tangram::handleShoveGesture(scroll_multiplier * scrolly);
     } else if (rotating) {
-        Tangram::handleRotateGesture(x, y, scroll_multiplier * scroll);
+        Tangram::handleRotateGesture(x, y, scroll_multiplier * scrolly);
     } else {
-        Tangram::handlePinchGesture(x, y, 1.0 + scroll_multiplier * scroll);
+        Tangram::handlePinchGesture(x, y, 1.0 + scroll_multiplier * scrolly);
     }
     
 }
@@ -94,6 +92,10 @@ void key_callback(GLFWwindow* window, int key, int scancode, int action, int mod
                 break;
             case GLFW_KEY_3:
                 Tangram::setDebugFlag(Tangram::DebugFlags::TILE_BOUNDS, !Tangram::getDebugFlag(Tangram::DebugFlags::TILE_BOUNDS));
+                break;
+            case GLFW_KEY_4:
+                Tangram::setDebugFlag(Tangram::DebugFlags::TILE_INFOS, !Tangram::getDebugFlag(Tangram::DebugFlags::TILE_INFOS));
+                break;
             default:
                 break;
         }
@@ -125,7 +127,7 @@ int main(void) {
 
     /* Create a windowed mode window and its OpenGL context */
     glfwWindowHint(GLFW_SAMPLES, 2);
-    window = glfwCreateWindow(width, height, "GLFW Window", NULL, NULL);
+    window = glfwCreateWindow(width, height, "Tangram ES", NULL, NULL);
     if (!window) {
         glfwTerminate();
         return -1;
@@ -168,7 +170,11 @@ int main(void) {
         glfwSwapBuffers(window);
 
         /* Poll for and process events */
-        glfwPollEvents();
+        if (isContinuousRendering()) {
+            glfwPollEvents();
+        } else {
+            glfwWaitEvents();
+        }
     }
     
     Tangram::teardown();

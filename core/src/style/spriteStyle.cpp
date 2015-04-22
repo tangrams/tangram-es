@@ -55,7 +55,7 @@ void SpriteStyle::setupFrame(const std::shared_ptr<View>& _view, const std::shar
 
 void SpriteStyle::addData(TileData& _data, MapTile& _tile, const MapProjection& _mapProjection) const {
     
-    RawVboMesh* mesh = new RawVboMesh(m_vertexLayout, m_drawMode);
+    Mesh* mesh = new Mesh(m_vertexLayout, m_drawMode);
     
     std::vector<PosUVVertex> vertices;
     
@@ -70,7 +70,7 @@ void SpriteStyle::addData(TileData& _data, MapTile& _tile, const MapProjection& 
     vertices.push_back({  size, -size, 0.f, 0.f, 1.f });
     vertices.push_back({  size,  size, 0.f, 0.f, 0.f });
     
-    mesh->addVertices((GLbyte*)vertices.data(), (int)vertices.size());
+    mesh->addVertices(std::move(vertices), {});
     mesh->compileVertexBuffer();
     
     _tile.addGeometry(*this, std::unique_ptr<VboMesh>(mesh));

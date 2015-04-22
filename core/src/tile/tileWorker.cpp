@@ -59,6 +59,8 @@ void TileWorker::load(const TileID &_tile,
         
         m_finished = true;
         
+        requestRender();
+        
         // Return finished tile
         return std::move(tile);
                                         
