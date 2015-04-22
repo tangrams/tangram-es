@@ -88,7 +88,8 @@ void MapTile::draw(const Style& _style, const View& _view) {
         glm::mat4 modelViewProjMatrix = _view.getViewProjectionMatrix() * m_modelMatrix;
         
         glm::mat3 normalMatrix = glm::mat3(modelViewMatrix); // Transforms surface normals into camera space
-        normalMatrix = glm::transpose(glm::inverse(normalMatrix));
+        // normalMatrix = glm::transpose(glm::inverse(normalMatrix));
+        normalMatrix = glm::transpose(normalMatrix);
         
         shader->setUniformMatrix4f("u_modelView", glm::value_ptr(modelViewMatrix));
         shader->setUniformMatrix4f("u_modelViewProj", glm::value_ptr(modelViewProjMatrix));

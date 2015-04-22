@@ -11,17 +11,12 @@ public:
     /*  Set the position relative to the camera */
     virtual void setPosition(const glm::vec3& _pos);
 
-    /*  Set the constant attenuation. Basically dim */
-    virtual void setConstantAttenuation(float _constantAtt);
+    /*  Set the constant attenuation */
+    virtual void setAttenuation(float _att);
 
-    /*  Set the linear attenuation based on the distance */
-    virtual void setLinearAttenuation(float _linearAtt);
-
-    /*  Set the quadratic attenuation based on the distance */
-    virtual void setQuadreaticAttenuation(float _quadraticAtt);
-
-    /*  Set the the constant, linear and quadratic attenuation. */
-    virtual void setAttenuation(float _constant , float _linear , float _quadratic);
+    /*  Set the constant outer radius or inner/outer radius*/
+    virtual void setRadius(float _outer);
+    virtual void setRadius(float _inner, float _outer);
     
     virtual void setupProgram(std::shared_ptr<ShaderProgram> _program) override;
     
@@ -36,7 +31,7 @@ protected:
     
     glm::vec4 m_position;
 
-    float m_constantAttenuation;
-    float m_linearAttenuation;
-    float m_quadraticAttenuation;
+    float m_attenuation;
+    float m_innerRadius;
+    float m_outerRadius;
 };

@@ -4,14 +4,9 @@
 #include "glm/glm.hpp"
 #include "util/shaderProgram.h"
 
-typedef enum {
-    DEFAULT,
-    VERTEX,
-    FRAGMENT
-} InjectionType;
-
 enum class LightType {
     UNDEFINED,
+    AMBIENT,
     DIRECTIONAL,
     POINT,
     SPOT,
@@ -31,7 +26,7 @@ public:
     virtual ~Light();
     
     /*  This name is used to construct the uniform name to be pass to the shader */
-    virtual void setName(const std::string &_name);
+    virtual void setInstanceName(const std::string &_name);
 
     /*  Set Ambient Color. Which is constant across the scene */
     virtual void setAmbientColor(const glm::vec4 _ambient);
@@ -42,19 +37,17 @@ public:
     /*  Set Specular Color. This are the intense reflections of a light. AKA shinny spot */
     virtual void setSpecularColor(const glm::vec4 _specular);
 
+    /*  Get the instances light name defined on the shader */
+    virtual std::string getInstanceName();
+
     /*  Get the type of light, especially to identify the class and specific methods to it. */
     virtual LightType getType();
-
-    virtual InjectionType getInjectionType();
-
-    /*  Get the name of the light */
-    virtual std::string getName();
 
     /*  GLSL line to compute the specific light instance */
     virtual std::string getInstanceComputeBlock();
 
     /*  Inject the needed lines of GLSL code on the shader to make this light work */
-    virtual void injectOnProgram( std::shared_ptr<ShaderProgram> _shader, InjectionType _injType = DEFAULT);
+    virtual void injectOnProgram( std::shared_ptr<ShaderProgram> _shader);
 
     /*  Pass the uniforms for this particular DYNAMICAL light on the passed shader */
     virtual void setupProgram( std::shared_ptr<ShaderProgram> _shader );
@@ -68,9 +61,6 @@ protected:
 
     /*  Get the struct and function to compute a light */
     virtual std::string getClassBlock() = 0;
-
-    /*  Get the instances light name defined on the shader */
-    virtual std::string getInstanceName();
 
     /*  Get the instances GLSL block where the light is defined inside the shader */
     virtual std::string getInstanceBlock();
@@ -95,13 +85,10 @@ protected:
     /*  This is use to identify the type of light after been pull inside a vector of uniq_ptr of this abstract class*/
     LightType m_type;
 
-    InjectionType m_injType;
-
     bool m_dynamic;
     
 private:
-    
-    static std::string s_vertexLightingBlock;
-    static std::string s_fragmentLightingBlock;
+
+    static std::string s_lightToCalculate;
     
 };

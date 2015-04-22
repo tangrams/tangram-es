@@ -9,9 +9,6 @@ uniform float u_time;
 uniform float u_zoom;
 uniform float u_tile_zoom;
 
-#pragma tangram: material
-#pragma tangram: vertex_lighting
-
 attribute vec4 a_position;
 attribute vec4 a_color;
 
@@ -28,6 +25,10 @@ varying vec3 v_eyeToPoint;
 varying vec3 v_normal;
 varying vec2 v_texcoord;
 
+#pragma tangram: material
+#pragma tangram: lighting
+#pragma tangram: globals
+
 void main() {
 
     v_normal = vec3(0.,0.,1.);
@@ -40,9 +41,21 @@ void main() {
 
     v_eyeToPoint = vec3(u_modelView * a_position);
     
-    #ifdef TANGRAM_LIGHTS
+    #ifdef TANGRAM_LIGHTING_VERTEX
+        vec4 color = v_color;
+        vec3 normal = normalize(u_normalMatrix * v_normal);
+
+        // Modify normal before lighting
+        #pragma tangram: normal
+
+        // Modify color and material properties before lighting
+        #pragma tangram: color
+
+        v_lighting = calculateLighting(v_eyeToPoint.xyz, normal, color);
+        v_color = color;
+    #else
         v_normal = normalize(u_normalMatrix * v_normal);
-        lightVertex(v_eyeToPoint, v_normal, v_color);
+        v_color = a_color;
     #endif
 
     gl_Position = u_modelViewProj * v_pos;
