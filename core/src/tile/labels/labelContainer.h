@@ -7,7 +7,6 @@
 #include <memory>
 #include <vector>
 #include <set>
-#include <queue>
 #include <map>
 
 class MapTile;
