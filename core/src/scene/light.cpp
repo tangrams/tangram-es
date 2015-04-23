@@ -10,7 +10,8 @@ Light::Light(const std::string& _name, bool _dynamic):
     m_diffuse(1.0f),
     m_specular(0.0f),
     m_type(LightType::UNDEFINED),
-    m_dynamic(_dynamic) {
+    m_origin(LightOrigin::CAMERA),
+    m_dynamic(_dynamic){
 }
 
 Light::~Light() {
@@ -31,6 +32,10 @@ void Light::setDiffuseColor(const glm::vec4 _diffuse) {
 
 void Light::setSpecularColor(const glm::vec4 _specular) {
     m_specular = _specular;
+}
+
+void Light::setOrigin( LightOrigin _origin ){
+    m_origin = _origin;
 }
 
 void Light::injectOnProgram(std::shared_ptr<ShaderProgram> _shader) {

@@ -13,6 +13,12 @@ enum class LightType {
     CUSTOM
 };
 
+enum class LightOrigin {
+    CAMERA,
+    GROUND,
+    WORLD
+};
+
 /*  This is the abstract class that other type of lights can extend from it.
  *  Another possible aproach could be something like the vertexLayout but this one
  *  let you define specific methods for subclassed lights.
@@ -36,6 +42,9 @@ public:
 
     /*  Set Specular Color. This are the intense reflections of a light. AKA shinny spot */
     virtual void setSpecularColor(const glm::vec4 _specular);
+
+    /*  Set Specular Color. This are the intense reflections of a light. AKA shinny spot */
+    virtual void setOrigin( LightOrigin _origin );
 
     /*  Get the instances light name defined on the shader */
     virtual std::string getInstanceName();
@@ -84,6 +93,9 @@ protected:
 
     /*  This is use to identify the type of light after been pull inside a vector of uniq_ptr of this abstract class*/
     LightType m_type;
+
+    /*  This determines if postion and direction of the light is related to the camera, ground or world */
+    LightOrigin m_origin;
 
     bool m_dynamic;
     
