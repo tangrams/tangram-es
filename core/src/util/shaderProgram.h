@@ -32,6 +32,9 @@ public:
     /*  Add a block of GLSL to be injected at "#pragma tangram: [_tagName]" in the shader sources */
     void addSourceBlock(const std::string& _tagName, const std::string& _glslSource, bool _allowDuplicate = true);
 
+    /*  Delete a block of GLSL to be injected at "#pragma tangram: [_tagName]" in the shader sources */
+    void delSourceBlock(const std::string& _tagName, const std::string& _glslSource);
+
     /*
      * Applies all source blocks to the source strings for this shader and attempts to compile
      * and then link the resulting vertex and fragment shaders; if compiling or linking fails 

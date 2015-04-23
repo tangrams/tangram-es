@@ -352,7 +352,7 @@ int main(int argc, char **argv){
                                             mouse.x,
                                             mouse.y);
             } else if( mouse.button == 2 ){
-                Tangram::handlePinchGesture( 0.0, 0.0, 1.0 + mouse.velY*0.001);
+                Tangram::handlePinchGesture( state->screen_width/2., state->screen_height/2., 1.0 + mouse.velY*0.001);
             } 
         }
 

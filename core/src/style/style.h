@@ -15,6 +15,12 @@
 
 #include "scene/material.h"
 
+typedef enum LightingType {
+    LIGHTING_NONE,
+    LIGHTING_VERTEX,
+    LIGHTING_FRAGMENT
+};
+
 class Scene;
 
 /* Means of constructing and rendering map geometry
@@ -104,5 +110,7 @@ public:
 
     virtual ~Style();
     
+    virtual void setLighting( LightingType _lType );
+
     Material    m_material;
 };

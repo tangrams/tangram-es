@@ -52,6 +52,7 @@ namespace Tangram {
             
             // Load style(s); hard-coded for now
             std::unique_ptr<Style> polyStyle(new PolygonStyle("Polygon"));
+            polyStyle->setLighting(LIGHTING_FRAGMENT);
             polyStyle->addLayers({
                 "buildings",
                 "water",
@@ -79,12 +80,20 @@ namespace Tangram {
             std::unique_ptr<DebugStyle> debugStyle(new DebugStyle("Debug"));
             m_scene->addStyle(std::move(debugStyle));
 
-            //  Directional light with white diffuse color pointing Northeast and down
+             // Directional light with white diffuse color pointing Northeast and down
             auto directionalLight = std::make_shared<DirectionalLight>("dLight");
             directionalLight->setAmbientColor({0.3, 0.3, 0.3, 1.0});
             directionalLight->setDiffuseColor({0.7, 0.7, 0.7, 1.0});
             directionalLight->setDirection({1.0, 1.0, -1.0});
             m_scene->addLight(directionalLight);
+
+            //  Directional light with white diffuse color pointing Northeast and down
+            // auto pointLight = std::make_shared<PointLight>("pLight");
+            // pointLight->setAmbientColor({0.2, 0.2, 0.2, 1.0});
+            // pointLight->setDiffuseColor({0.7, 0.7, 0.7, 1.0});
+            // pointLight->setPosition({0.0, 0.0, -100.0});
+            // pointLight->setRadius(200);
+            // m_scene->addLight(pointLight);
         }
 
         // Create a tileManager
