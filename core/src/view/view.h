@@ -112,8 +112,6 @@ public:
     /* Returns the set of all tiles visible at the current position and zoom */
     const std::set<TileID>& getVisibleTiles();
     
-    void setChanged(bool _changed) { m_changed = _changed; }
-    
     /* Returns true if the view properties have changed since the last call to update() */
     bool changedOnLastUpdate() const { return m_changed; }
 
