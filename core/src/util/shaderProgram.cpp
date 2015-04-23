@@ -54,6 +54,19 @@ void ShaderProgram::addSourceBlock(const std::string& _tagName, const std::strin
     //          - add Global Blocks
 }
 
+void ShaderProgram::delSourceBlock(const std::string& _tagName, const std::string& _glslSource){
+    bool bChange = false;
+
+    for (int i = m_sourceBlocks[_tagName].size()-1; i >= 0; i--) {
+        if (_glslSource == m_sourceBlocks[_tagName][i]) {
+            m_sourceBlocks[_tagName].erase(m_sourceBlocks[_tagName].begin()+i);
+            bChange = true;
+        }
+    }
+
+    m_needsBuild = bChange;
+}
+
 const GLint ShaderProgram::getAttribLocation(const std::string& _attribName) {
 
     // Get uniform location at this key, or create one valued at -2 if absent

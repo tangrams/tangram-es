@@ -37,7 +37,6 @@ void Light::injectOnProgram(std::shared_ptr<ShaderProgram> _shader) {
     
     // Inject all needed #defines for this light instance
     _shader->addSourceBlock("defines", getInstanceDefinesBlock(), false);
-    _shader->addSourceBlock("defines", "#define TANGRAM_LIGHTING_FRAGMENT\n", false);
 
     _shader->addSourceBlock("__lighting", getClassBlock(), false);
     _shader->addSourceBlock("__lighting", getInstanceBlock());
