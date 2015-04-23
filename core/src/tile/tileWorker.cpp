@@ -54,6 +54,7 @@ void TileWorker::load(const TileID &_tile,
                     style->addData(*tileData, *tile, _view.getMapProjection());
                 }
             }
+            tile->update(0, _view);
         }
         
         m_finished = true;
