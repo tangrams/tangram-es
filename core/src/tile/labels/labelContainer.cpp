@@ -78,8 +78,8 @@ void LabelContainer::updateOcclusions() {
     
     // no priorities, only occlude one of the two occluded label
     for (auto& pair : occlusions) {
-        //if(pair.second->isVisible()) {
+        if(pair.second->isVisible()) {
             pair.first->setVisible(false);
-        //}
+        }
     }
 }
