@@ -89,5 +89,11 @@ bool isPowerOf2(unsigned int _val);
 /* Computes the angle in radians between two points with the axis y = 0 in 2d space */
 float angleBetweenPoints(const glm::vec2& _p1, const glm::vec2& _p2);
 
-glm::vec2 worldToScreenSpace(const glm::mat4& _mvp, const glm::vec4& _worldPosition, const glm::vec2& _screenSize);
+/* Computes the clip coordinates from position in world space and a model view matrix */
+glm::vec4 worldToClipSpace(const glm::mat4& _mvp, const glm::vec4& _worldPosition);
 
+/* Computes the screen coordinates from a coordinate in clip space and a screen size */
+glm::vec2 clipToScreenSpace(const glm::vec4& _clipCoords, const glm::vec2& _screenSize);
+
+/* Computes the screen coordinates from a world position, a model view matrix and a screen size */
+glm::vec2 worldToScreenSpace(const glm::mat4& _mvp, const glm::vec4& _worldPosition, const glm::vec2& _screenSize);
