@@ -66,19 +66,22 @@ float angleBetweenPoints(const glm::vec2& _p1, const glm::vec2& _p2) {
     return (float) atan2(p1p2.x, -p1p2.y);
 }
 
-glm::vec2 worldToScreenSpace(const glm::mat4& _mvp, const glm::vec4& _worldPosition, const glm::vec2& _screenSize) {
-    float halfWidth = _screenSize.x * 0.5f;
-    float halfHeight = _screenSize.y * 0.5f;
+glm::vec4 worldToClipSpace(const glm::mat4& _mvp, const glm::vec4& _worldPosition) {
+    return _mvp * _worldPosition;
+}
 
-    // mimic gpu vertex projection to screen
-    glm::vec4 screenPosition = _mvp * _worldPosition;
-    screenPosition = screenPosition / screenPosition.w; // perspective division
-
+glm::vec2 clipToScreenSpace(const glm::vec4& _clipCoords, const glm::vec2& _screenSize) {
+    glm::vec2 halfScreen = glm::vec2(_screenSize * 0.5f);
+    
+    glm::vec4 ndc = _clipCoords / _clipCoords.w;
+    
     // from normalized device coordinates to screen space coordinate system
     // top-left screen axis, y pointing down
-    screenPosition.x = (screenPosition.x + 1) * halfWidth;
-    screenPosition.y = (1 - screenPosition.y) * halfHeight;
+    
+    return glm::vec2((ndc.x + 1) * halfScreen.x, (1 - ndc.y) * halfScreen.y);
+}
 
-    return glm::vec2(screenPosition);
+glm::vec2 worldToScreenSpace(const glm::mat4& _mvp, const glm::vec4& _worldPosition, const glm::vec2& _screenSize) {
+    return clipToScreenSpace(worldToClipSpace(_mvp, _worldPosition), _screenSize);
 }
 

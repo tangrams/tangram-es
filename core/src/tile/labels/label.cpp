@@ -24,7 +24,7 @@ void Label::rasterize() {
 
 void Label::setVisible(bool _visible) {
     m_visible = _visible;
-    m_transform.m_alpha = m_visible ? m_transform.m_alpha : 0.0;
+    m_transform.m_alpha = m_visible ? 1.0 : 0.0;
     m_dirty = true;
 }
 
@@ -45,7 +45,7 @@ void Label::pushTransform() {
         m_buffer->transformID(m_id, m_transform.m_screenPosition.x, m_transform.m_screenPosition.y, m_transform.m_rotation, m_transform.m_alpha);
         m_dirty = false;
     }
-    
+
 }
 
 void Label::updateScreenTransform(const glm::mat4& _mvp, const glm::vec2& _screenSize) {
@@ -57,15 +57,33 @@ void Label::updateScreenTransform(const glm::mat4& _mvp, const glm::vec2& _scree
         case Type::DEBUG:
         case Type::POINT:
         {
-            screenPosition = worldToScreenSpace(_mvp, glm::vec4(m_transform.m_modelPosition1, 0.0, 1.0), _screenSize);
+            glm::vec4 v1 = worldToClipSpace(_mvp, glm::vec4(m_transform.m_modelPosition1, 0.0, 1.0));
+            
+            if (v1.w <= 0) {
+                m_visible = false;
+            }
+            
+            screenPosition = clipToScreenSpace(v1, _screenSize);
+            
+            // center on half the width
             screenPosition.x -= m_width / 2;
             
             break;
         }
         case Type::LINE:
         {
-            glm::vec2 p1 = worldToScreenSpace(_mvp, glm::vec4(m_transform.m_modelPosition1, 0.0, 1.0), _screenSize);
-            glm::vec2 p2 = worldToScreenSpace(_mvp, glm::vec4(m_transform.m_modelPosition2, 0.0, 1.0), _screenSize);
+            // project label position from mercator world space to clip coordinates
+            glm::vec4 v1 = worldToClipSpace(_mvp, glm::vec4(m_transform.m_modelPosition1, 0.0, 1.0));
+            glm::vec4 v2 = worldToClipSpace(_mvp, glm::vec4(m_transform.m_modelPosition2, 0.0, 1.0));
+            
+            // check whether the label is behind the camera using the perspective division factor
+            if (v1.w <= 0 || v2.w <= 0) {
+                m_visible = false;
+            }
+            
+            // project to screen space
+            glm::vec2 p1 = clipToScreenSpace(v1, _screenSize);
+            glm::vec2 p2 = clipToScreenSpace(v2, _screenSize);
             
             rot = angleBetweenPoints(p1, p2) + M_PI_2;
             
@@ -88,6 +106,8 @@ void Label::updateScreenTransform(const glm::mat4& _mvp, const glm::vec2& _scree
             }
             
             screenPosition = (p1 + p2) / 2.0f;
+            
+            // translate by half the width
             screenPosition += t * (m_width / 2);
 
             break;
@@ -109,7 +129,7 @@ void Label::updateScreenTransform(const glm::mat4& _mvp, const glm::vec2& _scree
 }
 
 void Label::update(const glm::mat4& _mvp, const glm::vec2& _screenSize, float _dt) {
-    
+
     updateScreenTransform(_mvp, _screenSize);
     updateBBoxes();
     
