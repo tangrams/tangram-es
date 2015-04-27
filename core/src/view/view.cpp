@@ -227,6 +227,8 @@ void View::updateMatrices() {
     
     // set far clipping distance to the distance of the intersection of
     // the "top" face of the view frustum with the ground plane
+    
+    // NOTE: far here can go to infinity and hence a std::min below!
     float far = m_pos.z / cos(m_pitch + 0.5 * fovy);
     
     // limit the far clipping distance to be no greater than the maximum
