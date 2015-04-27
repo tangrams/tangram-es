@@ -15,7 +15,7 @@
 
 #include "util/shaderProgram.h"
 #include "util/vertexLayout.h"
-#include "util/vboMesh.h"
+#include "util/typedMesh.h"
 #include "util/geom.h"
 
 #define KEY_ESC      113    // q
@@ -102,7 +102,8 @@ struct PosUVColorVertex {
     // Color Data
     GLuint abgr;
 };
-std::shared_ptr<VboMesh> mouseMesh;
+typedef TypedMesh<PosUVColorVertex> Mesh;
+std::shared_ptr<Mesh> mouseMesh;
 
 static void initOpenGL(){
     bcm_host_init();
@@ -229,9 +230,9 @@ static void initOpenGL(){
             indices.push_back(2); indices.push_back(3); indices.push_back(0);
         }
         
-        mouseMesh = std::shared_ptr<VboMesh>(new VboMesh(vertexLayout));
-        mouseMesh->addVertices((GLbyte*)vertices.data(), vertices.size());
-        mouseMesh->addIndices(indices.data(), indices.size());
+        mouseMesh = std::shared_ptr<Mesh>(new Mesh(vertexLayout, GL_TRIANGLES));
+        mouseMesh->addVertices(std::move(vertices), std::move(indices));
+        mouseMesh->compileVertexBuffer();
     }
 }
 
@@ -351,7 +352,7 @@ int main(int argc, char **argv){
                                             mouse.x,
                                             mouse.y);
             } else if( mouse.button == 2 ){
-                Tangram::handlePinchGesture( 0.0, 0.0, 1.0 + mouse.velY*0.001);
+                Tangram::handlePinchGesture( state->screen_width/2.0, state->screen_height/2.0, 1.0 + mouse.velY*0.001);
             } 
         }
 
