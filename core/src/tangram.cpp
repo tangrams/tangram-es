@@ -252,9 +252,11 @@ namespace Tangram {
         // Skybox test
         {
             glDisable(GL_DEPTH_TEST);
+            // TODO : order the vertices
+            glDisable(GL_CULL_FACE);
             m_skyboxTexture->bind();
 
-            glm::mat4 p; // = m_view->getPerspectiveMatrix();
+            glm::mat4 p = m_view->getProjectionMatrix();
             // remove the translation component from the view matrix
             glm::mat4 v = glm::mat4(glm::mat3(m_view->getViewMatrix())); 
             glm::mat4 vp = p * v;
@@ -263,6 +265,7 @@ namespace Tangram {
             m_skyboxShader->setUniformi("u_tex", m_skyboxTexture->getTextureSlot());
             m_skyboxMesh->draw(m_skyboxShader);
             glEnable(GL_DEPTH_TEST);
+            glEnable(GL_CULL_FACE);
         }
         
         // Loop over all styles
