@@ -22,6 +22,8 @@
 #include "util/error.h"
 #include "stl_util.hpp"
 #include "glm/gtc/type_ptr.hpp"
+#include "glm/mat4x4.hpp"
+#include "glm/gtc/matrix_transform.hpp"
 
 namespace Tangram {
 
@@ -116,26 +118,23 @@ namespace Tangram {
                     {"a_position", 3, GL_FLOAT, false, 0},
                 }));
                 
-                m_skyboxMesh = new Mesh(layout, GL_TRIANGLES);
+                m_skyboxMesh = new Mesh(layout, GL_TRIANGLE_STRIP);
                 
                 std::vector<PosVertex> vertices;
                 std::vector<int> indices = {
-                    0, 1, 2, 0, 2, 3, 3, 2, 6,
-                    3, 6, 7, 0, 4, 7, 0, 7, 3,
-                    4, 6, 7, 4, 6, 5, 0, 5, 4,
-                    0, 5, 1, 1, 6, 5, 1, 6, 2,
+                    0, 1, 2, 3, 7, 1, 5, 4, 7, 6, 2, 4, 0, 1
                 };
                 
-                vertices.push_back({ -1.0, 1.0, 1.0});
-                vertices.push_back({ -1.0, -1.0, 1.0});
-                vertices.push_back({ 1.0, -1.0, 1.0});
-                vertices.push_back({ 1.0, 1.0, 1.0 });
-                vertices.push_back({ -1.0, 1.0, -1.0 });
+                vertices.push_back({ -1.0, -1.0,  1.0 });
+                vertices.push_back({ 1.0, -1.0,  1.0 });
+                vertices.push_back({ -1.0,  1.0,  1.0 });
+                vertices.push_back({ 1.0,  1.0,  1.0 });
                 vertices.push_back({ -1.0, -1.0, -1.0 });
                 vertices.push_back({ 1.0, -1.0, -1.0 });
+                vertices.push_back({ -1.0,  1.0, -1.0 });
                 vertices.push_back({ 1.0,  1.0, -1.0 });
                 
-                m_skyboxMesh->addVertices(std::move(vertices), {});
+                m_skyboxMesh->addVertices(std::move(vertices), std::move(indices));
                 m_skyboxMesh->compileVertexBuffer();
             }
         }
@@ -228,11 +227,15 @@ namespace Tangram {
         {
             glDisable(GL_DEPTH_TEST);
             m_skyboxTexture->bind();
-        
-            glm::mat4 modelViewProjMatrix = m_view->getViewProjectionMatrix();
-            m_skyboxShader->setUniformMatrix4f("u_modelViewProj", glm::value_ptr(modelViewProjMatrix));
+
+            glm::mat4 p; // = m_view->getPerspectiveMatrix();
+            // remove the translation component from the view matrix
+            glm::mat4 v = glm::mat4(glm::mat3(m_view->getViewMatrix())); 
+            glm::mat4 vp = p * v;
+            m_skyboxShader->setUniformMatrix4f("u_modelViewProj", glm::value_ptr(vp));
+            m_skyboxShader->setUniformf("u_cameraPosition", m_view->getPosition());
             m_skyboxShader->setUniformi("u_tex", m_skyboxTexture->getTextureSlot());
-            //m_skyboxMesh->draw(m_skyboxShader);
+            m_skyboxMesh->draw(m_skyboxShader);
             glEnable(GL_DEPTH_TEST);
         }
         
