@@ -128,21 +128,27 @@ namespace Tangram {
                     {"a_position", 3, GL_FLOAT, false, 0},
                 }));
                 
-                m_skyboxMesh = new Mesh(layout, GL_TRIANGLE_STRIP);
+                m_skyboxMesh = new Mesh(layout, GL_TRIANGLES);
                 
-                std::vector<PosVertex> vertices;
                 std::vector<int> indices = {
-                    0, 1, 2, 3, 7, 1, 5, 4, 7, 6, 2, 4, 0, 1
+                    5, 1, 3, 3, 7, 5, // +x
+                    6, 2, 0, 0, 4, 6, // -x
+                    2, 6, 7, 7, 3, 2, // +y
+                    5, 4, 0, 0, 1, 5, // -y
+                    0, 2, 3, 3, 1, 0, // +z
+                    7, 6, 4, 4, 5, 7  // -z
                 };
                 
-                vertices.push_back({ -1.0, -1.0,  1.0 });
-                vertices.push_back({ 1.0, -1.0,  1.0 });
-                vertices.push_back({ -1.0,  1.0,  1.0 });
-                vertices.push_back({ 1.0,  1.0,  1.0 });
-                vertices.push_back({ -1.0, -1.0, -1.0 });
-                vertices.push_back({ 1.0, -1.0, -1.0 });
-                vertices.push_back({ -1.0,  1.0, -1.0 });
-                vertices.push_back({ 1.0,  1.0, -1.0 });
+                std::vector<PosVertex> vertices = {
+                    { -1.0, -1.0,  1.0 },
+                    {  1.0, -1.0,  1.0 },
+                    { -1.0,  1.0,  1.0 },
+                    {  1.0,  1.0,  1.0 },
+                    { -1.0, -1.0, -1.0 },
+                    {  1.0, -1.0, -1.0 },
+                    { -1.0,  1.0, -1.0 },
+                    {  1.0,  1.0, -1.0 }
+                };
                 
                 m_skyboxMesh->addVertices(std::move(vertices), std::move(indices));
                 m_skyboxMesh->compileVertexBuffer();
@@ -268,8 +274,6 @@ namespace Tangram {
 
         // Skybox test
         {
-            // TODO : order the vertices
-            glDisable(GL_CULL_FACE);
             m_skyboxTexture->bind();
 
             glm::mat4 p = m_view->getProjectionMatrix();
@@ -281,7 +285,6 @@ namespace Tangram {
             m_skyboxMesh->draw(m_skyboxShader);
 
             m_skyboxTexture->unbind();
-            glEnable(GL_CULL_FACE);
         }
         
         while (Error::hadGlError("Tangram::render()")) {}
