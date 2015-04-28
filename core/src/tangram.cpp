@@ -249,25 +249,6 @@ namespace Tangram {
         // Set up openGL for new frame
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
         
-        // Skybox test
-        {
-            glDisable(GL_DEPTH_TEST);
-            // TODO : order the vertices
-            glDisable(GL_CULL_FACE);
-            m_skyboxTexture->bind();
-
-            glm::mat4 p = m_view->getProjectionMatrix();
-            // remove the translation component from the view matrix
-            glm::mat4 v = glm::mat4(glm::mat3(m_view->getViewMatrix())); 
-            glm::mat4 vp = p * v;
-            m_skyboxShader->setUniformMatrix4f("u_modelViewProj", glm::value_ptr(vp));
-            m_skyboxShader->setUniformf("u_cameraPosition", m_view->getPosition());
-            m_skyboxShader->setUniformi("u_tex", m_skyboxTexture->getTextureSlot());
-            m_skyboxMesh->draw(m_skyboxShader);
-            glEnable(GL_DEPTH_TEST);
-            glEnable(GL_CULL_FACE);
-        }
-        
         // Loop over all styles
         for (const auto& style : m_scene->getStyles()) {
             style->setupFrame(m_view, m_scene);
@@ -283,6 +264,22 @@ namespace Tangram {
             }
 
             style->teardown();
+        }
+
+        // Skybox test
+        {
+            // TODO : order the vertices
+            glDisable(GL_CULL_FACE);
+            m_skyboxTexture->bind();
+
+            glm::mat4 p = m_view->getProjectionMatrix();
+            // remove the translation component from the view matrix
+            glm::mat4 v = glm::mat4(glm::mat3(m_view->getViewMatrix())); 
+            glm::mat4 vp = p * v;
+            m_skyboxShader->setUniformMatrix4f("u_modelViewProj", glm::value_ptr(vp));
+            m_skyboxShader->setUniformi("u_tex", m_skyboxTexture->getTextureSlot());
+            m_skyboxMesh->draw(m_skyboxShader);
+            glEnable(GL_DEPTH_TEST);
         }
         
         while (Error::hadGlError("Tangram::render()")) {}
