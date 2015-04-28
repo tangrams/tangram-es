@@ -58,7 +58,14 @@ public:
      */
     bool hasGeometry();
 
-    void update(float _dt, const Style& _style, const View& _view);
+    /* uUdate the Tile considering the current view */
+    void update(float _dt, const View& _view);
+
+    /* Update labels position considering the tile transform */
+    void updateLabels(float _dt, const Style& _style, const View& _view);
+    
+    /* Push the label transforms to the font rendering context */
+    void pushLabelTransforms(const Style& _style);
 
     void setTextBuffer(const Style& _style, std::shared_ptr<TextBuffer> _buffer);
     std::shared_ptr<TextBuffer> getTextBuffer(const Style& _style) const;

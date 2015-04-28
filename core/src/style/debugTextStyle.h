@@ -1,10 +1,10 @@
 #pragma once
 
-#include "fontStyle.h"
+#include "textStyle.h"
 #include "tangram.h"
 #include "typedMesh.h"
 
-class DebugTextStyle : public FontStyle {
+class DebugTextStyle : public TextStyle {
 
 protected:
 
@@ -22,6 +22,6 @@ protected:
 
 public:
 
-    DebugTextStyle(const std::string& _fontName, std::string _name, float _fontSize, bool _sdf = false, GLenum _drawMode = GL_TRIANGLES);
+    DebugTextStyle(const std::string& _fontName, std::string _name, float _fontSize, unsigned int _color, bool _sdf = false, GLenum _drawMode = GL_TRIANGLES);
 
 };
