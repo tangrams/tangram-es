@@ -279,7 +279,9 @@ namespace Tangram {
             m_skyboxShader->setUniformMatrix4f("u_modelViewProj", glm::value_ptr(vp));
             m_skyboxShader->setUniformi("u_tex", m_skyboxTexture->getTextureSlot());
             m_skyboxMesh->draw(m_skyboxShader);
-            glEnable(GL_DEPTH_TEST);
+
+            m_skyboxTexture->unbind();
+            glEnable(GL_CULL_FACE);
         }
         
         while (Error::hadGlError("Tangram::render()")) {}

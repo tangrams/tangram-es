@@ -16,11 +16,8 @@ public:
     void update() override;
     
     void resize(const unsigned int _width, const unsigned int _height) = delete;
-
     void setData(const GLuint* _data, unsigned int _dataSize) = delete;
     void setSubData(const GLuint* _subData, unsigned int _xoff, unsigned int _yoff, unsigned int _width, unsigned int _height) = delete;
-    
-    void destroy() override;
     
 private:
     

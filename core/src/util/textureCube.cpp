@@ -39,8 +39,8 @@ void TextureCube::load(const std::string& _file) {
             if(iFace == 0 && jFace == 1) face = &m_faces[1]; // NEG_X
             if(iFace == 1 && jFace == 0) face = &m_faces[2]; // POS_Y
             if(iFace == 1 && jFace == 2) face = &m_faces[3]; // NEG_Y
-            if(iFace == 3 && jFace == 1) face = &m_faces[4]; // POS_Z
-            if(iFace == 1 && jFace == 1) face = &m_faces[5]; // NEG_Z
+            if(iFace == 1 && jFace == 1) face = &m_faces[4]; // POS_Z
+            if(iFace == 3 && jFace == 1) face = &m_faces[5]; // NEG_Z
             
             if (!face) {
                 continue;
@@ -91,8 +91,4 @@ void TextureCube::update() {
     m_data.clear();
     
     unbind();
-}
-
-void TextureCube::destroy() {
-    glDeleteTextures(1, &m_name);
 }
