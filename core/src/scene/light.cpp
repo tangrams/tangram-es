@@ -34,12 +34,12 @@ void Light::setSpecularColor(const glm::vec4 _specular) {
     m_specular = _specular;
 }
 
-void Light::setOrigin( LightOrigin _origin ){
+void Light::setOrigin( LightOrigin _origin ) {
     m_origin = _origin;
 }
 
 void Light::injectOnProgram(std::shared_ptr<ShaderProgram> _shader) {
-    
+
     // Inject all needed #defines for this light instance
     _shader->addSourceBlock("defines", getInstanceDefinesBlock(), false);
 
@@ -59,30 +59,30 @@ void Light::setupProgram(std::shared_ptr<ShaderProgram> _shader) {
 }
 
 void Light::assembleLights(std::map<std::string, std::vector<std::string>>& _sourceBlocks) {
-    
+
     // Create strings to contain the assembled lighting source code
     std::string lightingBlock;
-    
+
     // Concatenate all strings at the "__lighting" keys
     // (struct definitions and function definitions)
-    
+
     for (const auto& string : _sourceBlocks["__lighting"]) {
         lightingBlock += string;
     }
-    
+
     // After lights definitions are all added, add the main lighting functions
     lightingBlock += stringFromResource("lights.glsl");
 
     // The main lighting functions each contain a tag where all light instances should be computed;
     // Insert all of our "lights_to_compute" at this tag
-    
+
     std::string tag = "#pragma tangram: lights_to_compute";
     size_t pos = lightingBlock.find(tag) + tag.length();
     for (const auto& string : _sourceBlocks["__lights_to_compute"]) {
         lightingBlock.insert(pos, string);
         pos += string.length();
     }
-    
+
     // Place our assembled lighting source code back into the map of "source blocks";
     // The assembled strings will then be injected into a shader at the "vertex_lighting"
     // and "fragment_lighting" tags
