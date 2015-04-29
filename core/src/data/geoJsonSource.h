@@ -6,14 +6,14 @@
 
 
 /* Extends NetworkDataSource class to read Mapzen's GeoJSON vector tiles */
-class GeoJsonSource: public NetworkDataSource {
-    
+class GeoJsonSource: public DataSource {
+
 protected:
-    
-    virtual std::shared_ptr<TileData> parse(const MapTile& _tile, std::stringstream& _in) override;
-    
+
+    virtual std::shared_ptr<TileData> parse(const MapTile& _tile, std::stringstream& _in);
+
 public:
-    
+
     GeoJsonSource();
-    
+
 };

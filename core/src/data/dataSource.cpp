@@ -7,7 +7,14 @@
 #include "tileData.h"
 #include "mapTile.h"
 
-//---- DataSource Implementation----
+DataSource::DataSource() {
+    curl_global_init(CURL_GLOBAL_DEFAULT);
+}
+
+DataSource::~DataSource() {
+    curl_global_cleanup();
+    m_tileStore.clear();
+}
 
 bool DataSource::hasTileData(const TileID& _tileID) {
 
@@ -31,24 +38,11 @@ void DataSource::clearData() {
     m_tileStore.clear();
 }
 
-//---- NetworkDataSource Implementation----
-
-//write_data call back from CURLOPT_WRITEFUNCTION
-//responsible to read and fill "stream" with the data.
-static size_t write_data(void *_ptr, size_t _size, size_t _nmemb, void *_stream) {
-    ((std::stringstream*) _stream)->write(reinterpret_cast<char *>(_ptr), _size * _nmemb);
-    return _size * _nmemb;
+void DataSource::setUrlTemplate(const std::string &_urlTemplate){
+  m_urlTemplate = _urlTemplate;
 }
 
-NetworkDataSource::NetworkDataSource() {
-    curl_global_init(CURL_GLOBAL_DEFAULT);
-}
-
-NetworkDataSource::~NetworkDataSource() {
-    curl_global_cleanup();
-}
-
-std::unique_ptr<std::string> NetworkDataSource::constructURL(const TileID& _tileCoord) {
+std::unique_ptr<std::string> DataSource::constructURL(const TileID& _tileCoord) {
 
     std::unique_ptr<std::string> urlPtr(new std::string(m_urlTemplate)); // Make a copy of our template
 
@@ -68,7 +62,14 @@ std::unique_ptr<std::string> NetworkDataSource::constructURL(const TileID& _tile
     return std::move(urlPtr);
 }
 
-bool NetworkDataSource::loadTileData(const MapTile& _tile) {
+//write_data call back from CURLOPT_WRITEFUNCTION
+//responsible to read and fill "stream" with the data.
+static size_t write_data(void *_ptr, size_t _size, size_t _nmemb, void *_stream) {
+    ((std::stringstream*) _stream)->write(reinterpret_cast<char *>(_ptr), _size * _nmemb);
+    return _size * _nmemb;
+}
+
+bool DataSource::loadTileData(const MapTile& _tile) {
 
     bool success = true; // Begin optimistically
 
@@ -119,9 +120,3 @@ bool NetworkDataSource::loadTileData(const MapTile& _tile) {
 
     return success;
 }
-
-void NetworkDataSource::setUrlTemplate(const std::string &_urlTemplate){
-  m_urlTemplate = _urlTemplate;
-}
-
-//---- MapzenVectorTileJson Implementation----
