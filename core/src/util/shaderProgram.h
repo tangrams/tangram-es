@@ -87,9 +87,9 @@ public:
      * Ensures the program is bound and then sets the named uniform to the values
      * beginning at the pointer _value; 4 values are used for a 2x2 matrix, 9 values for a 3x3, etc.
      */
-    void setUniformMatrix2f(const std::string& _name, float* _value, bool transpose = false);
-    void setUniformMatrix3f(const std::string& _name, float* _value, bool transpose = false);
-    void setUniformMatrix4f(const std::string& _name, float* _value, bool transpose = false);
+    void setUniformMatrix2f(const std::string& _name, const float* _value, bool transpose = false);
+    void setUniformMatrix3f(const std::string& _name, const float* _value, bool transpose = false);
+    void setUniformMatrix4f(const std::string& _name, const float* _value, bool transpose = false);
     
     /* Invalidates all managed ShaderPrograms
      * 
