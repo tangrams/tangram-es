@@ -31,6 +31,10 @@ void DataSource::clearData() {
     m_tileStore.clear();
 }
 
+void DataSource::setUrlTemplate(const std::string& _urlTemplate){
+    m_urlTemplate = _urlTemplate;
+}
+
 //---- NetworkDataSource Implementation----
 
 //write_data call back from CURLOPT_WRITEFUNCTION
