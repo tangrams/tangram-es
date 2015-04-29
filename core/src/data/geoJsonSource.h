@@ -10,7 +10,7 @@ class GeoJsonSource: public DataSource {
 
 protected:
 
-    virtual std::shared_ptr<TileData> parse(const MapTile& _tile, std::stringstream& _in);
+    virtual std::shared_ptr<TileData> parse(const MapTile& _tile, std::stringstream& _in) override;
 
 public:
 
