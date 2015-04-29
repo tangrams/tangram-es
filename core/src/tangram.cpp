@@ -34,13 +34,13 @@ namespace Tangram {
     static unsigned long g_flags = 0;
 
     void initialize() {
-        
+
         logMsg("initialize\n");
 
         // Create view
         if (!m_view) {
             m_view = std::make_shared<View>();
-            
+
             // Move the view to coordinates in Manhattan so we have something interesting to test
             glm::dvec2 target = m_view->getMapProjection().LonLatToMeters(glm::dvec2(-74.00796, 40.70361));
             m_view->setPosition(target.x, target.y);
@@ -49,7 +49,7 @@ namespace Tangram {
         // Create a scene object
         if (!m_scene) {
             m_scene = std::make_shared<Scene>();
-            
+
             // Load style(s); hard-coded for now
             std::unique_ptr<Style> polyStyle(new PolygonStyle("Polygon"));
             polyStyle->addLayers({
@@ -59,7 +59,7 @@ namespace Tangram {
                 "landuse"
             });
             m_scene->addStyle(std::move(polyStyle));
-            
+
             std::unique_ptr<Style> linesStyle(new PolylineStyle("Polyline"));
             linesStyle->addLayers({"roads"});
             m_scene->addStyle(std::move(linesStyle));
@@ -82,7 +82,7 @@ namespace Tangram {
                 "landuse",
             });
             m_scene->addStyle(std::move(textStyle1));
-            
+
             std::unique_ptr<Style> debugTextStyle(new DebugTextStyle("FiraSans", "DebugTextStyle", 30.0f, 0xDC3522, true));
             m_scene->addStyle(std::move(debugTextStyle));
 
@@ -100,14 +100,15 @@ namespace Tangram {
         // Create a tileManager
         if (!m_tileManager) {
             m_tileManager = TileManager::GetInstance();
-            
+
             // Pass references to the view and scene into the tile manager
             m_tileManager->setView(m_view);
             m_tileManager->setScene(m_scene);
-            
+
             // Add a tile data source
             // json tile source
-            // std::unique_ptr<DataSource> dataSource(new GeoJsonTile());
+            // std::unique_ptr<DataSource> dataSource(new GeoJsonSource());
+            // dataSource->setUrlTemplate("file:///Users/patricio/Desktop/landgrab/tiles/[z]-[x]-[y].json");
             // protobuf tile source
             std::unique_ptr<DataSource> dataSource(new ProtobufSource());
             m_tileManager->addDataSource(std::move(dataSource));
@@ -133,7 +134,7 @@ namespace Tangram {
     }
 
     void resize(int _newWidth, int _newHeight) {
-        
+
         logMsg("resize: %d x %d\n", _newWidth, _newHeight);
 
         glViewport(0, 0, _newWidth, _newHeight);
@@ -141,7 +142,7 @@ namespace Tangram {
         if (m_view) {
             m_view->setSize(_newWidth, _newHeight);
         }
-        
+
         if (m_ftContext) {
             m_ftContext->setScreenSize(m_view->getWidth(), m_view->getHeight());
         }
@@ -174,10 +175,10 @@ namespace Tangram {
                         tile->updateLabels(_dt, *style, *m_view);
                     }
                 }
-                
+
                 // manage occlusions
                 LabelContainer::GetInstance()->updateOcclusions();
-                
+
                 for (const auto& style : m_scene->getStyles()) {
                     for (const auto& mapIDandTile : m_tileManager->getVisibleTiles()) {
                         const std::shared_ptr<MapTile>& tile = mapIDandTile.second;
@@ -186,14 +187,14 @@ namespace Tangram {
                 }
             }
         }
-        
+
         if(m_scene) {
             // Update lights and styles
-        }   
+        }
     }
 
     void render() {
-        
+
         // Set up openGL for new frame
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
@@ -218,7 +219,7 @@ namespace Tangram {
     }
 
     void setPixelScale(float _pixelsPerPoint) {
-        
+
         if (m_view) {
             m_view->setPixelScale(_pixelsPerPoint);
         }
@@ -226,14 +227,14 @@ namespace Tangram {
         for (auto& style : m_scene->getStyles()) {
             style->setPixelScale(_pixelsPerPoint);
         }
-        
+
     }
-        
+
     void handleTapGesture(float _posX, float _posY) {
-        
+
         float viewCenterX = 0.5f * m_view->getWidth();
         float viewCenterY = 0.5f * m_view->getHeight();
-        
+
         m_view->screenToGroundPlane(viewCenterX, viewCenterY);
         m_view->screenToGroundPlane(_posX, _posY);
 
@@ -242,13 +243,13 @@ namespace Tangram {
     }
 
     void handleDoubleTapGesture(float _posX, float _posY) {
-        
+
         handlePinchGesture(_posX, _posY, 2.f);
-        
+
     }
 
     void handlePanGesture(float _startX, float _startY, float _endX, float _endY) {
-        
+
         m_view->screenToGroundPlane(_startX, _startY);
         m_view->screenToGroundPlane(_endX, _endY);
 
@@ -257,33 +258,33 @@ namespace Tangram {
     }
 
     void handlePinchGesture(float _posX, float _posY, float _scale) {
-        
+
         float viewCenterX = 0.5f * m_view->getWidth();
         float viewCenterY = 0.5f * m_view->getHeight();
-        
+
         m_view->screenToGroundPlane(viewCenterX, viewCenterY);
         m_view->screenToGroundPlane(_posX, _posY);
-        
+
         m_view->translate((_posX - viewCenterX)*(1-1/_scale), (_posY - viewCenterY)*(1-1/_scale));
-        
+
         m_view->zoom(log2f(_scale));
     }
-        
+
     void handleRotateGesture(float _posX, float _posY, float _radians) {
-        
+
         m_view->screenToGroundPlane(_posX, _posY);
         m_view->orbit(_posX, _posY, _radians);
-        
+
     }
 
     void handleShoveGesture(float _distance) {
-        
+
         m_view->pitch(_distance);
-        
+
     }
-    
+
     void setDebugFlag(DebugFlags _flag, bool _on) {
-        
+
         if (_on) {
             g_flags |= (1 << _flag); // |ing with a bitfield that is 0 everywhere except index _flag; sets index _flag to 1
         } else {
@@ -291,13 +292,13 @@ namespace Tangram {
         }
 
         m_view->setZoom(m_view->getZoom()); // Force the view to refresh
-        
+
     }
-    
+
     bool getDebugFlag(DebugFlags _flag) {
-        
+
         return (g_flags & (1 << _flag)) != 0; // &ing with a bitfield that is 0 everywhere except index _flag will yield 0 iff index _flag is 0
-        
+
     }
 
     void teardown() {
@@ -309,9 +310,9 @@ namespace Tangram {
     }
 
     void onContextDestroyed() {
-        
+
         logMsg("context destroyed\n");
-        
+
         // The OpenGL context has been destroyed since the last time resources were created,
         // so we invalidate all data that depends on OpenGL object handles.
 
@@ -320,7 +321,7 @@ namespace Tangram {
 
         // Buffer objects are invalidated and re-uploaded the next time they are used
         VboMesh::invalidateAllVBOs();
-        
+
     }
-    
+
 }
