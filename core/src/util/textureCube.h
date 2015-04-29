@@ -7,7 +7,7 @@ class TextureCube : public Texture {
     
 public:
     TextureCube(std::string _file, GLuint _slot = 0, TextureOptions _options =
-                {GL_RGBA, GL_RGBA, {GL_LINEAR, GL_LINEAR}, {GL_CLAMP_TO_EDGE, GL_CLAMP_TO_EDGE, GL_CLAMP_TO_EDGE}});
+                {GL_RGBA, GL_RGBA, {GL_LINEAR, GL_LINEAR}, {GL_CLAMP_TO_EDGE, GL_CLAMP_TO_EDGE}});
     
     void bind() override;
     

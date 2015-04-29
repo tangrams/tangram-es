@@ -15,7 +15,6 @@ struct TextureFiltering {
 struct TextureWrapping {
     GLenum m_wraps;
     GLenum m_wrapt;
-    GLenum m_wrapr;
 };
 
 struct TextureOptions {
@@ -31,7 +30,7 @@ public:
 
     Texture() {}
     Texture(unsigned int _width, unsigned int _height, GLuint _slot = 0,
-            TextureOptions _options = {GL_ALPHA, GL_ALPHA, {GL_LINEAR, GL_LINEAR}, {GL_CLAMP_TO_EDGE, GL_CLAMP_TO_EDGE, GL_CLAMP_TO_EDGE}});
+            TextureOptions _options = {GL_ALPHA, GL_ALPHA, {GL_LINEAR, GL_LINEAR}, {GL_CLAMP_TO_EDGE, GL_CLAMP_TO_EDGE}});
     
     ~Texture();
 

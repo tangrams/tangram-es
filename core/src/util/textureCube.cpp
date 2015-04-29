@@ -81,7 +81,6 @@ void TextureCube::update() {
     
     glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_WRAP_S, m_options.m_wrapping.m_wraps);
     glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_WRAP_T, m_options.m_wrapping.m_wrapt);
-    glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_WRAP_R, m_options.m_wrapping.m_wrapr);
     
     for(int i = 0; i < 6; ++i) {
         const Face& f = m_faces[i];
