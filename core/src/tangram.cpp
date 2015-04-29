@@ -276,10 +276,8 @@ namespace Tangram {
         {
             m_skyboxTexture->bind();
 
-            glm::mat4 p = m_view->getProjectionMatrix();
-            // remove the translation component from the view matrix
-            glm::mat4 v = glm::mat4(glm::mat3(m_view->getViewMatrix())); 
-            glm::mat4 vp = p * v;
+            glm::mat4 vp = m_view->getViewProjectionMatrix();
+
             m_skyboxShader->setUniformMatrix4f("u_modelViewProj", glm::value_ptr(vp));
             m_skyboxShader->setUniformi("u_tex", m_skyboxTexture->getTextureSlot());
             m_skyboxMesh->draw(m_skyboxShader);
