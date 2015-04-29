@@ -79,9 +79,9 @@ public:
     void setUniformf(const std::string& _name, float _value0, float _value1, float _value2);
     void setUniformf(const std::string& _name, float _value0, float _value1, float _value2, float _value3);
 
-    void setUniformf(const std::string& _name, glm::vec2 _value){setUniformf(_name,_value.x,_value.y);}
-    void setUniformf(const std::string& _name, glm::vec3 _value){setUniformf(_name,_value.x,_value.y,_value.z);}
-    void setUniformf(const std::string& _name, glm::vec4 _value){setUniformf(_name,_value.x,_value.y,_value.z,_value.w);}
+    void setUniformf(const std::string& _name, const glm::vec2& _value){setUniformf(_name,_value.x,_value.y);}
+    void setUniformf(const std::string& _name, const glm::vec3& _value){setUniformf(_name,_value.x,_value.y,_value.z);}
+    void setUniformf(const std::string& _name, const glm::vec4& _value){setUniformf(_name,_value.x,_value.y,_value.z,_value.w);}
 
     /* 
      * Ensures the program is bound and then sets the named uniform to the values
