@@ -19,8 +19,18 @@ protected:
     std::map< TileID, std::shared_ptr<TileData> > m_tileStore;
     
     std::mutex m_mutex; // Used to ensure safe access from async loading threads
+
+    std::string m_urlTemplate; //URL template for data sources 
     
 public:
+
+     /* Set the URL template for data sources 
+     *
+     * Data sources (file:// and http://)must define a URL template including exactly one 
+     * occurrance each of '[x]', '[y]', and '[z]' which will be replaced by
+     * the x index, y index, and zoom level of tiles to produce their URL
+     */
+    virtual void setUrlTemplate(const std::string& _urlTemplate);
     
     /* Fetch data for a map tile
      *
@@ -53,14 +63,6 @@ public:
 class NetworkDataSource : public DataSource {
 
 protected:
-
-    /* URL template for network data sources 
-     *
-     * Network data sources must define a URL template including exactly one 
-     * occurrance each of '[x]', '[y]', and '[z]' which will be replaced by
-     * the x index, y index, and zoom level of tiles to produce their URL
-     */
-    std::string m_urlTemplate;
 
     /* Constructs the URL of a tile using <m_urlTemplate> */
     virtual void constructURL(const TileID& _tileCoord, std::string& _url);

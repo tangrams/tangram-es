@@ -35,6 +35,10 @@ void DataSource::setTileData(const TileID& _tileID, const std::shared_ptr<TileDa
         m_tileStore[_tileID] = _tileData;
 }
 
+void DataSource::setUrlTemplate(const std::string& _urlTemplate){
+    m_urlTemplate = _urlTemplate;
+}
+
 //---- NetworkDataSource Implementation----
 
 NetworkDataSource::NetworkDataSource() {

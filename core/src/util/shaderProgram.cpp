@@ -312,19 +312,19 @@ void ShaderProgram::setUniformf(const std::string& _name, float _value0, float _
     glUniform4f(location, _value0, _value1, _value2, _value3);
 }
 
-void ShaderProgram::setUniformMatrix2f(const std::string& _name, float* _value, bool _transpose) {
+void ShaderProgram::setUniformMatrix2f(const std::string& _name, const float* _value, bool _transpose) {
     use();
     GLint location = getUniformLocation(_name);
     glUniformMatrix2fv(location, 1, _transpose, _value);
 }
 
-void ShaderProgram::setUniformMatrix3f(const std::string& _name, float* _value, bool _transpose) {
+void ShaderProgram::setUniformMatrix3f(const std::string& _name, const float* _value, bool _transpose) {
     use();
     GLint location = getUniformLocation(_name);
     glUniformMatrix3fv(location, 1, _transpose, _value);
 }
 
-void ShaderProgram::setUniformMatrix4f(const std::string& _name, float* _value, bool _transpose) {
+void ShaderProgram::setUniformMatrix4f(const std::string& _name, const float* _value, bool _transpose) {
     use();
     GLint location = getUniformLocation(_name);
     glUniformMatrix4fv(location, 1, _transpose, _value);
