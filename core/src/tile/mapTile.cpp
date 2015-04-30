@@ -51,7 +51,7 @@ std::shared_ptr<TextBuffer> MapTile::getTextBuffer(const Style& _style) const {
     return nullptr;
 }
 
-void MapTile::update(float _dt, const Style& _style, const View& _view) {
+void MapTile::update(float _dt, const View& _view) {
 
     // Apply tile-view translation to the model matrix
     const auto& viewOrigin = _view.getPosition();
@@ -59,21 +59,43 @@ void MapTile::update(float _dt, const Style& _style, const View& _view) {
     m_modelMatrix[3][1] = m_tileOrigin.y - viewOrigin.y;
     m_modelMatrix[3][2] = -viewOrigin.z;
 
+}
+
+void MapTile::updateLabels(float _dt, const Style& _style, const View& _view) {
+    
     if(m_buffers[_style.getName()]) {
         auto labelContainer = LabelContainer::GetInstance();
         auto ftContext = labelContainer->getFontContext();
         glm::mat4 mvp = _view.getViewProjectionMatrix() * m_modelMatrix;
+        glm::vec2 screenSize = glm::vec2(_view.getWidth(), _view.getHeight());
+        
+        ftContext->lock();
+        
+        for(auto label : labelContainer->getLabels(_style.getName(), getID())) {
+            label->update(mvp, screenSize, _dt);
+        }
+        
+        ftContext->unlock();
+    }
+}
+
+void MapTile::pushLabelTransforms(const Style& _style) {
+
+    if(m_buffers[_style.getName()]) {
+        auto labelContainer = LabelContainer::GetInstance();
+        auto ftContext = labelContainer->getFontContext();
 
         ftContext->lock();
-
+        
         for(auto label : labelContainer->getLabels(_style.getName(), getID())) {
-            label->updateTransform(label->getTransform(), mvp, glm::vec2(_view.getWidth(), _view.getHeight()));
+            label->pushTransform();
         }
-
+        
         m_buffers[_style.getName()]->triggerTransformUpdate();
         
         ftContext->unlock();
     }
+    
 }
 
 void MapTile::draw(const Style& _style, const View& _view) {

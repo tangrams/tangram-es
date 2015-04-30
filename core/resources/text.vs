@@ -52,36 +52,41 @@ void main() {
     // decode the uv from a text id
     vec2 ij = id2ij(int(a_fsid), u_tresolution.x);
     vec2 uv1 = ij2uv(ij.x, ij.y, u_tresolution.x, u_tresolution.y);
-    vec2 uv2 = ij2uv(ij.x+1.0, ij.y, u_tresolution.x, u_tresolution.y);
 
     // reads the transform data and its precision
     vec4 tdata = texture2D(u_transforms, uv1);
-    vec4 tdataPrecision = texture2D(u_transforms, uv2);
+    
+    if (alpha != 0.0) {
+        vec2 uv2 = ij2uv(ij.x+1.0, ij.y, u_tresolution.x, u_tresolution.y);
+        vec4 tdataPrecision = texture2D(u_transforms, uv2);
 
-    float txe = u_resolution.x / 255.0; // max error on x
-    float tye = u_resolution.y / 255.0; // max error on y
-    float tre = (2.0 * PI) / 255.0;
+        float txe = u_resolution.x / 255.0; // max error on x
+        float tye = u_resolution.y / 255.0; // max error on y
+        float tre = (2.0 * PI) / 255.0;
 
-    // transforms from [0..1] to [0..resolution] and add lost precision
-    tx = u_resolution.x * tx + (txp * txe);
-    ty = u_resolution.y * ty + (typ * tye);
+        // transforms from [0..1] to [0..resolution] and add lost precision
+        tx = u_resolution.x * tx + (txp * txe);
+        ty = u_resolution.y * ty + (typ * tye);
 
-    // scale from [0..1] to [0..2pi]
-    theta = theta * 2.0 * PI + (trp * tre);
+        // scale from [0..1] to [0..2pi]
+        theta = theta * 2.0 * PI + (trp * tre);
 
-    float st = sin(theta);
-    float ct = cos(theta);
+        float st = sin(theta);
+        float ct = cos(theta);
 
-    // rotates first around +z-axis (0,0,1) and then translates by (tx,ty,0)
-    vec4 p = vec4(
-        a_position.x * ct - a_position.y * st + tx,
-        a_position.x * st + a_position.y * ct + ty,
-        0.0,
-        1.0
-    );
+        // rotates first around +z-axis (0,0,1) and then translates by (tx,ty,0)
+        vec4 p = vec4(
+            a_position.x * ct - a_position.y * st + tx,
+            a_position.x * st + a_position.y * ct + ty,
+            0.0,
+            1.0
+        );
 
-    gl_Position = u_proj * p;
-
+        gl_Position = u_proj * p;
+    } else {
+        gl_Position = vec4(0.0, 0.0, 0.0, 1.0);
+    }
+    
     v_uv = a_texCoord;
     v_alpha = alpha;
 }
