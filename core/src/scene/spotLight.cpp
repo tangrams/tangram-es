@@ -2,7 +2,7 @@
 #include "glm/gtx/string_cast.hpp"
 
 std::string SpotLight::s_classBlock;
-std::string SpotLight::s_typeName;
+std::string SpotLight::s_typeName = "SpotLight";
 
 SpotLight::SpotLight(const std::string& _name, bool _dynamic) : 
     PointLight(_name, _dynamic),
