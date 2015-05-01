@@ -52,7 +52,7 @@ namespace Tangram {
             
             // Load style(s); hard-coded for now
             std::unique_ptr<Style> polyStyle(new PolygonStyle("Polygon"));
-            polyStyle->setLighting(LIGHTING_FRAGMENT);
+            polyStyle->setLighting(LightingType::vertex);
             polyStyle->addLayers({
                 "buildings",
                 "water",
