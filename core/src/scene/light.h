@@ -5,12 +5,10 @@
 #include "util/shaderProgram.h"
 
 enum class LightType {
-    UNDEFINED,
     AMBIENT,
     DIRECTIONAL,
     POINT,
-    SPOT,
-    CUSTOM
+    SPOT
 };
 
 enum class LightOrigin {
@@ -25,7 +23,7 @@ enum class LightOrigin {
  */
 class Light {
 public:
-    
+
     /* All lights have a name*/
     Light(const std::string& _name, bool _dynamic = false);
 
@@ -80,11 +78,11 @@ protected:
     /*  GLSL #defines flags for the instance of this light */
     virtual std::string getInstanceDefinesBlock() = 0;
 
+    /* Get the string name of the type of this light (as it would be declared in GLSL) */
+    virtual const std::string& getTypeName() = 0;
+
     /*  The name reference to the uniform on the shader.  */
     std::string m_name;
-
-    /*  String with the type name */
-    std::string m_typeName;
 
     /* Light Colors */
     glm::vec4 m_ambient;

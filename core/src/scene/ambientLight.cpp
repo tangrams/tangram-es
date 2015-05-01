@@ -2,10 +2,13 @@
 #include "glm/gtx/string_cast.hpp"
 
 std::string AmbientLight::s_classBlock;
+std::string AmbientLight::s_typeName = "AmbientLight";
 
-AmbientLight::AmbientLight(const std::string& _name, bool _dynamic):Light(_name,_dynamic){
-    m_typeName = "AmbientLight";
+AmbientLight::AmbientLight(const std::string& _name, bool _dynamic) : 
+    Light(_name, _dynamic) {
+
     m_type = LightType::AMBIENT;
+    
 }
 
 AmbientLight::~AmbientLight() {
@@ -36,4 +39,10 @@ std::string AmbientLight::getInstanceAssignBlock() {
         block += ")";
     }
     return block;
+}
+
+const std::string& AmbientLight::getTypeName() {
+
+    return s_typeName;
+
 }
