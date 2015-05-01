@@ -91,20 +91,29 @@ namespace Tangram {
             m_scene->addStyle(std::move(debugStyle));
 
              // Directional light with white diffuse color pointing Northeast and down
-            auto directionalLight = std::make_shared<DirectionalLight>("dLight");
-            directionalLight->setAmbientColor({0.3, 0.3, 0.3, 1.0});
-            directionalLight->setDiffuseColor({0.7, 0.7, 0.7, 1.0});
-            directionalLight->setDirection({1.0, 1.0, -1.0});
-            directionalLight->setOrigin(LightOrigin::GROUND);
-            m_scene->addLight(directionalLight);
+            // auto directionalLight = std::make_shared<DirectionalLight>("dLight");
+            // directionalLight->setAmbientColor({0.3, 0.3, 0.3, 1.0});
+            // directionalLight->setDiffuseColor({0.7, 0.7, 0.7, 1.0});
+            // directionalLight->setDirection({1.0, 1.0, -1.0});
+            // directionalLight->setOrigin(LightOrigin::GROUND);
+            // m_scene->addLight(directionalLight);
 
             //  Directional light with white diffuse color pointing Northeast and down
-            // auto pointLight = std::make_shared<PointLight>("pLight");
-            // pointLight->setAmbientColor({0.2, 0.2, 0.2, 1.0});
-            // pointLight->setDiffuseColor({0.7, 0.7, 0.7, 1.0});
-            // pointLight->setPosition({0.0, 0.0, -100.0});
-            // pointLight->setRadius(200);
-            // m_scene->addLight(pointLight);
+            auto pointLight = std::make_shared<PointLight>("pLight");
+            pointLight->setAmbientColor({0.2, 0.2, 0.2, 1.0});
+            pointLight->setDiffuseColor({0.7, 0.7, 0.7, 1.0});
+            
+            // pointLight->setOrigin(LightOrigin::WORLD);
+            // pointLight->setPosition({-74.00796, 40.70361, 200.0});
+
+            pointLight->setOrigin(LightOrigin::GROUND);
+            pointLight->setPosition({0.0, 0.0, 200.0});
+
+            // pointLight->setOrigin(LightOrigin::CAMERA);
+            // pointLight->setPosition({0.0, 0.0, -200.0});
+
+            pointLight->setRadius(1000);
+            m_scene->addLight(pointLight);
         }
 
         // Create a tileManager

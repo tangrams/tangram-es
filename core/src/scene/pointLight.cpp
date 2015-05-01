@@ -48,12 +48,18 @@ void PointLight::setupProgram(const std::shared_ptr<View>& _view, std::shared_pt
             m_position_eye.y = camSpace.y - _view->getPosition().y;
             m_position_eye.z = m_position_eye.z - _view->getPosition().z;
 
+            glm::mat4 InvViewMatrix = glm::transpose(glm::inverse(_view->getViewMatrix()));
+            m_position_eye = InvViewMatrix * m_position_eye;
+
         } else if (m_origin == LightOrigin::GROUND) {
             // Leave light's xy in camera space, but z needs to be moved relative to ground plane
             m_position_eye.z = m_position_eye.z - _view->getPosition().z;
+
+            glm::mat4 InvViewMatrix = glm::transpose(glm::inverse(_view->getViewMatrix()));
+            m_position_eye = InvViewMatrix * m_position_eye;
         }
 
-        _shader->setUniformf(getUniformName()+".position", glm::vec4(m_position_eye));
+        _shader->setUniformf(getUniformName()+".position", m_position_eye);
 
         if (m_attenuation!=0.0) {
             _shader->setUniformf(getUniformName()+".attenuation", m_attenuation);
