@@ -1,6 +1,8 @@
 #include "light.h"
 #include "glm/gtx/string_cast.hpp"
 
+std::string Light::s_mainLightingBlock;
+
 Light::Light(const std::string& _name, bool _dynamic):
     m_name(_name),
     m_typeName("undefined_light"),
@@ -68,7 +70,10 @@ void Light::assembleLights(std::map<std::string, std::vector<std::string>>& _sou
     }
     
     // After lights definitions are all added, add the main lighting functions
-    lightingBlock += stringFromResource("lights.glsl");
+    if (s_mainLightingBlock.empty()) {
+        s_mainLightingBlock = stringFromResource("lights.glsl");
+    }
+    lightingBlock += s_mainLightingBlock;
 
     // The main lighting functions each contain a tag where all light instances should be computed;
     // Insert all of our "lights_to_compute" at this tag
