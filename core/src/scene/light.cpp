@@ -1,8 +1,6 @@
 #include "light.h"
 #include "glm/gtx/string_cast.hpp"
 
-std::string Light::s_lightToCalculate;
-
 Light::Light(const std::string& _name, bool _dynamic):
     m_name(_name),
     m_typeName("undefined_light"),
@@ -47,7 +45,6 @@ void Light::injectOnProgram(std::shared_ptr<ShaderProgram> _shader) {
     _shader->addSourceBlock("__lighting", getInstanceBlock());
     _shader->addSourceBlock("__lights_to_compute", getInstanceComputeBlock());
 
-    s_lightToCalculate += getInstanceComputeBlock();
 }
 
 void Light::setupProgram(std::shared_ptr<ShaderProgram> _shader) {
