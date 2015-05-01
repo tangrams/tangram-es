@@ -2,7 +2,9 @@
  
 #include <memory>
 #include "glm/glm.hpp"
+
 #include "util/shaderProgram.h"
+#include "view/view.h"
 
 enum class LightType {
     UNDEFINED,
@@ -59,8 +61,9 @@ public:
     virtual void injectOnProgram( std::shared_ptr<ShaderProgram> _shader);
 
     /*  Pass the uniforms for this particular DYNAMICAL light on the passed shader */
-    virtual void setupProgram( std::shared_ptr<ShaderProgram> _shader );
+    virtual void setupProgram(const std::shared_ptr<View>& _view, std::shared_ptr<ShaderProgram> _shader );
     
+    /*  STATIC Function that compose sourceBlocks with Lights on a ProgramShader */
     static void assembleLights(std::map<std::string, std::vector<std::string>>& _sourceBlocks);
 
 protected:

@@ -35,6 +35,7 @@ void Light::setSpecularColor(const glm::vec4 _specular) {
 }
 
 void Light::setOrigin( LightOrigin _origin ) {
+    m_dynamic = true;
     m_origin = _origin;
 }
 
@@ -50,7 +51,7 @@ void Light::injectOnProgram(std::shared_ptr<ShaderProgram> _shader) {
     s_lightToCalculate += getInstanceComputeBlock();
 }
 
-void Light::setupProgram(std::shared_ptr<ShaderProgram> _shader) {
+void Light::setupProgram(const std::shared_ptr<View>& _view, std::shared_ptr<ShaderProgram> _shader) {
     if (m_dynamic) {
         _shader->setUniformf(getUniformName()+".ambient", m_ambient);
         _shader->setUniformf(getUniformName()+".diffuse", m_diffuse);

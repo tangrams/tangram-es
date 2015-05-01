@@ -12,9 +12,9 @@ AmbientLight::~AmbientLight() {
 
 }
 
-void AmbientLight::setupProgram( std::shared_ptr<ShaderProgram> _shader ) {
+void AmbientLight::setupProgram(const std::shared_ptr<View>& _view, std::shared_ptr<ShaderProgram> _shader ) {
     if (m_dynamic) {
-        Light::setupProgram(_shader);
+        Light::setupProgram(_view, _shader);
     }
 }
 

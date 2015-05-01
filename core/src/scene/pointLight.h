@@ -18,7 +18,7 @@ public:
     virtual void setRadius(float _outer);
     virtual void setRadius(float _inner, float _outer);
     
-    virtual void setupProgram(std::shared_ptr<ShaderProgram> _program) override;
+    virtual void setupProgram(const std::shared_ptr<View>& _view, std::shared_ptr<ShaderProgram> _program) override;
     
 protected:
 
@@ -30,6 +30,7 @@ protected:
     static std::string s_classBlock;
     
     glm::vec4 m_position;
+    glm::vec4 m_position_eye;
 
     float m_attenuation;
     float m_innerRadius;

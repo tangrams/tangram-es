@@ -95,6 +95,7 @@ namespace Tangram {
             directionalLight->setAmbientColor({0.3, 0.3, 0.3, 1.0});
             directionalLight->setDiffuseColor({0.7, 0.7, 0.7, 1.0});
             directionalLight->setDirection({1.0, 1.0, -1.0});
+            directionalLight->setOrigin(LightOrigin::GROUND);
             m_scene->addLight(directionalLight);
 
             //  Directional light with white diffuse color pointing Northeast and down

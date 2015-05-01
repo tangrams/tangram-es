@@ -22,9 +22,9 @@ void SpotLight::setCutOff(float _cutoffAngle, float _exponent) {
     m_spotExponent = _exponent;
 }
 
-void SpotLight::setupProgram( std::shared_ptr<ShaderProgram> _shader ) {
+void SpotLight::setupProgram(const std::shared_ptr<View>& _view, std::shared_ptr<ShaderProgram> _shader ) {
     if (m_dynamic) {
-        PointLight::setupProgram(_shader);
+        PointLight::setupProgram(_view, _shader);
         _shader->setUniformf(getUniformName()+".direction", m_direction);
         _shader->setUniformf(getUniformName()+".spotCosCutoff", m_spotCosCutoff);
         _shader->setUniformf(getUniformName()+".spotExponent", m_spotExponent);

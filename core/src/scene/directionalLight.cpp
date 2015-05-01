@@ -16,10 +16,19 @@ void DirectionalLight::setDirection(const glm::vec3 &_dir) {
     m_direction = glm::normalize(_dir);
 }
 
-void DirectionalLight::setupProgram( std::shared_ptr<ShaderProgram> _shader ) {
+void DirectionalLight::setupProgram(const std::shared_ptr<View>& _view, std::shared_ptr<ShaderProgram> _shader ) {
+
+    m_direction_eye = m_direction;
+    if (m_origin != LightOrigin::CAMERA) {
+        glm::mat3 normalMatrix = glm::mat3(_view->getViewMatrix()); // Transforms surface normals into camera space
+        normalMatrix = glm::transpose(glm::inverse(normalMatrix));
+
+        m_direction_eye = normalMatrix * m_direction;
+    }
+
 	if (m_dynamic) {
-		Light::setupProgram(_shader);
-		_shader->setUniformf(getUniformName()+".direction", m_direction);
+		Light::setupProgram(_view, _shader);
+		_shader->setUniformf(getUniformName()+".direction", m_direction_eye);
 	}
 }
 

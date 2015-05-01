@@ -72,7 +72,7 @@ void Style::setupFrame(const std::shared_ptr<View>& _view, const std::shared_ptr
     
     // Set up lights
     for (const auto& light : _scene->getLights()) {
-        light.second->setupProgram(m_shaderProgram);
+        light.second->setupProgram(_view,m_shaderProgram);
     }
     
     m_shaderProgram->setUniformf("u_zoom", _view->getZoom());
