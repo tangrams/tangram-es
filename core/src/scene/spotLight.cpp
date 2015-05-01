@@ -25,7 +25,24 @@ void SpotLight::setCutOff(float _cutoffAngle, float _exponent) {
 void SpotLight::setupProgram(const std::shared_ptr<View>& _view, std::shared_ptr<ShaderProgram> _shader ) {
     if (m_dynamic) {
         PointLight::setupProgram(_view, _shader);
-        _shader->setUniformf(getUniformName()+".direction", m_direction);
+
+        m_direction_eye = m_direction;
+        if (m_origin == LightOrigin::WORLD) {
+            glm::mat3 normalMatrix = glm::mat3(_view->getViewMatrix()); // Transforms surface normals into camera space
+            normalMatrix = glm::transpose(glm::inverse(normalMatrix));
+
+            m_direction_eye = normalMatrix * m_direction;
+        } else if (m_origin == LightOrigin::GROUND) {
+
+            // TODO: this behaves weird
+            //
+            glm::mat3 normalMatrix = glm::mat3(_view->getViewMatrix()); // Transforms surface normals into camera space
+            normalMatrix = glm::transpose(glm::inverse(normalMatrix));
+
+            m_direction_eye = normalMatrix * m_direction;
+        }
+
+        _shader->setUniformf(getUniformName()+".direction", m_direction_eye);
         _shader->setUniformf(getUniformName()+".spotCosCutoff", m_spotCosCutoff);
         _shader->setUniformf(getUniformName()+".spotExponent", m_spotExponent);
     }

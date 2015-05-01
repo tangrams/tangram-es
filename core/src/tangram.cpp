@@ -95,25 +95,39 @@ namespace Tangram {
             // directionalLight->setAmbientColor({0.3, 0.3, 0.3, 1.0});
             // directionalLight->setDiffuseColor({0.7, 0.7, 0.7, 1.0});
             // directionalLight->setDirection({1.0, 1.0, -1.0});
-            // directionalLight->setOrigin(LightOrigin::GROUND);
+            // directionalLight->setOrigin(LightOrigin::WORLD);
             // m_scene->addLight(directionalLight);
 
-            //  Directional light with white diffuse color pointing Northeast and down
-            auto pointLight = std::make_shared<PointLight>("pLight");
-            pointLight->setAmbientColor({0.2, 0.2, 0.2, 1.0});
-            pointLight->setDiffuseColor({0.7, 0.7, 0.7, 1.0});
+            //  Point light over downtown 
+            // auto pointLight = std::make_shared<PointLight>("pLight");
+            // pointLight->setAmbientColor({0.2, 0.2, 0.2, 1.0});
+            // pointLight->setDiffuseColor({0.5, 0.5, 0.5, 1.0});
             
             // pointLight->setOrigin(LightOrigin::WORLD);
             // pointLight->setPosition({-74.00796, 40.70361, 200.0});
 
-            pointLight->setOrigin(LightOrigin::GROUND);
-            pointLight->setPosition({0.0, 0.0, 200.0});
+            // // pointLight->setOrigin(LightOrigin::GROUND);
+            // // pointLight->setPosition({0.0, 0.0, 200.0});
 
-            // pointLight->setOrigin(LightOrigin::CAMERA);
-            // pointLight->setPosition({0.0, 0.0, -200.0});
+            // // pointLight->setOrigin(LightOrigin::CAMERA);
+            // // pointLight->setPosition({0.0, 0.0, -200.0});
 
-            pointLight->setRadius(1000);
-            m_scene->addLight(pointLight);
+            // pointLight->setRadius(1000);
+            // m_scene->addLight(pointLight);
+
+            //  Spotlight over downtown 
+            auto spotLight = std::make_shared<SpotLight>("sLight");
+            spotLight->setAmbientColor({0.2, 0.2, 0.2, 1.0});
+            spotLight->setDiffuseColor({0.5, 0.5, 0.5, 1.0});
+            
+            spotLight->setOrigin(LightOrigin::WORLD);
+            spotLight->setPosition({-74.00796, 40.70361, 200.0});
+
+            spotLight->setDirection({0.2, 1.0, 0.0});
+            spotLight->setCutOff(20.,20.);
+
+            // spotLight->setRadius(1000);
+            m_scene->addLight(spotLight);
         }
 
         // Create a tileManager
