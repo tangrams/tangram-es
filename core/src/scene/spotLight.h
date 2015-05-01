@@ -19,8 +19,8 @@ public:
 protected:
     /*  GLSL block code with structs and need functions for this light type */
     virtual std::string getClassBlock() override;
-    virtual std::string getInstanceDefinesBlock() override;
     virtual std::string getInstanceAssignBlock() override;
+    virtual const std::string& getTypeName() override;
     
     static std::string s_classBlock;
     
@@ -29,4 +29,9 @@ protected:
    	float m_spotExponent;
     float m_spotCutoff;
     float m_spotCosCutoff;
+
+private:
+
+    static std::string s_typeName;
+    
 };

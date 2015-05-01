@@ -2,14 +2,11 @@
 
 #include "light.h"
 
-class DirectionalLight : public Light {
+class AmbientLight : public Light {
 public:
     
-    DirectionalLight(const std::string& _name, bool _dynamic = false);
-    virtual ~DirectionalLight();
-
-    /*	Set the direction of the light */
-    virtual void setDirection(const glm::vec3& _dir);
+    AmbientLight(const std::string& _name, bool _dynamic = false);
+    virtual ~AmbientLight();
     
     virtual void setupProgram(std::shared_ptr<ShaderProgram> _program) override;
     
