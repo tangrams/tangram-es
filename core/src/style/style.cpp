@@ -81,14 +81,14 @@ void Style::setupFrame(const std::shared_ptr<View>& _view, const std::shared_ptr
 void Style::setLighting( LightingType _lType ){
 
     if ( _lType == LightingType::vertex ) {
-        m_shaderProgram->delSourceBlock("defines", "#define TANGRAM_LIGHTING_FRAGMENT\n");
-        m_shaderProgram->addSourceBlock("defines", "#define TANGRAM_LIGHTING_VERTEX\n", false);
+        m_shaderProgram->removeSourceBlock("defines", "#define TANGRAM_LIGHTING_FRAGMENT\n");
+        m_shaderProgram->addSourceBlock(   "defines", "#define TANGRAM_LIGHTING_VERTEX\n", false);
     } else if  (_lType == LightingType::fragment ) {
-        m_shaderProgram->delSourceBlock("defines", "#define TANGRAM_LIGHTING_VERTEX\n");
-        m_shaderProgram->addSourceBlock("defines", "#define TANGRAM_LIGHTING_FRAGMENT\n", false);
+        m_shaderProgram->removeSourceBlock("defines", "#define TANGRAM_LIGHTING_VERTEX\n");
+        m_shaderProgram->addSourceBlock(   "defines", "#define TANGRAM_LIGHTING_FRAGMENT\n", false);
     } else {
-        m_shaderProgram->delSourceBlock("defines", "#define TANGRAM_LIGHTING_VERTEX\n");
-        m_shaderProgram->delSourceBlock("defines", "#define TANGRAM_LIGHTING_FRAGMENT\n");
+        m_shaderProgram->removeSourceBlock("defines", "#define TANGRAM_LIGHTING_VERTEX\n");
+        m_shaderProgram->removeSourceBlock("defines", "#define TANGRAM_LIGHTING_FRAGMENT\n");
     }
     
 }
