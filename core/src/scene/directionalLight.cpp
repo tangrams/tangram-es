@@ -2,10 +2,13 @@
 #include "glm/gtx/string_cast.hpp"
 
 std::string DirectionalLight::s_classBlock;
+std::string DirectionalLight::s_typeName = "DirectionalLight";
 
-DirectionalLight::DirectionalLight(const std::string& _name, bool _dynamic):Light(_name,_dynamic),m_direction(1.0,0.0,0.0) {
-	m_typeName = "DirectionalLight";
-	m_type = LightType::DIRECTIONAL;
+DirectionalLight::DirectionalLight(const std::string& _name, bool _dynamic) : 
+    Light(_name, _dynamic),
+    m_direction(1.0,0.0,0.0) {
+
+    m_type = LightType::DIRECTIONAL;
 }
 
 DirectionalLight::~DirectionalLight() {
@@ -50,4 +53,10 @@ std::string DirectionalLight::getInstanceAssignBlock() {
         block += ", " + glm::to_string(m_direction) + ")";
 	}
 	return block;
+}
+
+const std::string& DirectionalLight::getTypeName() {
+
+    return s_typeName;
+
 }

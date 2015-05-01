@@ -1,17 +1,15 @@
 #include "light.h"
 #include "glm/gtx/string_cast.hpp"
 
-std::string Light::s_lightToCalculate;
+std::string Light::s_mainLightingBlock;
 
 Light::Light(const std::string& _name, bool _dynamic):
     m_name(_name),
-    m_typeName("undefined_light"),
     m_ambient(0.0f),
     m_diffuse(1.0f),
     m_specular(0.0f),
-    m_type(LightType::UNDEFINED),
     m_origin(LightOrigin::CAMERA),
-    m_dynamic(_dynamic){
+    m_dynamic(_dynamic) {
 }
 
 Light::~Light() {
@@ -48,7 +46,6 @@ void Light::injectOnProgram(std::shared_ptr<ShaderProgram> _shader) {
     _shader->addSourceBlock("__lighting", getInstanceBlock());
     _shader->addSourceBlock("__lights_to_compute", getInstanceComputeBlock());
 
-    s_lightToCalculate += getInstanceComputeBlock();
 }
 
 void Light::setupProgram(const std::shared_ptr<View>& _view, std::shared_ptr<ShaderProgram> _shader) {
@@ -72,7 +69,10 @@ void Light::assembleLights(std::map<std::string, std::vector<std::string>>& _sou
     }
 
     // After lights definitions are all added, add the main lighting functions
-    lightingBlock += stringFromResource("lights.glsl");
+    if (s_mainLightingBlock.empty()) {
+        s_mainLightingBlock = stringFromResource("lights.glsl");
+    }
+    lightingBlock += s_mainLightingBlock;
 
     // The main lighting functions each contain a tag where all light instances should be computed;
     // Insert all of our "lights_to_compute" at this tag
@@ -104,21 +104,23 @@ std::string Light::getInstanceName() {
 
 std::string Light::getInstanceBlock() {
     std::string block = "";
+    const std::string& typeName = getTypeName();
     if (m_dynamic) {
         //  If is dynamic, define the uniform and copy it to the global instance of the light struct
-        block += "uniform " + m_typeName + " " + getUniformName() + ";\n";
-        block += m_typeName + " " + getInstanceName() + " = " + getUniformName() + ";\n";
+        block += "uniform " + typeName + " " + getUniformName() + ";\n";
+        block += typeName + " " + getInstanceName() + " = " + getUniformName() + ";\n";
     } else {
         //  If is not dynamic define the global instance of the light struct and fill the variables
-        block += m_typeName + " " + getInstanceName() + getInstanceAssignBlock() +";\n";
+        block += typeName + " " + getInstanceName() + getInstanceAssignBlock() +";\n";
     }
     return block;
 }
 
 std::string Light::getInstanceAssignBlock() {
     std::string block = "";
+    const std::string& typeName = getTypeName();
     if (!m_dynamic) {
-        block += " = " + m_typeName + "(" + glm::to_string(m_ambient);
+        block += " = " + typeName + "(" + glm::to_string(m_ambient);
         block += ", " + glm::to_string(m_diffuse);
         block += ", " + glm::to_string(m_specular);
     }

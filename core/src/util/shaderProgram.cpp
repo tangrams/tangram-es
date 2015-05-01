@@ -54,7 +54,7 @@ void ShaderProgram::addSourceBlock(const std::string& _tagName, const std::strin
     //          - add Global Blocks
 }
 
-void ShaderProgram::delSourceBlock(const std::string& _tagName, const std::string& _glslSource){
+void ShaderProgram::removeSourceBlock(const std::string& _tagName, const std::string& _glslSource){
     bool bChange = false;
 
     for (int i = m_sourceBlocks[_tagName].size()-1; i >= 0; i--) {

@@ -2,10 +2,17 @@
 #include "glm/gtx/string_cast.hpp"
 
 std::string SpotLight::s_classBlock;
+std::string SpotLight::s_typeName;
 
-SpotLight::SpotLight(const std::string& _name, bool _dynamic):PointLight(_name,_dynamic),m_direction(1.0,0.0,0.0),m_spotExponent(0.0),m_spotCutoff(0.0),m_spotCosCutoff(0.0) {
-    m_typeName = "SpotLight";
+SpotLight::SpotLight(const std::string& _name, bool _dynamic) : 
+    PointLight(_name, _dynamic),
+    m_direction(1.0,0.0,0.0),
+    m_spotExponent(0.0),
+    m_spotCutoff(0.0),
+    m_spotCosCutoff(0.0) {
+
     m_type = LightType::SPOT;
+    
 }
 
 SpotLight::~SpotLight() {
@@ -77,4 +84,10 @@ std::string SpotLight::getInstanceAssignBlock() {
         block += ")";
     }
     return block;
+}
+
+const std::string& SpotLight::getTypeName() {
+
+    return s_typeName;
+
 }
