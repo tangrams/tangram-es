@@ -43,7 +43,7 @@ public:
     /*  Set Specular Color. This are the intense reflections of a light. AKA shinny spot */
     virtual void setSpecularColor(const glm::vec4 _specular);
 
-    /*  Set Specular Color. This are the intense reflections of a light. AKA shinny spot */
+    /*  Set the origin relative to which this light will be positioned */
     virtual void setOrigin( LightOrigin _origin );
 
     /*  Get the instances light name defined on the shader */
