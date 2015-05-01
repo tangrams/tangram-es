@@ -1,7 +1,7 @@
 /* MATERIAL 
 -------------------------------
-This openGL Material implementation mimics the behavior of 
-the WebGL version of Tangram ( https://github.com/tangrams/tangram/wiki/Materials-Overview )
+This openGL Material implementation follows from the WebGL version of Tangram 
+( https://github.com/tangrams/tangram/wiki/Materials-Overview )
 */
 
 #pragma once

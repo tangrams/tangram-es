@@ -1,12 +1,12 @@
 #pragma once
 
-/* LIGTHS 
+/* LIGHTS 
 -------------------------------
-This openGL Lights implementation mimics the behavior of 
-the WebGL version of Tangram ( https://github.com/tangrams/tangram/wiki/Lights-Overview )
+This openGL Lights implementation follows from the WebGL version of Tangram 
+( https://github.com/tangrams/tangram/wiki/Lights-Overview )
 
-Works together with the Material Class to inject different lights and functions in to the 
-style shader.
+Lights work together with the Materials to inject different lighting functions 
+into the style shaders.
 */
 
 /* Abstract Class */
