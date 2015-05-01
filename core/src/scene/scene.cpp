@@ -13,7 +13,7 @@ void Scene::addStyle(std::unique_ptr<Style> _style) {
     m_styles.push_back(std::move(_style));
 }
 
-void Scene::addLight(std::shared_ptr<Light> _light) {
+void Scene::addLight(std::unique_ptr<Light> _light) {
 
     // Avoid duplications
     if (m_lights.find(_light->getInstanceName()) != m_lights.end()) {
@@ -26,5 +26,5 @@ void Scene::addLight(std::shared_ptr<Light> _light) {
         _light->injectOnProgram(style->getShaderProgram());
     }
     
-    m_lights[_light->getInstanceName()] = _light;
+    m_lights[_light->getInstanceName()] = std::move(_light);
 }
