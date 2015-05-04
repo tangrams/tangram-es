@@ -52,7 +52,7 @@ namespace Tangram {
             
             // Load style(s); hard-coded for now
             std::unique_ptr<Style> polyStyle(new PolygonStyle("Polygon"));
-            polyStyle->setLighting(LIGHTING_FRAGMENT);
+            polyStyle->setLighting(LightingType::vertex);
             polyStyle->addLayers({
                 "buildings",
                 "water",
@@ -90,16 +90,17 @@ namespace Tangram {
             std::unique_ptr<DebugStyle> debugStyle(new DebugStyle("Debug"));
             m_scene->addStyle(std::move(debugStyle));
 
-             // Directional light with white diffuse color pointing Northeast and down
-            // auto directionalLight = std::make_shared<DirectionalLight>("dLight");
-            // directionalLight->setAmbientColor({0.3, 0.3, 0.3, 1.0});
-            // directionalLight->setDiffuseColor({0.7, 0.7, 0.7, 1.0});
-            // directionalLight->setDirection({1.0, 1.0, -1.0});
-            // directionalLight->setOrigin(LightOrigin::WORLD);
-            // m_scene->addLight(directionalLight);
+            // Directional light with white diffuse color pointing Northeast and down
+             
+            std::unique_ptr<DirectionalLight> directionalLight(new DirectionalLight("dLight"));
+            directionalLight->setAmbientColor({0.3, 0.3, 0.3, 1.0});
+            directionalLight->setDiffuseColor({0.7, 0.7, 0.7, 1.0});
+            directionalLight->setDirection({1.0, 1.0, -1.0});
+            directionalLight->setOrigin(LightOrigin::WORLD);
+            m_scene->addLight(std::move(directionalLight));
 
-            //  Point light over downtown 
-            // auto pointLight = std::make_shared<PointLight>("pLight");
+            // // Point light over downtown 
+            // std::unique_ptr<PointLight> pointLight(new PointLight("pLight"));
             // pointLight->setAmbientColor({0.2, 0.2, 0.2, 1.0});
             // pointLight->setDiffuseColor({0.5, 0.5, 0.5, 1.0});
             
@@ -113,21 +114,19 @@ namespace Tangram {
             // // pointLight->setPosition({0.0, 0.0, -200.0});
 
             // pointLight->setRadius(1000);
-            // m_scene->addLight(pointLight);
+            // m_scene->addLight(std::move(pointLight));
 
-            //  Spotlight over downtown 
-            auto spotLight = std::make_shared<SpotLight>("sLight");
-            spotLight->setAmbientColor({0.2, 0.2, 0.2, 1.0});
-            spotLight->setDiffuseColor({0.5, 0.5, 0.5, 1.0});
+            // //  Spotlight over downtown 
+            // std::unique_ptr<SpotLight> spotLight(new SpotLight("sLight"));
+            // spotLight->setAmbientColor({0.2, 0.2, 0.2, 1.0});
+            // spotLight->setDiffuseColor({0.5, 0.5, 0.5, 1.0});
             
-            spotLight->setOrigin(LightOrigin::WORLD);
-            spotLight->setPosition({-74.00796, 40.70361, 200.0});
+            // spotLight->setOrigin(LightOrigin::GROUND);
+            // spotLight->setPosition({-74.00796, 40.70361, 200.0});
 
-            spotLight->setDirection({0.2, 1.0, 0.0});
-            spotLight->setCutOff(20.,20.);
-
-            // spotLight->setRadius(1000);
-            m_scene->addLight(spotLight);
+            // spotLight->setDirection({0.2, 1.0, 0.0});
+            // spotLight->setCutOff(20.,20.);
+            // m_scene->addLight(std::move(spotLight));
         }
 
         // Create a tileManager

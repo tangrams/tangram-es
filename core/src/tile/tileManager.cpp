@@ -143,7 +143,7 @@ void TileManager::addTile(const TileID& _tileID) {
     updateProxyTiles(_tileID, m_view->isZoomIn());
     
     // Queue tile for workers
-    m_queuedTiles.push_front(_tileID);
+    m_queuedTiles.push_back(_tileID);
     
 }
 

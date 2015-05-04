@@ -16,8 +16,14 @@ protected:
     virtual std::string getClassBlock() override;
     virtual std::string getInstanceDefinesBlock() override;
     virtual std::string getInstanceAssignBlock() override;
+    virtual const std::string& getTypeName() override;
 
     static std::string s_classBlock;
     
     glm::vec3 m_direction;
+
+private:
+
+    static std::string s_typeName;
+    
 };

@@ -26,6 +26,7 @@ protected:
     virtual std::string getClassBlock() override;
     virtual std::string getInstanceDefinesBlock() override;
     virtual std::string getInstanceAssignBlock() override;
+    virtual const std::string& getTypeName() override;
     
     static std::string s_classBlock;
     
@@ -35,4 +36,9 @@ protected:
     float m_attenuation;
     float m_innerRadius;
     float m_outerRadius;
+
+private:
+
+    static std::string s_typeName;
+
 };

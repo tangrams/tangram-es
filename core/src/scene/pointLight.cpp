@@ -2,10 +2,17 @@
 #include "glm/gtx/string_cast.hpp"
 
 std::string PointLight::s_classBlock;
+std::string PointLight::s_typeName = "PointLight";
 
-PointLight::PointLight(const std::string& _name, bool _dynamic):Light(_name,_dynamic),m_position(0.0),m_attenuation(0.0),m_innerRadius(0.0),m_outerRadius(0.0) {
-    m_typeName = "PointLight";
+PointLight::PointLight(const std::string& _name, bool _dynamic) : 
+    Light(_name, _dynamic),
+    m_position(0.0),
+    m_attenuation(0.0),
+    m_innerRadius(0.0),
+    m_outerRadius(0.0) {
+
     m_type = LightType::POINT;
+    
 }
 
 PointLight::~PointLight() {
@@ -115,4 +122,10 @@ std::string PointLight::getInstanceAssignBlock() {
         block += ")";
     }
     return block;
+}
+
+const std::string& PointLight::getTypeName() {
+
+    return s_typeName;
+
 }

@@ -54,7 +54,7 @@ void ShaderProgram::addSourceBlock(const std::string& _tagName, const std::strin
     //          - add Global Blocks
 }
 
-void ShaderProgram::delSourceBlock(const std::string& _tagName, const std::string& _glslSource){
+void ShaderProgram::removeSourceBlock(const std::string& _tagName, const std::string& _glslSource){
     bool bChange = false;
 
     for (int i = m_sourceBlocks[_tagName].size()-1; i >= 0; i--) {
@@ -326,19 +326,19 @@ void ShaderProgram::setUniformf(const std::string& _name, float _value0, float _
     glUniform4f(location, _value0, _value1, _value2, _value3);
 }
 
-void ShaderProgram::setUniformMatrix2f(const std::string& _name, float* _value, bool _transpose) {
+void ShaderProgram::setUniformMatrix2f(const std::string& _name, const float* _value, bool _transpose) {
     use();
     GLint location = getUniformLocation(_name);
     glUniformMatrix2fv(location, 1, _transpose, _value);
 }
 
-void ShaderProgram::setUniformMatrix3f(const std::string& _name, float* _value, bool _transpose) {
+void ShaderProgram::setUniformMatrix3f(const std::string& _name, const float* _value, bool _transpose) {
     use();
     GLint location = getUniformLocation(_name);
     glUniformMatrix3fv(location, 1, _transpose, _value);
 }
 
-void ShaderProgram::setUniformMatrix4f(const std::string& _name, float* _value, bool _transpose) {
+void ShaderProgram::setUniformMatrix4f(const std::string& _name, const float* _value, bool _transpose) {
     use();
     GLint location = getUniformLocation(_name);
     glUniformMatrix4fv(location, 1, _transpose, _value);

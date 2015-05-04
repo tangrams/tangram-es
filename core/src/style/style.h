@@ -15,10 +15,10 @@
 
 #include "scene/material.h"
 
-typedef enum LightingType {
-    LIGHTING_NONE,
-    LIGHTING_VERTEX,
-    LIGHTING_FRAGMENT
+enum class LightingType {
+    none,
+    vertex,
+    fragment
 };
 
 class Scene;
