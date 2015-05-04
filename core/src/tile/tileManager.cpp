@@ -36,9 +36,9 @@ TileManager::~TileManager() {
     m_tileSet.clear();
 }
 
-bool TileManager::updateTileSet() {
+void TileManager::updateTileSet() {
     
-    bool tileSetChanged = false;
+    m_tileSetChanged = false;
     
     // Check if any incoming tiles are finished
     for (auto& worker : m_workers) {
@@ -51,16 +51,16 @@ bool TileManager::updateTileSet() {
             logMsg("Tile [%d, %d, %d] finished loading\n", id.z, id.x, id.y);
             std::swap(m_tileSet[id], tile);
             cleanProxyTiles(id);
-            tileSetChanged = true;
+            m_tileSetChanged = true;
             
         }
         
     }
     
-    if (! (m_view->changedOnLastUpdate() || tileSetChanged) ) {
+    if (! (m_view->changedOnLastUpdate() || m_tileSetChanged) ) {
         // No new tiles have come into view and no tiles have finished loading, 
         // so the tileset is unchanged
-        return false;
+        return;
     }
     
     const std::set<TileID>& visibleTiles = m_view->getVisibleTiles();
@@ -75,7 +75,7 @@ bool TileManager::updateTileSet() {
             if (setTilesIter == m_tileSet.end() || *visTilesIter < setTilesIter->first) {
                 // tileSet is missing an element present in visibleTiles
                 addTile(*visTilesIter);
-                tileSetChanged = true;
+                m_tileSetChanged = true;
                 ++visTilesIter;
             } else if (setTilesIter->first < *visTilesIter) {
                 // visibleTiles is missing an element present in tileSet (handled below)
@@ -99,7 +99,7 @@ bool TileManager::updateTileSet() {
                 // visibleTiles is missing an element present in tileSet
                 if (setTilesIter->second->getProxyCounter() <= 0) {
                     removeTile(setTilesIter);
-                    tileSetChanged = true;
+                    m_tileSetChanged = true;
                 } else {
                     ++setTilesIter;
                 }
@@ -132,8 +132,6 @@ bool TileManager::updateTileSet() {
             ++workersIter;
         }
     }
-    
-    return tileSetChanged;
 }
 
 void TileManager::addTile(const TileID& _tileID) {
@@ -145,7 +143,7 @@ void TileManager::addTile(const TileID& _tileID) {
     updateProxyTiles(_tileID, m_view->isZoomIn());
     
     // Queue tile for workers
-    m_queuedTiles.push_front(_tileID);
+    m_queuedTiles.push_back(_tileID);
     
 }
 

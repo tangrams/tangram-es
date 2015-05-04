@@ -49,10 +49,12 @@ public:
      * Contacts the <ViewModule> to determine whether the set of visible tiles has changed; if so,
      * constructs or disposes tiles as needed and returns true
      */
-    bool updateTileSet();
+    void updateTileSet();
     
     /* Returns the set of currently visible tiles */
     const std::map<TileID, std::shared_ptr<MapTile>>& getVisibleTiles() { return m_tileSet; }
+    
+    bool hasTileSetChanged() { return m_tileSetChanged; }
     
 private:
 
@@ -70,6 +72,8 @@ private:
     std::list<std::unique_ptr<TileWorker> > m_workers;
     
     std::list<TileID> m_queuedTiles;
+    
+    bool m_tileSetChanged = false;
     
     /*
      * Constructs a future (async) to load data of a new visible tile

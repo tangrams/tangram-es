@@ -2,10 +2,17 @@
 #include "glm/gtx/string_cast.hpp"
 
 std::string SpotLight::s_classBlock;
+std::string SpotLight::s_typeName = "SpotLight";
 
-SpotLight::SpotLight(const std::string& _name, bool _dynamic):PointLight(_name,_dynamic),m_direction(1.0,0.0,0.0),m_spotExponent(0.0),m_spotCutoff(0.0),m_spotCosCutoff(0.0) {
-    m_typeName = "SpotLight";
+SpotLight::SpotLight(const std::string& _name, bool _dynamic) : 
+    PointLight(_name, _dynamic),
+    m_direction(1.0,0.0,0.0),
+    m_spotExponent(0.0),
+    m_spotCutoff(0.0),
+    m_spotCosCutoff(0.0) {
+
     m_type = LightType::SPOT;
+    
 }
 
 SpotLight::~SpotLight() {
@@ -18,7 +25,7 @@ void SpotLight::setDirection(const glm::vec3 &_dir) {
 
 void SpotLight::setCutOff(float _cutoffAngle, float _exponent) {
     m_spotCutoff = _cutoffAngle;
-    m_spotCosCutoff = cos(_cutoffAngle * 3.14159 / 180.0);//cos(_cutoff);
+    m_spotCosCutoff = cos(_cutoffAngle * 3.14159 / 180.0);
     m_spotExponent = _exponent;
 }
 
@@ -38,45 +45,32 @@ std::string SpotLight::getClassBlock() {
     return s_classBlock;
 }
 
-std::string SpotLight::getInstanceDefinesBlock() {
-    std::string defines = "";
-
-    if (m_constantAttenuation!=0.0) {
-        defines += "#define TANGRAM_SPOTLIGHT_CONSTANT_ATTENUATION\n";
-    }
-
-    if (m_linearAttenuation!=0.0) {
-        defines += "#define TANGRAM_SPOTLIGHT_LINEAR_ATTENUATION\n";
-    }
-
-    if (m_quadraticAttenuation!=0.0) {
-        defines += "#define TANGRAM_SPOTLIGHT_QUADRATIC_ATTENUATION\n";
-    }
-    return defines;
-}
-
 std::string SpotLight::getInstanceAssignBlock() {
     std::string block = Light::getInstanceAssignBlock();
 
     if (!m_dynamic) {
-
         block += ", " + glm::to_string(m_position);
-        block += ", " + glm::to_string(m_direction);
+        if (m_attenuation!=0.0) {
+            block += ", " + std::to_string(m_attenuation);
+        }
+        if (m_innerRadius!=0.0) {
+            block += ", " + std::to_string(m_innerRadius);
+        }
+        if (m_outerRadius!=0.0) {
+            block += ", " + std::to_string(m_outerRadius);
+        }
 
+        block += ", " + glm::to_string(m_direction);
         block += ", " + std::to_string(m_spotCosCutoff);
         block += ", " + std::to_string(m_spotExponent);
-
-        if (m_constantAttenuation!=0.0) {
-            block += ", " + std::to_string(m_constantAttenuation);
-        }
-        if (m_linearAttenuation!=0.0) {
-            block += ", " + std::to_string(m_linearAttenuation);
-        }
-        if (m_quadraticAttenuation!=0.0) {
-            block += ", " + std::to_string(m_quadraticAttenuation);
-        }
 
         block += ")";
     }
     return block;
+}
+
+const std::string& SpotLight::getTypeName() {
+
+    return s_typeName;
+
 }

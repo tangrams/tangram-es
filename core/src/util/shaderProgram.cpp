@@ -54,6 +54,19 @@ void ShaderProgram::addSourceBlock(const std::string& _tagName, const std::strin
     //          - add Global Blocks
 }
 
+void ShaderProgram::removeSourceBlock(const std::string& _tagName, const std::string& _glslSource){
+    bool bChange = false;
+
+    for (int i = m_sourceBlocks[_tagName].size()-1; i >= 0; i--) {
+        if (_glslSource == m_sourceBlocks[_tagName][i]) {
+            m_sourceBlocks[_tagName].erase(m_sourceBlocks[_tagName].begin()+i);
+            bChange = true;
+        }
+    }
+
+    m_needsBuild = bChange;
+}
+
 const GLint ShaderProgram::getAttribLocation(const std::string& _attribName) {
 
     // Get uniform location at this key, or create one valued at -2 if absent
@@ -202,6 +215,7 @@ GLuint ShaderProgram::makeCompiledShader(const std::string& _src, GLenum _type) 
             std::vector<GLchar> infoLog(infoLength);
             glGetShaderInfoLog(shader, infoLength, NULL, &infoLog[0]);
             logMsg("Error compiling shader:\n%s\n", &infoLog[0]);
+            //logMsg("\n%s\n", source); 
         }
         glDeleteShader(shader);
         return 0;
@@ -312,19 +326,19 @@ void ShaderProgram::setUniformf(const std::string& _name, float _value0, float _
     glUniform4f(location, _value0, _value1, _value2, _value3);
 }
 
-void ShaderProgram::setUniformMatrix2f(const std::string& _name, float* _value, bool _transpose) {
+void ShaderProgram::setUniformMatrix2f(const std::string& _name, const float* _value, bool _transpose) {
     use();
     GLint location = getUniformLocation(_name);
     glUniformMatrix2fv(location, 1, _transpose, _value);
 }
 
-void ShaderProgram::setUniformMatrix3f(const std::string& _name, float* _value, bool _transpose) {
+void ShaderProgram::setUniformMatrix3f(const std::string& _name, const float* _value, bool _transpose) {
     use();
     GLint location = getUniformLocation(_name);
     glUniformMatrix3fv(location, 1, _transpose, _value);
 }
 
-void ShaderProgram::setUniformMatrix4f(const std::string& _name, float* _value, bool _transpose) {
+void ShaderProgram::setUniformMatrix4f(const std::string& _name, const float* _value, bool _transpose) {
     use();
     GLint location = getUniformLocation(_name);
     glUniformMatrix4fv(location, 1, _transpose, _value);

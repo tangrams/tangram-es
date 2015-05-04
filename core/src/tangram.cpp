@@ -13,7 +13,7 @@
 
 #include "style/polygonStyle.h"
 #include "style/polylineStyle.h"
-#include "style/fontStyle.h"
+#include "style/textStyle.h"
 #include "style/debugTextStyle.h"
 #include "style/debugStyle.h"
 #include "style/spriteStyle.h"
@@ -53,6 +53,7 @@ namespace Tangram {
             
             // Load style(s); hard-coded for now
             std::unique_ptr<Style> polyStyle(new PolygonStyle("Polygon"));
+            polyStyle->setLighting(LightingType::vertex);
             polyStyle->addLayers({
                 "buildings",
                 "water",
@@ -66,29 +67,50 @@ namespace Tangram {
             m_scene->addStyle(std::move(linesStyle));
 
             m_ftContext = std::make_shared<FontContext>();
-            m_ftContext->addFont("Roboto-Regular.ttf", "Roboto-Regular");
+            m_ftContext->addFont("FiraSans-Medium.ttf", "FiraSans");
+            m_ftContext->addFont("FuturaStd-Condensed.ttf", "Futura");
             m_labelContainer = LabelContainer::GetInstance();
             m_labelContainer->setFontContext(m_ftContext);
 
-            std::unique_ptr<Style> fontStyle(new FontStyle("Roboto-Regular", "FontStyle", 14.0f, true));
-            fontStyle->addLayers({"roads"});
-            m_scene->addStyle(std::move(fontStyle));
-
-            std::unique_ptr<Style> debugTextStyle(new DebugTextStyle("Roboto-Regular", "DebugTextStyle", 30.0f, true));
+            std::unique_ptr<Style> textStyle0(new TextStyle("FiraSans", "Textstyle0", 15.0f, 0xF7F0E1, true, true));
+            textStyle0->addLayers({
+                "roads",
+                "places",
+                "pois"
+            });
+            m_scene->addStyle(std::move(textStyle0));
+            std::unique_ptr<Style> textStyle1(new TextStyle("Futura", "Textstyle1", 18.0f, 0x26241F, true, true));
+            textStyle1->addLayers({
+                "landuse",
+            });
+            m_scene->addStyle(std::move(textStyle1));
+            
+            std::unique_ptr<Style> debugTextStyle(new DebugTextStyle("FiraSans", "DebugTextStyle", 30.0f, 0xDC3522, true));
             m_scene->addStyle(std::move(debugTextStyle));
 
             std::unique_ptr<DebugStyle> debugStyle(new DebugStyle("Debug"));
             m_scene->addStyle(std::move(debugStyle));
 
-            //  Directional light with white diffuse color pointing Northeast and down
-            auto directionalLight = std::make_shared<DirectionalLight>("dLight");
+            // Directional light with white diffuse color pointing Northeast and down
+             
+            std::unique_ptr<DirectionalLight> directionalLight(new DirectionalLight("dLight"));
             directionalLight->setAmbientColor({0.3, 0.3, 0.3, 1.0});
             directionalLight->setDiffuseColor({0.7, 0.7, 0.7, 1.0});
             directionalLight->setDirection({1.0, 1.0, -1.0});
-            m_scene->addLight(directionalLight);
+            m_scene->addLight(std::move(directionalLight));
+
+            //  Directional light with white diffuse color pointing Northeast and down
             
-            std::unique_ptr<Style> spriteStyle(new SpriteStyle("Sprite"));
-            m_scene->addStyle(std::move(spriteStyle));
+            /*std::unique_ptr<PointLight> pointLight(new PointLight("pLight"));
+            pointLight->setAmbientColor({0.2, 0.2, 0.2, 1.0});
+            pointLight->setDiffuseColor({0.7, 0.7, 0.7, 1.0});
+            pointLight->setPosition({0.0, 0.0, -100.0});
+            pointLight->setRadius(200);
+            m_scene->addLight(std::move(pointLight));*/
+
+            // Testing loading image
+			// std::unique_ptr<Style> spriteStyle(new SpriteStyle("Sprite"));
+            // m_scene->addStyle(std::move(spriteStyle));
         }
 
         // Create a tileManager
@@ -154,12 +176,28 @@ namespace Tangram {
             m_tileManager->updateTileSet();
 
             if (m_view->changedOnLastUpdate()) {
+                for (const auto& mapIDandTile : m_tileManager->getVisibleTiles()) {
+                    const std::shared_ptr<MapTile>& tile = mapIDandTile.second;
+                    tile->update(_dt, *m_view);
+                }
+            }
 
+            if(m_view->changedOnLastUpdate() || m_tileManager->hasTileSetChanged()) {
+                // update labels for specific style
                 for (const auto& style : m_scene->getStyles()) {
-
                     for (const auto& mapIDandTile : m_tileManager->getVisibleTiles()) {
                         const std::shared_ptr<MapTile>& tile = mapIDandTile.second;
-                        tile->update(_dt, *style, *m_view);
+                        tile->updateLabels(_dt, *style, *m_view);
+                    }
+                }
+                
+                // manage occlusions
+                LabelContainer::GetInstance()->updateOcclusions();
+                
+                for (const auto& style : m_scene->getStyles()) {
+                    for (const auto& mapIDandTile : m_tileManager->getVisibleTiles()) {
+                        const std::shared_ptr<MapTile>& tile = mapIDandTile.second;
+                        tile->pushLabelTransforms(*style);
                     }
                 }
             }
@@ -193,7 +231,6 @@ namespace Tangram {
         }
         
         while (Error::hadGlError("Tangram::render()")) {}
-
     }
 
     void setPixelScale(float _pixelsPerPoint) {

@@ -1,7 +1,9 @@
-//
-//  Based on openGL 2.0 GLSL gl_MaterialParameters
-//  http://mew.cx/glsl_quickref.pdf
-//
+/* MATERIAL 
+-------------------------------
+This openGL Material implementation follows from the WebGL version of Tangram 
+( https://github.com/tangrams/tangram/wiki/Materials-Overview )
+*/
+
 #pragma once
  
 #include <memory>
