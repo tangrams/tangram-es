@@ -129,12 +129,6 @@ void Texture::update() {
 
 void Texture::resize(const unsigned int _width, const unsigned int _height) {
 
-    // don't treat those textures for now
-    //if (!isPowerOf2(_width) || !isPowerOf2(_height)) {
-    //    logMsg("[Texture] non-power of two textures not implemented yet");
-    //    return;
-    //}
-
     m_width = _width;
     m_height = _height;
 

@@ -46,10 +46,7 @@ public:
     /* Perform texture updates, should be called at least once and after adding data or resizing */
     void update();
 
-    /* Resize the texture 
-     * 
-     * Width and height should be power of two numbers 
-     */
+    /* Resize the texture */
     void resize(const unsigned int _width, const unsigned int _height);
 
     /* Width and Height texture getters */
