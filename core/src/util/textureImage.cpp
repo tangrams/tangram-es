@@ -1,3 +1,6 @@
+#include <stdio.h>
+#define STB_IMAGE_IMPLEMENTATION
+#include "stb_image.h"
 #include "textureImage.h"
 
 TextureImage::TextureImage(std::string _file, GLuint _slot) 
@@ -8,17 +11,16 @@ TextureImage::TextureImage(std::string _file, GLuint _slot)
 
 void TextureImage::load(std::string& _file) {
     unsigned int size;
-    unsigned char* data = bytesFromResource(_file.c_str(), &size); 
-    unsigned int width, height;
+    unsigned char* data = bytesFromResource(_file.c_str(), &size);
+    unsigned char* pixels;
+    int width, height, comp;
 
-    std::vector<unsigned char> png;
-    std::vector<unsigned char> image; //the raw pixels
-
-    png.insert(png.begin(), data, data + size);
-
-    lodepng::decode(image, width, height, png);
+    pixels = stbi_load_from_memory(data,size, &width, &height, &comp, 0);
 
     resize(width, height);
-    setData(reinterpret_cast<GLuint*>(image.data()), width * height);
+    setData(reinterpret_cast<GLuint*>(pixels), width * height);
     update();
+
+    delete [] pixels;
+    delete [] data;
 }

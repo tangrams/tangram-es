@@ -1,7 +1,6 @@
 #pragma once
 
 #include "texture.h"
-#include "lodepng.h"
 #include <string>
 
 class TextureImage : public Texture {
