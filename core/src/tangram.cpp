@@ -62,6 +62,7 @@ namespace Tangram {
             m_scene->addStyle(std::move(polyStyle));
             
             std::unique_ptr<Style> linesStyle(new PolylineStyle("Polyline"));
+            linesStyle->setLighting(LightingType::vertex);
             linesStyle->addLayers({"roads"});
             m_scene->addStyle(std::move(linesStyle));
 
@@ -100,12 +101,12 @@ namespace Tangram {
 
             //  Directional light with white diffuse color pointing Northeast and down
             
-            /*std::unique_ptr<PointLight> pointLight(new PointLight("pLight"));
-            pointLight->setAmbientColor({0.2, 0.2, 0.2, 1.0});
-            pointLight->setDiffuseColor({0.7, 0.7, 0.7, 1.0});
-            pointLight->setPosition({0.0, 0.0, -100.0});
-            pointLight->setRadius(200);
-            m_scene->addLight(std::move(pointLight));*/
+            // std::unique_ptr<PointLight> pointLight(new PointLight("pLight"));
+            // pointLight->setAmbientColor({0.2, 0.2, 0.2, 1.0});
+            // pointLight->setDiffuseColor({0.7, 0.7, 0.7, 1.0});
+            // pointLight->setPosition({0.0, 0.0, -100.0});
+            // pointLight->setRadius(200);
+            // m_scene->addLight(std::move(pointLight));
         }
 
         // Create a tileManager
