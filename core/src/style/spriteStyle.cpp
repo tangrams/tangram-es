@@ -59,18 +59,15 @@ void SpriteStyle::addData(TileData& _data, MapTile& _tile, const MapProjection& 
     
     std::vector<PosUVVertex> vertices;
     
-    vertices.reserve(6);
+    vertices.reserve(4);
     
     float size = 0.2;
-    vertices.push_back({  size,  size, 0.f, 0.f, 0.f });
-    vertices.push_back({ -size,  size, 0.f, 1.f, 0.f });
-    vertices.push_back({ -size, -size, 0.f, 1.f, 1.f });
+    vertices.push_back({  size,  size, 0.f, 1.f, 0.f });
+    vertices.push_back({ -size,  size, 0.f, 0.f, 0.f });
+    vertices.push_back({ -size, -size, 0.f, 0.f, 1.f });
+    vertices.push_back({  size, -size, 0.f, 1.f, 1.f });
     
-    vertices.push_back({ -size, -size, 0.f, 1.f, 1.f });
-    vertices.push_back({  size, -size, 0.f, 0.f, 1.f });
-    vertices.push_back({  size,  size, 0.f, 0.f, 0.f });
-    
-    mesh->addVertices(std::move(vertices), {});
+    mesh->addVertices(std::move(vertices), { 0, 1, 2, 2, 3, 0 });
     mesh->compileVertexBuffer();
     
     _tile.addGeometry(*this, std::unique_ptr<VboMesh>(mesh));
