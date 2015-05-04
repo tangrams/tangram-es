@@ -33,12 +33,12 @@ void SpotLight::setupProgram(const std::shared_ptr<View>& _view, std::shared_ptr
     if (m_dynamic) {
         PointLight::setupProgram(_view, _shader);
 
-        m_direction_eye = m_direction;
+        glm::vec3 direction = m_direction;
         if (m_origin == LightOrigin::WORLD) {
-            m_direction_eye = _view->getNormalMatrix() * m_direction;
+            direction = _view->getNormalMatrix() * direction;
         }
 
-        _shader->setUniformf(getUniformName()+".direction", m_direction_eye);
+        _shader->setUniformf(getUniformName()+".direction", direction);
         _shader->setUniformf(getUniformName()+".spotCosCutoff", m_spotCosCutoff);
         _shader->setUniformf(getUniformName()+".spotExponent", m_spotExponent);
     }

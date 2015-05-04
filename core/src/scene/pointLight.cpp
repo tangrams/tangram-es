@@ -44,29 +44,29 @@ void PointLight::setupProgram(const std::shared_ptr<View>& _view, std::shared_pt
     if (m_dynamic) {
         Light::setupProgram(_view, _shader);
 
-        m_position_eye = m_position;
+        glm::vec4 position = m_position;
 
         if (m_origin == LightOrigin::WORLD) {
             // For world origin, format is: [longitude, latitude, meters (default) or pixels w/px units]
 
             // Move light's world position into camera space
             glm::dvec2 camSpace = _view->getMapProjection().LonLatToMeters(glm::dvec2(m_position.x, m_position.y));
-            m_position_eye.x = camSpace.x - _view->getPosition().x;
-            m_position_eye.y = camSpace.y - _view->getPosition().y;
-            m_position_eye.z = m_position_eye.z - _view->getPosition().z;
+            position.x = camSpace.x - _view->getPosition().x;
+            position.y = camSpace.y - _view->getPosition().y;
+            position.z = position.z - _view->getPosition().z;
 
             glm::mat4 InvViewMatrix = glm::transpose(glm::inverse(_view->getViewMatrix()));
-            m_position_eye = InvViewMatrix * m_position_eye;
+            position = InvViewMatrix * position;
 
         } else if (m_origin == LightOrigin::GROUND) {
             // Leave light's xy in camera space, but z needs to be moved relative to ground plane
-            m_position_eye.z = m_position_eye.z - _view->getPosition().z;
+            position.z = position.z - _view->getPosition().z;
 
             glm::mat4 InvViewMatrix = glm::transpose(glm::inverse(_view->getViewMatrix()));
-            m_position_eye = InvViewMatrix * m_position_eye;
+            position = InvViewMatrix * position;
         }
 
-        _shader->setUniformf(getUniformName()+".position", m_position_eye);
+        _shader->setUniformf(getUniformName()+".position", position);
 
         if (m_attenuation!=0.0) {
             _shader->setUniformf(getUniformName()+".attenuation", m_attenuation);

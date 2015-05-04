@@ -21,14 +21,14 @@ void DirectionalLight::setDirection(const glm::vec3 &_dir) {
 
 void DirectionalLight::setupProgram(const std::shared_ptr<View>& _view, std::shared_ptr<ShaderProgram> _shader ) {
 
-    m_direction_eye = m_direction;
+    glm::vec3 direction = m_direction;
     if (m_origin == LightOrigin::WORLD) {
-        m_direction_eye = _view->getNormalMatrix() * m_direction;
+        direction = _view->getNormalMatrix() * direction;
     }
 
 	if (m_dynamic) {
 		Light::setupProgram(_view, _shader);
-		_shader->setUniformf(getUniformName()+".direction", m_direction_eye);
+		_shader->setUniformf(getUniformName()+".direction", direction);
 	}
 }
 

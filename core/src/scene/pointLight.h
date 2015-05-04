@@ -31,7 +31,6 @@ protected:
     static std::string s_classBlock;
     
     glm::vec4 m_position;
-    glm::vec4 m_position_eye;
 
     float m_attenuation;
     float m_innerRadius;

@@ -24,7 +24,6 @@ protected:
     static std::string s_classBlock;
     
     glm::vec3 m_direction;
-	glm::vec3 m_direction_eye;
 
 private:
 
