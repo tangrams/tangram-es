@@ -1,4 +1,5 @@
 #include "spriteStyle.h"
+#include "texture.h"
 
 SpriteStyle::SpriteStyle(std::string _name, GLenum _drawMode) : Style(_name, _drawMode) {
     
@@ -30,7 +31,7 @@ void SpriteStyle::constructShaderProgram() {
     m_shaderProgram = std::make_shared<ShaderProgram>();
     m_shaderProgram->setSourceStrings(fragShaderSrcStr, vertShaderSrcStr);
     
-    m_texture = std::shared_ptr<Texture>(new TextureImage("mapzen-logo.png"));
+    m_texture = std::shared_ptr<Texture>(new Texture("mapzen-logo.png"));
     
 }
 

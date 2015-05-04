@@ -2,7 +2,6 @@
 
 #include "style.h"
 #include "util/typedMesh.h"
-#include "textureImage.h"
 
 class SpriteStyle : public Style {
     
