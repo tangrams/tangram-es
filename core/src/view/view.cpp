@@ -245,6 +245,7 @@ void View::updateMatrices() {
     m_proj = glm::perspective(fovy, m_aspect, near, far);
     m_viewProj = m_proj * m_view;
     m_invViewProj = glm::inverse(m_viewProj);
+    m_normalMatrix = glm::transpose(glm::inverse(glm::mat3(m_view)));
     
 }
 

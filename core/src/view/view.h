@@ -98,6 +98,9 @@ public:
     /* Gets the combined view and projection transformation */
     const glm::mat4 getViewProjectionMatrix() const { return m_viewProj; }
 
+    /* Gets the normal matrix; transforms surface normals from model space to camera space */
+    const glm::mat3& getNormalMatrix() const { return m_normalMatrix; }
+
     /* Returns a rectangle of the current view range as [[x_min, y_min], [x_max, y_max]] */
     glm::dmat2 getBoundsRect() const;
     
@@ -135,6 +138,7 @@ protected:
     glm::mat4 m_proj;
     glm::mat4 m_viewProj;
     glm::mat4 m_invViewProj;
+    glm::mat3 m_normalMatrix;
     
     float m_roll = 0.f;
     float m_pitch = 0.f;

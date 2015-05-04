@@ -22,11 +22,8 @@ void DirectionalLight::setDirection(const glm::vec3 &_dir) {
 void DirectionalLight::setupProgram(const std::shared_ptr<View>& _view, std::shared_ptr<ShaderProgram> _shader ) {
 
     m_direction_eye = m_direction;
-    if (m_origin != LightOrigin::CAMERA) {
-        glm::mat3 normalMatrix = glm::mat3(_view->getViewMatrix()); // Transforms surface normals into camera space
-        normalMatrix = glm::transpose(glm::inverse(normalMatrix));
-
-        m_direction_eye = normalMatrix * m_direction;
+    if (m_origin == LightOrigin::WORLD) {
+        m_direction_eye = _view->getNormalMatrix() * m_direction;
     }
 
 	if (m_dynamic) {
