@@ -55,15 +55,13 @@ void PointLight::setupProgram(const std::shared_ptr<View>& _view, std::shared_pt
             position.y = camSpace.y - _view->getPosition().y;
             position.z = position.z - _view->getPosition().z;
 
-            glm::mat4 InvViewMatrix = glm::transpose(glm::inverse(_view->getViewMatrix()));
-            position = InvViewMatrix * position;
-
         } else if (m_origin == LightOrigin::GROUND) {
             // Leave light's xy in camera space, but z needs to be moved relative to ground plane
             position.z = position.z - _view->getPosition().z;
-
-            glm::mat4 InvViewMatrix = glm::transpose(glm::inverse(_view->getViewMatrix()));
-            position = InvViewMatrix * position;
+        }
+        
+        if (m_origin == LightOrigin::WORLD || m_origin == LightOrigin::GROUND) {
+            position = glm::vec4(_view->getNormalMatrix() * glm::vec3(position), 1.f);
         }
 
         _shader->setUniformf(getUniformName()+".position", position);
