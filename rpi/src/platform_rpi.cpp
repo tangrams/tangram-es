@@ -1,18 +1,56 @@
+#ifdef PLATFORM_RPI
+
 #include <stdio.h>
 #include <stdarg.h>
 #include <iostream>
 #include <fstream>
 #include <string>
-
-#include <curl/curl.h>
+#include <list>
 
 #include "platform.h"
+
+static std::function<void(std::vector<char>&&, TileID, int)> networkCallback;
+
+static NetworkWorker s_Workers[NUM_WORKERS];
+static std::list<std::unique_ptr<NetWorkerData>> s_WorkerDataQueue;
 
 void logMsg(const char* fmt, ...) {
     va_list args;
     va_start(args, fmt);
     vfprintf(stderr, fmt, args);
     va_end(args);
+}
+
+void processNetworkQueue() {
+
+    // attach workers to NetWorkerData
+    {
+        auto workerDataItr = s_WorkerDataQueue.begin();
+        for(auto& worker : s_Workers) {
+            if(workerDataItr == s_WorkerDataQueue.end()) {
+                break;
+            }
+            if(worker.isAvailable()) {
+                worker.perform(std::move(*workerDataItr));
+                workerDataItr = s_WorkerDataQueue.erase(workerDataItr);
+            }
+        }
+    }
+
+    // check if any of the workers is done
+    {
+        for(auto& worker : s_Workers) {
+            if(worker.isFinished() && !worker.isAvailable()) {
+                auto resultData = worker.getWorkerResult();
+                worker.reset();
+                if(resultData->rawData.size() != 0) {
+                    networkCallback(std::move(resultData->rawData), resultData->tileID, resultData->dataSourceID);
+                } else {
+                    logMsg("Something went wrong during network fetch of tile: [%d, %d, %d]\n", resultData->tileID.x, resultData->tileID.y, resultData->tileID.z);
+                }
+            }
+        }
+    }
 }
 
 void requestRender() {
@@ -69,45 +107,35 @@ unsigned char* bytesFromResource(const char* _path, unsigned int* _size) {
     return reinterpret_cast<unsigned char *>(cdata);
 }
 
-//write_data call back from CURLOPT_WRITEFUNCTION
-//responsible to read and fill "stream" with the data.
-static size_t write_data(void *_ptr, size_t _size, size_t _nmemb, void *_stream) {
-    ((std::stringstream*) _stream)->write(reinterpret_cast<char *>(_ptr), _size * _nmemb);
-    return _size * _nmemb;
-}
+bool streamFromHttpASync(const std::string& _url, const TileID& _tileID, const int _dataSourceID) {
 
-bool streamFromHttpSync(const std::string& _url, const TileID& _tileID, const int _dataSourceID) {
-
-    std::stringstream _rawData;
-
-    CURL* curlHandle = curl_easy_init();
-
-    // set up curl to perform fetch
-    curl_easy_setopt(curlHandle, CURLOPT_WRITEFUNCTION, write_data);
-    curl_easy_setopt(curlHandle, CURLOPT_WRITEDATA, &_rawData);
-    curl_easy_setopt(curlHandle, CURLOPT_URL, _url.c_str());
-    curl_easy_setopt(curlHandle, CURLOPT_HEADER, 0L);
-    curl_easy_setopt(curlHandle, CURLOPT_VERBOSE, 0L);
-    curl_easy_setopt(curlHandle, CURLOPT_ACCEPT_ENCODING, "gzip");
-    
-    logMsg("Fetching URL with curl: %s\n", _url.c_str());
-
-    CURLcode result = curl_easy_perform(curlHandle);
-    
-    curl_easy_cleanup(curlHandle);
-    if (result != CURLE_OK) {
-        logMsg("curl_easy_perform failed: %s\n", curl_easy_strerror(result));
-        return false;
-    } else {
-        return true;
+    std::unique_ptr<NetWorkerData> workerData(new NetWorkerData(_url, _tileID, _dataSourceID));
+    for(auto& worker : s_Workers) {
+        if(worker.isAvailable()) {
+            worker.perform( std::move(workerData) ); 
+            return true;
+        }
     }
+    s_WorkerDataQueue.push_back( std::move(workerData) );
+    return true;
+
 }
 
 void cancelNetworkRequest(const std::string& _url) {
 
+    // Only clear this request if a worker has not started operating on it!! otherwise it gets too convoluted with curl!
+    auto itr = s_WorkerDataQueue.begin();
+    while(itr != s_WorkerDataQueue.end()) {
+        if((*itr)->url == _url) {
+            itr = s_WorkerDataQueue.erase(itr);
+        } else {
+            itr++;
+        }
+    }
 }
 
 void setNetworkRequestCallback(std::function<void(std::vector<char>&&, TileID, int)>&& _callback) {
-
+    networkCallback = _callback;
 }
 
+#endif

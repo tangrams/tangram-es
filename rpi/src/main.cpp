@@ -347,6 +347,8 @@ int main(int argc, char **argv){
         double delta = (timeNow - timePrev)*0.001;
         float time = (timeNow - timeStart)*0.001;
 
+        processNetworkQueue();
+
         Tangram::update(delta);
         timePrev = timeNow;
         
