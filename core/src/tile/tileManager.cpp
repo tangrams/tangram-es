@@ -37,7 +37,7 @@ TileManager::~TileManager() {
 
 void TileManager::addToWorkerQueue(std::vector<char>&& _rawData, const TileID& _tileId, const int _dataSourceID) {
     std::lock_guard<std::mutex> lock(m_queueTileMutex);
-    m_queuedTiles.push_front(std::unique_ptr<WorkerData>(new WorkerData(std::move(_rawData), _tileId, _dataSourceID)));
+    m_queuedTiles.push_back(std::unique_ptr<WorkerData>(new WorkerData(std::move(_rawData), _tileId, _dataSourceID)));
 }
 
 void TileManager::updateTileSet() {
