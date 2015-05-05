@@ -39,7 +39,7 @@ void main() {
 
     v_color = a_color;
     v_eyeToPoint = vec3(u_modelView * a_position);
-    v_normal = normalize(u_normalMatrix * vec3(0.,0.,1.));
+    v_normal = u_normalMatrix * vec3(0.,0.,1.);
     v_texcoord = a_texcoord;
         
     #ifdef TANGRAM_LIGHTING_VERTEX
