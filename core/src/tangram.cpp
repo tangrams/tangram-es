@@ -16,6 +16,7 @@
 #include "style/textStyle.h"
 #include "style/debugTextStyle.h"
 #include "style/debugStyle.h"
+#include "style/spriteStyle.h"
 #include "scene/scene.h"
 #include "scene/lights.h"
 #include "util/error.h"
@@ -101,12 +102,16 @@ namespace Tangram {
 
             //  Directional light with white diffuse color pointing Northeast and down
             
-            // std::unique_ptr<PointLight> pointLight(new PointLight("pLight"));
-            // pointLight->setAmbientColor({0.2, 0.2, 0.2, 1.0});
-            // pointLight->setDiffuseColor({0.7, 0.7, 0.7, 1.0});
-            // pointLight->setPosition({0.0, 0.0, -100.0});
-            // pointLight->setRadius(200);
-            // m_scene->addLight(std::move(pointLight));
+            /*std::unique_ptr<PointLight> pointLight(new PointLight("pLight"));
+            pointLight->setAmbientColor({0.2, 0.2, 0.2, 1.0});
+            pointLight->setDiffuseColor({0.7, 0.7, 0.7, 1.0});
+            pointLight->setPosition({0.0, 0.0, -100.0});
+            pointLight->setRadius(200);
+            m_scene->addLight(std::move(pointLight));*/
+
+            // Testing loading image
+			// std::unique_ptr<Style> spriteStyle(new SpriteStyle("Sprite"));
+            // m_scene->addStyle(std::move(spriteStyle));
         }
 
         // Create a tileManager
@@ -225,7 +230,7 @@ namespace Tangram {
 
             style->teardown();
         }
-
+        
         while (Error::hadGlError("Tangram::render()")) {}
     }
 
