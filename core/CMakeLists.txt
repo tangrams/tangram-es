@@ -11,6 +11,9 @@ set(SOURCE_DIR src)
 
 add_subdirectory("${DEPENDENCIES_DIR}/tess2")
 
+set(YAML_CPP_BUILD_TOOLS OFF CACHE BOOL "Enable testing and parse tools")
+add_subdirectory("${DEPENDENCIES_DIR}/yaml-cpp")
+
 file(GLOB_RECURSE FOUND_HEADERS "${SOURCE_DIR}/*.h")
 file(GLOB_RECURSE FOUND_SOURCES "${SOURCE_DIR}/*.cpp")
 
@@ -21,6 +24,7 @@ foreach(_headerFile ${FOUND_HEADERS})
 endforeach()
 set(CORE_INCLUDE_DIRS ${INCLUDE_DIRS} CACHE INTERNAL "core include directories" FORCE)
 list(APPEND INCLUDE_DIRS "${DEPENDENCIES_DIR}/tess2/libtess2/Include")
+list(APPEND INCLUDE_DIRS "${DEPENDENCIES_DIR}/yaml-cpp/include")
 list(APPEND INCLUDE_DIRS "${INCLUDE_DIR}/stb")
 list(APPEND INCLUDE_DIRS "${INCLUDE_DIR}/glm")
 list(APPEND INCLUDE_DIRS "${INCLUDE_DIR}/isect2d/include")
