@@ -14,7 +14,7 @@ public:
     /*  Set the properties of the cutoff light cone */
     virtual void setCutOff(float _cutoffConeDegrees, float _lightExponent);
     
-    virtual void setupProgram(std::shared_ptr<ShaderProgram> _program) override;
+    virtual void setupProgram(const std::shared_ptr<View>& _view, std::shared_ptr<ShaderProgram> _program) override;
     
 protected:
     /*  GLSL block code with structs and need functions for this light type */
