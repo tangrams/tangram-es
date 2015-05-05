@@ -11,7 +11,7 @@ void TextureCube::load(const std::string& _file) {
     unsigned char* pixels;
     int width, height, comp;
     
-    pixels = stbi_load_from_memory(data,size, &width, &height, &comp, 0);
+    pixels = stbi_load_from_memory(data, size, &width, &height, &comp, STBI_rgb_alpha);
 
     size = width * height;
    
