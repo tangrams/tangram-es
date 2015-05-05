@@ -19,6 +19,12 @@ else()
 	message(FATAL_ERROR "Please install a C++11 compatible compiler")
 endif()
 
+# add sources and include headers
+find_sources_and_include_directories(
+	${PROJECT_SOURCE_DIR}/rpi/src/*.h 
+	${PROJECT_SOURCE_DIR}/rpi/src/*.cpp
+	${PROJECT_SOURCE_DIR}/linux/src/netWorkerData.*)
+
 # include headers for rpi-installed libraries
 include_directories(/opt/vc/include/)
 include_directories(/opt/vc/include/interface/vcos/pthreads)
@@ -28,11 +34,6 @@ include_directories(/opt/vc/include/interface/vmcs_host/linux)
 add_subdirectory(${PROJECT_SOURCE_DIR}/core)
 include_directories(${CORE_INCLUDE_DIRS})
 include_directories(${CORE_LIBRARIES_INCLUDE_DIRS})
-
-# add sources and include headers
-find_sources_and_include_directories(
-	${PROJECT_SOURCE_DIR}/rpi/src/*.h 
-	${PROJECT_SOURCE_DIR}/rpi/src/*.cpp)
 
 # link and build functions
 function(link_libraries)
