@@ -72,12 +72,27 @@ void Style::setupFrame(const std::shared_ptr<View>& _view, const std::shared_ptr
     
     // Set up lights
     for (const auto& light : _scene->getLights()) {
-        light.second->setupProgram(m_shaderProgram);
+        light.second->setupProgram(_view,m_shaderProgram);
     }
     
     m_shaderProgram->setUniformf("u_zoom", _view->getZoom());
 }
 
+void Style::setLighting( LightingType _lType ){
+
+    if ( _lType == LightingType::vertex ) {
+        m_shaderProgram->removeSourceBlock("defines", "#define TANGRAM_LIGHTING_FRAGMENT\n");
+        m_shaderProgram->addSourceBlock(   "defines", "#define TANGRAM_LIGHTING_VERTEX\n", false);
+    } else if  (_lType == LightingType::fragment ) {
+        m_shaderProgram->removeSourceBlock("defines", "#define TANGRAM_LIGHTING_VERTEX\n");
+        m_shaderProgram->addSourceBlock(   "defines", "#define TANGRAM_LIGHTING_FRAGMENT\n", false);
+    } else {
+        m_shaderProgram->removeSourceBlock("defines", "#define TANGRAM_LIGHTING_VERTEX\n");
+        m_shaderProgram->removeSourceBlock("defines", "#define TANGRAM_LIGHTING_FRAGMENT\n");
+    }
+    
+}
+    
 void Style::setupTile(const std::shared_ptr<MapTile>& _tile) {
     // No-op by default
 }

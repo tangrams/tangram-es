@@ -246,6 +246,11 @@ void View::updateMatrices() {
     m_viewProj = m_proj * m_view;
     m_invViewProj = glm::inverse(m_viewProj);
     
+    // The matrix that transforms normals from world space to camera space is the transpose of the inverse of the view matrix,
+    // but since our view matrix is orthonormal transposing is equivalent to inverting, so the normal matrix is just the
+    // original view matrix (cropped to the top-left 3 rows and columns, since we're applying it to 3d vectors)
+    m_normalMatrix = glm::mat3(m_view);
+    
 }
 
 // Triangle rasterization adapted from Polymaps: https://github.com/simplegeo/polymaps/blob/master/src/Layer.js#L333-L383

@@ -11,7 +11,7 @@ public:
     /*	Set the direction of the light */
     virtual void setDirection(const glm::vec3& _dir);
     
-    virtual void setupProgram(std::shared_ptr<ShaderProgram> _program) override;
+    virtual void setupProgram(const std::shared_ptr<View>& _view, std::shared_ptr<ShaderProgram> _program) override;
     
 protected:
 
@@ -19,8 +19,14 @@ protected:
     virtual std::string getClassBlock() override;
     virtual std::string getInstanceDefinesBlock() override;
     virtual std::string getInstanceAssignBlock() override;
+    virtual const std::string& getTypeName() override;
 
     static std::string s_classBlock;
     
     glm::vec3 m_direction;
+
+private:
+
+    static std::string s_typeName;
+    
 };

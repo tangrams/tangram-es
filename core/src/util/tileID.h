@@ -2,7 +2,10 @@
 
 /* An immutable identifier for a map tile 
  * 
- * Contains the x, y, and z indices of a tile in a quad tree; TileIDs are arbitrarily but strictly ordered
+ * Contains the x, y, and z indices of a tile in a quad tree; TileIDs are ordered by:
+ * 1. z, highest to lowest
+ * 2. x, lowest to highest
+ * 3. y, lowest to highest
  */
 
 struct TileID {
@@ -15,7 +18,7 @@ struct TileID {
     TileID(const TileID& _rhs): x(_rhs.x), y(_rhs.y), z(_rhs.z) {};
 
     bool operator< (const TileID& _rhs) const {
-        return x < _rhs.x || (x == _rhs.x && (y < _rhs.y || (y == _rhs.y && z < _rhs.z)));
+        return z > _rhs.z || (z == _rhs.z && (x < _rhs.x || (x == _rhs.x && y < _rhs.y)));
     }
     bool operator> (const TileID& _rhs) const { return _rhs < const_cast<TileID&>(*this); }
     bool operator<=(const TileID& _rhs) const { return !(*this > _rhs); }
@@ -30,7 +33,7 @@ struct TileID {
     }
     
     bool isValid(int _maxZoom) const {
-        return isValid() && z < _maxZoom;
+        return isValid() && z <= _maxZoom;
     }
 
     TileID getParent() const {
