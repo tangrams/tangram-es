@@ -6,6 +6,7 @@
 #include <vector>
 #include <queue>
 #include <memory>
+#include <string>
 
 struct TextureFiltering {
     GLenum m_min;
@@ -32,6 +33,9 @@ public:
     Texture(unsigned int _width, unsigned int _height, GLuint _slot = 0,
             TextureOptions _options = {GL_ALPHA, GL_ALPHA, {GL_LINEAR, GL_LINEAR}, {GL_CLAMP_TO_EDGE, GL_CLAMP_TO_EDGE}});
     
+    Texture(const std::string& _file, GLuint _slot = 0, 
+            TextureOptions _options = {GL_RGBA, GL_RGBA, {GL_LINEAR, GL_LINEAR}, {GL_CLAMP_TO_EDGE, GL_CLAMP_TO_EDGE}});
+
     ~Texture();
 
     /* Binds the texture to GPU */
@@ -43,10 +47,7 @@ public:
     /* Perform texture updates, should be called at least once and after adding data or resizing */
     virtual void update();
 
-    /* Resize the texture 
-     * 
-     * Width and height should be power of two numbers 
-     */
+    /* Resize the texture */
     void resize(const unsigned int _width, const unsigned int _height);
 
     /* Width and Height texture getters */

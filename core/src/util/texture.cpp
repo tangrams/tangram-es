@@ -1,4 +1,6 @@
 #include "texture.h"
+#define STB_IMAGE_IMPLEMENTATION
+#include "stb_image.h"
 
 Texture::Texture(unsigned int _width, unsigned int _height, GLuint _slot, TextureOptions _options) 
 : m_options(_options), m_slot(_slot) {
@@ -8,6 +10,25 @@ Texture::Texture(unsigned int _width, unsigned int _height, GLuint _slot, Textur
     m_shouldResize = false;
     
     resize(_width, _height);
+}
+
+Texture::Texture(const std::string& _file, GLuint _slot, TextureOptions _options) 
+: Texture(0, 0, _slot, _options) {
+
+    unsigned int size;
+    unsigned char* data = bytesFromResource(_file.c_str(), &size);
+    unsigned char* pixels;
+    int width, height, comp;
+
+    pixels = stbi_load_from_memory(data,size, &width, &height, &comp, 0);
+
+    resize(width, height);
+    setData(reinterpret_cast<GLuint*>(pixels), width * height);
+    update();
+
+    delete [] pixels;
+    delete [] data;
+
 }
 
 Texture::~Texture() {
@@ -107,12 +128,6 @@ void Texture::update() {
 }
 
 void Texture::resize(const unsigned int _width, const unsigned int _height) {
-
-    // don't treat those textures for now
-    //if (!isPowerOf2(_width) || !isPowerOf2(_height)) {
-    //    logMsg("[Texture] non-power of two textures not implemented yet");
-    //    return;
-    //}
 
     m_width = _width;
     m_height = _height;

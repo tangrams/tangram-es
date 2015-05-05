@@ -2,11 +2,17 @@
 #include "glm/gtx/string_cast.hpp"
 
 std::string PointLight::s_classBlock;
+std::string PointLight::s_typeName = "PointLight";
 
-PointLight::PointLight(const std::string& _name, bool _dynamic):Light(_name,_dynamic),m_position(0.0),m_constantAttenuation(0.0),m_linearAttenuation(0.0),m_quadraticAttenuation(0.0) {
-    m_typeName = "PointLight";
+PointLight::PointLight(const std::string& _name, bool _dynamic) : 
+    Light(_name, _dynamic),
+    m_position(0.0),
+    m_attenuation(0.0),
+    m_innerRadius(0.0),
+    m_outerRadius(0.0) {
+
     m_type = LightType::POINT;
-    m_injType = FRAGMENT;
+    
 }
 
 PointLight::~PointLight() {
@@ -20,39 +26,58 @@ void PointLight::setPosition(const glm::vec3 &_pos) {
     m_position.w = 0.0;
 }
 
-void PointLight::setConstantAttenuation(float _constantAtt) {
-    m_constantAttenuation = _constantAtt;
+void PointLight::setAttenuation(float _att){
+    m_attenuation = _att;
 }
 
-void PointLight::setLinearAttenuation(float _linearAtt) {
-    m_linearAttenuation = _linearAtt;
+void PointLight::setRadius(float _outer){
+    m_innerRadius = 0.0;
+    m_outerRadius = _outer;
 }
 
-void PointLight::setQuadreaticAttenuation(float _quadraticAtt) {
-    m_quadraticAttenuation = _quadraticAtt;
+void PointLight::setRadius(float _inner, float _outer){
+    m_innerRadius = _inner;
+    m_outerRadius = _outer;
 }
 
-void PointLight::setAttenuation(float _constant, float _linear, float _quadratic) {
-    m_constantAttenuation = _constant;
-    m_linearAttenuation = _linear;
-    m_quadraticAttenuation = _quadratic;
-}
-
-void PointLight::setupProgram(std::shared_ptr<ShaderProgram> _shader) {
+void PointLight::setupProgram(const std::shared_ptr<View>& _view, std::shared_ptr<ShaderProgram> _shader) {
     if (m_dynamic) {
-        Light::setupProgram(_shader);
-        _shader->setUniformf(getUniformName()+".position", glm::vec4(m_position));
+        Light::setupProgram(_view, _shader);
 
-        if (m_constantAttenuation!=0.0) {
-            _shader->setUniformf(getUniformName()+".constantAttenuation", m_constantAttenuation);
+        glm::vec4 position = m_position;
+
+        if (m_origin == LightOrigin::WORLD) {
+            // For world origin, format is: [longitude, latitude, meters (default) or pixels w/px units]
+
+            // Move light's world position into camera space
+            glm::dvec2 camSpace = _view->getMapProjection().LonLatToMeters(glm::dvec2(m_position.x, m_position.y));
+            position.x = camSpace.x - _view->getPosition().x;
+            position.y = camSpace.y - _view->getPosition().y;
+            position.z = position.z - _view->getPosition().z;
+
+        } else if (m_origin == LightOrigin::GROUND) {
+            // Leave light's xy in camera space, but z needs to be moved relative to ground plane
+            position.z = position.z - _view->getPosition().z;
+        }
+        
+        if (m_origin == LightOrigin::WORLD || m_origin == LightOrigin::GROUND) {
+            // Light position is a vector from the camera to the light in world space;
+            // we can transform this vector into camera space the same way we would with normals
+            position = _view->getViewMatrix() * position;
         }
 
-        if (m_linearAttenuation!=0.0) {
-            _shader->setUniformf(getUniformName()+".linearAttenuation", m_linearAttenuation);
+        _shader->setUniformf(getUniformName()+".position", position);
+
+        if (m_attenuation!=0.0) {
+            _shader->setUniformf(getUniformName()+".attenuation", m_attenuation);
         }
 
-        if (m_quadraticAttenuation!=0.0) {
-            _shader->setUniformf(getUniformName()+".quadraticAttenuation", m_quadraticAttenuation);
+        if (m_innerRadius!=0.0) {
+            _shader->setUniformf(getUniformName()+".innerRadius", m_innerRadius);
+        }
+
+        if (m_outerRadius!=0.0) {
+            _shader->setUniformf(getUniformName()+".outerRadius", m_outerRadius);
         }
     }
 }
@@ -67,16 +92,16 @@ std::string PointLight::getClassBlock() {
 std::string PointLight::getInstanceDefinesBlock() {
     std::string defines = "";
     
-    if (m_constantAttenuation!=0.0) {
-        defines += "#define TANGRAM_POINTLIGHT_CONSTANT_ATTENUATION\n";
+    if (m_attenuation!=0.0) {
+        defines += "#define TANGRAM_POINTLIGHT_ATTENUATION_EXPONENT\n";
     }
 
-    if (m_linearAttenuation!=0.0) {
-        defines += "#define TANGRAM_POINTLIGHT_LINEAR_ATTENUATION\n";
+    if (m_innerRadius!=0.0) {
+        defines += "#define TANGRAM_POINTLIGHT_ATTENUATION_INNER_RADIUS\n";
     }
 
-    if (m_quadraticAttenuation!=0.0) {
-        defines += "#define TANGRAM_POINTLIGHT_QUADRATIC_ATTENUATION\n";
+    if (m_outerRadius!=0.0) {
+        defines += "#define TANGRAM_POINTLIGHT_ATTENUATION_OUTER_RADIUS\n";
     }
     return defines;
 }
@@ -85,16 +110,22 @@ std::string PointLight::getInstanceAssignBlock() {
     std::string block = Light::getInstanceAssignBlock();
     if (!m_dynamic) {
         block += ", " + glm::to_string(m_position);
-        if (m_constantAttenuation!=0.0) {
-            block += ", " + std::to_string(m_constantAttenuation);
+        if (m_attenuation!=0.0) {
+            block += ", " + std::to_string(m_attenuation);
         }
-        if (m_linearAttenuation!=0.0) {
-            block += ", " + std::to_string(m_linearAttenuation);
+        if (m_innerRadius!=0.0) {
+            block += ", " + std::to_string(m_innerRadius);
         }
-        if (m_quadraticAttenuation!=0.0) {
-            block += ", " + std::to_string(m_quadraticAttenuation);
+        if (m_outerRadius!=0.0) {
+            block += ", " + std::to_string(m_outerRadius);
         }
         block += ")";
     }
     return block;
+}
+
+const std::string& PointLight::getTypeName() {
+
+    return s_typeName;
+
 }

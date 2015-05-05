@@ -8,16 +8,11 @@ TextureCube::TextureCube(std::string _file, GLuint _slot, TextureOptions _option
 void TextureCube::load(const std::string& _file) {
     unsigned int size;
     unsigned char* data = bytesFromResource(_file.c_str(), &size);
-    unsigned int width;
-    unsigned int height;
+    unsigned char* pixels;
+    int width, height, comp;
+    
+    pixels = stbi_load_from_memory(data,size, &width, &height, &comp, 0);
 
-    std::vector<unsigned char> png;
-    std::vector<unsigned char> image;
-    
-    png.insert(png.begin(), data, data + size);
-    
-    lodepng::decode(image, width, height, png);
-    
     size = width * height;
    
     m_width = width / 4;
@@ -47,10 +42,13 @@ void TextureCube::load(const std::string& _file) {
             }
             
             int offset = (m_width * iFace + y * width) * sizeof(unsigned int);
-            memcpy(face->m_data.data() + face->m_offset, image.data() + offset, m_width * sizeof(unsigned int));
+            memcpy(face->m_data.data() + face->m_offset, pixels + offset, m_width * sizeof(unsigned int));
             face->m_offset += m_width;
         }
     }
+    
+    delete[] pixels;
+    delete[] data;
     
     update();
 }
@@ -83,11 +81,10 @@ void TextureCube::update() {
     glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_WRAP_T, m_options.m_wrapping.m_wrapt);
     
     for(int i = 0; i < 6; ++i) {
-        const Face& f = m_faces[i];
+        Face& f = m_faces[i];
         glTexImage2D(CubeMapFace[i], 0, m_options.m_internalFormat, m_width, m_height, 0, m_options.m_format, GL_UNSIGNED_BYTE, f.m_data.data());
+        f.m_data.clear();
     }
-    
-    m_data.clear();
-    
+        
     unbind();
 }

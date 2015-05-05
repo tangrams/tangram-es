@@ -1,4 +1,5 @@
 #include "spriteStyle.h"
+#include "texture.h"
 
 SpriteStyle::SpriteStyle(std::string _name, GLenum _drawMode) : Style(_name, _drawMode) {
     
@@ -30,8 +31,7 @@ void SpriteStyle::constructShaderProgram() {
     m_shaderProgram = std::make_shared<ShaderProgram>();
     m_shaderProgram->setSourceStrings(fragShaderSrcStr, vertShaderSrcStr);
     
-    //m_texture = std::shared_ptr<Texture>(new TextureImage("cubemap.png"));
-    m_texture = std::shared_ptr<Texture>(new TextureCube("cubemap.png"));
+    m_texture = std::shared_ptr<Texture>(new Texture("mapzen-logo.png"));
 }
 
 void SpriteStyle::buildPoint(Point& _point, std::string& _layer, Properties& _props, VboMesh& _mesh) const {
@@ -59,18 +59,15 @@ void SpriteStyle::addData(TileData& _data, MapTile& _tile, const MapProjection& 
     
     std::vector<PosUVVertex> vertices;
     
-    vertices.reserve(6);
+    vertices.reserve(4);
     
     float size = 0.2;
-    vertices.push_back({  size,  size, 0.f, 0.f, 0.f });
-    vertices.push_back({ -size,  size, 0.f, 1.f, 0.f });
-    vertices.push_back({ -size, -size, 0.f, 1.f, 1.f });
+    vertices.push_back({  size,  size, 0.f, 1.f, 0.f });
+    vertices.push_back({ -size,  size, 0.f, 0.f, 0.f });
+    vertices.push_back({ -size, -size, 0.f, 0.f, 1.f });
+    vertices.push_back({  size, -size, 0.f, 1.f, 1.f });
     
-    vertices.push_back({ -size, -size, 0.f, 1.f, 1.f });
-    vertices.push_back({  size, -size, 0.f, 0.f, 1.f });
-    vertices.push_back({  size,  size, 0.f, 0.f, 0.f });
-    
-    mesh->addVertices(std::move(vertices), {});
+    mesh->addVertices(std::move(vertices), { 0, 1, 2, 2, 3, 0 });
     mesh->compileVertexBuffer();
     
     _tile.addGeometry(*this, std::unique_ptr<VboMesh>(mesh));

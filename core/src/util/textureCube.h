@@ -1,7 +1,8 @@
-#include "texture.h"
-#include "lodepng.h"
-#include <vector>
+#pragma once
 
+#include "texture.h"
+#include "stb_image.h"
+#include <vector>
 
 class TextureCube : public Texture {
     

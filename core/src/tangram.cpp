@@ -24,6 +24,7 @@
 #include "glm/gtc/type_ptr.hpp"
 #include "glm/mat4x4.hpp"
 #include "glm/gtc/matrix_transform.hpp"
+#include "util/textureCube.h"
 
 namespace Tangram {
 
@@ -68,6 +69,7 @@ namespace Tangram {
             
             // Load style(s); hard-coded for now
             std::unique_ptr<Style> polyStyle(new PolygonStyle("Polygon"));
+            polyStyle->setLighting(LightingType::vertex);
             polyStyle->addLayers({
                 "buildings",
                 "water",
@@ -105,16 +107,13 @@ namespace Tangram {
             std::unique_ptr<DebugStyle> debugStyle(new DebugStyle("Debug"));
             m_scene->addStyle(std::move(debugStyle));
 
-            //  Directional light with white diffuse color pointing Northeast and down
-            auto directionalLight = std::make_shared<DirectionalLight>("dLight");
+            // Directional light with white diffuse color pointing Northeast and down
+             
+            std::unique_ptr<DirectionalLight> directionalLight(new DirectionalLight("dLight"));
             directionalLight->setAmbientColor({0.3, 0.3, 0.3, 1.0});
             directionalLight->setDiffuseColor({0.7, 0.7, 0.7, 1.0});
             directionalLight->setDirection({1.0, 1.0, -1.0});
-            m_scene->addLight(directionalLight);
-            
-            //std::unique_ptr<Style> spriteStyle(new SpriteStyle("Sprite"));
-            //m_scene->addStyle(std::move(spriteStyle));
-            
+
             // Skybox test
             {
                 std::string fragShaderSrcStr = stringFromResource("cubemap.fs");
@@ -153,6 +152,21 @@ namespace Tangram {
                 m_skyboxMesh->addVertices(std::move(vertices), std::move(indices));
                 m_skyboxMesh->compileVertexBuffer();
             }
+
+            directionalLight->setOrigin(LightOrigin::WORLD);
+            m_scene->addLight(std::move(directionalLight));
+
+            // Point light
+            // std::unique_ptr<PointLight> pointLight(new PointLight("pLight"));
+            // pointLight->setAmbientColor({0.2, 0.2, 0.2, 1.0});
+            // pointLight->setDiffuseColor({0.5, 0.5, 0.5, 1.0});
+            // pointLight->setPosition({0.0, 0.0, -100.0});
+            // pointLight->setRadius(200);
+            // m_scene->addLight(std::move(pointLight));
+
+            // Testing loading image
+			// std::unique_ptr<Style> spriteStyle(new SpriteStyle("Sprite"));
+            // m_scene->addStyle(std::move(spriteStyle));
         }
 
         // Create a tileManager
