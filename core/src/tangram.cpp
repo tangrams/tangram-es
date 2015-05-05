@@ -98,16 +98,16 @@ namespace Tangram {
             directionalLight->setAmbientColor({0.3, 0.3, 0.3, 1.0});
             directionalLight->setDiffuseColor({0.7, 0.7, 0.7, 1.0});
             directionalLight->setDirection({1.0, 1.0, -1.0});
+            directionalLight->setOrigin(LightOrigin::WORLD);
             m_scene->addLight(std::move(directionalLight));
 
-            //  Directional light with white diffuse color pointing Northeast and down
-            
-            /*std::unique_ptr<PointLight> pointLight(new PointLight("pLight"));
-            pointLight->setAmbientColor({0.2, 0.2, 0.2, 1.0});
-            pointLight->setDiffuseColor({0.7, 0.7, 0.7, 1.0});
-            pointLight->setPosition({0.0, 0.0, -100.0});
-            pointLight->setRadius(200);
-            m_scene->addLight(std::move(pointLight));*/
+            // Point light
+            // std::unique_ptr<PointLight> pointLight(new PointLight("pLight"));
+            // pointLight->setAmbientColor({0.2, 0.2, 0.2, 1.0});
+            // pointLight->setDiffuseColor({0.5, 0.5, 0.5, 1.0});
+            // pointLight->setPosition({0.0, 0.0, -100.0});
+            // pointLight->setRadius(200);
+            // m_scene->addLight(std::move(pointLight));
 
             // Testing loading image
 			// std::unique_ptr<Style> spriteStyle(new SpriteStyle("Sprite"));
@@ -230,7 +230,7 @@ namespace Tangram {
 
             style->teardown();
         }
-        
+
         while (Error::hadGlError("Tangram::render()")) {}
     }
 
