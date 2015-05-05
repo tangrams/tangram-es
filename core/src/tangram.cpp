@@ -155,6 +155,7 @@ namespace Tangram {
         
         if (m_ftContext) {
             m_ftContext->setScreenSize(m_view->getWidth(), m_view->getHeight());
+            m_labelContainer->setScreenSize(m_view->getWidth(), m_view->getHeight());
         }
 
         while (Error::hadGlError("Tangram::resize()")) {}
@@ -171,6 +172,8 @@ namespace Tangram {
             m_tileManager->updateTileSet();
 
             if (m_view->changedOnLastUpdate()) {
+                m_labelContainer->setViewProjectionMatrix(m_view->getViewProjectionMatrix());
+                
                 for (const auto& mapIDandTile : m_tileManager->getVisibleTiles()) {
                     const std::shared_ptr<MapTile>& tile = mapIDandTile.second;
                     tile->update(_dt, *m_view);
@@ -182,17 +185,17 @@ namespace Tangram {
                 for (const auto& style : m_scene->getStyles()) {
                     for (const auto& mapIDandTile : m_tileManager->getVisibleTiles()) {
                         const std::shared_ptr<MapTile>& tile = mapIDandTile.second;
-                        tile->updateLabels(_dt, *style, *m_view);
+                        tile->updateLabels(_dt, *style, *m_view, m_labelContainer);
                     }
                 }
                 
                 // manage occlusions
-                LabelContainer::GetInstance()->updateOcclusions();
+                m_labelContainer->updateOcclusions();
                 
                 for (const auto& style : m_scene->getStyles()) {
                     for (const auto& mapIDandTile : m_tileManager->getVisibleTiles()) {
                         const std::shared_ptr<MapTile>& tile = mapIDandTile.second;
-                        tile->pushLabelTransforms(*style);
+                        tile->pushLabelTransforms(*style, m_labelContainer);
                     }
                 }
             }

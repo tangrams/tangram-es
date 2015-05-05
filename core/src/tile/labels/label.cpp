@@ -24,7 +24,6 @@ void Label::rasterize() {
 
 void Label::setVisible(bool _visible) {
     m_visible = _visible;
-    m_transform.m_alpha = m_visible ? 1.0 : 0.0;
     m_dirty = true;
 }
 
@@ -42,7 +41,11 @@ void Label::updateBBoxes() {
 void Label::pushTransform() {
     
     if (m_dirty) {
-        m_buffer->transformID(m_id, m_transform.m_screenPosition.x, m_transform.m_screenPosition.y, m_transform.m_rotation, m_transform.m_alpha);
+        if (!m_visible || m_outOfScreen) {
+            m_buffer->transformID(m_id, 0, 0, 0, 0);
+        } else {
+            m_buffer->transformID(m_id, m_transform.m_screenPosition.x, m_transform.m_screenPosition.y, m_transform.m_rotation, 1.0);
+        }
         m_dirty = false;
     }
 
@@ -122,8 +125,6 @@ void Label::updateScreenTransform(const glm::mat4& _mvp, const glm::vec2& _scree
     
     m_outOfScreen = screenPosition.x > _screenSize.x || screenPosition.x < 0;
     m_outOfScreen = m_outOfScreen || screenPosition.y > _screenSize.y || screenPosition.y < 0;
-    
-    m_transform.m_alpha = !m_outOfScreen && m_visible ? 1.0 : 0.0;
     
     m_dirty = true;
 }

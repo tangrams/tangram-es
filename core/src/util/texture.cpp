@@ -73,6 +73,12 @@ void Texture::update() {
 
         glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, m_options.m_wrapping.m_wraps);
         glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, m_options.m_wrapping.m_wrapt);
+        
+        // if no data make sure texture is 0-filled at creation (usefull for transform lookup)
+        if (m_data.size() == 0) {
+            m_data.resize(m_width * m_height);
+            std::fill(m_data.begin(), m_data.end(), 0);
+        }
     } else {
 
         bind();
