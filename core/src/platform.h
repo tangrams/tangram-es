@@ -32,6 +32,11 @@ void networkDataBridge(std::vector<char>& _rawData, TileID _tileID, int _dataSou
 void NSurlInit();
 #endif
 
+#if (defined PLATFORM_LINUX) || (defined PLATFORM_RPI)
+#include "netWorkerData.h"
+void processNetworkQueue();
+#endif
+
 #include <string>
 
 /* Print a formatted message to the console

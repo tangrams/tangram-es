@@ -154,6 +154,8 @@ int main(void) {
         double delta = currentTime - lastTime;
         lastTime = currentTime;
         
+        processNetworkQueue();
+
         /* Render here */
         Tangram::update(delta);
         Tangram::render();
