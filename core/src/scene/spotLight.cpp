@@ -35,7 +35,7 @@ void SpotLight::setupProgram(const std::shared_ptr<View>& _view, std::shared_ptr
 
         glm::vec3 direction = m_direction;
         if (m_origin == LightOrigin::WORLD) {
-            direction = _view->getNormalMatrix() * direction;
+            direction = glm::normalize(_view->getNormalMatrix() * direction);
         }
 
         _shader->setUniformf(getUniformName()+".direction", direction);
