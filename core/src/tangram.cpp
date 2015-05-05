@@ -16,6 +16,7 @@
 #include "style/textStyle.h"
 #include "style/debugTextStyle.h"
 #include "style/debugStyle.h"
+#include "style/spriteStyle.h"
 #include "scene/scene.h"
 #include "scene/lights.h"
 #include "util/error.h"
@@ -99,34 +100,17 @@ namespace Tangram {
             directionalLight->setOrigin(LightOrigin::WORLD);
             m_scene->addLight(std::move(directionalLight));
 
-            // // Point light over downtown 
+            // Point light
             // std::unique_ptr<PointLight> pointLight(new PointLight("pLight"));
             // pointLight->setAmbientColor({0.2, 0.2, 0.2, 1.0});
             // pointLight->setDiffuseColor({0.5, 0.5, 0.5, 1.0});
-            
-            // pointLight->setOrigin(LightOrigin::WORLD);
-            // pointLight->setPosition({-74.00796, 40.70361, 200.0});
-
-            // // pointLight->setOrigin(LightOrigin::GROUND);
-            // // pointLight->setPosition({0.0, 0.0, 200.0});
-
-            // // pointLight->setOrigin(LightOrigin::CAMERA);
-            // // pointLight->setPosition({0.0, 0.0, -200.0});
-
-            // pointLight->setRadius(1000);
+            // pointLight->setPosition({0.0, 0.0, -100.0});
+            // pointLight->setRadius(200);
             // m_scene->addLight(std::move(pointLight));
 
-            // //  Spotlight over downtown 
-            // std::unique_ptr<SpotLight> spotLight(new SpotLight("sLight"));
-            // spotLight->setAmbientColor({0.2, 0.2, 0.2, 1.0});
-            // spotLight->setDiffuseColor({0.5, 0.5, 0.5, 1.0});
-            
-            // spotLight->setOrigin(LightOrigin::GROUND);
-            // spotLight->setPosition({-74.00796, 40.70361, 200.0});
-
-            // spotLight->setDirection({0.2, 1.0, 0.0});
-            // spotLight->setCutOff(20.,20.);
-            // m_scene->addLight(std::move(spotLight));
+            // Testing loading image
+			// std::unique_ptr<Style> spriteStyle(new SpriteStyle("Sprite"));
+            // m_scene->addStyle(std::move(spriteStyle));
         }
 
         // Create a tileManager
