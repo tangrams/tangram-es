@@ -63,6 +63,7 @@ namespace Tangram {
             m_scene->addStyle(std::move(polyStyle));
             
             std::unique_ptr<Style> linesStyle(new PolylineStyle("Polyline"));
+            linesStyle->setLighting(LightingType::vertex);
             linesStyle->addLayers({"roads"});
             m_scene->addStyle(std::move(linesStyle));
 
