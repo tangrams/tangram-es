@@ -245,7 +245,11 @@ void View::updateMatrices() {
     m_proj = glm::perspective(fovy, m_aspect, near, far);
     m_viewProj = m_proj * m_view;
     m_invViewProj = glm::inverse(m_viewProj);
-    m_normalMatrix = glm::transpose(glm::inverse(glm::mat3(m_view)));
+    
+    // The matrix that transforms normals from world space to camera space is the transpose of the inverse of the view matrix,
+    // but since our view matrix is orthonormal transposing is equivalent to inverting, so the normal matrix is just the
+    // original view matrix (cropped to the top-left 3 rows and columns, since we're applying it to 3d vectors)
+    m_normalMatrix = glm::mat3(m_view);
     
 }
 

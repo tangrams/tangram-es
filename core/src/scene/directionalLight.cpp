@@ -23,7 +23,7 @@ void DirectionalLight::setupProgram(const std::shared_ptr<View>& _view, std::sha
 
     glm::vec3 direction = m_direction;
     if (m_origin == LightOrigin::WORLD) {
-        direction = glm::normalize(_view->getNormalMatrix() * direction);
+        direction = _view->getNormalMatrix() * direction;
     }
 
 	if (m_dynamic) {

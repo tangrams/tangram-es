@@ -63,7 +63,7 @@ void PointLight::setupProgram(const std::shared_ptr<View>& _view, std::shared_pt
         if (m_origin == LightOrigin::WORLD || m_origin == LightOrigin::GROUND) {
             // Light position is a vector from the camera to the light in world space;
             // we can transform this vector into camera space the same way we would with normals
-            position = glm::vec4(_view->getNormalMatrix() * glm::vec3(position), 1.f);
+            position = _view->getViewMatrix() * position;
         }
 
         _shader->setUniformf(getUniformName()+".position", position);
