@@ -40,7 +40,7 @@ public class Tangram extends GLSurfaceView implements Renderer, OnScaleGestureLi
     }
 
     private OkHttpClient okClient;
-    public static final int TILE_CACHE_SIZE = 1024 * 1024 * 30; // 30 Mgs
+    private static final int TILE_CACHE_SIZE = 1024 * 1024 * 30; // 30 Mgs
 
     private static native void init(Tangram tangramInst, AssetManager assetManager);
     private static native void resize(int width, int height);
