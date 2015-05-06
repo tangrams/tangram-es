@@ -29,6 +29,8 @@ public:
     
     MapTile(TileID _id, const MapProjection& _projection);
 
+    MapTile(MapTile&& _other); 
+
     virtual ~MapTile();
 
     /* Returns the immutable <TileID> of this tile */
