@@ -48,16 +48,11 @@ void NetworkWorker::perform(std::unique_ptr<NetWorkerData> _workerData) {
         if (result != CURLE_OK) {
             logMsg("curl_easy_perform failed: %s\n", curl_easy_strerror(result));
             rawData.clear();
-            m_workerData->setRawData(std::move(rawData));
-            m_finished = true;
-            requestRender();
-            return std::move(m_workerData);
-        } else {
-            m_workerData->setRawData(std::move(rawData));
-            m_finished = true;
-            requestRender();
-            return std::move(m_workerData);
         }
+        m_workerData->setRawData(std::move(rawData));
+        m_finished = true;
+        requestRender();
+        return std::move(m_workerData);
     });
 }
 
