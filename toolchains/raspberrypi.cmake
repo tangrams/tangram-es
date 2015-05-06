@@ -22,8 +22,12 @@ endif()
 # add sources and include headers
 find_sources_and_include_directories(
 	${PROJECT_SOURCE_DIR}/rpi/src/*.h 
-	${PROJECT_SOURCE_DIR}/rpi/src/*.cpp
-	${PROJECT_SOURCE_DIR}/linux/src/netWorkerData.*)
+	${PROJECT_SOURCE_DIR}/rpi/src/*.cpp)
+
+# add sources and include headers
+find_sources_and_include_directories(
+    ${PROJECT_SOURCE_DIR}/linux/src/netWorkerData.*
+    ${PROJECT_SOURCE_DIR}/linux/src/netWorkerData.*)
 
 # include headers for rpi-installed libraries
 include_directories(/opt/vc/include/)
