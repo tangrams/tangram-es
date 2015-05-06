@@ -2,17 +2,17 @@
 #define STB_IMAGE_IMPLEMENTATION
 #include "stb_image.h"
 
-Texture::Texture(unsigned int _width, unsigned int _height, GLuint _slot, TextureOptions _options) 
+Texture::Texture(unsigned int _width, unsigned int _height, GLuint _slot, TextureOptions _options)
 : m_options(_options), m_slot(_slot) {
 
     m_name = 0;
     m_dirty = false;
     m_shouldResize = false;
-    
+
     resize(_width, _height);
 }
 
-Texture::Texture(const std::string& _file, GLuint _slot, TextureOptions _options) 
+Texture::Texture(const std::string& _file, GLuint _slot, TextureOptions _options)
 : Texture(0, 0, _slot, _options) {
 
     unsigned int size;
@@ -26,9 +26,8 @@ Texture::Texture(const std::string& _file, GLuint _slot, TextureOptions _options
     setData(reinterpret_cast<GLuint*>(pixels), width * height);
     update();
 
-    delete [] pixels;
-    delete [] data;
-
+    free(data);
+    stbi_image_free(pixels);
 }
 
 Texture::~Texture() {
@@ -115,7 +114,7 @@ void Texture::update() {
     // process queued sub data updates
     while (m_subData.size() > 0) {
         const TextureSubData* subData = m_subData.front().get();
-            
+
         glTexSubImage2D(GL_TEXTURE_2D, 0, subData->m_xoff, subData->m_yoff, subData->m_width, subData->m_height,
                         m_options.m_format, GL_UNSIGNED_BYTE, subData->m_data->data());
 
