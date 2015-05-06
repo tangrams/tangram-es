@@ -67,3 +67,4 @@ private:
     
     std::future< std::shared_ptr<MapTile> > m_future;
 };
+

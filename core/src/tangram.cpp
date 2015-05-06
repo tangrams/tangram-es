@@ -136,7 +136,6 @@ namespace Tangram {
             m_tileManager->addToWorkerQueue(std::move(_rawData), _tileId, _dataSourceID);
             requestRender();
 
-
         });
 
         // Set up openGL state
