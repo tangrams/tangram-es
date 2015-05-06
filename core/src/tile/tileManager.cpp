@@ -165,6 +165,7 @@ void TileManager::removeTile(std::map< TileID, std::shared_ptr<MapTile> >::itera
     // Make sure to cancel the network request associated with this tile, then if already fetched remove it from the proocessing queue and the worker managing this tile, if applicable
     for(auto& dataSource : m_dataSources) {
         dataSource->cancelLoadingTile(id);
+        cleanProxyTiles(id);
     }
 
     // Remove tile from queue, if present
