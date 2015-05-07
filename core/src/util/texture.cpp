@@ -20,7 +20,7 @@ Texture::Texture(const std::string& _file, GLuint _slot, TextureOptions _options
     unsigned char* pixels;
     int width, height, comp;
 
-    pixels = stbi_load_from_memory(data,size, &width, &height, &comp, 0);
+    pixels = stbi_load_from_memory(data,size, &width, &height, &comp, STBI_rgb_alpha);
 
     resize(width, height);
     setData(reinterpret_cast<GLuint*>(pixels), width * height);
@@ -127,7 +127,6 @@ void Texture::update() {
 }
 
 void Texture::resize(const unsigned int _width, const unsigned int _height) {
-
     m_width = _width;
     m_height = _height;
 

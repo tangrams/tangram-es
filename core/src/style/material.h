@@ -67,6 +67,8 @@ public:
     /*  Inject the needed lines of GLSL code on the shader to make this material work */
     virtual void injectOnProgram( std::shared_ptr<ShaderProgram> _shader );
 
+    virtual void removeFromProgram( std::shared_ptr<ShaderProgram> _shader );
+
     /*  Method to pass it self as a uniform to the shader program */
     virtual void setupProgram( std::shared_ptr<ShaderProgram> _shader );
     

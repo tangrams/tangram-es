@@ -1,19 +1,20 @@
 #include "material.h"
 
+#include <iostream>
+
 Material::Material():m_name("material"),
-m_emission(0.0), m_emission_texture(NULL), m_emission_texture_scale(1.), m_emission_texture_mapping(MappingType::PLANAR),
-m_ambient(1.0), m_ambient_texture(NULL), m_ambient_texture_scale(1.), m_ambient_texture_mapping(MappingType::PLANAR),
-m_diffuse(0.8), m_diffuse_texture(NULL), m_diffuse_texture_scale(1.), m_diffuse_texture_mapping(MappingType::PLANAR),
-m_specular(0.2), m_specular_texture(NULL), m_specular_texture_scale(1.), m_specular_texture_mapping(MappingType::PLANAR),
+m_emission(0.0), m_emission_texture(nullptr), m_emission_texture_scale(1.), m_emission_texture_mapping(MappingType::PLANAR),
+m_ambient(1.0), m_ambient_texture(nullptr), m_ambient_texture_scale(1.), m_ambient_texture_mapping(MappingType::PLANAR),
+m_diffuse(0.8), m_diffuse_texture(nullptr), m_diffuse_texture_scale(1.), m_diffuse_texture_mapping(MappingType::PLANAR),
+m_specular(0.2), m_specular_texture(nullptr), m_specular_texture_scale(1.), m_specular_texture_mapping(MappingType::PLANAR),
 m_shininess(0.2),
-m_normal_texture(NULL), m_normal_texture_scale(1.), m_normal_texture_mapping(MappingType::PLANAR),m_normal_texture_amount(1.),
+m_normal_texture(nullptr), m_normal_texture_scale(1.), m_normal_texture_mapping(MappingType::PLANAR),m_normal_texture_amount(1.),
 m_bEmission(false),m_bAmbient(false),m_bDiffuse(true),m_bSpecular(false) {
-    
 }
 
 void Material::setEmission(const glm::vec4 _emission){
 	m_emission = _emission;
-    m_emission_texture = NULL;
+    m_emission_texture.reset();
     setEmissionEnabled(true);
 }
 
@@ -27,12 +28,12 @@ void Material::setEmission(std::shared_ptr<Texture> _texture, MappingType _type,
     m_emission_texture_mapping = _type;
     m_emission_texture_scale = _scale;
     m_emission = _amount;
-    setEmissionEnabled(_texture != NULL);
+    setEmissionEnabled((bool)_texture);
 }
 
 void Material::setAmbient(const glm::vec4 _ambient){
 	m_ambient = _ambient;
-    m_ambient_texture = NULL;
+    m_ambient_texture.reset();
     setAmbientEnabled(true);
 }
 
@@ -46,12 +47,12 @@ void Material::setAmbient(std::shared_ptr<Texture> _texture, MappingType _type, 
     m_ambient_texture_mapping = _type;
     m_ambient_texture_scale = _scale;
     m_ambient = _amount;
-    setAmbientEnabled(_texture != NULL);
+    setAmbientEnabled((bool)_texture);
 }
 
 void Material::setDiffuse(const glm::vec4 _diffuse){
 	m_diffuse = _diffuse;
-    m_diffuse_texture = NULL;
+    m_diffuse_texture.reset();
     setDiffuseEnabled(true);
 }
 
@@ -65,13 +66,13 @@ void Material::setDiffuse(std::shared_ptr<Texture> _texture, MappingType _type, 
     m_diffuse_texture_mapping = _type;
     m_diffuse_texture_scale = _scale;
     m_diffuse = _amount;
-    setDiffuseEnabled(_texture != NULL);
+    setDiffuseEnabled((bool)_texture);
 }
 
 void Material::setSpecular(const glm::vec4 _specular, float _shinnyFactor){
 	m_specular = _specular;
 	m_shininess = _shinnyFactor;
-    m_specular_texture = NULL;
+    m_specular_texture.reset();
     setSpecularEnabled(true);
 }
 
@@ -85,7 +86,7 @@ void Material::setSpecular(std::shared_ptr<Texture> _texture, MappingType _type,
     m_specular_texture_mapping = _type;
     m_specular_texture_scale = _scale;
     m_specular = _amount;
-    setSpecularEnabled(_texture != NULL);
+    setSpecularEnabled((bool)_texture);
 }
 
 void Material::setEmissionEnabled(bool _enable) { m_bEmission = _enable; }
@@ -115,7 +116,7 @@ std::string Material::getDefinesBlock(){
 
 	if (m_bEmission) {
 		defines += "#define TANGRAM_MATERIAL_EMISSION\n";
-        if (m_emission_texture != NULL) {
+        if (m_emission_texture) {
             defines += "#define TANGRAM_MATERIAL_EMISSION_TEXTURE\n";
             if ( m_emission_texture_mapping == MappingType::UV ){
                 defines += "#define TANGRAM_MATERIAL_EMISSION_TEXTURE_UV\n";
@@ -131,7 +132,7 @@ std::string Material::getDefinesBlock(){
 
 	if (m_bAmbient) {
 		defines += "#define TANGRAM_MATERIAL_AMBIENT\n";
-        if (m_ambient_texture != NULL) {
+        if (m_ambient_texture) {
             defines += "#define TANGRAM_MATERIAL_AMBIENT_TEXTURE\n";
             if ( m_ambient_texture_mapping == MappingType::UV ){
                 defines += "#define TANGRAM_MATERIAL_AMBIENT_TEXTURE_UV\n";
@@ -147,7 +148,7 @@ std::string Material::getDefinesBlock(){
     
     if (m_bDiffuse) {
     	defines += "#define TANGRAM_MATERIAL_DIFFUSE\n";
-        if (m_diffuse_texture != NULL) {
+        if (m_diffuse_texture) {
             defines += "#define TANGRAM_MATERIAL_DIFFUSE_TEXTURE\n";
             if ( m_diffuse_texture_mapping == MappingType::UV ){
                 defines += "#define TANGRAM_MATERIAL_DIFFUSE_TEXTURE_UV\n";
@@ -163,7 +164,7 @@ std::string Material::getDefinesBlock(){
     
     if (m_bSpecular) {
     	defines += "#define TANGRAM_MATERIAL_SPECULAR\n";
-        if (m_specular_texture != NULL) {
+        if (m_specular_texture) {
             defines += "#define TANGRAM_MATERIAL_SPECULAR_TEXTURE\n";;
             if ( m_specular_texture_mapping == MappingType::UV ){
                 defines += "#define TANGRAM_MATERIAL_SPECULAR_TEXTURE_UV\n";
@@ -177,7 +178,9 @@ std::string Material::getDefinesBlock(){
         }
     }
     
-    if (m_normal_texture != NULL){
+    if (m_normal_texture){
+        std::cout << "Defines for normals ARE LOADED" << std::endl;
+
         defines += "#define TANGRAM_MATERIAL_NORMAL_TEXTURE\n";
         if ( m_normal_texture_mapping == MappingType::UV ){
             defines += "#define TANGRAM_MATERIAL_NORMAL_TEXTURE_UV\n";
@@ -188,8 +191,8 @@ std::string Material::getDefinesBlock(){
         }
     }
 
-    if (m_emission_texture != NULL ||  m_ambient_texture != NULL || m_diffuse_texture != NULL || m_specular_texture != NULL ||
-        m_normal_texture != NULL ) {
+    if (m_emission_texture ||  m_ambient_texture || m_diffuse_texture || m_specular_texture ||
+        m_normal_texture ) {
 
         // Add MAPPING functions
         if( (m_bEmission && m_emission_texture_mapping == MappingType::SPHEREMAP) ||
@@ -229,11 +232,16 @@ void Material::injectOnProgram(std::shared_ptr<ShaderProgram> _shader ) {
     _shader->addSourceBlock("material", getClassBlock(), false);
 }
 
+void Material::removeFromProgram(std::shared_ptr<ShaderProgram> _shader ) {
+    _shader->removeSourceBlock("defines", getDefinesBlock());
+    _shader->removeSourceBlock("material", getClassBlock());
+}
+
 void Material::setupProgram(std::shared_ptr<ShaderProgram> _shader) {
 	if (m_bEmission) {
         _shader->setUniformf("u_"+m_name+".emission", m_emission);
 
-        if (m_emission_texture != NULL) {
+        if (m_emission_texture) {
             _shader->setUniformi("u_material_emission_texture", m_emission_texture->getTextureSlot());
             _shader->setUniformf("u_"+m_name+".emissionScale", m_emission_texture_scale);
         }
@@ -242,7 +250,7 @@ void Material::setupProgram(std::shared_ptr<ShaderProgram> _shader) {
 	if (m_bAmbient) {
 		_shader->setUniformf("u_"+m_name+".ambient", m_ambient);
 
-        if (m_ambient_texture != NULL) {
+        if (m_ambient_texture) {
             _shader->setUniformi("u_material_ambient_texture", m_ambient_texture->getTextureSlot());
             _shader->setUniformf("u_"+m_name+".ambientScale", m_ambient_texture_scale);
         }
@@ -251,7 +259,7 @@ void Material::setupProgram(std::shared_ptr<ShaderProgram> _shader) {
     if (m_bDiffuse) {
     	_shader->setUniformf("u_"+m_name+".diffuse", m_diffuse);
 
-        if (m_diffuse_texture != NULL) {
+        if (m_diffuse_texture) {
             _shader->setUniformi("u_material_diffuse_texture", m_diffuse_texture->getTextureSlot());
             _shader->setUniformf("u_"+m_name+".diffuseScale", m_diffuse_texture_scale);
         }
@@ -261,13 +269,13 @@ void Material::setupProgram(std::shared_ptr<ShaderProgram> _shader) {
     	_shader->setUniformf("u_"+m_name+".specular", m_specular);
     	_shader->setUniformf("u_"+m_name+".shininess", m_shininess);
 
-        if (m_diffuse_texture != NULL) {
+        if (m_diffuse_texture) {
             _shader->setUniformi("u_material_specular_texture", m_specular_texture->getTextureSlot());
             _shader->setUniformf("u_"+m_name+".specularScale", m_specular_texture_scale);
         }
     }
 
-    if (m_normal_texture != NULL) {
+    if (m_normal_texture) {
         _shader->setUniformi("u_material_normal_texture", m_normal_texture->getTextureSlot());
         _shader->setUniformf("u_"+m_name+".normalScale", m_normal_texture_scale);
         _shader->setUniformf("u_"+m_name+".normalAmount", m_normal_texture_amount);
