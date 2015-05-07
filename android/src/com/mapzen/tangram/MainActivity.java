@@ -16,19 +16,7 @@ public class MainActivity extends Activity {
         
         tangram = new Tangram(this);
         
-        setContentView(tangram);
-    }
-
-    @Override
-    protected void onPause() {
-        super.onPause();
-        tangram.onPause();
-    }
-
-    @Override
-    protected void onResume() {
-        super.onResume();
-        tangram.onResume();
+        setContentView(tangram.getView());
     }
     
     @Override
