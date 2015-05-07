@@ -3,12 +3,12 @@
 #include <iostream>
 
 Material::Material():m_name("material"),
-m_emission(0.0), m_emission_texture(nullptr), m_emission_texture_scale(1.), m_emission_texture_mapping(MappingType::PLANAR),
-m_ambient(1.0), m_ambient_texture(nullptr), m_ambient_texture_scale(1.), m_ambient_texture_mapping(MappingType::PLANAR),
-m_diffuse(0.8), m_diffuse_texture(nullptr), m_diffuse_texture_scale(1.), m_diffuse_texture_mapping(MappingType::PLANAR),
-m_specular(0.2), m_specular_texture(nullptr), m_specular_texture_scale(1.), m_specular_texture_mapping(MappingType::PLANAR),
+m_emission(0.0), m_emission_texture(nullptr), m_emission_texture_scale(1.), m_emission_texture_mapping(MappingType::UV),
+m_ambient(1.0), m_ambient_texture(nullptr), m_ambient_texture_scale(1.), m_ambient_texture_mapping(MappingType::UV),
+m_diffuse(0.8), m_diffuse_texture(nullptr), m_diffuse_texture_scale(1.), m_diffuse_texture_mapping(MappingType::UV),
+m_specular(0.2), m_specular_texture(nullptr), m_specular_texture_scale(1.), m_specular_texture_mapping(MappingType::UV),
 m_shininess(0.2),
-m_normal_texture(nullptr), m_normal_texture_scale(1.), m_normal_texture_mapping(MappingType::PLANAR),m_normal_texture_amount(1.),
+m_normal_texture(nullptr), m_normal_texture_scale(1.), m_normal_texture_mapping(MappingType::UV),m_normal_texture_amount(1.),
 m_bEmission(false),m_bAmbient(false),m_bDiffuse(true),m_bSpecular(false) {
 }
 

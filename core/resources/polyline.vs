@@ -2,12 +2,16 @@
 precision highp float;
 #endif
 
+#define TANGRAM_WORLD_POSITION_WRAP 100000
+
+uniform mat4 u_model;
 uniform mat4 u_modelView;
 uniform mat4 u_modelViewProj;
 uniform mat3 u_normalMatrix;
+uniform vec3 u_tile_origin;
+uniform float u_tile_zoom;
 uniform float u_time;
 uniform float u_zoom;
-uniform float u_tile_zoom;
 
 attribute vec4 a_position;
 attribute vec4 a_color;
@@ -16,6 +20,7 @@ attribute float a_extrudeWidth;
 attribute vec2 a_texcoord;
 attribute float a_layer;
 
+varying vec4 v_world_position;
 varying vec4 v_color;
 varying vec3 v_eyeToPoint;
 varying vec3 v_normal;
@@ -23,6 +28,10 @@ varying vec2 v_texcoord;
 
 #ifdef TANGRAM_LIGHTING_VERTEX
     varying vec4 v_lighting;
+#endif
+
+#ifdef TANGRAM_WORLD_POSITION_WRAP
+    vec2 world_position_anchor = vec2(floor(u_tile_origin / TANGRAM_WORLD_POSITION_WRAP) * TANGRAM_WORLD_POSITION_WRAP);
 #endif
 
 #pragma tangram: material
@@ -33,6 +42,12 @@ void main() {
 
     vec4 position = a_position;
     position.xyz += a_extrudeNormal * (a_extrudeWidth * 2.) * pow(2., abs(u_tile_zoom) - u_zoom);
+
+    // World coordinates for 3d procedural textures
+    v_world_position = u_model * position;
+    #ifdef TANGRAM_WORLD_POSITION_WRAP
+        v_world_position.xy -= world_position_anchor;
+    #endif
 
     // Modify position before camera projection
     #pragma tangram: position

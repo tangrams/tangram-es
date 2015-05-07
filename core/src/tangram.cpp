@@ -61,12 +61,12 @@ namespace Tangram {
                 "landuse"
             });
             std::shared_ptr<Material> mat(new Material());
-            mat->setEmissionEnabled(false);
+            mat->setEmissionEnabled(true);
             mat->setAmbientEnabled(true);
             mat->setDiffuse(glm::vec4(1.0,0.0,0.0,0.0));
-            // mat->setEmission("grid.jpg",MappingType::UV);
+            mat->setEmission("grid.jpg",MappingType::UV);
             mat->setSpecularEnabled(true);
-            mat->setNormal("normals.jpg",MappingType::UV);
+            // mat->setNormal("normals.jpg",MappingType::UV);
 
             polyStyle->setMaterial(mat);
             m_scene->addStyle(std::move(polyStyle));

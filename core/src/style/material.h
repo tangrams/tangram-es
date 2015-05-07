@@ -28,26 +28,26 @@ public:
     /*  Emission color is by default disblable and vec4(0.0).
     *   By setting the property you will enable and require to reloading the shader. */
     void setEmission(const glm::vec4 _emission);
-    void setEmission(const std::string &_file, MappingType _type = MappingType::PLANAR, glm::vec3 _scale = glm::vec3(1.), glm::vec4 _amount = glm::vec4(1.));
-    void setEmission(std::shared_ptr<Texture> _texture, MappingType _type = MappingType::PLANAR, glm::vec3 _scale = glm::vec3(1.), glm::vec4 _amount = glm::vec4(1.));
+    void setEmission(const std::string &_file, MappingType _type = MappingType::UV, glm::vec3 _scale = glm::vec3(1.), glm::vec4 _amount = glm::vec4(1.));
+    void setEmission(std::shared_ptr<Texture> _texture, MappingType _type = MappingType::UV, glm::vec3 _scale = glm::vec3(1.), glm::vec4 _amount = glm::vec4(1.));
 
     /*  Ambient color is by default disblable and vec4(1.0).
     *   By setting the property you will enable and require to reloading the shader. */
     void setAmbient(const glm::vec4 _ambient);
-    void setAmbient(const std::string &_file, MappingType _type = MappingType::PLANAR, glm::vec3 _scale = glm::vec3(1.), glm::vec4 _amount = glm::vec4(1.));
-    void setAmbient(std::shared_ptr<Texture> _texture, MappingType _type = MappingType::PLANAR, glm::vec3 _scale = glm::vec3(1.), glm::vec4 _amount = glm::vec4(1.));
+    void setAmbient(const std::string &_file, MappingType _type = MappingType::UV, glm::vec3 _scale = glm::vec3(1.), glm::vec4 _amount = glm::vec4(1.));
+    void setAmbient(std::shared_ptr<Texture> _texture, MappingType _type = MappingType::UV, glm::vec3 _scale = glm::vec3(1.), glm::vec4 _amount = glm::vec4(1.));
 
     /*  Difuse color is by default enable and vec4(1.0).
     *   If you want to disable it you have to disableDiffuse and reloading the shader. */
     void setDiffuse(const glm::vec4 _diffuse);
-    void setDiffuse(const std::string &_file, MappingType _type = MappingType::PLANAR, glm::vec3 _scale = glm::vec3(1.), glm::vec4 _amount = glm::vec4(1.));
-    void setDiffuse(std::shared_ptr<Texture> _texture, MappingType _type = MappingType::PLANAR, glm::vec3 _scale = glm::vec3(1.), glm::vec4 _amount = glm::vec4(1.));
+    void setDiffuse(const std::string &_file, MappingType _type = MappingType::UV, glm::vec3 _scale = glm::vec3(1.), glm::vec4 _amount = glm::vec4(1.));
+    void setDiffuse(std::shared_ptr<Texture> _texture, MappingType _type = MappingType::UV, glm::vec3 _scale = glm::vec3(1.), glm::vec4 _amount = glm::vec4(1.));
 
     /*  Specular color is by default disblable and vec4(0.2) with a shinny factor of 0.2.
     *   By setting the property you will enable and require to reloading the shader. */
     void setSpecular(const glm::vec4 _specular, float _shinnyFactor);
-    void setSpecular(const std::string &_file, MappingType _type = MappingType::PLANAR, glm::vec3 _scale = glm::vec3(1.), glm::vec4 _amount = glm::vec4(1.));
-    void setSpecular(std::shared_ptr<Texture> _texture, MappingType _type = MappingType::PLANAR, glm::vec3 _scale = glm::vec3(1.), glm::vec4 _amount = glm::vec4(1.));
+    void setSpecular(const std::string &_file, MappingType _type = MappingType::UV, glm::vec3 _scale = glm::vec3(1.), glm::vec4 _amount = glm::vec4(1.));
+    void setSpecular(std::shared_ptr<Texture> _texture, MappingType _type = MappingType::UV, glm::vec3 _scale = glm::vec3(1.), glm::vec4 _amount = glm::vec4(1.));
 
     /* Enable or disable emission colors */
     void setEmissionEnabled(bool _enable);
@@ -61,8 +61,8 @@ public:
     /* Enable or disable specular colors */
     void setSpecularEnabled(bool _enable);
 
-    void setNormal(const std::string &_file, MappingType _type = MappingType::PLANAR, glm::vec3 _scale = glm::vec3(1.), float _amount = 1.);
-    void setNormal(std::shared_ptr<Texture> _texture, MappingType _type = MappingType::PLANAR, glm::vec3 _scale = glm::vec3(1.), float _amount = 1.);
+    void setNormal(const std::string &_file, MappingType _type = MappingType::UV, glm::vec3 _scale = glm::vec3(1.), float _amount = 1.);
+    void setNormal(std::shared_ptr<Texture> _texture, MappingType _type = MappingType::UV, glm::vec3 _scale = glm::vec3(1.), float _amount = 1.);
 
     /*  Inject the needed lines of GLSL code on the shader to make this material work */
     virtual void injectOnProgram( std::shared_ptr<ShaderProgram> _shader );
