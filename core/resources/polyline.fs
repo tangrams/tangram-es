@@ -6,6 +6,7 @@ uniform mat4 u_modelView;
 uniform mat4 u_modelViewProj;
 uniform float u_time;
 
+varying vec4 v_world_position;
 varying vec4 v_color;
 varying vec3 v_eyeToPoint;
 varying vec3 v_normal;
