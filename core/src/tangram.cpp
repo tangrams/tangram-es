@@ -177,14 +177,16 @@ namespace Tangram {
 
             m_tileManager->updateTileSet();
 
-            if(m_view->changedOnLastUpdate() || m_tileManager->hasTileSetChanged()) {
+            if(m_view->changedOnLastUpdate()) {
                 m_labelContainer->setViewProjectionMatrix(m_view->getViewProjectionMatrix());
                 
                 for (const auto& mapIDandTile : m_tileManager->getVisibleTiles()) {
                     const std::shared_ptr<MapTile>& tile = mapIDandTile.second;
                     tile->update(_dt, *m_view);
                 }
+            }
                 
+            if(m_view->changedOnLastUpdate() || m_tileManager->hasTileSetChanged()) {
                 // update labels for specific style
                 for (const auto& style : m_scene->getStyles()) {
                     for (const auto& mapIDandTile : m_tileManager->getVisibleTiles()) {
