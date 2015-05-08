@@ -203,11 +203,11 @@ void TextStyle::setupTile(const std::shared_ptr<MapTile>& _tile) {
         auto texture = buffer->getTextureTransform();
 
         if (texture) {
-            texture->update();
-            texture->bind();
-
+            texture->update(1);
+            texture->bind(1);
+            
             // transform texture
-            m_shaderProgram->setUniformi("u_transforms", texture->getTextureSlot());
+            m_shaderProgram->setUniformi("u_transforms", 1);
             // resolution of the transform texture
             m_shaderProgram->setUniformf("u_tresolution", texture->getWidth(), texture->getHeight());
         }
@@ -222,10 +222,10 @@ void TextStyle::setupFrame(const std::shared_ptr<View>& _view, const std::shared
     ftContext->setScreenSize(_view->getWidth(), _view->getHeight());
     ftContext->getProjection(projectionMatrix);
 
-    atlas->update();
-    atlas->bind();
-
-    m_shaderProgram->setUniformi("u_tex", atlas->getTextureSlot());
+    atlas->update(0);
+    atlas->bind(0);
+    
+    m_shaderProgram->setUniformi("u_tex", 0);
     m_shaderProgram->setUniformf("u_resolution", _view->getWidth(), _view->getHeight());
     
     float r = (m_color >> 16 & 0xff) / 255.0;
