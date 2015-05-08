@@ -7,6 +7,12 @@ light_accumulator_*
 */
 
 
+#ifdef TANGRAM_WEBGL
+    #define TANGRAM_SKEW u_vanishing_point
+#else
+    #define TANGRAM_SKEW vec2(0.0)
+#endif
+
 // MATERIALS
 //
 struct Material {
@@ -83,8 +89,11 @@ vec4 getSphereMap (in sampler2D _tex, in vec3 _eyeToPoint, in vec3 _normal, in v
     vec3 eye = normalize(_eyeToPoint);
     eye.xy -= _skew;
     eye = normalize(eye);
-
+#ifdef TANGRAM_WEBGL
     vec3 r = reflect(eye, _normal);
+#else
+    vec3 r = reflect(eye, _normal);
+#endif
     r.z += 1.0;
     float m = 2. * length(r);
     vec2 uv = r.xy / m + .5;
@@ -157,7 +166,7 @@ void calculateMaterial (in vec3 _eyeToPoint, inout vec3 _normal) {
         #endif
 
         #ifdef TANGRAM_MATERIAL_EMISSION_TEXTURE_SPHEREMAP
-        material.emission *= getSphereMap(u_material_emission_texture, _eyeToPoint, _normal, u_vanishing_point);
+        material.emission *= getSphereMap(u_material_emission_texture, _eyeToPoint, _normal, TANGRAM_SKEW);
         #endif
     #endif
 
@@ -177,7 +186,7 @@ void calculateMaterial (in vec3 _eyeToPoint, inout vec3 _normal) {
         #endif
 
         #ifdef TANGRAM_MATERIAL_AMBIENT_TEXTURE_SPHEREMAP
-        material.ambient *= getSphereMap(u_material_ambient_texture, _eyeToPoint, _normal, u_vanishing_point);
+        material.ambient *= getSphereMap(u_material_ambient_texture, _eyeToPoint, _normal, TANGRAM_SKEW);
         #endif
     #endif
 
@@ -197,7 +206,7 @@ void calculateMaterial (in vec3 _eyeToPoint, inout vec3 _normal) {
         #endif
 
         #ifdef TANGRAM_MATERIAL_DIFFUSE_TEXTURE_SPHEREMAP
-        material.diffuse *= getSphereMap(u_material_diffuse_texture, _eyeToPoint, _normal, u_vanishing_point);
+        material.diffuse *= getSphereMap(u_material_diffuse_texture, _eyeToPoint, _normal, TANGRAM_SKEW);
         #endif
     #endif
 
@@ -217,7 +226,7 @@ void calculateMaterial (in vec3 _eyeToPoint, inout vec3 _normal) {
         #endif
 
         #ifdef TANGRAM_MATERIAL_SPECULAR_TEXTURE_SPHEREMAP
-        material.specular *= getSphereMap(u_material_specular_texture, _eyeToPoint, _normal, u_vanishing_point);
+        material.specular *= getSphereMap(u_material_specular_texture, _eyeToPoint, _normal, TANGRAM_SKEW);
         #endif
     #endif
 }

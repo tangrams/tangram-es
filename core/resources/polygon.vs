@@ -51,6 +51,7 @@ void main() {
     #pragma tangram: position
 
     v_color = a_color;
+    
     v_eyeToPoint = vec3(u_modelView * position);
     v_normal = normalize(u_normalMatrix * a_normal);
 
