@@ -7,9 +7,12 @@ This openGL Material implementation follows from the WebGL version of Tangram
 #pragma once
  
 #include <memory>
-#include "glm/glm.hpp"
-#include "util/shaderProgram.h"
-#include "util/texture.h"
+#include <string>
+#include "glm/vec3.hpp"
+#include "glm/vec4.hpp"
+
+class Texture;
+class ShaderProgram;
 
 enum class MappingType {
     UV,
@@ -80,37 +83,36 @@ private:
     /* Get the GLSL struct and classes need to be injected */
     virtual std::string getClassBlock();
 
-    std::string m_name;
+    std::string m_name = "material";
     
     glm::vec4   m_emission;
-    std::shared_ptr<Texture>   m_emission_texture;
-    glm::vec3   m_emission_texture_scale;
-    MappingType m_emission_texture_mapping;
+    glm::vec3   m_emission_texture_scale = glm::vec3(1.f);
+    MappingType m_emission_texture_mapping = MappingType::UV;
+    std::shared_ptr<Texture> m_emission_texture;
 
-    glm::vec4   m_ambient;
-    std::shared_ptr<Texture>   m_ambient_texture;
-    glm::vec3   m_ambient_texture_scale;
-    MappingType m_ambient_texture_mapping;
+    glm::vec4   m_ambient = glm::vec4(1.f);
+    glm::vec3   m_ambient_texture_scale = glm::vec3(1.f);
+    MappingType m_ambient_texture_mapping = MappingType::UV;
+    std::shared_ptr<Texture> m_ambient_texture;
 
-    glm::vec4   m_diffuse;
-    std::shared_ptr<Texture>   m_diffuse_texture;
-    glm::vec3   m_diffuse_texture_scale;
-    MappingType m_diffuse_texture_mapping;
+    glm::vec4   m_diffuse = glm::vec4(.8f);
+    glm::vec3   m_diffuse_texture_scale = glm::vec3(1.f);
+    MappingType m_diffuse_texture_mapping = MappingType::UV;
+    std::shared_ptr<Texture> m_diffuse_texture;
 
-    glm::vec4   m_specular;
-    std::shared_ptr<Texture>   m_specular_texture;
-    glm::vec3   m_specular_texture_scale;
-    MappingType m_specular_texture_mapping;
+    glm::vec4   m_specular = glm::vec4(.2f);
+    glm::vec3   m_specular_texture_scale = glm::vec3(1.f);
+    MappingType m_specular_texture_mapping = MappingType::UV;
+    std::shared_ptr<Texture> m_specular_texture;
 
-    float       m_shininess;
-    
-    std::shared_ptr<Texture>   m_normal_texture;
-    glm::vec3   m_normal_texture_scale;
-    MappingType m_normal_texture_mapping;
-    float       m_normal_texture_amount;
+    glm::vec3   m_normal_texture_scale = glm::vec3(1.f);
+    float       m_normal_texture_amount = 1.f;
+    MappingType m_normal_texture_mapping = MappingType::UV;
+    std::shared_ptr<Texture> m_normal_texture;
 
-    bool        m_bEmission;
-    bool        m_bAmbient;
-    bool        m_bDiffuse;
-    bool        m_bSpecular;
+    float       m_shininess = .2f;
+    bool        m_bEmission = false;
+    bool        m_bAmbient = false;
+    bool        m_bDiffuse = true;
+    bool        m_bSpecular = false;
 };
