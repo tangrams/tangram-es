@@ -278,6 +278,15 @@ void ShaderProgram::invalidateAllPrograms() {
     
 }
 
+void ShaderProgram::setUniform(const std::string& _name, std::shared_ptr<Texture> _tex, unsigned int _texLoc){
+    use();
+    GLint location = getUniformLocation(_name);
+    glActiveTexture(GL_TEXTURE0 + _texLoc);
+    // glBindTexture(GL_TEXTURE_2D, _tex->getId());
+    _tex->bind();
+    glUniform1i(location, _texLoc);
+}
+
 void ShaderProgram::setUniformi(const std::string& _name, int _value) {
     use();
     GLint location = getUniformLocation(_name);

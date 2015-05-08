@@ -50,6 +50,14 @@ namespace Tangram {
         // Create a scene object
         if (!m_scene) {
             m_scene = std::make_shared<Scene>();
+
+            std::shared_ptr<Material> mat(new Material());
+            mat->setEmissionEnabled(false);
+            mat->setAmbientEnabled(true);
+            // mat->setDiffuseEnabled(true);
+            mat->setDiffuse("sem.jpg",MappingType::SPHEREMAP);
+            mat->setSpecularEnabled(true);
+            mat->setNormal("normals.jpg",MappingType::UV);
             
             // Load style(s); hard-coded for now
             std::unique_ptr<Style> polyStyle(new PolygonStyle("Polygon"));
@@ -60,20 +68,13 @@ namespace Tangram {
                 "earth",
                 "landuse"
             });
-            std::shared_ptr<Material> mat(new Material());
-            mat->setEmissionEnabled(true);
-            mat->setAmbientEnabled(true);
-            mat->setDiffuse(glm::vec4(1.0,0.0,0.0,0.0));
-            mat->setEmission("grid.jpg",MappingType::UV);
-            mat->setSpecularEnabled(true);
-            // mat->setNormal("normals.jpg",MappingType::UV);
-
             polyStyle->setMaterial(mat);
             m_scene->addStyle(std::move(polyStyle));
             
             std::unique_ptr<Style> linesStyle(new PolylineStyle("Polyline"));
             linesStyle->setLighting(LightingType::vertex);
             linesStyle->addLayers({"roads"});
+            // linesStyle->setMaterial(mat);
             m_scene->addStyle(std::move(linesStyle));
 
             m_ftContext = std::make_shared<FontContext>();

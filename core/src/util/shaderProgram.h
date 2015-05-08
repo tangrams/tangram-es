@@ -9,6 +9,7 @@
 
 #include "glm/glm.hpp"
 
+#include "util/texture.h"
 // TODO:
 // each ShaderProgram instance has a map of <string, vector<string>> pairs
 // the string identifies the tag to replace, the vector is a list of strings of GLSL to inject
@@ -72,6 +73,9 @@ public:
     /* 
      * Ensures the program is bound and then sets the named uniform to the given value(s)
      */
+
+    void setUniform(const std::string& _name, std::shared_ptr<Texture> _tex, unsigned int _texLoc);
+
     void setUniformi(const std::string& _name, int _value);
     void setUniformi(const std::string& _name, int _value0, int _value1);
     void setUniformi(const std::string& _name, int _value0, int _value1, int _value2);

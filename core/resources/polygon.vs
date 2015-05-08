@@ -2,7 +2,7 @@
 precision highp float;
 #endif
 
-#define TANGRAM_WORLD_POSITION_WRAP 100000
+#define TANGRAM_WORLD_POSITION_WRAP vec3(100000.0)
 
 uniform mat4 u_model;
 uniform mat4 u_modelView;

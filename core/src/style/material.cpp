@@ -238,11 +238,14 @@ void Material::removeFromProgram(std::shared_ptr<ShaderProgram> _shader ) {
 }
 
 void Material::setupProgram(std::shared_ptr<ShaderProgram> _shader) {
+
+    int textCounter = 0;
+
 	if (m_bEmission) {
         _shader->setUniformf("u_"+m_name+".emission", m_emission);
 
         if (m_emission_texture) {
-            _shader->setUniformi("u_material_emission_texture", m_emission_texture->getTextureSlot());
+            _shader->setUniform("u_material_emission_texture", m_emission_texture, textCounter++);
             _shader->setUniformf("u_"+m_name+".emissionScale", m_emission_texture_scale);
         }
 	}
@@ -251,7 +254,7 @@ void Material::setupProgram(std::shared_ptr<ShaderProgram> _shader) {
 		_shader->setUniformf("u_"+m_name+".ambient", m_ambient);
 
         if (m_ambient_texture) {
-            _shader->setUniformi("u_material_ambient_texture", m_ambient_texture->getTextureSlot());
+            _shader->setUniform("u_material_ambient_texture", m_ambient_texture, textCounter++);
             _shader->setUniformf("u_"+m_name+".ambientScale", m_ambient_texture_scale);
         }
 	}
@@ -260,7 +263,7 @@ void Material::setupProgram(std::shared_ptr<ShaderProgram> _shader) {
     	_shader->setUniformf("u_"+m_name+".diffuse", m_diffuse);
 
         if (m_diffuse_texture) {
-            _shader->setUniformi("u_material_diffuse_texture", m_diffuse_texture->getTextureSlot());
+            _shader->setUniform("u_material_diffuse_texture", m_diffuse_texture, textCounter++);
             _shader->setUniformf("u_"+m_name+".diffuseScale", m_diffuse_texture_scale);
         }
     }
@@ -270,13 +273,13 @@ void Material::setupProgram(std::shared_ptr<ShaderProgram> _shader) {
     	_shader->setUniformf("u_"+m_name+".shininess", m_shininess);
 
         if (m_diffuse_texture) {
-            _shader->setUniformi("u_material_specular_texture", m_specular_texture->getTextureSlot());
+            _shader->setUniform("u_material_specular_texture", m_specular_texture, textCounter++);
             _shader->setUniformf("u_"+m_name+".specularScale", m_specular_texture_scale);
         }
     }
 
     if (m_normal_texture) {
-        _shader->setUniformi("u_material_normal_texture", m_normal_texture->getTextureSlot());
+        _shader->setUniform("u_material_normal_texture", m_normal_texture, textCounter++);
         _shader->setUniformf("u_"+m_name+".normalScale", m_normal_texture_scale);
         _shader->setUniformf("u_"+m_name+".normalAmount", m_normal_texture_amount);
     }
