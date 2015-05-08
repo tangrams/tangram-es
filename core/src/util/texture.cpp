@@ -41,7 +41,7 @@ void Texture::destroy() {
 }
 
 void Texture::bind(GLuint _textureUnit) {
-    std::pair<GLuint, GLuint> textureSlot { _textureUnit, m_name };
+    TextureSlot textureSlot { _textureUnit, m_name };
     
     if (s_activeSlot == textureSlot) {
         return;

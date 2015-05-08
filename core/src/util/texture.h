@@ -49,6 +49,8 @@ public:
     /* Width and Height texture getters */
     unsigned int getWidth() const { return m_width; }
     unsigned int getHeight() const { return m_height; }
+    
+    GLuint getId() { return m_name; }
 
     /* Sets texture data
      * 
@@ -61,25 +63,13 @@ public:
 
     /* GPU delete of the texture */
     void destroy();
-
+    
+    typedef std::pair<GLuint, GLuint> TextureSlot;
+    
 protected:
-
-    struct TextureSubData {
-        std::unique_ptr<std::vector<GLuint>> m_data;
-        unsigned int m_xoff;
-        unsigned int m_yoff;
-        unsigned int m_width;
-        unsigned int m_height;
-    };
-
-    static GLuint getTextureUnit(GLuint _slot);
 
     TextureOptions m_options;
     std::vector<GLuint> m_data;
-
-    // used to queue the subdata updates, each call of setSubData would be treated in the order that they arrived
-    std::queue<std::unique_ptr<TextureSubData>> m_subData;
-
     GLuint m_name;
 
     bool m_dirty;
@@ -88,6 +78,22 @@ protected:
     unsigned int m_width;
     unsigned int m_height;
     
-    static std::pair<GLuint, GLuint> s_activeSlot;
+private:
+    
+    static GLuint getTextureUnit(GLuint _slot);
+    
+    struct TextureSubData {
+        std::unique_ptr<std::vector<GLuint>> m_data;
+        unsigned int m_xoff;
+        unsigned int m_yoff;
+        unsigned int m_width;
+        unsigned int m_height;
+    };
+
+    
+    // used to queue the subdata updates, each call of setSubData would be treated in the order that they arrived
+    std::queue<std::unique_ptr<TextureSubData>> m_subData;
+
+    static TextureSlot s_activeSlot;
 
 };

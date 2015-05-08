@@ -10,6 +10,7 @@ ShaderProgram::ShaderProgram() {
     m_glFragmentShader = 0;
     m_glVertexShader = 0;
     m_needsBuild = true;
+    m_freeTextureUnit = 0;
 
 }
 
@@ -276,6 +277,24 @@ void ShaderProgram::invalidateAllPrograms() {
     s_activeGlProgram = 0;
     ++s_validGeneration;
     
+}
+
+void ShaderProgram::setUniform(const std::string& _name, Texture& _texture) {
+    use();
+    GLint location = getUniformLocation(_name);
+    GLuint unit;
+    
+    if (m_textureSlots.find(_name) == m_textureSlots.end()) {
+        unit = m_freeTextureUnit;
+        m_textureSlots[_name] = { _texture.getId(), m_freeTextureUnit++ };
+    } else {
+        unit = m_textureSlots[_name].second;
+    }
+    
+    _texture.update(unit);
+    _texture.bind(unit);
+    
+    glUniform1i(location, unit);
 }
 
 void ShaderProgram::setUniformi(const std::string& _name, int _value) {
