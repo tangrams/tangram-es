@@ -17,6 +17,7 @@
 #include "style/debugTextStyle.h"
 #include "style/debugStyle.h"
 #include "style/spriteStyle.h"
+#include "scene/sceneLoader.h"
 #include "scene/scene.h"
 #include "scene/lights.h"
 #include "util/error.h"
@@ -93,12 +94,12 @@ namespace Tangram {
 
             // Directional light with white diffuse color pointing Northeast and down
              
-            std::unique_ptr<DirectionalLight> directionalLight(new DirectionalLight("dLight"));
-            directionalLight->setAmbientColor({0.3, 0.3, 0.3, 1.0});
-            directionalLight->setDiffuseColor({0.7, 0.7, 0.7, 1.0});
-            directionalLight->setDirection({1.0, 1.0, -1.0});
-            directionalLight->setOrigin(LightOrigin::WORLD);
-            m_scene->addLight(std::move(directionalLight));
+            // std::unique_ptr<DirectionalLight> directionalLight(new DirectionalLight("dLight"));
+            // directionalLight->setAmbientColor({0.3, 0.3, 0.3, 1.0});
+            // directionalLight->setDiffuseColor({0.7, 0.7, 0.7, 1.0});
+            // directionalLight->setDirection({1.0, 1.0, -1.0});
+            // directionalLight->setOrigin(LightOrigin::WORLD);
+            // m_scene->addLight(std::move(directionalLight));
 
             // Point light
             // std::unique_ptr<PointLight> pointLight(new PointLight("pLight"));
@@ -128,6 +129,9 @@ namespace Tangram {
             std::unique_ptr<DataSource> dataSource(new ProtobufSource());
             m_tileManager->addDataSource(std::move(dataSource));
         }
+
+        SceneLoader loader;
+        loader.loadScene("config.yaml", *m_scene, *m_tileManager, *m_view);
 
         // Set up openGL state
         glDisable(GL_BLEND);
