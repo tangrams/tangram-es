@@ -13,6 +13,7 @@ using namespace YAML;
 
 void loadSources(Node sources, TileManager& tileManager);
 void loadLights(Node lights, Scene& scene);
+void loadCameras(Node cameras, View& view);
 
 void SceneLoader::loadScene(const std::string& _file, Scene& _scene, TileManager& _tileManager, View& _view) {
 
@@ -20,6 +21,7 @@ void SceneLoader::loadScene(const std::string& _file, Scene& _scene, TileManager
     
     loadSources(config["sources"], _tileManager);
     loadLights(config["lights"], _scene);
+    loadCameras(config["cameras"], _view);
     
 }
 
@@ -192,4 +194,70 @@ void loadLights(Node lights, Scene& scene) {
 
     }
 
+}
+
+void loadCameras(Node cameras, View& view) {
+    
+    // To correctly match the behavior of the webGL library we'll need a place to store multiple view instances.
+    // Since we only have one global view right now, we'll just apply the settings from the first active camera we find.
+    
+    for (auto it = cameras.begin(); it != cameras.end(); ++it) {
+        
+        const Node camera = it->second;
+        
+        const std::string type = camera["type"].as<std::string>();
+        if (type == "perspective") {
+            // The default camera
+            Node fov = camera["fov"];
+            if (fov) {
+                // TODO
+            }
+            
+            Node focal = camera["focal_length"];
+            if (focal) {
+                // TODO
+            }
+            
+            Node vanishing = camera["vanishing_point"];
+            if (vanishing) {
+                // TODO
+            }
+        } else if (type == "isometric") {
+            // TODO
+            Node axis = camera["axis"];
+            if (axis) {
+                // TODO
+            }
+        } else if (type == "flat") {
+            // TODO
+        }
+        
+        double x = -74.00976419448854;
+        double y = 40.70532700869127;
+        float z = 16;
+        
+        Node position = camera["position"];
+        if (position) {
+            x = position[0].as<double>();
+            y = position[1].as<double>();
+            if (position.size() > 2) {
+                z = position[2].as<float>();
+            }
+        }
+        glm::dvec2 projPos = view.getMapProjection().LonLatToMeters(glm::dvec2(x, y));
+        view.setPosition(projPos.x, projPos.y);
+        
+        Node zoom = camera["zoom"];
+        if (zoom) {
+            z = zoom.as<float>();
+        }
+        view.setZoom(z);
+        
+        Node active = camera["active"];
+        if (active) {
+            break;
+        }
+        
+    }
+    
 }

@@ -38,10 +38,6 @@ namespace Tangram {
         // Create view
         if (!m_view) {
             m_view = std::make_shared<View>();
-            
-            // Move the view to coordinates in Manhattan so we have something interesting to test
-            glm::dvec2 target = m_view->getMapProjection().LonLatToMeters(glm::dvec2(-74.00796, 40.70361));
-            m_view->setPosition(target.x, target.y);
         }
 
         // Create a scene object
