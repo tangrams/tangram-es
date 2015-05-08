@@ -7,6 +7,7 @@ cameras:
 lights:
     light1:
         type: directional
+        origin: world
         direction: [1, 1, -1]
         diffuse: [.7, .7, .7, 1.]
         ambient: [.3, .3, .3, 1.]
