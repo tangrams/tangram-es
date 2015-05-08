@@ -56,6 +56,9 @@ public:
     /* Gets the GPU texture slot */
     GLuint getTextureSlot() const { return m_slot; }
 
+    /* Gets the GPU texture slot */
+    GLuint getId() const { return m_name; }
+
     /* Sets texture data
      * 
      * Has less priority than set sub data
