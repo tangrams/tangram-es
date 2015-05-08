@@ -89,11 +89,8 @@ vec4 getSphereMap (in sampler2D _tex, in vec3 _eyeToPoint, in vec3 _normal, in v
     vec3 eye = normalize(_eyeToPoint);
     eye.xy -= _skew;
     eye = normalize(eye);
-#ifdef TANGRAM_WEBGL
     vec3 r = reflect(eye, _normal);
-#else
-    vec3 r = reflect(eye, _normal);
-#endif
+
     r.z += 1.0;
     float m = 2. * length(r);
     vec2 uv = r.xy / m + .5;
