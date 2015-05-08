@@ -137,7 +137,7 @@ void Texture::resize(const unsigned int _width, const unsigned int _height) {
 }
 
 GLuint Texture::getTextureUnit(GLuint _unit) {
-    if (GL_MAX_COMBINED_TEXTURE_IMAGE_UNITS == _unit) {
+    if (GL_MAX_COMBINED_TEXTURE_IMAGE_UNITS - 1 == _unit) {
         logMsg("Warning: trying to access unavailable texture unit");
     }
     
