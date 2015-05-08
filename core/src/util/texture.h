@@ -29,7 +29,7 @@ class Texture {
 
 public:
 
-    Texture(unsigned int _width, unsigned int _height,
+    Texture(unsigned int _width, unsigned int _height, bool _autoDelete = true,
             TextureOptions _options = {GL_ALPHA, GL_ALPHA, {GL_LINEAR, GL_LINEAR}, {GL_CLAMP_TO_EDGE, GL_CLAMP_TO_EDGE}});
     
     Texture(const std::string& _file,
@@ -89,7 +89,8 @@ private:
         unsigned int m_width;
         unsigned int m_height;
     };
-
+    
+    bool m_autoDelete;
     
     // used to queue the subdata updates, each call of setSubData would be treated in the order that they arrived
     std::queue<std::unique_ptr<TextureSubData>> m_subData;

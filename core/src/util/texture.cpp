@@ -4,8 +4,8 @@
 
 std::pair<GLuint, GLuint> Texture::s_activeSlot = { -1, 0 };
 
-Texture::Texture(unsigned int _width, unsigned int _height, TextureOptions _options)
-: m_options(_options) {
+Texture::Texture(unsigned int _width, unsigned int _height, bool _autoDelete, TextureOptions _options)
+: m_options(_options), m_autoDelete(_autoDelete) {
 
     m_name = 0;
     m_dirty = false;
@@ -15,7 +15,7 @@ Texture::Texture(unsigned int _width, unsigned int _height, TextureOptions _opti
 }
 
 Texture::Texture(const std::string& _file, TextureOptions _options)
-: Texture(0, 0, _options) {
+: Texture(0, 0, true, _options) {
 
     unsigned int size;
     unsigned char* data = bytesFromResource(_file.c_str(), &size);
@@ -33,7 +33,9 @@ Texture::Texture(const std::string& _file, TextureOptions _options)
 }
 
 Texture::~Texture() {
-
+    if (m_autoDelete) {
+        destroy();
+    }
 }
 
 void Texture::destroy() {
