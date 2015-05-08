@@ -8,9 +8,6 @@
 #include "platform.h"
 #include "tile/tileManager.h"
 #include "view/view.h"
-#include "data/geoJsonSource.h"
-#include "data/protobufSource.h"
-
 #include "style/polygonStyle.h"
 #include "style/polylineStyle.h"
 #include "style/textStyle.h"
@@ -19,7 +16,6 @@
 #include "style/spriteStyle.h"
 #include "scene/sceneLoader.h"
 #include "scene/scene.h"
-#include "scene/lights.h"
 #include "util/error.h"
 #include "stl_util.hpp"
 
@@ -93,23 +89,6 @@ namespace Tangram {
             std::unique_ptr<DebugStyle> debugStyle(new DebugStyle("Debug"));
             m_scene->addStyle(std::move(debugStyle));
 
-            // Directional light with white diffuse color pointing Northeast and down
-             
-            // std::unique_ptr<DirectionalLight> directionalLight(new DirectionalLight("dLight"));
-            // directionalLight->setAmbientColor({0.3, 0.3, 0.3, 1.0});
-            // directionalLight->setDiffuseColor({0.7, 0.7, 0.7, 1.0});
-            // directionalLight->setDirection({1.0, 1.0, -1.0});
-            // directionalLight->setOrigin(LightOrigin::WORLD);
-            // m_scene->addLight(std::move(directionalLight));
-
-            // Point light
-            // std::unique_ptr<PointLight> pointLight(new PointLight("pLight"));
-            // pointLight->setAmbientColor({0.2, 0.2, 0.2, 1.0});
-            // pointLight->setDiffuseColor({0.5, 0.5, 0.5, 1.0});
-            // pointLight->setPosition({0.0, 0.0, -100.0});
-            // pointLight->setRadius(200);
-            // m_scene->addLight(std::move(pointLight));
-
             // Testing loading image
 			// std::unique_ptr<Style> spriteStyle(new SpriteStyle("Sprite"));
             // m_scene->addStyle(std::move(spriteStyle));
@@ -122,13 +101,6 @@ namespace Tangram {
             // Pass references to the view and scene into the tile manager
             m_tileManager->setView(m_view);
             m_tileManager->setScene(m_scene);
-            
-            // Add a tile data source
-            // json tile source
-            // std::unique_ptr<DataSource> dataSource(new GeoJsonTile());
-            // protobuf tile source
-            std::unique_ptr<DataSource> dataSource(new ProtobufSource());
-            m_tileManager->addDataSource(std::move(dataSource));
         }
 
         SceneLoader loader;

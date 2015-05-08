@@ -4,17 +4,21 @@
 #include "tileManager.h"
 #include "view.h"
 #include "lights.h"
+#include "geoJsonSource.h"
+#include "protobufSource.h"
 
 #include "yaml-cpp/yaml.h"
 
 using namespace YAML;
 
+void loadSources(Node sources, TileManager& tileManager);
 void loadLights(Node lights, Scene& scene);
 
 void SceneLoader::loadScene(const std::string& _file, Scene& _scene, TileManager& _tileManager, View& _view) {
 
     Node config = YAML::LoadFile(_file);
     
+    loadSources(config["sources"], _tileManager);
     loadLights(config["lights"], _scene);
     
 }
@@ -43,6 +47,32 @@ glm::vec3 parseVec3(const Node& node) {
         }
     }
     return vec;
+}
+
+void loadSources(Node sources, TileManager& tileManager) {
+    
+    for (auto it = sources.begin(); it != sources.end(); ++it) {
+        
+        const Node source = it->second;
+        std::string type = source["type"].as<std::string>();
+        std::string url = source["url"].as<std::string>();
+        
+        std::unique_ptr<DataSource> sourcePtr;
+        
+        if (type == "GeoJSONTiles") {
+            sourcePtr = std::unique_ptr<DataSource>(new GeoJsonSource());
+        } else if (type == "TopoJSONTiles") {
+            // TODO
+        } else if (type == "MVT") {
+            sourcePtr = std::unique_ptr<DataSource>(new ProtobufSource());
+        }
+        
+        if (sourcePtr) {
+            sourcePtr->setUrlTemplate(url);
+            tileManager.addDataSource(std::move(sourcePtr));
+        }
+    }
+    
 }
 
 void loadLights(Node lights, Scene& scene) {
