@@ -52,11 +52,9 @@ namespace Tangram {
             m_scene = std::make_shared<Scene>();
 
             std::shared_ptr<Material> mat(new Material());
-            // mat->setEmissionEnabled(false);
-            // mat->setAmbientEnabled(true);
-            mat->setDiffuseEnabled(true);
-            mat->setDiffuse("sem.jpg",MappingType::SPHEREMAP);
-            // mat->setSpecularEnabled(true);
+            mat->setAmbientEnabled(true);
+            // mat->setDiffuse("sem.jpg",MappingType::SPHEREMAP);
+            mat->setSpecularEnabled(true);
             // mat->setNormal("normals.jpg",MappingType::UV);
             
             // Load style(s); hard-coded for now
@@ -111,13 +109,13 @@ namespace Tangram {
             m_scene->addLight(std::move(directionalLight));
 
             // Point light
-            std::unique_ptr<PointLight> pointLight(new PointLight("pLight"));
-            pointLight->setAmbientColor({0.2, 0.2, 0.2, 1.0});
-            pointLight->setDiffuseColor({0.5, 0.5, 0.5, 1.0});
-            pointLight->setPosition({-74.00796, 40.70361, 100.0});
-            pointLight->setRadius(1000);
-            pointLight->setOrigin(LightOrigin::WORLD);
-            m_scene->addLight(std::move(pointLight));
+            // std::unique_ptr<PointLight> pointLight(new PointLight("pLight"));
+            // pointLight->setAmbientColor({0.2, 0.2, 0.2, 1.0});
+            // pointLight->setDiffuseColor({0.5, 0.5, 0.5, 1.0});
+            // pointLight->setPosition({-74.00796, 40.70361, 100.0});
+            // pointLight->setRadius(1000);
+            // pointLight->setOrigin(LightOrigin::WORLD);
+            // m_scene->addLight(std::move(pointLight));
 
             // Testing loading image
 			// std::unique_ptr<Style> spriteStyle(new SpriteStyle("Sprite"));
