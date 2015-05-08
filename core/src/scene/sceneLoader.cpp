@@ -6,33 +6,17 @@
 #include "lights.h"
 
 #include "yaml-cpp/yaml.h"
-#include "glm/vec2.hpp"
 
 using namespace YAML;
-
-void loadCameras(Node cameras, View& view);
 
 void loadLights(Node lights, Scene& scene);
 
 void SceneLoader::loadScene(const std::string& _file, Scene& _scene, TileManager& _tileManager, View& _view) {
 
     Node config = YAML::LoadFile(_file);
-
-    loadCameras(config["cameras"], _view);
+    
     loadLights(config["lights"], _scene);
     
-}
-
-void loadCameras(Node cameras, View& view) {
-
-    // Load defaults
-    glm::dvec2 target = view.getMapProjection().LonLatToMeters(glm::dvec2(-74.00796, 40.70361));
-    view.setPosition(target.x, target.y);
-
-    if (!cameras) { return; }
-
-    Node camera = cameras[0]; // We only support one camera for now
-
 }
 
 glm::vec4 parseVec4(const Node& node) {
@@ -49,7 +33,6 @@ glm::vec4 parseVec4(const Node& node) {
 }
 
 glm::vec3 parseVec3(const Node& node) {
-    // for now I'll just parse 4-element color nodes
     glm::vec3 vec;
     int i = 0;
     for (auto it = node.begin(); it != node.end(); ++it) {
@@ -81,42 +64,87 @@ void loadLights(Node lights, Scene& scene) {
         const std::string type = light["type"].as<std::string>();
 
         std::unique_ptr<Light> lightPtr;
+
         if (type == "ambient") {
+
             lightPtr = std::unique_ptr<Light>(new AmbientLight(name));
+
         } else if (type == "directional") {
+
             DirectionalLight* dLightPtr = new DirectionalLight(name);
             if (light["direction"]) {
                 dLightPtr->setDirection(parseVec3(light["direction"]));
             }
             lightPtr = std::unique_ptr<Light>(dLightPtr);
+
         } else if (type == "point") {
+
             PointLight* pLightPtr = new PointLight(name);
             if (light["position"]) {
                 pLightPtr->setPosition(parseVec3(light["position"]));
             }
+            if (light["radius"]) {
+                Node rad = light["radius"];
+                if (rad.size() > 1) {
+                    pLightPtr->setRadius(rad[0].as<float>(), rad[1].as<float>());
+                } else {
+                    pLightPtr->setRadius(rad.as<float>());
+                }
+            }
+            if (light["attenuation"]) {
+                pLightPtr->setAttenuation(light["attenuation"].as<float>());
+            }
             lightPtr = std::unique_ptr<Light>(pLightPtr);
 
         } else if (type == "spotlight") {
+
             SpotLight* sLightPtr = new SpotLight(name);
             if (light["position"]) {
                 sLightPtr->setPosition(parseVec3(light["position"]));
             }
+            if (light["direction"]) {
+                sLightPtr->setDirection(parseVec3(light["direction"]));
+            }
+            if (light["radius"]) {
+                Node rad = light["radius"];
+                if (rad.size() > 1) {
+                    sLightPtr->setRadius(rad[0].as<float>(), rad[1].as<float>());
+                } else {
+                    sLightPtr->setRadius(rad.as<float>());
+                }
+            }
+            if (light["angle"]) {
+                sLightPtr->setCutoffAngle(light["angle"].as<float>());
+            }
+            if (light["exponent"]) {
+                sLightPtr->setCutoffExponent(light["exponent"].as<float>());
+            }
+            
             lightPtr = std::unique_ptr<Light>(sLightPtr);
+
+        }
+        
+        if (light["origin"]) {
+            const std::string origin = light["origin"].as<std::string>();
+            if (origin == "world") {
+                lightPtr->setOrigin(LightOrigin::WORLD);
+            } else if (origin == "camera") {
+                lightPtr->setOrigin(LightOrigin::CAMERA);
+            } else if (origin == "ground") {
+                lightPtr->setOrigin(LightOrigin::GROUND);
+            }
         }
 
         if (light["ambient"]) {
-            glm::vec4 color = parseVec4(light["ambient"]);
-            lightPtr->setAmbientColor(color);
+            lightPtr->setAmbientColor(parseVec4(light["ambient"]));
         }
 
         if (light["diffuse"]) {
-            glm::vec4 color = parseVec4(light["diffuse"]);
-            lightPtr->setDiffuseColor(color);
+            lightPtr->setDiffuseColor(parseVec4(light["diffuse"]));
         }
 
         if (light["specular"]) {
-            glm::vec4 color = parseVec4(light["specular"]);
-            lightPtr->setSpecularColor(color);
+            lightPtr->setSpecularColor(parseVec4(light["specular"]));
         }
 
         scene.addLight(std::move(lightPtr));
