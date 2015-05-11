@@ -51,7 +51,7 @@ public:
     unsigned int getWidth() const { return m_width; }
     unsigned int getHeight() const { return m_height; }
     
-    GLuint getId() { return m_name; }
+    GLuint getGlHandle() { return m_glHandle; }
 
     /* Sets texture data
      * 
@@ -71,7 +71,7 @@ protected:
 
     TextureOptions m_options;
     std::vector<GLuint> m_data;
-    GLuint m_name;
+    GLuint m_glHandle;
 
     bool m_dirty;
     bool m_shouldResize;
@@ -80,8 +80,6 @@ protected:
     unsigned int m_height;
     
 private:
-    
-    static GLuint getTextureUnit(GLuint _slot);
     
     struct TextureSubData {
         std::unique_ptr<std::vector<GLuint>> m_data;
@@ -96,6 +94,13 @@ private:
     // used to queue the subdata updates, each call of setSubData would be treated in the order that they arrived
     std::queue<std::unique_ptr<TextureSubData>> m_subData;
     
-    static std::unordered_map<GLuint, GLuint> s_activeSlots;
+    // We refer to both 'texture slots' and 'texture units', which are almost (but not quite) the same.
+    // Texture slots range from 0 to GL_MAX_COMBINED_TEXTURE_UNITS-1 and the texture unit corresponding to
+    // a given texture slot is (slot + GL_TEXTURE0).
+    static GLuint s_activeSlot;
+    static GLuint getTextureUnit(GLuint _slot);
+    
+    // if (s_boundTextures[s] == h) then the texture with handle 'h' is currently bound at slot 's'
+    static GLuint s_boundTextures[GL_MAX_COMBINED_TEXTURE_IMAGE_UNITS];
 
 };
