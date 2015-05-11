@@ -59,7 +59,7 @@ void Texture::bind(GLuint _textureUnit) {
     } else if(it->second != m_name) {
         glBindTexture(GL_TEXTURE_2D, m_name);
         it->second = m_name;
-     }
+    }
 }
 
 void Texture::setData(const GLuint* _data, unsigned int _dataSize) {
