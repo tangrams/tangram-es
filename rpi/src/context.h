@@ -28,9 +28,6 @@ typedef struct {
 } Viewport;
 static Viewport viewport;
 
-static bool bUpdate = true;
-static bool bRender = true;
-
 // Events
 //--------------------------------
 void onKeyPress(int _key);
@@ -39,10 +36,11 @@ void onMouseClick();
 void onMouseDrag();
 void onViewportResize(int _width, int _height);
 
-void resizeViewport(int _width, int _height) {
+void setViewport(int _x, int _y, int _width, int _height) {
     viewport.width = _width;
     viewport.height = _height;
     glViewport(0, 0, viewport.width, viewport.height);
+    onViewportResize(viewport.width, viewport.height);
 }
 
 // Inputs: Mouse/Keyboard
@@ -145,7 +143,7 @@ void updateInputs() {
     getMouse();
 
     int key = getKey();
-    if ( key != 0 && key != keyPressed ){
+    if ( key != -1 && key != keyPressed ){
         keyPressed = key;
         onKeyPress(key);
     } else {
@@ -248,42 +246,6 @@ static void initOpenGL(){
     
     // Prepare viewport
     glViewport( 0, 0, state->screen_width, state->screen_height );
-
-    // Prepair Mouse Shader
-    if (bMouse) {
-        mouseShader = std::shared_ptr<ShaderProgram>(new ShaderProgram());
-        mouseShader->setSourceStrings(mouseFragment, mouseVertex );
-
-        std::shared_ptr<VertexLayout> vertexLayout = std::shared_ptr<VertexLayout>(new VertexLayout({
-            {"a_position", 3, GL_FLOAT, false, 0},
-            {"a_texcoord", 2, GL_FLOAT, false, 0},
-            {"a_color", 4, GL_UNSIGNED_BYTE, true, 0}
-        }));
-
-        std::vector<PosUVColorVertex> vertices;
-        std::vector<int> indices;
-
-        // Small billboard for the mouse
-        GLuint color = 0xffffffff;
-        {
-            float x = -mouseSize*0.5f/state->screen_width;
-            float y = -mouseSize*0.5f/state->screen_height;
-            float w = mouseSize/state->screen_width;
-            float h = mouseSize/state->screen_height;
-
-            vertices.push_back({ x, y, 0.0, 0.0, 0.0, color});
-            vertices.push_back({ x+w, y, 0.0, 0.0, 1.0, color});
-            vertices.push_back({ x+w, y+h, 0.0, 1.0, 1.0, color});
-            vertices.push_back({ x, y+h, 0.0, 0.0, 1.0, color });
-            
-            indices.push_back(0); indices.push_back(1); indices.push_back(2);
-            indices.push_back(2); indices.push_back(3); indices.push_back(0);
-        }
-        
-        mouseMesh = std::shared_ptr<Mesh>(new Mesh(vertexLayout, GL_TRIANGLES));
-        mouseMesh->addVertices(std::move(vertices), std::move(indices));
-        mouseMesh->compileVertexBuffer();
-    }
 }
 
 void updateGL(){
