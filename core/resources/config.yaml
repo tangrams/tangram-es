@@ -15,7 +15,7 @@ lights:
 sources:
     osm:
         type: MVT
-        url:  http://vector.mapzen.com/osm/all/{z}/{x}/{y}.mapbox
+        url:  http://vector.mapzen.com/osm/all/{z}/{x}/{y}.mvt
 
 layers:
     earth:

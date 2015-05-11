@@ -5,7 +5,7 @@
 #include "view.h"
 #include "lights.h"
 #include "geoJsonSource.h"
-#include "protobufSource.h"
+#include "mvtSource.h"
 
 #include "yaml-cpp/yaml.h"
 
@@ -71,7 +71,7 @@ void loadSources(Node sources, TileManager& tileManager) {
         } else if (type == "TopoJSONTiles") {
             // TODO
         } else if (type == "MVT") {
-            sourcePtr = std::unique_ptr<DataSource>(new ProtobufSource());
+            sourcePtr = std::unique_ptr<DataSource>(new MVTSource());
         }
         
         if (sourcePtr) {
