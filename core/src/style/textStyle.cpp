@@ -58,7 +58,8 @@ void TextStyle::buildPoint(Point& _point, std::string& _layer, Properties& _prop
     if (_layer == "pois") {
         for (auto prop : _props.stringProps) {
             if (prop.first == "name") {
-                labelContainer->addLabel(TextStyle::processedTile->getID(), m_name, { glm::vec2(_point), glm::vec2(_point) }, prop.second, Label::Type::POINT);
+                labelContainer->addLabel(TextStyle::processedTile->getID(), m_name, { glm::vec2(_point), glm::vec2(_point) }, prop.second, Label::Type::POINT,
+                                         processedTile->getModelMatrix());
             }
         }
     }
@@ -110,7 +111,8 @@ void TextStyle::buildLine(Line& _line, std::string& _layer, Properties& _props, 
                         continue;
                     }
 
-                    labelContainer->addLabel(TextStyle::processedTile->getID(), m_name, { p1, p2 }, prop.second, Label::Type::LINE);
+                    labelContainer->addLabel(TextStyle::processedTile->getID(), m_name, { p1, p2 }, prop.second,
+                                             Label::Type::LINE, processedTile->getModelMatrix());
                 }
             }
         }
@@ -159,7 +161,8 @@ void TextStyle::buildPolygon(Polygon& _polygon, std::string& _layer, Properties&
 
     for (auto prop : _props.stringProps) {
         if (prop.first == "name") {
-            labelContainer->addLabel(TextStyle::processedTile->getID(), m_name, { glm::vec2(centroid), glm::vec2(centroid) }, prop.second, Label::Type::POINT);
+            labelContainer->addLabel(TextStyle::processedTile->getID(), m_name, { glm::vec2(centroid), glm::vec2(centroid) }, prop.second,
+                                     Label::Type::POINT, processedTile->getModelMatrix());
         }
     }
     
