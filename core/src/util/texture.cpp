@@ -2,7 +2,7 @@
 #define STB_IMAGE_IMPLEMENTATION
 #include "stb_image.h"
 
-std::pair<GLuint, GLuint> Texture::s_activeSlot = { -1, 0 };
+std::unordered_map<GLuint, GLuint> Texture::s_activeSlots;
 
 Texture::Texture(unsigned int _width, unsigned int _height, bool _autoDelete, TextureOptions _options)
 : m_options(_options), m_autoDelete(_autoDelete) {
@@ -39,22 +39,27 @@ Texture::~Texture() {
 }
 
 void Texture::destroy() {
+    for (auto& k : s_activeSlots) {
+        if (k.second == m_name) {
+            // set this slot to non-valid texture name
+            k.second = 0;
+        }
+    }
     glDeleteTextures(1, &m_name);
 }
 
 void Texture::bind(GLuint _textureUnit) {
-    TextureSlot textureSlot { _textureUnit, m_name };
+    auto it = s_activeSlots.find(_textureUnit);
     
-    if (s_activeSlot == textureSlot) {
-        return;
-    }
+    glActiveTexture(getTextureUnit(_textureUnit));
     
-    if (s_activeSlot.first != _textureUnit) {
-        glActiveTexture(getTextureUnit(_textureUnit));
-    }
-    
-    glBindTexture(GL_TEXTURE_2D, m_name);
-    s_activeSlot = textureSlot;
+    if (it == s_activeSlots.end()) {
+        glBindTexture(GL_TEXTURE_2D, m_name);
+        s_activeSlots[_textureUnit] = m_name;
+    } else if(it->second != m_name) {
+        glBindTexture(GL_TEXTURE_2D, m_name);
+        it->second = m_name;
+     }
 }
 
 void Texture::setData(const GLuint* _data, unsigned int _dataSize) {

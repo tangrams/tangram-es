@@ -6,6 +6,7 @@
 #include <vector>
 #include <queue>
 #include <memory>
+#include <unordered_map>
 #include <string>
 
 struct TextureFiltering {
@@ -94,7 +95,7 @@ private:
     
     // used to queue the subdata updates, each call of setSubData would be treated in the order that they arrived
     std::queue<std::unique_ptr<TextureSubData>> m_subData;
-
-    static TextureSlot s_activeSlot;
+    
+    static std::unordered_map<GLuint, GLuint> s_activeSlots;
 
 };
