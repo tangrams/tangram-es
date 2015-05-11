@@ -47,6 +47,8 @@ public:
     
     /* Returns the reciprocal of <getScale()> */
     float getInverseScale() const { return m_inverseScale; }
+    
+    const glm::mat4& getModelMatrix() const { return m_modelMatrix; }
 
     /* Adds drawable geometry to the tile and associates it with a <Style>
      * 
@@ -64,10 +66,10 @@ public:
     void update(float _dt, const View& _view);
 
     /* Update labels position considering the tile transform */
-    void updateLabels(float _dt, const Style& _style, const View& _view);
+    void updateLabels(float _dt, const Style& _style, const View& _view, std::shared_ptr<LabelContainer> _labelContainer);
     
     /* Push the label transforms to the font rendering context */
-    void pushLabelTransforms(const Style& _style);
+    void pushLabelTransforms(const Style& _style, std::shared_ptr<LabelContainer> _labelContainer);
 
     void setTextBuffer(const Style& _style, std::shared_ptr<TextBuffer> _buffer);
     std::shared_ptr<TextBuffer> getTextBuffer(const Style& _style) const;

@@ -68,33 +68,23 @@ void MapTile::update(float _dt, const View& _view) {
 
 }
 
-void MapTile::updateLabels(float _dt, const Style& _style, const View& _view) {
+void MapTile::updateLabels(float _dt, const Style& _style, const View& _view, std::shared_ptr<LabelContainer> _labelContainer) {
+    glm::mat4 mvp = _view.getViewProjectionMatrix() * m_modelMatrix;
+    glm::vec2 screenSize = glm::vec2(_view.getWidth(), _view.getHeight());
     
-    if(m_buffers[_style.getName()]) {
-        auto labelContainer = LabelContainer::GetInstance();
-        auto ftContext = labelContainer->getFontContext();
-        glm::mat4 mvp = _view.getViewProjectionMatrix() * m_modelMatrix;
-        glm::vec2 screenSize = glm::vec2(_view.getWidth(), _view.getHeight());
-        
-        ftContext->lock();
-        
-        for(auto label : labelContainer->getLabels(_style.getName(), getID())) {
-            label->update(mvp, screenSize, _dt);
-        }
-        
-        ftContext->unlock();
+    for(auto label : _labelContainer->getLabels(_style.getName(), getID())) {
+        label->update(mvp, screenSize, _dt);
     }
 }
 
-void MapTile::pushLabelTransforms(const Style& _style) {
+void MapTile::pushLabelTransforms(const Style& _style, std::shared_ptr<LabelContainer> _labelContainer) {
 
     if(m_buffers[_style.getName()]) {
-        auto labelContainer = LabelContainer::GetInstance();
-        auto ftContext = labelContainer->getFontContext();
+        auto ftContext = _labelContainer->getFontContext();
 
         ftContext->lock();
         
-        for(auto label : labelContainer->getLabels(_style.getName(), getID())) {
+        for(auto label : _labelContainer->getLabels(_style.getName(), getID())) {
             label->pushTransform();
         }
         

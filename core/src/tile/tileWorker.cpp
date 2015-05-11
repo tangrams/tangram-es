@@ -38,6 +38,8 @@ void TileWorker::processTileData(std::unique_ptr<WorkerData> _workerData,
 
         auto tileData = dataSource->getTileData(tileID);
         
+		tile->update(0, _view);
+
         //Process data for all styles
         for(const auto& style : _styles) {
             if(m_aborted) {
@@ -48,7 +50,6 @@ void TileWorker::processTileData(std::unique_ptr<WorkerData> _workerData,
                 style->addData(*tileData, *tile, _view.getMapProjection());
             }
         }
-		tile->update(0, _view);
         m_finished = true;
         
         requestRender();
