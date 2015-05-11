@@ -51,13 +51,13 @@ void NetworkDataSource::constructURL(const TileID& _tileCoord, std::string& _url
 
     _url.assign(m_urlTemplate);
 
-    size_t xpos = _url.find("[x]");
+    size_t xpos = _url.find("{x}");
     _url.replace(xpos, 3, std::to_string(_tileCoord.x));
     
-    size_t ypos = _url.find("[y]");
+    size_t ypos = _url.find("{y}");
     _url.replace(ypos, 3, std::to_string(_tileCoord.y));
     
-    size_t zpos = _url.find("[z]");
+    size_t zpos = _url.find("{z}");
     _url.replace(zpos, 3, std::to_string(_tileCoord.z));
     
     if (xpos == std::string::npos || ypos == std::string::npos || zpos == std::string::npos) {
