@@ -11,6 +11,9 @@ set(SOURCE_DIR src)
 
 add_subdirectory("${DEPENDENCIES_DIR}/tess2")
 
+set(YAML_CPP_BUILD_TOOLS OFF CACHE BOOL "Enable testing and parse tools")
+add_subdirectory("${DEPENDENCIES_DIR}/yaml-cpp")
+
 file(GLOB_RECURSE FOUND_HEADERS "${SOURCE_DIR}/*.h")
 file(GLOB_RECURSE FOUND_SOURCES "${SOURCE_DIR}/*.cpp")
 
@@ -21,6 +24,7 @@ foreach(_headerFile ${FOUND_HEADERS})
 endforeach()
 set(CORE_INCLUDE_DIRS ${INCLUDE_DIRS} CACHE INTERNAL "core include directories" FORCE)
 list(APPEND INCLUDE_DIRS "${DEPENDENCIES_DIR}/tess2/libtess2/Include")
+list(APPEND INCLUDE_DIRS "${DEPENDENCIES_DIR}/yaml-cpp/include")
 list(APPEND INCLUDE_DIRS "${INCLUDE_DIR}/stb")
 list(APPEND INCLUDE_DIRS "${INCLUDE_DIR}/glm")
 list(APPEND INCLUDE_DIRS "${INCLUDE_DIR}/isect2d/include")
@@ -48,7 +52,7 @@ if(NOT DEFINED CORE_LIB_NAME)
 endif()
 
 add_library(${CORE_LIB_NAME} ${CORE_LIB_TYPE} ${FOUND_SOURCES} ${FOUND_HEADERS})
-target_link_libraries(${CORE_LIB_NAME} libtess2 ${CORE_LIB_DEPS})
+target_link_libraries(${CORE_LIB_NAME} libtess2 yaml-cpp ${CORE_LIB_DEPS})
 
 # make groups for xcode
 group_recursive_sources(src "src")

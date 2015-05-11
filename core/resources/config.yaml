@@ -1,0 +1,52 @@
+cameras:
+    camera1:
+        type: perspective
+        focal_length: [[16, 2], [20, 6]] # pairs of [zoom, focal len]
+        vanishing_point: [-250, -250] # relative to center of screen, in pixels
+
+lights:
+    light1:
+        type: directional
+        origin: world
+        direction: [1, 1, -1]
+        diffuse: [.7, .7, .7, 1.]
+        ambient: [.3, .3, .3, 1.]
+
+sources:
+    osm:
+        type: MVT
+        url:  http://vector.mapzen.com/osm/all/{z}/{x}/{y}.mvt
+
+layers:
+    earth:
+        data: { source: osm }
+        style:
+            order: 0
+            color: '#ddeeee'
+
+    landuse:
+        data: { source: osm }
+        style:
+            order: 1
+            color: '#aaffaa'
+            interactive: true
+
+    water:
+        data: { source: osm }
+        style:
+            order: 2
+            color: '#88bbee'
+
+    roads:
+        data: { source: osm }
+        style:
+            order: 3 
+            width: 8
+            color: '#cc6666'
+    buildings:
+        data: { source: osm }
+        style:
+            order: 4
+            color: '#e6f0f2'
+            extrude: true
+

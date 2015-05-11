@@ -5,7 +5,7 @@
 #include "tileData.h"
 
 
-class ProtobufSource : public NetworkDataSource {
+class MVTSource : public NetworkDataSource {
     
 protected:
     
@@ -13,6 +13,6 @@ protected:
     
 public:
     
-    ProtobufSource();
+    MVTSource();
     
 };
