@@ -162,21 +162,27 @@ void onKeyPress(int _key) {
         switch (key) {
             case KEY_ZOOM_IN:
                 Tangram::handlePinchGesture(0.0,0.0,0.5);
+                requestRender();
                 break;
             case KEY_ZOOM_OUT:
                 Tangram::handlePinchGesture(0.0,0.0,2.0);
+                requestRender();
                 break;
             case KEY_UP:
                 Tangram::handlePanGesture(0.0,0.0,0.0,100.0);
+                requestRender();
                 break;
             case KEY_DOWN:
                 Tangram::handlePanGesture(0.0,0.0,0.0,-100.0);
+                requestRender();
                 break;
             case KEY_LEFT:
                 Tangram::handlePanGesture(0.0,0.0,100.0,0.0);
+                requestRender();
                 break;
             case KEY_RIGHT:
                 Tangram::handlePanGesture(0.0,0.0,-100.0,0.0);
+                requestRender();
                 break;
             case KEY_ESC:
                 bUpdate = false;
@@ -188,7 +194,6 @@ void onKeyPress(int _key) {
 }
 
 void onMouseMove() {
-
 }
 
 void onMouseClick() {
@@ -201,14 +206,16 @@ void onMouseDrag() {
                                     mouse.y+mouse.velY*1.0, 
                                     mouse.x,
                                     mouse.y);
+        requestRender();
     } else if( mouse.button == 2 ){
         Tangram::handlePinchGesture( state->screen_width/2.0, state->screen_height/2.0, 1.0 + mouse.velY*0.001);
+        requestRender();
     } 
 }
 
 void onViewportResize(int _newWidth, int _newHeight) {
     resizeViewport(_newWidth,_newHeight);
-    cam.setViewport(viewport.width,viewport.height);
+    requestRender();
 }
 
 
