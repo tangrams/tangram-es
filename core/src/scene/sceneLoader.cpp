@@ -1,5 +1,6 @@
 #include "sceneLoader.h"
 
+#include "platform.h"
 #include "scene.h"
 #include "tileManager.h"
 #include "view.h"
@@ -17,7 +18,9 @@ void loadCameras(Node cameras, View& view);
 
 void SceneLoader::loadScene(const std::string& _file, Scene& _scene, TileManager& _tileManager, View& _view) {
 
-    Node config = YAML::LoadFile(_file);
+    std::string configString = stringFromResource(_file.c_str());
+    
+    Node config = YAML::Load(configString);
     
     loadSources(config["sources"], _tileManager);
     loadLights(config["lights"], _scene);
