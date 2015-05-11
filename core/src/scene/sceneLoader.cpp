@@ -53,6 +53,11 @@ glm::vec3 parseVec3(const Node& node) {
 
 void loadSources(Node sources, TileManager& tileManager) {
     
+    if(!sources) {
+        logMsg("Warning: No source defined in the yaml scene configuration.\n");
+        return;
+    }
+    
     for (auto it = sources.begin(); it != sources.end(); ++it) {
         
         const Node source = it->second;
