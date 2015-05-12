@@ -233,20 +233,27 @@
 
 - (BOOL)networkRequestWithUrl:(NSString *)url TileID:(TileID)tileID DataSourceID:(NSNumber*)dataSourceID
 {
+    void (^handler)(NSData*, NSURLResponse*, NSError*) = ^void (NSData* data, NSURLResponse* response, NSError* error) {
+        
+        if(error == nil) {
+            
+            int dataLength = [data length];
+            std::vector<char> rawDataVec;
+            rawDataVec.resize(dataLength);
+            memcpy(rawDataVec.data(), (char *)[data bytes], dataLength);
+            networkDataBridge(rawDataVec, tileID, [dataSourceID intValue]);
+            
+        } else {
+            
+            logMsg("ERROR: response \"%s\" with error \"%s\".\n", response, error);
+            
+        }
+        
+    };
+
     NSURLSessionDataTask* dataTask = [_defaultSession dataTaskWithURL:[NSURL URLWithString:url]
-                                                     completionHandler:^(NSData* data, NSURLResponse* response, NSError* error) {
-                                                         if(error == nil) {
-                                                             const char* rawData = (char *)[data bytes];
-                                                             int dataLength = [data length];
-                                                             std::vector<char> rawDataVec;
-                                                             rawDataVec.resize(dataLength);
-                                                             memcpy(rawDataVec.data(), rawData, dataLength);
-                                                             networkDataBridge(rawDataVec, tileID, [dataSourceID intValue]);
-                                                         }
-                                                         else {
-                                                             logMsg("Got a response \"%s\" with error \"%s\".\n", response, error);
-                                                         }
-                                                     }];
+                                                    completionHandler:handler];
+
     [dataTask resume];
     return true;
 }

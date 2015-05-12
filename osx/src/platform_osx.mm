@@ -105,20 +105,26 @@ bool streamFromHttpASync(const std::string& _url, const TileID& _tileID, const i
     const TileID id = _tileID;
     const int dataSourceID = _dataSourceID;
     
-    NSURLSessionDataTask* dataTask = [defaultSession dataTaskWithURL:[NSURL URLWithString:nsUrl]
-                                                    completionHandler:^(NSData* data, NSURLResponse* response, NSError* error) {
-                                                        if(error == nil) {
-                                                            const char* rawData = (char *)[data bytes];
-                                                            int dataLength = [data length];
-                                                            std::vector<char> rawDataVec;
-                                                            rawDataVec.resize(dataLength);
-                                                            memcpy(rawDataVec.data(), rawData, dataLength);
-                                                            networkCallback(std::move(rawDataVec), id, dataSourceID);
-                                                        }
-                                                        else {
-                                                            logMsg("Got a response \"%s\" with error \"%s\".\n", response, error);
-                                                        }
-                                                    }];
+    void (^handler)(NSData*, NSURLResponse*, NSError*) = ^void (NSData* data, NSURLResponse* response, NSError* error) {
+        
+        if(error == nil) {
+            
+            int dataLength = [data length];
+            std::vector<char> rawDataVec;
+            rawDataVec.resize(dataLength);
+            memcpy(rawDataVec.data(), (char *)[data bytes], dataLength);
+            networkCallback(std::move(rawDataVec), id, dataSourceID);
+            
+        } else {
+            
+            logMsg("ERROR: response \"%s\" with error \"%s\".\n", response, error);
+            
+        }
+        
+    };
+    
+    NSURLSessionDataTask* dataTask = [defaultSession dataTaskWithURL:[NSURL URLWithString:nsUrl] completionHandler:handler];
+    
     [dataTask resume];
     
     return true;
