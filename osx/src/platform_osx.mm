@@ -102,7 +102,7 @@ void NSurlInit() {
 bool streamFromHttpASync(const std::string& _url, const TileID& _tileID, const int _dataSourceID) {
 
     NSString* nsUrl = [NSString stringWithUTF8String:_url.c_str()];
-    const TileID id = _tileID;
+    const TileID tileID = _tileID;
     const int dataSourceID = _dataSourceID;
     
     void (^handler)(NSData*, NSURLResponse*, NSError*) = ^void (NSData* data, NSURLResponse* response, NSError* error) {
@@ -113,7 +113,7 @@ bool streamFromHttpASync(const std::string& _url, const TileID& _tileID, const i
             std::vector<char> rawDataVec;
             rawDataVec.resize(dataLength);
             memcpy(rawDataVec.data(), (char *)[data bytes], dataLength);
-            networkCallback(std::move(rawDataVec), id, dataSourceID);
+            networkCallback(std::move(rawDataVec), tileID, dataSourceID);
             
         } else {
             
