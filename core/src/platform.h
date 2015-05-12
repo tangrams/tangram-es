@@ -1,9 +1,7 @@
 #pragma once
 
 #include <string>
-#include <sstream>
 #include <vector>
-#include <memory>
 #include <functional>
 
 #include "tileID.h"
@@ -36,8 +34,6 @@ void NSurlInit();
 #include "netWorkerData.h"
 void processNetworkQueue();
 #endif
-
-#include <string>
 
 /* Print a formatted message to the console
  *
