@@ -10,3 +10,8 @@
 [submodule "core/include/isect2d"]
 	path = core/include/isect2d
 	url = https://github.com/tangrams/isect2d.git
+[submodule "core/dependencies/yaml-cpp"]
+	path = core/dependencies/yaml-cpp
+	url = https://github.com/blair1618/yaml-cpp.git
+	branch = no-boost
+	ignore = untracked

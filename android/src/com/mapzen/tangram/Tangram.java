@@ -8,18 +8,20 @@ import android.content.res.AssetManager;
 import android.opengl.GLSurfaceView;
 import android.opengl.GLSurfaceView.Renderer;
 import android.util.DisplayMetrics;
+import android.view.View;
+import android.view.View.OnTouchListener;
 import android.view.GestureDetector;
 import android.view.GestureDetector.OnGestureListener;
 import android.view.MotionEvent;
 import android.view.ScaleGestureDetector;
 import android.view.ScaleGestureDetector.OnScaleGestureListener;
+import android.view.SurfaceHolder;
 import com.almeros.android.multitouch.RotateGestureDetector;
 import com.almeros.android.multitouch.RotateGestureDetector.OnRotateGestureListener;
 import com.almeros.android.multitouch.ShoveGestureDetector;
 import com.almeros.android.multitouch.ShoveGestureDetector.OnShoveGestureListener;
-import android.view.SurfaceHolder;
 
-public class Tangram extends GLSurfaceView implements Renderer, OnScaleGestureListener, OnRotateGestureListener, OnGestureListener, OnShoveGestureListener {
+public class Tangram implements Renderer, OnTouchListener, OnScaleGestureListener, OnRotateGestureListener, OnGestureListener, OnShoveGestureListener {
 
     static {
         System.loadLibrary("c++_shared");
@@ -48,15 +50,26 @@ public class Tangram extends GLSurfaceView implements Renderer, OnScaleGestureLi
     private RotateGestureDetector rotateGestureDetector;
     private ShoveGestureDetector shoveGestureDetector;
     private DisplayMetrics displayMetrics = new DisplayMetrics();
+    private GLSurfaceView view;
 
     public Tangram(Activity mainApp) {
-        super(mainApp);
         
-        setEGLContextClientVersion(2);
-        setPreserveEGLContextOnPause(true);
-        setEGLConfigChooser(8, 8, 8, 8, 24, 0);
-        setRenderer(this);
-        setRenderMode(RENDERMODE_WHEN_DIRTY);
+        view = new GLSurfaceView(mainApp) {
+
+            @Override
+            public void surfaceDestroyed(SurfaceHolder holder) {
+                contextDestroyed = true;
+                super.surfaceDestroyed(holder);
+            }
+
+        };
+        
+        view.setOnTouchListener(this);
+        view.setEGLContextClientVersion(2);
+        view.setPreserveEGLContextOnPause(true);
+        view.setEGLConfigChooser(8, 8, 8, 8, 24, 0);
+        view.setRenderer(this);
+        view.setRenderMode(GLSurfaceView.RENDERMODE_WHEN_DIRTY);
         
         mainApp.getWindowManager().getDefaultDisplay().getMetrics(displayMetrics);
         
@@ -67,24 +80,27 @@ public class Tangram extends GLSurfaceView implements Renderer, OnScaleGestureLi
         this.shoveGestureDetector = new ShoveGestureDetector(mainApp, this);
         
     }
-    
-    @Override
-    public void onResume() {
-        super.onResume();
+
+    public View getView() {
+        return view;
     }
     
     public void onDestroy() {
         teardown();
     }
-    
-    @Override
-    public void surfaceDestroyed(SurfaceHolder holder) {
-        contextDestroyed = true;
-        super.surfaceDestroyed(holder);
+
+    public void requestRender() {
+        view.requestRender();
+    }
+
+    public void setRenderMode(int renderMode) {
+        view.setRenderMode(renderMode);
     }
     
-    @Override
-    public boolean onTouchEvent(MotionEvent event) { 
+    // View.OnTouchListener methods
+    // ============================
+
+    public boolean onTouch(View v, MotionEvent event) { 
         
         //Pass the event to gesture detectors
         if (gestureDetector.onTouchEvent(event) |
@@ -93,9 +109,9 @@ public class Tangram extends GLSurfaceView implements Renderer, OnScaleGestureLi
             shoveGestureDetector.onTouchEvent(event)) {
             requestRender();
             return true;
-        } else {
-            return super.onTouchEvent(event);
         }
+        
+        return false;
         
     }
 

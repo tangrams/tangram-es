@@ -44,6 +44,8 @@ void TileWorker::load(const TileID &_tile,
             
             auto tileData = dataSource->getTileData(_id);
             
+            tile->update(0, _view);
+            
             // Process data for all styles
             for (const auto& style : _styles) {
                 if (m_aborted) {
@@ -54,7 +56,6 @@ void TileWorker::load(const TileID &_tile,
                     style->addData(*tileData, *tile, _view.getMapProjection());
                 }
             }
-            tile->update(0, _view);
         }
         
         m_finished = true;

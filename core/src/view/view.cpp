@@ -382,7 +382,7 @@ void View::updateTiles() {
         
         x >>= lod;
         y >>= lod;
-        z -= lod;
+        z = glm::clamp((z-lod), 0, (int)s_maxZoom);
         
         m_visibleTiles.emplace(x, y, z);
         
