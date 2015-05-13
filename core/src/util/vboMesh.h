@@ -96,8 +96,8 @@ protected:
     void checkValidity();
 
     template <typename T>
-    void compile(std::vector<std::vector<T>> vertices,
-                 std::vector<std::vector<int>> indices,
+    void compile(std::vector<std::vector<T>>& vertices,
+                 std::vector<std::vector<int>>& indices,
                  int divider = 1) {
 
         int vertexOffset = 0, indexOffset = 0;
@@ -147,5 +147,8 @@ protected:
         m_vertexOffsets.emplace_back(indexOffset, vertexOffset);
 
         m_isCompiled = true;
+        
+        vertices.clear();
+        indices.clear();
     }
 };
