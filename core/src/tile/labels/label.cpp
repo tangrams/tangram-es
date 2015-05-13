@@ -60,7 +60,7 @@ void Label::updateScreenTransform(const glm::mat4& _mvp, const glm::vec2& _scree
         case Type::DEBUG:
         case Type::POINT:
         {
-            glm::vec4 v1 = worldToClipSpace(_mvp, glm::vec4(m_transform.m_modelPosition1, 0.0, 1.0));
+            glm::vec4 v1 = mapWorldToClipSpace(_mvp, m_transform.m_modelPosition1);
             
             if (v1.w <= 0) {
                 m_visible = false;
@@ -76,8 +76,8 @@ void Label::updateScreenTransform(const glm::mat4& _mvp, const glm::vec2& _scree
         case Type::LINE:
         {
             // project label position from mercator world space to clip coordinates
-            glm::vec4 v1 = worldToClipSpace(_mvp, glm::vec4(m_transform.m_modelPosition1, 0.0, 1.0));
-            glm::vec4 v2 = worldToClipSpace(_mvp, glm::vec4(m_transform.m_modelPosition2, 0.0, 1.0));
+            glm::vec4 v1 = mapWorldToClipSpace(_mvp, m_transform.m_modelPosition1);
+            glm::vec4 v2 = mapWorldToClipSpace(_mvp, m_transform.m_modelPosition2);
             
             // check whether the label is behind the camera using the perspective division factor
             if (v1.w <= 0 || v2.w <= 0) {
