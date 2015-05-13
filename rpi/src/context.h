@@ -3,10 +3,10 @@
 #include "gl.h"
 
 // GL Context
-void initGL();
-void updateGL();
-void renderGL();
-void closeGL();
+void    initGL();
+void    updateGL();
+void    renderGL();
+void    closeGL();
 
 // SET
 void    setWindowSize(int _width, int _height);

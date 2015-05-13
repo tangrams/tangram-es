@@ -133,7 +133,6 @@ void initGL(){
 
 void renderGL(){
     eglSwapBuffers(state->display, state->surface);
-    bRender = false;
 }
 
 void closeGL(){
@@ -253,12 +252,10 @@ void updateGL() {
     getMouse();
 
     int key = getKey();
-    if ( key != 0 && key != keyPressed ){
+    if ( key != -1 && key != keyPressed ){
         keyPressed = key;
         onKeyPress(key);
-    } else {
-        keyPressed = -1;
-    }   
+    }  
 }
 
 int getWindowWidth(){

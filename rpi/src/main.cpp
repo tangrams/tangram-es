@@ -116,13 +116,11 @@ int main(int argc, char **argv){
     timeStart = timePrev = (unsigned long long)(tv.tv_sec) * 1000 + (unsigned long long)(tv.tv_usec) / 1000;
 
     while (bUpdate) {
-        
         updateGL();
 
         if (getRenderRequest()) {
+            setRenderRequest(false);
             newFrame();
-        } else {
-            sleep(500);   
         }
     }
     
@@ -174,10 +172,10 @@ void newFrame() {
     // Update
     gettimeofday( &tv, NULL);
     unsigned long long timeNow = (unsigned long long)(tv.tv_sec) * 1000 + (unsigned long long)(tv.tv_usec) / 1000;
-    double delta = (timeNow - timePrev)*0.001;
+    double delta = ((double)timeNow - (double)timePrev)*0.001;
     float time = (timeNow - timeStart)*0.001;
 
-    // logMsg("New frame (delta %d msec)\n",int(timeNow),delta);
+    //logMsg("New frame (delta %d msec)\n",delta);
 
     Tangram::update(delta);
     timePrev = timeNow;
@@ -233,16 +231,17 @@ void onKeyPress(int _key) {
 }
 
 void onMouseMove(float _x, float _y) {
+    requestRender();
 }
 
 void onMouseClick(float _x, float _y, int _button) {
-
+    requestRender();
 }
 
 void onMouseDrag(float _x, float _y, int _button) {
     if( _button == 1 ){
         Tangram::handlePanGesture(  _x-getMouseVelX()*1.0, 
-                                    _y+getMouseVelX()*1.0, 
+                                    _y+getMouseVelY()*1.0, 
                                     _x,
                                     _y);
     } else if( _button == 2 ){
