@@ -1,3 +1,10 @@
+#include "context.h"
+
+#include <assert.h>
+#include <fcntl.h>
+#include <iostream>
+#include <termios.h>
+
 // Main global variables
 //-------------------------------
 typedef struct {
@@ -28,7 +35,7 @@ static bool bRender = true;
 
 // OpenGL ES
 //--------------------------------
-static void initGL(){
+void initGL(){
     bcm_host_init();
     
     // Clear application state
@@ -288,6 +295,6 @@ void setRenderRequest(bool _request) {
     bRender = _request;
 }
 
-void getRenderRequest() {
+bool getRenderRequest() {
     return bRender;
 }

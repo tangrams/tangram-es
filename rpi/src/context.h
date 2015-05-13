@@ -5,6 +5,7 @@
 // GL Context
 void initGL();
 bool isGL();
+void updateGL();
 void renderGL();
 void closeGL();
 
@@ -15,15 +16,12 @@ void setRenderRequest(bool _request);
 // GET
 int getWindowWidth();
 int getWindowHeight();
-
 float getMouseX();
 float getMouseY();
 int getMouseButton();
 float getMouseVelX();
 float getMouseVelY();
-
 unsigned char getKeyPressed();
-
 bool getRenderRequest();
 
 // EVENTS

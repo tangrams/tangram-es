@@ -92,7 +92,7 @@ std::shared_ptr<Mesh> mouseMesh;
 
 //==============================================================================
 void setup();
-void render();
+void newFrame();
 
 int main(int argc, char **argv){
 
@@ -107,6 +107,7 @@ int main(int argc, char **argv){
     
     // Set background color and clear buffers
     Tangram::initialize();
+    logMsg("%ix%i\n",getWindowWidth(), getWindowHeight());
     Tangram::resize(getWindowWidth(), getWindowHeight());
     
     setup();
@@ -120,7 +121,7 @@ int main(int argc, char **argv){
         updateGL();
 
         if (getRenderRequest()) {
-            renderTangram();
+            newFrame();
         } else {
             sleep(500);   
         }
@@ -169,7 +170,7 @@ void setup() {
     }
 }
 
-void render() {
+void newFrame() {
 
     // Update
     gettimeofday( &tv, NULL);
@@ -198,7 +199,7 @@ void render() {
         glEnable(GL_DEPTH_TEST);
     }    
 
-    updateGL();
+    renderGL();
 }
 
 //======================================================================= EVENTS
@@ -241,22 +242,22 @@ void onMouseClick(float _x, float _y, int _button) {
 
 void onMouseDrag(float _x, float _y, int _button) {
     if( _button == 1 ){
-        Tangram::handlePanGesture(  mouse.x-mouse.velX*1.0, 
-                                    mouse.y+mouse.velY*1.0, 
-                                    mouse.x,
-                                    mouse.y);
+        Tangram::handlePanGesture(  _x-getMouseVelX()*1.0, 
+                                    _y+getMouseVelX()*1.0, 
+                                    _x,
+                                    _y);
     } else if( _button == 2 ){
         if ( getKeyPressed() == 'r') {
             float scale = -0.05;
             float rot = atan2(getMouseVelY(),getMouseVelX());
-            if( mouse.x < getWindowWidth()/2.0 ) {
+            if( _x < getWindowWidth()/2.0 ) {
                 scale *= -1.0;
             }
             Tangram::handleRotateGesture(getWindowWidth()/2.0, getWindowHeight()/2.0, rot*scale);
         } else if ( getKeyPressed() == 't') {
             Tangram::handleShoveGesture(getMouseVelY()*0.005);
         } else {
-            Tangram::handlePinchGesture(getWindowWidth()/2.0, getWindowHeight()/2.0,, 1.0 + getMouseVelY()*0.001);
+            Tangram::handlePinchGesture(getWindowWidth()/2.0, getWindowHeight()/2.0, 1.0 + getMouseVelY()*0.001);
         }
         
     }
@@ -264,7 +265,7 @@ void onMouseDrag(float _x, float _y, int _button) {
 }
 
 void onViewportResize(int _newWidth, int _newHeight) {
-    Tangram::resize(getWindowWidth(), getWindowHeight());
+    Tangram::resize(_newWidth,_newHeight);
     requestRender();
 }
 
