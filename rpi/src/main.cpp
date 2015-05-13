@@ -28,6 +28,8 @@
 
 struct timeval tv;
 
+static bool bUpdate = true;
+
 // Draw Cursor
 //------------------------------------------------
 bool bMouse = false;
@@ -99,7 +101,43 @@ int main(int argc, char **argv){
     }
     
     // Start OpenGL context
-    initOpenGL();
+    initGL();
+
+    // Prepair Mouse Shader
+    if (bMouse) {
+        mouseShader = std::shared_ptr<ShaderProgram>(new ShaderProgram());
+        mouseShader->setSourceStrings(mouseFragment, mouseVertex );
+
+        std::shared_ptr<VertexLayout> vertexLayout = std::shared_ptr<VertexLayout>(new VertexLayout({
+            {"a_position", 3, GL_FLOAT, false, 0},
+            {"a_texcoord", 2, GL_FLOAT, false, 0},
+            {"a_color", 4, GL_UNSIGNED_BYTE, true, 0}
+        }));
+
+        std::vector<PosUVColorVertex> vertices;
+        std::vector<int> indices;
+
+        // Small billboard for the mouse
+        GLuint color = 0xffffffff;
+        {
+            float x = -mouseSize*0.5f/state->screen_width;
+            float y = -mouseSize*0.5f/state->screen_height;
+            float w = mouseSize/state->screen_width;
+            float h = mouseSize/state->screen_height;
+
+            vertices.push_back({ x, y, 0.0, 0.0, 0.0, color});
+            vertices.push_back({ x+w, y, 0.0, 0.0, 1.0, color});
+            vertices.push_back({ x+w, y+h, 0.0, 1.0, 1.0, color});
+            vertices.push_back({ x, y+h, 0.0, 0.0, 1.0, color });
+            
+            indices.push_back(0); indices.push_back(1); indices.push_back(2);
+            indices.push_back(2); indices.push_back(3); indices.push_back(0);
+        }
+        
+        mouseMesh = std::shared_ptr<Mesh>(new Mesh(vertexLayout, GL_TRIANGLES));
+        mouseMesh->addVertices(std::move(vertices), std::move(indices));
+        mouseMesh->compileVertexBuffer();
+    }
     
     // Set background color and clear buffers
     Tangram::initialize();
@@ -112,11 +150,10 @@ int main(int argc, char **argv){
 
     while (bUpdate) {
         
-        updateInputs();
+        updateGL();
 
-        if (bRender) {
+        if (getRenderRequest()) {
             renderTangram();
-            bRender = false;
         } else {
             sleep(500);   
         }
@@ -193,22 +230,22 @@ void onKeyPress(int _key) {
     }
 }
 
-void onMouseMove() {
+void onMouseMove(float _x, float _y) {
 }
 
-void onMouseClick() {
+void onMouseClick(float _x, float _y, int _button) {
 
 }
 
-void onMouseDrag() {
-    if( mouse.button == 1 ){
-        Tangram::handlePanGesture(  mouse.x-mouse.velX*1.0, 
-                                    mouse.y+mouse.velY*1.0, 
-                                    mouse.x,
-                                    mouse.y);
+void onMouseDrag(float _x, float _y, int _button) {
+    if( _button == 1 ){
+        Tangram::handlePanGesture(  _x-getMouseVelX()*1.0, 
+                                    _y+getMouseVelY()*1.0, 
+                                    getMouseX(),
+                                    getMouseY());
         requestRender();
-    } else if( mouse.button == 2 ){
-        Tangram::handlePinchGesture( state->screen_width/2.0, state->screen_height/2.0, 1.0 + mouse.velY*0.001);
+    } else if( _button == 2 ){
+        Tangram::handlePinchGesture( state->screen_width/2.0, state->screen_height/2.0, 1.0 + getMouseVelY()*0.001);
         requestRender();
     } 
 }
