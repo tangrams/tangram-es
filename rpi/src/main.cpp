@@ -27,6 +27,7 @@
 #define KEY_DOWN     122    // z
 
 struct timeval tv;
+unsigned long long timePrev, timeStart; 
 
 static bool bUpdate = true;
 
@@ -90,7 +91,8 @@ typedef TypedMesh<PosUVColorVertex> Mesh;
 std::shared_ptr<Mesh> mouseMesh;
 
 //==============================================================================
-void renderTangram();
+void setup();
+void render();
 
 int main(int argc, char **argv){
 
@@ -102,51 +104,16 @@ int main(int argc, char **argv){
     
     // Start OpenGL context
     initGL();
-
-    // Prepair Mouse Shader
-    if (bMouse) {
-        mouseShader = std::shared_ptr<ShaderProgram>(new ShaderProgram());
-        mouseShader->setSourceStrings(mouseFragment, mouseVertex );
-
-        std::shared_ptr<VertexLayout> vertexLayout = std::shared_ptr<VertexLayout>(new VertexLayout({
-            {"a_position", 3, GL_FLOAT, false, 0},
-            {"a_texcoord", 2, GL_FLOAT, false, 0},
-            {"a_color", 4, GL_UNSIGNED_BYTE, true, 0}
-        }));
-
-        std::vector<PosUVColorVertex> vertices;
-        std::vector<int> indices;
-
-        // Small billboard for the mouse
-        GLuint color = 0xffffffff;
-        {
-            float x = -mouseSize*0.5f/state->screen_width;
-            float y = -mouseSize*0.5f/state->screen_height;
-            float w = mouseSize/state->screen_width;
-            float h = mouseSize/state->screen_height;
-
-            vertices.push_back({ x, y, 0.0, 0.0, 0.0, color});
-            vertices.push_back({ x+w, y, 0.0, 0.0, 1.0, color});
-            vertices.push_back({ x+w, y+h, 0.0, 1.0, 1.0, color});
-            vertices.push_back({ x, y+h, 0.0, 0.0, 1.0, color });
-            
-            indices.push_back(0); indices.push_back(1); indices.push_back(2);
-            indices.push_back(2); indices.push_back(3); indices.push_back(0);
-        }
-        
-        mouseMesh = std::shared_ptr<Mesh>(new Mesh(vertexLayout, GL_TRIANGLES));
-        mouseMesh->addVertices(std::move(vertices), std::move(indices));
-        mouseMesh->compileVertexBuffer();
-    }
     
     // Set background color and clear buffers
     Tangram::initialize();
-    Tangram::resize(state->screen_width, state->screen_height);
+    Tangram::resize(getWindowWidth(), getWindowHeight());
     
+    setup();
+
     // Start clock
     gettimeofday(&tv, NULL);
-    unsigned long long timePrev = (unsigned long long)(tv.tv_sec) * 1000 + (unsigned long long)(tv.tv_usec) / 1000;
-    unsigned long long timeStart = (unsigned long long)(tv.tv_sec) * 1000 + (unsigned long long)(tv.tv_usec) / 1000; 
+    timeStart = timePrev = (unsigned long long)(tv.tv_sec) * 1000 + (unsigned long long)(tv.tv_usec) / 1000;
 
     while (bUpdate) {
         
@@ -164,11 +131,53 @@ int main(int argc, char **argv){
     return 0;
 }
 
-void renderTangram() {
+void setup() {
+        // Prepair Mouse Shader
+    if (bMouse) {
+        mouseShader = std::shared_ptr<ShaderProgram>(new ShaderProgram());
+        mouseShader->setSourceStrings(mouseFragment, mouseVertex );
+
+        std::shared_ptr<VertexLayout> vertexLayout = std::shared_ptr<VertexLayout>(new VertexLayout({
+            {"a_position", 3, GL_FLOAT, false, 0},
+            {"a_texcoord", 2, GL_FLOAT, false, 0},
+            {"a_color", 4, GL_UNSIGNED_BYTE, true, 0}
+        }));
+
+        std::vector<PosUVColorVertex> vertices;
+        std::vector<int> indices;
+
+        // Small billboard for the mouse
+        GLuint color = 0xffffffff;
+        {
+            float x = -mouseSize*0.5f/getWindowWidth();
+            float y = -mouseSize*0.5f/getWindowHeight();
+            float w = mouseSize/getWindowWidth();
+            float h = mouseSize/getWindowHeight();
+
+            vertices.push_back({ x, y, 0.0, 0.0, 0.0, color});
+            vertices.push_back({ x+w, y, 0.0, 0.0, 1.0, color});
+            vertices.push_back({ x+w, y+h, 0.0, 1.0, 1.0, color});
+            vertices.push_back({ x, y+h, 0.0, 0.0, 1.0, color });
+            
+            indices.push_back(0); indices.push_back(1); indices.push_back(2);
+            indices.push_back(2); indices.push_back(3); indices.push_back(0);
+        }
+        
+        mouseMesh = std::shared_ptr<Mesh>(new Mesh(vertexLayout, GL_TRIANGLES));
+        mouseMesh->addVertices(std::move(vertices), std::move(indices));
+        mouseMesh->compileVertexBuffer();
+    }
+}
+
+void render() {
+
     // Update
+    gettimeofday( &tv, NULL);
     unsigned long long timeNow = (unsigned long long)(tv.tv_sec) * 1000 + (unsigned long long)(tv.tv_usec) / 1000;
     double delta = (timeNow - timePrev)*0.001;
     float time = (timeNow - timeStart)*0.001;
+
+    // logMsg("New frame (delta %d msec)\n",int(timeNow),delta);
 
     Tangram::update(delta);
     timePrev = timeNow;
@@ -182,8 +191,8 @@ void renderTangram() {
         glDisable(GL_DEPTH_TEST);
         mouseShader->use();
         mouseShader->setUniformf("u_time", time);
-        mouseShader->setUniformf("u_mouse", mouse.x, mouse.y);
-        mouseShader->setUniformf("u_resolution",state->screen_width, state->screen_height);
+        mouseShader->setUniformf("u_mouse", getMouseX(), getMouseY());
+        mouseShader->setUniformf("u_resolution",getWindowWidth(), getWindowHeight());
         mouseMesh->draw(mouseShader);
         glDisable(GL_BLEND);
         glEnable(GL_DEPTH_TEST);
@@ -195,39 +204,32 @@ void renderTangram() {
 //======================================================================= EVENTS
 
 void onKeyPress(int _key) {
-    if(key != -1){
-        switch (key) {
-            case KEY_ZOOM_IN:
-                Tangram::handlePinchGesture(0.0,0.0,0.5);
-                requestRender();
-                break;
-            case KEY_ZOOM_OUT:
-                Tangram::handlePinchGesture(0.0,0.0,2.0);
-                requestRender();
-                break;
-            case KEY_UP:
-                Tangram::handlePanGesture(0.0,0.0,0.0,100.0);
-                requestRender();
-                break;
-            case KEY_DOWN:
-                Tangram::handlePanGesture(0.0,0.0,0.0,-100.0);
-                requestRender();
-                break;
-            case KEY_LEFT:
-                Tangram::handlePanGesture(0.0,0.0,100.0,0.0);
-                requestRender();
-                break;
-            case KEY_RIGHT:
-                Tangram::handlePanGesture(0.0,0.0,-100.0,0.0);
-                requestRender();
-                break;
-            case KEY_ESC:
-                bUpdate = false;
-                break;
-            default:
-                logMsg(" -> %i\n",key);
-        }   
+    switch (_key) {
+        case KEY_ZOOM_IN:
+            Tangram::handlePinchGesture(0.0,0.0,0.5);
+            break;
+        case KEY_ZOOM_OUT:
+            Tangram::handlePinchGesture(0.0,0.0,2.0);
+            break;
+        case KEY_UP:
+            Tangram::handlePanGesture(0.0,0.0,0.0,100.0);
+            break;
+        case KEY_DOWN:
+            Tangram::handlePanGesture(0.0,0.0,0.0,-100.0);
+            break;
+        case KEY_LEFT:
+            Tangram::handlePanGesture(0.0,0.0,100.0,0.0);
+            break;
+        case KEY_RIGHT:
+            Tangram::handlePanGesture(0.0,0.0,-100.0,0.0);
+            break;
+        case KEY_ESC:
+            bUpdate = false;
+            break;
+        default:
+            logMsg(" -> %i\n",_key);
     }
+    requestRender();
 }
 
 void onMouseMove(float _x, float _y) {
@@ -239,19 +241,30 @@ void onMouseClick(float _x, float _y, int _button) {
 
 void onMouseDrag(float _x, float _y, int _button) {
     if( _button == 1 ){
-        Tangram::handlePanGesture(  _x-getMouseVelX()*1.0, 
-                                    _y+getMouseVelY()*1.0, 
-                                    getMouseX(),
-                                    getMouseY());
-        requestRender();
+        Tangram::handlePanGesture(  mouse.x-mouse.velX*1.0, 
+                                    mouse.y+mouse.velY*1.0, 
+                                    mouse.x,
+                                    mouse.y);
     } else if( _button == 2 ){
-        Tangram::handlePinchGesture( state->screen_width/2.0, state->screen_height/2.0, 1.0 + getMouseVelY()*0.001);
-        requestRender();
-    } 
+        if ( getKeyPressed() == 'r') {
+            float scale = -0.05;
+            float rot = atan2(getMouseVelY(),getMouseVelX());
+            if( mouse.x < getWindowWidth()/2.0 ) {
+                scale *= -1.0;
+            }
+            Tangram::handleRotateGesture(getWindowWidth()/2.0, getWindowHeight()/2.0, rot*scale);
+        } else if ( getKeyPressed() == 't') {
+            Tangram::handleShoveGesture(getMouseVelY()*0.005);
+        } else {
+            Tangram::handlePinchGesture(getWindowWidth()/2.0, getWindowHeight()/2.0,, 1.0 + getMouseVelY()*0.001);
+        }
+        
+    }
+    requestRender();
 }
 
 void onViewportResize(int _newWidth, int _newHeight) {
-    resizeViewport(_newWidth,_newHeight);
+    Tangram::resize(getWindowWidth(), getWindowHeight());
     requestRender();
 }
 

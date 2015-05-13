@@ -16,7 +16,7 @@ void logMsg(const char* fmt, ...) {
 }
 
 void requestRender() {
-    bRender = true;
+
 }
 
 void setContinuousRendering(bool _isContinuous) {
