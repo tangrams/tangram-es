@@ -148,7 +148,10 @@ protected:
 
         m_isCompiled = true;
         
-        vertices.clear();
-        indices.clear();
+        std::vector<std::vector<T>> vdump;
+        std::vector<std::vector<int>> idump;
+        
+        vertices.swap(vdump);
+        indices.swap(idump);
     }
 };
