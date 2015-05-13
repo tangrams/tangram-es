@@ -96,9 +96,16 @@ protected:
     void checkValidity();
 
     template <typename T>
-    void compile(std::vector<std::vector<T>>& vertices,
-                 std::vector<std::vector<int>>& indices,
+    void compile(std::vector<std::vector<T>>& _vertices,
+                 std::vector<std::vector<int>>& _indices,
                  int divider = 1) {
+
+        std::vector<std::vector<T>> vertices;
+        std::vector<std::vector<int>> indices;
+
+        // take over contents
+        std::swap(_vertices, vertices);
+        std::swap(_indices, indices);
 
         int vertexOffset = 0, indexOffset = 0;
 
@@ -137,21 +144,12 @@ protected:
                     iBuffer[iPos++] = idx + vertexOffset;
                 }
                 indexOffset += indices[i].size();
-
-                indices[i].clear();
             }
             vertexOffset += nVertices;
-            curVertices.clear();
         }
 
         m_vertexOffsets.emplace_back(indexOffset, vertexOffset);
 
         m_isCompiled = true;
-        
-        std::vector<std::vector<T>> vdump;
-        std::vector<std::vector<int>> idump;
-        
-        vertices.swap(vdump);
-        indices.swap(idump);
     }
 };
