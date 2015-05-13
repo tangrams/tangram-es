@@ -5,6 +5,7 @@
 #include <string>
 
 #include "platform.h"
+#include "context.h"
 
 static bool s_isContinuousRendering = false;
 
@@ -16,7 +17,7 @@ void logMsg(const char* fmt, ...) {
 }
 
 void requestRender() {
-
+    setRenderRequest(true);
 }
 
 void setContinuousRendering(bool _isContinuous) {

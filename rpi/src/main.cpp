@@ -107,7 +107,6 @@ int main(int argc, char **argv){
     
     // Set background color and clear buffers
     Tangram::initialize();
-    logMsg("%ix%i\n",getWindowWidth(), getWindowHeight());
     Tangram::resize(getWindowWidth(), getWindowHeight());
     
     setup();

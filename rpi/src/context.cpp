@@ -8,14 +8,6 @@
 // Main global variables
 //-------------------------------
 typedef struct {
-    float   x,y;
-    float   velX,velY;
-    int     button;
-} Mouse;
-static Mouse mouse;
-static unsigned char keyPressed;
-
-typedef struct {
     uint32_t screen_width;
     uint32_t screen_height;
 
@@ -30,6 +22,14 @@ typedef struct {
     uint32_t x, y, width, height;
 } Viewport;
 static Viewport viewport;
+
+typedef struct {
+    float   x,y;
+    float   velX,velY;
+    int     button;
+} Mouse;
+static Mouse mouse;
+static unsigned char keyPressed;
 
 static bool bRender = true;
 
@@ -128,6 +128,7 @@ void initGL(){
     
     // Prepare viewport
     glViewport( 0, 0, state->screen_width, state->screen_height );
+    setWindowSize(state->screen_width,state->screen_height);
 }
 
 void renderGL(){
@@ -149,6 +150,7 @@ void setWindowSize(int _width, int _height) {
     viewport.width = _width;
     viewport.height = _height;
     glViewport(0, 0, viewport.width, viewport.height);
+    onViewportResize(viewport.width, viewport.height);
 }
 
 // Inputs: Mouse/Keyboard
