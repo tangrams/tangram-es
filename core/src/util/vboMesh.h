@@ -97,8 +97,7 @@ protected:
 
     template <typename T>
     void compile(std::vector<std::vector<T>>& _vertices,
-                 std::vector<std::vector<int>>& _indices,
-                 int divider = 1) {
+                 std::vector<std::vector<int>>& _indices) {
 
         std::vector<std::vector<T>> vertices;
         std::vector<std::vector<int>> indices;
@@ -125,7 +124,7 @@ protected:
 
         for (size_t i = 0; i < vertices.size(); i++) {
             auto curVertices = vertices[i];
-            size_t nVertices = curVertices.size() / divider;
+            size_t nVertices = curVertices.size();
             int nBytes = nVertices * stride;
 
             std::memcpy(vBuffer + vPos, (GLbyte*)curVertices.data(), nBytes);
