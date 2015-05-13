@@ -40,7 +40,7 @@ public:
     const std::shared_ptr<FontContext>& getFontContext() { return m_ftContext; }
 
     /* Returns a const list of labels for a <TileID> and a style name */
-    const std::vector<std::shared_ptr<Label>>& getLabels(const std::string& _styleName, const TileID& _tileID);
+    const std::vector<std::unique_ptr<Label>>& getLabels(const std::string& _styleName, const TileID& _tileID);
     
     void updateOcclusions();
     
@@ -52,7 +52,7 @@ private:
 
     LabelContainer();
     // map of <Style>s containing all <Label>s by <TileID>s
-    std::map<std::string, std::map<TileID, std::vector<std::shared_ptr<Label>>>> m_labels;
+    std::map<std::string, std::map<TileID, std::vector<std::unique_ptr<Label>>>> m_labels;
     // map of <Style>s containing all <Label>s by <TileID>s, accessed from tile threads
     std::map<std::string, std::map<TileID, std::vector<Label>>> m_pendingLabels;
 

@@ -50,7 +50,7 @@ void LabelContainer::removeLabels(const TileID& _tileID) {
     }
 }
 
-const std::vector<std::shared_ptr<Label>>& LabelContainer::getLabels(const std::string& _styleName, const TileID& _tileID) {
+const std::vector<std::unique_ptr<Label>>& LabelContainer::getLabels(const std::string& _styleName, const TileID& _tileID) {
     return m_labels[_styleName][_tileID];
 }
 
@@ -76,7 +76,7 @@ void LabelContainer::updateOcclusions() {
         }
     }
     
-    std::set<std::pair<std::shared_ptr<Label>, std::shared_ptr<Label>>> occlusions;
+    std::set<std::pair<Label*, Label*>> occlusions;
     std::vector<isect2d::AABB> aabbs;
     
     for (auto& styleTilepair : m_labels) {
@@ -89,7 +89,7 @@ void LabelContainer::updateOcclusions() {
                 }
                 
                 isect2d::AABB aabb = label->getAABB();
-                aabb.m_userData = (void*) &label;
+                aabb.m_userData = (void*) (label.get());
                 aabbs.push_back(aabb);
             }
         }
@@ -102,8 +102,8 @@ void LabelContainer::updateOcclusions() {
         const auto& aabb1 = aabbs[pair.first];
         const auto& aabb2 = aabbs[pair.second];
         
-        auto l1 = *(std::shared_ptr<Label>*) aabb1.m_userData;
-        auto l2 = *(std::shared_ptr<Label>*) aabb2.m_userData;
+        auto l1 = (Label*)aabb1.m_userData;
+        auto l2 = (Label*)aabb2.m_userData;
         
         // narrow phase
         if (intersect(l1->getOBB(), l2->getOBB())) {
