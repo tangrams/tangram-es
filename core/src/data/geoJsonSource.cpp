@@ -9,7 +9,7 @@ GeoJsonSource::GeoJsonSource() {
     m_urlTemplate = "http://vector.mapzen.com/osm/all/[z]/[x]/[y].json";
 }
 
-std::shared_ptr<TileData> GeoJsonSource::parse(const MapTile& _tile, std::vector<char>& _rawData) {
+std::shared_ptr<TileData> GeoJsonSource::parse(const MapTile& _tile, std::vector<char>& _rawData) const {
 
     std::shared_ptr<TileData> tileData = std::make_shared<TileData>();
     

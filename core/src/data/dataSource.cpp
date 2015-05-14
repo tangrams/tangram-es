@@ -7,15 +7,17 @@
 
 //---- DataSource Implementation----
 
-bool DataSource::hasTileData(const TileID& _tileID) {
+bool DataSource::hasTileData(const TileID& _tileID) const {
     
     return m_tileStore.find(_tileID) != m_tileStore.end();
 }
 
-std::shared_ptr<TileData> DataSource::getTileData(const TileID& _tileID) {
+std::shared_ptr<TileData> DataSource::getTileData(const TileID& _tileID) const {
     
-    if (hasTileData(_tileID)) {
-        std::shared_ptr<TileData> tileData = m_tileStore[_tileID];
+    const auto it = m_tileStore.find(_tileID);
+    
+    if (it != m_tileStore.end()) {
+        std::shared_ptr<TileData> tileData = it->second;
         return tileData;
     } else {
         return nullptr;

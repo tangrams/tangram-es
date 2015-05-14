@@ -42,13 +42,13 @@ public:
     virtual void cancelLoadingTile(const TileID& _tile) = 0;
 
     /* Returns the data corresponding to a <TileID> */
-    virtual std::shared_ptr<TileData> getTileData(const TileID& _tileID);
+    virtual std::shared_ptr<TileData> getTileData(const TileID& _tileID) const;
 
     /* Checks if data exists for a specific <TileID> */
-    virtual bool hasTileData(const TileID& _tileID);
+    virtual bool hasTileData(const TileID& _tileID) const;
     
     /* Parse an I/O response into a <TileData>, returning an empty TileData on failure */
-    virtual std::shared_ptr<TileData> parse(const MapTile& _tile, std::vector<char>& _rawData)= 0;
+    virtual std::shared_ptr<TileData> parse(const MapTile& _tile, std::vector<char>& _rawData) const = 0;
 
     /* Stores tileData in m_tileStore */
     virtual void setTileData(const TileID& _tileID, const std::shared_ptr<TileData>& _tileData);
