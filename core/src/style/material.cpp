@@ -63,9 +63,9 @@ void Material::setDiffuse(std::shared_ptr<Texture> _texture, MappingType _type, 
     setDiffuseEnabled((bool)_texture);
 }
 
-void Material::setSpecular(const glm::vec4 _specular, float _shinnyFactor){
+void Material::setSpecular(const glm::vec4 _specular, float _shininess){
     m_specular = _specular;
-    m_shininess = _shinnyFactor;
+    m_shininess = _shininess;
     m_specular_texture.reset();
     setSpecularEnabled(true);
 }
