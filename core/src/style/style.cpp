@@ -1,15 +1,21 @@
 #include "style.h"
 #include "scene/scene.h"
 
-/*
- * Style Class Methods
- */
-
 Style::Style(std::string _name, GLenum _drawMode) : m_name(_name), m_drawMode(_drawMode) {
 }
 
 Style::~Style() {
-    m_layers.clear();
+}
+
+void Style::setMaterial(const std::shared_ptr<Material>& _material){
+
+    if ( m_material ) {
+        m_material->removeFromProgram(m_shaderProgram);
+    }
+
+    m_material = _material;
+    m_material->injectOnProgram(m_shaderProgram);
+    
 }
 
 void Style::addLayers(std::vector<std::string> _layers) {
@@ -67,8 +73,13 @@ void Style::addData(TileData& _data, MapTile& _tile, const MapProjection& _mapPr
 }
 
 void Style::setupFrame(const std::shared_ptr<View>& _view, const std::shared_ptr<Scene>& _scene) {
+    
     // Set up material
-    m_material.setupProgram(m_shaderProgram);
+    if (!m_material) {
+        setMaterial(std::make_shared<Material>());
+    }
+    
+    m_material->setupProgram(m_shaderProgram);
     
     // Set up lights
     for (const auto& light : _scene->getLights()) {

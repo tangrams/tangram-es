@@ -10,6 +10,7 @@
 
 #include "glm/glm.hpp"
 
+#include "util/texture.h"
 // TODO:
 // each ShaderProgram instance has a map of <string, vector<string>> pairs
 // the string identifies the tag to replace, the vector is a list of strings of GLSL to inject

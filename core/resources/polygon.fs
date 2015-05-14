@@ -4,6 +4,7 @@ precision highp float;
 
 uniform mat4 u_modelView;
 uniform mat4 u_modelViewProj;
+uniform mat3 u_normalMatrix;
 uniform float u_time;
 
 varying vec4 v_color;
@@ -47,5 +48,5 @@ void main(void) {
     #pragma tangram: filter
 
     //color.rgb = pow(color.rgb, vec3(1.0/2.2)); // gamma correction
-  	gl_FragColor = color;
+    gl_FragColor = color;
 }
