@@ -4,6 +4,7 @@
 #include "text/fontContext.h"
 #include "text/textBuffer.h"
 #include "isect2d.h"
+#include "util/tileID.h"
 #include <string>
 
 struct LabelTransform {
@@ -15,6 +16,8 @@ struct LabelTransform {
     float m_alpha;
     float m_rotation;
 };
+
+
 class Label {
 
 public:
@@ -81,3 +84,24 @@ private:
     float m_height;
 
 };
+
+struct LabelUnit {
+    std::shared_ptr<Label> m_label;
+    std::unique_ptr<TileID> m_tileID;
+    std::string m_styleName;
+
+    LabelUnit(std::shared_ptr<Label>& _label, std::unique_ptr<TileID>& _tileID, const std::string& _styleName) : m_label(std::move(_label)), m_tileID(std::move(_tileID)), m_styleName(_styleName) {}
+
+    LabelUnit(LabelUnit&& _other) : m_label(std::move(_other.m_label)), m_tileID(std::move(_other.m_tileID)), m_styleName(_other.m_styleName) {}
+
+    LabelUnit& operator=(LabelUnit&& _other) {
+        m_label = std::move(_other.m_label);
+        m_tileID = std::move(_other.m_tileID);
+        m_styleName = std::move(_other.m_styleName);
+        return *this;
+    }
+
+    std::shared_ptr<Label>& getLabel() { return m_label; }
+};
+
+

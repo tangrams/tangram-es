@@ -29,7 +29,7 @@ public:
      * Creates a label for and associate it with the current processed <MapTile> TileID for a specific syle name
      * Returns nullptr if no text buffer are currently used by the FontContext
      */
-    bool addLabel(const TileID& _tileID, const std::string& _styleName, LabelTransform _transform, std::string _text, Label::Type _type, const glm::mat4& _model);
+    bool addLabel(MapTile& _tile, const std::string& _styleName, LabelTransform _transform, std::string _text, Label::Type _type);
 
     /* Clean all labels for a specific <tileID> */
     void removeLabels(const TileID& _tileID);
@@ -39,9 +39,6 @@ public:
     /* Returns a const reference to a pointer of the font context */
     const std::shared_ptr<FontContext>& getFontContext() { return m_ftContext; }
 
-    /* Returns a const list of labels for a <TileID> and a style name */
-    const std::vector<std::shared_ptr<Label>>& getLabels(const std::string& _styleName, const TileID& _tileID);
-    
     void updateOcclusions();
     
     void setViewProjectionMatrix(glm::mat4 _viewProjection) { m_viewProjection = _viewProjection; }
@@ -52,9 +49,11 @@ private:
 
     LabelContainer();
     // map of <Style>s containing all <Label>s by <TileID>s
-    std::map<std::string, std::map<TileID, std::vector<std::shared_ptr<Label>>>> m_labels;
+    std::vector<LabelUnit> m_labelUnits;
+    //std::map<std::string, std::map<TileID, std::vector<std::shared_ptr<Label>>>> m_labels;
     // map of <Style>s containing all <Label>s by <TileID>s, accessed from tile threads
-    std::map<std::string, std::map<TileID, std::vector<Label>>> m_pendingLabels;
+    std::vector<LabelUnit> m_pendingLabelUnits;
+    //std::map<std::string, std::map<TileID, std::vector<Label>>> m_pendingLabels;
 
     // reference to the <FontContext>
     std::shared_ptr<FontContext> m_ftContext;
