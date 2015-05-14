@@ -96,9 +96,15 @@ protected:
     void checkValidity();
 
     template <typename T>
-    void compile(std::vector<std::vector<T>>& vertices,
-                 std::vector<std::vector<int>>& indices,
-                 int divider = 1) {
+    void compile(std::vector<std::vector<T>>& _vertices,
+                 std::vector<std::vector<int>>& _indices) {
+
+        std::vector<std::vector<T>> vertices;
+        std::vector<std::vector<int>> indices;
+
+        // take over contents
+        std::swap(_vertices, vertices);
+        std::swap(_indices, indices);
 
         int vertexOffset = 0, indexOffset = 0;
 
@@ -118,7 +124,7 @@ protected:
 
         for (size_t i = 0; i < vertices.size(); i++) {
             auto curVertices = vertices[i];
-            size_t nVertices = curVertices.size() / divider;
+            size_t nVertices = curVertices.size();
             int nBytes = nVertices * stride;
 
             std::memcpy(vBuffer + vPos, (GLbyte*)curVertices.data(), nBytes);
@@ -137,20 +143,12 @@ protected:
                     iBuffer[iPos++] = idx + vertexOffset;
                 }
                 indexOffset += indices[i].size();
-
-                indices[i].clear();
             }
             vertexOffset += nVertices;
-            curVertices.clear();
         }
 
         m_vertexOffsets.emplace_back(indexOffset, vertexOffset);
 
         m_isCompiled = true;
-        
-        // To efficiently free the memory in these vectors, we can
-        // swap their contents with new, empty vectors
-        std::vector<std::vector<T>>().swap(vertices);
-        std::vector<std::vector<int>>().swap(indices);
     }
 };
