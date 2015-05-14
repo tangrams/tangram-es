@@ -148,10 +148,9 @@ protected:
 
         m_isCompiled = true;
         
-        std::vector<std::vector<T>> vdump;
-        std::vector<std::vector<int>> idump;
-        
-        vertices.swap(vdump);
-        indices.swap(idump);
+        // To efficiently free the memory in these vectors, we can
+        // swap their contents with new, empty vectors
+        std::vector<std::vector<T>>().swap(vertices);
+        std::vector<std::vector<int>>().swap(indices);
     }
 };
