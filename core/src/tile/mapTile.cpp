@@ -73,16 +73,17 @@ void MapTile::updateLabels(float _dt, const Style& _style, const View& _view) {
 
 void MapTile::pushLabelTransforms(const Style& _style, std::shared_ptr<LabelContainer> _labelContainer) {
 
-    if(m_buffers[_style.getName()]) {
+    auto& textBuffer = m_buffers[_style.getName()];
+    if(textBuffer) {
         auto ftContext = _labelContainer->getFontContext();
 
         ftContext->lock();
         
         for(auto& label : m_labels[_style.getName()]) {
-            label->pushTransform();
+            label->pushTransform(textBuffer);
         }
         
-        m_buffers[_style.getName()]->triggerTransformUpdate();
+        textBuffer->triggerTransformUpdate();
         
         ftContext->unlock();
     }

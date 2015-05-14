@@ -4,7 +4,6 @@
 #include "text/fontContext.h"
 #include "text/textBuffer.h"
 #include "isect2d.h"
-#include "util/tileID.h"
 #include <string>
 
 struct LabelTransform {
@@ -29,11 +28,11 @@ public:
     };
 
 
-    Label(LabelTransform _transform, std::string _text, std::shared_ptr<TextBuffer> _buffer, Type _type);
+    Label(LabelTransform _transform, std::string _text, fsuint _id, Type _type);
     ~Label();
 
     /* Call the font context to rasterize the label string */
-    void rasterize();
+    void rasterize(std::shared_ptr<TextBuffer>& _buffer);
 
     LabelTransform getTransform() const { return m_transform; }
 
@@ -56,7 +55,7 @@ public:
     
     void update(const glm::mat4& _mvp, const glm::vec2& _screenSize, float _dt);
 
-    void pushTransform();
+    void pushTransform(std::shared_ptr<TextBuffer>& _buffer);
     
     void updateScreenTransform(const glm::mat4& _mvp, const glm::vec2& _screenSize);
     
@@ -69,7 +68,6 @@ private:
     Type m_type;
     LabelTransform m_transform;
     std::string m_text;
-    std::shared_ptr<TextBuffer> m_buffer; // the buffer in which this label text id is associated to
     fsuint m_id;
     
     bool m_dirty;
@@ -84,29 +82,3 @@ private:
     float m_height;
 
 };
-
-struct LabelUnit {
-    
-private:
-    std::weak_ptr<Label> m_label;
-    
-public:
-    std::unique_ptr<TileID> m_tileID;
-    std::string m_styleName;
-    
-    LabelUnit(std::shared_ptr<Label>& _label, std::unique_ptr<TileID>& _tileID, const std::string& _styleName) : m_label(std::move(_label)), m_tileID(std::move(_tileID)), m_styleName(_styleName) {}
-
-    LabelUnit(LabelUnit&& _other) : m_label(std::move(_other.m_label)), m_tileID(std::move(_other.m_tileID)), m_styleName(_other.m_styleName) {}
-
-    LabelUnit& operator=(LabelUnit&& _other) {
-        m_label = std::move(_other.m_label);
-        m_tileID = std::move(_other.m_tileID);
-        m_styleName = std::move(_other.m_styleName);
-        return *this;
-    }
-
-    // Could return a null pointer
-    std::shared_ptr<Label> getWeakLabel() { return m_label.lock(); }
-};
-
-

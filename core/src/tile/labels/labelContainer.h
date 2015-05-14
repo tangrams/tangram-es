@@ -11,9 +11,35 @@
 
 class MapTile;
 
+struct LabelUnit {
+    
+private:
+    std::weak_ptr<Label> m_label;
+    
+public:
+    std::unique_ptr<TileID> m_tileID;
+    std::string m_styleName;
+    
+    LabelUnit(std::shared_ptr<Label>& _label, std::unique_ptr<TileID>& _tileID, const std::string& _styleName) : m_label(std::move(_label)), m_tileID(std::move(_tileID)), m_styleName(_styleName) {}
+    
+    LabelUnit(LabelUnit&& _other) : m_label(std::move(_other.m_label)), m_tileID(std::move(_other.m_tileID)), m_styleName(_other.m_styleName) {}
+    
+    LabelUnit& operator=(LabelUnit&& _other) {
+        m_label = std::move(_other.m_label);
+        m_tileID = std::move(_other.m_tileID);
+        m_styleName = std::move(_other.m_styleName);
+        return *this;
+    }
+    
+    // Could return a null pointer
+    std::shared_ptr<Label> getWeakLabel() { return m_label.lock(); }
+};
+
+
 /*
  * Singleton class containing all labels
  */
+
 class LabelContainer {
 
 public:
@@ -45,12 +71,8 @@ public:
 private:
 
     LabelContainer();
-    // map of <Style>s containing all <Label>s by <TileID>s
     std::vector<LabelUnit> m_labelUnits;
-    //std::map<std::string, std::map<TileID, std::vector<std::shared_ptr<Label>>>> m_labels;
-    // map of <Style>s containing all <Label>s by <TileID>s, accessed from tile threads
     std::vector<LabelUnit> m_pendingLabelUnits;
-    //std::map<std::string, std::map<TileID, std::vector<Label>>> m_pendingLabels;
 
     // reference to the <FontContext>
     std::shared_ptr<FontContext> m_ftContext;
