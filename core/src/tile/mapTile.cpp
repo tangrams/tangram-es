@@ -97,10 +97,10 @@ void MapTile::draw(const Style& _style, const View& _view) {
         std::shared_ptr<ShaderProgram> shader = _style.getShaderProgram();
 
         glm::mat4 modelViewMatrix = _view.getViewMatrix() * m_modelMatrix;
-        glm::mat4 modelViewProjMatrix = _view.getViewProjectionMatrix() * m_modelMatrix;
+        glm::mat4 projMatrix = _view.getProjectionMatrix();
         
         shader->setUniformMatrix4f("u_modelView", glm::value_ptr(modelViewMatrix));
-        shader->setUniformMatrix4f("u_modelViewProj", glm::value_ptr(modelViewProjMatrix));
+        shader->setUniformMatrix4f("u_proj", glm::value_ptr(projMatrix));
         shader->setUniformMatrix3f("u_normalMatrix", glm::value_ptr(_view.getNormalMatrix()));
 
         // Set the tile zoom level, using the sign to indicate whether the tile is a proxy

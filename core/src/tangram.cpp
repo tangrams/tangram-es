@@ -113,7 +113,7 @@ namespace Tangram {
         glEnable(GL_CULL_FACE);
         glFrontFace(GL_CCW);
         glCullFace(GL_BACK);
-        glClearColor(0.3f, 0.3f, 0.3f, 1.0f);
+        glClearColor(132.0/255.0, 186.0/255.0, 224.0/255.0, 1.0f);
 
         while (Error::hadGlError("Tangram::initialize()")) {}
 

@@ -229,7 +229,7 @@ void View::updateMatrices() {
     // the "top" face of the view frustum with the ground plane
     
     // NOTE: far here can go to infinity and hence a std::min below!
-    float far = m_pos.z / cos(m_pitch + 0.5 * fovy);
+    float far = 2.f * m_pos.z / cos(m_pitch + 0.5 * fovy);
     
     // limit the far clipping distance to be no greater than the maximum
     // distance of visible tiles
