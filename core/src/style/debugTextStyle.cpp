@@ -25,7 +25,7 @@ void DebugTextStyle::addData(TileData& _data, MapTile& _tile, const MapProjectio
         }
 
         std::string tileID = std::to_string(_tile.getID().x) + "/" + std::to_string(_tile.getID().y) + "/" + std::to_string(_tile.getID().z);
-        labelContainer->addLabel(_tile.getID(), m_name, { glm::vec2(0), glm::vec2(0) }, tileID, Label::Type::DEBUG);
+        labelContainer->addLabel(_tile.getID(), m_name, { glm::vec2(0), glm::vec2(0) }, tileID, Label::Type::DEBUG, processedTile->getModelMatrix());
 
         std::vector<PosTexID> vertices;
         vertices.resize(textBuffer->getVerticesSize());

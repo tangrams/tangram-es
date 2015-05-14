@@ -58,7 +58,8 @@ void TextStyle::buildPoint(Point& _point, std::string& _layer, Properties& _prop
     if (_layer == "pois") {
         for (auto prop : _props.stringProps) {
             if (prop.first == "name") {
-                labelContainer->addLabel(TextStyle::processedTile->getID(), m_name, { glm::vec2(_point), glm::vec2(_point) }, prop.second, Label::Type::POINT);
+                labelContainer->addLabel(TextStyle::processedTile->getID(), m_name, { glm::vec2(_point), glm::vec2(_point) }, prop.second, Label::Type::POINT,
+                                         processedTile->getModelMatrix());
             }
         }
     }
@@ -110,7 +111,8 @@ void TextStyle::buildLine(Line& _line, std::string& _layer, Properties& _props, 
                         continue;
                     }
 
-                    labelContainer->addLabel(TextStyle::processedTile->getID(), m_name, { p1, p2 }, prop.second, Label::Type::LINE);
+                    labelContainer->addLabel(TextStyle::processedTile->getID(), m_name, { p1, p2 }, prop.second,
+                                             Label::Type::LINE, processedTile->getModelMatrix());
                 }
             }
         }
@@ -159,7 +161,8 @@ void TextStyle::buildPolygon(Polygon& _polygon, std::string& _layer, Properties&
 
     for (auto prop : _props.stringProps) {
         if (prop.first == "name") {
-            labelContainer->addLabel(TextStyle::processedTile->getID(), m_name, { glm::vec2(centroid), glm::vec2(centroid) }, prop.second, Label::Type::POINT);
+            labelContainer->addLabel(TextStyle::processedTile->getID(), m_name, { glm::vec2(centroid), glm::vec2(centroid) }, prop.second,
+                                     Label::Type::POINT, processedTile->getModelMatrix());
         }
     }
     
@@ -203,11 +206,9 @@ void TextStyle::setupTile(const std::shared_ptr<MapTile>& _tile) {
         auto texture = buffer->getTextureTransform();
 
         if (texture) {
-            texture->update();
-            texture->bind();
-
-            // transform texture
-            m_shaderProgram->setUniformi("u_transforms", texture->getTextureSlot());
+            texture->update(0);
+            texture->bind(0);
+            m_shaderProgram->setUniformi("u_transforms", 0);
             // resolution of the transform texture
             m_shaderProgram->setUniformf("u_tresolution", texture->getWidth(), texture->getHeight());
         }
@@ -222,10 +223,9 @@ void TextStyle::setupFrame(const std::shared_ptr<View>& _view, const std::shared
     ftContext->setScreenSize(_view->getWidth(), _view->getHeight());
     ftContext->getProjection(projectionMatrix);
 
-    atlas->update();
-    atlas->bind();
-
-    m_shaderProgram->setUniformi("u_tex", atlas->getTextureSlot());
+    atlas->update(1);
+    atlas->bind(1);
+    m_shaderProgram->setUniformi("u_tex", 1);
     m_shaderProgram->setUniformf("u_resolution", _view->getWidth(), _view->getHeight());
     
     float r = (m_color >> 16 & 0xff) / 255.0;

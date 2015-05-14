@@ -5,19 +5,28 @@ LabelContainer::LabelContainer() {}
 
 LabelContainer::~LabelContainer() {
     m_labels.clear();
+    m_pendingLabels.clear();
 }
 
-bool LabelContainer::addLabel(const TileID& _tileID, const std::string& _styleName, LabelTransform _transform, std::string _text, Label::Type _type) {
+bool LabelContainer::addLabel(const TileID& _tileID, const std::string& _styleName, LabelTransform _transform, std::string _text, Label::Type _type, const glm::mat4& _model) {
     auto currentBuffer = m_ftContext->getCurrentBuffer();
 
     if (currentBuffer) {
-        std::shared_ptr<Label> label(new Label(_transform, _text, currentBuffer, _type));
-        label->rasterize();
+        auto& container = m_pendingLabels[_styleName][_tileID];
         
-        m_labels[_styleName][_tileID].push_back(label);
+        // lock concurrent collection
+        {
+            std::lock_guard<std::mutex> lock(m_mutex);
+            container.emplace_back(_transform, _text, currentBuffer, _type);
+            
+            container.back().rasterize();
+            
+            // ensure label is updated once
+            container.back().update(m_viewProjection * _model, m_screenSize, 0);
+        }
 
         return true;
-    } 
+    }
 
     return false;
 }
@@ -26,10 +35,15 @@ void LabelContainer::removeLabels(const TileID& _tileID) {
     if (m_labels.size() > 0) {
         for (auto& styleTilepair : m_labels) {
             std::string styleName = styleTilepair.first;
+            
             for (auto& tileLabelsPair : m_labels[styleName]) {
                 const TileID& tileID = tileLabelsPair.first;
                 if (tileID == _tileID) {
                     m_labels[styleName][tileID].clear();
+                    {
+                        std::lock_guard<std::mutex> lock(m_mutex);
+                        m_pendingLabels[styleName][tileID].clear();
+                    }
                 }
             }
         }
@@ -41,6 +55,27 @@ const std::vector<std::shared_ptr<Label>>& LabelContainer::getLabels(const std::
 }
 
 void LabelContainer::updateOcclusions() {
+    // merge pending labels from threads
+    for (auto& styleTilepair : m_pendingLabels) {
+        std::string styleName = styleTilepair.first;
+        
+        for (auto& tileLabelsPair : m_pendingLabels[styleName]) {
+            const TileID& tileID = tileLabelsPair.first;
+            auto& pendingLabels = m_pendingLabels[styleName][tileID];
+            auto& labels = m_labels[styleName][tileID];
+            
+            for (auto& label : pendingLabels) {
+                // create a shared pointer as a copy of the label created in the thread
+                labels.emplace_back(new Label(label));
+            }
+            
+            {
+                std::lock_guard<std::mutex> lock(m_mutex);
+                pendingLabels.clear();
+            }
+        }
+    }
+    
     std::set<std::pair<std::shared_ptr<Label>, std::shared_ptr<Label>>> occlusions;
     std::vector<isect2d::AABB> aabbs;
     

@@ -56,13 +56,13 @@ std::unique_ptr<std::string> NetworkDataSource::constructURL(const TileID& _tile
 
     std::unique_ptr<std::string> urlPtr(new std::string(m_urlTemplate)); // Make a copy of our template
 
-    size_t xpos = urlPtr->find("[x]");
+    size_t xpos = urlPtr->find("{x}");
     urlPtr->replace(xpos, 3, std::to_string(_tileCoord.x));
     
-    size_t ypos = urlPtr->find("[y]");
+    size_t ypos = urlPtr->find("{y}");
     urlPtr->replace(ypos, 3, std::to_string(_tileCoord.y));
     
-    size_t zpos = urlPtr->find("[z]");
+    size_t zpos = urlPtr->find("{z}");
     urlPtr->replace(zpos, 3, std::to_string(_tileCoord.z));
     
     if (xpos == std::string::npos || ypos == std::string::npos || zpos == std::string::npos) {

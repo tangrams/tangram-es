@@ -6,6 +6,7 @@
 #include <vector>
 #include <map>
 #include <unordered_map>
+#include "texture.h"
 
 #include "glm/glm.hpp"
 
@@ -73,9 +74,6 @@ public:
     /* 
      * Ensures the program is bound and then sets the named uniform to the given value(s)
      */
-
-    void setUniform(const std::string& _name, std::shared_ptr<Texture> _tex, unsigned int _texLoc);
-
     void setUniformi(const std::string& _name, int _value);
     void setUniformi(const std::string& _name, int _value0, int _value1);
     void setUniformi(const std::string& _name, int _value0, int _value1, int _value2);
@@ -140,5 +138,8 @@ private:
     GLuint makeCompiledShader(const std::string& _src, GLenum _type);
     
     void applySourceBlocks(std::string& _vertSrcOut, std::string& _fragSrcOut);
+    
+    std::unordered_map<std::string, Texture::TextureSlot> m_textureSlots;
+    GLuint m_freeTextureUnit;
     
 };

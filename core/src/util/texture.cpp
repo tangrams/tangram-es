@@ -2,18 +2,21 @@
 #define STB_IMAGE_IMPLEMENTATION
 #include "stb_image.h"
 
-Texture::Texture(unsigned int _width, unsigned int _height, GLuint _slot, TextureOptions _options)
-: m_options(_options), m_slot(_slot) {
+GLuint Texture::s_boundTextures[] = { 0 };
+GLuint Texture::s_activeSlot = GL_TEXTURE0;
 
-    m_name = 0;
+Texture::Texture(unsigned int _width, unsigned int _height, bool _autoDelete, TextureOptions _options)
+: m_options(_options), m_autoDelete(_autoDelete) {
+
+    m_glHandle = 0;
     m_dirty = false;
     m_shouldResize = false;
 
     resize(_width, _height);
 }
 
-Texture::Texture(const std::string& _file, GLuint _slot, TextureOptions _options)
-: Texture(0, 0, _slot, _options) {
+Texture::Texture(const std::string& _file, TextureOptions _options)
+: Texture(0, 0, true, _options) {
 
     unsigned int size;
     unsigned char* data = bytesFromResource(_file.c_str(), &size);
@@ -24,32 +27,51 @@ Texture::Texture(const std::string& _file, GLuint _slot, TextureOptions _options
 
     resize(width, height);
     setData(reinterpret_cast<GLuint*>(pixels), width * height);
-    update();
+    update(0);
 
     free(data);
     stbi_image_free(pixels);
 }
 
 Texture::~Texture() {
-
+    if (m_autoDelete) {
+        destroy();
+    }
 }
 
 void Texture::destroy() {
-    glDeleteTextures(1, &m_name);
+    
+    for (size_t i = 0; i < GL_MAX_COMBINED_TEXTURE_IMAGE_UNITS; i++) {
+        if (s_boundTextures[i] == m_glHandle) {
+            s_boundTextures[i] = 0;
+        }
+    }
+    glDeleteTextures(1, &m_glHandle);
+    
 }
 
-void Texture::bind() {
-
-    glActiveTexture(getTextureUnit());
-
-    glBindTexture(GL_TEXTURE_2D, m_name);
-}
-
-void Texture::unbind() {
-
-    glActiveTexture(getTextureUnit());
-
-    glBindTexture(GL_TEXTURE_2D, 0);
+void Texture::bind(GLuint _textureSlot) {
+    
+    if (_textureSlot >= GL_MAX_COMBINED_TEXTURE_IMAGE_UNITS) {
+        
+        // Trying to access an invalid texture unit
+        return;
+    }
+    
+    if (_textureSlot != s_activeSlot) {
+        
+        glActiveTexture(getTextureUnit(_textureSlot));
+        s_activeSlot = _textureSlot;
+        
+    }
+    
+    if (s_boundTextures[_textureSlot] != m_glHandle) {
+        
+        glBindTexture(GL_TEXTURE_2D, m_glHandle);
+        s_boundTextures[_textureSlot] = m_glHandle;
+        
+    }
+    
 }
 
 void Texture::setData(const GLuint* _data, unsigned int _dataSize) {
@@ -76,26 +98,32 @@ void Texture::setSubData(const GLuint* _subData, unsigned int _xoff, unsigned in
     m_dirty = true;
 }
 
-void Texture::update() {
+void Texture::update(GLuint _textureUnit) {
 
     if (!m_dirty) {
         return;
     }
 
-    if (m_name == 0) { // textures hasn't be initialized yet, generate it
+    if (m_glHandle == 0) { // textures hasn't been initialized yet, generate it
 
-        glGenTextures(1, &m_name);
-
-        bind();
+        glGenTextures(1, &m_glHandle);
+    
+        bind(_textureUnit);
 
         glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, m_options.m_filtering.m_min);
         glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, m_options.m_filtering.m_mag);
 
         glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, m_options.m_wrapping.m_wraps);
         glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, m_options.m_wrapping.m_wrapt);
+        
+        // if no data make sure texture is 0-filled at creation (useful for transform lookup)
+        if (m_data.size() == 0) {
+            m_data.resize(m_width * m_height);
+            memset(m_data.data(), 0, m_data.size());
+        }
     } else {
-
-        bind();
+        
+        bind(_textureUnit);
     }
 
     GLuint* data = m_data.size() > 0 ? m_data.data() : nullptr;
@@ -121,8 +149,6 @@ void Texture::update() {
         m_subData.pop();
     }
 
-    unbind();
-
     m_dirty = false;
 }
 
@@ -134,13 +160,10 @@ void Texture::resize(const unsigned int _width, const unsigned int _height) {
     m_dirty = true;
 }
 
-GLuint Texture::getTextureUnit() {
-    switch(m_slot) {
-        case 1: return GL_TEXTURE1;
-        case 2: return GL_TEXTURE2;
-        case 3: return GL_TEXTURE3;
-        case 4: return GL_TEXTURE4;
-        case 5: return GL_TEXTURE5;
-        default: return GL_TEXTURE0;
+GLuint Texture::getTextureUnit(GLuint _unit) {
+    if (_unit >= GL_MAX_COMBINED_TEXTURE_IMAGE_UNITS) {
+        logMsg("Warning: trying to access unavailable texture unit");
     }
+    
+    return GL_TEXTURE0 + _unit;
 }
