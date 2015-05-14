@@ -6,6 +6,7 @@
 #include <vector>
 #include <map>
 #include <unordered_map>
+#include "texture.h"
 
 #include "glm/glm.hpp"
 
@@ -136,5 +137,8 @@ private:
     GLuint makeCompiledShader(const std::string& _src, GLenum _type);
     
     void applySourceBlocks(std::string& _vertSrcOut, std::string& _fragSrcOut);
+    
+    std::unordered_map<std::string, Texture::TextureSlot> m_textureSlots;
+    GLuint m_freeTextureUnit;
     
 };
