@@ -66,6 +66,18 @@ float angleBetweenPoints(const glm::vec2& _p1, const glm::vec2& _p2) {
     return (float) atan2(p1p2.x, -p1p2.y);
 }
 
+/* 
+ * Optimized world to clip space transformation for 2d-map coordinates based on 
+ * our modelViewMatrix, and on the fact that the map position is on a 2d-plane
+ */
+glm::vec4 mapWorldToClipSpace(const glm::mat4& _mvp, const glm::vec2& _mapPos) {
+
+    return glm::vec4(_mapPos.x * _mvp[0][0] + _mvp[3][0],
+                     _mapPos.y * _mvp[1][1] + _mvp[3][1],
+                     _mvp[3][2],
+                     _mvp[0][3] * _mapPos.x + _mvp[1][3] * _mapPos.y + _mvp[3][3]);
+}
+
 glm::vec4 worldToClipSpace(const glm::mat4& _mvp, const glm::vec4& _worldPosition) {
     return _mvp * _worldPosition;
 }

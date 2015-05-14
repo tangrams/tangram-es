@@ -92,6 +92,8 @@ float angleBetweenPoints(const glm::vec2& _p1, const glm::vec2& _p2);
 /* Computes the clip coordinates from position in world space and a model view matrix */
 glm::vec4 worldToClipSpace(const glm::mat4& _mvp, const glm::vec4& _worldPosition);
 
+glm::vec4 mapWorldToClipSpace(const glm::mat4& _mvp, const glm::vec2& _mercatorPos);
+
 /* Computes the screen coordinates from a coordinate in clip space and a screen size */
 glm::vec2 clipToScreenSpace(const glm::vec4& _clipCoords, const glm::vec2& _screenSize);
 
