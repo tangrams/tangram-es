@@ -90,8 +90,9 @@ protected:
 public:
 
     Style(std::string _name, GLenum _drawMode);
+    virtual ~Style();
 
-    /* Add layers to which this style will apply 
+    /* Add layers to which this style will apply
      * TODO: More flexible filtering */
     virtual void addLayers(std::vector<std::string> _layers);
     
@@ -99,7 +100,7 @@ public:
     virtual void addData(TileData& _data, MapTile& _tile, const MapProjection& _mapProjection) const;
 
     virtual void setMaterial(const std::shared_ptr<Material>& _material);
-    std::shared_ptr<Material> getMaterial();
+    std::shared_ptr<Material> getMaterial() { return m_material; }
 
     /* Perform any unsetup needed after drawing each frame */
     virtual void teardown() {}
@@ -114,8 +115,6 @@ public:
 
     std::shared_ptr<ShaderProgram> getShaderProgram() const { return m_shaderProgram; }
     std::string getName() const { return m_name; }
-
-    virtual ~Style();
     
     virtual void setLighting( LightingType _lType );
 

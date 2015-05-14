@@ -28,27 +28,27 @@ public:
     
     virtual ~Material(){};
 
-    /*  Emission color is by default disblable and vec4(0.0).
-    *   By setting the property you will enable and require to reloading the shader. */
+    /*  Emission color is by default disabled and vec4(0.0).
+     *  Setting this property enables it and changes require reloading the shader. */
     void setEmission(const glm::vec4 _emission);
     void setEmission(const std::string &_file, MappingType _type = MappingType::UV, glm::vec3 _scale = glm::vec3(1.), glm::vec4 _amount = glm::vec4(1.));
     void setEmission(std::shared_ptr<Texture> _texture, MappingType _type = MappingType::UV, glm::vec3 _scale = glm::vec3(1.), glm::vec4 _amount = glm::vec4(1.));
 
-    /*  Ambient color is by default disblable and vec4(1.0).
-    *   By setting the property you will enable and require to reloading the shader. */
+    /*  Ambient color is by default disabled and vec4(1.0).
+     *  Setting this property enables it and changes require reloading the shader. */
     void setAmbient(const glm::vec4 _ambient);
     void setAmbient(const std::string &_file, MappingType _type = MappingType::UV, glm::vec3 _scale = glm::vec3(1.), glm::vec4 _amount = glm::vec4(1.));
     void setAmbient(std::shared_ptr<Texture> _texture, MappingType _type = MappingType::UV, glm::vec3 _scale = glm::vec3(1.), glm::vec4 _amount = glm::vec4(1.));
 
-    /*  Difuse color is by default enable and vec4(1.0).
-    *   If you want to disable it you have to disableDiffuse and reloading the shader. */
+    /*  Diffuse color is by default enabled and vec4(1.0).
+     *  Changes require reloading the shader. */
     void setDiffuse(const glm::vec4 _diffuse);
     void setDiffuse(const std::string &_file, MappingType _type = MappingType::UV, glm::vec3 _scale = glm::vec3(1.), glm::vec4 _amount = glm::vec4(1.));
     void setDiffuse(std::shared_ptr<Texture> _texture, MappingType _type = MappingType::UV, glm::vec3 _scale = glm::vec3(1.), glm::vec4 _amount = glm::vec4(1.));
 
-    /*  Specular color is by default disblable and vec4(0.2) with a shinny factor of 0.2.
-    *   By setting the property you will enable and require to reloading the shader. */
-    void setSpecular(const glm::vec4 _specular, float _shinnyFactor);
+    /*  Specular color is by default disabled and vec4(0.2) with a shininess factor of 0.2.
+     *  Setting this property enables it and changes require reloading the shader. */
+    void setSpecular(const glm::vec4 _specular, float _shininess);
     void setSpecular(const std::string &_file, MappingType _type = MappingType::UV, glm::vec3 _scale = glm::vec3(1.), glm::vec4 _amount = glm::vec4(1.));
     void setSpecular(std::shared_ptr<Texture> _texture, MappingType _type = MappingType::UV, glm::vec3 _scale = glm::vec3(1.), glm::vec4 _amount = glm::vec4(1.));
 
@@ -95,7 +95,7 @@ private:
     MappingType m_ambient_texture_mapping = MappingType::UV;
     std::shared_ptr<Texture> m_ambient_texture;
 
-    glm::vec4   m_diffuse = glm::vec4(.8f);
+    glm::vec4   m_diffuse = glm::vec4(1.f);
     glm::vec3   m_diffuse_texture_scale = glm::vec3(1.f);
     MappingType m_diffuse_texture_mapping = MappingType::UV;
     std::shared_ptr<Texture> m_diffuse_texture;
