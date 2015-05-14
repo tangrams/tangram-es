@@ -95,7 +95,7 @@ private:
     MappingType m_ambient_texture_mapping = MappingType::UV;
     std::shared_ptr<Texture> m_ambient_texture;
 
-    glm::vec4   m_diffuse = glm::vec4(.8f);
+    glm::vec4   m_diffuse = glm::vec4(1.f);
     glm::vec3   m_diffuse_texture_scale = glm::vec3(1.f);
     MappingType m_diffuse_texture_mapping = MappingType::UV;
     std::shared_ptr<Texture> m_diffuse_texture;

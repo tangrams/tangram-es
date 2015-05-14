@@ -101,8 +101,6 @@ public:
 
     virtual void setMaterial(const std::shared_ptr<Material>& _material);
     std::shared_ptr<Material> getMaterial() { return m_material; }
-    
-    static std::shared_ptr<Material> getDefaultMaterial();
 
     /* Perform any unsetup needed after drawing each frame */
     virtual void teardown() {}

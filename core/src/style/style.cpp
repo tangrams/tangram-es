@@ -1,18 +1,6 @@
 #include "style.h"
 #include "scene/scene.h"
 
-std::shared_ptr<Material> Style::getDefaultMaterial() {
-    
-    std::shared_ptr<Material> defaultMaterial(new Material());
-    defaultMaterial->setEmissionEnabled(false);
-    defaultMaterial->setAmbientEnabled(true);
-    defaultMaterial->setDiffuse(glm::vec4(1.0));
-    defaultMaterial->setSpecularEnabled(true);
-    
-    return defaultMaterial;
-    
-}
-
 Style::Style(std::string _name, GLenum _drawMode) : m_name(_name), m_drawMode(_drawMode) {
 }
 
@@ -88,7 +76,7 @@ void Style::setupFrame(const std::shared_ptr<View>& _view, const std::shared_ptr
     
     // Set up material
     if (!m_material) {
-        setMaterial(getDefaultMaterial());
+        setMaterial(std::make_shared<Material>());
     }
     
     m_material->setupProgram(m_shaderProgram);
