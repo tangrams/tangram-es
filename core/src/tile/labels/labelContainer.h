@@ -31,9 +31,6 @@ public:
      */
     bool addLabel(MapTile& _tile, const std::string& _styleName, LabelTransform _transform, std::string _text, Label::Type _type);
 
-    /* Clean all labels for a specific <tileID> */
-    void removeLabels(const TileID& _tileID);
-
     void setFontContext(std::shared_ptr<FontContext> _ftContext) { m_ftContext = _ftContext; }
 
     /* Returns a const reference to a pointer of the font context */
