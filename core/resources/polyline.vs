@@ -2,8 +2,10 @@
 precision highp float;
 #endif
 
+#define R_GLOBE 350.0
+
 uniform mat4 u_modelView;
-uniform mat4 u_modelViewProj;
+uniform mat4 u_proj;
 uniform mat3 u_normalMatrix;
 uniform float u_time;
 uniform float u_zoom;
@@ -58,7 +60,15 @@ void main() {
         v_color = color;
     #endif
 
-    gl_Position = u_modelViewProj * position;
+    vec4 p_globe = u_modelView * position;
+    
+    float r_dist = length(p_globe.xy);
+    vec2 r_dir = p_globe.xy / r_dist;
+    float theta = r_dist / R_GLOBE;
+    p_globe.z -= R_GLOBE - (R_GLOBE + a_position.z) * cos(theta);
+    p_globe.xy = (R_GLOBE + a_position.z) * sin(theta) * r_dir;
+    
+    gl_Position = u_proj * p_globe;
     
     // Proxy tiles have u_tile_zoom < 0, so this re-scaling will place proxy tiles deeper in
     // the depth buffer than non-proxy tiles by a distance that increases with tile zoom
