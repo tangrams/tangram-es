@@ -1,15 +1,22 @@
 #include "style.h"
 #include "scene/scene.h"
 
-/*
- * Style Class Methods
- */
+std::shared_ptr<Material> Style::getDefaultMaterial() {
+    
+    std::shared_ptr<Material> defaultMaterial(new Material());
+    defaultMaterial->setEmissionEnabled(false);
+    defaultMaterial->setAmbientEnabled(true);
+    defaultMaterial->setDiffuse(glm::vec4(1.0));
+    defaultMaterial->setSpecularEnabled(true);
+    
+    return defaultMaterial;
+    
+}
 
 Style::Style(std::string _name, GLenum _drawMode) : m_name(_name), m_drawMode(_drawMode) {
 }
 
 Style::~Style() {
-    m_layers.clear();
 }
 
 void Style::setMaterial(const std::shared_ptr<Material>& _material){
@@ -20,19 +27,7 @@ void Style::setMaterial(const std::shared_ptr<Material>& _material){
 
     m_material = _material;
     m_material->injectOnProgram(m_shaderProgram);
-}
-
-std::shared_ptr<Material> Style::getMaterial(){
-    if(!m_material){
-        std::shared_ptr<Material> defaultMaterial(new Material());
-        defaultMaterial->setEmissionEnabled(false);
-        defaultMaterial->setAmbientEnabled(true);
-        defaultMaterial->setDiffuse(glm::vec4(1.0));
-        defaultMaterial->setSpecularEnabled(true);
-        setMaterial(defaultMaterial);
-    }
     
-    return m_material;
 }
 
 void Style::addLayers(std::vector<std::string> _layers) {
@@ -90,8 +85,13 @@ void Style::addData(TileData& _data, MapTile& _tile, const MapProjection& _mapPr
 }
 
 void Style::setupFrame(const std::shared_ptr<View>& _view, const std::shared_ptr<Scene>& _scene) {
+    
     // Set up material
-    getMaterial()->setupProgram(m_shaderProgram);
+    if (!m_material) {
+        setMaterial(getDefaultMaterial());
+    }
+    
+    m_material->setupProgram(m_shaderProgram);
     
     // Set up lights
     for (const auto& light : _scene->getLights()) {
