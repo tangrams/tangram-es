@@ -5,6 +5,9 @@
 #include <string>
 
 #include "platform.h"
+#include "context.h"
+
+static bool s_isContinuousRendering = false;
 
 void logMsg(const char* fmt, ...) {
     va_list args;
@@ -14,16 +17,15 @@ void logMsg(const char* fmt, ...) {
 }
 
 void requestRender() {
-    // TODO: implement non-continuous rendering on RPi
+    setRenderRequest(true);
 }
 
 void setContinuousRendering(bool _isContinuous) {
-    // TODO: implement non-continuous rendering on RPi
+    s_isContinuousRendering = _isContinuous;
 }
 
 bool isContinuousRendering() {
-    return false;
-    // TODO: implement non-continuous rendering on RPi
+    return s_isContinuousRendering;
 }
 
 std::string stringFromResource(const char* _path) {
