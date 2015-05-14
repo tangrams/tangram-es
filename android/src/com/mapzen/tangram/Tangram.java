@@ -57,7 +57,8 @@ public class Tangram implements Renderer, OnTouchListener, OnScaleGestureListene
     private static native void handlePinchGesture(float posX, float posY, float scale);
     private static native void handleRotateGesture(float posX, float posY, float rotation);
     private static native void handleShoveGesture(float distance);
-    private static native void networkDataBridge(byte[] rawDataBytes, int tileIDx, int tileIDy, int tileIDz, int dataSourceID);
+    private static native void onNetworkSuccess(byte[] rawDataBytes, long callbackPtr);
+    private static native void onNetworkFailure(long callbackPtr);
 
     private long time = System.nanoTime();
     private boolean contextDestroyed = false;
@@ -269,23 +270,27 @@ public class Tangram implements Renderer, OnTouchListener, OnScaleGestureListene
     }
 
     // Network requests using okHttp
-    public boolean networkRequest(String url, final int tileIDx, final int tileIDy, final int tileIDz, final int dataSourceID) throws Exception {
+    public boolean networkRequest(String url, final long callbackPtr) throws Exception {
         Request request = new Request.Builder().tag(url).url(url).build();
 
         okClient.newCall(request).enqueue(new Callback() {
             @Override 
             public void onFailure(Request request, IOException e) {
+
+                onNetworkFailure(callbackPtr);
                 e.printStackTrace();
             }
 
             @Override 
             public void onResponse(Response response) throws IOException {
 
-                if(!response.isSuccessful()) throw new IOException("Unexpected code " + response);
-
+                if(!response.isSuccessful()) {
+                    onNetworkFailure(callbackPtr);
+                    throw new IOException("Unexpected code " + response);
+                }
                 BufferedSource src = response.body().source();
                 byte[] rawDataBytes = src.readByteArray();
-                networkDataBridge(rawDataBytes, tileIDx, tileIDy, tileIDz, dataSourceID);
+                onNetworkSuccess(rawDataBytes, callbackPtr);
             }
         });
         return true;

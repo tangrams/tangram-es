@@ -34,7 +34,7 @@ void setupJniEnv(JNIEnv* _jniEnv, jobject _tangramInstance, jobject _assetManage
 
     tangramInstance = jniEnv->NewGlobalRef(_tangramInstance);
     jclass tangramClass = jniEnv->FindClass("com/mapzen/tangram/Tangram");
-    networkRequestMID = jniEnv->GetMethodID(tangramClass, "networkRequest", "(Ljava/lang/String;IIII)Z");
+    networkRequestMID = jniEnv->GetMethodID(tangramClass, "networkRequest", "(Ljava/lang/String;J)Z");
     cancelNetworkRequestMID = jniEnv->GetMethodID(tangramClass, "cancelNetworkRequest", "(Ljava/lang/String;)V");
 	requestRenderMethodID = _jniEnv->GetMethodID(tangramClass, "requestRender", "()V");
     setRenderModeMethodID = _jniEnv->GetMethodID(tangramClass, "setRenderMode", "(I)V");
@@ -152,11 +152,19 @@ unsigned char* bytesFromResource(const char* _path, unsigned int* _size) {
     return data;
 }
 
-bool streamFromHttpASync(const std::string& _url, const TileID& _tileID, const int _dataSourceID) {
+bool startUrlRequest(const std::string& _url, UrlCallback _callback) {
     
     jstring jUrl = jniEnv->NewStringUTF(_url.c_str());
 
-    jboolean methodResult = jniEnv->CallBooleanMethod(tangramInstance, networkRequestMID, jUrl, (jint)_tileID.x, (jint)_tileID.y, (jint)_tileID.z, (jint)_dataSourceID);
+    // This is probably super dangerous. In order to pass a reference to our callback we have to convert it
+    // to a Java type. We allocate a new callback object and then reinterpret the pointer to it as a Java long. 
+    // In Java, we associate this long with the current network request and pass it back to native code when
+    // the request completes (either in onNetworkSuccess or onNetworkFailure), reinterpret the long back into a
+    // pointer, call the callback function if the request succeeded, and delete the heap-allocated UrlCallback 
+    // to make sure nothing is leaked. 
+    jlong jCallbackPtr = reinterpret_cast<jlong>(new UrlCallback(_callback));
+
+    jboolean methodResult = jniEnv->CallBooleanMethod(tangramInstance, networkRequestMID, jUrl, jCallbackPtr);
 
     if(!methodResult) {
         logMsg("\"networkRequest\" returned false");
@@ -166,20 +174,14 @@ bool streamFromHttpASync(const std::string& _url, const TileID& _tileID, const i
     return methodResult;
 }
 
-void cancelNetworkRequest(const std::string& _url) {
+void cancelUrlRequest(const std::string& _url) {
 
     jstring jUrl = jniEnv->NewStringUTF(_url.c_str());
     jniEnv->CallVoidMethod(tangramInstance, cancelNetworkRequestMID, jUrl);
 
 }
 
-void setNetworkRequestCallback(std::function<void(std::vector<char>&&, TileID, int)>&& _callback) {
-
-    networkCallback = _callback;
-
-}
-
-void networkDataBridge(JNIEnv* _jniEnv, jbyteArray _jFetchedBytes, int _tileIDx, int _tileIDy, int _tileIDz, int _dataSourceID) {
+void onNetworkSuccess(JNIEnv* _jniEnv, jbyteArray _jFetchedBytes, jlong _jCallbackPtr) {
 
     int dataLength = _jniEnv->GetArrayLength(_jFetchedBytes);
 
@@ -188,7 +190,16 @@ void networkDataBridge(JNIEnv* _jniEnv, jbyteArray _jFetchedBytes, int _tileIDx,
 
     _jniEnv->GetByteArrayRegion(_jFetchedBytes, 0, dataLength, reinterpret_cast<jbyte*>(rawData.data()));
 
-    networkCallback(std::move(rawData), TileID(_tileIDx, _tileIDy, _tileIDz), _dataSourceID);
+    UrlCallback* callback = reinterpret_cast<UrlCallback*>(_jCallbackPtr);
+    (*callback)(std::move(rawData));
+    delete callback;
+
+}
+
+void onNetworkFailure(JNIEnv* _jniEnv, jlong _jCallbackPtr) {
+
+    UrlCallback* callback = reinterpret_cast<UrlCallback*>(_jCallbackPtr);
+    delete callback;
 
 }
 
