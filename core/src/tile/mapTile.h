@@ -55,7 +55,7 @@ public:
      */
     void addGeometry(const Style& _style, std::unique_ptr<VboMesh> _mesh);
     
-    void addLabel(std::shared_ptr<Label> _label);
+    void addLabel(const std::string& _styleName, std::shared_ptr<Label> _label);
     
     /*
      * Method to check if this tile's vboMesh(s) are loaded and ready to be drawn
@@ -108,7 +108,7 @@ private:
     // relative translation from the view origin to the model origin immediately before drawing the tile. 
 
     std::unordered_map<std::string, std::unique_ptr<VboMesh>> m_geometry; // Map of <Style>s and their associated <VboMesh>es
-    std::vector<std::shared_ptr<Label>> m_labels;
+    std::unordered_map<std::string, std::vector<std::shared_ptr<Label>>> m_labels;
     std::map<std::string, std::shared_ptr<TextBuffer>> m_buffers; // Map of <Style>s and the associated text buffer
 
 };

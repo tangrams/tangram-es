@@ -18,7 +18,7 @@ bool LabelContainer::addLabel(MapTile& _tile, const std::string& _styleName, Lab
         l->rasterize();
         l->update(m_viewProjection * _tile.getModelMatrix(), m_screenSize, 0);
         std::unique_ptr<TileID> tileID(new TileID(_tile.getID()));
-        _tile.addLabel(l);
+        _tile.addLabel(_styleName, l);
         
         // lock concurrent collection
         {
