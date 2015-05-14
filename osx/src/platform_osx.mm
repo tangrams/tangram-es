@@ -10,7 +10,6 @@
 #include "gl.h"
 
 static bool s_isContinuousRendering = false;
-static std::function<void(std::vector<char>&&, TileID, int)> networkCallback;
 
 NSURLSession* defaultSession;
 
@@ -99,11 +98,9 @@ void NSurlInit() {
     defaultSession = [NSURLSession sessionWithConfiguration: defaultConfigObject];
 }
 
-bool streamFromHttpASync(const std::string& _url, const TileID& _tileID, const int _dataSourceID) {
+bool startUrlRequest(const std::string& _url, UrlCallback _callback) {
 
     NSString* nsUrl = [NSString stringWithUTF8String:_url.c_str()];
-    const TileID tileID = _tileID;
-    const int dataSourceID = _dataSourceID;
     
     void (^handler)(NSData*, NSURLResponse*, NSError*) = ^void (NSData* data, NSURLResponse* response, NSError* error) {
         
@@ -113,7 +110,7 @@ bool streamFromHttpASync(const std::string& _url, const TileID& _tileID, const i
             std::vector<char> rawDataVec;
             rawDataVec.resize(dataLength);
             memcpy(rawDataVec.data(), (char *)[data bytes], dataLength);
-            networkCallback(std::move(rawDataVec), tileID, dataSourceID);
+            _callback(std::move(rawDataVec));
             
         } else {
             
@@ -131,8 +128,7 @@ bool streamFromHttpASync(const std::string& _url, const TileID& _tileID, const i
     
 }
 
-void cancelNetworkRequest(const std::string& _url) {
-    
+void cancelUrlRequest(const std::string& _url) {
     
     NSString* nsUrl = [NSString stringWithUTF8String:_url.c_str()];
    
@@ -144,10 +140,6 @@ void cancelNetworkRequest(const std::string& _url) {
             }
         }
     }];
-}
-
-void setNetworkRequestCallback(std::function<void(std::vector<char>&&, TileID, int)>&& _callback) {
-    networkCallback = _callback;
 }
 
 #endif //PLATFORM_OSX
