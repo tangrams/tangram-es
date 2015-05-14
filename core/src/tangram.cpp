@@ -46,8 +46,8 @@ namespace Tangram {
 
             std::shared_ptr<Material> mat(new Material());
             mat->setAmbientEnabled(true);
-            //mat->setDiffuse("sem.jpg",MappingType::SPHEREMAP);
-            mat->setSpecularEnabled(true);
+            // mat->setDiffuse("sem.jpg",MappingType::SPHEREMAP);
+            mat->setSpecularEnabled(false);
             //mat->setNormal("normals.jpg",MappingType::UV);
             
             // Load style(s); hard-coded for now
