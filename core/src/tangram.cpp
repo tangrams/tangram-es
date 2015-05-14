@@ -161,7 +161,7 @@ namespace Tangram {
                 for (const auto& style : m_scene->getStyles()) {
                     for (const auto& mapIDandTile : m_tileManager->getVisibleTiles()) {
                         const std::shared_ptr<MapTile>& tile = mapIDandTile.second;
-                        tile->updateLabels(_dt, *style, *m_view, m_labelContainer);
+                        tile->updateLabels(_dt, *style, *m_view);
                     }
                 }
                 

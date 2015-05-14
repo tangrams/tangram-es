@@ -27,6 +27,7 @@ MapTile::~MapTile() {
 
     m_geometry.clear();
     m_buffers.clear();
+    m_labels.clear();
 
 }
 
@@ -61,11 +62,11 @@ void MapTile::update(float _dt, const View& _view) {
 
 }
 
-void MapTile::updateLabels(float _dt, const Style& _style, const View& _view, std::shared_ptr<LabelContainer> _labelContainer) {
+void MapTile::updateLabels(float _dt, const Style& _style, const View& _view) {
     glm::mat4 mvp = _view.getViewProjectionMatrix() * m_modelMatrix;
     glm::vec2 screenSize = glm::vec2(_view.getWidth(), _view.getHeight());
     
-    for(auto& label : _labelContainer->getLabels(_style.getName(), getID())) {
+    for(auto& label : m_labels) {
         label->update(mvp, screenSize, _dt);
     }
 }
@@ -77,7 +78,7 @@ void MapTile::pushLabelTransforms(const Style& _style, std::shared_ptr<LabelCont
 
         ftContext->lock();
         
-        for(auto& label : _labelContainer->getLabels(_style.getName(), getID())) {
+        for(auto& label : m_labels) {
             label->pushTransform();
         }
         
@@ -112,4 +113,8 @@ void MapTile::draw(const Style& _style, const View& _view) {
 
 bool MapTile::hasGeometry() {
     return (m_geometry.size() != 0);
+}
+
+void MapTile::addLabel(std::shared_ptr<Label> _label) {
+    m_labels.push_back(std::move(_label));
 }

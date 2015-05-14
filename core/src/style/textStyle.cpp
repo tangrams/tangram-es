@@ -1,6 +1,6 @@
 #include "textStyle.h"
 
-MapTile* TextStyle::processedTile = nullptr;
+MapTile* TextStyle::s_processedTile = nullptr;
 
 TextStyle::TextStyle(const std::string& _fontName, std::string _name, float _fontSize, unsigned int _color, bool _sdf, bool _sdfMultisampling, GLenum _drawMode)
 : Style(_name, _drawMode), m_fontName(_fontName), m_fontSize(_fontSize), m_color(_color), m_sdf(_sdf), m_sdfMultisampling(_sdfMultisampling)  {
@@ -58,8 +58,7 @@ void TextStyle::buildPoint(Point& _point, std::string& _layer, Properties& _prop
     if (_layer == "pois") {
         for (auto prop : _props.stringProps) {
             if (prop.first == "name") {
-                labelContainer->addLabel(TextStyle::processedTile->getID(), m_name, { glm::vec2(_point), glm::vec2(_point) }, prop.second, Label::Type::POINT,
-                                         processedTile->getModelMatrix());
+                labelContainer->addLabel(*TextStyle::s_processedTile, m_name, { glm::vec2(_point), glm::vec2(_point) }, prop.second, Label::Type::POINT);
             }
         }
     }
@@ -111,8 +110,8 @@ void TextStyle::buildLine(Line& _line, std::string& _layer, Properties& _props, 
                         continue;
                     }
 
-                    labelContainer->addLabel(TextStyle::processedTile->getID(), m_name, { p1, p2 }, prop.second,
-                                             Label::Type::LINE, processedTile->getModelMatrix());
+                    labelContainer->addLabel(*TextStyle::s_processedTile, m_name, { p1, p2 }, prop.second,
+                                             Label::Type::LINE);
                 }
             }
         }
@@ -161,8 +160,7 @@ void TextStyle::buildPolygon(Polygon& _polygon, std::string& _layer, Properties&
 
     for (auto prop : _props.stringProps) {
         if (prop.first == "name") {
-            labelContainer->addLabel(TextStyle::processedTile->getID(), m_name, { glm::vec2(centroid), glm::vec2(centroid) }, prop.second,
-                                     Label::Type::POINT, processedTile->getModelMatrix());
+            labelContainer->addLabel(*TextStyle::s_processedTile, m_name, { glm::vec2(centroid), glm::vec2(centroid) }, prop.second, Label::Type::POINT);
         }
     }
     
@@ -187,13 +185,13 @@ void TextStyle::prepareDataProcessing(MapTile& _tile) const {
 
     buffer->init();
 
-    TextStyle::processedTile = &_tile;
+    TextStyle::s_processedTile = &_tile;
 }
 
 void TextStyle::finishDataProcessing(MapTile& _tile) const {
     auto ftContext = LabelContainer::GetInstance()->getFontContext();
 
-    TextStyle::processedTile = nullptr;
+    TextStyle::s_processedTile = nullptr;
 
     ftContext->useBuffer(nullptr);
     ftContext->unlock();
