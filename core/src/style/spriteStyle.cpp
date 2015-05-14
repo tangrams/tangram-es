@@ -48,7 +48,9 @@ void SpriteStyle::buildPolygon(Polygon& _polygon, std::string& _layer, Propertie
 }
 
 void SpriteStyle::setupFrame(const std::shared_ptr<View>& _view, const std::shared_ptr<Scene>& _scene) {
-    m_shaderProgram->setUniform("u_tex", *m_texture);
+    m_texture->update(0);
+    m_texture->bind(0);
+    m_shaderProgram->setUniformi("u_tex", 0);
 }
 
 void SpriteStyle::addData(TileData& _data, MapTile& _tile, const MapProjection& _mapProjection) const {
