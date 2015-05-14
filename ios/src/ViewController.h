@@ -15,7 +15,5 @@ struct TileID;
 
 @property (nonatomic) bool continuous;
 - (void)renderOnce;
-- (BOOL)networkRequestWithUrl:(NSString *)url TileID:(TileID)tileID DataSourceID:(NSNumber*)dataSourceID;
-- (void)cancelNetworkRequestWithUrl:(NSString *)url;
 
 @end
