@@ -53,6 +53,6 @@ public:
      * A pointer to the tile being currently processed, e.g. the tile which data is being added to
      * nullptr if no tile is being processed
      */
-    static MapTile* processedTile;
+    static MapTile* s_processedTile;
     
 };
