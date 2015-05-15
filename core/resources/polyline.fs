@@ -4,6 +4,7 @@ precision highp float;
 
 uniform mat4 u_modelView;
 uniform mat4 u_modelViewProj;
+uniform mat3 u_normalMatrix;
 uniform float u_time;
 
 varying vec4 v_color;

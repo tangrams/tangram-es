@@ -5,8 +5,9 @@ precision highp float;
 uniform mat4 u_modelView;
 uniform mat4 u_modelViewProj;
 uniform mat3 u_normalMatrix;
-uniform float u_time;
+uniform vec3 u_tile_origin;
 uniform float u_tile_zoom;
+uniform float u_time;
 
 attribute vec4 a_position;
 attribute vec4 a_color;
@@ -36,6 +37,7 @@ void main() {
     #pragma tangram: position
 
     v_color = a_color;
+    
     v_eyeToPoint = vec3(u_modelView * position);
     v_normal = normalize(u_normalMatrix * a_normal);
 

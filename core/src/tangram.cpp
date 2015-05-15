@@ -44,21 +44,29 @@ namespace Tangram {
         // Create a scene object
         if (!m_scene) {
             m_scene = std::make_shared<Scene>();
+
+            std::shared_ptr<Material> mat(new Material());
+            mat->setAmbientEnabled(true);
+            // mat->setDiffuse("sem.jpg",MappingType::SPHEREMAP);
+            mat->setSpecularEnabled(false);
+            //mat->setNormal("normals.jpg",MappingType::UV);
             
             // Load style(s); hard-coded for now
             std::unique_ptr<Style> polyStyle(new PolygonStyle("Polygon"));
-            polyStyle->setLighting(LightingType::vertex);
+            polyStyle->setLighting(LightingType::fragment);
             polyStyle->addLayers({
                 "buildings",
                 "water",
                 "earth",
                 "landuse"
             });
+            polyStyle->setMaterial(mat);
             m_scene->addStyle(std::move(polyStyle));
             
             std::unique_ptr<Style> linesStyle(new PolylineStyle("Polyline"));
             linesStyle->setLighting(LightingType::vertex);
             linesStyle->addLayers({"roads"});
+            // linesStyle->setMaterial(mat);
             m_scene->addStyle(std::move(linesStyle));
 
             m_ftContext = std::make_shared<FontContext>();

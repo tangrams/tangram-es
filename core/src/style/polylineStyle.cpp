@@ -4,12 +4,7 @@
 #include "tangram.h"
 #include <ctime>
 
-PolylineStyle::PolylineStyle(std::string _name, GLenum _drawMode) : Style(_name, _drawMode) {
-    m_material.setEmissionEnabled(false);
-    m_material.setAmbientEnabled(true);
-    m_material.setDiffuse(glm::vec4(1.0));
-    m_material.setSpecularEnabled(true);
-    
+PolylineStyle::PolylineStyle(std::string _name, GLenum _drawMode) : Style(_name, _drawMode) {    
     constructVertexLayout();
     constructShaderProgram();
 }
@@ -35,8 +30,6 @@ void PolylineStyle::constructShaderProgram() {
     
     m_shaderProgram = std::make_shared<ShaderProgram>();
     m_shaderProgram->setSourceStrings(fragShaderSrcStr, vertShaderSrcStr);
-    
-    m_material.injectOnProgram(m_shaderProgram);
 }
 
 void PolylineStyle::buildPoint(Point& _point, std::string& _layer, Properties& _props, VboMesh& _mesh) const {
