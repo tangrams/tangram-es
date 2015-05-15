@@ -9,6 +9,8 @@
 #include <string.h>
 #include <termios.h>
 
+#include <curl/curl.h>
+
 #include "context.h"
 #include "tangram.h"
 #include "platform.h"
@@ -104,6 +106,9 @@ int main(int argc, char **argv){
     
     // Start OpenGL context
     initGL();
+
+    /* Do Curl Init */
+    curl_global_init(CURL_GLOBAL_DEFAULT);
     
     // Set background color and clear buffers
     Tangram::initialize();
@@ -118,6 +123,8 @@ int main(int argc, char **argv){
     while (bUpdate) {
         updateGL();
 
+        processNetworkQueue();
+
         if (getRenderRequest()) {
             setRenderRequest(false);
             newFrame();
@@ -125,6 +132,7 @@ int main(int argc, char **argv){
     }
     
     Tangram::teardown();
+    curl_global_cleanup();
     closeGL();
     return 0;
 }

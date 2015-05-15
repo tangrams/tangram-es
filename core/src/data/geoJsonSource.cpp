@@ -9,13 +9,13 @@ GeoJsonSource::GeoJsonSource() {
     m_urlTemplate = "http://vector.mapzen.com/osm/all/[z]/[x]/[y].json";
 }
 
-std::shared_ptr<TileData> GeoJsonSource::parse(const MapTile& _tile, std::stringstream& _in) {
+std::shared_ptr<TileData> GeoJsonSource::parse(const MapTile& _tile, std::vector<char>& _rawData) {
 
     std::shared_ptr<TileData> tileData = std::make_shared<TileData>();
-
+    
     // parse written data into a JSON object
     rapidjson::Document doc;
-    doc.Parse(_in.str().c_str());
+    doc.Parse(_rawData.data());
 
     if (doc.HasParseError()) {
 

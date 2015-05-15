@@ -50,6 +50,8 @@ public:
      * constructs or disposes tiles as needed and returns true
      */
     void updateTileSet();
+
+    void addToWorkerQueue(std::vector<char>&& _rawData, const TileID& _id, const int _dataSourceID);
     
     /* Returns the set of currently visible tiles */
     const std::map<TileID, std::shared_ptr<MapTile>>& getVisibleTiles() { return m_tileSet; }
@@ -63,6 +65,8 @@ private:
     std::shared_ptr<View> m_view;
     std::shared_ptr<Scene> m_scene;
     
+    std::mutex m_queueTileMutex;
+    
     // TODO: Might get away with using a vector of pairs here (and for searching using std:search (binary search))
     std::map<TileID, std::shared_ptr<MapTile>> m_tileSet;
     
@@ -71,7 +75,7 @@ private:
     const static size_t MAX_WORKERS = 4;
     std::list<std::unique_ptr<TileWorker> > m_workers;
     
-    std::list<TileID> m_queuedTiles;
+    std::list<std::unique_ptr<WorkerData>> m_queuedTiles;
     
     bool m_tileSetChanged = false;
     

@@ -5,17 +5,54 @@
 #include <iostream>
 #include <fstream>
 #include <string>
+#include <list>
 
 #include "platform.h"
 #include "gl.h"
 
 static bool s_isContinuousRendering = false;
+static std::function<void(std::vector<char>&&, TileID, int)> networkCallback;
+
+static NetworkWorker s_Workers[NUM_WORKERS];
+static std::list<std::unique_ptr<NetWorkerData>> s_WorkerDataQueue;
 
 void logMsg(const char* fmt, ...) {
     va_list args;
     va_start(args, fmt);
     vfprintf(stderr, fmt, args);
     va_end(args);
+}
+
+void processNetworkQueue() {
+
+    // attach workers to NetWorkerData
+    {
+        auto workerDataItr = s_WorkerDataQueue.begin();
+        for(auto& worker : s_Workers) {
+            if(workerDataItr == s_WorkerDataQueue.end()) {
+                break;
+            }
+            if(worker.isAvailable()) {
+                worker.perform(std::move(*workerDataItr));
+                workerDataItr = s_WorkerDataQueue.erase(workerDataItr);
+            }
+        }
+    }
+
+    // check if any of the workers is done
+    {
+        for(auto& worker : s_Workers) {
+            if(worker.isFinished() && !worker.isAvailable()) {
+                auto resultData = worker.getWorkerResult();
+                worker.reset();
+                if(resultData->rawData.size() != 0) {
+                    networkCallback(std::move(resultData->rawData), resultData->tileID, resultData->dataSourceID);
+                } else {
+                    logMsg("Something went wrong during network fetch of tile: [%d, %d, %d]\n", resultData->tileID.x, resultData->tileID.y, resultData->tileID.z);
+                }
+            }
+        }
+    }
 }
 
 void requestRender() {
@@ -77,5 +114,37 @@ unsigned char* bytesFromResource(const char* _path, unsigned int* _size) {
 
     return reinterpret_cast<unsigned char *>(cdata);
 }
+
+bool startNetworkRequest(const std::string& _url, const TileID& _tileID, const int _dataSourceID) {
+
+    std::unique_ptr<NetWorkerData> workerData(new NetWorkerData(_url, _tileID, _dataSourceID));
+    for(auto& worker : s_Workers) {
+        if(worker.isAvailable()) {
+            worker.perform( std::move(workerData) ); 
+            return true;
+        }
+    }
+    s_WorkerDataQueue.push_back( std::move(workerData) );
+    return true;
+
+}
+
+void cancelNetworkRequest(const std::string& _url) {
+
+    // Only clear this request if a worker has not started operating on it!! otherwise it gets too convoluted with curl!
+    auto itr = s_WorkerDataQueue.begin();
+    while(itr != s_WorkerDataQueue.end()) {
+        if((*itr)->url == _url) {
+            itr = s_WorkerDataQueue.erase(itr);
+        } else {
+            itr++;
+        }
+    }
+}
+
+void setNetworkRequestCallback(std::function<void(std::vector<char>&&, TileID, int)>&& _callback) {
+    networkCallback = _callback;
+}
+
 
 #endif

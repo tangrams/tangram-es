@@ -23,6 +23,13 @@ MapTile::MapTile(TileID _id, const MapProjection& _projection) : m_id(_id),  m_p
 
 }
 
+MapTile::MapTile(MapTile&& _other) : m_id(std::move(m_id)), m_proxyCounter(std::move(_other.m_proxyCounter)), 
+                                     m_projection(std::move(_other.m_projection)), m_scale(std::move(_other.m_scale)), 
+                                     m_inverseScale(std::move(_other.m_inverseScale)), m_tileOrigin(std::move(_other.m_tileOrigin)), 
+                                     m_modelMatrix(std::move(_other.m_modelMatrix)), m_geometry(std::move(_other.m_geometry)), 
+                                     m_buffers(std::move(_other.m_buffers)) {}
+
+
 MapTile::~MapTile() {
 
     m_geometry.clear();

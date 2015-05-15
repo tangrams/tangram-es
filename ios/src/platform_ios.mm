@@ -10,6 +10,7 @@
 #include "ViewController.h"
 
 static ViewController* viewController;
+static std::function<void(std::vector<char>&&, TileID, int)> networkCallback;
 
 void setViewController(ViewController* _controller) {
     
@@ -88,6 +89,36 @@ unsigned char* bytesFromResource(const char* _path, unsigned int* _size) {
     resource.close();
 
     return reinterpret_cast<unsigned char *>(cdata);
+}
+
+bool startNetworkRequest(const std::string& _url, const TileID& _tileID, const int _dataSourceID) {
+
+    NSString* nsUrl = [NSString stringWithUTF8String:_url.c_str()];
+    
+    if(! [viewController networkRequestWithUrl:nsUrl
+                         TileID:_tileID
+                         DataSourceID:[NSNumber numberWithInt:_dataSourceID] ] ) {
+        
+        logMsg("\"networkRequest\" returned false");
+        return false;
+        
+    }
+    
+    return true;
+
+}
+
+void cancelNetworkRequest(const std::string& _url) {
+    NSString* nsUrl = [NSString stringWithUTF8String:_url.c_str()];
+    [viewController cancelNetworkRequestWithUrl:nsUrl];
+}
+
+void setNetworkRequestCallback(std::function<void(std::vector<char>&&, TileID, int)>&& _callback) {
+    networkCallback = _callback;
+}
+
+void networkDataBridge(std::vector<char>& _rawData, TileID _tileID, int _dataSource) {
+    networkCallback(std::move(_rawData), _tileID, _dataSource);
 }
 
 #endif //PLATFORM_IOS

@@ -3,6 +3,10 @@ package com.mapzen.tangram;
 import javax.microedition.khronos.egl.EGLConfig;
 import javax.microedition.khronos.opengles.GL10;
 
+import java.io.File;
+import java.io.IOException;
+import java.util.concurrent.TimeUnit;
+
 import android.app.Activity;
 import android.content.res.AssetManager;
 import android.opengl.GLSurfaceView;
@@ -21,12 +25,24 @@ import com.almeros.android.multitouch.RotateGestureDetector.OnRotateGestureListe
 import com.almeros.android.multitouch.ShoveGestureDetector;
 import com.almeros.android.multitouch.ShoveGestureDetector.OnShoveGestureListener;
 
+import com.squareup.okhttp.Callback;
+import com.squareup.okhttp.OkHttpClient;
+import com.squareup.okhttp.Cache;
+import com.squareup.okhttp.Request;
+import com.squareup.okhttp.RequestBody;
+import com.squareup.okhttp.Response;
+import com.squareup.okhttp.Call;
+import okio.BufferedSource;
+
 public class Tangram implements Renderer, OnTouchListener, OnScaleGestureListener, OnRotateGestureListener, OnGestureListener, OnShoveGestureListener {
 
     static {
         System.loadLibrary("c++_shared");
         System.loadLibrary("tangram");
     }
+
+    private OkHttpClient okClient;
+    private static final int TILE_CACHE_SIZE = 1024 * 1024 * 30; // 30 Mgs
 
     private static native void init(Tangram tangramInstance, AssetManager assetManager);
     private static native void resize(int width, int height);
@@ -41,6 +57,7 @@ public class Tangram implements Renderer, OnTouchListener, OnScaleGestureListene
     private static native void handlePinchGesture(float posX, float posY, float scale);
     private static native void handleRotateGesture(float posX, float posY, float rotation);
     private static native void handleShoveGesture(float distance);
+    private static native void networkDataBridge(byte[] rawDataBytes, int tileIDx, int tileIDy, int tileIDz, int dataSourceID);
 
     private long time = System.nanoTime();
     private boolean contextDestroyed = false;
@@ -78,7 +95,17 @@ public class Tangram implements Renderer, OnTouchListener, OnScaleGestureListene
         this.scaleGestureDetector = new ScaleGestureDetector(mainApp, this);
         this.rotateGestureDetector = new RotateGestureDetector(mainApp, this);
         this.shoveGestureDetector = new ShoveGestureDetector(mainApp, this);
-        
+
+        this.okClient = new OkHttpClient();
+        okClient.setConnectTimeout(10, TimeUnit.SECONDS);
+        okClient.setReadTimeout(30, TimeUnit.SECONDS);
+        File cacheDir = new File(mainApp.getExternalCacheDir().getAbsolutePath() + "/tile_cache");
+        try {
+            Cache okTileCache = new Cache(cacheDir, TILE_CACHE_SIZE);
+            okClient.setCache(okTileCache);
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
     }
 
     public View getView() {
@@ -235,6 +262,33 @@ public class Tangram implements Renderer, OnTouchListener, OnScaleGestureListene
 
     public void onShoveEnd(ShoveGestureDetector detector) {
         return;
+    }
+
+    public void cancelNetworkRequest(String url) {
+        okClient.cancel(url);
+    }
+
+    // Network requests using okHttp
+    public boolean networkRequest(String url, final int tileIDx, final int tileIDy, final int tileIDz, final int dataSourceID) throws Exception {
+        Request request = new Request.Builder().tag(url).url(url).build();
+
+        okClient.newCall(request).enqueue(new Callback() {
+            @Override 
+            public void onFailure(Request request, IOException e) {
+                e.printStackTrace();
+            }
+
+            @Override 
+            public void onResponse(Response response) throws IOException {
+
+                if(!response.isSuccessful()) throw new IOException("Unexpected code " + response);
+
+                BufferedSource src = response.body().source();
+                byte[] rawDataBytes = src.readByteArray();
+                networkDataBridge(rawDataBytes, tileIDx, tileIDy, tileIDz, dataSourceID);
+            }
+        });
+        return true;
     }
 }
 

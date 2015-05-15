@@ -1,4 +1,3 @@
-
 #include <jni.h>
 #include "tangram.h"
 // Includes platform.h for setAssetManager reference
@@ -6,7 +5,7 @@
 
 extern "C" {
     JNIEXPORT void JNICALL Java_com_mapzen_tangram_Tangram_init(JNIEnv* jniEnv, jobject obj, jobject tangramInstance, jobject assetManager) {
-        jniInit(jniEnv, tangramInstance, assetManager);
+        setupJniEnv(jniEnv, tangramInstance, assetManager);
         Tangram::initialize();
     }
 
@@ -57,6 +56,10 @@ extern "C" {
     JNIEXPORT void JNICALL Java_com_mapzen_tangram_Tangram_handleShoveGesture(JNIEnv* jniEnv, jobject obj, jfloat distance) {
         Tangram::handleShoveGesture(distance);
     }
-    
+
+    JNIEXPORT void JNICALL Java_com_mapzen_tangram_Tangram_networkDataBridge(JNIEnv* jniEnv, jobject obj, jbyteArray jFetchedBytes, jint tileIDx, jint tileIDy, jint tileIDz, jint dataSourceID) {
+        networkDataBridge(jniEnv, jFetchedBytes, tileIDx, tileIDy, tileIDz, dataSourceID);
+    }
+
 }
 

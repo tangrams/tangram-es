@@ -18,6 +18,7 @@
 #include "scene/scene.h"
 #include "util/error.h"
 #include "stl_util.hpp"
+#include "util/tileID.h"
 
 namespace Tangram {
 
@@ -109,6 +110,13 @@ namespace Tangram {
 
         SceneLoader loader;
         loader.loadScene("config.yaml", *m_scene, *m_tileManager, *m_view);
+
+        setNetworkRequestCallback([&](std::vector<char>&& _rawData, TileID _tileId, int _dataSourceID) {
+
+            m_tileManager->addToWorkerQueue(std::move(_rawData), _tileId, _dataSourceID);
+            requestRender();
+
+        });
 
         // Set up openGL state
         glDisable(GL_BLEND);
@@ -320,5 +328,6 @@ namespace Tangram {
         VboMesh::invalidateAllVBOs();
         
     }
-    
+
 }
+

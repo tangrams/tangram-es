@@ -2,33 +2,49 @@
 
 #include "platform.h"
 
-#include <jni.h>
 #include <android/log.h>
 #include <android/asset_manager.h>
 #include <android/asset_manager_jni.h>
+#include <jni.h>
 #include <cstdarg>
 
+/* Followed the following document for JavaVM tips when used with native threads
+ * http://android.wooyd.org/JNIExample/#NWD1sCYeT-I
+ * http://developer.android.com/training/articles/perf-jni.html and
+ * http://www.ibm.com/developerworks/library/j-jni/
+ * http://docs.oracle.com/javase/7/docs/technotes/guides/jni/spec/invocation.html
+ */
+
 static JavaVM* jvm;
-static jobject tangramObj;
+static JNIEnv* jniEnv;
+static jobject tangramInstance;
 static jmethodID requestRenderMethodID;
 static jmethodID setRenderModeMethodID;
+static jmethodID networkRequestMID;
+static jmethodID cancelNetworkRequestMID;
 static AAssetManager* assetManager;
+
 static bool s_isContinuousRendering = false;
 
-void jniInit(JNIEnv* _jniEnv, jobject _tangramInstance, jobject _assetManager) {
+static std::function<void(std::vector<char>&&, TileID, int)> networkCallback;
 
-    assetManager = AAssetManager_fromJava(_jniEnv, _assetManager);
+void setupJniEnv(JNIEnv* _jniEnv, jobject _tangramInstance, jobject _assetManager) {
+	_jniEnv->GetJavaVM(&jvm);
+    jniEnv = _jniEnv;
+
+    tangramInstance = jniEnv->NewGlobalRef(_tangramInstance);
+    jclass tangramClass = jniEnv->FindClass("com/mapzen/tangram/Tangram");
+    networkRequestMID = jniEnv->GetMethodID(tangramClass, "networkRequest", "(Ljava/lang/String;IIII)Z");
+    cancelNetworkRequestMID = jniEnv->GetMethodID(tangramClass, "cancelNetworkRequest", "(Ljava/lang/String;)V");
+	requestRenderMethodID = _jniEnv->GetMethodID(tangramClass, "requestRender", "()V");
+    setRenderModeMethodID = _jniEnv->GetMethodID(tangramClass, "setRenderMode", "(I)V");
+
+    assetManager = AAssetManager_fromJava(jniEnv, _assetManager);
 
     if (assetManager == nullptr) {
         logMsg("ERROR: Could not obtain Asset Manager reference\n");
     }
 
-    _jniEnv->GetJavaVM(&jvm);
-    tangramObj = _jniEnv->NewGlobalRef(_tangramInstance);
-    jclass tangramClass = _jniEnv->GetObjectClass(tangramObj);
-    requestRenderMethodID = _jniEnv->GetMethodID(tangramClass, "requestRender", "()V");
-    setRenderModeMethodID = _jniEnv->GetMethodID(tangramClass, "setRenderMode", "(I)V");
-    
 }
 
 void logMsg(const char* fmt, ...) {
@@ -48,7 +64,7 @@ void requestRender() {
         jvm->AttachCurrentThread(&jniEnv, NULL);
     }
 
-    jniEnv->CallVoidMethod(tangramObj, requestRenderMethodID);
+    jniEnv->CallVoidMethod(tangramInstance, requestRenderMethodID);
 
     if(status == JNI_EDETACHED) {
         jvm->DetachCurrentThread();
@@ -65,7 +81,7 @@ void setContinuousRendering(bool _isContinuous) {
         jvm->AttachCurrentThread(&jniEnv, NULL);
     }
 
-    jniEnv->CallVoidMethod(tangramObj, requestRenderMethodID, _isContinuous ? 1 : 0);
+    jniEnv->CallVoidMethod(tangramInstance, requestRenderMethodID, _isContinuous ? 1 : 0);
 
     if(status == JNI_EDETACHED) {
         jvm->DetachCurrentThread();
@@ -135,5 +151,46 @@ unsigned char* bytesFromResource(const char* _path, unsigned int* _size) {
 
     return data;
 }
+
+bool startNetworkRequest(const std::string& _url, const TileID& _tileID, const int _dataSourceID) {
+    
+    jstring jUrl = jniEnv->NewStringUTF(_url.c_str());
+
+    jboolean methodResult = jniEnv->CallBooleanMethod(tangramInstance, networkRequestMID, jUrl, (jint)_tileID.x, (jint)_tileID.y, (jint)_tileID.z, (jint)_dataSourceID);
+
+    if(!methodResult) {
+        logMsg("\"networkRequest\" returned false");
+        return methodResult;
+    }
+
+    return methodResult;
+}
+
+void cancelNetworkRequest(const std::string& _url) {
+
+    jstring jUrl = jniEnv->NewStringUTF(_url.c_str());
+    jniEnv->CallVoidMethod(tangramInstance, cancelNetworkRequestMID, jUrl);
+
+}
+
+void setNetworkRequestCallback(std::function<void(std::vector<char>&&, TileID, int)>&& _callback) {
+
+    networkCallback = _callback;
+
+}
+
+void networkDataBridge(JNIEnv* _jniEnv, jbyteArray _jFetchedBytes, int _tileIDx, int _tileIDy, int _tileIDz, int _dataSourceID) {
+
+    int dataLength = _jniEnv->GetArrayLength(_jFetchedBytes);
+
+    std::vector<char> rawData;
+    rawData.resize(dataLength);
+
+    _jniEnv->GetByteArrayRegion(_jFetchedBytes, 0, dataLength, reinterpret_cast<jbyte*>(rawData.data()));
+
+    networkCallback(std::move(rawData), TileID(_tileIDx, _tileIDy, _tileIDz), _dataSourceID);
+
+}
+
 
 #endif

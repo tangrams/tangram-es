@@ -4,6 +4,7 @@
 #include <sstream>
 #include <map>
 #include <memory>
+#include <vector>
 #include <mutex>
 
 struct TileData;
@@ -21,9 +22,6 @@ protected:
 
     std::string m_urlTemplate; //URL template for data sources 
     
-    /* Parse an I/O response into a <TileData>, returning an empty TileData on failure */
-    virtual std::shared_ptr<TileData> parse(const MapTile& _tile, std::stringstream& _in) = 0;
-    
 public:
 
      /* Set the URL template for data sources 
@@ -40,13 +38,20 @@ public:
      * then stores it to be accessed via <GetTileData>. This method SHALL NOT be called
      * from the main thread. 
      */
-    virtual bool loadTileData(const MapTile& _tile) = 0;
+    virtual bool loadTileData(const TileID& _tileID, const int _dataSourceID) = 0;
+    virtual void cancelLoadingTile(const TileID& _tile) = 0;
 
     /* Returns the data corresponding to a <TileID> */
     virtual std::shared_ptr<TileData> getTileData(const TileID& _tileID);
 
     /* Checks if data exists for a specific <TileID> */
     virtual bool hasTileData(const TileID& _tileID);
+    
+    /* Parse an I/O response into a <TileData>, returning an empty TileData on failure */
+    virtual std::shared_ptr<TileData> parse(const MapTile& _tile, std::vector<char>& _rawData)= 0;
+
+    /* Stores tileData in m_tileStore */
+    virtual void setTileData(const TileID& _tileID, const std::shared_ptr<TileData>& _tileData);
     
     /* Clears all data associated with this dataSource */
     void clearData();
@@ -60,14 +65,15 @@ class NetworkDataSource : public DataSource {
 protected:
 
     /* Constructs the URL of a tile using <m_urlTemplate> */
-    virtual std::unique_ptr<std::string> constructURL(const TileID& _tileCoord);
+    virtual void constructURL(const TileID& _tileCoord, std::string& _url);
 
 public:
 
     NetworkDataSource();
     virtual ~NetworkDataSource();
 
-    virtual bool loadTileData(const MapTile& _tile) override;
+    virtual bool loadTileData(const TileID& _tileID, const int _dataSourceID) override;
+    virtual void cancelLoadingTile(const TileID& _tile) override;
 
 };
 
