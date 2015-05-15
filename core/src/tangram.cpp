@@ -195,7 +195,7 @@ namespace Tangram {
         
         if(m_scene) {
             // Update lights and styles
-        }   
+        }
     }
 
     void render() {

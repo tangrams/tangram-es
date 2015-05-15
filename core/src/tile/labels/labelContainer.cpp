@@ -8,7 +8,7 @@ LabelContainer::~LabelContainer() {
     m_pendingLabels.clear();
 }
 
-bool LabelContainer::addLabel(const TileID& _tileID, const std::string& _styleName, LabelTransform _transform, std::string _text, Label::Type _type, const glm::mat4& _model) {
+bool LabelContainer::addLabel(const TileID& _tileID, const std::string& _styleName, Label::Transform _transform, std::string _text, Label::Type _type, const glm::mat4& _model) {
     auto currentBuffer = m_ftContext->getCurrentBuffer();
 
     if (currentBuffer) {
@@ -84,7 +84,7 @@ void LabelContainer::updateOcclusions() {
         for (auto& tileLabelsPair : m_labels[styleName]) {
             auto& labels = tileLabelsPair.second;
             for(auto& label : labels) {
-                if (!label->isVisible() || label->isOutOfScreen() || label->getType() == Label::Type::DEBUG) {
+                if (!label->canOcclude()) {
                     continue;
                 }
                 
@@ -113,8 +113,20 @@ void LabelContainer::updateOcclusions() {
     
     // no priorities, only occlude one of the two occluded label
     for (auto& pair : occlusions) {
-        if(pair.second->isVisible()) {
-            pair.first->setVisible(false);
+        if(!pair.second->occludedLastFrame()) {
+            pair.first->setOcclusion(true);
+        }
+    }
+    
+    for (auto& styleTilepair : m_labels) {
+        std::string styleName = styleTilepair.first;
+        for (auto& tileLabelsPair : m_labels[styleName]) {
+            auto& labels = tileLabelsPair.second;
+            for(auto& label : labels) {
+                if (label->canOcclude()) {
+                    label->occlusionSolved();
+                }
+            }
         }
     }
 }
