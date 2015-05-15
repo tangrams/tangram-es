@@ -13,7 +13,7 @@
 #include "gl.h"
 #include "view/view.h"
 
-#include "scene/material.h"
+#include "style/material.h"
 
 enum class LightingType {
     none,
@@ -34,6 +34,10 @@ class Scene;
  * geometry into meshes. See <PolygonStyle> for a basic implementation.
  */
 class Style {
+private:
+    /* Pointer to material */
+    std::shared_ptr<Material> m_material;
+
 protected:
 
     /* The platform pixel scale */
@@ -47,10 +51,10 @@ protected:
     
     /* <VertexLayout> shared between meshes using this style */
     std::shared_ptr<VertexLayout> m_vertexLayout;
-    
+
     /* Draw mode to pass into <VboMesh>es created with this style */
     GLenum m_drawMode;
-    
+
     /* Set of strings defining which data layers this style applies to */
     std::set<std::string> m_layers;
     
@@ -86,13 +90,17 @@ protected:
 public:
 
     Style(std::string _name, GLenum _drawMode);
+    virtual ~Style();
 
-    /* Add layers to which this style will apply 
+    /* Add layers to which this style will apply
      * TODO: More flexible filtering */
     virtual void addLayers(std::vector<std::string> _layers);
     
     /* Add styled geometry from the given Json object to the given <MapTile> */
     virtual void addData(TileData& _data, MapTile& _tile, const MapProjection& _mapProjection) const;
+
+    virtual void setMaterial(const std::shared_ptr<Material>& _material);
+    std::shared_ptr<Material> getMaterial() { return m_material; }
 
     /* Perform any unsetup needed after drawing each frame */
     virtual void teardown() {}
@@ -107,10 +115,7 @@ public:
 
     std::shared_ptr<ShaderProgram> getShaderProgram() const { return m_shaderProgram; }
     std::string getName() const { return m_name; }
-
-    virtual ~Style();
     
     virtual void setLighting( LightingType _lType );
 
-    Material    m_material;
 };

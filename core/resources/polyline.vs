@@ -2,12 +2,14 @@
 precision highp float;
 #endif
 
+#define TANGRAM_WORLD_POSITION_WRAP vec3(100000.0)
+
 uniform mat4 u_modelView;
 uniform mat4 u_modelViewProj;
 uniform mat3 u_normalMatrix;
+uniform float u_tile_zoom;
 uniform float u_time;
 uniform float u_zoom;
-uniform float u_tile_zoom;
 
 attribute vec4 a_position;
 attribute vec4 a_color;
@@ -16,6 +18,7 @@ attribute float a_extrudeWidth;
 attribute vec2 a_texcoord;
 attribute float a_layer;
 
+varying vec4 v_world_position;
 varying vec4 v_color;
 varying vec3 v_eyeToPoint;
 varying vec3 v_normal;

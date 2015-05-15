@@ -6,9 +6,11 @@
 #include <vector>
 #include <map>
 #include <unordered_map>
+#include "texture.h"
 
 #include "glm/glm.hpp"
 
+#include "util/texture.h"
 // TODO:
 // each ShaderProgram instance has a map of <string, vector<string>> pairs
 // the string identifies the tag to replace, the vector is a list of strings of GLSL to inject
@@ -136,5 +138,8 @@ private:
     GLuint makeCompiledShader(const std::string& _src, GLenum _type);
     
     void applySourceBlocks(std::string& _vertSrcOut, std::string& _fragSrcOut);
+    
+    std::unordered_map<std::string, Texture::TextureSlot> m_textureSlots;
+    GLuint m_freeTextureUnit;
     
 };
