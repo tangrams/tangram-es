@@ -3,6 +3,7 @@
 #include <future>
 #include <memory>
 #include <vector>
+#include <sstream>
 
 #include "tileID.h"
 
@@ -54,6 +55,7 @@ class NetworkWorker {
 
     private:
         std::unique_ptr<NetWorkerData> m_workerData;
+        std::stringstream m_stream;
         bool m_available = true;
         bool m_finished = false;
         CURL* m_curlHandle = nullptr;
