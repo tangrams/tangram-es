@@ -26,8 +26,6 @@ static AAssetManager* assetManager;
 
 static bool s_isContinuousRendering = false;
 
-static std::function<void(std::vector<char>&&, TileID, int)> networkCallback;
-
 void setupJniEnv(JNIEnv* _jniEnv, jobject _tangramInstance, jobject _assetManager) {
 	_jniEnv->GetJavaVM(&jvm);
     jniEnv = _jniEnv;
