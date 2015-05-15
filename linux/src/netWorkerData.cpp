@@ -22,29 +22,35 @@ static size_t write_data(void *_buffer, size_t _size, size_t _nmemb, void *_data
     return realSize;
 }
 
-void NetworkWorker::perform(std::unique_ptr<NetWorkerData> _workerData) {
+NetworkWorker::NetworkWorker() {
+    m_curlHandle = curl_easy_init();
+}
 
+NetworkWorker::~NetworkWorker() {
+    curl_easy_cleanup(m_curlHandle);
+} 
+
+void NetworkWorker::perform(std::unique_ptr<NetWorkerData> _workerData) {
+    
     m_workerData = std::move(_workerData);
     m_available = false;
 
     m_future = std::async(std::launch::async, [&]() {
 
         std::vector<char> rawData;
-        CURL* curlHandle = curl_easy_init();
 
         // set up curl to perform fetch
-        curl_easy_setopt(curlHandle, CURLOPT_WRITEFUNCTION, write_data);
-        curl_easy_setopt(curlHandle, CURLOPT_WRITEDATA, &rawData);
-        curl_easy_setopt(curlHandle, CURLOPT_URL, m_workerData->url.c_str());
-        curl_easy_setopt(curlHandle, CURLOPT_HEADER, 0L);
-        curl_easy_setopt(curlHandle, CURLOPT_VERBOSE, 0L);
-        curl_easy_setopt(curlHandle, CURLOPT_ACCEPT_ENCODING, "gzip");
+        curl_easy_setopt(m_curlHandle, CURLOPT_WRITEFUNCTION, write_data);
+        curl_easy_setopt(m_curlHandle, CURLOPT_WRITEDATA, &rawData);
+        curl_easy_setopt(m_curlHandle, CURLOPT_URL, m_workerData->url.c_str());
+        curl_easy_setopt(m_curlHandle, CURLOPT_HEADER, 0L);
+        curl_easy_setopt(m_curlHandle, CURLOPT_VERBOSE, 0L);
+        curl_easy_setopt(m_curlHandle, CURLOPT_ACCEPT_ENCODING, "gzip");
     
         logMsg("Fetching URL with curl: %s\n", m_workerData->url.c_str());
 
-        CURLcode result = curl_easy_perform(curlHandle);
+        CURLcode result = curl_easy_perform(m_curlHandle);
         
-        curl_easy_cleanup(curlHandle);
         if (result != CURLE_OK) {
             logMsg("curl_easy_perform failed: %s\n", curl_easy_strerror(result));
             rawData.clear();
