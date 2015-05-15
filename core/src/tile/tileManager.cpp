@@ -196,9 +196,6 @@ void TileManager::removeTile(std::map< TileID, std::shared_ptr<MapTile> >::itera
         }
     }
 
-    // Remove labels for tile
-    LabelContainer::GetInstance()->removeLabels(id);
-
     // Remove tile from set
     _tileIter = m_tileSet.erase(_tileIter);
     
