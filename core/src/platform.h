@@ -1,19 +1,39 @@
 #pragma once
 
+#include <string>
+#include <vector>
+#include <functional>
+
+#include "tileID.h"
+
 #ifdef PLATFORM_ANDROID
+
 struct _JNIEnv;
 typedef _JNIEnv JNIEnv;
 class _jobject;
 typedef _jobject* jobject;
-void jniInit(JNIEnv* _jniEnv, jobject obj, jobject _assetManager);
+class _jbyteArray;
+typedef _jbyteArray* jbyteArray;
+
+void setupJniEnv(JNIEnv* _jniEnv, jobject _tangramInstance, jobject _assetManager);
+void networkDataBridge(JNIEnv* jniEnv, jbyteArray jFetchedBytes, int tileIDx, int tileIDy, int tileIDz, int dataSourceID);
 #endif
+
 
 #if (defined PLATFORM_IOS) && (defined __OBJC__)
 #import "ViewController.h"
 void setViewController(ViewController* _controller);
+void networkDataBridge(std::vector<char>& _rawData, TileID _tileID, int _dataSource);
 #endif
 
-#include <string>
+#ifdef PLATFORM_OSX
+void NSurlInit();
+#endif
+
+#if (defined PLATFORM_LINUX) || (defined PLATFORM_RPI)
+#include "netWorkerData.h"
+void processNetworkQueue();
+#endif
 
 /* Print a formatted message to the console
  *
@@ -49,3 +69,10 @@ std::string stringFromResource(const char* _path);
  * allocated file
  */ 
 unsigned char* bytesFromResource(const char* _path, unsigned int* _size);
+
+bool startNetworkRequest(const std::string& _url, const TileID& _tileID, const int _dataSourceID);
+
+void cancelNetworkRequest(const std::string& _url);
+
+void setNetworkRequestCallback(std::function<void(std::vector<char>&&, TileID, int)>&& _callback);
+

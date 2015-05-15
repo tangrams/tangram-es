@@ -44,7 +44,6 @@ function(link_libraries)
         "-framework CoreFoundation"   
         "-framework CoreVideo")
 
-    target_link_libraries(${EXECUTABLE_NAME} -lcurl) #use system libcurl
     target_link_libraries(${EXECUTABLE_NAME} core ${GLFW_LDFLAGS})
 
     # add resource files and property list

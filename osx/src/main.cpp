@@ -136,6 +136,8 @@ int main(void) {
     /* Make the window's context current */
     glfwMakeContextCurrent(window);
 
+    NSurlInit();
+
     Tangram::initialize();
     Tangram::resize(width, height);
 

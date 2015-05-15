@@ -12,7 +12,7 @@ fi
 if [[ ${PLATFORM} == "linux" ]]; then
     # Build linux project
     echo "Building linux project"
-    make -j linux
+    make linux
 fi
 
 if [[ ${PLATFORM} == "ios" ]]; then

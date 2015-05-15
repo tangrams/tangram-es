@@ -7,17 +7,17 @@ add_definitions(-DPLATFORM_LINUX)
 
 include_directories(/usr/local/include)
 
+# add sources and include headers
+find_sources_and_include_directories(
+    ${PROJECT_SOURCE_DIR}/linux/src/*.h 
+    ${PROJECT_SOURCE_DIR}/linux/src/*.cpp)
+
 # load core library
 include_directories(${PROJECT_SOURCE_DIR}/core/include/)
 include_directories(${PROJECT_SOURCE_DIR}/core/include/jsoncpp/)
 set(CORE_LIB_DEPS -lcurl)
 add_subdirectory(${PROJECT_SOURCE_DIR}/core)
 include_recursive_dirs(${PROJECT_SOURCE_DIR}/core/src/*.h)
-
-# add sources and include headers
-find_sources_and_include_directories(
-    ${PROJECT_SOURCE_DIR}/linux/src/*.h 
-    ${PROJECT_SOURCE_DIR}/linux/src/*.cpp)
 
 # link and build functions
 function(link_libraries)
