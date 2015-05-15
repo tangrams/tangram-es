@@ -7,14 +7,16 @@
 #include <string>
 #include <list>
 
+#include "urlWorker.h"
 #include "platform.h"
 #include "gl.h"
 
-static bool s_isContinuousRendering = false;
-static std::function<void(std::vector<char>&&, TileID, int)> networkCallback;
+#define NUM_WORKERS 3
 
-static NetworkWorker s_Workers[NUM_WORKERS];
-static std::list<std::unique_ptr<NetWorkerData>> s_WorkerDataQueue;
+static bool s_isContinuousRendering = false;
+
+static UrlWorker s_Workers[NUM_WORKERS];
+static std::list<std::unique_ptr<UrlTask>> s_urlTaskQueue;
 
 void logMsg(const char* fmt, ...) {
     va_list args;
@@ -25,31 +27,29 @@ void logMsg(const char* fmt, ...) {
 
 void processNetworkQueue() {
 
-    // attach workers to NetWorkerData
-    {
-        auto workerDataItr = s_WorkerDataQueue.begin();
-        for(auto& worker : s_Workers) {
-            if(workerDataItr == s_WorkerDataQueue.end()) {
-                break;
-            }
-            if(worker.isAvailable()) {
-                worker.perform(std::move(*workerDataItr));
-                workerDataItr = s_WorkerDataQueue.erase(workerDataItr);
-            }
-        }
-    }
-
     // check if any of the workers is done
     {
         for(auto& worker : s_Workers) {
             if(worker.isFinished() && !worker.isAvailable()) {
-                auto resultData = worker.getWorkerResult();
+                auto result = worker.getResult();
                 worker.reset();
-                if(resultData->rawData.size() != 0) {
-                    networkCallback(std::move(resultData->rawData), resultData->tileID, resultData->dataSourceID);
-                } else {
-                    logMsg("Something went wrong during network fetch of tile: [%d, %d, %d]\n", resultData->tileID.x, resultData->tileID.y, resultData->tileID.z);
+                if(result->content.size() != 0) {
+                    result->callback(std::move(result->content));
                 }
+            }
+        }
+    }
+
+    // attach workers to NetWorkerData
+    {
+        auto taskItr = s_urlTaskQueue.begin();
+        for(auto& worker : s_Workers) {
+            if(taskItr == s_urlTaskQueue.end()) {
+                break;
+            }
+            if(worker.isAvailable()) {
+                worker.perform(std::move(*taskItr));
+                taskItr = s_urlTaskQueue.erase(taskItr);
             }
         }
     }
@@ -115,36 +115,31 @@ unsigned char* bytesFromResource(const char* _path, unsigned int* _size) {
     return reinterpret_cast<unsigned char *>(cdata);
 }
 
-bool startNetworkRequest(const std::string& _url, const TileID& _tileID, const int _dataSourceID) {
+bool startUrlRequest(const std::string& _url, UrlCallback _callback) {
 
-    std::unique_ptr<NetWorkerData> workerData(new NetWorkerData(_url, _tileID, _dataSourceID));
+    std::unique_ptr<UrlTask> task(new UrlTask(_url, _callback));
     for(auto& worker : s_Workers) {
         if(worker.isAvailable()) {
-            worker.perform( std::move(workerData) ); 
+            worker.perform(std::move(task)); 
             return true;
         }
     }
-    s_WorkerDataQueue.push_back( std::move(workerData) );
+    s_urlTaskQueue.push_back(std::move(task));
     return true;
 
 }
 
-void cancelNetworkRequest(const std::string& _url) {
+void cancelUrlRequest(const std::string& _url) {
 
     // Only clear this request if a worker has not started operating on it!! otherwise it gets too convoluted with curl!
-    auto itr = s_WorkerDataQueue.begin();
-    while(itr != s_WorkerDataQueue.end()) {
+    auto itr = s_urlTaskQueue.begin();
+    while(itr != s_urlTaskQueue.end()) {
         if((*itr)->url == _url) {
-            itr = s_WorkerDataQueue.erase(itr);
+            itr = s_urlTaskQueue.erase(itr);
         } else {
             itr++;
         }
     }
 }
-
-void setNetworkRequestCallback(std::function<void(std::vector<char>&&, TileID, int)>&& _callback) {
-    networkCallback = _callback;
-}
-
 
 #endif

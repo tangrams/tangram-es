@@ -4,8 +4,6 @@
 #include <vector>
 #include <functional>
 
-#include "tileID.h"
-
 #ifdef PLATFORM_ANDROID
 
 struct _JNIEnv;
@@ -32,7 +30,6 @@ void NSurlInit();
 #endif
 
 #if (defined PLATFORM_LINUX) || (defined PLATFORM_RPI)
-#include "netWorkerData.h"
 void processNetworkQueue();
 #endif
 
