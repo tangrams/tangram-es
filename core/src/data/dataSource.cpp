@@ -78,7 +78,7 @@ bool NetworkDataSource::loadTileData(const TileID& _tileID, const int _dataSourc
     
     constructURL(_tileID, url);
 
-    success = streamFromHttpASync(url, _tileID, _dataSourceID);
+    success = startNetworkRequest(url, _tileID, _dataSourceID);
     
     return success;
 }

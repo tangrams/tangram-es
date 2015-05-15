@@ -152,7 +152,7 @@ unsigned char* bytesFromResource(const char* _path, unsigned int* _size) {
     return data;
 }
 
-bool streamFromHttpASync(const std::string& _url, const TileID& _tileID, const int _dataSourceID) {
+bool startNetworkRequest(const std::string& _url, const TileID& _tileID, const int _dataSourceID) {
     
     jstring jUrl = jniEnv->NewStringUTF(_url.c_str());
 
