@@ -8,6 +8,9 @@
 #include <list>
 
 #include "platform.h"
+#include "context.h"
+
+static bool s_isContinuousRendering = false;
 
 static std::function<void(std::vector<char>&&, TileID, int)> networkCallback;
 
@@ -54,16 +57,15 @@ void processNetworkQueue() {
 }
 
 void requestRender() {
-    // TODO: implement non-continuous rendering on RPi
+    setRenderRequest(true);
 }
 
 void setContinuousRendering(bool _isContinuous) {
-    // TODO: implement non-continuous rendering on RPi
+    s_isContinuousRendering = _isContinuous;
 }
 
 bool isContinuousRendering() {
-    return false;
-    // TODO: implement non-continuous rendering on RPi
+    return s_isContinuousRendering;
 }
 
 std::string stringFromResource(const char* _path) {
@@ -107,7 +109,7 @@ unsigned char* bytesFromResource(const char* _path, unsigned int* _size) {
     return reinterpret_cast<unsigned char *>(cdata);
 }
 
-bool streamFromHttpASync(const std::string& _url, const TileID& _tileID, const int _dataSourceID) {
+bool startNetworkRequest(const std::string& _url, const TileID& _tileID, const int _dataSourceID) {
 
     std::unique_ptr<NetWorkerData> workerData(new NetWorkerData(_url, _tileID, _dataSourceID));
     for(auto& worker : s_Workers) {
