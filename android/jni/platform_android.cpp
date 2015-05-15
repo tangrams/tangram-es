@@ -20,8 +20,8 @@ static JNIEnv* jniEnv;
 static jobject tangramInstance;
 static jmethodID requestRenderMethodID;
 static jmethodID setRenderModeMethodID;
-static jmethodID networkRequestMID;
-static jmethodID cancelNetworkRequestMID;
+static jmethodID startUrlRequestMID;
+static jmethodID cancelUrlRequestMID;
 static AAssetManager* assetManager;
 
 static bool s_isContinuousRendering = false;
@@ -32,8 +32,8 @@ void setupJniEnv(JNIEnv* _jniEnv, jobject _tangramInstance, jobject _assetManage
 
     tangramInstance = jniEnv->NewGlobalRef(_tangramInstance);
     jclass tangramClass = jniEnv->FindClass("com/mapzen/tangram/Tangram");
-    networkRequestMID = jniEnv->GetMethodID(tangramClass, "networkRequest", "(Ljava/lang/String;J)Z");
-    cancelNetworkRequestMID = jniEnv->GetMethodID(tangramClass, "cancelNetworkRequest", "(Ljava/lang/String;)V");
+    startUrlRequestMID = jniEnv->GetMethodID(tangramClass, "startUrlRequest", "(Ljava/lang/String;J)Z");
+    cancelUrlRequestMID = jniEnv->GetMethodID(tangramClass, "cancelUrlRequest", "(Ljava/lang/String;)V");
 	requestRenderMethodID = _jniEnv->GetMethodID(tangramClass, "requestRender", "()V");
     setRenderModeMethodID = _jniEnv->GetMethodID(tangramClass, "setRenderMode", "(I)V");
 
@@ -157,17 +157,12 @@ bool startUrlRequest(const std::string& _url, UrlCallback _callback) {
     // This is probably super dangerous. In order to pass a reference to our callback we have to convert it
     // to a Java type. We allocate a new callback object and then reinterpret the pointer to it as a Java long. 
     // In Java, we associate this long with the current network request and pass it back to native code when
-    // the request completes (either in onNetworkSuccess or onNetworkFailure), reinterpret the long back into a
+    // the request completes (either in onUrlSuccess or onUrlFailure), reinterpret the long back into a
     // pointer, call the callback function if the request succeeded, and delete the heap-allocated UrlCallback 
     // to make sure nothing is leaked. 
     jlong jCallbackPtr = reinterpret_cast<jlong>(new UrlCallback(_callback));
 
-    jboolean methodResult = jniEnv->CallBooleanMethod(tangramInstance, networkRequestMID, jUrl, jCallbackPtr);
-
-    if(!methodResult) {
-        logMsg("\"networkRequest\" returned false");
-        return methodResult;
-    }
+    jboolean methodResult = jniEnv->CallBooleanMethod(tangramInstance, startUrlRequestMID, jUrl, jCallbackPtr);
 
     return methodResult;
 }
@@ -175,26 +170,26 @@ bool startUrlRequest(const std::string& _url, UrlCallback _callback) {
 void cancelUrlRequest(const std::string& _url) {
 
     jstring jUrl = jniEnv->NewStringUTF(_url.c_str());
-    jniEnv->CallVoidMethod(tangramInstance, cancelNetworkRequestMID, jUrl);
+    jniEnv->CallVoidMethod(tangramInstance, cancelUrlRequestMID, jUrl);
 
 }
 
-void onNetworkSuccess(JNIEnv* _jniEnv, jbyteArray _jFetchedBytes, jlong _jCallbackPtr) {
+void onUrlSuccess(JNIEnv* _jniEnv, jbyteArray _jBytes, jlong _jCallbackPtr) {
 
-    int dataLength = _jniEnv->GetArrayLength(_jFetchedBytes);
+    size_t length = _jniEnv->GetArrayLength(_jBytes);
 
-    std::vector<char> rawData;
-    rawData.resize(dataLength);
+    std::vector<char> content;
+    content.resize(length);
 
-    _jniEnv->GetByteArrayRegion(_jFetchedBytes, 0, dataLength, reinterpret_cast<jbyte*>(rawData.data()));
+    _jniEnv->GetByteArrayRegion(_jBytes, 0, length, reinterpret_cast<jbyte*>(content.data()));
 
     UrlCallback* callback = reinterpret_cast<UrlCallback*>(_jCallbackPtr);
-    (*callback)(std::move(rawData));
+    (*callback)(std::move(content));
     delete callback;
 
 }
 
-void onNetworkFailure(JNIEnv* _jniEnv, jlong _jCallbackPtr) {
+void onUrlFailure(JNIEnv* _jniEnv, jlong _jCallbackPtr) {
 
     UrlCallback* callback = reinterpret_cast<UrlCallback*>(_jCallbackPtr);
     delete callback;

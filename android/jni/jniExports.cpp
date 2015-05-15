@@ -57,12 +57,12 @@ extern "C" {
         Tangram::handleShoveGesture(distance);
     }
 
-    JNIEXPORT void JNICALL Java_com_mapzen_tangram_Tangram_onNetworkSuccess(JNIEnv* jniEnv, jobject obj, jbyteArray fetchedBytes, jlong callbackPtr) {
-        onNetworkSuccess(jniEnv, fetchedBytes, callbackPtr);
+    JNIEXPORT void JNICALL Java_com_mapzen_tangram_Tangram_onUrlSuccess(JNIEnv* jniEnv, jobject obj, jbyteArray fetchedBytes, jlong callbackPtr) {
+        onUrlSuccess(jniEnv, fetchedBytes, callbackPtr);
     }
 
-    JNIEXPORT void JNICALL Java_com_mapzen_tangram_Tangram_onNetworkFailure(JNIEnv* jniEnv, jobject obj, jlong callbackPtr) {
-        onNetworkFailure(jniEnv, callbackPtr);
+    JNIEXPORT void JNICALL Java_com_mapzen_tangram_Tangram_onUrlFailure(JNIEnv* jniEnv, jobject obj, jlong callbackPtr) {
+        onUrlFailure(jniEnv, callbackPtr);
     }
 
 }

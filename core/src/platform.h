@@ -17,8 +17,8 @@ typedef _jbyteArray* jbyteArray;
 typedef long long jlong;
 
 void setupJniEnv(JNIEnv* _jniEnv, jobject _tangramInstance, jobject _assetManager);
-void onNetworkSuccess(JNIEnv* jniEnv, jbyteArray jFetchedBytes, jlong jCallbackPtr);
-void onNetworkFailure(JNIEnv* jniEnv, jlong jCallbackPtr);
+void onUrlSuccess(JNIEnv* jniEnv, jbyteArray jFetchedBytes, jlong jCallbackPtr);
+void onUrlFailure(JNIEnv* jniEnv, jlong jCallbackPtr);
 #endif
 
 
