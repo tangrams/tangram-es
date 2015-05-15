@@ -10,6 +10,7 @@
 struct TileData;
 struct TileID;
 class MapTile;
+class TileManager;
 
 class DataSource {
 
@@ -26,9 +27,9 @@ public:
 
      /* Set the URL template for data sources 
      *
-     * Data sources (file:// and http://)must define a URL template including exactly one 
-     * occurrance each of '[x]', '[y]', and '[z]' which will be replaced by
-     * the x index, y index, and zoom level of tiles to produce their URL
+     * Data sources (file:// and http://) must define a URL template including exactly
+     * one occurrance each of '{x}', '{y}', and '{z}' which will be replaced by the
+     * x index, y index, and zoom level of tiles to produce their URL
      */
     virtual void setUrlTemplate(const std::string& _urlTemplate);
     
@@ -38,17 +39,17 @@ public:
      * then stores it to be accessed via <GetTileData>. This method SHALL NOT be called
      * from the main thread. 
      */
-    virtual bool loadTileData(const TileID& _tileID, const int _dataSourceID) = 0;
+    virtual bool loadTileData(const TileID& _tileID, TileManager& _tileManager) = 0;
     virtual void cancelLoadingTile(const TileID& _tile) = 0;
 
     /* Returns the data corresponding to a <TileID> */
-    virtual std::shared_ptr<TileData> getTileData(const TileID& _tileID);
+    virtual std::shared_ptr<TileData> getTileData(const TileID& _tileID) const;
 
     /* Checks if data exists for a specific <TileID> */
-    virtual bool hasTileData(const TileID& _tileID);
+    virtual bool hasTileData(const TileID& _tileID) const;
     
     /* Parse an I/O response into a <TileData>, returning an empty TileData on failure */
-    virtual std::shared_ptr<TileData> parse(const MapTile& _tile, std::vector<char>& _rawData)= 0;
+    virtual std::shared_ptr<TileData> parse(const MapTile& _tile, std::vector<char>& _rawData) const = 0;
 
     /* Stores tileData in m_tileStore */
     virtual void setTileData(const TileID& _tileID, const std::shared_ptr<TileData>& _tileData);
@@ -72,7 +73,7 @@ public:
     NetworkDataSource();
     virtual ~NetworkDataSource();
 
-    virtual bool loadTileData(const TileID& _tileID, const int _dataSourceID) override;
+    virtual bool loadTileData(const TileID& _tileID, TileManager& _tileManager) override;
     virtual void cancelLoadingTile(const TileID& _tile) override;
 
 };

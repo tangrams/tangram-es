@@ -111,13 +111,6 @@ namespace Tangram {
         SceneLoader loader;
         loader.loadScene("config.yaml", *m_scene, *m_tileManager, *m_view);
 
-        setNetworkRequestCallback([&](std::vector<char>&& _rawData, TileID _tileId, int _dataSourceID) {
-
-            m_tileManager->addToWorkerQueue(std::move(_rawData), _tileId, _dataSourceID);
-            requestRender();
-
-        });
-
         // Set up openGL state
         glDisable(GL_BLEND);
         glDisable(GL_STENCIL_TEST);

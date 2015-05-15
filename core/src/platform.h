@@ -4,8 +4,6 @@
 #include <vector>
 #include <functional>
 
-#include "tileID.h"
-
 #ifdef PLATFORM_ANDROID
 
 struct _JNIEnv;
@@ -14,16 +12,17 @@ class _jobject;
 typedef _jobject* jobject;
 class _jbyteArray;
 typedef _jbyteArray* jbyteArray;
+typedef long long jlong;
 
 void setupJniEnv(JNIEnv* _jniEnv, jobject _tangramInstance, jobject _assetManager);
-void networkDataBridge(JNIEnv* jniEnv, jbyteArray jFetchedBytes, int tileIDx, int tileIDy, int tileIDz, int dataSourceID);
+void onUrlSuccess(JNIEnv* jniEnv, jbyteArray jFetchedBytes, jlong jCallbackPtr);
+void onUrlFailure(JNIEnv* jniEnv, jlong jCallbackPtr);
 #endif
 
 
 #if (defined PLATFORM_IOS) && (defined __OBJC__)
 #import "ViewController.h"
-void setViewController(ViewController* _controller);
-void networkDataBridge(std::vector<char>& _rawData, TileID _tileID, int _dataSource);
+void init(ViewController* _controller);
 #endif
 
 #ifdef PLATFORM_OSX
@@ -31,7 +30,6 @@ void NSurlInit();
 #endif
 
 #if (defined PLATFORM_LINUX) || (defined PLATFORM_RPI)
-#include "netWorkerData.h"
 void processNetworkQueue();
 #endif
 
@@ -70,9 +68,16 @@ std::string stringFromResource(const char* _path);
  */ 
 unsigned char* bytesFromResource(const char* _path, unsigned int* _size);
 
-bool startNetworkRequest(const std::string& _url, const TileID& _tileID, const int _dataSourceID);
+/* Function type for receiving data from a successful network request */
+using UrlCallback = std::function<void(std::vector<char>&&)>;
 
-void cancelNetworkRequest(const std::string& _url);
+/* Start retrieving data from a URL asynchronously
+ * 
+ * When the request is finished, the callback @_callback will be
+ * run with the data that was retrieved from the URL @_url
+ */
+bool startUrlRequest(const std::string& _url, UrlCallback _callback);
 
-void setNetworkRequestCallback(std::function<void(std::vector<char>&&, TileID, int)>&& _callback);
-
+/* Stop retrieving data from a URL that was previously requested
+ */
+void cancelUrlRequest(const std::string& _url);

@@ -35,9 +35,11 @@ TileManager::~TileManager() {
     m_tileSet.clear();
 }
 
-void TileManager::addToWorkerQueue(std::vector<char>&& _rawData, const TileID& _tileId, const int _dataSourceID) {
+void TileManager::addToWorkerQueue(std::vector<char>&& _rawData, const TileID& _tileId, DataSource* _source) {
+    
     std::lock_guard<std::mutex> lock(m_queueTileMutex);
-    m_queuedTiles.push_back(std::unique_ptr<WorkerData>(new WorkerData(std::move(_rawData), _tileId, _dataSourceID)));
+    m_queuedTiles.push_back(std::unique_ptr<WorkerData>(new WorkerData(std::move(_rawData), _tileId, _source)));
+    
 }
 
 void TileManager::updateTileSet() {
@@ -54,8 +56,9 @@ void TileManager::updateTileSet() {
             auto& worker = *workersIter;
 
             if (worker->isFree()) {
-                logMsg("Dispatched worker for processing tile: [%d, %d, %d]\n", (*queuedTilesIter)->tileID->x, (*queuedTilesIter)->tileID->y, (*queuedTilesIter)->tileID->z);
-                worker->processTileData(std::move(*queuedTilesIter), m_dataSources, m_scene->getStyles(), *m_view);
+                const TileID& id = *(*queuedTilesIter)->tileID;
+                logMsg("Dispatched worker for processing tile: [%d, %d, %d]\n", id.x, id.y, id.z);
+                worker->processTileData(std::move(*queuedTilesIter), m_scene->getStyles(), *m_view);
                 queuedTilesIter = m_queuedTiles.erase(queuedTilesIter);
             }
 
@@ -144,13 +147,18 @@ void TileManager::addTile(const TileID& _tileID) {
     m_tileSet[_tileID] = std::move(tile);
 
     for(size_t dsIndex = 0; dsIndex < m_dataSources.size(); dsIndex++) {
-        // ByPass Network Request if data already loaded/parsed
-        // Create workerData with empty "rawData", parsed data will be fetched in the Worker::processTileData
-        logMsg("Initiate network request for tile: [%d, %d, %d]\n", _tileID.x, _tileID.y, _tileID.z);
-        if(m_dataSources[dsIndex]->hasTileData(_tileID)) {
-            addToWorkerQueue(std::move(std::vector<char>()), _tileID, dsIndex);
-        } else if( !m_dataSources[dsIndex]->loadTileData(_tileID, dsIndex) ) {
+        
+        auto& source = m_dataSources[dsIndex];
+        
+        // Bypass Network Request if data already loaded/parsed; empty "rawData" will be fetched in Worker::processTileData
+        if(source->hasTileData(_tileID)) {
+            
+            addToWorkerQueue(std::move(std::vector<char>()), _tileID, source.get());
+            
+        } else if( !source->loadTileData(_tileID, *this) ) {
+            
             logMsg("ERROR: Loading failed for tile [%d, %d, %d]\n", _tileID.z, _tileID.x, _tileID.y);
+            
         }
     }
     

@@ -15,8 +15,7 @@ void TileWorker::abort() {
     m_aborted = true;
 }
 
-void TileWorker::processTileData(std::unique_ptr<WorkerData> _workerData, 
-                                 const std::vector<std::unique_ptr<DataSource>>& _dataSources,
+void TileWorker::processTileData(std::unique_ptr<WorkerData> _workerData,
                                  const std::vector<std::unique_ptr<Style>>& _styles,
                                  const View& _view) {
 
@@ -28,7 +27,7 @@ void TileWorker::processTileData(std::unique_ptr<WorkerData> _workerData,
     m_future = std::async(std::launch::async, [&]() {
         
         TileID tileID = *(m_workerData->tileID);
-        auto& dataSource = _dataSources[m_workerData->dataSourceID];
+        DataSource* dataSource = m_workerData->source;
         
         auto tile = std::shared_ptr<MapTile>(new MapTile(tileID, _view.getMapProjection()));
 
