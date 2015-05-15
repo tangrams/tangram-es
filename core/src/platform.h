@@ -70,7 +70,7 @@ std::string stringFromResource(const char* _path);
  */ 
 unsigned char* bytesFromResource(const char* _path, unsigned int* _size);
 
-bool streamFromHttpASync(const std::string& _url, const TileID& _tileID, const int _dataSourceID);
+bool startNetworkRequest(const std::string& _url, const TileID& _tileID, const int _dataSourceID);
 
 void cancelNetworkRequest(const std::string& _url);
 

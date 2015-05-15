@@ -99,7 +99,7 @@ void NSurlInit() {
     defaultSession = [NSURLSession sessionWithConfiguration: defaultConfigObject];
 }
 
-bool streamFromHttpASync(const std::string& _url, const TileID& _tileID, const int _dataSourceID) {
+bool startNetworkRequest(const std::string& _url, const TileID& _tileID, const int _dataSourceID) {
 
     NSString* nsUrl = [NSString stringWithUTF8String:_url.c_str()];
     const TileID tileID = _tileID;

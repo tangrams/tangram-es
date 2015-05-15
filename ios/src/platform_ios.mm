@@ -91,7 +91,7 @@ unsigned char* bytesFromResource(const char* _path, unsigned int* _size) {
     return reinterpret_cast<unsigned char *>(cdata);
 }
 
-bool streamFromHttpASync(const std::string& _url, const TileID& _tileID, const int _dataSourceID) {
+bool startNetworkRequest(const std::string& _url, const TileID& _tileID, const int _dataSourceID) {
 
     NSString* nsUrl = [NSString stringWithUTF8String:_url.c_str()];
     
