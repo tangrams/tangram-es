@@ -47,8 +47,8 @@ void TextureCube::load(const std::string& _file) {
         }
     }
     
-    delete[] pixels;
-    delete[] data;
+    free(data);
+    stbi_image_free(pixels);
     
     update();
 }
