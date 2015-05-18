@@ -35,6 +35,10 @@ public:
         
         return st;
     }
+    
+    bool isFinished() {
+        return m_step > m_duration;
+    }
 
 private:
 
