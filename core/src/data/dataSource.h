@@ -1,7 +1,6 @@
 #pragma once
 
 #include <string>
-#include <sstream>
 #include <map>
 #include <memory>
 #include <vector>
@@ -13,40 +12,34 @@ class MapTile;
 class TileManager;
 
 class DataSource {
-
-protected:
-    
-    /* Map of tileIDs to data for that tile */
-    std::map< TileID, std::shared_ptr<TileData> > m_tileStore;
-    
-    std::mutex m_mutex; // Used to ensure safe access from async loading threads
-
-    std::string m_urlTemplate; //URL template for data sources 
     
 public:
 
-     /* Set the URL template for data sources 
-     *
-     * Data sources (file:// and http://) must define a URL template including exactly
-     * one occurrance each of '{x}', '{y}', and '{z}' which will be replaced by the
-     * x index, y index, and zoom level of tiles to produce their URL
+    /* Tile data sources must have a name and a URL template that defines where to find 
+     * a tile based on its coordinates. A URL template includes exactly one occurrance 
+     * each of '{x}', '{y}', and '{z}' which will be replaced by the x index, y index, 
+     * and zoom level of tiles to produce their URL
      */
-    virtual void setUrlTemplate(const std::string& _urlTemplate);
-    
-    /* Fetch data for a map tile
-     *
-     * LoadTile performs synchronous I/O to retrieve all needed data for a tile,
-     * then stores it to be accessed via <GetTileData>. This method SHALL NOT be called
-     * from the main thread. 
-     */
-    virtual bool loadTileData(const TileID& _tileID, TileManager& _tileManager) = 0;
-    virtual void cancelLoadingTile(const TileID& _tile) = 0;
+    DataSource(const std::string& _name, const std::string& _urlTemplate);
 
-    /* Returns the data corresponding to a <TileID> */
-    virtual std::shared_ptr<TileData> getTileData(const TileID& _tileID) const;
+    virtual ~DataSource() {}
+    
+    /* Fetches data for the map tile specified by @_tileID
+     *
+     * LoadTile starts an asynchronous I/O task to retrieve the data for a tile. When
+     * the I/O task is complete, the tile data is added to a queue in @_tileManager for 
+     * further processing before it is renderable. 
+     */
+    virtual bool loadTileData(const TileID& _tileID, TileManager& _tileManager);
+
+    /* Stops any running I/O tasks pertaining to @_tile */
+    virtual void cancelLoadingTile(const TileID& _tile);
 
     /* Checks if data exists for a specific <TileID> */
     virtual bool hasTileData(const TileID& _tileID) const;
+
+    /* Returns the data corresponding to a <TileID>, if it has been fetched already */
+    virtual std::shared_ptr<TileData> getTileData(const TileID& _tileID) const;
     
     /* Parse an I/O response into a <TileData>, returning an empty TileData on failure */
     virtual std::shared_ptr<TileData> parse(const MapTile& _tile, std::vector<char>& _rawData) const = 0;
@@ -54,35 +47,20 @@ public:
     /* Stores tileData in m_tileStore */
     virtual void setTileData(const TileID& _tileID, const std::shared_ptr<TileData>& _tileData);
     
-    /* Clears all data associated with this dataSource */
+    /* Clears all data associated with this DataSource */
     void clearData();
-
-    DataSource() {}
-    virtual ~DataSource() { m_tileStore.clear(); }
-};
-
-class NetworkDataSource : public DataSource {
 
 protected:
 
     /* Constructs the URL of a tile using <m_urlTemplate> */
-    virtual void constructURL(const TileID& _tileCoord, std::string& _url);
+    virtual void constructURL(const TileID& _tileCoord, std::string& _url) const;
+    
+    std::map< TileID, std::shared_ptr<TileData> > m_tileStore; // Map of tileIDs to data for that tile
+    
+    std::string m_name; // Name used to identify this source in the style sheet
 
-public:
+    std::mutex m_mutex; // Used to ensure safe access from async loading threads
 
-    NetworkDataSource();
-    virtual ~NetworkDataSource();
-
-    virtual bool loadTileData(const TileID& _tileID, TileManager& _tileManager) override;
-    virtual void cancelLoadingTile(const TileID& _tile) override;
+    std::string m_urlTemplate; // URL template for requesting tiles from a network or filesystem
 
 };
-
-// TODO: Support TopoJSON tiles
-class TopoJsonNetSrc : public NetworkDataSource {
-};
-
-// TODO: Support local GeoJSON tiles
-class GeoJsonFileSrc : public DataSource {
-};
-

@@ -8,6 +8,11 @@
 
 //---- DataSource Implementation----
 
+DataSource::DataSource(const std::string& _name, const std::string& _urlTemplate) :
+    m_name(_name), m_urlTemplate(_urlTemplate) {
+
+}
+
 bool DataSource::hasTileData(const TileID& _tileID) const {
     
     return m_tileStore.find(_tileID) != m_tileStore.end();
@@ -38,19 +43,7 @@ void DataSource::setTileData(const TileID& _tileID, const std::shared_ptr<TileDa
         m_tileStore[_tileID] = _tileData;
 }
 
-void DataSource::setUrlTemplate(const std::string& _urlTemplate){
-    m_urlTemplate = _urlTemplate;
-}
-
-//---- NetworkDataSource Implementation----
-
-NetworkDataSource::NetworkDataSource() {
-}
-
-NetworkDataSource::~NetworkDataSource() {
-}
-
-void NetworkDataSource::constructURL(const TileID& _tileCoord, std::string& _url) {
+void DataSource::constructURL(const TileID& _tileCoord, std::string& _url) const {
 
     _url.assign(m_urlTemplate);
 
@@ -68,7 +61,7 @@ void NetworkDataSource::constructURL(const TileID& _tileCoord, std::string& _url
     }
 }
 
-bool NetworkDataSource::loadTileData(const TileID& _tileID, TileManager& _tileManager) {
+bool DataSource::loadTileData(const TileID& _tileID, TileManager& _tileManager) {
     
     bool success = true; // Begin optimistically
     
@@ -94,7 +87,7 @@ bool NetworkDataSource::loadTileData(const TileID& _tileID, TileManager& _tileMa
     return success;
 }
 
-void NetworkDataSource::cancelLoadingTile(const TileID& _tileID) {
+void DataSource::cancelLoadingTile(const TileID& _tileID) {
     std::string url;
     constructURL(_tileID, url);
     cancelUrlRequest(url);
