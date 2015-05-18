@@ -6,7 +6,43 @@
 #include "isect2d.h"
 #include <string>
 
+struct FadeEffect {
 
+public:
+
+    enum class Interpolation {
+        LINEAR, POW, SINE
+    };
+    
+    FadeEffect() {}
+
+    FadeEffect(bool _in, Interpolation _interpolation = Interpolation::LINEAR, float _duration = 0.5f)
+        : m_interpolation(_interpolation), m_duration(_duration), m_step(0.0), m_in(_in)
+    {}
+
+    float update(float _dt) {
+        m_step += _dt;
+        float st = m_step / m_duration;
+        
+        switch (m_interpolation) {
+            case Interpolation::LINEAR:
+                return m_in ? st : -st + 1;
+            case Interpolation::POW:
+                return m_in ? st * st : -(st * st) + 1;
+            case Interpolation::SINE:
+                return m_in ? cos(st * M_PI * 0.5) : sin(st * M_PI * 0.5);
+        }
+        
+        return st;
+    }
+
+private:
+
+    Interpolation m_interpolation;
+    float m_duration;
+    float m_step;
+    bool m_in;
+};
 
 class Label {
 
@@ -25,7 +61,6 @@ public:
         SLEEP           = 1 << 3,
         OUT_OF_SCREEN   = 1 << 4,
         WAIT_OCC        = 1 << 5, // state waiting for first occlusion result
-        STATE_N         = 7
     };
 
     struct Transform {
@@ -77,7 +112,7 @@ public:
 
 private:
 
-    void enterState(State _state);
+    void enterState(State _state, float _alpha = 1.0f);
 
     bool offViewport(const glm::vec2& _screenSize);
 
@@ -97,6 +132,6 @@ private:
     glm::vec2 m_dim;
     bool m_occludedLastFrame;
     bool m_occlusionSolved;
-    float m_depth;
+    FadeEffect m_fade;
 
 };

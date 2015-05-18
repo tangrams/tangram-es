@@ -54,8 +54,6 @@ bool Label::updateScreenTransform(const glm::mat4& _mvp, const glm::vec2& _scree
                 return false;
             }
 
-            m_depth = v1.w;
-
             screenPosition = clipToScreenSpace(v1, _screenSize);
 
             // center on half the width
@@ -74,8 +72,6 @@ bool Label::updateScreenTransform(const glm::mat4& _mvp, const glm::vec2& _scree
                 return false;
             }
 
-            m_depth = (v1.w + v2.w) / 2.f;
-
             // project to screen space
             glm::vec2 p1 = clipToScreenSpace(v1, _screenSize);
             glm::vec2 p2 = clipToScreenSpace(v2, _screenSize);
@@ -93,7 +89,7 @@ bool Label::updateScreenTransform(const glm::mat4& _mvp, const glm::vec2& _scree
 
             float length = glm::length(p1p2);
 
-            float exceedHeuristic = 40; // default heuristic : 40%
+            float exceedHeuristic = 10; // default heuristic : 10%
 
             if (m_dim.x > length) {
                 float exceed = (1 - (length / m_dim.x)) * 100;
@@ -151,79 +147,64 @@ void Label::occlusionSolved() {
     m_occlusionSolved = true;
 }
 
-void Label::enterState(State _state) {
+void Label::enterState(State _state, float _alpha) {
     m_currentState = _state;
-    m_transform.m_alpha = CLAMP(m_transform.m_alpha, 0.0, 1.0);
+    m_transform.m_alpha = CLAMP(_alpha, 0.0, 1.0);
 }
 
 void Label::updateState(const glm::mat4& _mvp, const glm::vec2& _screenSize, float _dt) {
-    bool occludedLasteFrame = m_occludedLastFrame;
+    if (m_currentState == State::SLEEP) {
+        // no-op state for now, when label-collision has less complexity, this state
+        // would lead to FADE_IN state if no collision occured
+        return;
+    }
+
+    bool occludedLastFrame = m_occludedLastFrame;
     m_occludedLastFrame = false;
 
     bool ruleSatisfied = updateScreenTransform(_mvp, _screenSize);
 
-    if (!ruleSatisfied) { // label rules not satisfied
-        m_transform.m_alpha = 0.0;
+    if (!ruleSatisfied) { // one of the label rules not satisfied
+        enterState(State::SLEEP, 0.0);
         return;
     }
 
     updateBBoxes();
 
-    if (m_currentState != State::SLEEP && offViewport(_screenSize)) {
-        enterState(State::OUT_OF_SCREEN);
+    if (offViewport(_screenSize)) {
+        enterState(State::OUT_OF_SCREEN, 0.0);
     }
 
     switch (m_currentState) {
         case State::VISIBLE:
-            m_transform.m_alpha = 1.0;
-
-            if (m_depth > 100.0f) {
-                enterState(State::SLEEP);
-            } else if (occludedLasteFrame) {
-                enterState(State::FADING_OUT);
+            if (occludedLastFrame) {
+                m_fade = FadeEffect(false, FadeEffect::Interpolation::SINE, 1.0);
+                enterState(State::FADING_OUT, 1.0);
             }
             break;
-
         case State::FADING_IN:
-            m_transform.m_alpha += 0.03;
-
-            if (m_transform.m_alpha >= 1.0) {
-                enterState(State::VISIBLE);
-            }
+            m_transform.m_alpha = m_fade.update(_dt);
+            if (m_transform.m_alpha >= 1.0)
+                enterState(State::VISIBLE, 1.0);
             break;
-
         case State::FADING_OUT:
-            m_transform.m_alpha -= 0.03;
-
-            if (m_transform.m_alpha <= 0.0) {
-                enterState(State::SLEEP);
-            }
+            m_transform.m_alpha = m_fade.update(_dt);
+            if (m_transform.m_alpha <= 0.0)
+                enterState(State::SLEEP, 0.0);
             break;
-
         case State::OUT_OF_SCREEN:
-            m_transform.m_alpha = 0.0;
-
-            if (!offViewport(_screenSize)) {
-                enterState(State::VISIBLE);
-            }
+            if (!offViewport(_screenSize))
+                enterState(State::WAIT_OCC, 0.0);
             break;
-
-        case State::SLEEP:
-            m_transform.m_alpha = 0.0;
-            break;
-
         case State::WAIT_OCC:
-            m_transform.m_alpha = 0.0;
-
-            if (!occludedLasteFrame && m_occlusionSolved) {
-                enterState(State::VISIBLE);
-            } else if (occludedLasteFrame) {
-                enterState(State::STATE_N);
+            if (!occludedLastFrame && m_occlusionSolved) {
+                enterState(State::VISIBLE, 1.0);
+            } else if (occludedLastFrame) {
+                enterState(State::SLEEP, 0.0);
             }
             break;
-
-        default:
-            break;
+        case State::SLEEP:;
+            // dead state
     }
 
     m_occlusionSolved = false;
