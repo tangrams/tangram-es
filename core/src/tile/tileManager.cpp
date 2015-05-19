@@ -42,7 +42,7 @@ void TileManager::addToWorkerQueue(std::vector<char>&& _rawData, const TileID& _
     
 }
 
-void TileManager::addToWorkerQueue(std::shared_ptr<TileData> _parsedData, const TileID& _tileID, DataSource* _source) {
+void TileManager::addToWorkerQueue(std::shared_ptr<TileData>& _parsedData, const TileID& _tileID, DataSource* _source) {
 
     std::lock_guard<std::mutex> lock(m_queueTileMutex);
     m_queuedTiles.emplace_back(std::unique_ptr<TileTask>(new TileTask(_parsedData, _tileID, _source)));

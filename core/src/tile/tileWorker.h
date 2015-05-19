@@ -28,7 +28,7 @@ struct TileTask {
         source(_source) {
     }
 
-    TileTask(std::shared_ptr<TileData> _tileData, const TileID& _tileID, DataSource* _source) :
+    TileTask(std::shared_ptr<TileData>& _tileData, const TileID& _tileID, DataSource* _source) :
         tileID(_tileID),
         parsedTileData(_tileData),
         source(_source) {       
