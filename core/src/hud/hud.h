@@ -14,6 +14,7 @@ public:
     virtual ~Hud();
 
     void mousePosition(int _x, int _y);
+    void mouseMove(float _x,float _y);
     void setWindowSize(int _width, int _height);
 
     void init();
