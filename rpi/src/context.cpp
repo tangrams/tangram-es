@@ -5,23 +5,20 @@
 #include <iostream>
 #include <termios.h>
 
+#include "glm/gtc/matrix_transform.hpp"
+
+#include "util/geom.h"
+#include "hud/utils.h"
+
 // Main global variables
 //-------------------------------
-typedef struct {
-    uint32_t screen_width;
-    uint32_t screen_height;
+#define check() assert(glGetError() == 0)
+EGLDisplay display;
+EGLSurface surface;
+EGLContext context;
 
-    EGLDisplay display;
-    EGLSurface surface;
-    EGLContext context;
-
-} CUBE_STATE_T;
-static CUBE_STATE_T _state, *state=&_state;
-
-typedef struct {
-    uint32_t x, y, width, height;
-} Viewport;
-static Viewport viewport;
+static glm::ivec4 viewport;
+static glm::mat4 orthoMatrix;
 
 typedef struct {
     float   x,y;
@@ -35,24 +32,27 @@ static bool bRender = true;
 
 // OpenGL ES
 //--------------------------------
-void initGL(){
+void initGL(int argc, char **argv){
+
+    // Start OpenGL ES
     bcm_host_init();
-    
+
     // Clear application state
-    memset( state, 0, sizeof( *state ) );
-    
     int32_t success = 0;
     EGLBoolean result;
     EGLint num_config;
-    
-    static EGL_DISPMANX_WINDOW_T nativewindow;
-    
+
+    static EGL_DISPMANX_WINDOW_T nativeviewport;
+
     DISPMANX_ELEMENT_HANDLE_T dispman_element;
     DISPMANX_DISPLAY_HANDLE_T dispman_display;
     DISPMANX_UPDATE_HANDLE_T dispman_update;
     VC_RECT_T dst_rect;
     VC_RECT_T src_rect;
-    
+
+    uint32_t screen_width;
+    uint32_t screen_height;
+
     static const EGLint attribute_list[] = {
         EGL_RED_SIZE, 8,
         EGL_GREEN_SIZE, 8,
@@ -62,94 +62,134 @@ void initGL(){
         EGL_DEPTH_SIZE, 16,
         EGL_NONE
     };
-    
+
     static const EGLint context_attributes[] = {
         EGL_CONTEXT_CLIENT_VERSION, 2,
         EGL_NONE
     };
+
     EGLConfig config;
-    
+
     // get an EGL display connection
-    state->display = eglGetDisplay(EGL_DEFAULT_DISPLAY);
-    assert(state->display!=EGL_NO_DISPLAY);
-    
+    display = eglGetDisplay(EGL_DEFAULT_DISPLAY);
+    assert(display!=EGL_NO_DISPLAY);
+    check();
+
     // initialize the EGL display connection
-    result = eglInitialize(state->display, NULL, NULL);
+    result = eglInitialize(display, NULL, NULL);
     assert(EGL_FALSE != result);
-    
+    check();
+
     // get an appropriate EGL frame buffer configuration
-    result = eglChooseConfig(state->display, attribute_list, &config, 1, &num_config);
+    result = eglChooseConfig(display, attribute_list, &config, 1, &num_config);
     assert(EGL_FALSE != result);
-    
+    check();
+
     // get an appropriate EGL frame buffer configuration
     result = eglBindAPI(EGL_OPENGL_ES_API);
     assert(EGL_FALSE != result);
-    
+    check();
+
     // create an EGL rendering context
-    state->context = eglCreateContext(state->display, config, EGL_NO_CONTEXT, context_attributes);
-    assert(state->context!=EGL_NO_CONTEXT);
-    
-    // create an EGL window surface
-    success = graphics_get_display_size(0 /* LCD */, &state->screen_width, &state->screen_height);
+    context = eglCreateContext(display, config, EGL_NO_CONTEXT, context_attributes);
+    assert(context!=EGL_NO_CONTEXT);
+    check();
+
+    // create an EGL viewport surface
+    success = graphics_get_display_size(0 /* LCD */, &screen_width, &screen_height);
     assert( success >= 0 );
-    
-    dst_rect.x = 0;
-    dst_rect.y = 0;
-    dst_rect.width = state->screen_width;
-    dst_rect.height = state->screen_height;
-    
+
+    //  Initially the viewport is for all the screen
+    viewport.x = 0;
+    viewport.y = 0;
+    viewport.z = screen_width;
+    viewport.w = screen_height;
+
+    //  Adjust the viewport acording to the passed argument
+    for (int i = 1; i < argc ; i++){
+        if ( std::string(argv[i]) == "-x" ) {
+            i++;
+            viewport.x = getInt(std::string(argv[i]));
+        } else if ( std::string(argv[i]) == "-y" ) {
+            i++;
+            viewport.y = getInt(std::string(argv[i]));
+        } else if ( std::string(argv[i]) == "-w" || 
+                    std::string(argv[i]) == "--width" ) {
+            i++;
+            viewport.z = getInt(std::string(argv[i]));
+        } else if ( std::string(argv[i]) == "-h" || 
+                    std::string(argv[i]) == "--height") {
+            i++;
+            viewport.w = getInt(std::string(argv[i]));
+        } else if ( std::string(argv[i]) == "--square") {
+            if (screen_width > screen_height) {
+                viewport.x = screen_width/2-screen_height/2;
+            } else {
+                viewport.y = screen_height/2-screen_width/2;
+            }
+            viewport.z = viewport.w = MIN(screen_width,screen_height);
+        } else if ( std::string(argv[i]) == "-l" || 
+                    std::string(argv[i]) == "--life-coding" ){
+            viewport.x = viewport.z-500;
+            viewport.z = viewport.w = 500;
+        }
+    }
+
+    dst_rect.x = viewport.x;
+    dst_rect.y = viewport.y;
+    dst_rect.width = viewport.z;
+    dst_rect.height = viewport.w;
+
     src_rect.x = 0;
     src_rect.y = 0;
-    src_rect.width = state->screen_width << 16;
-    src_rect.height = state->screen_height << 16;
-    
+    src_rect.width = viewport.z << 16;
+    src_rect.height = viewport.w << 16;
+
     dispman_display = vc_dispmanx_display_open( 0 /* LCD */);
     dispman_update = vc_dispmanx_update_start( 0 );
-    dispman_element = vc_dispmanx_element_add ( dispman_update, dispman_display,
-                                               0/*layer*/, &dst_rect, 0/*src*/,
-                                               &src_rect, DISPMANX_PROTECTION_NONE, 0 /*alpha*/, 0/*clamp*/, 0/*transform*/);
-    
-    nativewindow.element = dispman_element;
-    nativewindow.width = state->screen_width;
-    nativewindow.height = state->screen_height;
+
+    dispman_element = vc_dispmanx_element_add( dispman_update, dispman_display,
+                                       0/*layer*/, &dst_rect, 0/*src*/,
+                                       &src_rect, DISPMANX_PROTECTION_NONE, 0 /*alpha*/, 0/*clamp*/, (DISPMANX_TRANSFORM_T)0/*transform*/);
+
+    nativeviewport.element = dispman_element;
+    nativeviewport.width = viewport.z;
+    nativeviewport.height = viewport.w;
     vc_dispmanx_update_submit_sync( dispman_update );
-    
-    
-    state->surface = eglCreateWindowSurface( state->display, config, &nativewindow, NULL );
-    assert(state->surface != EGL_NO_SURFACE);
-    
+
+    check();
+
+    surface = eglCreateWindowSurface( display, config, &nativeviewport, NULL );
+    assert(surface != EGL_NO_SURFACE);
+    check();
+
     // connect the context to the surface
-    result = eglMakeCurrent(state->display, state->surface, state->surface, state->context);
+    result = eglMakeCurrent(display, surface, surface, context);
     assert(EGL_FALSE != result);
-    
+    check();
+
     // Set background color and clear buffers
-    glClearColor(0.15f, 0.25f, 0.35f, 1.0f);
-    glClear( GL_COLOR_BUFFER_BIT );
-    
-    // Prepare viewport
-    glViewport( 0, 0, state->screen_width, state->screen_height );
-    setWindowSize(state->screen_width,state->screen_height);
+    // glClearColor(0.15f, 0.25f, 0.35f, 1.0f);
+    // glClear( GL_COLOR_BUFFER_BIT );
+
+    setWindowSize(viewport.z,viewport.w);
+    check();
+
+    ///printf("OpenGL Initialize at %i,%i,%i,%i\n",viewport.x,viewport.y,viewport.z,viewport.w);
 }
 
 void renderGL(){
-    eglSwapBuffers(state->display, state->surface);
+    eglSwapBuffers(display, surface);
 }
 
 void closeGL(){
-    eglSwapBuffers(state->display, state->surface);
+    eglSwapBuffers(display, surface);
 
     // Release OpenGL resources
-    eglMakeCurrent( state->display, EGL_NO_SURFACE, EGL_NO_SURFACE, EGL_NO_CONTEXT );
-    eglDestroySurface( state->display, state->surface );
-    eglDestroyContext( state->display, state->context );
-    eglTerminate( state->display );
-}
-
-void setWindowSize(int _width, int _height) {
-    viewport.width = _width;
-    viewport.height = _height;
-    glViewport(0, 0, viewport.width, viewport.height);
-    onViewportResize(viewport.width, viewport.height);
+    eglMakeCurrent( display, EGL_NO_SURFACE, EGL_NO_SURFACE, EGL_NO_CONTEXT );
+    eglDestroySurface( display, surface );
+    eglDestroyContext( display, context );
+    eglTerminate( display );
 }
 
 // Inputs: Mouse/Keyboard
@@ -201,8 +241,8 @@ bool getMouse(){
         // Clamp values
         if (mouse.x < 0) mouse.x=0;
         if (mouse.y < 0) mouse.y=0;
-        if (mouse.x > viewport.width) mouse.x = viewport.width;
-        if (mouse.y > viewport.height) mouse.y = viewport.height;
+        if (mouse.x > viewport.z) mouse.x = viewport.z;
+        if (mouse.y > viewport.w) mouse.y = viewport.w;
 
         // Lunch events
         if(mouse.button == 0 && button != mouse.button){
@@ -258,12 +298,29 @@ void updateGL() {
     }  
 }
 
+void setWindowSize(int _width, int _height) {
+    viewport.z = _width;
+    viewport.w = _height;
+    glViewport((float)viewport.x, (float)viewport.y, (float)viewport.z, (float)viewport.w);
+    orthoMatrix = glm::ortho((float)viewport.x, (float)viewport.z, (float)viewport.y, (float)viewport.w);
+
+    onViewportResize(viewport.z, viewport.w);
+}
+
 int getWindowWidth(){
-    return viewport.width;
+    return viewport.z;
 }
 
 int getWindowHeight(){
-    return viewport.height;
+    return viewport.w;
+}
+
+glm::vec2 getWindowSize() {
+    return glm::vec2(viewport.w,viewport.w);
+}
+
+glm::mat4 getOrthoMatrix(){
+    return orthoMatrix;
 }
 
 float getMouseX(){
@@ -274,8 +331,8 @@ float getMouseY(){
     return mouse.y;
 }
 
-int getMouseButton(){
-    return mouse.button;
+glm::vec2 getMousePosition() {
+    return glm::vec2(mouse.x,mouse.y);
 }
 
 float getMouseVelX(){
@@ -284,6 +341,14 @@ float getMouseVelX(){
 
 float getMouseVelY(){
     return mouse.velY;
+}
+
+glm::vec2 getMouseVelocity() {
+    return glm::vec2(mouse.velX,mouse.velY);
+}
+
+int getMouseButton(){
+    return mouse.button;
 }
 
 unsigned char getKeyPressed(){

@@ -1,11 +1,16 @@
 #pragma once
 
 #include "util/shaderProgram.h"
-
-#include "shapes.h"
-#include "vbo.h"
+#include "util/typedMesh.h"
 
 #include "glm/glm.hpp"
+
+struct LineVertex {
+    GLfloat x;
+    GLfloat y;
+    GLfloat z;
+};
+typedef TypedMesh<LineVertex> LineMesh;
 
 class Hud {
 public:
@@ -13,19 +18,10 @@ public:
     Hud();
     virtual ~Hud();
 
-    void mousePosition(int _x, int _y);
-    void mouseMove(float _x,float _y);
-    void setWindowSize(int _width, int _height);
-
     void init();
     void draw();
 private:
 
-    glm::vec2   m_windowSize;
-    glm::mat4   m_orthoMatrix;
-
-// Cursor
-    glm::vec2       m_mousePos;
-    std::shared_ptr<ShaderProgram>   m_cursorShader;
-    std::shared_ptr<Vbo>             m_cursorGeom;
+    std::shared_ptr<ShaderProgram>  m_cursorShader;
+    std::shared_ptr<LineMesh>       m_cursorMesh;
 };

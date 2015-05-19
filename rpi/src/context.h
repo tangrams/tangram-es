@@ -1,9 +1,10 @@
 #pragma once
 
 #include "gl.h"
+#include "glm/glm.hpp"
 
 // GL Context
-void    initGL();
+void    initGL(int argc, char **argv);
 void    updateGL();
 void    renderGL();
 void    closeGL();
@@ -15,12 +16,21 @@ void    setRenderRequest(bool _request);
 // GET
 int     getWindowWidth();
 int     getWindowHeight();
+glm::vec2 getWindowSize();
+glm::mat4 getOrthoMatrix();
+
 float   getMouseX();
 float   getMouseY();
+glm::vec2 getMousePosition();
+
 float   getMouseVelX();
 float   getMouseVelY();
+glm::vec2 getMouseVelocity();
+
 int     getMouseButton();
+
 unsigned char getKeyPressed();
+
 bool    getRenderRequest();
 
 // EVENTS
