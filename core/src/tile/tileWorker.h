@@ -35,7 +35,7 @@ struct TileTask {
     }
 
     TileTask(TileTask&& _other) :
-        tileID(_other.tileID),
+        tileID(std::move(_other.tileID)),
         parsedTileData(std::move(_other.parsedTileData)),
         rawTileData(std::move(_other.rawTileData)),
         source(std::move(_other.source)) {
