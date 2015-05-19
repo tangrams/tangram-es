@@ -64,21 +64,21 @@ void loadSources(Node sources, TileManager& tileManager) {
     for (auto it = sources.begin(); it != sources.end(); ++it) {
         
         const Node source = it->second;
+        std::string name = it->first.as<std::string>();
         std::string type = source["type"].as<std::string>();
         std::string url = source["url"].as<std::string>();
         
         std::unique_ptr<DataSource> sourcePtr;
         
         if (type == "GeoJSONTiles") {
-            sourcePtr = std::unique_ptr<DataSource>(new GeoJsonSource());
+            sourcePtr = std::unique_ptr<DataSource>(new GeoJsonSource(name, url));
         } else if (type == "TopoJSONTiles") {
             // TODO
         } else if (type == "MVT") {
-            sourcePtr = std::unique_ptr<DataSource>(new MVTSource());
+            sourcePtr = std::unique_ptr<DataSource>(new MVTSource(name, url));
         }
         
         if (sourcePtr) {
-            sourcePtr->setUrlTemplate(url);
             tileManager.addDataSource(std::move(sourcePtr));
         }
     }
