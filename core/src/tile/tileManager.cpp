@@ -38,14 +38,14 @@ TileManager::~TileManager() {
 void TileManager::addToWorkerQueue(std::vector<char>&& _rawData, const TileID& _tileId, DataSource* _source) {
     
     std::lock_guard<std::mutex> lock(m_queueTileMutex);
-    m_queuedTiles.push_back(std::unique_ptr<TileTask>(new TileTask(std::move(_rawData), _tileId, _source)));
+    m_queuedTiles.emplace_back(std::unique_ptr<TileTask>(new TileTask(std::move(_rawData), _tileId, _source)));
     
 }
 
 void TileManager::addToWorkerQueue(std::shared_ptr<TileData> _parsedData, const TileID& _tileID, DataSource* _source) {
 
     std::lock_guard<std::mutex> lock(m_queueTileMutex);
-    m_queuedTiles.push_back(std::unique_ptr<TileTask>(new TileTask(_parsedData, _tileID, _source)));
+    m_queuedTiles.emplace_back(std::unique_ptr<TileTask>(new TileTask(_parsedData, _tileID, _source)));
 
 }
 
