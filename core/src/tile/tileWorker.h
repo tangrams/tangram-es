@@ -7,36 +7,38 @@
 #include "data/dataSource.h"
 #include "mapTile.h"
 
-struct WorkerData {
+struct TileTask {
+
+    TileID tileID;
+
+    // Only one of either parsedTileData or rawTileData will be non-empty for a given task.
+    // If parsedTileData is non-empty, then the data for this tile was previously fetched
+    // and parsed. Otherwise rawTileData will be non-empty, indicating that the data needs 
+    // to be parsed using the given DataSource. 
+    std::shared_ptr<TileData> parsedTileData;
     std::vector<char> rawTileData;
-    std::unique_ptr<TileID> tileID;
     DataSource* source;
 
-    WorkerData() {
-        tileID.reset(new TileID(NOT_A_TILE));
+    TileTask() : tileID(NOT_A_TILE) {
     }
 
-    WorkerData(std::vector<char>&& _rawTileData, const TileID& _tileID, DataSource* _source) :
+    TileTask(std::vector<char>&& _rawTileData, const TileID& _tileID, DataSource* _source) :
+        tileID(_tileID),
         rawTileData(std::move(_rawTileData)),
         source(_source) {
-            
-        tileID.reset(new TileID(_tileID));
-        
     }
 
-    WorkerData(WorkerData&& _other) :
+    TileTask(std::shared_ptr<TileData> _tileData, const TileID& _tileID, DataSource* _source) :
+        tileID(_tileID),
+        parsedTileData(_tileData),
+        source(_source) {       
+    }
+
+    TileTask(TileTask&& _other) :
+        tileID(_other.tileID),
+        parsedTileData(std::move(_other.parsedTileData)),
         rawTileData(std::move(_other.rawTileData)),
         source(std::move(_other.source)) {
-            
-        tileID.reset(new TileID(*(_other.tileID)));
-        
-    }
-
-    WorkerData& operator=(WorkerData&& _other) {
-        rawTileData = std::move(_other.rawTileData);
-        tileID.reset(new TileID(*(_other.tileID)));
-        source = std::move(_other.source);
-        return *this;
     }
 
 };
@@ -47,7 +49,7 @@ public:
     
     TileWorker();
     
-    void processTileData(std::unique_ptr<WorkerData> _workerData,
+    void processTileData(std::unique_ptr<TileTask> _task,
                          const std::vector<std::unique_ptr<Style>>& _styles,
                          const View& _view);
     
@@ -57,7 +59,7 @@ public:
 
     bool isFree() const { return m_free; }
     
-    const TileID& getTileID() const { return m_workerData->tileID ? *(m_workerData->tileID) : NOT_A_TILE; }
+    const TileID& getTileID() const { return m_task->tileID; }
     
     std::shared_ptr<MapTile> getTileResult();
     
@@ -67,7 +69,7 @@ private:
     bool m_aborted;
     bool m_finished;
     
-    std::unique_ptr<WorkerData> m_workerData;
+    std::unique_ptr<TileTask> m_task;
     std::future< std::shared_ptr<MapTile> > m_future;
 };
 

@@ -15,27 +15,34 @@ void TileWorker::abort() {
     m_aborted = true;
 }
 
-void TileWorker::processTileData(std::unique_ptr<WorkerData> _workerData,
+void TileWorker::processTileData(std::unique_ptr<TileTask> _task,
                                  const std::vector<std::unique_ptr<Style>>& _styles,
                                  const View& _view) {
 
-    m_workerData = std::move(_workerData);
+    m_task = std::move(_task);
     m_free = false;
     m_finished = false;
     m_aborted = false;
 
     m_future = std::async(std::launch::async, [&]() {
         
-        TileID tileID = *(m_workerData->tileID);
-        DataSource* dataSource = m_workerData->source;
+        const TileID& tileID = m_task->tileID;
+        DataSource* dataSource = m_task->source;
         
         auto tile = std::shared_ptr<MapTile>(new MapTile(tileID, _view.getMapProjection()));
 
-        if( !(dataSource->hasTileData(tileID)) ) {
-            dataSource->setTileData( tileID, dataSource->parse(*tile, m_workerData->rawTileData));
-        }
+        std::shared_ptr<TileData> tileData;
 
-        auto tileData = dataSource->getTileData(tileID);
+        if (m_task->parsedTileData) {
+            // Data has already been parsed!
+            tileData = m_task->parsedTileData;
+        } else {
+            // Data needs to be parsed
+            tileData = dataSource->parse(*tile, m_task->rawTileData);
+
+            // Cache parsed data with the original data source
+            dataSource->setTileData(tileID, tileData);
+        }
         
 		tile->update(0, _view);
 

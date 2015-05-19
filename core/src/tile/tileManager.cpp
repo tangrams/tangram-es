@@ -38,8 +38,15 @@ TileManager::~TileManager() {
 void TileManager::addToWorkerQueue(std::vector<char>&& _rawData, const TileID& _tileId, DataSource* _source) {
     
     std::lock_guard<std::mutex> lock(m_queueTileMutex);
-    m_queuedTiles.push_back(std::unique_ptr<WorkerData>(new WorkerData(std::move(_rawData), _tileId, _source)));
+    m_queuedTiles.push_back(std::unique_ptr<TileTask>(new TileTask(std::move(_rawData), _tileId, _source)));
     
+}
+
+void TileManager::addToWorkerQueue(std::shared_ptr<TileData> _parsedData, const TileID& _tileID, DataSource* _source) {
+
+    std::lock_guard<std::mutex> lock(m_queueTileMutex);
+    m_queuedTiles.push_back(std::unique_ptr<TileTask>(new TileTask(_parsedData, _tileID, _source)));
+
 }
 
 void TileManager::updateTileSet() {
@@ -56,8 +63,6 @@ void TileManager::updateTileSet() {
             auto& worker = *workersIter;
 
             if (worker->isFree()) {
-                const TileID& id = *(*queuedTilesIter)->tileID;
-                logMsg("Dispatched worker for processing tile: [%d, %d, %d]\n", id.x, id.y, id.z);
                 worker->processTileData(std::move(*queuedTilesIter), m_scene->getStyles(), *m_view);
                 queuedTilesIter = m_queuedTiles.erase(queuedTilesIter);
             }
@@ -146,16 +151,9 @@ void TileManager::addTile(const TileID& _tileID) {
     std::shared_ptr<MapTile> tile(new MapTile(_tileID, m_view->getMapProjection()));
     m_tileSet[_tileID] = std::move(tile);
 
-    for(size_t dsIndex = 0; dsIndex < m_dataSources.size(); dsIndex++) {
+    for (auto& source : m_dataSources) {
         
-        auto& source = m_dataSources[dsIndex];
-        
-        // Bypass Network Request if data already loaded/parsed; empty "rawData" will be fetched in Worker::processTileData
-        if(source->hasTileData(_tileID)) {
-            
-            addToWorkerQueue(std::move(std::vector<char>()), _tileID, source.get());
-            
-        } else if( !source->loadTileData(_tileID, *this) ) {
+        if (!source->loadTileData(_tileID, *this)) {
             
             logMsg("ERROR: Loading failed for tile [%d, %d, %d]\n", _tileID.z, _tileID.x, _tileID.y);
             
@@ -178,8 +176,8 @@ void TileManager::removeTile(std::map< TileID, std::shared_ptr<MapTile> >::itera
 
     // Remove tile from queue, if present
     const auto& found = std::find_if(m_queuedTiles.begin(), m_queuedTiles.end(), 
-                                        [&](std::unique_ptr<WorkerData>& p) {
-                                            return ( *(p->tileID) == id);
+                                        [&](std::unique_ptr<TileTask>& p) {
+                                            return (p->tileID == id);
                                         });
 
     if (found != m_queuedTiles.end()) {

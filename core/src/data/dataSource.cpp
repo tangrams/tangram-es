@@ -66,7 +66,7 @@ bool DataSource::loadTileData(const TileID& _tileID, TileManager& _tileManager) 
     bool success = true; // Begin optimistically
     
     if (hasTileData(_tileID)) {
-        // Tile has been fetched already!
+        _tileManager.addToWorkerQueue(m_tileStore[_tileID], _tileID, this);
         return success;
     }
 
