@@ -26,8 +26,8 @@ find_sources_and_include_directories(
 
 # add sources and include headers
 find_sources_and_include_directories(
-    ${PROJECT_SOURCE_DIR}/linux/src/netWorkerData.*
-    ${PROJECT_SOURCE_DIR}/linux/src/netWorkerData.*)
+    ${PROJECT_SOURCE_DIR}/linux/src/urlWorker.*
+    ${PROJECT_SOURCE_DIR}/linux/src/urlWorker.*)
 
 # include headers for rpi-installed libraries
 include_directories(/opt/vc/include/)
