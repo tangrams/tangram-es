@@ -30,11 +30,11 @@ void PolygonStyle::constructShaderProgram() {
     m_shaderProgram->setSourceStrings(fragShaderSrcStr, vertShaderSrcStr);
 }
 
-void PolygonStyle::buildPoint(Point& _point, std::string& _layer, Properties& _props, VboMesh& _mesh) const {
+void PolygonStyle::buildPoint(Point& _point, StyleParams& _params, Properties& _props, VboMesh& _mesh) const {
     // No-op
 }
 
-void PolygonStyle::buildLine(Line& _line, std::string& _layer, Properties& _props, VboMesh& _mesh) const {
+void PolygonStyle::buildLine(Line& _line, StyleParams& _params, Properties& _props, VboMesh& _mesh) const {
     std::vector<PosNormColVertex> vertices;
     std::vector<int> indices;
     std::vector<glm::vec3> points;
@@ -56,7 +56,7 @@ void PolygonStyle::buildLine(Line& _line, std::string& _layer, Properties& _prop
     mesh.addVertices(std::move(vertices),std::move(indices));
 }
 
-void PolygonStyle::buildPolygon(Polygon& _polygon, std::string& _layer, Properties& _props, VboMesh& _mesh) const {
+void PolygonStyle::buildPolygon(Polygon& _polygon, StyleParams& _params, Properties& _props, VboMesh& _mesh) const {
     
     std::vector<PosNormColVertex> vertices;
     std::vector<int> indices;
@@ -65,25 +65,8 @@ void PolygonStyle::buildPolygon(Polygon& _polygon, std::string& _layer, Properti
     std::vector<glm::vec2> texcoords;
     PolygonOutput output = { points, indices, normals, texcoords };
     
-    GLuint abgr = 0xffaaaaaa; // Default color
-    GLfloat layer = 0;
-    
-    if (_layer == "buildings") {
-        layer = ROAD_LAYER_OFFSET + 4;
-        abgr = 0xffe6f0f2;
-    } else if (_layer == "water") {
-        layer = 2;
-        abgr = 0xff917d1a;
-    } else if (_layer == "roads") {
-        layer = 3;
-        abgr = 0xff969696;
-    } else if (_layer == "earth") {
-        layer = 0;
-        abgr = 0xffa9b9c2;
-    } else if (_layer == "landuse") {
-        layer = 1;
-        abgr = 0xff669171;
-    }
+    GLuint abgr = _params.color;
+    GLfloat layer = _params.order;
     
     if (Tangram::getDebugFlag(Tangram::DebugFlags::PROXY_COLORS)) {
         abgr = abgr << (int(_props.numericProps["zoom"]) % 6);

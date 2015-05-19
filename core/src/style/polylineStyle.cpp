@@ -32,18 +32,18 @@ void PolylineStyle::constructShaderProgram() {
     m_shaderProgram->setSourceStrings(fragShaderSrcStr, vertShaderSrcStr);
 }
 
-void PolylineStyle::buildPoint(Point& _point, std::string& _layer, Properties& _props, VboMesh& _mesh) const {
+void PolylineStyle::buildPoint(Point& _point, StyleParams& _params, Properties& _props, VboMesh& _mesh) const {
     // No-op
 }
 
-void PolylineStyle::buildLine(Line& _line, std::string& _layer, Properties& _props, VboMesh& _mesh) const {
+void PolylineStyle::buildLine(Line& _line, StyleParams& _params, Properties& _props, VboMesh& _mesh) const {
     std::vector<PosNormEnormColVertex> vertices;
     std::vector<int> indices;
     std::vector<glm::vec3> points;
     std::vector<glm::vec2> texcoords;
     std::vector<glm::vec2> scalingVecs;
     
-    GLuint abgr = 0xff686868; // Default road color
+    GLuint abgr = _params.color; // Default road color
     GLuint abgrOutline = 0xff777777;
     
     if (Tangram::getDebugFlag(Tangram::DebugFlags::PROXY_COLORS)) {
@@ -105,6 +105,6 @@ void PolylineStyle::buildLine(Line& _line, std::string& _layer, Properties& _pro
     mesh.addVertices(std::move(vertices), std::move(indices));
 }
 
-void PolylineStyle::buildPolygon(Polygon& _polygon, std::string& _layer, Properties& _props, VboMesh& _mesh) const {
+void PolylineStyle::buildPolygon(Polygon& _polygon, StyleParams& _params, Properties& _props, VboMesh& _mesh) const {
     // No-op
 }

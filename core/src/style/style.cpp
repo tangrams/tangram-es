@@ -18,8 +18,8 @@ void Style::setMaterial(const std::shared_ptr<Material>& _material){
     
 }
 
-void Style::addLayers(std::vector<std::string> _layers) {
-    m_layers.insert(_layers.cbegin(), _layers.cend());
+void Style::addLayer(const std::pair<std::string, StyleParams>& _layer) {
+    m_layers.push_back(_layer);
 }
 
 void Style::addData(TileData& _data, MapTile& _tile, const MapProjection& _mapProjection)  const {
@@ -29,10 +29,14 @@ void Style::addData(TileData& _data, MapTile& _tile, const MapProjection& _mapPr
     
     for (auto& layer : _data.layers) {
         
-        if (m_layers.find(layer.name) == m_layers.end()) {
-            continue;
-        }
+        // Skip any layers that this style doesn't have a rule for
+        auto it = m_layers.begin();
+        while (it != m_layers.end() && it->first != layer.name) { ++it; }
+        if (it == m_layers.end()) { continue; }
+
+        StyleParams params = it->second;
         
+        // Loop over all features
         for (auto& feature : layer.features) {
 
             feature.props.numericProps["zoom"] = _tile.getID().z;
@@ -41,19 +45,19 @@ void Style::addData(TileData& _data, MapTile& _tile, const MapProjection& _mapPr
                 case GeometryType::POINTS:
                     // Build points
                     for (auto& point : feature.points) {
-                        buildPoint(point, layer.name, feature.props, *mesh);
+                        buildPoint(point, params, feature.props, *mesh);
                     }
                     break;
                 case GeometryType::LINES:
                     // Build lines
                     for (auto& line : feature.lines) {
-                        buildLine(line, layer.name, feature.props, *mesh);
+                        buildLine(line, params, feature.props, *mesh);
                     }
                     break;
                 case GeometryType::POLYGONS:
                     // Build polygons
                     for (auto& polygon : feature.polygons) {
-                        buildPolygon(polygon, layer.name, feature.props, *mesh);
+                        buildPolygon(polygon, params, feature.props, *mesh);
                     }
                     break;
                 default:
