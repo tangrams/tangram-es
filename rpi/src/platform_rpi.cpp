@@ -12,6 +12,8 @@
 #include "gl.h"
 #include "context.h"
 
+#define NUM_WORKERS 3
+
 static bool s_isContinuousRendering = false;
 
 static UrlWorker s_Workers[NUM_WORKERS];
