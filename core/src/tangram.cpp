@@ -204,7 +204,6 @@ namespace Tangram {
 
         // Loop over all styles
         for (const auto& style : m_scene->getStyles()) {
-            logMsg("render\n");
             style->setupFrame(m_view, m_scene);
 
             // Loop over all tiles in m_tileSet
