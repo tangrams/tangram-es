@@ -117,6 +117,8 @@ public:
     
     static bool s_needUpdate;
     
+    bool isWaitingOcclusion() const { return m_currentState == State::WAIT_OCC; }
+    
 private:
 
     void enterState(State _state, float _alpha = 1.0f);

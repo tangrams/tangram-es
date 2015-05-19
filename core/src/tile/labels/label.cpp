@@ -6,7 +6,8 @@ Label::Label(Label::Transform _transform, std::string _text, fsuint _id, Type _t
     m_type(_type),
     m_transform(_transform),
     m_text(_text), m_id(_id) {
-
+        
+    m_transform.m_alpha = m_type == Type::DEBUG ? 1.0 : 0.0;
     m_currentState = m_type == Type::DEBUG ? State::VISIBLE : State::WAIT_OCC;
     m_occludedLastFrame = false;
     m_occlusionSolved = false;
