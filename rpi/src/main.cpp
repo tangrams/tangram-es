@@ -20,6 +20,9 @@
 #include "util/typedMesh.h"
 #include "util/geom.h"
 
+#include "hud/hud.h"
+Hud m_hud;
+
 #define KEY_ESC      113    // q
 #define KEY_ZOOM_IN  45     // - 
 #define KEY_ZOOM_OUT 61     // =
@@ -173,6 +176,8 @@ void setup() {
         mouseMesh->addVertices(std::move(vertices), std::move(indices));
         mouseMesh->compileVertexBuffer();
     }
+
+    m_hud.init();
 }
 
 void newFrame() {
@@ -203,6 +208,8 @@ void newFrame() {
         glDisable(GL_BLEND);
         glEnable(GL_DEPTH_TEST);
     }    
+
+    m_hud.draw();
 
     renderGL();
 }
@@ -239,6 +246,8 @@ void onKeyPress(int _key) {
 }
 
 void onMouseMove(float _x, float _y) {
+    m_hud.mousePosition(_x,_y);
+
     requestRender();
 }
 
@@ -272,6 +281,10 @@ void onMouseDrag(float _x, float _y, int _button) {
 
 void onViewportResize(int _newWidth, int _newHeight) {
     Tangram::resize(_newWidth,_newHeight);
+
+    m_hud.setWindowSize(_newWidth, _newHeight);
+    m_hud.mousePosition(_newWidth/2, _newHeight/2);
+
     requestRender();
 }
 

@@ -20,8 +20,6 @@
 #include "stl_util.hpp"
 #include "util/tileID.h"
 
-#include "hud/hud.h"
-
 namespace Tangram {
 
     std::unique_ptr<TileManager> m_tileManager;
@@ -30,8 +28,6 @@ namespace Tangram {
     std::shared_ptr<LabelContainer> m_labelContainer;
     std::shared_ptr<FontContext> m_ftContext;
     std::shared_ptr<DebugStyle> m_debugStyle;
-
-    Hud m_hud;
 
     static float g_time = 0.0;
     static unsigned long g_flags = 0;
@@ -115,8 +111,6 @@ namespace Tangram {
         SceneLoader loader;
         loader.loadScene("config.yaml", *m_scene, *m_tileManager, *m_view);
 
-        m_hud.init();
-
         // Set up openGL state
         glDisable(GL_BLEND);
         glDisable(GL_STENCIL_TEST);
@@ -150,9 +144,6 @@ namespace Tangram {
             m_ftContext->setScreenSize(m_view->getWidth(), m_view->getHeight());
             m_labelContainer->setScreenSize(m_view->getWidth(), m_view->getHeight());
         }
-
-        m_hud.setWindowSize(_newWidth, _newHeight);
-        m_hud.mousePosition(_newWidth/2, _newHeight/2);
 
         while (Error::hadGlError("Tangram::resize()")) {}
 
@@ -222,8 +213,6 @@ namespace Tangram {
             style->teardown();
         }
 
-        m_hud.draw();
-
         while (Error::hadGlError("Tangram::render()")) {}
     }
 
@@ -254,7 +243,6 @@ namespace Tangram {
     void handleDoubleTapGesture(float _posX, float _posY) {
         
         handlePinchGesture(_posX, _posY, 2.f);
-        
     }
 
     void handlePanGesture(float _startX, float _startY, float _endX, float _endY) {
@@ -263,7 +251,6 @@ namespace Tangram {
         m_view->screenToGroundPlane(_endX, _endY);
 
         m_view->translate(_startX - _endX, _startY - _endY);
-        m_hud.mouseMove(_startX - _endX, _startY - _endY);
     }
 
     void handlePinchGesture(float _posX, float _posY, float _scale) {
