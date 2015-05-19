@@ -10,27 +10,32 @@
 struct WorkerData {
     std::vector<char> rawTileData;
     std::unique_ptr<TileID> tileID;
-    int dataSourceID;
+    DataSource* source;
 
     WorkerData() {
         tileID.reset(new TileID(NOT_A_TILE));
     }
 
-    WorkerData(std::vector<char>&& _rawTileData, const TileID& _tileID, const int _dataSourceID) :
-                                                                rawTileData(std::move(_rawTileData)), 
-                                                                dataSourceID(_dataSourceID) {
+    WorkerData(std::vector<char>&& _rawTileData, const TileID& _tileID, DataSource* _source) :
+        rawTileData(std::move(_rawTileData)),
+        source(_source) {
+            
         tileID.reset(new TileID(_tileID));
+        
     }
 
-    WorkerData(WorkerData&& _other) : rawTileData(std::move(_other.rawTileData)),
-                                      dataSourceID(std::move(_other.dataSourceID)) {
+    WorkerData(WorkerData&& _other) :
+        rawTileData(std::move(_other.rawTileData)),
+        source(std::move(_other.source)) {
+            
         tileID.reset(new TileID(*(_other.tileID)));
+        
     }
 
     WorkerData& operator=(WorkerData&& _other) {
         rawTileData = std::move(_other.rawTileData);
         tileID.reset(new TileID(*(_other.tileID)));
-        dataSourceID = std::move(_other.dataSourceID);
+        source = std::move(_other.source);
         return *this;
     }
 
@@ -42,8 +47,7 @@ public:
     
     TileWorker();
     
-    void processTileData(std::unique_ptr<WorkerData> _workerData, 
-                         const std::vector<std::unique_ptr<DataSource>>& _dataSources,
+    void processTileData(std::unique_ptr<WorkerData> _workerData,
                          const std::vector<std::unique_ptr<Style>>& _styles,
                          const View& _view);
     
@@ -59,12 +63,11 @@ public:
     
 private:
     
-    std::unique_ptr<WorkerData> m_workerData;
-    
     bool m_free;
     bool m_aborted;
     bool m_finished;
     
+    std::unique_ptr<WorkerData> m_workerData;
     std::future< std::shared_ptr<MapTile> > m_future;
 };
 

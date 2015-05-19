@@ -2,13 +2,10 @@
 
 bool Label::s_needUpdate = false;
 
-Label::Label(Transform _transform, std::string _text, std::shared_ptr<TextBuffer> _buffer, Type _type) :
+Label::Label(Label::Transform _transform, std::string _text, fsuint _id, Type _type) :
     m_type(_type),
     m_transform(_transform),
-    m_text(_text),
-    m_buffer(_buffer) {
-
-    m_id = m_buffer->genTextID();
+    m_text(_text), m_id(_id) {
 
     m_currentState = m_type == Type::DEBUG ? State::VISIBLE : State::WAIT_OCC;
     m_occludedLastFrame = false;
@@ -17,11 +14,11 @@ Label::Label(Transform _transform, std::string _text, std::shared_ptr<TextBuffer
 
 Label::~Label() {}
 
-void Label::rasterize() {
-    m_buffer->rasterize(m_text, m_id);
-
-    glm::vec4 bbox = m_buffer->getBBox(m_id);
-
+void Label::rasterize(std::shared_ptr<TextBuffer>& _buffer) {
+    _buffer->rasterize(m_text, m_id);
+    
+    glm::vec4 bbox = _buffer->getBBox(m_id);
+    
     m_dim.x = std::abs(bbox.z - bbox.x);
     m_dim.y = std::abs(bbox.w - bbox.y);
 }
@@ -37,9 +34,8 @@ void Label::updateBBoxes() {
     m_aabb = m_obb.getExtent();
 }
 
-void Label::pushTransform() {
-    logMsg("push transform\n");
-    m_buffer->transformID(m_id, m_transform.m_screenPosition.x, m_transform.m_screenPosition.y, m_transform.m_rotation, m_transform.m_alpha);
+void Label::pushTransform(std::shared_ptr<TextBuffer>& _buffer) {
+    _buffer->transformID(m_id, m_transform.m_screenPosition.x, m_transform.m_screenPosition.y, m_transform.m_rotation, m_transform.m_alpha);
 }
 
 bool Label::updateScreenTransform(const glm::mat4& _mvp, const glm::vec2& _screenSize) {

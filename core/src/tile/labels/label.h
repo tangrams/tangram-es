@@ -77,11 +77,12 @@ public:
         float m_rotation;
     };
 
-    Label(Transform _transform, std::string _text, std::shared_ptr<TextBuffer> _buffer, Type _type);
+    Label(Transform _transform, std::string _text, fsuint _id, Type _type);
+
     ~Label();
 
     /* Call the font context to rasterize the label string */
-    void rasterize();
+    void rasterize(std::shared_ptr<TextBuffer>& _buffer);
 
     Transform getTransform() const { return m_transform; }
 
@@ -98,10 +99,10 @@ public:
 
     void update(const glm::mat4& _mvp, const glm::vec2& _screenSize, float _dt);
 
-    void pushTransform();
-
+    void pushTransform(std::shared_ptr<TextBuffer>& _buffer);
+    
     bool updateScreenTransform(const glm::mat4& _mvp, const glm::vec2& _screenSize);
-
+    
     Type getType() const { return m_type; }
 
     void setOcclusion(bool _occlusion);
@@ -129,7 +130,6 @@ private:
     Type m_type;
     Transform m_transform;
     std::string m_text;
-    std::shared_ptr<TextBuffer> m_buffer; // the buffer in which this label text id is associated to
     fsuint m_id;
     isect2d::OBB m_obb;
     isect2d::AABB m_aabb;

@@ -4,25 +4,26 @@
 LabelContainer::LabelContainer() {}
 
 LabelContainer::~LabelContainer() {
-    m_labels.clear();
-    m_pendingLabels.clear();
+    m_labelUnits.clear();
+    m_pendingLabelUnits.clear();
 }
 
-bool LabelContainer::addLabel(const TileID& _tileID, const std::string& _styleName, Label::Transform _transform, std::string _text, Label::Type _type, const glm::mat4& _model) {
+bool LabelContainer::addLabel(MapTile& _tile, const std::string& _styleName, Label::Transform _transform, std::string _text, Label::Type _type) {
     auto currentBuffer = m_ftContext->getCurrentBuffer();
 
     if (currentBuffer) {
-        auto& container = m_pendingLabels[_styleName][_tileID];
+        fsuint textID = currentBuffer->genTextID();
+        std::shared_ptr<Label> l(new Label(_transform, _text, textID, _type));
+        
+        l->rasterize(currentBuffer);
+        l->update(m_viewProjection * _tile.getModelMatrix(), m_screenSize, 0);
+        std::unique_ptr<TileID> tileID(new TileID(_tile.getID()));
+        _tile.addLabel(_styleName, l);
         
         // lock concurrent collection
         {
             std::lock_guard<std::mutex> lock(m_mutex);
-            container.emplace_back(_transform, _text, currentBuffer, _type);
-            
-            container.back().rasterize();
-            
-            // ensure label is updated once
-            container.back().update(m_viewProjection * _model, m_screenSize, 0);
+            m_pendingLabelUnits.emplace_back(LabelUnit(l, tileID, _styleName));
         }
 
         return true;
@@ -31,68 +32,35 @@ bool LabelContainer::addLabel(const TileID& _tileID, const std::string& _styleNa
     return false;
 }
 
-void LabelContainer::removeLabels(const TileID& _tileID) {
-    if (m_labels.size() > 0) {
-        for (auto& styleTilepair : m_labels) {
-            std::string styleName = styleTilepair.first;
-            
-            for (auto& tileLabelsPair : m_labels[styleName]) {
-                const TileID& tileID = tileLabelsPair.first;
-                if (tileID == _tileID) {
-                    m_labels[styleName][tileID].clear();
-                    {
-                        std::lock_guard<std::mutex> lock(m_mutex);
-                        m_pendingLabels[styleName][tileID].clear();
-                    }
-                }
-            }
-        }
-    }
-}
-
-const std::vector<std::shared_ptr<Label>>& LabelContainer::getLabels(const std::string& _styleName, const TileID& _tileID) {
-    return m_labels[_styleName][_tileID];
-}
-
 void LabelContainer::updateOcclusions() {
     // merge pending labels from threads
-    for (auto& styleTilepair : m_pendingLabels) {
-        std::string styleName = styleTilepair.first;
-        
-        for (auto& tileLabelsPair : m_pendingLabels[styleName]) {
-            const TileID& tileID = tileLabelsPair.first;
-            auto& pendingLabels = m_pendingLabels[styleName][tileID];
-            auto& labels = m_labels[styleName][tileID];
-            
-            for (auto& label : pendingLabels) {
-                // create a shared pointer as a copy of the label created in the thread
-                labels.emplace_back(new Label(label));
-            }
-            
-            {
-                std::lock_guard<std::mutex> lock(m_mutex);
-                pendingLabels.clear();
-            }
-        }
+    m_labelUnits.reserve(m_labelUnits.size() + m_pendingLabelUnits.size());
+    {
+        std::lock_guard<std::mutex> lock(m_mutex);
+        m_labelUnits.insert(m_labelUnits.end(), std::make_move_iterator(m_pendingLabelUnits.begin()), std::make_move_iterator(m_pendingLabelUnits.end()));
+        std::vector<LabelUnit>().swap(m_pendingLabelUnits);
     }
-    
-    std::set<std::pair<std::shared_ptr<Label>, std::shared_ptr<Label>>> occlusions;
+
+    std::set<std::pair<Label*, Label*>> occlusions;
     std::vector<isect2d::AABB> aabbs;
     
-    for (auto& styleTilepair : m_labels) {
-        std::string styleName = styleTilepair.first;
-        for (auto& tileLabelsPair : m_labels[styleName]) {
-            auto& labels = tileLabelsPair.second;
-            for(auto& label : labels) {
-                if (!label->canOcclude()) {
-                    continue;
-                }
-                
-                isect2d::AABB aabb = label->getAABB();
-                aabb.m_userData = (void*) &label;
-                aabbs.push_back(aabb);
-            }
+    for(int i = 0; i < m_labelUnits.size(); i++) {
+        auto& labelUnit = m_labelUnits[i];
+        auto label = labelUnit.getWeakLabel();
+        
+        if (label == nullptr) {
+            m_labelUnits[i] = std::move(m_labelUnits[m_labelUnits.size() - 1]);
+            m_labelUnits.pop_back();
+            continue;
         }
+        
+        if (!label->canOcclude()) {
+            continue;
+        }
+        
+        isect2d::AABB aabb = label->getAABB();
+        aabb.m_userData = (void*) label.get();
+        aabbs.push_back(aabb);
     }
     
     // broad phase
@@ -102,8 +70,8 @@ void LabelContainer::updateOcclusions() {
         const auto& aabb1 = aabbs[pair.first];
         const auto& aabb2 = aabbs[pair.second];
         
-        auto l1 = *(std::shared_ptr<Label>*) aabb1.m_userData;
-        auto l2 = *(std::shared_ptr<Label>*) aabb2.m_userData;
+        auto l1 = (Label*) aabb1.m_userData;
+        auto l2 = (Label*) aabb2.m_userData;
         
         // narrow phase
         if (intersect(l1->getOBB(), l2->getOBB())) {
@@ -118,15 +86,12 @@ void LabelContainer::updateOcclusions() {
         }
     }
     
-    for (auto& styleTilepair : m_labels) {
-        std::string styleName = styleTilepair.first;
-        for (auto& tileLabelsPair : m_labels[styleName]) {
-            auto& labels = tileLabelsPair.second;
-            for(auto& label : labels) {
-                if (label->canOcclude()) {
-                    label->occlusionSolved();
-                }
-            }
+    for(int i = 0; i < m_labelUnits.size(); i++) {
+        auto& labelUnit = m_labelUnits[i];
+        auto label = labelUnit.getWeakLabel();
+        
+        if (label != nullptr) {
+            label->occlusionSolved();
         }
     }
 }

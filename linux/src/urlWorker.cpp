@@ -1,7 +1,5 @@
-#include "netWorkerData.h"
-#include "platform.h"
+#include "urlWorker.h"
 
-#include <cstring>
 #include <curl/curl.h>
 
 static size_t write_data(void *_buffer, size_t _size, size_t _nmemb, void *_dataPtr) {
@@ -15,17 +13,17 @@ static size_t write_data(void *_buffer, size_t _size, size_t _nmemb, void *_data
     return realSize;
 }
 
-NetworkWorker::NetworkWorker() {
+UrlWorker::UrlWorker() {
     m_curlHandle = curl_easy_init();
 }
 
-NetworkWorker::~NetworkWorker() {
+UrlWorker::~UrlWorker() {
     curl_easy_cleanup(m_curlHandle);
 } 
 
-void NetworkWorker::perform(std::unique_ptr<NetWorkerData> _workerData) {
+void UrlWorker::perform(std::unique_ptr<UrlTask> _task) {
     
-    m_workerData = std::move(_workerData);
+    m_task = std::move(_task);
     m_available = false;
 
     m_future = std::async(std::launch::async, [&]() {
@@ -33,12 +31,12 @@ void NetworkWorker::perform(std::unique_ptr<NetWorkerData> _workerData) {
         // set up curl to perform fetch
         curl_easy_setopt(m_curlHandle, CURLOPT_WRITEFUNCTION, write_data);
         curl_easy_setopt(m_curlHandle, CURLOPT_WRITEDATA, &m_stream);
-        curl_easy_setopt(m_curlHandle, CURLOPT_URL, m_workerData->url.c_str());
+        curl_easy_setopt(m_curlHandle, CURLOPT_URL, m_task->url.c_str());
         curl_easy_setopt(m_curlHandle, CURLOPT_HEADER, 0L);
         curl_easy_setopt(m_curlHandle, CURLOPT_VERBOSE, 0L);
         curl_easy_setopt(m_curlHandle, CURLOPT_ACCEPT_ENCODING, "gzip");
     
-        logMsg("Fetching URL with curl: %s\n", m_workerData->url.c_str());
+        logMsg("Fetching URL with curl: %s\n", m_task->url.c_str());
 
         CURLcode result = curl_easy_perform(m_curlHandle);
         
@@ -49,27 +47,27 @@ void NetworkWorker::perform(std::unique_ptr<NetWorkerData> _workerData) {
         size_t nBytes = m_stream.tellp();
         m_stream.seekp(0);
 
-        m_workerData->rawData.resize(nBytes);
+        m_task->content.resize(nBytes);
         m_stream.seekg(0);
-        m_stream.read(m_workerData->rawData.data(), nBytes);
+        m_stream.read(m_task->content.data(), nBytes);
 
         m_finished = true;
         requestRender();
-        return std::move(m_workerData);
+        return std::move(m_task);
     });
 }
 
-void NetworkWorker::reset() {
-    m_workerData.reset();
+void UrlWorker::reset() {
+    m_task.reset();
     m_available = true;
     m_finished = false;
 }
 
-bool NetworkWorker::hasWorkerData(const std::string& _url) {
-    return (m_workerData->url == _url);
+bool UrlWorker::hasTask(const std::string& _url) {
+    return (m_task->url == _url);
 }
 
-std::unique_ptr<NetWorkerData> NetworkWorker::getWorkerResult() {
+std::unique_ptr<UrlTask> UrlWorker::getResult() {
     return std::move( m_future.get() );
 }
 

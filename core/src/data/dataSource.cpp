@@ -4,18 +4,21 @@
 #include "tileID.h"
 #include "tileData.h"
 #include "mapTile.h"
+#include "tileManager.h"
 
 //---- DataSource Implementation----
 
-bool DataSource::hasTileData(const TileID& _tileID) {
+bool DataSource::hasTileData(const TileID& _tileID) const {
     
     return m_tileStore.find(_tileID) != m_tileStore.end();
 }
 
-std::shared_ptr<TileData> DataSource::getTileData(const TileID& _tileID) {
+std::shared_ptr<TileData> DataSource::getTileData(const TileID& _tileID) const {
     
-    if (hasTileData(_tileID)) {
-        std::shared_ptr<TileData> tileData = m_tileStore[_tileID];
+    const auto it = m_tileStore.find(_tileID);
+    
+    if (it != m_tileStore.end()) {
+        std::shared_ptr<TileData> tileData = it->second;
         return tileData;
     } else {
         return nullptr;
@@ -65,11 +68,11 @@ void NetworkDataSource::constructURL(const TileID& _tileCoord, std::string& _url
     }
 }
 
-bool NetworkDataSource::loadTileData(const TileID& _tileID, const int _dataSourceID) {
+bool NetworkDataSource::loadTileData(const TileID& _tileID, TileManager& _tileManager) {
     
     bool success = true; // Begin optimistically
     
-    if (hasTileData(_tileID)){
+    if (hasTileData(_tileID)) {
         // Tile has been fetched already!
         return success;
     }
@@ -78,7 +81,15 @@ bool NetworkDataSource::loadTileData(const TileID& _tileID, const int _dataSourc
     
     constructURL(_tileID, url);
 
-    success = startNetworkRequest(url, _tileID, _dataSourceID);
+    success = startUrlRequest(url, [=,&_tileManager](std::vector<char>&& _rawData) {
+        
+        // _tileManager is captured here by reference, since its lifetime is the entire program lifetime,
+        // but _tileID has to be captured by copy since it is a temporary stack object
+        
+        _tileManager.addToWorkerQueue(std::move(_rawData), _tileID, this);
+        requestRender();
+        
+    });
     
     return success;
 }
@@ -86,6 +97,6 @@ bool NetworkDataSource::loadTileData(const TileID& _tileID, const int _dataSourc
 void NetworkDataSource::cancelLoadingTile(const TileID& _tileID) {
     std::string url;
     constructURL(_tileID, url);
-    cancelNetworkRequest(url);
+    cancelUrlRequest(url);
 }
 

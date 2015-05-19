@@ -20,13 +20,11 @@ static JNIEnv* jniEnv;
 static jobject tangramInstance;
 static jmethodID requestRenderMethodID;
 static jmethodID setRenderModeMethodID;
-static jmethodID networkRequestMID;
-static jmethodID cancelNetworkRequestMID;
+static jmethodID startUrlRequestMID;
+static jmethodID cancelUrlRequestMID;
 static AAssetManager* assetManager;
 
 static bool s_isContinuousRendering = false;
-
-static std::function<void(std::vector<char>&&, TileID, int)> networkCallback;
 
 void setupJniEnv(JNIEnv* _jniEnv, jobject _tangramInstance, jobject _assetManager) {
 	_jniEnv->GetJavaVM(&jvm);
@@ -34,8 +32,8 @@ void setupJniEnv(JNIEnv* _jniEnv, jobject _tangramInstance, jobject _assetManage
 
     tangramInstance = jniEnv->NewGlobalRef(_tangramInstance);
     jclass tangramClass = jniEnv->FindClass("com/mapzen/tangram/Tangram");
-    networkRequestMID = jniEnv->GetMethodID(tangramClass, "networkRequest", "(Ljava/lang/String;IIII)Z");
-    cancelNetworkRequestMID = jniEnv->GetMethodID(tangramClass, "cancelNetworkRequest", "(Ljava/lang/String;)V");
+    startUrlRequestMID = jniEnv->GetMethodID(tangramClass, "startUrlRequest", "(Ljava/lang/String;J)Z");
+    cancelUrlRequestMID = jniEnv->GetMethodID(tangramClass, "cancelUrlRequest", "(Ljava/lang/String;)V");
 	requestRenderMethodID = _jniEnv->GetMethodID(tangramClass, "requestRender", "()V");
     setRenderModeMethodID = _jniEnv->GetMethodID(tangramClass, "setRenderMode", "(I)V");
 
@@ -152,43 +150,49 @@ unsigned char* bytesFromResource(const char* _path, unsigned int* _size) {
     return data;
 }
 
-bool startNetworkRequest(const std::string& _url, const TileID& _tileID, const int _dataSourceID) {
+bool startUrlRequest(const std::string& _url, UrlCallback _callback) {
     
     jstring jUrl = jniEnv->NewStringUTF(_url.c_str());
 
-    jboolean methodResult = jniEnv->CallBooleanMethod(tangramInstance, networkRequestMID, jUrl, (jint)_tileID.x, (jint)_tileID.y, (jint)_tileID.z, (jint)_dataSourceID);
+    // This is probably super dangerous. In order to pass a reference to our callback we have to convert it
+    // to a Java type. We allocate a new callback object and then reinterpret the pointer to it as a Java long. 
+    // In Java, we associate this long with the current network request and pass it back to native code when
+    // the request completes (either in onUrlSuccess or onUrlFailure), reinterpret the long back into a
+    // pointer, call the callback function if the request succeeded, and delete the heap-allocated UrlCallback 
+    // to make sure nothing is leaked. 
+    jlong jCallbackPtr = reinterpret_cast<jlong>(new UrlCallback(_callback));
 
-    if(!methodResult) {
-        logMsg("\"networkRequest\" returned false");
-        return methodResult;
-    }
+    jboolean methodResult = jniEnv->CallBooleanMethod(tangramInstance, startUrlRequestMID, jUrl, jCallbackPtr);
 
     return methodResult;
 }
 
-void cancelNetworkRequest(const std::string& _url) {
+void cancelUrlRequest(const std::string& _url) {
 
     jstring jUrl = jniEnv->NewStringUTF(_url.c_str());
-    jniEnv->CallVoidMethod(tangramInstance, cancelNetworkRequestMID, jUrl);
+    jniEnv->CallVoidMethod(tangramInstance, cancelUrlRequestMID, jUrl);
 
 }
 
-void setNetworkRequestCallback(std::function<void(std::vector<char>&&, TileID, int)>&& _callback) {
+void onUrlSuccess(JNIEnv* _jniEnv, jbyteArray _jBytes, jlong _jCallbackPtr) {
 
-    networkCallback = _callback;
+    size_t length = _jniEnv->GetArrayLength(_jBytes);
+
+    std::vector<char> content;
+    content.resize(length);
+
+    _jniEnv->GetByteArrayRegion(_jBytes, 0, length, reinterpret_cast<jbyte*>(content.data()));
+
+    UrlCallback* callback = reinterpret_cast<UrlCallback*>(_jCallbackPtr);
+    (*callback)(std::move(content));
+    delete callback;
 
 }
 
-void networkDataBridge(JNIEnv* _jniEnv, jbyteArray _jFetchedBytes, int _tileIDx, int _tileIDy, int _tileIDz, int _dataSourceID) {
+void onUrlFailure(JNIEnv* _jniEnv, jlong _jCallbackPtr) {
 
-    int dataLength = _jniEnv->GetArrayLength(_jFetchedBytes);
-
-    std::vector<char> rawData;
-    rawData.resize(dataLength);
-
-    _jniEnv->GetByteArrayRegion(_jFetchedBytes, 0, dataLength, reinterpret_cast<jbyte*>(rawData.data()));
-
-    networkCallback(std::move(rawData), TileID(_tileIDx, _tileIDy, _tileIDz), _dataSourceID);
+    UrlCallback* callback = reinterpret_cast<UrlCallback*>(_jCallbackPtr);
+    delete callback;
 
 }
 

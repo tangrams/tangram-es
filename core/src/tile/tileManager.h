@@ -51,7 +51,7 @@ public:
      */
     void updateTileSet();
 
-    void addToWorkerQueue(std::vector<char>&& _rawData, const TileID& _id, const int _dataSourceID);
+    void addToWorkerQueue(std::vector<char>&& _rawData, const TileID& _id, DataSource* _source);
     
     /* Returns the set of currently visible tiles */
     const std::map<TileID, std::shared_ptr<MapTile>>& getVisibleTiles() { return m_tileSet; }
