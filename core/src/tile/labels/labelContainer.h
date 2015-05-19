@@ -4,6 +4,7 @@
 #include "util/tileID.h"
 #include "text/fontContext.h"
 #include "isect2d.h"
+#include "view/view.h"
 #include <memory>
 #include <vector>
 #include <set>
@@ -64,11 +65,13 @@ public:
 
     void updateOcclusions();
     
-    void setViewProjectionMatrix(glm::mat4 _viewProjection) { m_viewProjection = _viewProjection; }
+    void setView(std::shared_ptr<View> _view) { m_view = _view; }
     
     void setScreenSize(int _width, int _height) { m_screenSize = glm::vec2(_width, _height); }
 
 private:
+    
+    int LODDiscardFunc(float _maxZoom, float _zoom);
 
     LabelContainer();
     std::vector<LabelUnit> m_labelUnits;
@@ -81,5 +84,7 @@ private:
     
     glm::mat4 m_viewProjection;
     glm::vec2 m_screenSize;
+    std::shared_ptr<View> m_view;
+    float m_currentZoom;
 
 };

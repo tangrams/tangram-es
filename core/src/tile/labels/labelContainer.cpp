@@ -8,11 +8,30 @@ LabelContainer::~LabelContainer() {
     m_pendingLabelUnits.clear();
 }
 
+int LabelContainer::LODDiscardFunc(float _maxZoom, float _zoom) {
+    return (int) MIN(ceil(((log(-_zoom + (_maxZoom + 2)) / log(_maxZoom + 2) * (_maxZoom )) * 0.5) - 0.5), MAX_LOD);
+}
+
 bool LabelContainer::addLabel(MapTile& _tile, const std::string& _styleName, LabelTransform _transform, std::string _text, Label::Type _type) {
-    
     auto currentBuffer = m_ftContext->getCurrentBuffer();
 
+    if (m_currentZoom - _tile.getID().z > LODDiscardFunc(View::s_maxZoom, m_currentZoom)) {
+        return false;
+    }
+    
     if (currentBuffer) {
+        for (auto& unit : m_pendingLabelUnits) {
+            {
+                std::lock_guard<std::mutex> lock(m_mutex);
+                auto label = unit.getWeakLabel();
+                // a label with this text already exists
+                // NOTE: use an option for this
+                if (label && label->getText() == _text) {
+                    return false;
+                }
+            }
+        }
+        
         fsuint textID = currentBuffer->genTextID();
         std::shared_ptr<Label> l(new Label(_transform, _text, textID, _type));
         
@@ -34,6 +53,8 @@ bool LabelContainer::addLabel(MapTile& _tile, const std::string& _styleName, Lab
 }
 
 void LabelContainer::updateOcclusions() {
+    m_currentZoom = m_view->getZoom();
+    
     // merge pending labels from threads
     m_labelUnits.reserve(m_labelUnits.size() + m_pendingLabelUnits.size());
     {
