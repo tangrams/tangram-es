@@ -157,16 +157,18 @@ namespace Tangram {
     }
 
     void update(float _dt) {
-
+    
         g_time += _dt;
 
-        if (m_view) {
+        if (m_view || Label::s_needUpdate) {
+            
             m_view->update();
 
             m_tileManager->updateTileSet();
 
-            if(m_view->changedOnLastUpdate() || m_tileManager->hasTileSetChanged()) {
+            if(m_view->changedOnLastUpdate() || m_tileManager->hasTileSetChanged() || Label::s_needUpdate) {
                 m_labelContainer->setViewProjectionMatrix(m_view->getViewProjectionMatrix());
+                Label::s_needUpdate = false;
                 
                 for (const auto& mapIDandTile : m_tileManager->getVisibleTiles()) {
                     const std::shared_ptr<MapTile>& tile = mapIDandTile.second;
@@ -191,6 +193,10 @@ namespace Tangram {
                     }
                 }
             }
+            
+            if (Label::s_needUpdate) {
+                requestRender();
+            }
         }
         
         if(m_scene) {
@@ -205,6 +211,7 @@ namespace Tangram {
 
         // Loop over all styles
         for (const auto& style : m_scene->getStyles()) {
+            logMsg("render\n");
             style->setupFrame(m_view, m_scene);
 
             // Loop over all tiles in m_tileSet

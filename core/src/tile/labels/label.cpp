@@ -1,5 +1,7 @@
 #include "label.h"
 
+bool Label::s_needUpdate = false;
+
 Label::Label(Transform _transform, std::string _text, std::shared_ptr<TextBuffer> _buffer, Type _type) :
     m_type(_type),
     m_transform(_transform),
@@ -36,6 +38,7 @@ void Label::updateBBoxes() {
 }
 
 void Label::pushTransform() {
+    logMsg("push transform\n");
     m_buffer->transformID(m_id, m_transform.m_screenPosition.x, m_transform.m_screenPosition.y, m_transform.m_rotation, m_transform.m_alpha);
 }
 
@@ -119,6 +122,8 @@ bool Label::updateScreenTransform(const glm::mat4& _mvp, const glm::vec2& _scree
 void Label::update(const glm::mat4& _mvp, const glm::vec2& _screenSize, float _dt) {
 
     updateState(_mvp, _screenSize, _dt);
+    
+    m_occlusionSolved = false;
 }
 
 bool Label::offViewport(const glm::vec2& _screenSize) {
@@ -169,8 +174,10 @@ void Label::updateState(const glm::mat4& _mvp, const glm::vec2& _screenSize, flo
         return;
     }
 
+    // update the view-space bouding box
     updateBBoxes();
 
+    // checks whether the label is out of the viewport
     if (offViewport(_screenSize)) {
         enterState(State::OUT_OF_SCREEN, 0.0);
     }
@@ -178,17 +185,19 @@ void Label::updateState(const glm::mat4& _mvp, const glm::vec2& _screenSize, flo
     switch (m_currentState) {
         case State::VISIBLE:
             if (occludedLastFrame) {
-                m_fade = FadeEffect(false, FadeEffect::Interpolation::LINEAR, 1.0);
+                m_fade = FadeEffect(false, FadeEffect::Interpolation::POW, 1.0);
                 enterState(State::FADING_OUT, 1.0);
             }
             break;
         case State::FADING_IN:
             m_transform.m_alpha = m_fade.update(_dt);
+            s_needUpdate = true;
             if (m_fade.isFinished())
                 enterState(State::VISIBLE, 1.0);
             break;
         case State::FADING_OUT:
             m_transform.m_alpha = m_fade.update(_dt);
+            s_needUpdate = true;
             if (m_fade.isFinished())
                 enterState(State::SLEEP, 0.0);
             break;
@@ -206,7 +215,5 @@ void Label::updateState(const glm::mat4& _mvp, const glm::vec2& _screenSize, flo
         case State::SLEEP:;
             // dead state
     }
-
-    m_occlusionSolved = false;
 }
 

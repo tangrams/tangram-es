@@ -107,18 +107,18 @@ public:
     void setOcclusion(bool _occlusion);
 
     bool canOcclude();
-
-    void resetOcclusion();
+    
+    bool offViewport(const glm::vec2& _screenSize);
 
     void occlusionSolved();
 
     bool occludedLastFrame() { return m_occludedLastFrame; }
-
+    
+    static bool s_needUpdate;
+    
 private:
 
     void enterState(State _state, float _alpha = 1.0f);
-
-    bool offViewport(const glm::vec2& _screenSize);
 
     void updateBBoxes();
 
