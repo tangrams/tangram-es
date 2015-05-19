@@ -20,33 +20,39 @@ sources:
 layers:
     earth:
         data: { source: osm }
-        style:
-            order: 0
-            color: '#ddeeee'
+        draw:
+            polygons:
+                order: 0
+                color: [.76, .725, .66, 1.]
 
     landuse:
         data: { source: osm }
-        style:
-            order: 1
-            color: '#aaffaa'
-            interactive: true
+        draw:
+            polygons:
+                order: 1
+                color: [0.443, 0.569, 0.4, 1.]
+                interactive: true
 
     water:
         data: { source: osm }
-        style:
-            order: 2
-            color: '#88bbee'
+        draw:
+            polygons:
+                order: 2
+                color: [.102, .49, .569, 1.]
 
     roads:
         data: { source: osm }
-        style:
-            order: 3 
-            width: 8
-            color: '#cc6666'
+        draw:
+            lines:
+                order: 3
+                width: 8
+                color: [0.59, 0.59, 0.59, 1.]
+
     buildings:
         data: { source: osm }
-        style:
-            order: 4
-            color: '#e6f0f2'
-            extrude: true
+        draw:
+            polygons:
+                order: 4
+                color: [0.949, 0.941, 0.901, 1.]
+                extrude: true
 
