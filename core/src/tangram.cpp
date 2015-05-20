@@ -8,23 +8,20 @@
 #include "platform.h"
 #include "tile/tileManager.h"
 #include "view/view.h"
-#include "data/geoJsonSource.h"
-#include "data/protobufSource.h"
-
 #include "style/polygonStyle.h"
 #include "style/polylineStyle.h"
 #include "style/textStyle.h"
 #include "style/debugTextStyle.h"
 #include "style/debugStyle.h"
 #include "style/spriteStyle.h"
+#include "scene/sceneLoader.h"
 #include "scene/scene.h"
 #include "scene/lights.h"
 #include "util/error.h"
 #include "stl_util.hpp"
-#include "glm/gtc/type_ptr.hpp"
-#include "glm/mat4x4.hpp"
-#include "glm/gtc/matrix_transform.hpp"
 #include "util/textureCube.h"
+#include "glm/gtc/type_ptr.hpp"
+#include "util/tileID.h"
 
 namespace Tangram {
 
@@ -41,11 +38,10 @@ namespace Tangram {
         GLfloat pos_y;
         GLfloat pos_z;
     };
-    typedef TypedMesh<PosVertex> Mesh;
     
     std::shared_ptr<ShaderProgram> m_skyboxShader;
     std::shared_ptr<Texture> m_skyboxTexture;
-    Mesh* m_skyboxMesh;
+    std::shared_ptr<TypedMesh<PosVertex>> m_skyboxMesh;
 
     static float g_time = 0.0;
     static unsigned long g_flags = 0;
@@ -57,29 +53,34 @@ namespace Tangram {
         // Create view
         if (!m_view) {
             m_view = std::make_shared<View>();
-            
-            // Move the view to coordinates in Manhattan so we have something interesting to test
-            glm::dvec2 target = m_view->getMapProjection().LonLatToMeters(glm::dvec2(-74.00796, 40.70361));
-            m_view->setPosition(target.x, target.y);
         }
 
         // Create a scene object
         if (!m_scene) {
             m_scene = std::make_shared<Scene>();
+
+            std::shared_ptr<Material> mat(new Material());
+            mat->setAmbientEnabled(true);
+            // mat->setDiffuse("sem.jpg",MappingType::SPHEREMAP);
+            mat->setSpecularEnabled(false);
+            //mat->setNormal("normals.jpg",MappingType::UV);
             
             // Load style(s); hard-coded for now
             std::unique_ptr<Style> polyStyle(new PolygonStyle("Polygon"));
-            polyStyle->setLighting(LightingType::vertex);
+            polyStyle->setLighting(LightingType::fragment);
             polyStyle->addLayers({
                 "buildings",
                 "water",
                 "earth",
                 "landuse"
             });
+            polyStyle->setMaterial(mat);
             m_scene->addStyle(std::move(polyStyle));
             
             std::unique_ptr<Style> linesStyle(new PolylineStyle("Polyline"));
+            linesStyle->setLighting(LightingType::vertex);
             linesStyle->addLayers({"roads"});
+            // linesStyle->setMaterial(mat);
             m_scene->addStyle(std::move(linesStyle));
 
             m_ftContext = std::make_shared<FontContext>();
@@ -106,14 +107,7 @@ namespace Tangram {
 
             std::unique_ptr<DebugStyle> debugStyle(new DebugStyle("Debug"));
             m_scene->addStyle(std::move(debugStyle));
-
-            // Directional light with white diffuse color pointing Northeast and down
-             
-            std::unique_ptr<DirectionalLight> directionalLight(new DirectionalLight("dLight"));
-            directionalLight->setAmbientColor({0.3, 0.3, 0.3, 1.0});
-            directionalLight->setDiffuseColor({0.7, 0.7, 0.7, 1.0});
-            directionalLight->setDirection({1.0, 1.0, -1.0});
-
+            
             // Skybox test
             {
                 std::string fragShaderSrcStr = stringFromResource("cubemap.fs");
@@ -127,7 +121,7 @@ namespace Tangram {
                     {"a_position", 3, GL_FLOAT, false, 0},
                 }));
                 
-                m_skyboxMesh = new Mesh(layout, GL_TRIANGLES);
+                m_skyboxMesh = std::shared_ptr<TypedMesh<PosVertex>>(new TypedMesh<PosVertex>(layout, GL_TRIANGLES));
                 
                 std::vector<int> indices = {
                     5, 1, 3, 3, 7, 5, // +x
@@ -152,21 +146,6 @@ namespace Tangram {
                 m_skyboxMesh->addVertices(std::move(vertices), std::move(indices));
                 m_skyboxMesh->compileVertexBuffer();
             }
-
-            directionalLight->setOrigin(LightOrigin::WORLD);
-            m_scene->addLight(std::move(directionalLight));
-
-            // Point light
-            // std::unique_ptr<PointLight> pointLight(new PointLight("pLight"));
-            // pointLight->setAmbientColor({0.2, 0.2, 0.2, 1.0});
-            // pointLight->setDiffuseColor({0.5, 0.5, 0.5, 1.0});
-            // pointLight->setPosition({0.0, 0.0, -100.0});
-            // pointLight->setRadius(200);
-            // m_scene->addLight(std::move(pointLight));
-
-            // Testing loading image
-			// std::unique_ptr<Style> spriteStyle(new SpriteStyle("Sprite"));
-            // m_scene->addStyle(std::move(spriteStyle));
         }
 
         // Create a tileManager
@@ -176,14 +155,10 @@ namespace Tangram {
             // Pass references to the view and scene into the tile manager
             m_tileManager->setView(m_view);
             m_tileManager->setScene(m_scene);
-            
-            // Add a tile data source
-            // json tile source
-            // std::unique_ptr<DataSource> dataSource(new GeoJsonTile());
-            // protobuf tile source
-            std::unique_ptr<DataSource> dataSource(new ProtobufSource());
-            m_tileManager->addDataSource(std::move(dataSource));
         }
+
+        SceneLoader loader;
+        loader.loadScene("config.yaml", *m_scene, *m_tileManager, *m_view);
 
         // Set up openGL state
         glDisable(GL_BLEND);
@@ -216,6 +191,7 @@ namespace Tangram {
         
         if (m_ftContext) {
             m_ftContext->setScreenSize(m_view->getWidth(), m_view->getHeight());
+            m_labelContainer->setScreenSize(m_view->getWidth(), m_view->getHeight());
         }
 
         while (Error::hadGlError("Tangram::resize()")) {}
@@ -231,14 +207,14 @@ namespace Tangram {
 
             m_tileManager->updateTileSet();
 
-            if (m_view->changedOnLastUpdate()) {
+            if(m_view->changedOnLastUpdate() || m_tileManager->hasTileSetChanged()) {
+                m_labelContainer->setViewProjectionMatrix(m_view->getViewProjectionMatrix());
+                
                 for (const auto& mapIDandTile : m_tileManager->getVisibleTiles()) {
                     const std::shared_ptr<MapTile>& tile = mapIDandTile.second;
                     tile->update(_dt, *m_view);
                 }
-            }
-
-            if(m_view->changedOnLastUpdate() || m_tileManager->hasTileSetChanged()) {
+                
                 // update labels for specific style
                 for (const auto& style : m_scene->getStyles()) {
                     for (const auto& mapIDandTile : m_tileManager->getVisibleTiles()) {
@@ -248,12 +224,12 @@ namespace Tangram {
                 }
                 
                 // manage occlusions
-                LabelContainer::GetInstance()->updateOcclusions();
+                m_labelContainer->updateOcclusions();
                 
                 for (const auto& style : m_scene->getStyles()) {
                     for (const auto& mapIDandTile : m_tileManager->getVisibleTiles()) {
                         const std::shared_ptr<MapTile>& tile = mapIDandTile.second;
-                        tile->pushLabelTransforms(*style);
+                        tile->pushLabelTransforms(*style, m_labelContainer);
                     }
                 }
             }
@@ -286,17 +262,15 @@ namespace Tangram {
             style->teardown();
         }
 
-        // Skybox test
+        // Skybox
         {
-            m_skyboxTexture->bind();
+            m_skyboxTexture->bind(0);
 
             glm::mat4 vp = m_view->getViewProjectionMatrix();
 
             m_skyboxShader->setUniformMatrix4f("u_modelViewProj", glm::value_ptr(vp));
-            m_skyboxShader->setUniformi("u_tex", m_skyboxTexture->getTextureSlot());
+            m_skyboxShader->setUniformi("u_tex", 0);
             m_skyboxMesh->draw(m_skyboxShader);
-
-            m_skyboxTexture->unbind();
         }
         
         while (Error::hadGlError("Tangram::render()")) {}
@@ -407,5 +381,6 @@ namespace Tangram {
         VboMesh::invalidateAllVBOs();
         
     }
-    
+
 }
+

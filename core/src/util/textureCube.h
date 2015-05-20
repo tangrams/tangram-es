@@ -7,14 +7,10 @@
 class TextureCube : public Texture {
     
 public:
-    TextureCube(std::string _file, GLuint _slot = 0, TextureOptions _options =
+    TextureCube(std::string _file, TextureOptions _options =
                 {GL_RGBA, GL_RGBA, {GL_LINEAR, GL_LINEAR}, {GL_CLAMP_TO_EDGE, GL_CLAMP_TO_EDGE}});
     
-    void bind() override;
-    
-    void unbind() override;
-    
-    void update() override;
+    void update(GLuint _textureUnit) override;
     
     void resize(const unsigned int _width, const unsigned int _height) = delete;
     void setData(const GLuint* _data, unsigned int _dataSize) = delete;

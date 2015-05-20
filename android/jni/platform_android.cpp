@@ -2,33 +2,47 @@
 
 #include "platform.h"
 
-#include <jni.h>
 #include <android/log.h>
 #include <android/asset_manager.h>
 #include <android/asset_manager_jni.h>
+#include <jni.h>
 #include <cstdarg>
 
+/* Followed the following document for JavaVM tips when used with native threads
+ * http://android.wooyd.org/JNIExample/#NWD1sCYeT-I
+ * http://developer.android.com/training/articles/perf-jni.html and
+ * http://www.ibm.com/developerworks/library/j-jni/
+ * http://docs.oracle.com/javase/7/docs/technotes/guides/jni/spec/invocation.html
+ */
+
 static JavaVM* jvm;
-static jobject tangramObj;
+static JNIEnv* jniEnv;
+static jobject tangramInstance;
 static jmethodID requestRenderMethodID;
 static jmethodID setRenderModeMethodID;
+static jmethodID startUrlRequestMID;
+static jmethodID cancelUrlRequestMID;
 static AAssetManager* assetManager;
+
 static bool s_isContinuousRendering = false;
 
-void jniInit(JNIEnv* _jniEnv, jobject _tangramInstance, jobject _assetManager) {
+void setupJniEnv(JNIEnv* _jniEnv, jobject _tangramInstance, jobject _assetManager) {
+	_jniEnv->GetJavaVM(&jvm);
+    jniEnv = _jniEnv;
 
-    assetManager = AAssetManager_fromJava(_jniEnv, _assetManager);
+    tangramInstance = jniEnv->NewGlobalRef(_tangramInstance);
+    jclass tangramClass = jniEnv->FindClass("com/mapzen/tangram/Tangram");
+    startUrlRequestMID = jniEnv->GetMethodID(tangramClass, "startUrlRequest", "(Ljava/lang/String;J)Z");
+    cancelUrlRequestMID = jniEnv->GetMethodID(tangramClass, "cancelUrlRequest", "(Ljava/lang/String;)V");
+	requestRenderMethodID = _jniEnv->GetMethodID(tangramClass, "requestRender", "()V");
+    setRenderModeMethodID = _jniEnv->GetMethodID(tangramClass, "setRenderMode", "(I)V");
+
+    assetManager = AAssetManager_fromJava(jniEnv, _assetManager);
 
     if (assetManager == nullptr) {
         logMsg("ERROR: Could not obtain Asset Manager reference\n");
     }
 
-    _jniEnv->GetJavaVM(&jvm);
-    tangramObj = _jniEnv->NewGlobalRef(_tangramInstance);
-    jclass tangramClass = _jniEnv->GetObjectClass(tangramObj);
-    requestRenderMethodID = _jniEnv->GetMethodID(tangramClass, "requestRender", "()V");
-    setRenderModeMethodID = _jniEnv->GetMethodID(tangramClass, "setRenderMode", "(I)V");
-    
 }
 
 void logMsg(const char* fmt, ...) {
@@ -48,7 +62,7 @@ void requestRender() {
         jvm->AttachCurrentThread(&jniEnv, NULL);
     }
 
-    jniEnv->CallVoidMethod(tangramObj, requestRenderMethodID);
+    jniEnv->CallVoidMethod(tangramInstance, requestRenderMethodID);
 
     if(status == JNI_EDETACHED) {
         jvm->DetachCurrentThread();
@@ -65,7 +79,7 @@ void setContinuousRendering(bool _isContinuous) {
         jvm->AttachCurrentThread(&jniEnv, NULL);
     }
 
-    jniEnv->CallVoidMethod(tangramObj, requestRenderMethodID, _isContinuous ? 1 : 0);
+    jniEnv->CallVoidMethod(tangramInstance, requestRenderMethodID, _isContinuous ? 1 : 0);
 
     if(status == JNI_EDETACHED) {
         jvm->DetachCurrentThread();
@@ -135,5 +149,52 @@ unsigned char* bytesFromResource(const char* _path, unsigned int* _size) {
 
     return data;
 }
+
+bool startUrlRequest(const std::string& _url, UrlCallback _callback) {
+    
+    jstring jUrl = jniEnv->NewStringUTF(_url.c_str());
+
+    // This is probably super dangerous. In order to pass a reference to our callback we have to convert it
+    // to a Java type. We allocate a new callback object and then reinterpret the pointer to it as a Java long. 
+    // In Java, we associate this long with the current network request and pass it back to native code when
+    // the request completes (either in onUrlSuccess or onUrlFailure), reinterpret the long back into a
+    // pointer, call the callback function if the request succeeded, and delete the heap-allocated UrlCallback 
+    // to make sure nothing is leaked. 
+    jlong jCallbackPtr = reinterpret_cast<jlong>(new UrlCallback(_callback));
+
+    jboolean methodResult = jniEnv->CallBooleanMethod(tangramInstance, startUrlRequestMID, jUrl, jCallbackPtr);
+
+    return methodResult;
+}
+
+void cancelUrlRequest(const std::string& _url) {
+
+    jstring jUrl = jniEnv->NewStringUTF(_url.c_str());
+    jniEnv->CallVoidMethod(tangramInstance, cancelUrlRequestMID, jUrl);
+
+}
+
+void onUrlSuccess(JNIEnv* _jniEnv, jbyteArray _jBytes, jlong _jCallbackPtr) {
+
+    size_t length = _jniEnv->GetArrayLength(_jBytes);
+
+    std::vector<char> content;
+    content.resize(length);
+
+    _jniEnv->GetByteArrayRegion(_jBytes, 0, length, reinterpret_cast<jbyte*>(content.data()));
+
+    UrlCallback* callback = reinterpret_cast<UrlCallback*>(_jCallbackPtr);
+    (*callback)(std::move(content));
+    delete callback;
+
+}
+
+void onUrlFailure(JNIEnv* _jniEnv, jlong _jCallbackPtr) {
+
+    UrlCallback* callback = reinterpret_cast<UrlCallback*>(_jCallbackPtr);
+    delete callback;
+
+}
+
 
 #endif

@@ -29,6 +29,8 @@ public:
     
     MapTile(TileID _id, const MapProjection& _projection);
 
+    MapTile(MapTile&& _other); 
+
     virtual ~MapTile();
 
     /* Returns the immutable <TileID> of this tile */
@@ -45,6 +47,8 @@ public:
     
     /* Returns the reciprocal of <getScale()> */
     float getInverseScale() const { return m_inverseScale; }
+    
+    const glm::mat4& getModelMatrix() const { return m_modelMatrix; }
 
     /* Adds drawable geometry to the tile and associates it with a <Style>
      * 
@@ -52,6 +56,8 @@ public:
      * the tile origin.
      */
     void addGeometry(const Style& _style, std::unique_ptr<VboMesh> _mesh);
+    
+    void addLabel(const std::string& _styleName, std::shared_ptr<Label> _label);
     
     /*
      * Method to check if this tile's vboMesh(s) are loaded and ready to be drawn
@@ -65,7 +71,7 @@ public:
     void updateLabels(float _dt, const Style& _style, const View& _view);
     
     /* Push the label transforms to the font rendering context */
-    void pushLabelTransforms(const Style& _style);
+    void pushLabelTransforms(const Style& _style, std::shared_ptr<LabelContainer> _labelContainer);
 
     void setTextBuffer(const Style& _style, std::shared_ptr<TextBuffer> _buffer);
     std::shared_ptr<TextBuffer> getTextBuffer(const Style& _style) const;
@@ -104,6 +110,7 @@ private:
     // relative translation from the view origin to the model origin immediately before drawing the tile. 
 
     std::unordered_map<std::string, std::unique_ptr<VboMesh>> m_geometry; // Map of <Style>s and their associated <VboMesh>es
+    std::unordered_map<std::string, std::vector<std::shared_ptr<Label>>> m_labels;
     std::map<std::string, std::shared_ptr<TextBuffer>> m_buffers; // Map of <Style>s and the associated text buffer
 
 };

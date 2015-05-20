@@ -10,6 +10,7 @@ ShaderProgram::ShaderProgram() {
     m_glFragmentShader = 0;
     m_glVertexShader = 0;
     m_needsBuild = true;
+    m_freeTextureUnit = 0;
 
 }
 

@@ -4,60 +4,64 @@
 LabelContainer::LabelContainer() {}
 
 LabelContainer::~LabelContainer() {
-    m_labels.clear();
+    m_labelUnits.clear();
+    m_pendingLabelUnits.clear();
 }
 
-bool LabelContainer::addLabel(const TileID& _tileID, const std::string& _styleName, LabelTransform _transform, std::string _text, Label::Type _type) {
+bool LabelContainer::addLabel(MapTile& _tile, const std::string& _styleName, LabelTransform _transform, std::string _text, Label::Type _type) {
+    
     auto currentBuffer = m_ftContext->getCurrentBuffer();
 
     if (currentBuffer) {
-        std::shared_ptr<Label> label(new Label(_transform, _text, currentBuffer, _type));
-        label->rasterize();
+        fsuint textID = currentBuffer->genTextID();
+        std::shared_ptr<Label> l(new Label(_transform, _text, textID, _type));
         
-        m_labels[_styleName][_tileID].push_back(label);
+        l->rasterize(currentBuffer);
+        l->update(m_viewProjection * _tile.getModelMatrix(), m_screenSize, 0);
+        std::unique_ptr<TileID> tileID(new TileID(_tile.getID()));
+        _tile.addLabel(_styleName, l);
+        
+        // lock concurrent collection
+        {
+            std::lock_guard<std::mutex> lock(m_mutex);
+            m_pendingLabelUnits.emplace_back(LabelUnit(l, tileID, _styleName));
+        }
 
         return true;
-    } 
+    }
 
     return false;
 }
 
-void LabelContainer::removeLabels(const TileID& _tileID) {
-    if (m_labels.size() > 0) {
-        for (auto& styleTilepair : m_labels) {
-            std::string styleName = styleTilepair.first;
-            for (auto& tileLabelsPair : m_labels[styleName]) {
-                const TileID& tileID = tileLabelsPair.first;
-                if (tileID == _tileID) {
-                    m_labels[styleName][tileID].clear();
-                }
-            }
-        }
-    }
-}
-
-const std::vector<std::shared_ptr<Label>>& LabelContainer::getLabels(const std::string& _styleName, const TileID& _tileID) {
-    return m_labels[_styleName][_tileID];
-}
-
 void LabelContainer::updateOcclusions() {
-    std::set<std::pair<std::shared_ptr<Label>, std::shared_ptr<Label>>> occlusions;
+    // merge pending labels from threads
+    m_labelUnits.reserve(m_labelUnits.size() + m_pendingLabelUnits.size());
+    {
+        std::lock_guard<std::mutex> lock(m_mutex);
+        m_labelUnits.insert(m_labelUnits.end(), std::make_move_iterator(m_pendingLabelUnits.begin()), std::make_move_iterator(m_pendingLabelUnits.end()));
+        std::vector<LabelUnit>().swap(m_pendingLabelUnits);
+    }
+
+    std::set<std::pair<Label*, Label*>> occlusions;
     std::vector<isect2d::AABB> aabbs;
     
-    for (auto& styleTilepair : m_labels) {
-        std::string styleName = styleTilepair.first;
-        for (auto& tileLabelsPair : m_labels[styleName]) {
-            auto& labels = tileLabelsPair.second;
-            for(auto& label : labels) {
-                if (!label->isVisible() || label->isOutOfScreen() || label->getType() == Label::Type::DEBUG) {
-                    continue;
-                }
-                
-                isect2d::AABB aabb = label->getAABB();
-                aabb.m_userData = (void*) &label;
-                aabbs.push_back(aabb);
-            }
+    for(int i = 0; i < m_labelUnits.size(); i++) {
+        auto& labelUnit = m_labelUnits[i];
+        auto label = labelUnit.getWeakLabel();
+        
+        if (label == nullptr) {
+            m_labelUnits[i] = std::move(m_labelUnits[m_labelUnits.size() - 1]);
+            m_labelUnits.pop_back();
+            continue;
         }
+        
+        if (!label->isVisible() || label->isOutOfScreen() || label->getType() == Label::Type::DEBUG) {
+            continue;
+        }
+        
+        isect2d::AABB aabb = label->getAABB();
+        aabb.m_userData = (void*) label.get();
+        aabbs.push_back(aabb);
     }
     
     // broad phase
@@ -67,8 +71,8 @@ void LabelContainer::updateOcclusions() {
         const auto& aabb1 = aabbs[pair.first];
         const auto& aabb2 = aabbs[pair.second];
         
-        auto l1 = *(std::shared_ptr<Label>*) aabb1.m_userData;
-        auto l2 = *(std::shared_ptr<Label>*) aabb2.m_userData;
+        auto l1 = (Label*) aabb1.m_userData;
+        auto l2 = (Label*) aabb2.m_userData;
         
         // narrow phase
         if (intersect(l1->getOBB(), l2->getOBB())) {

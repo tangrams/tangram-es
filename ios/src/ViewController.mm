@@ -7,7 +7,7 @@
 //
 
 #import "ViewController.h"
-#import "tangram.h"
+#include "tangram.h"
 
 @interface ViewController () {
     
@@ -31,7 +31,7 @@
 - (void)viewDidLoad
 {
     [super viewDidLoad];
-    
+
     self.context = [[EAGLContext alloc] initWithAPI:kEAGLRenderingAPIOpenGLES2];
     self.pixelScale = [[UIScreen mainScreen] scale];
     self.renderRequested = true;
@@ -40,8 +40,8 @@
     if (!self.context) {
         NSLog(@"Failed to create ES context");
     }
-    
-    setViewController(self);
+
+    init(self);
     
     GLKView *view = (GLKView *)self.view;
     view.context = self.context;
@@ -148,7 +148,7 @@
 - (void)dealloc
 {    
     [self tearDownGL];
-    
+
     if ([EAGLContext currentContext] == self.context) {
         [EAGLContext setCurrentContext:nil];
     }

@@ -1,22 +1,20 @@
 #include "label.h"
 
-Label::Label(LabelTransform _transform, std::string _text, std::shared_ptr<TextBuffer> _buffer, Type _type) :
+Label::Label(LabelTransform _transform, std::string _text, fsuint _id, Type _type) :
     m_type(_type),
     m_transform(_transform),
-    m_text(_text),
-    m_buffer(_buffer) {
+    m_text(_text), m_id(_id){
 
-    m_id = m_buffer->genTextID();
     m_visible = true;
     m_dirty = false;
 }
 
 Label::~Label() {}
 
-void Label::rasterize() {
-    m_buffer->rasterize(m_text, m_id);
+void Label::rasterize(std::shared_ptr<TextBuffer>& _buffer) {
+    _buffer->rasterize(m_text, m_id);
     
-    m_bbox = m_buffer->getBBox(m_id);
+    m_bbox = _buffer->getBBox(m_id);
     
     m_width = std::abs(m_bbox.z - m_bbox.x);
     m_height = std::abs(m_bbox.w - m_bbox.y);
@@ -24,7 +22,6 @@ void Label::rasterize() {
 
 void Label::setVisible(bool _visible) {
     m_visible = _visible;
-    m_transform.m_alpha = m_visible ? 1.0 : 0.0;
     m_dirty = true;
 }
 
@@ -39,10 +36,14 @@ void Label::updateBBoxes() {
     m_aabb = m_obb.getExtent();
 }
 
-void Label::pushTransform() {
+void Label::pushTransform(std::shared_ptr<TextBuffer>& _buffer) {
     
     if (m_dirty) {
-        m_buffer->transformID(m_id, m_transform.m_screenPosition.x, m_transform.m_screenPosition.y, m_transform.m_rotation, m_transform.m_alpha);
+        if (!m_visible || m_outOfScreen) {
+            _buffer->transformID(m_id, 0, 0, 0, 0);
+        } else {
+            _buffer->transformID(m_id, m_transform.m_screenPosition.x, m_transform.m_screenPosition.y, m_transform.m_rotation, 1.0);
+        }
         m_dirty = false;
     }
 
@@ -122,8 +123,6 @@ void Label::updateScreenTransform(const glm::mat4& _mvp, const glm::vec2& _scree
     
     m_outOfScreen = screenPosition.x > _screenSize.x || screenPosition.x < 0;
     m_outOfScreen = m_outOfScreen || screenPosition.y > _screenSize.y || screenPosition.y < 0;
-    
-    m_transform.m_alpha = !m_outOfScreen && m_visible ? 1.0 : 0.0;
     
     m_dirty = true;
 }

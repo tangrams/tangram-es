@@ -23,9 +23,12 @@ void SpotLight::setDirection(const glm::vec3 &_dir) {
     m_direction = _dir;
 }
 
-void SpotLight::setCutOff(float _cutoffAngle, float _exponent) {
+void SpotLight::setCutoffAngle(float _cutoffAngle) {
     m_spotCutoff = _cutoffAngle;
     m_spotCosCutoff = cos(_cutoffAngle * 3.14159 / 180.0);
+}
+
+void SpotLight::setCutoffExponent(float _exponent) {
     m_spotExponent = _exponent;
 }
 

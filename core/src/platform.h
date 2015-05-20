@@ -1,19 +1,37 @@
 #pragma once
 
+#include <string>
+#include <vector>
+#include <functional>
+
 #ifdef PLATFORM_ANDROID
+
 struct _JNIEnv;
 typedef _JNIEnv JNIEnv;
 class _jobject;
 typedef _jobject* jobject;
-void jniInit(JNIEnv* _jniEnv, jobject obj, jobject _assetManager);
+class _jbyteArray;
+typedef _jbyteArray* jbyteArray;
+typedef long long jlong;
+
+void setupJniEnv(JNIEnv* _jniEnv, jobject _tangramInstance, jobject _assetManager);
+void onUrlSuccess(JNIEnv* jniEnv, jbyteArray jFetchedBytes, jlong jCallbackPtr);
+void onUrlFailure(JNIEnv* jniEnv, jlong jCallbackPtr);
 #endif
+
 
 #if (defined PLATFORM_IOS) && (defined __OBJC__)
 #import "ViewController.h"
-void setViewController(ViewController* _controller);
+void init(ViewController* _controller);
 #endif
 
-#include <string>
+#ifdef PLATFORM_OSX
+void NSurlInit();
+#endif
+
+#if (defined PLATFORM_LINUX) || (defined PLATFORM_RPI)
+void processNetworkQueue();
+#endif
 
 /* Print a formatted message to the console
  *
@@ -49,3 +67,17 @@ std::string stringFromResource(const char* _path);
  * allocated file
  */ 
 unsigned char* bytesFromResource(const char* _path, unsigned int* _size);
+
+/* Function type for receiving data from a successful network request */
+using UrlCallback = std::function<void(std::vector<char>&&)>;
+
+/* Start retrieving data from a URL asynchronously
+ * 
+ * When the request is finished, the callback @_callback will be
+ * run with the data that was retrieved from the URL @_url
+ */
+bool startUrlRequest(const std::string& _url, UrlCallback _callback);
+
+/* Stop retrieving data from a URL that was previously requested
+ */
+void cancelUrlRequest(const std::string& _url);

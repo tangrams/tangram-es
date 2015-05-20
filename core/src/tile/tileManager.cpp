@@ -7,7 +7,6 @@
 #include <algorithm>
 
 TileManager::TileManager() {
-    
     // Instantiate workers
     for (size_t i = 0; i < MAX_WORKERS; i++) {
         m_workers.push_back(std::unique_ptr<TileWorker>(new TileWorker()));
@@ -36,10 +35,37 @@ TileManager::~TileManager() {
     m_tileSet.clear();
 }
 
+void TileManager::addToWorkerQueue(std::vector<char>&& _rawData, const TileID& _tileId, DataSource* _source) {
+    
+    std::lock_guard<std::mutex> lock(m_queueTileMutex);
+    m_queuedTiles.push_back(std::unique_ptr<WorkerData>(new WorkerData(std::move(_rawData), _tileId, _source)));
+    
+}
+
 void TileManager::updateTileSet() {
     
     m_tileSetChanged = false;
     
+    // Check if any native worker needs to be dispatched i.e. queuedTiles is not empty
+    {
+        auto workersIter = m_workers.begin();
+        auto queuedTilesIter = m_queuedTiles.begin();
+
+        while (workersIter != m_workers.end() && queuedTilesIter != m_queuedTiles.end()) {
+
+            auto& worker = *workersIter;
+
+            if (worker->isFree()) {
+                const TileID& id = *(*queuedTilesIter)->tileID;
+                logMsg("Dispatched worker for processing tile: [%d, %d, %d]\n", id.x, id.y, id.z);
+                worker->processTileData(std::move(*queuedTilesIter), m_scene->getStyles(), *m_view);
+                queuedTilesIter = m_queuedTiles.erase(queuedTilesIter);
+            }
+
+            ++workersIter;
+        }
+    }
+
     // Check if any incoming tiles are finished
     for (auto& worker : m_workers) {
         
@@ -113,61 +139,62 @@ void TileManager::updateTileSet() {
             }
         }
     }
-    
-    // Dispatch workers for queued tiles
-    {
-        auto workersIter = m_workers.begin();
-        auto queuedTilesIter = m_queuedTiles.begin();
-        
-        while (workersIter != m_workers.end() && queuedTilesIter != m_queuedTiles.end()) {
-            
-            TileID id = *queuedTilesIter;
-            auto& worker = *workersIter;
-            
-            if (worker->isFree()) {
-                worker->load(id, m_dataSources, m_scene->getStyles(), *m_view);
-                queuedTilesIter = m_queuedTiles.erase(queuedTilesIter);
-            }
-            
-            ++workersIter;
-        }
-    }
 }
 
 void TileManager::addTile(const TileID& _tileID) {
     
     std::shared_ptr<MapTile> tile(new MapTile(_tileID, m_view->getMapProjection()));
     m_tileSet[_tileID] = std::move(tile);
+
+    for(size_t dsIndex = 0; dsIndex < m_dataSources.size(); dsIndex++) {
+        
+        auto& source = m_dataSources[dsIndex];
+        
+        // Bypass Network Request if data already loaded/parsed; empty "rawData" will be fetched in Worker::processTileData
+        if(source->hasTileData(_tileID)) {
+            
+            addToWorkerQueue(std::move(std::vector<char>()), _tileID, source.get());
+            
+        } else if( !source->loadTileData(_tileID, *this) ) {
+            
+            logMsg("ERROR: Loading failed for tile [%d, %d, %d]\n", _tileID.z, _tileID.x, _tileID.y);
+            
+        }
+    }
     
     //Add Proxy if corresponding proxy MapTile ready
     updateProxyTiles(_tileID, m_view->isZoomIn());
-    
-    // Queue tile for workers
-    m_queuedTiles.push_back(_tileID);
-    
 }
 
 void TileManager::removeTile(std::map< TileID, std::shared_ptr<MapTile> >::iterator& _tileIter) {
     
     const TileID& id = _tileIter->first;
-    
+
+    // Make sure to cancel the network request associated with this tile, then if already fetched remove it from the proocessing queue and the worker managing this tile, if applicable
+    for(auto& dataSource : m_dataSources) {
+        dataSource->cancelLoadingTile(id);
+        cleanProxyTiles(id);
+    }
+
     // Remove tile from queue, if present
-    const auto& found = std::find(m_queuedTiles.begin(), m_queuedTiles.end(), id);
+    const auto& found = std::find_if(m_queuedTiles.begin(), m_queuedTiles.end(), 
+                                        [&](std::unique_ptr<WorkerData>& p) {
+                                            return ( *(p->tileID) == id);
+                                        });
+
     if (found != m_queuedTiles.end()) {
+        logMsg("Erasing tile: [%d,%d,%d]\n", id.x, id.y, id.z);
         m_queuedTiles.erase(found);
         cleanProxyTiles(id);
     }
     
-    // If a worker is loading this tile, abort it
+    // If a worker is processing this tile, abort it
     for (const auto& worker : m_workers) {
         if (!worker->isFree() && worker->getTileID() == id) {
             worker->abort();
             // Proxy tiles will be cleaned in update loop
         }
     }
-
-    // Remove labels for tile
-    LabelContainer::GetInstance()->removeLabels(id);
 
     // Remove tile from set
     _tileIter = m_tileSet.erase(_tileIter);
@@ -210,3 +237,4 @@ void TileManager::cleanProxyTiles(const TileID& _tileID) {
         }
     }
 }
+

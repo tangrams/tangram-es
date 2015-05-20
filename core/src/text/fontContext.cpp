@@ -88,7 +88,7 @@ void createTexTransforms(void* _userPtr, unsigned int _width, unsigned int _heig
     FontContext* fontContext = static_cast<FontContext*>(_userPtr);
 
     TextureOptions options = {GL_RGBA, GL_RGBA, {GL_NEAREST, GL_NEAREST}, {GL_CLAMP_TO_EDGE, GL_CLAMP_TO_EDGE}};
-    std::unique_ptr<Texture> texture(new Texture(_width, _height, 1 /* gpu slot */ , options));
+    std::unique_ptr<Texture> texture(new Texture(_width, _height, false, options));
     std::shared_ptr<TextBuffer> textBuffer = fontContext->m_currentBuffer.lock();
 
     if (textBuffer) {

@@ -10,10 +10,23 @@
 #include "ViewController.h"
 
 static ViewController* viewController;
+NSURLSession* defaultSession;
 
-void setViewController(ViewController* _controller) {
+void init(ViewController* _controller) {
     
     viewController = _controller;
+    
+    /* Setup NSURLSession configuration : cache path and size */
+    NSURLSessionConfiguration *defaultConfigObject = [NSURLSessionConfiguration defaultSessionConfiguration];
+    NSString *cachePath = @"/tile_cache";
+    NSURLCache *tileCache = [[NSURLCache alloc] initWithMemoryCapacity: 4 * 1024 * 1024 diskCapacity: 30 * 1024 * 1024 diskPath: cachePath];
+    defaultConfigObject.URLCache = tileCache;
+    defaultConfigObject.requestCachePolicy = NSURLRequestUseProtocolCachePolicy;
+    defaultConfigObject.timeoutIntervalForRequest = 30;
+    defaultConfigObject.timeoutIntervalForResource = 60;
+    
+    /* create a default NSURLSession using the defaultConfigObject*/
+    defaultSession = [NSURLSession sessionWithConfiguration: defaultConfigObject ];
     
 }
 
@@ -88,6 +101,52 @@ unsigned char* bytesFromResource(const char* _path, unsigned int* _size) {
     resource.close();
 
     return reinterpret_cast<unsigned char *>(cdata);
+}
+
+bool startUrlRequest(const std::string& _url, UrlCallback _callback) {
+
+    NSString* nsUrl = [NSString stringWithUTF8String:_url.c_str()];
+    
+    void (^handler)(NSData*, NSURLResponse*, NSError*) = ^void (NSData* data, NSURLResponse* response, NSError* error) {
+        
+        if(error == nil) {
+            
+            int dataLength = [data length];
+            std::vector<char> rawDataVec;
+            rawDataVec.resize(dataLength);
+            memcpy(rawDataVec.data(), (char *)[data bytes], dataLength);
+            _callback(std::move(rawDataVec));
+            
+        } else {
+            
+            logMsg("ERROR: response \"%s\" with error \"%s\".\n", response, error);
+            
+        }
+        
+    };
+    
+    NSURLSessionDataTask* dataTask = [defaultSession dataTaskWithURL:[NSURL URLWithString:nsUrl]
+                                                    completionHandler:handler];
+    
+    [dataTask resume];
+    
+    return true;
+
+}
+
+void cancelUrlRequest(const std::string& _url) {
+    
+    NSString* nsUrl = [NSString stringWithUTF8String:_url.c_str()];
+    
+    [defaultSession getTasksWithCompletionHandler:^(NSArray* dataTasks, NSArray* uploadTasks, NSArray* downloadTasks) {
+        for(NSURLSessionTask* task in dataTasks) {
+            if([[task originalRequest].URL.absoluteString isEqualToString:nsUrl]) {
+                [task cancel];
+                break;
+            }
+        }
+    }];
+    
 }
 
 #endif //PLATFORM_IOS

@@ -6,6 +6,7 @@
 #include <vector>
 #include <queue>
 #include <memory>
+#include <unordered_map>
 #include <string>
 
 struct TextureFiltering {
@@ -29,23 +30,19 @@ class Texture {
 
 public:
 
-    Texture() {}
-    Texture(unsigned int _width, unsigned int _height, GLuint _slot = 0,
+    Texture(unsigned int _width, unsigned int _height, bool _autoDelete = true,
             TextureOptions _options = {GL_ALPHA, GL_ALPHA, {GL_LINEAR, GL_LINEAR}, {GL_CLAMP_TO_EDGE, GL_CLAMP_TO_EDGE}});
     
-    Texture(const std::string& _file, GLuint _slot = 0, 
+    Texture(const std::string& _file,
             TextureOptions _options = {GL_RGBA, GL_RGBA, {GL_LINEAR, GL_LINEAR}, {GL_CLAMP_TO_EDGE, GL_CLAMP_TO_EDGE}});
 
     ~Texture();
 
-    /* Binds the texture to GPU */
-    virtual void bind();
-
-    /* Unbinds the texture from GPU */
-    virtual void unbind();
+    /* Binds the texture to the specified slot */
+    void bind(GLuint _textureSlot);
 
     /* Perform texture updates, should be called at least once and after adding data or resizing */
-    virtual void update();
+    virtual void update(GLuint _textureSlot);
 
     /* Resize the texture */
     void resize(const unsigned int _width, const unsigned int _height);
@@ -53,9 +50,8 @@ public:
     /* Width and Height texture getters */
     unsigned int getWidth() const { return m_width; }
     unsigned int getHeight() const { return m_height; }
-
-    /* Gets the GPU texture slot */
-    GLuint getTextureSlot() const { return m_slot; }
+    
+    GLuint getGlHandle() { return m_glHandle; }
 
     /* Sets texture data
      * 
@@ -68,9 +64,29 @@ public:
 
     /* GPU delete of the texture */
     virtual void destroy();
-
+    
+    typedef std::pair<GLuint, GLuint> TextureSlot;
+    
 protected:
+    
+    void generate(GLuint _textureUnit);
 
+    TextureOptions m_options;
+    std::vector<GLuint> m_data;
+    GLuint m_glHandle;
+
+    bool m_dirty;
+    bool m_shouldResize;
+
+    unsigned int m_width;
+    unsigned int m_height;
+    
+    GLenum m_target;
+    
+    static GLuint getTextureUnit(GLuint _slot);
+    
+private:
+    
     struct TextureSubData {
         std::unique_ptr<std::vector<GLuint>> m_data;
         unsigned int m_xoff;
@@ -78,22 +94,18 @@ protected:
         unsigned int m_width;
         unsigned int m_height;
     };
-
-    GLuint getTextureUnit();
-
-    TextureOptions m_options;
-    std::vector<GLuint> m_data;
-
+    
+    bool m_autoDelete;
+    
     // used to queue the subdata updates, each call of setSubData would be treated in the order that they arrived
     std::queue<std::unique_ptr<TextureSubData>> m_subData;
-
-    GLuint m_name;
-    GLuint m_slot;
-
-    bool m_dirty;
-    bool m_shouldResize;
-
-    unsigned int m_width;
-    unsigned int m_height;
+    
+    // We refer to both 'texture slots' and 'texture units', which are almost (but not quite) the same.
+    // Texture slots range from 0 to GL_MAX_COMBINED_TEXTURE_UNITS-1 and the texture unit corresponding to
+    // a given texture slot is (slot + GL_TEXTURE0).
+    static GLuint s_activeSlot;
+    
+    // if (s_boundTextures[s] == h) then the texture with handle 'h' is currently bound at slot 's'
+    static GLuint s_boundTextures[GL_MAX_COMBINED_TEXTURE_IMAGE_UNITS];
 
 };

@@ -1,7 +1,8 @@
 #include "textureCube.h"
 
-TextureCube::TextureCube(std::string _file, GLuint _slot, TextureOptions _options) : Texture(0, 0, _slot, _options) {
-    
+TextureCube::TextureCube(std::string _file, TextureOptions _options) : Texture(0, 0, false, _options) {
+
+    m_target = GL_TEXTURE_CUBE_MAP;
     load(_file);
 }
 
@@ -42,7 +43,7 @@ void TextureCube::load(const std::string& _file) {
             }
             
             int offset = (m_width * iFace + y * width) * sizeof(unsigned int);
-            memcpy(face->m_data.data() + face->m_offset, pixels + offset, m_width * sizeof(unsigned int));
+            std::memcpy(face->m_data.data() + face->m_offset, pixels + offset, m_width * sizeof(unsigned int));
             face->m_offset += m_width;
         }
     }
@@ -50,41 +51,18 @@ void TextureCube::load(const std::string& _file) {
     free(data);
     stbi_image_free(pixels);
     
-    update();
+    update(0);
 }
-
-void TextureCube::bind() {
-    
-    glActiveTexture(getTextureUnit());
-    glBindTexture(GL_TEXTURE_CUBE_MAP, m_name);
-}
-
-void TextureCube::unbind() {
-    
-    glActiveTexture(getTextureUnit());
-    glBindTexture(GL_TEXTURE_CUBE_MAP, 0);
-}
-
-void TextureCube::update() {
-    if (m_name != 0 || m_faces.size() == 0) {
+void TextureCube::update(GLuint _textureUnit) {
+    if (m_glHandle != 0 || m_faces.size() == 0) {
         return;
     }
-        
-    glGenTextures(1, &m_name);
     
-    bind();
-    
-    glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_MIN_FILTER, m_options.m_filtering.m_min);
-    glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_MAG_FILTER, m_options.m_filtering.m_mag);
-    
-    glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_WRAP_S, m_options.m_wrapping.m_wraps);
-    glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_WRAP_T, m_options.m_wrapping.m_wrapt);
+    generate(_textureUnit);
     
     for(int i = 0; i < 6; ++i) {
         Face& f = m_faces[i];
         glTexImage2D(CubeMapFace[i], 0, m_options.m_internalFormat, m_width, m_height, 0, m_options.m_format, GL_UNSIGNED_BYTE, f.m_data.data());
         f.m_data.clear();
     }
-        
-    unbind();
 }

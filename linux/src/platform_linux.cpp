@@ -5,17 +5,54 @@
 #include <iostream>
 #include <fstream>
 #include <string>
+#include <list>
 
+#include "urlWorker.h"
 #include "platform.h"
 #include "gl.h"
 
+#define NUM_WORKERS 3
+
 static bool s_isContinuousRendering = false;
+
+static UrlWorker s_Workers[NUM_WORKERS];
+static std::list<std::unique_ptr<UrlTask>> s_urlTaskQueue;
 
 void logMsg(const char* fmt, ...) {
     va_list args;
     va_start(args, fmt);
     vfprintf(stderr, fmt, args);
     va_end(args);
+}
+
+void processNetworkQueue() {
+
+    // check if any of the workers is done
+    {
+        for(auto& worker : s_Workers) {
+            if(worker.isFinished() && !worker.isAvailable()) {
+                auto result = worker.getResult();
+                worker.reset();
+                if(result->content.size() != 0) {
+                    result->callback(std::move(result->content));
+                }
+            }
+        }
+    }
+
+    // attach workers to NetWorkerData
+    {
+        auto taskItr = s_urlTaskQueue.begin();
+        for(auto& worker : s_Workers) {
+            if(taskItr == s_urlTaskQueue.end()) {
+                break;
+            }
+            if(worker.isAvailable()) {
+                worker.perform(std::move(*taskItr));
+                taskItr = s_urlTaskQueue.erase(taskItr);
+            }
+        }
+    }
 }
 
 void requestRender() {
@@ -76,6 +113,33 @@ unsigned char* bytesFromResource(const char* _path, unsigned int* _size) {
     resource.close();
 
     return reinterpret_cast<unsigned char *>(cdata);
+}
+
+bool startUrlRequest(const std::string& _url, UrlCallback _callback) {
+
+    std::unique_ptr<UrlTask> task(new UrlTask(_url, _callback));
+    for(auto& worker : s_Workers) {
+        if(worker.isAvailable()) {
+            worker.perform(std::move(task)); 
+            return true;
+        }
+    }
+    s_urlTaskQueue.push_back(std::move(task));
+    return true;
+
+}
+
+void cancelUrlRequest(const std::string& _url) {
+
+    // Only clear this request if a worker has not started operating on it!! otherwise it gets too convoluted with curl!
+    auto itr = s_urlTaskQueue.begin();
+    while(itr != s_urlTaskQueue.end()) {
+        if((*itr)->url == _url) {
+            itr = s_urlTaskQueue.erase(itr);
+        } else {
+            itr++;
+        }
+    }
 }
 
 #endif

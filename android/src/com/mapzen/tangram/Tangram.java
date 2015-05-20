@@ -3,28 +3,46 @@ package com.mapzen.tangram;
 import javax.microedition.khronos.egl.EGLConfig;
 import javax.microedition.khronos.opengles.GL10;
 
+import java.io.File;
+import java.io.IOException;
+import java.util.concurrent.TimeUnit;
+
 import android.app.Activity;
 import android.content.res.AssetManager;
 import android.opengl.GLSurfaceView;
 import android.opengl.GLSurfaceView.Renderer;
 import android.util.DisplayMetrics;
+import android.view.View;
+import android.view.View.OnTouchListener;
 import android.view.GestureDetector;
 import android.view.GestureDetector.OnGestureListener;
 import android.view.MotionEvent;
 import android.view.ScaleGestureDetector;
 import android.view.ScaleGestureDetector.OnScaleGestureListener;
+import android.view.SurfaceHolder;
 import com.almeros.android.multitouch.RotateGestureDetector;
 import com.almeros.android.multitouch.RotateGestureDetector.OnRotateGestureListener;
 import com.almeros.android.multitouch.ShoveGestureDetector;
 import com.almeros.android.multitouch.ShoveGestureDetector.OnShoveGestureListener;
-import android.view.SurfaceHolder;
 
-public class Tangram extends GLSurfaceView implements Renderer, OnScaleGestureListener, OnRotateGestureListener, OnGestureListener, OnShoveGestureListener {
+import com.squareup.okhttp.Callback;
+import com.squareup.okhttp.OkHttpClient;
+import com.squareup.okhttp.Cache;
+import com.squareup.okhttp.Request;
+import com.squareup.okhttp.RequestBody;
+import com.squareup.okhttp.Response;
+import com.squareup.okhttp.Call;
+import okio.BufferedSource;
+
+public class Tangram implements Renderer, OnTouchListener, OnScaleGestureListener, OnRotateGestureListener, OnGestureListener, OnShoveGestureListener {
 
     static {
         System.loadLibrary("c++_shared");
         System.loadLibrary("tangram");
     }
+
+    private OkHttpClient okClient;
+    private static final int TILE_CACHE_SIZE = 1024 * 1024 * 30; // 30 Mgs
 
     private static native void init(Tangram tangramInstance, AssetManager assetManager);
     private static native void resize(int width, int height);
@@ -39,6 +57,8 @@ public class Tangram extends GLSurfaceView implements Renderer, OnScaleGestureLi
     private static native void handlePinchGesture(float posX, float posY, float scale);
     private static native void handleRotateGesture(float posX, float posY, float rotation);
     private static native void handleShoveGesture(float distance);
+    private static native void onUrlSuccess(byte[] rawDataBytes, long callbackPtr);
+    private static native void onUrlFailure(long callbackPtr);
 
     private long time = System.nanoTime();
     private boolean contextDestroyed = false;
@@ -48,15 +68,26 @@ public class Tangram extends GLSurfaceView implements Renderer, OnScaleGestureLi
     private RotateGestureDetector rotateGestureDetector;
     private ShoveGestureDetector shoveGestureDetector;
     private DisplayMetrics displayMetrics = new DisplayMetrics();
+    private GLSurfaceView view;
 
     public Tangram(Activity mainApp) {
-        super(mainApp);
         
-        setEGLContextClientVersion(2);
-        setPreserveEGLContextOnPause(true);
-        setEGLConfigChooser(8, 8, 8, 8, 24, 0);
-        setRenderer(this);
-        setRenderMode(RENDERMODE_WHEN_DIRTY);
+        view = new GLSurfaceView(mainApp) {
+
+            @Override
+            public void surfaceDestroyed(SurfaceHolder holder) {
+                contextDestroyed = true;
+                super.surfaceDestroyed(holder);
+            }
+
+        };
+        
+        view.setOnTouchListener(this);
+        view.setEGLContextClientVersion(2);
+        view.setPreserveEGLContextOnPause(true);
+        view.setEGLConfigChooser(8, 8, 8, 8, 24, 0);
+        view.setRenderer(this);
+        view.setRenderMode(GLSurfaceView.RENDERMODE_WHEN_DIRTY);
         
         mainApp.getWindowManager().getDefaultDisplay().getMetrics(displayMetrics);
         
@@ -65,26 +96,39 @@ public class Tangram extends GLSurfaceView implements Renderer, OnScaleGestureLi
         this.scaleGestureDetector = new ScaleGestureDetector(mainApp, this);
         this.rotateGestureDetector = new RotateGestureDetector(mainApp, this);
         this.shoveGestureDetector = new ShoveGestureDetector(mainApp, this);
-        
+
+        this.okClient = new OkHttpClient();
+        okClient.setConnectTimeout(10, TimeUnit.SECONDS);
+        okClient.setReadTimeout(30, TimeUnit.SECONDS);
+        File cacheDir = new File(mainApp.getExternalCacheDir().getAbsolutePath() + "/tile_cache");
+        try {
+            Cache okTileCache = new Cache(cacheDir, TILE_CACHE_SIZE);
+            okClient.setCache(okTileCache);
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
     }
-    
-    @Override
-    public void onResume() {
-        super.onResume();
+
+    public View getView() {
+        return view;
     }
     
     public void onDestroy() {
         teardown();
     }
-    
-    @Override
-    public void surfaceDestroyed(SurfaceHolder holder) {
-        contextDestroyed = true;
-        super.surfaceDestroyed(holder);
+
+    public void requestRender() {
+        view.requestRender();
+    }
+
+    public void setRenderMode(int renderMode) {
+        view.setRenderMode(renderMode);
     }
     
-    @Override
-    public boolean onTouchEvent(MotionEvent event) { 
+    // View.OnTouchListener methods
+    // ============================
+
+    public boolean onTouch(View v, MotionEvent event) { 
         
         //Pass the event to gesture detectors
         if (gestureDetector.onTouchEvent(event) |
@@ -93,9 +137,9 @@ public class Tangram extends GLSurfaceView implements Renderer, OnScaleGestureLi
             shoveGestureDetector.onTouchEvent(event)) {
             requestRender();
             return true;
-        } else {
-            return super.onTouchEvent(event);
         }
+        
+        return false;
         
     }
 
@@ -219,6 +263,37 @@ public class Tangram extends GLSurfaceView implements Renderer, OnScaleGestureLi
 
     public void onShoveEnd(ShoveGestureDetector detector) {
         return;
+    }
+
+    public void cancelUrlRequest(String url) {
+        okClient.cancel(url);
+    }
+
+    // Network requests using okHttp
+    public boolean startUrlRequest(String url, final long callbackPtr) throws Exception {
+        Request request = new Request.Builder().tag(url).url(url).build();
+
+        okClient.newCall(request).enqueue(new Callback() {
+            @Override 
+            public void onFailure(Request request, IOException e) {
+
+                onUrlFailure(callbackPtr);
+                e.printStackTrace();
+            }
+
+            @Override 
+            public void onResponse(Response response) throws IOException {
+
+                if(!response.isSuccessful()) {
+                    onUrlFailure(callbackPtr);
+                    throw new IOException("Unexpected code " + response);
+                }
+                BufferedSource src = response.body().source();
+                byte[] rawDataBytes = src.readByteArray();
+                onUrlSuccess(rawDataBytes, callbackPtr);
+            }
+        });
+        return true;
     }
 }
 
