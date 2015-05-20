@@ -5,7 +5,7 @@
 #include "tileData.h"
 
 
-class MVTSource : public NetworkDataSource {
+class MVTSource : public DataSource {
     
 protected:
     
@@ -13,6 +13,6 @@ protected:
     
 public:
     
-    MVTSource();
+    MVTSource(const std::string& _name, const std::string& _urlTemplate);
     
 };
