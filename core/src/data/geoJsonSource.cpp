@@ -5,8 +5,8 @@
 #include "geoJsonSource.h"
 
 
-GeoJsonSource::GeoJsonSource() {
-    m_urlTemplate = "http://vector.mapzen.com/osm/all/[z]/[x]/[y].json";
+GeoJsonSource::GeoJsonSource(const std::string& _name, const std::string& _urlTemplate) :
+    DataSource(_name, _urlTemplate) {
 }
 
 std::shared_ptr<TileData> GeoJsonSource::parse(const MapTile& _tile, std::vector<char>& _rawData) const {
