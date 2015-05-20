@@ -30,7 +30,7 @@ public:
             case Interpolation::POW:
                 return m_in ? st * st : -(st * st) + 1;
             case Interpolation::SINE:
-                return m_in ? cos(st * M_PI * 0.5) : sin(st * M_PI * 0.5);
+                return m_in ? sin(st * M_PI * 0.5) : cos(st * M_PI * 0.5);
         }
         
         return st;
