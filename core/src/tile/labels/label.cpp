@@ -205,7 +205,7 @@ void Label::updateState(const glm::mat4& _mvp, const glm::vec2& _screenSize, flo
         case State::WAIT_OCC:
             if (!occludedLastFrame && m_occlusionSolved) {
                 enterState(State::VISIBLE, 1.0);
-            } else if (occludedLastFrame) {
+            } else if (occludedLastFrame && m_occlusionSolved) {
                 enterState(State::SLEEP, 0.0);
             }
             break;

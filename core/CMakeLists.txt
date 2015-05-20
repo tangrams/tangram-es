@@ -42,6 +42,7 @@ set(CORE_LIBRARIES_INCLUDE_DIRS
     ${PROJECT_SOURCE_DIR}/${INCLUDE_DIR}/fontstash-es/fontstash/
     ${PROJECT_SOURCE_DIR}/${INCLUDE_DIR}/pbf/
     ${PROJECT_SOURCE_DIR}/${INCLUDE_DIR}/rapidjson/
+    ${PROJECT_SOURCE_DIR}/${INCLUDE_DIR}/isect2d/include
     CACHE INTERNAL "core libraries include directories" FORCE)
 
 # adding some other dependent target files if needed
