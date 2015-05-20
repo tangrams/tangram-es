@@ -9,7 +9,7 @@ LabelContainer::~LabelContainer() {
 }
 
 int LabelContainer::LODDiscardFunc(float _maxZoom, float _zoom) {
-    return (int) MIN(ceil(((log(-_zoom + (_maxZoom + 2)) / log(_maxZoom + 2) * (_maxZoom )) * 0.5) - 0.5), MAX_LOD);
+    return (int) MIN(floor(((log(-_zoom + (_maxZoom + 2)) / log(_maxZoom + 2) * (_maxZoom )) * 0.5)), MAX_LOD);
 }
 
 bool LabelContainer::addLabel(MapTile& _tile, const std::string& _styleName, LabelTransform _transform, std::string _text, Label::Type _type) {
