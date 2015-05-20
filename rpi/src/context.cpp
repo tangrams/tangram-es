@@ -234,7 +234,6 @@ bool getMouse(){
 
         mouse.velX=dx;
         mouse.velY=dy;
-        
         mouse.x+=mouse.velX;
         mouse.y+=mouse.velY;
 
@@ -257,11 +256,11 @@ bool getMouse(){
             }
         }
 
-        std::cout << "--------------------------------------------" << std::endl;
-        std::cout << "Deltas " << mouse.velX << "," << mouse.velY << std::endl;
-        std::cout << "Position " << mouse.x << "," << mouse.y << std::endl; 
-        std::cout << "Viewport " << getWindowWidth() << "," << getWindowHeight() << std::endl; 
-        std::cout << "--------------------------------------------" << std::endl; 
+        // std::cout << "--------------------------------------------" << std::endl;
+        // std::cout << "Deltas " << mouse.velX << "," << mouse.velY << std::endl;
+        // std::cout << "Position " << mouse.x << "," << mouse.y << std::endl; 
+        // std::cout << "Viewport " << getWindowWidth() << "," << getWindowHeight() << std::endl; 
+        // std::cout << "--------------------------------------------" << std::endl; 
         
         if(mouse.velX != 0.0 || mouse.velY != 0.0){
             if (button != 0) {
