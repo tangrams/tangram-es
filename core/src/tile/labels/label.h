@@ -115,11 +115,9 @@ public:
 
     bool occludedLastFrame() { return m_occludedLastFrame; }
     
-    static bool s_needUpdate;
-    
-    bool isWaitingOcclusion() const { return m_currentState == State::WAIT_OCC; }
-    
     State getState() const { return m_currentState; }
+    
+    static bool s_needUpdate;
     
 private:
 
