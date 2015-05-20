@@ -297,6 +297,14 @@ namespace Tangram {
         
     }
 
+    float getRotation(){
+        return m_view->getRoll();
+    }
+    
+    float getZoom(){
+        return m_view->getZoom();
+    }
+
     void teardown() {
         // Release resources!
         logMsg("teardown\n");

@@ -8,7 +8,7 @@
 #include "glm/gtc/matrix_transform.hpp"
 
 #include "util/geom.h"
-#include "hud/utils.h"
+#include "string-conversions.h"
 
 // Main global variables
 //-------------------------------
@@ -223,10 +223,16 @@ bool getMouse(){
         
         // Set button value
         int button = m.buttons&3;
-        if (button)
+        
+        // Lunch events
+        if(button != mouse.button){
             mouse.button = button;
-        else
-            mouse.button = 0;
+            if(mouse.button == 0){
+                onMouseRelease(mouse.x,mouse.y);
+            } else {
+                onMouseClick(mouse.x,mouse.y,mouse.button);
+            }
+        }
         
         // Set deltas
         mouse.velX=m.dx;
@@ -244,13 +250,6 @@ bool getMouse(){
         if (mouse.x > viewport.z) mouse.x = viewport.z;
         if (mouse.y > viewport.w) mouse.y = viewport.w;
 
-        // Lunch events
-        if(mouse.button == 0 && button != mouse.button){
-            mouse.button = button;
-            onMouseClick(mouse.x,mouse.y,mouse.button);
-        } else {
-            mouse.button = button;
-        }
 
         if(mouse.velX != 0.0 || mouse.velY != 0.0){
             if (button != 0) {

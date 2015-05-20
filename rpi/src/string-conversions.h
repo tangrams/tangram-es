@@ -14,19 +14,6 @@
 
 #include "glm/glm.hpp"
 
-//---------------------------------------- Geom
-void scale(glm::vec3 &_vec, float _length);
-glm::vec3 getScaled(const glm::vec3 &_vec, float _length);
-
-float getArea(const std::vector<glm::vec3> &_pts);
-glm::vec3 getCentroid(const std::vector<glm::vec3> &_pts);
-
-void simplify(std::vector<glm::vec3> &_pts, float _tolerance=0.3f);
-std::vector<glm::vec3> getSimplify(const std::vector<glm::vec3> &_pts, float _tolerance=0.3f);
-
-std::vector<glm::vec3> getConvexHull(std::vector<glm::vec3> &_pts);
-std::vector<glm::vec3> getConvexHull(const std::vector<glm::vec3> &_pts);
-
 //---------------------------------------- Conversions
 
 /*  Transform the string into lower letters */
@@ -256,10 +243,4 @@ inline std::istream& operator>>(std::istream& is, glm::vec3& vec) {
     is.ignore(2);
     is >> vec.z;
     return is;
-}
-
-//----------------------------------------  String I/O
-
-static inline bool haveExt(const std::string& file, const std::string& ext){
-    return file.find("."+ext) != std::string::npos;
 }

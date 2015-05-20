@@ -38,4 +38,5 @@ void    onKeyPress(int _key);
 void    onMouseMove(float _x, float _y);
 void    onMouseClick(float _x, float _y, int _button);
 void    onMouseDrag(float _x, float _y, int _button);
+void    onMouseRelease(float _x, float _y);
 void    onViewportResize(int _width, int _height);

@@ -55,5 +55,9 @@ namespace Tangram {
     // Get the boolean state of a debug feature (see debug.h)
     bool getDebugFlag(DebugFlags _flag);
 
+    float getRotation();
+    
+    float getZoom();
+
 }
 

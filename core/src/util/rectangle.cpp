@@ -105,6 +105,37 @@ glm::vec3  Rectangle::getCenter() const {
     return glm::vec3(x + width * 0.5f, y + height * 0.5f, 0.0);
 }
 
+//----------------------------------------------------------
+bool Rectangle::inside(float _px, float _py) const {
+    return  _px > getMinX() && _py > getMinY() &&
+            _px < getMaxX() && _py < getMaxY();
+}
+
+bool Rectangle::inside(const glm::vec2& _p) const {
+    return inside(_p.x, _p.y);
+}
+
+bool Rectangle::inside(const glm::vec3& _p) const {
+    return inside(_p.x, _p.y);
+}
+
+bool Rectangle::inside(const Rectangle& rect) const {
+    return  inside(rect.getMinX(),rect.getMinY()) &&
+            inside(rect.getMaxX(),rect.getMaxY());
+}
+
+bool Rectangle::inside(const glm::vec2& p0, const glm::vec2& p1) const {
+    // check to see if a line segment is inside the rectangle
+    return inside(p0) && inside(p1);
+}
+
+bool Rectangle::inside(const glm::vec3& p0, const glm::vec3& p1) const {
+    // check to see if a line segment is inside the rectangle
+    return inside(p0) && inside(p1);
+}
+
+//----------------------------------------------------------
+
 void Rectangle::growToInclude(const glm::vec3& p){
     float x0 = MIN(getMinX(),p.x);
     float x1 = MAX(getMaxX(),p.x);
