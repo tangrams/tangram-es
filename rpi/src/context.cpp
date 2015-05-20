@@ -173,6 +173,8 @@ void initGL(int argc, char **argv){
     // glClear( GL_COLOR_BUFFER_BIT );
 
     setWindowSize(viewport.z,viewport.w);
+    mouse.x = viewport.z*0.5;
+    mouse.y = viewport.w*0.5;
     check();
 
     ///printf("OpenGL Initialize at %i,%i,%i,%i\n",viewport.x,viewport.y,viewport.z,viewport.w);
@@ -221,6 +223,27 @@ bool getMouse(){
             read(fd, &m, 1); // Try to sync up again
         }
         
+        // Set deltas
+        int dx,dy;
+        dx = (int)m.dx;
+        dy = (int)m.dy;
+        if (m.buttons&XSIGN) 
+            dx-=256;
+        if (m.buttons&YSIGN) 
+            dy-=256;
+
+        mouse.velX=dx;
+        mouse.velY=dy;
+        
+        mouse.x+=mouse.velX;
+        mouse.y+=mouse.velY;
+
+        // Clamp values
+        if (mouse.x < 0) mouse.x=0;
+        if (mouse.y < 0) mouse.y=0;
+        if (mouse.x > viewport.z) mouse.x = viewport.z;
+        if (mouse.y > viewport.w) mouse.y = viewport.w;
+
         // Set button value
         int button = m.buttons&3;
         
@@ -233,24 +256,13 @@ bool getMouse(){
                 onMouseClick(mouse.x,mouse.y,mouse.button);
             }
         }
-        
-        // Set deltas
-        mouse.velX=m.dx;
-        mouse.velY=m.dy;
-        if (m.buttons&XSIGN) mouse.velX-=256;
-        if (m.buttons&YSIGN) mouse.velY-=256;
-        
-        // Add movement
-        mouse.x+=mouse.velX;
-        mouse.y+=mouse.velY;
-        
-        // Clamp values
-        if (mouse.x < 0) mouse.x=0;
-        if (mouse.y < 0) mouse.y=0;
-        if (mouse.x > viewport.z) mouse.x = viewport.z;
-        if (mouse.y > viewport.w) mouse.y = viewport.w;
 
-
+        std::cout << "--------------------------------------------" << std::endl;
+        std::cout << "Deltas " << mouse.velX << "," << mouse.velY << std::endl;
+        std::cout << "Position " << mouse.x << "," << mouse.y << std::endl; 
+        std::cout << "Viewport " << getWindowWidth() << "," << getWindowHeight() << std::endl; 
+        std::cout << "--------------------------------------------" << std::endl; 
+        
         if(mouse.velX != 0.0 || mouse.velY != 0.0){
             if (button != 0) {
                 onMouseDrag(mouse.x,mouse.y,mouse.button);
