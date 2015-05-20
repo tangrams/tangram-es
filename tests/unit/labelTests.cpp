@@ -6,7 +6,7 @@
 glm::mat4 mvp;
 glm::vec2 screen;
 
-TEST_CASE( "", "" ) {
+TEST_CASE( "Ensure the transition from wait -> sleep when occlusion happens", "[Core][Label]" ) {
     Label l({}, "label", 0, Label::Type::LINE);
 
     REQUIRE(l.getState() == Label::State::WAIT_OCC);
@@ -24,7 +24,7 @@ TEST_CASE( "", "" ) {
     REQUIRE(l.getState() == Label::State::SLEEP);
 }
 
-TEST_CASE( "", "" ) {
+TEST_CASE( "Ensure the transition from wait -> visible when no occlusion happens", "[Core][Label]" ) {
     Label l({}, "label", 0, Label::Type::LINE);
 
     REQUIRE(l.getState() == Label::State::WAIT_OCC);
@@ -42,7 +42,7 @@ TEST_CASE( "", "" ) {
     REQUIRE(l.getState() == Label::State::VISIBLE);
 }
 
-TEST_CASE( "", "" ) {
+TEST_CASE( "Ensure the end state of fading out is sleep state", "[Core][Label]" ) {
     Label l({}, "label", 0, Label::Type::LINE);
 
     l.setOcclusion(false);
