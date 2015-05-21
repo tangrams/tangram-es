@@ -15,7 +15,7 @@ int LabelContainer::LODDiscardFunc(float _maxZoom, float _zoom) {
 bool LabelContainer::addLabel(MapTile& _tile, const std::string& _styleName, LabelTransform _transform, std::string _text, Label::Type _type) {
     auto currentBuffer = m_ftContext->getCurrentBuffer();
 
-    if (m_currentZoom - _tile.getID().z > LODDiscardFunc(View::s_maxZoom, m_currentZoom)) {
+    if ( (m_currentZoom - _tile.getID().z) > LODDiscardFunc(View::s_maxZoom, m_currentZoom)) {
         return false;
     }
 
