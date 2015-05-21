@@ -29,7 +29,7 @@ void Label::updateBBoxes() {
     glm::vec2 tperp = glm::vec2(-t.y, t.x);
     glm::vec2 obbCenter;
 
-    obbCenter = m_transform.m_screenPosition + t * (m_dim.x / 2) - tperp * (m_dim.y / 8);
+    obbCenter = m_transform.m_screenPosition + t * m_dim.x * 0.5f - tperp * (m_dim.y / 8);
 
     m_obb = isect2d::OBB(obbCenter.x, obbCenter.y, m_transform.m_rotation, m_dim.x, m_dim.y);
     m_aabb = m_obb.getExtent();
@@ -86,6 +86,7 @@ bool Label::updateScreenTransform(const glm::mat4& _mvp, const glm::vec2& _scree
 
             glm::vec2 p1p2 = p2 - p1;
             glm::vec2 t = glm::normalize(-p1p2);
+            glm::vec2 tperp = glm::vec2(-t.y, t.x);
 
             float length = glm::length(p1p2);
 
@@ -98,16 +99,10 @@ bool Label::updateScreenTransform(const glm::mat4& _mvp, const glm::vec2& _scree
                 }
             }
 
-            screenPosition = (p1 + p2) / 2.0f;
-
-            // translate by half the width
-            screenPosition += t * (m_dim.x / 2);
+            screenPosition = (p1 + p2) * 0.5f + t * m_dim.x * 0.5f - tperp * (m_dim.y / 6);
 
             break;
         }
-
-        default:
-            break;
     }
 
     m_transform.m_screenPosition = screenPosition;
