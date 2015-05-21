@@ -153,7 +153,7 @@ namespace Tangram {
     
         g_time += _dt;
 
-        if (m_view || Label::s_needUpdate) {
+        if (m_view) {
             
             m_view->update();
 

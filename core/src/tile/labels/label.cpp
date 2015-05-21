@@ -182,7 +182,7 @@ void Label::updateState(const glm::mat4& _mvp, const glm::vec2& _screenSize, flo
     switch (m_currentState) {
         case State::VISIBLE:
             if (occludedLastFrame) {
-                m_fade = FadeEffect(false, FadeEffect::Interpolation::POW, 1.0);
+                m_fade = FadeEffect(false, FadeEffect::Interpolation::SINE, 1.0);
                 enterState(State::FADING_OUT, 1.0);
             }
             break;
