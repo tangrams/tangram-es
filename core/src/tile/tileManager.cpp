@@ -181,7 +181,6 @@ void TileManager::removeTile(std::map< TileID, std::shared_ptr<MapTile> >::itera
                                         });
 
     if (found != m_queuedTiles.end()) {
-        logMsg("Erasing tile: [%d,%d,%d]\n", id.x, id.y, id.z);
         m_queuedTiles.erase(found);
         cleanProxyTiles(id);
     }

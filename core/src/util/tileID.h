@@ -16,7 +16,6 @@ struct TileID {
     
     TileID(int _x, int _y, int _z) : x(_x), y(_y), z(_z) {};
     TileID(const TileID& _rhs): x(_rhs.x), y(_rhs.y), z(_rhs.z) {};
-    TileID(const TileID&& _rhs): x(std::move(_rhs.x)), y(std::move(_rhs.y)), z(std::move(_rhs.z)) {};
 
     bool operator< (const TileID& _rhs) const {
         return z > _rhs.z || (z == _rhs.z && (x < _rhs.x || (x == _rhs.x && y < _rhs.y)));

@@ -23,19 +23,19 @@ struct TileTask {
     }
 
     TileTask(std::vector<char>&& _rawTileData, const TileID& _tileID, DataSource* _source) :
-        tileID(std::move(_tileID)),
+        tileID(_tileID),
         rawTileData(std::move(_rawTileData)),
         source(_source) {
     }
 
     TileTask(std::shared_ptr<TileData>& _tileData, const TileID& _tileID, DataSource* _source) :
-        tileID(std::move(_tileID)),
+        tileID(_tileID),
         parsedTileData(_tileData),
         source(_source) {       
     }
 
     TileTask(TileTask&& _other) :
-        tileID(std::move(_other.tileID)),
+        tileID(_other.tileID),
         parsedTileData(std::move(_other.parsedTileData)),
         rawTileData(std::move(_other.rawTileData)),
         source(std::move(_other.source)) {
