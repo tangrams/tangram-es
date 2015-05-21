@@ -81,6 +81,12 @@ void LabelContainer::updateOcclusions() {
     
     // no priorities, only occlude one of the two occluded label
     for (auto& pair : occlusions) {
+        if (pair.second->getState() == Label::State::WAIT_OCC) {
+            pair.second->setOcclusion(true);
+        } else if (pair.first->getState() == Label::State::WAIT_OCC) {
+            pair.first->setOcclusion(true);
+        }
+        
         if(!pair.second->occludedLastFrame()) {
             pair.first->setOcclusion(true);
         }
