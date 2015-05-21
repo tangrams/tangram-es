@@ -6,7 +6,7 @@
 
 
 /* Extends NetworkDataSource class to read Mapzen's GeoJSON vector tiles */
-class GeoJsonSource: public NetworkDataSource {
+class GeoJsonSource: public DataSource {
     
 protected:
     
@@ -14,6 +14,6 @@ protected:
     
 public:
     
-    GeoJsonSource();
+    GeoJsonSource(const std::string& _name, const std::string& _urlTemplate);
     
 };
