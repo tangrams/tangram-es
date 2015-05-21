@@ -7,6 +7,7 @@
 #include "lights.h"
 #include "geoJsonSource.h"
 #include "mvtSource.h"
+#include "filters.h"
 
 #include "yaml-cpp/yaml.h"
 
