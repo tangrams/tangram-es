@@ -141,7 +141,7 @@ void Label::setOcclusion(bool _occlusion) {
 }
 
 bool Label::canOcclude() {
-    int occludeFlags = (State::VISIBLE | State::WAIT_OCC);
+    int occludeFlags = (State::VISIBLE | State::WAIT_OCC | State::FADING_IN);
     return (occludeFlags & m_currentState) && !(m_type == Type::DEBUG);
 }
 
@@ -187,6 +187,10 @@ void Label::updateState(const glm::mat4& _mvp, const glm::vec2& _screenSize, flo
             }
             break;
         case State::FADING_IN:
+            if (occludedLastFrame) {
+                enterState(State::SLEEP, 0.0);
+                break;
+            }
             m_transform.m_alpha = m_fade.update(_dt);
             s_needUpdate = true;
             if (m_fade.isFinished())
@@ -204,7 +208,8 @@ void Label::updateState(const glm::mat4& _mvp, const glm::vec2& _screenSize, flo
             break;
         case State::WAIT_OCC:
             if (!occludedLastFrame && m_occlusionSolved) {
-                enterState(State::VISIBLE, 1.0);
+                m_fade = FadeEffect(true, FadeEffect::Interpolation::POW, 0.2);
+                enterState(State::FADING_IN, 0.0);
             } else if (occludedLastFrame && m_occlusionSolved) {
                 enterState(State::SLEEP, 0.0);
             }

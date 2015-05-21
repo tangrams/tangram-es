@@ -44,26 +44,30 @@ TEST_CASE( "Ensure the transition from wait -> visible when no occlusion happens
     l.occlusionSolved();
     l.update(mvp, screen, 0);
 
+    REQUIRE(l.getState() == Label::State::FADING_IN);
+    REQUIRE(l.canOcclude());
+
+    l.update(mvp, screen, 1.0);
     REQUIRE(l.getState() == Label::State::VISIBLE);
     REQUIRE(l.canOcclude());
 }
 
-TEST_CASE( "Ensure the end state of fading out is sleep state", "[Core][Label]" ) {
+TEST_CASE( "Ensure the end state after occlusion is leep state", "[Core][Label]" ) {
     Label l({}, "label", 0, Label::Type::LINE);
 
     l.setOcclusion(false);
     l.occlusionSolved();
     l.update(mvp, screen, 0);
+
+    REQUIRE(l.getState() == Label::State::FADING_IN);
+    REQUIRE(l.canOcclude());
+
     l.setOcclusion(true);
     l.occlusionSolved();
     l.update(mvp, screen, 0);
 
-    REQUIRE(l.getState() == Label::State::FADING_OUT);
-    REQUIRE(!l.canOcclude());
-
-    l.update(mvp, screen, 100);
-
     REQUIRE(l.getState() == Label::State::SLEEP);
+    REQUIRE(!l.canOcclude());
 }
 
 TEST_CASE( "Ensure the out of screen state transition", "[Core][Label]" ) {
@@ -89,6 +93,11 @@ TEST_CASE( "Ensure the out of screen state transition", "[Core][Label]" ) {
     l.setOcclusion(false);
     l.occlusionSolved();
     l.update(mvp, screen, 0);
+
+    REQUIRE(l.getState() == Label::State::FADING_IN);
+    REQUIRE(l.canOcclude());
+
+    l.update(mvp, screen, 1.0);
 
     REQUIRE(l.getState() == Label::State::VISIBLE);
     REQUIRE(l.canOcclude());
