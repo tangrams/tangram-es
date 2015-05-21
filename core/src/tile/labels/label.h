@@ -16,8 +16,8 @@ public:
     
     FadeEffect() {}
 
-    FadeEffect(bool _in, Interpolation _interpolation = Interpolation::LINEAR, float _duration = 0.5f)
-        : m_interpolation(_interpolation), m_duration(_duration), m_step(0.0), m_in(_in)
+    FadeEffect(bool _in, Interpolation _interpolation, float _duration)
+        : m_interpolation(_interpolation), m_duration(_duration), m_in(_in)
     {}
 
     float update(float _dt) {
@@ -42,9 +42,9 @@ public:
 
 private:
 
-    Interpolation m_interpolation;
-    float m_duration;
-    float m_step;
+    Interpolation m_interpolation = Interpolation::LINEAR;
+    float m_duration = 0.5;
+    float m_step = 0.0;
     bool m_in;
 };
 
