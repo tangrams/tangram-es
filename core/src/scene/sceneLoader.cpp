@@ -299,9 +299,7 @@ void loadLayers(Node layers, Scene& scene, TileManager& tileManager) {
         // TODO: handle data.source
 
         Node dataLayer = data["layer"];
-        if (dataLayer) {
-            name = dataLayer.as<std::string>();
-        }
+        if (dataLayer) { name = dataLayer.as<std::string>(); }
 
         for (auto groupIt = drawGroup.begin(); groupIt != drawGroup.end(); ++groupIt) {
 
@@ -310,9 +308,7 @@ void loadLayers(Node layers, Scene& scene, TileManager& tileManager) {
             Node rules = groupIt->second;
 
             Node order = rules["order"];
-            if (order) {
-                params.order = order.as<float>();
-            }
+            if (order) { params.order = order.as<float>(); }
 
             Node color = rules["color"];
             if (color) {
@@ -325,8 +321,58 @@ void loadLayers(Node layers, Scene& scene, TileManager& tileManager) {
             }
 
             Node width = rules["width"];
-            if (width) {
-                params.width = width.as<float>();
+            if (width) { params.width = width.as<float>(); }
+            
+            Node cap = rules["cap"];
+            if (cap) {
+                std::string capString = cap.as<std::string>();
+                if (capString == "butt") { params.line.cap = CapTypes::BUTT; }
+                else if (capString == "sqaure") { params.line.cap = CapTypes::SQUARE; }
+                else if (capString == "round") { params.line.cap = CapTypes::ROUND; }
+            }
+            
+            Node join = rules["join"];
+            if (join) {
+                std::string joinString = join.as<std::string>();
+                if (joinString == "bevel") { params.line.join = JoinTypes::BEVEL; }
+                else if (joinString == "miter") { params.line.join = JoinTypes::MITER; }
+                else if (joinString == "round") { params.line.join = JoinTypes::ROUND; }
+            }
+            
+            Node outline = rules["outline"];
+            if (outline) {
+                
+                params.outline.on = true;
+                
+                Node color = outline["color"];
+                if (color) {
+                    glm::vec4 c = parseVec4(color);
+                    params.outline.color = (uint32_t(c.a * 255) << 24) +
+                    (uint32_t(c.b * 255) << 16) +
+                    (uint32_t(c.g * 255) << 8)  +
+                    (uint32_t(c.r * 255));
+                    // TODO: color helper funtions
+                }
+                
+                Node width = outline["width"];
+                if (width) { params.outline.width = width.as<float>(); }
+                
+                Node cap = outline["cap"];
+                if (cap) {
+                    std::string capString = cap.as<std::string>();
+                    if (capString == "butt") { params.outline.line.cap = CapTypes::BUTT; }
+                    else if (capString == "sqaure") { params.outline.line.cap = CapTypes::SQUARE; }
+                    else if (capString == "round") { params.outline.line.cap = CapTypes::ROUND; }
+                }
+                
+                Node join = outline["join"];
+                if (join) {
+                    std::string joinString = join.as<std::string>();
+                    if (joinString == "bevel") { params.outline.line.join = JoinTypes::BEVEL; }
+                    else if (joinString == "miter") { params.outline.line.join = JoinTypes::MITER; }
+                    else if (joinString == "round") { params.outline.line.join = JoinTypes::ROUND; }
+                }
+                
             }
 
             // match to built-in styles

@@ -44,15 +44,20 @@ layers:
         data: { source: osm }
         draw:
             lines:
-                order: 3
-                width: 8
-                color: [0.59, 0.59, 0.59, 1.]
+                order: 4
+                width: .02
+                cap: round
+                color: [0.41, 0.41, 0.41, 1.]
+                outline:
+                    width: .01
+                    cap: round
+                    color: [0.47, 0.47, 0.47, 1.]
 
     buildings:
         data: { source: osm }
         draw:
             polygons:
-                order: 4
+                order: 50
                 color: [0.949, 0.941, 0.901, 1.]
                 extrude: true
 

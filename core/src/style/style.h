@@ -7,6 +7,7 @@
 #include "util/vertexLayout.h"
 #include "util/shaderProgram.h"
 #include "util/mapProjection.h"
+#include "util/builders.h"
 #include "tile/mapTile.h"
 #include "tileData.h"
 #include "platform.h"
@@ -21,11 +22,29 @@ enum class LightingType {
     fragment
 };
 
+struct LineStyleParams {
+
+    CapTypes cap = CapTypes::BUTT;
+    JoinTypes join = JoinTypes::MITER;
+
+};
+
+struct OutlineParams {
+
+    LineStyleParams line;
+    uint32_t color = 0xffffffff;
+    float width = 1.f;
+    bool on = false;
+
+};
+
 struct StyleParams {
 
     int32_t order = 0;
     uint32_t color = 0xffffffff;
     float width = 1.f;
+    LineStyleParams line;
+    OutlineParams outline;
 
 };
 
