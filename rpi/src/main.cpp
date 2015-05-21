@@ -15,6 +15,7 @@
 #include "tangram.h"
 #include "platform.h"
 
+#include <iostream>
 #include "hud/hud.h"
 Hud m_hud;
 
@@ -142,7 +143,6 @@ void onMouseClick(float _x, float _y, int _button) {
 }
 
 void onMouseDrag(float _x, float _y, int _button) {
-
 
     if( _button == 1 ){
 

@@ -4,6 +4,7 @@
 #include <fcntl.h>
 #include <iostream>
 #include <termios.h>
+#include <linux/input.h>
 
 #include "glm/gtc/matrix_transform.hpp"
 
@@ -20,6 +21,8 @@ EGLContext context;
 static glm::ivec4 viewport;
 static glm::mat4 orthoMatrix;
 
+#define MOUSEFILE "/dev/input/event0"
+static int mouse_fd = -1;
 typedef struct {
     float   x,y;
     float   velX,velY;
@@ -29,6 +32,144 @@ static Mouse mouse;
 static unsigned char keyPressed;
 
 static bool bRender = true;
+
+// Mouse stuff
+//--------------------------------
+void closeMouse(){
+    if (mouse_fd > 0)
+        close(mouse_fd);
+    mouse_fd = -1;
+}
+
+int initMouse(){
+    closeMouse();
+
+    mouse.x = viewport.z*0.5;
+    mouse.y = viewport.w*0.5;
+    mouse_fd = open(MOUSEFILE, O_RDONLY | O_NONBLOCK);
+
+    return mouse_fd;
+}
+
+
+bool readMouseEvent(struct input_event *mousee){
+    int bytes;
+    if (mouse_fd > 0) {
+        bytes = read(mouse_fd, mousee, sizeof(struct input_event));
+        if (bytes == -1)
+            return false;
+        else if (bytes == sizeof(struct input_event)) 
+            return true;
+    }
+    return false;
+}
+
+bool updateMouse() {
+    if (mouse_fd < 0) {
+        return false;
+    }
+
+    struct input_event mousee;
+    while ( readMouseEvent(&mousee) ) {
+        
+        mouse.velX=0;
+        mouse.velY=0;
+
+        float x,y = 0.0f;
+        int button = 0;
+
+        switch(mousee.type) {
+            // Update Mouse Event
+            case EV_KEY:
+                switch (mousee.code) {
+                    case BTN_LEFT:
+                        if (mousee.value == 1){
+                            button = 1;
+                        }
+                        break;
+                    case BTN_RIGHT:
+                        if(mousee.value == 1){
+                            button = 2;
+                        }
+                        break;
+                    case BTN_MIDDLE:
+                        if(mousee.value == 1){
+                            button = 3;
+                        }
+                        break;
+                    default:
+                        button = 0;
+                        break;
+                }
+                if (button != mouse.button) {
+                    mouse.button = button;
+                    if(mouse.button == 0){
+                        onMouseRelease(mouse.x,mouse.y);
+                    } else {
+                        onMouseClick(mouse.x,mouse.y,mouse.button);
+                    }
+                }
+                break;
+            case EV_REL:
+                switch (mousee.code) {
+                    case REL_X:
+                        mouse.velX = mousee.value;
+                        break;
+                    case REL_Y:
+                        mousee.value = mousee.value * -1;
+                        mouse.velY = mousee.value;
+                        break;
+                    // case REL_WHEEL:
+                    //     if (mousee.value > 0)
+                    //         std::cout << "Mouse wheel Forward" << std::endl;
+                    //     else if(mousee.value < 0)
+                    //         std::cout << "Mouse wheel Backward" << std::endl;
+                    //     break;
+                    default:
+                        break;
+                }
+                mouse.x+=mouse.velX;
+                mouse.y+=mouse.velY;
+
+                // Clamp values
+                if (mouse.x < 0) mouse.x=0;
+                if (mouse.y < 0) mouse.y=0;
+                if (mouse.x > viewport.z) mouse.x = viewport.z;
+                if (mouse.y > viewport.w) mouse.y = viewport.w;
+
+                if (mouse.button != 0) {
+                    onMouseDrag(mouse.x,mouse.y,mouse.button);
+                } else {
+                    onMouseMove(mouse.x,mouse.y);
+                }
+                break;
+            case EV_ABS:
+                switch (mousee.code) {
+                    case ABS_X:
+                        x = ((float)mousee.value/4095.0f)*viewport.z;
+                        mouse.velX = x - mouse.x;
+                        mouse.x = x;
+                        break;
+                    case ABS_Y:
+                        y = (1.0-((float)mousee.value/4095.0f))*viewport.w;
+                        mouse.velY = y - mouse.y;
+                        mouse.y = y;
+                        break;
+                    default:
+                        break;
+                }
+                if (mouse.button != 0) {
+                    onMouseDrag(mouse.x,mouse.y,mouse.button);
+                } else {
+                    onMouseMove(mouse.x,mouse.y);
+                }
+                break;
+            default:
+                break;
+        }
+    }
+    return true;
+}
 
 // OpenGL ES
 //--------------------------------
@@ -177,6 +318,7 @@ void initGL(int argc, char **argv){
     mouse.y = viewport.w*0.5;
     check();
 
+    initMouse();
     ///printf("OpenGL Initialize at %i,%i,%i,%i\n",viewport.x,viewport.y,viewport.z,viewport.w);
 }
 
@@ -185,6 +327,7 @@ void renderGL(){
 }
 
 void closeGL(){
+    closeMouse();
     eglSwapBuffers(display, surface);
 
     // Release OpenGL resources
@@ -194,86 +337,6 @@ void closeGL(){
     eglTerminate( display );
 }
 
-// Inputs: Mouse/Keyboard
-//--------------------------------
-bool getMouse(){
-    static int fd = -1;
-
-    const int XSIGN = 1<<4, YSIGN = 1<<5;
-    if (fd<0) {
-        fd = open("/dev/input/mouse0",O_RDONLY|O_NONBLOCK);
-    }
-    if (fd>=0) {
-        
-        // Set values to 0
-        mouse.velX=0;
-        mouse.velY=0;
-        
-        // Extract values from driver
-        struct {char buttons, dx, dy; } m;
-        while (1) {
-            int bytes = read(fd, &m, sizeof m);
-            
-            if (bytes < (int)sizeof m) {
-                return false;
-            } else if (m.buttons&8) {
-                break; // This bit should always be set
-            }
-            
-            read(fd, &m, 1); // Try to sync up again
-        }
-        
-        // Set deltas
-        int dx,dy;
-        dx = (int)m.dx;
-        dy = (int)m.dy;
-        if (m.buttons&XSIGN) 
-            dx-=256;
-        if (m.buttons&YSIGN) 
-            dy-=256;
-
-        mouse.velX=dx;
-        mouse.velY=dy;
-        mouse.x+=mouse.velX;
-        mouse.y+=mouse.velY;
-
-        // Clamp values
-        if (mouse.x < 0) mouse.x=0;
-        if (mouse.y < 0) mouse.y=0;
-        if (mouse.x > viewport.z) mouse.x = viewport.z;
-        if (mouse.y > viewport.w) mouse.y = viewport.w;
-
-        // Set button value
-        int button = m.buttons&3;
-        
-        // Lunch events
-        if(button != mouse.button){
-            mouse.button = button;
-            if(mouse.button == 0){
-                onMouseRelease(mouse.x,mouse.y);
-            } else {
-                onMouseClick(mouse.x,mouse.y,mouse.button);
-            }
-        }
-
-        // std::cout << "--------------------------------------------" << std::endl;
-        // std::cout << "Deltas " << mouse.velX << "," << mouse.velY << std::endl;
-        // std::cout << "Position " << mouse.x << "," << mouse.y << std::endl; 
-        // std::cout << "Viewport " << getWindowWidth() << "," << getWindowHeight() << std::endl; 
-        // std::cout << "--------------------------------------------" << std::endl; 
-        
-        if(mouse.velX != 0.0 || mouse.velY != 0.0){
-            if (button != 0) {
-                onMouseDrag(mouse.x,mouse.y,mouse.button);
-            } else {
-                onMouseMove(mouse.x,mouse.y);
-            }
-        }  
-
-        return true;
-    }
-    return false;
-}
 
 int getKey() {
     int character;
@@ -299,7 +362,7 @@ int getKey() {
 }
 
 void updateGL() {
-    getMouse();
+    updateMouse();
 
     int key = getKey();
     if ( key != -1 && key != keyPressed ){

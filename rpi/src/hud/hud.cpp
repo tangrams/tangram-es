@@ -89,7 +89,7 @@ void Hud::cursorDrag(float _x, float _y, int _button){
 
     } else if (m_selected == 2) {
         
-        Tangram::handlePinchGesture(getWindowWidth()/2.0, getWindowHeight()/2.0, 1.0 + getMouseVelY()*0.001);
+        Tangram::handlePinchGesture(getWindowWidth()/2.0, getWindowHeight()/2.0, 1.0 + getMouseVelY()*0.01);
         m_zoom.slider += getMouseVelY();
 
     }
