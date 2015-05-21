@@ -89,11 +89,11 @@ bool Label::updateScreenTransform(const glm::mat4& _mvp, const glm::vec2& _scree
 
             float length = glm::length(p1p2);
 
-            float exceedHeuristic = 10; // default heuristic : 10%
+            float exceedHeuristic = 30; // default heuristic : 30%
 
             if (m_dim.x > length) {
                 float exceed = (1 - (length / m_dim.x)) * 100;
-                if (exceed < exceedHeuristic) {
+                if (exceed > exceedHeuristic) {
                     return false;
                 }
             }
