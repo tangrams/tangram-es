@@ -50,7 +50,7 @@ void LabelContainer::updateOcclusions() {
         auto label = labelUnit.getWeakLabel();
         
         if (label == nullptr) {
-            m_labelUnits[i] = std::move(m_labelUnits[m_labelUnits.size() - 1]);
+            m_labelUnits[i--] = std::move(m_labelUnits[m_labelUnits.size() - 1]);
             m_labelUnits.pop_back();
             continue;
         }
