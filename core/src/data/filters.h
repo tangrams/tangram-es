@@ -125,6 +125,13 @@ struct Range : public Predicate {
     float max = +std::numeric_limits<float>::infinity();
 
     virtual bool eval(const Feature& feat, const Context& ctx) const override {
+
+        auto ctxIt = ctx.find(key);
+        if (ctxIt != ctx.end()) {
+            const auto& val = *ctxIt->second;
+            if (!val.equals(val.num)) { return false; } // only check range for numbers
+            return val.num >= min && val.num < max;
+        }
         auto numIt = feat.props.numericProps.find(key);
         if (numIt != feat.props.numericProps.end()) {
             const auto& num = numIt->second;
