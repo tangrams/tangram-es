@@ -1,7 +1,6 @@
 #pragma once
 
 #include "glm/glm.hpp"
-#include "text/fontContext.h"
 #include "text/textBuffer.h"
 #include "isect2d.h"
 #include <string>
@@ -127,6 +126,12 @@ private:
 
     void updateState(const glm::mat4& _mvp, const glm::vec2& _screenSize, float _dt);
 
+    void setAlpha(float _alpha);
+    
+    void setScreenPosition(const glm::vec2& _screenPosition);
+    
+    void setRotation(float _rotation);
+    
     State m_currentState;
 
     Type m_type;
@@ -139,5 +144,6 @@ private:
     bool m_occludedLastFrame;
     bool m_occlusionSolved;
     FadeEffect m_fade;
+    bool m_dirty;
 
 };

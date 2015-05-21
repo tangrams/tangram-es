@@ -36,7 +36,10 @@ void Label::updateBBoxes() {
 }
 
 void Label::pushTransform(std::shared_ptr<TextBuffer>& _buffer) {
-    _buffer->transformID(m_id, m_transform.m_screenPosition.x, m_transform.m_screenPosition.y, m_transform.m_rotation, m_transform.m_alpha);
+    if (m_dirty) {
+        _buffer->transformID(m_id, m_transform.m_screenPosition.x, m_transform.m_screenPosition.y, m_transform.m_rotation, m_transform.m_alpha);
+        m_dirty = false;
+    }
 }
 
 bool Label::updateScreenTransform(const glm::mat4& _mvp, const glm::vec2& _screenSize) {
@@ -104,15 +107,14 @@ bool Label::updateScreenTransform(const glm::mat4& _mvp, const glm::vec2& _scree
             break;
         }
     }
-
-    m_transform.m_screenPosition = screenPosition;
-    m_transform.m_rotation = rot;
+    
+    setScreenPosition(screenPosition);
+    setRotation(rot);
 
     return true;
 }
 
 void Label::update(const glm::mat4& _mvp, const glm::vec2& _screenSize, float _dt) {
-
     updateState(_mvp, _screenSize, _dt);
     
     m_occlusionSolved = false;
@@ -146,7 +148,24 @@ void Label::occlusionSolved() {
 
 void Label::enterState(State _state, float _alpha) {
     m_currentState = _state;
+    setAlpha(_alpha);
+}
+
+void Label::setAlpha(float _alpha) {
     m_transform.m_alpha = CLAMP(_alpha, 0.0, 1.0);
+    m_dirty = true;
+}
+
+void Label::setScreenPosition(const glm::vec2& _screenPosition) {
+    if (_screenPosition != m_transform.m_screenPosition) {
+        m_transform.m_screenPosition = _screenPosition;
+        m_dirty = true;
+    }
+}
+
+void Label::setRotation(float _rotation) {
+    m_transform.m_rotation = _rotation;
+    m_dirty = true;
 }
 
 void Label::updateState(const glm::mat4& _mvp, const glm::vec2& _screenSize, float _dt) {
@@ -186,13 +205,13 @@ void Label::updateState(const glm::mat4& _mvp, const glm::vec2& _screenSize, flo
                 enterState(State::SLEEP, 0.0);
                 break;
             }
-            m_transform.m_alpha = m_fade.update(_dt);
+            setAlpha(m_fade.update(_dt));
             s_needUpdate = true;
             if (m_fade.isFinished())
                 enterState(State::VISIBLE, 1.0);
             break;
         case State::FADING_OUT:
-            m_transform.m_alpha = m_fade.update(_dt);
+            setAlpha(m_fade.update(_dt));
             s_needUpdate = true;
             if (m_fade.isFinished())
                 enterState(State::SLEEP, 0.0);
