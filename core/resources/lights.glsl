@@ -1,3 +1,4 @@
+
 vec4 calculateLighting(in vec3 _eyeToPoint, in vec3 _normal, in vec4 _color) {
 
     // Do initial material calculations over normal, emission, ambient, diffuse and specular values

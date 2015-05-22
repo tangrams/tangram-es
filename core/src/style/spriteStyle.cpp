@@ -35,15 +35,15 @@ void SpriteStyle::constructShaderProgram() {
     
 }
 
-void SpriteStyle::buildPoint(Point& _point, std::string& _layer, Properties& _props, VboMesh& _mesh) const {
+void SpriteStyle::buildPoint(Point& _point, StyleParams& _params, Properties& _props, VboMesh& _mesh) const {
     
 }
 
-void SpriteStyle::buildLine(Line& _line, std::string& _layer, Properties& _props, VboMesh& _mesh) const {
+void SpriteStyle::buildLine(Line& _line, StyleParams& _params, Properties& _props, VboMesh& _mesh) const {
     
 }
 
-void SpriteStyle::buildPolygon(Polygon& _polygon, std::string& _layer, Properties& _props, VboMesh& _mesh) const {
+void SpriteStyle::buildPolygon(Polygon& _polygon, StyleParams& _params, Properties& _props, VboMesh& _mesh) const {
     
 }
 

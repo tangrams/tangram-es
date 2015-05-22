@@ -7,6 +7,7 @@
 #include "util/vertexLayout.h"
 #include "util/shaderProgram.h"
 #include "util/mapProjection.h"
+#include "util/builders.h"
 #include "tile/mapTile.h"
 #include "tileData.h"
 #include "platform.h"
@@ -19,6 +20,32 @@ enum class LightingType {
     none,
     vertex,
     fragment
+};
+
+struct LineStyleParams {
+
+    CapTypes cap = CapTypes::BUTT;
+    JoinTypes join = JoinTypes::MITER;
+
+};
+
+struct OutlineParams {
+
+    LineStyleParams line;
+    uint32_t color = 0xffffffff;
+    float width = 1.f;
+    bool on = false;
+
+};
+
+struct StyleParams {
+
+    int32_t order = 0;
+    uint32_t color = 0xffffffff;
+    float width = 1.f;
+    LineStyleParams line;
+    OutlineParams outline;
+
 };
 
 class Scene;
@@ -56,7 +83,7 @@ protected:
     GLenum m_drawMode;
 
     /* Set of strings defining which data layers this style applies to */
-    std::set<std::string> m_layers;
+    std::vector< std::pair<std::string, StyleParams> > m_layers;
     
     /* Create <VertexLayout> corresponding to this style */
     virtual void constructVertexLayout() = 0;
@@ -65,10 +92,10 @@ protected:
     virtual void constructShaderProgram() = 0;
     
     /* Build styled vertex data for point geometry and add it to the given <VboMesh> */
-    virtual void buildPoint(Point& _point, std::string& _layer, Properties& _props, VboMesh& _mesh) const = 0;
+    virtual void buildPoint(Point& _point, StyleParams& _params, Properties& _props, VboMesh& _mesh) const = 0;
     
     /* Build styled vertex data for line geometry and add it to the given <VboMesh> */
-    virtual void buildLine(Line& _line, std::string& _layer, Properties& _props, VboMesh& _mesh) const = 0;
+    virtual void buildLine(Line& _line, StyleParams& _params, Properties& _props, VboMesh& _mesh) const = 0;
     
     /* Build styled vertex data for polygon geometry and add it to the given <VboMesh> 
      * 
@@ -77,7 +104,7 @@ protected:
      * simple polygon (in the mathematical sense), _sizes will have one element which is
      * the number of points in the first vector.
      */
-    virtual void buildPolygon(Polygon& _polygon, std::string& _layer, Properties& _props, VboMesh& _mesh) const = 0;
+    virtual void buildPolygon(Polygon& _polygon, StyleParams& _params, Properties& _props, VboMesh& _mesh) const = 0;
 
     /* Can be used by the style to prepare the data processing */
     virtual void prepareDataProcessing(MapTile& _tile) const;
@@ -94,7 +121,7 @@ public:
 
     /* Add layers to which this style will apply
      * TODO: More flexible filtering */
-    virtual void addLayers(std::vector<std::string> _layers);
+    virtual void addLayer(const std::pair<std::string, StyleParams>& _layer);
     
     /* Add styled geometry from the given Json object to the given <MapTile> */
     virtual void addData(TileData& _data, MapTile& _tile, const MapProjection& _mapProjection) const;

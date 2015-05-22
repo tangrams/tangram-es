@@ -7,6 +7,9 @@
 #include "lights.h"
 #include "geoJsonSource.h"
 #include "mvtSource.h"
+#include "polygonStyle.h"
+#include "polylineStyle.h"
+#include "debugStyle.h"
 #include "filters.h"
 
 #include "yaml-cpp/yaml.h"
@@ -16,6 +19,7 @@ using namespace YAML;
 void loadSources(Node sources, TileManager& tileManager);
 void loadLights(Node lights, Scene& scene);
 void loadCameras(Node cameras, View& view);
+void loadLayers(Node layers, Scene& scene, TileManager& tileManager);
 
 void SceneLoader::loadScene(const std::string& _file, Scene& _scene, TileManager& _tileManager, View& _view) {
 
@@ -24,8 +28,9 @@ void SceneLoader::loadScene(const std::string& _file, Scene& _scene, TileManager
     Node config = YAML::Load(configString);
     
     loadSources(config["sources"], _tileManager);
-    loadLights(config["lights"], _scene);
+    loadLayers(config["layers"], _scene, _tileManager);
     loadCameras(config["cameras"], _view);
+    loadLights(config["lights"], _scene);
     
 }
 
@@ -268,5 +273,126 @@ void loadCameras(Node cameras, View& view) {
         }
         
     }
+    
+}
+
+void loadLayers(Node layers, Scene& scene, TileManager& tileManager) {
+
+    if (!layers) {
+        return;
+    }
+
+    // Instantiate base styles
+    auto polygonStyle = std::unique_ptr<PolygonStyle>(new PolygonStyle("polygons"));
+    auto polylineStyle = std::unique_ptr<PolylineStyle>(new PolylineStyle("lines"));
+    auto debugStyle = std::unique_ptr<DebugStyle>(new DebugStyle("debug"));
+    
+    // TODO: configure style properties in styles block
+    polygonStyle->setLighting(LightingType::vertex);
+    polylineStyle->setLighting(LightingType::vertex);
+
+    for (auto layerIt = layers.begin(); layerIt != layers.end(); ++layerIt) {
+
+        std::string name = layerIt->first.as<std::string>();
+        Node drawGroup = layerIt->second["draw"];
+        Node data = layerIt->second["data"];
+
+        // TODO: handle data.source
+
+        Node dataLayer = data["layer"];
+        if (dataLayer) { name = dataLayer.as<std::string>(); }
+
+        for (auto groupIt = drawGroup.begin(); groupIt != drawGroup.end(); ++groupIt) {
+
+            StyleParams params;
+            std::string styleName = groupIt->first.as<std::string>();
+            Node rules = groupIt->second;
+
+            Node order = rules["order"];
+            if (order) { params.order = order.as<float>(); }
+
+            Node color = rules["color"];
+            if (color) {
+                glm::vec4 c = parseVec4(color);
+                params.color = (uint32_t(c.a * 255) << 24) +
+                               (uint32_t(c.b * 255) << 16) +
+                               (uint32_t(c.g * 255) << 8)  +
+                               (uint32_t(c.r * 255));
+                // TODO: color helper funtions
+            }
+
+            Node width = rules["width"];
+            if (width) { params.width = width.as<float>(); }
+            
+            Node cap = rules["cap"];
+            if (cap) {
+                std::string capString = cap.as<std::string>();
+                if (capString == "butt") { params.line.cap = CapTypes::BUTT; }
+                else if (capString == "sqaure") { params.line.cap = CapTypes::SQUARE; }
+                else if (capString == "round") { params.line.cap = CapTypes::ROUND; }
+            }
+            
+            Node join = rules["join"];
+            if (join) {
+                std::string joinString = join.as<std::string>();
+                if (joinString == "bevel") { params.line.join = JoinTypes::BEVEL; }
+                else if (joinString == "miter") { params.line.join = JoinTypes::MITER; }
+                else if (joinString == "round") { params.line.join = JoinTypes::ROUND; }
+            }
+            
+            Node outline = rules["outline"];
+            if (outline) {
+                
+                params.outline.on = true;
+                
+                Node color = outline["color"];
+                if (color) {
+                    glm::vec4 c = parseVec4(color);
+                    params.outline.color = (uint32_t(c.a * 255) << 24) +
+                    (uint32_t(c.b * 255) << 16) +
+                    (uint32_t(c.g * 255) << 8)  +
+                    (uint32_t(c.r * 255));
+                    // TODO: color helper funtions
+                }
+                
+                Node width = outline["width"];
+                if (width) { params.outline.width = width.as<float>(); }
+                
+                Node cap = outline["cap"];
+                if (cap) {
+                    std::string capString = cap.as<std::string>();
+                    if (capString == "butt") { params.outline.line.cap = CapTypes::BUTT; }
+                    else if (capString == "sqaure") { params.outline.line.cap = CapTypes::SQUARE; }
+                    else if (capString == "round") { params.outline.line.cap = CapTypes::ROUND; }
+                }
+                
+                Node join = outline["join"];
+                if (join) {
+                    std::string joinString = join.as<std::string>();
+                    if (joinString == "bevel") { params.outline.line.join = JoinTypes::BEVEL; }
+                    else if (joinString == "miter") { params.outline.line.join = JoinTypes::MITER; }
+                    else if (joinString == "round") { params.outline.line.join = JoinTypes::ROUND; }
+                }
+                
+            }
+
+            // match to built-in styles
+            if (styleName == "polygons") {
+                polygonStyle->addLayer({ name, params });
+            } else if (styleName == "lines") {
+                polylineStyle->addLayer({ name, params });
+            } else if (styleName == "text") {
+                // TODO
+            }
+
+        }
+
+    }
+
+    scene.addStyle(std::move(polygonStyle));
+    scene.addStyle(std::move(polylineStyle));
+    scene.addStyle(std::move(debugStyle));
+
+    // tileManager isn't used yet, but we'll need it soon to get the list of data sources
     
 }
