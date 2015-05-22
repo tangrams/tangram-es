@@ -51,8 +51,12 @@ std::string searchForDevice(const std::string& _device) {
       getline(file, buffer);
       std::size_t found = buffer.find(_device);
       if(found!=std::string::npos){
-        address = "/dev/input/"+buffer.substr(found+_device.size()+1);
-        address.erase(address.begin()+address.size()-1);
+        std::string tmp = buffer.substr(found+_device.size()+1);
+        std::size_t foundBegining = tmp.find("event");
+        if(foundBegining!=std::string::npos){
+            address = "/dev/input/"+tmp.substr(foundBegining);
+            address.erase(address.size()-1,1);
+        }
         break;
       }
     }
