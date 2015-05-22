@@ -18,21 +18,38 @@ namespace Tangram {
         virtual bool equals(const std::string& s) const = 0;
         virtual bool equals(const Value& v) const = 0;
 
+        Value(std::string s) : str(s) {}
+        Value(float val) : num(val) {}
+
+        virtual ~Value() {
+        // Need to call std::string destructor explicitly, however this is a bug in clang implementation and works in
+        // gcc (refer https://llvm.org/bugs/show_bug.cgi?id=12350)
+        // str.std::string::~string();
+        }
+
     };
 
     struct NumValue : Value {
+
+        NumValue(float val) : Value(val) {}
 
         virtual bool equals(const std::string& s) const override { return false; }
         virtual bool equals(float f) const override { return num == f; }
         virtual bool equals(const Value& v) const override { return v.equals(num); }
 
+        virtual ~NumValue() {}
+
     };
 
     struct StrValue : Value {
 
+        StrValue(std::string s) : Value(s) {}
+
         virtual bool equals(const std::string& s) const override { return str == s; }
         virtual bool equals(float f) const override { return false; }
         virtual bool equals(const Value& v) const override { return v.equals(str); }
+
+        virtual ~StrValue() {}
 
     };
 
