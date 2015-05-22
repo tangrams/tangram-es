@@ -216,6 +216,22 @@ namespace Tangram {
         while (Error::hadGlError("Tangram::render()")) {}
     }
 
+    void setViewPosition(double _lon, double _lat) {
+        
+        glm::dvec2 meters = m_view->getMapProjection().LonLatToMeters({ _lon, _lat});
+        m_view->setPosition(meters.x, meters.y);
+
+    }
+
+    void getViewPosition(double& _lon, double& _lat) {
+
+        glm::dvec2 meters(m_view->getPosition().x, m_view->getPosition().y);
+        glm::dvec2 degrees = m_view->getMapProjection().MetersToLonLat(meters);
+        _lon = degrees.x;
+        _lat = degrees.y;
+        
+    }
+
     void setPixelScale(float _pixelsPerPoint) {
         
         if (m_view) {
