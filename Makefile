@@ -129,17 +129,17 @@ osx: ${OSX_BUILD_DIR}/Makefile
 
 ${OSX_BUILD_DIR}/Makefile: cmake-osx
 
-osx-xcode: cmake-osx-xcode ${OSX_XCODE_BUILD_DIR}
+osx-xcode: ${OSX_XCODE_BUILD_DIR}/${OSX_XCODE_PROJ}
 	xcodebuild -target ${OSX_TARGET} -project ${OSX_XCODE_BUILD_DIR}/${OSX_XCODE_PROJ}
 
+${OSX_XCODE_BUILD_DIR}/${OSX_XCODE_PROJ}: cmake-osx-xcode
+
 cmake-osx-xcode:
-ifeq ($(wildcard ${OSX_XCODE_BUILD_DIR}/${OSX_XCODE_PROJ}/.*),)
 	@mkdir -p ${OSX_XCODE_BUILD_DIR} 
 	@cd ${OSX_XCODE_BUILD_DIR} && \
 	cmake ../.. ${DARWIN_XCODE_CMAKE_PARAMS}
-endif
 
-cmake-osx: 
+cmake-osx:
 	@mkdir -p ${OSX_BUILD_DIR} 
 	@cd ${OSX_BUILD_DIR} && \
 	cmake ../.. ${DARWIN_CMAKE_PARAMS}
@@ -150,11 +150,9 @@ ios: ${IOS_BUILD_DIR}/${IOS_XCODE_PROJ}
 ${IOS_BUILD_DIR}/${IOS_XCODE_PROJ}: cmake-ios
 
 cmake-ios:
-ifeq ($(wildcard ${IOS_BUILD_DIR}/${IOS_XCODE_PROJ}/.*),)
 	@mkdir -p ${IOS_BUILD_DIR}
 	@cd ${IOS_BUILD_DIR} && \
 	cmake ../.. ${IOS_CMAKE_PARAMS}
-endif
 
 rpi: cmake-rpi
 	@cd ${RPI_BUILD_DIR} && \
