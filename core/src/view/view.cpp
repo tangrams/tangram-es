@@ -9,8 +9,6 @@
 #include "glm/gtc/matrix_transform.hpp"
 #include "glm/gtx/rotate_vector.hpp"
 
-#define MAX_LOD 6
-
 constexpr float View::s_maxZoom; // Create a stack reference to the static member variable
 
 double invLodFunc(double d) {
