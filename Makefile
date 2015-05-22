@@ -11,6 +11,7 @@ all: android osx ios
 .PHONY: osx
 .PHONY: xcode
 .PHONY: ios
+.PHONY: ios-sim
 .PHONY: rpi
 .PHONY: linux
 .PHONY: check-ndk
@@ -18,6 +19,7 @@ all: android osx ios
 .PHONY: cmake-xcode
 .PHONY: cmake-android
 .PHONY: cmake-ios
+.PHONY: cmake-ios-sim
 .PHONY: cmake-rpi
 .PHONY: cmake-linux
 .PHONY: install-android
@@ -26,6 +28,7 @@ ANDROID_BUILD_DIR = build/android
 OSX_BUILD_DIR = build/osx
 OSX_XCODE_BUILD_DIR = build/xcode
 IOS_BUILD_DIR = build/ios
+IOS_SIM_BUILD_DIR = build/ios-sim
 RPI_BUILD_DIR = build/rpi
 LINUX_BUILD_DIR = build/linux
 TESTS_BUILD_DIR = build/tests
@@ -45,10 +48,6 @@ ifndef ANDROID_API_LEVEL
 	ANDROID_API_LEVEL = android-19
 endif
 
-ifndef IOS_PLATFORM
-	IOS_PLATFORM = SIMULATOR
-endif
-
 UNIT_TESTS_CMAKE_PARAMS = \
 	-DUNIT_TESTS=1
 
@@ -62,7 +61,6 @@ ANDROID_CMAKE_PARAMS = \
 
 IOS_CMAKE_PARAMS = \
 	-DPLATFORM_TARGET=ios \
-	-DIOS_PLATFORM=${IOS_PLATFORM} \
 	-DCMAKE_TOOLCHAIN_FILE=${TOOLCHAIN_DIR}/iOS.toolchain.cmake \
 	-G Xcode
 
@@ -153,6 +151,16 @@ cmake-ios:
 	@mkdir -p ${IOS_BUILD_DIR}
 	@cd ${IOS_BUILD_DIR} && \
 	cmake ../.. ${IOS_CMAKE_PARAMS}
+
+ios-sim: ${IOS_SIM_BUILD_DIR}/${IOS_XCODE_PROJ}
+	xcodebuild -target ${IOS_TARGET} -project ${IOS_SIM_BUILD_DIR}/${IOS_XCODE_PROJ}
+
+${IOS_SIM_BUILD_DIR}/${IOS_XCODE_PROJ}: cmake-ios-sim
+
+cmake-ios-sim:
+	@mkdir -p ${IOS_SIM_BUILD_DIR}
+	@cd ${IOS_SIM_BUILD_DIR} && \
+	cmake ../.. ${IOS_CMAKE_PARAMS} -DIOS_PLATFORM=SIMULATOR
 
 rpi: cmake-rpi
 	@cd ${RPI_BUILD_DIR} && \
