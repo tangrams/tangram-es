@@ -3,6 +3,8 @@
 #include <assert.h>
 #include <fcntl.h>
 #include <iostream>
+#include <string>
+#include <fstream>
 #include <termios.h>
 #include <linux/input.h>
 
@@ -21,7 +23,7 @@ EGLContext context;
 static glm::ivec4 viewport;
 static glm::mat4 orthoMatrix;
 
-#define MOUSEFILE "/dev/input/event0"
+#define MOUSE_ID "mouse0"
 static int mouse_fd = -1;
 typedef struct {
     float   x,y;
@@ -35,6 +37,29 @@ static bool bRender = true;
 
 // Mouse stuff
 //--------------------------------
+std::string searchForDevice(const std::string& _device) {
+    std::ifstream file;
+    std::string buffer;
+    std::string address = "NONE";
+
+    file.open("/proc/bus/input/devices");
+
+    if (!file.is_open())
+      return "NOT FOUND";
+    
+    while (!file.eof()) {
+      getline(file, buffer);
+      std::size_t found = buffer.find(_device);
+      if(found!=std::string::npos){
+        address = "/dev/input/"+buffer.substr(found+_device.size()+1);
+        break;
+      }
+    }
+
+    file.close();
+    return address;
+}
+
 void closeMouse(){
     if (mouse_fd > 0)
         close(mouse_fd);
@@ -46,7 +71,7 @@ int initMouse(){
 
     mouse.x = viewport.z*0.5;
     mouse.y = viewport.w*0.5;
-    mouse_fd = open(MOUSEFILE, O_RDONLY | O_NONBLOCK);
+    mouse_fd = open(searchForDevice(MOUSE_ID), O_RDONLY | O_NONBLOCK);
 
     return mouse_fd;
 }
