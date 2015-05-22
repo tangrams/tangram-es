@@ -8,6 +8,7 @@
 #include <memory>
 #include <unordered_map>
 #include <string>
+#include <cstring>
 
 struct TextureFiltering {
     GLenum m_min;
