@@ -52,6 +52,7 @@ std::string searchForDevice(const std::string& _device) {
       std::size_t found = buffer.find(_device);
       if(found!=std::string::npos){
         address = "/dev/input/"+buffer.substr(found+_device.size()+1);
+        address.erase(address.begin()+address.size()-1);
         break;
       }
     }
@@ -71,7 +72,9 @@ int initMouse(){
 
     mouse.x = viewport.z*0.5;
     mouse.y = viewport.w*0.5;
-    mouse_fd = open(searchForDevice(MOUSE_ID), O_RDONLY | O_NONBLOCK);
+    std::string mouseAddress = searchForDevice(MOUSE_ID);
+    std::cout << "Mouse [" << mouseAddress << "]"<< std::endl;
+    mouse_fd = open(mouseAddress.c_str(), O_RDONLY | O_NONBLOCK);
 
     return mouse_fd;
 }
