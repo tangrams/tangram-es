@@ -74,6 +74,7 @@ namespace Tangram {
             m_ftContext->addFont("FuturaStd-Condensed.ttf", "Futura");
             m_labelContainer = LabelContainer::GetInstance();
             m_labelContainer->setFontContext(m_ftContext);
+            m_labelContainer->setView(m_view);
 
             std::unique_ptr<Style> textStyle0(new TextStyle("FiraSans", "Textstyle0", 15.0f, 0xF7F0E1, true, true));
             textStyle0->addLayers({
@@ -159,8 +160,6 @@ namespace Tangram {
             m_tileManager->updateTileSet();
 
             if(m_view->changedOnLastUpdate() || m_tileManager->hasTileSetChanged()) {
-                m_labelContainer->setViewProjectionMatrix(m_view->getViewProjectionMatrix());
-                
                 for (const auto& mapIDandTile : m_tileManager->getVisibleTiles()) {
                     const std::shared_ptr<MapTile>& tile = mapIDandTile.second;
                     tile->update(_dt, *m_view);
