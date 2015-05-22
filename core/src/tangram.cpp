@@ -16,7 +16,6 @@
 #include "style/spriteStyle.h"
 #include "scene/sceneLoader.h"
 #include "scene/scene.h"
-#include "scene/lights.h"
 #include "util/error.h"
 #include "stl_util.hpp"
 #include "util/tileID.h"

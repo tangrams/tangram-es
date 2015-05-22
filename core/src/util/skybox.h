@@ -28,11 +28,11 @@ private:
         GLfloat pos_z;
     };
 
-    std::shared_ptr<ShaderProgram> m_skyboxShader;
-    std::shared_ptr<Texture> m_skyboxTexture;
+    std::shared_ptr<ShaderProgram> m_shader;
+    std::shared_ptr<Texture> m_texture;
 
     typedef TypedMesh<PosVertex> Mesh;
-    std::shared_ptr<Mesh> m_skyboxMesh;
+    std::shared_ptr<Mesh> m_mesh;
 
     std::string m_file;
 
