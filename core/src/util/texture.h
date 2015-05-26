@@ -8,6 +8,7 @@
 #include <memory>
 #include <unordered_map>
 #include <string>
+#include <cstring>
 
 struct TextureFiltering {
     GLenum m_min;
@@ -42,7 +43,7 @@ public:
     void bind(GLuint _textureSlot);
 
     /* Perform texture updates, should be called at least once and after adding data or resizing */
-    void update(GLuint _textureSlot);
+    virtual void update(GLuint _textureSlot);
 
     /* Resize the texture */
     void resize(const unsigned int _width, const unsigned int _height);
@@ -63,11 +64,13 @@ public:
     void setSubData(const GLuint* _subData, unsigned int _xoff, unsigned int _yoff, unsigned int _width, unsigned int _height);
 
     /* GPU delete of the texture */
-    void destroy();
+    virtual void destroy();
     
     typedef std::pair<GLuint, GLuint> TextureSlot;
     
 protected:
+    
+    void generate(GLuint _textureUnit);
 
     TextureOptions m_options;
     std::vector<GLuint> m_data;
@@ -78,6 +81,10 @@ protected:
 
     unsigned int m_width;
     unsigned int m_height;
+    
+    GLenum m_target;
+    
+    static GLuint getTextureUnit(GLuint _slot);
     
 private:
     
@@ -98,7 +105,6 @@ private:
     // Texture slots range from 0 to GL_MAX_COMBINED_TEXTURE_UNITS-1 and the texture unit corresponding to
     // a given texture slot is (slot + GL_TEXTURE0).
     static GLuint s_activeSlot;
-    static GLuint getTextureUnit(GLuint _slot);
     
     // if (s_boundTextures[s] == h) then the texture with handle 'h' is currently bound at slot 's'
     static GLuint s_boundTextures[GL_MAX_COMBINED_TEXTURE_IMAGE_UNITS];

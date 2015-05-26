@@ -11,6 +11,7 @@ Texture::Texture(unsigned int _width, unsigned int _height, bool _autoDelete, Te
     m_glHandle = 0;
     m_dirty = false;
     m_shouldResize = false;
+    m_target = GL_TEXTURE_2D;
 
     resize(_width, _height);
 }
@@ -67,7 +68,7 @@ void Texture::bind(GLuint _textureSlot) {
     
     if (s_boundTextures[_textureSlot] != m_glHandle) {
         
-        glBindTexture(GL_TEXTURE_2D, m_glHandle);
+        glBindTexture(m_target, m_glHandle);
         s_boundTextures[_textureSlot] = m_glHandle;
         
     }
@@ -98,6 +99,18 @@ void Texture::setSubData(const GLuint* _subData, unsigned int _xoff, unsigned in
     m_dirty = true;
 }
 
+void Texture::generate(GLuint _textureUnit) {
+    glGenTextures(1, &m_glHandle);
+    
+    bind(_textureUnit);
+    
+    glTexParameteri(m_target, GL_TEXTURE_MIN_FILTER, m_options.m_filtering.m_min);
+    glTexParameteri(m_target, GL_TEXTURE_MAG_FILTER, m_options.m_filtering.m_mag);
+    
+    glTexParameteri(m_target, GL_TEXTURE_WRAP_S, m_options.m_wrapping.m_wraps);
+    glTexParameteri(m_target, GL_TEXTURE_WRAP_T, m_options.m_wrapping.m_wrapt);
+}
+
 void Texture::update(GLuint _textureUnit) {
 
     if (!m_dirty) {
@@ -105,21 +118,13 @@ void Texture::update(GLuint _textureUnit) {
     }
 
     if (m_glHandle == 0) { // textures hasn't been initialized yet, generate it
-
-        glGenTextures(1, &m_glHandle);
-    
-        bind(_textureUnit);
-
-        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, m_options.m_filtering.m_min);
-        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, m_options.m_filtering.m_mag);
-
-        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, m_options.m_wrapping.m_wraps);
-        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, m_options.m_wrapping.m_wrapt);
+        
+        generate(_textureUnit);
         
         // if no data make sure texture is 0-filled at creation (useful for transform lookup)
         if (m_data.size() == 0) {
             m_data.resize(m_width * m_height);
-            memset(m_data.data(), 0, m_data.size());
+            std::memset(m_data.data(), 0, m_data.size());
         }
     } else {
         
@@ -130,7 +135,7 @@ void Texture::update(GLuint _textureUnit) {
 
     // resize or push data
     if (data || m_shouldResize) {
-        glTexImage2D(GL_TEXTURE_2D, 0, m_options.m_internalFormat, m_width, m_height, 0, m_options.m_format, GL_UNSIGNED_BYTE, data);
+        glTexImage2D(m_target, 0, m_options.m_internalFormat, m_width, m_height, 0, m_options.m_format, GL_UNSIGNED_BYTE, data);
         m_shouldResize = false;
     }
 
@@ -143,7 +148,7 @@ void Texture::update(GLuint _textureUnit) {
     while (m_subData.size() > 0) {
         const TextureSubData* subData = m_subData.front().get();
 
-        glTexSubImage2D(GL_TEXTURE_2D, 0, subData->m_xoff, subData->m_yoff, subData->m_width, subData->m_height,
+        glTexSubImage2D(m_target, 0, subData->m_xoff, subData->m_yoff, subData->m_width, subData->m_height,
                         m_options.m_format, GL_UNSIGNED_BYTE, subData->m_data->data());
 
         m_subData.pop();
