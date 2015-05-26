@@ -7,6 +7,7 @@
 
 #include "slideZoom.h"
 #include "slideRot.h"
+#include "button.h"
 
 class Hud {
 public:
@@ -25,8 +26,9 @@ public:
 
     bool isInUse();
 
-    SlideRot m_rot;
-    SlideZoom m_zoom;
+    SlideRot    m_rot;
+    SlideZoom   m_zoom;
+    Button      m_center;
 
 private:
 

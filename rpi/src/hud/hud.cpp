@@ -11,6 +11,8 @@
 
 #include "tangram.h"
 
+#include "../gps.h"
+
 #define STRINGIFY(A) #A
 
 Hud::Hud(): m_selected(0), m_bCursor(false){
@@ -30,6 +32,9 @@ void Hud::init() {
 
     m_rot.set(getWindowWidth()*0.34625,getWindowHeight()*0.866667,getWindowWidth()*0.3125,getWindowHeight()*0.1);
     m_rot.init();
+
+    m_center.set(getWindowWidth()*0.93625,getWindowHeight()*0.8958,getWindowHeight()*0.0708,getWindowHeight()*0.0708);
+    m_center.init();
 
     if (m_bCursor){
         std::string frag =
@@ -65,7 +70,17 @@ void Hud::init() {
 }
 
 void Hud::cursorClick(float _x, float _y, int _button){
-    if (m_rot.inside(_x,_y)){
+
+    if (m_center.inside(_x,_y)){
+        float lat = 0.0;
+        float lon = 0.0; 
+        if (getLocation(&lat,&lon)){
+            // GO TO CENTER
+            std::cout << "GO TO " << lat << " lat, " << lon << " lon"<< std::endl;
+        } else {
+            std::cout << "NO FIX GPS" << std::endl;  
+        }
+    } else if (m_rot.inside(_x,_y)){
         m_selected = 1;
     } else if (m_zoom.inside(_x,_y)){
         m_selected = 2;
@@ -124,6 +139,9 @@ void Hud::draw(){
     // Rotation
     m_rot.angle = Tangram::getRotation();
     m_rot.draw();
+
+    // Center button
+    m_center.draw();
 
     glDisable(GL_BLEND);
     glEnable(GL_DEPTH_TEST);

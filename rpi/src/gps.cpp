@@ -145,7 +145,7 @@ void getLocation(int _port_fd, float *lat, float *lon){
     }
 }
 
-void getLocation(float *lat, float *lon){
+bool getLocation(float *lat, float *lon){
     static int fd = -1;
 
     if (fd<0) {
@@ -154,5 +154,12 @@ void getLocation(float *lat, float *lon){
 
     if (fd>=0) {
         getLocation(fd,lat,lon);
+        if (*lat == 0.0 && *lon == 0.0){
+            return false;
+        } else {
+            return true;
+        }
+    } else {
+        return false;
     }
 }

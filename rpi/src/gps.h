@@ -1,3 +1,3 @@
 #pragma once
 
-void getLocation(float *lat, float *lon);
+bool getLocation(float *lat, float *lon);
