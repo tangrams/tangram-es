@@ -82,7 +82,8 @@ protected:
     /* Draw mode to pass into <VboMesh>es created with this style */
     GLenum m_drawMode;
 
-    /* Set of strings defining which data layers this style applies to */
+    /* Set of strings defining which data layers this style applies to, 
+     * along with the style parameters applied specifically to these data layers*/
     std::vector< std::pair<std::string, StyleParams> > m_layers;
     
     /* Create <VertexLayout> corresponding to this style */
