@@ -121,15 +121,18 @@ namespace Tangram {
     }
 
     void update(float _dt) {
-
+    
         g_time += _dt;
 
         if (m_view) {
+            
             m_view->update();
 
             m_tileManager->updateTileSet();
 
-            if(m_view->changedOnLastUpdate() || m_tileManager->hasTileSetChanged()) {
+            if(m_view->changedOnLastUpdate() || m_tileManager->hasTileSetChanged() || Label::s_needUpdate) {
+                Label::s_needUpdate = false;
+                
                 for (const auto& mapIDandTile : m_tileManager->getVisibleTiles()) {
                     const std::shared_ptr<MapTile>& tile = mapIDandTile.second;
                     tile->update(_dt, *m_view);
@@ -153,11 +156,15 @@ namespace Tangram {
                     }
                 }
             }
+            
+            if (Label::s_needUpdate) {
+                requestRender();
+            }
         }
         
         if(m_scene) {
             // Update lights and styles
-        }   
+        }
     }
 
     void render() {
@@ -185,6 +192,22 @@ namespace Tangram {
         m_skybox->draw(*m_view);
         
         while (Error::hadGlError("Tangram::render()")) {}
+    }
+
+    void setViewPosition(double _lon, double _lat) {
+        
+        glm::dvec2 meters = m_view->getMapProjection().LonLatToMeters({ _lon, _lat});
+        m_view->setPosition(meters.x, meters.y);
+
+    }
+
+    void getViewPosition(double& _lon, double& _lat) {
+
+        glm::dvec2 meters(m_view->getPosition().x, m_view->getPosition().y);
+        glm::dvec2 degrees = m_view->getMapProjection().MetersToLonLat(meters);
+        _lon = degrees.x;
+        _lat = degrees.y;
+        
     }
 
     void setPixelScale(float _pixelsPerPoint) {
