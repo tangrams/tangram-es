@@ -17,6 +17,7 @@
 #include "util/error.h"
 #include "stl_util.hpp"
 #include "util/tileID.h"
+#include "util/skybox.h"
 
 namespace Tangram {
 
@@ -26,7 +27,8 @@ namespace Tangram {
     std::shared_ptr<LabelContainer> m_labelContainer;
     std::shared_ptr<FontContext> m_ftContext;
     std::shared_ptr<DebugStyle> m_debugStyle;
-
+    std::shared_ptr<Skybox> m_skybox;
+    
     static float g_time = 0.0;
     static unsigned long g_flags = 0;
 
@@ -42,6 +44,9 @@ namespace Tangram {
         // Create a scene object
         if (!m_scene) {
             m_scene = std::make_shared<Scene>();
+
+            m_skybox = std::shared_ptr<Skybox>(new Skybox("cubemap.png"));
+            m_skybox->init();
         }
 
         // Create a tileManager
@@ -159,7 +164,7 @@ namespace Tangram {
         
         // Set up openGL for new frame
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-
+        
         // Loop over all styles
         for (const auto& style : m_scene->getStyles()) {
             style->setupFrame(m_view, m_scene);
@@ -177,6 +182,8 @@ namespace Tangram {
             style->teardown();
         }
 
+        m_skybox->draw(*m_view);
+        
         while (Error::hadGlError("Tangram::render()")) {}
     }
 
