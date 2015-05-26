@@ -16,10 +16,6 @@
 
 using namespace YAML;
 
-void loadSources(Node sources, TileManager& tileManager);
-void loadLights(Node lights, Scene& scene);
-void loadCameras(Node cameras, View& view);
-void loadLayers(Node layers, Scene& scene, TileManager& tileManager);
 
 void SceneLoader::loadScene(const std::string& _file, Scene& _scene, TileManager& _tileManager, View& _view) {
 
@@ -60,7 +56,7 @@ glm::vec3 parseVec3(const Node& node) {
     return vec;
 }
 
-void loadSources(Node sources, TileManager& tileManager) {
+void SceneLoader::loadSources(Node sources, TileManager& tileManager) {
     
     if(!sources) {
         logMsg("Warning: No source defined in the yaml scene configuration.\n");
@@ -91,7 +87,7 @@ void loadSources(Node sources, TileManager& tileManager) {
     
 }
 
-void loadLights(Node lights, Scene& scene) {
+void SceneLoader::loadLights(Node lights, Scene& scene) {
 
     if (!lights) { 
         
@@ -210,7 +206,7 @@ void loadLights(Node lights, Scene& scene) {
 
 }
 
-void loadCameras(Node cameras, View& view) {
+void SceneLoader::loadCameras(Node cameras, View& view) {
     
     // To correctly match the behavior of the webGL library we'll need a place to store multiple view instances.
     // Since we only have one global view right now, we'll just apply the settings from the first active camera we find.
@@ -276,7 +272,7 @@ void loadCameras(Node cameras, View& view) {
     
 }
 
-void loadLayers(Node layers, Scene& scene, TileManager& tileManager) {
+void SceneLoader::loadLayers(Node layers, Scene& scene, TileManager& tileManager) {
 
     if (!layers) {
         return;

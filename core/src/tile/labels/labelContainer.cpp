@@ -8,19 +8,26 @@ LabelContainer::~LabelContainer() {
     m_pendingLabelUnits.clear();
 }
 
+int LabelContainer::LODDiscardFunc(float _maxZoom, float _zoom) {
+    return (int) MIN(floor(((log(-_zoom + (_maxZoom + 2)) / log(_maxZoom + 2) * (_maxZoom )) * 0.5)), MAX_LOD);
+}
+
 bool LabelContainer::addLabel(MapTile& _tile, const std::string& _styleName, LabelTransform _transform, std::string _text, Label::Type _type) {
-    
     auto currentBuffer = m_ftContext->getCurrentBuffer();
+
+    if ( (m_currentZoom - _tile.getID().z) > LODDiscardFunc(View::s_maxZoom, m_currentZoom)) {
+        return false;
+    }
 
     if (currentBuffer) {
         fsuint textID = currentBuffer->genTextID();
         std::shared_ptr<Label> l(new Label(_transform, _text, textID, _type));
-        
+
         l->rasterize(currentBuffer);
-        l->update(m_viewProjection * _tile.getModelMatrix(), m_screenSize, 0);
+        l->update(m_view->getViewProjectionMatrix() * _tile.getModelMatrix(), m_screenSize, 0);
         std::unique_ptr<TileID> tileID(new TileID(_tile.getID()));
         _tile.addLabel(_styleName, l);
-        
+
         // lock concurrent collection
         {
             std::lock_guard<std::mutex> lock(m_mutex);
@@ -34,6 +41,8 @@ bool LabelContainer::addLabel(MapTile& _tile, const std::string& _styleName, Lab
 }
 
 void LabelContainer::updateOcclusions() {
+    m_currentZoom = m_view->getZoom();
+
     // merge pending labels from threads
     m_labelUnits.reserve(m_labelUnits.size() + m_pendingLabelUnits.size());
     {
@@ -44,42 +53,42 @@ void LabelContainer::updateOcclusions() {
 
     std::set<std::pair<Label*, Label*>> occlusions;
     std::vector<isect2d::AABB> aabbs;
-    
+
     for(int i = 0; i < m_labelUnits.size(); i++) {
         auto& labelUnit = m_labelUnits[i];
         auto label = labelUnit.getWeakLabel();
-        
+
         if (label == nullptr) {
             m_labelUnits[i--] = std::move(m_labelUnits[m_labelUnits.size() - 1]);
             m_labelUnits.pop_back();
             continue;
         }
-        
+
         if (!label->isVisible() || label->isOutOfScreen() || label->getType() == Label::Type::DEBUG) {
             continue;
         }
-        
+
         isect2d::AABB aabb = label->getAABB();
         aabb.m_userData = (void*) label.get();
         aabbs.push_back(aabb);
     }
-    
+
     // broad phase
     auto pairs = intersect(aabbs);
-    
+
     for (auto pair : pairs) {
         const auto& aabb1 = aabbs[pair.first];
         const auto& aabb2 = aabbs[pair.second];
-        
+
         auto l1 = (Label*) aabb1.m_userData;
         auto l2 = (Label*) aabb2.m_userData;
-        
+
         // narrow phase
         if (intersect(l1->getOBB(), l2->getOBB())) {
             occlusions.insert({ l1, l2 });
         }
     }
-    
+
     // no priorities, only occlude one of the two occluded label
     for (auto& pair : occlusions) {
         if(pair.second->isVisible()) {
