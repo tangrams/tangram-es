@@ -9,47 +9,39 @@ namespace Tangram {
 
     struct Value {
 
-        union {
-            std::string str;
-            float num;
-        };
+        float num;
+        std::string str;
 
         virtual bool equals(float f) const = 0;
         virtual bool equals(const std::string& s) const = 0;
         virtual bool equals(const Value& v) const = 0;
 
-        Value(std::string s) : str(s) {}
-        Value(float val) : num(val) {}
+        virtual ~Value() {};
 
-        virtual ~Value() {}
+        Value(float n) : num(n) {}
+        Value(const std::string& s) : str(s) {}
 
     };
 
-    struct NumValue : Value {
+    struct NumValue : public Value {
 
-        NumValue(float val) : Value(val) {}
+        NumValue(float n) : Value(n) {}
+        ~NumValue() {}
 
         virtual bool equals(const std::string& s) const override { return false; }
         virtual bool equals(float f) const override { return num == f; }
         virtual bool equals(const Value& v) const override { return v.equals(num); }
 
-        virtual ~NumValue() {}
-
     };
 
-    struct StrValue : Value {
+    struct StrValue : public Value {
 
-        StrValue(std::string s) : Value(s) {}
+        StrValue(const std::string& s) : Value(s) {}
+        ~StrValue() {}
 
         virtual bool equals(const std::string& s) const override { return str == s; }
         virtual bool equals(float f) const override { return false; }
         virtual bool equals(const Value& v) const override { return v.equals(str); }
-
-        virtual ~StrValue() {
-            // Need to call std::string destructor explicitly, however this is a bug in clang implementation and works in
-            // gcc (refer https://llvm.org/bugs/show_bug.cgi?id=12350)
-            // str.std::string::~string();
-        }
 
     };
 
@@ -60,6 +52,7 @@ namespace Tangram {
     struct Filter {
 
         virtual bool eval(const Feature& f, const Context& c) const = 0;
+        virtual ~Filter() {};
 
     };
 
@@ -67,10 +60,14 @@ namespace Tangram {
 
         std::vector<Filter*> operands;
 
+        Operator(const std::vector<Filter*>& ops) : operands(ops) {}
+        ~Operator() { for (auto* f : operands) { delete f; } }
+
     };
 
     struct Any : public Operator {
 
+        Any(const std::vector<Filter*>& ops) : Operator(ops) {}
         virtual bool eval(const Feature& feat, const Context& ctx) const override {
             for (const Filter* filt : operands) {
                 if (filt->eval(feat, ctx)) { return true; }
@@ -82,6 +79,7 @@ namespace Tangram {
 
     struct All : public Operator {
 
+        All(const std::vector<Filter*>& ops) : Operator(ops) {}
         virtual bool eval(const Feature& feat, const Context& ctx) const override {
             for (const Filter* filt : operands) {
                 if (!filt->eval(feat, ctx)) { return false; }
@@ -93,6 +91,7 @@ namespace Tangram {
 
     struct None : public Operator {
 
+        None(const std::vector<Filter*>& ops) : Operator(ops) {}
         virtual bool eval(const Feature& feat, const Context& ctx) const override {
             for (const Filter* filt : operands) {
                 if (filt->eval(feat, ctx)) { return false; }
@@ -106,11 +105,17 @@ namespace Tangram {
 
         std::string key;
 
+        Predicate(const std::string& k) : key(k) {}
+        virtual ~Predicate() {}
+
     };
 
     struct Equality : public Predicate {
 
         ValueList values;
+
+        Equality(const std::string& k, const ValueList& v) : Predicate(k), values(v) {}
+        ~Equality() { for (auto* v : values) { delete v; } }
 
         virtual bool eval(const Feature& feat, const Context& ctx) const override {
 
@@ -142,6 +147,8 @@ namespace Tangram {
 
         float min = -std::numeric_limits<float>::infinity();
         float max = +std::numeric_limits<float>::infinity();
+
+        Range(const std::string& k, float mn, float mx) : Predicate(k), min (mn), max(mx) {}
 
         virtual bool eval(const Feature& feat, const Context& ctx) const override {
 
