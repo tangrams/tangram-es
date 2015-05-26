@@ -302,12 +302,12 @@ void SceneLoader::loadLayers(Node layers, Scene& scene, TileManager& tileManager
 
             StyleParams params;
             std::string styleName = groupIt->first.as<std::string>();
-            Node rules = groupIt->second;
+            Node styleProps = groupIt->second;
 
-            Node order = rules["order"];
+            Node order = styleProps["order"];
             if (order) { params.order = order.as<float>(); }
 
-            Node color = rules["color"];
+            Node color = styleProps["color"];
             if (color) {
                 glm::vec4 c = parseVec4(color);
                 params.color = (uint32_t(c.a * 255) << 24) +
@@ -317,10 +317,10 @@ void SceneLoader::loadLayers(Node layers, Scene& scene, TileManager& tileManager
                 // TODO: color helper funtions
             }
 
-            Node width = rules["width"];
+            Node width = styleProps["width"];
             if (width) { params.width = width.as<float>(); }
             
-            Node cap = rules["cap"];
+            Node cap = styleProps["cap"];
             if (cap) {
                 std::string capString = cap.as<std::string>();
                 if (capString == "butt") { params.line.cap = CapTypes::BUTT; }
@@ -328,7 +328,7 @@ void SceneLoader::loadLayers(Node layers, Scene& scene, TileManager& tileManager
                 else if (capString == "round") { params.line.cap = CapTypes::ROUND; }
             }
             
-            Node join = rules["join"];
+            Node join = styleProps["join"];
             if (join) {
                 std::string joinString = join.as<std::string>();
                 if (joinString == "bevel") { params.line.join = JoinTypes::BEVEL; }
@@ -336,7 +336,7 @@ void SceneLoader::loadLayers(Node layers, Scene& scene, TileManager& tileManager
                 else if (joinString == "round") { params.line.join = JoinTypes::ROUND; }
             }
             
-            Node outline = rules["outline"];
+            Node outline = styleProps["outline"];
             if (outline) {
                 
                 params.outline.on = true;
