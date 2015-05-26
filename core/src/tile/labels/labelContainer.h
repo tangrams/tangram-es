@@ -54,9 +54,9 @@ public:
 
     /*
      * Creates a label for and associate it with the current processed <MapTile> TileID for a specific syle name
-     * Returns nullptr if no text buffer are currently used by the FontContext
+     * Returns true if label was created
      */
-    bool addLabel(MapTile& _tile, const std::string& _styleName, LabelTransform _transform, std::string _text, Label::Type _type);
+    bool addLabel(MapTile& _tile, const std::string& _styleName, Label::Transform _transform, std::string _text, Label::Type _type);
 
     void setFontContext(std::shared_ptr<FontContext> _ftContext) { m_ftContext = _ftContext; }
 

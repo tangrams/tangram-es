@@ -12,7 +12,7 @@ int LabelContainer::LODDiscardFunc(float _maxZoom, float _zoom) {
     return (int) MIN(floor(((log(-_zoom + (_maxZoom + 2)) / log(_maxZoom + 2) * (_maxZoom )) * 0.5)), MAX_LOD);
 }
 
-bool LabelContainer::addLabel(MapTile& _tile, const std::string& _styleName, LabelTransform _transform, std::string _text, Label::Type _type) {
+bool LabelContainer::addLabel(MapTile& _tile, const std::string& _styleName, Label::Transform _transform, std::string _text, Label::Type _type) {
     auto currentBuffer = m_ftContext->getCurrentBuffer();
 
     if ( (m_currentZoom - _tile.getID().z) > LODDiscardFunc(View::s_maxZoom, m_currentZoom)) {
@@ -63,8 +63,8 @@ void LabelContainer::updateOcclusions() {
             m_labelUnits.pop_back();
             continue;
         }
-
-        if (!label->isVisible() || label->isOutOfScreen() || label->getType() == Label::Type::DEBUG) {
+        
+        if (!label->canOcclude()) {
             continue;
         }
 
@@ -91,8 +91,28 @@ void LabelContainer::updateOcclusions() {
 
     // no priorities, only occlude one of the two occluded label
     for (auto& pair : occlusions) {
-        if(pair.second->isVisible()) {
-            pair.first->setVisible(false);
+        if(!pair.first->occludedLastFrame()) {
+            if (pair.second->getState() == Label::State::WAIT_OCC) {
+                pair.second->setOcclusion(true);
+            }
+        }
+        if(!pair.second->occludedLastFrame()) {
+            if (pair.first->getState() == Label::State::WAIT_OCC) {
+                pair.first->setOcclusion(true);
+            }
+        }
+        
+        if(!pair.second->occludedLastFrame()) {
+            pair.first->setOcclusion(true);
+        }
+    }
+    
+    for(int i = 0; i < m_labelUnits.size(); i++) {
+        auto& labelUnit = m_labelUnits[i];
+        auto label = labelUnit.getWeakLabel();
+        
+        if (label != nullptr) {
+            label->occlusionSolved();
         }
     }
 }
