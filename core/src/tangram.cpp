@@ -8,8 +8,6 @@
 #include "platform.h"
 #include "tile/tileManager.h"
 #include "view/view.h"
-#include "style/polygonStyle.h"
-#include "style/polylineStyle.h"
 #include "style/textStyle.h"
 #include "style/debugTextStyle.h"
 #include "style/debugStyle.h"
@@ -47,56 +45,6 @@ namespace Tangram {
         if (!m_scene) {
             m_scene = std::make_shared<Scene>();
 
-            std::shared_ptr<Material> mat(new Material());
-            mat->setAmbientEnabled(true);
-            // mat->setDiffuse("sem.jpg",MappingType::SPHEREMAP);
-            mat->setSpecularEnabled(false);
-            //mat->setNormal("normals.jpg",MappingType::UV);
-            
-            // Load style(s); hard-coded for now
-            std::unique_ptr<Style> polyStyle(new PolygonStyle("Polygon"));
-            polyStyle->setLighting(LightingType::fragment);
-            polyStyle->addLayers({
-                "buildings",
-                "water",
-                "earth",
-                "landuse"
-            });
-            polyStyle->setMaterial(mat);
-            m_scene->addStyle(std::move(polyStyle));
-            
-            std::unique_ptr<Style> linesStyle(new PolylineStyle("Polyline"));
-            linesStyle->setLighting(LightingType::vertex);
-            linesStyle->addLayers({"roads"});
-            // linesStyle->setMaterial(mat);
-            m_scene->addStyle(std::move(linesStyle));
-
-            m_ftContext = std::make_shared<FontContext>();
-            m_ftContext->addFont("FiraSans-Medium.ttf", "FiraSans");
-            m_ftContext->addFont("FuturaStd-Condensed.ttf", "Futura");
-            m_labelContainer = LabelContainer::GetInstance();
-            m_labelContainer->setFontContext(m_ftContext);
-            m_labelContainer->setView(m_view);
-
-            std::unique_ptr<Style> textStyle0(new TextStyle("FiraSans", "Textstyle0", 15.0f, 0xF7F0E1, true, true));
-            textStyle0->addLayers({
-                "roads",
-                "places",
-                "pois"
-            });
-            m_scene->addStyle(std::move(textStyle0));
-            std::unique_ptr<Style> textStyle1(new TextStyle("Futura", "Textstyle1", 18.0f, 0x26241F, true, true));
-            textStyle1->addLayers({
-                "landuse",
-            });
-            m_scene->addStyle(std::move(textStyle1));
-            
-            std::unique_ptr<Style> debugTextStyle(new DebugTextStyle("FiraSans", "DebugTextStyle", 30.0f, 0xDC3522, true));
-            m_scene->addStyle(std::move(debugTextStyle));
-
-            std::unique_ptr<DebugStyle> debugStyle(new DebugStyle("Debug"));
-            m_scene->addStyle(std::move(debugStyle));
-            
             m_skybox = std::shared_ptr<Skybox>(new Skybox("cubemap.png"));
             m_skybox->init();
         }
@@ -112,6 +60,27 @@ namespace Tangram {
 
         SceneLoader loader;
         loader.loadScene("config.yaml", *m_scene, *m_tileManager, *m_view);
+        
+        // Hard-coded setup for stuff that isn't loaded through the config file yet
+        m_ftContext = std::make_shared<FontContext>();
+        m_ftContext->addFont("FiraSans-Medium.ttf", "FiraSans");
+        m_ftContext->addFont("FuturaStd-Condensed.ttf", "Futura");
+        m_labelContainer = LabelContainer::GetInstance();
+        m_labelContainer->setFontContext(m_ftContext);
+        m_labelContainer->setView(m_view);
+        
+        std::unique_ptr<Style> textStyle0(new TextStyle("FiraSans", "Textstyle0", 15.0f, 0xF7F0E1, true, true));
+        textStyle0->addLayer({ "roads", StyleParams() });
+        textStyle0->addLayer({ "places", StyleParams() });
+        textStyle0->addLayer({ "pois", StyleParams() });
+        m_scene->addStyle(std::move(textStyle0));
+        
+        std::unique_ptr<Style> textStyle1(new TextStyle("Futura", "Textstyle1", 18.0f, 0x26241F, true, true));
+        textStyle1->addLayer({ "landuse", StyleParams() });
+        m_scene->addStyle(std::move(textStyle1));
+        
+        std::unique_ptr<Style> debugTextStyle(new DebugTextStyle("FiraSans", "DebugTextStyle", 30.0f, 0xDC3522, true));
+        m_scene->addStyle(std::move(debugTextStyle));
 
         // Set up openGL state
         glDisable(GL_BLEND);

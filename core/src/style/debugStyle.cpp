@@ -59,19 +59,19 @@ void DebugStyle::addData(TileData &_data, MapTile &_tile, const MapProjection &_
     
 }
 
-void DebugStyle::buildPoint(Point &_point, std::string &_layer, Properties &_props, VboMesh &_mesh) const {
+void DebugStyle::buildPoint(Point &_point, StyleParams& _params, Properties &_props, VboMesh &_mesh) const {
     
     // No-op
     
 }
 
-void DebugStyle::buildLine(Line &_line, std::string &_layer, Properties &_props, VboMesh &_mesh) const {
+void DebugStyle::buildLine(Line &_line, StyleParams& _params, Properties &_props, VboMesh &_mesh) const {
     
     // No-op
     
 }
 
-void DebugStyle::buildPolygon(Polygon &_polygon, std::string &_layer, Properties &_props, VboMesh &_mesh) const {
+void DebugStyle::buildPolygon(Polygon &_polygon, StyleParams& _params, Properties &_props, VboMesh &_mesh) const {
     
     // No-op
     
