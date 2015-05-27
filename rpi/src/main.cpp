@@ -16,8 +16,6 @@
 #include "platform.h"
 
 #include <iostream>
-#include "hud/hud.h"
-Hud m_hud;
 
 #define KEY_ESC      113    // q
 #define KEY_ZOOM_IN  45     // - 
@@ -37,13 +35,6 @@ void setup();
 void newFrame();
 
 int main(int argc, char **argv){
-
-    for (int i = 1; i < argc ; i++){
-        if ( std::string(argv[i]) == "-m" ){
-            // bMouse = true;
-            m_hud.setDrawCursor(true);
-        }
-    }
     
     // Start OpenGL context
     initGL(argc, argv);
@@ -79,7 +70,7 @@ int main(int argc, char **argv){
 }
 
 void setup() {
-    m_hud.init();
+
 }
 
 void newFrame() {
@@ -96,8 +87,6 @@ void newFrame() {
 
     // Render        
     Tangram::render(); 
-
-    m_hud.draw();
 
     renderGL();
 }
@@ -138,23 +127,17 @@ void onMouseMove(float _x, float _y) {
 }
 
 void onMouseClick(float _x, float _y, int _button) {
-    m_hud.cursorClick(_x,_y,_button);
     requestRender();
 }
 
 void onMouseDrag(float _x, float _y, int _button) {
-
     if( _button == 1 ){
 
-        if (m_hud.isInUse()){
-            m_hud.cursorDrag(_x,_y,_button);
-        } else {
-            Tangram::handlePanGesture(  _x-getMouseVelX()*1.0, 
-                                        _y+getMouseVelY()*1.0, 
-                                        _x,
-                                        _y);
-        }
-        
+        Tangram::handlePanGesture(  _x-getMouseVelX()*1.0, 
+                                    _y+getMouseVelY()*1.0, 
+                                    _x,
+                                    _y);
+
     } else if( _button == 2 ){
         if ( getKeyPressed() == 'r') {
             float scale = -0.05;
@@ -174,11 +157,9 @@ void onMouseDrag(float _x, float _y, int _button) {
 }
 
 void onMouseRelease(float _x, float _y) {
-    m_hud.cursorRelease(_x,_y);
     requestRender();
 }
 
 void onViewportResize(int _newWidth, int _newHeight) {
-    Tangram::resize(_newWidth,_newHeight);
     requestRender();
 }
