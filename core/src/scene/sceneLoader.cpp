@@ -1,5 +1,6 @@
 #include "sceneLoader.h"
 
+#include <vector>
 #include "platform.h"
 #include "scene.h"
 #include "tileManager.h"
@@ -272,6 +273,126 @@ void SceneLoader::loadCameras(Node cameras, View& view) {
     
 }
 
+Tangram::Filter* SceneLoader::generateFilter(YAML::Node _filter) {
+
+    std::vector<Tangram::Filter*> filters;
+
+    for(YAML::const_iterator filtItr = _filter.begin(); filtItr != _filter.end(); ++filtItr) {
+
+        Tangram::Filter* filter;
+
+        if(filtItr->first.as<std::string>() == "not") {
+
+            filter = generateNoneFilter(_filter["not"]);
+
+        } else if (filtItr->first.as<std::string>() == "any") {
+
+            filter = generateAnyFilter(_filter["any"]);
+
+        } else if (filtItr->first.as<std::string>() == "all") {
+
+            filter = generateFilter(_filter["all"]);
+
+        } else {
+
+            std::string key = filtItr->first.as<std::string>();
+            filter = generatePredicate(_filter, key);
+
+        }
+
+        filters.push_back(filter);
+
+    }
+    if(filters.size() > 0) {
+        return (new Tangram::All(filters));
+    } else {
+        return nullptr;
+    }
+
+}
+
+Tangram::Filter* SceneLoader::generatePredicate(YAML::Node _filter, std::string _key) {
+    Node node = _filter[_key];
+
+    if(node.IsScalar()) {
+        try {
+            float value = node.as<float>();
+            return (new Tangram::Equality(_key, {new Tangram::NumValue(value)}));
+        } catch(const BadConversion& e) {
+            std::string value = node.as<std::string>();
+            return (new Tangram::Equality(_key, {new Tangram::StrValue(value)}));
+        }
+    } else if(node.IsSequence()) {
+        Tangram::ValueList values;
+        for(YAML::const_iterator valItr = node.begin(); valItr != node.end(); ++valItr) {
+            try {
+                float value = valItr->as<float>();
+                values.emplace_back(new Tangram::NumValue(value));
+            } catch(const BadConversion& e) {
+                std::string value = valItr->as<std::string>();
+                values.emplace_back(new Tangram::StrValue(value));
+            }
+        }
+        return (new Tangram::Equality(_key, std::move(values)));
+    } else if(node.IsMap()) {
+        float minVal = -std::numeric_limits<float>::infinity();
+        float maxVal = std::numeric_limits<float>::infinity();
+
+        for(YAML::const_iterator valItr = node.begin(); valItr != node.end(); ++valItr) {
+            if(valItr->first.as<std::string>() == "min") {
+                try {
+                    minVal = valItr->second.as<float>();
+                } catch(const BadConversion& e) {
+                    logMsg("Error: Badly formed filter.\tExpect a float value type, string found.\n");
+                    return nullptr;
+                }
+            } else if(valItr->first.as<std::string>() == "max") {
+                try {
+                    maxVal = valItr->second.as<float>();
+                } catch(const BadConversion& e) {
+                    logMsg("Error: Badly formed filter.\tExpect a float value type, string found.\n");
+                    return nullptr;
+                }
+            } else {
+                logMsg("Error: Badly formed Filter\n");
+                return nullptr;
+            }
+        }
+        return (new Tangram::Range(_key, minVal, maxVal));
+
+    } else {
+        logMsg("Error: Badly formed Filter\n");
+        return nullptr;
+    }
+
+}
+
+Tangram::Filter* SceneLoader::generateAnyFilter(YAML::Node _filter) {
+    std::vector<Tangram::Filter*> filters;
+
+    if(!_filter.IsSequence()) {
+        logMsg("Error: Badly formed filter. \"Any\" expects a list.\n");
+        return nullptr;
+    }
+    for(YAML::const_iterator filtItr = _filter.begin(); filtItr != _filter.end(); ++filtItr) {
+        filters.emplace_back(generateFilter(*filtItr));
+    }
+    return (new Tangram::Any(std::move(filters)));
+}
+
+Tangram::Filter* SceneLoader::generateNoneFilter(YAML::Node _filter) {
+    std::vector<Tangram::Filter*> filters;
+    if(! (_filter.IsSequence() || _filter.IsMap() )) {
+        logMsg("Error: Badly formed filter. \"None\" expects a list or an object.\n");
+        return nullptr;
+    }
+    for(YAML::const_iterator filtIter = _filter.begin(); filtIter != _filter.end(); ++filtIter) {
+        std::string key = filtIter->first.as<std::string>();
+        filters.emplace_back(generatePredicate(_filter, key));
+    }
+    return (new Tangram::None(std::move(filters)));
+}
+
 void SceneLoader::loadLayers(Node layers, Scene& scene, TileManager& tileManager) {
 
     if (!layers) {
@@ -282,7 +403,7 @@ void SceneLoader::loadLayers(Node layers, Scene& scene, TileManager& tileManager
     auto polygonStyle = std::unique_ptr<PolygonStyle>(new PolygonStyle("polygons"));
     auto polylineStyle = std::unique_ptr<PolylineStyle>(new PolylineStyle("lines"));
     auto debugStyle = std::unique_ptr<DebugStyle>(new DebugStyle("debug"));
-    
+
     // TODO: configure style properties in styles block
     polygonStyle->setLighting(LightingType::vertex);
     polylineStyle->setLighting(LightingType::vertex);
@@ -294,6 +415,7 @@ void SceneLoader::loadLayers(Node layers, Scene& scene, TileManager& tileManager
         Node data = layerIt->second["data"];
 
         // TODO: handle data.source
+
 
         Node dataLayer = data["layer"];
         if (dataLayer) { name = dataLayer.as<std::string>(); }
@@ -319,7 +441,7 @@ void SceneLoader::loadLayers(Node layers, Scene& scene, TileManager& tileManager
 
             Node width = styleProps["width"];
             if (width) { params.width = width.as<float>(); }
-            
+
             Node cap = styleProps["cap"];
             if (cap) {
                 std::string capString = cap.as<std::string>();
@@ -327,7 +449,7 @@ void SceneLoader::loadLayers(Node layers, Scene& scene, TileManager& tileManager
                 else if (capString == "sqaure") { params.line.cap = CapTypes::SQUARE; }
                 else if (capString == "round") { params.line.cap = CapTypes::ROUND; }
             }
-            
+
             Node join = styleProps["join"];
             if (join) {
                 std::string joinString = join.as<std::string>();
@@ -335,12 +457,12 @@ void SceneLoader::loadLayers(Node layers, Scene& scene, TileManager& tileManager
                 else if (joinString == "miter") { params.line.join = JoinTypes::MITER; }
                 else if (joinString == "round") { params.line.join = JoinTypes::ROUND; }
             }
-            
+
             Node outline = styleProps["outline"];
             if (outline) {
-                
+
                 params.outline.on = true;
-                
+
                 Node color = outline["color"];
                 if (color) {
                     glm::vec4 c = parseVec4(color);
@@ -350,10 +472,10 @@ void SceneLoader::loadLayers(Node layers, Scene& scene, TileManager& tileManager
                     (uint32_t(c.r * 255));
                     // TODO: color helper funtions
                 }
-                
+
                 Node width = outline["width"];
                 if (width) { params.outline.width = width.as<float>(); }
-                
+
                 Node cap = outline["cap"];
                 if (cap) {
                     std::string capString = cap.as<std::string>();
@@ -361,7 +483,7 @@ void SceneLoader::loadLayers(Node layers, Scene& scene, TileManager& tileManager
                     else if (capString == "sqaure") { params.outline.line.cap = CapTypes::SQUARE; }
                     else if (capString == "round") { params.outline.line.cap = CapTypes::ROUND; }
                 }
-                
+
                 Node join = outline["join"];
                 if (join) {
                     std::string joinString = join.as<std::string>();
@@ -369,7 +491,7 @@ void SceneLoader::loadLayers(Node layers, Scene& scene, TileManager& tileManager
                     else if (joinString == "miter") { params.outline.line.join = JoinTypes::MITER; }
                     else if (joinString == "round") { params.outline.line.join = JoinTypes::ROUND; }
                 }
-                
+
             }
 
             // match to built-in styles
@@ -390,5 +512,5 @@ void SceneLoader::loadLayers(Node layers, Scene& scene, TileManager& tileManager
     scene.addStyle(std::move(debugStyle));
 
     // tileManager isn't used yet, but we'll need it soon to get the list of data sources
-    
+
 }
