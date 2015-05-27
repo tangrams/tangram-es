@@ -1,31 +1,34 @@
-all: android osx osx-xcode ios
+all: android osx ios
 
 .PHONY: clean
 .PHONY: clean-android
 .PHONY: clean-osx
-.PHONY: clean-osx-xcode
+.PHONY: clean-xcode
 .PHONY: clean-ios
 .PHONY: clean-rpi
 .PHONY: clean-linux
 .PHONY: android
 .PHONY: osx
-.PHONY: osx-xcode
+.PHONY: xcode
 .PHONY: ios
+.PHONY: ios-sim
 .PHONY: rpi
 .PHONY: linux
 .PHONY: check-ndk
 .PHONY: cmake-osx
-.PHONY: cmake-osx-xcode
+.PHONY: cmake-xcode
 .PHONY: cmake-android
 .PHONY: cmake-ios
+.PHONY: cmake-ios-sim
 .PHONY: cmake-rpi
 .PHONY: cmake-linux
 .PHONY: install-android
 
 ANDROID_BUILD_DIR = build/android
 OSX_BUILD_DIR = build/osx
-OSX_XCODE_BUILD_DIR = build/osx-xcode
+OSX_XCODE_BUILD_DIR = build/xcode
 IOS_BUILD_DIR = build/ios
+IOS_SIM_BUILD_DIR = build/ios-sim
 RPI_BUILD_DIR = build/rpi
 LINUX_BUILD_DIR = build/linux
 TESTS_BUILD_DIR = build/tests
@@ -45,10 +48,6 @@ ifndef ANDROID_API_LEVEL
 	ANDROID_API_LEVEL = android-19
 endif
 
-ifndef IOS_PLATFORM
-	IOS_PLATFORM = SIMULATOR
-endif
-
 UNIT_TESTS_CMAKE_PARAMS = \
 	-DUNIT_TESTS=1
 
@@ -62,7 +61,6 @@ ANDROID_CMAKE_PARAMS = \
 
 IOS_CMAKE_PARAMS = \
 	-DPLATFORM_TARGET=ios \
-	-DIOS_PLATFORM=${IOS_PLATFORM} \
 	-DCMAKE_TOOLCHAIN_FILE=${TOOLCHAIN_DIR}/iOS.toolchain.cmake \
 	-G Xcode
 
@@ -79,7 +77,7 @@ RPI_CMAKE_PARAMS = \
 LINUX_CMAKE_PARAMS = \
 	-DPLATFORM_TARGET=linux
 
-clean: clean-android clean-osx clean-ios clean-rpi clean-tests clean-osx-xcode clean-linux
+clean: clean-android clean-osx clean-ios clean-rpi clean-tests clean-xcode clean-linux
 
 clean-android:
 	@cd android/ && \
@@ -99,7 +97,7 @@ clean-rpi:
 clean-linux:
 	rm -rf ${LINUX_BUILD_DIR}
 
-clean-osx-xcode:
+clean-xcode:
 	rm -rf ${OSX_XCODE_BUILD_DIR}
 
 clean-tests:
@@ -129,17 +127,17 @@ osx: ${OSX_BUILD_DIR}/Makefile
 
 ${OSX_BUILD_DIR}/Makefile: cmake-osx
 
-osx-xcode: cmake-osx-xcode ${OSX_XCODE_BUILD_DIR}
+xcode: ${OSX_XCODE_BUILD_DIR}/${OSX_XCODE_PROJ}
 	xcodebuild -target ${OSX_TARGET} -project ${OSX_XCODE_BUILD_DIR}/${OSX_XCODE_PROJ}
 
-cmake-osx-xcode:
-ifeq ($(wildcard ${OSX_XCODE_BUILD_DIR}/${OSX_XCODE_PROJ}/.*),)
+${OSX_XCODE_BUILD_DIR}/${OSX_XCODE_PROJ}: cmake-osx-xcode
+
+cmake-xcode:
 	@mkdir -p ${OSX_XCODE_BUILD_DIR} 
 	@cd ${OSX_XCODE_BUILD_DIR} && \
 	cmake ../.. ${DARWIN_XCODE_CMAKE_PARAMS}
-endif
 
-cmake-osx: 
+cmake-osx:
 	@mkdir -p ${OSX_BUILD_DIR} 
 	@cd ${OSX_BUILD_DIR} && \
 	cmake ../.. ${DARWIN_CMAKE_PARAMS}
@@ -150,11 +148,19 @@ ios: ${IOS_BUILD_DIR}/${IOS_XCODE_PROJ}
 ${IOS_BUILD_DIR}/${IOS_XCODE_PROJ}: cmake-ios
 
 cmake-ios:
-ifeq ($(wildcard ${IOS_BUILD_DIR}/${IOS_XCODE_PROJ}/.*),)
 	@mkdir -p ${IOS_BUILD_DIR}
 	@cd ${IOS_BUILD_DIR} && \
 	cmake ../.. ${IOS_CMAKE_PARAMS}
-endif
+
+ios-sim: ${IOS_SIM_BUILD_DIR}/${IOS_XCODE_PROJ}
+	xcodebuild -target ${IOS_TARGET} -project ${IOS_SIM_BUILD_DIR}/${IOS_XCODE_PROJ}
+
+${IOS_SIM_BUILD_DIR}/${IOS_XCODE_PROJ}: cmake-ios-sim
+
+cmake-ios-sim:
+	@mkdir -p ${IOS_SIM_BUILD_DIR}
+	@cd ${IOS_SIM_BUILD_DIR} && \
+	cmake ../.. ${IOS_CMAKE_PARAMS} -DIOS_PLATFORM=SIMULATOR
 
 rpi: cmake-rpi
 	@cd ${RPI_BUILD_DIR} && \

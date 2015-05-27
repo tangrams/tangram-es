@@ -31,6 +31,12 @@ namespace Tangram {
     // Set the values of the arguments to the position of the map view in degrees longitude and latitude
     void getViewPosition(double& _lon, double& _lat);
 
+    // Get the counter-clockwise rotation of the view in radians; 0 corresponds to North pointing up
+    float getViewRotation();
+    
+    // Get the fractional zoom level of the view
+    float getViewZoom();
+
     // Invalidate and re-create all OpenGL resources
     void onContextDestroyed();
 

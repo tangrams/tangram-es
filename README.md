@@ -56,7 +56,7 @@ cd build/linux/bin/ && ./tangram
 For running on the iOS simulator, generate and compile an XCode project:
 
 ```bash
-make ios
+make ios-sim
 ```
 
 Then just open the Xcode project and run/debug from there: 
@@ -73,7 +73,7 @@ For running on iOS devices you will need an iOS developer account, a valid code 
 First generate an XCode project without compiling:
 
 ```bash
-make cmake-ios IOS_PLATFORM=OS
+make cmake-ios
 ```
 
 Then open the Xcode project and set up your developer account information to run on a device:
