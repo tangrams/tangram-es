@@ -25,6 +25,12 @@ namespace Tangram {
     // Release resources and shut down renderer
     void teardown();
 
+    // Set the position of the map view in degrees longitude and latitude
+    void setViewPosition(double _lon, double _lat);
+
+    // Set the values of the arguments to the position of the map view in degrees longitude and latitude
+    void getViewPosition(double& _lon, double& _lat);
+
     // Invalidate and re-create all OpenGL resources
     void onContextDestroyed();
 

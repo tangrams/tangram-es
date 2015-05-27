@@ -11,6 +11,8 @@
 #include "util/mapProjection.h"
 #include "util/tileID.h"
 
+#define MAX_LOD 6
+
 /* ViewModule
  * 1. Stores a representation of the current view into the map world
  * 2. Determines which tiles are visible in the current view

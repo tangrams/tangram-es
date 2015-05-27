@@ -112,7 +112,7 @@ private:
 
     float       m_shininess = .2f;
     bool        m_bEmission = false;
-    bool        m_bAmbient = false;
+    bool        m_bAmbient = true;
     bool        m_bDiffuse = true;
     bool        m_bSpecular = false;
 };

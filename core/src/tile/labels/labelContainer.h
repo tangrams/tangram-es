@@ -4,6 +4,7 @@
 #include "util/tileID.h"
 #include "text/fontContext.h"
 #include "isect2d.h"
+#include "view/view.h"
 #include <memory>
 #include <vector>
 #include <set>
@@ -12,25 +13,25 @@
 class MapTile;
 
 struct LabelUnit {
-    
+
 private:
     std::weak_ptr<Label> m_label;
-    
+
 public:
     std::unique_ptr<TileID> m_tileID;
     std::string m_styleName;
-    
+
     LabelUnit(std::shared_ptr<Label>& _label, std::unique_ptr<TileID>& _tileID, const std::string& _styleName) : m_label(std::move(_label)), m_tileID(std::move(_tileID)), m_styleName(_styleName) {}
-    
+
     LabelUnit(LabelUnit&& _other) : m_label(std::move(_other.m_label)), m_tileID(std::move(_other.m_tileID)), m_styleName(_other.m_styleName) {}
-    
+
     LabelUnit& operator=(LabelUnit&& _other) {
         m_label = std::move(_other.m_label);
         m_tileID = std::move(_other.m_tileID);
         m_styleName = std::move(_other.m_styleName);
         return *this;
     }
-    
+
     // Could return a null pointer
     std::shared_ptr<Label> getWeakLabel() { return m_label.lock(); }
 };
@@ -53,9 +54,9 @@ public:
 
     /*
      * Creates a label for and associate it with the current processed <MapTile> TileID for a specific syle name
-     * Returns nullptr if no text buffer are currently used by the FontContext
+     * Returns true if label was created
      */
-    bool addLabel(MapTile& _tile, const std::string& _styleName, LabelTransform _transform, std::string _text, Label::Type _type);
+    bool addLabel(MapTile& _tile, const std::string& _styleName, Label::Transform _transform, std::string _text, Label::Type _type);
 
     void setFontContext(std::shared_ptr<FontContext> _ftContext) { m_ftContext = _ftContext; }
 
@@ -63,12 +64,14 @@ public:
     const std::shared_ptr<FontContext>& getFontContext() { return m_ftContext; }
 
     void updateOcclusions();
-    
-    void setViewProjectionMatrix(glm::mat4 _viewProjection) { m_viewProjection = _viewProjection; }
-    
+
+    void setView(std::shared_ptr<View> _view) { m_view = _view; }
+
     void setScreenSize(int _width, int _height) { m_screenSize = glm::vec2(_width, _height); }
 
 private:
+
+    int LODDiscardFunc(float _maxZoom, float _zoom);
 
     LabelContainer();
     std::vector<LabelUnit> m_labelUnits;
@@ -76,10 +79,11 @@ private:
 
     // reference to the <FontContext>
     std::shared_ptr<FontContext> m_ftContext;
-    
+
     std::mutex m_mutex;
-    
-    glm::mat4 m_viewProjection;
+
     glm::vec2 m_screenSize;
+    std::shared_ptr<View> m_view;
+    float m_currentZoom;
 
 };

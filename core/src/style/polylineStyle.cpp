@@ -32,79 +32,79 @@ void PolylineStyle::constructShaderProgram() {
     m_shaderProgram->setSourceStrings(fragShaderSrcStr, vertShaderSrcStr);
 }
 
-void PolylineStyle::buildPoint(Point& _point, std::string& _layer, Properties& _props, VboMesh& _mesh) const {
+void PolylineStyle::buildPoint(Point& _point, StyleParams& _params, Properties& _props, VboMesh& _mesh) const {
     // No-op
 }
 
-void PolylineStyle::buildLine(Line& _line, std::string& _layer, Properties& _props, VboMesh& _mesh) const {
+void PolylineStyle::buildLine(Line& _line, StyleParams& _params, Properties& _props, VboMesh& _mesh) const {
     std::vector<PosNormEnormColVertex> vertices;
     std::vector<int> indices;
     std::vector<glm::vec3> points;
     std::vector<glm::vec2> texcoords;
     std::vector<glm::vec2> scalingVecs;
     
-    GLuint abgr = 0xff686868; // Default road color
-    GLuint abgrOutline = 0xff777777;
+    GLuint abgr = _params.color;
     
     if (Tangram::getDebugFlag(Tangram::DebugFlags::PROXY_COLORS)) {
         abgr = abgr << (int(_props.numericProps["zoom"]) % 6);
     }
     
-    GLfloat layer = sortKeyToLayer(_props.numericProps["sort_key"]) + 3;
+    GLfloat layer = _props.numericProps["sort_key"] + _params.order;
     
-    float halfWidth = 0.02;
-    
-    const std::string& kind = _props.stringProps["kind"];
-    
-    if (kind == "highway") {
-        halfWidth = 0.02;
-    } else if (kind == "major_road") {
-        halfWidth = 0.015;
-    } else if (kind == "minor_road") {
-        halfWidth = 0.01;
-    } else if (kind == "rail") {
-        halfWidth = 0.002;
-    } else if (kind == "path") {
-        halfWidth = 0.005;
-    }
+    float halfWidth = _params.width * .5f;
     
     PolyLineOutput lineOutput = { points, indices, scalingVecs, texcoords };
-    PolyLineOptions lineOptions = { CapTypes::ROUND, JoinTypes::MITER, halfWidth };
+    PolyLineOptions lineOptions = { _params.line.cap, _params.line.join, halfWidth };
     Builders::buildPolyLine(_line, lineOptions, lineOutput);
     
-    /*
-     * Populate polyline vertices
-     */
+    // populate polyline vertices
     for (size_t i = 0; i < points.size(); i++) {
         const glm::vec3& p = points[i];
         const glm::vec2& uv = texcoords[i];
         const glm::vec2& en = scalingVecs[i];
-        vertices.push_back({ p.x, p.y, p.z, uv.x, uv.y, en.x, en.y, 0.6f * halfWidth, abgr, layer });
+        vertices.push_back({ p.x, p.y, p.z, uv.x, uv.y, en.x, en.y, halfWidth, abgr, layer });
     }
     
-    /*
-     * Populate outline vertices
-     */
-    for (size_t i = 0; i < points.size(); i++) {
-        const glm::vec3& p = points[i];
-        const glm::vec2& uv = texcoords[i];
-        const glm::vec2& en = scalingVecs[i];
-        vertices.push_back({ p.x, p.y, p.z, uv.x, uv.y, en.x, en.y, halfWidth, abgrOutline, layer - 1.f });
-    }
-    
-    /*
-     * add outline indices with apt offset
-     */
-    size_t oldSize = indices.size();
-    indices.reserve(2 * oldSize);
-    for(size_t i = 0; i < oldSize; i++) {
-        indices.push_back(points.size() + indices[i]);
+    if (_params.outline.on) {
+
+        GLuint abgrOutline = _params.outline.color;
+        halfWidth += _params.outline.width * .5f;
+        
+        size_t outlineStart = 0;
+        
+        if (_params.outline.line.cap != _params.line.cap || _params.outline.line.join != _params.line.join) {
+            // need to re-triangulate with different cap and/or join
+            outlineStart = points.size();
+            lineOptions.cap = _params.outline.line.cap;
+            lineOptions.join = _params.outline.line.join;
+            Builders::buildPolyLine(_line, lineOptions, lineOutput);
+
+        } else {
+
+            // re-use indices from original line
+            size_t oldSize = indices.size();
+            size_t offset = points.size();
+            indices.reserve(2 * oldSize);
+            for(size_t i = 0; i < oldSize; i++) {
+                indices.push_back(offset + indices[i]);
+            }
+
+        }
+
+        // populate outline vertices
+        for (size_t i = outlineStart; i < points.size(); i++) {
+            const glm::vec3& p = points[i];
+            const glm::vec2& uv = texcoords[i];
+            const glm::vec2& en = scalingVecs[i];
+            vertices.push_back({ p.x, p.y, p.z, uv.x, uv.y, en.x, en.y, halfWidth, abgrOutline, layer - 1.f });
+        }
+        
     }
 
     auto& mesh = static_cast<PolylineStyle::Mesh&>(_mesh);
     mesh.addVertices(std::move(vertices), std::move(indices));
 }
 
-void PolylineStyle::buildPolygon(Polygon& _polygon, std::string& _layer, Properties& _props, VboMesh& _mesh) const {
+void PolylineStyle::buildPolygon(Polygon& _polygon, StyleParams& _params, Properties& _props, VboMesh& _mesh) const {
     // No-op
 }

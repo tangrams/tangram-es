@@ -8,8 +8,6 @@
 #include "platform.h"
 #include "tile/tileManager.h"
 #include "view/view.h"
-#include "style/polygonStyle.h"
-#include "style/polylineStyle.h"
 #include "style/textStyle.h"
 #include "style/debugTextStyle.h"
 #include "style/debugStyle.h"
@@ -19,6 +17,7 @@
 #include "util/error.h"
 #include "stl_util.hpp"
 #include "util/tileID.h"
+#include "util/skybox.h"
 
 namespace Tangram {
 
@@ -28,7 +27,8 @@ namespace Tangram {
     std::shared_ptr<LabelContainer> m_labelContainer;
     std::shared_ptr<FontContext> m_ftContext;
     std::shared_ptr<DebugStyle> m_debugStyle;
-
+    std::shared_ptr<Skybox> m_skybox;
+    
     static float g_time = 0.0;
     static unsigned long g_flags = 0;
 
@@ -45,58 +45,8 @@ namespace Tangram {
         if (!m_scene) {
             m_scene = std::make_shared<Scene>();
 
-            std::shared_ptr<Material> mat(new Material());
-            mat->setAmbientEnabled(true);
-            // mat->setDiffuse("sem.jpg",MappingType::SPHEREMAP);
-            mat->setSpecularEnabled(false);
-            //mat->setNormal("normals.jpg",MappingType::UV);
-            
-            // Load style(s); hard-coded for now
-            std::unique_ptr<Style> polyStyle(new PolygonStyle("Polygon"));
-            polyStyle->setLighting(LightingType::fragment);
-            polyStyle->addLayers({
-                "buildings",
-                "water",
-                "earth",
-                "landuse"
-            });
-            polyStyle->setMaterial(mat);
-            m_scene->addStyle(std::move(polyStyle));
-            
-            std::unique_ptr<Style> linesStyle(new PolylineStyle("Polyline"));
-            linesStyle->setLighting(LightingType::vertex);
-            linesStyle->addLayers({"roads"});
-            // linesStyle->setMaterial(mat);
-            m_scene->addStyle(std::move(linesStyle));
-
-            m_ftContext = std::make_shared<FontContext>();
-            m_ftContext->addFont("FiraSans-Medium.ttf", "FiraSans");
-            m_ftContext->addFont("FuturaStd-Condensed.ttf", "Futura");
-            m_labelContainer = LabelContainer::GetInstance();
-            m_labelContainer->setFontContext(m_ftContext);
-
-            std::unique_ptr<Style> textStyle0(new TextStyle("FiraSans", "Textstyle0", 15.0f, 0xF7F0E1, true, true));
-            textStyle0->addLayers({
-                "roads",
-                "places",
-                "pois"
-            });
-            m_scene->addStyle(std::move(textStyle0));
-            std::unique_ptr<Style> textStyle1(new TextStyle("Futura", "Textstyle1", 18.0f, 0x26241F, true, true));
-            textStyle1->addLayers({
-                "landuse",
-            });
-            m_scene->addStyle(std::move(textStyle1));
-            
-            std::unique_ptr<Style> debugTextStyle(new DebugTextStyle("FiraSans", "DebugTextStyle", 30.0f, 0xDC3522, true));
-            m_scene->addStyle(std::move(debugTextStyle));
-
-            std::unique_ptr<DebugStyle> debugStyle(new DebugStyle("Debug"));
-            m_scene->addStyle(std::move(debugStyle));
-
-            // Testing loading image
-			// std::unique_ptr<Style> spriteStyle(new SpriteStyle("Sprite"));
-            // m_scene->addStyle(std::move(spriteStyle));
+            m_skybox = std::shared_ptr<Skybox>(new Skybox("cubemap.png"));
+            m_skybox->init();
         }
 
         // Create a tileManager
@@ -110,6 +60,27 @@ namespace Tangram {
 
         SceneLoader loader;
         loader.loadScene("config.yaml", *m_scene, *m_tileManager, *m_view);
+        
+        // Hard-coded setup for stuff that isn't loaded through the config file yet
+        m_ftContext = std::make_shared<FontContext>();
+        m_ftContext->addFont("FiraSans-Medium.ttf", "FiraSans");
+        m_ftContext->addFont("FuturaStd-Condensed.ttf", "Futura");
+        m_labelContainer = LabelContainer::GetInstance();
+        m_labelContainer->setFontContext(m_ftContext);
+        m_labelContainer->setView(m_view);
+        
+        std::unique_ptr<Style> textStyle0(new TextStyle("FiraSans", "Textstyle0", 15.0f, 0xF7F0E1, true, true));
+        textStyle0->addLayer({ "roads", StyleParams() });
+        textStyle0->addLayer({ "places", StyleParams() });
+        textStyle0->addLayer({ "pois", StyleParams() });
+        m_scene->addStyle(std::move(textStyle0));
+        
+        std::unique_ptr<Style> textStyle1(new TextStyle("Futura", "Textstyle1", 18.0f, 0x26241F, true, true));
+        textStyle1->addLayer({ "landuse", StyleParams() });
+        m_scene->addStyle(std::move(textStyle1));
+        
+        std::unique_ptr<Style> debugTextStyle(new DebugTextStyle("FiraSans", "DebugTextStyle", 30.0f, 0xDC3522, true));
+        m_scene->addStyle(std::move(debugTextStyle));
 
         // Set up openGL state
         glDisable(GL_BLEND);
@@ -150,16 +121,17 @@ namespace Tangram {
     }
 
     void update(float _dt) {
-
+    
         g_time += _dt;
 
         if (m_view) {
+            
             m_view->update();
 
             m_tileManager->updateTileSet();
 
-            if(m_view->changedOnLastUpdate() || m_tileManager->hasTileSetChanged()) {
-                m_labelContainer->setViewProjectionMatrix(m_view->getViewProjectionMatrix());
+            if(m_view->changedOnLastUpdate() || m_tileManager->hasTileSetChanged() || Label::s_needUpdate) {
+                Label::s_needUpdate = false;
                 
                 for (const auto& mapIDandTile : m_tileManager->getVisibleTiles()) {
                     const std::shared_ptr<MapTile>& tile = mapIDandTile.second;
@@ -184,18 +156,22 @@ namespace Tangram {
                     }
                 }
             }
+            
+            if (Label::s_needUpdate) {
+                requestRender();
+            }
         }
         
         if(m_scene) {
             // Update lights and styles
-        }   
+        }
     }
 
     void render() {
         
         // Set up openGL for new frame
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-
+        
         // Loop over all styles
         for (const auto& style : m_scene->getStyles()) {
             style->setupFrame(m_view, m_scene);
@@ -213,7 +189,25 @@ namespace Tangram {
             style->teardown();
         }
 
+        m_skybox->draw(*m_view);
+        
         while (Error::hadGlError("Tangram::render()")) {}
+    }
+
+    void setViewPosition(double _lon, double _lat) {
+        
+        glm::dvec2 meters = m_view->getMapProjection().LonLatToMeters({ _lon, _lat});
+        m_view->setPosition(meters.x, meters.y);
+
+    }
+
+    void getViewPosition(double& _lon, double& _lat) {
+
+        glm::dvec2 meters(m_view->getPosition().x, m_view->getPosition().y);
+        glm::dvec2 degrees = m_view->getMapProjection().MetersToLonLat(meters);
+        _lon = degrees.x;
+        _lat = degrees.y;
+        
     }
 
     void setPixelScale(float _pixelsPerPoint) {
