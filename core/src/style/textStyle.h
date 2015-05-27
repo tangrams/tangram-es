@@ -23,8 +23,8 @@ protected:
     virtual void buildPoint(Point& _point, StyleParams& _params, Properties& _props, VboMesh& _mesh) const override;
     virtual void buildLine(Line& _line, StyleParams& _params, Properties& _props, VboMesh& _mesh) const override;
     virtual void buildPolygon(Polygon& _polygon, StyleParams& _params, Properties& _props, VboMesh& _mesh) const override;
-    virtual void prepareDataProcessing(MapTile& _tile) const override;
-    virtual void finishDataProcessing(MapTile& _tile) const override;
+    virtual void onBeginBuildTile(MapTile& _tile) const override;
+    virtual void onEndBuildTile(MapTile& _tile) const override;
 
     typedef TypedMesh<PosTexID> Mesh;
 
@@ -43,9 +43,9 @@ public:
     TextStyle(const std::string& _fontName, std::string _name, float _fontSize, unsigned int _color = 0xffffff,
               bool _sdf = false, bool _sdfMultisampling = false, GLenum _drawMode = GL_TRIANGLES);
 
-    virtual void setupFrame(const std::shared_ptr<View>& _view, const std::shared_ptr<Scene>& _scene) override;
-    virtual void setupTile(const std::shared_ptr<MapTile>& _tile) override;
-    virtual void teardown() override;
+    virtual void onBeginDrawFrame(const std::shared_ptr<View>& _view, const std::shared_ptr<Scene>& _scene) override;
+    virtual void onBeginDrawTile(const std::shared_ptr<MapTile>& _tile) override;
+    virtual void onEndDrawFrame() override;
 
     virtual ~TextStyle();
 
