@@ -210,6 +210,18 @@ namespace Tangram {
         
     }
 
+    float getViewRotation() {
+
+        return m_view->getRoll();
+
+    }
+    
+    float getViewZoom() {
+
+        return m_view->getZoom();
+
+    }
+
     void setPixelScale(float _pixelsPerPoint) {
         
         if (m_view) {
@@ -289,14 +301,6 @@ namespace Tangram {
         
         return (g_flags & (1 << _flag)) != 0; // &ing with a bitfield that is 0 everywhere except index _flag will yield 0 iff index _flag is 0
         
-    }
-
-    float getRotation(){
-        return m_view->getRoll();
-    }
-    
-    float getZoom(){
-        return m_view->getZoom();
     }
 
     void teardown() {
