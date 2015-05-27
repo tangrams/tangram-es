@@ -47,6 +47,13 @@ public:
     /*  Grow the area of the rectangle to include one or several points*/
     void    growToInclude(const glm::vec3& _point);
     void    growToInclude(const std::vector<glm::vec3> &_points);
+
+    bool    inside(float _px, float _py) const;
+    bool    inside(const glm::vec2& _p) const;
+    bool    inside(const glm::vec3& _p) const;
+    bool    inside(const Rectangle& _rect) const;
+    bool    inside(const glm::vec2& p0, const glm::vec2& p1) const;
+    bool    inside(const glm::vec3& p0, const glm::vec3& p1) const;
     
     float   getMinX() const;
     float   getMaxX() const;

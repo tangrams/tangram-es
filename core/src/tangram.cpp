@@ -210,6 +210,18 @@ namespace Tangram {
         
     }
 
+    float getViewRotation() {
+
+        return m_view->getRoll();
+
+    }
+    
+    float getViewZoom() {
+
+        return m_view->getZoom();
+
+    }
+
     void setPixelScale(float _pixelsPerPoint) {
         
         if (m_view) {
@@ -237,7 +249,6 @@ namespace Tangram {
     void handleDoubleTapGesture(float _posX, float _posY) {
         
         handlePinchGesture(_posX, _posY, 2.f);
-        
     }
 
     void handlePanGesture(float _startX, float _startY, float _endX, float _endY) {
@@ -246,7 +257,6 @@ namespace Tangram {
         m_view->screenToGroundPlane(_endX, _endY);
 
         m_view->translate(_startX - _endX, _startY - _endY);
-
     }
 
     void handlePinchGesture(float _posX, float _posY, float _scale) {
