@@ -174,7 +174,7 @@ void TextStyle::buildPolygon(Polygon& _polygon, StyleParams& _params, Properties
     }
 }
 
-void TextStyle::prepareDataProcessing(MapTile& _tile) const {
+void TextStyle::onBeginBuildTile(MapTile& _tile) const {
     auto ftContext = LabelContainer::GetInstance()->getFontContext();
     auto buffer = ftContext->genTextBuffer();
 
@@ -188,7 +188,7 @@ void TextStyle::prepareDataProcessing(MapTile& _tile) const {
     TextStyle::s_processedTile = &_tile;
 }
 
-void TextStyle::finishDataProcessing(MapTile& _tile) const {
+void TextStyle::onEndBuildTile(MapTile& _tile) const {
     auto ftContext = LabelContainer::GetInstance()->getFontContext();
 
     TextStyle::s_processedTile = nullptr;
@@ -197,7 +197,7 @@ void TextStyle::finishDataProcessing(MapTile& _tile) const {
     ftContext->unlock();
 }
 
-void TextStyle::setupTile(const std::shared_ptr<MapTile>& _tile) {
+void TextStyle::onBeginDrawTile(const std::shared_ptr<MapTile>& _tile) {
     auto buffer = _tile->getTextBuffer(*this);
 
     if (buffer) {
@@ -213,7 +213,7 @@ void TextStyle::setupTile(const std::shared_ptr<MapTile>& _tile) {
     }
 }
 
-void TextStyle::setupFrame(const std::shared_ptr<View>& _view, const std::shared_ptr<Scene>& _scene) {
+void TextStyle::onBeginDrawFrame(const std::shared_ptr<View>& _view, const std::shared_ptr<Scene>& _scene) {
     auto ftContext = LabelContainer::GetInstance()->getFontContext();
     const auto& atlas = ftContext->getAtlas();
     float projectionMatrix[16] = {0};
@@ -238,7 +238,7 @@ void TextStyle::setupFrame(const std::shared_ptr<View>& _view, const std::shared
     glDisable(GL_DEPTH_TEST);
 }
 
-void TextStyle::teardown() {
+void TextStyle::onEndDrawFrame() {
     glDisable(GL_BLEND);
     glEnable(GL_DEPTH_TEST);
 }

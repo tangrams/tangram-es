@@ -19,14 +19,14 @@ using namespace YAML;
 void SceneLoader::loadScene(const std::string& _file, Scene& _scene, TileManager& _tileManager, View& _view) {
 
     std::string configString = stringFromResource(_file.c_str());
-    
+
     Node config = YAML::Load(configString);
-    
+
     loadSources(config["sources"], _tileManager);
     loadLayers(config["layers"], _scene, _tileManager);
     loadCameras(config["cameras"], _view);
     loadLights(config["lights"], _scene);
-    
+
 }
 
 glm::vec4 parseVec4(const Node& node) {
@@ -56,21 +56,21 @@ glm::vec3 parseVec3(const Node& node) {
 }
 
 void SceneLoader::loadSources(Node sources, TileManager& tileManager) {
-    
+
     if(!sources) {
         logMsg("Warning: No source defined in the yaml scene configuration.\n");
         return;
     }
-    
+
     for (auto it = sources.begin(); it != sources.end(); ++it) {
-        
+
         const Node source = it->second;
         std::string name = it->first.as<std::string>();
         std::string type = source["type"].as<std::string>();
         std::string url = source["url"].as<std::string>();
-        
+
         std::unique_ptr<DataSource> sourcePtr;
-        
+
         if (type == "GeoJSONTiles") {
             sourcePtr = std::unique_ptr<DataSource>(new GeoJsonSource(name, url));
         } else if (type == "TopoJSONTiles") {
@@ -78,24 +78,24 @@ void SceneLoader::loadSources(Node sources, TileManager& tileManager) {
         } else if (type == "MVT") {
             sourcePtr = std::unique_ptr<DataSource>(new MVTSource(name, url));
         }
-        
+
         if (sourcePtr) {
             tileManager.addDataSource(std::move(sourcePtr));
         }
     }
-    
+
 }
 
 void SceneLoader::loadLights(Node lights, Scene& scene) {
 
-    if (!lights) { 
-        
+    if (!lights) {
+
         // Add an ambient light if nothing else is specified
         std::unique_ptr<AmbientLight> amb(new AmbientLight("defaultLight"));
         amb->setAmbientColor({ .5f, .5f, .5f, 1.f });
         scene.addLight(std::move(amb));
 
-        return; 
+        return;
     }
 
     for (auto it = lights.begin(); it != lights.end(); ++it) {
@@ -167,11 +167,11 @@ void SceneLoader::loadLights(Node lights, Scene& scene) {
             if (exponent) {
                 sLightPtr->setCutoffExponent(exponent.as<float>());
             }
-            
+
             lightPtr = std::unique_ptr<Light>(sLightPtr);
 
         }
-        
+
         Node origin = light["origin"];
         if (origin) {
             const std::string originStr = origin.as<std::string>();
@@ -183,7 +183,7 @@ void SceneLoader::loadLights(Node lights, Scene& scene) {
                 lightPtr->setOrigin(LightOrigin::GROUND);
             }
         }
-        
+
         Node ambient = light["ambient"];
         if (ambient) {
             lightPtr->setAmbientColor(parseVec4(ambient));
@@ -206,14 +206,14 @@ void SceneLoader::loadLights(Node lights, Scene& scene) {
 }
 
 void SceneLoader::loadCameras(Node cameras, View& view) {
-    
+
     // To correctly match the behavior of the webGL library we'll need a place to store multiple view instances.
     // Since we only have one global view right now, we'll just apply the settings from the first active camera we find.
-    
+
     for (auto it = cameras.begin(); it != cameras.end(); ++it) {
-        
+
         const Node camera = it->second;
-        
+
         const std::string type = camera["type"].as<std::string>();
         if (type == "perspective") {
             // The default camera
@@ -221,12 +221,12 @@ void SceneLoader::loadCameras(Node cameras, View& view) {
             if (fov) {
                 // TODO
             }
-            
+
             Node focal = camera["focal_length"];
             if (focal) {
                 // TODO
             }
-            
+
             Node vanishing = camera["vanishing_point"];
             if (vanishing) {
                 // TODO
@@ -240,11 +240,11 @@ void SceneLoader::loadCameras(Node cameras, View& view) {
         } else if (type == "flat") {
             // TODO
         }
-        
+
         double x = -74.00976419448854;
         double y = 40.70532700869127;
         float z = 16;
-        
+
         Node position = camera["position"];
         if (position) {
             x = position[0].as<double>();
@@ -255,20 +255,20 @@ void SceneLoader::loadCameras(Node cameras, View& view) {
         }
         glm::dvec2 projPos = view.getMapProjection().LonLatToMeters(glm::dvec2(x, y));
         view.setPosition(projPos.x, projPos.y);
-        
+
         Node zoom = camera["zoom"];
         if (zoom) {
             z = zoom.as<float>();
         }
         view.setZoom(z);
-        
+
         Node active = camera["active"];
         if (active) {
             break;
         }
-        
+
     }
-    
+
 }
 
 void SceneLoader::loadLayers(Node layers, Scene& scene, TileManager& tileManager) {
@@ -281,10 +281,10 @@ void SceneLoader::loadLayers(Node layers, Scene& scene, TileManager& tileManager
     auto polygonStyle = std::unique_ptr<PolygonStyle>(new PolygonStyle("polygons"));
     auto polylineStyle = std::unique_ptr<PolylineStyle>(new PolylineStyle("lines"));
     auto debugStyle = std::unique_ptr<DebugStyle>(new DebugStyle("debug"));
-    
+
     // TODO: configure style properties in styles block
-    polygonStyle->setLighting(LightingType::vertex);
-    polylineStyle->setLighting(LightingType::vertex);
+    polygonStyle->setLightingType(LightingType::vertex);
+    polylineStyle->setLightingType(LightingType::vertex);
 
     for (auto layerIt = layers.begin(); layerIt != layers.end(); ++layerIt) {
 
@@ -318,7 +318,7 @@ void SceneLoader::loadLayers(Node layers, Scene& scene, TileManager& tileManager
 
             Node width = styleProps["width"];
             if (width) { params.width = width.as<float>(); }
-            
+
             Node cap = styleProps["cap"];
             if (cap) {
                 std::string capString = cap.as<std::string>();
@@ -326,7 +326,7 @@ void SceneLoader::loadLayers(Node layers, Scene& scene, TileManager& tileManager
                 else if (capString == "sqaure") { params.line.cap = CapTypes::SQUARE; }
                 else if (capString == "round") { params.line.cap = CapTypes::ROUND; }
             }
-            
+
             Node join = styleProps["join"];
             if (join) {
                 std::string joinString = join.as<std::string>();
@@ -334,12 +334,12 @@ void SceneLoader::loadLayers(Node layers, Scene& scene, TileManager& tileManager
                 else if (joinString == "miter") { params.line.join = JoinTypes::MITER; }
                 else if (joinString == "round") { params.line.join = JoinTypes::ROUND; }
             }
-            
+
             Node outline = styleProps["outline"];
             if (outline) {
-                
+
                 params.outline.on = true;
-                
+
                 Node color = outline["color"];
                 if (color) {
                     glm::vec4 c = parseVec4(color);
@@ -349,10 +349,10 @@ void SceneLoader::loadLayers(Node layers, Scene& scene, TileManager& tileManager
                     (uint32_t(c.r * 255));
                     // TODO: color helper funtions
                 }
-                
+
                 Node width = outline["width"];
                 if (width) { params.outline.width = width.as<float>(); }
-                
+
                 Node cap = outline["cap"];
                 if (cap) {
                     std::string capString = cap.as<std::string>();
@@ -360,7 +360,7 @@ void SceneLoader::loadLayers(Node layers, Scene& scene, TileManager& tileManager
                     else if (capString == "sqaure") { params.outline.line.cap = CapTypes::SQUARE; }
                     else if (capString == "round") { params.outline.line.cap = CapTypes::ROUND; }
                 }
-                
+
                 Node join = outline["join"];
                 if (join) {
                     std::string joinString = join.as<std::string>();
@@ -368,7 +368,7 @@ void SceneLoader::loadLayers(Node layers, Scene& scene, TileManager& tileManager
                     else if (joinString == "miter") { params.outline.line.join = JoinTypes::MITER; }
                     else if (joinString == "round") { params.outline.line.join = JoinTypes::ROUND; }
                 }
-                
+
             }
 
             // match to built-in styles
@@ -389,5 +389,5 @@ void SceneLoader::loadLayers(Node layers, Scene& scene, TileManager& tileManager
     scene.addStyle(std::move(debugStyle));
 
     // tileManager isn't used yet, but we'll need it soon to get the list of data sources
-    
+
 }
