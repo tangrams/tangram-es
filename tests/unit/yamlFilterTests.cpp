@@ -23,6 +23,7 @@ void init() {
     civic.props.numericProps["wheel"] = 4;
     civic.props.stringProps["drive"] = "fwd";
     civic.props.stringProps["type"] = "car";
+    civic.props.numericProps["fancy"] = 0;
     vehicles.push_back(civic);
 
     Feature bmw1;
@@ -32,6 +33,7 @@ void init() {
     bmw1.props.numericProps["wheel"] = 4;
     bmw1.props.stringProps["drive"] = "all";
     bmw1.props.stringProps["type"] = "car";
+    bmw1.props.numericProps["fancy"] = 1;
     vehicles.push_back(bmw1);
 
     Feature bike;
@@ -40,6 +42,7 @@ void init() {
     bike.props.numericProps["wheel"] = 2;
     bike.props.stringProps["type"] = "bike";
     bike.props.stringProps["series"] = "CB";
+    bike.props.numericProps["fancy"] = 1;
     vehicles.push_back(bike);
 
     vehicles.swap(vehicles);
@@ -197,6 +200,20 @@ TEST_CASE( "yaml-filter-tests: context filter", "[filters][core][yaml]") {
         }
     }
     REQUIRE(count == 3);
+    delete filter;
+}
+
+TEST_CASE( "yaml-filter-tests: boolean filter", "[filters][core][yaml]") {
+    init();
+    YAML::Node node = YAML::Load("filter: {fancy : true}");
+    Filter* filter = sceneLoader.generateFilter(node["filter"]);
+    int count = 0;
+    for(auto& vehicle : vehicles) {
+        if(filter->eval(vehicle, ctx)) {
+            count++;
+        }
+    }
+    REQUIRE(count == 2);
     delete filter;
 }
 
