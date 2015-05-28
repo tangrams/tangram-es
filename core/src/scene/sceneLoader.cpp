@@ -304,7 +304,7 @@ Tangram::Filter* SceneLoader::generateFilter(YAML::Node _filter) {
         } else {
 
             std::string key = filtItr->first.as<std::string>();
-            filter = generatePredicate(_filter, key);
+            filter = generatePredicate(_filter[key], key);
 
         }
 
@@ -320,20 +320,19 @@ Tangram::Filter* SceneLoader::generateFilter(YAML::Node _filter) {
 
 }
 
-Tangram::Filter* SceneLoader::generatePredicate(YAML::Node _filter, std::string _key) {
-    Node node = _filter[_key];
+Tangram::Filter* SceneLoader::generatePredicate(YAML::Node _node, std::string _key) {
 
-    if(node.IsScalar()) {
+    if(_node.IsScalar()) {
         try {
-            float value = node.as<float>();
+            float value = _node.as<float>();
             return (new Tangram::Equality(_key, {new Tangram::NumValue(value)}));
         } catch(const BadConversion& e) {
-            std::string value = node.as<std::string>();
+            std::string value = _node.as<std::string>();
             return (new Tangram::Equality(_key, {new Tangram::StrValue(value)}));
         }
-    } else if(node.IsSequence()) {
+    } else if(_node.IsSequence()) {
         Tangram::ValueList values;
-        for(YAML::const_iterator valItr = node.begin(); valItr != node.end(); ++valItr) {
+        for(YAML::const_iterator valItr = _node.begin(); valItr != _node.end(); ++valItr) {
             try {
                 float value = valItr->as<float>();
                 values.emplace_back(new Tangram::NumValue(value));
@@ -343,11 +342,11 @@ Tangram::Filter* SceneLoader::generatePredicate(YAML::Node _filter, std::string 
             }
         }
         return (new Tangram::Equality(_key, std::move(values)));
-    } else if(node.IsMap()) {
+    } else if(_node.IsMap()) {
         float minVal = -std::numeric_limits<float>::infinity();
         float maxVal = std::numeric_limits<float>::infinity();
 
-        for(YAML::const_iterator valItr = node.begin(); valItr != node.end(); ++valItr) {
+        for(YAML::const_iterator valItr = _node.begin(); valItr != _node.end(); ++valItr) {
             if(valItr->first.as<std::string>() == "min") {
                 try {
                     minVal = valItr->second.as<float>();
@@ -400,7 +399,7 @@ Tangram::Filter* SceneLoader::generateNoneFilter(YAML::Node _filter) {
     } else if(_filter.IsMap()) { // not case
         for(YAML::const_iterator filtIter = _filter.begin(); filtIter != _filter.end(); ++filtIter) {
             std::string key = filtIter->first.as<std::string>();
-            filters.emplace_back(generatePredicate(_filter, key));
+            filters.emplace_back(generatePredicate(_filter[key], key));
         }
     } else {
         logMsg("Error: Badly formed filter. \"None\" expects a list or an object.\n");
