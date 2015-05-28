@@ -16,7 +16,7 @@
 #include "yaml-cpp/yaml.h"
 
 using namespace YAML;
-
+using namespace Tangram;
 
 void SceneLoader::loadScene(const std::string& _file, Scene& _scene, TileManager& _tileManager, View& _view) {
 
@@ -273,13 +273,13 @@ void SceneLoader::loadCameras(Node cameras, View& view) {
 
 }
 
-Tangram::Filter* SceneLoader::generateFilter(YAML::Node _filter) {
+Filter* SceneLoader::generateFilter(YAML::Node _filter) {
 
-    std::vector<Tangram::Filter*> filters;
+    std::vector<Filter*> filters;
 
     for(YAML::const_iterator filtItr = _filter.begin(); filtItr != _filter.end(); ++filtItr) {
 
-        Tangram::Filter* filter;
+        Filter* filter;
 
         if(_filter.IsSequence()) {
 
@@ -313,35 +313,35 @@ Tangram::Filter* SceneLoader::generateFilter(YAML::Node _filter) {
     }
 
     if(filters.size() > 0) {
-        return (new Tangram::All(filters));
+        return (new All(filters));
     } else {
         return nullptr;
     }
 
 }
 
-Tangram::Filter* SceneLoader::generatePredicate(YAML::Node _node, std::string _key) {
+Filter* SceneLoader::generatePredicate(YAML::Node _node, std::string _key) {
 
     if(_node.IsScalar()) {
         try {
             float value = _node.as<float>();
-            return (new Tangram::Equality(_key, {new Tangram::NumValue(value)}));
+            return (new Equality(_key, {new NumValue(value)}));
         } catch(const BadConversion& e) {
             std::string value = _node.as<std::string>();
-            return (new Tangram::Equality(_key, {new Tangram::StrValue(value)}));
+            return (new Equality(_key, {new StrValue(value)}));
         }
     } else if(_node.IsSequence()) {
-        Tangram::ValueList values;
+        ValueList values;
         for(YAML::const_iterator valItr = _node.begin(); valItr != _node.end(); ++valItr) {
             try {
                 float value = valItr->as<float>();
-                values.emplace_back(new Tangram::NumValue(value));
+                values.emplace_back(new NumValue(value));
             } catch(const BadConversion& e) {
                 std::string value = valItr->as<std::string>();
-                values.emplace_back(new Tangram::StrValue(value));
+                values.emplace_back(new StrValue(value));
             }
         }
-        return (new Tangram::Equality(_key, std::move(values)));
+        return (new Equality(_key, std::move(values)));
     } else if(_node.IsMap()) {
         float minVal = -std::numeric_limits<float>::infinity();
         float maxVal = std::numeric_limits<float>::infinity();
@@ -366,7 +366,7 @@ Tangram::Filter* SceneLoader::generatePredicate(YAML::Node _node, std::string _k
                 return nullptr;
             }
         }
-        return (new Tangram::Range(_key, minVal, maxVal));
+        return (new Range(_key, minVal, maxVal));
 
     } else {
         logMsg("Error: Badly formed Filter\n");
@@ -375,8 +375,8 @@ Tangram::Filter* SceneLoader::generatePredicate(YAML::Node _node, std::string _k
 
 }
 
-Tangram::Filter* SceneLoader::generateAnyFilter(YAML::Node _filter) {
-    std::vector<Tangram::Filter*> filters;
+Filter* SceneLoader::generateAnyFilter(YAML::Node _filter) {
+    std::vector<Filter*> filters;
 
     if(!_filter.IsSequence()) {
         logMsg("Error: Badly formed filter. \"Any\" expects a list.\n");
@@ -385,12 +385,12 @@ Tangram::Filter* SceneLoader::generateAnyFilter(YAML::Node _filter) {
     for(YAML::const_iterator filtItr = _filter.begin(); filtItr != _filter.end(); ++filtItr) {
         filters.emplace_back(generateFilter(*filtItr));
     }
-    return (new Tangram::Any(std::move(filters)));
+    return (new Any(std::move(filters)));
 }
 
-Tangram::Filter* SceneLoader::generateNoneFilter(YAML::Node _filter) {
+Filter* SceneLoader::generateNoneFilter(YAML::Node _filter) {
 
-    std::vector<Tangram::Filter*> filters;
+    std::vector<Filter*> filters;
 
     if(_filter.IsSequence()) {
         for(YAML::const_iterator filtIter = _filter.begin(); filtIter != _filter.end(); ++filtIter) {
@@ -406,7 +406,7 @@ Tangram::Filter* SceneLoader::generateNoneFilter(YAML::Node _filter) {
         return nullptr;
     }
 
-    return (new Tangram::None(std::move(filters)));
+    return (new None(std::move(filters)));
 }
 
 void SceneLoader::loadLayers(Node layers, Scene& scene, TileManager& tileManager) {
