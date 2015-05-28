@@ -63,7 +63,7 @@ namespace Tangram {
 
     struct Filter {
 
-        virtual bool eval(const Feature& f, const Context& c) const = 0;
+        virtual bool eval(const Feature& f, const Context& c) const { return false; };
         virtual ~Filter() {};
 
     };

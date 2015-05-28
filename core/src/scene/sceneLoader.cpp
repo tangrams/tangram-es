@@ -315,7 +315,7 @@ Filter* SceneLoader::generateFilter(YAML::Node _filter) {
     if(filters.size() > 0) {
         return (new All(filters));
     } else {
-        return nullptr;
+        return (new Filter());
     }
 
 }
@@ -366,25 +366,25 @@ Filter* SceneLoader::generatePredicate(YAML::Node _node, std::string _key) {
                     minVal = valItr->second.as<float>();
                 } catch(const BadConversion& e) {
                     logMsg("Error: Badly formed filter.\tExpect a float value type, string found.\n");
-                    return nullptr;
+                    return (new Filter());
                 }
             } else if(valItr->first.as<std::string>() == "max") {
                 try {
                     maxVal = valItr->second.as<float>();
                 } catch(const BadConversion& e) {
                     logMsg("Error: Badly formed filter.\tExpect a float value type, string found.\n");
-                    return nullptr;
+                    return (new Filter());
                 }
             } else {
                 logMsg("Error: Badly formed Filter\n");
-                return nullptr;
+                return (new Filter());
             }
         }
         return (new Range(_key, minVal, maxVal));
 
     } else {
         logMsg("Error: Badly formed Filter\n");
-        return nullptr;
+        return (new Filter());
     }
 
 }
@@ -394,7 +394,7 @@ Filter* SceneLoader::generateAnyFilter(YAML::Node _filter) {
 
     if(!_filter.IsSequence()) {
         logMsg("Error: Badly formed filter. \"Any\" expects a list.\n");
-        return nullptr;
+        return (new Filter());
     }
     for(YAML::const_iterator filtItr = _filter.begin(); filtItr != _filter.end(); ++filtItr) {
         filters.emplace_back(generateFilter(*filtItr));
@@ -417,7 +417,7 @@ Filter* SceneLoader::generateNoneFilter(YAML::Node _filter) {
         }
     } else {
         logMsg("Error: Badly formed filter. \"None\" expects a list or an object.\n");
-        return nullptr;
+        return (new Filter());
     }
 
     return (new None(std::move(filters)));
