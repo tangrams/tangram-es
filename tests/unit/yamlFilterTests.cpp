@@ -217,3 +217,17 @@ TEST_CASE( "yaml-filter-tests: boolean filter", "[filters][core][yaml]") {
     delete filter;
 }
 
+TEST_CASE( "yaml-filter-tests: bogus filter", "[filters][core][yaml]") {
+    init();
+    YAML::Node node = YAML::Load("filter: {max: bogus}");
+    Filter* filter = sceneLoader.generateFilter(node["filter"]);
+    int count = 0;
+    for(auto& vehicle : vehicles) {
+        if(filter->eval(vehicle, ctx)) {
+            count++;
+        }
+    }
+    REQUIRE(count == 0);
+    delete filter;
+}
+
