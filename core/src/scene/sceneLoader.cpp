@@ -281,7 +281,15 @@ Tangram::Filter* SceneLoader::generateFilter(YAML::Node _filter) {
 
         Tangram::Filter* filter;
 
-        if(filtItr->first.as<std::string>() == "not") {
+        if(_filter.IsSequence()) {
+
+            filter = generateFilter(*filtItr);
+
+        } else if(filtItr->first.as<std::string>() == "none") {
+
+            filter = generateNoneFilter(_filter["none"]);
+
+        } else if(filtItr->first.as<std::string>() == "not") {
 
             filter = generateNoneFilter(_filter["not"]);
 
@@ -303,6 +311,7 @@ Tangram::Filter* SceneLoader::generateFilter(YAML::Node _filter) {
         filters.push_back(filter);
 
     }
+
     if(filters.size() > 0) {
         return (new Tangram::All(filters));
     } else {
@@ -381,15 +390,23 @@ Tangram::Filter* SceneLoader::generateAnyFilter(YAML::Node _filter) {
 }
 
 Tangram::Filter* SceneLoader::generateNoneFilter(YAML::Node _filter) {
+
     std::vector<Tangram::Filter*> filters;
-    if(! (_filter.IsSequence() || _filter.IsMap() )) {
+
+    if(_filter.IsSequence()) {
+        for(YAML::const_iterator filtIter = _filter.begin(); filtIter != _filter.end(); ++filtIter) {
+            filters.emplace_back(generateFilter(*filtIter));
+        }
+    } else if(_filter.IsMap()) { // not case
+        for(YAML::const_iterator filtIter = _filter.begin(); filtIter != _filter.end(); ++filtIter) {
+            std::string key = filtIter->first.as<std::string>();
+            filters.emplace_back(generatePredicate(_filter, key));
+        }
+    } else {
         logMsg("Error: Badly formed filter. \"None\" expects a list or an object.\n");
         return nullptr;
     }
-    for(YAML::const_iterator filtIter = _filter.begin(); filtIter != _filter.end(); ++filtIter) {
-        std::string key = filtIter->first.as<std::string>();
-        filters.emplace_back(generatePredicate(_filter, key));
-    }
+
     return (new Tangram::None(std::move(filters)));
 }
 
