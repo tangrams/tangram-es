@@ -3,6 +3,10 @@
 #include "tileID.h"
 
 #include "geoJsonSource.h"
+#include "rapidjson/error/en.h"
+#include "rapidjson/memorystream.h"
+#include "rapidjson/encodings.h"
+#include "rapidjson/encodedstream.h"
 
 
 GeoJsonSource::GeoJsonSource(const std::string& _name, const std::string& _urlTemplate) :
@@ -12,14 +16,20 @@ GeoJsonSource::GeoJsonSource(const std::string& _name, const std::string& _urlTe
 std::shared_ptr<TileData> GeoJsonSource::parse(const MapTile& _tile, std::vector<char>& _rawData) const {
 
     std::shared_ptr<TileData> tileData = std::make_shared<TileData>();
-    
+
     // parse written data into a JSON object
     rapidjson::Document doc;
-    doc.Parse(_rawData.data());
+
+    rapidjson::MemoryStream ms(_rawData.data(), _rawData.size());
+    rapidjson::EncodedInputStream<rapidjson::UTF8<char>, rapidjson::MemoryStream> is(ms);
+
+    doc.ParseStream(is);
 
     if (doc.HasParseError()) {
 
-        logMsg("Json parsing failed on tile [%d, %d, %d]\n", _tile.getID().z, _tile.getID().x, _tile.getID().y);
+        size_t offset = doc.GetErrorOffset();
+        const char* error = rapidjson::GetParseError_En(doc.GetParseError());
+        logMsg("Json parsing failed on tile [%d, %d, %d]: %s (%u)\n", _tile.getID().z, _tile.getID().x, _tile.getID().y, error, offset);
         return tileData;
 
     }
