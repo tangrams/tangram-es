@@ -114,8 +114,8 @@ bool startUrlRequest(const std::string& _url, UrlCallback _callback) {
             
         } else {
             
-            logMsg("ERROR: response \"%s\" with error \"%s\".\n", response, error);
-            
+            logMsg("ERROR: response \"%s\" with error \"%s\".\n", response, std::string([error.localizedDescription UTF8String]).c_str());
+
         }
         
     };
