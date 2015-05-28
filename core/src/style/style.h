@@ -4,19 +4,18 @@
 #include <vector>
 #include <set>
 
+#include "data/tileData.h"
+#include "gl.h"
+#include "platform.h"
+#include "style/material.h"
+#include "tile/mapTile.h"
 #include "util/vertexLayout.h"
 #include "util/shaderProgram.h"
 #include "util/mapProjection.h"
 #include "util/builders.h"
-#include "tile/mapTile.h"
-#include "tileData.h"
-#include "platform.h"
-#include "gl.h"
 #include "view/view.h"
 
-#include "style/material.h"
-
-enum class LightingType {
+enum class LightingType : char {
     none,
     vertex,
     fragment
@@ -61,9 +60,6 @@ class Scene;
  * geometry into meshes. See <PolygonStyle> for a basic implementation.
  */
 class Style {
-private:
-    /* Pointer to material */
-    std::shared_ptr<Material> m_material;
 
 protected:
 
@@ -79,17 +75,20 @@ protected:
     /* <VertexLayout> shared between meshes using this style */
     std::shared_ptr<VertexLayout> m_vertexLayout;
 
+    /* <Material> used for drawing meshes that use this style */
+    std::shared_ptr<Material> m_material;
+
     /* Draw mode to pass into <VboMesh>es created with this style */
     GLenum m_drawMode;
 
     /* Set of strings defining which data layers this style applies to, 
-     * along with the style parameters applied specifically to these data layers*/
+     * along with the style parameters corresponding to these data layers */
     std::vector< std::pair<std::string, StyleParams> > m_layers;
     
-    /* Create <VertexLayout> corresponding to this style */
+    /* Create <VertexLayout> corresponding to this style; subclasses must implement this and call it on construction */
     virtual void constructVertexLayout() = 0;
     
-    /* Create <ShaderProgram> for this style */
+    /* Create <ShaderProgram> for this style; subclasses must implement this and call it on construction */
     virtual void constructShaderProgram() = 0;
     
     /* Build styled vertex data for point geometry and add it to the given <VboMesh> */
@@ -98,52 +97,49 @@ protected:
     /* Build styled vertex data for line geometry and add it to the given <VboMesh> */
     virtual void buildLine(Line& _line, StyleParams& _params, Properties& _props, VboMesh& _mesh) const = 0;
     
-    /* Build styled vertex data for polygon geometry and add it to the given <VboMesh> 
-     * 
-     * Polygon geometry is provided as a vector of all points in the polygon and a vector
-     * containing the number of points in each contour (or ring) of the polygon. For a
-     * simple polygon (in the mathematical sense), _sizes will have one element which is
-     * the number of points in the first vector.
-     */
+    /* Build styled vertex data for polygon geometry and add it to the given <VboMesh> */
     virtual void buildPolygon(Polygon& _polygon, StyleParams& _params, Properties& _props, VboMesh& _mesh) const = 0;
 
-    /* Can be used by the style to prepare the data processing */
-    virtual void prepareDataProcessing(MapTile& _tile) const;
+    /* Perform any needed setup to process the data for a tile */
+    virtual void onBeginBuildTile(MapTile& _tile) const;
 
-    /* Can be used by the style once the data has been processed */
-    virtual void finishDataProcessing(MapTile& _tile) const;
+    /* Perform any needed teardown after processing data for a tile */
+    virtual void onEndBuildTile(MapTile& _tile) const;
     
+    /* Create a new mesh object using the vertex layout corresponding to this style */
     virtual VboMesh* newMesh() const = 0;
 
 public:
 
     Style(std::string _name, GLenum _drawMode);
+
     virtual ~Style();
 
-    /* Add layers to which this style will apply
-     * TODO: More flexible filtering */
+    /* Add layers to which this style will apply */
     virtual void addLayer(const std::pair<std::string, StyleParams>& _layer);
     
-    /* Add styled geometry from the given Json object to the given <MapTile> */
+    /* Add styled geometry from the given <TileData> object to the given <MapTile> */
     virtual void addData(TileData& _data, MapTile& _tile, const MapProjection& _mapProjection) const;
-
-    virtual void setMaterial(const std::shared_ptr<Material>& _material);
-    std::shared_ptr<Material> getMaterial() { return m_material; }
-
-    /* Perform any unsetup needed after drawing each frame */
-    virtual void teardown() {}
-
-    void setPixelScale(float _pixelScale) { m_pixelScale = _pixelScale; }
     
     /* Perform any setup needed before drawing each frame */
-    virtual void setupFrame(const std::shared_ptr<View>& _view, const std::shared_ptr<Scene>& _scene);
+    virtual void onBeginDrawFrame(const std::shared_ptr<View>& _view, const std::shared_ptr<Scene>& _scene);
 
     /* Perform any setup needed before drawing each tile */
-    virtual void setupTile(const std::shared_ptr<MapTile>& _tile);
+    virtual void onBeginDrawTile(const std::shared_ptr<MapTile>& _tile);
+
+    /* Perform any unsetup needed after drawing each frame */
+    virtual void onEndDrawFrame() {}
+    
+    virtual void setLightingType(LightingType _lType);
+
+    void setMaterial(const std::shared_ptr<Material>& _material);
+    
+    void setPixelScale(float _pixelScale) { m_pixelScale = _pixelScale; }
+
+    std::shared_ptr<Material> getMaterial() { return m_material; }
 
     std::shared_ptr<ShaderProgram> getShaderProgram() const { return m_shaderProgram; }
-    std::string getName() const { return m_name; }
     
-    virtual void setLighting( LightingType _lType );
+    std::string getName() const { return m_name; }
 
 };

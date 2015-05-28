@@ -422,8 +422,8 @@ void SceneLoader::loadLayers(Node layers, Scene& scene, TileManager& tileManager
     auto debugStyle = std::unique_ptr<DebugStyle>(new DebugStyle("debug"));
 
     // TODO: configure style properties in styles block
-    polygonStyle->setLighting(LightingType::vertex);
-    polylineStyle->setLighting(LightingType::vertex);
+    polygonStyle->setLightingType(LightingType::vertex);
+    polylineStyle->setLightingType(LightingType::vertex);
 
     for (auto layerIt = layers.begin(); layerIt != layers.end(); ++layerIt) {
 
@@ -432,7 +432,6 @@ void SceneLoader::loadLayers(Node layers, Scene& scene, TileManager& tileManager
         Node data = layerIt->second["data"];
 
         // TODO: handle data.source
-
 
         Node dataLayer = data["layer"];
         if (dataLayer) { name = dataLayer.as<std::string>(); }

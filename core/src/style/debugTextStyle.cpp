@@ -9,7 +9,7 @@ DebugTextStyle::DebugTextStyle(const std::string& _fontName, std::string _name, 
 void DebugTextStyle::addData(TileData& _data, MapTile& _tile, const MapProjection& _mapProjection) const {
 
     if (Tangram::getDebugFlag(Tangram::DebugFlags::TILE_INFOS)) {
-        prepareDataProcessing(_tile);
+        onBeginBuildTile(_tile);
 
         Mesh* mesh = new Mesh(m_vertexLayout, m_drawMode);
 
@@ -38,7 +38,7 @@ void DebugTextStyle::addData(TileData& _data, MapTile& _tile, const MapProjectio
 
         _tile.addGeometry(*this, std::unique_ptr<VboMesh>(mesh));
 
-        finishDataProcessing(_tile);
+        onEndBuildTile(_tile);
     }
 
 }
