@@ -328,7 +328,14 @@ Filter* SceneLoader::generatePredicate(YAML::Node _node, std::string _key) {
             return (new Equality(_key, {new NumValue(value)}));
         } catch(const BadConversion& e) {
             std::string value = _node.as<std::string>();
-            return (new Equality(_key, {new StrValue(value)}));
+            // NOTE: there is no way to distinguish between boolean true/false and a string "true"/"false". Yaml-cpp will consider both equivalent
+            if(value == "true") {
+                return (new Equality(_key, {new NumValue(1)}));
+            } else if(value == "false") {
+                return (new Equality(_key, {new NumValue(0)}));
+            } else {
+                return (new Equality(_key, {new StrValue(value)}));
+            }
         }
     } else if(_node.IsSequence()) {
         ValueList values;
@@ -338,7 +345,14 @@ Filter* SceneLoader::generatePredicate(YAML::Node _node, std::string _key) {
                 values.emplace_back(new NumValue(value));
             } catch(const BadConversion& e) {
                 std::string value = valItr->as<std::string>();
-                values.emplace_back(new StrValue(value));
+                // NOTE: there is no way to distinguish between boolean true/false and a string "true"/"false". Yaml-cpp will consider both equivalent
+                if(value == "true") {
+                    values.emplace_back(new NumValue(1));
+                } else if(value == "false") {
+                    values.emplace_back(new NumValue(0));
+                } else {
+                    values.emplace_back(new StrValue(value));
+                }
             }
         }
         return (new Equality(_key, std::move(values)));
