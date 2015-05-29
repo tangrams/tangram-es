@@ -225,3 +225,15 @@ TEST_CASE( "yaml-filter-tests: true/false as string value", "[filters][core][yam
     delete filter;
 }
 
+TEST_CASE( "yaml-filter-tests: boolean filter as existence check", "[filters][core][yaml]") {
+    init();
+    YAML::Node node = YAML::Load("filter: { drive : true }");
+    Filter* filter = sceneLoader.generateFilter(node["filter"]);
+
+    REQUIRE(filter->eval(civic, ctx));
+    REQUIRE(filter->eval(bmw1, ctx));
+    REQUIRE(!filter->eval(bike, ctx));
+
+    delete filter;
+}
+
