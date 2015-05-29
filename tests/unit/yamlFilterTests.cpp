@@ -22,6 +22,7 @@ void init() {
     civic.props.numericProps.clear();
     civic.props.stringProps["name"] = "civic";
     civic.props.stringProps["brand"] = "honda";
+    civic.props.stringProps["check"] = "true";
     civic.props.numericProps["wheel"] = 4;
     civic.props.stringProps["drive"] = "fwd";
     civic.props.stringProps["type"] = "car";
@@ -31,6 +32,7 @@ void init() {
     bmw1.props.numericProps.clear();
     bmw1.props.stringProps["name"] = "bmw320i";
     bmw1.props.stringProps["brand"] = "bmw";
+    bmw1.props.stringProps["check"] = "false";
     bmw1.props.stringProps["series"] = "3";
     bmw1.props.numericProps["wheel"] = 4;
     bmw1.props.stringProps["drive"] = "all";
@@ -44,6 +46,7 @@ void init() {
     bike.props.numericProps["wheel"] = 2;
     bike.props.stringProps["type"] = "bike";
     bike.props.stringProps["series"] = "CB";
+    bike.props.stringProps["check"] = "available";
     bike.props.numericProps["fancy"] = 1;
 
     for (auto& it : ctx) {
@@ -205,6 +208,18 @@ TEST_CASE( "yaml-filter-tests: bogus filter", "[filters][core][yaml]") {
 
     REQUIRE(!filter->eval(civic, ctx));
     REQUIRE(!filter->eval(bmw1, ctx));
+    REQUIRE(!filter->eval(bike, ctx));
+
+    delete filter;
+}
+
+TEST_CASE( "yaml-filter-tests: true/false as string value", "[filters][core][yaml]") {
+    init();
+    YAML::Node node = YAML::Load("filter: {any : [{check: true}, {check: false}]}");
+    Filter* filter = sceneLoader.generateFilter(node["filter"]);
+
+    REQUIRE(filter->eval(civic, ctx));
+    REQUIRE(filter->eval(bmw1, ctx));
     REQUIRE(!filter->eval(bike, ctx));
 
     delete filter;
