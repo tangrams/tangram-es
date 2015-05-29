@@ -324,8 +324,7 @@ Filter* SceneLoader::generatePredicate(YAML::Node _node, std::string _key) {
 
     if(_node.IsScalar()) {
         try {
-            float value = _node.as<float>();
-            return (new Equality(_key, {new NumValue(value)}));
+            return (new Equality(_key, { new NumValue(_node.as<float>(), _node.as<std::string>()) }));
         } catch(const BadConversion& e) {
             std::string value = _node.as<std::string>();
             // NOTE: there is no way to distinguish between boolean true/false and a string "true"/"false". Yaml-cpp will consider both equivalent
@@ -341,8 +340,7 @@ Filter* SceneLoader::generatePredicate(YAML::Node _node, std::string _key) {
         ValueList values;
         for(YAML::const_iterator valItr = _node.begin(); valItr != _node.end(); ++valItr) {
             try {
-                float value = valItr->as<float>();
-                values.emplace_back(new NumValue(value));
+                values.push_back(new NumValue(valItr->as<float>(), valItr->as<std::string>()));
             } catch(const BadConversion& e) {
                 std::string value = valItr->as<std::string>();
                 // NOTE: there is no way to distinguish between boolean true/false and a string "true"/"false". Yaml-cpp will consider both equivalent

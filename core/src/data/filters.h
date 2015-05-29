@@ -19,6 +19,7 @@ namespace Tangram {
         virtual ~Value() {};
 
         Value(float n) : num(n) {}
+        Value(float n, const std::string& s) : num(n), str(s) {}
         Value(const std::string& s) : str(s) {}
 
     };
@@ -26,21 +27,10 @@ namespace Tangram {
     struct NumValue : public Value {
 
         NumValue(float n) : Value(n) {}
+        NumValue(float n, const std::string& s) : Value(n, s) {}
         ~NumValue() {}
 
-        // We don't like it! But there is no other way to check for an explicit string value in yaml-cpp
-        virtual bool equals(const std::string& s) const override {
-            try {
-                float f = std::stof(s);
-                if( (num-f) < 0.00001) {
-                    return true;
-                } else {
-                    return false;
-                }
-            } catch(const std::invalid_argument& e) {
-                return false;
-            }
-        }
+        virtual bool equals(const std::string& s) const override { return str.size() != 0 && str == s; }
         virtual bool equals(float f) const override { return num == f; }
         virtual bool equals(const Value& v) const override { return v.equals(num); }
 
