@@ -55,6 +55,64 @@ glm::vec3 parseVec3(const Node& node) {
     return vec;
 }
 
+void SceneLoader::loadStyles(YAML::Node styles, Scene& scene) {
+
+    if (!styles) {
+        return;
+    }
+    
+    for (auto styleNode : styles) {
+        
+        Style* style = nullptr;
+        
+        std::string styleName = styleNode.first.as<std::string>();
+        
+        Node baseNode = styleNode["base"];
+        if (baseNode) {
+            std::string baseString = baseNode.as<std::string>();
+            if (baseString == "lines") { style = new PolylineStyle(styleName); }
+            else if (baseString == "text") { /* TODO */ }
+            else if (baseString == "sprites" ) { /* TODO */ }
+        }
+        
+        if (style == nullptr) { style = new PolygonStyle(styleName); }
+        
+        Node animatedNode = styleNode["animated"];
+        if (animatedNode) { /* TODO */ }
+        
+        Node blendNode = styleNode["blend"];
+        if (blendNode) {
+            
+            std::string blend = blendNode.as<std::string>();
+            if (blend == "add") { /* TODO */ }
+            else if (blend == "multiply") { /* TODO */ }
+            
+        }
+        
+        Node texcoordsNode = styleNode["texcoords"];
+        if (texcoordsNode) {
+            
+            if (texcoordsNode.as<bool>()) { /* TODO */ }
+            else { /* TODO */ }
+            
+        }
+        
+        Node shadersNode = styleNode["shaders"];
+        if (shadersNode) { /* TODO */ }
+        
+        Node materialNode = styleNode["material"];
+        if (materialNode) { /* TODO */ }
+        
+        Node urlNode = styleNode["url"];
+        if (urlNode) { /* TODO */ }
+        
+        Node namedStyleNode = styleNode["style"];
+        if (namedStyleNode) { /* TODO */ }
+        
+    }
+
+}
+
 void SceneLoader::loadSources(Node sources, TileManager& tileManager) {
 
     if(!sources) {

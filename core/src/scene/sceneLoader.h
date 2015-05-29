@@ -17,6 +17,7 @@ class SceneLoader {
     void loadLights(YAML::Node lights, Scene& scene);
     void loadCameras(YAML::Node cameras, View& view);
     void loadLayers(YAML::Node layers, Scene& scene, TileManager& tileManager);
+    void loadStyles(YAML::Node styles, Scene& scene);
 
 public:
 
@@ -25,5 +26,5 @@ public:
     virtual ~SceneLoader() {};
 
     void loadScene(const std::string& _file, Scene& _scene, TileManager& _tileManager, View& _view);
-    
+
 };
