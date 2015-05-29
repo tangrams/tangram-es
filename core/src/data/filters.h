@@ -131,7 +131,12 @@ namespace Tangram {
             auto strIt = feat.props.stringProps.find(key);
             if (strIt != feat.props.stringProps.end()) {
                 for (auto* v : values) {
+                    if(v->equals("true")) { return true; }
                     if (v->equals(strIt->second)) { return true; }
+                }
+            } else {
+                for(auto* v : values) {
+                    if(v->equals("false")) { return true; }
                 }
             }
             auto numIt = feat.props.numericProps.find(key);

@@ -22,11 +22,9 @@ void init() {
     civic.props.numericProps.clear();
     civic.props.stringProps["name"] = "civic";
     civic.props.stringProps["brand"] = "honda";
-    civic.props.stringProps["check"] = "true";
     civic.props.numericProps["wheel"] = 4;
     civic.props.stringProps["drive"] = "fwd";
     civic.props.stringProps["type"] = "car";
-    civic.props.numericProps["fancy"] = 0;
 
     bmw1.props.stringProps.clear();
     bmw1.props.numericProps.clear();
@@ -37,7 +35,6 @@ void init() {
     bmw1.props.numericProps["wheel"] = 4;
     bmw1.props.stringProps["drive"] = "all";
     bmw1.props.stringProps["type"] = "car";
-    bmw1.props.numericProps["fancy"] = 1;
 
     bike.props.stringProps.clear();
     bike.props.numericProps.clear();
@@ -47,7 +44,6 @@ void init() {
     bike.props.stringProps["type"] = "bike";
     bike.props.stringProps["series"] = "CB";
     bike.props.stringProps["check"] = "available";
-    bike.props.numericProps["fancy"] = 1;
 
     for (auto& it : ctx) {
         delete it.second;
@@ -189,18 +185,6 @@ TEST_CASE( "yaml-filter-tests: context filter", "[filters][core][yaml]") {
     delete filter;
 }
 
-TEST_CASE( "yaml-filter-tests: boolean filter", "[filters][core][yaml]") {
-    init();
-    YAML::Node node = YAML::Load("filter: {fancy : true}");
-    Filter* filter = sceneLoader.generateFilter(node["filter"]);
-
-    REQUIRE(!filter->eval(civic, ctx));
-    REQUIRE(filter->eval(bmw1, ctx));
-    REQUIRE(filter->eval(bike, ctx));
-
-    delete filter;
-}
-
 TEST_CASE( "yaml-filter-tests: bogus filter", "[filters][core][yaml]") {
     init();
     YAML::Node node = YAML::Load("filter: {max: bogus}");
@@ -213,9 +197,9 @@ TEST_CASE( "yaml-filter-tests: bogus filter", "[filters][core][yaml]") {
     delete filter;
 }
 
-TEST_CASE( "yaml-filter-tests: true/false as string value", "[filters][core][yaml]") {
+TEST_CASE( "yaml-filter-tests: boolean true filter as existence check", "[filters][core][yaml]") {
     init();
-    YAML::Node node = YAML::Load("filter: {any : [{check: true}, {check: false}]}");
+    YAML::Node node = YAML::Load("filter: { drive : true }");
     Filter* filter = sceneLoader.generateFilter(node["filter"]);
 
     REQUIRE(filter->eval(civic, ctx));
@@ -225,14 +209,14 @@ TEST_CASE( "yaml-filter-tests: true/false as string value", "[filters][core][yam
     delete filter;
 }
 
-TEST_CASE( "yaml-filter-tests: boolean filter as existence check", "[filters][core][yaml]") {
+TEST_CASE( "yaml-filter-tests: boolean false filter as existence check", "[filters][core][yaml]") {
     init();
-    YAML::Node node = YAML::Load("filter: { drive : true }");
+    YAML::Node node = YAML::Load("filter: { drive : false}");
     Filter* filter = sceneLoader.generateFilter(node["filter"]);
 
-    REQUIRE(filter->eval(civic, ctx));
-    REQUIRE(filter->eval(bmw1, ctx));
-    REQUIRE(!filter->eval(bike, ctx));
+    REQUIRE(!filter->eval(civic, ctx));
+    REQUIRE(!filter->eval(bmw1, ctx));
+    REQUIRE(filter->eval(bike, ctx));
 
     delete filter;
 }
