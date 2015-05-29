@@ -329,9 +329,9 @@ Filter* SceneLoader::generatePredicate(YAML::Node _node, std::string _key) {
             std::string value = _node.as<std::string>();
             // NOTE: there is no way to distinguish between boolean true/false and a string "true"/"false". Yaml-cpp will consider both equivalent
             if(value == "true") {
-                return (new Equality(_key, {new NumValue(1)}));
+                return (new Equality(_key, {new NumValue(1, value)}));
             } else if(value == "false") {
-                return (new Equality(_key, {new NumValue(0)}));
+                return (new Equality(_key, {new NumValue(0, value)}));
             } else {
                 return (new Equality(_key, {new StrValue(value)}));
             }
@@ -340,14 +340,14 @@ Filter* SceneLoader::generatePredicate(YAML::Node _node, std::string _key) {
         ValueList values;
         for(YAML::const_iterator valItr = _node.begin(); valItr != _node.end(); ++valItr) {
             try {
-                values.push_back(new NumValue(valItr->as<float>(), valItr->as<std::string>()));
+                values.emplace_back(new NumValue(valItr->as<float>(), valItr->as<std::string>()));
             } catch(const BadConversion& e) {
                 std::string value = valItr->as<std::string>();
                 // NOTE: there is no way to distinguish between boolean true/false and a string "true"/"false". Yaml-cpp will consider both equivalent
                 if(value == "true") {
-                    values.emplace_back(new NumValue(1));
+                    values.emplace_back(new NumValue(1, value));
                 } else if(value == "false") {
-                    values.emplace_back(new NumValue(0));
+                    values.emplace_back(new NumValue(0, value));
                 } else {
                     values.emplace_back(new StrValue(value));
                 }
