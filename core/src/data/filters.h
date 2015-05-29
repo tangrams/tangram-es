@@ -112,6 +112,24 @@ namespace Tangram {
 
     };
 
+    struct Existence : public Predicate {
+        bool exists;
+        Existence(const std::string& k, const bool& e) : Predicate(k), exists(e) {}
+
+        virtual bool eval(const Feature& feat, const Context& ctx) const override {
+            bool inCtx = ctx.find(key) != ctx.end();
+            bool inStrProp = feat.props.stringProps.find(key) != feat.props.stringProps.end();
+            bool inNumProp = feat.props.numericProps.find(key) != feat.props.numericProps.end();
+            if(exists && (inCtx || inStrProp || inNumProp)) {
+                return true;
+            } else if(!exists && !inCtx && !inStrProp && !inNumProp) {
+                return true;
+            } else {
+                return false;
+            }
+        }
+    };
+
     struct Equality : public Predicate {
 
         ValueList values;

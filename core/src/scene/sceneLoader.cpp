@@ -329,7 +329,13 @@ Filter* SceneLoader::generatePredicate(YAML::Node _node, std::string _key) {
             return (new Equality(_key, { new NumValue(_node.as<float>(), _node.as<std::string>()) }));
         } catch(const BadConversion& e) {
             std::string value = _node.as<std::string>();
-            return (new Equality(_key, {new StrValue(value)}));
+            if(value == "true") {
+                return (new Existence(_key, true));
+            } else if(value == "false") {
+                return (new Existence(_key, false));
+            } else {
+                return (new Equality(_key, {new StrValue(value)}));
+            }
         }
     } else if(_node.IsSequence()) {
         ValueList values;

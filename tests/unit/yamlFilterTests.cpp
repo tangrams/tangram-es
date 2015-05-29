@@ -221,3 +221,27 @@ TEST_CASE( "yaml-filter-tests: boolean false filter as existence check", "[filte
     delete filter;
 }
 
+TEST_CASE( "yaml-filter-tests: boolean true filter as existence check for keyword", "[filters][core][yaml]") {
+    init();
+    YAML::Node node = YAML::Load("filter: {$vroom : true}");
+    Filter* filter = sceneLoader.generateFilter(node["filter"]);
+
+    REQUIRE(filter->eval(civic, ctx));
+    REQUIRE(filter->eval(bmw1, ctx));
+    REQUIRE(filter->eval(bike, ctx));
+
+    delete filter;
+}
+
+TEST_CASE( "yaml-filter-tests: boolean false filter as existence check for keyword", "[filters][core][yaml]") {
+    init();
+    YAML::Node node = YAML::Load("filter: {$foo : false}");
+    Filter* filter = sceneLoader.generateFilter(node["filter"]);
+
+    REQUIRE(filter->eval(civic, ctx));
+    REQUIRE(filter->eval(bmw1, ctx));
+    REQUIRE(filter->eval(bike, ctx));
+
+    delete filter;
+}
+
