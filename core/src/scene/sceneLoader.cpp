@@ -312,7 +312,9 @@ Filter* SceneLoader::generateFilter(YAML::Node _filter) {
 
     }
 
-    if(filters.size() > 0) {
+    if(filters.size() == 1) {
+        return filters.front();
+    } else if(filters.size() > 0) {
         return (new All(filters));
     } else {
         return (new Filter());
