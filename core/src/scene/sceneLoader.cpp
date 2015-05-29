@@ -1,5 +1,6 @@
 #include "sceneLoader.h"
 
+#include <vector>
 #include "platform.h"
 #include "scene.h"
 #include "tileManager.h"
@@ -10,11 +11,12 @@
 #include "polygonStyle.h"
 #include "polylineStyle.h"
 #include "debugStyle.h"
+#include "filters.h"
 
 #include "yaml-cpp/yaml.h"
 
 using namespace YAML;
-
+using namespace Tangram;
 
 void SceneLoader::loadScene(const std::string& _file, Scene& _scene, TileManager& _tileManager, View& _view) {
 
@@ -269,6 +271,148 @@ void SceneLoader::loadCameras(Node cameras, View& view) {
 
     }
 
+}
+
+Filter* SceneLoader::generateFilter(YAML::Node _filter) {
+
+    std::vector<Filter*> filters;
+
+    for(YAML::const_iterator filtItr = _filter.begin(); filtItr != _filter.end(); ++filtItr) {
+
+        Filter* filter;
+
+        if(_filter.IsSequence()) {
+
+            filter = generateFilter(*filtItr);
+
+        } else if(filtItr->first.as<std::string>() == "none") {
+
+            filter = generateNoneFilter(_filter["none"]);
+
+        } else if(filtItr->first.as<std::string>() == "not") {
+
+            filter = generateNoneFilter(_filter["not"]);
+
+        } else if (filtItr->first.as<std::string>() == "any") {
+
+            filter = generateAnyFilter(_filter["any"]);
+
+        } else if (filtItr->first.as<std::string>() == "all") {
+
+            filter = generateFilter(_filter["all"]);
+
+        } else {
+
+            std::string key = filtItr->first.as<std::string>();
+            filter = generatePredicate(_filter[key], key);
+
+        }
+
+        filters.push_back(filter);
+
+    }
+
+    if(filters.size() == 1) {
+        return filters.front();
+    } else if(filters.size() > 0) {
+        return (new All(filters));
+    } else {
+        return (new Filter());
+    }
+
+}
+
+Filter* SceneLoader::generatePredicate(YAML::Node _node, std::string _key) {
+
+    if(_node.IsScalar()) {
+        try {
+            return (new Equality(_key, { new NumValue(_node.as<float>(), _node.as<std::string>()) }));
+        } catch(const BadConversion& e) {
+            std::string value = _node.as<std::string>();
+            if(value == "true") {
+                return (new Existence(_key, true));
+            } else if(value == "false") {
+                return (new Existence(_key, false));
+            } else {
+                return (new Equality(_key, {new StrValue(value)}));
+            }
+        }
+    } else if(_node.IsSequence()) {
+        ValueList values;
+        for(YAML::const_iterator valItr = _node.begin(); valItr != _node.end(); ++valItr) {
+            try {
+                values.emplace_back(new NumValue(valItr->as<float>(), valItr->as<std::string>()));
+            } catch(const BadConversion& e) {
+                std::string value = valItr->as<std::string>();
+                values.emplace_back(new StrValue(value));
+            }
+        }
+        return (new Equality(_key, std::move(values)));
+    } else if(_node.IsMap()) {
+        float minVal = -std::numeric_limits<float>::infinity();
+        float maxVal = std::numeric_limits<float>::infinity();
+
+        for(YAML::const_iterator valItr = _node.begin(); valItr != _node.end(); ++valItr) {
+            if(valItr->first.as<std::string>() == "min") {
+                try {
+                    minVal = valItr->second.as<float>();
+                } catch(const BadConversion& e) {
+                    logMsg("Error: Badly formed filter.\tExpect a float value type, string found.\n");
+                    return (new Filter());
+                }
+            } else if(valItr->first.as<std::string>() == "max") {
+                try {
+                    maxVal = valItr->second.as<float>();
+                } catch(const BadConversion& e) {
+                    logMsg("Error: Badly formed filter.\tExpect a float value type, string found.\n");
+                    return (new Filter());
+                }
+            } else {
+                logMsg("Error: Badly formed Filter\n");
+                return (new Filter());
+            }
+        }
+        return (new Range(_key, minVal, maxVal));
+
+    } else {
+        logMsg("Error: Badly formed Filter\n");
+        return (new Filter());
+    }
+
+}
+
+Filter* SceneLoader::generateAnyFilter(YAML::Node _filter) {
+    std::vector<Filter*> filters;
+
+    if(!_filter.IsSequence()) {
+        logMsg("Error: Badly formed filter. \"Any\" expects a list.\n");
+        return (new Filter());
+    }
+    for(YAML::const_iterator filtItr = _filter.begin(); filtItr != _filter.end(); ++filtItr) {
+        filters.emplace_back(generateFilter(*filtItr));
+    }
+    return (new Any(std::move(filters)));
+}
+
+Filter* SceneLoader::generateNoneFilter(YAML::Node _filter) {
+
+    std::vector<Filter*> filters;
+
+    if(_filter.IsSequence()) {
+        for(YAML::const_iterator filtIter = _filter.begin(); filtIter != _filter.end(); ++filtIter) {
+            filters.emplace_back(generateFilter(*filtIter));
+        }
+    } else if(_filter.IsMap()) { // not case
+        for(YAML::const_iterator filtIter = _filter.begin(); filtIter != _filter.end(); ++filtIter) {
+            std::string key = filtIter->first.as<std::string>();
+            filters.emplace_back(generatePredicate(_filter[key], key));
+        }
+    } else {
+        logMsg("Error: Badly formed filter. \"None\" expects a list or an object.\n");
+        return (new Filter());
+    }
+
+    return (new None(std::move(filters)));
 }
 
 void SceneLoader::loadLayers(Node layers, Scene& scene, TileManager& tileManager) {
