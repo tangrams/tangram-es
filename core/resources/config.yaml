@@ -52,6 +52,7 @@ layers:
                     width: .01
                     cap: round
                     color: [0.47, 0.47, 0.47, 1.]
+            text: {}
 
     buildings:
         data: { source: osm }
