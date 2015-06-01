@@ -467,7 +467,7 @@ void SceneLoader::loadLayers(Node layers, Scene& scene, TileManager& tileManager
             if (cap) {
                 std::string capString = cap.as<std::string>();
                 if (capString == "butt") { params.line.cap = CapTypes::BUTT; }
-                else if (capString == "sqaure") { params.line.cap = CapTypes::SQUARE; }
+                else if (capString == "square") { params.line.cap = CapTypes::SQUARE; }
                 else if (capString == "round") { params.line.cap = CapTypes::ROUND; }
             }
 
@@ -501,7 +501,7 @@ void SceneLoader::loadLayers(Node layers, Scene& scene, TileManager& tileManager
                 if (cap) {
                     std::string capString = cap.as<std::string>();
                     if (capString == "butt") { params.outline.line.cap = CapTypes::BUTT; }
-                    else if (capString == "sqaure") { params.outline.line.cap = CapTypes::SQUARE; }
+                    else if (capString == "square") { params.outline.line.cap = CapTypes::SQUARE; }
                     else if (capString == "round") { params.outline.line.cap = CapTypes::ROUND; }
                 }
 
