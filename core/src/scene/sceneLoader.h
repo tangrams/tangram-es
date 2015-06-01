@@ -11,6 +11,10 @@ namespace YAML {
     class Node;
 }
 
+namespace Tangram {
+    struct Filter;
+}
+
 class SceneLoader {
 
     void loadSources(YAML::Node sources, TileManager& tileManager);
@@ -18,6 +22,9 @@ class SceneLoader {
     void loadCameras(YAML::Node cameras, View& view);
     void loadLayers(YAML::Node layers, Scene& scene, TileManager& tileManager);
     void loadStyles(YAML::Node styles, Scene& scene);
+    Tangram::Filter* generateAnyFilter(YAML::Node filter);
+    Tangram::Filter* generateNoneFilter(YAML::Node filter);
+    Tangram::Filter* generatePredicate(YAML::Node filter, std::string _key);
 
 public:
 
@@ -27,4 +34,5 @@ public:
 
     void loadScene(const std::string& _file, Scene& _scene, TileManager& _tileManager, View& _view);
 
+    Tangram::Filter* generateFilter(YAML::Node filter);
 };
