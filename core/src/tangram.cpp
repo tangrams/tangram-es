@@ -58,29 +58,16 @@ namespace Tangram {
             m_tileManager->setScene(m_scene);
         }
 
-        SceneLoader loader;
-        loader.loadScene("config.yaml", *m_scene, *m_tileManager, *m_view);
-
         // Hard-coded setup for stuff that isn't loaded through the config file yet
         m_ftContext = std::make_shared<FontContext>();
         m_ftContext->addFont("FiraSans-Medium.ttf", "FiraSans");
-        m_ftContext->addFont("FuturaStd-Condensed.ttf", "Futura");
         m_labelContainer = LabelContainer::GetInstance();
         m_labelContainer->setFontContext(m_ftContext);
         m_labelContainer->setView(m_view);
-
-        std::unique_ptr<Style> textStyle0(new TextStyle("FiraSans", "Textstyle0", 15.0f, 0xF7F0E1, true, true));
-        textStyle0->addLayer({ "roads", StyleParams() });
-        textStyle0->addLayer({ "places", StyleParams() });
-        textStyle0->addLayer({ "pois", StyleParams() });
-        m_scene->addStyle(std::move(textStyle0));
-
-        std::unique_ptr<Style> textStyle1(new TextStyle("Futura", "Textstyle1", 18.0f, 0x26241F, true, true));
-        textStyle1->addLayer({ "landuse", StyleParams() });
-        m_scene->addStyle(std::move(textStyle1));
-
-        std::unique_ptr<Style> debugTextStyle(new DebugTextStyle("FiraSans", "DebugTextStyle", 30.0f, 0xDC3522, true));
-        m_scene->addStyle(std::move(debugTextStyle));
+        
+        // Load scene from config file
+        SceneLoader loader;
+        loader.loadScene("config.yaml", *m_scene, *m_tileManager, *m_view);
 
         // Set up openGL state
         glDisable(GL_BLEND);

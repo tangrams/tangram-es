@@ -9,7 +9,9 @@
 #include "mvtSource.h"
 #include "polygonStyle.h"
 #include "polylineStyle.h"
+#include "textStyle.h"
 #include "debugStyle.h"
+#include "debugTextStyle.h"
 
 #include "yaml-cpp/yaml.h"
 
@@ -23,9 +25,14 @@ void SceneLoader::loadScene(const std::string& _file, Scene& _scene, TileManager
     Node config = YAML::Load(configString);
 
     loadSources(config["sources"], _tileManager);
+    loadStyles(config["styles"], _scene);
     loadLayers(config["layers"], _scene, _tileManager);
     loadCameras(config["cameras"], _view);
     loadLights(config["lights"], _scene);
+
+    for (auto& style : _scene.getStyles()) {
+        style->build(_scene.getLights());
+    }
 
 }
 
@@ -57,58 +64,65 @@ glm::vec3 parseVec3(const Node& node) {
 
 void SceneLoader::loadStyles(YAML::Node styles, Scene& scene) {
 
+    // Instantiate built-in styles
+    scene.getStyles().emplace_back(new PolygonStyle("polygons"));
+    scene.getStyles().emplace_back(new PolylineStyle("lines"));
+    scene.getStyles().emplace_back(new TextStyle("FiraSans", "text", 15.0f, 0xF7F0E1, true, true));
+    scene.getStyles().emplace_back(new DebugTextStyle("FiraSans", "debugtext", 30.0f, 0xDC3522, true));
+    scene.getStyles().emplace_back(new DebugStyle("debug"));
+
     if (!styles) {
         return;
     }
-    
+
     for (auto styleNode : styles) {
-        
+
         Style* style = nullptr;
-        
+
         std::string styleName = styleNode.first.as<std::string>();
-        
+
         Node baseNode = styleNode["base"];
         if (baseNode) {
             std::string baseString = baseNode.as<std::string>();
             if (baseString == "lines") { style = new PolylineStyle(styleName); }
-            else if (baseString == "text") { /* TODO */ }
-            else if (baseString == "sprites" ) { /* TODO */ }
+            else if (baseString == "text") { style = new TextStyle("FiraSans", styleName, 15.0f, 0xF7F0E1, true, true); }
+            else if (baseString == "sprites") { /* TODO */ }
         }
-        
+
         if (style == nullptr) { style = new PolygonStyle(styleName); }
-        
+
         Node animatedNode = styleNode["animated"];
         if (animatedNode) { /* TODO */ }
-        
+
         Node blendNode = styleNode["blend"];
         if (blendNode) {
-            
+
             std::string blend = blendNode.as<std::string>();
             if (blend == "add") { /* TODO */ }
             else if (blend == "multiply") { /* TODO */ }
-            
+
         }
-        
+
         Node texcoordsNode = styleNode["texcoords"];
         if (texcoordsNode) {
-            
+
             if (texcoordsNode.as<bool>()) { /* TODO */ }
             else { /* TODO */ }
-            
+
         }
-        
+
         Node shadersNode = styleNode["shaders"];
         if (shadersNode) { /* TODO */ }
-        
+
         Node materialNode = styleNode["material"];
         if (materialNode) { /* TODO */ }
-        
+
         Node urlNode = styleNode["url"];
         if (urlNode) { /* TODO */ }
-        
+
         Node namedStyleNode = styleNode["style"];
         if (namedStyleNode) { /* TODO */ }
-        
+
     }
 
 }
@@ -335,15 +349,6 @@ void SceneLoader::loadLayers(Node layers, Scene& scene, TileManager& tileManager
         return;
     }
 
-    // Instantiate base styles
-    auto polygonStyle = std::unique_ptr<PolygonStyle>(new PolygonStyle("polygons"));
-    auto polylineStyle = std::unique_ptr<PolylineStyle>(new PolylineStyle("lines"));
-    auto debugStyle = std::unique_ptr<DebugStyle>(new DebugStyle("debug"));
-
-    // TODO: configure style properties in styles block
-    polygonStyle->setLightingType(LightingType::vertex);
-    polylineStyle->setLightingType(LightingType::vertex);
-
     for (auto layerIt = layers.begin(); layerIt != layers.end(); ++layerIt) {
 
         std::string name = layerIt->first.as<std::string>();
@@ -429,22 +434,16 @@ void SceneLoader::loadLayers(Node layers, Scene& scene, TileManager& tileManager
 
             }
 
-            // match to built-in styles
-            if (styleName == "polygons") {
-                polygonStyle->addLayer({ name, params });
-            } else if (styleName == "lines") {
-                polylineStyle->addLayer({ name, params });
-            } else if (styleName == "text") {
-                // TODO
+            // match layer to the style in scene with the given name
+            for (auto& style : scene.getStyles()) {
+                if (style->getName() == styleName) {
+                    style->addLayer({ name, params });
+                }
             }
 
         }
 
     }
-
-    scene.addStyle(std::move(polygonStyle));
-    scene.addStyle(std::move(polylineStyle));
-    scene.addStyle(std::move(debugStyle));
 
     // tileManager isn't used yet, but we'll need it soon to get the list of data sources
 
