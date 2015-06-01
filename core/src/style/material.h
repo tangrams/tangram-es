@@ -1,11 +1,11 @@
-/* MATERIAL 
+/* MATERIAL
 -------------------------------
-This openGL Material implementation follows from the WebGL version of Tangram 
+This openGL Material implementation follows from the WebGL version of Tangram
 ( https://github.com/tangrams/tangram/wiki/Materials-Overview )
 */
 
 #pragma once
- 
+
 #include <memory>
 #include <string>
 #include "glm/vec3.hpp"
@@ -23,9 +23,9 @@ enum class MappingType {
 
 class Material {
 public:
-    
+
     Material();
-    
+
     virtual ~Material(){};
 
     /*  Emission color is by default disabled and vec4(0.0).
@@ -70,11 +70,9 @@ public:
     /*  Inject the needed lines of GLSL code on the shader to make this material work */
     virtual void injectOnProgram( std::shared_ptr<ShaderProgram> _shader );
 
-    virtual void removeFromProgram( std::shared_ptr<ShaderProgram> _shader );
-
     /*  Method to pass it self as a uniform to the shader program */
     virtual void setupProgram( std::shared_ptr<ShaderProgram> _shader );
-    
+
 private:
 
     /* Get defines that need to be injected on top of the shader */
@@ -84,7 +82,7 @@ private:
     virtual std::string getClassBlock();
 
     std::string m_name = "material";
-    
+
     glm::vec4   m_emission;
     glm::vec3   m_emission_texture_scale = glm::vec3(1.f);
     MappingType m_emission_texture_mapping = MappingType::UV;

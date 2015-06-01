@@ -96,8 +96,8 @@ void Material::setNormal(const std::string &_file, MappingType _type, glm::vec3 
 void Material::setNormal(std::shared_ptr<Texture> _texture, MappingType _type, glm::vec3 _scale, float _amount){
     m_normal_texture = _texture;
     if (_type == MappingType::SPHEREMAP){
-        // TODO 
-        //      - Print error: no SPHEREMAP on normal 
+        // TODO
+        //      - Print error: no SPHEREMAP on normal
         _type = MappingType::PLANAR;
     }
     m_normal_texture_mapping = _type;
@@ -139,7 +139,7 @@ std::string Material::getDefinesBlock(){
             }
         }
     }
-    
+
     if (m_bDiffuse) {
         defines += "#define TANGRAM_MATERIAL_DIFFUSE\n";
         if (m_diffuse_texture) {
@@ -155,7 +155,7 @@ std::string Material::getDefinesBlock(){
             }
         }
     }
-    
+
     if (m_bSpecular) {
         defines += "#define TANGRAM_MATERIAL_SPECULAR\n";
         if (m_specular_texture) {
@@ -171,7 +171,7 @@ std::string Material::getDefinesBlock(){
             }
         }
     }
-    
+
     if (m_normal_texture){
 
         defines += "#define TANGRAM_MATERIAL_NORMAL_TEXTURE\n";
@@ -225,11 +225,6 @@ void Material::injectOnProgram(std::shared_ptr<ShaderProgram> _shader ) {
     _shader->addSourceBlock("material", getClassBlock(), false);
 }
 
-void Material::removeFromProgram(std::shared_ptr<ShaderProgram> _shader ) {
-    _shader->removeSourceBlock("defines", getDefinesBlock());
-    _shader->removeSourceBlock("material", getClassBlock());
-}
-
 void Material::setupProgram(std::shared_ptr<ShaderProgram> _shader) {
 
     if (m_bEmission) {
@@ -242,7 +237,7 @@ void Material::setupProgram(std::shared_ptr<ShaderProgram> _shader) {
             _shader->setUniformf("u_"+m_name+".emissionScale", m_emission_texture_scale);
         }
     }
-    
+
     if (m_bAmbient) {
         _shader->setUniformf("u_"+m_name+".ambient", m_ambient);
 
@@ -253,7 +248,7 @@ void Material::setupProgram(std::shared_ptr<ShaderProgram> _shader) {
             _shader->setUniformf("u_"+m_name+".ambientScale", m_ambient_texture_scale);
         }
     }
-    
+
     if (m_bDiffuse) {
         _shader->setUniformf("u_"+m_name+".diffuse", m_diffuse);
 
@@ -264,7 +259,7 @@ void Material::setupProgram(std::shared_ptr<ShaderProgram> _shader) {
             _shader->setUniformf("u_"+m_name+".diffuseScale", m_diffuse_texture_scale);
         }
     }
-    
+
     if (m_bSpecular) {
         _shader->setUniformf("u_"+m_name+".specular", m_specular);
         _shader->setUniformf("u_"+m_name+".shininess", m_shininess);
