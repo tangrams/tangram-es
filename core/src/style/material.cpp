@@ -63,9 +63,8 @@ void Material::setDiffuse(std::shared_ptr<Texture> _texture, MappingType _type, 
     setDiffuseEnabled((bool)_texture);
 }
 
-void Material::setSpecular(const glm::vec4 _specular, float _shininess){
+void Material::setSpecular(const glm::vec4 _specular){
     m_specular = _specular;
-    m_shininess = _shininess;
     m_specular_texture.reset();
     setSpecularEnabled(true);
 }
@@ -83,6 +82,11 @@ void Material::setSpecular(std::shared_ptr<Texture> _texture, MappingType _type,
     setSpecularEnabled((bool)_texture);
 }
 
+void Material::setShininess(float _shiny) {
+    m_shininess = _shiny;
+    setSpecularEnabled(true);
+}
+
 void Material::setEmissionEnabled(bool _enable) { m_bEmission = _enable; }
 void Material::setAmbientEnabled(bool _enable) { m_bAmbient = _enable; }
 void Material::setDiffuseEnabled(bool _enable) { m_bDiffuse = _enable; }
@@ -95,14 +99,21 @@ void Material::setNormal(const std::string &_file, MappingType _type, glm::vec3 
 
 void Material::setNormal(std::shared_ptr<Texture> _texture, MappingType _type, glm::vec3 _scale, float _amount){
     m_normal_texture = _texture;
-    if (_type == MappingType::SPHEREMAP){
-        // TODO
-        //      - Print error: no SPHEREMAP on normal
-        _type = MappingType::PLANAR;
+    if (_type == MappingType::spheremap){
+        _type = MappingType::planar;
     }
     m_normal_texture_mapping = _type;
     m_normal_texture_scale = _scale;
     m_normal_texture_amount = _amount;
+}
+
+std::string mappingTypeToString(MappingType type) {
+    switch(type) {
+        case MappingType::uv:        return "UV";
+        case MappingType::planar:    return "PLANAR";
+        case MappingType::triplanar: return "TRIPLANAR";
+        case MappingType::spheremap: return "SPHEREMAP";
+    }
 }
 
 std::string Material::getDefinesBlock(){
@@ -112,15 +123,7 @@ std::string Material::getDefinesBlock(){
         defines += "#define TANGRAM_MATERIAL_EMISSION\n";
         if (m_emission_texture) {
             defines += "#define TANGRAM_MATERIAL_EMISSION_TEXTURE\n";
-            if ( m_emission_texture_mapping == MappingType::UV ){
-                defines += "#define TANGRAM_MATERIAL_EMISSION_TEXTURE_UV\n";
-            } else if ( m_emission_texture_mapping == MappingType::PLANAR ){
-                defines += "#define TANGRAM_MATERIAL_EMISSION_TEXTURE_PLANAR\n";
-            } else if ( m_emission_texture_mapping == MappingType::TRIPLANAR ){
-                defines += "#define TANGRAM_MATERIAL_EMISSION_TEXTURE_TRIPLANAR\n";
-            } else if ( m_emission_texture_mapping == MappingType::SPHEREMAP ){
-                defines += "#define TANGRAM_MATERIAL_EMISSION_TEXTURE_SPHEREMAP\n";
-            }
+            defines += "#define TANGRAM_MATERIAL_EMISSION_TEXTURE_" + mappingTypeToString(m_emission_texture_mapping) + "\n";
         }
     }
 
@@ -128,15 +131,7 @@ std::string Material::getDefinesBlock(){
         defines += "#define TANGRAM_MATERIAL_AMBIENT\n";
         if (m_ambient_texture) {
             defines += "#define TANGRAM_MATERIAL_AMBIENT_TEXTURE\n";
-            if ( m_ambient_texture_mapping == MappingType::UV ){
-                defines += "#define TANGRAM_MATERIAL_AMBIENT_TEXTURE_UV\n";
-            } else if ( m_ambient_texture_mapping == MappingType::PLANAR ){
-                defines += "#define TANGRAM_MATERIAL_AMBIENT_TEXTURE_PLANAR\n";
-            } else if ( m_ambient_texture_mapping == MappingType::TRIPLANAR ){
-                defines += "#define TANGRAM_MATERIAL_AMBIENT_TEXTURE_TRIPLANAR\n";
-            } else if ( m_ambient_texture_mapping == MappingType::SPHEREMAP ){
-                defines += "#define TANGRAM_MATERIAL_AMBIENT_TEXTURE_SPHEREMAP\n";
-            }
+            defines += "#define TANGRAM_MATERIAL_AMBIENT_TEXTURE_" + mappingTypeToString(m_ambient_texture_mapping) + "\n";
         }
     }
 
@@ -144,71 +139,48 @@ std::string Material::getDefinesBlock(){
         defines += "#define TANGRAM_MATERIAL_DIFFUSE\n";
         if (m_diffuse_texture) {
             defines += "#define TANGRAM_MATERIAL_DIFFUSE_TEXTURE\n";
-            if ( m_diffuse_texture_mapping == MappingType::UV ){
-                defines += "#define TANGRAM_MATERIAL_DIFFUSE_TEXTURE_UV\n";
-            } else if ( m_diffuse_texture_mapping == MappingType::PLANAR ){
-                defines += "#define TANGRAM_MATERIAL_DIFFUSE_TEXTURE_PLANAR\n";
-            } else if ( m_diffuse_texture_mapping == MappingType::TRIPLANAR ){
-                defines += "#define TANGRAM_MATERIAL_DIFFUSE_TEXTURE_TRIPLANAR\n";
-            } else if ( m_diffuse_texture_mapping == MappingType::SPHEREMAP ){
-                defines += "#define TANGRAM_MATERIAL_DIFFUSE_TEXTURE_SPHEREMAP\n";
-            }
+            defines += "#define TANGRAM_MATERIAL_DIFFUSE_TEXTURE_" + mappingTypeToString(m_diffuse_texture_mapping) + "\n";
         }
     }
 
     if (m_bSpecular) {
         defines += "#define TANGRAM_MATERIAL_SPECULAR\n";
         if (m_specular_texture) {
-            defines += "#define TANGRAM_MATERIAL_SPECULAR_TEXTURE\n";;
-            if ( m_specular_texture_mapping == MappingType::UV ){
-                defines += "#define TANGRAM_MATERIAL_SPECULAR_TEXTURE_UV\n";
-            } else if ( m_specular_texture_mapping == MappingType::PLANAR ){
-                defines += "#define TANGRAM_MATERIAL_SPECULAR_TEXTURE_PLANAR\n";
-            } else if ( m_specular_texture_mapping == MappingType::TRIPLANAR ){
-                defines += "#define TANGRAM_MATERIAL_SPECULAR_TEXTURE_TRIPLANAR\n";
-            } else if ( m_specular_texture_mapping == MappingType::SPHEREMAP ){
-                defines += "#define TANGRAM_MATERIAL_SPECULAR_TEXTURE_SPHEREMAP\n";
-            }
+            defines += "#define TANGRAM_MATERIAL_SPECULAR_TEXTURE\n";
+            defines += "#define TANGRAM_MATERIAL_SPECULAR_TEXTURE_" + mappingTypeToString(m_specular_texture_mapping) + "\n";
         }
     }
 
     if (m_normal_texture){
-
         defines += "#define TANGRAM_MATERIAL_NORMAL_TEXTURE\n";
-        if ( m_normal_texture_mapping == MappingType::UV ){
-            defines += "#define TANGRAM_MATERIAL_NORMAL_TEXTURE_UV\n";
-        } else if ( m_normal_texture_mapping == MappingType::PLANAR ){
-            defines += "#define TANGRAM_MATERIAL_NORMAL_TEXTURE_PLANAR\n";
-        } else if ( m_normal_texture_mapping == MappingType::TRIPLANAR ){
-            defines += "#define TANGRAM_MATERIAL_NORMAL_TEXTURE_TRIPLANAR\n";
-        }
+        defines += "#define TANGRAM_MATERIAL_NORMAL_TEXTURE_" + mappingTypeToString(m_normal_texture_mapping) + "\n";
     }
 
     if (m_emission_texture ||  m_ambient_texture || m_diffuse_texture || m_specular_texture ||
         m_normal_texture ) {
 
         // Add MAPPING functions
-        if( (m_bEmission && m_emission_texture_mapping == MappingType::SPHEREMAP) ||
-            (m_bAmbient && m_ambient_texture_mapping == MappingType::SPHEREMAP) ||
-            (m_bDiffuse && m_diffuse_texture_mapping == MappingType::SPHEREMAP) ||
-            (m_bSpecular && m_specular_texture_mapping == MappingType::SPHEREMAP) ||
-            m_normal_texture_mapping == MappingType::SPHEREMAP ){
+        if( (m_bEmission && m_emission_texture_mapping == MappingType::spheremap) ||
+            (m_bAmbient  && m_ambient_texture_mapping  == MappingType::spheremap) ||
+            (m_bDiffuse  && m_diffuse_texture_mapping  == MappingType::spheremap) ||
+            (m_bSpecular && m_specular_texture_mapping == MappingType::spheremap) ||
+                            m_normal_texture_mapping   == MappingType::spheremap) {
             defines += "#define TANGRAM_MATERIAL_TEXTURE_SPHEREMAP\n";
         }
 
-        if( (m_bEmission && m_emission_texture_mapping == MappingType::TRIPLANAR) ||
-            (m_bAmbient && m_ambient_texture_mapping == MappingType::TRIPLANAR) ||
-            (m_bDiffuse && m_diffuse_texture_mapping == MappingType::TRIPLANAR) ||
-            (m_bSpecular && m_specular_texture_mapping == MappingType::TRIPLANAR) ||
-            m_normal_texture_mapping == MappingType::TRIPLANAR ){
+        if( (m_bEmission && m_emission_texture_mapping == MappingType::triplanar) ||
+            (m_bAmbient  && m_ambient_texture_mapping  == MappingType::triplanar) ||
+            (m_bDiffuse  && m_diffuse_texture_mapping  == MappingType::triplanar) ||
+            (m_bSpecular && m_specular_texture_mapping == MappingType::triplanar) ||
+                            m_normal_texture_mapping   == MappingType::triplanar) {
             defines += "#define TANGRAM_MATERIAL_TEXTURE_TRIPLANAR\n";
         }
 
-        if( (m_bEmission && m_emission_texture_mapping == MappingType::PLANAR) ||
-            (m_bAmbient && m_ambient_texture_mapping == MappingType::PLANAR) ||
-            (m_bDiffuse && m_diffuse_texture_mapping == MappingType::PLANAR) ||
-            (m_bSpecular && m_specular_texture_mapping == MappingType::PLANAR) ||
-            m_normal_texture_mapping == MappingType::PLANAR ){
+        if( (m_bEmission && m_emission_texture_mapping == MappingType::planar) ||
+            (m_bAmbient  && m_ambient_texture_mapping  == MappingType::planar) ||
+            (m_bDiffuse  && m_diffuse_texture_mapping  == MappingType::planar) ||
+            (m_bSpecular && m_specular_texture_mapping == MappingType::planar) ||
+                            m_normal_texture_mapping   == MappingType::planar) {
             defines += "#define TANGRAM_MATERIAL_TEXTURE_PLANAR\n";
         }
     }

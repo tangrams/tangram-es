@@ -64,6 +64,66 @@ glm::vec3 parseVec3(const Node& node) {
     return vec;
 }
 
+std::shared_ptr<Material> SceneLoader::loadMaterial(YAML::Node matNode) {
+
+    auto mat = std::make_shared<Material>();
+
+    Node diffuse = matNode["diffuse"];
+    if (diffuse) {
+        if (diffuse.IsMap()) {
+            // Parse texture parameters
+        } else {
+            // Just set a color
+            mat->setDiffuse(parseVec4(diffuse));
+        }
+    }
+
+    Node ambient = matNode["ambient"];
+    if (ambient) {
+        if (ambient.IsMap()) {
+            // Parse texture parameters
+        } else {
+            // Just set a color
+            mat->setAmbient(parseVec4(ambient));
+        }
+    }
+
+    Node specular = matNode["specular"];
+    if (specular) {
+        if (specular.IsMap()) {
+            // Parse texture parameters
+        } else {
+            // Just set a color
+            mat->setSpecular(parseVec4(specular));
+        }
+    }
+
+    Node shininess = matNode["shininess"];
+    if (shininess) { mat->setShininess(shininess.as<float>()); }
+
+    Node normal = matNode["normal"];
+    if (normal) {
+        Node texture = normal["texture"];
+        Node mapping = normal["mapping"];
+        if (texture && mapping) {
+
+            std::string texstring = texture.as<std::string>();
+            std::string mapstring = mapping.as<std::string>();
+
+            MappingType maptype = MappingType::uv;
+            if (mapstring == "uv") { maptype = MappingType::uv; }
+            else if (mapstring == "planar") { maptype = MappingType::planar; }
+            else if (mapstring == "triplanar") { maptype = MappingType::triplanar; }
+            else { logMsg("WARNING: invalid mapping for texture \"%s\"\n", texstring.c_str()); }
+
+            mat->setNormal(texstring, maptype);
+        }
+    }
+
+    return mat;
+
+}
+
 void SceneLoader::loadStyles(YAML::Node styles, Scene& scene) {
 
     // Instantiate built-in styles
@@ -117,7 +177,12 @@ void SceneLoader::loadStyles(YAML::Node styles, Scene& scene) {
         if (shadersNode) { /* TODO */ }
 
         Node materialNode = styleNode["material"];
-        if (materialNode) { /* TODO */ }
+        if (materialNode) {
+            std::shared_ptr<Material> material = loadMaterial(materialNode);
+            if (material) {
+                style->setMaterial(material);
+            }
+        }
 
         Node urlNode = styleNode["url"];
         if (urlNode) { /* TODO */ }
