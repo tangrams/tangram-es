@@ -12,6 +12,15 @@ lights:
         diffuse: [.7, .7, .7, 1.]
         ambient: [.3, .3, .3, 1.]
 
+styles:
+    pillows:
+        base: polygon
+        lighting: fragment
+        material:
+            normal:
+                texture: normals.jpg
+                mapping: uv
+
 sources:
     osm:
         type: MVT
@@ -36,7 +45,7 @@ layers:
     water:
         data: { source: osm }
         draw:
-            polygons:
+            pillows:
                 order: 2
                 color: [.102, .49, .569, 1.]
 

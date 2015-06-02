@@ -137,11 +137,12 @@ void SceneLoader::loadStyles(YAML::Node styles, Scene& scene) {
         return;
     }
 
-    for (auto styleNode : styles) {
+    for (auto styleIt : styles) {
 
         Style* style = nullptr;
 
-        std::string styleName = styleNode.first.as<std::string>();
+        std::string styleName = styleIt.first.as<std::string>();
+        Node styleNode = styleIt.second;
 
         Node baseNode = styleNode["base"];
         if (baseNode) {
@@ -183,12 +184,21 @@ void SceneLoader::loadStyles(YAML::Node styles, Scene& scene) {
                 style->setMaterial(material);
             }
         }
+        
+        Node lightingNode = styleNode["lighting"];
+        if (lightingNode) {
+            if (lightingNode.as<std::string>() == "fragment") { style->setLightingType(LightingType::fragment); }
+            else if (lightingNode.as<std::string>() == "vertex") { style->setLightingType(LightingType::vertex); }
+            else { style->setLightingType(LightingType::vertex); }
+        }
 
         Node urlNode = styleNode["url"];
         if (urlNode) { /* TODO */ }
 
         Node namedStyleNode = styleNode["style"];
         if (namedStyleNode) { /* TODO */ }
+        
+        scene.addStyle(std::unique_ptr<Style>(style));
 
     }
 
