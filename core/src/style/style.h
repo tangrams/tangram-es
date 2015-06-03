@@ -71,7 +71,7 @@ protected:
     std::string m_name;
 
     /* <ShaderProgram> used to draw meshes using this style */
-    std::shared_ptr<ShaderProgram> m_shaderProgram;
+    std::shared_ptr<ShaderProgram> m_shaderProgram = std::make_shared<ShaderProgram>();
 
     /* <VertexLayout> shared between meshes using this style */
     std::shared_ptr<VertexLayout> m_vertexLayout;

@@ -64,9 +64,42 @@ glm::vec3 parseVec3(const Node& node) {
     return vec;
 }
 
-std::shared_ptr<Material> SceneLoader::loadMaterial(YAML::Node matNode) {
+void SceneLoader::loadShaderConfig(YAML::Node shaders, ShaderProgram& shader) {
 
-    auto mat = std::make_shared<Material>();
+    if (!shaders) {
+        return;
+    }
+
+    Node definesNode = shaders["defines"];
+    if (definesNode) {
+        for (auto define : definesNode) {
+            std::string name = define.first.as<std::string>();
+            std::string value = define.second.as<std::string>();
+            shader.addSourceBlock("defines", "#define" + name + " " + value);
+        }
+    }
+
+    Node uniformsNode = shaders["uniforms"];
+    if (uniformsNode) {
+        for (auto uniform : uniformsNode) {
+            std::string name = uniform.first.as<std::string>();
+            std::string value = uniform.first.as<std::string>();
+            shader.addSourceBlock("uniforms", "uniform " + name + " = " + value + ";");
+        }
+    }
+
+    Node blocksNode = shaders["blocks"];
+    if (blocksNode) {
+        for (auto block : blocksNode) {
+            std::string name = block.first.as<std::string>();
+            std::string value = block.second.as<std::string>();
+            shader.addSourceBlock(name, value); // TODO: Warn on unrecognized injection points
+        }
+    }
+
+}
+
+void SceneLoader::loadMaterial(YAML::Node matNode, Material& mat) {
 
     Node diffuse = matNode["diffuse"];
     if (diffuse) {
@@ -74,7 +107,7 @@ std::shared_ptr<Material> SceneLoader::loadMaterial(YAML::Node matNode) {
             // Parse texture parameters
         } else {
             // Just set a color
-            mat->setDiffuse(parseVec4(diffuse));
+            mat.setDiffuse(parseVec4(diffuse));
         }
     }
 
@@ -84,7 +117,7 @@ std::shared_ptr<Material> SceneLoader::loadMaterial(YAML::Node matNode) {
             // Parse texture parameters
         } else {
             // Just set a color
-            mat->setAmbient(parseVec4(ambient));
+            mat.setAmbient(parseVec4(ambient));
         }
     }
 
@@ -94,12 +127,12 @@ std::shared_ptr<Material> SceneLoader::loadMaterial(YAML::Node matNode) {
             // Parse texture parameters
         } else {
             // Just set a color
-            mat->setSpecular(parseVec4(specular));
+            mat.setSpecular(parseVec4(specular));
         }
     }
 
     Node shininess = matNode["shininess"];
-    if (shininess) { mat->setShininess(shininess.as<float>()); }
+    if (shininess) { mat.setShininess(shininess.as<float>()); }
 
     Node normal = matNode["normal"];
     if (normal) {
@@ -116,11 +149,9 @@ std::shared_ptr<Material> SceneLoader::loadMaterial(YAML::Node matNode) {
             else if (mapstring == "triplanar") { maptype = MappingType::triplanar; }
             else { logMsg("WARNING: invalid mapping for texture \"%s\"\n", texstring.c_str()); }
 
-            mat->setNormal(texstring, maptype);
+            mat.setNormal(texstring, maptype);
         }
     }
-
-    return mat;
 
 }
 
@@ -175,16 +206,15 @@ void SceneLoader::loadStyles(YAML::Node styles, Scene& scene) {
         }
 
         Node shadersNode = styleNode["shaders"];
-        if (shadersNode) { /* TODO */ }
+        if (shadersNode) {
+            loadShaderConfig(shadersNode, *style->getShaderProgram());
+        }
 
         Node materialNode = styleNode["material"];
         if (materialNode) {
-            std::shared_ptr<Material> material = loadMaterial(materialNode);
-            if (material) {
-                style->setMaterial(material);
-            }
+            loadMaterial(materialNode, *style->getMaterial());
         }
-        
+
         Node lightingNode = styleNode["lighting"];
         if (lightingNode) {
             if (lightingNode.as<std::string>() == "fragment") { style->setLightingType(LightingType::fragment); }
@@ -197,7 +227,7 @@ void SceneLoader::loadStyles(YAML::Node styles, Scene& scene) {
 
         Node namedStyleNode = styleNode["style"];
         if (namedStyleNode) { /* TODO */ }
-        
+
         scene.addStyle(std::unique_ptr<Style>(style));
 
     }

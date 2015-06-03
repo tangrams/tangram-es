@@ -6,6 +6,7 @@
 class Scene;
 class TileManager;
 class View;
+class ShaderProgram;
 class Material;
 
 /* Forward Declaration of yaml-cpp node type */
@@ -24,7 +25,8 @@ class SceneLoader {
     void loadCameras(YAML::Node cameras, View& view);
     void loadLayers(YAML::Node layers, Scene& scene, TileManager& tileManager);
     void loadStyles(YAML::Node styles, Scene& scene);
-    std::shared_ptr<Material> loadMaterial(YAML::Node material);
+    void loadMaterial(YAML::Node material, Material& style);
+    void loadShaderConfig(YAML::Node shaders, ShaderProgram& shader);
     Tangram::Filter* generateAnyFilter(YAML::Node filter);
     Tangram::Filter* generateNoneFilter(YAML::Node filter);
     Tangram::Filter* generatePredicate(YAML::Node filter, std::string _key);

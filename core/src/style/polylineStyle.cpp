@@ -28,7 +28,6 @@ void PolylineStyle::constructShaderProgram() {
     std::string vertShaderSrcStr = stringFromResource("polyline.vs");
     std::string fragShaderSrcStr = stringFromResource("polyline.fs");
     
-    m_shaderProgram = std::make_shared<ShaderProgram>();
     m_shaderProgram->setSourceStrings(fragShaderSrcStr, vertShaderSrcStr);
 }
 

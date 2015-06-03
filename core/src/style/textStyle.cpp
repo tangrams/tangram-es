@@ -26,7 +26,6 @@ void TextStyle::constructShaderProgram() {
     std::string vertShaderSrcStr = stringFromResource("text.vs");
     std::string fragShaderSrcStr = stringFromResource(frag.c_str());
 
-    m_shaderProgram = std::make_shared<ShaderProgram>();
     m_shaderProgram->setSourceStrings(fragShaderSrcStr, vertShaderSrcStr);
 
     std::string defines;

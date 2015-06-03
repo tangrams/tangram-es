@@ -1,8 +1,8 @@
 cameras:
     camera1:
-        type: perspective
-        focal_length: [[16, 2], [20, 6]] # pairs of [zoom, focal len]
-        vanishing_point: [-250, -250] # relative to center of screen, in pixels
+        type: perspective #currently ignored
+        focal_length: [[16, 2], [20, 6]] # currently ignored
+        vanishing_point: [-250, -250] # currently ignored
 
 lights:
     light1:
@@ -20,6 +20,11 @@ styles:
             normal:
                 texture: normals.jpg
                 mapping: uv
+    heightglow:
+        base: polygon
+        shaders:
+            blocks:
+                color: "color.rgb += vec3(0.5 * position.z);"
 
 sources:
     osm:
@@ -40,7 +45,7 @@ layers:
             polygons:
                 order: 1
                 color: [0.443, 0.569, 0.4, 1.]
-                interactive: true
+                interactive: true #currently ignored
 
     water:
         data: { source: osm }
@@ -66,8 +71,8 @@ layers:
     buildings:
         data: { source: osm }
         draw:
-            polygons:
+            heightglow:
                 order: 50
                 color: [0.949, 0.941, 0.901, 1.]
-                extrude: true
+                extrude: true #currently ignored
 

@@ -27,7 +27,6 @@ void DebugStyle::constructShaderProgram() {
     std::string vertShaderSrcStr = stringFromResource("debug.vs");
     std::string fragShaderSrcStr = stringFromResource("debug.fs");
     
-    m_shaderProgram = std::make_shared<ShaderProgram>();
     m_shaderProgram->setSourceStrings(fragShaderSrcStr, vertShaderSrcStr);
     
 }
