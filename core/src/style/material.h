@@ -21,6 +21,13 @@ enum class MappingType {
     spheremap
 };
 
+struct MaterialTexture {
+    std::shared_ptr<Texture> tex = nullptr;
+    MappingType mapping = MappingType::uv;
+    glm::vec3 scale = glm::vec3(1.f);
+    glm::vec3 amount = glm::vec3(1.f);
+};
+
 class Material {
 public:
 
@@ -31,26 +38,22 @@ public:
     /*  Emission color is by default disabled and vec4(0.0).
      *  Setting this property enables it and changes require reloading the shader. */
     void setEmission(const glm::vec4 _emission);
-    void setEmission(const std::string &_file, MappingType _type = MappingType::uv, glm::vec3 _scale = glm::vec3(1.), glm::vec4 _amount = glm::vec4(1.));
-    void setEmission(std::shared_ptr<Texture> _texture, MappingType _type = MappingType::uv, glm::vec3 _scale = glm::vec3(1.), glm::vec4 _amount = glm::vec4(1.));
+    void setEmission(MaterialTexture _emissionTexture);
 
     /*  Ambient color is by default disabled and vec4(1.0).
      *  Setting this property enables it and changes require reloading the shader. */
     void setAmbient(const glm::vec4 _ambient);
-    void setAmbient(const std::string &_file, MappingType _type = MappingType::uv, glm::vec3 _scale = glm::vec3(1.), glm::vec4 _amount = glm::vec4(1.));
-    void setAmbient(std::shared_ptr<Texture> _texture, MappingType _type = MappingType::uv, glm::vec3 _scale = glm::vec3(1.), glm::vec4 _amount = glm::vec4(1.));
+    void setAmbient(MaterialTexture _ambientTexture);
 
     /*  Diffuse color is by default enabled and vec4(1.0).
      *  Changes require reloading the shader. */
     void setDiffuse(const glm::vec4 _diffuse);
-    void setDiffuse(const std::string &_file, MappingType _type = MappingType::uv, glm::vec3 _scale = glm::vec3(1.), glm::vec4 _amount = glm::vec4(1.));
-    void setDiffuse(std::shared_ptr<Texture> _texture, MappingType _type = MappingType::uv, glm::vec3 _scale = glm::vec3(1.), glm::vec4 _amount = glm::vec4(1.));
+    void setDiffuse(MaterialTexture _diffuseTexture);
 
     /*  Specular color is by default disabled and vec4(0.2) with a shininess factor of 0.2.
      *  Setting this property enables it and changes require reloading the shader. */
     void setSpecular(const glm::vec4 _specular);
-    void setSpecular(const std::string &_file, MappingType _type = MappingType::uv, glm::vec3 _scale = glm::vec3(1.), glm::vec4 _amount = glm::vec4(1.));
-    void setSpecular(std::shared_ptr<Texture> _texture, MappingType _type = MappingType::uv, glm::vec3 _scale = glm::vec3(1.), glm::vec4 _amount = glm::vec4(1.));
+    void setSpecular(MaterialTexture _specularTexture);
 
     void setShininess(float _shiny);
 
@@ -66,8 +69,7 @@ public:
     /* Enable or disable specular colors */
     void setSpecularEnabled(bool _enable);
 
-    void setNormal(const std::string &_file, MappingType _type = MappingType::uv, glm::vec3 _scale = glm::vec3(1.), float _amount = 1.);
-    void setNormal(std::shared_ptr<Texture> _texture, MappingType _type = MappingType::uv, glm::vec3 _scale = glm::vec3(1.), float _amount = 1.);
+    void setNormal(MaterialTexture _normalTexture);
 
     /*  Inject the needed lines of GLSL code on the shader to make this material work */
     virtual void injectOnProgram(std::shared_ptr<ShaderProgram> _shader);
@@ -78,41 +80,29 @@ public:
 private:
 
     /* Get defines that need to be injected on top of the shader */
-    virtual std::string getDefinesBlock();
+    std::string getDefinesBlock();
 
     /* Get the GLSL struct and classes need to be injected */
-    virtual std::string getClassBlock();
+    std::string getClassBlock();
 
-    std::string m_name = "material";
+    bool m_bEmission = false;
+    glm::vec4 m_emission = glm::vec4(1.f);
+    MaterialTexture m_emission_texture;
 
-    glm::vec4   m_emission;
-    glm::vec3   m_emission_texture_scale = glm::vec3(1.f);
-    MappingType m_emission_texture_mapping = MappingType::uv;
-    std::shared_ptr<Texture> m_emission_texture;
+    bool m_bAmbient = true;
+    glm::vec4 m_ambient = glm::vec4(1.f);
+    MaterialTexture m_ambient_texture;
 
-    glm::vec4   m_ambient = glm::vec4(1.f);
-    glm::vec3   m_ambient_texture_scale = glm::vec3(1.f);
-    MappingType m_ambient_texture_mapping = MappingType::uv;
-    std::shared_ptr<Texture> m_ambient_texture;
+    bool m_bDiffuse = true;
+    glm::vec4 m_diffuse = glm::vec4(1.f);
+    MaterialTexture m_diffuse_texture;
 
-    glm::vec4   m_diffuse = glm::vec4(1.f);
-    glm::vec3   m_diffuse_texture_scale = glm::vec3(1.f);
-    MappingType m_diffuse_texture_mapping = MappingType::uv;
-    std::shared_ptr<Texture> m_diffuse_texture;
+    bool m_bSpecular = false;
+    glm::vec4 m_specular = glm::vec4(.2f);
+    MaterialTexture m_specular_texture;
+    
+    MaterialTexture m_normal_texture;
 
-    glm::vec4   m_specular = glm::vec4(.2f);
-    glm::vec3   m_specular_texture_scale = glm::vec3(1.f);
-    MappingType m_specular_texture_mapping = MappingType::uv;
-    std::shared_ptr<Texture> m_specular_texture;
+    float m_shininess = .2f;
 
-    glm::vec3   m_normal_texture_scale = glm::vec3(1.f);
-    float       m_normal_texture_amount = 1.f;
-    MappingType m_normal_texture_mapping = MappingType::uv;
-    std::shared_ptr<Texture> m_normal_texture;
-
-    float       m_shininess = .2f;
-    bool        m_bEmission = false;
-    bool        m_bAmbient = true;
-    bool        m_bDiffuse = true;
-    bool        m_bSpecular = false;
 };
