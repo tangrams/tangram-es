@@ -2,7 +2,7 @@
 
 #include <vector>
 #include <memory>
-#include <map>
+#include <unordered_map>
 
 #include "style/style.h"
 #include "scene/light.h"
@@ -22,13 +22,15 @@ public:
 
     std::vector<std::unique_ptr<Style>>& getStyles() { return m_styles; };
     std::vector<std::unique_ptr<Light>>& getLights() { return m_lights; };
-    std::vector<std::shared_ptr<Texture>>& getTextures() { return m_textures; };
+
+    std::unordered_map<std::string, std::shared_ptr<Texture>>& getTextures() { return m_textures; };
 
 private:
 
     std::vector<std::unique_ptr<Style>> m_styles;
     std::vector<std::unique_ptr<Light>> m_lights;
-    std::vector<std::shared_ptr<Texture>> m_textures;
-    
+
+    std::unordered_map<std::string, std::shared_ptr<Texture>> m_textures;
+
 };
 

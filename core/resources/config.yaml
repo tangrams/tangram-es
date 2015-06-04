@@ -12,13 +12,17 @@ lights:
         diffuse: [.7, .7, .7, 1.]
         ambient: [.3, .3, .3, 1.]
 
+textures:
+    water-texture:
+        url: normals.jpg
+        filtering: nearest
 styles:
     pillows:
         base: polygon
         lighting: fragment
         material:
-            normal:
-                texture: normals.jpg
+            diffuse:
+                texture: water-texture
                 mapping: uv
     heightglow:
         base: polygon

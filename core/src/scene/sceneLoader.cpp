@@ -100,15 +100,16 @@ void SceneLoader::loadShaderConfig(YAML::Node shaders, ShaderProgram& shader) {
 
 }
 
-void SceneLoader::loadMaterial(YAML::Node matNode, Material& mat) {
+void SceneLoader::loadMaterial(YAML::Node matNode, Material& material, Scene& scene) {
 
     Node diffuse = matNode["diffuse"];
     if (diffuse) {
         if (diffuse.IsMap()) {
             // Parse texture parameters
+            material.setDiffuse(loadMaterialTexture(diffuse, scene));
         } else {
             // Just set a color
-            mat.setDiffuse(parseVec4(diffuse));
+            material.setDiffuse(parseVec4(diffuse));
         }
     }
 
@@ -116,9 +117,10 @@ void SceneLoader::loadMaterial(YAML::Node matNode, Material& mat) {
     if (ambient) {
         if (ambient.IsMap()) {
             // Parse texture parameters
+            material.setAmbient(loadMaterialTexture(ambient, scene));
         } else {
             // Just set a color
-            mat.setAmbient(parseVec4(ambient));
+            material.setAmbient(parseVec4(ambient));
         }
     }
 
@@ -126,36 +128,71 @@ void SceneLoader::loadMaterial(YAML::Node matNode, Material& mat) {
     if (specular) {
         if (specular.IsMap()) {
             // Parse texture parameters
+            material.setSpecular(loadMaterialTexture(specular, scene));
         } else {
             // Just set a color
-            mat.setSpecular(parseVec4(specular));
+            material.setSpecular(parseVec4(specular));
         }
     }
 
     Node shininess = matNode["shininess"];
-    if (shininess) { mat.setShininess(shininess.as<float>()); }
+    if (shininess) { material.setShininess(shininess.as<float>()); }
 
     Node normal = matNode["normal"];
     if (normal) {
         // Parse texture parameters
+        material.setNormal(loadMaterialTexture(normal, scene));
     }
 
 }
 
+MaterialTexture SceneLoader::loadMaterialTexture(YAML::Node matCompNode, Scene& scene) {
+
+    MaterialTexture matTex;
+
+    Node textureNode = matCompNode["texture"];
+    Node mappingNode = matCompNode["mapping"];
+
+    if (!textureNode) {
+        logMsg("WARNING: Expected a \"texture\" parameter; Material may be incorrect.\n");
+        return matTex;
+    }
+
+    std::string name = textureNode.as<std::string>();
+
+    auto& sharedTexs = scene.getTextures();
+    if (sharedTexs.find(name) == sharedTexs.end()) {
+        sharedTexs.emplace(name, std::make_shared<Texture>(name));
+    }
+
+    matTex.tex = sharedTexs[name];
+
+    if (mappingNode) {
+        std::string mapping = mappingNode.as<std::string>();
+        if (mapping == "uv") { matTex.mapping = MappingType::uv; }
+        else if (mapping == "planar") { matTex.mapping = MappingType::planar; }
+        else if (mapping == "triplanar") { matTex.mapping = MappingType::triplanar; }
+        else if (mapping == "spheremap") { matTex.mapping = MappingType::spheremap; }
+        else { logMsg("WARNING: unrecognized texture mapping \"%s\"\n", mapping.c_str()); }
+    }
+
+    return matTex;
+}
+
 void SceneLoader::loadTextures(YAML::Node textures, Scene& scene) {
-    
+
     if (!textures) {
         return;
     }
-    
+
     for (auto textureNode : textures) {
-        
+
         std::string name = textureNode.first.as<std::string>();
         Node textureConfig = textureNode.second;
-        
+
         std::string file;
-        TextureOptions options;
-        
+        TextureOptions options = {GL_RGBA, GL_RGBA, {GL_LINEAR, GL_LINEAR}, {GL_CLAMP_TO_EDGE, GL_CLAMP_TO_EDGE} };
+
         Node url = textureConfig["url"];
         if (url) {
             file = url.as<std::string>();
@@ -163,7 +200,7 @@ void SceneLoader::loadTextures(YAML::Node textures, Scene& scene) {
             logMsg("WARNING: No url specified for texture \"%s\", skipping.\n", name.c_str());
             continue;
         }
-        
+
         Node filtering = textureConfig["filtering"];
         if (filtering) {
             std::string f = filtering.as<std::string>();
@@ -171,11 +208,11 @@ void SceneLoader::loadTextures(YAML::Node textures, Scene& scene) {
             else if (f == "mipmap") { options.m_filtering = { GL_LINEAR_MIPMAP_LINEAR, GL_LINEAR_MIPMAP_LINEAR }; }
             else if (f == "nearest") { options.m_filtering = { GL_NEAREST, GL_NEAREST }; }
         }
-        
+
         Node sprites = textureConfig["sprites"];
         if (sprites) { /* TODO */ }
-        
-        scene.getTextures().emplace_back(new Texture(file, options));
+
+        scene.getTextures().emplace(name, std::make_shared<Texture>(file, options));
     }
 }
 
@@ -236,7 +273,7 @@ void SceneLoader::loadStyles(YAML::Node styles, Scene& scene) {
 
         Node materialNode = styleNode["material"];
         if (materialNode) {
-            loadMaterial(materialNode, *style->getMaterial());
+            loadMaterial(materialNode, *style->getMaterial(), scene);
         }
 
         Node lightingNode = styleNode["lighting"];
