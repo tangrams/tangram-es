@@ -27,6 +27,7 @@ void SceneLoader::loadScene(const std::string& _file, Scene& _scene, TileManager
     Node config = YAML::Load(configString);
 
     loadSources(config["sources"], _tileManager);
+    loadTextures(config["textures"], _scene);
     loadStyles(config["styles"], _scene);
     loadLayers(config["layers"], _scene, _tileManager);
     loadCameras(config["cameras"], _view);
@@ -136,23 +137,46 @@ void SceneLoader::loadMaterial(YAML::Node matNode, Material& mat) {
 
     Node normal = matNode["normal"];
     if (normal) {
-        Node texture = normal["texture"];
-        Node mapping = normal["mapping"];
-        if (texture && mapping) {
-
-            std::string texstring = texture.as<std::string>();
-            std::string mapstring = mapping.as<std::string>();
-
-            MappingType maptype = MappingType::uv;
-            if (mapstring == "uv") { maptype = MappingType::uv; }
-            else if (mapstring == "planar") { maptype = MappingType::planar; }
-            else if (mapstring == "triplanar") { maptype = MappingType::triplanar; }
-            else { logMsg("WARNING: invalid mapping for texture \"%s\"\n", texstring.c_str()); }
-
-            mat.setNormal(texstring, maptype);
-        }
+        // Parse texture parameters
     }
 
+}
+
+void SceneLoader::loadTextures(YAML::Node textures, Scene& scene) {
+    
+    if (!textures) {
+        return;
+    }
+    
+    for (auto textureNode : textures) {
+        
+        std::string name = textureNode.first.as<std::string>();
+        Node textureConfig = textureNode.second;
+        
+        std::string file;
+        TextureOptions options;
+        
+        Node url = textureConfig["url"];
+        if (url) {
+            file = url.as<std::string>();
+        } else {
+            logMsg("WARNING: No url specified for texture \"%s\", skipping.\n", name.c_str());
+            continue;
+        }
+        
+        Node filtering = textureConfig["filtering"];
+        if (filtering) {
+            std::string f = filtering.as<std::string>();
+            if (f == "linear") { options.m_filtering = { GL_LINEAR, GL_LINEAR }; }
+            else if (f == "mipmap") { options.m_filtering = { GL_LINEAR_MIPMAP_LINEAR, GL_LINEAR_MIPMAP_LINEAR }; }
+            else if (f == "nearest") { options.m_filtering = { GL_NEAREST, GL_NEAREST }; }
+        }
+        
+        Node sprites = textureConfig["sprites"];
+        if (sprites) { /* TODO */ }
+        
+        scene.getTextures().emplace_back(new Texture(file, options));
+    }
 }
 
 void SceneLoader::loadStyles(YAML::Node styles, Scene& scene) {

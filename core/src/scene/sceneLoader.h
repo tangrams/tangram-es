@@ -25,6 +25,7 @@ class SceneLoader {
     void loadCameras(YAML::Node cameras, View& view);
     void loadLayers(YAML::Node layers, Scene& scene, TileManager& tileManager);
     void loadStyles(YAML::Node styles, Scene& scene);
+    void loadTextures(YAML::Node textures, Scene& scene);
     void loadMaterial(YAML::Node material, Material& style);
     void loadShaderConfig(YAML::Node shaders, ShaderProgram& shader);
     Tangram::Filter* generateAnyFilter(YAML::Node filter);

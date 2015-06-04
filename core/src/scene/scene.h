@@ -18,18 +18,17 @@ public:
     Scene();
 
     void addStyle(std::unique_ptr<Style> _style);
-
-    /*  Add a Directional Light */
     void addLight(std::unique_ptr<Light> _light);
 
     std::vector<std::unique_ptr<Style>>& getStyles() { return m_styles; };
-
-    /*  Get all Lights */
     std::vector<std::unique_ptr<Light>>& getLights() { return m_lights; };
+    std::vector<std::shared_ptr<Texture>>& getTextures() { return m_textures; };
 
 private:
 
     std::vector<std::unique_ptr<Style>> m_styles;
     std::vector<std::unique_ptr<Light>> m_lights;
+    std::vector<std::shared_ptr<Texture>> m_textures;
+    
 };
 
