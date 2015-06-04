@@ -4,18 +4,7 @@
 #include "glfontstash.h"
 
 /* 
- * This class represents a text buffer, each text buffer has several text ids and a single 
- * transform texture. The transform texture is a texture containing the text ids transformations 
- * in screen space. 
- * There are three callbacks that the usage of this class could potentially trigger (those are 
- * defined in <FontContext>:
- *  - texture transform creation : lets you create the gpu transform texture, called after
- *  TextBuffer::init.
- *  - texture transform update : lets you update the gpu transform texture, called after 
- *  TextBuffer::triggerTransformUpdate.
- *  - an error callback : usually when you asked to generate too many text ids, this would lets 
- *  you expand the text buffer transform texture.
- *
+ * This class represents a text buffer, each text buffer has several text ids
  */
 class TextBuffer {
 
@@ -45,14 +34,8 @@ public:
     void transformID(fsuint _textID, float _x, float _y, float _rot, float _alpha);
 
     /* ask to update to update the transform texture related to this text buffer */
-    void triggerTransformUpdate();
-
-    /* sets the transform texture of this text buffer */
-    void setTextureTransform(std::unique_ptr<Texture> _texture);
-
-    /* get the related texture containing the transforms of text ids of this text buffer */
-    std::shared_ptr<Texture> getTextureTransform() const;
-
+    void pushBuffer();
+    
     /* 
      * fills the vector of float with the rasterized text ids linked to the text buffer 
      * nVerts is the number of vertices inside the vector
@@ -61,20 +44,15 @@ public:
     
     int getVerticesSize();
 
-    /* double the size of the related texture transform of the text buffer */ 
-    void expand();
-    
     /* get the axis aligned bounding box for a text */
     glm::vec4 getBBox(fsuint _textID);
-
-private:
-
+    
     void bind();
     void unbind();
 
+private:
     bool m_dirty;
     bool m_bound;
-    std::shared_ptr<Texture> m_transform;
     fsuint m_fsBuffer;
     FONScontext* m_fsContext;
 

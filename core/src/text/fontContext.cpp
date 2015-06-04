@@ -84,27 +84,6 @@ void FontContext::setFont(std::string _name, int size) {
     }
 }
 
-void createTexTransforms(void* _userPtr, unsigned int _width, unsigned int _height) {
-    FontContext* fontContext = static_cast<FontContext*>(_userPtr);
-
-    TextureOptions options = {GL_RGBA, GL_RGBA, {GL_NEAREST, GL_NEAREST}, {GL_CLAMP_TO_EDGE, GL_CLAMP_TO_EDGE}};
-    std::unique_ptr<Texture> texture(new Texture(_width, _height, false, options));
-    std::shared_ptr<TextBuffer> textBuffer = fontContext->m_currentBuffer.lock();
-
-    if (textBuffer) {
-        textBuffer->setTextureTransform(std::move(texture));
-    }
-}
-
-void updateTransforms(void* _userPtr, unsigned int _xoff, unsigned int _yoff, unsigned int _width,
-                      unsigned int _height, const unsigned int* _pixels, void* _ownerPtr) {
-
-    TextBuffer* buffer = static_cast<TextBuffer*>(_ownerPtr);
-    const GLuint* subData = static_cast<const GLuint*>(_pixels);
-    auto texture = buffer->getTextureTransform();
-    texture->setSubData(subData, _xoff, _yoff, _width, _height);
-}
-
 void updateAtlas(void* _userPtr, unsigned int _xoff, unsigned int _yoff,
                  unsigned int _width, unsigned int _height, const unsigned int* _pixels) {
 
@@ -118,39 +97,11 @@ void createAtlas(void* _userPtr, unsigned int _width, unsigned int _height) {
     fontContext->m_atlas = std::unique_ptr<Texture>(new Texture(_width, _height));
 }
 
-bool errorCallback(void* _userPtr, fsuint buffer, GLFONSError error) {
-    FontContext* fontContext = static_cast<FontContext*>(_userPtr);
-
-    bool solved = false;
-
-    switch (error) {
-        case GLFONSError::ID_OVERFLOW: {
-            auto textBuffer = fontContext->m_currentBuffer.lock();
-
-            if (textBuffer) {
-                textBuffer->expand();
-                solved = true;
-            }
-
-            break;
-        }
-
-        default:
-            logMsg("[FontContext] FontError : undefined error\n");
-            break;
-    }
-
-    return solved;
-}
-
 void FontContext::initFontContext(int _atlasSize) {
     GLFONSparams params;
 
-    params.errorCallback = errorCallback;
     params.createAtlas = createAtlas;
-    params.createTexTransforms = createTexTransforms;
     params.updateAtlas = updateAtlas;
-    params.updateTransforms = updateTransforms;
 
     m_fsContext = glfonsCreate(_atlasSize, _atlasSize, FONS_ZERO_TOPLEFT, params, (void*) this);
 }
