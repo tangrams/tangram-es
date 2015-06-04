@@ -105,10 +105,8 @@ void SceneLoader::loadMaterial(YAML::Node matNode, Material& material, Scene& sc
     Node diffuse = matNode["diffuse"];
     if (diffuse) {
         if (diffuse.IsMap()) {
-            // Parse texture parameters
             material.setDiffuse(loadMaterialTexture(diffuse, scene));
         } else {
-            // Just set a color
             material.setDiffuse(parseVec4(diffuse));
         }
     }
@@ -116,10 +114,8 @@ void SceneLoader::loadMaterial(YAML::Node matNode, Material& material, Scene& sc
     Node ambient = matNode["ambient"];
     if (ambient) {
         if (ambient.IsMap()) {
-            // Parse texture parameters
             material.setAmbient(loadMaterialTexture(ambient, scene));
         } else {
-            // Just set a color
             material.setAmbient(parseVec4(ambient));
         }
     }
@@ -127,20 +123,17 @@ void SceneLoader::loadMaterial(YAML::Node matNode, Material& material, Scene& sc
     Node specular = matNode["specular"];
     if (specular) {
         if (specular.IsMap()) {
-            // Parse texture parameters
             material.setSpecular(loadMaterialTexture(specular, scene));
         } else {
-            // Just set a color
             material.setSpecular(parseVec4(specular));
         }
     }
 
     Node shininess = matNode["shininess"];
-    if (shininess) { material.setShininess(shininess.as<float>()); }
+    if (shininess) { material.setShininess(shininess.as<float>()); } // TODO: check for bad conversions
 
     Node normal = matNode["normal"];
     if (normal) {
-        // Parse texture parameters
         material.setNormal(loadMaterialTexture(normal, scene));
     }
 
@@ -170,8 +163,8 @@ MaterialTexture SceneLoader::loadMaterialTexture(YAML::Node matCompNode, Scene& 
     if (mappingNode) {
         std::string mapping = mappingNode.as<std::string>();
         if (mapping == "uv") { matTex.mapping = MappingType::uv; }
-        else if (mapping == "planar") { matTex.mapping = MappingType::planar; }
-        else if (mapping == "triplanar") { matTex.mapping = MappingType::triplanar; }
+        else if (mapping == "planar") { logMsg("WARNING: planar texture mapping not yet implemented\n"); } // TODO
+        else if (mapping == "triplanar") { logMsg("WARNING: triplanar texture mapping not yet implemented\n"); } // TODO
         else if (mapping == "spheremap") { matTex.mapping = MappingType::spheremap; }
         else { logMsg("WARNING: unrecognized texture mapping \"%s\"\n", mapping.c_str()); }
     }
@@ -210,7 +203,7 @@ void SceneLoader::loadTextures(YAML::Node textures, Scene& scene) {
         }
 
         Node sprites = textureConfig["sprites"];
-        if (sprites) { /* TODO */ }
+        if (sprites) { logMsg("WARNING: sprite mapping not yet implemented\n"); } // TODO
 
         scene.getTextures().emplace(name, std::make_shared<Texture>(file, options));
     }
@@ -241,28 +234,32 @@ void SceneLoader::loadStyles(YAML::Node styles, Scene& scene) {
             std::string baseString = baseNode.as<std::string>();
             if (baseString == "lines") { style = new PolylineStyle(styleName); }
             else if (baseString == "text") { style = new TextStyle("FiraSans", styleName, 15.0f, 0xF7F0E1, true, true); }
-            else if (baseString == "sprites") { /* TODO */ }
+            else if (baseString == "sprites") { logMsg("WARNING: sprite base styles not yet implemented\n"); } // TODO
         }
 
         if (style == nullptr) { style = new PolygonStyle(styleName); }
 
         Node animatedNode = styleNode["animated"];
-        if (animatedNode) { /* TODO */ }
+        if (animatedNode) { logMsg("WARNING: animated styles not yet implemented\n"); } // TODO
 
         Node blendNode = styleNode["blend"];
         if (blendNode) {
 
+            logMsg("WARNING: blending modes not yet implemented\n");
+
             std::string blend = blendNode.as<std::string>();
-            if (blend == "add") { /* TODO */ }
-            else if (blend == "multiply") { /* TODO */ }
+            if (blend == "add") { } // TODO
+            else if (blend == "multiply") { } // TODO
 
         }
 
         Node texcoordsNode = styleNode["texcoords"];
         if (texcoordsNode) {
 
-            if (texcoordsNode.as<bool>()) { /* TODO */ }
-            else { /* TODO */ }
+            logMsg("WARNING: texcoords style parameter is currently ignored\n");
+
+            if (texcoordsNode.as<bool>()) { } // TODO
+            else { } // TODO
 
         }
 
@@ -278,16 +275,15 @@ void SceneLoader::loadStyles(YAML::Node styles, Scene& scene) {
 
         Node lightingNode = styleNode["lighting"];
         if (lightingNode) {
-            if (lightingNode.as<std::string>() == "fragment") { style->setLightingType(LightingType::fragment); }
-            else if (lightingNode.as<std::string>() == "vertex") { style->setLightingType(LightingType::vertex); }
-            else { style->setLightingType(LightingType::vertex); }
+            std::string lighting = lightingNode.as<std::string>();
+            if (lighting == "fragment") { style->setLightingType(LightingType::fragment); }
+            else if (lighting == "vertex") { style->setLightingType(LightingType::vertex); }
+            else if (lighting == "none") { style->setLightingType(LightingType::none); }
+            else { logMsg("WARNING: unrecognized lighting type \"%s\"\n", lighting.c_str()); }
         }
 
         Node urlNode = styleNode["url"];
-        if (urlNode) { /* TODO */ }
-
-        Node namedStyleNode = styleNode["style"];
-        if (namedStyleNode) { /* TODO */ }
+        if (urlNode) { logMsg("WARNING: loading style from URL not yet implemented\n"); } // TODO
 
         scene.addStyle(std::unique_ptr<Style>(style));
 
@@ -314,9 +310,11 @@ void SceneLoader::loadSources(Node sources, TileManager& tileManager) {
         if (type == "GeoJSONTiles") {
             sourcePtr = std::unique_ptr<DataSource>(new GeoJsonSource(name, url));
         } else if (type == "TopoJSONTiles") {
-            // TODO
+            logMsg("WARNING: TopoJSON data sources not yet implemented\n"); // TODO
         } else if (type == "MVT") {
             sourcePtr = std::unique_ptr<DataSource>(new MVTSource(name, url));
+        } else {
+            logMsg("WARNING: unrecognized data source type \"%s\", skipping\n", type.c_str());
         }
 
         if (sourcePtr) {
