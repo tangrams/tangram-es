@@ -36,14 +36,8 @@ void SceneLoader::loadScene(const std::string& _file, Scene& _scene, TileManager
  * cssColorParser format rgb(r, g, b) or rgba(r, g, b, a)
  */
 std::string parseColorSequence(const Node& node) {
-    std::string str;
-    size_t nodeSize = node.size();
-    if(nodeSize == 3) {
-        str = "rgb({r}, {g}, {b})";
-    } else {
-        str = "rgba({r}, {g}, {b}, {a}     )";
-    }
-    for(size_t i = 0; i < nodeSize; i++) {
+    std::string str = "rgba({r}, {g}, {b}, {a}     )";
+    for(size_t i = 0; i < 4; i++) {
         uint32_t c;
         float a;
         size_t pos;
@@ -64,7 +58,7 @@ std::string parseColorSequence(const Node& node) {
                 str.replace(pos, 3, std::to_string(c));
                 break;
             case 3:
-                a = node[i].as<float>();
+                a = (node.size() < 4) ? 1.0 : node[i].as<float>();
                 pos = str.find("{a}");
                 str.replace(pos, 8, std::to_string(a));
                 break;
