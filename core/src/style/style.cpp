@@ -18,13 +18,13 @@ void Style::setMaterial(const std::shared_ptr<Material>& _material) {
 
 }
 
-void Style::addLayer(const std::pair<std::string, StyleParams>& _layer) {
+void Style::addLayer(const std::pair<std::string, StyleParamMap>&& _layer) {
 
-    m_layers.push_back(_layer);
+    m_layers.push_back(std::move(_layer));
 
 }
 
-void Style::addData(TileData& _data, MapTile& _tile, const MapProjection& _mapProjection)  const {
+void Style::addData(TileData& _data, MapTile& _tile, const MapProjection& _mapProjection) {
     onBeginBuildTile(_tile);
 
     VboMesh* mesh = newMesh();
@@ -35,8 +35,8 @@ void Style::addData(TileData& _data, MapTile& _tile, const MapProjection& _mapPr
         auto it = m_layers.begin();
         while (it != m_layers.end() && it->first != layer.name) { ++it; }
         if (it == m_layers.end()) { continue; }
-
-        StyleParams params = it->second;
+        void* styleParam = parseStyleParams(it->second);
+        m_styleParamCache[it->first] = styleParam;
 
         // Loop over all features
         for (auto& feature : layer.features) {
@@ -47,19 +47,19 @@ void Style::addData(TileData& _data, MapTile& _tile, const MapProjection& _mapPr
                 case GeometryType::POINTS:
                     // Build points
                     for (auto& point : feature.points) {
-                        buildPoint(point, params, feature.props, *mesh);
+                        buildPoint(point, styleParam, feature.props, *mesh);
                     }
                     break;
                 case GeometryType::LINES:
                     // Build lines
                     for (auto& line : feature.lines) {
-                        buildLine(line, params, feature.props, *mesh);
+                        buildLine(line, styleParam, feature.props, *mesh);
                     }
                     break;
                 case GeometryType::POLYGONS:
                     // Build polygons
                     for (auto& polygon : feature.polygons) {
-                        buildPolygon(polygon, params, feature.props, *mesh);
+                        buildPolygon(polygon, styleParam, feature.props, *mesh);
                     }
                     break;
                 default:
