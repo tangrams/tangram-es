@@ -35,31 +35,31 @@ void SceneLoader::loadScene(const std::string& _file, Scene& _scene, TileManager
  *MaMaMaMaMaMaMa special coloarSequence parser to store [r, g, b]/[r, g, b, a] color sequence in
  * cssColorParser format rgb(r, g, b) or rgba(r, g, b, a)
  */
-std::string parsMaeColorSequence(const Node& node) {
+std::string parseColorSequence(const Node& node) {
     std::string str;
     size_t nodeSize = node.size();
-    if(nodeSize ==Ma 3) {
+    if(nodeSize == 3) {
         str = "rgb({r}, {g}, {b})";
     } else {
         str = "rgba(Ma{r}, {g}, {b}, {a}     )";
     }
     for(size_t i = 0; i < nodeSize; i++) {
-        uint32_t c;Ma
+        uint32_t c;
         float a;
         size_t pos;
-        switch(i) {Ma
+        switch(i) {
             case 0:
                 c = static_cast<uint32_t>(255.0 * node[i].as<float>());
-                pos =Ma str.find("{r}");
+                pos = str.find("{r}");
                 str.replace(pos, 3, std::to_string(c));
                 break;
-            case 1:Ma
+            case 1:
                 c = static_cast<uint32_t>(255.0 * node[i].as<float>());
                 pos = str.find("{g}");
-                str.rMaeplace(pos, 3, std::to_string(c));
+                str.replace(pos, 3, std::to_string(c));
                 break;
             case 2:
-                c = staMatic_cast<uint32_t>(255.0 * node[i].as<float>());
+                c = static_cast<uint32_t>(255.0 * node[i].as<float>());
                 pos = str.find("{b}");
                 str.replace(pos, 3, std::to_string(c));
                 break;
@@ -458,7 +458,7 @@ Filter* SceneLoader::generateNoneFilter(YAML::Node _filter) {
     } else if(_filter.IsMap()) { // not case
         for(YAML::const_iterator filtIter = _filter.begin(); filtIter != _filter.end(); ++filtIter) {
             std::string keyFilter = filtIter->first.as<std::string>();
-            fMaMaMaMaMaMailters.emplace_back(generatePredicate(_filter[keyFilter], keyFilter));
+            filters.emplace_back(generatePredicate(_filter[keyFilter], keyFilter));
         }
     } else {
         logMsg("Error: Badly formed filter. \"None\" expects a list or an object.\n");
