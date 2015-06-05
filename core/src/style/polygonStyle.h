@@ -4,9 +4,14 @@
 #include "typedMesh.h"
 
 class PolygonStyle : public Style {
-    
+
 protected:
-    
+
+    struct StyleParams {
+        int32_t order = 0;
+        uint32_t color = 0xffffffff;
+    };
+
     struct PosNormColVertex {
         // Position Data
         GLfloat pos_x;
@@ -27,9 +32,10 @@ protected:
 
     virtual void constructVertexLayout() override;
     virtual void constructShaderProgram() override;
-    virtual void buildPoint(Point& _point, StyleParams& _params, Properties& _props, VboMesh& _mesh) const override;
-    virtual void buildLine(Line& _line, StyleParams& _params, Properties& _props, VboMesh& _mesh) const override;
-    virtual void buildPolygon(Polygon& _polygon, StyleParams& _params, Properties& _props, VboMesh& _mesh) const override;
+    virtual void buildPoint(Point& _point, void* _styleParams, Properties& _props, VboMesh& _mesh) const override;
+    virtual void buildLine(Line& _line, void* _styleParams, Properties& _props, VboMesh& _mesh) const override;
+    virtual void buildPolygon(Polygon& _polygon, void* _styleParams, Properties& _props, VboMesh& _mesh) const override;
+    virtual void* parseStyleParams(StyleParamMap& _styleParamMap) const override;
 
     typedef TypedMesh<PosNormColVertex> Mesh;
 
@@ -37,9 +43,9 @@ protected:
         return new Mesh(m_vertexLayout, m_drawMode);
     };
 
-    
+
 public:
-    
+
     PolygonStyle(GLenum _drawMode = GL_TRIANGLES);
     PolygonStyle(std::string _name, GLenum _drawMode = GL_TRIANGLES);
 
