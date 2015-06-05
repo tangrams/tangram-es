@@ -19,10 +19,12 @@ protected:
 
     virtual void constructVertexLayout() override;
     virtual void constructShaderProgram() override;
-    virtual void buildPoint(Point& _point, StyleParams& _params, Properties& _props, VboMesh& _mesh) const override;
-    virtual void buildLine(Line& _line, StyleParams& _params, Properties& _props, VboMesh& _mesh) const override;
-    virtual void buildPolygon(Polygon& _polygon, StyleParams& _params, Properties& _props, VboMesh& _mesh) const override;
-    virtual void addData(TileData& _data, MapTile& _tile, const MapProjection& _mapProjection) const override;
+    virtual void buildPoint(Point& _point, void* _styleParam, Properties& _props, VboMesh& _mesh) const override;
+    virtual void buildLine(Line& _line, void* _styleParam, Properties& _props, VboMesh& _mesh) const override;
+    virtual void buildPolygon(Polygon& _polygon, void* _styleParam, Properties& _props, VboMesh& _mesh) const override;
+    virtual void addData(TileData& _data, MapTile& _tile, const MapProjection& _mapProjection) override;
+    
+    virtual void* parseStyleParams(StyleParamMap& _styleParamMap) const;
 
     typedef TypedMesh<PosUVVertex> Mesh;
 

@@ -32,7 +32,11 @@ void DebugStyle::constructShaderProgram() {
     
 }
 
-void DebugStyle::addData(TileData &_data, MapTile &_tile, const MapProjection &_mapProjection) const {
+void* DebugStyle::parseStyleParams(StyleParamMap& _styleParamMap) const {
+    return nullptr;
+}
+
+void DebugStyle::addData(TileData &_data, MapTile &_tile, const MapProjection &_mapProjection) {
     
     if (Tangram::getDebugFlag(Tangram::DebugFlags::TILE_BOUNDS)) {
         
@@ -59,19 +63,19 @@ void DebugStyle::addData(TileData &_data, MapTile &_tile, const MapProjection &_
     
 }
 
-void DebugStyle::buildPoint(Point &_point, StyleParams& _params, Properties &_props, VboMesh &_mesh) const {
+void DebugStyle::buildPoint(Point &_point, void* _styleParams, Properties &_props, VboMesh &_mesh) const {
     
     // No-op
     
 }
 
-void DebugStyle::buildLine(Line &_line, StyleParams& _params, Properties &_props, VboMesh &_mesh) const {
+void DebugStyle::buildLine(Line &_line, void* _styleParams, Properties &_props, VboMesh &_mesh) const {
     
     // No-op
     
 }
 
-void DebugStyle::buildPolygon(Polygon &_polygon, StyleParams& _params, Properties &_props, VboMesh &_mesh) const {
+void DebugStyle::buildPolygon(Polygon &_polygon, void* _styleParams, Properties &_props, VboMesh &_mesh) const {
     
     // No-op
     
