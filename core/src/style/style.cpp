@@ -36,7 +36,10 @@ void Style::addData(TileData& _data, MapTile& _tile, const MapProjection& _mapPr
         while (it != m_layers.end() && it->first != layer.name) { ++it; }
         if (it == m_layers.end()) { continue; }
         void* styleParam = parseStyleParams(it->second);
-        m_styleParamCache[it->first] = styleParam;
+
+        // coming soon: use styleParam cache to reuse parameters which have already been encountered for a set of style
+        // rules
+        //m_styleParamCache[it->first] = styleParam;
 
         // Loop over all features
         for (auto& feature : layer.features) {
