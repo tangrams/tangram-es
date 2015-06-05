@@ -278,7 +278,8 @@ void SceneLoader::loadStyles(YAML::Node styles, Scene& scene) {
             std::string lighting = lightingNode.as<std::string>();
             if (lighting == "fragment") { style->setLightingType(LightingType::fragment); }
             else if (lighting == "vertex") { style->setLightingType(LightingType::vertex); }
-            else if (lighting == "none") { style->setLightingType(LightingType::none); }
+            else if (lighting == "false") { style->setLightingType(LightingType::none); }
+            else if (lighting == "true") { } // use default lighting
             else { logMsg("WARNING: unrecognized lighting type \"%s\"\n", lighting.c_str()); }
         }
 
