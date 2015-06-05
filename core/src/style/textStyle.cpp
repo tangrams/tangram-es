@@ -55,13 +55,11 @@ void TextStyle::addVertices(TextBuffer& _buffer, VboMesh& _mesh) const {
 void TextStyle::buildPoint(Point& _point, StyleParams& _params, Properties& _props, VboMesh& _mesh) const {
     auto textBuffer = m_labels->getFontContext()->getCurrentBuffer();
 
-    // if (_layer == "pois") {
-    //     for (auto prop : _props.stringProps) {
-    //         if (prop.first == "name") {
-    //             labelContainer->addLabel(*TextStyle::s_processedTile, m_name, { glm::vec2(_point), glm::vec2(_point) }, prop.second, Label::Type::POINT);
-    //         }
-    //     }
-    // }
+    for (auto prop : _props.stringProps) {
+        if (prop.first == "name") {
+            m_labels->addLabel(*TextStyle::s_processedTile, m_name, { glm::vec2(_point), glm::vec2(_point) }, prop.second, Label::Type::POINT);
+        }
+    }
     
     addVertices(*textBuffer, _mesh);
 }
@@ -73,27 +71,24 @@ void TextStyle::buildLine(Line& _line, StyleParams& _params, Properties& _props,
     int skipOffset = floor(lineLength / 2);
     float minLength = 0.15; // default, probably need some more thoughts
     
-    // if (_layer == "roads") {
-    //     for (auto prop : _props.stringProps) {
-    //         if (prop.first.compare("name") == 0) {
+    for (auto prop : _props.stringProps) {
+        if (prop.first.compare("name") == 0) {
+            
+            for (size_t i = 0; i < _line.size() - 1; i += skipOffset) {
+                glm::vec2 p1 = glm::vec2(_line[i]);
+                glm::vec2 p2 = glm::vec2(_line[i + 1]);
                 
-    //             for (size_t i = 0; i < _line.size() - 1; i += skipOffset) {
-    //                 glm::vec2 p1 = glm::vec2(_line[i]);
-    //                 glm::vec2 p2 = glm::vec2(_line[i + 1]);
-                    
-    //                 glm::vec2 p1p2 = p2 - p1;
-    //                 float length = glm::length(p1p2);
-                    
-    //                 if (length < minLength) {
-    //                     continue;
-    //                 }
-
-    //                 labelContainer->addLabel(*TextStyle::s_processedTile, m_name, { p1, p2 }, prop.second,
-    //                                          Label::Type::LINE);
-    //             }
-    //         }
-    //     }
-    // }
+                glm::vec2 p1p2 = p2 - p1;
+                float length = glm::length(p1p2);
+                
+                if (length < minLength) {
+                    continue;
+                }
+                
+                m_labels->addLabel(*TextStyle::s_processedTile, m_name, { p1, p2 }, prop.second, Label::Type::LINE);
+            }
+        }
+    }
     
     addVertices(*textBuffer, _mesh);
 }
