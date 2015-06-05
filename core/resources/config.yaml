@@ -21,14 +21,15 @@ styles:
         base: polygon
         lighting: fragment
         material:
-            diffuse:
+            normal:
                 texture: water-texture
                 mapping: uv
     heightglow:
         base: polygon
+        lighting: vertex
         shaders:
             blocks:
-                color: "color.rgb += vec3(0.5 * position.z);"
+                color: "color.rgb += vec3(0.3 * position.z);"
 
 sources:
     osm:
@@ -54,7 +55,7 @@ layers:
     water:
         data: { source: osm }
         draw:
-            pillows:
+            polygons:
                 order: 2
                 color: [.102, .49, .569, 1.]
 
