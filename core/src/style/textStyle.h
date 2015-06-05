@@ -29,7 +29,7 @@ protected:
     typedef TypedMesh<PosTexID> Mesh;
 
     virtual VboMesh* newMesh() const override {
-        return new Mesh(m_vertexLayout, m_drawMode);
+        return new Mesh(m_vertexLayout, m_drawMode, GL_DYNAMIC_DRAW);
     };
 
     std::string m_fontName;

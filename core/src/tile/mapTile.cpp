@@ -90,7 +90,7 @@ void MapTile::pushLabelTransforms(const Style& _style, std::shared_ptr<LabelCont
             label->pushTransform(textBuffer);
         }
         
-        textBuffer->triggerTransformUpdate();
+        textBuffer->pushBuffer();
         
         ftContext->unlock();
     }

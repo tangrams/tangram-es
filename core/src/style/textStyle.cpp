@@ -15,8 +15,10 @@ TextStyle::~TextStyle() {
 void TextStyle::constructVertexLayout() {
     m_vertexLayout = std::shared_ptr<VertexLayout>(new VertexLayout({
         {"a_position", 2, GL_FLOAT, false, 0},
-        {"a_texCoord", 2, GL_FLOAT, false, 0},
-        {"a_fsid", 1, GL_FLOAT, false, 0},
+        {"a_uvs", 2, GL_FLOAT, false, 0},
+        {"a_screenPosition", 2, GL_FLOAT, false, 0},
+        {"a_alpha", 1, GL_FLOAT, false, 0},
+        {"a_rotation", 1, GL_FLOAT, false, 0},
     }));
 }
 
