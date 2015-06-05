@@ -41,7 +41,7 @@ std::string parseColorSequence(const Node& node) {
     if(nodeSize == 3) {
         str = "rgb({r}, {g}, {b})";
     } else {
-        str = "rgba(Ma{r}, {g}, {b}, {a}     )";
+        str = "rgba({r}, {g}, {b}, {a}     )";
     }
     for(size_t i = 0; i < nodeSize; i++) {
         uint32_t c;
