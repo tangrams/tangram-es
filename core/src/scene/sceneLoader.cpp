@@ -1,6 +1,7 @@
 #include "sceneLoader.h"
 
 #include <vector>
+#include <cstdio>
 #include "platform.h"
 #include "scene.h"
 #include "tileManager.h"
@@ -36,34 +37,19 @@ void SceneLoader::loadScene(const std::string& _file, Scene& _scene, TileManager
  * cssColorParser format rgb(r, g, b) or rgba(r, g, b, a)
  */
 std::string parseColorSequence(const Node& node) {
-    std::string str = "rgba({r}, {g}, {b}, {a}     )";
-    for(size_t i = 0; i < 4; i++) {
-        uint32_t c;
-        float a;
-        size_t pos;
-        switch(i) {
-            case 0:
-                c = static_cast<uint32_t>(255.0 * node[i].as<float>());
-                pos = str.find("{r}");
-                str.replace(pos, 3, std::to_string(c));
-                break;
-            case 1:
-                c = static_cast<uint32_t>(255.0 * node[i].as<float>());
-                pos = str.find("{g}");
-                str.replace(pos, 3, std::to_string(c));
-                break;
-            case 2:
-                c = static_cast<uint32_t>(255.0 * node[i].as<float>());
-                pos = str.find("{b}");
-                str.replace(pos, 3, std::to_string(c));
-                break;
-            case 3:
-                a = (node.size() < 4) ? 1.0 : node[i].as<float>();
-                pos = str.find("{a}");
-                str.replace(pos, 8, std::to_string(a));
-                break;
-        }
-    }
+    char buffer[50];
+    int length;
+    
+    float alpha = (node.size() == 3) ? 1.0 : node[3].as<float>();
+    
+    length = sprintf(buffer, "rgba(%d, %d, %d, %f)",
+                     static_cast<uint32_t>(255.0 * node[0].as<float>()),
+                     static_cast<uint32_t>(255.0 * node[1].as<float>()),
+                     static_cast<uint32_t>(255.0 * node[2].as<float>()),
+                     alpha);
+    
+    std::string str(buffer, length);
+
     return str;
 }
 
