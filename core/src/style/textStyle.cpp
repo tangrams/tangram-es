@@ -4,9 +4,6 @@ MapTile* TextStyle::s_processedTile = nullptr;
 
 TextStyle::TextStyle(const std::string& _fontName, std::string _name, float _fontSize, unsigned int _color, bool _sdf, bool _sdfMultisampling, GLenum _drawMode)
 : Style(_name, _drawMode), m_fontName(_fontName), m_fontSize(_fontSize), m_color(_color), m_sdf(_sdf), m_sdfMultisampling(_sdfMultisampling)  {
-
-    constructVertexLayout();
-    constructShaderProgram();
 }
 
 TextStyle::~TextStyle() {
