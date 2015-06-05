@@ -91,16 +91,11 @@ void updateAtlas(void* _userPtr, unsigned int _xoff, unsigned int _yoff,
     fontContext->m_atlas->setSubData(static_cast<const GLuint*>(_pixels), _xoff, _yoff, _width, _height);
 }
 
-void createAtlas(void* _userPtr, unsigned int _width, unsigned int _height) {
-
-    FontContext* fontContext = static_cast<FontContext*>(_userPtr);
-    fontContext->m_atlas = std::unique_ptr<Texture>(new Texture(_width, _height));
-}
-
 void FontContext::initFontContext(int _atlasSize) {
     GLFONSparams params;
-
-    params.createAtlas = createAtlas;
+    
+    m_atlas = std::unique_ptr<Texture>(new Texture(_atlasSize, _atlasSize));
+    
     params.updateAtlas = updateAtlas;
 
     m_fsContext = glfonsCreate(_atlasSize, _atlasSize, FONS_ZERO_TOPLEFT, params, (void*) this);
