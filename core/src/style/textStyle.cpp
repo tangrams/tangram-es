@@ -44,6 +44,12 @@ void TextStyle::constructShaderProgram() {
 
 void TextStyle::addVertices(TextBuffer& _buffer, VboMesh& _mesh) const {
     std::vector<TextVert> vertices;
+    int bufferSize = _buffer.getVerticesSize();
+    
+    if (bufferSize == 0) {
+        return;
+    }
+
     vertices.resize(_buffer.getVerticesSize());
     
     if (_buffer.getVertices(reinterpret_cast<float*>(vertices.data()))) {
@@ -60,8 +66,6 @@ void TextStyle::buildPoint(Point& _point, StyleParams& _params, Properties& _pro
             m_labels->addLabel(*TextStyle::s_processedTile, m_name, { glm::vec2(_point), glm::vec2(_point) }, prop.second, Label::Type::POINT);
         }
     }
-    
-    addVertices(*textBuffer, _mesh);
 }
 
 void TextStyle::buildLine(Line& _line, StyleParams& _params, Properties& _props, VboMesh& _mesh) const {
@@ -89,8 +93,6 @@ void TextStyle::buildLine(Line& _line, StyleParams& _params, Properties& _props,
             }
         }
     }
-    
-    addVertices(*textBuffer, _mesh);
 }
 
 void TextStyle::buildPolygon(Polygon& _polygon, StyleParams& _params, Properties& _props, VboMesh& _mesh) const {
@@ -113,8 +115,6 @@ void TextStyle::buildPolygon(Polygon& _polygon, StyleParams& _params, Properties
             m_labels->addLabel(*TextStyle::s_processedTile, m_name, { glm::vec2(centroid), glm::vec2(centroid) }, prop.second, Label::Type::POINT);
         }
     }
-    
-    addVertices(*textBuffer, _mesh);
 }
 
 void TextStyle::onBeginBuildTile(MapTile& _tile) const {
@@ -138,9 +138,12 @@ void TextStyle::onBeginBuildTile(MapTile& _tile) const {
     TextStyle::s_processedTile = &_tile;
 }
 
-void TextStyle::onEndBuildTile(MapTile& _tile) const {
+void TextStyle::onEndBuildTile(MapTile &_tile, VboMesh& _mesh) const {
     auto ftContext = LabelContainer::GetInstance()->getFontContext();
-
+    
+    // add the computed glyph vertices to the mesh once
+    addVertices(*ftContext->getCurrentBuffer(), _mesh);
+    
     TextStyle::s_processedTile = nullptr;
     
     ftContext->clearState();

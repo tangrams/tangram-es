@@ -68,14 +68,15 @@ void Style::addData(TileData& _data, MapTile& _tile, const MapProjection& _mapPr
         }
     }
 
+    onEndBuildTile(_tile, *mesh);
+    
     if (mesh->numVertices() == 0) {
         delete mesh;
     } else {
         mesh->compileVertexBuffer();
-
+        
         _tile.addGeometry(*this, std::unique_ptr<VboMesh>(mesh));
     }
-    onEndBuildTile(_tile);
 }
 
 void Style::onBeginDrawFrame(const std::shared_ptr<View>& _view, const std::shared_ptr<Scene>& _scene) {
@@ -119,6 +120,6 @@ void Style::onBeginBuildTile(MapTile& _tile) const {
     // No-op by default
 }
 
-void Style::onEndBuildTile(MapTile& _tile) const {
+void Style::onEndBuildTile(MapTile& _tile, VboMesh& _mesh) const {
     // No-op by default
 }

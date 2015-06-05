@@ -26,13 +26,11 @@ void DebugTextStyle::addData(TileData& _data, MapTile& _tile, const MapProjectio
         std::string tileID = std::to_string(_tile.getID().x) + "/" + std::to_string(_tile.getID().y) + "/" + std::to_string(_tile.getID().z);
         m_labels->addLabel(_tile, m_name, { glm::vec2(0), glm::vec2(0) }, tileID, Label::Type::DEBUG);
 
-        addVertices(*textBuffer, *mesh);
-
         mesh->compileVertexBuffer();
-
+        
         _tile.addGeometry(*this, std::unique_ptr<VboMesh>(mesh));
-
-        onEndBuildTile(_tile);
+        
+        onEndBuildTile(_tile, *mesh);
     }
 
 }

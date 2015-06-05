@@ -125,6 +125,10 @@ bool MapTile::hasGeometry() {
     return (m_geometry.size() != 0);
 }
 
+std::unique_ptr<VboMesh>& MapTile::getGeometry(const Style& _style) {
+    return m_geometry.at(_style.getName());
+}
+
 void MapTile::addLabel(const std::string& _styleName, std::shared_ptr<Label> _label) {
     m_labels[_styleName].push_back(std::move(_label));
 }

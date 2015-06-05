@@ -63,6 +63,8 @@ public:
      * Method to check if this tile's vboMesh(s) are loaded and ready to be drawn
      */
     bool hasGeometry();
+    
+    std::unique_ptr<VboMesh>& getGeometry(const Style& _style);
 
     /* uUdate the Tile considering the current view */
     void update(float _dt, const View& _view);
