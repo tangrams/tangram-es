@@ -55,11 +55,7 @@ public:
     void unlock();
 
     const std::unique_ptr<Texture>& getAtlas() const;
-
-    /* Called by fontstash when the atlas need to update the atlas texture */
-    friend void updateAtlas(void* _userPtr, unsigned int _xoff, unsigned int _yoff,
-                            unsigned int _width, unsigned int _height, const unsigned int* _pixels);
-
+    
 private:
 
     void initFontContext(int _atlasSize);
