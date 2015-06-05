@@ -80,7 +80,7 @@ protected:
     std::shared_ptr<Material> m_material = std::make_shared<Material>();
 
     /* <LightingType> to determine how lighting will be calculated for this style */
-    LightingType m_lightingType = LightingType::vertex;
+    LightingType m_lightingType = LightingType::fragment;
 
     /* Draw mode to pass into <VboMesh>es created with this style */
     GLenum m_drawMode;
