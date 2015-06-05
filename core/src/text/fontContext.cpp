@@ -34,6 +34,10 @@ void FontContext::clearState() {
 }
 
 void FontContext::useBuffer(const std::shared_ptr<TextBuffer>& _textBuffer) {
+    if (_textBuffer) {
+        _textBuffer->bind();
+    }
+
     m_currentBuffer = _textBuffer;
 }
 
@@ -61,14 +65,14 @@ bool FontContext::addFont(std::string _fontFile, std::string _name) {
 
     unsigned int dataSize;
     unsigned char* data = bytesFromResource(_fontFile.c_str(), &dataSize);
-    m_font = fonsAddFont(m_fsContext, "droid-serif", data, dataSize);
+    int font = fonsAddFont(m_fsContext, "droid-serif", data, dataSize);
 
-    if (m_font == FONS_INVALID) {
+    if (font == FONS_INVALID) {
         logMsg("[FontContext] Error loading font file %s\n", _fontFile.c_str());
         return false;
     }
 
-    m_fonts[_name] = m_font;
+    m_fonts[_name] = font;
 
     return true;
 }

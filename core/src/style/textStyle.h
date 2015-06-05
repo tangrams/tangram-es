@@ -37,6 +37,10 @@ protected:
     int m_color;
     bool m_sdf;
     bool m_sdfMultisampling = true;
+    
+    std::shared_ptr<LabelContainer> m_labels;
+    
+    void addVertices(TextBuffer& _buffer, VboMesh& _mesh) const;
 
 public:
 
