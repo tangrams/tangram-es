@@ -20,7 +20,7 @@ public:
      * inits the text buffer, the size is the size of the transform texture, a size of 2 would 
      * create a transform texture of size 2x4.
      */
-    void init(int _size = 2);
+    void init();
 
     /* ask the font rasterizer to rasterize a specific text for a text id */
     void rasterize(const std::string& _text, fsuint _id);
@@ -52,7 +52,6 @@ public:
 
 private:
     bool m_dirty;
-    bool m_bound;
     fsuint m_fsBuffer;
     FONScontext* m_fsContext;
 

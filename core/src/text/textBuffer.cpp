@@ -2,11 +2,10 @@
 
 TextBuffer::TextBuffer(FONScontext* _fsContext) : m_fsContext(_fsContext) {
     m_dirty = false;
-    m_bound = false;
 }
 
-void TextBuffer::init(int _size) {
-    glfonsBufferCreate(m_fsContext, _size, &m_fsBuffer);
+void TextBuffer::init() {
+    glfonsBufferCreate(m_fsContext, &m_fsBuffer);
 }
 
 TextBuffer::~TextBuffer() {
@@ -22,10 +21,7 @@ bool TextBuffer::getVertices(float* _vertices) {
 }
 
 void TextBuffer::bind() {
-    if (!m_bound) {
-        m_bound = true;
-        glfonsBindBuffer(m_fsContext, m_fsBuffer);
-    }
+    glfonsBindBuffer(m_fsContext, m_fsBuffer);
 }
 
 fsuint TextBuffer::genTextID() {
@@ -52,10 +48,7 @@ void TextBuffer::transformID(fsuint _textID, float _x, float _y, float _rot, flo
 }
 
 void TextBuffer::unbind() {
-    if (m_bound) {
-        glfonsBindBuffer(m_fsContext, 0);
-        m_bound = false;
-    }
+    glfonsBindBuffer(m_fsContext, 0);
 }
 
 glm::vec4 TextBuffer::getBBox(fsuint _textID) {

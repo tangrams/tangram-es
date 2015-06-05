@@ -43,7 +43,7 @@ void TextStyle::constructShaderProgram() {
 }
 
 void TextStyle::addVertices(TextBuffer& _buffer, VboMesh& _mesh) const {
-    std::vector<PosTexID> vertices;
+    std::vector<TextVert> vertices;
     vertices.resize(_buffer.getVerticesSize());
     
     if (_buffer.getVertices(reinterpret_cast<float*>(vertices.data()))) {
@@ -68,7 +68,6 @@ void TextStyle::buildPoint(Point& _point, StyleParams& _params, Properties& _pro
 
 void TextStyle::buildLine(Line& _line, StyleParams& _params, Properties& _props, VboMesh& _mesh) const {
     auto textBuffer = m_labels->getFontContext()->getCurrentBuffer();
-    std::vector<PosTexID> vertices;
 
     int lineLength = _line.size();
     int skipOffset = floor(lineLength / 2);
@@ -101,7 +100,6 @@ void TextStyle::buildLine(Line& _line, StyleParams& _params, Properties& _props,
 
 void TextStyle::buildPolygon(Polygon& _polygon, StyleParams& _params, Properties& _props, VboMesh& _mesh) const {
     auto textBuffer = m_labels->getFontContext()->getCurrentBuffer();
-    std::vector<PosTexID> vertices;
     glm::vec3 centroid;
     int n = 0;
     

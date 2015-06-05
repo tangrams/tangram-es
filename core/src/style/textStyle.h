@@ -10,12 +10,15 @@ class TextStyle : public Style {
 
 protected:
 
-    struct PosTexID {
+    struct TextVert {
         float pos_x;
         float pos_y;
         float tex_u;
         float tex_v;
-        float fsID;
+        float screen_x;
+        float screen_y;
+        float alpha;
+        float rotation;
     };
 
     virtual void constructVertexLayout() override;
@@ -26,7 +29,7 @@ protected:
     virtual void onBeginBuildTile(MapTile& _tile) const override;
     virtual void onEndBuildTile(MapTile& _tile) const override;
 
-    typedef TypedMesh<PosTexID> Mesh;
+    typedef TypedMesh<TextVert> Mesh;
 
     virtual VboMesh* newMesh() const override {
         return new Mesh(m_vertexLayout, m_drawMode, GL_DYNAMIC_DRAW);
