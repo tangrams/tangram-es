@@ -5,8 +5,8 @@
 
 int VboMesh::s_validGeneration = 0;
 
-VboMesh::VboMesh(std::shared_ptr<VertexLayout> _vertexLayout, GLenum _drawMode)
-    : m_vertexLayout(_vertexLayout) {
+VboMesh::VboMesh(std::shared_ptr<VertexLayout> _vertexLayout, GLenum _drawMode, GLenum _hint)
+    : m_vertexLayout(_vertexLayout), m_hint(_hint) {
 
     m_glVertexBuffer = 0;
     m_glIndexBuffer = 0;
@@ -15,6 +15,7 @@ VboMesh::VboMesh(std::shared_ptr<VertexLayout> _vertexLayout, GLenum _drawMode)
 
     m_isUploaded = false;
     m_isCompiled = false;
+    m_dirty = false;
 
     setDrawMode(_drawMode);
 }
@@ -55,6 +56,24 @@ void VboMesh::setDrawMode(GLenum _drawMode) {
     }
 }
 
+void VboMesh::update(intptr_t _offset, size_t _size, unsigned char* data) {
+    if (m_hint == GL_STATIC_DRAW) {
+        logMsg("WARNING: wrong usage hint provided to the Vbo");
+    }
+    
+    // TODO
+    
+    m_dirty = true;
+}
+
+void VboMesh::subDataUpload() {
+    glBindBuffer(GL_ARRAY_BUFFER, m_glVertexBuffer);
+    
+    // TODO
+
+    m_dirty = false;
+}
+
 void VboMesh::upload() {
     // Generate vertex buffer, if needed
     if (m_glVertexBuffer == 0) {
@@ -66,7 +85,7 @@ void VboMesh::upload() {
     int vertexBytes = m_glVertexData.size();
 
     glBindBuffer(GL_ARRAY_BUFFER, m_glVertexBuffer);
-    glBufferData(GL_ARRAY_BUFFER, vertexBytes, m_glVertexData.data(), GL_STATIC_DRAW);
+    glBufferData(GL_ARRAY_BUFFER, vertexBytes, m_glVertexData.data(), m_hint);
 
     if (!m_glIndexData.empty()) {
         
@@ -77,7 +96,7 @@ void VboMesh::upload() {
         // Buffer element index data
         glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, m_glIndexBuffer);
         glBufferData(GL_ELEMENT_ARRAY_BUFFER, m_glIndexData.size() * sizeof(GLushort),
-                     m_glIndexData.data(), GL_STATIC_DRAW);
+                     m_glIndexData.data(), m_hint);
     }
 
     // m_glVertexData.resize(0);
@@ -105,6 +124,10 @@ void VboMesh::draw(const std::shared_ptr<ShaderProgram> _shader) {
     // Ensure that geometry is buffered into GPU
     if (!m_isUploaded) {
         upload();
+    }
+    
+    if (m_dirty) {
+        subDataUpload();
     }
 
     // Bind buffers for drawing
