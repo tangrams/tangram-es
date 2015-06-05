@@ -44,7 +44,6 @@ public:
               bool _sdf = false, bool _sdfMultisampling = false, GLenum _drawMode = GL_TRIANGLES);
 
     virtual void onBeginDrawFrame(const std::shared_ptr<View>& _view, const std::shared_ptr<Scene>& _scene) override;
-    virtual void onBeginDrawTile(const std::shared_ptr<MapTile>& _tile) override;
     virtual void onEndDrawFrame() override;
 
     virtual ~TextStyle();

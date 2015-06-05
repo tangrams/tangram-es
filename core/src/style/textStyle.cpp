@@ -197,22 +197,6 @@ void TextStyle::onEndBuildTile(MapTile& _tile) const {
     ftContext->unlock();
 }
 
-void TextStyle::onBeginDrawTile(const std::shared_ptr<MapTile>& _tile) {
-    auto buffer = _tile->getTextBuffer(*this);
-
-    if (buffer) {
-        auto texture = buffer->getTextureTransform();
-
-        if (texture) {
-            texture->update(0);
-            texture->bind(0);
-            m_shaderProgram->setUniformi("u_transforms", 0);
-            // resolution of the transform texture
-            m_shaderProgram->setUniformf("u_tresolution", texture->getWidth(), texture->getHeight());
-        }
-    }
-}
-
 void TextStyle::onBeginDrawFrame(const std::shared_ptr<View>& _view, const std::shared_ptr<Scene>& _scene) {
     auto ftContext = LabelContainer::GetInstance()->getFontContext();
     const auto& atlas = ftContext->getAtlas();
