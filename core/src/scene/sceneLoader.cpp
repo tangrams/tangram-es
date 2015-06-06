@@ -32,27 +32,6 @@ void SceneLoader::loadScene(const std::string& _file, Scene& _scene, TileManager
 
 }
 
-/*
- * special coloarSequence parser to store [r, g, b]/[r, g, b, a] color sequence in
- * cssColorParser format rgb(r, g, b) or rgba(r, g, b, a)
- */
-std::string parseColorSequence(const Node& node) {
-    char buffer[50];
-    int length;
-
-    float alpha = (node.size() == 3) ? 1.0 : node[3].as<float>();
-
-    length = sprintf(buffer, "rgba(%d, %d, %d, %f)",
-                     static_cast<uint32_t>(255.0 * node[0].as<float>()),
-                     static_cast<uint32_t>(255.0 * node[1].as<float>()),
-                     static_cast<uint32_t>(255.0 * node[2].as<float>()),
-                     alpha);
-
-    std::string str(buffer, length);
-
-    return str;
-}
-
 std::string parseSequence(const Node& node) {
     std::string str;
     std::stringstream sstream;
@@ -461,11 +440,7 @@ void SceneLoader::parseStyleProps(Node styleProps, StyleParamMap& paramMap, cons
         if(propItr->second.IsScalar()) {
             paramMap.emplace(paramKey, propItr->second.as<std::string>());
         } else if(propItr->second.IsSequence()) {
-            if(prop.as<std::string>() == "color") {
-                paramMap.emplace(paramKey, parseColorSequence(propItr->second));
-            } else {
-                paramMap.emplace(paramKey, parseSequence(propItr->second));
-            }
+            paramMap.emplace(paramKey, parseSequence(propItr->second));
         } else if(propItr->second.IsMap()) {
             parseStyleProps(propItr->second, paramMap, paramKey);
         } else {

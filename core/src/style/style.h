@@ -16,6 +16,12 @@
 #include "util/builders.h"
 #include "view/view.h"
 #include "styleParamMap.h"
+#include "csscolorparser.hpp"
+
+
+namespace CSSColorParser {
+    struct Color;
+}
 
 enum class LightingType : char {
     none,
@@ -83,6 +89,9 @@ protected:
 
     /* Parse StyleParamMap to apt Style property parameters */
     virtual void* parseStyleParams(StyleParamMap& _styleParamMap) const = 0;
+
+    /* parse color properties */
+    static uint32_t parseColorProp(std::string _colorPropStr) ;
 
     /* Perform any needed setup to process the data for a tile */
     virtual void onBeginBuildTile(MapTile& _tile) const;

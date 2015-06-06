@@ -1,10 +1,41 @@
 #include "style.h"
 #include "scene/scene.h"
 
+using namespace CSSColorParser;
+
 Style::Style(std::string _name, GLenum _drawMode) : m_name(_name), m_drawMode(_drawMode) {
 }
 
 Style::~Style() {
+}
+
+uint32_t Style::parseColorProp(std::string _colorPropStr) {
+    uint32_t color = 0;
+    if(std::isdigit(_colorPropStr[0])) { // r, g, b, a
+        int shift = 0;
+        size_t start = 0;
+        auto pos = _colorPropStr.find_first_of(",", start);
+        while(pos != std::string::npos) {
+            if(pos != start) {
+                std::string value(_colorPropStr, start, pos - start);
+                color += (static_cast<uint32_t>(255.0 * std::stof(value)) << shift);
+                shift += 8;
+            }
+            start = pos + 1;
+            pos = _colorPropStr.find_first_of(",", start);
+        }
+        if(start < _colorPropStr.length()) {
+            std::string value(_colorPropStr, start, pos - start);
+            color += (static_cast<uint32_t>(255.0 * std::stof(value)) << shift);
+            shift += 8;
+        }
+        if(shift == 24) {
+            color += (255 << 24);
+        }
+    } else { // css color or #hex-num
+        color = parse(_colorPropStr).getInt();
+    }
+    return color;
 }
 
 void Style::setMaterial(const std::shared_ptr<Material>& _material) {

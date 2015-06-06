@@ -39,8 +39,7 @@ void* PolygonStyle::parseStyleParams(StyleParamMap& _styleParamMap) const {
         params->order = std::stof(_styleParamMap.at("order"));
     }
     if(_styleParamMap.find("color") != _styleParamMap.end()) {
-        Color c = parse(_styleParamMap.at("color"));
-        params->color = c.getInt();
+        params->color = parseColorProp(_styleParamMap.at("color"));
     }
     return static_cast<void*>(params);
 }
@@ -79,7 +78,7 @@ void PolygonStyle::buildPolygon(Polygon& _polygon, void* _styleParams, Propertie
     std::vector<glm::vec3> points;
     std::vector<glm::vec3> normals;
     std::vector<glm::vec2> texcoords;
-    
+
     StyleParams* params = static_cast<StyleParams*>(_styleParams);
 
     PolygonOutput output = { points, indices, normals, texcoords };
@@ -130,7 +129,7 @@ void PolygonStyle::buildPolygon(Polygon& _polygon, void* _styleParams, Propertie
         }
     }
     */
-    
+
     auto& mesh = static_cast<PolygonStyle::Mesh&>(_mesh);
     mesh.addVertices(std::move(vertices), std::move(indices));
 }
