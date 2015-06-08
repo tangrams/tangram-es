@@ -137,7 +137,6 @@ public class Tangram implements Renderer, OnTouchListener, OnScaleGestureListene
         shoveGestureDetector.onTouchEvent(event);
 
         if (shoveGestureDetector.isInProgress()) {
-            requestRender();
             return true;
         }
 
@@ -145,12 +144,10 @@ public class Tangram implements Renderer, OnTouchListener, OnScaleGestureListene
         rotateGestureDetector.onTouchEvent(event);
 
         if (scaleGestureDetector.isInProgress() || rotateGestureDetector.isInProgress()) {
-            requestRender();
             return true;
         }
 
         if (gestureDetector.onTouchEvent(event)) {
-            requestRender();
             return true;
         }
 
