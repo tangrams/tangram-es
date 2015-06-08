@@ -132,26 +132,12 @@ public class Tangram implements Renderer, OnTouchListener, OnScaleGestureListene
 
     public boolean onTouch(View v, MotionEvent event) {
 
-        // Pass the event to gesture detectors in order of decreasing specificity
-
+        gestureDetector.onTouchEvent(event);
         shoveGestureDetector.onTouchEvent(event);
-
-        if (shoveGestureDetector.isInProgress()) {
-            return true;
-        }
-
         scaleGestureDetector.onTouchEvent(event);
         rotateGestureDetector.onTouchEvent(event);
 
-        if (scaleGestureDetector.isInProgress() || rotateGestureDetector.isInProgress()) {
-            return true;
-        }
-
-        if (gestureDetector.onTouchEvent(event)) {
-            return true;
-        }
-
-        return false;
+        return true;
 
     }
 
@@ -230,7 +216,7 @@ public class Tangram implements Renderer, OnTouchListener, OnScaleGestureListene
     // ===================================================
 
     public boolean onScaleBegin(ScaleGestureDetector detector) {
-        return true;
+        return !shoveGestureDetector.isInProgress();
     }
 
     public boolean onScale(ScaleGestureDetector detector) {
@@ -246,7 +232,7 @@ public class Tangram implements Renderer, OnTouchListener, OnScaleGestureListene
     // =====================================================
 
     public boolean onRotateBegin(RotateGestureDetector detector) {
-        return true;
+        return !shoveGestureDetector.isInProgress();
     }
 
     public boolean onRotate(RotateGestureDetector detector) {
@@ -265,7 +251,7 @@ public class Tangram implements Renderer, OnTouchListener, OnScaleGestureListene
     // ===================================================
 
     public boolean onShoveBegin(ShoveGestureDetector detector) {
-        return true;
+        return !(scaleGestureDetector.isInProgress() || rotateGestureDetector.isInProgress());
     }
 
     public boolean onShove(ShoveGestureDetector detector) {
