@@ -137,7 +137,6 @@ public class Tangram implements Renderer, OnTouchListener, OnScaleGestureListene
             scaleGestureDetector.onTouchEvent(event) |
             rotateGestureDetector.onTouchEvent(event) |
             shoveGestureDetector.onTouchEvent(event)) {
-            requestRender();
             return true;
         }
 
