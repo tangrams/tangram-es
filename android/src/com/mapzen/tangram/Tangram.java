@@ -41,9 +41,6 @@ public class Tangram implements Renderer, OnTouchListener, OnScaleGestureListene
         System.loadLibrary("tangram");
     }
 
-    private OkHttpClient okClient;
-    private static final int TILE_CACHE_SIZE = 1024 * 1024 * 30; // 30 Mgs
-
     private static native void init(Tangram tangramInstance, AssetManager assetManager);
     private static native void resize(int width, int height);
     private static native void update(float dt);
@@ -69,6 +66,10 @@ public class Tangram implements Renderer, OnTouchListener, OnScaleGestureListene
     private ShoveGestureDetector shoveGestureDetector;
     private DisplayMetrics displayMetrics = new DisplayMetrics();
     private GLSurfaceView view;
+
+    private OkHttpClient okClient;
+    private Request.Builder okRequestBuilder;
+    private static final int TILE_CACHE_SIZE = 1024 * 1024 * 30; // 30 MB
 
     public Tangram(Activity mainApp) {
 
@@ -107,6 +108,7 @@ public class Tangram implements Renderer, OnTouchListener, OnScaleGestureListene
         } catch (Exception e) {
             e.printStackTrace();
         }
+        this.okRequestBuilder = new Request.Builder();
     }
 
     public View getView() {
@@ -284,7 +286,7 @@ public class Tangram implements Renderer, OnTouchListener, OnScaleGestureListene
 
     // Network requests using okHttp
     public boolean startUrlRequest(String url, final long callbackPtr) throws Exception {
-        Request request = new Request.Builder().tag(url).url(url).build();
+        Request request = okRequestBuilder.tag(url).url(url).build();
 
         okClient.newCall(request).enqueue(new Callback() {
             @Override
