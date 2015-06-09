@@ -41,9 +41,6 @@ public class Tangram implements Renderer, OnTouchListener, OnScaleGestureListene
         System.loadLibrary("tangram");
     }
 
-    private OkHttpClient okClient;
-    private static final int TILE_CACHE_SIZE = 1024 * 1024 * 30; // 30 Mgs
-
     private static native void init(Tangram tangramInstance, AssetManager assetManager);
     private static native void resize(int width, int height);
     private static native void update(float dt);
@@ -70,8 +67,12 @@ public class Tangram implements Renderer, OnTouchListener, OnScaleGestureListene
     private DisplayMetrics displayMetrics = new DisplayMetrics();
     private GLSurfaceView view;
 
+    private OkHttpClient okClient;
+    private Request.Builder okRequestBuilder;
+    private static final int TILE_CACHE_SIZE = 1024 * 1024 * 30; // 30 MB
+
     public Tangram(Activity mainApp) {
-        
+
         view = new GLSurfaceView(mainApp) {
 
             @Override
@@ -81,16 +82,16 @@ public class Tangram implements Renderer, OnTouchListener, OnScaleGestureListene
             }
 
         };
-        
+
         view.setOnTouchListener(this);
         view.setEGLContextClientVersion(2);
         view.setPreserveEGLContextOnPause(true);
         view.setEGLConfigChooser(8, 8, 8, 8, 24, 0);
         view.setRenderer(this);
         view.setRenderMode(GLSurfaceView.RENDERMODE_WHEN_DIRTY);
-        
+
         mainApp.getWindowManager().getDefaultDisplay().getMetrics(displayMetrics);
-        
+
         this.assetManager = mainApp.getAssets();
         this.gestureDetector = new GestureDetector(mainApp, this);
         this.scaleGestureDetector = new ScaleGestureDetector(mainApp, this);
@@ -107,12 +108,13 @@ public class Tangram implements Renderer, OnTouchListener, OnScaleGestureListene
         } catch (Exception e) {
             e.printStackTrace();
         }
+        this.okRequestBuilder = new Request.Builder();
     }
 
     public View getView() {
         return view;
     }
-    
+
     public void onDestroy() {
         teardown();
     }
@@ -124,23 +126,22 @@ public class Tangram implements Renderer, OnTouchListener, OnScaleGestureListene
     public void setRenderMode(int renderMode) {
         view.setRenderMode(renderMode);
     }
-    
+
     // View.OnTouchListener methods
     // ============================
 
-    public boolean onTouch(View v, MotionEvent event) { 
-        
+    public boolean onTouch(View v, MotionEvent event) {
+
         //Pass the event to gesture detectors
         if (gestureDetector.onTouchEvent(event) |
             scaleGestureDetector.onTouchEvent(event) |
             rotateGestureDetector.onTouchEvent(event) |
             shoveGestureDetector.onTouchEvent(event)) {
-            requestRender();
             return true;
         }
-        
+
         return false;
-        
+
     }
 
     // GLSurfaceView.Renderer methods
@@ -161,18 +162,18 @@ public class Tangram implements Renderer, OnTouchListener, OnScaleGestureListene
     }
 
     public void onSurfaceCreated(GL10 gl, EGLConfig config) {
-        
+
         if (contextDestroyed) {
             onContextDestroyed();
             contextDestroyed = false;
         }
-        
+
         init(this, assetManager);
     }
 
     // GestureDetetor.OnGestureListener methods
     // ========================================
-    
+
     public boolean onDown(MotionEvent event) {
         return true;
     }
@@ -187,7 +188,7 @@ public class Tangram implements Renderer, OnTouchListener, OnScaleGestureListene
         // cause a simultaneous shove gesture
         if (e1.getPointerCount() == 1 && e2.getPointerCount() == 1) {
             // We flip the signs of distanceX and distanceY because onScroll provides the distances
-            // by which the view being scrolled should move, while handlePanGesture expects the 
+            // by which the view being scrolled should move, while handlePanGesture expects the
             // distances by which the touch point has moved on the screen (these are opposite)
             float x = e2.getX();
             float y = e2.getY();
@@ -216,7 +217,7 @@ public class Tangram implements Renderer, OnTouchListener, OnScaleGestureListene
 
     // ScaleGestureDetector.OnScaleGestureListener methods
     // ===================================================
-    
+
     public boolean onScaleBegin(ScaleGestureDetector detector) {
         return true;
     }
@@ -271,17 +272,17 @@ public class Tangram implements Renderer, OnTouchListener, OnScaleGestureListene
 
     // Network requests using okHttp
     public boolean startUrlRequest(String url, final long callbackPtr) throws Exception {
-        Request request = new Request.Builder().tag(url).url(url).build();
+        Request request = okRequestBuilder.tag(url).url(url).build();
 
         okClient.newCall(request).enqueue(new Callback() {
-            @Override 
+            @Override
             public void onFailure(Request request, IOException e) {
 
                 onUrlFailure(callbackPtr);
                 e.printStackTrace();
             }
 
-            @Override 
+            @Override
             public void onResponse(Response response) throws IOException {
 
                 if(!response.isSuccessful()) {

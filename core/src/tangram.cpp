@@ -245,6 +245,7 @@ namespace Tangram {
 
         m_view->translate((_posX - viewCenterX), (_posY - viewCenterY));
 
+        requestRender();
     }
 
     void handleDoubleTapGesture(float _posX, float _posY) {
@@ -258,6 +259,8 @@ namespace Tangram {
         m_view->screenToGroundPlane(_endX, _endY);
 
         m_view->translate(_startX - _endX, _startY - _endY);
+
+        requestRender();
     }
 
     void handlePinchGesture(float _posX, float _posY, float _scale) {
@@ -271,6 +274,8 @@ namespace Tangram {
         m_view->translate((_posX - viewCenterX)*(1-1/_scale), (_posY - viewCenterY)*(1-1/_scale));
 
         m_view->zoom(log2f(_scale));
+
+        requestRender();
     }
 
     void handleRotateGesture(float _posX, float _posY, float _radians) {
@@ -278,12 +283,14 @@ namespace Tangram {
         m_view->screenToGroundPlane(_posX, _posY);
         m_view->orbit(_posX, _posY, _radians);
 
+        requestRender();
     }
 
     void handleShoveGesture(float _distance) {
 
         m_view->pitch(_distance);
 
+        requestRender();
     }
 
     void setDebugFlag(DebugFlags _flag, bool _on) {
