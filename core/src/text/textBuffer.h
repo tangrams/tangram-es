@@ -2,6 +2,7 @@
 
 #include "texture.h"
 #include "glfontstash.h"
+#include "util/vboMesh.h"
 
 /* 
  * This class represents a text buffer, each text buffer has several text ids
@@ -32,6 +33,10 @@ public:
      *  alpha should be in [0..1]
      */
     void transformID(fsuint _textID, float _x, float _y, float _rot, float _alpha);
+    
+    void setMesh(std::shared_ptr<VboMesh> _mesh) { m_mesh = _mesh; }
+    
+    std::shared_ptr<VboMesh>& getMesh() { return m_mesh; }
 
     /* ask to update to update the transform texture related to this text buffer */
     void pushBuffer();
@@ -54,5 +59,6 @@ private:
     bool m_dirty;
     fsuint m_fsBuffer;
     FONScontext* m_fsContext;
+    std::shared_ptr<VboMesh> m_mesh;
 
 };

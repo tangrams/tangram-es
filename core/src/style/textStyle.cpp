@@ -148,6 +148,8 @@ void TextStyle::onEndBuildTile(MapTile &_tile, VboMesh& _mesh) const {
     
     ftContext->clearState();
     
+    ftContext->getCurrentBuffer()->setMesh(_tile.getGeometry(*this));
+    
     ftContext->useBuffer(nullptr);
     ftContext->unlock();
 }

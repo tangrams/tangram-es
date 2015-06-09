@@ -75,7 +75,7 @@ void Style::addData(TileData& _data, MapTile& _tile, const MapProjection& _mapPr
     } else {
         mesh->compileVertexBuffer();
         
-        _tile.addGeometry(*this, std::unique_ptr<VboMesh>(mesh));
+        _tile.addGeometry(*this, std::shared_ptr<VboMesh>(mesh));
     }
 }
 

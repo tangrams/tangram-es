@@ -38,7 +38,7 @@ MapTile::~MapTile() {
 
 }
 
-void MapTile::addGeometry(const Style& _style, std::unique_ptr<VboMesh> _mesh) {
+void MapTile::addGeometry(const Style& _style, std::shared_ptr<VboMesh> _mesh) {
 
     m_geometry[_style.getName()] = std::move(_mesh); // Move-construct a unique_ptr at the value associated with the given style
 
@@ -101,7 +101,7 @@ void MapTile::pushLabelTransforms(const Style& _style, std::shared_ptr<LabelCont
 
 void MapTile::draw(const Style& _style, const View& _view) {
 
-    const std::unique_ptr<VboMesh>& styleMesh = m_geometry[_style.getName()];
+    const std::shared_ptr<VboMesh>& styleMesh = m_geometry[_style.getName()];
     
     if (styleMesh) {
         
@@ -125,7 +125,7 @@ bool MapTile::hasGeometry() {
     return (m_geometry.size() != 0);
 }
 
-std::unique_ptr<VboMesh>& MapTile::getGeometry(const Style& _style) {
+std::shared_ptr<VboMesh>& MapTile::getGeometry(const Style& _style) {
     return m_geometry.at(_style.getName());
 }
 

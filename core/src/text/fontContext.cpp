@@ -98,9 +98,7 @@ void updateAtlas(void* _userPtr, unsigned int _xoff, unsigned int _yoff,
 void updateBuffer(void* _userPtr, intptr_t _offset, size_t _size, float* _newData) {
     FontContext* fontContext = static_cast<FontContext*>(_userPtr);
     auto buffer = fontContext->getCurrentBuffer();
-    
-    // TODO
-    logMsg("%d %d\n", _offset, _size);
+    buffer->getMesh()->update(_offset, _size, reinterpret_cast<unsigned char*>(_newData));
 }
 
 void FontContext::initFontContext(int _atlasSize) {
