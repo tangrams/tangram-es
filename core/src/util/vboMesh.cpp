@@ -56,12 +56,12 @@ void VboMesh::setDrawMode(GLenum _drawMode) {
     }
 }
 
-void VboMesh::update(intptr_t _offset, size_t _size, unsigned char* data) {
+void VboMesh::update(intptr_t _offset, size_t _size, unsigned char* _data) {
     if (m_hint == GL_STATIC_DRAW) {
         logMsg("WARNING: wrong usage hint provided to the Vbo");
     }
     
-    // TODO
+    std::memcpy(m_glVertexData.data() + _offset, _data, _size);
     
     m_dirty = true;
 }
@@ -69,7 +69,8 @@ void VboMesh::update(intptr_t _offset, size_t _size, unsigned char* data) {
 void VboMesh::subDataUpload() {
     glBindBuffer(GL_ARRAY_BUFFER, m_glVertexBuffer);
     
-    // TODO
+    // TODO : track dirtyness and call glBufferSubData
+    glBufferData(GL_ARRAY_BUFFER, m_glVertexData.size(), m_glVertexData.data(), m_hint);
 
     m_dirty = false;
 }

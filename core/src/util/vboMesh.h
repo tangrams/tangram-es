@@ -62,7 +62,7 @@ public:
      */
     void draw(const std::shared_ptr<ShaderProgram> _shader);
     
-    void update(intptr_t _offset, size_t _size, unsigned char* data);
+    void update(intptr_t _offset, size_t _size, unsigned char* _data);
     
     static void addManagedVBO(VboMesh* _vbo);
     
