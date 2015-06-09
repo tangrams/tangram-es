@@ -95,12 +95,12 @@ void updateAtlas(void* _userPtr, unsigned int _xoff, unsigned int _yoff,
     fontContext->getAtlas()->setSubData(static_cast<const GLuint*>(_pixels), _xoff, _yoff, _width, _height);
 }
 
-void updateBuffer(void* _userPtr, intptr_t _offset, size_t _size, float* _newData) {
+void updateBuffer(void* _userPtr, intptr_t _offset, size_t _size, float* _newData, size_t _dirtySize, intptr_t _dirtyOffset) {
     FontContext* fontContext = static_cast<FontContext*>(_userPtr);
     auto buffer = fontContext->getCurrentBuffer();
     
     if (buffer->hasData()) {
-        buffer->getWeakMesh()->update(_offset, _size, reinterpret_cast<unsigned char*>(_newData));
+        buffer->getWeakMesh()->update(_offset, _size, reinterpret_cast<unsigned char*>(_newData), _dirtySize, _dirtyOffset);
     }
 }
 
