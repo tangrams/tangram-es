@@ -138,18 +138,18 @@ void TextStyle::onBeginBuildTile(MapTile& _tile) const {
     TextStyle::s_processedTile = &_tile;
 }
 
-void TextStyle::onEndBuildTile(MapTile &_tile, VboMesh& _mesh) const {
+void TextStyle::onEndBuildTile(MapTile &_tile, std::shared_ptr<VboMesh> _mesh) const {
     auto ftContext = LabelContainer::GetInstance()->getFontContext();
+    auto buffer = ftContext->getCurrentBuffer();
     
     // add the computed glyph vertices to the mesh once
-    addVertices(*ftContext->getCurrentBuffer(), _mesh);
+    addVertices(*ftContext->getCurrentBuffer(), *_mesh);
+
+    buffer->setMesh(_mesh->numVertices() > 0 ? _mesh : nullptr);
     
     TextStyle::s_processedTile = nullptr;
     
     ftContext->clearState();
-    
-    ftContext->getCurrentBuffer()->setMesh(_tile.getGeometry(*this));
-    
     ftContext->useBuffer(nullptr);
     ftContext->unlock();
 }
@@ -164,6 +164,7 @@ void TextStyle::onBeginDrawFrame(const std::shared_ptr<View>& _view, const std::
 
     atlas->update(1);
     atlas->bind(1);
+    
     m_shaderProgram->setUniformi("u_tex", 1);
     m_shaderProgram->setUniformf("u_resolution", _view->getWidth(), _view->getHeight());
     

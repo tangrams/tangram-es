@@ -27,7 +27,7 @@ protected:
     virtual void buildLine(Line& _line, StyleParams& _params, Properties& _props, VboMesh& _mesh) const override;
     virtual void buildPolygon(Polygon& _polygon, StyleParams& _params, Properties& _props, VboMesh& _mesh) const override;
     virtual void onBeginBuildTile(MapTile& _tile) const override;
-    virtual void onEndBuildTile(MapTile& _tile, VboMesh& _mesh) const override;
+    virtual void onEndBuildTile(MapTile& _tile, std::shared_ptr<VboMesh> _mesh) const override;
 
     typedef TypedMesh<TextVert> Mesh;
 

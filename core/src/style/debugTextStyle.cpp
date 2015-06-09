@@ -11,7 +11,7 @@ void DebugTextStyle::addData(TileData& _data, MapTile& _tile, const MapProjectio
     if (Tangram::getDebugFlag(Tangram::DebugFlags::TILE_INFOS)) {
         onBeginBuildTile(_tile);
 
-        Mesh* mesh = new Mesh(m_vertexLayout, m_drawMode);
+        std::shared_ptr<VboMesh> mesh(new Mesh(m_vertexLayout, m_drawMode));
         
         auto ftContext = m_labels->getFontContext();
         auto textBuffer = _tile.getTextBuffer(*this);
@@ -28,9 +28,9 @@ void DebugTextStyle::addData(TileData& _data, MapTile& _tile, const MapProjectio
 
         mesh->compileVertexBuffer();
         
-        _tile.addGeometry(*this, std::unique_ptr<VboMesh>(mesh));
+        _tile.addGeometry(*this, mesh);
         
-        onEndBuildTile(_tile, *mesh);
+        onEndBuildTile(_tile, mesh);
     }
 
 }

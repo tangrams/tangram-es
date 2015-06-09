@@ -17,10 +17,6 @@ public:
     /* generates a text id */
     fsuint genTextID();
 
-    /* 
-     * inits the text buffer, the size is the size of the transform texture, a size of 2 would 
-     * create a transform texture of size 2x4.
-     */
     void init();
 
     /* ask the font rasterizer to rasterize a specific text for a text id */
@@ -28,7 +24,7 @@ public:
 
     /* 
      * transform a text id in screen space coordinate
-     *  x, y should be inside the screen bounds
+     *  x, y in screen space
      *  rotation is in radians
      *  alpha should be in [0..1]
      */
@@ -36,9 +32,8 @@ public:
     
     void setMesh(std::shared_ptr<VboMesh> _mesh) { m_mesh = _mesh; }
     
-    std::shared_ptr<VboMesh>& getMesh() { return m_mesh; }
+    std::shared_ptr<VboMesh> getWeakMesh();
 
-    /* ask to update to update the transform texture related to this text buffer */
     void pushBuffer();
     
     /* 
@@ -48,7 +43,9 @@ public:
     bool getVertices(float* _vertices);
     
     int getVerticesSize();
-
+    
+    bool hasData();
+    
     /* get the axis aligned bounding box for a text */
     glm::vec4 getBBox(fsuint _textID);
     
@@ -59,6 +56,6 @@ private:
     bool m_dirty;
     fsuint m_fsBuffer;
     FONScontext* m_fsContext;
-    std::shared_ptr<VboMesh> m_mesh;
+    std::weak_ptr<VboMesh> m_mesh;
 
 };

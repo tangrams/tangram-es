@@ -27,7 +27,7 @@ void Style::addLayer(const std::pair<std::string, StyleParams>& _layer) {
 void Style::addData(TileData& _data, MapTile& _tile, const MapProjection& _mapProjection)  const {
     onBeginBuildTile(_tile);
 
-    VboMesh* mesh = newMesh();
+    std::shared_ptr<VboMesh> mesh(newMesh());
 
     for (auto& layer : _data.layers) {
 
@@ -67,15 +67,15 @@ void Style::addData(TileData& _data, MapTile& _tile, const MapProjection& _mapPr
             }
         }
     }
-
-    onEndBuildTile(_tile, *mesh);
     
+    onEndBuildTile(_tile, mesh);
+
     if (mesh->numVertices() == 0) {
-        delete mesh;
+        mesh.reset();
     } else {
         mesh->compileVertexBuffer();
         
-        _tile.addGeometry(*this, std::shared_ptr<VboMesh>(mesh));
+        _tile.addGeometry(*this, mesh);
     }
 }
 
@@ -120,6 +120,6 @@ void Style::onBeginBuildTile(MapTile& _tile) const {
     // No-op by default
 }
 
-void Style::onEndBuildTile(MapTile& _tile, VboMesh& _mesh) const {
+void Style::onEndBuildTile(MapTile& _tile, std::shared_ptr<VboMesh> _mesh) const {
     // No-op by default
 }

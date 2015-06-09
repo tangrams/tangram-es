@@ -56,3 +56,15 @@ glm::vec4 TextBuffer::getBBox(fsuint _textID) {
     glfonsGetBBox(m_fsContext, _textID, &bbox.x, &bbox.y, &bbox.z, &bbox.w);
     return bbox;
 }
+
+bool TextBuffer::hasData() {
+    auto mesh = getWeakMesh();
+    if (mesh == nullptr) {
+        return false;
+    }
+    return mesh->numVertices() > 0;
+}
+
+std::shared_ptr<VboMesh> TextBuffer::getWeakMesh() {
+    return m_mesh.lock();
+}

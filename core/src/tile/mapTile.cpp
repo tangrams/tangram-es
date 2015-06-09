@@ -79,13 +79,18 @@ void MapTile::updateLabels(float _dt, const Style& _style, const View& _view) {
 }
 
 void MapTile::pushLabelTransforms(const Style& _style, std::shared_ptr<LabelContainer> _labelContainer) {
+    auto it = m_buffers.find(_style.getName());
+    
+    if (it == m_buffers.end()) {
+        return;
+    }
 
-    auto& textBuffer = m_buffers[_style.getName()];
-    if(textBuffer) {
+    auto textBuffer = it->second;
+    
+    if (textBuffer->hasData()) {
         auto ftContext = _labelContainer->getFontContext();
 
         ftContext->lock();
-        
         ftContext->useBuffer(textBuffer);
         
         for(auto& label : m_labels[_style.getName()]) {
@@ -93,7 +98,6 @@ void MapTile::pushLabelTransforms(const Style& _style, std::shared_ptr<LabelCont
         }
         
         textBuffer->pushBuffer();
-        
         ftContext->unlock();
     }
     

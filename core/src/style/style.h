@@ -104,7 +104,7 @@ protected:
     virtual void onBeginBuildTile(MapTile& _tile) const;
 
     /* Perform any needed teardown after processing data for a tile */
-    virtual void onEndBuildTile(MapTile& _tile, VboMesh& _mesh) const;
+    virtual void onEndBuildTile(MapTile& _tile, std::shared_ptr<VboMesh> _mesh) const;
     
     /* Create a new mesh object using the vertex layout corresponding to this style */
     virtual VboMesh* newMesh() const = 0;
