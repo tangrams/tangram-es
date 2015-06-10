@@ -70,11 +70,14 @@ void VboMesh::update(intptr_t _offset, size_t _size, unsigned char* _data, size_
 }
 
 void VboMesh::subDataUpload() {
-    glBindBuffer(GL_ARRAY_BUFFER, m_glVertexBuffer);
-    glBufferSubData(GL_ARRAY_BUFFER, m_dirtyOffset, m_dirtySize, m_glVertexData.data() + m_dirtyOffset);
+    if (m_dirtySize != 0) {
+        glBindBuffer(GL_ARRAY_BUFFER, m_glVertexBuffer);
 
-    m_dirtyOffset = 0;
-    m_dirtySize = 0;
+        glBufferSubData(GL_ARRAY_BUFFER, m_dirtyOffset, m_dirtySize, m_glVertexData.data() + m_dirtyOffset);
+        
+        m_dirtyOffset = 0;
+        m_dirtySize = 0;
+    }
     
     m_dirty = false;
 }
