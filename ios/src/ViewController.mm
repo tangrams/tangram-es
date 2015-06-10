@@ -104,13 +104,11 @@
 - (void)respondToTapGesture:(UITapGestureRecognizer *)tapRecognizer {
     CGPoint location = [tapRecognizer locationInView:self.view];
     Tangram::handleTapGesture(location.x * self.pixelScale, location.y * self.pixelScale);
-    [self renderOnce];
 }
 
 - (void)respondToDoubleTapGesture:(UITapGestureRecognizer *)doubleTapRecognizer {
     CGPoint location = [doubleTapRecognizer locationInView:self.view];
     Tangram::handleDoubleTapGesture(location.x * self.pixelScale, location.y * self.pixelScale);
-    [self renderOnce];
 }
 
 - (void)respondToPanGesture:(UIPanGestureRecognizer *)panRecognizer {
@@ -119,7 +117,6 @@
     CGPoint end = [panRecognizer locationInView:self.view];
     CGPoint start = {end.x - displacement.x, end.y - displacement.y};
     Tangram::handlePanGesture(start.x * self.pixelScale, start.y * self.pixelScale, end.x * self.pixelScale, end.y * self.pixelScale);
-    [self renderOnce];
 }
 
 - (void)respondToPinchGesture:(UIPinchGestureRecognizer *)pinchRecognizer {
@@ -127,7 +124,6 @@
     CGFloat scale = pinchRecognizer.scale;
     [pinchRecognizer setScale:1.0];
     Tangram::handlePinchGesture(location.x * self.pixelScale, location.y * self.pixelScale, scale);
-    [self renderOnce];
 }
 
 - (void)respondToRotationGesture:(UIRotationGestureRecognizer *)rotationRecognizer {
@@ -135,14 +131,12 @@
     CGFloat rotation = rotationRecognizer.rotation;
     [rotationRecognizer setRotation:0.0];
     Tangram::handleRotateGesture(position.x * self.pixelScale, position.y * self.pixelScale, rotation);
-    [self renderOnce];
 }
 
 - (void)respondToShoveGesture:(UIPanGestureRecognizer *)shoveRecognizer {
     CGPoint displacement = [shoveRecognizer translationInView:self.view];
     [shoveRecognizer setTranslation:{0, 0} inView:self.view];
     Tangram::handleShoveGesture(displacement.y / self.view.bounds.size.height);
-    [self renderOnce];
 }
 
 - (void)dealloc
