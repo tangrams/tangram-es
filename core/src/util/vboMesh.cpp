@@ -56,15 +56,15 @@ void VboMesh::setDrawMode(GLenum _drawMode) {
     }
 }
 
-void VboMesh::update(intptr_t _offset, size_t _size, unsigned char* _data, size_t _dirtySize, intptr_t _dirtyOffset) {
+void VboMesh::update(intptr_t _offset, long _size, unsigned char* _data) {
     if (m_hint == GL_STATIC_DRAW) {
         logMsg("WARNING: wrong usage hint provided to the Vbo");
     }
     
     std::memcpy(m_glVertexData.data() + _offset, _data, _size);
     
-    m_dirtyOffset = _dirtyOffset;
-    m_dirtySize = _dirtySize;
+    m_dirtyOffset = _offset;
+    m_dirtySize = _size;
     
     m_dirty = true;
 }
