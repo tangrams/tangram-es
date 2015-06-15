@@ -189,6 +189,7 @@
 - (void)viewWillTransitionToSize:(CGSize)size withTransitionCoordinator:(id<UIViewControllerTransitionCoordinator>)coordinator
 {
     Tangram::resize(size.width * self.pixelScale, size.height * self.pixelScale);
+    [self renderOnce];
 }
 
 - (void)renderOnce
