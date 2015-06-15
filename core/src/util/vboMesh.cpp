@@ -82,7 +82,7 @@ void VboMesh::subDataUpload() {
             GLvoid* dataStore = glMapBuffer(GL_ARRAY_BUFFER, GL_WRITE_ONLY);
             
             // perform data store write
-            std::memcpy(m_glVertexData.data(), dataStore, m_glVertexData.size());
+            std::memcpy(dataStore, m_glVertexData.data(), m_glVertexData.size());
             
             glUnmapBuffer(GL_ARRAY_BUFFER);
         } else {
