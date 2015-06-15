@@ -73,7 +73,22 @@ void VboMesh::subDataUpload() {
     if (m_dirtySize != 0) {
         glBindBuffer(GL_ARRAY_BUFFER, m_glVertexBuffer);
 
-        glBufferSubData(GL_ARRAY_BUFFER, m_dirtyOffset, m_dirtySize, m_glVertexData.data() + m_dirtyOffset);
+        // updating the entire buffer
+        if (abs(m_dirtySize - m_glVertexData.size()) < m_vertexLayout->getStride()) {
+            
+            // invalidate the data store on the driver
+            glBufferData(GL_ARRAY_BUFFER, m_glVertexData.size(), NULL, m_hint);
+            
+            GLvoid* dataStore = glMapBuffer(GL_ARRAY_BUFFER, GL_WRITE_ONLY);
+            
+            // perform data store write
+            std::memcpy(m_glVertexData.data(), dataStore, m_glVertexData.size());
+            
+            glUnmapBuffer(GL_ARRAY_BUFFER);
+        } else {
+            // perform simple sub data upload for part of the buffer
+            glBufferSubData(GL_ARRAY_BUFFER, m_dirtyOffset, m_dirtySize, m_glVertexData.data() + m_dirtyOffset);
+        }
         
         m_dirtyOffset = 0;
         m_dirtySize = 0;
