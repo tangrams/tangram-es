@@ -79,12 +79,9 @@ void VboMesh::subDataUpload() {
             // invalidate the data store on the driver
             glBufferData(GL_ARRAY_BUFFER, m_glVertexData.size(), NULL, m_hint);
             
-            GLvoid* dataStore = glMapBuffer(GL_ARRAY_BUFFER, GL_WRITE_ONLY);
-            
-            // perform data store write
-            std::memcpy(dataStore, m_glVertexData.data(), m_glVertexData.size());
-            
-            glUnmapBuffer(GL_ARRAY_BUFFER);
+            // if this buffer is still used by gpu on current frame this call will not wait
+            // for the frame to finish using the vbo but directly upload the data
+            glBufferData(GL_ARRAY_BUFFER, m_glVertexData.size(), m_glVertexData.data(), m_hint);
         } else {
             // perform simple sub data upload for part of the buffer
             glBufferSubData(GL_ARRAY_BUFFER, m_dirtyOffset, m_dirtySize, m_glVertexData.data() + m_dirtyOffset);
