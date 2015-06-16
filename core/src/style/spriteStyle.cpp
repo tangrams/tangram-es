@@ -24,7 +24,7 @@ void SpriteStyle::constructShaderProgram() {
 
     m_shaderProgram->setSourceStrings(fragShaderSrcStr, vertShaderSrcStr);
 
-    m_texture = std::shared_ptr<Texture>(new Texture("mapzen-logo.png"));
+    m_texture = std::shared_ptr<Texture>(new Texture("poi_icons_32.png"));
 }
 
 void* SpriteStyle::parseStyleParams(const std::string& _layerNameID, const StyleParamMap& _styleParamMap) {
@@ -51,7 +51,7 @@ void SpriteStyle::addData(TileData& _data, MapTile& _tile) {
 
     vertices.reserve(4);
 
-    float size = 0.2;
+    float size = 0.9;
     vertices.push_back({{size, size, 0.f}, {1.f, 0.f}});
     vertices.push_back({{-size, size, 0.f}, {0.f, 0.f}});
     vertices.push_back({{-size, -size, 0.f}, {0.f, 1.f}});
