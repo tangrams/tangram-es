@@ -81,6 +81,9 @@ namespace Tangram {
 
         std::unique_ptr<Style> debugTextStyle(new DebugTextStyle("FiraSans", "DebugTextStyle", 30.0f, 0xDC3522, true));
         m_scene->addStyle(std::move(debugTextStyle));
+        
+        std::unique_ptr<Style> spriteStyle(new SpriteStyle("SpriteStyle"));
+        m_scene->addStyle(std::move(spriteStyle));
 
         // Set up openGL state
         glDisable(GL_BLEND);

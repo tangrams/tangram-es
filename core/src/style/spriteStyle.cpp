@@ -31,7 +31,7 @@ void SpriteStyle::constructShaderProgram() {
     m_shaderProgram = std::make_shared<ShaderProgram>();
     m_shaderProgram->setSourceStrings(fragShaderSrcStr, vertShaderSrcStr);
 
-    m_texture = std::shared_ptr<Texture>(new Texture("mapzen-logo.png"));
+    m_texture = std::shared_ptr<Texture>(new Texture("poi_icons_32.png"));
 }
 
 void SpriteStyle::buildPoint(Point& _point, StyleParams& _params, Properties& _props, VboMesh& _mesh) const {
@@ -60,7 +60,7 @@ void SpriteStyle::addData(TileData& _data, MapTile& _tile, const MapProjection& 
 
     vertices.reserve(4);
 
-    float size = 0.2;
+    float size = 0.9;
     vertices.push_back({  size,  size, 0.f, 1.f, 0.f });
     vertices.push_back({ -size,  size, 0.f, 0.f, 0.f });
     vertices.push_back({ -size, -size, 0.f, 0.f, 1.f });
