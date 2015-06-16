@@ -6,6 +6,7 @@
 #include "gl.h"
 #include "vertexLayout.h"
 #include <cstring>
+#include <cmath>
 
 #define MAX_INDEX_VALUE 65535
 
