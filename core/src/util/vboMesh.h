@@ -85,12 +85,12 @@ protected:
     int m_nVertices;
     GLuint m_glVertexBuffer;
     // Compiled vertices for upload
-    std::vector<GLbyte> m_glVertexData;
+    GLbyte* m_glVertexData = nullptr;
 
     int m_nIndices;
     GLuint m_glIndexBuffer;
     // Compiled  indices for upload
-    std::vector<GLushort> m_glIndexData;
+    GLushort* m_glIndexData = nullptr;
 
     GLenum m_drawMode;
     GLenum m_hint;
@@ -121,14 +121,11 @@ protected:
         int vPos = 0, iPos = 0;
 
         int stride = m_vertexLayout->getStride();
-        m_glVertexData.resize(stride * m_nVertices);
-        GLbyte* vBuffer = m_glVertexData.data();
+        m_glVertexData = new GLbyte[stride * m_nVertices];
 
-        GLushort* iBuffer = nullptr;
         bool useIndices = m_nIndices > 0;
         if (useIndices) {
-            m_glIndexData.resize(m_nIndices);
-            iBuffer = m_glIndexData.data();
+            m_glIndexData = new GLushort[m_nIndices];
         }
 
         for (size_t i = 0; i < vertices.size(); i++) {
@@ -136,7 +133,7 @@ protected:
             size_t nVertices = curVertices.size();
             int nBytes = nVertices * stride;
 
-            std::memcpy(vBuffer + vPos, (GLbyte*)curVertices.data(), nBytes);
+            std::memcpy(m_glVertexData + vPos, (GLbyte*)curVertices.data(), nBytes);
             vPos += nBytes;
 
             if (useIndices) {
@@ -149,7 +146,7 @@ protected:
                 }
 
                 for (int idx : indices[i]) {
-                    iBuffer[iPos++] = idx + vertexOffset;
+                    m_glIndexData[iPos++] = idx + vertexOffset;
                 }
                 indexOffset += indices[i].size();
             }

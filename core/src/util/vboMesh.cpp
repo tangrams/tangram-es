@@ -33,6 +33,9 @@ VboMesh::VboMesh() {
 VboMesh::~VboMesh() {
     if (m_glVertexBuffer) glDeleteBuffers(1, &m_glVertexBuffer);
     if (m_glIndexBuffer) glDeleteBuffers(1, &m_glIndexBuffer);
+
+    delete[] m_glVertexData;
+    delete[] m_glIndexData;
 }
 
 void VboMesh::setVertexLayout(std::shared_ptr<VertexLayout> _vertexLayout) {
@@ -60,12 +63,12 @@ void VboMesh::update(intptr_t _offset, long _size, unsigned char* _data) {
     if (m_hint == GL_STATIC_DRAW) {
         logMsg("WARNING: wrong usage hint provided to the Vbo");
     }
-    
-    std::memcpy(m_glVertexData.data() + _offset, _data, _size);
-    
+
+    std::memcpy(m_glVertexData + _offset, _data, _size);
+
     m_dirtyOffset = _offset;
     m_dirtySize = _size;
-    
+
     m_dirty = true;
 }
 
@@ -73,24 +76,26 @@ void VboMesh::subDataUpload() {
     if (m_dirtySize != 0) {
         glBindBuffer(GL_ARRAY_BUFFER, m_glVertexBuffer);
 
+        int vertexBytes = m_nVertices * m_vertexLayout->getStride();
+
         // updating the entire buffer
-        if (abs(m_dirtySize - m_glVertexData.size()) < m_vertexLayout->getStride()) {
-            
+        if (abs(m_dirtySize - vertexBytes) < m_vertexLayout->getStride()) {
+
             // invalidate the data store on the driver
-            glBufferData(GL_ARRAY_BUFFER, m_glVertexData.size(), NULL, m_hint);
-            
+            glBufferData(GL_ARRAY_BUFFER, vertexBytes, NULL, m_hint);
+
             // if this buffer is still used by gpu on current frame this call will not wait
             // for the frame to finish using the vbo but directly upload the data
-            glBufferData(GL_ARRAY_BUFFER, m_glVertexData.size(), m_glVertexData.data(), m_hint);
+            glBufferData(GL_ARRAY_BUFFER, vertexBytes, m_glVertexData, m_hint);
         } else {
             // perform simple sub data upload for part of the buffer
-            glBufferSubData(GL_ARRAY_BUFFER, m_dirtyOffset, m_dirtySize, m_glVertexData.data() + m_dirtyOffset);
+            glBufferSubData(GL_ARRAY_BUFFER, m_dirtyOffset, m_dirtySize, m_glVertexData + m_dirtyOffset);
         }
-        
+
         m_dirtyOffset = 0;
         m_dirtySize = 0;
     }
-    
+
     m_dirty = false;
 }
 
@@ -102,21 +107,20 @@ void VboMesh::upload() {
 
     // TODO check if compiled?
     // Buffer vertex data
-    int vertexBytes = m_glVertexData.size();
+    int vertexBytes = m_nVertices * m_vertexLayout->getStride();
 
     glBindBuffer(GL_ARRAY_BUFFER, m_glVertexBuffer);
-    glBufferData(GL_ARRAY_BUFFER, vertexBytes, m_glVertexData.data(), m_hint);
+    glBufferData(GL_ARRAY_BUFFER, vertexBytes, m_glVertexData, m_hint);
 
-    if (!m_glIndexData.empty()) {
-        
+    if (m_glIndexData) {
+
         if (m_glIndexBuffer == 0) {
             glGenBuffers(1, &m_glIndexBuffer);
         }
 
         // Buffer element index data
         glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, m_glIndexBuffer);
-        glBufferData(GL_ELEMENT_ARRAY_BUFFER, m_glIndexData.size() * sizeof(GLushort),
-                     m_glIndexData.data(), m_hint);
+        glBufferData(GL_ELEMENT_ARRAY_BUFFER, m_nIndices * sizeof(GLushort), m_glIndexData, m_hint);
     }
 
     // m_glVertexData.resize(0);
@@ -126,7 +130,7 @@ void VboMesh::upload() {
     // to easily rebuild themselves after GL context loss. For optimizing memory usage (and for
     // other reasons) we'll want to change this in the future. This probably means going back to
     // data sources and styles to rebuild the vertex data.
-    
+
     m_generation = s_validGeneration;
 
     m_isUploaded = true;
@@ -145,7 +149,7 @@ void VboMesh::draw(const std::shared_ptr<ShaderProgram> _shader) {
     if (!m_isUploaded) {
         upload();
     }
-    
+
     if (m_dirty) {
         subDataUpload();
     }
@@ -190,13 +194,13 @@ void VboMesh::checkValidity() {
         m_isUploaded = false;
         m_glVertexBuffer = 0;
         m_glIndexBuffer = 0;
-        
+
         m_generation = s_validGeneration;
     }
 }
 
 void VboMesh::invalidateAllVBOs() {
-    
+
     ++s_validGeneration;
-    
+
 }
