@@ -1,5 +1,6 @@
 #include "labelContainer.h"
 #include "tile/mapTile.h"
+#include "text/fontContext.h"
 
 LabelContainer::LabelContainer() {}
 

@@ -2,6 +2,9 @@
 #include "style/style.h"
 #include "view/view.h"
 #include "util/tileID.h"
+#include "util/vboMesh.h"
+#include "text/fontContext.h"
+#include "labels/labelContainer.h"
 
 #include "glm/gtc/matrix_transform.hpp"
 #include "glm/gtc/type_ptr.hpp"
