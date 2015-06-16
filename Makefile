@@ -103,11 +103,11 @@ clean-xcode:
 clean-tests:
 	rm -rf ${TESTS_BUILD_DIR}
 
-android: android/libs/${ANDROID_ARCH}/libtangram.so android/build.gradle
+android: android/tangram/libs/${ANDROID_ARCH}/libtangram.so android/build.gradle
 	@cd android/ && \
-	./gradlew assembleDebug
+	./gradlew demo:assembleDebug
 
-android/libs/${ANDROID_ARCH}/libtangram.so: install-android
+android/tangram/libs/${ANDROID_ARCH}/libtangram.so: install-android
 
 install-android: ${ANDROID_BUILD_DIR}/Makefile
 	@cd ${ANDROID_BUILD_DIR} && \

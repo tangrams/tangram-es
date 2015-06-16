@@ -14,15 +14,15 @@ set(CXX_FLAGS_DEBUG "${CXX_FLAGS_DEBUG} -g -O0")
 set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -Wall -fPIC")
 
 # adding manually the two jni c++ files
-set(ADDITIONNAL_TARGET_DEPENDENT_SRC_FILES 
-     ${CMAKE_SOURCE_DIR}/android/jni/jniExports.cpp
-     ${CMAKE_SOURCE_DIR}/android/jni/platform_android.cpp)
+set(ADDITIONNAL_TARGET_DEPENDENT_SRC_FILES
+     ${CMAKE_SOURCE_DIR}/android/tangram/jni/jniExports.cpp
+     ${CMAKE_SOURCE_DIR}/android/tangram/jni/platform_android.cpp)
 
 # load core library
 set(INSTALL_CORE_LIBRARY "ON")
 set(CORE_LIB_TYPE SHARED)
-set(CORE_INSTALLATION_PATH ${CMAKE_SOURCE_DIR}/android/libs/${ANDROID_ABI})
-set(CORE_LIB_DEPS GLESv2) 
+set(CORE_INSTALLATION_PATH ${CMAKE_SOURCE_DIR}/android/tangram/libs/${ANDROID_ABI})
+set(CORE_LIB_DEPS GLESv2)
 set(CORE_LIB_NAME tangram) # in order to have libtangram.so
 
 add_subdirectory(${PROJECT_SOURCE_DIR}/core)
