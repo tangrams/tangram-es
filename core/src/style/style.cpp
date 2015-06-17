@@ -66,14 +66,16 @@ void Style::addData(TileData& _data, MapTile& _tile, const MapProjection& _mapPr
         auto it = m_layers.begin();
         while (it != m_layers.end() && it->first != layer.name) { ++it; }
         if (it == m_layers.end()) { continue; }
-        void* styleParam = parseStyleParams(it->second);
-
-        // coming soon: use styleParam cache to reuse parameters which have already been encountered for a set of style
-        // rules
-        //m_styleParamCache[it->first] = styleParam;
 
         // Loop over all features
         for (auto& feature : layer.features) {
+
+            /*
+             * TODO: do filter evaluation for each feature for sublayer!
+             *     construct a unique ID for a the set of filters matched
+             *     use this ID pass to the style's parseStyleParams method to construct styleParam cache
+             *     NOTE: for the time being use layerName as ID for cache
+             */
 
             feature.props.numericProps["zoom"] = _tile.getID().z;
 
@@ -81,19 +83,19 @@ void Style::addData(TileData& _data, MapTile& _tile, const MapProjection& _mapPr
                 case GeometryType::POINTS:
                     // Build points
                     for (auto& point : feature.points) {
-                        buildPoint(point, styleParam, feature.props, *mesh);
+                        buildPoint(point, parseStyleParams(it->first, it->second), feature.props, *mesh);
                     }
                     break;
                 case GeometryType::LINES:
                     // Build lines
                     for (auto& line : feature.lines) {
-                        buildLine(line, styleParam, feature.props, *mesh);
+                        buildLine(line, parseStyleParams(it->first, it->second), feature.props, *mesh);
                     }
                     break;
                 case GeometryType::POLYGONS:
                     // Build polygons
                     for (auto& polygon : feature.polygons) {
-                        buildPolygon(polygon, styleParam, feature.props, *mesh);
+                        buildPolygon(polygon, parseStyleParams(it->first, it->second), feature.props, *mesh);
                     }
                     break;
                 default:

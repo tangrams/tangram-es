@@ -2,8 +2,6 @@
 
 #include <string>
 #include <vector>
-#include <unordered_map>
-#include <set>
 
 #include "data/tileData.h"
 #include "gl.h"
@@ -68,10 +66,6 @@ protected:
      * to be parsed explicitly by styles for their style parameters*/
     std::vector< std::pair<std::string, StyleParamMap> > m_layers;
 
-    // cache the styleParameters for a layer (later for a ruleID(uniquely generated))
-    // NOTE: no use at present!!!
-    std::unordered_map<std::string, void*> m_styleParamCache;
-
     /* Create <VertexLayout> corresponding to this style; subclasses must implement this and call it on construction */
     virtual void constructVertexLayout() = 0;
 
@@ -87,8 +81,9 @@ protected:
     /* Build styled vertex data for polygon geometry and add it to the given <VboMesh> */
     virtual void buildPolygon(Polygon& _polygon, void* _styleParam, Properties& _props, VboMesh& _mesh) const = 0;
 
-    /* Parse StyleParamMap to apt Style property parameters */
-    virtual void* parseStyleParams(StyleParamMap& _styleParamMap) const = 0;
+    /* Parse StyleParamMap to apt Style property parameters, and puts in the styleParamCache
+     * NOTE: layerNameID will be replaced by unique ID for a set of filter matches*/
+    virtual void* parseStyleParams(const std::string& _layerNameID, const StyleParamMap& _styleParamMap) = 0;
 
     /* parse color properties */
     static uint32_t parseColorProp(std::string _colorPropStr) ;

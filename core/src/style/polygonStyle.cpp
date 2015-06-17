@@ -33,7 +33,12 @@ void PolygonStyle::constructShaderProgram() {
     m_shaderProgram->setSourceStrings(fragShaderSrcStr, vertShaderSrcStr);
 }
 
-void* PolygonStyle::parseStyleParams(StyleParamMap& _styleParamMap) const {
+void* PolygonStyle::parseStyleParams(const std::string& _layerNameID, const StyleParamMap& _styleParamMap) {
+
+    if(m_styleParamCache.find(_layerNameID) != m_styleParamCache.end()) {
+        return static_cast<void*>(m_styleParamCache.at(_layerNameID));
+    }
+
     StyleParams* params = new StyleParams();
     if(_styleParamMap.find("order") != _styleParamMap.end()) {
         params->order = std::stof(_styleParamMap.at("order"));
@@ -41,14 +46,20 @@ void* PolygonStyle::parseStyleParams(StyleParamMap& _styleParamMap) const {
     if(_styleParamMap.find("color") != _styleParamMap.end()) {
         params->color = parseColorProp(_styleParamMap.at("color"));
     }
+
+    {
+        std::lock_guard<std::mutex> lock(m_cacheMutex);
+        m_styleParamCache.emplace(_layerNameID, params);
+    }
+
     return static_cast<void*>(params);
 }
 
-void PolygonStyle::buildPoint(Point& _point, void* _styleParams, Properties& _props, VboMesh& _mesh) const {
+void PolygonStyle::buildPoint(Point& _point, void* _styleParam, Properties& _props, VboMesh& _mesh) const {
     // No-op
 }
 
-void PolygonStyle::buildLine(Line& _line, void* _styleParams, Properties& _props, VboMesh& _mesh) const {
+void PolygonStyle::buildLine(Line& _line, void* _styleParam, Properties& _props, VboMesh& _mesh) const {
     std::vector<PosNormColVertex> vertices;
     std::vector<int> indices;
     std::vector<glm::vec3> points;
@@ -71,7 +82,7 @@ void PolygonStyle::buildLine(Line& _line, void* _styleParams, Properties& _props
     mesh.addVertices(std::move(vertices),std::move(indices));
 }
 
-void PolygonStyle::buildPolygon(Polygon& _polygon, void* _styleParams, Properties& _props, VboMesh& _mesh) const {
+void PolygonStyle::buildPolygon(Polygon& _polygon, void* _styleParam, Properties& _props, VboMesh& _mesh) const {
 
     std::vector<PosNormColVertex> vertices;
     std::vector<int> indices;
@@ -79,9 +90,9 @@ void PolygonStyle::buildPolygon(Polygon& _polygon, void* _styleParams, Propertie
     std::vector<glm::vec3> normals;
     std::vector<glm::vec2> texcoords;
 
-    StyleParams* params = static_cast<StyleParams*>(_styleParams);
-
     PolygonOutput output = { points, indices, normals, texcoords };
+
+    StyleParams* params = static_cast<StyleParams*>(_styleParam);
 
     GLuint abgr = params->color;
     GLfloat layer = params->order;
