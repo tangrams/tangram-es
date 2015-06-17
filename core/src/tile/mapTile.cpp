@@ -32,10 +32,6 @@ MapTile::MapTile(MapTile&& _other) : m_id(std::move(m_id)), m_proxyCounter(std::
 
 MapTile::~MapTile() {
 
-    m_geometry.clear();
-    m_buffers.clear();
-    m_labels.clear();
-
 }
 
 void MapTile::addGeometry(const Style& _style, std::unique_ptr<VboMesh> _mesh) {
