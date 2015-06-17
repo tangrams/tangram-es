@@ -101,8 +101,8 @@ public class Tangram implements Renderer, OnTouchListener, OnScaleGestureListene
         this.okClient = new OkHttpClient();
         okClient.setConnectTimeout(10, TimeUnit.SECONDS);
         okClient.setReadTimeout(30, TimeUnit.SECONDS);
-        File cacheDir = new File(mainApp.getExternalCacheDir().getAbsolutePath() + "/tile_cache");
         try {
+            File cacheDir = new File(mainApp.getExternalCacheDir().getAbsolutePath() + "/tile_cache");
             Cache okTileCache = new Cache(cacheDir, TILE_CACHE_SIZE);
             okClient.setCache(okTileCache);
         } catch (Exception e) {

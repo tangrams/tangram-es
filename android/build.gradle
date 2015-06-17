@@ -20,11 +20,11 @@ dependencies {
 
 android {
 
-    compileSdkVersion 19
+    compileSdkVersion 15
     buildToolsVersion "21.1.2"
 
     sourceSets.main {
-        
+
         manifest.srcFile 'AndroidManifest.xml'
         java.srcDirs = ['src']
         jni.srcDirs = []
