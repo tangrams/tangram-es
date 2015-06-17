@@ -25,8 +25,8 @@ protected:
     virtual void buildPolygon(Polygon& _polygon, void* _styleParams, Properties& _props, VboMesh& _mesh) const override;
     virtual void onBeginBuildTile(MapTile& _tile) const override;
     virtual void onEndBuildTile(MapTile& _tile) const override;
-    
-    virtual void* parseStyleParams(StyleParamMap& _styleParamMap) const;
+
+    virtual void* parseStyleParams(const std::string& _layerNameID, const StyleParamMap& _styleParamMap) override;
 
     typedef TypedMesh<PosTexID> Mesh;
 
@@ -56,5 +56,5 @@ public:
      * nullptr if no tile is being processed
      */
     static MapTile* s_processedTile;
-    
+
 };

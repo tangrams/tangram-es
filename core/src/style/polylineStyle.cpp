@@ -35,7 +35,12 @@ void PolylineStyle::constructShaderProgram() {
     m_shaderProgram->setSourceStrings(fragShaderSrcStr, vertShaderSrcStr);
 }
 
-void* PolylineStyle::parseStyleParams(StyleParamMap& _styleParamMap) const {
+void* PolylineStyle::parseStyleParams(const std::string& _layerNameID, const StyleParamMap& _styleParamMap) {
+
+    if(m_styleParamCache.find(_layerNameID) != m_styleParamCache.end()) {
+        return static_cast<void*>(m_styleParamCache.at(_layerNameID));
+    }
+
     StyleParams* params = new StyleParams();
 
     if(_styleParamMap.find("order") != _styleParamMap.end()) {
@@ -87,6 +92,11 @@ void* PolylineStyle::parseStyleParams(StyleParamMap& _styleParamMap) const {
         if(joinStr == "bevel") { params->outlineJoin = JoinTypes::BEVEL; }
         else if(joinStr == "miter") { params->outlineJoin = JoinTypes::MITER; }
         else if(joinStr == "round") { params->outlineJoin = JoinTypes::ROUND; }
+    }
+
+    {
+        std::lock_guard<std::mutex> lock(m_cacheMutex);
+        m_styleParamCache.emplace(_layerNameID, params);
     }
 
     return static_cast<void*>(params);
