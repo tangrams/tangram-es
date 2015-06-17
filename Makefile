@@ -83,7 +83,7 @@ clean-android:
 	@cd android/ && \
 	./gradlew clean
 	rm -rf ${ANDROID_BUILD_DIR}
-	rm -rf android/libs android/obj
+	rm -rf android/tangram/libs
 
 clean-osx:
 	rm -rf ${OSX_BUILD_DIR}
