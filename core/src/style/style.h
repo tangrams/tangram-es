@@ -17,10 +17,6 @@
 #include "csscolorparser.hpp"
 
 
-namespace CSSColorParser {
-    struct Color;
-}
-
 enum class LightingType : char {
     none,
     vertex,
