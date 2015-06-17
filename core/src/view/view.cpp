@@ -162,7 +162,7 @@ glm::dmat2 View::getBoundsRect() const {
 
 }
 
-glm::vec2 View::screenToGroundPlane(float& _screenX, float& _screenY) const {
+float View::screenToGroundPlane(float& _screenX, float& _screenY) const {
     
     // Cast a ray and find its intersection with the z = 0 plane,
     // following the technique described here: http://antongerdelan.net/opengl/raycasting.html
@@ -189,7 +189,7 @@ glm::vec2 View::screenToGroundPlane(float& _screenX, float& _screenY) const {
     _screenX = ray_world.x;
     _screenY = ray_world.y;
     
-    return glm::vec2(t, ray_world.z);
+    return t;
 }
 
 const std::set<TileID>& View::getVisibleTiles() {
@@ -333,19 +333,16 @@ void View::updateTiles() {
     glm::vec2 viewTR = { m_vpWidth, 0.f        }; // top right
     glm::vec2 viewTL = { 0.f,       0.f        }; // top left
     
-    glm::vec2 s0 = screenToGroundPlane(viewBL.x, viewBL.y);
-    glm::vec2 s1 = screenToGroundPlane(viewBR.x, viewBR.y);
-    glm::vec2 s2 = screenToGroundPlane(viewTR.x, viewTR.y);
-    glm::vec2 s3 = screenToGroundPlane(viewTL.x, viewTL.y);
+    float t0 = screenToGroundPlane(viewBL.x, viewBL.y);
+    float t1 = screenToGroundPlane(viewBR.x, viewBR.y);
+    float t2 = screenToGroundPlane(viewTR.x, viewTR.y);
+    float t3 = screenToGroundPlane(viewTL.x, viewTL.y);
 
     // is the camera looking up
     if (m_pitch > M_PI_2) {
-        // if the distance to the ground positive for each of the projected rays coming out of screen space
-        if (s0.y > 0.f && s1.y > 0.f && s2.y > 0.f && s3.y > 0.f) {
-            // is the intersection with the ground having solutions in R
-            if (s0.x < .0f || s1.x < 0.f || s2.x < 0.f || s3.x < 0.f) {
-                return;
-            }
+        // is the intersection with the ground having solutions in R
+        if (t0 < .0f && t1 < 0.f && t2 < 0.f && t3 < 0.f) {
+            return;
         }
     }
     
