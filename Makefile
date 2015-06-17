@@ -45,7 +45,7 @@ ifndef ANDROID_ARCH
 endif
 
 ifndef ANDROID_API_LEVEL
-	ANDROID_API_LEVEL = android-19
+	ANDROID_API_LEVEL = android-15
 endif
 
 UNIT_TESTS_CMAKE_PARAMS = \

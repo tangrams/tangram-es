@@ -272,7 +272,8 @@ namespace Tangram {
 
         m_view->translate((_posX - viewCenterX)*(1-1/_scale), (_posY - viewCenterY)*(1-1/_scale));
 
-        m_view->zoom(log2f(_scale));
+        static float invLog2 = 1 / log(2);
+        m_view->zoom(log(_scale) * invLog2);
 
         requestRender();
     }
