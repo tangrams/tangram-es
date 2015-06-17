@@ -112,7 +112,7 @@ public:
     
     /* Calculate the position on the ground plane (z = 0) under the given screen space coordinates, 
        replacing the input coordinates with world-space coordinates */
-    void screenToGroundPlane(float& _screenX, float& _screenY) const;
+    glm::vec2 screenToGroundPlane(float& _screenX, float& _screenY) const;
     
     /* Returns the set of all tiles visible at the current position and zoom */
     const std::set<TileID>& getVisibleTiles();
