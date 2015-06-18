@@ -9,9 +9,7 @@ protected:
     
     struct PosColVertex {
         // Position Data
-        GLfloat pos_x;
-        GLfloat pos_y;
-        GLfloat pos_z;
+        glm::vec3 pos;
         // Color Data
         GLuint abgr;
     };
