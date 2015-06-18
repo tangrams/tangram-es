@@ -3,6 +3,7 @@ package com.mapzen.tangram.android;
 import android.app.Activity;
 import android.os.Bundle;
 import android.view.Window;
+import android.view.View;
 import com.mapzen.tangram.Tangram;
 
 public class MainActivity extends Activity {
@@ -15,9 +16,12 @@ public class MainActivity extends Activity {
 
         requestWindowFeature(Window.FEATURE_NO_TITLE);
 
-        tangram = new Tangram(this);
+        setContentView(R.layout.main);
 
-        setContentView(tangram.getView());
+        tangram = (Tangram)findViewById(R.id.map);
+        tangram.setup(this);
+
+
     }
 
     @Override
