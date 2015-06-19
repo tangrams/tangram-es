@@ -74,9 +74,6 @@ public:
     
     /* Gets the current zoom */
     float getZoom() const { return m_zoom; }
-
-	/* Get the current m_zoomIn */
-	bool isZoomIn() const { return m_isZoomIn; }
     
     /* Get the current roll angle in radians */
     float getRoll() const { return m_roll; }
@@ -147,7 +144,6 @@ protected:
     
     float m_zoom;
     float m_initZoom = 16.0;
-    bool m_isZoomIn = false;
 
     float m_width;
     float m_height;
