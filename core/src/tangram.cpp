@@ -69,13 +69,13 @@ namespace Tangram {
         m_labelContainer->setFontContext(m_ftContext);
         m_labelContainer->setView(m_view);
 
-        std::unique_ptr<Style> textStyle0(new TextStyle("FiraSans", "Textstyle0", 15.0f, 0xF7F0E1, true, true));
+        std::unique_ptr<Style> textStyle0(new TextStyle("FiraSans", "Textstyle0", 18.0f, 0xffffff, true, true));
         textStyle0->addLayer({ "roads", StyleParams() });
         textStyle0->addLayer({ "places", StyleParams() });
         textStyle0->addLayer({ "pois", StyleParams() });
         m_scene->addStyle(std::move(textStyle0));
 
-        std::unique_ptr<Style> textStyle1(new TextStyle("Futura", "Textstyle1", 18.0f, 0x26241F, true, true));
+        std::unique_ptr<Style> textStyle1(new TextStyle("Futura", "Textstyle1", 18.0f, 0x000000, true, true));
         textStyle1->addLayer({ "landuse", StyleParams() });
         m_scene->addStyle(std::move(textStyle1));
 
