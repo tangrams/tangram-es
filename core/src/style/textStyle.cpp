@@ -49,8 +49,8 @@ void TextStyle::addVertices(TextBuffer& _buffer, VboMesh& _mesh) const {
     if (bufferSize == 0) {
         return;
     }
-
-    vertices.resize(_buffer.getVerticesSize());
+    
+    vertices.resize(bufferSize);
     
     if (_buffer.getVertices(reinterpret_cast<float*>(vertices.data()))) {
         auto& mesh = static_cast<TextStyle::Mesh&>(_mesh);

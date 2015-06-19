@@ -5,29 +5,24 @@
 
 int VboMesh::s_validGeneration = 0;
 
-VboMesh::VboMesh(std::shared_ptr<VertexLayout> _vertexLayout, GLenum _drawMode, GLenum _hint)
-    : m_vertexLayout(_vertexLayout), m_hint(_hint) {
-
-    m_glVertexBuffer = 0;
-    m_glIndexBuffer = 0;
-    m_nVertices = 0;
-    m_nIndices = 0;
-
-    m_isUploaded = false;
-    m_isCompiled = false;
-    m_dirty = false;
-
-    setDrawMode(_drawMode);
-}
-
 VboMesh::VboMesh() {
     m_glVertexBuffer = 0;
     m_glIndexBuffer = 0;
     m_nVertices = 0;
     m_nIndices = 0;
-
+    m_dirtyOffset = 0;
+    m_dirtySize = 0;
+    
+    m_dirty = false;
     m_isUploaded = false;
     m_isCompiled = false;
+}
+
+VboMesh::VboMesh(std::shared_ptr<VertexLayout> _vertexLayout, GLenum _drawMode, GLenum _hint) : VboMesh() {
+    m_vertexLayout = _vertexLayout;
+    m_hint = _hint;
+    
+    setDrawMode(_drawMode);
 }
 
 VboMesh::~VboMesh() {
@@ -61,7 +56,7 @@ void VboMesh::setDrawMode(GLenum _drawMode) {
 
 void VboMesh::update(intptr_t _offset, long _size, unsigned char* _data) {
     if (m_hint == GL_STATIC_DRAW) {
-        logMsg("WARNING: wrong usage hint provided to the Vbo");
+        logMsg("WARNING: wrong usage hint provided to the Vbo\n");
     }
 
     std::memcpy(m_glVertexData + _offset, _data, _size);
