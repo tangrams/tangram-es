@@ -15,6 +15,7 @@ VboMesh::VboMesh(std::shared_ptr<VertexLayout> _vertexLayout, GLenum _drawMode)
 
     m_isUploaded = false;
     m_isCompiled = false;
+    m_generation = -1;
 
     setDrawMode(_drawMode);
 }

@@ -200,19 +200,33 @@ void TileManager::removeTile(std::map< TileID, std::shared_ptr<MapTile> >::itera
 
 void TileManager::updateProxyTiles(const TileID& _tileID, bool _zoomingIn) {
     if (_zoomingIn) {
-        // zoom in - add parent
+        // zoom in - try parent first
         const auto& parentID = _tileID.getParent();
         const auto& parentTileIter = m_tileSet.find(parentID);
-        if (parentID.isValid() && parentTileIter != m_tileSet.end()) {
+        if (parentTileIter != m_tileSet.end()) {
             parentTileIter->second->incProxyCounter();
+            return;
         }
-    } else {
-        for(int i = 0; i < 4; i++) {
-            const auto& childID = _tileID.getChild(i);
-            const auto& childTileIter = m_tileSet.find(childID);
-            if(childID.isValid(m_view->s_maxZoom) && childTileIter != m_tileSet.end()) {
-                childTileIter->second->incProxyCounter();
-            }
+    }
+
+    int found = 0;
+    if (m_view->s_maxZoom > _tileID.z) {
+      for(int i = 0; i < 4; i++) {
+        const auto& childID = _tileID.getChild(i);
+        const auto& childTileIter = m_tileSet.find(childID);
+        if(childTileIter != m_tileSet.end()) {
+          childTileIter->second->incProxyCounter();
+          found++;
+        }
+      }
+    }
+
+    if (found < 4 && !_zoomingIn) {
+        // fallback
+        const auto& parentID = _tileID.getParent();
+        const auto& parentTileIter = m_tileSet.find(parentID);
+        if (parentTileIter != m_tileSet.end()) {
+            parentTileIter->second->incProxyCounter();
         }
     }
 }
@@ -221,7 +235,7 @@ void TileManager::cleanProxyTiles(const TileID& _tileID) {
     // check if parent proxy is present
     const auto& parentID = _tileID.getParent();
     const auto& parentTileIter = m_tileSet.find(parentID);
-    if (parentID.isValid() && parentTileIter != m_tileSet.end()) {
+    if (parentTileIter != m_tileSet.end()) {
         parentTileIter->second->decProxyCounter();
     }
     
@@ -229,7 +243,7 @@ void TileManager::cleanProxyTiles(const TileID& _tileID) {
     for(int i = 0; i < 4; i++) {
         const auto& childID = _tileID.getChild(i);
         const auto& childTileIter = m_tileSet.find(childID);
-        if(childID.isValid(m_view->s_maxZoom) && childTileIter != m_tileSet.end()) {
+        if (childTileIter != m_tileSet.end()) {
             childTileIter->second->decProxyCounter();
         }
     }
