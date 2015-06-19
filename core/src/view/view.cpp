@@ -187,12 +187,6 @@ float View::screenToGroundPlane(float& _screenX, float& _screenY) const {
     return t;
 }
 
-const std::set<TileID>& View::getVisibleTiles() {
-
-    return m_visibleTiles;
-
-}
-
 void View::updateMatrices() {
     
     // find dimensions of tiles in world space at new zoom level
