@@ -40,6 +40,11 @@ layers:
                 order: 2
                 #color: [.102, .49, .569, 1.]
                 color: steelblue
+        oceanLayer:
+            filter: {kind: "ocean"}
+            draw:
+                polygons:
+                    color: blue
 
     roads:
         data: { source: osm }
