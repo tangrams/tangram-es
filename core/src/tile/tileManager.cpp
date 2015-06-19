@@ -161,7 +161,7 @@ void TileManager::addTile(const TileID& _tileID) {
     }
     
     //Add Proxy if corresponding proxy MapTile ready
-    updateProxyTiles(_tileID, m_view->isZoomIn());
+    updateProxyTiles(_tileID);
 }
 
 void TileManager::removeTile(std::map< TileID, std::shared_ptr<MapTile> >::iterator& _tileIter) {
@@ -198,37 +198,25 @@ void TileManager::removeTile(std::map< TileID, std::shared_ptr<MapTile> >::itera
     
 }
 
-void TileManager::updateProxyTiles(const TileID& _tileID, bool _zoomingIn) {
-    if (_zoomingIn) {
-        // zoom in - try parent first
-        const auto& parentID = _tileID.getParent();
-        const auto& parentTileIter = m_tileSet.find(parentID);
-        if (parentTileIter != m_tileSet.end()) {
-            parentTileIter->second->incProxyCounter();
-            return;
-        }
+void TileManager::updateProxyTiles(const TileID& _tileID) {
+
+    const auto& parentID = _tileID.getParent();
+    const auto& parentTileIter = m_tileSet.find(parentID);
+    if (parentTileIter != m_tileSet.end()) {
+        parentTileIter->second->incProxyCounter();
+        return;
     }
 
-    int found = 0;
     if (m_view->s_maxZoom > _tileID.z) {
       for(int i = 0; i < 4; i++) {
         const auto& childID = _tileID.getChild(i);
         const auto& childTileIter = m_tileSet.find(childID);
         if(childTileIter != m_tileSet.end()) {
           childTileIter->second->incProxyCounter();
-          found++;
         }
       }
     }
 
-    if (found < 4 && !_zoomingIn) {
-        // fallback
-        const auto& parentID = _tileID.getParent();
-        const auto& parentTileIter = m_tileSet.find(parentID);
-        if (parentTileIter != m_tileSet.end()) {
-            parentTileIter->second->incProxyCounter();
-        }
-    }
 }
 
 void TileManager::cleanProxyTiles(const TileID& _tileID) {
