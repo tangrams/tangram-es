@@ -338,12 +338,9 @@ void View::updateTiles() {
     float t2 = screenToGroundPlane(viewTR.x, viewTR.y);
     float t3 = screenToGroundPlane(viewTL.x, viewTL.y);
 
-    // is the camera looking up
-    if (m_pitch > M_PI_2) {
-        // is the intersection with the ground having solutions in R
-        if (t0 < .0f && t1 < 0.f && t2 < 0.f && t3 < 0.f) {
-            return;
-        }
+    // if all of our raycasts have a negative intersection distance, we have no area to cover
+    if (t0 < .0f && t1 < 0.f && t2 < 0.f && t3 < 0.f) {
+        return;
     }
     
     // Transformation from world space to tile space
