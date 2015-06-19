@@ -1,13 +1,22 @@
 #include "style.h"
 #include "scene/scene.h"
+#include "scene/sceneLayer.h"
 #include "util/vboMesh.h"
 
+std::unordered_map<long long, StyleParamMap> Style::s_styleParamMapCache;
+std::mutex Style::s_cacheMutex;
+
 using namespace CSSColorParser;
+using namespace Tangram;
 
 Style::Style(std::string _name, GLenum _drawMode) : m_name(_name), m_drawMode(_drawMode) {
 }
 
 Style::~Style() {
+    for(auto& layer : m_layers) {
+        delete layer;
+    }
+    m_layers.clear();
 }
 
 uint32_t Style::parseColorProp(std::string _colorPropStr) {
@@ -50,10 +59,56 @@ void Style::setMaterial(const std::shared_ptr<Material>& _material) {
 
 }
 
-void Style::addLayer(const std::pair<std::string, StyleParamMap>&& _layer) {
+void Style::addLayer(SceneLayer* _layer) {
 
-    m_layers.push_back(std::move(_layer));
+    m_layers.push_back(_layer);
 
+}
+
+void Style::applySublayerFiltering(const Feature& _feature, const Context& _ctx, long long& _uniqueID,
+                                   StyleParamMap& _styleParamMapMix, std::vector<SceneLayer*>& _subLayers) const {
+
+    std::vector<SceneLayer*> sLayers;
+    sLayers.reserve(_subLayers.size());
+    sLayers = _subLayers;
+
+    auto sLayerItr = sLayers.begin();
+
+    //A BFS traversal of the SceneLayer graph
+    while(sLayerItr != sLayers.end()) {
+        if((*sLayerItr)->getFilter()->eval(_feature, _ctx)) { // filter matches
+            logMsg("ocean Name: %s\n", _feature.props.stringProps.at("name").c_str());
+
+            _uniqueID += (1 << (*sLayerItr)->getID());
+
+            if(s_styleParamMapCache.find(_uniqueID) != s_styleParamMapCache.end()) {
+                _styleParamMapMix = s_styleParamMapCache.at(_uniqueID);
+            } else {
+                /* update StyleParam with subLayer parameters */
+                auto& sLayerStyleParamMap = (*sLayerItr)->getStyleParamMap();
+                for(auto& styleParam : sLayerStyleParamMap) {
+                    auto it = _styleParamMapMix.find(styleParam.first);
+                    if(it != _styleParamMapMix.end()) {
+                        it->second = styleParam.second;
+                    } else {
+                        _styleParamMapMix.insert(styleParam);
+                    }
+                }
+
+                {
+                    std::lock_guard<std::mutex> lock(s_cacheMutex);
+                    s_styleParamMapCache.emplace(_uniqueID, _styleParamMapMix);
+                }
+            }
+
+            /* append sLayers with sublayers of this layer */
+            auto& ssLayers = (*sLayerItr)->getSublayers();
+            sLayers.reserve(sLayers.size() + ssLayers.size());
+            sLayerItr = sLayers.insert(sLayers.end(), ssLayers.begin(), ssLayers.end());
+        } else {
+            sLayerItr++;
+        }
+    }
 }
 
 void Style::addData(TileData& _data, MapTile& _tile, const MapProjection& _mapProjection) {
@@ -61,22 +116,22 @@ void Style::addData(TileData& _data, MapTile& _tile, const MapProjection& _mapPr
 
     VboMesh* mesh = newMesh();
 
+    Context ctx;
+
     for (auto& layer : _data.layers) {
 
         // Skip any layers that this style doesn't have a rule for
         auto it = m_layers.begin();
-        while (it != m_layers.end() && it->first != layer.name) { ++it; }
+        while (it != m_layers.end() && (*it)->getName() != layer.name) { ++it; }
         if (it == m_layers.end()) { continue; }
 
         // Loop over all features
         for (auto& feature : layer.features) {
 
-            /*
-             * TODO: do filter evaluation for each feature for sublayer!
-             *     construct a unique ID for a the set of filters matched
-             *     use this ID pass to the style's parseStyleParams method to construct styleParam cache
-             *     NOTE: for the time being use layerName as ID for cache
-             */
+            // NOTE: Makes a restriction on number of layers in the style confic (64 max)
+            long long uniqueID = 1 << (*it)->getID();
+            StyleParamMap styleParamMapMix((*it)->getStyleParamMap());
+            applySublayerFiltering(feature, ctx, uniqueID, styleParamMapMix, (*it)->getSublayers());
 
             feature.props.numericProps["zoom"] = _tile.getID().z;
 
@@ -84,19 +139,19 @@ void Style::addData(TileData& _data, MapTile& _tile, const MapProjection& _mapPr
                 case GeometryType::POINTS:
                     // Build points
                     for (auto& point : feature.points) {
-                        buildPoint(point, parseStyleParams(it->first, it->second), feature.props, *mesh);
+                        buildPoint(point, parseStyleParams(styleParamMapMix), feature.props, *mesh);
                     }
                     break;
                 case GeometryType::LINES:
                     // Build lines
                     for (auto& line : feature.lines) {
-                        buildLine(line, parseStyleParams(it->first, it->second), feature.props, *mesh);
+                        buildLine(line, parseStyleParams(styleParamMapMix), feature.props, *mesh);
                     }
                     break;
                 case GeometryType::POLYGONS:
                     // Build polygons
                     for (auto& polygon : feature.polygons) {
-                        buildPolygon(polygon, parseStyleParams(it->first, it->second), feature.props, *mesh);
+                        buildPolygon(polygon, parseStyleParams(styleParamMapMix), feature.props, *mesh);
                     }
                     break;
                 default:

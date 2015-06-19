@@ -2,6 +2,7 @@
 
 #include <string>
 #include <vector>
+#include <mutex>
 
 #include "data/tileData.h"
 #include "gl.h"
@@ -22,6 +23,12 @@ enum class LightingType : char {
     vertex,
     fragment
 };
+
+namespace Tangram {
+    struct Value;
+    class SceneLayer;
+    using Context = std::unordered_map<std::string, Value*>;
+}
 
 class Scene;
 
@@ -60,7 +67,7 @@ protected:
     /* Set of strings defining which data layers this style applies to,
      * along with the style paramter map corresponding to these data layers,
      * to be parsed explicitly by styles for their style parameters*/
-    std::vector< std::pair<std::string, StyleParamMap> > m_layers;
+    std::vector<Tangram::SceneLayer*> m_layers;
 
     /* Create <VertexLayout> corresponding to this style; subclasses must implement this and call it on construction */
     virtual void constructVertexLayout() = 0;
@@ -79,10 +86,19 @@ protected:
 
     /* Parse StyleParamMap to apt Style property parameters, and puts in the styleParamCache
      * NOTE: layerNameID will be replaced by unique ID for a set of filter matches*/
-    virtual void* parseStyleParams(const std::string& _layerNameID, const StyleParamMap& _styleParamMap) = 0;
+    virtual void* parseStyleParams(const StyleParamMap& _styleParamMap) const = 0;
 
     /* parse color properties */
     static uint32_t parseColorProp(std::string _colorPropStr) ;
+    static std::unordered_map<long long, StyleParamMap> s_styleParamMapCache;
+    static std::mutex s_cacheMutex;
+
+    /*
+     * filter what subLayers a features match and get style paramaters for this feature based on all subLayers it
+     * matches
+     */
+    virtual void applySublayerFiltering(const Feature& _feature, const Tangram::Context& _ctx, long long& _uniqueID,
+                                        StyleParamMap& _styleParamMapMix, std::vector<Tangram::SceneLayer*>& _subLayers) const;
 
     /* Perform any needed setup to process the data for a tile */
     virtual void onBeginBuildTile(MapTile& _tile) const;
@@ -100,7 +116,7 @@ public:
     virtual ~Style();
 
     /* Add layers to which this style will apply */
-    virtual void addLayer(const std::pair<std::string, StyleParamMap>&& _layer);
+    virtual void addLayer(Tangram::SceneLayer* _layer);
 
     /* Add styled geometry from the given <TileData> object to the given <MapTile> */
     virtual void addData(TileData& _data, MapTile& _tile, const MapProjection& _mapProjection);
