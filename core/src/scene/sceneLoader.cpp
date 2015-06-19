@@ -12,7 +12,8 @@
 #include "polygonStyle.h"
 #include "polylineStyle.h"
 #include "debugStyle.h"
-#include "filters.h"
+#include "data/filters.h"
+#include "sceneLayer.h"
 
 #include "yaml-cpp/yaml.h"
 
@@ -450,6 +451,27 @@ void SceneLoader::parseStyleProps(Node styleProps, StyleParamMap& paramMap, cons
 
 }
 
+void SceneLoader::loadSublayers(YAML::Node layer, std::vector<SceneLayer*>& subLayers) {
+    for(auto subLayerItr = layer.begin(); subLayerItr != layer.end(); ++subLayerItr ) {
+        std::string subLayerName = subLayerItr->first.as<std::string>();
+        if( subLayerName != "data" && subLayerName != "filter" && subLayerName != "draw" && subLayerName != "properties") {
+            std::vector<SceneLayer*> ssubLayers;
+            Filter* subLayerFilter = generateFilter(subLayerItr->second["filter"]);
+            Node drawGroup = subLayerItr->second["draw"];
+
+            loadSublayers(layer[subLayerName], ssubLayers);
+
+            for(auto groupIt = drawGroup.begin(); groupIt != drawGroup.end(); ++groupIt) {
+                StyleParamMap paramMap;
+                // TODO: multiple draw groups for a subLayer, NOTE: only one draw for now
+                // TODO: subLayers can have different base style than the parent layer
+                parseStyleProps(groupIt->second, paramMap);
+                subLayers.push_back(new SceneLayer(std::move(ssubLayers), std::move(paramMap), subLayerName, subLayerFilter));
+            }
+        }
+    }
+}
+
 void SceneLoader::loadLayers(Node layers, Scene& scene, TileManager& tileManager) {
 
     if (!layers) {
@@ -467,9 +489,13 @@ void SceneLoader::loadLayers(Node layers, Scene& scene, TileManager& tileManager
 
     for (auto layerIt = layers.begin(); layerIt != layers.end(); ++layerIt) {
 
+        std::vector<SceneLayer*> subLayers;
         std::string name = layerIt->first.as<std::string>();
-        Node drawGroup = layerIt->second["draw"];
         Node data = layerIt->second["data"];
+        Filter* layerFilter = generateFilter(layerIt->second["filter"]);
+        Node drawGroup = layerIt->second["draw"];
+
+        loadSublayers(layers[name], subLayers);
 
         // TODO: handle data.source
 
@@ -484,9 +510,9 @@ void SceneLoader::loadLayers(Node layers, Scene& scene, TileManager& tileManager
 
             // match to built-in styles
             if (styleName == "polygons") {
-                polygonStyle->addLayer({ name, std::move(paramMap) });
+                polygonStyle->addLayer(new SceneLayer(std::move(subLayers), std::move(paramMap), name, layerFilter));
             } else if (styleName == "lines") {
-                polylineStyle->addLayer({ name, std::move(paramMap) });
+                polylineStyle->addLayer(new SceneLayer(std::move(subLayers), std::move(paramMap), name, layerFilter));
             } else if (styleName == "text") {
                 // TODO
             }
