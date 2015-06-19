@@ -157,7 +157,7 @@ glm::dmat2 View::getBoundsRect() const {
 
 }
 
-void View::screenToGroundPlane(float& _screenX, float& _screenY) const {
+float View::screenToGroundPlane(float& _screenX, float& _screenY) const {
     
     // Cast a ray and find its intersection with the z = 0 plane,
     // following the technique described here: http://antongerdelan.net/opengl/raycasting.html
@@ -169,7 +169,7 @@ void View::screenToGroundPlane(float& _screenX, float& _screenY) const {
     if (ray_world.z != 0.f) {
         t = -m_pos.z / ray_world.z;
     }
-
+    
     ray_world *= fabs(t);
     
     // Determine the maximum distance from the view position at which tiles can be drawn; If the projected point 
@@ -183,6 +183,8 @@ void View::screenToGroundPlane(float& _screenX, float& _screenY) const {
     
     _screenX = ray_world.x;
     _screenY = ray_world.y;
+    
+    return t;
 }
 
 const std::set<TileID>& View::getVisibleTiles() {
@@ -236,6 +238,7 @@ void View::updateMatrices() {
     // update view and projection matrices
     m_view = glm::lookAt(eye, at, up);
     m_proj = glm::perspective(fovy, m_aspect, near, far);
+
     m_viewProj = m_proj * m_view;
     m_invViewProj = glm::inverse(m_viewProj);
     
@@ -325,10 +328,15 @@ void View::updateTiles() {
     glm::vec2 viewTR = { m_vpWidth, 0.f        }; // top right
     glm::vec2 viewTL = { 0.f,       0.f        }; // top left
     
-    screenToGroundPlane(viewBL.x, viewBL.y);
-    screenToGroundPlane(viewBR.x, viewBR.y);
-    screenToGroundPlane(viewTR.x, viewTR.y);
-    screenToGroundPlane(viewTL.x, viewTL.y);
+    float t0 = screenToGroundPlane(viewBL.x, viewBL.y);
+    float t1 = screenToGroundPlane(viewBR.x, viewBR.y);
+    float t2 = screenToGroundPlane(viewTR.x, viewTR.y);
+    float t3 = screenToGroundPlane(viewTL.x, viewTL.y);
+
+    // if all of our raycasts have a negative intersection distance, we have no area to cover
+    if (t0 < .0f && t1 < 0.f && t2 < 0.f && t3 < 0.f) {
+        return;
+    }
     
     // Transformation from world space to tile space
     double hc = MapProjection::HALF_CIRCUMFERENCE;
