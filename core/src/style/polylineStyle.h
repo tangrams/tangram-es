@@ -41,7 +41,7 @@ protected:
     virtual void buildPoint(Point& _point, void* _styleParam, Properties& _props, VboMesh& _mesh) const override;
     virtual void buildLine(Line& _line, void* _styleParam, Properties& _props, VboMesh& _mesh) const override;
     virtual void buildPolygon(Polygon& _polygon, void* _styleParam, Properties& _props, VboMesh& _mesh) const override;
-    virtual void* parseStyleParams(const std::string& _layerNameID, const StyleParamMap& _styleParamMap) override;
+    virtual void* parseStyleParams(const StyleParamMap& _styleParamMap) const override;
 
     typedef TypedMesh<PosNormEnormColVertex> Mesh;
 
@@ -49,18 +49,11 @@ protected:
         return new Mesh(m_vertexLayout, m_drawMode);
     };
 
-    std::unordered_map<std::string, StyleParams*> m_styleParamCache;
-    std::mutex m_cacheMutex;
-
 public:
 
     PolylineStyle(GLenum _drawMode = GL_TRIANGLES);
     PolylineStyle(std::string _name, GLenum _drawMode = GL_TRIANGLES);
 
     virtual ~PolylineStyle() {
-        for(auto& styleParam : m_styleParamCache) {
-            delete styleParam.second;
-        }
-        m_styleParamCache.clear();
     }
 };

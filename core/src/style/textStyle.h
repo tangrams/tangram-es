@@ -26,7 +26,7 @@ protected:
     virtual void onBeginBuildTile(MapTile& _tile) const override;
     virtual void onEndBuildTile(MapTile& _tile) const override;
 
-    virtual void* parseStyleParams(const std::string& _layerNameID, const StyleParamMap& _styleParamMap) override;
+    virtual void* parseStyleParams(const StyleParamMap& _styleParamMap) const override;
 
     typedef TypedMesh<PosTexID> Mesh;
 

@@ -33,11 +33,7 @@ void PolygonStyle::constructShaderProgram() {
     m_shaderProgram->setSourceStrings(fragShaderSrcStr, vertShaderSrcStr);
 }
 
-void* PolygonStyle::parseStyleParams(const std::string& _layerNameID, const StyleParamMap& _styleParamMap) {
-
-    if(m_styleParamCache.find(_layerNameID) != m_styleParamCache.end()) {
-        return static_cast<void*>(m_styleParamCache.at(_layerNameID));
-    }
+void* PolygonStyle::parseStyleParams(const StyleParamMap& _styleParamMap) const {
 
     StyleParams* params = new StyleParams();
     if(_styleParamMap.find("order") != _styleParamMap.end()) {
@@ -45,11 +41,6 @@ void* PolygonStyle::parseStyleParams(const std::string& _layerNameID, const Styl
     }
     if(_styleParamMap.find("color") != _styleParamMap.end()) {
         params->color = parseColorProp(_styleParamMap.at("color"));
-    }
-
-    {
-        std::lock_guard<std::mutex> lock(m_cacheMutex);
-        m_styleParamCache.emplace(_layerNameID, params);
     }
 
     return static_cast<void*>(params);
@@ -137,4 +128,6 @@ void PolygonStyle::buildPolygon(Polygon& _polygon, void* _styleParam, Properties
 
     auto& mesh = static_cast<PolygonStyle::Mesh&>(_mesh);
     mesh.addVertices(std::move(vertices), std::move(indices));
+
+    delete params;
 }

@@ -38,8 +38,7 @@ void TextStyle::constructShaderProgram() {
 
     m_shaderProgram->addSourceBlock("defines", defines);
 }
-
-void* TextStyle::parseStyleParams(const std::string& _layerNameID, const StyleParamMap& _styleParamMap) {
+void* TextStyle::parseStyleParams(const StyleParamMap& _styleParamMap) const {
     return nullptr;
 }
 

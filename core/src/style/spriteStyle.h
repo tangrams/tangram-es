@@ -21,7 +21,7 @@ protected:
     virtual void buildPolygon(Polygon& _polygon, void* _styleParam, Properties& _props, VboMesh& _mesh) const override;
     virtual void addData(TileData& _data, MapTile& _tile, const MapProjection& _mapProjection) override;
 
-    virtual void* parseStyleParams(const std::string& _layerNameID, const StyleParamMap& _styleParamMap) override;
+    virtual void* parseStyleParams(const StyleParamMap& _styleParamMap) const override;
 
     typedef TypedMesh<PosUVVertex> Mesh;
 

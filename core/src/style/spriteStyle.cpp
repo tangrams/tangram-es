@@ -34,7 +34,7 @@ void SpriteStyle::constructShaderProgram() {
     m_texture = std::shared_ptr<Texture>(new Texture("mapzen-logo.png"));
 }
 
-void* SpriteStyle::parseStyleParams(const std::string& _layerNameID, const StyleParamMap& _styleParamMap) {
+void* SpriteStyle::parseStyleParams(const StyleParamMap& _styleParamMap) const {
     return nullptr;
 }
 

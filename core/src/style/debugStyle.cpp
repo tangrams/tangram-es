@@ -32,7 +32,7 @@ void DebugStyle::constructShaderProgram() {
 
 }
 
-void* DebugStyle::parseStyleParams(const std::string& _layerNameID, const StyleParamMap& _styleParamMap) {
+void* DebugStyle::parseStyleParams(const StyleParamMap& _styleParamMap) const {
     return nullptr;
 }
 
@@ -53,7 +53,7 @@ void DebugStyle::addData(TileData &_data, MapTile &_tile, const MapProjection &_
         vertices.push_back({{  1.f, -1.f, 0.f }, abgr });
         vertices.push_back({{  1.f,  1.f, 0.f }, abgr });
         vertices.push_back({{ -1.f,  1.f, 0.f }, abgr });
-        
+
         mesh->addVertices(std::move(vertices), { 0, 1, 2, 3, 0 });
         mesh->compileVertexBuffer();
 
