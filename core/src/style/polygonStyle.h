@@ -16,16 +16,11 @@ protected:
 
     struct PosNormColVertex {
         // Position Data
-        GLfloat pos_x;
-        GLfloat pos_y;
-        GLfloat pos_z;
+        glm::vec3 pos;
         // Normal Data
-        GLfloat norm_x;
-        GLfloat norm_y;
-        GLfloat norm_z;
+        glm::vec3 norm;
         // UV Data
-        GLfloat texcoord_x;
-        GLfloat texcoord_y;
+        glm::vec2 texcoord;
         // Color Data
         GLuint abgr;
         // Layer Data

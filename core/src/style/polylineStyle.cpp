@@ -133,7 +133,7 @@ void PolylineStyle::buildLine(Line& _line, void* _styleParam, Properties& _props
         const glm::vec3& p = points[i];
         const glm::vec2& uv = texcoords[i];
         const glm::vec2& en = scalingVecs[i];
-        vertices.push_back({ p.x, p.y, p.z, uv.x, uv.y, en.x, en.y, halfWidth, abgr, layer });
+        vertices.push_back({ p, uv, en, halfWidth, abgr, layer });
     }
 
     if (params->outlineOn) {
@@ -167,7 +167,7 @@ void PolylineStyle::buildLine(Line& _line, void* _styleParam, Properties& _props
             const glm::vec3& p = points[i];
             const glm::vec2& uv = texcoords[i];
             const glm::vec2& en = scalingVecs[i];
-            vertices.push_back({ p.x, p.y, p.z, uv.x, uv.y, en.x, en.y, halfWidth, abgrOutline, layer - 1.f });
+            vertices.push_back({ p, uv, en, halfWidth, abgrOutline, layer - 1.f });
         }
 
     }
