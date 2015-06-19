@@ -1,5 +1,6 @@
 #include "style.h"
 #include "scene/scene.h"
+#include "util/vboMesh.h"
 
 using namespace CSSColorParser;
 

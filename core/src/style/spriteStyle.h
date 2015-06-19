@@ -9,12 +9,9 @@ protected:
 
     struct PosUVVertex {
         // Position Data
-        GLfloat pos_x;
-        GLfloat pos_y;
-        GLfloat pos_z;
+        glm::vec3 pos;
         // UV Data
-        GLfloat u;
-        GLfloat v;
+        glm::vec2 uv;
     };
 
     virtual void constructVertexLayout() override;

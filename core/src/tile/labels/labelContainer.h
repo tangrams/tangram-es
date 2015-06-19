@@ -2,15 +2,16 @@
 
 #include "label.h"
 #include "util/tileID.h"
-#include "text/fontContext.h"
 #include "isect2d.h"
 #include "view/view.h"
 #include <memory>
+#include <mutex>
 #include <vector>
 #include <set>
 #include <map>
 
 class MapTile;
+class FontContext;
 
 struct LabelUnit {
 

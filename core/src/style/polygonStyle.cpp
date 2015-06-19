@@ -72,10 +72,7 @@ void PolygonStyle::buildLine(Line& _line, void* _styleParam, Properties& _props,
     Builders::buildPolyLine(_line, PolyLineOptions(), output);
 
     for (size_t i = 0; i < points.size(); i++) {
-        glm::vec3 p = points[i];
-        glm::vec3 n = glm::vec3(0.0f, 0.0f, 1.0f);
-        glm::vec2 u = texcoords[i];
-        vertices.push_back({ p.x, p.y, p.z, n.x, n.y, n.z, u.x, u.y, abgr });
+        vertices.push_back({ points[i], glm::vec3(0.0f, 0.0f, 1.0f), texcoords[i], abgr, 0.0f });
     }
 
     auto& mesh = static_cast<PolygonStyle::Mesh&>(_mesh);
@@ -116,10 +113,7 @@ void PolygonStyle::buildPolygon(Polygon& _polygon, void* _styleParam, Properties
     Builders::buildPolygon(_polygon, output);
 
     for (size_t i = 0; i < points.size(); i++) {
-        glm::vec3 p = points[i];
-        glm::vec3 n = normals[i];
-        glm::vec2 u = texcoords[i];
-        vertices.push_back({ p.x, p.y, p.z, n.x, n.y, n.z, u.x, u.y, abgr, layer });
+        vertices.push_back({ points[i], normals[i], texcoords[i], abgr, layer });
     }
 
     // Outlines for water polygons
