@@ -60,8 +60,6 @@ void TextStyle::addVertices(TextBuffer& _buffer, VboMesh& _mesh) const {
 }
 
 void TextStyle::buildPoint(Point& _point, StyleParams& _params, Properties& _props, VboMesh& _mesh) const {
-    auto textBuffer = m_labels->getFontContext()->getCurrentBuffer();
-
     for (auto prop : _props.stringProps) {
         if (prop.first == "name") {
             m_labels->addLabel(*TextStyle::s_processedTile, m_name, { glm::vec2(_point), glm::vec2(_point) }, prop.second, Label::Type::POINT);
@@ -70,8 +68,6 @@ void TextStyle::buildPoint(Point& _point, StyleParams& _params, Properties& _pro
 }
 
 void TextStyle::buildLine(Line& _line, StyleParams& _params, Properties& _props, VboMesh& _mesh) const {
-    auto textBuffer = m_labels->getFontContext()->getCurrentBuffer();
-
     int lineLength = _line.size();
     int skipOffset = floor(lineLength / 2);
     float minLength = 0.15; // default, probably need some more thoughts
@@ -97,7 +93,6 @@ void TextStyle::buildLine(Line& _line, StyleParams& _params, Properties& _props,
 }
 
 void TextStyle::buildPolygon(Polygon& _polygon, StyleParams& _params, Properties& _props, VboMesh& _mesh) const {
-    auto textBuffer = m_labels->getFontContext()->getCurrentBuffer();
     glm::vec3 centroid;
     int n = 0;
     
