@@ -11,12 +11,9 @@ class TextStyle : public Style {
 protected:
 
     struct TextVert {
-        float pos_x;
-        float pos_y;
-        float tex_u;
-        float tex_v;
-        float screen_x;
-        float screen_y;
+        glm::vec2 pos;
+        glm::vec2 uvs;
+        glm::vec2 screenPos;
         float alpha;
         float rotation;
     };
