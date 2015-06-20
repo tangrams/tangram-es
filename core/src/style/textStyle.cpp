@@ -1,4 +1,5 @@
 #include "textStyle.h"
+#include "text/fontContext.h"
 
 MapTile* TextStyle::s_processedTile = nullptr;
 

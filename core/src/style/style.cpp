@@ -1,5 +1,6 @@
 #include "style.h"
 #include "scene/scene.h"
+#include "util/vboMesh.h"
 
 Style::Style(std::string _name, GLenum _drawMode) : m_name(_name), m_drawMode(_drawMode) {
 }

@@ -1,22 +1,23 @@
 #pragma once
 
-#include <unordered_map>
+#include <map>
 #include <memory>
+#include <string>
+#include <unordered_map>
+#include <vector>
 
-#include "glm/vec2.hpp"
 #include "glm/mat4x4.hpp"
+#include "glm/vec2.hpp"
 
-#include "label.h"
-#include "text/textBuffer.h"
-#include "view/view.h"
-#include "labels/labelContainer.h"
-#include "util/vboMesh.h"
-#include "util/mapProjection.h"
-#include "util/texture.h"
+#include "tileID.h"
 
+class Label;
+class LabelContainer;
+class MapProjection;
 class Style;
+class TextBuffer;
+class VboMesh;
 class View;
-struct TileID;
 
 /* Tile of vector map data
  * 
@@ -52,8 +53,8 @@ public:
 
     /* Adds drawable geometry to the tile and associates it with a <Style>
      * 
-     * Use std::move to pass in the mesh by move semantics; Geometry in the mesh must have coordinates relative to
-     * the tile origin.
+     * Use std::move to pass in the mesh by move semantics; Geometry in the mesh
+     * must have coordinates relative to the tile origin.
      */
     void addGeometry(const Style& _style, std::shared_ptr<VboMesh> _mesh);
     

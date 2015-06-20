@@ -9,15 +9,11 @@ protected:
     
     struct PosNormEnormColVertex {
         //Position Data
-        GLfloat pos_x;
-        GLfloat pos_y;
-        GLfloat pos_z;
+        glm::vec3 pos;
+        // UV Data
+        glm::vec2 texcoord;
         // Extrude Normals Data
-        GLfloat texcoord_x;
-        GLfloat texcoord_y;
-        // Extrude Normals Data
-        GLfloat enorm_x;
-        GLfloat enorm_y;
+        glm::vec2 enorm;
         GLfloat ewidth;
         // Color Data
         GLuint abgr;

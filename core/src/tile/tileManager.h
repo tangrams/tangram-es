@@ -96,9 +96,8 @@ private:
     /*
      * Checks and updates m_tileSet with proxy tiles for every new visible tile
      *  @_tileID: TileID of the new visible tile for which proxies needs to be added
-     *  @_zoomingIn: Zoom-in or Zoom-out to determine parent of child proxies
      */
-    void updateProxyTiles(const TileID& _tileID, bool _zoomingIn);
+    void updateProxyTiles(const TileID& _tileID);
     
     /*
      *  Once a visible tile finishes loaded and is added to m_tileSet, all its proxy(ies) MapTiles are removed

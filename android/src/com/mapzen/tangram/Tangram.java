@@ -101,8 +101,8 @@ public class Tangram implements Renderer, OnTouchListener, OnScaleGestureListene
         this.okClient = new OkHttpClient();
         okClient.setConnectTimeout(10, TimeUnit.SECONDS);
         okClient.setReadTimeout(30, TimeUnit.SECONDS);
-        File cacheDir = new File(mainApp.getExternalCacheDir().getAbsolutePath() + "/tile_cache");
         try {
+            File cacheDir = new File(mainApp.getExternalCacheDir().getAbsolutePath() + "/tile_cache");
             Cache okTileCache = new Cache(cacheDir, TILE_CACHE_SIZE);
             okClient.setCache(okTileCache);
         } catch (Exception e) {
@@ -132,15 +132,12 @@ public class Tangram implements Renderer, OnTouchListener, OnScaleGestureListene
 
     public boolean onTouch(View v, MotionEvent event) {
 
-        //Pass the event to gesture detectors
-        if (gestureDetector.onTouchEvent(event) |
-            scaleGestureDetector.onTouchEvent(event) |
-            rotateGestureDetector.onTouchEvent(event) |
-            shoveGestureDetector.onTouchEvent(event)) {
-            return true;
-        }
+        gestureDetector.onTouchEvent(event);
+        shoveGestureDetector.onTouchEvent(event);
+        scaleGestureDetector.onTouchEvent(event);
+        rotateGestureDetector.onTouchEvent(event);
 
-        return false;
+        return true;
 
     }
 
@@ -219,7 +216,7 @@ public class Tangram implements Renderer, OnTouchListener, OnScaleGestureListene
     // ===================================================
 
     public boolean onScaleBegin(ScaleGestureDetector detector) {
-        return true;
+        return !shoveGestureDetector.isInProgress();
     }
 
     public boolean onScale(ScaleGestureDetector detector) {
@@ -235,7 +232,7 @@ public class Tangram implements Renderer, OnTouchListener, OnScaleGestureListene
     // =====================================================
 
     public boolean onRotateBegin(RotateGestureDetector detector) {
-        return true;
+        return !shoveGestureDetector.isInProgress();
     }
 
     public boolean onRotate(RotateGestureDetector detector) {
@@ -254,7 +251,7 @@ public class Tangram implements Renderer, OnTouchListener, OnScaleGestureListene
     // ===================================================
 
     public boolean onShoveBegin(ShoveGestureDetector detector) {
-        return true;
+        return !(scaleGestureDetector.isInProgress() || rotateGestureDetector.isInProgress());
     }
 
     public boolean onShove(ShoveGestureDetector detector) {
