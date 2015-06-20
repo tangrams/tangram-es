@@ -22,10 +22,10 @@ public:
     ~FontContext();
 
     /* adds a font from a .ttf font file with a specific name */
-    bool addFont(std::string _fontFile, std::string _name);
+    bool addFont(const std::string& _fontFile, const std::string& _name);
 
     /* sets the current font for a size in pixels */
-    void setFont(std::string _name, int size);
+    void setFont(const std::string& _name, int size);
 
     /* sets the blur spread when using signed distance field rendering */
     void setSignedDistanceField(float _blurSpread);
