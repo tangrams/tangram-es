@@ -95,51 +95,61 @@ void TileManager::updateTileSet() {
     }
     
     const std::set<TileID>& visibleTiles = m_view->getVisibleTiles();
-    
+
     // Loop over visibleTiles and add any needed tiles to tileSet
     {
         auto setTilesIter = m_tileSet.begin();
         auto visTilesIter = visibleTiles.begin();
-        
+
         while (visTilesIter != visibleTiles.end()) {
-            
-            if (setTilesIter == m_tileSet.end() || *visTilesIter < setTilesIter->first) {
+
+            auto& visTileId = *visTilesIter;
+            auto& curTileId = setTilesIter == m_tileSet.end() ? NOT_A_TILE : setTilesIter->first;
+
+            if (visTileId == curTileId) {
+                // tiles in both sets match
+                ++setTilesIter;
+                ++visTilesIter;
+
+            } else if (curTileId == NOT_A_TILE || visTileId < curTileId) {
                 // tileSet is missing an element present in visibleTiles
-                addTile(*visTilesIter);
+                addTile(visTileId);
                 m_tileSetChanged = true;
                 ++visTilesIter;
-            } else if (setTilesIter->first < *visTilesIter) {
+
+            } else {
                 // visibleTiles is missing an element present in tileSet (handled below)
                 ++setTilesIter;
-            } else {
-                // tiles in both sets match, move on
-                ++setTilesIter;
-                ++visTilesIter;
             }
         }
     }
-    
+
     // Loop over tileSet and remove any tiles that are neither visible nor proxies
     {
         auto setTilesIter = m_tileSet.begin();
         auto visTilesIter = visibleTiles.begin();
-        
+
         while (setTilesIter != m_tileSet.end()) {
-            
-            if (visTilesIter == visibleTiles.end() || setTilesIter->first < *visTilesIter) {
-                // visibleTiles is missing an element present in tileSet
-                if (setTilesIter->second->getProxyCounter() <= 0) {
+
+            auto& visTileId = visTilesIter == visibleTiles.end() ? NOT_A_TILE : *visTilesIter;
+            auto& curTileId = setTilesIter->first;
+
+            if (visTileId == curTileId) {
+                // tiles in both sets match
+                ++setTilesIter;
+                ++visTilesIter;
+
+            } else if (visTileId == NOT_A_TILE || curTileId < visTileId) {
+                // remove element from tileSet not present in visibleTiles
+                const auto& tile = setTilesIter->second;
+                if (tile->getProxyCounter() <= 0) {
                     removeTile(setTilesIter);
                     m_tileSetChanged = true;
                 } else {
                     ++setTilesIter;
                 }
-            } else if (*visTilesIter < setTilesIter->first) {
-                // tileSet is missing an element present in visibleTiles (shouldn't occur)
-                ++visTilesIter;
             } else {
-                // tiles in both sets match, move on
-                ++setTilesIter;
+                // tileSet is missing an element present in visibleTiles (shouldn't occur)
                 ++visTilesIter;
             }
         }
