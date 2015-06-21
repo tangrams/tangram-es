@@ -89,3 +89,9 @@ glm::dvec4 MercatorProjection::TileLonLatBounds(const TileID _tileCoord) const {
     lonLatBounds = glm::dvec4(boundMin.x, boundMin.y, boundMax.x, boundMax.y);
     return lonLatBounds;
 }
+
+glm::dvec2 MercatorProjection::TileCenter(const TileID _tileCoord) const {
+    return PixelsToMeters(glm::dvec2(_tileCoord.x*m_TileSize +m_TileSize*0.5,
+                                     (_tileCoord.y*m_TileSize+m_TileSize*0.5)),
+                          _tileCoord.z);
+}

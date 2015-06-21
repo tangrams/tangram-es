@@ -116,6 +116,16 @@ public:
      *       z,w: max bounds in lon lat
      */
     virtual glm::dvec4 TileLonLatBounds(const TileID _tileCoord) const = 0;
+
+    /* 
+     * Returns center of the given tile
+     *  Arguments:
+     *    _tileCoord: glm::ivec3 (x,y and zoom)
+     *  Return value:
+     *    center in projection-meters (glm::dvec2)
+     *       x,y : position in projection meters
+     */
+    virtual glm::dvec2 TileCenter(const TileID _tileCoord) const = 0;
     
     /* 
      * Returns the projection type of a given projection instance 
@@ -148,6 +158,7 @@ public:
     virtual glm::dvec2 PixelsToRaster(const glm::dvec2 _pix, const int _zoom) const override;
     virtual glm::dvec4 TileBounds(const TileID _tileCoord) const override;
     virtual glm::dvec4 TileLonLatBounds(const TileID _tileCoord) const override;
+    virtual glm::dvec2 TileCenter(const TileID _tileCoord) const override;
     virtual ~MercatorProjection() {}
 };
 
