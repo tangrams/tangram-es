@@ -53,8 +53,14 @@ styles:
 
 sources:
     osm:
-        type: MVT
-        url:  https://vector.mapzen.com/osm/all/{z}/{x}/{y}.mvt
+        type: VTM
+        url:  http://opensciencemap.org/tiles/vtm/{z}/{x}/{y}.vtm
+        #url:  http://localhost/~jeff/tilecache/{z}/{x}/{y}
+
+    s3db:
+        type: VTM3D
+        url:  http://opensciencemap.org/tiles/s3db/{z}/{x}/{y}.vtm
+        #url:  http://localhost/~jeff/s3dbcache/{z}/{x}/{y}
 
 layers:
     touch:
@@ -76,14 +82,6 @@ layers:
 
     landuse:
         data: { source: osm }
-        filter:
-            name: true
-            any:
-                - { $zoom: { min: 9 }, area: { min: 10000000 } }
-                - { $zoom: { min: 10 }, area: { min: 3300000 } }
-                - { $zoom: { min: 12 }, area: { min: 1000000 } }
-                - { $zoom: { min: 13 }, area: { min: 10000 } }
-                - { $zoom: { min: 15 } }
         draw:
             polygons:
                 order: 1
@@ -108,14 +106,6 @@ layers:
 
     water:
         data: { source: osm }
-        filter:
-            any:
-                # show smaller water areas at higher zooms
-                - { $zoom: { min: 0 }, area: { min: 10000000 } }
-                - { $zoom: { min: 10 }, area: { min: 1000000 } }
-                - { $zoom: { min: 12 }, area: { min: 100000 } }
-                - { $zoom: { min: 15 }, area: { min: 1000 } }
-                - { $zoom: { min: 18 } }
         draw:
             flatcolor:
                 order: 3
@@ -219,6 +209,8 @@ layers:
     poi_icons:
         data: { source: osm, layer: pois }
         filter: { name: true, not: { kind: [peak, viewpoint, bicycle_rental, car_sharing] }, $zoom: { min: 15 } }
+    s3db:
+        data: { source: s3db }
         draw:
             icons:
                 offset: [0px, -15px]
@@ -266,42 +258,34 @@ layers:
                 filter: { kind: [bookstore] }
                 draw: { icons: { sprite: bookstore } }
 
-    buildings:
-        data: { source: osm }
-        filter: { $zoom: { min: 14 } }
+#    buildings:
+#        data: { source: osm }
+#        filter: { $zoom: { min: 14 } }
+#        draw:
+#            polygons:
+#                order: 50
+#                color: [.65, .65, .65]
+#        # turn interactive feature selection on for buildings with names
+#        interactive:
+#            filter: { name: true }
+#            draw: { heightglow: { interactive: true } }
+#        extruded:
+#            filter: { $zoom: { min: 15 } }
+#            draw:
+#                heightglow:
+#                    extrude: true
+#        high-line:
+#            filter: {roof_material: grass}
+#            draw:
+#                heightglow:
+#                    color: '#bddec5'
+
+    s3db:
+        data: { source: s3db }
         draw:
             polygons:
-                style: polygons 
                 order: 50
-                color: [.85, .85, .83]
-        # turn interactive feature selection on for buildings with names
-        interactive:
-            filter: { name: true }
-            draw:
-                polygons:
-                    style: heightglow
-                    color: [.65, .65, .63]
-                    interactive: true  
-        extruded:
-            filter: { $zoom: { min: 15 } }
-            draw:
-                polygons:
-                    style: heightglow
-                    color: [.65, .65, .63]
-                    extrude: true
-            draw:
-                lines:
-                    style: heightglowline
-                    width: 1.0
-                    color: [.75, .75, .73]
-                    order: 52
-                    extrude: true
-        high-line:
-            filter: {roof_material: grass}
-            draw:
-                polygons:
-                    style: polygons
-                    color: '#bddec5'
+                color: [.65, .65, .65]
 
     poi_labels:
         data: { source: osm, layer: pois }
