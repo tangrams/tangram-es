@@ -95,6 +95,7 @@ void TileManager::updateTileSet() {
     }
     
     const std::set<TileID>& visibleTiles = m_view->getVisibleTiles();
+    bool cleanupTiles = false;
 
     // Loop over visibleTiles and add any needed tiles to tileSet
     {
@@ -119,13 +120,14 @@ void TileManager::updateTileSet() {
 
             } else {
                 // visibleTiles is missing an element present in tileSet (handled below)
+                cleanupTiles = true;
                 ++setTilesIter;
             }
         }
     }
 
     // Loop over tileSet and remove any tiles that are neither visible nor proxies
-    {
+    if (cleanupTiles) {
         auto setTilesIter = m_tileSet.begin();
         auto visTilesIter = visibleTiles.begin();
 
