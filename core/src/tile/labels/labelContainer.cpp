@@ -119,11 +119,16 @@ void LabelContainer::updateOcclusions() {
 }
 
 void LabelContainer::drawDebug() {
+
+    if (!Tangram::getDebugFlag(Tangram::DebugFlags::DEBUG_PRIMITIVE)) {
+        return;
+    }
+    
     for(size_t i = 0; i < m_labelUnits.size(); i++) {
         auto& labelUnit = m_labelUnits[i];
         auto label = labelUnit.getWeakLabel();
 
-        if (label != nullptr && label->getState() != Label::SLEEP) {
+        if (label != nullptr && label->canOcclude()) {
             isect2d::OBB obb = label->getOBB();
             const isect2d::Vec2* quad = obb.getQuad();
 

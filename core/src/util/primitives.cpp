@@ -75,8 +75,8 @@ namespace Primitives {
 
     void drawLine(const glm::vec2& _origin, const glm::vec2& _destination, glm::vec2 _resolution) {
 
-        if (!Tangram::DebugFlags(Tangram::DebugFlags::DEBUG_PRIMITIVE)) {
-            //return;
+        if (!Tangram::getDebugFlag(Tangram::DebugFlags::DEBUG_PRIMITIVE)) {
+            return;
         }
 
         init(_resolution);
@@ -105,8 +105,8 @@ namespace Primitives {
 
     void drawPoly(const glm::vec2* _polygon, size_t _n, glm::vec2 _resolution) {
 
-        if (!Tangram::DebugFlags(Tangram::DebugFlags::DEBUG_PRIMITIVE)) {
-            //return;
+        if (!Tangram::getDebugFlag(Tangram::DebugFlags::DEBUG_PRIMITIVE)) {
+            return;
         }
 
         init(_resolution);

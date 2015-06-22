@@ -1,5 +1,6 @@
 #pragma once
 
+#include "tangram.h"
 #include "util/shaderProgram.h"
 #include "util/vertexLayout.h"
 #include "glm/glm.hpp"
