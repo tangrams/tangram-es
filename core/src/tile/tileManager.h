@@ -78,6 +78,7 @@ private:
     std::list<std::unique_ptr<TileWorker> > m_workers;
     
     std::list<std::unique_ptr<TileTask> > m_queuedTiles;
+    std::list<TileID> m_loadQueue;
     
     bool m_tileSetChanged = false;
     

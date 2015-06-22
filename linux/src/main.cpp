@@ -153,11 +153,14 @@ int main(void) {
         double currentTime = glfwGetTime();
         double delta = currentTime - lastTime;
         lastTime = currentTime;
-        
+
+        /* Update view and current tiles */
+        Tangram::update(delta);
+
+        /* Start loading new tiles */
         processNetworkQueue();
 
         /* Render here */
-        Tangram::update(delta);
         Tangram::render();
 
         /* Swap front and back buffers */

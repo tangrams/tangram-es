@@ -3,6 +3,8 @@
 #include "tile/mapTile.h"
 #include "view/view.h"
 
+#include <glm/gtx/norm.hpp>
+
 #include <chrono>
 #include <algorithm>
 
@@ -156,22 +158,36 @@ void TileManager::updateTileSet() {
             }
         }
     }
+
+    if (!m_loadQueue.empty()) {
+        glm::dvec2 center(m_view->getPosition().x, -m_view->getPosition().y);
+
+        m_loadQueue.sort([&](const TileID& a, const TileID& b) {
+            auto ca = m_view->getMapProjection().TileCenter(a);
+            auto cb = m_view->getMapProjection().TileCenter(b);
+            return glm::length2(ca - center) < glm::length2(cb - center);
+        });
+
+        for (auto& tileID : m_loadQueue) {
+            for (auto& source : m_dataSources) {
+                if (!source->loadTileData(tileID, *this)) {
+                    logMsg("ERROR: Loading failed for tile [%d, %d, %d]\n", tileID.z, tileID.x, tileID.y);
+                }
+            }
+        }
+        m_loadQueue.clear();
+    }
 }
 
+
+
 void TileManager::addTile(const TileID& _tileID) {
-    
+
+    m_loadQueue.push_back(_tileID);
+
     std::shared_ptr<MapTile> tile(new MapTile(_tileID, m_view->getMapProjection()));
     m_tileSet[_tileID] = std::move(tile);
 
-    for (auto& source : m_dataSources) {
-        
-        if (!source->loadTileData(_tileID, *this)) {
-            
-            logMsg("ERROR: Loading failed for tile [%d, %d, %d]\n", _tileID.z, _tileID.x, _tileID.y);
-            
-        }
-    }
-    
     //Add Proxy if corresponding proxy MapTile ready
     updateProxyTiles(_tileID);
 }
