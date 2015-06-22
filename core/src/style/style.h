@@ -82,7 +82,7 @@ protected:
     virtual void* parseStyleParams(const std::string& _layerNameID, const StyleParamMap& _styleParamMap) = 0;
 
     /* parse color properties */
-    static uint32_t parseColorProp(std::string _colorPropStr) ;
+    static uint32_t parseColorProp(const std::string& _colorPropStr) ;
 
     /* Perform any needed setup to process the data for a tile */
     virtual void onBeginBuildTile(MapTile& _tile) const;
