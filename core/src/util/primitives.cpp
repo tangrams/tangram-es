@@ -42,7 +42,7 @@ namespace Primitives {
 
     void init(glm::vec2 _resolution) {
 
-        if (!s_initialized || s_resolution != _resolution) {
+        if (!s_initialized || _resolution != s_resolution) {
             glm::mat4 proj = glm::ortho(0.f, _resolution.x, _resolution.y, 0.f, -1.f, 1.f);
 
             s_shader = std::unique_ptr<ShaderProgram>(new ShaderProgram());
@@ -101,5 +101,22 @@ namespace Primitives {
         drawLine({_destination.x, _origin.y}, _destination, _resolution);
         drawLine(_destination, {_origin.x, _destination.y}, _resolution);
         drawLine({_origin.x,_destination.y}, _origin, _resolution);
+    }
+
+    void drawPoly(const glm::vec2* _polygon, size_t _n, glm::vec2 _resolution) {
+
+        if (!Tangram::DebugFlags(Tangram::DebugFlags::DEBUG_PRIMITIVE)) {
+            //return;
+        }
+
+        init(_resolution);
+
+        saveState();
+
+        s_shader->use();
+        s_layout->enable(*s_shader, 0, (void*)_polygon);
+
+        glDrawArrays(GL_LINE_LOOP, 0, _n);
+        popState();
     }
 }
