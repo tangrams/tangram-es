@@ -19,6 +19,7 @@
 #include "util/skybox.h"
 #include "util/tileID.h"
 #include "view/view.h"
+#include "util/primitives.h"
 
 namespace Tangram {
 
@@ -82,6 +83,8 @@ namespace Tangram {
 
         std::unique_ptr<Style> debugTextStyle(new DebugTextStyle("FiraSans", "DebugTextStyle", 30.0f, 0xDC3522, true));
         m_scene->addStyle(std::move(debugTextStyle));
+
+        Primitives::init({800, 600});
 
         // Set up openGL state
         glDisable(GL_BLEND);
@@ -191,6 +194,9 @@ namespace Tangram {
         }
 
         m_skybox->draw(*m_view);
+
+        // test debug drawing
+        Primitives::drawLine({0.f, 0.f}, {100.0, 100.f});
 
         while (Error::hadGlError("Tangram::render()")) {}
     }

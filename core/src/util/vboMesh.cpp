@@ -130,7 +130,7 @@ void VboMesh::draw(const std::shared_ptr<ShaderProgram> _shader) {
         size_t byteOffset = vertexOffset * m_vertexLayout->getStride();
 
         // Enable vertex attribs via vertex layout object
-        m_vertexLayout->enable(_shader, byteOffset);
+        m_vertexLayout->enable(*_shader, byteOffset);
 
         // Draw as elements or arrays
         if (nIndices > 0) {
