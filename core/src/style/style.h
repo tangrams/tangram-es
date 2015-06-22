@@ -94,11 +94,11 @@ protected:
     static std::mutex s_cacheMutex;
 
     /*
-     * filter what subLayers a features match and get style paramaters for this feature based on all subLayers it
+     * filter what layer(s) a features match and get style paramaters for this feature based on all subLayers it
      * matches
      */
-    virtual void applySublayerFiltering(const Feature& _feature, const Tangram::Context& _ctx, long long& _uniqueID,
-                                        StyleParamMap& _styleParamMapMix, std::vector<Tangram::SceneLayer*>& _subLayers) const;
+    void applyLayerFiltering(const Feature& _feature, const Tangram::Context& _ctx, long long& _uniqueID,
+                                        StyleParamMap& _styleParamMapMix, Tangram::SceneLayer* _uberLayer) const;
 
     /* Perform any needed setup to process the data for a tile */
     virtual void onBeginBuildTile(MapTile& _tile) const;

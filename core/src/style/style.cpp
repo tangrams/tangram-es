@@ -65,20 +65,19 @@ void Style::addLayer(SceneLayer* _layer) {
 
 }
 
-void Style::applySublayerFiltering(const Feature& _feature, const Context& _ctx, long long& _uniqueID,
-                                   StyleParamMap& _styleParamMapMix, std::vector<SceneLayer*>& _subLayers) const {
+void Style::applyLayerFiltering(const Feature& _feature, const Context& _ctx, long long& _uniqueID,
+                                   StyleParamMap& _styleParamMapMix, SceneLayer* _uberLayer) const {
 
     std::vector<SceneLayer*> sLayers;
-    sLayers.reserve(_subLayers.size());
-    sLayers = _subLayers;
+    sLayers.reserve(_uberLayer->getSublayers().size() + 1);
+    sLayers.push_back(_uberLayer);
 
     auto sLayerItr = sLayers.begin();
 
     //A BFS traversal of the SceneLayer graph
     while(sLayerItr != sLayers.end()) {
-        if((*sLayerItr)->getFilter()->eval(_feature, _ctx)) { // filter matches
-            logMsg("ocean Name: %s\n", _feature.props.stringProps.at("name").c_str());
-
+        auto layerFilter = (*sLayerItr)->getFilter();
+        if( (*sLayerItr)->getFilter()->eval(_feature, _ctx)) { // filter matches
             _uniqueID += (1 << (*sLayerItr)->getID());
 
             if(s_styleParamMapCache.find(_uniqueID) != s_styleParamMapCache.end()) {
@@ -117,6 +116,7 @@ void Style::addData(TileData& _data, MapTile& _tile, const MapProjection& _mapPr
     VboMesh* mesh = newMesh();
 
     Context ctx;
+    ctx["$zoom"] = new NumValue(_tile.getID().z);
 
     for (auto& layer : _data.layers) {
 
@@ -129,33 +129,35 @@ void Style::addData(TileData& _data, MapTile& _tile, const MapProjection& _mapPr
         for (auto& feature : layer.features) {
 
             // NOTE: Makes a restriction on number of layers in the style confic (64 max)
-            long long uniqueID = 1 << (*it)->getID();
-            StyleParamMap styleParamMapMix((*it)->getStyleParamMap());
-            applySublayerFiltering(feature, ctx, uniqueID, styleParamMapMix, (*it)->getSublayers());
+            long long uniqueID = 0;
+            StyleParamMap styleParamMapMix;
+            applyLayerFiltering(feature, ctx, uniqueID, styleParamMapMix, (*it));
 
-            feature.props.numericProps["zoom"] = _tile.getID().z;
+            if(uniqueID != 0) { // if a layer matched then uniqueID should be > 0
+                feature.props.numericProps["zoom"] = _tile.getID().z;
 
-            switch (feature.geometryType) {
-                case GeometryType::POINTS:
-                    // Build points
-                    for (auto& point : feature.points) {
-                        buildPoint(point, parseStyleParams(styleParamMapMix), feature.props, *mesh);
-                    }
-                    break;
-                case GeometryType::LINES:
-                    // Build lines
-                    for (auto& line : feature.lines) {
-                        buildLine(line, parseStyleParams(styleParamMapMix), feature.props, *mesh);
-                    }
-                    break;
-                case GeometryType::POLYGONS:
-                    // Build polygons
-                    for (auto& polygon : feature.polygons) {
-                        buildPolygon(polygon, parseStyleParams(styleParamMapMix), feature.props, *mesh);
-                    }
-                    break;
-                default:
-                    break;
+                switch (feature.geometryType) {
+                    case GeometryType::POINTS:
+                        // Build points
+                        for (auto& point : feature.points) {
+                            buildPoint(point, parseStyleParams(styleParamMapMix), feature.props, *mesh);
+                        }
+                        break;
+                    case GeometryType::LINES:
+                        // Build lines
+                        for (auto& line : feature.lines) {
+                            buildLine(line, parseStyleParams(styleParamMapMix), feature.props, *mesh);
+                        }
+                        break;
+                    case GeometryType::POLYGONS:
+                        // Build polygons
+                        for (auto& polygon : feature.polygons) {
+                            buildPolygon(polygon, parseStyleParams(styleParamMapMix), feature.props, *mesh);
+                        }
+                        break;
+                    default:
+                        break;
+                }
             }
         }
     }
