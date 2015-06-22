@@ -68,7 +68,7 @@ layers:
                 - { $zoom: { min: 18 } }
         draw:
             polygons:
-                order: 2
+                order: 3
                 color: '#9dc3de'
 
     roads:
