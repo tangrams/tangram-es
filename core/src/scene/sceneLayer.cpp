@@ -7,7 +7,7 @@ namespace Tangram {
     SceneLayer::SceneLayer(const std::vector<SceneLayer*>&& _subLayers, const StyleParamMap&& _styleParamMap, const std::string _name, Filter* _filter) :
         m_subLayers(std::move(_subLayers)), m_styleParams(std::move(_styleParamMap)), m_name(_name), m_filter(_filter) {
 
-        m_id = 1 << (s_layerCount++);
+        m_id = s_layerCount++;
 
     }
 
