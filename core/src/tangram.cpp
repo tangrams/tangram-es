@@ -193,11 +193,7 @@ namespace Tangram {
 
         m_skybox->draw(*m_view);
 
-        // test debug drawing
-        Primitives::drawLine({0.f, 0.f}, {100.0, 100.f}, {m_view->getWidth(), m_view->getHeight()});
-        Primitives::drawRect({300.f, 300.f}, {350.0, 400.f}, {m_view->getWidth(), m_view->getHeight()});
-        glm::vec2 polygon[3] = {{200.f, 200.f,}, {250.f, 200.f,}, {250.f, 250.f,}};
-        Primitives::drawPoly(polygon, 3, {m_view->getWidth(), m_view->getHeight()});
+        m_labelContainer->drawDebug();
 
         while (Error::hadGlError("Tangram::render()")) {}
     }

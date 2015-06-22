@@ -4,6 +4,7 @@
 #include "util/tileID.h"
 #include "isect2d.h"
 #include "view/view.h"
+#include "util/primitives.h"
 #include <memory>
 #include <mutex>
 #include <vector>
@@ -69,6 +70,8 @@ public:
     void setView(std::shared_ptr<View> _view) { m_view = _view; }
 
     void setScreenSize(int _width, int _height) { m_screenSize = glm::vec2(_width, _height); }
+
+    void drawDebug();
 
 private:
 

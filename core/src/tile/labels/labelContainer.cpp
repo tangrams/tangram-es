@@ -117,3 +117,24 @@ void LabelContainer::updateOcclusions() {
         }
     }
 }
+
+void LabelContainer::drawDebug() {
+    for(size_t i = 0; i < m_labelUnits.size(); i++) {
+        auto& labelUnit = m_labelUnits[i];
+        auto label = labelUnit.getWeakLabel();
+
+        if (label != nullptr && label->getState() != Label::SLEEP) {
+            isect2d::OBB obb = label->getOBB();
+            const isect2d::Vec2* quad = obb.getQuad();
+
+            glm::vec2 polygon[4] = {
+                {quad[0].x, quad[0].y},
+                {quad[1].x, quad[1].y},
+                {quad[2].x, quad[2].y},
+                {quad[3].x, quad[3].y}
+            };
+
+            Primitives::drawPoly(polygon, 4, {m_view->getWidth(), m_view->getHeight()});
+        }
+    }
+}
