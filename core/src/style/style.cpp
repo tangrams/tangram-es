@@ -3,8 +3,6 @@
 #include "util/vboMesh.h"
 #include <sstream>
 
-using namespace CSSColorParser;
-
 Style::Style(std::string _name, GLenum _drawMode) : m_name(_name), m_drawMode(_drawMode) {
 }
 
@@ -23,7 +21,7 @@ uint32_t Style::parseColorProp(const std::string& _colorPropStr) {
             color += (uint32_t(std::stod(token) * 255.)) << (8 * i++);
         }
     } else { // parse as css color or #hex-num
-        color = parse(_colorPropStr).getInt();
+        color = CSSColorParser::parse(_colorPropStr).getInt();
     }
     return color;
 }

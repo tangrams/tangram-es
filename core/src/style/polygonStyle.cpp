@@ -1,10 +1,7 @@
 #include "polygonStyle.h"
 #include "util/builders.h"
 #include "roadLayers.h"
-#include "csscolorparser.hpp"
 #include "tangram.h"
-
-using namespace CSSColorParser;
 
 PolygonStyle::PolygonStyle(std::string _name, GLenum _drawMode) : Style(_name, _drawMode) {
     constructVertexLayout();
