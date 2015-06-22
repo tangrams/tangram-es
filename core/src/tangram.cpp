@@ -84,8 +84,6 @@ namespace Tangram {
         std::unique_ptr<Style> debugTextStyle(new DebugTextStyle("FiraSans", "DebugTextStyle", 30.0f, 0xDC3522, true));
         m_scene->addStyle(std::move(debugTextStyle));
 
-        Primitives::init({800, 600});
-
         // Set up openGL state
         glDisable(GL_BLEND);
         glDisable(GL_STENCIL_TEST);
@@ -196,7 +194,8 @@ namespace Tangram {
         m_skybox->draw(*m_view);
 
         // test debug drawing
-        Primitives::drawLine({0.f, 0.f}, {100.0, 100.f});
+        Primitives::drawLine({0.f, 0.f}, {100.0, 100.f}, {m_view->getWidth(), m_view->getHeight()});
+        Primitives::drawRect({300.f, 300.f}, {350.0, 400.f}, {m_view->getWidth(), m_view->getHeight()});
 
         while (Error::hadGlError("Tangram::render()")) {}
     }

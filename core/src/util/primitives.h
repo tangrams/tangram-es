@@ -4,10 +4,11 @@
 #include "util/vertexLayout.h"
 #include "glm/glm.hpp"
 #include "glm/mat4x4.hpp"
+#include "debug.h"
 
 namespace Primitives {
-    
-    void init(glm::vec2 _resolution);
 
-    void drawLine(const glm::vec2& _origin, const glm::vec2& _destination);
+    void drawLine(const glm::vec2& _origin, const glm::vec2& _destination, glm::vec2 _resolution);
+
+    void drawRect(const glm::vec2& _origin, const glm::vec2& _destination, glm::vec2 _resolution);
 }
