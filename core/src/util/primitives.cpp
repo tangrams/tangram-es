@@ -42,20 +42,22 @@ namespace Primitives {
 
     void init(glm::vec2 _resolution) {
 
-        if (!s_initialized || _resolution != s_resolution) {
-            glm::mat4 proj = glm::ortho(0.f, _resolution.x, _resolution.y, 0.f, -1.f, 1.f);
-
+        if (!s_initialized) {
             s_shader = std::unique_ptr<ShaderProgram>(new ShaderProgram());
             s_shader->setSourceStrings(s_frag, s_vert);
             s_shader->setUniformf("u_color", 1.f, 1.f, 1.f);
-            s_shader->setUniformMatrix4f("u_proj", glm::value_ptr(proj));
 
             s_layout = std::unique_ptr<VertexLayout>(new VertexLayout({
                 {"a_position", 2, GL_FLOAT, false, 0},
             }));
 
-            s_resolution = _resolution;
             s_initialized = true;
+        }
+
+        if (s_resolution != _resolution) {
+            glm::mat4 proj = glm::ortho(0.f, _resolution.x, _resolution.y, 0.f, -1.f, 1.f);
+            s_shader->setUniformMatrix4f("u_proj", glm::value_ptr(proj));
+            s_resolution = _resolution;
         }
     }
 
