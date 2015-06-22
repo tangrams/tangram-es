@@ -72,14 +72,13 @@ namespace Tangram {
         m_labelContainer->setView(m_view);
 
         std::unique_ptr<Style> textStyle0(new TextStyle("FiraSans", "Textstyle0", 15.0f, 0xF7F0E1, true, true));
-        StyleParamMap emptyParamMap;
-        textStyle0->addLayer(new SceneLayer(std::vector<SceneLayer*>(), StyleParamMap(), "roads", nullptr));
-        textStyle0->addLayer(new SceneLayer(std::vector<SceneLayer*>(), StyleParamMap(), "places", nullptr));
-        textStyle0->addLayer(new SceneLayer(std::vector<SceneLayer*>(), StyleParamMap(), "pois", nullptr));
+        textStyle0->addLayer(new SceneLayer(std::vector<SceneLayer*>(), StyleParamMap(), "roads", new Filter()));
+        textStyle0->addLayer(new SceneLayer(std::vector<SceneLayer*>(), StyleParamMap(), "places", new Filter()));
+        textStyle0->addLayer(new SceneLayer(std::vector<SceneLayer*>(), StyleParamMap(), "pois", new Filter()));
         m_scene->addStyle(std::move(textStyle0));
 
         std::unique_ptr<Style> textStyle1(new TextStyle("Futura", "Textstyle1", 18.0f, 0x26241F, true, true));
-        textStyle1->addLayer(new SceneLayer(std::vector<SceneLayer*>(), StyleParamMap(), "landuse", nullptr));
+        textStyle1->addLayer(new SceneLayer(std::vector<SceneLayer*>(), StyleParamMap(), "landuse", new Filter()));
         m_scene->addStyle(std::move(textStyle1));
 
         std::unique_ptr<Style> debugTextStyle(new DebugTextStyle("FiraSans", "DebugTextStyle", 30.0f, 0xDC3522, true));
