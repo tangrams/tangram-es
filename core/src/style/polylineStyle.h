@@ -3,10 +3,25 @@
 #include "style.h"
 #include "typedMesh.h"
 
+#include <mutex>
+
 class PolylineStyle : public Style {
-    
+
 protected:
-    
+
+    struct StyleParams {
+        int32_t order = 0;
+        uint32_t color = 0xffffffff;
+        float width = 1.f;
+        CapTypes cap = CapTypes::BUTT;
+        JoinTypes join = JoinTypes::MITER;
+        float outlineWidth = 1.f;
+        uint32_t outlineColor = 0xffffffff;
+        bool outlineOn = false;
+        CapTypes outlineCap = CapTypes::BUTT;
+        JoinTypes outlineJoin = JoinTypes::MITER;
+    };
+
     struct PosNormEnormColVertex {
         //Position Data
         glm::vec3 pos;
@@ -20,24 +35,32 @@ protected:
         // Layer Data
         GLfloat layer;
     };
-    
+
     virtual void constructVertexLayout() override;
     virtual void constructShaderProgram() override;
-    virtual void buildPoint(Point& _point, StyleParams& _params, Properties& _props, VboMesh& _mesh) const override;
-    virtual void buildLine(Line& _line, StyleParams& _params, Properties& _props, VboMesh& _mesh) const override;
-    virtual void buildPolygon(Polygon& _polygon, StyleParams& _params, Properties& _props, VboMesh& _mesh) const override;
+    virtual void buildPoint(Point& _point, void* _styleParam, Properties& _props, VboMesh& _mesh) const override;
+    virtual void buildLine(Line& _line, void* _styleParam, Properties& _props, VboMesh& _mesh) const override;
+    virtual void buildPolygon(Polygon& _polygon, void* _styleParam, Properties& _props, VboMesh& _mesh) const override;
+    virtual void* parseStyleParams(const std::string& _layerNameID, const StyleParamMap& _styleParamMap) override;
 
     typedef TypedMesh<PosNormEnormColVertex> Mesh;
-    
+
     virtual VboMesh* newMesh() const override {
         return new Mesh(m_vertexLayout, m_drawMode);
     };
 
+    std::unordered_map<std::string, StyleParams*> m_styleParamCache;
+    std::mutex m_cacheMutex;
+
 public:
-    
+
     PolylineStyle(GLenum _drawMode = GL_TRIANGLES);
     PolylineStyle(std::string _name, GLenum _drawMode = GL_TRIANGLES);
 
     virtual ~PolylineStyle() {
+        for(auto& styleParam : m_styleParamCache) {
+            delete styleParam.second;
+        }
+        m_styleParamCache.clear();
     }
 };

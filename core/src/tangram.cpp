@@ -71,13 +71,14 @@ namespace Tangram {
         m_labelContainer->setView(m_view);
 
         std::unique_ptr<Style> textStyle0(new TextStyle("FiraSans", "Textstyle0", 15.0f, 0xF7F0E1, true, true));
-        textStyle0->addLayer({ "roads", StyleParams() });
-        textStyle0->addLayer({ "places", StyleParams() });
-        textStyle0->addLayer({ "pois", StyleParams() });
+        StyleParamMap emptyParamMap;
+        textStyle0->addLayer({ "roads", std::move(emptyParamMap)});
+        textStyle0->addLayer({ "places", std::move(emptyParamMap)});
+        textStyle0->addLayer({ "pois", std::move(emptyParamMap)});
         m_scene->addStyle(std::move(textStyle0));
 
         std::unique_ptr<Style> textStyle1(new TextStyle("Futura", "Textstyle1", 18.0f, 0x26241F, true, true));
-        textStyle1->addLayer({ "landuse", StyleParams() });
+        textStyle1->addLayer({ "landuse", std::move(emptyParamMap)});
         m_scene->addStyle(std::move(textStyle1));
 
         std::unique_ptr<Style> debugTextStyle(new DebugTextStyle("FiraSans", "DebugTextStyle", 30.0f, 0xDC3522, true));

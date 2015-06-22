@@ -7,7 +7,7 @@ DebugTextStyle::DebugTextStyle(const std::string& _fontName, std::string _name, 
 
 }
 
-void DebugTextStyle::addData(TileData& _data, MapTile& _tile, const MapProjection& _mapProjection) const {
+void DebugTextStyle::addData(TileData& _data, MapTile& _tile, const MapProjection& _mapProjection) {
 
     if (Tangram::getDebugFlag(Tangram::DebugFlags::TILE_INFOS)) {
         onBeginBuildTile(_tile);

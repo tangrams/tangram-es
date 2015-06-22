@@ -38,7 +38,8 @@ layers:
         draw:
             polygons:
                 order: 2
-                color: [.102, .49, .569, 1.]
+                #color: [.102, .49, .569, 1.]
+                color: steelblue
 
     roads:
         data: { source: osm }
@@ -47,7 +48,8 @@ layers:
                 order: 4
                 width: .02
                 cap: round
-                color: [0.41, 0.41, 0.41, 1.]
+                #color: [0.41, 0.41, 0.41, 1.]
+                color: '#696969'
                 outline:
                     width: .01
                     cap: round
