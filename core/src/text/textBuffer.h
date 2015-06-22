@@ -20,7 +20,7 @@ public:
     void init();
 
     /* ask the font rasterizer to rasterize a specific text for a text id */
-    void rasterize(const std::string& _text, fsuint _id);
+    bool rasterize(const std::string& _text, fsuint _id);
 
     /* 
      * transform a text id in screen space coordinate

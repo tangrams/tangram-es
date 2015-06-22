@@ -24,7 +24,11 @@ bool LabelContainer::addLabel(MapTile& _tile, const std::string& _styleName, Lab
         fsuint textID = currentBuffer->genTextID();
         std::shared_ptr<Label> l(new Label(_transform, _text, textID, _type));
 
-        l->rasterize(currentBuffer);
+        if (!l->rasterize(currentBuffer)) {
+            l.reset();
+            return false;
+        }
+
         l->update(m_view->getViewProjectionMatrix() * _tile.getModelMatrix(), m_screenSize, 0);
         std::unique_ptr<TileID> tileID(new TileID(_tile.getID()));
         _tile.addLabel(_styleName, l);

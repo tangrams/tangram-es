@@ -30,8 +30,9 @@ fsuint TextBuffer::genTextID() {
     return id;
 }
     
-void TextBuffer::rasterize(const std::string& _text, fsuint _id) {
-    glfonsRasterize(m_fsContext, _id, _text.c_str());
+bool TextBuffer::rasterize(const std::string& _text, fsuint _id) {
+    int status = glfonsRasterize(m_fsContext, _id, _text.c_str());
+    return status == GLFONS_VALID;
 }
 
 void TextBuffer::pushBuffer() {

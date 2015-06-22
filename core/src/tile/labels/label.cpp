@@ -15,13 +15,19 @@ Label::Label(Label::Transform _transform, std::string _text, fsuint _id, Type _t
 
 Label::~Label() {}
 
-void Label::rasterize(std::shared_ptr<TextBuffer>& _buffer) {
-    _buffer->rasterize(m_text, m_id);
+bool Label::rasterize(std::shared_ptr<TextBuffer>& _buffer) {
+    bool res = _buffer->rasterize(m_text, m_id);
+
+    if (!res) {
+        return false;
+    }
     
     glm::vec4 bbox = _buffer->getBBox(m_id);
     
     m_dim.x = std::abs(bbox.z - bbox.x);
     m_dim.y = std::abs(bbox.w - bbox.y);
+
+    return true;
 }
 
 void Label::updateBBoxes() {
