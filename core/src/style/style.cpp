@@ -12,7 +12,7 @@ Style::~Style() {
 
 uint32_t Style::parseColorProp(std::string _colorPropStr) {
     uint32_t color = 0;
-    if(std::isdigit(_colorPropStr[0])) { // r, g, b, a
+    if(_colorPropStr.find(",") != std::string::npos) { // r, g, b, a
         int shift = 0;
         size_t start = 0;
         auto pos = _colorPropStr.find_first_of(",", start);
