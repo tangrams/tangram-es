@@ -163,8 +163,8 @@ void TextStyle::buildPolygon(Polygon& _polygon, void* _styleParams, Properties& 
         ftContext->setSignedDistanceField(blurSpread);
     }
 
-    for (auto& prop : _props.stringProps) {
-        if (prop.first == "name") {
+    for (const auto& prop : _props.stringProps) {
+        if (prop.first == TAG_KEY_NAME) {
             labelContainer->addLabel(*TextStyle::s_processedTile, m_name, { glm::vec2(centroid), glm::vec2(centroid) }, prop.second, Label::Type::POINT);
         }
     }

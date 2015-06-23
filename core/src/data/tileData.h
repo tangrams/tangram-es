@@ -1,5 +1,7 @@
 #pragma once
 
+#include "flyweight/object.hpp"
+
 #include <vector>
 #include <string>
 #include <unordered_map>
@@ -63,11 +65,29 @@ typedef std::vector<Point> Line;
 
 typedef std::vector<Line> Polygon;
 
+
+    
+typedef flyweight::object<std::string> TagKey;
+
+static TagKey TAG_KEY_NAME { "name" };
+static TagKey TAG_KEY_HEIGHT { "height" };
+static TagKey TAG_KEY_MIN_HEIGHT { "min_height" };
+static TagKey TAG_KEY_ZOOM { "zoom" };
+static TagKey TAG_KEY_SORT_KEY { "sort_key" };
+
+namespace std
+{
+template <> struct hash<TagKey>
+{
+  std::size_t operator()(const TagKey& str) const {
+    return hash<std::string>()(str);
+    }
+};
+}
+
 struct Properties {
-    
-    std::unordered_map<std::string, std::string> stringProps;
-    std::unordered_map<std::string, float> numericProps;
-    
+    std::unordered_map<TagKey, std::string> stringProps;
+    std::unordered_map<TagKey, float> numericProps;
 };
 
 struct Feature {

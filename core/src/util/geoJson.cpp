@@ -42,20 +42,20 @@ void GeoJson::extractFeature(const rapidjson::Value& _in, Feature& _out, const M
         
         // height and minheight need to be handled separately so that their dimensions are normalized
         if (strcmp(member, "height") == 0) {
-            _out.props.numericProps[member] = prop.GetDouble() * _tile.getInverseScale();
+            _out.props.numericProps.emplace(member, prop.GetDouble() * _tile.getInverseScale());
             continue;
         }
         
         if (strcmp(member, "min_height") == 0) {
-            _out.props.numericProps[member] = prop.GetDouble() * _tile.getInverseScale();
+            _out.props.numericProps.emplace(member, prop.GetDouble() * _tile.getInverseScale());
             continue;
         }
         
         
         if (prop.IsNumber()) {
-            _out.props.numericProps[member] = prop.GetDouble();
+            _out.props.numericProps.emplace(member, prop.GetDouble());
         } else if (prop.IsString()) {
-            _out.props.stringProps[member] = prop.GetString();
+            _out.props.stringProps.emplace(member, prop.GetString());
         }
         
     }

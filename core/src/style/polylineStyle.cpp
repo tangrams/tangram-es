@@ -113,7 +113,7 @@ void PolylineStyle::buildLine(Line& _line, void* _styleParam, Properties& _props
     GLuint abgr = params->color;
 
     if (Tangram::getDebugFlag(Tangram::DebugFlags::PROXY_COLORS)) {
-        abgr = abgr << (int(_props.numericProps["zoom"]) % 6);
+        abgr = abgr << (int(_props.numericProps[TAG_KEY_ZOOM]) % 6);
     }
 
     GLfloat layer = _props.numericProps["sort_key"] + params->order;

@@ -92,11 +92,11 @@ void PolygonStyle::buildPolygon(Polygon& _polygon, void* _styleParam, Properties
     GLfloat layer = params->order;
 
     if (Tangram::getDebugFlag(Tangram::DebugFlags::PROXY_COLORS)) {
-        abgr = abgr << (int(_props.numericProps["zoom"]) % 6);
+        abgr = abgr << (int(_props.numericProps[TAG_KEY_ZOOM]) % 6);
     }
 
-    float height = _props.numericProps["height"]; // Inits to zero if not present in data
-    float minHeight = _props.numericProps["min_height"]; // Inits to zero if not present in data
+    float height = _props.numericProps[TAG_KEY_HEIGHT]; // Inits to zero if not present in data
+    float minHeight = _props.numericProps[TAG_KEY_MIN_HEIGHT]; // Inits to zero if not present in data
 
     if (minHeight != height) {
         for (auto& line : _polygon) {
