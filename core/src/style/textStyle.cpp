@@ -96,10 +96,10 @@ void TextStyle::buildLine(Line& _line, void* _styleParams, Properties& _props, V
         ftContext->setSignedDistanceField(blurSpread);
     }
 
-    int lineLength = _line.size();
-    int skipOffset = floor(lineLength / 2);
-    float minLength = 0.15; // default, probably need some more thoughts
-
+    // int lineLength = _line.size();
+    // int skipOffset = floor(lineLength / 2);
+    // float minLength = 0.15; // default, probably need some more thoughts
+    
     // if (_layer == "roads") {
     //     for (auto prop : _props.stringProps) {
     //         if (prop.first.compare("name") == 0) {
@@ -163,7 +163,7 @@ void TextStyle::buildPolygon(Polygon& _polygon, void* _styleParams, Properties& 
         ftContext->setSignedDistanceField(blurSpread);
     }
 
-    for (auto prop : _props.stringProps) {
+    for (auto& prop : _props.stringProps) {
         if (prop.first == "name") {
             labelContainer->addLabel(*TextStyle::s_processedTile, m_name, { glm::vec2(centroid), glm::vec2(centroid) }, prop.second, Label::Type::POINT);
         }
