@@ -29,7 +29,8 @@ void init() {
     bmw1.props.emplace("name", "bmw320i");
     bmw1.props.emplace("brand", "bmw");
     bmw1.props.emplace("check", "false");
-    bmw1.props.emplace("series", "3");
+    //bmw1.props.emplace("series", "3");
+    bmw1.props.emplace("series", 3);
     bmw1.props.emplace("wheel", 4);
     bmw1.props.emplace("drive", "all");
     bmw1.props.emplace("type", "car");
