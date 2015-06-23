@@ -12,7 +12,7 @@ VboMesh::VboMesh() {
     m_nIndices = 0;
     m_dirtyOffset = 0;
     m_dirtySize = 0;
-    
+
     m_dirty = false;
     m_isUploaded = false;
     m_isCompiled = false;
@@ -23,7 +23,7 @@ VboMesh::VboMesh() {
 VboMesh::VboMesh(std::shared_ptr<VertexLayout> _vertexLayout, GLenum _drawMode, GLenum _hint) : VboMesh() {
     m_vertexLayout = _vertexLayout;
     m_hint = _hint;
-    
+
     setDrawMode(_drawMode);
 }
 
@@ -145,9 +145,7 @@ void VboMesh::draw(const std::shared_ptr<ShaderProgram> _shader) {
     // Ensure that geometry is buffered into GPU
     if (!m_isUploaded) {
         upload();
-    }
-
-    if (m_dirty) {
+    } else if (m_dirty) {
         subDataUpload();
     }
 
