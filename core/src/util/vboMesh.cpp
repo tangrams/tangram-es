@@ -73,10 +73,10 @@ void VboMesh::subDataUpload() {
     if (m_dirtySize != 0) {
         glBindBuffer(GL_ARRAY_BUFFER, m_glVertexBuffer);
 
-        int vertexBytes = m_nVertices * m_vertexLayout->getStride();
+        long vertexBytes = m_nVertices * m_vertexLayout->getStride();
 
         // updating the entire buffer
-        if (abs(m_dirtySize - vertexBytes) < m_vertexLayout->getStride()) {
+        if (std::abs(m_dirtySize - vertexBytes) < m_vertexLayout->getStride()) {
 
             // invalidate the data store on the driver
             glBufferData(GL_ARRAY_BUFFER, vertexBytes, NULL, m_hint);

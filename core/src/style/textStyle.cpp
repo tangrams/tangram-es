@@ -30,17 +30,21 @@ void TextStyle::constructShaderProgram() {
 
     std::string vertShaderSrcStr = stringFromResource("text.vs");
     std::string fragShaderSrcStr = stringFromResource(frag.c_str());
-    
+
     m_shaderProgram = std::make_shared<ShaderProgram>();
     m_shaderProgram->setSourceStrings(fragShaderSrcStr, vertShaderSrcStr);
-    
+
     std::string defines;
-    
+
     if (m_sdf && m_sdfMultisampling) {
         defines += "#define TANGRAM_SDF_MULTISAMPLING\n";
     }
-    
+
     m_shaderProgram->addSourceBlock("defines", defines);
+}
+
+void* TextStyle::parseStyleParams(const std::string& _layerNameID, const StyleParamMap& _styleParamMap) {
+    return nullptr;
 }
 
 void TextStyle::addVertices(TextBuffer& _buffer, VboMesh& _mesh) const {
@@ -59,7 +63,7 @@ void TextStyle::addVertices(TextBuffer& _buffer, VboMesh& _mesh) const {
     }
 }
 
-void TextStyle::buildPoint(Point& _point, StyleParams& _params, Properties& _props, VboMesh& _mesh) const {
+void TextStyle::buildPoint(Point& _point, void* _styleParams, Properties& _props, VboMesh& _mesh) const {
     for (auto prop : _props.stringProps) {
         if (prop.first == "name") {
             m_labels->addLabel(*TextStyle::s_processedTile, m_name, { glm::vec2(_point), glm::vec2(_point) }, prop.second, Label::Type::POINT);
@@ -67,7 +71,7 @@ void TextStyle::buildPoint(Point& _point, StyleParams& _params, Properties& _pro
     }
 }
 
-void TextStyle::buildLine(Line& _line, StyleParams& _params, Properties& _props, VboMesh& _mesh) const {
+void TextStyle::buildLine(Line& _line, void* _styleParams, Properties& _props, VboMesh& _mesh) const {
     int lineLength = _line.size();
     int skipOffset = floor(lineLength / 2);
     float minLength = 0.15; // default, probably need some more thoughts
@@ -92,10 +96,10 @@ void TextStyle::buildLine(Line& _line, StyleParams& _params, Properties& _props,
     }
 }
 
-void TextStyle::buildPolygon(Polygon& _polygon, StyleParams& _params, Properties& _props, VboMesh& _mesh) const {
+void TextStyle::buildPolygon(Polygon& _polygon, void* _styleParams, Properties& _props, VboMesh& _mesh) const {
     glm::vec3 centroid;
     int n = 0;
-    
+
     for (auto& l : _polygon) {
         for (auto& p : l) {
             centroid.x += p.x;
@@ -103,7 +107,7 @@ void TextStyle::buildPolygon(Polygon& _polygon, StyleParams& _params, Properties
             n++;
         }
     }
-    
+
     centroid /= n;
 
     for (auto prop : _props.stringProps) {
@@ -163,11 +167,11 @@ void TextStyle::onBeginDrawFrame(const std::shared_ptr<View>& _view, const std::
     
     m_shaderProgram->setUniformi("u_tex", 1);
     m_shaderProgram->setUniformf("u_resolution", _view->getWidth(), _view->getHeight());
-    
+
     float r = (m_color >> 16 & 0xff) / 255.0;
     float g = (m_color >> 8  & 0xff) / 255.0;
     float b = (m_color       & 0xff) / 255.0;
-    
+
     m_shaderProgram->setUniformf("u_color", r, g, b);
     m_shaderProgram->setUniformMatrix4f("u_proj", projectionMatrix);
 
