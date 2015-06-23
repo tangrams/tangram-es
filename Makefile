@@ -54,9 +54,10 @@ UNIT_TESTS_CMAKE_PARAMS = \
 ANDROID_CMAKE_PARAMS = \
 	-DPLATFORM_TARGET=android \
 	-DCMAKE_TOOLCHAIN_FILE=${TOOLCHAIN_DIR}/android.toolchain.cmake \
-	-DMAKE_BUILD_TOOL=$$ANDROID_NDK/prebuilt/darwin-x86_64/bin/make \
+	-DMAKE_BUILD_TOOL=$$ANDROID_NDK/prebuilt/linux-x86_64/bin/make \
+	-DANDROID_TOOLCHAIN_NAME=arm-linux-androideabi-4.9 \
 	-DANDROID_ABI=${ANDROID_ARCH} \
-	-DANDROID_STL=c++_shared \
+	-DANDROID_STL=gnustl_static \
 	-DANDROID_NATIVE_API_LEVEL=${ANDROID_API_LEVEL}
 
 IOS_CMAKE_PARAMS = \
