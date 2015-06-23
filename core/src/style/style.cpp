@@ -20,9 +20,9 @@ Style::~Style() {
 }
 
 uint32_t Style::parseColorProp(const std::string& _colorPropStr) {
-    
+
     uint32_t color = 0;
-    
+
     if (_colorPropStr.find(',') != std::string::npos) { // try to parse as comma-separated rgba components
         std::istringstream stream(_colorPropStr);
         std::string token;
@@ -64,7 +64,6 @@ void Style::applyLayerFiltering(const Feature& _feature, const Context& _ctx, lo
 
     //A BFS traversal of the SceneLayer graph
     while(sLayerItr != sLayers.end()) {
-        auto layerFilter = (*sLayerItr)->getFilter();
         if( (*sLayerItr)->getFilter()->eval(_feature, _ctx)) { // filter matches
             _uniqueID += (1 << (*sLayerItr)->getID());
 
