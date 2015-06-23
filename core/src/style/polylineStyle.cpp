@@ -2,10 +2,6 @@
 #include "util/builders.h"
 #include "roadLayers.h"
 #include "tangram.h"
-#include "csscolorparser.hpp"
-#include <ctime>
-
-using namespace CSSColorParser;
 
 PolylineStyle::PolylineStyle(std::string _name, GLenum _drawMode) : Style(_name, _drawMode) {
     constructVertexLayout();

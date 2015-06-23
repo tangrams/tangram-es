@@ -2,11 +2,11 @@
 #include "scene/scene.h"
 #include "scene/sceneLayer.h"
 #include "util/vboMesh.h"
+#include <sstream>
 
 std::unordered_map<long long, StyleParamMap> Style::s_styleParamMapCache;
 std::mutex Style::s_cacheMutex;
 
-using namespace CSSColorParser;
 using namespace Tangram;
 
 Style::Style(std::string _name, GLenum _drawMode) : m_name(_name), m_drawMode(_drawMode) {
@@ -19,31 +19,19 @@ Style::~Style() {
     m_layers.clear();
 }
 
-uint32_t Style::parseColorProp(std::string _colorPropStr) {
+uint32_t Style::parseColorProp(const std::string& _colorPropStr) {
+    
     uint32_t color = 0;
-    if(std::isdigit(_colorPropStr[0])) { // r, g, b, a
-        int shift = 0;
-        size_t start = 0;
-        auto pos = _colorPropStr.find_first_of(",", start);
-        while(pos != std::string::npos) {
-            if(pos != start) {
-                std::string value(_colorPropStr, start, pos - start);
-                color += (static_cast<uint32_t>(255.0 * std::stof(value)) << shift);
-                shift += 8;
-            }
-            start = pos + 1;
-            pos = _colorPropStr.find_first_of(",", start);
+    
+    if (_colorPropStr.find(',') != std::string::npos) { // try to parse as comma-separated rgba components
+        std::istringstream stream(_colorPropStr);
+        std::string token;
+        unsigned char i = 0;
+        while (std::getline(stream, token, ',') && i < 4) {
+            color += (uint32_t(std::stod(token) * 255.)) << (8 * i++);
         }
-        if(start < _colorPropStr.length()) {
-            std::string value(_colorPropStr, start, pos - start);
-            color += (static_cast<uint32_t>(255.0 * std::stof(value)) << shift);
-            shift += 8;
-        }
-        if(shift == 24) {
-            color += (255 << 24);
-        }
-    } else { // css color or #hex-num
-        color = parse(_colorPropStr).getInt();
+    } else { // parse as css color or #hex-num
+        color = CSSColorParser::parse(_colorPropStr).getInt();
     }
     return color;
 }

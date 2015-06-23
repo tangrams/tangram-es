@@ -108,18 +108,19 @@ public:
     float getHeight() const { return m_vpHeight; }
     
     /* Calculate the position on the ground plane (z = 0) under the given screen space coordinates, 
-       replacing the input coordinates with world-space coordinates */
-    void screenToGroundPlane(float& _screenX, float& _screenY) const;
+     * replacing the input coordinates with world-space coordinates 
+     * @return the un-normalized distance 'into the screen' to the ground plane 
+     * (if < 0, intersection is behind the screen)
+    */
+    float screenToGroundPlane(float& _screenX, float& _screenY) const;
     
     /* Returns the set of all tiles visible at the current position and zoom */
-    const std::set<TileID>& getVisibleTiles();
+    const std::set<TileID>& getVisibleTiles() { return m_visibleTiles; }
     
     /* Returns true if the view properties have changed since the last call to update() */
     bool changedOnLastUpdate() const { return m_changed; }
 
-    virtual ~View() {
-        m_visibleTiles.clear();
-    }
+    virtual ~View() {}
     
     constexpr static float s_maxZoom = 18.0;
 

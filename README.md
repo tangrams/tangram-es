@@ -133,3 +133,23 @@ cd build/rpi/bin
 ```
 
 You can also move the map with `w`, `a`, `s`, and `z`, zoom in and out with `-` and `=`, and quit with `q`.
+
+code-styling
+=====
+Tangram is using clang-format to style the code. 
+When submitting a PR, make sure the code conforms to the styling rules defined in the clang style file.
+
+Install clang-format (available through brew or apt-get)
+```
+brew install clang-format
+```  
+or
+```
+sudo apt-get install clang-format
+```
+
+Running clang-format with specified style (use -i to modify the contents of the specified file):
+```
+clang-format -i -style=file [file] 
+```
+

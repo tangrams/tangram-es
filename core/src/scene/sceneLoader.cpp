@@ -34,14 +34,11 @@ void SceneLoader::loadScene(const std::string& _file, Scene& _scene, TileManager
 }
 
 std::string parseSequence(const Node& node) {
-    std::string str;
     std::stringstream sstream;
-    for(auto it = node.begin(); it != node.end(); ++it) {
-        if(it != node.begin()) { sstream << ","; }
-        sstream << it->as<float>();
+    for (auto& val : node) {
+        sstream << val.as<float>() << ",";
     }
-    str = sstream.str();
-    return str;
+    return sstream.str();
 }
 
 glm::vec4 parseVec4(const Node& node) {

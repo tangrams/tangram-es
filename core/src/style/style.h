@@ -89,9 +89,9 @@ protected:
     virtual void* parseStyleParams(const StyleParamMap& _styleParamMap) const = 0;
 
     /* parse color properties */
-    static uint32_t parseColorProp(std::string _colorPropStr) ;
     static std::unordered_map<long long, StyleParamMap> s_styleParamMapCache;
     static std::mutex s_cacheMutex;
+    static uint32_t parseColorProp(const std::string& _colorPropStr) ;
 
     /*
      * filter what layer(s) a features match and get style paramaters for this feature based on all subLayers it
