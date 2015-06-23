@@ -1,5 +1,6 @@
 #include "labelContainer.h"
 #include "tile/mapTile.h"
+#include "text/fontContext.h"
 
 LabelContainer::LabelContainer() {}
 
@@ -54,7 +55,7 @@ void LabelContainer::updateOcclusions() {
     std::set<std::pair<Label*, Label*>> occlusions;
     std::vector<isect2d::AABB> aabbs;
 
-    for(int i = 0; i < m_labelUnits.size(); i++) {
+    for(size_t i = 0; i < m_labelUnits.size(); i++) {
         auto& labelUnit = m_labelUnits[i];
         auto label = labelUnit.getWeakLabel();
 
@@ -107,7 +108,7 @@ void LabelContainer::updateOcclusions() {
         }
     }
     
-    for(int i = 0; i < m_labelUnits.size(); i++) {
+    for(size_t i = 0; i < m_labelUnits.size(); i++) {
         auto& labelUnit = m_labelUnits[i];
         auto label = labelUnit.getWeakLabel();
         

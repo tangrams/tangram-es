@@ -1,4 +1,5 @@
 #include "textStyle.h"
+#include "text/fontContext.h"
 
 MapTile* TextStyle::s_processedTile = nullptr;
 
@@ -34,7 +35,11 @@ void TextStyle::constructShaderProgram() {
     m_shaderProgram->addSourceBlock("defines", defines);
 }
 
-void TextStyle::buildPoint(Point& _point, StyleParams& _params, Properties& _props, VboMesh& _mesh) const {
+void* TextStyle::parseStyleParams(const std::string& _layerNameID, const StyleParamMap& _styleParamMap) {
+    return nullptr;
+}
+
+void TextStyle::buildPoint(Point& _point, void* _styleParams, Properties& _props, VboMesh& _mesh) const {
     std::vector<PosTexID> vertices;
     auto labelContainer = LabelContainer::GetInstance();
     auto ftContext = labelContainer->getFontContext();
@@ -68,7 +73,7 @@ void TextStyle::buildPoint(Point& _point, StyleParams& _params, Properties& _pro
 
 }
 
-void TextStyle::buildLine(Line& _line, StyleParams& _params, Properties& _props, VboMesh& _mesh) const {
+void TextStyle::buildLine(Line& _line, void* _styleParams, Properties& _props, VboMesh& _mesh) const {
     std::vector<PosTexID> vertices;
     auto labelContainer = LabelContainer::GetInstance();
     auto ftContext = labelContainer->getFontContext();
@@ -119,7 +124,7 @@ void TextStyle::buildLine(Line& _line, StyleParams& _params, Properties& _props,
     }
 }
 
-void TextStyle::buildPolygon(Polygon& _polygon, StyleParams& _params, Properties& _props, VboMesh& _mesh) const {
+void TextStyle::buildPolygon(Polygon& _polygon, void* _styleParams, Properties& _props, VboMesh& _mesh) const {
 
     glm::vec3 centroid;
     int n = 0;

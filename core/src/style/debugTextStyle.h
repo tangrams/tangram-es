@@ -9,14 +9,12 @@ class DebugTextStyle : public TextStyle {
 protected:
 
     struct PosTexID {
-        float pos_x;
-        float pos_y;
-        float tex_u;
-        float tex_v;
+        glm::vec2 pos;
+        glm::vec2 uv;
         float fsID;
     };
 
-    virtual void addData(TileData& _data, MapTile& _tile, const MapProjection& _mapProjection) const override;
+    virtual void addData(TileData& _data, MapTile& _tile, const MapProjection& _mapProjection) override;
 
     typedef TypedMesh<PosTexID> Mesh;
 

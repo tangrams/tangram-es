@@ -1,7 +1,7 @@
 #pragma once
 
 #include <string>
-#include <memory>
+#include "style/styleParamMap.h"
 
 class Scene;
 class TileManager;
@@ -25,6 +25,7 @@ class SceneLoader {
     void loadLights(YAML::Node lights, Scene& scene);
     void loadCameras(YAML::Node cameras, View& view);
     void loadLayers(YAML::Node layers, Scene& scene, TileManager& tileManager);
+    void parseStyleProps(YAML::Node styleProps, StyleParamMap& paramMap, const std::string& propPrefix = "");
     void loadStyles(YAML::Node styles, Scene& scene);
     void loadTextures(YAML::Node textures, Scene& scene);
     void loadMaterial(YAML::Node matNode, Material& material, Scene& scene);

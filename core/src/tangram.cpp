@@ -6,18 +6,19 @@
 #include <set>
 
 #include "platform.h"
-#include "tile/tileManager.h"
-#include "view/view.h"
-#include "style/textStyle.h"
-#include "style/debugTextStyle.h"
-#include "style/debugStyle.h"
-#include "style/spriteStyle.h"
-#include "scene/sceneLoader.h"
 #include "scene/scene.h"
-#include "util/error.h"
+#include "scene/sceneLoader.h"
 #include "stl_util.hpp"
-#include "util/tileID.h"
+#include "style/debugStyle.h"
+#include "style/debugTextStyle.h"
+#include "style/spriteStyle.h"
+#include "style/textStyle.h"
+#include "text/fontContext.h"
+#include "tile/tileManager.h"
+#include "util/error.h"
 #include "util/skybox.h"
+#include "util/tileID.h"
+#include "view/view.h"
 
 namespace Tangram {
 
@@ -231,6 +232,7 @@ namespace Tangram {
 
         m_view->translate((_posX - viewCenterX), (_posY - viewCenterY));
 
+        requestRender();
     }
 
     void handleDoubleTapGesture(float _posX, float _posY) {
@@ -244,6 +246,8 @@ namespace Tangram {
         m_view->screenToGroundPlane(_endX, _endY);
 
         m_view->translate(_startX - _endX, _startY - _endY);
+
+        requestRender();
     }
 
     void handlePinchGesture(float _posX, float _posY, float _scale) {
@@ -256,7 +260,10 @@ namespace Tangram {
 
         m_view->translate((_posX - viewCenterX)*(1-1/_scale), (_posY - viewCenterY)*(1-1/_scale));
 
-        m_view->zoom(log2f(_scale));
+        static float invLog2 = 1 / log(2);
+        m_view->zoom(log(_scale) * invLog2);
+
+        requestRender();
     }
 
     void handleRotateGesture(float _posX, float _posY, float _radians) {
@@ -264,12 +271,14 @@ namespace Tangram {
         m_view->screenToGroundPlane(_posX, _posY);
         m_view->orbit(_posX, _posY, _radians);
 
+        requestRender();
     }
 
     void handleShoveGesture(float _distance) {
 
         m_view->pitch(_distance);
 
+        requestRender();
     }
 
     void setDebugFlag(DebugFlags _flag, bool _on) {

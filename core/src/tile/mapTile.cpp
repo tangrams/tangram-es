@@ -2,6 +2,9 @@
 #include "style/style.h"
 #include "view/view.h"
 #include "util/tileID.h"
+#include "util/vboMesh.h"
+#include "text/fontContext.h"
+#include "labels/labelContainer.h"
 
 #include "glm/gtc/matrix_transform.hpp"
 #include "glm/gtc/type_ptr.hpp"
@@ -31,10 +34,6 @@ MapTile::MapTile(MapTile&& _other) : m_id(std::move(m_id)), m_proxyCounter(std::
 
 
 MapTile::~MapTile() {
-
-    m_geometry.clear();
-    m_buffers.clear();
-    m_labels.clear();
 
 }
 

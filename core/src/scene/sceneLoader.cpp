@@ -39,6 +39,14 @@ void SceneLoader::loadScene(const std::string& _file, Scene& _scene, TileManager
 
 }
 
+std::string parseSequence(const Node& node) {
+    std::stringstream sstream;
+    for (auto& val : node) {
+        sstream << val.as<float>() << ",";
+    }
+    return sstream.str();
+}
+
 glm::vec4 parseVec4(const Node& node) {
     glm::vec4 vec;
     int i = 0;
@@ -641,8 +649,8 @@ Filter* SceneLoader::generateNoneFilter(YAML::Node _filter) {
         }
     } else if(_filter.IsMap()) { // not case
         for(YAML::const_iterator filtIter = _filter.begin(); filtIter != _filter.end(); ++filtIter) {
-            std::string key = filtIter->first.as<std::string>();
-            filters.emplace_back(generatePredicate(_filter[key], key));
+            std::string keyFilter = filtIter->first.as<std::string>();
+            filters.emplace_back(generatePredicate(_filter[keyFilter], keyFilter));
         }
     } else {
         logMsg("Error: Badly formed filter. \"None\" expects a list or an object.\n");
@@ -650,6 +658,29 @@ Filter* SceneLoader::generateNoneFilter(YAML::Node _filter) {
     }
 
     return (new None(std::move(filters)));
+}
+
+void SceneLoader::parseStyleProps(Node styleProps, StyleParamMap& paramMap, const std::string& propPrefix) {
+
+    for(auto propItr = styleProps.begin(); propItr != styleProps.end(); ++propItr) {
+        Node prop = propItr->first;
+        std::string paramKey;
+        if(propPrefix.length() > 0) {
+            paramKey = propPrefix + ":" + prop.as<std::string>();
+        } else {
+            paramKey = prop.as<std::string>();
+        }
+        if(propItr->second.IsScalar()) {
+            paramMap.emplace(paramKey, propItr->second.as<std::string>());
+        } else if(propItr->second.IsSequence()) {
+            paramMap.emplace(paramKey, parseSequence(propItr->second));
+        } else if(propItr->second.IsMap()) {
+            parseStyleProps(propItr->second, paramMap, paramKey);
+        } else {
+            logMsg("Error: Badly formed Style property, need to be a scalar, sequence or map. %s will not be added to stype properties.\n", paramKey.c_str());
+        }
+    }
+
 }
 
 void SceneLoader::loadLayers(Node layers, Scene& scene, TileManager& tileManager) {
@@ -671,82 +702,14 @@ void SceneLoader::loadLayers(Node layers, Scene& scene, TileManager& tileManager
 
         for (auto groupIt = drawGroup.begin(); groupIt != drawGroup.end(); ++groupIt) {
 
-            StyleParams params;
+            StyleParamMap paramMap;
             std::string styleName = groupIt->first.as<std::string>();
-            Node styleProps = groupIt->second;
-
-            Node order = styleProps["order"];
-            if (order) { params.order = order.as<float>(); }
-
-            Node color = styleProps["color"];
-            if (color) {
-                glm::vec4 c = parseVec4(color);
-                params.color = (uint32_t(c.a * 255) << 24) +
-                               (uint32_t(c.b * 255) << 16) +
-                               (uint32_t(c.g * 255) << 8)  +
-                               (uint32_t(c.r * 255));
-                // TODO: color helper funtions
-            }
-
-            Node width = styleProps["width"];
-            if (width) { params.width = width.as<float>(); }
-
-            Node cap = styleProps["cap"];
-            if (cap) {
-                std::string capString = cap.as<std::string>();
-                if (capString == "butt") { params.line.cap = CapTypes::BUTT; }
-                else if (capString == "square") { params.line.cap = CapTypes::SQUARE; }
-                else if (capString == "round") { params.line.cap = CapTypes::ROUND; }
-            }
-
-            Node join = styleProps["join"];
-            if (join) {
-                std::string joinString = join.as<std::string>();
-                if (joinString == "bevel") { params.line.join = JoinTypes::BEVEL; }
-                else if (joinString == "miter") { params.line.join = JoinTypes::MITER; }
-                else if (joinString == "round") { params.line.join = JoinTypes::ROUND; }
-            }
-
-            Node outline = styleProps["outline"];
-            if (outline) {
-
-                params.outline.on = true;
-
-                Node color = outline["color"];
-                if (color) {
-                    glm::vec4 c = parseVec4(color);
-                    params.outline.color = (uint32_t(c.a * 255) << 24) +
-                    (uint32_t(c.b * 255) << 16) +
-                    (uint32_t(c.g * 255) << 8)  +
-                    (uint32_t(c.r * 255));
-                    // TODO: color helper funtions
-                }
-
-                Node width = outline["width"];
-                if (width) { params.outline.width = width.as<float>(); }
-
-                Node cap = outline["cap"];
-                if (cap) {
-                    std::string capString = cap.as<std::string>();
-                    if (capString == "butt") { params.outline.line.cap = CapTypes::BUTT; }
-                    else if (capString == "square") { params.outline.line.cap = CapTypes::SQUARE; }
-                    else if (capString == "round") { params.outline.line.cap = CapTypes::ROUND; }
-                }
-
-                Node join = outline["join"];
-                if (join) {
-                    std::string joinString = join.as<std::string>();
-                    if (joinString == "bevel") { params.outline.line.join = JoinTypes::BEVEL; }
-                    else if (joinString == "miter") { params.outline.line.join = JoinTypes::MITER; }
-                    else if (joinString == "round") { params.outline.line.join = JoinTypes::ROUND; }
-                }
-
-            }
+            parseStyleProps(groupIt->second, paramMap);
 
             // match layer to the style in scene with the given name
             for (auto& style : scene.getStyles()) {
                 if (style->getName() == styleName) {
-                    style->addLayer({ name, params });
+                    style->addLayer({ name, paramMap });
                 }
             }
 

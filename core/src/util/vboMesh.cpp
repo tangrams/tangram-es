@@ -15,6 +15,7 @@ VboMesh::VboMesh(std::shared_ptr<VertexLayout> _vertexLayout, GLenum _drawMode)
 
     m_isUploaded = false;
     m_isCompiled = false;
+    m_generation = -1;
 
     setDrawMode(_drawMode);
 }
@@ -32,6 +33,9 @@ VboMesh::VboMesh() {
 VboMesh::~VboMesh() {
     if (m_glVertexBuffer) glDeleteBuffers(1, &m_glVertexBuffer);
     if (m_glIndexBuffer) glDeleteBuffers(1, &m_glIndexBuffer);
+    
+    delete[] m_glVertexData;
+    delete[] m_glIndexData;
 }
 
 void VboMesh::setVertexLayout(std::shared_ptr<VertexLayout> _vertexLayout) {
@@ -63,12 +67,12 @@ void VboMesh::upload() {
 
     // TODO check if compiled?
     // Buffer vertex data
-    int vertexBytes = m_glVertexData.size();
+    int vertexBytes = m_nVertices * m_vertexLayout->getStride();
 
     glBindBuffer(GL_ARRAY_BUFFER, m_glVertexBuffer);
-    glBufferData(GL_ARRAY_BUFFER, vertexBytes, m_glVertexData.data(), GL_STATIC_DRAW);
+    glBufferData(GL_ARRAY_BUFFER, vertexBytes, m_glVertexData, GL_STATIC_DRAW);
 
-    if (!m_glIndexData.empty()) {
+    if (m_glIndexData) {
         
         if (m_glIndexBuffer == 0) {
             glGenBuffers(1, &m_glIndexBuffer);
@@ -76,8 +80,7 @@ void VboMesh::upload() {
 
         // Buffer element index data
         glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, m_glIndexBuffer);
-        glBufferData(GL_ELEMENT_ARRAY_BUFFER, m_glIndexData.size() * sizeof(GLushort),
-                     m_glIndexData.data(), GL_STATIC_DRAW);
+        glBufferData(GL_ELEMENT_ARRAY_BUFFER, m_nIndices * sizeof(GLushort), m_glIndexData, GL_STATIC_DRAW);
     }
 
     // m_glVertexData.resize(0);

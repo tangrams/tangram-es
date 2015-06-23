@@ -45,7 +45,7 @@ ifndef ANDROID_ARCH
 endif
 
 ifndef ANDROID_API_LEVEL
-	ANDROID_API_LEVEL = android-19
+	ANDROID_API_LEVEL = android-15
 endif
 
 UNIT_TESTS_CMAKE_PARAMS = \
@@ -72,7 +72,7 @@ DARWIN_CMAKE_PARAMS = \
 	-DPLATFORM_TARGET=darwin
 
 RPI_CMAKE_PARAMS = \
-	-DPLATFORM_TARGET=raspberrypi 
+	-DPLATFORM_TARGET=raspberrypi
 
 LINUX_CMAKE_PARAMS = \
 	-DPLATFORM_TARGET=linux
@@ -87,7 +87,7 @@ clean-android:
 
 clean-osx:
 	rm -rf ${OSX_BUILD_DIR}
-	
+
 clean-ios:
 	rm -rf ${IOS_BUILD_DIR}
 
@@ -117,7 +117,7 @@ install-android: ${ANDROID_BUILD_DIR}/Makefile
 ${ANDROID_BUILD_DIR}/Makefile: check-ndk cmake-android
 
 cmake-android:
-	@mkdir -p ${ANDROID_BUILD_DIR} 
+	@mkdir -p ${ANDROID_BUILD_DIR}
 	@cd ${ANDROID_BUILD_DIR} && \
 	cmake ../.. ${ANDROID_CMAKE_PARAMS}
 
@@ -130,15 +130,15 @@ ${OSX_BUILD_DIR}/Makefile: cmake-osx
 xcode: ${OSX_XCODE_BUILD_DIR}/${OSX_XCODE_PROJ}
 	xcodebuild -target ${OSX_TARGET} -project ${OSX_XCODE_BUILD_DIR}/${OSX_XCODE_PROJ}
 
-${OSX_XCODE_BUILD_DIR}/${OSX_XCODE_PROJ}: cmake-osx-xcode
+${OSX_XCODE_BUILD_DIR}/${OSX_XCODE_PROJ}: cmake-xcode
 
 cmake-xcode:
-	@mkdir -p ${OSX_XCODE_BUILD_DIR} 
+	@mkdir -p ${OSX_XCODE_BUILD_DIR}
 	@cd ${OSX_XCODE_BUILD_DIR} && \
 	cmake ../.. ${DARWIN_XCODE_CMAKE_PARAMS}
 
 cmake-osx:
-	@mkdir -p ${OSX_BUILD_DIR} 
+	@mkdir -p ${OSX_BUILD_DIR}
 	@cd ${OSX_BUILD_DIR} && \
 	cmake ../.. ${DARWIN_CMAKE_PARAMS}
 
@@ -165,7 +165,7 @@ cmake-ios-sim:
 rpi: cmake-rpi
 	@cd ${RPI_BUILD_DIR} && \
 	${MAKE}
-	
+
 cmake-rpi:
 	@mkdir -p ${RPI_BUILD_DIR}
 	@cd ${RPI_BUILD_DIR} && \
@@ -175,15 +175,15 @@ linux: cmake-linux
 	cd ${LINUX_BUILD_DIR} && \
 	${MAKE}
 
-cmake-linux: 
+cmake-linux:
 	mkdir -p ${LINUX_BUILD_DIR}
 	cd ${LINUX_BUILD_DIR} &&\
 	cmake ../.. ${LINUX_CMAKE_PARAMS}
-	
+
 tests: unit-tests
 
 unit-tests:
-	@mkdir -p ${UNIT_TESTS_BUILD_DIR} 
+	@mkdir -p ${UNIT_TESTS_BUILD_DIR}
 	@cd ${UNIT_TESTS_BUILD_DIR} && \
 	cmake ../../.. ${UNIT_TESTS_CMAKE_PARAMS} && \
 	${MAKE}
