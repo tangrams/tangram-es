@@ -101,7 +101,6 @@ void PolylineStyle::buildPoint(Point& _point, void* _styleParam, Properties& _pr
 
 void PolylineStyle::buildLine(Line& _line, void* _styleParam, Properties& _props, VboMesh& _mesh) const {
     std::vector<PosNormEnormColVertex> vertices;
-    std::vector<int> indices;
 
     StyleParams* params = static_cast<StyleParams*>(_styleParam);
     GLuint abgr = params->color;
@@ -117,7 +116,6 @@ void PolylineStyle::buildLine(Line& _line, void* _styleParam, Properties& _props
     PolyLineOptions lineOptions = { params->cap, params->join };
 
     PolyLineOutput lineOutput {
-      indices,
       [&](const glm::vec3& coord, const glm::vec2& normal, const glm::vec2& uv) {
         vertices.push_back({ coord, uv, normal, halfWidth, abgr, layer });
       }
@@ -137,12 +135,12 @@ void PolylineStyle::buildLine(Line& _line, void* _styleParam, Properties& _props
             Builders::buildPolyLine(_line, lineOptions, lineOutput);
         } else {
             // re-use indices from original line
-            size_t oldSize = indices.size();
+            size_t oldSize = lineOutput.indices.size();
             size_t offset = vertices.size();
-            indices.reserve(2 * oldSize);
+            lineOutput.indices.reserve(2 * oldSize);
 
             for(size_t i = 0; i < oldSize; i++) {
-                 indices.push_back(offset + indices[i]);
+                 lineOutput.indices.push_back(offset + lineOutput.indices[i]);
             }
             for (size_t i = 0; i < offset; i++) {
               const auto& v = vertices[i];
@@ -152,7 +150,7 @@ void PolylineStyle::buildLine(Line& _line, void* _styleParam, Properties& _props
     }
 
     auto& mesh = static_cast<PolylineStyle::Mesh&>(_mesh);
-    mesh.addVertices(std::move(vertices), std::move(indices));
+    mesh.addVertices(std::move(vertices), std::move(lineOutput.indices));
 }
 
 void PolylineStyle::buildPolygon(Polygon& _polygon, void* _styleParam, Properties& _props, VboMesh& _mesh) const {

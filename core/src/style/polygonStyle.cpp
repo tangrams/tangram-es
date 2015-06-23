@@ -55,10 +55,8 @@ void PolygonStyle::buildPoint(Point& _point, void* _styleParam, Properties& _pro
 
 void PolygonStyle::buildLine(Line& _line, void* _styleParam, Properties& _props, VboMesh& _mesh) const {
     std::vector<PosNormColVertex> vertices;
-    std::vector<int> indices;
 
     PolyLineOutput output = {
-      indices,
       [&](const glm::vec3& coord, const glm::vec2& normal, const glm::vec2& uv) {
         float halfWidth =  0.2f;
         GLuint abgr = 0xff969696; // Default road color
@@ -71,13 +69,12 @@ void PolygonStyle::buildLine(Line& _line, void* _styleParam, Properties& _props,
     Builders::buildPolyLine(_line, PolyLineOptions(), output);
 
     auto& mesh = static_cast<PolygonStyle::Mesh&>(_mesh);
-    mesh.addVertices(std::move(vertices), std::move(indices));
+    mesh.addVertices(std::move(vertices), std::move(output.indices));
 }
 
 void PolygonStyle::buildPolygon(Polygon& _polygon, void* _styleParam, Properties& _props, VboMesh& _mesh) const {
 
     std::vector<PosNormColVertex> vertices;
-    std::vector<int> indices;
 
     StyleParams* params = static_cast<StyleParams*>(_styleParam);
     GLuint abgr = params->color;
@@ -91,7 +88,6 @@ void PolygonStyle::buildPolygon(Polygon& _polygon, void* _styleParam, Properties
     float minHeight = _props.numericProps["min_height"]; // Inits to zero if not present in data
 
     PolygonOutput output = {
-      indices,
       [&](const glm::vec3& coord, const glm::vec3& normal, const glm::vec2& uv){
         vertices.push_back({ coord, normal, uv, abgr, layer });
       },
@@ -129,5 +125,5 @@ void PolygonStyle::buildPolygon(Polygon& _polygon, void* _styleParam, Properties
     */
 
     auto& mesh = static_cast<PolygonStyle::Mesh&>(_mesh);
-    mesh.addVertices(std::move(vertices), std::move(indices));
+    mesh.addVertices(std::move(vertices), std::move(output.indices));
 }
