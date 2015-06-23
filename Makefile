@@ -193,3 +193,6 @@ ifndef ANDROID_NDK
 	$(error ANDROID_NDK is undefined)
 endif
 
+format:
+	clang-format -i `git diff --name-only -- '*.cpp' '*.h'` 
+	@echo "format done on `git diff --name-only -- '*.cpp' '*.h'`"
