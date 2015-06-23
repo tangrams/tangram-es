@@ -1,10 +1,12 @@
 #pragma once
 
 #include "flyweight/object.hpp"
+#include "core/variant.hpp"
 
 #include <vector>
 #include <string>
 #include <unordered_map>
+
 #include "glm/vec3.hpp"
 
 /* Notes on TileData implementation:
@@ -65,9 +67,8 @@ typedef std::vector<Point> Line;
 
 typedef std::vector<Line> Polygon;
 
-
-    
-typedef flyweight::object<std::string> TagKey;
+using TagKey = flyweight::object<std::string>;
+using Value = core::variant<std::string, float>;
 
 static TagKey TAG_KEY_NAME { "name" };
 static TagKey TAG_KEY_HEIGHT { "height" };
@@ -85,9 +86,34 @@ template <> struct hash<TagKey>
 };
 }
 
-struct Properties {
-    std::unordered_map<TagKey, std::string> stringProps;
-    std::unordered_map<TagKey, float> numericProps;
+typedef std::unordered_map<TagKey, Value> Properties;
+
+class Props {
+ public:
+  static const std::string& GetString(const Properties& _props, const TagKey& _key, const std::string& _fallback) {
+    auto it = _props.find(_key);
+    if(it == _props.end())
+      return _fallback;
+    
+    auto* result = core::get<0>(&it->second);
+    if (!result)
+      return _fallback;
+
+    return *result;
+  };
+
+  static float GetFloat(const Properties& _props, const TagKey& _key, float _fallback) {
+    auto it = _props.find(_key);
+    if(it == _props.end())
+      return _fallback;
+    
+    auto* result = core::get<1>(&it->second);
+
+    if (!result)
+      return _fallback;
+
+    return *result;
+  };
 };
 
 struct Feature {

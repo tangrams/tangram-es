@@ -335,7 +335,7 @@ Filter* SceneLoader::generatePredicate(YAML::Node _node, std::string _key) {
 
     if(_node.IsScalar()) {
         try {
-            return (new Equality(_key, { new NumValue(_node.as<float>(), _node.as<std::string>()) }));
+            return (new Equality(_key, {{_node.as<float>() }}));
         } catch(const BadConversion& e) {
             std::string value = _node.as<std::string>();
             if(value == "true") {
@@ -343,17 +343,17 @@ Filter* SceneLoader::generatePredicate(YAML::Node _node, std::string _key) {
             } else if(value == "false") {
                 return (new Existence(_key, false));
             } else {
-                return (new Equality(_key, {new StrValue(value)}));
+                return (new Equality(_key, {{ value }}));
             }
         }
     } else if(_node.IsSequence()) {
         ValueList values;
         for(YAML::const_iterator valItr = _node.begin(); valItr != _node.end(); ++valItr) {
             try {
-                values.emplace_back(new NumValue(valItr->as<float>(), valItr->as<std::string>()));
+                values.emplace_back(valItr->as<float>());
             } catch(const BadConversion& e) {
                 std::string value = valItr->as<std::string>();
-                values.emplace_back(new StrValue(value));
+                values.emplace_back(value);
             }
         }
         return (new Equality(_key, std::move(values)));

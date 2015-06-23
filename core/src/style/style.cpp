@@ -65,7 +65,7 @@ void Style::addData(TileData& _data, MapTile& _tile, const MapProjection& _mapPr
              *     NOTE: for the time being use layerName as ID for cache
              */
 
-            feature.props.numericProps.emplace("zoom", _tile.getID().z);
+            feature.props.emplace(TAG_KEY_ZOOM, _tile.getID().z);
 
             switch (feature.geometryType) {
                 case GeometryType::POINTS:

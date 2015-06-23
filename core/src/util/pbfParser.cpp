@@ -108,11 +108,11 @@ void PbfParser::extractFeature(protobuf::message& _featureIn, Feature& _out, con
                         if(key.compare("height") == 0 || key.compare("min_height") == 0) {
                             numVal *= _tile.getInverseScale();
                         }
-                        _out.props.numericProps.emplace(key, numVal);
+                        _out.props.emplace(key, numVal);
                         
                     } else {
                         
-                        _out.props.stringProps.emplace(key, strVal);
+                        _out.props.emplace(key, strVal);
                         
                     }
                 }
