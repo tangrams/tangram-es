@@ -20,32 +20,42 @@ enum class JoinTypes {
 struct PolyLineOptions {
     CapTypes cap;
     JoinTypes join;
-    float halfWidth;
     
-    PolyLineOptions() : cap(CapTypes::BUTT), join(JoinTypes::MITER), halfWidth(0.02f) {};
-    PolyLineOptions(CapTypes _c, JoinTypes _j, float _hw) : cap(_c), join(_j), halfWidth(_hw) {};
+    PolyLineOptions() : cap(CapTypes::BUTT), join(JoinTypes::MITER) {};
+    PolyLineOptions(CapTypes _c, JoinTypes _j) : cap(_c), join(_j) {};
 };
+
+typedef std::function<void(const glm::vec3& coord, const glm::vec3& normal, const glm::vec2& uv)> PolygonVertexFn;
+
+typedef std::function<void(size_t reserve)> SizeHintFn;
 
 struct PolygonOutput {
-    std::vector<glm::vec3>& points; // tesselated output coordinates are added to this vector
     std::vector<int>& indices; // indices for drawing the polyon as triangles are added to this vector
-    std::vector<glm::vec3>& normals; // normal vectors for each output coordinate are added to this vector
-    std::vector<glm::vec2>& texcoords; // if not null, 2D texture coordinates for each output coordinate are added to this vector
+    PolygonVertexFn addVertex;
+    SizeHintFn sizeHint;
+    size_t numVertices = 0;
+    PolygonOutput(std::vector<int>& indices, PolygonVertexFn addVertex, SizeHintFn sizeHint = SizeHintFn())
+      : indices(indices),
+        addVertex(addVertex),
+        sizeHint(sizeHint){}
 };
 
+// coord  tesselated output coordinate
+// normal extrusion vector of the output coordinate
+// uv     texture coordinate of the output coordinate
+typedef std::function<void(const glm::vec3& coord, const glm::vec2& normal, const glm::vec2& uv)> PolyLineVertexFn;
+
 struct PolyLineOutput {
-    std::vector<glm::vec3>& points; // tesselated output coordinates are added to this vector
     std::vector<int>& indices; // indices for drawing the polyline as triangles are added to this vector
-    std::vector<glm::vec2>& scalingVecs; // if not null, 2D vectors for scaling the polyline are added to this vector
-    std::vector<glm::vec2>& texcoords; // if not null, 2D texture coordinates for each output coordinate are added to this vector
+    PolyLineVertexFn addVertex;
+    size_t numVertices = 0;
+
+    PolyLineOutput(std::vector<int>& indices, PolyLineVertexFn addVertex) : indices(indices), addVertex(addVertex){}
 };
 
 class Builders {
     
 public:
-    
-    static std::vector<glm::vec2> NO_TEXCOORDS;
-    static std::vector<glm::vec2> NO_SCALING_VECS;
     
     /* Build a tesselated polygon
      * @_polygon input coordinates describing the polygon

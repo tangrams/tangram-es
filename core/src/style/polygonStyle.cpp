@@ -59,35 +59,30 @@ void PolygonStyle::buildPoint(Point& _point, void* _styleParam, Properties& _pro
 void PolygonStyle::buildLine(Line& _line, void* _styleParam, Properties& _props, VboMesh& _mesh) const {
     std::vector<PosNormColVertex> vertices;
     std::vector<int> indices;
-    std::vector<glm::vec3> points;
-    std::vector<glm::vec2> texcoords;
 
-    PolyLineOutput output = { points, indices, Builders::NO_SCALING_VECS, texcoords };
+    PolyLineOutput output = {
+      indices,
+      [&](const glm::vec3& coord, const glm::vec2& normal, const glm::vec2& uv) {
+        float halfWidth =  0.2f;
+        GLuint abgr = 0xff969696; // Default road color
 
-    GLuint abgr = 0xff969696; // Default road color
+        glm::vec3 point( coord.x + normal.x * halfWidth, coord.y + normal.y * halfWidth, coord.z);
+        vertices.push_back({ point, glm::vec3(0.0f, 0.0f, 1.0f), uv, abgr, 0.0f });
+      }
+    };
 
     Builders::buildPolyLine(_line, PolyLineOptions(), output);
 
-    for (size_t i = 0; i < points.size(); i++) {
-        vertices.push_back({ points[i], glm::vec3(0.0f, 0.0f, 1.0f), texcoords[i], abgr, 0.0f });
-    }
-
     auto& mesh = static_cast<PolygonStyle::Mesh&>(_mesh);
-    mesh.addVertices(std::move(vertices),std::move(indices));
+    mesh.addVertices(std::move(vertices), std::move(indices));
 }
 
 void PolygonStyle::buildPolygon(Polygon& _polygon, void* _styleParam, Properties& _props, VboMesh& _mesh) const {
 
     std::vector<PosNormColVertex> vertices;
     std::vector<int> indices;
-    std::vector<glm::vec3> points;
-    std::vector<glm::vec3> normals;
-    std::vector<glm::vec2> texcoords;
-
-    PolygonOutput output = { points, indices, normals, texcoords };
 
     StyleParams* params = static_cast<StyleParams*>(_styleParam);
-
     GLuint abgr = params->color;
     GLfloat layer = params->order;
 
@@ -97,6 +92,14 @@ void PolygonStyle::buildPolygon(Polygon& _polygon, void* _styleParam, Properties
 
     float height = _props.numericProps["height"]; // Inits to zero if not present in data
     float minHeight = _props.numericProps["min_height"]; // Inits to zero if not present in data
+
+    PolygonOutput output = {
+      indices,
+      [&](const glm::vec3& coord, const glm::vec3& normal, const glm::vec2& uv){
+        vertices.push_back({ coord, normal, uv, abgr, layer });
+      },
+      [&](size_t sizeHint){ vertices.reserve(sizeHint); }
+    };
 
     if (minHeight != height) {
         for (auto& line : _polygon) {
@@ -108,10 +111,6 @@ void PolygonStyle::buildPolygon(Polygon& _polygon, void* _styleParam, Properties
     }
 
     Builders::buildPolygon(_polygon, output);
-
-    for (size_t i = 0; i < points.size(); i++) {
-        vertices.push_back({ points[i], normals[i], texcoords[i], abgr, layer });
-    }
 
     // Outlines for water polygons
     /*
