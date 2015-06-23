@@ -96,10 +96,10 @@ void TextStyle::buildLine(Line& _line, void* _styleParams, Properties& _props, V
         ftContext->setSignedDistanceField(blurSpread);
     }
 
-    int lineLength = _line.size();
-    int skipOffset = floor(lineLength / 2);
-    float minLength = 0.15; // default, probably need some more thoughts
-
+    // int lineLength = _line.size();
+    // int skipOffset = floor(lineLength / 2);
+    // float minLength = 0.15; // default, probably need some more thoughts
+    
     // if (_layer == "roads") {
     //     for (auto prop : _props.stringProps) {
     //         if (prop.first.compare("name") == 0) {
