@@ -18,39 +18,32 @@ Feature civic, bmw1, bike;
 
 void init() {
 
-    civic.props.stringProps.clear();
-    civic.props.numericProps.clear();
-    civic.props.stringProps["name"] = "civic";
-    civic.props.stringProps["brand"] = "honda";
-    civic.props.numericProps["wheel"] = 4;
-    civic.props.stringProps["drive"] = "fwd";
-    civic.props.stringProps["type"] = "car";
+    civic.props.clear();
+    civic.props.emplace("name", "civic");
+    civic.props.emplace("brand", "honda");
+    civic.props.emplace("wheel", 4);
+    civic.props.emplace("drive", "fwd");
+    civic.props.emplace("type", "car");
 
-    bmw1.props.stringProps.clear();
-    bmw1.props.numericProps.clear();
-    bmw1.props.stringProps["name"] = "bmw320i";
-    bmw1.props.stringProps["brand"] = "bmw";
-    bmw1.props.stringProps["check"] = "false";
-    bmw1.props.stringProps["series"] = "3";
-    bmw1.props.numericProps["wheel"] = 4;
-    bmw1.props.stringProps["drive"] = "all";
-    bmw1.props.stringProps["type"] = "car";
+    bmw1.props.clear();
+    bmw1.props.emplace("name", "bmw320i");
+    bmw1.props.emplace("brand", "bmw");
+    bmw1.props.emplace("check", "false");
+    bmw1.props.emplace("series", "3");
+    bmw1.props.emplace("wheel", 4);
+    bmw1.props.emplace("drive", "all");
+    bmw1.props.emplace("type", "car");
 
-    bike.props.stringProps.clear();
-    bike.props.numericProps.clear();
-    bike.props.stringProps["name"] = "cb1100";
-    bike.props.stringProps["brand"] = "honda";
-    bike.props.numericProps["wheel"] = 2;
-    bike.props.stringProps["type"] = "bike";
-    bike.props.stringProps["series"] = "CB";
-    bike.props.stringProps["check"] = "available";
+    bike.props.clear();
+    bike.props.emplace("name", "cb1100");
+    bike.props.emplace("brand", "honda");
+    bike.props.emplace("wheel", 2);
+    bike.props.emplace("type", "bike");
+    bike.props.emplace("series", "CB");
+    bike.props.emplace("check", "available");
 
-    for (auto& it : ctx) {
-        delete it.second;
-        it.second = nullptr;
-    }
-    ctx["$vroom"] = new NumValue(1);
-    ctx["$zooooom"] = new StrValue("false");
+    ctx.emplace("$vroom", 1.0f);
+    ctx.emplace("$zooooom", "false");
 }
 
 
