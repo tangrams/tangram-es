@@ -34,15 +34,19 @@ void SpriteStyle::constructShaderProgram() {
     m_texture = std::shared_ptr<Texture>(new Texture("mapzen-logo.png"));
 }
 
-void SpriteStyle::buildPoint(Point& _point, StyleParams& _params, Properties& _props, VboMesh& _mesh) const {
+void* SpriteStyle::parseStyleParams(const std::string& _layerNameID, const StyleParamMap& _styleParamMap) {
+    return nullptr;
+}
+
+void SpriteStyle::buildPoint(Point& _point, void* _styleParam, Properties& _props, VboMesh& _mesh) const {
 
 }
 
-void SpriteStyle::buildLine(Line& _line, StyleParams& _params, Properties& _props, VboMesh& _mesh) const {
+void SpriteStyle::buildLine(Line& _line, void* _styleParam, Properties& _props, VboMesh& _mesh) const {
 
 }
 
-void SpriteStyle::buildPolygon(Polygon& _polygon, StyleParams& _params, Properties& _props, VboMesh& _mesh) const {
+void SpriteStyle::buildPolygon(Polygon& _polygon, void* _styleParam, Properties& _props, VboMesh& _mesh) const {
 
 }
 
@@ -52,7 +56,7 @@ void SpriteStyle::onBeginDrawFrame(const std::shared_ptr<View>& _view, const std
     m_shaderProgram->setUniformi("u_tex", 0);
 }
 
-void SpriteStyle::addData(TileData& _data, MapTile& _tile, const MapProjection& _mapProjection) const {
+void SpriteStyle::addData(TileData& _data, MapTile& _tile, const MapProjection& _mapProjection) {
 
     Mesh* mesh = new Mesh(m_vertexLayout, m_drawMode);
 

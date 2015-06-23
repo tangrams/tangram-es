@@ -26,36 +26,40 @@ void TextStyle::constructShaderProgram() {
 
     std::string vertShaderSrcStr = stringFromResource("text.vs");
     std::string fragShaderSrcStr = stringFromResource(frag.c_str());
-    
+
     m_shaderProgram = std::make_shared<ShaderProgram>();
     m_shaderProgram->setSourceStrings(fragShaderSrcStr, vertShaderSrcStr);
-    
+
     std::string defines;
-    
+
     if (m_sdf && m_sdfMultisampling) {
         defines += "#define TANGRAM_SDF_MULTISAMPLING\n";
     }
-    
+
     m_shaderProgram->addSourceBlock("defines", defines);
 }
 
-void TextStyle::buildPoint(Point& _point, StyleParams& _params, Properties& _props, VboMesh& _mesh) const {
+void* TextStyle::parseStyleParams(const std::string& _layerNameID, const StyleParamMap& _styleParamMap) {
+    return nullptr;
+}
+
+void TextStyle::buildPoint(Point& _point, void* _styleParams, Properties& _props, VboMesh& _mesh) const {
     std::vector<PosTexID> vertices;
     auto labelContainer = LabelContainer::GetInstance();
     auto ftContext = labelContainer->getFontContext();
     auto textBuffer = ftContext->getCurrentBuffer();
-    
+
     if (!textBuffer) {
         return;
     }
-    
+
     ftContext->setFont(m_fontName, m_fontSize * m_pixelScale);
-    
+
     if (m_sdf) {
         float blurSpread = 2.5;
         ftContext->setSignedDistanceField(blurSpread);
     }
-    
+
     // if (_layer == "pois") {
     //     for (auto prop : _props.stringProps) {
     //         if (prop.first == "name") {
@@ -63,11 +67,11 @@ void TextStyle::buildPoint(Point& _point, StyleParams& _params, Properties& _pro
     //         }
     //     }
     // }
-    
+
     ftContext->clearState();
-    
+
     vertices.resize(textBuffer->getVerticesSize());
-    
+
     if (textBuffer->getVertices(reinterpret_cast<float*>(vertices.data()))) {
         auto& mesh = static_cast<TextStyle::Mesh&>(_mesh);
         mesh.addVertices(std::move(vertices), {});
@@ -75,7 +79,7 @@ void TextStyle::buildPoint(Point& _point, StyleParams& _params, Properties& _pro
 
 }
 
-void TextStyle::buildLine(Line& _line, StyleParams& _params, Properties& _props, VboMesh& _mesh) const {
+void TextStyle::buildLine(Line& _line, void* _styleParams, Properties& _props, VboMesh& _mesh) const {
     std::vector<PosTexID> vertices;
     auto labelContainer = LabelContainer::GetInstance();
     auto ftContext = labelContainer->getFontContext();
@@ -95,18 +99,18 @@ void TextStyle::buildLine(Line& _line, StyleParams& _params, Properties& _props,
     int lineLength = _line.size();
     int skipOffset = floor(lineLength / 2);
     float minLength = 0.15; // default, probably need some more thoughts
-    
+
     // if (_layer == "roads") {
     //     for (auto prop : _props.stringProps) {
     //         if (prop.first.compare("name") == 0) {
-                
+
     //             for (size_t i = 0; i < _line.size() - 1; i += skipOffset) {
     //                 glm::vec2 p1 = glm::vec2(_line[i]);
     //                 glm::vec2 p2 = glm::vec2(_line[i + 1]);
-                    
+
     //                 glm::vec2 p1p2 = p2 - p1;
     //                 float length = glm::length(p1p2);
-                    
+
     //                 if (length < minLength) {
     //                     continue;
     //                 }
@@ -119,20 +123,20 @@ void TextStyle::buildLine(Line& _line, StyleParams& _params, Properties& _props,
     // }
 
     ftContext->clearState();
-    
+
     vertices.resize(textBuffer->getVerticesSize());
-    
+
     if (textBuffer->getVertices(reinterpret_cast<float*>(vertices.data()))) {
         auto& mesh = static_cast<TextStyle::Mesh&>(_mesh);
         mesh.addVertices(std::move(vertices), {});
     }
 }
 
-void TextStyle::buildPolygon(Polygon& _polygon, StyleParams& _params, Properties& _props, VboMesh& _mesh) const {
-    
+void TextStyle::buildPolygon(Polygon& _polygon, void* _styleParams, Properties& _props, VboMesh& _mesh) const {
+
     glm::vec3 centroid;
     int n = 0;
-    
+
     for (auto& l : _polygon) {
         for (auto& p : l) {
             centroid.x += p.x;
@@ -140,20 +144,20 @@ void TextStyle::buildPolygon(Polygon& _polygon, StyleParams& _params, Properties
             n++;
         }
     }
-    
+
     centroid /= n;
-    
+
     std::vector<PosTexID> vertices;
     auto labelContainer = LabelContainer::GetInstance();
     auto ftContext = labelContainer->getFontContext();
     auto textBuffer = ftContext->getCurrentBuffer();
-    
+
     if (!textBuffer) {
         return;
     }
-    
+
     ftContext->setFont(m_fontName, m_fontSize * m_pixelScale);
-    
+
     if (m_sdf) {
         float blurSpread = 2.5;
         ftContext->setSignedDistanceField(blurSpread);
@@ -164,11 +168,11 @@ void TextStyle::buildPolygon(Polygon& _polygon, StyleParams& _params, Properties
             labelContainer->addLabel(*TextStyle::s_processedTile, m_name, { glm::vec2(centroid), glm::vec2(centroid) }, prop.second, Label::Type::POINT);
         }
     }
-    
+
     ftContext->clearState();
-    
+
     vertices.resize(textBuffer->getVerticesSize());
-    
+
     if (textBuffer->getVertices(reinterpret_cast<float*>(vertices.data()))) {
         auto& mesh = static_cast<TextStyle::Mesh&>(_mesh);
         mesh.addVertices(std::move(vertices), {});
@@ -226,11 +230,11 @@ void TextStyle::onBeginDrawFrame(const std::shared_ptr<View>& _view, const std::
     atlas->bind(1);
     m_shaderProgram->setUniformi("u_tex", 1);
     m_shaderProgram->setUniformf("u_resolution", _view->getWidth(), _view->getHeight());
-    
+
     float r = (m_color >> 16 & 0xff) / 255.0;
     float g = (m_color >> 8  & 0xff) / 255.0;
     float b = (m_color       & 0xff) / 255.0;
-    
+
     m_shaderProgram->setUniformf("u_color", r, g, b);
     m_shaderProgram->setUniformMatrix4f("u_proj", projectionMatrix);
 
