@@ -17,6 +17,19 @@ typedef long long jlong;
 void setupJniEnv(JNIEnv* _jniEnv, jobject _tangramInstance, jobject _assetManager);
 void onUrlSuccess(JNIEnv* jniEnv, jbyteArray jFetchedBytes, jlong jCallbackPtr);
 void onUrlFailure(JNIEnv* jniEnv, jlong jCallbackPtr);
+
+// FIXME - this just here for a borken NDK
+#include <sstream>
+namespace std {
+template <typename T>
+std::string to_string(T value)
+{
+    std::ostringstream os ;
+    os << value ;
+    return os.str() ;
+}
+}
+
 #endif
 
 
