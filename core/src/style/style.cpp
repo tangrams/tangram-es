@@ -10,9 +10,9 @@ Style::~Style() {
 }
 
 uint32_t Style::parseColorProp(const std::string& _colorPropStr) {
-    
+
     uint32_t color = 0;
-    
+
     if (_colorPropStr.find(',') != std::string::npos) { // try to parse as comma-separated rgba components
         std::istringstream stream(_colorPropStr);
         std::string token;
@@ -91,14 +91,14 @@ void Style::addData(TileData& _data, MapTile& _tile, const MapProjection& _mapPr
             }
         }
     }
-    
+
     onEndBuildTile(_tile, mesh);
 
     if (mesh->numVertices() == 0) {
         mesh.reset();
     } else {
         mesh->compileVertexBuffer();
-        
+
         _tile.addGeometry(*this, mesh);
     }
 }
@@ -134,10 +134,6 @@ void Style::setLightingType(LightingType _lType){
         m_shaderProgram->removeSourceBlock("defines", "#define TANGRAM_LIGHTING_FRAGMENT\n");
     }
 
-}
-
-void Style::onBeginDrawTile(const std::shared_ptr<MapTile>& _tile) {
-    // No-op by default
 }
 
 void Style::onBeginBuildTile(MapTile& _tile) const {

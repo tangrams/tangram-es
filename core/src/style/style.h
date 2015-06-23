@@ -108,9 +108,6 @@ public:
     /* Perform any setup needed before drawing each frame */
     virtual void onBeginDrawFrame(const std::shared_ptr<View>& _view, const std::shared_ptr<Scene>& _scene);
 
-    /* Perform any setup needed before drawing each tile */
-    virtual void onBeginDrawTile(const std::shared_ptr<MapTile>& _tile);
-
     /* Perform any unsetup needed after drawing each frame */
     virtual void onEndDrawFrame() {}
 

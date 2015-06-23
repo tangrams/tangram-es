@@ -184,7 +184,6 @@ namespace Tangram {
                 const std::shared_ptr<MapTile>& tile = mapIDandTile.second;
                 if (tile->hasGeometry()) {
                     // Draw tile!
-                    style->onBeginDrawTile(tile);
                     tile->draw(*style, *m_view);
                 }
             }
