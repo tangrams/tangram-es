@@ -93,7 +93,6 @@ namespace Tangram {
         ValueList values;
 
         Equality(const std::string& k, const ValueList v) : Predicate(k), values(std::move(v)) {}
-        //~Equality() { for (auto* v : values) { delete v; } }
 
         virtual bool eval(const Feature& feat, const Context& ctx) const override {
             auto ctxIt = ctx.find(key);
