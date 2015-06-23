@@ -167,7 +167,7 @@ void TextStyle::buildPolygon(Polygon& _polygon, void* _styleParams, Properties& 
         if (prop.first == TAG_KEY_NAME) {
             labelContainer->addLabel(*TextStyle::s_processedTile, m_name,
                                      { glm::vec2(centroid), glm::vec2(centroid) },
-                                     core::get<0>(prop.second), Label::Type::POINT);
+                                     prop.second.get<std::string>(), Label::Type::POINT);
         }
     }
 

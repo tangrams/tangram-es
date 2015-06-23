@@ -1,7 +1,7 @@
 #pragma once
 
 #include "flyweight/object.hpp"
-#include "core/variant.hpp"
+#include "variant/variant.hpp"
 
 #include <vector>
 #include <string>
@@ -68,7 +68,8 @@ typedef std::vector<Point> Line;
 typedef std::vector<Line> Polygon;
 
 using TagKey = flyweight::object<std::string>;
-using Value = core::variant<std::string, float>;
+
+using Value = mapbox::util::variant<std::string, float>;
 
 static TagKey TAG_KEY_NAME { "name" };
 static TagKey TAG_KEY_HEIGHT { "height" };
@@ -94,26 +95,23 @@ class Props {
     auto it = _props.find(_key);
     if(it == _props.end())
       return _fallback;
-    
-    auto* result = core::get<0>(&it->second);
-    if (!result)
+
+    if (!it->second.is<std::string>())
       return _fallback;
 
-    return *result;
-  };
+    return it->second.get<std::string>();
+  }
 
   static float GetFloat(const Properties& _props, const TagKey& _key, float _fallback) {
     auto it = _props.find(_key);
     if(it == _props.end())
       return _fallback;
-    
-    auto* result = core::get<1>(&it->second);
 
-    if (!result)
+    if (!it->second.is<float>())
       return _fallback;
 
-    return *result;
-  };
+    return it->second.get<float>();
+  }
 };
 
 struct Feature {

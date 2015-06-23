@@ -15,3 +15,6 @@
 	url = https://github.com/blair1618/yaml-cpp.git
 	branch = no-boost
 	ignore = untracked
+[submodule "core/include/variant"]
+        path = core/include/variant
+        url = https://github.com/mapbox/variant.git
