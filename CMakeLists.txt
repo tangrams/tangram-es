@@ -8,11 +8,6 @@ set(CMAKE_ARCHIVE_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/lib)
 set(CMAKE_LIBRARY_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/lib)
 set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin)
 
-if(UNIT_TESTS) 
-    include(${PROJECT_SOURCE_DIR}/toolchains/unitTests.cmake)
-    return()
-endif()
-
 # platform lookup
 set(SUPPORTED_TARGETS darwin ios android raspberrypi linux)
 
@@ -36,6 +31,12 @@ list(FIND SUPPORTED_TARGETS ${varplatform} target_in_list)
 
 if(target_in_list EQUAL -1)
     message(SEND_ERROR "${varplatform} not in supported targets: ${SUPPORTED_TARGETS}")
+    return()
+endif()
+
+if(UNIT_TESTS) 
+    include(${PROJECT_SOURCE_DIR}/toolchains/unitTests.cmake)
+#   include(${PROJECT_SOURCE_DIR}/toolchains/linux.tests.cmake)
     return()
 endif()
 
