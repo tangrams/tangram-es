@@ -30,13 +30,12 @@ typedef std::function<void(const glm::vec3& coord, const glm::vec3& normal, cons
 typedef std::function<void(size_t reserve)> SizeHintFn;
 
 struct PolygonOutput {
-    std::vector<int>& indices; // indices for drawing the polyon as triangles are added to this vector
+    std::vector<int> indices; // indices for drawing the polyon as triangles are added to this vector
     PolygonVertexFn addVertex;
     SizeHintFn sizeHint;
     size_t numVertices = 0;
-    PolygonOutput(std::vector<int>& indices, PolygonVertexFn addVertex, SizeHintFn sizeHint = SizeHintFn())
-      : indices(indices),
-        addVertex(addVertex),
+    PolygonOutput(PolygonVertexFn addVertex, SizeHintFn sizeHint = SizeHintFn())
+      : addVertex(addVertex),
         sizeHint(sizeHint){}
 };
 
@@ -46,11 +45,10 @@ struct PolygonOutput {
 typedef std::function<void(const glm::vec3& coord, const glm::vec2& normal, const glm::vec2& uv)> PolyLineVertexFn;
 
 struct PolyLineOutput {
-    std::vector<int>& indices; // indices for drawing the polyline as triangles are added to this vector
+    std::vector<int> indices; // indices for drawing the polyline as triangles are added to this vector
     PolyLineVertexFn addVertex;
     size_t numVertices = 0;
-
-    PolyLineOutput(std::vector<int>& indices, PolyLineVertexFn addVertex) : indices(indices), addVertex(addVertex){}
+    PolyLineOutput(PolyLineVertexFn addVertex) : addVertex(addVertex){}
 };
 
 class Builders {
