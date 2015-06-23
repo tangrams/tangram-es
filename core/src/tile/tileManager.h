@@ -96,13 +96,13 @@ private:
     
     /*
      * Checks and updates m_tileSet with proxy tiles for every new visible tile
-     *  @_tileID: TileID of the new visible tile for which proxies needs to be added
+     *  @_tile: MapTile, the new visible tile for which proxies needs to be added
      */
-    void updateProxyTiles(const TileID& _tileID);
+    void updateProxyTiles(MapTile& _tile);
     
     /*
-     *  Once a visible tile finishes loaded and is added to m_tileSet, all its proxy(ies) MapTiles are removed
+     *  Once a visible tile finishes loading and is added to m_tileSet, all its proxy(ies) MapTiles are removed
      */
-    void cleanProxyTiles(const TileID& _tileID);
+    void cleanProxyTiles(MapTile& _tile);
 
 };

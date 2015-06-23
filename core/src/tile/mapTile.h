@@ -88,6 +88,28 @@ public:
     void decProxyCounter() { m_proxyCounter = m_proxyCounter > 0 ? m_proxyCounter - 1 : 0; }
     void resetProxyCounter() { m_proxyCounter = 0; }
 
+    enum ProxyID {
+      None = 0,
+      Child1 = 1 << 0,
+      Child2 = 1 << 1,
+      Child3 = 1 << 2,
+      Child4 = 1 << 3,
+      Parent = 1 << 4,
+      Parent2 = 1 << 5,
+    };
+
+    bool hasProxy(ProxyID id) { return (m_proxies & id) != 0; }
+
+    void clearProxies() { m_proxies = 0; }
+
+    bool setProxy(ProxyID id) {
+      if ((m_proxies & id) == 0) {
+        m_proxies |= id;
+        return true;
+      }
+      return false;
+    }
+
 private:
 
     TileID m_id;
@@ -96,7 +118,9 @@ private:
      * A Counter for number of tiles this tile acts a proxy for
      */
     int m_proxyCounter = 0;
-    
+
+    uint8_t m_proxies = 0;
+
     const MapProjection* m_projection = nullptr;
     
     float m_scale = 1;

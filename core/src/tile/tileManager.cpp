@@ -82,12 +82,12 @@ void TileManager::updateTileSet() {
             auto tile = worker->getTileResult();
             const TileID& id = tile->getID();
             logMsg("Tile [%d, %d, %d] finished loading\n", id.z, id.x, id.y);
+            if (m_tileSet[id])
+                cleanProxyTiles(*m_tileSet[id]);
+
             std::swap(m_tileSet[id], tile);
-            cleanProxyTiles(id);
             m_tileSetChanged = true;
-            
         }
-        
     }
     
     if (! (m_view->changedOnLastUpdate() || m_tileSetChanged) ) {
@@ -186,20 +186,21 @@ void TileManager::addTile(const TileID& _tileID) {
     m_loadQueue.push_back(_tileID);
 
     std::shared_ptr<MapTile> tile(new MapTile(_tileID, m_view->getMapProjection()));
-    m_tileSet[_tileID] = std::move(tile);
-
     //Add Proxy if corresponding proxy MapTile ready
-    updateProxyTiles(_tileID);
+    updateProxyTiles(*tile);
+
+    m_tileSet[_tileID] = std::move(tile);
 }
 
 void TileManager::removeTile(std::map< TileID, std::shared_ptr<MapTile> >::iterator& _tileIter) {
     
     const TileID& id = _tileIter->first;
+    MapTile& tile = *_tileIter->second;
 
     // Make sure to cancel the network request associated with this tile, then if already fetched remove it from the proocessing queue and the worker managing this tile, if applicable
     for(auto& dataSource : m_dataSources) {
+        cleanProxyTiles(tile);
         dataSource->cancelLoadingTile(id);
-        cleanProxyTiles(id);
     }
 
     // Remove tile from queue, if present
@@ -209,8 +210,8 @@ void TileManager::removeTile(std::map< TileID, std::shared_ptr<MapTile> >::itera
                                         });
 
     if (found != m_queuedTiles.end()) {
+        cleanProxyTiles(tile);
         m_queuedTiles.erase(found);
-        cleanProxyTiles(id);
     }
     
     // If a worker is processing this tile, abort it
@@ -226,42 +227,52 @@ void TileManager::removeTile(std::map< TileID, std::shared_ptr<MapTile> >::itera
     
 }
 
-void TileManager::updateProxyTiles(const TileID& _tileID) {
+void TileManager::updateProxyTiles(MapTile& _tile) {
+    const TileID& _tileID = _tile.getID();
 
     const auto& parentID = _tileID.getParent();
     const auto& parentTileIter = m_tileSet.find(parentID);
     if (parentTileIter != m_tileSet.end()) {
-        parentTileIter->second->incProxyCounter();
+        auto& parent = parentTileIter->second;
+        if (_tile.setProxy(MapTile::Parent))
+            parent->incProxyCounter();
         return;
     }
 
     if (m_view->s_maxZoom > _tileID.z) {
-      for(int i = 0; i < 4; i++) {
-        const auto& childID = _tileID.getChild(i);
-        const auto& childTileIter = m_tileSet.find(childID);
-        if(childTileIter != m_tileSet.end()) {
-          childTileIter->second->incProxyCounter();
+        for(int i = 0; i < 4; i++) {
+            const auto& childID = _tileID.getChild(i);
+            const auto& childTileIter = m_tileSet.find(childID);
+            if(childTileIter != m_tileSet.end()) {
+                if (_tile.setProxy((MapTile::ProxyID)(1 << i)))
+                    childTileIter->second->incProxyCounter();
+            }
         }
-      }
     }
-
 }
 
-void TileManager::cleanProxyTiles(const TileID& _tileID) {
+void TileManager::cleanProxyTiles(MapTile& _tile) {
+    const TileID& _tileID = _tile.getID();
+
     // check if parent proxy is present
-    const auto& parentID = _tileID.getParent();
-    const auto& parentTileIter = m_tileSet.find(parentID);
-    if (parentTileIter != m_tileSet.end()) {
-        parentTileIter->second->decProxyCounter();
+    if (_tile.hasProxy(MapTile::Parent)) {
+        const auto& parentID = _tileID.getParent();
+        const auto& parentTileIter = m_tileSet.find(parentID);
+        if (parentTileIter != m_tileSet.end()) {
+            parentTileIter->second->decProxyCounter();
+        }
     }
     
     // check if child proxies are present
     for(int i = 0; i < 4; i++) {
-        const auto& childID = _tileID.getChild(i);
-        const auto& childTileIter = m_tileSet.find(childID);
-        if (childTileIter != m_tileSet.end()) {
-            childTileIter->second->decProxyCounter();
+        if (_tile.hasProxy((MapTile::ProxyID)(1 << i))) {
+            const auto& childID = _tileID.getChild(i);
+            const auto& childTileIter = m_tileSet.find(childID);
+            if (childTileIter != m_tileSet.end()) {
+                childTileIter->second->decProxyCounter();
+            }
         }
     }
+    _tile.clearProxies();
 }
 
