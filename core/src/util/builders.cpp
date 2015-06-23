@@ -7,9 +7,6 @@
 
 #include <memory>
 
-std::vector<glm::vec2> Builders::NO_TEXCOORDS;
-std::vector<glm::vec2> Builders::NO_SCALING_VECS;
-
 void* alloc(void* _userData, unsigned int _size) {
     return malloc(_size);
 }
@@ -35,10 +32,10 @@ void Builders::buildPolygon(const Polygon& _polygon, PolygonOutput& _out) {
     
     TESStesselator* tesselator = tessNewTess(&allocator);
     
-    bool useTexCoords = (&_out.texcoords != &NO_TEXCOORDS);
+    bool useTexCoords = false; // FIXME (&_out.texcoords != &NO_TEXCOORDS);
     
     // get the number of vertices already added
-    int vertexDataOffset = (int)_out.points.size();
+    // int vertexDataOffset = _out.numVertices; //(int)_out.points.size();
     
     Rectangle bBox;
     
@@ -66,74 +63,69 @@ void Builders::buildPolygon(const Polygon& _polygon, PolygonOutput& _out) {
         for (int i = 0; i < numElements; i++) {
             const TESSindex* tessElement = &tessElements[i * 3];
             for (int j = 0; j < 3; j++) {
-                _out.indices.push_back(tessElement[j] + vertexDataOffset);
+                _out.indices.push_back(tessElement[j] + _out.numVertices);
             }
         }
         
         const int numVertices = tessGetVertexCount(tesselator);
         const float* tessVertices = tessGetVertices(tesselator);
-        _out.points.reserve(_out.points.size() + numVertices); // Pre-allocate vertex vector
-        _out.normals.reserve(_out.normals.size() + numVertices); // Pre-allocate normal vector
-        if (useTexCoords) {
-            _out.texcoords.reserve(_out.texcoords.size() + numVertices); // Pre-allocate texcoord vector
-        }
+
+        _out.numVertices += numVertices;
+        _out.sizeHint(_out.numVertices);
+
         for (int i = 0; i < numVertices; i++) {
+            glm::vec3 coord(tessVertices[3*i], tessVertices[3*i+1], tessVertices[3*i+2]);
+            glm::vec2 uv(0);
+
             if (useTexCoords) {
                 float u = mapValue(tessVertices[3*i], bBox.getMinX(), bBox.getMaxX(), 0., 1.);
                 float v = mapValue(tessVertices[3*i+1], bBox.getMinY(), bBox.getMaxY(), 0., 1.);
-                _out.texcoords.push_back(glm::vec2(u, v));
+                uv = glm::vec2(u, v);
             }
-            _out.points.push_back(glm::vec3(tessVertices[3*i], tessVertices[3*i+1], tessVertices[3*i+2]));
-            _out.normals.push_back(normal);
+            _out.addVertex(coord, normal, uv);
         }
     } else {
         logMsg("Tesselator cannot tesselate!!\n");
     }
-    
+
     tessDeleteTess(tesselator);
 }
 
 void Builders::buildPolygonExtrusion(const Polygon& _polygon, const float& _minHeight, PolygonOutput& _out) {
     
-    int vertexDataOffset = (int)_out.points.size();
+    int vertexDataOffset = (int)_out.numVertices;
     
     glm::vec3 upVector(0.0f, 0.0f, 1.0f);
     glm::vec3 normalVector;
     
-    bool useTexCoords = (&_out.texcoords != &NO_TEXCOORDS);
-    
     for (auto& line : _polygon) {
         
         size_t lineSize = line.size();
-        _out.points.reserve(_out.points.size() + lineSize * 4); // Pre-allocate vertex vector
-        _out.normals.reserve(_out.normals.size() + lineSize * 4); // Pre-allocate normal vector
         _out.indices.reserve(_out.indices.size() + lineSize * 6); // Pre-allocate index vector
-        if (useTexCoords) {
-            _out.texcoords.reserve(_out.texcoords.size() + lineSize * 4); // Pre-allocate texcoord vector
-        }
-        
+
+        _out.numVertices += (lineSize - 1) * 4;
+        _out.sizeHint(_out.numVertices);
+
         for (size_t i = 0; i < lineSize - 1; i++) {
             
             normalVector = glm::cross(upVector, (line[i+1] - line[i]));
             normalVector = glm::normalize(normalVector);
             
             // 1st vertex top
-            _out.points.push_back(line[i]);
-            _out.normals.push_back(normalVector);
-            
+            _out.addVertex(line[i], normalVector, glm::vec2(1.,0.));
+
             // 2nd vertex top
-            _out.points.push_back(line[i+1]);
-            _out.normals.push_back(normalVector);
-            
+            _out.addVertex(line[i+1], normalVector, glm::vec2(0.,0.));
+
             // 1st vertex bottom
-            _out.points.push_back(glm::vec3(line[i].x, line[i].y, _minHeight));
-            _out.normals.push_back(normalVector);
-            
+            _out.addVertex(glm::vec3(line[i].x, line[i].y, _minHeight),
+                           normalVector, glm::vec2(1.,1.));
+
             // 2nd vertex bottom
-            _out.points.push_back(glm::vec3(line[i+1].x, line[i+1].y, _minHeight));
-            _out.normals.push_back(normalVector);
-            
-            //Start the index from the previous state of the vertex Data
+            _out.addVertex(glm::vec3(line[i+1].x, line[i+1].y, _minHeight),
+                           normalVector, glm::vec2(0.,1.));
+
+            // Start the index from the previous state of the vertex Data
             _out.indices.push_back(vertexDataOffset);
             _out.indices.push_back(vertexDataOffset + 1);
             _out.indices.push_back(vertexDataOffset + 2);
@@ -142,15 +134,7 @@ void Builders::buildPolygonExtrusion(const Polygon& _polygon, const float& _minH
             _out.indices.push_back(vertexDataOffset + 3);
             _out.indices.push_back(vertexDataOffset + 2);
             
-            if (useTexCoords) {
-                _out.texcoords.push_back(glm::vec2(1.,0.));
-                _out.texcoords.push_back(glm::vec2(0.,0.));
-                _out.texcoords.push_back(glm::vec2(1.,1.));
-                _out.texcoords.push_back(glm::vec2(0.,1.));
-            }
-            
             vertexDataOffset += 4;
-            
         }
     }
 }
@@ -161,18 +145,9 @@ glm::vec2 perp2d(const glm::vec3& _v1, const glm::vec3& _v2 ){
 }
 
 // Helper function for polyline tesselation
-void addPolyLineVertex(const glm::vec3& _coord, const glm::vec2& _normal, const glm::vec2& _uv, float _halfWidth, PolyLineOutput _out) {
-
-    if (&_out.scalingVecs != &Builders::NO_SCALING_VECS) {
-        _out.points.push_back(_coord);
-        _out.scalingVecs.push_back(_normal);
-    } else {
-        _out.points.push_back(glm::vec3( _coord.x + _normal.x * _halfWidth, _coord.y + _normal.y * _halfWidth, _coord.z));
-    }
-
-    if(&_out.texcoords != &Builders::NO_TEXCOORDS){
-         _out.texcoords.push_back(_uv);
-    }
+inline void addPolyLineVertex(const glm::vec3& _coord, const glm::vec2& _normal, const glm::vec2& _uv, PolyLineOutput& _out) {
+  _out.numVertices++;
+  _out.addVertex(_coord, _normal, _uv);
 }
 
 // Helper function for polyline tesselation; adds indices for pairs of vertices arranged like a line strip
@@ -196,19 +171,19 @@ void indexPairs( int _nPairs, int _nVertices, std::vector<int>& _indicesOut) {
 void addFan(const glm::vec3& _pC,
             const glm::vec2& _nA, const glm::vec2& _nB, const glm::vec2& _nC,
             const glm::vec2& _uA, const glm::vec2& _uB, const glm::vec2& _uC,
-            int _numTriangles, float _halfWidth, PolyLineOutput _out) {
+            int _numTriangles, PolyLineOutput& _out) {
     
     // Find angle difference
     float cross = _nA.x * _nB.y - _nA.y * _nB.x; // z component of cross(_CA, _CB)
     float angle = atan2f(cross, glm::dot(_nA, _nB));
     
-    int startIndex = _out.points.size();
+    int startIndex = _out.numVertices;
     
     // Add center vertex
-    addPolyLineVertex(_pC, _nC, _uC, _halfWidth, _out);
+    addPolyLineVertex(_pC, _nC, _uC, _out);
     
     // Add vertex for point A
-    addPolyLineVertex(_pC, _nA, _uA, _halfWidth, _out);
+    addPolyLineVertex(_pC, _nA, _uA, _out);
     
     // Add radial vertices
     glm::vec2 radial = _nA;
@@ -216,7 +191,7 @@ void addFan(const glm::vec3& _pC,
         float frac = (i + 1)/(float)_numTriangles;
         radial = glm::rotate(_nA, angle * frac);
         glm::vec2 uv = (1.f - frac) * _uA + frac * _uB;
-        addPolyLineVertex(_pC, radial, uv, _halfWidth, _out);
+        addPolyLineVertex(_pC, radial, uv, _out);
         
         // Add indices
         _out.indices.push_back(startIndex); // center vertex
@@ -227,7 +202,7 @@ void addFan(const glm::vec3& _pC,
 }
 
 // Function to add the vertices for line caps
-void addCap(const glm::vec3& _coord, const glm::vec2& _normal, int _numCorners, bool _isBeginning, float _halfWidth, PolyLineOutput _out) {
+void addCap(const glm::vec3& _coord, const glm::vec2& _normal, int _numCorners, bool _isBeginning, PolyLineOutput& _out) {
 
     float v = _isBeginning ? 0.f : 1.f; // length-wise tex coord
     
@@ -237,10 +212,10 @@ void addCap(const glm::vec3& _coord, const glm::vec2& _normal, int _numCorners, 
     } else if (_numCorners == 2) {
         // "Square" cap needs two extra vertices
         glm::vec2 tangent(-_normal.y, _normal.x);
-        addPolyLineVertex(_coord, _normal + tangent, {0.f, v}, _halfWidth, _out);
-        addPolyLineVertex(_coord, -_normal + tangent, {0.f, v}, _halfWidth, _out);
+        addPolyLineVertex(_coord, _normal + tangent, {0.f, v}, _out);
+        addPolyLineVertex(_coord, -_normal + tangent, {0.f, v}, _out);
         if (!_isBeginning) { // At the beginning of a line we can't form triangles with previous vertices
-            indexPairs(1, _out.points.size(), _out.indices);
+            indexPairs(1, _out.numVertices, _out.indices);
         }
         return;
     }
@@ -253,7 +228,7 @@ void addCap(const glm::vec3& _coord, const glm::vec2& _normal, int _numCorners, 
         uA.x = 0.f; // To keep tex coords consistent, we must reverse these too
         uB.x = 1.f;
     }
-    addFan(_coord, nA, nB, nC, uA, uB, uC, _numCorners, _halfWidth, _out);
+    addFan(_coord, nA, nB, nC, uA, uB, uC, _numCorners, _out);
 }
 
 float valuesWithinTolerance(float _a, float _b, float _tolerance = 0.001) {
@@ -292,9 +267,9 @@ void Builders::buildPolyLine(const Line& _line, const PolyLineOptions& _options,
     
     // Process first point in line with an end cap
     normNext = glm::normalize(perp2d(coordCurr, coordNext));
-    addCap(coordCurr, normNext, cornersOnCap, true, _options.halfWidth, _out);
-    addPolyLineVertex(coordCurr, normNext, {1.0f, 0.0f}, _options.halfWidth, _out); // right corner
-    addPolyLineVertex(coordCurr, -normNext, {0.0f, 0.0f}, _options.halfWidth, _out); // left corner
+    addCap(coordCurr, normNext, cornersOnCap, true, _out);
+    addPolyLineVertex(coordCurr, normNext, {1.0f, 0.0f}, _out); // right corner
+    addPolyLineVertex(coordCurr, -normNext, {0.0f, 0.0f}, _out); // left corner
     
     // Process intermediate points
     for (int i = 1; i < lineSize - 1; i++) {
@@ -316,9 +291,9 @@ void Builders::buildPolyLine(const Line& _line, const PolyLineOptions& _options,
         if (trianglesOnJoin == 0) {
             // Join type is a simple miter
             
-            addPolyLineVertex(coordCurr, miterVec, {1.0, v}, _options.halfWidth, _out); // right corner
-            addPolyLineVertex(coordCurr, -miterVec, {0.0, v}, _options.halfWidth, _out); // left corner
-            indexPairs(1, _out.points.size(), _out.indices);
+            addPolyLineVertex(coordCurr, miterVec, {1.0, v}, _out); // right corner
+            addPolyLineVertex(coordCurr, -miterVec, {0.0, v}, _out); // left corner
+            indexPairs(1, _out.numVertices, _out.indices);
             
         } else {
             // Join type is a fan of triangles
@@ -327,25 +302,25 @@ void Builders::buildPolyLine(const Line& _line, const PolyLineOptions& _options,
             
             if (isRightTurn) {
                 
-                addPolyLineVertex(coordCurr, miterVec, {1.0f, v}, _options.halfWidth, _out); // right (inner) corner
-                addPolyLineVertex(coordCurr, -normPrev, {0.0f, v}, _options.halfWidth, _out); // left (outer) corner
-                indexPairs(1, _out.points.size(), _out.indices);
+                addPolyLineVertex(coordCurr, miterVec, {1.0f, v}, _out); // right (inner) corner
+                addPolyLineVertex(coordCurr, -normPrev, {0.0f, v}, _out); // left (outer) corner
+                indexPairs(1, _out.numVertices, _out.indices);
                 
-                addFan(coordCurr, -normPrev, -normNext, miterVec, {0.f, v}, {0.f, v}, {1.f, v}, trianglesOnJoin, _options.halfWidth, _out);
+                addFan(coordCurr, -normPrev, -normNext, miterVec, {0.f, v}, {0.f, v}, {1.f, v}, trianglesOnJoin, _out);
                 
-                addPolyLineVertex(coordCurr, miterVec, {1.0f, v}, _options.halfWidth, _out); // right (inner) corner
-                addPolyLineVertex(coordCurr, -normNext, {0.0f, v}, _options.halfWidth, _out); // left (outer) corner
+                addPolyLineVertex(coordCurr, miterVec, {1.0f, v}, _out); // right (inner) corner
+                addPolyLineVertex(coordCurr, -normNext, {0.0f, v}, _out); // left (outer) corner
                 
             } else {
                 
-                addPolyLineVertex(coordCurr, normPrev, {1.0f, v}, _options.halfWidth, _out); // right (outer) corner
-                addPolyLineVertex(coordCurr, -miterVec, {0.0f, v}, _options.halfWidth, _out); // left (inner) corner
-                indexPairs(1, _out.points.size(), _out.indices);
+                addPolyLineVertex(coordCurr, normPrev, {1.0f, v}, _out); // right (outer) corner
+                addPolyLineVertex(coordCurr, -miterVec, {0.0f, v}, _out); // left (inner) corner
+                indexPairs(1, _out.numVertices, _out.indices);
                 
-                addFan(coordCurr, normPrev, normNext, -miterVec, {1.f, v}, {1.f, v}, {0.0f, v}, trianglesOnJoin, _options.halfWidth, _out);
+                addFan(coordCurr, normPrev, normNext, -miterVec, {1.f, v}, {1.f, v}, {0.0f, v}, trianglesOnJoin, _out);
                 
-                addPolyLineVertex(coordCurr, normNext, {1.0f, v}, _options.halfWidth, _out); // right (outer) corner
-                addPolyLineVertex(coordCurr, -miterVec, {0.0f, v}, _options.halfWidth, _out); // left (inner) corner
+                addPolyLineVertex(coordCurr, normNext, {1.0f, v}, _out); // right (outer) corner
+                addPolyLineVertex(coordCurr, -miterVec, {0.0f, v}, _out); // left (inner) corner
                 
             }
             
@@ -353,10 +328,10 @@ void Builders::buildPolyLine(const Line& _line, const PolyLineOptions& _options,
     }
     
     // Process last point in line with a cap
-    addPolyLineVertex(coordNext, normNext, {1.f, 1.f}, _options.halfWidth, _out); // right corner
-    addPolyLineVertex(coordNext, -normNext, {0.f, 1.f}, _options.halfWidth, _out); // left corner
-    indexPairs(1, _out.points.size(), _out.indices);
-    addCap(coordNext, normNext, cornersOnCap , false, _options.halfWidth, _out);
+    addPolyLineVertex(coordNext, normNext, {1.f, 1.f}, _out); // right corner
+    addPolyLineVertex(coordNext, -normNext, {0.f, 1.f}, _out); // left corner
+    indexPairs(1, _out.numVertices, _out.indices);
+    addCap(coordNext, normNext, cornersOnCap , false, _out);
     
 }
 
