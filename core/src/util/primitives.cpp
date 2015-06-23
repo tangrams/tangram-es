@@ -42,6 +42,7 @@ namespace Primitives {
 
     void init(glm::vec2 _resolution) {
 
+        // lazy init
         if (!s_initialized) {
             s_shader = std::unique_ptr<ShaderProgram>(new ShaderProgram());
             s_shader->setSourceStrings(s_frag, s_vert);
@@ -62,6 +63,8 @@ namespace Primitives {
     }
 
     void saveState() {
+        
+        // save the current gl state
         glGetIntegerv(GL_ARRAY_BUFFER_BINDING, (GLint*) &s_boundBuffer);
         glGetBooleanv(GL_DEPTH_TEST, &s_depthTest);
         glBindBuffer(GL_ARRAY_BUFFER, 0);
@@ -69,17 +72,16 @@ namespace Primitives {
     }
 
     void popState() {
+        
+        // undo modification on the gl states
         glBindBuffer(GL_ARRAY_BUFFER, s_boundBuffer);
+        
         if (s_depthTest) {
             glEnable(GL_DEPTH_TEST);
         }
     }
 
     void drawLine(const glm::vec2& _origin, const glm::vec2& _destination, glm::vec2 _resolution) {
-
-        if (!Tangram::getDebugFlag(Tangram::DebugFlags::DEBUG_PRIMITIVE)) {
-            return;
-        }
 
         init(_resolution);
 
@@ -91,6 +93,8 @@ namespace Primitives {
         saveState();
 
         s_shader->use();
+        
+        // enable the layout for the line vertices
         s_layout->enable(*s_shader, 0, &verts);
 
         glDrawArrays(GL_LINES, 0, 2);
@@ -106,16 +110,14 @@ namespace Primitives {
     }
 
     void drawPoly(const glm::vec2* _polygon, size_t _n, glm::vec2 _resolution) {
-
-        if (!Tangram::getDebugFlag(Tangram::DebugFlags::DEBUG_PRIMITIVE)) {
-            return;
-        }
-
+        
         init(_resolution);
 
         saveState();
 
         s_shader->use();
+        
+        // enable the layout for the _polygon vertices
         s_layout->enable(*s_shader, 0, (void*)_polygon);
 
         glDrawArrays(GL_LINE_LOOP, 0, _n);

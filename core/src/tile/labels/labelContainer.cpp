@@ -120,7 +120,7 @@ void LabelContainer::updateOcclusions() {
 
 void LabelContainer::drawDebug() {
 
-    if (!Tangram::getDebugFlag(Tangram::DebugFlags::DEBUG_PRIMITIVE)) {
+    if (!Tangram::getDebugFlag(Tangram::DebugFlags::LABEL_BBOX)) {
         return;
     }
     

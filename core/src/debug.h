@@ -7,7 +7,7 @@ namespace Tangram {
         PROXY_COLORS,        // Applies a color change to every other zoom level of tiles to visualize proxy tile behavior
         TILE_BOUNDS,         // Draws tile boundaries
         TILE_INFOS,          // Debug tile infos
-        DEBUG_PRIMITIVE      // Debug primitives
+        LABEL_BBOX           // Debug label bounding boxes
     };
     
 }
