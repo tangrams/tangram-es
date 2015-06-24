@@ -3,11 +3,9 @@
 #include "util/vboMesh.h"
 #include <sstream>
 
-Style::Style(std::string _name, GLenum _drawMode) : m_name(_name), m_drawMode(_drawMode) {
-}
+Style::Style(std::string _name, GLenum _drawMode) : m_name(_name), m_drawMode(_drawMode) {}
 
-Style::~Style() {
-}
+Style::~Style() {}
 
 uint32_t Style::parseColorProp(const std::string& _colorPropStr) {
 
@@ -17,9 +15,7 @@ uint32_t Style::parseColorProp(const std::string& _colorPropStr) {
         std::istringstream stream(_colorPropStr);
         std::string token;
         unsigned char i = 0;
-        while (std::getline(stream, token, ',') && i < 4) {
-            color += (uint32_t(std::stod(token) * 255.)) << (8 * i++);
-        }
+        while (std::getline(stream, token, ',') && i < 4) { color += (uint32_t(std::stod(token) * 255.)) << (8 * i++); }
     } else { // parse as css color or #hex-num
         color = CSSColorParser::parse(_colorPropStr).getInt();
     }
@@ -28,20 +24,13 @@ uint32_t Style::parseColorProp(const std::string& _colorPropStr) {
 
 void Style::setMaterial(const std::shared_ptr<Material>& _material) {
 
-    if ( m_material ) {
-        m_material->removeFromProgram(m_shaderProgram);
-    }
+    if (m_material) { m_material->removeFromProgram(m_shaderProgram); }
 
     m_material = _material;
     m_material->injectOnProgram(m_shaderProgram);
-
 }
 
-void Style::addLayer(const std::pair<std::string, StyleParamMap>&& _layer) {
-
-    m_layers.push_back(std::move(_layer));
-
-}
+void Style::addLayer(const std::pair<std::string, StyleParamMap>&& _layer) { m_layers.push_back(std::move(_layer)); }
 
 void Style::addData(TileData& _data, MapTile& _tile, const MapProjection& _mapProjection) {
     onBeginBuildTile(_tile);
@@ -68,35 +57,32 @@ void Style::addData(TileData& _data, MapTile& _tile, const MapProjection& _mapPr
             feature.props.numericProps["zoom"] = _tile.getID().z;
 
             switch (feature.geometryType) {
-                case GeometryType::POINTS:
-                    // Build points
-                    for (auto& point : feature.points) {
-                        buildPoint(point, parseStyleParams(it->first, it->second), feature.props, *mesh);
-                    }
-                    break;
-                case GeometryType::LINES:
-                    // Build lines
-                    for (auto& line : feature.lines) {
-                        buildLine(line, parseStyleParams(it->first, it->second), feature.props, *mesh);
-                    }
-                    break;
-                case GeometryType::POLYGONS:
-                    // Build polygons
-                    for (auto& polygon : feature.polygons) {
-                        buildPolygon(polygon, parseStyleParams(it->first, it->second), feature.props, *mesh);
-                    }
-                    break;
-                default:
-                    break;
+            case GeometryType::points:
+                // Build points
+                for (auto& point : feature.points) {
+                    buildPoint(point, parseStyleParams(it->first, it->second), feature.props, *mesh);
+                }
+                break;
+            case GeometryType::lines:
+                // Build lines
+                for (auto& line : feature.lines) {
+                    buildLine(line, parseStyleParams(it->first, it->second), feature.props, *mesh);
+                }
+                break;
+            case GeometryType::polygons:
+                // Build polygons
+                for (auto& polygon : feature.polygons) {
+                    buildPolygon(polygon, parseStyleParams(it->first, it->second), feature.props, *mesh);
+                }
+                break;
+            default: break;
             }
         }
     }
 
     onEndBuildTile(_tile, mesh);
 
-    if (mesh->numVertices() == 0) {
-        mesh.reset();
-    } else {
+    if (mesh->numVertices() == 0) { mesh.reset(); } else {
         mesh->compileVertexBuffer();
 
         _tile.addGeometry(*this, mesh);
@@ -106,34 +92,28 @@ void Style::addData(TileData& _data, MapTile& _tile, const MapProjection& _mapPr
 void Style::onBeginDrawFrame(const std::shared_ptr<View>& _view, const std::shared_ptr<Scene>& _scene) {
 
     // Set up material
-    if (!m_material) {
-        setMaterial(std::make_shared<Material>());
-    }
+    if (!m_material) { setMaterial(std::make_shared<Material>()); }
 
     m_material->setupProgram(m_shaderProgram);
 
     // Set up lights
-    for (const auto& light : _scene->getLights()) {
-        light.second->setupProgram(_view, m_shaderProgram);
-    }
+    for (const auto& light : _scene->getLights()) { light.second->setupProgram(_view, m_shaderProgram); }
 
     m_shaderProgram->setUniformf("u_zoom", _view->getZoom());
-
 }
 
-void Style::setLightingType(LightingType _lType){
+void Style::setLightingType(LightingType _lType) {
 
-    if ( _lType == LightingType::vertex ) {
+    if (_lType == LightingType::vertex) {
         m_shaderProgram->removeSourceBlock("defines", "#define TANGRAM_LIGHTING_FRAGMENT\n");
-        m_shaderProgram->addSourceBlock(   "defines", "#define TANGRAM_LIGHTING_VERTEX\n", false);
-    } else if  (_lType == LightingType::fragment ) {
+        m_shaderProgram->addSourceBlock("defines", "#define TANGRAM_LIGHTING_VERTEX\n", false);
+    } else if (_lType == LightingType::fragment) {
         m_shaderProgram->removeSourceBlock("defines", "#define TANGRAM_LIGHTING_VERTEX\n");
-        m_shaderProgram->addSourceBlock(   "defines", "#define TANGRAM_LIGHTING_FRAGMENT\n", false);
+        m_shaderProgram->addSourceBlock("defines", "#define TANGRAM_LIGHTING_FRAGMENT\n", false);
     } else {
         m_shaderProgram->removeSourceBlock("defines", "#define TANGRAM_LIGHTING_VERTEX\n");
         m_shaderProgram->removeSourceBlock("defines", "#define TANGRAM_LIGHTING_FRAGMENT\n");
     }
-
 }
 
 void Style::onBeginBuildTile(MapTile& _tile) const {

@@ -11,15 +11,12 @@ PolylineStyle::PolylineStyle(std::string _name, GLenum _drawMode) : Style(_name,
 void PolylineStyle::constructVertexLayout() {
 
     // TODO: Ideally this would be in the same location as the struct that it basically describes
-    m_vertexLayout = std::shared_ptr<VertexLayout>(new VertexLayout({
-        {"a_position", 3, GL_FLOAT, false, 0},
-        {"a_texcoord", 2, GL_FLOAT, false, 0},
-        {"a_extrudeNormal", 2, GL_FLOAT, false, 0},
-        {"a_extrudeWidth", 1, GL_FLOAT, false, 0},
-        {"a_color", 4, GL_UNSIGNED_BYTE, true, 0},
-        {"a_layer", 1, GL_FLOAT, false, 0}
-    }));
-
+    m_vertexLayout = std::shared_ptr<VertexLayout>(new VertexLayout({{"a_position", 3, GL_FLOAT, false, 0},
+                                                                     {"a_texcoord", 2, GL_FLOAT, false, 0},
+                                                                     {"a_extrudeNormal", 2, GL_FLOAT, false, 0},
+                                                                     {"a_extrudeWidth", 1, GL_FLOAT, false, 0},
+                                                                     {"a_color", 4, GL_UNSIGNED_BYTE, true, 0},
+                                                                     {"a_layer", 1, GL_FLOAT, false, 0}}));
 }
 
 void PolylineStyle::constructShaderProgram() {
@@ -33,61 +30,57 @@ void PolylineStyle::constructShaderProgram() {
 
 void* PolylineStyle::parseStyleParams(const std::string& _layerNameID, const StyleParamMap& _styleParamMap) {
 
-    if(m_styleParamCache.find(_layerNameID) != m_styleParamCache.end()) {
+    if (m_styleParamCache.find(_layerNameID) != m_styleParamCache.end()) {
         return static_cast<void*>(m_styleParamCache.at(_layerNameID));
     }
 
     StyleParams* params = new StyleParams();
 
-    if(_styleParamMap.find("order") != _styleParamMap.end()) {
-        params->order = std::stof(_styleParamMap.at("order"));
-    }
+    if (_styleParamMap.find("order") != _styleParamMap.end()) { params->order = std::stof(_styleParamMap.at("order")); }
 
-    if(_styleParamMap.find("color") != _styleParamMap.end()) {
+    if (_styleParamMap.find("color") != _styleParamMap.end()) {
         params->color = parseColorProp(_styleParamMap.at("color"));
     }
 
-    if(_styleParamMap.find("width") != _styleParamMap.end()) {
-        params->width = std::stof(_styleParamMap.at("width"));
-    }
+    if (_styleParamMap.find("width") != _styleParamMap.end()) { params->width = std::stof(_styleParamMap.at("width")); }
 
-    if(_styleParamMap.find("cap") != _styleParamMap.end()) {
+    if (_styleParamMap.find("cap") != _styleParamMap.end()) {
         std::string capStr = _styleParamMap.at("cap");
-        if(capStr == "butt") { params->cap = CapTypes::BUTT; }
-        else if(capStr == "square") { params->cap = CapTypes::SQUARE; }
-        else if(capStr == "round") { params->cap = CapTypes::ROUND; }
+        if (capStr == "butt") { params->cap = CapTypes::BUTT; } else if (capStr == "square") {
+            params->cap = CapTypes::SQUARE;
+        } else if (capStr == "round") { params->cap = CapTypes::ROUND; }
     }
 
-    if(_styleParamMap.find("join") != _styleParamMap.end()) {
+    if (_styleParamMap.find("join") != _styleParamMap.end()) {
         std::string joinStr = _styleParamMap.at("join");
-        if(joinStr == "bevel") { params->join = JoinTypes::BEVEL; }
-        else if(joinStr == "miter") { params->join = JoinTypes::MITER; }
-        else if(joinStr == "round") { params->join = JoinTypes::ROUND; }
+        if (joinStr == "bevel") { params->join = JoinTypes::BEVEL; } else if (joinStr == "miter") {
+            params->join = JoinTypes::MITER;
+        } else if (joinStr == "round") { params->join = JoinTypes::ROUND; }
     }
 
-    if(_styleParamMap.find("outline:width") != _styleParamMap.end()) {
+    if (_styleParamMap.find("outline:width") != _styleParamMap.end()) {
         params->outlineOn = true;
         params->outlineWidth = std::stof(_styleParamMap.at("outline:width"));
     }
 
-    if(_styleParamMap.find("outline:color") != _styleParamMap.end()) {
-        params->outlineColor =  parseColorProp(_styleParamMap.at("outline:color"));
+    if (_styleParamMap.find("outline:color") != _styleParamMap.end()) {
+        params->outlineColor = parseColorProp(_styleParamMap.at("outline:color"));
     }
 
-    if(_styleParamMap.find("outline:cap") != _styleParamMap.end()) {
+    if (_styleParamMap.find("outline:cap") != _styleParamMap.end()) {
         params->outlineOn = true;
         std::string capStr = _styleParamMap.at("outline:cap");
-        if(capStr == "butt") { params->outlineCap = CapTypes::BUTT; }
-        else if(capStr == "square") { params->outlineCap = CapTypes::SQUARE; }
-        else if(capStr == "round") { params->outlineCap = CapTypes::ROUND; }
+        if (capStr == "butt") { params->outlineCap = CapTypes::BUTT; } else if (capStr == "square") {
+            params->outlineCap = CapTypes::SQUARE;
+        } else if (capStr == "round") { params->outlineCap = CapTypes::ROUND; }
     }
 
-    if( _styleParamMap.find("outline:join") != _styleParamMap.end()) {
+    if (_styleParamMap.find("outline:join") != _styleParamMap.end()) {
         params->outlineOn = true;
         std::string joinStr = _styleParamMap.at("outline:join");
-        if(joinStr == "bevel") { params->outlineJoin = JoinTypes::BEVEL; }
-        else if(joinStr == "miter") { params->outlineJoin = JoinTypes::MITER; }
-        else if(joinStr == "round") { params->outlineJoin = JoinTypes::ROUND; }
+        if (joinStr == "bevel") { params->outlineJoin = JoinTypes::BEVEL; } else if (joinStr == "miter") {
+            params->outlineJoin = JoinTypes::MITER;
+        } else if (joinStr == "round") { params->outlineJoin = JoinTypes::ROUND; }
     }
 
     {
@@ -112,7 +105,7 @@ void PolylineStyle::buildLine(Line& _line, void* _styleParam, Properties& _props
     StyleParams* params = static_cast<StyleParams*>(_styleParam);
     GLuint abgr = params->color;
 
-    if (Tangram::getDebugFlag(Tangram::DebugFlags::PROXY_COLORS)) {
+    if (Tangram::getDebugFlag(Tangram::DebugFlags::proxy_colors)) {
         abgr = abgr << (int(_props.numericProps["zoom"]) % 6);
     }
 
@@ -120,8 +113,8 @@ void PolylineStyle::buildLine(Line& _line, void* _styleParam, Properties& _props
 
     float halfWidth = params->width * .5f;
 
-    PolyLineOutput lineOutput = { points, indices, scalingVecs, texcoords };
-    PolyLineOptions lineOptions = { params->cap, params->join, halfWidth };
+    PolyLineOutput lineOutput = {points, indices, scalingVecs, texcoords};
+    PolyLineOptions lineOptions = {params->cap, params->join, halfWidth};
     Builders::buildPolyLine(_line, lineOptions, lineOutput);
 
     // populate polyline vertices
@@ -129,7 +122,7 @@ void PolylineStyle::buildLine(Line& _line, void* _styleParam, Properties& _props
         const glm::vec3& p = points[i];
         const glm::vec2& uv = texcoords[i];
         const glm::vec2& en = scalingVecs[i];
-        vertices.push_back({ p, uv, en, halfWidth, abgr, layer });
+        vertices.push_back({p, uv, en, halfWidth, abgr, layer});
     }
 
     if (params->outlineOn) {
@@ -152,10 +145,7 @@ void PolylineStyle::buildLine(Line& _line, void* _styleParam, Properties& _props
             size_t oldSize = indices.size();
             size_t offset = points.size();
             indices.reserve(2 * oldSize);
-            for(size_t i = 0; i < oldSize; i++) {
-                indices.push_back(offset + indices[i]);
-            }
-
+            for (size_t i = 0; i < oldSize; i++) { indices.push_back(offset + indices[i]); }
         }
 
         // populate outline vertices
@@ -163,9 +153,8 @@ void PolylineStyle::buildLine(Line& _line, void* _styleParam, Properties& _props
             const glm::vec3& p = points[i];
             const glm::vec2& uv = texcoords[i];
             const glm::vec2& en = scalingVecs[i];
-            vertices.push_back({ p, uv, en, halfWidth, abgrOutline, layer - 1.f });
+            vertices.push_back({p, uv, en, halfWidth, abgrOutline, layer - 1.f});
         }
-
     }
 
     auto& mesh = static_cast<PolylineStyle::Mesh&>(_mesh);

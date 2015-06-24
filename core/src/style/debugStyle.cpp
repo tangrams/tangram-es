@@ -10,16 +10,12 @@ DebugStyle::DebugStyle(std::string _name, GLenum _drawMode) : Style(_name, _draw
 
     constructVertexLayout();
     constructShaderProgram();
-
 }
 
 void DebugStyle::constructVertexLayout() {
 
-    m_vertexLayout = std::shared_ptr<VertexLayout>(new VertexLayout({
-        {"a_position", 3, GL_FLOAT, false, 0},
-        {"a_color", 4, GL_UNSIGNED_BYTE, true, 0}
-    }));
-
+    m_vertexLayout = std::shared_ptr<VertexLayout>(
+        new VertexLayout({{"a_position", 3, GL_FLOAT, false, 0}, {"a_color", 4, GL_UNSIGNED_BYTE, true, 0}}));
 }
 
 void DebugStyle::constructShaderProgram() {
@@ -29,16 +25,15 @@ void DebugStyle::constructShaderProgram() {
 
     m_shaderProgram = std::make_shared<ShaderProgram>();
     m_shaderProgram->setSourceStrings(fragShaderSrcStr, vertShaderSrcStr);
-
 }
 
 void* DebugStyle::parseStyleParams(const std::string& _layerNameID, const StyleParamMap& _styleParamMap) {
     return nullptr;
 }
 
-void DebugStyle::addData(TileData &_data, MapTile &_tile, const MapProjection &_mapProjection) {
+void DebugStyle::addData(TileData& _data, MapTile& _tile, const MapProjection& _mapProjection) {
 
-    if (Tangram::getDebugFlag(Tangram::DebugFlags::TILE_BOUNDS)) {
+    if (Tangram::getDebugFlag(Tangram::DebugFlags::tile_bounds)) {
 
         Mesh* mesh = new Mesh(m_vertexLayout, m_drawMode);
 
@@ -49,34 +44,29 @@ void DebugStyle::addData(TileData &_data, MapTile &_tile, const MapProjection &_
         GLuint abgr = 0xff0000ff;
 
         vertices.reserve(4);
-        vertices.push_back({{ -1.f, -1.f, 0.f }, abgr });
-        vertices.push_back({{  1.f, -1.f, 0.f }, abgr });
-        vertices.push_back({{  1.f,  1.f, 0.f }, abgr });
-        vertices.push_back({{ -1.f,  1.f, 0.f }, abgr });
-        
-        mesh->addVertices(std::move(vertices), { 0, 1, 2, 3, 0 });
+        vertices.push_back({{-1.f, -1.f, 0.f}, abgr});
+        vertices.push_back({{1.f, -1.f, 0.f}, abgr});
+        vertices.push_back({{1.f, 1.f, 0.f}, abgr});
+        vertices.push_back({{-1.f, 1.f, 0.f}, abgr});
+
+        mesh->addVertices(std::move(vertices), {0, 1, 2, 3, 0});
         mesh->compileVertexBuffer();
 
         _tile.addGeometry(*this, std::unique_ptr<VboMesh>(mesh));
-
     }
-
 }
 
-void DebugStyle::buildPoint(Point &_point, void* _styleParams, Properties &_props, VboMesh &_mesh) const {
+void DebugStyle::buildPoint(Point& _point, void* _styleParams, Properties& _props, VboMesh& _mesh) const {
 
     // No-op
-
 }
 
-void DebugStyle::buildLine(Line &_line, void* _styleParams, Properties &_props, VboMesh &_mesh) const {
+void DebugStyle::buildLine(Line& _line, void* _styleParams, Properties& _props, VboMesh& _mesh) const {
 
     // No-op
-
 }
 
-void DebugStyle::buildPolygon(Polygon &_polygon, void* _styleParams, Properties &_props, VboMesh &_mesh) const {
+void DebugStyle::buildPolygon(Polygon& _polygon, void* _styleParams, Properties& _props, VboMesh& _mesh) const {
 
     // No-op
-
 }
