@@ -4,8 +4,6 @@
 #include "tangram.h"
 
 PolygonStyle::PolygonStyle(std::string _name, GLenum _drawMode) : Style(_name, _drawMode) {
-    constructVertexLayout();
-    constructShaderProgram();
 }
 
 void PolygonStyle::constructVertexLayout() {
