@@ -10,107 +10,107 @@
 glm::vec2 screenSize(500.f, 500.f);
 
 TEST_CASE( "Ensure the transition from wait -> sleep when occlusion happens", "[Core][Label]" ) {
-    Label l({screenSize/2.f}, "label", 0, Label::Type::POINT);
+    Label l({screenSize/2.f}, "label", 0, Label::Type::point);
 
-    REQUIRE(l.getState() == Label::State::WAIT_OCC);
+    REQUIRE(l.getState() == Label::State::wait_occ);
     l.setOcclusion(true);
     l.update(glm::ortho(0.f, screenSize.x, screenSize.y, 0.f, -1.f, 1.f), screenSize, 0);
 
-    REQUIRE(l.getState() != Label::State::SLEEP);
-    REQUIRE(l.getState() == Label::State::WAIT_OCC);
+    REQUIRE(l.getState() != Label::State::sleep);
+    REQUIRE(l.getState() == Label::State::wait_occ);
     REQUIRE(l.canOcclude());
 
     l.setOcclusion(true);
     l.occlusionSolved();
     l.update(glm::ortho(0.f, screenSize.x, screenSize.y, 0.f, -1.f, 1.f), screenSize, 0);
 
-    REQUIRE(l.getState() == Label::State::SLEEP);
+    REQUIRE(l.getState() == Label::State::sleep);
     REQUIRE(!l.canOcclude());
 }
 
 TEST_CASE( "Ensure the transition from wait -> visible when no occlusion happens", "[Core][Label]" ) {
-    Label l({screenSize/2.f}, "label", 0, Label::Type::POINT);
+    Label l({screenSize/2.f}, "label", 0, Label::Type::point);
 
-    REQUIRE(l.getState() == Label::State::WAIT_OCC);
+    REQUIRE(l.getState() == Label::State::wait_occ);
 
     l.setOcclusion(false);
     l.update(glm::ortho(0.f, screenSize.x, screenSize.y, 0.f, -1.f, 1.f), screenSize, 0);
 
-    REQUIRE(l.getState() != Label::State::SLEEP);
-    REQUIRE(l.getState() == Label::State::WAIT_OCC);
+    REQUIRE(l.getState() != Label::State::sleep);
+    REQUIRE(l.getState() == Label::State::wait_occ);
 
     l.setOcclusion(false);
     l.occlusionSolved();
     l.update(glm::ortho(0.f, screenSize.x, screenSize.y, 0.f, -1.f, 1.f), screenSize, 0);
 
-    REQUIRE(l.getState() == Label::State::FADING_IN);
+    REQUIRE(l.getState() == Label::State::fading_in);
     REQUIRE(l.canOcclude());
 
     l.update(glm::ortho(0.f, screenSize.x, screenSize.y, 0.f, -1.f, 1.f), screenSize, 1.f);
-    REQUIRE(l.getState() == Label::State::VISIBLE);
+    REQUIRE(l.getState() == Label::State::visible);
     REQUIRE(l.canOcclude());
 }
 
 TEST_CASE( "Ensure the end state after occlusion is leep state", "[Core][Label]" ) {
-    Label l({screenSize/2.f}, "label", 0, Label::Type::POINT);
+    Label l({screenSize/2.f}, "label", 0, Label::Type::point);
 
     l.setOcclusion(false);
     l.occlusionSolved();
     l.update(glm::ortho(0.f, screenSize.x, screenSize.y, 0.f, -1.f, 1.f), screenSize, 0.f);
 
-    REQUIRE(l.getState() == Label::State::FADING_IN);
+    REQUIRE(l.getState() == Label::State::fading_in);
     REQUIRE(l.canOcclude());
 
     l.setOcclusion(true);
     l.occlusionSolved();
     l.update(glm::ortho(0.f, screenSize.x, screenSize.y, 0.f, -1.f, 1.f), screenSize, 0.f);
 
-    REQUIRE(l.getState() == Label::State::SLEEP);
+    REQUIRE(l.getState() == Label::State::sleep);
     REQUIRE(!l.canOcclude());
 }
 
 TEST_CASE( "Ensure the out of screen state transition", "[Core][Label]" ) {
-    Label l({screenSize*2.f}, "label", 0, Label::Type::POINT);
+    Label l({screenSize*2.f}, "label", 0, Label::Type::point);
 
-    REQUIRE(l.getState() == Label::State::WAIT_OCC);
+    REQUIRE(l.getState() == Label::State::wait_occ);
 
     l.update(glm::ortho(0.f, screenSize.x, screenSize.y, 0.f, -1.f, 1.f), screenSize, 0.f);
 
-    REQUIRE(l.getState() == Label::State::OUT_OF_SCREEN);
+    REQUIRE(l.getState() == Label::State::out_of_screen);
     REQUIRE(!l.canOcclude());
 
     l.update(glm::ortho(0.f, screenSize.x * 4.f, screenSize.y * 4.f, 0.f, -1.f, 1.f), screenSize, 0.f);
-    REQUIRE(l.getState() == Label::State::WAIT_OCC);
+    REQUIRE(l.getState() == Label::State::wait_occ);
     REQUIRE(l.canOcclude());
 
     l.setOcclusion(false);
     l.occlusionSolved();
     l.update(glm::ortho(0.f, screenSize.x * 4.f, screenSize.y * 4.f, 0.f, -1.f, 1.f), screenSize, 0.f);
-    REQUIRE(l.getState() != Label::State::WAIT_OCC);
+    REQUIRE(l.getState() != Label::State::wait_occ);
 
-    REQUIRE(l.getState() == Label::State::FADING_IN);
+    REQUIRE(l.getState() == Label::State::fading_in);
     REQUIRE(l.canOcclude());
 
     l.update(glm::ortho(0.f, screenSize.x * 4.f, screenSize.y * 4.f, 0.f, -1.f, 1.f), screenSize, 1.f);
 
-    REQUIRE(l.getState() == Label::State::VISIBLE);
+    REQUIRE(l.getState() == Label::State::visible);
     REQUIRE(l.canOcclude());
 }
 
 TEST_CASE( "Ensure debug labels are always visible and cannot occlude", "[Core][Label]" ) {
-    Label l({screenSize/2.f}, "label", 0, Label::Type::DEBUG);
+    Label l({screenSize/2.f}, "label", 0, Label::Type::debug);
 
-    REQUIRE(l.getState() == Label::State::VISIBLE);
+    REQUIRE(l.getState() == Label::State::visible);
     REQUIRE(!l.canOcclude());
 
     l.update(glm::ortho(0.f, screenSize.x, screenSize.y, 0.f, -1.f, 1.f), screenSize, 1.f);
 
-    REQUIRE(l.getState() == Label::State::VISIBLE);
+    REQUIRE(l.getState() == Label::State::visible);
     REQUIRE(!l.canOcclude());
 }
 
 TEST_CASE( "Linear interpolation", "[Core][Label][Fade]" ) {
-    FadeEffect fadeOut(false, FadeEffect::Interpolation::LINEAR, 1.0);
+    FadeEffect fadeOut(false, FadeEffect::Interpolation::linear, 1.0);
 
     REQUIRE(fadeOut.update(0.0) == 1.0);
     REQUIRE(fadeOut.update(0.5) == 0.5);
@@ -120,7 +120,7 @@ TEST_CASE( "Linear interpolation", "[Core][Label][Fade]" ) {
 
     REQUIRE(fadeOut.isFinished());
 
-    FadeEffect fadeIn(true, FadeEffect::Interpolation::LINEAR, 1.0);
+    FadeEffect fadeIn(true, FadeEffect::Interpolation::linear, 1.0);
 
     REQUIRE(fadeIn.update(0.0) == 0.0);
     REQUIRE(fadeIn.update(0.5) == 0.5);
@@ -132,7 +132,7 @@ TEST_CASE( "Linear interpolation", "[Core][Label][Fade]" ) {
 }
 
 TEST_CASE( "Pow interpolation", "[Core][Label][Fade]" ) {
-    FadeEffect fadeOut(false, FadeEffect::Interpolation::POW, 1.0);
+    FadeEffect fadeOut(false, FadeEffect::Interpolation::pow, 1.0);
 
     REQUIRE(fadeOut.update(0.0) == 1.0);
     REQUIRE(fadeOut.update(0.5) == 0.75);
@@ -142,7 +142,7 @@ TEST_CASE( "Pow interpolation", "[Core][Label][Fade]" ) {
 
     REQUIRE(fadeOut.isFinished());
 
-    FadeEffect fadeIn(true, FadeEffect::Interpolation::POW, 1.0);
+    FadeEffect fadeIn(true, FadeEffect::Interpolation::pow, 1.0);
 
     REQUIRE(fadeIn.update(0.0) == 0.0);
     REQUIRE(fadeIn.update(0.5) == 0.25);
@@ -154,7 +154,7 @@ TEST_CASE( "Pow interpolation", "[Core][Label][Fade]" ) {
 }
 
 TEST_CASE( "Sine interpolation", "[Core][Label][Fade]" ) {
-    FadeEffect fadeOut(false, FadeEffect::Interpolation::SINE, 1.0);
+    FadeEffect fadeOut(false, FadeEffect::Interpolation::sine, 1.0);
 
     REQUIRE(std::fabs(fadeOut.update(0.0) - 1.0) < EPSILON);
     REQUIRE(std::fabs(fadeOut.update(1.0) - 0.0) < EPSILON);
@@ -163,7 +163,7 @@ TEST_CASE( "Sine interpolation", "[Core][Label][Fade]" ) {
 
     REQUIRE(fadeOut.isFinished());
 
-    FadeEffect fadeIn(true, FadeEffect::Interpolation::SINE, 1.0);
+    FadeEffect fadeIn(true, FadeEffect::Interpolation::sine, 1.0);
 
     REQUIRE(std::fabs(fadeIn.update(0.0) - 0.0) < EPSILON);
     REQUIRE(std::fabs(fadeIn.update(1.0) - 1.0) < EPSILON);
