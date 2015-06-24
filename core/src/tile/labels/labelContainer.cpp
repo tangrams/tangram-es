@@ -79,7 +79,7 @@ void LabelContainer::updateOcclusions() {
     }
 
     // broad phase
-    auto pairs = intersect(aabbs);
+    auto pairs = intersect(aabbs, { 4, 4 }, { m_view->getWidth(), m_view->getHeight() });
 
     for (auto pair : pairs) {
         const auto& aabb1 = aabbs[pair.first];
