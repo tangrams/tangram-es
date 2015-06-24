@@ -1,6 +1,6 @@
 #include "pbfParser.h"
 
-#include "tile/MapTile.h"
+#include "tile/mapTile.h"
 #include "platform.h"
 
 
