@@ -7,8 +7,8 @@ class TypedMesh : public VboMesh {
 
 public:
     
-    TypedMesh(std::shared_ptr<VertexLayout> _vertexLayout, GLenum _drawMode)
-        : VboMesh(_vertexLayout, _drawMode){};
+    TypedMesh(std::shared_ptr<VertexLayout> _vertexLayout, GLenum _drawMode, GLenum _hint = GL_STATIC_DRAW)
+        : VboMesh(_vertexLayout, _drawMode, _hint) {};
 
     void addVertices(std::vector<T>&& _vertices,
                      std::vector<int>&& _indices) {

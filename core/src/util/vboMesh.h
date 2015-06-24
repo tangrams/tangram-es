@@ -6,6 +6,7 @@
 #include "gl.h"
 #include "vertexLayout.h"
 #include <cstring>
+#include <cstdlib>
 
 #define MAX_INDEX_VALUE 65535
 
@@ -21,7 +22,7 @@ public:
      * Creates a VboMesh for vertex data arranged in the structure described by _vertexLayout to be drawn
      * using the OpenGL primitive type _drawMode
      */
-    VboMesh(std::shared_ptr<VertexLayout> _vertexlayout, GLenum _drawMode = GL_TRIANGLES);
+    VboMesh(std::shared_ptr<VertexLayout> _vertexlayout, GLenum _drawMode = GL_TRIANGLES, GLenum _hint = GL_STATIC_DRAW);
     VboMesh();
     
     /*
@@ -54,12 +55,15 @@ public:
      * no more vertices or indices can be added
      */
     void upload();
+    void subDataUpload();
 
     /*
      * Renders the geometry in this mesh using the ShaderProgram _shader; if geometry has not already
      * been uploaded it will be uploaded at this point
      */
     void draw(const std::shared_ptr<ShaderProgram> _shader);
+    
+    void update(GLintptr _offset, GLsizei _size, unsigned char* _data);
     
     static void addManagedVBO(VboMesh* _vbo);
     
@@ -89,9 +93,14 @@ protected:
     GLushort* m_glIndexData = nullptr;
 
     GLenum m_drawMode;
+    GLenum m_hint;
 
     bool m_isUploaded;
     bool m_isCompiled;
+    bool m_dirty;
+    
+    GLsizei m_dirtySize;
+    GLintptr m_dirtyOffset;
     
     void checkValidity();
 
