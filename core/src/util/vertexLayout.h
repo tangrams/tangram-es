@@ -27,7 +27,7 @@ public:
 
     void enable(const std::shared_ptr<ShaderProgram> _program, size_t byteOffset);
 
-    GLint getStride() const { return m_stride; };
+    size_t getStride() const { return m_stride; };
 
 private:
 

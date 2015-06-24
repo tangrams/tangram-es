@@ -19,9 +19,9 @@ Style::~Style() {
 }
 
 uint32_t Style::parseColorProp(const std::string& _colorPropStr) {
-    
+
     uint32_t color = 0;
-    
+
     if (_colorPropStr.find(',') != std::string::npos) { // try to parse as comma-separated rgba components
         std::istringstream stream(_colorPropStr);
         std::string token;
@@ -55,7 +55,7 @@ void Style::addLayer(const std::pair<std::string, StyleParamMap>&& _layer) {
 void Style::addData(TileData& _data, MapTile& _tile, const MapProjection& _mapProjection) {
     onBeginBuildTile(_tile);
 
-    VboMesh* mesh = newMesh();
+    std::shared_ptr<VboMesh> mesh(newMesh());
 
     for (auto& layer : _data.layers) {
 
@@ -101,14 +101,15 @@ void Style::addData(TileData& _data, MapTile& _tile, const MapProjection& _mapPr
         }
     }
 
+    onEndBuildTile(_tile, mesh);
+
     if (mesh->numVertices() == 0) {
-        delete mesh;
+        mesh.reset();
     } else {
         mesh->compileVertexBuffer();
 
-        _tile.addGeometry(*this, std::unique_ptr<VboMesh>(mesh));
+        _tile.addGeometry(*this, mesh);
     }
-    onEndBuildTile(_tile);
 }
 
 void Style::onBeginDrawFrame(const std::shared_ptr<View>& _view, const std::shared_ptr<Scene>& _scene) {
@@ -144,14 +145,10 @@ void Style::setLightingType(LightingType _lType){
 
 }
 
-void Style::onBeginDrawTile(const std::shared_ptr<MapTile>& _tile) {
-    // No-op by default
-}
-
 void Style::onBeginBuildTile(MapTile& _tile) const {
     // No-op by default
 }
 
-void Style::onEndBuildTile(MapTile& _tile) const {
+void Style::onEndBuildTile(MapTile& _tile, std::shared_ptr<VboMesh> _mesh) const {
     // No-op by default
 }

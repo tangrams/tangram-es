@@ -68,15 +68,16 @@ namespace Tangram {
         m_labelContainer->setFontContext(m_ftContext);
         m_labelContainer->setView(m_view);
 
-        std::unique_ptr<Style> textStyle0(new TextStyle("FiraSans", "Textstyle0", 15.0f, 0xF7F0E1, true, true));
+        std::unique_ptr<Style> textStyle0(new TextStyle("FiraSans", "Textstyle0", 15.0f, 0xffffff, true, true));
         StyleParamMap emptyParamMap;
         textStyle0->addLayer({ "roads", std::move(emptyParamMap)});
         textStyle0->addLayer({ "places", std::move(emptyParamMap)});
         textStyle0->addLayer({ "pois", std::move(emptyParamMap)});
         m_scene->addStyle(std::move(textStyle0));
 
-        std::unique_ptr<Style> textStyle1(new TextStyle("Futura", "Textstyle1", 18.0f, 0x26241F, true, true));
+        std::unique_ptr<Style> textStyle1(new TextStyle("Futura", "Textstyle1", 18.0f, 0x000000, true, true));
         textStyle1->addLayer({ "landuse", std::move(emptyParamMap)});
+
         m_scene->addStyle(std::move(textStyle1));
 
         std::unique_ptr<Style> debugTextStyle(new DebugTextStyle("FiraSans", "DebugTextStyle", 30.0f, 0xDC3522, true));
@@ -181,7 +182,6 @@ namespace Tangram {
                 const std::shared_ptr<MapTile>& tile = mapIDandTile.second;
                 if (tile->hasGeometry()) {
                     // Draw tile!
-                    style->onBeginDrawTile(tile);
                     tile->draw(*style, *m_view);
                 }
             }
