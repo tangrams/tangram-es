@@ -58,7 +58,7 @@ std::shared_ptr<TextBuffer> FontContext::getCurrentBuffer() {
     return m_currentBuffer.lock();
 }
 
-bool FontContext::addFont(std::string _fontFile, std::string _name) {
+bool FontContext::addFont(const std::string& _fontFile, std::string _name) {
     if (m_fonts.find(_name) != m_fonts.end()) {
         return true;
     }
@@ -72,12 +72,12 @@ bool FontContext::addFont(std::string _fontFile, std::string _name) {
         return false;
     }
 
-    m_fonts[_name] = font;
+    m_fonts.emplace(std::move(_name), font);
 
     return true;
 }
 
-void FontContext::setFont(std::string _name, int size) {
+void FontContext::setFont(const std::string& _name, int size) {
     auto it = m_fonts.find(_name);
 
     if (it != m_fonts.end()) {
