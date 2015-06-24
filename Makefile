@@ -194,5 +194,7 @@ ifndef ANDROID_NDK
 endif
 
 format:
-	clang-format -i `git diff --name-only -- '*.cpp' '*.h'` 
-	@echo "format done on `git diff --name-only -- '*.cpp' '*.h'`"
+	@for file in `git diff --diff-filter=ACMRTUXB --name-only -- '*.cpp' '*.h'`; do \
+		if [[ -e $$file ]]; then clang-format -i $$file; fi \
+	done
+	@echo "format done on `git diff --diff-filter=ACMRTUXB --name-only -- '*.cpp' '*.h'`"
