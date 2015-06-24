@@ -273,12 +273,12 @@ void SceneLoader::loadStyles(YAML::Node styles, Scene& scene) {
 
         Node shadersNode = styleNode["shaders"];
         if (shadersNode) {
-            loadShaderConfig(shadersNode, *style->getShaderProgram());
+            loadShaderConfig(shadersNode, *(style->getShaderProgram()));
         }
 
         Node materialNode = styleNode["material"];
         if (materialNode) {
-            loadMaterial(materialNode, *style->getMaterial(), scene);
+            loadMaterial(materialNode, *(style->getMaterial()), scene);
         }
 
         Node lightingNode = styleNode["lighting"];
