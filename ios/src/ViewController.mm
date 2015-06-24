@@ -8,6 +8,7 @@
 
 #import "ViewController.h"
 #include "tangram.h"
+#include "platform.h"
 
 @interface ViewController () {
     
