@@ -8,6 +8,8 @@ TextStyle::TextStyle(const std::string& _fontName, std::string _name, float _fon
 
     constructVertexLayout();
     constructShaderProgram();
+    
+    m_labels = LabelContainer::GetInstance();
 }
 
 TextStyle::~TextStyle() {
@@ -16,8 +18,10 @@ TextStyle::~TextStyle() {
 void TextStyle::constructVertexLayout() {
     m_vertexLayout = std::shared_ptr<VertexLayout>(new VertexLayout({
         {"a_position", 2, GL_FLOAT, false, 0},
-        {"a_texCoord", 2, GL_FLOAT, false, 0},
-        {"a_fsid", 1, GL_FLOAT, false, 0},
+        {"a_uvs", 2, GL_FLOAT, false, 0},
+        {"a_screenPosition", 2, GL_FLOAT, false, 0},
+        {"a_alpha", 1, GL_FLOAT, false, 0},
+        {"a_rotation", 1, GL_FLOAT, false, 0},
     }));
 }
 
@@ -43,97 +47,56 @@ void* TextStyle::parseStyleParams(const std::string& _layerNameID, const StylePa
     return nullptr;
 }
 
-void TextStyle::buildPoint(Point& _point, void* _styleParams, Properties& _props, VboMesh& _mesh) const {
-    std::vector<PosTexID> vertices;
-    auto labelContainer = LabelContainer::GetInstance();
-    auto ftContext = labelContainer->getFontContext();
-    auto textBuffer = ftContext->getCurrentBuffer();
-
-    if (!textBuffer) {
+void TextStyle::addVertices(TextBuffer& _buffer, VboMesh& _mesh) const {
+    std::vector<TextVert> vertices;
+    int bufferSize = _buffer.getVerticesSize();
+    
+    if (bufferSize == 0) {
         return;
     }
-
-    ftContext->setFont(m_fontName, m_fontSize * m_pixelScale);
-
-    if (m_sdf) {
-        float blurSpread = 2.5;
-        ftContext->setSignedDistanceField(blurSpread);
-    }
-
-    // if (_layer == "pois") {
-    //     for (auto prop : _props.stringProps) {
-    //         if (prop.first == "name") {
-    //             labelContainer->addLabel(*TextStyle::s_processedTile, m_name, { glm::vec2(_point), glm::vec2(_point) }, prop.second, Label::Type::POINT);
-    //         }
-    //     }
-    // }
-
-    ftContext->clearState();
-
-    vertices.resize(textBuffer->getVerticesSize());
-
-    if (textBuffer->getVertices(reinterpret_cast<float*>(vertices.data()))) {
+    
+    vertices.resize(bufferSize);
+    
+    if (_buffer.getVertices(reinterpret_cast<float*>(vertices.data()))) {
         auto& mesh = static_cast<TextStyle::Mesh&>(_mesh);
         mesh.addVertices(std::move(vertices), {});
     }
+}
 
+void TextStyle::buildPoint(Point& _point, void* _styleParams, Properties& _props, VboMesh& _mesh) const {
+    for (auto prop : _props.stringProps) {
+        if (prop.first == "name") {
+            m_labels->addLabel(*TextStyle::s_processedTile, m_name, { glm::vec2(_point), glm::vec2(_point) }, prop.second, Label::Type::POINT);
+        }
+    }
 }
 
 void TextStyle::buildLine(Line& _line, void* _styleParams, Properties& _props, VboMesh& _mesh) const {
-    std::vector<PosTexID> vertices;
-    auto labelContainer = LabelContainer::GetInstance();
-    auto ftContext = labelContainer->getFontContext();
-    auto textBuffer = ftContext->getCurrentBuffer();
-
-    if (!textBuffer) {
-        return;
-    }
-
-    ftContext->setFont(m_fontName, m_fontSize * m_pixelScale);
-
-    if (m_sdf) {
-        float blurSpread = 2.5;
-        ftContext->setSignedDistanceField(blurSpread);
-    }
-
-    // int lineLength = _line.size();
-    // int skipOffset = floor(lineLength / 2);
-    // float minLength = 0.15; // default, probably need some more thoughts
+    int lineLength = _line.size();
+    int skipOffset = floor(lineLength / 2);
+    float minLength = 0.15; // default, probably need some more thoughts
     
-    // if (_layer == "roads") {
-    //     for (auto prop : _props.stringProps) {
-    //         if (prop.first.compare("name") == 0) {
-
-    //             for (size_t i = 0; i < _line.size() - 1; i += skipOffset) {
-    //                 glm::vec2 p1 = glm::vec2(_line[i]);
-    //                 glm::vec2 p2 = glm::vec2(_line[i + 1]);
-
-    //                 glm::vec2 p1p2 = p2 - p1;
-    //                 float length = glm::length(p1p2);
-
-    //                 if (length < minLength) {
-    //                     continue;
-    //                 }
-
-    //                 labelContainer->addLabel(*TextStyle::s_processedTile, m_name, { p1, p2 }, prop.second,
-    //                                          Label::Type::LINE);
-    //             }
-    //         }
-    //     }
-    // }
-
-    ftContext->clearState();
-
-    vertices.resize(textBuffer->getVerticesSize());
-
-    if (textBuffer->getVertices(reinterpret_cast<float*>(vertices.data()))) {
-        auto& mesh = static_cast<TextStyle::Mesh&>(_mesh);
-        mesh.addVertices(std::move(vertices), {});
+    for (auto prop : _props.stringProps) {
+        if (prop.first.compare("name") == 0) {
+            
+            for (size_t i = 0; i < _line.size() - 1; i += skipOffset) {
+                glm::vec2 p1 = glm::vec2(_line[i]);
+                glm::vec2 p2 = glm::vec2(_line[i + 1]);
+                
+                glm::vec2 p1p2 = p2 - p1;
+                float length = glm::length(p1p2);
+                
+                if (length < minLength) {
+                    continue;
+                }
+                
+                m_labels->addLabel(*TextStyle::s_processedTile, m_name, { p1, p2 }, prop.second, Label::Type::LINE);
+            }
+        }
     }
 }
 
 void TextStyle::buildPolygon(Polygon& _polygon, void* _styleParams, Properties& _props, VboMesh& _mesh) const {
-
     glm::vec3 centroid;
     int n = 0;
 
@@ -147,35 +110,10 @@ void TextStyle::buildPolygon(Polygon& _polygon, void* _styleParams, Properties& 
 
     centroid /= n;
 
-    std::vector<PosTexID> vertices;
-    auto labelContainer = LabelContainer::GetInstance();
-    auto ftContext = labelContainer->getFontContext();
-    auto textBuffer = ftContext->getCurrentBuffer();
-
-    if (!textBuffer) {
-        return;
-    }
-
-    ftContext->setFont(m_fontName, m_fontSize * m_pixelScale);
-
-    if (m_sdf) {
-        float blurSpread = 2.5;
-        ftContext->setSignedDistanceField(blurSpread);
-    }
-
-    for (auto& prop : _props.stringProps) {
+    for (auto prop : _props.stringProps) {
         if (prop.first == "name") {
-            labelContainer->addLabel(*TextStyle::s_processedTile, m_name, { glm::vec2(centroid), glm::vec2(centroid) }, prop.second, Label::Type::POINT);
+            m_labels->addLabel(*TextStyle::s_processedTile, m_name, { glm::vec2(centroid), glm::vec2(centroid) }, prop.second, Label::Type::POINT);
         }
-    }
-
-    ftContext->clearState();
-
-    vertices.resize(textBuffer->getVerticesSize());
-
-    if (textBuffer->getVertices(reinterpret_cast<float*>(vertices.data()))) {
-        auto& mesh = static_cast<TextStyle::Mesh&>(_mesh);
-        mesh.addVertices(std::move(vertices), {});
     }
 }
 
@@ -189,33 +127,31 @@ void TextStyle::onBeginBuildTile(MapTile& _tile) const {
     ftContext->useBuffer(buffer);
 
     buffer->init();
+    
+    ftContext->setFont(m_fontName, m_fontSize * m_pixelScale);
+    
+    if (m_sdf) {
+        float blurSpread = 2.5;
+        ftContext->setSignedDistanceField(blurSpread);
+    }
 
     TextStyle::s_processedTile = &_tile;
 }
 
-void TextStyle::onEndBuildTile(MapTile& _tile) const {
+void TextStyle::onEndBuildTile(MapTile &_tile, std::shared_ptr<VboMesh> _mesh) const {
     auto ftContext = LabelContainer::GetInstance()->getFontContext();
+    auto buffer = ftContext->getCurrentBuffer();
+    
+    // add the computed glyph vertices to the mesh once
+    addVertices(*ftContext->getCurrentBuffer(), *_mesh);
 
+    buffer->setMesh(_mesh->numVertices() > 0 ? _mesh : nullptr);
+    
     TextStyle::s_processedTile = nullptr;
-
+    
+    ftContext->clearState();
     ftContext->useBuffer(nullptr);
     ftContext->unlock();
-}
-
-void TextStyle::onBeginDrawTile(const std::shared_ptr<MapTile>& _tile) {
-    auto buffer = _tile->getTextBuffer(*this);
-
-    if (buffer) {
-        auto texture = buffer->getTextureTransform();
-
-        if (texture) {
-            texture->update(0);
-            texture->bind(0);
-            m_shaderProgram->setUniformi("u_transforms", 0);
-            // resolution of the transform texture
-            m_shaderProgram->setUniformf("u_tresolution", texture->getWidth(), texture->getHeight());
-        }
-    }
 }
 
 void TextStyle::onBeginDrawFrame(const std::shared_ptr<View>& _view, const std::shared_ptr<Scene>& _scene) {
@@ -228,6 +164,7 @@ void TextStyle::onBeginDrawFrame(const std::shared_ptr<View>& _view, const std::
 
     atlas->update(1);
     atlas->bind(1);
+    
     m_shaderProgram->setUniformi("u_tex", 1);
     m_shaderProgram->setUniformf("u_resolution", _view->getWidth(), _view->getHeight());
 
