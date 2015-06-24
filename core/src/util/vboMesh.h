@@ -63,7 +63,7 @@ public:
      */
     void draw(const std::shared_ptr<ShaderProgram> _shader);
     
-    void update(intptr_t _offset, long _size, unsigned char* _data);
+    void update(GLintptr _offset, GLsizei _size, unsigned char* _data);
     
     static void addManagedVBO(VboMesh* _vbo);
     
@@ -99,8 +99,8 @@ protected:
     bool m_isCompiled;
     bool m_dirty;
     
-    long m_dirtySize;
-    intptr_t m_dirtyOffset;
+    GLsizei m_dirtySize;
+    GLintptr m_dirtyOffset;
     
     void checkValidity();
 

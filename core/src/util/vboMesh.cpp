@@ -56,7 +56,7 @@ void VboMesh::setDrawMode(GLenum _drawMode) {
     }
 }
 
-void VboMesh::update(intptr_t _offset, long _size, unsigned char* _data) {
+void VboMesh::update(GLintptr _offset, GLsizei _size, unsigned char* _data) {
     if (m_hint == GL_STATIC_DRAW) {
         logMsg("WARNING: wrong usage hint provided to the Vbo\n");
     }
