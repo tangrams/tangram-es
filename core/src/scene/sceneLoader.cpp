@@ -81,7 +81,7 @@ void SceneLoader::loadShaderConfig(YAML::Node shaders, ShaderProgram& shader) {
 
     Node definesNode = shaders["defines"];
     if (definesNode) {
-        for (auto define : definesNode) {
+        for (const auto& define : definesNode) {
             std::string name = define.first.as<std::string>();
             std::string value = define.second.as<std::string>();
             shader.addSourceBlock("defines", "#define" + name + " " + value);
@@ -90,7 +90,7 @@ void SceneLoader::loadShaderConfig(YAML::Node shaders, ShaderProgram& shader) {
 
     Node uniformsNode = shaders["uniforms"];
     if (uniformsNode) {
-        for (auto uniform : uniformsNode) {
+        for (const auto& uniform : uniformsNode) {
             std::string name = uniform.first.as<std::string>();
             std::string value = uniform.first.as<std::string>();
             shader.addSourceBlock("uniforms", "uniform " + name + " = " + value + ";");
@@ -99,7 +99,7 @@ void SceneLoader::loadShaderConfig(YAML::Node shaders, ShaderProgram& shader) {
 
     Node blocksNode = shaders["blocks"];
     if (blocksNode) {
-        for (auto block : blocksNode) {
+        for (const auto& block : blocksNode) {
             std::string name = block.first.as<std::string>();
             std::string value = block.second.as<std::string>();
             shader.addSourceBlock(name, value); // TODO: Warn on unrecognized injection points
@@ -186,7 +186,7 @@ void SceneLoader::loadTextures(YAML::Node textures, Scene& scene) {
         return;
     }
 
-    for (auto textureNode : textures) {
+    for (const auto& textureNode : textures) {
 
         std::string name = textureNode.first.as<std::string>();
         Node textureConfig = textureNode.second;
@@ -230,7 +230,7 @@ void SceneLoader::loadStyles(YAML::Node styles, Scene& scene) {
         return;
     }
 
-    for (auto styleIt : styles) {
+    for (const auto& styleIt : styles) {
 
         Style* style = nullptr;
 
@@ -707,7 +707,7 @@ void SceneLoader::loadLayers(Node layers, Scene& scene, TileManager& tileManager
             parseStyleProps(groupIt->second, paramMap);
 
             // match layer to the style in scene with the given name
-            for (auto& style : scene.getStyles()) {
+            for (const auto& style : scene.getStyles()) {
                 if (style->getName() == styleName) {
                     style->addLayer({ name, paramMap });
                 }
