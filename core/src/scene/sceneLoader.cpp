@@ -114,8 +114,15 @@ void SceneLoader::loadMaterial(YAML::Node matNode, Material& material, Scene& sc
     if (diffuse) {
         if (diffuse.IsMap()) {
             material.setDiffuse(loadMaterialTexture(diffuse, scene));
-        } else {
+        } else if (diffuse.IsSequence()) {
             material.setDiffuse(parseVec4(diffuse));
+        } else {
+            try {
+                float difValue = diffuse.as<float>();
+                material.setDiffuse(glm::vec4(difValue, difValue, difValue, 1.0));
+            } catch (const BadConversion& e) {
+                // TODO: css color parser and hex_values
+            }
         }
     }
 
@@ -123,8 +130,15 @@ void SceneLoader::loadMaterial(YAML::Node matNode, Material& material, Scene& sc
     if (ambient) {
         if (ambient.IsMap()) {
             material.setAmbient(loadMaterialTexture(ambient, scene));
-        } else {
+        } else if (ambient.IsSequence()) {
             material.setAmbient(parseVec4(ambient));
+        } else {
+            try {
+                float ambientValue = ambient.as<float>();
+                material.setAmbient(glm::vec4(ambientValue, ambientValue, ambientValue, 1.0));
+            } catch (const BadConversion& e) {
+                // TODO: css color parser and hex_values
+            }
         }
     }
 
@@ -132,8 +146,15 @@ void SceneLoader::loadMaterial(YAML::Node matNode, Material& material, Scene& sc
     if (specular) {
         if (specular.IsMap()) {
             material.setSpecular(loadMaterialTexture(specular, scene));
-        } else {
+        } else if (specular.IsSequence()) {
             material.setSpecular(parseVec4(specular));
+        } else {
+            try {
+                float specValue = specular.as<float>();
+                material.setSpecular(glm::vec4(specValue, specValue, specValue, 1.0));
+            } catch (const BadConversion& e) {
+                // TODO: css color parser and hex_values
+            }
         }
     }
 

@@ -24,6 +24,8 @@ styles:
             normal:
                 texture: water-texture
                 mapping: uv
+            diffuse: 0.75
+
     heightglow:
         base: polygon
         lighting: vertex
@@ -47,7 +49,7 @@ layers:
     landuse:
         data: { source: osm }
         draw:
-            polygons:
+            pillows:
                 order: 1
                 color: [0.443, 0.569, 0.4, 1.]
                 interactive: true #currently ignored
