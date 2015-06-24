@@ -11,14 +11,11 @@ PolygonStyle::PolygonStyle(std::string _name, GLenum _drawMode) : Style(_name, _
 void PolygonStyle::constructVertexLayout() {
 
     // TODO: Ideally this would be in the same location as the struct that it basically describes
-    m_vertexLayout = std::shared_ptr<VertexLayout>(new VertexLayout({
-        {"a_position", 3, GL_FLOAT, false, 0},
-        {"a_normal", 3, GL_FLOAT, false, 0},
-        {"a_texcoord", 2, GL_FLOAT, false, 0},
-        {"a_color", 4, GL_UNSIGNED_BYTE, true, 0},
-        {"a_layer", 1, GL_FLOAT, false, 0}
-    }));
-
+    m_vertexLayout = std::shared_ptr<VertexLayout>(new VertexLayout({{"a_position", 3, GL_FLOAT, false, 0},
+                                                                     {"a_normal", 3, GL_FLOAT, false, 0},
+                                                                     {"a_texcoord", 2, GL_FLOAT, false, 0},
+                                                                     {"a_color", 4, GL_UNSIGNED_BYTE, true, 0},
+                                                                     {"a_layer", 1, GL_FLOAT, false, 0}}));
 }
 
 void PolygonStyle::constructShaderProgram() {
@@ -32,15 +29,13 @@ void PolygonStyle::constructShaderProgram() {
 
 void* PolygonStyle::parseStyleParams(const std::string& _layerNameID, const StyleParamMap& _styleParamMap) {
 
-    if(m_styleParamCache.find(_layerNameID) != m_styleParamCache.end()) {
+    if (m_styleParamCache.find(_layerNameID) != m_styleParamCache.end()) {
         return static_cast<void*>(m_styleParamCache.at(_layerNameID));
     }
 
     StyleParams* params = new StyleParams();
-    if(_styleParamMap.find("order") != _styleParamMap.end()) {
-        params->order = std::stof(_styleParamMap.at("order"));
-    }
-    if(_styleParamMap.find("color") != _styleParamMap.end()) {
+    if (_styleParamMap.find("order") != _styleParamMap.end()) { params->order = std::stof(_styleParamMap.at("order")); }
+    if (_styleParamMap.find("color") != _styleParamMap.end()) {
         params->color = parseColorProp(_styleParamMap.at("color"));
     }
 
@@ -62,18 +57,18 @@ void PolygonStyle::buildLine(Line& _line, void* _styleParam, Properties& _props,
     std::vector<glm::vec3> points;
     std::vector<glm::vec2> texcoords;
 
-    PolyLineOutput output = { points, indices, Builders::NO_SCALING_VECS, texcoords };
+    PolyLineOutput output = {points, indices, Builders::NO_SCALING_VECS, texcoords};
 
     GLuint abgr = 0xff969696; // Default road color
 
     Builders::buildPolyLine(_line, PolyLineOptions(), output);
 
     for (size_t i = 0; i < points.size(); i++) {
-        vertices.push_back({ points[i], glm::vec3(0.0f, 0.0f, 1.0f), texcoords[i], abgr, 0.0f });
+        vertices.push_back({points[i], glm::vec3(0.0f, 0.0f, 1.0f), texcoords[i], abgr, 0.0f});
     }
 
     auto& mesh = static_cast<PolygonStyle::Mesh&>(_mesh);
-    mesh.addVertices(std::move(vertices),std::move(indices));
+    mesh.addVertices(std::move(vertices), std::move(indices));
 }
 
 void PolygonStyle::buildPolygon(Polygon& _polygon, void* _styleParam, Properties& _props, VboMesh& _mesh) const {
@@ -84,25 +79,23 @@ void PolygonStyle::buildPolygon(Polygon& _polygon, void* _styleParam, Properties
     std::vector<glm::vec3> normals;
     std::vector<glm::vec2> texcoords;
 
-    PolygonOutput output = { points, indices, normals, texcoords };
+    PolygonOutput output = {points, indices, normals, texcoords};
 
     StyleParams* params = static_cast<StyleParams*>(_styleParam);
 
     GLuint abgr = params->color;
     GLfloat layer = params->order;
 
-    if (Tangram::getDebugFlag(Tangram::DebugFlags::PROXY_COLORS)) {
+    if (Tangram::getDebugFlag(Tangram::DebugFlags::proxy_colors)) {
         abgr = abgr << (int(_props.numericProps["zoom"]) % 6);
     }
 
-    float height = _props.numericProps["height"]; // Inits to zero if not present in data
+    float height = _props.numericProps["height"];        // Inits to zero if not present in data
     float minHeight = _props.numericProps["min_height"]; // Inits to zero if not present in data
 
     if (minHeight != height) {
         for (auto& line : _polygon) {
-            for (auto& point : line) {
-                point.z = height;
-            }
+            for (auto& point : line) { point.z = height; }
         }
         Builders::buildPolygonExtrusion(_polygon, minHeight, output);
     }
@@ -110,7 +103,7 @@ void PolygonStyle::buildPolygon(Polygon& _polygon, void* _styleParam, Properties
     Builders::buildPolygon(_polygon, output);
 
     for (size_t i = 0; i < points.size(); i++) {
-        vertices.push_back({ points[i], normals[i], texcoords[i], abgr, layer });
+        vertices.push_back({points[i], normals[i], texcoords[i], abgr, layer});
     }
 
     // Outlines for water polygons

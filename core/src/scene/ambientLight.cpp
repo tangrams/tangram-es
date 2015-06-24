@@ -4,27 +4,19 @@
 std::string AmbientLight::s_classBlock;
 std::string AmbientLight::s_typeName = "AmbientLight";
 
-AmbientLight::AmbientLight(const std::string& _name, bool _dynamic) : 
-    Light(_name, _dynamic) {
+AmbientLight::AmbientLight(const std::string& _name, bool _dynamic) : Light(_name, _dynamic) {
 
-    m_type = LightType::AMBIENT;
-    
+    m_type = LightType::ambient;
 }
 
-AmbientLight::~AmbientLight() {
+AmbientLight::~AmbientLight() {}
 
-}
-
-void AmbientLight::setupProgram(const std::shared_ptr<View>& _view, std::shared_ptr<ShaderProgram> _shader ) {
-    if (m_dynamic) {
-        Light::setupProgram(_view, _shader);
-    }
+void AmbientLight::setupProgram(const std::shared_ptr<View>& _view, std::shared_ptr<ShaderProgram> _shader) {
+    if (m_dynamic) { Light::setupProgram(_view, _shader); }
 }
 
 std::string AmbientLight::getClassBlock() {
-    if (s_classBlock.empty()) {
-        s_classBlock = stringFromResource("ambientLight.glsl")+"\n";
-    }
+    if (s_classBlock.empty()) { s_classBlock = stringFromResource("ambientLight.glsl") + "\n"; }
     return s_classBlock;
 }
 
@@ -35,14 +27,8 @@ std::string AmbientLight::getInstanceDefinesBlock() {
 
 std::string AmbientLight::getInstanceAssignBlock() {
     std::string block = Light::getInstanceAssignBlock();
-    if (!m_dynamic) {
-        block += ")";
-    }
+    if (!m_dynamic) { block += ")"; }
     return block;
 }
 
-const std::string& AmbientLight::getTypeName() {
-
-    return s_typeName;
-
-}
+const std::string& AmbientLight::getTypeName() { return s_typeName; }
