@@ -1,22 +1,23 @@
 #pragma once
 
-#include <unordered_map>
+#include <map>
 #include <memory>
+#include <string>
+#include <unordered_map>
+#include <vector>
 
-#include "glm/vec2.hpp"
 #include "glm/mat4x4.hpp"
+#include "glm/vec2.hpp"
 
-#include "label.h"
-#include "text/textBuffer.h"
-#include "view/view.h"
-#include "labels/labelContainer.h"
-#include "util/vboMesh.h"
-#include "util/mapProjection.h"
-#include "util/texture.h"
+#include "tileID.h"
 
+class Label;
+class LabelContainer;
+class MapProjection;
 class Style;
+class TextBuffer;
+class VboMesh;
 class View;
-struct TileID;
 
 /* Tile of vector map data
  * 
@@ -52,10 +53,10 @@ public:
 
     /* Adds drawable geometry to the tile and associates it with a <Style>
      * 
-     * Use std::move to pass in the mesh by move semantics; Geometry in the mesh must have coordinates relative to
-     * the tile origin.
+     * Use std::move to pass in the mesh by move semantics; Geometry in the mesh
+     * must have coordinates relative to the tile origin.
      */
-    void addGeometry(const Style& _style, std::unique_ptr<VboMesh> _mesh);
+    void addGeometry(const Style& _style, std::shared_ptr<VboMesh> _mesh);
     
     void addLabel(const std::string& _styleName, std::shared_ptr<Label> _label);
     
@@ -63,6 +64,8 @@ public:
      * Method to check if this tile's vboMesh(s) are loaded and ready to be drawn
      */
     bool hasGeometry();
+    
+    std::shared_ptr<VboMesh>& getGeometry(const Style& _style);
 
     /* uUdate the Tile considering the current view */
     void update(float _dt, const View& _view);
@@ -109,7 +112,7 @@ private:
     // Distances from the global origin are too large to represent precisely in 32-bit floats, so we only apply the
     // relative translation from the view origin to the model origin immediately before drawing the tile. 
 
-    std::unordered_map<std::string, std::unique_ptr<VboMesh>> m_geometry; // Map of <Style>s and their associated <VboMesh>es
+    std::unordered_map<std::string, std::shared_ptr<VboMesh>> m_geometry; // Map of <Style>s and their associated <VboMesh>es
     std::unordered_map<std::string, std::vector<std::shared_ptr<Label>>> m_labels;
     std::map<std::string, std::shared_ptr<TextBuffer>> m_buffers; // Map of <Style>s and the associated text buffer
 

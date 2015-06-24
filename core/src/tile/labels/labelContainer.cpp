@@ -1,5 +1,6 @@
 #include "labelContainer.h"
 #include "tile/mapTile.h"
+#include "text/fontContext.h"
 
 LabelContainer::LabelContainer() {}
 
@@ -23,7 +24,11 @@ bool LabelContainer::addLabel(MapTile& _tile, const std::string& _styleName, Lab
         fsuint textID = currentBuffer->genTextID();
         std::shared_ptr<Label> l(new Label(_transform, _text, textID, _type));
 
-        l->rasterize(currentBuffer);
+        if (!l->rasterize(currentBuffer)) {
+            l.reset();
+            return false;
+        }
+
         l->update(m_view->getViewProjectionMatrix() * _tile.getModelMatrix(), m_screenSize, 0);
         std::unique_ptr<TileID> tileID(new TileID(_tile.getID()));
         _tile.addLabel(_styleName, l);
@@ -54,7 +59,7 @@ void LabelContainer::updateOcclusions() {
     std::set<std::pair<Label*, Label*>> occlusions;
     std::vector<isect2d::AABB> aabbs;
 
-    for(int i = 0; i < m_labelUnits.size(); i++) {
+    for(size_t i = 0; i < m_labelUnits.size(); i++) {
         auto& labelUnit = m_labelUnits[i];
         auto label = labelUnit.getWeakLabel();
 
@@ -106,8 +111,8 @@ void LabelContainer::updateOcclusions() {
             pair.first->setOcclusion(true);
         }
     }
-    
-    for(int i = 0; i < m_labelUnits.size(); i++) {
+
+    for(size_t i = 0; i < m_labelUnits.size(); i++) {
         auto& labelUnit = m_labelUnits[i];
         auto label = labelUnit.getWeakLabel();
         
