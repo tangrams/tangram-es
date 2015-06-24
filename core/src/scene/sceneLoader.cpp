@@ -138,7 +138,14 @@ void SceneLoader::loadMaterial(YAML::Node matNode, Material& material, Scene& sc
     }
 
     Node shininess = matNode["shininess"];
-    if (shininess) { material.setShininess(shininess.as<float>()); } // TODO: check for bad conversions
+
+    if (shininess) {
+        try {
+            material.setShininess(shininess.as<float>());
+        } catch(const BadConversion& e) {
+            logMsg("Error: float value expected for shininess material parameter");
+        }
+    }
 
     Node normal = matNode["normal"];
     if (normal) {
