@@ -1,11 +1,13 @@
 #pragma once
 
+#include "gl.h"
+
 #include <vector>
 #include <unordered_map>
 #include <memory>
+#include <string>
 
-#include "gl.h"
-#include "shaderProgram.h"
+class ShaderProgram;
 
 class VertexLayout {
     

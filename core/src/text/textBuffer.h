@@ -1,7 +1,9 @@
 #pragma once
 
-#include "texture.h"
 #include "glfontstash.h"
+#include "glm/vec4.hpp"
+
+class Texture;
 
 /* 
  * This class represents a text buffer, each text buffer has several text ids and a single 

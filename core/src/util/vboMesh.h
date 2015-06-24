@@ -1,13 +1,13 @@
 #pragma once
 
+#include "gl.h"
+#include "platform.h"
+#include "vertexLayout.h"
+
 #include <vector>
 #include <memory>
 
-#include "gl.h"
-#include "vertexLayout.h"
-#include <cstring>
-
-#define MAX_INDEX_VALUE 65535
+#define MAX_INDEX_VALUE 65535 // Maximum value of GLushort
 
 /*
  * VboMesh - Drawable collection of geometry contained in a vertex buffer and (optionally) an index buffer

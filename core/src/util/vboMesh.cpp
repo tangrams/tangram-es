@@ -1,7 +1,5 @@
 #include "vboMesh.h"
-#include "platform.h"
-
-#define MAX_INDEX_VALUE 65535 // Maximum value of GLushort
+#include "shaderProgram.h"
 
 int VboMesh::s_validGeneration = 0;
 

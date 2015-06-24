@@ -1,5 +1,9 @@
 #include "spotLight.h"
+
 #include "glm/gtx/string_cast.hpp"
+#include "platform.h"
+#include "util/shaderProgram.h"
+#include "view/view.h"
 
 std::string SpotLight::s_classBlock;
 std::string SpotLight::s_typeName = "SpotLight";

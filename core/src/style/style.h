@@ -1,21 +1,20 @@
 #pragma once
 
+#include "data/tileData.h"
+#include "gl.h"
+#include "styleParamMap.h"
+
+#include <memory>
 #include <string>
 #include <vector>
 
-#include "data/tileData.h"
-#include "gl.h"
-#include "platform.h"
-#include "style/material.h"
-#include "tile/mapTile.h"
-#include "util/vertexLayout.h"
-#include "util/shaderProgram.h"
-#include "util/mapProjection.h"
-#include "util/builders.h"
-#include "view/view.h"
-#include "styleParamMap.h"
-#include "csscolorparser.hpp"
-
+class MapTile;
+class MapProjection;
+class Material;
+class ShaderProgram;
+class VboMesh;
+class VertexLayout;
+class View;
 
 enum class LightingType : char {
     none,

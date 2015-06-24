@@ -1,5 +1,10 @@
 #include "textStyle.h"
+
 #include "text/fontContext.h"
+#include "tile/mapTile.h"
+#include "util/shaderProgram.h"
+#include "util/vboMesh.h"
+#include "view/view.h"
 
 MapTile* TextStyle::s_processedTile = nullptr;
 

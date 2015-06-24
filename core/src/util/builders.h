@@ -1,9 +1,8 @@
 #pragma once
 
-#include <vector>
-
 #include "tileData.h"
-#include "platform.h"
+
+#include <vector>
 
 enum class CapTypes {
     BUTT = 0, // No points added to end of line

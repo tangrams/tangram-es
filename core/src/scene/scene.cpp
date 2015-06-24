@@ -1,9 +1,8 @@
 #include "scene.h"
 
 #include "platform.h"
-#include "directionalLight.h"
-#include "pointLight.h"
-#include "spotLight.h"
+#include "scene/light.h"
+#include "style/style.h"
 
 Scene::Scene() {
 

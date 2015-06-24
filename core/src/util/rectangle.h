@@ -20,7 +20,7 @@ public:
     Rectangle(const glm::ivec4 &_viewPort);
     
     /* Create a rectangle from other one, with the option to add some margins on the sides */
-    Rectangle(const Rectangle &_rectangel, const float &_margin = 0.0);
+    Rectangle(const Rectangle &_rectangle, const float &_margin = 0.0);
     
     /* Element by element constructor */
     Rectangle(const float &_x, const float &_y, const float &_width, const float &_height);

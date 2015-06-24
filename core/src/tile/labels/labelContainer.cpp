@@ -1,6 +1,9 @@
 #include "labelContainer.h"
-#include "tile/mapTile.h"
+
+#include "isect2d.h"
 #include "text/fontContext.h"
+#include "tile/mapTile.h"
+#include "view/view.h"
 
 LabelContainer::LabelContainer() {}
 

@@ -1,10 +1,14 @@
 #pragma once
  
-#include <memory>
-#include "glm/glm.hpp"
+#include "glm/vec4.hpp"
 
-#include "util/shaderProgram.h"
-#include "view/view.h"
+#include <map>
+#include <memory>
+#include <string>
+#include <vector>
+
+class ShaderProgram;
+class View;
 
 enum class LightType {
     AMBIENT,

@@ -1,5 +1,8 @@
 #include "shaderProgram.h"
+
+#include "platform.h"
 #include "scene/light.h"
+
 
 GLuint ShaderProgram::s_activeGlProgram = 0;
 int ShaderProgram::s_validGeneration = 0;

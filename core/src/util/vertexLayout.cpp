@@ -1,4 +1,5 @@
 #include "vertexLayout.h"
+#include "shaderProgram.h"
 
 std::unordered_map<GLint, GLuint> VertexLayout::s_enabledAttribs = std::unordered_map<GLint, GLuint>();
 

@@ -1,7 +1,7 @@
 #include "pbfParser.h"
-#include "platform.h"
 
-#include <cmath>
+#include "tile/MapTile.h"
+#include "platform.h"
 
 
 void PbfParser::extractGeometry(protobuf::message& _geomIn, int _tileExtent, std::vector<Line>& _out, const MapTile& _tile) {

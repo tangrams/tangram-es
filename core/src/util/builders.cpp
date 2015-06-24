@@ -1,9 +1,10 @@
 #include "builders.h"
 
-#include "tesselator.h"
-#include "rectangle.h"
 #include "geom.h"
 #include "glm/gtx/rotate_vector.hpp"
+#include "platform.h"
+#include "rectangle.h"
+#include "tesselator.h"
 
 #include <memory>
 

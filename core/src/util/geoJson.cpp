@@ -1,5 +1,7 @@
 #include "geoJson.h"
+
 #include "platform.h"
+#include "tile/mapTile.h"
 #include "util/mapProjection.h"
 
 void GeoJson::extractPoint(const rapidjson::Value& _in, Point& _out, const MapTile& _tile) {
