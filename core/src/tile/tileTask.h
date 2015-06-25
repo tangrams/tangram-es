@@ -10,8 +10,6 @@ class DataSource;
 class TileTaskData {
 
 public:
-    TileManager& tileManager;
-
     TileID tileID;
     /*const*/ DataSource* source;
 
@@ -25,11 +23,14 @@ public:
     // The result
     std::shared_ptr<MapTile> tile;
 
-    TileTaskData(TileManager& _tileManager, TileID _tileID, DataSource* _source) :
-        tileManager(_tileManager),
+    TileTaskData(TileID _tileID, DataSource* _source) :
         tileID(_tileID),
         source(_source) {
     }
 };
 
+// NB: with c++14 this should become unique_ptr:
+// Moving unique_ptr into closure is a not well supported with c++11
 typedef std::shared_ptr<TileTaskData> TileTask;
+
+typedef std::function<void(TileTask)> TileTaskCb;

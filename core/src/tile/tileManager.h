@@ -88,6 +88,9 @@ private:
     int32_t m_loadPending = 0;
     
     bool m_tileSetChanged = false;
+
+    TileTaskCb m_dataCallback;
+    //TileTaskCb m_processCallback;
     
     /*
      * Constructs a future (async) to load data of a new visible tile

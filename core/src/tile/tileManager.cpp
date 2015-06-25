@@ -18,6 +18,8 @@ TileManager::TileManager() {
     for (size_t i = 0; i < MAX_WORKERS; i++) {
         m_workers.push_back(std::unique_ptr<TileWorker>(new TileWorker()));
     }
+    m_dataCallback = std::bind(&TileManager::addToWorkerQueue, this, std::placeholders::_1);
+    //m_processCallback = std::bind(&TileManager::addToCompleted, this, std::placeholders::_1);
 }
 
 TileManager::TileManager(TileManager&& _other) :
@@ -48,7 +50,7 @@ void TileManager::addDataSource(std::unique_ptr<DataSource> _source) {
 
 void TileManager::addToWorkerQueue(TileTask task) {
     std::lock_guard<std::mutex> lock(m_queueTileMutex);
-    m_queuedTiles.push_back(task);
+    m_queuedTiles.push_back(std::move(task));
 }
 
 TileTask TileManager::pollTileTask() {
@@ -213,12 +215,11 @@ void TileManager::updateTileSet() {
             tile->setState(MapTile::Loading);
 
             for (auto& source : m_dataSources) {
-                //auto task = std::unique_ptr<TileTask>(new TileTask(*this, id, tile->getSerial(), source.get()));
 
-                TileTask task = std::make_shared<TileTaskData>( *this, id, source.get() );
+                TileTask task = std::make_shared<TileTaskData>(id, source.get() );
                 task->tile = tile;
 
-                if (!source->loadTileData(task)) {
+                if (!source->loadTileData(task, m_dataCallback)) {
                     logMsg("ERROR: Loading failed for tile [%d, %d, %d]\n", id.z, id.x, id.y);
                 }
             }

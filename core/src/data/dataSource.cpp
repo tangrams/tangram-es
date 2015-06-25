@@ -45,7 +45,6 @@ void DataSource::setTileData(const TileID& _tileID, const std::shared_ptr<TileDa
 }
 
 void DataSource::constructURL(const TileID& _tileCoord, std::string& _url) const {
-
     _url.assign(m_urlTemplate);
 
     size_t xpos = _url.find("{x}");
@@ -62,31 +61,26 @@ void DataSource::constructURL(const TileID& _tileCoord, std::string& _url) const
     }
 }
 
-bool DataSource::loadTileData(TileTask _task) {
-    
-    bool success = true; // Begin optimistically
+bool DataSource::loadTileData(TileTask _task, TileTaskCb _cb) {
     
     if (hasTileData(_task->tileID)) {
         _task->parsedTileData = m_tileStore[_task->tileID];
-        _task->tileManager.addToWorkerQueue(_task);
-        return success;
+        _cb(std::move(_task));
+        requestRender();
+
+        return true;
     }
 
-    std::string url;
-    constructURL(_task->tileID, url);
+    std::string url(constructURL(_task->tileID));
 
-    success = startUrlRequest(url,[=](std::vector<char>&& _rawData) {
-        _task->rawTileData = std::move(_rawData);
-        _task->tileManager.addToWorkerQueue(_task);
-        requestRender();
-    });
-    
-    return success;
+    return startUrlRequest(url, [=](std::vector<char>&& _rawData) {
+            _task->rawTileData = std::move(_rawData);
+            _cb(std::move(_task));
+            requestRender();
+        });
 }
 
 void DataSource::cancelLoadingTile(const TileID& _tileID) {
-    std::string url;
-    constructURL(_tileID, url);
-    cancelUrlRequest(url);
+    cancelUrlRequest(constructURL(_tileID));
 }
 
