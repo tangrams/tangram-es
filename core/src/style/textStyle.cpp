@@ -14,7 +14,7 @@ TextStyle::TextStyle(const std::string& _fontName, std::string _name, float _fon
     constructVertexLayout();
     constructShaderProgram();
     
-    m_labels = LabelContainer::GetInstance();
+    m_labels = Labels::GetInstance();
 }
 
 TextStyle::~TextStyle() {
@@ -123,7 +123,7 @@ void TextStyle::buildPolygon(Polygon& _polygon, void* _styleParams, Properties& 
 }
 
 void TextStyle::onBeginBuildTile(MapTile& _tile) const {
-    auto ftContext = LabelContainer::GetInstance()->getFontContext();
+    auto ftContext = m_labels->getFontContext();
     auto buffer = ftContext->genTextBuffer();
 
     _tile.setTextBuffer(*this, buffer);
@@ -144,7 +144,7 @@ void TextStyle::onBeginBuildTile(MapTile& _tile) const {
 }
 
 void TextStyle::onEndBuildTile(MapTile &_tile, std::shared_ptr<VboMesh> _mesh) const {
-    auto ftContext = LabelContainer::GetInstance()->getFontContext();
+    auto ftContext = m_labels->getFontContext();
     auto buffer = ftContext->getCurrentBuffer();
     
     // add the computed glyph vertices to the mesh once
@@ -160,7 +160,7 @@ void TextStyle::onEndBuildTile(MapTile &_tile, std::shared_ptr<VboMesh> _mesh) c
 }
 
 void TextStyle::onBeginDrawFrame(const std::shared_ptr<View>& _view, const std::shared_ptr<Scene>& _scene) {
-    auto ftContext = LabelContainer::GetInstance()->getFontContext();
+    auto ftContext = m_labels->getFontContext();
     const auto& atlas = ftContext->getAtlas();
     float projectionMatrix[16] = {0};
 
