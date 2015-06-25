@@ -199,7 +199,7 @@ MaterialTexture SceneLoader::loadMaterialTexture(YAML::Node matCompNode, Scene& 
         sharedTexs.emplace(name, std::make_shared<Texture>(name));
     }
 
-    matTex.tex = sharedTexs[name];
+    matTex.tex = sharedTexs.at(name);
 
     if (mappingNode) {
         std::string mapping = mappingNode.as<std::string>();
