@@ -186,6 +186,8 @@ MaterialTexture SceneLoader::loadMaterialTexture(YAML::Node matCompNode, Scene& 
 
     Node textureNode = matCompNode["texture"];
     Node mappingNode = matCompNode["mapping"];
+    Node scaleNode = matCompNode["scale"];
+    Node amountNode = matCompNode["amount"];
 
     if (!textureNode) {
         logMsg("WARNING: Expected a \"texture\" parameter; Material may be incorrect.\n");
@@ -208,6 +210,26 @@ MaterialTexture SceneLoader::loadMaterialTexture(YAML::Node matCompNode, Scene& 
         else if (mapping == "triplanar") { logMsg("WARNING: triplanar texture mapping not yet implemented\n"); } // TODO
         else if (mapping == "spheremap") { matTex.mapping = MappingType::spheremap; }
         else { logMsg("WARNING: unrecognized texture mapping \"%s\"\n", mapping.c_str()); }
+    }
+
+    if (scaleNode) {
+        if (scaleNode.IsSequence() && scaleNode.size() == 2) {
+            matTex.scale = { scaleNode[0].as<float>(), scaleNode[1].as<float>(), 1.f };
+        } else if (scaleNode.IsScalar()) {
+            matTex.scale = glm::vec3(scaleNode.as<float>());
+        } else {
+            logMsg("WARNING: unrecognized scale parameter in material\n");
+        }
+    }
+
+    if (amountNode) {
+        if (amountNode.IsSequence() && amountNode.size() == 3) {
+            matTex.amount = { amountNode[0].as<float>(), amountNode[1].as<float>(), amountNode[2].as<float>() };
+        } else if (amountNode.IsScalar()) {
+            matTex.amount = glm::vec3(amountNode.as<float>());
+        } else {
+            logMsg("WARNING: unrecognized amount parameter in material\n");
+        }
     }
 
     return matTex;
