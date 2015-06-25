@@ -47,7 +47,7 @@ void TileWorker::processTileData(TileTask _task,
         
             //Process data for all styles
             for(const auto& style : _styles) {
-                if(m_aborted) {
+                if (m_aborted || tile->state() == MapTile::Canceled) {
                     m_finished = true;
                     return false;
                 }

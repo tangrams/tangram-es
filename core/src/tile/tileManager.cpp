@@ -70,35 +70,34 @@ void TileManager::updateTileSet() {
     // Check if any native worker needs to be dispatched i.e. queuedTiles is not empty.
     if (!m_queuedTiles.empty()) {
 
-        //logMsg("QUEUED TILES: %d\n", m_queuedTiles.size());
-
         for (auto& worker : m_workers) {
-            if (worker->isFree()){
-                auto task = pollTileTask();
+            if (!worker->isFree())
+                continue;
 
-                while (task) {
+            auto task = pollTileTask();
+            while (task) {
 
-                    // Check if the tile was not canceled.
-                    if (task->tile->state() == MapTile::Loading) {
-                        // FIXME - use atomic and decrement on retrival
-                        m_loadPending--;
+                // Check if the tile is ready for processing.
+                if (task->tile->state() == MapTile::Loading)
+                    break;
 
-                        task->tile->setState(MapTile::Processing);
-                        worker->processTileData(std::move(task), m_scene->getStyles(), *m_view);
-                        break;
-                    }
+                const auto& id = task->tileID;
+                logMsg("[%d, %d, %d] >>> skipping work for removed tile\n", id.z, id.x, id.y);
 
-                    const auto& id = task->tileID;
-                    logMsg("[%d, %d, %d] >>> skipping work for removed tile\n", id.z, id.x, id.y);
-
-                    if (task->tile->state() != MapTile::Canceled) {
-                        logMsg(">>> WRONG STATE %d <<<", task->tile->state());
-                        assert(false);
-                    }
-
-                    task = pollTileTask();
+                if (task->tile->state() != MapTile::Canceled) {
+                    logMsg(">>> WRONG STATE %d <<<", task->tile->state());
+                    assert(false);
                 }
+                task = pollTileTask();
             }
+            if (!task)
+                break;
+
+            // FIXME - use atomic and decrement on retrival
+            m_loadPending--;
+
+            task->tile->setState(MapTile::Processing);
+            worker->processTileData(std::move(task), m_scene->getStyles(), *m_view);
         }
     }
 
@@ -250,41 +249,42 @@ void TileManager::removeTile(std::map< TileID, std::shared_ptr<MapTile> >::itera
     //logMsg("[%d, %d, %d] REMOVE Tile\n", id.z, id.x, id.y);
 
     if (tile->state() == MapTile::Loading) {
-        // 1. Remove from Datasource
         m_loadPending--;
 
-        // Make sure to cancel the network request associated with this tile,
-        // then if already fetched remove it from the processing queue and
-        // the worker managing this tile, if applicable
+        // 1. Remove from Datasource
+        // Make sure to cancel the network request associated with this tile.
         for(auto& dataSource : m_dataSources) {
-            // FIXME ??? cleanProxyTiles(tile);
             dataSource->cancelLoadingTile(id);
         }
 
+        //// Canceled tiles will be ignored ////
         // 2. Remove from tiles queued for processing
-        std::lock_guard<std::mutex> lock(m_queueTileMutex);
+        // If already fetched remove it from the processing queue.
 
-        const auto& found = std::find_if(m_queuedTiles.begin(), m_queuedTiles.end(),
-                                         [&](const TileTask& p) {
-                                             return (p->tileID == id);
-                                         });
-        if (found != m_queuedTiles.end()) {
-            m_queuedTiles.erase(found);
-        }
-    } else if (tile->state() == MapTile::Processing) {
-        // 3. If a worker is processing this tile, abort it
-
-        for (const auto& worker : m_workers) {
-            if (!worker->isFree() && worker->getTileID() == id) {
-                worker->abort();
-                // Proxy tiles will be cleaned in update loop
-            }
-        }
+        // std::lock_guard<std::mutex> lock(m_queueTileMutex);
+        // const auto& found = std::find_if(m_queuedTiles.begin(), m_queuedTiles.end(),
+        //                                  [&](const TileTask& p) {
+        //                                      return (p->tileID == id);
+        //                                  });
+        // if (found != m_queuedTiles.end()) {
+        //     m_queuedTiles.erase(found);
+        // }
     }
+    // else if (tile->state() == MapTile::Processing) {
+    //     // 3. If a worker is processing this tile, abort it
+    //     for (const auto& worker : m_workers) {
+    //         if (!worker->isFree() && worker->getTileID() == id) {
+    //             worker->abort();
+    //             // Proxy tiles will be cleaned in update loop
+    //         }
+    //     }
+    // }
 
+    //
     tile->setState(MapTile::Canceled);
 
     cleanProxyTiles(*tile);
+
     // Remove tile from set
     _tileIter = m_tileSet.erase(_tileIter);
 
