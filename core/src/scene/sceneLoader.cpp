@@ -84,6 +84,11 @@ void SceneLoader::loadShaderConfig(YAML::Node shaders, ShaderProgram& shader) {
         for (const auto& define : definesNode) {
             std::string name = define.first.as<std::string>();
             std::string value = define.second.as<std::string>();
+            if (value == "true") {
+                value = ""; // specifying a define to be 'true' means that it is simply defined and has no value
+            } else if (value == "false") {
+                continue; // specifying a define to be 'false' means that the define will not be defined at all
+            }
             shader.addSourceBlock("defines", "#define " + name + " " + value);
         }
     }
