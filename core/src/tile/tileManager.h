@@ -53,8 +53,9 @@ public:
      */
     void updateTileSet();
 
-    // void addToWorkerQueue(std::vector<char>&& _rawData, std::shared_ptr<MapTile> _tile, DataSource* _source);
-    // void addToWorkerQueue(std::shared_ptr<TileData>& _parsedData, std::shared_ptr<MapTile> _tile, DataSource* _source);
+    /* For DataSource: Pass TileTask with 'parsed' or 'raw' data back
+     * to TileManager for further processing by TileWorker.
+     */
     void addToWorkerQueue(TileTask task);
     
     TileTask pollTileTask();
