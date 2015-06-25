@@ -4,7 +4,7 @@
 #include "util/tileID.h"
 #include "util/vboMesh.h"
 #include "text/fontContext.h"
-#include "labels/labelContainer.h"
+#include "labels/labels.h"
 
 #include "glm/gtc/matrix_transform.hpp"
 #include "glm/gtc/type_ptr.hpp"
@@ -77,7 +77,7 @@ void MapTile::updateLabels(float _dt, const Style& _style, const View& _view) {
     }
 }
 
-void MapTile::pushLabelTransforms(const Style& _style, std::shared_ptr<LabelContainer> _labelContainer) {
+void MapTile::pushLabelTransforms(const Style& _style, std::shared_ptr<Labels> _labels) {
     auto it = m_buffers.find(_style.getName());
     
     if (it == m_buffers.end()) {
@@ -87,7 +87,7 @@ void MapTile::pushLabelTransforms(const Style& _style, std::shared_ptr<LabelCont
     auto textBuffer = it->second;
     
     if (textBuffer->hasData()) {
-        auto ftContext = _labelContainer->getFontContext();
+        auto ftContext = _labels->getFontContext();
 
         ftContext->lock();
         ftContext->useBuffer(textBuffer);
