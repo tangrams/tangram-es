@@ -84,7 +84,7 @@ void SceneLoader::loadShaderConfig(YAML::Node shaders, ShaderProgram& shader) {
         for (const auto& define : definesNode) {
             std::string name = define.first.as<std::string>();
             std::string value = define.second.as<std::string>();
-            shader.addSourceBlock("defines", "#define" + name + " " + value);
+            shader.addSourceBlock("defines", "#define " + name + " " + value);
         }
     }
 
