@@ -269,6 +269,15 @@ void SceneLoader::loadStyles(YAML::Node styles, Scene& scene) {
 
         std::string styleName = styleIt.first.as<std::string>();
         Node styleNode = styleIt.second;
+        
+        bool validName = true;
+        for (auto builtIn : { "polygons", "lines", "points", "text", "debug", "debugtext" }) {
+            if (styleName == builtIn) { validName = false; }
+        }
+        if (!validName) {
+            logMsg("WARNING: cannot use built-in style name \"%s\" for new style\n", styleName.c_str());
+            continue;
+        }
 
         Node baseNode = styleNode["base"];
         if (baseNode) {
@@ -276,6 +285,7 @@ void SceneLoader::loadStyles(YAML::Node styles, Scene& scene) {
             if (baseString == "lines") { style = new PolylineStyle(styleName); }
             else if (baseString == "text") { style = new TextStyle("FiraSans", styleName, 15.0f, 0xF7F0E1, true, true); }
             else if (baseString == "sprites") { logMsg("WARNING: sprite base styles not yet implemented\n"); } // TODO
+            else { logMsg("WARNING: base style \"%s\" not recognized, defaulting to polygons\n", baseString.c_str()); }
         }
 
         if (style == nullptr) { style = new PolygonStyle(styleName); }
