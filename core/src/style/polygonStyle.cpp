@@ -56,7 +56,7 @@ void PolygonStyle::buildPoint(Point& _point, void* _styleParam, Properties& _pro
 void PolygonStyle::buildLine(Line& _line, void* _styleParam, Properties& _props, VboMesh& _mesh) const {
     std::vector<PosNormColVertex> vertices;
 
-    PolyLineOutput output = {
+    PolyLineBuilder builder = {
       [&](const glm::vec3& coord, const glm::vec2& normal, const glm::vec2& uv) {
         float halfWidth =  0.2f;
         GLuint abgr = 0xff969696; // Default road color
@@ -66,10 +66,10 @@ void PolygonStyle::buildLine(Line& _line, void* _styleParam, Properties& _props,
       }
     };
 
-    Builders::buildPolyLine(_line, PolyLineOptions(), output);
+    Builders::buildPolyLine(_line, builder);
 
     auto& mesh = static_cast<PolygonStyle::Mesh&>(_mesh);
-    mesh.addVertices(std::move(vertices), std::move(output.indices));
+    mesh.addVertices(std::move(vertices), std::move(builder.indices));
 }
 
 void PolygonStyle::buildPolygon(Polygon& _polygon, void* _styleParam, Properties& _props, VboMesh& _mesh) const {
@@ -87,7 +87,7 @@ void PolygonStyle::buildPolygon(Polygon& _polygon, void* _styleParam, Properties
     float height = _props.numericProps["height"]; // Inits to zero if not present in data
     float minHeight = _props.numericProps["min_height"]; // Inits to zero if not present in data
 
-    PolygonOutput output = {
+    PolygonBuilder builder = {
       [&](const glm::vec3& coord, const glm::vec3& normal, const glm::vec2& uv){
         vertices.push_back({ coord, normal, uv, abgr, layer });
       },
@@ -100,19 +100,19 @@ void PolygonStyle::buildPolygon(Polygon& _polygon, void* _styleParam, Properties
                 point.z = height;
             }
         }
-        Builders::buildPolygonExtrusion(_polygon, minHeight, output);
+        Builders::buildPolygonExtrusion(_polygon, minHeight, builder);
     }
 
-    Builders::buildPolygon(_polygon, output);
+    Builders::buildPolygon(_polygon, builder);
 
     // Outlines for water polygons
     /*
     if (_layer == "water") {
         abgr = 0xfff2cc6c;
         size_t outlineStart = points.size();
-        PolyLineOutput lineOutput = { points, indices, Builders::NO_SCALING_VECS, texcoords };
+        PolyLineBuilder lineBuilder = { points, indices, Builders::NO_SCALING_VECS, texcoords };
         PolyLineOptions outlineOptions = { CapTypes::ROUND, JoinTypes::ROUND, 0.02f };
-        Builders::buildOutline(_polygon[0], outlineOptions, lineOutput);
+        Builders::buildOutline(_polygon[0], outlineOptions, lineBuilder);
         glm::vec3 normal(0.f, 0.f, 1.f); // The outline builder doesn't produce normals, so we'll add those now
         normals.insert(normals.end(), points.size() - normals.size(), normal);
         for (size_t i = outlineStart; i < points.size(); i++) {
@@ -125,5 +125,5 @@ void PolygonStyle::buildPolygon(Polygon& _polygon, void* _styleParam, Properties
     */
 
     auto& mesh = static_cast<PolygonStyle::Mesh&>(_mesh);
-    mesh.addVertices(std::move(vertices), std::move(output.indices));
+    mesh.addVertices(std::move(vertices), std::move(builder.indices));
 }

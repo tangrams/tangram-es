@@ -110,18 +110,16 @@ void PolylineStyle::buildLine(Line& _line, void* _styleParam, Properties& _props
     }
 
     GLfloat layer = _props.numericProps["sort_key"] + params->order;
-
     float halfWidth = params->width * .5f;
 
-    PolyLineOptions lineOptions = { params->cap, params->join };
-
-    PolyLineOutput lineOutput {
-      [&](const glm::vec3& coord, const glm::vec2& normal, const glm::vec2& uv) {
-        vertices.push_back({ coord, uv, normal, halfWidth, abgr, layer });
-      }
+    PolyLineBuilder builder {
+        [&](const glm::vec3& coord, const glm::vec2& normal, const glm::vec2& uv) {
+            vertices.push_back({ coord, uv, normal, halfWidth, abgr, layer });
+        },
+        PolyLineOptions(params->cap, params->join)
     };
 
-    Builders::buildPolyLine(_line, lineOptions, lineOutput);
+    Builders::buildPolyLine(_line, builder);
 
     if (params->outlineOn) {
 
@@ -130,17 +128,17 @@ void PolylineStyle::buildLine(Line& _line, void* _styleParam, Properties& _props
 
         if (params->outlineCap != params->cap || params->outlineJoin != params->join) {
             // need to re-triangulate with different cap and/or join
-            lineOptions.cap = params->outlineCap;
-            lineOptions.join = params->outlineJoin;
-            Builders::buildPolyLine(_line, lineOptions, lineOutput);
+            builder.options.cap = params->outlineCap;
+            builder.options.join = params->outlineJoin;
+            Builders::buildPolyLine(_line, builder);
         } else {
             // re-use indices from original line
-            size_t oldSize = lineOutput.indices.size();
+            size_t oldSize = builder.indices.size();
             size_t offset = vertices.size();
-            lineOutput.indices.reserve(2 * oldSize);
+            builder.indices.reserve(2 * oldSize);
 
             for(size_t i = 0; i < oldSize; i++) {
-                 lineOutput.indices.push_back(offset + lineOutput.indices[i]);
+                 builder.indices.push_back(offset + builder.indices[i]);
             }
             for (size_t i = 0; i < offset; i++) {
               const auto& v = vertices[i];
@@ -150,7 +148,7 @@ void PolylineStyle::buildLine(Line& _line, void* _styleParam, Properties& _props
     }
 
     auto& mesh = static_cast<PolylineStyle::Mesh&>(_mesh);
-    mesh.addVertices(std::move(vertices), std::move(lineOutput.indices));
+    mesh.addVertices(std::move(vertices), std::move(builder.indices));
 }
 
 void PolylineStyle::buildPolygon(Polygon& _polygon, void* _styleParam, Properties& _props, VboMesh& _mesh) const {
