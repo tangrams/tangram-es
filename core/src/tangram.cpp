@@ -25,7 +25,7 @@ namespace Tangram {
     std::unique_ptr<TileManager> m_tileManager;
     std::shared_ptr<Scene> m_scene;
     std::shared_ptr<View> m_view;
-    std::shared_ptr<LabelContainer> m_labelContainer;
+    std::shared_ptr<Labels> m_labels;
     std::shared_ptr<FontContext> m_ftContext;
     std::shared_ptr<DebugStyle> m_debugStyle;
     std::shared_ptr<Skybox> m_skybox;
@@ -62,11 +62,10 @@ namespace Tangram {
         // Hard-coded setup for stuff that isn't loaded through the config file yet
         m_ftContext = std::make_shared<FontContext>();
         m_ftContext->addFont("FiraSans-Medium.ttf", "FiraSans");
-        m_labelContainer = LabelContainer::GetInstance();
-        m_labelContainer->setFontContext(m_ftContext);
-        m_labelContainer->setView(m_view);
-        
-        // Load scene from config file
+        m_labels = Labels::GetInstance();
+        m_labels->setFontContext(m_ftContext);
+        m_labels->setView(m_view);
+
         SceneLoader loader;
         loader.loadScene("config.yaml", *m_scene, *m_tileManager, *m_view);
 
@@ -101,7 +100,7 @@ namespace Tangram {
 
         if (m_ftContext) {
             m_ftContext->setScreenSize(m_view->getWidth(), m_view->getHeight());
-            m_labelContainer->setScreenSize(m_view->getWidth(), m_view->getHeight());
+            m_labels->setScreenSize(m_view->getWidth(), m_view->getHeight());
         }
 
         while (Error::hadGlError("Tangram::resize()")) {}
@@ -135,12 +134,12 @@ namespace Tangram {
                 }
 
                 // manage occlusions
-                m_labelContainer->updateOcclusions();
+                m_labels->updateOcclusions();
 
                 for (const auto& style : m_scene->getStyles()) {
                     for (const auto& mapIDandTile : m_tileManager->getVisibleTiles()) {
                         const std::shared_ptr<MapTile>& tile = mapIDandTile.second;
-                        tile->pushLabelTransforms(*style, m_labelContainer);
+                        tile->pushLabelTransforms(*style, m_labels);
                     }
                 }
             }
@@ -169,7 +168,6 @@ namespace Tangram {
                 const std::shared_ptr<MapTile>& tile = mapIDandTile.second;
                 if (tile->hasGeometry()) {
                     // Draw tile!
-                    style->onBeginDrawTile(tile);
                     tile->draw(*style, *m_view);
                 }
             }

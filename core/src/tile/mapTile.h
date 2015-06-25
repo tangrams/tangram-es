@@ -12,7 +12,7 @@
 #include "tileID.h"
 
 class Label;
-class LabelContainer;
+class Labels;
 class MapProjection;
 class Style;
 class TextBuffer;
@@ -56,7 +56,7 @@ public:
      * Use std::move to pass in the mesh by move semantics; Geometry in the mesh
      * must have coordinates relative to the tile origin.
      */
-    void addGeometry(const Style& _style, std::unique_ptr<VboMesh> _mesh);
+    void addGeometry(const Style& _style, std::shared_ptr<VboMesh> _mesh);
     
     void addLabel(const std::string& _styleName, std::shared_ptr<Label> _label);
     
@@ -64,6 +64,8 @@ public:
      * Method to check if this tile's vboMesh(s) are loaded and ready to be drawn
      */
     bool hasGeometry();
+    
+    std::shared_ptr<VboMesh>& getGeometry(const Style& _style);
 
     /* uUdate the Tile considering the current view */
     void update(float _dt, const View& _view);
@@ -72,7 +74,7 @@ public:
     void updateLabels(float _dt, const Style& _style, const View& _view);
     
     /* Push the label transforms to the font rendering context */
-    void pushLabelTransforms(const Style& _style, std::shared_ptr<LabelContainer> _labelContainer);
+    void pushLabelTransforms(const Style& _style, std::shared_ptr<Labels> _labels);
 
     void setTextBuffer(const Style& _style, std::shared_ptr<TextBuffer> _buffer);
     std::shared_ptr<TextBuffer> getTextBuffer(const Style& _style) const;
@@ -110,7 +112,7 @@ private:
     // Distances from the global origin are too large to represent precisely in 32-bit floats, so we only apply the
     // relative translation from the view origin to the model origin immediately before drawing the tile. 
 
-    std::unordered_map<std::string, std::unique_ptr<VboMesh>> m_geometry; // Map of <Style>s and their associated <VboMesh>es
+    std::unordered_map<std::string, std::shared_ptr<VboMesh>> m_geometry; // Map of <Style>s and their associated <VboMesh>es
     std::unordered_map<std::string, std::vector<std::shared_ptr<Label>>> m_labels;
     std::map<std::string, std::shared_ptr<TextBuffer>> m_buffers; // Map of <Style>s and the associated text buffer
 

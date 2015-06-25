@@ -1,19 +1,19 @@
-#include "labelContainer.h"
+#include "labels.h"
 #include "tile/mapTile.h"
 #include "text/fontContext.h"
 
-LabelContainer::LabelContainer() {}
+Labels::Labels() {}
 
-LabelContainer::~LabelContainer() {
+Labels::~Labels() {
     m_labelUnits.clear();
     m_pendingLabelUnits.clear();
 }
 
-int LabelContainer::LODDiscardFunc(float _maxZoom, float _zoom) {
+int Labels::LODDiscardFunc(float _maxZoom, float _zoom) {
     return (int) MIN(floor(((log(-_zoom + (_maxZoom + 2)) / log(_maxZoom + 2) * (_maxZoom )) * 0.5)), MAX_LOD);
 }
 
-bool LabelContainer::addLabel(MapTile& _tile, const std::string& _styleName, Label::Transform _transform, std::string _text, Label::Type _type) {
+bool Labels::addLabel(MapTile& _tile, const std::string& _styleName, Label::Transform _transform, std::string _text, Label::Type _type) {
     auto currentBuffer = m_ftContext->getCurrentBuffer();
 
     if ( (m_currentZoom - _tile.getID().z) > LODDiscardFunc(View::s_maxZoom, m_currentZoom)) {
@@ -24,7 +24,11 @@ bool LabelContainer::addLabel(MapTile& _tile, const std::string& _styleName, Lab
         fsuint textID = currentBuffer->genTextID();
         std::shared_ptr<Label> l(new Label(_transform, _text, textID, _type));
 
-        l->rasterize(currentBuffer);
+        if (!l->rasterize(currentBuffer)) {
+            l.reset();
+            return false;
+        }
+
         l->update(m_view->getViewProjectionMatrix() * _tile.getModelMatrix(), m_screenSize, 0);
         std::unique_ptr<TileID> tileID(new TileID(_tile.getID()));
         _tile.addLabel(_styleName, l);
@@ -41,7 +45,7 @@ bool LabelContainer::addLabel(MapTile& _tile, const std::string& _styleName, Lab
     return false;
 }
 
-void LabelContainer::updateOcclusions() {
+void Labels::updateOcclusions() {
     m_currentZoom = m_view->getZoom();
 
     // merge pending labels from threads
@@ -107,7 +111,7 @@ void LabelContainer::updateOcclusions() {
             pair.first->setOcclusion(true);
         }
     }
-    
+
     for(size_t i = 0; i < m_labelUnits.size(); i++) {
         auto& labelUnit = m_labelUnits[i];
         auto label = labelUnit.getWeakLabel();

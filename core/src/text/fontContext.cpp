@@ -34,6 +34,10 @@ void FontContext::clearState() {
 }
 
 void FontContext::useBuffer(const std::shared_ptr<TextBuffer>& _textBuffer) {
+    if (_textBuffer) {
+        _textBuffer->bind();
+    }
+
     m_currentBuffer = _textBuffer;
 }
 
@@ -61,14 +65,14 @@ bool FontContext::addFont(const std::string& _fontFile, std::string _name) {
 
     unsigned int dataSize;
     unsigned char* data = bytesFromResource(_fontFile.c_str(), &dataSize);
-    m_font = fonsAddFont(m_fsContext, "droid-serif", data, dataSize);
+    int font = fonsAddFont(m_fsContext, "droid-serif", data, dataSize);
 
-    if (m_font == FONS_INVALID) {
+    if (font == FONS_INVALID) {
         logMsg("[FontContext] Error loading font file %s\n", _fontFile.c_str());
         return false;
     }
 
-    m_fonts.emplace(std::move(_name), m_font);
+    m_fonts.emplace(std::move(_name), font);
 
     return true;
 }
@@ -84,73 +88,23 @@ void FontContext::setFont(const std::string& _name, int size) {
     }
 }
 
-void createTexTransforms(void* _userPtr, unsigned int _width, unsigned int _height) {
-    FontContext* fontContext = static_cast<FontContext*>(_userPtr);
-
-    TextureOptions options = {GL_RGBA, GL_RGBA, {GL_NEAREST, GL_NEAREST}, {GL_CLAMP_TO_EDGE, GL_CLAMP_TO_EDGE}};
-    std::unique_ptr<Texture> texture(new Texture(_width, _height, false, options));
-    std::shared_ptr<TextBuffer> textBuffer = fontContext->m_currentBuffer.lock();
-
-    if (textBuffer) {
-        textBuffer->setTextureTransform(std::move(texture));
-    }
-}
-
-void updateTransforms(void* _userPtr, unsigned int _xoff, unsigned int _yoff, unsigned int _width,
-                      unsigned int _height, const unsigned int* _pixels, void* _ownerPtr) {
-
-    TextBuffer* buffer = static_cast<TextBuffer*>(_ownerPtr);
-    const GLuint* subData = static_cast<const GLuint*>(_pixels);
-    auto texture = buffer->getTextureTransform();
-    texture->setSubData(subData, _xoff, _yoff, _width, _height);
-}
-
 void updateAtlas(void* _userPtr, unsigned int _xoff, unsigned int _yoff,
                  unsigned int _width, unsigned int _height, const unsigned int* _pixels) {
 
     FontContext* fontContext = static_cast<FontContext*>(_userPtr);
-    fontContext->m_atlas->setSubData(static_cast<const GLuint*>(_pixels), _xoff, _yoff, _width, _height);
+    fontContext->getAtlas()->setSubData(static_cast<const GLuint*>(_pixels), _xoff, _yoff, _width, _height);
 }
 
-void createAtlas(void* _userPtr, unsigned int _width, unsigned int _height) {
-
+void updateBuffer(void* _userPtr, GLintptr _offset, GLsizei _size, float* _newData) {
     FontContext* fontContext = static_cast<FontContext*>(_userPtr);
-    fontContext->m_atlas = std::unique_ptr<Texture>(new Texture(_width, _height));
-}
-
-bool errorCallback(void* _userPtr, fsuint buffer, GLFONSError error) {
-    FontContext* fontContext = static_cast<FontContext*>(_userPtr);
-
-    bool solved = false;
-
-    switch (error) {
-        case GLFONSError::ID_OVERFLOW: {
-            auto textBuffer = fontContext->m_currentBuffer.lock();
-
-            if (textBuffer) {
-                textBuffer->expand();
-                solved = true;
-            }
-
-            break;
-        }
-
-        default:
-            logMsg("[FontContext] FontError : undefined error\n");
-            break;
+    auto buffer = fontContext->getCurrentBuffer();
+    
+    if (buffer->hasData()) {
+        buffer->getWeakMesh()->update(_offset, _size, reinterpret_cast<unsigned char*>(_newData));
     }
-
-    return solved;
 }
 
 void FontContext::initFontContext(int _atlasSize) {
-    GLFONSparams params;
-
-    params.errorCallback = errorCallback;
-    params.createAtlas = createAtlas;
-    params.createTexTransforms = createTexTransforms;
-    params.updateAtlas = updateAtlas;
-    params.updateTransforms = updateTransforms;
-
-    m_fsContext = glfonsCreate(_atlasSize, _atlasSize, FONS_ZERO_TOPLEFT, params, (void*) this);
+    m_atlas = std::unique_ptr<Texture>(new Texture(_atlasSize, _atlasSize));
+    m_fsContext = glfonsCreate(_atlasSize, _atlasSize, FONS_ZERO_TOPLEFT, { false, updateBuffer, updateAtlas }, (void*) this);
 }
