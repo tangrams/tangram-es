@@ -51,7 +51,7 @@ void TileWorker::processTileData(TileTask _task,
                     m_finished = true;
                     return false;
                 }
-                style->addData(*tileData, *tile, _view.getMapProjection());
+                style->addData(*tileData, *tile);
             }
         }
 

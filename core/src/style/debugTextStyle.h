@@ -7,7 +7,7 @@ class DebugTextStyle : public TextStyle {
 
 protected:
 
-    virtual void addData(TileData& _data, MapTile& _tile, const MapProjection& _mapProjection) override;
+    virtual void addData(TileData& _data, MapTile& _tile) override;
 
 public:
 

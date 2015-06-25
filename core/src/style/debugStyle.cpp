@@ -33,7 +33,7 @@ void* DebugStyle::parseStyleParams(const std::string& _layerNameID, const StyleP
     return nullptr;
 }
 
-void DebugStyle::addData(TileData &_data, MapTile &_tile, const MapProjection &_mapProjection) {
+void DebugStyle::addData(TileData &_data, MapTile &_tile) {
 
     if (Tangram::getDebugFlag(Tangram::DebugFlags::tile_bounds)) {
 

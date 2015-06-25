@@ -107,7 +107,7 @@ public:
     virtual void addLayer(const std::pair<std::string, StyleParamMap>&& _layer);
 
     /* Add styled geometry from the given <TileData> object to the given <MapTile> */
-    virtual void addData(TileData& _data, MapTile& _tile, const MapProjection& _mapProjection);
+    virtual void addData(TileData& _data, MapTile& _tile);
 
     /* Perform any setup needed before drawing each frame */
     virtual void onBeginDrawFrame(const std::shared_ptr<View>& _view, const std::shared_ptr<Scene>& _scene);
