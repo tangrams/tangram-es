@@ -8,7 +8,7 @@ Light::Light(const std::string& _name, bool _dynamic):
     m_ambient(0.0f),
     m_diffuse(1.0f),
     m_specular(0.0f),
-    m_origin(LightOrigin::CAMERA),
+    m_origin(LightOrigin::camera),
     m_dynamic(_dynamic) {
 }
 

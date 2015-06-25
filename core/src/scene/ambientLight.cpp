@@ -4,11 +4,11 @@
 std::string AmbientLight::s_classBlock;
 std::string AmbientLight::s_typeName = "AmbientLight";
 
-AmbientLight::AmbientLight(const std::string& _name, bool _dynamic) : 
+AmbientLight::AmbientLight(const std::string& _name, bool _dynamic) :
     Light(_name, _dynamic) {
 
-    m_type = LightType::AMBIENT;
-    
+    m_type = LightType::ambient;
+
 }
 
 AmbientLight::~AmbientLight() {

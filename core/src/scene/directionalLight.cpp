@@ -4,11 +4,11 @@
 std::string DirectionalLight::s_classBlock;
 std::string DirectionalLight::s_typeName = "DirectionalLight";
 
-DirectionalLight::DirectionalLight(const std::string& _name, bool _dynamic) : 
+DirectionalLight::DirectionalLight(const std::string& _name, bool _dynamic) :
     Light(_name, _dynamic),
     m_direction(1.0,0.0,0.0) {
 
-    m_type = LightType::DIRECTIONAL;
+    m_type = LightType::directional;
 }
 
 DirectionalLight::~DirectionalLight() {
@@ -22,7 +22,7 @@ void DirectionalLight::setDirection(const glm::vec3 &_dir) {
 void DirectionalLight::setupProgram(const std::shared_ptr<View>& _view, std::shared_ptr<ShaderProgram> _shader ) {
 
     glm::vec3 direction = m_direction;
-    if (m_origin == LightOrigin::WORLD) {
+    if (m_origin == LightOrigin::world) {
         direction = _view->getNormalMatrix() * direction;
     }
 

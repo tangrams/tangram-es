@@ -68,7 +68,7 @@ void Labels::updateOcclusions() {
             m_labelUnits.pop_back();
             continue;
         }
-        
+
         if (!label->canOcclude()) {
             continue;
         }
@@ -97,16 +97,16 @@ void Labels::updateOcclusions() {
     // no priorities, only occlude one of the two occluded label
     for (auto& pair : occlusions) {
         if(!pair.first->occludedLastFrame()) {
-            if (pair.second->getState() == Label::State::WAIT_OCC) {
+            if (pair.second->getState() == Label::State::wait_occ) {
                 pair.second->setOcclusion(true);
             }
         }
         if(!pair.second->occludedLastFrame()) {
-            if (pair.first->getState() == Label::State::WAIT_OCC) {
+            if (pair.first->getState() == Label::State::wait_occ) {
                 pair.first->setOcclusion(true);
             }
         }
-        
+
         if(!pair.second->occludedLastFrame()) {
             pair.first->setOcclusion(true);
         }
@@ -115,7 +115,7 @@ void Labels::updateOcclusions() {
     for(size_t i = 0; i < m_labelUnits.size(); i++) {
         auto& labelUnit = m_labelUnits[i];
         auto label = labelUnit.getWeakLabel();
-        
+
         if (label != nullptr) {
             label->occlusionSolved();
         }

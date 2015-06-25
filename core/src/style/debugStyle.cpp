@@ -38,7 +38,7 @@ void* DebugStyle::parseStyleParams(const std::string& _layerNameID, const StyleP
 
 void DebugStyle::addData(TileData &_data, MapTile &_tile, const MapProjection &_mapProjection) {
 
-    if (Tangram::getDebugFlag(Tangram::DebugFlags::TILE_BOUNDS)) {
+    if (Tangram::getDebugFlag(Tangram::DebugFlags::tile_bounds)) {
 
         Mesh* mesh = new Mesh(m_vertexLayout, m_drawMode);
 
@@ -53,7 +53,7 @@ void DebugStyle::addData(TileData &_data, MapTile &_tile, const MapProjection &_
         vertices.push_back({{  1.f, -1.f, 0.f }, abgr });
         vertices.push_back({{  1.f,  1.f, 0.f }, abgr });
         vertices.push_back({{ -1.f,  1.f, 0.f }, abgr });
-        
+
         mesh->addVertices(std::move(vertices), { 0, 1, 2, 3, 0 });
         mesh->compileVertexBuffer();
 
