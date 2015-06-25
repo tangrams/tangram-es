@@ -1,8 +1,6 @@
 #include "vboMesh.h"
 #include "shaderProgram.h"
 
-#include <cstring> // for std::memcpy
-
 int VboMesh::s_validGeneration = 0;
 
 VboMesh::VboMesh() {

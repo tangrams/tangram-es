@@ -4,6 +4,8 @@
 #include "glfontstash.h"
 #include "glm/vec4.hpp"
 
+#include <memory>
+
 class Texture;
 class VboMesh;
 

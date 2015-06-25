@@ -4,6 +4,7 @@
 #include "platform.h"
 #include "vertexLayout.h"
 
+#include <cstring> // for memcpy
 #include <vector>
 #include <memory>
 

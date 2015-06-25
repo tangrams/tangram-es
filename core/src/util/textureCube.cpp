@@ -2,7 +2,7 @@
 #include "platform.h"
 #include "stb_image.h"
 
-#include <cstdlib>
+#include <cstring> // for memcpy
 
 TextureCube::TextureCube(std::string _file, TextureOptions _options) : Texture(0, 0, false, _options) {
 

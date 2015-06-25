@@ -6,6 +6,8 @@
 #define STB_IMAGE_IMPLEMENTATION
 #include "stb_image.h"
 
+#include <cstring> // for memset
+
 GLuint Texture::s_boundTextures[] = { 0 };
 GLuint Texture::s_activeSlot = GL_TEXTURE0;
 
