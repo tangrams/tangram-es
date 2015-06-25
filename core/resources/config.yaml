@@ -49,7 +49,7 @@ layers:
     landuse:
         data: { source: osm }
         draw:
-            pillows:
+            polygons:
                 order: 1
                 color: [0.443, 0.569, 0.4, 1.]
                 interactive: true #currently ignored
