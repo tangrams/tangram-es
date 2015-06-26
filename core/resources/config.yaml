@@ -173,4 +173,13 @@ layers:
             draw:
                 heightglow:
                     color: '#bddec5'
+    road_labels:
+        data: {source: osm, layer: roads}
+        filter: { name: true, aeroway: false, tunnel: false, railway: false, not: { kind: rail }, $zoom: { min: 10 } }
+        draw:
+            text: {}
+        highway: 
+            filter: { kind: highway, $zoom: { min: 7 } }
+        major_road:
+            filter: { kind: major_road, $zoom: { min: 14 } }
 
