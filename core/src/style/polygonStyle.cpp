@@ -105,25 +105,6 @@ void PolygonStyle::buildPolygon(Polygon& _polygon, void* _styleParam, Properties
 
     Builders::buildPolygon(_polygon, builder);
 
-    // Outlines for water polygons
-    /*
-    if (_layer == "water") {
-        abgr = 0xfff2cc6c;
-        size_t outlineStart = points.size();
-        PolyLineBuilder lineBuilder = { points, indices, Builders::NO_SCALING_VECS, texcoords };
-        PolyLineOptions outlineOptions = { CapTypes::ROUND, JoinTypes::ROUND, 0.02f };
-        Builders::buildOutline(_polygon[0], outlineOptions, lineBuilder);
-        glm::vec3 normal(0.f, 0.f, 1.f); // The outline builder doesn't produce normals, so we'll add those now
-        normals.insert(normals.end(), points.size() - normals.size(), normal);
-        for (size_t i = outlineStart; i < points.size(); i++) {
-            glm::vec3& p = points[i];
-            glm::vec3& n = normals[i];
-            glm::vec2& u = texcoords[i];
-            vertices.push_back({ p.x, p.y, p.z + .02f, n.x, n.y, n.z, u.x, u.y, abgr });
-        }
-    }
-    */
-
     auto& mesh = static_cast<PolygonStyle::Mesh&>(_mesh);
     mesh.addVertices(std::move(vertices), std::move(builder.indices));
 }
