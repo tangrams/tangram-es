@@ -88,17 +88,23 @@ void Style::applyLayerFiltering(const Feature& _feature, const Context& _ctx, lo
     auto sLayerItr = sLayers.begin();
 
     //A BFS traversal of the SceneLayer graph
-    while(sLayerItr != sLayers.end()) {
-        if( (*sLayerItr)->getFilter()->eval(_feature, _ctx)) { // filter matches
+    while (sLayerItr != sLayers.end()) {
+
+        if ( (*sLayerItr)->getFilter()->eval(_feature, _ctx)) { // filter matches
+
             _uniqueID += (1 << (*sLayerItr)->getID());
 
             if(s_styleParamMapCache.find(_uniqueID) != s_styleParamMapCache.end()) {
+
                 _styleParamMapMix = s_styleParamMapCache.at(_uniqueID);
+
             } else {
+
                 /* update StyleParam with subLayer parameters */
                 auto& sLayerStyleParamMap = (*sLayerItr)->getStyleParamMap();
                 for(auto& styleParam : sLayerStyleParamMap) {
                     auto it = _styleParamMapMix.find(styleParam.first);
+                    // C++17 has an insert_or_assign which does the same thing.
                     if(it != _styleParamMapMix.end()) {
                         it->second = styleParam.second;
                     } else {
@@ -114,7 +120,6 @@ void Style::applyLayerFiltering(const Feature& _feature, const Context& _ctx, lo
 
             /* append sLayers with sublayers of this layer */
             auto& ssLayers = (*sLayerItr)->getSublayers();
-            sLayers.reserve(sLayers.size() + ssLayers.size());
             sLayerItr = sLayers.insert(sLayers.end(), ssLayers.begin(), ssLayers.end());
         } else {
             sLayerItr++;
@@ -140,7 +145,7 @@ void Style::addData(TileData& _data, MapTile& _tile, const MapProjection& _mapPr
         // Loop over all features
         for (auto& feature : layer.features) {
 
-            // NOTE: Makes a restriction on number of layers in the style confic (64 max)
+            // NOTE: Makes a restriction on number of layers in the style config (64 max)
             long long uniqueID = 0;
             StyleParamMap styleParamMapMix;
             applyLayerFiltering(feature, ctx, uniqueID, styleParamMapMix, (*it));

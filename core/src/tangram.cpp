@@ -7,7 +7,6 @@
 
 #include "platform.h"
 #include "scene/scene.h"
-#include "scene/sceneLayer.h"
 #include "scene/sceneLoader.h"
 #include "stl_util.hpp"
 #include "style/debugStyle.h"

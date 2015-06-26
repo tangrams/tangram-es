@@ -292,7 +292,7 @@ void SceneLoader::loadStyles(YAML::Node styles, Scene& scene) {
 
         std::string styleName = styleIt.first.as<std::string>();
         Node styleNode = styleIt.second;
-        
+
         bool validName = true;
         for (auto builtIn : { "polygons", "lines", "points", "text", "debug", "debugtext" }) {
             if (styleName == builtIn) { validName = false; }
@@ -743,28 +743,35 @@ void SceneLoader::parseStyleProps(Node styleProps, StyleParamMap& paramMap, cons
         } else if(propItr->second.IsMap()) {
             parseStyleProps(propItr->second, paramMap, paramKey);
         } else {
-            logMsg("Error: Badly formed Style property, need to be a scalar, sequence or map. %s will not be added to stype properties.\n", paramKey.c_str());
+            logMsg("Error: Badly formed Style property, need to be a scalar, sequence or map."
+                    "%s will not be added to stype properties.\n", paramKey.c_str());
         }
     }
 
 }
 
 void SceneLoader::loadSublayers(YAML::Node layer, std::vector<SceneLayer*>& subLayers) {
-    for(auto subLayerItr = layer.begin(); subLayerItr != layer.end(); ++subLayerItr ) {
+
+    for (auto subLayerItr = layer.begin(); subLayerItr != layer.end(); ++subLayerItr ) {
+
         std::string subLayerName = subLayerItr->first.as<std::string>();
-        if( subLayerName != "data" && subLayerName != "filter" && subLayerName != "draw" && subLayerName != "properties") {
+        if( subLayerName != "data" && subLayerName != "filter" && subLayerName != "draw" &&
+                subLayerName != "properties") {
+
             std::vector<SceneLayer*> ssubLayers;
             Filter* subLayerFilter = generateFilter(subLayerItr->second["filter"]);
             Node drawGroup = subLayerItr->second["draw"];
 
             loadSublayers(layer[subLayerName], ssubLayers);
 
-            for(auto groupIt = drawGroup.begin(); groupIt != drawGroup.end(); ++groupIt) {
+            for (auto groupIt = drawGroup.begin(); groupIt != drawGroup.end(); ++groupIt) {
+
                 StyleParamMap paramMap;
                 // TODO: multiple draw groups for a subLayer, NOTE: only one draw for now
                 // TODO: subLayers can have different base style than the parent layer
                 parseStyleProps(groupIt->second, paramMap);
-                subLayers.push_back(new SceneLayer(std::move(ssubLayers), std::move(paramMap), subLayerName, subLayerFilter));
+                subLayers.push_back(new SceneLayer(std::move(ssubLayers), std::move(paramMap), subLayerName,
+                            subLayerFilter));
             }
         }
     }

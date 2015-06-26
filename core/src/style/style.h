@@ -68,9 +68,8 @@ protected:
     /* Draw mode to pass into <VboMesh>es created with this style */
     GLenum m_drawMode;
 
-    /* Set of strings defining which data layers this style applies to,
-     * along with the style paramter map corresponding to these data layers,
-     * to be parsed explicitly by styles for their style parameters*/
+    /* vector of SceneLayers a style can operator on */
+    /* TODO: decouple layers and styles so that sublayers can apply different styles than the parent */
     std::vector<Tangram::SceneLayer*> m_layers;
 
     /* Create <VertexLayout> corresponding to this style; subclasses must implement this and call it on construction */
@@ -88,18 +87,18 @@ protected:
     /* Build styled vertex data for polygon geometry and add it to the given <VboMesh> */
     virtual void buildPolygon(Polygon& _polygon, void* _styleParam, Properties& _props, VboMesh& _mesh) const = 0;
 
-    /* Parse StyleParamMap to apt Style property parameters, and puts in the styleParamCache
-     * NOTE: layerNameID will be replaced by unique ID for a set of filter matches*/
+    /*
+     * Parse StyleParamMap to apt Style property parameters
+     */
     virtual void* parseStyleParams(const StyleParamMap& _styleParamMap) const = 0;
 
-    /* parse color properties */
     static std::unordered_map<long long, StyleParamMap> s_styleParamMapCache;
     static std::mutex s_cacheMutex;
     static uint32_t parseColorProp(const std::string& _colorPropStr) ;
 
     /*
      * filter what layer(s) a features match and get style paramaters for this feature based on all subLayers it
-     * matches
+     * matches. Matching is cached for other features to use.
      */
     void applyLayerFiltering(const Feature& _feature, const Tangram::Context& _ctx, long long& _uniqueID,
                                         StyleParamMap& _styleParamMapMix, Tangram::SceneLayer* _uberLayer) const;
