@@ -32,10 +32,12 @@ class Texture {
 public:
 
     Texture(unsigned int _width, unsigned int _height, bool _autoDelete = true,
-            TextureOptions _options = {GL_ALPHA, GL_ALPHA, {GL_LINEAR, GL_LINEAR}, {GL_CLAMP_TO_EDGE, GL_CLAMP_TO_EDGE}});
+            TextureOptions _options = {GL_ALPHA, GL_ALPHA, {GL_LINEAR, GL_LINEAR}, {GL_CLAMP_TO_EDGE, GL_CLAMP_TO_EDGE}},
+            bool _generateMipmaps = false);
     
     Texture(const std::string& _file,
-            TextureOptions _options = {GL_RGBA, GL_RGBA, {GL_LINEAR, GL_LINEAR}, {GL_CLAMP_TO_EDGE, GL_CLAMP_TO_EDGE}});
+            TextureOptions _options = {GL_RGBA, GL_RGBA, {GL_LINEAR, GL_LINEAR}, {GL_CLAMP_TO_EDGE, GL_CLAMP_TO_EDGE}},
+            bool _generateMipmaps = false);
 
     virtual ~Texture();
 
@@ -97,6 +99,7 @@ private:
     };
     
     bool m_autoDelete;
+    bool m_generateMipmaps;
     
     // used to queue the subdata updates, each call of setSubData would be treated in the order that they arrived
     std::queue<std::unique_ptr<TextureSubData>> m_subData;

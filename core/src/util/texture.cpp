@@ -5,8 +5,8 @@
 GLuint Texture::s_boundTextures[] = { 0 };
 GLuint Texture::s_activeSlot = GL_TEXTURE0;
 
-Texture::Texture(unsigned int _width, unsigned int _height, bool _autoDelete, TextureOptions _options)
-: m_options(_options), m_autoDelete(_autoDelete) {
+Texture::Texture(unsigned int _width, unsigned int _height, bool _autoDelete, TextureOptions _options, bool _generateMipmaps)
+: m_options(_options), m_autoDelete(_autoDelete), m_generateMipmaps(_generateMipmaps) {
 
     m_glHandle = 0;
     m_dirty = false;
@@ -16,8 +16,8 @@ Texture::Texture(unsigned int _width, unsigned int _height, bool _autoDelete, Te
     resize(_width, _height);
 }
 
-Texture::Texture(const std::string& _file, TextureOptions _options)
-: Texture(0, 0, true, _options) {
+Texture::Texture(const std::string& _file, TextureOptions _options, bool _generateMipmaps)
+: Texture(0, 0, true, _options, _generateMipmaps) {
 
     unsigned int size;
     unsigned char* data = bytesFromResource(_file.c_str(), &size);
@@ -104,6 +104,13 @@ void Texture::generate(GLuint _textureUnit) {
     
     bind(_textureUnit);
     
+    if (m_generateMipmaps) {
+        GLenum mipmapFlags = GL_LINEAR_MIPMAP_LINEAR | GL_LINEAR_MIPMAP_NEAREST | GL_NEAREST_MIPMAP_LINEAR | GL_NEAREST_MIPMAP_NEAREST;
+        if (m_options.m_filtering.m_min & mipmapFlags) {
+            logMsg("Warning: wrong options provided for the usage of mipmap generation\n");
+        }
+    }
+    
     glTexParameteri(m_target, GL_TEXTURE_MIN_FILTER, m_options.m_filtering.m_min);
     glTexParameteri(m_target, GL_TEXTURE_MAG_FILTER, m_options.m_filtering.m_mag);
     
@@ -136,6 +143,13 @@ void Texture::update(GLuint _textureUnit) {
     // resize or push data
     if (data || m_shouldResize) {
         glTexImage2D(m_target, 0, m_options.m_internalFormat, m_width, m_height, 0, m_options.m_format, GL_UNSIGNED_BYTE, data);
+        
+        if (data && m_generateMipmaps) {
+            
+            // generate the mipmaps for this texture
+            glGenerateMipmap(m_target);
+        }
+        
         m_shouldResize = false;
     }
 
