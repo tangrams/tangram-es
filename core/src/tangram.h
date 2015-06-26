@@ -26,16 +26,28 @@ namespace Tangram {
     void teardown();
 
     // Set the position of the map view in degrees longitude and latitude
-    void setViewPosition(double _lon, double _lat);
+    void setPosition(double _lon, double _lat);
 
     // Set the values of the arguments to the position of the map view in degrees longitude and latitude
-    void getViewPosition(double& _lon, double& _lat);
+    void getPosition(double& _lon, double& _lat);
+
+    // Set the fractional zoom level of the view
+    void setZoom(float _z);
+
+    // Get the fractional zoom level of the view
+    float getZoom();
+
+    // Set the counter-clockwise rotation of the view in radians; 0 corresponds to North pointing up
+    void setRotation(float _radians);
 
     // Get the counter-clockwise rotation of the view in radians; 0 corresponds to North pointing up
-    float getViewRotation();
-    
-    // Get the fractional zoom level of the view
-    float getViewZoom();
+    float getRotation();
+
+    // Set the tilt angle of the view in radians; 0 corresponds to straight down
+    void setTilt(float _radians);
+
+    // Get the tilt angle of the view in radians; 0 corresponds to straight down
+    float getTilt();
 
     // Invalidate and re-create all OpenGL resources
     void onContextDestroyed();

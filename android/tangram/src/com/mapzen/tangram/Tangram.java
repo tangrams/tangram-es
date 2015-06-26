@@ -43,21 +43,31 @@ public class Tangram extends GLSurfaceView implements Renderer, OnTouchListener,
         System.loadLibrary("tangram");
     }
 
-    private static native void init(Tangram instance, AssetManager assetManager);
-    private static native void resize(int width, int height);
-    private static native void update(float dt);
-    private static native void render();
-    private static native void teardown();
-    private static native void onContextDestroyed();
-    private static native void setPixelScale(float scale);
-    private static native void handleTapGesture(float posX, float posY);
-    private static native void handleDoubleTapGesture(float posX, float posY);
-    private static native void handlePanGesture(float startX, float startY, float endX, float endY);
-    private static native void handlePinchGesture(float posX, float posY, float scale);
-    private static native void handleRotateGesture(float posX, float posY, float rotation);
-    private static native void handleShoveGesture(float distance);
-    private static native void onUrlSuccess(byte[] rawDataBytes, long callbackPtr);
-    private static native void onUrlFailure(long callbackPtr);
+    public native void setPosition(double lon, double lat);
+    public native double getPositionX();
+    public native double getPositionY();
+    public native void setZoom(float zoom);
+    public native float getZoom();
+    public native void setRotation(float radians);
+    public native float getRotation();
+    public native void setTilt(float radians);
+    public native float getTilt();
+
+    private native void init(Tangram instance, AssetManager assetManager);
+    private native void resize(int width, int height);
+    private native void update(float dt);
+    private native void render();
+    private native void teardown();
+    private native void onContextDestroyed();
+    private native void setPixelScale(float scale);
+    private native void handleTapGesture(float posX, float posY);
+    private native void handleDoubleTapGesture(float posX, float posY);
+    private native void handlePanGesture(float startX, float startY, float endX, float endY);
+    private native void handlePinchGesture(float posX, float posY, float scale);
+    private native void handleRotateGesture(float posX, float posY, float rotation);
+    private native void handleShoveGesture(float distance);
+    private native void onUrlSuccess(byte[] rawDataBytes, long callbackPtr);
+    private native void onUrlFailure(long callbackPtr);
 
     private long time = System.nanoTime();
     private boolean contextDestroyed = false;
@@ -76,7 +86,7 @@ public class Tangram extends GLSurfaceView implements Renderer, OnTouchListener,
 
         super(context);
 
-        configureGLSurfaceView();        
+        configureGLSurfaceView();
    
     }
 

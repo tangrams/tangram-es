@@ -4,6 +4,47 @@
 #include "platform.h"
 
 extern "C" {
+
+    JNIEXPORT void JNICALL Java_com_mapzen_tangram_Tangram_setPosition(JNIEnv* jniEnv, jobject obj, jdouble lon, jdouble lat) {
+        Tangram::setPosition(lon, lat);
+    }
+
+    JNIEXPORT jdouble JNICALL Java_com_mapzen_tangram_Tangram_getPositionX(JNIEnv* jniEnv, jobject obj) {
+        double x, y;
+        Tangram::getPosition(x, y);
+        return x;
+    }
+
+    JNIEXPORT jdouble JNICALL Java_com_mapzen_tangram_Tangram_getPositionY(JNIEnv* jniEnv, jobject obj) {
+        double x, y;
+        Tangram::getPosition(x, y);
+        return y;
+    }
+
+    JNIEXPORT void JNICALL Java_com_mapzen_tangram_Tangram_setZoom(JNIEnv* jniEnv, jobject obj, jfloat zoom) {
+        Tangram::setZoom(zoom);
+    }
+
+    JNIEXPORT jfloat JNICALL Java_com_mapzen_tangram_Tangram_getZoom(JNIEnv* jniEnv, jobject obj) {
+        return Tangram::getZoom();
+    }
+
+    JNIEXPORT void JNICALL Java_com_mapzen_tangram_Tangram_setRotation(JNIEnv* jniEnv, jobject obj, jfloat radians) {
+        Tangram::setRotation(radians);
+    }
+
+    JNIEXPORT jfloat JNICALL Java_com_mapzen_tangram_Tangram_getRotation(JNIEnv* jniEnv, jobject obj) {
+        return Tangram::getRotation();
+    }
+
+    JNIEXPORT void JNICALL Java_com_mapzen_tangram_Tangram_setTilt(JNIEnv* jniEnv, jobject obj, jfloat radians) {
+        Tangram::setTilt(radians);
+    }
+
+    JNIEXPORT jfloat JNICALL Java_com_mapzen_tangram_Tangram_getTilt(JNIEnv* jniEnv, jobject obj) {
+        return Tangram::getTilt();
+    }
+
     JNIEXPORT void JNICALL Java_com_mapzen_tangram_Tangram_init(JNIEnv* jniEnv, jobject obj, jobject tangramInstance, jobject assetManager) {
         setupJniEnv(jniEnv, tangramInstance, assetManager);
         Tangram::initialize();
