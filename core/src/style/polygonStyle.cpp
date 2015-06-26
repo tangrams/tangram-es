@@ -4,8 +4,6 @@
 #include "tangram.h"
 
 PolygonStyle::PolygonStyle(std::string _name, GLenum _drawMode) : Style(_name, _drawMode) {
-    constructVertexLayout();
-    constructShaderProgram();
 }
 
 void PolygonStyle::constructVertexLayout() {
@@ -26,7 +24,6 @@ void PolygonStyle::constructShaderProgram() {
     std::string vertShaderSrcStr = stringFromResource("polygon.vs");
     std::string fragShaderSrcStr = stringFromResource("polygon.fs");
 
-    m_shaderProgram = std::make_shared<ShaderProgram>();
     m_shaderProgram->setSourceStrings(fragShaderSrcStr, vertShaderSrcStr);
 }
 

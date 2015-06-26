@@ -48,7 +48,7 @@ struct Material {
 
     #ifdef TANGRAM_MATERIAL_NORMAL_TEXTURE
         vec3 normalScale;
-        float normalAmount;
+        vec3 normalAmount;
     #endif
 };
 
