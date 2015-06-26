@@ -15,7 +15,6 @@ namespace Tangram {
         for(auto& subLayer : m_subLayers) {
             delete subLayer;
         }
-        m_subLayers.clear();
         delete m_filter;
     }
 }
