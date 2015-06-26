@@ -113,7 +113,7 @@ void Labels::updateOcclusions() {
 
 void Labels::drawDebug() {
 
-    if (!Tangram::getDebugFlag(Tangram::DebugFlags::LABEL_BBOX)) {
+    if (!Tangram::getDebugFlag(Tangram::DebugFlags::LABELS)) {
         return;
     }
     
@@ -135,4 +135,23 @@ void Labels::drawDebug() {
             Primitives::drawPoly(polygon, 4, {m_view->getWidth(), m_view->getHeight()});
         }
     }
+    
+    glm::vec2 split(4, 4);
+    glm::vec2 res(m_view->getWidth(), m_view->getHeight());
+    const short xpad = short(ceilf(res.x / split.x));
+    const short ypad = short(ceilf(res.y / split.y));
+    
+    short x = 0, y = 0;
+    for (int j = 0; j < split.y; ++j) {
+        for (int i = 0; i < split.x; ++i) {
+            isect2d::AABB cell(x, y, x + xpad, y + ypad);
+            Primitives::drawRect({x, y}, {x + xpad, y + ypad}, res);
+            x += xpad;
+            if (x >= res.x) {
+                x = 0;
+                y += ypad;
+            }
+        }
+    }
+
 }

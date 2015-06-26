@@ -97,7 +97,7 @@ void key_callback(GLFWwindow* window, int key, int scancode, int action, int mod
                 Tangram::setDebugFlag(Tangram::DebugFlags::TILE_INFOS, !Tangram::getDebugFlag(Tangram::DebugFlags::TILE_INFOS));
                 break;
             case GLFW_KEY_5:
-                Tangram::setDebugFlag(Tangram::DebugFlags::LABEL_BBOX, !Tangram::getDebugFlag(Tangram::DebugFlags::LABEL_BBOX));
+                Tangram::setDebugFlag(Tangram::DebugFlags::LABELS, !Tangram::getDebugFlag(Tangram::DebugFlags::LABELS));
                 break;
             default:
                 break;
