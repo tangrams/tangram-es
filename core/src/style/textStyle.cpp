@@ -4,12 +4,8 @@
 MapTile* TextStyle::s_processedTile = nullptr;
 
 TextStyle::TextStyle(const std::string& _fontName, std::string _name, float _fontSize, unsigned int _color, bool _sdf, bool _sdfMultisampling, GLenum _drawMode)
-: Style(_name, _drawMode), m_fontName(_fontName), m_fontSize(_fontSize), m_color(_color), m_sdf(_sdf), m_sdfMultisampling(_sdfMultisampling)  {
-
-    constructVertexLayout();
-    constructShaderProgram();
-    
-    m_labels = LabelContainer::GetInstance();
+: Style(_name, _drawMode), m_fontName(_fontName), m_fontSize(_fontSize), m_color(_color), m_sdf(_sdf), m_sdfMultisampling(_sdfMultisampling)  {    
+    m_labels = Labels::GetInstance();
 }
 
 TextStyle::~TextStyle() {
@@ -31,7 +27,6 @@ void TextStyle::constructShaderProgram() {
     std::string vertShaderSrcStr = stringFromResource("text.vs");
     std::string fragShaderSrcStr = stringFromResource(frag.c_str());
 
-    m_shaderProgram = std::make_shared<ShaderProgram>();
     m_shaderProgram->setSourceStrings(fragShaderSrcStr, vertShaderSrcStr);
 
     std::string defines;
@@ -118,7 +113,7 @@ void TextStyle::buildPolygon(Polygon& _polygon, void* _styleParams, Properties& 
 }
 
 void TextStyle::onBeginBuildTile(MapTile& _tile) const {
-    auto ftContext = LabelContainer::GetInstance()->getFontContext();
+    auto ftContext = m_labels->getFontContext();
     auto buffer = ftContext->genTextBuffer();
 
     _tile.setTextBuffer(*this, buffer);
@@ -139,7 +134,7 @@ void TextStyle::onBeginBuildTile(MapTile& _tile) const {
 }
 
 void TextStyle::onEndBuildTile(MapTile &_tile, std::shared_ptr<VboMesh> _mesh) const {
-    auto ftContext = LabelContainer::GetInstance()->getFontContext();
+    auto ftContext = m_labels->getFontContext();
     auto buffer = ftContext->getCurrentBuffer();
     
     // add the computed glyph vertices to the mesh once
@@ -155,7 +150,7 @@ void TextStyle::onEndBuildTile(MapTile &_tile, std::shared_ptr<VboMesh> _mesh) c
 }
 
 void TextStyle::onBeginDrawFrame(const std::shared_ptr<View>& _view, const std::shared_ptr<Scene>& _scene) {
-    auto ftContext = LabelContainer::GetInstance()->getFontContext();
+    auto ftContext = m_labels->getFontContext();
     const auto& atlas = ftContext->getAtlas();
     float projectionMatrix[16] = {0};
 

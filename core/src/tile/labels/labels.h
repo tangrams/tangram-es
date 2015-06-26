@@ -43,16 +43,16 @@ public:
  * Singleton class containing all labels
  */
 
-class LabelContainer {
+class Labels {
 
 public:
 
-    static std::shared_ptr<LabelContainer> GetInstance() {
-        static std::shared_ptr<LabelContainer> instance(new LabelContainer());
+    static std::shared_ptr<Labels> GetInstance() {
+        static std::shared_ptr<Labels> instance(new Labels());
         return instance;
     }
 
-    virtual ~LabelContainer();
+    virtual ~Labels();
 
     /*
      * Creates a label for and associate it with the current processed <MapTile> TileID for a specific syle name
@@ -77,7 +77,7 @@ private:
 
     int LODDiscardFunc(float _maxZoom, float _zoom);
 
-    LabelContainer();
+    Labels();
     std::vector<LabelUnit> m_labelUnits;
     std::vector<LabelUnit> m_pendingLabelUnits;
 

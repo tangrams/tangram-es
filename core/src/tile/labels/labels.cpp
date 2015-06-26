@@ -1,19 +1,19 @@
-#include "labelContainer.h"
+#include "labels.h"
 #include "tile/mapTile.h"
 #include "text/fontContext.h"
 
-LabelContainer::LabelContainer() {}
+Labels::Labels() {}
 
-LabelContainer::~LabelContainer() {
+Labels::~Labels() {
     m_labelUnits.clear();
     m_pendingLabelUnits.clear();
 }
 
-int LabelContainer::LODDiscardFunc(float _maxZoom, float _zoom) {
+int Labels::LODDiscardFunc(float _maxZoom, float _zoom) {
     return (int) MIN(floor(((log(-_zoom + (_maxZoom + 2)) / log(_maxZoom + 2) * (_maxZoom )) * 0.5)), MAX_LOD);
 }
 
-bool LabelContainer::addLabel(MapTile& _tile, const std::string& _styleName, Label::Transform _transform, std::string _text, Label::Type _type) {
+bool Labels::addLabel(MapTile& _tile, const std::string& _styleName, Label::Transform _transform, std::string _text, Label::Type _type) {
     auto currentBuffer = m_ftContext->getCurrentBuffer();
 
     if ( (m_currentZoom - _tile.getID().z) > LODDiscardFunc(View::s_maxZoom, m_currentZoom)) {
@@ -45,21 +45,22 @@ bool LabelContainer::addLabel(MapTile& _tile, const std::string& _styleName, Lab
     return false;
 }
 
-void LabelContainer::updateOcclusions() {
+void Labels::updateOcclusions() {
     m_currentZoom = m_view->getZoom();
 
     // merge pending labels from threads
     m_labelUnits.reserve(m_labelUnits.size() + m_pendingLabelUnits.size());
     {
         std::lock_guard<std::mutex> lock(m_mutex);
-        m_labelUnits.insert(m_labelUnits.end(), std::make_move_iterator(m_pendingLabelUnits.begin()), std::make_move_iterator(m_pendingLabelUnits.end()));
+        m_labelUnits.insert(m_labelUnits.end(), std::make_move_iterator(m_pendingLabelUnits.begin()),
+                            std::make_move_iterator(m_pendingLabelUnits.end()));
         std::vector<LabelUnit>().swap(m_pendingLabelUnits);
     }
 
     std::set<std::pair<Label*, Label*>> occlusions;
     std::vector<isect2d::AABB> aabbs;
 
-    for(size_t i = 0; i < m_labelUnits.size(); i++) {
+    for (size_t i = 0; i < m_labelUnits.size(); i++) {
         auto& labelUnit = m_labelUnits[i];
         auto label = labelUnit.getWeakLabel();
 
@@ -68,61 +69,49 @@ void LabelContainer::updateOcclusions() {
             m_labelUnits.pop_back();
             continue;
         }
-        
-        if (!label->canOcclude()) {
-            continue;
-        }
+
+        if (!label->canOcclude()) { continue; }
 
         isect2d::AABB aabb = label->getAABB();
-        aabb.m_userData = (void*) label.get();
+        aabb.m_userData = (void*)label.get();
         aabbs.push_back(aabb);
     }
 
     // broad phase
-    auto pairs = intersect(aabbs);
+    auto pairs = intersect(aabbs, {4, 4}, {m_view->getWidth(), m_view->getHeight()});
 
     for (auto pair : pairs) {
         const auto& aabb1 = aabbs[pair.first];
         const auto& aabb2 = aabbs[pair.second];
 
-        auto l1 = (Label*) aabb1.m_userData;
-        auto l2 = (Label*) aabb2.m_userData;
+        auto l1 = (Label*)aabb1.m_userData;
+        auto l2 = (Label*)aabb2.m_userData;
 
         // narrow phase
-        if (intersect(l1->getOBB(), l2->getOBB())) {
-            occlusions.insert({ l1, l2 });
-        }
+        if (intersect(l1->getOBB(), l2->getOBB())) { occlusions.insert({l1, l2}); }
     }
 
     // no priorities, only occlude one of the two occluded label
     for (auto& pair : occlusions) {
-        if(!pair.first->occludedLastFrame()) {
-            if (pair.second->getState() == Label::State::WAIT_OCC) {
-                pair.second->setOcclusion(true);
-            }
+        if (!pair.first->occludedLastFrame()) {
+            if (pair.second->getState() == Label::State::WAIT_OCC) { pair.second->setOcclusion(true); }
         }
-        if(!pair.second->occludedLastFrame()) {
-            if (pair.first->getState() == Label::State::WAIT_OCC) {
-                pair.first->setOcclusion(true);
-            }
+        if (!pair.second->occludedLastFrame()) {
+            if (pair.first->getState() == Label::State::WAIT_OCC) { pair.first->setOcclusion(true); }
         }
-        
-        if(!pair.second->occludedLastFrame()) {
-            pair.first->setOcclusion(true);
-        }
+
+        if (!pair.second->occludedLastFrame()) { pair.first->setOcclusion(true); }
     }
 
-    for(size_t i = 0; i < m_labelUnits.size(); i++) {
+    for (size_t i = 0; i < m_labelUnits.size(); i++) {
         auto& labelUnit = m_labelUnits[i];
         auto label = labelUnit.getWeakLabel();
-        
-        if (label != nullptr) {
-            label->occlusionSolved();
-        }
+
+        if (label != nullptr) { label->occlusionSolved(); }
     }
 }
 
-void LabelContainer::drawDebug() {
+void Labels::drawDebug() {
 
     if (!Tangram::getDebugFlag(Tangram::DebugFlags::LABEL_BBOX)) {
         return;

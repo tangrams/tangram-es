@@ -57,7 +57,8 @@ ANDROID_CMAKE_PARAMS = \
 	-DMAKE_BUILD_TOOL=$$ANDROID_NDK/prebuilt/darwin-x86_64/bin/make \
 	-DANDROID_ABI=${ANDROID_ARCH} \
 	-DANDROID_STL=c++_shared \
-	-DANDROID_NATIVE_API_LEVEL=${ANDROID_API_LEVEL}
+	-DANDROID_NATIVE_API_LEVEL=${ANDROID_API_LEVEL} \
+	-DLIBRARY_OUTPUT_PATH_ROOT=../../android/tangram
 
 IOS_CMAKE_PARAMS = \
 	-DPLATFORM_TARGET=ios \
@@ -83,7 +84,7 @@ clean-android:
 	@cd android/ && \
 	./gradlew clean
 	rm -rf ${ANDROID_BUILD_DIR}
-	rm -rf android/libs android/obj
+	rm -rf android/tangram/libs
 
 clean-osx:
 	rm -rf ${OSX_BUILD_DIR}
@@ -103,11 +104,11 @@ clean-xcode:
 clean-tests:
 	rm -rf ${TESTS_BUILD_DIR}
 
-android: android/libs/${ANDROID_ARCH}/libtangram.so android/build.gradle
+android: android/tangram/libs/${ANDROID_ARCH}/libtangram.so android/build.gradle
 	@cd android/ && \
-	./gradlew assembleDebug
+	./gradlew demo:assembleDebug
 
-android/libs/${ANDROID_ARCH}/libtangram.so: install-android
+android/tangram/libs/${ANDROID_ARCH}/libtangram.so: install-android
 
 install-android: ${ANDROID_BUILD_DIR}/Makefile
 	@cd ${ANDROID_BUILD_DIR} && \
@@ -193,3 +194,8 @@ ifndef ANDROID_NDK
 	$(error ANDROID_NDK is undefined)
 endif
 
+format:
+	@for file in `git diff --diff-filter=ACMRTUXB --name-only -- '*.cpp' '*.h'`; do \
+		if [[ -e $$file ]]; then clang-format -i $$file; fi \
+	done
+	@echo "format done on `git diff --diff-filter=ACMRTUXB --name-only -- '*.cpp' '*.h'`"
