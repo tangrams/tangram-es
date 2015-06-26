@@ -8,15 +8,7 @@ class DebugTextStyle : public TextStyle {
 
 protected:
 
-    struct PosTexID {
-        glm::vec2 pos;
-        glm::vec2 uv;
-        float fsID;
-    };
-
     virtual void addData(TileData& _data, MapTile& _tile, const MapProjection& _mapProjection) override;
-
-    typedef TypedMesh<PosTexID> Mesh;
 
 public:
 

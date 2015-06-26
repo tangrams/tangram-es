@@ -81,7 +81,7 @@ public:
     ~Label();
 
     /* Call the font context to rasterize the label string */
-    void rasterize(std::shared_ptr<TextBuffer>& _buffer);
+    bool rasterize(std::shared_ptr<TextBuffer>& _buffer);
 
     Transform getTransform() const { return m_transform; }
 

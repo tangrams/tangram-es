@@ -3,19 +3,19 @@
 #include "style.h"
 #include "typedMesh.h"
 #include "glfontstash.h"
-#include "tile/labels/labelContainer.h"
+#include "tile/labels/labels.h"
 #include <memory>
 
 class TextStyle : public Style {
 
 protected:
 
-    struct PosTexID {
-        float pos_x;
-        float pos_y;
-        float tex_u;
-        float tex_v;
-        float fsID;
+    struct TextVert {
+        glm::vec2 pos;
+        glm::vec2 uvs;
+        glm::vec2 screenPos;
+        float alpha;
+        float rotation;
     };
 
     virtual void constructVertexLayout() override;
@@ -24,14 +24,14 @@ protected:
     virtual void buildLine(Line& _line, void* _styleParams, Properties& _props, VboMesh& _mesh) const override;
     virtual void buildPolygon(Polygon& _polygon, void* _styleParams, Properties& _props, VboMesh& _mesh) const override;
     virtual void onBeginBuildTile(MapTile& _tile) const override;
-    virtual void onEndBuildTile(MapTile& _tile) const override;
+    virtual void onEndBuildTile(MapTile& _tile, std::shared_ptr<VboMesh> _mesh) const override;
+    
+	virtual void* parseStyleParams(const StyleParamMap& _styleParamMap) const override;
 
-    virtual void* parseStyleParams(const StyleParamMap& _styleParamMap) const override;
-
-    typedef TypedMesh<PosTexID> Mesh;
+    typedef TypedMesh<TextVert> Mesh;
 
     virtual VboMesh* newMesh() const override {
-        return new Mesh(m_vertexLayout, m_drawMode);
+        return new Mesh(m_vertexLayout, m_drawMode, GL_DYNAMIC_DRAW);
     };
 
     std::string m_fontName;
@@ -39,6 +39,10 @@ protected:
     int m_color;
     bool m_sdf;
     bool m_sdfMultisampling = true;
+    
+    std::shared_ptr<Labels> m_labels;
+    
+    void addVertices(TextBuffer& _buffer, VboMesh& _mesh) const;
 
 public:
 
@@ -46,7 +50,6 @@ public:
               bool _sdf = false, bool _sdfMultisampling = false, GLenum _drawMode = GL_TRIANGLES);
 
     virtual void onBeginDrawFrame(const std::shared_ptr<View>& _view, const std::shared_ptr<Scene>& _scene) override;
-    virtual void onBeginDrawTile(const std::shared_ptr<MapTile>& _tile) override;
     virtual void onEndDrawFrame() override;
 
     virtual ~TextStyle();

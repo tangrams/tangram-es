@@ -37,7 +37,7 @@ public:
     Texture(const std::string& _file,
             TextureOptions _options = {GL_RGBA, GL_RGBA, {GL_LINEAR, GL_LINEAR}, {GL_CLAMP_TO_EDGE, GL_CLAMP_TO_EDGE}});
 
-    ~Texture();
+    virtual ~Texture();
 
     /* Binds the texture to the specified slot */
     void bind(GLuint _textureSlot);

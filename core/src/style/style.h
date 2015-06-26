@@ -8,6 +8,7 @@
 #include "gl.h"
 #include "platform.h"
 #include "style/material.h"
+#include "scene/light.h"
 #include "tile/mapTile.h"
 #include "util/vertexLayout.h"
 #include "util/shaderProgram.h"
@@ -53,13 +54,16 @@ protected:
     std::string m_name;
 
     /* <ShaderProgram> used to draw meshes using this style */
-    std::shared_ptr<ShaderProgram> m_shaderProgram;
+    std::shared_ptr<ShaderProgram> m_shaderProgram = std::make_shared<ShaderProgram>();
 
     /* <VertexLayout> shared between meshes using this style */
     std::shared_ptr<VertexLayout> m_vertexLayout;
 
     /* <Material> used for drawing meshes that use this style */
-    std::shared_ptr<Material> m_material;
+    std::shared_ptr<Material> m_material = std::make_shared<Material>();
+
+    /* <LightingType> to determine how lighting will be calculated for this style */
+    LightingType m_lightingType = LightingType::fragment;
 
     /* Draw mode to pass into <VboMesh>es created with this style */
     GLenum m_drawMode;
@@ -104,7 +108,7 @@ protected:
     virtual void onBeginBuildTile(MapTile& _tile) const;
 
     /* Perform any needed teardown after processing data for a tile */
-    virtual void onEndBuildTile(MapTile& _tile) const;
+    virtual void onEndBuildTile(MapTile& _tile, std::shared_ptr<VboMesh> _mesh) const;
 
     /* Create a new mesh object using the vertex layout corresponding to this style */
     virtual VboMesh* newMesh() const = 0;
@@ -115,6 +119,9 @@ public:
 
     virtual ~Style();
 
+    /* Make this style ready to be used (call after all needed properties are set) */
+    virtual void build(const std::vector<std::unique_ptr<Light>>& _lights);
+
     /* Add layers to which this style will apply */
     virtual void addLayer(Tangram::SceneLayer* _layer);
 
@@ -123,9 +130,6 @@ public:
 
     /* Perform any setup needed before drawing each frame */
     virtual void onBeginDrawFrame(const std::shared_ptr<View>& _view, const std::shared_ptr<Scene>& _scene);
-
-    /* Perform any setup needed before drawing each tile */
-    virtual void onBeginDrawTile(const std::shared_ptr<MapTile>& _tile);
 
     /* Perform any unsetup needed after drawing each frame */
     virtual void onEndDrawFrame() {}
@@ -140,6 +144,6 @@ public:
 
     std::shared_ptr<ShaderProgram> getShaderProgram() const { return m_shaderProgram; }
 
-    std::string getName() const { return m_name; }
+    const std::string& getName() const { return m_name; }
 
 };

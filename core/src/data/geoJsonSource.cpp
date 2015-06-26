@@ -1,7 +1,7 @@
 #include "geoJson.h"
 #include "platform.h"
 #include "tileID.h"
-#include "labels/labelContainer.h"
+#include "labels/labels.h"
 
 #include "geoJsonSource.h"
 #include "rapidjson/error/en.h"

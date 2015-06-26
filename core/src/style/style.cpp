@@ -36,14 +36,39 @@ uint32_t Style::parseColorProp(const std::string& _colorPropStr) {
     return color;
 }
 
-void Style::setMaterial(const std::shared_ptr<Material>& _material) {
+void Style::build(const std::vector<std::unique_ptr<Light>>& _lights) {
 
-    if ( m_material ) {
-        m_material->removeFromProgram(m_shaderProgram);
+    constructVertexLayout();
+    constructShaderProgram();
+
+    switch (m_lightingType) {
+        case LightingType::vertex:
+            m_shaderProgram->addSourceBlock("defines", "#define TANGRAM_LIGHTING_VERTEX\n", false);
+            break;
+        case LightingType::fragment:
+            m_shaderProgram->addSourceBlock("defines", "#define TANGRAM_LIGHTING_FRAGMENT\n", false);
+            break;
+        default:
+            break;
     }
 
-    m_material = _material;
     m_material->injectOnProgram(m_shaderProgram);
+
+    for (auto& light : _lights) {
+        light->injectOnProgram(m_shaderProgram);
+    }
+
+}
+
+void Style::setMaterial(const std::shared_ptr<Material>& _material) {
+
+    m_material = _material;
+
+}
+
+void Style::setLightingType(LightingType _type){
+
+    m_lightingType = _type;
 
 }
 
@@ -100,7 +125,7 @@ void Style::applyLayerFiltering(const Feature& _feature, const Context& _ctx, lo
 void Style::addData(TileData& _data, MapTile& _tile, const MapProjection& _mapProjection) {
     onBeginBuildTile(_tile);
 
-    VboMesh* mesh = newMesh();
+    std::shared_ptr<VboMesh> mesh(newMesh());
 
     Context ctx;
     ctx["$zoom"] = new NumValue(_tile.getID().z);
@@ -149,57 +174,34 @@ void Style::addData(TileData& _data, MapTile& _tile, const MapProjection& _mapPr
         }
     }
 
+    onEndBuildTile(_tile, mesh);
+
     if (mesh->numVertices() == 0) {
-        delete mesh;
+        mesh.reset();
     } else {
         mesh->compileVertexBuffer();
 
-        _tile.addGeometry(*this, std::unique_ptr<VboMesh>(mesh));
+        _tile.addGeometry(*this, mesh);
     }
-    onEndBuildTile(_tile);
 }
 
 void Style::onBeginDrawFrame(const std::shared_ptr<View>& _view, const std::shared_ptr<Scene>& _scene) {
-
-    // Set up material
-    if (!m_material) {
-        setMaterial(std::make_shared<Material>());
-    }
 
     m_material->setupProgram(m_shaderProgram);
 
     // Set up lights
     for (const auto& light : _scene->getLights()) {
-        light.second->setupProgram(_view, m_shaderProgram);
+        light->setupProgram(_view, m_shaderProgram);
     }
 
     m_shaderProgram->setUniformf("u_zoom", _view->getZoom());
 
 }
 
-void Style::setLightingType(LightingType _lType){
-
-    if ( _lType == LightingType::vertex ) {
-        m_shaderProgram->removeSourceBlock("defines", "#define TANGRAM_LIGHTING_FRAGMENT\n");
-        m_shaderProgram->addSourceBlock(   "defines", "#define TANGRAM_LIGHTING_VERTEX\n", false);
-    } else if  (_lType == LightingType::fragment ) {
-        m_shaderProgram->removeSourceBlock("defines", "#define TANGRAM_LIGHTING_VERTEX\n");
-        m_shaderProgram->addSourceBlock(   "defines", "#define TANGRAM_LIGHTING_FRAGMENT\n", false);
-    } else {
-        m_shaderProgram->removeSourceBlock("defines", "#define TANGRAM_LIGHTING_VERTEX\n");
-        m_shaderProgram->removeSourceBlock("defines", "#define TANGRAM_LIGHTING_FRAGMENT\n");
-    }
-
-}
-
-void Style::onBeginDrawTile(const std::shared_ptr<MapTile>& _tile) {
-    // No-op by default
-}
-
 void Style::onBeginBuildTile(MapTile& _tile) const {
     // No-op by default
 }
 
-void Style::onEndBuildTile(MapTile& _tile) const {
+void Style::onEndBuildTile(MapTile& _tile, std::shared_ptr<VboMesh> _mesh) const {
     // No-op by default
 }

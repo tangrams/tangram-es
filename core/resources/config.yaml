@@ -1,8 +1,8 @@
 cameras:
     camera1:
-        type: perspective
-        focal_length: [[16, 2], [20, 6]] # pairs of [zoom, focal len]
-        vanishing_point: [-250, -250] # relative to center of screen, in pixels
+        type: perspective #currently ignored
+        focal_length: [[16, 2], [20, 6]] # currently ignored
+        vanishing_point: [-250, -250] # currently ignored
 
 lights:
     light1:
@@ -11,6 +11,27 @@ lights:
         direction: [1, 1, -1]
         diffuse: [.7, .7, .7, 1.]
         ambient: [.3, .3, .3, 1.]
+
+textures:
+    water-texture:
+        url: normals.jpg
+        filtering: nearest
+styles:
+    pillows:
+        base: polygon
+        lighting: fragment
+        material:
+            normal:
+                texture: water-texture
+                mapping: uv
+            diffuse: 0.75
+
+    heightglow:
+        base: polygon
+        lighting: vertex
+        shaders:
+            blocks:
+                color: "color.rgb += vec3(0.3 * position.z);"
 
 sources:
     osm:
@@ -38,7 +59,7 @@ layers:
         draw:
             polygons:
                 order: 1
-                interactive: true
+                interactive: true # currently ignored
         green:
             filter: { kind: [park, graveyard, cemetery, forest, recreation_ground] }
             draw:
@@ -135,21 +156,21 @@ layers:
         data: { source: osm }
         filter: { $zoom: { min: 14 } }
         draw:
-            polygons:
+            heightglow:
                 order: 50
                 color: [.65, .65, .65]
         # turn interactive feature selection on for buildings with names
         interactive:
             filter: { name: true }
-            draw: { polygons: { interactive: true } }
+            draw: { heightglow: { interactive: true } }
         extruded:
             filter: { $zoom: { min: 15 } }
             draw:
-                polygon:
+                heightglow:
                     extrude: true
         high-line:
             filter: {roof_material: grass}
             draw:
-                polygon:
+                heightglow:
                     color: '#bddec5'
 

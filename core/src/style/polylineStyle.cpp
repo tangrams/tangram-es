@@ -4,8 +4,6 @@
 #include "tangram.h"
 
 PolylineStyle::PolylineStyle(std::string _name, GLenum _drawMode) : Style(_name, _drawMode) {
-    constructVertexLayout();
-    constructShaderProgram();
 }
 
 void PolylineStyle::constructVertexLayout() {
@@ -27,7 +25,6 @@ void PolylineStyle::constructShaderProgram() {
     std::string vertShaderSrcStr = stringFromResource("polyline.vs");
     std::string fragShaderSrcStr = stringFromResource("polyline.fs");
 
-    m_shaderProgram = std::make_shared<ShaderProgram>();
     m_shaderProgram->setSourceStrings(fragShaderSrcStr, vertShaderSrcStr);
 }
 

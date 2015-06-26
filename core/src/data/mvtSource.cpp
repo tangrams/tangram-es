@@ -1,7 +1,7 @@
 #include "pbfParser.h"
 #include "platform.h"
 #include "tileID.h"
-#include "labels/labelContainer.h"
+#include "labels/labels.h"
 
 #include <sstream>
 #include <fstream>
