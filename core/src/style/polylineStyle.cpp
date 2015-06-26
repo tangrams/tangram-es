@@ -50,16 +50,16 @@ void* PolylineStyle::parseStyleParams(const std::string& _layerNameID, const Sty
 
     if(_styleParamMap.find("cap") != _styleParamMap.end()) {
         std::string capStr = _styleParamMap.at("cap");
-        if(capStr == "butt") { params->cap = CapTypes::BUTT; }
-        else if(capStr == "square") { params->cap = CapTypes::SQUARE; }
-        else if(capStr == "round") { params->cap = CapTypes::ROUND; }
+        if(capStr == "butt") { params->cap = CapTypes::butt; }
+        else if(capStr == "square") { params->cap = CapTypes::square; }
+        else if(capStr == "round") { params->cap = CapTypes::round; }
     }
 
     if(_styleParamMap.find("join") != _styleParamMap.end()) {
         std::string joinStr = _styleParamMap.at("join");
-        if(joinStr == "bevel") { params->join = JoinTypes::BEVEL; }
-        else if(joinStr == "miter") { params->join = JoinTypes::MITER; }
-        else if(joinStr == "round") { params->join = JoinTypes::ROUND; }
+        if(joinStr == "bevel") { params->join = JoinTypes::bevel; }
+        else if(joinStr == "miter") { params->join = JoinTypes::miter; }
+        else if(joinStr == "round") { params->join = JoinTypes::round; }
     }
 
     if(_styleParamMap.find("outline:width") != _styleParamMap.end()) {
@@ -74,17 +74,17 @@ void* PolylineStyle::parseStyleParams(const std::string& _layerNameID, const Sty
     if(_styleParamMap.find("outline:cap") != _styleParamMap.end()) {
         params->outlineOn = true;
         std::string capStr = _styleParamMap.at("outline:cap");
-        if(capStr == "butt") { params->outlineCap = CapTypes::BUTT; }
-        else if(capStr == "square") { params->outlineCap = CapTypes::SQUARE; }
-        else if(capStr == "round") { params->outlineCap = CapTypes::ROUND; }
+        if(capStr == "butt") { params->outlineCap = CapTypes::butt; }
+        else if(capStr == "square") { params->outlineCap = CapTypes::square; }
+        else if(capStr == "round") { params->outlineCap = CapTypes::round; }
     }
 
     if( _styleParamMap.find("outline:join") != _styleParamMap.end()) {
         params->outlineOn = true;
         std::string joinStr = _styleParamMap.at("outline:join");
-        if(joinStr == "bevel") { params->outlineJoin = JoinTypes::BEVEL; }
-        else if(joinStr == "miter") { params->outlineJoin = JoinTypes::MITER; }
-        else if(joinStr == "round") { params->outlineJoin = JoinTypes::ROUND; }
+        if(joinStr == "bevel") { params->outlineJoin = JoinTypes::bevel; }
+        else if(joinStr == "miter") { params->outlineJoin = JoinTypes::miter; }
+        else if(joinStr == "round") { params->outlineJoin = JoinTypes::round; }
     }
 
     {
@@ -109,7 +109,7 @@ void PolylineStyle::buildLine(Line& _line, void* _styleParam, Properties& _props
     StyleParams* params = static_cast<StyleParams*>(_styleParam);
     GLuint abgr = params->color;
 
-    if (Tangram::getDebugFlag(Tangram::DebugFlags::PROXY_COLORS)) {
+    if (Tangram::getDebugFlag(Tangram::DebugFlags::proxy_colors)) {
         abgr = abgr << (int(_props.numericProps["zoom"]) % 6);
     }
 

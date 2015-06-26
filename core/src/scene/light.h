@@ -1,5 +1,5 @@
 #pragma once
- 
+
 #include <memory>
 #include "glm/glm.hpp"
 
@@ -7,16 +7,16 @@
 #include "view/view.h"
 
 enum class LightType {
-    AMBIENT,
-    DIRECTIONAL,
-    POINT,
-    SPOT
+    ambient,
+    directional,
+    point,
+    spot
 };
 
 enum class LightOrigin {
-    CAMERA,
-    GROUND,
-    WORLD
+    camera,
+    ground,
+    world
 };
 
 /*  This is the abstract class that other type of lights can extend from it.
@@ -30,7 +30,7 @@ public:
     Light(const std::string& _name, bool _dynamic = false);
 
     virtual ~Light();
-    
+
     /*  This name is used to construct the uniform name to be pass to the shader */
     virtual void setInstanceName(const std::string &_name);
 
@@ -60,7 +60,7 @@ public:
 
     /*  Pass the uniforms for this particular DYNAMICAL light on the passed shader */
     virtual void setupProgram(const std::shared_ptr<View>& _view, std::shared_ptr<ShaderProgram> _shader );
-    
+
     /*  STATIC Function that compose sourceBlocks with Lights on a ProgramShader */
     static void assembleLights(std::map<std::string, std::vector<std::string>>& _sourceBlocks);
 
@@ -103,5 +103,5 @@ protected:
 private:
 
     static std::string s_mainLightingBlock;
-    
+
 };

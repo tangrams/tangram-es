@@ -4,15 +4,15 @@
 std::string PointLight::s_classBlock;
 std::string PointLight::s_typeName = "PointLight";
 
-PointLight::PointLight(const std::string& _name, bool _dynamic) : 
+PointLight::PointLight(const std::string& _name, bool _dynamic) :
     Light(_name, _dynamic),
     m_position(0.0),
     m_attenuation(0.0),
     m_innerRadius(0.0),
     m_outerRadius(0.0) {
 
-    m_type = LightType::POINT;
-    
+    m_type = LightType::point;
+
 }
 
 PointLight::~PointLight() {
@@ -46,7 +46,7 @@ void PointLight::setupProgram(const std::shared_ptr<View>& _view, std::shared_pt
 
         glm::vec4 position = m_position;
 
-        if (m_origin == LightOrigin::WORLD) {
+        if (m_origin == LightOrigin::world) {
             // For world origin, format is: [longitude, latitude, meters (default) or pixels w/px units]
 
             // Move light's world position into camera space
@@ -55,12 +55,12 @@ void PointLight::setupProgram(const std::shared_ptr<View>& _view, std::shared_pt
             position.y = camSpace.y - _view->getPosition().y;
             position.z = position.z - _view->getPosition().z;
 
-        } else if (m_origin == LightOrigin::GROUND) {
+        } else if (m_origin == LightOrigin::ground) {
             // Leave light's xy in camera space, but z needs to be moved relative to ground plane
             position.z = position.z - _view->getPosition().z;
         }
-        
-        if (m_origin == LightOrigin::WORLD || m_origin == LightOrigin::GROUND) {
+
+        if (m_origin == LightOrigin::world || m_origin == LightOrigin::ground) {
             // Light position is a vector from the camera to the light in world space;
             // we can transform this vector into camera space the same way we would with normals
             position = _view->getViewMatrix() * position;
@@ -91,7 +91,7 @@ std::string PointLight::getClassBlock() {
 
 std::string PointLight::getInstanceDefinesBlock() {
     std::string defines = "";
-    
+
     if (m_attenuation!=0.0) {
         defines += "#define TANGRAM_POINTLIGHT_ATTENUATION_EXPONENT\n";
     }

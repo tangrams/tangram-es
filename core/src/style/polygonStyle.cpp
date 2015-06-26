@@ -88,7 +88,7 @@ void PolygonStyle::buildPolygon(Polygon& _polygon, void* _styleParam, Properties
     GLuint abgr = params->color;
     GLfloat layer = params->order;
 
-    if (Tangram::getDebugFlag(Tangram::DebugFlags::PROXY_COLORS)) {
+    if (Tangram::getDebugFlag(Tangram::DebugFlags::proxy_colors)) {
         abgr = abgr << (int(_props.numericProps["zoom"]) % 6);
     }
 
@@ -116,7 +116,7 @@ void PolygonStyle::buildPolygon(Polygon& _polygon, void* _styleParam, Properties
         abgr = 0xfff2cc6c;
         size_t outlineStart = points.size();
         PolyLineOutput lineOutput = { points, indices, Builders::NO_SCALING_VECS, texcoords };
-        PolyLineOptions outlineOptions = { CapTypes::ROUND, JoinTypes::ROUND, 0.02f };
+        PolyLineOptions outlineOptions = { CapTypes::round, JoinTypes::round, 0.02f };
         Builders::buildOutline(_polygon[0], outlineOptions, lineOutput);
         glm::vec3 normal(0.f, 0.f, 1.f); // The outline builder doesn't produce normals, so we'll add those now
         normals.insert(normals.end(), points.size() - normals.size(), normal);

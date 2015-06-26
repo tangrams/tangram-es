@@ -4,15 +4,15 @@
 std::string SpotLight::s_classBlock;
 std::string SpotLight::s_typeName = "SpotLight";
 
-SpotLight::SpotLight(const std::string& _name, bool _dynamic) : 
+SpotLight::SpotLight(const std::string& _name, bool _dynamic) :
     PointLight(_name, _dynamic),
     m_direction(1.0,0.0,0.0),
     m_spotExponent(0.0),
     m_spotCutoff(0.0),
     m_spotCosCutoff(0.0) {
 
-    m_type = LightType::SPOT;
-    
+    m_type = LightType::spot;
+
 }
 
 SpotLight::~SpotLight() {
@@ -37,7 +37,7 @@ void SpotLight::setupProgram(const std::shared_ptr<View>& _view, std::shared_ptr
         PointLight::setupProgram(_view, _shader);
 
         glm::vec3 direction = m_direction;
-        if (m_origin == LightOrigin::WORLD) {
+        if (m_origin == LightOrigin::world) {
             direction = glm::normalize(_view->getNormalMatrix() * direction);
         }
 
