@@ -46,36 +46,28 @@ void PolygonStyle::buildPoint(Point& _point, void* _styleParam, Properties& _pro
 
 void PolygonStyle::buildLine(Line& _line, void* _styleParam, Properties& _props, VboMesh& _mesh) const {
     std::vector<PosNormColVertex> vertices;
-    std::vector<int> indices;
-    std::vector<glm::vec3> points;
-    std::vector<glm::vec2> texcoords;
 
-    PolyLineOutput output = { points, indices, Builders::NO_SCALING_VECS, texcoords };
+    PolyLineBuilder builder = {
+        [&](const glm::vec3& coord, const glm::vec2& normal, const glm::vec2& uv) {
+            float halfWidth =  0.2f;
+            GLuint abgr = 0xff969696; // Default road color
 
-    GLuint abgr = 0xff969696; // Default road color
+            glm::vec3 point(coord.x + normal.x * halfWidth, coord.y + normal.y * halfWidth, coord.z);
+            vertices.push_back({ point, glm::vec3(0.0f, 0.0f, 1.0f), uv, abgr, 0.0f });
+        }
+    };
 
-    Builders::buildPolyLine(_line, PolyLineOptions(), output);
-
-    for (size_t i = 0; i < points.size(); i++) {
-        vertices.push_back({ points[i], glm::vec3(0.0f, 0.0f, 1.0f), texcoords[i], abgr, 0.0f });
-    }
+    Builders::buildPolyLine(_line, builder);
 
     auto& mesh = static_cast<PolygonStyle::Mesh&>(_mesh);
-    mesh.addVertices(std::move(vertices),std::move(indices));
+    mesh.addVertices(std::move(vertices), std::move(builder.indices));
 }
 
 void PolygonStyle::buildPolygon(Polygon& _polygon, void* _styleParam, Properties& _props, VboMesh& _mesh) const {
 
     std::vector<PosNormColVertex> vertices;
-    std::vector<int> indices;
-    std::vector<glm::vec3> points;
-    std::vector<glm::vec3> normals;
-    std::vector<glm::vec2> texcoords;
-
-    PolygonOutput output = { points, indices, normals, texcoords };
 
     StyleParams* params = static_cast<StyleParams*>(_styleParam);
-
     GLuint abgr = params->color;
     GLfloat layer = params->order;
 
@@ -86,42 +78,24 @@ void PolygonStyle::buildPolygon(Polygon& _polygon, void* _styleParam, Properties
     float height = _props.numericProps["height"]; // Inits to zero if not present in data
     float minHeight = _props.numericProps["min_height"]; // Inits to zero if not present in data
 
+    PolygonBuilder builder = {
+        [&](const glm::vec3& coord, const glm::vec3& normal, const glm::vec2& uv){
+            vertices.push_back({ coord, normal, uv, abgr, layer });
+        },
+        [&](size_t sizeHint){ vertices.reserve(sizeHint); }
+    };
+
     if (minHeight != height) {
         for (auto& line : _polygon) {
             for (auto& point : line) {
                 point.z = height;
             }
         }
-        Builders::buildPolygonExtrusion(_polygon, minHeight, output);
+        Builders::buildPolygonExtrusion(_polygon, minHeight, builder);
     }
 
-    Builders::buildPolygon(_polygon, output);
-
-    for (size_t i = 0; i < points.size(); i++) {
-        vertices.push_back({ points[i], normals[i], texcoords[i], abgr, layer });
-    }
-
-    // Outlines for water polygons
-    /*
-    if (_layer == "water") {
-        abgr = 0xfff2cc6c;
-        size_t outlineStart = points.size();
-        PolyLineOutput lineOutput = { points, indices, Builders::NO_SCALING_VECS, texcoords };
-        PolyLineOptions outlineOptions = { CapTypes::ROUND, JoinTypes::ROUND, 0.02f };
-        Builders::buildOutline(_polygon[0], outlineOptions, lineOutput);
-        glm::vec3 normal(0.f, 0.f, 1.f); // The outline builder doesn't produce normals, so we'll add those now
-        normals.insert(normals.end(), points.size() - normals.size(), normal);
-        for (size_t i = outlineStart; i < points.size(); i++) {
-            glm::vec3& p = points[i];
-            glm::vec3& n = normals[i];
-            glm::vec2& u = texcoords[i];
-            vertices.push_back({ p.x, p.y, p.z + .02f, n.x, n.y, n.z, u.x, u.y, abgr });
-        }
-    }
-    */
+    Builders::buildPolygon(_polygon, builder);
 
     auto& mesh = static_cast<PolygonStyle::Mesh&>(_mesh);
-    mesh.addVertices(std::move(vertices), std::move(indices));
-
-    delete params;
+    mesh.addVertices(std::move(vertices), std::move(builder.indices));
 }
