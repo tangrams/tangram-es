@@ -1,7 +1,7 @@
 #include "builders.h"
 
 #include "tesselator.h"
-#include "rectangle.h"
+#include "aabb.h"
 #include "geom.h"
 #include "glm/gtx/rotate_vector.hpp"
 
@@ -31,17 +31,19 @@ static TESSalloc allocator = {&alloc, &realloc, &free, nullptr,
 void Builders::buildPolygon(const Polygon& _polygon, PolygonBuilder& _ctx) {
     
     TESStesselator* tesselator = tessNewTess(&allocator);
-    Rectangle bBox;
+    isect2d::AABB bbox;
     
     if (_ctx.useTexCoords && _polygon.size() > 0 && _polygon[0].size() > 0) {
         // initialize the axis-aligned bounding box of the polygon
-        bBox.set(_polygon[0][0].x, _polygon[0][0].y, 0, 0);
+        bbox = isect2d::AABB(_polygon[0][0].x, _polygon[0][0].y, 0, 0);
     }
     
     // add polygon contour for every ring
     for (auto& line : _polygon) {
         if (_ctx.useTexCoords) {
-            bBox.growToInclude(line);
+            for (auto& p : line) {
+                bbox.include(p.x, p.y);
+            }
         }
         tessAddContour(tesselator, 3, line.data(), sizeof(Point), (int)line.size());
     }
@@ -72,8 +74,8 @@ void Builders::buildPolygon(const Polygon& _polygon, PolygonBuilder& _ctx) {
             glm::vec2 uv(0);
 
             if (_ctx.useTexCoords) {
-                float u = mapValue(tessVertices[3*i], bBox.getMinX(), bBox.getMaxX(), 0., 1.);
-                float v = mapValue(tessVertices[3*i+1], bBox.getMinY(), bBox.getMaxY(), 0., 1.);
+                float u = mapValue(tessVertices[3*i], bbox.m_min.x, bbox.m_max.x, 0., 1.);
+                float v = mapValue(tessVertices[3*i+1], bbox.m_min.y, bbox.m_max.y, 0., 1.);
                 uv = glm::vec2(u, v);
             }
             _ctx.addVertex(coord, normal, uv);
