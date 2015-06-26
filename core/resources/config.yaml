@@ -182,4 +182,46 @@ layers:
             filter: { kind: highway, $zoom: { min: 7 } }
         major_road:
             filter: { kind: major_road, $zoom: { min: 14 } }
+    places:
+        data: { sources: osm }
+        filter:
+            name: true
+            not: { kind: [county, state, island] }
+            any: 
+                - { $zoom: { min: 1 }, kind: ocean } 
+                - { $zoom: { min: 2, max: 5 }, kind: continent }
+                #important contries
+                - { $zoom: { min: 4 }, name: ["United States of America", "Brasil", "Россия", "中华人民共和国"] }
+                # unimportant countries
+                - { $zoom: { min: 5 }, kind: country }
+                # this function matches the "cities" sublayer
+                #- function() {return (feature.scalerank * .75) <= ($zoom - 4); }
+        draw:
+            text: {}
+        continents:
+            filter: { kind: continent }
+        countries:
+            filter: { kind: country }
+        oceans:
+            filter: { kind: ocean }
+        minor-places:
+            filter: { kind: [hamlet, village, town, neighbourhood, suburb, quarter], $zoom: { max: 13 } }
+            #visible: false 
+        #cities:
+            # this filter shows lower scaleranks at higher zooms, starting at z4
+            #filter: function() { return (feature.scalerank * .75) <= ($zoom - 4); }
+    landuse_labels:
+        data: { source: osm }
+        filter:
+            name: true
+            kind: [park, forest, cemetery, graveyard]
+            any:
+                # show labels for smaller landuse areas at higher zooms
+                - { $zoom: { min: 9 }, area: { min: 100000000 } }
+                - { $zoom: { min: 10 }, area: { min: 10000000 } }
+                - { $zoom: { min: 12 }, area: { min: 1000000 } }
+                - { $zoom: { min: 15 }, area: { min: 10000 } }
+                - { $zoom: { min: 18 } }
+        draw:
+            text: {}
 
