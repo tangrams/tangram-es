@@ -3,7 +3,7 @@
 #include "style.h"
 #include "typedMesh.h"
 #include "glfontstash.h"
-#include "tile/labels/labelContainer.h"
+#include "tile/labels/labels.h"
 #include <memory>
 
 class TextStyle : public Style {
@@ -40,7 +40,7 @@ protected:
     bool m_sdf;
     bool m_sdfMultisampling = true;
     
-    std::shared_ptr<LabelContainer> m_labels;
+    std::shared_ptr<Labels> m_labels;
     
     void addVertices(TextBuffer& _buffer, VboMesh& _mesh) const;
 
