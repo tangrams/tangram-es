@@ -57,13 +57,13 @@ void PolygonStyle::buildLine(Line& _line, void* _styleParam, Properties& _props,
     std::vector<PosNormColVertex> vertices;
 
     PolyLineBuilder builder = {
-      [&](const glm::vec3& coord, const glm::vec2& normal, const glm::vec2& uv) {
-        float halfWidth =  0.2f;
-        GLuint abgr = 0xff969696; // Default road color
+        [&](const glm::vec3& coord, const glm::vec2& normal, const glm::vec2& uv) {
+            float halfWidth =  0.2f;
+            GLuint abgr = 0xff969696; // Default road color
 
-        glm::vec3 point( coord.x + normal.x * halfWidth, coord.y + normal.y * halfWidth, coord.z);
-        vertices.push_back({ point, glm::vec3(0.0f, 0.0f, 1.0f), uv, abgr, 0.0f });
-      }
+            glm::vec3 point(coord.x + normal.x * halfWidth, coord.y + normal.y * halfWidth, coord.z);
+            vertices.push_back({ point, glm::vec3(0.0f, 0.0f, 1.0f), uv, abgr, 0.0f });
+        }
     };
 
     Builders::buildPolyLine(_line, builder);
@@ -88,10 +88,10 @@ void PolygonStyle::buildPolygon(Polygon& _polygon, void* _styleParam, Properties
     float minHeight = _props.numericProps["min_height"]; // Inits to zero if not present in data
 
     PolygonBuilder builder = {
-      [&](const glm::vec3& coord, const glm::vec3& normal, const glm::vec2& uv){
-        vertices.push_back({ coord, normal, uv, abgr, layer });
-      },
-      [&](size_t sizeHint){ vertices.reserve(sizeHint); }
+        [&](const glm::vec3& coord, const glm::vec3& normal, const glm::vec2& uv){
+            vertices.push_back({ coord, normal, uv, abgr, layer });
+        },
+        [&](size_t sizeHint){ vertices.reserve(sizeHint); }
     };
 
     if (minHeight != height) {

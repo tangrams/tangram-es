@@ -142,8 +142,8 @@ glm::vec2 perp2d(const glm::vec3& _v1, const glm::vec3& _v2 ){
 
 // Helper function for polyline tesselation
 inline void addPolyLineVertex(const glm::vec3& _coord, const glm::vec2& _normal, const glm::vec2& _uv, PolyLineBuilder& _ctx) {
-  _ctx.numVertices++;
-  _ctx.addVertex(_coord, _normal, _uv);
+    _ctx.numVertices++;
+    _ctx.addVertex(_coord, _normal, _uv);
 }
 
 // Helper function for polyline tesselation; adds indices for pairs of vertices arranged like a line strip

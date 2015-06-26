@@ -46,9 +46,7 @@ struct PolygonBuilder {
     bool useTexCoords;
 
     PolygonBuilder(PolygonVertexFn _addVertex, SizeHintFn _sizeHint, bool _useTexCoords = true)
-      : addVertex(_addVertex),
-        sizeHint(_sizeHint),
-        useTexCoords(_useTexCoords){}
+        : addVertex(_addVertex), sizeHint(_sizeHint), useTexCoords(_useTexCoords){}
 };
 
 

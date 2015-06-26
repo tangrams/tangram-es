@@ -141,8 +141,8 @@ void PolylineStyle::buildLine(Line& _line, void* _styleParam, Properties& _props
                  builder.indices.push_back(offset + builder.indices[i]);
             }
             for (size_t i = 0; i < offset; i++) {
-              const auto& v = vertices[i];
-              vertices.push_back({ v.pos, v.texcoord, v.enorm, halfWidth, abgrOutline, layer - 1.f });
+                const auto& v = vertices[i];
+                vertices.push_back({ v.pos, v.texcoord, v.enorm, halfWidth, abgrOutline, layer - 1.f });
             }
         }
     }
