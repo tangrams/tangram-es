@@ -64,9 +64,11 @@ void TextStyle::addVertices(TextBuffer& _buffer, VboMesh& _mesh) const {
 }
 
 void TextStyle::buildPoint(Point& _point, void* _styleParams, Properties& _props, VboMesh& _mesh) const {
-    for (auto prop : _props.stringProps) {
+    for (const auto& prop : _props) {
         if (prop.first == TAG_KEY_NAME) {
-            m_labels->addLabel(*TextStyle::s_processedTile, m_name, { glm::vec2(_point), glm::vec2(_point) }, prop.second, Label::Type::point);
+            m_labels->addLabel(*TextStyle::s_processedTile, m_name,
+                               { glm::vec2(_point), glm::vec2(_point) },
+                               prop.second.get<0>(), Label::Type::point);
         }
     }
 }
@@ -76,7 +78,7 @@ void TextStyle::buildLine(Line& _line, void* _styleParams, Properties& _props, V
     int skipOffset = floor(lineLength / 2);
     float minLength = 0.15; // default, probably need some more thoughts
 
-    for (auto prop : _props.stringProps) {
+    for (const auto& prop : _props) {
         if (prop.first == TAG_KEY_NAME) {
 
             for (size_t i = 0; i < _line.size() - 1; i += skipOffset) {
@@ -89,8 +91,8 @@ void TextStyle::buildLine(Line& _line, void* _styleParams, Properties& _props, V
                 if (length < minLength) {
                     continue;
                 }
-
-                m_labels->addLabel(*TextStyle::s_processedTile, m_name, { p1, p2 }, prop.second, Label::Type::line);
+                m_labels->addLabel(*TextStyle::s_processedTile, m_name,
+                                   { p1, p2 }, prop.second.get<0>(), Label::Type::line);
             }
         }
     }
@@ -110,9 +112,11 @@ void TextStyle::buildPolygon(Polygon& _polygon, void* _styleParams, Properties& 
 
     centroid /= n;
 
-    for (const auto& prop : _props.stringProps) {
+    for (const auto& prop : _props) {
         if (prop.first == TAG_KEY_NAME) {
-            m_labels->addLabel(*TextStyle::s_processedTile, m_name, { glm::vec2(centroid), glm::vec2(centroid) }, prop.second, Label::Type::point);
+            m_labels->addLabel(*TextStyle::s_processedTile, m_name,
+                               { glm::vec2(centroid), glm::vec2(centroid) },
+                               prop.second.get<0>(), Label::Type::point);
         }
     }
 }

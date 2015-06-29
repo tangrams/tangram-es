@@ -1,6 +1,7 @@
 #pragma once
 
 #include "flyweight/object.hpp"
+#include "core/variant.hpp"
 
 #include <vector>
 #include <string>
@@ -65,9 +66,9 @@ typedef std::vector<Point> Line;
 
 typedef std::vector<Line> Polygon;
 
-
     
-typedef flyweight::object<std::string> TagKey;
+using TagKey = flyweight::object<std::string>;
+using Value = core::variant<std::string, float>;
 
 static TagKey TAG_KEY_NAME { "name" };
 static TagKey TAG_KEY_HEIGHT { "height" };
@@ -85,9 +86,33 @@ template <> struct hash<TagKey>
 };
 }
 
-struct Properties {
-    std::unordered_map<TagKey, std::string> stringProps;
-    std::unordered_map<TagKey, float> numericProps;
+typedef std::unordered_map<TagKey, Value> Properties;
+
+class Props {
+ public:
+  static const std::string& getString(const Properties& _props, const TagKey& _key, const std::string& _fallback = "") {
+    auto it = _props.find(_key);
+    if(it == _props.end())
+      return _fallback;
+    
+    auto* result = &it->second.get<0>();
+    if (!result)
+      return _fallback;
+
+    return *result;
+  };
+
+  static float getFloat(const Properties& _props, const TagKey& _key, float _fallback = 0) {
+    auto it = _props.find(_key);
+    if(it == _props.end())
+      return _fallback;
+    
+    auto* result = &it->second.get<1>();
+    if (!result)
+      return _fallback;
+
+    return *result;
+  };
 };
 
 struct Feature {
