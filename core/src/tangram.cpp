@@ -37,37 +37,35 @@ namespace Tangram {
 
         logMsg("initialize\n");
 
-        // Create view
-        if (!m_view) {
-            m_view = std::make_shared<View>();
-        }
+        if (!m_tileManager) {
 
-        // Create a scene object
-        if (!m_scene) {
+            // Create view
+            m_view = std::make_shared<View>();
+
+            // Create a scene object
             m_scene = std::make_shared<Scene>();
 
             m_skybox = std::shared_ptr<Skybox>(new Skybox("cubemap.png"));
             m_skybox->init();
-        }
 
-        // Create a tileManager
-        if (!m_tileManager) {
+            // Create a tileManager
             m_tileManager = TileManager::GetInstance();
 
             // Pass references to the view and scene into the tile manager
             m_tileManager->setView(m_view);
             m_tileManager->setScene(m_scene);
+
+            // Font and label setup
+            m_ftContext = std::make_shared<FontContext>();
+            m_ftContext->addFont("FiraSans-Medium.ttf", "FiraSans");
+            m_labels = Labels::GetInstance();
+            m_labels->setFontContext(m_ftContext);
+            m_labels->setView(m_view);
+
+            SceneLoader loader;
+            loader.loadScene("config.yaml", *m_scene, *m_tileManager, *m_view);
+            
         }
-
-        // Hard-coded setup for stuff that isn't loaded through the config file yet
-        m_ftContext = std::make_shared<FontContext>();
-        m_ftContext->addFont("FiraSans-Medium.ttf", "FiraSans");
-        m_labels = Labels::GetInstance();
-        m_labels->setFontContext(m_ftContext);
-        m_labels->setView(m_view);
-
-        SceneLoader loader;
-        loader.loadScene("config.yaml", *m_scene, *m_tileManager, *m_view);
 
         // Set up openGL state
         glDisable(GL_BLEND);
@@ -302,9 +300,9 @@ namespace Tangram {
     void teardown() {
         // Release resources!
         logMsg("teardown\n");
-        m_tileManager.reset();
-        m_scene.reset();
-        m_view.reset();
+        // m_tileManager.reset();
+        // m_scene.reset();
+        // m_view.reset();
     }
 
     void onContextDestroyed() {

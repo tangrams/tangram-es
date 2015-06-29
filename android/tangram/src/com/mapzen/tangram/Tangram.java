@@ -124,6 +124,7 @@ public class Tangram extends GLSurfaceView implements Renderer, OnTouchListener,
     }
 
     public void onDestroy() {
+        onContextDestroyed();
         teardown();
     }
 
