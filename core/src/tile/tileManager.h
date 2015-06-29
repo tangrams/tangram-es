@@ -3,12 +3,15 @@
 #include "data/tileData.h"
 #include "tile/tileWorker.h"
 #include "util/tileID.h"
+#include "tileTask.h"
 
-#include <list>
 #include <map>
-#include <memory>
-#include <mutex>
+#include <list>
 #include <vector>
+#include <memory>
+#include <future>
+#include <set>
+#include <mutex>
 
 class DataSource;
 class MapTile;
@@ -29,7 +32,7 @@ public:
         return std::move(instance);
     }
 
-    /* Constructs a TileManager using move semantics */
+    // /* Constructs a TileManager using move semantics */
     TileManager(TileManager&& _other);
 
     virtual ~TileManager();
@@ -50,10 +53,12 @@ public:
      */
     void updateTileSet();
 
-    void addToWorkerQueue(std::vector<char>&& _rawData, const TileID& _id, DataSource* _source);
-
-    void addToWorkerQueue(std::shared_ptr<TileData>& _parsedData, const TileID& _id, DataSource* _source);
+    // void addToWorkerQueue(std::vector<char>&& _rawData, std::shared_ptr<MapTile> _tile, DataSource* _source);
+    // void addToWorkerQueue(std::shared_ptr<TileData>& _parsedData, std::shared_ptr<MapTile> _tile, DataSource* _source);
+    void addToWorkerQueue(TileTask task);
     
+    TileTask pollTileTask();
+      
     /* Returns the set of currently visible tiles */
     const std::map<TileID, std::shared_ptr<MapTile>>& getVisibleTiles() { return m_tileSet; }
     
@@ -67,6 +72,7 @@ private:
     std::shared_ptr<Scene> m_scene;
     
     std::mutex m_queueTileMutex;
+    uint64_t m_tileSerial = 0;
     
     // TODO: Might get away with using a vector of pairs here (and for searching using std:search (binary search))
     std::map<TileID, std::shared_ptr<MapTile>> m_tileSet;
@@ -76,8 +82,9 @@ private:
     const static size_t MAX_WORKERS = 4;
     std::list<std::unique_ptr<TileWorker> > m_workers;
     
-    std::list<std::unique_ptr<TileTask> > m_queuedTiles;
+    std::list<TileTask> m_queuedTiles;
     std::list<TileID> m_loadQueue;
+    int32_t m_loadPending = 0;
     
     bool m_tileSetChanged = false;
     

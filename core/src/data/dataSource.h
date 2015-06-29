@@ -5,6 +5,7 @@
 #include <memory>
 #include <vector>
 #include <mutex>
+#include "tile/tileTask.h"
 
 struct TileData;
 struct TileID;
@@ -30,7 +31,8 @@ public:
      * the I/O task is complete, the tile data is added to a queue in @_tileManager for 
      * further processing before it is renderable. 
      */
-    virtual bool loadTileData(const TileID& _tileID, TileManager& _tileManager);
+    //virtual bool loadTileData(std::shared_ptr<MapTile> _tile, TileManager& _tileManager);
+    virtual bool loadTileData(TileTask _task);
 
     /* Stops any running I/O tasks pertaining to @_tile */
     virtual void cancelLoadingTile(const TileID& _tile);

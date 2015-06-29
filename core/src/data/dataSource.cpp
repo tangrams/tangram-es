@@ -62,27 +62,23 @@ void DataSource::constructURL(const TileID& _tileCoord, std::string& _url) const
     }
 }
 
-bool DataSource::loadTileData(const TileID& _tileID, TileManager& _tileManager) {
+bool DataSource::loadTileData(TileTask _task) {
     
     bool success = true; // Begin optimistically
     
-    if (hasTileData(_tileID)) {
-        _tileManager.addToWorkerQueue(m_tileStore[_tileID], _tileID, this);
+    if (hasTileData(_task->tileID)) {
+        _task->parsedTileData = m_tileStore[_task->tileID];
+        _task->tileManager.addToWorkerQueue(_task);
         return success;
     }
 
     std::string url;
-    
-    constructURL(_tileID, url);
+    constructURL(_task->tileID, url);
 
-    success = startUrlRequest(url, [=,&_tileManager](std::vector<char>&& _rawData) {
-        
-        // _tileManager is captured here by reference, since its lifetime is the entire program lifetime,
-        // but _tileID has to be captured by copy since it is a temporary stack object
-        
-        _tileManager.addToWorkerQueue(std::move(_rawData), _tileID, this);
+    success = startUrlRequest(url,[=](std::vector<char>&& _rawData) {
+        _task->rawTileData = std::move(_rawData);
+        _task->tileManager.addToWorkerQueue(_task);
         requestRender();
-        
     });
     
     return success;

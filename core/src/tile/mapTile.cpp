@@ -11,10 +11,13 @@
 #include "glm/gtc/matrix_transform.hpp"
 #include "glm/gtc/type_ptr.hpp"
 
-MapTile::MapTile(TileID _id, const MapProjection& _projection) : m_id(_id),  m_projection(&_projection) {
+
+MapTile::MapTile(TileID _id, const MapProjection& _projection) :
+    m_id(_id),
+    m_projection(&_projection) {
 
     glm::dvec4 bounds = _projection.TileBounds(_id); // [x: xmin, y: ymin, z: xmax, w: ymax]
-    
+
     m_scale = 0.5 * glm::abs(bounds.x - bounds.z);
     m_inverseScale = 1.0/m_scale;
     
@@ -25,15 +28,7 @@ MapTile::MapTile(TileID _id, const MapProjection& _projection) : m_id(_id),  m_p
     
     // Scale model matrix to size of tile
     m_modelMatrix = glm::scale(m_modelMatrix, glm::vec3(m_scale));
-
 }
-
-MapTile::MapTile(MapTile&& _other) : m_id(std::move(m_id)), m_proxyCounter(std::move(_other.m_proxyCounter)), 
-                                     m_projection(std::move(_other.m_projection)), m_scale(std::move(_other.m_scale)), 
-                                     m_inverseScale(std::move(_other.m_inverseScale)), m_tileOrigin(std::move(_other.m_tileOrigin)), 
-                                     m_modelMatrix(std::move(_other.m_modelMatrix)), m_geometry(std::move(_other.m_geometry)), 
-                                     m_buffers(std::move(_other.m_buffers)) {}
-
 
 MapTile::~MapTile() {
 

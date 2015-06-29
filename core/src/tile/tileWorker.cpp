@@ -2,7 +2,6 @@
 
 #include "data/dataSource.h"
 #include "platform.h"
-#include "style/style.h"
 #include "tile/mapTile.h"
 #include "view/view.h"
 
@@ -16,10 +15,10 @@ void TileWorker::abort() {
     m_aborted = true;
 }
 
-void TileWorker::processTileData(std::unique_ptr<TileTask> _task,
-                                 const std::vector<std::unique_ptr<Style>>& _styles,
-                                 const View& _view) {
-
+void TileWorker::processTileData(TileTask _task,
+                                 const StyleSet& _styles,
+                                 const View& _view)
+{
     m_task = std::move(_task);
     m_free = false;
     m_finished = false;
@@ -27,11 +26,9 @@ void TileWorker::processTileData(std::unique_ptr<TileTask> _task,
 
     m_future = std::async(std::launch::async, [&]() {
         
-        const TileID& tileID = m_task->tileID;
         DataSource* dataSource = m_task->source;
+        auto& tile = m_task->tile;
         
-        auto tile = std::shared_ptr<MapTile>(new MapTile(tileID, _view.getMapProjection()));
-
         std::shared_ptr<TileData> tileData;
 
         if (m_task->parsedTileData) {
@@ -42,36 +39,37 @@ void TileWorker::processTileData(std::unique_ptr<TileTask> _task,
             tileData = dataSource->parse(*tile, m_task->rawTileData);
 
             // Cache parsed data with the original data source
-            dataSource->setTileData(tileID, tileData);
+            dataSource->setTileData(tile->getID(), tileData);
         }
-        
-		tile->update(0, _view);
 
-        //Process data for all styles
-        for(const auto& style : _styles) {
-            if(m_aborted) {
-                m_finished = true;
-                return std::move(tile);
-            }
-            if(tileData) {
+        if (tileData) {
+            tile->update(0, _view);
+        
+            //Process data for all styles
+            for(const auto& style : _styles) {
+                if(m_aborted) {
+                    m_finished = true;
+                    return false;
+                }
                 style->addData(*tileData, *tile, _view.getMapProjection());
             }
         }
+
         m_finished = true;
-        
         requestRender();
-        
-        // Return finished tile
-        return std::move(tile);
 
+        return true;
     });
+}
 
+void TileWorker::drain() {
+  m_future.get();
+  m_free = true;
 }
 
 std::shared_ptr<MapTile> TileWorker::getTileResult() {
-
+    m_future.get();
     m_free = true;
-    return std::move(m_future.get());
-    
+    return std::move(m_task->tile);
 }
 
