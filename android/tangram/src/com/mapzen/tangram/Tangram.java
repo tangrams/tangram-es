@@ -8,9 +8,11 @@ import java.io.IOException;
 import java.util.concurrent.TimeUnit;
 
 import android.app.Activity;
+import android.content.Context;
 import android.content.res.AssetManager;
 import android.opengl.GLSurfaceView;
 import android.opengl.GLSurfaceView.Renderer;
+import android.util.AttributeSet;
 import android.util.DisplayMetrics;
 import android.view.View;
 import android.view.View.OnTouchListener;
@@ -34,14 +36,14 @@ import com.squareup.okhttp.Response;
 import com.squareup.okhttp.Call;
 import okio.BufferedSource;
 
-public class Tangram implements Renderer, OnTouchListener, OnScaleGestureListener, OnRotateGestureListener, OnGestureListener, OnShoveGestureListener {
+public class Tangram extends GLSurfaceView implements Renderer, OnTouchListener, OnScaleGestureListener, OnRotateGestureListener, OnGestureListener, OnShoveGestureListener {
 
     static {
         System.loadLibrary("c++_shared");
         System.loadLibrary("tangram");
     }
 
-    private static native void init(Tangram tangramInstance, AssetManager assetManager);
+    private static native void init(Tangram instance, AssetManager assetManager);
     private static native void resize(int width, int height);
     private static native void update(float dt);
     private static native void render();
@@ -65,40 +67,50 @@ public class Tangram implements Renderer, OnTouchListener, OnScaleGestureListene
     private RotateGestureDetector rotateGestureDetector;
     private ShoveGestureDetector shoveGestureDetector;
     private DisplayMetrics displayMetrics = new DisplayMetrics();
-    private GLSurfaceView view;
 
     private OkHttpClient okClient;
     private Request.Builder okRequestBuilder;
     private static final int TILE_CACHE_SIZE = 1024 * 1024 * 30; // 30 MB
 
-    public Tangram(Activity mainApp) {
+    public Tangram(Context context) {
 
-        view = new GLSurfaceView(mainApp) {
+        super(context);
 
-            @Override
-            public void surfaceDestroyed(SurfaceHolder holder) {
-                contextDestroyed = true;
-                super.surfaceDestroyed(holder);
-            }
+        configureGLSurfaceView();        
+   
+    }
 
-        };
+    public Tangram(Context context, AttributeSet attrs) {
 
-        view.setOnTouchListener(this);
-        view.setEGLContextClientVersion(2);
-        view.setPreserveEGLContextOnPause(true);
-        view.setEGLConfigChooser(8, 8, 8, 8, 24, 0);
-        view.setRenderer(this);
-        view.setRenderMode(GLSurfaceView.RENDERMODE_WHEN_DIRTY);
+        super(context, attrs);
+
+        configureGLSurfaceView();
+
+    }
+
+    private void configureGLSurfaceView() {
+
+        setOnTouchListener(this);
+        setEGLContextClientVersion(2);
+        setPreserveEGLContextOnPause(true);
+        setEGLConfigChooser(8, 8, 8, 8, 24, 0);
+        setRenderer(this);
+        setRenderMode(GLSurfaceView.RENDERMODE_WHEN_DIRTY);
+
+    }
+
+    public void setup(Activity mainApp) {
 
         mainApp.getWindowManager().getDefaultDisplay().getMetrics(displayMetrics);
 
-        this.assetManager = mainApp.getAssets();
-        this.gestureDetector = new GestureDetector(mainApp, this);
-        this.scaleGestureDetector = new ScaleGestureDetector(mainApp, this);
-        this.rotateGestureDetector = new RotateGestureDetector(mainApp, this);
-        this.shoveGestureDetector = new ShoveGestureDetector(mainApp, this);
+        assetManager = mainApp.getAssets();
+        gestureDetector = new GestureDetector(mainApp, this);
+        scaleGestureDetector = new ScaleGestureDetector(mainApp, this);
+        rotateGestureDetector = new RotateGestureDetector(mainApp, this);
+        shoveGestureDetector = new ShoveGestureDetector(mainApp, this);
 
-        this.okClient = new OkHttpClient();
+        okRequestBuilder = new Request.Builder();
+        okClient = new OkHttpClient();
         okClient.setConnectTimeout(10, TimeUnit.SECONDS);
         okClient.setReadTimeout(30, TimeUnit.SECONDS);
         try {
@@ -108,23 +120,17 @@ public class Tangram implements Renderer, OnTouchListener, OnScaleGestureListene
         } catch (Exception e) {
             e.printStackTrace();
         }
-        this.okRequestBuilder = new Request.Builder();
-    }
 
-    public View getView() {
-        return view;
     }
 
     public void onDestroy() {
         teardown();
     }
 
-    public void requestRender() {
-        view.requestRender();
-    }
-
-    public void setRenderMode(int renderMode) {
-        view.setRenderMode(renderMode);
+    @Override
+    public void surfaceDestroyed(SurfaceHolder holder) {
+        contextDestroyed = true;
+        super.surfaceDestroyed(holder);
     }
 
     // View.OnTouchListener methods

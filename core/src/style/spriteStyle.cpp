@@ -2,10 +2,6 @@
 #include "texture.h"
 
 SpriteStyle::SpriteStyle(std::string _name, GLenum _drawMode) : Style(_name, _drawMode) {
-
-    constructVertexLayout();
-    constructShaderProgram();
-
 }
 
 SpriteStyle::~SpriteStyle() {
@@ -28,7 +24,6 @@ void SpriteStyle::constructShaderProgram() {
     std::string fragShaderSrcStr = stringFromResource("texture.fs");
     std::string vertShaderSrcStr = stringFromResource("texture.vs");
 
-    m_shaderProgram = std::make_shared<ShaderProgram>();
     m_shaderProgram->setSourceStrings(fragShaderSrcStr, vertShaderSrcStr);
 
     m_texture = std::shared_ptr<Texture>(new Texture("mapzen-logo.png"));

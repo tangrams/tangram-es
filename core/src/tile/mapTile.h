@@ -12,7 +12,7 @@
 #include "tileID.h"
 
 class Label;
-class LabelContainer;
+class Labels;
 class MapProjection;
 class Style;
 class TextBuffer;
@@ -74,7 +74,7 @@ public:
     void updateLabels(float _dt, const Style& _style, const View& _view);
     
     /* Push the label transforms to the font rendering context */
-    void pushLabelTransforms(const Style& _style, std::shared_ptr<LabelContainer> _labelContainer);
+    void pushLabelTransforms(const Style& _style, std::shared_ptr<Labels> _labels);
 
     void setTextBuffer(const Style& _style, std::shared_ptr<TextBuffer> _buffer);
     std::shared_ptr<TextBuffer> getTextBuffer(const Style& _style) const;
