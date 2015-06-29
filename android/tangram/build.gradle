@@ -25,10 +25,10 @@ android {
     java.srcDirs = ['src']
     jni.srcDirs = []
     jniLibs.srcDirs = ['libs']
-    assets.srcDirs = assets.srcDirs = ['../core/resources/fonts/',
-      '../core/resources/shaders/',
-      '../core/resources/img/',
-      '../core/resources/scene/']
+    assets.srcDirs = ['../../core/resources/fonts/',
+      '../../core/resources/shaders/',
+      '../../core/resources/img/',
+      '../../core/resources/scene/']
   }
 }
 
