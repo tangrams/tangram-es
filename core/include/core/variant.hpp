@@ -340,6 +340,25 @@ public:
     return static_cast<add_pointer_t<element<N>>>(this->pointer());
   }
 
+  template <::std::size_t N>
+  auto get () const& noexcept(false) -> element<N> const& {
+    if (this->tag != N) { throw_bad_variant_get(); }
+    return *static_cast<element<N> const*>(this->pointer());
+  }
+
+  template <::std::size_t N>
+  auto get () && noexcept(false) -> element<N>&& {
+    if (this->tag != N) { throw_bad_variant_get(); }
+    return ::core::move(*static_cast<element<N>*>(this->pointer()));
+  }
+
+  template <::std::size_t N>
+  auto get () & noexcept(false) -> element<N>& {
+    if (this->tag != N) { throw_bad_variant_get(); }
+    return *static_cast<element<N>*>(this->pointer());
+  }
+
+
 #ifndef CORE_NO_RTTI
   ::std::type_info const& type () const noexcept {
     return *this->visit(type_info { });
