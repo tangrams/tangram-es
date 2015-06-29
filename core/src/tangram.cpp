@@ -114,18 +114,16 @@ namespace Tangram {
 
                 for (const auto& mapIDandTile : m_tileManager->getVisibleTiles()) {
                     const auto& tile = mapIDandTile.second;
-                    if (tile->state() != MapTile::Ready)
-                        continue;
-                    tile->update(_dt, *m_view);
+                    if (tile->isReady())
+                        tile->update(_dt, *m_view);
                 }
 
                 // update labels for specific style
                 for (const auto& style : m_scene->getStyles()) {
                     for (const auto& mapIDandTile : m_tileManager->getVisibleTiles()) {
                         const auto& tile = mapIDandTile.second;
-                        if (tile->state() != MapTile::Ready)
-                            continue;
-                        tile->updateLabels(_dt, *style, *m_view);
+                        if (tile->isReady())
+                            tile->updateLabels(_dt, *style, *m_view);
                     }
                 }
 
@@ -135,10 +133,8 @@ namespace Tangram {
                 for (const auto& style : m_scene->getStyles()) {
                     for (const auto& mapIDandTile : m_tileManager->getVisibleTiles()) {
                         const auto& tile = mapIDandTile.second;
-                        if (tile->state() != MapTile::Ready)
-                            continue;
-
-                        tile->pushLabelTransforms(*style, m_labels);
+                        if (tile->isReady())
+                            tile->pushLabelTransforms(*style, m_labels);
                     }
                 }
             }
@@ -165,10 +161,7 @@ namespace Tangram {
             // Loop over all tiles in m_tileSet
             for (const auto& mapIDandTile : m_tileManager->getVisibleTiles()) {
                 const std::shared_ptr<MapTile>& tile = mapIDandTile.second;
-                if (tile->state() != MapTile::Ready)
-                    continue;
-
-                if (tile->hasGeometry()) {
+                if (tile->isReady() && tile->hasGeometry()) {
                     // Draw tile!
                     tile->draw(*style, *m_view);
                 }

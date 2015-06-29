@@ -110,20 +110,12 @@ public:
       return false;
     }
 
-    enum State {
-      None,
-      Loading,
-      Processing,
-      Ready,
-      Canceled
-    };
-    
-    void setState(State state) {
-      m_state = state;
+    bool isCanceled() const {
+        return m_state == Canceled;
     }
 
-    State state() {
-      return m_state;
+    bool isReady() const {
+        return m_state == Ready;
     }
 
 private:
@@ -137,7 +129,6 @@ private:
 
     uint8_t m_proxies = 0;
 
-    State m_state = None;
   
     const MapProjection* m_projection = nullptr;
     
@@ -150,10 +141,30 @@ private:
     glm::mat4 m_modelMatrix; // Matrix relating tile-local coordinates to global projection space coordinates;
     // Note that this matrix does not contain the relative translation from the global origin to the tile origin.
     // Distances from the global origin are too large to represent precisely in 32-bit floats, so we only apply the
-    // relative translation from the view origin to the model origin immediately before drawing the tile. 
+    // relative translation from the view origin to the model origin immediately before drawing the tile.
 
     std::unordered_map<std::string, std::shared_ptr<VboMesh>> m_geometry; // Map of <Style>s and their associated <VboMesh>es
     std::unordered_map<std::string, std::vector<std::shared_ptr<Label>>> m_labels;
     std::map<std::string, std::shared_ptr<TextBuffer>> m_buffers; // Map of <Style>s and the associated text buffer
+
+    friend class TileManager;
+
+    enum State {
+        None,
+        Loading,
+        Processing,
+        Ready,
+        Canceled
+    };
+
+    State m_state = None;
+
+    State state() {
+        return m_state;
+    }
+
+    void setState(State state) {
+      m_state = state;
+    }
 
 };

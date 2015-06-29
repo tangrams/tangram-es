@@ -4,72 +4,72 @@
 #include "platform.h"
 #include "tile/mapTile.h"
 #include "view/view.h"
+#include "tileManager.h"
 
-TileWorker::TileWorker() {
-    m_free = true;
+#include <chrono>
+
+TileWorker::TileWorker(TileManager& _tileManager)
+    : m_tileManager(_tileManager) {
     m_aborted = false;
-    m_finished = false;
+    m_running = false;
 }
 
 void TileWorker::abort() {
     m_aborted = true;
 }
 
-void TileWorker::processTileData(TileTask _task,
-                                 const StyleSet& _styles,
-                                 const View& _view)
+void TileWorker::process(const StyleSet& _styles)
 {
-    m_task = std::move(_task);
-    m_free = false;
-    m_finished = false;
+    m_running = true;
     m_aborted = false;
 
     m_future = std::async(std::launch::async, [&]() {
-        
-        DataSource* dataSource = m_task->source;
-        auto& tile = m_task->tile;
-        
-        std::shared_ptr<TileData> tileData;
+        while (!m_aborted) {
 
-        if (m_task->parsedTileData) {
-            // Data has already been parsed!
-            tileData = m_task->parsedTileData;
-        } else {
-            // Data needs to be parsed
-            tileData = dataSource->parse(*tile, m_task->rawTileData);
-
-            // Cache parsed data with the original data source
-            dataSource->setTileData(tile->getID(), tileData);
-        }
-
-        if (tileData) {
-            tile->update(0, _view);
-        
-            //Process data for all styles
-            for(const auto& style : _styles) {
-                if (m_aborted || tile->state() == MapTile::Canceled) {
-                    m_finished = true;
-                    return false;
-                }
-                style->addData(*tileData, *tile);
+            auto task = m_tileManager.pollProcessQueue();
+            if (!task) {
+                // No work left to do.
+                break;
             }
+
+            DataSource* dataSource = task->source;
+            auto& tile = task->tile;
+
+            std::shared_ptr<TileData> tileData;
+
+            if (task->parsedTileData) {
+                // Data has already been parsed!
+                tileData = task->parsedTileData;
+            } else {
+                // Data needs to be parsed
+                tileData = dataSource->parse(*tile, task->rawTileData);
+
+                // Cache parsed data with the original data source
+                dataSource->setTileData(tile->getID(), tileData);
+            }
+
+            if (tileData) {
+                // Process data for all styles
+                for (const auto& style : _styles) {
+                    if (m_aborted) {
+                        break;
+                    }
+                    if(tile->isCanceled()) {
+                        break;
+                    }
+                    style->addData(*tileData, *tile);
+                }
+            }
+
+            m_tileManager.tileProcessed(std::move(task));
+            requestRender();
         }
 
-        m_finished = true;
-        requestRender();
-
+        m_running = false;
         return true;
     });
 }
 
 void TileWorker::drain() {
-  m_future.get();
-  m_free = true;
-}
-
-std::shared_ptr<MapTile> TileWorker::getTileResult() {
     m_future.get();
-    m_free = true;
-    return std::move(m_task->tile);
 }
-

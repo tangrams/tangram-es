@@ -3,6 +3,8 @@
 #include "mapTile.h"
 #include "tileData.h"
 
+#include <memory>
+
 class TileManager;
 class DataSource;
 
@@ -10,7 +12,7 @@ class DataSource;
 class TileTaskData {
 
 public:
-    TileID tileID;
+    std::shared_ptr<MapTile> tile;
     /*const*/ DataSource* source;
 
     // Only one of either parsedTileData or rawTileData will be non-empty for a given task.
@@ -20,11 +22,8 @@ public:
     std::shared_ptr<TileData> parsedTileData;
     std::vector<char> rawTileData;
 
-    // The result
-    std::shared_ptr<MapTile> tile;
-
-    TileTaskData(TileID _tileID, DataSource* _source) :
-        tileID(_tileID),
+    TileTaskData(std::shared_ptr<MapTile> _tile, DataSource* _source) :
+        tile(_tile),
         source(_source) {
     }
 };

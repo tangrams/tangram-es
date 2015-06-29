@@ -11,28 +11,21 @@
 #include <chrono>
 #include <algorithm>
 
-#define MAX_CONCURRENT_DOWNLOADS 4
+#define MAX_PARALLEL_DOWNLOADS 4
 
-TileManager::TileManager() {
+TileManager::TileManager()
+    : m_loadPending(0) {
+
     // Instantiate workers
     for (size_t i = 0; i < MAX_WORKERS; i++) {
-        m_workers.push_back(std::unique_ptr<TileWorker>(new TileWorker()));
+        m_workers.push_back(std::unique_ptr<TileWorker>(new TileWorker(*this)));
     }
-    m_dataCallback = std::bind(&TileManager::addToWorkerQueue, this, std::placeholders::_1);
-    //m_processCallback = std::bind(&TileManager::addToCompleted, this, std::placeholders::_1);
-}
-
-TileManager::TileManager(TileManager&& _other) :
-    m_view(std::move(_other.m_view)),
-    m_tileSet(std::move(_other.m_tileSet)),
-    m_dataSources(std::move(_other.m_dataSources)),
-    m_workers(std::move(_other.m_workers)),
-    m_queuedTiles(std::move(_other.m_queuedTiles)) {
+    m_dataCallback = std::bind(&TileManager::tileLoaded, this, std::placeholders::_1);
 }
 
 TileManager::~TileManager() {
     for (auto& worker : m_workers) {
-        if (!worker->isFree()) {
+        if (worker->isRunning()) {
             worker->abort();
             worker->drain();
         }
@@ -48,86 +41,116 @@ void TileManager::addDataSource(std::unique_ptr<DataSource> _source) {
     m_dataSources.push_back(std::move(_source));
 }
 
-void TileManager::addToWorkerQueue(TileTask task) {
+void TileManager::tileLoaded(TileTask task) {
     std::lock_guard<std::mutex> lock(m_queueTileMutex);
     m_queuedTiles.push_back(std::move(task));
 }
 
-TileTask TileManager::pollTileTask() {
-    std::lock_guard<std::mutex> lock(m_queueTileMutex);
-    if (m_queuedTiles.empty())
-         return TileTask(nullptr);
-
-    auto task = std::move(m_queuedTiles.front());
-    m_queuedTiles.pop_front();
-    return task;
+void TileManager::tileProcessed(TileTask task) {
+    std::lock_guard<std::mutex> lock(m_readyTileMutex);
+    m_readyTiles.push_back(std::move(task));
 }
+
+TileTask TileManager::pollProcessQueue() {
+    std::lock_guard<std::mutex> lock(m_queueTileMutex);
+
+    while (!m_queuedTiles.empty()) {
+        auto task = std::move(m_queuedTiles.front());
+        m_queuedTiles.pop_front();
+
+        if (!setTileState(*(task->tile), MapTile::Processing)) {
+            // Drop canceled task.
+            continue;
+        }
+        return task;
+    }
+
+    return TileTask(nullptr);
+}
+
+bool TileManager::setTileState(MapTile& tile, MapTile::State state) {
+    std::lock_guard<std::mutex> lock(m_tileStateMutex);
+
+    switch (tile.state()) {
+    case MapTile::None:
+        if (state == MapTile::Loading) {
+            tile.setState(state);
+            m_loadPending++;
+            return true;
+        }
+        break;
+
+    case MapTile::Loading:
+        if (state == MapTile::Processing) {
+            tile.setState(state);
+            m_loadPending--;
+            return true;
+        }
+        if (state == MapTile::Canceled) {
+            tile.setState(state);
+            m_loadPending--;
+            return true;
+        }
+        break;
+
+    case MapTile::Processing:
+        if (state == MapTile::Ready) {
+            tile.setState(state);
+            return true;
+        }
+        break;
+
+    case MapTile::Ready:
+        return false;
+
+    case MapTile::Canceled:
+        return false;
+
+    }
+
+    if (state == MapTile::Canceled)
+        return false;
+
+    logMsg("Wrong state change %d -> %d<<<", tile.state(), state);
+    assert(false);
+}
+
 
 void TileManager::updateTileSet() {
 
     m_tileSetChanged = false;
 
-    // Check if any native worker needs to be dispatched i.e. queuedTiles is not empty.
+    // Check if any native worker needs to be dispatched.
     if (!m_queuedTiles.empty()) {
 
         for (auto& worker : m_workers) {
-            if (!worker->isFree())
+            if (worker->isRunning())
                 continue;
 
-            auto task = pollTileTask();
-            while (task) {
-
-                // Check if the tile is ready for processing.
-                if (task->tile->state() == MapTile::Loading)
-                    break;
-
-                const auto& id = task->tileID;
-                logMsg("[%d, %d, %d] >>> skipping work for removed tile\n", id.z, id.x, id.y);
-
-                if (task->tile->state() != MapTile::Canceled) {
-                    logMsg(">>> WRONG STATE %d <<<", task->tile->state());
-                    assert(false);
-                }
-                task = pollTileTask();
-            }
-            if (!task)
-                break;
-
-            // FIXME - use atomic and decrement on retrival
-            m_loadPending--;
-
-            task->tile->setState(MapTile::Processing);
-            worker->processTileData(std::move(task), m_scene->getStyles(), *m_view);
+            worker->process(m_scene->getStyles());
         }
     }
 
-    // Check if any incoming tiles are finished.
-    for (auto& worker : m_workers) {
+    if (!m_readyTiles.empty()) {
+        std::lock_guard<std::mutex> lock(m_readyTileMutex);
+        auto it = m_readyTiles.begin();
 
-        if (!worker->isFree() && worker->isFinished()) {
+        while (it != m_readyTiles.end()) {
+            auto& task = *it;
+            auto& tile = *(task->tile);
 
-            // Get result from worker and move it into tile set.
-            auto tile = worker->getTileResult();
-            const TileID& id = tile->getID();
-
-            logMsg("[%d, %d, %d] Tile finished loading\n", id.z, id.x, id.y);
-
-            if (tile->state() == MapTile::Processing) {
-                tile->setState(MapTile::Ready);
-
-                cleanProxyTiles(*tile);
+            if (setTileState(tile, MapTile::Ready)) {
+                cleanProxyTiles(tile);
                 m_tileSetChanged = true;
-            } else if (tile->state() != MapTile::Canceled) {
-                logMsg(">>> WRONG STATE %d <<<", tile->state());
-                assert(false);
             }
+
+            it = m_readyTiles.erase(it);
         }
     }
 
     if (m_view->changedOnLastUpdate() || m_tileSetChanged) {
 
         const std::set<TileID>& visibleTiles = m_view->getVisibleTiles();
-        bool cleanupTiles = false;
 
         // Loop over visibleTiles and add any needed tiles to tileSet
         {
@@ -140,8 +163,8 @@ void TileManager::updateTileSet() {
                 auto& curTileId = setTilesIter == m_tileSet.end() ? NOT_A_TILE : setTilesIter->first;
 
                 if (visTileId == curTileId) {
-                    if (setTilesIter->second->state() == MapTile::None){
-                        //logMsg("Enqueue tile [%d, %d, %d]\n", curTileId.z, curTileId.x, curTileId.y);
+                    if (setTilesIter->second->state() == MapTile::None) {
+                        logMsg("[%d, %d, %d] - Enqueue\n", curTileId.z, curTileId.x, curTileId.y);
                         m_loadQueue.push_back(curTileId);
                     }
 
@@ -156,14 +179,13 @@ void TileManager::updateTileSet() {
 
                 } else {
                     // visibleTiles is missing an element present in tileSet (handled below)
-                    cleanupTiles = true;
                     ++setTilesIter;
                 }
             }
         }
 
         // Loop over tileSet and remove any tiles that are neither visible nor proxies
-        if (cleanupTiles) {
+        {
             auto setTilesIter = m_tileSet.begin();
             auto visTilesIter = visibleTiles.begin();
 
@@ -193,7 +215,7 @@ void TileManager::updateTileSet() {
         }
     }
 
-    if (!m_loadQueue.empty() && m_loadPending < MAX_CONCURRENT_DOWNLOADS) {
+    if (!m_loadQueue.empty() && m_loadPending < MAX_PARALLEL_DOWNLOADS) {
         glm::dvec2 center(m_view->getPosition().x, -m_view->getPosition().y);
 
         m_loadQueue.sort([&](const TileID& a, const TileID& b) {
@@ -203,35 +225,30 @@ void TileManager::updateTileSet() {
         });
 
         for (auto& id : m_loadQueue) {
-
             auto& tile = m_tileSet[id];
-
-            if (tile->state() != MapTile::None) {
-                logMsg(">>> WRONG STATE %d <<<", tile->state());
-                assert(false);
-            }
-
-            tile->setState(MapTile::Loading);
+            setTileState(*tile, MapTile::Loading);
 
             for (auto& source : m_dataSources) {
-
-                TileTask task = std::make_shared<TileTaskData>(id, source.get() );
-                task->tile = tile;
+                TileTask task = std::make_shared<TileTaskData>(tile, source.get());
+                logMsg("[%d, %d, %d] Load\n", id.z, id.x, id.y);
 
                 if (!source->loadTileData(task, m_dataCallback)) {
                     logMsg("ERROR: Loading failed for tile [%d, %d, %d]\n", id.z, id.x, id.y);
                 }
             }
-            if (++m_loadPending == MAX_CONCURRENT_DOWNLOADS)
+            if (m_loadPending == MAX_PARALLEL_DOWNLOADS)
                 break;
         }
     }
-    logMsg("all:%d loading:%d pending:%d\n", m_tileSet.size(), m_loadQueue.size(), m_loadPending);
+
+    // logMsg("all:%d loading:%d processing:%d pending:%d\n",
+    //        m_tileSet.size(), m_loadQueue.size(),
+    //        m_queuedTiles.size(), m_loadPending);
     m_loadQueue.clear();
 }
 
 void TileManager::addTile(const TileID& _tileID) {
-    //logMsg("[%d, %d, %d] ADD Tile\n", _tileID.z, _tileID.x, _tileID.y);
+    logMsg("[%d, %d, %d] Add\n", _tileID.z, _tileID.x, _tileID.y);
 
     std::shared_ptr<MapTile> tile(new MapTile(_tileID, m_view->getMapProjection()));
 
@@ -246,10 +263,9 @@ void TileManager::removeTile(std::map< TileID, std::shared_ptr<MapTile> >::itera
     const TileID& id = _tileIter->first;
     auto& tile = _tileIter->second;
 
-    //logMsg("[%d, %d, %d] REMOVE Tile\n", id.z, id.x, id.y);
+    logMsg("[%d, %d, %d] Remove\n", id.z, id.x, id.y);
 
-    if (tile->state() == MapTile::Loading) {
-        m_loadPending--;
+    if (setTileState(*tile, MapTile::Canceled)) {
 
         // 1. Remove from Datasource
         // Make sure to cancel the network request associated with this tile.
@@ -281,7 +297,7 @@ void TileManager::removeTile(std::map< TileID, std::shared_ptr<MapTile> >::itera
     // }
 
     //
-    tile->setState(MapTile::Canceled);
+    // tile->setState(MapTile::Canceled);
 
     cleanProxyTiles(*tile);
 
