@@ -6,7 +6,7 @@ set(EXECUTABLE_NAME "tangram")
 add_definitions(-DPLATFORM_OSX)
 
 find_package(PkgConfig REQUIRED)
-pkg_search_module(GLFW REQUIRED glfw3)
+pkg_search_module(GLFW REQUIRED glfw3>=3.1)
 
 if(NOT GLFW_FOUND)
     message(SEND_ERROR "GLFW not found")
