@@ -114,16 +114,18 @@ namespace Tangram {
 
                 for (const auto& mapIDandTile : m_tileManager->getVisibleTiles()) {
                     const auto& tile = mapIDandTile.second;
-                    if (tile->isReady())
+                    if (tile->isReady()) {
                         tile->update(_dt, *m_view);
+                    }
                 }
 
                 // update labels for specific style
                 for (const auto& style : m_scene->getStyles()) {
                     for (const auto& mapIDandTile : m_tileManager->getVisibleTiles()) {
                         const auto& tile = mapIDandTile.second;
-                        if (tile->isReady())
+                        if (tile->isReady()) {
                             tile->updateLabels(_dt, *style, *m_view);
+                        }
                     }
                 }
 
@@ -133,8 +135,9 @@ namespace Tangram {
                 for (const auto& style : m_scene->getStyles()) {
                     for (const auto& mapIDandTile : m_tileManager->getVisibleTiles()) {
                         const auto& tile = mapIDandTile.second;
-                        if (tile->isReady())
+                        if (tile->isReady()) {
                             tile->pushLabelTransforms(*style, m_labels);
+                        }
                     }
                 }
             }

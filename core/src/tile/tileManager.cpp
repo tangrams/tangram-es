@@ -108,8 +108,9 @@ bool TileManager::setTileState(MapTile& tile, MapTile::State state) {
 
     }
 
-    if (state == MapTile::Canceled)
+    if (state == MapTile::Canceled) {
         return false;
+    }
 
     logMsg("Wrong state change %d -> %d<<<", tile.state(), state);
     assert(false);
@@ -124,8 +125,7 @@ void TileManager::updateTileSet() {
     if (!m_queuedTiles.empty()) {
 
         for (auto& worker : m_workers) {
-            if (worker->isRunning())
-                continue;
+            if (worker->isRunning()) { continue; }
 
             worker->process(m_scene->getStyles());
         }
@@ -236,8 +236,9 @@ void TileManager::updateTileSet() {
                     logMsg("ERROR: Loading failed for tile [%d, %d, %d]\n", id.z, id.x, id.y);
                 }
             }
-            if (m_loadPending == MAX_PARALLEL_DOWNLOADS)
+            if (m_loadPending == MAX_PARALLEL_DOWNLOADS) {
                 break;
+            }
         }
     }
 
@@ -313,8 +314,9 @@ void TileManager::updateProxyTiles(MapTile& _tile) {
     const auto& parentTileIter = m_tileSet.find(parentID);
     if (parentTileIter != m_tileSet.end()) {
         auto& parent = parentTileIter->second;
-        if (_tile.setProxy(MapTile::Parent))
+        if (_tile.setProxy(MapTile::Parent)) {
             parent->incProxyCounter();
+        }
         return;
     }
 
@@ -323,8 +325,9 @@ void TileManager::updateProxyTiles(MapTile& _tile) {
             const auto& childID = _tileID.getChild(i);
             const auto& childTileIter = m_tileSet.find(childID);
             if(childTileIter != m_tileSet.end()) {
-                if (_tile.setProxy((MapTile::ProxyID)(1 << i)))
+                if (_tile.setProxy((MapTile::ProxyID)(1 << i))) {
                     childTileIter->second->incProxyCounter();
+                }
             }
         }
     }
