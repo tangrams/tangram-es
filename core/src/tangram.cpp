@@ -19,7 +19,6 @@
 #include "util/skybox.h"
 #include "util/tileID.h"
 #include "view/view.h"
-#include "util/primitives.h"
 
 namespace Tangram {
 

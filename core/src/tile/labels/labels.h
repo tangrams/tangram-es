@@ -4,7 +4,6 @@
 #include "util/tileID.h"
 #include "isect2d.h"
 #include "view/view.h"
-#include "util/primitives.h"
 #include <memory>
 #include <mutex>
 #include <vector>

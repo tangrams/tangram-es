@@ -1,11 +1,6 @@
 #pragma once
 
-#include "tangram.h"
-#include "util/shaderProgram.h"
-#include "util/vertexLayout.h"
-#include "glm/glm.hpp"
-#include "glm/mat4x4.hpp"
-#include "debug.h"
+#include "glm/vec2.hpp"
 
 namespace Primitives {
     

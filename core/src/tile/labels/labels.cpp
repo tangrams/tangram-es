@@ -1,6 +1,8 @@
 #include "labels.h"
+#include "tangram.h"
 #include "tile/mapTile.h"
 #include "text/fontContext.h"
+#include "util/primitives.h"
 
 Labels::Labels() {}
 

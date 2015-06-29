@@ -1,7 +1,11 @@
 #include "primitives.h"
 
+#include "debug.h"
+#include "glm/mat4x4.hpp"
 #include "glm/gtc/matrix_transform.hpp"
 #include "glm/gtc/type_ptr.hpp"
+#include "util/shaderProgram.h"
+#include "util/vertexLayout.h"
 
 namespace Primitives {
 
