@@ -23,7 +23,7 @@ include_recursive_dirs(${PROJECT_SOURCE_DIR}/core/src/*.h)
 function(link_libraries)
 
     find_package(PkgConfig REQUIRED)
-    pkg_search_module(GLFW REQUIRED glfw3)
+    pkg_search_module(GLFW REQUIRED glfw3>=3.1)
     include_directories(${GLFW_INCLUDE_DIRS})
     target_link_libraries(${EXECUTABLE_NAME} -lcurl) #use system libcurl
     target_link_libraries(${EXECUTABLE_NAME} core ${GLFW_STATIC_LIBRARIES})

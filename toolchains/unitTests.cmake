@@ -14,7 +14,7 @@ include_directories(${CORE_LIBRARIES_INCLUDE_DIRS})
 set(OSX_PLATFORM_SRC ${PROJECT_SOURCE_DIR}/osx/src/platform_osx.mm)
 
 find_package(PkgConfig REQUIRED)
-pkg_search_module(GLFW REQUIRED glfw3)
+pkg_search_module(GLFW REQUIRED glfw3>=3.1)
 
 list(APPEND GLFW_LDFLAGS
         "-framework OpenGL" 

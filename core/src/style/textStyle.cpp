@@ -9,11 +9,7 @@
 MapTile* TextStyle::s_processedTile = nullptr;
 
 TextStyle::TextStyle(const std::string& _fontName, std::string _name, float _fontSize, unsigned int _color, bool _sdf, bool _sdfMultisampling, GLenum _drawMode)
-: Style(_name, _drawMode), m_fontName(_fontName), m_fontSize(_fontSize), m_color(_color), m_sdf(_sdf), m_sdfMultisampling(_sdfMultisampling)  {
-
-    constructVertexLayout();
-    constructShaderProgram();
-    
+: Style(_name, _drawMode), m_fontName(_fontName), m_fontSize(_fontSize), m_color(_color), m_sdf(_sdf), m_sdfMultisampling(_sdfMultisampling)  {    
     m_labels = Labels::GetInstance();
 }
 
@@ -36,7 +32,6 @@ void TextStyle::constructShaderProgram() {
     std::string vertShaderSrcStr = stringFromResource("text.vs");
     std::string fragShaderSrcStr = stringFromResource(frag.c_str());
 
-    m_shaderProgram = std::make_shared<ShaderProgram>();
     m_shaderProgram->setSourceStrings(fragShaderSrcStr, vertShaderSrcStr);
 
     std::string defines;

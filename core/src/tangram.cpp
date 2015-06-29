@@ -3,18 +3,15 @@
 #include "platform.h"
 #include "scene/scene.h"
 #include "scene/sceneLoader.h"
-#include "style/debugStyle.h"
-#include "style/debugTextStyle.h"
-#include "style/spriteStyle.h"
-#include "style/textStyle.h"
+#include "style/style.h"
 #include "text/fontContext.h"
+#include "tile/labels/labels.h"
 #include "tile/tileManager.h"
 #include "tile/mapTile.h"
 #include "util/error.h"
 #include "util/shaderProgram.h"
 #include "util/skybox.h"
 #include "view/view.h"
-
 #include <memory>
 #include <cmath>
 
@@ -25,7 +22,6 @@ namespace Tangram {
     std::shared_ptr<View> m_view;
     std::shared_ptr<Labels> m_labels;
     std::shared_ptr<FontContext> m_ftContext;
-    std::shared_ptr<DebugStyle> m_debugStyle;
     std::shared_ptr<Skybox> m_skybox;
 
     static float g_time = 0.0;
@@ -57,31 +53,15 @@ namespace Tangram {
             m_tileManager->setScene(m_scene);
         }
 
-        SceneLoader loader;
-        loader.loadScene("config.yaml", *m_scene, *m_tileManager, *m_view);
-
         // Hard-coded setup for stuff that isn't loaded through the config file yet
         m_ftContext = std::make_shared<FontContext>();
         m_ftContext->addFont("FiraSans-Medium.ttf", "FiraSans");
-        m_ftContext->addFont("FuturaStd-Condensed.ttf", "Futura");
         m_labels = Labels::GetInstance();
         m_labels->setFontContext(m_ftContext);
         m_labels->setView(m_view);
 
-        std::unique_ptr<Style> textStyle0(new TextStyle("FiraSans", "Textstyle0", 15.0f, 0xffffff, true, true));
-        StyleParamMap emptyParamMap;
-        textStyle0->addLayer({ "roads", std::move(emptyParamMap)});
-        textStyle0->addLayer({ "places", std::move(emptyParamMap)});
-        textStyle0->addLayer({ "pois", std::move(emptyParamMap)});
-        m_scene->addStyle(std::move(textStyle0));
-
-        std::unique_ptr<Style> textStyle1(new TextStyle("Futura", "Textstyle1", 18.0f, 0x000000, true, true));
-        textStyle1->addLayer({ "landuse", std::move(emptyParamMap)});
-
-        m_scene->addStyle(std::move(textStyle1));
-
-        std::unique_ptr<Style> debugTextStyle(new DebugTextStyle("FiraSans", "DebugTextStyle", 30.0f, 0xDC3522, true));
-        m_scene->addStyle(std::move(debugTextStyle));
+        SceneLoader loader;
+        loader.loadScene("config.yaml", *m_scene, *m_tileManager, *m_view);
 
         // Set up openGL state
         glDisable(GL_BLEND);

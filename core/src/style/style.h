@@ -1,13 +1,15 @@
 #pragma once
 
 #include "data/tileData.h"
+#include "material.h"
 #include "gl.h"
 #include "styleParamMap.h"
-
+#include "util/shaderProgram.h"
 #include <memory>
 #include <string>
 #include <vector>
 
+class Light;
 class MapTile;
 class MapProjection;
 class Material;
@@ -45,13 +47,16 @@ protected:
     std::string m_name;
 
     /* <ShaderProgram> used to draw meshes using this style */
-    std::shared_ptr<ShaderProgram> m_shaderProgram;
+    std::shared_ptr<ShaderProgram> m_shaderProgram = std::make_shared<ShaderProgram>();
 
     /* <VertexLayout> shared between meshes using this style */
     std::shared_ptr<VertexLayout> m_vertexLayout;
 
     /* <Material> used for drawing meshes that use this style */
-    std::shared_ptr<Material> m_material;
+    std::shared_ptr<Material> m_material = std::make_shared<Material>();
+
+    /* <LightingType> to determine how lighting will be calculated for this style */
+    LightingType m_lightingType = LightingType::fragment;
 
     /* Draw mode to pass into <VboMesh>es created with this style */
     GLenum m_drawMode;
@@ -98,6 +103,9 @@ public:
 
     virtual ~Style();
 
+    /* Make this style ready to be used (call after all needed properties are set) */
+    virtual void build(const std::vector<std::unique_ptr<Light>>& _lights);
+
     /* Add layers to which this style will apply */
     virtual void addLayer(const std::pair<std::string, StyleParamMap>&& _layer);
 
@@ -120,6 +128,6 @@ public:
 
     std::shared_ptr<ShaderProgram> getShaderProgram() const { return m_shaderProgram; }
 
-    std::string getName() const { return m_name; }
+    const std::string& getName() const { return m_name; }
 
 };
