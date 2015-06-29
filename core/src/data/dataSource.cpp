@@ -5,6 +5,7 @@
 #include "tileData.h"
 #include "mapTile.h"
 #include "tileManager.h"
+#include "labels/labels.h"
 
 //---- DataSource Implementation----
 

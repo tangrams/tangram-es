@@ -2,10 +2,6 @@
 #include "texture.h"
 
 SpriteStyle::SpriteStyle(std::string _name, GLenum _drawMode) : Style(_name, _drawMode) {
-
-    constructVertexLayout();
-    constructShaderProgram();
-
 }
 
 SpriteStyle::~SpriteStyle() {
@@ -28,21 +24,24 @@ void SpriteStyle::constructShaderProgram() {
     std::string fragShaderSrcStr = stringFromResource("texture.fs");
     std::string vertShaderSrcStr = stringFromResource("texture.vs");
 
-    m_shaderProgram = std::make_shared<ShaderProgram>();
     m_shaderProgram->setSourceStrings(fragShaderSrcStr, vertShaderSrcStr);
 
     m_texture = std::shared_ptr<Texture>(new Texture("poi_icons_32.png"));
 }
 
-void SpriteStyle::buildPoint(Point& _point, StyleParams& _params, Properties& _props, VboMesh& _mesh) const {
+void* SpriteStyle::parseStyleParams(const std::string& _layerNameID, const StyleParamMap& _styleParamMap) {
+    return nullptr;
+}
+
+void SpriteStyle::buildPoint(Point& _point, void* _styleParam, Properties& _props, VboMesh& _mesh) const {
 
 }
 
-void SpriteStyle::buildLine(Line& _line, StyleParams& _params, Properties& _props, VboMesh& _mesh) const {
+void SpriteStyle::buildLine(Line& _line, void* _styleParam, Properties& _props, VboMesh& _mesh) const {
 
 }
 
-void SpriteStyle::buildPolygon(Polygon& _polygon, StyleParams& _params, Properties& _props, VboMesh& _mesh) const {
+void SpriteStyle::buildPolygon(Polygon& _polygon, void* _styleParam, Properties& _props, VboMesh& _mesh) const {
 
 }
 
@@ -52,7 +51,7 @@ void SpriteStyle::onBeginDrawFrame(const std::shared_ptr<View>& _view, const std
     m_shaderProgram->setUniformi("u_tex", 0);
 }
 
-void SpriteStyle::addData(TileData& _data, MapTile& _tile, const MapProjection& _mapProjection) const {
+void SpriteStyle::addData(TileData& _data, MapTile& _tile, const MapProjection& _mapProjection) {
 
     Mesh* mesh = new Mesh(m_vertexLayout, m_drawMode);
 
@@ -60,11 +59,11 @@ void SpriteStyle::addData(TileData& _data, MapTile& _tile, const MapProjection& 
 
     vertices.reserve(4);
 
-    float size = 0.9;
-    vertices.push_back({  size,  size, 0.f, 1.f, 0.f });
-    vertices.push_back({ -size,  size, 0.f, 0.f, 0.f });
-    vertices.push_back({ -size, -size, 0.f, 0.f, 1.f });
-    vertices.push_back({  size, -size, 0.f, 1.f, 1.f });
+    float size = 0.2;
+    vertices.push_back({{  size,  size, 0.f },{ 1.f, 0.f }});
+    vertices.push_back({{ -size,  size, 0.f },{ 0.f, 0.f }});
+    vertices.push_back({{ -size, -size, 0.f },{ 0.f, 1.f }});
+    vertices.push_back({{  size, -size, 0.f },{ 1.f, 1.f }});
 
     mesh->addVertices(std::move(vertices), { 0, 1, 2, 2, 3, 0 });
     mesh->compileVertexBuffer();

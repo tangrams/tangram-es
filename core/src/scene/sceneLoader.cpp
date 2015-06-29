@@ -10,7 +10,9 @@
 #include "mvtSource.h"
 #include "polygonStyle.h"
 #include "polylineStyle.h"
+#include "textStyle.h"
 #include "debugStyle.h"
+#include "debugTextStyle.h"
 #include "filters.h"
 
 #include "yaml-cpp/yaml.h"
@@ -25,10 +27,24 @@ void SceneLoader::loadScene(const std::string& _file, Scene& _scene, TileManager
     Node config = YAML::Load(configString);
 
     loadSources(config["sources"], _tileManager);
+    loadTextures(config["textures"], _scene);
+    loadStyles(config["styles"], _scene);
     loadLayers(config["layers"], _scene, _tileManager);
     loadCameras(config["cameras"], _view);
     loadLights(config["lights"], _scene);
 
+    for (auto& style : _scene.getStyles()) {
+        style->build(_scene.getLights());
+    }
+
+}
+
+std::string parseSequence(const Node& node) {
+    std::stringstream sstream;
+    for (auto& val : node) {
+        sstream << val.as<float>() << ",";
+    }
+    return sstream.str();
 }
 
 glm::vec4 parseVec4(const Node& node) {
@@ -57,6 +73,298 @@ glm::vec3 parseVec3(const Node& node) {
     return vec;
 }
 
+void SceneLoader::loadShaderConfig(YAML::Node shaders, ShaderProgram& shader) {
+
+    if (!shaders) {
+        return;
+    }
+
+    Node definesNode = shaders["defines"];
+    if (definesNode) {
+        for (const auto& define : definesNode) {
+            std::string name = define.first.as<std::string>();
+            std::string value = define.second.as<std::string>();
+            if (value == "true") {
+                value = ""; // specifying a define to be 'true' means that it is simply defined and has no value
+            } else if (value == "false") {
+                continue; // specifying a define to be 'false' means that the define will not be defined at all
+            }
+            shader.addSourceBlock("defines", "#define " + name + " " + value);
+        }
+    }
+
+    Node uniformsNode = shaders["uniforms"];
+    if (uniformsNode) {
+        for (const auto& uniform : uniformsNode) {
+            std::string name = uniform.first.as<std::string>();
+            std::string value = uniform.first.as<std::string>();
+            shader.addSourceBlock("uniforms", "uniform " + name + " = " + value + ";");
+        }
+    }
+
+    Node blocksNode = shaders["blocks"];
+    if (blocksNode) {
+        for (const auto& block : blocksNode) {
+            std::string name = block.first.as<std::string>();
+            std::string value = block.second.as<std::string>();
+            shader.addSourceBlock(name, value); // TODO: Warn on unrecognized injection points
+        }
+    }
+
+}
+
+void SceneLoader::loadMaterial(YAML::Node matNode, Material& material, Scene& scene) {
+
+    Node diffuse = matNode["diffuse"];
+    if (diffuse) {
+        if (diffuse.IsMap()) {
+            material.setDiffuse(loadMaterialTexture(diffuse, scene));
+        } else if (diffuse.IsSequence()) {
+            material.setDiffuse(parseVec4(diffuse));
+        } else {
+            try {
+                float difValue = diffuse.as<float>();
+                material.setDiffuse(glm::vec4(difValue, difValue, difValue, 1.0));
+            } catch (const BadConversion& e) {
+                // TODO: css color parser and hex_values
+            }
+        }
+    }
+
+    Node ambient = matNode["ambient"];
+    if (ambient) {
+        if (ambient.IsMap()) {
+            material.setAmbient(loadMaterialTexture(ambient, scene));
+        } else if (ambient.IsSequence()) {
+            material.setAmbient(parseVec4(ambient));
+        } else {
+            try {
+                float ambientValue = ambient.as<float>();
+                material.setAmbient(glm::vec4(ambientValue, ambientValue, ambientValue, 1.0));
+            } catch (const BadConversion& e) {
+                // TODO: css color parser and hex_values
+            }
+        }
+    }
+
+    Node specular = matNode["specular"];
+    if (specular) {
+        if (specular.IsMap()) {
+            material.setSpecular(loadMaterialTexture(specular, scene));
+        } else if (specular.IsSequence()) {
+            material.setSpecular(parseVec4(specular));
+        } else {
+            try {
+                float specValue = specular.as<float>();
+                material.setSpecular(glm::vec4(specValue, specValue, specValue, 1.0));
+            } catch (const BadConversion& e) {
+                // TODO: css color parser and hex_values
+            }
+        }
+    }
+
+    Node shininess = matNode["shininess"];
+
+    if (shininess) {
+        try {
+            material.setShininess(shininess.as<float>());
+        } catch(const BadConversion& e) {
+            logMsg("Error: float value expected for shininess material parameter");
+        }
+    }
+
+    Node normal = matNode["normal"];
+    if (normal) {
+        material.setNormal(loadMaterialTexture(normal, scene));
+    }
+
+}
+
+MaterialTexture SceneLoader::loadMaterialTexture(YAML::Node matCompNode, Scene& scene) {
+
+    MaterialTexture matTex;
+
+    Node textureNode = matCompNode["texture"];
+    Node mappingNode = matCompNode["mapping"];
+    Node scaleNode = matCompNode["scale"];
+    Node amountNode = matCompNode["amount"];
+
+    if (!textureNode) {
+        logMsg("WARNING: Expected a \"texture\" parameter; Material may be incorrect.\n");
+        return matTex;
+    }
+
+    std::string name = textureNode.as<std::string>();
+
+    auto& sharedTexs = scene.getTextures();
+    if (sharedTexs.find(name) == sharedTexs.end()) {
+        sharedTexs.emplace(name, std::make_shared<Texture>(name));
+    }
+
+    matTex.tex = sharedTexs.at(name);
+
+    if (mappingNode) {
+        std::string mapping = mappingNode.as<std::string>();
+        if (mapping == "uv") { matTex.mapping = MappingType::uv; }
+        else if (mapping == "planar") { logMsg("WARNING: planar texture mapping not yet implemented\n"); } // TODO
+        else if (mapping == "triplanar") { logMsg("WARNING: triplanar texture mapping not yet implemented\n"); } // TODO
+        else if (mapping == "spheremap") { matTex.mapping = MappingType::spheremap; }
+        else { logMsg("WARNING: unrecognized texture mapping \"%s\"\n", mapping.c_str()); }
+    }
+
+    if (scaleNode) {
+        if (scaleNode.IsSequence() && scaleNode.size() == 2) {
+            matTex.scale = { scaleNode[0].as<float>(), scaleNode[1].as<float>(), 1.f };
+        } else if (scaleNode.IsScalar()) {
+            matTex.scale = glm::vec3(scaleNode.as<float>());
+        } else {
+            logMsg("WARNING: unrecognized scale parameter in material\n");
+        }
+    }
+
+    if (amountNode) {
+        if (amountNode.IsSequence() && amountNode.size() == 3) {
+            matTex.amount = { amountNode[0].as<float>(), amountNode[1].as<float>(), amountNode[2].as<float>() };
+        } else if (amountNode.IsScalar()) {
+            matTex.amount = glm::vec3(amountNode.as<float>());
+        } else {
+            logMsg("WARNING: unrecognized amount parameter in material\n");
+        }
+    }
+
+    return matTex;
+}
+
+void SceneLoader::loadTextures(YAML::Node textures, Scene& scene) {
+
+    if (!textures) {
+        return;
+    }
+
+    for (const auto& textureNode : textures) {
+
+        std::string name = textureNode.first.as<std::string>();
+        Node textureConfig = textureNode.second;
+
+        std::string file;
+        TextureOptions options = {GL_RGBA, GL_RGBA, {GL_LINEAR, GL_LINEAR}, {GL_CLAMP_TO_EDGE, GL_CLAMP_TO_EDGE} };
+
+        Node url = textureConfig["url"];
+        if (url) {
+            file = url.as<std::string>();
+        } else {
+            logMsg("WARNING: No url specified for texture \"%s\", skipping.\n", name.c_str());
+            continue;
+        }
+
+        Node filtering = textureConfig["filtering"];
+        if (filtering) {
+            std::string f = filtering.as<std::string>();
+            if (f == "linear") { options.m_filtering = { GL_LINEAR, GL_LINEAR }; }
+            else if (f == "mipmap") { options.m_filtering = { GL_LINEAR_MIPMAP_LINEAR, GL_LINEAR_MIPMAP_LINEAR }; }
+            else if (f == "nearest") { options.m_filtering = { GL_NEAREST, GL_NEAREST }; }
+        }
+
+        Node sprites = textureConfig["sprites"];
+        if (sprites) { logMsg("WARNING: sprite mapping not yet implemented\n"); } // TODO
+
+        scene.getTextures().emplace(name, std::make_shared<Texture>(file, options));
+    }
+}
+
+void SceneLoader::loadStyles(YAML::Node styles, Scene& scene) {
+
+    // Instantiate built-in styles
+    scene.getStyles().emplace_back(new PolygonStyle("polygons"));
+    scene.getStyles().emplace_back(new PolylineStyle("lines"));
+    scene.getStyles().emplace_back(new TextStyle("FiraSans", "text", 15.0f, 0xF7F0E1, true, true));
+    scene.getStyles().emplace_back(new DebugTextStyle("FiraSans", "debugtext", 30.0f, 0xDC3522, true));
+    scene.getStyles().emplace_back(new DebugStyle("debug"));
+
+    if (!styles) {
+        return;
+    }
+
+    for (const auto& styleIt : styles) {
+
+        Style* style = nullptr;
+
+        std::string styleName = styleIt.first.as<std::string>();
+        Node styleNode = styleIt.second;
+        
+        bool validName = true;
+        for (auto builtIn : { "polygons", "lines", "points", "text", "debug", "debugtext" }) {
+            if (styleName == builtIn) { validName = false; }
+        }
+        if (!validName) {
+            logMsg("WARNING: cannot use built-in style name \"%s\" for new style\n", styleName.c_str());
+            continue;
+        }
+
+        Node baseNode = styleNode["base"];
+        if (baseNode) {
+            std::string baseString = baseNode.as<std::string>();
+            if (baseString == "lines") { style = new PolylineStyle(styleName); }
+            else if (baseString == "text") { style = new TextStyle("FiraSans", styleName, 15.0f, 0xF7F0E1, true, true); }
+            else if (baseString == "sprites") { logMsg("WARNING: sprite base styles not yet implemented\n"); } // TODO
+            else { logMsg("WARNING: base style \"%s\" not recognized, defaulting to polygons\n", baseString.c_str()); }
+        }
+
+        if (style == nullptr) { style = new PolygonStyle(styleName); }
+
+        Node animatedNode = styleNode["animated"];
+        if (animatedNode) { logMsg("WARNING: animated styles not yet implemented\n"); } // TODO
+
+        Node blendNode = styleNode["blend"];
+        if (blendNode) {
+
+            logMsg("WARNING: blending modes not yet implemented\n");
+
+            std::string blend = blendNode.as<std::string>();
+            if (blend == "add") { } // TODO
+            else if (blend == "multiply") { } // TODO
+
+        }
+
+        Node texcoordsNode = styleNode["texcoords"];
+        if (texcoordsNode) {
+
+            logMsg("WARNING: texcoords style parameter is currently ignored\n");
+
+            if (texcoordsNode.as<bool>()) { } // TODO
+            else { } // TODO
+
+        }
+
+        Node shadersNode = styleNode["shaders"];
+        if (shadersNode) {
+            loadShaderConfig(shadersNode, *(style->getShaderProgram()));
+        }
+
+        Node materialNode = styleNode["material"];
+        if (materialNode) {
+            loadMaterial(materialNode, *(style->getMaterial()), scene);
+        }
+
+        Node lightingNode = styleNode["lighting"];
+        if (lightingNode) {
+            std::string lighting = lightingNode.as<std::string>();
+            if (lighting == "fragment") { style->setLightingType(LightingType::fragment); }
+            else if (lighting == "vertex") { style->setLightingType(LightingType::vertex); }
+            else if (lighting == "false") { style->setLightingType(LightingType::none); }
+            else if (lighting == "true") { } // use default lighting
+            else { logMsg("WARNING: unrecognized lighting type \"%s\"\n", lighting.c_str()); }
+        }
+
+        Node urlNode = styleNode["url"];
+        if (urlNode) { logMsg("WARNING: loading style from URL not yet implemented\n"); } // TODO
+
+        scene.addStyle(std::unique_ptr<Style>(style));
+
+    }
+
+}
+
 void SceneLoader::loadSources(Node sources, TileManager& tileManager) {
 
     if(!sources) {
@@ -76,9 +384,11 @@ void SceneLoader::loadSources(Node sources, TileManager& tileManager) {
         if (type == "GeoJSONTiles") {
             sourcePtr = std::unique_ptr<DataSource>(new GeoJsonSource(name, url));
         } else if (type == "TopoJSONTiles") {
-            // TODO
+            logMsg("WARNING: TopoJSON data sources not yet implemented\n"); // TODO
         } else if (type == "MVT") {
             sourcePtr = std::unique_ptr<DataSource>(new MVTSource(name, url));
+        } else {
+            logMsg("WARNING: unrecognized data source type \"%s\", skipping\n", type.c_str());
         }
 
         if (sourcePtr) {
@@ -404,8 +714,8 @@ Filter* SceneLoader::generateNoneFilter(YAML::Node _filter) {
         }
     } else if(_filter.IsMap()) { // not case
         for(YAML::const_iterator filtIter = _filter.begin(); filtIter != _filter.end(); ++filtIter) {
-            std::string key = filtIter->first.as<std::string>();
-            filters.emplace_back(generatePredicate(_filter[key], key));
+            std::string keyFilter = filtIter->first.as<std::string>();
+            filters.emplace_back(generatePredicate(_filter[keyFilter], keyFilter));
         }
     } else {
         logMsg("Error: Badly formed filter. \"None\" expects a list or an object.\n");
@@ -415,20 +725,34 @@ Filter* SceneLoader::generateNoneFilter(YAML::Node _filter) {
     return (new None(std::move(filters)));
 }
 
+void SceneLoader::parseStyleProps(Node styleProps, StyleParamMap& paramMap, const std::string& propPrefix) {
+
+    for(auto propItr = styleProps.begin(); propItr != styleProps.end(); ++propItr) {
+        Node prop = propItr->first;
+        std::string paramKey;
+        if(propPrefix.length() > 0) {
+            paramKey = propPrefix + ":" + prop.as<std::string>();
+        } else {
+            paramKey = prop.as<std::string>();
+        }
+        if(propItr->second.IsScalar()) {
+            paramMap.emplace(paramKey, propItr->second.as<std::string>());
+        } else if(propItr->second.IsSequence()) {
+            paramMap.emplace(paramKey, parseSequence(propItr->second));
+        } else if(propItr->second.IsMap()) {
+            parseStyleProps(propItr->second, paramMap, paramKey);
+        } else {
+            logMsg("Error: Badly formed Style property, need to be a scalar, sequence or map. %s will not be added to stype properties.\n", paramKey.c_str());
+        }
+    }
+
+}
+
 void SceneLoader::loadLayers(Node layers, Scene& scene, TileManager& tileManager) {
 
     if (!layers) {
         return;
     }
-
-    // Instantiate base styles
-    auto polygonStyle = std::unique_ptr<PolygonStyle>(new PolygonStyle("polygons"));
-    auto polylineStyle = std::unique_ptr<PolylineStyle>(new PolylineStyle("lines"));
-    auto debugStyle = std::unique_ptr<DebugStyle>(new DebugStyle("debug"));
-
-    // TODO: configure style properties in styles block
-    polygonStyle->setLightingType(LightingType::vertex);
-    polylineStyle->setLightingType(LightingType::vertex);
 
     for (auto layerIt = layers.begin(); layerIt != layers.end(); ++layerIt) {
 
@@ -443,94 +767,20 @@ void SceneLoader::loadLayers(Node layers, Scene& scene, TileManager& tileManager
 
         for (auto groupIt = drawGroup.begin(); groupIt != drawGroup.end(); ++groupIt) {
 
-            StyleParams params;
+            StyleParamMap paramMap;
             std::string styleName = groupIt->first.as<std::string>();
-            Node styleProps = groupIt->second;
+            parseStyleProps(groupIt->second, paramMap);
 
-            Node order = styleProps["order"];
-            if (order) { params.order = order.as<float>(); }
-
-            Node color = styleProps["color"];
-            if (color) {
-                glm::vec4 c = parseVec4(color);
-                params.color = (uint32_t(c.a * 255) << 24) +
-                               (uint32_t(c.b * 255) << 16) +
-                               (uint32_t(c.g * 255) << 8)  +
-                               (uint32_t(c.r * 255));
-                // TODO: color helper funtions
-            }
-
-            Node width = styleProps["width"];
-            if (width) { params.width = width.as<float>(); }
-
-            Node cap = styleProps["cap"];
-            if (cap) {
-                std::string capString = cap.as<std::string>();
-                if (capString == "butt") { params.line.cap = CapTypes::BUTT; }
-                else if (capString == "square") { params.line.cap = CapTypes::SQUARE; }
-                else if (capString == "round") { params.line.cap = CapTypes::ROUND; }
-            }
-
-            Node join = styleProps["join"];
-            if (join) {
-                std::string joinString = join.as<std::string>();
-                if (joinString == "bevel") { params.line.join = JoinTypes::BEVEL; }
-                else if (joinString == "miter") { params.line.join = JoinTypes::MITER; }
-                else if (joinString == "round") { params.line.join = JoinTypes::ROUND; }
-            }
-
-            Node outline = styleProps["outline"];
-            if (outline) {
-
-                params.outline.on = true;
-
-                Node color = outline["color"];
-                if (color) {
-                    glm::vec4 c = parseVec4(color);
-                    params.outline.color = (uint32_t(c.a * 255) << 24) +
-                    (uint32_t(c.b * 255) << 16) +
-                    (uint32_t(c.g * 255) << 8)  +
-                    (uint32_t(c.r * 255));
-                    // TODO: color helper funtions
+            // match layer to the style in scene with the given name
+            for (const auto& style : scene.getStyles()) {
+                if (style->getName() == styleName) {
+                    style->addLayer({ name, paramMap });
                 }
-
-                Node width = outline["width"];
-                if (width) { params.outline.width = width.as<float>(); }
-
-                Node cap = outline["cap"];
-                if (cap) {
-                    std::string capString = cap.as<std::string>();
-                    if (capString == "butt") { params.outline.line.cap = CapTypes::BUTT; }
-                    else if (capString == "square") { params.outline.line.cap = CapTypes::SQUARE; }
-                    else if (capString == "round") { params.outline.line.cap = CapTypes::ROUND; }
-                }
-
-                Node join = outline["join"];
-                if (join) {
-                    std::string joinString = join.as<std::string>();
-                    if (joinString == "bevel") { params.outline.line.join = JoinTypes::BEVEL; }
-                    else if (joinString == "miter") { params.outline.line.join = JoinTypes::MITER; }
-                    else if (joinString == "round") { params.outline.line.join = JoinTypes::ROUND; }
-                }
-
-            }
-
-            // match to built-in styles
-            if (styleName == "polygons") {
-                polygonStyle->addLayer({ name, params });
-            } else if (styleName == "lines") {
-                polylineStyle->addLayer({ name, params });
-            } else if (styleName == "text") {
-                // TODO
             }
 
         }
 
     }
-
-    scene.addStyle(std::move(polygonStyle));
-    scene.addStyle(std::move(polylineStyle));
-    scene.addStyle(std::move(debugStyle));
 
     // tileManager isn't used yet, but we'll need it soon to get the list of data sources
 

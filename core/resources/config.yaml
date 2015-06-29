@@ -1,8 +1,8 @@
 cameras:
     camera1:
-        type: perspective
-        focal_length: [[16, 2], [20, 6]] # pairs of [zoom, focal len]
-        vanishing_point: [-250, -250] # relative to center of screen, in pixels
+        type: perspective #currently ignored
+        focal_length: [[16, 2], [20, 6]] # currently ignored
+        vanishing_point: [-250, -250] # currently ignored
 
 lights:
     light1:
@@ -11,6 +11,27 @@ lights:
         direction: [1, 1, -1]
         diffuse: [.7, .7, .7, 1.]
         ambient: [.3, .3, .3, 1.]
+
+textures:
+    water-texture:
+        url: normals.jpg
+        filtering: nearest
+styles:
+    pillows:
+        base: polygon
+        lighting: fragment
+        material:
+            normal:
+                texture: water-texture
+                mapping: uv
+            diffuse: 0.75
+
+    heightglow:
+        base: polygon
+        lighting: vertex
+        shaders:
+            blocks:
+                color: "color.rgb += vec3(0.3 * position.z);"
 
 sources:
     osm:
@@ -31,14 +52,15 @@ layers:
             polygons:
                 order: 1
                 color: [0.443, 0.569, 0.4, 1.]
-                interactive: true
+                interactive: true #currently ignored
 
     water:
         data: { source: osm }
         draw:
             polygons:
                 order: 2
-                color: [.102, .49, .569, 1.]
+                #color: [.102, .49, .569, 1.]
+                color: steelblue
 
     roads:
         data: { source: osm }
@@ -47,17 +69,19 @@ layers:
                 order: 4
                 width: .02
                 cap: round
-                color: [0.41, 0.41, 0.41, 1.]
+                #color: [0.41, 0.41, 0.41, 1.]
+                color: '#696969'
                 outline:
                     width: .01
                     cap: round
                     color: [0.47, 0.47, 0.47, 1.]
+            text: {}
 
     buildings:
         data: { source: osm }
         draw:
-            polygons:
+            heightglow:
                 order: 50
                 color: [0.949, 0.941, 0.901, 1.]
-                extrude: true
+                extrude: true #currently ignored
 

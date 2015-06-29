@@ -6,25 +6,26 @@
 #include <set>
 
 #include "platform.h"
-#include "tile/tileManager.h"
-#include "view/view.h"
-#include "style/textStyle.h"
-#include "style/debugTextStyle.h"
-#include "style/debugStyle.h"
-#include "style/spriteStyle.h"
-#include "scene/sceneLoader.h"
 #include "scene/scene.h"
-#include "util/error.h"
+#include "scene/sceneLoader.h"
 #include "stl_util.hpp"
-#include "util/tileID.h"
+#include "style/debugStyle.h"
+#include "style/debugTextStyle.h"
+#include "style/spriteStyle.h"
+#include "style/textStyle.h"
+#include "text/fontContext.h"
+#include "tile/tileManager.h"
+#include "util/error.h"
 #include "util/skybox.h"
+#include "util/tileID.h"
+#include "view/view.h"
 
 namespace Tangram {
 
     std::unique_ptr<TileManager> m_tileManager;
     std::shared_ptr<Scene> m_scene;
     std::shared_ptr<View> m_view;
-    std::shared_ptr<LabelContainer> m_labelContainer;
+    std::shared_ptr<Labels> m_labels;
     std::shared_ptr<FontContext> m_ftContext;
     std::shared_ptr<DebugStyle> m_debugStyle;
     std::shared_ptr<Skybox> m_skybox;
@@ -58,32 +59,18 @@ namespace Tangram {
             m_tileManager->setScene(m_scene);
         }
 
-        SceneLoader loader;
-        loader.loadScene("config.yaml", *m_scene, *m_tileManager, *m_view);
-
         // Hard-coded setup for stuff that isn't loaded through the config file yet
         m_ftContext = std::make_shared<FontContext>();
         m_ftContext->addFont("FiraSans-Medium.ttf", "FiraSans");
-        m_ftContext->addFont("FuturaStd-Condensed.ttf", "Futura");
-        m_labelContainer = LabelContainer::GetInstance();
-        m_labelContainer->setFontContext(m_ftContext);
-        m_labelContainer->setView(m_view);
-
-        std::unique_ptr<Style> textStyle0(new TextStyle("FiraSans", "Textstyle0", 15.0f, 0xF7F0E1, true, true));
-        textStyle0->addLayer({ "roads", StyleParams() });
-        textStyle0->addLayer({ "places", StyleParams() });
-        textStyle0->addLayer({ "pois", StyleParams() });
-        m_scene->addStyle(std::move(textStyle0));
-
-        std::unique_ptr<Style> textStyle1(new TextStyle("Futura", "Textstyle1", 18.0f, 0x26241F, true, true));
-        textStyle1->addLayer({ "landuse", StyleParams() });
-        m_scene->addStyle(std::move(textStyle1));
-
-        std::unique_ptr<Style> debugTextStyle(new DebugTextStyle("FiraSans", "DebugTextStyle", 30.0f, 0xDC3522, true));
-        m_scene->addStyle(std::move(debugTextStyle));
+        m_labels = Labels::GetInstance();
+        m_labels->setFontContext(m_ftContext);
+        m_labels->setView(m_view);
         
         std::unique_ptr<Style> spriteStyle(new SpriteStyle("SpriteStyle"));
         m_scene->addStyle(std::move(spriteStyle));
+        
+        SceneLoader loader;
+        loader.loadScene("config.yaml", *m_scene, *m_tileManager, *m_view);
 
         // Set up openGL state
         glDisable(GL_BLEND);
@@ -116,7 +103,7 @@ namespace Tangram {
 
         if (m_ftContext) {
             m_ftContext->setScreenSize(m_view->getWidth(), m_view->getHeight());
-            m_labelContainer->setScreenSize(m_view->getWidth(), m_view->getHeight());
+            m_labels->setScreenSize(m_view->getWidth(), m_view->getHeight());
         }
 
         while (Error::hadGlError("Tangram::resize()")) {}
@@ -150,12 +137,12 @@ namespace Tangram {
                 }
 
                 // manage occlusions
-                m_labelContainer->updateOcclusions();
+                m_labels->updateOcclusions();
 
                 for (const auto& style : m_scene->getStyles()) {
                     for (const auto& mapIDandTile : m_tileManager->getVisibleTiles()) {
                         const std::shared_ptr<MapTile>& tile = mapIDandTile.second;
-                        tile->pushLabelTransforms(*style, m_labelContainer);
+                        tile->pushLabelTransforms(*style, m_labels);
                     }
                 }
             }
@@ -184,7 +171,6 @@ namespace Tangram {
                 const std::shared_ptr<MapTile>& tile = mapIDandTile.second;
                 if (tile->hasGeometry()) {
                     // Draw tile!
-                    style->onBeginDrawTile(tile);
                     tile->draw(*style, *m_view);
                 }
             }
@@ -193,6 +179,8 @@ namespace Tangram {
         }
 
         m_skybox->draw(*m_view);
+
+        m_labels->drawDebug();
 
         while (Error::hadGlError("Tangram::render()")) {}
     }
@@ -275,7 +263,8 @@ namespace Tangram {
 
         m_view->translate((_posX - viewCenterX)*(1-1/_scale), (_posY - viewCenterY)*(1-1/_scale));
 
-        m_view->zoom(log2f(_scale));
+        static float invLog2 = 1 / log(2);
+        m_view->zoom(log(_scale) * invLog2);
 
         requestRender();
     }

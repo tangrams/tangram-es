@@ -1,3 +1,3 @@
-adb uninstall com.mapzen.tangram
-adb install android/build/outputs/apk/android-debug.apk
-adb shell am start -a android.intent.action.MAIN -n com.mapzen.tangram/.MainActivity
+adb uninstall com.mapzen.tangram.android
+adb install android/demo/build/outputs/apk/demo-debug.apk
+adb shell am start -a android.intent.action.MAIN -n com.mapzen.tangram.android/.MainActivity

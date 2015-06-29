@@ -1,37 +1,13 @@
-buildscript {
+allprojects {
+  buildscript {
     repositories {
-        mavenCentral()
+      mavenCentral()
     }
-    dependencies {
-        classpath 'com.android.tools.build:gradle:1.1.3'
+  }
+
+  dependencies {
+    repositories {
+      mavenCentral()
     }
-}
-
-apply plugin: 'android'
-
-repositories {
-    mavenCentral()
-}
-
-dependencies {
-    compile fileTree(dir: 'libs', include: '*.jar')
-    compile 'com.squareup.okhttp:okhttp:2.2.0'
-}
-
-android {
-
-    compileSdkVersion 19
-    buildToolsVersion "21.1.2"
-
-    sourceSets.main {
-        
-        manifest.srcFile 'AndroidManifest.xml'
-        java.srcDirs = ['src']
-        jni.srcDirs = []
-        jniLibs.srcDirs = ['libs']
-        resources.srcDirs = ['src']
-        res.srcDirs = ['res']
-        assets.srcDirs = ['../core/resources']
-
-    }
+  }
 }

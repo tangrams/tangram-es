@@ -2,15 +2,16 @@
 
 #include "label.h"
 #include "util/tileID.h"
-#include "text/fontContext.h"
 #include "isect2d.h"
 #include "view/view.h"
 #include <memory>
+#include <mutex>
 #include <vector>
 #include <set>
 #include <map>
 
 class MapTile;
+class FontContext;
 
 struct LabelUnit {
 
@@ -41,16 +42,16 @@ public:
  * Singleton class containing all labels
  */
 
-class LabelContainer {
+class Labels {
 
 public:
 
-    static std::shared_ptr<LabelContainer> GetInstance() {
-        static std::shared_ptr<LabelContainer> instance(new LabelContainer());
+    static std::shared_ptr<Labels> GetInstance() {
+        static std::shared_ptr<Labels> instance(new Labels());
         return instance;
     }
 
-    virtual ~LabelContainer();
+    virtual ~Labels();
 
     /*
      * Creates a label for and associate it with the current processed <MapTile> TileID for a specific syle name
@@ -69,11 +70,13 @@ public:
 
     void setScreenSize(int _width, int _height) { m_screenSize = glm::vec2(_width, _height); }
 
+    void drawDebug();
+
 private:
 
     int LODDiscardFunc(float _maxZoom, float _zoom);
 
-    LabelContainer();
+    Labels();
     std::vector<LabelUnit> m_labelUnits;
     std::vector<LabelUnit> m_pendingLabelUnits;
 

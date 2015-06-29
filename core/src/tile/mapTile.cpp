@@ -2,6 +2,9 @@
 #include "style/style.h"
 #include "view/view.h"
 #include "util/tileID.h"
+#include "util/vboMesh.h"
+#include "text/fontContext.h"
+#include "labels/labels.h"
 
 #include "glm/gtc/matrix_transform.hpp"
 #include "glm/gtc/type_ptr.hpp"
@@ -34,7 +37,7 @@ MapTile::~MapTile() {
 
 }
 
-void MapTile::addGeometry(const Style& _style, std::unique_ptr<VboMesh> _mesh) {
+void MapTile::addGeometry(const Style& _style, std::shared_ptr<VboMesh> _mesh) {
 
     m_geometry[_style.getName()] = std::move(_mesh); // Move-construct a unique_ptr at the value associated with the given style
 
@@ -74,20 +77,26 @@ void MapTile::updateLabels(float _dt, const Style& _style, const View& _view) {
     }
 }
 
-void MapTile::pushLabelTransforms(const Style& _style, std::shared_ptr<LabelContainer> _labelContainer) {
+void MapTile::pushLabelTransforms(const Style& _style, std::shared_ptr<Labels> _labels) {
+    auto it = m_buffers.find(_style.getName());
+    
+    if (it == m_buffers.end()) {
+        return;
+    }
 
-    auto& textBuffer = m_buffers[_style.getName()];
-    if(textBuffer) {
-        auto ftContext = _labelContainer->getFontContext();
+    auto textBuffer = it->second;
+    
+    if (textBuffer->hasData()) {
+        auto ftContext = _labels->getFontContext();
 
         ftContext->lock();
+        ftContext->useBuffer(textBuffer);
         
         for(auto& label : m_labels[_style.getName()]) {
             label->pushTransform(textBuffer);
         }
         
-        textBuffer->triggerTransformUpdate();
-        
+        textBuffer->pushBuffer();
         ftContext->unlock();
     }
     
@@ -95,7 +104,7 @@ void MapTile::pushLabelTransforms(const Style& _style, std::shared_ptr<LabelCont
 
 void MapTile::draw(const Style& _style, const View& _view) {
 
-    const std::unique_ptr<VboMesh>& styleMesh = m_geometry[_style.getName()];
+    const std::shared_ptr<VboMesh>& styleMesh = m_geometry[_style.getName()];
     
     if (styleMesh) {
         
@@ -117,6 +126,10 @@ void MapTile::draw(const Style& _style, const View& _view) {
 
 bool MapTile::hasGeometry() {
     return (m_geometry.size() != 0);
+}
+
+std::shared_ptr<VboMesh>& MapTile::getGeometry(const Style& _style) {
+    return m_geometry.at(_style.getName());
 }
 
 void MapTile::addLabel(const std::string& _styleName, std::shared_ptr<Label> _label) {
