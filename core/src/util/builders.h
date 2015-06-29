@@ -2,6 +2,7 @@
 
 #include "tileData.h"
 
+#include <functional>
 #include <vector>
 
 enum class CapTypes {
