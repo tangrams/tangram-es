@@ -4,6 +4,7 @@
 #include "scene/scene.h"
 #include "scene/sceneLoader.h"
 #include "style/style.h"
+#include "style/spriteStyle.h"
 #include "text/fontContext.h"
 #include "tile/labels/labels.h"
 #include "tile/tileManager.h"
@@ -62,6 +63,7 @@ namespace Tangram {
         }
 
         std::unique_ptr<Style> spriteStyle(new SpriteStyle("SpriteStyle"));
+        spriteStyle->build(m_scene->getLights());
         m_scene->addStyle(std::move(spriteStyle));
 
         // Set up openGL state
