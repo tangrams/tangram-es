@@ -111,6 +111,7 @@ bool TileManager::setTileState(MapTile& tile, TileState state) {
 
     logMsg("Wrong state change %d -> %d<<<", tile.state(), state);
     assert(false);
+    return false; // ...
 }
 
 void TileManager::enqueueLoadTask(const TileID& tileID, const glm::dvec2& viewCenter) {
