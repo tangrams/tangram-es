@@ -23,35 +23,21 @@ bool Labels::addTextLabel(MapTile& _tile, const std::string& _styleName, Label::
 
     // FIXME: the current view should not be used to determine whether a label is shown at all
     // otherwise results will be random
-    if ( (m_currentZoom - _tile.getID().z) > LODDiscardFunc(View::s_maxZoom, m_currentZoom)) {
+    if ((m_currentZoom - _tile.getID().z) > LODDiscardFunc(View::s_maxZoom, m_currentZoom)) {
         return false;
     }
 
     if (currentBuffer) {
         fsuint textID = currentBuffer->genTextID();
-        std::shared_ptr<TextLabel> l(new TextLabel(_transform, _text, textID, _type));
+        std::shared_ptr<TextLabel> l(new TextLabel(_transform, _text, textID, _type, currentBuffer));
 
         if (!l->rasterize(currentBuffer)) {
             l.reset();
             return false;
         }
 
-        // NB: viewOrigin.z is only determined by screen width and height.
-        const auto& viewOrigin = m_view->getPosition();
-
-        auto modelMatrix = glm::scale(glm::mat4(1.0), glm::vec3(_tile.getScale()));
-        modelMatrix[3][2] = -viewOrigin.z;
-
-        l->update(m_view->getViewProjectionMatrix() * modelMatrix, m_screenSize, 0);
-        std::unique_ptr<TileID> tileID(new TileID(_tile.getID()));
-        _tile.addLabel(_styleName, l);
-
-        // lock concurrent collection
-        {
-            std::lock_guard<std::mutex> lock(m_mutex);
-            std::shared_ptr<Label> label = std::dynamic_pointer_cast<Label>(l);
-            m_pendingLabelUnits.emplace_back(LabelUnit(label, tileID, _styleName));
-        }
+        auto label = std::dynamic_pointer_cast<Label>(l);
+        addLabel(_tile, _styleName, label);
 
         return true;
     }
@@ -59,8 +45,32 @@ bool Labels::addTextLabel(MapTile& _tile, const std::string& _styleName, Label::
     return false;
 }
 
-bool addSpriteLabel(MapTile& _tile, const std::string& _styleName, Label::Transform _transform) {
-    // TODO
+void Labels::addLabel(MapTile& _tile, const std::string& _styleName, std::shared_ptr<Label> _label) {
+    // NB: viewOrigin.z is only determined by screen width and height.
+    const auto& viewOrigin = m_view->getPosition();
+
+    auto modelMatrix = glm::scale(glm::mat4(1.0), glm::vec3(_tile.getScale()));
+    modelMatrix[3][2] = -viewOrigin.z;
+
+    _label->update(m_view->getViewProjectionMatrix() * modelMatrix, m_screenSize, 0);
+    std::unique_ptr<TileID> tileID(new TileID(_tile.getID()));
+    _tile.addLabel(_styleName, _label);
+
+    // lock concurrent collection
+    {
+        std::lock_guard<std::mutex> lock(m_mutex);
+        m_pendingLabelUnits.emplace_back(LabelUnit(_label, tileID, _styleName));
+    }
+}
+
+bool Labels::addSpriteLabel(MapTile& _tile, const std::string& _styleName, Label::Transform _transform) {
+    if ((m_currentZoom - _tile.getID().z) > LODDiscardFunc(View::s_maxZoom, m_currentZoom)) {
+        return false;
+    }
+
+    addLabel(_tile, _styleName, std::shared_ptr<Label>(new SpriteLabel(_transform)));
+
+    return true;
 }
 
 void Labels::updateOcclusions() {

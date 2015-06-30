@@ -75,6 +75,8 @@ public:
     void drawDebug();
 
 private:
+    
+    void addLabel(MapTile& _tile, const std::string& _styleName, std::shared_ptr<Label> _label);
 
     int LODDiscardFunc(float _maxZoom, float _zoom);
 
