@@ -309,7 +309,7 @@ void TileManager::updateProxyTiles(MapTile& _tile) {
     const auto& parentTileIter = m_tileSet.find(parentID);
     if (parentTileIter != m_tileSet.end()) {
         auto& parent = parentTileIter->second;
-        if (_tile.setProxy(MapTile::Parent)) {
+        if (_tile.setProxy(MapTile::parent)) {
             parent->incProxyCounter();
         }
         return;
@@ -332,7 +332,7 @@ void TileManager::cleanProxyTiles(MapTile& _tile) {
     const TileID& _tileID = _tile.getID();
 
     // check if parent proxy is present
-    if (_tile.hasProxy(MapTile::Parent)) {
+    if (_tile.hasProxy(MapTile::parent)) {
         const auto& parentID = _tileID.getParent();
         const auto& parentTileIter = m_tileSet.find(parentID);
         if (parentTileIter != m_tileSet.end()) {

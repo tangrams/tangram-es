@@ -92,13 +92,13 @@ public:
     void resetProxyCounter() { m_proxyCounter = 0; }
 
     enum ProxyID {
-      NoProxies = 0,
-      Child1 = 1 << 0,
-      Child2 = 1 << 1,
-      Child3 = 1 << 2,
-      Child4 = 1 << 3,
-      Parent = 1 << 4,
-      Parent2 = 1 << 5,
+      no_proxies = 0,
+      child1 = 1 << 0,
+      child2 = 1 << 1,
+      child3 = 1 << 2,
+      child4 = 1 << 3,
+      parent = 1 << 4,
+      parent2 = 1 << 5,
     };
 
     bool hasProxy(ProxyID id) { return (m_proxies & id) != 0; }
