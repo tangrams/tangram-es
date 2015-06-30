@@ -19,7 +19,7 @@ class VboMesh;
 class View;
 
 
-enum class TileState { none = 0, loading, processing, ready, canceled };
+enum class TileState { none, loading, processing, ready, canceled };
 
 /* Tile of vector map data
  * 
