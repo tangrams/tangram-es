@@ -18,7 +18,7 @@ int Labels::LODDiscardFunc(float _maxZoom, float _zoom) {
     return (int) MIN(floor(((log(-_zoom + (_maxZoom + 2)) / log(_maxZoom + 2) * (_maxZoom )) * 0.5)), MAX_LOD);
 }
 
-bool Labels::addLabel(MapTile& _tile, const std::string& _styleName, Label::Transform _transform, std::string _text, Label::Type _type) {
+bool Labels::addTextLabel(MapTile& _tile, const std::string& _styleName, Label::Transform _transform, std::string _text, Label::Type _type) {
     auto currentBuffer = m_ftContext->getCurrentBuffer();
 
     // FIXME: the current view should not be used to determine whether a label is shown at all
@@ -29,7 +29,7 @@ bool Labels::addLabel(MapTile& _tile, const std::string& _styleName, Label::Tran
 
     if (currentBuffer) {
         fsuint textID = currentBuffer->genTextID();
-        std::shared_ptr<Label> l(new Label(_transform, _text, textID, _type));
+        std::shared_ptr<TextLabel> l(new TextLabel(_transform, _text, textID, _type));
 
         if (!l->rasterize(currentBuffer)) {
             l.reset();
@@ -49,13 +49,18 @@ bool Labels::addLabel(MapTile& _tile, const std::string& _styleName, Label::Tran
         // lock concurrent collection
         {
             std::lock_guard<std::mutex> lock(m_mutex);
-            m_pendingLabelUnits.emplace_back(LabelUnit(l, tileID, _styleName));
+            std::shared_ptr<Label> label = std::dynamic_pointer_cast<Label>(l);
+            m_pendingLabelUnits.emplace_back(LabelUnit(label, tileID, _styleName));
         }
 
         return true;
     }
 
     return false;
+}
+
+bool addSpriteLabel(MapTile& _tile, const std::string& _styleName, Label::Transform _transform) {
+    // TODO
 }
 
 void Labels::updateOcclusions() {

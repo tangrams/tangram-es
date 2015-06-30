@@ -89,7 +89,7 @@ void MapTile::pushLabelTransforms(const Style& _style, std::shared_ptr<Labels> _
         ftContext->useBuffer(textBuffer);
         
         for (auto& label : m_labels[_style.getName()]) {
-            label->pushTransform(textBuffer);
+            label->pushTransform();
         }
         
         textBuffer->pushBuffer();

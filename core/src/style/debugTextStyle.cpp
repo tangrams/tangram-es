@@ -26,7 +26,7 @@ void DebugTextStyle::addData(TileData& _data, MapTile& _tile) {
         }
 
         std::string tileID = std::to_string(_tile.getID().x) + "/" + std::to_string(_tile.getID().y) + "/" + std::to_string(_tile.getID().z);
-        m_labels->addLabel(_tile, m_name, { glm::vec2(0), glm::vec2(0) }, tileID, Label::Type::debug);
+        m_labels->addTextLabel(_tile, m_name, { glm::vec2(0), glm::vec2(0) }, tileID, Label::Type::debug);
 
         onEndBuildTile(_tile, mesh);
 
