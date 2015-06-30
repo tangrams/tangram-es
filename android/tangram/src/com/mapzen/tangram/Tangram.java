@@ -48,7 +48,8 @@ public class Tangram extends GLSurfaceView implements Renderer, OnTouchListener,
     private static native void update(float dt);
     private static native void render();
     private static native void teardown();
-    private static native void onContextDestroyed();
+    private static native void beforeContextDestroyed();
+    private static native void afterContextDestroyed();
     private static native void setPixelScale(float scale);
     private static native void handleTapGesture(float posX, float posY);
     private static native void handleDoubleTapGesture(float posX, float posY);
@@ -76,7 +77,7 @@ public class Tangram extends GLSurfaceView implements Renderer, OnTouchListener,
 
         super(context);
 
-        configureGLSurfaceView();        
+        configureGLSurfaceView();    
    
     }
 
@@ -145,7 +146,6 @@ public class Tangram extends GLSurfaceView implements Renderer, OnTouchListener,
         rotateGestureDetector.onTouchEvent(event);
 
         return true;
-
     }
 
     // GLSurfaceView.Renderer methods
@@ -168,7 +168,7 @@ public class Tangram extends GLSurfaceView implements Renderer, OnTouchListener,
     public void onSurfaceCreated(GL10 gl, EGLConfig config) {
 
         if (contextDestroyed) {
-            onContextDestroyed();
+            afterContextDestroyed();
             contextDestroyed = false;
         }
 

@@ -64,7 +64,7 @@ namespace Tangram {
 
             SceneLoader loader;
             loader.loadScene("config.yaml", *m_scene, *m_tileManager, *m_view);
-            
+
         }
 
         // Set up openGL state
@@ -305,9 +305,17 @@ namespace Tangram {
         // m_view.reset();
     }
 
-    void onContextDestroyed() {
+    void beforeContextDestroyed() {
 
-        logMsg("context destroyed\n");
+        logMsg("before context destroyed\n");
+
+        // TODO: Save texture data to CPU buffers
+
+    }
+
+    void afterContextDestroyed() {
+
+        logMsg("after context destroyed\n");
 
         // The OpenGL context has been destroyed since the last time resources were created,
         // so we invalidate all data that depends on OpenGL object handles.
@@ -317,6 +325,8 @@ namespace Tangram {
 
         // Buffer objects are invalidated and re-uploaded the next time they are used
         VboMesh::invalidateAllVBOs();
+
+        // TODO: Restore textures from CPU buffers
 
     }
 
