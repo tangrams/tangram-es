@@ -1,6 +1,8 @@
 #pragma once
 
 #include "label.h"
+#include "textLabel.h"
+#include "spriteLabel.h"
 #include "util/tileID.h"
 #include "isect2d.h"
 #include "view/view.h"
@@ -57,7 +59,9 @@ public:
      * Creates a label for and associate it with the current processed <MapTile> TileID for a specific syle name
      * Returns true if label was created
      */
-    bool addLabel(MapTile& _tile, const std::string& _styleName, Label::Transform _transform, std::string _text, Label::Type _type);
+    bool addTextLabel(MapTile& _tile, const std::string& _styleName, Label::Transform _transform, std::string _text, Label::Type _type);
+    
+    bool addSpriteLabel(MapTile& _tile, const std::string& _styleName, Label::Transform _transform);
 
     void setFontContext(std::shared_ptr<FontContext> _ftContext) { m_ftContext = _ftContext; }
 

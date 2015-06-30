@@ -61,7 +61,7 @@ void TextStyle::addVertices(TextBuffer& _buffer, VboMesh& _mesh) const {
 void TextStyle::buildPoint(Point& _point, void* _styleParams, Properties& _props, VboMesh& _mesh) const {
     for (auto prop : _props.stringProps) {
         if (prop.first == "name") {
-            m_labels->addLabel(*TextStyle::s_processedTile, m_name, { glm::vec2(_point), glm::vec2(_point) }, prop.second, Label::Type::POINT);
+            m_labels->addTextLabel(*TextStyle::s_processedTile, m_name, { glm::vec2(_point), glm::vec2(_point) }, prop.second, Label::Type::POINT);
         }
     }
 }
@@ -85,7 +85,7 @@ void TextStyle::buildLine(Line& _line, void* _styleParams, Properties& _props, V
                     continue;
                 }
                 
-                m_labels->addLabel(*TextStyle::s_processedTile, m_name, { p1, p2 }, prop.second, Label::Type::LINE);
+                m_labels->addTextLabel(*TextStyle::s_processedTile, m_name, { p1, p2 }, prop.second, Label::Type::LINE);
             }
         }
     }
@@ -107,7 +107,7 @@ void TextStyle::buildPolygon(Polygon& _polygon, void* _styleParams, Properties& 
 
     for (auto prop : _props.stringProps) {
         if (prop.first == "name") {
-            m_labels->addLabel(*TextStyle::s_processedTile, m_name, { glm::vec2(centroid), glm::vec2(centroid) }, prop.second, Label::Type::POINT);
+            m_labels->addTextLabel(*TextStyle::s_processedTile, m_name, { glm::vec2(centroid), glm::vec2(centroid) }, prop.second, Label::Type::POINT);
         }
     }
 }
