@@ -12,12 +12,12 @@ group = GROUP
 version = VERSION_NAME
 
 android {
-  compileSdkVersion 15
+  compileSdkVersion 22
   buildToolsVersion "21.1.2"
 
   defaultConfig {
     minSdkVersion 15
-    targetSdkVersion 15
+    targetSdkVersion 22
   }
 
   sourceSets.main {
