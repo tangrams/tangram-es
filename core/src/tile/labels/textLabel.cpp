@@ -1,9 +1,10 @@
 #include "textLabel.h"
 
-TextLabel::TextLabel(Label::Transform _transform, std::string _text, fsuint _id, Type _type) :
+TextLabel::TextLabel(Label::Transform _transform, std::string _text, fsuint _id, Type _type, std::weak_ptr<TextBuffer> _textBuffer) :
     Label(_transform, _type),
     m_text(_text),
-    m_id(_id) {
+    m_id(_id),
+    m_textBuffer(_textBuffer) {
     
 }
 
@@ -24,8 +25,10 @@ bool TextLabel::rasterize(std::shared_ptr<TextBuffer>& _buffer) {
 
 void TextLabel::pushTransform() {
     if (m_dirty) {
-        // TODO : get the buffer
-        //_buffer->transformID(m_id, m_transform.m_screenPosition.x, m_transform.m_screenPosition.y, m_transform.m_rotation, m_transform.m_alpha);
+        auto buffer = m_textBuffer.lock();
+        if (buffer) {
+            buffer->transformID(m_id, m_transform.m_screenPosition.x, m_transform.m_screenPosition.y, m_transform.m_rotation, m_transform.m_alpha);
+        }
         m_dirty = false;
     }
 }

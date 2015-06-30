@@ -18,29 +18,21 @@ int Labels::LODDiscardFunc(float _maxZoom, float _zoom) {
 bool Labels::addTextLabel(MapTile& _tile, const std::string& _styleName, Label::Transform _transform, std::string _text, Label::Type _type) {
     auto currentBuffer = m_ftContext->getCurrentBuffer();
 
-    if ( (m_currentZoom - _tile.getID().z) > LODDiscardFunc(View::s_maxZoom, m_currentZoom)) {
+    if ((m_currentZoom - _tile.getID().z) > LODDiscardFunc(View::s_maxZoom, m_currentZoom)) {
         return false;
     }
 
     if (currentBuffer) {
         fsuint textID = currentBuffer->genTextID();
-        std::shared_ptr<TextLabel> l(new TextLabel(_transform, _text, textID, _type));
+        std::shared_ptr<TextLabel> l(new TextLabel(_transform, _text, textID, _type, currentBuffer));
 
         if (!l->rasterize(currentBuffer)) {
             l.reset();
             return false;
         }
-
-        l->update(m_view->getViewProjectionMatrix() * _tile.getModelMatrix(), m_screenSize, 0);
-        std::unique_ptr<TileID> tileID(new TileID(_tile.getID()));
-        _tile.addLabel(_styleName, l);
-
-        // lock concurrent collection
-        {
-            std::lock_guard<std::mutex> lock(m_mutex);
-            std::shared_ptr<Label> label = std::dynamic_pointer_cast<Label>(l);
-            m_pendingLabelUnits.emplace_back(LabelUnit(label, tileID, _styleName));
-        }
+        
+        auto label = std::dynamic_pointer_cast<Label>(l);
+        addLabel(_tile, _styleName, label);
 
         return true;
     }
@@ -48,8 +40,26 @@ bool Labels::addTextLabel(MapTile& _tile, const std::string& _styleName, Label::
     return false;
 }
 
-bool addSpriteLabel(MapTile& _tile, const std::string& _styleName, Label::Transform _transform) {
-    // TODO
+void Labels::addLabel(MapTile& _tile, const std::string& _styleName, std::shared_ptr<Label> _label) {
+    _label->update(m_view->getViewProjectionMatrix() * _tile.getModelMatrix(), m_screenSize, 0);
+    std::unique_ptr<TileID> tileID(new TileID(_tile.getID()));
+    _tile.addLabel(_styleName, _label);
+    
+    // lock concurrent collection
+    {
+        std::lock_guard<std::mutex> lock(m_mutex);
+        m_pendingLabelUnits.emplace_back(LabelUnit(_label, tileID, _styleName));
+    }
+}
+
+bool Labels::addSpriteLabel(MapTile& _tile, const std::string& _styleName, Label::Transform _transform) {
+    if ((m_currentZoom - _tile.getID().z) > LODDiscardFunc(View::s_maxZoom, m_currentZoom)) {
+        return false;
+    }
+    
+    addLabel(_tile, _styleName, std::shared_ptr<Label>(new SpriteLabel(_transform)));
+
+    return true;
 }
 
 void Labels::updateOcclusions() {

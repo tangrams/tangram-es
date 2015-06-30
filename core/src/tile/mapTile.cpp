@@ -89,12 +89,12 @@ void MapTile::pushLabelTransforms(const Style& _style, std::shared_ptr<Labels> _
     if (textBuffer->hasData()) {
         auto ftContext = _labels->getFontContext();
 
+        // FIXME : locking during sprite updates
         ftContext->lock();
         ftContext->useBuffer(textBuffer);
         
         for(auto& label : m_labels[_style.getName()]) {
-            // FIXME
-            // label->pushTransform(textBuffer);
+            label->pushTransform();
         }
         
         textBuffer->pushBuffer();

@@ -130,7 +130,6 @@ private:
     State m_currentState;
 
     Type m_type;
-    Transform m_transform;
     isect2d::OBB m_obb;
     isect2d::AABB m_aabb;
     bool m_occludedLastFrame;
@@ -140,6 +139,7 @@ private:
 protected:
     
     bool m_dirty;
+    Transform m_transform;
     glm::vec2 m_dim;
     
 };
