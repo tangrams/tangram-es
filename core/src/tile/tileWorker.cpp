@@ -5,71 +5,97 @@
 #include "tile/mapTile.h"
 #include "view/view.h"
 #include "tileManager.h"
+#include "style/style.h"
+#include "scene/scene.h"
 
-#include <chrono>
 
-TileWorker::TileWorker(TileManager& _tileManager)
+TileWorker::TileWorker(TileManager& _tileManager, int _num_worker)
     : m_tileManager(_tileManager) {
-    m_aborted = false;
-    m_running = false;
-}
-
-void TileWorker::abort() {
-    m_aborted = true;
-}
-
-void TileWorker::process(const StyleSet& _styles)
-{
     m_running = true;
-    m_aborted = false;
 
-    m_future = std::async(std::launch::async, [&]() {
-        while (!m_aborted) {
+    for (int i = 0; i < _num_worker; i++) {
+        m_workers.emplace_back(&TileWorker::run, this);
+    }
+}
 
-            auto task = m_tileManager.pollProcessQueue();
-            if (!task) {
-                // No work left to do.
+TileWorker::~TileWorker(){
+    if (m_running) {
+        stop();
+    }
+}
+
+void TileWorker::run() {
+    while (true) {
+
+        TileTask task;
+        {
+            std::unique_lock<std::mutex> lock(m_mutex);
+            m_condition.wait(lock, [&, this]{
+                    return !m_running || !m_queue.empty();
+                });
+
+            if (!m_running && m_queue.empty())
                 break;
-            }
 
-            DataSource* dataSource = task->source;
-            auto& tile = task->tile;
+            task = m_queue.front();
+            m_queue.pop_front();
+        }
+        if (task->tile->isCanceled())
+            continue;
 
-            std::shared_ptr<TileData> tileData;
+        DataSource* dataSource = task->source;
+        auto& tile = task->tile;
 
-            if (task->parsedTileData) {
-                // Data has already been parsed!
-                tileData = task->parsedTileData;
-            } else {
-                // Data needs to be parsed
-                tileData = dataSource->parse(*tile, task->rawTileData);
+        std::shared_ptr<TileData> tileData;
 
-                // Cache parsed data with the original data source
-                dataSource->setTileData(tile->getID(), tileData);
-            }
+        if (task->parsedTileData) {
+            // Data has already been parsed!
+            tileData = task->parsedTileData;
+        } else {
+            // Data needs to be parsed
+            tileData = dataSource->parse(*tile, task->rawTileData);
 
-            if (tileData) {
-                // Process data for all styles
-                for (const auto& style : _styles) {
-                    if (m_aborted) {
-                        break;
-                    }
-                    if(tile->isCanceled()) {
-                        break;
-                    }
-                    style->addData(*tileData, *tile);
-                }
-            }
-
-            m_tileManager.tileProcessed(std::move(task));
-            requestRender();
+            // Cache parsed data with the original data source
+            dataSource->setTileData(tile->getID(), tileData);
         }
 
-        m_running = false;
-        return true;
-    });
+        if (tileData) {
+            // Process data for all styles
+            for (const auto& style : m_tileManager.getScene()->getStyles()) {
+                if (!m_running) {
+                    continue;
+                }
+                if(tile->isCanceled()) {
+                    continue;
+                }
+                style->addData(*tileData, *tile);
+            }
+        }
+
+        m_tileManager.tileProcessed(std::move(task));
+        requestRender();
+    }
 }
 
-void TileWorker::drain() {
-    m_future.get();
+void TileWorker::enqueue(TileTask task) {
+    {
+        std::unique_lock<std::mutex> lock(m_mutex);
+        if (!m_running)
+            return;
+
+        m_queue.push_back(task);
+    }
+    m_condition.notify_one();
+}
+
+void TileWorker::stop() {
+    {
+        std::unique_lock<std::mutex> lock(m_mutex);
+        m_running = false;
+    }
+
+    m_condition.notify_all();
+
+    for(std::thread &worker: m_workers)
+        worker.join();
 }

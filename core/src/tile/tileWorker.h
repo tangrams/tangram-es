@@ -1,6 +1,5 @@
 #pragma once
 
-#include "data/tileData.h"
 #include "util/tileID.h"
 #include "style/style.h"
 #include "tileTask.h"
@@ -8,7 +7,10 @@
 #include <memory>
 #include <future>
 #include <memory>
-#include <future>
+#include <vector>
+#include <condition_variable>
+#include <thread>
+#include <mutex>
 
 class TileManager;
 class DataSource;
@@ -19,23 +21,28 @@ class TileWorker {
     
 public:
     
-    TileWorker(TileManager& _tileManager);
+    TileWorker(TileManager& _tileManager, int _num_worker);
+
+    ~TileWorker();
     
-    void process(const StyleSet& _styles);
+    void enqueue(TileTask task);
     
-    void abort();
+    void stop();
     
     bool isRunning() const { return m_running; }
-
-    void drain();
     
 private:
+
+    void run();
     
     TileManager& m_tileManager;
     
-    bool m_aborted;
     bool m_running;
     
-    std::future<bool> m_future;
+    std::vector<std::thread> m_workers;
+    std::condition_variable m_condition;
+
+    std::mutex m_mutex;
+    std::deque<TileTask> m_queue;
 };
 

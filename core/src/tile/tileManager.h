@@ -41,6 +41,8 @@ public:
     /* Sets the scene which the TileManager will use to style tiles */
     void setScene(std::shared_ptr<Scene> _scene) { m_scene = _scene; }
 
+    std::shared_ptr<Scene>& getScene() { return m_scene; }
+
     /* Adds a <DataSource> from which tile data should be retrieved */
     void addDataSource(std::unique_ptr<DataSource> _source);
 
@@ -61,8 +63,8 @@ public:
      */
     void tileProcessed(TileTask task);
 
-    /* For TileWorker: Get next TileTask to be processed. */
-    TileTask pollProcessQueue();
+    ///* For TileWorker: Get next TileTask to be processed. */
+    //TileTask pollProcessQueue();
 
     /* Returns the set of currently visible tiles */
     const std::map<TileID, std::shared_ptr<MapTile>>& getVisibleTiles() { return m_tileSet; }
@@ -76,8 +78,6 @@ private:
     std::shared_ptr<View> m_view;
     std::shared_ptr<Scene> m_scene;
 
-    std::mutex m_queueTileMutex;
-    std::deque<TileTask> m_queuedTiles;
 
     std::mutex m_readyTileMutex;
     std::deque<TileTask> m_readyTiles;
@@ -92,7 +92,7 @@ private:
     std::vector<std::unique_ptr<DataSource>> m_dataSources;
 
     const static size_t MAX_WORKERS = 2;
-    std::list<std::unique_ptr<TileWorker> > m_workers;
+    std::unique_ptr<TileWorker> m_workers;
 
     bool m_tileSetChanged = false;
 

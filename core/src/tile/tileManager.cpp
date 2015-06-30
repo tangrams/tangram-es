@@ -15,21 +15,13 @@ TileManager::TileManager()
     : m_loadPending(0) {
 
     // Instantiate workers
-    for (size_t i = 0; i < MAX_WORKERS; i++) {
-        m_workers.push_back(std::unique_ptr<TileWorker>(new TileWorker(*this)));
-    }
+    m_workers = std::unique_ptr<TileWorker>(new TileWorker(*this, MAX_WORKERS));
     m_dataCallback = std::bind(&TileManager::tileLoaded, this, std::placeholders::_1);
 }
 
 TileManager::~TileManager() {
-    for (auto& worker : m_workers) {
-        if (worker->isRunning()) {
-            worker->abort();
-            worker->drain();
-        }
-        // We stop all workers before we destroy the resources they use.
-        // TODO: This will wait for any pending network requests to finish,
-        // which could delay closing of the application.
+    if (m_workers->isRunning()) {
+        m_workers->stop();
     }
     m_dataSources.clear();
     m_tileSet.clear();
@@ -40,30 +32,14 @@ void TileManager::addDataSource(std::unique_ptr<DataSource> _source) {
 }
 
 void TileManager::tileLoaded(TileTask task) {
-    std::lock_guard<std::mutex> lock(m_queueTileMutex);
-    m_queuedTiles.push_back(std::move(task));
-}
+    if (setTileState(*task->tile, TileState::processing)) {
+        m_workers->enqueue(task);
+    }
 
+}
 void TileManager::tileProcessed(TileTask task) {
     std::lock_guard<std::mutex> lock(m_readyTileMutex);
     m_readyTiles.push_back(std::move(task));
-}
-
-TileTask TileManager::pollProcessQueue() {
-    std::lock_guard<std::mutex> lock(m_queueTileMutex);
-
-    while (!m_queuedTiles.empty()) {
-        auto task = std::move(m_queuedTiles.front());
-        m_queuedTiles.pop_front();
-
-        if (!setTileState(*(task->tile), TileState::processing)) {
-            // Drop canceled task.
-            continue;
-        }
-        return task;
-    }
-
-    return TileTask(nullptr);
 }
 
 bool TileManager::setTileState(MapTile& tile, TileState state) {
@@ -146,14 +122,13 @@ void TileManager::updateTileSet() {
     m_tileSetChanged = false;
 
     // Check if any native worker needs to be dispatched.
-    if (!m_queuedTiles.empty()) {
-
-        for (auto& worker : m_workers) {
-            if (worker->isRunning()) { continue; }
-
-            worker->process(m_scene->getStyles());
-        }
-    }
+    // if (!m_processTiles.empty()) {
+    //     for (auto& worker : m_workers) {
+    //         //if (!worker->isRunning()) {
+    //             worker->process();
+    //             //}
+    //     }
+    // }
 
     if (!m_readyTiles.empty()) {
         std::lock_guard<std::mutex> lock(m_readyTileMutex);
