@@ -272,29 +272,7 @@ void TileManager::removeTile(std::map< TileID, std::shared_ptr<MapTile> >::itera
         for(auto& dataSource : m_dataSources) {
             dataSource->cancelLoadingTile(id);
         }
-
-        //// Canceled tiles will be ignored ////
-        // 2. Remove from tiles queued for processing
-        // If already fetched remove it from the processing queue.
-
-        // std::lock_guard<std::mutex> lock(m_queueTileMutex);
-        // const auto& found = std::find_if(m_queuedTiles.begin(), m_queuedTiles.end(),
-        //                                  [&](const TileTask& p) {
-        //                                      return (p->tileID == id);
-        //                                  });
-        // if (found != m_queuedTiles.end()) {
-        //     m_queuedTiles.erase(found);
-        // }
     }
-    // else if (tile->state() == MapTile::Processing) {
-    //     // 3. If a worker is processing this tile, abort it
-    //     for (const auto& worker : m_workers) {
-    //         if (!worker->isFree() && worker->getTileID() == id) {
-    //             worker->abort();
-    //             // Proxy tiles will be cleaned in update loop
-    //         }
-    //     }
-    // }
 
     cleanProxyTiles(*tile);
 
