@@ -350,18 +350,14 @@ void Builders::buildOutline(const Line& _line, PolyLineBuilder& _ctx) {
     
 }
 
-void Builders::buildSpriteQuadAtPoint(const glm::vec2& _screenOrigin, const glm::vec2& _spriteOrigin, const glm::vec2& _spriteSize, const glm::vec2& _atlasSize, SpriteBuilder& _ctx) {
+void Builders::buildQuadAtPoint(const glm::vec2& _screenOrigin, const glm::vec2& _size, const glm::vec2& _uvBL, const glm::vec2& _uvTR, SpriteBuilder& _ctx) {
+    float halfWidth = _size.x * .5f;
+    float halfHeight = _size.y * .5f;
     
-    glm::vec2 uvBL = _spriteOrigin / _atlasSize;
-    glm::vec2 uvTR = (_spriteOrigin + _spriteSize) / _atlasSize;
-    
-    float halfWidth = _spriteSize.x * .5f;
-    float halfHeight = _spriteSize.y * .5f;
-    
-    _ctx.addVertex(_screenOrigin + glm::vec2(-halfWidth, -halfHeight), {uvBL.x, uvBL.y});
-    _ctx.addVertex(_screenOrigin + glm::vec2(-halfWidth, halfHeight), {uvBL.x, uvTR.y});
-    _ctx.addVertex(_screenOrigin + glm::vec2(halfWidth, -halfHeight), {uvTR.x, uvBL.y});
-    _ctx.addVertex(_screenOrigin + glm::vec2(halfWidth, halfHeight), {uvTR.x, uvTR.y});
+    _ctx.addVertex(_screenOrigin + glm::vec2(-halfWidth, -halfHeight), {_uvBL.x, _uvBL.y});
+    _ctx.addVertex(_screenOrigin + glm::vec2(-halfWidth, halfHeight), {_uvBL.x, _uvTR.y});
+    _ctx.addVertex(_screenOrigin + glm::vec2(halfWidth, -halfHeight), {_uvTR.x, _uvBL.y});
+    _ctx.addVertex(_screenOrigin + glm::vec2(halfWidth, halfHeight), {_uvTR.x, _uvTR.y});
 
     _ctx.indices.push_back(_ctx.numVerts + 2);
     _ctx.indices.push_back(_ctx.numVerts + 0);

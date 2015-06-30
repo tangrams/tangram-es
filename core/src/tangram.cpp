@@ -62,10 +62,6 @@ namespace Tangram {
 
         }
 
-        std::unique_ptr<Style> spriteStyle(new SpriteStyle("SpriteStyle"));
-        spriteStyle->build(m_scene->getLights());
-        m_scene->addStyle(std::move(spriteStyle));
-
         // Set up openGL state
         glDisable(GL_BLEND);
         glDisable(GL_STENCIL_TEST);
