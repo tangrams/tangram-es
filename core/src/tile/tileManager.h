@@ -124,6 +124,6 @@ private:
      */
     void cleanProxyTiles(MapTile& _tile);
 
-    bool setTileState(MapTile& tile, MapTile::State state);
+    bool setTileState(MapTile& tile, TileState state);
 
 };

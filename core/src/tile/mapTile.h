@@ -18,6 +18,9 @@ class TextBuffer;
 class VboMesh;
 class View;
 
+
+enum class TileState { none = 0, loading, processing, ready, canceled };
+
 /* Tile of vector map data
  * 
  * MapTile represents a fixed area of a map at a fixed zoom level; It contains its position within a quadtree of
@@ -111,11 +114,11 @@ public:
     }
 
     bool isCanceled() const {
-        return m_state == Canceled;
+        return m_state == TileState::canceled;
     }
 
     bool isReady() const {
-        return m_state == Ready;
+        return m_state == TileState::ready;
     }
 
 private:
@@ -149,21 +152,13 @@ private:
 
     friend class TileManager;
 
-    enum State {
-        None,
-        Loading,
-        Processing,
-        Ready,
-        Canceled
-    };
+    TileState m_state = TileState::none;
 
-    State m_state = None;
-
-    State state() {
+    TileState state() {
         return m_state;
     }
 
-    void setState(State state) {
+    void setState(TileState state) {
       m_state = state;
     }
 

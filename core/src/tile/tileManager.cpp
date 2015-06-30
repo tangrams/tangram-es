@@ -58,7 +58,7 @@ TileTask TileManager::pollProcessQueue() {
         auto task = std::move(m_queuedTiles.front());
         m_queuedTiles.pop_front();
 
-        if (!setTileState(*(task->tile), MapTile::Processing)) {
+        if (!setTileState(*(task->tile), TileState::processing)) {
             // Drop canceled task.
             continue;
         }
@@ -68,47 +68,46 @@ TileTask TileManager::pollProcessQueue() {
     return TileTask(nullptr);
 }
 
-bool TileManager::setTileState(MapTile& tile, MapTile::State state) {
+bool TileManager::setTileState(MapTile& tile, TileState state) {
     std::lock_guard<std::mutex> lock(m_tileStateMutex);
 
     switch (tile.state()) {
-    case MapTile::None:
-        if (state == MapTile::Loading) {
+    case TileState::none:
+        if (state == TileState::loading) {
             tile.setState(state);
             m_loadPending++;
             return true;
         }
         break;
 
-    case MapTile::Loading:
-        if (state == MapTile::Processing) {
+    case TileState::loading:
+        if (state == TileState::processing) {
             tile.setState(state);
             m_loadPending--;
             return true;
         }
-        if (state == MapTile::Canceled) {
+        if (state == TileState::canceled) {
             tile.setState(state);
             m_loadPending--;
             return true;
         }
         break;
 
-    case MapTile::Processing:
-        if (state == MapTile::Ready) {
+    case TileState::processing:
+        if (state == TileState::ready) {
             tile.setState(state);
             return true;
         }
         break;
 
-    case MapTile::Ready:
-        return false;
+    case TileState::canceled:
+         return false;
 
-    case MapTile::Canceled:
-        return false;
-
+    default:
+        break;
     }
 
-    if (state == MapTile::Canceled) {
+    if (state == TileState::canceled) {
         return false;
     }
 
@@ -139,7 +138,7 @@ void TileManager::updateTileSet() {
             auto& task = *it;
             auto& tile = *(task->tile);
 
-            if (setTileState(tile, MapTile::Ready)) {
+            if (setTileState(tile, TileState::ready)) {
                 cleanProxyTiles(tile);
                 m_tileSetChanged = true;
             }
@@ -163,8 +162,8 @@ void TileManager::updateTileSet() {
                 auto& curTileId = setTilesIter == m_tileSet.end() ? NOT_A_TILE : setTilesIter->first;
 
                 if (visTileId == curTileId) {
-                    if (setTilesIter->second->state() == MapTile::None) {
-                        logMsg("[%d, %d, %d] - Enqueue\n", curTileId.z, curTileId.x, curTileId.y);
+                    if (setTilesIter->second->state() == TileState::none) {
+                        //logMsg("[%d, %d, %d] - Enqueue\n", curTileId.z, curTileId.x, curTileId.y);
                         m_loadQueue.push_back(curTileId);
                     }
 
@@ -226,7 +225,7 @@ void TileManager::updateTileSet() {
 
         for (auto& id : m_loadQueue) {
             auto& tile = m_tileSet[id];
-            setTileState(*tile, MapTile::Loading);
+            setTileState(*tile, TileState::loading);
 
             for (auto& source : m_dataSources) {
                 TileTask task = std::make_shared<TileTaskData>(tile, source.get());
@@ -266,7 +265,7 @@ void TileManager::removeTile(std::map< TileID, std::shared_ptr<MapTile> >::itera
 
     logMsg("[%d, %d, %d] Remove\n", id.z, id.x, id.y);
 
-    if (setTileState(*tile, MapTile::Canceled)) {
+    if (setTileState(*tile, TileState::canceled)) {
 
         // 1. Remove from Datasource
         // Make sure to cancel the network request associated with this tile.
@@ -296,9 +295,6 @@ void TileManager::removeTile(std::map< TileID, std::shared_ptr<MapTile> >::itera
     //         }
     //     }
     // }
-
-    //
-    // tile->setState(MapTile::Canceled);
 
     cleanProxyTiles(*tile);
 
