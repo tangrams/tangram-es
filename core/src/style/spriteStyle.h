@@ -4,6 +4,7 @@
 #include "glm/vec2.hpp"
 #include "glm/vec3.hpp"
 #include "util/typedMesh.h"
+#include "tile/labels/labels.h"
 #include "tile/labels/spriteAtlas.h"
 
 class Texture;
@@ -24,17 +25,20 @@ protected:
     virtual void buildPoint(Point& _point, void* _styleParam, Properties& _props, VboMesh& _mesh) const override;
     virtual void buildLine(Line& _line, void* _styleParam, Properties& _props, VboMesh& _mesh) const override;
     virtual void buildPolygon(Polygon& _polygon, void* _styleParam, Properties& _props, VboMesh& _mesh) const override;
-    virtual void addData(TileData& _data, MapTile& _tile) override;
+    virtual void onBeginBuildTile(MapTile& _tile) const override;
+    virtual void onEndBuildTile(MapTile& _tile, std::shared_ptr<VboMesh> _mesh) const override;
 
     virtual void* parseStyleParams(const std::string& _layerNameID, const StyleParamMap& _styleParamMap) override;
 
     typedef TypedMesh<PosUVVertex> Mesh;
 
     virtual VboMesh* newMesh() const override {
-        return nullptr;
+        return new Mesh(m_vertexLayout, m_drawMode, GL_DYNAMIC_DRAW);
     };
     
     std::unique_ptr<SpriteAtlas> m_spriteAtlas;
+    std::shared_ptr<Labels> m_labels;
+    
 
 public:
 
@@ -46,5 +50,8 @@ public:
     SpriteStyle(std::string _name, GLenum _drawMode = GL_TRIANGLES);
 
     virtual ~SpriteStyle();
+    
+    // FIXME : only one sprite tile can be processed at a time
+    static MapTile* s_processedTile;
 
 };

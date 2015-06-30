@@ -18,13 +18,13 @@ int Labels::LODDiscardFunc(float _maxZoom, float _zoom) {
     return (int) MIN(floor(((log(-_zoom + (_maxZoom + 2)) / log(_maxZoom + 2) * (_maxZoom )) * 0.5)), MAX_LOD);
 }
 
-bool Labels::addTextLabel(MapTile& _tile, const std::string& _styleName, Label::Transform _transform, std::string _text, Label::Type _type) {
+std::shared_ptr<Label> Labels::addTextLabel(MapTile& _tile, const std::string& _styleName, Label::Transform _transform, std::string _text, Label::Type _type) {
     auto currentBuffer = m_ftContext->getCurrentBuffer();
 
     // FIXME: the current view should not be used to determine whether a label is shown at all
     // otherwise results will be random
     if ((m_currentZoom - _tile.getID().z) > LODDiscardFunc(View::s_maxZoom, m_currentZoom)) {
-        return false;
+        return nullptr;
     }
 
     if (currentBuffer) {
@@ -33,16 +33,15 @@ bool Labels::addTextLabel(MapTile& _tile, const std::string& _styleName, Label::
 
         if (!l->rasterize(currentBuffer)) {
             l.reset();
-            return false;
+            return nullptr;
         }
+        
+        addLabel(_tile, _styleName, std::dynamic_pointer_cast<Label>(l));
 
-        auto label = std::dynamic_pointer_cast<Label>(l);
-        addLabel(_tile, _styleName, label);
-
-        return true;
+        return l;
     }
 
-    return false;
+    return nullptr;
 }
 
 void Labels::addLabel(MapTile& _tile, const std::string& _styleName, std::shared_ptr<Label> _label) {
@@ -63,14 +62,15 @@ void Labels::addLabel(MapTile& _tile, const std::string& _styleName, std::shared
     }
 }
 
-bool Labels::addSpriteLabel(MapTile& _tile, const std::string& _styleName, Label::Transform _transform) {
+std::shared_ptr<Label> Labels::addSpriteLabel(MapTile& _tile, const std::string& _styleName, Label::Transform _transform) {
     if ((m_currentZoom - _tile.getID().z) > LODDiscardFunc(View::s_maxZoom, m_currentZoom)) {
-        return false;
+        return nullptr;
     }
-
-    addLabel(_tile, _styleName, std::shared_ptr<Label>(new SpriteLabel(_transform)));
-
-    return true;
+    
+    auto l = std::shared_ptr<Label>(new SpriteLabel(_transform));
+    addLabel(_tile, _styleName, l);
+    
+    return l;
 }
 
 void Labels::updateOcclusions() {

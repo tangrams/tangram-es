@@ -85,3 +85,10 @@ layers:
                 color: [0.949, 0.941, 0.901, 1.]
                 extrude: true #currently ignored
 
+    pois:
+        data: { source: osm }
+        draw:
+            sprites: {}
+
+
+
