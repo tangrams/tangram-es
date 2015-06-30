@@ -13,7 +13,6 @@
 #include <set>
 #include <mutex>
 #include <deque>
-#include <atomic>
 
 class DataSource;
 class MapTile;
