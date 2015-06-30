@@ -71,6 +71,22 @@ struct PolyLineBuilder {
         : options(_options), addVertex(_addVertex){}
 };
 
+/* Callback function for SpriteBuilder
+ * @coord   tesselated coordinates of the sprite quad in screen space
+ * @uv      texture coordinate of the ouptput coordinate
+ */
+typedef std::function<void(const glm::vec2& screencoord, const glm::vec2& uv)> SpriteBuilderFn;
+
+/* SpriteBuidler context
+ */
+struct SpriteBuilder {
+    std::vector<int> indices;
+    SpriteBuilderFn addVertex;
+    size_t numVerts = 0;
+    
+    SpriteBuilder(SpriteBuilderFn _addVertex) : addVertex(_addVertex) {}
+};
+
 class Builders {
     
 public:
@@ -98,10 +114,13 @@ public:
     /* Build a tesselated outline that follows the given line while skipping tile boundaries */
     static void buildOutline(const Line& _line, PolyLineBuilder& _ctx);
     
-    /* Build a tesselated square centered on a point coordinate
-     * 
-     * NOT IMPLEMENTED
+    /* Build a tesselated quad centered on _origin
+     * @_screenPos the sprite origin in screen space
+     * @_spriteOrigin the sprite origin in the texture sprite atlas
+     * @_spriteSize the sprite size in the texture sprite atlas
+     * @_atlasSize the sprite atlas size
+     * @_ctx output vectors, see <SpriteBuilder>
      */
-    static void buildQuadAtPoint(const Point& _pointIn, const glm::vec3& _normal, float width, float height, PolygonBuilder& _ctx);
+    static void buildSpriteQuadAtPoint(const glm::vec2& _screenOrigin, const glm::vec2& _spriteOrigin, const glm::vec2& _spriteSize, const glm::vec2& _atlasSize, SpriteBuilder& _ctx);
     
 };

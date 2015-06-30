@@ -9,7 +9,7 @@ protected:
 
     struct PosUVVertex {
         // Position Data
-        glm::vec3 pos;
+        glm::vec2 pos;
         // UV Data
         glm::vec2 uv;
     };
@@ -34,6 +34,7 @@ protected:
 public:
 
     virtual void onBeginDrawFrame(const std::shared_ptr<View>& _view, const std::shared_ptr<Scene>& _scene) override;
+    virtual void onEndDrawFrame() override;
 
     SpriteStyle(std::string _name, GLenum _drawMode = GL_TRIANGLES);
 

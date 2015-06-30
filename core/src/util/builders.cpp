@@ -350,6 +350,26 @@ void Builders::buildOutline(const Line& _line, PolyLineBuilder& _ctx) {
     
 }
 
-void Builders::buildQuadAtPoint(const Point& _point, const glm::vec3& _normal, float halfWidth, float height, PolygonBuilder& _ctx) {
+void Builders::buildSpriteQuadAtPoint(const glm::vec2& _screenOrigin, const glm::vec2& _spriteOrigin, const glm::vec2& _spriteSize, const glm::vec2& _atlasSize, SpriteBuilder& _ctx) {
+    
+    glm::vec2 uvBL = _spriteOrigin / _atlasSize;
+    glm::vec2 uvTR = (_spriteOrigin + _spriteSize) / _atlasSize;
+    
+    float halfWidth = _spriteSize.x * .5f;
+    float halfHeight = _spriteSize.y * .5f;
+    
+    _ctx.addVertex(_screenOrigin + glm::vec2(-halfWidth, -halfHeight), {uvBL.x, uvBL.y});
+    _ctx.addVertex(_screenOrigin + glm::vec2(-halfWidth, halfHeight), {uvBL.x, uvTR.y});
+    _ctx.addVertex(_screenOrigin + glm::vec2(halfWidth, -halfHeight), {uvTR.x, uvBL.y});
+    _ctx.addVertex(_screenOrigin + glm::vec2(halfWidth, halfHeight), {uvTR.x, uvTR.y});
 
+    _ctx.indices.push_back(_ctx.numVerts + 2);
+    _ctx.indices.push_back(_ctx.numVerts + 0);
+    _ctx.indices.push_back(_ctx.numVerts + 1);
+    _ctx.indices.push_back(_ctx.numVerts + 1);
+    _ctx.indices.push_back(_ctx.numVerts + 3);
+    _ctx.indices.push_back(_ctx.numVerts + 2);
+    
+    _ctx.numVerts += 4;
+    
 }
