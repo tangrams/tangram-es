@@ -3,6 +3,9 @@
 #include "gl.h"
 #include <cmath>
 
+// Forward declaration
+void init_main_window();
+
 // Input handling
 // ==============
 
@@ -99,15 +102,21 @@ void key_callback(GLFWwindow* window, int key, int scancode, int action, int mod
             case GLFW_KEY_5:
                 Tangram::setDebugFlag(Tangram::DebugFlags::LABELS, !Tangram::getDebugFlag(Tangram::DebugFlags::LABELS));
                 break;
+            case GLFW_KEY_BACKSPACE:
+                init_main_window(); // Simulate GL context loss
+                break;
             default:
                 break;
         }
     }
 }
 
-
 // Window handling
 // ===============
+
+GLFWwindow* main_window = nullptr;
+int width = 800;
+int height = 600;
 
 void window_size_callback(GLFWwindow* window, int width, int height) {
     
@@ -115,66 +124,74 @@ void window_size_callback(GLFWwindow* window, int width, int height) {
     
 }
 
+void init_main_window() {
+
+    // Destroy old window
+    if (main_window != nullptr) {
+        glfwDestroyWindow(main_window);
+        Tangram::afterContextDestroyed();
+    }
+
+    // Create a windowed mode window and its OpenGL context
+    glfwWindowHint(GLFW_SAMPLES, 2);
+    main_window = glfwCreateWindow(width, height, "Tangram ES", NULL, NULL);
+    if (!main_window) {
+        glfwTerminate();
+    }
+
+    // Make the main_window's context current
+    glfwMakeContextCurrent(main_window);
+
+    // Set input callbacks
+    glfwSetWindowSizeCallback(main_window, window_size_callback);
+    glfwSetMouseButtonCallback(main_window, mouse_button_callback);
+    glfwSetCursorPosCallback(main_window, cursor_pos_callback);
+    glfwSetScrollCallback(main_window, scroll_callback);
+    glfwSetKeyCallback(main_window, key_callback);
+
+    // Setup tangram
+    Tangram::initialize();
+    Tangram::resize(width, height);
+
+    // Work-around for a bug in GLFW on retina displays
+    int fbWidth = 0, fbHeight = 0;
+    glfwGetFramebufferSize(main_window, &fbWidth, &fbHeight);
+    glViewport(0, 0, fbWidth, fbHeight);
+
+}
+
 // Main program
 // ============
 
 int main(void) {
 
-    GLFWwindow* window;
-    int width = 800;
-    int height = 600;
-
-    /* Initialize the library */
-    if (!glfwInit())
-        return -1;
-
-    /* Create a windowed mode window and its OpenGL context */
-    glfwWindowHint(GLFW_SAMPLES, 2);
-    window = glfwCreateWindow(width, height, "Tangram ES", NULL, NULL);
-    if (!window) {
-        glfwTerminate();
-        return -1;
+    // Initialize the windowing library
+    if (!glfwInit()) {
+        return -1;    
     }
 
-    /* Make the window's context current */
-    glfwMakeContextCurrent(window);
+    init_main_window();
 
+    // Initialize networking
     NSurlInit();
 
-    Tangram::initialize();
-    Tangram::resize(width, height);
-
-    /* Work-around for a bug in GLFW on retina displays */
-    int fbWidth = 0, fbHeight = 0;
-    glfwGetFramebufferSize(window, &fbWidth, &fbHeight);
-    glViewport(0, 0, fbWidth, fbHeight);
-
-    /* Set input callbacks */
-    glfwSetWindowSizeCallback(window, window_size_callback);
-    glfwSetMouseButtonCallback(window, mouse_button_callback);
-    glfwSetCursorPosCallback(window, cursor_pos_callback);
-    glfwSetScrollCallback(window, scroll_callback);
-    glfwSetKeyCallback(window, key_callback);
-    
-    glfwSwapInterval(1);
-    
     double lastTime = glfwGetTime();
 
-    /* Loop until the user closes the window */
-    while (!glfwWindowShouldClose(window)) {
+    // Loop until the user closes the window
+    while (!glfwWindowShouldClose(main_window)) {
 
         double currentTime = glfwGetTime();
         double delta = currentTime - lastTime;
         lastTime = currentTime;
         
-        /* Render here */
+        // Render
         Tangram::update(delta);
         Tangram::render();
 
-        /* Swap front and back buffers */
-        glfwSwapBuffers(window);
+        // Swap front and back buffers
+        glfwSwapBuffers(main_window);
 
-        /* Poll for and process events */
+        // Poll for and process events
         if (isContinuousRendering()) {
             glfwPollEvents();
         } else {
