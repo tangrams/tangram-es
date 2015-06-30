@@ -56,12 +56,16 @@ public:
     virtual ~Labels();
 
     /*
-     * Creates a label for and associate it with the current processed <MapTile> TileID for a specific syle name
-     * Returns true if label was created
+     * Creates a text slabel for and associate it with the current processed <MapTile> TileID for a specific syle name
+     * Returns the created label
      */
-    bool addTextLabel(MapTile& _tile, const std::string& _styleName, Label::Transform _transform, std::string _text, Label::Type _type);
+    std::shared_ptr<Label> addTextLabel(MapTile& _tile, const std::string& _styleName, Label::Transform _transform, std::string _text, Label::Type _type);
     
-    bool addSpriteLabel(MapTile& _tile, const std::string& _styleName, Label::Transform _transform);
+    /*
+     * Creates a sprite slabel for and associate it with the current processed <MapTile> TileID for a specific syle name
+     * Returns the created labe
+     */
+    std::shared_ptr<Label> addSpriteLabel(MapTile& _tile, const std::string& _styleName, Label::Transform _transform);
 
     void setFontContext(std::shared_ptr<FontContext> _ftContext) { m_ftContext = _ftContext; }
 
