@@ -11,8 +11,6 @@
 #include <chrono>
 #include <algorithm>
 
-#define MAX_PARALLEL_DOWNLOADS 4
-
 TileManager::TileManager()
     : m_loadPending(0) {
 
@@ -115,6 +113,32 @@ bool TileManager::setTileState(MapTile& tile, TileState state) {
     assert(false);
 }
 
+void TileManager::enqueueLoadTask(const TileID& tileID, const glm::dvec2& viewCenter) {
+    // Keep the items sorted by distance and limit list to MAX_DOWNLOADS
+
+    auto tileCenter = m_view->getMapProjection().TileCenter(tileID);
+    double distance = glm::length2(tileCenter - viewCenter);
+
+    bool isFull = m_loadTasks.size() == MAX_DOWNLOADS;
+    if (isFull && m_loadTasks.back().first < distance) {
+        return;
+    }
+
+    auto iter = m_loadTasks.begin();
+    while (iter != m_loadTasks.end()){
+        if (iter->first > distance) {
+            break;
+        }
+        ++iter;
+    }
+
+    if (!isFull || iter != m_loadTasks.end()) {
+        m_loadTasks.insert(iter, { distance, &tileID });
+    }
+    if (isFull) {
+        m_loadTasks.pop_back();
+    }
+}
 
 void TileManager::updateTileSet() {
 
@@ -149,6 +173,8 @@ void TileManager::updateTileSet() {
 
     if (m_view->changedOnLastUpdate() || m_tileSetChanged) {
 
+        glm::dvec2 viewCenter(m_view->getPosition().x, -m_view->getPosition().y);
+
         const std::set<TileID>& visibleTiles = m_view->getVisibleTiles();
 
         // Loop over visibleTiles and add any needed tiles to tileSet
@@ -164,7 +190,7 @@ void TileManager::updateTileSet() {
                 if (visTileId == curTileId) {
                     if (setTilesIter->second->state() == TileState::none) {
                         //logMsg("[%d, %d, %d] - Enqueue\n", curTileId.z, curTileId.x, curTileId.y);
-                        m_loadQueue.push_back(curTileId);
+                        enqueueLoadTask(visTileId, viewCenter);
                     }
 
                     // tiles in both sets match
@@ -174,8 +200,9 @@ void TileManager::updateTileSet() {
                 } else if (curTileId == NOT_A_TILE || visTileId < curTileId) {
                     // tileSet is missing an element present in visibleTiles
                     addTile(visTileId);
-                    ++visTilesIter;
+                    enqueueLoadTask(visTileId, viewCenter);
 
+                    ++visTilesIter;
                 } else {
                     // visibleTiles is missing an element present in tileSet (handled below)
                     ++setTilesIter;
@@ -214,17 +241,12 @@ void TileManager::updateTileSet() {
         }
     }
 
-    if (!m_loadQueue.empty() && m_loadPending < MAX_PARALLEL_DOWNLOADS) {
-        glm::dvec2 center(m_view->getPosition().x, -m_view->getPosition().y);
+    if (m_loadPending < MAX_DOWNLOADS) {
 
-        m_loadQueue.sort([&](const TileID& a, const TileID& b) {
-            auto ca = m_view->getMapProjection().TileCenter(a);
-            auto cb = m_view->getMapProjection().TileCenter(b);
-            return glm::length2(ca - center) < glm::length2(cb - center);
-        });
-
-        for (auto& id : m_loadQueue) {
+        for (auto& item : m_loadTasks) {
+            auto& id = *item.second;
             auto& tile = m_tileSet[id];
+
             setTileState(*tile, TileState::loading);
 
             for (auto& source : m_dataSources) {
@@ -235,16 +257,16 @@ void TileManager::updateTileSet() {
                     logMsg("ERROR: Loading failed for tile [%d, %d, %d]\n", id.z, id.x, id.y);
                 }
             }
-            if (m_loadPending == MAX_PARALLEL_DOWNLOADS) {
+            if (m_loadPending == MAX_DOWNLOADS) {
                 break;
             }
         }
     }
+    m_loadTasks.clear();
 
     // logMsg("all:%d loading:%d processing:%d pending:%d\n",
-    //        m_tileSet.size(), m_loadQueue.size(),
+    //        m_tileSet.size(), m_loadTasks.size(),
     //        m_queuedTiles.size(), m_loadPending);
-    m_loadQueue.clear();
 }
 
 void TileManager::addTile(const TileID& _tileID) {
@@ -255,7 +277,6 @@ void TileManager::addTile(const TileID& _tileID) {
     //Add Proxy if corresponding proxy MapTile ready
     updateProxyTiles(*tile);
 
-    m_loadQueue.push_back(_tileID);
     m_tileSet[_tileID] = std::move(tile);
 }
 

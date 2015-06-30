@@ -94,12 +94,12 @@ private:
     const static size_t MAX_WORKERS = 2;
     std::list<std::unique_ptr<TileWorker> > m_workers;
 
-
-    std::list<TileID> m_loadQueue;
-
     bool m_tileSetChanged = false;
 
     TileTaskCb m_dataCallback;
+
+    const static int MAX_DOWNLOADS = 4;
+    std::vector<std::pair<double, const TileID*>> m_loadTasks;
 
     /*
      * Constructs a future (async) to load data of a new visible tile
@@ -126,4 +126,5 @@ private:
 
     bool setTileState(MapTile& tile, TileState state);
 
+    void enqueueLoadTask(const TileID& tileID, const glm::dvec2& viewCenter);
 };
