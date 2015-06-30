@@ -2,6 +2,7 @@
 
 #include "style.h"
 #include "util/typedMesh.h"
+#include "tile/labels/spriteAtlas.h"
 
 class SpriteStyle : public Style {
 
@@ -28,13 +29,15 @@ protected:
     virtual VboMesh* newMesh() const override {
         return nullptr;
     };
-
-    std::shared_ptr<Texture> m_texture;
+    
+    std::unique_ptr<SpriteAtlas> m_spriteAtlas;
 
 public:
 
     virtual void onBeginDrawFrame(const std::shared_ptr<View>& _view, const std::shared_ptr<Scene>& _scene) override;
     virtual void onEndDrawFrame() override;
+    
+    void setSpriteAtlas(std::unique_ptr<SpriteAtlas> _atlas);
 
     SpriteStyle(std::string _name, GLenum _drawMode = GL_TRIANGLES);
 

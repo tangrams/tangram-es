@@ -121,6 +121,6 @@ public:
      * @_atlasSize the sprite atlas size
      * @_ctx output vectors, see <SpriteBuilder>
      */
-    static void buildSpriteQuadAtPoint(const glm::vec2& _screenOrigin, const glm::vec2& _spriteOrigin, const glm::vec2& _spriteSize, const glm::vec2& _atlasSize, SpriteBuilder& _ctx);
+    static void buildQuadAtPoint(const glm::vec2& _screenOrigin, const glm::vec2& _size, const glm::vec2& _uvBL, const glm::vec2& _uvTR, SpriteBuilder& _ctx);
     
 };

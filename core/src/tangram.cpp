@@ -66,9 +66,6 @@ namespace Tangram {
         m_labels->setFontContext(m_ftContext);
         m_labels->setView(m_view);
         
-        std::unique_ptr<Style> spriteStyle(new SpriteStyle("SpriteStyle"));
-        m_scene->addStyle(std::move(spriteStyle));
-        
         SceneLoader loader;
         loader.loadScene("config.yaml", *m_scene, *m_tileManager, *m_view);
 

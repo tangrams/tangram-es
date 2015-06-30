@@ -7,11 +7,7 @@
 SpriteStyle::SpriteStyle(std::string _name, GLenum _drawMode) : Style(_name, _drawMode) {
 }
 
-SpriteStyle::~SpriteStyle() {
-
-    m_texture->destroy();
-
-}
+SpriteStyle::~SpriteStyle() {}
 
 void SpriteStyle::constructVertexLayout() {
 
@@ -29,7 +25,11 @@ void SpriteStyle::constructShaderProgram() {
 
     m_shaderProgram->setSourceStrings(fragShaderSrcStr, vertShaderSrcStr);
 
-    m_texture = std::shared_ptr<Texture>(new Texture("poi_icons_32.png"));
+    m_spriteAtlas = std::unique_ptr<SpriteAtlas>(new SpriteAtlas("poi_icons_32.png"));
+    
+    m_spriteAtlas->addSpriteNode("plane", {0, 0}, {32, 32});
+    m_spriteAtlas->addSpriteNode("tree", {0, 185}, {32, 32});
+    m_spriteAtlas->addSpriteNode("sunburst", {0, 629}, {32, 32});
 }
 
 void* SpriteStyle::parseStyleParams(const std::string& _layerNameID, const StyleParamMap& _styleParamMap) {
@@ -50,17 +50,20 @@ void SpriteStyle::buildPolygon(Polygon& _polygon, void* _styleParam, Properties&
 
 void SpriteStyle::onBeginDrawFrame(const std::shared_ptr<View>& _view, const std::shared_ptr<Scene>& _scene) {
 
-    m_texture->bind(0);
+    m_spriteAtlas->bind();
+    
     m_shaderProgram->setUniformi("u_tex", 0);
     
     // top-left screen axis, y pointing down
     m_shaderProgram->setUniformMatrix4f("u_proj", glm::value_ptr(glm::ortho(0.f, _view->getWidth(), _view->getHeight(), 0.f, -1.f, 1.f)));
     
+    glDisable(GL_DEPTH_TEST);
     glEnable(GL_BLEND);
     glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 }
 
 void SpriteStyle::onEndDrawFrame() {
+    glEnable(GL_DEPTH_TEST);
     glDisable(GL_BLEND);
 }
 
@@ -76,11 +79,14 @@ void SpriteStyle::addData(TileData& _data, MapTile& _tile, const MapProjection& 
         }
     };
     
+    SpriteNode planeSprite = m_spriteAtlas->getSpriteNode("plane");
+    SpriteNode treeSprite = m_spriteAtlas->getSpriteNode("tree");
+    SpriteNode sunburstSprite = m_spriteAtlas->getSpriteNode("sunburst");
+    
     // Test building different sprite quads
-    Builders::buildSpriteQuadAtPoint({150, 150}, {0, 185}, {32, 32}, {m_texture->getWidth(), m_texture->getHeight()}, builder);
-    Builders::buildSpriteQuadAtPoint({300, 300}, {0, 0}, {32, 32}, {m_texture->getWidth(), m_texture->getHeight()}, builder);
-    Builders::buildSpriteQuadAtPoint({150, 300}, {0, 629}, {32, 32}, {m_texture->getWidth(), m_texture->getHeight()}, builder);
-    Builders::buildSpriteQuadAtPoint({200, 300}, {0, 777}, {32, 32}, {m_texture->getWidth(), m_texture->getHeight()}, builder);
+    Builders::buildQuadAtPoint({150, 150}, planeSprite.size, planeSprite.uvBL, planeSprite.uvTR, builder);
+    Builders::buildQuadAtPoint({350, 150}, treeSprite.size, treeSprite.uvBL, treeSprite.uvTR, builder);
+    Builders::buildQuadAtPoint({150, 350}, sunburstSprite.size, sunburstSprite.uvBL, sunburstSprite.uvTR, builder);
     
     mesh->addVertices(std::move(vertices), std::move(builder.indices));
     mesh->compileVertexBuffer();
