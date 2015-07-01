@@ -72,10 +72,11 @@ struct PolyLineBuilder {
 };
 
 /* Callback function for SpriteBuilder
- * @coord   tesselated coordinates of the sprite quad in screen space
- * @uv      texture coordinate of the ouptput coordinate
+ * @coord tesselated coordinates of the sprite quad in screen space
+ * @screenPos the screen position
+ * @uv texture coordinate of the ouptput coordinate
  */
-typedef std::function<void(const glm::vec2& screencoord, const glm::vec2& uv)> SpriteBuilderFn;
+typedef std::function<void(const glm::vec2& coord, const glm::vec2& screenPos, const glm::vec2& uv)> SpriteBuilderFn;
 
 /* SpriteBuidler context
  */

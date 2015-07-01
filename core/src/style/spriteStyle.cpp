@@ -24,8 +24,10 @@ void SpriteStyle::constructVertexLayout() {
 
     m_vertexLayout = std::shared_ptr<VertexLayout>(new VertexLayout({
         {"a_position", 2, GL_FLOAT, false, 0},
+        {"a_screenPosition", 2, GL_FLOAT, false, 0},
         {"a_uv", 2, GL_FLOAT, false, 0},
         {"a_alpha", 1, GL_FLOAT, false, 0},
+        {"a_rotation", 1, GL_FLOAT, false, 0},
     }));
 }
 
@@ -53,17 +55,18 @@ void SpriteStyle::buildPoint(Point& _point, void* _styleParam, Properties& _prop
     std::vector<PosUVVertex> vertices;
     
     SpriteBuilder builder = {
-        [&](const glm::vec2& coord, const glm::vec2& uv) {
-            vertices.push_back({ coord, uv, 0.5f });
+        [&](const glm::vec2& coord, const glm::vec2 screenPos, const glm::vec2& uv) {
+            vertices.push_back({ coord, screenPos, uv, 0.5f, M_PI_2 });
         }
     };
     
     for (auto prop : _props.stringProps) {
         if (prop.first == "name") {
-            auto label = m_labels->addSpriteLabel(*SpriteStyle::s_processedTile, m_name, { glm::vec2(_point), glm::vec2(_point) }, planeSprite.size);
+            float scale = .5f;
+            auto label = m_labels->addSpriteLabel(*SpriteStyle::s_processedTile, m_name, { glm::vec2(_point), glm::vec2(_point) }, planeSprite.size * scale);
             
             if (label) {
-                Builders::buildQuadAtPoint(label->getTransform().m_screenPosition, planeSprite.size, planeSprite.uvBL, planeSprite.uvTR, builder);
+                Builders::buildQuadAtPoint(label->getTransform().m_screenPosition, planeSprite.size * scale, planeSprite.uvBL, planeSprite.uvTR, builder);
             }
         }
     }

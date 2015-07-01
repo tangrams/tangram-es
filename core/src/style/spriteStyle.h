@@ -16,9 +16,11 @@ protected:
     struct PosUVVertex {
         // Position Data
         glm::vec2 pos;
+        glm::vec2 screenPos;
         // UV Data
         glm::vec2 uv;
         float alpha;
+        float rotation;
     };
 
     virtual void constructVertexLayout() override;
