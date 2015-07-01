@@ -5,7 +5,7 @@
 class SpriteLabel : public Label {
 public:
     
-    SpriteLabel(Label::Transform _transform);
+    SpriteLabel(Label::Transform _transform, glm::vec2& _size);
     
     void pushTransform() override;
     
