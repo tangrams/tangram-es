@@ -4,6 +4,7 @@
 
 GLuint Texture::s_boundTextures[] = { 0 };
 GLuint Texture::s_activeSlot = GL_TEXTURE0;
+int Texture::s_validGeneration = 0;
 
 Texture::Texture(unsigned int _width, unsigned int _height, bool _autoDelete, TextureOptions _options)
 : m_options(_options), m_autoDelete(_autoDelete) {
@@ -12,6 +13,7 @@ Texture::Texture(unsigned int _width, unsigned int _height, bool _autoDelete, Te
     m_dirty = false;
     m_shouldResize = false;
     m_target = GL_TEXTURE_2D;
+    m_generation = -1;
 
     resize(_width, _height);
 }
@@ -24,7 +26,7 @@ Texture::Texture(const std::string& _file, TextureOptions _options)
     unsigned char* pixels;
     int width, height, comp;
 
-    pixels = stbi_load_from_memory(data,size, &width, &height, &comp, STBI_rgb_alpha);
+    pixels = stbi_load_from_memory(data, size, &width, &height, &comp, STBI_rgb_alpha);
 
     resize(width, height);
     setData(reinterpret_cast<GLuint*>(pixels), width * height);
@@ -109,9 +111,22 @@ void Texture::generate(GLuint _textureUnit) {
     
     glTexParameteri(m_target, GL_TEXTURE_WRAP_S, m_options.m_wrapping.m_wraps);
     glTexParameteri(m_target, GL_TEXTURE_WRAP_T, m_options.m_wrapping.m_wrapt);
+
+    m_generation = s_validGeneration;
+}
+
+void Texture::checkValidity(GLuint _textureUnit) {
+
+    if (m_generation != s_validGeneration) {
+        m_dirty = true;
+        m_shouldResize = true;
+        m_glHandle = 0;
+    }
 }
 
 void Texture::update(GLuint _textureUnit) {
+
+    checkValidity(_textureUnit);
 
     if (!m_dirty) {
         return;
@@ -134,22 +149,26 @@ void Texture::update(GLuint _textureUnit) {
     GLuint* data = m_data.size() > 0 ? m_data.data() : nullptr;
 
     // resize or push data
-    if (data || m_shouldResize) {
+    if (m_shouldResize) {
         glTexImage2D(m_target, 0, m_options.m_internalFormat, m_width, m_height, 0, m_options.m_format, GL_UNSIGNED_BYTE, data);
         m_shouldResize = false;
-    }
-
-    // clear cpu data
-    if (data) {
-        m_data.clear();
     }
 
     // process queued sub data updates
     while (m_subData.size() > 0) {
         const TextureSubData* subData = m_subData.front().get();
+        const auto& subDataBytes = *subData->m_data;
 
         glTexSubImage2D(m_target, 0, subData->m_xoff, subData->m_yoff, subData->m_width, subData->m_height,
-                        m_options.m_format, GL_UNSIGNED_BYTE, subData->m_data->data());
+                        m_options.m_format, GL_UNSIGNED_BYTE, subDataBytes.data());
+
+        // update m_data with subdata
+        for (size_t j = 0; j < subData->m_height; j++) {
+            size_t h = j + subData->m_yoff;
+            size_t dpos = h * m_width + subData->m_xoff;
+            size_t spos = j * subData->m_width;
+            std::memcpy(&m_data[dpos], &subDataBytes[spos], subData->m_width * sizeof(GLuint));
+        }
 
         m_subData.pop();
     }
@@ -171,4 +190,15 @@ GLuint Texture::getTextureUnit(GLuint _unit) {
     }
     
     return GL_TEXTURE0 + _unit;
+}
+
+void Texture::invalidateAllTextures() {
+
+    for (GLuint i = 0; i < GL_MAX_COMBINED_TEXTURE_IMAGE_UNITS; ++i) {
+        s_boundTextures[i] = 0;
+    }
+    s_activeSlot = GL_TEXTURE0;
+
+    ++s_validGeneration;
+
 }

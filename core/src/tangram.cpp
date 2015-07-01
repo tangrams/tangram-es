@@ -309,8 +309,6 @@ namespace Tangram {
 
         logMsg("before context destroyed\n");
 
-        // TODO: Save texture data to CPU buffers
-
     }
 
     void afterContextDestroyed() {
@@ -326,8 +324,8 @@ namespace Tangram {
         // Buffer objects are invalidated and re-uploaded the next time they are used
         VboMesh::invalidateAllVBOs();
 
-        // TODO: Restore textures from CPU buffers
-
+        // Texture objects are invalidated and re-uploaded the next time they are updated
+        Texture::invalidateAllTextures();
     }
 
 }
