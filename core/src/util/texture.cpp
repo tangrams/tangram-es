@@ -93,10 +93,12 @@ void Texture::setSubData(const GLuint* _subData, unsigned int _xoff, unsigned in
     std::unique_ptr<std::vector<GLuint>> subData(new std::vector<GLuint>(_subData, _subData + (_width * _height)));
     
     // update m_data with subdata
+    size_t bpp = bytesPerPixel();
+    size_t divisor = sizeof(GLuint) / bpp;
     for (size_t j = 0; j < _height; j++) {
-        size_t dpos = (j + _yoff) * m_width + _xoff;
-        size_t spos = j * _width;
-        std::memcpy(&m_data[dpos], &_subData[spos], _width * sizeof(GLuint));
+        size_t dpos = ((j + _yoff) * m_width + _xoff) / divisor;
+        size_t spos = (j * _width) / divisor;
+        std::memcpy(&m_data[dpos], &_subData[spos], _width * bpp);
     }
 
     m_subData.push(std::unique_ptr<TextureSubData>(new TextureSubData
@@ -177,6 +179,20 @@ void Texture::resize(const unsigned int _width, const unsigned int _height) {
 
     m_shouldResize = true;
     m_dirty = true;
+}
+
+size_t Texture::bytesPerPixel() {
+    switch (m_options.m_internalFormat) {
+        case GL_ALPHA:
+        case GL_LUMINANCE:
+            return 1;
+        case GL_LUMINANCE_ALPHA:
+            return 2;
+        case GL_RGB:
+            return 3;
+        default:
+            return 4;
+    }
 }
 
 GLuint Texture::getTextureUnit(GLuint _unit) {

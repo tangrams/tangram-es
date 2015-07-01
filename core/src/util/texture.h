@@ -102,6 +102,8 @@ private:
         unsigned int m_height;
     };
     
+    size_t bytesPerPixel();
+    
     bool m_autoDelete;
     
     // used to queue the subdata updates, each call of setSubData would be treated in the order that they arrived
