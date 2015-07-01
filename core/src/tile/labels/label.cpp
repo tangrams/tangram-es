@@ -16,17 +16,6 @@ Label::Label(Label::Transform _transform, Type _type) :
 
 Label::~Label() {}
 
-void Label::updateBBoxes() {
-    glm::vec2 t = glm::vec2(cos(m_transform.m_rotation), sin(m_transform.m_rotation));
-    glm::vec2 tperp = glm::vec2(-t.y, t.x);
-    glm::vec2 obbCenter;
-
-    obbCenter = m_transform.m_screenPosition + t * m_dim.x * 0.5f - tperp * (m_dim.y / 8);
-
-    m_obb = isect2d::OBB(obbCenter.x, obbCenter.y, m_transform.m_rotation, m_dim.x, m_dim.y);
-    m_aabb = m_obb.getExtent();
-}
-
 bool Label::updateScreenTransform(const glm::mat4& _mvp, const glm::vec2& _screenSize) {
 
     glm::vec2 screenPosition;

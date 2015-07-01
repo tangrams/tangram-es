@@ -8,4 +8,8 @@ public:
     SpriteLabel(Label::Transform _transform);
     
     void pushTransform() override;
+    
+protected:
+    
+    void updateBBoxes() override;
 };

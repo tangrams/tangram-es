@@ -16,7 +16,12 @@ public:
     void pushTransform() override;
     
 private:
+    
     std::string m_text;
     fsuint m_id;
     std::weak_ptr<TextBuffer> m_textBuffer;
+    
+protected:
+    
+    void updateBBoxes() override;
 };
