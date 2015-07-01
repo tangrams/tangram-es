@@ -37,9 +37,11 @@ bool TextLabel::rasterize(std::shared_ptr<TextBuffer>& _buffer) {
 void TextLabel::pushTransform() {
     if (m_dirty) {
         auto buffer = m_textBuffer.lock();
+        
         if (buffer) {
             buffer->transformID(m_id, m_transform.m_screenPosition.x, m_transform.m_screenPosition.y, m_transform.m_rotation, m_transform.m_alpha);
         }
+        
         m_dirty = false;
     }
 }
