@@ -42,6 +42,12 @@ make osx
 ### Ubuntu Linux ###
 To build on Ubuntu you will again need [GLFW](http://www.glfw.org/) and on linux platforms it's best to compile from source. GLFW provides [instructions for compiling the library](http://www.glfw.org/docs/latest/compile.html). Once you've installed GLFW, build Tangram from the project root using GNU Make:
 
+Install the required curl dev package.
+
+```bash
+sudo apt-get install libcurl4-openssl-dev
+```
+
 ```bash
 make linux
 ```
