@@ -12,19 +12,16 @@
 class Light;
 class MapTile;
 class MapProjection;
-class Material;
-class ShaderProgram;
 class VboMesh;
 class VertexLayout;
 class View;
+class Scene;
 
 enum class LightingType : char {
     none,
     vertex,
     fragment
 };
-
-class Scene;
 
 /* Means of constructing and rendering map geometry
  *

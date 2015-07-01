@@ -1,7 +1,6 @@
 #include "scene.h"
 
 #include "platform.h"
-#include "scene/light.h"
 #include "style/style.h"
 
 Scene::Scene() {

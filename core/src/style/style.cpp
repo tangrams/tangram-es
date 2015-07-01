@@ -2,9 +2,7 @@
 
 #include "scene/scene.h"
 #include "scene/light.h"
-#include "style/material.h"
 #include "tile/mapTile.h"
-#include "util/shaderProgram.h"
 #include "util/vboMesh.h"
 #include "view/view.h"
 
