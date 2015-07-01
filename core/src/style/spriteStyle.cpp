@@ -18,6 +18,7 @@ void SpriteStyle::constructVertexLayout() {
     m_vertexLayout = std::shared_ptr<VertexLayout>(new VertexLayout({
         {"a_position", 2, GL_FLOAT, false, 0},
         {"a_uv", 2, GL_FLOAT, false, 0},
+        {"a_alpha", 1, GL_FLOAT, false, 0},
     }));
 
 }
@@ -41,21 +42,23 @@ void* SpriteStyle::parseStyleParams(const std::string& _layerNameID, const Style
 }
 
 void SpriteStyle::buildPoint(Point& _point, void* _styleParam, Properties& _props, VboMesh& _mesh) const {
-    
     // TODO : make this configurable
     SpriteNode planeSprite = m_spriteAtlas->getSpriteNode("plane");
     std::vector<PosUVVertex> vertices;
     
     SpriteBuilder builder = {
         [&](const glm::vec2& coord, const glm::vec2& uv) {
-            vertices.push_back({ coord, uv });
+            vertices.push_back({ coord, uv, 0.5f });
         }
     };
     
     for (auto prop : _props.stringProps) {
         if (prop.first == "name") {
-            auto l = m_labels->addSpriteLabel(*SpriteStyle::s_processedTile, m_name, { glm::vec2(_point), glm::vec2(_point) });
-            Builders::buildQuadAtPoint(l->getTransform().m_screenPosition, planeSprite.size, planeSprite.uvBL, planeSprite.uvTR, builder);
+            auto label = m_labels->addSpriteLabel(*SpriteStyle::s_processedTile, m_name, { glm::vec2(_point), glm::vec2(_point) });
+            
+            if (label) {
+                Builders::buildQuadAtPoint(label->getTransform().m_screenPosition, planeSprite.size, planeSprite.uvBL, planeSprite.uvTR, builder);
+            }
         }
     }
     
@@ -73,6 +76,7 @@ void SpriteStyle::buildPolygon(Polygon& _polygon, void* _styleParam, Properties&
 
 void SpriteStyle::onBeginBuildTile(MapTile& _tile) const {
 
+    // FIXME: concurrency makes this processed tile unreliable
     SpriteStyle::s_processedTile = &_tile;
 }
 
