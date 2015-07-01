@@ -199,7 +199,6 @@ int main(void) {
         }
     }
     
-    Tangram::teardown();
     glfwTerminate();
     return 0;
 }

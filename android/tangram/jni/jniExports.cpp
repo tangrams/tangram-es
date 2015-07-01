@@ -21,10 +21,6 @@ extern "C" {
         Tangram::render();
     }
 
-    JNIEXPORT void JNICALL Java_com_mapzen_tangram_Tangram_teardown(JNIEnv* jniEnv, jobject obj) {
-        Tangram::teardown();
-    }
-
     JNIEXPORT void JNICALL Java_com_mapzen_tangram_Tangram_onContextDestroyed(JNIEnv* jniEnv, jobject obj) {
         Tangram::onContextDestroyed();
     }

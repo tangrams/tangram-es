@@ -22,9 +22,6 @@ namespace Tangram {
     // Render a new frame of the map view (if needed)
     void render();
 
-    // Release resources and shut down renderer
-    void teardown();
-
     // Set the position of the map view in degrees longitude and latitude
     void setViewPosition(double _lon, double _lat);
 

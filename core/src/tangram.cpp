@@ -297,14 +297,6 @@ namespace Tangram {
 
     }
 
-    void teardown() {
-        // Release resources!
-        logMsg("teardown\n");
-        // m_tileManager.reset();
-        // m_scene.reset();
-        // m_view.reset();
-    }
-
     void onContextDestroyed() {
 
         logMsg("context destroyed\n");

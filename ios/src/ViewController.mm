@@ -183,7 +183,7 @@
 - (void)tearDownGL
 {
     [EAGLContext setCurrentContext:self.context];
-    Tangram::teardown();
+    Tangram::onContextDestroyed();
 }
 
 - (void)viewWillTransitionToSize:(CGSize)size withTransitionCoordinator:(id<UIViewControllerTransitionCoordinator>)coordinator

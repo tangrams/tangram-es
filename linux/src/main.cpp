@@ -177,7 +177,6 @@ int main(void) {
         }
     }
     
-    Tangram::teardown();
     curl_global_cleanup();
     glfwTerminate();
     return 0;
