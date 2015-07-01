@@ -60,7 +60,7 @@ void SpriteStyle::buildPoint(Point& _point, void* _styleParam, Properties& _prop
     
     for (auto prop : _props.stringProps) {
         if (prop.first == "name") {
-            auto label = m_labels->addSpriteLabel(*SpriteStyle::s_processedTile, m_name, { glm::vec2(_point), glm::vec2(_point) });
+            auto label = m_labels->addSpriteLabel(*SpriteStyle::s_processedTile, m_name, { glm::vec2(_point), glm::vec2(_point) }, planeSprite.size);
             
             if (label) {
                 Builders::buildQuadAtPoint(label->getTransform().m_screenPosition, planeSprite.size, planeSprite.uvBL, planeSprite.uvTR, builder);
