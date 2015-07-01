@@ -90,9 +90,14 @@ void Texture::setData(const GLuint* _data, unsigned int _dataSize) {
 
 void Texture::setSubData(const GLuint* _subData, unsigned int _xoff, unsigned int _yoff, unsigned int _width, unsigned int _height) {
 
-    std::unique_ptr<std::vector<GLuint>> subData(new std::vector<GLuint>);
-
-    subData->insert(subData->begin(), _subData, _subData + (_width * _height));
+    std::unique_ptr<std::vector<GLuint>> subData(new std::vector<GLuint>(_subData, _subData + (_width * _height)));
+    
+    // update m_data with subdata
+    for (size_t j = 0; j < _height; j++) {
+        size_t dpos = (j + _yoff) * m_width + _xoff;
+        size_t spos = j * _width;
+        std::memcpy(&m_data[dpos], &_subData[spos], _width * sizeof(GLuint));
+    }
 
     m_subData.push(std::unique_ptr<TextureSubData>(new TextureSubData
         {std::move(subData), _xoff, _yoff, _width, _height}
@@ -132,18 +137,16 @@ void Texture::update(GLuint _textureUnit) {
         return;
     }
 
-    if (m_glHandle == 0) { // textures hasn't been initialized yet, generate it
+    if (m_glHandle == 0) { // texture hasn't been initialized yet, generate it
         
         generate(_textureUnit);
         
-        // if no data make sure texture is 0-filled at creation (useful for transform lookup)
-        if (m_data.size() == 0) {
-            m_data.resize(m_width * m_height);
-            std::memset(m_data.data(), 0, m_data.size());
-        }
+        if (m_data.size() == 0) { m_data.assign(m_width * m_height, 0); }
+
     } else {
         
         bind(_textureUnit);
+
     }
 
     GLuint* data = m_data.size() > 0 ? m_data.data() : nullptr;
@@ -161,14 +164,6 @@ void Texture::update(GLuint _textureUnit) {
 
         glTexSubImage2D(m_target, 0, subData->m_xoff, subData->m_yoff, subData->m_width, subData->m_height,
                         m_options.m_format, GL_UNSIGNED_BYTE, subDataBytes.data());
-
-        // update m_data with subdata
-        for (size_t j = 0; j < subData->m_height; j++) {
-            size_t h = j + subData->m_yoff;
-            size_t dpos = h * m_width + subData->m_xoff;
-            size_t spos = j * subData->m_width;
-            std::memcpy(&m_data[dpos], &subDataBytes[spos], subData->m_width * sizeof(GLuint));
-        }
 
         m_subData.pop();
     }
