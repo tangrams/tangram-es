@@ -1,6 +1,6 @@
 #include "spriteLabel.h"
 
-SpriteLabel::SpriteLabel(Label::Transform _transform, glm::vec2& _size) : Label(_transform, Label::Type::POINT) {
+SpriteLabel::SpriteLabel(Label::Transform _transform, const glm::vec2& _size, const glm::vec2& _offset) : Label(_transform, Label::Type::POINT), m_offset(_offset) {
     m_dim = _size;
 }
 
@@ -9,7 +9,7 @@ void SpriteLabel::pushTransform() {
 }
 
 void SpriteLabel::updateBBoxes() {
-    glm::vec2 sp = m_transform.m_screenPosition;
+    glm::vec2 sp = m_transform.m_screenPosition + m_offset;
     m_obb = isect2d::OBB(sp.x, sp.y, m_transform.m_rotation, m_dim.x, m_dim.y);
     m_aabb = m_obb.getExtent();
 }

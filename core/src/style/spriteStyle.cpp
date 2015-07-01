@@ -57,10 +57,12 @@ void SpriteStyle::buildPoint(Point& _point, void* _styleParam, Properties& _prop
     for (auto prop : _props.stringProps) {
         if (prop.first == "name") {
             float scale = .5f;
-            auto label = m_labels->addSpriteLabel(*SpriteStyle::s_processedTile, m_name, { glm::vec2(_point), glm::vec2(_point) }, planeSprite.size * scale);
+            glm::vec2 offset = {0.f, -10.f};
+            
+            auto label = m_labels->addSpriteLabel(*SpriteStyle::s_processedTile, m_name, { glm::vec2(_point), glm::vec2(_point) }, planeSprite.size * scale, offset);
             
             if (label) {
-                Builders::buildQuadAtPoint(label->getTransform().m_screenPosition, planeSprite.size * scale, planeSprite.uvBL, planeSprite.uvTR, builder);
+                Builders::buildQuadAtPoint(label->getTransform().m_screenPosition + offset, planeSprite.size * scale, planeSprite.uvBL, planeSprite.uvTR, builder);
             }
         }
     }

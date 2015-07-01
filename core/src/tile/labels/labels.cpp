@@ -53,12 +53,12 @@ void Labels::addLabel(MapTile& _tile, const std::string& _styleName, std::shared
     }
 }
 
-std::shared_ptr<Label> Labels::addSpriteLabel(MapTile& _tile, const std::string& _styleName, Label::Transform _transform, glm::vec2 _size) {
+std::shared_ptr<Label> Labels::addSpriteLabel(MapTile& _tile, const std::string& _styleName, Label::Transform _transform, const glm::vec2& _size, const glm::vec2& _offset) {
     if ((m_currentZoom - _tile.getID().z) > LODDiscardFunc(View::s_maxZoom, m_currentZoom)) {
         return nullptr;
     }
     
-    auto label = std::shared_ptr<Label>(new SpriteLabel(_transform, _size));
+    auto label = std::shared_ptr<Label>(new SpriteLabel(_transform, _size, _offset));
     addLabel(_tile, _styleName, label);
     
     return label;
