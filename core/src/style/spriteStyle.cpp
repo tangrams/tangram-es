@@ -37,7 +37,8 @@ void SpriteStyle::constructShaderProgram() {
     std::string vertShaderSrcStr = stringFromResource("sprite.vs");
 
     m_shaderProgram->setSourceStrings(fragShaderSrcStr, vertShaderSrcStr);
-
+    
+    // TODO : load this from stylesheet
     m_spriteAtlas = std::unique_ptr<SpriteAtlas>(new SpriteAtlas("poi_icons_32.png"));
     
     m_spriteAtlas->addSpriteNode("plane", {0, 0}, {32, 32});
@@ -51,7 +52,7 @@ void* SpriteStyle::parseStyleParams(const std::string& _layerNameID, const Style
 
 void SpriteStyle::buildPoint(Point& _point, void* _styleParam, Properties& _props, VboMesh& _mesh) const {
     // TODO : make this configurable
-    SpriteNode planeSprite = m_spriteAtlas->getSpriteNode("plane");
+    SpriteNode planeSprite = m_spriteAtlas->getSpriteNode("tree");
     std::vector<PosUVVertex> vertices;
     
     SpriteBuilder builder = {
@@ -60,15 +61,17 @@ void SpriteStyle::buildPoint(Point& _point, void* _styleParam, Properties& _prop
         }
     };
     
+    // TODO : configure this
+    float spriteScale = .5f;
+    glm::vec2 offset = {0.f, 10.f};
+    
     for (auto prop : _props.stringProps) {
         if (prop.first == "name") {
-            float scale = .5f;
-            glm::vec2 offset = {0.f, -10.f};
-            
-            auto label = m_labels->addSpriteLabel(*SpriteStyle::s_processedTile, m_name, { glm::vec2(_point), glm::vec2(_point) }, planeSprite.size * scale, offset);
+            Label::Transform t = {glm::vec2(_point), glm::vec2(_point)};
+            auto label = m_labels->addSpriteLabel(*SpriteStyle::s_processedTile, m_name, t, planeSprite.size * spriteScale, offset);
             
             if (label) {
-                Builders::buildQuadAtPoint(label->getTransform().m_screenPosition + offset, planeSprite.size * scale, planeSprite.uvBL, planeSprite.uvTR, builder);
+                Builders::buildQuadAtPoint(label->getTransform().m_screenPosition + offset, planeSprite.size * spriteScale, planeSprite.uvBL, planeSprite.uvTR, builder);
             }
         }
     }

@@ -5,11 +5,11 @@ precision mediump float;
 #define LOWP
 #endif
 
-attribute vec2 a_position;
-attribute vec2 a_screenPosition;
+attribute LOWP vec2 a_position;
+attribute LOWP vec2 a_screenPosition;
 attribute vec2 a_uvs;
-attribute float a_alpha;
-attribute float a_rotation;
+attribute LOWP float a_alpha;
+attribute LOWP float a_rotation;
 
 uniform mat4 u_proj;
 
