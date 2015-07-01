@@ -305,15 +305,9 @@ namespace Tangram {
         // m_view.reset();
     }
 
-    void beforeContextDestroyed() {
+    void onContextDestroyed() {
 
-        logMsg("before context destroyed\n");
-
-    }
-
-    void afterContextDestroyed() {
-
-        logMsg("after context destroyed\n");
+        logMsg("context destroyed\n");
 
         // The OpenGL context has been destroyed since the last time resources were created,
         // so we invalidate all data that depends on OpenGL object handles.

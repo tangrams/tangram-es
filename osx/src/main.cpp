@@ -129,7 +129,7 @@ void init_main_window() {
     // Destroy old window
     if (main_window != nullptr) {
         glfwDestroyWindow(main_window);
-        Tangram::afterContextDestroyed();
+        Tangram::onContextDestroyed();
     }
 
     // Create a windowed mode window and its OpenGL context

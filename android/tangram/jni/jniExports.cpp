@@ -25,12 +25,8 @@ extern "C" {
         Tangram::teardown();
     }
 
-    JNIEXPORT void JNICALL Java_com_mapzen_tangram_Tangram_beforeContextDestroyed(JNIEnv* jniEnv, jobject obj) {
-        Tangram::beforeContextDestroyed();
-    }
-
-    JNIEXPORT void JNICALL Java_com_mapzen_tangram_Tangram_afterContextDestroyed(JNIEnv* jniEnv, jobject obj) {
-        Tangram::afterContextDestroyed();
+    JNIEXPORT void JNICALL Java_com_mapzen_tangram_Tangram_onContextDestroyed(JNIEnv* jniEnv, jobject obj) {
+        Tangram::onContextDestroyed();
     }
 
     JNIEXPORT void JNICALL Java_com_mapzen_tangram_Tangram_setPixelScale(JNIEnv* jniEnv, jobject obj, jfloat scale) {

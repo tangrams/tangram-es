@@ -38,9 +38,7 @@ namespace Tangram {
     float getViewZoom();
 
     // Invalidate and re-create all OpenGL resources
-    void beforeContextDestroyed();
-
-    void afterContextDestroyed();
+    void onContextDestroyed();
 
     // Set the ratio of hardware pixels to logical pixels (defaults to 1.0)
     void setPixelScale(float _pixelsPerPoint);
