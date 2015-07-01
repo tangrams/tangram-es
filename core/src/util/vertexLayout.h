@@ -25,7 +25,7 @@ public:
 
     virtual ~VertexLayout();
 
-    void enable(const std::shared_ptr<ShaderProgram> _program, size_t byteOffset);
+    void enable(ShaderProgram& _program, size_t byteOffset, void* _ptr = nullptr);
 
     size_t getStride() const { return m_stride; };
 

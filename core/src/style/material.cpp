@@ -78,6 +78,7 @@ std::string mappingTypeToString(MappingType type) {
         case MappingType::planar:    return "PLANAR";
         case MappingType::triplanar: return "TRIPLANAR";
         case MappingType::spheremap: return "SPHEREMAP";
+        default:                     return "";
     }
 }
 

@@ -68,6 +68,8 @@ public:
 
     void setScreenSize(int _width, int _height) { m_screenSize = glm::vec2(_width, _height); }
 
+    void drawDebug();
+
 private:
 
     int LODDiscardFunc(float _maxZoom, float _zoom);

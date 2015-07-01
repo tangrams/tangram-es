@@ -171,6 +171,8 @@ namespace Tangram {
 
         m_skybox->draw(*m_view);
 
+        m_labels->drawDebug();
+
         while (Error::hadGlError("Tangram::render()")) {}
     }
 
