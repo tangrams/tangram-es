@@ -56,7 +56,7 @@ void TextureCube::load(const std::string& _file) {
 
 void TextureCube::update(GLuint _textureUnit) {
 
-    checkValidity(_textureUnit);
+    checkValidity();
 
     if (m_glHandle != 0 || m_faces.size() == 0) {
         return;

@@ -120,7 +120,7 @@ void Texture::generate(GLuint _textureUnit) {
     m_generation = s_validGeneration;
 }
 
-void Texture::checkValidity(GLuint _textureUnit) {
+void Texture::checkValidity() {
 
     if (m_generation != s_validGeneration) {
         m_dirty = true;
@@ -131,7 +131,7 @@ void Texture::checkValidity(GLuint _textureUnit) {
 
 void Texture::update(GLuint _textureUnit) {
 
-    checkValidity(_textureUnit);
+    checkValidity();
 
     if (!m_dirty) {
         return;

@@ -73,7 +73,7 @@ public:
 protected:
     
     void generate(GLuint _textureUnit);
-    void checkValidity(GLuint _textureUnit);
+    void checkValidity();
 
     TextureOptions m_options;
     std::vector<GLuint> m_data;
