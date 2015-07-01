@@ -8,14 +8,7 @@
 #include "style/style.h"
 #include "scene/scene.h"
 
-#if defined(PLATFORM_LINUX) || defined(PLATFORM_RPI) || defined(PLATFORM_ANDROID)
-#include <pthread.h>
-#include <unistd.h>
-#include <sys/resource.h>
-#include <sys/syscall.h>
-
 #define WORKER_NICENESS 10
-#endif
 
 TileWorker::TileWorker(TileManager& _tileManager, int _num_worker)
     : m_tileManager(_tileManager) {
@@ -34,19 +27,7 @@ TileWorker::~TileWorker(){
 
 void TileWorker::run() {
 
-#if defined(PLATFORM_LINUX) || defined(PLATFORM_RPI) || defined(PLATFORM_ANDROID)
-#if defined(PLATFORM_ANDROID)
-    int  tid = gettid();
-#else
-    int tid = syscall(SYS_gettid);
-#endif
-    int  p1 = getpriority(PRIO_PROCESS, tid);
-
-    setpriority(PRIO_PROCESS, tid, WORKER_NICENESS);
-
-    int  p2 = getpriority(PRIO_PROCESS, tid);
-    logMsg("worker niceness: %d -> %d\n", p1, p2);
-#endif
+    setCurrentThreadPriority(WORKER_NICENESS);
 
     while (true) {
 

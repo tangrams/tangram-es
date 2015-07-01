@@ -11,6 +11,10 @@
 #include "platform.h"
 #include "gl.h"
 
+#include <unistd.h>
+#include <sys/resource.h>
+#include <sys/syscall.h>
+
 #define NUM_WORKERS 3
 
 static bool s_isContinuousRendering = false;
@@ -140,6 +144,16 @@ void cancelUrlRequest(const std::string& _url) {
             itr++;
         }
     }
+}
+
+void setCurrentThreadPriority(int priority){
+    int tid = syscall(SYS_gettid);
+    //int  p1 = getpriority(PRIO_PROCESS, tid);
+
+    setpriority(PRIO_PROCESS, tid, priority);
+
+    //int  p2 = getpriority(PRIO_PROCESS, tid);
+    //logMsg("set niceness: %d -> %d\n", p1, p2);
 }
 
 #endif
