@@ -18,6 +18,7 @@ protected:
         glm::vec2 pos;
         // UV Data
         glm::vec2 uv;
+        float alpha;
     };
 
     virtual void constructVertexLayout() override;
