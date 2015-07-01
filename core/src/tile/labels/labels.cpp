@@ -16,24 +16,26 @@ int Labels::LODDiscardFunc(float _maxZoom, float _zoom) {
 }
 
 std::shared_ptr<Label> Labels::addTextLabel(MapTile& _tile, const std::string& _styleName, Label::Transform _transform, std::string _text, Label::Type _type) {
-    auto currentBuffer = m_ftContext->getCurrentBuffer();
-
+    // discard based on level of detail
     if ((m_currentZoom - _tile.getID().z) > LODDiscardFunc(View::s_maxZoom, m_currentZoom)) {
         return nullptr;
     }
-
+    
+    auto currentBuffer = m_ftContext->getCurrentBuffer();
+    
     if (currentBuffer) {
         fsuint textID = currentBuffer->genTextID();
-        std::shared_ptr<TextLabel> l(new TextLabel(_transform, _text, textID, _type, currentBuffer));
+        std::shared_ptr<TextLabel> label(new TextLabel(_transform, _text, textID, _type, currentBuffer));
 
-        if (!l->rasterize(currentBuffer)) {
-            l.reset();
+        // raterize the text label
+        if (!label->rasterize(currentBuffer)) {
+            label.reset();
             return nullptr;
         }
         
-        addLabel(_tile, _styleName, std::dynamic_pointer_cast<Label>(l));
+        addLabel(_tile, _styleName, std::dynamic_pointer_cast<Label>(label));
 
-        return l;
+        return label;
     }
 
     return nullptr;
@@ -56,10 +58,10 @@ std::shared_ptr<Label> Labels::addSpriteLabel(MapTile& _tile, const std::string&
         return nullptr;
     }
     
-    auto l = std::shared_ptr<Label>(new SpriteLabel(_transform));
-    addLabel(_tile, _styleName, l);
+    auto label = std::shared_ptr<Label>(new SpriteLabel(_transform));
+    addLabel(_tile, _styleName, label);
     
-    return l;
+    return label;
 }
 
 void Labels::updateOcclusions() {
@@ -139,17 +141,7 @@ void Labels::drawDebug() {
         auto label = labelUnit.getWeakLabel();
 
         if (label != nullptr && label->canOcclude()) {
-            isect2d::OBB obb = label->getOBB();
-            const isect2d::Vec2* quad = obb.getQuad();
-
-            glm::vec2 polygon[4] = {
-                {quad[0].x, quad[0].y},
-                {quad[1].x, quad[1].y},
-                {quad[2].x, quad[2].y},
-                {quad[3].x, quad[3].y}
-            };
-
-            Primitives::drawPoly(polygon, 4, {m_view->getWidth(), m_view->getHeight()});
+            Primitives::drawPoly(reinterpret_cast<const glm::vec2*>(label->getOBB().getQuad()), 4, {m_view->getWidth(), m_view->getHeight()});
         }
     }
     
