@@ -350,14 +350,14 @@ void Builders::buildOutline(const Line& _line, PolyLineBuilder& _ctx) {
     
 }
 
-void Builders::buildQuadAtPoint(const glm::vec2& _screenOrigin, const glm::vec2& _size, const glm::vec2& _uvBL, const glm::vec2& _uvTR, SpriteBuilder& _ctx) {
+void Builders::buildQuadAtPoint(const glm::vec2& _screenPosition, const glm::vec2& _size, const glm::vec2& _uvBL, const glm::vec2& _uvTR, SpriteBuilder& _ctx) {
     float halfWidth = _size.x * .5f;
     float halfHeight = _size.y * .5f;
     
-    _ctx.addVertex(_screenOrigin + glm::vec2(-halfWidth, -halfHeight), {_uvBL.x, _uvBL.y});
-    _ctx.addVertex(_screenOrigin + glm::vec2(-halfWidth, halfHeight), {_uvBL.x, _uvTR.y});
-    _ctx.addVertex(_screenOrigin + glm::vec2(halfWidth, -halfHeight), {_uvTR.x, _uvBL.y});
-    _ctx.addVertex(_screenOrigin + glm::vec2(halfWidth, halfHeight), {_uvTR.x, _uvTR.y});
+    _ctx.addVertex(glm::vec2(-halfWidth, -halfHeight), _screenPosition, {_uvBL.x, _uvBL.y});
+    _ctx.addVertex(glm::vec2(-halfWidth, halfHeight), _screenPosition, {_uvBL.x, _uvTR.y});
+    _ctx.addVertex(glm::vec2(halfWidth, -halfHeight), _screenPosition, {_uvTR.x, _uvBL.y});
+    _ctx.addVertex(glm::vec2(halfWidth, halfHeight), _screenPosition, {_uvTR.x, _uvTR.y});
 
     _ctx.indices.push_back(_ctx.numVerts + 2);
     _ctx.indices.push_back(_ctx.numVerts + 0);
