@@ -122,7 +122,7 @@ private:
     /*
      *  Once a visible tile finishes loading and is added to m_tileSet, all its proxy(ies) MapTiles are removed
      */
-    void cleanProxyTiles(MapTile& _tile);
+    void clearProxyTiles(MapTile& _tile);
 
     bool setTileState(MapTile& tile, TileState state);
 

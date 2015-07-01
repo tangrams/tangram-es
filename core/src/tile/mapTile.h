@@ -113,6 +113,14 @@ public:
       return false;
     }
 
+    bool unsetProxy(ProxyID id) {
+      if ((m_proxies & id) != 0) {
+        m_proxies &= ~id;
+        return true;
+      }
+      return false;
+    }
+
     bool isCanceled() const {
         return m_state == TileState::canceled;
     }
@@ -121,10 +129,20 @@ public:
         return m_state == TileState::ready;
     }
 
+    bool isVisible() const {
+        return m_visible;
+    }
+
+    void setVisible(bool _visible) {
+         m_visible = _visible;
+    }
+
 private:
 
     const TileID m_id;
-    
+
+    const MapProjection* m_projection = nullptr;
+
     /*
      * A Counter for number of tiles this tile acts a proxy for
      */
@@ -132,11 +150,10 @@ private:
 
     uint8_t m_proxies = 0;
 
-  
-    const MapProjection* m_projection = nullptr;
-    
+    bool m_visible;
+
     float m_scale = 1;
-    
+
     float m_inverseScale = 1;
 
     glm::dvec2 m_tileOrigin; // Center of the tile in 2D projection space in meters (e.g. mercator meters)
