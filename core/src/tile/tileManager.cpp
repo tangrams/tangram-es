@@ -147,9 +147,9 @@ void TileManager::updateTileSet() {
 
     std::vector<TileID> removeTiles;
 
-    if (m_view->changedOnLastUpdate() || m_tileSetChanged) {
+    glm::dvec2 viewCenter(m_view->getPosition().x, -m_view->getPosition().y);
 
-        glm::dvec2 viewCenter(m_view->getPosition().x, -m_view->getPosition().y);
+    if (m_view->changedOnLastUpdate() || m_tileSetChanged) {
 
         // Loop over visibleTiles and add any needed tiles to tileSet
         auto setTilesIter = m_tileSet.begin();
@@ -196,6 +196,14 @@ void TileManager::updateTileSet() {
                 removeTiles.push_back(tile->getID());
 
             ++setTilesIter;
+        }
+    }
+
+    {
+        for (auto& entry : m_tileSet) {
+            auto& tile = entry.second;
+            auto tileCenter = m_view->getMapProjection().TileCenter(tile->getID());
+            tile->setPriority(glm::length2(tileCenter - viewCenter));
         }
     }
 

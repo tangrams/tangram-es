@@ -9,6 +9,7 @@
 #include <string>
 #include <unordered_map>
 #include <vector>
+#include <atomic>
 
 class Label;
 class Labels;
@@ -133,8 +134,8 @@ public:
         return m_visible;
     }
 
-    void setVisible(bool _visible) {
-         m_visible = _visible;
+    double getPriority() const {
+        return m_priority.load();
     }
 
 private:
@@ -156,6 +157,8 @@ private:
 
     float m_inverseScale = 1;
 
+    std::atomic<double> m_priority;
+
     glm::dvec2 m_tileOrigin; // Center of the tile in 2D projection space in meters (e.g. mercator meters)
 
     glm::mat4 m_modelMatrix; // Matrix relating tile-local coordinates to global projection space coordinates;
@@ -175,8 +178,16 @@ private:
         return m_state;
     }
 
-    void setState(TileState state) {
-      m_state = state;
+    void setState(TileState _state) {
+      m_state = _state;
+    }
+
+    void setPriority(double _priority) {
+      m_priority = _priority;
+    }
+
+    void setVisible(bool _visible) {
+         m_visible = _visible;
     }
 
 };

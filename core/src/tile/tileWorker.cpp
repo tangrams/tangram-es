@@ -8,6 +8,8 @@
 #include "style/style.h"
 #include "scene/scene.h"
 
+#include <algorithm>
+
 #define WORKER_NICENESS 10
 
 TileWorker::TileWorker(TileManager& _tileManager, int _num_worker)
@@ -34,16 +36,39 @@ void TileWorker::run() {
         TileTask task;
         {
             std::unique_lock<std::mutex> lock(m_mutex);
+
             m_condition.wait(lock, [&, this]{
                     return !m_running || !m_queue.empty();
                 });
 
-            if (!m_running && m_queue.empty())
+            // Check if thread should stop
+            if (!m_running) {
                 break;
+            }
 
-            task = m_queue.front();
-            m_queue.pop_front();
+            // Remove all canceled tasks
+            std::remove_if(m_queue.begin(), m_queue.end(),
+                [](const TileTask& a){
+                    return a->tile->isCanceled();
+                });
+
+            if (m_queue.empty()) {
+                continue;
+            }
+
+            // Pop highest priority tile from queue
+            auto it = std::min_element(m_queue.begin(), m_queue.end(),
+                [](const TileTask& a, const TileTask& b) {
+                    if (a->tile->isVisible() != b->tile->isVisible())
+                        return a->tile->isVisible();
+
+                    return a->tile->getPriority() < b->tile->getPriority();
+                });
+
+            task = *it;
+            m_queue.erase(it);
         }
+
         if (task->tile->isCanceled())
             continue;
 
@@ -67,10 +92,10 @@ void TileWorker::run() {
             // Process data for all styles
             for (const auto& style : m_tileManager.getScene()->getStyles()) {
                 if (!m_running) {
-                    continue;
+                    break;
                 }
                 if(tile->isCanceled()) {
-                    continue;
+                    break;
                 }
                 style->addData(*tileData, *tile);
             }
