@@ -43,15 +43,15 @@ public class Tangram extends GLSurfaceView implements Renderer, OnTouchListener,
         System.loadLibrary("tangram");
     }
 
-    public native void setPosition(double lon, double lat);
-    public native double getPositionX();
-    public native double getPositionY();
-    public native void setZoom(float zoom);
-    public native float getZoom();
-    public native void setRotation(float radians);
-    public native float getRotation();
-    public native void setTilt(float radians);
-    public native float getTilt();
+    public native void   setMapPosition(double lon, double lat);
+    public native double getMapPositionX();
+    public native double getMapPositionY();
+    public native void   setMapZoom(float zoom);
+    public native float  getMapZoom();
+    public native void   setMapRotation(float radians);
+    public native float  getMapRotation();
+    public native void   setMapTilt(float radians);
+    public native float  getMapTilt();
 
     private native void init(Tangram instance, AssetManager assetManager);
     private native void resize(int width, int height);
