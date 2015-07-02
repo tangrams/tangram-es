@@ -22,7 +22,8 @@ public:
     std::unique_ptr<TileID> m_tileID;
     std::string m_styleName;
 
-    LabelUnit(std::shared_ptr<Label>& _label, std::unique_ptr<TileID>& _tileID, const std::string& _styleName) : m_label(std::move(_label)), m_tileID(std::move(_tileID)), m_styleName(_styleName) {}
+    LabelUnit(std::shared_ptr<Label>& _label, std::unique_ptr<TileID>& _tileID, const std::string& _styleName) :
+        m_label(std::move(_label)), m_tileID(std::move(_tileID)), m_styleName(_styleName) {}
 
     LabelUnit(LabelUnit&& _other) : m_label(std::move(_other.m_label)), m_tileID(std::move(_other.m_tileID)), m_styleName(_other.m_styleName) {}
 
@@ -63,7 +64,8 @@ public:
      * Creates a sprite slabel for and associate it with the current processed <MapTile> TileID for a specific syle name
      * Returns the created labe
      */
-    std::shared_ptr<Label> addSpriteLabel(MapTile& _tile, const std::string& _styleName, Label::Transform _transform, const glm::vec2& _size, const glm::vec2& _offset);
+    std::shared_ptr<Label> addSpriteLabel(MapTile& _tile, const std::string& _styleName, Label::Transform _transform, const glm::vec2& _size,
+                                          const glm::vec2& _offset, SpriteLabel::AttributeOffsets _attribOffsets);
 
     void setFontContext(std::shared_ptr<FontContext> _ftContext) { m_ftContext = _ftContext; }
 

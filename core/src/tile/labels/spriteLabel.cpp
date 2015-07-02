@@ -1,6 +1,10 @@
 #include "spriteLabel.h"
 
-SpriteLabel::SpriteLabel(Label::Transform _transform, const glm::vec2& _size, const glm::vec2& _offset) : Label(_transform, Label::Type::point), m_offset(_offset) {
+SpriteLabel::SpriteLabel(Label::Transform _transform, const glm::vec2& _size, const glm::vec2& _offset, AttributeOffsets _attribOffsets) :
+    Label(_transform, Label::Type::point),
+    m_offset(_offset),
+    m_attribOffsets(_attribOffsets) {
+
     m_dim = _size;
 }
 

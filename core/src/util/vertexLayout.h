@@ -27,7 +27,9 @@ public:
 
     void enable(ShaderProgram& _program, size_t byteOffset, void* _ptr = nullptr);
 
-    size_t getStride() const { return m_stride; };
+    GLint getStride() const { return m_stride; };
+    
+    GLvoid* getOffset(std::string _attribName);
 
 private:
 
