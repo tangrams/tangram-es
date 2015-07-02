@@ -40,6 +40,17 @@ VertexLayout::~VertexLayout() {
 
 }
 
+GLvoid* VertexLayout::getOffset(std::string _attribName) {
+    
+    for (auto& attrib : m_attribs) {
+        if (attrib.name == _attribName) {
+            return attrib.offset;
+        }
+    }
+    
+    return NULL;
+}
+
 void VertexLayout::enable(ShaderProgram& _program, size_t byteOffset, void* _ptr) {
 
     GLuint glProgram = _program.getGlProgram();
