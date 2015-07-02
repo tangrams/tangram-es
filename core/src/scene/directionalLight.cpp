@@ -1,5 +1,9 @@
 #include "directionalLight.h"
+
 #include "glm/gtx/string_cast.hpp"
+#include "platform.h"
+#include "util/shaderProgram.h"
+#include "view/view.h"
 
 std::string DirectionalLight::s_classBlock;
 std::string DirectionalLight::s_typeName = "DirectionalLight";

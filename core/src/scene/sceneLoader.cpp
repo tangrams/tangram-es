@@ -7,6 +7,7 @@
 #include "view.h"
 #include "lights.h"
 #include "geoJsonSource.h"
+#include "material.h"
 #include "mvtSource.h"
 #include "polygonStyle.h"
 #include "polylineStyle.h"
@@ -14,6 +15,7 @@
 #include "debugStyle.h"
 #include "debugTextStyle.h"
 #include "filters.h"
+#include "texture.h"
 
 #include "yaml-cpp/yaml.h"
 

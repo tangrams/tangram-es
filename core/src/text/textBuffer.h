@@ -1,8 +1,13 @@
 #pragma once
 
-#include "texture.h"
+#include "gl.h"
 #include "glfontstash.h"
-#include "util/vboMesh.h"
+#include "glm/vec4.hpp"
+
+#include <memory>
+
+class Texture;
+class VboMesh;
 
 /* 
  * This class represents a text buffer, each text buffer has several text ids

@@ -1,30 +1,27 @@
 #pragma once
 
+#include "data/tileData.h"
+#include "material.h"
+#include "gl.h"
+#include "styleParamMap.h"
+#include "util/shaderProgram.h"
+#include <memory>
 #include <string>
 #include <vector>
 
-#include "data/tileData.h"
-#include "gl.h"
-#include "platform.h"
-#include "style/material.h"
-#include "scene/light.h"
-#include "tile/mapTile.h"
-#include "util/vertexLayout.h"
-#include "util/shaderProgram.h"
-#include "util/mapProjection.h"
-#include "util/builders.h"
-#include "view/view.h"
-#include "styleParamMap.h"
-#include "csscolorparser.hpp"
-
+class Light;
+class MapTile;
+class MapProjection;
+class VboMesh;
+class VertexLayout;
+class View;
+class Scene;
 
 enum class LightingType : char {
     none,
     vertex,
     fragment
 };
-
-class Scene;
 
 /* Means of constructing and rendering map geometry
  *

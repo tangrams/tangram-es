@@ -1,5 +1,8 @@
 #include "textBuffer.h"
 
+#include "util/texture.h"
+#include "util/vboMesh.h"
+
 TextBuffer::TextBuffer(FONScontext* _fsContext) : m_fsContext(_fsContext) {
     m_dirty = false;
 }

@@ -1,7 +1,8 @@
 #include "polygonStyle.h"
-#include "util/builders.h"
-#include "roadLayers.h"
+
 #include "tangram.h"
+#include "util/builders.h"
+#include "util/shaderProgram.h"
 
 PolygonStyle::PolygonStyle(std::string _name, GLenum _drawMode) : Style(_name, _drawMode) {
 }

@@ -1,5 +1,6 @@
 #include "material.h"
 
+#include "platform.h"
 #include "shaderProgram.h"
 #include "texture.h"
 

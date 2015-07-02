@@ -1,6 +1,13 @@
 #include "style.h"
+
 #include "scene/scene.h"
+#include "scene/light.h"
+#include "tile/mapTile.h"
 #include "util/vboMesh.h"
+#include "view/view.h"
+
+#include "csscolorparser.hpp"
+
 #include <sstream>
 
 Style::Style(std::string _name, GLenum _drawMode) : m_name(_name), m_drawMode(_drawMode) {

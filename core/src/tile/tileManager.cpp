@@ -1,9 +1,11 @@
 #include "tileManager.h"
+
+#include "data/dataSource.h"
+#include "platform.h"
 #include "scene/scene.h"
 #include "tile/mapTile.h"
 #include "view/view.h"
 
-#include <chrono>
 #include <algorithm>
 
 TileManager::TileManager() {
@@ -33,6 +35,10 @@ TileManager::~TileManager() {
     }
     m_dataSources.clear();
     m_tileSet.clear();
+}
+
+void TileManager::addDataSource(std::unique_ptr<DataSource> _source) { 
+    m_dataSources.push_back(std::move(_source));
 }
 
 void TileManager::addToWorkerQueue(std::vector<char>&& _rawData, const TileID& _tileId, DataSource* _source) {

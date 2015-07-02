@@ -1,4 +1,8 @@
 #include "skybox.h"
+#include "shaderProgram.h"
+#include "textureCube.h"
+#include "view/view.h"
+#include "glm/gtc/type_ptr.hpp"
 
 Skybox::Skybox(std::string _file) : m_file(_file) {}
 

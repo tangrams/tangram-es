@@ -3,6 +3,7 @@
 #include "tile/mapTile.h"
 #include "text/fontContext.h"
 #include "util/primitives.h"
+#include "view/view.h"
 
 Labels::Labels() {}
 
@@ -118,7 +119,7 @@ void Labels::drawDebug() {
     if (!Tangram::getDebugFlag(Tangram::DebugFlags::LABELS)) {
         return;
     }
-    
+
     for(size_t i = 0; i < m_labelUnits.size(); i++) {
         auto& labelUnit = m_labelUnits[i];
         auto label = labelUnit.getWeakLabel();
@@ -137,12 +138,12 @@ void Labels::drawDebug() {
             Primitives::drawPoly(polygon, 4, {m_view->getWidth(), m_view->getHeight()});
         }
     }
-    
+
     glm::vec2 split(4, 4);
     glm::vec2 res(m_view->getWidth(), m_view->getHeight());
     const short xpad = short(ceilf(res.x / split.x));
     const short ypad = short(ceilf(res.y / split.y));
-    
+
     short x = 0, y = 0;
     for (int j = 0; j < split.y; ++j) {
         for (int i = 0; i < split.x; ++i) {

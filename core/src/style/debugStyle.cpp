@@ -1,6 +1,8 @@
 #include "debugStyle.h"
 
 #include "tangram.h"
+#include "tile/mapTile.h"
+#include "util/shaderProgram.h"
 
 #include <vector>
 #include <memory>

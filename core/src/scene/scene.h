@@ -1,11 +1,13 @@
 #pragma once
 
-#include <vector>
+#include "scene/light.h"
 #include <memory>
+#include <string>
+#include <vector>
 #include <unordered_map>
 
-#include "style/style.h"
-#include "scene/light.h"
+class Style;
+class Texture;
 
 /* Singleton container of <Style> information
  *

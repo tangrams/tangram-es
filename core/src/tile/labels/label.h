@@ -1,8 +1,11 @@
 #pragma once
 
-#include "glm/glm.hpp"
-#include "text/textBuffer.h"
+#include "glm/vec2.hpp"
+#include "glm/mat4x4.hpp"
+#include <climits> // needed in aabb.h
 #include "isect2d.h"
+#include "text/textBuffer.h"
+
 #include <string>
 
 struct FadeEffect {

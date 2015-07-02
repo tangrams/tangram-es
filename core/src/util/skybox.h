@@ -1,12 +1,13 @@
 #pragma once
 
+#include "util/typedMesh.h"
+
 #include <string>
 #include <memory>
-#include "util/textureCube.h"
-#include "util/shaderProgram.h"
-#include "util/typedMesh.h"
-#include "view/view.h"
-#include "glm/gtc/type_ptr.hpp"
+
+class View;
+class ShaderProgram;
+class Texture;
 
 class Skybox {
 

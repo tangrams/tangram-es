@@ -2,11 +2,9 @@
  * Reference used for implementation: http://www.maptiler.org/google-maps-coordinates-tile-bounds-projection/
  */
 
-#include <cmath>
-#include <iostream>
-#include <cstdio>
-
 #include "mapProjection.h"
+
+#include <cmath>
 
 MercatorProjection::MercatorProjection(int _tileSize) : MapProjection(ProjectionType::mercator), m_TileSize(_tileSize) {
     double invTileSize = 1.0/m_TileSize;

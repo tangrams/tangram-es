@@ -3,8 +3,6 @@
 //Define global constants
 #define R_EARTH 6378137.0
 
-#include "glm/vec2.hpp"
-#include "glm/vec4.hpp"
 #include "tileID.h"
 #include "geom.h"
 
