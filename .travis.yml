@@ -34,3 +34,5 @@ script:
     - source ./travis/script_run_tests.sh
     - source ./travis/script_build.sh
 
+after_success:
+    - source ./travis/script_deploy_android_snapshot.sh

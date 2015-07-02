@@ -45,7 +45,7 @@ if [[ ${PLATFORM} == "android" ]]; then
 
     ANDROID_SDK_VERSION="r24.0.2"
     ANDROID_BUILD_TOOL_VERSION="21.1.2"
-    ANDROID_PLATFORM_VERSION="15"
+    ANDROID_PLATFORM_VERSION="22"
 
     # install jdk7 and 32bit dependencies for android sdk
     sudo apt-get update -qq
