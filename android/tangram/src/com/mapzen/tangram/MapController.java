@@ -1,63 +1,102 @@
 package com.mapzen.tangram;
 
-import javax.microedition.khronos.egl.EGLConfig;
-import javax.microedition.khronos.opengles.GL10;
-
-import java.io.File;
-import java.io.IOException;
-import java.util.concurrent.TimeUnit;
-
 import android.app.Activity;
-import android.content.Context;
 import android.content.res.AssetManager;
 import android.opengl.GLSurfaceView;
 import android.opengl.GLSurfaceView.Renderer;
-import android.util.AttributeSet;
 import android.util.DisplayMetrics;
-import android.view.View;
-import android.view.View.OnTouchListener;
 import android.view.GestureDetector;
 import android.view.GestureDetector.OnGestureListener;
 import android.view.MotionEvent;
 import android.view.ScaleGestureDetector;
 import android.view.ScaleGestureDetector.OnScaleGestureListener;
-import android.view.SurfaceHolder;
+import android.view.View;
+import android.view.View.OnTouchListener;
+
 import com.almeros.android.multitouch.RotateGestureDetector;
 import com.almeros.android.multitouch.RotateGestureDetector.OnRotateGestureListener;
 import com.almeros.android.multitouch.ShoveGestureDetector;
 import com.almeros.android.multitouch.ShoveGestureDetector.OnShoveGestureListener;
-
+import com.squareup.okhttp.Cache;
 import com.squareup.okhttp.Callback;
 import com.squareup.okhttp.OkHttpClient;
-import com.squareup.okhttp.Cache;
 import com.squareup.okhttp.Request;
-import com.squareup.okhttp.RequestBody;
 import com.squareup.okhttp.Response;
-import com.squareup.okhttp.Call;
+
+import java.io.File;
+import java.io.IOException;
+import java.util.concurrent.TimeUnit;
+
+import javax.microedition.khronos.egl.EGLConfig;
+import javax.microedition.khronos.opengles.GL10;
+
 import okio.BufferedSource;
 
-public class Tangram extends GLSurfaceView implements Renderer, OnTouchListener, OnScaleGestureListener, OnRotateGestureListener, OnGestureListener, OnShoveGestureListener {
+public class MapController implements Renderer, OnTouchListener, OnScaleGestureListener, OnRotateGestureListener, OnGestureListener, OnShoveGestureListener {
 
     static {
         System.loadLibrary("c++_shared");
         System.loadLibrary("tangram");
     }
 
-    public native void   setMapPosition(double lon, double lat);
-    public native double getMapPositionX();
-    public native double getMapPositionY();
-    public native void   setMapZoom(float zoom);
-    public native float  getMapZoom();
-    public native void   setMapRotation(float radians);
-    public native float  getMapRotation();
-    public native void   setMapTilt(float radians);
-    public native float  getMapTilt();
+    public void setMapPosition(double lon, double lat) {
+        mapLonLat[0] = lon;
+        mapLonLat[1] = lat;
+        if (initialized) { setPosition(lon, lat); }
+    }
 
-    private native void init(Tangram instance, AssetManager assetManager);
+    public double getMapPositionX() {
+        if (initialized) { getPosition(mapLonLat); }
+        return mapLonLat[0];
+    }
+
+    public double getMapPositionY() {
+        if (initialized) { getPosition(mapLonLat); }
+        return mapLonLat[1];
+    }
+
+    public void setMapZoom(float zoom) {
+        mapZoom = zoom;
+        if (initialized) { setZoom(zoom); }
+    }
+
+    public float  getMapZoom() {
+        if (initialized) { mapZoom = getZoom(); }
+        return mapZoom;
+    }
+
+    public void setMapRotation(float radians) {
+        mapRotation = radians;
+        if (initialized) { setRotation(radians); }
+    }
+
+    public float getMapRotation() {
+        if (initialized) { mapRotation = getRotation(); }
+        return mapRotation;
+    }
+
+    public void setMapTilt(float radians) {
+        mapTilt = radians;
+        if (initialized) { setTilt(radians); }
+    }
+
+    public float getMapTilt() {
+        if (initialized) { mapTilt = getTilt(); }
+        return mapTilt;
+    }
+
+    private native void init(MapController instance, AssetManager assetManager);
     private native void resize(int width, int height);
     private native void update(float dt);
     private native void render();
-    private native void teardown();
+    private native void setPosition(double lon, double lat);
+    private native void getPosition(double[] lonLatOut);
+    private native void setZoom(float zoom);
+    private native float getZoom();
+    private native void setRotation(float radians);
+    private native float getRotation();
+    private native void setTilt(float radians);
+    private native float getTilt();
     private native void onContextDestroyed();
     private native void setPixelScale(float scale);
     private native void handleTapGesture(float posX, float posY);
@@ -70,7 +109,12 @@ public class Tangram extends GLSurfaceView implements Renderer, OnTouchListener,
     private native void onUrlFailure(long callbackPtr);
 
     private long time = System.nanoTime();
-    private boolean contextDestroyed = false;
+    private boolean initialized = false;
+    private double[] mapLonLat = {0, 0};
+    private float mapZoom = 0;
+    private float mapRotation = 0;
+    private float mapTilt = 0;
+    private MapView mapView;
     private AssetManager assetManager;
     private GestureDetector gestureDetector;
     private ScaleGestureDetector scaleGestureDetector;
@@ -82,43 +126,19 @@ public class Tangram extends GLSurfaceView implements Renderer, OnTouchListener,
     private Request.Builder okRequestBuilder;
     private static final int TILE_CACHE_SIZE = 1024 * 1024 * 30; // 30 MB
 
-    public Tangram(Context context) {
+    public MapController(Activity mainApp, MapView view) {
 
-        super(context);
-
-        configureGLSurfaceView();
-   
-    }
-
-    public Tangram(Context context, AttributeSet attrs) {
-
-        super(context, attrs);
-
-        configureGLSurfaceView();
-
-    }
-
-    private void configureGLSurfaceView() {
-
-        setOnTouchListener(this);
-        setEGLContextClientVersion(2);
-        setPreserveEGLContextOnPause(true);
-        setEGLConfigChooser(8, 8, 8, 8, 24, 0);
-        setRenderer(this);
-        setRenderMode(GLSurfaceView.RENDERMODE_WHEN_DIRTY);
-
-    }
-
-    public void setup(Activity mainApp) {
-
+        // Get configuration info from application
         mainApp.getWindowManager().getDefaultDisplay().getMetrics(displayMetrics);
-
         assetManager = mainApp.getAssets();
+
+        // Set up gesture recognizers
         gestureDetector = new GestureDetector(mainApp, this);
         scaleGestureDetector = new ScaleGestureDetector(mainApp, this);
         rotateGestureDetector = new RotateGestureDetector(mainApp, this);
         shoveGestureDetector = new ShoveGestureDetector(mainApp, this);
 
+        // Set up okHTTP
         okRequestBuilder = new Request.Builder();
         okClient = new OkHttpClient();
         okClient.setConnectTimeout(10, TimeUnit.SECONDS);
@@ -131,16 +151,20 @@ public class Tangram extends GLSurfaceView implements Renderer, OnTouchListener,
             e.printStackTrace();
         }
 
+        // Set up MapView
+        mapView = view;
+        view.setOnTouchListener(this);
+        view.setRenderer(this);
+        view.setRenderMode(GLSurfaceView.RENDERMODE_WHEN_DIRTY);
+
     }
 
-    public void onDestroy() {
-        teardown();
+    public void requestRender() {
+        mapView.requestRender();
     }
 
-    @Override
-    public void surfaceDestroyed(SurfaceHolder holder) {
-        contextDestroyed = true;
-        super.surfaceDestroyed(holder);
+    public void setRenderMode(int renderMode) {
+        mapView.setRenderMode(renderMode);
     }
 
     // View.OnTouchListener methods
@@ -175,16 +199,16 @@ public class Tangram extends GLSurfaceView implements Renderer, OnTouchListener,
     }
 
     public void onSurfaceCreated(GL10 gl, EGLConfig config) {
-
-        if (contextDestroyed) {
-            onContextDestroyed();
-            contextDestroyed = false;
-        }
-
+        onContextDestroyed();
         init(this, assetManager);
+        setPosition(mapLonLat[0], mapLonLat[1]);
+        setZoom(mapZoom);
+        setRotation(mapRotation);
+        setTilt(mapTilt);
+        initialized = true;
     }
 
-    // GestureDetetor.OnGestureListener methods
+    // GestureDetector.OnGestureListener methods
     // ========================================
 
     public boolean onDown(MotionEvent event) {
@@ -241,7 +265,6 @@ public class Tangram extends GLSurfaceView implements Renderer, OnTouchListener,
     }
 
     public void onScaleEnd(ScaleGestureDetector detector) {
-        return;
     }
 
     // RotateGestureDetector.OnRotateGestureListener methods
@@ -260,7 +283,6 @@ public class Tangram extends GLSurfaceView implements Renderer, OnTouchListener,
     }
 
     public void onRotateEnd(RotateGestureDetector detector) {
-        return;
     }
 
     // ShoveGestureDetector.OnShoveGestureListener methods
@@ -276,7 +298,6 @@ public class Tangram extends GLSurfaceView implements Renderer, OnTouchListener,
     }
 
     public void onShoveEnd(ShoveGestureDetector detector) {
-        return;
     }
 
     public void cancelUrlRequest(String url) {

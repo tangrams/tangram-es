@@ -5,104 +5,98 @@
 
 extern "C" {
 
-    JNIEXPORT void JNICALL Java_com_mapzen_tangram_Tangram_setMapPosition(JNIEnv* jniEnv, jobject obj, jdouble lon, jdouble lat) {
+    JNIEXPORT void JNICALL Java_com_mapzen_tangram_MapController_setPosition(JNIEnv* jniEnv, jobject obj, jdouble lon, jdouble lat) {
         Tangram::setPosition(lon, lat);
     }
 
-    JNIEXPORT jdouble JNICALL Java_com_mapzen_tangram_Tangram_getMapPositionX(JNIEnv* jniEnv, jobject obj) {
-        double x, y;
-        Tangram::getPosition(x, y);
-        return x;
+    JNIEXPORT void JNICALL Java_com_mapzen_tangram_MapController_getPosition(JNIEnv* jniEnv, jobject obj, jdoubleArray lonLat) {
+        jdouble* arr = jniEnv->GetDoubleArrayElements(lonLat, NULL);
+        Tangram::getPosition(arr[0], arr[1]);
+        jniEnv->ReleaseDoubleArrayElements(lonLat, arr, 0);
     }
 
-    JNIEXPORT jdouble JNICALL Java_com_mapzen_tangram_Tangram_getMapPositionY(JNIEnv* jniEnv, jobject obj) {
-        double x, y;
-        Tangram::getPosition(x, y);
-        return y;
-    }
-
-    JNIEXPORT void JNICALL Java_com_mapzen_tangram_Tangram_setMapZoom(JNIEnv* jniEnv, jobject obj, jfloat zoom) {
+    JNIEXPORT void JNICALL Java_com_mapzen_tangram_MapController_setZoom(JNIEnv* jniEnv, jobject obj, jfloat zoom) {
         Tangram::setZoom(zoom);
     }
 
-    JNIEXPORT jfloat JNICALL Java_com_mapzen_tangram_Tangram_getMapZoom(JNIEnv* jniEnv, jobject obj) {
+    JNIEXPORT jfloat JNICALL Java_com_mapzen_tangram_MapController_getZoom(JNIEnv* jniEnv, jobject obj) {
         return Tangram::getZoom();
     }
 
-    JNIEXPORT void JNICALL Java_com_mapzen_tangram_Tangram_setMapRotation(JNIEnv* jniEnv, jobject obj, jfloat radians) {
+    JNIEXPORT void JNICALL Java_com_mapzen_tangram_MapController_setRotation(JNIEnv* jniEnv, jobject obj, jfloat radians) {
         Tangram::setRotation(radians);
     }
 
-    JNIEXPORT jfloat JNICALL Java_com_mapzen_tangram_Tangram_getMapRotation(JNIEnv* jniEnv, jobject obj) {
+    JNIEXPORT jfloat JNICALL Java_com_mapzen_tangram_MapController_getRotation(JNIEnv* jniEnv, jobject obj) {
         return Tangram::getRotation();
     }
 
-    JNIEXPORT void JNICALL Java_com_mapzen_tangram_Tangram_setMapTilt(JNIEnv* jniEnv, jobject obj, jfloat radians) {
+    JNIEXPORT void JNICALL Java_com_mapzen_tangram_MapController_setTilt(JNIEnv* jniEnv, jobject obj, jfloat radians) {
         Tangram::setTilt(radians);
     }
 
-    JNIEXPORT jfloat JNICALL Java_com_mapzen_tangram_Tangram_getMapTilt(JNIEnv* jniEnv, jobject obj) {
+    JNIEXPORT jfloat JNICALL Java_com_mapzen_tangram_MapController_getTilt(JNIEnv* jniEnv, jobject obj) {
         return Tangram::getTilt();
     }
 
-    JNIEXPORT void JNICALL Java_com_mapzen_tangram_Tangram_init(JNIEnv* jniEnv, jobject obj, jobject tangramInstance, jobject assetManager) {
+    JNIEXPORT void JNICALL Java_com_mapzen_tangram_MapController_init(JNIEnv* jniEnv, jobject obj, jobject tangramInstance, jobject assetManager) {
         setupJniEnv(jniEnv, tangramInstance, assetManager);
         Tangram::initialize();
     }
 
-    JNIEXPORT void JNICALL Java_com_mapzen_tangram_Tangram_resize(JNIEnv* jniEnv, jobject obj, jint width, jint height) {
+    JNIEXPORT void JNICALL Java_com_mapzen_tangram_MapController_resize(JNIEnv* jniEnv, jobject obj, jint width, jint height) {
         Tangram::resize(width, height);
     }
 
-    JNIEXPORT void JNICALL Java_com_mapzen_tangram_Tangram_update(JNIEnv* jniEnv, jobject obj, jfloat dt) {
+    JNIEXPORT void JNICALL Java_com_mapzen_tangram_MapController_update(JNIEnv* jniEnv, jobject obj, jfloat dt) {
         Tangram::update(dt);
     }
 
-    JNIEXPORT void JNICALL Java_com_mapzen_tangram_Tangram_render(JNIEnv* jniEnv, jobject obj) {
+    JNIEXPORT void JNICALL Java_com_mapzen_tangram_MapController_render(JNIEnv* jniEnv, jobject obj) {
         Tangram::render();
     }
 
-    JNIEXPORT void JNICALL Java_com_mapzen_tangram_Tangram_teardown(JNIEnv* jniEnv, jobject obj) {
+    JNIEXPORT void JNICALL Java_com_mapzen_tangram_MapController_teardown(JNIEnv* jniEnv, jobject obj) {
         Tangram::teardown();
     }
 
-    JNIEXPORT void JNICALL Java_com_mapzen_tangram_Tangram_onContextDestroyed(JNIEnv* jniEnv, jobject obj) {
+    JNIEXPORT void JNICALL Java_com_mapzen_tangram_MapController_onContextDestroyed(JNIEnv* jniEnv, jobject obj) {
         Tangram::onContextDestroyed();
     }
 
-    JNIEXPORT void JNICALL Java_com_mapzen_tangram_Tangram_setPixelScale(JNIEnv* jniEnv, jobject obj, jfloat scale) {
+    JNIEXPORT void JNICALL Java_com_mapzen_tangram_MapController_setPixelScale(JNIEnv* jniEnv, jobject obj, jfloat scale) {
         Tangram::setPixelScale(scale);
     }
 
-    JNIEXPORT void JNICALL Java_com_mapzen_tangram_Tangram_handleTapGesture(JNIEnv* jniEnv, jobject obj, jfloat posX, jfloat posY) {
+    JNIEXPORT void JNICALL Java_com_mapzen_tangram_MapController_handleTapGesture(JNIEnv* jniEnv, jobject obj, jfloat posX, jfloat posY) {
         Tangram::handleTapGesture(posX, posY);
     }
 
-    JNIEXPORT void JNICALL Java_com_mapzen_tangram_Tangram_handleDoubleTapGesture(JNIEnv* jniEnv, jobject obj, jfloat posX, jfloat posY) {
+    JNIEXPORT void JNICALL Java_com_mapzen_tangram_MapController_handleDoubleTapGesture(JNIEnv* jniEnv, jobject obj, jfloat posX, jfloat posY) {
         Tangram::handleDoubleTapGesture(posX, posY);
     }
 
-    JNIEXPORT void JNICALL Java_com_mapzen_tangram_Tangram_handlePanGesture(JNIEnv* jniEnv, jobject obj, jfloat startX, jfloat startY, jfloat endX, jfloat endY) {
+    JNIEXPORT void JNICALL Java_com_mapzen_tangram_MapController_handlePanGesture(JNIEnv* jniEnv, jobject obj, jfloat startX, jfloat startY, jfloat endX, jfloat endY) {
         Tangram::handlePanGesture(startX, startY, endX, endY);
     }
 
-    JNIEXPORT void JNICALL Java_com_mapzen_tangram_Tangram_handlePinchGesture(JNIEnv* jniEnv, jobject obj, jfloat posX, jfloat posY, jfloat scale) {
+    JNIEXPORT void JNICALL Java_com_mapzen_tangram_MapController_handlePinchGesture(JNIEnv* jniEnv, jobject obj, jfloat posX, jfloat posY, jfloat scale) {
         Tangram::handlePinchGesture(posX, posY, scale);
     }
 
-    JNIEXPORT void JNICALL Java_com_mapzen_tangram_Tangram_handleRotateGesture(JNIEnv* jniEnv, jobject obj, jfloat posX, jfloat posY, jfloat rotation) {
+    JNIEXPORT void JNICALL Java_com_mapzen_tangram_MapController_handleRotateGesture(JNIEnv* jniEnv, jobject obj, jfloat posX, jfloat posY, jfloat rotation) {
         Tangram::handleRotateGesture(posX, posY, rotation);
     }
 
-    JNIEXPORT void JNICALL Java_com_mapzen_tangram_Tangram_handleShoveGesture(JNIEnv* jniEnv, jobject obj, jfloat distance) {
+    JNIEXPORT void JNICALL Java_com_mapzen_tangram_MapController_handleShoveGesture(JNIEnv* jniEnv, jobject obj, jfloat distance) {
         Tangram::handleShoveGesture(distance);
     }
 
-    JNIEXPORT void JNICALL Java_com_mapzen_tangram_Tangram_onUrlSuccess(JNIEnv* jniEnv, jobject obj, jbyteArray fetchedBytes, jlong callbackPtr) {
+    JNIEXPORT void JNICALL Java_com_mapzen_tangram_MapController_onUrlSuccess(JNIEnv* jniEnv, jobject obj, jbyteArray fetchedBytes, jlong callbackPtr) {
         onUrlSuccess(jniEnv, fetchedBytes, callbackPtr);
     }
 
-    JNIEXPORT void JNICALL Java_com_mapzen_tangram_Tangram_onUrlFailure(JNIEnv* jniEnv, jobject obj, jlong callbackPtr) {
+    JNIEXPORT void JNICALL Java_com_mapzen_tangram_MapController_onUrlFailure(JNIEnv* jniEnv, jobject obj, jlong callbackPtr) {
         onUrlFailure(jniEnv, callbackPtr);
     }
 
