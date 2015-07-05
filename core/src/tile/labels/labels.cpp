@@ -10,8 +10,8 @@
 Labels::Labels() {}
 
 Labels::~Labels() {
-    m_labelUnits.clear();
-    m_pendingLabelUnits.clear();
+    m_labels.clear();
+    m_pendingLabels.clear();
 }
 
 int Labels::LODDiscardFunc(float _maxZoom, float _zoom) {
@@ -50,7 +50,7 @@ bool Labels::addLabel(MapTile& _tile, const std::string& _styleName, Label::Tran
     // lock concurrent collection
     {
         std::lock_guard<std::mutex> lock(m_mutex);
-        m_pendingLabelUnits.push_back(std::unique_ptr<LabelUnit>(new LabelUnit(l, _tile.getID(), _styleName)));
+        m_pendingLabels.emplace_back(l);
     }
 
     return true;
@@ -60,25 +60,24 @@ void Labels::updateOcclusions() {
     m_currentZoom = m_view->getZoom();
 
     // merge pending labels from threads
-    m_labelUnits.reserve(m_labelUnits.size() + m_pendingLabelUnits.size());
+    m_labels.reserve(m_labels.size() + m_pendingLabels.size());
     {
         std::lock_guard<std::mutex> lock(m_mutex);
-        m_labelUnits.insert(m_labelUnits.end(),
-                            std::make_move_iterator(m_pendingLabelUnits.begin()),
-                            std::make_move_iterator(m_pendingLabelUnits.end()));
-        std::vector<std::unique_ptr<LabelUnit>>().swap(m_pendingLabelUnits);
+        m_labels.insert(m_labels.end(),
+                        std::make_move_iterator(m_pendingLabels.begin()),
+                        std::make_move_iterator(m_pendingLabels.end()));
+        m_pendingLabels.clear();
     }
 
     std::set<std::pair<Label*, Label*>> occlusions;
     std::vector<isect2d::AABB> aabbs;
 
-    for (size_t i = 0; i < m_labelUnits.size(); i++) {
-        auto& labelUnit = m_labelUnits[i];
-        auto label = labelUnit->getWeakLabel();
+    for (size_t i = 0; i < m_labels.size(); i++) {
+        auto label = m_labels[i].lock();
 
-        if (label == nullptr) {
-            m_labelUnits[i--] = std::move(m_labelUnits[m_labelUnits.size() - 1]);
-            m_labelUnits.pop_back();
+        if (!label) {
+            m_labels[i--] = std::move(m_labels[m_labels.size() - 1]);
+            m_labels.pop_back();
             continue;
         }
 
@@ -115,11 +114,10 @@ void Labels::updateOcclusions() {
         if (!pair.second->occludedLastFrame()) { pair.first->setOcclusion(true); }
     }
 
-    for (size_t i = 0; i < m_labelUnits.size(); i++) {
-        auto& labelUnit = m_labelUnits[i];
-        auto label = labelUnit->getWeakLabel();
+    for (size_t i = 0; i < m_labels.size(); i++) {
+        auto label = m_labels[i].lock();
 
-        if (label != nullptr) { label->occlusionSolved(); }
+        if (label) { label->occlusionSolved(); }
     }
 }
 
@@ -129,11 +127,10 @@ void Labels::drawDebug() {
         return;
     }
 
-    for(size_t i = 0; i < m_labelUnits.size(); i++) {
-        auto& labelUnit = m_labelUnits[i];
-        auto label = labelUnit->getWeakLabel();
+    for(size_t i = 0; i < m_labels.size(); i++) {
+        auto label = m_labels[i].lock();
 
-        if (label != nullptr && label->canOcclude()) {
+        if (label && label->canOcclude()) {
             isect2d::OBB obb = label->getOBB();
             const isect2d::Vec2* quad = obb.getQuad();
 

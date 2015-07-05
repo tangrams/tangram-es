@@ -11,24 +11,6 @@ class FontContext;
 class MapTile;
 class View;
 
-struct LabelUnit {
-
-private:
-    std::weak_ptr<Label> m_label;
-
-public:
-    TileID m_tileID;
-    std::string m_styleName;
-
-    LabelUnit(std::shared_ptr<Label>& _label, const TileID& _tileID, std::string _styleName)
-        : m_label(_label),
-          m_tileID(_tileID),
-          m_styleName(std::move(_styleName)) {}
-
-    // Could return a null pointer
-    std::shared_ptr<Label> getWeakLabel() { return m_label.lock(); }
-};
-
 
 /*
  * Singleton class containing all labels
@@ -69,8 +51,8 @@ private:
     int LODDiscardFunc(float _maxZoom, float _zoom);
 
     Labels();
-    std::vector<std::unique_ptr<LabelUnit>> m_labelUnits;
-    std::vector<std::unique_ptr<LabelUnit>> m_pendingLabelUnits;
+    std::vector<std::weak_ptr<Label>> m_labels;
+    std::vector<std::weak_ptr<Label>> m_pendingLabels;
 
     // reference to the <FontContext>
     std::shared_ptr<FontContext> m_ftContext;
