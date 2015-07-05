@@ -56,6 +56,11 @@ bool TileManager::setTileState(MapTile& tile, TileState state) {
             m_loadPending++;
             return true;
         }
+        if (state == TileState::processing) {
+            tile.setState(state);
+            return true;
+        }
+
         break;
 
     case TileState::loading:
@@ -200,14 +205,6 @@ void TileManager::updateTileSet() {
     }
 
     {
-        for (auto& entry : m_tileSet) {
-            auto& tile = entry.second;
-            auto tileCenter = m_view->getMapProjection().TileCenter(tile->getID());
-            tile->setPriority(glm::length2(tileCenter - viewCenter));
-        }
-    }
-
-    {
         for (const auto& id : removeTiles) {
             auto tileIter = m_tileSet.find(id);
             if (tileIter != m_tileSet.end()) {
@@ -218,24 +215,34 @@ void TileManager::updateTileSet() {
         }
     }
 
-    if (m_loadPending < MAX_DOWNLOADS) {
+    {
+        for (auto& entry : m_tileSet) {
+            auto& tile = entry.second;
+            auto tileCenter = m_view->getMapProjection().TileCenter(tile->getID());
+            tile->setPriority(glm::length2(tileCenter - viewCenter));
+        }
+    }
 
+    {
         for (auto& item : m_loadTasks) {
             auto& id = *item.second;
             auto& tile = m_tileSet[id];
-
-            setTileState(*tile, TileState::loading);
 
             for (auto& source : m_dataSources) {
                 TileTask task = std::make_shared<TileTaskData>(tile, source.get());
                 DBG("[%d, %d, %d] Load\n", id.z, id.x, id.y);
 
-                if (!source->loadTileData(task, m_dataCallback)) {
-                    DBG("ERROR: Loading failed for tile [%d, %d, %d]\n", id.z, id.x, id.y);
+                if (source->getTileData(task, m_dataCallback)) {
+                    continue;
                 }
-            }
-            if (m_loadPending == MAX_DOWNLOADS) {
-                break;
+
+                if (m_loadPending < MAX_DOWNLOADS) {
+                    setTileState(*tile, TileState::loading);
+
+                    if (!source->loadTileData(task, m_dataCallback)) {
+                        DBG("ERROR: Loading failed for tile [%d, %d, %d]\n", id.z, id.x, id.y);
+                    }
+                }
             }
         }
     }

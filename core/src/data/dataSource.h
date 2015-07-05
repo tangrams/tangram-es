@@ -33,6 +33,8 @@ public:
      */
     virtual bool loadTileData(TileTask _task, TileTaskCb _cb);
 
+    virtual bool getTileData(TileTask _task, TileTaskCb _cb);
+
     /* Stops any running I/O tasks pertaining to @_tile */
     virtual void cancelLoadingTile(const TileID& _tile);
 

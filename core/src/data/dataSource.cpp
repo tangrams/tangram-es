@@ -61,7 +61,8 @@ void DataSource::constructURL(const TileID& _tileCoord, std::string& _url) const
     }
 }
 
-bool DataSource::loadTileData(TileTask _task, TileTaskCb _cb) {
+
+bool DataSource::getTileData(TileTask _task, TileTaskCb _cb) {
 
     const auto& tileID = _task->tile->getID();
     
@@ -73,7 +74,13 @@ bool DataSource::loadTileData(TileTask _task, TileTaskCb _cb) {
         return true;
     }
 
-    std::string url(constructURL(tileID));
+    return false;
+}
+
+
+bool DataSource::loadTileData(TileTask _task, TileTaskCb _cb) {
+
+    std::string url(constructURL(_task->tile->getID()));
 
     return startUrlRequest(url, [=](std::vector<char>&& _rawData) {
             _task->rawTileData = std::move(_rawData);
