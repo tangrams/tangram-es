@@ -5,6 +5,8 @@
 #include "util/primitives.h"
 #include "view/view.h"
 
+#include "glm/gtc/matrix_transform.hpp"
+
 Labels::Labels() {}
 
 Labels::~Labels() {
@@ -19,6 +21,8 @@ int Labels::LODDiscardFunc(float _maxZoom, float _zoom) {
 bool Labels::addLabel(MapTile& _tile, const std::string& _styleName, Label::Transform _transform, std::string _text, Label::Type _type) {
     auto currentBuffer = m_ftContext->getCurrentBuffer();
 
+    // FIXME: the current view should not be used to determine whether a label is shown at all
+    // otherwise results will be random
     if ( (m_currentZoom - _tile.getID().z) > LODDiscardFunc(View::s_maxZoom, m_currentZoom)) {
         return false;
     }
@@ -32,7 +36,13 @@ bool Labels::addLabel(MapTile& _tile, const std::string& _styleName, Label::Tran
             return false;
         }
 
-        l->update(m_view->getViewProjectionMatrix() * _tile.getModelMatrix(), m_screenSize, 0);
+        // NB: viewOrigin.z is only determined by screen width and height.
+        const auto& viewOrigin = m_view->getPosition();
+
+        auto modelMatrix = glm::scale(glm::mat4(1.0), glm::vec3(_tile.getScale()));
+        modelMatrix[3][2] = -viewOrigin.z;
+
+        l->update(m_view->getViewProjectionMatrix() * modelMatrix, m_screenSize, 0);
         std::unique_ptr<TileID> tileID(new TileID(_tile.getID()));
         _tile.addLabel(_styleName, l);
 

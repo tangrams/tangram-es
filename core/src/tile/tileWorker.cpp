@@ -45,8 +45,6 @@ void TileWorker::processTileData(std::unique_ptr<TileTask> _task,
             dataSource->setTileData(tileID, tileData);
         }
         
-		tile->update(0, _view);
-
         //Process data for all styles
         for(const auto& style : _styles) {
             if(m_aborted) {
