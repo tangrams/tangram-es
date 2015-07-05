@@ -20,6 +20,9 @@ int Labels::LODDiscardFunc(float _maxZoom, float _zoom) {
 
 bool Labels::addLabel(MapTile& _tile, const std::string& _styleName, Label::Transform _transform, std::string _text, Label::Type _type) {
     auto currentBuffer = m_ftContext->getCurrentBuffer();
+    if (!currentBuffer) {
+        return false;
+    }
 
     // FIXME: the current view should not be used to determine whether a label is shown at all
     // otherwise results will be random
@@ -27,35 +30,30 @@ bool Labels::addLabel(MapTile& _tile, const std::string& _styleName, Label::Tran
         return false;
     }
 
-    if (currentBuffer) {
-        fsuint textID = currentBuffer->genTextID();
-        std::shared_ptr<Label> l(new Label(_transform, _text, textID, _type));
+    fsuint textID = currentBuffer->genTextID();
+    std::shared_ptr<Label> l(new Label(_transform, _text, textID, _type));
 
-        if (!l->rasterize(currentBuffer)) {
-            l.reset();
-            return false;
-        }
-
-        // NB: viewOrigin.z is only determined by screen width and height.
-        const auto& viewOrigin = m_view->getPosition();
-
-        auto modelMatrix = glm::scale(glm::mat4(1.0), glm::vec3(_tile.getScale()));
-        modelMatrix[3][2] = -viewOrigin.z;
-
-        l->update(m_view->getViewProjectionMatrix() * modelMatrix, m_screenSize, 0);
-        std::unique_ptr<TileID> tileID(new TileID(_tile.getID()));
-        _tile.addLabel(_styleName, l);
-
-        // lock concurrent collection
-        {
-            std::lock_guard<std::mutex> lock(m_mutex);
-            m_pendingLabelUnits.emplace_back(LabelUnit(l, tileID, _styleName));
-        }
-
-        return true;
+    if (!l->rasterize(currentBuffer)) {
+        l.reset();
+        return false;
     }
 
-    return false;
+    // NB: viewOrigin.z is only determined by screen width and height.
+    const auto& viewOrigin = m_view->getPosition();
+
+    auto modelMatrix = glm::scale(glm::mat4(1.0), glm::vec3(_tile.getScale()));
+    modelMatrix[3][2] = -viewOrigin.z;
+
+    l->update(m_view->getViewProjectionMatrix() * modelMatrix, m_screenSize, 0);
+    _tile.addLabel(_styleName, l);
+
+    // lock concurrent collection
+    {
+        std::lock_guard<std::mutex> lock(m_mutex);
+        m_pendingLabelUnits.push_back(std::unique_ptr<LabelUnit>(new LabelUnit(l, _tile.getID(), _styleName)));
+    }
+
+    return true;
 }
 
 void Labels::updateOcclusions() {
@@ -65,9 +63,10 @@ void Labels::updateOcclusions() {
     m_labelUnits.reserve(m_labelUnits.size() + m_pendingLabelUnits.size());
     {
         std::lock_guard<std::mutex> lock(m_mutex);
-        m_labelUnits.insert(m_labelUnits.end(), std::make_move_iterator(m_pendingLabelUnits.begin()),
+        m_labelUnits.insert(m_labelUnits.end(),
+                            std::make_move_iterator(m_pendingLabelUnits.begin()),
                             std::make_move_iterator(m_pendingLabelUnits.end()));
-        std::vector<LabelUnit>().swap(m_pendingLabelUnits);
+        std::vector<std::unique_ptr<LabelUnit>>().swap(m_pendingLabelUnits);
     }
 
     std::set<std::pair<Label*, Label*>> occlusions;
@@ -75,7 +74,7 @@ void Labels::updateOcclusions() {
 
     for (size_t i = 0; i < m_labelUnits.size(); i++) {
         auto& labelUnit = m_labelUnits[i];
-        auto label = labelUnit.getWeakLabel();
+        auto label = labelUnit->getWeakLabel();
 
         if (label == nullptr) {
             m_labelUnits[i--] = std::move(m_labelUnits[m_labelUnits.size() - 1]);
@@ -118,7 +117,7 @@ void Labels::updateOcclusions() {
 
     for (size_t i = 0; i < m_labelUnits.size(); i++) {
         auto& labelUnit = m_labelUnits[i];
-        auto label = labelUnit.getWeakLabel();
+        auto label = labelUnit->getWeakLabel();
 
         if (label != nullptr) { label->occlusionSolved(); }
     }
@@ -132,7 +131,7 @@ void Labels::drawDebug() {
 
     for(size_t i = 0; i < m_labelUnits.size(); i++) {
         auto& labelUnit = m_labelUnits[i];
-        auto label = labelUnit.getWeakLabel();
+        auto label = labelUnit->getWeakLabel();
 
         if (label != nullptr && label->canOcclude()) {
             isect2d::OBB obb = label->getOBB();
