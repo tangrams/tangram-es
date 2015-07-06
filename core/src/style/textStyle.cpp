@@ -19,7 +19,7 @@ TextStyle::~TextStyle() {
 void TextStyle::constructVertexLayout() {
     m_vertexLayout = std::shared_ptr<VertexLayout>(new VertexLayout({
         {"a_position", 2, GL_FLOAT, false, 0},
-        {"a_uvs", 2, GL_FLOAT, false, 0},
+        {"a_uv", 2, GL_FLOAT, false, 0},
         {"a_screenPosition", 2, GL_FLOAT, false, 0},
         {"a_alpha", 1, GL_FLOAT, false, 0},
         {"a_rotation", 1, GL_FLOAT, false, 0},
@@ -29,7 +29,7 @@ void TextStyle::constructVertexLayout() {
 void TextStyle::constructShaderProgram() {
     std::string frag = m_sdf ? "sdf.fs" : "text.fs";
 
-    std::string vertShaderSrcStr = stringFromResource("text.vs");
+    std::string vertShaderSrcStr = stringFromResource("point.vs");
     std::string fragShaderSrcStr = stringFromResource(frag.c_str());
 
     m_shaderProgram->setSourceStrings(fragShaderSrcStr, vertShaderSrcStr);

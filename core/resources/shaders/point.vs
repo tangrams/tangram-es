@@ -7,7 +7,7 @@ precision mediump float;
 
 attribute LOWP vec2 a_position;
 attribute LOWP vec2 a_screenPosition;
-attribute vec2 a_uvs;
+attribute vec2 a_uv;
 attribute LOWP float a_alpha;
 attribute LOWP float a_rotation;
 
@@ -28,11 +28,12 @@ void main() {
             0.0, 1.0
         );
         
+        v_uv = a_uv;
+        v_alpha = a_alpha;
+        
         gl_Position = u_proj * p;
     } else {
+        // clip it
         gl_Position = vec4(0.0);
     }
-    
-    v_uv = a_uvs;
-    v_alpha = a_alpha;
 }
