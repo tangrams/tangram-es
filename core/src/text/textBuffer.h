@@ -59,8 +59,13 @@ public:
     void finish();
 
 private:
+    
+    void bind();
+    void unbind();
+    
+    bool m_bound;
     bool m_dirty;
     fsuint m_fsBuffer;
-    FONScontext* m_fsContext;
+    std::shared_ptr<FontContext> m_fontContext;
 
 };

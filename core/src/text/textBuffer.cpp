@@ -5,59 +5,70 @@ TextBuffer::TextBuffer(std::shared_ptr<FontContext> _fontContext, std::shared_pt
     : TypedMesh<TextVert>(_vertexLayout, GL_TRIANGLES, GL_DYNAMIC_DRAW) {
         
     m_dirty = false;
-    m_fsContext = _fontContext->getFontContext();
+    m_fontContext = _fontContext;
+    m_bound = false;
 }
 
 void TextBuffer::init() {
-    glfonsBufferCreate(m_fsContext, &m_fsBuffer);
+    m_fontContext->lock();
+    glfonsBufferCreate(m_fontContext->getFontContext(), &m_fsBuffer);
+    m_fontContext->unlock();
 }
 
 TextBuffer::~TextBuffer() {
-    glfonsBufferDelete(m_fsContext, m_fsBuffer);
+    glfonsBufferDelete(m_fontContext->getFontContext(), m_fsBuffer);
 }
 
 int TextBuffer::getVerticesSize() {
-    glfonsBindBuffer(m_fsContext, m_fsBuffer);
-    return glfonsVerticesSize(m_fsContext);
+    bind();
+    int size = glfonsVerticesSize(m_fontContext->getFontContext());
+    unbind();
+    return size;
 }
 
 bool TextBuffer::getVertices(float* _vertices) {
-    glfonsBindBuffer(m_fsContext, m_fsBuffer);
-    return glfonsVertices(m_fsContext, _vertices);
+    bind();
+    bool res = glfonsVertices(m_fontContext->getFontContext(), _vertices);
+    unbind();
+    return res;
 }
 
 fsuint TextBuffer::genTextID() {
     fsuint id;
-    glfonsBindBuffer(m_fsContext, m_fsBuffer);
-    glfonsGenText(m_fsContext, 1, &id);
+    bind();
+    glfonsGenText(m_fontContext->getFontContext(), 1, &id);
+    unbind();
     return id;
 }
     
 bool TextBuffer::rasterize(const std::string& _text, fsuint _id) {
-    glfonsBindBuffer(m_fsContext, m_fsBuffer);
-    int status = glfonsRasterize(m_fsContext, _id, _text.c_str());
+    bind();
+    int status = glfonsRasterize(m_fontContext->getFontContext(), _id, _text.c_str());
+    unbind();
     return status == GLFONS_VALID;
 }
 
 void TextBuffer::pushBuffer() {
     if (m_dirty) {
-        glfonsBindBuffer(m_fsContext, m_fsBuffer);
-        glfonsUpdateBuffer(m_fsContext);
+        bind();
+        glfonsUpdateBuffer(m_fontContext->getFontContext());
+        unbind();
         m_dirty = false;
     }
 }
 
 void TextBuffer::transformID(fsuint _textID, float _x, float _y, float _rot, float _alpha) {
-    glfonsBindBuffer(m_fsContext, m_fsBuffer);
-    glfonsTransform(m_fsContext, _textID, _x, _y, _rot, _alpha);
-
+    bind();
+    glfonsTransform(m_fontContext->getFontContext(), _textID, _x, _y, _rot, _alpha);
+    unbind();
     m_dirty = true;
 }
 
 glm::vec4 TextBuffer::getBBox(fsuint _textID) {
     glm::vec4 bbox;
-    glfonsBindBuffer(m_fsContext, m_fsBuffer);
-    glfonsGetBBox(m_fsContext, _textID, &bbox.x, &bbox.y, &bbox.z, &bbox.w);
+    bind();
+    glfonsGetBBox(m_fontContext->getFontContext(), _textID, &bbox.x, &bbox.y, &bbox.z, &bbox.w);
+    unbind();
     return bbox;
 }
 
@@ -73,5 +84,21 @@ void TextBuffer::finish() {
     
     if (getVertices(reinterpret_cast<float*>(vertices.data()))) {
         addVertices(std::move(vertices), {});
+    }
+}
+
+void TextBuffer::bind() {
+    if (!m_bound) {
+        m_fontContext->lock();
+        glfonsBindBuffer(m_fontContext->getFontContext(), m_fsBuffer);
+        m_bound = true;
+    }
+}
+
+void TextBuffer::unbind() {
+    if (m_bound) {
+        glfonsBindBuffer(m_fontContext->getFontContext(), 0);
+        m_fontContext->unlock();
+        m_bound = false;
     }
 }

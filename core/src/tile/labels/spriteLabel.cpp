@@ -9,6 +9,7 @@ SpriteLabel::SpriteLabel(Label::Transform _transform, const glm::vec2& _size, co
 }
 
 void SpriteLabel::pushTransform(VboMesh& _mesh) {
+    // TODO: update the mesh
 }
 
 void SpriteLabel::updateBBoxes() {
