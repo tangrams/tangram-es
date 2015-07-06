@@ -29,7 +29,7 @@ void SpriteStyle::constructVertexLayout() {
 void SpriteStyle::constructShaderProgram() {
 
     std::string fragShaderSrcStr = stringFromResource("sprite.fs");
-    std::string vertShaderSrcStr = stringFromResource("sprite.vs");
+    std::string vertShaderSrcStr = stringFromResource("point.vs");
 
     m_shaderProgram->setSourceStrings(fragShaderSrcStr, vertShaderSrcStr);
     
