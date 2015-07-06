@@ -62,10 +62,8 @@ void MapTile::pushLabelTransforms(const Style& _style, std::shared_ptr<Labels> _
     std::shared_ptr<VboMesh>& styleMesh = m_geometry[_style.getName()];
     
     if (styleMesh) {
-        bool hasLabels = false;
         for(auto& label : m_labels[_style.getName()]) {
             label->pushTransform(*styleMesh);
-            hasLabels = true;
         }
         
         if (styleMesh->numVertices() > 0 && _style.getName() == "text") {
