@@ -32,17 +32,12 @@ std::shared_ptr<Label> Labels::addTextLabel(MapTile& _tile, TextBuffer& _buffer,
     
     std::shared_ptr<TextLabel> label(new TextLabel(_transform, _text, textID, _type));
 
-    m_ftContext->lock();
-    
     // raterize the text label
     if (!label->rasterize(_buffer)) {
-        m_ftContext->unlock();
         
         label.reset();
         return nullptr;
     }
-    
-    m_ftContext->unlock();
     
     addLabel(_tile, _styleName, std::dynamic_pointer_cast<Label>(label));
 
