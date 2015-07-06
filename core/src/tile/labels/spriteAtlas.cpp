@@ -22,6 +22,6 @@ SpriteNode SpriteAtlas::getSpriteNode(const std::string& _name) {
     return m_spritesNodes.at(_name);
 }
 
-void SpriteAtlas::bind() {
-    m_texture->bind(0);
+void SpriteAtlas::bind(GLuint _slot) {
+    m_texture->bind(_slot);
 }

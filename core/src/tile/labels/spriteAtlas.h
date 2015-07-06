@@ -19,7 +19,7 @@ public:
     void addSpriteNode(const std::string& _name, glm::vec2 _origin, glm::vec2 _size);
     SpriteNode getSpriteNode(const std::string& _name);
     
-    void bind();
+    void bind(GLuint _slot = 0);
     
 private:
     std::map<std::string, SpriteNode> m_spritesNodes;
