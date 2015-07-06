@@ -55,8 +55,6 @@ public:
     
     int getVerticesSize();
     
-    bool hasData();
-    
     /* get the axis aligned bounding box for a text */
     glm::vec4 getBBox(fsuint _textID);
     

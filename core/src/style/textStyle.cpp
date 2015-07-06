@@ -118,10 +118,8 @@ void TextStyle::onBeginBuildTile(VboMesh& _mesh) const {
 
 void TextStyle::onEndBuildTile(VboMesh& _mesh) const {
     auto& buffer = static_cast<TextStyle::Mesh&>(_mesh);
-    
+
     buffer.finish();
-    
-    m_labels->getFontContext()->clearState();
 }
 
 void TextStyle::onBeginDrawFrame(const std::shared_ptr<View>& _view, const std::shared_ptr<Scene>& _scene) {

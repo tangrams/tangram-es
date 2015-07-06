@@ -54,7 +54,7 @@ bool TextBuffer::rasterize(const std::string& _text, fsuint _id) {
 void TextBuffer::pushBuffer() {
     if (m_dirty) {
         bind();
-        glfonsUpdateBuffer(m_fontContext->getFontContext());
+        glfonsUpdateBuffer(m_fontContext->getFontContext(), this);
         unbind();
         m_dirty = false;
     }
