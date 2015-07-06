@@ -59,9 +59,10 @@ bool Labels::addLabel(MapTile& _tile, const std::string& _styleName, Label::Tran
 void Labels::updateOcclusions() {
     m_currentZoom = m_view->getZoom();
 
-    // merge pending labels from threads
-    m_labels.reserve(m_labels.size() + m_pendingLabels.size());
-    {
+    if (!m_pendingLabels.empty()) {
+        // merge pending labels from threads
+        m_labels.reserve(m_labels.size() + m_pendingLabels.size());
+
         std::lock_guard<std::mutex> lock(m_mutex);
         m_labels.insert(m_labels.end(),
                         std::make_move_iterator(m_pendingLabels.begin()),
