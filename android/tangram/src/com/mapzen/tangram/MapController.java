@@ -46,8 +46,14 @@ public class MapController implements Renderer, OnTouchListener, OnScaleGestureL
     }
 
     public double[] getMapPosition() {
+        return getMapPosition(new double[2]);
+    }
+
+    public double[] getMapPosition(double[] coordinatesOut) {
         if (initialized) { getPosition(mapLonLat); }
-        return new double[] {mapLonLat[0], mapLonLat[1]};
+        coordinatesOut[0] = mapLonLat[0];
+        coordinatesOut[1] = mapLonLat[1];
+        return coordinatesOut;
     }
 
     public void setMapZoom(float zoom) {
