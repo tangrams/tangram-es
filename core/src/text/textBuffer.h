@@ -2,16 +2,26 @@
 
 #include "texture.h"
 #include "glfontstash.h"
-#include "util/vboMesh.h"
+#include "util/typedMesh.h"
 
-/* 
+struct TextVert {
+    glm::vec2 pos;
+    glm::vec2 uvs;
+    glm::vec2 screenPos;
+    float alpha;
+    float rotation;
+};
+
+class FontContext;
+
+/*
  * This class represents a text buffer, each text buffer has several text ids
  */
-class TextBuffer {
+class TextBuffer : public TypedMesh<TextVert> {
 
 public:
 
-    TextBuffer(FONScontext* _fsContext);
+    TextBuffer(std::shared_ptr<FontContext> _fontContext, std::shared_ptr<VertexLayout> _vertexLayout);
     ~TextBuffer();
     
     /* generates a text id */
@@ -29,10 +39,6 @@ public:
      *  alpha should be in [0..1]
      */
     void transformID(fsuint _textID, float _x, float _y, float _rot, float _alpha);
-    
-    void setMesh(std::shared_ptr<VboMesh> _mesh) { m_mesh = _mesh; }
-    
-    std::shared_ptr<VboMesh> getWeakMesh();
 
     void pushBuffer();
     
@@ -49,13 +55,12 @@ public:
     /* get the axis aligned bounding box for a text */
     glm::vec4 getBBox(fsuint _textID);
     
-    void bind();
-    void unbind();
+    /* get the vertices from the font context and add them as vbo mesh data */
+    void finish();
 
 private:
     bool m_dirty;
     fsuint m_fsBuffer;
     FONScontext* m_fsContext;
-    std::weak_ptr<VboMesh> m_mesh;
 
 };

@@ -13,10 +13,6 @@ FontContext::~FontContext() {
     glfonsDelete(m_fsContext);
 }
 
-std::shared_ptr<TextBuffer> FontContext::genTextBuffer() {
-    return std::shared_ptr<TextBuffer>(new TextBuffer(m_fsContext));
-}
-
 const std::unique_ptr<Texture>& FontContext::getAtlas() const {
     return m_atlas;
 }
@@ -33,14 +29,6 @@ void FontContext::clearState() {
     fonsClearState(m_fsContext);
 }
 
-void FontContext::useBuffer(const std::shared_ptr<TextBuffer>& _textBuffer) {
-    if (_textBuffer) {
-        _textBuffer->bind();
-    }
-
-    m_currentBuffer = _textBuffer;
-}
-
 void FontContext::setSignedDistanceField(float _blurSpread) {
     fonsSetBlur(m_fsContext, _blurSpread);
     fonsSetBlurType(m_fsContext, FONS_EFFECT_DISTANCE_FIELD);
@@ -52,10 +40,6 @@ void FontContext::lock() {
 
 void FontContext::unlock() {
     m_contextMutex->unlock();
-}
-
-std::shared_ptr<TextBuffer> FontContext::getCurrentBuffer() {
-    return m_currentBuffer.lock();
 }
 
 bool FontContext::addFont(const std::string& _fontFile, std::string _name) {
@@ -97,11 +81,11 @@ void updateAtlas(void* _userPtr, unsigned int _xoff, unsigned int _yoff,
 
 void updateBuffer(void* _userPtr, GLintptr _offset, GLsizei _size, float* _newData) {
     FontContext* fontContext = static_cast<FontContext*>(_userPtr);
-    auto buffer = fontContext->getCurrentBuffer();
+    //auto buffer = fontContext->getCurrentBuffer();
     
-    if (buffer->hasData()) {
-        buffer->getWeakMesh()->update(_offset, _size, reinterpret_cast<unsigned char*>(_newData));
-    }
+    //if (buffer->hasData()) {
+    //    buffer->getWeakMesh()->update(_offset, _size, reinterpret_cast<unsigned char*>(_newData));
+    //}
 }
 
 void FontContext::initFontContext(int _atlasSize) {

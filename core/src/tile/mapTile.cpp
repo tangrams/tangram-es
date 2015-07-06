@@ -29,8 +29,7 @@ MapTile::MapTile(TileID _id, const MapProjection& _projection) : m_id(_id),  m_p
 MapTile::MapTile(MapTile&& _other) : m_id(std::move(m_id)), m_proxyCounter(std::move(_other.m_proxyCounter)), 
                                      m_projection(std::move(_other.m_projection)), m_scale(std::move(_other.m_scale)), 
                                      m_inverseScale(std::move(_other.m_inverseScale)), m_tileOrigin(std::move(_other.m_tileOrigin)), 
-                                     m_modelMatrix(std::move(_other.m_modelMatrix)), m_geometry(std::move(_other.m_geometry)), 
-                                     m_buffers(std::move(_other.m_buffers)) {}
+                                     m_modelMatrix(std::move(_other.m_modelMatrix)), m_geometry(std::move(_other.m_geometry)) {}
 
 
 MapTile::~MapTile() {
@@ -41,21 +40,6 @@ void MapTile::addGeometry(const Style& _style, std::shared_ptr<VboMesh> _mesh) {
 
     m_geometry[_style.getName()] = std::move(_mesh); // Move-construct a unique_ptr at the value associated with the given style
 
-}
-
-void MapTile::setTextBuffer(const Style& _style, std::shared_ptr<TextBuffer> _buffer) {
-
-    m_buffers[_style.getName()] = _buffer;
-}
-
-std::shared_ptr<TextBuffer> MapTile::getTextBuffer(const Style& _style) const {
-    auto it = m_buffers.find(_style.getName());
-
-    if (it != m_buffers.end()) {
-        return it->second;
-    }
-
-    return nullptr;
 }
 
 void MapTile::update(float _dt, const View& _view) {
@@ -78,29 +62,13 @@ void MapTile::updateLabels(float _dt, const Style& _style, const View& _view) {
 }
 
 void MapTile::pushLabelTransforms(const Style& _style, std::shared_ptr<Labels> _labels) {
-    auto it = m_buffers.find(_style.getName());
+    std::shared_ptr<VboMesh>& styleMesh = m_geometry[_style.getName()];
     
-    if (it == m_buffers.end()) {
-        return;
-    }
-
-    auto textBuffer = it->second;
-    
-    if (textBuffer->hasData()) {
-        auto ftContext = _labels->getFontContext();
-
-        // FIXME : locking during sprite updates
-        ftContext->lock();
-        ftContext->useBuffer(textBuffer);
-        
+    if (styleMesh) {
         for(auto& label : m_labels[_style.getName()]) {
-            label->pushTransform();
+            label->pushTransform(*styleMesh);
         }
-        
-        textBuffer->pushBuffer();
-        ftContext->unlock();
     }
-    
 }
 
 void MapTile::draw(const Style& _style, const View& _view) {

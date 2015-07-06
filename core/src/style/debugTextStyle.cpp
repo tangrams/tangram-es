@@ -9,13 +9,13 @@ DebugTextStyle::DebugTextStyle(const std::string& _fontName, std::string _name, 
 void DebugTextStyle::addData(TileData& _data, MapTile& _tile, const MapProjection& _mapProjection) {
 
     if (Tangram::getDebugFlag(Tangram::DebugFlags::TILE_INFOS)) {
-        onBeginBuildTile(_tile);
-
-        std::shared_ptr<VboMesh> mesh(new Mesh(m_vertexLayout, m_drawMode));
+        std::shared_ptr<VboMesh> mesh(newMesh());
+        auto& buffer = static_cast<TextBuffer&>(*mesh);
+        
+        onBeginBuildTile(*mesh);
         
         auto ftContext = m_labels->getFontContext();
-        auto textBuffer = _tile.getTextBuffer(*this);
-
+        
         ftContext->setFont(m_fontName, m_fontSize * m_pixelScale);
 
         if (m_sdf) {
@@ -24,9 +24,9 @@ void DebugTextStyle::addData(TileData& _data, MapTile& _tile, const MapProjectio
         }
 
         std::string tileID = std::to_string(_tile.getID().x) + "/" + std::to_string(_tile.getID().y) + "/" + std::to_string(_tile.getID().z);
-        m_labels->addTextLabel(_tile, m_name, { glm::vec2(0), glm::vec2(0) }, tileID, Label::Type::DEBUG);
+        m_labels->addTextLabel(_tile, buffer, m_name, { glm::vec2(0), glm::vec2(0) }, tileID, Label::Type::DEBUG);
 
-        onEndBuildTile(_tile, mesh);
+        onEndBuildTile(*mesh);
 
         mesh->compileVertexBuffer();
         _tile.addGeometry(*this, mesh);

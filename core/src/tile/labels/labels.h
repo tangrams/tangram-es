@@ -60,7 +60,7 @@ public:
      * Creates a text slabel for and associate it with the current processed <MapTile> TileID for a specific syle name
      * Returns the created label
      */
-    std::shared_ptr<Label> addTextLabel(MapTile& _tile, const std::string& _styleName, Label::Transform _transform, std::string _text, Label::Type _type);
+    std::shared_ptr<Label> addTextLabel(MapTile& _tile, TextBuffer& _buffer, const std::string& _styleName, Label::Transform _transform, std::string _text, Label::Type _type);
     
     /*
      * Creates a sprite slabel for and associate it with the current processed <MapTile> TileID for a specific syle name

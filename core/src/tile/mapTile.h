@@ -76,9 +76,6 @@ public:
     /* Push the label transforms to the font rendering context */
     void pushLabelTransforms(const Style& _style, std::shared_ptr<Labels> _labels);
 
-    void setTextBuffer(const Style& _style, std::shared_ptr<TextBuffer> _buffer);
-    std::shared_ptr<TextBuffer> getTextBuffer(const Style& _style) const;
-
     /* Draws the geometry associated with the provided <Style> and view-projection matrix */
     void draw(const Style& _style, const View& _view);
     
@@ -114,6 +111,5 @@ private:
 
     std::unordered_map<std::string, std::shared_ptr<VboMesh>> m_geometry; // Map of <Style>s and their associated <VboMesh>es
     std::unordered_map<std::string, std::vector<std::shared_ptr<Label>>> m_labels;
-    std::map<std::string, std::shared_ptr<TextBuffer>> m_buffers; // Map of <Style>s and the associated text buffer
 
 };
