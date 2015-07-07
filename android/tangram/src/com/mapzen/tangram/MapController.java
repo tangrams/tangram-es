@@ -123,7 +123,7 @@ public class MapController implements Renderer, OnTouchListener, OnScaleGestureL
      * Get the zoom level of the map view
      * @return Fractional zoom level
      */
-    public float  getMapZoom() {
+    public float getMapZoom() {
         if (initialized) { mapZoom = getZoom(); }
         return mapZoom;
     }
@@ -165,6 +165,27 @@ public class MapController implements Renderer, OnTouchListener, OnScaleGestureL
     }
 
     /**
+     * Find the geographic coordinates corrseponding to the given position on screen
+     * @param screenX Pixels from the left edge of the screen
+     * @param screenY Pixels from the top edge of the screen
+     * @return Degrees longitude and latitude corresponding to the given point, in a two-element array
+     */
+    public double[] coordinatesAtScreenPosition(double screenX, double screenY) {
+        return coordinatesAtScreenPosition(new double[] {screenX, screenY});
+    }
+
+    /**
+     * Find geographic coordinates corrseponding to the given position on screen
+     * @param coordinatesInOut Two-element array of the x and y screen coordinates in pixels, the same
+     * array will be returned with the values modified
+     * @return Degrees longitude and latitude corresponding to the given point, in a two-element array
+     */
+    public double[] coordinatesAtScreenPosition(double[] coordinatesInOut) {
+        if (initialized) { screenToWorldCoordinates(coordinatesInOut); }
+        return coordinatesInOut;
+    }
+
+    /**
      * Manually trigger a re-draw of the map view
      *
      * Typically this does not need to be called from outside Tangram, see {@link setRenderMode}.
@@ -199,6 +220,7 @@ public class MapController implements Renderer, OnTouchListener, OnScaleGestureL
     private native float getRotation();
     private native void setTilt(float radians);
     private native float getTilt();
+    private native void screenToWorldCoordinates(double[] screenCoords);
     private native void onContextDestroyed();
     private native void setPixelScale(float scale);
     private native void handleTapGesture(float posX, float posY);

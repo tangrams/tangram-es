@@ -48,6 +48,9 @@ namespace Tangram {
     // Get the tilt angle of the view in radians; 0 corresponds to straight down
     float getTilt();
 
+    // Transform coordinates in screen space (x right, y down) into their longitude and latitude in the map view
+    void screenToWorldCoordinates(double& _x, double& _y);
+
     // Invalidate and re-create all OpenGL resources
     void onContextDestroyed();
 

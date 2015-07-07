@@ -232,6 +232,17 @@ namespace Tangram {
 
     }
 
+    void screenToWorldCoordinates(double& _x, double& _y) {
+
+        float screenX = _x, screenY = _y;
+        m_view->screenToGroundPlane(screenX, screenY);
+        glm::dvec2 meters(screenX + m_view->getPosition().x, screenY + m_view->getPosition().y);
+        glm::dvec2 lonLat = m_view->getMapProjection().MetersToLonLat(meters);
+        _x = lonLat.x;
+        _y = lonLat.y;
+
+    }
+
     void setPixelScale(float _pixelsPerPoint) {
 
         if (m_view) {
