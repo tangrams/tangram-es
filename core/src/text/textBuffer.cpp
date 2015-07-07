@@ -26,13 +26,6 @@ int TextBuffer::getVerticesSize() {
     return size;
 }
 
-bool TextBuffer::getVertices(float* _vertices) {
-    bind();
-    bool res = glfonsVertices(m_fontContext->getFontContext(), _vertices);
-    unbind();
-    return res;
-}
-
 fsuint TextBuffer::genTextID() {
     fsuint id;
     bind();
@@ -72,7 +65,7 @@ glm::vec4 TextBuffer::getBBox(fsuint _textID) {
     return bbox;
 }
 
-void TextBuffer::finish() {
+void TextBuffer::addBufferVerticesToMesh() {
     std::vector<TextVert> vertices;
     int bufferSize = getVerticesSize();
     
@@ -82,7 +75,11 @@ void TextBuffer::finish() {
     
     vertices.resize(bufferSize);
     
-    if (getVertices(reinterpret_cast<float*>(vertices.data()))) {
+    bind();
+    bool res = glfonsVertices(m_fontContext->getFontContext(), reinterpret_cast<float*>(vertices.data()));
+    unbind();
+    
+    if (res) {
         addVertices(std::move(vertices), {});
     }
 }

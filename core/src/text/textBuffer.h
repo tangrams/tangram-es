@@ -27,6 +27,7 @@ public:
     /* generates a text id */
     fsuint genTextID();
 
+    /* creates a text buffer and bind it */
     void init();
 
     /* ask the font rasterizer to rasterize a specific text for a text id */
@@ -42,19 +43,13 @@ public:
 
     void pushBuffer();
     
-    /* 
-     * fills the vector of float with the rasterized text ids linked to the text buffer 
-     * nVerts is the number of vertices inside the vector
-     */
-    bool getVertices(float* _vertices);
-    
     int getVerticesSize();
     
     /* get the axis aligned bounding box for a text */
     glm::vec4 getBBox(fsuint _textID);
-    
+
     /* get the vertices from the font context and add them as vbo mesh data */
-    void finish();
+    void addBufferVerticesToMesh();
 
 private:
     
