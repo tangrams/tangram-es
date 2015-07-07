@@ -1,6 +1,5 @@
 #include <jni.h>
 #include "tangram.h"
-// Includes platform.h for setAssetManager reference
 #include "platform.h"
 
 extern "C" {
@@ -37,6 +36,12 @@ extern "C" {
 
     JNIEXPORT jfloat JNICALL Java_com_mapzen_tangram_MapController_getTilt(JNIEnv* jniEnv, jobject obj) {
         return Tangram::getTilt();
+    }
+
+    JNIEXPORT void JNICALL Java_com_mapzen_tangram_MapController_screenToWorldCoordinates(JNIEnv* jniEnv, jobject obj, jdoubleArray screenPos) {
+        jdouble* arr = jniEnv->GetDoubleArrayElements(screenPos, NULL);
+        Tangram::screenToWorldCoordinates(arr[0], arr[1]);
+        jniEnv->ReleaseDoubleArrayElements(screenPos, arr, 0);
     }
 
     JNIEXPORT void JNICALL Java_com_mapzen_tangram_MapController_init(JNIEnv* jniEnv, jobject obj, jobject tangramInstance, jobject assetManager) {
