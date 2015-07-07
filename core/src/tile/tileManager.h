@@ -1,19 +1,18 @@
 #pragma once
 
-#include <map>
-#include <list>
-#include <vector>
-#include <memory>
-#include <future>
-#include <set>
-#include <mutex>
-
-#include "tileWorker.h"
+#include "data/tileData.h"
+#include "tile/tileWorker.h"
 #include "util/tileID.h"
-#include "data/dataSource.h"
 
-class Scene;
+#include <list>
+#include <map>
+#include <memory>
+#include <mutex>
+#include <vector>
+
+class DataSource;
 class MapTile;
+class Scene;
 class View;
 
 /* Singleton container of <MapTile>s
@@ -42,7 +41,7 @@ public:
     void setScene(std::shared_ptr<Scene> _scene) { m_scene = _scene; }
 
     /* Adds a <DataSource> from which tile data should be retrieved */
-    void addDataSource(std::unique_ptr<DataSource> _source) { m_dataSources.push_back(std::move(_source)); }
+    void addDataSource(std::unique_ptr<DataSource> _source);
 
     /* Updates visible tile set if necessary
      * 

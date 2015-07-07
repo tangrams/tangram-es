@@ -1,5 +1,7 @@
-#include <limits>
 #include "geom.h"
+
+#include <limits>
+#include <cmath>
 
 int signValue(float _n) {
     if( _n > 0 ) return 1;

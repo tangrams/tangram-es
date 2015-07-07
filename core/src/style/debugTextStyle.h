@@ -2,7 +2,6 @@
 
 #include "textStyle.h"
 #include "tangram.h"
-#include "typedMesh.h"
 
 class DebugTextStyle : public TextStyle {
 

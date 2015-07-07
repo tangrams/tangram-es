@@ -4,6 +4,7 @@
 #include <iostream>
 #include <vector>
 #include "tangram.h"
+#include "platform.h"
 #include "gl.h"
 #define GLFONTSTASH_IMPLEMENTATION
 #include "glfontstash.h"

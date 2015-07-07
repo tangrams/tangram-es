@@ -1,0 +1,28 @@
+buildscript {
+  dependencies {
+    classpath 'com.android.tools.build:gradle:1.2.3'
+  }
+}
+
+apply plugin: 'com.android.application'
+
+android {
+  compileSdkVersion 22
+  buildToolsVersion "21.1.2"
+
+  defaultConfig {
+    minSdkVersion 15
+    targetSdkVersion 22
+  }
+
+  sourceSets.main {
+    manifest.srcFile 'AndroidManifest.xml'
+    java.srcDirs = ['src']
+    resources.srcDirs = ['src']
+    res.srcDirs = ['res']
+  }
+}
+
+dependencies {
+  compile project(":tangram")
+}

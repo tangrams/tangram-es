@@ -1,9 +1,10 @@
 #include "tileWorker.h"
-#include "platform.h"
-#include "view/view.h"
-#include "style/style.h"
 
-#include <chrono>
+#include "data/dataSource.h"
+#include "platform.h"
+#include "style/style.h"
+#include "tile/mapTile.h"
+#include "view/view.h"
 
 TileWorker::TileWorker() {
     m_free = true;

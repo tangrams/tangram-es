@@ -1,9 +1,9 @@
 #pragma once
 
 #include "texture.h"
-#include "stb_image.h"
+
 #include <vector>
-#include <cstring>
+#include <string>
 
 class TextureCube : public Texture {
     

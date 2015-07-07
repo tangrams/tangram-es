@@ -1,15 +1,14 @@
 #pragma once
 
+#include "glm/mat4x4.hpp"
+#include "glm/vec2.hpp"
+#include "tileID.h"
+
 #include <map>
 #include <memory>
 #include <string>
 #include <unordered_map>
 #include <vector>
-
-#include "glm/mat4x4.hpp"
-#include "glm/vec2.hpp"
-
-#include "tileID.h"
 
 class Label;
 class Labels;

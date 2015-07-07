@@ -1,5 +1,8 @@
 #include "shaderProgram.h"
+
+#include "platform.h"
 #include "scene/light.h"
+
 
 GLuint ShaderProgram::s_activeGlProgram = 0;
 int ShaderProgram::s_validGeneration = 0;
@@ -29,7 +32,7 @@ ShaderProgram::~ShaderProgram() {
     }
 
     m_attribMap.clear();
-    
+
 }
 
 void ShaderProgram::setSourceStrings(const std::string& _fragSrc, const std::string& _vertSrc){
@@ -39,7 +42,7 @@ void ShaderProgram::setSourceStrings(const std::string& _fragSrc, const std::str
 }
 
 void ShaderProgram::addSourceBlock(const std::string& _tagName, const std::string &_glslSource, bool _allowDuplicate){
-    
+
     if (!_allowDuplicate) {
         for (auto& source : m_sourceBlocks[_tagName]) {
             if (_glslSource == source) {
@@ -47,25 +50,12 @@ void ShaderProgram::addSourceBlock(const std::string& _tagName, const std::strin
             }
         }
     }
-    
+
     m_sourceBlocks[_tagName].push_back("\n" + _glslSource);
     m_needsBuild = true;
 
     //  TODO:
     //          - add Global Blocks
-}
-
-void ShaderProgram::removeSourceBlock(const std::string& _tagName, const std::string& _glslSource){
-    bool bChange = false;
-
-    for (int i = m_sourceBlocks[_tagName].size()-1; i >= 0; i--) {
-        if (_glslSource == m_sourceBlocks[_tagName][i]) {
-            m_sourceBlocks[_tagName].erase(m_sourceBlocks[_tagName].begin()+i);
-            bChange = true;
-        }
-    }
-
-    m_needsBuild = bChange;
 }
 
 const GLint ShaderProgram::getAttribLocation(const std::string& _attribName) {
@@ -101,11 +91,11 @@ const GLint ShaderProgram::getUniformLocation(const std::string& _uniformName) {
 void ShaderProgram::use() {
 
     checkValidity();
-    
+
     if (m_needsBuild) {
         build();
     }
-    
+
     if (m_glProgram != 0 && m_glProgram != s_activeGlProgram) {
         glUseProgram(m_glProgram);
         s_activeGlProgram = m_glProgram;
@@ -114,16 +104,16 @@ void ShaderProgram::use() {
 }
 
 bool ShaderProgram::build() {
-    
+
     m_needsBuild = false;
     m_generation = s_validGeneration;
-    
+
     // Inject source blocks
-    
+
     std::string vertSrc = m_vertexShaderSource;
     std::string fragSrc = m_fragmentShaderSource;
     applySourceBlocks(vertSrc, fragSrc);
-    
+
     // Try to compile vertex and fragment shaders, releasing resources and quiting on failure
 
     GLint vertexShader = makeCompiledShader(vertSrc, GL_VERTEX_SHADER);
@@ -216,7 +206,7 @@ GLuint ShaderProgram::makeCompiledShader(const std::string& _src, GLenum _type) 
             std::vector<GLchar> infoLog(infoLength);
             glGetShaderInfoLog(shader, infoLength, NULL, &infoLog[0]);
             logMsg("Error compiling shader:\n%s\n", &infoLog[0]);
-            //logMsg("\n%s\n", source); 
+            //logMsg("\n%s\n", source);
         }
         glDeleteShader(shader);
         return 0;
@@ -227,22 +217,22 @@ GLuint ShaderProgram::makeCompiledShader(const std::string& _src, GLenum _type) 
 }
 
 void ShaderProgram::applySourceBlocks(std::string& _vertSrcOut, std::string& _fragSrcOut) {
-    
+
     _vertSrcOut.insert(0, "#pragma tangram: defines\n");
     _fragSrcOut.insert(0, "#pragma tangram: defines\n");
-    
+
     float depthDelta = 1.f / (1 << 16);
     _vertSrcOut.insert(0, "#define TANGRAM_DEPTH_DELTA "+std::to_string(depthDelta)+"\n");
-    
+
     Light::assembleLights(m_sourceBlocks);
-    
+
     for (auto& block : m_sourceBlocks) {
-        
+
         std::string tag = "#pragma tangram: " + block.first;
-        
+
         size_t vertSrcPos = _vertSrcOut.find(tag);
         size_t fragSrcPos = _fragSrcOut.find(tag);
-        
+
         if (vertSrcPos != std::string::npos) {
             vertSrcPos += tag.length();
             for (auto& source : block.second) {
@@ -258,25 +248,25 @@ void ShaderProgram::applySourceBlocks(std::string& _vertSrcOut, std::string& _fr
             }
         }
     }
-    
+
 }
 
 void ShaderProgram::checkValidity() {
-    
+
     if (m_generation != s_validGeneration) {
         m_glFragmentShader = 0;
         m_glVertexShader = 0;
         m_glProgram = 0;
         m_needsBuild = true;
     }
-    
+
 }
 
 void ShaderProgram::invalidateAllPrograms() {
-    
+
     s_activeGlProgram = 0;
     ++s_validGeneration;
-    
+
 }
 
 void ShaderProgram::setUniformi(const std::string& _name, int _value) {

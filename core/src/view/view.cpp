@@ -1,13 +1,12 @@
 #include "view.h"
 
-#include <cmath>
-#include <functional>
-
-#include "util/tileID.h"
 #include "platform.h"
 #include "tangram.h"
 #include "glm/gtc/matrix_transform.hpp"
 #include "glm/gtx/rotate_vector.hpp"
+
+#include <cmath>
+#include <functional>
 
 constexpr float View::s_maxZoom; // Create a stack reference to the static member variable
 

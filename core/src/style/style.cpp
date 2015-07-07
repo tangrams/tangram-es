@@ -1,6 +1,13 @@
 #include "style.h"
+
 #include "scene/scene.h"
+#include "scene/light.h"
+#include "tile/mapTile.h"
 #include "util/vboMesh.h"
+#include "view/view.h"
+
+#include "csscolorparser.hpp"
+
 #include <sstream>
 
 Style::Style(std::string _name, GLenum _drawMode) : m_name(_name), m_drawMode(_drawMode) {
@@ -26,14 +33,39 @@ uint32_t Style::parseColorProp(const std::string& _colorPropStr) {
     return color;
 }
 
-void Style::setMaterial(const std::shared_ptr<Material>& _material) {
+void Style::build(const std::vector<std::unique_ptr<Light>>& _lights) {
 
-    if ( m_material ) {
-        m_material->removeFromProgram(m_shaderProgram);
+    constructVertexLayout();
+    constructShaderProgram();
+
+    switch (m_lightingType) {
+        case LightingType::vertex:
+            m_shaderProgram->addSourceBlock("defines", "#define TANGRAM_LIGHTING_VERTEX\n", false);
+            break;
+        case LightingType::fragment:
+            m_shaderProgram->addSourceBlock("defines", "#define TANGRAM_LIGHTING_FRAGMENT\n", false);
+            break;
+        default:
+            break;
     }
 
-    m_material = _material;
     m_material->injectOnProgram(m_shaderProgram);
+
+    for (auto& light : _lights) {
+        light->injectOnProgram(m_shaderProgram);
+    }
+
+}
+
+void Style::setMaterial(const std::shared_ptr<Material>& _material) {
+
+    m_material = _material;
+
+}
+
+void Style::setLightingType(LightingType _type){
+
+    m_lightingType = _type;
 
 }
 
@@ -105,34 +137,14 @@ void Style::addData(TileData& _data, MapTile& _tile, const MapProjection& _mapPr
 
 void Style::onBeginDrawFrame(const std::shared_ptr<View>& _view, const std::shared_ptr<Scene>& _scene) {
 
-    // Set up material
-    if (!m_material) {
-        setMaterial(std::make_shared<Material>());
-    }
-
     m_material->setupProgram(m_shaderProgram);
 
     // Set up lights
     for (const auto& light : _scene->getLights()) {
-        light.second->setupProgram(_view, m_shaderProgram);
+        light->setupProgram(_view, m_shaderProgram);
     }
 
     m_shaderProgram->setUniformf("u_zoom", _view->getZoom());
-
-}
-
-void Style::setLightingType(LightingType _lType){
-
-    if ( _lType == LightingType::vertex ) {
-        m_shaderProgram->removeSourceBlock("defines", "#define TANGRAM_LIGHTING_FRAGMENT\n");
-        m_shaderProgram->addSourceBlock(   "defines", "#define TANGRAM_LIGHTING_VERTEX\n", false);
-    } else if  (_lType == LightingType::fragment ) {
-        m_shaderProgram->removeSourceBlock("defines", "#define TANGRAM_LIGHTING_VERTEX\n");
-        m_shaderProgram->addSourceBlock(   "defines", "#define TANGRAM_LIGHTING_FRAGMENT\n", false);
-    } else {
-        m_shaderProgram->removeSourceBlock("defines", "#define TANGRAM_LIGHTING_VERTEX\n");
-        m_shaderProgram->removeSourceBlock("defines", "#define TANGRAM_LIGHTING_FRAGMENT\n");
-    }
 
 }
 

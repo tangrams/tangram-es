@@ -1,4 +1,5 @@
 #include "vertexLayout.h"
+#include "shaderProgram.h"
 
 std::unordered_map<GLint, GLuint> VertexLayout::s_enabledAttribs = std::unordered_map<GLint, GLuint>();
 
@@ -40,19 +41,20 @@ VertexLayout::~VertexLayout() {
 
 }
 
-void VertexLayout::enable(const std::shared_ptr<ShaderProgram> _program, size_t byteOffset) {
+void VertexLayout::enable(ShaderProgram& _program, size_t byteOffset, void* _ptr) {
 
-    GLuint glProgram = _program->getGlProgram();
+    GLuint glProgram = _program.getGlProgram();
 
     // Enable all attributes for this layout
     for (auto& attrib : m_attribs) {
 
-        GLint location = _program->getAttribLocation(attrib.name);
+        GLint location = _program.getAttribLocation(attrib.name);
 
         if (location != -1) {
             glEnableVertexAttribArray(location);
-            glVertexAttribPointer(location, attrib.size, attrib.type, attrib.normalized, m_stride,
-                                  ((unsigned char*) attrib.offset) + byteOffset);
+
+            void* data = _ptr ? _ptr : ((unsigned char*) attrib.offset) + byteOffset;
+            glVertexAttribPointer(location, attrib.size, attrib.type, attrib.normalized, m_stride, data);
             s_enabledAttribs[location] = glProgram; // Track currently enabled attribs by the program to which they are bound
         }
 

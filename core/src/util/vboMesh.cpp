@@ -1,7 +1,5 @@
 #include "vboMesh.h"
-#include "platform.h"
-
-#define MAX_INDEX_VALUE 65535 // Maximum value of GLushort
+#include "shaderProgram.h"
 
 int VboMesh::s_validGeneration = 0;
 
@@ -73,10 +71,10 @@ void VboMesh::subDataUpload() {
     if (m_dirtySize != 0) {
         glBindBuffer(GL_ARRAY_BUFFER, m_glVertexBuffer);
 
-        long vertexBytes = m_nVertices * m_vertexLayout->getStride();
+        size_t vertexBytes = m_nVertices * m_vertexLayout->getStride();
 
         // updating the entire buffer
-        if (std::abs(m_dirtySize - vertexBytes) < m_vertexLayout->getStride()) {
+        if (vertexBytes - m_dirtySize < m_vertexLayout->getStride()) {
 
             // invalidate the data store on the driver
             glBufferData(GL_ARRAY_BUFFER, vertexBytes, NULL, m_hint);
@@ -169,7 +167,7 @@ void VboMesh::draw(const std::shared_ptr<ShaderProgram> _shader) {
         size_t byteOffset = vertexOffset * m_vertexLayout->getStride();
 
         // Enable vertex attribs via vertex layout object
-        m_vertexLayout->enable(_shader, byteOffset);
+        m_vertexLayout->enable(*_shader, byteOffset);
 
         // Draw as elements or arrays
         if (nIndices > 0) {

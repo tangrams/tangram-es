@@ -1,4 +1,9 @@
 #include "textureCube.h"
+#include "platform.h"
+#include "stb_image.h"
+
+#include <cstring> // for memcpy
+#include <cstdlib>
 
 TextureCube::TextureCube(std::string _file, TextureOptions _options) : Texture(0, 0, _options) {
 
