@@ -46,16 +46,16 @@ void setupJniEnv(JNIEnv* _jniEnv, jobject _tangramInstance, jobject _assetManage
 }
 
 void logMsg(const char* fmt, ...) {
-
+#ifdef LOG
     va_list args;
     va_start(args, fmt);
     __android_log_vprint(ANDROID_LOG_DEBUG, "Tangram", fmt, args);
     va_end(args);
-
+#endif
 }
 
 void requestRender() {
-    
+
     JNIEnv *jniEnv;
     int status = jvm->GetEnv((void**)&jniEnv, JNI_VERSION_1_6);
     if(status == JNI_EDETACHED) {
@@ -96,10 +96,10 @@ bool isContinuousRendering() {
 std::string stringFromResource(const char* _path) {
 
     std::string out;
-    
+
     // Open asset
     AAsset* asset = AAssetManager_open(assetManager, _path, AASSET_MODE_STREAMING);
-    
+
     if (asset == nullptr) {
         logMsg("Failed to open asset at path: %s\n", _path);
         return out;
@@ -108,7 +108,7 @@ std::string stringFromResource(const char* _path) {
     // Allocate string
     int length = AAsset_getLength(asset);
     out.resize(length);
-    
+
     // Read data
     int read = AAsset_read(asset, &out.front(), length);
 
@@ -151,15 +151,15 @@ unsigned char* bytesFromResource(const char* _path, unsigned int* _size) {
 }
 
 bool startUrlRequest(const std::string& _url, UrlCallback _callback) {
-    
+
     jstring jUrl = jniEnv->NewStringUTF(_url.c_str());
 
     // This is probably super dangerous. In order to pass a reference to our callback we have to convert it
-    // to a Java type. We allocate a new callback object and then reinterpret the pointer to it as a Java long. 
+    // to a Java type. We allocate a new callback object and then reinterpret the pointer to it as a Java long.
     // In Java, we associate this long with the current network request and pass it back to native code when
     // the request completes (either in onUrlSuccess or onUrlFailure), reinterpret the long back into a
-    // pointer, call the callback function if the request succeeded, and delete the heap-allocated UrlCallback 
-    // to make sure nothing is leaked. 
+    // pointer, call the callback function if the request succeeded, and delete the heap-allocated UrlCallback
+    // to make sure nothing is leaked.
     jlong jCallbackPtr = reinterpret_cast<jlong>(new UrlCallback(_callback));
 
     jboolean methodResult = jniEnv->CallBooleanMethod(tangramInstance, startUrlRequestMID, jUrl, jCallbackPtr);

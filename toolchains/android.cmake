@@ -1,5 +1,10 @@
 add_definitions(-DPLATFORM_ANDROID)
 
+if(LOG EQUAL 1)
+    message(STATUS "Building with logs")
+    add_definitions(-DLOG)
+endif()
+
 if(NOT MAKE_BUILD_TOOL)
     message(SEND_ERROR "Provide ndk make, located in <NDK_ROOT>/prebuilt/<OS>/bin/, -DMAKE_BUILD_TOOL=<NDK_PREBUILT_BIN>/make")
     return()

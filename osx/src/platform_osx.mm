@@ -14,52 +14,52 @@ static bool s_isContinuousRendering = false;
 NSURLSession* defaultSession;
 
 void logMsg(const char* fmt, ...) {
-    
+#ifdef LOG
     va_list args;
     va_start(args, fmt);
     vfprintf(stderr, fmt, args);
     va_end(args);
-    
+#endif
 }
 
 void requestRender() {
-    
+
     glfwPostEmptyEvent();
-    
+
 }
 
 void setContinuousRendering(bool _isContinuous) {
-    
+
     s_isContinuousRendering = _isContinuous;
-    
+
 }
 
 bool isContinuousRendering() {
-    
+
     return s_isContinuousRendering;
-    
+
 }
 
 NSString* resolveResourcePath(const char* _path) {
-    
+
     NSString* resourcePath = [[[NSBundle mainBundle] resourcePath] stringByAppendingString:@"/"];
     NSString* internalPath = [NSString stringWithUTF8String:_path];
     return [resourcePath stringByAppendingString:internalPath];
-    
+
 }
 
 std::string stringFromResource(const char* _path) {
-    
+
     NSString* path = resolveResourcePath(_path);
     NSString* str = [NSString stringWithContentsOfFile:path
                                               encoding:NSASCIIStringEncoding
                                                  error:NULL];
-    
+
     if (str == nil) {
         logMsg("Failed to read file at path: %s\n", _path);
         return std::move(std::string());
     }
-    
+
     return std::move(std::string([str UTF8String]));
 }
 
@@ -94,44 +94,44 @@ void NSurlInit() {
     defaultConfigObject.requestCachePolicy = NSURLRequestUseProtocolCachePolicy;
     defaultConfigObject.timeoutIntervalForRequest = 30;
     defaultConfigObject.timeoutIntervalForResource = 60;
-    
+
     defaultSession = [NSURLSession sessionWithConfiguration: defaultConfigObject];
 }
 
 bool startUrlRequest(const std::string& _url, UrlCallback _callback) {
 
     NSString* nsUrl = [NSString stringWithUTF8String:_url.c_str()];
-    
+
     void (^handler)(NSData*, NSURLResponse*, NSError*) = ^void (NSData* data, NSURLResponse* response, NSError* error) {
-        
+
         if(error == nil) {
-            
+
             int dataLength = [data length];
             std::vector<char> rawDataVec;
             rawDataVec.resize(dataLength);
             memcpy(rawDataVec.data(), (char *)[data bytes], dataLength);
             _callback(std::move(rawDataVec));
-            
+
         } else {
-            
+
             logMsg("ERROR: response \"%s\" with error \"%s\".\n", response, std::string([error.localizedDescription UTF8String]).c_str());
 
         }
-        
+
     };
-    
+
     NSURLSessionDataTask* dataTask = [defaultSession dataTaskWithURL:[NSURL URLWithString:nsUrl] completionHandler:handler];
-    
+
     [dataTask resume];
-    
+
     return true;
-    
+
 }
 
 void cancelUrlRequest(const std::string& _url) {
-    
+
     NSString* nsUrl = [NSString stringWithUTF8String:_url.c_str()];
-   
+
     [defaultSession getTasksWithCompletionHandler:^(NSArray* dataTasks, NSArray* uploadTasks, NSArray* downloadTasks) {
         for(NSURLSessionTask* task in dataTasks) {
             if([[task originalRequest].URL.absoluteString isEqualToString:nsUrl]) {

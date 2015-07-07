@@ -2,19 +2,24 @@ include(${CMAKE_SOURCE_DIR}/toolchains/iOS.toolchain.cmake)
 
 add_definitions(-DPLATFORM_IOS)
 
+if(LOG EQUAL 1)
+    message(STATUS "Building with logs")
+    add_definitions(-DLOG)
+endif()
+
 set(EXECUTABLE_NAME "tangram")
 
-set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} 
-    -fobjc-abi-version=2 
-    -fobjc-arc 
-    -std=gnu++11 
-    -stdlib=libc++ 
+set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS}
+    -fobjc-abi-version=2
+    -fobjc-arc
+    -std=gnu++11
+    -stdlib=libc++
     -isysroot ${CMAKE_IOS_SDK_ROOT}")
 set(CMAKE_CXX_FLAGS_DEBUG "-g -O0")
 
-set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} 
-    -fobjc-abi-version=2 
-    -fobjc-arc 
+set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS}
+    -fobjc-abi-version=2
+    -fobjc-arc
     -isysroot ${CMAKE_IOS_SDK_ROOT}")
 
 if(${IOS_PLATFORM} STREQUAL "SIMULATOR")
@@ -25,7 +30,7 @@ else()
     set(ARCH "armv6 armv7")
 endif()
 
-set(FRAMEWORKS CoreGraphics CoreFoundation QuartzCore UIKit OpenGLES Security CFNetwork GLKit) 
+set(FRAMEWORKS CoreGraphics CoreFoundation QuartzCore UIKit OpenGLES Security CFNetwork GLKit)
 set(MACOSX_BUNDLE_GUI_IDENTIFIER "com.mapzen.\${PRODUCT_NAME:Tangram}")
 set(APP_TYPE MACOSX_BUNDLE)
 
@@ -47,7 +52,7 @@ endif()
 set(IOS_EXTENSIONS_FILES *.mm *.cpp *.m)
 foreach(_ext ${IOS_EXTENSIONS_FILES})
     find_sources_and_include_directories(
-        ${PROJECT_SOURCE_DIR}/ios/src/*.h 
+        ${PROJECT_SOURCE_DIR}/ios/src/*.h
         ${PROJECT_SOURCE_DIR}/ios/src/${_ext})
 endforeach()
 
@@ -55,7 +60,7 @@ endforeach()
 function(link_libraries)
     target_link_libraries(${EXECUTABLE_NAME} core)
     target_link_libraries(${EXECUTABLE_NAME} ${ZLIB_LIBRARIES})
-    
+
     foreach(_framework ${FRAMEWORKS})
         add_framework(${_framework} ${EXECUTABLE_NAME} ${CMAKE_SYSTEM_FRAMEWORK_PATH})
     endforeach()
