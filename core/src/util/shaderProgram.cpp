@@ -259,7 +259,6 @@ void ShaderProgram::checkValidity() {
         m_glProgram = 0;
         m_needsBuild = true;
     }
-
 }
 
 void ShaderProgram::invalidateAllPrograms() {
@@ -272,65 +271,76 @@ void ShaderProgram::invalidateAllPrograms() {
 void ShaderProgram::setUniformi(const std::string& _name, int _value) {
     use();
     GLint location = getUniformLocation(_name);
-    glUniform1i(location, _value);
+    if (location >= 0)
+        glUniform1i(location, _value);
 }
 
 void ShaderProgram::setUniformi(const std::string& _name, int _value0, int _value1) {
     use();
     GLint location = getUniformLocation(_name);
-    glUniform2i(location, _value0, _value1);
+    if (location >= 0)
+        glUniform2i(location, _value0, _value1);
 }
 
 void ShaderProgram::setUniformi(const std::string& _name, int _value0, int _value1, int _value2) {
     use();
     GLint location = getUniformLocation(_name);
-    glUniform3i(location, _value0, _value1, _value2);
+    if (location >= 0)
+        glUniform3i(location, _value0, _value1, _value2);
 }
 
 void ShaderProgram::setUniformi(const std::string& _name, int _value0, int _value1, int _value2, int _value3) {
     use();
     GLint location = getUniformLocation(_name);
-    glUniform4i(location, _value0, _value1, _value2, _value3);
+    if (location >= 0)
+        glUniform4i(location, _value0, _value1, _value2, _value3);
 }
 
 void ShaderProgram::setUniformf(const std::string& _name, float _value) {
     use();
     GLint location = getUniformLocation(_name);
-    glUniform1f(location, _value);
+    if (location >= 0)
+        glUniform1f(location, _value);
 }
 
 void ShaderProgram::setUniformf(const std::string& _name, float _value0, float _value1) {
     use();
     GLint location = getUniformLocation(_name);
-    glUniform2f(location, _value0, _value1);
+    if (location >= 0)
+        glUniform2f(location, _value0, _value1);
 }
 
 void ShaderProgram::setUniformf(const std::string& _name, float _value0, float _value1, float _value2) {
     use();
     GLint location = getUniformLocation(_name);
-    glUniform3f(location, _value0, _value1, _value2);
+    if (location >= 0)
+        glUniform3f(location, _value0, _value1, _value2);
 }
 
 void ShaderProgram::setUniformf(const std::string& _name, float _value0, float _value1, float _value2, float _value3) {
     use();
     GLint location = getUniformLocation(_name);
-    glUniform4f(location, _value0, _value1, _value2, _value3);
+    if (location >= 0)
+        glUniform4f(location, _value0, _value1, _value2, _value3);
 }
 
 void ShaderProgram::setUniformMatrix2f(const std::string& _name, const float* _value, bool _transpose) {
     use();
     GLint location = getUniformLocation(_name);
-    glUniformMatrix2fv(location, 1, _transpose, _value);
+    if (location >= 0)
+        glUniformMatrix2fv(location, 1, _transpose, _value);
 }
 
 void ShaderProgram::setUniformMatrix3f(const std::string& _name, const float* _value, bool _transpose) {
     use();
     GLint location = getUniformLocation(_name);
-    glUniformMatrix3fv(location, 1, _transpose, _value);
+    if (location >= 0)
+        glUniformMatrix3fv(location, 1, _transpose, _value);
 }
 
 void ShaderProgram::setUniformMatrix4f(const std::string& _name, const float* _value, bool _transpose) {
     use();
     GLint location = getUniformLocation(_name);
-    glUniformMatrix4fv(location, 1, _transpose, _value);
+    if (location >= 0)
+        glUniformMatrix4fv(location, 1, _transpose, _value);
 }
