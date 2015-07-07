@@ -5,11 +5,16 @@ set(EXECUTABLE_NAME "tangram")
 
 add_definitions(-DPLATFORM_LINUX)
 
+if(LOG EQUAL 1)
+    message(STATUS "Building with logs")
+    add_definitions(-DLOG)
+endif()
+
 include_directories(/usr/local/include)
 
 # add sources and include headers
 find_sources_and_include_directories(
-    ${PROJECT_SOURCE_DIR}/linux/src/*.h 
+    ${PROJECT_SOURCE_DIR}/linux/src/*.h
     ${PROJECT_SOURCE_DIR}/linux/src/*.cpp)
 
 # load core library
@@ -30,7 +35,7 @@ function(link_libraries)
 
 endfunction()
 
-function(build) 
+function(build)
 
     add_executable(${EXECUTABLE_NAME} ${SOURCES})
 

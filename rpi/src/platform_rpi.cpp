@@ -20,10 +20,12 @@ static UrlWorker s_Workers[NUM_WORKERS];
 static std::list<std::unique_ptr<UrlTask>> s_urlTaskQueue;
 
 void logMsg(const char* fmt, ...) {
+#ifdef LOG
     va_list args;
     va_start(args, fmt);
     vfprintf(stderr, fmt, args);
     va_end(args);
+#endif
 }
 
 void processNetworkQueue() {
@@ -114,7 +116,7 @@ bool startUrlRequest(const std::string& _url, UrlCallback _callback) {
     std::unique_ptr<UrlTask> task(new UrlTask(_url, _callback));
     for(auto& worker : s_Workers) {
         if(worker.isAvailable()) {
-            worker.perform(std::move(task)); 
+            worker.perform(std::move(task));
             return true;
         }
     }

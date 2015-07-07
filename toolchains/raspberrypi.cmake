@@ -6,6 +6,11 @@ set(EXECUTABLE_NAME "tangram")
 
 add_definitions(-DPLATFORM_RPI)
 
+if(LOG EQUAL 1)
+    message(STATUS "Building with logs")
+    add_definitions(-DLOG)
+endif()
+
 # check for c++11 compiler
 execute_process(COMMAND ${CMAKE_CXX_COMPILER} -dumpversion OUTPUT_VARIABLE GCC_VERSION)
 
@@ -21,7 +26,7 @@ endif()
 
 # add sources and include headers
 find_sources_and_include_directories(
-	${PROJECT_SOURCE_DIR}/rpi/src/*.h 
+	${PROJECT_SOURCE_DIR}/rpi/src/*.h
 	${PROJECT_SOURCE_DIR}/rpi/src/*.cpp)
 
 # add sources and include headers
@@ -47,7 +52,7 @@ function(link_libraries)
 
 endfunction()
 
-function(build) 
+function(build)
 
     add_executable(${EXECUTABLE_NAME} ${SOURCES})
 

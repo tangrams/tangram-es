@@ -48,6 +48,13 @@ ifndef ANDROID_API_LEVEL
 	ANDROID_API_LEVEL = android-15
 endif
 
+ifndef LOG
+	LOG = 1
+endif
+
+CMAKE_PARAMS = \
+	-DLOG=${LOG}
+
 UNIT_TESTS_CMAKE_PARAMS = \
 	-DUNIT_TESTS=1
 
@@ -58,25 +65,31 @@ ANDROID_CMAKE_PARAMS = \
 	-DANDROID_ABI=${ANDROID_ARCH} \
 	-DANDROID_STL=c++_shared \
 	-DANDROID_NATIVE_API_LEVEL=${ANDROID_API_LEVEL} \
-	-DLIBRARY_OUTPUT_PATH_ROOT=../../android/tangram
+	-DLIBRARY_OUTPUT_PATH_ROOT=../../android/tangram \
+	${CMAKE_PARAMS}
 
 IOS_CMAKE_PARAMS = \
 	-DPLATFORM_TARGET=ios \
 	-DCMAKE_TOOLCHAIN_FILE=${TOOLCHAIN_DIR}/iOS.toolchain.cmake \
-	-G Xcode
+	-G Xcode \
+	${CMAKE_PARAMS}
 
 DARWIN_XCODE_CMAKE_PARAMS = \
 	-DPLATFORM_TARGET=darwin \
-	-G Xcode
+	-G Xcode \
+	${CMAKE_PARAMS}
 
 DARWIN_CMAKE_PARAMS = \
-	-DPLATFORM_TARGET=darwin
+	-DPLATFORM_TARGET=darwin \
+	${CMAKE_PARAMS}
 
 RPI_CMAKE_PARAMS = \
-	-DPLATFORM_TARGET=raspberrypi
+	-DPLATFORM_TARGET=raspberrypi \
+	${CMAKE_PARAMS}
 
 LINUX_CMAKE_PARAMS = \
-	-DPLATFORM_TARGET=linux
+	-DPLATFORM_TARGET=linux \
+	${CMAKE_PARAMS}
 
 clean: clean-android clean-osx clean-ios clean-rpi clean-tests clean-xcode clean-linux
 
