@@ -64,15 +64,13 @@ void MapTile::updateLabels(float _dt, const Style& _style, const View& _view) {
 void MapTile::pushLabelTransforms(const Style& _style, std::shared_ptr<Labels> _labels) {
     std::shared_ptr<VboMesh>& styleMesh = m_geometry[_style.getName()];
     
-    if (styleMesh) {
+    if (styleMesh && typeid(*styleMesh) == typeid(TextBuffer)) {
         for(auto& label : m_labels[_style.getName()]) {
             label->pushTransform(*styleMesh);
         }
-        
-        if (typeid(*styleMesh) == typeid(TextBuffer)) {
-            TextBuffer& buffer = static_cast<TextBuffer&>(*styleMesh);
-            buffer.pushBuffer();
-        }
+    
+        TextBuffer& buffer = static_cast<TextBuffer&>(*styleMesh);
+        buffer.pushBuffer();
     }
 }
 
