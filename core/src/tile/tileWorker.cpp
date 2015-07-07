@@ -33,7 +33,7 @@ void TileWorker::run() {
 
     while (true) {
 
-        TileTask task;
+        std::shared_ptr<TileTask> task;
         {
             std::unique_lock<std::mutex> lock(m_mutex);
 
@@ -48,7 +48,7 @@ void TileWorker::run() {
 
             // Remove all canceled tasks
             std::remove_if(m_queue.begin(), m_queue.end(),
-                [](const TileTask& a){
+                [](const std::shared_ptr<TileTask>& a) {
                     return a->tile->isCanceled();
                 });
 
@@ -58,14 +58,14 @@ void TileWorker::run() {
 
             // Pop highest priority tile from queue
             auto it = std::min_element(m_queue.begin(), m_queue.end(),
-                [](const TileTask& a, const TileTask& b) {
+                [](const std::shared_ptr<TileTask>& a, const std::shared_ptr<TileTask>& b) {
                     if (a->tile->isVisible() != b->tile->isVisible())
                         return a->tile->isVisible();
 
                     return a->tile->getPriority() < b->tile->getPriority();
                 });
 
-            task = *it;
+            task = std::move(*it);
             m_queue.erase(it);
         }
 
@@ -106,13 +106,13 @@ void TileWorker::run() {
     }
 }
 
-void TileWorker::enqueue(TileTask task) {
+void TileWorker::enqueue(std::shared_ptr<TileTask>&& task) {
     {
         std::unique_lock<std::mutex> lock(m_mutex);
         if (!m_running)
             return;
 
-        m_queue.push_back(task);
+        m_queue.push_back(std::move(task));
     }
     m_condition.notify_one();
 }

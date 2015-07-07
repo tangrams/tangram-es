@@ -8,8 +8,7 @@
 class TileManager;
 class DataSource;
 
-
-class TileTaskData {
+class TileTask {
 
 public:
     std::shared_ptr<MapTile> tile;
@@ -22,14 +21,12 @@ public:
     std::shared_ptr<TileData> parsedTileData;
     std::vector<char> rawTileData;
 
-    TileTaskData(std::shared_ptr<MapTile> _tile, DataSource* _source) :
+    TileTask(std::shared_ptr<MapTile> _tile, DataSource* _source) :
         tile(_tile),
         source(_source) {
     }
+
+    TileTask& operator=(const TileTask& _other) = delete;
 };
 
-// NB: with c++14 this should become unique_ptr:
-// Moving unique_ptr into closure is a not well supported with c++11
-typedef std::shared_ptr<TileTaskData> TileTask;
-
-typedef std::function<void(TileTask)> TileTaskCb;
+typedef std::function<void(std::shared_ptr<TileTask>&&)> TileTaskCb;

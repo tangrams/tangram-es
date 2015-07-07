@@ -25,7 +25,7 @@ public:
 
     ~TileWorker();
     
-    void enqueue(TileTask task);
+    void enqueue(std::shared_ptr<TileTask>&& task);
     
     void stop();
     
@@ -43,6 +43,6 @@ private:
     std::condition_variable m_condition;
 
     std::mutex m_mutex;
-    std::deque<TileTask> m_queue;
+    std::vector<std::shared_ptr<TileTask>> m_queue;
 };
 

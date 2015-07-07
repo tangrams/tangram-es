@@ -12,7 +12,6 @@
 #include <future>
 #include <set>
 #include <mutex>
-#include <deque>
 
 class DataSource;
 class MapTile;
@@ -56,7 +55,7 @@ public:
     /* For TileWorker: Pass TileTask with processed data back
      * to TileManager.
      */
-    void tileProcessed(TileTask task);
+    void tileProcessed(std::shared_ptr<TileTask>&& task);
 
     /* Returns the set of currently visible tiles */
     const std::map<TileID, std::shared_ptr<MapTile>>& getVisibleTiles() { return m_tileSet; }
@@ -72,7 +71,7 @@ private:
 
 
     std::mutex m_readyTileMutex;
-    std::deque<TileTask> m_readyTiles;
+    std::vector<std::shared_ptr<TileTask>> m_readyTiles;
 
     std::mutex m_tileStateMutex;
     int32_t m_loadPending;

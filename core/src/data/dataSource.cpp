@@ -62,7 +62,7 @@ void DataSource::constructURL(const TileID& _tileCoord, std::string& _url) const
 }
 
 
-bool DataSource::getTileData(TileTask _task, TileTaskCb _cb) {
+bool DataSource::getTileData(std::shared_ptr<TileTask>&& _task, TileTaskCb _cb) {
 
     const auto& tileID = _task->tile->getID();
     
@@ -77,16 +77,21 @@ bool DataSource::getTileData(TileTask _task, TileTaskCb _cb) {
     return false;
 }
 
+static void onTileLoaded(std::vector<char>&& _rawData, std::shared_ptr<TileTask>& _task, TileTaskCb _cb) {
+    _task->rawTileData = std::move(_rawData);
+    _cb(std::move(_task));
+    requestRender();
+}
 
-bool DataSource::loadTileData(TileTask _task, TileTaskCb _cb) {
+
+bool DataSource::loadTileData(std::shared_ptr<TileTask>&& _task, TileTaskCb _cb) {
 
     std::string url(constructURL(_task->tile->getID()));
 
-    return startUrlRequest(url, [=](std::vector<char>&& _rawData) {
-            _task->rawTileData = std::move(_rawData);
-            _cb(std::move(_task));
-            requestRender();
-        });
+    return startUrlRequest(url, std::bind(&onTileLoaded,
+                                          std::placeholders::_1,
+                                          std::move(_task), _cb));
+
 }
 
 void DataSource::cancelLoadingTile(const TileID& _tileID) {

@@ -31,9 +31,9 @@ public:
      * the I/O task is complete, the tile data is added to a queue in @_tileManager for 
      * further processing before it is renderable. 
      */
-    virtual bool loadTileData(TileTask _task, TileTaskCb _cb);
+    virtual bool loadTileData(std::shared_ptr<TileTask>&& _task, TileTaskCb _cb);
 
-    virtual bool getTileData(TileTask _task, TileTaskCb _cb);
+    virtual bool getTileData(std::shared_ptr<TileTask>&& _task, TileTaskCb _cb);
 
     /* Stops any running I/O tasks pertaining to @_tile */
     virtual void cancelLoadingTile(const TileID& _tile);
@@ -63,7 +63,7 @@ protected:
         constructURL(_tileCoord, url);
         return url;
     }
-    
+
     std::map< TileID, std::shared_ptr<TileData> > m_tileStore; // Map of tileIDs to data for that tile
     
     std::string m_name; // Name used to identify this source in the style sheet

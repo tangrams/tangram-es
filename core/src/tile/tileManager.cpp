@@ -20,9 +20,9 @@ TileManager::TileManager()
     // Instantiate workers
     m_workers = std::unique_ptr<TileWorker>(new TileWorker(*this, MAX_WORKERS));
 
-    m_dataCallback = [this](TileTask task){
+    m_dataCallback = [this](std::shared_ptr<TileTask>&& task){
         if (setTileState(*task->tile, TileState::processing)) {
-            m_workers->enqueue(task);
+            m_workers->enqueue(std::move(task));
         }
     };
 }
@@ -40,7 +40,7 @@ void TileManager::addDataSource(std::unique_ptr<DataSource> _source) {
 }
 
 
-void TileManager::tileProcessed(TileTask task) {
+void TileManager::tileProcessed(std::shared_ptr<TileTask>&& task) {
     std::lock_guard<std::mutex> lock(m_readyTileMutex);
     m_readyTiles.push_back(std::move(task));
 }
@@ -228,17 +228,17 @@ void TileManager::updateTileSet() {
             auto& tile = m_tileSet[id];
 
             for (auto& source : m_dataSources) {
-                TileTask task = std::make_shared<TileTaskData>(tile, source.get());
+                auto task = std::make_shared<TileTask>(tile, source.get());
                 DBG("[%d, %d, %d] Load\n", id.z, id.x, id.y);
 
-                if (source->getTileData(task, m_dataCallback)) {
+                if (source->getTileData(std::move(task), m_dataCallback)) {
                     continue;
                 }
 
                 if (m_loadPending < MAX_DOWNLOADS) {
                     setTileState(*tile, TileState::loading);
 
-                    if (!source->loadTileData(task, m_dataCallback)) {
+                    if (!source->loadTileData(std::move(task), m_dataCallback)) {
                         DBG("ERROR: Loading failed for tile [%d, %d, %d]\n", id.z, id.x, id.y);
                     }
                 }
