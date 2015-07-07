@@ -19,7 +19,12 @@ TileManager::TileManager()
 
     // Instantiate workers
     m_workers = std::unique_ptr<TileWorker>(new TileWorker(*this, MAX_WORKERS));
-    m_dataCallback = std::bind(&TileManager::tileLoaded, this, std::placeholders::_1);
+
+    m_dataCallback = [this](TileTask task){
+        if (setTileState(*task->tile, TileState::processing)) {
+            m_workers->enqueue(task);
+        }
+    };
 }
 
 TileManager::~TileManager() {
@@ -34,12 +39,6 @@ void TileManager::addDataSource(std::unique_ptr<DataSource> _source) {
     m_dataSources.push_back(std::move(_source));
 }
 
-void TileManager::tileLoaded(TileTask task) {
-    // If tile request was not canceled, continue with processing
-    if (setTileState(*task->tile, TileState::processing)) {
-        m_workers->enqueue(task);
-    }
-}
 
 void TileManager::tileProcessed(TileTask task) {
     std::lock_guard<std::mutex> lock(m_readyTileMutex);

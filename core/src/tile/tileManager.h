@@ -53,18 +53,10 @@ public:
      */
     void updateTileSet();
 
-    /* For DataSource: Pass TileTask with 'parsed' or 'raw' data back
-     * to TileManager for further processing by TileWorker.
-     */
-    void tileLoaded(TileTask task);
-
     /* For TileWorker: Pass TileTask with processed data back
      * to TileManager.
      */
     void tileProcessed(TileTask task);
-
-    ///* For TileWorker: Get next TileTask to be processed. */
-    //TileTask pollProcessQueue();
 
     /* Returns the set of currently visible tiles */
     const std::map<TileID, std::shared_ptr<MapTile>>& getVisibleTiles() { return m_tileSet; }
@@ -96,6 +88,9 @@ private:
 
     bool m_tileSetChanged = false;
 
+    /* For DataSource: Pass TileTask with 'parsed' or 'raw' data back
+     * to TileManager for further processing by TileWorker.
+     */
     TileTaskCb m_dataCallback;
 
     const static int MAX_DOWNLOADS = 4;
