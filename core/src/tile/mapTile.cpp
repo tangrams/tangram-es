@@ -66,8 +66,9 @@ void MapTile::pushLabelTransforms(const Style& _style, std::shared_ptr<Labels> _
             label->pushTransform(*styleMesh);
         }
         
-        if (styleMesh->numVertices() > 0 && _style.getName() == "text") {
-            (static_cast<TextBuffer*>(styleMesh.get()))->pushBuffer();
+        if (typeid(*styleMesh) == typeid(TextBuffer)) {
+            TextBuffer& buffer = static_cast<TextBuffer&>(*styleMesh);
+            buffer.pushBuffer();
         }
     }
 }
