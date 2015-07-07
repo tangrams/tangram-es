@@ -39,94 +39,13 @@ public class MapController implements Renderer, OnTouchListener, OnScaleGestureL
         System.loadLibrary("tangram");
     }
 
-    public void setMapPosition(double lon, double lat) {
-        mapLonLat[0] = lon;
-        mapLonLat[1] = lat;
-        if (initialized) { setPosition(lon, lat); }
-    }
-
-    public double[] getMapPosition() {
-        return getMapPosition(new double[2]);
-    }
-
-    public double[] getMapPosition(double[] coordinatesOut) {
-        if (initialized) { getPosition(mapLonLat); }
-        coordinatesOut[0] = mapLonLat[0];
-        coordinatesOut[1] = mapLonLat[1];
-        return coordinatesOut;
-    }
-
-    public void setMapZoom(float zoom) {
-        mapZoom = zoom;
-        if (initialized) { setZoom(zoom); }
-    }
-
-    public float  getMapZoom() {
-        if (initialized) { mapZoom = getZoom(); }
-        return mapZoom;
-    }
-
-    public void setMapRotation(float radians) {
-        mapRotation = radians;
-        if (initialized) { setRotation(radians); }
-    }
-
-    public float getMapRotation() {
-        if (initialized) { mapRotation = getRotation(); }
-        return mapRotation;
-    }
-
-    public void setMapTilt(float radians) {
-        mapTilt = radians;
-        if (initialized) { setTilt(radians); }
-    }
-
-    public float getMapTilt() {
-        if (initialized) { mapTilt = getTilt(); }
-        return mapTilt;
-    }
-
-    private native void init(MapController instance, AssetManager assetManager);
-    private native void resize(int width, int height);
-    private native void update(float dt);
-    private native void render();
-    private native void setPosition(double lon, double lat);
-    private native void getPosition(double[] lonLatOut);
-    private native void setZoom(float zoom);
-    private native float getZoom();
-    private native void setRotation(float radians);
-    private native float getRotation();
-    private native void setTilt(float radians);
-    private native float getTilt();
-    private native void onContextDestroyed();
-    private native void setPixelScale(float scale);
-    private native void handleTapGesture(float posX, float posY);
-    private native void handleDoubleTapGesture(float posX, float posY);
-    private native void handlePanGesture(float startX, float startY, float endX, float endY);
-    private native void handlePinchGesture(float posX, float posY, float scale);
-    private native void handleRotateGesture(float posX, float posY, float rotation);
-    private native void handleShoveGesture(float distance);
-    private native void onUrlSuccess(byte[] rawDataBytes, long callbackPtr);
-    private native void onUrlFailure(long callbackPtr);
-
-    private long time = System.nanoTime();
-    private boolean initialized = false;
-    private double[] mapLonLat = {0, 0};
-    private float mapZoom = 0;
-    private float mapRotation = 0;
-    private float mapTilt = 0;
-    private MapView mapView;
-    private AssetManager assetManager;
-    private GestureDetector gestureDetector;
-    private ScaleGestureDetector scaleGestureDetector;
-    private RotateGestureDetector rotateGestureDetector;
-    private ShoveGestureDetector shoveGestureDetector;
-    private DisplayMetrics displayMetrics = new DisplayMetrics();
-
-    private OkHttpClient okClient;
-    private Request.Builder okRequestBuilder;
-    private static final int TILE_CACHE_SIZE = 1024 * 1024 * 30; // 30 MB
-
+    /**
+     * Construct a MapController
+     * @param mainApp Activity in which the map will function; the asset bundle for this activity must contain all
+     * the local files that the map will need
+     * @param view MapView where the map will be displayed; input events from this view will be handled by the
+     * resulting MapController
+     */
     public MapController(Activity mainApp, MapView view) {
 
         // Get configuration info from application
@@ -160,13 +79,157 @@ public class MapController implements Renderer, OnTouchListener, OnScaleGestureL
 
     }
 
+    /**
+     * Set the geographic position of the center of the map view
+     * @param lon Degrees longitude of the position to set
+     * @param lat Degrees latitude of the position to set
+     */
+    public void setMapPosition(double lon, double lat) {
+        mapLonLat[0] = lon;
+        mapLonLat[1] = lat;
+        if (initialized) { setPosition(lon, lat); }
+    }
+
+    /**
+     * Get the geographic position of the center of the map view
+     * @return Degrees longitude and latitude of the current map position, in a two-element array
+     */
+    public double[] getMapPosition() {
+        return getMapPosition(new double[2]);
+    }
+
+    /**
+     * Get the geoagraphic position of the center of the map view
+     * @param coordinatesOut Two-element array to be returned as the result
+     * @return Degrees longitude and latitude of the current map position, in a two-element array
+     */
+    public double[] getMapPosition(double[] coordinatesOut) {
+        if (initialized) { getPosition(mapLonLat); }
+        coordinatesOut[0] = mapLonLat[0];
+        coordinatesOut[1] = mapLonLat[1];
+        return coordinatesOut;
+    }
+
+    /**
+     * Set the zoom level of the map view
+     * @param zoom Fractional zoom level
+     */
+    public void setMapZoom(float zoom) {
+        mapZoom = zoom;
+        if (initialized) { setZoom(zoom); }
+    }
+
+    /**
+     * Get the zoom level of the map view
+     * @return Fractional zoom level
+     */
+    public float  getMapZoom() {
+        if (initialized) { mapZoom = getZoom(); }
+        return mapZoom;
+    }
+
+    /**
+     * Set the counter-clockwise rotation of the view in radians; 0 corresponds to North pointing up
+     * @param radians Rotation in radians
+     */
+    public void setMapRotation(float radians) {
+        mapRotation = radians;
+        if (initialized) { setRotation(radians); }
+    }
+
+    /**
+     * Get the counter-clockwise rotation of the view in radians; 0 corresponds to North pointing up
+     * @return Rotation in radians
+     */
+    public float getMapRotation() {
+        if (initialized) { mapRotation = getRotation(); }
+        return mapRotation;
+    }
+
+    /**
+     * Set the tilt angle of the view in radians; 0 corresponds to striaght down
+     * @param radians Tilt angle in radians
+     */
+    public void setMapTilt(float radians) {
+        mapTilt = radians;
+        if (initialized) { setTilt(radians); }
+    }
+
+    /**
+     * Get the tilt angle of the view in radians; 0 corresponds to striaght down
+     * @return Tilt angle in radians
+     */
+    public float getMapTilt() {
+        if (initialized) { mapTilt = getTilt(); }
+        return mapTilt;
+    }
+
+    /**
+     * Manually trigger a re-draw of the map view
+     *
+     * Typically this does not need to be called from outside Tangram, see {@link setRenderMode}.
+     */
     public void requestRender() {
         mapView.requestRender();
     }
 
+    /**
+     * Set whether the map view re-draws continuously
+     *
+     * Typically this does not need to be called from outside Tangram. The map automatically re-renders when the view
+     * changes or when any animation in the map requires rendering.
+     * @param renderMode Either 1, to render continuously, or 0, to render only when needed.
+     */
     public void setRenderMode(int renderMode) {
         mapView.setRenderMode(renderMode);
     }
+
+    // Native methods
+    // ==============
+
+    private native void init(MapController instance, AssetManager assetManager);
+    private native void resize(int width, int height);
+    private native void update(float dt);
+    private native void render();
+    private native void setPosition(double lon, double lat);
+    private native void getPosition(double[] lonLatOut);
+    private native void setZoom(float zoom);
+    private native float getZoom();
+    private native void setRotation(float radians);
+    private native float getRotation();
+    private native void setTilt(float radians);
+    private native float getTilt();
+    private native void onContextDestroyed();
+    private native void setPixelScale(float scale);
+    private native void handleTapGesture(float posX, float posY);
+    private native void handleDoubleTapGesture(float posX, float posY);
+    private native void handlePanGesture(float startX, float startY, float endX, float endY);
+    private native void handlePinchGesture(float posX, float posY, float scale);
+    private native void handleRotateGesture(float posX, float posY, float rotation);
+    private native void handleShoveGesture(float distance);
+    private native void onUrlSuccess(byte[] rawDataBytes, long callbackPtr);
+    private native void onUrlFailure(long callbackPtr);
+
+    // Private members
+    // ===============
+
+    private long time = System.nanoTime();
+    private boolean initialized = false;
+    private double[] mapLonLat = {0, 0};
+    private float mapZoom = 0;
+    private float mapRotation = 0;
+    private float mapTilt = 0;
+    private MapView mapView;
+    private AssetManager assetManager;
+    private GestureDetector gestureDetector;
+    private ScaleGestureDetector scaleGestureDetector;
+    private RotateGestureDetector rotateGestureDetector;
+    private ShoveGestureDetector shoveGestureDetector;
+    private DisplayMetrics displayMetrics = new DisplayMetrics();
+
+    private OkHttpClient okClient;
+    private Request.Builder okRequestBuilder;
+    private static final int TILE_CACHE_SIZE = 1024 * 1024 * 30; // 30 MB
 
     // View.OnTouchListener methods
     // ============================
@@ -301,11 +364,13 @@ public class MapController implements Renderer, OnTouchListener, OnScaleGestureL
     public void onShoveEnd(ShoveGestureDetector detector) {
     }
 
+    // Networking methods
+    // ==================
+
     public void cancelUrlRequest(String url) {
         okClient.cancel(url);
     }
 
-    // Network requests using okHttp
     public boolean startUrlRequest(String url, final long callbackPtr) throws Exception {
         Request request = okRequestBuilder.tag(url).url(url).build();
 
