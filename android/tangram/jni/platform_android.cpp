@@ -31,7 +31,7 @@ void setupJniEnv(JNIEnv* _jniEnv, jobject _tangramInstance, jobject _assetManage
     jniEnv = _jniEnv;
 
     tangramInstance = jniEnv->NewGlobalRef(_tangramInstance);
-    jclass tangramClass = jniEnv->FindClass("com/mapzen/tangram/Tangram");
+    jclass tangramClass = jniEnv->FindClass("com/mapzen/tangram/MapController");
     startUrlRequestMID = jniEnv->GetMethodID(tangramClass, "startUrlRequest", "(Ljava/lang/String;J)Z");
     cancelUrlRequestMID = jniEnv->GetMethodID(tangramClass, "cancelUrlRequest", "(Ljava/lang/String;)V");
 	requestRenderMethodID = _jniEnv->GetMethodID(tangramClass, "requestRender", "()V");

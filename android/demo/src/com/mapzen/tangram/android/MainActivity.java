@@ -3,12 +3,14 @@ package com.mapzen.tangram.android;
 import android.app.Activity;
 import android.os.Bundle;
 import android.view.Window;
-import android.view.View;
-import com.mapzen.tangram.Tangram;
+
+import com.mapzen.tangram.MapController;
+import com.mapzen.tangram.MapView;
 
 public class MainActivity extends Activity {
 
-    Tangram tangram;
+    MapController mapController;
+    MapView mapView;
 
     @Override
     public void onCreate(Bundle savedInstanceState) {
@@ -18,16 +20,9 @@ public class MainActivity extends Activity {
 
         setContentView(R.layout.main);
 
-        tangram = (Tangram)findViewById(R.id.map);
-        tangram.setup(this);
+        mapView = (MapView)findViewById(R.id.map);
+        mapController = new MapController(this, mapView);
 
-
-    }
-
-    @Override
-    protected void onDestroy() {
-        super.onDestroy();
-        tangram.onDestroy();
     }
 
 }

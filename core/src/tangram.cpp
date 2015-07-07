@@ -176,14 +176,15 @@ namespace Tangram {
         while (Error::hadGlError("Tangram::render()")) {}
     }
 
-    void setViewPosition(double _lon, double _lat) {
+    void setPosition(double _lon, double _lat) {
 
         glm::dvec2 meters = m_view->getMapProjection().LonLatToMeters({ _lon, _lat});
         m_view->setPosition(meters.x, meters.y);
+        requestRender();
 
     }
 
-    void getViewPosition(double& _lon, double& _lat) {
+    void getPosition(double& _lon, double& _lat) {
 
         glm::dvec2 meters(m_view->getPosition().x, m_view->getPosition().y);
         glm::dvec2 degrees = m_view->getMapProjection().MetersToLonLat(meters);
@@ -192,15 +193,42 @@ namespace Tangram {
 
     }
 
-    float getViewRotation() {
+    void setZoom(float _z) {
+
+        m_view->setZoom(_z);
+        requestRender();
+
+    }
+
+    float getZoom() {
+
+        return m_view->getZoom();
+
+    }
+
+    void setRotation(float _radians) {
+
+        m_view->setRoll(_radians);
+        requestRender();
+
+    }
+
+    float getRotation() {
 
         return m_view->getRoll();
 
     }
 
-    float getViewZoom() {
+    void setTilt(float _radians) {
 
-        return m_view->getZoom();
+        m_view->setPitch(_radians);
+        requestRender();
+
+    }
+
+    float getTilt() {
+
+        return m_view->getPitch();
 
     }
 
