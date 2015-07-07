@@ -1,11 +1,13 @@
 #pragma once
 
+#include "gl.h"
+
 #include <vector>
 #include <unordered_map>
 #include <memory>
+#include <string>
 
-#include "gl.h"
-#include "shaderProgram.h"
+class ShaderProgram;
 
 class VertexLayout {
     
@@ -25,7 +27,7 @@ public:
 
     void enable(ShaderProgram& _program, size_t byteOffset, void* _ptr = nullptr);
 
-    GLint getStride() const { return m_stride; };
+    size_t getStride() const { return m_stride; };
 
 private:
 

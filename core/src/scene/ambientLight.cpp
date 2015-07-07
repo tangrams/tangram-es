@@ -1,5 +1,7 @@
 #include "ambientLight.h"
+
 #include "glm/gtx/string_cast.hpp"
+#include "platform.h"
 
 std::string AmbientLight::s_classBlock;
 std::string AmbientLight::s_typeName = "AmbientLight";

@@ -1,10 +1,10 @@
 #include "builders.h"
 
-#include "tesselator.h"
 #include "aabb.h"
 #include "geom.h"
 #include "glm/gtx/rotate_vector.hpp"
-
+#include "platform.h"
+#include "tesselator.h"
 #include <memory>
 
 void* alloc(void* _userData, unsigned int _size) {

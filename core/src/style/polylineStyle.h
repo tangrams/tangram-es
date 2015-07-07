@@ -1,7 +1,10 @@
 #pragma once
 
 #include "style.h"
+#include "glm/vec2.hpp"
+#include "glm/vec3.hpp"
 #include "typedMesh.h"
+#include "util/builders.h"
 
 #include <mutex>
 

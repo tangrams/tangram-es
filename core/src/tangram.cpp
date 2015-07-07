@@ -1,24 +1,19 @@
 #include "tangram.h"
 
-#include <memory>
-#include <utility>
-#include <cmath>
-#include <set>
-
 #include "platform.h"
 #include "scene/scene.h"
 #include "scene/sceneLoader.h"
-#include "stl_util.hpp"
-#include "style/debugStyle.h"
-#include "style/debugTextStyle.h"
-#include "style/spriteStyle.h"
-#include "style/textStyle.h"
+#include "style/style.h"
 #include "text/fontContext.h"
+#include "tile/labels/labels.h"
 #include "tile/tileManager.h"
+#include "tile/mapTile.h"
 #include "util/error.h"
+#include "util/shaderProgram.h"
 #include "util/skybox.h"
-#include "util/tileID.h"
 #include "view/view.h"
+#include <memory>
+#include <cmath>
 
 namespace Tangram {
 
@@ -27,7 +22,6 @@ namespace Tangram {
     std::shared_ptr<View> m_view;
     std::shared_ptr<Labels> m_labels;
     std::shared_ptr<FontContext> m_ftContext;
-    std::shared_ptr<DebugStyle> m_debugStyle;
     std::shared_ptr<Skybox> m_skybox;
 
     static float g_time = 0.0;
@@ -182,14 +176,15 @@ namespace Tangram {
         while (Error::hadGlError("Tangram::render()")) {}
     }
 
-    void setViewPosition(double _lon, double _lat) {
+    void setPosition(double _lon, double _lat) {
 
         glm::dvec2 meters = m_view->getMapProjection().LonLatToMeters({ _lon, _lat});
         m_view->setPosition(meters.x, meters.y);
+        requestRender();
 
     }
 
-    void getViewPosition(double& _lon, double& _lat) {
+    void getPosition(double& _lon, double& _lat) {
 
         glm::dvec2 meters(m_view->getPosition().x, m_view->getPosition().y);
         glm::dvec2 degrees = m_view->getMapProjection().MetersToLonLat(meters);
@@ -198,15 +193,53 @@ namespace Tangram {
 
     }
 
-    float getViewRotation() {
+    void setZoom(float _z) {
+
+        m_view->setZoom(_z);
+        requestRender();
+
+    }
+
+    float getZoom() {
+
+        return m_view->getZoom();
+
+    }
+
+    void setRotation(float _radians) {
+
+        m_view->setRoll(_radians);
+        requestRender();
+
+    }
+
+    float getRotation() {
 
         return m_view->getRoll();
 
     }
 
-    float getViewZoom() {
+    void setTilt(float _radians) {
 
-        return m_view->getZoom();
+        m_view->setPitch(_radians);
+        requestRender();
+
+    }
+
+    float getTilt() {
+
+        return m_view->getPitch();
+
+    }
+
+    void screenToWorldCoordinates(double& _x, double& _y) {
+
+        float screenX = _x, screenY = _y;
+        m_view->screenToGroundPlane(screenX, screenY);
+        glm::dvec2 meters(screenX + m_view->getPosition().x, screenY + m_view->getPosition().y);
+        glm::dvec2 lonLat = m_view->getMapProjection().MetersToLonLat(meters);
+        _x = lonLat.x;
+        _y = lonLat.y;
 
     }
 

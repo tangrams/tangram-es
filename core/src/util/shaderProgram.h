@@ -1,21 +1,15 @@
 #pragma once
 
-#include "platform.h"
 #include "gl.h"
+#include "texture.h"
+#include "glm/vec2.hpp"
+#include "glm/vec3.hpp"
+#include "glm/vec4.hpp"
+
 #include <string>
 #include <vector>
 #include <map>
 #include <unordered_map>
-#include "texture.h"
-
-#include "glm/glm.hpp"
-
-#include "util/texture.h"
-// TODO:
-// each ShaderProgram instance has a map of <string, vector<string>> pairs
-// the string identifies the tag to replace, the vector is a list of strings of GLSL to inject
-// the ShaderProgram class also has a static map of <string, vector<string>> pairs, that are injected in ALL program instances
-// class-level blocks are injected before instance-level blocks
 
 /*
  * ShaderProgram - utility class representing an OpenGL shader program

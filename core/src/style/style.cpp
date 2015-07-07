@@ -1,7 +1,14 @@
 #include "style.h"
+
 #include "scene/scene.h"
 #include "scene/sceneLayer.h"
+#include "scene/light.h"
+#include "tile/mapTile.h"
 #include "util/vboMesh.h"
+#include "view/view.h"
+
+#include "csscolorparser.hpp"
+
 #include <sstream>
 
 std::unordered_map<long long, StyleParamMap> Style::s_styleParamMapCache;

@@ -1,11 +1,11 @@
 #pragma once
 
+#include "rapidjson/document.h"
+#include "tileData.h"
+
 #include <vector>
 
-#include "rapidjson/document.h"
-
-#include "mapTile.h"
-#include "tileData.h"
+class MapTile;
 
 namespace GeoJson {
     

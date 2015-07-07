@@ -1,11 +1,15 @@
 #pragma once
 
+#include "data/tileData.h"
+#include "util/tileID.h"
+
 #include <memory>
 #include <future>
 
-#include "util/tileID.h"
-#include "data/dataSource.h"
-#include "mapTile.h"
+class DataSource;
+class MapTile;
+class Style;
+class View;
 
 struct TileTask {
 

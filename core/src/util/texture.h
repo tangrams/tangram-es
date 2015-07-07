@@ -1,14 +1,11 @@
 #pragma once
 
 #include "gl.h"
-#include "platform.h"
-#include "geom.h"
+
 #include <vector>
 #include <queue>
 #include <memory>
-#include <unordered_map>
 #include <string>
-#include <cstring>
 
 struct TextureFiltering {
     GLenum m_min;

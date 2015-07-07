@@ -1,13 +1,12 @@
 #pragma once
 
-#include <vector>
-#include <unordered_map>
-#include <string>
-
+#include "data/tileData.h"
 #include "pbf/pbf.hpp"
 
-#include "mapTile.h"
-#include "tileData.h"
+#include <vector>
+#include <string>
+
+class MapTile;
 
 namespace PbfParser {
     

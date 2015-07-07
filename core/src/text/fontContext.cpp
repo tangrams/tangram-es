@@ -1,6 +1,10 @@
 #include "fontContext.h"
+
+#include <cstring> // needed in glfontstash.h
+
 #define GLFONTSTASH_IMPLEMENTATION
 #include "glfontstash.h"
+#include "util/vboMesh.h"
 
 FontContext::FontContext() : FontContext(512) {}
 

@@ -1,12 +1,6 @@
 #pragma once
 
-#include <vector>
-#include <cmath>
-
 #include "glm/glm.hpp"
-#include "glm/vec3.hpp"
-#include "glm/vec2.hpp"
-#include "glm/mat4x4.hpp"
 
 #ifndef PI
 #define PI 3.14159265358979323846

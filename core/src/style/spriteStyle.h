@@ -1,7 +1,11 @@
 #pragma once
 
 #include "style.h"
+#include "glm/vec2.hpp"
+#include "glm/vec3.hpp"
 #include "util/typedMesh.h"
+
+class Texture;
 
 class SpriteStyle : public Style {
 

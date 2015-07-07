@@ -1,5 +1,7 @@
 #include "label.h"
 
+#include "util/geom.h"
+
 bool Label::s_needUpdate = false;
 
 Label::Label(Label::Transform _transform, std::string _text, fsuint _id, Type _type) :

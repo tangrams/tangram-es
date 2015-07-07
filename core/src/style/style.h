@@ -1,23 +1,25 @@
 #pragma once
 
-#include <string>
-#include <vector>
-#include <mutex>
-
 #include "data/tileData.h"
+#include "material.h"
 #include "gl.h"
-#include "platform.h"
-#include "style/material.h"
-#include "scene/light.h"
-#include "tile/mapTile.h"
-#include "util/vertexLayout.h"
-#include "util/shaderProgram.h"
-#include "util/mapProjection.h"
-#include "util/builders.h"
-#include "view/view.h"
 #include "styleParamMap.h"
+#include "util/shaderProgram.h"
+
 #include "csscolorparser.hpp"
 
+#include <memory>
+#include <mutex>
+#include <string>
+#include <vector>
+
+class Light;
+class MapTile;
+class MapProjection;
+class VboMesh;
+class VertexLayout;
+class View;
+class Scene;
 
 enum class LightingType : char {
     none,
@@ -30,8 +32,6 @@ namespace Tangram {
     class SceneLayer;
     using Context = std::unordered_map<std::string, Value*>;
 }
-
-class Scene;
 
 /* Means of constructing and rendering map geometry
  *

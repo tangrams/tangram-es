@@ -1,6 +1,7 @@
 #pragma once
 
 #include "light.h"
+#include "glm/vec3.hpp"
 
 class DirectionalLight : public Light {
 public:

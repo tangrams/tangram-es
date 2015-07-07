@@ -1,5 +1,10 @@
 #include "spriteStyle.h"
-#include "texture.h"
+
+#include "platform.h"
+#include "tile/mapTile.h"
+#include "util/shaderProgram.h"
+#include "util/texture.h"
+#include "util/vertexLayout.h"
 
 SpriteStyle::SpriteStyle(std::string _name, GLenum _drawMode) : Style(_name, _drawMode) {
 }

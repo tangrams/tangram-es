@@ -1,8 +1,10 @@
 #include "mapTile.h"
+
 #include "style/style.h"
 #include "view/view.h"
 #include "util/tileID.h"
 #include "util/vboMesh.h"
+#include "util/shaderProgram.h"
 #include "text/fontContext.h"
 #include "labels/labels.h"
 
