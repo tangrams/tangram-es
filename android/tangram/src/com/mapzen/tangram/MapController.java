@@ -188,7 +188,7 @@ public class MapController implements Renderer, OnTouchListener, OnScaleGestureL
     /**
      * Manually trigger a re-draw of the map view
      *
-     * Typically this does not need to be called from outside Tangram, see {@link setRenderMode}.
+     * Typically this does not need to be called from outside Tangram, see {@link #setRenderMode(int)}.
      */
     public void requestRender() {
         mapView.requestRender();
