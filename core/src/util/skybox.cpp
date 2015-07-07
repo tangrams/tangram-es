@@ -48,6 +48,7 @@ void Skybox::init() {
 
 void Skybox::draw(const View& _view) {
 
+    m_texture->update(0);
     m_texture->bind(0);
 
     glm::mat4 vp = _view.getViewProjectionMatrix();

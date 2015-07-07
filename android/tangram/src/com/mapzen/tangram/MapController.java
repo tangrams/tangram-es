@@ -264,7 +264,6 @@ public class MapController implements Renderer, OnTouchListener, OnScaleGestureL
         rotateGestureDetector.onTouchEvent(event);
 
         return true;
-
     }
 
     // GLSurfaceView.Renderer methods

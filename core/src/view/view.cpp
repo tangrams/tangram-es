@@ -197,7 +197,7 @@ void View::updateMatrices() {
     m_width = m_height * m_aspect;
     
     // set vertical field-of-view
-    float fovy = PI * 0.5;
+    float fovy = PI * 0.25;
     
     // we assume portrait orientation by default, so in landscape
     // mode we scale the vertical FOV such that the wider dimension

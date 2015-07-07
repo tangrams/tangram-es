@@ -64,10 +64,13 @@ public:
     virtual void destroy();
     
     typedef std::pair<GLuint, GLuint> TextureSlot;
+
+    static void invalidateAllTextures();
     
 protected:
     
     void generate(GLuint _textureUnit);
+    void checkValidity();
 
     TextureOptions m_options;
     std::vector<GLuint> m_data;
@@ -80,6 +83,9 @@ protected:
     unsigned int m_height;
     
     GLenum m_target;
+
+    int m_generation;
+    static int s_validGeneration;
     
     static GLuint getTextureUnit(GLuint _slot);
     
@@ -92,6 +98,8 @@ private:
         unsigned int m_width;
         unsigned int m_height;
     };
+    
+    size_t bytesPerPixel();
     
     bool m_autoDelete;
     
