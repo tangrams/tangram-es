@@ -5,7 +5,7 @@ std::unordered_map<GLint, GLuint> VertexLayout::s_enabledAttribs = std::unordere
 
 VertexLayout::VertexLayout(std::vector<VertexAttrib> _attribs) : m_attribs(_attribs) {
 
-    m_stride = 0; 
+    m_stride = 0;
 
     for (auto& attrib : m_attribs) {
 
@@ -51,13 +51,15 @@ void VertexLayout::enable(ShaderProgram& _program, size_t byteOffset, void* _ptr
         GLint location = _program.getAttribLocation(attrib.name);
 
         if (location != -1) {
-            glEnableVertexAttribArray(location);
+            // Track currently enabled attribs by the program to which they are bound
+            if (s_enabledAttribs[location] != glProgram) {
+                glEnableVertexAttribArray(location);
+                s_enabledAttribs[location] = glProgram;
+            }
 
             void* data = _ptr ? _ptr : ((unsigned char*) attrib.offset) + byteOffset;
             glVertexAttribPointer(location, attrib.size, attrib.type, attrib.normalized, m_stride, data);
-            s_enabledAttribs[location] = glProgram; // Track currently enabled attribs by the program to which they are bound
         }
-
     }
 
     // Disable previously bound and now-unneeded attributes
@@ -70,7 +72,5 @@ void VertexLayout::enable(ShaderProgram& _program, size_t byteOffset, void* _ptr
             glDisableVertexAttribArray(location);
             boundProgram = 0;
         }
-
     }
-
 }
