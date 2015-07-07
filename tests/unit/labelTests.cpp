@@ -9,10 +9,9 @@
 #define EPSILON 0.00001
 
 glm::vec2 screenSize(500.f, 500.f);
-std::weak_ptr<TextBuffer> ptr;
 
 TEST_CASE( "Ensure the transition from wait -> sleep when occlusion happens", "[Core][Label]" ) {
-    TextLabel l({screenSize/2.f}, "label", 0, Label::Type::POINT, ptr);
+    TextLabel l({screenSize/2.f}, "label", 0, Label::Type::POINT);
 
     REQUIRE(l.getState() == Label::State::WAIT_OCC);
     l.setOcclusion(true);
@@ -31,7 +30,7 @@ TEST_CASE( "Ensure the transition from wait -> sleep when occlusion happens", "[
 }
 
 TEST_CASE( "Ensure the transition from wait -> visible when no occlusion happens", "[Core][Label]" ) {
-    TextLabel l({screenSize/2.f}, "label", 0, Label::Type::POINT, ptr);
+    TextLabel l({screenSize/2.f}, "label", 0, Label::Type::POINT);
 
     REQUIRE(l.getState() == Label::State::WAIT_OCC);
 
@@ -54,7 +53,7 @@ TEST_CASE( "Ensure the transition from wait -> visible when no occlusion happens
 }
 
 TEST_CASE( "Ensure the end state after occlusion is leep state", "[Core][Label]" ) {
-    TextLabel l({screenSize/2.f}, "label", 0, Label::Type::POINT, ptr);
+    TextLabel l({screenSize/2.f}, "label", 0, Label::Type::POINT);
 
     l.setOcclusion(false);
     l.occlusionSolved();
@@ -72,7 +71,7 @@ TEST_CASE( "Ensure the end state after occlusion is leep state", "[Core][Label]"
 }
 
 TEST_CASE( "Ensure the out of screen state transition", "[Core][Label]" ) {
-    TextLabel l({screenSize*2.f}, "label", 0, Label::Type::POINT, ptr);
+    TextLabel l({screenSize*2.f}, "label", 0, Label::Type::POINT);
 
     REQUIRE(l.getState() == Label::State::WAIT_OCC);
 
@@ -100,7 +99,7 @@ TEST_CASE( "Ensure the out of screen state transition", "[Core][Label]" ) {
 }
 
 TEST_CASE( "Ensure debug labels are always visible and cannot occlude", "[Core][Label]" ) {
-    TextLabel l({screenSize/2.f}, "label", 0, Label::Type::DEBUG, ptr);
+    TextLabel l({screenSize/2.f}, "label", 0, Label::Type::DEBUG);
 
     REQUIRE(l.getState() == Label::State::VISIBLE);
     REQUIRE(!l.canOcclude());
