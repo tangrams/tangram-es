@@ -63,13 +63,6 @@ public class MapController implements Renderer, OnTouchListener, OnScaleGestureL
         okClient = new OkHttpClient();
         okClient.setConnectTimeout(10, TimeUnit.SECONDS);
         okClient.setReadTimeout(30, TimeUnit.SECONDS);
-        try {
-            File cacheDir = new File(mainApp.getExternalCacheDir().getAbsolutePath() + "/tile_cache");
-            Cache okTileCache = new Cache(cacheDir, TILE_CACHE_SIZE);
-            okClient.setCache(okTileCache);
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
 
         // Set up MapView
         mapView = view;
@@ -77,6 +70,20 @@ public class MapController implements Renderer, OnTouchListener, OnScaleGestureL
         view.setRenderer(this);
         view.setRenderMode(GLSurfaceView.RENDERMODE_WHEN_DIRTY);
 
+    }
+
+    /**
+     * Cache map data in a directory with a specified size limit
+     * @param directory Directory in which map data will be cached
+     * @param maxSize Maximum size of data to cache, in bytes
+     * @return true if cache was successfully created
+     */
+    public boolean setTileCache(File directory, long maxSize) {
+        try {
+            Cache okTileCache = new Cache(directory, maxSize);
+            okClient.setCache(okTileCache);
+        } catch (IOException ignored) { return false; }
+        return true;
     }
 
     /**
@@ -251,7 +258,6 @@ public class MapController implements Renderer, OnTouchListener, OnScaleGestureL
 
     private OkHttpClient okClient;
     private Request.Builder okRequestBuilder;
-    private static final int TILE_CACHE_SIZE = 1024 * 1024 * 30; // 30 MB
 
     // View.OnTouchListener methods
     // ============================
