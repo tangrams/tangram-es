@@ -100,19 +100,19 @@ void Style::addData(TileData& _data, MapTile& _tile, const MapProjection& _mapPr
             feature.props.numericProps["zoom"] = _tile.getID().z;
 
             switch (feature.geometryType) {
-                case GeometryType::POINTS:
+                case GeometryType::points:
                     // Build points
                     for (auto& point : feature.points) {
                         buildPoint(point, parseStyleParams(it->first, it->second), feature.props, *mesh);
                     }
                     break;
-                case GeometryType::LINES:
+                case GeometryType::lines:
                     // Build lines
                     for (auto& line : feature.lines) {
                         buildLine(line, parseStyleParams(it->first, it->second), feature.props, *mesh);
                     }
                     break;
-                case GeometryType::POLYGONS:
+                case GeometryType::polygons:
                     // Build polygons
                     for (auto& polygon : feature.polygons) {
                         buildPolygon(polygon, parseStyleParams(it->first, it->second), feature.props, *mesh);

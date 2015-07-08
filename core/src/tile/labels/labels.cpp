@@ -96,11 +96,11 @@ void Labels::updateOcclusions() {
 
     // no priorities, only occlude one of the two occluded label
     for (auto& pair : occlusions) {
-        if (!pair.first->occludedLastFrame()) {
-            if (pair.second->getState() == Label::State::WAIT_OCC) { pair.second->setOcclusion(true); }
+        if(!pair.first->occludedLastFrame()) {
+            if (pair.second->getState() == Label::State::wait_occ) { pair.second->setOcclusion(true); }
         }
-        if (!pair.second->occludedLastFrame()) {
-            if (pair.first->getState() == Label::State::WAIT_OCC) { pair.first->setOcclusion(true); }
+        if(!pair.second->occludedLastFrame()) {
+            if (pair.first->getState() == Label::State::wait_occ) { pair.first->setOcclusion(true); }
         }
 
         if (!pair.second->occludedLastFrame()) { pair.first->setOcclusion(true); }
@@ -116,7 +116,7 @@ void Labels::updateOcclusions() {
 
 void Labels::drawDebug() {
 
-    if (!Tangram::getDebugFlag(Tangram::DebugFlags::LABELS)) {
+    if (!Tangram::getDebugFlag(Tangram::DebugFlags::labels)) {
         return;
     }
 

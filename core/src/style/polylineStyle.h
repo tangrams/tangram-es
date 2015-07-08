@@ -16,13 +16,13 @@ protected:
         int32_t order = 0;
         uint32_t color = 0xffffffff;
         float width = 1.f;
-        CapTypes cap = CapTypes::BUTT;
-        JoinTypes join = JoinTypes::MITER;
+        CapTypes cap = CapTypes::butt;
+        JoinTypes join = JoinTypes::miter;
         float outlineWidth = 1.f;
         uint32_t outlineColor = 0xffffffff;
         bool outlineOn = false;
-        CapTypes outlineCap = CapTypes::BUTT;
-        JoinTypes outlineJoin = JoinTypes::MITER;
+        CapTypes outlineCap = CapTypes::butt;
+        JoinTypes outlineJoin = JoinTypes::miter;
     };
 
     struct PosNormEnormColVertex {

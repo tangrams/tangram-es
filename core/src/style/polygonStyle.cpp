@@ -81,7 +81,7 @@ void PolygonStyle::buildPolygon(Polygon& _polygon, void* _styleParam, Properties
     GLuint abgr = params->color;
     GLfloat layer = params->order;
 
-    if (Tangram::getDebugFlag(Tangram::DebugFlags::PROXY_COLORS)) {
+    if (Tangram::getDebugFlag(Tangram::DebugFlags::proxy_colors)) {
         abgr = abgr << (int(_props.numericProps["zoom"]) % 6);
     }
 

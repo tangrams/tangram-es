@@ -6,22 +6,22 @@
 #include <vector>
 
 enum class CapTypes {
-    BUTT = 0, // No points added to end of line
-    SQUARE = 2, // Two points added to make a square extension
-    ROUND = 6 // Six points added in a fan to make a round cap
+    butt = 0, // No points added to end of line
+    square = 2, // Two points added to make a square extension
+    round = 6 // Six points added in a fan to make a round cap
 };
 
 enum class JoinTypes {
-    MITER = 0, // No points added at line join
-    BEVEL = 1, // One point added to flatten the corner of a join
-    ROUND = 5 // Five points added in a fan to make a round outer join
+    miter = 0, // No points added at line join
+    bevel = 1, // One point added to flatten the corner of a join
+    round = 5 // Five points added in a fan to make a round outer join
 };
 
 struct PolyLineOptions {
     CapTypes cap;
     JoinTypes join;
     
-    PolyLineOptions() : cap(CapTypes::BUTT), join(JoinTypes::MITER) {};
+    PolyLineOptions() : cap(CapTypes::butt), join(JoinTypes::miter) {};
     PolyLineOptions(CapTypes _c, JoinTypes _j) : cap(_c), join(_j) {};
 };
 
@@ -72,7 +72,7 @@ struct PolyLineBuilder {
 };
 
 class Builders {
-    
+
 public:
     
     /* Build a tesselated polygon
@@ -99,7 +99,7 @@ public:
     static void buildOutline(const Line& _line, PolyLineBuilder& _ctx);
     
     /* Build a tesselated square centered on a point coordinate
-     * 
+     *
      * NOT IMPLEMENTED
      */
     static void buildQuadAtPoint(const Point& _pointIn, const glm::vec3& _normal, float width, float height, PolygonBuilder& _ctx);
