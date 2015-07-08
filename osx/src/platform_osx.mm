@@ -5,6 +5,8 @@
 #import <cstdio>
 #import <cstdarg>
 #import <fstream>
+#include <sys/resource.h>
+#include <sys/syscall.h>
 
 #include "platform.h"
 #include "gl.h"
@@ -142,6 +144,9 @@ void cancelUrlRequest(const std::string& _url) {
     }];
 }
 
-void setCurrentThreadPriority(int priority) {}
+void setCurrentThreadPriority(int priority) {
+    int tid = syscall(SYS_gettid);
+    setpriority(PRIO_PROCESS, tid, priority);
+}
 
 #endif //PLATFORM_OSX
