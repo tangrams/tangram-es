@@ -208,29 +208,29 @@ public class MapController implements Renderer, OnTouchListener, OnScaleGestureL
     // Native methods
     // ==============
 
-    private native void init(MapController instance, AssetManager assetManager);
-    private native void resize(int width, int height);
-    private native void update(float dt);
-    private native void render();
-    private native void setPosition(double lon, double lat);
-    private native void getPosition(double[] lonLatOut);
-    private native void setZoom(float zoom);
-    private native float getZoom();
-    private native void setRotation(float radians);
-    private native float getRotation();
-    private native void setTilt(float radians);
-    private native float getTilt();
-    private native void screenToWorldCoordinates(double[] screenCoords);
-    private native void onContextDestroyed();
-    private native void setPixelScale(float scale);
-    private native void handleTapGesture(float posX, float posY);
-    private native void handleDoubleTapGesture(float posX, float posY);
-    private native void handlePanGesture(float startX, float startY, float endX, float endY);
-    private native void handlePinchGesture(float posX, float posY, float scale);
-    private native void handleRotateGesture(float posX, float posY, float rotation);
-    private native void handleShoveGesture(float distance);
-    private native void onUrlSuccess(byte[] rawDataBytes, long callbackPtr);
-    private native void onUrlFailure(long callbackPtr);
+    private synchronized native void init(MapController instance, AssetManager assetManager);
+    private synchronized native void resize(int width, int height);
+    private synchronized native void update(float dt);
+    private synchronized native void render();
+    private synchronized native void setPosition(double lon, double lat);
+    private synchronized native void getPosition(double[] lonLatOut);
+    private synchronized native void setZoom(float zoom);
+    private synchronized native float getZoom();
+    private synchronized native void setRotation(float radians);
+    private synchronized native float getRotation();
+    private synchronized native void setTilt(float radians);
+    private synchronized native float getTilt();
+    private synchronized native void screenToWorldCoordinates(double[] screenCoords);
+    private synchronized native void onContextDestroyed();
+    private synchronized native void setPixelScale(float scale);
+    private synchronized native void handleTapGesture(float posX, float posY);
+    private synchronized native void handleDoubleTapGesture(float posX, float posY);
+    private synchronized native void handlePanGesture(float startX, float startY, float endX, float endY);
+    private synchronized native void handlePinchGesture(float posX, float posY, float scale);
+    private synchronized native void handleRotateGesture(float posX, float posY, float rotation);
+    private synchronized native void handleShoveGesture(float distance);
+    private synchronized native void onUrlSuccess(byte[] rawDataBytes, long callbackPtr);
+    private synchronized native void onUrlFailure(long callbackPtr);
 
     // Private members
     // ===============
