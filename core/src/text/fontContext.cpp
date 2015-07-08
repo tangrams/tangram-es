@@ -76,7 +76,7 @@ void updateAtlas(void* _userPtr, unsigned int _xoff, unsigned int _yoff, unsigne
     fontContext->getAtlas()->setSubData(static_cast<const GLuint*>(_pixels), _xoff, _yoff, _width, _height);
 }
 
-void updateBuffer(void* _userPtr, GLintptr _offset, GLsizei _size, float* _newData) {
+void updateBuffer(void* _userPtr, GLintptr _offset, GLsizei _size, float* _newData, void* _owner) {
     FontContext* fontContext = static_cast<FontContext*>(_userPtr);
     auto buffer = fontContext->getCurrentBuffer();
 
