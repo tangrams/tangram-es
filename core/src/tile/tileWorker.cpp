@@ -59,9 +59,9 @@ void TileWorker::run() {
             // Pop highest priority tile from queue
             auto it = std::min_element(m_queue.begin(), m_queue.end(),
                 [](const std::shared_ptr<TileTask>& a, const std::shared_ptr<TileTask>& b) {
-                    if (a->tile->isVisible() != b->tile->isVisible())
+                    if (a->tile->isVisible() != b->tile->isVisible()) {
                         return a->tile->isVisible();
-
+                    }
                     return a->tile->getPriority() < b->tile->getPriority();
                 });
 
@@ -69,8 +69,9 @@ void TileWorker::run() {
             m_queue.erase(it);
         }
 
-        if (task->tile->isCanceled())
+        if (task->tile->isCanceled()) {
             continue;
+        }
 
         DataSource* dataSource = task->source;
         auto& tile = task->tile;
@@ -94,7 +95,7 @@ void TileWorker::run() {
                 if (!m_running) {
                     break;
                 }
-                if(tile->isCanceled()) {
+                if (tile->isCanceled()) {
                     break;
                 }
                 style->addData(*tileData, *tile);
@@ -109,9 +110,9 @@ void TileWorker::run() {
 void TileWorker::enqueue(std::shared_ptr<TileTask>&& task) {
     {
         std::unique_lock<std::mutex> lock(m_mutex);
-        if (!m_running)
+        if (!m_running) {
             return;
-
+        }
         m_queue.push_back(std::move(task));
     }
     m_condition.notify_one();
@@ -125,6 +126,7 @@ void TileWorker::stop() {
 
     m_condition.notify_all();
 
-    for(std::thread &worker: m_workers)
+    for (std::thread &worker: m_workers) {
         worker.join();
+    }
 }

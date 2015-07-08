@@ -112,7 +112,7 @@ void TileManager::enqueueLoadTask(const TileID& tileID, const glm::dvec2& viewCe
     }
 
     auto iter = m_loadTasks.begin();
-    while (iter != m_loadTasks.end()){
+    while (iter != m_loadTasks.end()) {
         if (iter->first > distance) {
             break;
         }
@@ -186,9 +186,9 @@ void TileManager::updateTileSet() {
                 // visibleTiles is missing an element present in tileSet
                 auto& tile = setTilesIter->second;
                 tile->setVisible(false);
-                if (tile->getProxyCounter() <= 0)
+                if (tile->getProxyCounter() <= 0) {
                     removeTiles.push_back(tile->getID());
-
+                }
                 ++setTilesIter;
             }
         }
@@ -196,9 +196,9 @@ void TileManager::updateTileSet() {
             // more visibleTiles missing an element present in tileSet
             auto& tile = setTilesIter->second;
             tile->setVisible(false);
-            if (tile->getProxyCounter() <= 0)
+            if (tile->getProxyCounter() <= 0) {
                 removeTiles.push_back(tile->getID());
-
+            }
             ++setTilesIter;
         }
     }
@@ -275,7 +275,7 @@ void TileManager::removeTile(std::map< TileID, std::shared_ptr<MapTile> >::itera
         setTileState(*tile, TileState::canceled)) {
         // 1. Remove from Datasource. Make sure to cancel the network request
         // associated with this tile.
-        for(auto& dataSource : m_dataSources) {
+        for (auto& dataSource : m_dataSources) {
             dataSource->cancelLoadingTile(id);
         }
     }
@@ -300,7 +300,7 @@ void TileManager::updateProxyTiles(MapTile& _tile) {
     }
 
     if (m_view->s_maxZoom > _tileID.z) {
-        for(int i = 0; i < 4; i++) {
+        for (int i = 0; i < 4; i++) {
             const auto& childTileIter = m_tileSet.find(_tileID.getChild(i));
             if (childTileIter != m_tileSet.end()) {
                 auto& child = childTileIter->second;
@@ -335,7 +335,7 @@ void TileManager::clearProxyTiles(MapTile& _tile) {
     }
 
     // Check if child proxies are present
-    for(int i = 0; i < 4; i++) {
+    for (int i = 0; i < 4; i++) {
         if (_tile.unsetProxy(static_cast<MapTile::ProxyID>(1 << i))) {
             TileID childID(_tileID.getChild(i));
             auto childTileIter = m_tileSet.find(childID);

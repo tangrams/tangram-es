@@ -69,7 +69,7 @@ void MapTile::updateLabels(float _dt, const Style& _style, const View& _view) {
     glm::mat4 mvp = _view.getViewProjectionMatrix() * m_modelMatrix;
     glm::vec2 screenSize = glm::vec2(_view.getWidth(), _view.getHeight());
     
-    for(auto& label : m_labels[_style.getName()]) {
+    for (auto& label : m_labels[_style.getName()]) {
         label->update(mvp, screenSize, _dt);
     }
 }
@@ -89,7 +89,7 @@ void MapTile::pushLabelTransforms(const Style& _style, std::shared_ptr<Labels> _
         ftContext->lock();
         ftContext->useBuffer(textBuffer);
         
-        for(auto& label : m_labels[_style.getName()]) {
+        for (auto& label : m_labels[_style.getName()]) {
             label->pushTransform(textBuffer);
         }
         
