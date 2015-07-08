@@ -33,11 +33,9 @@ bool TextLabel::rasterize(TextBuffer& _buffer) {
 }
 
 void TextLabel::pushTransform(VboMesh& _mesh) {
-    if (m_dirty && typeid(_mesh) == typeid(TextBuffer)) {
+    if (m_dirty) {
         TextBuffer& buffer = static_cast<TextBuffer&>(_mesh);
-        
-        buffer.transformID(m_id, m_transform.m_screenPosition.x, m_transform.m_screenPosition.y,
-                           m_transform.m_rotation, m_transform.m_alpha);
+        buffer.transformID(m_id, m_transform.m_screenPosition.x, m_transform.m_screenPosition.y, m_transform.m_rotation, m_transform.m_alpha);
         m_dirty = false;
     }
 }
