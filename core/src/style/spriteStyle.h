@@ -29,8 +29,8 @@ protected:
     
     std::unique_ptr<SpriteAtlas> m_spriteAtlas;
     std::shared_ptr<Labels> m_labels;
+    unsigned int m_spriteGeneration;
     
-
 public:
 
     virtual void onBeginDrawFrame(const std::shared_ptr<View>& _view, const std::shared_ptr<Scene>& _scene) override;
