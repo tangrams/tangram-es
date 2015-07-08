@@ -62,11 +62,6 @@ public:
     
     void addLabel(const std::string& _styleName, std::shared_ptr<Label> _label);
     
-    /*
-     * Method to check if this tile's vboMesh(s) are loaded and ready to be drawn
-     */
-    bool hasGeometry();
-    
     std::shared_ptr<VboMesh>& getGeometry(const Style& _style);
 
     /* uUdate the Tile considering the current view */

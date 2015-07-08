@@ -121,10 +121,6 @@ void MapTile::draw(const Style& _style, const View& _view) {
     }
 }
 
-bool MapTile::hasGeometry() {
-    return (m_geometry.size() != 0);
-}
-
 std::shared_ptr<VboMesh>& MapTile::getGeometry(const Style& _style) {
     return m_geometry.at(_style.getName());
 }

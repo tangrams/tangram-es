@@ -164,7 +164,7 @@ namespace Tangram {
             // Loop over all tiles in m_tileSet
             for (const auto& mapIDandTile : m_tileManager->getVisibleTiles()) {
                 const std::shared_ptr<MapTile>& tile = mapIDandTile.second;
-                if (tile->isReady() && tile->hasGeometry()) {
+                if (tile->isReady()) {
                     // Draw tile!
                     tile->draw(*style, *m_view);
                 }
