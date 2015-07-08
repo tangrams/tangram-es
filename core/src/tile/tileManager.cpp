@@ -48,7 +48,7 @@ void TileManager::tileProcessed(std::shared_ptr<TileTask>&& task) {
 bool TileManager::setTileState(MapTile& tile, TileState state) {
     std::lock_guard<std::mutex> lock(m_tileStateMutex);
 
-    switch (tile.state()) {
+    switch (tile.getState()) {
     case TileState::none:
         if (state == TileState::loading) {
             tile.setState(state);
@@ -166,7 +166,7 @@ void TileManager::updateTileSet() {
             DBG("visible: [%d, %d, %d]\n", visTileId.z, visTileId.x, visTileId.y);
 
             if (visTileId == curTileId) {
-                if (setTilesIter->second->state() == TileState::none) {
+                if (setTilesIter->second->hasState(TileState::none)) {
                     enqueueLoadTask(visTileId, viewCenter);
                 }
                 auto& tile = setTilesIter->second;
@@ -271,7 +271,7 @@ void TileManager::removeTile(std::map< TileID, std::shared_ptr<MapTile> >::itera
 
     DBG("[%d, %d, %d] Remove\n", id.z, id.x, id.y);
 
-    if (tile->state() == TileState::loading &&
+    if (tile->hasState(TileState::loading) &&
         setTileState(*tile, TileState::canceled)) {
         // 1. Remove from Datasource. Make sure to cancel the network request
         // associated with this tile.

@@ -133,8 +133,28 @@ public:
         return m_visible;
     }
 
+    void setVisible(bool _visible) {
+         m_visible = _visible;
+    }
+
     double getPriority() const {
         return m_priority.load();
+    }
+
+    void setPriority(double _priority) {
+        m_priority.store(_priority);
+    }
+
+    bool hasState(TileState _state) {
+        return (m_state == _state);
+    }
+
+    TileState getState() {
+        return m_state;
+    }
+
+    void setState(TileState _state) {
+        m_state = _state;
     }
 
 private:
@@ -172,24 +192,5 @@ private:
     std::unordered_map<std::string, std::shared_ptr<VboMesh>> m_geometry; // Map of <Style>s and their associated <VboMesh>es
     std::unordered_map<std::string, std::vector<std::shared_ptr<Label>>> m_labels;
     std::map<std::string, std::shared_ptr<TextBuffer>> m_buffers; // Map of <Style>s and the associated text buffer
-
-    friend class TileManager;
-
-
-    TileState state() {
-        return m_state;
-    }
-
-    void setState(TileState _state) {
-      m_state = _state;
-    }
-
-    void setPriority(double _priority) {
-      m_priority = _priority;
-    }
-
-    void setVisible(bool _visible) {
-         m_visible = _visible;
-    }
 
 };
