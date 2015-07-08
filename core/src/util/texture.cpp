@@ -43,7 +43,7 @@ Texture::~Texture() {
     for (size_t i = 0; i < GL_MAX_COMBINED_TEXTURE_IMAGE_UNITS; i++) {
         if (s_boundTextures[i] == m_glHandle) { s_boundTextures[i] = 0; }
     }
-    glDeleteTextures(1, &m_glHandle);
+    if (m_glHandle) { glDeleteTextures(1, &m_glHandle); }
 }
 
 void Texture::bind(GLuint _textureSlot) {
