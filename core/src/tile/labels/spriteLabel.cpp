@@ -9,7 +9,12 @@ SpriteLabel::SpriteLabel(Label::Transform _transform, const glm::vec2& _size, co
 }
 
 void SpriteLabel::pushTransform(VboMesh& _mesh) {
-    // TODO: update the mesh
+    if (m_dirty) {
+        TypedMesh<BufferVert>& mesh = static_cast<TypedMesh<BufferVert>&>(_mesh);
+        mesh.updateAttribute(m_attribOffsets.m_position, 4, glm::vec2(m_transform.m_screenPosition.x, m_transform.m_screenPosition.y));
+        mesh.updateAttribute(m_attribOffsets.m_alpha, 4, m_transform.m_alpha);
+        mesh.updateAttribute(m_attribOffsets.m_rotation, 4, m_transform.m_rotation);
+    }
 }
 
 void SpriteLabel::updateBBoxes() {
