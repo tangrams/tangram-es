@@ -116,7 +116,7 @@ void MapTile::draw(const Style& _style, const View& _view) {
         // Set the tile zoom level, using the sign to indicate whether the tile is a proxy
         shader->setUniformf("u_tile_zoom", m_proxyCounter > 0 ? -m_id.z : m_id.z);
 
-        styleMesh->draw(shader);
+        styleMesh->draw(*shader);
     }
 }
 

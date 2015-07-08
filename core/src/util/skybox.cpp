@@ -60,7 +60,7 @@ void Skybox::draw(const View& _view) {
     RenderState::blending(GL_FALSE);
     RenderState::depthTest(GL_TRUE);
 
-    m_mesh->draw(m_shader);
+    m_mesh->draw(*m_shader);
 
 }
 

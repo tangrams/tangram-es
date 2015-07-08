@@ -66,7 +66,7 @@ public:
      * Renders the geometry in this mesh using the ShaderProgram _shader; if geometry has not already
      * been uploaded it will be uploaded at this point
      */
-    void draw(const std::shared_ptr<ShaderProgram> _shader);
+    void draw(ShaderProgram& _shader);
     
     void update(GLintptr _offset, GLsizei _size, unsigned char* _data);
     
