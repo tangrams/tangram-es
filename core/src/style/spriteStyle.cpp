@@ -47,7 +47,6 @@ void SpriteStyle::buildPoint(Point& _point, void* _styleParam, Properties& _prop
     // TODO : make this configurable
     SpriteNode planeSprite = m_spriteAtlas->getSpriteNode("tree");
     std::vector<BufferVert> vertices;
-    GLint memOffset = 0;
     
     SpriteBuilder builder = {
         [&](const glm::vec2& coord, const glm::vec2& screenPos, const glm::vec2& uv) {
@@ -64,6 +63,7 @@ void SpriteStyle::buildPoint(Point& _point, void* _styleParam, Properties& _prop
             Label::Transform t = {glm::vec2(_point), glm::vec2(_point)};
             
             SpriteLabel::AttributeOffsets attribOffsets = {
+                _mesh.numVertices() * m_vertexLayout->getStride(),
                 (GLintptr) m_vertexLayout->getOffset("a_screenPosition"),
                 (GLintptr) m_vertexLayout->getOffset("a_rotation"),
                 (GLintptr) m_vertexLayout->getOffset("a_alpha"),
@@ -73,7 +73,6 @@ void SpriteStyle::buildPoint(Point& _point, void* _styleParam, Properties& _prop
             
             if (label) {
                 Builders::buildQuadAtPoint(label->getTransform().m_screenPosition + offset, planeSprite.size * spriteScale, planeSprite.uvBL, planeSprite.uvTR, builder);
-                memOffset++;
             }
         }
     }
