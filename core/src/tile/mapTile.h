@@ -93,13 +93,13 @@ public:
     void resetProxyCounter() { m_proxyCounter = 0; }
 
     enum ProxyID {
-      no_proxies = 0,
-      child1 = 1 << 0,
-      child2 = 1 << 1,
-      child3 = 1 << 2,
-      child4 = 1 << 3,
-      parent = 1 << 4,
-      parent2 = 1 << 5,
+        no_proxies = 0,
+        child1 = 1 << 0,
+        child2 = 1 << 1,
+        child3 = 1 << 2,
+        child4 = 1 << 3,
+        parent = 1 << 4,
+        parent2 = 1 << 5,
     };
 
     bool hasProxy(ProxyID id) { return (m_proxies & id) != 0; }
@@ -107,19 +107,19 @@ public:
     void clearProxies() { m_proxies = 0; }
 
     bool setProxy(ProxyID id) {
-      if ((m_proxies & id) == 0) {
-        m_proxies |= id;
-        return true;
-      }
-      return false;
+        if ((m_proxies & id) == 0) {
+            m_proxies |= id;
+            return true;
+        }
+        return false;
     }
 
     bool unsetProxy(ProxyID id) {
-      if ((m_proxies & id) != 0) {
-        m_proxies &= ~id;
-        return true;
-      }
-      return false;
+        if ((m_proxies & id) != 0) {
+            m_proxies &= ~id;
+            return true;
+        }
+        return false;
     }
 
     bool isCanceled() const {
