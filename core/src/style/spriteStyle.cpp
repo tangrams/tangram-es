@@ -6,11 +6,7 @@
 #include "util/texture.h"
 #include "util/vertexLayout.h"
 
-SpriteStyle::SpriteStyle(std::string _name, GLenum _drawMode) : Style(_name, _drawMode) {
-
-    constructVertexLayout();
-    constructShaderProgram();
-}
+SpriteStyle::SpriteStyle(std::string _name, GLenum _drawMode) : Style(_name, _drawMode) {}
 
 SpriteStyle::~SpriteStyle() {}
 
