@@ -12,8 +12,8 @@ GLuint Texture::s_boundTextures[] = { 0 };
 GLuint Texture::s_activeSlot = GL_TEXTURE0;
 int Texture::s_validGeneration = 0;
 
-Texture::Texture(unsigned int _width, unsigned int _height, bool _autoDelete, TextureOptions _options, bool _generateMipmaps)
-: m_options(_options), m_autoDelete(_autoDelete), m_generateMipmaps(_generateMipmaps) {
+Texture::Texture(unsigned int _width, unsigned int _height, TextureOptions _options, bool _generateMipmaps)
+    : m_options(_options), m_generateMipmaps(_generateMipmaps) {
 
     m_glHandle = 0;
     m_dirty = false;
@@ -25,7 +25,7 @@ Texture::Texture(unsigned int _width, unsigned int _height, bool _autoDelete, Te
 }
 
 Texture::Texture(const std::string& _file, TextureOptions _options, bool _generateMipmaps)
-: Texture(0, 0, true, _options, _generateMipmaps) {
+    : Texture(0, 0, _options, _generateMipmaps) {
 
     unsigned int size;
     unsigned char* data = bytesFromResource(_file.c_str(), &size);
@@ -43,58 +43,44 @@ Texture::Texture(const std::string& _file, TextureOptions _options, bool _genera
 }
 
 Texture::~Texture() {
-    if (m_autoDelete) {
-        destroy();
-    }
-}
-
-void Texture::destroy() {
-    
     for (size_t i = 0; i < GL_MAX_COMBINED_TEXTURE_IMAGE_UNITS; i++) {
-        if (s_boundTextures[i] == m_glHandle) {
-            s_boundTextures[i] = 0;
-        }
+        if (s_boundTextures[i] == m_glHandle) { s_boundTextures[i] = 0; }
     }
-    glDeleteTextures(1, &m_glHandle);
-    
+    if (m_glHandle) { glDeleteTextures(1, &m_glHandle); }
 }
 
 void Texture::bind(GLuint _textureSlot) {
-    
+
     if (_textureSlot >= GL_MAX_COMBINED_TEXTURE_IMAGE_UNITS) {
-        
+
         // Trying to access an invalid texture unit
         return;
     }
-    
+
     if (_textureSlot != s_activeSlot) {
-        
+
         glActiveTexture(getTextureUnit(_textureSlot));
         s_activeSlot = _textureSlot;
-        
     }
-    
+
     if (s_boundTextures[_textureSlot] != m_glHandle) {
-        
+
         glBindTexture(m_target, m_glHandle);
         s_boundTextures[_textureSlot] = m_glHandle;
-        
     }
-    
 }
 
 void Texture::setData(const GLuint* _data, unsigned int _dataSize) {
 
-    if (m_data.size() > 0) {
-        m_data.clear();
-    }
+    if (m_data.size() > 0) { m_data.clear(); }
 
     m_data.insert(m_data.begin(), _data, _data + _dataSize);
 
     m_dirty = true;
 }
 
-void Texture::setSubData(const GLuint* _subData, unsigned int _xoff, unsigned int _yoff, unsigned int _width, unsigned int _height) {
+void Texture::setSubData(const GLuint* _subData, unsigned int _xoff, unsigned int _yoff, unsigned int _width,
+                         unsigned int _height) {
 
     std::unique_ptr<std::vector<GLuint>> subData(new std::vector<GLuint>(_subData, _subData + (_width * _height)));
     
@@ -116,19 +102,19 @@ void Texture::setSubData(const GLuint* _subData, unsigned int _xoff, unsigned in
 
 void Texture::generate(GLuint _textureUnit) {
     glGenTextures(1, &m_glHandle);
-    
+
     bind(_textureUnit);
-    
+
     if (m_generateMipmaps) {
         GLenum mipmapFlags = GL_LINEAR_MIPMAP_LINEAR | GL_LINEAR_MIPMAP_NEAREST | GL_NEAREST_MIPMAP_LINEAR | GL_NEAREST_MIPMAP_NEAREST;
         if (m_options.m_filtering.m_min & mipmapFlags) {
             logMsg("Warning: wrong options provided for the usage of mipmap generation\n");
         }
     }
-    
+
     glTexParameteri(m_target, GL_TEXTURE_MIN_FILTER, m_options.m_filtering.m_min);
     glTexParameteri(m_target, GL_TEXTURE_MAG_FILTER, m_options.m_filtering.m_mag);
-    
+
     glTexParameteri(m_target, GL_TEXTURE_WRAP_S, m_options.m_wrapping.m_wraps);
     glTexParameteri(m_target, GL_TEXTURE_WRAP_T, m_options.m_wrapping.m_wrapt);
 
@@ -148,21 +134,15 @@ void Texture::update(GLuint _textureUnit) {
 
     checkValidity();
 
-    if (!m_dirty) {
-        return;
-    }
+    if (!m_dirty) { return; }
 
     if (m_glHandle == 0) { // texture hasn't been initialized yet, generate it
-        
+
         generate(_textureUnit);
         
         if (m_data.size() == 0) { m_data.assign(m_width * m_height, 0); }
 
-    } else {
-        
-        bind(_textureUnit);
-
-    }
+    } else { bind(_textureUnit); }
 
     GLuint* data = m_data.size() > 0 ? m_data.data() : nullptr;
 
@@ -171,7 +151,6 @@ void Texture::update(GLuint _textureUnit) {
         glTexImage2D(m_target, 0, m_options.m_internalFormat, m_width, m_height, 0, m_options.m_format, GL_UNSIGNED_BYTE, data);
         
         if (data && m_generateMipmaps) {
-            
             // generate the mipmaps for this texture
             glGenerateMipmap(m_target);
         }
@@ -182,10 +161,9 @@ void Texture::update(GLuint _textureUnit) {
     // process queued sub data updates
     while (m_subData.size() > 0) {
         const TextureSubData* subData = m_subData.front().get();
-        const auto& subDataBytes = *subData->m_data;
 
         glTexSubImage2D(m_target, 0, subData->m_xoff, subData->m_yoff, subData->m_width, subData->m_height,
-                        m_options.m_format, GL_UNSIGNED_BYTE, subDataBytes.data());
+                        m_options.m_format, GL_UNSIGNED_BYTE, subData->m_data->data());
 
         m_subData.pop();
     }
@@ -216,10 +194,8 @@ size_t Texture::bytesPerPixel() {
 }
 
 GLuint Texture::getTextureUnit(GLuint _unit) {
-    if (_unit >= GL_MAX_COMBINED_TEXTURE_IMAGE_UNITS) {
-        logMsg("Warning: trying to access unavailable texture unit");
-    }
-    
+    if (_unit >= GL_MAX_COMBINED_TEXTURE_IMAGE_UNITS) { logMsg("Warning: trying to access unavailable texture unit"); }
+
     return GL_TEXTURE0 + _unit;
 }
 
