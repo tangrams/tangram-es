@@ -102,10 +102,6 @@ public:
         parent2 = 1 << 5,
     };
 
-    bool hasProxy(ProxyID id) { return (m_proxies & id) != 0; }
-
-    void clearProxies() { m_proxies = 0; }
-
     bool setProxy(ProxyID id) {
         if ((m_proxies & id) == 0) {
             m_proxies |= id;
@@ -147,12 +143,16 @@ private:
 
     const MapProjection* m_projection = nullptr;
 
-    /*
-     * A Counter for number of tiles this tile acts a proxy for
-     */
+    /* A Counter for number of tiles this tile acts a proxy for */
     int m_proxyCounter = 0;
 
     uint8_t m_proxies = 0;
+
+    /* The loading state of the tile.
+     * NB: This may be moved to TileTask when multiple DataSources should
+     *     contribute to a single tile.
+     */
+    TileState m_state = TileState::none;
 
     bool m_visible;
 
@@ -175,7 +175,6 @@ private:
 
     friend class TileManager;
 
-    TileState m_state = TileState::none;
 
     TileState state() {
         return m_state;
