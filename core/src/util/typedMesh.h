@@ -39,12 +39,7 @@ public:
             std::memcpy(m_glVertexData + _byteOffset + i * tSize, &_newAttributeValue, aSize);
         }
         
-        //setDirty(_byteOffset + aSize, _byteOffset + _nVerts * tSize + aSize);
-        
-        // hack for now
-        m_dirtySize = m_nVertices * m_vertexLayout->getStride();
-        m_dirtyOffset = 0;
-        m_dirty = true;
+        setDirty(_byteOffset + aSize, _nVerts * tSize + aSize);
     }
 
 protected:
@@ -101,5 +96,5 @@ void TypedMesh<T>::updateVertices(GLintptr _byteOffset, unsigned int _nVerts, co
         std::memcpy(m_glVertexData + _byteOffset + i * tSize, &_newVertexValue, tSize);
     }
     
-    setDirty(_byteOffset, _byteOffset + _nVerts * tSize);
+    setDirty(_byteOffset, _nVerts * tSize);
 }
