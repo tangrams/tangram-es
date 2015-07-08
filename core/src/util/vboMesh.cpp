@@ -71,13 +71,13 @@ bool VboMesh::subDataUpload() {
     if (m_dirtySize == 0) {
         return false;
     }
-    
+
     glBindBuffer(GL_ARRAY_BUFFER, m_glVertexBuffer);
 
     long vertexBytes = m_nVertices * m_vertexLayout->getStride();
 
     // updating the entire buffer
-    if (m_dirtySize - vertexBytes < m_vertexLayout->getStride()) {
+    if (vertexBytes - m_dirtySize < m_vertexLayout->getStride()) {
 
         // invalidate the data store on the driver
         glBufferData(GL_ARRAY_BUFFER, vertexBytes, NULL, m_hint);
@@ -92,9 +92,9 @@ bool VboMesh::subDataUpload() {
 
     m_dirtyOffset = 0;
     m_dirtySize = 0;
-    
+
     m_dirty = false;
-    
+
     return true;
 }
 
@@ -102,7 +102,7 @@ bool VboMesh::upload() {
     if (m_isUploaded) {
         return false;
     }
-    
+
     // Generate vertex buffer, if needed
     if (m_glVertexBuffer == 0) {
         glGenBuffers(1, &m_glVertexBuffer);
@@ -137,7 +137,7 @@ bool VboMesh::upload() {
     m_generation = s_validGeneration;
 
     m_isUploaded = true;
-    
+
     return true;
 
 }
@@ -149,7 +149,7 @@ void VboMesh::draw(const std::shared_ptr<ShaderProgram> _shader) {
     if (!m_isCompiled) return;
 
     if (m_nVertices == 0) return;
-    
+
     bool bound = false;
 
     // Ensure that geometry is buffered into GPU
