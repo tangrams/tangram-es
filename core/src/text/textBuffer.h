@@ -9,9 +9,9 @@
 
 #include <memory>
 
-struct TextVert {
+struct BufferVert {
     glm::vec2 pos;
-    glm::vec2 uvs;
+    glm::vec2 uv;
     glm::vec2 screenPos;
     float alpha;
     float rotation;
@@ -22,7 +22,7 @@ class FontContext;
 /*
  * This class represents a text buffer, each text buffer has several text ids
  */
-class TextBuffer : public TypedMesh<TextVert> {
+class TextBuffer : public TypedMesh<BufferVert> {
 
 public:
 
@@ -62,7 +62,7 @@ private:
     void unbind();
     
     bool m_bound;
-    bool m_dirty;
+    bool m_dirtyTransform;
     fsuint m_fsBuffer;
     std::shared_ptr<FontContext> m_fontContext;
 

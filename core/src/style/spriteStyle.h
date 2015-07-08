@@ -13,16 +13,6 @@ class SpriteStyle : public Style {
 
 protected:
 
-    struct PosUVVertex {
-        // Position Data
-        glm::vec2 pos;
-        glm::vec2 screenPos;
-        // UV Data
-        glm::vec2 uv;
-        float alpha;
-        float rotation;
-    };
-
     virtual void constructVertexLayout() override;
     virtual void constructShaderProgram() override;
     virtual void buildPoint(Point& _point, void* _styleParam, Properties& _props, VboMesh& _mesh, MapTile& _tile) const override;
@@ -31,7 +21,7 @@ protected:
 
     virtual void* parseStyleParams(const std::string& _layerNameID, const StyleParamMap& _styleParamMap) override;
 
-    typedef TypedMesh<PosUVVertex> Mesh;
+    typedef TypedMesh<BufferVert> Mesh;
 
     virtual VboMesh* newMesh() const override {
         return new Mesh(m_vertexLayout, m_drawMode, GL_DYNAMIC_DRAW);

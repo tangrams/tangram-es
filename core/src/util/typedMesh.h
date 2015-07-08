@@ -22,10 +22,84 @@ public:
     virtual void compileVertexBuffer() override {
         compile(vertices, indices);
     }
+    
+    void updateVertices(GLintptr _byteOffset, unsigned int _nVerts, const T& _newVertexValue);
+    
+    template<class A>
+    void updateAttribute(GLintptr _byteOffset, unsigned int _nVerts, const A& _newAttributeValue) {
+        if (!m_isCompiled) {
+            return;
+        }
+        
+        size_t aSize = sizeof(A);
+        size_t tSize = sizeof(T);
+        
+        // update the vertices
+        for (size_t i = 0; i < _nVerts; ++i) {
+            std::memcpy(m_glVertexData + _byteOffset + i * tSize, &_newAttributeValue, aSize);
+        }
+        
+        //setDirty(_byteOffset + aSize, _byteOffset + _nVerts * tSize + aSize);
+        
+        // hack for now
+        m_dirtySize = m_nVertices * m_vertexLayout->getStride();
+        m_dirtyOffset = 0;
+        m_dirty = true;
+    }
 
 protected:
+    
+    void setDirty(GLintptr _byteOffset, GLsizei _byteSize);
     
     std::vector<std::vector<T>> vertices;
     std::vector<std::vector<int>> indices;
     
 };
+
+template<class T>
+void TypedMesh<T>::setDirty(GLintptr _byteOffset, GLsizei _byteSize) {
+    // not dirty, init the dirtyness of the buffer
+    if(!m_dirty) {
+        m_dirtySize = _byteSize;
+        m_dirtyOffset = _byteOffset;
+        m_dirty = true;
+    } else {
+        // distance in bytes
+        long dBytes = std::abs((long double)_byteOffset - m_dirtyOffset);
+        long newEnd = _byteOffset + _byteSize;
+        long oldEnd = m_dirtySize + m_dirtyOffset;
+        
+        if(_byteOffset < m_dirtyOffset) {
+            // update from left part of the buffer
+            m_dirtyOffset = _byteOffset;
+            
+            // merge sizes
+            if(newEnd > oldEnd) {
+                m_dirtySize = _byteSize;
+            } else {
+                m_dirtySize += dBytes;
+            }
+            m_dirty = true;
+        } else if(newEnd > oldEnd) {
+            // update from right part of the buffer
+            m_dirtySize = dBytes + _byteSize;
+            m_dirty = true;
+        }
+    }
+}
+
+template<class T>
+void TypedMesh<T>::updateVertices(GLintptr _byteOffset, unsigned int _nVerts, const T& _newVertexValue) {
+    if (!m_isCompiled) {
+        return;
+    }
+    
+    size_t tSize = sizeof(T);
+    
+    // update the vertices
+    for (int i = 0; i < _nVerts; ++i) {
+        std::memcpy(m_glVertexData + _byteOffset + i * tSize, &_newVertexValue, tSize);
+    }
+    
+    setDirty(_byteOffset, _byteOffset + _nVerts * tSize);
+}
