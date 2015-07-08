@@ -85,7 +85,7 @@ public:
     void draw(const Style& _style, const View& _view);
     
     /* 
-     * methods to set and get proxy counter
+     * Methods to set and get proxy counter
      */
     int getProxyCounter() { return m_proxyCounter; }
     void incProxyCounter() { m_proxyCounter++; }
@@ -130,6 +130,9 @@ public:
         return m_state == TileState::ready;
     }
 
+    /* Method to check whther this tile is in the current set of visible tiles
+     * determined by view::updateTiles().
+     */
     bool isVisible() const {
         return m_visible;
     }
