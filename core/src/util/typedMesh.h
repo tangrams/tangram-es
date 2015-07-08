@@ -60,7 +60,7 @@ void TypedMesh<T>::setDirty(GLintptr _byteOffset, GLsizei _byteSize) {
         m_dirty = true;
     } else {
         // distance in bytes
-        long dBytes = std::abs((long double)_byteOffset - m_dirtyOffset);
+        long dBytes = std::abs(_byteOffset - m_dirtyOffset);
         long newEnd = _byteOffset + _byteSize;
         long oldEnd = m_dirtySize + m_dirtyOffset;
         
