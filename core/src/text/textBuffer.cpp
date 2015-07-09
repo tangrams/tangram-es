@@ -54,9 +54,11 @@ void TextBuffer::pushBuffer() {
     }
 }
 
-void TextBuffer::transformID(fsuint _textID, float _x, float _y, float _rot, float _alpha) {
+void TextBuffer::transformID(fsuint _textID, const BufferVert::State& _state) {
     bind();
-    glfonsTransform(m_fontContext->getFontContext(), _textID, _x, _y, _rot, _alpha);
+    glfonsTransform(m_fontContext->getFontContext(), _textID,
+                    _state.screenPos.x, _state.screenPos.y,
+                    _state.rotation, _state.alpha);
     unbind();
     m_dirtyTransform = true;
 }
