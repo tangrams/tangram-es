@@ -83,17 +83,18 @@ void SpriteStyle::buildPoint(Point& _point, const StyleParamMap&, Properties& _p
     SpriteNode spriteNode = m_spriteAtlas->getSpriteNode(kind);
     Label::Transform t = {glm::vec2(_point), glm::vec2(_point)};
 
-    SpriteLabel::AttributeOffsets attribOffsets = {
-        _mesh.numVertices() * m_vertexLayout->getStride(),
-        (GLintptr) m_vertexLayout->getOffset("a_screenPosition"),
-        (GLintptr) m_vertexLayout->getOffset("a_rotation"),
-        (GLintptr) m_vertexLayout->getOffset("a_alpha"),
-    };
+    // NB: byte offset into BufferVert 'state'
+    size_t attribOffset =  (size_t)m_vertexLayout->getOffset("a_screenPosition");
+    size_t bufferOffset = _mesh.numVertices() * m_vertexLayout->getStride() + attribOffset;
 
-    auto label = m_labels->addSpriteLabel(_tile, m_name, t, spriteNode.m_size * spriteScale, offset, attribOffsets);
+    auto label = m_labels->addSpriteLabel(_tile, m_name, t,
+                                          spriteNode.m_size * spriteScale,
+                                          offset, bufferOffset);
 
     if (label) {
-        Builders::buildQuadAtPoint(label->getTransform().state.screenPos + offset, spriteNode.m_size * spriteScale, spriteNode.m_uvBL, spriteNode.m_uvTR, builder);
+        Builders::buildQuadAtPoint(label->getTransform().state.screenPos + offset,
+                                   spriteNode.m_size * spriteScale,
+                                   spriteNode.m_uvBL, spriteNode.m_uvTR, builder);
     }
 
     auto& mesh = static_cast<SpriteStyle::Mesh&>(_mesh);
