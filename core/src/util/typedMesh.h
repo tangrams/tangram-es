@@ -1,6 +1,7 @@
 #pragma once
 
 #include "vboMesh.h"
+#include <cstdlib> // std::abs
 
 template<class T>
 class TypedMesh : public VboMesh {
@@ -66,7 +67,7 @@ protected:
 template<class T>
 void TypedMesh<T>::setDirty(GLintptr _byteOffset, GLsizei _byteSize) {
 
-    // not dirty at all, init the dirtyness of the buffer
+    // not dirty at all, init the dirtiness of the buffer
     if (!m_dirty) {
 
         m_dirtySize = _byteSize;
