@@ -39,6 +39,10 @@ public:
             return;
         }
         
+        if (m_hint == GL_STATIC_DRAW) {
+            logMsg("WARNING: wrong usage hint provided to the Vbo\n");
+        }
+        
         size_t aSize = sizeof(A);
         size_t tSize = sizeof(T);
         
@@ -63,40 +67,49 @@ template<class T>
 void TypedMesh<T>::setDirty(GLintptr _byteOffset, GLsizei _byteSize) {
     
     // not dirty at all, init the dirtyness of the buffer
-    if(!m_dirty) {
+    if (!m_dirty) {
+        
         m_dirtySize = _byteSize;
         m_dirtyOffset = _byteOffset;
         m_dirty = true;
-    } else {
-        // distance in bytes
-        long dBytes = std::abs(_byteOffset - m_dirtyOffset);
-        long newEnd = _byteOffset + _byteSize;
-        long oldEnd = m_dirtySize + m_dirtyOffset;
         
-        if(_byteOffset < m_dirtyOffset) {
-            // update before the old buffer offset (left part of the buffer)
+    } else {
+        GLsizei dBytes = std::abs(_byteOffset - m_dirtyOffset); // distance in bytes
+        GLintptr nOff = _byteOffset + _byteSize; // new offset
+        GLintptr pOff = m_dirtySize + m_dirtyOffset; // previous offset
+        
+        if (_byteOffset < m_dirtyOffset) { // left part of the buffer
+            
+            // update before the old buffer offset
             m_dirtyOffset = _byteOffset;
             
             // merge sizes
-            if(newEnd > oldEnd) {
+            if (nOff > pOff) {
                 m_dirtySize = _byteSize;
             } else {
                 m_dirtySize += dBytes;
             }
             
             m_dirty = true;
-        } else if(newEnd > oldEnd) {
-            // update starting after the old buffer offset (right part of the buffer)
+            
+        } else if (nOff > pOff) { // right part of the buffer
+            
+            // update starting after the old buffer offset
             m_dirtySize = dBytes + _byteSize;
             m_dirty = true;
         }
     }
+    
 }
 
 template<class T>
 void TypedMesh<T>::updateVertices(GLintptr _byteOffset, unsigned int _nVerts, const T& _newVertexValue) {
     if (!m_isCompiled) {
         return;
+    }
+    
+    if (m_hint == GL_STATIC_DRAW) {
+        logMsg("WARNING: wrong usage hint provided to the Vbo\n");
     }
     
     size_t tSize = sizeof(T);
