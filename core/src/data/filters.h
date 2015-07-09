@@ -28,137 +28,110 @@ namespace Tangram {
 
     using Context = std::unordered_map<std::string, Value>;
 
+    enum class Operators : int {
+        any = 0,
+        all,
+        none
+    };
+    
+    enum class FilterType : int {
+        any = 0,
+        all,
+        none,
+        existence,
+        equality,
+        range
+    };
+    
     struct Filter {
-
-        virtual bool eval(const Feature& f, const Context& c) const { return false; };
-        virtual ~Filter() {};
-
-    };
-
-    struct Operator : public Filter {
-
-        std::vector<Filter*> operands;
-
-        Operator(const std::vector<Filter*>& ops) : operands(ops) {}
-        ~Operator() { for (auto* f : operands) { delete f; } }
-
-    };
-
-    struct Any : public Operator {
-
-        Any(const std::vector<Filter*>& ops) : Operator(ops) {}
-        virtual bool eval(const Feature& feat, const Context& ctx) const override {
-            for (const Filter* filt : operands) {
-                if (filt->eval(feat, ctx)) { return true; }
-            }
-            return false;
-        }
-
-    };
-
-    struct All : public Operator {
-
-        All(const std::vector<Filter*>& ops) : Operator(ops) {}
-        virtual bool eval(const Feature& feat, const Context& ctx) const override {
-            for (const Filter* filt : operands) {
-                if (!filt->eval(feat, ctx)) { return false; }
-            }
-            return true;
-        }
-
-    };
-
-    struct None : public Operator {
-
-        None(const std::vector<Filter*>& ops) : Operator(ops) {}
-        virtual bool eval(const Feature& feat, const Context& ctx) const override {
-            for (const Filter* filt : operands) {
-                if (filt->eval(feat, ctx)) { return false; }
-            }
-            return true;
-        }
-
-    };
-
-    struct Predicate : public Filter {
-
+        
+        std::vector<Filter> operands;
+        std::vector<Value> values;
         std::string key;
-
-        Predicate(const std::string& k) : key(k) {}
-        virtual ~Predicate() {}
-
-    };
-
-    struct Existence : public Predicate {
-
         bool exists;
+        
+        FilterType type;
+        
+        Filter() : type(FilterType::none) {}
+        
+        // Create an 'any', 'all', or 'none' filter
+        Filter(Operators op, const std::vector<Filter>& filters) : operands(filters), type(static_cast<FilterType>(op)) {}
+        
+        // Create an 'equality' filter
+        Filter(const std::string& k, const std::vector<Value>& vals) : values(vals), key(k), type(FilterType::equality) {}
+        
+        // Create a 'range' filter
+        Filter(const std::string& k, float min, float max) : values({ Value(min), Value(max) }), type(FilterType::range) {}
+        
+        // Create an 'existence' filter
+        Filter(const std::string& k, bool ex) : key(k), exists(ex), type(FilterType::existence) {}
 
-        Existence(const std::string& k, bool e) : Predicate(k), exists(e) {}
-
-        virtual bool eval(const Feature& feat, const Context& ctx) const override {
-
-            bool found = ctx.find(key) != ctx.end() ||
-                         feat.props.stringProps.find(key) != feat.props.stringProps.end() ||
-                         feat.props.numericProps.find(key) != feat.props.numericProps.end();
-
-            return exists == found;
-        }
-
-    };
-
-    struct Equality : public Predicate {
-
-        ValueList values;
-
-        Equality(const std::string& k, const ValueList& v) : Predicate(k), values(v) {}
-
-        virtual bool eval(const Feature& feat, const Context& ctx) const override {
-
-            auto ctxIt = ctx.find(key);
-            if (ctxIt != ctx.end()) {
-                for (auto& v : values) {
-                    if (v.equals(ctxIt->second)) { return true; }
+        bool eval(const Feature& feat, const Context& ctx) const {
+            
+            switch (type) {
+                    
+                case FilterType::any:
+                case FilterType::all:
+                case FilterType::none: {
+                    
+                    bool breakValue = (type == FilterType::any || type == FilterType::none); // For 'any' or 'none' filters, a true evaluation breaks early
+                    bool breakResult = (type == FilterType::any); // For 'any' filters, an early break returns true
+                    for (const auto& filt : operands) {
+                        if (filt.eval(feat, ctx) == breakValue) { return breakResult; }
+                    }
+                    return !breakResult;
                 }
-                return false;
-            }
-            auto strIt = feat.props.stringProps.find(key);
-            if (strIt != feat.props.stringProps.end()) {
-                for (auto& v : values) {
-                    if (v.equals(strIt->second)) { return true; }
+                case FilterType::existence: {
+                    
+                    bool found = ctx.find(key) != ctx.end() ||
+                    feat.props.stringProps.find(key) != feat.props.stringProps.end() ||
+                    feat.props.numericProps.find(key) != feat.props.numericProps.end();
+                    
+                    return exists == found;
                 }
-            }
-            auto numIt = feat.props.numericProps.find(key);
-            if (numIt != feat.props.numericProps.end()) {
-                for (auto& v : values) {
-                    if (v.equals(numIt->second)) { return true; }
+                case FilterType::equality: {
+                    
+                    auto ctxIt = ctx.find(key);
+                    if (ctxIt != ctx.end()) {
+                        for (auto& v : values) {
+                            if (v.equals(ctxIt->second)) { return true; }
+                        }
+                        return false;
+                    }
+                    auto strIt = feat.props.stringProps.find(key);
+                    if (strIt != feat.props.stringProps.end()) {
+                        for (auto& v : values) {
+                            if (v.equals(strIt->second)) { return true; }
+                        }
+                    }
+                    auto numIt = feat.props.numericProps.find(key);
+                    if (numIt != feat.props.numericProps.end()) {
+                        for (auto& v : values) {
+                            if (v.equals(numIt->second)) { return true; }
+                        }
+                    }
+                    return false;
                 }
+                case FilterType::range: {
+                    
+                    float min = values[0].num;
+                    float max = values[1].num;
+                    auto ctxIt = ctx.find(key);
+                    if (ctxIt != ctx.end()) {
+                        const auto& val = ctxIt->second;
+                        if (!val.numeric) { return false; } // only check range for numbers
+                        return val.num >= min && val.num < max;
+                    }
+                    auto numIt = feat.props.numericProps.find(key);
+                    if (numIt != feat.props.numericProps.end()) {
+                        const auto& num = numIt->second;
+                        return num >= min && num < max;
+                    }
+                    return false;
+                }
+                default:
+                    return true;
             }
-            return false;
-        }
-
-    };
-
-    struct Range : public Predicate {
-
-        float min = -std::numeric_limits<float>::infinity();
-        float max = +std::numeric_limits<float>::infinity();
-
-        Range(const std::string& k, float mn, float mx) : Predicate(k), min (mn), max(mx) {}
-
-        virtual bool eval(const Feature& feat, const Context& ctx) const override {
-
-            auto ctxIt = ctx.find(key);
-            if (ctxIt != ctx.end()) {
-                const auto& val = ctxIt->second;
-                if (!val.numeric) { return false; } // only check range for numbers
-                return val.num >= min && val.num < max;
-            }
-            auto numIt = feat.props.numericProps.find(key);
-            if (numIt != feat.props.numericProps.end()) {
-                const auto& num = numIt->second;
-                return num >= min && num < max;
-            }
-            return false;
         }
 
     };
