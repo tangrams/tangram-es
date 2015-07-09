@@ -1,9 +1,9 @@
 #include "spriteLabel.h"
 
-SpriteLabel::SpriteLabel(Label::Transform _transform, const glm::vec2& _size, const glm::vec2& _offset, AttributeOffsets _attribOffsets) :
+SpriteLabel::SpriteLabel(Label::Transform _transform, const glm::vec2& _size, const glm::vec2& _offset, size_t _bufferOffset) :
     Label(_transform, Label::Type::point),
     m_offset(_offset),
-    m_attribOffsets(_attribOffsets) {
+    m_bufferOffset(_bufferOffset) {
 
     m_dim = _size;
 }
@@ -12,7 +12,7 @@ void SpriteLabel::pushTransform(VboMesh& _mesh) {
     if (m_dirty) {
         TypedMesh<BufferVert>& mesh = static_cast<TypedMesh<BufferVert>&>(_mesh);
 
-        mesh.updateAttribute(m_attribOffsets.memOffset + m_attribOffsets.m_position, 4, m_transform.state);
+        mesh.updateAttribute(m_bufferOffset, 4, m_transform.state);
     }
 }
 

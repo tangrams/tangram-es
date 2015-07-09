@@ -59,21 +59,19 @@ void SpriteStyle::buildPoint(Point& _point, const StyleParamMap&, Properties& _p
     // TODO : configure this
     float spriteScale = .5f;
     glm::vec2 offset = {0.f, 10.f};
-    
+
+    // NB: byte offset into BufferVert 'state'
+    size_t attribOffset =  (size_t)m_vertexLayout->getOffset("a_screenPosition");
+
     for (auto prop : _props.stringProps) {
         if (prop.first == "name") {
             Label::Transform t = {glm::vec2(_point), glm::vec2(_point)};
-            
-            SpriteLabel::AttributeOffsets attribOffsets = {
-                _mesh.numVertices() * m_vertexLayout->getStride(),
-                (GLintptr) m_vertexLayout->getOffset("a_screenPosition"),
-                (GLintptr) m_vertexLayout->getOffset("a_rotation"),
-                (GLintptr) m_vertexLayout->getOffset("a_alpha"),
-            };
+
+            size_t bufferOffset = _mesh.numVertices() * m_vertexLayout->getStride() + attribOffset;
             
             auto label = m_labels->addSpriteLabel(_tile, m_name, t,
                                                   planeSprite.size * spriteScale,
-                                                  offset, attribOffsets);
+                                                  offset, bufferOffset);
             
             if (label) {
                 Builders::buildQuadAtPoint(label->getTransform().state.screenPos + offset,
