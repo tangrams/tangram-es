@@ -11,7 +11,7 @@
 
 #include <sstream>
 
-std::unordered_map<long long, StyleParamMap> Style::s_styleParamMapCache;
+std::unordered_map<std::string, StyleParamMap> Style::s_styleParamMapCache;
 std::mutex Style::s_cacheMutex;
 
 using namespace Tangram;
@@ -20,9 +20,6 @@ Style::Style(std::string _name, GLenum _drawMode) : m_name(_name), m_drawMode(_d
 }
 
 Style::~Style() {
-    for(auto& layer : m_layers) {
-        delete layer;
-    }
     m_layers.clear();
 }
 
@@ -79,17 +76,17 @@ void Style::setLightingType(LightingType _type){
 
 }
 
-void Style::addLayer(SceneLayer* _layer) {
+void Style::addLayer(std::shared_ptr<SceneLayer> _layer) {
 
-    m_layers.push_back(_layer);
+    m_layers.push_back(std::move(_layer));
 
 }
 
-void Style::applyLayerFiltering(const Feature& _feature, const Context& _ctx, long long& _uniqueID,
-                                   StyleParamMap& _styleParamMapMix, SceneLayer* _uberLayer) const {
+void Style::applyLayerFiltering(const Feature& _feature, const Context& _ctx, std::string& _uniqueID,
+                                   StyleParamMap& _styleParamMapMix, std::weak_ptr<SceneLayer> _uberLayer) const {
 
-    std::vector<SceneLayer*> sLayers;
-    sLayers.reserve(_uberLayer->getSublayers().size() + 1);
+    std::vector<std::weak_ptr<SceneLayer>> sLayers;
+    sLayers.reserve(_uberLayer.lock()->getSublayers().size() + 1);
     sLayers.push_back(_uberLayer);
 
     auto sLayerItr = sLayers.begin();
@@ -97,9 +94,11 @@ void Style::applyLayerFiltering(const Feature& _feature, const Context& _ctx, lo
     //A BFS traversal of the SceneLayer graph
     while (sLayerItr != sLayers.end()) {
 
-        if ( (*sLayerItr)->getFilter()->eval(_feature, _ctx)) { // filter matches
+        auto sceneLyr = (*sLayerItr).lock();
 
-            _uniqueID += (1 << (*sLayerItr)->getID());
+        if ( sceneLyr->getFilter()->eval(_feature, _ctx)) { // filter matches
+
+            _uniqueID += std::to_string(sceneLyr->getID()) + "_";
 
             if(s_styleParamMapCache.find(_uniqueID) != s_styleParamMapCache.end()) {
 
@@ -108,7 +107,7 @@ void Style::applyLayerFiltering(const Feature& _feature, const Context& _ctx, lo
             } else {
 
                 /* update StyleParam with subLayer parameters */
-                auto& sLayerStyleParamMap = (*sLayerItr)->getStyleParamMap();
+                auto& sLayerStyleParamMap = sceneLyr->getStyleParamMap();
                 for(auto& styleParam : sLayerStyleParamMap) {
                     auto it = _styleParamMapMix.find(styleParam.first);
                     // C++17 has an insert_or_assign which does the same thing.
@@ -126,7 +125,7 @@ void Style::applyLayerFiltering(const Feature& _feature, const Context& _ctx, lo
             }
 
             /* append sLayers with sublayers of this layer */
-            auto& ssLayers = (*sLayerItr)->getSublayers();
+            auto& ssLayers = sceneLyr->getSublayers();
             sLayerItr = sLayers.insert(sLayers.end(), ssLayers.begin(), ssLayers.end());
         } else {
             sLayerItr++;
@@ -152,12 +151,11 @@ void Style::addData(TileData& _data, MapTile& _tile, const MapProjection& _mapPr
         // Loop over all features
         for (auto& feature : layer.features) {
 
-            // NOTE: Makes a restriction on number of layers in the style config (64 max)
-            long long uniqueID = 0;
+            std::string uniqueID("");
             StyleParamMap styleParamMapMix;
             applyLayerFiltering(feature, ctx, uniqueID, styleParamMapMix, (*it));
 
-            if(uniqueID != 0) { // if a layer matched then uniqueID should be > 0
+            if(uniqueID.length() != 0) { // if a layer matched then uniqueID should be > 0
                 feature.props.numericProps["zoom"] = _tile.getID().z;
 
                 switch (feature.geometryType) {

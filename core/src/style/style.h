@@ -70,7 +70,7 @@ protected:
 
     /* vector of SceneLayers a style can operator on */
     /* TODO: decouple layers and styles so that sublayers can apply different styles than the parent */
-    std::vector<Tangram::SceneLayer*> m_layers;
+    std::vector<std::shared_ptr<Tangram::SceneLayer>> m_layers;
 
     /* Create <VertexLayout> corresponding to this style; subclasses must implement this and call it on construction */
     virtual void constructVertexLayout() = 0;
@@ -92,7 +92,7 @@ protected:
      */
     virtual void* parseStyleParams(const StyleParamMap& _styleParamMap) const = 0;
 
-    static std::unordered_map<long long, StyleParamMap> s_styleParamMapCache;
+    static std::unordered_map<std::string, StyleParamMap> s_styleParamMapCache;
     static std::mutex s_cacheMutex;
     static uint32_t parseColorProp(const std::string& _colorPropStr) ;
 
@@ -100,8 +100,8 @@ protected:
      * filter what layer(s) a features match and get style paramaters for this feature based on all subLayers it
      * matches. Matching is cached for other features to use.
      */
-    void applyLayerFiltering(const Feature& _feature, const Tangram::Context& _ctx, long long& _uniqueID,
-                                        StyleParamMap& _styleParamMapMix, Tangram::SceneLayer* _uberLayer) const;
+    void applyLayerFiltering(const Feature& _feature, const Tangram::Context& _ctx, std::string& _uniqueID,
+                                        StyleParamMap& _styleParamMapMix, std::weak_ptr<Tangram::SceneLayer> _uberLayer) const;
 
     /* Perform any needed setup to process the data for a tile */
     virtual void onBeginBuildTile(MapTile& _tile) const;
@@ -122,7 +122,7 @@ public:
     virtual void build(const std::vector<std::unique_ptr<Light>>& _lights);
 
     /* Add layers to which this style will apply */
-    virtual void addLayer(Tangram::SceneLayer* _layer);
+    void addLayer(std::shared_ptr<Tangram::SceneLayer> _layer);
 
     /* Add styled geometry from the given <TileData> object to the given <MapTile> */
     virtual void addData(TileData& _data, MapTile& _tile, const MapProjection& _mapProjection);

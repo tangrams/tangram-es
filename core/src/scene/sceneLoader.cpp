@@ -1,8 +1,7 @@
-#include "sceneLoader.h"
-
 #include <vector>
 #include "platform.h"
 #include "scene.h"
+#include "sceneLoader.h"
 #include "tileManager.h"
 #include "view.h"
 #include "lights.h"
@@ -752,7 +751,7 @@ void SceneLoader::parseStyleProps(Node styleProps, StyleParamMap& paramMap, cons
 
 }
 
-void SceneLoader::loadSublayers(YAML::Node layer, std::vector<SceneLayer*>& subLayers) {
+void SceneLoader::loadSublayers(YAML::Node layer, std::vector<std::shared_ptr<SceneLayer>>& subLayers) {
 
     for (auto subLayerItr = layer.begin(); subLayerItr != layer.end(); ++subLayerItr ) {
 
@@ -760,7 +759,7 @@ void SceneLoader::loadSublayers(YAML::Node layer, std::vector<SceneLayer*>& subL
         if( subLayerName != "data" && subLayerName != "filter" && subLayerName != "draw" &&
                 subLayerName != "properties") {
 
-            std::vector<SceneLayer*> ssubLayers;
+            std::vector<std::shared_ptr<SceneLayer>> ssubLayers;
             Filter* subLayerFilter = generateFilter(subLayerItr->second["filter"]);
             Node drawGroup = subLayerItr->second["draw"];
 
@@ -772,7 +771,7 @@ void SceneLoader::loadSublayers(YAML::Node layer, std::vector<SceneLayer*>& subL
                 // TODO: multiple draw groups for a subLayer, NOTE: only one draw for now
                 // TODO: subLayers can have different base style than the parent layer
                 parseStyleProps(groupIt->second, paramMap);
-                subLayers.push_back(new SceneLayer(std::move(ssubLayers), std::move(paramMap), subLayerName,
+                subLayers.push_back(std::make_shared<SceneLayer>(std::move(ssubLayers), std::move(paramMap), subLayerName,
                             subLayerFilter));
             }
         }
@@ -787,7 +786,7 @@ void SceneLoader::loadLayers(Node layers, Scene& scene, TileManager& tileManager
 
     for (auto layerIt = layers.begin(); layerIt != layers.end(); ++layerIt) {
 
-        std::vector<SceneLayer*> subLayers;
+        std::vector<std::shared_ptr<SceneLayer>> subLayers;
         std::string name = layerIt->first.as<std::string>();
         Node data = layerIt->second["data"];
         Filter* layerFilter = generateFilter(layerIt->second["filter"]);
@@ -809,7 +808,8 @@ void SceneLoader::loadLayers(Node layers, Scene& scene, TileManager& tileManager
             // match layer to the style in scene with the given name
             for (const auto& style : scene.getStyles()) {
                 if (style->getName() == styleName) {
-                    style->addLayer(new SceneLayer(std::move(subLayers), std::move(paramMap), name, layerFilter));
+                    style->addLayer(std::make_shared<SceneLayer>(std::move(subLayers), std::move(paramMap),
+                                name, layerFilter));
                 }
 			}
         }
