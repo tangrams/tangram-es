@@ -93,7 +93,7 @@ void SpriteStyle::buildPoint(Point& _point, const StyleParamMap&, Properties& _p
     auto label = m_labels->addSpriteLabel(_tile, m_name, t, spriteNode.m_size * spriteScale, offset, attribOffsets);
 
     if (label) {
-        Builders::buildQuadAtPoint(label->getTransform().m_screenPosition + offset, spriteNode.m_size * spriteScale, spriteNode.m_uvBL, spriteNode.m_uvTR, builder);
+        Builders::buildQuadAtPoint(label->getTransform().state.screenPos + offset, spriteNode.m_size * spriteScale, spriteNode.m_uvBL, spriteNode.m_uvTR, builder);
     }
 
     auto& mesh = static_cast<SpriteStyle::Mesh&>(_mesh);

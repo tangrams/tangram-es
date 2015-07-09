@@ -11,9 +11,11 @@
 struct BufferVert {
     glm::vec2 pos;
     glm::vec2 uv;
-    glm::vec2 screenPos;
-    float alpha;
-    float rotation;
+    struct State {
+        glm::vec2 screenPos;
+        float alpha;
+        float rotation;
+    } state;
 };
 
 class FontContext;
