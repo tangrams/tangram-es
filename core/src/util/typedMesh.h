@@ -40,10 +40,6 @@ public:
             return;
         }
 
-        if (m_hint == GL_STATIC_DRAW) {
-            logMsg("WARNING: wrong usage hint provided to the Vbo\n");
-        }
-
         size_t aSize = sizeof(A);
         size_t tSize = sizeof(T);
 
@@ -107,10 +103,6 @@ template<class T>
 void TypedMesh<T>::updateVertices(GLintptr _byteOffset, unsigned int _nVerts, const T& _newVertexValue) {
     if (!m_isCompiled) {
         return;
-    }
-
-    if (m_hint == GL_STATIC_DRAW) {
-        logMsg("WARNING: wrong usage hint provided to the Vbo\n");
     }
 
     size_t tSize = sizeof(T);

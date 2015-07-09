@@ -57,10 +57,6 @@ void VboMesh::setDrawMode(GLenum _drawMode) {
 }
 
 void VboMesh::update(GLintptr _offset, GLsizei _size, unsigned char* _data) {
-    if (m_hint == GL_STATIC_DRAW) {
-        logMsg("WARNING: wrong usage hint provided to the Vbo\n");
-    }
-
     std::memcpy(m_glVertexData + _offset, _data, _size);
 
     m_dirtyOffset = _offset;
@@ -71,6 +67,11 @@ void VboMesh::update(GLintptr _offset, GLsizei _size, unsigned char* _data) {
 
 void VboMesh::subDataUpload() {
     if (m_dirtySize != 0) {
+        
+        if (m_hint == GL_STATIC_DRAW) {
+            logMsg("WARNING: wrong usage hint provided to the Vbo\n");
+        }
+        
         glBindBuffer(GL_ARRAY_BUFFER, m_glVertexBuffer);
 
         long vertexBytes = m_nVertices * m_vertexLayout->getStride();
