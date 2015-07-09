@@ -31,9 +31,9 @@ class SceneLoader {
     void loadMaterial(YAML::Node matNode, Material& material, Scene& scene);
     void loadShaderConfig(YAML::Node shaders, ShaderProgram& shader);
     MaterialTexture loadMaterialTexture(YAML::Node matCompNode, Scene& scene);
-    Tangram::Filter* generateAnyFilter(YAML::Node filter);
-    Tangram::Filter* generateNoneFilter(YAML::Node filter);
-    Tangram::Filter* generatePredicate(YAML::Node filter, std::string _key);
+    Tangram::Filter generateAnyFilter(YAML::Node filter);
+    Tangram::Filter generateNoneFilter(YAML::Node filter);
+    Tangram::Filter generatePredicate(YAML::Node filter, std::string _key);
 
 public:
 
@@ -43,5 +43,5 @@ public:
 
     void loadScene(const std::string& _file, Scene& _scene, TileManager& _tileManager, View& _view);
 
-    Tangram::Filter* generateFilter(YAML::Node filter);
+    Tangram::Filter generateFilter(YAML::Node filter);
 };
