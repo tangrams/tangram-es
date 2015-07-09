@@ -3,6 +3,9 @@
 #include "gl.h"
 #include <cmath>
 
+// Forward declaration
+void init_main_window();
+
 // Input handling
 // ==============
 
@@ -15,55 +18,55 @@ double last_x_down = 0.0;
 double last_y_down = 0.0;
 
 void mouse_button_callback(GLFWwindow* window, int button, int action, int mods) {
-    
+
     if (button != GLFW_MOUSE_BUTTON_1) {
         return; // This event is for a mouse button that we don't care about
     }
-    
+
     if (was_panning) {
         was_panning = false;
         return; // Clicks with movement don't count as taps
     }
-    
+
     double x, y;
     glfwGetCursorPos(window, &x, &y);
     double time = glfwGetTime();
-    
+
     if (action == GLFW_PRESS) {
         last_x_down = x;
         last_y_down = y;
         return;
     }
-    
+
     if (time - last_mouse_up < double_tap_time) {
         Tangram::handleDoubleTapGesture(x, y);
     } else {
         Tangram::handleTapGesture(x, y);
     }
-    
+
     last_mouse_up = time;
-    
+
 }
 
 void cursor_pos_callback(GLFWwindow* window, double x, double y) {
-    
+
     int action = glfwGetMouseButton(window, GLFW_MOUSE_BUTTON_1);
-    
+
     if (action == GLFW_PRESS) {
-        
+
         if (was_panning) {
             Tangram::handlePanGesture(last_x_down, last_y_down, x, y);
         }
-        
+
         was_panning = true;
         last_x_down = x;
         last_y_down = y;
     }
-    
+
 }
 
 void scroll_callback(GLFWwindow* window, double scrollx, double scrolly) {
-    
+
     double x, y;
     glfwGetCursorPos(window, &x, &y);
 
@@ -77,27 +80,30 @@ void scroll_callback(GLFWwindow* window, double scrollx, double scrolly) {
     } else {
         Tangram::handlePinchGesture(x, y, 1.0 + scroll_multiplier * scrolly);
     }
-    
+
 }
 
 void key_callback(GLFWwindow* window, int key, int scancode, int action, int mods) {
-    
+
     if (action == GLFW_PRESS) {
         switch (key) {
             case GLFW_KEY_1:
-                Tangram::setDebugFlag(Tangram::DebugFlags::FREEZE_TILES, !Tangram::getDebugFlag(Tangram::DebugFlags::FREEZE_TILES));
+                Tangram::setDebugFlag(Tangram::DebugFlags::freeze_tiles, !Tangram::getDebugFlag(Tangram::DebugFlags::freeze_tiles));
                 break;
             case GLFW_KEY_2:
-                Tangram::setDebugFlag(Tangram::DebugFlags::PROXY_COLORS, !Tangram::getDebugFlag(Tangram::DebugFlags::PROXY_COLORS));
+                Tangram::setDebugFlag(Tangram::DebugFlags::proxy_colors, !Tangram::getDebugFlag(Tangram::DebugFlags::proxy_colors));
                 break;
             case GLFW_KEY_3:
-                Tangram::setDebugFlag(Tangram::DebugFlags::TILE_BOUNDS, !Tangram::getDebugFlag(Tangram::DebugFlags::TILE_BOUNDS));
+                Tangram::setDebugFlag(Tangram::DebugFlags::tile_bounds, !Tangram::getDebugFlag(Tangram::DebugFlags::tile_bounds));
                 break;
             case GLFW_KEY_4:
-                Tangram::setDebugFlag(Tangram::DebugFlags::TILE_INFOS, !Tangram::getDebugFlag(Tangram::DebugFlags::TILE_INFOS));
+                Tangram::setDebugFlag(Tangram::DebugFlags::tile_infos, !Tangram::getDebugFlag(Tangram::DebugFlags::tile_infos));
                 break;
             case GLFW_KEY_5:
-                Tangram::setDebugFlag(Tangram::DebugFlags::LABELS, !Tangram::getDebugFlag(Tangram::DebugFlags::LABELS));
+                Tangram::setDebugFlag(Tangram::DebugFlags::labels, !Tangram::getDebugFlag(Tangram::DebugFlags::labels));
+                break;
+            case GLFW_KEY_BACKSPACE:
+                init_main_window(); // Simulate GL context loss
                 break;
             default:
                 break;
@@ -105,14 +111,53 @@ void key_callback(GLFWwindow* window, int key, int scancode, int action, int mod
     }
 }
 
-
 // Window handling
 // ===============
 
+GLFWwindow* main_window = nullptr;
+int width = 800;
+int height = 600;
+
 void window_size_callback(GLFWwindow* window, int width, int height) {
-    
+
     Tangram::resize(width, height);
-    
+
+}
+
+void init_main_window() {
+
+    // Destroy old window
+    if (main_window != nullptr) {
+        glfwDestroyWindow(main_window);
+        Tangram::onContextDestroyed();
+    }
+
+    // Create a windowed mode window and its OpenGL context
+    glfwWindowHint(GLFW_SAMPLES, 2);
+    main_window = glfwCreateWindow(width, height, "Tangram ES", NULL, NULL);
+    if (!main_window) {
+        glfwTerminate();
+    }
+
+    // Make the main_window's context current
+    glfwMakeContextCurrent(main_window);
+
+    // Set input callbacks
+    glfwSetWindowSizeCallback(main_window, window_size_callback);
+    glfwSetMouseButtonCallback(main_window, mouse_button_callback);
+    glfwSetCursorPosCallback(main_window, cursor_pos_callback);
+    glfwSetScrollCallback(main_window, scroll_callback);
+    glfwSetKeyCallback(main_window, key_callback);
+
+    // Setup tangram
+    Tangram::initialize();
+    Tangram::resize(width, height);
+
+    // Work-around for a bug in GLFW on retina displays
+    int fbWidth = 0, fbHeight = 0;
+    glfwGetFramebufferSize(main_window, &fbWidth, &fbHeight);
+    glViewport(0, 0, fbWidth, fbHeight);
+
 }
 
 // Main program
@@ -120,61 +165,33 @@ void window_size_callback(GLFWwindow* window, int width, int height) {
 
 int main(void) {
 
-    GLFWwindow* window;
-    int width = 800;
-    int height = 600;
-
-    /* Initialize the library */
-    if (!glfwInit())
-        return -1;
-
-    /* Create a windowed mode window and its OpenGL context */
-    glfwWindowHint(GLFW_SAMPLES, 2);
-    window = glfwCreateWindow(width, height, "Tangram ES", NULL, NULL);
-    if (!window) {
-        glfwTerminate();
-        return -1;
+    // Initialize the windowing library
+    if (!glfwInit()) {
+        return -1;    
     }
 
-    /* Make the window's context current */
-    glfwMakeContextCurrent(window);
+    init_main_window();
 
+    // Initialize networking
     NSurlInit();
 
-    Tangram::initialize();
-    Tangram::resize(width, height);
-
-    /* Work-around for a bug in GLFW on retina displays */
-    int fbWidth = 0, fbHeight = 0;
-    glfwGetFramebufferSize(window, &fbWidth, &fbHeight);
-    glViewport(0, 0, fbWidth, fbHeight);
-
-    /* Set input callbacks */
-    glfwSetWindowSizeCallback(window, window_size_callback);
-    glfwSetMouseButtonCallback(window, mouse_button_callback);
-    glfwSetCursorPosCallback(window, cursor_pos_callback);
-    glfwSetScrollCallback(window, scroll_callback);
-    glfwSetKeyCallback(window, key_callback);
-    
-    glfwSwapInterval(1);
-    
     double lastTime = glfwGetTime();
 
-    /* Loop until the user closes the window */
-    while (!glfwWindowShouldClose(window)) {
+    // Loop until the user closes the window
+    while (!glfwWindowShouldClose(main_window)) {
 
         double currentTime = glfwGetTime();
         double delta = currentTime - lastTime;
         lastTime = currentTime;
         
-        /* Render here */
+        // Render
         Tangram::update(delta);
         Tangram::render();
 
-        /* Swap front and back buffers */
-        glfwSwapBuffers(window);
+        // Swap front and back buffers
+        glfwSwapBuffers(main_window);
 
-        /* Poll for and process events */
+        // Poll for and process events
         if (isContinuousRendering()) {
             glfwPollEvents();
         } else {
@@ -182,7 +199,6 @@ int main(void) {
         }
     }
     
-    Tangram::teardown();
     glfwTerminate();
     return 0;
 }

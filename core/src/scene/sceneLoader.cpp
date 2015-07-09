@@ -491,11 +491,11 @@ void SceneLoader::loadLights(Node lights, Scene& scene) {
         if (origin) {
             const std::string originStr = origin.as<std::string>();
             if (originStr == "world") {
-                lightPtr->setOrigin(LightOrigin::WORLD);
+                lightPtr->setOrigin(LightOrigin::world);
             } else if (originStr == "camera") {
-                lightPtr->setOrigin(LightOrigin::CAMERA);
+                lightPtr->setOrigin(LightOrigin::camera);
             } else if (originStr == "ground") {
-                lightPtr->setOrigin(LightOrigin::GROUND);
+                lightPtr->setOrigin(LightOrigin::ground);
             }
         }
 

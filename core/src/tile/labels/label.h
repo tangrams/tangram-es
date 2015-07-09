@@ -13,9 +13,9 @@ struct FadeEffect {
 public:
 
     enum class Interpolation {
-        LINEAR, POW, SINE
+        linear, pow, sine
     };
-    
+
     FadeEffect() {}
 
     FadeEffect(bool _in, Interpolation _interpolation, float _duration)
@@ -25,26 +25,26 @@ public:
     float update(float _dt) {
         m_step += _dt;
         float st = m_step / m_duration;
-        
+
         switch (m_interpolation) {
-            case Interpolation::LINEAR:
+            case Interpolation::linear:
                 return m_in ? st : -st + 1;
-            case Interpolation::POW:
+            case Interpolation::pow:
                 return m_in ? st * st : -(st * st) + 1;
-            case Interpolation::SINE:
+            case Interpolation::sine:
                 return m_in ? sin(st * M_PI * 0.5) : cos(st * M_PI * 0.5);
         }
-        
+
         return st;
     }
-    
+
     bool isFinished() {
         return m_step > m_duration;
     }
 
 private:
 
-    Interpolation m_interpolation = Interpolation::LINEAR;
+    Interpolation m_interpolation = Interpolation::linear;
     float m_duration = 0.5;
     float m_step = 0.0;
     bool m_in;
@@ -55,18 +55,18 @@ class Label {
 public:
 
     enum class Type {
-        POINT,
-        LINE,
-        DEBUG
+        point,
+        line,
+        debug
     };
 
     enum State {
-        FADING_IN       = 1,
-        FADING_OUT      = 1 << 1,
-        VISIBLE         = 1 << 2,
-        SLEEP           = 1 << 3,
-        OUT_OF_SCREEN   = 1 << 4,
-        WAIT_OCC        = 1 << 5, // state waiting for first occlusion result
+        fading_in       = 1,
+        fading_out      = 1 << 1,
+        visible         = 1 << 2,
+        sleep           = 1 << 3,
+        out_of_screen   = 1 << 4,
+        wait_occ        = 1 << 5, // state waiting for first occlusion result
     };
 
     struct Transform {
@@ -102,25 +102,25 @@ public:
     void update(const glm::mat4& _mvp, const glm::vec2& _screenSize, float _dt);
 
     void pushTransform(std::shared_ptr<TextBuffer>& _buffer);
-    
+
     bool updateScreenTransform(const glm::mat4& _mvp, const glm::vec2& _screenSize);
-    
+
     Type getType() const { return m_type; }
 
     void setOcclusion(bool _occlusion);
 
     bool canOcclude();
-    
+
     bool offViewport(const glm::vec2& _screenSize);
 
     void occlusionSolved();
 
     bool occludedLastFrame() { return m_occludedLastFrame; }
-    
+
     State getState() const { return m_currentState; }
-    
+
     static bool s_needUpdate;
-    
+
 private:
 
     void enterState(State _state, float _alpha = 1.0f);
@@ -130,11 +130,11 @@ private:
     void updateState(const glm::mat4& _mvp, const glm::vec2& _screenSize, float _dt);
 
     void setAlpha(float _alpha);
-    
+
     void setScreenPosition(const glm::vec2& _screenPosition);
-    
+
     void setRotation(float _rotation);
-    
+
     State m_currentState;
 
     Type m_type;

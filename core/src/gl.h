@@ -11,6 +11,7 @@
 #endif
 
 #ifdef PLATFORM_OSX
+#define GLFW_INCLUDE_GLEXT
 #include <GLFW/glfw3.h>
 /*
  * typedef to resolve name conflict in osx

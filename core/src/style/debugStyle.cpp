@@ -35,7 +35,7 @@ void* DebugStyle::parseStyleParams(const StyleParamMap& _styleParamMap) const {
 
 void DebugStyle::addData(TileData &_data, MapTile &_tile, const MapProjection &_mapProjection) {
 
-    if (Tangram::getDebugFlag(Tangram::DebugFlags::TILE_BOUNDS)) {
+    if (Tangram::getDebugFlag(Tangram::DebugFlags::tile_bounds)) {
 
         Mesh* mesh = new Mesh(m_vertexLayout, m_drawMode);
 

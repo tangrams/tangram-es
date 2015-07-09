@@ -6,22 +6,15 @@
 #include "util/texture.h"
 #include "util/vertexLayout.h"
 
-SpriteStyle::SpriteStyle(std::string _name, GLenum _drawMode) : Style(_name, _drawMode) {
-}
+SpriteStyle::SpriteStyle(std::string _name, GLenum _drawMode) : Style(_name, _drawMode) {}
 
-SpriteStyle::~SpriteStyle() {
-
-    m_texture->destroy();
-
-}
+SpriteStyle::~SpriteStyle() {}
 
 void SpriteStyle::constructVertexLayout() {
 
     m_vertexLayout = std::shared_ptr<VertexLayout>(new VertexLayout({
-        {"a_position", 3, GL_FLOAT, false, 0},
-        {"a_uv", 2, GL_FLOAT, false, 0},
+        {"a_position", 3, GL_FLOAT, false, 0}, {"a_uv", 2, GL_FLOAT, false, 0},
     }));
-
 }
 
 void SpriteStyle::constructShaderProgram() {
@@ -38,17 +31,11 @@ void* SpriteStyle::parseStyleParams(const StyleParamMap& _styleParamMap) const {
     return nullptr;
 }
 
-void SpriteStyle::buildPoint(Point& _point, void* _styleParam, Properties& _props, VboMesh& _mesh) const {
+void SpriteStyle::buildPoint(Point& _point, void* _styleParam, Properties& _props, VboMesh& _mesh) const {}
 
-}
+void SpriteStyle::buildLine(Line& _line, void* _styleParam, Properties& _props, VboMesh& _mesh) const {}
 
-void SpriteStyle::buildLine(Line& _line, void* _styleParam, Properties& _props, VboMesh& _mesh) const {
-
-}
-
-void SpriteStyle::buildPolygon(Polygon& _polygon, void* _styleParam, Properties& _props, VboMesh& _mesh) const {
-
-}
+void SpriteStyle::buildPolygon(Polygon& _polygon, void* _styleParam, Properties& _props, VboMesh& _mesh) const {}
 
 void SpriteStyle::onBeginDrawFrame(const std::shared_ptr<View>& _view, const std::shared_ptr<Scene>& _scene) {
     m_texture->update(0);
@@ -65,14 +52,13 @@ void SpriteStyle::addData(TileData& _data, MapTile& _tile, const MapProjection& 
     vertices.reserve(4);
 
     float size = 0.2;
-    vertices.push_back({{  size,  size, 0.f },{ 1.f, 0.f }});
-    vertices.push_back({{ -size,  size, 0.f },{ 0.f, 0.f }});
-    vertices.push_back({{ -size, -size, 0.f },{ 0.f, 1.f }});
-    vertices.push_back({{  size, -size, 0.f },{ 1.f, 1.f }});
+    vertices.push_back({{size, size, 0.f}, {1.f, 0.f}});
+    vertices.push_back({{-size, size, 0.f}, {0.f, 0.f}});
+    vertices.push_back({{-size, -size, 0.f}, {0.f, 1.f}});
+    vertices.push_back({{size, -size, 0.f}, {1.f, 1.f}});
 
-    mesh->addVertices(std::move(vertices), { 0, 1, 2, 2, 3, 0 });
+    mesh->addVertices(std::move(vertices), {0, 1, 2, 2, 3, 0});
     mesh->compileVertexBuffer();
 
     _tile.addGeometry(*this, std::unique_ptr<VboMesh>(mesh));
-
 }

@@ -22,6 +22,8 @@ public class MainActivity extends Activity {
 
         mapView = (MapView)findViewById(R.id.map);
         mapController = new MapController(this, mapView);
+        mapController.setMapZoom(16);
+        mapController.setMapPosition(-74.00976419448854, 40.70532700869127);
 
     }
 

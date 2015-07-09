@@ -63,7 +63,6 @@ int main(int argc, char **argv){
         }
     }
     
-    Tangram::teardown();
     curl_global_cleanup();
     closeGL();
     return 0;
