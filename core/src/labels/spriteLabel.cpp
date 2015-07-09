@@ -1,9 +1,9 @@
 #include "spriteLabel.h"
 
-SpriteLabel::SpriteLabel(Label::Transform _transform, const glm::vec2& _size, const glm::vec2& _offset, AttributeOffsets _attribOffsets) :
+SpriteLabel::SpriteLabel(Label::Transform _transform, const glm::vec2& _size, const glm::vec2& _offset, size_t _bufferOffset) :
     Label(_transform, Label::Type::point),
     m_offset(_offset),
-    m_attribOffsets(_attribOffsets) {
+    m_bufferOffset(_bufferOffset) {
 
     m_dim = _size;
 }
@@ -16,7 +16,7 @@ void SpriteLabel::pushTransform(VboMesh& _mesh) {
         state.screenPos += m_offset;
 
         // update all attributes screenPosition/rotation/alpha for the 4 quad vertices in the mesh
-        mesh.updateAttribute(m_attribOffsets.m_memOffset + m_attribOffsets.m_position, 4, state);
+        mesh.updateAttribute(m_bufferOffset, 4, state);
     }
 }
 
