@@ -9,47 +9,24 @@ namespace Tangram {
 
     struct Value {
 
-        float num;
         std::string str;
+        float num;
+        bool numeric;
 
-        virtual bool equals(float f) const = 0;
-        virtual bool equals(const std::string& s) const = 0;
-        virtual bool equals(const Value& v) const = 0;
+        bool equals(float f) const { return numeric && num == f; }
+        bool equals(const std::string& s) const { return str.size() != 0 && str == s; }
+        bool equals(const Value& v) const { return (numeric && v.equals(num)) || v.equals(str); }
 
-        virtual ~Value() {};
-
-        Value(float n) : num(n) {}
-        Value(float n, const std::string& s) : num(n), str(s) {}
-        Value(const std::string& s) : str(s) {}
-
-    };
-
-    struct NumValue : public Value {
-
-        NumValue(float n) : Value(n) {}
-        NumValue(float n, const std::string& s) : Value(n, s) {}
-        ~NumValue() {}
-
-        virtual bool equals(const std::string& s) const override { return str.size() != 0 && str == s; }
-        virtual bool equals(float f) const override { return num == f; }
-        virtual bool equals(const Value& v) const override { return v.equals(num); }
+        Value() : num(0), numeric(false) {}
+        Value(float n) : num(n), numeric(true) {}
+        Value(float n, const std::string& s) : str(s), num(n), numeric(true) {}
+        Value(const std::string& s) : str(s), num(0), numeric(false) {}
 
     };
 
-    struct StrValue : public Value {
+    using ValueList = std::vector<Value>;
 
-        StrValue(const std::string& s) : Value(s) {}
-        ~StrValue() {}
-
-        virtual bool equals(const std::string& s) const override { return str == s; }
-        virtual bool equals(float f) const override { return false; }
-        virtual bool equals(const Value& v) const override { return v.equals(str); }
-
-    };
-
-    using ValueList = std::vector<Value*>;
-
-    using Context = std::unordered_map<std::string, Value*>;
+    using Context = std::unordered_map<std::string, Value>;
 
     struct Filter {
 
@@ -134,27 +111,26 @@ namespace Tangram {
         ValueList values;
 
         Equality(const std::string& k, const ValueList& v) : Predicate(k), values(v) {}
-        ~Equality() { for (auto* v : values) { delete v; } }
 
         virtual bool eval(const Feature& feat, const Context& ctx) const override {
 
             auto ctxIt = ctx.find(key);
             if (ctxIt != ctx.end()) {
-                for (auto* v : values) {
-                    if (v->equals(*ctxIt->second)) { return true; }
+                for (auto& v : values) {
+                    if (v.equals(ctxIt->second)) { return true; }
                 }
                 return false;
             }
             auto strIt = feat.props.stringProps.find(key);
             if (strIt != feat.props.stringProps.end()) {
-                for (auto* v : values) {
-                    if (v->equals(strIt->second)) { return true; }
+                for (auto& v : values) {
+                    if (v.equals(strIt->second)) { return true; }
                 }
             }
             auto numIt = feat.props.numericProps.find(key);
             if (numIt != feat.props.numericProps.end()) {
-                for (auto* v : values) {
-                    if (v->equals(numIt->second)) { return true; }
+                for (auto& v : values) {
+                    if (v.equals(numIt->second)) { return true; }
                 }
             }
             return false;
@@ -173,8 +149,8 @@ namespace Tangram {
 
             auto ctxIt = ctx.find(key);
             if (ctxIt != ctx.end()) {
-                const auto& val = *ctxIt->second;
-                if (!val.equals(val.num)) { return false; } // only check range for numbers
+                const auto& val = ctxIt->second;
+                if (!val.numeric) { return false; } // only check range for numbers
                 return val.num >= min && val.num < max;
             }
             auto numIt = feat.props.numericProps.find(key);
