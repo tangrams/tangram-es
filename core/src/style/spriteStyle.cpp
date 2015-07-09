@@ -75,10 +75,14 @@ void SpriteStyle::buildPoint(Point& _point, void* _styleParam, Properties& _prop
                 (GLintptr) m_vertexLayout->getOffset("a_alpha"),
             };
             
-            auto label = m_labels->addSpriteLabel(_tile, m_name, t, planeSprite.size * spriteScale, offset, attribOffsets);
+            auto label = m_labels->addSpriteLabel(_tile, m_name, t,
+                                                  planeSprite.size * spriteScale,
+                                                  offset, attribOffsets);
             
             if (label) {
-                Builders::buildQuadAtPoint(label->getTransform().m_screenPosition + offset, planeSprite.size * spriteScale, planeSprite.uvBL, planeSprite.uvTR, builder);
+                Builders::buildQuadAtPoint(label->getTransform().state.screenPos + offset,
+                                           planeSprite.size * spriteScale,
+                                           planeSprite.uvBL, planeSprite.uvTR, builder);
             }
         }
     }
