@@ -46,7 +46,7 @@ public:
      *  rotation is in radians
      *  alpha should be in [0..1]
      */
-    void transformID(fsuint _textID, float _x, float _y, float _rot, float _alpha);
+    void transformID(fsuint _textID, const BufferVert::State& _state);
 
     void pushBuffer();
     
