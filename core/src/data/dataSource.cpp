@@ -45,7 +45,6 @@ void DataSource::setTileData(const TileID& _tileID, const std::shared_ptr<TileDa
 }
 
 void DataSource::constructURL(const TileID& _tileCoord, std::string& _url) const {
-
     _url.assign(m_urlTemplate);
 
     size_t xpos = _url.find("{x}");
@@ -62,35 +61,40 @@ void DataSource::constructURL(const TileID& _tileCoord, std::string& _url) const
     }
 }
 
-bool DataSource::loadTileData(const TileID& _tileID, TileManager& _tileManager) {
+
+bool DataSource::getTileData(std::shared_ptr<TileTask>&& _task, TileTaskCb _cb) {
+
+    const auto& tileID = _task->tile->getID();
     
-    bool success = true; // Begin optimistically
-    
-    if (hasTileData(_tileID)) {
-        _tileManager.addToWorkerQueue(m_tileStore[_tileID], _tileID, this);
-        return success;
+    if (hasTileData(tileID)) {
+        _task->parsedTileData = m_tileStore[tileID];
+        _cb(std::move(_task));
+        requestRender();
+
+        return true;
     }
 
-    std::string url;
-    
-    constructURL(_tileID, url);
+    return false;
+}
 
-    success = startUrlRequest(url, [=,&_tileManager](std::vector<char>&& _rawData) {
-        
-        // _tileManager is captured here by reference, since its lifetime is the entire program lifetime,
-        // but _tileID has to be captured by copy since it is a temporary stack object
-        
-        _tileManager.addToWorkerQueue(std::move(_rawData), _tileID, this);
-        requestRender();
-        
-    });
-    
-    return success;
+static void onTileLoaded(std::vector<char>&& _rawData, std::shared_ptr<TileTask>& _task, TileTaskCb _cb) {
+    _task->rawTileData = std::move(_rawData);
+    _cb(std::move(_task));
+    requestRender();
+}
+
+
+bool DataSource::loadTileData(std::shared_ptr<TileTask>&& _task, TileTaskCb _cb) {
+
+    std::string url(constructURL(_task->tile->getID()));
+
+    return startUrlRequest(url, std::bind(&onTileLoaded,
+                                          std::placeholders::_1,
+                                          std::move(_task), _cb));
+
 }
 
 void DataSource::cancelLoadingTile(const TileID& _tileID) {
-    std::string url;
-    constructURL(_tileID, url);
-    cancelUrlRequest(url);
+    cancelUrlRequest(constructURL(_tileID));
 }
 

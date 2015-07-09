@@ -8,6 +8,9 @@
 #include <jni.h>
 #include <cstdarg>
 
+#include <unistd.h>
+#include <sys/resource.h>
+
 /* Followed the following document for JavaVM tips when used with native threads
  * http://android.wooyd.org/JNIExample/#NWD1sCYeT-I
  * http://developer.android.com/training/articles/perf-jni.html and
@@ -194,6 +197,11 @@ void onUrlFailure(JNIEnv* _jniEnv, jlong _jCallbackPtr) {
     UrlCallback* callback = reinterpret_cast<UrlCallback*>(_jCallbackPtr);
     delete callback;
 
+}
+
+void setCurrentThreadPriority(int priority) {
+    int  tid = gettid();
+    setpriority(PRIO_PROCESS, tid, priority);
 }
 
 

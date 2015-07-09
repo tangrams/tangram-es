@@ -24,7 +24,6 @@ Style::~Style() {
 }
 
 uint32_t Style::parseColorProp(const std::string& _colorPropStr) {
-
     uint32_t color = 0;
 
     if (_colorPropStr.find(',') != std::string::npos) { // try to parse as comma-separated rgba components
@@ -133,7 +132,7 @@ void Style::applyLayerFiltering(const Feature& _feature, const Context& _ctx, st
     }
 }
 
-void Style::addData(TileData& _data, MapTile& _tile, const MapProjection& _mapProjection) {
+void Style::addData(TileData& _data, MapTile& _tile) {
     onBeginBuildTile(_tile);
 
     std::shared_ptr<VboMesh> mesh(newMesh());

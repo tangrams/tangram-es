@@ -81,3 +81,9 @@ bool startUrlRequest(const std::string& _url, UrlCallback _callback);
 /* Stop retrieving data from a URL that was previously requested
  */
 void cancelUrlRequest(const std::string& _url);
+
+
+/* Set the priority of the current thread. Priority is equivalent
+ * to pthread niceness.
+ */
+void setCurrentThreadPriority(int priority);

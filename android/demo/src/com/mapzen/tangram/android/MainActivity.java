@@ -7,6 +7,8 @@ import android.view.Window;
 import com.mapzen.tangram.MapController;
 import com.mapzen.tangram.MapView;
 
+import java.io.File;
+
 public class MainActivity extends Activity {
 
     MapController mapController;
@@ -24,6 +26,13 @@ public class MainActivity extends Activity {
         mapController = new MapController(this, mapView);
         mapController.setMapZoom(16);
         mapController.setMapPosition(-74.00976419448854, 40.70532700869127);
+
+        try {
+            File cacheDir = new File(getExternalCacheDir().getAbsolutePath() + "/tile_cache");
+            mapController.setTileCache(cacheDir, 30 * 1024 * 1024);
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
 
     }
 

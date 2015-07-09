@@ -5,6 +5,7 @@
 #include <memory>
 #include <vector>
 #include <mutex>
+#include "tile/tileTask.h"
 
 struct TileData;
 struct TileID;
@@ -30,7 +31,9 @@ public:
      * the I/O task is complete, the tile data is added to a queue in @_tileManager for 
      * further processing before it is renderable. 
      */
-    virtual bool loadTileData(const TileID& _tileID, TileManager& _tileManager);
+    virtual bool loadTileData(std::shared_ptr<TileTask>&& _task, TileTaskCb _cb);
+
+    virtual bool getTileData(std::shared_ptr<TileTask>&& _task, TileTaskCb _cb);
 
     /* Stops any running I/O tasks pertaining to @_tile */
     virtual void cancelLoadingTile(const TileID& _tile);
@@ -54,7 +57,13 @@ protected:
 
     /* Constructs the URL of a tile using <m_urlTemplate> */
     virtual void constructURL(const TileID& _tileCoord, std::string& _url) const;
-    
+
+    std::string constructURL(const TileID& _tileCoord) const {
+        std::string url;
+        constructURL(_tileCoord, url);
+        return url;
+    }
+
     std::map< TileID, std::shared_ptr<TileData> > m_tileStore; // Map of tileIDs to data for that tile
     
     std::string m_name; // Name used to identify this source in the style sheet

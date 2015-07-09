@@ -95,6 +95,11 @@ bool VboMesh::subDataUpload() {
 
     m_dirty = false;
 
+    // Also bind indices when return 'already bound'.
+    if (m_nIndices > 0) {
+        glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, m_glIndexBuffer);
+    }
+
     return true;
 }
 
