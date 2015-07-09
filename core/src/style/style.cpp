@@ -11,7 +11,7 @@
 
 #include <sstream>
 
-std::unordered_map<std::string, StyleParamMap> Style::s_styleParamMapCache;
+std::unordered_map<std::bitset<MAX_LAYERS>, StyleParamMap> Style::s_styleParamMapCache;
 std::mutex Style::s_cacheMutex;
 
 using namespace Tangram;
@@ -82,7 +82,7 @@ void Style::addLayer(std::shared_ptr<SceneLayer> _layer) {
 
 }
 
-void Style::applyLayerFiltering(const Feature& _feature, const Context& _ctx, std::string& _uniqueID,
+void Style::applyLayerFiltering(const Feature& _feature, const Context& _ctx, std::bitset<MAX_LAYERS>& _uniqueID,
                                    StyleParamMap& _styleParamMapMix, std::weak_ptr<SceneLayer> _uberLayer) const {
 
     std::vector<std::weak_ptr<SceneLayer>> sLayers;
@@ -98,7 +98,7 @@ void Style::applyLayerFiltering(const Feature& _feature, const Context& _ctx, st
 
         if ( sceneLyr->getFilter()->eval(_feature, _ctx)) { // filter matches
 
-            _uniqueID += std::to_string(sceneLyr->getID()) + "_";
+            _uniqueID.set(sceneLyr->getID());
 
             if(s_styleParamMapCache.find(_uniqueID) != s_styleParamMapCache.end()) {
 
@@ -151,11 +151,11 @@ void Style::addData(TileData& _data, MapTile& _tile, const MapProjection& _mapPr
         // Loop over all features
         for (auto& feature : layer.features) {
 
-            std::string uniqueID("");
+            std::bitset<MAX_LAYERS> uniqueID(0);
             StyleParamMap styleParamMapMix;
             applyLayerFiltering(feature, ctx, uniqueID, styleParamMapMix, (*it));
 
-            if(uniqueID.length() != 0) { // if a layer matched then uniqueID should be > 0
+            if(uniqueID.any()) { // if a layer matched then uniqueID should be > 0
                 feature.props.numericProps["zoom"] = _tile.getID().z;
 
                 switch (feature.geometryType) {

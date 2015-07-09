@@ -3,11 +3,13 @@
 #include "data/tileData.h"
 #include "material.h"
 #include "gl.h"
+#include "scene/sceneLayer.h"
 #include "styleParamMap.h"
 #include "util/shaderProgram.h"
 
 #include "csscolorparser.hpp"
 
+#include <bitset>
 #include <memory>
 #include <mutex>
 #include <string>
@@ -29,7 +31,6 @@ enum class LightingType : char {
 
 namespace Tangram {
     struct Value;
-    class SceneLayer;
     using Context = std::unordered_map<std::string, Value*>;
 }
 
@@ -92,7 +93,7 @@ protected:
      */
     virtual void* parseStyleParams(const StyleParamMap& _styleParamMap) const = 0;
 
-    static std::unordered_map<std::string, StyleParamMap> s_styleParamMapCache;
+    static std::unordered_map<std::bitset<MAX_LAYERS>, StyleParamMap> s_styleParamMapCache;
     static std::mutex s_cacheMutex;
     static uint32_t parseColorProp(const std::string& _colorPropStr) ;
 
@@ -100,7 +101,7 @@ protected:
      * filter what layer(s) a features match and get style paramaters for this feature based on all subLayers it
      * matches. Matching is cached for other features to use.
      */
-    void applyLayerFiltering(const Feature& _feature, const Tangram::Context& _ctx, std::string& _uniqueID,
+    void applyLayerFiltering(const Feature& _feature, const Tangram::Context& _ctx, std::bitset<MAX_LAYERS>& _uniqueID,
                                         StyleParamMap& _styleParamMapMix, std::weak_ptr<Tangram::SceneLayer> _uberLayer) const;
 
     /* Perform any needed setup to process the data for a tile */
