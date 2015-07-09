@@ -9,10 +9,9 @@
 #define EPSILON 0.00001
 
 glm::vec2 screenSize(500.f, 500.f);
-std::weak_ptr<TextBuffer> ptr;
 
 TEST_CASE( "Ensure the transition from wait -> sleep when occlusion happens", "[Core][Label]" ) {
-    TextLabel l({screenSize/2.f}, "label", 0, Label::Type::point, ptr);
+    TextLabel l({screenSize/2.f}, "label", 0, Label::Type::point);
 
     REQUIRE(l.getState() == Label::State::wait_occ);
     l.setOcclusion(true);
@@ -31,9 +30,9 @@ TEST_CASE( "Ensure the transition from wait -> sleep when occlusion happens", "[
 }
 
 TEST_CASE( "Ensure the transition from wait -> visible when no occlusion happens", "[Core][Label]" ) {
-    TextLabel l({screenSize/2.f}, "label", 0, Label::Type::point, ptr);
+    TextLabel l({screenSize/2.f}, "label", 0, Label::Type::point);
 
-    REQUIRE(l.getState() == Label::State::wait_occ);
+(l.getState() == Label::State::wait_occ);
 
     l.setOcclusion(false);
     l.update(glm::ortho(0.f, screenSize.x, screenSize.y, 0.f, -1.f, 1.f), screenSize, 0);
@@ -54,7 +53,7 @@ TEST_CASE( "Ensure the transition from wait -> visible when no occlusion happens
 }
 
 TEST_CASE( "Ensure the end state after occlusion is leep state", "[Core][Label]" ) {
-    TextLabel l({screenSize/2.f}, "label", 0, Label::Type::point, ptr);
+    TextLabel l({screenSize/2.f}, "label", 0, Label::Type::point);
 
     l.setOcclusion(false);
     l.occlusionSolved();
@@ -72,7 +71,7 @@ TEST_CASE( "Ensure the end state after occlusion is leep state", "[Core][Label]"
 }
 
 TEST_CASE( "Ensure the out of screen state transition", "[Core][Label]" ) {
-    TextLabel l({screenSize*2.f}, "label", 0, Label::Type::point, ptr);
+    TextLabel l({screenSize*2.f}, "label", 0, Label::Type::point);
 
     REQUIRE(l.getState() == Label::State::wait_occ);
 
@@ -100,7 +99,7 @@ TEST_CASE( "Ensure the out of screen state transition", "[Core][Label]" ) {
 }
 
 TEST_CASE( "Ensure debug labels are always visible and cannot occlude", "[Core][Label]" ) {
-    TextLabel l({screenSize/2.f}, "label", 0, Label::Type::debug, ptr);
+    TextLabel l({screenSize/2.f}, "label", 0, Label::Type::debug);
 
     REQUIRE(l.getState() == Label::State::visible);
     REQUIRE(!l.canOcclude());

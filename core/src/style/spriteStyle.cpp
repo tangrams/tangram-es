@@ -11,8 +11,6 @@
 #include "glm/gtc/matrix_transform.hpp"
 #include "glm/gtc/type_ptr.hpp"
 
-MapTile* SpriteStyle::s_processedTile = nullptr;
-
 SpriteStyle::SpriteStyle(std::string _name, GLenum _drawMode) : Style(_name, _drawMode) {
     
     m_labels = Labels::GetInstance();
@@ -51,16 +49,14 @@ void* SpriteStyle::parseStyleParams(const std::string& _layerNameID, const Style
     return nullptr;
 }
 
-void SpriteStyle::buildPoint(Point& _point, void* _styleParam, Properties& _props, VboMesh& _mesh) const {
+void SpriteStyle::buildPoint(Point& _point, void* _styleParam, Properties& _props, VboMesh& _mesh, MapTile& _tile) const {
     // TODO : make this configurable
     SpriteNode planeSprite = m_spriteAtlas->getSpriteNode("tree");
     std::vector<PosUVVertex> vertices;
-    
-    // a pointer to the current start of the vertex in the array of vertices
-    GLvoid* memStart = &vertices;
+    GLvoid* memStart;
     
     SpriteBuilder builder = {
-        [&](const glm::vec2& coord, const glm::vec2 screenPos, const glm::vec2& uv) {
+        [&](const glm::vec2& coord, const glm::vec2& screenPos, const glm::vec2& uv) {
             vertices.push_back({ coord, screenPos, uv, 0.5f, M_PI_2 });
         }
     };
@@ -74,13 +70,14 @@ void SpriteStyle::buildPoint(Point& _point, void* _styleParam, Properties& _prop
             Label::Transform t = {glm::vec2(_point), glm::vec2(_point)};
             
             SpriteLabel::AttributeOffsets attribOffsets = {
-                nullptr,
+                m_vertexLayout->getStride(),
+                memStart,
                 m_vertexLayout->getOffset("a_screenPosition"),
                 m_vertexLayout->getOffset("a_rotation"),
                 m_vertexLayout->getOffset("a_alpha"),
             };
             
-            auto label = m_labels->addSpriteLabel(*SpriteStyle::s_processedTile, m_name, t, planeSprite.size * spriteScale, offset, attribOffsets);
+            auto label = m_labels->addSpriteLabel(_tile, m_name, t, planeSprite.size * spriteScale, offset, attribOffsets);
             
             if (label) {
                 Builders::buildQuadAtPoint(label->getTransform().m_screenPosition + offset, planeSprite.size * spriteScale, planeSprite.uvBL, planeSprite.uvTR, builder);
@@ -94,23 +91,12 @@ void SpriteStyle::buildPoint(Point& _point, void* _styleParam, Properties& _prop
     mesh.addVertices(std::move(vertices), std::move(builder.indices));
 }
 
-void SpriteStyle::buildLine(Line& _line, void* _styleParam, Properties& _props, VboMesh& _mesh) const {
+void SpriteStyle::buildLine(Line& _line, void* _styleParam, Properties& _props, VboMesh& _mesh, MapTile& _tile) const {
     // NO-OP
 }
 
-void SpriteStyle::buildPolygon(Polygon& _polygon, void* _styleParam, Properties& _props, VboMesh& _mesh) const {
+void SpriteStyle::buildPolygon(Polygon& _polygon, void* _styleParam, Properties& _props, VboMesh& _mesh, MapTile& _tile) const {
     // NO-OP
-}
-
-void SpriteStyle::onBeginBuildTile(MapTile& _tile) const {
-
-    // FIXME: concurrency makes this processed tile unreliable
-    SpriteStyle::s_processedTile = &_tile;
-}
-
-void SpriteStyle::onEndBuildTile(MapTile &_tile, std::shared_ptr<VboMesh> _mesh) const {
-
-    SpriteStyle::s_processedTile = nullptr;
 }
 
 void SpriteStyle::onBeginDrawFrame(const std::shared_ptr<View>& _view, const std::shared_ptr<Scene>& _scene) {

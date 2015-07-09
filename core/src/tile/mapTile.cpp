@@ -39,21 +39,6 @@ void MapTile::addGeometry(const Style& _style, std::shared_ptr<VboMesh> _mesh) {
 
 }
 
-void MapTile::setTextBuffer(const Style& _style, std::shared_ptr<TextBuffer> _buffer) {
-
-    m_buffers[_style.getName()] = _buffer;
-}
-
-std::shared_ptr<TextBuffer> MapTile::getTextBuffer(const Style& _style) const {
-    auto it = m_buffers.find(_style.getName());
-
-    if (it != m_buffers.end()) {
-        return it->second;
-    }
-
-    return nullptr;
-}
-
 void MapTile::update(float _dt, const View& _view) {
 
     // Apply tile-view translation to the model matrix
@@ -74,29 +59,13 @@ void MapTile::updateLabels(float _dt, const Style& _style, const View& _view) {
 }
 
 void MapTile::pushLabelTransforms(const Style& _style, std::shared_ptr<Labels> _labels) {
-    auto it = m_buffers.find(_style.getName());
+    std::shared_ptr<VboMesh>& styleMesh = m_geometry[_style.getName()];
     
-    if (it == m_buffers.end()) {
-        return;
-    }
-
-    auto textBuffer = it->second;
-    
-    if (textBuffer->hasData()) {
-        auto ftContext = _labels->getFontContext();
-
-        // FIXME : locking during sprite updates
-        ftContext->lock();
-        ftContext->useBuffer(textBuffer);
-        
-        for (auto& label : m_labels[_style.getName()]) {
-            label->pushTransform();
+    if (styleMesh) {
+        for(auto& label : m_labels[_style.getName()]) {
+            label->pushTransform(*styleMesh);
         }
-        
-        textBuffer->pushBuffer();
-        ftContext->unlock();
     }
-    
 }
 
 void MapTile::draw(const Style& _style, const View& _view) {

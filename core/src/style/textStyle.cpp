@@ -6,8 +6,6 @@
 #include "util/vboMesh.h"
 #include "view/view.h"
 
-MapTile* TextStyle::s_processedTile = nullptr;
-
 TextStyle::TextStyle(const std::string& _fontName, std::string _name, float _fontSize, unsigned int _color, bool _sdf, bool _sdfMultisampling, GLenum _drawMode)
 : Style(_name, _drawMode), m_fontName(_fontName), m_fontSize(_fontSize), m_color(_color), m_sdf(_sdf), m_sdfMultisampling(_sdfMultisampling)  {    
     m_labels = Labels::GetInstance();
@@ -47,31 +45,18 @@ void* TextStyle::parseStyleParams(const std::string& _layerNameID, const StylePa
     return nullptr;
 }
 
-void TextStyle::addVertices(TextBuffer& _buffer, VboMesh& _mesh) const {
-    std::vector<TextVert> vertices;
-    int bufferSize = _buffer.getVerticesSize();
-
-    if (bufferSize == 0) {
-        return;
-    }
-
-    vertices.resize(bufferSize);
-
-    if (_buffer.getVertices(reinterpret_cast<float*>(vertices.data()))) {
-        auto& mesh = static_cast<TextStyle::Mesh&>(_mesh);
-        mesh.addVertices(std::move(vertices), {});
-    }
-}
-
-void TextStyle::buildPoint(Point& _point, void* _styleParams, Properties& _props, VboMesh& _mesh) const {
+void TextStyle::buildPoint(Point& _point, void* _styleParams, Properties& _props, VboMesh& _mesh, MapTile& _tile) const {
+    auto& buffer = static_cast<TextBuffer&>(_mesh);
+    
     for (auto prop : _props.stringProps) {
         if (prop.first == "name") {
-            m_labels->addTextLabel(*TextStyle::s_processedTile, m_name, { glm::vec2(_point), glm::vec2(_point) }, prop.second, Label::Type::point);
+            m_labels->addTextLabel(_tile, buffer, m_name, { glm::vec2(_point), glm::vec2(_point) }, prop.second, Label::Type::point);
         }
     }
 }
 
-void TextStyle::buildLine(Line& _line, void* _styleParams, Properties& _props, VboMesh& _mesh) const {
+void TextStyle::buildLine(Line& _line, void* _styleParams, Properties& _props, VboMesh& _mesh, MapTile& _tile) const {
+    auto& buffer = static_cast<TextBuffer&>(_mesh);
     int lineLength = _line.size();
     int skipOffset = floor(lineLength / 2);
     float minLength = 0.15; // default, probably need some more thoughts
@@ -90,13 +75,14 @@ void TextStyle::buildLine(Line& _line, void* _styleParams, Properties& _props, V
                     continue;
                 }
                 
-                m_labels->addTextLabel(*TextStyle::s_processedTile, m_name, { p1, p2 }, prop.second, Label::Type::line);
+                m_labels->addTextLabel(_tile, buffer, m_name, { p1, p2 }, prop.second, Label::Type::line);
             }
         }
     }
 }
 
-void TextStyle::buildPolygon(Polygon& _polygon, void* _styleParams, Properties& _props, VboMesh& _mesh) const {
+void TextStyle::buildPolygon(Polygon& _polygon, void* _styleParams, Properties& _props, VboMesh& _mesh, MapTile& _tile) const {
+    auto& buffer = static_cast<TextBuffer&>(_mesh);
     glm::vec3 centroid;
     int n = 0;
 
@@ -112,46 +98,30 @@ void TextStyle::buildPolygon(Polygon& _polygon, void* _styleParams, Properties& 
 
     for (auto prop : _props.stringProps) {
         if (prop.first == "name") {
-            m_labels->addTextLabel(*TextStyle::s_processedTile, m_name, { glm::vec2(centroid), glm::vec2(centroid) }, prop.second, Label::Type::point);
+            m_labels->addTextLabel(_tile, buffer, m_name, { glm::vec2(centroid), glm::vec2(centroid) }, prop.second, Label::Type::point);
         }
     }
 }
 
-void TextStyle::onBeginBuildTile(MapTile& _tile) const {
+void TextStyle::onBeginBuildTile(VboMesh& _mesh) const {
+    auto& buffer = static_cast<TextStyle::Mesh&>(_mesh);
+    buffer.init();
+    
     auto ftContext = m_labels->getFontContext();
-    auto buffer = ftContext->genTextBuffer();
-
-    _tile.setTextBuffer(*this, buffer);
-
-    ftContext->lock();
-    ftContext->useBuffer(buffer);
-
-    buffer->init();
-
+    
     ftContext->setFont(m_fontName, m_fontSize * m_pixelScale);
-
     if (m_sdf) {
         float blurSpread = 2.5;
         ftContext->setSignedDistanceField(blurSpread);
     }
-
-    TextStyle::s_processedTile = &_tile;
 }
 
-void TextStyle::onEndBuildTile(MapTile &_tile, std::shared_ptr<VboMesh> _mesh) const {
-    auto ftContext = m_labels->getFontContext();
-    auto buffer = ftContext->getCurrentBuffer();
-
-    // add the computed glyph vertices to the mesh once
-    addVertices(*ftContext->getCurrentBuffer(), *_mesh);
-
-    buffer->setMesh(_mesh->numVertices() > 0 ? _mesh : nullptr);
-
-    TextStyle::s_processedTile = nullptr;
-
-    ftContext->clearState();
-    ftContext->useBuffer(nullptr);
-    ftContext->unlock();
+void TextStyle::onEndBuildTile(VboMesh& _mesh) const {
+    auto& buffer = static_cast<TextStyle::Mesh&>(_mesh);
+    
+    buffer.finish();
+    
+    m_labels->getFontContext()->clearState();
 }
 
 void TextStyle::onBeginDrawFrame(const std::shared_ptr<View>& _view, const std::shared_ptr<Scene>& _scene) {

@@ -70,13 +70,13 @@ protected:
     virtual void constructShaderProgram() = 0;
 
     /* Build styled vertex data for point geometry and add it to the given <VboMesh> */
-    virtual void buildPoint(Point& _point, void* _styleParam, Properties& _props, VboMesh& _mesh) const = 0;
+    virtual void buildPoint(Point& _point, void* _styleParam, Properties& _props, VboMesh& _mesh, MapTile& _tile) const = 0;
 
     /* Build styled vertex data for line geometry and add it to the given <VboMesh> */
-    virtual void buildLine(Line& _line, void* _styleParam, Properties& _props, VboMesh& _mesh) const = 0;
+    virtual void buildLine(Line& _line, void* _styleParam, Properties& _props, VboMesh& _mesh, MapTile& _tile) const = 0;
 
     /* Build styled vertex data for polygon geometry and add it to the given <VboMesh> */
-    virtual void buildPolygon(Polygon& _polygon, void* _styleParam, Properties& _props, VboMesh& _mesh) const = 0;
+    virtual void buildPolygon(Polygon& _polygon, void* _styleParam, Properties& _props, VboMesh& _mesh, MapTile& _tile) const = 0;
 
     /* Parse StyleParamMap to apt Style property parameters, and puts in the styleParamCache
      * NOTE: layerNameID will be replaced by unique ID for a set of filter matches*/
@@ -86,10 +86,10 @@ protected:
     static uint32_t parseColorProp(const std::string& _colorPropStr) ;
 
     /* Perform any needed setup to process the data for a tile */
-    virtual void onBeginBuildTile(MapTile& _tile) const;
+    virtual void onBeginBuildTile(VboMesh& _mesh) const;
 
     /* Perform any needed teardown after processing data for a tile */
-    virtual void onEndBuildTile(MapTile& _tile, std::shared_ptr<VboMesh> _mesh) const;
+    virtual void onEndBuildTile(VboMesh& _mesh) const;
 
     /* Create a new mesh object using the vertex layout corresponding to this style */
     virtual VboMesh* newMesh() const = 0;

@@ -18,9 +18,9 @@ int Labels::LODDiscardFunc(float _maxZoom, float _zoom) {
     return (int) MIN(floor(((log(-_zoom + (_maxZoom + 2)) / log(_maxZoom + 2) * (_maxZoom )) * 0.5)), MAX_LOD);
 }
 
-std::shared_ptr<Label> Labels::addTextLabel(MapTile& _tile, const std::string& _styleName, Label::Transform _transform, std::string _text, Label::Type _type) {
-    auto currentBuffer = m_ftContext->getCurrentBuffer();
-
+std::shared_ptr<Label> Labels::addTextLabel(MapTile& _tile, TextBuffer& _buffer, const std::string& _styleName,
+                                            Label::Transform _transform, std::string _text, Label::Type _type) {
+    
     // discard based on level of detail
     // FIXME: the current view should not be used to determine whether a label is shown at all
     // otherwise results will be random
@@ -28,22 +28,25 @@ std::shared_ptr<Label> Labels::addTextLabel(MapTile& _tile, const std::string& _
         return nullptr;
     }
     
-    if (currentBuffer) {
-        fsuint textID = currentBuffer->genTextID();
-        std::shared_ptr<TextLabel> label(new TextLabel(_transform, _text, textID, _type, currentBuffer));
+    fsuint textID = _buffer.genTextID();
+    
+    std::shared_ptr<TextLabel> label(new TextLabel(_transform, _text, textID, _type));
 
-        // raterize the text label
-        if (!label->rasterize(currentBuffer)) {
-            label.reset();
-            return nullptr;
-        }
+    m_ftContext->lock();
+    
+    // raterize the text label
+    if (!label->rasterize(_buffer)) {
+        m_ftContext->unlock();
         
-        addLabel(_tile, _styleName, std::dynamic_pointer_cast<Label>(label));
-
-        return label;
+        label.reset();
+        return nullptr;
     }
+    
+    m_ftContext->unlock();
+    
+    addLabel(_tile, _styleName, std::dynamic_pointer_cast<Label>(label));
 
-    return nullptr;
+    return label;
 }
 
 void Labels::addLabel(MapTile& _tile, const std::string& _styleName, std::shared_ptr<Label> _label) {
