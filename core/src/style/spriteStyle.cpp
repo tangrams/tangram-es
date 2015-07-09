@@ -43,7 +43,7 @@ void SpriteStyle::onBeginDrawFrame(const std::shared_ptr<View>& _view, const std
     m_shaderProgram->setUniformi("u_tex", 0);
 }
 
-void SpriteStyle::addData(TileData& _data, MapTile& _tile, const MapProjection& _mapProjection) {
+void SpriteStyle::addData(TileData& _data, MapTile& _tile) {
 
     Mesh* mesh = new Mesh(m_vertexLayout, m_drawMode);
 

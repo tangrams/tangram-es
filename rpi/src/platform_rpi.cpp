@@ -136,4 +136,6 @@ void cancelUrlRequest(const std::string& _url) {
     }
 }
 
+void setCurrentThreadPriority(int priority) {}
+
 #endif

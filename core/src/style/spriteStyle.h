@@ -23,7 +23,7 @@ protected:
     virtual void buildPoint(Point& _point, void* _styleParam, Properties& _props, VboMesh& _mesh) const override;
     virtual void buildLine(Line& _line, void* _styleParam, Properties& _props, VboMesh& _mesh) const override;
     virtual void buildPolygon(Polygon& _polygon, void* _styleParam, Properties& _props, VboMesh& _mesh) const override;
-    virtual void addData(TileData& _data, MapTile& _tile, const MapProjection& _mapProjection) override;
+    virtual void addData(TileData& _data, MapTile& _tile) override;
 
     virtual void* parseStyleParams(const std::string& _layerNameID, const StyleParamMap& _styleParamMap) override;
 

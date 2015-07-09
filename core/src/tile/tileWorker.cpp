@@ -2,76 +2,131 @@
 
 #include "data/dataSource.h"
 #include "platform.h"
-#include "style/style.h"
 #include "tile/mapTile.h"
 #include "view/view.h"
+#include "tileManager.h"
+#include "style/style.h"
+#include "scene/scene.h"
 
-TileWorker::TileWorker() {
-    m_free = true;
-    m_aborted = false;
-    m_finished = false;
+#include <algorithm>
+
+#define WORKER_NICENESS 10
+
+TileWorker::TileWorker(TileManager& _tileManager, int _num_worker)
+    : m_tileManager(_tileManager) {
+    m_running = true;
+
+    for (int i = 0; i < _num_worker; i++) {
+        m_workers.emplace_back(&TileWorker::run, this);
+    }
 }
 
-void TileWorker::abort() {
-    m_aborted = true;
+TileWorker::~TileWorker(){
+    if (m_running) {
+        stop();
+    }
 }
 
-void TileWorker::processTileData(std::unique_ptr<TileTask> _task,
-                                 const std::vector<std::unique_ptr<Style>>& _styles,
-                                 const View& _view) {
+void TileWorker::run() {
 
-    m_task = std::move(_task);
-    m_free = false;
-    m_finished = false;
-    m_aborted = false;
+    setCurrentThreadPriority(WORKER_NICENESS);
 
-    m_future = std::async(std::launch::async, [&]() {
-        
-        const TileID& tileID = m_task->tileID;
-        DataSource* dataSource = m_task->source;
-        
-        auto tile = std::shared_ptr<MapTile>(new MapTile(tileID, _view.getMapProjection()));
+    while (true) {
+
+        std::shared_ptr<TileTask> task;
+        {
+            std::unique_lock<std::mutex> lock(m_mutex);
+
+            m_condition.wait(lock, [&, this]{
+                    return !m_running || !m_queue.empty();
+                });
+
+            // Check if thread should stop
+            if (!m_running) {
+                break;
+            }
+
+            // Remove all canceled tasks
+            std::remove_if(m_queue.begin(), m_queue.end(),
+                [](const std::shared_ptr<TileTask>& a) {
+                    return a->tile->isCanceled();
+                });
+
+            if (m_queue.empty()) {
+                continue;
+            }
+
+            // Pop highest priority tile from queue
+            auto it = std::min_element(m_queue.begin(), m_queue.end(),
+                [](const std::shared_ptr<TileTask>& a, const std::shared_ptr<TileTask>& b) {
+                    if (a->tile->isVisible() != b->tile->isVisible()) {
+                        return a->tile->isVisible();
+                    }
+                    return a->tile->getPriority() < b->tile->getPriority();
+                });
+
+            task = std::move(*it);
+            m_queue.erase(it);
+        }
+
+        if (task->tile->isCanceled()) {
+            continue;
+        }
+
+        DataSource* dataSource = task->source;
+        auto& tile = task->tile;
 
         std::shared_ptr<TileData> tileData;
 
-        if (m_task->parsedTileData) {
+        if (task->parsedTileData) {
             // Data has already been parsed!
-            tileData = m_task->parsedTileData;
+            tileData = task->parsedTileData;
         } else {
             // Data needs to be parsed
-            tileData = dataSource->parse(*tile, m_task->rawTileData);
+            tileData = dataSource->parse(*tile, task->rawTileData);
 
             // Cache parsed data with the original data source
-            dataSource->setTileData(tileID, tileData);
+            dataSource->setTileData(tile->getID(), tileData);
         }
-        
-		tile->update(0, _view);
 
-        //Process data for all styles
-        for(const auto& style : _styles) {
-            if(m_aborted) {
-                m_finished = true;
-                return std::move(tile);
-            }
-            if(tileData) {
-                style->addData(*tileData, *tile, _view.getMapProjection());
+        if (tileData) {
+            // Process data for all styles
+            for (const auto& style : m_tileManager.getScene()->getStyles()) {
+                if (!m_running) {
+                    break;
+                }
+                if (tile->isCanceled()) {
+                    break;
+                }
+                style->addData(*tileData, *tile);
             }
         }
-        m_finished = true;
-        
+
+        m_tileManager.tileProcessed(std::move(task));
         requestRender();
-        
-        // Return finished tile
-        return std::move(tile);
-
-    });
-
+    }
 }
 
-std::shared_ptr<MapTile> TileWorker::getTileResult() {
-
-    m_free = true;
-    return std::move(m_future.get());
-    
+void TileWorker::enqueue(std::shared_ptr<TileTask>&& task) {
+    {
+        std::unique_lock<std::mutex> lock(m_mutex);
+        if (!m_running) {
+            return;
+        }
+        m_queue.push_back(std::move(task));
+    }
+    m_condition.notify_one();
 }
 
+void TileWorker::stop() {
+    {
+        std::unique_lock<std::mutex> lock(m_mutex);
+        m_running = false;
+    }
+
+    m_condition.notify_all();
+
+    for (std::thread &worker: m_workers) {
+        worker.join();
+    }
+}
