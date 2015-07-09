@@ -70,13 +70,10 @@ public:
     };
 
     struct Transform {
-        glm::vec2 m_modelPosition1;
-        glm::vec2 m_modelPosition2;
+        glm::vec2 modelPosition1;
+        glm::vec2 modelPosition2;
 
-        glm::vec2 m_screenPosition;
-
-        float m_alpha;
-        float m_rotation;
+        BufferVert::State state;
     };
 
     Label(Transform _transform, Type _type);
