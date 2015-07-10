@@ -29,7 +29,9 @@ void createAtlas(void* _userPtr, unsigned int _width, unsigned int _height) {
 FONScontext* initContext(void* _usrPtr) {
     GLFONSparams params;
 
+    params.useGLBackend = false;
     params.updateAtlas = updateAtlas;
+    params.updateBuffer = nullptr;
 
     return glfonsCreate(ATLAS_WIDTH, ATLAS_HEIGHT, FONS_ZERO_TOPLEFT, params, _usrPtr);
 }
