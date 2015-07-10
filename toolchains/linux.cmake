@@ -15,7 +15,6 @@ find_sources_and_include_directories(
 # load core library
 include_directories(${PROJECT_SOURCE_DIR}/core/include/)
 include_directories(${PROJECT_SOURCE_DIR}/core/include/jsoncpp/)
-set(CORE_LIB_DEPS -lcurl)
 add_subdirectory(${PROJECT_SOURCE_DIR}/core)
 include_recursive_dirs(${PROJECT_SOURCE_DIR}/core/src/*.h)
 
@@ -30,7 +29,7 @@ function(link_libraries)
     add_subdirectory(${PROJECT_SOURCE_DIR}/glfw)
     include_directories(${PROJECT_SOURCE_DIR}/glfw/include)
 
-    target_link_libraries(${EXECUTABLE_NAME} core -lcurl ${GLFW_LIBRARIES})
+    target_link_libraries(${EXECUTABLE_NAME} core -lcurl glfw ${GLFW_LIBRARIES})
 
 endfunction()
 
