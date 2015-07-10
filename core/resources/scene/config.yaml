@@ -180,8 +180,10 @@ layers:
             text: {}
         highway: 
             filter: { kind: highway, $zoom: { min: 7 } }
+            draw: {}
         major_road:
             filter: { kind: major_road, $zoom: { min: 14 } }
+            draw: {}
     places:
         data: { sources: osm }
         filter:
@@ -200,12 +202,16 @@ layers:
             text: {}
         continents:
             filter: { kind: continent }
+            draw: {}
         countries:
             filter: { kind: country }
+            draw: {}
         oceans:
             filter: { kind: ocean }
+            draw: {}
         minor-places:
             filter: { kind: [hamlet, village, town, neighbourhood, suburb, quarter], $zoom: { max: 13 } }
+            draw: {}
             #visible: false 
         #cities:
             # this filter shows lower scaleranks at higher zooms, starting at z4

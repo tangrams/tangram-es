@@ -106,15 +106,9 @@ void Style::applyLayerFiltering(const Feature& _feature, const Context& _ctx, st
             } else {
 
                 /* update StyleParam with subLayer parameters */
-                auto& sLayerStyleParamMap = sceneLyr->getStyleParamMap();
-                for(auto& styleParam : sLayerStyleParamMap) {
-                    auto it = _styleParamMapMix.find(styleParam.first);
-                    // C++17 has an insert_or_assign which does the same thing.
-                    if(it != _styleParamMapMix.end()) {
-                        it->second = styleParam.second;
-                    } else {
-                        _styleParamMapMix.insert(styleParam);
-                    }
+                auto& layerStyleParamMap = sceneLyr->getStyleParamMap();
+                for(auto& styleParam : layerStyleParamMap) {
+                    _styleParamMapMix[styleParam.first] = styleParam.second;
                 }
 
                 {
