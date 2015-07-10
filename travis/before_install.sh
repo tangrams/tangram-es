@@ -3,14 +3,6 @@
 set -e
 set -o pipefail
 
-if [[ ${PLATFORM} == "linux" ]]; then
-
-    #Use a c++11 compatible compiler
-    export CXX=g++-4.8
-    export CC=gcc-4.8
-
-fi
-
 if [[ ${PLATFORM} == "android" ]]; then
 
     ANDROID_SDK_VERSION="r24.0.2"
