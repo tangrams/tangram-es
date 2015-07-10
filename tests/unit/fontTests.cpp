@@ -1,5 +1,8 @@
+
 #define CATCH_CONFIG_MAIN
 #include "catch/catch.hpp"
+
+#ifdef PLATFORM_OSX
 
 #include <iostream>
 #include <vector>
@@ -85,3 +88,8 @@ TEST_CASE( "Test that the number of vertices correspond to the logic", "[Core][F
     glfonsDelete(context);
 }
 
+#else
+
+TEST_CASE( "Omitting fontTest" ) {}
+
+#endif // PLATFORM_OSX
