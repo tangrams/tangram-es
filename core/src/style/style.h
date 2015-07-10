@@ -5,6 +5,7 @@
 #include "gl.h"
 #include "styleParamMap.h"
 #include "util/shaderProgram.h"
+#include "util/renderState.h"
 #include <memory>
 #include <string>
 #include <vector>
