@@ -21,12 +21,16 @@ include_recursive_dirs(${PROJECT_SOURCE_DIR}/core/src/*.h)
 
 # link and build functions
 function(link_libraries)
+    
+    # configure glfw
+    set(GLFW_BUILD_EXAMPLES OFF CACHE BOOL "Build the GLFW example programs")
+    set(GLFW_BUILD_TESTS OFF CACHE BOOL "Build the GLFW test programs")
+    set(GLFW_BUILD_DOCS OFF CACHE BOOL "Build the GLFW documentation")
+    set(GLFW_INSTALL OFF CACHE BOOL "Generate installation target")
+    add_subdirectory(${PROJECT_SOURCE_DIR}/glfw)
+    include_directories(${PROJECT_SOURCE_DIR}/glfw/include)
 
-    find_package(PkgConfig REQUIRED)
-    pkg_search_module(GLFW REQUIRED glfw3>=3.1)
-    include_directories(${GLFW_INCLUDE_DIRS})
-    target_link_libraries(${EXECUTABLE_NAME} -lcurl) #use system libcurl
-    target_link_libraries(${EXECUTABLE_NAME} core ${GLFW_STATIC_LIBRARIES})
+    target_link_libraries(${EXECUTABLE_NAME} core -lcurl ${GLFW_LIBRARIES})
 
 endfunction()
 

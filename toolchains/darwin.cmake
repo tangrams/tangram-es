@@ -4,17 +4,6 @@ set(CXX_FLAGS_DEBUG "-g -O0")
 set(EXECUTABLE_NAME "tangram")
 
 add_definitions(-DPLATFORM_OSX)
-
-find_package(PkgConfig REQUIRED)
-pkg_search_module(GLFW REQUIRED glfw3>=3.1)
-
-if(NOT GLFW_FOUND)
-    message(SEND_ERROR "GLFW not found")
-    return()
-else()
-    include_directories(${GLFW_INCLUDE_DIRS})
-    message(STATUS "Found GLFW ${GLFW_PREFIX}")
-endif()
     
 # load core library
 add_subdirectory(${PROJECT_SOURCE_DIR}/core)
@@ -37,14 +26,15 @@ string(REGEX REPLACE "[.]DS_Store" "" RESOURCES "${RESOURCES}")
 # link and build functions
 function(link_libraries)
 
-    list(APPEND GLFW_LDFLAGS
-        "-framework OpenGL" 
-        "-framework Cocoa" 
-        "-framework IOKit" 
-        "-framework CoreFoundation"   
-        "-framework CoreVideo")
-
-    target_link_libraries(${EXECUTABLE_NAME} core ${GLFW_LDFLAGS})
+    # configure glfw
+    set(GLFW_BUILD_EXAMPLES OFF CACHE BOOL "Build the GLFW example programs")
+    set(GLFW_BUILD_TESTS OFF CACHE BOOL "Build the GLFW test programs")
+    set(GLFW_BUILD_DOCS OFF CACHE BOOL "Build the GLFW documentation")
+    set(GLFW_INSTALL OFF CACHE BOOL "Generate installation target")
+    add_subdirectory(${PROJECT_SOURCE_DIR}/glfw)
+    include_directories(${PROJECT_SOURCE_DIR}/glfw/include)
+    
+    target_link_libraries(${EXECUTABLE_NAME} core glfw ${GLFW_LIBRARIES})
 
     # add resource files and property list
     set_target_properties(${EXECUTABLE_NAME} PROPERTIES

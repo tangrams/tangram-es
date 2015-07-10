@@ -1,8 +1,5 @@
 language: cpp
 
-# enabling multi platform build (under travis beta)
-# requires emailing support@travis-ci.com for this to be enabled for our repo
-# http://docs.travis-ci.com/user/multi-os/
 matrix:
     include:
         - os: osx

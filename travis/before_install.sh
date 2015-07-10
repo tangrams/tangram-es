@@ -3,30 +3,11 @@
 set -e
 set -o pipefail
 
-if [[ ${TRAVIS_OS_NAME} == "osx" ]]; then
-    brew update >/dev/null
-fi
-
-if [[ ${PLATFORM} == "osx" ]]; then
-    brew tap homebrew/versions
-    brew install glfw3
-fi
-
 if [[ ${PLATFORM} == "linux" ]]; then
-
-    GLFW_VERSION="3.1.1"
 
     #Use a c++11 compatible compiler
     export CXX=g++-4.8
     export CC=gcc-4.8
-
-    # Download and install GLFW from source
-    wget https://github.com/glfw/glfw/releases/download/${GLFW_VERSION}/glfw-${GLFW_VERSION}.zip
-    unzip -qq glfw-${GLFW_VERSION}.zip
-    cd glfw-${GLFW_VERSION}
-    cmake .
-    make install
-    cd ../
 
 fi
 
