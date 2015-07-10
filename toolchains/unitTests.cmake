@@ -13,17 +13,15 @@ include_directories(${CORE_LIBRARIES_INCLUDE_DIRS})
 
 set(OSX_PLATFORM_SRC ${PROJECT_SOURCE_DIR}/osx/src/platform_osx.mm)
 
-find_package(PkgConfig REQUIRED)
-pkg_search_module(GLFW REQUIRED glfw3>=3.1)
-
-list(APPEND GLFW_LDFLAGS
-        "-framework OpenGL" 
-        "-framework Cocoa" 
-        "-framework IOKit" 
-        "-framework CoreFoundation"   
-        "-framework CoreVideo")
-
 file(GLOB TEST_SOURCES tests/unit/*.cpp)
+
+# configure glfw
+set(GLFW_BUILD_EXAMPLES OFF CACHE BOOL "Build the GLFW example programs")
+set(GLFW_BUILD_TESTS OFF CACHE BOOL "Build the GLFW test programs")
+set(GLFW_BUILD_DOCS OFF CACHE BOOL "Build the GLFW documentation")
+set(GLFW_INSTALL OFF CACHE BOOL "Generate installation target")
+add_subdirectory(${PROJECT_SOURCE_DIR}/glfw)
+include_directories(${PROJECT_SOURCE_DIR}/glfw/include)
 
 # create an executable per test
 foreach(_src_file_path ${TEST_SOURCES})
@@ -34,8 +32,8 @@ foreach(_src_file_path ${TEST_SOURCES})
 
     add_executable(${EXECUTABLE_NAME} ${_src_file_path} ${OSX_PLATFORM_SRC})
 
-    target_link_libraries(${EXECUTABLE_NAME} -lcurl)
-    target_link_libraries(${EXECUTABLE_NAME} core ${GLFW_LDFLAGS})
+    target_link_libraries(${EXECUTABLE_NAME} core glfw ${GLFW_LIBRARIES})
+    
 endforeach(_src_file_path ${TEST_SOURCES})
 
 # copy resources in order to make tests with resources dependency
