@@ -14,9 +14,16 @@ matrix:
         - os: linux
           env: PLATFORM=android
           compiler: gcc
+          addons:
+            apt:
+              packages: [ 'openjdk-7-jdk', 'lib32z1-dev', 'lib32stdc++6' ]
         - os: linux
           env: PLATFORM=linux
           compiler: gcc
+          addons:
+            apt:
+              sources: [ 'kalakris-cmake', 'ubuntu-toolchain-r-test' ]
+              packages: [ 'cmake', 'gcc-4.8', 'g++-4.8', 'xorg-dev', 'libglu1-mesa-dev' ]
 
 before_install:
     - git submodule init && git submodule update
@@ -36,3 +43,5 @@ script:
 
 after_success:
     - source ./travis/script_deploy_android_snapshot.sh
+
+sudo: false
