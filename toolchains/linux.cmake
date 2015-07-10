@@ -21,10 +21,8 @@ add_subdirectory(${PROJECT_SOURCE_DIR}/glfw)
 include_directories(${PROJECT_SOURCE_DIR}/glfw/include)
 
 # load core library
-include_directories(${PROJECT_SOURCE_DIR}/core/include/)
-include_directories(${PROJECT_SOURCE_DIR}/core/include/jsoncpp/)
 add_subdirectory(${PROJECT_SOURCE_DIR}/core)
-include_recursive_dirs(${PROJECT_SOURCE_DIR}/core/src/*.h)
+include_directories(${CORE_INCLUDE_DIRS})
 
 # link and build functions
 function(link_libraries)
