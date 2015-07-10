@@ -2,8 +2,6 @@
 #define CATCH_CONFIG_MAIN
 #include "catch/catch.hpp"
 
-#ifdef PLATFORM_OSX
-
 #include <iostream>
 #include <vector>
 #include "tangram.h"
@@ -64,7 +62,10 @@ TEST_CASE( "Test that the number of vertices correspond to the logic", "[Core][F
     UserPtr p;
 
     FONScontext* context = initContext(&p);
+    REQUIRE(context != NULL);
+
     int font = initFont(context);
+    REQUIRE(font >= 0);
 
     glfonsBufferCreate(context, &p.bufferId);
     glfonsBindBuffer(context, p.bufferId);
@@ -80,16 +81,11 @@ TEST_CASE( "Test that the number of vertices correspond to the logic", "[Core][F
 
     std::vector<float> vertices;
     int size = glfonsVerticesSize(context);
-    vertices.resize(size * 6);
-    glfonsVertices(context, reinterpret_cast<float*>(vertices.data()));
+    // 6 vertices per glyph - 4 float attributes per vertex
+    vertices.resize(size * 6 * 4);
+    glfonsVertices(context, static_cast<float*>(vertices.data()));
 
     REQUIRE(size == text.size() * 6); // shoud have 6 vertices per glyph
 
     glfonsDelete(context);
 }
-
-#else
-
-TEST_CASE( "Omitting fontTest" ) {}
-
-#endif // PLATFORM_OSX
