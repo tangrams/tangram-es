@@ -3,9 +3,6 @@ set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wall -stdlib=libc++ -std=c++11")
 
 add_definitions(-DPLATFORM_OSX) 
 
-# include headers for homebrew-installed libraries
-include_directories(/usr/local/include)
-
 # configure glfw
 set(GLFW_BUILD_EXAMPLES OFF CACHE BOOL "Build the GLFW example programs")
 set(GLFW_BUILD_TESTS OFF CACHE BOOL "Build the GLFW test programs")

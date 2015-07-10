@@ -5,8 +5,6 @@ set(EXECUTABLE_NAME "tangram")
 
 add_definitions(-DPLATFORM_LINUX)
 
-include_directories(/usr/local/include)
-
 # add sources and include headers
 find_sources_and_include_directories(
     ${PROJECT_SOURCE_DIR}/linux/src/*.h 
