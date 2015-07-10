@@ -3,7 +3,6 @@
 #include "tileData.h"
 #include <unordered_map>
 #include <vector>
-#include <limits>
 
 namespace Tangram {
 
@@ -61,7 +60,7 @@ namespace Tangram {
         Filter(const std::string& k, const std::vector<Value>& vals) : values(vals), key(k), type(FilterType::equality) {}
         
         // Create a 'range' filter
-        Filter(const std::string& k, float min, float max) : values({ Value(min), Value(max) }), type(FilterType::range) {}
+        Filter(const std::string& k, float min, float max) : values({ Value(min), Value(max) }), key(k), type(FilterType::range) {}
         
         // Create an 'existence' filter
         Filter(const std::string& k, bool ex) : key(k), exists(ex), type(FilterType::existence) {}
