@@ -25,7 +25,6 @@ protected:
     
     std::unique_ptr<SpriteAtlas> m_spriteAtlas;
     std::shared_ptr<Labels> m_labels;
-    unsigned int m_spriteGeneration;
     
 public:
 
