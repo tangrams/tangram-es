@@ -9,11 +9,11 @@ public:
     TextLabel(Label::Transform _transform, std::string _text, fsuint _id, Type _type);
     
     /* Call the font context to rasterize the label string */
-    bool rasterize(TextBuffer& _buffer);
+    bool rasterize(TextBatch& _buffer);
     
     std::string getText() { return m_text; }
     
-    void pushTransform(VboMesh& _mesh) override;
+    void pushTransform(Batch& _batch) override;
     
 private:
     

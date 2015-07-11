@@ -1,4 +1,5 @@
 #include "textLabel.h"
+#include "style/style.h"
 
 TextLabel::TextLabel(Label::Transform _transform, std::string _text, fsuint _id, Type _type) :
     Label(_transform, _type),
@@ -17,7 +18,7 @@ void TextLabel::updateBBoxes() {
     m_aabb = m_obb.getExtent();
 }
 
-bool TextLabel::rasterize(TextBuffer& _buffer) {
+bool TextLabel::rasterize(TextBatch& _buffer) {
     bool res = _buffer.rasterize(m_text, m_id);
     
     if (!res) {
@@ -32,10 +33,13 @@ bool TextLabel::rasterize(TextBuffer& _buffer) {
     return true;
 }
 
-void TextLabel::pushTransform(VboMesh& _mesh) {
+void TextLabel::pushTransform(Batch& _batch) {
     if (m_dirty) {
-        TextBuffer& buffer = static_cast<TextBuffer&>(_mesh);
-        buffer.transformID(m_id, m_transform.state);
+        if (typeid(_batch) != typeid(TextBatch))
+            return;
+
+        auto& batch = static_cast<TextBatch&>(_batch);
+        batch.transformID(m_id, m_transform.state);
         m_dirty = false;
     }
 }

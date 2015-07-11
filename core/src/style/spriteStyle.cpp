@@ -11,6 +11,15 @@
 #include "glm/gtc/matrix_transform.hpp"
 #include "glm/gtc/type_ptr.hpp"
 
+SpriteBatch::SpriteBatch(const SpriteStyle& _style)
+    :  m_mesh(std::make_shared<TypedMesh<BufferVert>>(_style.m_vertexLayout, GL_TRIANGLES, GL_DYNAMIC_DRAW)),
+       m_style(_style)
+{
+        
+    // m_dirtyTransform = false;
+    // m_bound = false;
+}
+
 SpriteStyle::SpriteStyle(std::string _name, GLenum _drawMode) : Style(_name, _drawMode) {
 
     m_labels = Labels::GetInstance();
@@ -45,7 +54,10 @@ void SpriteStyle::constructShaderProgram() {
     m_spriteAtlas->addSpriteNode("sunburst", {0, 629}, {32, 32});
 }
 
-void SpriteStyle::buildPoint(Point& _point, const StyleParamMap& _styleParamMap, Properties& _props, VboMesh& _mesh, MapTile& _tile) const {
+void SpriteStyle::buildPoint(Point& _point, const StyleParamMap& _styleParamMap, Properties& _props, Batch& _batch, MapTile& _tile) const {
+
+    auto& batch = static_cast<SpriteBatch&>(_batch);
+
     // TODO : make this configurable
     SpriteNode planeSprite = m_spriteAtlas->getSpriteNode("tree");
     std::vector<BufferVert> vertices;
@@ -67,8 +79,8 @@ void SpriteStyle::buildPoint(Point& _point, const StyleParamMap& _styleParamMap,
         if (prop.first == "name") {
             Label::Transform t = {glm::vec2(_point), glm::vec2(_point)};
 
-            size_t bufferOffset = _mesh.numVertices() * m_vertexLayout->getStride() + attribOffset;
-
+            size_t bufferOffset = batch.m_mesh->numVertices() * m_vertexLayout->getStride() + attribOffset;
+            
             auto label = m_labels->addSpriteLabel(_tile, m_name, t,
                                                   planeSprite.size * spriteScale,
                                                   offset, bufferOffset);
@@ -80,9 +92,9 @@ void SpriteStyle::buildPoint(Point& _point, const StyleParamMap& _styleParamMap,
             }
         }
     }
-
-    auto& mesh = static_cast<SpriteStyle::Mesh&>(_mesh);
-    mesh.addVertices(std::move(vertices), std::move(builder.indices));
+    
+    //auto& mesh = static_cast<SpriteStyle::Mesh&>(_mesh);
+    batch.m_mesh->addVertices(std::move(vertices), std::move(builder.indices));
 }
 
 void SpriteStyle::onBeginDrawFrame(const std::shared_ptr<View>& _view, const std::shared_ptr<Scene>& _scene) {
@@ -101,3 +113,11 @@ void SpriteStyle::onEndDrawFrame() {
     glEnable(GL_DEPTH_TEST);
     glDisable(GL_BLEND);
 }
+
+Batch* SpriteStyle::newBatch() const {
+    return new SpriteBatch(*this);
+};
+
+void SpriteBatch::draw(const View& _view) {
+    m_mesh->draw(m_style.getShaderProgram());
+};

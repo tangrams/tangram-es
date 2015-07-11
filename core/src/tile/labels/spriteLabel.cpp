@@ -1,4 +1,5 @@
 #include "spriteLabel.h"
+#include "style/spriteStyle.h"
 
 SpriteLabel::SpriteLabel(Label::Transform _transform, const glm::vec2& _size, const glm::vec2& _offset, size_t _bufferOffset) :
     Label(_transform, Label::Type::point),
@@ -8,12 +9,15 @@ SpriteLabel::SpriteLabel(Label::Transform _transform, const glm::vec2& _size, co
     m_dim = _size;
 }
 
-void SpriteLabel::pushTransform(VboMesh& _mesh) {
+void SpriteLabel::pushTransform(Batch& _batch) {
 
     if (m_dirty) {
-        TypedMesh<BufferVert>& mesh = static_cast<TypedMesh<BufferVert>&>(_mesh);
-
-        mesh.updateAttribute(m_bufferOffset, 4, m_transform.state);
+        if (typeid(_batch) != typeid(SpriteBatch))
+            return;
+        
+        //TypedMesh<BufferVert>& mesh = static_cast<TypedMesh<BufferVert>&>(_mesh);
+        auto& batch = static_cast<SpriteBatch&>(_batch);
+        batch.m_mesh->updateAttribute(m_bufferOffset, 4, m_transform.state);
     }
 }
 

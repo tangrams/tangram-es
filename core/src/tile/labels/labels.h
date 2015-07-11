@@ -4,6 +4,7 @@
 #include "textLabel.h"
 #include "spriteLabel.h"
 #include "util/tileID.h"
+//#include "style/textStyle.h"
 
 #include <memory>
 #include <mutex>
@@ -12,6 +13,7 @@
 class FontContext;
 class MapTile;
 class View;
+class TextBatch;
 
 struct LabelUnit {
 
@@ -58,7 +60,7 @@ public:
      * Creates a text slabel for and associate it with the current processed <MapTile> TileID for a specific syle name
      * Returns the created label
      */
-    std::shared_ptr<Label> addTextLabel(MapTile& _tile, TextBuffer& _buffer, const std::string& _styleName, Label::Transform _transform, std::string _text, Label::Type _type);
+    std::shared_ptr<Label> addTextLabel(MapTile& _tile, TextBatch& _buffer, const std::string& _styleName, Label::Transform _transform, std::string _text, Label::Type _type);
 
     /*
      * Creates a sprite slabel for and associate it with the current processed <MapTile> TileID for a specific syle name
@@ -70,7 +72,7 @@ public:
     void setFontContext(std::shared_ptr<FontContext> _ftContext) { m_ftContext = _ftContext; }
 
     /* Returns a const reference to a pointer of the font context */
-    const std::shared_ptr<FontContext>& getFontContext() { return m_ftContext; }
+    std::shared_ptr<FontContext>& getFontContext() { return m_ftContext; }
 
     void updateOcclusions();
 

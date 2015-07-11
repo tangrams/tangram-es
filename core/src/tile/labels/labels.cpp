@@ -18,7 +18,7 @@ int Labels::LODDiscardFunc(float _maxZoom, float _zoom) {
     return (int) MIN(floor(((log(-_zoom + (_maxZoom + 2)) / log(_maxZoom + 2) * (_maxZoom )) * 0.5)), MAX_LOD);
 }
 
-std::shared_ptr<Label> Labels::addTextLabel(MapTile& _tile, TextBuffer& _buffer, const std::string& _styleName,
+std::shared_ptr<Label> Labels::addTextLabel(MapTile& _tile, TextBatch& _batch, const std::string& _styleName,
                                             Label::Transform _transform, std::string _text, Label::Type _type) {
     
     // discard based on level of detail
@@ -28,12 +28,12 @@ std::shared_ptr<Label> Labels::addTextLabel(MapTile& _tile, TextBuffer& _buffer,
         return nullptr;
     }
     
-    fsuint textID = _buffer.genTextID();
+    fsuint textID = _batch.genTextID();
     
     std::shared_ptr<TextLabel> label(new TextLabel(_transform, _text, textID, _type));
 
     // raterize the text label
-    if (!label->rasterize(_buffer)) {
+    if (!label->rasterize(_batch)) {
         
         label.reset();
         return nullptr;

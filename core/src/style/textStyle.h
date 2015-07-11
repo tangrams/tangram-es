@@ -9,22 +9,23 @@
 
 #include <memory>
 
+class TextBatch;
+
 class TextStyle : public Style {
 
 protected:
 
     virtual void constructVertexLayout() override;
     virtual void constructShaderProgram() override;
-    virtual void buildPoint(Point& _point, const StyleParamMap& _styleParamMap, Properties& _props, VboMesh& _mesh, MapTile& _tile) const override;
-    virtual void buildLine(Line& _line, const StyleParamMap& _styleParamMap, Properties& _props, VboMesh& _mesh, MapTile& _tile) const override;
-    virtual void buildPolygon(Polygon& _polygon, const StyleParamMap& _styleParamMap, Properties& _props, VboMesh& _mesh, MapTile& _tile) const override;
-    virtual void onBeginBuildTile(VboMesh& _mesh) const override;
-    virtual void onEndBuildTile(VboMesh& _mesh) const override;
+    virtual void buildPoint(Point& _point, const StyleParamMap& _styleParamMap, Properties& _props, Batch& _batch, MapTile& _tile) const override;
+    virtual void buildLine(Line& _line, const StyleParamMap& _styleParamMap, Properties& _props, Batch& _batch, MapTile& _tile) const override;
+    virtual void buildPolygon(Polygon& _polygon, const StyleParamMap& _styleParamMap, Properties& _props, Batch& _batch, MapTile& _tile) const override;
+    virtual void onBeginBuildTile(Batch& _batch) const override;
+    virtual void onEndBuildTile(Batch& _batch) const override;
 
-    virtual VboMesh* newMesh() const override {
-        return new TextBuffer(m_labels->getFontContext(), m_vertexLayout);
-    };
 
+    virtual Batch* newBatch() const override;
+    
     std::string m_fontName;
     float m_fontSize;
     int m_color;
@@ -43,4 +44,5 @@ public:
 
     virtual ~TextStyle();
 
+    friend class TextBatch;
 };

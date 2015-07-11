@@ -3,9 +3,12 @@
 #include "gl.h"
 #include "glfontstash.h"
 #include "util/typedMesh.h"
+#include "style/style.h"
 
 #include "glm/vec4.hpp"
 #include "glm/vec2.hpp"
+
+#include "style/style.h" // for Batch base class
 
 #include <memory>
 
@@ -20,16 +23,28 @@ struct BufferVert {
 };
 
 class FontContext;
+class TextStyle;
 
 /*
  * This class represents a text buffer, each text buffer has several text ids
  */
-class TextBuffer : public TypedMesh<BufferVert> {
+class TextBatch : public Batch {
 
 public:
 
-    TextBuffer(std::shared_ptr<FontContext> _fontContext, std::shared_ptr<VertexLayout> _vertexLayout);
-    ~TextBuffer();
+    TextBatch(const TextStyle& _style);
+    
+    virtual void draw(const View& _view) override;
+    virtual void update(float _dt, const View& _view) override {};
+    virtual bool compile() {
+        if (m_mesh->numVertices() > 0) {
+            m_mesh->compileVertexBuffer();
+            return true;
+        }
+        return false;
+    };
+    
+    ~TextBatch();
     
     /* generates a text id */
     fsuint genTextID();
@@ -58,7 +73,7 @@ public:
     /* get the vertices from the font context and add them as vbo mesh data */
     void addBufferVerticesToMesh();
 
-private:
+//private:
     
     void bind();
     void unbind();
@@ -68,4 +83,7 @@ private:
     fsuint m_fsBuffer;
     std::shared_ptr<FontContext> m_fontContext;
 
+    std::shared_ptr<TypedMesh<BufferVert>> m_mesh;
+
+    const TextStyle& m_style;
 };

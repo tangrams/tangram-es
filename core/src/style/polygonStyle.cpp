@@ -38,7 +38,7 @@ void PolygonStyle::parseStyleParams(const StyleParamMap& _styleParamMap, StylePa
     }
 }
 
-void PolygonStyle::buildLine(Line& _line, const StyleParamMap& _styleParamMap, Properties& _props, VboMesh& _mesh, MapTile& _tile) const {
+void PolygonStyle::buildLine(Line& _line, const StyleParamMap& _styleParamMap, Properties& _props, Batch& _batch, MapTile& _tile) const {
     std::vector<PosNormColVertex> vertices;
 
     PolyLineBuilder builder = {
@@ -53,11 +53,11 @@ void PolygonStyle::buildLine(Line& _line, const StyleParamMap& _styleParamMap, P
 
     Builders::buildPolyLine(_line, builder);
 
-    auto& mesh = static_cast<PolygonStyle::Mesh&>(_mesh);
-    mesh.addVertices(std::move(vertices), std::move(builder.indices));
+    auto& batch = static_cast<PolygonBatch&>(_batch);
+    batch.m_mesh->addVertices(std::move(vertices), std::move(builder.indices));
 }
 
-void PolygonStyle::buildPolygon(Polygon& _polygon, const StyleParamMap& _styleParamMap, Properties& _props, VboMesh& _mesh, MapTile& _tile) const {
+void PolygonStyle::buildPolygon(Polygon& _polygon, const StyleParamMap& _styleParamMap, Properties& _props, Batch& _batch, MapTile& _tile) const {
 
     std::vector<PosNormColVertex> vertices;
 
@@ -92,6 +92,6 @@ void PolygonStyle::buildPolygon(Polygon& _polygon, const StyleParamMap& _stylePa
 
     Builders::buildPolygon(_polygon, builder);
 
-    auto& mesh = static_cast<PolygonStyle::Mesh&>(_mesh);
-    mesh.addVertices(std::move(vertices), std::move(builder.indices));
+    auto& batch = static_cast<PolygonBatch&>(_batch);
+    batch.m_mesh->addVertices(std::move(vertices), std::move(builder.indices));
 }

@@ -1,6 +1,7 @@
 #include "mapTile.h"
 
 #include "style/style.h"
+#include "style/textStyle.h"
 #include "view/view.h"
 #include "util/tileID.h"
 #include "util/vboMesh.h"
@@ -33,9 +34,9 @@ MapTile::~MapTile() {
 
 }
 
-void MapTile::addGeometry(const Style& _style, std::shared_ptr<VboMesh> _mesh) {
+void MapTile::addBatch(const Style& _style, std::unique_ptr<Batch> _batch) {
 
-    m_geometry[_style.getName()] = std::move(_mesh); // Move-construct a unique_ptr at the value associated with the given style
+    m_batches[_style.getName()] = std::move(_batch);
 
 }
 
@@ -59,23 +60,25 @@ void MapTile::updateLabels(float _dt, const Style& _style, const View& _view) {
 }
 
 void MapTile::pushLabelTransforms(const Style& _style, std::shared_ptr<Labels> _labels) {
-    std::shared_ptr<VboMesh>& styleMesh = m_geometry[_style.getName()];
+    auto it = m_batches.find(_style.getName());
     
-    if (styleMesh) {
+    if (it != m_batches.end() && it->second) {
+        auto& batch = *it->second.get();
+        
         for(auto& label : m_labels[_style.getName()]) {
-            label->pushTransform(*styleMesh);
+            label->pushTransform(batch);
         }
     
-        if (typeid(*styleMesh) == typeid(TextBuffer)) {
-            TextBuffer& buffer = static_cast<TextBuffer&>(*styleMesh);
-            buffer.pushBuffer();
+        if (typeid(batch) == typeid(TextBatch)) {
+            TextBatch& textBatch = static_cast<TextBatch&>(batch);
+            textBatch.pushBuffer();
         }
     }
 }
 
 void MapTile::draw(const Style& _style, const View& _view) {
 
-    const std::shared_ptr<VboMesh>& styleMesh = m_geometry[_style.getName()];
+    const auto& styleMesh = m_batches[_style.getName()];
     
     if (styleMesh) {
         
@@ -91,12 +94,8 @@ void MapTile::draw(const Style& _style, const View& _view) {
         // Set the tile zoom level, using the sign to indicate whether the tile is a proxy
         shader->setUniformf("u_tile_zoom", m_proxyCounter > 0 ? -m_id.z : m_id.z);
 
-        styleMesh->draw(shader);
+        styleMesh->draw(_view);
     }
-}
-
-std::shared_ptr<VboMesh>& MapTile::getGeometry(const Style& _style) {
-    return m_geometry.at(_style.getName());
 }
 
 void MapTile::addLabel(const std::string& _styleName, std::shared_ptr<Label> _label) {
