@@ -92,8 +92,6 @@ public:
     const isect2d::AABB& getAABB() const { return m_aabb; }
 
     void update(const glm::mat4& _mvp, const glm::vec2& _screenSize, float _dt);
-
-    virtual void pushTransform(Batch& _batch) = 0;
     
     bool updateScreenTransform(const glm::mat4& _mvp, const glm::vec2& _screenSize);
 

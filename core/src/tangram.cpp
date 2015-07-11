@@ -114,7 +114,7 @@ namespace Tangram {
                     for (const auto& mapIDandTile : m_tileManager->getVisibleTiles()) {
                         const auto& tile = mapIDandTile.second;
                         if (tile->isReady()) {
-                            tile->updateLabels(_dt, *style, *m_view);
+                            tile->updateStyle(*style, _dt, *m_view);
                         }
                     }
                 }
@@ -126,7 +126,7 @@ namespace Tangram {
                     for (const auto& mapIDandTile : m_tileManager->getVisibleTiles()) {
                         const auto& tile = mapIDandTile.second;
                         if (tile->isReady()) {
-                            tile->pushLabelTransforms(*style, m_labels);
+                            tile->prepareStyle(*style);
                         }
                     }
                 }

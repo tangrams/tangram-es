@@ -39,7 +39,9 @@ protected:
         virtual void draw(const View& _view) override {
             m_mesh->draw(m_style.getShaderProgram());
         };
-        virtual void update(float _dt, const View& _view) override {};
+        virtual void update(const glm::mat4& mvp, const View& _view, float _dt) override {};
+        virtual void prepare() override {};
+
         virtual bool compile() {
             if (m_mesh->numVertices() > 0) {
                 m_mesh->compileVertexBuffer();

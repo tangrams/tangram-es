@@ -9,14 +9,10 @@ SpriteLabel::SpriteLabel(Label::Transform _transform, const glm::vec2& _size, co
     m_dim = _size;
 }
 
-void SpriteLabel::pushTransform(Batch& _batch) {
-
+void SpriteLabel::pushTransform(SpriteBatch& _batch) {
     if (m_dirty) {
-        if (typeid(_batch) != typeid(SpriteBatch))
-            return;
-        
-        auto& batch = static_cast<SpriteBatch&>(_batch);
-        batch.m_mesh->updateAttribute(m_bufferOffset, 4, m_transform.state);
+        _batch.m_mesh->updateAttribute(m_bufferOffset, 4, m_transform.state);
+        //m_dirty = false;
     }
 }
 

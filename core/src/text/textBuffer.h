@@ -23,6 +23,7 @@ struct BufferVert {
 
 class FontContext;
 class TextStyle;
+class TextLabel;
 
 /*
  * This class represents a text buffer, each text buffer has several text ids
@@ -34,7 +35,8 @@ public:
     TextBatch(const TextStyle& _style);
     
     virtual void draw(const View& _view) override;
-    virtual void update(float _dt, const View& _view) override {};
+    virtual void update(const glm::mat4& mvp, const View& _view, float _dt) override;
+    virtual void prepare() override;
     virtual bool compile() {
         if (m_mesh->numVertices() > 0) {
             m_mesh->compileVertexBuffer();
@@ -81,6 +83,8 @@ public:
     bool m_dirtyTransform;
     fsuint m_fsBuffer;
     std::shared_ptr<FontContext> m_fontContext;
+
+    std::vector<std::shared_ptr<TextLabel>> m_labels;
 
     std::shared_ptr<TypedMesh<BufferVert>> m_mesh;
 

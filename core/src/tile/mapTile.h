@@ -11,8 +11,6 @@
 #include <vector>
 #include <atomic>
 
-class Label;
-class Labels;
 class MapProjection;
 class Style;
 class TextBatch;
@@ -61,18 +59,14 @@ public:
      */
     void addBatch(const Style& _style, std::unique_ptr<Batch> _batch);
     
-    void addLabel(const std::string& _styleName, std::shared_ptr<Label> _label);
-    
-    //std::shared_ptr<VboMesh>& getGeometry(const Style& _style);
-
-    /* uUdate the Tile considering the current view */
+    /* Udate the Tile considering the current view */
     void update(float _dt, const View& _view);
 
-    /* Update labels position considering the tile transform */
-    void updateLabels(float _dt, const Style& _style, const View& _view);
+    /* Update Style considering the tile transform */
+    void updateStyle(const Style& _style, float _dt, const View& _view);
     
-    /* Push the label transforms to the font rendering context */
-    void pushLabelTransforms(const Style& _style, std::shared_ptr<Labels> _labels);
+    /* Prepare Style for rendering */
+    void prepareStyle(const Style& _style);
 
     /* Draws the geometry associated with the provided <Style> and view-projection matrix */
     void draw(const Style& _style, const View& _view);
@@ -183,8 +177,4 @@ private:
     // relative translation from the view origin to the model origin immediately before drawing the tile.
 
     std::unordered_map<std::string, std::unique_ptr<Batch>> m_batches;
-    
-    //std::unordered_map<std::string, std::shared_ptr<VboMesh>> m_geometry; // Map of <Style>s and their associated <VboMesh>es
-    std::unordered_map<std::string, std::vector<std::shared_ptr<Label>>> m_labels;
-
 };

@@ -4,6 +4,7 @@
 #include "style/textStyle.h"
 #include "util/texture.h"
 #include "util/vboMesh.h"
+#include "view/view.h"
 
 TextBatch::TextBatch(const TextStyle& _style)
     : m_fontContext(_style.m_labels->getFontContext()),
@@ -113,3 +114,19 @@ void TextBatch::unbind() {
 void TextBatch::draw(const View& _view) {
     m_mesh->draw(m_style.getShaderProgram());
 };
+
+
+void TextBatch::update(const glm::mat4& mvp, const View& _view, float _dt) {
+    glm::vec2 screenSize = glm::vec2(_view.getWidth(), _view.getHeight());
+    for (auto& label : m_labels) {
+        label->update(mvp, screenSize, _dt);
+    }
+}
+
+void TextBatch::prepare() {
+    for(auto& label : m_labels) {
+        label->pushTransform(*this);
+    }
+    pushBuffer();
+}
+

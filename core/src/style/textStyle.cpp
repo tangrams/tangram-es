@@ -49,7 +49,7 @@ void TextStyle::buildPoint(Point& _point, const StyleParamMap& _styleParamMap, P
         return;
     }
 
-    m_labels->addTextLabel(_tile, batch, m_name, { glm::vec2(_point), glm::vec2(_point) }, text, Label::Type::point);
+    m_labels->addTextLabel(batch, _tile, { glm::vec2(_point), glm::vec2(_point) }, text, Label::Type::point);
 }
 
 void TextStyle::buildLine(Line& _line, const StyleParamMap& _styleParamMap, Properties& _props, Batch& _batch, MapTile& _tile) const {
@@ -76,7 +76,7 @@ void TextStyle::buildLine(Line& _line, const StyleParamMap& _styleParamMap, Prop
             continue;
         }
 
-        m_labels->addTextLabel(_tile, batch, m_name, { p1, p2 }, text, Label::Type::line);
+        m_labels->addTextLabel(batch, _tile, { p1, p2 }, text, Label::Type::line);
     }
 }
 
@@ -101,7 +101,7 @@ void TextStyle::buildPolygon(Polygon& _polygon, const StyleParamMap& _styleParam
 
     centroid /= n;
 
-    m_labels->addTextLabel(_tile, batch, m_name, { glm::vec2(centroid), glm::vec2(centroid) }, text, Label::Type::point);
+    m_labels->addTextLabel(batch, _tile, { glm::vec2(centroid), glm::vec2(centroid) }, text, Label::Type::point);
 }
 
 void TextStyle::onBeginBuildTile(Batch& _batch) const {

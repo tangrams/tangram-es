@@ -1,13 +1,11 @@
 #include "mapTile.h"
 
 #include "style/style.h"
-#include "style/textStyle.h"
 #include "view/view.h"
 #include "util/tileID.h"
 #include "util/vboMesh.h"
 #include "util/shaderProgram.h"
 #include "text/fontContext.h"
-#include "labels/labels.h"
 
 #include "glm/gtc/matrix_transform.hpp"
 #include "glm/gtc/type_ptr.hpp"
@@ -50,37 +48,27 @@ void MapTile::update(float _dt, const View& _view) {
 
 }
 
-void MapTile::updateLabels(float _dt, const Style& _style, const View& _view) {
+void MapTile::updateStyle(const Style& _style, float _dt, const View& _view) {
     glm::mat4 mvp = _view.getViewProjectionMatrix() * m_modelMatrix;
-    glm::vec2 screenSize = glm::vec2(_view.getWidth(), _view.getHeight());
     
-    for (auto& label : m_labels[_style.getName()]) {
-        label->update(mvp, screenSize, _dt);
+    auto it = m_batches.find(_style.getName());
+    if (it != m_batches.end() && it->second) {
+        it->second->update(mvp, _view, _dt);
     }
 }
 
-void MapTile::pushLabelTransforms(const Style& _style, std::shared_ptr<Labels> _labels) {
+void MapTile::prepareStyle(const Style& _style) {
     auto it = m_batches.find(_style.getName());
-    
     if (it != m_batches.end() && it->second) {
-        auto& batch = *it->second.get();
-        
-        for(auto& label : m_labels[_style.getName()]) {
-            label->pushTransform(batch);
-        }
-    
-        if (typeid(batch) == typeid(TextBatch)) {
-            TextBatch& textBatch = static_cast<TextBatch&>(batch);
-            textBatch.pushBuffer();
-        }
+        it->second->prepare();
     }
 }
 
 void MapTile::draw(const Style& _style, const View& _view) {
 
-    const auto& styleMesh = m_batches[_style.getName()];
-    
-    if (styleMesh) {
+    auto it = m_batches.find(_style.getName());
+    if (it != m_batches.end() && it->second) {
+        auto& batch = *it->second;
         
         std::shared_ptr<ShaderProgram> shader = _style.getShaderProgram();
 
@@ -94,10 +82,7 @@ void MapTile::draw(const Style& _style, const View& _view) {
         // Set the tile zoom level, using the sign to indicate whether the tile is a proxy
         shader->setUniformf("u_tile_zoom", m_proxyCounter > 0 ? -m_id.z : m_id.z);
 
-        styleMesh->draw(_view);
+        batch.draw(_view);
     }
 }
 
-void MapTile::addLabel(const std::string& _styleName, std::shared_ptr<Label> _label) {
-    m_labels[_styleName].push_back(std::move(_label));
-}

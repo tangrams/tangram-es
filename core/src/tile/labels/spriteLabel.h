@@ -2,12 +2,14 @@
 
 #include "label.h"
 
+class SpriteBatch;
+
 class SpriteLabel : public Label {
 public:
     
     SpriteLabel(Label::Transform _transform, const glm::vec2& _size, const glm::vec2& _offset, size_t _bufferOffset);
     
-    void pushTransform(Batch& _batch) override;
+    void pushTransform(SpriteBatch& _batch);
     
 protected:
     

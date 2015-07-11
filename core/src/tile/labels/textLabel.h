@@ -13,7 +13,7 @@ public:
     
     std::string getText() { return m_text; }
     
-    void pushTransform(Batch& _batch) override;
+    void pushTransform(TextBatch& _batch);
     
 private:
     
