@@ -46,7 +46,7 @@ void TextStyle::buildPoint(Point& _point, const StyleParamMap& _styleParamMap, P
     
     for (auto prop : _props.stringProps) {
         if (prop.first == "name") {
-            m_labels->addTextLabel(_tile, batch, m_name, { glm::vec2(_point), glm::vec2(_point) }, prop.second, Label::Type::point);
+            m_labels->addTextLabel(batch, _tile, { glm::vec2(_point), glm::vec2(_point) }, prop.second, Label::Type::point);
         }
     }
 }
@@ -71,7 +71,7 @@ void TextStyle::buildLine(Line& _line, const StyleParamMap& _styleParamMap, Prop
                     continue;
                 }
                 
-                m_labels->addTextLabel(_tile, batch, m_name, { p1, p2 }, prop.second, Label::Type::line);
+                m_labels->addTextLabel(batch, _tile, { p1, p2 }, prop.second, Label::Type::line);
             }
         }
     }
@@ -94,7 +94,9 @@ void TextStyle::buildPolygon(Polygon& _polygon, const StyleParamMap& _styleParam
 
     for (auto prop : _props.stringProps) {
         if (prop.first == "name") {
-            m_labels->addTextLabel(_tile, batch, m_name, { glm::vec2(centroid), glm::vec2(centroid) }, prop.second, Label::Type::point);
+            m_labels->addTextLabel(batch, _tile,
+                                   { glm::vec2(centroid), glm::vec2(centroid) },
+                                   prop.second, Label::Type::point);
         }
     }
 }

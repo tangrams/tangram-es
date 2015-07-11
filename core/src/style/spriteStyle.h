@@ -8,6 +8,7 @@
 #include "tile/labels/spriteAtlas.h"
 
 class Texture;
+class SpriteLabel;
 
 class SpriteStyle : public Style {
 
@@ -45,7 +46,8 @@ public:
     SpriteBatch(const SpriteStyle& _style);
     
     virtual void draw(const View& _view) override;
-    virtual void update(float _dt, const View& _view) override {};
+    virtual void update(const glm::mat4& mvp, const View& _view, float _dt) override;
+    virtual void prepare() override;
     virtual bool compile() {
         if (m_mesh->numVertices() > 0) {
             m_mesh->compileVertexBuffer();
@@ -53,6 +55,8 @@ public:
         }
         return false;
     };
+
+    std::vector<std::shared_ptr<SpriteLabel>> m_labels;
 
     std::shared_ptr<TypedMesh<BufferVert>> m_mesh;
     const SpriteStyle& m_style;

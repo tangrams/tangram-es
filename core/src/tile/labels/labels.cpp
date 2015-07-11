@@ -4,6 +4,7 @@
 #include "text/fontContext.h"
 #include "util/primitives.h"
 #include "view/view.h"
+#include "style/spriteStyle.h"
 
 #include "glm/gtc/matrix_transform.hpp"
 
@@ -18,33 +19,51 @@ int Labels::LODDiscardFunc(float _maxZoom, float _zoom) {
     return (int) MIN(floor(((log(-_zoom + (_maxZoom + 2)) / log(_maxZoom + 2) * (_maxZoom )) * 0.5)), MAX_LOD);
 }
 
-std::shared_ptr<Label> Labels::addTextLabel(MapTile& _tile, TextBatch& _batch, const std::string& _styleName,
+std::shared_ptr<Label> Labels::addTextLabel(TextBatch& _batch, const MapTile& _tile,
                                             Label::Transform _transform, std::string _text, Label::Type _type) {
-    
+
     // discard based on level of detail
     // FIXME: the current view should not be used to determine whether a label is shown at all
     // otherwise results will be random
     if ((m_currentZoom - _tile.getID().z) > LODDiscardFunc(View::s_maxZoom, m_currentZoom)) {
         return nullptr;
     }
-    
+
     fsuint textID = _batch.genTextID();
-    
+
     std::shared_ptr<TextLabel> label(new TextLabel(_transform, _text, textID, _type));
 
     // raterize the text label
     if (!label->rasterize(_batch)) {
-        
+
         label.reset();
         return nullptr;
     }
-    
-    addLabel(_tile, _styleName, std::dynamic_pointer_cast<Label>(label));
+
+    addLabel(_tile, label);
+
+    _batch.m_labels.push_back(label);
 
     return label;
 }
 
-void Labels::addLabel(MapTile& _tile, const std::string& _styleName, std::shared_ptr<Label> _label) {
+std::shared_ptr<Label> Labels::addSpriteLabel(SpriteBatch& _batch, const MapTile& _tile,
+                                              Label::Transform _transform, const glm::vec2& _size,
+                                              const glm::vec2& _offset, size_t _bufferOffset) {
+
+    if ((m_currentZoom - _tile.getID().z) > LODDiscardFunc(View::s_maxZoom, m_currentZoom)) {
+        return nullptr;
+    }
+
+    auto label = std::shared_ptr<SpriteLabel>(new SpriteLabel(_transform, _size, _offset, _bufferOffset));
+    addLabel(_tile, label);
+
+    _batch.m_labels.push_back(label);
+
+    return label;
+}
+
+void Labels::addLabel(const MapTile& _tile, std::shared_ptr<Label> _label) {
     // NB: viewOrigin.z is only determined by screen width and height.
     const auto& viewOrigin = m_view->getPosition();
 
@@ -53,26 +72,13 @@ void Labels::addLabel(MapTile& _tile, const std::string& _styleName, std::shared
 
     _label->update(m_view->getViewProjectionMatrix() * modelMatrix, m_screenSize, 0);
     std::unique_ptr<TileID> tileID(new TileID(_tile.getID()));
-    _tile.addLabel(_styleName, _label);
+    //_tile.addLabel(_styleName, _label);
 
     // lock concurrent collection
     {
         std::lock_guard<std::mutex> lock(m_mutex);
-        m_pendingLabelUnits.emplace_back(LabelUnit(_label, tileID, _styleName));
+        m_pendingLabelUnits.emplace_back(LabelUnit(_label, tileID, ""));
     }
-}
-
-std::shared_ptr<Label> Labels::addSpriteLabel(MapTile& _tile, const std::string& _styleName, Label::Transform _transform, const glm::vec2& _size,
-                                              const glm::vec2& _offset, size_t _bufferOffset) {
-    
-    if ((m_currentZoom - _tile.getID().z) > LODDiscardFunc(View::s_maxZoom, m_currentZoom)) {
-        return nullptr;
-    }
-    
-    auto label = std::shared_ptr<Label>(new SpriteLabel(_transform, _size, _offset, _bufferOffset));
-    addLabel(_tile, _styleName, label);
-    
-    return label;
 }
 
 void Labels::updateOcclusions() {

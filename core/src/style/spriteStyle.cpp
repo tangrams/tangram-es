@@ -81,7 +81,7 @@ void SpriteStyle::buildPoint(Point& _point, const StyleParamMap& _styleParamMap,
 
             size_t bufferOffset = batch.m_mesh->numVertices() * m_vertexLayout->getStride() + attribOffset;
             
-            auto label = m_labels->addSpriteLabel(_tile, m_name, t,
+            auto label = m_labels->addSpriteLabel(batch, _tile, t,
                                                   planeSprite.size * spriteScale,
                                                   offset, bufferOffset);
 
@@ -116,8 +116,21 @@ void SpriteStyle::onEndDrawFrame() {
 
 Batch* SpriteStyle::newBatch() const {
     return new SpriteBatch(*this);
-};
+}
 
 void SpriteBatch::draw(const View& _view) {
     m_mesh->draw(m_style.getShaderProgram());
-};
+}
+
+void SpriteBatch::update(const glm::mat4& mvp, const View& _view, float _dt) {
+    glm::vec2 screenSize = glm::vec2(_view.getWidth(), _view.getHeight());
+    for (auto& label : m_labels) {
+        label->update(mvp, screenSize, _dt);
+    }
+}
+
+void SpriteBatch::prepare() {
+    for(auto& label : m_labels) {
+        label->pushTransform(*this);
+    }
+}

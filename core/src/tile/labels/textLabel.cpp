@@ -33,13 +33,9 @@ bool TextLabel::rasterize(TextBatch& _buffer) {
     return true;
 }
 
-void TextLabel::pushTransform(Batch& _batch) {
+void TextLabel::pushTransform(TextBatch& _batch) {
     if (m_dirty) {
-        if (typeid(_batch) != typeid(TextBatch))
-            return;
-
-        auto& batch = static_cast<TextBatch&>(_batch);
-        batch.transformID(m_id, m_transform.state);
+        _batch.transformID(m_id, m_transform.state);
         m_dirty = false;
     }
 }

@@ -7,6 +7,9 @@
 #include "styleParamMap.h"
 #include "util/shaderProgram.h"
 
+#include "csscolorparser.hpp"
+#include "glm/fwd.hpp"
+
 #include <bitset>
 #include <memory>
 #include <mutex>
@@ -35,7 +38,8 @@ namespace Tangram {
 class Batch {
 public:
     virtual void draw(const View& _view) = 0;
-    virtual void update(float _dt, const View& _view) = 0;
+    virtual void update(const glm::mat4& mvp, const View& _view, float _dt) = 0;
+    virtual void prepare() = 0;
     virtual bool compile() = 0;
 };
 
