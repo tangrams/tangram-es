@@ -82,7 +82,7 @@ void PolylineStyle::parseStyleParams(const StyleParamMap& _styleParamMap, StyleP
     }
 }
 
-void PolylineStyle::buildLine(Line& _line, const StyleParamMap& _styleParamMap, Properties& _props, VboMesh& _mesh, MapTile& _tile) const {
+void PolylineStyle::buildLine(Line& _line, const StyleParamMap& _styleParamMap, Properties& _props, Batch& _batch, MapTile& _tile) const {
     std::vector<PosNormEnormColVertex> vertices;
 
     StyleParams params;
@@ -131,6 +131,6 @@ void PolylineStyle::buildLine(Line& _line, const StyleParamMap& _styleParamMap, 
         }
     }
 
-    auto& mesh = static_cast<PolylineStyle::Mesh&>(_mesh);
-    mesh.addVertices(std::move(vertices), std::move(builder.indices));
+    auto& batch = static_cast<PolylineBatch&>(_batch);
+    batch.m_mesh->addVertices(std::move(vertices), std::move(builder.indices));
 }

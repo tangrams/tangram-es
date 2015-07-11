@@ -1,51 +1,55 @@
 #include "textBuffer.h"
 #include "fontContext.h"
 
-#include "glm/vec4.hpp"
+#include "style/textStyle.h"
+#include "util/texture.h"
+#include "util/vboMesh.h"
 
-TextBuffer::TextBuffer(std::shared_ptr<FontContext> _fontContext, std::shared_ptr<VertexLayout> _vertexLayout)
-    : TypedMesh<BufferVert>(_vertexLayout, GL_TRIANGLES, GL_DYNAMIC_DRAW) {
-
+TextBatch::TextBatch(const TextStyle& _style)
+    : m_fontContext(_style.m_labels->getFontContext()),
+      m_mesh(std::make_shared<TypedMesh<BufferVert>>(_style.m_vertexLayout, GL_TRIANGLES, GL_DYNAMIC_DRAW)),
+      m_style(_style)
+{
+        
     m_dirtyTransform = false;
-    m_fontContext = _fontContext;
     m_bound = false;
 }
 
-void TextBuffer::init() {
+void TextBatch::init() {
     m_fontContext->lock();
     glfonsBufferCreate(m_fontContext->getFontContext(), &m_fsBuffer);
     m_fontContext->unlock();
 }
 
-TextBuffer::~TextBuffer() {
+TextBatch::~TextBatch() {
     m_fontContext->lock();
     glfonsBufferDelete(m_fontContext->getFontContext(), m_fsBuffer);
     m_fontContext->unlock();
 }
 
-int TextBuffer::getVerticesSize() {
+int TextBatch::getVerticesSize() {
     bind();
     int size = glfonsVerticesSize(m_fontContext->getFontContext());
     unbind();
     return size;
 }
 
-fsuint TextBuffer::genTextID() {
+fsuint TextBatch::genTextID() {
     fsuint id;
     bind();
     glfonsGenText(m_fontContext->getFontContext(), 1, &id);
     unbind();
     return id;
 }
-
-bool TextBuffer::rasterize(const std::string& _text, fsuint _id) {
+    
+bool TextBatch::rasterize(const std::string& _text, fsuint _id) {
     bind();
     int status = glfonsRasterize(m_fontContext->getFontContext(), _id, _text.c_str());
     unbind();
     return status == GLFONS_VALID;
 }
 
-void TextBuffer::pushBuffer() {
+void TextBatch::pushBuffer() {
     if (m_dirtyTransform) {
         bind();
         glfonsUpdateBuffer(m_fontContext->getFontContext(), this);
@@ -54,7 +58,7 @@ void TextBuffer::pushBuffer() {
     }
 }
 
-void TextBuffer::transformID(fsuint _textID, const BufferVert::State& _state) {
+void TextBatch::transformID(fsuint _textID, const BufferVert::State& _state) {
     bind();
     glfonsTransform(m_fontContext->getFontContext(), _textID,
                     _state.screenPos.x, _state.screenPos.y,
@@ -63,7 +67,7 @@ void TextBuffer::transformID(fsuint _textID, const BufferVert::State& _state) {
     m_dirtyTransform = true;
 }
 
-glm::vec4 TextBuffer::getBBox(fsuint _textID) {
+glm::vec4 TextBatch::getBBox(fsuint _textID) {
     glm::vec4 bbox;
     bind();
     glfonsGetBBox(m_fontContext->getFontContext(), _textID, &bbox.x, &bbox.y, &bbox.z, &bbox.w);
@@ -71,7 +75,7 @@ glm::vec4 TextBuffer::getBBox(fsuint _textID) {
     return bbox;
 }
 
-void TextBuffer::addBufferVerticesToMesh() {
+void TextBatch::addBufferVerticesToMesh() {
     std::vector<BufferVert> vertices;
     int bufferSize = getVerticesSize();
 
@@ -86,11 +90,11 @@ void TextBuffer::addBufferVerticesToMesh() {
     unbind();
 
     if (res) {
-        addVertices(std::move(vertices), {});
+        m_mesh->addVertices(std::move(vertices), {});
     }
 }
 
-void TextBuffer::bind() {
+void TextBatch::bind() {
     if (!m_bound) {
         m_fontContext->lock();
         glfonsBindBuffer(m_fontContext->getFontContext(), m_fsBuffer);
@@ -98,10 +102,14 @@ void TextBuffer::bind() {
     }
 }
 
-void TextBuffer::unbind() {
+void TextBatch::unbind() {
     if (m_bound) {
         glfonsBindBuffer(m_fontContext->getFontContext(), 0);
         m_fontContext->unlock();
         m_bound = false;
     }
 }
+
+void TextBatch::draw(const View& _view) {
+    m_mesh->draw(m_style.getShaderProgram());
+};

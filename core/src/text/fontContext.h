@@ -12,7 +12,7 @@
 #include <vector>
 #include <map>
 
-class TextBuffer;
+class TextBatch;
 
 class FontContext {
 

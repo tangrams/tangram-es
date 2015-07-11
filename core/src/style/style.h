@@ -33,6 +33,13 @@ namespace Tangram {
     using Context = std::unordered_map<std::string, Value*>;
 }
 
+class Batch {
+public:
+    virtual void draw(const View& _view) = 0;
+    virtual void update(float _dt, const View& _view) = 0;
+    virtual bool compile() = 0;
+};
+
 /* Means of constructing and rendering map geometry
  *
  * A Style defines a way to
@@ -79,13 +86,13 @@ protected:
     virtual void constructShaderProgram() = 0;
 
     /* Build styled vertex data for point geometry and add it to the given <VboMesh> */
-    virtual void buildPoint(Point& _point, const StyleParamMap& _styleParamMap, Properties& _props, VboMesh& _mesh, MapTile& _tile) const;
+    virtual void buildPoint(Point& _point, const StyleParamMap& _styleParamMap, Properties& _props, Batch& _batch, MapTile& _tile) const;
 
     /* Build styled vertex data for line geometry and add it to the given <VboMesh> */
-    virtual void buildLine(Line& _line, const StyleParamMap& _styleParamMap, Properties& _props, VboMesh& _mesh, MapTile& _tile) const;
+    virtual void buildLine(Line& _line, const StyleParamMap& _styleParamMap, Properties& _props, Batch& _batch, MapTile& _tile) const;
 
     /* Build styled vertex data for polygon geometry and add it to the given <VboMesh> */
-    virtual void buildPolygon(Polygon& _polygon, const StyleParamMap& _styleParamMap, Properties& _props, VboMesh& _mesh, MapTile& _tile) const;
+    virtual void buildPolygon(Polygon& _polygon, const StyleParamMap& _styleParamMap, Properties& _props, Batch& _batch, MapTile& _tile) const;
 
     static std::unordered_map<std::bitset<MAX_LAYERS>, StyleParamMap> s_styleParamMapCache;
     static std::mutex s_cacheMutex;
@@ -101,13 +108,13 @@ protected:
                                         StyleParamMap& _styleParamMapMix, std::shared_ptr<Tangram::SceneLayer> _uberLayer) const;
 
     /* Perform any needed setup to process the data for a tile */
-    virtual void onBeginBuildTile(VboMesh& _mesh) const;
+    virtual void onBeginBuildTile(Batch& _batch) const;
 
     /* Perform any needed teardown after processing data for a tile */
-    virtual void onEndBuildTile(VboMesh& _mesh) const;
+    virtual void onEndBuildTile(Batch& _batch) const;
 
     /* Create a new mesh object using the vertex layout corresponding to this style */
-    virtual VboMesh* newMesh() const = 0;
+    virtual Batch* newBatch() const = 0;
 
 public:
 

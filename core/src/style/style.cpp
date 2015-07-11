@@ -128,9 +128,9 @@ void Style::applyLayerFiltering(const Feature& _feature, const Context& _ctx, st
 }
 
 void Style::addData(TileData& _data, MapTile& _tile) {
-    std::shared_ptr<VboMesh> mesh(newMesh());
-    
-    onBeginBuildTile(*mesh);
+    std::unique_ptr<Batch> batch(newBatch());
+
+    onBeginBuildTile(*batch);
 
     Context ctx;
     ctx["$zoom"] = new NumValue(_tile.getID().z);
@@ -156,19 +156,19 @@ void Style::addData(TileData& _data, MapTile& _tile) {
                     case GeometryType::points:
                         // Build points
                         for (auto& point : feature.points) {
-                            buildPoint(point, styleParamMapMix, feature.props, *mesh, _tile);
+                            buildPoint(point, styleParamMapMix, feature.props, *batch, _tile);
                         }
                         break;
                     case GeometryType::lines:
                         // Build lines
                         for (auto& line : feature.lines) {
-                            buildLine(line, styleParamMapMix, feature.props, *mesh, _tile);
+                            buildLine(line, styleParamMapMix, feature.props, *batch, _tile);
                         }
                         break;
                     case GeometryType::polygons:
                         // Build polygons
                         for (auto& polygon : feature.polygons) {
-                            buildPolygon(polygon, styleParamMapMix, feature.props, *mesh, _tile);
+                            buildPolygon(polygon, styleParamMapMix, feature.props, *batch, _tile);
                         }
                         break;
                     default:
@@ -178,14 +178,10 @@ void Style::addData(TileData& _data, MapTile& _tile) {
         }
     }
 
-    onEndBuildTile(*mesh);
+    onEndBuildTile(*batch);
 
-    if (mesh->numVertices() == 0) {
-        mesh.reset();
-    } else {
-        mesh->compileVertexBuffer();
-
-        _tile.addGeometry(*this, mesh);
+    if (batch->compile()) {
+        _tile.addBatch(*this, std::move(batch));
     }
 }
 
@@ -205,22 +201,22 @@ void Style::onBeginDrawFrame(const std::shared_ptr<View>& _view, const std::shar
     RenderState::depthTest(GL_TRUE);
 }
 
-void Style::onBeginBuildTile(VboMesh& _mesh) const {
+void Style::onBeginBuildTile(Batch& _batch) const {
     // No-op by default
 }
 
-void Style::onEndBuildTile(VboMesh& _mesh) const {
+void Style::onEndBuildTile(Batch& _batch) const {
     // No-op by default
 }
 
-void Style::buildPoint(Point& _point, const StyleParamMap& _styleParamMap, Properties& _props, VboMesh& _mesh, MapTile& _tile) const {
+void Style::buildPoint(Point& _point, const StyleParamMap& _styleParamMap, Properties& _props, Batch& _batch, MapTile& _tile) const {
     // No-op by default
 }
 
-void Style::buildLine(Line& _line, const StyleParamMap& _styleParamMap, Properties& _props, VboMesh& _mesh, MapTile& _tile) const {
+void Style::buildLine(Line& _line, const StyleParamMap& _styleParamMap, Properties& _props, Batch& _batch, MapTile& _tile) const {
     // No-op by default
 }
 
-void Style::buildPolygon(Polygon& _polygon, const StyleParamMap& _styleParamMap, Properties& _props, VboMesh& _mesh, MapTile& _tile) const {
+void Style::buildPolygon(Polygon& _polygon, const StyleParamMap& _styleParamMap, Properties& _props, Batch& _batch, MapTile& _tile) const {
     // No-op by default
 }

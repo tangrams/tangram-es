@@ -10,14 +10,15 @@ DebugTextStyle::DebugTextStyle(const std::string& _fontName, std::string _name, 
 
 void DebugTextStyle::addData(TileData& _data, MapTile& _tile) {
 
+#if 0
     if (Tangram::getDebugFlag(Tangram::DebugFlags::tile_infos)) {
         std::shared_ptr<VboMesh> mesh(newMesh());
-        auto& buffer = static_cast<TextBuffer&>(*mesh);
-        
+        auto& buffer = static_cast<TextBatch&>(*mesh);
+
         onBeginBuildTile(*mesh);
-        
+
         auto ftContext = m_labels->getFontContext();
-        
+
         ftContext->setFont(m_fontName, m_fontSize * m_pixelScale);
 
         if (m_sdf) {
@@ -33,5 +34,5 @@ void DebugTextStyle::addData(TileData& _data, MapTile& _tile) {
         mesh->compileVertexBuffer();
         _tile.addGeometry(*this, mesh);
     }
-
+#endif
 }

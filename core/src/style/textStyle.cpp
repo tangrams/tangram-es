@@ -41,19 +41,19 @@ void TextStyle::constructShaderProgram() {
     m_shaderProgram->addSourceBlock("defines", defines);
 }
 
-void TextStyle::buildPoint(Point& _point, const StyleParamMap& _styleParamMap, Properties& _props, VboMesh& _mesh, MapTile& _tile) const {
-    auto& buffer = static_cast<TextBuffer&>(_mesh);
-
+void TextStyle::buildPoint(Point& _point, const StyleParamMap& _styleParamMap, Properties& _props, Batch& _batch, MapTile& _tile) const {
+    auto& batch = static_cast<TextBatch&>(_batch);
+    
     std::string text;
     if (!_props.getString("name", text)) {
         return;
     }
 
-    m_labels->addTextLabel(_tile, buffer, m_name, { glm::vec2(_point), glm::vec2(_point) }, text, Label::Type::point);
+    m_labels->addTextLabel(_tile, batch, m_name, { glm::vec2(_point), glm::vec2(_point) }, text, Label::Type::point);
 }
 
-void TextStyle::buildLine(Line& _line, const StyleParamMap& _styleParamMap, Properties& _props, VboMesh& _mesh, MapTile& _tile) const {
-    auto& buffer = static_cast<TextBuffer&>(_mesh);
+void TextStyle::buildLine(Line& _line, const StyleParamMap& _styleParamMap, Properties& _props, Batch& _batch, MapTile& _tile) const {
+    auto& batch = static_cast<TextBatch&>(_batch);
 
     std::string text;
     if (!_props.getString("name", text)) {
@@ -76,12 +76,12 @@ void TextStyle::buildLine(Line& _line, const StyleParamMap& _styleParamMap, Prop
             continue;
         }
 
-        m_labels->addTextLabel(_tile, buffer, m_name, { p1, p2 }, text, Label::Type::line);
+        m_labels->addTextLabel(_tile, batch, m_name, { p1, p2 }, text, Label::Type::line);
     }
 }
 
-void TextStyle::buildPolygon(Polygon& _polygon, const StyleParamMap& _styleParamMap, Properties& _props, VboMesh& _mesh, MapTile& _tile) const {
-    auto& buffer = static_cast<TextBuffer&>(_mesh);
+void TextStyle::buildPolygon(Polygon& _polygon, const StyleParamMap& _styleParamMap, Properties& _props, Batch& _batch, MapTile& _tile) const {
+    auto& batch = static_cast<TextBatch&>(_batch);
 
     std::string text;
     if (!_props.getString("name", text)) {
@@ -101,12 +101,12 @@ void TextStyle::buildPolygon(Polygon& _polygon, const StyleParamMap& _styleParam
 
     centroid /= n;
 
-    m_labels->addTextLabel(_tile, buffer, m_name, { glm::vec2(centroid), glm::vec2(centroid) }, text, Label::Type::point);
+    m_labels->addTextLabel(_tile, batch, m_name, { glm::vec2(centroid), glm::vec2(centroid) }, text, Label::Type::point);
 }
 
-void TextStyle::onBeginBuildTile(VboMesh& _mesh) const {
-    auto& buffer = static_cast<TextBuffer&>(_mesh);
-    buffer.init();
+void TextStyle::onBeginBuildTile(Batch& _batch) const {
+    auto& batch = static_cast<TextBatch&>(_batch);
+    batch.init();
 
     auto ftContext = m_labels->getFontContext();
 
@@ -117,10 +117,12 @@ void TextStyle::onBeginBuildTile(VboMesh& _mesh) const {
     }
 }
 
-void TextStyle::onEndBuildTile(VboMesh& _mesh) const {
-    auto& buffer = static_cast<TextBuffer&>(_mesh);
+void TextStyle::onEndBuildTile(Batch& _batch) const {
+    //auto& buffer = static_cast<TextStyle::Mesh&>(_mesh);
+    //buffer.addBufferVerticesToMesh();
 
-    buffer.addBufferVerticesToMesh();
+    auto& batch = static_cast<TextBatch&>(_batch);
+    batch.addBufferVerticesToMesh();
 }
 
 void TextStyle::onBeginDrawFrame(const std::shared_ptr<View>& _view, const std::shared_ptr<Scene>& _scene) {
@@ -148,3 +150,8 @@ void TextStyle::onBeginDrawFrame(const std::shared_ptr<View>& _view, const std::
     RenderState::blendingFunc({GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA});
     RenderState::depthTest(GL_FALSE);
 }
+
+
+Batch* TextStyle::newBatch() const {
+    return new TextBatch(*this);
+};
