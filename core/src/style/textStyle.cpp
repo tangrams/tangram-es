@@ -41,7 +41,35 @@ void TextStyle::constructShaderProgram() {
     m_shaderProgram->addSourceBlock("defines", defines);
 }
 
-void TextStyle::buildPoint(Point& _point, const StyleParamMap& _styleParamMap, Properties& _props, Batch& _batch, MapTile& _tile) const {
+void TextStyle::build(Batch& _batch, const Feature& _feature, const StyleParamMap& _params, const MapTile& _tile) const {
+
+    auto& batch = static_cast<TextBatch&>(_batch);
+
+    Params params;
+    
+    switch (_feature.geometryType) {
+        case GeometryType::points:
+            for (auto& point : _feature.points) {
+                buildPoint(batch, point, _feature.props, params, _tile);
+            }
+            break;
+        case GeometryType::lines:
+            for (auto& line : _feature.lines) {
+                buildLine(batch, line, _feature.props, params, _tile);
+            }
+            break;
+        case GeometryType::polygons:
+            for (auto& polygon : _feature.polygons) {
+                buildPolygon(batch, polygon, _feature.props, params, _tile);
+            }
+            break;
+        default:
+            break;
+    }
+}
+
+void TextStyle::buildPoint(TextBatch& _batch, const Point& _point, const Properties& _props,
+                           const Params& _params, const MapTile& _tile) const {
     auto& batch = static_cast<TextBatch&>(_batch);
     
     for (auto prop : _props.stringProps) {
@@ -51,7 +79,8 @@ void TextStyle::buildPoint(Point& _point, const StyleParamMap& _styleParamMap, P
     }
 }
 
-void TextStyle::buildLine(Line& _line, const StyleParamMap& _styleParamMap, Properties& _props, Batch& _batch, MapTile& _tile) const {
+void TextStyle::buildLine(TextBatch& _batch, const Line& _line, const Properties& _props,
+                          const Params& _params, const MapTile& _tile) const {
     auto& batch = static_cast<TextBatch&>(_batch);
     int lineLength = _line.size();
     int skipOffset = floor(lineLength / 2);
@@ -77,7 +106,8 @@ void TextStyle::buildLine(Line& _line, const StyleParamMap& _styleParamMap, Prop
     }
 }
 
-void TextStyle::buildPolygon(Polygon& _polygon, const StyleParamMap& _styleParamMap, Properties& _props, Batch& _batch, MapTile& _tile) const {
+void TextStyle::buildPolygon(TextBatch& _batch, const Polygon& _polygon, const Properties& _props,
+                             const Params& _params, const MapTile& _tile) const {
     auto& batch = static_cast<TextBatch&>(_batch);
     glm::vec3 centroid;
     int n = 0;

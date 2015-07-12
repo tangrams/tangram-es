@@ -28,17 +28,40 @@ void PolygonStyle::constructShaderProgram() {
     m_shaderProgram->setSourceStrings(fragShaderSrcStr, vertShaderSrcStr);
 }
 
-void PolygonStyle::parseStyleParams(const StyleParamMap& _styleParamMap, StyleParams& _styleParams) const {
+void PolygonStyle::build(Batch& _batch, const Feature& _feature,
+                         const StyleParamMap& _styleParams,
+                         const MapTile& _tile) const {
 
-    if(_styleParamMap.find("order") != _styleParamMap.end()) {
-        _styleParams.order = std::stof(_styleParamMap.at("order"));
+    StyleParams params;
+
+    if (_styleParams.find("order") != _styleParams.end()) {
+        params.order = std::stof(_styleParams.at("order"));
     }
-    if(_styleParamMap.find("color") != _styleParamMap.end()) {
-        _styleParams.color = parseColorProp(_styleParamMap.at("color"));
+    if (_styleParams.find("color") != _styleParams.end()) {
+        params.color = parseColorProp(_styleParams.at("color"));
+    }
+
+    auto& batch = static_cast<PolygonBatch&>(_batch);
+
+    switch (_feature.geometryType) {
+        case GeometryType::lines:
+            for (auto& line : _feature.lines) {
+                buildLine(batch, line, _feature.props, params);
+            }
+            break;
+        case GeometryType::polygons:
+            for (auto& polygon : _feature.polygons) {
+                buildPolygon(batch, polygon, _feature.props, params);
+            }
+            break;
+        default:
+            break;
     }
 }
 
-void PolygonStyle::buildLine(Line& _line, const StyleParamMap& _styleParamMap, Properties& _props, Batch& _batch, MapTile& _tile) const {
+void PolygonStyle::buildLine(PolygonBatch& _batch, const Line& _line,
+                             const Properties& _props, const StyleParams& _params) const {
+
     std::vector<PosNormColVertex> vertices;
 
     PolyLineBuilder builder = {
@@ -53,45 +76,41 @@ void PolygonStyle::buildLine(Line& _line, const StyleParamMap& _styleParamMap, P
 
     Builders::buildPolyLine(_line, builder);
 
-    auto& batch = static_cast<PolygonBatch&>(_batch);
-    batch.m_mesh->addVertices(std::move(vertices), std::move(builder.indices));
+    _batch.m_mesh->addVertices(std::move(vertices), std::move(builder.indices));
 }
 
-void PolygonStyle::buildPolygon(Polygon& _polygon, const StyleParamMap& _styleParamMap, Properties& _props, Batch& _batch, MapTile& _tile) const {
+void PolygonStyle::buildPolygon(PolygonBatch& _batch, const Polygon& _polygon, const Properties& _props,
+                                const StyleParams& _params) const {
 
     std::vector<PosNormColVertex> vertices;
 
-    StyleParams params;
-    parseStyleParams(_styleParamMap, params);
-
-    GLuint abgr = params.color;
-    GLfloat layer = params.order;
+    GLuint abgr = _params.color;
+    GLfloat layer = _params.order;
 
     if (Tangram::getDebugFlag(Tangram::DebugFlags::proxy_colors)) {
-        abgr = abgr << (int(_props.numericProps["zoom"]) % 6);
+        abgr = abgr << (int(_props.getNumeric("zoom")) % 6);
     }
 
-    float height = _props.numericProps["height"]; // Inits to zero if not present in data
-    float minHeight = _props.numericProps["min_height"]; // Inits to zero if not present in data
+    float height = _props.getNumeric("height");
+    float minHeight = _props.getNumeric("min_height");
 
     PolygonBuilder builder = {
         [&](const glm::vec3& coord, const glm::vec3& normal, const glm::vec2& uv){
-            vertices.push_back({ coord, normal, uv, abgr, layer });
+            vertices.push_back({ { coord.x, coord.y, height }, normal, uv, abgr, layer });
         },
-        [&](size_t sizeHint){ vertices.reserve(sizeHint); }
+        [&](size_t sizeHint){ vertices.reserve(sizeHint); },
     };
-
-    if (minHeight != height) {
-        for (auto& line : _polygon) {
-            for (auto& point : line) {
-                point.z = height;
-            }
-        }
-        Builders::buildPolygonExtrusion(_polygon, minHeight, builder);
-    }
 
     Builders::buildPolygon(_polygon, builder);
 
-    auto& batch = static_cast<PolygonBatch&>(_batch);
-    batch.m_mesh->addVertices(std::move(vertices), std::move(builder.indices));
+    if (minHeight != height) {
+        builder.addVertex =  [&](const glm::vec3& coord, const glm::vec3& normal, const glm::vec2& uv) {
+            vertices.push_back({ coord, normal, uv, abgr, layer });
+        };
+
+        Builders::buildPolygonExtrusion(_polygon, minHeight, height, builder);
+    }
+
+
+    _batch.m_mesh->addVertices(std::move(vertices), std::move(builder.indices));
 }

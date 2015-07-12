@@ -14,18 +14,25 @@ class SpriteStyle : public Style {
 
 protected:
 
+    struct Params {
+        int i;
+    };
+    
     virtual void constructVertexLayout() override;
     virtual void constructShaderProgram() override;
-    virtual void buildPoint(Point& _point, const StyleParamMap& _styleParamMap, Properties& _props, Batch& _batch, MapTile& _tile) const override;
+    virtual void build(Batch& _batch, const Feature& _feature, const StyleParamMap& _params, const MapTile& _tile) const override;
 
     typedef TypedMesh<BufferVert> Mesh;
 
     virtual Batch* newBatch() const override;
-    
+
     std::unique_ptr<SpriteAtlas> m_spriteAtlas;
     std::shared_ptr<Labels> m_labels;
     unsigned int m_spriteGeneration;
-    
+
+private:
+    void buildPoint(SpriteBatch& _batch, const Point& _point, const Properties& _props, const Params& _params, const MapTile& _tile) const;
+
 public:
 
     virtual void onBeginDrawFrame(const std::shared_ptr<View>& _view, const std::shared_ptr<Scene>& _scene) override;

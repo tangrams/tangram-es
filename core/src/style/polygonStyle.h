@@ -57,16 +57,12 @@ protected:
 
     virtual void constructVertexLayout() override;
     virtual void constructShaderProgram() override;
-    virtual void buildLine(Line& _line, const StyleParamMap& _styleParamMap, Properties& _props, Batch& _batch, MapTile& _tile) const override;
-    virtual void buildPolygon(Polygon& _polygon, const StyleParamMap& _styleParamMap, Properties& _props, Batch& _batch, MapTile& _tile) const override;
-    /*
-     * Parse StyleParamMap to individual style's StyleParam structure.
-     */
-    void parseStyleParams(const StyleParamMap& _styleParamMap, StyleParams& _styleParams) const;
+    virtual void build(Batch& _batch, const Feature& _feature, const StyleParamMap& _params, const MapTile& _tile) const override;
 
-    virtual Batch* newBatch() const override {
-        return new PolygonBatch(*this);
-    };
+    virtual Batch* newBatch() const override { return new PolygonBatch(*this); };
+
+    void buildLine(PolygonBatch& _batch, const Line& _line, const Properties& _props, const StyleParams& _params) const;
+    void buildPolygon(PolygonBatch& _batch, const Polygon& _polygon, const Properties& _props, const StyleParams& _params) const;
 
 public:
 
