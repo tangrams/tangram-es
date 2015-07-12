@@ -20,9 +20,7 @@ protected:
 
     typedef TypedMesh<PosColVertex> Mesh;
 
-    virtual Batch* newBatch() const override {
-        return nullptr;
-    };
+    virtual StyleBatch* newBatch() const override { return nullptr; };
 
 public:
 

@@ -128,9 +128,9 @@ void Style::applyLayerFiltering(const Feature& _feature, const Context& _ctx, st
 }
 
 void Style::addData(TileData& _data, MapTile& _tile) {
-    std::unique_ptr<Batch> batch(newBatch());
+    std::unique_ptr<StyleBatch> batch(newBatch());
 
-    onBeginBuildTile(*batch);
+    batch->onBeginBuildTile();
 
     Context ctx;
     ctx["$zoom"] = new NumValue(_tile.getID().z);
@@ -149,15 +149,14 @@ void Style::addData(TileData& _data, MapTile& _tile) {
             StyleParamMap styleParamMapMix;
             applyLayerFiltering(feature, ctx, uniqueID, styleParamMapMix, (*it));
 
-            if(uniqueID.any()) { // if a layer matched then uniqueID should be > 0
-                feature.props.numericProps["zoom"] = _tile.getID().z;
-
-                build(*batch, feature, styleParamMapMix, _tile);
+            // if a layer matched then uniqueID should be > 0
+            if(uniqueID.any()) {
+                batch->add(feature, styleParamMapMix, _tile);
             }
         }
     }
 
-    onEndBuildTile(*batch);
+    batch->onEndBuildTile();
 
     if (batch->compile()) {
         _tile.addBatch(*this, std::move(batch));
@@ -178,16 +177,4 @@ void Style::onBeginDrawFrame(const std::shared_ptr<View>& _view, const std::shar
     // default capabilities
     RenderState::blending(GL_FALSE);
     RenderState::depthTest(GL_TRUE);
-}
-
-void Style::onBeginBuildTile(Batch& _batch) const {
-    // No-op by default
-}
-
-void Style::onEndBuildTile(Batch& _batch) const {
-    // No-op by default
-}
-
-void Style::build(Batch& _batch, const Feature& _feature, const StyleParamMap& _params, const MapTile& _tile) const {
-     // No-op
 }

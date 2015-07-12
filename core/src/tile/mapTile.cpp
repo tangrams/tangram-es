@@ -32,7 +32,7 @@ MapTile::~MapTile() {
 
 }
 
-void MapTile::addBatch(const Style& _style, std::unique_ptr<Batch> _batch) {
+void MapTile::addBatch(const Style& _style, std::unique_ptr<StyleBatch> _batch) {
 
     m_batches[_style.getName()] = std::move(_batch);
 

@@ -36,12 +36,20 @@ namespace Tangram {
     using Context = std::unordered_map<std::string, Value*>;
 }
 
-class Batch {
+class StyleBatch {
 public:
     virtual void draw(const View& _view) = 0;
     virtual void update(const glm::mat4& mvp, const View& _view, float _dt) = 0;
     virtual void prepare() = 0;
     virtual bool compile() = 0;
+
+    virtual void add(const Feature& _feature, const StyleParamMap& _params, const MapTile& _tile) = 0;
+
+    /* Perform any needed setup to process the data for a tile */
+    virtual void onBeginBuildTile() {};
+
+    /* Perform any needed teardown after processing data for a tile */
+    virtual void onEndBuildTile() {};
 };
 
 /* Means of constructing and rendering map geometry
@@ -89,9 +97,6 @@ protected:
     /* Create <ShaderProgram> for this style; subclasses must implement this and call it on construction */
     virtual void constructShaderProgram() = 0;
 
-    /* Build styled data for <Feature> and add it to the given <Batch> */
-    virtual void build(Batch& _batch, const Feature& _feature, const StyleParamMap& _params, const MapTile& _tile) const;
-
     static std::unordered_map<std::bitset<MAX_LAYERS>, StyleParamMap> s_styleParamMapCache;
     static std::mutex s_cacheMutex;
     static uint32_t parseColorProp(const std::string& _colorPropStr);
@@ -105,14 +110,8 @@ protected:
     void applyLayerFiltering(const Feature& _feature, const Tangram::Context& _ctx, std::bitset<MAX_LAYERS>& _uniqueID,
                                         StyleParamMap& _styleParamMapMix, std::shared_ptr<Tangram::SceneLayer> _uberLayer) const;
 
-    /* Perform any needed setup to process the data for a tile */
-    virtual void onBeginBuildTile(Batch& _batch) const;
-
-    /* Perform any needed teardown after processing data for a tile */
-    virtual void onEndBuildTile(Batch& _batch) const;
-
     /* Create a new mesh object using the vertex layout corresponding to this style */
-    virtual Batch* newBatch() const = 0;
+    virtual StyleBatch* newBatch() const = 0;
 
 public:
 

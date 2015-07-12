@@ -41,26 +41,22 @@ void TextStyle::constructShaderProgram() {
     m_shaderProgram->addSourceBlock("defines", defines);
 }
 
-void TextStyle::build(Batch& _batch, const Feature& _feature, const StyleParamMap& _params, const MapTile& _tile) const {
+void TextBatch::add(const Feature& _feature, const StyleParamMap& _params, const MapTile& _tile) {
 
-    auto& batch = static_cast<TextBatch&>(_batch);
-
-    Params params;
-    
     switch (_feature.geometryType) {
         case GeometryType::points:
             for (auto& point : _feature.points) {
-                buildPoint(batch, point, _feature.props, params, _tile);
+                buildPoint(point, _feature.props, _tile);
             }
             break;
         case GeometryType::lines:
             for (auto& line : _feature.lines) {
-                buildLine(batch, line, _feature.props, params, _tile);
+                buildLine(line, _feature.props, _tile);
             }
             break;
         case GeometryType::polygons:
             for (auto& polygon : _feature.polygons) {
-                buildPolygon(batch, polygon, _feature.props, params, _tile);
+                buildPolygon(polygon, _feature.props, _tile);
             }
             break;
         default:
@@ -68,21 +64,23 @@ void TextStyle::build(Batch& _batch, const Feature& _feature, const StyleParamMa
     }
 }
 
-void TextStyle::buildPoint(TextBatch& _batch, const Point& _point, const Properties& _props,
-                           const Params& _params, const MapTile& _tile) const {
-    auto& batch = static_cast<TextBatch&>(_batch);
-    
+void TextBatch::buildPoint(const Point& _point, const Properties& _props, const MapTile& _tile) {
+
     std::string text;
     if (!_props.getString("name", text)) {
         return;
     }
 
-    m_labels->addTextLabel(batch, _tile, { glm::vec2(_point), glm::vec2(_point) }, text, Label::Type::point);
+    auto label = m_style.m_labels->addTextLabel(*this, _tile, { glm::vec2(_point), glm::vec2(_point) },
+                                                text, Label::Type::point);
+    if (label) {
+        m_labels.push_back(label);
+    }
+
+    m_style.m_labels->addTextLabel(*this, _tile, { glm::vec2(_point), glm::vec2(_point) }, text, Label::Type::point);
 }
 
-void TextStyle::buildLine(TextBatch& _batch, const Line& _line, const Properties& _props,
-                          const Params& _params, const MapTile& _tile) const {
-    auto& batch = static_cast<TextBatch&>(_batch);
+void TextBatch::buildLine(const Line& _line, const Properties& _props, const MapTile& _tile) {
 
     std::string text;
     if (!_props.getString("name", text)) {
@@ -105,13 +103,14 @@ void TextStyle::buildLine(TextBatch& _batch, const Line& _line, const Properties
             continue;
         }
 
-        m_labels->addTextLabel(batch, _tile, { p1, p2 }, text, Label::Type::line);
+       auto label =  m_style.m_labels->addTextLabel(*this, _tile, { p1, p2 }, text, Label::Type::line);
+        if (label) {
+            m_labels.push_back(label);
+        }
     }
 }
 
-void TextStyle::buildPolygon(TextBatch& _batch, const Polygon& _polygon, const Properties& _props,
-                             const Params& _params, const MapTile& _tile) const {
-    auto& batch = static_cast<TextBatch&>(_batch);
+void TextBatch::buildPolygon(const Polygon& _polygon, const Properties& _props, const MapTile& _tile) {
 
     std::string text;
     if (!_props.getString("name", text)) {
@@ -131,29 +130,23 @@ void TextStyle::buildPolygon(TextBatch& _batch, const Polygon& _polygon, const P
 
     centroid /= n;
 
-    m_labels->addTextLabel(batch, _tile, { glm::vec2(centroid), glm::vec2(centroid) }, text, Label::Type::point);
-}
-
-void TextStyle::onBeginBuildTile(Batch& _batch) const {
-    auto& batch = static_cast<TextBatch&>(_batch);
-    batch.init();
-
-    auto ftContext = m_labels->getFontContext();
-
-    ftContext->setFont(m_fontName, m_fontSize * m_pixelScale);
-    if (m_sdf) {
-        float blurSpread = 2.5;
-        ftContext->setSignedDistanceField(blurSpread);
+    auto label = m_style.m_labels->addTextLabel(*this, _tile,
+                                                { glm::vec2(centroid), glm::vec2(centroid) },
+                                                text, Label::Type::point);
+    if (label) {
+        m_labels.push_back(label);
     }
+
 }
 
-void TextStyle::onEndBuildTile(Batch& _batch) const {
-    //auto& buffer = static_cast<TextStyle::Mesh&>(_mesh);
-    //buffer.addBufferVerticesToMesh();
-
-    auto& batch = static_cast<TextBatch&>(_batch);
-    batch.addBufferVerticesToMesh();
+void TextBatch::onBeginBuildTile() {
+    //init();
 }
+
+void TextBatch::onEndBuildTile() {
+    addBufferVerticesToMesh();
+}
+
 
 void TextStyle::onBeginDrawFrame(const std::shared_ptr<View>& _view, const std::shared_ptr<Scene>& _scene) {
     auto ftContext = m_labels->getFontContext();
@@ -182,6 +175,17 @@ void TextStyle::onBeginDrawFrame(const std::shared_ptr<View>& _view, const std::
 }
 
 
-Batch* TextStyle::newBatch() const {
-    return new TextBatch(*this);
+StyleBatch* TextStyle::newBatch() const {
+    auto batch = new TextBatch(*this);
+    batch->init();
+
+    auto ftContext = m_labels->getFontContext();
+
+    ftContext->setFont(m_fontName, m_fontSize * m_pixelScale);
+    if (m_sdf) {
+        float blurSpread = 2.5;
+        ftContext->setSignedDistanceField(blurSpread);
+    }
+
+    return batch;
 };

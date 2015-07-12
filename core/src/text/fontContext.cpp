@@ -79,10 +79,10 @@ void updateAtlas(void* _userPtr, unsigned int _xoff, unsigned int _yoff,
 }
 
 void updateBuffer(void* _userPtr, GLintptr _offset, GLsizei _size, float* _newData, void* _owner) {
-    auto* batch = static_cast<TextBatch*>(_owner);
+    auto* mesh = static_cast<TypedMesh<BufferVert>*>(_owner);
     
-    if (batch) {
-        batch->m_mesh->update(_offset, _size, reinterpret_cast<unsigned char*>(_newData));
+    if (mesh) {
+        mesh->update(_offset, _size, reinterpret_cast<unsigned char*>(_newData));
     }
 }
 

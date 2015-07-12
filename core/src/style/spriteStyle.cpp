@@ -56,27 +56,21 @@ void SpriteStyle::constructShaderProgram() {
     m_spriteAtlas->addSpriteNode("sunburst", {0, 629}, {32, 32});
 }
 
-void SpriteStyle::build(Batch& _batch, const Feature& _feature, const StyleParamMap& _params,
-                        const MapTile& _tile) const {
+void SpriteBatch::add(const Feature& _feature, const StyleParamMap& _params, const MapTile& _tile) {
 
     if (_feature.geometryType != GeometryType::points) {
         return;
     }
 
-    Params params;
-    
-    auto& batch = static_cast<SpriteBatch&>(_batch);
-
     for (auto& point : _feature.points) {
-        buildPoint(batch, point, _feature.props, params, _tile);
+        buildPoint(point, _feature.props, _tile);
     }
 }
 
-void SpriteStyle::buildPoint(SpriteBatch& _batch, const Point& _point, const Properties& _props,
-                             const Params& _params, const MapTile& _tile) const {
+void SpriteBatch::buildPoint(const Point& _point, const Properties& _props, const MapTile& _tile) {
 
     // TODO : make this configurable
-    SpriteNode planeSprite = m_spriteAtlas->getSpriteNode("tree");
+    SpriteNode planeSprite = m_style.m_spriteAtlas->getSpriteNode("tree");
 
     std::vector<BufferVert> vertices;
     
@@ -92,18 +86,20 @@ void SpriteStyle::buildPoint(SpriteBatch& _batch, const Point& _point, const Pro
 
     Label::Transform t = {glm::vec2(_point), glm::vec2(_point)};
 
-    size_t bufferOffset = _batch.m_mesh->numVertices() * m_vertexLayout->getStride() + m_stateAttribOffset;
-            
-    auto label = m_labels->addSpriteLabel(_batch, _tile, t,
-                                          planeSprite.size * spriteScale,
-                                          offset, bufferOffset);
+    size_t bufferOffset = m_mesh->numVertices() * m_style.m_vertexLayout->getStride() + m_style.m_stateAttribOffset;
+
+    std::shared_ptr<SpriteLabel> label = m_style.m_labels->addSpriteLabel(*this, _tile, t,
+                                                                          planeSprite.size * spriteScale,
+                                                                          offset, bufferOffset);
     if (label) {
+        m_labels.push_back(label);
+
         Builders::buildQuadAtPoint(label->getTransform().state.screenPos + offset,
                                    planeSprite.size * spriteScale,
                                    planeSprite.uvBL, planeSprite.uvTR, builder);
     }
-    
-    _batch.m_mesh->addVertices(std::move(vertices), std::move(builder.indices));
+
+    m_mesh->addVertices(std::move(vertices), std::move(builder.indices));
 }
 
 void SpriteStyle::onBeginDrawFrame(const std::shared_ptr<View>& _view, const std::shared_ptr<Scene>& _scene) {
@@ -114,7 +110,7 @@ void SpriteStyle::onBeginDrawFrame(const std::shared_ptr<View>& _view, const std
     m_shaderProgram->setUniformMatrix4f("u_proj", glm::value_ptr(glm::ortho(0.f, _view->getWidth(),
                                                                             _view->getHeight(),
                                                                             0.f, -1.f, 1.f)));
-    
+
     glDisable(GL_DEPTH_TEST);
     glEnable(GL_BLEND);
     glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
@@ -125,7 +121,7 @@ void SpriteStyle::onEndDrawFrame() {
     glDisable(GL_BLEND);
 }
 
-Batch* SpriteStyle::newBatch() const {
+StyleBatch* SpriteStyle::newBatch() const {
     return new SpriteBatch(*this);
 }
 
@@ -142,6 +138,6 @@ void SpriteBatch::update(const glm::mat4& mvp, const View& _view, float _dt) {
 
 void SpriteBatch::prepare() {
     for(auto& label : m_labels) {
-        label->pushTransform(*this);
+        label->pushTransform(*m_mesh);
     }
 }

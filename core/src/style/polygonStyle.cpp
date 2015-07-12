@@ -3,6 +3,7 @@
 #include "tangram.h"
 #include "util/builders.h"
 #include "util/shaderProgram.h"
+#include "tile/mapTile.h"
 
 PolygonStyle::PolygonStyle(std::string _name, GLenum _drawMode) : Style(_name, _drawMode) {
 }
@@ -28,9 +29,11 @@ void PolygonStyle::constructShaderProgram() {
     m_shaderProgram->setSourceStrings(fragShaderSrcStr, vertShaderSrcStr);
 }
 
-void PolygonStyle::build(Batch& _batch, const Feature& _feature,
-                         const StyleParamMap& _styleParams,
-                         const MapTile& _tile) const {
+StyleBatch* PolygonStyle::newBatch() const {
+    return new PolygonBatch(*this);
+};
+
+void PolygonBatch::add(const Feature& _feature, const StyleParamMap& _styleParams, const MapTile& _tile) {
 
     StyleParams params;
 
@@ -38,20 +41,18 @@ void PolygonStyle::build(Batch& _batch, const Feature& _feature,
         params.order = std::stof(_styleParams.at("order"));
     }
     if (_styleParams.find("color") != _styleParams.end()) {
-        params.color = parseColorProp(_styleParams.at("color"));
+        params.color = Style::parseColorProp(_styleParams.at("color"));
     }
-
-    auto& batch = static_cast<PolygonBatch&>(_batch);
 
     switch (_feature.geometryType) {
         case GeometryType::lines:
             for (auto& line : _feature.lines) {
-                buildLine(batch, line, _feature.props, params);
+                buildLine(line, _feature.props, params, _tile);
             }
             break;
         case GeometryType::polygons:
             for (auto& polygon : _feature.polygons) {
-                buildPolygon(batch, polygon, _feature.props, params);
+                buildPolygon(polygon, _feature.props, params, _tile);
             }
             break;
         default:
@@ -59,8 +60,8 @@ void PolygonStyle::build(Batch& _batch, const Feature& _feature,
     }
 }
 
-void PolygonStyle::buildLine(PolygonBatch& _batch, const Line& _line,
-                             const Properties& _props, const StyleParams& _params) const {
+void PolygonBatch::buildLine(const Line& _line, const Properties& _props,
+                             const StyleParams& _params, const MapTile& _tile) {
 
     std::vector<PosNormColVertex> vertices;
 
@@ -78,11 +79,11 @@ void PolygonStyle::buildLine(PolygonBatch& _batch, const Line& _line,
 
     Builders::buildPolyLine(_line, builder);
 
-    _batch.m_mesh->addVertices(std::move(vertices), std::move(builder.indices));
+    m_mesh->addVertices(std::move(vertices), std::move(builder.indices));
 }
 
-void PolygonStyle::buildPolygon(PolygonBatch& _batch, const Polygon& _polygon, const Properties& _props,
-                                const StyleParams& _params) const {
+void PolygonBatch::buildPolygon(const Polygon& _polygon, const Properties& _props,
+                                const StyleParams& _params, const MapTile& _tile) {
 
     std::vector<PosNormColVertex> vertices;
 
@@ -90,7 +91,7 @@ void PolygonStyle::buildPolygon(PolygonBatch& _batch, const Polygon& _polygon, c
     GLfloat layer = _params.order;
 
     if (Tangram::getDebugFlag(Tangram::DebugFlags::proxy_colors)) {
-        abgr = abgr << (int(_props.getNumeric("zoom")) % 6);
+        abgr = abgr << (_tile.getID().z % 6);
     }
 
     float height = _props.getNumeric("height");
@@ -106,7 +107,7 @@ void PolygonStyle::buildPolygon(PolygonBatch& _batch, const Polygon& _polygon, c
     Builders::buildPolygon(_polygon, builder);
 
     if (minHeight != height) {
-        builder.addVertex =  [&](const glm::vec3& coord, const glm::vec3& normal, const glm::vec2& uv) {
+        builder.addVertex = [&](const glm::vec3& coord, const glm::vec3& normal, const glm::vec2& uv) {
             vertices.push_back({ coord, normal, uv, abgr, layer });
         };
 
@@ -114,5 +115,5 @@ void PolygonStyle::buildPolygon(PolygonBatch& _batch, const Polygon& _polygon, c
     }
 
 
-    _batch.m_mesh->addVertices(std::move(vertices), std::move(builder.indices));
+    m_mesh->addVertices(std::move(vertices), std::move(builder.indices));
 }
