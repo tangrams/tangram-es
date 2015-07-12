@@ -28,99 +28,96 @@ void PolylineStyle::constructShaderProgram() {
     m_shaderProgram->setSourceStrings(fragShaderSrcStr, vertShaderSrcStr);
 }
 
-void* PolylineStyle::parseStyleParams(const StyleParamMap& _styleParamMap) const {
-
-    StyleParams* params = new StyleParams();
+void PolylineStyle::parseStyleParams(const StyleParamMap& _styleParamMap, StyleParams& _styleParams) const {
 
     if(_styleParamMap.find("order") != _styleParamMap.end()) {
-        params->order = std::stof(_styleParamMap.at("order"));
+        _styleParams.order = std::stof(_styleParamMap.at("order"));
     }
 
     if(_styleParamMap.find("color") != _styleParamMap.end()) {
-        params->color = parseColorProp(_styleParamMap.at("color"));
+        _styleParams.color = parseColorProp(_styleParamMap.at("color"));
     }
 
     if(_styleParamMap.find("width") != _styleParamMap.end()) {
-        params->width = std::stof(_styleParamMap.at("width"));
+        _styleParams.width = std::stof(_styleParamMap.at("width"));
     }
 
     if(_styleParamMap.find("cap") != _styleParamMap.end()) {
         std::string capStr = _styleParamMap.at("cap");
-        if(capStr == "butt") { params->cap = CapTypes::butt; }
-        else if(capStr == "square") { params->cap = CapTypes::square; }
-        else if(capStr == "round") { params->cap = CapTypes::round; }
+        if(capStr == "butt") { _styleParams.cap = CapTypes::butt; }
+        else if(capStr == "square") { _styleParams.cap = CapTypes::square; }
+        else if(capStr == "round") { _styleParams.cap = CapTypes::round; }
     }
 
     if(_styleParamMap.find("join") != _styleParamMap.end()) {
         std::string joinStr = _styleParamMap.at("join");
-        if(joinStr == "bevel") { params->join = JoinTypes::bevel; }
-        else if(joinStr == "miter") { params->join = JoinTypes::miter; }
-        else if(joinStr == "round") { params->join = JoinTypes::round; }
+        if(joinStr == "bevel") { _styleParams.join = JoinTypes::bevel; }
+        else if(joinStr == "miter") { _styleParams.join = JoinTypes::miter; }
+        else if(joinStr == "round") { _styleParams.join = JoinTypes::round; }
     }
 
     if(_styleParamMap.find("outline:width") != _styleParamMap.end()) {
-        params->outlineOn = true;
-        params->outlineWidth = std::stof(_styleParamMap.at("outline:width"));
+        _styleParams.outlineOn = true;
+        _styleParams.outlineWidth = std::stof(_styleParamMap.at("outline:width"));
     }
 
     if(_styleParamMap.find("outline:color") != _styleParamMap.end()) {
-        params->outlineColor =  parseColorProp(_styleParamMap.at("outline:color"));
+        _styleParams.outlineColor =  parseColorProp(_styleParamMap.at("outline:color"));
     }
 
     if(_styleParamMap.find("outline:cap") != _styleParamMap.end()) {
-        params->outlineOn = true;
+        _styleParams.outlineOn = true;
         std::string capStr = _styleParamMap.at("outline:cap");
-        if(capStr == "butt") { params->outlineCap = CapTypes::butt; }
-        else if(capStr == "square") { params->outlineCap = CapTypes::square; }
-        else if(capStr == "round") { params->outlineCap = CapTypes::round; }
+        if(capStr == "butt") { _styleParams.outlineCap = CapTypes::butt; }
+        else if(capStr == "square") { _styleParams.outlineCap = CapTypes::square; }
+        else if(capStr == "round") { _styleParams.outlineCap = CapTypes::round; }
     }
 
     if( _styleParamMap.find("outline:join") != _styleParamMap.end()) {
-        params->outlineOn = true;
+        _styleParams.outlineOn = true;
         std::string joinStr = _styleParamMap.at("outline:join");
-        if(joinStr == "bevel") { params->outlineJoin = JoinTypes::bevel; }
-        else if(joinStr == "miter") { params->outlineJoin = JoinTypes::miter; }
-        else if(joinStr == "round") { params->outlineJoin = JoinTypes::round; }
+        if(joinStr == "bevel") { _styleParams.outlineJoin = JoinTypes::bevel; }
+        else if(joinStr == "miter") { _styleParams.outlineJoin = JoinTypes::miter; }
+        else if(joinStr == "round") { _styleParams.outlineJoin = JoinTypes::round; }
     }
-
-    return static_cast<void*>(params);
 }
 
-void PolylineStyle::buildPoint(Point& _point, void* _styleParam, Properties& _props, VboMesh& _mesh) const {
+void PolylineStyle::buildPoint(Point& _point, const StyleParamMap& _styleParamMap, Properties& _props, VboMesh& _mesh) const {
     // No-op
 }
 
-void PolylineStyle::buildLine(Line& _line, void* _styleParam, Properties& _props, VboMesh& _mesh) const {
+void PolylineStyle::buildLine(Line& _line, const StyleParamMap& _styleParamMap, Properties& _props, VboMesh& _mesh) const {
     std::vector<PosNormEnormColVertex> vertices;
 
-    StyleParams* params = static_cast<StyleParams*>(_styleParam);
-    GLuint abgr = params->color;
+    StyleParams params;
+    parseStyleParams(_styleParamMap, params);
+    GLuint abgr = params.color;
 
     if (Tangram::getDebugFlag(Tangram::DebugFlags::proxy_colors)) {
         abgr = abgr << (int(_props.numericProps["zoom"]) % 6);
     }
 
-    GLfloat layer = _props.numericProps["sort_key"] + params->order;
-    float halfWidth = params->width * .5f;
+    GLfloat layer = _props.numericProps["sort_key"] + params.order;
+    float halfWidth = params.width * .5f;
 
     PolyLineBuilder builder {
         [&](const glm::vec3& coord, const glm::vec2& normal, const glm::vec2& uv) {
             vertices.push_back({ coord, uv, normal, halfWidth, abgr, layer });
         },
-        PolyLineOptions(params->cap, params->join)
+        PolyLineOptions(params.cap, params.join)
     };
 
     Builders::buildPolyLine(_line, builder);
 
-    if (params->outlineOn) {
+    if (params.outlineOn) {
 
-        GLuint abgrOutline = params->outlineColor;
-        halfWidth += params->outlineWidth * .5f;
+        GLuint abgrOutline = params.outlineColor;
+        halfWidth += params.outlineWidth * .5f;
 
-        if (params->outlineCap != params->cap || params->outlineJoin != params->join) {
+        if (params.outlineCap != params.cap || params.outlineJoin != params.join) {
             // need to re-triangulate with different cap and/or join
-            builder.options.cap = params->outlineCap;
-            builder.options.join = params->outlineJoin;
+            builder.options.cap = params.outlineCap;
+            builder.options.join = params.outlineJoin;
             Builders::buildPolyLine(_line, builder);
         } else {
             // re-use indices from original line
@@ -142,6 +139,6 @@ void PolylineStyle::buildLine(Line& _line, void* _styleParam, Properties& _props
     mesh.addVertices(std::move(vertices), std::move(builder.indices));
 }
 
-void PolylineStyle::buildPolygon(Polygon& _polygon, void* _styleParam, Properties& _props, VboMesh& _mesh) const {
+void PolylineStyle::buildPolygon(Polygon& _polygon, const StyleParamMap& _styleParamMap, Properties& _props, VboMesh& _mesh) const {
     // No-op
 }

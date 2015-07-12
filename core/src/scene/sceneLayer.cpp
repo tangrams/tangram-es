@@ -12,7 +12,6 @@ namespace Tangram {
     }
 
     SceneLayer::~SceneLayer() {
-        m_subLayers.clear();
         delete m_filter;
     }
 }

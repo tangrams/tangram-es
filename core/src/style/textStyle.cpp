@@ -42,9 +42,6 @@ void TextStyle::constructShaderProgram() {
 
     m_shaderProgram->addSourceBlock("defines", defines);
 }
-void* TextStyle::parseStyleParams(const StyleParamMap& _styleParamMap) const {
-    return nullptr;
-}
 
 void TextStyle::addVertices(TextBuffer& _buffer, VboMesh& _mesh) const {
     std::vector<TextVert> vertices;
@@ -62,7 +59,7 @@ void TextStyle::addVertices(TextBuffer& _buffer, VboMesh& _mesh) const {
     }
 }
 
-void TextStyle::buildPoint(Point& _point, void* _styleParams, Properties& _props, VboMesh& _mesh) const {
+void TextStyle::buildPoint(Point& _point, const StyleParamMap& _styleParamMap, Properties& _props, VboMesh& _mesh) const {
     for (auto prop : _props.stringProps) {
         if (prop.first == "name") {
             m_labels->addLabel(*TextStyle::s_processedTile, m_name, { glm::vec2(_point), glm::vec2(_point) }, prop.second, Label::Type::point);
@@ -70,7 +67,7 @@ void TextStyle::buildPoint(Point& _point, void* _styleParams, Properties& _props
     }
 }
 
-void TextStyle::buildLine(Line& _line, void* _styleParams, Properties& _props, VboMesh& _mesh) const {
+void TextStyle::buildLine(Line& _line, const StyleParamMap& _styleParamMap, Properties& _props, VboMesh& _mesh) const {
     int lineLength = _line.size();
     int skipOffset = floor(lineLength / 2);
     float minLength = 0.15; // default, probably need some more thoughts
@@ -95,7 +92,7 @@ void TextStyle::buildLine(Line& _line, void* _styleParams, Properties& _props, V
     }
 }
 
-void TextStyle::buildPolygon(Polygon& _polygon, void* _styleParams, Properties& _props, VboMesh& _mesh) const {
+void TextStyle::buildPolygon(Polygon& _polygon, const StyleParamMap& _styleParamMap, Properties& _props, VboMesh& _mesh) const {
     glm::vec3 centroid;
     int n = 0;
 
