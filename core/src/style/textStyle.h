@@ -26,8 +26,6 @@ protected:
     virtual void onBeginBuildTile(MapTile& _tile) const override;
     virtual void onEndBuildTile(MapTile& _tile, std::shared_ptr<VboMesh> _mesh) const override;
 
-    virtual void parseStyleParams(const StyleParamMap& _styleParamMap, void* _styleParams) const override;
-
     typedef TypedMesh<TextVert> Mesh;
 
     virtual VboMesh* newMesh() const override {

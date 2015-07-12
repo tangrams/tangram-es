@@ -88,11 +88,6 @@ protected:
     /* Build styled vertex data for polygon geometry and add it to the given <VboMesh> */
     virtual void buildPolygon(Polygon& _polygon, const StyleParamMap& _styleParamMap, Properties& _props, VboMesh& _mesh) const = 0;
 
-    /*
-     * Parse StyleParamMap to individual style's StyleParam structure.
-     */
-    virtual void parseStyleParams(const StyleParamMap& _styleParamMap, void* _styleParams) const = 0;
-
     static std::unordered_map<std::bitset<MAX_LAYERS>, StyleParamMap> s_styleParamMapCache;
     static std::mutex s_cacheMutex;
     static uint32_t parseColorProp(const std::string& _colorPropStr) ;

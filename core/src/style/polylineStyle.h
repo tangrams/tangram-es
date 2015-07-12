@@ -44,7 +44,8 @@ protected:
     virtual void buildPoint(Point& _point, const StyleParamMap& _styleParamMap, Properties& _props, VboMesh& _mesh) const override;
     virtual void buildLine(Line& _line, const StyleParamMap& _styleParamMap, Properties& _props, VboMesh& _mesh) const override;
     virtual void buildPolygon(Polygon& _polygon, const StyleParamMap& _styleParamMap, Properties& _props, VboMesh& _mesh) const override;
-    virtual void parseStyleParams(const StyleParamMap& _styleParamMap, void* _styleParams) const override;
+
+    auto parseStyleParams(const StyleParamMap& _styleParamMap) const -> StyleParams;
 
     typedef TypedMesh<PosNormEnormColVertex> Mesh;
 
