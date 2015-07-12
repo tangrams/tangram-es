@@ -5,6 +5,7 @@
 #include "gl.h"
 #include "scene/sceneLayer.h"
 #include "styleParamMap.h"
+#include "util/monitor.h"
 #include "util/shaderProgram.h"
 
 #include "csscolorparser.hpp"
@@ -42,6 +43,8 @@ public:
     virtual void prepare() = 0;
     virtual bool compile() = 0;
 };
+
+using StyleCache = std::unordered_map<std::bitset<MAX_LAYERS>, StyleParamMap>;
 
 /* Means of constructing and rendering map geometry
  *
@@ -91,8 +94,14 @@ protected:
     /* Build styled data for <Feature> and add it to the given <Batch> */
     virtual void build(Batch& _batch, const Feature& _feature, const StyleParamMap& _params, const MapTile& _tile) const;
 
-    static std::unordered_map<std::bitset<MAX_LAYERS>, StyleParamMap> s_styleParamMapCache;
-    static std::mutex s_cacheMutex;
+    /* Build styled vertex data for line geometry and add it to the given <VboMesh> */
+    virtual void buildLine(Line& _line, const StyleParamMap& _styleParamMap, Properties& _props, VboMesh& _mesh) const = 0;
+
+    /* Build styled vertex data for polygon geometry and add it to the given <VboMesh> */
+    virtual void buildPolygon(Polygon& _polygon, const StyleParamMap& _styleParamMap, Properties& _props, VboMesh& _mesh) const = 0;
+
+    static util::monitor<StyleCache> s_styleParamMapCache;
+
     static uint32_t parseColorProp(const std::string& _colorPropStr);
 
     /*

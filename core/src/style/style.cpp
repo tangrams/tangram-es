@@ -11,8 +11,8 @@
 
 #include <sstream>
 
-std::unordered_map<std::bitset<MAX_LAYERS>, StyleParamMap> Style::s_styleParamMapCache;
-std::mutex Style::s_cacheMutex;
+
+util::monitor<StyleCache> Style::s_styleParamMapCache;
 
 using namespace Tangram;
 
@@ -99,11 +99,16 @@ void Style::applyLayerFiltering(const Feature& _feature, const Context& _ctx, st
 
             _uniqueID.set(sceneLyr->getID());
 
-            if(s_styleParamMapCache.find(_uniqueID) != s_styleParamMapCache.end()) {
+            bool found = s_styleParamMapCache([&](StyleCache& cache) {
+                auto entry = cache.find(_uniqueID);
+                if (entry != cache.end()) {
+                    _styleParamMapMix = entry->second;
+                    return true;
+                }
+                return false;
+            });
 
-                _styleParamMapMix = s_styleParamMapCache.at(_uniqueID);
-
-            } else {
+            if (!found) {
 
                 /* update StyleParam with subLayer parameters */
                 auto& layerStyleParamMap = sceneLyr->getStyleParamMap();
@@ -111,10 +116,9 @@ void Style::applyLayerFiltering(const Feature& _feature, const Context& _ctx, st
                     _styleParamMapMix[styleParam.first] = styleParam.second;
                 }
 
-                {
-                    std::lock_guard<std::mutex> lock(s_cacheMutex);
-                    s_styleParamMapCache.emplace(_uniqueID, _styleParamMapMix);
-                }
+                s_styleParamMapCache([&](StyleCache& cache) {
+                        cache.emplace(_uniqueID, _styleParamMapMix);
+                });
             }
 
             /* append sLayers with sublayers of this layer */
