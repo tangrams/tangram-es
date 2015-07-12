@@ -68,6 +68,38 @@ struct Properties {
     std::unordered_map<std::string, std::string> stringProps;
     std::unordered_map<std::string, float> numericProps;
 
+    bool getNumeric(const std::string& key, float& value) const {
+        auto it = numericProps.find(key);
+        if (it != numericProps.end()) {
+            value = it->second;
+            return true;
+        }
+        return false;
+    }
+
+    float getNumeric(const std::string& key, float fallback = 0) const {
+        auto it = numericProps.find(key);
+        if (it != numericProps.end()) {
+            return it->second;
+        }
+        return fallback;
+    }
+    bool getString(const std::string& key, std::string& value) const {
+        auto it = stringProps.find(key);
+        if (it != stringProps.end()) {
+            value = it->second;
+            return true;
+        }
+        return false;
+    }
+
+    std::string getString(const std::string& key) const {
+        auto it = stringProps.find(key);
+        if (it != stringProps.end()) {
+            return it->second;
+        }
+        return "";
+    }
 };
 
 struct Feature {
