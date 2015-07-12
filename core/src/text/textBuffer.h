@@ -26,10 +26,11 @@ class FontContext;
 class TextStyle;
 class TextLabel;
 
+
 /*
  * This class represents a text buffer, each text buffer has several text ids
  */
-class TextBatch : public Batch {
+class TextBatch : public StyleBatch {
 
 public:
 
@@ -45,7 +46,12 @@ public:
         }
         return false;
     };
-    
+
+    virtual void add(const Feature& _feature, const StyleParamMap& _params, const MapTile& _tile) override;
+
+    virtual void onBeginBuildTile() override;
+    virtual void onEndBuildTile() override;
+
     ~TextBatch();
     
     /* generates a text id */
@@ -75,11 +81,15 @@ public:
     /* get the vertices from the font context and add them as vbo mesh data */
     void addBufferVerticesToMesh();
 
-//private:
+private:
     
     void bind();
     void unbind();
-    
+
+    void buildPoint(const Point& _point, const Properties& _props, const MapTile& _tile);
+    void buildLine(const Line& _line, const Properties& _props, const MapTile& _tile);
+    void buildPolygon(const Polygon& _polygon, const Properties& _props, const MapTile& _tile);
+
     bool m_bound;
     bool m_dirtyTransform;
     fsuint m_fsBuffer;

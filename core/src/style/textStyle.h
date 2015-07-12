@@ -4,9 +4,6 @@
 #include "typedMesh.h"
 #include "glfontstash.h"
 #include "tile/labels/labels.h"
-#include "text/fontContext.h"
-#include "text/textBuffer.h"
-
 #include <memory>
 
 class TextBatch;
@@ -17,11 +14,8 @@ protected:
 
     virtual void constructVertexLayout() override;
     virtual void constructShaderProgram() override;
-    virtual void onBeginBuildTile(Batch& _batch) const override;
-    virtual void onEndBuildTile(Batch& _batch) const override;
-    virtual void build(Batch& _batch, const Feature& _feature, const StyleParamMap& _params, const MapTile& _tile) const override;
 
-    virtual Batch* newBatch() const override;
+    virtual StyleBatch* newBatch() const override;
     
     std::string m_fontName;
     float m_fontSize;
@@ -30,16 +24,6 @@ protected:
     bool m_sdfMultisampling = true;
 
     std::shared_ptr<Labels> m_labels;
-
-private:
-
-    struct Params {
-        int i;
-    };
-
-    void buildPoint(TextBatch& _batch, const Point& _point, const Properties& _props, const Params& _params, const MapTile& _tile) const;
-    void buildLine(TextBatch& _batch, const Line& _line, const Properties& _props, const Params& _params, const MapTile& _tile) const;
-    void buildPolygon(TextBatch& _batch, const Polygon& _polygon, const Properties& _props, const Params& _params, const MapTile& _tile) const;
 
 public:
 
@@ -53,3 +37,4 @@ public:
 
     friend class TextBatch;
 };
+

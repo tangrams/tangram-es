@@ -2,6 +2,7 @@
 
 #include "tangram.h"
 #include "util/shaderProgram.h"
+#include "tile/mapTile.h"
 
 PolylineStyle::PolylineStyle(std::string _name, GLenum _drawMode) : Style(_name, _drawMode) {
 }
@@ -28,10 +29,12 @@ void PolylineStyle::constructShaderProgram() {
     m_shaderProgram->setSourceStrings(fragShaderSrcStr, vertShaderSrcStr);
 }
 
+StyleBatch* PolylineStyle::newBatch() const {
+    return new PolylineBatch(*this);
+};
 
-void PolylineStyle::build(Batch& _batch, const Feature& _feature,
-                          const StyleParamMap& _styleParams,
-                          const MapTile& _tile) const {
+
+void PolylineBatch::add(const Feature& _feature, const StyleParamMap& _styleParams, const MapTile& _tile) {
 
     StyleParams params;
 
@@ -44,7 +47,7 @@ void PolylineStyle::build(Batch& _batch, const Feature& _feature,
     }
 
     if(_styleParams.find("color") != _styleParams.end()) {
-        params.color = parseColorProp(_styleParams.at("color"));
+        params.color = Style::parseColorProp(_styleParams.at("color"));
     }
 
     if(_styleParams.find("width") != _styleParams.end()) {
@@ -71,7 +74,7 @@ void PolylineStyle::build(Batch& _batch, const Feature& _feature,
     }
 
     if(_styleParams.find("outline:color") != _styleParams.end()) {
-        params.outlineColor =  parseColorProp(_styleParams.at("outline:color"));
+        params.outlineColor =  Style::parseColorProp(_styleParams.at("outline:color"));
     }
 
     if(_styleParams.find("outline:cap") != _styleParams.end()) {
@@ -90,22 +93,19 @@ void PolylineStyle::build(Batch& _batch, const Feature& _feature,
         else if(joinStr == "round") { params.outlineJoin = JoinTypes::round; }
     }
 
-    auto& batch = static_cast<PolylineBatch&>(_batch);
-
     for (auto& line : _feature.lines) {
-        buildLine(batch, line, params, _feature.props, _tile);
+        buildLine(line, _feature.props, params, _tile);
     }
 }
 
-void PolylineStyle::buildLine(PolylineBatch& _batch, const Line& _line, const StyleParams& _params,
-                              const Properties& _props, const MapTile& _tile) const {
+void PolylineBatch::buildLine(const Line& _line, const Properties& _props, const StyleParams& _params, const MapTile& _tile) {
 
     std::vector<PosNormEnormColVertex> vertices;
 
     GLuint abgr = _params.color;
 
     if (Tangram::getDebugFlag(Tangram::DebugFlags::proxy_colors)) {
-        abgr = abgr << (int(_props.getNumeric("zoom")) % 6);
+        abgr = abgr << (_tile.getID().z % 6);
     }
 
     GLfloat layer = _props.getNumeric("sort_key") + _params.order;
@@ -146,5 +146,5 @@ void PolylineStyle::buildLine(PolylineBatch& _batch, const Line& _line, const St
         }
     }
 
-    _batch.m_mesh->addVertices(std::move(vertices), std::move(builder.indices));
+    m_mesh->addVertices(std::move(vertices), std::move(builder.indices));
 }

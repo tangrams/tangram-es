@@ -51,7 +51,7 @@ bool TextBatch::rasterize(const std::string& _text, fsuint _id) {
 void TextBatch::pushBuffer() {
     if (m_dirtyTransform) {
         bind();
-        glfonsUpdateBuffer(m_fontContext->getFontContext(), this);
+        glfonsUpdateBuffer(m_fontContext->getFontContext(), m_mesh.get());
         unbind();
         m_dirtyTransform = false;
     }

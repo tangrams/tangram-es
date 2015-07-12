@@ -7,9 +7,27 @@
 
 #include <mutex>
 
+class PolygonBatch;
+
 class PolygonStyle : public Style {
 
 protected:
+
+    virtual void constructVertexLayout() override;
+    virtual void constructShaderProgram() override;
+    virtual StyleBatch* newBatch() const override;
+
+public:
+
+    PolygonStyle(GLenum _drawMode = GL_TRIANGLES);
+    PolygonStyle(std::string _name, GLenum _drawMode = GL_TRIANGLES);
+
+    virtual ~PolygonStyle() {}
+
+    friend class PolygonBatch;
+};
+
+class PolygonBatch : public StyleBatch {
 
     struct StyleParams {
         int32_t order = 0;
@@ -31,44 +49,31 @@ protected:
 
     using Mesh = TypedMesh<PosNormColVertex>;
 
-    class PolygonBatch : public Batch {
-    public:
-        PolygonBatch(const PolygonStyle& _style) : m_style(_style) {
-            m_mesh = std::make_shared<Mesh>(_style.m_vertexLayout, _style.m_drawMode);
-        }
-
-        virtual void draw(const View& _view) override {
-            m_mesh->draw(m_style.getShaderProgram());
-        };
-        virtual void update(const glm::mat4& mvp, const View& _view, float _dt) override {};
-        virtual void prepare() override {};
-        virtual bool compile() {
-            if (m_mesh->numVertices() > 0) {
-                m_mesh->compileVertexBuffer();
-                return true;
-            }
-            return false;
-        };
-
-        std::shared_ptr<Mesh> m_mesh;
-    private:
-        const PolygonStyle& m_style;
-    };
-
-    virtual void constructVertexLayout() override;
-    virtual void constructShaderProgram() override;
-    virtual void build(Batch& _batch, const Feature& _feature, const StyleParamMap& _params, const MapTile& _tile) const override;
-
-    virtual Batch* newBatch() const override { return new PolygonBatch(*this); };
-
-    void buildLine(PolygonBatch& _batch, const Line& _line, const Properties& _props, const StyleParams& _params) const;
-    void buildPolygon(PolygonBatch& _batch, const Polygon& _polygon, const Properties& _props, const StyleParams& _params) const;
-
 public:
 
-    PolygonStyle(GLenum _drawMode = GL_TRIANGLES);
-    PolygonStyle(std::string _name, GLenum _drawMode = GL_TRIANGLES);
-
-    virtual ~PolygonStyle() {
+    PolygonBatch(const PolygonStyle& _style) : m_style(_style) {
+        m_mesh = std::make_shared<Mesh>(_style.m_vertexLayout, _style.m_drawMode);
     }
+
+    virtual void draw(const View& _view) override {
+        m_mesh->draw(m_style.getShaderProgram());
+    };
+    virtual void update(const glm::mat4& mvp, const View& _view, float _dt) override {};
+    virtual void prepare() override {};
+    virtual bool compile() override {
+        if (m_mesh->numVertices() > 0) {
+            m_mesh->compileVertexBuffer();
+            return true;
+        }
+        return false;
+    };
+    virtual void add(const Feature& _feature, const StyleParamMap& _params, const MapTile& _tile) override;
+
+private:
+
+    void buildLine(const Line& _line, const Properties& _props, const StyleParams& _params, const MapTile& _tile);
+    void buildPolygon(const Polygon& _polygon, const Properties& _props, const StyleParams& _params, const MapTile& _tile);
+
+    std::shared_ptr<Mesh> m_mesh;
+    const PolygonStyle& m_style;
 };

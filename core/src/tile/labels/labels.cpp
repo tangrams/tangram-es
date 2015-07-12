@@ -19,8 +19,9 @@ int Labels::LODDiscardFunc(float _maxZoom, float _zoom) {
     return (int) MIN(floor(((log(-_zoom + (_maxZoom + 2)) / log(_maxZoom + 2) * (_maxZoom )) * 0.5)), MAX_LOD);
 }
 
-std::shared_ptr<Label> Labels::addTextLabel(TextBatch& _batch, const MapTile& _tile,
-                                            Label::Transform _transform, std::string _text, Label::Type _type) {
+std::shared_ptr<TextLabel> Labels::addTextLabel(TextBatch& _batch, const MapTile& _tile,
+                                                Label::Transform _transform,
+                                                std::string _text, Label::Type _type) {
 
     // discard based on level of detail
     // FIXME: the current view should not be used to determine whether a label is shown at all
@@ -42,14 +43,12 @@ std::shared_ptr<Label> Labels::addTextLabel(TextBatch& _batch, const MapTile& _t
 
     addLabel(_tile, label);
 
-    _batch.m_labels.push_back(label);
-
     return label;
 }
 
-std::shared_ptr<Label> Labels::addSpriteLabel(SpriteBatch& _batch, const MapTile& _tile,
-                                              Label::Transform _transform, const glm::vec2& _size,
-                                              const glm::vec2& _offset, size_t _bufferOffset) {
+std::shared_ptr<SpriteLabel> Labels::addSpriteLabel(SpriteBatch& _batch, const MapTile& _tile,
+                                                    Label::Transform _transform, const glm::vec2& _size,
+                                                    const glm::vec2& _offset, size_t _bufferOffset) {
 
     if ((m_currentZoom - _tile.getID().z) > LODDiscardFunc(View::s_maxZoom, m_currentZoom)) {
         return nullptr;
@@ -57,8 +56,6 @@ std::shared_ptr<Label> Labels::addSpriteLabel(SpriteBatch& _batch, const MapTile
 
     auto label = std::shared_ptr<SpriteLabel>(new SpriteLabel(_transform, _size, _offset, _bufferOffset));
     addLabel(_tile, label);
-
-    _batch.m_labels.push_back(label);
 
     return label;
 }
@@ -72,7 +69,6 @@ void Labels::addLabel(const MapTile& _tile, std::shared_ptr<Label> _label) {
 
     _label->update(m_view->getViewProjectionMatrix() * modelMatrix, m_screenSize, 0);
     std::unique_ptr<TileID> tileID(new TileID(_tile.getID()));
-    //_tile.addLabel(_styleName, _label);
 
     // lock concurrent collection
     {

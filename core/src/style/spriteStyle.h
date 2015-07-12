@@ -13,25 +13,15 @@ class SpriteLabel;
 class SpriteStyle : public Style {
 
 protected:
-
-    struct Params {
-        int i;
-    };
     
     virtual void constructVertexLayout() override;
     virtual void constructShaderProgram() override;
-    virtual void build(Batch& _batch, const Feature& _feature, const StyleParamMap& _params, const MapTile& _tile) const override;
 
-    typedef TypedMesh<BufferVert> Mesh;
-
-    virtual Batch* newBatch() const override;
+    virtual StyleBatch* newBatch() const override;
 
     std::unique_ptr<SpriteAtlas> m_spriteAtlas;
     std::shared_ptr<Labels> m_labels;
     unsigned int m_spriteGeneration;
-
-private:
-    void buildPoint(SpriteBatch& _batch, const Point& _point, const Properties& _props, const Params& _params, const MapTile& _tile) const;
 
 public:
 
@@ -48,7 +38,8 @@ public:
     
 };
 
-class SpriteBatch : public Batch {
+class SpriteBatch : public StyleBatch {
+
 public:
     SpriteBatch(const SpriteStyle& _style);
     
@@ -62,6 +53,12 @@ public:
         }
         return false;
     };
+
+    virtual void add(const Feature& _feature, const StyleParamMap& _params, const MapTile& _tile) override;
+
+private:
+
+    void buildPoint(const Point& _point, const Properties& _props, const MapTile& _tile);
 
     std::vector<std::shared_ptr<SpriteLabel>> m_labels;
 
