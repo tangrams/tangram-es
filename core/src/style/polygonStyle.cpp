@@ -28,15 +28,16 @@ void PolygonStyle::constructShaderProgram() {
     m_shaderProgram->setSourceStrings(fragShaderSrcStr, vertShaderSrcStr);
 }
 
-void PolygonStyle::parseStyleParams(const StyleParamMap& _styleParamMap, void* _styleParams) const {
+auto PolygonStyle::parseStyleParams(const StyleParamMap& _styleParamMap) const -> StyleParams {
 
-    StyleParams* params = static_cast<StyleParams*>(_styleParams);
+    StyleParams params;
     if(_styleParamMap.find("order") != _styleParamMap.end()) {
-        params->order = std::stof(_styleParamMap.at("order"));
+        params.order = std::stof(_styleParamMap.at("order"));
     }
     if(_styleParamMap.find("color") != _styleParamMap.end()) {
-        params->color = parseColorProp(_styleParamMap.at("color"));
+        params.color = parseColorProp(_styleParamMap.at("color"));
     }
+    return params;
 }
 
 void PolygonStyle::buildPoint(Point& _point, const StyleParamMap& _styleParamMap, Properties& _props, VboMesh& _mesh) const {
@@ -66,8 +67,7 @@ void PolygonStyle::buildPolygon(Polygon& _polygon, const StyleParamMap& _stylePa
 
     std::vector<PosNormColVertex> vertices;
 
-    StyleParams params;
-    parseStyleParams(_styleParamMap, static_cast<void*>(&params));
+    StyleParams params(parseStyleParams(_styleParamMap));
 
     GLuint abgr = params.color;
     GLfloat layer = params.order;

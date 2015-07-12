@@ -29,8 +29,6 @@ void DebugStyle::constructShaderProgram() {
 
 }
 
-void DebugStyle::parseStyleParams(const StyleParamMap& _styleParamMap, void* _styleParams) const {}
-
 void DebugStyle::addData(TileData &_data, MapTile &_tile) {
 
     if (Tangram::getDebugFlag(Tangram::DebugFlags::tile_bounds)) {

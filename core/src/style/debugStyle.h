@@ -21,8 +21,6 @@ protected:
     virtual void buildPolygon(Polygon& _polygon, const StyleParamMap& _styleParamMap, Properties& _props, VboMesh& _mesh) const override;
     virtual void addData(TileData& _data, MapTile& _tile) override;
 
-    virtual void parseStyleParams(const StyleParamMap& _styleParamMap, void* _styleParams) const override;
-
     typedef TypedMesh<PosColVertex> Mesh;
 
     virtual VboMesh* newMesh() const override {

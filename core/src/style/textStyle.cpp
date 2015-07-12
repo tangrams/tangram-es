@@ -43,8 +43,6 @@ void TextStyle::constructShaderProgram() {
     m_shaderProgram->addSourceBlock("defines", defines);
 }
 
-void TextStyle::parseStyleParams(const StyleParamMap& _styleParamMap, void* _styleParams) const {}
-
 void TextStyle::addVertices(TextBuffer& _buffer, VboMesh& _mesh) const {
     std::vector<TextVert> vertices;
     int bufferSize = _buffer.getVerticesSize();
