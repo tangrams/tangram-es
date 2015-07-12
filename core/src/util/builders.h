@@ -103,7 +103,7 @@ public:
      * @_minHeight the extrusion will extend from this z coordinate to the z of the polygon points
      * @_ctx output vectors, see <PolygonBuilder>
      */
-    static void buildPolygonExtrusion(const Polygon& _polygon, const float& _minHeight, PolygonBuilder& _ctx);
+    static void buildPolygonExtrusion(const Polygon& _polygon, float _minHeight, float _height, PolygonBuilder& _ctx);
 
     /* Build a tesselated polygon line of fixed width from line coordinates
      * @_line input coordinates describing the line
