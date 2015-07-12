@@ -27,15 +27,13 @@ void SpriteStyle::constructShaderProgram() {
     m_texture = std::shared_ptr<Texture>(new Texture("mapzen-logo.png"));
 }
 
-void* SpriteStyle::parseStyleParams(const StyleParamMap& _styleParamMap) const {
-    return nullptr;
-}
+void SpriteStyle::parseStyleParams(const StyleParamMap& _styleParamMap, void* _styleParams) const {}
 
-void SpriteStyle::buildPoint(Point& _point, void* _styleParam, Properties& _props, VboMesh& _mesh) const {}
+void SpriteStyle::buildPoint(Point& _point, const StyleParamMap& _styleParamMap, Properties& _props, VboMesh& _mesh) const {}
 
-void SpriteStyle::buildLine(Line& _line, void* _styleParam, Properties& _props, VboMesh& _mesh) const {}
+void SpriteStyle::buildLine(Line& _line, const StyleParamMap& _styleParamMap, Properties& _props, VboMesh& _mesh) const {}
 
-void SpriteStyle::buildPolygon(Polygon& _polygon, void* _styleParam, Properties& _props, VboMesh& _mesh) const {}
+void SpriteStyle::buildPolygon(Polygon& _polygon, const StyleParamMap& _styleParamMap, Properties& _props, VboMesh& _mesh) const {}
 
 void SpriteStyle::onBeginDrawFrame(const std::shared_ptr<View>& _view, const std::shared_ptr<Scene>& _scene) {
     m_texture->update(0);

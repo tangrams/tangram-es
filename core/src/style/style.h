@@ -80,18 +80,18 @@ protected:
     virtual void constructShaderProgram() = 0;
 
     /* Build styled vertex data for point geometry and add it to the given <VboMesh> */
-    virtual void buildPoint(Point& _point, void* _styleParam, Properties& _props, VboMesh& _mesh) const = 0;
+    virtual void buildPoint(Point& _point, const StyleParamMap& _styleParamMap, Properties& _props, VboMesh& _mesh) const = 0;
 
     /* Build styled vertex data for line geometry and add it to the given <VboMesh> */
-    virtual void buildLine(Line& _line, void* _styleParam, Properties& _props, VboMesh& _mesh) const = 0;
+    virtual void buildLine(Line& _line, const StyleParamMap& _styleParamMap, Properties& _props, VboMesh& _mesh) const = 0;
 
     /* Build styled vertex data for polygon geometry and add it to the given <VboMesh> */
-    virtual void buildPolygon(Polygon& _polygon, void* _styleParam, Properties& _props, VboMesh& _mesh) const = 0;
+    virtual void buildPolygon(Polygon& _polygon, const StyleParamMap& _styleParamMap, Properties& _props, VboMesh& _mesh) const = 0;
 
     /*
-     * Parse StyleParamMap to apt Style property parameters
+     * Parse StyleParamMap to individual style's StyleParam structure.
      */
-    virtual void* parseStyleParams(const StyleParamMap& _styleParamMap) const = 0;
+    virtual void parseStyleParams(const StyleParamMap& _styleParamMap, void* _styleParams) const = 0;
 
     static std::unordered_map<std::bitset<MAX_LAYERS>, StyleParamMap> s_styleParamMapCache;
     static std::mutex s_cacheMutex;
@@ -100,6 +100,8 @@ protected:
     /*
      * filter what layer(s) a features match and get style paramaters for this feature based on all subLayers it
      * matches. Matching is cached for other features to use.
+     * Parameter maps for a set of layers is determined by merging parameters maps for individual layers matching the
+     * filters and keyed based on a uniqueID defined by the id of the matching layers.
      */
     void applyLayerFiltering(const Feature& _feature, const Tangram::Context& _ctx, std::bitset<MAX_LAYERS>& _uniqueID,
                                         StyleParamMap& _styleParamMapMix, std::weak_ptr<Tangram::SceneLayer> _uberLayer) const;

@@ -155,19 +155,19 @@ void Style::addData(TileData& _data, MapTile& _tile) {
                     case GeometryType::points:
                         // Build points
                         for (auto& point : feature.points) {
-                            buildPoint(point, parseStyleParams(styleParamMapMix), feature.props, *mesh);
+                            buildPoint(point, styleParamMapMix, feature.props, *mesh);
                         }
                         break;
                     case GeometryType::lines:
                         // Build lines
                         for (auto& line : feature.lines) {
-                            buildLine(line, parseStyleParams(styleParamMapMix), feature.props, *mesh);
+                            buildLine(line, styleParamMapMix, feature.props, *mesh);
                         }
                         break;
                     case GeometryType::polygons:
                         // Build polygons
                         for (auto& polygon : feature.polygons) {
-                            buildPolygon(polygon, parseStyleParams(styleParamMapMix), feature.props, *mesh);
+                            buildPolygon(polygon, styleParamMapMix, feature.props, *mesh);
                         }
                         break;
                     default:

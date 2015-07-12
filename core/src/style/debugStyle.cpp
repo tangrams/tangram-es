@@ -29,9 +29,7 @@ void DebugStyle::constructShaderProgram() {
 
 }
 
-void* DebugStyle::parseStyleParams(const StyleParamMap& _styleParamMap) const {
-    return nullptr;
-}
+void DebugStyle::parseStyleParams(const StyleParamMap& _styleParamMap, void* _styleParams) const {}
 
 void DebugStyle::addData(TileData &_data, MapTile &_tile) {
 
@@ -60,19 +58,19 @@ void DebugStyle::addData(TileData &_data, MapTile &_tile) {
 
 }
 
-void DebugStyle::buildPoint(Point &_point, void* _styleParams, Properties &_props, VboMesh &_mesh) const {
+void DebugStyle::buildPoint(Point &_point, const StyleParamMap& _styleParamMap, Properties &_props, VboMesh &_mesh) const {
 
     // No-op
 
 }
 
-void DebugStyle::buildLine(Line &_line, void* _styleParams, Properties &_props, VboMesh &_mesh) const {
+void DebugStyle::buildLine(Line &_line, const StyleParamMap& _styleParamMap, Properties &_props, VboMesh &_mesh) const {
 
     // No-op
 
 }
 
-void DebugStyle::buildPolygon(Polygon &_polygon, void* _styleParams, Properties &_props, VboMesh &_mesh) const {
+void DebugStyle::buildPolygon(Polygon &_polygon, const StyleParamMap& _styleParamMap, Properties &_props, VboMesh &_mesh) const {
 
     // No-op
 

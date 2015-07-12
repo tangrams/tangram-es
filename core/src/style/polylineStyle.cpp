@@ -28,9 +28,9 @@ void PolylineStyle::constructShaderProgram() {
     m_shaderProgram->setSourceStrings(fragShaderSrcStr, vertShaderSrcStr);
 }
 
-void* PolylineStyle::parseStyleParams(const StyleParamMap& _styleParamMap) const {
+void PolylineStyle::parseStyleParams(const StyleParamMap& _styleParamMap, void* _styleParams) const {
 
-    StyleParams* params = new StyleParams();
+    StyleParams* params = static_cast<StyleParams*>(_styleParams);
 
     if(_styleParamMap.find("order") != _styleParamMap.end()) {
         params->order = std::stof(_styleParamMap.at("order"));
@@ -82,45 +82,44 @@ void* PolylineStyle::parseStyleParams(const StyleParamMap& _styleParamMap) const
         else if(joinStr == "miter") { params->outlineJoin = JoinTypes::miter; }
         else if(joinStr == "round") { params->outlineJoin = JoinTypes::round; }
     }
-
-    return static_cast<void*>(params);
 }
 
-void PolylineStyle::buildPoint(Point& _point, void* _styleParam, Properties& _props, VboMesh& _mesh) const {
+void PolylineStyle::buildPoint(Point& _point, const StyleParamMap& _styleParamMap, Properties& _props, VboMesh& _mesh) const {
     // No-op
 }
 
-void PolylineStyle::buildLine(Line& _line, void* _styleParam, Properties& _props, VboMesh& _mesh) const {
+void PolylineStyle::buildLine(Line& _line, const StyleParamMap& _styleParamMap, Properties& _props, VboMesh& _mesh) const {
     std::vector<PosNormEnormColVertex> vertices;
 
-    StyleParams* params = static_cast<StyleParams*>(_styleParam);
-    GLuint abgr = params->color;
+    StyleParams params;
+    parseStyleParams(_styleParamMap, static_cast<void*>(&params));
+    GLuint abgr = params.color;
 
     if (Tangram::getDebugFlag(Tangram::DebugFlags::proxy_colors)) {
         abgr = abgr << (int(_props.numericProps["zoom"]) % 6);
     }
 
-    GLfloat layer = _props.numericProps["sort_key"] + params->order;
-    float halfWidth = params->width * .5f;
+    GLfloat layer = _props.numericProps["sort_key"] + params.order;
+    float halfWidth = params.width * .5f;
 
     PolyLineBuilder builder {
         [&](const glm::vec3& coord, const glm::vec2& normal, const glm::vec2& uv) {
             vertices.push_back({ coord, uv, normal, halfWidth, abgr, layer });
         },
-        PolyLineOptions(params->cap, params->join)
+        PolyLineOptions(params.cap, params.join)
     };
 
     Builders::buildPolyLine(_line, builder);
 
-    if (params->outlineOn) {
+    if (params.outlineOn) {
 
-        GLuint abgrOutline = params->outlineColor;
-        halfWidth += params->outlineWidth * .5f;
+        GLuint abgrOutline = params.outlineColor;
+        halfWidth += params.outlineWidth * .5f;
 
-        if (params->outlineCap != params->cap || params->outlineJoin != params->join) {
+        if (params.outlineCap != params.cap || params.outlineJoin != params.join) {
             // need to re-triangulate with different cap and/or join
-            builder.options.cap = params->outlineCap;
-            builder.options.join = params->outlineJoin;
+            builder.options.cap = params.outlineCap;
+            builder.options.join = params.outlineJoin;
             Builders::buildPolyLine(_line, builder);
         } else {
             // re-use indices from original line
@@ -142,6 +141,6 @@ void PolylineStyle::buildLine(Line& _line, void* _styleParam, Properties& _props
     mesh.addVertices(std::move(vertices), std::move(builder.indices));
 }
 
-void PolylineStyle::buildPolygon(Polygon& _polygon, void* _styleParam, Properties& _props, VboMesh& _mesh) const {
+void PolylineStyle::buildPolygon(Polygon& _polygon, const StyleParamMap& _styleParamMap, Properties& _props, VboMesh& _mesh) const {
     // No-op
 }
