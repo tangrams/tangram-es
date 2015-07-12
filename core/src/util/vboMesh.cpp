@@ -77,7 +77,7 @@ bool VboMesh::subDataUpload() {
     long vertexBytes = m_nVertices * m_vertexLayout->getStride();
 
     // updating the entire buffer
-    if (vertexBytes - m_dirtySize < m_vertexLayout->getStride()) {
+    if (vertexBytes <= m_dirtyOffset + m_dirtySize) {
 
         // invalidate the data store on the driver
         glBufferData(GL_ARRAY_BUFFER, vertexBytes, NULL, m_hint);
@@ -92,7 +92,6 @@ bool VboMesh::subDataUpload() {
 
     m_dirtyOffset = 0;
     m_dirtySize = 0;
-
     m_dirty = false;
 
     // Also bind indices when return 'already bound'.
@@ -130,9 +129,6 @@ bool VboMesh::upload() {
         glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, m_glIndexBuffer);
         glBufferData(GL_ELEMENT_ARRAY_BUFFER, m_nIndices * sizeof(GLushort), m_glIndexData, m_hint);
     }
-
-    // m_glVertexData.resize(0);
-    // m_glIndexData.resize(0);
 
     // TODO: For now, we retain copies of the vertex and index data in CPU memory to allow VBOs
     // to easily rebuild themselves after GL context loss. For optimizing memory usage (and for
