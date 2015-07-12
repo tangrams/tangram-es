@@ -87,7 +87,7 @@ void Builders::buildPolygon(const Polygon& _polygon, PolygonBuilder& _ctx) {
     tessDeleteTess(tesselator);
 }
 
-void Builders::buildPolygonExtrusion(const Polygon& _polygon, const float& _minHeight, PolygonBuilder& _ctx) {
+void Builders::buildPolygonExtrusion(const Polygon& _polygon, float _minHeight, float _height, PolygonBuilder& _ctx) {
     
     int vertexDataOffset = (int)_ctx.numVertices;
     
@@ -108,10 +108,12 @@ void Builders::buildPolygonExtrusion(const Polygon& _polygon, const float& _minH
             normalVector = glm::normalize(normalVector);
             
             // 1st vertex top
-            _ctx.addVertex(line[i], normalVector, glm::vec2(1.,0.));
+            _ctx.addVertex(glm::vec3(line[i].x, line[i].y, _height),
+                           normalVector, glm::vec2(1.,0.));
 
             // 2nd vertex top
-            _ctx.addVertex(line[i+1], normalVector, glm::vec2(0.,0.));
+            _ctx.addVertex(glm::vec3(line[i+1].x, line[i+1].y, _height),
+                           normalVector, glm::vec2(0.,0.));
 
             // 1st vertex bottom
             _ctx.addVertex(glm::vec3(line[i].x, line[i].y, _minHeight),
