@@ -89,18 +89,12 @@ protected:
     /* Create <ShaderProgram> for this style; subclasses must implement this and call it on construction */
     virtual void constructShaderProgram() = 0;
 
-    /* Build styled vertex data for point geometry and add it to the given <VboMesh> */
-    virtual void buildPoint(Point& _point, const StyleParamMap& _styleParamMap, Properties& _props, Batch& _batch, MapTile& _tile) const;
-
-    /* Build styled vertex data for line geometry and add it to the given <VboMesh> */
-    virtual void buildLine(Line& _line, const StyleParamMap& _styleParamMap, Properties& _props, Batch& _batch, MapTile& _tile) const;
-
-    /* Build styled vertex data for polygon geometry and add it to the given <VboMesh> */
-    virtual void buildPolygon(Polygon& _polygon, const StyleParamMap& _styleParamMap, Properties& _props, Batch& _batch, MapTile& _tile) const;
+    /* Build styled data for <Feature> and add it to the given <Batch> */
+    virtual void build(Batch& _batch, const Feature& _feature, const StyleParamMap& _params, const MapTile& _tile) const;
 
     static std::unordered_map<std::bitset<MAX_LAYERS>, StyleParamMap> s_styleParamMapCache;
     static std::mutex s_cacheMutex;
-    static uint32_t parseColorProp(const std::string& _colorPropStr) ;
+    static uint32_t parseColorProp(const std::string& _colorPropStr);
 
     /*
      * filter what layer(s) a features match and get style paramaters for this feature based on all subLayers it

@@ -70,11 +70,14 @@ protected:
 
     virtual void constructVertexLayout() override;
     virtual void constructShaderProgram() override;
-    virtual void buildLine(Line& _line, const StyleParamMap& _styleParamMap, Properties& _props, Batch& _batch, MapTile& _tile) const override;
     /*
      * Parse StyleParamMap to individual style's StyleParam structure.
      */
     void parseStyleParams(const StyleParamMap& _styleParamMap, StyleParams& _styleParams) const;
+
+    virtual void build(Batch& _batch, const Feature& _feature, const StyleParamMap& _params, const MapTile& _tile) const;
+
+    virtual void buildLine(PolylineBatch& _batch, const Line& _line, const StyleParams& _styleParam, const Properties& _props, const MapTile& _tile) const;
 
     virtual Batch* newBatch() const override {
         return new PolylineBatch(*this);

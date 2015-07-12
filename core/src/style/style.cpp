@@ -152,28 +152,7 @@ void Style::addData(TileData& _data, MapTile& _tile) {
             if(uniqueID.any()) { // if a layer matched then uniqueID should be > 0
                 feature.props.numericProps["zoom"] = _tile.getID().z;
 
-                switch (feature.geometryType) {
-                    case GeometryType::points:
-                        // Build points
-                        for (auto& point : feature.points) {
-                            buildPoint(point, styleParamMapMix, feature.props, *batch, _tile);
-                        }
-                        break;
-                    case GeometryType::lines:
-                        // Build lines
-                        for (auto& line : feature.lines) {
-                            buildLine(line, styleParamMapMix, feature.props, *batch, _tile);
-                        }
-                        break;
-                    case GeometryType::polygons:
-                        // Build polygons
-                        for (auto& polygon : feature.polygons) {
-                            buildPolygon(polygon, styleParamMapMix, feature.props, *batch, _tile);
-                        }
-                        break;
-                    default:
-                        break;
-                }
+                build(*batch, feature, styleParamMapMix, _tile);
             }
         }
     }
@@ -209,14 +188,6 @@ void Style::onEndBuildTile(Batch& _batch) const {
     // No-op by default
 }
 
-void Style::buildPoint(Point& _point, const StyleParamMap& _styleParamMap, Properties& _props, Batch& _batch, MapTile& _tile) const {
-    // No-op by default
-}
-
-void Style::buildLine(Line& _line, const StyleParamMap& _styleParamMap, Properties& _props, Batch& _batch, MapTile& _tile) const {
-    // No-op by default
-}
-
-void Style::buildPolygon(Polygon& _polygon, const StyleParamMap& _styleParamMap, Properties& _props, Batch& _batch, MapTile& _tile) const {
-    // No-op by default
+void Style::build(Batch& _batch, const Feature& _feature, const StyleParamMap& _params, const MapTile& _tile) const {
+     // No-op
 }
