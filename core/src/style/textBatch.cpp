@@ -10,7 +10,6 @@ TextBatch::TextBatch(const TextStyle& _style)
       m_mesh(std::make_shared<TypedMesh<BufferVert>>(_style.m_vertexLayout, GL_TRIANGLES, GL_DYNAMIC_DRAW)),
       m_style(_style)
 {
-
     m_dirtyTransform = false;
     m_bound = false;
 }
@@ -153,40 +152,43 @@ void TextBatch::add(const Feature& _feature, const StyleParamMap& _params, const
 
 void TextBatch::buildPoint(const Point& _point, const Properties& _props, const MapTile& _tile) {
 
-    for (auto prop : _props.stringProps) {
-        if (prop.first == "name") {
-            auto label = m_style.m_labels->addTextLabel(*this, _tile, { glm::vec2(_point), glm::vec2(_point) },
-                                                        prop.second, Label::Type::point);
-            if (label) {
-                m_labels.push_back(label);
-            }
+    std::string name;
+
+    if (_props.getString("name", name)) {
+
+        auto label = m_style.m_labels->addTextLabel(*this, _tile, { glm::vec2(_point), glm::vec2(_point) },
+                                                    name, Label::Type::point);
+        if (label) {
+            m_labels.push_back(label);
         }
     }
 }
 
 void TextBatch::buildLine(const Line& _line, const Properties& _props, const MapTile& _tile) {
-    int lineLength = _line.size();
-    int skipOffset = floor(lineLength / 2);
-    float minLength = 0.15; // default, probably need some more thoughts
 
-    for (auto prop : _props.stringProps) {
-        if (prop.first.compare("name") == 0) {
+    std::string name;
 
-            for (size_t i = 0; i < _line.size() - 1; i += skipOffset) {
-                glm::vec2 p1 = glm::vec2(_line[i]);
-                glm::vec2 p2 = glm::vec2(_line[i + 1]);
+    if (_props.getString("name", name)) {
 
-                glm::vec2 p1p2 = p2 - p1;
-                float length = glm::length(p1p2);
+        int lineLength = _line.size();
+        int skipOffset = floor(lineLength / 2);
+        float minLength = 0.15; // default, probably need some more thoughts
 
-                if (length < minLength) {
-                    continue;
-                }
 
-                auto label = m_style.m_labels->addTextLabel(*this, _tile, { p1, p2 }, prop.second, Label::Type::line);
-                if (label) {
-                    m_labels.push_back(label);
-                }
+        for (size_t i = 0; i < _line.size() - 1; i += skipOffset) {
+            glm::vec2 p1 = glm::vec2(_line[i]);
+            glm::vec2 p2 = glm::vec2(_line[i + 1]);
+
+            glm::vec2 p1p2 = p2 - p1;
+            float length = glm::length(p1p2);
+
+            if (length < minLength) {
+                continue;
+            }
+
+            auto label = m_style.m_labels->addTextLabel(*this, _tile, { p1, p2 }, name, Label::Type::line);
+            if (label) {
+                m_labels.push_back(label);
             }
         }
     }
@@ -194,27 +196,27 @@ void TextBatch::buildLine(const Line& _line, const Properties& _props, const Map
 
 void TextBatch::buildPolygon(const Polygon& _polygon, const Properties& _props, const MapTile& _tile) {
 
-    glm::vec3 centroid;
-    int n = 0;
+    std::string name;
 
-    for (auto& l : _polygon) {
-        for (auto& p : l) {
-            centroid.x += p.x;
-            centroid.y += p.y;
-            n++;
-        }
-    }
+    if (_props.getString("name", name)) {
 
-    centroid /= n;
+        glm::vec3 centroid;
+        int n = 0;
 
-    for (auto prop : _props.stringProps) {
-        if (prop.first == "name") {
-            auto label = m_style.m_labels->addTextLabel(*this, _tile,
-                                                        { glm::vec2(centroid), glm::vec2(centroid) },
-                                                        prop.second, Label::Type::point);
-            if (label) {
-                m_labels.push_back(label);
+        for (auto& l : _polygon) {
+            for (auto& p : l) {
+                centroid.x += p.x;
+                centroid.y += p.y;
+                n++;
             }
+        }
+
+        centroid /= n;
+
+        auto label = m_style.m_labels->addTextLabel(*this, _tile, { glm::vec2(centroid), glm::vec2(centroid) },
+                                                    name, Label::Type::point);
+        if (label) {
+            m_labels.push_back(label);
         }
     }
 }
