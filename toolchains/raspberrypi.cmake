@@ -21,7 +21,7 @@ endif()
 
 # add sources and include headers
 find_sources_and_include_directories(
-	${PROJECT_SOURCE_DIR}/rpi/src/*.h 
+	${PROJECT_SOURCE_DIR}/rpi/src/*.h
 	${PROJECT_SOURCE_DIR}/rpi/src/*.cpp)
 
 # add sources and include headers
@@ -47,7 +47,7 @@ function(link_libraries)
 
 endfunction()
 
-function(build) 
+function(build)
 
     add_executable(${EXECUTABLE_NAME} ${SOURCES})
 

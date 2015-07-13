@@ -15,7 +15,7 @@ else()
     include_directories(${GLFW_INCLUDE_DIRS})
     message(STATUS "Found GLFW ${GLFW_PREFIX}")
 endif()
-    
+
 # load core library
 add_subdirectory(${PROJECT_SOURCE_DIR}/core)
 include_directories(${CORE_INCLUDE_DIRS})
@@ -24,7 +24,7 @@ include_directories(${CORE_INCLUDE_DIRS})
 set(OSX_EXTENSIONS_FILES *.mm *.cpp)
 foreach(_ext ${OSX_EXTENSIONS_FILES})
     find_sources_and_include_directories(
-        ${PROJECT_SOURCE_DIR}/osx/src/*.h 
+        ${PROJECT_SOURCE_DIR}/osx/src/*.h
         ${PROJECT_SOURCE_DIR}/osx/src/${_ext})
 endforeach()
 
@@ -38,10 +38,10 @@ string(REGEX REPLACE "[.]DS_Store" "" RESOURCES "${RESOURCES}")
 function(link_libraries)
 
     list(APPEND GLFW_LDFLAGS
-        "-framework OpenGL" 
-        "-framework Cocoa" 
-        "-framework IOKit" 
-        "-framework CoreFoundation"   
+        "-framework OpenGL"
+        "-framework Cocoa"
+        "-framework IOKit"
+        "-framework CoreFoundation"
         "-framework CoreVideo")
 
     target_link_libraries(${EXECUTABLE_NAME} core ${GLFW_LDFLAGS})
@@ -53,7 +53,7 @@ function(link_libraries)
 
 endfunction()
 
-function(build) 
+function(build)
 
     add_executable(${EXECUTABLE_NAME} MACOSX_BUNDLE ${SOURCES} ${RESOURCES})
 
