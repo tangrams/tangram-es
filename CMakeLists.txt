@@ -8,11 +8,6 @@ set(CMAKE_ARCHIVE_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/lib)
 set(CMAKE_LIBRARY_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/lib)
 set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin)
 
-if(UNIT_TESTS) 
-    include(${PROJECT_SOURCE_DIR}/toolchains/unitTests.cmake)
-    return()
-endif()
-
 # platform lookup
 set(SUPPORTED_TARGETS darwin ios android raspberrypi linux)
 
@@ -41,6 +36,17 @@ endif()
 
 # setting up cache variable platform 
 set(PLATFORM ${varplatform} CACHE INTERNAL "platform" FORCE)
+
+if(UNIT_TESTS)
+  message(STATUS "Build tests for : ${PLATFORM_TARGET}")
+
+  if(PLATFORM_TARGET STREQUAL "linux")
+    include(${PROJECT_SOURCE_DIR}/toolchains/linux.tests.cmake)
+  else()
+    include(${PROJECT_SOURCE_DIR}/toolchains/unitTests.cmake)
+  endif()
+  return()
+endif()
 
 # cmake inclusions and definitions
 # set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} ${CMAKE_SOURCE_DIR}/build/modules)
