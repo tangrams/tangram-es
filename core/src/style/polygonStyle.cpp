@@ -38,11 +38,7 @@ void PolygonStyle::parseStyleParams(const StyleParamMap& _styleParamMap, StylePa
     }
 }
 
-void PolygonStyle::buildPoint(Point& _point, const StyleParamMap& _styleParamMap, Properties& _props, VboMesh& _mesh) const {
-    // No-op
-}
-
-void PolygonStyle::buildLine(Line& _line, const StyleParamMap& _styleParamMap, Properties& _props, VboMesh& _mesh) const {
+void PolygonStyle::buildLine(Line& _line, const StyleParamMap& _styleParamMap, Properties& _props, VboMesh& _mesh, MapTile& _tile) const {
     std::vector<PosNormColVertex> vertices;
 
     PolyLineBuilder builder = {
@@ -61,7 +57,7 @@ void PolygonStyle::buildLine(Line& _line, const StyleParamMap& _styleParamMap, P
     mesh.addVertices(std::move(vertices), std::move(builder.indices));
 }
 
-void PolygonStyle::buildPolygon(Polygon& _polygon, const StyleParamMap& _styleParamMap, Properties& _props, VboMesh& _mesh) const {
+void PolygonStyle::buildPolygon(Polygon& _polygon, const StyleParamMap& _styleParamMap, Properties& _props, VboMesh& _mesh, MapTile& _tile) const {
 
     std::vector<PosNormColVertex> vertices;
 

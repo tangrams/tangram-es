@@ -71,6 +71,23 @@ struct PolyLineBuilder {
         : options(_options), addVertex(_addVertex){}
 };
 
+/* Callback function for SpriteBuilder
+ * @coord tesselated coordinates of the sprite quad in screen space
+ * @screenPos the screen position
+ * @uv texture coordinate of the ouptput coordinate
+ */
+typedef std::function<void(const glm::vec2& coord, const glm::vec2& screenPos, const glm::vec2& uv)> SpriteBuilderFn;
+
+/* SpriteBuidler context
+ */
+struct SpriteBuilder {
+    std::vector<int> indices;
+    SpriteBuilderFn addVertex;
+    size_t numVerts = 0;
+    
+    SpriteBuilder(SpriteBuilderFn _addVertex) : addVertex(_addVertex) {}
+};
+
 class Builders {
 
 public:
@@ -103,5 +120,14 @@ public:
      * NOT IMPLEMENTED
      */
     static void buildQuadAtPoint(const Point& _pointIn, const glm::vec3& _normal, float width, float height, PolygonBuilder& _ctx);
+
+    /* Build a tesselated quad centered on _origin
+     * @_screenPos the sprite origin in screen space
+     * @_spriteOrigin the sprite origin in the texture sprite atlas
+     * @_spriteSize the sprite size in the texture sprite atlas
+     * @_atlasSize the sprite atlas size
+     * @_ctx output vectors, see <SpriteBuilder>
+     */
+    static void buildQuadAtPoint(const glm::vec2& _screenOrigin, const glm::vec2& _size, const glm::vec2& _uvBL, const glm::vec2& _uvTR, SpriteBuilder& _ctx);
     
 };

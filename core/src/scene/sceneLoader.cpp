@@ -1,7 +1,8 @@
+#include "sceneLoader.h"
+
 #include <vector>
 #include "platform.h"
 #include "scene.h"
-#include "sceneLoader.h"
 #include "tileManager.h"
 #include "view.h"
 #include "lights.h"
@@ -15,6 +16,7 @@
 #include "debugTextStyle.h"
 #include "data/filters.h"
 #include "sceneLayer.h"
+#include "spriteStyle.h"
 #include "texture.h"
 
 #include "yaml-cpp/yaml.h"
@@ -282,6 +284,7 @@ void SceneLoader::loadStyles(YAML::Node styles, Scene& scene) {
     scene.getStyles().emplace_back(new TextStyle("FiraSans", "text", 15.0f, 0xF7F0E1, true, true));
     scene.getStyles().emplace_back(new DebugTextStyle("FiraSans", "debugtext", 30.0f, 0xDC3522, true));
     scene.getStyles().emplace_back(new DebugStyle("debug"));
+    scene.getStyles().emplace_back(new SpriteStyle("sprites"));
 
     if (!styles) {
         return;

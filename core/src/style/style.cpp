@@ -127,9 +127,9 @@ void Style::applyLayerFiltering(const Feature& _feature, const Context& _ctx, st
 }
 
 void Style::addData(TileData& _data, MapTile& _tile) {
-    onBeginBuildTile(_tile);
-
     std::shared_ptr<VboMesh> mesh(newMesh());
+
+    onBeginBuildTile(*mesh);
 
     Context ctx;
     ctx["$zoom"] = new NumValue(_tile.getID().z);
@@ -155,19 +155,19 @@ void Style::addData(TileData& _data, MapTile& _tile) {
                     case GeometryType::points:
                         // Build points
                         for (auto& point : feature.points) {
-                            buildPoint(point, styleParamMapMix, feature.props, *mesh);
+                            buildPoint(point, styleParamMapMix, feature.props, *mesh, _tile);
                         }
                         break;
                     case GeometryType::lines:
                         // Build lines
                         for (auto& line : feature.lines) {
-                            buildLine(line, styleParamMapMix, feature.props, *mesh);
+                            buildLine(line, styleParamMapMix, feature.props, *mesh, _tile);
                         }
                         break;
                     case GeometryType::polygons:
                         // Build polygons
                         for (auto& polygon : feature.polygons) {
-                            buildPolygon(polygon, styleParamMapMix, feature.props, *mesh);
+                            buildPolygon(polygon, styleParamMapMix, feature.props, *mesh, _tile);
                         }
                         break;
                     default:
@@ -177,7 +177,7 @@ void Style::addData(TileData& _data, MapTile& _tile) {
         }
     }
 
-    onEndBuildTile(_tile, mesh);
+    onEndBuildTile(*mesh);
 
     if (mesh->numVertices() == 0) {
         mesh.reset();
@@ -201,10 +201,22 @@ void Style::onBeginDrawFrame(const std::shared_ptr<View>& _view, const std::shar
 
 }
 
-void Style::onBeginBuildTile(MapTile& _tile) const {
+void Style::onBeginBuildTile(VboMesh& _mesh) const {
     // No-op by default
 }
 
-void Style::onEndBuildTile(MapTile& _tile, std::shared_ptr<VboMesh> _mesh) const {
+void Style::onEndBuildTile(VboMesh& _mesh) const {
     // No-op by default
+}
+
+void Style::buildPoint(Point &_point, const StyleParamMap& _styleParamMap, Properties &_props, VboMesh &_mesh, MapTile& _tile) const {
+    // No-op
+}
+
+void Style::buildLine(Line &_line, const StyleParamMap& _styleParamMap, Properties &_props, VboMesh &_mesh, MapTile& _tile) const {
+    // No-op
+}
+
+void Style::buildPolygon(Polygon &_polygon, const StyleParamMap& _styleParamMap, Properties &_props, VboMesh &_mesh, MapTile& _tile) const {
+    // No-op
 }

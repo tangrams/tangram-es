@@ -78,13 +78,13 @@ protected:
     virtual void constructShaderProgram() = 0;
 
     /* Build styled vertex data for point geometry and add it to the given <VboMesh> */
-    virtual void buildPoint(Point& _point, const StyleParamMap& _styleParamMap, Properties& _props, VboMesh& _mesh) const = 0;
+    virtual void buildPoint(Point& _point, const StyleParamMap& _styleParamMap, Properties& _props, VboMesh& _mesh, MapTile& _tile) const;
 
     /* Build styled vertex data for line geometry and add it to the given <VboMesh> */
-    virtual void buildLine(Line& _line, const StyleParamMap& _styleParamMap, Properties& _props, VboMesh& _mesh) const = 0;
+    virtual void buildLine(Line& _line, const StyleParamMap& _styleParamMap, Properties& _props, VboMesh& _mesh, MapTile& _tile) const;
 
     /* Build styled vertex data for polygon geometry and add it to the given <VboMesh> */
-    virtual void buildPolygon(Polygon& _polygon, const StyleParamMap& _styleParamMap, Properties& _props, VboMesh& _mesh) const = 0;
+    virtual void buildPolygon(Polygon& _polygon, const StyleParamMap& _styleParamMap, Properties& _props, VboMesh& _mesh, MapTile& _tile) const;
 
     static std::unordered_map<std::bitset<MAX_LAYERS>, StyleParamMap> s_styleParamMapCache;
     static std::mutex s_cacheMutex;
@@ -100,10 +100,10 @@ protected:
                                         StyleParamMap& _styleParamMapMix, std::shared_ptr<Tangram::SceneLayer> _uberLayer) const;
 
     /* Perform any needed setup to process the data for a tile */
-    virtual void onBeginBuildTile(MapTile& _tile) const;
+    virtual void onBeginBuildTile(VboMesh& _mesh) const;
 
     /* Perform any needed teardown after processing data for a tile */
-    virtual void onEndBuildTile(MapTile& _tile, std::shared_ptr<VboMesh> _mesh) const;
+    virtual void onEndBuildTile(VboMesh& _mesh) const;
 
     /* Create a new mesh object using the vertex layout corresponding to this style */
     virtual VboMesh* newMesh() const = 0;

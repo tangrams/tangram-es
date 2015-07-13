@@ -4,6 +4,7 @@
 #include "scene/scene.h"
 #include "scene/sceneLoader.h"
 #include "style/style.h"
+#include "style/spriteStyle.h"
 #include "text/fontContext.h"
 #include "tile/labels/labels.h"
 #include "tile/tileManager.h"

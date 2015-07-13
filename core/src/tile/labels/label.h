@@ -70,21 +70,15 @@ public:
     };
 
     struct Transform {
-        glm::vec2 m_modelPosition1;
-        glm::vec2 m_modelPosition2;
+        glm::vec2 modelPosition1;
+        glm::vec2 modelPosition2;
 
-        glm::vec2 m_screenPosition;
-
-        float m_alpha;
-        float m_rotation;
+        BufferVert::State state;
     };
 
-    Label(Transform _transform, std::string _text, fsuint _id, Type _type);
+    Label(Transform _transform, Type _type);
 
     ~Label();
-
-    /* Call the font context to rasterize the label string */
-    bool rasterize(std::shared_ptr<TextBuffer>& _buffer);
 
     Transform getTransform() const { return m_transform; }
 
@@ -97,12 +91,10 @@ public:
     /* gets the extent of the oriented bounding box of the label */
     const isect2d::AABB& getAABB() const { return m_aabb; }
 
-    std::string getText() { return m_text; }
-
     void update(const glm::mat4& _mvp, const glm::vec2& _screenSize, float _dt);
 
-    void pushTransform(std::shared_ptr<TextBuffer>& _buffer);
-
+    virtual void pushTransform(VboMesh& _mesh) = 0;
+    
     bool updateScreenTransform(const glm::mat4& _mvp, const glm::vec2& _screenSize);
 
     Type getType() const { return m_type; }
@@ -125,8 +117,6 @@ private:
 
     void enterState(State _state, float _alpha = 1.0f);
 
-    void updateBBoxes();
-
     void updateState(const glm::mat4& _mvp, const glm::vec2& _screenSize, float _dt);
 
     void setAlpha(float _alpha);
@@ -138,15 +128,18 @@ private:
     State m_currentState;
 
     Type m_type;
-    Transform m_transform;
-    std::string m_text;
-    fsuint m_id;
-    isect2d::OBB m_obb;
-    isect2d::AABB m_aabb;
-    glm::vec2 m_dim;
     bool m_occludedLastFrame;
     bool m_occlusionSolved;
     FadeEffect m_fade;
+    
+protected:
+    
+    virtual void updateBBoxes() = 0;
+    
+    isect2d::OBB m_obb;
+    isect2d::AABB m_aabb;
     bool m_dirty;
-
+    Transform m_transform;
+    glm::vec2 m_dim;
+    
 };
