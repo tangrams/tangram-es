@@ -7,8 +7,6 @@
 #include "styleParamMap.h"
 #include "util/shaderProgram.h"
 
-#include "csscolorparser.hpp"
-
 #include <bitset>
 #include <memory>
 #include <mutex>
@@ -144,6 +142,3 @@ public:
     const std::string& getName() const { return m_name; }
 
 };
-
-
-typedef std::vector<std::unique_ptr<Style>> StyleSet;
