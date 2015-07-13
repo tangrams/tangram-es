@@ -5,6 +5,7 @@
 #include "util/shaderProgram.h"
 #include "util/vboMesh.h"
 #include "view/view.h"
+#include "textBatch.h"
 
 TextStyle::TextStyle(const std::string& _fontName, std::string _name, float _fontSize, unsigned int _color, bool _sdf, bool _sdfMultisampling, GLenum _drawMode)
 : Style(_name, _drawMode), m_fontName(_fontName), m_fontSize(_fontSize), m_color(_color), m_sdf(_sdf), m_sdfMultisampling(_sdfMultisampling)  {
@@ -40,106 +41,6 @@ void TextStyle::constructShaderProgram() {
 
     m_shaderProgram->addSourceBlock("defines", defines);
 }
-
-void TextBatch::add(const Feature& _feature, const StyleParamMap& _params, const MapTile& _tile) {
-
-    switch (_feature.geometryType) {
-        case GeometryType::points:
-            for (auto& point : _feature.points) {
-                buildPoint(point, _feature.props, _tile);
-            }
-            break;
-        case GeometryType::lines:
-            for (auto& line : _feature.lines) {
-                buildLine(line, _feature.props, _tile);
-            }
-            break;
-        case GeometryType::polygons:
-            for (auto& polygon : _feature.polygons) {
-                buildPolygon(polygon, _feature.props, _tile);
-            }
-            break;
-        default:
-            break;
-    }
-}
-
-void TextBatch::buildPoint(const Point& _point, const Properties& _props, const MapTile& _tile) {
-
-    for (auto prop : _props.stringProps) {
-        if (prop.first == "name") {
-            auto label = m_style.m_labels->addTextLabel(*this, _tile, { glm::vec2(_point), glm::vec2(_point) },
-                                                        prop.second, Label::Type::point);
-            if (label) {
-                m_labels.push_back(label);
-            }
-        }
-    }
-}
-
-void TextBatch::buildLine(const Line& _line, const Properties& _props, const MapTile& _tile) {
-    int lineLength = _line.size();
-    int skipOffset = floor(lineLength / 2);
-    float minLength = 0.15; // default, probably need some more thoughts
-
-    for (auto prop : _props.stringProps) {
-        if (prop.first.compare("name") == 0) {
-
-            for (size_t i = 0; i < _line.size() - 1; i += skipOffset) {
-                glm::vec2 p1 = glm::vec2(_line[i]);
-                glm::vec2 p2 = glm::vec2(_line[i + 1]);
-
-                glm::vec2 p1p2 = p2 - p1;
-                float length = glm::length(p1p2);
-
-                if (length < minLength) {
-                    continue;
-                }
-
-                auto label = m_style.m_labels->addTextLabel(*this, _tile, { p1, p2 }, prop.second, Label::Type::line);
-                if (label) {
-                    m_labels.push_back(label);
-                }
-            }
-        }
-    }
-}
-
-void TextBatch::buildPolygon(const Polygon& _polygon, const Properties& _props, const MapTile& _tile) {
-
-    glm::vec3 centroid;
-    int n = 0;
-
-    for (auto& l : _polygon) {
-        for (auto& p : l) {
-            centroid.x += p.x;
-            centroid.y += p.y;
-            n++;
-        }
-    }
-
-    centroid /= n;
-
-    for (auto prop : _props.stringProps) {
-        if (prop.first == "name") {
-            auto label = m_style.m_labels->addTextLabel(*this, _tile,
-                                                        { glm::vec2(centroid), glm::vec2(centroid) },
-                                                        prop.second, Label::Type::point);
-            if (label) {
-                m_labels.push_back(label);
-            }
-        }
-    }
-}
-
-void TextBatch::onBeginBuildTile() {
-    //init();
-}
-
-void TextBatch::onEndBuildTile() {
-    addBufferVerticesToMesh();
-}
-
 
 void TextStyle::onBeginDrawFrame(const std::shared_ptr<View>& _view, const std::shared_ptr<Scene>& _scene) {
     auto ftContext = m_labels->getFontContext();
@@ -187,3 +88,4 @@ StyleBatch* TextStyle::newBatch() const {
 
     return batch;
 };
+

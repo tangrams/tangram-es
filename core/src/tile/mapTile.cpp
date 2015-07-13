@@ -1,6 +1,7 @@
 #include "mapTile.h"
 
 #include "style/style.h"
+#include "style/styleBatch.h"
 #include "view/view.h"
 #include "util/tileID.h"
 #include "util/vboMesh.h"
