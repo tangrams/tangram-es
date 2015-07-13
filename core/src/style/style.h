@@ -99,7 +99,7 @@ protected:
      * filters and keyed based on a uniqueID defined by the id of the matching layers.
      */
     void applyLayerFiltering(const Feature& _feature, const Tangram::Context& _ctx, std::bitset<MAX_LAYERS>& _uniqueID,
-                                        StyleParamMap& _styleParamMapMix, std::weak_ptr<Tangram::SceneLayer> _uberLayer) const;
+                                        StyleParamMap& _styleParamMapMix, std::shared_ptr<Tangram::SceneLayer> _uberLayer) const;
 
     /* Perform any needed setup to process the data for a tile */
     virtual void onBeginBuildTile(MapTile& _tile) const;

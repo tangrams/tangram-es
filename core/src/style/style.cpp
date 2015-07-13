@@ -82,10 +82,10 @@ void Style::addLayer(std::shared_ptr<SceneLayer> _layer) {
 }
 
 void Style::applyLayerFiltering(const Feature& _feature, const Context& _ctx, std::bitset<MAX_LAYERS>& _uniqueID,
-                                   StyleParamMap& _styleParamMapMix, std::weak_ptr<SceneLayer> _uberLayer) const {
+                                   StyleParamMap& _styleParamMapMix, std::shared_ptr<SceneLayer> _uberLayer) const {
 
-    std::vector<std::weak_ptr<SceneLayer>> sLayers;
-    sLayers.reserve(_uberLayer.lock()->getSublayers().size() + 1);
+    std::vector<std::shared_ptr<SceneLayer>> sLayers;
+    sLayers.reserve(_uberLayer->getSublayers().size() + 1);
     sLayers.push_back(_uberLayer);
 
     auto sLayerItr = sLayers.begin();
@@ -93,7 +93,7 @@ void Style::applyLayerFiltering(const Feature& _feature, const Context& _ctx, st
     //A BFS traversal of the SceneLayer graph
     while (sLayerItr != sLayers.end()) {
 
-        auto sceneLyr = (*sLayerItr).lock();
+        auto sceneLyr = *sLayerItr;
 
         if ( sceneLyr->getFilter()->eval(_feature, _ctx)) { // filter matches
 
