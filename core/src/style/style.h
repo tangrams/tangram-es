@@ -24,6 +24,7 @@ class VboMesh;
 class VertexLayout;
 class View;
 class Scene;
+class StyleBatch;
 
 enum class LightingType : char {
     none,
@@ -36,21 +37,6 @@ namespace Tangram {
     using Context = std::unordered_map<std::string, Value*>;
 }
 
-class StyleBatch {
-public:
-    virtual void draw(const View& _view) = 0;
-    virtual void update(const glm::mat4& mvp, const View& _view, float _dt) = 0;
-    virtual void prepare() = 0;
-    virtual bool compile() = 0;
-
-    virtual void add(const Feature& _feature, const StyleParamMap& _params, const MapTile& _tile) = 0;
-
-    /* Perform any needed setup to process the data for a tile */
-    virtual void onBeginBuildTile() {};
-
-    /* Perform any needed teardown after processing data for a tile */
-    virtual void onEndBuildTile() {};
-};
 
 /* Means of constructing and rendering map geometry
  *
@@ -147,3 +133,5 @@ public:
     const std::string& getName() const { return m_name; }
 
 };
+
+typedef std::vector<std::unique_ptr<Style>> StyleSet;

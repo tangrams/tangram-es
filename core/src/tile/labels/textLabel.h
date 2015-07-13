@@ -2,6 +2,8 @@
 
 #include "label.h"
 #include "text/textBuffer.h"
+// FIXME 
+#include "style/textBatch.h"
 
 class TextLabel : public Label {
 

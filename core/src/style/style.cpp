@@ -1,5 +1,6 @@
 #include "style.h"
 
+#include "style/styleBatch.h"
 #include "scene/scene.h"
 #include "scene/sceneLayer.h"
 #include "scene/light.h"
