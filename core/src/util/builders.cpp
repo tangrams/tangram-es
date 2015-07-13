@@ -4,8 +4,45 @@
 #include "geom.h"
 #include "glm/gtx/rotate_vector.hpp"
 #include "platform.h"
-#include "tesselator.h"
 #include <memory>
+
+#if USE_LIBTESS
+#include "tesselator.h"
+#else
+#include "earcut.hpp/include/earcut.hpp"
+
+namespace mapbox { namespace util {
+template <>
+struct nth<0, Tangram::Point> {
+    inline static float get(const Tangram::Point &t) {
+        return t.x;
+    };
+};
+template <>
+struct nth<1, Tangram::Point> {
+    inline static float get(const Tangram::Point &t) {
+        return t.y;
+    };
+};
+}}
+
+#endif
+
+namespace Tangram {
+
+CapTypes CapTypeFromString(const std::string& str) {
+    if (str == "square") { return CapTypes::square; }
+    if (str == "round") { return CapTypes::round; }
+    return CapTypes::butt;
+}
+
+JoinTypes JoinTypeFromString(const std::string& str) {
+    if (str == "bevel") { return JoinTypes::bevel; }
+    if (str == "round") { return JoinTypes::round; }
+    return JoinTypes::miter;
+}
+
+#if USE_LIBTESS
 
 void* alloc(void* _userData, unsigned int _size) {
     return malloc(_size);
@@ -19,8 +56,6 @@ void free(void* _userData, void* _ptr) {
     free(_ptr);
 }
 
-namespace Tangram {
-
 static TESSalloc allocator = {&alloc, &realloc, &free, nullptr,
                               64, // meshEdgeBucketSize
                               64, // meshVertexBucketSize
@@ -29,18 +64,6 @@ static TESSalloc allocator = {&alloc, &realloc, &free, nullptr,
                               16,  // regionBucketSize
                               64  // extraVertices
                              };
-
-CapTypes CapTypeFromString(const std::string& str) {
-    if (str == "square") { return CapTypes::square; }
-    if (str == "round") { return CapTypes::round; }
-    return CapTypes::butt;
-}
-
-JoinTypes JoinTypeFromString(const std::string& str) {
-    if (str == "bevel") { return JoinTypes::bevel; }
-    if (str == "round") { return JoinTypes::round; }
-    return JoinTypes::miter;
-}
 
 void Builders::buildPolygon(const Polygon& _polygon, float _height, PolygonBuilder& _ctx) {
 
@@ -65,7 +88,7 @@ void Builders::buildPolygon(const Polygon& _polygon, float _height, PolygonBuild
     // call the tesselator
     glm::vec3 normal(0.0, 0.0, 1.0);
 
-    if ( tessTesselate(tesselator, TessWindingRule::TESS_WINDING_NONZERO, TessElementType::TESS_POLYGONS, 3, 3, &normal[0]) ) {
+    if (tessTesselate(tesselator, TessWindingRule::TESS_WINDING_NONZERO, TessElementType::TESS_POLYGONS, 3, 3, &normal[0])) {
 
         const int numElements = tessGetElementCount(tesselator);
         const TESSindex* tessElements = tessGetElements(tesselator);
@@ -84,12 +107,12 @@ void Builders::buildPolygon(const Polygon& _polygon, float _height, PolygonBuild
         _ctx.sizeHint(_ctx.numVertices);
 
         for (int i = 0; i < numVertices; i++) {
-            glm::vec3 coord(tessVertices[3*i], tessVertices[3*i+1], tessVertices[3*i+2] + _height);
+            glm::vec3 coord(tessVertices[3*i], tessVertices[3*i+1], _height);
             glm::vec2 uv(0);
 
             if (_ctx.useTexCoords) {
-                float u = mapValue(tessVertices[3*i], bbox.m_min.x, bbox.m_max.x, 0., 1.);
-                float v = mapValue(tessVertices[3*i+1], bbox.m_min.y, bbox.m_max.y, 0., 1.);
+                float u = mapValue(coord.x, bbox.m_min.x, bbox.m_max.x, 0., 1.);
+                float v = mapValue(coord.y, bbox.m_min.y, bbox.m_max.y, 0., 1.);
                 uv = glm::vec2(u, v);
             }
             _ctx.addVertex(coord, normal, uv);
@@ -101,8 +124,55 @@ void Builders::buildPolygon(const Polygon& _polygon, float _height, PolygonBuild
     tessDeleteTess(tesselator);
 }
 
+#else
+
+
+void Builders::buildPolygon(const Polygon& _polygon, float _height, PolygonBuilder& _ctx) {
+
+    mapbox::Earcut<float, uint16_t> earcut;
+
+    earcut(_polygon);
+
+    _ctx.indices = std::move(earcut.indices);
+
+    isect2d::AABB bbox;
+
+    if (_ctx.useTexCoords) {
+        if (_polygon.size() > 0 && _polygon[0].size() > 0) {
+            // initialize the axis-aligned bounding box of the polygon
+            bbox = isect2d::AABB(_polygon[0][0].x, _polygon[0][0].y, 0, 0);
+        }
+        for (auto& line : _polygon) {
+            for (auto& p : line) {
+                bbox.include(p.x, p.y);
+            }
+        }
+    }
+
+    // call the tesselator
+    glm::vec3 normal(0.0, 0.0, 1.0);
+
+    _ctx.numVertices += earcut.vertices.size();
+    _ctx.sizeHint(_ctx.numVertices);
+
+    for (auto& p : earcut.vertices) {
+        glm::vec2 uv(0);
+        glm::vec3 coord(p[0], p[1], _height);
+
+        if (_ctx.useTexCoords) {
+            float u = mapValue(coord.x, bbox.m_min.x, bbox.m_max.x, 0., 1.);
+            float v = mapValue(coord.y, bbox.m_min.y, bbox.m_max.y, 0., 1.);
+            uv = glm::vec2(u, v);
+        }
+        _ctx.addVertex(coord, normal, uv);
+    }
+}
+
+
+#endif
+
 void Builders::buildPolygonExtrusion(const Polygon& _polygon, float _minHeight, float _maxHeight, PolygonBuilder& _ctx) {
-    
+
     int vertexDataOffset = (int)_ctx.numVertices;
 
     glm::vec3 upVector(0.0f, 0.0f, 1.0f);
@@ -111,31 +181,34 @@ void Builders::buildPolygonExtrusion(const Polygon& _polygon, float _minHeight, 
     for (auto& line : _polygon) {
 
         size_t lineSize = line.size();
-        _ctx.indices.reserve(_ctx.indices.size() + lineSize * 6); // Pre-allocate index vector
+        _ctx.indices.reserve(_ctx.indices.size() + lineSize * 6);
 
         _ctx.numVertices += (lineSize - 1) * 4;
         _ctx.sizeHint(_ctx.numVertices);
 
         for (size_t i = 0; i < lineSize - 1; i++) {
 
-            normalVector = glm::cross(upVector, (line[i+1] - line[i]));
+            glm::vec3 a(line[i]);
+            glm::vec3 b(line[i+1]);
+
+            normalVector = glm::cross(upVector, b - a);
             normalVector = glm::normalize(normalVector);
 
             // 1st vertex top
-            _ctx.addVertex(glm::vec3(line[i].x, line[i].y, _maxHeight),
-                           normalVector, glm::vec2(1.,0.));
+            a.z = _maxHeight;
+            _ctx.addVertex(a, normalVector, glm::vec2(1.,0.));
 
             // 2nd vertex top
-            _ctx.addVertex(glm::vec3(line[i+1].x, line[i+1].y, _maxHeight),
-                           normalVector, glm::vec2(0.,0.));
+            b.z = _maxHeight;
+            _ctx.addVertex(b, normalVector, glm::vec2(0.,0.));
 
             // 1st vertex bottom
-            _ctx.addVertex(glm::vec3(line[i].x, line[i].y, _minHeight),
-                           normalVector, glm::vec2(1.,1.));
+            a.z = _minHeight;
+            _ctx.addVertex(a, normalVector, glm::vec2(1.,1.));
 
             // 2nd vertex bottom
-            _ctx.addVertex(glm::vec3(line[i+1].x, line[i+1].y, _minHeight),
-                           normalVector, glm::vec2(0.,1.));
+            b.z = _minHeight;
+            _ctx.addVertex(b, normalVector, glm::vec2(0.,1.));
 
             // Start the index from the previous state of the vertex Data
             _ctx.indices.push_back(vertexDataOffset);

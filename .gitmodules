@@ -27,3 +27,6 @@
 [submodule "core/include/variant"]
 	path = core/include/variant
 	url = https://github.com/mapbox/variant
+[submodule "core/include/earcut.hpp"]
+	path = core/include/earcut.hpp
+	url = https://github.com/tangrams/earcut.hpp
