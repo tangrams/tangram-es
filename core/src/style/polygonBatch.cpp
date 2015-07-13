@@ -7,20 +7,7 @@
 
 
 PolygonBatch::PolygonBatch(const PolygonStyle& _style)
-    : m_style(_style) {
-    m_mesh = std::make_shared<Mesh>(_style.m_vertexLayout, _style.m_drawMode);
-}
-
-bool PolygonBatch::compile() {
-    if (m_mesh->numVertices() > 0) {
-        m_mesh->compileVertexBuffer();
-        return true;
-    }
-    return false;
-}
-
-void PolygonBatch::draw(const View& _view) {
-    m_mesh->draw(m_style.getShaderProgram());
+    : MeshBatch(_style, std::make_shared<Mesh>(_style.m_vertexLayout, _style.m_drawMode)) {
 }
 
 void PolygonBatch::add(const Feature& _feature, const StyleParamMap& _styleParams, const MapTile& _tile) {

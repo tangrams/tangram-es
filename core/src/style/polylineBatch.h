@@ -7,40 +7,35 @@
 #include "gl.h"
 #include "tileData.h"
 #include "util/typedMesh.h"
+#include "style/meshBatch.h"
 
 class PolylineStyle;
 
-class PolylineBatch : public StyleBatch {
+struct PosNormEnormColVertex {
+    //Position Data
+    glm::vec3 pos;
+    // UV Data
+    glm::vec2 texcoord;
+    // Extrude Normals Data
+    glm::vec2 enorm;
+    GLfloat ewidth;
+    // Color Data
+    GLuint abgr;
+    // Layer Data
+    GLfloat layer;
+};
 
-    struct PosNormEnormColVertex {
-        //Position Data
-        glm::vec3 pos;
-        // UV Data
-        glm::vec2 texcoord;
-        // Extrude Normals Data
-        glm::vec2 enorm;
-        GLfloat ewidth;
-        // Color Data
-        GLuint abgr;
-        // Layer Data
-        GLfloat layer;
-    };
+using Mesh = TypedMesh<PosNormEnormColVertex>;
 
-    using Mesh = TypedMesh<PosNormEnormColVertex>;
+class PolylineBatch : public MeshBatch<PolylineStyle, Mesh> {
 
 public:
-    PolylineBatch(const PolylineStyle& _style);
 
-    virtual void draw(const View& _view) override;
-    virtual void update(const glm::mat4& mvp, const View& _view, float _dt) override {};
-    virtual void prepare() override {};
-    virtual bool compile();
+    PolylineBatch(const PolylineStyle& _style);
 
     virtual void add(const Feature& _feature, const StyleParamMap& _params, const MapTile& _tile) override;
 
 private:
-    void buildLine(const Line& _line, const Properties& _props, const PolylineStyle::StyleParams& _params, const MapTile& _tile);
 
-    std::shared_ptr<Mesh> m_mesh;
-    const PolylineStyle& m_style;
+    void buildLine(const Line& _line, const Properties& _props, const PolylineStyle::StyleParams& _params, const MapTile& _tile);
 };
