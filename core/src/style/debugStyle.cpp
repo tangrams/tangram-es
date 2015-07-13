@@ -3,6 +3,7 @@
 #include "tangram.h"
 #include "tile/mapTile.h"
 #include "util/shaderProgram.h"
+#include "style/meshBatch.h"
 
 #include <vector>
 #include <memory>
@@ -29,11 +30,11 @@ void DebugStyle::constructShaderProgram() {
 
 }
 
+
 void DebugStyle::addData(TileData &_data, MapTile &_tile) {
-#if 0
     if (Tangram::getDebugFlag(Tangram::DebugFlags::tile_bounds)) {
 
-        Mesh* mesh = new Mesh(m_vertexLayout, m_drawMode);
+        auto mesh = std::make_shared<Mesh>(m_vertexLayout, m_drawMode);
 
         // Add four vertices to draw the outline of the tile in red
 
@@ -50,8 +51,9 @@ void DebugStyle::addData(TileData &_data, MapTile &_tile) {
         mesh->addVertices(std::move(vertices), { 0, 1, 2, 3, 0 });
         mesh->compileVertexBuffer();
 
-        _tile.addBatch(*this, std::unique_ptr<VboMesh>(mesh));
+        auto batch = std::unique_ptr<MeshBatch<DebugStyle, Mesh>>(new MeshBatch<DebugStyle, Mesh>(*this, mesh));
+
+        _tile.addBatch(*this, std::move(batch));
 
     }
-#endif
 }
