@@ -94,10 +94,13 @@ void PolygonStyle::buildPolygon(const Polygon& _polygon, const DrawRule& _rule, 
     };
 
     if (extrude.first != 0.0f || extrude.second != 0.0f) {
-        float ht = std::isnan(extrude.second) ? ( std::isnan(extrude.first) ? height : extrude.first ) : extrude.second;
+        float ht = std::isnan(extrude.second)
+            ? ( std::isnan(extrude.first) ? height : extrude.first )
+            : extrude.second;
+
         float minHt = std::isnan(extrude.second) ? minHeight : extrude.first;
-        Builders::buildPolygonExtrusion(_polygon, minHt, ht, builder);
         Builders::buildPolygon(_polygon, ht, builder);
+        Builders::buildPolygonExtrusion(_polygon, minHt, ht, builder);
     } else {
         Builders::buildPolygon(_polygon, 0.0f, builder);
     }
