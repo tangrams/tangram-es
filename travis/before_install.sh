@@ -24,9 +24,9 @@ if [[ ${PLATFORM} == "linux" ]]; then
     sudo apt-get update -qq
 
     #Install a c++11 compatible compiler
-    sudo apt-get install -y -qq gcc-4.8 g++-4.8
-    export CXX=g++-4.8
-    export CC=gcc-4.8
+    sudo apt-get install -y -qq gcc-4.9 g++-4.9
+    export CXX=g++-4.9
+    export CC=gcc-4.9
 
     #Install X11, OpenGL, and CMake for GLFW
     sudo apt-get install -y -qq xorg-dev libglu1-mesa-dev cmake

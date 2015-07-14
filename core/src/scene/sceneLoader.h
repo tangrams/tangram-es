@@ -1,6 +1,8 @@
 #pragma once
 
 #include <string>
+#include <vector>
+#include <memory>
 #include "style/styleParamMap.h"
 
 class Scene;
@@ -17,6 +19,7 @@ namespace YAML {
 
 namespace Tangram {
     struct Filter;
+    class SceneLayer;
 }
 
 class SceneLoader {
@@ -25,6 +28,7 @@ class SceneLoader {
     void loadLights(YAML::Node lights, Scene& scene);
     void loadCameras(YAML::Node cameras, View& view);
     void loadLayers(YAML::Node layers, Scene& scene, TileManager& tileManager);
+    void loadSublayers(YAML::Node layer, std::vector<std::shared_ptr<Tangram::SceneLayer>>& subLayers);
     void parseStyleProps(YAML::Node styleProps, StyleParamMap& paramMap, const std::string& propPrefix = "");
     void loadStyles(YAML::Node styles, Scene& scene);
     void loadTextures(YAML::Node textures, Scene& scene);
