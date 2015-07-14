@@ -15,13 +15,14 @@ precision mediump float;
 
 uniform sampler2D u_tex;
 uniform LOWP vec3 u_color;
+uniform float u_sdf;
 
 varying vec2 v_uv;
 varying float v_alpha;
 
 const float gamma = 2.2;
 const float tint = 1.8;
-const float sdf = 0.8;
+//const float sdf = 0.8;
 
 float contour(in float d, in float w, in float off) {
     return smoothstep(off - w, off + w, d);
@@ -52,7 +53,7 @@ float sampleAlpha(in vec2 uv, float distance, in float off) {
 
 void main(void) {
     float distance = texture2D(u_tex, v_uv).a;
-    float alpha = sampleAlpha(v_uv, distance, sdf) * tint;
+    float alpha = sampleAlpha(v_uv, distance, u_sdf) * tint;
     alpha = pow(alpha, 1.0 / gamma);
 
     gl_FragColor = vec4(u_color, v_alpha * alpha);
