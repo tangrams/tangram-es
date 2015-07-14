@@ -12,12 +12,14 @@ namespace RenderState {
         void init(const typename T::Type& _default) {
             T::set(_default);
         }
-        inline void operator=(const typename T::Type& _value) {
+        
+        inline void operator()(const typename T::Type& _value) {
             if (m_current != _value) {
                 m_current = _value;
                 T::set(m_current);
             }
         }
+        
     private:
         typename T::Type m_current;
     };

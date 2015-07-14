@@ -175,7 +175,7 @@ void TextStyle::onBeginDrawFrame(const std::shared_ptr<View>& _view, const std::
     m_shaderProgram->setUniformf("u_color", r, g, b);
     m_shaderProgram->setUniformMatrix4f("u_proj", projectionMatrix);
 
-    RenderState::blending = GL_TRUE;
-    RenderState::blendingFunc = {GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA};
-    RenderState::depthTest = GL_FALSE;
+    RenderState::blending(GL_TRUE);
+    RenderState::blendingFunc({GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA});
+    RenderState::depthTest(GL_FALSE);
 }

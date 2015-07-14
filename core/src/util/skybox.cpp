@@ -57,8 +57,8 @@ void Skybox::draw(const View& _view) {
     m_shader->setUniformMatrix4f("u_modelViewProj", glm::value_ptr(vp));
     m_shader->setUniformi("u_tex", 0);
     
-    RenderState::blending = GL_FALSE;
-    RenderState::depthTest = GL_TRUE;
+    RenderState::blending(GL_FALSE);
+    RenderState::depthTest(GL_TRUE);
 
     m_mesh->draw(m_shader);
 
