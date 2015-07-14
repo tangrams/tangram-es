@@ -6,7 +6,7 @@ matrix:
           env: PLATFORM=osx
           compiler: clang
         - os: linux
-          env: PLATFORM=linux CXX=g++-4.8 CC=gcc-4.8
+          env: PLATFORM=linux CXX=g++-4.9 CC=gcc-4.9
           addons:
             apt:
               sources: [ 'kalakris-cmake', 'ubuntu-toolchain-r-test' ]
