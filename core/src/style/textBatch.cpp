@@ -28,6 +28,7 @@ int TextBatch::getVerticesSize() {
     auto ctx = m_fontContext->bindScoped(m_fsBuffer);
     return glfonsVerticesSize(ctx.get());
 }
+
 fsuint TextBatch::genTextID() {
     fsuint id;
     auto ctx = m_fontContext->bindScoped(m_fsBuffer);
@@ -65,26 +66,6 @@ glm::vec4 TextBatch::getBBox(fsuint _textID) {
     glfonsGetBBox(ctx.get(), _textID, &bbox.x, &bbox.y, &bbox.z, &bbox.w);
 
     return bbox;
-}
-
-void TextBatch::addBufferVerticesToMesh() {
-    std::vector<BufferVert> vertices;
-    int bufferSize = getVerticesSize();
-
-    if (bufferSize == 0) {
-        return;
-    }
-
-    vertices.resize(bufferSize);
-
-    bool res;
-    {
-        auto ctx = m_fontContext->bindScoped(m_fsBuffer);
-        res = glfonsVertices(ctx.get(), reinterpret_cast<float*>(vertices.data()));
-    }
-    if (res) {
-        m_mesh->addVertices(std::move(vertices), {});
-    }
 }
 
 void TextBatch::draw(const View& _view) {
@@ -204,10 +185,29 @@ void TextBatch::buildPolygon(const Polygon& _polygon, const Properties& _props, 
     }
 }
 
-void TextBatch::onBeginBuildTile() {
-    //init();
-}
+bool TextBatch::compile() {
 
-void TextBatch::onEndBuildTile() {
-    addBufferVerticesToMesh();
-}
+    std::vector<BufferVert> vertices;
+    int bufferSize = getVerticesSize();
+
+    if (bufferSize == 0) {
+        return false;
+    }
+    vertices.resize(bufferSize);
+
+    /* get the vertices from the font context and add them as vbo mesh data */
+    bool res;
+    {
+        auto ctx = m_fontContext->bindScoped(m_fsBuffer);
+        res = glfonsVertices(ctx.get(), reinterpret_cast<float*>(vertices.data()));
+    }
+    if (res) {
+        m_mesh->addVertices(std::move(vertices), {});
+    }
+
+    if (m_mesh->numVertices() > 0) {
+        m_mesh->compileVertexBuffer();
+        return true;
+    }
+    return false;
+};

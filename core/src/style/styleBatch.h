@@ -28,11 +28,5 @@ public:
     /* Add <Feature> to this <Batch> and apply styling for rendering */
     virtual void add(const Feature& _feature, const StyleParamMap& _params, const MapTile& _tile) = 0;
 
-    /* Perform any needed setup to process the data for a tile */
-    virtual void onBeginBuildTile() {};
-
-    /* Perform any needed teardown after processing data for a tile */
-    virtual void onEndBuildTile() {};
-
     virtual bool compile() = 0;
 };
