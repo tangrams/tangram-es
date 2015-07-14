@@ -67,26 +67,6 @@ glm::vec4 TextBatch::getBBox(fsuint _textID) {
     return bbox;
 }
 
-void TextBatch::draw(const View& _view) {
-    m_mesh->draw(m_style.getShaderProgram());
-};
-
-
-void TextBatch::update(const glm::mat4& mvp, const View& _view, float _dt) {
-    glm::vec2 screenSize = glm::vec2(_view.getWidth(), _view.getHeight());
-    for (auto& label : m_labels) {
-        label->update(mvp, screenSize, _dt);
-    }
-}
-
-void TextBatch::prepare() {
-    for(auto& label : m_labels) {
-        label->pushTransform(*this);
-    }
-    pushBuffer();
-}
-
-
 void TextBatch::add(const Feature& _feature, const StyleParamMap& _params, const MapTile& _tile) {
 
     switch (_feature.geometryType) {
@@ -198,3 +178,37 @@ bool TextBatch::compile() {
     }
     return false;
 };
+
+
+void TextBatch::draw(const View& _view) {
+    auto shader =  m_style.getShaderProgram();
+
+    shader->setUniformf("u_color", 0.2, 0.2, 0.2);
+    shader->setUniformf("u_sdf", 0.3);
+
+    m_mesh->draw(shader);
+
+    float r = (m_style.m_color >> 16 & 0xff) / 255.0;
+    float g = (m_style.m_color >> 8  & 0xff) / 255.0;
+    float b = (m_style.m_color       & 0xff) / 255.0;
+
+    shader->setUniformf("u_color", r, g, b);
+    shader->setUniformf("u_sdf", 0.8);
+
+    m_mesh->draw(shader);
+};
+
+
+void TextBatch::update(const glm::mat4& mvp, const View& _view, float _dt) {
+    glm::vec2 screenSize = glm::vec2(_view.getWidth(), _view.getHeight());
+    for (auto& label : m_labels) {
+        label->update(mvp, screenSize, _dt);
+    }
+}
+
+void TextBatch::prepare() {
+    for(auto& label : m_labels) {
+        label->pushTransform(*this);
+    }
+    pushBuffer();
+}
