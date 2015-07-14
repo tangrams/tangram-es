@@ -101,7 +101,10 @@ void Style::applyLayerFiltering(const Feature& _feature, const Context& _ctx, st
 
             if(s_styleParamMapCache.find(_uniqueID) != s_styleParamMapCache.end()) {
 
-                _styleParamMapMix = s_styleParamMapCache.at(_uniqueID);
+                {
+                    std::lock_guard<std::mutex> lock(s_cacheMutex);
+                    _styleParamMapMix = s_styleParamMapCache.at(_uniqueID);
+                }
 
             } else {
 
