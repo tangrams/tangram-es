@@ -1,6 +1,7 @@
 #include "style.h"
 
 #include "scene/scene.h"
+#include "scene/sceneLayer.h"
 #include "scene/light.h"
 #include "tile/mapTile.h"
 #include "util/vboMesh.h"
@@ -10,10 +11,16 @@
 
 #include <sstream>
 
+std::unordered_map<std::bitset<MAX_LAYERS>, StyleParamMap> Style::s_styleParamMapCache;
+std::mutex Style::s_cacheMutex;
+
+using namespace Tangram;
+
 Style::Style(std::string _name, GLenum _drawMode) : m_name(_name), m_drawMode(_drawMode) {
 }
 
 Style::~Style() {
+    m_layers.clear();
 }
 
 uint32_t Style::parseColorProp(const std::string& _colorPropStr) {
@@ -68,10 +75,58 @@ void Style::setLightingType(LightingType _type){
 
 }
 
-void Style::addLayer(const std::pair<std::string, StyleParamMap>&& _layer) {
+void Style::addLayer(std::shared_ptr<SceneLayer> _layer) {
 
     m_layers.push_back(std::move(_layer));
 
+}
+
+void Style::applyLayerFiltering(const Feature& _feature, const Context& _ctx, std::bitset<MAX_LAYERS>& _uniqueID,
+                                   StyleParamMap& _styleParamMapMix, std::shared_ptr<SceneLayer> _uberLayer) const {
+
+    std::vector<std::shared_ptr<SceneLayer>> sLayers;
+    sLayers.reserve(_uberLayer->getSublayers().size() + 1);
+    sLayers.push_back(_uberLayer);
+
+    auto sLayerItr = sLayers.begin();
+
+    //A BFS traversal of the SceneLayer graph
+    while (sLayerItr != sLayers.end()) {
+
+        auto sceneLyr = *sLayerItr;
+
+        if ( sceneLyr->getFilter()->eval(_feature, _ctx)) { // filter matches
+
+            _uniqueID.set(sceneLyr->getID());
+
+            if(s_styleParamMapCache.find(_uniqueID) != s_styleParamMapCache.end()) {
+
+                {
+                    std::lock_guard<std::mutex> lock(s_cacheMutex);
+                    _styleParamMapMix = s_styleParamMapCache.at(_uniqueID);
+                }
+
+            } else {
+
+                /* update StyleParam with subLayer parameters */
+                auto& layerStyleParamMap = sceneLyr->getStyleParamMap();
+                for(auto& styleParam : layerStyleParamMap) {
+                    _styleParamMapMix[styleParam.first] = styleParam.second;
+                }
+
+                {
+                    std::lock_guard<std::mutex> lock(s_cacheMutex);
+                    s_styleParamMapCache.emplace(_uniqueID, _styleParamMapMix);
+                }
+            }
+
+            /* append sLayers with sublayers of this layer */
+            auto& ssLayers = sceneLyr->getSublayers();
+            sLayerItr = sLayers.insert(sLayers.end(), ssLayers.begin(), ssLayers.end());
+        } else {
+            sLayerItr++;
+        }
+    }
 }
 
 void Style::addData(TileData& _data, MapTile& _tile) {
@@ -79,46 +134,48 @@ void Style::addData(TileData& _data, MapTile& _tile) {
 
     std::shared_ptr<VboMesh> mesh(newMesh());
 
+    Context ctx;
+    ctx["$zoom"] = new NumValue(_tile.getID().z);
+
     for (auto& layer : _data.layers) {
 
         // Skip any layers that this style doesn't have a rule for
         auto it = m_layers.begin();
-        while (it != m_layers.end() && it->first != layer.name) { ++it; }
+        while (it != m_layers.end() && (*it)->getName() != layer.name) { ++it; }
         if (it == m_layers.end()) { continue; }
 
         // Loop over all features
         for (auto& feature : layer.features) {
 
-            /*
-             * TODO: do filter evaluation for each feature for sublayer!
-             *     construct a unique ID for a the set of filters matched
-             *     use this ID pass to the style's parseStyleParams method to construct styleParam cache
-             *     NOTE: for the time being use layerName as ID for cache
-             */
+            std::bitset<MAX_LAYERS> uniqueID(0);
+            StyleParamMap styleParamMapMix;
+            applyLayerFiltering(feature, ctx, uniqueID, styleParamMapMix, (*it));
 
-            feature.props.numericProps["zoom"] = _tile.getID().z;
+            if(uniqueID.any()) { // if a layer matched then uniqueID should be > 0
+                feature.props.numericProps["zoom"] = _tile.getID().z;
 
-            switch (feature.geometryType) {
-                case GeometryType::points:
-                    // Build points
-                    for (auto& point : feature.points) {
-                        buildPoint(point, parseStyleParams(it->first, it->second), feature.props, *mesh);
-                    }
-                    break;
-                case GeometryType::lines:
-                    // Build lines
-                    for (auto& line : feature.lines) {
-                        buildLine(line, parseStyleParams(it->first, it->second), feature.props, *mesh);
-                    }
-                    break;
-                case GeometryType::polygons:
-                    // Build polygons
-                    for (auto& polygon : feature.polygons) {
-                        buildPolygon(polygon, parseStyleParams(it->first, it->second), feature.props, *mesh);
-                    }
-                    break;
-                default:
-                    break;
+                switch (feature.geometryType) {
+                    case GeometryType::points:
+                        // Build points
+                        for (auto& point : feature.points) {
+                            buildPoint(point, styleParamMapMix, feature.props, *mesh);
+                        }
+                        break;
+                    case GeometryType::lines:
+                        // Build lines
+                        for (auto& line : feature.lines) {
+                            buildLine(line, styleParamMapMix, feature.props, *mesh);
+                        }
+                        break;
+                    case GeometryType::polygons:
+                        // Build polygons
+                        for (auto& polygon : feature.polygons) {
+                            buildPolygon(polygon, styleParamMapMix, feature.props, *mesh);
+                        }
+                        break;
+                    default:
+                        break;
+                }
             }
         }
     }

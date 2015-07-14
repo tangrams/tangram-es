@@ -98,22 +98,18 @@ public:
      *  Arguments:
      *    _tileCoord: glm::ivec3 (x,y and zoom)
      *  Return value:
-     *    bounds in projection-meters (glm::dvec4)
-     *       x,y : min bounds in projection meters
-     *       z,w : max bounds in projection meters
+     *    bounds in projection-meters (BoundingBox)
      */
-    virtual glm::dvec4 TileBounds(const TileID _tileCoord) const = 0;
+    virtual BoundingBox TileBounds(const TileID _tileCoord) const = 0;
     
     /* 
      * bounds of space in lon lat
      *  Arguments:
      *    _tileCoord: glm::ivec3 (x,y and zoom)
      *  Return value:
-     *    bounds in lon lat (glm::dvec4)
-     *       x,y: min bounds in lon lat
-     *       z,w: max bounds in lon lat
+     *    bounds in lon lat (BoundingBox)
      */
-    virtual glm::dvec4 TileLonLatBounds(const TileID _tileCoord) const = 0;
+    virtual BoundingBox TileLonLatBounds(const TileID _tileCoord) const = 0;
 
     /* 
      * Returns center of the given tile
@@ -154,8 +150,8 @@ public:
     virtual glm::ivec2 PixelsToTileXY(const glm::dvec2 _pix) const override;
     virtual glm::ivec2 MetersToTileXY(const glm::dvec2 _meters, const int _zoom) const override;
     virtual glm::dvec2 PixelsToRaster(const glm::dvec2 _pix, const int _zoom) const override;
-    virtual glm::dvec4 TileBounds(const TileID _tileCoord) const override;
-    virtual glm::dvec4 TileLonLatBounds(const TileID _tileCoord) const override;
+    virtual BoundingBox TileBounds(const TileID _tileCoord) const override;
+    virtual BoundingBox TileLonLatBounds(const TileID _tileCoord) const override;
     virtual glm::dvec2 TileCenter(const TileID _tileCoord) const override;
     virtual ~MercatorProjection() {}
 };

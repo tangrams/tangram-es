@@ -3,16 +3,15 @@
 set -e
 set -o pipefail
 
-if [[ ${PLATFORM} == "osx" ]]; then
+if [[ ${PLATFORM} == "osx" || ${PLATFORM} == "linux" ]]; then
     # Run unit tests
     echo "Running Unit Tests"
-    for file in ./build/tests/unit/bin/*
-        do
-            if [ ${file: -4} == ".out" ]
-                then
-                    echo "Running ${file}"
-                    $file
-            fi
-        done
-fi
+    pushd ./build/tests/unit/bin
 
+    for file in *.out
+        do
+            echo "Running ${file}"
+            ./$file
+        done
+    popd
+fi

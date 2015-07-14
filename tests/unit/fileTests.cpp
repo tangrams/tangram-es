@@ -12,7 +12,7 @@ TEST_CASE( "Compare byte size of allocated resource to os file size", "[Core][by
 
     // ask os for size
     struct stat st;
-    stat("core/resources/shaders/polygon.fs", &st);
+    stat("polygon.fs", &st);
     unsigned int sys_size = st.st_size;
 
     REQUIRE(sys_size == size);

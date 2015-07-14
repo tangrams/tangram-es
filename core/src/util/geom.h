@@ -52,6 +52,16 @@
 #define ABS(x) (((x) < 0) ? -(x) : (x))
 #endif
 
+struct BoundingBox {
+
+    glm::dvec2 min;
+    glm::dvec2 max;
+
+    double width() const { return glm::abs(max.x - min.x); }
+    double height() const { return glm::abs(max.y - min.y); }
+    glm::dvec2 center() const { return 0.5 * (min + max); }
+};
+
 /* Returns 1 for positive values, -1 for negative values and 0 otherwise.
  * Ex: signValue(-2) == -1
  */
