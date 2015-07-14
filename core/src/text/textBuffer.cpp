@@ -3,7 +3,7 @@
 
 TextBuffer::TextBuffer(std::shared_ptr<FontContext> _fontContext, std::shared_ptr<VertexLayout> _vertexLayout)
     : TypedMesh<BufferVert>(_vertexLayout, GL_TRIANGLES, GL_DYNAMIC_DRAW) {
-        
+
     m_dirtyTransform = false;
     m_fontContext = _fontContext;
     m_bound = false;
@@ -16,7 +16,9 @@ void TextBuffer::init() {
 }
 
 TextBuffer::~TextBuffer() {
+    m_fontContext->lock();
     glfonsBufferDelete(m_fontContext->getFontContext(), m_fsBuffer);
+    m_fontContext->unlock();
 }
 
 int TextBuffer::getVerticesSize() {
@@ -33,7 +35,7 @@ fsuint TextBuffer::genTextID() {
     unbind();
     return id;
 }
-    
+
 bool TextBuffer::rasterize(const std::string& _text, fsuint _id) {
     bind();
     int status = glfonsRasterize(m_fontContext->getFontContext(), _id, _text.c_str());
@@ -68,17 +70,17 @@ glm::vec4 TextBuffer::getBBox(fsuint _textID) {
 void TextBuffer::addBufferVerticesToMesh() {
     std::vector<BufferVert> vertices;
     int bufferSize = getVerticesSize();
-    
+
     if (bufferSize == 0) {
         return;
     }
-    
+
     vertices.resize(bufferSize);
-    
+
     bind();
     bool res = glfonsVertices(m_fontContext->getFontContext(), reinterpret_cast<float*>(vertices.data()));
     unbind();
-    
+
     if (res) {
         addVertices(std::move(vertices), {});
     }
