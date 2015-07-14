@@ -10,11 +10,22 @@ class MapTile;
 
 class StyleBatch {
 public:
-    virtual void draw(const View& _view) = 0;
-    virtual void update(const glm::mat4& mvp, const View& _view, float _dt) = 0;
-    virtual void prepare() = 0;
-    virtual bool compile() = 0;
 
+    /*** Methods called on render thread ***/
+
+    /* Draw Batch */
+    virtual void draw(const View& _view) = 0;
+
+    /* Update state of Batch objects for the current View */
+    virtual void update(const glm::mat4& mvp, const View& _view, float _dt) = 0;
+
+    /* Prepare updated data for rendering */
+    virtual void prepare() = 0;
+
+
+    /*** Methods called on TileWorker during creation ***/
+
+    /* Add <Feature> to this <Batch> and apply styling for rendering */
     virtual void add(const Feature& _feature, const StyleParamMap& _params, const MapTile& _tile) = 0;
 
     /* Perform any needed setup to process the data for a tile */
@@ -22,4 +33,6 @@ public:
 
     /* Perform any needed teardown after processing data for a tile */
     virtual void onEndBuildTile() {};
+
+    virtual bool compile() = 0;
 };
