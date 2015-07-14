@@ -1,16 +1,16 @@
-#ifdef GL_ES
-precision mediump float;
-#define LOWP lowp
-#else
-#define LOWP
-#endif
-
 #ifdef TANGRAM_SDF_MULTISAMPLING
     #ifdef GL_OES_standard_derivatives
         #extension GL_OES_standard_derivatives : enable
     #else
         #undef TANGRAM_SDF_MULTISAMPLING
     #endif
+#endif
+
+#ifdef GL_ES
+precision mediump float;
+#define LOWP lowp
+#else
+#define LOWP
 #endif
 
 uniform sampler2D u_tex;
