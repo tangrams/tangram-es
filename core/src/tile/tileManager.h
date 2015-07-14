@@ -2,7 +2,7 @@
 
 #include "data/tileData.h"
 #include "tile/tileWorker.h"
-#include "util/tileID.h"
+#include "tile/tileID.h"
 #include "tileTask.h"
 
 #include <map>
@@ -14,13 +14,13 @@
 #include <mutex>
 
 class DataSource;
-class MapTile;
+class Tile;
 class Scene;
 class View;
 
-/* Singleton container of <MapTile>s
+/* Singleton container of <Tile>s
  *
- * TileManager is a singleton that maintains a set of MapTiles based on the current view into the map
+ * TileManager is a singleton that maintains a set of Tiles based on the current view into the map
  */
 class TileManager {
 
@@ -58,7 +58,7 @@ public:
     void tileProcessed(std::shared_ptr<TileTask>&& task);
 
     /* Returns the set of currently visible tiles */
-    const std::map<TileID, std::shared_ptr<MapTile>>& getVisibleTiles() { return m_tileSet; }
+    const std::map<TileID, std::shared_ptr<Tile>>& getVisibleTiles() { return m_tileSet; }
 
     bool hasTileSetChanged() { return m_tileSetChanged; }
 
@@ -78,7 +78,7 @@ private:
 
     // TODO: Might get away with using a vector of pairs here (and for searching
     // using std:search (binary search))
-    std::map<TileID, std::shared_ptr<MapTile>> m_tileSet;
+    std::map<TileID, std::shared_ptr<Tile>> m_tileSet;
 
     std::vector<std::unique_ptr<DataSource>> m_dataSources;
 
@@ -98,27 +98,27 @@ private:
     /*
      * Constructs a future (async) to load data of a new visible tile
      *      this is also responsible for loading proxy tiles for the newly visible tiles
-     * @_tileID: TileID for which new MapTile needs to be constructed
+     * @_tileID: TileID for which new Tile needs to be constructed
      */
     void addTile(const TileID& _tileID);
 
     /*
      * Removes a tile from m_tileSet
      */
-    void removeTile(std::map<TileID, std::shared_ptr<MapTile>>::iterator& _tileIter);
+    void removeTile(std::map<TileID, std::shared_ptr<Tile>>::iterator& _tileIter);
 
     /*
      * Checks and updates m_tileSet with proxy tiles for every new visible tile
-     *  @_tile: MapTile, the new visible tile for which proxies needs to be added
+     *  @_tile: Tile, the new visible tile for which proxies needs to be added
      */
-    void updateProxyTiles(MapTile& _tile);
+    void updateProxyTiles(Tile& _tile);
 
     /*
-     *  Once a visible tile finishes loading and is added to m_tileSet, all its proxy(ies) MapTiles are removed
+     *  Once a visible tile finishes loading and is added to m_tileSet, all its proxy(ies) Tiles are removed
      */
-    void clearProxyTiles(MapTile& _tile);
+    void clearProxyTiles(Tile& _tile);
 
-    bool setTileState(MapTile& tile, TileState state);
+    bool setTileState(Tile& tile, TileState state);
 
     void enqueueLoadTask(const TileID& tileID, const glm::dvec2& viewCenter);
 };

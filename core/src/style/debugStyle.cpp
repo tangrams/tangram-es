@@ -1,8 +1,8 @@
 #include "debugStyle.h"
 
 #include "tangram.h"
-#include "tile/mapTile.h"
-#include "util/shaderProgram.h"
+#include "tile/tile.h"
+#include "gl/shaderProgram.h"
 
 #include <vector>
 #include <memory>
@@ -33,7 +33,7 @@ void* DebugStyle::parseStyleParams(const std::string& _layerNameID, const StyleP
     return nullptr;
 }
 
-void DebugStyle::addData(TileData &_data, MapTile &_tile) {
+void DebugStyle::addData(TileData &_data, Tile &_tile) {
 
     if (Tangram::getDebugFlag(Tangram::DebugFlags::tile_bounds)) {
 

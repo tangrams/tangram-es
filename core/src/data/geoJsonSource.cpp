@@ -14,7 +14,7 @@ GeoJsonSource::GeoJsonSource(const std::string& _name, const std::string& _urlTe
     DataSource(_name, _urlTemplate) {
 }
 
-std::shared_ptr<TileData> GeoJsonSource::parse(const MapTile& _tile, std::vector<char>& _rawData) const {
+std::shared_ptr<TileData> GeoJsonSource::parse(const Tile& _tile, std::vector<char>& _rawData) const {
 
     std::shared_ptr<TileData> tileData = std::make_shared<TileData>();
 

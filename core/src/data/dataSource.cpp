@@ -3,7 +3,7 @@
 #include "platform.h"
 #include "tileID.h"
 #include "tileData.h"
-#include "mapTile.h"
+#include "tile.h"
 #include "tileManager.h"
 #include "labels/labels.h"
 

@@ -1,12 +1,12 @@
 #include "textStyle.h"
 
 #include "text/fontContext.h"
-#include "tile/mapTile.h"
-#include "util/shaderProgram.h"
-#include "util/vboMesh.h"
+#include "tile/tile.h"
+#include "gl/shaderProgram.h"
+#include "gl/vboMesh.h"
 #include "view/view.h"
 
-MapTile* TextStyle::s_processedTile = nullptr;
+Tile* TextStyle::s_processedTile = nullptr;
 
 TextStyle::TextStyle(const std::string& _fontName, std::string _name, float _fontSize, unsigned int _color, bool _sdf, bool _sdfMultisampling, GLenum _drawMode)
 : Style(_name, _drawMode), m_fontName(_fontName), m_fontSize(_fontSize), m_color(_color), m_sdf(_sdf), m_sdfMultisampling(_sdfMultisampling)  {    
@@ -117,7 +117,7 @@ void TextStyle::buildPolygon(Polygon& _polygon, void* _styleParams, Properties& 
     }
 }
 
-void TextStyle::onBeginBuildTile(MapTile& _tile) const {
+void TextStyle::onBeginBuildTile(Tile& _tile) const {
     auto ftContext = m_labels->getFontContext();
     auto buffer = ftContext->genTextBuffer();
 
@@ -138,7 +138,7 @@ void TextStyle::onBeginBuildTile(MapTile& _tile) const {
     TextStyle::s_processedTile = &_tile;
 }
 
-void TextStyle::onEndBuildTile(MapTile &_tile, std::shared_ptr<VboMesh> _mesh) const {
+void TextStyle::onEndBuildTile(Tile &_tile, std::shared_ptr<VboMesh> _mesh) const {
     auto ftContext = m_labels->getFontContext();
     auto buffer = ftContext->getCurrentBuffer();
 

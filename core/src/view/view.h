@@ -5,7 +5,7 @@
 #include "glm/vec3.hpp"
 
 #include "util/mapProjection.h"
-#include "util/tileID.h"
+#include "tile/tileID.h"
 
 #include <set>
 #include <memory>

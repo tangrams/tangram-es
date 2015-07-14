@@ -1,11 +1,11 @@
 #include "pbfParser.h"
 
-#include "tile/mapTile.h"
+#include "tile/tile.h"
 #include "platform.h"
 
 #include <cmath> // for isnan
 
-void PbfParser::extractGeometry(protobuf::message& _geomIn, int _tileExtent, std::vector<Line>& _out, const MapTile& _tile) {
+void PbfParser::extractGeometry(protobuf::message& _geomIn, int _tileExtent, std::vector<Line>& _out, const Tile& _tile) {
 
     pbfGeomCmd cmd = pbfGeomCmd::moveTo;
     uint32_t cmdRepeat = 0;
@@ -60,7 +60,7 @@ void PbfParser::extractGeometry(protobuf::message& _geomIn, int _tileExtent, std
 
 }
 
-void PbfParser::extractFeature(protobuf::message& _featureIn, Feature& _out, const MapTile& _tile, std::vector<std::string>& _keys, std::vector<float>& _numericValues, std::vector<std::string>& _stringValues, int _tileExtent) {
+void PbfParser::extractFeature(protobuf::message& _featureIn, Feature& _out, const Tile& _tile, std::vector<std::string>& _keys, std::vector<float>& _numericValues, std::vector<std::string>& _stringValues, int _tileExtent) {
 
     //Iterate through this feature
     std::vector<Line> geometryLines;
@@ -159,7 +159,7 @@ void PbfParser::extractFeature(protobuf::message& _featureIn, Feature& _out, con
 
 }
 
-void PbfParser::extractLayer(protobuf::message& _layerIn, Layer& _out, const MapTile& _tile) {
+void PbfParser::extractLayer(protobuf::message& _layerIn, Layer& _out, const Tile& _tile) {
 
     std::vector<std::string> keys;
     std::vector<float> numericValues;

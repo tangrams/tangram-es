@@ -2,7 +2,7 @@
 
 #include "tangram.h"
 #include "util/builders.h"
-#include "util/shaderProgram.h"
+#include "gl/shaderProgram.h"
 
 PolygonStyle::PolygonStyle(std::string _name, GLenum _drawMode) : Style(_name, _drawMode) {
 }

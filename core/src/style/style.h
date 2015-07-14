@@ -4,13 +4,13 @@
 #include "material.h"
 #include "gl.h"
 #include "styleParamMap.h"
-#include "util/shaderProgram.h"
+#include "gl/shaderProgram.h"
 #include <memory>
 #include <string>
 #include <vector>
 
 class Light;
-class MapTile;
+class Tile;
 class MapProjection;
 class VboMesh;
 class VertexLayout;
@@ -86,10 +86,10 @@ protected:
     static uint32_t parseColorProp(const std::string& _colorPropStr) ;
 
     /* Perform any needed setup to process the data for a tile */
-    virtual void onBeginBuildTile(MapTile& _tile) const;
+    virtual void onBeginBuildTile(Tile& _tile) const;
 
     /* Perform any needed teardown after processing data for a tile */
-    virtual void onEndBuildTile(MapTile& _tile, std::shared_ptr<VboMesh> _mesh) const;
+    virtual void onEndBuildTile(Tile& _tile, std::shared_ptr<VboMesh> _mesh) const;
 
     /* Create a new mesh object using the vertex layout corresponding to this style */
     virtual VboMesh* newMesh() const = 0;
@@ -106,8 +106,8 @@ public:
     /* Add layers to which this style will apply */
     virtual void addLayer(const std::pair<std::string, StyleParamMap>&& _layer);
 
-    /* Add styled geometry from the given <TileData> object to the given <MapTile> */
-    virtual void addData(TileData& _data, MapTile& _tile);
+    /* Add styled geometry from the given <TileData> object to the given <Tile> */
+    virtual void addData(TileData& _data, Tile& _tile);
 
     /* Perform any setup needed before drawing each frame */
     virtual void onBeginDrawFrame(const std::shared_ptr<View>& _view, const std::shared_ptr<Scene>& _scene);

@@ -1,7 +1,7 @@
 #include "polylineStyle.h"
 
 #include "tangram.h"
-#include "util/shaderProgram.h"
+#include "gl/shaderProgram.h"
 
 PolylineStyle::PolylineStyle(std::string _name, GLenum _drawMode) : Style(_name, _drawMode) {
 }
