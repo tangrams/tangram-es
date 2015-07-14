@@ -2,9 +2,14 @@
 
 namespace RenderState {
     
+    State<Blending> blending = State<Blending>();
+    State<DepthWrite> depthWrite = State<DepthWrite>();
+    State<Culling> culling = State<Culling>();
+    State<BlendingFunc> blendingFunc = State<BlendingFunc>();
+    State<DepthTest> depthTest = State<DepthTest>();
+    
     void configure() {
         blending.init(GL_FALSE);
-        blendingFunc.init({GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA});
         culling.init({GL_TRUE, GL_CCW, GL_BACK});
         depthTest.init(GL_TRUE);
         depthWrite.init(GL_TRUE);
