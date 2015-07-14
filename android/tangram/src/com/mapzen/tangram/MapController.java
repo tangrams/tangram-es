@@ -106,7 +106,7 @@ public class MapController implements Renderer, OnTouchListener, OnScaleGestureL
     }
 
     /**
-     * Get the geoagraphic position of the center of the map view
+     * Get the geographic position of the center of the map view
      * @param coordinatesOut Two-element array to be returned as the result
      * @return Degrees longitude and latitude of the current map position, in a two-element array
      */
@@ -154,7 +154,7 @@ public class MapController implements Renderer, OnTouchListener, OnScaleGestureL
     }
 
     /**
-     * Set the tilt angle of the view in radians; 0 corresponds to striaght down
+     * Set the tilt angle of the view in radians; 0 corresponds to straight down
      * @param radians Tilt angle in radians
      */
     public void setMapTilt(float radians) {
@@ -163,7 +163,7 @@ public class MapController implements Renderer, OnTouchListener, OnScaleGestureL
     }
 
     /**
-     * Get the tilt angle of the view in radians; 0 corresponds to striaght down
+     * Get the tilt angle of the view in radians; 0 corresponds to straight down
      * @return Tilt angle in radians
      */
     public float getMapTilt() {
@@ -172,7 +172,7 @@ public class MapController implements Renderer, OnTouchListener, OnScaleGestureL
     }
 
     /**
-     * Find the geographic coordinates corrseponding to the given position on screen
+     * Find the geographic coordinates corresponding to the given position on screen
      * @param screenX Pixels from the left edge of the screen
      * @param screenY Pixels from the top edge of the screen
      * @return Degrees longitude and latitude corresponding to the given point, in a two-element array
