@@ -3,8 +3,8 @@ set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wall -std=c++11")
 
 add_definitions(-DPLATFORM_LINUX)
 
-# include headers for homebrew-installed libraries
-include_directories(/usr/local/include)
+# load glfw
+include(${PROJECT_SOURCE_DIR}/toolchains/add_glfw.cmake)
 
 # load core library
 add_subdirectory(${PROJECT_SOURCE_DIR}/core)
@@ -15,9 +15,6 @@ set(LINUX_PLATFORM_SRC
   ${PROJECT_SOURCE_DIR}/linux/src/platform_linux.cpp
   ${PROJECT_SOURCE_DIR}/linux/src/urlWorker.cpp
 )
-
-find_package(PkgConfig REQUIRED)
-pkg_search_module(GLFW REQUIRED glfw3)
 
 file(GLOB TEST_SOURCES tests/unit/*.cpp)
 
@@ -30,8 +27,7 @@ foreach(_src_file_path ${TEST_SOURCES})
 
     add_executable(${EXECUTABLE_NAME} ${_src_file_path} ${LINUX_PLATFORM_SRC})
 
-    target_link_libraries(${EXECUTABLE_NAME} -lcurl)
-    target_link_libraries(${EXECUTABLE_NAME} core ${GLFW_STATIC_LIBRARIES})
+    target_link_libraries(${EXECUTABLE_NAME} core -lcurl glfw ${GLFW_LIBRARIES})
 endforeach(_src_file_path ${TEST_SOURCES})
 
 # copy resources in order to make tests with resources dependency

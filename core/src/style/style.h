@@ -3,9 +3,13 @@
 #include "data/tileData.h"
 #include "material.h"
 #include "gl.h"
+#include "scene/sceneLayer.h"
 #include "styleParamMap.h"
 #include "gl/shaderProgram.h"
+
+#include <bitset>
 #include <memory>
+#include <mutex>
 #include <string>
 #include <vector>
 
@@ -22,6 +26,11 @@ enum class LightingType : char {
     vertex,
     fragment
 };
+
+namespace Tangram {
+    struct Value;
+    using Context = std::unordered_map<std::string, Value*>;
+}
 
 /* Means of constructing and rendering map geometry
  *
@@ -58,10 +67,9 @@ protected:
     /* Draw mode to pass into <VboMesh>es created with this style */
     GLenum m_drawMode;
 
-    /* Set of strings defining which data layers this style applies to,
-     * along with the style paramter map corresponding to these data layers,
-     * to be parsed explicitly by styles for their style parameters*/
-    std::vector< std::pair<std::string, StyleParamMap> > m_layers;
+    /* vector of SceneLayers a style can operator on */
+    /* TODO: decouple layers and styles so that sublayers can apply different styles than the parent */
+    std::vector<std::shared_ptr<Tangram::SceneLayer>> m_layers;
 
     /* Create <VertexLayout> corresponding to this style; subclasses must implement this and call it on construction */
     virtual void constructVertexLayout() = 0;
@@ -70,20 +78,26 @@ protected:
     virtual void constructShaderProgram() = 0;
 
     /* Build styled vertex data for point geometry and add it to the given <VboMesh> */
-    virtual void buildPoint(Point& _point, void* _styleParam, Properties& _props, VboMesh& _mesh) const = 0;
+    virtual void buildPoint(Point& _point, const StyleParamMap& _styleParamMap, Properties& _props, VboMesh& _mesh) const = 0;
 
     /* Build styled vertex data for line geometry and add it to the given <VboMesh> */
-    virtual void buildLine(Line& _line, void* _styleParam, Properties& _props, VboMesh& _mesh) const = 0;
+    virtual void buildLine(Line& _line, const StyleParamMap& _styleParamMap, Properties& _props, VboMesh& _mesh) const = 0;
 
     /* Build styled vertex data for polygon geometry and add it to the given <VboMesh> */
-    virtual void buildPolygon(Polygon& _polygon, void* _styleParam, Properties& _props, VboMesh& _mesh) const = 0;
+    virtual void buildPolygon(Polygon& _polygon, const StyleParamMap& _styleParamMap, Properties& _props, VboMesh& _mesh) const = 0;
 
-    /* Parse StyleParamMap to apt Style property parameters, and puts in the styleParamCache
-     * NOTE: layerNameID will be replaced by unique ID for a set of filter matches*/
-    virtual void* parseStyleParams(const std::string& _layerNameID, const StyleParamMap& _styleParamMap) = 0;
-
-    /* parse color properties */
+    static std::unordered_map<std::bitset<MAX_LAYERS>, StyleParamMap> s_styleParamMapCache;
+    static std::mutex s_cacheMutex;
     static uint32_t parseColorProp(const std::string& _colorPropStr) ;
+
+    /*
+     * filter what layer(s) a features match and get style paramaters for this feature based on all subLayers it
+     * matches. Matching is cached for other features to use.
+     * Parameter maps for a set of layers is determined by merging parameters maps for individual layers matching the
+     * filters and keyed based on a uniqueID defined by the id of the matching layers.
+     */
+    void applyLayerFiltering(const Feature& _feature, const Tangram::Context& _ctx, std::bitset<MAX_LAYERS>& _uniqueID,
+                                        StyleParamMap& _styleParamMapMix, std::shared_ptr<Tangram::SceneLayer> _uberLayer) const;
 
     /* Perform any needed setup to process the data for a tile */
     virtual void onBeginBuildTile(Tile& _tile) const;
@@ -104,7 +118,7 @@ public:
     virtual void build(const std::vector<std::unique_ptr<Light>>& _lights);
 
     /* Add layers to which this style will apply */
-    virtual void addLayer(const std::pair<std::string, StyleParamMap>&& _layer);
+    void addLayer(std::shared_ptr<Tangram::SceneLayer> _layer);
 
     /* Add styled geometry from the given <TileData> object to the given <Tile> */
     virtual void addData(TileData& _data, Tile& _tile);
@@ -128,6 +142,3 @@ public:
     const std::string& getName() const { return m_name; }
 
 };
-
-
-typedef std::vector<std::unique_ptr<Style>> StyleSet;
