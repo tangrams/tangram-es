@@ -4,18 +4,15 @@
 #include "tile/mapTile.h"
 #include "util/vboMesh.h"
 
-DebugTextStyle::DebugTextStyle(const std::string& _fontName, std::string _name, float _fontSize, unsigned int _color, bool _sdf, GLenum _drawMode)
-: TextStyle(_fontName, _name, _fontSize, _color, _sdf, false, _drawMode) {
+DebugTextStyle::DebugTextStyle(const std::string& _fontName, std::string _name, float _fontSize,
+                               unsigned int _color, bool _sdf, GLenum _drawMode)
+    : TextStyle(_fontName, _name, _fontSize, _color, _sdf, false, _drawMode) {
 }
 
 void DebugTextStyle::addData(TileData& _data, MapTile& _tile) {
 
-#if 0
     if (Tangram::getDebugFlag(Tangram::DebugFlags::tile_infos)) {
-        std::shared_ptr<VboMesh> mesh(newMesh());
-        auto& buffer = static_cast<TextBatch&>(*mesh);
-
-        onBeginBuildTile(*mesh);
+        auto batch = static_cast<TextBatch*>(newBatch());
 
         auto ftContext = m_labels->getFontContext();
 
@@ -26,13 +23,14 @@ void DebugTextStyle::addData(TileData& _data, MapTile& _tile) {
             ftContext->setSignedDistanceField(blurSpread);
         }
 
-        std::string tileID = std::to_string(_tile.getID().x) + "/" + std::to_string(_tile.getID().y) + "/" + std::to_string(_tile.getID().z);
-        m_labels->addTextLabel(_tile, buffer, m_name, { glm::vec2(0), glm::vec2(0) }, tileID, Label::Type::debug);
+        std::string tileID = std::to_string(_tile.getID().x) + "/" +
+                             std::to_string(_tile.getID().y) + "/" +
+                             std::to_string(_tile.getID().z);
 
-        onEndBuildTile(*mesh);
+        batch->addLabel(m_labels->addTextLabel(*batch, _tile, { glm::vec2(0), glm::vec2(0) }, tileID, Label::Type::debug));
 
-        mesh->compileVertexBuffer();
-        _tile.addGeometry(*this, mesh);
+        if (batch->compile()) {
+            _tile.addBatch(*this, std::unique_ptr<StyleBatch>(batch));
+        }
     }
-#endif
 }

@@ -60,6 +60,9 @@ public:
     /* get the axis aligned bounding box for a text */
     glm::vec4 getBBox(fsuint _textID);
 
+    void addLabel(std::shared_ptr<TextLabel> _label) {
+        if (_label) { m_labels.push_back(std::move(_label)); }
+    }
 
 private:
 

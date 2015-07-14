@@ -116,11 +116,8 @@ void TextBatch::buildPoint(const Point& _point, const Properties& _props, const 
 
     if (_props.getString("name", name)) {
 
-        auto label = m_style.m_labels->addTextLabel(*this, _tile, { glm::vec2(_point), glm::vec2(_point) },
-                                                    name, Label::Type::point);
-        if (label) {
-            m_labels.push_back(label);
-        }
+        addLabel(m_style.m_labels->addTextLabel(*this, _tile, { glm::vec2(_point), glm::vec2(_point) },
+                                                name, Label::Type::point));
     }
 }
 
@@ -146,10 +143,7 @@ void TextBatch::buildLine(const Line& _line, const Properties& _props, const Map
                 continue;
             }
 
-            auto label = m_style.m_labels->addTextLabel(*this, _tile, { p1, p2 }, name, Label::Type::line);
-            if (label) {
-                m_labels.push_back(label);
-            }
+            addLabel(m_style.m_labels->addTextLabel(*this, _tile, { p1, p2 }, name, Label::Type::line));
         }
     }
 }
@@ -173,11 +167,8 @@ void TextBatch::buildPolygon(const Polygon& _polygon, const Properties& _props, 
 
         centroid /= n;
 
-        auto label = m_style.m_labels->addTextLabel(*this, _tile, { glm::vec2(centroid), glm::vec2(centroid) },
-                                                    name, Label::Type::point);
-        if (label) {
-            m_labels.push_back(label);
-        }
+        addLabel(m_style.m_labels->addTextLabel(*this, _tile, { glm::vec2(centroid), glm::vec2(centroid) },
+                                                name, Label::Type::point));
     }
 }
 
