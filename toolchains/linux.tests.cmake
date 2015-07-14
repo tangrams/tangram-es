@@ -27,7 +27,7 @@ foreach(_src_file_path ${TEST_SOURCES})
 
     add_executable(${EXECUTABLE_NAME} ${_src_file_path} ${LINUX_PLATFORM_SRC})
 
-    target_link_libraries(${EXECUTABLE_NAME} core -lcurl ${GLFW_LIBRARIES})
+    target_link_libraries(${EXECUTABLE_NAME} core -lcurl glfw ${GLFW_LIBRARIES})
 endforeach(_src_file_path ${TEST_SOURCES})
 
 # copy resources in order to make tests with resources dependency
