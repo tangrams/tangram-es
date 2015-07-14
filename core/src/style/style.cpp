@@ -134,8 +134,6 @@ void Style::applyLayerFiltering(const Feature& _feature, const Context& _ctx, st
 void Style::addData(TileData& _data, MapTile& _tile) {
     std::unique_ptr<StyleBatch> batch(newBatch());
 
-    batch->onBeginBuildTile();
-
     Context ctx;
     ctx["$zoom"] = new NumValue(_tile.getID().z);
 
@@ -159,8 +157,6 @@ void Style::addData(TileData& _data, MapTile& _tile) {
             }
         }
     }
-
-    batch->onEndBuildTile();
 
     if (batch->compile()) {
         _tile.addBatch(*this, std::move(batch));

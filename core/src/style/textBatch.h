@@ -30,18 +30,9 @@ public:
     virtual void draw(const View& _view) override;
     virtual void update(const glm::mat4& mvp, const View& _view, float _dt) override;
     virtual void prepare() override;
-    virtual bool compile() {
-        if (m_mesh->numVertices() > 0) {
-            m_mesh->compileVertexBuffer();
-            return true;
-        }
-        return false;
-    };
+    virtual bool compile() override;
 
     virtual void add(const Feature& _feature, const StyleParamMap& _params, const MapTile& _tile) override;
-
-    virtual void onBeginBuildTile() override;
-    virtual void onEndBuildTile() override;
 
     ~TextBatch();
 
@@ -69,8 +60,6 @@ public:
     /* get the axis aligned bounding box for a text */
     glm::vec4 getBBox(fsuint _textID);
 
-    /* get the vertices from the font context and add them as vbo mesh data */
-    void addBufferVerticesToMesh();
 
 private:
 
