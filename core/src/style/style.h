@@ -88,7 +88,9 @@ protected:
     /* Build styled vertex data for polygon geometry and add it to the given <VboMesh> */
     virtual void buildPolygon(Polygon& _polygon, const StyleParamMap& _styleParamMap, Properties& _props, VboMesh& _mesh, Tile& _tile) const;
 
-    static std::unordered_map<std::bitset<MAX_LAYERS>, StyleParamMap> s_styleParamMapCache;
+    using StyleCacheKey = std::bitset<MAX_LAYERS>;
+
+    static std::unordered_map<StyleCacheKey, StyleParamMap> s_styleParamMapCache;
     static std::mutex s_cacheMutex;
     static uint32_t parseColorProp(const std::string& _colorPropStr) ;
 
@@ -98,8 +100,8 @@ protected:
      * Parameter maps for a set of layers is determined by merging parameters maps for individual layers matching the
      * filters and keyed based on a uniqueID defined by the id of the matching layers.
      */
-    void applyLayerFiltering(const Feature& _feature, const Tangram::Context& _ctx, std::bitset<MAX_LAYERS>& _uniqueID,
-                                        StyleParamMap& _styleParamMapMix, std::shared_ptr<Tangram::SceneLayer> _uberLayer) const;
+    void applyLayerFiltering(const Feature& _feature, const Tangram::Context& _ctx, StyleCacheKey& _uniqueID,
+                             StyleParamMap& _styleParamMapMix, std::shared_ptr<Tangram::SceneLayer> _uberLayer) const;
 
     /* Perform any needed setup to process the data for a tile */
     virtual void onBeginBuildTile(VboMesh& _mesh) const;

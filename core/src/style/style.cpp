@@ -11,7 +11,7 @@
 
 #include <sstream>
 
-std::unordered_map<std::bitset<MAX_LAYERS>, StyleParamMap> Style::s_styleParamMapCache;
+std::unordered_map<Style::StyleCacheKey, StyleParamMap> Style::s_styleParamMapCache;
 std::mutex Style::s_cacheMutex;
 
 using namespace Tangram;
@@ -81,7 +81,7 @@ void Style::addLayer(std::shared_ptr<SceneLayer> _layer) {
 
 }
 
-void Style::applyLayerFiltering(const Feature& _feature, const Context& _ctx, std::bitset<MAX_LAYERS>& _uniqueID,
+void Style::applyLayerFiltering(const Feature& _feature, const Context& _ctx, StyleCacheKey& _uniqueID,
                                    StyleParamMap& _styleParamMapMix, std::shared_ptr<SceneLayer> _uberLayer) const {
 
     std::vector<std::shared_ptr<SceneLayer>> sLayers;
@@ -146,7 +146,7 @@ void Style::addData(TileData& _data, Tile& _tile) {
         // Loop over all features
         for (auto& feature : layer.features) {
 
-            std::bitset<MAX_LAYERS> uniqueID(0);
+            StyleCacheKey uniqueID(0);
             StyleParamMap styleParamMapMix;
             applyLayerFiltering(feature, ctx, uniqueID, styleParamMapMix, (*it));
 
