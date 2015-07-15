@@ -3,9 +3,11 @@ tangram-es
 
 [![Travis CI Build Status](https://travis-ci.org/tangrams/tangram-es.svg?branch=master)](https://travis-ci.org/tangrams/tangram-es/builds)
 
-OpenGL ES version of Tangram for mobile devices - EARLY work-in-progress!
+tangram-es is a C++ library for rendering 2D and 3D maps from vector data using OpenGL ES, it is a counterpart to [tangram](https://github.com/tangrams/tangram) focused on mobile and embedded devices.
 
-tangram-es is a library for rendering 2D and 3D maps using OpenGL ES 2 with custom styling and interactions. We maintain sample client applications that use the library to render on Android, iOS, Mac OS X, Ubuntu, and Rasberry Pi. 
+This repository contains both the core rendering library and sample applications that use the library on Android, iOS, Mac OS X, Ubuntu, and Raspberry Pi. 
+
+*tangram-es is in active development and is not yet feature-complete*
 
 build
 =====
@@ -26,33 +28,27 @@ Currently we are targeting five platforms: OS X, Ubuntu Linux, iOS, Android, and
 ## platforms ##
 
 ### OS X ###
-To build for OS X, you will need to install [GLFW](http://www.glfw.org/) and [pkg-config](http://www.freedesktop.org/wiki/Software/pkg-config/): 
-
-```bash
-brew tap homebrew/versions
-brew install glfw3 pkg-config
-```
-
-Then build using GNU Make:
+To build a runnable OS X application bundle, run
 
 ```bash
 make osx
 ```
+And open the application from `build/osx/bin`
 
 ### Ubuntu Linux ###
-To build on Ubuntu you will again need [GLFW](http://www.glfw.org/) and on linux platforms it's best to compile from source. GLFW provides [instructions for compiling the library](http://www.glfw.org/docs/latest/compile.html). Once you've installed GLFW, build Tangram from the project root using GNU Make:
-
-Install the required curl dev package.
+To build on Ubuntu you will need to install a libcurl develepment package:
 
 ```bash
 sudo apt-get install libcurl4-openssl-dev
 ```
 
+Then build an executable:
+
 ```bash
 make linux
 ```
 
-Then run the binary from the output folder:
+And run it from the output folder:
 
 ```bash
 cd build/linux/bin/ && ./tangram
@@ -113,14 +109,11 @@ First, install cmake and libcurl:
 sudo apt-get install cmake libcurl4-openssl-dev
 ```
 
-To build the project, you will need to have C++11 compatible compiler installed, for example GNU g++-4.9 or greater
-(refer https://solarianprogrammer.com/2015/01/13/raspberry-pi-raspbian-install-gcc-compile-cpp-14-programs/ for
-instructions on getting g++-4.9):
-```
+To build the project, you will need to have C++11 compatible compiler installed, for example GNU g++-4.9 or greater (refer [here](https://solarianprogrammer.com/2015/01/13/raspberry-pi-raspbian-install-gcc-compile-cpp-14-programs/) for instructions on getting g++-4.9)
 
-Before compiling, choose which compiler to use by running the following:
+Before compiling, choose which compiler to use:
 ```
-export CXX=/usr/bin/g++-4.8
+export CXX=/usr/bin/g++-4.9
 ```
 
 Then compile and run:
