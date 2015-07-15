@@ -254,6 +254,7 @@ public class MapController implements Renderer, OnTouchListener, OnScaleGestureL
     private ScaleGestureDetector scaleGestureDetector;
     private RotateGestureDetector rotateGestureDetector;
     private ShoveGestureDetector shoveGestureDetector;
+    private View.OnGenericMotionListener genericMotionListener;
     private DisplayMetrics displayMetrics = new DisplayMetrics();
 
     private OkHttpClient okClient;
@@ -270,6 +271,10 @@ public class MapController implements Renderer, OnTouchListener, OnScaleGestureL
         rotateGestureDetector.onTouchEvent(event);
 
         return true;
+    }
+
+    public void setGenericMotionListener(View.OnGenericMotionListener listener) {
+        genericMotionListener = listener;
     }
 
     // GLSurfaceView.Renderer methods
@@ -315,7 +320,7 @@ public class MapController implements Renderer, OnTouchListener, OnScaleGestureL
         // Only pan for scrolling events with just one pointer; otherwise vertical scrolling will
         // cause a simultaneous shove gesture
         if (e1.getPointerCount() == 1 && e2.getPointerCount() == 1) {
-            // We flip the signs of distanceX and distanceY because onScroll provides the distances
+            // We flip the signs of distanceX and distanceY because onScroll provides the distancesj
             // by which the view being scrolled should move, while handlePanGesture expects the
             // distances by which the touch point has moved on the screen (these are opposite)
             float x = e2.getX();
@@ -331,7 +336,9 @@ public class MapController implements Renderer, OnTouchListener, OnScaleGestureL
     }
 
     public void onLongPress(MotionEvent event) {
-        //not handled
+        if(genericMotionListener != null) {
+            genericMotionListener.onGenericMotion(mapView, event);
+        }
     }
 
     public void onShowPress(MotionEvent event) {
