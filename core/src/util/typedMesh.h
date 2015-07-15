@@ -48,7 +48,7 @@ public:
             std::memcpy(m_glVertexData + _byteOffset + i * tSize, &_newAttributeValue, aSize);
         }
 
-        setDirty(_byteOffset + aSize, _nVerts * tSize + aSize);
+        setDirty(_byteOffset, (_nVerts - 1) * tSize + aSize);
     }
 
 protected:

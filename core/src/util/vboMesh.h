@@ -24,7 +24,7 @@ public:
      */
     VboMesh(std::shared_ptr<VertexLayout> _vertexlayout, GLenum _drawMode = GL_TRIANGLES, GLenum _hint = GL_STATIC_DRAW);
     VboMesh();
-    
+
     /*
      * Set Vertex Layout for the vboMesh object
      */
@@ -62,14 +62,17 @@ public:
      * been uploaded it will be uploaded at this point
      */
     void draw(const std::shared_ptr<ShaderProgram> _shader);
-    
+
     void update(GLintptr _offset, GLsizei _size, unsigned char* _data);
-    
+
     static void addManagedVBO(VboMesh* _vbo);
-    
+
     static void removeManagedVBO(VboMesh* _vbo);
-    
+
     static void invalidateAllVBOs();
+
+    GLsizei getDirtySize() const { return m_dirtySize; }
+    GLintptr getDirtyOffset() const { return m_dirtyOffset; }
 
 protected:
 
@@ -98,10 +101,10 @@ protected:
     bool m_isUploaded;
     bool m_isCompiled;
     bool m_dirty;
-    
+
     GLsizei m_dirtySize;
     GLintptr m_dirtyOffset;
-    
+
     void checkValidity();
 
     template <typename T>
