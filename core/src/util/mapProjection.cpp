@@ -69,23 +69,26 @@ glm::dvec2 MercatorProjection::PixelsToRaster(const glm::dvec2 _pix, const int _
     return transformedPix;
 }
 
-glm::dvec4 MercatorProjection::TileBounds(const TileID _tileCoord) const {
-    glm::dvec2 boundMin, boundMax;
-    glm::dvec4 bounds;
-    boundMin = PixelsToMeters(glm::dvec2(_tileCoord.x*m_TileSize, _tileCoord.y*m_TileSize), _tileCoord.z);
-    boundMax = PixelsToMeters(glm::dvec2((_tileCoord.x+1)*m_TileSize, (_tileCoord.y+1)*m_TileSize), _tileCoord.z);
-    bounds = glm::dvec4(boundMin.x, boundMin.y, boundMax.x, boundMax.y);
-    return bounds;
+BoundingBox MercatorProjection::TileBounds(const TileID _tileCoord) const {
+    return {
+        PixelsToMeters({
+                _tileCoord.x * m_TileSize,
+                _tileCoord.y * m_TileSize },
+            _tileCoord.z),
+        PixelsToMeters({
+                (_tileCoord.x + 1) * m_TileSize,
+                (_tileCoord.y + 1) * m_TileSize },
+            _tileCoord.z)
+    };
 }
 
-glm::dvec4 MercatorProjection::TileLonLatBounds(const TileID _tileCoord) const {
-    glm::dvec2 boundMin, boundMax;
-    glm::dvec4 tileBounds, lonLatBounds;
-    tileBounds = TileBounds(_tileCoord);
-    boundMin = MetersToLonLat(glm::dvec2(tileBounds.x, tileBounds.y));
-    boundMax = MetersToLonLat(glm::dvec2(tileBounds.z, tileBounds.w));
-    lonLatBounds = glm::dvec4(boundMin.x, boundMin.y, boundMax.x, boundMax.y);
-    return lonLatBounds;
+
+BoundingBox MercatorProjection::TileLonLatBounds(const TileID _tileCoord) const {
+    BoundingBox tileBounds(TileBounds(_tileCoord));
+    return {
+        MetersToLonLat(tileBounds.min),
+        MetersToLonLat(tileBounds.max)
+    };
 }
 
 glm::dvec2 MercatorProjection::TileCenter(const TileID _tileCoord) const {

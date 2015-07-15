@@ -113,9 +113,9 @@ First, install cmake and libcurl:
 sudo apt-get install cmake libcurl4-openssl-dev
 ```
 
-To build the project, you will need to have C++11 compatible compiler installed, for example GNU g++-4.8 or greater:
-```
-sudo apt-get install g++-4.8
+To build the project, you will need to have C++11 compatible compiler installed, for example GNU g++-4.9 or greater
+(refer https://solarianprogrammer.com/2015/01/13/raspberry-pi-raspbian-install-gcc-compile-cpp-14-programs/ for
+instructions on getting g++-4.9):
 ```
 
 Before compiling, choose which compiler to use by running the following:

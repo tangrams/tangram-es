@@ -5,17 +5,9 @@ set(EXECUTABLE_NAME "tangram")
 
 add_definitions(-DPLATFORM_OSX)
 
-find_package(PkgConfig REQUIRED)
-pkg_search_module(GLFW REQUIRED glfw3>=3.1)
+# load glfw
+include(${PROJECT_SOURCE_DIR}/toolchains/add_glfw.cmake)
 
-if(NOT GLFW_FOUND)
-    message(SEND_ERROR "GLFW not found")
-    return()
-else()
-    include_directories(${GLFW_INCLUDE_DIRS})
-    message(STATUS "Found GLFW ${GLFW_PREFIX}")
-endif()
-    
 # load core library
 add_subdirectory(${PROJECT_SOURCE_DIR}/core)
 include_directories(${CORE_INCLUDE_DIRS})
@@ -37,14 +29,7 @@ string(REGEX REPLACE "[.]DS_Store" "" RESOURCES "${RESOURCES}")
 # link and build functions
 function(link_libraries)
 
-    list(APPEND GLFW_LDFLAGS
-        "-framework OpenGL" 
-        "-framework Cocoa" 
-        "-framework IOKit" 
-        "-framework CoreFoundation"   
-        "-framework CoreVideo")
-
-    target_link_libraries(${EXECUTABLE_NAME} core ${GLFW_LDFLAGS})
+    target_link_libraries(${EXECUTABLE_NAME} core glfw ${GLFW_LIBRARIES})
 
     # add resource files and property list
     set_target_properties(${EXECUTABLE_NAME} PROPERTIES

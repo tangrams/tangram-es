@@ -1,8 +1,7 @@
-#include "sceneLoader.h"
-
 #include <vector>
 #include "platform.h"
 #include "scene.h"
+#include "sceneLoader.h"
 #include "tileManager.h"
 #include "view.h"
 #include "lights.h"
@@ -14,7 +13,8 @@
 #include "textStyle.h"
 #include "debugStyle.h"
 #include "debugTextStyle.h"
-#include "filters.h"
+#include "data/filters.h"
+#include "sceneLayer.h"
 #include "texture.h"
 
 #include "yaml-cpp/yaml.h"
@@ -44,7 +44,7 @@ void SceneLoader::loadScene(const std::string& _file, Scene& _scene, TileManager
 
 std::string parseSequence(const Node& node) {
     std::stringstream sstream;
-    for (auto& val : node) {
+    for (const auto& val : node) {
         sstream << val.as<float>() << ",";
     }
     return sstream.str();
@@ -53,9 +53,9 @@ std::string parseSequence(const Node& node) {
 glm::vec4 parseVec4(const Node& node) {
     glm::vec4 vec;
     int i = 0;
-    for (auto it = node.begin(); it != node.end(); ++it) {
+    for (const auto& nodeVal : node) {
         if (i < 4) {
-            vec[i++] = it->as<float>();
+            vec[i++] = nodeVal.as<float>();
         } else {
             break;
         }
@@ -66,9 +66,9 @@ glm::vec4 parseVec4(const Node& node) {
 glm::vec3 parseVec3(const Node& node) {
     glm::vec3 vec;
     int i = 0;
-    for (auto it = node.begin(); it != node.end(); ++it) {
+    for (const auto& nodeVal : node) {
         if (i < 3) {
-            vec[i++] = it->as<float>();
+            vec[i++] = nodeVal.as<float>();
         } else {
             break;
         }
@@ -294,7 +294,7 @@ void SceneLoader::loadStyles(YAML::Node styles, Scene& scene) {
 
         std::string styleName = styleIt.first.as<std::string>();
         Node styleNode = styleIt.second;
-        
+
         bool validName = true;
         for (auto builtIn : { "polygons", "lines", "points", "text", "debug", "debugtext" }) {
             if (styleName == builtIn) { validName = false; }
@@ -370,15 +370,15 @@ void SceneLoader::loadStyles(YAML::Node styles, Scene& scene) {
 
 void SceneLoader::loadSources(Node sources, TileManager& tileManager) {
 
-    if(!sources) {
+    if (!sources) {
         logMsg("Warning: No source defined in the yaml scene configuration.\n");
         return;
     }
 
-    for (auto it = sources.begin(); it != sources.end(); ++it) {
+    for (const auto& src : sources) {
 
-        const Node source = it->second;
-        std::string name = it->first.as<std::string>();
+        const Node source = src.second;
+        std::string name = src.first.as<std::string>();
         std::string type = source["type"].as<std::string>();
         std::string url = source["url"].as<std::string>();
 
@@ -413,10 +413,10 @@ void SceneLoader::loadLights(Node lights, Scene& scene) {
         return;
     }
 
-    for (auto it = lights.begin(); it != lights.end(); ++it) {
+    for (const auto& lt : lights) {
 
-        const Node light = it->second;
-        const std::string name = it->first.Scalar();
+        const Node light = lt.second;
+        const std::string name = lt.first.Scalar();
         const std::string type = light["type"].as<std::string>();
 
         std::unique_ptr<Light> lightPtr;
@@ -525,9 +525,9 @@ void SceneLoader::loadCameras(Node cameras, View& view) {
     // To correctly match the behavior of the webGL library we'll need a place to store multiple view instances.
     // Since we only have one global view right now, we'll just apply the settings from the first active camera we find.
 
-    for (auto it = cameras.begin(); it != cameras.end(); ++it) {
+    for (const auto& cam : cameras) {
 
-        const Node camera = it->second;
+        const Node camera = cam.second;
 
         const std::string type = camera["type"].as<std::string>();
         if (type == "perspective") {
@@ -588,35 +588,38 @@ void SceneLoader::loadCameras(Node cameras, View& view) {
 
 Filter SceneLoader::generateFilter(YAML::Node _filter) {
 
+    if (!_filter) {
+        return Filter();
+    }
+    
     std::vector<Filter> filters;
 
-    for (YAML::const_iterator filtItr = _filter.begin(); filtItr != _filter.end(); ++filtItr) {
-
+    for (const auto& filtItr : _filter) {
         Filter filter;
 
         if (_filter.IsSequence()) {
 
-            filter = generateFilter(*filtItr);
+            filter = generateFilter(filtItr);
 
-        } else if (filtItr->first.as<std::string>() == "none") {
+        } else if (filtItr.first.as<std::string>() == "none") {
 
             filter = generateNoneFilter(_filter["none"]);
 
-        } else if (filtItr->first.as<std::string>() == "not") {
+        } else if (filtItr.first.as<std::string>() == "not") {
 
             filter = generateNoneFilter(_filter["not"]);
 
-        } else if (filtItr->first.as<std::string>() == "any") {
+        } else if (filtItr.first.as<std::string>() == "any") {
 
             filter = generateAnyFilter(_filter["any"]);
 
-        } else if (filtItr->first.as<std::string>() == "all") {
+        } else if (filtItr.first.as<std::string>() == "all") {
 
             filter = generateFilter(_filter["all"]);
 
         } else {
 
-            std::string key = filtItr->first.as<std::string>();
+            std::string key = filtItr.first.as<std::string>();
             filter = generatePredicate(_filter[key], key);
 
         }
@@ -625,9 +628,9 @@ Filter SceneLoader::generateFilter(YAML::Node _filter) {
 
     }
 
-    if(filters.size() == 1) {
+    if (filters.size() == 1) {
         return filters.front();
-    } else if(filters.size() > 0) {
+    } else if (filters.size() > 0) {
         return (Filter(Operators::all, filters));
     } else {
         return Filter();
@@ -652,11 +655,11 @@ Filter SceneLoader::generatePredicate(YAML::Node _node, std::string _key) {
         }
     } else if (_node.IsSequence()) {
         ValueList values;
-        for (YAML::const_iterator valItr = _node.begin(); valItr != _node.end(); ++valItr) {
+        for (const auto& valItr : _node) {
             try {
-                values.emplace_back(valItr->as<float>(), valItr->as<std::string>());
-            } catch (const BadConversion& e) {
-                std::string value = valItr->as<std::string>();
+                values.emplace_back(valItr.as<float>(), valItr.as<std::string>());
+            } catch(const BadConversion& e) {
+                std::string value = valItr.as<std::string>();
                 values.emplace_back(value);
             }
         }
@@ -665,17 +668,17 @@ Filter SceneLoader::generatePredicate(YAML::Node _node, std::string _key) {
         float minVal = -std::numeric_limits<float>::infinity();
         float maxVal = std::numeric_limits<float>::infinity();
 
-        for (YAML::const_iterator valItr = _node.begin(); valItr != _node.end(); ++valItr) {
-            if (valItr->first.as<std::string>() == "min") {
+        for (const auto& valItr : _node) {
+            if (valItr.first.as<std::string>() == "min") {
                 try {
-                    minVal = valItr->second.as<float>();
+                    minVal = valItr.second.as<float>();
                 } catch (const BadConversion& e) {
                     logMsg("Error: Badly formed filter.\tExpect a float value type, string found.\n");
                     return Filter();
                 }
-            } else if (valItr->first.as<std::string>() == "max") {
+            } else if (valItr.first.as<std::string>() == "max") {
                 try {
-                    maxVal = valItr->second.as<float>();
+                    maxVal = valItr.second.as<float>();
                 } catch (const BadConversion& e) {
                     logMsg("Error: Badly formed filter.\tExpect a float value type, string found.\n");
                     return Filter();
@@ -701,7 +704,7 @@ Filter SceneLoader::generateAnyFilter(YAML::Node _filter) {
         logMsg("Error: Badly formed filter. \"Any\" expects a list.\n");
         return Filter();
     }
-    for (auto filt : _filter) {
+    for (const auto& filt : _filter) {
         filters.emplace_back(generateFilter(filt));
     }
     return Filter(Operators::any, std::move(filters));
@@ -712,11 +715,11 @@ Filter SceneLoader::generateNoneFilter(YAML::Node _filter) {
     std::vector<Filter> filters;
 
     if (_filter.IsSequence()) {
-        for(auto filt : _filter) {
+        for (const auto& filt : _filter) {
             filters.emplace_back(generateFilter(filt));
         }
     } else if (_filter.IsMap()) { // not case
-        for (auto filt : _filter) {
+        for (const auto& filt : _filter) {
             std::string keyFilter = filt.first.as<std::string>();
             filters.emplace_back(generatePredicate(_filter[keyFilter], keyFilter));
         }
@@ -730,25 +733,56 @@ Filter SceneLoader::generateNoneFilter(YAML::Node _filter) {
 
 void SceneLoader::parseStyleProps(Node styleProps, StyleParamMap& paramMap, const std::string& propPrefix) {
 
-    for(auto propItr = styleProps.begin(); propItr != styleProps.end(); ++propItr) {
-        Node prop = propItr->first;
+    for (const auto& propItr : styleProps) {
+        Node prop = propItr.first;
         std::string paramKey;
-        if(propPrefix.length() > 0) {
+        if (propPrefix.length() > 0) {
             paramKey = propPrefix + ":" + prop.as<std::string>();
         } else {
             paramKey = prop.as<std::string>();
         }
-        if(propItr->second.IsScalar()) {
-            paramMap.emplace(paramKey, propItr->second.as<std::string>());
-        } else if(propItr->second.IsSequence()) {
-            paramMap.emplace(paramKey, parseSequence(propItr->second));
-        } else if(propItr->second.IsMap()) {
-            parseStyleProps(propItr->second, paramMap, paramKey);
+        if (propItr.second.IsScalar()) {
+            paramMap.emplace(paramKey, propItr.second.as<std::string>());
+        } else if (propItr.second.IsSequence()) {
+            paramMap.emplace(paramKey, parseSequence(propItr.second));
+        } else if (propItr.second.IsMap()) {
+            parseStyleProps(propItr.second, paramMap, paramKey);
         } else {
-            logMsg("Error: Badly formed Style property, need to be a scalar, sequence or map. %s will not be added to stype properties.\n", paramKey.c_str());
+            logMsg("Error: Badly formed Style property, need to be a scalar, sequence or map."
+                    "%s will not be added to stype properties.\n", paramKey.c_str());
         }
     }
 
+}
+
+void SceneLoader::loadSublayers(YAML::Node layer, std::vector<std::shared_ptr<SceneLayer>>& subLayers) {
+
+    for (const auto& subLayerItr : layer) {
+
+        std::string subLayerName = subLayerItr.first.as<std::string>();
+
+        Node drawGroup = subLayerItr.second["draw"];
+
+        // If node has a draw group that means its a sublayer (no need to check for reserved)
+        if(drawGroup) {
+
+            std::vector<std::shared_ptr<SceneLayer>> ssubLayers;
+            Node filter = subLayerItr.second["filter"];
+            Filter subLayerFilter = generateFilter(filter);
+
+            loadSublayers(layer[subLayerName], ssubLayers);
+
+            for (const auto& groupIt : drawGroup) {
+
+                StyleParamMap paramMap;
+                // TODO: multiple draw groups for a subLayer, NOTE: only one draw for now
+                // TODO: subLayers can have different base style than the parent layer
+                parseStyleProps(groupIt.second, paramMap);
+                subLayers.push_back(std::make_shared<SceneLayer>(std::move(ssubLayers), std::move(paramMap), subLayerName,
+                            subLayerFilter));
+            }
+        }
+    }
 }
 
 void SceneLoader::loadLayers(Node layers, Scene& scene, TileManager& tileManager) {
@@ -757,30 +791,35 @@ void SceneLoader::loadLayers(Node layers, Scene& scene, TileManager& tileManager
         return;
     }
 
-    for (auto layerIt = layers.begin(); layerIt != layers.end(); ++layerIt) {
+    for (const auto& layerIt : layers) {
 
-        std::string name = layerIt->first.as<std::string>();
-        Node drawGroup = layerIt->second["draw"];
-        Node data = layerIt->second["data"];
+        std::vector<std::shared_ptr<SceneLayer>> subLayers;
+        std::string name = layerIt.first.as<std::string>();
+        Node data = layerIt.second["data"];
+        Node filter = layerIt.second["filter"];
+        Filter layerFilter = generateFilter(filter);
+        Node drawGroup = layerIt.second["draw"];
+
+        loadSublayers(layers[name], subLayers);
 
         // TODO: handle data.source
 
         Node dataLayer = data["layer"];
         if (dataLayer) { name = dataLayer.as<std::string>(); }
 
-        for (auto groupIt = drawGroup.begin(); groupIt != drawGroup.end(); ++groupIt) {
+        for (const auto& groupIt : drawGroup) {
 
             StyleParamMap paramMap;
-            std::string styleName = groupIt->first.as<std::string>();
-            parseStyleProps(groupIt->second, paramMap);
+            std::string styleName = groupIt.first.as<std::string>();
+            parseStyleProps(groupIt.second, paramMap);
 
             // match layer to the style in scene with the given name
             for (const auto& style : scene.getStyles()) {
                 if (style->getName() == styleName) {
-                    style->addLayer({ name, paramMap });
+                    style->addLayer(std::make_shared<SceneLayer>(std::move(subLayers), std::move(paramMap),
+                                name, layerFilter));
                 }
-            }
-
+			}
         }
 
     }

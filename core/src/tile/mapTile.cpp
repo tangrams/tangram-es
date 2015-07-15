@@ -12,22 +12,21 @@
 #include "glm/gtc/type_ptr.hpp"
 
 
-MapTile::MapTile(TileID _id, const MapProjection& _projection) :
-    m_id(_id),
-    m_projection(&_projection) {
+MapTile::MapTile(TileID _id, const MapProjection& _projection)
+    : m_id(_id),
+      m_projection(&_projection) {
 
-    glm::dvec4 bounds = _projection.TileBounds(_id); // [x: xmin, y: ymin, z: xmax, w: ymax]
+    BoundingBox bounds(_projection.TileBounds(_id));
 
-    m_scale = 0.5 * glm::abs(bounds.x - bounds.z);
+    m_scale = 0.5 * bounds.width();
     m_inverseScale = 1.0/m_scale;
     
+    m_tileOrigin = bounds.center();
     // negative y coordinate: to change from y down to y up (tile system has y down and gl context we use has y up).
-    m_tileOrigin = glm::dvec2(0.5*(bounds.x + bounds.z), -0.5*(bounds.y + bounds.w));
-    
-    m_modelMatrix = glm::mat4(1.0);
-    
-    // Scale model matrix to size of tile
-    m_modelMatrix = glm::scale(m_modelMatrix, glm::vec3(m_scale));
+    m_tileOrigin.y *= -1.0;
+
+    // Init model matrix to size of tile
+    m_modelMatrix = glm::scale(glm::mat4(1.0), glm::vec3(m_scale));
 }
 
 MapTile::~MapTile() {

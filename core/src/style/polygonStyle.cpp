@@ -28,33 +28,21 @@ void PolygonStyle::constructShaderProgram() {
     m_shaderProgram->setSourceStrings(fragShaderSrcStr, vertShaderSrcStr);
 }
 
-void* PolygonStyle::parseStyleParams(const std::string& _layerNameID, const StyleParamMap& _styleParamMap) {
+void PolygonStyle::parseStyleParams(const StyleParamMap& _styleParamMap, StyleParams& _styleParams) const {
 
-    if(m_styleParamCache.find(_layerNameID) != m_styleParamCache.end()) {
-        return static_cast<void*>(m_styleParamCache.at(_layerNameID));
-    }
-
-    StyleParams* params = new StyleParams();
     if(_styleParamMap.find("order") != _styleParamMap.end()) {
-        params->order = std::stof(_styleParamMap.at("order"));
+        _styleParams.order = std::stof(_styleParamMap.at("order"));
     }
     if(_styleParamMap.find("color") != _styleParamMap.end()) {
-        params->color = parseColorProp(_styleParamMap.at("color"));
+        _styleParams.color = parseColorProp(_styleParamMap.at("color"));
     }
-
-    {
-        std::lock_guard<std::mutex> lock(m_cacheMutex);
-        m_styleParamCache.emplace(_layerNameID, params);
-    }
-
-    return static_cast<void*>(params);
 }
 
-void PolygonStyle::buildPoint(Point& _point, void* _styleParam, Properties& _props, VboMesh& _mesh) const {
+void PolygonStyle::buildPoint(Point& _point, const StyleParamMap& _styleParamMap, Properties& _props, VboMesh& _mesh) const {
     // No-op
 }
 
-void PolygonStyle::buildLine(Line& _line, void* _styleParam, Properties& _props, VboMesh& _mesh) const {
+void PolygonStyle::buildLine(Line& _line, const StyleParamMap& _styleParamMap, Properties& _props, VboMesh& _mesh) const {
     std::vector<PosNormColVertex> vertices;
 
     PolyLineBuilder builder = {
@@ -73,13 +61,15 @@ void PolygonStyle::buildLine(Line& _line, void* _styleParam, Properties& _props,
     mesh.addVertices(std::move(vertices), std::move(builder.indices));
 }
 
-void PolygonStyle::buildPolygon(Polygon& _polygon, void* _styleParam, Properties& _props, VboMesh& _mesh) const {
+void PolygonStyle::buildPolygon(Polygon& _polygon, const StyleParamMap& _styleParamMap, Properties& _props, VboMesh& _mesh) const {
 
     std::vector<PosNormColVertex> vertices;
 
-    StyleParams* params = static_cast<StyleParams*>(_styleParam);
-    GLuint abgr = params->color;
-    GLfloat layer = params->order;
+    StyleParams params;
+    parseStyleParams(_styleParamMap, params);
+
+    GLuint abgr = params.color;
+    GLfloat layer = params.order;
 
     if (Tangram::getDebugFlag(Tangram::DebugFlags::proxy_colors)) {
         abgr = abgr << (int(_props.numericProps["zoom"]) % 6);
