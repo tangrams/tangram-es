@@ -21,6 +21,13 @@ namespace Tangram {
         Value(float n, const std::string& s) : str(s), num(n), numeric(true) {}
         Value(const std::string& s) : str(s), num(0), numeric(false) {}
 
+        // Why do "numeric" values keep both a string and a number? Basically because of a shortcoming in the
+        // YAML parser we use. Suppose we want to filter for features named "007". In a stylesheet, filter values 
+        // can be either numbers or strings and the only way to check for numbers is to try to cast the value to 
+        // a numeric type. The cast succeeds for "007", so we must consider it a number value. But when we filter
+        // against a feature containing the string "007", we must also have the original string representation of
+        // the filter value in order to correctly find the match. 
+
     };
 
     using ValueList = std::vector<Value>;
