@@ -1,7 +1,7 @@
 #pragma once
 
 #include "style.h"
-#include "typedMesh.h"
+#include "gl/typedMesh.h"
 #include "glfontstash.h"
 #include "labels/labels.h"
 #include <memory>

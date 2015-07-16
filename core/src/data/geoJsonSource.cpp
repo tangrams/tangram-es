@@ -1,9 +1,10 @@
-#include "geoJson.h"
+#include "geoJsonSource.h"
+
+#include "util/geoJson.h"
 #include "platform.h"
-#include "tileID.h"
+#include "tile/tileID.h"
 #include "labels/labels.h"
 
-#include "geoJsonSource.h"
 #include "rapidjson/error/en.h"
 #include "rapidjson/memorystream.h"
 #include "rapidjson/encodings.h"

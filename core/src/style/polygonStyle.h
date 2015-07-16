@@ -1,7 +1,7 @@
 #pragma once
 
 #include "style.h"
-#include "typedMesh.h"
+#include "gl/typedMesh.h"
 #include "glm/vec2.hpp"
 #include "glm/vec3.hpp"
 

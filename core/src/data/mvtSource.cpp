@@ -1,21 +1,21 @@
-#include "pbfParser.h"
+#include "mvtSource.h"
+
+#include "util/pbfParser.h"
 #include "platform.h"
-#include "tileID.h"
+#include "tile/tileID.h"
 #include "labels/labels.h"
 
 #include <sstream>
 #include <fstream>
 
-#include "mvtSource.h"
-
-MVTSource::MVTSource(const std::string& _name, const std::string& _urlTemplate) : 
+MVTSource::MVTSource(const std::string& _name, const std::string& _urlTemplate) :
     DataSource(_name, _urlTemplate) {
 }
 
 std::shared_ptr<TileData> MVTSource::parse(const Tile& _tile, std::vector<char>& _rawData) const {
-    
+
     std::shared_ptr<TileData> tileData = std::make_shared<TileData>();
-    
+
     protobuf::message item(_rawData.data(), _rawData.size());
 
     while(item.next()) {
