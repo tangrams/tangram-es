@@ -73,7 +73,7 @@ TEST_CASE( "Right merge on vertices dirtiness", "[Core][TypedMesh]" ) {
 TEST_CASE( "Update on second attribute of the mesh for n vertices", "[Core][TypedMesh]" ) {
     auto mesh = newMesh(10);
     int nVert = 5;
-    size_t stride_b = 1 * sizeof(float); // stride of a in the struct
+    size_t stride_b = sizeof(float); // stride of a in the struct
 
     mesh->updateAttribute(stride_b + sizeof(Vertex), nVert, 0.f);
 
@@ -83,17 +83,17 @@ TEST_CASE( "Update on second attribute of the mesh for n vertices", "[Core][Type
 
 TEST_CASE( "Update on second attribute of the mesh for 1 vertices", "[Core][TypedMesh]" ) {
     auto mesh = newMesh(10);
-    size_t stride_a = 1 * sizeof(float); // stride of a in the struct
+    size_t stride_b = sizeof(float); // stride of a in the struct
 
-    mesh->updateAttribute(stride_a, 1, 0.f);
+    mesh->updateAttribute(stride_b, 1, 0.f);
 
-    REQUIRE(mesh->getDirtyOffset() == stride_a);
+    REQUIRE(mesh->getDirtyOffset() == stride_b);
     REQUIRE(mesh->getDirtySize() == sizeof(float));
 }
 
 TEST_CASE( "Update on second and third attribute of the mesh for n vertices", "[Core][TypedMesh]" ) {
     auto mesh = newMesh(10);
-    size_t stride_b = 1 * sizeof(float); // stride of b in the struct
+    size_t stride_b = sizeof(float); // stride of b in the struct
     size_t stride_c = 2 * sizeof(float); // stride of c in the struct
     short c = 0;
 
@@ -107,7 +107,7 @@ TEST_CASE( "Update on second and third attribute of the mesh for n vertices", "[
 
 TEST_CASE( "Update on second and fourth attribute of the mesh for n vertices", "[Core][TypedMesh]" ) {
     auto mesh = newMesh(10);
-    size_t stride_b = 1 * sizeof(float); // stride of b in the struct
+    size_t stride_b = sizeof(float); // stride of b in the struct
     size_t stride_d = 2 * sizeof(float) + sizeof(short); // stride of c in the struct
     char d = 0;
 
