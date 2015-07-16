@@ -212,6 +212,14 @@ public class MapController implements Renderer, OnTouchListener, OnScaleGestureL
         mapView.setRenderMode(renderMode);
     }
 
+    /**
+     * Set a listener for long press events
+     * @param listener Listener to call
+     */
+    public void setLongPressListener(View.OnGenericMotionListener listener) {
+        longPressListener = listener;
+    }
+
     // Native methods
     // ==============
 
@@ -254,6 +262,7 @@ public class MapController implements Renderer, OnTouchListener, OnScaleGestureL
     private ScaleGestureDetector scaleGestureDetector;
     private RotateGestureDetector rotateGestureDetector;
     private ShoveGestureDetector shoveGestureDetector;
+    private View.OnGenericMotionListener longPressListener;
     private DisplayMetrics displayMetrics = new DisplayMetrics();
 
     private OkHttpClient okClient;
@@ -331,7 +340,9 @@ public class MapController implements Renderer, OnTouchListener, OnScaleGestureL
     }
 
     public void onLongPress(MotionEvent event) {
-        //not handled
+        if (longPressListener != null) {
+            longPressListener.onGenericMotion(mapView, event);
+        }
     }
 
     public void onShowPress(MotionEvent event) {
