@@ -36,7 +36,7 @@ make osx
 And open the application from `build/osx/bin`
 
 ### Ubuntu Linux ###
-To build on Ubuntu you will need to install a libcurl develepment package:
+To build on Ubuntu you will need to install a libcurl development package:
 
 ```bash
 sudo apt-get install libcurl4-openssl-dev
@@ -55,7 +55,7 @@ cd build/linux/bin/ && ./tangram
 ```
 
 ### iOS Simulator ###
-For running on the iOS simulator, generate and compile an XCode project:
+For running on the iOS simulator, generate and compile an Xcode project:
 
 ```bash
 make ios-sim
@@ -67,12 +67,12 @@ Then just open the Xcode project and run/debug from there:
 open build/ios/tangram.xcodeproject
 ```
 
-Note that any Xcode configuration change you make to the project won't be preserved when Cmake runs again. Build configuration is defined only in the CMakeLists file(s).
+Note that any Xcode configuration change you make to the project won't be preserved when CMake runs again. Build configuration is defined only in the CMakeLists file(s).
 
 ### iOS Devices ###
 For running on iOS devices you will need an iOS developer account, a valid code signing certificate, and a valid provisioning profile. Help on these topics can be found at [Apple's developer website](http://developer.apple.com). 
 
-First generate an XCode project without compiling:
+First generate an Xcode project without compiling:
 
 ```bash
 make cmake-ios
@@ -87,7 +87,7 @@ open build/ios/tangram.xcodeproj
 If you run into problems deploying to an iOS device, see [this note](https://github.com/tangrams/tangram-es/wiki/iOS-Notes).
 
 ### Android ###
-To build for Android you'll need to have installed both the [Android SDK](http://developer.android.com/sdk/installing/index.html?pkg=tools) and the [Android NDK](https://developer.android.com/tools/sdk/ndk/index.html). Set an `ANDROID_HOME` evironment variable with the root directory of your SDK and an `ANDROID_NDK` environment variable with the root directory of your NDK. 
+To build for Android you'll need to have installed both the [Android SDK](http://developer.android.com/sdk/installing/index.html?pkg=tools) and the [Android NDK](https://developer.android.com/tools/sdk/ndk/index.html). Set an `ANDROID_HOME` environment variable with the root directory of your SDK and an `ANDROID_NDK` environment variable with the root directory of your NDK. 
 
 Build an APK of the demo application and optionally specify an architecture (default is armeabi-v7a):
 
@@ -103,7 +103,7 @@ Then install to a connected device or emulator. You can (re)install and run the 
 
 ### Raspberry Pi ###
 
-First, install cmake and libcurl:
+First, install CMake and libcurl:
 
 ```
 sudo apt-get install cmake libcurl4-openssl-dev
