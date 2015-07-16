@@ -2,9 +2,9 @@ package com.almeros.android.multitouch;
 
 import android.content.Context;
 import android.util.DisplayMetrics;
-import android.util.FloatMath;
 import android.view.MotionEvent;
 import android.view.ViewConfiguration;
+import java.lang.Math;
 
 /**
  * @author Almer Thie (code.almeros.com)
@@ -92,7 +92,7 @@ public abstract class TwoFingerGestureDetector extends BaseGestureDetector {
         if (mCurrLen == -1) {
             final float cvx = mCurrFingerDiffX;
             final float cvy = mCurrFingerDiffY;
-            mCurrLen = FloatMath.sqrt(cvx*cvx + cvy*cvy);
+            mCurrLen = (float)Math.sqrt(cvx*cvx + cvy*cvy);
         }
         return mCurrLen;
     }
@@ -107,7 +107,7 @@ public abstract class TwoFingerGestureDetector extends BaseGestureDetector {
         if (mPrevLen == -1) {
             final float pvx = mPrevFingerDiffX;
             final float pvy = mPrevFingerDiffY;
-            mPrevLen = FloatMath.sqrt(pvx*pvx + pvy*pvy);
+            mPrevLen = (float)Math.sqrt(pvx*pvx + pvy*pvy);
         }
         return mPrevLen;
     }
