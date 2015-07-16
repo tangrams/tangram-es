@@ -27,6 +27,11 @@ namespace Tangram {
 
     static float g_time = 0.0;
     static unsigned long g_flags = 0;
+    
+    bool m_hasPan;
+    glm::vec2 m_panDelta;
+    const float m_minPanDelta = 5.f;
+    const float m_decreasePan = 0.95f;
 
     void initialize() {
 
@@ -94,6 +99,14 @@ namespace Tangram {
         g_time += _dt;
 
         if (m_view) {
+            
+            if (!m_hasPan) {
+                m_panDelta *= m_decreasePan;
+                m_view->translate(m_panDelta.x, m_panDelta.y);
+                requestRender();
+            }
+            
+            m_hasPan = false;
 
             m_view->update();
 
@@ -271,8 +284,16 @@ namespace Tangram {
 
         m_view->screenToGroundPlane(_startX, _startY);
         m_view->screenToGroundPlane(_endX, _endY);
-
+        
+        m_panDelta = glm::vec2(_startX - _endX, _startY - _endY);
+        
+        if (glm::length(m_panDelta) < m_minPanDelta) {
+            m_panDelta = glm::vec2(0.f);
+        }
+        
         m_view->translate(_startX - _endX, _startY - _endY);
+        
+        m_hasPan = true;
 
         requestRender();
     }
