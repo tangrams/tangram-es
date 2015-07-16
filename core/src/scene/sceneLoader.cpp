@@ -585,16 +585,16 @@ void SceneLoader::loadCameras(Node cameras, View& view) {
 
 }
 
-Filter* SceneLoader::generateFilter(YAML::Node _filter) {
+std::shared_ptr<Filter> SceneLoader::generateFilter(YAML::Node _filter) {
 
     if (!_filter) {
-        return (new Filter());
+        return std::shared_ptr<Filter>(new Filter());
     }
 
-    std::vector<Filter*> filters;
+    std::vector< std::shared_ptr<Filter> > filters;
 
     for (const auto& filtItr : _filter) {
-        Filter* filter;
+        std::shared_ptr<Filter> filter;
 
         if (_filter.IsSequence()) {
 
@@ -630,26 +630,27 @@ Filter* SceneLoader::generateFilter(YAML::Node _filter) {
     if (filters.size() == 1) {
         return filters.front();
     } else if (filters.size() > 0) {
-        return (new All(filters));
+        return std::shared_ptr<Filter>(new All(filters));
     } else {
-        return (new Filter());
+        return std::shared_ptr<Filter>(new Filter());
     }
 
 }
 
-Filter* SceneLoader::generatePredicate(YAML::Node _node, std::string _key) {
+std::shared_ptr<Filter> SceneLoader::generatePredicate(YAML::Node _node, std::string _key) {
 
     if (_node.IsScalar()) {
         try {
-            return (new Equality(_key, { new NumValue(_node.as<float>(), _node.as<std::string>()) }));
+            return std::shared_ptr<Filter>(new Equality(_key, { new NumValue(_node.as<float>(),
+                            _node.as<std::string>()) }));
         } catch(const BadConversion& e) {
             std::string value = _node.as<std::string>();
             if (value == "true") {
-                return (new Existence(_key, true));
+                return std::shared_ptr<Filter>(new Existence(_key, true));
             } else if (value == "false") {
-                return (new Existence(_key, false));
+                return std::shared_ptr<Filter>(new Existence(_key, false));
             } else {
-                return (new Equality(_key, {new StrValue(value)}));
+                return std::shared_ptr<Filter>(new Equality(_key, {new StrValue(value)}));
             }
         }
     } else if (_node.IsSequence()) {
@@ -662,7 +663,7 @@ Filter* SceneLoader::generatePredicate(YAML::Node _node, std::string _key) {
                 values.emplace_back(new StrValue(value));
             }
         }
-        return (new Equality(_key, std::move(values)));
+        return std::shared_ptr<Filter>(new Equality(_key, std::move(values)));
     } else if (_node.IsMap()) {
         float minVal = -std::numeric_limits<float>::infinity();
         float maxVal = std::numeric_limits<float>::infinity();
@@ -673,46 +674,46 @@ Filter* SceneLoader::generatePredicate(YAML::Node _node, std::string _key) {
                     minVal = valItr.second.as<float>();
                 } catch(const BadConversion& e) {
                     logMsg("Error: Badly formed filter.\tExpect a float value type, string found.\n");
-                    return (new Filter());
+                    return std::shared_ptr<Filter>(new Filter());
                 }
             } else if (valItr.first.as<std::string>() == "max") {
                 try {
                     maxVal = valItr.second.as<float>();
                 } catch(const BadConversion& e) {
                     logMsg("Error: Badly formed filter.\tExpect a float value type, string found.\n");
-                    return (new Filter());
+                    return std::shared_ptr<Filter>(new Filter());
                 }
             } else {
                 logMsg("Error: Badly formed Filter\n");
-                return (new Filter());
+                return std::shared_ptr<Filter>(new Filter());
             }
         }
-        return (new Range(_key, minVal, maxVal));
+        return std::shared_ptr<Filter>(new Range(_key, minVal, maxVal));
 
     } else {
         logMsg("Error: Badly formed Filter\n");
-        return (new Filter());
+        return std::shared_ptr<Filter>(new Filter());
     }
 
 }
 
-Filter* SceneLoader::generateAnyFilter(YAML::Node _filter) {
-    std::vector<Filter*> filters;
+std::shared_ptr<Filter> SceneLoader::generateAnyFilter(YAML::Node _filter) {
+    std::vector< std::shared_ptr<Filter> > filters;
 
     if (!_filter.IsSequence()) {
         logMsg("Error: Badly formed filter. \"Any\" expects a list.\n");
-        return (new Filter());
+        return std::shared_ptr<Filter>(new Filter());
     }
 
     for (const auto& filtItr : _filter) {
         filters.emplace_back(generateFilter(filtItr));
     }
-    return (new Any(std::move(filters)));
+    return std::shared_ptr<Filter>(new Any(std::move(filters)));
 }
 
-Filter* SceneLoader::generateNoneFilter(YAML::Node _filter) {
+std::shared_ptr<Filter> SceneLoader::generateNoneFilter(YAML::Node _filter) {
 
-    std::vector<Filter*> filters;
+    std::vector< std::shared_ptr<Filter> > filters;
 
     if (_filter.IsSequence()) {
         for (const auto& filtIter : _filter) {
@@ -725,10 +726,10 @@ Filter* SceneLoader::generateNoneFilter(YAML::Node _filter) {
         }
     } else {
         logMsg("Error: Badly formed filter. \"None\" expects a list or an object.\n");
-        return (new Filter());
+        return std::shared_ptr<Filter>(new Filter());
     }
 
-    return (new None(std::move(filters)));
+    return std::shared_ptr<Filter>(new None(std::move(filters)));
 }
 
 void SceneLoader::parseStyleProps(Node styleProps, StyleParamMap& paramMap, const std::string& propPrefix) {
@@ -755,7 +756,7 @@ void SceneLoader::parseStyleProps(Node styleProps, StyleParamMap& paramMap, cons
 
 }
 
-void SceneLoader::loadSublayers(YAML::Node layer, std::vector<std::shared_ptr<SceneLayer>>& subLayers) {
+void SceneLoader::loadSublayers(YAML::Node layer, std::vector< std::shared_ptr<SceneLayer> >& subLayers) {
 
     for (const auto& subLayerItr : layer) {
 
@@ -766,9 +767,9 @@ void SceneLoader::loadSublayers(YAML::Node layer, std::vector<std::shared_ptr<Sc
         // If node has a draw group that means its a sublayer (no need to check for reserved)
         if(drawGroup) {
 
-            std::vector<std::shared_ptr<SceneLayer>> ssubLayers;
+            std::vector< std::shared_ptr<SceneLayer> > ssubLayers;
             Node filter = subLayerItr.second["filter"];
-            Filter* subLayerFilter = generateFilter(filter);
+            auto subLayerFilter = generateFilter(filter);
 
             loadSublayers(layer[subLayerName], ssubLayers);
 
@@ -778,7 +779,7 @@ void SceneLoader::loadSublayers(YAML::Node layer, std::vector<std::shared_ptr<Sc
                 // TODO: multiple draw groups for a subLayer, NOTE: only one draw for now
                 // TODO: subLayers can have different base style than the parent layer
                 parseStyleProps(groupIt.second, paramMap);
-                subLayers.push_back(std::make_shared<SceneLayer>(std::move(ssubLayers), std::move(paramMap), subLayerName,
+                subLayers.push_back(std::make_shared<SceneLayer>(ssubLayers, std::move(paramMap), subLayerName,
                             subLayerFilter));
             }
         }
@@ -793,11 +794,11 @@ void SceneLoader::loadLayers(Node layers, Scene& scene, TileManager& tileManager
 
     for (const auto& layerIt : layers) {
 
-        std::vector<std::shared_ptr<SceneLayer>> subLayers;
+        std::vector< std::shared_ptr<SceneLayer> > subLayers;
         std::string name = layerIt.first.as<std::string>();
         Node data = layerIt.second["data"];
         Node filter = layerIt.second["filter"];
-        Filter* layerFilter = generateFilter(filter);
+        auto layerFilter = generateFilter(filter);
         Node drawGroup = layerIt.second["draw"];
 
         loadSublayers(layers[name], subLayers);
@@ -816,7 +817,7 @@ void SceneLoader::loadLayers(Node layers, Scene& scene, TileManager& tileManager
             // match layer to the style in scene with the given name
             for (const auto& style : scene.getStyles()) {
                 if (style->getName() == styleName) {
-                    style->addLayer(std::make_shared<SceneLayer>(std::move(subLayers), std::move(paramMap),
+                    style->addLayer(std::make_shared<SceneLayer>(subLayers, std::move(paramMap),
                                 name, layerFilter));
                 }
 			}

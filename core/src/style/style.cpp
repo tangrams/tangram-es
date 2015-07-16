@@ -133,7 +133,8 @@ void Style::addData(TileData& _data, MapTile& _tile) {
     std::shared_ptr<VboMesh> mesh(newMesh());
 
     Context ctx;
-    ctx["$zoom"] = new NumValue(_tile.getID().z);
+    auto ctxVal = new NumValue(_tile.getID().z);
+    ctx["$zoom"] = ctxVal;
 
     for (auto& layer : _data.layers) {
 
@@ -187,6 +188,8 @@ void Style::addData(TileData& _data, MapTile& _tile) {
 
         _tile.addGeometry(*this, mesh);
     }
+
+    delete ctxVal;
 }
 
 void Style::onBeginDrawFrame(const std::shared_ptr<View>& _view, const std::shared_ptr<Scene>& _scene) {

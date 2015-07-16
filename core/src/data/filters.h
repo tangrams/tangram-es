@@ -60,18 +60,18 @@ namespace Tangram {
 
     struct Operator : public Filter {
 
-        std::vector<Filter*> operands;
+        std::vector<std::shared_ptr<Filter>> operands;
 
-        Operator(const std::vector<Filter*>& ops) : operands(ops) {}
-        ~Operator() { for (auto* f : operands) { delete f; } }
+        Operator(const std::vector<std::shared_ptr<Filter>>& ops) : operands(ops) {}
+        ~Operator() {}
 
     };
 
     struct Any : public Operator {
 
-        Any(const std::vector<Filter*>& ops) : Operator(ops) {}
+        Any(const std::vector<std::shared_ptr<Filter>>& ops) : Operator(ops) {}
         virtual bool eval(const Feature& feat, const Context& ctx) const override {
-            for (const Filter* filt : operands) {
+            for (const std::shared_ptr<Filter> filt : operands) {
                 if (filt->eval(feat, ctx)) { return true; }
             }
             return false;
@@ -81,9 +81,9 @@ namespace Tangram {
 
     struct All : public Operator {
 
-        All(const std::vector<Filter*>& ops) : Operator(ops) {}
+        All(const std::vector<std::shared_ptr<Filter>>& ops) : Operator(ops) {}
         virtual bool eval(const Feature& feat, const Context& ctx) const override {
-            for (const Filter* filt : operands) {
+            for (const std::shared_ptr<Filter> filt : operands) {
                 if (!filt->eval(feat, ctx)) { return false; }
             }
             return true;
@@ -93,9 +93,9 @@ namespace Tangram {
 
     struct None : public Operator {
 
-        None(const std::vector<Filter*>& ops) : Operator(ops) {}
+        None(const std::vector<std::shared_ptr<Filter>>& ops) : Operator(ops) {}
         virtual bool eval(const Feature& feat, const Context& ctx) const override {
-            for (const Filter* filt : operands) {
+            for (const std::shared_ptr<Filter> filt : operands) {
                 if (filt->eval(feat, ctx)) { return false; }
             }
             return true;
@@ -134,7 +134,7 @@ namespace Tangram {
         ValueList values;
 
         Equality(const std::string& k, const ValueList& v) : Predicate(k), values(v) {}
-        ~Equality() { for (auto* v : values) { delete v; } }
+        ~Equality() {}
 
         virtual bool eval(const Feature& feat, const Context& ctx) const override {
 
