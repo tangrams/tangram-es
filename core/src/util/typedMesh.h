@@ -43,6 +43,10 @@ public:
         size_t aSize = sizeof(A);
         size_t tSize = sizeof(T);
 
+        if (_nVerts * tSize + _byteOffset > m_nVertices * tSize) {
+            return;
+        }
+
         // update the vertices attributes
         for (int i = 0; i < _nVerts; ++i) {
             std::memcpy(m_glVertexData + _byteOffset + i * tSize, &_newAttributeValue, aSize);
@@ -106,6 +110,10 @@ void TypedMesh<T>::updateVertices(GLintptr _byteOffset, unsigned int _nVerts, co
     }
 
     size_t tSize = sizeof(T);
+
+    if (_nVerts * tSize + _byteOffset > m_nVertices * tSize) {
+            return;
+    }
 
     // update the vertices
     for (int i = 0; i < _nVerts; ++i) {

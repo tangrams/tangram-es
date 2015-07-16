@@ -28,6 +28,14 @@ std::shared_ptr<TypedMesh<Vertex>> newMesh(unsigned int size) {
     return mesh;
 }
 
+void checkBounds(const std::shared_ptr<TypedMesh<Vertex>>& mesh) {
+
+    REQUIRE(mesh->getDirtyOffset() >= 0);
+    REQUIRE(mesh->getDirtyOffset() < mesh->numVertices() * sizeof(Vertex));
+    REQUIRE(long(mesh->getDirtyOffset() + mesh->getDirtySize()) < mesh->numVertices() * sizeof(Vertex));
+
+}
+
 TEST_CASE( "Simple update on vertices", "[Core][TypedMesh]" ) {
     auto mesh = newMesh(10);
 
@@ -38,6 +46,8 @@ TEST_CASE( "Simple update on vertices", "[Core][TypedMesh]" ) {
 
     REQUIRE(mesh->getDirtyOffset() == 0);
     REQUIRE(mesh->getDirtySize() == 4 * sizeof(Vertex));
+
+    checkBounds(mesh);
 }
 
 TEST_CASE( "Left merge on vertices with bigger left size", "[Core][TypedMesh]" ) {
@@ -48,6 +58,8 @@ TEST_CASE( "Left merge on vertices with bigger left size", "[Core][TypedMesh]" )
 
     REQUIRE(mesh->getDirtyOffset() == 0);
     REQUIRE(mesh->getDirtySize() == 8 * sizeof(Vertex));
+
+    checkBounds(mesh);
 }
 
 TEST_CASE( "Left merge on vertices with smaller left size", "[Core][TypedMesh]" ) {
@@ -58,6 +70,8 @@ TEST_CASE( "Left merge on vertices with smaller left size", "[Core][TypedMesh]" 
 
     REQUIRE(mesh->getDirtyOffset() == 0);
     REQUIRE(mesh->getDirtySize() == 4 * sizeof(Vertex));
+
+    checkBounds(mesh);
 }
 
 TEST_CASE( "Right merge on vertices dirtiness", "[Core][TypedMesh]" ) {
@@ -68,6 +82,8 @@ TEST_CASE( "Right merge on vertices dirtiness", "[Core][TypedMesh]" ) {
 
     REQUIRE(mesh->getDirtyOffset() == 2 * sizeof(Vertex));
     REQUIRE(mesh->getDirtySize() == 4 * sizeof(Vertex));
+
+    checkBounds(mesh);
 }
 
 TEST_CASE( "Update on second attribute of the mesh for n vertices", "[Core][TypedMesh]" ) {
@@ -79,6 +95,8 @@ TEST_CASE( "Update on second attribute of the mesh for n vertices", "[Core][Type
 
     REQUIRE(mesh->getDirtyOffset() == stride_b + sizeof(Vertex));
     REQUIRE(mesh->getDirtySize() == (nVert - 1) * sizeof(Vertex) + sizeof(float));
+
+    checkBounds(mesh);
 }
 
 TEST_CASE( "Update on second attribute of the mesh for 1 vertices", "[Core][TypedMesh]" ) {
@@ -89,6 +107,8 @@ TEST_CASE( "Update on second attribute of the mesh for 1 vertices", "[Core][Type
 
     REQUIRE(mesh->getDirtyOffset() == stride_b);
     REQUIRE(mesh->getDirtySize() == sizeof(float));
+
+    checkBounds(mesh);
 }
 
 TEST_CASE( "Update on second and third attribute of the mesh for n vertices", "[Core][TypedMesh]" ) {
@@ -103,6 +123,8 @@ TEST_CASE( "Update on second and third attribute of the mesh for n vertices", "[
     REQUIRE(mesh->getDirtyOffset() == stride_b);
     int dist = stride_c - stride_b; // distance between b and c
     REQUIRE(mesh->getDirtySize() == 8 * sizeof(Vertex) + dist + sizeof(short));
+
+    checkBounds(mesh);
 }
 
 TEST_CASE( "Update on second and fourth attribute of the mesh for n vertices", "[Core][TypedMesh]" ) {
@@ -117,4 +139,21 @@ TEST_CASE( "Update on second and fourth attribute of the mesh for n vertices", "
     REQUIRE(mesh->getDirtyOffset() == stride_b);
     int dist = stride_d - stride_b; // distance between b and c
     REQUIRE(mesh->getDirtySize() == 7 * sizeof(Vertex) + dist + sizeof(char));
+
+    checkBounds(mesh);
+}
+
+TEST_CASE( "Check overflow", "[Core][TypedMesh]" ) {
+    auto mesh = newMesh(10);
+    size_t stride_b = sizeof(float); // stride of b in the struct
+
+    mesh->updateAttribute(stride_b, 100, 0.f);
+    mesh->updateVertices(0, 100, Vertex());
+    mesh->updateAttribute(stride_b + sizeof(Vertex) * 10, 1, Vertex());
+    mesh->updateAttribute(-sizeof(Vertex) * 100, 10, Vertex());
+
+    REQUIRE(mesh->getDirtyOffset() == 0);
+    REQUIRE(mesh->getDirtySize() == 0);
+
+    checkBounds(mesh);
 }
