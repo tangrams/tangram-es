@@ -3,7 +3,7 @@
 #include "style.h"
 #include "typedMesh.h"
 #include "glfontstash.h"
-#include "tile/labels/labels.h"
+#include "labels/labels.h"
 #include <memory>
 
 class TextStyle : public Style {

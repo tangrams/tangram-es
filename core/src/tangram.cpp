@@ -5,7 +5,7 @@
 #include "scene/sceneLoader.h"
 #include "style/style.h"
 #include "text/fontContext.h"
-#include "tile/labels/labels.h"
+#include "labels/labels.h"
 #include "tile/tileManager.h"
 #include "tile/tile.h"
 #include "gl/error.h"
@@ -63,7 +63,7 @@ namespace Tangram {
         }
 
         RenderState::configure();
-        
+
         while (Error::hadGlError("Tangram::initialize()")) {}
 
         logMsg("finish initialize\n");
