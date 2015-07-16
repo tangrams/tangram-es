@@ -43,7 +43,11 @@ public:
         size_t aSize = sizeof(A);
         size_t tSize = sizeof(T);
 
-        if (_nVerts * tSize + _byteOffset > m_nVertices * tSize) {
+        // updating an attribute for _nVerts vertex means updating a byte distance
+        // of (_nVerts - 1) * tSize in the buffer
+        unsigned int attrByteDist = (_nVerts - 1) * tSize;
+
+        if (attrByteDist + _byteOffset > m_nVertices * tSize) {
             return;
         }
 
@@ -52,7 +56,8 @@ public:
             std::memcpy(m_glVertexData + _byteOffset + i * tSize, &_newAttributeValue, aSize);
         }
 
-        setDirty(_byteOffset, (_nVerts - 1) * tSize + aSize);
+        // set dirty from _byteOffset by the distance between the two attributes + the size of it
+        setDirty(_byteOffset, attrByteDist + aSize);
     }
 
 protected:
