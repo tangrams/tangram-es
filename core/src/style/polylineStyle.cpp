@@ -95,11 +95,11 @@ void* PolylineStyle::parseStyleParams(const std::string& _layerNameID, const Sty
     return static_cast<void*>(params);
 }
 
-void PolylineStyle::buildPoint(Point& _point, void* _styleParam, Properties& _props, VboMesh& _mesh) const {
+void PolylineStyle::buildPoint(Point& _point, void* _styleParam, Properties& _props, VboMesh& _mesh, MapTile& _tile) const {
     // No-op
 }
 
-void PolylineStyle::buildLine(Line& _line, void* _styleParam, Properties& _props, VboMesh& _mesh) const {
+void PolylineStyle::buildLine(Line& _line, void* _styleParam, Properties& _props, VboMesh& _mesh, MapTile& _tile) const {
     std::vector<PosNormEnormColVertex> vertices;
 
     StyleParams* params = static_cast<StyleParams*>(_styleParam);
@@ -151,6 +151,6 @@ void PolylineStyle::buildLine(Line& _line, void* _styleParam, Properties& _props
     mesh.addVertices(std::move(vertices), std::move(builder.indices));
 }
 
-void PolylineStyle::buildPolygon(Polygon& _polygon, void* _styleParam, Properties& _props, VboMesh& _mesh) const {
+void PolylineStyle::buildPolygon(Polygon& _polygon, void* _styleParam, Properties& _props, VboMesh& _mesh, MapTile& _tile) const {
     // No-op
 }
