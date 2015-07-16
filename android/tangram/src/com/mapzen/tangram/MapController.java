@@ -212,6 +212,14 @@ public class MapController implements Renderer, OnTouchListener, OnScaleGestureL
         mapView.setRenderMode(renderMode);
     }
 
+    /**
+     * Set a listener for long press events
+     * @param listener Listener to call
+     */
+    public void setLongPressListener(View.OnGenericMotionListener listener) {
+        longPressListener = listener;
+    }
+
     // Native methods
     // ==============
 
@@ -254,7 +262,7 @@ public class MapController implements Renderer, OnTouchListener, OnScaleGestureL
     private ScaleGestureDetector scaleGestureDetector;
     private RotateGestureDetector rotateGestureDetector;
     private ShoveGestureDetector shoveGestureDetector;
-    private View.OnGenericMotionListener genericMotionListener;
+    private View.OnGenericMotionListener longPressListener;
     private DisplayMetrics displayMetrics = new DisplayMetrics();
 
     private OkHttpClient okClient;
@@ -271,10 +279,6 @@ public class MapController implements Renderer, OnTouchListener, OnScaleGestureL
         rotateGestureDetector.onTouchEvent(event);
 
         return true;
-    }
-
-    public void setGenericMotionListener(View.OnGenericMotionListener listener) {
-        genericMotionListener = listener;
     }
 
     // GLSurfaceView.Renderer methods
@@ -336,8 +340,8 @@ public class MapController implements Renderer, OnTouchListener, OnScaleGestureL
     }
 
     public void onLongPress(MotionEvent event) {
-        if (genericMotionListener != null) {
-            genericMotionListener.onGenericMotion(mapView, event);
+        if (longPressListener != null) {
+            longPressListener.onGenericMotion(mapView, event);
         }
     }
 
