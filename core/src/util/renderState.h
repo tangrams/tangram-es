@@ -62,7 +62,7 @@ namespace RenderState {
         struct Type {
             GLenum src;
             GLenum dst;
-            bool operator!=(const Type& _other) {
+            inline bool operator!=(const Type& _other) {
                 return src != _other.src || dst != _other.dst;
             }
         };
@@ -76,6 +76,9 @@ namespace RenderState {
             GLboolean culling;
             GLenum frontFaceOrder;
             GLenum face;
+            inline bool operator!=(const Type& _other) {
+                return culling != _other.culling || frontFaceOrder != _other.frontFaceOrder || face != _other.face;
+            }
         };
         inline static void set(const Type& _type) {
             if (_type.culling) {
@@ -85,10 +88,6 @@ namespace RenderState {
             }
         }
     };
-
-    inline bool operator!=(const Culling::Type& _lhs, const Culling::Type& _rhs) {
-        return _lhs.culling != _rhs.culling || _lhs.frontFaceOrder != _rhs.frontFaceOrder || _lhs.face != _rhs.face;
-    }
 
     extern State<DepthTest> depthTest;
     extern State<DepthWrite> depthWrite;
