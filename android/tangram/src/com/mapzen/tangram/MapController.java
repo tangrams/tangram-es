@@ -320,7 +320,7 @@ public class MapController implements Renderer, OnTouchListener, OnScaleGestureL
         // Only pan for scrolling events with just one pointer; otherwise vertical scrolling will
         // cause a simultaneous shove gesture
         if (e1.getPointerCount() == 1 && e2.getPointerCount() == 1) {
-            // We flip the signs of distanceX and distanceY because onScroll provides the distancesj
+            // We flip the signs of distanceX and distanceY because onScroll provides the distances
             // by which the view being scrolled should move, while handlePanGesture expects the
             // distances by which the touch point has moved on the screen (these are opposite)
             float x = e2.getX();
@@ -336,7 +336,7 @@ public class MapController implements Renderer, OnTouchListener, OnScaleGestureL
     }
 
     public void onLongPress(MotionEvent event) {
-        if(genericMotionListener != null) {
+        if (genericMotionListener != null) {
             genericMotionListener.onGenericMotion(mapView, event);
         }
     }
