@@ -45,13 +45,18 @@ void PolygonStyle::buildPoint(Point& _point, const StyleParamMap& _styleParamMap
 void PolygonStyle::buildLine(Line& _line, const StyleParamMap& _styleParamMap, Properties& _props, VboMesh& _mesh) const {
     std::vector<PosNormColVertex> vertices;
 
+    StyleParams params;
+    parseStyleParams(_styleParamMap, params);
+
+    GLuint abgr = params.color;
+    GLfloat layer = params.order;
+
     PolyLineBuilder builder = {
         [&](const glm::vec3& coord, const glm::vec2& normal, const glm::vec2& uv) {
             float halfWidth =  0.2f;
-            GLuint abgr = 0xff969696; // Default road color
 
             glm::vec3 point(coord.x + normal.x * halfWidth, coord.y + normal.y * halfWidth, coord.z);
-            vertices.push_back({ point, glm::vec3(0.0f, 0.0f, 1.0f), uv, abgr, 0.0f });
+            vertices.push_back({ point, glm::vec3(0.0f, 0.0f, 1.0f), uv, abgr, layer });
         }
     };
 

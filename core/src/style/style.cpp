@@ -99,23 +99,21 @@ void Style::applyLayerFiltering(const Feature& _feature, const Context& _ctx, st
 
             _uniqueID.set(sceneLyr->getID());
 
-            if(s_styleParamMapCache.find(_uniqueID) != s_styleParamMapCache.end()) {
+            {
+                std::lock_guard<std::mutex> lock(s_cacheMutex);
 
-                {
-                    std::lock_guard<std::mutex> lock(s_cacheMutex);
+                if(s_styleParamMapCache.find(_uniqueID) != s_styleParamMapCache.end()) {
+
                     _styleParamMapMix = s_styleParamMapCache.at(_uniqueID);
-                }
 
-            } else {
+                } else {
 
-                /* update StyleParam with subLayer parameters */
-                auto& layerStyleParamMap = sceneLyr->getStyleParamMap();
-                for(auto& styleParam : layerStyleParamMap) {
-                    _styleParamMapMix[styleParam.first] = styleParam.second;
-                }
+                    /* update StyleParam with subLayer parameters */
+                    auto& layerStyleParamMap = sceneLyr->getStyleParamMap();
+                    for(auto& styleParam : layerStyleParamMap) {
+                        _styleParamMapMix[styleParam.first] = styleParam.second;
+                    }
 
-                {
-                    std::lock_guard<std::mutex> lock(s_cacheMutex);
                     s_styleParamMapCache.emplace(_uniqueID, _styleParamMapMix);
                 }
             }
@@ -201,7 +199,10 @@ void Style::onBeginDrawFrame(const std::shared_ptr<View>& _view, const std::shar
     }
 
     m_shaderProgram->setUniformf("u_zoom", _view->getZoom());
-
+    
+    // default capabilities
+    RenderState::blending(GL_FALSE);
+    RenderState::depthTest(GL_TRUE);
 }
 
 void Style::onBeginBuildTile(Tile& _tile) const {
