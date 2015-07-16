@@ -12,7 +12,7 @@
 #include "gl/shaderProgram.h"
 #include "scene/skybox.h"
 #include "view/view.h"
-#include "util/renderState.h"
+#include "gl/renderState.h"
 #include <memory>
 #include <cmath>
 

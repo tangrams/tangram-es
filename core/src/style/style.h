@@ -7,7 +7,7 @@
 #include "styleParamMap.h"
 
 #include "gl/shaderProgram.h"
-#include "util/renderState.h"
+#include "gl/renderState.h"
 
 #include <bitset>
 #include <memory>
