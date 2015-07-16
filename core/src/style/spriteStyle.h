@@ -22,16 +22,14 @@ protected:
     virtual VboMesh* newMesh() const override {
         return new Mesh(m_vertexLayout, m_drawMode, GL_DYNAMIC_DRAW);
     };
-    
+
     std::unique_ptr<SpriteAtlas> m_spriteAtlas;
     std::shared_ptr<Labels> m_labels;
-    
+
 public:
 
     virtual void onBeginDrawFrame(const std::shared_ptr<View>& _view, const std::shared_ptr<Scene>& _scene) override;
     virtual void onEndDrawFrame() override;
-    
-    void setSpriteAtlas(std::unique_ptr<SpriteAtlas> _atlas);
 
     SpriteStyle(std::string _name, GLenum _drawMode = GL_TRIANGLES);
 
