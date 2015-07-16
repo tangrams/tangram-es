@@ -73,11 +73,11 @@ TEST_CASE( "Right merge on vertices dirtiness", "[Core][TypedMesh]" ) {
 TEST_CASE( "Update on second attribute of the mesh for n vertices", "[Core][TypedMesh]" ) {
     auto mesh = newMesh(10);
     int nVert = 5;
-    size_t stride_a = 1 * sizeof(float); // stride of a in the struct
+    size_t stride_b = 1 * sizeof(float); // stride of a in the struct
 
-    mesh->updateAttribute(stride_a + sizeof(Vertex), nVert, 0.f);
+    mesh->updateAttribute(stride_b + sizeof(Vertex), nVert, 0.f);
 
-    REQUIRE(mesh->getDirtyOffset() == stride_a + sizeof(Vertex));
+    REQUIRE(mesh->getDirtyOffset() == stride_b + sizeof(Vertex));
     REQUIRE(mesh->getDirtySize() == (nVert - 1) * sizeof(Vertex) + sizeof(float));
 }
 
