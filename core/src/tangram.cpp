@@ -100,9 +100,11 @@ namespace Tangram {
 
         if (m_view) {
             
-            if (!m_hasPan) {
+            if (!m_hasPan && glm::length(m_panDelta) > 0.f) {
+                // exponential decrease, m_decreasePan should be between [0..1]
                 m_panDelta *= m_decreasePan;
                 m_view->translate(m_panDelta.x, m_panDelta.y);
+                
                 requestRender();
             }
             
@@ -263,7 +265,9 @@ namespace Tangram {
     }
 
     void handleTapGesture(float _posX, float _posY) {
-
+        // break pan momentum
+        m_panDelta = glm::vec2(0.f);
+        
         float viewCenterX = 0.5f * m_view->getWidth();
         float viewCenterY = 0.5f * m_view->getHeight();
 
@@ -281,17 +285,24 @@ namespace Tangram {
     }
 
     void handlePanGesture(float _startX, float _startY, float _endX, float _endY) {
-
+        // it is possible that the platform is sending the same values for the last pan
+        if (std::abs(_startX - _endX) < FLT_EPSILON && std::abs(_startY - _endY) < FLT_EPSILON) {
+            return;
+        }
+        
         m_view->screenToGroundPlane(_startX, _startY);
         m_view->screenToGroundPlane(_endX, _endY);
-        
-        m_panDelta = glm::vec2(_startX - _endX, _startY - _endY);
-        
+
+        float dx = _startX - _endX;
+        float dy = _startY - _endY;
+
+        m_panDelta = glm::vec2(dx, dy);
+
         if (glm::length(m_panDelta) < m_minPanDelta) {
             m_panDelta = glm::vec2(0.f);
         }
         
-        m_view->translate(_startX - _endX, _startY - _endY);
+        m_view->translate(dx, dy);
         
         m_hasPan = true;
 
