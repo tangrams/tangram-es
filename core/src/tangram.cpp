@@ -12,6 +12,7 @@
 #include "util/shaderProgram.h"
 #include "util/skybox.h"
 #include "view/view.h"
+#include "util/renderState.h"
 #include <memory>
 #include <cmath>
 
@@ -61,19 +62,8 @@ namespace Tangram {
 
         }
 
-        // Set up openGL state
-        glDisable(GL_BLEND);
-        glDisable(GL_STENCIL_TEST);
-        glEnable(GL_DEPTH_TEST);
-        glClearDepthf(1.0);
-        glDepthRangef(0.0, 1.0);
-        glDepthMask(GL_TRUE);
-        glDepthFunc(GL_LEQUAL);
-        glEnable(GL_CULL_FACE);
-        glFrontFace(GL_CCW);
-        glCullFace(GL_BACK);
-        glClearColor(0.3f, 0.3f, 0.3f, 1.0f);
-
+        RenderState::configure();
+        
         while (Error::hadGlError("Tangram::initialize()")) {}
 
         logMsg("finish initialize\n");

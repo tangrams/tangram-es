@@ -199,7 +199,10 @@ void Style::onBeginDrawFrame(const std::shared_ptr<View>& _view, const std::shar
     }
 
     m_shaderProgram->setUniformf("u_zoom", _view->getZoom());
-
+    
+    // default capabilities
+    RenderState::blending(GL_FALSE);
+    RenderState::depthTest(GL_TRUE);
 }
 
 void Style::onBeginBuildTile(MapTile& _tile) const {
