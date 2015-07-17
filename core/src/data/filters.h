@@ -22,11 +22,11 @@ namespace Tangram {
         Value(const std::string& s) : str(s), num(0), numeric(false) {}
 
         // Why do "numeric" values keep both a string and a number? Basically because of a shortcoming in the
-        // YAML parser we use. Suppose we want to filter for features named "007". In a stylesheet, filter values 
-        // can be either numbers or strings and the only way to check for numbers is to try to cast the value to 
+        // YAML parser we use. Suppose we want to filter for features named "007". In a stylesheet, filter values
+        // can be either numbers or strings and the only way to check for numbers is to try to cast the value to
         // a numeric type. The cast succeeds for "007", so we must consider it a number value. But when we filter
         // against a feature containing the string "007", we must also have the original string representation of
-        // the filter value in order to correctly find the match. 
+        // the filter value in order to correctly find the match.
 
     };
 
@@ -37,7 +37,7 @@ namespace Tangram {
         all,
         none
     };
-    
+
     enum class FilterType : int {
         any = 0,
         all,
@@ -46,34 +46,34 @@ namespace Tangram {
         equality,
         range
     };
-    
+
     struct Filter {
-        
+
         std::vector<Filter> operands;
         std::vector<Value> values;
         std::string key;
         bool exists;
-        
+
         FilterType type;
-        
+
         Filter() : type(FilterType::none) {}
-        
+
         // Create an 'any', 'all', or 'none' filter
         Filter(Operators op, const std::vector<Filter>& filters) : operands(filters), type(static_cast<FilterType>(op)) {}
-        
+
         // Create an 'equality' filter
         Filter(const std::string& k, const std::vector<Value>& vals) : values(vals), key(k), type(FilterType::equality) {}
-        
+
         // Create a 'range' filter
         Filter(const std::string& k, float min, float max) : values({ Value(min), Value(max) }), key(k), type(FilterType::range) {}
-        
+
         // Create an 'existence' filter
         Filter(const std::string& k, bool ex) : key(k), exists(ex), type(FilterType::existence) {}
 
         bool eval(const Feature& feat, const Context& ctx) const {
-            
+
             switch (type) {
-                    
+
                 case FilterType::any: {
                     for (const auto& filt : operands) {
                         if (filt.eval(feat, ctx)) { return true; }
@@ -93,38 +93,38 @@ namespace Tangram {
                     return true;
                 }
                 case FilterType::existence: {
-                    
+
                     bool found = ctx.find(key) != ctx.end() ||
                                  feat.props.stringProps.find(key) != feat.props.stringProps.end() ||
                                  feat.props.numericProps.find(key) != feat.props.numericProps.end();
-                    
+
                     return exists == found;
                 }
                 case FilterType::equality: {
-                    
+
                     auto ctxIt = ctx.find(key);
                     if (ctxIt != ctx.end()) {
-                        for (auto& v : values) {
+                        for (const auto& v : values) {
                             if (v.equals(ctxIt->second)) { return true; }
                         }
                         return false;
                     }
                     auto strIt = feat.props.stringProps.find(key);
                     if (strIt != feat.props.stringProps.end()) {
-                        for (auto& v : values) {
+                        for (const auto& v : values) {
                             if (v.equals(strIt->second)) { return true; }
                         }
                     }
                     auto numIt = feat.props.numericProps.find(key);
                     if (numIt != feat.props.numericProps.end()) {
-                        for (auto& v : values) {
+                        for (const auto& v : values) {
                             if (v.equals(numIt->second)) { return true; }
                         }
                     }
                     return false;
                 }
                 case FilterType::range: {
-                    
+
                     float min = values[0].num;
                     float max = values[1].num;
                     auto ctxIt = ctx.find(key);
