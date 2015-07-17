@@ -4,9 +4,14 @@ namespace RenderState {
     
     State<Blending> blending = State<Blending>();
     State<DepthWrite> depthWrite = State<DepthWrite>();
+    State<ColorWrite> colorWrite = State<ColorWrite>();
     State<Culling> culling = State<Culling>();
     State<BlendingFunc> blendingFunc = State<BlendingFunc>();
     State<DepthTest> depthTest = State<DepthTest>();
+    State<StencilTest> stencilTest = State<StencilTest>();
+    State<StencilWrite> stencilWrite = State<StencilWrite>();
+    State<StencilFunc> stencilFunc = State<StencilFunc>();
+    State<StencilOp> stencilOp = State<StencilOp>();
     
     void configure() {
         blending.init(GL_FALSE);
