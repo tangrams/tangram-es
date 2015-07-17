@@ -11,11 +11,11 @@
 #include "util/error.h"
 #include "util/shaderProgram.h"
 #include "util/skybox.h"
+#include "util/stencil.h"
 #include "view/view.h"
 #include "util/renderState.h"
 #include <memory>
 #include <cmath>
-
 namespace Tangram {
 
     std::unique_ptr<TileManager> m_tileManager;
@@ -24,6 +24,7 @@ namespace Tangram {
     std::shared_ptr<Labels> m_labels;
     std::shared_ptr<FontContext> m_ftContext;
     std::shared_ptr<Skybox> m_skybox;
+    std::shared_ptr<StencilClipper> m_stencil;
 
     static float g_time = 0.0;
     static unsigned long g_flags = 0;
@@ -61,6 +62,8 @@ namespace Tangram {
             loader.loadScene("config.yaml", *m_scene, *m_tileManager, *m_view);
 
         }
+
+	m_stencil = std::shared_ptr<StencilClipper>(new StencilClipper());
 
         RenderState::configure();
         
@@ -144,20 +147,77 @@ namespace Tangram {
 
     void render() {
 
+        // Enable writes to stencil-buffer (and allow to clear it)
+        RenderState::stencilWrite(0xFF);
+
         // Set up openGL for new frame
-        glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+        // - TODO do this early in the frame as possible, i.e. before update()
+        glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT | GL_STENCIL_BUFFER_BIT);
+
+        std::vector<MapTile*> tiles;
+
+        for (const auto& mapIDandTile : m_tileManager->getVisibleTiles()) {
+            const std::shared_ptr<MapTile>& tile =  mapIDandTile.second;
+            if (tile->isReady()) {
+                tiles.push_back(tile.get());
+            }
+        }
+
+        // Draw tile quad geometry into stencil buffer for clipping
+        // all geometries to tile boundaries. Tiles are drawn with
+        // descending zoom-levels and the stencil is only updated when
+        // no previous tile was drawn so that lower zoom-level tiles
+        // do not overdraw previous drawn children to avoid flickering.
+        {
+            RenderState::depthTest(GL_FALSE);
+            RenderState::depthWrite(GL_FALSE);
+            RenderState::colorWrite(GL_FALSE);
+
+            RenderState::stencilTest(GL_TRUE);
+
+            RenderState::stencilOp({GL_KEEP, GL_KEEP, GL_REPLACE});
+    
+            //glStencilOp(GL_KEEP, GL_KEEP, GL_REPLACE);
+
+            int stencilRef = 0xFF;
+            for (auto tile : tiles) {
+                //glStencilFunc(GL_GREATER, stencilRef, 0xFF);
+                RenderState::stencilFunc({GL_GREATER, stencilRef, 0xFF});
+
+                if (--stencilRef == 0) stencilRef = 0xFF;
+
+                m_stencil->draw(m_view->getViewProjectionMatrix() * tile->getModelMatrix());
+            }
+
+            // Disable writes to stencil-buffer
+            RenderState::stencilWrite(0x0);
+
+            RenderState::depthTest(GL_TRUE);
+            RenderState::depthWrite(GL_TRUE);
+            RenderState::colorWrite(GL_TRUE);
+        }
+
 
         // Loop over all styles
         for (const auto& style : m_scene->getStyles()) {
             style->onBeginDrawFrame(m_view, m_scene);
+            int stencilRef = 0xFF;
+
+            // HACK: disable stencil clipping for buildings:
+            // maybe check for 'extrude' style property?
+            if (style->getName() == "heightglow") {
+                RenderState::stencilTest(GL_FALSE);
+            } else {
+                RenderState::stencilTest(GL_TRUE);
+            }
 
             // Loop over all tiles in m_tileSet
-            for (const auto& mapIDandTile : m_tileManager->getVisibleTiles()) {
-                const std::shared_ptr<MapTile>& tile = mapIDandTile.second;
-                if (tile->isReady()) {
-                    // Draw tile!
-                    tile->draw(*style, *m_view);
-                }
+            for (auto tile : tiles) {
+                RenderState::stencilFunc({GL_EQUAL, stencilRef, 0xFF});
+                if (--stencilRef == 0) stencilRef = 0xFF;
+
+                // Draw tile!
+                tile->draw(*style, *m_view);
             }
 
             style->onEndDrawFrame();
