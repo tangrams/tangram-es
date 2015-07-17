@@ -35,6 +35,8 @@ protected:
 
 public:
 
+    bool isOpaque() const override { return false; }
+
     TextStyle(const std::string& _fontName, std::string _name, float _fontSize, unsigned int _color = 0xffffff,
               bool _sdf = false, bool _sdfMultisampling = false, GLenum _drawMode = GL_TRIANGLES);
 

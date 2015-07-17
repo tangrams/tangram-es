@@ -30,6 +30,8 @@ protected:
 
 public:
 
+    bool isOpaque() const override { return false; }
+
     virtual void onBeginDrawFrame(const std::shared_ptr<View>& _view, const std::shared_ptr<Scene>& _scene) override;
 
     SpriteStyle(std::string _name, GLenum _drawMode = GL_TRIANGLES);
