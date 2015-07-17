@@ -56,19 +56,19 @@ void DebugStyle::addData(TileData &_data, Tile &_tile) {
 
 }
 
-void DebugStyle::buildPoint(Point &_point, const StyleParamMap& _styleParamMap, Properties &_props, VboMesh &_mesh) const {
+void DebugStyle::buildPoint(Point &_point, const StyleParamMap& _styleParamMap, Properties &_props, VboMesh &_mesh, Tile& _tile) const {
 
     // No-op
 
 }
 
-void DebugStyle::buildLine(Line &_line, const StyleParamMap& _styleParamMap, Properties &_props, VboMesh &_mesh) const {
+void DebugStyle::buildLine(Line &_line, const StyleParamMap& _styleParamMap, Properties &_props, VboMesh &_mesh, Tile& _tile) const {
 
     // No-op
 
 }
 
-void DebugStyle::buildPolygon(Polygon &_polygon, const StyleParamMap& _styleParamMap, Properties &_props, VboMesh &_mesh) const {
+void DebugStyle::buildPolygon(Polygon &_polygon, const StyleParamMap& _styleParamMap, Properties &_props, VboMesh &_mesh, Tile& _tile) const {
 
     // No-op
 

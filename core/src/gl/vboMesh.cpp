@@ -55,10 +55,6 @@ void VboMesh::setDrawMode(GLenum _drawMode) {
 }
 
 void VboMesh::update(GLintptr _offset, GLsizei _size, unsigned char* _data) {
-    if (m_hint == GL_STATIC_DRAW) {
-        logMsg("WARNING: wrong usage hint provided to the Vbo\n");
-    }
-
     std::memcpy(m_glVertexData + _offset, _data, _size);
 
     m_dirtyOffset = _offset;
@@ -68,22 +64,26 @@ void VboMesh::update(GLintptr _offset, GLsizei _size, unsigned char* _data) {
 }
 
 bool VboMesh::subDataUpload() {
-    if (m_dirtySize == 0) {
+    if (!m_dirty) {
         return false;
+    }
+
+    if (m_hint == GL_STATIC_DRAW) {
+        logMsg("WARNING: wrong usage hint provided to the Vbo\n");
     }
 
     glBindBuffer(GL_ARRAY_BUFFER, m_glVertexBuffer);
 
     long vertexBytes = m_nVertices * m_vertexLayout->getStride();
 
-    // updating the entire buffer
+    // when all vertices are modified, it's better to update the entire mesh
     if (vertexBytes - m_dirtySize < m_vertexLayout->getStride()) {
 
         // invalidate the data store on the driver
         glBufferData(GL_ARRAY_BUFFER, vertexBytes, NULL, m_hint);
 
         // if this buffer is still used by gpu on current frame this call will not wait
-        // for the frame to finish using the vbo but directly upload the data
+        // for the frame to finish using the vbo but "directly" send command to upload the data
         glBufferData(GL_ARRAY_BUFFER, vertexBytes, m_glVertexData, m_hint);
     } else {
         // perform simple sub data upload for part of the buffer

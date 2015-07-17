@@ -231,3 +231,10 @@ layers:
         draw:
             text: {}
 
+    pois:
+        data: { source: osm }
+        draw:
+            sprites: {}
+
+
+

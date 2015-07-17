@@ -8,7 +8,13 @@ Scene::Scene() {
 }
 
 void Scene::addStyle(std::unique_ptr<Style> _style) {
-    m_styles.push_back(std::move(_style));
+    // opaque styles go first in drawing loop
+    if (_style->isOpaque()) {
+        m_styles.insert(m_styles.begin(), std::move(_style));
+    } else {
+        // styles that uses blending operations
+        m_styles.push_back(std::move(_style));
+    }
 }
 
 void Scene::addLight(std::unique_ptr<Light> _light) {

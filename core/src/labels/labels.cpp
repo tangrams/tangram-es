@@ -18,44 +18,61 @@ int Labels::LODDiscardFunc(float _maxZoom, float _zoom) {
     return (int) MIN(floor(((log(-_zoom + (_maxZoom + 2)) / log(_maxZoom + 2) * (_maxZoom )) * 0.5)), MAX_LOD);
 }
 
-bool Labels::addLabel(Tile& _tile, const std::string& _styleName, Label::Transform _transform, std::string _text, Label::Type _type) {
-    auto currentBuffer = m_ftContext->getCurrentBuffer();
-
+std::shared_ptr<Label> Labels::addTextLabel(Tile& _tile, TextBuffer& _buffer, const std::string& _styleName,
+                                            Label::Transform _transform, std::string _text, Label::Type _type) {
     // FIXME: the current view should not be used to determine whether a label is shown at all
-    // otherwise results will be random
-    if ( (m_currentZoom - _tile.getID().z) > LODDiscardFunc(View::s_maxZoom, m_currentZoom)) {
-        return false;
+    // otherwise results will be random    
+
+    // discard based on level of detail
+    if ((m_currentZoom - _tile.getID().z) > LODDiscardFunc(View::s_maxZoom, m_currentZoom)) {
+        return nullptr;
     }
+    
+    fsuint textID = _buffer.genTextID();
+    
+    std::shared_ptr<TextLabel> label(new TextLabel(_transform, _text, textID, _type));
 
-    if (currentBuffer) {
-        fsuint textID = currentBuffer->genTextID();
-        std::shared_ptr<Label> l(new Label(_transform, _text, textID, _type));
-
-        if (!l->rasterize(currentBuffer)) {
-            l.reset();
-            return false;
-        }
-
-        // NB: viewOrigin.z is only determined by screen width and height.
-        const auto& viewOrigin = m_view->getPosition();
-
-        auto modelMatrix = glm::scale(glm::mat4(1.0), glm::vec3(_tile.getScale()));
-        modelMatrix[3][2] = -viewOrigin.z;
-
-        l->update(m_view->getViewProjectionMatrix() * modelMatrix, m_screenSize, 0);
-        std::unique_ptr<TileID> tileID(new TileID(_tile.getID()));
-        _tile.addLabel(_styleName, l);
-
-        // lock concurrent collection
-        {
-            std::lock_guard<std::mutex> lock(m_mutex);
-            m_pendingLabelUnits.emplace_back(LabelUnit(l, tileID, _styleName));
-        }
-
-        return true;
+    // raterize the text label
+    if (!label->rasterize(_buffer)) {
+        
+        label.reset();
+        return nullptr;
     }
+    
+    addLabel(_tile, _styleName, std::dynamic_pointer_cast<Label>(label));
 
-    return false;
+    return label;
+}
+
+void Labels::addLabel(Tile& _tile, const std::string& _styleName, std::shared_ptr<Label> _label) {
+
+    auto modelMatrix = glm::scale(glm::mat4(1.0), glm::vec3(_tile.getScale()));
+    // NB: viewOrigin.z is only determined by screen width and height.
+    const auto& viewOrigin = m_view->getPosition();
+    modelMatrix[3][2] = -viewOrigin.z;
+
+    _label->update(m_view->getViewProjectionMatrix() * modelMatrix, m_screenSize, 0);
+    std::unique_ptr<TileID> tileID(new TileID(_tile.getID()));
+    _tile.addLabel(_styleName, _label);
+    
+    // lock concurrent collection
+    {
+        std::lock_guard<std::mutex> lock(m_mutex);
+        m_pendingLabelUnits.emplace_back(LabelUnit(_label, tileID, _styleName));
+    }
+}
+
+std::shared_ptr<Label> Labels::addSpriteLabel(Tile& _tile, const std::string& _styleName, Label::Transform _transform, const glm::vec2& _size,
+                                              const glm::vec2& _offset, SpriteLabel::AttributeOffsets _attribOffsets) {
+    
+    if ((m_currentZoom - _tile.getID().z) > LODDiscardFunc(View::s_maxZoom, m_currentZoom)) {
+        return nullptr;
+    }
+    
+    auto label = std::shared_ptr<Label>(new SpriteLabel(_transform, _size, _offset, _attribOffsets));
+    addLabel(_tile, _styleName, label);
+    
+    return label;
 }
 
 void Labels::updateOcclusions() {
@@ -135,17 +152,7 @@ void Labels::drawDebug() {
         auto label = labelUnit.getWeakLabel();
 
         if (label != nullptr && label->canOcclude()) {
-            isect2d::OBB obb = label->getOBB();
-            const isect2d::Vec2* quad = obb.getQuad();
-
-            glm::vec2 polygon[4] = {
-                {quad[0].x, quad[0].y},
-                {quad[1].x, quad[1].y},
-                {quad[2].x, quad[2].y},
-                {quad[3].x, quad[3].y}
-            };
-
-            Primitives::drawPoly(polygon, 4, {m_view->getWidth(), m_view->getHeight()});
+            Primitives::drawPoly(reinterpret_cast<const glm::vec2*>(label->getOBB().getQuad()), 4, {m_view->getWidth(), m_view->getHeight()});
         }
     }
 
