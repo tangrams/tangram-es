@@ -6,6 +6,7 @@
 #include "scene/sceneLayer.h"
 #include "styleParamMap.h"
 #include "util/shaderProgram.h"
+#include "util/renderState.h"
 
 #include <bitset>
 #include <memory>
