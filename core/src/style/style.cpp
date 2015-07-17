@@ -95,7 +95,7 @@ void Style::applyLayerFiltering(const Feature& _feature, const Context& _ctx, st
 
         auto sceneLyr = *sLayerItr;
 
-        if ( sceneLyr->getFilter()->eval(_feature, _ctx)) { // filter matches
+        if (sceneLyr->getFilter().eval(_feature, _ctx)) { // filter matches
 
             _uniqueID.set(sceneLyr->getID());
 
@@ -133,8 +133,7 @@ void Style::addData(TileData& _data, MapTile& _tile) {
     std::shared_ptr<VboMesh> mesh(newMesh());
 
     Context ctx;
-    NumValue ctxZoom(_tile.getID().z);
-    ctx["$zoom"] = &ctxZoom;
+    ctx["$zoom"] = Value(_tile.getID().z);
 
     for (auto& layer : _data.layers) {
 

@@ -30,7 +30,7 @@ enum class LightingType : char {
 
 namespace Tangram {
     struct Value;
-    using Context = std::unordered_map<std::string, Value*>;
+    using Context = std::unordered_map<std::string, Value>;
 }
 
 /* Means of constructing and rendering map geometry
