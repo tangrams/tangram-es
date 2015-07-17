@@ -30,7 +30,7 @@ void SpriteStyle::constructVertexLayout() {
     }));
 
     // NB: byte offset into BufferVert 'state'
-    m_stateAttribOffset = (size_t)m_vertexLayout->getOffset("a_screenPosition");
+    m_stateAttribOffset = m_vertexLayout->getOffset("a_screenPosition");
 }
 
 void SpriteStyle::constructShaderProgram() {
