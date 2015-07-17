@@ -38,10 +38,6 @@ void PolygonStyle::parseStyleParams(const StyleParamMap& _styleParamMap, StylePa
     }
 }
 
-void PolygonStyle::buildPoint(Point& _point, const StyleParamMap& _styleParamMap, Properties& _props, VboMesh& _mesh, Tile& _tile) const {
-    // No-op
-}
-
 void PolygonStyle::buildLine(Line& _line, const StyleParamMap& _styleParamMap, Properties& _props, VboMesh& _mesh, Tile& _tile) const {
     std::vector<PosNormColVertex> vertices;
 
