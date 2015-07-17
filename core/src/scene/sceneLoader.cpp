@@ -779,7 +779,7 @@ void SceneLoader::loadSublayers(YAML::Node layer, std::vector<std::shared_ptr<Sc
                 // TODO: multiple draw groups for a subLayer, NOTE: only one draw for now
                 // TODO: subLayers can have different base style than the parent layer
                 parseStyleProps(groupIt.second, paramMap);
-                subLayers.push_back(std::make_shared<SceneLayer>(std::move(ssubLayers), std::move(paramMap), subLayerName,
+                subLayers.push_back(std::make_shared<SceneLayer>(ssubLayers, std::move(paramMap), subLayerName,
                             subLayerFilter));
             }
         }
@@ -817,7 +817,7 @@ void SceneLoader::loadLayers(Node layers, Scene& scene, TileManager& tileManager
             // match layer to the style in scene with the given name
             for (const auto& style : scene.getStyles()) {
                 if (style->getName() == styleName) {
-                    style->addLayer(std::make_shared<SceneLayer>(std::move(subLayers), std::move(paramMap),
+                    style->addLayer(std::make_shared<SceneLayer>(subLayers, std::move(paramMap),
                                 name, layerFilter));
                 }
 			}
