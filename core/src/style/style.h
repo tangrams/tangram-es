@@ -115,6 +115,9 @@ public:
 
     virtual ~Style();
 
+    /* Whether or not the style uses blending operation for drawing */
+    virtual bool isOpaque() const { return true; };
+
     /* Make this style ready to be used (call after all needed properties are set) */
     virtual void build(const std::vector<std::unique_ptr<Light>>& _lights);
 
