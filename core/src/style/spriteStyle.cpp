@@ -28,6 +28,9 @@ void SpriteStyle::constructVertexLayout() {
         {"a_alpha", 1, GL_FLOAT, false, 0},
         {"a_rotation", 1, GL_FLOAT, false, 0},
     }));
+
+    // NB: byte offset into BufferVert 'state'
+    m_stateAttribOffset = (size_t)m_vertexLayout->getOffset("a_screenPosition");
 }
 
 void SpriteStyle::constructShaderProgram() {
@@ -83,9 +86,7 @@ void SpriteStyle::buildPoint(Point& _point, const StyleParamMap&, Properties& _p
     SpriteNode spriteNode = m_spriteAtlas->getSpriteNode(kind);
     Label::Transform t = {glm::vec2(_point), glm::vec2(_point)};
 
-    // NB: byte offset into BufferVert 'state'
-    size_t attribOffset =  (size_t)m_vertexLayout->getOffset("a_screenPosition");
-    size_t bufferOffset = _mesh.numVertices() * m_vertexLayout->getStride() + attribOffset;
+    size_t bufferOffset = _mesh.numVertices() * m_vertexLayout->getStride() + m_stateAttribOffset;
 
     auto label = m_labels->addSpriteLabel(_tile, m_name, t,
                                           spriteNode.m_size * spriteScale,
