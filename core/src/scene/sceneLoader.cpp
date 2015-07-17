@@ -654,7 +654,7 @@ Filter SceneLoader::generatePredicate(YAML::Node _node, std::string _key) {
             }
         }
     } else if (_node.IsSequence()) {
-        ValueList values;
+        std::vector<Value> values;
         for (const auto& valItr : _node) {
             try {
                 values.emplace_back(valItr.as<float>(), valItr.as<std::string>());

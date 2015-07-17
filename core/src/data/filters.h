@@ -30,8 +30,6 @@ namespace Tangram {
 
     };
 
-    using ValueList = std::vector<Value>;
-
     using Context = std::unordered_map<std::string, Value>;
 
     enum class Operators : int {
