@@ -80,7 +80,7 @@ void SpriteStyle::buildPoint(Point& _point, const StyleParamMap&, Properties& _p
             if (!m_spriteAtlas->hasSpriteNode(kind)) {
                 continue;
             }
-            const SpriteNode& spriteNode = m_spriteAtlas->getSpriteNode(kind);
+            SpriteNode spriteNode = m_spriteAtlas->getSpriteNode(kind);
             Label::Transform t = {glm::vec2(_point), glm::vec2(_point)};
 
             SpriteLabel::AttributeOffsets attribOffsets = {
