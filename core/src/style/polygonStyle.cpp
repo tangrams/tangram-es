@@ -3,6 +3,7 @@
 #include "tangram.h"
 #include "util/builders.h"
 #include "gl/shaderProgram.h"
+#include "tile/tile.h"
 
 PolygonStyle::PolygonStyle(std::string _name, GLenum _drawMode) : Style(_name, _drawMode) {
 }
@@ -73,7 +74,7 @@ void PolygonStyle::buildPolygon(Polygon& _polygon, const StyleParamMap& _stylePa
     GLfloat layer = params.order;
 
     if (Tangram::getDebugFlag(Tangram::DebugFlags::proxy_colors)) {
-        abgr = abgr << (int(_props.numericProps["zoom"]) % 6);
+        abgr = abgr << (_tile.getID().z % 6);
     }
 
     float height = _props.getNumeric("height");
