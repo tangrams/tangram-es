@@ -47,16 +47,18 @@ public:
     /* Update the transform of the label in world space, and project it to screen space */
     void updateTransform(const Transform& _transform, const glm::mat4& _mvp, const glm::vec2& _screenSize);
 
-    /* gets the oriented bounding box of the label */
+    /* Gets the oriented bounding box of the label */
     const isect2d::OBB& getOBB() const { return m_obb; }
 
-    /* gets the extent of the oriented bounding box of the label */
+    /* Gets the extent of the oriented bounding box of the label */
     const isect2d::AABB& getAABB() const { return m_aabb; }
 
     void update(const glm::mat4& _mvp, const glm::vec2& _screenSize, float _dt);
 
+    /* Push the pending transforms to the vbo by updating the vertices */
     virtual void pushTransform(VboMesh& _mesh) = 0;
     
+    /* Update the screen position of the label */
     bool updateScreenTransform(const glm::mat4& _mvp, const glm::vec2& _screenSize);
 
     Type getType() const { return m_type; }

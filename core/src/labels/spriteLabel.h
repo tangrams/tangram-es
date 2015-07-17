@@ -6,7 +6,7 @@ class SpriteLabel : public Label {
 public:
     
     struct AttributeOffsets {
-        int memOffset;
+        int m_memOffset;
         GLintptr m_position;
         GLintptr m_rotation;
         GLintptr m_alpha;

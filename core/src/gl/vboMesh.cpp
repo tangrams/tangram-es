@@ -76,14 +76,14 @@ bool VboMesh::subDataUpload() {
 
     long vertexBytes = m_nVertices * m_vertexLayout->getStride();
 
-    // updating the entire buffer
+    // when all vertices are modified, it's better to update the entire mesh
     if (vertexBytes - m_dirtySize < m_vertexLayout->getStride()) {
 
         // invalidate the data store on the driver
         glBufferData(GL_ARRAY_BUFFER, vertexBytes, NULL, m_hint);
 
         // if this buffer is still used by gpu on current frame this call will not wait
-        // for the frame to finish using the vbo but directly upload the data
+        // for the frame to finish using the vbo but "directly" send command to upload the data
         glBufferData(GL_ARRAY_BUFFER, vertexBytes, m_glVertexData, m_hint);
     } else {
         // perform simple sub data upload for part of the buffer

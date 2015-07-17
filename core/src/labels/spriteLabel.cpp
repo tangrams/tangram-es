@@ -27,7 +27,8 @@ void SpriteLabel::pushTransform(VboMesh& _mesh) {
             m_transform.m_rotation,
         };
 
-        mesh.updateAttribute(stride + m_attribOffsets.memOffset, 4, newAttributes);
+        // update all attributes screenPosition/rotation/alpha for the 4 quad vertices in the mesh
+        mesh.updateAttribute(stride + m_attribOffsets.m_memOffset, 4, newAttributes);
     }
 }
 
