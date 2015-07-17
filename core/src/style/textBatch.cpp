@@ -12,7 +12,6 @@ TextBatch::TextBatch(const TextStyle& _style)
 {
 
     m_dirtyTransform = false;
-    m_bound = false;
 }
 
 void TextBatch::init() {
@@ -26,50 +25,45 @@ TextBatch::~TextBatch() {
 }
 
 int TextBatch::getVerticesSize() {
-    bind();
-    int size = glfonsVerticesSize(m_fontContext->getFontContext());
-    unbind();
-    return size;
+    auto ctx = m_fontContext->bindScoped(m_fsBuffer);
+    return glfonsVerticesSize(ctx.get());
 }
-
 fsuint TextBatch::genTextID() {
     fsuint id;
-    bind();
-    glfonsGenText(m_fontContext->getFontContext(), 1, &id);
-    unbind();
+    auto ctx = m_fontContext->bindScoped(m_fsBuffer);
+    glfonsGenText(ctx.get(), 1, &id);
     return id;
 }
 
 bool TextBatch::rasterize(const std::string& _text, fsuint _id) {
-    bind();
-    int status = glfonsRasterize(m_fontContext->getFontContext(), _id, _text.c_str());
-    unbind();
-    return status == GLFONS_VALID;
+    auto ctx = m_fontContext->bindScoped(m_fsBuffer);
+    return glfonsRasterize(ctx.get(), _id, _text.c_str()) == GLFONS_VALID;
 }
 
 void TextBatch::pushBuffer() {
     if (m_dirtyTransform) {
-        bind();
-        glfonsUpdateBuffer(m_fontContext->getFontContext(), m_mesh.get());
-        unbind();
+
+        auto ctx = m_fontContext->bindScoped(m_fsBuffer);
+        glfonsUpdateBuffer(ctx.get(), m_mesh.get());
+
         m_dirtyTransform = false;
     }
 }
 
 void TextBatch::transformID(fsuint _textID, const BufferVert::State& _state) {
-    bind();
-    glfonsTransform(m_fontContext->getFontContext(), _textID,
+    auto ctx = m_fontContext->bindScoped(m_fsBuffer);
+    glfonsTransform(ctx.get(), _textID,
                     _state.screenPos.x, _state.screenPos.y,
                     _state.rotation, _state.alpha);
-    unbind();
+
     m_dirtyTransform = true;
 }
 
 glm::vec4 TextBatch::getBBox(fsuint _textID) {
     glm::vec4 bbox;
-    bind();
-    glfonsGetBBox(m_fontContext->getFontContext(), _textID, &bbox.x, &bbox.y, &bbox.z, &bbox.w);
-    unbind();
+    auto ctx = m_fontContext->bindScoped(m_fsBuffer);
+    glfonsGetBBox(ctx.get(), _textID, &bbox.x, &bbox.y, &bbox.z, &bbox.w);
+
     return bbox;
 }
 
@@ -83,28 +77,13 @@ void TextBatch::addBufferVerticesToMesh() {
 
     vertices.resize(bufferSize);
 
-    bind();
-    bool res = glfonsVertices(m_fontContext->getFontContext(), reinterpret_cast<float*>(vertices.data()));
-    unbind();
-
+    bool res;
+    {
+        auto ctx = m_fontContext->bindScoped(m_fsBuffer);
+        res = glfonsVertices(ctx.get(), reinterpret_cast<float*>(vertices.data()));
+    }
     if (res) {
         m_mesh->addVertices(std::move(vertices), {});
-    }
-}
-
-void TextBatch::bind() {
-    if (!m_bound) {
-        m_fontContext->lock();
-        glfonsBindBuffer(m_fontContext->getFontContext(), m_fsBuffer);
-        m_bound = true;
-    }
-}
-
-void TextBatch::unbind() {
-    if (m_bound) {
-        glfonsBindBuffer(m_fontContext->getFontContext(), 0);
-        m_fontContext->unlock();
-        m_bound = false;
     }
 }
 

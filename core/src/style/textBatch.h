@@ -74,14 +74,10 @@ public:
 
 private:
 
-    void bind();
-    void unbind();
-
     void buildPoint(const Point& _point, const Properties& _props, const MapTile& _tile);
     void buildLine(const Line& _line, const Properties& _props, const MapTile& _tile);
     void buildPolygon(const Polygon& _polygon, const Properties& _props, const MapTile& _tile);
 
-    bool m_bound;
     bool m_dirtyTransform;
     fsuint m_fsBuffer;
     std::shared_ptr<FontContext> m_fontContext;

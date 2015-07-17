@@ -38,24 +38,44 @@ public:
     void getProjection(float* _projectionMatrix) const;
 
     void clearState();
-    
+
     /* lock thread access to this font context */
     void lock();
-    
+
     /* unlock thread access to this font context */
     void unlock();
 
     const std::unique_ptr<Texture>& getAtlas() const;
-    
+
     FONScontext* getFontContext() const { return m_fsContext; }
-    
+
+    struct ScopedBinding {
+        ScopedBinding(FontContext& _ctx, fsuint _buffer) : m_ctx(_ctx) {
+            m_ctx.m_contextMutex.lock();
+            glfonsBindBuffer(m_ctx.m_fsContext, _buffer);
+        }
+
+        ~ScopedBinding() {
+            glfonsBindBuffer(m_ctx.m_fsContext, 0);
+            m_ctx.m_contextMutex.unlock();
+        }
+
+        FONScontext *get() { return m_ctx.m_fsContext; }
+
+        FontContext& m_ctx;
+    };
+
+    ScopedBinding bindScoped(fsuint _buffer) {
+        return ScopedBinding(*this, _buffer);
+    }
+
 private:
 
     void initFontContext(int _atlasSize);
 
     std::map<std::string, int> m_fonts;
     std::unique_ptr<Texture> m_atlas;
-    std::unique_ptr<std::mutex> m_contextMutex;
+    mutable std::mutex m_contextMutex;
     FONScontext* m_fsContext;
-    
+
 };
