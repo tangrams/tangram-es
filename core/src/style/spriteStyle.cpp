@@ -49,8 +49,12 @@ void SpriteStyle::constructShaderProgram() {
 }
 
 void SpriteStyle::buildPoint(Point& _point, const StyleParamMap&, Properties& _props, VboMesh& _mesh, MapTile& _tile) const {
+    if (!_props.contains("name"))
+        return;
+
     // TODO : make this configurable
     SpriteNode planeSprite = m_spriteAtlas->getSpriteNode("tree");
+
     std::vector<BufferVert> vertices;
     
     SpriteBuilder builder = {
@@ -63,22 +67,17 @@ void SpriteStyle::buildPoint(Point& _point, const StyleParamMap&, Properties& _p
     float spriteScale = .5f;
     glm::vec2 offset = {0.f, 10.f};
 
-    for (auto prop : _props.stringProps) {
-        if (prop.first == "name") {
-            Label::Transform t = {glm::vec2(_point), glm::vec2(_point)};
+    Label::Transform t = {glm::vec2(_point), glm::vec2(_point)};
 
-            size_t bufferOffset = _mesh.numVertices() * m_vertexLayout->getStride() + m_stateAttribOffset;
+    size_t bufferOffset = _mesh.numVertices() * m_vertexLayout->getStride() + m_stateAttribOffset;
             
-            auto label = m_labels->addSpriteLabel(_tile, m_name, t,
-                                                  planeSprite.size * spriteScale,
-                                                  offset, bufferOffset);
-            
-            if (label) {
-                Builders::buildQuadAtPoint(label->getTransform().state.screenPos + offset,
-                                           planeSprite.size * spriteScale,
-                                           planeSprite.uvBL, planeSprite.uvTR, builder);
-            }
-        }
+    auto label = m_labels->addSpriteLabel(_tile, m_name, t,
+                                          planeSprite.size * spriteScale,
+                                          offset, bufferOffset);
+    if (label) {
+        Builders::buildQuadAtPoint(label->getTransform().state.screenPos + offset,
+                                   planeSprite.size * spriteScale,
+                                   planeSprite.uvBL, planeSprite.uvTR, builder);
     }
     
     auto& mesh = static_cast<SpriteStyle::Mesh&>(_mesh);
