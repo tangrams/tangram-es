@@ -4,9 +4,9 @@
 #include <iostream>
 #include <vector>
 
-#include "filters.h"
+#include "data/filters.h"
 #include "yaml-cpp/yaml.h"
-#include "sceneLoader.h"
+#include "scene/sceneLoader.h"
 
 using namespace Tangram;
 using YAML::Node;

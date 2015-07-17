@@ -1,8 +1,8 @@
 #include "labels.h"
 #include "tangram.h"
-#include "tile/mapTile.h"
+#include "tile/tile.h"
 #include "text/fontContext.h"
-#include "util/primitives.h"
+#include "gl/primitives.h"
 #include "view/view.h"
 
 #include "glm/gtc/matrix_transform.hpp"
@@ -18,7 +18,7 @@ int Labels::LODDiscardFunc(float _maxZoom, float _zoom) {
     return (int) MIN(floor(((log(-_zoom + (_maxZoom + 2)) / log(_maxZoom + 2) * (_maxZoom )) * 0.5)), MAX_LOD);
 }
 
-bool Labels::addLabel(MapTile& _tile, const std::string& _styleName, Label::Transform _transform, std::string _text, Label::Type _type) {
+bool Labels::addLabel(Tile& _tile, const std::string& _styleName, Label::Transform _transform, std::string _text, Label::Type _type) {
     auto currentBuffer = m_ftContext->getCurrentBuffer();
 
     // FIXME: the current view should not be used to determine whether a label is shown at all

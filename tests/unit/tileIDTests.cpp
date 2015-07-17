@@ -1,11 +1,11 @@
-#define CATCH_CONFIG_MAIN 
+#define CATCH_CONFIG_MAIN
 #include "catch.hpp"
 
-#include "util/tileID.h"
+#include "tile/tileID.h"
 #include <set>
 
 TEST_CASE( "Create TileIDs and check that they are correctly ordered", "[Core][TileID]" ) {
-    
+
     TileID a = TileID(1, 1, 1);
 
     REQUIRE(a.x == 1);
@@ -33,7 +33,7 @@ TEST_CASE( "Create TileIDs and check that they are correctly ordered", "[Core][T
 
     REQUIRE(c > d);
     REQUIRE(d < c);
-    
+
 }
 
 TEST_CASE( "Create TileIDs and find their parents and children", "[Core][TileID]" ) {
@@ -73,5 +73,5 @@ TEST_CASE( "Ensure TileIDs correctly evaluate their validity", "[Core][TileID]")
     REQUIRE(!TileID( 0,  1,  0).isValid());
 
     REQUIRE(!NOT_A_TILE.isValid());
-    
+
 }

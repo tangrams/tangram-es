@@ -1,7 +1,7 @@
 #include "texture.h"
 
 #include "platform.h"
-#include "geom.h"
+#include "util/geom.h"
 
 #define STB_IMAGE_IMPLEMENTATION
 #include "stb_image.h"
@@ -83,7 +83,7 @@ void Texture::setSubData(const GLuint* _subData, unsigned int _xoff, unsigned in
                          unsigned int _height) {
 
     std::unique_ptr<std::vector<GLuint>> subData(new std::vector<GLuint>(_subData, _subData + (_width * _height)));
-    
+
     // update m_data with subdata
     size_t bpp = bytesPerPixel();
     size_t divisor = sizeof(GLuint) / bpp;
@@ -139,7 +139,7 @@ void Texture::update(GLuint _textureUnit) {
     if (m_glHandle == 0) { // texture hasn't been initialized yet, generate it
 
         generate(_textureUnit);
-        
+
         if (m_data.size() == 0) { m_data.assign(m_width * m_height, 0); }
 
     } else { bind(_textureUnit); }
@@ -149,12 +149,12 @@ void Texture::update(GLuint _textureUnit) {
     // resize or push data
     if (m_shouldResize) {
         glTexImage2D(m_target, 0, m_options.m_internalFormat, m_width, m_height, 0, m_options.m_format, GL_UNSIGNED_BYTE, data);
-        
+
         if (data && m_generateMipmaps) {
             // generate the mipmaps for this texture
             glGenerateMipmap(m_target);
         }
-        
+
         m_shouldResize = false;
     }
 

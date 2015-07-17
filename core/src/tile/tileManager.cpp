@@ -3,7 +3,7 @@
 #include "data/dataSource.h"
 #include "platform.h"
 #include "scene/scene.h"
-#include "tile/mapTile.h"
+#include "tile/tile.h"
 #include "view/view.h"
 
 #include "glm/gtx/norm.hpp"
@@ -45,7 +45,7 @@ void TileManager::tileProcessed(std::shared_ptr<TileTask>&& task) {
     m_readyTiles.push_back(std::move(task));
 }
 
-bool TileManager::setTileState(MapTile& tile, TileState state) {
+bool TileManager::setTileState(Tile& tile, TileState state) {
     std::lock_guard<std::mutex> lock(m_tileStateMutex);
 
     switch (tile.getState()) {
@@ -255,16 +255,16 @@ void TileManager::updateTileSet() {
 void TileManager::addTile(const TileID& _tileID) {
     DBG("[%d, %d, %d] Add\n", _tileID.z, _tileID.x, _tileID.y);
 
-    std::shared_ptr<MapTile> tile(new MapTile(_tileID, m_view->getMapProjection()));
+    std::shared_ptr<Tile> tile(new Tile(_tileID, m_view->getMapProjection()));
     tile->setVisible(true);
 
-    //Add Proxy if corresponding proxy MapTile ready
+    //Add Proxy if corresponding proxy Tile ready
     updateProxyTiles(*tile);
 
     m_tileSet.emplace(_tileID, tile);
 }
 
-void TileManager::removeTile(std::map< TileID, std::shared_ptr<MapTile> >::iterator& _tileIter) {
+void TileManager::removeTile(std::map< TileID, std::shared_ptr<Tile> >::iterator& _tileIter) {
 
     const TileID& id = _tileIter->first;
     auto& tile = _tileIter->second;
@@ -287,13 +287,13 @@ void TileManager::removeTile(std::map< TileID, std::shared_ptr<MapTile> >::itera
 
 }
 
-void TileManager::updateProxyTiles(MapTile& _tile) {
+void TileManager::updateProxyTiles(Tile& _tile) {
     const TileID& _tileID = _tile.getID();
 
     const auto& parentTileIter = m_tileSet.find(_tileID.getParent());
     if (parentTileIter != m_tileSet.end()) {
         auto& parent = parentTileIter->second;
-        if (_tile.setProxy(MapTile::parent)) {
+        if (_tile.setProxy(Tile::parent)) {
             parent->incProxyCounter();
         }
         return;
@@ -305,7 +305,7 @@ void TileManager::updateProxyTiles(MapTile& _tile) {
             if (childTileIter != m_tileSet.end()) {
                 auto& child = childTileIter->second;
 
-                if (_tile.setProxy(static_cast<MapTile::ProxyID>(1 << i))) {
+                if (_tile.setProxy(static_cast<Tile::ProxyID>(1 << i))) {
                     child->incProxyCounter();
                 }
             }
@@ -313,13 +313,13 @@ void TileManager::updateProxyTiles(MapTile& _tile) {
     }
 }
 
-void TileManager::clearProxyTiles(MapTile& _tile) {
+void TileManager::clearProxyTiles(Tile& _tile) {
     const TileID& _tileID = _tile.getID();
 
     std::vector<TileID> removeTiles;
 
     // Check if parent proxy is present
-    if (_tile.unsetProxy(MapTile::parent)) {
+    if (_tile.unsetProxy(Tile::parent)) {
         TileID parentID(_tileID.getParent());
         auto parentTileIter = m_tileSet.find(parentID);
         if (parentTileIter != m_tileSet.end()) {
@@ -336,7 +336,7 @@ void TileManager::clearProxyTiles(MapTile& _tile) {
 
     // Check if child proxies are present
     for (int i = 0; i < 4; i++) {
-        if (_tile.unsetProxy(static_cast<MapTile::ProxyID>(1 << i))) {
+        if (_tile.unsetProxy(static_cast<Tile::ProxyID>(1 << i))) {
             TileID childID(_tileID.getChild(i));
             auto childTileIter = m_tileSet.find(childID);
 

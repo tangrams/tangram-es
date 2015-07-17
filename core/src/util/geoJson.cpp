@@ -1,10 +1,10 @@
 #include "geoJson.h"
 
 #include "platform.h"
-#include "tile/mapTile.h"
+#include "tile/tile.h"
 #include "util/mapProjection.h"
 
-void GeoJson::extractPoint(const rapidjson::Value& _in, Point& _out, const MapTile& _tile) {
+void GeoJson::extractPoint(const rapidjson::Value& _in, Point& _out, const Tile& _tile) {
 
     glm::dvec2 tmp = _tile.getProjection()->LonLatToMeters(glm::dvec2(_in[0].GetDouble(), _in[1].GetDouble()));
     _out.x = (tmp.x - _tile.getOrigin().x) * _tile.getInverseScale();
@@ -12,7 +12,7 @@ void GeoJson::extractPoint(const rapidjson::Value& _in, Point& _out, const MapTi
 
 }
 
-void GeoJson::extractLine(const rapidjson::Value& _in, Line& _out, const MapTile& _tile) {
+void GeoJson::extractLine(const rapidjson::Value& _in, Line& _out, const Tile& _tile) {
 
     for (auto itr = _in.Begin(); itr != _in.End(); ++itr) {
         _out.emplace_back();
@@ -21,7 +21,7 @@ void GeoJson::extractLine(const rapidjson::Value& _in, Line& _out, const MapTile
 
 }
 
-void GeoJson::extractPoly(const rapidjson::Value& _in, Polygon& _out, const MapTile& _tile) {
+void GeoJson::extractPoly(const rapidjson::Value& _in, Polygon& _out, const Tile& _tile) {
 
     for (auto itr = _in.Begin(); itr != _in.End(); ++itr) {
         _out.emplace_back();
@@ -30,7 +30,7 @@ void GeoJson::extractPoly(const rapidjson::Value& _in, Polygon& _out, const MapT
 
 }
 
-void GeoJson::extractFeature(const rapidjson::Value& _in, Feature& _out, const MapTile& _tile) {
+void GeoJson::extractFeature(const rapidjson::Value& _in, Feature& _out, const Tile& _tile) {
 
     // Copy properties into tile data
 
@@ -112,7 +112,7 @@ void GeoJson::extractFeature(const rapidjson::Value& _in, Feature& _out, const M
 
 }
 
-void GeoJson::extractLayer(const rapidjson::Value& _in, Layer& _out, const MapTile& _tile) {
+void GeoJson::extractLayer(const rapidjson::Value& _in, Layer& _out, const Tile& _tile) {
 
     const auto& featureIter = _in.FindMember("features");
 

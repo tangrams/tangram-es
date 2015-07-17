@@ -24,17 +24,17 @@ enum class TileState { none, loading, processing, ready, canceled };
 
 /* Tile of vector map data
  * 
- * MapTile represents a fixed area of a map at a fixed zoom level; It contains its position within a quadtree of
+ * Tile represents a fixed area of a map at a fixed zoom level; It contains its position within a quadtree of
  * tiles and its location in projected global space; It stores drawable geometry of the map features in its area
  */
-class MapTile {
+class Tile {
 
 public:
   
-    MapTile(TileID _id, const MapProjection& _projection);
+    Tile(TileID _id, const MapProjection& _projection);
 
 
-    virtual ~MapTile();
+    virtual ~Tile();
 
     /* Returns the immutable <TileID> of this tile */
     const TileID& getID() const { return m_id; }

@@ -3,8 +3,8 @@
 #include "scene/scene.h"
 #include "scene/sceneLayer.h"
 #include "scene/light.h"
-#include "tile/mapTile.h"
-#include "util/vboMesh.h"
+#include "tile/tile.h"
+#include "gl/vboMesh.h"
 #include "view/view.h"
 
 #include "csscolorparser.hpp"
@@ -127,7 +127,7 @@ void Style::applyLayerFiltering(const Feature& _feature, const Context& _ctx, st
     }
 }
 
-void Style::addData(TileData& _data, MapTile& _tile) {
+void Style::addData(TileData& _data, Tile& _tile) {
     onBeginBuildTile(_tile);
 
     std::shared_ptr<VboMesh> mesh(newMesh());
@@ -205,10 +205,10 @@ void Style::onBeginDrawFrame(const std::shared_ptr<View>& _view, const std::shar
     RenderState::depthTest(GL_TRUE);
 }
 
-void Style::onBeginBuildTile(MapTile& _tile) const {
+void Style::onBeginBuildTile(Tile& _tile) const {
     // No-op by default
 }
 
-void Style::onEndBuildTile(MapTile& _tile, std::shared_ptr<VboMesh> _mesh) const {
+void Style::onEndBuildTile(Tile& _tile, std::shared_ptr<VboMesh> _mesh) const {
     // No-op by default
 }

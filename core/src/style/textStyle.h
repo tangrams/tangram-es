@@ -1,9 +1,9 @@
 #pragma once
 
 #include "style.h"
-#include "typedMesh.h"
+#include "gl/typedMesh.h"
 #include "glfontstash.h"
-#include "tile/labels/labels.h"
+#include "labels/labels.h"
 #include <memory>
 
 class TextStyle : public Style {
@@ -20,11 +20,12 @@ protected:
 
     virtual void constructVertexLayout() override;
     virtual void constructShaderProgram() override;
+
     virtual void buildPoint(Point& _point, const StyleParamMap& _styleParamMap, Properties& _props, VboMesh& _mesh) const override;
     virtual void buildLine(Line& _line, const StyleParamMap& _styleParamMap, Properties& _props, VboMesh& _mesh) const override;
     virtual void buildPolygon(Polygon& _polygon, const StyleParamMap& _styleParamMap, Properties& _props, VboMesh& _mesh) const override;
-    virtual void onBeginBuildTile(MapTile& _tile) const override;
-    virtual void onEndBuildTile(MapTile& _tile, std::shared_ptr<VboMesh> _mesh) const override;
+    virtual void onBeginBuildTile(Tile& _tile) const override;
+    virtual void onEndBuildTile(Tile& _tile, std::shared_ptr<VboMesh> _mesh) const override;
 
     typedef TypedMesh<TextVert> Mesh;
 
@@ -55,6 +56,6 @@ public:
      * A pointer to the tile being currently processed, e.g. the tile which data is being added to
      * nullptr if no tile is being processed
      */
-    static MapTile* s_processedTile;
+    static Tile* s_processedTile;
 
 };

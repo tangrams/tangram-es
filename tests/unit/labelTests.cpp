@@ -1,7 +1,7 @@
 #define CATCH_CONFIG_MAIN
 #include "catch/catch.hpp"
 #include "tangram.h"
-#include "tile/labels/label.h"
+#include "labels/label.h"
 #include "glm/mat4x4.hpp"
 #include "glm/gtc/matrix_transform.hpp"
 

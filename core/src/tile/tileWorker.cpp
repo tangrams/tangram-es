@@ -2,7 +2,7 @@
 
 #include "data/dataSource.h"
 #include "platform.h"
-#include "tile/mapTile.h"
+#include "tile/tile.h"
 #include "view/view.h"
 #include "tileManager.h"
 #include "style/style.h"

@@ -34,17 +34,17 @@
 
 /* Minimum value between two variables that support < comparison */
 #ifndef MIN
-#define MIN(x,y) (((x) < (y)) ? (x) : (y))
+#define MIN(x, y) (((x) < (y)) ? (x) : (y))
 #endif
 
 /* Maximum value between two values that support > comparison */
 #ifndef MAX
-#define MAX(x,y) (((x) > (y)) ? (x) : (y))
+#define MAX(x, y) (((x) > (y)) ? (x) : (y))
 #endif
 
 /* Clamp a value between a min and max value */
 #ifndef CLAMP
-#define CLAMP(val,min,max) ((val) < (min) ? (min) : ((val > max) ? (max) : (val)))
+#define CLAMP(val, min, max) ((val) < (min) ? (min) : ((val > max) ? (max) : (val)))
 #endif
 
 /* Absolute value of a numeric variable */
@@ -62,33 +62,12 @@ struct BoundingBox {
     glm::dvec2 center() const { return 0.5 * (min + max); }
 };
 
-/* Returns 1 for positive values, -1 for negative values and 0 otherwise.
- * Ex: signValue(-2) == -1
- */
-int signValue(float _n);
-
-/* Returns an equivalent angle in radians between -PI and PI
- * Ex: wrapRad(3.24159265358979323846) == -0.1
- * Ex: wrapRad(6.28318530717958647693) == 0.0
- */
-void wrapRad(double& _rads);
-
 /* Map a value from the range [_inputMin, _inputMax] into the range [_outputMin, _outputMax];
  * If _clamp is true, the output is strictly within the output range.
  * Ex: mapValue(5, 0, 10, 0, 360) == 180
  */
-float mapValue(const float& _value, const float& _inputMin, const float& _inputMax, const float& _outputMin, const float& _outputMax, bool _clamp = true);
-
-/* Returns linear interpolation between _start and _stop by the fraction _amt */
-float lerp(const float& _start, const float& _stop, float const& _amt);
-
-/* Sets the length of _vec to _length */
-void setLength(glm::vec3& _vec, float _length);
-
-/* Gets a copy of _vec scaled to have length _length */
-glm::vec3 getWithLength(const glm::vec3& _vec, float _length);
-
-bool isPowerOf2(unsigned int _val);
+float mapValue(const float& _value, const float& _inputMin, const float& _inputMax, const float& _outputMin,
+               const float& _outputMax, bool _clamp = true);
 
 /* Computes the angle in radians between two points with the axis y = 0 in 2d space */
 float angleBetweenPoints(const glm::vec2& _p1, const glm::vec2& _p2);

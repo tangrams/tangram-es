@@ -1,14 +1,14 @@
 #include "debugTextStyle.h"
 
 #include "text/fontContext.h"
-#include "tile/mapTile.h"
-#include "util/vboMesh.h"
+#include "tile/tile.h"
+#include "gl/vboMesh.h"
 
 DebugTextStyle::DebugTextStyle(const std::string& _fontName, std::string _name, float _fontSize, unsigned int _color, bool _sdf, GLenum _drawMode)
 : TextStyle(_fontName, _name, _fontSize, _color, _sdf, false, _drawMode) {
 }
 
-void DebugTextStyle::addData(TileData& _data, MapTile& _tile) {
+void DebugTextStyle::addData(TileData& _data, Tile& _tile) {
 
     if (Tangram::getDebugFlag(Tangram::DebugFlags::tile_infos)) {
         onBeginBuildTile(_tile);

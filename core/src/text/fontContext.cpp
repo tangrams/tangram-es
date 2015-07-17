@@ -4,7 +4,7 @@
 
 #define GLFONTSTASH_IMPLEMENTATION
 #include "glfontstash.h"
-#include "util/vboMesh.h"
+#include "gl/vboMesh.h"
 
 FontContext::FontContext() : FontContext(512) {}
 

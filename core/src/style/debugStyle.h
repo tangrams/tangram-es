@@ -1,7 +1,7 @@
 #pragma once
 
 #include "style.h"
-#include "typedMesh.h"
+#include "gl/typedMesh.h"
 
 class DebugStyle : public Style {
 
@@ -16,10 +16,11 @@ protected:
 
     virtual void constructVertexLayout() override;
     virtual void constructShaderProgram() override;
+
     virtual void buildPoint(Point& _point, const StyleParamMap& _styleParamMap, Properties& _props, VboMesh& _mesh) const override;
     virtual void buildLine(Line& _line, const StyleParamMap& _styleParamMap, Properties& _props, VboMesh& _mesh) const override;
     virtual void buildPolygon(Polygon& _polygon, const StyleParamMap& _styleParamMap, Properties& _props, VboMesh& _mesh) const override;
-    virtual void addData(TileData& _data, MapTile& _tile) override;
+    virtual void addData(TileData& _data, Tile& _tile) override;
 
     typedef TypedMesh<PosColVertex> Mesh;
 

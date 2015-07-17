@@ -1,10 +1,10 @@
 #include "spriteStyle.h"
 
 #include "platform.h"
-#include "tile/mapTile.h"
-#include "util/shaderProgram.h"
-#include "util/texture.h"
-#include "util/vertexLayout.h"
+#include "tile/tile.h"
+#include "gl/shaderProgram.h"
+#include "gl/texture.h"
+#include "gl/vertexLayout.h"
 
 SpriteStyle::SpriteStyle(std::string _name, GLenum _drawMode) : Style(_name, _drawMode) {}
 
@@ -39,7 +39,7 @@ void SpriteStyle::onBeginDrawFrame(const std::shared_ptr<View>& _view, const std
     m_shaderProgram->setUniformi("u_tex", 0);
 }
 
-void SpriteStyle::addData(TileData& _data, MapTile& _tile) {
+void SpriteStyle::addData(TileData& _data, Tile& _tile) {
 
     Mesh* mesh = new Mesh(m_vertexLayout, m_drawMode);
 

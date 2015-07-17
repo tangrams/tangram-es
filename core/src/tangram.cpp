@@ -5,14 +5,14 @@
 #include "scene/sceneLoader.h"
 #include "style/style.h"
 #include "text/fontContext.h"
-#include "tile/labels/labels.h"
+#include "labels/labels.h"
 #include "tile/tileManager.h"
-#include "tile/mapTile.h"
-#include "util/error.h"
-#include "util/shaderProgram.h"
-#include "util/skybox.h"
+#include "tile/tile.h"
+#include "gl/error.h"
+#include "gl/shaderProgram.h"
+#include "scene/skybox.h"
 #include "view/view.h"
-#include "util/renderState.h"
+#include "gl/renderState.h"
 #include <memory>
 #include <cmath>
 
@@ -63,7 +63,7 @@ namespace Tangram {
         }
 
         RenderState::configure();
-        
+
         while (Error::hadGlError("Tangram::initialize()")) {}
 
         logMsg("finish initialize\n");
@@ -153,7 +153,7 @@ namespace Tangram {
 
             // Loop over all tiles in m_tileSet
             for (const auto& mapIDandTile : m_tileManager->getVisibleTiles()) {
-                const std::shared_ptr<MapTile>& tile = mapIDandTile.second;
+                const std::shared_ptr<Tile>& tile = mapIDandTile.second;
                 if (tile->isReady()) {
                     // Draw tile!
                     tile->draw(*style, *m_view);

@@ -1,14 +1,14 @@
 #pragma once
 
 #include "label.h"
-#include "util/tileID.h"
+#include "tile/tileID.h"
 
 #include <memory>
 #include <mutex>
 #include <vector>
 
 class FontContext;
-class MapTile;
+class Tile;
 class View;
 
 struct LabelUnit {
@@ -52,10 +52,10 @@ public:
     virtual ~Labels();
 
     /*
-     * Creates a label for and associate it with the current processed <MapTile> TileID for a specific syle name
+     * Creates a label for and associate it with the current processed <Tile> TileID for a specific syle name
      * Returns true if label was created
      */
-    bool addLabel(MapTile& _tile, const std::string& _styleName, Label::Transform _transform, std::string _text, Label::Type _type);
+    bool addLabel(Tile& _tile, const std::string& _styleName, Label::Transform _transform, std::string _text, Label::Type _type);
 
     void setFontContext(std::shared_ptr<FontContext> _ftContext) { m_ftContext = _ftContext; }
 
