@@ -93,7 +93,7 @@ void PolylineStyle::buildLine(Line& _line, const StyleParamMap& _styleParamMap, 
         abgr = abgr << (int(_props.numericProps["zoom"]) % 6);
     }
 
-    GLfloat layer = _props.numericProps["sort_key"] + params.order;
+    GLfloat layer = _props.getNumeric("sort_key", 0) + params.order;
     float halfWidth = params.width * .5f;
 
     PolyLineBuilder builder {

@@ -76,8 +76,8 @@ void PolygonStyle::buildPolygon(Polygon& _polygon, const StyleParamMap& _stylePa
         abgr = abgr << (int(_props.numericProps["zoom"]) % 6);
     }
 
-    float height = _props.numericProps["height"]; // Inits to zero if not present in data
-    float minHeight = _props.numericProps["min_height"]; // Inits to zero if not present in data
+    float height = _props.getNumeric("height");
+    float minHeight = _props.getNumeric("min_height");
 
     PolygonBuilder builder = {
         [&](const glm::vec3& coord, const glm::vec3& normal, const glm::vec2& uv){
