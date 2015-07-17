@@ -767,12 +767,12 @@ void SceneLoader::loadSublayers(YAML::Node layer, std::vector<std::shared_ptr<Sc
         if(drawGroup) {
 
             std::vector<std::shared_ptr<SceneLayer>> ssubLayers;
-            Node filter = subLayerItr.second["filter"];
-            Filter* subLayerFilter = generateFilter(filter);
 
             loadSublayers(layer[subLayerName], ssubLayers);
 
             for (const auto& groupIt : drawGroup) {
+                Node filter = subLayerItr.second["filter"];
+                Filter* subLayerFilter = generateFilter(filter);
 
                 StyleParamMap paramMap;
                 // TODO: multiple draw groups for a subLayer, NOTE: only one draw for now

@@ -133,7 +133,8 @@ void Style::addData(TileData& _data, MapTile& _tile) {
     std::shared_ptr<VboMesh> mesh(newMesh());
 
     Context ctx;
-    ctx["$zoom"] = new NumValue(_tile.getID().z);
+    NumValue ctxZoom(_tile.getID().z);
+    ctx["$zoom"] = &ctxZoom;
 
     for (auto& layer : _data.layers) {
 
