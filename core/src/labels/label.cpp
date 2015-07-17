@@ -8,7 +8,7 @@ Label::Label(Label::Transform _transform, Type _type) :
     m_type(_type),
     m_transform(_transform) {
 
-    m_transform.m_alpha = m_type == Type::debug ? 1.0 : 0.0;
+    m_transform.state.alpha = m_type == Type::debug ? 1.0 : 0.0;
     m_currentState = m_type == Type::debug ? State::visible : State::wait_occ;
     m_occludedLastFrame = false;
     m_occlusionSolved = false;
@@ -25,7 +25,7 @@ bool Label::updateScreenTransform(const glm::mat4& _mvp, const glm::vec2& _scree
         case Type::debug:
         case Type::point:
         {
-            glm::vec4 v1 = worldToClipSpace(_mvp, glm::vec4(m_transform.m_modelPosition1, 0.0, 1.0));
+            glm::vec4 v1 = worldToClipSpace(_mvp, glm::vec4(m_transform.modelPosition1, 0.0, 1.0));
 
             if (v1.w <= 0) {
                 return false;
@@ -41,8 +41,8 @@ bool Label::updateScreenTransform(const glm::mat4& _mvp, const glm::vec2& _scree
         case Type::line:
         {
             // project label position from mercator world space to clip coordinates
-            glm::vec4 v1 = worldToClipSpace(_mvp, glm::vec4(m_transform.m_modelPosition1, 0.0, 1.0));
-            glm::vec4 v2 = worldToClipSpace(_mvp, glm::vec4(m_transform.m_modelPosition2, 0.0, 1.0));
+            glm::vec4 v1 = worldToClipSpace(_mvp, glm::vec4(m_transform.modelPosition1, 0.0, 1.0));
+            glm::vec4 v2 = worldToClipSpace(_mvp, glm::vec4(m_transform.modelPosition2, 0.0, 1.0));
 
             // check whether the label is behind the camera using the perspective division factor
             if (v1.w <= 0 || v2.w <= 0) {
@@ -130,19 +130,19 @@ void Label::enterState(State _state, float _alpha) {
 }
 
 void Label::setAlpha(float _alpha) {
-    m_transform.m_alpha = CLAMP(_alpha, 0.0, 1.0);
+    m_transform.state.alpha = CLAMP(_alpha, 0.0, 1.0);
     m_dirty = true;
 }
 
 void Label::setScreenPosition(const glm::vec2& _screenPosition) {
-    if (_screenPosition != m_transform.m_screenPosition) {
-        m_transform.m_screenPosition = _screenPosition;
+    if (_screenPosition != m_transform.state.screenPos) {
+        m_transform.state.screenPos = _screenPosition;
         m_dirty = true;
     }
 }
 
 void Label::setRotation(float _rotation) {
-    m_transform.m_rotation = _rotation;
+    m_transform.state.rotation = _rotation;
     m_dirty = true;
 }
 
