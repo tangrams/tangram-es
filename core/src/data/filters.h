@@ -74,22 +74,29 @@ namespace Tangram {
             
             switch (type) {
                     
-                case FilterType::any:
-                case FilterType::all:
-                case FilterType::none: {
-                    
-                    bool breakValue = (type == FilterType::any || type == FilterType::none); // For 'any' or 'none' filters, a true evaluation breaks early
-                    bool breakResult = (type == FilterType::any); // For 'any' filters, an early break returns true
+                case FilterType::any: {
                     for (const auto& filt : operands) {
-                        if (filt.eval(feat, ctx) == breakValue) { return breakResult; }
+                        if (filt.eval(feat, ctx)) { return true; }
                     }
-                    return !breakResult;
+                    return false;
+                }
+                case FilterType::all: {
+                    for (const auto& filt : operands) {
+                        if (!filt.eval(feat, ctx)) { return false; }
+                    }
+                    return true;
+                }
+                case FilterType::none: {
+                    for (const auto& filt : operands) {
+                        if (filt.eval(feat, ctx)) { return false; }
+                    }
+                    return true;
                 }
                 case FilterType::existence: {
                     
                     bool found = ctx.find(key) != ctx.end() ||
-                    feat.props.stringProps.find(key) != feat.props.stringProps.end() ||
-                    feat.props.numericProps.find(key) != feat.props.numericProps.end();
+                                 feat.props.stringProps.find(key) != feat.props.stringProps.end() ||
+                                 feat.props.numericProps.find(key) != feat.props.numericProps.end();
                     
                     return exists == found;
                 }
