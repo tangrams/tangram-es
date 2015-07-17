@@ -2,7 +2,7 @@
 #include "catch/catch.hpp"
 
 #include <iostream>
-#include "typedMesh.h"
+#include "gl/typedMesh.h"
 
 struct Vertex {
     float a;
