@@ -83,14 +83,6 @@ void SpriteStyle::buildPoint(Point& _point, const StyleParamMap&, Properties& _p
     mesh.addVertices(std::move(vertices), std::move(builder.indices));
 }
 
-void SpriteStyle::buildLine(Line& _line, const StyleParamMap&, Properties& _props, VboMesh& _mesh, MapTile& _tile) const {
-    // NO-OP
-}
-
-void SpriteStyle::buildPolygon(Polygon& _polygon, const StyleParamMap&, Properties& _props, VboMesh& _mesh, MapTile& _tile) const {
-    // NO-OP
-}
-
 void SpriteStyle::onBeginDrawFrame(const std::shared_ptr<View>& _view, const std::shared_ptr<Scene>& _scene) {
     m_spriteAtlas->bind();
     

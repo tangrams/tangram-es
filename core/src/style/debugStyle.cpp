@@ -53,23 +53,4 @@ void DebugStyle::addData(TileData &_data, MapTile &_tile) {
         _tile.addGeometry(*this, std::unique_ptr<VboMesh>(mesh));
 
     }
-
-}
-
-void DebugStyle::buildPoint(Point &_point, const StyleParamMap& _styleParamMap, Properties &_props, VboMesh &_mesh, MapTile& _tile) const {
-
-    // No-op
-
-}
-
-void DebugStyle::buildLine(Line &_line, const StyleParamMap& _styleParamMap, Properties &_props, VboMesh &_mesh, MapTile& _tile) const {
-
-    // No-op
-
-}
-
-void DebugStyle::buildPolygon(Polygon &_polygon, const StyleParamMap& _styleParamMap, Properties &_props, VboMesh &_mesh, MapTile& _tile) const {
-
-    // No-op
-
 }

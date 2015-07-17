@@ -212,3 +212,15 @@ void Style::onBeginBuildTile(VboMesh& _mesh) const {
 void Style::onEndBuildTile(VboMesh& _mesh) const {
     // No-op by default
 }
+
+void Style::buildPoint(Point& _point, const StyleParamMap& _styleParamMap, Properties& _props, VboMesh& _mesh, MapTile& _tile) const {
+    // No-op by default
+}
+
+void Style::buildLine(Line& _line, const StyleParamMap& _styleParamMap, Properties& _props, VboMesh& _mesh, MapTile& _tile) const {
+    // No-op by default
+}
+
+void Style::buildPolygon(Polygon& _polygon, const StyleParamMap& _styleParamMap, Properties& _props, VboMesh& _mesh, MapTile& _tile) const {
+    // No-op by default
+}
