@@ -43,11 +43,21 @@ void SpriteStyle::constructShaderProgram() {
     m_spriteAtlas->addSpriteNode("plane", {0, 0}, {32, 32});
     m_spriteAtlas->addSpriteNode("tree", {0, 185}, {32, 32});
     m_spriteAtlas->addSpriteNode("sunburst", {0, 629}, {32, 32});
+    m_spriteAtlas->addSpriteNode("restaurant", {0, 777}, {32, 32});
+    m_spriteAtlas->addSpriteNode("cafe", {0, 814}, {32, 32});
+    m_spriteAtlas->addSpriteNode("museum", {0, 518}, {32, 32});
+    m_spriteAtlas->addSpriteNode("bar", {0, 887}, {32, 32});
+    m_spriteAtlas->addSpriteNode("train", {0, 74}, {32, 32});
+    m_spriteAtlas->addSpriteNode("bus", {0, 148}, {32, 32});
+    m_spriteAtlas->addSpriteNode("hospital", {0, 444}, {32, 32});
+    m_spriteAtlas->addSpriteNode("parking", {0, 1073}, {32, 32});
+    m_spriteAtlas->addSpriteNode("info", {0, 1110}, {32, 32});
+    m_spriteAtlas->addSpriteNode("hotel", {0, 259}, {32, 32});
+    m_spriteAtlas->addSpriteNode("bookstore", {0, 333}, {32, 32});
 }
 
 void SpriteStyle::buildPoint(Point& _point, const StyleParamMap&, Properties& _props, VboMesh& _mesh, MapTile& _tile) const {
     // TODO : make this configurable
-    SpriteNode planeSprite = m_spriteAtlas->getSpriteNode("tree");
     std::vector<BufferVert> vertices;
 
     SpriteBuilder builder = {
@@ -62,6 +72,15 @@ void SpriteStyle::buildPoint(Point& _point, const StyleParamMap&, Properties& _p
 
     for (auto prop : _props.stringProps) {
         if (prop.first == "name") {
+            auto it = _props.stringProps.find("kind");
+            if (it == _props.stringProps.end()) {
+                continue;
+            }
+            std::string& kind = (*it).second;
+            if (!m_spriteAtlas->hasSpriteNode(kind)) {
+                continue;
+            }
+            const SpriteNode& spriteNode = m_spriteAtlas->getSpriteNode(kind);
             Label::Transform t = {glm::vec2(_point), glm::vec2(_point)};
 
             SpriteLabel::AttributeOffsets attribOffsets = {
@@ -71,10 +90,10 @@ void SpriteStyle::buildPoint(Point& _point, const StyleParamMap&, Properties& _p
                 (GLintptr) m_vertexLayout->getOffset("a_alpha"),
             };
 
-            auto label = m_labels->addSpriteLabel(_tile, m_name, t, planeSprite.size * spriteScale, offset, attribOffsets);
+            auto label = m_labels->addSpriteLabel(_tile, m_name, t, spriteNode.size * spriteScale, offset, attribOffsets);
 
             if (label) {
-                Builders::buildQuadAtPoint(label->getTransform().m_screenPosition + offset, planeSprite.size * spriteScale, planeSprite.uvBL, planeSprite.uvTR, builder);
+                Builders::buildQuadAtPoint(label->getTransform().m_screenPosition + offset, spriteNode.size * spriteScale, spriteNode.uvBL, spriteNode.uvTR, builder);
             }
         }
     }
