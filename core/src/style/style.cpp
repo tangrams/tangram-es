@@ -3,8 +3,8 @@
 #include "scene/scene.h"
 #include "scene/sceneLayer.h"
 #include "scene/light.h"
-#include "tile/mapTile.h"
-#include "util/vboMesh.h"
+#include "tile/tile.h"
+#include "gl/vboMesh.h"
 #include "view/view.h"
 
 #include "csscolorparser.hpp"
@@ -95,7 +95,7 @@ void Style::applyLayerFiltering(const Feature& _feature, const Context& _ctx, st
 
         auto sceneLyr = *sLayerItr;
 
-        if ( sceneLyr->getFilter()->eval(_feature, _ctx)) { // filter matches
+        if (sceneLyr->getFilter().eval(_feature, _ctx)) { // filter matches
 
             _uniqueID.set(sceneLyr->getID());
 
@@ -127,13 +127,14 @@ void Style::applyLayerFiltering(const Feature& _feature, const Context& _ctx, st
     }
 }
 
-void Style::addData(TileData& _data, MapTile& _tile) {
+void Style::addData(TileData& _data, Tile& _tile) {
+
     std::shared_ptr<VboMesh> mesh(newMesh());
     
     onBeginBuildTile(*mesh);
 
     Context ctx;
-    ctx["$zoom"] = new NumValue(_tile.getID().z);
+    ctx["$zoom"] = Value(_tile.getID().z);
 
     for (auto& layer : _data.layers) {
 

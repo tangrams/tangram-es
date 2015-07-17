@@ -2,8 +2,8 @@
 
 #include "gl.h"
 #include "glfontstash.h"
-#include "util/typedMesh.h"
-
+#include "gl/typedMesh.h"
+#include "glm/vec4.hpp"
 #include "glm/vec2.hpp"
 
 #include <memory>

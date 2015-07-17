@@ -1,8 +1,8 @@
 #include "debugStyle.h"
 
 #include "tangram.h"
-#include "tile/mapTile.h"
-#include "util/shaderProgram.h"
+#include "tile/tile.h"
+#include "gl/shaderProgram.h"
 
 #include <vector>
 #include <memory>
@@ -29,7 +29,7 @@ void DebugStyle::constructShaderProgram() {
 
 }
 
-void DebugStyle::addData(TileData &_data, MapTile &_tile) {
+void DebugStyle::addData(TileData &_data, Tile &_tile) {
 
     if (Tangram::getDebugFlag(Tangram::DebugFlags::tile_bounds)) {
 
@@ -56,19 +56,19 @@ void DebugStyle::addData(TileData &_data, MapTile &_tile) {
 
 }
 
-void DebugStyle::buildPoint(Point &_point, const StyleParamMap& _styleParamMap, Properties &_props, VboMesh &_mesh, MapTile& _tile) const {
+void DebugStyle::buildPoint(Point &_point, const StyleParamMap& _styleParamMap, Properties &_props, VboMesh &_mesh, Tile& _tile) const {
 
     // No-op
 
 }
 
-void DebugStyle::buildLine(Line &_line, const StyleParamMap& _styleParamMap, Properties &_props, VboMesh &_mesh, MapTile& _tile) const {
+void DebugStyle::buildLine(Line &_line, const StyleParamMap& _styleParamMap, Properties &_props, VboMesh &_mesh, Tile& _tile) const {
 
     // No-op
 
 }
 
-void DebugStyle::buildPolygon(Polygon &_polygon, const StyleParamMap& _styleParamMap, Properties &_props, VboMesh &_mesh, MapTile& _tile) const {
+void DebugStyle::buildPolygon(Polygon &_polygon, const StyleParamMap& _styleParamMap, Properties &_props, VboMesh &_mesh, Tile& _tile) const {
 
     // No-op
 

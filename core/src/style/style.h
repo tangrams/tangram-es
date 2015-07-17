@@ -5,8 +5,9 @@
 #include "gl.h"
 #include "scene/sceneLayer.h"
 #include "styleParamMap.h"
-#include "util/shaderProgram.h"
-#include "util/renderState.h"
+
+#include "gl/shaderProgram.h"
+#include "gl/renderState.h"
 
 #include <bitset>
 #include <memory>
@@ -15,7 +16,7 @@
 #include <vector>
 
 class Light;
-class MapTile;
+class Tile;
 class MapProjection;
 class VboMesh;
 class VertexLayout;
@@ -30,7 +31,7 @@ enum class LightingType : char {
 
 namespace Tangram {
     struct Value;
-    using Context = std::unordered_map<std::string, Value*>;
+    using Context = std::unordered_map<std::string, Value>;
 }
 
 /* Means of constructing and rendering map geometry
@@ -79,13 +80,13 @@ protected:
     virtual void constructShaderProgram() = 0;
 
     /* Build styled vertex data for point geometry and add it to the given <VboMesh> */
-    virtual void buildPoint(Point& _point, const StyleParamMap& _styleParamMap, Properties& _props, VboMesh& _mesh, MapTile& _tile) const = 0;
+    virtual void buildPoint(Point& _point, const StyleParamMap& _styleParamMap, Properties& _props, VboMesh& _mesh, Tile& _tile) const = 0;
 
     /* Build styled vertex data for line geometry and add it to the given <VboMesh> */
-    virtual void buildLine(Line& _line, const StyleParamMap& _styleParamMap, Properties& _props, VboMesh& _mesh, MapTile& _tile) const = 0;
+    virtual void buildLine(Line& _line, const StyleParamMap& _styleParamMap, Properties& _props, VboMesh& _mesh, Tile& _tile) const = 0;
 
     /* Build styled vertex data for polygon geometry and add it to the given <VboMesh> */
-    virtual void buildPolygon(Polygon& _polygon, const StyleParamMap& _styleParamMap, Properties& _props, VboMesh& _mesh, MapTile& _tile) const = 0;
+    virtual void buildPolygon(Polygon& _polygon, const StyleParamMap& _styleParamMap, Properties& _props, VboMesh& _mesh, Tile& _tile) const = 0;
 
     static std::unordered_map<std::bitset<MAX_LAYERS>, StyleParamMap> s_styleParamMapCache;
     static std::mutex s_cacheMutex;
@@ -124,8 +125,8 @@ public:
     /* Add layers to which this style will apply */
     void addLayer(std::shared_ptr<Tangram::SceneLayer> _layer);
 
-    /* Add styled geometry from the given <TileData> object to the given <MapTile> */
-    virtual void addData(TileData& _data, MapTile& _tile);
+    /* Add styled geometry from the given <TileData> object to the given <Tile> */
+    virtual void addData(TileData& _data, Tile& _tile);
 
     /* Perform any setup needed before drawing each frame */
     virtual void onBeginDrawFrame(const std::shared_ptr<View>& _view, const std::shared_ptr<Scene>& _scene);

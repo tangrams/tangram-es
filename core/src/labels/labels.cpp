@@ -1,8 +1,8 @@
 #include "labels.h"
 #include "tangram.h"
-#include "tile/mapTile.h"
+#include "tile/tile.h"
 #include "text/fontContext.h"
-#include "util/primitives.h"
+#include "gl/primitives.h"
 #include "view/view.h"
 
 #include "glm/gtc/matrix_transform.hpp"
@@ -18,7 +18,7 @@ int Labels::LODDiscardFunc(float _maxZoom, float _zoom) {
     return (int) MIN(floor(((log(-_zoom + (_maxZoom + 2)) / log(_maxZoom + 2) * (_maxZoom )) * 0.5)), MAX_LOD);
 }
 
-std::shared_ptr<Label> Labels::addTextLabel(MapTile& _tile, TextBuffer& _buffer, const std::string& _styleName,
+std::shared_ptr<Label> Labels::addTextLabel(Tile& _tile, TextBuffer& _buffer, const std::string& _styleName,
                                             Label::Transform _transform, std::string _text, Label::Type _type) {
     // FIXME: the current view should not be used to determine whether a label is shown at all
     // otherwise results will be random    
@@ -44,7 +44,7 @@ std::shared_ptr<Label> Labels::addTextLabel(MapTile& _tile, TextBuffer& _buffer,
     return label;
 }
 
-void Labels::addLabel(MapTile& _tile, const std::string& _styleName, std::shared_ptr<Label> _label) {
+void Labels::addLabel(Tile& _tile, const std::string& _styleName, std::shared_ptr<Label> _label) {
 
     auto modelMatrix = glm::scale(glm::mat4(1.0), glm::vec3(_tile.getScale()));
     // NB: viewOrigin.z is only determined by screen width and height.
@@ -62,7 +62,7 @@ void Labels::addLabel(MapTile& _tile, const std::string& _styleName, std::shared
     }
 }
 
-std::shared_ptr<Label> Labels::addSpriteLabel(MapTile& _tile, const std::string& _styleName, Label::Transform _transform, const glm::vec2& _size,
+std::shared_ptr<Label> Labels::addSpriteLabel(Tile& _tile, const std::string& _styleName, Label::Transform _transform, const glm::vec2& _size,
                                               const glm::vec2& _offset, SpriteLabel::AttributeOffsets _attribOffsets) {
     
     if ((m_currentZoom - _tile.getID().z) > LODDiscardFunc(View::s_maxZoom, m_currentZoom)) {

@@ -7,7 +7,7 @@ class DebugTextStyle : public TextStyle {
 
 protected:
 
-    virtual void addData(TileData& _data, MapTile& _tile) override;
+    virtual void addData(TileData& _data, Tile& _tile) override;
 
 public:
 

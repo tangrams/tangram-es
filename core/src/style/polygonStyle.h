@@ -1,7 +1,7 @@
 #pragma once
 
 #include "style.h"
-#include "typedMesh.h"
+#include "gl/typedMesh.h"
 #include "glm/vec2.hpp"
 #include "glm/vec3.hpp"
 
@@ -31,9 +31,9 @@ protected:
 
     virtual void constructVertexLayout() override;
     virtual void constructShaderProgram() override;
-    virtual void buildPoint(Point& _line, const StyleParamMap& _styleParamMap, Properties& _props, VboMesh& _mesh, MapTile& _tile) const override;
-    virtual void buildLine(Line& _line, const StyleParamMap& _styleParamMap, Properties& _props, VboMesh& _mesh, MapTile& _tile) const override;
-    virtual void buildPolygon(Polygon& _polygon, const StyleParamMap& _styleParamMap, Properties& _props, VboMesh& _mesh, MapTile& _tile) const override;
+    virtual void buildPoint(Point& _line, const StyleParamMap& _styleParamMap, Properties& _props, VboMesh& _mesh, Tile& _tile) const override;
+    virtual void buildLine(Line& _line, const StyleParamMap& _styleParamMap, Properties& _props, VboMesh& _mesh, Tile& _tile) const override;
+    virtual void buildPolygon(Polygon& _polygon, const StyleParamMap& _styleParamMap, Properties& _props, VboMesh& _mesh, Tile& _tile) const override;
     /*
      * Parse StyleParamMap to individual style's StyleParam structure.
      */

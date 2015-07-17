@@ -3,7 +3,7 @@
 #include "style.h"
 #include "glm/vec2.hpp"
 #include "glm/vec3.hpp"
-#include "typedMesh.h"
+#include "gl/typedMesh.h"
 #include "util/builders.h"
 
 #include <mutex>
@@ -41,9 +41,9 @@ protected:
 
     virtual void constructVertexLayout() override;
     virtual void constructShaderProgram() override;
-    virtual void buildPoint(Point& _point, const StyleParamMap& _styleParamMap, Properties& _props, VboMesh& _mesh, MapTile& _tile) const override;
-    virtual void buildLine(Line& _line, const StyleParamMap& _styleParamMap, Properties& _props, VboMesh& _mesh, MapTile& _tile) const override;
-    virtual void buildPolygon(Polygon& _polygon, const StyleParamMap& _styleParamMap, Properties& _props, VboMesh& _mesh, MapTile& _tile) const override;
+    virtual void buildPoint(Point& _point, const StyleParamMap& _styleParamMap, Properties& _props, VboMesh& _mesh, Tile& _tile) const override;
+    virtual void buildLine(Line& _line, const StyleParamMap& _styleParamMap, Properties& _props, VboMesh& _mesh, Tile& _tile) const override;
+    virtual void buildPolygon(Polygon& _polygon, const StyleParamMap& _styleParamMap, Properties& _props, VboMesh& _mesh, Tile& _tile) const override;
     /*
      * Parse StyleParamMap to individual style's StyleParam structure.
      */

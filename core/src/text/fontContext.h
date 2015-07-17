@@ -2,7 +2,7 @@
 
 #include "gl.h"
 #include "glfontstash.h"
-#include "texture.h"
+#include "gl/texture.h"
 #include "platform.h"
 #include "textBuffer.h"
 #include "stl_util.hpp"
@@ -41,14 +41,14 @@ public:
     
     /* lock thread access to this font context */
     void lock();
-    
+
     /* unlock thread access to this font context */
     void unlock();
 
     const std::unique_ptr<Texture>& getAtlas() const;
-    
+
     FONScontext* getFontContext() const { return m_fsContext; }
-    
+
 private:
 
     void initFontContext(int _atlasSize);
@@ -57,5 +57,5 @@ private:
     std::unique_ptr<Texture> m_atlas;
     std::unique_ptr<std::mutex> m_contextMutex;
     FONScontext* m_fsContext;
-    
+
 };

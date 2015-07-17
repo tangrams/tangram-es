@@ -1,8 +1,8 @@
 #include "material.h"
 
 #include "platform.h"
-#include "shaderProgram.h"
-#include "texture.h"
+#include "gl/shaderProgram.h"
+#include "gl/texture.h"
 
 Material::Material() {
 }
@@ -84,7 +84,7 @@ std::string mappingTypeToString(MappingType type) {
 
 std::string Material::getDefinesBlock(){
     std::string defines = "";
-    
+
     bool mappings[4] = { false };
 
     if (m_bEmission) {
@@ -128,7 +128,7 @@ std::string Material::getDefinesBlock(){
         defines += "#define TANGRAM_MATERIAL_NORMAL_TEXTURE_" + mappingTypeToString(m_normal_texture.mapping) + "\n";
         mappings[(int)m_specular_texture.mapping] = true;
     }
-    
+
     for (int i = 0; i < 4; i++) {
         if (mappings[i]) {
             defines += "#define TANGRAM_MATERIAL_TEXTURE_" + mappingTypeToString((MappingType)i) + "\n";

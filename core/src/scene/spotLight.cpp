@@ -2,7 +2,7 @@
 
 #include "glm/gtx/string_cast.hpp"
 #include "platform.h"
-#include "util/shaderProgram.h"
+#include "gl/shaderProgram.h"
 #include "view/view.h"
 
 std::string SpotLight::s_classBlock;

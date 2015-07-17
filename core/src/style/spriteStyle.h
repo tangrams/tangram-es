@@ -3,9 +3,9 @@
 #include "style.h"
 #include "glm/vec2.hpp"
 #include "glm/vec3.hpp"
-#include "util/typedMesh.h"
-#include "tile/labels/labels.h"
-#include "tile/labels/spriteAtlas.h"
+#include "gl/typedMesh.h"
+#include "labels/labels.h"
+#include "labels/spriteAtlas.h"
 
 class Texture;
 
@@ -15,9 +15,10 @@ protected:
 
     virtual void constructVertexLayout() override;
     virtual void constructShaderProgram() override;
-    virtual void buildPoint(Point& _point, const StyleParamMap& _styleParamMap, Properties& _props, VboMesh& _mesh, MapTile& _tile) const override;
-    virtual void buildLine(Line& _line, const StyleParamMap& _styleParamMap, Properties& _props, VboMesh& _mesh, MapTile& _tile) const override;
-    virtual void buildPolygon(Polygon& _polygon, const StyleParamMap& _styleParamMap, Properties& _props, VboMesh& _mesh, MapTile& _tile) const override;
+
+    virtual void buildPoint(Point& _point, const StyleParamMap& _styleParamMap, Properties& _props, VboMesh& _mesh, Tile& _tile) const override;
+    virtual void buildLine(Line& _line, const StyleParamMap& _styleParamMap, Properties& _props, VboMesh& _mesh, Tile& _tile) const override;
+    virtual void buildPolygon(Polygon& _polygon, const StyleParamMap& _styleParamMap, Properties& _props, VboMesh& _mesh, Tile& _tile) const override;
 
     typedef TypedMesh<BufferVert> Mesh;
 

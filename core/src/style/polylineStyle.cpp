@@ -1,7 +1,7 @@
 #include "polylineStyle.h"
 
 #include "tangram.h"
-#include "util/shaderProgram.h"
+#include "gl/shaderProgram.h"
 
 PolylineStyle::PolylineStyle(std::string _name, GLenum _drawMode) : Style(_name, _drawMode) {
 }
@@ -82,11 +82,11 @@ void PolylineStyle::parseStyleParams(const StyleParamMap& _styleParamMap, StyleP
     }
 }
 
-void PolylineStyle::buildPoint(Point& _point, const StyleParamMap& _styleParamMap, Properties& _props, VboMesh& _mesh, MapTile& _tile) const {
+void PolylineStyle::buildPoint(Point& _point, const StyleParamMap& _styleParamMap, Properties& _props, VboMesh& _mesh, Tile& _tile) const {
     // No-op
 }
 
-void PolylineStyle::buildLine(Line& _line, const StyleParamMap& _styleParamMap, Properties& _props, VboMesh& _mesh, MapTile& _tile) const {
+void PolylineStyle::buildLine(Line& _line, const StyleParamMap& _styleParamMap, Properties& _props, VboMesh& _mesh, Tile& _tile) const {
     std::vector<PosNormEnormColVertex> vertices;
 
     StyleParams params;
@@ -139,6 +139,6 @@ void PolylineStyle::buildLine(Line& _line, const StyleParamMap& _styleParamMap, 
     mesh.addVertices(std::move(vertices), std::move(builder.indices));
 }
 
-void PolylineStyle::buildPolygon(Polygon& _polygon, const StyleParamMap& _styleParamMap, Properties& _props, VboMesh& _mesh, MapTile& _tile) const {
+void PolylineStyle::buildPolygon(Polygon& _polygon, const StyleParamMap& _styleParamMap, Properties& _props, VboMesh& _mesh, Tile& _tile) const {
     // No-op
 }

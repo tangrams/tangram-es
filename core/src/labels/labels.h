@@ -3,14 +3,14 @@
 #include "label.h"
 #include "textLabel.h"
 #include "spriteLabel.h"
-#include "util/tileID.h"
+#include "tile/tileID.h"
 
 #include <memory>
 #include <mutex>
 #include <vector>
 
 class FontContext;
-class MapTile;
+class Tile;
 class View;
 
 struct LabelUnit {
@@ -58,13 +58,13 @@ public:
      * Creates a text slabel for and associate it with the current processed <MapTile> TileID for a specific syle name
      * Returns the created label
      */
-    std::shared_ptr<Label> addTextLabel(MapTile& _tile, TextBuffer& _buffer, const std::string& _styleName, Label::Transform _transform, std::string _text, Label::Type _type);
+    std::shared_ptr<Label> addTextLabel(Tile& _tile, TextBuffer& _buffer, const std::string& _styleName, Label::Transform _transform, std::string _text, Label::Type _type);
     
     /*
      * Creates a sprite slabel for and associate it with the current processed <MapTile> TileID for a specific syle name
      * Returns the created labe
      */
-    std::shared_ptr<Label> addSpriteLabel(MapTile& _tile, const std::string& _styleName, Label::Transform _transform, const glm::vec2& _size,
+    std::shared_ptr<Label> addSpriteLabel(Tile& _tile, const std::string& _styleName, Label::Transform _transform, const glm::vec2& _size,
                                           const glm::vec2& _offset, SpriteLabel::AttributeOffsets _attribOffsets);
 
     void setFontContext(std::shared_ptr<FontContext> _ftContext) { m_ftContext = _ftContext; }
@@ -82,7 +82,7 @@ public:
 
 private:
     
-    void addLabel(MapTile& _tile, const std::string& _styleName, std::shared_ptr<Label> _label);
+    void addLabel(Tile& _tile, const std::string& _styleName, std::shared_ptr<Label> _label);
 
     int LODDiscardFunc(float _maxZoom, float _zoom);
 

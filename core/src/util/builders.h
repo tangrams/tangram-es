@@ -1,6 +1,6 @@
 #pragma once
 
-#include "tileData.h"
+#include "data/tileData.h"
 
 #include <functional>
 #include <vector>
@@ -20,7 +20,7 @@ enum class JoinTypes {
 struct PolyLineOptions {
     CapTypes cap;
     JoinTypes join;
-    
+
     PolyLineOptions() : cap(CapTypes::butt), join(JoinTypes::miter) {};
     PolyLineOptions(CapTypes _c, JoinTypes _j) : cap(_c), join(_j) {};
 };
@@ -91,7 +91,7 @@ struct SpriteBuilder {
 class Builders {
 
 public:
-    
+
     /* Build a tesselated polygon
      * @_polygon input coordinates describing the polygon
      * @_ctx output vectors, see <PolygonBuilder>
@@ -111,7 +111,7 @@ public:
      * @_ctx output vectors, see <PolyLineBuilder>
      */
     static void buildPolyLine(const Line& _line, PolyLineBuilder& _ctx);
-    
+
     /* Build a tesselated outline that follows the given line while skipping tile boundaries */
     static void buildOutline(const Line& _line, PolyLineBuilder& _ctx);
     
@@ -123,5 +123,5 @@ public:
      * @_ctx output vectors, see <SpriteBuilder>
      */
     static void buildQuadAtPoint(const glm::vec2& _screenOrigin, const glm::vec2& _size, const glm::vec2& _uvBL, const glm::vec2& _uvTR, SpriteBuilder& _ctx);
-    
+
 };

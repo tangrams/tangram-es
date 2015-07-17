@@ -1,9 +1,9 @@
 #pragma once
 
 #include "style.h"
-#include "typedMesh.h"
+#include "gl/typedMesh.h"
 #include "glfontstash.h"
-#include "tile/labels/labels.h"
+#include "labels/labels.h"
 #include "text/fontContext.h"
 #include "text/textBuffer.h"
 
@@ -15,9 +15,10 @@ protected:
 
     virtual void constructVertexLayout() override;
     virtual void constructShaderProgram() override;
-    virtual void buildPoint(Point& _point, const StyleParamMap& _styleParamMap, Properties& _props, VboMesh& _mesh, MapTile& _tile) const override;
-    virtual void buildLine(Line& _line, const StyleParamMap& _styleParamMap, Properties& _props, VboMesh& _mesh, MapTile& _tile) const override;
-    virtual void buildPolygon(Polygon& _polygon, const StyleParamMap& _styleParamMap, Properties& _props, VboMesh& _mesh, MapTile& _tile) const override;
+
+    virtual void buildPoint(Point& _point, const StyleParamMap& _styleParamMap, Properties& _props, VboMesh& _mesh, Tile& _tile) const override;
+    virtual void buildLine(Line& _line, const StyleParamMap& _styleParamMap, Properties& _props, VboMesh& _mesh, Tile& _tile) const override;
+    virtual void buildPolygon(Polygon& _polygon, const StyleParamMap& _styleParamMap, Properties& _props, VboMesh& _mesh, Tile& _tile) const override;
     virtual void onBeginBuildTile(VboMesh& _mesh) const override;
     virtual void onEndBuildTile(VboMesh& _mesh) const override;
 

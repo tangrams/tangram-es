@@ -1,9 +1,9 @@
 #include "textStyle.h"
 
 #include "text/fontContext.h"
-#include "tile/mapTile.h"
-#include "util/shaderProgram.h"
-#include "util/vboMesh.h"
+#include "tile/tile.h"
+#include "gl/shaderProgram.h"
+#include "gl/vboMesh.h"
 #include "view/view.h"
 
 TextStyle::TextStyle(const std::string& _fontName, std::string _name, float _fontSize, unsigned int _color, bool _sdf, bool _sdfMultisampling, GLenum _drawMode)
@@ -41,7 +41,7 @@ void TextStyle::constructShaderProgram() {
     m_shaderProgram->addSourceBlock("defines", defines);
 }
 
-void TextStyle::buildPoint(Point& _point, const StyleParamMap& _styleParamMap, Properties& _props, VboMesh& _mesh, MapTile& _tile) const {
+void TextStyle::buildPoint(Point& _point, const StyleParamMap& _styleParamMap, Properties& _props, VboMesh& _mesh, Tile& _tile) const {
     auto& buffer = static_cast<TextBuffer&>(_mesh);
 
     for (auto prop : _props.stringProps) {
@@ -51,7 +51,7 @@ void TextStyle::buildPoint(Point& _point, const StyleParamMap& _styleParamMap, P
     }
 }
 
-void TextStyle::buildLine(Line& _line, const StyleParamMap& _styleParamMap, Properties& _props, VboMesh& _mesh, MapTile& _tile) const {
+void TextStyle::buildLine(Line& _line, const StyleParamMap& _styleParamMap, Properties& _props, VboMesh& _mesh, Tile& _tile) const {
     auto& buffer = static_cast<TextBuffer&>(_mesh);
     int lineLength = _line.size();
     int skipOffset = floor(lineLength / 2);
@@ -77,7 +77,7 @@ void TextStyle::buildLine(Line& _line, const StyleParamMap& _styleParamMap, Prop
     }
 }
 
-void TextStyle::buildPolygon(Polygon& _polygon, const StyleParamMap& _styleParamMap, Properties& _props, VboMesh& _mesh, MapTile& _tile) const {
+void TextStyle::buildPolygon(Polygon& _polygon, const StyleParamMap& _styleParamMap, Properties& _props, VboMesh& _mesh, Tile& _tile) const {
     auto& buffer = static_cast<TextBuffer&>(_mesh);
     glm::vec3 centroid;
     int n = 0;

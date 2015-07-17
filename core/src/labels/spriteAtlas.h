@@ -2,7 +2,7 @@
 
 #include <map>
 #include <memory>
-#include "util/texture.h"
+#include "gl/texture.h"
 #include "glm/glm.hpp"
 
 struct SpriteNode {

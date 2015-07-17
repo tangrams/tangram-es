@@ -1,7 +1,8 @@
 #include "textBuffer.h"
 #include "fontContext.h"
 
-#include "glm/vec4.hpp"
+#include "gl/texture.h"
+#include "gl/vboMesh.h"
 
 TextBuffer::TextBuffer(std::shared_ptr<FontContext> _fontContext, std::shared_ptr<VertexLayout> _vertexLayout)
     : TypedMesh<BufferVert>(_vertexLayout, GL_TRIANGLES, GL_DYNAMIC_DRAW) {

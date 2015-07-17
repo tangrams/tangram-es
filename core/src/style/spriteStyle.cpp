@@ -1,10 +1,10 @@
 #include "spriteStyle.h"
 
 #include "platform.h"
-#include "tile/mapTile.h"
-#include "util/shaderProgram.h"
-#include "util/texture.h"
-#include "util/vertexLayout.h"
+#include "tile/tile.h"
+#include "gl/shaderProgram.h"
+#include "gl/texture.h"
+#include "gl/vertexLayout.h"
 #include "util/builders.h"
 #include "view/view.h"
 
@@ -56,7 +56,7 @@ void SpriteStyle::constructShaderProgram() {
     m_spriteAtlas->addSpriteNode("bookstore", {0, 333}, {32, 32});
 }
 
-void SpriteStyle::buildPoint(Point& _point, const StyleParamMap&, Properties& _props, VboMesh& _mesh, MapTile& _tile) const {
+void SpriteStyle::buildPoint(Point& _point, const StyleParamMap&, Properties& _props, VboMesh& _mesh, Tile& _tile) const {
     // TODO : make this configurable
     std::vector<BufferVert> vertices;
 
@@ -100,11 +100,11 @@ void SpriteStyle::buildPoint(Point& _point, const StyleParamMap&, Properties& _p
     mesh.addVertices(std::move(vertices), std::move(builder.indices));
 }
 
-void SpriteStyle::buildLine(Line& _line, const StyleParamMap&, Properties& _props, VboMesh& _mesh, MapTile& _tile) const {
+void SpriteStyle::buildLine(Line& _line, const StyleParamMap&, Properties& _props, VboMesh& _mesh, Tile& _tile) const {
     // NO-OP
 }
 
-void SpriteStyle::buildPolygon(Polygon& _polygon, const StyleParamMap&, Properties& _props, VboMesh& _mesh, MapTile& _tile) const {
+void SpriteStyle::buildPolygon(Polygon& _polygon, const StyleParamMap&, Properties& _props, VboMesh& _mesh, Tile& _tile) const {
     // NO-OP
 }
 
