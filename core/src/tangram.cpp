@@ -13,6 +13,7 @@
 #include "util/skybox.h"
 #include "view/view.h"
 #include "util/renderState.h"
+#include "util/inputHandler.h"
 #include <memory>
 #include <cmath>
 
@@ -24,14 +25,10 @@ namespace Tangram {
     std::shared_ptr<Labels> m_labels;
     std::shared_ptr<FontContext> m_ftContext;
     std::shared_ptr<Skybox> m_skybox;
+    std::unique_ptr<InputHandler> m_inputHandler;
 
     static float g_time = 0.0;
     static unsigned long g_flags = 0;
-    
-    bool m_hasPan;
-    glm::vec2 m_panDelta;
-    const float m_minPanDelta = 5.f;
-    const float m_decreasePan = 0.95f;
 
     void initialize() {
 
@@ -44,6 +41,9 @@ namespace Tangram {
 
             // Create a scene object
             m_scene = std::make_shared<Scene>();
+            
+            // Input handler
+            m_inputHandler = std::unique_ptr<InputHandler>(new InputHandler(m_view));
 
             m_skybox = std::shared_ptr<Skybox>(new Skybox("cubemap.png"));
             m_skybox->init();
@@ -68,7 +68,7 @@ namespace Tangram {
         }
 
         RenderState::configure();
-        
+
         while (Error::hadGlError("Tangram::initialize()")) {}
 
         logMsg("finish initialize\n");
@@ -100,15 +100,7 @@ namespace Tangram {
 
         if (m_view) {
             
-            if (!m_hasPan && glm::length(m_panDelta) > 0.f) {
-                // exponential decrease, m_decreasePan should be between [0..1]
-                m_panDelta *= m_decreasePan;
-                m_view->translate(m_panDelta.x, m_panDelta.y);
-                
-                requestRender();
-            }
-            
-            m_hasPan = false;
+            m_inputHandler->update(_dt);
 
             m_view->update();
 
@@ -265,79 +257,39 @@ namespace Tangram {
     }
 
     void handleTapGesture(float _posX, float _posY) {
-        // break pan momentum
-        m_panDelta = glm::vec2(0.f);
         
-        float viewCenterX = 0.5f * m_view->getWidth();
-        float viewCenterY = 0.5f * m_view->getHeight();
-
-        m_view->screenToGroundPlane(viewCenterX, viewCenterY);
-        m_view->screenToGroundPlane(_posX, _posY);
-
-        m_view->translate((_posX - viewCenterX), (_posY - viewCenterY));
-
-        requestRender();
+        m_inputHandler->handleTapGesture(_posX, _posY);
+        
     }
 
     void handleDoubleTapGesture(float _posX, float _posY) {
-
-        handlePinchGesture(_posX, _posY, 2.f);
+        
+        m_inputHandler->handleDoubleTapGesture(_posX, _posY);
+        
     }
 
     void handlePanGesture(float _startX, float _startY, float _endX, float _endY) {
-        // it is possible that the platform is sending the same values for the last pan
-        if (std::abs(_startX - _endX) < FLT_EPSILON && std::abs(_startY - _endY) < FLT_EPSILON) {
-            return;
-        }
         
-        m_view->screenToGroundPlane(_startX, _startY);
-        m_view->screenToGroundPlane(_endX, _endY);
-
-        float dx = _startX - _endX;
-        float dy = _startY - _endY;
-
-        m_panDelta = glm::vec2(dx, dy);
-
-        if (glm::length(m_panDelta) < m_minPanDelta) {
-            m_panDelta = glm::vec2(0.f);
-        }
+        m_inputHandler->handlePanGesture(_startX, _startY, _endX, _endY);
         
-        m_view->translate(dx, dy);
-        
-        m_hasPan = true;
-
-        requestRender();
     }
 
     void handlePinchGesture(float _posX, float _posY, float _scale) {
-
-        float viewCenterX = 0.5f * m_view->getWidth();
-        float viewCenterY = 0.5f * m_view->getHeight();
-
-        m_view->screenToGroundPlane(viewCenterX, viewCenterY);
-        m_view->screenToGroundPlane(_posX, _posY);
-
-        m_view->translate((_posX - viewCenterX)*(1-1/_scale), (_posY - viewCenterY)*(1-1/_scale));
-
-        static float invLog2 = 1 / log(2);
-        m_view->zoom(log(_scale) * invLog2);
-
-        requestRender();
+        
+        m_inputHandler->handlePinchGesture(_posX, _posY, _scale);
+        
     }
 
     void handleRotateGesture(float _posX, float _posY, float _radians) {
-
-        m_view->screenToGroundPlane(_posX, _posY);
-        m_view->orbit(_posX, _posY, _radians);
-
-        requestRender();
+        
+        m_inputHandler->handleRotateGesture(_posX, _posY, _radians);
+        
     }
 
     void handleShoveGesture(float _distance) {
-
-        m_view->pitch(_distance);
-
-        requestRender();
+        
+        m_inputHandler->handleShoveGesture(_distance);
+        
     }
 
     void setDebugFlag(DebugFlags _flag, bool _on) {
