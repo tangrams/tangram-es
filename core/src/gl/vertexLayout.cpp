@@ -1,5 +1,6 @@
 #include "vertexLayout.h"
 #include "shaderProgram.h"
+#include "platform.h"
 
 std::unordered_map<GLint, GLuint> VertexLayout::s_enabledAttribs = std::unordered_map<GLint, GLuint>();
 
@@ -12,7 +13,7 @@ VertexLayout::VertexLayout(std::vector<VertexAttrib> _attribs) : m_attribs(_attr
         // Set the offset of this vertex attribute: The stride at this point denotes the number
         // of bytes into the vertex by which this attribute is offset, but we must cast the number
         // as a void* to use with glVertexAttribPointer; We use reinterpret_cast to avoid warnings
-        attrib.offset = reinterpret_cast<void*>(m_stride);
+        attrib.offset = m_stride;
 
         GLint byteSize = attrib.size;
 
@@ -41,15 +42,16 @@ VertexLayout::~VertexLayout() {
 
 }
 
-GLvoid* VertexLayout::getOffset(std::string _attribName) {
+size_t VertexLayout::getOffset(std::string _attribName) {
     
     for (auto& attrib : m_attribs) {
         if (attrib.name == _attribName) {
             return attrib.offset;
         }
     }
-    
-    return NULL;
+
+    logMsg("Error - No such attribute %s\n", _attribName.c_str());
+    return 0;
 }
 
 void VertexLayout::enable(ShaderProgram& _program, size_t byteOffset, void* _ptr) {

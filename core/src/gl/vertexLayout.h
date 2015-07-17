@@ -18,7 +18,7 @@ public:
         GLint size;
         GLenum type;
         GLboolean normalized;
-        GLvoid* offset; // Can be left as zero; value is overwritten in constructor of VertexLayout
+        size_t offset; // Can be left as zero; value is overwritten in constructor of VertexLayout
     };
 
     VertexLayout(std::vector<VertexAttrib> _attribs);
@@ -29,7 +29,7 @@ public:
 
     GLint getStride() const { return m_stride; };
     
-    GLvoid* getOffset(std::string _attribName);
+    size_t getOffset(std::string _attribName);
 
 private:
 
