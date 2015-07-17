@@ -175,14 +175,14 @@ namespace Tangram {
 
             RenderState::stencilTest(GL_TRUE);
 
-            RenderState::stencilOp({GL_KEEP, GL_KEEP, GL_REPLACE});
+            RenderState::stencilOp(GL_KEEP, GL_KEEP, GL_REPLACE);
     
             //glStencilOp(GL_KEEP, GL_KEEP, GL_REPLACE);
 
             int stencilRef = 0xFF;
             for (auto tile : tiles) {
                 //glStencilFunc(GL_GREATER, stencilRef, 0xFF);
-                RenderState::stencilFunc({GL_GREATER, stencilRef, 0xFF});
+                RenderState::stencilFunc(GL_GREATER, stencilRef, 0xFF);
 
                 if (--stencilRef == 0) stencilRef = 0xFF;
 
@@ -213,7 +213,7 @@ namespace Tangram {
 
             // Loop over all tiles in m_tileSet
             for (auto tile : tiles) {
-                RenderState::stencilFunc({GL_EQUAL, stencilRef, 0xFF});
+                RenderState::stencilFunc(GL_EQUAL, stencilRef, 0xFF);
                 if (--stencilRef == 0) stencilRef = 0xFF;
 
                 // Draw tile!

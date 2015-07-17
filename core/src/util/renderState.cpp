@@ -3,15 +3,16 @@
 namespace RenderState {
     
     State<Blending> blending = State<Blending>();
-    State<DepthWrite> depthWrite = State<DepthWrite>();
     State<ColorWrite> colorWrite = State<ColorWrite>();
     State<Culling> culling = State<Culling>();
-    State<BlendingFunc> blendingFunc = State<BlendingFunc>();
     State<DepthTest> depthTest = State<DepthTest>();
     State<StencilTest> stencilTest = State<StencilTest>();
-    State<StencilWrite> stencilWrite = State<StencilWrite>();
-    State<StencilFunc> stencilFunc = State<StencilFunc>();
-    State<StencilOp> stencilOp = State<StencilOp>();
+
+    StateWrap<GLboolean> depthWrite(glDepthMask);
+    StateWrap<GLenum, GLenum> blendingFunc(glBlendFunc);
+    StateWrap<GLuint> stencilWrite(glStencilMask);
+    StateWrap<GLenum, GLint, GLuint> stencilFunc(glStencilFunc);
+    StateWrap<GLenum, GLenum, GLenum> stencilOp(glStencilOp);
     
     void configure() {
         blending.init(GL_FALSE);

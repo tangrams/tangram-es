@@ -1,8 +1,9 @@
 #pragma once
 
-#include <map>
 #include "gl.h"
 #include "platform.h"
+
+#include <tuple>
 
 namespace RenderState {
 
@@ -38,18 +39,61 @@ namespace RenderState {
         }
     };
 
-    using DepthTest = BoolSwitch<GL_DEPTH_TEST>;
+    // http://stackoverflow.com/questions/7858817/unpacking-a-tuple-to-call-a-matching-function-pointer
 
-    struct DepthWrite {
-        using Type = GLboolean;
-        inline static void set(const Type& _type) {
-            if (_type) {
-                glDepthMask(GL_TRUE);
-            } else {
-                glDepthMask(GL_FALSE);
+    template<int ...> struct seq {};
+    template<int N, int ...S> struct gens : gens<N-1, N-1, S...> {};
+    template<int ...S> struct gens<0, S...>{ typedef seq<S...> type; };
+
+    template <typename ...Args>
+    struct StateWrap {
+
+        using Type = std::tuple<Args...>;
+        Type params;
+        void (*func)(Args...);
+
+        StateWrap(void (*func)(Args...))
+            : func(func) {}
+
+        void init(const Args&... _param) {
+            params = std::make_tuple(_param...);
+        }
+
+        void operator()(const Args&... _param) {
+            auto _params = std::make_tuple(_param...);
+
+            if (_params != params) {
+                call(_params, typename gens<sizeof...(Args)>::type());
+                params = _params;
             }
         }
+
+        template<int ...S>
+        void call(const Type& _params, seq<S...>) {
+            func(std::get<S>(_params) ...);
+        }
+
+        inline bool operator!=(const Type& _other) {
+            return params != _other;
+        }
     };
+
+    using DepthTest = BoolSwitch<GL_DEPTH_TEST>;
+    extern State<DepthTest> depthTest;
+
+    extern StateWrap<GLboolean> depthWrite;
+
+    using Blending = BoolSwitch<GL_BLEND>;
+    extern State<Blending> blending;
+
+    extern StateWrap<GLenum, GLenum> blendingFunc;
+
+    using StencilTest = BoolSwitch<GL_STENCIL_TEST>;
+    extern State<StencilTest> stencilTest;
+
+    extern StateWrap<GLuint> stencilWrite;
+    extern StateWrap<GLenum, GLint, GLuint> stencilFunc;
+    extern StateWrap<GLenum, GLenum, GLenum> stencilOp;
 
     struct ColorWrite {
         using Type = GLboolean;
@@ -62,28 +106,17 @@ namespace RenderState {
         }
     };
 
-    using Blending = BoolSwitch<GL_BLEND>;
+    extern State<ColorWrite> colorWrite;
 
-    struct BlendingFunc {
-        struct Type {
-            GLenum src;
-            GLenum dst;
-            inline bool operator!=(const Type& _other) {
-                return src != _other.src || dst != _other.dst;
-            }
-        };
-        inline static void set(const Type& _type) {
-            glBlendFunc(_type.src, _type.dst);
-        }
-    };
-
-    struct Culling {
+    struct Culling  {
         struct Type {
             GLboolean culling;
             GLenum frontFaceOrder;
             GLenum face;
             inline bool operator!=(const Type& _other) {
-                return culling != _other.culling || frontFaceOrder != _other.frontFaceOrder || face != _other.face;
+                return culling != _other.culling ||
+                    frontFaceOrder != _other.frontFaceOrder ||
+                    face != _other.face;
             }
         };
         inline static void set(const Type& _type) {
@@ -97,53 +130,8 @@ namespace RenderState {
         }
     };
 
-    using StencilTest = BoolSwitch<GL_STENCIL_TEST>;
-
-    struct StencilWrite {
-        using Type = GLuint;
-        inline static void set(const Type& _type) {
-            glStencilMask(_type);
-        }
-    };
-
-    struct StencilFunc {
-        struct Type {
-            GLenum func;
-            GLint ref;
-            GLuint mask;
-            inline bool operator!=(const Type& _other) {
-                return func != _other.func || ref != _other.ref || mask != _other.mask;
-            }
-        };
-        inline static void set(const Type& _type) {
-            glStencilFunc(_type.func, _type.ref, _type.mask);
-        }
-    };
-
-    struct StencilOp {
-        struct Type {
-            GLenum sfail;
-            GLint dfail;
-            GLuint dppass;
-            inline bool operator!=(const Type& _other) {
-                return sfail != _other.sfail || dfail != _other.dfail || dppass != _other.dppass;
-            }
-        };
-        inline static void set(const Type& _type) {
-            glStencilOp(_type.sfail, _type.sfail, _type.dppass);
-        }
-    };
-
-    extern State<DepthTest> depthTest;
-    extern State<DepthWrite> depthWrite;
-    extern State<ColorWrite> colorWrite;
-    extern State<Blending> blending;
-    extern State<BlendingFunc> blendingFunc;
     extern State<Culling> culling;
-    extern State<StencilTest> stencilTest;
-    extern State<StencilWrite> stencilWrite;
-    extern State<StencilFunc> stencilFunc;
-    extern State<StencilOp> stencilOp;
+
 
     void configure();
 }
