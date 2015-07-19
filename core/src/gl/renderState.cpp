@@ -3,17 +3,25 @@
 namespace Tangram {
 
 namespace RenderState {
-
-    State<Blending> blending = State<Blending>();
-    State<DepthWrite> depthWrite = State<DepthWrite>();
-    State<Culling> culling = State<Culling>();
-    State<BlendingFunc> blendingFunc = State<BlendingFunc>();
-    State<DepthTest> depthTest = State<DepthTest>();
+    
+    Blending blending;
+    DepthTest depthTest;
+    StencilTest stencilTest;
+    Culling culling;
+    DepthWrite depthWrite;
+    BlendingFunc blendingFunc;
+    StencilWrite stencilWrite;
+    StencilFunc stencilFunc;
+    StencilOp stencilOp;
+    ColorWrite colorWrite;
+    FrontFace frontFace;
+    CullFace cullFace;
 
     void configure() {
         blending.init(GL_FALSE);
-        culling.init({GL_TRUE, GL_CCW, GL_BACK});
-        blendingFunc.init({GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA});
+        culling.init(GL_TRUE);
+        cullFace.init(GL_BACK);
+        frontFace(GL_CCW);
         depthTest.init(GL_TRUE);
         depthWrite.init(GL_TRUE);
 
