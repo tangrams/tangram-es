@@ -96,6 +96,5 @@ namespace RenderState {
     extern State<Culling> culling;
 
     void configure();
-    void invalidateAllStates();
 }
 
