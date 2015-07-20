@@ -65,7 +65,7 @@ public:
      * Returns the created labe
      */
     std::shared_ptr<Label> addSpriteLabel(Tile& _tile, const std::string& _styleName, Label::Transform _transform, const glm::vec2& _size,
-                                          const glm::vec2& _offset, size_t _bufferOffset);
+                                          size_t _bufferOffset);
 
     void setFontContext(std::shared_ptr<FontContext> _ftContext) { m_ftContext = _ftContext; }
 

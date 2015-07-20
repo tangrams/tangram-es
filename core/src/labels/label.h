@@ -31,6 +31,7 @@ public:
     struct Transform {
         glm::vec2 modelPosition1;
         glm::vec2 modelPosition2;
+        glm::vec2 offset;
 
         BufferVert::State state;
     };
@@ -102,5 +103,5 @@ protected:
     bool m_dirty;
     Transform m_transform;
     glm::vec2 m_dim;
-    
+
 };

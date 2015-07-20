@@ -49,7 +49,8 @@ void TextStyle::buildPoint(Point& _point, const StyleParamMap& _styleParamMap, P
         return;
     }
 
-    m_labels->addTextLabel(_tile, buffer, m_name, { glm::vec2(_point), glm::vec2(_point) }, text, Label::Type::point);
+    Label::Transform t { glm::vec2(_point), glm::vec2(_point), glm::vec2(0) };
+    m_labels->addTextLabel(_tile, buffer, m_name, t, text, Label::Type::point);
 }
 
 void TextStyle::buildLine(Line& _line, const StyleParamMap& _styleParamMap, Properties& _props, VboMesh& _mesh, Tile& _tile) const {
@@ -76,7 +77,7 @@ void TextStyle::buildLine(Line& _line, const StyleParamMap& _styleParamMap, Prop
             continue;
         }
 
-        m_labels->addTextLabel(_tile, buffer, m_name, { p1, p2 }, text, Label::Type::line);
+        m_labels->addTextLabel(_tile, buffer, m_name, { p1, p2, glm::vec2(0) }, text, Label::Type::line);
     }
 }
 
@@ -88,7 +89,7 @@ void TextStyle::buildPolygon(Polygon& _polygon, const StyleParamMap& _styleParam
         return;
     }
 
-    glm::vec3 centroid;
+    glm::vec2 centroid;
     int n = 0;
 
     for (auto& l : _polygon) {
@@ -101,7 +102,9 @@ void TextStyle::buildPolygon(Polygon& _polygon, const StyleParamMap& _styleParam
 
     centroid /= n;
 
-    m_labels->addTextLabel(_tile, buffer, m_name, { glm::vec2(centroid), glm::vec2(centroid) }, text, Label::Type::point);
+    Label::Transform t { centroid, centroid, glm::vec2(0) };
+
+    m_labels->addTextLabel(_tile, buffer, m_name, t, text, Label::Type::point);
 }
 
 void TextStyle::onBeginBuildTile(VboMesh& _mesh) const {
