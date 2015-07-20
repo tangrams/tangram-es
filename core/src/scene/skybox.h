@@ -1,6 +1,6 @@
 #pragma once
 
-#include "util/typedMesh.h"
+#include "gl/typedMesh.h"
 
 #include <string>
 #include <memory>

@@ -3,7 +3,7 @@
 //Define global constants
 #define R_EARTH 6378137.0
 
-#include "tileID.h"
+#include "tile/tileID.h"
 #include "geom.h"
 
 enum class ProjectionType {
@@ -33,18 +33,18 @@ public:
      */
     virtual glm::dvec2 LonLatToMeters(const glm::dvec2 _lonLat) const = 0;
 
-    /* 
+    /*
      * ProjectionType-Meters to Lon Lat
-     *  Arguments: 
+     *  Arguments:
      *    _meter: glm::dvec2 having the projection units in meters
      *  Return value:
      *    lonlat (glm::dvec2)
      */
     virtual glm::dvec2 MetersToLonLat(const glm::dvec2 _meters) const = 0;
 
-    /* 
+    /*
      * Converts a pixel coordinate at a given zoom level of pyramid to projection meters
-     * Screen pixels to Meters 
+     * Screen pixels to Meters
      *  Arguments:
      *    _pix: pixels defined as glm::dvec2
      *    _zoom: zoom level to determine the projection-meters
@@ -52,10 +52,10 @@ public:
      *    projection-meters (glm::dvec2)
      */
     virtual glm::dvec2 PixelsToMeters(const glm::dvec2 _pix, const int _zoom) const = 0;
-    
-    /* 
+
+    /*
      * Converts projection meters to pyramid pixel coordinates in given zoom level.
-     * Meters to Screen Pixels 
+     * Meters to Screen Pixels
      * Arguments:
      *   _meters: projection-meters (glm::dvec2)
      *   _zoom: zoom level to determine pixels
@@ -63,17 +63,17 @@ public:
      *   pixels (glm::dvec2)
      */
     virtual glm::dvec2 MetersToPixel(const glm::dvec2 _meters, const int _zoom) const = 0;
-    
+
     /*
      * Returns a tile covering region in given pixel coordinates.
      * Argument:
-     *   _pix: pixel 
+     *   _pix: pixel
      * Return Value:
      *   Tile coordinates (x and y) glm::ivec2
      */
     virtual glm::ivec2 PixelsToTileXY(const glm::dvec2 _pix) const = 0;
-    
-    /* 
+
+    /*
      * Returns tile for given projection coordinates.
      *  Arguments:
      *    _meters: projection-meters (glm::dvec2)
@@ -92,8 +92,8 @@ public:
      *   glm::dvec2 newPixels at top-left corner
      */
     virtual glm::dvec2 PixelsToRaster(const glm::dvec2 _pix, const int _zoom) const = 0;
-    
-    /* 
+
+    /*
      * Returns bounds of the given tile
      *  Arguments:
      *    _tileCoord: glm::ivec3 (x,y and zoom)
@@ -101,8 +101,8 @@ public:
      *    bounds in projection-meters (BoundingBox)
      */
     virtual BoundingBox TileBounds(const TileID _tileCoord) const = 0;
-    
-    /* 
+
+    /*
      * bounds of space in lon lat
      *  Arguments:
      *    _tileCoord: glm::ivec3 (x,y and zoom)
@@ -111,7 +111,7 @@ public:
      */
     virtual BoundingBox TileLonLatBounds(const TileID _tileCoord) const = 0;
 
-    /* 
+    /*
      * Returns center of the given tile
      *  Arguments:
      *    _tileCoord: glm::ivec3 (x,y and zoom)
@@ -120,9 +120,9 @@ public:
      *       x,y : position in projection meters
      */
     virtual glm::dvec2 TileCenter(const TileID _tileCoord) const = 0;
-    
-    /* 
-     * Returns the projection type of a given projection instance 
+
+    /*
+     * Returns the projection type of a given projection instance
      *   (example: ProjectionType::Mercator)
      */
     virtual ProjectionType GetMapProjectionType() const {return m_type;}
@@ -131,7 +131,7 @@ public:
 };
 
 class MercatorProjection : public MapProjection {
-    /* 
+    /*
      * Following define the boundry covered by this mercator projection
      */
     int m_TileSize;

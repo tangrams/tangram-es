@@ -5,14 +5,14 @@
 #include "scene/sceneLoader.h"
 #include "style/style.h"
 #include "text/fontContext.h"
-#include "tile/labels/labels.h"
+#include "labels/labels.h"
 #include "tile/tileManager.h"
-#include "tile/mapTile.h"
-#include "util/error.h"
-#include "util/shaderProgram.h"
-#include "util/skybox.h"
+#include "tile/tile.h"
+#include "gl/error.h"
+#include "gl/shaderProgram.h"
+#include "scene/skybox.h"
 #include "view/view.h"
-#include "util/renderState.h"
+#include "gl/renderState.h"
 #include "util/inputHandler.h"
 #include <memory>
 #include <cmath>
@@ -41,7 +41,7 @@ namespace Tangram {
 
             // Create a scene object
             m_scene = std::make_shared<Scene>();
-            
+
             // Input handler
             m_inputHandler = std::unique_ptr<InputHandler>(new InputHandler(m_view));
 
@@ -99,7 +99,7 @@ namespace Tangram {
         g_time += _dt;
 
         if (m_view) {
-            
+
             m_inputHandler->update(_dt);
 
             m_view->update();
@@ -160,7 +160,7 @@ namespace Tangram {
 
             // Loop over all tiles in m_tileSet
             for (const auto& mapIDandTile : m_tileManager->getVisibleTiles()) {
-                const std::shared_ptr<MapTile>& tile = mapIDandTile.second;
+                const std::shared_ptr<Tile>& tile = mapIDandTile.second;
                 if (tile->isReady()) {
                     // Draw tile!
                     tile->draw(*style, *m_view);
@@ -257,39 +257,39 @@ namespace Tangram {
     }
 
     void handleTapGesture(float _posX, float _posY) {
-        
+
         m_inputHandler->handleTapGesture(_posX, _posY);
-        
+
     }
 
     void handleDoubleTapGesture(float _posX, float _posY) {
-        
+
         m_inputHandler->handleDoubleTapGesture(_posX, _posY);
-        
+
     }
 
     void handlePanGesture(float _startX, float _startY, float _endX, float _endY) {
-        
+
         m_inputHandler->handlePanGesture(_startX, _startY, _endX, _endY);
-        
+
     }
 
     void handlePinchGesture(float _posX, float _posY, float _scale) {
-        
+
         m_inputHandler->handlePinchGesture(_posX, _posY, _scale);
-        
+
     }
 
     void handleRotateGesture(float _posX, float _posY, float _radians) {
-        
+
         m_inputHandler->handleRotateGesture(_posX, _posY, _radians);
-        
+
     }
 
     void handleShoveGesture(float _distance) {
-        
+
         m_inputHandler->handleShoveGesture(_distance);
-        
+
     }
 
     void setDebugFlag(DebugFlags _flag, bool _on) {

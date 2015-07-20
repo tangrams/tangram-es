@@ -9,7 +9,7 @@
 
 struct TileData;
 struct TileID;
-class MapTile;
+class Tile;
 class TileManager;
 
 class DataSource {
@@ -45,7 +45,7 @@ public:
     virtual std::shared_ptr<TileData> getTileData(const TileID& _tileID) const;
     
     /* Parse an I/O response into a <TileData>, returning an empty TileData on failure */
-    virtual std::shared_ptr<TileData> parse(const MapTile& _tile, std::vector<char>& _rawData) const = 0;
+    virtual std::shared_ptr<TileData> parse(const Tile& _tile, std::vector<char>& _rawData) const = 0;
 
     /* Stores tileData in m_tileStore */
     virtual void setTileData(const TileID& _tileID, const std::shared_ptr<TileData>& _tileData);

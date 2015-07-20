@@ -5,8 +5,9 @@
 #include "gl.h"
 #include "scene/sceneLayer.h"
 #include "styleParamMap.h"
-#include "util/shaderProgram.h"
-#include "util/renderState.h"
+
+#include "gl/shaderProgram.h"
+#include "gl/renderState.h"
 
 #include <bitset>
 #include <memory>
@@ -15,7 +16,7 @@
 #include <vector>
 
 class Light;
-class MapTile;
+class Tile;
 class MapProjection;
 class VboMesh;
 class VertexLayout;
@@ -30,7 +31,7 @@ enum class LightingType : char {
 
 namespace Tangram {
     struct Value;
-    using Context = std::unordered_map<std::string, Value*>;
+    using Context = std::unordered_map<std::string, Value>;
 }
 
 /* Means of constructing and rendering map geometry
@@ -79,13 +80,13 @@ protected:
     virtual void constructShaderProgram() = 0;
 
     /* Build styled vertex data for point geometry and add it to the given <VboMesh> */
-    virtual void buildPoint(Point& _point, const StyleParamMap& _styleParamMap, Properties& _props, VboMesh& _mesh) const = 0;
+    virtual void buildPoint(Point& _point, const StyleParamMap& _styleParamMap, Properties& _props, VboMesh& _mesh, Tile& _tile) const;
 
     /* Build styled vertex data for line geometry and add it to the given <VboMesh> */
-    virtual void buildLine(Line& _line, const StyleParamMap& _styleParamMap, Properties& _props, VboMesh& _mesh) const = 0;
+    virtual void buildLine(Line& _line, const StyleParamMap& _styleParamMap, Properties& _props, VboMesh& _mesh, Tile& _tile) const;
 
     /* Build styled vertex data for polygon geometry and add it to the given <VboMesh> */
-    virtual void buildPolygon(Polygon& _polygon, const StyleParamMap& _styleParamMap, Properties& _props, VboMesh& _mesh) const = 0;
+    virtual void buildPolygon(Polygon& _polygon, const StyleParamMap& _styleParamMap, Properties& _props, VboMesh& _mesh, Tile& _tile) const;
 
     static std::unordered_map<std::bitset<MAX_LAYERS>, StyleParamMap> s_styleParamMapCache;
     static std::mutex s_cacheMutex;
@@ -101,10 +102,10 @@ protected:
                                         StyleParamMap& _styleParamMapMix, std::shared_ptr<Tangram::SceneLayer> _uberLayer) const;
 
     /* Perform any needed setup to process the data for a tile */
-    virtual void onBeginBuildTile(MapTile& _tile) const;
+    virtual void onBeginBuildTile(VboMesh& _mesh) const;
 
     /* Perform any needed teardown after processing data for a tile */
-    virtual void onEndBuildTile(MapTile& _tile, std::shared_ptr<VboMesh> _mesh) const;
+    virtual void onEndBuildTile(VboMesh& _mesh) const;
 
     /* Create a new mesh object using the vertex layout corresponding to this style */
     virtual VboMesh* newMesh() const = 0;
@@ -115,14 +116,17 @@ public:
 
     virtual ~Style();
 
+    /* Whether or not the style uses blending operation for drawing */
+    virtual bool isOpaque() const { return true; };
+
     /* Make this style ready to be used (call after all needed properties are set) */
     virtual void build(const std::vector<std::unique_ptr<Light>>& _lights);
 
     /* Add layers to which this style will apply */
     void addLayer(std::shared_ptr<Tangram::SceneLayer> _layer);
 
-    /* Add styled geometry from the given <TileData> object to the given <MapTile> */
-    virtual void addData(TileData& _data, MapTile& _tile);
+    /* Add styled geometry from the given <TileData> object to the given <Tile> */
+    virtual void addData(TileData& _data, Tile& _tile);
 
     /* Perform any setup needed before drawing each frame */
     virtual void onBeginDrawFrame(const std::shared_ptr<View>& _view, const std::shared_ptr<Scene>& _scene);

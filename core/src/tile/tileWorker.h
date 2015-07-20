@@ -1,6 +1,6 @@
 #pragma once
 
-#include "util/tileID.h"
+#include "tile/tileID.h"
 #include "style/style.h"
 #include "tileTask.h"
 
@@ -14,7 +14,7 @@
 
 class TileManager;
 class DataSource;
-class MapTile;
+class Tile;
 class View;
 
 class TileWorker {

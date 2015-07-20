@@ -1,10 +1,10 @@
-#include "mapTile.h"
+#include "tile.h"
 
 #include "style/style.h"
 #include "view/view.h"
-#include "util/tileID.h"
-#include "util/vboMesh.h"
-#include "util/shaderProgram.h"
+#include "tile/tileID.h"
+#include "gl/vboMesh.h"
+#include "gl/shaderProgram.h"
 #include "text/fontContext.h"
 #include "labels/labels.h"
 
@@ -12,7 +12,7 @@
 #include "glm/gtc/type_ptr.hpp"
 
 
-MapTile::MapTile(TileID _id, const MapProjection& _projection)
+Tile::Tile(TileID _id, const MapProjection& _projection)
     : m_id(_id),
       m_projection(&_projection) {
 
@@ -29,32 +29,17 @@ MapTile::MapTile(TileID _id, const MapProjection& _projection)
     m_modelMatrix = glm::scale(glm::mat4(1.0), glm::vec3(m_scale));
 }
 
-MapTile::~MapTile() {
+Tile::~Tile() {
 
 }
 
-void MapTile::addGeometry(const Style& _style, std::shared_ptr<VboMesh> _mesh) {
+void Tile::addGeometry(const Style& _style, std::shared_ptr<VboMesh> _mesh) {
 
     m_geometry[_style.getName()] = std::move(_mesh); // Move-construct a unique_ptr at the value associated with the given style
 
 }
 
-void MapTile::setTextBuffer(const Style& _style, std::shared_ptr<TextBuffer> _buffer) {
-
-    m_buffers[_style.getName()] = _buffer;
-}
-
-std::shared_ptr<TextBuffer> MapTile::getTextBuffer(const Style& _style) const {
-    auto it = m_buffers.find(_style.getName());
-
-    if (it != m_buffers.end()) {
-        return it->second;
-    }
-
-    return nullptr;
-}
-
-void MapTile::update(float _dt, const View& _view) {
+void Tile::update(float _dt, const View& _view) {
 
     // Apply tile-view translation to the model matrix
     const auto& viewOrigin = _view.getPosition();
@@ -64,7 +49,7 @@ void MapTile::update(float _dt, const View& _view) {
 
 }
 
-void MapTile::updateLabels(float _dt, const Style& _style, const View& _view) {
+void Tile::updateLabels(float _dt, const Style& _style, const View& _view) {
     glm::mat4 mvp = _view.getViewProjectionMatrix() * m_modelMatrix;
     glm::vec2 screenSize = glm::vec2(_view.getWidth(), _view.getHeight());
     
@@ -73,32 +58,22 @@ void MapTile::updateLabels(float _dt, const Style& _style, const View& _view) {
     }
 }
 
-void MapTile::pushLabelTransforms(const Style& _style, std::shared_ptr<Labels> _labels) {
-    auto it = m_buffers.find(_style.getName());
+void Tile::pushLabelTransforms(const Style& _style, std::shared_ptr<Labels> _labels) {
+    std::shared_ptr<VboMesh>& styleMesh = m_geometry[_style.getName()];
     
-    if (it == m_buffers.end()) {
-        return;
-    }
-
-    auto textBuffer = it->second;
-    
-    if (textBuffer->hasData()) {
-        auto ftContext = _labels->getFontContext();
-
-        ftContext->lock();
-        ftContext->useBuffer(textBuffer);
-        
-        for (auto& label : m_labels[_style.getName()]) {
-            label->pushTransform(textBuffer);
+    if (styleMesh) {
+        for(auto& label : m_labels[_style.getName()]) {
+            label->pushTransform(*styleMesh);
         }
-        
-        textBuffer->pushBuffer();
-        ftContext->unlock();
-    }
     
+        if (typeid(*styleMesh) == typeid(TextBuffer)) {
+            TextBuffer& buffer = static_cast<TextBuffer&>(*styleMesh);
+            buffer.pushBuffer();
+        }
+    }
 }
 
-void MapTile::draw(const Style& _style, const View& _view) {
+void Tile::draw(const Style& _style, const View& _view) {
 
     const std::shared_ptr<VboMesh>& styleMesh = m_geometry[_style.getName()];
     
@@ -120,10 +95,10 @@ void MapTile::draw(const Style& _style, const View& _view) {
     }
 }
 
-std::shared_ptr<VboMesh>& MapTile::getGeometry(const Style& _style) {
+std::shared_ptr<VboMesh>& Tile::getGeometry(const Style& _style) {
     return m_geometry.at(_style.getName());
 }
 
-void MapTile::addLabel(const std::string& _styleName, std::shared_ptr<Label> _label) {
+void Tile::addLabel(const std::string& _styleName, std::shared_ptr<Label> _label) {
     m_labels[_styleName].push_back(std::move(_label));
 }

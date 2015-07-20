@@ -3,8 +3,8 @@
 #include "scene/scene.h"
 #include "scene/sceneLayer.h"
 #include "scene/light.h"
-#include "tile/mapTile.h"
-#include "util/vboMesh.h"
+#include "tile/tile.h"
+#include "gl/vboMesh.h"
 #include "view/view.h"
 
 #include "csscolorparser.hpp"
@@ -90,35 +90,35 @@ void Style::applyLayerFiltering(const Feature& _feature, const Context& _ctx, st
 
     auto sLayerItr = sLayers.begin();
 
-    //A BFS traversal of the SceneLayer graph
+    // A BFS traversal of the SceneLayer graph
     while (sLayerItr != sLayers.end()) {
 
         auto sceneLyr = *sLayerItr;
 
-        if ( sceneLyr->getFilter()->eval(_feature, _ctx)) { // filter matches
+        if (sceneLyr->getFilter().eval(_feature, _ctx)) { // filter matches
 
             _uniqueID.set(sceneLyr->getID());
-
             {
                 std::lock_guard<std::mutex> lock(s_cacheMutex);
 
-                if(s_styleParamMapCache.find(_uniqueID) != s_styleParamMapCache.end()) {
+                // Get or create cache entry
+                auto& entry = s_styleParamMapCache[_uniqueID];
 
-                    _styleParamMapMix = s_styleParamMapCache.at(_uniqueID);
+                if (!entry.empty()) {
+                    _styleParamMapMix = entry;
 
                 } else {
+                    // Update StyleParam with subLayer parameters
 
-                    /* update StyleParam with subLayer parameters */
                     auto& layerStyleParamMap = sceneLyr->getStyleParamMap();
                     for(auto& styleParam : layerStyleParamMap) {
                         _styleParamMapMix[styleParam.first] = styleParam.second;
                     }
-
-                    s_styleParamMapCache.emplace(_uniqueID, _styleParamMapMix);
+                    entry = _styleParamMapMix;
                 }
             }
 
-            /* append sLayers with sublayers of this layer */
+            // Append sLayers with sublayers of this layer
             auto& ssLayers = sceneLyr->getSublayers();
             sLayerItr = sLayers.insert(sLayers.end(), ssLayers.begin(), ssLayers.end());
         } else {
@@ -127,13 +127,14 @@ void Style::applyLayerFiltering(const Feature& _feature, const Context& _ctx, st
     }
 }
 
-void Style::addData(TileData& _data, MapTile& _tile) {
-    onBeginBuildTile(_tile);
+void Style::addData(TileData& _data, Tile& _tile) {
 
     std::shared_ptr<VboMesh> mesh(newMesh());
+    
+    onBeginBuildTile(*mesh);
 
     Context ctx;
-    ctx["$zoom"] = new NumValue(_tile.getID().z);
+    ctx["$zoom"] = Value(_tile.getID().z);
 
     for (auto& layer : _data.layers) {
 
@@ -150,25 +151,24 @@ void Style::addData(TileData& _data, MapTile& _tile) {
             applyLayerFiltering(feature, ctx, uniqueID, styleParamMapMix, (*it));
 
             if(uniqueID.any()) { // if a layer matched then uniqueID should be > 0
-                feature.props.numericProps["zoom"] = _tile.getID().z;
 
                 switch (feature.geometryType) {
                     case GeometryType::points:
                         // Build points
                         for (auto& point : feature.points) {
-                            buildPoint(point, styleParamMapMix, feature.props, *mesh);
+                            buildPoint(point, styleParamMapMix, feature.props, *mesh, _tile);
                         }
                         break;
                     case GeometryType::lines:
                         // Build lines
                         for (auto& line : feature.lines) {
-                            buildLine(line, styleParamMapMix, feature.props, *mesh);
+                            buildLine(line, styleParamMapMix, feature.props, *mesh, _tile);
                         }
                         break;
                     case GeometryType::polygons:
                         // Build polygons
                         for (auto& polygon : feature.polygons) {
-                            buildPolygon(polygon, styleParamMapMix, feature.props, *mesh);
+                            buildPolygon(polygon, styleParamMapMix, feature.props, *mesh, _tile);
                         }
                         break;
                     default:
@@ -178,7 +178,7 @@ void Style::addData(TileData& _data, MapTile& _tile) {
         }
     }
 
-    onEndBuildTile(_tile, mesh);
+    onEndBuildTile(*mesh);
 
     if (mesh->numVertices() == 0) {
         mesh.reset();
@@ -205,10 +205,22 @@ void Style::onBeginDrawFrame(const std::shared_ptr<View>& _view, const std::shar
     RenderState::depthTest(GL_TRUE);
 }
 
-void Style::onBeginBuildTile(MapTile& _tile) const {
+void Style::onBeginBuildTile(VboMesh& _mesh) const {
     // No-op by default
 }
 
-void Style::onEndBuildTile(MapTile& _tile, std::shared_ptr<VboMesh> _mesh) const {
+void Style::onEndBuildTile(VboMesh& _mesh) const {
+    // No-op by default
+}
+
+void Style::buildPoint(Point& _point, const StyleParamMap& _styleParamMap, Properties& _props, VboMesh& _mesh, Tile& _tile) const {
+    // No-op by default
+}
+
+void Style::buildLine(Line& _line, const StyleParamMap& _styleParamMap, Properties& _props, VboMesh& _mesh, Tile& _tile) const {
+    // No-op by default
+}
+
+void Style::buildPolygon(Polygon& _polygon, const StyleParamMap& _styleParamMap, Properties& _props, VboMesh& _mesh, Tile& _tile) const {
     // No-op by default
 }

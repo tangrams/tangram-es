@@ -1,14 +1,16 @@
 #pragma once
 
 #include "label.h"
-#include "util/tileID.h"
+#include "textLabel.h"
+#include "spriteLabel.h"
+#include "tile/tileID.h"
 
 #include <memory>
 #include <mutex>
 #include <vector>
 
 class FontContext;
-class MapTile;
+class Tile;
 class View;
 
 struct LabelUnit {
@@ -20,7 +22,8 @@ public:
     std::unique_ptr<TileID> m_tileID;
     std::string m_styleName;
 
-    LabelUnit(std::shared_ptr<Label>& _label, std::unique_ptr<TileID>& _tileID, const std::string& _styleName) : m_label(std::move(_label)), m_tileID(std::move(_tileID)), m_styleName(_styleName) {}
+    LabelUnit(std::shared_ptr<Label>& _label, std::unique_ptr<TileID>& _tileID, const std::string& _styleName) :
+        m_label(std::move(_label)), m_tileID(std::move(_tileID)), m_styleName(_styleName) {}
 
     LabelUnit(LabelUnit&& _other) : m_label(std::move(_other.m_label)), m_tileID(std::move(_other.m_tileID)), m_styleName(_other.m_styleName) {}
 
@@ -52,10 +55,17 @@ public:
     virtual ~Labels();
 
     /*
-     * Creates a label for and associate it with the current processed <MapTile> TileID for a specific syle name
-     * Returns true if label was created
+     * Creates a text slabel for and associate it with the current processed <MapTile> TileID for a specific syle name
+     * Returns the created label
      */
-    bool addLabel(MapTile& _tile, const std::string& _styleName, Label::Transform _transform, std::string _text, Label::Type _type);
+    std::shared_ptr<Label> addTextLabel(Tile& _tile, TextBuffer& _buffer, const std::string& _styleName, Label::Transform _transform, std::string _text, Label::Type _type);
+    
+    /*
+     * Creates a sprite slabel for and associate it with the current processed <MapTile> TileID for a specific syle name
+     * Returns the created labe
+     */
+    std::shared_ptr<Label> addSpriteLabel(Tile& _tile, const std::string& _styleName, Label::Transform _transform, const glm::vec2& _size,
+                                          const glm::vec2& _offset, SpriteLabel::AttributeOffsets _attribOffsets);
 
     void setFontContext(std::shared_ptr<FontContext> _ftContext) { m_ftContext = _ftContext; }
 
@@ -71,6 +81,8 @@ public:
     void drawDebug();
 
 private:
+    
+    void addLabel(Tile& _tile, const std::string& _styleName, std::shared_ptr<Label> _label);
 
     int LODDiscardFunc(float _maxZoom, float _zoom);
 

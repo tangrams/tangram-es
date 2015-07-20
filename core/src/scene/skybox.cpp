@@ -3,7 +3,7 @@
 #include "textureCube.h"
 #include "view/view.h"
 #include "glm/gtc/type_ptr.hpp"
-#include "util/renderState.h"
+#include "gl/renderState.h"
 
 Skybox::Skybox(std::string _file) : m_file(_file) {}
 

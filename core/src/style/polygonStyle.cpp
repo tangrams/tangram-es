@@ -2,7 +2,8 @@
 
 #include "tangram.h"
 #include "util/builders.h"
-#include "util/shaderProgram.h"
+#include "gl/shaderProgram.h"
+#include "tile/tile.h"
 
 PolygonStyle::PolygonStyle(std::string _name, GLenum _drawMode) : Style(_name, _drawMode) {
 }
@@ -30,19 +31,16 @@ void PolygonStyle::constructShaderProgram() {
 
 void PolygonStyle::parseStyleParams(const StyleParamMap& _styleParamMap, StyleParams& _styleParams) const {
 
-    if(_styleParamMap.find("order") != _styleParamMap.end()) {
-        _styleParams.order = std::stof(_styleParamMap.at("order"));
+    auto it = _styleParamMap.find("order");
+    if (it != _styleParamMap.end()) {
+        _styleParams.order = std::stof(it->second);
     }
-    if(_styleParamMap.find("color") != _styleParamMap.end()) {
-        _styleParams.color = parseColorProp(_styleParamMap.at("color"));
+    if ((it = _styleParamMap.find("color")) != _styleParamMap.end()) {
+        _styleParams.color = parseColorProp(it->second);
     }
 }
 
-void PolygonStyle::buildPoint(Point& _point, const StyleParamMap& _styleParamMap, Properties& _props, VboMesh& _mesh) const {
-    // No-op
-}
-
-void PolygonStyle::buildLine(Line& _line, const StyleParamMap& _styleParamMap, Properties& _props, VboMesh& _mesh) const {
+void PolygonStyle::buildLine(Line& _line, const StyleParamMap& _styleParamMap, Properties& _props, VboMesh& _mesh, Tile& _tile) const {
     std::vector<PosNormColVertex> vertices;
 
     StyleParams params;
@@ -66,7 +64,7 @@ void PolygonStyle::buildLine(Line& _line, const StyleParamMap& _styleParamMap, P
     mesh.addVertices(std::move(vertices), std::move(builder.indices));
 }
 
-void PolygonStyle::buildPolygon(Polygon& _polygon, const StyleParamMap& _styleParamMap, Properties& _props, VboMesh& _mesh) const {
+void PolygonStyle::buildPolygon(Polygon& _polygon, const StyleParamMap& _styleParamMap, Properties& _props, VboMesh& _mesh, Tile& _tile) const {
 
     std::vector<PosNormColVertex> vertices;
 
@@ -77,11 +75,11 @@ void PolygonStyle::buildPolygon(Polygon& _polygon, const StyleParamMap& _stylePa
     GLfloat layer = params.order;
 
     if (Tangram::getDebugFlag(Tangram::DebugFlags::proxy_colors)) {
-        abgr = abgr << (int(_props.numericProps["zoom"]) % 6);
+        abgr = abgr << (_tile.getID().z % 6);
     }
 
-    float height = _props.numericProps["height"]; // Inits to zero if not present in data
-    float minHeight = _props.numericProps["min_height"]; // Inits to zero if not present in data
+    float height = _props.getNumeric("height");
+    float minHeight = _props.getNumeric("min_height");
 
     PolygonBuilder builder = {
         [&](const glm::vec3& coord, const glm::vec3& normal, const glm::vec2& uv){

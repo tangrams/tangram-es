@@ -5,50 +5,9 @@
 #include <climits> // needed in aabb.h
 #include "isect2d.h"
 #include "text/textBuffer.h"
+#include "fadeEffect.h"
 
 #include <string>
-
-struct FadeEffect {
-
-public:
-
-    enum class Interpolation {
-        linear, pow, sine
-    };
-
-    FadeEffect() {}
-
-    FadeEffect(bool _in, Interpolation _interpolation, float _duration)
-        : m_interpolation(_interpolation), m_duration(_duration), m_in(_in)
-    {}
-
-    float update(float _dt) {
-        m_step += _dt;
-        float st = m_step / m_duration;
-
-        switch (m_interpolation) {
-            case Interpolation::linear:
-                return m_in ? st : -st + 1;
-            case Interpolation::pow:
-                return m_in ? st * st : -(st * st) + 1;
-            case Interpolation::sine:
-                return m_in ? sin(st * M_PI * 0.5) : cos(st * M_PI * 0.5);
-        }
-
-        return st;
-    }
-
-    bool isFinished() {
-        return m_step > m_duration;
-    }
-
-private:
-
-    Interpolation m_interpolation = Interpolation::linear;
-    float m_duration = 0.5;
-    float m_step = 0.0;
-    bool m_in;
-};
 
 class Label {
 
@@ -79,30 +38,27 @@ public:
         float m_rotation;
     };
 
-    Label(Transform _transform, std::string _text, fsuint _id, Type _type);
+    Label(Transform _transform, Type _type);
 
     ~Label();
-
-    /* Call the font context to rasterize the label string */
-    bool rasterize(std::shared_ptr<TextBuffer>& _buffer);
 
     Transform getTransform() const { return m_transform; }
 
     /* Update the transform of the label in world space, and project it to screen space */
     void updateTransform(const Transform& _transform, const glm::mat4& _mvp, const glm::vec2& _screenSize);
 
-    /* gets the oriented bounding box of the label */
+    /* Gets the oriented bounding box of the label */
     const isect2d::OBB& getOBB() const { return m_obb; }
 
-    /* gets the extent of the oriented bounding box of the label */
+    /* Gets the extent of the oriented bounding box of the label */
     const isect2d::AABB& getAABB() const { return m_aabb; }
-
-    std::string getText() { return m_text; }
 
     void update(const glm::mat4& _mvp, const glm::vec2& _screenSize, float _dt);
 
-    void pushTransform(std::shared_ptr<TextBuffer>& _buffer);
-
+    /* Push the pending transforms to the vbo by updating the vertices */
+    virtual void pushTransform(VboMesh& _mesh) = 0;
+    
+    /* Update the screen position of the label */
     bool updateScreenTransform(const glm::mat4& _mvp, const glm::vec2& _screenSize);
 
     Type getType() const { return m_type; }
@@ -125,8 +81,6 @@ private:
 
     void enterState(State _state, float _alpha = 1.0f);
 
-    void updateBBoxes();
-
     void updateState(const glm::mat4& _mvp, const glm::vec2& _screenSize, float _dt);
 
     void setAlpha(float _alpha);
@@ -138,15 +92,18 @@ private:
     State m_currentState;
 
     Type m_type;
-    Transform m_transform;
-    std::string m_text;
-    fsuint m_id;
-    isect2d::OBB m_obb;
-    isect2d::AABB m_aabb;
-    glm::vec2 m_dim;
     bool m_occludedLastFrame;
     bool m_occlusionSolved;
     FadeEffect m_fade;
+    
+protected:
+    
+    virtual void updateBBoxes() = 0;
+    
+    isect2d::OBB m_obb;
+    isect2d::AABB m_aabb;
     bool m_dirty;
-
+    Transform m_transform;
+    glm::vec2 m_dim;
+    
 };

@@ -24,17 +24,17 @@ enum class TileState { none, loading, processing, ready, canceled };
 
 /* Tile of vector map data
  * 
- * MapTile represents a fixed area of a map at a fixed zoom level; It contains its position within a quadtree of
+ * Tile represents a fixed area of a map at a fixed zoom level; It contains its position within a quadtree of
  * tiles and its location in projected global space; It stores drawable geometry of the map features in its area
  */
-class MapTile {
+class Tile {
 
 public:
   
-    MapTile(TileID _id, const MapProjection& _projection);
+    Tile(TileID _id, const MapProjection& _projection);
 
 
-    virtual ~MapTile();
+    virtual ~Tile();
 
     /* Returns the immutable <TileID> of this tile */
     const TileID& getID() const { return m_id; }
@@ -72,9 +72,6 @@ public:
     
     /* Push the label transforms to the font rendering context */
     void pushLabelTransforms(const Style& _style, std::shared_ptr<Labels> _labels);
-
-    void setTextBuffer(const Style& _style, std::shared_ptr<TextBuffer> _buffer);
-    std::shared_ptr<TextBuffer> getTextBuffer(const Style& _style) const;
 
     /* Draws the geometry associated with the provided <Style> and view-projection matrix */
     void draw(const Style& _style, const View& _view);
@@ -186,6 +183,5 @@ private:
 
     std::unordered_map<std::string, std::shared_ptr<VboMesh>> m_geometry; // Map of <Style>s and their associated <VboMesh>es
     std::unordered_map<std::string, std::vector<std::shared_ptr<Label>>> m_labels;
-    std::map<std::string, std::shared_ptr<TextBuffer>> m_buffers; // Map of <Style>s and the associated text buffer
 
 };

@@ -2,7 +2,7 @@
 
 #include "gl.h"
 #include "glfontstash.h"
-#include "texture.h"
+#include "gl/texture.h"
 #include "platform.h"
 #include "textBuffer.h"
 #include "stl_util.hpp"
@@ -37,33 +37,25 @@ public:
     /* fills the orthographic projection matrix related to the current screen size */
     void getProjection(float* _projectionMatrix) const;
 
-    /* asks to generate an uninitialized text buffer */
-    std::shared_ptr<TextBuffer> genTextBuffer();
-
-    /* use a buffer : all callbacks related to text buffer would be done on this buffer */
-    void useBuffer(const std::shared_ptr<TextBuffer>& _textBuffer);
-
-    /* gets the currently used buffer by the font context */
-    std::shared_ptr<TextBuffer> getCurrentBuffer(); 
-
     void clearState();
-
+    
     /* lock thread access to this font context */
     void lock();
-    
+
     /* unlock thread access to this font context */
     void unlock();
 
     const std::unique_ptr<Texture>& getAtlas() const;
-    
+
+    FONScontext* getFontContext() const { return m_fsContext; }
+
 private:
 
     void initFontContext(int _atlasSize);
 
     std::map<std::string, int> m_fonts;
-    std::weak_ptr<TextBuffer> m_currentBuffer;
     std::unique_ptr<Texture> m_atlas;
     std::unique_ptr<std::mutex> m_contextMutex;
     FONScontext* m_fsContext;
-    
+
 };

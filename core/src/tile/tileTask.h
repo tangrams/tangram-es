@@ -1,7 +1,7 @@
 #pragma once
 
-#include "mapTile.h"
-#include "tileData.h"
+#include "tile.h"
+#include "data/tileData.h"
 
 #include <memory>
 
@@ -11,7 +11,7 @@ class DataSource;
 class TileTask {
 
 public:
-    std::shared_ptr<MapTile> tile;
+    std::shared_ptr<Tile> tile;
     /*const*/ DataSource* source;
 
     // Only one of either parsedTileData or rawTileData will be non-empty for a given task.
@@ -21,7 +21,7 @@ public:
     std::shared_ptr<TileData> parsedTileData;
     std::vector<char> rawTileData;
 
-    TileTask(std::shared_ptr<MapTile> _tile, DataSource* _source) :
+    TileTask(std::shared_ptr<Tile> _tile, DataSource* _source) :
         tile(_tile),
         source(_source) {
     }
