@@ -12,16 +12,22 @@ namespace RenderState {
         void init(const typename T::Type& _default) {
             T::set(_default);
             m_current = _default;
+            m_valid = true;
         }
 
         inline void operator()(const typename T::Type& _value) {
-            if (m_current != _value) {
+            if (m_current != _value || !m_valid) {
                 m_current = _value;
                 T::set(m_current);
             }
         }
+        
+        void invalidate() {
+            m_valid = false;
+        }
 
     private:
+        bool m_valid;
         typename T::Type m_current;
     };
 
@@ -96,5 +102,6 @@ namespace RenderState {
     extern State<Culling> culling;
 
     void configure();
+    void invalidateAllStates();
 }
 

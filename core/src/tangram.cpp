@@ -341,6 +341,8 @@ namespace Tangram {
 
         // Texture objects are invalidated and re-uploaded the next time they are updated
         Texture::invalidateAllTextures();
+
+        RenderState::invalidateAllStates();
     }
 
 }

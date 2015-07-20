@@ -21,4 +21,12 @@ namespace RenderState {
         glClearColor(0.3, 0.3, 0.3, 1.0);
     }
     
+    void invalidateAllStates() {
+        blending.invalidate();
+        culling.invalidate();
+        depthTest.invalidate();
+        depthWrite.invalidate();
+        blendingFunc.invalidate();
+    }
+    
 }
