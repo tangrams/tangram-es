@@ -3,7 +3,6 @@
 #include "util/geoJson.h"
 #include "platform.h"
 #include "tile/tileID.h"
-#include "labels/labels.h"
 
 #include "rapidjson/error/en.h"
 #include "rapidjson/memorystream.h"
