@@ -28,5 +28,6 @@ bool SpriteAtlas::hasSpriteNode(const std::string& _name) const {
 }
 
 void SpriteAtlas::bind(GLuint _slot) {
+    m_texture->update(_slot);
     m_texture->bind(_slot);
 }
