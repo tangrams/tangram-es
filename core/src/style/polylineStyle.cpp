@@ -43,14 +43,14 @@ void PolylineStyle::parseStyleParams(const StyleParamMap& _styleParamMap, StyleP
     }
 
     if(_styleParamMap.find("cap") != _styleParamMap.end()) {
-        std::string capStr = _styleParamMap.at("cap");
+        const auto& capStr = _styleParamMap.at("cap");
         if(capStr == "butt") { _styleParams.cap = CapTypes::butt; }
         else if(capStr == "square") { _styleParams.cap = CapTypes::square; }
         else if(capStr == "round") { _styleParams.cap = CapTypes::round; }
     }
 
     if(_styleParamMap.find("join") != _styleParamMap.end()) {
-        std::string joinStr = _styleParamMap.at("join");
+        const auto& joinStr = _styleParamMap.at("join");
         if(joinStr == "bevel") { _styleParams.join = JoinTypes::bevel; }
         else if(joinStr == "miter") { _styleParams.join = JoinTypes::miter; }
         else if(joinStr == "round") { _styleParams.join = JoinTypes::round; }
@@ -67,7 +67,7 @@ void PolylineStyle::parseStyleParams(const StyleParamMap& _styleParamMap, StyleP
 
     if(_styleParamMap.find("outline:cap") != _styleParamMap.end()) {
         _styleParams.outlineOn = true;
-        std::string capStr = _styleParamMap.at("outline:cap");
+        const auto& capStr = _styleParamMap.at("outline:cap");
         if(capStr == "butt") { _styleParams.outlineCap = CapTypes::butt; }
         else if(capStr == "square") { _styleParams.outlineCap = CapTypes::square; }
         else if(capStr == "round") { _styleParams.outlineCap = CapTypes::round; }
@@ -75,7 +75,7 @@ void PolylineStyle::parseStyleParams(const StyleParamMap& _styleParamMap, StyleP
 
     if( _styleParamMap.find("outline:join") != _styleParamMap.end()) {
         _styleParams.outlineOn = true;
-        std::string joinStr = _styleParamMap.at("outline:join");
+        const auto& joinStr = _styleParamMap.at("outline:join");
         if(joinStr == "bevel") { _styleParams.outlineJoin = JoinTypes::bevel; }
         else if(joinStr == "miter") { _styleParams.outlineJoin = JoinTypes::miter; }
         else if(joinStr == "round") { _styleParams.outlineJoin = JoinTypes::round; }
