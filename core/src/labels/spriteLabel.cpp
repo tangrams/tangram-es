@@ -17,7 +17,7 @@ void SpriteLabel::pushTransform(VboMesh& _mesh) {
 }
 
 void SpriteLabel::updateBBoxes() {
-    glm::vec2 sp = m_transform.state.screenPos + m_transform.offset;
+    glm::vec2 sp = m_transform.state.screenPos;
     m_obb = isect2d::OBB(sp.x, sp.y, m_transform.state.rotation, m_dim.x, m_dim.y);
     m_aabb = m_obb.getExtent();
 }

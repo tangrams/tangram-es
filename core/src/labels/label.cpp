@@ -136,7 +136,7 @@ void Label::setAlpha(float _alpha) {
 
 void Label::setScreenPosition(const glm::vec2& _screenPosition) {
     if (_screenPosition != m_transform.state.screenPos) {
-        m_transform.state.screenPos = _screenPosition;
+        m_transform.state.screenPos = _screenPosition + m_transform.offset;
         m_dirty = true;
     }
 }
