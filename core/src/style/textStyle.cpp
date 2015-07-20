@@ -44,41 +44,50 @@ void TextStyle::constructShaderProgram() {
 void TextStyle::buildPoint(Point& _point, const StyleParamMap& _styleParamMap, Properties& _props, VboMesh& _mesh, Tile& _tile) const {
     auto& buffer = static_cast<TextBuffer&>(_mesh);
 
-    for (auto prop : _props.stringProps) {
-        if (prop.first == "name") {
-            m_labels->addTextLabel(_tile, buffer, m_name, { glm::vec2(_point), glm::vec2(_point) }, prop.second, Label::Type::point);
-        }
+    std::string text;
+    if (!_props.getString("name", text)) {
+        return;
     }
+
+    m_labels->addTextLabel(_tile, buffer, m_name, { glm::vec2(_point), glm::vec2(_point) }, text, Label::Type::point);
 }
 
 void TextStyle::buildLine(Line& _line, const StyleParamMap& _styleParamMap, Properties& _props, VboMesh& _mesh, Tile& _tile) const {
     auto& buffer = static_cast<TextBuffer&>(_mesh);
+
+    std::string text;
+    if (!_props.getString("name", text)) {
+        return;
+    }
+
     int lineLength = _line.size();
     int skipOffset = floor(lineLength / 2);
     float minLength = 0.15; // default, probably need some more thoughts
 
-    for (auto prop : _props.stringProps) {
-        if (prop.first.compare("name") == 0) {
 
-            for (size_t i = 0; i < _line.size() - 1; i += skipOffset) {
-                glm::vec2 p1 = glm::vec2(_line[i]);
-                glm::vec2 p2 = glm::vec2(_line[i + 1]);
+    for (size_t i = 0; i < _line.size() - 1; i += skipOffset) {
+        glm::vec2 p1 = glm::vec2(_line[i]);
+        glm::vec2 p2 = glm::vec2(_line[i + 1]);
 
-                glm::vec2 p1p2 = p2 - p1;
-                float length = glm::length(p1p2);
+        glm::vec2 p1p2 = p2 - p1;
+        float length = glm::length(p1p2);
 
-                if (length < minLength) {
-                    continue;
-                }
-
-                m_labels->addTextLabel(_tile, buffer, m_name, { p1, p2 }, prop.second, Label::Type::line);
-            }
+        if (length < minLength) {
+            continue;
         }
+
+        m_labels->addTextLabel(_tile, buffer, m_name, { p1, p2 }, text, Label::Type::line);
     }
 }
 
 void TextStyle::buildPolygon(Polygon& _polygon, const StyleParamMap& _styleParamMap, Properties& _props, VboMesh& _mesh, Tile& _tile) const {
     auto& buffer = static_cast<TextBuffer&>(_mesh);
+
+    std::string text;
+    if (!_props.getString("name", text)) {
+        return;
+    }
+
     glm::vec3 centroid;
     int n = 0;
 
@@ -92,11 +101,7 @@ void TextStyle::buildPolygon(Polygon& _polygon, const StyleParamMap& _styleParam
 
     centroid /= n;
 
-    for (auto prop : _props.stringProps) {
-        if (prop.first == "name") {
-            m_labels->addTextLabel(_tile, buffer, m_name, { glm::vec2(centroid), glm::vec2(centroid) }, prop.second, Label::Type::point);
-        }
-    }
+    m_labels->addTextLabel(_tile, buffer, m_name, { glm::vec2(centroid), glm::vec2(centroid) }, text, Label::Type::point);
 }
 
 void TextStyle::onBeginBuildTile(VboMesh& _mesh) const {

@@ -2,6 +2,7 @@
 
 #include "tangram.h"
 #include "gl/shaderProgram.h"
+#include "tile/tile.h"
 
 PolylineStyle::PolylineStyle(std::string _name, GLenum _drawMode) : Style(_name, _drawMode) {
 }
@@ -91,10 +92,10 @@ void PolylineStyle::buildLine(Line& _line, const StyleParamMap& _styleParamMap, 
     GLuint abgr = params.color;
 
     if (Tangram::getDebugFlag(Tangram::DebugFlags::proxy_colors)) {
-        abgr = abgr << (int(_props.numericProps["zoom"]) % 6);
+        abgr = abgr << (_tile.getID().z % 6);
     }
 
-    GLfloat layer = _props.numericProps["sort_key"] + params.order;
+    GLfloat layer = _props.getNumeric("sort_key", 0) + params.order;
     float halfWidth = params.width * .5f;
 
     PolyLineBuilder builder {

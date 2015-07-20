@@ -151,7 +151,6 @@ void Style::addData(TileData& _data, Tile& _tile) {
             applyLayerFiltering(feature, ctx, uniqueID, styleParamMapMix, (*it));
 
             if(uniqueID.any()) { // if a layer matched then uniqueID should be > 0
-                feature.props.numericProps["zoom"] = _tile.getID().z;
 
                 switch (feature.geometryType) {
                     case GeometryType::points:
