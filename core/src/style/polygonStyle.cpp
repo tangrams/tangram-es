@@ -30,11 +30,12 @@ void PolygonStyle::constructShaderProgram() {
 
 void PolygonStyle::parseStyleParams(const StyleParamMap& _styleParamMap, StyleParams& _styleParams) const {
 
-    if(_styleParamMap.find("order") != _styleParamMap.end()) {
-        _styleParams.order = std::stof(_styleParamMap.at("order"));
+    auto it = _styleParamMap.find("order");
+    if (it != _styleParamMap.end()) {
+        _styleParams.order = std::stof(it->second);
     }
-    if(_styleParamMap.find("color") != _styleParamMap.end()) {
-        _styleParams.color = parseColorProp(_styleParamMap.at("color"));
+    if ((it = _styleParamMap.find("color")) != _styleParamMap.end()) {
+        _styleParams.color = parseColorProp(it->second);
     }
 }
 
