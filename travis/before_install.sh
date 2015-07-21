@@ -6,9 +6,9 @@ set -o pipefail
 if [[ ${PLATFORM} == "android" ]]; then
 
     # Install android ndk
-    echo "Cloning mindk..."
-    git clone --quiet --depth 1 --branch linux-x86_64-api15-armv7 https://github.com/tangrams/mindk.git
-    export ANDROID_NDK=$PWD/mindk/android-ndk-r10d
+    echo "Cloning android-ndk"
+    git clone --quiet --depth 1 https://github.com/urho3d/android-ndk.git $HOME/android-ndk-root
+    export ANDROID_NDK=$HOME/android-ndk-root
     echo "Done."
 
     # Update PATH
