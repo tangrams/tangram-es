@@ -75,24 +75,10 @@ void TileWorker::run() {
             continue;
         }
 
-        DataSource* dataSource = task->source;
-        auto& tile = task->tile;
-
-        std::shared_ptr<TileData> tileData;
-
-        if (task->parsedTileData) {
-            // Data has already been parsed!
-            tileData = task->parsedTileData;
-        } else {
-            // Data needs to be parsed
-            tileData = dataSource->parse(*tile, task->rawTileData);
-
-            // Cache parsed data with the original data source
-            dataSource->setTileData(tile->getID(), tileData);
-        }
+        auto tileData = task->source->parse(*task->tile, *task->rawTileData);
 
         if (tileData) {
-            tile->build(*m_tileManager.getScene(), *tileData, *dataSource);
+            task->tile->build(*m_tileManager.getScene(), *tileData, *task->source);
         }
 
         m_tileManager.tileProcessed(std::move(task));
