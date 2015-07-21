@@ -133,9 +133,6 @@ bool VboMesh::upload() {
         glBufferData(GL_ELEMENT_ARRAY_BUFFER, m_nIndices * sizeof(GLushort), m_glIndexData, m_hint);
     }
 
-    // m_glVertexData.resize(0);
-    // m_glIndexData.resize(0);
-
     // TODO: For now, we retain copies of the vertex and index data in CPU memory to allow VBOs
     // to easily rebuild themselves after GL context loss. For optimizing memory usage (and for
     // other reasons) we'll want to change this in the future. This probably means going back to
@@ -212,6 +209,11 @@ void VboMesh::checkValidity() {
         m_generation = s_validGeneration;
     }
 }
+
+size_t VboMesh::bufferSize() {
+    return m_nVertices * m_vertexLayout->getStride() + m_nIndices * sizeof(GLushort);
+}
+
 
 void VboMesh::invalidateAllVBOs() {
 

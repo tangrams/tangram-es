@@ -70,6 +70,8 @@ public:
 
     void update(GLintptr _offset, GLsizei _size, unsigned char* _data);
 
+    size_t bufferSize();
+
     static void addManagedVBO(VboMesh* _vbo);
 
     static void removeManagedVBO(VboMesh* _vbo);
@@ -90,12 +92,12 @@ protected:
 
     std::shared_ptr<VertexLayout> m_vertexLayout;
 
-    int m_nVertices;
+    size_t m_nVertices;
     GLuint m_glVertexBuffer;
     // Compiled vertices for upload
     GLbyte* m_glVertexData = nullptr;
 
-    int m_nIndices;
+    size_t m_nIndices;
     GLuint m_glIndexBuffer;
     // Compiled  indices for upload
     GLushort* m_glIndexData = nullptr;

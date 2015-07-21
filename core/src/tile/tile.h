@@ -138,6 +138,9 @@ public:
         m_state = _state;
     }
 
+    /* Get the sum in bytes of all <VboMesh>es + TODO labels?  */
+    size_t getMemoryUsage() const;
+
 private:
 
     const TileID m_id;
