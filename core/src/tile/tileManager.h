@@ -4,6 +4,7 @@
 #include "tile/tileWorker.h"
 #include "tile/tileID.h"
 #include "tileTask.h"
+#include "tileCache.h"
 
 #include <map>
 #include <list>
@@ -70,7 +71,6 @@ private:
     std::shared_ptr<View> m_view;
     std::shared_ptr<Scene> m_scene;
 
-
     std::mutex m_readyTileMutex;
     std::vector<std::shared_ptr<TileTask>> m_readyTiles;
 
@@ -82,6 +82,8 @@ private:
     std::map<TileID, std::shared_ptr<Tile>> m_tileSet;
 
     std::vector<std::shared_ptr<DataSource>> m_dataSources;
+
+    TileCache m_tileCache;
 
     const static size_t MAX_WORKERS = 2;
     std::unique_ptr<TileWorker> m_workers;
@@ -101,12 +103,13 @@ private:
      *      this is also responsible for loading proxy tiles for the newly visible tiles
      * @_tileID: TileID for which new Tile needs to be constructed
      */
-    void addTile(const TileID& _tileID);
+    bool addTile(const TileID& _tileID);
 
     /*
      * Removes a tile from m_tileSet
      */
-    void removeTile(std::map<TileID, std::shared_ptr<Tile>>::iterator& _tileIter);
+    void removeTile(std::map<TileID, std::shared_ptr<Tile>>::iterator& _tileIter,
+                    std::vector<TileID>& _removes);
 
     /*
      * Checks and updates m_tileSet with proxy tiles for every new visible tile
@@ -117,7 +120,7 @@ private:
     /*
      *  Once a visible tile finishes loading and is added to m_tileSet, all its proxy(ies) Tiles are removed
      */
-    void clearProxyTiles(Tile& _tile);
+    void clearProxyTiles(Tile& _tile, std::vector<TileID>& _removes);
 
     bool setTileState(Tile& tile, TileState state);
 
