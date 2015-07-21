@@ -3,7 +3,6 @@
 #include "util/pbfParser.h"
 #include "platform.h"
 #include "tile/tileID.h"
-#include "labels/labels.h"
 
 #include <sstream>
 #include <fstream>
