@@ -33,14 +33,15 @@ public:
      * Creates a text slabel for and associate it with the current processed <MapTile> TileID for a specific syle name
      * Returns the created label
      */
-    std::shared_ptr<Label> addTextLabel(Tile& _tile, TextBuffer& _buffer, const std::string& _styleName, Label::Transform _transform, std::string _text, Label::Type _type);
+    std::shared_ptr<Label> addTextLabel(Tile& _tile, TextBuffer& _buffer, const std::string& _styleName,
+                                        Label::Transform _transform, std::string _text, Label::Type _type);
 
     /*
      * Creates a sprite slabel for and associate it with the current processed <MapTile> TileID for a specific syle name
      * Returns the created labe
      */
-    std::shared_ptr<Label> addSpriteLabel(Tile& _tile, const std::string& _styleName, Label::Transform _transform, const glm::vec2& _size,
-                                          size_t _bufferOffset);
+    std::shared_ptr<Label> addSpriteLabel(Tile& _tile, const std::string& _styleName, Label::Transform _transform,
+                                          const glm::vec2& _size, size_t _bufferOffset);
 
     void setFontContext(std::shared_ptr<FontContext> _ftContext) { m_ftContext = _ftContext; }
 

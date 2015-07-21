@@ -41,6 +41,19 @@ std::shared_ptr<Label> Labels::addTextLabel(Tile& _tile, TextBuffer& _buffer, co
     return label;
 }
 
+std::shared_ptr<Label> Labels::addSpriteLabel(Tile& _tile, const std::string& _styleName, Label::Transform _transform,
+                                              const glm::vec2& _size, size_t _bufferOffset) {
+
+    if ((m_currentZoom - _tile.getID().z) > LODDiscardFunc(View::s_maxZoom, m_currentZoom)) {
+        return nullptr;
+    }
+
+    auto label = std::shared_ptr<Label>(new SpriteLabel(_transform, _size, _bufferOffset));
+    addLabel(_tile, _styleName, label);
+
+    return label;
+}
+
 void Labels::addLabel(Tile& _tile, const std::string& _styleName, std::shared_ptr<Label> _label) {
 
     auto modelMatrix = glm::scale(glm::mat4(1.0), glm::vec3(_tile.getScale()));
@@ -56,19 +69,6 @@ void Labels::addLabel(Tile& _tile, const std::string& _styleName, std::shared_pt
         std::lock_guard<std::mutex> lock(m_mutex);
         m_pendingLabels.push_back(_label);
     }
-}
-
-std::shared_ptr<Label> Labels::addSpriteLabel(Tile& _tile, const std::string& _styleName, Label::Transform _transform, const glm::vec2& _size,
-                                              size_t _bufferOffset) {
-    
-    if ((m_currentZoom - _tile.getID().z) > LODDiscardFunc(View::s_maxZoom, m_currentZoom)) {
-        return nullptr;
-    }
-    
-    auto label = std::shared_ptr<Label>(new SpriteLabel(_transform, _size, _bufferOffset));
-    addLabel(_tile, _styleName, label);
-    
-    return label;
 }
 
 void Labels::updateOcclusions() {
