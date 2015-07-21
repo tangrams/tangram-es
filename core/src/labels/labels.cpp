@@ -36,7 +36,7 @@ std::shared_ptr<Label> Labels::addTextLabel(Tile& _tile, TextBuffer& _buffer, co
         return nullptr;
     }
 
-    addLabel(_tile, _styleName, std::dynamic_pointer_cast<Label>(label));
+    addLabel(_tile, _styleName, label);
 
     return label;
 }
