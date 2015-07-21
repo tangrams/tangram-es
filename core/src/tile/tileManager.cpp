@@ -226,11 +226,10 @@ void TileManager::updateTileSet() {
                 auto task = std::make_shared<TileTask>(tile, source.get());
                 DBG("[%d, %d, %d] Load\n", id.z, id.x, id.y);
 
-                if (source->getTileData(std::move(task), m_dataCallback)) {
-                    continue;
-                }
+                if (source->getTileData(task)) {
+                    m_dataCallback(std::move(task));
 
-                if (m_loadPending < MAX_DOWNLOADS) {
+                } else if (m_loadPending < MAX_DOWNLOADS) {
                     setTileState(*tile, TileState::loading);
 
                     if (!source->loadTileData(std::move(task), m_dataCallback)) {

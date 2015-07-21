@@ -5,6 +5,7 @@
 #include <memory>
 #include <vector>
 #include <mutex>
+#include <list>
 #include "tile/tileTask.h"
 
 namespace Tangram {
@@ -35,29 +36,23 @@ public:
      */
     virtual bool loadTileData(std::shared_ptr<TileTask>&& _task, TileTaskCb _cb);
 
-    virtual bool getTileData(std::shared_ptr<TileTask>&& _task, TileTaskCb _cb);
+    /* Lookup TileData in cache and */
+    virtual bool getTileData(std::shared_ptr<TileTask>& _task);
 
     /* Stops any running I/O tasks pertaining to @_tile */
     virtual void cancelLoadingTile(const TileID& _tile);
 
-    /* Checks if data exists for a specific <TileID> */
-    virtual bool hasTileData(const TileID& _tileID) const;
-
-    /* Returns the data corresponding to a <TileID>, if it has been fetched already */
-    virtual std::shared_ptr<TileData> getTileData(const TileID& _tileID) const;
-    
     /* Parse an I/O response into a <TileData>, returning an empty TileData on failure */
     virtual std::shared_ptr<TileData> parse(const Tile& _tile, std::vector<char>& _rawData) const = 0;
 
-    /* Stores tileData in m_tileStore */
-    virtual void setTileData(const TileID& _tileID, const std::shared_ptr<TileData>& _tileData);
-    
     /* Clears all data associated with this DataSource */
     void clearData();
 
     const std::string& name() const { return m_name; }
 
 protected:
+
+    void onTileLoaded(std::vector<char>&& _rawData, std::shared_ptr<TileTask>& _task, TileTaskCb _cb);
 
     /* Constructs the URL of a tile using <m_urlTemplate> */
     virtual void constructURL(const TileID& _tileCoord, std::string& _url) const;
@@ -68,13 +63,24 @@ protected:
         return url;
     }
 
-    std::map< TileID, std::shared_ptr<TileData> > m_tileStore; // Map of tileIDs to data for that tile
-    
-    std::string m_name; // Name used to identify this source in the style sheet
+    // Name used to identify this source in the style sheet
+    std::string m_name;
 
-    std::mutex m_mutex; // Used to ensure safe access from async loading threads
+    // URL template for requesting tiles from a network or filesystem
+    std::string m_urlTemplate;
 
-    std::string m_urlTemplate; // URL template for requesting tiles from a network or filesystem
+    // Used to ensure safe access from async loading threads
+    std::mutex m_mutex;
+
+    // LRU in-memory cache for raw tile data
+    using CacheEntry = std::pair<TileID, std::shared_ptr<std::vector<char>>>;
+    using CacheList = std::list<CacheEntry>;
+    using CacheMap = std::unordered_map<TileID, typename CacheList::iterator>;
+
+    CacheMap m_cacheMap;
+    CacheList m_cacheList;
+    size_t m_cacheUsage;
+    size_t m_cacheMaxUsage;
 
 };
 
