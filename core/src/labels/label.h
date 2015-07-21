@@ -29,13 +29,11 @@ public:
     };
 
     struct Transform {
-        glm::vec2 m_modelPosition1;
-        glm::vec2 m_modelPosition2;
+        glm::vec2 modelPosition1;
+        glm::vec2 modelPosition2;
+        glm::vec2 offset;
 
-        glm::vec2 m_screenPosition;
-
-        float m_alpha;
-        float m_rotation;
+        BufferVert::State state;
     };
 
     Label(Transform _transform, Type _type);
@@ -105,5 +103,5 @@ protected:
     bool m_dirty;
     Transform m_transform;
     glm::vec2 m_dim;
-    
+
 };

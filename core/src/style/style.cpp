@@ -90,7 +90,7 @@ void Style::applyLayerFiltering(const Feature& _feature, const Context& _ctx, st
 
     auto sLayerItr = sLayers.begin();
 
-    //A BFS traversal of the SceneLayer graph
+    // A BFS traversal of the SceneLayer graph
     while (sLayerItr != sLayers.end()) {
 
         auto sceneLyr = *sLayerItr;
@@ -98,27 +98,27 @@ void Style::applyLayerFiltering(const Feature& _feature, const Context& _ctx, st
         if (sceneLyr->getFilter().eval(_feature, _ctx)) { // filter matches
 
             _uniqueID.set(sceneLyr->getID());
-
             {
                 std::lock_guard<std::mutex> lock(s_cacheMutex);
 
-                if(s_styleParamMapCache.find(_uniqueID) != s_styleParamMapCache.end()) {
+                // Get or create cache entry
+                auto& entry = s_styleParamMapCache[_uniqueID];
 
-                    _styleParamMapMix = s_styleParamMapCache.at(_uniqueID);
+                if (!entry.empty()) {
+                    _styleParamMapMix = entry;
 
                 } else {
+                    // Update StyleParam with subLayer parameters
 
-                    /* update StyleParam with subLayer parameters */
                     auto& layerStyleParamMap = sceneLyr->getStyleParamMap();
                     for(auto& styleParam : layerStyleParamMap) {
                         _styleParamMapMix[styleParam.first] = styleParam.second;
                     }
-
-                    s_styleParamMapCache.emplace(_uniqueID, _styleParamMapMix);
+                    entry = _styleParamMapMix;
                 }
             }
 
-            /* append sLayers with sublayers of this layer */
+            // Append sLayers with sublayers of this layer
             auto& ssLayers = sceneLyr->getSublayers();
             sLayerItr = sLayers.insert(sLayers.end(), ssLayers.begin(), ssLayers.end());
         } else {
@@ -151,7 +151,6 @@ void Style::addData(TileData& _data, Tile& _tile) {
             applyLayerFiltering(feature, ctx, uniqueID, styleParamMapMix, (*it));
 
             if(uniqueID.any()) { // if a layer matched then uniqueID should be > 0
-                feature.props.numericProps["zoom"] = _tile.getID().z;
 
                 switch (feature.geometryType) {
                     case GeometryType::points:

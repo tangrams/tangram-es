@@ -2,6 +2,7 @@
 
 #include "tangram.h"
 #include "gl/shaderProgram.h"
+#include "tile/tile.h"
 
 PolylineStyle::PolylineStyle(std::string _name, GLenum _drawMode) : Style(_name, _drawMode) {
 }
@@ -30,52 +31,53 @@ void PolylineStyle::constructShaderProgram() {
 
 void PolylineStyle::parseStyleParams(const StyleParamMap& _styleParamMap, StyleParams& _styleParams) const {
 
-    if(_styleParamMap.find("order") != _styleParamMap.end()) {
-        _styleParams.order = std::stof(_styleParamMap.at("order"));
+    auto it = _styleParamMap.find("order");
+    if (it != _styleParamMap.end()) {
+        _styleParams.order = std::stof(it->second);
     }
 
-    if(_styleParamMap.find("color") != _styleParamMap.end()) {
-        _styleParams.color = parseColorProp(_styleParamMap.at("color"));
+    if ((it = _styleParamMap.find("color")) != _styleParamMap.end()) {
+        _styleParams.color = parseColorProp(it->second);
     }
 
-    if(_styleParamMap.find("width") != _styleParamMap.end()) {
-        _styleParams.width = std::stof(_styleParamMap.at("width"));
+    if ((it =_styleParamMap.find("width")) != _styleParamMap.end()) {
+        _styleParams.width = std::stof(it->second);
     }
 
-    if(_styleParamMap.find("cap") != _styleParamMap.end()) {
-        std::string capStr = _styleParamMap.at("cap");
+    if ((it = _styleParamMap.find("cap")) != _styleParamMap.end()) {
+        const auto& capStr = it->second;
         if(capStr == "butt") { _styleParams.cap = CapTypes::butt; }
         else if(capStr == "square") { _styleParams.cap = CapTypes::square; }
         else if(capStr == "round") { _styleParams.cap = CapTypes::round; }
     }
 
-    if(_styleParamMap.find("join") != _styleParamMap.end()) {
-        std::string joinStr = _styleParamMap.at("join");
+    if ((it = _styleParamMap.find("join")) != _styleParamMap.end()) {
+        const auto& joinStr = it->second;
         if(joinStr == "bevel") { _styleParams.join = JoinTypes::bevel; }
         else if(joinStr == "miter") { _styleParams.join = JoinTypes::miter; }
         else if(joinStr == "round") { _styleParams.join = JoinTypes::round; }
     }
 
-    if(_styleParamMap.find("outline:width") != _styleParamMap.end()) {
+    if ((it = _styleParamMap.find("outline:width")) != _styleParamMap.end()) {
         _styleParams.outlineOn = true;
-        _styleParams.outlineWidth = std::stof(_styleParamMap.at("outline:width"));
+        _styleParams.outlineWidth = std::stof(it->second);
     }
 
-    if(_styleParamMap.find("outline:color") != _styleParamMap.end()) {
-        _styleParams.outlineColor =  parseColorProp(_styleParamMap.at("outline:color"));
+    if ((it = _styleParamMap.find("outline:color")) != _styleParamMap.end()) {
+        _styleParams.outlineColor =  parseColorProp(it->second);
     }
 
-    if(_styleParamMap.find("outline:cap") != _styleParamMap.end()) {
+    if ((it = _styleParamMap.find("outline:cap")) != _styleParamMap.end()) {
         _styleParams.outlineOn = true;
-        std::string capStr = _styleParamMap.at("outline:cap");
+        const auto& capStr = it->second;
         if(capStr == "butt") { _styleParams.outlineCap = CapTypes::butt; }
         else if(capStr == "square") { _styleParams.outlineCap = CapTypes::square; }
         else if(capStr == "round") { _styleParams.outlineCap = CapTypes::round; }
     }
 
-    if( _styleParamMap.find("outline:join") != _styleParamMap.end()) {
+    if ((it = _styleParamMap.find("outline:join")) != _styleParamMap.end()) {
         _styleParams.outlineOn = true;
-        std::string joinStr = _styleParamMap.at("outline:join");
+        const auto& joinStr = it->second;
         if(joinStr == "bevel") { _styleParams.outlineJoin = JoinTypes::bevel; }
         else if(joinStr == "miter") { _styleParams.outlineJoin = JoinTypes::miter; }
         else if(joinStr == "round") { _styleParams.outlineJoin = JoinTypes::round; }
@@ -90,10 +92,10 @@ void PolylineStyle::buildLine(Line& _line, const StyleParamMap& _styleParamMap, 
     GLuint abgr = params.color;
 
     if (Tangram::getDebugFlag(Tangram::DebugFlags::proxy_colors)) {
-        abgr = abgr << (int(_props.numericProps["zoom"]) % 6);
+        abgr = abgr << (_tile.getID().z % 6);
     }
 
-    GLfloat layer = _props.numericProps["sort_key"] + params.order;
+    GLfloat layer = _props.getNumeric("sort_key", 0) + params.order;
     float halfWidth = params.width * .5f;
 
     PolyLineBuilder builder {
