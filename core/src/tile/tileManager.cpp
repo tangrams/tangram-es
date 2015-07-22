@@ -360,3 +360,13 @@ void TileManager::clearProxyTiles(Tile& _tile) {
         }
     }
 }
+
+void TileManager::updateVisibleTiles(float _dt) {
+    
+    for (const auto& mapIDandTile : m_tileSet) {
+        const auto& tile = mapIDandTile.second;
+        if (tile->isReady()) {
+            tile->update(_dt, *m_view);
+        }
+    }
+}

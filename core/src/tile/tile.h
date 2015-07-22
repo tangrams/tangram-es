@@ -71,7 +71,7 @@ public:
     void updateLabels(float _dt, const Style& _style, const View& _view);
     
     /* Push the label transforms to the font rendering context */
-    void pushLabelTransforms(const Style& _style, std::shared_ptr<Labels> _labels);
+    void pushLabelTransforms(const Style& _style);
 
     /* Draws the geometry associated with the provided <Style> and view-projection matrix */
     void draw(const Style& _style, const View& _view);
