@@ -124,7 +124,7 @@
     CGPoint location = [pinchRecognizer locationInView:self.view];
     CGFloat scale = pinchRecognizer.scale;
     [pinchRecognizer setScale:1.0];
-    Tangram::handlePinchGesture(location.x * self.pixelScale, location.y * self.pixelScale, scale);
+    Tangram::handlePinchGesture(location.x * self.pixelScale, location.y * self.pixelScale, scale, pinchRecognizer.velocity);
 }
 
 - (void)respondToRotationGesture:(UIRotationGestureRecognizer *)rotationRecognizer {

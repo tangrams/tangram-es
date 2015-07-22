@@ -66,7 +66,7 @@ void cursor_pos_callback(GLFWwindow* window, double x, double y) {
 }
 
 void scroll_callback(GLFWwindow* window, double scrollx, double scrolly) {
-
+    
     double x, y;
     glfwGetCursorPos(window, &x, &y);
 
@@ -78,7 +78,7 @@ void scroll_callback(GLFWwindow* window, double scrollx, double scrolly) {
     } else if (rotating) {
         Tangram::handleRotateGesture(x, y, scroll_multiplier * scrolly);
     } else {
-        Tangram::handlePinchGesture(x, y, 1.0 + scroll_multiplier * scrolly);
+        Tangram::handlePinchGesture(x, y, 1.0 + scroll_multiplier * scrolly, 0.f);
     }
 
 }

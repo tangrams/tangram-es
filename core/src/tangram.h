@@ -64,17 +64,17 @@ namespace Tangram {
     void handlePanGesture(float _startX, float _startY, float _endX, float _endY);
 
     // Respond to a pinch at the given position in screen coordinates with the given incremental scale
-    void handlePinchGesture(float _posX, float _posY, float _scale);
+    void handlePinchGesture(float _posX, float _posY, float _scale, float _velocity);
 
     // Respond to a rotation gesture with the given incremental rotation in radians
     void handleRotateGesture(float _posX, float _posY, float _rotation);
 
     // Respond to a two-finger shove with the given distance
     void handleShoveGesture(float _distance);
-    
+
     // Set debug features on or off using a boolean (see debug.h)
     void setDebugFlag(DebugFlags _flag, bool _on);
-    
+
     // Get the boolean state of a debug feature (see debug.h)
     bool getDebugFlag(DebugFlags _flag);
 

@@ -79,7 +79,7 @@ void scroll_callback(GLFWwindow* window, double scrollx, double scrolly) {
     } else if (rotating) {
         Tangram::handleRotateGesture(x, y, scroll_multiplier * scrolly);
     } else {
-        Tangram::handlePinchGesture(x, y, 1.0 + scroll_multiplier * scrolly);
+        Tangram::handlePinchGesture(x, y, 1.0 + scroll_multiplier * scrolly, 0.f);
     }
 
 }
@@ -168,7 +168,7 @@ int main(void) {
 
     // Initialize cURL
     curl_global_init(CURL_GLOBAL_DEFAULT);
-    
+
     double lastTime = glfwGetTime();
 
     // Loop until the user closes the window
@@ -194,7 +194,7 @@ int main(void) {
             glfwWaitEvents();
         }
     }
-    
+
     curl_global_cleanup();
     glfwTerminate();
     return 0;

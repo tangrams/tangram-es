@@ -274,9 +274,9 @@ namespace Tangram {
 
     }
 
-    void handlePinchGesture(float _posX, float _posY, float _scale) {
+    void handlePinchGesture(float _posX, float _posY, float _scale, float _velocity) {
 
-        m_inputHandler->handlePinchGesture(_posX, _posY, _scale);
+        m_inputHandler->handlePinchGesture(_posX, _posY, _scale, _velocity);
 
     }
 
