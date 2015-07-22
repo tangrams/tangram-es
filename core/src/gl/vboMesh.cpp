@@ -72,6 +72,7 @@ bool VboMesh::subDataUpload() {
 
     if (m_hint == GL_STATIC_DRAW) {
         logMsg("WARNING: wrong usage hint provided to the Vbo\n");
+        assert(false);
     }
 
     glBindBuffer(GL_ARRAY_BUFFER, m_glVertexBuffer);
@@ -115,12 +116,17 @@ bool VboMesh::upload() {
         glGenBuffers(1, &m_glVertexBuffer);
     }
 
-    // TODO check if compiled?
     // Buffer vertex data
     int vertexBytes = m_nVertices * m_vertexLayout->getStride();
 
     glBindBuffer(GL_ARRAY_BUFFER, m_glVertexBuffer);
     glBufferData(GL_ARRAY_BUFFER, vertexBytes, m_glVertexData, m_hint);
+
+    // Clear vertex data that is not supposed to be updated.
+    if (m_hint == GL_STATIC_DRAW) {
+        delete[] m_glVertexData;
+        m_glVertexData = nullptr;
+    }
 
     if (m_glIndexData) {
 
@@ -131,12 +137,10 @@ bool VboMesh::upload() {
         // Buffer element index data
         glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, m_glIndexBuffer);
         glBufferData(GL_ELEMENT_ARRAY_BUFFER, m_nIndices * sizeof(GLushort), m_glIndexData, m_hint);
-    }
 
-    // TODO: For now, we retain copies of the vertex and index data in CPU memory to allow VBOs
-    // to easily rebuild themselves after GL context loss. For optimizing memory usage (and for
-    // other reasons) we'll want to change this in the future. This probably means going back to
-    // data sources and styles to rebuild the vertex data.
+        delete[] m_glIndexData;
+        m_glIndexData = nullptr;
+    }
 
     m_generation = s_validGeneration;
 

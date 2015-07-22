@@ -2,6 +2,7 @@
 
 #include "vboMesh.h"
 #include <cstdlib> // std::abs
+#include <cassert>
 
 namespace Tangram {
 
@@ -38,7 +39,8 @@ public:
      */
     template<class A>
     void updateAttribute(GLintptr _byteOffset, unsigned int _nVerts, const A& _newAttributeValue) {
-        if (!m_isCompiled) {
+        if (m_glVertexData == nullptr) {
+            assert(false);
             return;
         }
 
@@ -112,7 +114,8 @@ void TypedMesh<T>::setDirty(GLintptr _byteOffset, GLsizei _byteSize) {
 
 template<class T>
 void TypedMesh<T>::updateVertices(GLintptr _byteOffset, unsigned int _nVerts, const T& _newVertexValue) {
-    if (!m_isCompiled) {
+    if (m_glVertexData == nullptr) {
+        assert(false);
         return;
     }
 
