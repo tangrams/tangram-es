@@ -8,10 +8,12 @@
 #include <memory>
 #include <mutex>
 #include <vector>
+#include <map>
 
 class FontContext;
 class Tile;
 class View;
+class Style;
 
 
 /*
@@ -48,7 +50,6 @@ public:
     /* Returns a const reference to a pointer of the font context */
     const std::shared_ptr<FontContext>& getFontContext() { return m_ftContext; }
 
-    void updateOcclusions();
 
     void setView(std::shared_ptr<View> _view) { m_view = _view; }
 
@@ -56,7 +57,15 @@ public:
 
     void drawDebug();
 
+    void update(float _dt, const std::vector<std::unique_ptr<Style>>& _styles, const std::map<TileID, std::shared_ptr<Tile>>& _tiles);
+
+    void lazyRenderRequest();
+
+    bool needUpdate() { return Label::s_needUpdate; }
+
 private:
+
+    void updateOcclusions();
 
     void addLabel(Tile& _tile, const std::string& _styleName, std::shared_ptr<Label> _label);
 

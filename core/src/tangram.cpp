@@ -93,49 +93,23 @@ namespace Tangram {
 
         g_time += _dt;
 
-        if (m_view) {
+        // Update the view
+        m_view->update();
 
-            m_view->update();
+        // Update tile set
+        m_tileManager->updateTileSet();
 
-            m_tileManager->updateTileSet();
+        if(m_view->changedOnLastUpdate() || m_tileManager->hasTileSetChanged() || m_labels->needUpdate()) {
 
-            if(m_view->changedOnLastUpdate() || m_tileManager->hasTileSetChanged() || Label::s_needUpdate) {
-                Label::s_needUpdate = false;
-
-                for (const auto& mapIDandTile : m_tileManager->getVisibleTiles()) {
-                    const auto& tile = mapIDandTile.second;
-                    if (tile->isReady()) {
-                        tile->update(_dt, *m_view);
-                    }
-                }
-
-                // update labels for specific style
-                for (const auto& style : m_scene->getStyles()) {
-                    for (const auto& mapIDandTile : m_tileManager->getVisibleTiles()) {
-                        const auto& tile = mapIDandTile.second;
-                        if (tile->isReady()) {
-                            tile->updateLabels(_dt, *style, *m_view);
-                        }
-                    }
-                }
-
-                // manage occlusions
-                m_labels->updateOcclusions();
-
-                for (const auto& style : m_scene->getStyles()) {
-                    for (const auto& mapIDandTile : m_tileManager->getVisibleTiles()) {
-                        const auto& tile = mapIDandTile.second;
-                        if (tile->isReady()) {
-                            tile->pushLabelTransforms(*style, m_labels);
-                        }
-                    }
-                }
-            }
-
-            if (Label::s_needUpdate) {
-                requestRender();
-            }
+            // Update visible tile set
+            m_tileManager->updateVisibleTiles(_dt);
+            
+            // Update labels
+            m_labels->update(_dt, m_scene->getStyles(), m_tileManager->getVisibleTiles());
         }
+        
+        // Request for render if labels are in fading in/out states
+        m_labels->lazyRenderRequest();
 
         if(m_scene) {
             // Update lights and styles

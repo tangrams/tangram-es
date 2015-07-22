@@ -61,6 +61,8 @@ public:
     const std::map<TileID, std::shared_ptr<Tile>>& getVisibleTiles() { return m_tileSet; }
 
     bool hasTileSetChanged() { return m_tileSetChanged; }
+    
+    void updateVisibleTiles(float _dt);
 
 private:
 

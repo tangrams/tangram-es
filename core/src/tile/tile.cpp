@@ -58,7 +58,7 @@ void Tile::updateLabels(float _dt, const Style& _style, const View& _view) {
     }
 }
 
-void Tile::pushLabelTransforms(const Style& _style, std::shared_ptr<Labels> _labels) {
+void Tile::pushLabelTransforms(const Style& _style) {
     std::shared_ptr<VboMesh>& styleMesh = m_geometry[_style.getName()];
     
     if (styleMesh) {
