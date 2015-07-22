@@ -36,9 +36,6 @@ public:
     /* sets the screen size, this size is used when transforming text ids in the text buffers */
     void setScreenSize(int _width, int _height);
 
-    /* fills the orthographic projection matrix related to the current screen size */
-    void getProjection(float* _projectionMatrix) const;
-
     void clearState();
     
     /* lock thread access to this font context */

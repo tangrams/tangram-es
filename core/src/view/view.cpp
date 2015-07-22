@@ -63,6 +63,9 @@ void View::setSize(int _width, int _height) {
     m_aspect = (float)_width / (float)_height;
     m_dirty = true;
 
+    // Screen space orthographic projection matrix, top left origin, y pointing down
+    m_orthoViewport = glm::ortho(0.f, (float)m_vpWidth, (float)m_vpHeight, 0.f, -1.f, 1.f);
+
 }
 
 void View::setPosition(double _x, double _y) {
