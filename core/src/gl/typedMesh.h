@@ -4,6 +4,7 @@
 #include "util/types.h"
 
 #include <cstdlib> // std::abs
+#include <cassert>
 
 namespace Tangram {
 
@@ -40,7 +41,8 @@ public:
      */
     template<class A>
     void updateAttribute(Range _vertexRange, const A& _newAttributeValue, size_t _attribOffset = 0) {
-        if (!m_isCompiled) {
+        if (m_glVertexData == nullptr) {
+            assert(false);
             return;
         }
 
@@ -122,7 +124,8 @@ void TypedMesh<T>::setDirty(GLintptr _byteOffset, GLsizei _byteSize) {
 
 template<class T>
 void TypedMesh<T>::updateVertices(Range _vertexRange, const T& _newVertexValue) {
-    if (!m_isCompiled) {
+    if (m_glVertexData == nullptr) {
+        assert(false);
         return;
     }
 
