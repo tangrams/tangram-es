@@ -52,8 +52,6 @@ public:
 
     void setView(std::shared_ptr<View> _view) { m_view = _view; }
 
-    void setScreenSize(int _width, int _height) { m_screenSize = glm::vec2(_width, _height); }
-
     void drawDebug();
 
 private:
@@ -71,7 +69,6 @@ private:
 
     std::mutex m_mutex;
 
-    glm::vec2 m_screenSize;
     std::shared_ptr<View> m_view;
     float m_currentZoom;
 

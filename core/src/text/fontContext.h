@@ -31,9 +31,6 @@ public:
     /* sets the blur spread when using signed distance field rendering */
     void setSignedDistanceField(float _blurSpread);
 
-    /* sets the screen size, this size is used when transforming text ids in the text buffers */
-    void setScreenSize(int _width, int _height);
-
     void clearState();
     
     /* lock thread access to this font context */

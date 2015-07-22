@@ -16,10 +16,6 @@ const std::unique_ptr<Texture>& FontContext::getAtlas() const {
     return m_atlas;
 }
 
-void FontContext::setScreenSize(int _width, int _height) {
-    glfonsScreenSize(m_fsContext, _width, _height);
-}
-
 void FontContext::clearState() {
     fonsClearState(m_fsContext);
 }
