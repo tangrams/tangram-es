@@ -133,8 +133,6 @@ void TextStyle::onBeginDrawFrame(const std::shared_ptr<View>& _view, const std::
     auto ftContext = m_labels->getFontContext();
     const auto& atlas = ftContext->getAtlas();
 
-    ftContext->setScreenSize(_view->getWidth(), _view->getHeight());
-
     atlas->update(1);
     atlas->bind(1);
 

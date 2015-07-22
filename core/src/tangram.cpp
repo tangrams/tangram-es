@@ -86,11 +86,6 @@ void resize(int _newWidth, int _newHeight) {
         m_view->setSize(_newWidth, _newHeight);
     }
 
-    if (m_ftContext) {
-        m_ftContext->setScreenSize(m_view->getWidth(), m_view->getHeight());
-        m_labels->setScreenSize(m_view->getWidth(), m_view->getHeight());
-    }
-
     while (Error::hadGlError("Tangram::resize()")) {}
 
 }
