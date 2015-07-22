@@ -4,6 +4,8 @@
 #include "gl/shaderProgram.h"
 #include "gl/texture.h"
 
+namespace Tangram {
+
 Material::Material() {
 }
 
@@ -201,4 +203,6 @@ void Material::setupProgram(std::shared_ptr<ShaderProgram> _shader) {
         _shader->setUniformf("u_material.normalScale", m_normal_texture.scale);
         _shader->setUniformf("u_material.normalAmount", m_normal_texture.amount);
     }
+}
+
 }

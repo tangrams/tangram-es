@@ -3,6 +3,8 @@
 #include "light.h"
 #include "glm/vec3.hpp"
 
+namespace Tangram {
+
 class DirectionalLight : public Light {
 public:
     
@@ -31,3 +33,5 @@ private:
     static std::string s_typeName;
     
 };
+
+}

@@ -7,6 +7,8 @@
 #include <sstream>
 #include <fstream>
 
+namespace Tangram {
+
 MVTSource::MVTSource(const std::string& _name, const std::string& _urlTemplate) :
     DataSource(_name, _urlTemplate) {
 }
@@ -37,3 +39,4 @@ std::shared_ptr<TileData> MVTSource::parse(const Tile& _tile, std::vector<char>&
     return tileData;
 }
 
+}

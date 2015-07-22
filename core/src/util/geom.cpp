@@ -3,6 +3,8 @@
 #include <limits>
 #include <cmath>
 
+namespace Tangram {
+
 float mapValue(const float& _value, const float& _inputMin, const float& _inputMax, const float& _outputMin,
                const float& _outputMax, bool _clamp) {
     if (fabs(_inputMin - _inputMax) < std::numeric_limits<float>::epsilon()) { return _outputMin; } else {
@@ -48,4 +50,6 @@ glm::vec2 clipToScreenSpace(const glm::vec4& _clipCoords, const glm::vec2& _scre
 
 glm::vec2 worldToScreenSpace(const glm::mat4& _mvp, const glm::vec4& _worldPosition, const glm::vec2& _screenSize) {
     return clipToScreenSpace(worldToClipSpace(_mvp, _worldPosition), _screenSize);
+}
+
 }

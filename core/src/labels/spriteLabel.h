@@ -2,6 +2,8 @@
 
 #include "label.h"
 
+namespace Tangram {
+
 class SpriteLabel : public Label {
 public:
 
@@ -15,3 +17,5 @@ protected:
 
     size_t m_bufferOffset;
 };
+
+}

@@ -2,6 +2,8 @@
 #include "shaderProgram.h"
 #include "platform.h"
 
+namespace Tangram {
+
 std::unordered_map<GLint, GLuint> VertexLayout::s_enabledAttribs = std::unordered_map<GLint, GLuint>();
 
 VertexLayout::VertexLayout(std::vector<VertexAttrib> _attribs) : m_attribs(_attribs) {
@@ -86,4 +88,6 @@ void VertexLayout::enable(ShaderProgram& _program, size_t byteOffset, void* _ptr
             boundProgram = 0;
         }
     }
+}
+
 }

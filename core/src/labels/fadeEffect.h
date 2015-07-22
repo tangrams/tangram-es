@@ -2,6 +2,8 @@
 
 #include <cmath>
 
+namespace Tangram {
+
 struct FadeEffect {
 
 public:
@@ -44,4 +46,4 @@ private:
     bool m_in;
 };
 
-
+}

@@ -9,6 +9,8 @@
 
 #include <string>
 
+namespace Tangram {
+
 class Label {
 
 public:
@@ -105,3 +107,5 @@ protected:
     glm::vec2 m_dim;
 
 };
+
+}

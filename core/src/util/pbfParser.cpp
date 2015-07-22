@@ -5,6 +5,8 @@
 
 #include <cmath> // for isnan
 
+namespace Tangram {
+
 void PbfParser::extractGeometry(protobuf::message& _geomIn, int _tileExtent, std::vector<Line>& _out, const Tile& _tile) {
 
     pbfGeomCmd cmd = pbfGeomCmd::moveTo;
@@ -241,4 +243,6 @@ void PbfParser::extractLayer(protobuf::message& _layerIn, Layer& _out, const Til
         _out.features.emplace_back();
         extractFeature(featureMsg, _out.features.back(), _tile, keys, numericValues, stringValues, tileExtent);
     }
+}
+
 }

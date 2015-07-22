@@ -4,8 +4,8 @@
 #include "tile/tile.h"
 #include "tileData.h"
 
+namespace Tangram {
 
-/* Extends NetworkDataSource class to read Mapzen's GeoJSON vector tiles */
 class GeoJsonSource: public DataSource {
 
 protected:
@@ -17,3 +17,5 @@ public:
     GeoJsonSource(const std::string& _name, const std::string& _urlTemplate);
 
 };
+
+}

@@ -5,6 +5,8 @@
 #include "gl/shaderProgram.h"
 #include "view/view.h"
 
+namespace Tangram {
+
 std::string DirectionalLight::s_classBlock;
 std::string DirectionalLight::s_typeName = "DirectionalLight";
 
@@ -59,5 +61,7 @@ std::string DirectionalLight::getInstanceAssignBlock() {
 const std::string& DirectionalLight::getTypeName() {
 
     return s_typeName;
+
+}
 
 }

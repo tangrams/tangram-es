@@ -9,6 +9,8 @@
 #include <mutex>
 #include <vector>
 
+namespace Tangram {
+
 class FontContext;
 class Tile;
 class View;
@@ -76,3 +78,5 @@ private:
     float m_currentZoom;
 
 };
+
+}

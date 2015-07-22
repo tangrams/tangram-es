@@ -5,6 +5,8 @@
 #include <functional>
 #include <vector>
 
+namespace Tangram {
+
 enum class CapTypes {
     butt = 0, // No points added to end of line
     square = 2, // Two points added to make a square extension
@@ -125,3 +127,5 @@ public:
     static void buildQuadAtPoint(const glm::vec2& _screenOrigin, const glm::vec2& _size, const glm::vec2& _uvBL, const glm::vec2& _uvTR, SpriteBuilder& _ctx);
 
 };
+
+}

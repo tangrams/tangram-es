@@ -6,6 +6,8 @@
 
 #include <cmath>
 
+namespace Tangram {
+
 MercatorProjection::MercatorProjection(int _tileSize) : MapProjection(ProjectionType::mercator), m_TileSize(_tileSize) {
     double invTileSize = 1.0/m_TileSize;
     m_Res = 2.0 * HALF_CIRCUMFERENCE * invTileSize;
@@ -95,4 +97,6 @@ glm::dvec2 MercatorProjection::TileCenter(const TileID _tileCoord) const {
     return PixelsToMeters(glm::dvec2(_tileCoord.x*m_TileSize +m_TileSize*0.5,
                                      (_tileCoord.y*m_TileSize+m_TileSize*0.5)),
                           _tileCoord.z);
+}
+
 }

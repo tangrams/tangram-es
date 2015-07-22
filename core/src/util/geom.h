@@ -52,6 +52,8 @@
 #define ABS(x) (((x) < 0) ? -(x) : (x))
 #endif
 
+namespace Tangram {
+
 struct BoundingBox {
 
     glm::dvec2 min;
@@ -80,3 +82,5 @@ glm::vec2 clipToScreenSpace(const glm::vec4& _clipCoords, const glm::vec2& _scre
 
 /* Computes the screen coordinates from a world position, a model view matrix and a screen size */
 glm::vec2 worldToScreenSpace(const glm::mat4& _mvp, const glm::vec4& _worldPosition, const glm::vec2& _screenSize);
+
+}

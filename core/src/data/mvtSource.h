@@ -4,6 +4,7 @@
 #include "tile/tile.h"
 #include "tileData.h"
 
+namespace Tangram {
 
 class MVTSource : public DataSource {
 
@@ -16,3 +17,5 @@ public:
     MVTSource(const std::string& _name, const std::string& _urlTemplate);
 
 };
+
+}

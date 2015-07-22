@@ -7,6 +7,8 @@
 #include "gl/shaderProgram.h"
 #include "gl/vertexLayout.h"
 
+namespace Tangram {
+
 namespace Primitives {
 
     static bool s_initialized;
@@ -127,4 +129,6 @@ namespace Primitives {
         glDrawArrays(GL_LINE_LOOP, 0, _n);
         popState();
     }
+}
+
 }

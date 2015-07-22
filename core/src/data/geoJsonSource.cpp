@@ -9,6 +9,7 @@
 #include "rapidjson/encodings.h"
 #include "rapidjson/encodedstream.h"
 
+namespace Tangram {
 
 GeoJsonSource::GeoJsonSource(const std::string& _name, const std::string& _urlTemplate) :
     DataSource(_name, _urlTemplate) {
@@ -48,3 +49,4 @@ std::shared_ptr<TileData> GeoJsonSource::parse(const Tile& _tile, std::vector<ch
 
 }
 
+}

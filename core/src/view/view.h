@@ -12,7 +12,9 @@
 
 #define MAX_LOD 6
 
-/* ViewModule
+namespace Tangram {
+
+/* View
  * 1. Stores a representation of the current view into the map world
  * 2. Determines which tiles are visible in the current view
  * 3. Tracks changes in the view state to determine when new rendering is needed
@@ -159,3 +161,4 @@ protected:
     
 };
 
+}

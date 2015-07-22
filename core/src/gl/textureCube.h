@@ -5,6 +5,8 @@
 #include <vector>
 #include <string>
 
+namespace Tangram {
+
 class TextureCube : public Texture {
     
 public:
@@ -39,3 +41,5 @@ private:
     void load(const std::string& _file);
 
 };
+
+}

@@ -7,7 +7,7 @@
 #include "tile/tileManager.h"
 #include "labels/labels.h"
 
-//---- DataSource Implementation----
+namespace Tangram {
 
 DataSource::DataSource(const std::string& _name, const std::string& _urlTemplate) :
     m_name(_name), m_urlTemplate(_urlTemplate) {
@@ -98,3 +98,4 @@ void DataSource::cancelLoadingTile(const TileID& _tileID) {
     cancelUrlRequest(constructURL(_tileID));
 }
 
+}

@@ -5,6 +5,8 @@
 
 #include <memory>
 
+namespace Tangram {
+
 class TileManager;
 class DataSource;
 
@@ -30,3 +32,5 @@ public:
 };
 
 typedef std::function<void(std::shared_ptr<TileTask>&&)> TileTaskCb;
+
+}

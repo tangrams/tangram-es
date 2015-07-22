@@ -5,6 +5,8 @@
 #include <string>
 #include <memory>
 
+namespace Tangram {
+
 class View;
 class ShaderProgram;
 class Texture;
@@ -39,3 +41,4 @@ private:
 
 };
 
+}

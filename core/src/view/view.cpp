@@ -8,6 +8,8 @@
 #include <cmath>
 #include <functional>
 
+namespace Tangram {
+
 constexpr float View::s_maxZoom; // Create a stack reference to the static member variable
 
 double invLodFunc(double d) {
@@ -391,5 +393,7 @@ void View::updateTiles() {
     // of the view trapezoid. This is necessary to not cull any geometry with height in these tiles
     // (which should remain visible, even though the base of the tile is not).
     scanTriangle(a, b, e, 0, maxTileIndex, s);
+
+}
 
 }

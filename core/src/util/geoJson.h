@@ -5,6 +5,8 @@
 
 #include <vector>
 
+namespace Tangram {
+
 class Tile;
 
 namespace GeoJson {
@@ -21,4 +23,4 @@ namespace GeoJson {
 
 }
 
-
+}

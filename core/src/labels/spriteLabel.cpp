@@ -1,5 +1,7 @@
 #include "spriteLabel.h"
 
+namespace Tangram {
+
 SpriteLabel::SpriteLabel(Label::Transform _transform, const glm::vec2& _size, size_t _bufferOffset) :
     Label(_transform, Label::Type::point),
     m_bufferOffset(_bufferOffset) {
@@ -20,4 +22,6 @@ void SpriteLabel::updateBBoxes() {
     glm::vec2 sp = m_transform.state.screenPos;
     m_obb = isect2d::OBB(sp.x, sp.y, m_transform.state.rotation, m_dim.x, m_dim.y);
     m_aabb = m_obb.getExtent();
+}
+
 }

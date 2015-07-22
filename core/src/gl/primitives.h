@@ -2,6 +2,8 @@
 
 #include "glm/vec2.hpp"
 
+namespace Tangram {
+
 namespace Primitives {
     
     /*
@@ -19,4 +21,6 @@ namespace Primitives {
      */
     void drawPoly(const glm::vec2* _polygon, size_t _n, glm::vec2 _resolution);
     
+}
+
 }

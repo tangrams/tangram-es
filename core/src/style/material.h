@@ -11,6 +11,8 @@ This openGL Material implementation follows from the WebGL version of Tangram
 #include "glm/vec3.hpp"
 #include "glm/vec4.hpp"
 
+namespace Tangram {
+
 class Texture;
 class ShaderProgram;
 
@@ -106,3 +108,5 @@ private:
     float m_shininess = .2f;
 
 };
+
+}

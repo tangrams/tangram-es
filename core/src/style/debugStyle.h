@@ -3,6 +3,8 @@
 #include "style.h"
 #include "gl/typedMesh.h"
 
+namespace Tangram {
+
 class DebugStyle : public Style {
 
 protected:
@@ -33,3 +35,5 @@ public:
     }
 
 };
+
+}

@@ -8,6 +8,8 @@
 #include <memory>
 #include <string>
 
+namespace Tangram {
+
 DebugStyle::DebugStyle(std::string _name, GLenum _drawMode) : Style(_name, _drawMode) {
 }
 
@@ -53,4 +55,6 @@ void DebugStyle::addData(TileData &_data, Tile &_tile) {
         _tile.addGeometry(*this, std::unique_ptr<VboMesh>(mesh));
 
     }
+}
+
 }

@@ -13,6 +13,8 @@
 #include <set>
 #include <mutex>
 
+namespace Tangram {
+
 class DataSource;
 class Tile;
 class Scene;
@@ -122,3 +124,5 @@ private:
 
     void enqueueLoadTask(const TileID& tileID, const glm::dvec2& viewCenter);
 };
+
+}

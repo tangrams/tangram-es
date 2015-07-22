@@ -5,6 +5,8 @@
 #include "gl/shaderProgram.h"
 #include "view/view.h"
 
+namespace Tangram {
+
 std::string SpotLight::s_classBlock;
 std::string SpotLight::s_typeName = "SpotLight";
 
@@ -85,5 +87,7 @@ std::string SpotLight::getInstanceAssignBlock() {
 const std::string& SpotLight::getTypeName() {
 
     return s_typeName;
+
+}
 
 }

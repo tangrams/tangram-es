@@ -5,6 +5,8 @@
 #include <string>
 #include <unordered_map>
 
+namespace Tangram {
+
 class Error {
 
 public:
@@ -22,3 +24,4 @@ private:
 
 };
 
+}

@@ -7,6 +7,8 @@
 #include "labels/labels.h"
 #include "labels/spriteAtlas.h"
 
+namespace Tangram {
+
 class Texture;
 
 class SpriteStyle : public Style {
@@ -38,3 +40,5 @@ public:
     virtual ~SpriteStyle();
 
 };
+
+}

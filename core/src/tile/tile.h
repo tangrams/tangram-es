@@ -11,6 +11,8 @@
 #include <vector>
 #include <atomic>
 
+namespace Tangram {
+
 class Label;
 class Labels;
 class MapProjection;
@@ -185,3 +187,5 @@ private:
     std::unordered_map<std::string, std::vector<std::shared_ptr<Label>>> m_labels;
 
 };
+
+}

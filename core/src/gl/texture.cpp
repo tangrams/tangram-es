@@ -8,6 +8,8 @@
 
 #include <cstring> // for memset
 
+namespace Tangram {
+
 GLuint Texture::s_boundTextures[] = { 0 };
 GLuint Texture::s_activeSlot = GL_TEXTURE0;
 int Texture::s_validGeneration = 0;
@@ -207,5 +209,7 @@ void Texture::invalidateAllTextures() {
     s_activeSlot = GL_TEXTURE0;
 
     ++s_validGeneration;
+
+}
 
 }

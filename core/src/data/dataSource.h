@@ -7,6 +7,8 @@
 #include <mutex>
 #include "tile/tileTask.h"
 
+namespace Tangram {
+
 struct TileData;
 struct TileID;
 class Tile;
@@ -73,3 +75,5 @@ protected:
     std::string m_urlTemplate; // URL template for requesting tiles from a network or filesystem
 
 };
+
+}

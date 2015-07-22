@@ -9,6 +9,8 @@
 
 #include <memory>
 
+namespace Tangram {
+
 class TextStyle : public Style {
 
 protected:
@@ -46,3 +48,5 @@ public:
     virtual ~TextStyle();
 
 };
+
+}

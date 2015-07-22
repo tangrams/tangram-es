@@ -7,6 +7,8 @@
 #include <memory>
 #include <string>
 
+namespace Tangram {
+
 struct TextureFiltering {
     GLenum m_min;
     GLenum m_mag;
@@ -111,3 +113,5 @@ private:
     // if (s_boundTextures[s] == h) then the texture with handle 'h' is currently bound at slot 's'
     static GLuint s_boundTextures[GL_MAX_COMBINED_TEXTURE_IMAGE_UNITS];
 };
+
+}

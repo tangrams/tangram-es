@@ -5,6 +5,8 @@
 #include "gl/texture.h"
 #include "glm/glm.hpp"
 
+namespace Tangram {
+
 struct SpriteNode {
     glm::vec2 m_uvBL;
     glm::vec2 m_uvTR;
@@ -30,3 +32,5 @@ private:
     std::string m_file;
     std::shared_ptr<Texture> m_texture;
 };
+
+}

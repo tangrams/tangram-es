@@ -5,6 +5,8 @@
 #include "gl/shaderProgram.h"
 #include "tile/tile.h"
 
+namespace Tangram {
+
 PolygonStyle::PolygonStyle(std::string _name, GLenum _drawMode) : Style(_name, _drawMode) {
 }
 
@@ -101,4 +103,6 @@ void PolygonStyle::buildPolygon(Polygon& _polygon, const StyleParamMap& _stylePa
 
     auto& mesh = static_cast<PolygonStyle::Mesh&>(_mesh);
     mesh.addVertices(std::move(vertices), std::move(builder.indices));
+}
+
 }

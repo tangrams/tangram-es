@@ -3,6 +3,8 @@
 #include "glm/gtx/string_cast.hpp"
 #include "platform.h"
 
+namespace Tangram {
+
 std::string AmbientLight::s_classBlock;
 std::string AmbientLight::s_typeName = "AmbientLight";
 
@@ -46,5 +48,7 @@ std::string AmbientLight::getInstanceAssignBlock() {
 const std::string& AmbientLight::getTypeName() {
 
     return s_typeName;
+
+}
 
 }
