@@ -20,4 +20,4 @@
 	url = https://github.com/glfw/glfw.git
 [submodule "core/dependencies/benchmark/benchmark"]
 	path = core/dependencies/benchmark/benchmark
-	url = git@github.com:google/benchmark.git
+	url = https://github.com:google/benchmark.git
