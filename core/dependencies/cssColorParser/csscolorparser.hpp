@@ -39,6 +39,7 @@ struct Color {
 };
 
 
+Color parse(const std::string& css_str, bool& isValid);
 Color parse(const std::string& css_str);
 
 }

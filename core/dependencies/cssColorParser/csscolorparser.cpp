@@ -203,27 +203,34 @@ float clamp_css_float(T f) {  // Clamp to float 0.0 .. 1.0.
     return f < 0 ? 0 : f > 1 ? 1 : f;
 }
 
-float parseFloat(const char* str) {
-    return strtof(str, nullptr);
+float parse_float(const std::string& str) {
+    return strtof(str.c_str(), nullptr);
 }
 
-int64_t parseInt(const char* str, uint8_t base = 10) {
-    return strtoll(str, nullptr, base);
+int64_t parse_int(const char* str, int& read, uint8_t base) {
+    char *pos = nullptr;
+    int64_t val = strtoll(str, &pos, base);
+    read = pos - str;
+    return val;
+}
+
+int64_t parse_int(const std::string& str) {
+    return strtoll(str.c_str(), nullptr, 10);
 }
 
 uint8_t parse_css_int(const std::string& str) {  // int or percentage.
     if (str.length() && str.back() == '%') {
-        return clamp_css_byte(parseFloat(str.c_str()) / 100.0f * 255.0f);
+        return clamp_css_byte(parse_float(str) / 100.0f * 255.0f);
     } else {
-        return clamp_css_byte(parseInt(str.c_str()));
+        return clamp_css_byte(parse_int(str));
     }
 }
 
 float parse_css_float(const std::string& str) {  // float or percentage.
     if (str.length() && str.back() == '%') {
-        return clamp_css_float(parseFloat(str.c_str()) / 100.0f);
+        return clamp_css_float(parse_float(str) / 100.0f);
     } else {
-        return clamp_css_float(parseFloat(str.c_str()));
+        return clamp_css_float(parse_float(str));
     }
 }
 
@@ -246,11 +253,41 @@ float css_hue_to_rgb(float m1, float m2, float h) {
     return m1;
 }
 
+bool match(char c, const std::string& text, size_t& pos, size_t end) {
+    if (end < pos + 1)
+        return false;
 
+    if (c != tolower(text[pos]))
+        return false;
 
-std::vector<std::string> split(const std::string& s, char delim) {
+    pos += 1;
+    return true;
+}
+
+bool match_prefix(const std::string& prefix, const std::string& text, size_t& pos, size_t end) {
+    size_t length = prefix.size();
+    if (end < length + pos)
+        return false;
+
+    for (size_t i = 0; i < length; ++i)
+        if (prefix[i] != tolower(text[pos+i]))
+            return false;
+
+    pos += length;
+    return true;
+}
+
+void skip_whitespace(const std::string& text, size_t& pos, size_t end){
+    while((pos < end) && (text[pos] == ' ')) {
+        pos++;
+    }
+}
+
+std::vector<std::string> split(const std::string& s, char delim, size_t position) {
     std::vector<std::string> elems;
     std::stringstream ss(s);
+    ss.seekg(position);
+
     std::string item;
     while (std::getline(ss, item, delim)) {
         elems.push_back(item);
@@ -264,21 +301,42 @@ uint32_t CSSColorParser::Color::getInt() {
 }
 
 Color CSSColorParser::parse(const std::string& css_str) {
-    int length = css_str.length();
+    bool valid;
+    return parse(css_str, valid);
+}
 
-    if (length == 0) {
+Color CSSColorParser::parse(const std::string& css_str, bool& valid) {
+    valid = false;
+
+    size_t pos = 0;
+    size_t end = css_str.length();
+
+    skip_whitespace(css_str, pos, end);
+    if (pos == end) {
         return {};
      }
 
     // #abc and #abc123 syntax.
-    if (css_str.front() == '#') {
-        const char* str = css_str.c_str()+1;
+    if (match('#', css_str, pos, end)) {
+        int read = 0;
 
-        if (length == 4) { // rgb
-            int64_t iv = parseInt(str, 16);  // TODO(deanm): Stricter parsing.
-            if (!(iv >= 0 && iv <= 0xfff)) {
-                return {};
-            } else {
+        const char* str = css_str.c_str() + pos;
+        int64_t iv = parse_int(str, read, 16);
+        if (iv < 0) {
+            // Invalid: out of range.
+            return {};
+        }
+
+        pos += read;
+        skip_whitespace(css_str, pos, end);
+        if (pos != end) {
+            // Invalid: contains trailing chars.
+            return {};
+        }
+
+        if (read == 3) { // rgb
+            if (iv <= 0xfff) {
+                valid = true;
                 return {
                     static_cast<uint8_t>(((iv & 0xf00) >> 4) | ((iv & 0xf00) >> 8)),
                     static_cast<uint8_t>((iv & 0xf0) | ((iv & 0xf0) >> 4)),
@@ -286,11 +344,9 @@ Color CSSColorParser::parse(const std::string& css_str) {
                     1
                 };
             }
-        } else if (length == 7) { // rrggbb
-            int64_t iv = parseInt(str, 16);
-            if (!(iv >= 0 && iv <= 0xffffff)) {
-                return {};  // Covers NaN.
-            } else {
+        } else if (read == 6) { // rrggbb
+            if (iv <= 0xffffff) {
+                valid = true;
                 return {
                     static_cast<uint8_t>((iv & 0xff0000) >> 16),
                     static_cast<uint8_t>((iv & 0xff00) >> 8),
@@ -298,11 +354,9 @@ Color CSSColorParser::parse(const std::string& css_str) {
                     1
                 };
             }
-        } else if (length == 5) { // argb
-            int64_t iv = parseInt(str, 16);
-            if (!(iv >= 0 && iv <= 0xffff)) {
-                return {};
-            } else {
+        } else if (read == 4) { // argb
+            if (iv <= 0xffff) {
+                valid = true;
                 return {
                     static_cast<uint8_t>(((iv & 0xf00) >> 4) | ((iv & 0xf00) >> 8)),
                     static_cast<uint8_t>((iv & 0xf0) | ((iv & 0xf0) >> 4)),
@@ -310,11 +364,9 @@ Color CSSColorParser::parse(const std::string& css_str) {
                     static_cast<uint8_t>((iv & 0xf000) >> 12) / 255.0f,
                 };
             }
-        } else if (length == 9) { // aarrggbb
-            int64_t iv = parseInt(str, 16);
-            if (!(iv >= 0 && iv <= 0xffffffff)) {
-                return {};  // Covers NaN.
-            } else {
+        } else if (read == 8) { // aarrggbb
+            if (iv <= 0xffffffff) {
+                valid = true;
                 return {
                     static_cast<uint8_t>((iv & 0xff0000) >> 16),
                     static_cast<uint8_t>((iv & 0xff00) >> 8),
@@ -323,27 +375,30 @@ Color CSSColorParser::parse(const std::string& css_str) {
                 };
             }
         }
+
         return {};
     }
 
-    // TODO avoid copy
-    std::string str = css_str;
+    bool rgb, hsl = false;
+    rgb = match_prefix("rgb", css_str, pos, end);
+    if (!rgb) {
+        hsl = match_prefix("hsl", css_str, pos, end);
+    }
+    if (rgb || hsl) {
 
-    // Remove all whitespace, not compliant, but should just be more accepting.
-    str.erase(std::remove(str.begin(), str.end(), ' '), str.end());
+        bool hasAlpha = match('a', css_str, pos, end);
 
-    // Convert to lowercase.
-    std::transform(str.begin(), str.end(), str.begin(), ::tolower);
+        if (!match('(', css_str, pos, end)) {
+            return {};
+        }
 
-    size_t op = str.find_first_of('('), ep = str.find_first_of(')');
-    if (op != std::string::npos && ep + 1 == str.length()) {
-        const std::string fname = str.substr(0, op);
-        const std::vector<std::string> params = split(str.substr(op + 1, ep - (op + 1)), ',');
+        // TODO: validation
+        const std::vector<std::string> params = split(css_str, ',', pos);
 
         float alpha = 1.0f;
 
-        if (fname == "rgba" || fname == "rgb") {
-            if (fname == "rgba") {
+        if (rgb) {
+            if (hasAlpha) {
                 if (params.size() != 4) {
                     return {};
                 }
@@ -354,6 +409,7 @@ Color CSSColorParser::parse(const std::string& css_str) {
                 }
             }
 
+            valid = true;
             return {
                 parse_css_int(params[0]),
                 parse_css_int(params[1]),
@@ -361,8 +417,8 @@ Color CSSColorParser::parse(const std::string& css_str) {
                 alpha
             };
 
-        } else if (fname == "hsla" || fname == "hsl") {
-            if (fname == "hsla") {
+        } else if (hsl) {
+            if (hasAlpha) {
                 if (params.size() != 4) {
                     return {};
                 }
@@ -373,7 +429,7 @@ Color CSSColorParser::parse(const std::string& css_str) {
                 }
             }
 
-            float h = parseFloat(params[0].c_str()) / 360.0f;
+            float h = parse_float(params[0].c_str()) / 360.0f;
             while (h < 0.0f) h++;
             while (h > 1.0f) h--;
 
@@ -385,6 +441,7 @@ Color CSSColorParser::parse(const std::string& css_str) {
             float m2 = l <= 0.5f ? l * (s + 1.0f) : l + s - l * s;
             float m1 = l * 2.0f - m2;
 
+            valid = true;
             return {
                 clamp_css_byte(css_hue_to_rgb(m1, m2, h + 1.0f / 3.0f) * 255.0f),
                 clamp_css_byte(css_hue_to_rgb(m1, m2, h) * 255.0f),
@@ -394,15 +451,31 @@ Color CSSColorParser::parse(const std::string& css_str) {
         }
     }
 
-    NamedColor v{str.c_str(), {}};
+    size_t length = end - pos;
 
-    auto end = (namedColors + namedColorCount);
-    auto it = std::lower_bound(namedColors, end, v,
-                     [](const NamedColor& a, const NamedColor& b){
-                         return std::strcmp(a.name, b.name) < 0; });
+    // Skip if longer than longest named color
+    if (length > 20)
+        return {};
 
-    if (it != end && std::strcmp(it->name, v.name) == 0)
+    // Convert to lowercase.
+    char cstr[32];
+    cstr[length] = '\0';
+
+    for (size_t i = 0; i < length; ++i) {
+        cstr[i] = std::tolower(css_str[pos++]);
+    }
+
+    // Binary search
+    auto itEnd = (namedColors + namedColorCount);
+    auto it = std::lower_bound(namedColors, itEnd, cstr,
+                     [](const NamedColor& a, const char* b) {
+                         return std::strcmp(a.name, b) < 0; });
+
+    if (it != itEnd && std::strcmp(it->name, cstr) == 0) {
+        valid = true;
         return it->color;
+    }
 
+    // No named color found
     return {};
 }
