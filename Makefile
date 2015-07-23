@@ -23,6 +23,7 @@ all: android osx ios
 .PHONY: cmake-rpi
 .PHONY: cmake-linux
 .PHONY: install-android
+.PHONY: benchmark
 
 ANDROID_BUILD_DIR = build/android
 OSX_BUILD_DIR = build/osx
@@ -33,6 +34,7 @@ RPI_BUILD_DIR = build/rpi
 LINUX_BUILD_DIR = build/linux
 TESTS_BUILD_DIR = build/tests
 UNIT_TESTS_BUILD_DIR = ${TESTS_BUILD_DIR}/unit
+BENCH_BUILD_DIR = build/bench
 
 TOOLCHAIN_DIR = toolchains
 OSX_TARGET = tangram
@@ -47,6 +49,9 @@ endif
 ifndef ANDROID_API_LEVEL
 	ANDROID_API_LEVEL = android-15
 endif
+
+BENCH_CMAKE_PARAMS = \
+	-DBENCHMARK=1
 
 UNIT_TESTS_CMAKE_PARAMS = \
 	-DUNIT_TESTS=1 \
@@ -188,6 +193,12 @@ unit-tests:
 	@mkdir -p ${UNIT_TESTS_BUILD_DIR}
 	@cd ${UNIT_TESTS_BUILD_DIR} && \
 	cmake ../../.. ${UNIT_TESTS_CMAKE_PARAMS} && \
+	${MAKE}
+
+benchmark:
+	@mkdir -p ${BENCH_BUILD_DIR}
+	@cd ${BENCH_BUILD_DIR} && \
+	cmake ../../ ${BENCH_CMAKE_PARAMS} && \
 	${MAKE}
 
 check-ndk:

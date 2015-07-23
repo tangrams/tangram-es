@@ -34,7 +34,7 @@ if(target_in_list EQUAL -1)
     return()
 endif()
 
-# setting up cache variable platform 
+# setting up cache variable platform
 set(PLATFORM ${varplatform} CACHE INTERNAL "platform" FORCE)
 
 if(UNIT_TESTS)
@@ -46,6 +46,13 @@ if(UNIT_TESTS)
     include(${PROJECT_SOURCE_DIR}/toolchains/unitTests.cmake)
   endif()
   return()
+endif()
+
+if(BENCHMARK)
+    message(STATUS "Build benchmarks for : ${PLATFORM_TARGET}")
+
+    include(${PROJECT_SOURCE_DIR}/toolchains/benchmark.cmake)
+    return()
 endif()
 
 # cmake inclusions and definitions
