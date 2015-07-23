@@ -30,6 +30,8 @@ import java.util.concurrent.TimeUnit;
 import javax.microedition.khronos.egl.EGLConfig;
 import javax.microedition.khronos.opengles.GL10;
 
+import android.util.Log;
+
 import okio.BufferedSource;
 
 public class MapController implements Renderer, OnTouchListener, OnScaleGestureListener, OnRotateGestureListener, OnGestureListener, OnShoveGestureListener {
@@ -262,6 +264,11 @@ public class MapController implements Renderer, OnTouchListener, OnScaleGestureL
     private ScaleGestureDetector scaleGestureDetector;
     private RotateGestureDetector rotateGestureDetector;
     private ShoveGestureDetector shoveGestureDetector;
+
+    private static final double SHOVE_THRESHOLD = 1f; //Make sure x span is within 2pix between subsequent 2 finger gestures
+    private static final double PINCH_THRESHOLD = 10f; //Make sure x span is at least 10pix for pinch to occur
+    private static final double ROTATION_THRESHOLD = 0.035f; //Make sure rotation is at least 0.02 radians
+
     private View.OnGenericMotionListener longPressListener;
     private DisplayMetrics displayMetrics = new DisplayMetrics();
 
@@ -274,8 +281,8 @@ public class MapController implements Renderer, OnTouchListener, OnScaleGestureL
     public boolean onTouch(View v, MotionEvent event) {
 
         gestureDetector.onTouchEvent(event);
-        shoveGestureDetector.onTouchEvent(event);
         scaleGestureDetector.onTouchEvent(event);
+        shoveGestureDetector.onTouchEvent(event);
         rotateGestureDetector.onTouchEvent(event);
 
         return true;
@@ -330,6 +337,8 @@ public class MapController implements Renderer, OnTouchListener, OnScaleGestureL
             float x = e2.getX();
             float y = e2.getY();
             handlePanGesture(x + distanceX, y + distanceY, x, y);
+        } else {
+            return false;
         }
         return true;
     }
@@ -359,13 +368,23 @@ public class MapController implements Renderer, OnTouchListener, OnScaleGestureL
 
     public boolean onScaleBegin(ScaleGestureDetector detector) {
         return !shoveGestureDetector.isInProgress();
+        //return false;
     }
 
     public boolean onScale(ScaleGestureDetector detector) {
         // the velocity of the pinch in scale factor per ms
         float velocity = (detector.getCurrentSpan() - detector.getPreviousSpan()) / detector.getTimeDelta();
-        handlePinchGesture(detector.getFocusX(), detector.getFocusY(), detector.getScaleFactor(), velocity);
-        return true;
+        float currentSpan = detector.getCurrentSpanX();
+        float prevSpan = detector.getPreviousSpanX();
+
+        double diff = Math.abs(currentSpan - prevSpan);
+
+        if( !shoveGestureDetector.isInProgress() || diff > PINCH_THRESHOLD) {
+            Log.d("Tangram Testing", "\t\tIn Scale\tPreviousSpan:" + prevSpan + "\tcurrentSpan: " + currentSpan + "\tDiff: " + diff);
+	        handlePinchGesture(detector.getFocusX(), detector.getFocusY(), detector.getScaleFactor(), velocity);
+            return true;
+        }
+        return false;
     }
 
     public void onScaleEnd(ScaleGestureDetector detector) {
@@ -376,14 +395,21 @@ public class MapController implements Renderer, OnTouchListener, OnScaleGestureL
 
     public boolean onRotateBegin(RotateGestureDetector detector) {
         return !shoveGestureDetector.isInProgress();
+        //return false;
     }
 
     public boolean onRotate(RotateGestureDetector detector) {
-        float x = scaleGestureDetector.getFocusX();
-        float y = scaleGestureDetector.getFocusY();
-        float rotation = -detector.getRotationDegreesDelta() * (float)(Math.PI / 180);
-        handleRotateGesture(x, y, rotation);
-        return true;
+
+        float rotation = detector.getRotationRadiansDelta();
+
+        if( !shoveGestureDetector.isInProgress() || Math.abs(rotation) > ROTATION_THRESHOLD) {
+            Log.d("Tangram Testing", "\t\tIn Rotate\trotationDiff: " + Math.abs(rotation));
+            float x = scaleGestureDetector.getFocusX();
+            float y = scaleGestureDetector.getFocusY();
+            handleRotateGesture(x, y, -rotation);
+            return true;
+        }
+        return false;
     }
 
     public void onRotateEnd(RotateGestureDetector detector) {
@@ -397,8 +423,18 @@ public class MapController implements Renderer, OnTouchListener, OnScaleGestureL
     }
 
     public boolean onShove(ShoveGestureDetector detector) {
-        handleShoveGesture(detector.getShovePixelsDelta() / displayMetrics.heightPixels);
-        return true;
+
+        float currentSpanX = detector.getCurrentSpanX();
+        float prevSpanX = detector.getPreviousSpanX();
+
+        double diffX = Math.abs(currentSpanX - prevSpanX);
+
+        if( !(scaleGestureDetector.isInProgress() && rotateGestureDetector.isInProgress()) || diffX < SHOVE_THRESHOLD ) {
+            Log.d("Tangram Testing", "\t\t\t\tIn Shove:\t" + diffX);
+            handleShoveGesture(detector.getShovePixelsDelta() / displayMetrics.heightPixels);
+            return true;
+        }
+        return false;
     }
 
     public void onShoveEnd(ShoveGestureDetector detector) {
