@@ -26,7 +26,7 @@ Style::~Style() {
 uint32_t Style::parseColorProp(const std::string& _colorPropStr) {
     uint32_t color = 0;
 
-    if (_colorPropStr.find(',') != std::string::npos) { // try to parse as comma-separated rgba components
+    if (isdigit(_colorPropStr.front())) { // try to parse as comma-separated rgba components
         std::istringstream stream(_colorPropStr);
         std::string token;
         unsigned char i = 0;
@@ -34,7 +34,11 @@ uint32_t Style::parseColorProp(const std::string& _colorPropStr) {
             color += (uint32_t(std::stod(token) * 255.)) << (8 * i++);
         }
     } else { // parse as css color or #hex-num
-        color = CSSColorParser::parse(_colorPropStr).getInt();
+        bool isValid;
+        color = CSSColorParser::parse(_colorPropStr, isValid).getInt();
+        if (!isValid) {
+            color = 0xffff00ff;
+        }
     }
     return color;
 }
