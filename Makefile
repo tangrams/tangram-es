@@ -14,6 +14,7 @@ all: android osx ios
 .PHONY: ios-sim
 .PHONY: rpi
 .PHONY: linux
+.PHONY: benchmark
 .PHONY: check-ndk
 .PHONY: cmake-osx
 .PHONY: cmake-xcode
@@ -23,7 +24,6 @@ all: android osx ios
 .PHONY: cmake-rpi
 .PHONY: cmake-linux
 .PHONY: install-android
-.PHONY: benchmark
 
 ANDROID_BUILD_DIR = build/android
 OSX_BUILD_DIR = build/osx
