@@ -15,15 +15,15 @@ import java.lang.Math;
  * Redistribution and use in source and binary forms, with or without modification, are permitted provided that the following conditions are met:
  *
  *  Redistributions of source code must retain the above copyright notice, this list of conditions and the following disclaimer.
- *  Redistributions in binary form must reproduce the above copyright notice, this list of conditions and the following disclaimer 
+ *  Redistributions in binary form must reproduce the above copyright notice, this list of conditions and the following disclaimer
  *  in the documentation and/or other materials provided with the distribution.
  *
- * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, 
- * INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED. 
- * IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, 
- * OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, 
- * OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, 
- * OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY 
+ * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES,
+ * INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED.
+ * IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY,
+ * OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA,
+ * OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY,
+ * OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY
  * OF SUCH DAMAGE.
  */
 public abstract class TwoFingerGestureDetector extends BaseGestureDetector {
@@ -31,33 +31,33 @@ public abstract class TwoFingerGestureDetector extends BaseGestureDetector {
     private final float mEdgeSlop;
     private float mRightSlopEdge;
     private float mBottomSlopEdge;
-    
+
 	protected float mPrevFingerDiffX;
 	protected float mPrevFingerDiffY;
 	protected float mCurrFingerDiffX;
 	protected float mCurrFingerDiffY;
-    
+
     private float mCurrLen;
     private float mPrevLen;
-	
+
     public TwoFingerGestureDetector(Context context) {
     	super(context);
-    	
+
         ViewConfiguration config = ViewConfiguration.get(context);
-        mEdgeSlop = config.getScaledEdgeSlop();       	
+        mEdgeSlop = config.getScaledEdgeSlop();
     }
-    
+
 	@Override
 	protected abstract void handleStartProgressEvent(int actionCode, MotionEvent event);
 
 	@Override
 	protected abstract void handleInProgressEvent(int actionCode, MotionEvent event);
-	
+
 	protected void updateStateByEvent(MotionEvent curr){
 		super.updateStateByEvent(curr);
-		
+
 		final MotionEvent prev = mPrevEvent;
-		
+
         mCurrLen = -1;
         mPrevLen = -1;
 
@@ -70,7 +70,7 @@ public abstract class TwoFingerGestureDetector extends BaseGestureDetector {
         final float pvy = py1 - py0;
         mPrevFingerDiffX = pvx;
         mPrevFingerDiffY = pvy;
-        
+
         // Current
         final float cx0 = curr.getX(0);
         final float cy0 = curr.getY(0);
@@ -81,11 +81,51 @@ public abstract class TwoFingerGestureDetector extends BaseGestureDetector {
         mCurrFingerDiffX = cvx;
         mCurrFingerDiffY = cvy;
 	}
-	
+
+	/**
+     * Return the current x-distance between the two pointers forming the
+     * gesture in progress.
+     *
+     * @return Distance between pointers in pixels.
+     */
+    public float getCurrentSpanX() {
+        return mCurrFingerDiffX;
+    }
+
+	/**
+     * Return the current y-distance between the two pointers forming the
+     * gesture in progress.
+     *
+     * @return Distance between pointers in pixels.
+     */
+    public float getCurrentSpanY() {
+        return mCurrFingerDiffY;
+    }
+
+	/**
+     * Return the previous x-distance between the two pointers forming the
+     * gesture in progress.
+     *
+     * @return Distance between pointers in pixels.
+     */
+    public float getPreviousSpanX() {
+        return mPrevFingerDiffX;
+    }
+
+	/**
+     * Return the previous y-distance between the two pointers forming the
+     * gesture in progress.
+     *
+     * @return Distance between pointers in pixels.
+     */
+    public float getPreviousSpanY() {
+        return mPrevFingerDiffY;
+    }
+
     /**
      * Return the current distance between the two pointers forming the
      * gesture in progress.
-     * 
+     *
      * @return Distance between pointers in pixels.
      */
     public float getCurrentSpan() {
@@ -100,7 +140,7 @@ public abstract class TwoFingerGestureDetector extends BaseGestureDetector {
     /**
      * Return the previous distance between the two pointers forming the
      * gesture in progress.
-     * 
+     *
      * @return Previous distance between pointers in pixels.
      */
     public float getPreviousSpan() {
@@ -111,9 +151,9 @@ public abstract class TwoFingerGestureDetector extends BaseGestureDetector {
         }
         return mPrevLen;
     }
-    
+
     /**
-     * MotionEvent has no getRawX(int) method; simulate it pending future API approval. 
+     * MotionEvent has no getRawX(int) method; simulate it pending future API approval.
      * @param event
      * @param pointerIndex
      * @return
@@ -122,12 +162,12 @@ public abstract class TwoFingerGestureDetector extends BaseGestureDetector {
         float offset = event.getX() - event.getRawX();
         if(pointerIndex < event.getPointerCount()){
         	return event.getX(pointerIndex) + offset;
-        } 
+        }
         return 0f;
     }
 
     /**
-     * MotionEvent has no getRawY(int) method; simulate it pending future API approval. 
+     * MotionEvent has no getRawY(int) method; simulate it pending future API approval.
      * @param event
      * @param pointerIndex
      * @return
@@ -136,14 +176,14 @@ public abstract class TwoFingerGestureDetector extends BaseGestureDetector {
         float offset = event.getY() - event.getRawY();
         if(pointerIndex < event.getPointerCount()){
         	return event.getY(pointerIndex) + offset;
-        } 
+        }
         return 0f;
     }
 
 	/**
 	 * Check if we have a sloppy gesture. Sloppy gestures can happen if the edge
 	 * of the user's hand is touching the screen, for example.
-	 * 
+	 *
 	 * @param event
 	 * @return
 	 */
@@ -152,11 +192,11 @@ public abstract class TwoFingerGestureDetector extends BaseGestureDetector {
         DisplayMetrics metrics = mContext.getResources().getDisplayMetrics();
         mRightSlopEdge = metrics.widthPixels - mEdgeSlop;
         mBottomSlopEdge = metrics.heightPixels - mEdgeSlop;
-        
+
         final float edgeSlop = mEdgeSlop;
         final float rightSlop = mRightSlopEdge;
         final float bottomSlop = mBottomSlopEdge;
-        
+
         final float x0 = event.getRawX();
         final float y0 = event.getRawY();
         final float x1 = getRawX(event, 1);
@@ -173,8 +213,8 @@ public abstract class TwoFingerGestureDetector extends BaseGestureDetector {
         	 return true;
         } else if (p1sloppy) {
         	 return true;
-        } 
+        }
         return false;
-    }    
+    }
 
 }
