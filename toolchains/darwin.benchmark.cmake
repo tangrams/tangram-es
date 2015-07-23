@@ -22,7 +22,7 @@ foreach(_src_file_path ${BENCH_SOURCES})
     string(REPLACE ".cpp" "" bench ${_src_file_path})
     string(REGEX MATCH "([^/]*)$" bench_name ${bench})
 
-    set(EXECUTABLE_NAME "${bench_name}.out")
+    set(EXECUTABLE_NAME "${bench_name}_bench.out")
 
     add_executable(${EXECUTABLE_NAME} ${_src_file_path} ${OSX_PLATFORM_SRC})
 
