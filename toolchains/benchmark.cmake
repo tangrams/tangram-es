@@ -17,18 +17,18 @@ set(OSX_PLATFORM_SRC ${PROJECT_SOURCE_DIR}/osx/src/platform_osx.mm)
 
 file(GLOB BENCH_SOURCES bench/*.cpp)
 
-# create an executable per test
-#foreach(_src_file_path ${BENCH_SOURCES})
-#    string(REPLACE ".cpp" "" test_case ${_src_file_path})
-#    string(REGEX MATCH "([^/]*)$" test_name ${test_case})
-#
-#    set(EXECUTABLE_NAME "${test_name}.out")
-#
-#    add_executable(${EXECUTABLE_NAME} ${_src_file_path} ${OSX_PLATFORM_SRC})
-#
-#    target_link_libraries(${EXECUTABLE_NAME} core glfw ${GLFW_LIBRARIES})
-#
-#endforeach(_src_file_path ${TEST_SOURCES})
+# create an executable per benchmark
+foreach(_src_file_path ${BENCH_SOURCES})
+    string(REPLACE ".cpp" "" bench ${_src_file_path})
+    string(REGEX MATCH "([^/]*)$" bench_name ${bench})
+
+    set(EXECUTABLE_NAME "${bench_name}.out")
+
+    add_executable(${EXECUTABLE_NAME} ${_src_file_path} ${OSX_PLATFORM_SRC})
+
+    target_link_libraries(${EXECUTABLE_NAME} benchmark core glfw ${GLFW_LIBRARIES})
+
+endforeach(_src_file_path ${TEST_SOURCES})
 
 # copy resources in order to make tests with resources dependency
 file(GLOB_RECURSE RESOURCES ${PROJECT_SOURCE_DIR}/core/resources/*)
