@@ -30,7 +30,7 @@ foreach(_src_file_path ${BENCH_SOURCES})
 
 endforeach(_src_file_path ${TEST_SOURCES})
 
-# copy resources in order to make tests with resources dependency
+# copy resources in order to make tests benchmark resources dependency
 file(GLOB_RECURSE RESOURCES ${PROJECT_SOURCE_DIR}/core/resources/*)
 foreach(_resource ${RESOURCES})
     file(COPY ${_resource} DESTINATION ${PROJECT_SOURCE_DIR}/build/bench/bin)
