@@ -7,6 +7,7 @@ all: android osx ios
 .PHONY: clean-ios
 .PHONY: clean-rpi
 .PHONY: clean-linux
+.PHONY: clean-benchmark
 .PHONY: android
 .PHONY: osx
 .PHONY: xcode
@@ -110,6 +111,9 @@ clean-xcode:
 
 clean-tests:
 	rm -rf ${TESTS_BUILD_DIR}
+
+clean-benchmark:
+	rm -rf ${BENCH_BUILD_DIR}
 
 android: android/tangram/libs/${ANDROID_ARCH}/libtangram.so android/build.gradle
 	@cd android/ && \
