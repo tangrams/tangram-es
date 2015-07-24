@@ -13,6 +13,7 @@
 #include "scene/skybox.h"
 #include "view/view.h"
 #include "gl/renderState.h"
+#include "util/inputHandler.h"
 #include <memory>
 #include <cmath>
 
@@ -24,6 +25,7 @@ namespace Tangram {
     std::shared_ptr<Labels> m_labels;
     std::shared_ptr<FontContext> m_ftContext;
     std::shared_ptr<Skybox> m_skybox;
+    std::unique_ptr<InputHandler> m_inputHandler;
 
     static float g_time = 0.0;
     static unsigned long g_flags = 0;
@@ -39,6 +41,9 @@ namespace Tangram {
 
             // Create a scene object
             m_scene = std::make_shared<Scene>();
+
+            // Input handler
+            m_inputHandler = std::unique_ptr<InputHandler>(new InputHandler(m_view));
 
             m_skybox = std::shared_ptr<Skybox>(new Skybox("cubemap.png"));
             m_skybox->init();
@@ -94,6 +99,8 @@ namespace Tangram {
         g_time += _dt;
 
         if (m_view) {
+
+            m_inputHandler->update(_dt);
 
             m_view->update();
 
@@ -251,61 +258,38 @@ namespace Tangram {
 
     void handleTapGesture(float _posX, float _posY) {
 
-        float viewCenterX = 0.5f * m_view->getWidth();
-        float viewCenterY = 0.5f * m_view->getHeight();
+        m_inputHandler->handleTapGesture(_posX, _posY);
 
-        m_view->screenToGroundPlane(viewCenterX, viewCenterY);
-        m_view->screenToGroundPlane(_posX, _posY);
-
-        m_view->translate((_posX - viewCenterX), (_posY - viewCenterY));
-
-        requestRender();
     }
 
     void handleDoubleTapGesture(float _posX, float _posY) {
 
-        handlePinchGesture(_posX, _posY, 2.f);
+        m_inputHandler->handleDoubleTapGesture(_posX, _posY);
+
     }
 
     void handlePanGesture(float _startX, float _startY, float _endX, float _endY) {
 
-        m_view->screenToGroundPlane(_startX, _startY);
-        m_view->screenToGroundPlane(_endX, _endY);
+        m_inputHandler->handlePanGesture(_startX, _startY, _endX, _endY);
 
-        m_view->translate(_startX - _endX, _startY - _endY);
-
-        requestRender();
     }
 
-    void handlePinchGesture(float _posX, float _posY, float _scale) {
+    void handlePinchGesture(float _posX, float _posY, float _scale, float _velocity) {
 
-        float viewCenterX = 0.5f * m_view->getWidth();
-        float viewCenterY = 0.5f * m_view->getHeight();
+        m_inputHandler->handlePinchGesture(_posX, _posY, _scale, _velocity);
 
-        m_view->screenToGroundPlane(viewCenterX, viewCenterY);
-        m_view->screenToGroundPlane(_posX, _posY);
-
-        m_view->translate((_posX - viewCenterX)*(1-1/_scale), (_posY - viewCenterY)*(1-1/_scale));
-
-        static float invLog2 = 1 / log(2);
-        m_view->zoom(log(_scale) * invLog2);
-
-        requestRender();
     }
 
     void handleRotateGesture(float _posX, float _posY, float _radians) {
 
-        m_view->screenToGroundPlane(_posX, _posY);
-        m_view->orbit(_posX, _posY, _radians);
+        m_inputHandler->handleRotateGesture(_posX, _posY, _radians);
 
-        requestRender();
     }
 
     void handleShoveGesture(float _distance) {
 
-        m_view->pitch(_distance);
+        m_inputHandler->handleShoveGesture(_distance);
 
-        requestRender();
     }
 
     void setDebugFlag(DebugFlags _flag, bool _on) {

@@ -18,7 +18,7 @@
 #include <iostream>
 
 #define KEY_ESC      113    // q
-#define KEY_ZOOM_IN  45     // - 
+#define KEY_ZOOM_IN  45     // -
 #define KEY_ZOOM_OUT 61     // =
 #define KEY_UP       119    // w
 #define KEY_LEFT     97     // a
@@ -26,7 +26,7 @@
 #define KEY_DOWN     122    // z
 
 struct timeval tv;
-unsigned long long timePrev, timeStart; 
+unsigned long long timePrev, timeStart;
 
 static bool bUpdate = true;
 
@@ -35,17 +35,17 @@ void setup();
 void newFrame();
 
 int main(int argc, char **argv){
-    
+
     // Start OpenGL context
     initGL(argc, argv);
 
     /* Do Curl Init */
     curl_global_init(CURL_GLOBAL_DEFAULT);
-    
+
     // Set background color and clear buffers
     Tangram::initialize();
     Tangram::resize(getWindowWidth(), getWindowHeight());
-    
+
     setup();
 
     // Start clock
@@ -62,7 +62,7 @@ int main(int argc, char **argv){
             newFrame();
         }
     }
-    
+
     curl_global_cleanup();
     closeGL();
     return 0;
@@ -84,8 +84,8 @@ void newFrame() {
     Tangram::update(delta);
     timePrev = timeNow;
 
-    // Render        
-    Tangram::render(); 
+    // Render
+    Tangram::render();
 
     renderGL();
 }
@@ -132,8 +132,8 @@ void onMouseClick(float _x, float _y, int _button) {
 void onMouseDrag(float _x, float _y, int _button) {
     if( _button == 1 ){
 
-        Tangram::handlePanGesture(  _x-getMouseVelX()*1.0, 
-                                    _y+getMouseVelY()*1.0, 
+        Tangram::handlePanGesture(  _x-getMouseVelX()*1.0,
+                                    _y+getMouseVelY()*1.0,
                                     _x,
                                     _y);
 
@@ -148,9 +148,9 @@ void onMouseDrag(float _x, float _y, int _button) {
         } else if ( getKeyPressed() == 't') {
             Tangram::handleShoveGesture(getMouseVelY()*0.005);
         } else {
-            Tangram::handlePinchGesture(getWindowWidth()/2.0, getWindowHeight()/2.0, 1.0 + getMouseVelY()*0.001);
+            Tangram::handlePinchGesture(getWindowWidth()/2.0, getWindowHeight()/2.0, 1.0 + getMouseVelY()*0.001, 0.f);
         }
-        
+
     }
     requestRender();
 }
