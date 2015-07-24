@@ -24,6 +24,8 @@ struct TextureOptions {
     TextureWrapping m_wrapping;
 };
 
+#define TANGRAM_MAX_TEXTURE_UNIT 4
+
 class Texture {
 
 public:
@@ -109,5 +111,5 @@ private:
     static GLuint s_activeSlot;
 
     // if (s_boundTextures[s] == h) then the texture with handle 'h' is currently bound at slot 's'
-    static GLuint s_boundTextures[GL_MAX_COMBINED_TEXTURE_IMAGE_UNITS];
+    static GLuint s_boundTextures[TANGRAM_MAX_TEXTURE_UNIT];
 };

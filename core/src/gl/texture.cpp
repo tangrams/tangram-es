@@ -43,7 +43,7 @@ Texture::Texture(const std::string& _file, TextureOptions _options, bool _genera
 }
 
 Texture::~Texture() {
-    for (size_t i = 0; i < GL_MAX_COMBINED_TEXTURE_IMAGE_UNITS; i++) {
+    for (size_t i = 0; i < TANGRAM_MAX_TEXTURE_UNIT; i++) {
         if (s_boundTextures[i] == m_glHandle) { s_boundTextures[i] = 0; }
     }
     if (m_glHandle) { glDeleteTextures(1, &m_glHandle); }
@@ -51,7 +51,7 @@ Texture::~Texture() {
 
 void Texture::bind(GLuint _textureSlot) {
 
-    if (_textureSlot >= GL_MAX_COMBINED_TEXTURE_IMAGE_UNITS) {
+    if (_textureSlot >= TANGRAM_MAX_TEXTURE_UNIT) {
 
         // Trying to access an invalid texture unit
         return;
@@ -194,14 +194,14 @@ size_t Texture::bytesPerPixel() {
 }
 
 GLuint Texture::getTextureUnit(GLuint _unit) {
-    if (_unit >= GL_MAX_COMBINED_TEXTURE_IMAGE_UNITS) { logMsg("Warning: trying to access unavailable texture unit"); }
+    if (_unit >= TANGRAM_MAX_TEXTURE_UNIT) { logMsg("Warning: trying to access unavailable texture unit"); }
 
     return GL_TEXTURE0 + _unit;
 }
 
 void Texture::invalidateAllTextures() {
 
-    for (GLuint i = 0; i < GL_MAX_COMBINED_TEXTURE_IMAGE_UNITS; ++i) {
+    for (GLuint i = 0; i < TANGRAM_MAX_TEXTURE_UNIT; ++i) {
         s_boundTextures[i] = 0;
     }
     s_activeSlot = GL_TEXTURE0;
