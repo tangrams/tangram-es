@@ -65,16 +65,16 @@ public class ShoveGestureDetector extends TwoFingerGestureDetector {
 	private float mPrevFinger1Y;
 	private float mCurrFinger1Y;
 
+    private float mStartY0;
+    private float mStartY1;
+
     private final OnShoveGestureListener mListener;
     private boolean mSloppyGesture;
-
-    //private double mStartAvgY;
-    //private boolean mInitiated;
+    private boolean mInitiated;
 
     public ShoveGestureDetector(Context context, OnShoveGestureListener listener) {
     	super(context);
         mListener = listener;
-        //mStartAvgY = 0.0f;
     }
 
     @Override
@@ -87,20 +87,32 @@ public class ShoveGestureDetector extends TwoFingerGestureDetector {
                 mPrevEvent = MotionEvent.obtain(event);
                 mTimeDelta = 0;
 
+                mStartY0 = event.getY(0);
+                mStartY1 = event.getY(1);
+
                 updateStateByEvent(event);
 
-                // See if we have a sloppy gesture
-                mSloppyGesture = isSloppyGesture(event);
-                if(!mSloppyGesture){
-                	// No, start gesture now
-                    mGestureInProgress = mListener.onShoveBegin(this);
-                }
+                // Make this event explicitly sloppy
+                mInitiated = isSloppyGesture(event);
+                mSloppyGesture = true;
             	break;
 
             case MotionEvent.ACTION_MOVE:
-                if (!mSloppyGesture) {
-                	break;
+
+                // Check for previous MOVE events (stop doing when last MOVE was not sloppy and shove started)
+                if (!mSloppyGesture && mInitiated) {
+                    break;
                 }
+
+                // Update Previous
+                if(mPrevEvent != null) mPrevEvent.recycle();
+                mPrevEvent = MotionEvent.obtain(event);
+
+                if(mPrevEvent.getPointerCount() != 2) {
+                    break;
+                }
+
+                updateStateByEvent(event);
 
                 // See if we still have a sloppy gesture
                 mSloppyGesture = isSloppyGesture(event);
@@ -164,25 +176,19 @@ public class ShoveGestureDetector extends TwoFingerGestureDetector {
     @Override
     protected void resetState() {
         super.resetState();
-        //mInitiated = false;
         mSloppyGesture = false;
+        mInitiated = false;
 
         //mimic google map behavior (and use the first finger down for getting pixelDelta
         mCurrFinger0Y = 0.0f;
         mPrevFinger0Y = 0.0f;
         mCurrFinger1Y = 0.0f;
         mPrevFinger1Y = 0.0f;
-        //mStartAvgY = 0.0f;
     }
 
     @Override
     protected void updateStateByEvent(MotionEvent curr){
 		super.updateStateByEvent(curr);
-
-        //if(!mInitiated) {
-            //mInitiated = true;
-            //mStartAvgY = (curr.getY(0) + curr.getY(1)) * 0.5;
-        //}
 
 		final MotionEvent prev = mPrevEvent;
 		float py0 = prev.getY(0);
@@ -206,17 +212,30 @@ public class ShoveGestureDetector extends TwoFingerGestureDetector {
     	// is acceptable.
     	double angle = Math.abs(Math.atan2(mCurrFingerDiffY, mCurrFingerDiffX));
     	//about 20 degrees, left or right
-        return !(( 0.0f < angle && angle < 0.35f)
+
+        boolean badAngle = !(( 0.0f < angle && angle < 0.35f)
                 || 2.79f < angle && angle < Math.PI);
-        //boolean badAngle = !(( 0.0f < angle && angle < 0.35f)
+        //return !(( 0.0f < angle && angle < 0.35f)
                 //|| 2.79f < angle && angle < Math.PI);
+        if(badAngle)
+            return true;
 
-        //if(badAngle)
-            //return true;
+        // Make sure there is sufficient drag in the 2 fingers
+        // Make sure xspan between the 2 fingers is not more than 3pixels
+        final float drag0 = event.getY(0) - mStartY0;
+        final float drag1 = event.getY(1) - mStartY1;
 
-        //double drag = Math.abs( ((event.getY(0) + event.getY(1)) * 0.5) - mStartAvgY);
-        //Log.d("Tangram Testing", "\tDrag: " + drag);
-        //return  !(drag > 30f); //at least cover 10 pixels
+        final float xSpanDiff = mCurrFingerDiffX - mPrevFingerDiffX;
+
+        if(drag0 < 3f || drag1 < 3f) {
+            return true;
+        } else if(drag0 < 5f && drag1 < 5f) {
+            return true;
+        } else if(xSpanDiff > 15f) {
+            return true;
+        }
+
+        return false;
     }
 
 
