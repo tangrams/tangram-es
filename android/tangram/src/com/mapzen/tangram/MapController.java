@@ -30,8 +30,6 @@ import java.util.concurrent.TimeUnit;
 import javax.microedition.khronos.egl.EGLConfig;
 import javax.microedition.khronos.opengles.GL10;
 
-import android.util.Log;
-
 import okio.BufferedSource;
 
 public class MapController implements Renderer, OnTouchListener, OnScaleGestureListener, OnRotateGestureListener, OnGestureListener, OnShoveGestureListener {
@@ -265,9 +263,11 @@ public class MapController implements Renderer, OnTouchListener, OnScaleGestureL
     private RotateGestureDetector rotateGestureDetector;
     private ShoveGestureDetector shoveGestureDetector;
 
-    private static final double SHOVE_THRESHOLD = 1f; //Make sure x span is within 2pix between subsequent 2 finger gestures
-    private static final double PINCH_THRESHOLD = 10f; //Make sure x span is at least 10pix for pinch to occur
-    private static final double ROTATION_THRESHOLD = 0.035f; //Make sure rotation is at least 0.02 radians
+    private static final float PINCH_THRESHOLD = 20f; //Make sure x span is at least 20
+    private static final float ROTATION_THRESHOLD = 0.035f; //Make sure rotation is at least 0.02 radians
+
+    private boolean mScaleHandled = false;
+    private boolean mRotationHandled = false;
 
     private View.OnGenericMotionListener longPressListener;
     private DisplayMetrics displayMetrics = new DisplayMetrics();
@@ -367,8 +367,8 @@ public class MapController implements Renderer, OnTouchListener, OnScaleGestureL
     // ===================================================
 
     public boolean onScaleBegin(ScaleGestureDetector detector) {
+        mScaleHandled = false;
         return !shoveGestureDetector.isInProgress();
-        //return false;
     }
 
     public boolean onScale(ScaleGestureDetector detector) {
@@ -379,62 +379,79 @@ public class MapController implements Renderer, OnTouchListener, OnScaleGestureL
 
         double diff = Math.abs(currentSpan - prevSpan);
 
-        if( !shoveGestureDetector.isInProgress() || diff > PINCH_THRESHOLD) {
-            Log.d("Tangram Testing", "\t\tIn Scale\tPreviousSpan:" + prevSpan + "\tcurrentSpan: " + currentSpan + "\tDiff: " + diff);
-	        handlePinchGesture(detector.getFocusX(), detector.getFocusY(), detector.getScaleFactor(), velocity);
+         /*
+          * If Shove is in progress do not handle scale
+          * If previous scale is handled then keep on handling scale
+          * else give some buffer for shove to be processed
+          */
+        if( mScaleHandled || (!shoveGestureDetector.isInProgress() && diff > PINCH_THRESHOLD)) {
+            mScaleHandled = true;
+			handlePinchGesture(detector.getFocusX(), detector.getFocusY(), detector.getScaleFactor(), velocity);
             return true;
         }
+        mScaleHandled = false;
         return false;
     }
 
     public void onScaleEnd(ScaleGestureDetector detector) {
+        mScaleHandled = false;
     }
 
     // RotateGestureDetector.OnRotateGestureListener methods
     // =====================================================
 
     public boolean onRotateBegin(RotateGestureDetector detector) {
+        mRotationHandled = false;
         return !shoveGestureDetector.isInProgress();
-        //return false;
     }
 
     public boolean onRotate(RotateGestureDetector detector) {
 
+        // TODO: Handle for the loss of this THRESHOLD, when the rotation first starts
+        //       very small rotations will have noticable jumps
+        // TODO: Rotate about focal point vs rotate about stattionary finger
+
         float rotation = detector.getRotationRadiansDelta();
 
-        if( !shoveGestureDetector.isInProgress() || Math.abs(rotation) > ROTATION_THRESHOLD) {
-            Log.d("Tangram Testing", "\t\tIn Rotate\trotationDiff: " + Math.abs(rotation));
+         /*
+          * If Shove is in progress do not handle rotation
+          * If previous rotation is handled then keep on handling it
+          * else give some buffer for shove to be processed
+          */
+        if( mRotationHandled || (!shoveGestureDetector.isInProgress() && (Math.abs(rotation) > ROTATION_THRESHOLD)) ) {
+            mRotationHandled = true;
             float x = scaleGestureDetector.getFocusX();
             float y = scaleGestureDetector.getFocusY();
-            handleRotateGesture(x, y, -rotation);
+            handleRotateGesture(x, y, -(rotation));
             return true;
         }
+        mRotationHandled = false;
         return false;
     }
 
     public void onRotateEnd(RotateGestureDetector detector) {
+        mRotationHandled = false;
     }
 
     // ShoveGestureDetector.OnShoveGestureListener methods
     // ===================================================
 
     public boolean onShoveBegin(ShoveGestureDetector detector) {
-        return !(scaleGestureDetector.isInProgress() || rotateGestureDetector.isInProgress());
+        // If scale has started being handled ignore shove
+        return (!mScaleHandled || !mRotationHandled);
     }
 
     public boolean onShove(ShoveGestureDetector detector) {
+
+        if(mScaleHandled || mRotationHandled) return false;
 
         float currentSpanX = detector.getCurrentSpanX();
         float prevSpanX = detector.getPreviousSpanX();
 
         double diffX = Math.abs(currentSpanX - prevSpanX);
 
-        if( !(scaleGestureDetector.isInProgress() && rotateGestureDetector.isInProgress()) || diffX < SHOVE_THRESHOLD ) {
-            Log.d("Tangram Testing", "\t\t\t\tIn Shove:\t" + diffX);
-            handleShoveGesture(detector.getShovePixelsDelta() / displayMetrics.heightPixels);
-            return true;
-        }
-        return false;
+        handleShoveGesture(detector.getShovePixelsDelta() / displayMetrics.heightPixels);
+        return true;
     }
 
     public void onShoveEnd(ShoveGestureDetector detector) {

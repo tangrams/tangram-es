@@ -222,10 +222,10 @@ public class ShoveGestureDetector extends TwoFingerGestureDetector {
 
         // Make sure there is sufficient drag in the 2 fingers
         // Make sure xspan between the 2 fingers is not more than 3pixels
-        final float drag0 = event.getY(0) - mStartY0;
-        final float drag1 = event.getY(1) - mStartY1;
+        final float drag0 = Math.abs(event.getY(0) - mStartY0);
+        final float drag1 = Math.abs(event.getY(1) - mStartY1);
 
-        final float xSpanDiff = mCurrFingerDiffX - mPrevFingerDiffX;
+        final float xSpanDiff = Math.abs(mCurrFingerDiffX - mPrevFingerDiffX);
 
         if(drag0 < 3f || drag1 < 3f) {
             return true;
