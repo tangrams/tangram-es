@@ -11,7 +11,7 @@ InputHandler::InputHandler(std::shared_ptr<View> _view) : m_view(_view) {
 
 void InputHandler::update(float _dt) {
 
-    bool hasMomentum = glm::length(m_deltaTranslate) > m_minDeltaLength || std::fabs(m_deltaZoom) > m_minDeltaZoomLength;
+    bool hasMomentum = glm::length(m_deltaTranslate) > m_minDeltaLength || std::abs(m_deltaZoom) > m_minDeltaZoomLength;
 
     if (!m_gestureOccured && hasMomentum) {
 
