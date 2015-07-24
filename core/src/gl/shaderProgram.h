@@ -1,7 +1,6 @@
 #pragma once
 
 #include "gl.h"
-#include "texture.h"
 #include "glm/vec2.hpp"
 #include "glm/vec3.hpp"
 #include "glm/vec4.hpp"
@@ -129,8 +128,5 @@ private:
     GLuint makeCompiledShader(const std::string& _src, GLenum _type);
 
     void applySourceBlocks(std::string& _vertSrcOut, std::string& _fragSrcOut);
-
-    std::unordered_map<std::string, Texture::TextureSlot> m_textureSlots;
-    GLuint m_freeTextureUnit;
 
 };
