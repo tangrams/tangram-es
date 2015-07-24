@@ -7,7 +7,7 @@ set(EXECUTABLE_NAME "tangram")
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} 
     -fobjc-abi-version=2 
     -fobjc-arc 
-    -std=gnu++11 
+    -std=c++14 
     -stdlib=libc++ 
     -isysroot ${CMAKE_IOS_SDK_ROOT}")
 set(CMAKE_CXX_FLAGS_DEBUG "-g -O0")
