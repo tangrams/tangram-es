@@ -71,7 +71,7 @@ void Labels::addLabel(Tile& _tile, const std::string& _styleName, std::shared_pt
 void Labels::update(float _dt, const std::vector<std::unique_ptr<Style>>& _styles,
                     const std::map<TileID, std::shared_ptr<Tile>>& _tiles) {
 
-    Label::s_needUpdate = false;
+    m_needUpdate = false;
 
     // FIXME value is used on tile-worker thread (see addTextLabel)
     m_currentZoom = m_view->getZoom();
@@ -95,7 +95,7 @@ void Labels::update(float _dt, const std::vector<std::unique_ptr<Style>>& _style
         for (const auto& style : _styles) {
 
             for (auto& label : tile->getLabels(*style)) {
-                label->update(mvp, screenSize, _dt);
+                m_needUpdate |= label->update(mvp, screenSize, _dt);
 
                 if (label->canOcclude()) {
                     m_aabbs.push_back(label->getAABB());
@@ -153,13 +153,10 @@ void Labels::update(float _dt, const std::vector<std::unique_ptr<Style>>& _style
             }
         }
     }
-}
 
-void Labels::lazyRenderRequest() {
-
-    if (Label::s_needUpdate) {
+    // Request for render if labels are in fading in/out states
+    if (m_needUpdate)
         requestRender();
-    }
 }
 
 void Labels::drawDebug() {

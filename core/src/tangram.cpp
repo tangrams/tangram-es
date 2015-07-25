@@ -114,9 +114,6 @@ void update(float _dt) {
         m_labels->update(_dt, m_scene->getStyles(), tileSet);
     }
 
-    // Request for render if labels are in fading in/out states
-    m_labels->lazyRenderRequest();
-
     if (m_scene) {
         // Update lights and styles
     }

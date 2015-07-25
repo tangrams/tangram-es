@@ -59,9 +59,7 @@ public:
 
     void update(float _dt, const std::vector<std::unique_ptr<Style>>& _styles, const std::map<TileID, std::shared_ptr<Tile>>& _tiles);
 
-    void lazyRenderRequest();
-
-    bool needUpdate() { return Label::s_needUpdate; }
+    bool needUpdate() { return m_needUpdate; }
 
 private:
 
@@ -70,17 +68,17 @@ private:
     int LODDiscardFunc(float _maxZoom, float _zoom);
 
     Labels();
-    std::vector<Label*> m_labels;
 
     // reference to the <FontContext>
     std::shared_ptr<FontContext> m_ftContext;
 
     std::shared_ptr<View> m_view;
     float m_currentZoom;
+    bool m_needUpdate;
 
-
+    // temporary data used in update()
+    std::vector<Label*> m_labels;
     std::vector<isect2d::AABB> m_aabbs;
-
 };
 
 }
