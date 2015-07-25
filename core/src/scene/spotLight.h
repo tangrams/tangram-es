@@ -3,6 +3,8 @@
 #include "pointLight.h"
 #include "glm/vec3.hpp"
 
+namespace Tangram {
+
 class SpotLight : public PointLight {
 public:
     
@@ -38,3 +40,5 @@ private:
     static std::string s_typeName;
     
 };
+
+}

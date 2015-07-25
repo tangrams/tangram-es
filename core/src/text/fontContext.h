@@ -12,6 +12,8 @@
 #include <vector>
 #include <map>
 
+namespace Tangram {
+
 class TextBuffer;
 
 class FontContext {
@@ -59,3 +61,5 @@ private:
     FONScontext* m_fsContext;
 
 };
+
+}

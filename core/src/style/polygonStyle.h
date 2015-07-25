@@ -7,6 +7,8 @@
 
 #include <mutex>
 
+namespace Tangram {
+
 class PolygonStyle : public Style {
 
 protected:
@@ -52,3 +54,5 @@ public:
     virtual ~PolygonStyle() {
     }
 };
+
+}

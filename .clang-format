@@ -29,7 +29,7 @@ IndentWrappedFunctionNames: false
 IndentFunctionDeclarationAfterType: false
 MaxEmptyLinesToKeep: 2
 KeepEmptyLinesAtTheStartOfBlocks: true
-NamespaceIndentation: All
+NamespaceIndentation: None
 ObjCBlockIndentWidth: 2
 ObjCSpaceAfterProperty: false
 ObjCSpaceBeforeProtocolList: true

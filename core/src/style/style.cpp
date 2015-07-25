@@ -11,6 +11,8 @@
 
 #include <sstream>
 
+namespace Tangram {
+
 std::unordered_map<Style::StyleCacheKey, StyleParamMap> Style::s_styleParamMapCache;
 std::mutex Style::s_cacheMutex;
 
@@ -223,4 +225,6 @@ void Style::buildLine(Line& _line, const StyleParamMap& _styleParamMap, Properti
 
 void Style::buildPolygon(Polygon& _polygon, const StyleParamMap& _styleParamMap, Properties& _props, VboMesh& _mesh, Tile& _tile) const {
     // No-op by default
+}
+
 }

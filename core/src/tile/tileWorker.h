@@ -12,6 +12,8 @@
 #include <thread>
 #include <mutex>
 
+namespace Tangram {
+
 class TileManager;
 class DataSource;
 class Tile;
@@ -46,3 +48,4 @@ private:
     std::vector<std::shared_ptr<TileTask>> m_queue;
 };
 
+}

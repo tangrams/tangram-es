@@ -1,6 +1,8 @@
 #include "vboMesh.h"
 #include "shaderProgram.h"
 
+namespace Tangram {
+
 int VboMesh::s_validGeneration = 0;
 
 VboMesh::VboMesh() {
@@ -214,5 +216,7 @@ void VboMesh::checkValidity() {
 void VboMesh::invalidateAllVBOs() {
 
     ++s_validGeneration;
+
+}
 
 }

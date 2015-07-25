@@ -5,6 +5,8 @@
 #include <cstring> // for memcpy
 #include <cstdlib>
 
+namespace Tangram {
+
 TextureCube::TextureCube(std::string _file, TextureOptions _options) : Texture(0, 0, _options) {
 
     m_target = GL_TEXTURE_CUBE_MAP;
@@ -69,4 +71,6 @@ void TextureCube::update(GLuint _textureUnit) {
         Face& f = m_faces[i];
         glTexImage2D(CubeMapFace[i], 0, m_options.m_internalFormat, m_width, m_height, 0, m_options.m_format, GL_UNSIGNED_BYTE, f.m_data.data());
     }
+}
+
 }

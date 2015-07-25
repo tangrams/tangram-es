@@ -6,6 +6,8 @@
 #include "tile/tileID.h"
 #include "geom.h"
 
+namespace Tangram {
+
 enum class ProjectionType {
     mercator
 };
@@ -156,3 +158,4 @@ public:
     virtual ~MercatorProjection() {}
 };
 
+}

@@ -4,6 +4,8 @@
 #include "tile/tile.h"
 #include "util/mapProjection.h"
 
+namespace Tangram {
+
 void GeoJson::extractPoint(const rapidjson::Value& _in, Point& _out, const Tile& _tile) {
 
     glm::dvec2 tmp = _tile.getProjection()->LonLatToMeters(glm::dvec2(_in[0].GetDouble(), _in[1].GetDouble()));
@@ -126,5 +128,7 @@ void GeoJson::extractLayer(const rapidjson::Value& _in, Layer& _out, const Tile&
         _out.features.emplace_back();
         extractFeature(*featureJson, _out.features.back(), _tile);
     }
+
+}
 
 }

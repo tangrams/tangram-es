@@ -15,6 +15,8 @@
 #include <string>
 #include <vector>
 
+namespace Tangram {
+
 class Light;
 class Tile;
 class MapProjection;
@@ -22,17 +24,14 @@ class VboMesh;
 class VertexLayout;
 class View;
 class Scene;
+struct Value;
+using Context = std::unordered_map<std::string, Value>;
 
 enum class LightingType : char {
     none,
     vertex,
     fragment
 };
-
-namespace Tangram {
-    struct Value;
-    using Context = std::unordered_map<std::string, Value>;
-}
 
 /* Means of constructing and rendering map geometry
  *
@@ -71,7 +70,7 @@ protected:
 
     /* vector of SceneLayers a style can operator on */
     /* TODO: decouple layers and styles so that sublayers can apply different styles than the parent */
-    std::vector<std::shared_ptr<Tangram::SceneLayer>> m_layers;
+    std::vector<std::shared_ptr<SceneLayer>> m_layers;
 
     /* Create <VertexLayout> corresponding to this style; subclasses must implement this and call it on construction */
     virtual void constructVertexLayout() = 0;
@@ -100,8 +99,8 @@ protected:
      * Parameter maps for a set of layers is determined by merging parameters maps for individual layers matching the
      * filters and keyed based on a uniqueID defined by the id of the matching layers.
      */
-    void applyLayerFiltering(const Feature& _feature, const Tangram::Context& _ctx, StyleCacheKey& _uniqueID,
-                             StyleParamMap& _styleParamMapMix, std::shared_ptr<Tangram::SceneLayer> _uberLayer) const;
+    void applyLayerFiltering(const Feature& _feature, const Context& _ctx, StyleCacheKey& _uniqueID,
+                             StyleParamMap& _styleParamMapMix, std::shared_ptr<SceneLayer> _uberLayer) const;
 
     /* Perform any needed setup to process the data for a tile */
     virtual void onBeginBuildTile(VboMesh& _mesh) const;
@@ -125,7 +124,7 @@ public:
     virtual void build(const std::vector<std::unique_ptr<Light>>& _lights);
 
     /* Add layers to which this style will apply */
-    void addLayer(std::shared_ptr<Tangram::SceneLayer> _layer);
+    void addLayer(std::shared_ptr<SceneLayer> _layer);
 
     /* Add styled geometry from the given <TileData> object to the given <Tile> */
     virtual void addData(TileData& _data, Tile& _tile);
@@ -149,3 +148,5 @@ public:
     const std::string& getName() const { return m_name; }
 
 };
+
+}

@@ -3,6 +3,8 @@
 #include "vboMesh.h"
 #include <cstdlib> // std::abs
 
+namespace Tangram {
+
 template<class T>
 class TypedMesh : public VboMesh {
 
@@ -126,4 +128,6 @@ void TypedMesh<T>::updateVertices(GLintptr _byteOffset, unsigned int _nVerts, co
     }
 
     setDirty(_byteOffset, _nVerts * tSize);
+}
+
 }

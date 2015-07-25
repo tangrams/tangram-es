@@ -4,6 +4,8 @@
 #include "gl/texture.h"
 #include "gl/vboMesh.h"
 
+namespace Tangram {
+
 TextBuffer::TextBuffer(std::shared_ptr<FontContext> _fontContext, std::shared_ptr<VertexLayout> _vertexLayout)
     : TypedMesh<BufferVert>(_vertexLayout, GL_TRIANGLES, GL_DYNAMIC_DRAW) {
 
@@ -105,4 +107,6 @@ void TextBuffer::unbind() {
         m_fontContext->unlock();
         m_bound = false;
     }
+}
+
 }

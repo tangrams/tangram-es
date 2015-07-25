@@ -6,6 +6,8 @@
 #include <vector>
 #include <unordered_map>
 
+namespace Tangram {
+
 class Style;
 class Texture;
 
@@ -36,3 +38,4 @@ private:
 
 };
 
+}

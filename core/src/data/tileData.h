@@ -49,6 +49,7 @@ Data heirarchy:
   A <Point> is 3 32-bit floating point coordinates representing x, y, and z (in that order).
 
 */
+namespace Tangram {
 
 enum GeometryType {
     unknown,
@@ -134,3 +135,4 @@ struct TileData {
 
 };
 
+}

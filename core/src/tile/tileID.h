@@ -8,6 +8,8 @@
  * 3. y, lowest to highest
  */
 
+namespace Tangram {
+
 struct TileID {
 
     const int x;
@@ -59,3 +61,5 @@ struct TileID {
 };
 
 static TileID NOT_A_TILE(-1, -1, -1);
+
+}

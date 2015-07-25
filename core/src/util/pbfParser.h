@@ -6,6 +6,8 @@
 #include <vector>
 #include <string>
 
+namespace Tangram {
+
 class Tile;
 
 namespace PbfParser {
@@ -21,4 +23,6 @@ namespace PbfParser {
         lineTo = 2,
         closePath = 7
     };
+}
+
 }

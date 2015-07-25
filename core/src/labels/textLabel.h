@@ -3,6 +3,8 @@
 #include "label.h"
 #include "text/textBuffer.h"
 
+namespace Tangram {
+
 class TextLabel : public Label {
 
 public:
@@ -24,3 +26,5 @@ protected:
     
     void updateBBoxes() override;
 };
+
+}

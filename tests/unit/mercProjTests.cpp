@@ -9,6 +9,7 @@
 
 #include <stdio.h>
 
+using namespace Tangram;
 
 TEST_CASE( "Testing some functionality for mercator projection", "[MERCATOR][PROJECTION]" ) {
     MercatorProjection mercProjection = MercatorProjection();

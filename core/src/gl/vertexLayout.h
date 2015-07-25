@@ -7,6 +7,8 @@
 #include <memory>
 #include <string>
 
+namespace Tangram {
+
 class ShaderProgram;
 
 class VertexLayout {
@@ -39,3 +41,5 @@ private:
     GLint m_stride;
 
 };
+
+}

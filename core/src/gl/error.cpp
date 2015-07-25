@@ -1,5 +1,7 @@
 #include "error.h"
 
+namespace Tangram {
+
 std::unordered_map<GLenum, std::string> Error::s_GlErrorCodesToStrings = {
         {GL_NO_ERROR, "GL_NO_ERROR"},
         {GL_INVALID_ENUM, "GL_INVALID_ENUM"},
@@ -22,4 +24,6 @@ bool Error::hadGlError(const std::string& _locationTag) {
     }
 
     return false;
+}
+
 }

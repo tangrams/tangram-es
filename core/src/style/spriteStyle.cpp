@@ -11,6 +11,8 @@
 #include "glm/gtc/matrix_transform.hpp"
 #include "glm/gtc/type_ptr.hpp"
 
+namespace Tangram {
+
 SpriteStyle::SpriteStyle(std::string _name, GLenum _drawMode) : Style(_name, _drawMode) {
 
     m_labels = Labels::GetInstance();
@@ -112,4 +114,6 @@ void SpriteStyle::onBeginDrawFrame(const std::shared_ptr<View>& _view, const std
     RenderState::blending(GL_TRUE);
     RenderState::blendingFunc({GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA});
     RenderState::depthTest(GL_FALSE);
+}
+
 }

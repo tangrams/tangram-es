@@ -7,6 +7,8 @@
 #include <string>
 #include <vector>
 
+namespace Tangram {
+
 class ShaderProgram;
 class View;
 
@@ -109,3 +111,5 @@ private:
     static std::string s_mainLightingBlock;
 
 };
+
+}

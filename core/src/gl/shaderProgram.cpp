@@ -3,6 +3,7 @@
 #include "platform.h"
 #include "scene/light.h"
 
+namespace Tangram {
 
 GLuint ShaderProgram::s_activeGlProgram = 0;
 int ShaderProgram::s_validGeneration = 0;
@@ -331,4 +332,6 @@ void ShaderProgram::setUniformMatrix4f(const std::string& _name, const float* _v
     use();
     GLint location = getUniformLocation(_name);
     if (location >= 0) { glUniformMatrix4fv(location, 1, _transpose, _value); }
+}
+
 }

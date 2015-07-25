@@ -10,10 +10,10 @@
 
 #define MAX_INDEX_VALUE 65535 // Maximum value of GLushort
 
+namespace Tangram {
 /*
  * VboMesh - Drawable collection of geometry contained in a vertex buffer and (optionally) an index buffer
  */
-
 class VboMesh {
 
 public:
@@ -166,3 +166,5 @@ protected:
         m_isCompiled = true;
     }
 };
+
+}

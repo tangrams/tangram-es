@@ -5,22 +5,21 @@
 #include <memory>
 #include "style/styleParamMap.h"
 
-class Scene;
-class TileManager;
-class View;
-class ShaderProgram;
-class Material;
-struct MaterialTexture;
-
 /* Forward Declaration of yaml-cpp node type */
 namespace YAML {
     class Node;
 }
 
 namespace Tangram {
-    struct Filter;
-    class SceneLayer;
-}
+
+class Scene;
+class TileManager;
+class SceneLayer;
+class View;
+class ShaderProgram;
+class Material;
+struct MaterialTexture;
+struct Filter;
 
 class SceneLoader {
 
@@ -49,3 +48,5 @@ public:
 
     Tangram::Filter generateFilter(YAML::Node filter);
 };
+
+}

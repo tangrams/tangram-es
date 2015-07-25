@@ -4,6 +4,8 @@
 #include "gl.h"
 #include "platform.h"
 
+namespace Tangram {
+
 namespace RenderState {
 
     template <typename T>
@@ -98,3 +100,4 @@ namespace RenderState {
     void configure();
 }
 
+}

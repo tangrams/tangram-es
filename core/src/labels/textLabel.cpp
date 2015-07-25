@@ -1,5 +1,7 @@
 #include "textLabel.h"
 
+namespace Tangram {
+
 TextLabel::TextLabel(Label::Transform _transform, std::string _text, fsuint _id, Type _type) :
     Label(_transform, _type),
     m_text(_text),
@@ -38,4 +40,6 @@ void TextLabel::pushTransform(VboMesh& _mesh) {
         buffer.transformID(m_id, m_transform.state);
         m_dirty = false;
     }
+}
+
 }

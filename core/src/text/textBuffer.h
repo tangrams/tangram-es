@@ -8,6 +8,8 @@
 
 #include <memory>
 
+namespace Tangram {
+
 struct BufferVert {
     glm::vec2 pos;
     glm::vec2 uv;
@@ -68,3 +70,5 @@ private:
     std::shared_ptr<FontContext> m_fontContext;
 
 };
+
+}

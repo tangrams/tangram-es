@@ -2,6 +2,8 @@
 #define GLFONTSTASH_IMPLEMENTATION
 #include "glfontstash.h"
 
+namespace Tangram {
+
 FontContext::FontContext() : FontContext(512) {}
 
 FontContext::FontContext(int _atlasSize) : m_contextMutex(std_patch::make_unique<std::mutex>()) {
@@ -89,4 +91,6 @@ void updateBuffer(void* _userPtr, GLintptr _offset, GLsizei _size, float* _newDa
 void FontContext::initFontContext(int _atlasSize) {
     m_atlas = std::unique_ptr<Texture>(new Texture(_atlasSize, _atlasSize));
     m_fsContext = glfonsCreate(_atlasSize, _atlasSize, FONS_ZERO_TOPLEFT, { false, updateBuffer, updateAtlas }, (void*) this);
+}
+
 }

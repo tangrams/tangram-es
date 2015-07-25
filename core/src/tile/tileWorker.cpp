@@ -12,6 +12,8 @@
 
 #define WORKER_NICENESS 10
 
+namespace Tangram {
+
 TileWorker::TileWorker(TileManager& _tileManager, int _num_worker)
     : m_tileManager(_tileManager) {
     m_running = true;
@@ -129,4 +131,6 @@ void TileWorker::stop() {
     for (std::thread &worker: m_workers) {
         worker.join();
     }
+}
+
 }

@@ -19,6 +19,8 @@ void free(void* _userData, void* _ptr) {
     free(_ptr);
 }
 
+namespace Tangram {
+
 static TESSalloc allocator = {&alloc, &realloc, &free, nullptr,
                               64, // meshEdgeBucketSize
                               64, // meshVertexBucketSize
@@ -368,4 +370,6 @@ void Builders::buildQuadAtPoint(const glm::vec2& _screenPosition, const glm::vec
     
     _ctx.numVerts += 4;
     
+}
+
 }

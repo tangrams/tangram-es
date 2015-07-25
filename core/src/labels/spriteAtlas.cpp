@@ -1,6 +1,8 @@
 #include "spriteAtlas.h"
 #include "platform.h"
 
+namespace Tangram {
+
 SpriteAtlas::SpriteAtlas(const std::string& _file) : m_file(_file) {
     m_texture = std::shared_ptr<Texture>(new Texture(_file));
 }
@@ -30,4 +32,6 @@ bool SpriteAtlas::hasSpriteNode(const std::string& _name) const {
 void SpriteAtlas::bind(GLuint _slot) {
     m_texture->update(_slot);
     m_texture->bind(_slot);
+}
+
 }

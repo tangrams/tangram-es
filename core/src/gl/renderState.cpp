@@ -1,5 +1,7 @@
 #include "renderState.h"
 
+namespace Tangram {
+
 namespace RenderState {
 
     State<Blending> blending = State<Blending>();
@@ -21,5 +23,7 @@ namespace RenderState {
         glDepthRangef(0.0, 1.0);
         glClearColor(0.3, 0.3, 0.3, 1.0);
     }
+
+}
 
 }

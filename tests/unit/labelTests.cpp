@@ -8,6 +8,8 @@
 
 #define EPSILON 0.00001
 
+using namespace Tangram;
+
 glm::vec2 screenSize(500.f, 500.f);
 
 TEST_CASE( "Ensure the transition from wait -> sleep when occlusion happens", "[Core][Label]" ) {

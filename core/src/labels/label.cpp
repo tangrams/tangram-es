@@ -2,6 +2,8 @@
 
 #include "util/geom.h"
 
+namespace Tangram {
+
 bool Label::s_needUpdate = false;
 
 Label::Label(Label::Transform _transform, Type _type) :
@@ -211,3 +213,4 @@ void Label::updateState(const glm::mat4& _mvp, const glm::vec2& _screenSize, flo
     }
 }
 
+}

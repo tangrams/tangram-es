@@ -4,6 +4,8 @@
 #include <iostream>
 #include "gl/typedMesh.h"
 
+using namespace Tangram;
+
 struct Vertex {
     float a;
     float b;

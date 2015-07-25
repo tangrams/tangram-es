@@ -4,6 +4,8 @@
 #include "platform.h"
 #include "gl/shaderProgram.h"
 
+namespace Tangram {
+
 std::string Light::s_mainLightingBlock;
 
 Light::Light(const std::string& _name, bool _dynamic):
@@ -132,4 +134,6 @@ std::string Light::getInstanceAssignBlock() {
 
 std::string Light::getInstanceComputeBlock() {
     return "calculateLight("+getInstanceName()+", _eyeToPoint, _normal);\n";
+}
+
 }

@@ -6,6 +6,8 @@
 #include "gl/vboMesh.h"
 #include "view/view.h"
 
+namespace Tangram {
+
 TextStyle::TextStyle(const std::string& _fontName, std::string _name, float _fontSize, unsigned int _color, bool _sdf, bool _sdfMultisampling, GLenum _drawMode)
 : Style(_name, _drawMode), m_fontName(_fontName), m_fontSize(_fontSize), m_color(_color), m_sdf(_sdf), m_sdfMultisampling(_sdfMultisampling)  {
     m_labels = Labels::GetInstance();
@@ -150,4 +152,6 @@ void TextStyle::onBeginDrawFrame(const std::shared_ptr<View>& _view, const std::
     RenderState::blending(GL_TRUE);
     RenderState::blendingFunc({GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA});
     RenderState::depthTest(GL_FALSE);
+}
+
 }

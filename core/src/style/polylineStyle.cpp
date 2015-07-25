@@ -4,6 +4,8 @@
 #include "gl/shaderProgram.h"
 #include "tile/tile.h"
 
+namespace Tangram {
+
 PolylineStyle::PolylineStyle(std::string _name, GLenum _drawMode) : Style(_name, _drawMode) {
 }
 
@@ -135,4 +137,6 @@ void PolylineStyle::buildLine(Line& _line, const StyleParamMap& _styleParamMap, 
 
     auto& mesh = static_cast<PolylineStyle::Mesh&>(_mesh);
     mesh.addVertices(std::move(vertices), std::move(builder.indices));
+}
+
 }

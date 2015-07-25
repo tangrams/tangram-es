@@ -4,6 +4,8 @@
 #include "tile/tileID.h"
 #include <set>
 
+using namespace Tangram;
+
 TEST_CASE( "Create TileIDs and check that they are correctly ordered", "[Core][TileID]" ) {
 
     TileID a = TileID(1, 1, 1);

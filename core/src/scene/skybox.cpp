@@ -5,6 +5,8 @@
 #include "glm/gtc/type_ptr.hpp"
 #include "gl/renderState.h"
 
+namespace Tangram {
+
 Skybox::Skybox(std::string _file) : m_file(_file) {}
 
 void Skybox::init() {
@@ -64,4 +66,4 @@ void Skybox::draw(const View& _view) {
 
 }
 
-
+}

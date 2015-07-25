@@ -11,6 +11,7 @@
 #include "glm/gtc/matrix_transform.hpp"
 #include "glm/gtc/type_ptr.hpp"
 
+namespace Tangram {
 
 Tile::Tile(TileID _id, const MapProjection& _projection)
     : m_id(_id),
@@ -101,4 +102,6 @@ std::shared_ptr<VboMesh>& Tile::getGeometry(const Style& _style) {
 
 void Tile::addLabel(const std::string& _styleName, std::shared_ptr<Label> _label) {
     m_labels[_styleName].push_back(std::move(_label));
+}
+
 }

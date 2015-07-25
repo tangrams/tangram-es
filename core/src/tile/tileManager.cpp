@@ -14,6 +14,8 @@
 #define DBG(...)
 // logMsg(__VA_ARGS__)
 
+namespace Tangram {
+
 TileManager::TileManager()
     : m_loadPending(0) {
 
@@ -359,4 +361,6 @@ void TileManager::clearProxyTiles(Tile& _tile) {
             removeTile(tileIter);
         }
     }
+}
+
 }

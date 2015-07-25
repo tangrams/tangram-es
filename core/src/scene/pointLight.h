@@ -2,6 +2,8 @@
 
 #include "light.h"
 
+namespace Tangram {
+
 class PointLight : public Light {
 public:
 
@@ -41,3 +43,5 @@ private:
     static std::string s_typeName;
 
 };
+
+}

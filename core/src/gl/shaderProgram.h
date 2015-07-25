@@ -10,10 +10,10 @@
 #include <map>
 #include <unordered_map>
 
+namespace Tangram {
 /*
  * ShaderProgram - utility class representing an OpenGL shader program
  */
-
 class ShaderProgram {
 
 public:
@@ -130,3 +130,5 @@ private:
     void applySourceBlocks(std::string& _vertSrcOut, std::string& _fragSrcOut);
 
 };
+
+}

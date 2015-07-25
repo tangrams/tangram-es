@@ -8,6 +8,8 @@
 
 #include <mutex>
 
+namespace Tangram {
+
 class PolylineStyle : public Style {
 
 protected:
@@ -61,3 +63,5 @@ public:
     virtual ~PolylineStyle() {
     }
 };
+
+}

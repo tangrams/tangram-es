@@ -7,6 +7,8 @@
 
 #include "glm/gtc/matrix_transform.hpp"
 
+namespace Tangram {
+
 Labels::Labels() {}
 
 Labels::~Labels() {}
@@ -170,5 +172,7 @@ void Labels::drawDebug() {
             }
         }
     }
+
+}
 
 }

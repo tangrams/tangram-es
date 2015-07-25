@@ -2,6 +2,8 @@
 
 #include "light.h"
 
+namespace Tangram {
+
 class AmbientLight : public Light {
 public:
     
@@ -25,3 +27,5 @@ private:
     static std::string s_typeName;
     
 };
+
+}

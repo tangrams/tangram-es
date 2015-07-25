@@ -21,7 +21,8 @@
 
 using YAML::Node;
 using YAML::BadConversion;
-using namespace Tangram;
+
+namespace Tangram {
 
 void SceneLoader::loadScene(const std::string& _file, Scene& _scene, TileManager& _tileManager, View& _view) {
 
@@ -826,5 +827,7 @@ void SceneLoader::loadLayers(Node layers, Scene& scene, TileManager& tileManager
     }
 
     // tileManager isn't used yet, but we'll need it soon to get the list of data sources
+
+}
 
 }

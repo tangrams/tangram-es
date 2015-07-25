@@ -3,6 +3,8 @@
 #include "platform.h"
 #include "style/style.h"
 
+namespace Tangram {
+
 Scene::Scene() {
 
 }
@@ -29,5 +31,7 @@ void Scene::addLight(std::unique_ptr<Light> _light) {
     }
 
     m_lights.push_back(std::move(_light));
+
+}
 
 }
