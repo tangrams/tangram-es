@@ -63,8 +63,6 @@ public:
 
 private:
 
-    void addLabel(Tile& _tile, const std::string& _styleName, std::shared_ptr<Label> _label);
-
     int LODDiscardFunc(float _maxZoom, float _zoom);
 
     Labels();
@@ -73,7 +71,6 @@ private:
     std::shared_ptr<FontContext> m_ftContext;
 
     std::shared_ptr<View> m_view;
-    float m_currentZoom;
     bool m_needUpdate;
 
     // temporary data used in update()

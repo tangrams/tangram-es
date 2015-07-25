@@ -20,13 +20,6 @@ int Labels::LODDiscardFunc(float _maxZoom, float _zoom) {
 
 std::shared_ptr<Label> Labels::addTextLabel(Tile& _tile, TextBuffer& _buffer, const std::string& _styleName,
                                             Label::Transform _transform, std::string _text, Label::Type _type) {
-    // FIXME: the current view should not be used to determine whether a label is shown at all
-    // otherwise results will be random
-
-    // discard based on level of detail
-    if ((m_currentZoom - _tile.getID().z) > LODDiscardFunc(View::s_maxZoom, m_currentZoom)) {
-        return nullptr;
-    }
 
     fsuint textID = _buffer.genTextID();
 
@@ -39,7 +32,7 @@ std::shared_ptr<Label> Labels::addTextLabel(Tile& _tile, TextBuffer& _buffer, co
         return nullptr;
     }
 
-    addLabel(_tile, _styleName, label);
+    _tile.addLabel(_styleName, label);
 
     return label;
 }
@@ -47,25 +40,11 @@ std::shared_ptr<Label> Labels::addTextLabel(Tile& _tile, TextBuffer& _buffer, co
 std::shared_ptr<Label> Labels::addSpriteLabel(Tile& _tile, const std::string& _styleName, Label::Transform _transform,
                                               const glm::vec2& _size, size_t _bufferOffset) {
 
-    if ((m_currentZoom - _tile.getID().z) > LODDiscardFunc(View::s_maxZoom, m_currentZoom)) {
-        return nullptr;
-    }
-
     auto label = std::shared_ptr<Label>(new SpriteLabel(_transform, _size, _bufferOffset));
-    addLabel(_tile, _styleName, label);
+
+    _tile.addLabel(_styleName, label);
 
     return label;
-}
-
-void Labels::addLabel(Tile& _tile, const std::string& _styleName, std::shared_ptr<Label> _label) {
-
-    auto modelMatrix = glm::scale(glm::mat4(1.0), glm::vec3(_tile.getScale()));
-    // NB: viewOrigin.z is only determined by screen width and height.
-    const auto& viewOrigin = m_view->getPosition();
-    modelMatrix[3][2] = -viewOrigin.z;
-
-    _label->update(m_view->getViewProjectionMatrix() * modelMatrix, {m_view->getWidth(), m_view->getHeight()}, 0);
-    _tile.addLabel(_styleName, _label);
 }
 
 void Labels::update(float _dt, const std::vector<std::unique_ptr<Style>>& _styles,
@@ -74,7 +53,7 @@ void Labels::update(float _dt, const std::vector<std::unique_ptr<Style>>& _style
     m_needUpdate = false;
 
     // FIXME value is used on tile-worker thread (see addTextLabel)
-    m_currentZoom = m_view->getZoom();
+    float zoom = m_view->getZoom();
 
     std::set<std::pair<Label*, Label*>> occlusions;
 
@@ -84,16 +63,20 @@ void Labels::update(float _dt, const std::vector<std::unique_ptr<Style>>& _style
 
     glm::vec2 screenSize = glm::vec2(m_view->getWidth(), m_view->getHeight());
 
-    // update labels for specific style
+    //// update labels for specific style
     for (const auto& mapIDandTile : _tiles) {
         const auto& tile = mapIDandTile.second;
 
         if (!tile->isReady()) { continue; }
 
+        // discard based on level of detail
+        if ((zoom - tile->getID().z) > LODDiscardFunc(View::s_maxZoom, zoom)) {
+            continue;
+        }
+
         glm::mat4 mvp = m_view->getViewProjectionMatrix() * tile->getModelMatrix();
 
         for (const auto& style : _styles) {
-
             for (auto& label : tile->getLabels(*style)) {
                 m_needUpdate |= label->update(mvp, screenSize, _dt);
 
@@ -110,7 +93,6 @@ void Labels::update(float _dt, const std::vector<std::unique_ptr<Style>>& _style
     }
 
     //// manage occlusions
-
     // broad phase
     auto pairs = intersect(m_aabbs, {4, 4}, {m_view->getWidth(), m_view->getHeight()});
 
@@ -145,12 +127,18 @@ void Labels::update(float _dt, const std::vector<std::unique_ptr<Style>>& _style
         label->occlusionSolved();
     }
 
-    for (const auto& style : _styles) {
-        for (const auto& mapIDandTile : _tiles) {
-            const auto& tile = mapIDandTile.second;
-            if (tile->isReady()) {
-                tile->pushLabelTransforms(*style);
-            }
+    //// update meshes
+    for (const auto& mapIDandTile : _tiles) {
+        const auto& tile = mapIDandTile.second;
+
+        if (!tile->isReady()) { continue; }
+
+        if ((zoom - tile->getID().z) > LODDiscardFunc(View::s_maxZoom, zoom)) {
+            continue;
+        }
+
+        for (const auto& style : _styles) {
+            tile->pushLabelTransforms(*style);
         }
     }
 
