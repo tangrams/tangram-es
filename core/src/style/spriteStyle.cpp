@@ -89,9 +89,9 @@ void SpriteStyle::buildPoint(Point& _point, const StyleParamMap&, Properties& _p
 
     size_t bufferOffset = _mesh.numVertices() * m_vertexLayout->getStride() + m_stateAttribOffset;
 
-    auto label = m_labels->addSpriteLabel(_tile, m_name, t,
-                                          spriteNode.m_size * spriteScale,
-                                          bufferOffset);
+    auto label = addSpriteLabel(_tile, t,
+                                spriteNode.m_size * spriteScale,
+                                bufferOffset);
 
     if (label) {
         Builders::buildQuadAtPoint(label->getTransform().state.screenPos + offset,
@@ -101,6 +101,16 @@ void SpriteStyle::buildPoint(Point& _point, const StyleParamMap&, Properties& _p
 
     auto& mesh = static_cast<SpriteStyle::Mesh&>(_mesh);
     mesh.addVertices(std::move(vertices), std::move(builder.indices));
+}
+
+std::shared_ptr<Label> SpriteStyle::addSpriteLabel(Tile& _tile, Label::Transform _transform,
+                                                   const glm::vec2& _size, size_t _bufferOffset) const {
+
+    auto label = std::shared_ptr<Label>(new SpriteLabel(_transform, _size, _bufferOffset));
+
+    _tile.addLabel(m_name, label);
+
+    return label;
 }
 
 void SpriteStyle::onBeginDrawFrame(const std::shared_ptr<View>& _view, const std::shared_ptr<Scene>& _scene) {

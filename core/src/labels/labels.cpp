@@ -18,34 +18,6 @@ int Labels::LODDiscardFunc(float _maxZoom, float _zoom) {
     return (int) MIN(floor(((log(-_zoom + (_maxZoom + 2)) / log(_maxZoom + 2) * (_maxZoom )) * 0.5)), MAX_LOD);
 }
 
-std::shared_ptr<Label> Labels::addTextLabel(Tile& _tile, TextBuffer& _buffer, const std::string& _styleName,
-                                            Label::Transform _transform, std::string _text, Label::Type _type) {
-
-    fsuint textID = _buffer.genTextID();
-
-    std::shared_ptr<TextLabel> label(new TextLabel(_transform, _text, textID, _type));
-
-    // raterize the text label
-    if (!label->rasterize(_buffer)) {
-
-        label.reset();
-        return nullptr;
-    }
-
-    _tile.addLabel(_styleName, label);
-
-    return label;
-}
-
-std::shared_ptr<Label> Labels::addSpriteLabel(Tile& _tile, const std::string& _styleName, Label::Transform _transform,
-                                              const glm::vec2& _size, size_t _bufferOffset) {
-
-    auto label = std::shared_ptr<Label>(new SpriteLabel(_transform, _size, _bufferOffset));
-
-    _tile.addLabel(_styleName, label);
-
-    return label;
-}
 
 void Labels::update(float _dt, const std::vector<std::unique_ptr<Style>>& _styles,
                     const std::map<TileID, std::shared_ptr<Tile>>& _tiles) {

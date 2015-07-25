@@ -53,7 +53,7 @@ void TextStyle::buildPoint(Point& _point, const StyleParamMap& _styleParamMap, P
     }
 
     Label::Transform t { glm::vec2(_point), glm::vec2(_point), glm::vec2(0) };
-    m_labels->addTextLabel(_tile, buffer, m_name, t, text, Label::Type::point);
+    addTextLabel(_tile, buffer, t, text, Label::Type::point);
 }
 
 void TextStyle::buildLine(Line& _line, const StyleParamMap& _styleParamMap, Properties& _props, VboMesh& _mesh, Tile& _tile) const {
@@ -80,7 +80,7 @@ void TextStyle::buildLine(Line& _line, const StyleParamMap& _styleParamMap, Prop
             continue;
         }
 
-        m_labels->addTextLabel(_tile, buffer, m_name, { p1, p2, glm::vec2(0) }, text, Label::Type::line);
+        addTextLabel(_tile, buffer, { p1, p2, glm::vec2(0) }, text, Label::Type::line);
     }
 }
 
@@ -107,7 +107,26 @@ void TextStyle::buildPolygon(Polygon& _polygon, const StyleParamMap& _styleParam
 
     Label::Transform t { centroid, centroid, glm::vec2(0) };
 
-    m_labels->addTextLabel(_tile, buffer, m_name, t, text, Label::Type::point);
+    addTextLabel(_tile, buffer, t, text, Label::Type::point);
+}
+
+std::shared_ptr<Label> TextStyle::addTextLabel(Tile& _tile, TextBuffer& _buffer, Label::Transform _transform,
+                                               std::string _text, Label::Type _type) const {
+
+    fsuint textID = _buffer.genTextID();
+
+    std::shared_ptr<TextLabel> label(new TextLabel(_transform, _text, textID, _type));
+
+    // raterize the text label
+    if (!label->rasterize(_buffer)) {
+
+        label.reset();
+        return nullptr;
+    }
+
+    _tile.addLabel(m_name, label);
+
+    return label;
 }
 
 void TextStyle::onBeginBuildTile(VboMesh& _mesh) const {

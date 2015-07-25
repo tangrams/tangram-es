@@ -19,6 +19,12 @@ protected:
     virtual void constructShaderProgram() override;
     virtual void buildPoint(Point& _point, const StyleParamMap& _styleParamMap, Properties& _props, VboMesh& _mesh, Tile& _tile) const override;
 
+    /*
+     * Creates a sprite slabel for and associate it with the current processed <MapTile> TileID for a specific syle name
+     * Returns the created labe
+     */
+    std::shared_ptr<Label> addSpriteLabel(Tile& _tile, Label::Transform _transform, const glm::vec2& _size, size_t _bufferOffset) const;
+
     typedef TypedMesh<BufferVert> Mesh;
 
     virtual VboMesh* newMesh() const override {
