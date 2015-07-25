@@ -50,13 +50,8 @@ void Tile::update(float _dt, const View& _view) {
 
 }
 
-void Tile::updateLabels(float _dt, const Style& _style, const View& _view) {
-    glm::mat4 mvp = _view.getViewProjectionMatrix() * m_modelMatrix;
-    glm::vec2 screenSize = glm::vec2(_view.getWidth(), _view.getHeight());
-    
-    for (auto& label : m_labels[_style.getName()]) {
-        label->update(mvp, screenSize, _dt);
-    }
+std::vector<std::shared_ptr<Label>>& Tile::getLabels(const Style& _style) {
+    return m_labels[_style.getName()];
 }
 
 void Tile::pushLabelTransforms(const Style& _style) {

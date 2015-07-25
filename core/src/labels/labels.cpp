@@ -66,55 +66,57 @@ void Labels::addLabel(Tile& _tile, const std::string& _styleName, std::shared_pt
 
     _label->update(m_view->getViewProjectionMatrix() * modelMatrix, {m_view->getWidth(), m_view->getHeight()}, 0);
     _tile.addLabel(_styleName, _label);
-
-    // lock concurrent collection
-    {
-        std::lock_guard<std::mutex> lock(m_mutex);
-        m_pendingLabels.push_back(_label);
-    }
 }
 
-void Labels::updateOcclusions() {
+void Labels::update(float _dt, const std::vector<std::unique_ptr<Style>>& _styles,
+                    const std::map<TileID, std::shared_ptr<Tile>>& _tiles) {
+
+    Label::s_needUpdate = false;
+
+    // FIXME value is used on tile-worker thread (see addTextLabel)
     m_currentZoom = m_view->getZoom();
 
-    // merge pending labels from threads
-    if (!m_pendingLabels.empty()) {
-        std::lock_guard<std::mutex> lock(m_mutex);
-
-        m_labels.reserve(m_labels.size() + m_pendingLabels.size());
-
-        m_labels.insert(m_labels.end(),
-                        std::make_move_iterator(m_pendingLabels.begin()),
-                        std::make_move_iterator(m_pendingLabels.end()));
-
-        m_pendingLabels.clear();
-    }
-
     std::set<std::pair<Label*, Label*>> occlusions;
-    std::vector<isect2d::AABB> aabbs;
 
-    for (size_t i = 0; i < m_labels.size(); i++) {
-        auto label = m_labels[i].lock();
+    // Could clear this at end of function unless debug draw is active
+    m_labels.clear();
+    m_aabbs.clear();
 
-        if (!label) {
-            m_labels[i--] = std::move(m_labels[m_labels.size() - 1]);
-            m_labels.pop_back();
-            continue;
+    glm::vec2 screenSize = glm::vec2(m_view->getWidth(), m_view->getHeight());
+
+    // update labels for specific style
+    for (const auto& mapIDandTile : _tiles) {
+        const auto& tile = mapIDandTile.second;
+
+        if (!tile->isReady()) { continue; }
+
+        glm::mat4 mvp = m_view->getViewProjectionMatrix() * tile->getModelMatrix();
+
+        for (const auto& style : _styles) {
+
+            for (auto& label : tile->getLabels(*style)) {
+                label->update(mvp, screenSize, _dt);
+
+                if (label->canOcclude()) {
+                    m_aabbs.push_back(label->getAABB());
+                    m_aabbs.back().m_userData = (void*)label.get();
+                }
+
+                // Rethink: just used to set occlusionSolved at the
+                // end and for debug drawing
+                m_labels.push_back(label.get());
+            }
         }
-
-        if (!label->canOcclude()) { continue; }
-
-        isect2d::AABB aabb = label->getAABB();
-        aabb.m_userData = (void*)label.get();
-        aabbs.push_back(aabb);
     }
+
+    //// manage occlusions
 
     // broad phase
-    auto pairs = intersect(aabbs, {4, 4}, {m_view->getWidth(), m_view->getHeight()});
+    auto pairs = intersect(m_aabbs, {4, 4}, {m_view->getWidth(), m_view->getHeight()});
 
     for (auto pair : pairs) {
-        const auto& aabb1 = aabbs[pair.first];
-        const auto& aabb2 = aabbs[pair.second];
+        const auto& aabb1 = m_aabbs[pair.first];
+        const auto& aabb2 = m_aabbs[pair.second];
 
         auto l1 = (Label*)aabb1.m_userData;
         auto l2 = (Label*)aabb2.m_userData;
@@ -125,38 +127,23 @@ void Labels::updateOcclusions() {
 
     // no priorities, only occlude one of the two occluded label
     for (auto& pair : occlusions) {
-        if(!pair.first->occludedLastFrame()) {
-            if (pair.second->getState() == Label::State::wait_occ) { pair.second->setOcclusion(true); }
+        if (!pair.first->occludedLastFrame()) {
+            if (pair.second->getState() == Label::State::wait_occ) {
+                pair.second->setOcclusion(true);
+            }
         }
-        if(!pair.second->occludedLastFrame()) {
-            if (pair.first->getState() == Label::State::wait_occ) { pair.first->setOcclusion(true); }
+        if (!pair.second->occludedLastFrame()) {
+            if (pair.first->getState() == Label::State::wait_occ) {
+                pair.first->setOcclusion(true);
+            }
         }
 
         if (!pair.second->occludedLastFrame()) { pair.first->setOcclusion(true); }
     }
 
-    for (auto& labelPtr : m_labels) {
-        auto label = labelPtr.lock();
-        if (label) { label->occlusionSolved(); }
+    for (auto label : m_labels) {
+        label->occlusionSolved();
     }
-}
-
-void Labels::update(float _dt, const std::vector<std::unique_ptr<Style>>& _styles, const std::map<TileID, std::shared_ptr<Tile>>& _tiles) {
-
-    Label::s_needUpdate = false;
-
-    // update labels for specific style
-    for (const auto& style : _styles) {
-        for (const auto& mapIDandTile : _tiles) {
-            const auto& tile = mapIDandTile.second;
-            if (tile->isReady()) {
-                tile->updateLabels(_dt, *style, *m_view);
-            }
-        }
-    }
-
-    // manage occlusions
-    updateOcclusions();
 
     for (const auto& style : _styles) {
         for (const auto& mapIDandTile : _tiles) {
@@ -181,10 +168,8 @@ void Labels::drawDebug() {
         return;
     }
 
-    for(auto& labelPtr : m_labels) {
-        auto label = labelPtr.lock();
-
-        if (label && label->canOcclude()) {
+    for (auto label : m_labels) {
+        if (label->canOcclude()) {
             Primitives::drawPoly(reinterpret_cast<const glm::vec2*>(label->getOBB().getQuad()),
                                  4, { m_view->getWidth(), m_view->getHeight() });
         }

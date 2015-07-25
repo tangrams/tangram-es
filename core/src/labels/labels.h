@@ -65,23 +65,21 @@ public:
 
 private:
 
-    void updateOcclusions();
-
     void addLabel(Tile& _tile, const std::string& _styleName, std::shared_ptr<Label> _label);
 
     int LODDiscardFunc(float _maxZoom, float _zoom);
 
     Labels();
-    std::vector<std::weak_ptr<Label>> m_labels;
-    std::vector<std::weak_ptr<Label>> m_pendingLabels;
+    std::vector<Label*> m_labels;
 
     // reference to the <FontContext>
     std::shared_ptr<FontContext> m_ftContext;
 
-    std::mutex m_mutex;
-
     std::shared_ptr<View> m_view;
     float m_currentZoom;
+
+
+    std::vector<isect2d::AABB> m_aabbs;
 
 };
 

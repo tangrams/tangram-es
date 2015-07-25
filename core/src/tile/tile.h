@@ -69,8 +69,7 @@ public:
     /* uUdate the Tile considering the current view */
     void update(float _dt, const View& _view);
 
-    /* Update labels position considering the tile transform */
-    void updateLabels(float _dt, const Style& _style, const View& _view);
+    std::vector<std::shared_ptr<Label>>& getLabels(const Style& _style);
     
     /* Push the label transforms to the font rendering context */
     void pushLabelTransforms(const Style& _style);
