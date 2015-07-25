@@ -3,6 +3,8 @@
 #include "view/view.h"
 #include <memory>
 
+namespace Tangram {
+
 class InputHandler {
 
 public:
@@ -45,3 +47,5 @@ private:
     const float m_minZoomStart = 0.05f;
 
 };
+
+}
