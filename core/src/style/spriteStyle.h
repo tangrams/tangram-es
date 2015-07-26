@@ -25,7 +25,6 @@ protected:
     };
 
     std::unique_ptr<SpriteAtlas> m_spriteAtlas;
-    size_t m_stateAttribOffset;
 
 public:
 

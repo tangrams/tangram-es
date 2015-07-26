@@ -13,7 +13,9 @@ void SpriteLabel::pushTransform() {
     if (m_dirty) {
 
         // update all attributes screenPosition/rotation/alpha for the 4 quad vertices in the mesh
-        m_mesh.updateAttribute(m_bufferOffset, 4, m_transform.state);
+        size_t attribOffset = offsetof(Label::Vertex, state);
+
+        m_mesh.updateAttribute(m_bufferOffset + attribOffset, 4, m_transform.state);
     }
 }
 

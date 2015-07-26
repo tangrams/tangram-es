@@ -32,9 +32,8 @@ bool TextLabel::rasterize() {
 void TextLabel::pushTransform() {
     if (m_dirty) {
         m_dirty = false;
-
+        size_t attribOffset = offsetof(Label::Vertex, state);
         int numVerts = m_numGlyphs * 6;
-        size_t attribOffset = 16;
 
         m_mesh.updateAttribute(m_bufferOffset + attribOffset, numVerts, m_transform.state);
     }
