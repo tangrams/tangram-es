@@ -5,6 +5,7 @@
 #include "gl/shaderProgram.h"
 #include "gl/vboMesh.h"
 #include "view/view.h"
+#include "labels/textLabel.h"
 #include "glm/gtc/type_ptr.hpp"
 
 namespace Tangram {
@@ -120,7 +121,7 @@ void TextStyle::addTextLabel(TextBuffer& _buffer, Label::Transform _transform, s
 
 void TextStyle::onBeginBuildTile(VboMesh& _mesh) const {
     auto& buffer = static_cast<TextBuffer&>(_mesh);
-    auto ftContext = Labels::GetInstance()->getFontContext();
+    auto ftContext = FontContext::GetInstance();
     auto font = ftContext->getFontID(m_fontName);
 
     buffer.init(font, m_fontSize * m_pixelScale, m_sdf ? 2.5 : 0);
@@ -134,7 +135,7 @@ void TextStyle::onEndBuildTile(VboMesh& _mesh) const {
 }
 
 void TextStyle::onBeginDrawFrame(const std::shared_ptr<View>& _view, const std::shared_ptr<Scene>& _scene) {
-    auto ftContext = Labels::GetInstance()->getFontContext();
+    auto ftContext = FontContext::GetInstance();
 
     const auto& atlas = ftContext->getAtlas();
 

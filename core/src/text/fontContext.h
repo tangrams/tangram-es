@@ -20,6 +20,11 @@ class FontContext {
 
 public:
 
+    static std::shared_ptr<FontContext> GetInstance() {
+        static std::shared_ptr<FontContext> instance(new FontContext());
+        return instance;
+    }
+
     FontContext();
     FontContext(int _atlasSize);
     ~FontContext();

@@ -3,7 +3,6 @@
 
 #include "gl/texture.h"
 #include "gl/vboMesh.h"
-#include "labels/labels.h"
 
 namespace Tangram {
 
@@ -23,7 +22,7 @@ void TextBuffer::init(fsuint _fontID, float _size, float _blurSpread) {
 
 TextBuffer::~TextBuffer() {
     if (m_fsBuffer != 0) {
-        auto fontContext = Labels::GetInstance()->getFontContext();
+        auto fontContext = FontContext::GetInstance();
 
         fontContext->lock();
         glfonsBufferDelete(fontContext->getFontContext(), m_fsBuffer);
@@ -34,7 +33,7 @@ TextBuffer::~TextBuffer() {
 int TextBuffer::rasterize(const std::string& _text, glm::vec2& _size, size_t& _bufferOffset) {
     int numGlyphs = 0;
 
-    auto fontContext = Labels::GetInstance()->getFontContext();
+    auto fontContext = FontContext::GetInstance();
 
     fontContext->lock();
 
@@ -43,9 +42,6 @@ int TextBuffer::rasterize(const std::string& _text, glm::vec2& _size, size_t& _b
         glfonsBufferCreate(ctx, &m_fsBuffer);
 
     glfonsBindBuffer(ctx, m_fsBuffer);
-
-    fsuint textID;
-    glfonsGenText(ctx, 1, &textID);
 
     fonsSetSize(ctx, m_fontSize);
     fonsSetFont(ctx, m_fontID);
@@ -57,16 +53,18 @@ int TextBuffer::rasterize(const std::string& _text, glm::vec2& _size, size_t& _b
         fonsSetBlurType(ctx, FONS_EFFECT_NONE);
     }
 
+    fsuint textID;
+    glfonsGenText(ctx, 1, &textID);
+
     int status = glfonsRasterize(ctx, textID, _text.c_str());
     if (status == GLFONS_VALID) {
-        numGlyphs = glfonsGetGlyphCount(ctx, textID);
         _bufferOffset = m_bufferPosition;
 
+        numGlyphs = glfonsGetGlyphCount(ctx, textID);
         m_bufferPosition += m_vertexLayout->getStride() * numGlyphs * 6;
 
         glm::vec4 bbox;
         glfonsGetBBox(ctx, textID, &bbox.x, &bbox.y, &bbox.z, &bbox.w);
-
         _size.x = std::abs(bbox.z - bbox.x);
         _size.y = std::abs(bbox.w - bbox.y);
     }
@@ -81,7 +79,7 @@ void TextBuffer::addBufferVerticesToMesh() {
     if (m_fsBuffer == 0)
         return;
 
-    auto fontContext = Labels::GetInstance()->getFontContext();
+    auto fontContext = FontContext::GetInstance();
 
     fontContext->lock();
     auto ctx = fontContext->getFontContext();

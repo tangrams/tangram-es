@@ -1,7 +1,6 @@
 #include "labels.h"
 #include "tangram.h"
 #include "tile/tile.h"
-#include "text/fontContext.h"
 #include "gl/primitives.h"
 #include "view/view.h"
 #include "style/style.h"

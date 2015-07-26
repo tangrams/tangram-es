@@ -3,7 +3,6 @@
 #include "style.h"
 #include "gl/typedMesh.h"
 #include "glfontstash.h"
-#include "labels/labels.h"
 #include "text/fontContext.h"
 #include "text/textBuffer.h"
 

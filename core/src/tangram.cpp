@@ -23,7 +23,7 @@ namespace Tangram {
 std::unique_ptr<TileManager> m_tileManager;
 std::shared_ptr<Scene> m_scene;
 std::shared_ptr<View> m_view;
-std::shared_ptr<Labels> m_labels;
+std::unique_ptr<Labels> m_labels;
 std::shared_ptr<FontContext> m_ftContext;
 std::shared_ptr<Skybox> m_skybox;
 std::unique_ptr<InputHandler> m_inputHandler;
@@ -57,10 +57,9 @@ void initialize() {
         m_tileManager->setScene(m_scene);
 
         // Font and label setup
-        m_ftContext = std::make_shared<FontContext>();
+        m_ftContext = FontContext::GetInstance();
         m_ftContext->addFont("FiraSans-Medium.ttf", "FiraSans");
-        m_labels = Labels::GetInstance();
-        m_labels->setFontContext(m_ftContext);
+        m_labels = std::unique_ptr<Labels>(new Labels());
         m_labels->setView(m_view);
 
         SceneLoader loader;
