@@ -72,17 +72,9 @@ void updateAtlas(void* _userPtr, unsigned int _xoff, unsigned int _yoff,
     fontContext->getAtlas()->setSubData(static_cast<const GLuint*>(_pixels), _xoff, _yoff, _width, _height);
 }
 
-void updateBuffer(void* _userPtr, GLintptr _offset, GLsizei _size, float* _newData, void* _owner) {
-    auto buffer = static_cast<TextBuffer*>(_owner);
-    
-    if (buffer) {
-        buffer->update(_offset, _size, reinterpret_cast<unsigned char*>(_newData));
-    }
-}
-
 void FontContext::initFontContext(int _atlasSize) {
     m_atlas = std::unique_ptr<Texture>(new Texture(_atlasSize, _atlasSize));
-    m_fsContext = glfonsCreate(_atlasSize, _atlasSize, FONS_ZERO_TOPLEFT, { false, updateBuffer, updateAtlas }, (void*) this);
+    m_fsContext = glfonsCreate(_atlasSize, _atlasSize, FONS_ZERO_TOPLEFT, { false, nullptr, updateAtlas }, (void*) this);
 }
 
 }
