@@ -18,7 +18,7 @@ void DebugTextStyle::addData(TileData& _data, Tile& _tile) {
         
         onBeginBuildTile(*mesh);
         
-        auto ftContext = m_labels->getFontContext();
+        auto ftContext = Labels::GetInstance()->getFontContext();
         
         ftContext->setFont(m_fontName, m_fontSize * m_pixelScale);
 

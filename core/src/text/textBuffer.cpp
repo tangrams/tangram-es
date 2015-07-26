@@ -3,15 +3,17 @@
 
 #include "gl/texture.h"
 #include "gl/vboMesh.h"
+#include "labels/labels.h"
 
 namespace Tangram {
 
-TextBuffer::TextBuffer(std::shared_ptr<FontContext> _fontContext, std::shared_ptr<VertexLayout> _vertexLayout)
+TextBuffer::TextBuffer(std::shared_ptr<VertexLayout> _vertexLayout)
     : TypedMesh<BufferVert>(_vertexLayout, GL_TRIANGLES, GL_DYNAMIC_DRAW) {
 
     m_dirtyTransform = false;
-    m_fontContext = _fontContext;
     m_bound = false;
+
+    m_fontContext = Labels::GetInstance()->getFontContext();
 }
 
 void TextBuffer::init() {

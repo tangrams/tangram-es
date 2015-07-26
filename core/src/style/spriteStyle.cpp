@@ -13,8 +13,6 @@
 namespace Tangram {
 
 SpriteStyle::SpriteStyle(std::string _name, GLenum _drawMode) : Style(_name, _drawMode) {
-
-    m_labels = Labels::GetInstance();
 }
 
 SpriteStyle::~SpriteStyle() {}

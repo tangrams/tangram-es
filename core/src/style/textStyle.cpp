@@ -11,7 +11,6 @@ namespace Tangram {
 
 TextStyle::TextStyle(const std::string& _fontName, std::string _name, float _fontSize, unsigned int _color, bool _sdf, bool _sdfMultisampling, GLenum _drawMode)
 : Style(_name, _drawMode), m_fontName(_fontName), m_fontSize(_fontSize), m_color(_color), m_sdf(_sdf), m_sdfMultisampling(_sdfMultisampling)  {
-    m_labels = Labels::GetInstance();
 }
 
 TextStyle::~TextStyle() {
@@ -133,7 +132,7 @@ void TextStyle::onBeginBuildTile(VboMesh& _mesh) const {
     auto& buffer = static_cast<TextBuffer&>(_mesh);
     buffer.init();
 
-    auto ftContext = m_labels->getFontContext();
+    auto ftContext = Labels::GetInstance()->getFontContext();
 
     ftContext->setFont(m_fontName, m_fontSize * m_pixelScale);
     if (m_sdf) {
@@ -149,7 +148,7 @@ void TextStyle::onEndBuildTile(VboMesh& _mesh) const {
 }
 
 void TextStyle::onBeginDrawFrame(const std::shared_ptr<View>& _view, const std::shared_ptr<Scene>& _scene) {
-    auto ftContext = m_labels->getFontContext();
+    auto ftContext = Labels::GetInstance()->getFontContext();
     const auto& atlas = ftContext->getAtlas();
 
     atlas->update(1);

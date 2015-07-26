@@ -25,7 +25,7 @@ protected:
     virtual void onEndBuildTile(VboMesh& _mesh) const override;
 
     virtual VboMesh* newMesh() const override {
-        return new TextBuffer(m_labels->getFontContext(), m_vertexLayout);
+        return new TextBuffer(m_vertexLayout);
     };
 
     /*
@@ -39,8 +39,6 @@ protected:
     int m_color;
     bool m_sdf;
     bool m_sdfMultisampling = true;
-
-    std::shared_ptr<Labels> m_labels;
 
 public:
 
