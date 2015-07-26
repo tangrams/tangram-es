@@ -44,9 +44,6 @@ private:
     bool m_dirtyTransform;
     fsuint m_fsBuffer;
     int m_bufferPosition;
-
-    std::shared_ptr<FontContext> m_fontContext;
-
 };
 
 }

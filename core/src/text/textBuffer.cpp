@@ -12,32 +12,36 @@ TextBuffer::TextBuffer(std::shared_ptr<VertexLayout> _vertexLayout)
 
     m_dirtyTransform = false;
     m_bufferPosition = 0;
-
-    m_fontContext = Labels::GetInstance()->getFontContext();
+    m_fsBuffer = 0;
 }
 
 void TextBuffer::init(fsuint _fontID, float _size, float _blurSpread) {
     m_fontID = _fontID;
     m_fontSize = _size;
     m_fontBlurSpread = _blurSpread;
-
-    m_fontContext->lock();
-    glfonsBufferCreate(m_fontContext->getFontContext(), &m_fsBuffer);
-    m_fontContext->unlock();
 }
 
 TextBuffer::~TextBuffer() {
-    m_fontContext->lock();
-    glfonsBufferDelete(m_fontContext->getFontContext(), m_fsBuffer);
-    m_fontContext->unlock();
+    if (m_fsBuffer != 0) {
+        auto fontContext = Labels::GetInstance()->getFontContext();
+
+        fontContext->lock();
+        glfonsBufferDelete(fontContext->getFontContext(), m_fsBuffer);
+        fontContext->unlock();
+    }
 }
 
 int TextBuffer::rasterize(const std::string& _text, glm::vec2& _size, size_t& _bufferOffset) {
     int numGlyphs = 0;
 
-    m_fontContext->lock();
+    auto fontContext = Labels::GetInstance()->getFontContext();
 
-    auto ctx = m_fontContext->getFontContext();
+    fontContext->lock();
+
+    auto ctx = fontContext->getFontContext();
+    if (m_fsBuffer == 0)
+        glfonsBufferCreate(ctx, &m_fsBuffer);
+
     glfonsBindBuffer(ctx, m_fsBuffer);
 
     fsuint textID;
@@ -68,30 +72,32 @@ int TextBuffer::rasterize(const std::string& _text, glm::vec2& _size, size_t& _b
     }
 
     glfonsBindBuffer(ctx, 0);
-    m_fontContext->unlock();
+    fontContext->unlock();
 
     return numGlyphs;
 }
 
 void TextBuffer::addBufferVerticesToMesh() {
-    std::vector<Label::Vertex> vertices;
+    if (m_fsBuffer == 0)
+        return;
 
-    m_fontContext->lock();
-    auto ctx = m_fontContext->getFontContext();
+    auto fontContext = Labels::GetInstance()->getFontContext();
 
+    fontContext->lock();
+    auto ctx = fontContext->getFontContext();
     glfonsBindBuffer(ctx, m_fsBuffer);
-    int bufferSize = glfonsVerticesSize(ctx);
 
+    int bufferSize = glfonsVerticesSize(ctx);
     if (bufferSize == 0) {
         glfonsBindBuffer(ctx, 0);
         glfonsBufferDelete(ctx, m_fsBuffer);
         m_fsBuffer = 0;
 
-        m_fontContext->unlock();
+        fontContext->unlock();
         return;
     }
 
-    vertices.resize(bufferSize);
+    std::vector<Label::Vertex> vertices(bufferSize);
 
     bool res = glfonsVertices(ctx, reinterpret_cast<float*>(vertices.data()));
 
@@ -103,7 +109,7 @@ void TextBuffer::addBufferVerticesToMesh() {
     glfonsBufferDelete(ctx, m_fsBuffer);
     m_fsBuffer = 0;
 
-    m_fontContext->unlock();
+    fontContext->unlock();
 }
 
 }
