@@ -24,7 +24,6 @@ void Labels::update(float _dt, const std::vector<std::unique_ptr<Style>>& _style
 
     m_needUpdate = false;
 
-    // FIXME value is used on tile-worker thread (see addTextLabel)
     float zoom = m_view->getZoom();
 
     std::set<std::pair<Label*, Label*>> occlusions;
@@ -35,7 +34,8 @@ void Labels::update(float _dt, const std::vector<std::unique_ptr<Style>>& _style
 
     glm::vec2 screenSize = glm::vec2(m_view->getWidth(), m_view->getHeight());
 
-    //// update labels for specific style
+    //// Collect labels from visible tiles
+
     for (const auto& mapIDandTile : _tiles) {
         const auto& tile = mapIDandTile.second;
 
@@ -62,15 +62,13 @@ void Labels::update(float _dt, const std::vector<std::unique_ptr<Style>>& _style
                     m_aabbs.push_back(label->getAABB());
                     m_aabbs.back().m_userData = (void*)label.get();
                 }
-
-                // Rethink: just used to set occlusionSolved at the
-                // end and for debug drawing
                 m_labels.push_back(label.get());
             }
         }
     }
 
-    //// manage occlusions
+    //// Manage occlusions
+
     // broad phase
     auto pairs = intersect(m_aabbs, {4, 4}, {m_view->getWidth(), m_view->getHeight()});
 
@@ -100,6 +98,8 @@ void Labels::update(float _dt, const std::vector<std::unique_ptr<Style>>& _style
 
         if (!pair.second->occludedLastFrame()) { pair.first->setOcclusion(true); }
     }
+
+    //// Update label meshes
 
     for (auto label : m_labels) {
         label->occlusionSolved();
