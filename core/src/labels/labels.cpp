@@ -4,6 +4,7 @@
 #include "text/fontContext.h"
 #include "gl/primitives.h"
 #include "view/view.h"
+#include "style/style.h"
 
 #include "glm/gtc/matrix_transform.hpp"
 
@@ -137,6 +138,40 @@ void Labels::updateOcclusions() {
     for (auto& labelPtr : m_labels) {
         auto label = labelPtr.lock();
         if (label) { label->occlusionSolved(); }
+    }
+}
+
+void Labels::update(float _dt, const std::vector<std::unique_ptr<Style>>& _styles, const std::map<TileID, std::shared_ptr<Tile>>& _tiles) {
+
+    Label::s_needUpdate = false;
+
+    // update labels for specific style
+    for (const auto& style : _styles) {
+        for (const auto& mapIDandTile : _tiles) {
+            const auto& tile = mapIDandTile.second;
+            if (tile->isReady()) {
+                tile->updateLabels(_dt, *style, *m_view);
+            }
+        }
+    }
+
+    // manage occlusions
+    updateOcclusions();
+
+    for (const auto& style : _styles) {
+        for (const auto& mapIDandTile : _tiles) {
+            const auto& tile = mapIDandTile.second;
+            if (tile->isReady()) {
+                tile->pushLabelTransforms(*style);
+            }
+        }
+    }
+}
+
+void Labels::lazyRenderRequest() {
+
+    if (Label::s_needUpdate) {
+        requestRender();
     }
 }
 

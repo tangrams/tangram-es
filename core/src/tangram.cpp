@@ -94,53 +94,30 @@ void update(float _dt) {
 
     g_time += _dt;
 
-    if (m_view) {
+    m_inputHandler->update(_dt);
 
-        m_inputHandler->update(_dt);
+    m_view->update();
 
-        m_view->update();
+    m_tileManager->updateTileSet();
 
-        m_tileManager->updateTileSet();
+    if (m_view->changedOnLastUpdate() || m_tileManager->hasTileSetChanged() || m_labels->needUpdate()) {
 
-        if(m_view->changedOnLastUpdate() || m_tileManager->hasTileSetChanged() || Label::s_needUpdate) {
-            Label::s_needUpdate = false;
+        auto tileSet = m_tileManager->getVisibleTiles();
 
-            for (const auto& mapIDandTile : m_tileManager->getVisibleTiles()) {
-                const auto& tile = mapIDandTile.second;
-                if (tile->isReady()) {
-                    tile->update(_dt, *m_view);
-                }
-            }
-
-            // update labels for specific style
-            for (const auto& style : m_scene->getStyles()) {
-                for (const auto& mapIDandTile : m_tileManager->getVisibleTiles()) {
-                    const auto& tile = mapIDandTile.second;
-                    if (tile->isReady()) {
-                        tile->updateLabels(_dt, *style, *m_view);
-                    }
-                }
-            }
-
-            // manage occlusions
-            m_labels->updateOcclusions();
-
-            for (const auto& style : m_scene->getStyles()) {
-                for (const auto& mapIDandTile : m_tileManager->getVisibleTiles()) {
-                    const auto& tile = mapIDandTile.second;
-                    if (tile->isReady()) {
-                        tile->pushLabelTransforms(*style, m_labels);
-                    }
-                }
+        for (const auto& mapIDandTile : tileSet) {
+            const auto& tile = mapIDandTile.second;
+            if (tile->isReady()) {
+                tile->update(_dt, *m_view);
             }
         }
 
-        if (Label::s_needUpdate) {
-            requestRender();
-        }
+        m_labels->update(_dt, m_scene->getStyles(), tileSet);
     }
 
-    if(m_scene) {
+    // Request for render if labels are in fading in/out states
+    m_labels->lazyRenderRequest();
+
+    if (m_scene) {
         // Update lights and styles
     }
 }
@@ -253,7 +230,7 @@ void setPixelScale(float _pixelsPerPoint) {
 }
 
 void handleTapGesture(float _posX, float _posY) {
-    
+
     m_inputHandler->handleTapGesture(_posX, _posY);
 
 }
