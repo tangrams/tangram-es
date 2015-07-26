@@ -22,11 +22,11 @@ public:
     /* Tile data sources must have a name and a URL template that defines where to find 
      * a tile based on its coordinates. A URL template includes exactly one occurrance 
      * each of '{x}', '{y}', and '{z}' which will be replaced by the x index, y index, 
-     * and zoom level of tiles to produce their URL
+     * and zoom level of tiles to produce their URL.
      */
     DataSource(const std::string& _name, const std::string& _urlTemplate);
 
-    virtual ~DataSource() {}
+    virtual ~DataSource();
     
     /* Fetches data for the map tile specified by @_tileID
      *
@@ -49,6 +49,9 @@ public:
     void clearData();
 
     const std::string& name() const { return m_name; }
+
+    /* @_cacheSize: Set size of in-memory cache for tile data in bytes. */
+    void setCacheSize(size_t _cacheSize);
 
 protected:
 

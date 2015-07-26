@@ -9,15 +9,24 @@
 namespace Tangram {
 
 DataSource::DataSource(const std::string& _name, const std::string& _urlTemplate) :
-    m_name(_name), m_urlTemplate(_urlTemplate) {
-    m_cacheMaxUsage = 10 * 1024 * 1024;
-    m_cacheUsage = 0;
+    m_name(_name), m_urlTemplate(_urlTemplate),
+    m_cacheUsage(0),
+    m_cacheMaxUsage(0) {
+}
+
+DataSource::~DataSource() {
+    clearData();
+}
+
+void DataSource::setCacheSize(size_t _cacheSize) {
+    m_cacheMaxUsage = _cacheSize;
 }
 
 void DataSource::clearData() {
     std::lock_guard<std::mutex> lock(m_mutex);
     m_cacheMap.clear();
     m_cacheList.clear();
+    m_cacheUsage = 0;
 }
 
 void DataSource::constructURL(const TileID& _tileCoord, std::string& _url) const {
@@ -38,17 +47,19 @@ void DataSource::constructURL(const TileID& _tileCoord, std::string& _url) const
 }
 
 bool DataSource::getTileData(std::shared_ptr<TileTask>& _task) {
-    std::lock_guard<std::mutex> lock(m_mutex);
+    if (m_cacheMaxUsage > 0) {
+        std::lock_guard<std::mutex> lock(m_mutex);
+        auto it = m_cacheMap.find(_task->tile->getID());
+        if (it != m_cacheMap.end()) {
+            // Move cached entry to start of list
+            m_cacheList.splice(m_cacheList.begin(), m_cacheList, it->second);
+            _task->rawTileData = m_cacheList.front().second;
 
-    auto it = m_cacheMap.find(_task->tile->getID());
-    if (it == m_cacheMap.end()) {
-        return false;
+            return true;
+        }
     }
-    // Move cached entry to start of list
-    m_cacheList.splice(m_cacheList.begin(), m_cacheList, it->second);
 
-    _task->rawTileData = m_cacheList.front().second;
-    return true;
+    return false;
 }
 
 void DataSource::onTileLoaded(std::vector<char>&& _rawData, std::shared_ptr<TileTask>& _task, TileTaskCb _cb) {
@@ -60,22 +71,24 @@ void DataSource::onTileLoaded(std::vector<char>&& _rawData, std::shared_ptr<Tile
 
     _cb(std::move(_task));
 
-    std::lock_guard<std::mutex> lock(m_mutex);
+    if (m_cacheMaxUsage > 0) {
+        std::lock_guard<std::mutex> lock(m_mutex);
 
-    m_cacheList.push_front({tileID, rawDataRef});
-    m_cacheMap[tileID] = m_cacheList.begin();
+        m_cacheList.push_front({tileID, rawDataRef});
+        m_cacheMap[tileID] = m_cacheList.begin();
 
-    m_cacheUsage += rawDataRef->size();
+        m_cacheUsage += rawDataRef->size();
 
-    while (m_cacheUsage > m_cacheMaxUsage) {
-        logMsg("Limit raw cache tiles:%d, %fMB \n", m_cacheList.size(),
-               double(m_cacheUsage) / (1024*1024));
+        while (m_cacheUsage > m_cacheMaxUsage) {
+            logMsg("Limit raw cache tiles:%d, %fMB \n", m_cacheList.size(),
+                   double(m_cacheUsage) / (1024*1024));
 
-        auto& entry = m_cacheList.back();
-        m_cacheUsage -= entry.second->size();
+            auto& entry = m_cacheList.back();
+            m_cacheUsage -= entry.second->size();
 
-        m_cacheMap.erase(entry.first);
-        m_cacheList.pop_back();
+            m_cacheMap.erase(entry.first);
+            m_cacheList.pop_back();
+        }
     }
 }
 
