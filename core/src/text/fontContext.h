@@ -30,6 +30,8 @@ public:
     /* sets the current font for a size in pixels */
     void setFont(const std::string& _name, int size);
 
+    fsuint getFontID(const std::string& _name);
+
     /* sets the blur spread when using signed distance field rendering */
     void setSignedDistanceField(float _blurSpread);
 

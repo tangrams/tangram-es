@@ -18,15 +18,6 @@ void DebugTextStyle::addData(TileData& _data, Tile& _tile) {
         
         onBeginBuildTile(*mesh);
         
-        auto ftContext = Labels::GetInstance()->getFontContext();
-        
-        ftContext->setFont(m_fontName, m_fontSize * m_pixelScale);
-
-        if (m_sdf) {
-            float blurSpread = 2.5;
-            ftContext->setSignedDistanceField(blurSpread);
-        }
-
         std::string tileID = std::to_string(_tile.getID().x) + "/" + std::to_string(_tile.getID().y) + "/" + std::to_string(_tile.getID().z);
         addTextLabel(buffer, { glm::vec2(0), glm::vec2(0) }, tileID, Label::Type::debug);
 

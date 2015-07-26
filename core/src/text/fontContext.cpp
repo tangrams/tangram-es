@@ -65,6 +65,17 @@ void FontContext::setFont(const std::string& _name, int size) {
     }
 }
 
+fsuint FontContext::getFontID(const std::string& _name) {
+    auto it = m_fonts.find(_name);
+
+    if (it != m_fonts.end()) {
+        return it->second;
+    } else {
+        logMsg("[FontContext] Could not find font %s\n", _name.c_str());
+        return 0;
+    }
+}
+
 void updateAtlas(void* _userPtr, unsigned int _xoff, unsigned int _yoff,
                  unsigned int _width, unsigned int _height, const unsigned int* _pixels) {
 

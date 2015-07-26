@@ -16,7 +16,11 @@ TextBuffer::TextBuffer(std::shared_ptr<VertexLayout> _vertexLayout)
     m_fontContext = Labels::GetInstance()->getFontContext();
 }
 
-void TextBuffer::init() {
+void TextBuffer::init(fsuint _fontID, float _size, float _blurSpread) {
+    m_fontID = _fontID;
+    m_fontSize = _size;
+    m_fontBlurSpread = _blurSpread;
+
     m_fontContext->lock();
     glfonsBufferCreate(m_fontContext->getFontContext(), &m_fsBuffer);
     m_fontContext->unlock();
@@ -38,6 +42,16 @@ int TextBuffer::rasterize(const std::string& _text, glm::vec2& _size, size_t& _b
 
     fsuint textID;
     glfonsGenText(ctx, 1, &textID);
+
+    fonsSetSize(ctx, m_fontSize);
+    fonsSetFont(ctx, m_fontID);
+
+    if (m_fontBlurSpread > 0){
+        fonsSetBlur(ctx, m_fontBlurSpread);
+        fonsSetBlurType(ctx, FONS_EFFECT_DISTANCE_FIELD);
+    } else {
+        fonsSetBlurType(ctx, FONS_EFFECT_NONE);
+    }
 
     int status = glfonsRasterize(ctx, textID, _text.c_str());
     if (status == GLFONS_VALID) {

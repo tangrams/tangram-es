@@ -24,7 +24,7 @@ public:
     ~TextBuffer();
 
     /* creates a text buffer and bind it */
-    void init();
+    void init(fsuint _fontID, float _size, float _blurSpread);
 
     /* ask the font rasterizer to rasterize a specific text.
      * Returns number of glyphs > 0 on success.
@@ -36,6 +36,10 @@ public:
     void addBufferVerticesToMesh();
 
 private:
+
+    fsuint m_fontID;
+    float m_fontSize;
+    float m_fontBlurSpread;
 
     bool m_dirtyTransform;
     fsuint m_fsBuffer;

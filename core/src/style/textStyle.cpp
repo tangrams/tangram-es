@@ -120,15 +120,10 @@ void TextStyle::addTextLabel(TextBuffer& _buffer, Label::Transform _transform, s
 
 void TextStyle::onBeginBuildTile(VboMesh& _mesh) const {
     auto& buffer = static_cast<TextBuffer&>(_mesh);
-    buffer.init();
-
-    // FIXME: unsynced access - font might be changed by another tile-worker
     auto ftContext = Labels::GetInstance()->getFontContext();
-    ftContext->setFont(m_fontName, m_fontSize * m_pixelScale);
-    if (m_sdf) {
-        float blurSpread = 2.5;
-        ftContext->setSignedDistanceField(blurSpread);
-    }
+    auto font = ftContext->getFontID(m_fontName);
+
+    buffer.init(font, m_fontSize * m_pixelScale, m_sdf ? 2.5 : 0);
 }
 
 void TextStyle::onEndBuildTile(VboMesh& _mesh) const {
