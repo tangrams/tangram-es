@@ -60,7 +60,7 @@ int TextBuffer::rasterize(const std::string& _text, glm::vec2& _size, size_t& _b
 }
 
 void TextBuffer::addBufferVerticesToMesh() {
-    std::vector<Label::BufferVert> vertices;
+    std::vector<Label::Vertex> vertices;
 
     m_fontContext->lock();
     auto ctx = m_fontContext->getFontContext();

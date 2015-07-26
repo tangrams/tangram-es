@@ -4,7 +4,7 @@
 namespace Tangram {
 
 LabelMesh::LabelMesh(std::shared_ptr<VertexLayout> _vertexLayout, GLenum _drawMode)
-    : TypedMesh<Label::BufferVert>(_vertexLayout, _drawMode, GL_DYNAMIC_DRAW) {
+    : TypedMesh<Label::Vertex>(_vertexLayout, _drawMode, GL_DYNAMIC_DRAW) {
 }
 
 LabelMesh::~LabelMesh() {}

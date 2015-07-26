@@ -61,7 +61,7 @@ void SpriteStyle::constructShaderProgram() {
 
 void SpriteStyle::buildPoint(Point& _point, const StyleParamMap&, Properties& _props, VboMesh& _mesh, Tile& _tile) const {
     // TODO : make this configurable
-    std::vector<Label::BufferVert> vertices;
+    std::vector<Label::Vertex> vertices;
 
     SpriteBuilder builder = {
         [&](const glm::vec2& coord, const glm::vec2& screenPos, const glm::vec2& uv) {

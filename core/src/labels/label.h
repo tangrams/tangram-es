@@ -29,7 +29,7 @@ public:
         wait_occ        = 1 << 5, // state waiting for first occlusion result
     };
 
-    struct BufferVert {
+    struct Vertex {
         glm::vec2 pos;
         glm::vec2 uv;
         struct State {
@@ -44,7 +44,7 @@ public:
         glm::vec2 modelPosition2;
         glm::vec2 offset;
 
-        BufferVert::State state;
+        Vertex::State state;
     };
 
     Label(Transform _transform, Type _type);
