@@ -39,17 +39,7 @@ public:
     void init();
 
     /* ask the font rasterizer to rasterize a specific text for a text id */
-    bool rasterize(const std::string& _text, fsuint _id);
-
-    /*
-     * transform a text id in screen space coordinate
-     *  x, y in screen space
-     *  rotation is in radians
-     *  alpha should be in [0..1]
-     */
-    void transformID(fsuint _textID, const BufferVert::State& _state);
-
-    void pushBuffer();
+    int rasterize(const std::string& _text, fsuint _id, size_t& bufferOffset);
 
     int getVerticesSize();
 
@@ -67,6 +57,8 @@ private:
     bool m_bound;
     bool m_dirtyTransform;
     fsuint m_fsBuffer;
+    int m_bufferPosition;
+
     std::shared_ptr<FontContext> m_fontContext;
 
 };

@@ -21,6 +21,9 @@ private:
     
     std::string m_text;
     fsuint m_id;
+
+    size_t m_bufferOffset;
+    int m_numGlyphs;
     
 protected:
     

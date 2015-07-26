@@ -61,11 +61,6 @@ void Tile::pushLabelTransforms(const Style& _style) {
         for(auto& label : m_labels[_style.getName()]) {
             label->pushTransform(*styleMesh);
         }
-    
-        if (typeid(*styleMesh) == typeid(TextBuffer)) {
-            TextBuffer& buffer = static_cast<TextBuffer&>(*styleMesh);
-            buffer.pushBuffer();
-        }
     }
 }
 

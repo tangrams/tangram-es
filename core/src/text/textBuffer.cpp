@@ -12,6 +12,7 @@ TextBuffer::TextBuffer(std::shared_ptr<VertexLayout> _vertexLayout)
 
     m_dirtyTransform = false;
     m_bound = false;
+    m_bufferPosition = 0;
 
     m_fontContext = Labels::GetInstance()->getFontContext();
 }
@@ -43,29 +44,19 @@ fsuint TextBuffer::genTextID() {
     return id;
 }
 
-bool TextBuffer::rasterize(const std::string& _text, fsuint _id) {
+int TextBuffer::rasterize(const std::string& _text, fsuint _id, size_t& bufferOffset) {
+    int numGlyphs = 0;
+
     bind();
     int status = glfonsRasterize(m_fontContext->getFontContext(), _id, _text.c_str());
-    unbind();
-    return status == GLFONS_VALID;
-}
+    if (status == GLFONS_VALID) {
+        numGlyphs = glfonsGetGlyphCount(m_fontContext->getFontContext(), _id);
+        bufferOffset = m_bufferPosition;
 
-void TextBuffer::pushBuffer() {
-    if (m_dirtyTransform) {
-        bind();
-        glfonsUpdateBuffer(m_fontContext->getFontContext(), this);
-        unbind();
-        m_dirtyTransform = false;
+        m_bufferPosition += m_vertexLayout->getStride() * numGlyphs * 6;
     }
-}
-
-void TextBuffer::transformID(fsuint _textID, const BufferVert::State& _state) {
-    bind();
-    glfonsTransform(m_fontContext->getFontContext(), _textID,
-                    _state.screenPos.x, _state.screenPos.y,
-                    _state.rotation, _state.alpha);
     unbind();
-    m_dirtyTransform = true;
+    return numGlyphs;
 }
 
 glm::vec4 TextBuffer::getBBox(fsuint _textID) {
