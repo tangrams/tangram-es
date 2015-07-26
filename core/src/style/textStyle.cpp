@@ -130,8 +130,8 @@ void TextStyle::onBeginBuildTile(VboMesh& _mesh) const {
     auto& buffer = static_cast<TextBuffer&>(_mesh);
     buffer.init();
 
+    // FIXME: unsynced access - font might be changed by another tile-worker
     auto ftContext = Labels::GetInstance()->getFontContext();
-
     ftContext->setFont(m_fontName, m_fontSize * m_pixelScale);
     if (m_sdf) {
         float blurSpread = 2.5;
@@ -140,6 +140,7 @@ void TextStyle::onBeginBuildTile(VboMesh& _mesh) const {
 }
 
 void TextStyle::onEndBuildTile(VboMesh& _mesh) const {
+
     auto& buffer = static_cast<TextBuffer&>(_mesh);
 
     buffer.addBufferVerticesToMesh();
@@ -147,9 +148,15 @@ void TextStyle::onEndBuildTile(VboMesh& _mesh) const {
 
 void TextStyle::onBeginDrawFrame(const std::shared_ptr<View>& _view, const std::shared_ptr<Scene>& _scene) {
     auto ftContext = Labels::GetInstance()->getFontContext();
+
     const auto& atlas = ftContext->getAtlas();
 
+    // Atlas can be changed on worker thread.
+    // In particular: updates are pushed to Texture m_subData on worker thread.
+    ftContext->lock();
     atlas->update(1);
+    ftContext->unlock();
+
     atlas->bind(1);
 
     m_shaderProgram->setUniformi("u_tex", 1);
