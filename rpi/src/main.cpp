@@ -95,10 +95,10 @@ void newFrame() {
 void onKeyPress(int _key) {
     switch (_key) {
         case KEY_ZOOM_IN:
-            Tangram::handlePinchGesture(0.0,0.0,0.5);
+            Tangram::handlePinchGesture(0.0,0.0,0.5,0.0);
             break;
         case KEY_ZOOM_OUT:
-            Tangram::handlePinchGesture(0.0,0.0,2.0);
+            Tangram::handlePinchGesture(0.0,0.0,2.0,0.0);
             break;
         case KEY_UP:
             Tangram::handlePanGesture(0.0,0.0,0.0,100.0);
