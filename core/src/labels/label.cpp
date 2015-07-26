@@ -131,8 +131,11 @@ void Label::enterState(State _state, float _alpha) {
 }
 
 void Label::setAlpha(float _alpha) {
-    m_transform.state.alpha = CLAMP(_alpha, 0.0, 1.0);
-    m_dirty = true;
+    float alpha = CLAMP(_alpha, 0.0, 1.0);
+    if (m_transform.state.alpha != alpha) {
+        m_transform.state.alpha = alpha;
+        m_dirty = true;
+    }
 }
 
 void Label::setScreenPosition(const glm::vec2& _screenPosition) {
