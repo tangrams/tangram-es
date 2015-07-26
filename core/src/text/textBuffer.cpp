@@ -11,7 +11,6 @@ TextBuffer::TextBuffer(std::shared_ptr<VertexLayout> _vertexLayout)
     : TypedMesh<BufferVert>(_vertexLayout, GL_TRIANGLES, GL_DYNAMIC_DRAW) {
 
     m_dirtyTransform = false;
-    m_bound = false;
     m_bufferPosition = 0;
 
     m_fontContext = Labels::GetInstance()->getFontContext();
@@ -29,77 +28,68 @@ TextBuffer::~TextBuffer() {
     m_fontContext->unlock();
 }
 
-int TextBuffer::getVerticesSize() {
-    bind();
-    int size = glfonsVerticesSize(m_fontContext->getFontContext());
-    unbind();
-    return size;
-}
-
-fsuint TextBuffer::genTextID() {
-    fsuint id;
-    bind();
-    glfonsGenText(m_fontContext->getFontContext(), 1, &id);
-    unbind();
-    return id;
-}
-
-int TextBuffer::rasterize(const std::string& _text, fsuint _id, size_t& bufferOffset) {
+int TextBuffer::rasterize(const std::string& _text, glm::vec2& _size, size_t& _bufferOffset) {
     int numGlyphs = 0;
 
-    bind();
-    int status = glfonsRasterize(m_fontContext->getFontContext(), _id, _text.c_str());
+    m_fontContext->lock();
+
+    auto ctx = m_fontContext->getFontContext();
+    glfonsBindBuffer(ctx, m_fsBuffer);
+
+    fsuint textID;
+    glfonsGenText(ctx, 1, &textID);
+
+    int status = glfonsRasterize(ctx, textID, _text.c_str());
     if (status == GLFONS_VALID) {
-        numGlyphs = glfonsGetGlyphCount(m_fontContext->getFontContext(), _id);
-        bufferOffset = m_bufferPosition;
+        numGlyphs = glfonsGetGlyphCount(ctx, textID);
+        _bufferOffset = m_bufferPosition;
 
         m_bufferPosition += m_vertexLayout->getStride() * numGlyphs * 6;
-    }
-    unbind();
-    return numGlyphs;
-}
 
-glm::vec4 TextBuffer::getBBox(fsuint _textID) {
-    glm::vec4 bbox;
-    bind();
-    glfonsGetBBox(m_fontContext->getFontContext(), _textID, &bbox.x, &bbox.y, &bbox.z, &bbox.w);
-    unbind();
-    return bbox;
+        glm::vec4 bbox;
+        glfonsGetBBox(ctx, textID, &bbox.x, &bbox.y, &bbox.z, &bbox.w);
+
+        _size.x = std::abs(bbox.z - bbox.x);
+        _size.y = std::abs(bbox.w - bbox.y);
+    }
+
+    glfonsBindBuffer(ctx, 0);
+    m_fontContext->unlock();
+
+    return numGlyphs;
 }
 
 void TextBuffer::addBufferVerticesToMesh() {
     std::vector<BufferVert> vertices;
-    int bufferSize = getVerticesSize();
+
+    m_fontContext->lock();
+    auto ctx = m_fontContext->getFontContext();
+
+    glfonsBindBuffer(ctx, m_fsBuffer);
+    int bufferSize = glfonsVerticesSize(ctx);
 
     if (bufferSize == 0) {
+        glfonsBindBuffer(ctx, 0);
+        glfonsBufferDelete(ctx, m_fsBuffer);
+        m_fsBuffer = 0;
+
+        m_fontContext->unlock();
         return;
     }
 
     vertices.resize(bufferSize);
 
-    bind();
-    bool res = glfonsVertices(m_fontContext->getFontContext(), reinterpret_cast<float*>(vertices.data()));
-    unbind();
+    bool res = glfonsVertices(ctx, reinterpret_cast<float*>(vertices.data()));
 
     if (res) {
         addVertices(std::move(vertices), {});
     }
-}
 
-void TextBuffer::bind() {
-    if (!m_bound) {
-        m_fontContext->lock();
-        glfonsBindBuffer(m_fontContext->getFontContext(), m_fsBuffer);
-        m_bound = true;
-    }
-}
+    glfonsBindBuffer(ctx, 0);
+    glfonsBufferDelete(ctx, m_fsBuffer);
+    m_fsBuffer = 0;
 
-void TextBuffer::unbind() {
-    if (m_bound) {
-        glfonsBindBuffer(m_fontContext->getFontContext(), 0);
-        m_fontContext->unlock();
-        m_bound = false;
-    }
+    m_fontContext->unlock();
 }
 
 }

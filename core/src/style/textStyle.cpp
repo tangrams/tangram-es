@@ -112,9 +112,7 @@ void TextStyle::buildPolygon(Polygon& _polygon, const StyleParamMap& _styleParam
 std::shared_ptr<Label> TextStyle::addTextLabel(Tile& _tile, TextBuffer& _buffer, Label::Transform _transform,
                                                std::string _text, Label::Type _type) const {
 
-    fsuint textID = _buffer.genTextID();
-
-    std::shared_ptr<TextLabel> label(new TextLabel(_transform, _text, textID, _type));
+    std::shared_ptr<TextLabel> label(new TextLabel(_transform, _text, _type));
 
     // raterize the text label
     if (!label->rasterize(_buffer)) {

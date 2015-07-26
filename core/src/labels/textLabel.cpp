@@ -2,10 +2,9 @@
 
 namespace Tangram {
 
-TextLabel::TextLabel(Label::Transform _transform, std::string _text, fsuint _id, Type _type) :
+TextLabel::TextLabel(Label::Transform _transform, std::string _text, Type _type) :
     Label(_transform, _type),
-    m_text(_text),
-    m_id(_id)
+    m_text(_text)
 {}
 
 void TextLabel::updateBBoxes() {
@@ -21,17 +20,11 @@ void TextLabel::updateBBoxes() {
 
 bool TextLabel::rasterize(TextBuffer& _buffer) {
 
-    m_numGlyphs = _buffer.rasterize(m_text, m_id, m_bufferOffset);
+    m_numGlyphs = _buffer.rasterize(m_text, m_dim, m_bufferOffset);
 
     if (m_numGlyphs == 0) {
         return false;
     }
-
-    glm::vec4 bbox = _buffer.getBBox(m_id);
-
-    m_dim.x = std::abs(bbox.z - bbox.x);
-    m_dim.y = std::abs(bbox.w - bbox.y);
-
     return true;
 }
 

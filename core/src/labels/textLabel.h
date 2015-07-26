@@ -8,7 +8,7 @@ namespace Tangram {
 class TextLabel : public Label {
 
 public:
-    TextLabel(Label::Transform _transform, std::string _text, fsuint _id, Type _type);
+    TextLabel(Label::Transform _transform, std::string _text, Type _type);
     
     /* Call the font context to rasterize the label string */
     bool rasterize(TextBuffer& _buffer);
@@ -20,7 +20,6 @@ public:
 private:
     
     std::string m_text;
-    fsuint m_id;
 
     size_t m_bufferOffset;
     int m_numGlyphs;

@@ -1,10 +1,11 @@
 #pragma once
 
 #include "gl.h"
-#include "glfontstash.h"
 #include "gl/typedMesh.h"
 #include "glm/vec4.hpp"
 #include "glm/vec2.hpp"
+
+#include "glfontstash.h" // for fsuint
 
 #include <memory>
 
@@ -32,29 +33,20 @@ public:
     TextBuffer(std::shared_ptr<VertexLayout> _vertexLayout);
     ~TextBuffer();
 
-    /* generates a text id */
-    fsuint genTextID();
-
     /* creates a text buffer and bind it */
     void init();
 
-    /* ask the font rasterizer to rasterize a specific text for a text id */
-    int rasterize(const std::string& _text, fsuint _id, size_t& bufferOffset);
-
-    int getVerticesSize();
-
-    /* get the axis aligned bounding box for a text */
-    glm::vec4 getBBox(fsuint _textID);
+    /* ask the font rasterizer to rasterize a specific text.
+     * Returns number of glyphs > 0 on success.
+     * @_size is set to the text extents
+     * @_bufferOffset is set to the byteOffset of the first glyph-vertex */
+    int rasterize(const std::string& _text, glm::vec2& _size, size_t& bufferOffset);
 
     /* get the vertices from the font context and add them as vbo mesh data */
     void addBufferVerticesToMesh();
 
 private:
 
-    void bind();
-    void unbind();
-
-    bool m_bound;
     bool m_dirtyTransform;
     fsuint m_fsBuffer;
     int m_bufferPosition;
