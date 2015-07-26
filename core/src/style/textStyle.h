@@ -29,10 +29,9 @@ protected:
     };
 
     /*
-     * Creates a text slabel for and associate it with the current processed <MapTile> TileID for a specific syle name
-     * Returns the created label
+     * Creates a text label and add it to the processed <TextBuffer>.
      */
-    std::shared_ptr<Label> addTextLabel(Tile& _tile, TextBuffer& _buffer, Label::Transform _transform, std::string _text, Label::Type _type) const;
+    void addTextLabel(TextBuffer& _buffer, Label::Transform _transform, std::string _text, Label::Type _type) const;
 
     std::string m_fontName;
     float m_fontSize;

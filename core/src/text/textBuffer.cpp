@@ -8,7 +8,7 @@
 namespace Tangram {
 
 TextBuffer::TextBuffer(std::shared_ptr<VertexLayout> _vertexLayout)
-    : TypedMesh<BufferVert>(_vertexLayout, GL_TRIANGLES, GL_DYNAMIC_DRAW) {
+    : LabelMesh(_vertexLayout, GL_TRIANGLES) {
 
     m_dirtyTransform = false;
     m_bufferPosition = 0;

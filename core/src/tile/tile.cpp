@@ -34,10 +34,16 @@ Tile::~Tile() {
 
 }
 
-void Tile::addGeometry(const Style& _style, std::shared_ptr<VboMesh> _mesh) {
+void Tile::addMesh(const Style& _style, std::shared_ptr<VboMesh> _mesh) {
+    m_geometry[_style.getName()] = std::move(_mesh);
+}
 
-    m_geometry[_style.getName()] = std::move(_mesh); // Move-construct a unique_ptr at the value associated with the given style
+std::shared_ptr<VboMesh> Tile::getMesh(const Style& _style) {
+    auto it = m_geometry.find(_style.getName());
+    if (it != m_geometry.end())
+        return it->second;
 
+    return nullptr;
 }
 
 void Tile::update(float _dt, const View& _view) {
@@ -48,20 +54,6 @@ void Tile::update(float _dt, const View& _view) {
     m_modelMatrix[3][1] = m_tileOrigin.y - viewOrigin.y;
     m_modelMatrix[3][2] = -viewOrigin.z;
 
-}
-
-std::vector<std::shared_ptr<Label>>& Tile::getLabels(const Style& _style) {
-    return m_labels[_style.getName()];
-}
-
-void Tile::pushLabelTransforms(const Style& _style) {
-    std::shared_ptr<VboMesh>& styleMesh = m_geometry[_style.getName()];
-    
-    if (styleMesh) {
-        for(auto& label : m_labels[_style.getName()]) {
-            label->pushTransform(*styleMesh);
-        }
-    }
 }
 
 void Tile::draw(const Style& _style, const View& _view) {
@@ -84,14 +76,6 @@ void Tile::draw(const Style& _style, const View& _view) {
 
         styleMesh->draw(shader);
     }
-}
-
-std::shared_ptr<VboMesh>& Tile::getGeometry(const Style& _style) {
-    return m_geometry.at(_style.getName());
-}
-
-void Tile::addLabel(const std::string& _styleName, std::shared_ptr<Label> _label) {
-    m_labels[_styleName].push_back(std::move(_label));
 }
 
 }

@@ -49,7 +49,14 @@ void Labels::update(float _dt, const std::vector<std::unique_ptr<Style>>& _style
         glm::mat4 mvp = m_view->getViewProjectionMatrix() * tile->getModelMatrix();
 
         for (const auto& style : _styles) {
-            for (auto& label : tile->getLabels(*style)) {
+            auto mesh = tile->getMesh(*style);
+            if (!mesh) { continue; }
+
+            auto labelMesh = dynamic_cast<LabelMesh*>(mesh.get());
+            if (!labelMesh) { continue; }
+
+
+            for (auto& label : labelMesh->getLabels()) {
                 m_needUpdate |= label->update(mvp, screenSize, _dt);
 
                 if (label->canOcclude()) {
@@ -110,7 +117,15 @@ void Labels::update(float _dt, const std::vector<std::unique_ptr<Style>>& _style
         }
 
         for (const auto& style : _styles) {
-            tile->pushLabelTransforms(*style);
+            auto mesh = tile->getMesh(*style);
+            if (!mesh) { continue; }
+
+            auto labelMesh = dynamic_cast<LabelMesh*>(mesh.get());
+            if (!labelMesh) { continue; }
+
+            for (auto& label : labelMesh->getLabels()) {
+                label->pushTransform(*labelMesh);
+            }
         }
     }
 

@@ -7,6 +7,7 @@
 #include "gl/vertexLayout.h"
 #include "util/builders.h"
 #include "view/view.h"
+#include "labels/spriteLabel.h"
 
 #include "glm/gtc/type_ptr.hpp"
 
@@ -87,28 +88,15 @@ void SpriteStyle::buildPoint(Point& _point, const StyleParamMap&, Properties& _p
 
     size_t bufferOffset = _mesh.numVertices() * m_vertexLayout->getStride() + m_stateAttribOffset;
 
-    auto label = addSpriteLabel(_tile, t,
-                                spriteNode.m_size * spriteScale,
-                                bufferOffset);
+    auto label = std::make_shared<SpriteLabel>(t, spriteNode.m_size * spriteScale, bufferOffset);
 
-    if (label) {
-        Builders::buildQuadAtPoint(label->getTransform().state.screenPos + offset,
-                                   spriteNode.m_size * spriteScale,
-                                   spriteNode.m_uvBL, spriteNode.m_uvTR, builder);
-    }
+    Builders::buildQuadAtPoint(label->getTransform().state.screenPos + offset,
+                               spriteNode.m_size * spriteScale,
+                               spriteNode.m_uvBL, spriteNode.m_uvTR, builder);
 
-    auto& mesh = static_cast<SpriteStyle::Mesh&>(_mesh);
+    auto& mesh = static_cast<LabelMesh&>(_mesh);
     mesh.addVertices(std::move(vertices), std::move(builder.indices));
-}
-
-std::shared_ptr<Label> SpriteStyle::addSpriteLabel(Tile& _tile, Label::Transform _transform,
-                                                   const glm::vec2& _size, size_t _bufferOffset) const {
-
-    auto label = std::shared_ptr<Label>(new SpriteLabel(_transform, _size, _bufferOffset));
-
-    _tile.addLabel(m_name, label);
-
-    return label;
+    mesh.addLabel(std::move(label));
 }
 
 void SpriteStyle::onBeginDrawFrame(const std::shared_ptr<View>& _view, const std::shared_ptr<Scene>& _scene) {

@@ -28,12 +28,12 @@ void DebugTextStyle::addData(TileData& _data, Tile& _tile) {
         }
 
         std::string tileID = std::to_string(_tile.getID().x) + "/" + std::to_string(_tile.getID().y) + "/" + std::to_string(_tile.getID().z);
-        addTextLabel(_tile, buffer, { glm::vec2(0), glm::vec2(0) }, tileID, Label::Type::debug);
+        addTextLabel(buffer, { glm::vec2(0), glm::vec2(0) }, tileID, Label::Type::debug);
 
         onEndBuildTile(*mesh);
 
         mesh->compileVertexBuffer();
-        _tile.addGeometry(*this, mesh);
+        _tile.addMesh(*this, mesh);
     }
 
 }

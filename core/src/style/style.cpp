@@ -187,7 +187,7 @@ void Style::addData(TileData& _data, Tile& _tile) {
     } else {
         mesh->compileVertexBuffer();
 
-        _tile.addGeometry(*this, mesh);
+        _tile.addMesh(*this, mesh);
     }
 }
 

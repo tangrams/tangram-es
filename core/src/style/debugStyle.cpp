@@ -52,7 +52,7 @@ void DebugStyle::addData(TileData &_data, Tile &_tile) {
         mesh->addVertices(std::move(vertices), { 0, 1, 2, 3, 0 });
         mesh->compileVertexBuffer();
 
-        _tile.addGeometry(*this, std::unique_ptr<VboMesh>(mesh));
+        _tile.addMesh(*this, std::unique_ptr<VboMesh>(mesh));
 
     }
 }

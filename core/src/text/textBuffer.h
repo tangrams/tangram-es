@@ -1,7 +1,7 @@
 #pragma once
 
 #include "gl.h"
-#include "gl/typedMesh.h"
+#include "labels/labelMesh.h"
 #include "glm/vec4.hpp"
 #include "glm/vec2.hpp"
 
@@ -11,22 +11,12 @@
 
 namespace Tangram {
 
-struct BufferVert {
-    glm::vec2 pos;
-    glm::vec2 uv;
-    struct State {
-        glm::vec2 screenPos;
-        float alpha;
-        float rotation;
-    } state;
-};
-
 class FontContext;
 
 /*
  * This class represents a text buffer, each text buffer has several text ids
  */
-class TextBuffer : public TypedMesh<BufferVert> {
+class TextBuffer : public LabelMesh {
 
 public:
 
