@@ -13,8 +13,6 @@
 
 namespace Tangram {
 
-class Label;
-class Labels;
 class MapProjection;
 class Style;
 class TextBuffer;
