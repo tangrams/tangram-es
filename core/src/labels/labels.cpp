@@ -18,12 +18,12 @@ int Labels::LODDiscardFunc(float _maxZoom, float _zoom) {
 }
 
 
-void Labels::update(float _dt, const std::vector<std::unique_ptr<Style>>& _styles,
+void Labels::update(const View& _view, float _dt, const std::vector<std::unique_ptr<Style>>& _styles,
                     const std::map<TileID, std::shared_ptr<Tile>>& _tiles) {
 
     m_needUpdate = false;
 
-    float zoom = m_view->getZoom();
+    float zoom = _view.getZoom();
 
     std::set<std::pair<Label*, Label*>> occlusions;
 
@@ -31,7 +31,7 @@ void Labels::update(float _dt, const std::vector<std::unique_ptr<Style>>& _style
     m_labels.clear();
     m_aabbs.clear();
 
-    glm::vec2 screenSize = glm::vec2(m_view->getWidth(), m_view->getHeight());
+    glm::vec2 screenSize = glm::vec2(_view.getWidth(), _view.getHeight());
 
     //// Collect labels from visible tiles
 
@@ -45,7 +45,7 @@ void Labels::update(float _dt, const std::vector<std::unique_ptr<Style>>& _style
             continue;
         }
 
-        glm::mat4 mvp = m_view->getViewProjectionMatrix() * tile->getModelMatrix();
+        glm::mat4 mvp = _view.getViewProjectionMatrix() * tile->getModelMatrix();
 
         for (const auto& style : _styles) {
             auto mesh = tile->getMesh(*style);
@@ -69,7 +69,7 @@ void Labels::update(float _dt, const std::vector<std::unique_ptr<Style>>& _style
     //// Manage occlusions
 
     // broad phase
-    auto pairs = intersect(m_aabbs, {4, 4}, {m_view->getWidth(), m_view->getHeight()});
+    auto pairs = intersect(m_aabbs, {4, 4}, {_view.getWidth(), _view.getHeight()});
 
     for (auto pair : pairs) {
         const auto& aabb1 = m_aabbs[pair.first];
@@ -110,7 +110,7 @@ void Labels::update(float _dt, const std::vector<std::unique_ptr<Style>>& _style
         requestRender();
 }
 
-void Labels::drawDebug() {
+void Labels::drawDebug(const View& _view) {
 
     if (!Tangram::getDebugFlag(Tangram::DebugFlags::labels)) {
         return;
@@ -119,12 +119,12 @@ void Labels::drawDebug() {
     for (auto label : m_labels) {
         if (label->canOcclude()) {
             Primitives::drawPoly(reinterpret_cast<const glm::vec2*>(label->getOBB().getQuad()),
-                                 4, { m_view->getWidth(), m_view->getHeight() });
+                                 4, { _view.getWidth(), _view.getHeight() });
         }
     }
 
     glm::vec2 split(4, 4);
-    glm::vec2 res(m_view->getWidth(), m_view->getHeight());
+    glm::vec2 res(_view.getWidth(), _view.getHeight());
     const short xpad = short(ceilf(res.x / split.x));
     const short ypad = short(ceilf(res.y / split.y));
 

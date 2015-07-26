@@ -60,7 +60,6 @@ void initialize() {
         m_ftContext = FontContext::GetInstance();
         m_ftContext->addFont("FiraSans-Medium.ttf", "FiraSans");
         m_labels = std::unique_ptr<Labels>(new Labels());
-        m_labels->setView(m_view);
 
         SceneLoader loader;
         loader.loadScene("config.yaml", *m_scene, *m_tileManager, *m_view);
@@ -110,7 +109,7 @@ void update(float _dt) {
             }
         }
 
-        m_labels->update(_dt, m_scene->getStyles(), tileSet);
+        m_labels->update(*m_view, _dt, m_scene->getStyles(), tileSet);
     }
 
     if (m_scene) {
@@ -141,7 +140,7 @@ void render() {
 
     m_skybox->draw(*m_view);
 
-    m_labels->drawDebug();
+    m_labels->drawDebug(*m_view);
 
     while (Error::hadGlError("Tangram::render()")) {}
 }

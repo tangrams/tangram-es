@@ -29,11 +29,9 @@ public:
 
     virtual ~Labels();
 
-    void setView(std::shared_ptr<View> _view) { m_view = _view; }
+    void drawDebug(const View& _view);
 
-    void drawDebug();
-
-    void update(float _dt, const std::vector<std::unique_ptr<Style>>& _styles,
+    void update(const View& _view, float _dt, const std::vector<std::unique_ptr<Style>>& _styles,
                 const std::map<TileID, std::shared_ptr<Tile>>& _tiles);
 
     bool needUpdate() { return m_needUpdate; }
@@ -42,7 +40,6 @@ private:
 
     int LODDiscardFunc(float _maxZoom, float _zoom);
 
-    std::shared_ptr<View> m_view;
     bool m_needUpdate;
 
     // temporary data used in update()
