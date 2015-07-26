@@ -4,7 +4,6 @@
 #include "glm/mat4x4.hpp"
 #include <climits> // needed in aabb.h
 #include "isect2d.h"
-#include "text/textBuffer.h"
 #include "fadeEffect.h"
 
 #include <string>
@@ -28,6 +27,16 @@ public:
         sleep           = 1 << 3,
         out_of_screen   = 1 << 4,
         wait_occ        = 1 << 5, // state waiting for first occlusion result
+    };
+
+    struct BufferVert {
+        glm::vec2 pos;
+        glm::vec2 uv;
+        struct State {
+            glm::vec2 screenPos;
+            float alpha;
+            float rotation;
+        } state;
     };
 
     struct Transform {

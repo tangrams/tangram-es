@@ -1,6 +1,7 @@
 #pragma once
 
-#include "label.h"
+#include "labels/label.h"
+#include "labels/labelMesh.h"
 
 namespace Tangram {
 

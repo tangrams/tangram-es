@@ -61,7 +61,7 @@ void SpriteStyle::constructShaderProgram() {
 
 void SpriteStyle::buildPoint(Point& _point, const StyleParamMap&, Properties& _props, VboMesh& _mesh, Tile& _tile) const {
     // TODO : make this configurable
-    std::vector<BufferVert> vertices;
+    std::vector<Label::BufferVert> vertices;
 
     SpriteBuilder builder = {
         [&](const glm::vec2& coord, const glm::vec2& screenPos, const glm::vec2& uv) {
@@ -90,7 +90,7 @@ void SpriteStyle::buildPoint(Point& _point, const StyleParamMap&, Properties& _p
 
     auto& mesh = static_cast<LabelMesh&>(_mesh);
 
-    auto label = std::make_shared<SpriteLabel>(mesh, t, spriteNode.m_size * spriteScale, bufferOffset);
+    std::unique_ptr<SpriteLabel> label(new SpriteLabel(mesh, t, spriteNode.m_size * spriteScale, bufferOffset));
 
     Builders::buildQuadAtPoint(label->getTransform().state.screenPos + offset,
                                spriteNode.m_size * spriteScale,

@@ -111,10 +111,10 @@ void TextStyle::buildPolygon(Polygon& _polygon, const StyleParamMap& _styleParam
 
 void TextStyle::addTextLabel(TextBuffer& _buffer, Label::Transform _transform, std::string _text, Label::Type _type) const {
 
-    std::shared_ptr<TextLabel> label(new TextLabel(_buffer, _transform, _text, _type));
+    std::unique_ptr<TextLabel> label(new TextLabel(_buffer, _transform, _text, _type));
 
     if (label->rasterize()) {
-        _buffer.addLabel(label);
+        _buffer.addLabel(std::move(label));
     }
 }
 
