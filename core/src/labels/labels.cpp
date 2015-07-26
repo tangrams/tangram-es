@@ -90,12 +90,8 @@ void Labels::update(const View& _view, float _dt, const std::vector<std::unique_
             }
         }
         if (!pair.second->occludedLastFrame()) {
-            if (pair.first->getState() == Label::State::wait_occ) {
-                pair.first->setOcclusion(true);
-            }
+            pair.first->setOcclusion(true);
         }
-
-        if (!pair.second->occludedLastFrame()) { pair.first->setOcclusion(true); }
     }
 
     //// Update label meshes
