@@ -56,7 +56,7 @@ public:
     bool update(const glm::mat4& _mvp, const glm::vec2& _screenSize, float _dt);
 
     /* Push the pending transforms to the vbo by updating the vertices */
-    virtual void pushTransform(VboMesh& _mesh) = 0;
+    virtual void pushTransform() = 0;
     
     /* Update the screen position of the label */
     bool updateScreenTransform(const glm::mat4& _mvp, const glm::vec2& _screenSize);
@@ -105,7 +105,6 @@ protected:
     bool m_dirty;
     Transform m_transform;
     glm::vec2 m_dim;
-
 };
 
 }

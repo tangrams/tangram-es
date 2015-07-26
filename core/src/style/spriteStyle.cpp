@@ -88,13 +88,14 @@ void SpriteStyle::buildPoint(Point& _point, const StyleParamMap&, Properties& _p
 
     size_t bufferOffset = _mesh.numVertices() * m_vertexLayout->getStride() + m_stateAttribOffset;
 
-    auto label = std::make_shared<SpriteLabel>(t, spriteNode.m_size * spriteScale, bufferOffset);
+    auto& mesh = static_cast<LabelMesh&>(_mesh);
+
+    auto label = std::make_shared<SpriteLabel>(mesh, t, spriteNode.m_size * spriteScale, bufferOffset);
 
     Builders::buildQuadAtPoint(label->getTransform().state.screenPos + offset,
                                spriteNode.m_size * spriteScale,
                                spriteNode.m_uvBL, spriteNode.m_uvTR, builder);
 
-    auto& mesh = static_cast<LabelMesh&>(_mesh);
     mesh.addVertices(std::move(vertices), std::move(builder.indices));
     mesh.addLabel(std::move(label));
 }

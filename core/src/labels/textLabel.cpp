@@ -2,9 +2,10 @@
 
 namespace Tangram {
 
-TextLabel::TextLabel(Label::Transform _transform, std::string _text, Type _type) :
+TextLabel::TextLabel(TextBuffer& _mesh, Label::Transform _transform, std::string _text, Type _type) :
     Label(_transform, _type),
-    m_text(_text)
+    m_text(_text),
+    m_mesh(_mesh)
 {}
 
 void TextLabel::updateBBoxes() {
@@ -18,9 +19,9 @@ void TextLabel::updateBBoxes() {
     m_aabb = m_obb.getExtent();
 }
 
-bool TextLabel::rasterize(TextBuffer& _buffer) {
+bool TextLabel::rasterize() {
 
-    m_numGlyphs = _buffer.rasterize(m_text, m_dim, m_bufferOffset);
+    m_numGlyphs = m_mesh.rasterize(m_text, m_dim, m_bufferOffset);
 
     if (m_numGlyphs == 0) {
         return false;
@@ -28,15 +29,14 @@ bool TextLabel::rasterize(TextBuffer& _buffer) {
     return true;
 }
 
-void TextLabel::pushTransform(VboMesh& _mesh) {
+void TextLabel::pushTransform() {
     if (m_dirty) {
         m_dirty = false;
-        TextBuffer& buffer = static_cast<TextBuffer&>(_mesh);
 
         int numVerts = m_numGlyphs * 6;
         size_t attribOffset = 16;
 
-        buffer.updateAttribute(m_bufferOffset + attribOffset, numVerts, m_transform.state);
+        m_mesh.updateAttribute(m_bufferOffset + attribOffset, numVerts, m_transform.state);
     }
 }
 

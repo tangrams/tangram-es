@@ -55,7 +55,6 @@ void Labels::update(float _dt, const std::vector<std::unique_ptr<Style>>& _style
             auto labelMesh = dynamic_cast<LabelMesh*>(mesh.get());
             if (!labelMesh) { continue; }
 
-
             for (auto& label : labelMesh->getLabels()) {
                 m_needUpdate |= label->update(mvp, screenSize, _dt);
 
@@ -104,29 +103,7 @@ void Labels::update(float _dt, const std::vector<std::unique_ptr<Style>>& _style
 
     for (auto label : m_labels) {
         label->occlusionSolved();
-    }
-
-    //// update meshes
-    for (const auto& mapIDandTile : _tiles) {
-        const auto& tile = mapIDandTile.second;
-
-        if (!tile->isReady()) { continue; }
-
-        if ((zoom - tile->getID().z) > LODDiscardFunc(View::s_maxZoom, zoom)) {
-            continue;
-        }
-
-        for (const auto& style : _styles) {
-            auto mesh = tile->getMesh(*style);
-            if (!mesh) { continue; }
-
-            auto labelMesh = dynamic_cast<LabelMesh*>(mesh.get());
-            if (!labelMesh) { continue; }
-
-            for (auto& label : labelMesh->getLabels()) {
-                label->pushTransform(*labelMesh);
-            }
-        }
+        label->pushTransform();
     }
 
     // Request for render if labels are in fading in/out states
