@@ -105,6 +105,7 @@ void Labels::update(const View& _view, float _dt, const std::vector<std::unique_
     }
 
 
+    size_t dirtyBytes = 0;
     size_t dirtyBuffers = 0;
 
     for (const auto& mapIDandTile : _tiles) {
@@ -126,11 +127,17 @@ void Labels::update(const View& _view, float _dt, const std::vector<std::unique_
             auto labelMesh = dynamic_cast<LabelMesh*>(mesh.get());
             if (!labelMesh) { continue; }
 
-            dirtyBuffers += labelMesh->getDirtySize();
+            if (labelMesh->getDirtySize() > 0)
+                dirtyBuffers++;
+
+            dirtyBytes += labelMesh->getDirtySize();
         }
     }
 
-    logMsg("Active %f / Dirty %f\n", double(sumLabelBytes) / (1024 * 1024),  double(dirtyBuffers) / (1024 * 1024));
+    logMsg("Buffers %d / Dirty %fMB - Active %fMB\n",
+           dirtyBuffers,
+           double(dirtyBytes) / (1024 * 1024),
+           double(sumLabelBytes) / (1024 * 1024));
 
     // Request for render if labels are in fading in/out states
     if (m_needUpdate)
