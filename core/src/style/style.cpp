@@ -36,16 +36,10 @@ uint32_t Style::parseColorProp(const std::string& _colorPropStr) {
                 | (CLAMP(static_cast<uint32_t>(r * 255.), 0, 255)) << 16
                 | (CLAMP(static_cast<uint32_t>(g * 255.), 0, 255)) << 8
                 | (CLAMP(static_cast<uint32_t>(b * 255.), 0, 255));
-
-        } else {
-            color = 0xffff00ff;
         }
-    } else { // parse as css color or #hex-num
-        bool isValid;
-        color = CSSColorParser::parse(_colorPropStr, isValid).getInt();
-        if (!isValid) {
-            color = 0xffff00ff;
-        }
+    } else {
+        // parse as css color or #hex-num
+        color = CSSColorParser::parse(_colorPropStr).getInt();
     }
     return color;
 }
