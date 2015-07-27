@@ -58,6 +58,7 @@ ANDROID_CMAKE_PARAMS = \
 	-DMAKE_BUILD_TOOL=$$ANDROID_NDK/prebuilt/darwin-x86_64/bin/make \
 	-DANDROID_ABI=${ANDROID_ARCH} \
 	-DANDROID_STL=c++_shared \
+	-DANDROID_TOOLCHAIN_NAME=arm-linux-androideabi-clang3.5 \
 	-DANDROID_NATIVE_API_LEVEL=${ANDROID_API_LEVEL} \
 	-DLIBRARY_OUTPUT_PATH_ROOT=../../android/tangram
 
