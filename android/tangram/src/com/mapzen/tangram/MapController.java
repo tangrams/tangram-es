@@ -263,11 +263,16 @@ public class MapController implements Renderer, OnTouchListener, OnScaleGestureL
     private RotateGestureDetector rotateGestureDetector;
     private ShoveGestureDetector shoveGestureDetector;
 
-    private static final float PINCH_THRESHOLD = 20f; //Make sure x span is at least 20
-    private static final float ROTATION_THRESHOLD = 0.035f; //Make sure rotation is at least 0.02 radians
+    private static final float PINCH_THRESHOLD = 20f;
+    private static final float ROTATION_THRESHOLD = 0.30f;
 
+    /*
+     * NOTE: Not relying on gestureDetector.isInProgress() since this is set after gestureBegin call and before
+     * onGesture call, which makes it hard to get exclusivity with gestures.
+     */
     private boolean mScaleHandled = false;
     private boolean mRotationHandled = false;
+    private boolean mShoveHandled = false;
 
     private View.OnGenericMotionListener longPressListener;
     private DisplayMetrics displayMetrics = new DisplayMetrics();
@@ -368,7 +373,7 @@ public class MapController implements Renderer, OnTouchListener, OnScaleGestureL
 
     public boolean onScaleBegin(ScaleGestureDetector detector) {
         mScaleHandled = false;
-        return !shoveGestureDetector.isInProgress();
+        return !mShoveHandled;
     }
 
     public boolean onScale(ScaleGestureDetector detector) {
@@ -384,7 +389,7 @@ public class MapController implements Renderer, OnTouchListener, OnScaleGestureL
           * If previous scale is handled then keep on handling scale
           * else give some buffer for shove to be processed
           */
-        if( mScaleHandled || (!shoveGestureDetector.isInProgress() && diff > PINCH_THRESHOLD)) {
+        if( mScaleHandled || (!mShoveHandled && diff > PINCH_THRESHOLD)) {
             mScaleHandled = true;
 			handlePinchGesture(detector.getFocusX(), detector.getFocusY(), detector.getScaleFactor(), velocity);
             return true;
@@ -402,7 +407,7 @@ public class MapController implements Renderer, OnTouchListener, OnScaleGestureL
 
     public boolean onRotateBegin(RotateGestureDetector detector) {
         mRotationHandled = false;
-        return !shoveGestureDetector.isInProgress();
+        return !mShoveHandled;
     }
 
     public boolean onRotate(RotateGestureDetector detector) {
@@ -418,11 +423,19 @@ public class MapController implements Renderer, OnTouchListener, OnScaleGestureL
           * If previous rotation is handled then keep on handling it
           * else give some buffer for shove to be processed
           */
-        if( mRotationHandled || (!shoveGestureDetector.isInProgress() && (Math.abs(rotation) > ROTATION_THRESHOLD)) ) {
-            mRotationHandled = true;
+        if( mRotationHandled || (!mShoveHandled && (Math.abs(rotation) > ROTATION_THRESHOLD)) ) {
+            float rotAngle;
+
+            // Compensate for the ROTATION_THRESHOLD at the very beginning of the gesture, to avoid rotation jumps
+            if(!mRotationHandled) {
+                rotAngle = (rotation > 0) ? (rotation- ROTATION_THRESHOLD) : (rotation + ROTATION_THRESHOLD);
+            } else {
+                rotAngle = rotation;
+            }
             float x = scaleGestureDetector.getFocusX();
             float y = scaleGestureDetector.getFocusY();
-            handleRotateGesture(x, y, -(rotation));
+            handleRotateGesture(x, y, -(rotAngle));
+            mRotationHandled = true;
             return true;
         }
         mRotationHandled = false;
@@ -438,6 +451,7 @@ public class MapController implements Renderer, OnTouchListener, OnScaleGestureL
 
     public boolean onShoveBegin(ShoveGestureDetector detector) {
         // If scale has started being handled ignore shove
+        mShoveHandled = false;
         return (!mScaleHandled || !mRotationHandled);
     }
 
@@ -445,16 +459,19 @@ public class MapController implements Renderer, OnTouchListener, OnScaleGestureL
 
         if(mScaleHandled || mRotationHandled) return false;
 
+        mShoveHandled = true;
+
         float currentSpanX = detector.getCurrentSpanX();
         float prevSpanX = detector.getPreviousSpanX();
 
         double diffX = Math.abs(currentSpanX - prevSpanX);
 
-        handleShoveGesture(detector.getShovePixelsDelta() / displayMetrics.heightPixels);
+        handleShoveGesture(-detector.getShovePixelsDelta() / displayMetrics.heightPixels);
         return true;
     }
 
     public void onShoveEnd(ShoveGestureDetector detector) {
+        mShoveHandled = false;
     }
 
     // Networking methods

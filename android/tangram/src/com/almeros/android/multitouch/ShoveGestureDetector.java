@@ -3,8 +3,6 @@ package com.almeros.android.multitouch;
 import android.content.Context;
 import android.view.MotionEvent;
 
-import android.util.Log;
-
 /**
  * @author Robert Nordan (robert.nordan@norkart.no)
  *
@@ -71,6 +69,11 @@ public class ShoveGestureDetector extends TwoFingerGestureDetector {
     private final OnShoveGestureListener mListener;
     private boolean mSloppyGesture;
     private boolean mInitiated;
+
+    // Make sure there is sufficient drag in the 2 fingers
+    private final float DRAG_THRESHOLD = 50.0f;
+    // Make sure xSpan between 2 fingers is not increasing and is more or less consistent
+    private final float XSPAN_THRESHOLD = 10.0f;
 
     public ShoveGestureDetector(Context context, OnShoveGestureListener listener) {
     	super(context);
@@ -208,32 +211,24 @@ public class ShoveGestureDetector extends TwoFingerGestureDetector {
     	if (sloppy)
     		return true;
 
-    	// If it's not traditionally sloppy, we check if the angle between fingers
-    	// is acceptable.
-    	double angle = Math.abs(Math.atan2(mCurrFingerDiffY, mCurrFingerDiffX));
-    	//about 20 degrees, left or right
-
-        boolean badAngle = !(( 0.0f < angle && angle < 0.35f)
-                || 2.79f < angle && angle < Math.PI);
-        //return !(( 0.0f < angle && angle < 0.35f)
-                //|| 2.79f < angle && angle < Math.PI);
-        if(badAngle)
-            return true;
-
-        // Make sure there is sufficient drag in the 2 fingers
-        // Make sure xspan between the 2 fingers is not more than 3pixels
         final float drag0 = Math.abs(event.getY(0) - mStartY0);
         final float drag1 = Math.abs(event.getY(1) - mStartY1);
 
         final float xSpanDiff = Math.abs(mCurrFingerDiffX - mPrevFingerDiffX);
 
-        if(drag0 < 3f || drag1 < 3f) {
+        if(drag0 < DRAG_THRESHOLD || drag1 < DRAG_THRESHOLD) {
             return true;
-        } else if(drag0 < 5f && drag1 < 5f) {
-            return true;
-        } else if(xSpanDiff > 15f) {
+        } else if(xSpanDiff > XSPAN_THRESHOLD) {
             return true;
         }
+
+        // Do angle check post drag check!!
+    	double angle = Math.abs(Math.atan2(mCurrFingerDiffY, mCurrFingerDiffX));
+    	//about 20 degrees, left or right
+        boolean badAngle = !(( 0.0f < angle && angle < 0.35f)
+                || 2.79f < angle && angle < Math.PI);
+        if(badAngle)
+            return true;
 
         return false;
     }
