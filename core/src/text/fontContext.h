@@ -20,6 +20,11 @@ class FontContext {
 
 public:
 
+    static std::shared_ptr<FontContext> GetInstance() {
+        static std::shared_ptr<FontContext> instance(new FontContext());
+        return instance;
+    }
+
     FontContext();
     FontContext(int _atlasSize);
     ~FontContext();
@@ -29,6 +34,8 @@ public:
 
     /* sets the current font for a size in pixels */
     void setFont(const std::string& _name, int size);
+
+    fsuint getFontID(const std::string& _name);
 
     /* sets the blur spread when using signed distance field rendering */
     void setSignedDistanceField(float _blurSpread);
@@ -41,17 +48,22 @@ public:
     /* unlock thread access to this font context */
     void unlock();
 
-    const std::unique_ptr<Texture>& getAtlas() const;
+    void bindAtlas(GLuint _textureUnit);
 
     FONScontext* getFontContext() const { return m_fsContext; }
 
 private:
 
+    static void updateAtlas(void* _userPtr, unsigned int _xoff, unsigned int _yoff,
+                            unsigned int _width, unsigned int _height, const unsigned int* _pixels);
+
     void initFontContext(int _atlasSize);
 
     std::map<std::string, int> m_fonts;
     std::unique_ptr<Texture> m_atlas;
-    std::unique_ptr<std::mutex> m_contextMutex;
+    std::mutex m_contextMutex;
+    std::mutex m_atlasMutex;
+
     FONScontext* m_fsContext;
 
 };

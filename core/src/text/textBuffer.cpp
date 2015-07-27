@@ -6,107 +6,108 @@
 
 namespace Tangram {
 
-TextBuffer::TextBuffer(std::shared_ptr<FontContext> _fontContext, std::shared_ptr<VertexLayout> _vertexLayout)
-    : TypedMesh<BufferVert>(_vertexLayout, GL_TRIANGLES, GL_DYNAMIC_DRAW) {
+TextBuffer::TextBuffer(std::shared_ptr<VertexLayout> _vertexLayout)
+    : LabelMesh(_vertexLayout, GL_TRIANGLES) {
 
     m_dirtyTransform = false;
-    m_fontContext = _fontContext;
-    m_bound = false;
+    m_bufferPosition = 0;
+    m_fsBuffer = 0;
 }
 
-void TextBuffer::init() {
-    m_fontContext->lock();
-    glfonsBufferCreate(m_fontContext->getFontContext(), &m_fsBuffer);
-    m_fontContext->unlock();
+void TextBuffer::init(fsuint _fontID, float _size, float _blurSpread) {
+    m_fontID = _fontID;
+    m_fontSize = _size;
+    m_fontBlurSpread = _blurSpread;
 }
 
 TextBuffer::~TextBuffer() {
-    m_fontContext->lock();
-    glfonsBufferDelete(m_fontContext->getFontContext(), m_fsBuffer);
-    m_fontContext->unlock();
-}
+    if (m_fsBuffer != 0) {
+        auto fontContext = FontContext::GetInstance();
 
-int TextBuffer::getVerticesSize() {
-    bind();
-    int size = glfonsVerticesSize(m_fontContext->getFontContext());
-    unbind();
-    return size;
-}
-
-fsuint TextBuffer::genTextID() {
-    fsuint id;
-    bind();
-    glfonsGenText(m_fontContext->getFontContext(), 1, &id);
-    unbind();
-    return id;
-}
-
-bool TextBuffer::rasterize(const std::string& _text, fsuint _id) {
-    bind();
-    int status = glfonsRasterize(m_fontContext->getFontContext(), _id, _text.c_str());
-    unbind();
-    return status == GLFONS_VALID;
-}
-
-void TextBuffer::pushBuffer() {
-    if (m_dirtyTransform) {
-        bind();
-        glfonsUpdateBuffer(m_fontContext->getFontContext(), this);
-        unbind();
-        m_dirtyTransform = false;
+        fontContext->lock();
+        glfonsBufferDelete(fontContext->getFontContext(), m_fsBuffer);
+        fontContext->unlock();
     }
 }
 
-void TextBuffer::transformID(fsuint _textID, const BufferVert::State& _state) {
-    bind();
-    glfonsTransform(m_fontContext->getFontContext(), _textID,
-                    _state.screenPos.x, _state.screenPos.y,
-                    _state.rotation, _state.alpha);
-    unbind();
-    m_dirtyTransform = true;
-}
+int TextBuffer::rasterize(const std::string& _text, glm::vec2& _size, size_t& _bufferOffset) {
+    int numGlyphs = 0;
 
-glm::vec4 TextBuffer::getBBox(fsuint _textID) {
-    glm::vec4 bbox;
-    bind();
-    glfonsGetBBox(m_fontContext->getFontContext(), _textID, &bbox.x, &bbox.y, &bbox.z, &bbox.w);
-    unbind();
-    return bbox;
+    auto fontContext = FontContext::GetInstance();
+
+    fontContext->lock();
+
+    auto ctx = fontContext->getFontContext();
+    if (m_fsBuffer == 0)
+        glfonsBufferCreate(ctx, &m_fsBuffer);
+
+    glfonsBindBuffer(ctx, m_fsBuffer);
+
+    fonsSetSize(ctx, m_fontSize);
+    fonsSetFont(ctx, m_fontID);
+
+    if (m_fontBlurSpread > 0){
+        fonsSetBlur(ctx, m_fontBlurSpread);
+        fonsSetBlurType(ctx, FONS_EFFECT_DISTANCE_FIELD);
+    } else {
+        fonsSetBlurType(ctx, FONS_EFFECT_NONE);
+    }
+
+    fsuint textID;
+    glfonsGenText(ctx, 1, &textID);
+
+    int status = glfonsRasterize(ctx, textID, _text.c_str());
+    if (status == GLFONS_VALID) {
+        _bufferOffset = m_bufferPosition;
+
+        numGlyphs = glfonsGetGlyphCount(ctx, textID);
+        m_bufferPosition += m_vertexLayout->getStride() * numGlyphs * 6;
+
+        glm::vec4 bbox;
+        glfonsGetBBox(ctx, textID, &bbox.x, &bbox.y, &bbox.z, &bbox.w);
+        _size.x = std::abs(bbox.z - bbox.x);
+        _size.y = std::abs(bbox.w - bbox.y);
+    }
+
+    glfonsBindBuffer(ctx, 0);
+    fontContext->unlock();
+
+    return numGlyphs;
 }
 
 void TextBuffer::addBufferVerticesToMesh() {
-    std::vector<BufferVert> vertices;
-    int bufferSize = getVerticesSize();
+    if (m_fsBuffer == 0)
+        return;
 
+    auto fontContext = FontContext::GetInstance();
+
+    fontContext->lock();
+    auto ctx = fontContext->getFontContext();
+    glfonsBindBuffer(ctx, m_fsBuffer);
+
+    int bufferSize = glfonsVerticesSize(ctx);
     if (bufferSize == 0) {
+        glfonsBindBuffer(ctx, 0);
+        glfonsBufferDelete(ctx, m_fsBuffer);
+        m_fsBuffer = 0;
+
+        fontContext->unlock();
         return;
     }
 
-    vertices.resize(bufferSize);
+    std::vector<Label::Vertex> vertices(bufferSize);
 
-    bind();
-    bool res = glfonsVertices(m_fontContext->getFontContext(), reinterpret_cast<float*>(vertices.data()));
-    unbind();
+    bool res = glfonsVertices(ctx, reinterpret_cast<float*>(vertices.data()));
 
     if (res) {
         addVertices(std::move(vertices), {});
     }
-}
 
-void TextBuffer::bind() {
-    if (!m_bound) {
-        m_fontContext->lock();
-        glfonsBindBuffer(m_fontContext->getFontContext(), m_fsBuffer);
-        m_bound = true;
-    }
-}
+    glfonsBindBuffer(ctx, 0);
+    glfonsBufferDelete(ctx, m_fsBuffer);
+    m_fsBuffer = 0;
 
-void TextBuffer::unbind() {
-    if (m_bound) {
-        glfonsBindBuffer(m_fontContext->getFontContext(), 0);
-        m_fontContext->unlock();
-        m_bound = false;
-    }
+    fontContext->unlock();
 }
 
 }

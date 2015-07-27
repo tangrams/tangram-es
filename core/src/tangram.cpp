@@ -23,7 +23,7 @@ namespace Tangram {
 std::unique_ptr<TileManager> m_tileManager;
 std::shared_ptr<Scene> m_scene;
 std::shared_ptr<View> m_view;
-std::shared_ptr<Labels> m_labels;
+std::unique_ptr<Labels> m_labels;
 std::shared_ptr<FontContext> m_ftContext;
 std::shared_ptr<Skybox> m_skybox;
 std::unique_ptr<InputHandler> m_inputHandler;
@@ -57,11 +57,9 @@ void initialize() {
         m_tileManager->setScene(m_scene);
 
         // Font and label setup
-        m_ftContext = std::make_shared<FontContext>();
+        m_ftContext = FontContext::GetInstance();
         m_ftContext->addFont("FiraSans-Medium.ttf", "FiraSans");
-        m_labels = Labels::GetInstance();
-        m_labels->setFontContext(m_ftContext);
-        m_labels->setView(m_view);
+        m_labels = std::unique_ptr<Labels>(new Labels());
 
         SceneLoader loader;
         loader.loadScene("config.yaml", *m_scene, *m_tileManager, *m_view);
@@ -94,53 +92,27 @@ void update(float _dt) {
 
     g_time += _dt;
 
-    if (m_view) {
+    m_inputHandler->update(_dt);
 
-        m_inputHandler->update(_dt);
+    m_view->update();
 
-        m_view->update();
+    m_tileManager->updateTileSet();
 
-        m_tileManager->updateTileSet();
+    if (m_view->changedOnLastUpdate() || m_tileManager->hasTileSetChanged() || m_labels->needUpdate()) {
 
-        if(m_view->changedOnLastUpdate() || m_tileManager->hasTileSetChanged() || Label::s_needUpdate) {
-            Label::s_needUpdate = false;
+        auto tileSet = m_tileManager->getVisibleTiles();
 
-            for (const auto& mapIDandTile : m_tileManager->getVisibleTiles()) {
-                const auto& tile = mapIDandTile.second;
-                if (tile->isReady()) {
-                    tile->update(_dt, *m_view);
-                }
-            }
-
-            // update labels for specific style
-            for (const auto& style : m_scene->getStyles()) {
-                for (const auto& mapIDandTile : m_tileManager->getVisibleTiles()) {
-                    const auto& tile = mapIDandTile.second;
-                    if (tile->isReady()) {
-                        tile->updateLabels(_dt, *style, *m_view);
-                    }
-                }
-            }
-
-            // manage occlusions
-            m_labels->updateOcclusions();
-
-            for (const auto& style : m_scene->getStyles()) {
-                for (const auto& mapIDandTile : m_tileManager->getVisibleTiles()) {
-                    const auto& tile = mapIDandTile.second;
-                    if (tile->isReady()) {
-                        tile->pushLabelTransforms(*style, m_labels);
-                    }
-                }
+        for (const auto& mapIDandTile : tileSet) {
+            const auto& tile = mapIDandTile.second;
+            if (tile->isReady()) {
+                tile->update(_dt, *m_view);
             }
         }
 
-        if (Label::s_needUpdate) {
-            requestRender();
-        }
+        m_labels->update(*m_view, _dt, m_scene->getStyles(), tileSet);
     }
 
-    if(m_scene) {
+    if (m_scene) {
         // Update lights and styles
     }
 }
@@ -168,7 +140,7 @@ void render() {
 
     m_skybox->draw(*m_view);
 
-    m_labels->drawDebug();
+    m_labels->drawDebug(*m_view);
 
     while (Error::hadGlError("Tangram::render()")) {}
 }
@@ -253,7 +225,7 @@ void setPixelScale(float _pixelsPerPoint) {
 }
 
 void handleTapGesture(float _posX, float _posY) {
-    
+
     m_inputHandler->handleTapGesture(_posX, _posY);
 
 }

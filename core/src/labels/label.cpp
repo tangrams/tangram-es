@@ -4,8 +4,6 @@
 
 namespace Tangram {
 
-bool Label::s_needUpdate = false;
-
 Label::Label(Label::Transform _transform, Type _type) :
     m_type(_type),
     m_transform(_transform) {
@@ -90,10 +88,11 @@ bool Label::updateScreenTransform(const glm::mat4& _mvp, const glm::vec2& _scree
     return true;
 }
 
-void Label::update(const glm::mat4& _mvp, const glm::vec2& _screenSize, float _dt) {
-    updateState(_mvp, _screenSize, _dt);
-
+bool Label::update(const glm::mat4& _mvp, const glm::vec2& _screenSize, float _dt) {
+    bool animate =  updateState(_mvp, _screenSize, _dt);
     m_occlusionSolved = false;
+
+    return animate;
 }
 
 bool Label::offViewport(const glm::vec2& _screenSize) {
@@ -132,8 +131,11 @@ void Label::enterState(State _state, float _alpha) {
 }
 
 void Label::setAlpha(float _alpha) {
-    m_transform.state.alpha = CLAMP(_alpha, 0.0, 1.0);
-    m_dirty = true;
+    float alpha = CLAMP(_alpha, 0.0, 1.0);
+    if (m_transform.state.alpha != alpha) {
+        m_transform.state.alpha = alpha;
+        m_dirty = true;
+    }
 }
 
 void Label::setScreenPosition(const glm::vec2& _screenPosition) {
@@ -148,11 +150,11 @@ void Label::setRotation(float _rotation) {
     m_dirty = true;
 }
 
-void Label::updateState(const glm::mat4& _mvp, const glm::vec2& _screenSize, float _dt) {
+bool Label::updateState(const glm::mat4& _mvp, const glm::vec2& _screenSize, float _dt) {
     if (m_currentState == State::sleep) {
         // no-op state for now, when label-collision has less complexity, this state
         // would lead to FADE_IN state if no collision occured
-        return;
+        return false;
     }
 
     bool occludedLastFrame = m_occludedLastFrame;
@@ -162,7 +164,7 @@ void Label::updateState(const glm::mat4& _mvp, const glm::vec2& _screenSize, flo
 
     if (!ruleSatisfied) { // one of the label rules not satisfied
         enterState(State::sleep, 0.0);
-        return;
+        return false;
     }
 
     // update the view-space bouding box
@@ -172,6 +174,8 @@ void Label::updateState(const glm::mat4& _mvp, const glm::vec2& _screenSize, flo
     if (offViewport(_screenSize)) {
         enterState(State::out_of_screen, 0.0);
     }
+
+    bool animate = false;
 
     switch (m_currentState) {
         case State::visible:
@@ -186,13 +190,13 @@ void Label::updateState(const glm::mat4& _mvp, const glm::vec2& _screenSize, flo
                 break;
             }
             setAlpha(m_fade.update(_dt));
-            s_needUpdate = true;
+            animate = true;
             if (m_fade.isFinished())
                 enterState(State::visible, 1.0);
             break;
         case State::fading_out:
             setAlpha(m_fade.update(_dt));
-            s_needUpdate = true;
+            animate = true;
             if (m_fade.isFinished())
                 enterState(State::sleep, 0.0);
             break;
@@ -201,16 +205,21 @@ void Label::updateState(const glm::mat4& _mvp, const glm::vec2& _screenSize, flo
                 enterState(State::wait_occ, 0.0);
             break;
         case State::wait_occ:
-            if (!occludedLastFrame && m_occlusionSolved) {
-                m_fade = FadeEffect(true, FadeEffect::Interpolation::pow, 0.2);
-                enterState(State::fading_in, 0.0);
-            } else if (occludedLastFrame && m_occlusionSolved) {
-                enterState(State::sleep, 0.0);
+            if (m_occlusionSolved) {
+                if (occludedLastFrame) {
+                    enterState(State::sleep, 0.0);
+                }  else {
+                    m_fade = FadeEffect(true, FadeEffect::Interpolation::pow, 0.2);
+                    enterState(State::fading_in, 0.0);
+                }
             }
+
             break;
         case State::sleep:;
             // dead state
     }
+
+    return animate;
 }
 
 }

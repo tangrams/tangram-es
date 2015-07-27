@@ -4,7 +4,8 @@
 #include "glm/vec2.hpp"
 #include "glm/vec3.hpp"
 #include "gl/typedMesh.h"
-#include "labels/labels.h"
+#include "labels/labelMesh.h"
+#include "labels/label.h"
 #include "labels/spriteAtlas.h"
 
 namespace Tangram {
@@ -19,15 +20,11 @@ protected:
     virtual void constructShaderProgram() override;
     virtual void buildPoint(Point& _point, const StyleParamMap& _styleParamMap, Properties& _props, VboMesh& _mesh, Tile& _tile) const override;
 
-    typedef TypedMesh<BufferVert> Mesh;
-
     virtual VboMesh* newMesh() const override {
-        return new Mesh(m_vertexLayout, m_drawMode, GL_DYNAMIC_DRAW);
+        return new LabelMesh(m_vertexLayout, m_drawMode);
     };
 
     std::unique_ptr<SpriteAtlas> m_spriteAtlas;
-    std::shared_ptr<Labels> m_labels;
-    size_t m_stateAttribOffset;
 
 public:
 

@@ -1,9 +1,9 @@
 #include "labels.h"
 #include "tangram.h"
 #include "tile/tile.h"
-#include "text/fontContext.h"
 #include "gl/primitives.h"
 #include "view/view.h"
+#include "style/style.h"
 
 #include "glm/gtc/matrix_transform.hpp"
 
@@ -17,103 +17,66 @@ int Labels::LODDiscardFunc(float _maxZoom, float _zoom) {
     return (int) MIN(floor(((log(-_zoom + (_maxZoom + 2)) / log(_maxZoom + 2) * (_maxZoom )) * 0.5)), MAX_LOD);
 }
 
-std::shared_ptr<Label> Labels::addTextLabel(Tile& _tile, TextBuffer& _buffer, const std::string& _styleName,
-                                            Label::Transform _transform, std::string _text, Label::Type _type) {
-    // FIXME: the current view should not be used to determine whether a label is shown at all
-    // otherwise results will be random
 
-    // discard based on level of detail
-    if ((m_currentZoom - _tile.getID().z) > LODDiscardFunc(View::s_maxZoom, m_currentZoom)) {
-        return nullptr;
-    }
+void Labels::update(const View& _view, float _dt, const std::vector<std::unique_ptr<Style>>& _styles,
+                    const std::map<TileID, std::shared_ptr<Tile>>& _tiles) {
 
-    fsuint textID = _buffer.genTextID();
+    m_needUpdate = false;
 
-    std::shared_ptr<TextLabel> label(new TextLabel(_transform, _text, textID, _type));
-
-    // raterize the text label
-    if (!label->rasterize(_buffer)) {
-
-        label.reset();
-        return nullptr;
-    }
-
-    addLabel(_tile, _styleName, label);
-
-    return label;
-}
-
-std::shared_ptr<Label> Labels::addSpriteLabel(Tile& _tile, const std::string& _styleName, Label::Transform _transform,
-                                              const glm::vec2& _size, size_t _bufferOffset) {
-
-    if ((m_currentZoom - _tile.getID().z) > LODDiscardFunc(View::s_maxZoom, m_currentZoom)) {
-        return nullptr;
-    }
-
-    auto label = std::shared_ptr<Label>(new SpriteLabel(_transform, _size, _bufferOffset));
-    addLabel(_tile, _styleName, label);
-
-    return label;
-}
-
-void Labels::addLabel(Tile& _tile, const std::string& _styleName, std::shared_ptr<Label> _label) {
-
-    auto modelMatrix = glm::scale(glm::mat4(1.0), glm::vec3(_tile.getScale()));
-    // NB: viewOrigin.z is only determined by screen width and height.
-    const auto& viewOrigin = m_view->getPosition();
-    modelMatrix[3][2] = -viewOrigin.z;
-
-    _label->update(m_view->getViewProjectionMatrix() * modelMatrix, {m_view->getWidth(), m_view->getHeight()}, 0);
-    _tile.addLabel(_styleName, _label);
-
-    // lock concurrent collection
-    {
-        std::lock_guard<std::mutex> lock(m_mutex);
-        m_pendingLabels.push_back(_label);
-    }
-}
-
-void Labels::updateOcclusions() {
-    m_currentZoom = m_view->getZoom();
-
-    // merge pending labels from threads
-    if (!m_pendingLabels.empty()) {
-        std::lock_guard<std::mutex> lock(m_mutex);
-
-        m_labels.reserve(m_labels.size() + m_pendingLabels.size());
-
-        m_labels.insert(m_labels.end(),
-                        std::make_move_iterator(m_pendingLabels.begin()),
-                        std::make_move_iterator(m_pendingLabels.end()));
-
-        m_pendingLabels.clear();
-    }
+    // float zoom = _view.getZoom();
+    // int lodDiscard = LODDiscardFunc(View::s_maxZoom, zoom);
+    // logMsg("loddiscard %f %d\n", zoom, lodDiscard);
 
     std::set<std::pair<Label*, Label*>> occlusions;
-    std::vector<isect2d::AABB> aabbs;
 
-    for (size_t i = 0; i < m_labels.size(); i++) {
-        auto label = m_labels[i].lock();
+    // Could clear this at end of function unless debug draw is active
+    m_labels.clear();
+    m_aabbs.clear();
 
-        if (!label) {
-            m_labels[i--] = std::move(m_labels[m_labels.size() - 1]);
-            m_labels.pop_back();
-            continue;
+    glm::vec2 screenSize = glm::vec2(_view.getWidth(), _view.getHeight());
+
+    //// Collect labels from visible tiles
+
+    for (const auto& mapIDandTile : _tiles) {
+        const auto& tile = mapIDandTile.second;
+
+        if (!tile->isReady()) { continue; }
+
+        // discard based on level of detail
+        // if ((zoom - tile->getID().z) > lodDiscard) {
+        //     logMsg("discard %d %d %d\n", tile->getID().z, tile->getID().x, tile->getID().y);
+        //     continue;
+        // }
+
+        glm::mat4 mvp = _view.getViewProjectionMatrix() * tile->getModelMatrix();
+
+        for (const auto& style : _styles) {
+            auto mesh = tile->getMesh(*style);
+            if (!mesh) { continue; }
+
+            auto labelMesh = dynamic_cast<LabelMesh*>(mesh.get());
+            if (!labelMesh) { continue; }
+
+            for (auto& label : labelMesh->getLabels()) {
+                m_needUpdate |= label->update(mvp, screenSize, _dt);
+
+                if (label->canOcclude()) {
+                    m_aabbs.push_back(label->getAABB());
+                    m_aabbs.back().m_userData = (void*)label.get();
+                }
+                m_labels.push_back(label.get());
+            }
         }
-
-        if (!label->canOcclude()) { continue; }
-
-        isect2d::AABB aabb = label->getAABB();
-        aabb.m_userData = (void*)label.get();
-        aabbs.push_back(aabb);
     }
 
+    //// Manage occlusions
+
     // broad phase
-    auto pairs = intersect(aabbs, {4, 4}, {m_view->getWidth(), m_view->getHeight()});
+    auto pairs = intersect(m_aabbs, {4, 4}, {_view.getWidth(), _view.getHeight()});
 
     for (auto pair : pairs) {
-        const auto& aabb1 = aabbs[pair.first];
-        const auto& aabb2 = aabbs[pair.second];
+        const auto& aabb1 = m_aabbs[pair.first];
+        const auto& aabb2 = m_aabbs[pair.second];
 
         auto l1 = (Label*)aabb1.m_userData;
         auto l2 = (Label*)aabb2.m_userData;
@@ -124,39 +87,43 @@ void Labels::updateOcclusions() {
 
     // no priorities, only occlude one of the two occluded label
     for (auto& pair : occlusions) {
-        if(!pair.first->occludedLastFrame()) {
-            if (pair.second->getState() == Label::State::wait_occ) { pair.second->setOcclusion(true); }
+        if (!pair.first->occludedLastFrame()) {
+            if (pair.second->getState() == Label::State::wait_occ) {
+                pair.second->setOcclusion(true);
+            }
         }
-        if(!pair.second->occludedLastFrame()) {
-            if (pair.first->getState() == Label::State::wait_occ) { pair.first->setOcclusion(true); }
+        if (!pair.second->occludedLastFrame()) {
+            pair.first->setOcclusion(true);
         }
-
-        if (!pair.second->occludedLastFrame()) { pair.first->setOcclusion(true); }
     }
 
-    for (auto& labelPtr : m_labels) {
-        auto label = labelPtr.lock();
-        if (label) { label->occlusionSolved(); }
+    //// Update label meshes
+
+    for (auto label : m_labels) {
+        label->occlusionSolved();
+        label->pushTransform();
     }
+
+    // Request for render if labels are in fading in/out states
+    if (m_needUpdate)
+        requestRender();
 }
 
-void Labels::drawDebug() {
+void Labels::drawDebug(const View& _view) {
 
     if (!Tangram::getDebugFlag(Tangram::DebugFlags::labels)) {
         return;
     }
 
-    for(auto& labelPtr : m_labels) {
-        auto label = labelPtr.lock();
-
-        if (label && label->canOcclude()) {
+    for (auto label : m_labels) {
+        if (label->canOcclude()) {
             Primitives::drawPoly(reinterpret_cast<const glm::vec2*>(label->getOBB().getQuad()),
-                                 4, { m_view->getWidth(), m_view->getHeight() });
+                                 4, { _view.getWidth(), _view.getHeight() });
         }
     }
 
     glm::vec2 split(4, 4);
-    glm::vec2 res(m_view->getWidth(), m_view->getHeight());
+    glm::vec2 res(_view.getWidth(), _view.getHeight());
     const short xpad = short(ceilf(res.x / split.x));
     const short ypad = short(ceilf(res.y / split.y));
 

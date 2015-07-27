@@ -7,14 +7,13 @@
 #include "gl/vertexLayout.h"
 #include "util/builders.h"
 #include "view/view.h"
+#include "labels/spriteLabel.h"
 
 #include "glm/gtc/type_ptr.hpp"
 
 namespace Tangram {
 
 SpriteStyle::SpriteStyle(std::string _name, GLenum _drawMode) : Style(_name, _drawMode) {
-
-    m_labels = Labels::GetInstance();
 }
 
 SpriteStyle::~SpriteStyle() {}
@@ -29,9 +28,6 @@ void SpriteStyle::constructVertexLayout() {
         {"a_alpha", 1, GL_FLOAT, false, 0},
         {"a_rotation", 1, GL_FLOAT, false, 0},
     }));
-
-    // NB: byte offset into BufferVert 'state'
-    m_stateAttribOffset = m_vertexLayout->getOffset("a_screenPosition");
 }
 
 void SpriteStyle::constructShaderProgram() {
@@ -62,7 +58,7 @@ void SpriteStyle::constructShaderProgram() {
 
 void SpriteStyle::buildPoint(Point& _point, const StyleParamMap&, Properties& _props, VboMesh& _mesh, Tile& _tile) const {
     // TODO : make this configurable
-    std::vector<BufferVert> vertices;
+    std::vector<Label::Vertex> vertices;
 
     SpriteBuilder builder = {
         [&](const glm::vec2& coord, const glm::vec2& screenPos, const glm::vec2& uv) {
@@ -87,20 +83,18 @@ void SpriteStyle::buildPoint(Point& _point, const StyleParamMap&, Properties& _p
     SpriteNode spriteNode = m_spriteAtlas->getSpriteNode(kind);
     Label::Transform t = { glm::vec2(_point), glm::vec2(_point), offset };
 
-    size_t bufferOffset = _mesh.numVertices() * m_vertexLayout->getStride() + m_stateAttribOffset;
+    size_t bufferOffset = _mesh.numVertices() * m_vertexLayout->getStride();
 
-    auto label = m_labels->addSpriteLabel(_tile, m_name, t,
-                                          spriteNode.m_size * spriteScale,
-                                          bufferOffset);
+    auto& mesh = static_cast<LabelMesh&>(_mesh);
 
-    if (label) {
-        Builders::buildQuadAtPoint(label->getTransform().state.screenPos + offset,
-                                   spriteNode.m_size * spriteScale,
-                                   spriteNode.m_uvBL, spriteNode.m_uvTR, builder);
-    }
+    std::unique_ptr<SpriteLabel> label(new SpriteLabel(mesh, t, spriteNode.m_size * spriteScale, bufferOffset));
 
-    auto& mesh = static_cast<SpriteStyle::Mesh&>(_mesh);
+    Builders::buildQuadAtPoint(label->getTransform().state.screenPos + offset,
+                               spriteNode.m_size * spriteScale,
+                               spriteNode.m_uvBL, spriteNode.m_uvTR, builder);
+
     mesh.addVertices(std::move(vertices), std::move(builder.indices));
+    mesh.addLabel(std::move(label));
 }
 
 void SpriteStyle::onBeginDrawFrame(const std::shared_ptr<View>& _view, const std::shared_ptr<Scene>& _scene) {

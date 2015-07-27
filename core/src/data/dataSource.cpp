@@ -5,7 +5,6 @@
 #include "tile/tileID.h"
 #include "tile/tile.h"
 #include "tile/tileManager.h"
-#include "labels/labels.h"
 
 namespace Tangram {
 
