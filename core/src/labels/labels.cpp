@@ -23,7 +23,9 @@ void Labels::update(const View& _view, float _dt, const std::vector<std::unique_
 
     m_needUpdate = false;
 
-    float zoom = _view.getZoom();
+    // float zoom = _view.getZoom();
+    // int lodDiscard = LODDiscardFunc(View::s_maxZoom, zoom);
+    // logMsg("loddiscard %f %d\n", zoom, lodDiscard);
 
     std::set<std::pair<Label*, Label*>> occlusions;
 
@@ -41,9 +43,10 @@ void Labels::update(const View& _view, float _dt, const std::vector<std::unique_
         if (!tile->isReady()) { continue; }
 
         // discard based on level of detail
-        if ((zoom - tile->getID().z) > LODDiscardFunc(View::s_maxZoom, zoom)) {
-            continue;
-        }
+        // if ((zoom - tile->getID().z) > lodDiscard) {
+        //     logMsg("discard %d %d %d\n", tile->getID().z, tile->getID().x, tile->getID().y);
+        //     continue;
+        // }
 
         glm::mat4 mvp = _view.getViewProjectionMatrix() * tile->getModelMatrix();
 
