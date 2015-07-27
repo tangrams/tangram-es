@@ -59,11 +59,43 @@ public class RotateGestureDetector extends TwoFingerGestureDetector {
 
 
     private final OnRotateGestureListener mListener;
+    private final float FOCUS_THRESHOLD = 25f;
     private boolean mSloppyGesture;
+
+    private float mFocusX;
+    private float mFocusY;
 
     public RotateGestureDetector(Context context, OnRotateGestureListener listener) {
     	super(context);
         mListener = listener;
+    }
+
+    private void determineFocusPoint(MotionEvent curr) {
+        final MotionEvent prev = mPrevEvent;
+
+        // See if one of the points is relatively stationary, if not mFocusX and mFocusY is the midpoint.
+        // else the relatively stationary point is the focus point
+
+        final float diff0_X = curr.getX(0) - prev.getX(0);
+        final float diff0_Y = curr.getY(0) - prev.getY(0);
+        final float dist0 = diff0_X*diff0_X + diff0_Y*diff0_Y;
+
+        final float diff1_X = curr.getX(1) - prev.getX(1);
+        final float diff1_Y = curr.getY(1) - prev.getY(1);
+        final float dist1 = diff1_X*diff1_X + diff1_Y*diff1_Y;
+
+        if(dist0 < FOCUS_THRESHOLD && dist1 >= FOCUS_THRESHOLD) {
+            mFocusX = curr.getX(0);
+            mFocusY = curr.getY(0);
+        } else if(dist1 < FOCUS_THRESHOLD && dist0 >= FOCUS_THRESHOLD) {
+            mFocusX = curr.getX(1);
+            mFocusY = curr.getY(1);
+        } else {
+            mFocusX = (curr.getX(0) + curr.getX(1)) * 0.5f;
+            mFocusY = (curr.getY(0) + curr.getY(1)) * 0.5f;
+        }
+
+        // Seems like points are moving
     }
 
     @Override
@@ -139,6 +171,7 @@ public class RotateGestureDetector extends TwoFingerGestureDetector {
 				// a certain limit. This can help filter shaky data as a
 				// finger is lifted.
                 if (mCurrPressure / mPrevPressure > PRESSURE_THRESHOLD) {
+                    determineFocusPoint(event);
                     final boolean updatePrevious = mListener.onRotate(this);
                     if (updatePrevious) {
                         mPrevEvent.recycle();
@@ -153,6 +186,19 @@ public class RotateGestureDetector extends TwoFingerGestureDetector {
     protected void resetState() {
         super.resetState();
         mSloppyGesture = false;
+    }
+
+    /**
+     */
+    public float getFocusX() {
+        return mFocusX;
+    }
+
+
+    /**
+     */
+    public float getFocusY() {
+        return mFocusY;
     }
 
     /**

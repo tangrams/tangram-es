@@ -432,8 +432,8 @@ public class MapController implements Renderer, OnTouchListener, OnScaleGestureL
             } else {
                 rotAngle = rotation;
             }
-            float x = scaleGestureDetector.getFocusX();
-            float y = scaleGestureDetector.getFocusY();
+            float x = rotateGestureDetector.getFocusX();
+            float y = rotateGestureDetector.getFocusY();
             handleRotateGesture(x, y, -(rotAngle));
             mRotationHandled = true;
             return true;
