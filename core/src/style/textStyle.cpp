@@ -137,15 +137,7 @@ void TextStyle::onEndBuildTile(VboMesh& _mesh) const {
 void TextStyle::onBeginDrawFrame(const std::shared_ptr<View>& _view, const std::shared_ptr<Scene>& _scene) {
     auto ftContext = FontContext::GetInstance();
 
-    const auto& atlas = ftContext->getAtlas();
-
-    // Atlas can be changed on worker thread.
-    // In particular: updates are pushed to Texture m_subData on worker thread.
-    ftContext->lock();
-    atlas->update(1);
-    ftContext->unlock();
-
-    atlas->bind(1);
+    ftContext->bindAtlas(1);
 
     m_shaderProgram->setUniformi("u_tex", 1);
     m_shaderProgram->setUniformf("u_resolution", _view->getWidth(), _view->getHeight());

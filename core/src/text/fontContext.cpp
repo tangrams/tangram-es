@@ -14,8 +14,12 @@ FontContext::~FontContext() {
     glfonsDelete(m_fsContext);
 }
 
-const std::unique_ptr<Texture>& FontContext::getAtlas() const {
-    return m_atlas;
+void FontContext::bindAtlas(GLuint _textureUnit) {
+    {
+        std::lock_guard<std::mutex> lock(m_atlasMutex);
+        m_atlas->update(_textureUnit);
+    }
+    m_atlas->bind(_textureUnit);
 }
 
 void FontContext::clearState() {
@@ -76,16 +80,18 @@ fsuint FontContext::getFontID(const std::string& _name) {
     }
 }
 
-void updateAtlas(void* _userPtr, unsigned int _xoff, unsigned int _yoff,
+void FontContext::updateAtlas(void* _userPtr, unsigned int _xoff, unsigned int _yoff,
                  unsigned int _width, unsigned int _height, const unsigned int* _pixels) {
 
     FontContext* fontContext = static_cast<FontContext*>(_userPtr);
-    fontContext->getAtlas()->setSubData(static_cast<const GLuint*>(_pixels), _xoff, _yoff, _width, _height);
+
+    std::lock_guard<std::mutex> lock(fontContext->m_atlasMutex);
+    fontContext->m_atlas->setSubData(static_cast<const GLuint*>(_pixels), _xoff, _yoff, _width, _height);
 }
 
 void FontContext::initFontContext(int _atlasSize) {
     m_atlas = std::unique_ptr<Texture>(new Texture(_atlasSize, _atlasSize));
-    m_fsContext = glfonsCreate(_atlasSize, _atlasSize, FONS_ZERO_TOPLEFT, { false, nullptr, updateAtlas }, (void*) this);
+    m_fsContext = glfonsCreate(_atlasSize, _atlasSize, FONS_ZERO_TOPLEFT, { false, nullptr, FontContext::updateAtlas }, (void*) this);
 }
 
 }
