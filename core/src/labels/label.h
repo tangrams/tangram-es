@@ -86,6 +86,8 @@ public:
 
     static bool s_needUpdate;
 
+    size_t debugSize = 4 * sizeof(Label::Vertex);
+    
 private:
 
     void enterState(State _state, float _alpha = 1.0f);
