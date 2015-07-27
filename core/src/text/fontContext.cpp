@@ -6,7 +6,7 @@ namespace Tangram {
 
 FontContext::FontContext() : FontContext(512) {}
 
-FontContext::FontContext(int _atlasSize) : m_contextMutex(std_patch::make_unique<std::mutex>()) {
+FontContext::FontContext(int _atlasSize) {
     initFontContext(_atlasSize);
 }
 
@@ -28,11 +28,11 @@ void FontContext::setSignedDistanceField(float _blurSpread) {
 }
 
 void FontContext::lock() {
-    m_contextMutex->lock();
+    m_contextMutex.lock();
 }
 
 void FontContext::unlock() {
-    m_contextMutex->unlock();
+    m_contextMutex.unlock();
 }
 
 bool FontContext::addFont(const std::string& _fontFile, std::string _name) {

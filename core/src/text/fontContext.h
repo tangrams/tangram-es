@@ -58,7 +58,7 @@ private:
 
     std::map<std::string, int> m_fonts;
     std::unique_ptr<Texture> m_atlas;
-    std::unique_ptr<std::mutex> m_contextMutex;
+    std::mutex m_contextMutex;
     FONScontext* m_fsContext;
 
 };
