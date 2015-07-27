@@ -5,6 +5,7 @@
 #include "gl/shaderProgram.h"
 #include "gl/vboMesh.h"
 #include "view/view.h"
+#include "glm/gtc/type_ptr.hpp"
 
 namespace Tangram {
 
@@ -131,10 +132,6 @@ void TextStyle::onEndBuildTile(VboMesh& _mesh) const {
 void TextStyle::onBeginDrawFrame(const std::shared_ptr<View>& _view, const std::shared_ptr<Scene>& _scene) {
     auto ftContext = m_labels->getFontContext();
     const auto& atlas = ftContext->getAtlas();
-    float projectionMatrix[16] = {0};
-
-    ftContext->setScreenSize(_view->getWidth(), _view->getHeight());
-    ftContext->getProjection(projectionMatrix);
 
     atlas->update(1);
     atlas->bind(1);
@@ -147,7 +144,7 @@ void TextStyle::onBeginDrawFrame(const std::shared_ptr<View>& _view, const std::
     float b = (m_color       & 0xff) / 255.0;
 
     m_shaderProgram->setUniformf("u_color", r, g, b);
-    m_shaderProgram->setUniformMatrix4f("u_proj", projectionMatrix);
+    m_shaderProgram->setUniformMatrix4f("u_proj", glm::value_ptr(_view->getOrthoViewportMatrix()));
 
     RenderState::blending(GL_TRUE);
     RenderState::blendingFunc({GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA});

@@ -8,7 +8,6 @@
 #include "util/builders.h"
 #include "view/view.h"
 
-#include "glm/gtc/matrix_transform.hpp"
 #include "glm/gtc/type_ptr.hpp"
 
 namespace Tangram {
@@ -108,8 +107,7 @@ void SpriteStyle::onBeginDrawFrame(const std::shared_ptr<View>& _view, const std
     m_spriteAtlas->bind();
 
     m_shaderProgram->setUniformi("u_tex", 0);
-    // top-left screen axis, y pointing down
-    m_shaderProgram->setUniformMatrix4f("u_proj", glm::value_ptr(glm::ortho(0.f, _view->getWidth(), _view->getHeight(), 0.f, -1.f, 1.f)));
+    m_shaderProgram->setUniformMatrix4f("u_proj", glm::value_ptr(_view->getOrthoViewportMatrix()));
 
     RenderState::blending(GL_TRUE);
     RenderState::blendingFunc({GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA});

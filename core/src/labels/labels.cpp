@@ -63,7 +63,7 @@ void Labels::addLabel(Tile& _tile, const std::string& _styleName, std::shared_pt
     const auto& viewOrigin = m_view->getPosition();
     modelMatrix[3][2] = -viewOrigin.z;
 
-    _label->update(m_view->getViewProjectionMatrix() * modelMatrix, m_screenSize, 0);
+    _label->update(m_view->getViewProjectionMatrix() * modelMatrix, {m_view->getWidth(), m_view->getHeight()}, 0);
     _tile.addLabel(_styleName, _label);
 
     // lock concurrent collection
