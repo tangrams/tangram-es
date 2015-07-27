@@ -102,12 +102,17 @@ namespace Tangram {
         if(m_view->changedOnLastUpdate() || m_tileManager->hasTileSetChanged() || m_labels->needUpdate()) {
 
             // Update visible tile set
-            m_tileManager->updateVisibleTiles(_dt);
-            
+            for (const auto& mapIDandTile : m_tileManager->getVisibleTiles()) {
+                const auto& tile = mapIDandTile.second;
+                if (tile->isReady()) {
+                    tile->update(_dt, *m_view);
+                }
+            }
+
             // Update labels
             m_labels->update(_dt, m_scene->getStyles(), m_tileManager->getVisibleTiles());
         }
-        
+
         // Request for render if labels are in fading in/out states
         m_labels->lazyRenderRequest();
 
