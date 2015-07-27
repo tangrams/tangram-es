@@ -7,6 +7,7 @@ all: android osx ios
 .PHONY: clean-ios
 .PHONY: clean-rpi
 .PHONY: clean-linux
+.PHONY: clean-benchmark
 .PHONY: android
 .PHONY: osx
 .PHONY: xcode
@@ -14,6 +15,7 @@ all: android osx ios
 .PHONY: ios-sim
 .PHONY: rpi
 .PHONY: linux
+.PHONY: benchmark
 .PHONY: check-ndk
 .PHONY: cmake-osx
 .PHONY: cmake-xcode
@@ -33,6 +35,7 @@ RPI_BUILD_DIR = build/rpi
 LINUX_BUILD_DIR = build/linux
 TESTS_BUILD_DIR = build/tests
 UNIT_TESTS_BUILD_DIR = ${TESTS_BUILD_DIR}/unit
+BENCH_BUILD_DIR = build/bench
 
 TOOLCHAIN_DIR = toolchains
 OSX_TARGET = tangram
@@ -47,6 +50,9 @@ endif
 ifndef ANDROID_API_LEVEL
 	ANDROID_API_LEVEL = android-15
 endif
+
+BENCH_CMAKE_PARAMS = \
+	-DBENCHMARK=1
 
 UNIT_TESTS_CMAKE_PARAMS = \
 	-DUNIT_TESTS=1 \
@@ -105,6 +111,9 @@ clean-xcode:
 
 clean-tests:
 	rm -rf ${TESTS_BUILD_DIR}
+
+clean-benchmark:
+	rm -rf ${BENCH_BUILD_DIR}
 
 android: android/tangram/libs/${ANDROID_ARCH}/libtangram.so android/build.gradle
 	@cd android/ && \
@@ -189,6 +198,12 @@ unit-tests:
 	@mkdir -p ${UNIT_TESTS_BUILD_DIR}
 	@cd ${UNIT_TESTS_BUILD_DIR} && \
 	cmake ../../.. ${UNIT_TESTS_CMAKE_PARAMS} && \
+	${MAKE}
+
+benchmark:
+	@mkdir -p ${BENCH_BUILD_DIR}
+	@cd ${BENCH_BUILD_DIR} && \
+	cmake ../../ ${BENCH_CMAKE_PARAMS} && \
 	${MAKE}
 
 check-ndk:
