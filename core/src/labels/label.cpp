@@ -205,12 +205,15 @@ bool Label::updateState(const glm::mat4& _mvp, const glm::vec2& _screenSize, flo
                 enterState(State::wait_occ, 0.0);
             break;
         case State::wait_occ:
-            if (!occludedLastFrame && m_occlusionSolved) {
-                m_fade = FadeEffect(true, FadeEffect::Interpolation::pow, 0.2);
-                enterState(State::fading_in, 0.0);
-            } else if (occludedLastFrame && m_occlusionSolved) {
-                enterState(State::sleep, 0.0);
+            if (m_occlusionSolved) {
+                if (occludedLastFrame) {
+                    enterState(State::sleep, 0.0);
+                }  else {
+                    m_fade = FadeEffect(true, FadeEffect::Interpolation::pow, 0.2);
+                    enterState(State::fading_in, 0.0);
+                }
             }
+
             break;
         case State::sleep:;
             // dead state
