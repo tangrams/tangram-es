@@ -43,7 +43,7 @@ public:
     TextStyle(const std::string& _fontName, std::string _name, float _fontSize, unsigned int _color = 0xffffff,
               bool _sdf = false, bool _sdfMultisampling = false, GLenum _drawMode = GL_TRIANGLES);
 
-    virtual void onBeginDrawFrame(const std::shared_ptr<View>& _view, const std::shared_ptr<Scene>& _scene) override;
+    virtual void onBeginDrawFrame(const View& _view, const Scene& _scene) override;
 
     virtual ~TextStyle();
 

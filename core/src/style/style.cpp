@@ -57,10 +57,10 @@ void Style::build(const std::vector<std::unique_ptr<Light>>& _lights) {
             break;
     }
 
-    m_material->injectOnProgram(m_shaderProgram);
+    m_material->injectOnProgram(*m_shaderProgram);
 
     for (auto& light : _lights) {
-        light->injectOnProgram(m_shaderProgram);
+        light->injectOnProgram(*m_shaderProgram);
     }
 
 }
@@ -191,16 +191,16 @@ void Style::addData(TileData& _data, Tile& _tile) {
     }
 }
 
-void Style::onBeginDrawFrame(const std::shared_ptr<View>& _view, const std::shared_ptr<Scene>& _scene) {
+void Style::onBeginDrawFrame(const View& _view, const Scene& _scene) {
 
-    m_material->setupProgram(m_shaderProgram);
+    m_material->setupProgram(*m_shaderProgram);
 
     // Set up lights
-    for (const auto& light : _scene->getLights()) {
-        light->setupProgram(_view, m_shaderProgram);
+    for (const auto& light : _scene.getLights()) {
+        light->setupProgram(_view, *m_shaderProgram);
     }
 
-    m_shaderProgram->setUniformf("u_zoom", _view->getZoom());
+    m_shaderProgram->setUniformf("u_zoom", _view.getZoom());
     
     // default capabilities
     RenderState::blending(GL_FALSE);

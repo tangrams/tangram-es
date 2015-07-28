@@ -124,7 +124,7 @@ void render() {
 
     // Loop over all styles
     for (const auto& style : m_scene->getStyles()) {
-        style->onBeginDrawFrame(m_view, m_scene);
+        style->onBeginDrawFrame(*m_view, *m_scene);
 
         // Loop over all tiles in m_tileSet
         for (const auto& mapIDandTile : m_tileManager->getVisibleTiles()) {

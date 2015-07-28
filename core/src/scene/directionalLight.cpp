@@ -25,16 +25,16 @@ void DirectionalLight::setDirection(const glm::vec3 &_dir) {
     m_direction = glm::normalize(_dir);
 }
 
-void DirectionalLight::setupProgram(const std::shared_ptr<View>& _view, std::shared_ptr<ShaderProgram> _shader ) {
+void DirectionalLight::setupProgram(const View& _view, ShaderProgram& _shader ) {
 
     glm::vec3 direction = m_direction;
     if (m_origin == LightOrigin::world) {
-        direction = _view->getNormalMatrix() * direction;
+        direction = _view.getNormalMatrix() * direction;
     }
 
 	if (m_dynamic) {
 		Light::setupProgram(_view, _shader);
-		_shader->setUniformf(getUniformName()+".direction", direction);
+		_shader.setUniformf(getUniformName()+".direction", direction);
 	}
 }
 
