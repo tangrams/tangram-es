@@ -100,6 +100,14 @@
 }
 
 - (BOOL)gestureRecognizer:(UIGestureRecognizer *)gestureRecognizer shouldRecognizeSimultaneouslyWithGestureRecognizer:(UIGestureRecognizer *)otherGestureRecognizer {
+    id pan = [UIPanGestureRecognizer class];
+    // make shove gesture exclusive
+    if ([gestureRecognizer class] == pan) {
+        return [gestureRecognizer numberOfTouches] != 2;
+    }
+    if ([otherGestureRecognizer class] == pan) {
+        return [otherGestureRecognizer numberOfTouches] != 2;
+    }
     return YES;
 }
 
@@ -138,7 +146,11 @@
 - (void)respondToShoveGesture:(UIPanGestureRecognizer *)shoveRecognizer {
     CGPoint displacement = [shoveRecognizer translationInView:self.view];
     [shoveRecognizer setTranslation:{0, 0} inView:self.view];
-    Tangram::handleShoveGesture(displacement.y / self.view.bounds.size.height);
+    
+    // don't trigger shove on single touch gesture
+    if ([shoveRecognizer numberOfTouches] == 2) {
+        Tangram::handleShoveGesture(displacement.y / self.view.bounds.size.height);
+    }
 }
 
 - (void)dealloc
