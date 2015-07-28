@@ -52,8 +52,7 @@ void TextStyle::buildPoint(const Point& _point, const DrawRule& _rule, const Pro
         return;
     }
 
-    Label::Transform t { glm::vec2(_point), glm::vec2(_point), glm::vec2(0) };
-    addTextLabel(buffer, t, text, Label::Type::point);
+    buffer.addLabel(text, { glm::vec2(_point), glm::vec2(_point), glm::vec2(0) }, Label::Type::point);
 }
 
 void TextStyle::buildLine(const Line& _line, const DrawRule& _rule, const Properties& _props, VboMesh& _mesh, Tile& _tile) const {
@@ -80,7 +79,7 @@ void TextStyle::buildLine(const Line& _line, const DrawRule& _rule, const Proper
             continue;
         }
 
-        addTextLabel(buffer, { p1, p2, glm::vec2(0) }, text, Label::Type::line);
+        buffer.addLabel(text, { p1, p2, glm::vec2(0) }, Label::Type::line);
     }
 }
 
@@ -105,19 +104,9 @@ void TextStyle::buildPolygon(const Polygon& _polygon, const DrawRule& _rule, con
 
     centroid /= n;
 
-    Label::Transform t { centroid, centroid, glm::vec2(0) };
-
-    addTextLabel(buffer, t, text, Label::Type::point);
+    buffer.addLabel(text, { centroid, centroid, glm::vec2(0) }, Label::Type::point);
 }
 
-void TextStyle::addTextLabel(TextBuffer& _buffer, Label::Transform _transform, std::string _text, Label::Type _type) const {
-
-    std::unique_ptr<TextLabel> label(new TextLabel(_buffer, _transform, _text, _type));
-
-    if (label->rasterize()) {
-        _buffer.addLabel(std::move(label));
-    }
-}
 
 void TextStyle::onBeginBuildTile(Tile& _tile) const {
     auto& mesh = _tile.getMesh(*this);
@@ -132,12 +121,6 @@ void TextStyle::onBeginBuildTile(Tile& _tile) const {
 }
 
 void TextStyle::onEndBuildTile(Tile& _tile) const {
-
-    auto& mesh = _tile.getMesh(*this);
-
-    auto& buffer = static_cast<TextBuffer&>(*mesh);
-
-    buffer.addBufferVerticesToMesh();
 }
 
 void TextStyle::setColor(unsigned int _color) {
