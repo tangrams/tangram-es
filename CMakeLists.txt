@@ -52,8 +52,7 @@ if(BENCHMARK)
     message(STATUS "Build benchmarks for : ${PLATFORM_TARGET}")
 
     if(PLATFORM_TARGET STREQUAL "linux")
-        # TODO
-        # include(${PROJECT_SOURCE_DIR}/toolchains/linux.benchmark.cmake)
+        include(${PROJECT_SOURCE_DIR}/toolchains/linux.benchmark.cmake)
     else()
         include(${PROJECT_SOURCE_DIR}/toolchains/darwin.benchmark.cmake)
     endif()
