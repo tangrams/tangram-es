@@ -8,7 +8,8 @@ namespace Tangram {
 class TextLabel : public Label {
 
 public:
-    TextLabel(TextBuffer& _mesh, Label::Transform _transform, std::string _text, Type _type);
+    TextLabel(std::string _text, Label::Transform _transform, Type _type, int _numGlyphs,
+              glm::vec2 _dim, TextBuffer& _mesh, size_t _bufferOffset);
     
     /* Call the font context to rasterize the label string */
     bool rasterize();
@@ -28,6 +29,7 @@ private:
 
     // byte-offset in m_mesh vertices
     size_t m_bufferOffset;
+
 
 protected:
     

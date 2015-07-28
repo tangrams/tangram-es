@@ -37,6 +37,9 @@ public:
             float alpha;
             float rotation;
         } state;
+        Vertex() {}
+        Vertex(glm::vec2 pos, glm::vec2 uv) : pos(pos), uv(uv){}
+        Vertex(glm::vec2 pos, glm::vec2 uv, State state) : pos(pos), uv(uv), state(state){}
     };
 
     struct Transform {

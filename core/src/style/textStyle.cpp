@@ -52,8 +52,7 @@ void TextStyle::buildPoint(Point& _point, const StyleParamMap& _styleParamMap, P
         return;
     }
 
-    Label::Transform t { glm::vec2(_point), glm::vec2(_point), glm::vec2(0) };
-    addTextLabel(buffer, t, text, Label::Type::point);
+    buffer.addLabel(text, { glm::vec2(_point), glm::vec2(_point), glm::vec2(0) }, Label::Type::point);
 }
 
 void TextStyle::buildLine(Line& _line, const StyleParamMap& _styleParamMap, Properties& _props, VboMesh& _mesh, Tile& _tile) const {
@@ -80,7 +79,7 @@ void TextStyle::buildLine(Line& _line, const StyleParamMap& _styleParamMap, Prop
             continue;
         }
 
-        addTextLabel(buffer, { p1, p2, glm::vec2(0) }, text, Label::Type::line);
+        buffer.addLabel(text, { p1, p2, glm::vec2(0) }, Label::Type::line);
     }
 }
 
@@ -105,19 +104,9 @@ void TextStyle::buildPolygon(Polygon& _polygon, const StyleParamMap& _styleParam
 
     centroid /= n;
 
-    Label::Transform t { centroid, centroid, glm::vec2(0) };
-
-    addTextLabel(buffer, t, text, Label::Type::point);
+    buffer.addLabel(text, { centroid, centroid, glm::vec2(0) }, Label::Type::point);
 }
 
-void TextStyle::addTextLabel(TextBuffer& _buffer, Label::Transform _transform, std::string _text, Label::Type _type) const {
-
-    std::unique_ptr<TextLabel> label(new TextLabel(_buffer, _transform, _text, _type));
-
-    if (label->rasterize()) {
-        _buffer.addLabel(std::move(label));
-    }
-}
 
 void TextStyle::onBeginBuildTile(VboMesh& _mesh) const {
     auto& buffer = static_cast<TextBuffer&>(_mesh);
@@ -128,10 +117,6 @@ void TextStyle::onBeginBuildTile(VboMesh& _mesh) const {
 }
 
 void TextStyle::onEndBuildTile(VboMesh& _mesh) const {
-
-    auto& buffer = static_cast<TextBuffer&>(_mesh);
-
-    buffer.addBufferVerticesToMesh();
 }
 
 void TextStyle::onBeginDrawFrame(const View& _view, const Scene& _scene) {
