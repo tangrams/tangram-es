@@ -93,7 +93,7 @@ void TileWorker::run() {
 
         if (tileData) {
             // Process data for all styles
-            for (const auto& style : m_tileManager.getScene()->getStyles()) {
+            for (const auto& style : m_tileManager.getScene()->styles()) {
                 if (!m_running) {
                     break;
                 }

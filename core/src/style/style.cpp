@@ -41,7 +41,7 @@ uint32_t Style::parseColorProp(const std::string& _colorPropStr) {
     return color;
 }
 
-void Style::build(const std::vector<std::unique_ptr<Light>>& _lights) {
+void Style::build(const std::vector<std::shared_ptr<Light>>& _lights) {
 
     constructVertexLayout();
     constructShaderProgram();
@@ -196,7 +196,7 @@ void Style::onBeginDrawFrame(const std::shared_ptr<View>& _view, const std::shar
     m_material->setupProgram(m_shaderProgram);
 
     // Set up lights
-    for (const auto& light : _scene->getLights()) {
+    for (const auto& light : _scene->lights()) {
         light->setupProgram(_view, m_shaderProgram);
     }
 

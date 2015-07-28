@@ -113,7 +113,7 @@ void update(float _dt) {
             }
 
             // update labels for specific style
-            for (const auto& style : m_scene->getStyles()) {
+            for (const auto& style : m_scene->styles()) {
                 for (const auto& mapIDandTile : m_tileManager->getVisibleTiles()) {
                     const auto& tile = mapIDandTile.second;
                     if (tile->isReady()) {
@@ -125,7 +125,7 @@ void update(float _dt) {
             // manage occlusions
             m_labels->updateOcclusions();
 
-            for (const auto& style : m_scene->getStyles()) {
+            for (const auto& style : m_scene->styles()) {
                 for (const auto& mapIDandTile : m_tileManager->getVisibleTiles()) {
                     const auto& tile = mapIDandTile.second;
                     if (tile->isReady()) {
@@ -151,7 +151,7 @@ void render() {
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
     // Loop over all styles
-    for (const auto& style : m_scene->getStyles()) {
+    for (const auto& style : m_scene->styles()) {
         style->onBeginDrawFrame(m_view, m_scene);
 
         // Loop over all tiles in m_tileSet
@@ -246,7 +246,7 @@ void setPixelScale(float _pixelsPerPoint) {
         m_view->setPixelScale(_pixelsPerPoint);
     }
 
-    for (auto& style : m_scene->getStyles()) {
+    for (auto& style : m_scene->styles()) {
         style->setPixelScale(_pixelsPerPoint);
     }
 

@@ -37,8 +37,8 @@ void SceneLoader::loadScene(const std::string& _file, Scene& _scene, TileManager
     loadCameras(config["cameras"], _view);
     loadLights(config["lights"], _scene);
 
-    for (auto& style : _scene.getStyles()) {
-        style->build(_scene.getLights());
+    for (auto& style : _scene.styles()) {
+        style->build(_scene.lights());
     }
 
 }
@@ -200,12 +200,15 @@ MaterialTexture SceneLoader::loadMaterialTexture(YAML::Node matCompNode, Scene& 
 
     std::string name = textureNode.as<std::string>();
 
-    auto& sharedTexs = scene.getTextures();
-    if (sharedTexs.find(name) == sharedTexs.end()) {
-        sharedTexs.emplace(name, std::make_shared<Texture>(name));
+    auto& tex = scene.textures()[name];
+
+    if (!tex) {
+        tex = std::make_shared<Texture>(name);
     }
 
-    matTex.tex = sharedTexs.at(name);
+    matTex.tex = tex;
+
+    if (!matTex.tex) { matTex.tex.reset(new Texture(name)); }
 
     if (mappingNode) {
         std::string mapping = mappingNode.as<std::string>();
@@ -272,19 +275,19 @@ void SceneLoader::loadTextures(YAML::Node textures, Scene& scene) {
         Node sprites = textureConfig["sprites"];
         if (sprites) { logMsg("WARNING: sprite mapping not yet implemented\n"); } // TODO
 
-        scene.getTextures().emplace(name, std::make_shared<Texture>(file, options));
+        scene.textures().emplace(name, std::make_shared<Texture>(file, options));
     }
 }
 
 void SceneLoader::loadStyles(YAML::Node styles, Scene& scene) {
 
     // Instantiate built-in styles
-    scene.getStyles().emplace_back(new PolygonStyle("polygons"));
-    scene.getStyles().emplace_back(new PolylineStyle("lines"));
-    scene.getStyles().emplace_back(new TextStyle("FiraSans", "text", 15.0f, 0xF7F0E1, true, true));
-    scene.getStyles().emplace_back(new DebugTextStyle("FiraSans", "debugtext", 30.0f, 0xDC3522, true));
-    scene.getStyles().emplace_back(new DebugStyle("debug"));
-    scene.getStyles().emplace_back(new SpriteStyle("sprites"));
+    scene.styles().emplace_back(new PolygonStyle("polygons"));
+    scene.styles().emplace_back(new PolylineStyle("lines"));
+    scene.styles().emplace_back(new TextStyle("FiraSans", "text", 15.0f, 0xF7F0E1, true, true));
+    scene.styles().emplace_back(new DebugTextStyle("FiraSans", "debugtext", 30.0f, 0xDC3522, true));
+    scene.styles().emplace_back(new DebugStyle("debug"));
+    scene.styles().emplace_back(new SpriteStyle("sprites"));
 
     if (!styles) {
         return;
@@ -364,7 +367,7 @@ void SceneLoader::loadStyles(YAML::Node styles, Scene& scene) {
         Node urlNode = styleNode["url"];
         if (urlNode) { logMsg("WARNING: loading style from URL not yet implemented\n"); } // TODO
 
-        scene.addStyle(std::unique_ptr<Style>(style));
+        scene.styles().push_back(std::unique_ptr<Style>(style));
 
     }
 
@@ -410,7 +413,7 @@ void SceneLoader::loadLights(Node lights, Scene& scene) {
         // Add an ambient light if nothing else is specified
         std::unique_ptr<AmbientLight> amb(new AmbientLight("defaultLight"));
         amb->setAmbientColor({ .5f, .5f, .5f, 1.f });
-        scene.addLight(std::move(amb));
+        scene.lights().push_back(std::move(amb));
 
         return;
     }
@@ -516,7 +519,7 @@ void SceneLoader::loadLights(Node lights, Scene& scene) {
             lightPtr->setSpecularColor(parseVec4(specular));
         }
 
-        scene.addLight(std::move(lightPtr));
+        scene.lights().push_back(std::move(lightPtr));
 
     }
 
@@ -816,7 +819,7 @@ void SceneLoader::loadLayers(Node layers, Scene& scene, TileManager& tileManager
             parseStyleProps(groupIt.second, paramMap);
 
             // match layer to the style in scene with the given name
-            for (const auto& style : scene.getStyles()) {
+            for (const auto& style : scene.styles()) {
                 if (style->getName() == styleName) {
                     style->addLayer(std::make_shared<SceneLayer>(subLayers, std::move(paramMap),
                                 name, layerFilter));

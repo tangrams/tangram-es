@@ -19,21 +19,17 @@ class Texture;
 class Scene {
 public:
 
-    Scene();
+    auto& styles() { return m_styles; };
+    auto& lights() { return m_lights; };
+    auto& textures() { return m_textures; };
 
-    void addStyle(std::unique_ptr<Style> _style);
-    void addLight(std::unique_ptr<Light> _light);
-
-    std::vector<std::unique_ptr<Style>>& getStyles() { return m_styles; };
-    std::vector<std::unique_ptr<Light>>& getLights() { return m_lights; };
-
-    std::unordered_map<std::string, std::shared_ptr<Texture>>& getTextures() { return m_textures; };
+    std::shared_ptr<Style> findStyle(const std::string& _name);
+    std::shared_ptr<Light> findLight(const std::string& _name);
 
 private:
 
-    std::vector<std::unique_ptr<Style>> m_styles;
-    std::vector<std::unique_ptr<Light>> m_lights;
-
+    std::vector<std::shared_ptr<Style>> m_styles;
+    std::vector<std::shared_ptr<Light>> m_lights;
     std::unordered_map<std::string, std::shared_ptr<Texture>> m_textures;
 
 };
