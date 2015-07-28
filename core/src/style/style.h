@@ -87,7 +87,7 @@ protected:
     /* Build styled vertex data for polygon geometry and add it to the given <VboMesh> */
     virtual void buildPolygon(Polygon& _polygon, const StyleParamMap& _styleParamMap, Properties& _props, VboMesh& _mesh, Tile& _tile) const;
 
-    using StyleCacheKey = std::bitset<MAX_LAYERS>;
+    using StyleCacheKey = std::bitset<SceneLayer::MAX_LAYERS>;
 
     static std::unordered_map<StyleCacheKey, StyleParamMap> s_styleParamMapCache;
     static std::mutex s_cacheMutex;
