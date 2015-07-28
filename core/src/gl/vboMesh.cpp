@@ -149,7 +149,7 @@ bool VboMesh::upload() {
 
 }
 
-void VboMesh::draw(const std::shared_ptr<ShaderProgram> _shader) {
+void VboMesh::draw(ShaderProgram& _shader) {
 
     checkValidity();
 
@@ -176,7 +176,7 @@ void VboMesh::draw(const std::shared_ptr<ShaderProgram> _shader) {
     }
 
     // Enable shader program
-    _shader->use();
+    _shader.use();
 
     size_t indiceOffset = 0;
     size_t vertexOffset = 0;
@@ -188,7 +188,7 @@ void VboMesh::draw(const std::shared_ptr<ShaderProgram> _shader) {
         size_t byteOffset = vertexOffset * m_vertexLayout->getStride();
 
         // Enable vertex attribs via vertex layout object
-        m_vertexLayout->enable(*_shader, byteOffset);
+        m_vertexLayout->enable(_shader, byteOffset);
 
         // Draw as elements or arrays
         if (nIndices > 0) {
