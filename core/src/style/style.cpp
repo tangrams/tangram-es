@@ -9,8 +9,6 @@
 #include "csscolorparser.hpp"
 #include "geom.h" // for CLAMP
 
-#include <sstream>
-
 namespace Tangram {
 
 std::unordered_map<Style::StyleCacheKey, StyleParamMap> Style::s_styleParamMapCache;
@@ -30,12 +28,12 @@ uint32_t Style::parseColorProp(const std::string& _colorPropStr) {
 
     if (isdigit(_colorPropStr.front())) {
         // try to parse as comma-separated rgba components
-        float r, g, b;
-        if (sscanf(_colorPropStr.c_str(), "%f,%f,%f", &r, &g, &b) == 3) {
-            color = 0xff000000
-                | (CLAMP(static_cast<uint32_t>(r * 255.), 0, 255)) << 16
-                | (CLAMP(static_cast<uint32_t>(g * 255.), 0, 255)) << 8
-                | (CLAMP(static_cast<uint32_t>(b * 255.), 0, 255));
+        float r, g, b, a = 1.;
+        if (sscanf(_colorPropStr.c_str(), "%f,%f,%f,%f", &r, &g, &b, &a) >= 3) {
+            color = (CLAMP(static_cast<uint32_t>(a * 255.), 0, 255)) << 24
+                  | (CLAMP(static_cast<uint32_t>(r * 255.), 0, 255)) << 16
+                  | (CLAMP(static_cast<uint32_t>(g * 255.), 0, 255)) << 8
+                  | (CLAMP(static_cast<uint32_t>(b * 255.), 0, 255));
         }
     } else {
         // parse as css color or #hex-num
