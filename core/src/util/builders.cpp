@@ -30,6 +30,18 @@ static TESSalloc allocator = {&alloc, &realloc, &free, nullptr,
                               64  // extraVertices
                              };
 
+CapTypes CapTypeFromString(const std::string& str) {
+    if (str == "square") { return CapTypes::square; }
+    if (str == "round") { return CapTypes::round; }
+    return CapTypes::butt;
+}
+
+JoinTypes JoinTypeFromString(const std::string& str) {
+    if (str == "bevel") { return JoinTypes::bevel; }
+    if (str == "round") { return JoinTypes::round; }
+    return JoinTypes::miter;
+}
+
 void Builders::buildPolygon(const Polygon& _polygon, PolygonBuilder& _ctx) {
     
     TESStesselator* tesselator = tessNewTess(&allocator);
@@ -260,8 +272,8 @@ void Builders::buildPolyLine(const Line& _line, PolyLineBuilder& _ctx) {
     glm::vec3 coordPrev(_line[0]), coordCurr(_line[0]), coordNext(_line[1]);
     glm::vec2 normPrev, normNext, miterVec;
 
-    int cornersOnCap = (int)_ctx.options.cap;
-    int trianglesOnJoin = (int)_ctx.options.join;
+    int cornersOnCap = (int)_ctx.cap;
+    int trianglesOnJoin = (int)_ctx.join;
     
     // Process first point in line with an end cap
     normNext = glm::normalize(perp2d(coordCurr, coordNext));

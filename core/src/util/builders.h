@@ -13,19 +13,15 @@ enum class CapTypes {
     round = 6 // Six points added in a fan to make a round cap
 };
 
+CapTypes CapTypeFromString(const std::string& str);
+
 enum class JoinTypes {
     miter = 0, // No points added at line join
     bevel = 1, // One point added to flatten the corner of a join
     round = 5 // Five points added in a fan to make a round outer join
 };
 
-struct PolyLineOptions {
-    CapTypes cap;
-    JoinTypes join;
-
-    PolyLineOptions() : cap(CapTypes::butt), join(JoinTypes::miter) {};
-    PolyLineOptions(CapTypes _c, JoinTypes _j) : cap(_c), join(_j) {};
-};
+JoinTypes JoinTypeFromString(const std::string& str);
 
 /* Callback function for PolygonBuilder:
  *
@@ -64,13 +60,14 @@ typedef std::function<void(const glm::vec3& coord, const glm::vec2& enormal, con
  * see Builders::buildPolyLine()
  */
 struct PolyLineBuilder {
-    PolyLineOptions options;
     std::vector<int> indices; // indices for drawing the polyline as triangles are added to this vector
     PolyLineVertexFn addVertex;
     size_t numVertices = 0;
+    CapTypes cap;
+    JoinTypes join;
 
-    PolyLineBuilder(PolyLineVertexFn _addVertex, PolyLineOptions _options = PolyLineOptions())
-        : options(_options), addVertex(_addVertex){}
+    PolyLineBuilder(PolyLineVertexFn _addVertex, CapTypes _cap = CapTypes::butt, JoinTypes _join = JoinTypes::bevel)
+        : addVertex(_addVertex), cap(_cap), join(_join) {}
 };
 
 /* Callback function for SpriteBuilder

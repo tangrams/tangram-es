@@ -47,17 +47,11 @@ void PolylineStyle::parseStyleParams(const StyleParamMap& _styleParamMap, StyleP
     }
 
     if ((it = _styleParamMap.find("cap")) != _styleParamMap.end()) {
-        const auto& capStr = it->second;
-        if(capStr == "butt") { _styleParams.cap = CapTypes::butt; }
-        else if(capStr == "square") { _styleParams.cap = CapTypes::square; }
-        else if(capStr == "round") { _styleParams.cap = CapTypes::round; }
+        _styleParams.cap = CapTypeFromString(it->second);
     }
 
     if ((it = _styleParamMap.find("join")) != _styleParamMap.end()) {
-        const auto& joinStr = it->second;
-        if(joinStr == "bevel") { _styleParams.join = JoinTypes::bevel; }
-        else if(joinStr == "miter") { _styleParams.join = JoinTypes::miter; }
-        else if(joinStr == "round") { _styleParams.join = JoinTypes::round; }
+        _styleParams.join = JoinTypeFromString(it->second);
     }
 
     if ((it = _styleParamMap.find("outline:width")) != _styleParamMap.end()) {
@@ -71,18 +65,12 @@ void PolylineStyle::parseStyleParams(const StyleParamMap& _styleParamMap, StyleP
 
     if ((it = _styleParamMap.find("outline:cap")) != _styleParamMap.end()) {
         _styleParams.outlineOn = true;
-        const auto& capStr = it->second;
-        if(capStr == "butt") { _styleParams.outlineCap = CapTypes::butt; }
-        else if(capStr == "square") { _styleParams.outlineCap = CapTypes::square; }
-        else if(capStr == "round") { _styleParams.outlineCap = CapTypes::round; }
+        _styleParams.outlineCap = CapTypeFromString(it->second);
     }
 
     if ((it = _styleParamMap.find("outline:join")) != _styleParamMap.end()) {
         _styleParams.outlineOn = true;
-        const auto& joinStr = it->second;
-        if(joinStr == "bevel") { _styleParams.outlineJoin = JoinTypes::bevel; }
-        else if(joinStr == "miter") { _styleParams.outlineJoin = JoinTypes::miter; }
-        else if(joinStr == "round") { _styleParams.outlineJoin = JoinTypes::round; }
+        _styleParams.outlineJoin = JoinTypeFromString(it->second);
     }
 }
 
@@ -104,7 +92,8 @@ void PolylineStyle::buildLine(Line& _line, const StyleParamMap& _styleParamMap, 
         [&](const glm::vec3& coord, const glm::vec2& normal, const glm::vec2& uv) {
             vertices.push_back({ coord, uv, normal, halfWidth, abgr, layer });
         },
-        PolyLineOptions(params.cap, params.join)
+        params.cap,
+        params.join
     };
 
     Builders::buildPolyLine(_line, builder);
@@ -116,8 +105,8 @@ void PolylineStyle::buildLine(Line& _line, const StyleParamMap& _styleParamMap, 
 
         if (params.outlineCap != params.cap || params.outlineJoin != params.join) {
             // need to re-triangulate with different cap and/or join
-            builder.options.cap = params.outlineCap;
-            builder.options.join = params.outlineJoin;
+            builder.cap = params.outlineCap;
+            builder.join = params.outlineJoin;
             Builders::buildPolyLine(_line, builder);
         } else {
             // re-use indices from original line
