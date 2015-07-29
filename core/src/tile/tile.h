@@ -58,9 +58,9 @@ public:
      * Use std::move to pass in the mesh by move semantics; Geometry in the mesh
      * must have coordinates relative to the tile origin.
      */
-    void addMesh(const Style& _style, std::shared_ptr<VboMesh> _mesh);
+    void addMesh(const Style& _style, std::unique_ptr<VboMesh> _mesh);
     
-    std::shared_ptr<VboMesh> getMesh(const Style& _style);
+    VboMesh* getMesh(const Style& _style);
 
     /* uUdate the Tile considering the current view */
     void update(float _dt, const View& _view);
@@ -173,7 +173,7 @@ private:
     // Distances from the global origin are too large to represent precisely in 32-bit floats, so we only apply the
     // relative translation from the view origin to the model origin immediately before drawing the tile.
 
-    std::unordered_map<std::string, std::shared_ptr<VboMesh>> m_geometry; // Map of <Style>s and their associated <VboMesh>es
+    std::unordered_map<std::string, std::unique_ptr<VboMesh>> m_geometry; // Map of <Style>s and their associated <VboMesh>es
 
 };
 
