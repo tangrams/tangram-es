@@ -4,7 +4,7 @@
 namespace Tangram {
 
 SpriteAtlas::SpriteAtlas(const std::string& _file) : m_file(_file) {
-    m_texture = std::shared_ptr<Texture>(new Texture(_file));
+    m_texture = std::unique_ptr<Texture>(new Texture(_file));
 }
 
 void SpriteAtlas::addSpriteNode(const std::string& _name, glm::vec2 _origin, glm::vec2 _size) {
