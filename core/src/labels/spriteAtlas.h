@@ -30,7 +30,7 @@ public:
 private:
     std::map<std::string, SpriteNode> m_spritesNodes;
     std::string m_file;
-    std::shared_ptr<Texture> m_texture;
+    std::unique_ptr<Texture> m_texture;
 };
 
 }
