@@ -51,10 +51,10 @@ void Labels::update(const View& _view, float _dt, const std::vector<std::unique_
         glm::mat4 mvp = _view.getViewProjectionMatrix() * tile->getModelMatrix();
 
         for (const auto& style : _styles) {
-            auto mesh = tile->getMesh(*style);
+            VboMesh* mesh = tile->getMesh(*style);
             if (!mesh) { continue; }
 
-            auto labelMesh = dynamic_cast<LabelMesh*>(mesh.get());
+            auto labelMesh = dynamic_cast<LabelMesh*>(mesh);
             if (!labelMesh) { continue; }
 
             for (auto& label : labelMesh->getLabels()) {

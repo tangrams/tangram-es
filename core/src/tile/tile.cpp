@@ -32,14 +32,14 @@ Tile::~Tile() {
 
 }
 
-void Tile::addMesh(const Style& _style, std::shared_ptr<VboMesh> _mesh) {
+void Tile::addMesh(const Style& _style, std::unique_ptr<VboMesh> _mesh) {
     m_geometry[_style.getName()] = std::move(_mesh);
 }
 
-std::shared_ptr<VboMesh> Tile::getMesh(const Style& _style) {
+VboMesh* Tile::getMesh(const Style& _style) {
     auto it = m_geometry.find(_style.getName());
     if (it != m_geometry.end())
-        return it->second;
+        return it->second.get();
 
     return nullptr;
 }
@@ -56,7 +56,7 @@ void Tile::update(float _dt, const View& _view) {
 
 void Tile::draw(const Style& _style, const View& _view) {
 
-    const std::shared_ptr<VboMesh>& styleMesh = m_geometry[_style.getName()];
+    const auto& styleMesh = m_geometry[_style.getName()];
     
     if (styleMesh) {
         
