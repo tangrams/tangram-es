@@ -84,6 +84,10 @@ void resize(int _newWidth, int _newHeight) {
         m_view->setSize(_newWidth, _newHeight);
     }
 
+    for (auto& style : m_scene->getStyles()) {
+        style->viewportHasChanged();
+    }
+
     while (Error::hadGlError("Tangram::resize()")) {}
 
 }

@@ -72,6 +72,9 @@ protected:
     /* TODO: decouple layers and styles so that sublayers can apply different styles than the parent */
     std::vector<std::shared_ptr<SceneLayer>> m_layers;
 
+    /* Whether the viewport has changed size */
+    bool m_dirtyViewport;
+
     /* Create <VertexLayout> corresponding to this style; subclasses must implement this and call it on construction */
     virtual void constructVertexLayout() = 0;
 
@@ -116,6 +119,8 @@ public:
     Style(std::string _name, GLenum _drawMode);
 
     virtual ~Style();
+
+    bool viewportHasChanged() { m_dirtyViewport = true; };
 
     /* Whether or not the style uses blending operation for drawing */
     virtual bool isOpaque() const { return true; };

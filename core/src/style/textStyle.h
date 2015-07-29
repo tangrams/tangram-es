@@ -35,6 +35,7 @@ protected:
     int m_color;
     bool m_sdf;
     bool m_sdfMultisampling = true;
+    bool m_dirtyColor = true;
 
 public:
 
@@ -44,6 +45,7 @@ public:
               bool _sdf = false, bool _sdfMultisampling = false, GLenum _drawMode = GL_TRIANGLES);
 
     virtual void onBeginDrawFrame(const std::shared_ptr<View>& _view, const std::shared_ptr<Scene>& _scene) override;
+    void setColor(unsigned int _color);
 
     virtual ~TextStyle();
 
