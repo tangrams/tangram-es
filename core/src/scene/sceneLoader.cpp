@@ -279,12 +279,12 @@ void SceneLoader::loadTextures(YAML::Node textures, Scene& scene) {
 void SceneLoader::loadStyles(YAML::Node styles, Scene& scene) {
 
     // Instantiate built-in styles
-    scene.getStyles().emplace_back(new PolygonStyle("polygons"));
-    scene.getStyles().emplace_back(new PolylineStyle("lines"));
-    scene.getStyles().emplace_back(new TextStyle("FiraSans", "text", 15.0f, 0xF7F0E1, true, true));
-    scene.getStyles().emplace_back(new DebugTextStyle("FiraSans", "debugtext", 30.0f, 0xDC3522, true));
-    scene.getStyles().emplace_back(new DebugStyle("debug"));
-    scene.getStyles().emplace_back(new SpriteStyle("sprites"));
+    scene.addStyle(std::unique_ptr<Style>(new PolygonStyle("polygons")));
+    scene.addStyle(std::unique_ptr<Style>(new PolylineStyle("lines")));
+    scene.addStyle(std::unique_ptr<Style>(new TextStyle("FiraSans", "text", 15.0f, 0xF7F0E1, true, true)));
+    scene.addStyle(std::unique_ptr<Style>(new DebugTextStyle("FiraSans", "debugtext", 30.0f, 0xDC3522, true)));
+    scene.addStyle(std::unique_ptr<Style>(new DebugStyle("debug")));
+    scene.addStyle(std::unique_ptr<Style>(new SpriteStyle("sprites")));
 
     if (!styles) {
         return;

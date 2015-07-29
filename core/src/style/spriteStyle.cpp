@@ -97,11 +97,11 @@ void SpriteStyle::buildPoint(Point& _point, const StyleParamMap&, Properties& _p
     mesh.addLabel(std::move(label));
 }
 
-void SpriteStyle::onBeginDrawFrame(const std::shared_ptr<View>& _view, const std::shared_ptr<Scene>& _scene) {
+void SpriteStyle::onBeginDrawFrame(const View& _view, const Scene& _scene) {
     m_spriteAtlas->bind();
 
     m_shaderProgram->setUniformi("u_tex", 0);
-    m_shaderProgram->setUniformMatrix4f("u_proj", glm::value_ptr(_view->getOrthoViewportMatrix()));
+    m_shaderProgram->setUniformMatrix4f("u_proj", glm::value_ptr(_view.getOrthoViewportMatrix()));
 
     RenderState::blending(GL_TRUE);
     RenderState::blendingFunc({GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA});

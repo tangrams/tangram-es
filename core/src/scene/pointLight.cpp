@@ -46,7 +46,7 @@ void PointLight::setRadius(float _inner, float _outer){
     m_outerRadius = _outer;
 }
 
-void PointLight::setupProgram(const std::shared_ptr<View>& _view, std::shared_ptr<ShaderProgram> _shader) {
+void PointLight::setupProgram(const View& _view, ShaderProgram& _shader) {
     if (m_dynamic) {
         Light::setupProgram(_view, _shader);
 
@@ -56,34 +56,34 @@ void PointLight::setupProgram(const std::shared_ptr<View>& _view, std::shared_pt
             // For world origin, format is: [longitude, latitude, meters (default) or pixels w/px units]
 
             // Move light's world position into camera space
-            glm::dvec2 camSpace = _view->getMapProjection().LonLatToMeters(glm::dvec2(m_position.x, m_position.y));
-            position.x = camSpace.x - _view->getPosition().x;
-            position.y = camSpace.y - _view->getPosition().y;
-            position.z = position.z - _view->getPosition().z;
+            glm::dvec2 camSpace = _view.getMapProjection().LonLatToMeters(glm::dvec2(m_position.x, m_position.y));
+            position.x = camSpace.x - _view.getPosition().x;
+            position.y = camSpace.y - _view.getPosition().y;
+            position.z = position.z - _view.getPosition().z;
 
         } else if (m_origin == LightOrigin::ground) {
             // Leave light's xy in camera space, but z needs to be moved relative to ground plane
-            position.z = position.z - _view->getPosition().z;
+            position.z = position.z - _view.getPosition().z;
         }
 
         if (m_origin == LightOrigin::world || m_origin == LightOrigin::ground) {
             // Light position is a vector from the camera to the light in world space;
             // we can transform this vector into camera space the same way we would with normals
-            position = _view->getViewMatrix() * position;
+            position = _view.getViewMatrix() * position;
         }
 
-        _shader->setUniformf(getUniformName()+".position", position);
+        _shader.setUniformf(getUniformName()+".position", position);
 
         if (m_attenuation!=0.0) {
-            _shader->setUniformf(getUniformName()+".attenuation", m_attenuation);
+            _shader.setUniformf(getUniformName()+".attenuation", m_attenuation);
         }
 
         if (m_innerRadius!=0.0) {
-            _shader->setUniformf(getUniformName()+".innerRadius", m_innerRadius);
+            _shader.setUniformf(getUniformName()+".innerRadius", m_innerRadius);
         }
 
         if (m_outerRadius!=0.0) {
-            _shader->setUniformf(getUniformName()+".outerRadius", m_outerRadius);
+            _shader.setUniformf(getUniformName()+".outerRadius", m_outerRadius);
         }
     }
 }
