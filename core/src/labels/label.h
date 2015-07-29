@@ -108,6 +108,7 @@ private:
     bool m_occludedLastFrame;
     bool m_occlusionSolved;
     FadeEffect m_fade;
+    bool m_updateMeshVisibility;
 
 protected:
 
