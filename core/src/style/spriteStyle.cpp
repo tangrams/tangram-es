@@ -100,7 +100,7 @@ void SpriteStyle::buildPoint(Point& _point, const StyleParamMap&, Properties& _p
 void SpriteStyle::onBeginDrawFrame(const std::shared_ptr<View>& _view, const std::shared_ptr<Scene>& _scene) {
     m_spriteAtlas->bind();
 
-    static bool initUniformSampler = false;
+    static bool initUniformSampler = true;
 
     if (initUniformSampler) {
         m_shaderProgram->setUniformi("u_tex", 0);
