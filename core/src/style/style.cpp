@@ -131,7 +131,7 @@ void Style::applyLayerFiltering(const Feature& _feature, const Context& _ctx, St
 
 void Style::addData(TileData& _data, Tile& _tile) {
 
-    std::shared_ptr<VboMesh> mesh(newMesh());
+    std::unique_ptr<VboMesh> mesh(newMesh());
     
     onBeginBuildTile(*mesh);
 
@@ -187,7 +187,7 @@ void Style::addData(TileData& _data, Tile& _tile) {
     } else {
         mesh->compileVertexBuffer();
 
-        _tile.addMesh(*this, mesh);
+        _tile.addMesh(*this, std::move(mesh));
     }
 }
 

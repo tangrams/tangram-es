@@ -54,7 +54,7 @@ protected:
     std::string m_name;
 
     /* <ShaderProgram> used to draw meshes using this style */
-    std::shared_ptr<ShaderProgram> m_shaderProgram = std::make_shared<ShaderProgram>();
+    std::unique_ptr<ShaderProgram> m_shaderProgram = std::make_unique<ShaderProgram>();
 
     /* <VertexLayout> shared between meshes using this style */
     std::shared_ptr<VertexLayout> m_vertexLayout;
@@ -143,7 +143,7 @@ public:
 
     std::shared_ptr<Material> getMaterial() { return m_material; }
 
-    std::shared_ptr<ShaderProgram> getShaderProgram() const { return m_shaderProgram; }
+    const std::unique_ptr<ShaderProgram>& getShaderProgram() const { return m_shaderProgram; }
 
     const std::string& getName() const { return m_name; }
 

@@ -25,7 +25,7 @@ std::shared_ptr<Scene> m_scene;
 std::shared_ptr<View> m_view;
 std::unique_ptr<Labels> m_labels;
 std::shared_ptr<FontContext> m_ftContext;
-std::shared_ptr<Skybox> m_skybox;
+std::unique_ptr<Skybox> m_skybox;
 std::unique_ptr<InputHandler> m_inputHandler;
 
 static float g_time = 0.0;
@@ -46,7 +46,7 @@ void initialize() {
         // Input handler
         m_inputHandler = std::unique_ptr<InputHandler>(new InputHandler(m_view));
 
-        m_skybox = std::shared_ptr<Skybox>(new Skybox("cubemap.png"));
+        m_skybox = std::unique_ptr<Skybox>(new Skybox("cubemap.png"));
         m_skybox->init();
 
         // Create a tileManager
@@ -100,7 +100,7 @@ void update(float _dt) {
 
     if (m_view->changedOnLastUpdate() || m_tileManager->hasTileSetChanged() || m_labels->needUpdate()) {
 
-        auto tileSet = m_tileManager->getVisibleTiles();
+        auto& tileSet = m_tileManager->getVisibleTiles();
 
         for (const auto& mapIDandTile : tileSet) {
             const auto& tile = mapIDandTile.second;
