@@ -81,6 +81,9 @@ void InputHandler::handlePanGesture(float _startX, float _startY, float _endX, f
     
     clearDeltas();
     m_gestures.set(GestureFlags::pan);
+    
+    float dScreenX = _startX - _endX;
+    float dScreenY = _startY - _endY;
 
     m_view->screenToGroundPlane(_startX, _startY);
     m_view->screenToGroundPlane(_endX, _endY);
@@ -88,7 +91,9 @@ void InputHandler::handlePanGesture(float _startX, float _startY, float _endX, f
     float dx = _startX - _endX;
     float dy = _startY - _endY;
 
-    setDeltas(0.f, glm::vec2(dx, dy));
+    if (glm::length(glm::vec2(dScreenX, dScreenY)) > m_minDeltaTranslate) {
+        setDeltas(0.f, glm::vec2(dx, dy));
+    }
 
     m_view->translate(dx, dy);
 
@@ -165,10 +170,6 @@ void InputHandler::setDeltas(float _zoom, glm::vec2 _translate) {
     // setup deltas for momentum on gesture
     m_deltaTranslate = _translate;
     m_deltaZoom = _zoom;
-
-    if (glm::length(m_deltaTranslate) < m_minDeltaTranslate) {
-        m_deltaTranslate = glm::vec2(0.f);
-    }
 }
 
 }
