@@ -127,7 +127,7 @@ bool Label::canOcclude() {
 
 bool Label::visibleState() const {
     int visibleFlags = (State::visible | State::fading_in | State::fading_out);
-    return (visibleFlags & visibleFlags);
+    return (visibleFlags & m_currentState);
 }
 
 void Label::occlusionSolved() {
@@ -160,6 +160,7 @@ void Label::setRotation(float _rotation) {
 }
 
 void Label::pushTransform() {
+
     // update the buffer on valid states
     if (m_dirty && visibleState()) {
         static size_t attribOffset = offsetof(Label::Vertex, state);
