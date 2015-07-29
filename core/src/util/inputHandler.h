@@ -2,6 +2,7 @@
 
 #include "view/view.h"
 #include <memory>
+#include <bitset>
 
 namespace Tangram {
 
@@ -23,18 +24,31 @@ public:
     void update(float _dt);
 
 private:
+    
+    enum GestureFlags {
+        tap = 0,
+        double_tap,
+        pan,
+        pinch,
+        rotate,
+        shove
+    };
 
     void setDeltas(float _zoom, glm::vec2 _translate);
+    void clearDeltas();
 
     void onEndGesture();
 
     std::shared_ptr<View> m_view;
 
     bool m_gestureOccured = false;
+    bool m_momentumHandled = false;
 
     // fling deltas on zoom and translation
     glm::vec2 m_deltaTranslate;
     float m_deltaZoom;
+    
+    std::bitset<8> m_gestures = 0;
 
     glm::vec2 mPrevFocus = glm::vec2(0.0f, 0.0f);
 

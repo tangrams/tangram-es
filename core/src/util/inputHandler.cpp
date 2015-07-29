@@ -7,27 +7,42 @@
 namespace Tangram {
 
 InputHandler::InputHandler(std::shared_ptr<View> _view) : m_view(_view) {
+    
     m_deltaZoom = 0.f;
     m_deltaTranslate = glm::vec2(0.f);
+    
 }
 
 void InputHandler::update(float _dt) {
+    
+    if (!m_gestureOccured) {
+        
+        if (glm::length(m_deltaTranslate) > m_minDeltaLength || std::abs(m_deltaZoom) > m_minDeltaZoomLength) {
 
-    return;
+            static std::bitset<8> pan(1 << GestureFlags::pan);
+            static std::bitset<8> pinch(1 << GestureFlags::pinch);
 
-    bool hasMomentum = glm::length(m_deltaTranslate) > m_minDeltaLength || std::abs(m_deltaZoom) > m_minDeltaZoomLength;
+            // exponential decrease, m_expDecrease should be between [0..1]
+            if (pan == m_gestures || m_momentumHandled) {
+                m_deltaTranslate *= m_expDecrease;
+                m_view->translate(m_deltaTranslate.x, m_deltaTranslate.y);
+                m_momentumHandled = true;
+            }
+            
+            // to give more control, make zoom decrease faster than translation
+            if (pinch == m_gestures || m_momentumHandled) {
+                m_deltaZoom *= m_expDecrease * m_expDecrease;
+                m_view->zoom(m_deltaZoom);
+                m_momentumHandled = true;
+            }
 
-    if (!m_gestureOccured && hasMomentum) {
+            requestRender();
+        } else {
 
-        // exponential decrease, m_expDecrease should be between [0..1]
-        m_deltaTranslate *= m_expDecrease;
-        // to give more control, make zoom decrease faster than translation
-        m_deltaZoom *= m_expDecrease * m_expDecrease;
-
-        m_view->translate(m_deltaTranslate.x, m_deltaTranslate.y);
-        m_view->zoom(m_deltaZoom);
-
-        requestRender();
+            m_momentumHandled = false;
+        }
+        
+        m_gestures.reset();
     }
 
     m_gestureOccured = false;
@@ -35,6 +50,9 @@ void InputHandler::update(float _dt) {
 
 void InputHandler::handleTapGesture(float _posX, float _posY) {
 
+    clearDeltas();
+    m_gestures.set(GestureFlags::tap);
+    
     float viewCenterX = 0.5f * m_view->getWidth();
     float viewCenterY = 0.5f * m_view->getHeight();
 
@@ -48,6 +66,9 @@ void InputHandler::handleTapGesture(float _posX, float _posY) {
 
 void InputHandler::handleDoubleTapGesture(float _posX, float _posY) {
 
+    clearDeltas();
+    m_gestures.set(GestureFlags::double_tap);
+    
     handlePinchGesture(_posX, _posY, 2.f, 0.f);
 }
 
@@ -57,6 +78,9 @@ void InputHandler::handlePanGesture(float _startX, float _startY, float _endX, f
     if (std::abs(_startX - _endX) < FLT_EPSILON && std::abs(_startY - _endY) < FLT_EPSILON) {
         return;
     }
+    
+    clearDeltas();
+    m_gestures.set(GestureFlags::pan);
 
     m_view->screenToGroundPlane(_startX, _startY);
     m_view->screenToGroundPlane(_endX, _endY);
@@ -73,6 +97,8 @@ void InputHandler::handlePanGesture(float _startX, float _startY, float _endX, f
 
 void InputHandler::handlePinchGesture(float _posX, float _posY, float _scale, float _velocity) {
 
+    clearDeltas();
+    m_gestures.set(GestureFlags::pinch);
 
     m_view->screenToGroundPlane(_posX, _posY);
 
@@ -89,7 +115,10 @@ void InputHandler::handlePinchGesture(float _posX, float _posY, float _scale, fl
 }
 
 void InputHandler::handleRotateGesture(float _posX, float _posY, float _radians) {
-
+    
+    clearDeltas();
+    m_gestures.set(GestureFlags::rotate);
+    
     m_view->screenToGroundPlane(_posX, _posY);
 
     m_view->undoFocusPosition(glm::vec2(_posX, _posY), mPrevFocus);
@@ -101,7 +130,10 @@ void InputHandler::handleRotateGesture(float _posX, float _posY, float _radians)
 }
 
 void InputHandler::handleShoveGesture(float _distance) {
-
+    
+    clearDeltas();
+    m_gestures.set(GestureFlags::shove);
+    
     m_view->pitch(_distance);
 
     onEndGesture();
@@ -121,6 +153,11 @@ void InputHandler::onEndGesture() {
 
     // request a frame
     requestRender();
+}
+    
+void InputHandler::clearDeltas() {
+    m_deltaZoom = 0.f;
+    m_deltaTranslate = glm::vec2(0.f);
 }
 
 void InputHandler::setDeltas(float _zoom, glm::vec2 _translate) {
