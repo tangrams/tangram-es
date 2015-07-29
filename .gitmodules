@@ -21,6 +21,3 @@
 [submodule "core/dependencies/csscolorparser"]
 	path = core/dependencies/csscolorparser
 	url = https://github.com/tangrams/css-color-parser-cpp
-[submodule "core/dependencies/benchmark/benchmark"]
-	path = core/dependencies/benchmark/benchmark
-	url = https://github.com/google/benchmark
