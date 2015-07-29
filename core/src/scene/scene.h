@@ -24,8 +24,8 @@ public:
     void addStyle(std::unique_ptr<Style> _style);
     void addLight(std::unique_ptr<Light> _light);
 
-    std::vector<std::unique_ptr<Style>>& getStyles() { return m_styles; };
-    std::vector<std::unique_ptr<Light>>& getLights() { return m_lights; };
+    const std::vector<std::unique_ptr<Style>>& getStyles() const { return m_styles; };
+    const std::vector<std::unique_ptr<Light>>& getLights() const { return m_lights; };
 
     std::unordered_map<std::string, std::shared_ptr<Texture>>& getTextures() { return m_textures; };
 

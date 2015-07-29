@@ -14,7 +14,7 @@ public:
     /*	Set the direction of the light */
     virtual void setDirection(const glm::vec3& _dir);
     
-    virtual void setupProgram(const std::shared_ptr<View>& _view, std::shared_ptr<ShaderProgram> _program) override;
+    virtual void setupProgram(const View& _view, ShaderProgram& _program) override;
     
 protected:
 

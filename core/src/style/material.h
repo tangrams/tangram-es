@@ -74,10 +74,10 @@ public:
     void setNormal(MaterialTexture _normalTexture);
 
     /*  Inject the needed lines of GLSL code on the shader to make this material work */
-    virtual void injectOnProgram(std::shared_ptr<ShaderProgram> _shader);
+    virtual void injectOnProgram(ShaderProgram& _shader);
 
     /*  Method to pass it self as a uniform to the shader program */
-    virtual void setupProgram(std::shared_ptr<ShaderProgram> _shader);
+    virtual void setupProgram(ShaderProgram& _shader);
 
 private:
 

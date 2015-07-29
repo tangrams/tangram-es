@@ -38,18 +38,18 @@ void SpotLight::setCutoffExponent(float _exponent) {
     m_spotExponent = _exponent;
 }
 
-void SpotLight::setupProgram(const std::shared_ptr<View>& _view, std::shared_ptr<ShaderProgram> _shader ) {
+void SpotLight::setupProgram(const View& _view, ShaderProgram& _shader ) {
     if (m_dynamic) {
         PointLight::setupProgram(_view, _shader);
 
         glm::vec3 direction = m_direction;
         if (m_origin == LightOrigin::world) {
-            direction = glm::normalize(_view->getNormalMatrix() * direction);
+            direction = glm::normalize(_view.getNormalMatrix() * direction);
         }
 
-        _shader->setUniformf(getUniformName()+".direction", direction);
-        _shader->setUniformf(getUniformName()+".spotCosCutoff", m_spotCosCutoff);
-        _shader->setUniformf(getUniformName()+".spotExponent", m_spotExponent);
+        _shader.setUniformf(getUniformName()+".direction", direction);
+        _shader.setUniformf(getUniformName()+".spotCosCutoff", m_spotCosCutoff);
+        _shader.setUniformf(getUniformName()+".spotExponent", m_spotExponent);
     }
 }
 

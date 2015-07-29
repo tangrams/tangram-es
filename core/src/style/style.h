@@ -120,7 +120,7 @@ public:
 
     virtual ~Style();
 
-    bool viewportHasChanged() { m_dirtyViewport = true; };
+    void viewportHasChanged() { m_dirtyViewport = true; }
 
     /* Whether or not the style uses blending operation for drawing */
     virtual bool isOpaque() const { return true; };
@@ -135,7 +135,7 @@ public:
     virtual void addData(TileData& _data, Tile& _tile);
 
     /* Perform any setup needed before drawing each frame */
-    virtual void onBeginDrawFrame(const std::shared_ptr<View>& _view, const std::shared_ptr<Scene>& _scene);
+    virtual void onBeginDrawFrame(const View& _view, const Scene& _scene);
 
     /* Perform any unsetup needed after drawing each frame */
     virtual void onEndDrawFrame() {}

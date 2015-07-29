@@ -97,7 +97,7 @@ void SpriteStyle::buildPoint(Point& _point, const StyleParamMap&, Properties& _p
     mesh.addLabel(std::move(label));
 }
 
-void SpriteStyle::onBeginDrawFrame(const std::shared_ptr<View>& _view, const std::shared_ptr<Scene>& _scene) {
+void SpriteStyle::onBeginDrawFrame(const View& _view, const Scene& _scene) {
     m_spriteAtlas->bind();
 
     static bool initUniformSampler = true;
@@ -108,7 +108,7 @@ void SpriteStyle::onBeginDrawFrame(const std::shared_ptr<View>& _view, const std
     }
 
     if (m_dirtyViewport) {
-        m_shaderProgram->setUniformMatrix4f("u_proj", glm::value_ptr(_view->getOrthoViewportMatrix()));
+        m_shaderProgram->setUniformMatrix4f("u_proj", glm::value_ptr(_view.getOrthoViewportMatrix()));
         m_dirtyViewport = false;
     }
 

@@ -139,10 +139,9 @@ void TextStyle::setColor(unsigned int _color) {
     m_dirtyColor = true;
 }
 
-void TextStyle::onBeginDrawFrame(const std::shared_ptr<View>& _view, const std::shared_ptr<Scene>& _scene) {
-    auto ftContext = FontContext::GetInstance();
+void TextStyle::onBeginDrawFrame(const View& _view, const Scene& _scene) {
 
-    ftContext->bindAtlas(0);
+    FontContext::GetInstance()->bindAtlas(0);
 
     static bool initUniformSampler = true;
 
@@ -152,8 +151,8 @@ void TextStyle::onBeginDrawFrame(const std::shared_ptr<View>& _view, const std::
     }
 
     if (m_dirtyViewport) {
-        m_shaderProgram->setUniformf("u_resolution", _view->getWidth(), _view->getHeight());
-        m_shaderProgram->setUniformMatrix4f("u_proj", glm::value_ptr(_view->getOrthoViewportMatrix()));
+        m_shaderProgram->setUniformf("u_resolution", _view.getWidth(), _view.getHeight());
+        m_shaderProgram->setUniformMatrix4f("u_proj", glm::value_ptr(_view.getOrthoViewportMatrix()));
         m_dirtyViewport = false;
     }
 

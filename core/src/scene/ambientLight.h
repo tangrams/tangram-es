@@ -10,7 +10,7 @@ public:
     AmbientLight(const std::string& _name, bool _dynamic = false);
     virtual ~AmbientLight();
     
-    virtual void setupProgram(const std::shared_ptr<View>& _view, std::shared_ptr<ShaderProgram> _program) override;
+    virtual void setupProgram(const View& _view, ShaderProgram& _program) override;
     
 protected:
 
