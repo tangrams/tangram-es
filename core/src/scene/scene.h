@@ -1,6 +1,7 @@
 #pragma once
 
 #include "scene/light.h"
+#include "scene/dataLayer.h"
 #include <memory>
 #include <string>
 #include <vector>
@@ -19,6 +20,7 @@ class Texture;
 class Scene {
 public:
 
+    auto& layers() { return m_layers; };
     auto& styles() { return m_styles; };
     auto& lights() { return m_lights; };
     auto& textures() { return m_textures; };
@@ -28,6 +30,7 @@ public:
 
 private:
 
+    std::vector<DataLayer> m_layers;
     std::vector<std::shared_ptr<Style>> m_styles;
     std::vector<std::shared_ptr<Light>> m_lights;
     std::unordered_map<std::string, std::shared_ptr<Texture>> m_textures;

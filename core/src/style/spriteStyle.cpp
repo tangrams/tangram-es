@@ -60,7 +60,7 @@ void SpriteStyle::constructShaderProgram() {
     m_spriteAtlas->addSpriteNode("bookstore", {0, 333}, {32, 32});
 }
 
-void SpriteStyle::buildPoint(Point& _point, const StyleParamMap&, Properties& _props, VboMesh& _mesh, Tile& _tile) const {
+void SpriteStyle::buildPoint(const Point& _point, const StyleParamMap&, const Properties& _props, VboMesh& _mesh, Tile& _tile) const {
     // TODO : make this configurable
     std::vector<BufferVert> vertices;
 
@@ -79,7 +79,7 @@ void SpriteStyle::buildPoint(Point& _point, const StyleParamMap&, Properties& _p
         return;
     }
 
-    std::string& kind = (*it).second;
+    const std::string& kind = (*it).second;
     if (!m_spriteAtlas->hasSpriteNode(kind)) {
         return;
     }

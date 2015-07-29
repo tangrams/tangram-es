@@ -79,34 +79,15 @@ protected:
     virtual void constructShaderProgram() = 0;
 
     /* Build styled vertex data for point geometry and add it to the given <VboMesh> */
-    virtual void buildPoint(Point& _point, const StyleParamMap& _styleParamMap, Properties& _props, VboMesh& _mesh, Tile& _tile) const;
+    virtual void buildPoint(const Point& _point, const StyleParamMap& _styleParamMap, const Properties& _props, VboMesh& _mesh, Tile& _tile) const;
 
     /* Build styled vertex data for line geometry and add it to the given <VboMesh> */
-    virtual void buildLine(Line& _line, const StyleParamMap& _styleParamMap, Properties& _props, VboMesh& _mesh, Tile& _tile) const;
+    virtual void buildLine(const Line& _line, const StyleParamMap& _styleParamMap, const Properties& _props, VboMesh& _mesh, Tile& _tile) const;
 
     /* Build styled vertex data for polygon geometry and add it to the given <VboMesh> */
-    virtual void buildPolygon(Polygon& _polygon, const StyleParamMap& _styleParamMap, Properties& _props, VboMesh& _mesh, Tile& _tile) const;
+    virtual void buildPolygon(const Polygon& _polygon, const StyleParamMap& _styleParamMap, const Properties& _props, VboMesh& _mesh, Tile& _tile) const;
 
-    using StyleCacheKey = std::bitset<SceneLayer::MAX_LAYERS>;
-
-    static std::unordered_map<StyleCacheKey, StyleParamMap> s_styleParamMapCache;
-    static std::mutex s_cacheMutex;
-    static uint32_t parseColorProp(const std::string& _colorPropStr) ;
-
-    /*
-     * filter what layer(s) a features match and get style paramaters for this feature based on all subLayers it
-     * matches. Matching is cached for other features to use.
-     * Parameter maps for a set of layers is determined by merging parameters maps for individual layers matching the
-     * filters and keyed based on a uniqueID defined by the id of the matching layers.
-     */
-    void applyLayerFiltering(const Feature& _feature, const Context& _ctx, StyleCacheKey& _uniqueID,
-                             StyleParamMap& _styleParamMapMix, std::shared_ptr<SceneLayer> _uberLayer) const;
-
-    /* Perform any needed setup to process the data for a tile */
-    virtual void onBeginBuildTile(VboMesh& _mesh) const;
-
-    /* Perform any needed teardown after processing data for a tile */
-    virtual void onEndBuildTile(VboMesh& _mesh) const;
+    static uint32_t parseColorProp(const std::string& _colorPropStr);
 
     /* Create a new mesh object using the vertex layout corresponding to this style */
     virtual VboMesh* newMesh() const = 0;
@@ -126,8 +107,13 @@ public:
     /* Add layers to which this style will apply */
     void addLayer(std::shared_ptr<SceneLayer> _layer);
 
-    /* Add styled geometry from the given <TileData> object to the given <Tile> */
-    virtual void addData(TileData& _data, Tile& _tile);
+    void buildFeature(Tile& _tile, const Feature& _feat, const DrawRule& _rule) const;
+
+    /* Perform any needed setup to process the data for a tile */
+    virtual void onBeginBuildTile(Tile& _tile) const;
+
+    /* Perform any needed teardown after processing data for a tile */
+    virtual void onEndBuildTile(Tile& _tile) const;
 
     /* Perform any setup needed before drawing each frame */
     virtual void onBeginDrawFrame(const std::shared_ptr<View>& _view, const std::shared_ptr<Scene>& _scene);

@@ -55,6 +55,8 @@ public:
     /* Clears all data associated with this DataSource */
     void clearData();
 
+    const std::string& name() { return m_name; }
+
 protected:
 
     /* Constructs the URL of a tile using <m_urlTemplate> */

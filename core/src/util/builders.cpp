@@ -42,7 +42,7 @@ JoinTypes JoinTypeFromString(const std::string& str) {
     return JoinTypes::miter;
 }
 
-void Builders::buildPolygon(const Polygon& _polygon, PolygonBuilder& _ctx) {
+void Builders::buildPolygon(const Polygon& _polygon, float _height, PolygonBuilder& _ctx) {
     
     TESStesselator* tesselator = tessNewTess(&allocator);
     isect2d::AABB bbox;
@@ -84,7 +84,7 @@ void Builders::buildPolygon(const Polygon& _polygon, PolygonBuilder& _ctx) {
         _ctx.sizeHint(_ctx.numVertices);
 
         for (int i = 0; i < numVertices; i++) {
-            glm::vec3 coord(tessVertices[3*i], tessVertices[3*i+1], tessVertices[3*i+2]);
+            glm::vec3 coord(tessVertices[3*i], tessVertices[3*i+1], tessVertices[3*i+2] + _height);
             glm::vec2 uv(0);
 
             if (_ctx.useTexCoords) {
@@ -101,7 +101,7 @@ void Builders::buildPolygon(const Polygon& _polygon, PolygonBuilder& _ctx) {
     tessDeleteTess(tesselator);
 }
 
-void Builders::buildPolygonExtrusion(const Polygon& _polygon, const float& _minHeight, PolygonBuilder& _ctx) {
+void Builders::buildPolygonExtrusion(const Polygon& _polygon, float _minHeight, float _maxHeight, PolygonBuilder& _ctx) {
     
     int vertexDataOffset = (int)_ctx.numVertices;
     
@@ -122,10 +122,12 @@ void Builders::buildPolygonExtrusion(const Polygon& _polygon, const float& _minH
             normalVector = glm::normalize(normalVector);
             
             // 1st vertex top
-            _ctx.addVertex(line[i], normalVector, glm::vec2(1.,0.));
+            _ctx.addVertex(glm::vec3(line[i].x, line[i].y, _maxHeight),
+                           normalVector, glm::vec2(1.,0.));
 
             // 2nd vertex top
-            _ctx.addVertex(line[i+1], normalVector, glm::vec2(0.,0.));
+            _ctx.addVertex(glm::vec3(line[i+1].x, line[i+1].y, _maxHeight),
+                           normalVector, glm::vec2(0.,0.));
 
             // 1st vertex bottom
             _ctx.addVertex(glm::vec3(line[i].x, line[i].y, _minHeight),

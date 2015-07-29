@@ -27,16 +27,16 @@ class SceneLoader {
     void loadLights(YAML::Node lights, Scene& scene);
     void loadCameras(YAML::Node cameras, View& view);
     void loadLayers(YAML::Node layers, Scene& scene, TileManager& tileManager);
-    void loadSublayers(YAML::Node layer, std::vector<std::shared_ptr<Tangram::SceneLayer>>& subLayers);
     void parseStyleProps(YAML::Node styleProps, StyleParamMap& paramMap, const std::string& propPrefix = "");
     void loadStyles(YAML::Node styles, Scene& scene);
     void loadTextures(YAML::Node textures, Scene& scene);
     void loadMaterial(YAML::Node matNode, Material& material, Scene& scene);
     void loadShaderConfig(YAML::Node shaders, ShaderProgram& shader);
+    SceneLayer loadSublayer(YAML::Node layer, const std::string& name, Scene& scene);
     MaterialTexture loadMaterialTexture(YAML::Node matCompNode, Scene& scene);
-    Tangram::Filter generateAnyFilter(YAML::Node filter);
-    Tangram::Filter generateNoneFilter(YAML::Node filter);
-    Tangram::Filter generatePredicate(YAML::Node filter, std::string _key);
+    Filter generateAnyFilter(YAML::Node filter);
+    Filter generateNoneFilter(YAML::Node filter);
+    Filter generatePredicate(YAML::Node filter, std::string _key);
 
 public:
 

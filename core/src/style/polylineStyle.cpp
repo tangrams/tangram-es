@@ -74,7 +74,7 @@ void PolylineStyle::parseStyleParams(const StyleParamMap& _styleParamMap, StyleP
     }
 }
 
-void PolylineStyle::buildLine(Line& _line, const StyleParamMap& _styleParamMap, Properties& _props, VboMesh& _mesh, Tile& _tile) const {
+void PolylineStyle::buildLine(const Line& _line, const StyleParamMap& _styleParamMap, const Properties& _props, VboMesh& _mesh, Tile& _tile) const {
     std::vector<PosNormEnormColVertex> vertices;
 
     StyleParams params;

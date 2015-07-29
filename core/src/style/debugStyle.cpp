@@ -31,7 +31,7 @@ void DebugStyle::constructShaderProgram() {
 
 }
 
-void DebugStyle::addData(TileData &_data, Tile &_tile) {
+void DebugStyle::onBeginBuildTile(Tile &_tile) const {
 
     if (Tangram::getDebugFlag(Tangram::DebugFlags::tile_bounds)) {
 
@@ -52,7 +52,7 @@ void DebugStyle::addData(TileData &_data, Tile &_tile) {
         mesh->addVertices(std::move(vertices), { 0, 1, 2, 3, 0 });
         mesh->compileVertexBuffer();
 
-        _tile.addGeometry(*this, std::unique_ptr<VboMesh>(mesh));
+        _tile.getGeometry(*this).reset(mesh);
 
     }
 }

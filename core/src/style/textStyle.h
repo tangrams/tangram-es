@@ -18,11 +18,11 @@ protected:
     virtual void constructVertexLayout() override;
     virtual void constructShaderProgram() override;
 
-    virtual void buildPoint(Point& _point, const StyleParamMap& _styleParamMap, Properties& _props, VboMesh& _mesh, Tile& _tile) const override;
-    virtual void buildLine(Line& _line, const StyleParamMap& _styleParamMap, Properties& _props, VboMesh& _mesh, Tile& _tile) const override;
-    virtual void buildPolygon(Polygon& _polygon, const StyleParamMap& _styleParamMap, Properties& _props, VboMesh& _mesh, Tile& _tile) const override;
-    virtual void onBeginBuildTile(VboMesh& _mesh) const override;
-    virtual void onEndBuildTile(VboMesh& _mesh) const override;
+    virtual void buildPoint(const Point& _point, const StyleParamMap& _styleParamMap, const Properties& _props, VboMesh& _mesh, Tile& _tile) const override;
+    virtual void buildLine(const Line& _line, const StyleParamMap& _styleParamMap, const Properties& _props, VboMesh& _mesh, Tile& _tile) const override;
+    virtual void buildPolygon(const Polygon& _polygon, const StyleParamMap& _styleParamMap, const Properties& _props, VboMesh& _mesh, Tile& _tile) const override;
+    virtual void onBeginBuildTile(Tile& _tile) const override;
+    virtual void onEndBuildTile(Tile& _tile) const override;
 
     virtual VboMesh* newMesh() const override {
         return new TextBuffer(m_labels->getFontContext(), m_vertexLayout);

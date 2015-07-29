@@ -42,7 +42,7 @@ void PolygonStyle::parseStyleParams(const StyleParamMap& _styleParamMap, StylePa
     }
 }
 
-void PolygonStyle::buildLine(Line& _line, const StyleParamMap& _styleParamMap, Properties& _props, VboMesh& _mesh, Tile& _tile) const {
+void PolygonStyle::buildLine(const Line& _line, const StyleParamMap& _styleParamMap, const Properties& _props, VboMesh& _mesh, Tile& _tile) const {
     std::vector<PosNormColVertex> vertices;
 
     StyleParams params;
@@ -66,7 +66,7 @@ void PolygonStyle::buildLine(Line& _line, const StyleParamMap& _styleParamMap, P
     mesh.addVertices(std::move(vertices), std::move(builder.indices));
 }
 
-void PolygonStyle::buildPolygon(Polygon& _polygon, const StyleParamMap& _styleParamMap, Properties& _props, VboMesh& _mesh, Tile& _tile) const {
+void PolygonStyle::buildPolygon(const Polygon& _polygon, const StyleParamMap& _styleParamMap, const Properties& _props, VboMesh& _mesh, Tile& _tile) const {
 
     std::vector<PosNormColVertex> vertices;
 
@@ -91,15 +91,10 @@ void PolygonStyle::buildPolygon(Polygon& _polygon, const StyleParamMap& _stylePa
     };
 
     if (minHeight != height) {
-        for (auto& line : _polygon) {
-            for (auto& point : line) {
-                point.z = height;
-            }
-        }
-        Builders::buildPolygonExtrusion(_polygon, minHeight, builder);
+        Builders::buildPolygonExtrusion(_polygon, minHeight, height, builder);
     }
 
-    Builders::buildPolygon(_polygon, builder);
+    Builders::buildPolygon(_polygon, height, builder);
 
     auto& mesh = static_cast<PolygonStyle::Mesh&>(_mesh);
     mesh.addVertices(std::move(vertices), std::move(builder.indices));

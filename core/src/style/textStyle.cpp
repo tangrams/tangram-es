@@ -44,7 +44,7 @@ void TextStyle::constructShaderProgram() {
     m_shaderProgram->addSourceBlock("defines", defines);
 }
 
-void TextStyle::buildPoint(Point& _point, const StyleParamMap& _styleParamMap, Properties& _props, VboMesh& _mesh, Tile& _tile) const {
+void TextStyle::buildPoint(const Point& _point, const StyleParamMap& _styleParamMap, const Properties& _props, VboMesh& _mesh, Tile& _tile) const {
     auto& buffer = static_cast<TextBuffer&>(_mesh);
 
     std::string text;
@@ -56,7 +56,7 @@ void TextStyle::buildPoint(Point& _point, const StyleParamMap& _styleParamMap, P
     m_labels->addTextLabel(_tile, buffer, m_name, t, text, Label::Type::point);
 }
 
-void TextStyle::buildLine(Line& _line, const StyleParamMap& _styleParamMap, Properties& _props, VboMesh& _mesh, Tile& _tile) const {
+void TextStyle::buildLine(const Line& _line, const StyleParamMap& _styleParamMap, const Properties& _props, VboMesh& _mesh, Tile& _tile) const {
     auto& buffer = static_cast<TextBuffer&>(_mesh);
 
     std::string text;
@@ -84,7 +84,7 @@ void TextStyle::buildLine(Line& _line, const StyleParamMap& _styleParamMap, Prop
     }
 }
 
-void TextStyle::buildPolygon(Polygon& _polygon, const StyleParamMap& _styleParamMap, Properties& _props, VboMesh& _mesh, Tile& _tile) const {
+void TextStyle::buildPolygon(const Polygon& _polygon, const StyleParamMap& _styleParamMap, const Properties& _props, VboMesh& _mesh, Tile& _tile) const {
     auto& buffer = static_cast<TextBuffer&>(_mesh);
 
     std::string text;
@@ -110,8 +110,12 @@ void TextStyle::buildPolygon(Polygon& _polygon, const StyleParamMap& _styleParam
     m_labels->addTextLabel(_tile, buffer, m_name, t, text, Label::Type::point);
 }
 
-void TextStyle::onBeginBuildTile(VboMesh& _mesh) const {
-    auto& buffer = static_cast<TextBuffer&>(_mesh);
+void TextStyle::onBeginBuildTile(Tile& _tile) const {
+    auto& mesh = _tile.getGeometry(*this);
+    if (!mesh) {
+        mesh.reset(newMesh());
+    }
+    auto& buffer = static_cast<TextBuffer&>(*mesh);
     buffer.init();
 
     auto ftContext = m_labels->getFontContext();
@@ -123,8 +127,11 @@ void TextStyle::onBeginBuildTile(VboMesh& _mesh) const {
     }
 }
 
-void TextStyle::onEndBuildTile(VboMesh& _mesh) const {
-    auto& buffer = static_cast<TextBuffer&>(_mesh);
+void TextStyle::onEndBuildTile(Tile& _tile) const {
+
+    auto& mesh = _tile.getGeometry(*this);
+
+    auto& buffer = static_cast<TextBuffer&>(*mesh);
 
     buffer.addBufferVerticesToMesh();
 }

@@ -92,16 +92,7 @@ void TileWorker::run() {
         }
 
         if (tileData) {
-            // Process data for all styles
-            for (const auto& style : m_tileManager.getScene()->styles()) {
-                if (!m_running) {
-                    break;
-                }
-                if (tile->isCanceled()) {
-                    break;
-                }
-                style->addData(*tileData, *tile);
-            }
+            tile->build(*m_tileManager.getScene(), *tileData);
         }
 
         m_tileManager.tileProcessed(std::move(task));

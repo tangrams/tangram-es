@@ -44,9 +44,6 @@ public:
 
     std::shared_ptr<Scene>& getScene() { return m_scene; }
 
-    /* Adds a <DataSource> from which tile data should be retrieved */
-    void addDataSource(std::unique_ptr<DataSource> _source);
-
     /* Updates visible tile set if necessary
      *
      * Contacts the <ViewModule> to determine whether the set of visible tiles has changed; if so,
@@ -60,7 +57,9 @@ public:
     void tileProcessed(std::shared_ptr<TileTask>&& task);
 
     /* Returns the set of currently visible tiles */
-    const std::map<TileID, std::shared_ptr<Tile>>& getVisibleTiles() { return m_tileSet; }
+    const auto& getVisibleTiles() { return m_tileSet; }
+
+    auto& dataSources() { return m_dataSources; }
 
     bool hasTileSetChanged() { return m_tileSetChanged; }
 
@@ -82,7 +81,7 @@ private:
     // using std:search (binary search))
     std::map<TileID, std::shared_ptr<Tile>> m_tileSet;
 
-    std::vector<std::unique_ptr<DataSource>> m_dataSources;
+    std::vector<std::shared_ptr<DataSource>> m_dataSources;
 
     const static size_t MAX_WORKERS = 2;
     std::unique_ptr<TileWorker> m_workers;

@@ -1,5 +1,7 @@
 #include "tile.h"
 
+#include "scene/scene.h"
+#include "scene/dataLayer.h"
 #include "style/style.h"
 #include "view/view.h"
 #include "tile/tileID.h"
@@ -34,10 +36,45 @@ Tile::~Tile() {
 
 }
 
-void Tile::addGeometry(const Style& _style, std::shared_ptr<VboMesh> _mesh) {
+void Tile::build(Scene& _scene, const TileData& _data) {
 
-    m_geometry[_style.getName()] = std::move(_mesh); // Move-construct a unique_ptr at the value associated with the given style
+    const auto& layers = _scene.layers();
 
+    Context ctx;
+    ctx["$zoom"] = m_id.z;
+
+    for (auto& style : _scene.styles()) {
+        style->onBeginBuildTile(*this);
+    }
+
+    for (const auto& collection : _data.layers) {
+
+        for (const auto& datalayer : layers) {
+
+            if (collection.name != datalayer.collection()) {
+                continue;
+            }
+            // TODO: must also skip TileData which isn't from this DataLayer's source
+
+            for (const auto& feat : collection.features) {
+
+                std::vector<DrawRule> rules;
+                datalayer.layer().match(feat, ctx, rules);
+
+                for (const auto& rule : rules) {
+                    rule.style->buildFeature(*this, feat, rule);
+                }
+            }
+        }
+    }
+
+    for (auto& style : _scene.styles()) {
+        style->onEndBuildTile(*this);
+    }
+
+    for (auto& geometry : m_geometry) {
+        geometry.second->compileVertexBuffer();
+    }
 }
 
 void Tile::update(float _dt, const View& _view) {
@@ -97,7 +134,7 @@ void Tile::draw(const Style& _style, const View& _view) {
 }
 
 std::shared_ptr<VboMesh>& Tile::getGeometry(const Style& _style) {
-    return m_geometry.at(_style.getName());
+    return m_geometry[_style.getName()];
 }
 
 void Tile::addLabel(const std::string& _styleName, std::shared_ptr<Label> _label) {
