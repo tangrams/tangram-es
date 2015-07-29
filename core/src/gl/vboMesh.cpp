@@ -56,15 +56,6 @@ void VboMesh::setDrawMode(GLenum _drawMode) {
     }
 }
 
-void VboMesh::update(GLintptr _offset, GLsizei _size, unsigned char* _data) {
-    std::memcpy(m_glVertexData + _offset, _data, _size);
-
-    m_dirtyOffset = _offset;
-    m_dirtySize = _size;
-
-    m_dirty = true;
-}
-
 bool VboMesh::subDataUpload() {
     if (!m_dirty) {
         return false;
