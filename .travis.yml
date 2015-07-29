@@ -36,6 +36,8 @@ before_script:
 script:
     - source ./travis/script_build_tests.sh
     - source ./travis/script_run_tests.sh
+    - source ./travis/script_build_bench.sh
+    - source ./travis/script_run_bench.sh
     - source ./travis/script_build.sh
 
 after_success:
