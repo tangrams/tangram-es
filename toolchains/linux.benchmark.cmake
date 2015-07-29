@@ -11,7 +11,6 @@ add_subdirectory(${PROJECT_SOURCE_DIR}/core)
 include_directories(${CORE_INCLUDE_DIRS})
 include_directories(${CORE_LIBRARIES_INCLUDE_DIRS})
 
-add_subdirectory(${PROJECT_SOURCE_DIR}/core/dependencies/benchmark)
 
 set(LINUX_PLATFORM_SRC
   ${PROJECT_SOURCE_DIR}/linux/src/platform_linux.cpp

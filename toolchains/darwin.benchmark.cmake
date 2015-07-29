@@ -11,8 +11,6 @@ add_subdirectory(${PROJECT_SOURCE_DIR}/core)
 include_directories(${CORE_INCLUDE_DIRS})
 include_directories(${CORE_LIBRARIES_INCLUDE_DIRS})
 
-add_subdirectory(${PROJECT_SOURCE_DIR}/core/dependencies/benchmark)
-
 set(OSX_PLATFORM_SRC ${PROJECT_SOURCE_DIR}/osx/src/platform_osx.mm)
 
 file(GLOB BENCH_SOURCES bench/*.cpp)
