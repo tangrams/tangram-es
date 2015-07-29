@@ -73,7 +73,7 @@ protected:
     std::vector<std::shared_ptr<SceneLayer>> m_layers;
 
     /* Whether the viewport has changed size */
-    bool m_dirtyViewport;
+    bool m_dirtyViewport = true;
 
     /* Create <VertexLayout> corresponding to this style; subclasses must implement this and call it on construction */
     virtual void constructVertexLayout() = 0;
