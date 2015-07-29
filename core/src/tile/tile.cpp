@@ -60,7 +60,7 @@ void Tile::draw(const Style& _style, const View& _view) {
     
     if (styleMesh) {
         
-        std::shared_ptr<ShaderProgram> shader = _style.getShaderProgram();
+        auto& shader = _style.getShaderProgram();
 
         glm::mat4 modelViewMatrix = _view.getViewMatrix() * m_modelMatrix;
         glm::mat4 modelViewProjMatrix = _view.getViewProjectionMatrix() * m_modelMatrix;
