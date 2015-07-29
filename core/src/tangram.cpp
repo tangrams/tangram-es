@@ -100,7 +100,7 @@ void update(float _dt) {
 
     if (m_view->changedOnLastUpdate() || m_tileManager->hasTileSetChanged() || m_labels->needUpdate()) {
 
-        auto tileSet = m_tileManager->getVisibleTiles();
+        auto& tileSet = m_tileManager->getVisibleTiles();
 
         for (const auto& mapIDandTile : tileSet) {
             const auto& tile = mapIDandTile.second;
