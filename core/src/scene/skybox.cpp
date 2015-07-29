@@ -14,15 +14,15 @@ void Skybox::init() {
     std::string fragShaderSrcStr = stringFromResource("cubemap.fs");
     std::string vertShaderSrcStr = stringFromResource("cubemap.vs");
 
-    m_shader = std::make_shared<ShaderProgram>();
+    m_shader = std::make_unique<ShaderProgram>();
     m_shader->setSourceStrings(fragShaderSrcStr, vertShaderSrcStr);
 
-    m_texture = std::shared_ptr<Texture>(new TextureCube(m_file));
+    m_texture = std::unique_ptr<Texture>(new TextureCube(m_file));
     auto layout = std::shared_ptr<VertexLayout>(new VertexLayout({
         {"a_position", 3, GL_FLOAT, false, 0},
     }));
 
-    m_mesh = std::shared_ptr<Mesh>(new Mesh(layout, GL_TRIANGLES));
+    m_mesh = std::unique_ptr<Mesh>(new Mesh(layout, GL_TRIANGLES));
 
     std::vector<int> indices = {
         5, 1, 3, 3, 7, 5, // +x
