@@ -1,11 +1,10 @@
-#include "textLabel.h"
+#include "labels/textLabel.h"
 
 namespace Tangram {
 
 TextLabel::TextLabel(TextBuffer& _mesh, Label::Transform _transform, std::string _text, Type _type) :
-    Label(_transform, _type),
-    m_text(_text),
-    m_mesh(_mesh)
+    Label(_transform, static_cast<LabelMesh&>(_mesh), _type, 0, 0),
+    m_text(_text)
 {}
 
 void TextLabel::updateBBoxes() {
@@ -21,22 +20,14 @@ void TextLabel::updateBBoxes() {
 
 bool TextLabel::rasterize() {
 
-    m_numGlyphs = m_mesh.rasterize(m_text, m_dim, m_bufferOffset);
+    auto& buffer = dynamic_cast<TextBuffer&>(m_mesh);
+    int nGlyphs = buffer.rasterize(m_text, m_dim, m_bufferOffset);
+    m_nVerts = nGlyphs * 6;
 
-    if (m_numGlyphs == 0) {
+    if (nGlyphs == 0) {
         return false;
     }
     return true;
-}
-
-void TextLabel::pushTransform() {
-    if (m_dirty) {
-        m_dirty = false;
-        size_t attribOffset = offsetof(Label::Vertex, state);
-        int numVerts = m_numGlyphs * 6;
-
-        m_mesh.updateAttribute(m_bufferOffset + attribOffset, numVerts, m_transform.state);
-    }
 }
 
 }

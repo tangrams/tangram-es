@@ -8,7 +8,10 @@
 
 #include <string>
 
+
 namespace Tangram {
+
+class LabelMesh;
 
 class Label {
 
@@ -47,7 +50,7 @@ public:
         Vertex::State state;
     };
 
-    Label(Transform _transform, Type _type);
+    Label(Transform _transform, LabelMesh& _mesh, Type _type, size_t _bufferOffset, unsigned int _nVerts);
 
     ~Label();
 
@@ -65,28 +68,30 @@ public:
     bool update(const glm::mat4& _mvp, const glm::vec2& _screenSize, float _dt);
 
     /* Push the pending transforms to the vbo by updating the vertices */
-    virtual void pushTransform() = 0;
-    
+    void pushTransform();
+
     /* Update the screen position of the label */
     bool updateScreenTransform(const glm::mat4& _mvp, const glm::vec2& _screenSize);
 
-    Type getType() const { return m_type; }
-
+    /* Sets the occlusion */
     void setOcclusion(bool _occlusion);
 
+    /* Checks whether the label is in a state where it can occlusion */
     bool canOcclude();
 
-    bool offViewport(const glm::vec2& _screenSize);
-
+    /* Mark the label as resolved */
     void occlusionSolved();
 
     bool occludedLastFrame() { return m_occludedLastFrame; }
 
     State getState() const { return m_currentState; }
 
-    static bool s_needUpdate;
+    /* Checks whether the label is in a visible state */
+    bool visibleState() const;
 
 private:
+
+    bool offViewport(const glm::vec2& _screenSize);
 
     void enterState(State _state, float _alpha = 1.0f);
 
@@ -99,21 +104,28 @@ private:
     void setRotation(float _rotation);
 
     State m_currentState;
-
     Type m_type;
     bool m_occludedLastFrame;
     bool m_occlusionSolved;
     FadeEffect m_fade;
-    
+
 protected:
-    
+
     virtual void updateBBoxes() = 0;
-    
+
     isect2d::OBB m_obb;
     isect2d::AABB m_aabb;
     bool m_dirty;
     Transform m_transform;
     glm::vec2 m_dim;
+    unsigned int m_nVerts;
+
+    // Back-pointer to owning container
+    LabelMesh& m_mesh;
+
+    // byte-offset in m_mesh vertices
+    size_t m_bufferOffset;
+
 };
 
 }

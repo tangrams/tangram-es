@@ -1,13 +1,17 @@
 #include "label.h"
 
 #include "util/geom.h"
+#include "labels/labelMesh.h"
 
 namespace Tangram {
 
-Label::Label(Label::Transform _transform, Type _type) :
+Label::Label(Label::Transform _transform, LabelMesh& _mesh, Type _type, size_t _bufferOffset, unsigned int _nVerts) :
     m_type(_type),
-    m_transform(_transform) {
-
+    m_transform(_transform),
+    m_nVerts(_nVerts),
+    m_mesh(_mesh),
+    m_bufferOffset(_bufferOffset)
+{
     m_transform.state.alpha = m_type == Type::debug ? 1.0 : 0.0;
     m_currentState = m_type == Type::debug ? State::visible : State::wait_occ;
     m_occludedLastFrame = false;
@@ -121,6 +125,11 @@ bool Label::canOcclude() {
     return (occludeFlags & m_currentState) && !(m_type == Type::debug);
 }
 
+bool Label::visibleState() const {
+    int visibleFlags = (State::visible | State::fading_in | State::fading_out);
+    return (visibleFlags & visibleFlags);
+}
+
 void Label::occlusionSolved() {
     m_occlusionSolved = true;
 }
@@ -148,6 +157,15 @@ void Label::setScreenPosition(const glm::vec2& _screenPosition) {
 void Label::setRotation(float _rotation) {
     m_transform.state.rotation = _rotation;
     m_dirty = true;
+}
+
+void Label::pushTransform() {
+    // update the buffer on valid states
+    if (m_dirty && visibleState()) {
+        static size_t attribOffset = offsetof(Label::Vertex, state);
+        m_mesh.updateAttribute(m_bufferOffset + attribOffset, m_nVerts, m_transform.state);
+        m_dirty = false;
+    }
 }
 
 bool Label::updateState(const glm::mat4& _mvp, const glm::vec2& _screenSize, float _dt) {
