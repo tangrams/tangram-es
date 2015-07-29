@@ -16,7 +16,7 @@ public:
 
     void addLabel(std::unique_ptr<Label> _label);
 
-    std::vector<std::unique_ptr<Label>>& getLabels() {
+    const std::vector<std::unique_ptr<Label>>& getLabels() const {
         return m_labels;
     }
 
