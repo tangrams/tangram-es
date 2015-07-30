@@ -1,7 +1,7 @@
 # options
-set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wall -stdlib=libc++ -std=c++11")
+set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wall -stdlib=libc++ -std=c++1y")
 
-add_definitions(-DPLATFORM_OSX) 
+add_definitions(-DPLATFORM_OSX)
 
 # load glfw
 include(${PROJECT_SOURCE_DIR}/toolchains/add_glfw.cmake)
@@ -19,7 +19,7 @@ file(GLOB TEST_SOURCES tests/unit/*.cpp)
 foreach(_src_file_path ${TEST_SOURCES})
     string(REPLACE ".cpp" "" test_case ${_src_file_path})
     string(REGEX MATCH "([^/]*)$" test_name ${test_case})
-    
+
     set(EXECUTABLE_NAME "${test_name}.out")
 
     add_executable(${EXECUTABLE_NAME} ${_src_file_path} ${OSX_PLATFORM_SRC})
