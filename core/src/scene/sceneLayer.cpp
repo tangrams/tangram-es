@@ -5,12 +5,24 @@
 
 namespace Tangram {
 
-uint8_t SceneLayer::s_layerCount = 0;
+bool DrawRule::operator<(const DrawRule& _rhs) const {
+    return style->getName() < _rhs.style->getName();
+}
+
+DrawRule DrawRule::merge(DrawRule& _other) const {
+
+    StyleParamMap merged(parameters);
+
+    for (auto& entry : _other.parameters) {
+        // Override 'parent' values with 'child' values
+        std::swap(merged[entry.first], entry.second);
+    }
+
+    return { style, merged };
+}
 
 SceneLayer::SceneLayer(std::string _name, Filter _filter, std::vector<DrawRule> _rules, std::vector<SceneLayer> _sublayers) :
     m_filter(_filter), m_name(_name), m_rules(_rules), m_sublayers(_sublayers) {
-
-    m_id = s_layerCount++;
 
     // Rules must be sorted to merge correctly
     std::sort(m_rules.begin(), m_rules.end());
@@ -62,22 +74,6 @@ void SceneLayer::match(const Feature& _feat, const Context& _ctx, std::vector<Dr
 
     // Move merged results into output vector
     std::swap(merged, _matches);
-}
-
-bool DrawRule::operator<(const DrawRule& _rhs) const {
-    return style->getName() < _rhs.style->getName();
-}
-
-DrawRule DrawRule::merge(DrawRule& _other) const {
-
-    StyleParamMap merged(parameters);
-
-    for (auto& entry : _other.parameters) {
-        // Override 'parent' values with 'child' values
-        std::swap(merged[entry.first], entry.second);
-    }
-
-    return { style, merged };
 }
 
 }
