@@ -118,7 +118,7 @@ void View::roll(float _droll) {
 }
 
 void View::pitch(float _dpitch) {
-
+    m_tilted = true;
     setPitch(m_pitch + _dpitch);
 
 }
@@ -134,12 +134,29 @@ void View::orbit(float _x, float _y, float _radians) {
 
 void View::update() {
 
+    float oldViewCenterX, oldViewCenterY, viewCenterX, viewCenterY;
+
+    oldViewCenterX = viewCenterX = m_vpWidth * 0.5;
+    oldViewCenterY = viewCenterY = m_vpHeight * 0.5;
+
     if (!m_dirty) {
         m_changed = false;
         return;
     }
 
+    // origin before tilt
+    if (m_tilted) {
+        screenToGroundPlane(oldViewCenterX, oldViewCenterY);
+    }
+
     updateMatrices();
+
+    // origin after tilt
+    if(m_tilted) {
+        screenToGroundPlane(viewCenterX, viewCenterY);
+        translate(oldViewCenterX - viewCenterX, oldViewCenterY - viewCenterY);
+        m_tilted = false;
+    }
 
     if (!Tangram::getDebugFlag(Tangram::DebugFlags::freeze_tiles)) {
 
@@ -203,7 +220,7 @@ void View::updateMatrices() {
 
     // set vertical field-of-view
     float fovy = PI * 0.25;
-    
+
     // we assume portrait orientation by default, so in landscape
     // mode we scale the vertical FOV such that the wider dimension
     // gets the intended FOV
