@@ -389,7 +389,7 @@ public class MapController implements Renderer, OnTouchListener, OnScaleGestureL
           * If previous scale is handled then keep on handling scale
           * else give some buffer for shove to be processed
           */
-        if( mScaleHandled || (!mShoveHandled && diff > PINCH_THRESHOLD)) {
+        if ( mScaleHandled || (!mShoveHandled && diff > PINCH_THRESHOLD)) {
             mScaleHandled = true;
 			handlePinchGesture(detector.getFocusX(), detector.getFocusY(), detector.getScaleFactor(), velocity);
             return true;
@@ -412,10 +412,6 @@ public class MapController implements Renderer, OnTouchListener, OnScaleGestureL
 
     public boolean onRotate(RotateGestureDetector detector) {
 
-        // TODO: Handle for the loss of this THRESHOLD, when the rotation first starts
-        //       very small rotations will have noticable jumps
-        // TODO: Rotate about focal point vs rotate about stattionary finger
-
         float rotation = detector.getRotationRadiansDelta();
 
          /*
@@ -423,11 +419,11 @@ public class MapController implements Renderer, OnTouchListener, OnScaleGestureL
           * If previous rotation is handled then keep on handling it
           * else give some buffer for shove to be processed
           */
-        if( mRotationHandled || (!mShoveHandled && (Math.abs(rotation) > ROTATION_THRESHOLD)) ) {
+        if ( mRotationHandled || (!mShoveHandled && (Math.abs(rotation) > ROTATION_THRESHOLD)) ) {
             float rotAngle;
 
             // Compensate for the ROTATION_THRESHOLD at the very beginning of the gesture, to avoid rotation jumps
-            if(!mRotationHandled) {
+            if (!mRotationHandled) {
                 rotAngle = (rotation > 0) ? (rotation- ROTATION_THRESHOLD) : (rotation + ROTATION_THRESHOLD);
             } else {
                 rotAngle = rotation;
@@ -452,12 +448,12 @@ public class MapController implements Renderer, OnTouchListener, OnScaleGestureL
     public boolean onShoveBegin(ShoveGestureDetector detector) {
         // If scale has started being handled ignore shove
         mShoveHandled = false;
-        return (!mScaleHandled || !mRotationHandled);
+        return !(mScaleHandled && mRotationHandled);
     }
 
     public boolean onShove(ShoveGestureDetector detector) {
 
-        if(mScaleHandled || mRotationHandled) return false;
+        if (mScaleHandled || mRotationHandled) return false;
 
         mShoveHandled = true;
 
@@ -495,7 +491,7 @@ public class MapController implements Renderer, OnTouchListener, OnScaleGestureL
             @Override
             public void onResponse(Response response) throws IOException {
 
-                if(!response.isSuccessful()) {
+                if (!response.isSuccessful()) {
                     onUrlFailure(callbackPtr);
                     throw new IOException("Unexpected code " + response);
                 }
