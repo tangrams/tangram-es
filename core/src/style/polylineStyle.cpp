@@ -78,7 +78,7 @@ PolylineStyle::Parameters PolylineStyle::parseStyleParams(const StyleParamMap& _
 }
 
 void PolylineStyle::buildLine(const Line& _line, const StyleParamMap& _styleParamMap, const Properties& _props, VboMesh& _mesh, Tile& _tile) const {
-    std::vector<PosNormEnormColVertex> vertices;
+    std::vector<PolylineVertex> vertices;
 
     Parameters params = parseStyleParams(_styleParamMap);
     GLuint abgr = params.color;

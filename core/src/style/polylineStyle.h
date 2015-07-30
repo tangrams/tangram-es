@@ -27,17 +27,12 @@ protected:
         bool outlineOn = false;
     };
 
-    struct PosNormEnormColVertex {
-        //Position Data
+    struct PolylineVertex {
         glm::vec3 pos;
-        // UV Data
         glm::vec2 texcoord;
-        // Extrude Normals Data
         glm::vec2 enorm;
         GLfloat ewidth;
-        // Color Data
         GLuint abgr;
-        // Layer Data
         GLfloat layer;
     };
 
@@ -47,7 +42,7 @@ protected:
 
     Parameters parseStyleParams(const StyleParamMap& _styleParamMap) const;
 
-    typedef TypedMesh<PosNormEnormColVertex> Mesh;
+    typedef TypedMesh<PolylineVertex> Mesh;
 
     virtual VboMesh* newMesh() const override {
         return new Mesh(m_vertexLayout, m_drawMode);

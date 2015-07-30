@@ -18,16 +18,11 @@ protected:
         uint32_t color = 0xffffffff;
     };
 
-    struct PosNormColVertex {
-        // Position Data
+    struct PolygonVertex {
         glm::vec3 pos;
-        // Normal Data
         glm::vec3 norm;
-        // UV Data
         glm::vec2 texcoord;
-        // Color Data
         GLuint abgr;
-        // Layer Data
         GLfloat layer;
     };
 
@@ -38,7 +33,7 @@ protected:
 
     Parameters parseStyleParams(const StyleParamMap& _styleParamMap) const;
 
-    typedef TypedMesh<PosNormColVertex> Mesh;
+    typedef TypedMesh<PolygonVertex> Mesh;
 
     virtual VboMesh* newMesh() const override {
         return new Mesh(m_vertexLayout, m_drawMode);

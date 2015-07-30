@@ -47,7 +47,7 @@ PolygonStyle::Parameters PolygonStyle::parseStyleParams(const StyleParamMap& _st
 }
 
 void PolygonStyle::buildLine(const Line& _line, const StyleParamMap& _styleParamMap, const Properties& _props, VboMesh& _mesh, Tile& _tile) const {
-    std::vector<PosNormColVertex> vertices;
+    std::vector<PolygonVertex> vertices;
 
     Parameters params = parseStyleParams(_styleParamMap);
 
@@ -71,7 +71,7 @@ void PolygonStyle::buildLine(const Line& _line, const StyleParamMap& _styleParam
 
 void PolygonStyle::buildPolygon(const Polygon& _polygon, const StyleParamMap& _styleParamMap, const Properties& _props, VboMesh& _mesh, Tile& _tile) const {
 
-    std::vector<PosNormColVertex> vertices;
+    std::vector<PolygonVertex> vertices;
 
     Parameters params = parseStyleParams(_styleParamMap);
 
