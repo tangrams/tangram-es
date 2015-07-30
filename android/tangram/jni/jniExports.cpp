@@ -93,6 +93,14 @@ extern "C" {
         Tangram::handleShoveGesture(distance);
     }
 
+    JNIEXPORT void JNICALL Java_com_mapzen_tangram_MapController_handlePinchGestureEnd(JNIEnv* jniEnv, jobject obj) {
+        Tangram::handlePinchGestureEnd();
+    }
+
+    JNIEXPORT void JNICALL Java_com_mapzen_tangram_MapController_handleRotateGestureEnd(JNIEnv* jniEnv, jobject obj) {
+        Tangram::handleRotateGestureEnd();
+    }
+
     JNIEXPORT void JNICALL Java_com_mapzen_tangram_MapController_onUrlSuccess(JNIEnv* jniEnv, jobject obj, jbyteArray fetchedBytes, jlong callbackPtr) {
         onUrlSuccess(jniEnv, fetchedBytes, callbackPtr);
     }

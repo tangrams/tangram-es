@@ -264,6 +264,18 @@ void handleShoveGesture(float _distance) {
 
 }
 
+void handlePinchGestureEnd() {
+
+    m_inputHandler->handlePinchGestureEnd();
+
+}
+
+void handleRotateGestureEnd() {
+
+    m_inputHandler->handleRotateGestureEnd();
+
+}
+
 void setDebugFlag(DebugFlags _flag, bool _on) {
 
     g_flags.set(_flag, _on);

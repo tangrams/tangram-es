@@ -242,7 +242,9 @@ public class MapController implements Renderer, OnTouchListener, OnScaleGestureL
     private synchronized native void handleDoubleTapGesture(float posX, float posY);
     private synchronized native void handlePanGesture(float startX, float startY, float endX, float endY);
     private synchronized native void handlePinchGesture(float posX, float posY, float scale, float velocity);
+    private synchronized native void handlePinchGestureEnd();
     private synchronized native void handleRotateGesture(float posX, float posY, float rotation);
+    private synchronized native void handleRotateGestureEnd();
     private synchronized native void handleShoveGesture(float distance);
     private synchronized native void onUrlSuccess(byte[] rawDataBytes, long callbackPtr);
     private synchronized native void onUrlFailure(long callbackPtr);
@@ -263,7 +265,7 @@ public class MapController implements Renderer, OnTouchListener, OnScaleGestureL
     private RotateGestureDetector rotateGestureDetector;
     private ShoveGestureDetector shoveGestureDetector;
 
-    private static final float PINCH_THRESHOLD = 20f;
+    private static final float PINCH_THRESHOLD = 15f;
     private static final float ROTATION_THRESHOLD = 0.30f;
 
     /*
@@ -399,6 +401,7 @@ public class MapController implements Renderer, OnTouchListener, OnScaleGestureL
     }
 
     public void onScaleEnd(ScaleGestureDetector detector) {
+        handlePinchGestureEnd();
         mScaleHandled = false;
     }
 
@@ -439,6 +442,7 @@ public class MapController implements Renderer, OnTouchListener, OnScaleGestureL
     }
 
     public void onRotateEnd(RotateGestureDetector detector) {
+        handleRotateGestureEnd();
         mRotationHandled = false;
     }
 
