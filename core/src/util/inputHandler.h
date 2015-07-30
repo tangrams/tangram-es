@@ -17,6 +17,9 @@ public:
     void handleRotateGesture(float _posX, float _posY, float _radians);
     void handleShoveGesture(float _distance);
 
+    void handlePinchGestureEnd();
+    void handleRotateGestureEnd();
+
     void update(float _dt);
 
 private:
@@ -32,6 +35,8 @@ private:
     // fling deltas on zoom and translation
     glm::vec2 m_deltaTranslate;
     float m_deltaZoom;
+
+    glm::vec2 mPrevFocus = glm::vec2(0.0f, 0.0f);
 
     /* Momentum config */
 

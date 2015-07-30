@@ -73,16 +73,11 @@ void InputHandler::handlePanGesture(float _startX, float _startY, float _endX, f
 
 void InputHandler::handlePinchGesture(float _posX, float _posY, float _scale, float _velocity) {
 
-    float viewCenterX = 0.5f * m_view->getWidth();
-    float viewCenterY = 0.5f * m_view->getHeight();
 
-    m_view->screenToGroundPlane(viewCenterX, viewCenterY);
     m_view->screenToGroundPlane(_posX, _posY);
 
-    float dx = (_posX - viewCenterX) * (1 - 1 / _scale);
-    float dy = (_posY - viewCenterY) * (1 - 1 / _scale);
-
-    m_view->translate(dx, dy);
+    m_view->undoFocusPosition(glm::vec2(_posX, _posY), mPrevFocus);
+    mPrevFocus = glm::vec2(_posX, _posY);
 
     static float invLog2 = 1 / log(2);
 
@@ -96,7 +91,11 @@ void InputHandler::handlePinchGesture(float _posX, float _posY, float _scale, fl
 void InputHandler::handleRotateGesture(float _posX, float _posY, float _radians) {
 
     m_view->screenToGroundPlane(_posX, _posY);
-    m_view->orbit(_posX, _posY, _radians);
+
+    m_view->undoFocusPosition(glm::vec2(_posX, _posY), mPrevFocus);
+    mPrevFocus = glm::vec2(_posX, _posY);
+
+    m_view->roll(_radians);
 
     onEndGesture();
 }
@@ -106,6 +105,14 @@ void InputHandler::handleShoveGesture(float _distance) {
     m_view->pitch(_distance);
 
     onEndGesture();
+}
+
+void InputHandler::handlePinchGestureEnd() {
+    mPrevFocus = glm::vec2(0.0f, 0.0f);
+}
+
+void InputHandler::handleRotateGestureEnd() {
+    mPrevFocus = glm::vec2(0.0f, 0.0f);
 }
 
 void InputHandler::onEndGesture() {
