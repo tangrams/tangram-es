@@ -13,7 +13,7 @@ class PolygonStyle : public Style {
 
 protected:
 
-    struct StyleParams {
+    struct Parameters {
         int32_t order = 0;
         uint32_t color = 0xffffffff;
     };
@@ -35,10 +35,8 @@ protected:
     virtual void constructShaderProgram() override;
     virtual void buildLine(const Line& _line, const StyleParamMap& _styleParamMap, const Properties& _props, VboMesh& _mesh, Tile& _tile) const override;
     virtual void buildPolygon(const Polygon& _polygon, const StyleParamMap& _styleParamMap, const Properties& _props, VboMesh& _mesh, Tile& _tile) const override;
-    /*
-     * Parse StyleParamMap to individual style's StyleParam structure.
-     */
-    void parseStyleParams(const StyleParamMap& _styleParamMap, StyleParams& _styleParams) const;
+
+    Parameters parseStyleParams(const StyleParamMap& _styleParamMap) const;
 
     typedef TypedMesh<PosNormColVertex> Mesh;
 

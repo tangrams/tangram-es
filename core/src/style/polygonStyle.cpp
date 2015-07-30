@@ -31,22 +31,25 @@ void PolygonStyle::constructShaderProgram() {
     m_shaderProgram->setSourceStrings(fragShaderSrcStr, vertShaderSrcStr);
 }
 
-void PolygonStyle::parseStyleParams(const StyleParamMap& _styleParamMap, StyleParams& _styleParams) const {
+PolygonStyle::Parameters PolygonStyle::parseStyleParams(const StyleParamMap& _styleParamMap) const {
+
+    Parameters p;
 
     auto it = _styleParamMap.find("order");
     if (it != _styleParamMap.end()) {
-        _styleParams.order = std::stof(it->second);
+        p.order = std::stof(it->second);
     }
     if ((it = _styleParamMap.find("color")) != _styleParamMap.end()) {
-        _styleParams.color = parseColorProp(it->second);
+        p.color = parseColorProp(it->second);
     }
+
+    return p;
 }
 
 void PolygonStyle::buildLine(const Line& _line, const StyleParamMap& _styleParamMap, const Properties& _props, VboMesh& _mesh, Tile& _tile) const {
     std::vector<PosNormColVertex> vertices;
 
-    StyleParams params;
-    parseStyleParams(_styleParamMap, params);
+    Parameters params = parseStyleParams(_styleParamMap);
 
     GLuint abgr = params.color;
     GLfloat layer = params.order;
@@ -70,8 +73,7 @@ void PolygonStyle::buildPolygon(const Polygon& _polygon, const StyleParamMap& _s
 
     std::vector<PosNormColVertex> vertices;
 
-    StyleParams params;
-    parseStyleParams(_styleParamMap, params);
+    Parameters params = parseStyleParams(_styleParamMap);
 
     GLuint abgr = params.color;
     GLfloat layer = params.order;
