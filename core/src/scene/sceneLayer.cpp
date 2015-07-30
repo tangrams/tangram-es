@@ -60,7 +60,7 @@ DrawRule DrawRule::merge(DrawRule& _other) const {
 
     for (auto& entry : _other.parameters) {
         // Override 'parent' values with 'child' values
-        merged.insert(std::move(entry));
+        std::swap(merged[entry.first], entry.second);
     }
 
     return { style, merged };
