@@ -12,7 +12,20 @@ SceneLayer::SceneLayer(std::string _name, Filter _filter, std::vector<DrawRule> 
 
     m_id = s_layerCount++;
 
+    // Rules must be sorted to merge correctly
     std::sort(m_rules.begin(), m_rules.end());
+
+    // m_depth is one more than the maximum depth of any sublayer
+    for (auto& sublayer : m_sublayers) {
+        m_depth = sublayer.m_depth ? sublayer.m_depth : m_depth;
+    }
+    m_depth++;
+
+    // Sublayers must be sorted by the depth of their deepest leaf in order to correctly traverse them in match()
+    std::sort(m_sublayers.begin(), m_sublayers.end(), [&](const SceneLayer& a, const SceneLayer& b) {
+        return a.m_depth < b.m_depth;
+    });
+
 
 }
 
@@ -22,6 +35,7 @@ void SceneLayer::match(const Feature& _feat, const Context& _ctx, std::vector<Dr
         return;
     }
 
+    // Depth-first traversal produces correct parameter precedence when sublayers are sorted by increasing depth
     for (auto& layer : m_sublayers) {
         layer.match(_feat, _ctx, _matches);
     }

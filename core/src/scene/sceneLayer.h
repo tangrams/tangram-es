@@ -43,6 +43,10 @@ public:
     // Recursively match and combine draw rules that apply to the given Feature in the given Context
     void match(const Feature& _feat, const Context& _ctx, std::vector<DrawRule>& _matches) const;
 
+protected:
+
+    size_t m_depth;
+
 };
 
 struct DrawRule {
