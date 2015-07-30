@@ -123,13 +123,13 @@ void View::pitch(float _dpitch) {
 
 }
 
-void View::orbit(float _x, float _y, float _radians) {
-
-    glm::vec2 radial = { _x, _y };
-    glm::vec2 displacement = glm::rotate(radial, _radians) - radial;
-    translate(-displacement.x, -displacement.y);
-    roll(_radians);
-
+void View::undoFocusPosition(glm::vec2 _focus, glm::vec2 _prevFocus) {
+    if ( !m_focusUpdated && _prevFocus.x != 0.0f && _prevFocus.y != 0.0f) {
+        m_focusUpdated = true;
+        translate( _prevFocus.x - _focus.x, _prevFocus.y - _focus.y);
+    } else {
+        m_focusUpdated = false;
+    }
 }
 
 void View::update() {
@@ -167,6 +167,8 @@ void View::update() {
     m_changed = true;
 
     m_dirty = false;
+
+    m_focusUpdated = false; // allow focus update next view update
 
 }
 

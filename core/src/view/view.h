@@ -69,9 +69,8 @@ public:
     /* Changes the pitch angle by the given amount in radians */
     void pitch(float _drad);
 
-    /* Rotates the view by the given amount in radians and translates the view such that
-       the given position on the ground plane remains stationary in screen space */
-    void orbit(float _x, float _y, float _radians);
+    /* Puts the focus back, to account for any alterations to focus because of apt gestures */
+    void undoFocusPosition(glm::vec2 _focus, glm::vec2 _prevFocus);
 
     /* Gets the current zoom */
     float getZoom() const { return m_zoom; }
@@ -162,6 +161,7 @@ protected:
     bool m_dirty;
     bool m_changed;
     bool m_tilted = false;
+    bool m_focusUpdated = false; // Make sure only one gesture applies this update
 
 };
 
