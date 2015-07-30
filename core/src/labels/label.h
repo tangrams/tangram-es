@@ -4,7 +4,6 @@
 #include "glm/mat4x4.hpp"
 #include <climits> // needed in aabb.h
 #include "isect2d.h"
-#include "text/textBuffer.h"
 #include "fadeEffect.h"
 
 #include <string>
@@ -30,12 +29,22 @@ public:
         wait_occ        = 1 << 5, // state waiting for first occlusion result
     };
 
+    struct Vertex {
+        glm::vec2 pos;
+        glm::vec2 uv;
+        struct State {
+            glm::vec2 screenPos;
+            float alpha;
+            float rotation;
+        } state;
+    };
+
     struct Transform {
         glm::vec2 modelPosition1;
         glm::vec2 modelPosition2;
         glm::vec2 offset;
 
-        BufferVert::State state;
+        Vertex::State state;
     };
 
     Label(Transform _transform, Type _type);
@@ -53,10 +62,10 @@ public:
     /* Gets the extent of the oriented bounding box of the label */
     const isect2d::AABB& getAABB() const { return m_aabb; }
 
-    void update(const glm::mat4& _mvp, const glm::vec2& _screenSize, float _dt);
+    bool update(const glm::mat4& _mvp, const glm::vec2& _screenSize, float _dt);
 
     /* Push the pending transforms to the vbo by updating the vertices */
-    virtual void pushTransform(VboMesh& _mesh) = 0;
+    virtual void pushTransform() = 0;
     
     /* Update the screen position of the label */
     bool updateScreenTransform(const glm::mat4& _mvp, const glm::vec2& _screenSize);
@@ -81,7 +90,7 @@ private:
 
     void enterState(State _state, float _alpha = 1.0f);
 
-    void updateState(const glm::mat4& _mvp, const glm::vec2& _screenSize, float _dt);
+    bool updateState(const glm::mat4& _mvp, const glm::vec2& _screenSize, float _dt);
 
     void setAlpha(float _alpha);
 
@@ -105,7 +114,6 @@ protected:
     bool m_dirty;
     Transform m_transform;
     glm::vec2 m_dim;
-
 };
 
 }

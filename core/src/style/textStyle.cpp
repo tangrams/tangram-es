@@ -5,13 +5,13 @@
 #include "gl/shaderProgram.h"
 #include "gl/vboMesh.h"
 #include "view/view.h"
+#include "labels/textLabel.h"
 #include "glm/gtc/type_ptr.hpp"
 
 namespace Tangram {
 
 TextStyle::TextStyle(const std::string& _fontName, std::string _name, float _fontSize, unsigned int _color, bool _sdf, bool _sdfMultisampling, GLenum _drawMode)
 : Style(_name, _drawMode), m_fontName(_fontName), m_fontSize(_fontSize), m_color(_color), m_sdf(_sdf), m_sdfMultisampling(_sdfMultisampling)  {
-    m_labels = Labels::GetInstance();
 }
 
 TextStyle::~TextStyle() {
@@ -53,7 +53,7 @@ void TextStyle::buildPoint(const Point& _point, const StyleParamMap& _styleParam
     }
 
     Label::Transform t { glm::vec2(_point), glm::vec2(_point), glm::vec2(0) };
-    m_labels->addTextLabel(_tile, buffer, m_name, t, text, Label::Type::point);
+    addTextLabel(buffer, t, text, Label::Type::point);
 }
 
 void TextStyle::buildLine(const Line& _line, const StyleParamMap& _styleParamMap, const Properties& _props, VboMesh& _mesh, Tile& _tile) const {
@@ -80,7 +80,7 @@ void TextStyle::buildLine(const Line& _line, const StyleParamMap& _styleParamMap
             continue;
         }
 
-        m_labels->addTextLabel(_tile, buffer, m_name, { p1, p2, glm::vec2(0) }, text, Label::Type::line);
+        addTextLabel(buffer, { p1, p2, glm::vec2(0) }, text, Label::Type::line);
     }
 }
 
@@ -107,51 +107,52 @@ void TextStyle::buildPolygon(const Polygon& _polygon, const StyleParamMap& _styl
 
     Label::Transform t { centroid, centroid, glm::vec2(0) };
 
-    m_labels->addTextLabel(_tile, buffer, m_name, t, text, Label::Type::point);
+    addTextLabel(buffer, t, text, Label::Type::point);
+}
+
+void TextStyle::addTextLabel(TextBuffer& _buffer, Label::Transform _transform, std::string _text, Label::Type _type) const {
+
+    std::unique_ptr<TextLabel> label(new TextLabel(_buffer, _transform, _text, _type));
+
+    if (label->rasterize()) {
+        _buffer.addLabel(std::move(label));
+    }
 }
 
 void TextStyle::onBeginBuildTile(Tile& _tile) const {
-    auto& mesh = _tile.getGeometry(*this);
+    auto& mesh = _tile.getMesh(*this);
     if (!mesh) {
         mesh.reset(newMesh());
     }
     auto& buffer = static_cast<TextBuffer&>(*mesh);
-    buffer.init();
+    auto ftContext = FontContext::GetInstance();
+    auto font = ftContext->getFontID(m_fontName);
 
-    auto ftContext = m_labels->getFontContext();
-
-    ftContext->setFont(m_fontName, m_fontSize * m_pixelScale);
-    if (m_sdf) {
-        float blurSpread = 2.5;
-        ftContext->setSignedDistanceField(blurSpread);
-    }
+    buffer.init(font, m_fontSize * m_pixelScale, m_sdf ? 2.5 : 0);
 }
 
 void TextStyle::onEndBuildTile(Tile& _tile) const {
 
-    auto& mesh = _tile.getGeometry(*this);
+    auto& mesh = _tile.getMesh(*this);
 
     auto& buffer = static_cast<TextBuffer&>(*mesh);
 
     buffer.addBufferVerticesToMesh();
 }
 
-void TextStyle::onBeginDrawFrame(const std::shared_ptr<View>& _view, const std::shared_ptr<Scene>& _scene) {
-    auto ftContext = m_labels->getFontContext();
-    const auto& atlas = ftContext->getAtlas();
+void TextStyle::onBeginDrawFrame(const View& _view, const Scene& _scene) {
 
-    atlas->update(1);
-    atlas->bind(1);
+    FontContext::GetInstance()->bindAtlas(1);
 
     m_shaderProgram->setUniformi("u_tex", 1);
-    m_shaderProgram->setUniformf("u_resolution", _view->getWidth(), _view->getHeight());
+    m_shaderProgram->setUniformf("u_resolution", _view.getWidth(), _view.getHeight());
 
     float r = (m_color >> 16 & 0xff) / 255.0;
     float g = (m_color >> 8  & 0xff) / 255.0;
     float b = (m_color       & 0xff) / 255.0;
 
     m_shaderProgram->setUniformf("u_color", r, g, b);
-    m_shaderProgram->setUniformMatrix4f("u_proj", glm::value_ptr(_view->getOrthoViewportMatrix()));
+    m_shaderProgram->setUniformMatrix4f("u_proj", glm::value_ptr(_view.getOrthoViewportMatrix()));
 
     RenderState::blending(GL_TRUE);
     RenderState::blendingFunc({GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA});

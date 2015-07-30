@@ -62,10 +62,10 @@ public:
     virtual std::string getInstanceComputeBlock();
 
     /*  Inject the needed lines of GLSL code on the shader to make this light work */
-    virtual void injectOnProgram( std::shared_ptr<ShaderProgram> _shader);
+    virtual void injectOnProgram(ShaderProgram& _shader);
 
     /*  Pass the uniforms for this particular DYNAMICAL light on the passed shader */
-    virtual void setupProgram(const std::shared_ptr<View>& _view, std::shared_ptr<ShaderProgram> _shader );
+    virtual void setupProgram(const View& _view, ShaderProgram& _shader );
 
     /*  STATIC Function that compose sourceBlocks with Lights on a ProgramShader */
     static void assembleLights(std::map<std::string, std::vector<std::string>>& _sourceBlocks);

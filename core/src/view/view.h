@@ -125,7 +125,7 @@ public:
     
     constexpr static float s_maxZoom = 18.0;
 
-    const glm::mat4& getOrthoViewportMatrix() { return m_orthoViewport; };
+    const glm::mat4& getOrthoViewportMatrix() const { return m_orthoViewport; };
 
 protected:
     

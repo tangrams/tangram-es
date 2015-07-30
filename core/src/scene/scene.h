@@ -25,6 +25,10 @@ public:
     auto& lights() { return m_lights; };
     auto& textures() { return m_textures; };
 
+    const auto& layers() const { return m_layers; };
+    const auto& styles() const { return m_styles; };
+    const auto& lights() const { return m_lights; };
+
     std::shared_ptr<Style> findStyle(const std::string& _name);
     std::shared_ptr<Light> findLight(const std::string& _name);
 

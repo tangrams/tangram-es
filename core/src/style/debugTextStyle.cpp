@@ -16,14 +16,14 @@ void DebugTextStyle::onBeginBuildTile(Tangram::Tile &_tile) const {
 
     if (Tangram::getDebugFlag(Tangram::DebugFlags::tile_infos)) {
 
-        auto& mesh = _tile.getGeometry(*this);
+        auto& mesh = _tile.getMesh(*this);
         if (!mesh) {
             mesh.reset(newMesh());
         }
 
         auto& buffer = static_cast<TextBuffer&>(*mesh);
 
-        auto ftContext = m_labels->getFontContext();
+        auto ftContext = FontContext::GetInstance();
         
         ftContext->setFont(m_fontName, m_fontSize * m_pixelScale);
 
@@ -33,7 +33,11 @@ void DebugTextStyle::onBeginBuildTile(Tangram::Tile &_tile) const {
         }
 
         std::string tileID = std::to_string(_tile.getID().x) + "/" + std::to_string(_tile.getID().y) + "/" + std::to_string(_tile.getID().z);
-        m_labels->addTextLabel(_tile, buffer, m_name, { glm::vec2(0), glm::vec2(0) }, tileID, Label::Type::debug);
+        addTextLabel(buffer, { glm::vec2(0), glm::vec2(0) }, tileID, Label::Type::debug);
+
+        onEndBuildTile(_tile);
+
+        mesh->compileVertexBuffer();
     }
 
 }

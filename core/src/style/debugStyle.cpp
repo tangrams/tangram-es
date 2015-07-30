@@ -52,7 +52,7 @@ void DebugStyle::onBeginBuildTile(Tile &_tile) const {
         mesh->addVertices(std::move(vertices), { 0, 1, 2, 3, 0 });
         mesh->compileVertexBuffer();
 
-        _tile.getGeometry(*this).reset(mesh);
+        _tile.getMesh(*this).reset(mesh);
 
     }
 }

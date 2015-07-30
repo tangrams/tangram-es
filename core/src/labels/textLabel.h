@@ -8,20 +8,27 @@ namespace Tangram {
 class TextLabel : public Label {
 
 public:
-    TextLabel(Label::Transform _transform, std::string _text, fsuint _id, Type _type);
+    TextLabel(TextBuffer& _mesh, Label::Transform _transform, std::string _text, Type _type);
     
     /* Call the font context to rasterize the label string */
-    bool rasterize(TextBuffer& _buffer);
+    bool rasterize();
     
     std::string getText() { return m_text; }
     
-    void pushTransform(VboMesh& _mesh) override;
+    void pushTransform() override;
     
 private:
     
     std::string m_text;
-    fsuint m_id;
-    
+
+    int m_numGlyphs;
+
+    // Back-pointer to owning container
+    TextBuffer& m_mesh;
+
+    // byte-offset in m_mesh vertices
+    size_t m_bufferOffset;
+
 protected:
     
     void updateBBoxes() override;

@@ -6,10 +6,8 @@
 #include "tile/tile.h"
 #include "gl/vboMesh.h"
 #include "view/view.h"
-
 #include "csscolorparser.hpp"
-
-#include <sstream>
+#include "geom.h" // for CLAMP
 
 namespace Tangram {
 
@@ -21,14 +19,17 @@ Style::~Style() {}
 uint32_t Style::parseColorProp(const std::string& _colorPropStr) {
     uint32_t color = 0;
 
-    if (_colorPropStr.find(',') != std::string::npos) { // try to parse as comma-separated rgba components
-        std::istringstream stream(_colorPropStr);
-        std::string token;
-        unsigned char i = 0;
-        while (std::getline(stream, token, ',') && i < 4) {
-            color += (uint32_t(std::stod(token) * 255.)) << (8 * i++);
+    if (isdigit(_colorPropStr.front())) {
+        // try to parse as comma-separated rgba components
+        float r, g, b, a = 1.;
+        if (sscanf(_colorPropStr.c_str(), "%f,%f,%f,%f", &r, &g, &b, &a) >= 3) {
+            color = (CLAMP(static_cast<uint32_t>(a * 255.), 0, 255)) << 24
+                  | (CLAMP(static_cast<uint32_t>(r * 255.), 0, 255)) << 16
+                  | (CLAMP(static_cast<uint32_t>(g * 255.), 0, 255)) << 8
+                  | (CLAMP(static_cast<uint32_t>(b * 255.), 0, 255));
         }
-    } else { // parse as css color or #hex-num
+    } else {
+        // parse as css color or #hex-num
         color = CSSColorParser::parse(_colorPropStr).getInt();
     }
     return color;
@@ -50,10 +51,10 @@ void Style::build(const std::vector<std::shared_ptr<Light>>& _lights) {
             break;
     }
 
-    m_material->injectOnProgram(m_shaderProgram);
+    m_material->injectOnProgram(*m_shaderProgram);
 
     for (auto& light : _lights) {
-        light->injectOnProgram(m_shaderProgram);
+        light->injectOnProgram(*m_shaderProgram);
     }
 
 }
@@ -78,7 +79,7 @@ void Style::addLayer(std::shared_ptr<SceneLayer> _layer) {
 
 void Style::buildFeature(Tile& _tile, const Feature& _feat, const DrawRule& _rule) const {
 
-    auto& mesh = _tile.getGeometry(*this);
+    auto& mesh = _tile.getMesh(*this);
 
     if (!mesh) {
         mesh.reset(newMesh());
@@ -106,16 +107,16 @@ void Style::buildFeature(Tile& _tile, const Feature& _feat, const DrawRule& _rul
 
 }
 
-void Style::onBeginDrawFrame(const std::shared_ptr<View>& _view, const std::shared_ptr<Scene>& _scene) {
+void Style::onBeginDrawFrame(const View& _view, const Scene& _scene) {
 
-    m_material->setupProgram(m_shaderProgram);
+    m_material->setupProgram(*m_shaderProgram);
 
     // Set up lights
-    for (const auto& light : _scene->lights()) {
-        light->setupProgram(_view, m_shaderProgram);
+    for (const auto& light : _scene.lights()) {
+        light->setupProgram(_view, *m_shaderProgram);
     }
 
-    m_shaderProgram->setUniformf("u_zoom", _view->getZoom());
+    m_shaderProgram->setUniformf("u_zoom", _view.getZoom());
     
     // default capabilities
     RenderState::blending(GL_FALSE);

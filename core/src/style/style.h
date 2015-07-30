@@ -116,7 +116,7 @@ public:
     virtual void onEndBuildTile(Tile& _tile) const;
 
     /* Perform any setup needed before drawing each frame */
-    virtual void onBeginDrawFrame(const std::shared_ptr<View>& _view, const std::shared_ptr<Scene>& _scene);
+    virtual void onBeginDrawFrame(const View& _view, const Scene& _scene);
 
     /* Perform any unsetup needed after drawing each frame */
     virtual void onEndDrawFrame() {}
