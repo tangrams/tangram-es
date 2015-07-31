@@ -15,15 +15,15 @@ public:
 
     void addVertices(std::vector<T>&& _vertices,
                      std::vector<int>&& _indices) {
-        vertices.push_back(_vertices);
-        indices.push_back(_indices);
+        m_vertices.push_back(_vertices);
+        m_indices.push_back(_indices);
 
         m_nVertices += _vertices.size();
         m_nIndices += _indices.size();
     }
 
     virtual void compileVertexBuffer() override {
-        compile(vertices, indices);
+        compile(m_vertices, m_indices);
     }
 
     /*
@@ -66,8 +66,8 @@ protected:
 
     void setDirty(GLintptr _byteOffset, GLsizei _byteSize);
 
-    std::vector<std::vector<T>> vertices;
-    std::vector<std::vector<int>> indices;
+    std::vector<std::vector<T>> m_vertices;
+    std::vector<std::vector<int>> m_indices;
 
 };
 

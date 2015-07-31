@@ -36,12 +36,12 @@ bool TextBuffer::addLabel(const std::string& _text, Label::Transform _transform,
         return false;
     }
 
-    auto& verts = vertices[0];
+    auto& verts = m_vertices[0];
 
     // byte offset of added vertices
     size_t bufferPosition = m_vertexLayout->getStride() * verts.size();
 
-    verts.reserve(verts.size() + numGlyphs * 6);
+    verts.reserve(verts.size() + numGlyphs * 4);
 
     float inf = std::numeric_limits<float>::infinity();
     float x0 = inf, x1 = -inf, y0 = inf, y1 = -inf;
