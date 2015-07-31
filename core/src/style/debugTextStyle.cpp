@@ -13,7 +13,7 @@ DebugTextStyle::DebugTextStyle(const std::string& _fontName, std::string _name, 
 void DebugTextStyle::addData(TileData& _data, Tile& _tile) {
 
     if (Tangram::getDebugFlag(Tangram::DebugFlags::tile_infos)) {
-        std::shared_ptr<VboMesh> mesh(newMesh());
+        std::unique_ptr<VboMesh> mesh(newMesh());
         auto& buffer = static_cast<TextBuffer&>(*mesh);
         
         onBeginBuildTile(*mesh);
@@ -24,7 +24,7 @@ void DebugTextStyle::addData(TileData& _data, Tile& _tile) {
         onEndBuildTile(*mesh);
 
         mesh->compileVertexBuffer();
-        _tile.addMesh(*this, mesh);
+        _tile.addMesh(*this, std::move(mesh));
     }
 
 }

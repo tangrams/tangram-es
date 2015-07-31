@@ -31,11 +31,11 @@ private:
         GLfloat pos_z;
     };
 
-    std::shared_ptr<ShaderProgram> m_shader;
-    std::shared_ptr<Texture> m_texture;
+    std::unique_ptr<ShaderProgram> m_shader;
+    std::unique_ptr<Texture> m_texture;
 
     typedef TypedMesh<PosVertex> Mesh;
-    std::shared_ptr<Mesh> m_mesh;
+    std::unique_ptr<Mesh> m_mesh;
 
     std::string m_file;
 

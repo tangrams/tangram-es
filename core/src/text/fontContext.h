@@ -5,7 +5,6 @@
 #include "gl/texture.h"
 #include "platform.h"
 #include "textBuffer.h"
-#include "stl_util.hpp"
 #include <memory>
 #include <mutex>
 #include <string>

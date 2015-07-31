@@ -23,14 +23,14 @@ class View;
 enum class TileState { none, loading, processing, ready, canceled };
 
 /* Tile of vector map data
- * 
+ *
  * Tile represents a fixed area of a map at a fixed zoom level; It contains its position within a quadtree of
  * tiles and its location in projected global space; It stores drawable geometry of the map features in its area
  */
 class Tile {
 
 public:
-  
+
     Tile(TileID _id, const MapProjection& _projection);
 
 
@@ -41,34 +41,34 @@ public:
 
     /* Returns the center of the tile area in projection units */
     const glm::dvec2& getOrigin() const { return m_tileOrigin; }
-    
+
     /* Returns the map projection with which this tile interprets coordinates */
     const MapProjection* getProjection() const { return m_projection; }
-    
+
     /* Returns the length of a side of this tile in projection units */
     float getScale() const { return m_scale; }
-    
+
     /* Returns the reciprocal of <getScale()> */
     float getInverseScale() const { return m_inverseScale; }
-    
+
     const glm::mat4& getModelMatrix() const { return m_modelMatrix; }
 
     /* Adds drawable geometry to the tile and associates it with a <Style>
-     * 
+     *
      * Use std::move to pass in the mesh by move semantics; Geometry in the mesh
      * must have coordinates relative to the tile origin.
      */
-    void addMesh(const Style& _style, std::shared_ptr<VboMesh> _mesh);
-    
-    std::shared_ptr<VboMesh> getMesh(const Style& _style);
+    void addMesh(const Style& _style, std::unique_ptr<VboMesh> _mesh);
+
+    const VboMesh* getMesh(const Style& _style);
 
     /* uUdate the Tile considering the current view */
     void update(float _dt, const View& _view);
 
     /* Draws the geometry associated with the provided <Style> and view-projection matrix */
     void draw(const Style& _style, const View& _view);
-    
-    /* 
+
+    /*
      * Methods to set and get proxy counter
      */
     int getProxyCounter() { return m_proxyCounter; }
@@ -173,7 +173,7 @@ private:
     // Distances from the global origin are too large to represent precisely in 32-bit floats, so we only apply the
     // relative translation from the view origin to the model origin immediately before drawing the tile.
 
-    std::unordered_map<std::string, std::shared_ptr<VboMesh>> m_geometry; // Map of <Style>s and their associated <VboMesh>es
+    std::unordered_map<std::string, std::unique_ptr<VboMesh>> m_geometry; // Map of <Style>s and their associated <VboMesh>es
 
 };
 
