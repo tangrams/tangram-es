@@ -2,6 +2,7 @@ package com.almeros.android.multitouch;
 
 import android.content.Context;
 import android.view.MotionEvent;
+import android.util.DisplayMetrics;
 
 /**
  * @author Robert Nordan (robert.nordan@norkart.no)
@@ -58,6 +59,8 @@ public class ShoveGestureDetector extends TwoFingerGestureDetector {
 	    }
 	}
 
+    private DisplayMetrics displayMetrics;
+
 	private float mPrevFinger0Y;
 	private float mCurrFinger0Y;
 	private float mPrevFinger1Y;
@@ -70,13 +73,14 @@ public class ShoveGestureDetector extends TwoFingerGestureDetector {
     private boolean mSloppyGesture;
     private boolean mInitiated;
 
-    // Make sure there is sufficient drag in the 2 fingers
-    private final float DRAG_THRESHOLD = 50.0f;
-    // Make sure xSpan between 2 fingers is not increasing and is more or less consistent
-    private final float XSPAN_THRESHOLD = 10.0f;
+    // Make sure there is sufficient drag in the 2 fingers (4.5% of minDim)
+    private final float DRAG_THRESHOLD = 0.045f;
+    // Make sure xSpan between 2 fingers is not increasing and is more or less consistent (1% of minDim)
+    private final float XSPAN_THRESHOLD = 0.01f;
 
     public ShoveGestureDetector(Context context, OnShoveGestureListener listener) {
     	super(context);
+        displayMetrics = context.getResources().getDisplayMetrics();
         mListener = listener;
     }
 
@@ -215,10 +219,12 @@ public class ShoveGestureDetector extends TwoFingerGestureDetector {
         final float drag1 = Math.abs(event.getY(1) - mStartY1);
 
         final float xSpanDiff = Math.abs(mCurrFingerDiffX - mPrevFingerDiffX);
+        final float minDim = Math.min(displayMetrics.widthPixels, displayMetrics.heightPixels);
+        final float minDrag = DRAG_THRESHOLD * minDim;
 
-        if(drag0 < DRAG_THRESHOLD || drag1 < DRAG_THRESHOLD) {
+        if(drag0 < minDrag || drag1 < minDrag) {
             return true;
-        } else if(xSpanDiff > XSPAN_THRESHOLD) {
+        } else if(xSpanDiff > XSPAN_THRESHOLD * minDim) {
             return true;
         }
 

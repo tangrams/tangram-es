@@ -265,7 +265,7 @@ public class MapController implements Renderer, OnTouchListener, OnScaleGestureL
     private RotateGestureDetector rotateGestureDetector;
     private ShoveGestureDetector shoveGestureDetector;
 
-    private static final float PINCH_THRESHOLD = 15f;
+    private static final float PINCH_THRESHOLD = 0.015f; //1.5% of minDim
     private static final float ROTATION_THRESHOLD = 0.30f;
 
     /*
@@ -391,7 +391,7 @@ public class MapController implements Renderer, OnTouchListener, OnScaleGestureL
           * If previous scale is handled then keep on handling scale
           * else give some buffer for shove to be processed
           */
-        if ( mScaleHandled || (!mShoveHandled && diff > PINCH_THRESHOLD)) {
+        if ( mScaleHandled || (!mShoveHandled && diff > PINCH_THRESHOLD * Math.min(displayMetrics.widthPixels, displayMetrics.heightPixels) )) {
             mScaleHandled = true;
 			handlePinchGesture(detector.getFocusX(), detector.getFocusY(), detector.getScaleFactor(), velocity);
             return true;
