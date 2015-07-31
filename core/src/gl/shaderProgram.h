@@ -36,19 +36,19 @@ public:
     bool build();
 
     /* Getters */
-    const GLuint getGlProgram() const { return m_glProgram; };
-    const GLuint getGlFragmentShader() const { return m_glFragmentShader; };
-    const GLuint getGlVertexShader() const { return m_glVertexShader; };
+    GLuint getGlProgram() const { return m_glProgram; };
+    GLuint getGlFragmentShader() const { return m_glFragmentShader; };
+    GLuint getGlVertexShader() const { return m_glVertexShader; };
 
     /*
      * Fetches the location of a shader attribute, caching the result
      */
-    const GLint getAttribLocation(const std::string& _attribName);
+    GLint getAttribLocation(const std::string& _attribName);
 
     /*
      * Fetches the location of a shader uniform, caching the result
      */
-    const GLint getUniformLocation(const std::string& _uniformName);
+    GLint getUniformLocation(const std::string& _uniformName);
 
     /*
      * Returns true if this object represents a valid OpenGL shader program
