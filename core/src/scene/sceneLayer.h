@@ -14,7 +14,7 @@ struct Feature;
 
 struct DrawRule {
 
-    std::shared_ptr<Style> style;
+    std::string style;
     std::vector<std::pair<std::string, std::string>> parameters;
 
     DrawRule merge(DrawRule& _other) const;

@@ -29,8 +29,8 @@ public:
     const auto& styles() const { return m_styles; };
     const auto& lights() const { return m_lights; };
 
-    std::shared_ptr<Style> findStyle(const std::string& _name);
-    std::shared_ptr<Light> findLight(const std::string& _name);
+    const Style* findStyle(const std::string& _name) const;
+    const Light* findLight(const std::string& _name) const;
 
 private:
 

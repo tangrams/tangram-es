@@ -779,12 +779,8 @@ SceneLayer SceneLoader::loadSublayer(YAML::Node layer, const std::string& name, 
 
                 auto explicitStyle = ruleNode.second["style"];
 
-                auto style = scene.findStyle(explicitStyle ?
-                                             explicitStyle.as<std::string>() :
-                                             ruleNode.first.as<std::string>());
-
                 DrawRule rule;
-                rule.style = style;
+                rule.style = explicitStyle ? explicitStyle.as<std::string>() : ruleNode.first.as<std::string>();
                 parseStyleProps(ruleNode.second, rule);
                 rules.push_back(rule);
             }

@@ -1,12 +1,11 @@
 #include "sceneLayer.h"
-#include "style/style.h"
 
 #include <algorithm>
 
 namespace Tangram {
 
 bool DrawRule::operator<(const DrawRule& _rhs) const {
-    return style->getName() < _rhs.style->getName();
+    return style < _rhs.style;
 }
 
 DrawRule DrawRule::merge(DrawRule& _other) const {

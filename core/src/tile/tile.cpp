@@ -60,7 +60,8 @@ void Tile::build(const Scene& _scene, const TileData& _data, const DataSource& _
                 datalayer.layer().match(feat, ctx, rules);
 
                 for (const auto& rule : rules) {
-                    rule.style->buildFeature(*this, feat, rule);
+                    auto* style = _scene.findStyle(rule.style);
+                    if (style) { style->buildFeature(*this, feat, rule); }
                 }
             }
         }

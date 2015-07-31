@@ -5,16 +5,16 @@
 
 namespace Tangram {
 
-std::shared_ptr<Style> Scene::findStyle(const std::string &_name) {
+const Style* Scene::findStyle(const std::string &_name) const {
     for (auto& style : m_styles) {
-        if (style->getName() == _name) { return style; }
+        if (style->getName() == _name) { return style.get(); }
     }
     return nullptr;
 }
 
-std::shared_ptr<Light> Scene::findLight(const std::string &_name) {
+const Light* Scene::findLight(const std::string &_name) const {
     for (auto& light : m_lights) {
-        if (light->getInstanceName() == _name) { return light; }
+        if (light->getInstanceName() == _name) { return light.get(); }
     }
     return nullptr;
 }
