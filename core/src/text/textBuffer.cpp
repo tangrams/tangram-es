@@ -36,7 +36,7 @@ bool TextBuffer::addLabel(const std::string& _text, Label::Transform _transform,
         return false;
     }
 
-    auto& verts = vertices[0];
+    auto& verts = m_vertices[0];
 
     // byte offset of added vertices
     size_t bufferPosition = m_vertexLayout->getStride() * verts.size();
