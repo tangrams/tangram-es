@@ -12,12 +12,10 @@ namespace Tangram {
 class Style;
 struct Feature;
 
-using StyleParameters = std::vector<std::pair<std::string, std::string>>;
-
 struct DrawRule {
 
     std::shared_ptr<Style> style;
-    StyleParameters parameters;
+    std::vector<std::pair<std::string, std::string>> parameters;
 
     DrawRule merge(DrawRule& _other) const;
     bool findParameter(const std::string& _key, std::string* _out) const;

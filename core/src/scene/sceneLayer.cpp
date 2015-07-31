@@ -11,7 +11,7 @@ bool DrawRule::operator<(const DrawRule& _rhs) const {
 
 DrawRule DrawRule::merge(DrawRule& _other) const {
 
-    StyleParameters merged;
+    decltype(parameters) merged(parameters.size() + _other.parameters.size());
 
     auto mIt = parameters.begin(), mEnd = parameters.end();
     auto oIt = _other.parameters.begin(), oEnd = _other.parameters.end();
@@ -51,7 +51,7 @@ SceneLayer::SceneLayer(std::string _name, Filter _filter, std::vector<DrawRule> 
     // Rules must be sorted to merge correctly
     std::sort(m_rules.begin(), m_rules.end());
 
-    // Parameters within each rule must be sorted lexigraphically by key to mege correctly
+    // Parameters within each rule must be sorted lexigraphically by key to merge correctly
     for (auto& rule : m_rules) {
         auto& params = rule.parameters;
         std::sort(params.begin(), params.end(), [](decltype(params[0]) a, decltype(params[0]) b) {

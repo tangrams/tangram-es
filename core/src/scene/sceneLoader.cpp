@@ -737,7 +737,7 @@ Filter SceneLoader::generateNoneFilter(YAML::Node _filter) {
     return Filter(Operators::none, std::move(filters));
 }
 
-void SceneLoader::parseStyleProps(Node styleProps, StyleParameters& params, const std::string& propPrefix) {
+void SceneLoader::parseStyleProps(Node styleProps, DrawRule& rule, const std::string& propPrefix) {
 
     for (const auto& propItr : styleProps) {
         Node prop = propItr.first;
@@ -748,11 +748,11 @@ void SceneLoader::parseStyleProps(Node styleProps, StyleParameters& params, cons
             paramKey = prop.as<std::string>();
         }
         if (propItr.second.IsScalar()) {
-            params.push_back({ paramKey, propItr.second.as<std::string>() });
+            rule.parameters.push_back({ paramKey, propItr.second.as<std::string>() });
         } else if (propItr.second.IsSequence()) {
-            params.push_back({ paramKey, parseSequence(propItr.second) });
+            rule.parameters.push_back({ paramKey, parseSequence(propItr.second) });
         } else if (propItr.second.IsMap()) {
-            parseStyleProps(propItr.second, params, paramKey);
+            parseStyleProps(propItr.second, rule, paramKey);
         } else {
             logMsg("Error: Badly formed Style property, need to be a scalar, sequence or map."
                     "%s will not be added to stype properties.\n", paramKey.c_str());
@@ -783,9 +783,10 @@ SceneLayer SceneLoader::loadSublayer(YAML::Node layer, const std::string& name, 
                                              explicitStyle.as<std::string>() :
                                              ruleNode.first.as<std::string>());
 
-                StyleParameters params;
-                parseStyleProps(ruleNode.second, params);
-                rules.push_back({ style, params });
+                DrawRule rule;
+                rule.style = style;
+                parseStyleProps(ruleNode.second, rule);
+                rules.push_back(rule);
             }
         } else if (key == "filter") {
             filter = generateFilter(member.second);
