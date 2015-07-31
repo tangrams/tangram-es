@@ -37,16 +37,22 @@ bool TextBuffer::addLabel(const std::string& _text, Label::Transform _transform,
     }
 
     auto& verts = m_vertices[0];
+    auto& indices = m_indices[0];
 
     // byte offset of added vertices
     size_t bufferPosition = m_vertexLayout->getStride() * verts.size();
 
+    int indexOffset = verts.size();
     verts.reserve(verts.size() + numGlyphs * 4);
+    indices.reserve(indices.size() + numGlyphs * 6);
 
     float inf = std::numeric_limits<float>::infinity();
     float x0 = inf, x1 = -inf, y0 = inf, y1 = -inf;
 
-    for (auto& q : quads) {
+    for (int i = 0, j = 0; i < quads.size(); ++i, j += 4) {
+        int iOffset = indexOffset + j;
+        auto& q = quads[i];
+
         x0 = std::min(x0, std::min(q.x0, q.x1));
         x1 = std::max(x1, std::max(q.x0, q.x1));
         y0 = std::min(y0, std::min(q.y0, q.y1));
@@ -55,10 +61,14 @@ bool TextBuffer::addLabel(const std::string& _text, Label::Transform _transform,
         verts.push_back({{q.x0, q.y0}, {q.s0, q.t0}});
         verts.push_back({{q.x1, q.y1}, {q.s1, q.t1}});
         verts.push_back({{q.x1, q.y0}, {q.s1, q.t0}});
-
-        verts.push_back({{q.x0, q.y0}, {q.s0, q.t0}});
         verts.push_back({{q.x0, q.y1}, {q.s0, q.t1}});
-        verts.push_back({{q.x1, q.y1}, {q.s1, q.t1}});
+
+        indices.push_back(iOffset + 0);
+        indices.push_back(iOffset + 1);
+        indices.push_back(iOffset + 2);
+        indices.push_back(iOffset + 0);
+        indices.push_back(iOffset + 3);
+        indices.push_back(iOffset + 1);
     }
 
     fontContext->unlock();
@@ -71,6 +81,7 @@ bool TextBuffer::addLabel(const std::string& _text, Label::Transform _transform,
 
     // TODO: change this in TypeMesh::adVertices()
     m_nVertices = verts.size();
+    m_nIndices = indices.size();
 
     return true;
 }
