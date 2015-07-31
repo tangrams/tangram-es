@@ -7,6 +7,7 @@ import android.opengl.GLSurfaceView.Renderer;
 import android.util.DisplayMetrics;
 import android.view.GestureDetector;
 import android.view.GestureDetector.OnGestureListener;
+import android.view.GestureDetector.OnDoubleTapListener;
 import android.view.MotionEvent;
 import android.view.ScaleGestureDetector;
 import android.view.ScaleGestureDetector.OnScaleGestureListener;
@@ -32,7 +33,7 @@ import javax.microedition.khronos.opengles.GL10;
 
 import okio.BufferedSource;
 
-public class MapController implements Renderer, OnTouchListener, OnScaleGestureListener, OnRotateGestureListener, OnGestureListener, OnShoveGestureListener {
+public class MapController implements Renderer, OnTouchListener, OnScaleGestureListener, OnRotateGestureListener, OnGestureListener, OnDoubleTapListener, OnShoveGestureListener {
 
     static {
         System.loadLibrary("c++_shared");
@@ -57,6 +58,10 @@ public class MapController implements Renderer, OnTouchListener, OnScaleGestureL
         scaleGestureDetector = new ScaleGestureDetector(mainApp, this);
         rotateGestureDetector = new RotateGestureDetector(mainApp, this);
         shoveGestureDetector = new ShoveGestureDetector(mainApp, this);
+        gestureDetector.setOnDoubleTapListener(this);
+
+        // Explicitly enable quick scale with double tap, even though its default for API target 19+
+        scaleGestureDetector.setQuickScaleEnabled(true);
 
         // Set up okHTTP
         okRequestBuilder = new Request.Builder();
@@ -275,6 +280,7 @@ public class MapController implements Renderer, OnTouchListener, OnScaleGestureL
     private boolean mScaleHandled = false;
     private boolean mRotationHandled = false;
     private boolean mShoveHandled = false;
+    private boolean mDoubleTapScale = false;
 
     private View.OnGenericMotionListener longPressListener;
     private DisplayMetrics displayMetrics = new DisplayMetrics();
@@ -322,15 +328,33 @@ public class MapController implements Renderer, OnTouchListener, OnScaleGestureL
         initialized = true;
     }
 
+    // GestureDetector.OnDoubleTapListener methods
+    // ========================================
+
+    public boolean onDoubleTap(MotionEvent event) {
+        handleDoubleTapGesture(event.getX(), event.getY());
+        return true;
+    }
+
+    public boolean onDoubleTapEvent(MotionEvent event) {
+        if(event.getAction() == 2) { // Move action during double tap
+            mDoubleTapScale = true;
+        }
+        else {
+            mDoubleTapScale = false; // Up or Down action during double tap
+        }
+        return true;
+    }
+
+    public boolean onSingleTapConfirmed(MotionEvent event) {
+        handleTapGesture(event.getX(), event.getY());
+        return true;
+    }
+
     // GestureDetector.OnGestureListener methods
     // ========================================
 
     public boolean onDown(MotionEvent event) {
-        return true;
-    }
-
-    public boolean onDoubleTap(MotionEvent event) {
-        handleDoubleTapGesture(event.getX(), event.getY());
         return true;
     }
 
@@ -366,7 +390,6 @@ public class MapController implements Renderer, OnTouchListener, OnScaleGestureL
     }
 
     public boolean onSingleTapUp(MotionEvent event) {
-        handleTapGesture(event.getX(), event.getY());
         return true;
     }
 
@@ -391,7 +414,7 @@ public class MapController implements Renderer, OnTouchListener, OnScaleGestureL
           * If previous scale is handled then keep on handling scale
           * else give some buffer for shove to be processed
           */
-        if ( mScaleHandled || (!mShoveHandled && diff > PINCH_THRESHOLD * Math.min(displayMetrics.widthPixels, displayMetrics.heightPixels) )) {
+        if ( mDoubleTapScale || mScaleHandled || (!mShoveHandled && diff > PINCH_THRESHOLD * Math.min(displayMetrics.widthPixels, displayMetrics.heightPixels) )) {
             mScaleHandled = true;
 			handlePinchGesture(detector.getFocusX(), detector.getFocusY(), detector.getScaleFactor(), velocity);
             return true;
