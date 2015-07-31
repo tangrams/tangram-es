@@ -15,9 +15,9 @@ void DebugTextStyle::addData(TileData& _data, Tile& _tile) {
     if (Tangram::getDebugFlag(Tangram::DebugFlags::tile_infos)) {
         std::unique_ptr<VboMesh> mesh(newMesh());
         auto& buffer = static_cast<TextBuffer&>(*mesh);
-        
+
         onBeginBuildTile(*mesh);
-        
+
         std::string tileID = std::to_string(_tile.getID().x) + "/" + std::to_string(_tile.getID().y) + "/" + std::to_string(_tile.getID().z);
         addTextLabel(buffer, { glm::vec2(0), glm::vec2(0) }, tileID, Label::Type::debug);
 
