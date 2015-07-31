@@ -62,7 +62,7 @@ void SpriteStyle::buildPoint(Point& _point, const StyleParamMap&, Properties& _p
 
     SpriteBuilder builder = {
         [&](const glm::vec2& coord, const glm::vec2& screenPos, const glm::vec2& uv) {
-            vertices.push_back({ coord, uv, { screenPos, 0.5f, M_PI_2 } });
+            vertices.push_back({ coord, uv });
         }
     };
 
