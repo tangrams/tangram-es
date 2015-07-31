@@ -31,56 +31,28 @@ void PolylineStyle::constructShaderProgram() {
     m_shaderProgram->setSourceStrings(fragShaderSrcStr, vertShaderSrcStr);
 }
 
-PolylineStyle::Parameters PolylineStyle::parseStyleParams(const StyleParamMap& _styleParamMap) const {
+PolylineStyle::Parameters PolylineStyle::parseRule(const DrawRule& _rule) const {
 
-    Parameters params;
+    Parameters p;
 
-    auto it = _styleParamMap.find("order");
-    if (it != _styleParamMap.end()) {
-        params.order = std::stof(it->second);
-    }
+    std::string str;
+    if (_rule.findParameter("order", &str)) { p.order = std::stof(str); }
+    if (_rule.findParameter("color", &str)) { p.color = parseColorProp(str); }
+    if (_rule.findParameter("width", &str)) { p.width = std::stof(str); }
+    if (_rule.findParameter("cap", &str)) { p.cap = CapTypeFromString(str); }
+    if (_rule.findParameter("join", &str)) { p.join = JoinTypeFromString(str); }
+    if (_rule.findParameter("outline:width", &str)) { p.outlineWidth = std::stof(str); p.outlineOn = true; }
+    if (_rule.findParameter("outline:color", &str)) { p.outlineColor = parseColorProp(str); p.outlineOn = true; }
+    if (_rule.findParameter("outline:cap", &str)) { p.outlineCap = CapTypeFromString(str); p.outlineOn = true; }
+    if (_rule.findParameter("outline:join", &str)) { p.outlineJoin = JoinTypeFromString(str); p.outlineOn = true; }
 
-    if ((it = _styleParamMap.find("color")) != _styleParamMap.end()) {
-        params.color = parseColorProp(it->second);
-    }
-
-    if ((it =_styleParamMap.find("width")) != _styleParamMap.end()) {
-        params.width = std::stof(it->second);
-    }
-
-    if ((it = _styleParamMap.find("cap")) != _styleParamMap.end()) {
-        params.cap = CapTypeFromString(it->second);
-    }
-
-    if ((it = _styleParamMap.find("join")) != _styleParamMap.end()) {
-        params.join = JoinTypeFromString(it->second);
-    }
-
-    if ((it = _styleParamMap.find("outline:width")) != _styleParamMap.end()) {
-        params.outlineOn = true;
-        params.outlineWidth = std::stof(it->second);
-    }
-
-    if ((it = _styleParamMap.find("outline:color")) != _styleParamMap.end()) {
-        params.outlineColor =  parseColorProp(it->second);
-    }
-
-    if ((it = _styleParamMap.find("outline:cap")) != _styleParamMap.end()) {
-        params.outlineOn = true;
-        params.outlineCap = CapTypeFromString(it->second);
-    }
-
-    if ((it = _styleParamMap.find("outline:join")) != _styleParamMap.end()) {
-        params.outlineOn = true;
-        params.outlineJoin = JoinTypeFromString(it->second);
-    }
-    return params;
+    return p;
 }
 
-void PolylineStyle::buildLine(const Line& _line, const StyleParamMap& _styleParamMap, const Properties& _props, VboMesh& _mesh, Tile& _tile) const {
+void PolylineStyle::buildLine(const Line& _line, const DrawRule& _rule, const Properties& _props, VboMesh& _mesh, Tile& _tile) const {
     std::vector<PolylineVertex> vertices;
 
-    Parameters params = parseStyleParams(_styleParamMap);
+    Parameters params = parseRule(_rule);
     GLuint abgr = params.color;
 
     if (Tangram::getDebugFlag(Tangram::DebugFlags::proxy_colors)) {

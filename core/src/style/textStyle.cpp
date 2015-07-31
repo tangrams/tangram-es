@@ -44,7 +44,7 @@ void TextStyle::constructShaderProgram() {
     m_shaderProgram->addSourceBlock("defines", defines);
 }
 
-void TextStyle::buildPoint(const Point& _point, const StyleParamMap& _styleParamMap, const Properties& _props, VboMesh& _mesh, Tile& _tile) const {
+void TextStyle::buildPoint(const Point& _point, const DrawRule& _rule, const Properties& _props, VboMesh& _mesh, Tile& _tile) const {
     auto& buffer = static_cast<TextBuffer&>(_mesh);
 
     std::string text;
@@ -56,7 +56,7 @@ void TextStyle::buildPoint(const Point& _point, const StyleParamMap& _styleParam
     addTextLabel(buffer, t, text, Label::Type::point);
 }
 
-void TextStyle::buildLine(const Line& _line, const StyleParamMap& _styleParamMap, const Properties& _props, VboMesh& _mesh, Tile& _tile) const {
+void TextStyle::buildLine(const Line& _line, const DrawRule& _rule, const Properties& _props, VboMesh& _mesh, Tile& _tile) const {
     auto& buffer = static_cast<TextBuffer&>(_mesh);
 
     std::string text;
@@ -84,7 +84,7 @@ void TextStyle::buildLine(const Line& _line, const StyleParamMap& _styleParamMap
     }
 }
 
-void TextStyle::buildPolygon(const Polygon& _polygon, const StyleParamMap& _styleParamMap, const Properties& _props, VboMesh& _mesh, Tile& _tile) const {
+void TextStyle::buildPolygon(const Polygon& _polygon, const DrawRule& _rule, const Properties& _props, VboMesh& _mesh, Tile& _tile) const {
     auto& buffer = static_cast<TextBuffer&>(_mesh);
 
     std::string text;

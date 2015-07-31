@@ -88,17 +88,17 @@ void Style::buildFeature(Tile& _tile, const Feature& _feat, const DrawRule& _rul
     switch (_feat.geometryType) {
         case GeometryType::points:
             for (auto& point : _feat.points) {
-                buildPoint(point, _rule.parameters, _feat.props, *mesh, _tile);
+                buildPoint(point, _rule, _feat.props, *mesh, _tile);
             }
             break;
         case GeometryType::lines:
             for (auto& line : _feat.lines) {
-                buildLine(line, _rule.parameters, _feat.props, *mesh, _tile);
+                buildLine(line, _rule, _feat.props, *mesh, _tile);
             }
             break;
         case GeometryType::polygons:
             for (auto& polygon : _feat.polygons) {
-                buildPolygon(polygon, _rule.parameters, _feat.props, *mesh, _tile);
+                buildPolygon(polygon, _rule, _feat.props, *mesh, _tile);
             }
             break;
         default:
@@ -131,15 +131,15 @@ void Style::onEndBuildTile(Tile& _tile) const {
     // No-op by default
 }
 
-void Style::buildPoint(const Point& _point, const StyleParamMap& _styleParamMap, const Properties& _props, VboMesh& _mesh, Tile& _tile) const {
+void Style::buildPoint(const Point& _point, const DrawRule& _rule, const Properties& _props, VboMesh& _mesh, Tile& _tile) const {
     // No-op by default
 }
 
-void Style::buildLine(const Line& _line, const StyleParamMap& _styleParamMap, const Properties& _props, VboMesh& _mesh, Tile& _tile) const {
+void Style::buildLine(const Line& _line, const DrawRule& _rule, const Properties& _props, VboMesh& _mesh, Tile& _tile) const {
     // No-op by default
 }
 
-void Style::buildPolygon(const Polygon& _polygon, const StyleParamMap& _styleParamMap, const Properties& _props, VboMesh& _mesh, Tile& _tile) const {
+void Style::buildPolygon(const Polygon& _polygon, const DrawRule& _rule, const Properties& _props, VboMesh& _mesh, Tile& _tile) const {
     // No-op by default
 }
 

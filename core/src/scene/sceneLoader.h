@@ -3,7 +3,6 @@
 #include <string>
 #include <vector>
 #include <memory>
-#include "style/styleParamMap.h"
 
 /* Forward Declaration of yaml-cpp node type */
 namespace YAML {
@@ -27,7 +26,7 @@ class SceneLoader {
     void loadLights(YAML::Node lights, Scene& scene);
     void loadCameras(YAML::Node cameras, View& view);
     void loadLayers(YAML::Node layers, Scene& scene, TileManager& tileManager);
-    void parseStyleProps(YAML::Node styleProps, StyleParamMap& paramMap, const std::string& propPrefix = "");
+    void parseStyleProps(YAML::Node styleProps, StyleParameters& params, const std::string& propPrefix = "");
     void loadStyles(YAML::Node styles, Scene& scene);
     void loadTextures(YAML::Node textures, Scene& scene);
     void loadMaterial(YAML::Node matNode, Material& material, Scene& scene);

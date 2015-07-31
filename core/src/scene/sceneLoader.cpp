@@ -737,7 +737,7 @@ Filter SceneLoader::generateNoneFilter(YAML::Node _filter) {
     return Filter(Operators::none, std::move(filters));
 }
 
-void SceneLoader::parseStyleProps(Node styleProps, StyleParamMap& paramMap, const std::string& propPrefix) {
+void SceneLoader::parseStyleProps(Node styleProps, StyleParameters& params, const std::string& propPrefix) {
 
     for (const auto& propItr : styleProps) {
         Node prop = propItr.first;
@@ -748,11 +748,11 @@ void SceneLoader::parseStyleProps(Node styleProps, StyleParamMap& paramMap, cons
             paramKey = prop.as<std::string>();
         }
         if (propItr.second.IsScalar()) {
-            paramMap.emplace(paramKey, propItr.second.as<std::string>());
+            params.push_back({ paramKey, propItr.second.as<std::string>() });
         } else if (propItr.second.IsSequence()) {
-            paramMap.emplace(paramKey, parseSequence(propItr.second));
+            params.push_back({ paramKey, parseSequence(propItr.second) });
         } else if (propItr.second.IsMap()) {
-            parseStyleProps(propItr.second, paramMap, paramKey);
+            parseStyleProps(propItr.second, params, paramKey);
         } else {
             logMsg("Error: Badly formed Style property, need to be a scalar, sequence or map."
                     "%s will not be added to stype properties.\n", paramKey.c_str());
@@ -783,7 +783,7 @@ SceneLayer SceneLoader::loadSublayer(YAML::Node layer, const std::string& name, 
                                              explicitStyle.as<std::string>() :
                                              ruleNode.first.as<std::string>());
 
-                StyleParamMap params;
+                StyleParameters params;
                 parseStyleProps(ruleNode.second, params);
                 rules.push_back({ style, params });
             }

@@ -38,9 +38,9 @@ protected:
 
     virtual void constructVertexLayout() override;
     virtual void constructShaderProgram() override;
-    virtual void buildLine(const Line& _line, const StyleParamMap& _styleParamMap, const Properties& _props, VboMesh& _mesh, Tile& _tile) const override;
+    virtual void buildLine(const Line& _line, const DrawRule& _rule, const Properties& _props, VboMesh& _mesh, Tile& _tile) const override;
 
-    Parameters parseStyleParams(const StyleParamMap& _styleParamMap) const;
+    Parameters parseRule(const DrawRule& _rule) const;
 
     typedef TypedMesh<PolylineVertex> Mesh;
 

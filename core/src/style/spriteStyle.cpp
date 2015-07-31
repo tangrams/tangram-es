@@ -56,7 +56,7 @@ void SpriteStyle::constructShaderProgram() {
     m_spriteAtlas->addSpriteNode("bookstore", {0, 333}, {32, 32});
 }
 
-void SpriteStyle::buildPoint(const Point& _point, const StyleParamMap&, const Properties& _props, VboMesh& _mesh, Tile& _tile) const {
+void SpriteStyle::buildPoint(const Point& _point, const DrawRule& _rule, const Properties& _props, VboMesh& _mesh, Tile& _tile) const {
     // TODO : make this configurable
     std::vector<Label::Vertex> vertices;
 

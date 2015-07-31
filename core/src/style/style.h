@@ -3,15 +3,11 @@
 #include "data/tileData.h"
 #include "material.h"
 #include "gl.h"
-#include "scene/sceneLayer.h"
-#include "styleParamMap.h"
-
 #include "gl/shaderProgram.h"
 #include "gl/renderState.h"
+#include "scene/sceneLayer.h"
 
-#include <bitset>
 #include <memory>
-#include <mutex>
 #include <string>
 #include <vector>
 
@@ -79,13 +75,13 @@ protected:
     virtual void constructShaderProgram() = 0;
 
     /* Build styled vertex data for point geometry and add it to the given <VboMesh> */
-    virtual void buildPoint(const Point& _point, const StyleParamMap& _styleParamMap, const Properties& _props, VboMesh& _mesh, Tile& _tile) const;
+    virtual void buildPoint(const Point& _point, const DrawRule& _rule, const Properties& _props, VboMesh& _mesh, Tile& _tile) const;
 
     /* Build styled vertex data for line geometry and add it to the given <VboMesh> */
-    virtual void buildLine(const Line& _line, const StyleParamMap& _styleParamMap, const Properties& _props, VboMesh& _mesh, Tile& _tile) const;
+    virtual void buildLine(const Line& _line, const DrawRule& _rule, const Properties& _props, VboMesh& _mesh, Tile& _tile) const;
 
     /* Build styled vertex data for polygon geometry and add it to the given <VboMesh> */
-    virtual void buildPolygon(const Polygon& _polygon, const StyleParamMap& _styleParamMap, const Properties& _props, VboMesh& _mesh, Tile& _tile) const;
+    virtual void buildPolygon(const Polygon& _polygon, const DrawRule& _rule, const Properties& _props, VboMesh& _mesh, Tile& _tile) const;
 
     static uint32_t parseColorProp(const std::string& _colorPropStr);
 

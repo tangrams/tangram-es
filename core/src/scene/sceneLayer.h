@@ -1,23 +1,28 @@
 #pragma once
 
 #include "data/filters.h"
-#include "style/styleParamMap.h"
 
 #include <memory>
 #include <string>
+#include <utility>
 #include <vector>
-#include <unordered_map>
 
 namespace Tangram {
 
 class Style;
 struct Feature;
 
+using StyleParameters = std::vector<std::pair<std::string, std::string>>;
+
 struct DrawRule {
+
     std::shared_ptr<Style> style;
-    StyleParamMap parameters;
+    StyleParameters parameters;
+
     DrawRule merge(DrawRule& _other) const;
+    bool findParameter(const std::string& _key, std::string* _out) const;
     bool operator<(const DrawRule& _rhs) const;
+
 };
 
 class SceneLayer {

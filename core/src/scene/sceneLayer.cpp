@@ -11,14 +11,38 @@ bool DrawRule::operator<(const DrawRule& _rhs) const {
 
 DrawRule DrawRule::merge(DrawRule& _other) const {
 
-    StyleParamMap merged(parameters);
+    StyleParameters merged;
 
-    for (auto& entry : _other.parameters) {
-        // Override 'parent' values with 'child' values
-        std::swap(merged[entry.first], entry.second);
+    auto mIt = parameters.begin(), mEnd = parameters.end();
+    auto oIt = _other.parameters.begin(), oEnd = _other.parameters.end();
+    while (mIt != mEnd && oIt != oEnd) {
+        auto c = mIt->first.compare(oIt->first);
+        if (c < 0) {
+            merged.push_back(*mIt++);
+        } else if (c > 0) {
+            merged.push_back(std::move(*oIt++));
+        } else {
+            merged.push_back(*oIt++);
+            mIt++;
+        }
     }
+    while (mIt != mEnd) { merged.push_back(*mIt++); }
+    while (oIt != oEnd) { merged.push_back(std::move(*oIt++)); }
 
     return { style, merged };
+}
+
+bool DrawRule::findParameter(const std::string &_key, std::string *_out) const {
+
+    auto it = std::lower_bound(parameters.begin(), parameters.end(), _key, [](decltype(parameters[0]) p, std::string k) {
+        return p.first < k;
+    });
+
+    if (it->first == _key) {
+        *_out = it->second;
+        return true;
+    }
+    return false;
 }
 
 SceneLayer::SceneLayer(std::string _name, Filter _filter, std::vector<DrawRule> _rules, std::vector<SceneLayer> _sublayers) :
@@ -26,6 +50,14 @@ SceneLayer::SceneLayer(std::string _name, Filter _filter, std::vector<DrawRule> 
 
     // Rules must be sorted to merge correctly
     std::sort(m_rules.begin(), m_rules.end());
+
+    // Parameters within each rule must be sorted lexigraphically by key to mege correctly
+    for (auto& rule : m_rules) {
+        auto& params = rule.parameters;
+        std::sort(params.begin(), params.end(), [](decltype(params[0]) a, decltype(params[0]) b) {
+            return a.first < b.first;
+        });
+    }
 
     // m_depth is one more than the maximum depth of any sublayer
     for (auto& sublayer : m_sublayers) {
@@ -37,7 +69,6 @@ SceneLayer::SceneLayer(std::string _name, Filter _filter, std::vector<DrawRule> 
     std::sort(m_sublayers.begin(), m_sublayers.end(), [&](const SceneLayer& a, const SceneLayer& b) {
         return a.m_depth < b.m_depth;
     });
-
 
 }
 

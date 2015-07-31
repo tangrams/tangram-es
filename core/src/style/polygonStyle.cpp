@@ -31,25 +31,21 @@ void PolygonStyle::constructShaderProgram() {
     m_shaderProgram->setSourceStrings(fragShaderSrcStr, vertShaderSrcStr);
 }
 
-PolygonStyle::Parameters PolygonStyle::parseStyleParams(const StyleParamMap& _styleParamMap) const {
+PolygonStyle::Parameters PolygonStyle::parseRule(const DrawRule& _rule) const {
 
     Parameters p;
 
-    auto it = _styleParamMap.find("order");
-    if (it != _styleParamMap.end()) {
-        p.order = std::stof(it->second);
-    }
-    if ((it = _styleParamMap.find("color")) != _styleParamMap.end()) {
-        p.color = parseColorProp(it->second);
-    }
+    std::string str;
+    if (_rule.findParameter("order", &str)) { p.order = std::stof(str); }
+    if (_rule.findParameter("color", &str)) { p.color = parseColorProp(str); }
 
     return p;
 }
 
-void PolygonStyle::buildLine(const Line& _line, const StyleParamMap& _styleParamMap, const Properties& _props, VboMesh& _mesh, Tile& _tile) const {
+void PolygonStyle::buildLine(const Line& _line, const DrawRule& _rule, const Properties& _props, VboMesh& _mesh, Tile& _tile) const {
     std::vector<PolygonVertex> vertices;
 
-    Parameters params = parseStyleParams(_styleParamMap);
+    Parameters params = parseRule(_rule);
 
     GLuint abgr = params.color;
     GLfloat layer = params.order;
@@ -69,11 +65,11 @@ void PolygonStyle::buildLine(const Line& _line, const StyleParamMap& _styleParam
     mesh.addVertices(std::move(vertices), std::move(builder.indices));
 }
 
-void PolygonStyle::buildPolygon(const Polygon& _polygon, const StyleParamMap& _styleParamMap, const Properties& _props, VboMesh& _mesh, Tile& _tile) const {
+void PolygonStyle::buildPolygon(const Polygon& _polygon, const DrawRule& _rule, const Properties& _props, VboMesh& _mesh, Tile& _tile) const {
 
     std::vector<PolygonVertex> vertices;
 
-    Parameters params = parseStyleParams(_styleParamMap);
+    Parameters params = parseRule(_rule);
 
     GLuint abgr = params.color;
     GLfloat layer = params.order;
