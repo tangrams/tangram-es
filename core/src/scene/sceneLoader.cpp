@@ -818,19 +818,11 @@ void SceneLoader::loadLayers(Node layers, Scene& scene, TileManager& tileManager
         Node data_source = data["source"];
 
         std::string collection = data_layer ? data_layer.as<std::string>() : name;
-        std::string sourceName = data_source ? data_source.as<std::string>() : "";
-
-        std::shared_ptr<DataSource> source;
-
-        for (auto& ds : tileManager.dataSources()) {
-            if (ds->name() == sourceName) {
-                source = ds;
-            }
-        }
+        std::string source = data_source ? data_source.as<std::string>() : "";
 
         auto sublayer = loadSublayer(layer.second, name, scene);
 
-        scene.layers().push_back({ source, collection, sublayer });
+        scene.layers().push_back({ sublayer, source, collection });
 
     }
 

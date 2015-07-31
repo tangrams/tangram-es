@@ -92,7 +92,7 @@ void TileWorker::run() {
         }
 
         if (tileData) {
-            tile->build(*m_tileManager.getScene(), *tileData);
+            tile->build(*m_tileManager.getScene(), *tileData, *dataSource);
         }
 
         m_tileManager.tileProcessed(std::move(task));

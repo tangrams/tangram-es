@@ -13,6 +13,7 @@
 
 namespace Tangram {
 
+class DataSource;
 class MapProjection;
 class Scene;
 class Style;
@@ -62,7 +63,7 @@ public:
     /* Draws the geometry associated with the provided <Style> and view-projection matrix */
     void draw(const Style& _style, const View& _view);
 
-    void build(Scene& _scene, const TileData& _data);
+    void build(const Scene& _scene, const TileData& _data, const DataSource& _source);
     
     /* 
      * Methods to set and get proxy counter

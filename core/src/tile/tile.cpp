@@ -1,5 +1,6 @@
 #include "tile.h"
 
+#include "data/dataSource.h"
 #include "scene/scene.h"
 #include "scene/dataLayer.h"
 #include "style/style.h"
@@ -34,7 +35,7 @@ Tile::~Tile() {
 
 }
 
-void Tile::build(Scene& _scene, const TileData& _data) {
+void Tile::build(const Scene& _scene, const TileData& _data, const DataSource& _source) {
 
     const auto& layers = _scene.layers();
 
@@ -45,14 +46,13 @@ void Tile::build(Scene& _scene, const TileData& _data) {
         style->onBeginBuildTile(*this);
     }
 
-    for (const auto& collection : _data.layers) {
+    for (const auto& datalayer : layers) {
 
-        for (const auto& datalayer : layers) {
+        if (datalayer.source() != _source.name()) { continue; }
 
-            if (collection.name != datalayer.collection()) {
-                continue;
-            }
-            // TODO: must also skip TileData which isn't from this DataLayer's source
+        for (const auto& collection : _data.layers) {
+
+            if (collection.name != datalayer.collection()) { continue; }
 
             for (const auto& feat : collection.features) {
 

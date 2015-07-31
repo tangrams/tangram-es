@@ -2,7 +2,7 @@
 
 namespace Tangram {
 
-DataLayer::DataLayer(std::shared_ptr<DataSource> _source, const std::string& _collection, const SceneLayer& _layer) :
+DataLayer::DataLayer(SceneLayer _layer, const std::string& _source, const std::string& _collection) :
     m_layer(_layer),
     m_source(_source),
     m_collection(_collection) {}

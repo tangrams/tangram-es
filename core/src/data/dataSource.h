@@ -55,7 +55,7 @@ public:
     /* Clears all data associated with this DataSource */
     void clearData();
 
-    const std::string& name() { return m_name; }
+    const std::string& name() const { return m_name; }
 
 protected:
 
