@@ -59,7 +59,6 @@ public class RotateGestureDetector extends TwoFingerGestureDetector {
 
 
     private final OnRotateGestureListener mListener;
-    private final float FOCUS_THRESHOLD = 25f;
     private boolean mSloppyGesture;
 
     private float mFocusX;
