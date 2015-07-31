@@ -18,7 +18,7 @@ matrix:
           env: PLATFORM=android
           addons:
             apt:
-              packages: [ 'lib32z1-dev', 'lib32stdc++6' ]
+              packages: [ 'lib32z1-dev', 'lib32stdc++6', 's3cmd' ]
           android:
             components: [ 'build-tools-21.1.2', 'android-22' ]
 
