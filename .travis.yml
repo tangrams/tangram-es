@@ -40,5 +40,6 @@ script:
 
 after_success:
     - source ./travis/script_deploy_android_snapshot.sh
+    - source ./travis/script_deploy_android_demo.sh
 
 sudo: false
