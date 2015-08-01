@@ -272,6 +272,9 @@ public class MapController implements Renderer, OnTouchListener, OnScaleGestureL
 
     private static final float PINCH_THRESHOLD = 0.015f; //1.5% of minDim
     private static final float ROTATION_THRESHOLD = 0.30f;
+    private static final float DOUBLETAP_MOVE_THRESHOLD = 5.0f;
+
+    private float doubleTapDownY;
 
     /*
      * NOTE: Not relying on gestureDetector.isInProgress() since this is set after gestureBegin call and before
@@ -332,16 +335,24 @@ public class MapController implements Renderer, OnTouchListener, OnScaleGestureL
     // ========================================
 
     public boolean onDoubleTap(MotionEvent event) {
-        handleDoubleTapGesture(event.getX(), event.getY());
         return true;
     }
 
     public boolean onDoubleTapEvent(MotionEvent event) {
         if(event.getAction() == 2) { // Move action during double tap
-            mDoubleTapScale = true;
+            // Set TapScaling only if sufficient Y movement has happened
+            float movement = event.getY() - doubleTapDownY;
+            if(Math.abs(movement) > DOUBLETAP_MOVE_THRESHOLD) {
+                mDoubleTapScale = true;
+            }
         }
-        else {
-            mDoubleTapScale = false; // Up or Down action during double tap
+        else if(event.getAction() == 1) { // DoubleTap Up; handleDoubleTap zoom-in if not moved (scale happened)
+            if(!mDoubleTapScale) {
+                handleDoubleTapGesture(event.getX(), event.getY());
+            }
+            mDoubleTapScale = false;
+        } else { // DoubleTap down event
+            doubleTapDownY = event.getY();
         }
         return true;
     }
