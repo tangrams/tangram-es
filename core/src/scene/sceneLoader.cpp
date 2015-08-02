@@ -737,27 +737,29 @@ Filter SceneLoader::generateNoneFilter(YAML::Node _filter) {
     return Filter(Operators::none, std::move(filters));
 }
 
-void SceneLoader::parseStyleProps(Node styleProps, DrawRule& rule, const std::string& propPrefix) {
+std::vector<StyleParam> SceneLoader::parseStyleParams(Node params, const std::string& prefix) {
 
-    for (const auto& propItr : styleProps) {
-        Node prop = propItr.first;
-        std::string paramKey;
-        if (propPrefix.length() > 0) {
-            paramKey = propPrefix + ":" + prop.as<std::string>();
-        } else {
-            paramKey = prop.as<std::string>();
-        }
-        if (propItr.second.IsScalar()) {
-            rule.parameters.push_back({ paramKey, propItr.second.as<std::string>() });
-        } else if (propItr.second.IsSequence()) {
-            rule.parameters.push_back({ paramKey, parseSequence(propItr.second) });
-        } else if (propItr.second.IsMap()) {
-            parseStyleProps(propItr.second, rule, paramKey);
-        } else {
-            logMsg("Error: Badly formed Style property, need to be a scalar, sequence or map."
-                    "%s will not be added to stype properties.\n", paramKey.c_str());
+    std::vector<StyleParam> out;
+
+    for (const auto& prop : params) {
+
+        std::string key = (prefix.empty() ? "" : ":") + prop.first.as<std::string>();
+
+        Node value = prop.second;
+
+        switch (value.Type()) {
+            case YAML::NodeType::Scalar:   out.push_back({ key, value.as<std::string>() }); break;
+            case YAML::NodeType::Sequence: out.push_back({ key, parseSequence(value) }); break;
+            case YAML::NodeType::Map: {
+                auto subparams = parseStyleParams(value, key);
+                out.insert(out.end(), subparams.begin(), subparams.end());
+                break;
+            }
+            default: logMsg("ERROR: Style parameter %s must be a scalar, sequence, or map.\n", key.c_str());
         }
     }
+
+    return out;
 
 }
 
@@ -778,11 +780,10 @@ SceneLayer SceneLoader::loadSublayer(YAML::Node layer, const std::string& name, 
             for (auto& ruleNode : member.second) {
 
                 auto explicitStyle = ruleNode.second["style"];
+                auto style = explicitStyle ? explicitStyle.as<std::string>() : ruleNode.first.as<std::string>();
+                auto params = parseStyleParams(ruleNode.second);
+                rules.push_back({ style, params });
 
-                DrawRule rule;
-                rule.style = explicitStyle ? explicitStyle.as<std::string>() : ruleNode.first.as<std::string>();
-                parseStyleProps(ruleNode.second, rule);
-                rules.push_back(rule);
             }
         } else if (key == "filter") {
             filter = generateFilter(member.second);

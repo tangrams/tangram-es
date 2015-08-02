@@ -1,6 +1,7 @@
 #pragma once
 
 #include "data/filters.h"
+#include "scene/drawRule.h"
 
 #include <memory>
 #include <string>
@@ -10,18 +11,8 @@
 namespace Tangram {
 
 class Style;
+struct DrawRule;
 struct Feature;
-
-struct DrawRule {
-
-    std::string style;
-    std::vector<std::pair<std::string, std::string>> parameters;
-
-    DrawRule merge(DrawRule& _other) const;
-    bool findParameter(const std::string& _key, std::string* _out) const;
-    bool operator<(const DrawRule& _rhs) const;
-
-};
 
 class SceneLayer {
 
