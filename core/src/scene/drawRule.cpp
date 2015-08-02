@@ -53,7 +53,7 @@ bool DrawRule::findParameter(const std::string& _key, std::string* _out) const {
         return p.key < k;
     });
 
-    if (it->key == _key) {
+    if (it != parameters.end() && it->key == _key) {
         *_out = it->value;
         return true;
     }
