@@ -87,20 +87,20 @@ void Style::addLayer(std::shared_ptr<SceneLayer> _layer) {
 void Style::applyLayerFiltering(const Feature& _feature, const Context& _ctx, StyleCacheKey& _uniqueID,
                                    StyleParamMap& _styleParamMapMix, std::shared_ptr<SceneLayer> _uberLayer) const {
 
-    std::vector<std::shared_ptr<SceneLayer>> sLayers;
-    sLayers.reserve(_uberLayer->getSublayers().size() + 1);
-    sLayers.push_back(_uberLayer);
+    std::vector<std::shared_ptr<SceneLayer>> sceneLayers;
+    sceneLayers.reserve(_uberLayer->getSublayers().size() + 1);
+    sceneLayers.push_back(_uberLayer);
 
-    auto sLayerItr = sLayers.begin();
+    auto sceneLayerIter = sceneLayers.begin();
 
     // A BFS traversal of the SceneLayer graph
-    while (sLayerItr != sLayers.end()) {
+    while (sceneLayerIter != sceneLayers.end()) {
 
-        auto sceneLyr = *sLayerItr;
+        auto& sceneLayer = *sceneLayerIter->get();
 
-        if (sceneLyr->getFilter().eval(_feature, _ctx)) { // filter matches
+        if (sceneLayer.getFilter().eval(_feature, _ctx)) { // filter matches
 
-            _uniqueID.set(sceneLyr->getID());
+            _uniqueID.set(sceneLayer.getID());
             {
                 std::lock_guard<std::mutex> lock(s_cacheMutex);
 
@@ -113,8 +113,8 @@ void Style::applyLayerFiltering(const Feature& _feature, const Context& _ctx, St
                 } else {
                     // Update StyleParam with subLayer parameters
 
-                    auto& layerStyleParamMap = sceneLyr->getStyleParamMap();
-                    for(auto& styleParam : layerStyleParamMap) {
+                    auto& layerStyleParamMap = sceneLayer.getStyleParamMap();
+                    for (auto& styleParam : layerStyleParamMap) {
                         _styleParamMapMix[styleParam.first] = styleParam.second;
                     }
                     entry = _styleParamMapMix;
@@ -122,10 +122,10 @@ void Style::applyLayerFiltering(const Feature& _feature, const Context& _ctx, St
             }
 
             // Append sLayers with sublayers of this layer
-            auto& ssLayers = sceneLyr->getSublayers();
-            sLayerItr = sLayers.insert(sLayers.end(), ssLayers.begin(), ssLayers.end());
+            auto& subLayers = sceneLayer.getSublayers();
+            sceneLayerIter = sceneLayers.insert(sceneLayers.end(), subLayers.begin(), subLayers.end());
         } else {
-            sLayerItr++;
+            sceneLayerIter++;
         }
     }
 }
