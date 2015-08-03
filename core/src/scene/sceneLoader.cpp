@@ -743,7 +743,7 @@ std::vector<StyleParam> SceneLoader::parseStyleParams(Node params, const std::st
 
     for (const auto& prop : params) {
 
-        std::string key = (prefix.empty() ? "" : ":") + prop.first.as<std::string>();
+        std::string key = (prefix.empty() ? "" : (prefix + ":")) + prop.first.as<std::string>();
 
         Node value = prop.second;
 
