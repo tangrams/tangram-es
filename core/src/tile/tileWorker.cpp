@@ -49,10 +49,10 @@ void TileWorker::run() {
             }
 
             // Remove all canceled tasks
-            std::remove_if(m_queue.begin(), m_queue.end(),
-                [](const std::shared_ptr<TileTask>& a) {
-                    return a->tile->isCanceled();
-                });
+            auto removes = std::remove_if(m_queue.begin(), m_queue.end(),
+                [](const auto& a) { return a->tile->isCanceled(); });
+
+            m_queue.erase(removes, m_queue.end());
 
             if (m_queue.empty()) {
                 continue;
@@ -60,7 +60,7 @@ void TileWorker::run() {
 
             // Pop highest priority tile from queue
             auto it = std::min_element(m_queue.begin(), m_queue.end(),
-                [](const std::shared_ptr<TileTask>& a, const std::shared_ptr<TileTask>& b) {
+                [](const auto& a, const auto& b) {
                     if (a->tile->isVisible() != b->tile->isVisible()) {
                         return a->tile->isVisible();
                     }

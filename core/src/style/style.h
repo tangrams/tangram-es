@@ -50,7 +50,7 @@ protected:
     std::string m_name;
 
     /* <ShaderProgram> used to draw meshes using this style */
-    std::shared_ptr<ShaderProgram> m_shaderProgram = std::make_shared<ShaderProgram>();
+    std::unique_ptr<ShaderProgram> m_shaderProgram = std::make_unique<ShaderProgram>();
 
     /* <VertexLayout> shared between meshes using this style */
     std::shared_ptr<VertexLayout> m_vertexLayout;
@@ -67,6 +67,9 @@ protected:
     /* vector of SceneLayers a style can operator on */
     /* TODO: decouple layers and styles so that sublayers can apply different styles than the parent */
     std::vector<std::shared_ptr<SceneLayer>> m_layers;
+
+    /* Whether the viewport has changed size */
+    bool m_dirtyViewport = true;
 
     /* Create <VertexLayout> corresponding to this style; subclasses must implement this and call it on construction */
     virtual void constructVertexLayout() = 0;
@@ -93,6 +96,8 @@ public:
     Style(std::string _name, GLenum _drawMode);
 
     virtual ~Style();
+
+    void viewportHasChanged() { m_dirtyViewport = true; }
 
     /* Whether or not the style uses blending operation for drawing */
     virtual bool isOpaque() const { return true; };
@@ -125,7 +130,7 @@ public:
 
     std::shared_ptr<Material> getMaterial() { return m_material; }
 
-    std::shared_ptr<ShaderProgram> getShaderProgram() const { return m_shaderProgram; }
+    const std::unique_ptr<ShaderProgram>& getShaderProgram() const { return m_shaderProgram; }
 
     const std::string& getName() const { return m_name; }
 

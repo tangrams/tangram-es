@@ -140,19 +140,36 @@ void TextStyle::onEndBuildTile(Tile& _tile) const {
     buffer.addBufferVerticesToMesh();
 }
 
+void TextStyle::setColor(unsigned int _color) {
+    m_color = _color;
+    m_dirtyColor = true;
+}
+
 void TextStyle::onBeginDrawFrame(const View& _view, const Scene& _scene) {
 
-    FontContext::GetInstance()->bindAtlas(1);
+    FontContext::GetInstance()->bindAtlas(0);
 
-    m_shaderProgram->setUniformi("u_tex", 1);
-    m_shaderProgram->setUniformf("u_resolution", _view.getWidth(), _view.getHeight());
+    static bool initUniformSampler = true;
 
-    float r = (m_color >> 16 & 0xff) / 255.0;
-    float g = (m_color >> 8  & 0xff) / 255.0;
-    float b = (m_color       & 0xff) / 255.0;
+    if (initUniformSampler) {
+        m_shaderProgram->setUniformi("u_tex", 0);
+        initUniformSampler = false;
+    }
 
-    m_shaderProgram->setUniformf("u_color", r, g, b);
-    m_shaderProgram->setUniformMatrix4f("u_proj", glm::value_ptr(_view.getOrthoViewportMatrix()));
+    if (m_dirtyViewport) {
+        m_shaderProgram->setUniformf("u_resolution", _view.getWidth(), _view.getHeight());
+        m_shaderProgram->setUniformMatrix4f("u_proj", glm::value_ptr(_view.getOrthoViewportMatrix()));
+        m_dirtyViewport = false;
+    }
+
+    if (m_dirtyColor) {
+        float r = (m_color >> 16 & 0xff) / 255.0;
+        float g = (m_color >> 8  & 0xff) / 255.0;
+        float b = (m_color       & 0xff) / 255.0;
+
+        m_shaderProgram->setUniformf("u_color", r, g, b);
+        m_dirtyColor = false;
+    }
 
     RenderState::blending(GL_TRUE);
     RenderState::blendingFunc({GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA});

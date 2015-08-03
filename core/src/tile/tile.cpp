@@ -22,7 +22,7 @@ Tile::Tile(TileID _id, const MapProjection& _projection)
 
     m_scale = 0.5 * bounds.width();
     m_inverseScale = 1.0/m_scale;
-    
+
     m_tileOrigin = bounds.center();
     // negative y coordinate: to change from y down to y up (tile system has y down and gl context we use has y up).
     m_tileOrigin.y *= -1.0;
@@ -88,15 +88,15 @@ void Tile::update(float _dt, const View& _view) {
 
 void Tile::draw(const Style& _style, const View& _view) {
 
-    const std::shared_ptr<VboMesh>& styleMesh = m_geometry[_style.getName()];
-    
+    const auto& styleMesh = m_geometry[_style.getName()];
+
     if (styleMesh) {
-        
-        std::shared_ptr<ShaderProgram> shader = _style.getShaderProgram();
+
+        auto& shader = _style.getShaderProgram();
 
         glm::mat4 modelViewMatrix = _view.getViewMatrix() * m_modelMatrix;
         glm::mat4 modelViewProjMatrix = _view.getViewProjectionMatrix() * m_modelMatrix;
-        
+
         shader->setUniformMatrix4f("u_modelView", glm::value_ptr(modelViewMatrix));
         shader->setUniformMatrix4f("u_modelViewProj", glm::value_ptr(modelViewProjMatrix));
         shader->setUniformMatrix3f("u_normalMatrix", glm::value_ptr(_view.getNormalMatrix()));
@@ -108,7 +108,7 @@ void Tile::draw(const Style& _style, const View& _view) {
     }
 }
 
-std::shared_ptr<VboMesh>& Tile::getMesh(const Style& _style) {
+std::unique_ptr<VboMesh>& Tile::getMesh(const Style& _style) {
     return m_geometry[_style.getName()];
 }
 

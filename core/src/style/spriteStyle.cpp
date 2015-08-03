@@ -100,8 +100,17 @@ void SpriteStyle::buildPoint(const Point& _point, const DrawRule& _rule, const P
 void SpriteStyle::onBeginDrawFrame(const View& _view, const Scene& _scene) {
     m_spriteAtlas->bind();
 
-    m_shaderProgram->setUniformi("u_tex", 0);
-    m_shaderProgram->setUniformMatrix4f("u_proj", glm::value_ptr(_view.getOrthoViewportMatrix()));
+    static bool initUniformSampler = true;
+
+    if (initUniformSampler) {
+        m_shaderProgram->setUniformi("u_tex", 0);
+        initUniformSampler = false;
+    }
+
+    if (m_dirtyViewport) {
+        m_shaderProgram->setUniformMatrix4f("u_proj", glm::value_ptr(_view.getOrthoViewportMatrix()));
+        m_dirtyViewport = false;
+    }
 
     RenderState::blending(GL_TRUE);
     RenderState::blendingFunc({GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA});

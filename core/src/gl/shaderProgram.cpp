@@ -58,7 +58,7 @@ void ShaderProgram::addSourceBlock(const std::string& _tagName, const std::strin
     //          - add Global Blocks
 }
 
-const GLint ShaderProgram::getAttribLocation(const std::string& _attribName) {
+GLint ShaderProgram::getAttribLocation(const std::string& _attribName) {
 
     // Get uniform location at this key, or create one valued at -2 if absent
     GLint& location = m_attribMap[_attribName].loc;
@@ -73,7 +73,7 @@ const GLint ShaderProgram::getAttribLocation(const std::string& _attribName) {
 
 }
 
-const GLint ShaderProgram::getUniformLocation(const std::string& _uniformName) {
+GLint ShaderProgram::getUniformLocation(const std::string& _uniformName) {
 
     // Get uniform location at this key, or create one valued at -2 if absent
     GLint& location = m_uniformMap[_uniformName].loc;
