@@ -20,6 +20,8 @@
 
 #include "yaml-cpp/yaml.h"
 
+#include <algorithm>
+
 using YAML::Node;
 using YAML::BadConversion;
 
@@ -41,6 +43,11 @@ void SceneLoader::loadScene(const std::string& _file, Scene& _scene, TileManager
     for (auto& style : _scene.styles()) {
         style->build(_scene.lights());
     }
+
+    // Styles that are opaque must be ordered first in the scene so that they are rendered 'under' styles that require blending
+    std::sort(_scene.styles().begin(), _scene.styles().end(), [](std::unique_ptr<Style>& a, std::unique_ptr<Style>& b) {
+        return a->isOpaque();
+    });
 
 }
 
