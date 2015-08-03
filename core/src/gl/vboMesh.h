@@ -137,7 +137,7 @@ protected:
         }
 
         for (size_t i = 0; i < vertices.size(); i++) {
-            auto curVertices = vertices[i];
+            auto& curVertices = vertices[i];
             size_t nVertices = curVertices.size();
             int nBytes = nVertices * stride;
 
