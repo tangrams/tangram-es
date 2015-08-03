@@ -98,7 +98,7 @@ public:
     virtual bool isOpaque() const { return true; };
 
     /* Make this style ready to be used (call after all needed properties are set) */
-    virtual void build(const std::vector<std::shared_ptr<Light>>& _lights);
+    virtual void build(const std::vector<std::unique_ptr<Light>>& _lights);
 
     /* Add layers to which this style will apply */
     void addLayer(std::shared_ptr<SceneLayer> _layer);

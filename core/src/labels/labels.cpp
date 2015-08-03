@@ -18,7 +18,7 @@ int Labels::LODDiscardFunc(float _maxZoom, float _zoom) {
 }
 
 
-void Labels::update(const View& _view, float _dt, const std::vector<std::shared_ptr<Style>>& _styles,
+void Labels::update(const View& _view, float _dt, const std::vector<std::unique_ptr<Style>>& _styles,
                     const std::map<TileID, std::shared_ptr<Tile>>& _tiles) {
 
     m_needUpdate = false;

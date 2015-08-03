@@ -35,7 +35,7 @@ uint32_t Style::parseColorProp(const std::string& _colorPropStr) {
     return color;
 }
 
-void Style::build(const std::vector<std::shared_ptr<Light>>& _lights) {
+void Style::build(const std::vector<std::unique_ptr<Light>>& _lights) {
 
     constructVertexLayout();
     constructShaderProgram();

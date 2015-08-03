@@ -368,7 +368,7 @@ void SceneLoader::loadStyles(YAML::Node styles, Scene& scene) {
         Node urlNode = styleNode["url"];
         if (urlNode) { logMsg("WARNING: loading style from URL not yet implemented\n"); } // TODO
 
-        scene.styles().push_back(std::shared_ptr<Style>(style));
+        scene.styles().push_back(std::unique_ptr<Style>(style));
 
     }
 
@@ -412,7 +412,7 @@ void SceneLoader::loadLights(Node lights, Scene& scene) {
     if (!lights) {
 
         // Add an ambient light if nothing else is specified
-        std::shared_ptr<AmbientLight> amb(new AmbientLight("defaultLight"));
+        std::unique_ptr<AmbientLight> amb(new AmbientLight("defaultLight"));
         amb->setAmbientColor({ .5f, .5f, .5f, 1.f });
         scene.lights().push_back(std::move(amb));
 
@@ -425,11 +425,11 @@ void SceneLoader::loadLights(Node lights, Scene& scene) {
         const std::string name = lt.first.Scalar();
         const std::string type = light["type"].as<std::string>();
 
-        std::shared_ptr<Light> lightPtr;
+        std::unique_ptr<Light> lightPtr;
 
         if (type == "ambient") {
 
-            lightPtr = std::shared_ptr<Light>(new AmbientLight(name));
+            lightPtr = std::unique_ptr<Light>(new AmbientLight(name));
 
         } else if (type == "directional") {
 
@@ -438,7 +438,7 @@ void SceneLoader::loadLights(Node lights, Scene& scene) {
             if (direction) {
                 dLightPtr->setDirection(parseVec3(direction));
             }
-            lightPtr = std::shared_ptr<Light>(dLightPtr);
+            lightPtr = std::unique_ptr<Light>(dLightPtr);
 
         } else if (type == "point") {
 
@@ -459,7 +459,7 @@ void SceneLoader::loadLights(Node lights, Scene& scene) {
             if (att) {
                 pLightPtr->setAttenuation(att.as<float>());
             }
-            lightPtr = std::shared_ptr<Light>(pLightPtr);
+            lightPtr = std::unique_ptr<Light>(pLightPtr);
 
         } else if (type == "spotlight") {
 
@@ -489,7 +489,7 @@ void SceneLoader::loadLights(Node lights, Scene& scene) {
                 sLightPtr->setCutoffExponent(exponent.as<float>());
             }
 
-            lightPtr = std::shared_ptr<Light>(sLightPtr);
+            lightPtr = std::unique_ptr<Light>(sLightPtr);
 
         }
 

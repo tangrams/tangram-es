@@ -31,7 +31,7 @@ public:
 
     void drawDebug(const View& _view);
 
-    void update(const View& _view, float _dt, const std::vector<std::shared_ptr<Style>>& _styles,
+    void update(const View& _view, float _dt, const std::vector<std::unique_ptr<Style>>& _styles,
                 const std::map<TileID, std::shared_ptr<Tile>>& _tiles);
 
     bool needUpdate() { return m_needUpdate; }
