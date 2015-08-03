@@ -26,7 +26,7 @@ struct TextureOptions {
     TextureWrapping m_wrapping;
 };
 
-#define TANGRAM_MAX_TEXTURE_UNIT 4
+#define TANGRAM_MAX_TEXTURE_UNIT 6
 
 class Texture {
 

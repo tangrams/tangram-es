@@ -55,7 +55,7 @@ void Texture::bind(GLuint _textureSlot) {
 
     if (_textureSlot >= TANGRAM_MAX_TEXTURE_UNIT) {
 
-        // Trying to access an invalid texture unit
+        logMsg("Trying to access an invalid texture unit\n");
         return;
     }
 
