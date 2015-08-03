@@ -1,4 +1,5 @@
 #include "drawRule.h"
+#include <algorithm>
 
 namespace Tangram {
 
@@ -6,7 +7,7 @@ DrawRule::DrawRule(const std::string& _style, const std::vector<StyleParam>& _pa
     style(_style),
     parameters(_parameters) {
 
-    // Parameters within each rule must be sorted lexigraphically by key to merge correctly
+    // Parameters within each rule must be sorted lexicographically by key to merge correctly
     std::sort(parameters.begin(), parameters.end());
 
 }

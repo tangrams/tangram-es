@@ -3,6 +3,7 @@
 
 #include "scene/drawRule.h"
 #include <cstdio>
+#include <algorithm>
 
 using namespace Tangram;
 
