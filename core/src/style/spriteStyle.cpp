@@ -60,12 +60,6 @@ void SpriteStyle::buildPoint(const Point& _point, const DrawRule& _rule, const P
     // TODO : make this configurable
     std::vector<Label::Vertex> vertices;
 
-    SpriteBuilder builder = {
-        [&](const glm::vec2& coord, const glm::vec2& screenPos, const glm::vec2& uv) {
-            vertices.push_back({ coord, uv });
-        }
-    };
-
     // TODO : configure this
     float spriteScale = .5f;
     glm::vec2 offset = {0.f, 10.f};
@@ -89,11 +83,19 @@ void SpriteStyle::buildPoint(const Point& _point, const DrawRule& _rule, const P
 
     std::unique_ptr<SpriteLabel> label(new SpriteLabel(mesh, t, spriteNode.m_size * spriteScale, bufferOffset));
 
-    Builders::buildQuadAtPoint(label->getTransform().state.screenPos + offset,
-                               spriteNode.m_size * spriteScale,
-                               spriteNode.m_uvBL, spriteNode.m_uvTR, builder);
+    auto size = spriteNode.m_size * spriteScale;
+    float halfWidth = size.x * .5f;
+    float halfHeight = size.y * .5f;
+    const glm::vec2& uvBL = spriteNode.m_uvBL;
+    const glm::vec2& uvTR = spriteNode.m_uvTR;
 
-    mesh.addVertices(std::move(vertices), std::move(builder.indices));
+    vertices.reserve(4);
+    vertices.push_back({{-halfWidth, -halfHeight}, {uvBL.x, uvBL.y}});
+    vertices.push_back({{-halfWidth, halfHeight}, {uvBL.x, uvTR.y}});
+    vertices.push_back({{halfWidth, -halfHeight}, {uvTR.x, uvBL.y}});
+    vertices.push_back({{halfWidth, halfHeight}, {uvTR.x, uvTR.y}});
+
+    mesh.addVertices(std::move(vertices), {});
     mesh.addLabel(std::move(label));
 }
 
