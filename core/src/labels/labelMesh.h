@@ -19,8 +19,13 @@ public:
     const std::vector<std::unique_ptr<Label>>& getLabels() const {
         return m_labels;
     }
+    virtual void compileVertexBuffer() override;
+
+    virtual void draw(ShaderProgram& _shader) override;
 
 protected:
+    void loadQuadIndices();
+
     std::vector<std::unique_ptr<Label>> m_labels;
 };
 
