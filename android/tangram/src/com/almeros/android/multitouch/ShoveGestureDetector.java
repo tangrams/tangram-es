@@ -215,14 +215,16 @@ public class ShoveGestureDetector extends TwoFingerGestureDetector {
     	if (sloppy)
     		return true;
 
-        final float drag0 = Math.abs(event.getY(0) - mStartY0);
-        final float drag1 = Math.abs(event.getY(1) - mStartY1);
+        final float drag0 = event.getY(0) - mStartY0;
+        final float drag1 = event.getY(1) - mStartY1;
 
         final float xSpanDiff = Math.abs(mCurrFingerDiffX - mPrevFingerDiffX);
         final float minDim = Math.min(displayMetrics.widthPixels, displayMetrics.heightPixels);
         final float minDrag = DRAG_THRESHOLD * minDim;
 
-        if(drag0 < minDrag || drag1 < minDrag) {
+        if(drag0 * drag1 < 0.0f) { // Sloppy if fingers moving in opposite y direction
+            return true;
+        } else if(Math.abs(drag0) < minDrag || Math.abs(drag1) < minDrag) {
             return true;
         } else if(xSpanDiff > XSPAN_THRESHOLD * minDim) {
             return true;
