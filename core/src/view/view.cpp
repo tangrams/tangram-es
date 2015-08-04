@@ -94,7 +94,7 @@ void View::setRoll(float _roll) {
 void View::setPitch(float _pitch) {
 
     // Clamp pitch angle (until LoD tile coverage is implemented)
-    m_pitch = glm::clamp(_pitch, 0.f, (float)M_PI);
+    m_pitch = glm::clamp(_pitch, 0.f, (float)(M_PI*0.5));
     m_dirty = true;
 
 }
@@ -231,7 +231,7 @@ void View::updateMatrices() {
     }
 
     // set camera z to produce desired viewable area
-    m_pos.z = m_height * 0.5 / tan(fovy * 0.5);
+    m_pos.z = m_height * 0.5 / tan(fovy * 0.5) - (m_pos.z * (1.0f - cos(m_pitch)));
 
     // set near clipping distance as a function of camera z
     // TODO: this is a simple heuristic that deserves more thought
