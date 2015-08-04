@@ -18,6 +18,7 @@ std::shared_ptr<TileData> MVTSource::parse(const Tile& _tile, std::vector<char>&
     std::shared_ptr<TileData> tileData = std::make_shared<TileData>();
 
     protobuf::message item(_rawData.data(), _rawData.size());
+    PbfParser::ParserContext ctx;
 
     while(item.next()) {
         if(item.tag == 3) {
@@ -27,7 +28,7 @@ std::shared_ptr<TileData> MVTSource::parse(const Tile& _tile, std::vector<char>&
                 if (layerItr.tag == 1) {
                     auto layerName = layerItr.string();
                     tileData->layers.emplace_back(layerName);
-                    PbfParser::extractLayer(layerMsg, tileData->layers.back());
+                    PbfParser::extractLayer(ctx, layerMsg, tileData->layers.back());
                 } else {
                     layerItr.skip();
                 }
