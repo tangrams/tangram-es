@@ -27,7 +27,7 @@ std::shared_ptr<TileData> MVTSource::parse(const Tile& _tile, std::vector<char>&
                 if (layerItr.tag == 1) {
                     auto layerName = layerItr.string();
                     tileData->layers.emplace_back(layerName);
-                    PbfParser::extractLayer(layerMsg, tileData->layers.back(), _tile);
+                    PbfParser::extractLayer(layerMsg, tileData->layers.back());
                 } else {
                     layerItr.skip();
                 }

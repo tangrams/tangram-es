@@ -76,8 +76,8 @@ void PolygonStyle::buildPolygon(const Polygon& _polygon, const DrawRule& _rule, 
         abgr = abgr << (_tile.getID().z % 6);
     }
 
-    float height = _props.getNumeric("height");
-    float minHeight = _props.getNumeric("min_height");
+    float height = _props.getNumeric("height") * _tile.getInverseScale();
+    float minHeight = _props.getNumeric("min_height") * _tile.getInverseScale();
 
     PolygonBuilder builder = {
         [&](const glm::vec3& coord, const glm::vec3& normal, const glm::vec2& uv){

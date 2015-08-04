@@ -7,7 +7,7 @@
 
 namespace Tangram {
 
-void PbfParser::extractGeometry(protobuf::message& _geomIn, int _tileExtent, std::vector<Line>& _out, const Tile& _tile) {
+void PbfParser::extractGeometry(protobuf::message& _geomIn, int _tileExtent, std::vector<Line>& _out) {
 
     pbfGeomCmd cmd = pbfGeomCmd::moveTo;
     uint32_t cmdRepeat = 0;
@@ -62,7 +62,7 @@ void PbfParser::extractGeometry(protobuf::message& _geomIn, int _tileExtent, std
 
 }
 
-void PbfParser::extractFeature(protobuf::message& _featureIn, Feature& _out, const Tile& _tile, std::vector<std::string>& _keys, std::vector<float>& _numericValues, std::vector<std::string>& _stringValues, int _tileExtent) {
+void PbfParser::extractFeature(protobuf::message& _featureIn, Feature& _out, std::vector<std::string>& _keys, std::vector<float>& _numericValues, std::vector<std::string>& _stringValues, int _tileExtent) {
 
     //Iterate through this feature
     std::vector<Line> geometryLines;
@@ -106,17 +106,9 @@ void PbfParser::extractFeature(protobuf::message& _featureIn, Feature& _out, con
                     float numVal = _numericValues[valueKey];
 
                     if(!isnan(numVal)) {
-
-                        // height and minheight need to be handled separately so that their dimensions are normalized
-                        if(key.compare("height") == 0 || key.compare("min_height") == 0) {
-                            numVal *= _tile.getInverseScale();
-                        }
                         _out.props.numericProps[key] = numVal;
-
                     } else {
-
                         _out.props.stringProps[key] = strVal;
-
                     }
                 }
                 break;
@@ -128,7 +120,7 @@ void PbfParser::extractFeature(protobuf::message& _featureIn, Feature& _out, con
             // Actual geometry data
             case 4:
                 geometry = _featureIn.getMessage();
-                extractGeometry(geometry, _tileExtent, geometryLines, _tile);
+                extractGeometry(geometry, _tileExtent, geometryLines);
                 break;
             // None.. skip
             default:
@@ -161,7 +153,7 @@ void PbfParser::extractFeature(protobuf::message& _featureIn, Feature& _out, con
 
 }
 
-void PbfParser::extractLayer(protobuf::message& _layerIn, Layer& _out, const Tile& _tile) {
+void PbfParser::extractLayer(protobuf::message& _layerIn, Layer& _out) {
 
     std::vector<std::string> keys;
     std::vector<float> numericValues;
@@ -241,7 +233,7 @@ void PbfParser::extractLayer(protobuf::message& _layerIn, Layer& _out, const Til
 
     for(auto& featureMsg : featureMsgs) {
         _out.features.emplace_back();
-        extractFeature(featureMsg, _out.features.back(), _tile, keys, numericValues, stringValues, tileExtent);
+        extractFeature(featureMsg, _out.features.back(), keys, numericValues, stringValues, tileExtent);
     }
 }
 
