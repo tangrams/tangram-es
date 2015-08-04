@@ -53,7 +53,7 @@ std::string DrawRule::toString() const {
     return str;
 }
 
-const StyleParam&  DrawRule::findParameter(const std::string& _key) const {
+const StyleParam&  DrawRule::findParameter(const char* _key) const {
 
     auto it = std::lower_bound(parameters.begin(), parameters.end(), _key,
                                [](auto& p, auto& k) { return p.key < k; });
@@ -64,34 +64,34 @@ const StyleParam&  DrawRule::findParameter(const std::string& _key) const {
     return StyleParam::NONE;
 }
 
-bool DrawRule::getValue(const std::string& _key, float& _value) const {
+bool DrawRule::getValue(const char* _key, float& _value) const {
     auto& param = findParameter(_key);
     if (!param) { return false; }
     _value = std::stof(param.value);
     return true;
 }
 
-bool DrawRule::getValue(const std::string& _key, int32_t& _value) const {
+bool DrawRule::getValue(const char* _key, int32_t& _value) const {
     auto& param = findParameter(_key);
     if (!param) { return false; }
     _value = std::stoi(param.value);
     return true;
 }
 
-bool DrawRule::getColor(const std::string& _key, uint32_t& _value) const {
+bool DrawRule::getColor(const char* _key, uint32_t& _value) const {
     auto& param = findParameter(_key);
     if (!param) { return false; }
     _value = parseColor(param.value);
     return true;
 }
 
-bool DrawRule::getLineCap(const std::string& _key, CapTypes& _value) const {
+bool DrawRule::getLineCap(const char* _key, CapTypes& _value) const {
     auto& param = findParameter(_key);
     if (!param) { return false; }
     _value = CapTypeFromString(param.value);
     return true;
 }
-bool DrawRule::getLineJoin(const std::string& _key, JoinTypes& _value) const {
+bool DrawRule::getLineJoin(const char* _key, JoinTypes& _value) const {
     auto& param = findParameter(_key);
     if (!param) { return false; }
     _value = JoinTypeFromString(param.value);

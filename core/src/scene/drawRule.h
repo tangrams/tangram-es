@@ -32,13 +32,13 @@ struct DrawRule {
 
     DrawRule merge(DrawRule& _other) const;
     std::string toString() const;
-    inline const StyleParam& findParameter(const std::string& _key) const;
+    inline const StyleParam& findParameter(const char* _key) const;
 
-    bool getValue(const std::string& _key, float& value) const;
-    bool getValue(const std::string& _key, int32_t& value) const;
-    bool getColor(const std::string& _key, uint32_t& value) const;
-    bool getLineCap(const std::string& _key, CapTypes& value) const;
-    bool getLineJoin(const std::string& _key, JoinTypes& value) const;
+    bool getValue(const char* _key, float& value) const;
+    bool getValue(const char* _key, int32_t& value) const;
+    bool getColor(const char* _key, uint32_t& value) const;
+    bool getLineCap(const char* _key, CapTypes& value) const;
+    bool getLineJoin(const char* _key, JoinTypes& value) const;
 
     bool operator<(const DrawRule& _rhs) const;
     int compare(const DrawRule& _rhs) const { return style.compare(_rhs.style); }
