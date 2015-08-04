@@ -32,7 +32,17 @@ struct DrawRule {
 
     DrawRule merge(DrawRule& _other) const;
     std::string toString() const;
-    inline const StyleParam& findParameter(const char* _key) const;
+
+    const StyleParam& findParameter(const char* _key) const;
+
+    bool findParameter(const char* _key, std::string& _str) const {
+        auto& param = findParameter(_key);
+        if (param) {
+            _str = param.value;
+            return false;
+        }
+        return false;
+    };
 
     bool getValue(const char* _key, float& value) const;
     bool getValue(const char* _key, int32_t& value) const;

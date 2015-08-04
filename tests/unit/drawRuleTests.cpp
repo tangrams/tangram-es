@@ -108,13 +108,13 @@ TEST_CASE("DrawRule locates and outputs a parameter that it contains", "[DrawRul
 
     std::string str;
 
-    REQUIRE(rule_a.findParameter("key_0", &str)); REQUIRE(str == "value_0a");
-    REQUIRE(rule_a.findParameter("key_1", &str)); REQUIRE(str == "value_1a");
-    REQUIRE(rule_a.findParameter("key_4", &str)); REQUIRE(str == "value_4a");
-    REQUIRE(rule_b.findParameter("key_1", &str)); REQUIRE(str == "value_1b");
-    REQUIRE(rule_b.findParameter("key_2", &str)); REQUIRE(str == "value_2b");
-    REQUIRE(rule_b.findParameter("key_3", &str)); REQUIRE(str == "value_3b");
-    REQUIRE(rule_b.findParameter("key_0", &str)); REQUIRE(str == "value_0b");
+    REQUIRE(rule_a.findParameter("key_0", str)); REQUIRE(str == "value_0a");
+    REQUIRE(rule_a.findParameter("key_1", str)); REQUIRE(str == "value_1a");
+    REQUIRE(rule_a.findParameter("key_4", str)); REQUIRE(str == "value_4a");
+    REQUIRE(rule_b.findParameter("key_1", str)); REQUIRE(str == "value_1b");
+    REQUIRE(rule_b.findParameter("key_2", str)); REQUIRE(str == "value_2b");
+    REQUIRE(rule_b.findParameter("key_3", str)); REQUIRE(str == "value_3b");
+    REQUIRE(rule_b.findParameter("key_0", str)); REQUIRE(str == "value_0b");
 
 }
 
@@ -126,8 +126,7 @@ TEST_CASE("DrawRule correctly reports that it doesn't contain a parameter", "[Dr
 
     std::string str;
 
-    REQUIRE(!rule_a.findParameter("key_2", &str)); REQUIRE(str == "");
-    REQUIRE(!rule_b.findParameter("key_4", &str)); REQUIRE(str == "");
-    REQUIRE(!rule_c.findParameter("key_0", &str)); REQUIRE(str == "");
-
+    REQUIRE(!rule_a.findParameter("key_2", str)); REQUIRE(str == "");
+    REQUIRE(!rule_b.findParameter("key_4", str)); REQUIRE(str == "");
+    REQUIRE(!rule_c.findParameter("key_0", str)); REQUIRE(str == "");
 }
