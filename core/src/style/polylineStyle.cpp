@@ -32,19 +32,20 @@ void PolylineStyle::constructShaderProgram() {
 }
 
 PolylineStyle::Parameters PolylineStyle::parseRule(const DrawRule& _rule) const {
-
     Parameters p;
 
-    std::string str;
-    if (_rule.findParameter("order", &str)) { p.order = std::stof(str); }
-    if (_rule.findParameter("color", &str)) { p.color = parseColorProp(str); }
-    if (_rule.findParameter("width", &str)) { p.width = std::stof(str); }
-    if (_rule.findParameter("cap", &str)) { p.cap = CapTypeFromString(str); }
-    if (_rule.findParameter("join", &str)) { p.join = JoinTypeFromString(str); }
-    if (_rule.findParameter("outline:width", &str)) { p.outlineWidth = std::stof(str); p.outlineOn = true; }
-    if (_rule.findParameter("outline:color", &str)) { p.outlineColor = parseColorProp(str); p.outlineOn = true; }
-    if (_rule.findParameter("outline:cap", &str)) { p.outlineCap = CapTypeFromString(str); p.outlineOn = true; }
-    if (_rule.findParameter("outline:join", &str)) { p.outlineJoin = JoinTypeFromString(str); p.outlineOn = true; }
+    _rule.getValue("order", p.order);
+    _rule.getColor("color", p.color);
+    _rule.getValue("width", p.width);
+    _rule.getLineCap("cap", p.cap);
+    _rule.getLineJoin("join", p.join);
+
+    if (_rule.getColor("outline:color", p.outlineColor) |
+        _rule.getValue("outline:width", p.outlineWidth) |
+        _rule.getLineCap("outline:cap", p.outlineCap) |
+        _rule.getLineJoin("outline:join", p.outlineJoin)) {
+        p.outlineOn = true;
+    }
 
     return p;
 }

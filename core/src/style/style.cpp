@@ -6,8 +6,6 @@
 #include "tile/tile.h"
 #include "gl/vboMesh.h"
 #include "view/view.h"
-#include "csscolorparser.hpp"
-#include "geom.h" // for CLAMP
 
 namespace Tangram {
 
@@ -15,25 +13,6 @@ Style::Style(std::string _name, GLenum _drawMode) : m_name(_name), m_drawMode(_d
 }
 
 Style::~Style() {}
-
-uint32_t Style::parseColorProp(const std::string& _colorPropStr) {
-    uint32_t color = 0;
-
-    if (isdigit(_colorPropStr.front())) {
-        // try to parse as comma-separated rgba components
-        float r, g, b, a = 1.;
-        if (sscanf(_colorPropStr.c_str(), "%f,%f,%f,%f", &r, &g, &b, &a) >= 3) {
-            color = (CLAMP(static_cast<uint32_t>(a * 255.), 0, 255)) << 24
-                  | (CLAMP(static_cast<uint32_t>(r * 255.), 0, 255)) << 16
-                  | (CLAMP(static_cast<uint32_t>(g * 255.), 0, 255)) << 8
-                  | (CLAMP(static_cast<uint32_t>(b * 255.), 0, 255));
-        }
-    } else {
-        // parse as css color or #hex-num
-        color = CSSColorParser::parse(_colorPropStr).getInt();
-    }
-    return color;
-}
 
 void Style::build(const std::vector<std::unique_ptr<Light>>& _lights) {
 
