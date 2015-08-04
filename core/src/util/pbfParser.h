@@ -11,12 +11,20 @@ namespace Tangram {
 class Tile;
 
 namespace PbfParser {
+
+    struct ParserContext {
+        std::vector<std::string> keys;
+        std::vector<float> numericValues;
+        std::vector<std::string> stringValues;
+        std::vector<protobuf::message> featureMsgs;
+        int tileExtent = 0;
+    };
     
-    void extractGeometry(protobuf::message& _geomIn, int _tileExtent, std::vector<Line>& _out);
+    void extractGeometry(ParserContext& ctx, protobuf::message& _geomIn, std::vector<Line>& _out);
     
-    void extractFeature(protobuf::message& _featureIn, Feature& _out, std::vector<std::string>& _keys, std::vector<float>& _numericValues, std::vector<std::string>& _stringValues, int _tileExtent);
+    void extractFeature(ParserContext& ctx, protobuf::message& _featureIn, Feature& _out);
     
-    void extractLayer(protobuf::message& _in, Layer& _out);
+    void extractLayer(ParserContext& ctx, protobuf::message& _in, Layer& _out);
     
     enum pbfGeomCmd {
         moveTo = 1,
