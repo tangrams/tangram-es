@@ -3,10 +3,34 @@
 #include "geom.h" // for CLAMP
 
 #include <algorithm>
+#include <map>
 
 namespace Tangram {
 
-const StyleParam StyleParam::NONE;
+const StyleParam NONE;
+
+const std::map<std::string, StyleParamKey> s_StyleParamMap = {
+    {"order", StyleParamKey::order},
+    {"color", StyleParamKey::color},
+    {"width", StyleParamKey::width},
+    {"cap", StyleParamKey::cap},
+    {"join", StyleParamKey::join},
+    {"outline:color", StyleParamKey::outline_color},
+    {"outline:width", StyleParamKey::outline_width},
+    {"outline:cap", StyleParamKey::outline_cap},
+    {"outline:join", StyleParamKey::outline_join},
+};
+
+StyleParam::StyleParam(const std::string& _key, const std::string& _value) {
+    auto it = s_StyleParamMap.find(_key);
+    if (it == s_StyleParamMap.end()) {
+        value = "";
+        return;
+    }
+
+    key = it->second;
+    value = _value;
+}
 
 DrawRule::DrawRule(const std::string& _style, const std::vector<StyleParam>& _parameters) :
     style(_style),
@@ -24,7 +48,7 @@ DrawRule DrawRule::merge(DrawRule& _other) const {
     auto mIt = parameters.begin(), mEnd = parameters.end();
     auto oIt = _other.parameters.begin(), oEnd = _other.parameters.end();
     while (mIt != mEnd && oIt != oEnd) {
-        auto c = mIt->key.compare(oIt->key);
+        auto c = mIt->compare(*oIt);
         if (c < 0) {
             merged.push_back(*mIt++);
         } else if (c > 0) {
@@ -45,7 +69,7 @@ std::string DrawRule::toString() const {
     std::string str = "{\n";
 
     for (auto& p : parameters) {
-        str += "    { " + p.key + ", " + p.value + " }\n";
+        str += "    { " + std::to_string(static_cast<int>(p.key)) + ", " + p.value + " }\n";
     }
 
     str += "}\n";
@@ -53,7 +77,7 @@ std::string DrawRule::toString() const {
     return str;
 }
 
-const StyleParam&  DrawRule::findParameter(const char* _key) const {
+const StyleParam&  DrawRule::findParameter(StyleParamKey _key) const {
 
     auto it = std::lower_bound(parameters.begin(), parameters.end(), _key,
                                [](auto& p, auto& k) { return p.key < k; });
@@ -61,37 +85,51 @@ const StyleParam&  DrawRule::findParameter(const char* _key) const {
     if (it != parameters.end() && it->key == _key) {
         return *it;
     }
-    return StyleParam::NONE;
+    return NONE;
 }
 
-bool DrawRule::getValue(const char* _key, float& _value) const {
+bool DrawRule::findParameter(const char* _key, std::string& _str) const {
+    auto it = s_StyleParamMap.find(_key);
+    if (it == s_StyleParamMap.end()) {
+        return false;
+    }
+
+    auto& param = findParameter(it->second);
+    if (param) {
+        _str = param.value;
+        return false;
+    }
+    return false;
+};
+
+bool DrawRule::getValue(StyleParamKey _key, float& _value) const {
     auto& param = findParameter(_key);
     if (!param) { return false; }
     _value = std::stof(param.value);
     return true;
 }
 
-bool DrawRule::getValue(const char* _key, int32_t& _value) const {
+bool DrawRule::getValue(StyleParamKey _key, int32_t& _value) const {
     auto& param = findParameter(_key);
     if (!param) { return false; }
     _value = std::stoi(param.value);
     return true;
 }
 
-bool DrawRule::getColor(const char* _key, uint32_t& _value) const {
+bool DrawRule::getColor(StyleParamKey _key, uint32_t& _value) const {
     auto& param = findParameter(_key);
     if (!param) { return false; }
     _value = parseColor(param.value);
     return true;
 }
 
-bool DrawRule::getLineCap(const char* _key, CapTypes& _value) const {
+bool DrawRule::getLineCap(StyleParamKey _key, CapTypes& _value) const {
     auto& param = findParameter(_key);
     if (!param) { return false; }
     _value = CapTypeFromString(param.value);
     return true;
 }
-bool DrawRule::getLineJoin(const char* _key, JoinTypes& _value) const {
+bool DrawRule::getLineJoin(StyleParamKey _key, JoinTypes& _value) const {
     auto& param = findParameter(_key);
     if (!param) { return false; }
     _value = JoinTypeFromString(param.value);

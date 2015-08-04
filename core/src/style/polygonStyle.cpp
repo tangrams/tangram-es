@@ -33,8 +33,8 @@ void PolygonStyle::constructShaderProgram() {
 
 PolygonStyle::Parameters PolygonStyle::parseRule(const DrawRule& _rule) const {
     Parameters p;
-    _rule.getColor("color", p.color);
-    _rule.getValue("order", p.order);
+    _rule.getColor(StyleParamKey::color, p.color);
+    _rule.getValue(StyleParamKey::order, p.order);
 
     return p;
 }

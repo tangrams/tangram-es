@@ -7,18 +7,23 @@
 
 namespace Tangram {
 
+enum class StyleParamKey : uint8_t {
+    order, color, width, cap, join, outline_color, outline_width, outline_cap, outline_join,
+};
+
 struct StyleParam {
     StyleParam() {}
-    StyleParam(std::string _key, std::string _value) : key(std::move(_key)), value(std::move(_value)){}
+    StyleParam(const std::string& _key, const std::string& _value);
 
-    std::string key;
+    StyleParamKey key;
     std::string value;
     bool operator<(const StyleParam& _rhs) const { return key < _rhs.key; }
-    int compare(const StyleParam& _rhs) const { return key.compare(_rhs.key); }
-    bool valid() const { return !key.empty(); }
+    int compare(const StyleParam& _rhs) const {
+        int d = static_cast<int>(key) - static_cast<int>(_rhs.key);
+        return d < 0 ? -1 : d > 0 ? 1 : 0;
+    }
+    bool valid() const { return !value.empty(); }
     operator bool() const { return valid(); }
-
-    static const StyleParam NONE;
 };
 
 struct DrawRule {
@@ -33,22 +38,15 @@ struct DrawRule {
     DrawRule merge(DrawRule& _other) const;
     std::string toString() const;
 
-    const StyleParam& findParameter(const char* _key) const;
+    const StyleParam& findParameter(StyleParamKey _key) const;
 
-    bool findParameter(const char* _key, std::string& _str) const {
-        auto& param = findParameter(_key);
-        if (param) {
-            _str = param.value;
-            return false;
-        }
-        return false;
-    };
+    bool findParameter(const char* _key, std::string& _str) const;
 
-    bool getValue(const char* _key, float& value) const;
-    bool getValue(const char* _key, int32_t& value) const;
-    bool getColor(const char* _key, uint32_t& value) const;
-    bool getLineCap(const char* _key, CapTypes& value) const;
-    bool getLineJoin(const char* _key, JoinTypes& value) const;
+    bool getValue(StyleParamKey _key, float& value) const;
+    bool getValue(StyleParamKey _key, int32_t& value) const;
+    bool getColor(StyleParamKey _key, uint32_t& value) const;
+    bool getLineCap(StyleParamKey _key, CapTypes& value) const;
+    bool getLineJoin(StyleParamKey _key, JoinTypes& value) const;
 
     bool operator<(const DrawRule& _rhs) const;
     int compare(const DrawRule& _rhs) const { return style.compare(_rhs.style); }
