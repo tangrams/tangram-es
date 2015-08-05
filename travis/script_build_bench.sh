@@ -5,6 +5,6 @@ set -o pipefail
 
 if [[ ${PLATFORM} == "osx" || ${PLATFORM} == "linux" ]]; then
     # Build unit tests
-    make -j benchmark
+    make -j4 benchmark
 fi
 
