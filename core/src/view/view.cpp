@@ -93,8 +93,13 @@ void View::setRoll(float _roll) {
 
 void View::setPitch(float _pitch) {
 
-    // Clamp pitch angle (until LoD tile coverage is implemented)
-    m_pitch = glm::clamp(_pitch, 0.f, (float)(M_PI*0.5));
+    // Orbit vertically around the ground plane at the screen center
+    glm::vec2 radial = glm::vec2(-sin(m_roll), cos(m_roll));
+    radial *= m_zoomAltitude * (sin(m_pitch) - sin(_pitch));
+    translate(radial.x, radial.y);
+
+    // Clamp pitch angle
+    m_pitch = glm::clamp(_pitch, 0.f, (float)HALF_PI);
     m_dirty = true;
 
 }
@@ -118,7 +123,7 @@ void View::roll(float _droll) {
 }
 
 void View::pitch(float _dpitch) {
-    m_tilted = true;
+
     setPitch(m_pitch + _dpitch);
 
 }
@@ -134,29 +139,12 @@ void View::undoFocusPosition(glm::vec2 _focus, glm::vec2 _prevFocus) {
 
 void View::update() {
 
-    float oldViewCenterX, oldViewCenterY, viewCenterX, viewCenterY;
-
-    oldViewCenterX = viewCenterX = m_vpWidth * 0.5;
-    oldViewCenterY = viewCenterY = m_vpHeight * 0.5;
-
     if (!m_dirty) {
         m_changed = false;
         return;
     }
 
-    // origin before tilt
-    if (m_tilted) {
-        screenToGroundPlane(oldViewCenterX, oldViewCenterY);
-    }
-
     updateMatrices();
-
-    // origin after tilt
-    if(m_tilted) {
-        screenToGroundPlane(viewCenterX, viewCenterY);
-        translate(oldViewCenterX - viewCenterX, oldViewCenterY - viewCenterY);
-        m_tilted = false;
-    }
 
     if (!Tangram::getDebugFlag(Tangram::DebugFlags::freeze_tiles)) {
 
@@ -231,7 +219,9 @@ void View::updateMatrices() {
     }
 
     // set camera z to produce desired viewable area
-    m_pos.z = m_height * 0.5 / tan(fovy * 0.5) - (m_pos.z * (1.0f - cos(m_pitch)));
+    m_zoomAltitude = m_height * 0.5 / tan(fovy * 0.5);
+
+    m_pos.z = m_zoomAltitude * cos(m_pitch);
 
     // set near clipping distance as a function of camera z
     // TODO: this is a simple heuristic that deserves more thought

@@ -147,6 +147,7 @@ protected:
     float m_pitch = 0.f;
 
     float m_zoom;
+    float m_zoomAltitude;
     float m_initZoom = 16.0;
 
     float m_width;
@@ -160,7 +161,6 @@ protected:
 
     bool m_dirty;
     bool m_changed;
-    bool m_tilted = false;
     bool m_focusUpdated = false; // Make sure only one gesture applies this update
 
 };
