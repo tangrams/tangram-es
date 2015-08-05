@@ -17,6 +17,8 @@ void InputHandler::update(float _dt) {
 
     bool renderRequested = false;
 
+    m_focusUpdate = false; // allow focus update by either rotate or scale gesture next update
+
     if (!m_gestureOccured) {
 
         if (glm::length(m_deltaTranslate) > m_minDeltaLength || std::abs(m_deltaZoom) > m_minDeltaZoomLength) {
@@ -116,7 +118,7 @@ void InputHandler::handlePinchGesture(float _posX, float _posY, float _scale, fl
 
         m_view->screenToGroundPlane(_posX, _posY);
 
-        m_view->undoFocusPosition(glm::vec2(_posX, _posY), mPrevFocus);
+        updateFocusPoint(glm::vec2(_posX, _posY), mPrevFocus);
         mPrevFocus = glm::vec2(_posX, _posY);
 
         static float invLog2 = 1 / log(2);
@@ -136,7 +138,7 @@ void InputHandler::handleRotateGesture(float _posX, float _posY, float _radians)
 
         m_view->screenToGroundPlane(_posX, _posY);
 
-        m_view->undoFocusPosition(glm::vec2(_posX, _posY), mPrevFocus);
+        updateFocusPoint(glm::vec2(_posX, _posY), mPrevFocus);
         mPrevFocus = glm::vec2(_posX, _posY);
 
         m_view->roll(_radians);
@@ -162,6 +164,15 @@ void InputHandler::handlePinchGestureEnd() {
 
 void InputHandler::handleRotateGestureEnd() {
     mPrevFocus = glm::vec2(0.0f, 0.0f);
+}
+
+void InputHandler::updateFocusPoint(glm::vec2 _focus, glm::vec2 _prevFocus) {
+    if ( !m_focusUpdate && _prevFocus.x != 0.0f && _prevFocus.y != 0.0f) {
+        m_focusUpdate = true;
+        m_view->translate( _prevFocus.x - _focus.x, _prevFocus.y - _focus.y);
+    } else {
+        m_focusUpdate = false;
+    }
 }
 
 void InputHandler::onEndGesture() {

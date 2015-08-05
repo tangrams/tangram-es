@@ -124,17 +124,10 @@ void View::roll(float _droll) {
 
 void View::pitch(float _dpitch) {
 
+    if( (m_pitch + _dpitch) < 0.0f) return;
+
     setPitch(m_pitch + _dpitch);
 
-}
-
-void View::undoFocusPosition(glm::vec2 _focus, glm::vec2 _prevFocus) {
-    if ( !m_focusUpdated && _prevFocus.x != 0.0f && _prevFocus.y != 0.0f) {
-        m_focusUpdated = true;
-        translate( _prevFocus.x - _focus.x, _prevFocus.y - _focus.y);
-    } else {
-        m_focusUpdated = false;
-    }
 }
 
 void View::update() {
@@ -155,8 +148,6 @@ void View::update() {
     m_changed = true;
 
     m_dirty = false;
-
-    m_focusUpdated = false; // allow focus update next view update
 
 }
 

@@ -43,6 +43,7 @@ private:
 
     bool m_gestureOccured = false;
     bool m_momentumHandled = false;
+    bool m_focusUpdate = false; // Make sure either scale or rotate gesture applies this update
 
     // fling deltas on zoom and translation
     glm::vec2 m_deltaTranslate;
@@ -65,6 +66,8 @@ private:
     // the minimum zoom value at which momentum will start
     const float m_minZoomStart = 0.05f;
 
+    // Updates the focus point (between 2 fingers) on a scale/rotate gesture
+    void updateFocusPoint(glm::vec2 _focus, glm::vec2 _prevFocus);
 };
 
 }
