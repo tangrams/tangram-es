@@ -50,9 +50,8 @@ std::string DrawRule::toString() const {
 
 bool DrawRule::findParameter(const std::string& _key, std::string* _out) const {
 
-    auto it = std::lower_bound(parameters.begin(), parameters.end(), _key, [](StyleParam p, std::string k) {
-        return p.key < k;
-    });
+    auto it = std::lower_bound(parameters.begin(), parameters.end(), _key,
+                               [](auto& p, auto& k) { return p.key < k; });
 
     if (it != parameters.end() && it->key == _key) {
         *_out = it->value;
