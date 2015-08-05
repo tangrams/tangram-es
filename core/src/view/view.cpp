@@ -93,13 +93,14 @@ void View::setRoll(float _roll) {
 
 void View::setPitch(float _pitch) {
 
+    _pitch = glm::clamp(_pitch, 0.f, (float)HALF_PI);
+
     // Orbit vertically around the ground plane at the screen center
     glm::vec2 radial = glm::vec2(-sin(m_roll), cos(m_roll));
     radial *= m_zoomAltitude * (sin(m_pitch) - sin(_pitch));
     translate(radial.x, radial.y);
 
-    // Clamp pitch angle
-    m_pitch = glm::clamp(_pitch, 0.f, (float)HALF_PI);
+    m_pitch = _pitch;
     m_dirty = true;
 
 }
@@ -123,8 +124,6 @@ void View::roll(float _droll) {
 }
 
 void View::pitch(float _dpitch) {
-
-    if( (m_pitch + _dpitch) < 0.0f) return;
 
     setPitch(m_pitch + _dpitch);
 
