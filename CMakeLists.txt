@@ -34,7 +34,7 @@ if(target_in_list EQUAL -1)
     return()
 endif()
 
-# setting up cache variable platform 
+# setting up cache variable platform
 set(PLATFORM ${varplatform} CACHE INTERNAL "platform" FORCE)
 
 if(UNIT_TESTS)
@@ -43,9 +43,20 @@ if(UNIT_TESTS)
   if(PLATFORM_TARGET STREQUAL "linux")
     include(${PROJECT_SOURCE_DIR}/toolchains/linux.tests.cmake)
   else()
-    include(${PROJECT_SOURCE_DIR}/toolchains/unitTests.cmake)
+    include(${PROJECT_SOURCE_DIR}/toolchains/darwin.tests.cmake)
   endif()
   return()
+endif()
+
+if(BENCHMARK)
+    message(STATUS "Build benchmarks for : ${PLATFORM_TARGET}")
+
+    if(PLATFORM_TARGET STREQUAL "linux")
+        include(${PROJECT_SOURCE_DIR}/toolchains/linux.benchmark.cmake)
+    else()
+        include(${PROJECT_SOURCE_DIR}/toolchains/darwin.benchmark.cmake)
+    endif()
+    return()
 endif()
 
 # cmake inclusions and definitions
