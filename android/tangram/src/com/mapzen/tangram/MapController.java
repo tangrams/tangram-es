@@ -348,7 +348,7 @@ public class MapController implements Renderer, OnTouchListener, OnScaleGestureL
         }
         else if(event.getAction() == 1) { // DoubleTap Up; handleDoubleTap zoom-in if not moved (scale happened)
             if(!mDoubleTapScale) {
-                handleDoubleTapGesture(event.getX(), event.getY());
+                handleDoubleTapGesture(mapView.getWidth() * 0.5f, mapView.getHeight() * 0.5f);
             }
             mDoubleTapScale = false;
         } else { // DoubleTap down event
@@ -427,7 +427,9 @@ public class MapController implements Renderer, OnTouchListener, OnScaleGestureL
           */
         if ( mDoubleTapScale || mScaleHandled || (!mShoveHandled && diff > PINCH_THRESHOLD * Math.min(displayMetrics.widthPixels, displayMetrics.heightPixels) )) {
             mScaleHandled = true;
-			handlePinchGesture(detector.getFocusX(), detector.getFocusY(), detector.getScaleFactor(), velocity);
+            float focusX = mDoubleTapScale ? mapView.getWidth() * 0.5f : detector.getFocusX();
+            float focusY = mDoubleTapScale ? mapView.getHeight() * 0.5f : detector.getFocusY();
+			handlePinchGesture(focusX, focusY, detector.getScaleFactor(), velocity);
             return true;
         }
         mScaleHandled = false;
