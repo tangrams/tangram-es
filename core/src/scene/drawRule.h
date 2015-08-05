@@ -14,6 +14,7 @@ enum class StyleParamKey : uint8_t {
 struct StyleParam {
     StyleParam() {}
     StyleParam(const std::string& _key, const std::string& _value);
+    StyleParam(StyleParamKey _key, std::string _value) : key(_key), value(std::move(_value)){}
 
     StyleParamKey key;
     std::string value;
@@ -40,8 +41,7 @@ struct DrawRule {
 
     const StyleParam& findParameter(StyleParamKey _key) const;
 
-    bool findParameter(const char* _key, std::string& _str) const;
-
+    bool getValue(StyleParamKey _key, std::string& _str) const;
     bool getValue(StyleParamKey _key, float& value) const;
     bool getValue(StyleParamKey _key, int32_t& value) const;
     bool getColor(StyleParamKey _key, uint32_t& value) const;

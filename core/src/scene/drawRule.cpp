@@ -88,18 +88,11 @@ const StyleParam&  DrawRule::findParameter(StyleParamKey _key) const {
     return NONE;
 }
 
-bool DrawRule::findParameter(const char* _key, std::string& _str) const {
-    auto it = s_StyleParamMap.find(_key);
-    if (it == s_StyleParamMap.end()) {
-        return false;
-    }
-
-    auto& param = findParameter(it->second);
-    if (param) {
-        _str = param.value;
-        return false;
-    }
-    return false;
+bool DrawRule::getValue(StyleParamKey _key, std::string& _value) const {
+    auto& param = findParameter(_key);
+    if (!param) { return false; }
+    _value = param.value;
+    return true;
 };
 
 bool DrawRule::getValue(StyleParamKey _key, float& _value) const {
