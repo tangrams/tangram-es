@@ -52,6 +52,8 @@ public:
      */
     void updateTileSet();
 
+    void clearTileSet();
+
     /* For TileWorker: Pass TileTask with processed data back
      * to TileManager.
      */

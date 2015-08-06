@@ -10,10 +10,8 @@
 namespace Tangram {
 
 class TileCache {
-    // using Entry = std::pair<TileID, std::shared_ptr<Tile>>;
     using CacheList = std::list<std::shared_ptr<Tile>>;
     using CacheMap = std::unordered_map<TileID, typename CacheList::iterator>;
-    //using CacheMap = std::unordered_map<TileID, std::shared_ptr<Tile>>;
 
 public:
     void put(std::shared_ptr<Tile> _tile) {
@@ -49,6 +47,11 @@ public:
             sum += tile->getMemoryUsage();
         }
         return sum;
+    }
+
+    void clear() {
+        m_cacheMap.clear();
+        m_cacheList.clear();
     }
 
 private:

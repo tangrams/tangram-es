@@ -124,6 +124,17 @@ void TileManager::enqueueLoadTask(const TileID& tileID, const glm::dvec2& viewCe
     }
 }
 
+void TileManager::clearTileSet() {
+    for (auto& entry : m_tileSet) {
+        setTileState(*entry.second, TileState::canceled);
+    }
+
+    m_tileSet.clear();
+    m_tileCache.clear();
+
+    m_loadPending = 0;
+}
+
 void TileManager::updateTileSet() {
 
     m_tileSetChanged = false;
