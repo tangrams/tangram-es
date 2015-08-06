@@ -156,13 +156,13 @@ void TextStyle::onBeginDrawFrame(const View& _view, const Scene& _scene) {
         initUniformSampler = false;
     }
 
-    if (m_dirtyViewport) {
+    if (true || m_dirtyViewport) {
         m_shaderProgram->setUniformf("u_resolution", _view.getWidth(), _view.getHeight());
         m_shaderProgram->setUniformMatrix4f("u_proj", glm::value_ptr(_view.getOrthoViewportMatrix()));
         m_dirtyViewport = false;
     }
 
-    if (m_dirtyColor) {
+    if (true || m_dirtyColor) {
         float r = (m_color >> 16 & 0xff) / 255.0;
         float g = (m_color >> 8  & 0xff) / 255.0;
         float b = (m_color       & 0xff) / 255.0;

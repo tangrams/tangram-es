@@ -107,7 +107,7 @@ void SpriteStyle::onBeginDrawFrame(const View& _view, const Scene& _scene) {
         initUniformSampler = false;
     }
 
-    if (m_dirtyViewport) {
+    if (true || m_dirtyViewport) {
         m_shaderProgram->setUniformMatrix4f("u_proj", glm::value_ptr(_view.getOrthoViewportMatrix()));
         m_dirtyViewport = false;
     }
