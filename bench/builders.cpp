@@ -33,6 +33,7 @@ static void BM_Tangram_BuildButtMiterLine(benchmark::State& state) {
             [&](const glm::vec3& coord, const glm::vec2& normal, const glm::vec2& uv) {
                 vertices.push_back({ coord, uv, normal, 0.5f, 0xffffff, 0.f });
             },
+            [&](size_t numVertices){ vertices.reserve(numVertices); },
             CapTypes::butt,
             JoinTypes::miter
         };
@@ -49,6 +50,7 @@ static void BM_Tangram_BuildRoundRoundLine(benchmark::State& state) {
             [&](const glm::vec3& coord, const glm::vec2& normal, const glm::vec2& uv) {
                 vertices.push_back({ coord, uv, normal, 0.5f, 0xffffff, 0.f });
             },
+            [&](size_t numVertices){ vertices.reserve(numVertices); },
             CapTypes::round,
             JoinTypes::round
         };

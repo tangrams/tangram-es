@@ -262,21 +262,38 @@ bool isOnTileEdge(const glm::vec3& _pa, const glm::vec3& _pb) {
 }
 
 void Builders::buildPolyLine(const Line& _line, PolyLineBuilder& _ctx) {
-    
+
     int lineSize = (int)_line.size();
-    
-    if (lineSize < 2) {
-        return;
-    }
-    
-    // TODO: pre-allocate context vectors; try estimating worst-case space usage
-    
+    if (lineSize < 2) { return; }
+
     glm::vec3 coordPrev(_line[0]), coordCurr(_line[0]), coordNext(_line[1]);
     glm::vec2 normPrev, normNext, miterVec;
 
     int cornersOnCap = (int)_ctx.cap;
     int trianglesOnJoin = (int)_ctx.join;
-    
+
+    // Calculate number of used vertices to reserve enough space
+    size_t nIndices = _ctx.indices.size();
+    nIndices += (lineSize - 1) * 6;
+    size_t nVertices = _ctx.numVertices;
+    nVertices += lineSize * 2;
+
+    if (trianglesOnJoin > 0) {
+        int nJoins = (lineSize - 2);
+        nVertices += nJoins * (trianglesOnJoin + 4);
+        nIndices += nJoins * (trianglesOnJoin * 3);
+    }
+    if (cornersOnCap == 2) {
+        nVertices += 2 * 2;
+        nIndices += 2 * 3;
+    }
+    else if (cornersOnCap > 2) {
+        nVertices += 2 * (cornersOnCap + 2);
+        nIndices += 2 * cornersOnCap * 3;
+    }
+    _ctx.indices.reserve(nIndices);
+    _ctx.sizeHint(nVertices);
+
     // Process first point in line with an end cap
     normNext = glm::normalize(perp2d(coordCurr, coordNext));
     addCap(coordCurr, normNext, cornersOnCap, true, _ctx);
@@ -344,7 +361,15 @@ void Builders::buildPolyLine(const Line& _line, PolyLineBuilder& _ctx) {
     addPolyLineVertex(coordNext, -normNext, {0.f, 1.f}, _ctx); // left corner
     indexPairs(1, _ctx.numVertices, _ctx.indices);
     addCap(coordNext, normNext, cornersOnCap , false, _ctx);
-    
+
+#if 1
+    if (nIndices != _ctx.indices.size() || nVertices != _ctx.numVertices) {
+        logMsg("expected indices = %d => %d (%d / %d / %d)\n", nIndices, _ctx.indices.size(), lineSize,
+               cornersOnCap, trianglesOnJoin);
+        logMsg("expected vertices = %d => %d (%d / %d / %d)\n", nVertices, _ctx.numVertices, lineSize,
+               cornersOnCap, trianglesOnJoin);
+    }
+#endif
 }
 
 void Builders::buildOutline(const Line& _line, PolyLineBuilder& _ctx) {

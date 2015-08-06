@@ -67,6 +67,7 @@ void PolylineStyle::buildLine(const Line& _line, const DrawRule& _rule, const Pr
         [&](const glm::vec3& coord, const glm::vec2& normal, const glm::vec2& uv) {
             vertices.push_back({ coord, uv, normal, halfWidth, abgr, layer });
         },
+        [&](size_t sizeHint){ vertices.reserve(sizeHint); },
         params.cap,
         params.join
     };
