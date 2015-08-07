@@ -232,9 +232,9 @@ public class ShoveGestureDetector extends TwoFingerGestureDetector {
 
         // Do angle check post drag check!!
     	double angle = Math.abs(Math.atan2(mCurrFingerDiffY, mCurrFingerDiffX));
-    	//about 20 degrees, left or right
-        boolean badAngle = !(( 0.0f < angle && angle < 0.35f)
-                || 2.79f < angle && angle < Math.PI);
+    	//about 35 degrees, left or right
+        boolean badAngle = !(( 0.0f < angle && angle < 0.611f)
+                || 2.53f < angle && angle < Math.PI);
         if(badAngle)
             return true;
 

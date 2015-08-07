@@ -147,7 +147,7 @@ void InputHandler::handleShoveGesture(float _distance) {
     if (!clearMomentums()) {
         m_gestures.set(GestureFlags::shove);
 
-        m_view->pitch(_distance);
+        m_view->pitch(-_distance*2.0f);
 
         onEndGesture();
     }

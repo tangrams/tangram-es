@@ -528,7 +528,7 @@ public class MapController implements Renderer, OnTouchListener, OnScaleGestureL
 
         double diffX = Math.abs(currentSpanX - prevSpanX);
         mLastDoubleGestureTime = detector.getEventTime();
-        handleShoveGesture(-detector.getShovePixelsDelta() / displayMetrics.heightPixels);
+        handleShoveGesture(detector.getShovePixelsDelta() / displayMetrics.heightPixels);
         return true;
     }
 
