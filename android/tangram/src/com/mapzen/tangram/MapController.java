@@ -273,6 +273,7 @@ public class MapController implements Renderer, OnTouchListener, OnScaleGestureL
     private static final float PINCH_THRESHOLD = 0.015f; //1.5% of minDim
     private static final float ROTATION_THRESHOLD = 0.30f;
     private static final float DOUBLETAP_MOVE_THRESHOLD = 5.0f;
+    private static final float SCROLL_TIME_THRESHOLD = 100.0f; // Ignore small residual scrolls/pans post a double finger gesture
 
     private float doubleTapDownY;
 
@@ -284,6 +285,8 @@ public class MapController implements Renderer, OnTouchListener, OnScaleGestureL
     private boolean mRotationHandled = false;
     private boolean mShoveHandled = false;
     private boolean mDoubleTapScale = false;
+
+    private float mLastDoubleGestureTime = -SCROLL_TIME_THRESHOLD;
 
     private View.OnGenericMotionListener longPressListener;
     private DisplayMetrics displayMetrics = new DisplayMetrics();
@@ -371,6 +374,15 @@ public class MapController implements Renderer, OnTouchListener, OnScaleGestureL
     }
 
     public boolean onScroll(MotionEvent e1, MotionEvent e2, float distanceX, float distanceY) {
+
+        // Ignore onScroll for a small time period after a double finger gesture has occured
+        // Depending on how fingers are picked up after a double finger gesture, there could be a residual "single"
+        // finger pan which could also result in a fling. This check will ignore that.
+        float time = e2.getEventTime();
+        if( ( (time - mLastDoubleGestureTime) < SCROLL_TIME_THRESHOLD) && e2.getPointerCount() == 1) {
+            return false;
+        }
+
         // Only pan for scrolling events with just one pointer; otherwise vertical scrolling will
         // cause a simultaneous shove gesture
         if (e1.getPointerCount() == 1 && e2.getPointerCount() == 1) {
@@ -430,6 +442,7 @@ public class MapController implements Renderer, OnTouchListener, OnScaleGestureL
             mScaleHandled = true;
             float focusX = mDoubleTapScale ? mapView.getWidth() * 0.5f : detector.getFocusX();
             float focusY = mDoubleTapScale ? mapView.getHeight() * 0.5f : detector.getFocusY();
+            mLastDoubleGestureTime = detector.getEventTime();
 			handlePinchGesture(focusX, focusY, detector.getScaleFactor(), velocity);
             return true;
         }
@@ -470,6 +483,7 @@ public class MapController implements Renderer, OnTouchListener, OnScaleGestureL
             }
             float x = rotateGestureDetector.getFocusX();
             float y = rotateGestureDetector.getFocusY();
+            mLastDoubleGestureTime = detector.getEventTime();
             handleRotateGesture(x, y, -(rotAngle));
             mRotationHandled = true;
             return true;
@@ -502,7 +516,7 @@ public class MapController implements Renderer, OnTouchListener, OnScaleGestureL
         float prevSpanX = detector.getPreviousSpanX();
 
         double diffX = Math.abs(currentSpanX - prevSpanX);
-
+        mLastDoubleGestureTime = detector.getEventTime();
         handleShoveGesture(-detector.getShovePixelsDelta() / displayMetrics.heightPixels);
         return true;
     }
