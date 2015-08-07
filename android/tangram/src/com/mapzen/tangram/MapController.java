@@ -273,7 +273,7 @@ public class MapController implements Renderer, OnTouchListener, OnScaleGestureL
     private static final float PINCH_THRESHOLD = 0.015f; //1.5% of minDim
     private static final float ROTATION_THRESHOLD = 0.30f;
     private static final float DOUBLETAP_MOVE_THRESHOLD = 5.0f;
-    private static final float SCROLL_TIME_THRESHOLD = 100.0f; // Ignore small residual scrolls/pans post a double finger gesture
+    private static final long SCROLL_TIME_THRESHOLD = 100; // Ignore small residual scrolls/pans post a double finger gesture
 
     private float doubleTapDownY;
 
@@ -286,7 +286,7 @@ public class MapController implements Renderer, OnTouchListener, OnScaleGestureL
     private boolean mShoveHandled = false;
     private boolean mDoubleTapScale = false;
 
-    private float mLastDoubleGestureTime = -SCROLL_TIME_THRESHOLD;
+    private long mLastDoubleGestureTime = -SCROLL_TIME_THRESHOLD;
 
     private View.OnGenericMotionListener longPressListener;
     private DisplayMetrics displayMetrics = new DisplayMetrics();
@@ -378,7 +378,7 @@ public class MapController implements Renderer, OnTouchListener, OnScaleGestureL
         // Ignore onScroll for a small time period after a double finger gesture has occured
         // Depending on how fingers are picked up after a double finger gesture, there could be a residual "single"
         // finger pan which could also result in a fling. This check will ignore that.
-        float time = e2.getEventTime();
+        long time = e2.getEventTime();
         if( ( (time - mLastDoubleGestureTime) < SCROLL_TIME_THRESHOLD) && e2.getPointerCount() == 1) {
             return false;
         }
