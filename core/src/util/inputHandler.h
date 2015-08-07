@@ -54,7 +54,7 @@ private:
     // the minimum translation at which a momentum should start
     const float m_minDeltaTranslate = 8.f;
     // the minimum translation at which momentum should stop
-    const float m_minDeltaLength = 0.1f;
+    const float m_minDeltaLength = 1.f;
     // the minimum zoom at which momentum should stop
     const float m_minDeltaZoomLength = 1e-4f;
     // the minimum zoom value at which momentum will start
