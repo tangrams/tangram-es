@@ -33,12 +33,8 @@ public class MainActivity extends Activity {
         mapController.setTapGestureListener(new View.OnGenericMotionListener() {
             @Override
             public boolean onGenericMotion(View v, MotionEvent event) {
-                double[] mapPos = mapController.getMapPosition();
                 double[] tapCoord = mapController.coordinatesAtScreenPosition(event.getX(), event.getY());
-                double[] viewCenter = mapController.coordinatesAtScreenPosition(mapView.getWidth() * 0.5, mapView.getHeight() * 0.5);
-
-                mapController.setMapPosition( mapPos[0] + (tapCoord[0] - viewCenter[0]), mapPos[1] + (tapCoord[1] - viewCenter[1]));
-
+                mapController.setMapPosition(tapCoord[0], tapCoord[1]);
                 return true;
             }
         });
