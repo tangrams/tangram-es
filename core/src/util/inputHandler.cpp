@@ -84,11 +84,6 @@ void InputHandler::handleDoubleTapGesture(float _posX, float _posY) {
 
 void InputHandler::handlePanGesture(float _startX, float _startY, float _endX, float _endY) {
 
-    // The platform can send the same values for the last registered pan
-    if (std::abs(_startX - _endX) < FLT_EPSILON && std::abs(_startY - _endY) < FLT_EPSILON) {
-        return;
-    }
-
     if (!clearMomentums()) {
         m_gestures.set(GestureFlags::pan);
 

@@ -12,9 +12,11 @@ void init_main_window();
 
 const double double_tap_time = 0.5; // seconds
 const double scroll_multiplier = 0.05; // scaling for zoom
+const double single_tap_time = 0.25; //seconds (to avoid a long press being considered as a tap)
 
 bool was_panning = false;
 double last_mouse_up = -double_tap_time; // First click should never trigger a double tap
+double last_mouse_down = 0.0f;
 double last_x_down = 0.0;
 double last_y_down = 0.0;
 
@@ -34,14 +36,16 @@ void mouse_button_callback(GLFWwindow* window, int button, int action, int mods)
     double time = glfwGetTime();
 
     if (action == GLFW_PRESS) {
+        Tangram::handlePanGesture(0.0f, 0.0f, 0.0f, 0.0f);
         last_x_down = x;
         last_y_down = y;
+        last_mouse_down = glfwGetTime();
         return;
     }
 
     if (time - last_mouse_up < double_tap_time) {
         Tangram::handleDoubleTapGesture(x, y);
-    } else {
+    } else if ( (time - last_mouse_down) < single_tap_time) {
         Tangram::handleTapGesture(x, y);
     }
 

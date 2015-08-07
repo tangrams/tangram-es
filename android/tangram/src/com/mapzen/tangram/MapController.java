@@ -366,6 +366,7 @@ public class MapController implements Renderer, OnTouchListener, OnScaleGestureL
     // ========================================
 
     public boolean onDown(MotionEvent event) {
+        handlePanGesture(0.0f, 0.0f, 0.0f, 0.0f);
         return true;
     }
 
