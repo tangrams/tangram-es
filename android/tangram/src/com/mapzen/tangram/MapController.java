@@ -255,9 +255,7 @@ public class MapController implements Renderer, OnTouchListener, OnScaleGestureL
     private synchronized native void handleDoubleTapGesture(float posX, float posY);
     private synchronized native void handlePanGesture(float startX, float startY, float endX, float endY);
     private synchronized native void handlePinchGesture(float posX, float posY, float scale, float velocity);
-    private synchronized native void handlePinchGestureEnd();
     private synchronized native void handleRotateGesture(float posX, float posY, float rotation);
-    private synchronized native void handleRotateGestureEnd();
     private synchronized native void handleShoveGesture(float distance);
     private synchronized native void onUrlSuccess(byte[] rawDataBytes, long callbackPtr);
     private synchronized native void onUrlFailure(long callbackPtr);
@@ -394,18 +392,17 @@ public class MapController implements Renderer, OnTouchListener, OnScaleGestureL
             return false;
         }
 
-        // Only pan for scrolling events with just one pointer; otherwise vertical scrolling will
-        // cause a simultaneous shove gesture
-        if (e1.getPointerCount() == 1 && e2.getPointerCount() == 1) {
-            // We flip the signs of distanceX and distanceY because onScroll provides the distances
-            // by which the view being scrolled should move, while handlePanGesture expects the
-            // distances by which the touch point has moved on the screen (these are opposite)
-            float x = e2.getX();
-            float y = e2.getY();
-            handlePanGesture(x + distanceX, y + distanceY, x, y);
-        } else {
-            return false;
+        if (mShoveHandled) { return false; }
+
+        float x = 0, y = 0;
+        int n = e2.getPointerCount();
+        for (int i = 0; i < n; i++) {
+          x += e2.getX(i) / n;
+          y += e2.getY(i) / n;
         }
+
+        handlePanGesture(x + distanceX, y + distanceY, x, y);
+
         return true;
     }
 
@@ -454,7 +451,7 @@ public class MapController implements Renderer, OnTouchListener, OnScaleGestureL
             float focusX = mDoubleTapScale ? mapView.getWidth() * 0.5f : detector.getFocusX();
             float focusY = mDoubleTapScale ? mapView.getHeight() * 0.5f : detector.getFocusY();
             mLastDoubleGestureTime = detector.getEventTime();
-			handlePinchGesture(focusX, focusY, detector.getScaleFactor(), velocity);
+            handlePinchGesture(focusX, focusY, detector.getScaleFactor(), velocity);
             return true;
         }
         mScaleHandled = false;
@@ -462,7 +459,6 @@ public class MapController implements Renderer, OnTouchListener, OnScaleGestureL
     }
 
     public void onScaleEnd(ScaleGestureDetector detector) {
-        handlePinchGestureEnd();
         mScaleHandled = false;
     }
 
@@ -504,7 +500,6 @@ public class MapController implements Renderer, OnTouchListener, OnScaleGestureL
     }
 
     public void onRotateEnd(RotateGestureDetector detector) {
-        handleRotateGestureEnd();
         mRotationHandled = false;
     }
 

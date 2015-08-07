@@ -1,23 +1,17 @@
 #include "inputHandler.h"
 
-#include <cmath>
 #include "glm/glm.hpp"
+#include "glm/gtx/rotate_vector.hpp"
 #include "platform.h"
+#include <cmath>
 
 namespace Tangram {
 
-InputHandler::InputHandler(std::shared_ptr<View> _view) : m_view(_view) {
-
-    m_deltaZoom = 0.f;
-    m_deltaTranslate = glm::vec2(0.f);
-
-}
+InputHandler::InputHandler(std::shared_ptr<View> _view) : m_view(_view) {}
 
 void InputHandler::update(float _dt) {
 
     bool renderRequested = false;
-
-    m_focusUpdate = false; // allow focus update by either rotate or scale gesture next update
 
     if (!m_gestureOccured) {
 
@@ -111,16 +105,13 @@ void InputHandler::handlePinchGesture(float _posX, float _posY, float _scale, fl
     if (!clearMomentums()) {
         m_gestures.set(GestureFlags::pinch);
 
-        m_view->screenToGroundPlane(_posX, _posY);
-
-        updateFocusPoint(glm::vec2(_posX, _posY), mPrevFocus);
-        mPrevFocus = glm::vec2(_posX, _posY);
-
         static float invLog2 = 1 / log(2);
+        m_view->zoom(log(_scale) * invLog2);
+
+        m_view->screenToGroundPlane(_posX, _posY);
+        m_view->translate((_scale - 1) * _posX, (_scale - 1) * _posY);
 
         setDeltas(m_minZoomStart * _velocity, glm::vec2(0.f));
-
-        m_view->zoom(log(_scale) * invLog2);
 
         onEndGesture();
     }
@@ -132,10 +123,10 @@ void InputHandler::handleRotateGesture(float _posX, float _posY, float _radians)
         m_gestures.set(GestureFlags::rotate);
 
         m_view->screenToGroundPlane(_posX, _posY);
+        glm::dvec2 radial = { _posX, _posY };
+        glm::dvec2 displacement = radial - glm::rotate(radial, (double)_radians);
 
-        updateFocusPoint(glm::vec2(_posX, _posY), mPrevFocus);
-        mPrevFocus = glm::vec2(_posX, _posY);
-
+        m_view->translate(displacement.x, displacement.y);
         m_view->roll(_radians);
 
         onEndGesture();
@@ -150,23 +141,6 @@ void InputHandler::handleShoveGesture(float _distance) {
         m_view->pitch(-_distance*2.0f);
 
         onEndGesture();
-    }
-}
-
-void InputHandler::handlePinchGestureEnd() {
-    mPrevFocus = glm::vec2(0.0f, 0.0f);
-}
-
-void InputHandler::handleRotateGestureEnd() {
-    mPrevFocus = glm::vec2(0.0f, 0.0f);
-}
-
-void InputHandler::updateFocusPoint(glm::vec2 _focus, glm::vec2 _prevFocus) {
-    if ( !m_focusUpdate && _prevFocus.x != 0.0f && _prevFocus.y != 0.0f) {
-        m_focusUpdate = true;
-        m_view->translate( _prevFocus.x - _focus.x, _prevFocus.y - _focus.y);
-    } else {
-        m_focusUpdate = false;
     }
 }
 

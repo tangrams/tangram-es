@@ -72,12 +72,6 @@ void handleRotateGesture(float _posX, float _posY, float _rotation);
 // Respond to a two-finger shove with the given distance
 void handleShoveGesture(float _distance);
 
-// Respond to when a pinch gesture finishes
-void handlePinchGestureEnd();
-
-// Respond to when a rotate gesture finishes
-void handleRotateGestureEnd();
-
 // Set debug features on or off using a boolean (see debug.h)
 void setDebugFlag(DebugFlags _flag, bool _on);
 

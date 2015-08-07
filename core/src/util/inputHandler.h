@@ -18,9 +18,6 @@ public:
     void handleRotateGesture(float _posX, float _posY, float _radians);
     void handleShoveGesture(float _distance);
 
-    void handlePinchGestureEnd();
-    void handleRotateGestureEnd();
-
     void update(float _dt);
 
 private:
@@ -43,15 +40,12 @@ private:
 
     bool m_gestureOccured = false;
     bool m_momentumHandled = false;
-    bool m_focusUpdate = false; // Make sure either scale or rotate gesture applies this update
 
     // fling deltas on zoom and translation
     glm::vec2 m_deltaTranslate;
-    float m_deltaZoom;
+    float m_deltaZoom = 0.f;
 
     std::bitset<8> m_gestures = 0;
-
-    glm::vec2 mPrevFocus = glm::vec2(0.0f, 0.0f);
 
     /* Momentum config */
 
@@ -66,8 +60,6 @@ private:
     // the minimum zoom value at which momentum will start
     const float m_minZoomStart = 0.05f;
 
-    // Updates the focus point (between 2 fingers) on a scale/rotate gesture
-    void updateFocusPoint(glm::vec2 _focus, glm::vec2 _prevFocus);
 };
 
 }
