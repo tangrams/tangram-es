@@ -225,6 +225,14 @@ public class MapController implements Renderer, OnTouchListener, OnScaleGestureL
         longPressListener = listener;
     }
 
+    /**
+     * Set a listener for tap gesture
+     * @param listener Listen to call
+     */
+    public void setTapGestureListener(View.OnGenericMotionListener listener) {
+        tapGestureListener = listener;
+    }
+
     // Native methods
     // ==============
 
@@ -289,6 +297,7 @@ public class MapController implements Renderer, OnTouchListener, OnScaleGestureL
     private long mLastDoubleGestureTime = -SCROLL_TIME_THRESHOLD;
 
     private View.OnGenericMotionListener longPressListener;
+    private View.OnGenericMotionListener tapGestureListener;
     private DisplayMetrics displayMetrics = new DisplayMetrics();
 
     private OkHttpClient okClient;
@@ -361,8 +370,10 @@ public class MapController implements Renderer, OnTouchListener, OnScaleGestureL
     }
 
     public boolean onSingleTapConfirmed(MotionEvent event) {
-        handleTapGesture(event.getX(), event.getY());
-        return true;
+        if (tapGestureListener != null) {
+            return tapGestureListener.onGenericMotion(mapView, event);
+        }
+        return false;
     }
 
     // GestureDetector.OnGestureListener methods
