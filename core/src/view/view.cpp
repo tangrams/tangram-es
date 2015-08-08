@@ -25,7 +25,8 @@ View::View(int _width, int _height, ProjectionType _projType) {
     setPosition(0.0, 0.0);
 
     m_changed = false;
-    m_dirty = true;
+    m_dirtyMatrices = true;
+    m_dirtyTiles = true;
 
 }
 
@@ -41,7 +42,8 @@ void View::setMapProjection(ProjectionType _projType) {
             break;
     }
 
-    m_dirty = true;
+    m_dirtyMatrices = true;
+    m_dirtyTiles = true;
 
 }
 
@@ -52,7 +54,8 @@ const MapProjection& View::getMapProjection() const {
 void View::setPixelScale(float _pixelsPerPoint) {
 
     m_pixelScale = _pixelsPerPoint;
-    m_dirty = true;
+    m_dirtyMatrices = true;
+    m_dirtyTiles = true;
 
 }
 
@@ -61,7 +64,8 @@ void View::setSize(int _width, int _height) {
     m_vpWidth = _width;
     m_vpHeight = _height;
     m_aspect = (float)_width / (float)_height;
-    m_dirty = true;
+    m_dirtyMatrices = true;
+    m_dirtyTiles = true;
 
     // Screen space orthographic projection matrix, top left origin, y pointing down
     m_orthoViewport = glm::ortho(0.f, (float)m_vpWidth, (float)m_vpHeight, 0.f, -1.f, 1.f);
@@ -72,7 +76,7 @@ void View::setPosition(double _x, double _y) {
 
     m_pos.x = _x;
     m_pos.y = _y;
-    m_dirty = true;
+    m_dirtyTiles = true;
 
 }
 
@@ -80,14 +84,16 @@ void View::setZoom(float _z) {
 
     // ensure zoom value is allowed
     m_zoom = glm::clamp(_z, 0.0f, s_maxZoom);
-    m_dirty = true;
+    m_dirtyMatrices = true;
+    m_dirtyTiles = true;
 
 }
 
 void View::setRoll(float _roll) {
 
     m_roll = glm::mod(_roll, (float)TWO_PI);
-    m_dirty = true;
+    m_dirtyMatrices = true;
+    m_dirtyTiles = true;
 
 }
 
@@ -101,7 +107,8 @@ void View::setPitch(float _pitch) {
     translate(radial.x, radial.y);
 
     m_pitch = _pitch;
-    m_dirty = true;
+    m_dirtyMatrices = true;
+    m_dirtyTiles = true;
 
 }
 
@@ -131,22 +138,19 @@ void View::pitch(float _dpitch) {
 
 void View::update() {
 
-    if (!m_dirty) {
-        m_changed = false;
-        return;
-    }
-
-    updateMatrices();
-
-    if (!Tangram::getDebugFlag(Tangram::DebugFlags::freeze_tiles)) {
-
-        updateTiles();
+    if (m_dirtyMatrices) {
+        
+        updateMatrices(); // Resets dirty flag
+        m_changed = true;
 
     }
 
-    m_changed = true;
+    if (m_dirtyTiles && !Tangram::getDebugFlag(Tangram::DebugFlags::freeze_tiles)) {
 
-    m_dirty = false;
+        updateTiles(); // Resets dirty flag
+        m_changed = true;
+
+    }
 
 }
 
@@ -158,7 +162,9 @@ glm::dmat2 View::getBoundsRect() const {
 
 }
 
-float View::screenToGroundPlane(float& _screenX, float& _screenY) const {
+float View::screenToGroundPlane(float& _screenX, float& _screenY) {
+
+    if (m_dirtyMatrices) { updateMatrices(); } // Need the view matrices to be up-to-date
 
     // Cast a ray and find its intersection with the z = 0 plane,
     // following the technique described here: http://antongerdelan.net/opengl/raycasting.html
@@ -243,6 +249,8 @@ void View::updateMatrices() {
     // but since our view matrix is orthonormal transposing is equivalent to inverting, so the normal matrix is just the
     // original view matrix (cropped to the top-left 3 rows and columns, since we're applying it to 3d vectors)
     m_normalMatrix = glm::mat3(m_view);
+
+    m_dirtyMatrices = false;
 
 }
 
@@ -395,6 +403,8 @@ void View::updateTiles() {
     // of the view trapezoid. This is necessary to not cull any geometry with height in these tiles
     // (which should remain visible, even though the base of the tile is not).
     scanTriangle(a, b, e, 0, maxTileIndex, s);
+
+    m_dirtyTiles = false;
 
 }
 
