@@ -4,6 +4,9 @@ import android.app.Activity;
 import android.os.Bundle;
 import android.view.Window;
 
+import android.view.View;
+import android.view.MotionEvent;
+
 import com.mapzen.tangram.MapController;
 import com.mapzen.tangram.MapView;
 
@@ -26,6 +29,15 @@ public class MainActivity extends Activity {
         mapController = new MapController(this, mapView);
         mapController.setMapZoom(16);
         mapController.setMapPosition(-74.00976419448854, 40.70532700869127);
+
+        mapController.setTapGestureListener(new View.OnGenericMotionListener() {
+            @Override
+            public boolean onGenericMotion(View v, MotionEvent event) {
+                double[] tapCoord = mapController.coordinatesAtScreenPosition(event.getX(), event.getY());
+                mapController.setMapPosition(tapCoord[0], tapCoord[1]);
+                return true;
+            }
+        });
 
         try {
             File cacheDir = new File(getExternalCacheDir().getAbsolutePath() + "/tile_cache");

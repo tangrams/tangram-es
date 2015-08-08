@@ -2,6 +2,7 @@
 
 #include "view/view.h"
 #include <memory>
+#include <bitset>
 
 namespace Tangram {
 
@@ -23,7 +24,7 @@ private:
 
     void setDeltas(float _zoom, glm::vec2 _translate);
 
-    void onEndGesture();
+    void onGesture();
 
     std::shared_ptr<View> m_view;
 
@@ -31,7 +32,7 @@ private:
 
     // fling deltas on zoom and translation
     glm::vec2 m_deltaTranslate;
-    float m_deltaZoom;
+    float m_deltaZoom = 0.f;
 
     /* Momentum config */
 
@@ -40,7 +41,7 @@ private:
     // the minimum translation at which a momentum should start
     const float m_minDeltaTranslate = 8.f;
     // the minimum translation at which momentum should stop
-    const float m_minDeltaLength = 0.1f;
+    const float m_minDeltaLength = 1.f;
     // the minimum zoom at which momentum should stop
     const float m_minDeltaZoomLength = 1e-4f;
     // the minimum zoom value at which momentum will start
