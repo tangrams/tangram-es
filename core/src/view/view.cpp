@@ -93,8 +93,14 @@ void View::setRoll(float _roll) {
 
 void View::setPitch(float _pitch) {
 
-    // Clamp pitch angle (until LoD tile coverage is implemented)
-    m_pitch = glm::clamp(_pitch, 0.f, (float)M_PI);
+    _pitch = glm::clamp(_pitch, 0.f, (float)HALF_PI);
+
+    // Orbit vertically around the ground plane at the screen center
+    glm::vec2 radial = glm::vec2(-sin(m_roll), cos(m_roll));
+    radial *= m_zoomAltitude * (sin(m_pitch) - sin(_pitch));
+    translate(radial.x, radial.y);
+
+    m_pitch = _pitch;
     m_dirty = true;
 
 }
@@ -120,15 +126,6 @@ void View::roll(float _droll) {
 void View::pitch(float _dpitch) {
 
     setPitch(m_pitch + _dpitch);
-
-}
-
-void View::orbit(float _x, float _y, float _radians) {
-
-    glm::vec2 radial = { _x, _y };
-    glm::vec2 displacement = glm::rotate(radial, _radians) - radial;
-    translate(-displacement.x, -displacement.y);
-    roll(_radians);
 
 }
 
@@ -203,7 +200,7 @@ void View::updateMatrices() {
 
     // set vertical field-of-view
     float fovy = PI * 0.25;
-    
+
     // we assume portrait orientation by default, so in landscape
     // mode we scale the vertical FOV such that the wider dimension
     // gets the intended FOV
@@ -212,7 +209,9 @@ void View::updateMatrices() {
     }
 
     // set camera z to produce desired viewable area
-    m_pos.z = m_height * 0.5 / tan(fovy * 0.5);
+    m_zoomAltitude = m_height * 0.5 / tan(fovy * 0.5);
+
+    m_pos.z = m_zoomAltitude * cos(m_pitch);
 
     // set near clipping distance as a function of camera z
     // TODO: this is a simple heuristic that deserves more thought

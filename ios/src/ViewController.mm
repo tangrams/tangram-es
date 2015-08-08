@@ -99,7 +99,20 @@
     
 }
 
+// Implement touchesBegan to catch down events
+- (void)touchesBegan:(NSSet *)touches withEvent:(UIEvent *)event {
+    Tangram::handlePanGesture(0.0f, 0.0f, 0.0f, 0.0f);
+}
+
 - (BOOL)gestureRecognizer:(UIGestureRecognizer *)gestureRecognizer shouldRecognizeSimultaneouslyWithGestureRecognizer:(UIGestureRecognizer *)otherGestureRecognizer {
+    id pan = [UIPanGestureRecognizer class];
+    // make shove gesture exclusive
+    if ([gestureRecognizer class] == pan) {
+        return [gestureRecognizer numberOfTouches] != 2;
+    }
+    if ([otherGestureRecognizer class] == pan) {
+        return [otherGestureRecognizer numberOfTouches] != 2;
+    }
     return YES;
 }
 
@@ -115,6 +128,10 @@
 
 - (void)respondToPanGesture:(UIPanGestureRecognizer *)panRecognizer {
     CGPoint displacement = [panRecognizer translationInView:self.view];
+    // Do not handle zero displacement (last displacement when flinging is always zero)
+    if(fabsf(displacement.x) < FLT_EPSILON && fabsf(displacement.y) < FLT_EPSILON) {
+        return;
+    }
     [panRecognizer setTranslation:{0, 0} inView:self.view];
     CGPoint end = [panRecognizer locationInView:self.view];
     CGPoint start = {end.x - displacement.x, end.y - displacement.y};
@@ -138,7 +155,11 @@
 - (void)respondToShoveGesture:(UIPanGestureRecognizer *)shoveRecognizer {
     CGPoint displacement = [shoveRecognizer translationInView:self.view];
     [shoveRecognizer setTranslation:{0, 0} inView:self.view];
-    Tangram::handleShoveGesture(displacement.y / self.view.bounds.size.height);
+    
+    // don't trigger shove on single touch gesture
+    if ([shoveRecognizer numberOfTouches] == 2) {
+        Tangram::handleShoveGesture(displacement.y / self.view.bounds.size.height);
+    }
 }
 
 - (void)dealloc

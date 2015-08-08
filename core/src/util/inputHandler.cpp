@@ -1,37 +1,38 @@
 #include "inputHandler.h"
 
-#include <cmath>
 #include "glm/glm.hpp"
+#include "glm/gtx/rotate_vector.hpp"
 #include "platform.h"
+#include <cmath>
 
 namespace Tangram {
 
-InputHandler::InputHandler(std::shared_ptr<View> _view) : m_view(_view) {
-    m_deltaZoom = 0.f;
-    m_deltaTranslate = glm::vec2(0.f);
-}
+InputHandler::InputHandler(std::shared_ptr<View> _view) : m_view(_view) {}
 
 void InputHandler::update(float _dt) {
 
-    bool hasMomentum = glm::length(m_deltaTranslate) > m_minDeltaLength || std::abs(m_deltaZoom) > m_minDeltaZoomLength;
+    bool isFlinging = glm::length(m_deltaTranslate) > m_minDeltaLength || std::abs(m_deltaZoom) > m_minDeltaZoomLength;
 
-    if (!m_gestureOccured && hasMomentum) {
+    if (!m_gestureOccured && isFlinging) {
 
         // exponential decrease, m_expDecrease should be between [0..1]
         m_deltaTranslate *= m_expDecrease;
+        m_view->translate(m_deltaTranslate.x, m_deltaTranslate.y);
+
         // to give more control, make zoom decrease faster than translation
         m_deltaZoom *= m_expDecrease * m_expDecrease;
-
-        m_view->translate(m_deltaTranslate.x, m_deltaTranslate.y);
         m_view->zoom(m_deltaZoom);
 
         requestRender();
+
     }
 
     m_gestureOccured = false;
 }
 
 void InputHandler::handleTapGesture(float _posX, float _posY) {
+
+    onGesture();
 
     float viewCenterX = 0.5f * m_view->getWidth();
     float viewCenterY = 0.5f * m_view->getHeight();
@@ -41,20 +42,20 @@ void InputHandler::handleTapGesture(float _posX, float _posY) {
 
     m_view->translate((_posX - viewCenterX), (_posY - viewCenterY));
 
-    onEndGesture();
 }
 
 void InputHandler::handleDoubleTapGesture(float _posX, float _posY) {
 
     handlePinchGesture(_posX, _posY, 2.f, 0.f);
+
 }
 
 void InputHandler::handlePanGesture(float _startX, float _startY, float _endX, float _endY) {
 
-    // The platform can send the same values for the last registered pan
-    if (std::abs(_startX - _endX) < FLT_EPSILON && std::abs(_startY - _endY) < FLT_EPSILON) {
-        return;
-    }
+    onGesture();
+
+    float dScreenX = _startX - _endX;
+    float dScreenY = _startY - _endY;
 
     m_view->screenToGroundPlane(_startX, _startY);
     m_view->screenToGroundPlane(_endX, _endY);
@@ -62,56 +63,56 @@ void InputHandler::handlePanGesture(float _startX, float _startY, float _endX, f
     float dx = _startX - _endX;
     float dy = _startY - _endY;
 
-    setDeltas(0.f, glm::vec2(dx, dy));
+    if (glm::length(glm::vec2(dScreenX, dScreenY)) > m_minDeltaTranslate) {
+        setDeltas(0.f, glm::vec2(dx, dy));
+    }
 
     m_view->translate(dx, dy);
 
-    onEndGesture();
 }
 
 void InputHandler::handlePinchGesture(float _posX, float _posY, float _scale, float _velocity) {
 
-    float viewCenterX = 0.5f * m_view->getWidth();
-    float viewCenterY = 0.5f * m_view->getHeight();
+    onGesture();
 
-    m_view->screenToGroundPlane(viewCenterX, viewCenterY);
-    m_view->screenToGroundPlane(_posX, _posY);
-
-    float dx = (_posX - viewCenterX) * (1 - 1 / _scale);
-    float dy = (_posY - viewCenterY) * (1 - 1 / _scale);
-
-    m_view->translate(dx, dy);
-
+    float z = m_view->getZoom();
     static float invLog2 = 1 / log(2);
+    m_view->zoom(log(_scale) * invLog2);
+
+    m_view->screenToGroundPlane(_posX, _posY);
+    float s = pow(2, m_view->getZoom() - z) - 1;
+    m_view->translate(s * _posX, s * _posY);
 
     setDeltas(m_minZoomStart * _velocity, glm::vec2(0.f));
 
-    m_view->zoom(log(_scale) * invLog2);
-
-    onEndGesture();
 }
 
 void InputHandler::handleRotateGesture(float _posX, float _posY, float _radians) {
 
+    onGesture();
     m_view->screenToGroundPlane(_posX, _posY);
-    m_view->orbit(_posX, _posY, _radians);
+    glm::vec2 radial = { _posX, _posY };
+    glm::vec2 displacement = radial - glm::rotate(radial, _radians);
 
-    onEndGesture();
+    m_view->translate(displacement.x, displacement.y);
+    m_view->roll(_radians);
+
 }
 
 void InputHandler::handleShoveGesture(float _distance) {
 
-    m_view->pitch(_distance);
+    onGesture();
 
-    onEndGesture();
+    m_view->pitch(-_distance * 2.f);
+
 }
 
-void InputHandler::onEndGesture() {
+void InputHandler::onGesture() {
 
     m_gestureOccured = true;
-
-    // request a frame
+    setDeltas(0.f, { 0.f, 0.f });
     requestRender();
+
 }
 
 void InputHandler::setDeltas(float _zoom, glm::vec2 _translate) {
@@ -119,10 +120,6 @@ void InputHandler::setDeltas(float _zoom, glm::vec2 _translate) {
     // setup deltas for momentum on gesture
     m_deltaTranslate = _translate;
     m_deltaZoom = _zoom;
-
-    if (glm::length(m_deltaTranslate) < m_minDeltaTranslate) {
-        m_deltaTranslate = glm::vec2(0.f);
-    }
 }
 
 }
