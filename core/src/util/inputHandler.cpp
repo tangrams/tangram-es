@@ -75,11 +75,13 @@ void InputHandler::handlePinchGesture(float _posX, float _posY, float _scale, fl
 
     onGesture();
 
+    float z = m_view->getZoom();
     static float invLog2 = 1 / log(2);
     m_view->zoom(log(_scale) * invLog2);
 
     m_view->screenToGroundPlane(_posX, _posY);
-    m_view->translate((_scale - 1) * _posX, (_scale - 1) * _posY);
+    float s = pow(2, m_view->getZoom() - z) - 1;
+    m_view->translate(s * _posX, s * _posY);
 
     setDeltas(m_minZoomStart * _velocity, glm::vec2(0.f));
 
@@ -88,7 +90,6 @@ void InputHandler::handlePinchGesture(float _posX, float _posY, float _scale, fl
 void InputHandler::handleRotateGesture(float _posX, float _posY, float _radians) {
 
     onGesture();
-
     m_view->screenToGroundPlane(_posX, _posY);
     glm::vec2 radial = { _posX, _posY };
     glm::vec2 displacement = radial - glm::rotate(radial, _radians);
