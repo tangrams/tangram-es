@@ -33,7 +33,8 @@ static void BM_Tangram_BuildButtMiterLine(benchmark::State& state) {
             [&](const glm::vec3& coord, const glm::vec2& normal, const glm::vec2& uv) {
                 vertices.push_back({ coord, uv, normal, 0.5f, 0xffffff, 0.f });
             },
-            PolyLineOptions(CapTypes::butt, JoinTypes::miter)
+            CapTypes::butt,
+            JoinTypes::miter
         };
 
         Builders::buildPolyLine(line, builder);
@@ -48,7 +49,8 @@ static void BM_Tangram_BuildRoundRoundLine(benchmark::State& state) {
             [&](const glm::vec3& coord, const glm::vec2& normal, const glm::vec2& uv) {
                 vertices.push_back({ coord, uv, normal, 0.5f, 0xffffff, 0.f });
             },
-            PolyLineOptions(CapTypes::round, JoinTypes::round)
+            CapTypes::round,
+            JoinTypes::round
         };
 
         Builders::buildPolyLine(line, builder);
