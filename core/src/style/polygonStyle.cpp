@@ -53,7 +53,8 @@ void PolygonStyle::buildLine(const Line& _line, const DrawRule& _rule, const Pro
 
             glm::vec3 point(coord.x + normal.x * halfWidth, coord.y + normal.y * halfWidth, coord.z);
             vertices.push_back({ point, glm::vec3(0.0f, 0.0f, 1.0f), uv, abgr, layer });
-        }
+        },
+        [&](size_t sizeHint){ vertices.reserve(sizeHint); }
     };
 
     Builders::buildPolyLine(_line, builder);

@@ -62,12 +62,13 @@ typedef std::function<void(const glm::vec3& coord, const glm::vec2& enormal, con
 struct PolyLineBuilder {
     std::vector<int> indices; // indices for drawing the polyline as triangles are added to this vector
     PolyLineVertexFn addVertex;
+    SizeHintFn sizeHint;
     size_t numVertices = 0;
     CapTypes cap;
     JoinTypes join;
 
-    PolyLineBuilder(PolyLineVertexFn _addVertex, CapTypes _cap = CapTypes::butt, JoinTypes _join = JoinTypes::bevel)
-        : addVertex(_addVertex), cap(_cap), join(_join) {}
+    PolyLineBuilder(PolyLineVertexFn _addVertex, SizeHintFn _sizeHint, CapTypes _cap = CapTypes::butt, JoinTypes _join = JoinTypes::bevel)
+        : addVertex(_addVertex), sizeHint(_sizeHint), cap(_cap), join(_join) {}
 };
 
 /* Callback function for SpriteBuilder
@@ -83,7 +84,7 @@ struct SpriteBuilder {
     std::vector<int> indices;
     SpriteBuilderFn addVertex;
     size_t numVerts = 0;
-    
+
     SpriteBuilder(SpriteBuilderFn _addVertex) : addVertex(_addVertex) {}
 };
 
@@ -113,7 +114,7 @@ public:
 
     /* Build a tesselated outline that follows the given line while skipping tile boundaries */
     static void buildOutline(const Line& _line, PolyLineBuilder& _ctx);
-    
+
     /* Build a tesselated quad centered on _screenOrigin
      * @_screenOrigin the sprite origin in screen space
      * @_size the size of the sprite in pixels
