@@ -4,8 +4,8 @@
 
 namespace Tangram {
 
-GLuint s_quadIndexBuffer = 0;
-int s_quadGeneration = -1;
+static GLuint s_quadIndexBuffer = 0;
+static int s_quadGeneration = -1;
 
 const size_t maxVertices = 16384;
 
