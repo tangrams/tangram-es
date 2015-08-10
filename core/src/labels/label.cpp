@@ -1,17 +1,22 @@
 #include "label.h"
 
 #include "util/geom.h"
+#include "labels/labelMesh.h"
 
 namespace Tangram {
 
-Label::Label(Label::Transform _transform, Type _type) :
+Label::Label(Label::Transform _transform, LabelMesh& _mesh, Type _type, size_t _bufferOffset, unsigned int _nVerts) :
     m_type(_type),
-    m_transform(_transform) {
-
+    m_transform(_transform),
+    m_nVerts(_nVerts),
+    m_mesh(_mesh),
+    m_bufferOffset(_bufferOffset)
+{
     m_transform.state.alpha = m_type == Type::debug ? 1.0 : 0.0;
     m_currentState = m_type == Type::debug ? State::visible : State::wait_occ;
     m_occludedLastFrame = false;
     m_occlusionSolved = false;
+    m_updateMeshVisibility = true;
 }
 
 Label::~Label() {}
@@ -121,6 +126,11 @@ bool Label::canOcclude() {
     return (occludeFlags & m_currentState) && !(m_type == Type::debug);
 }
 
+bool Label::visibleState() const {
+    int visibleFlags = (State::visible | State::fading_in | State::fading_out);
+    return (visibleFlags & m_currentState);
+}
+
 void Label::occlusionSolved() {
     m_occlusionSolved = true;
 }
@@ -135,19 +145,46 @@ void Label::setAlpha(float _alpha) {
     if (m_transform.state.alpha != alpha) {
         m_transform.state.alpha = alpha;
         m_dirty = true;
+
+        if (alpha == 0.f) {
+            m_updateMeshVisibility = true;
+        }
     }
 }
 
 void Label::setScreenPosition(const glm::vec2& _screenPosition) {
     if (_screenPosition != m_transform.state.screenPos) {
         m_transform.state.screenPos = _screenPosition + m_transform.offset;
-        m_dirty = true;
     }
 }
 
 void Label::setRotation(float _rotation) {
     m_transform.state.rotation = _rotation;
     m_dirty = true;
+}
+
+void Label::pushTransform() {
+
+    // update the buffer on valid states
+    if (m_dirty) {
+        static size_t attribOffset = offsetof(Label::Vertex, state);
+        static size_t alphaOffset = offsetof(Label::Vertex::State, alpha) + attribOffset;
+
+        if (visibleState()) {
+            // update the complete state on the mesh
+            m_mesh.updateAttribute(m_bufferOffset + attribOffset, m_nVerts, m_transform.state);
+        } else {
+
+            // for any non-visible states, we don't need to overhead the gpu with updates on the
+            // alpha attribute, but simply do it once until the label goes back in a visible state
+            if (m_updateMeshVisibility) {
+                m_mesh.updateAttribute(m_bufferOffset + alphaOffset, m_nVerts, m_transform.state.alpha);
+                m_updateMeshVisibility = false;
+            }
+        }
+        
+        m_dirty = false;
+    }
 }
 
 bool Label::updateState(const glm::mat4& _mvp, const glm::vec2& _screenSize, float _dt) {

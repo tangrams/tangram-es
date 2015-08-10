@@ -1,22 +1,11 @@
-#include "spriteLabel.h"
+#include "labels/spriteLabel.h"
 
 namespace Tangram {
 
 SpriteLabel::SpriteLabel(LabelMesh& _mesh, Label::Transform _transform, const glm::vec2& _size, size_t _bufferOffset) :
-    Label(_transform, Label::Type::point),
-    m_mesh(_mesh),
-    m_bufferOffset(_bufferOffset) {
+    Label(_transform, _mesh, Label::Type::point, _bufferOffset, 4)
+{
     m_dim = _size;
-}
-
-void SpriteLabel::pushTransform() {
-    if (m_dirty) {
-
-        // update all attributes screenPosition/rotation/alpha for the 4 quad vertices in the mesh
-        size_t attribOffset = offsetof(Label::Vertex, state);
-
-        m_mesh.updateAttribute(m_bufferOffset + attribOffset, 4, m_transform.state);
-    }
 }
 
 void SpriteLabel::updateBBoxes() {

@@ -56,8 +56,8 @@ public:
      * Returns true if the upload results in a buffer binding
      */
     bool upload();
-    
-    /* 
+
+    /*
      * Sub data upload of the mesh, returns true if this results in a buffer binding
      */
     bool subDataUpload();
@@ -67,8 +67,6 @@ public:
      * been uploaded it will be uploaded at this point
      */
     virtual void draw(ShaderProgram& _shader);
-
-    void update(GLintptr _offset, GLsizei _size, unsigned char* _data);
 
     static void addManagedVBO(VboMesh* _vbo);
 
