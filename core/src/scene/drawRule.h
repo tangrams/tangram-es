@@ -19,10 +19,6 @@ struct StyleParam {
     StyleParamKey key;
     std::string value;
     bool operator<(const StyleParam& _rhs) const { return key < _rhs.key; }
-    int compare(const StyleParam& _rhs) const {
-        int d = static_cast<int>(key) - static_cast<int>(_rhs.key);
-        return d < 0 ? -1 : d > 0 ? 1 : 0;
-    }
     bool valid() const { return !value.empty(); }
     operator bool() const { return valid(); }
 };

@@ -48,10 +48,9 @@ DrawRule DrawRule::merge(DrawRule& _other) const {
     auto myIt = parameters.begin(), myEnd = parameters.end();
     auto otherIt = _other.parameters.begin(), otherEnd = _other.parameters.end();
     while (myIt != myEnd && otherIt != otherEnd) {
-        auto c = myIt->compare(*otherIt);
-        if (c < 0) {
+        if (*myIt < *otherIt) {
             merged.push_back(*myIt++);
-        } else if (c > 0) {
+        } else if (*otherIt < *myIt) {
             merged.push_back(std::move(*otherIt++));
         } else {
             merged.push_back(*otherIt++);
