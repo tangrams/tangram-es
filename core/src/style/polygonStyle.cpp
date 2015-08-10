@@ -32,12 +32,9 @@ void PolygonStyle::constructShaderProgram() {
 }
 
 PolygonStyle::Parameters PolygonStyle::parseRule(const DrawRule& _rule) const {
-
     Parameters p;
-
-    std::string str;
-    if (_rule.findParameter("order", &str)) { p.order = std::stof(str); }
-    if (_rule.findParameter("color", &str)) { p.color = parseColorProp(str); }
+    _rule.getColor(StyleParamKey::color, p.color);
+    _rule.getValue(StyleParamKey::order, p.order);
 
     return p;
 }

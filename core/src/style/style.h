@@ -82,8 +82,6 @@ protected:
     /* Build styled vertex data for polygon geometry and add it to the given <VboMesh> */
     virtual void buildPolygon(const Polygon& _polygon, const DrawRule& _rule, const Properties& _props, VboMesh& _mesh, Tile& _tile) const;
 
-    static uint32_t parseColorProp(const std::string& _colorPropStr);
-
     /* Create a new mesh object using the vertex layout corresponding to this style */
     virtual VboMesh* newMesh() const = 0;
 

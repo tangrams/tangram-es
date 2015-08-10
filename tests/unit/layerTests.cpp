@@ -11,7 +11,7 @@ SceneLayer instance_a() {
 
     Filter f = Filter(); // passes everything
 
-    DrawRule rule = { "style_0", { { "key_0", "value_a" } } };
+    DrawRule rule = { "style_0", { { StyleParamKey::order, "value_a" } } };
 
     return { "layer_a", f, { rule }, {} };
 }
@@ -20,7 +20,7 @@ SceneLayer instance_b() {
 
     Filter f = Filter(Operators::any, {}); // passes nothing
 
-    DrawRule rule = { "style_1", { { "key_0", "value_b" } } };
+    DrawRule rule = { "style_1", { { StyleParamKey::order, "value_b" } } };
 
     return { "layer_b", f, { rule }, {} };
 }
@@ -29,7 +29,7 @@ SceneLayer instance_c() {
 
     Filter f = Filter(); // passes everything
 
-    DrawRule rule = { "style_2", { { "key_0", "value_c" } } };
+    DrawRule rule = { "style_2", { { StyleParamKey::order, "value_c" } } };
 
     return { "layer_c", f, { rule }, { instance_a(), instance_b() } };
 }
@@ -38,7 +38,7 @@ SceneLayer instance_d() {
 
     Filter f = Filter(); // passes everything
 
-    DrawRule rule = { "style_0", { { "key_0", "value_d" } } };
+    DrawRule rule = { "style_0", { { StyleParamKey::order, "value_d" } } };
 
     return { "layer_d", f, { rule }, {} };
 }
@@ -47,7 +47,7 @@ SceneLayer instance_e() {
 
     Filter f = Filter(); // passes everything
 
-    DrawRule rule = { "style_2", { { "key_0", "value_e" } } };
+    DrawRule rule = { "style_2", { { StyleParamKey::order, "value_e" } } };
 
     return { "layer_e", f, { rule }, { instance_c(), instance_d() } };
 }
@@ -106,12 +106,12 @@ TEST_CASE("SceneLayer correctly merges rules matched from sublayer", "[SceneLaye
 
     // deeper match from layer_a should override parameters in same style from layer_d
     REQUIRE(matches[0].style == "style_0");
-    REQUIRE(matches[0].parameters[0].key == "key_0");
+    REQUIRE(matches[0].parameters[0].key == StyleParamKey::order);
     REQUIRE(matches[0].parameters[0].value == "value_a");
 
     // deeper match from layer_c should override parameters in same style from layer_e
     REQUIRE(matches[1].style == "style_2");
-    REQUIRE(matches[1].parameters[0].key == "key_0");
+    REQUIRE(matches[1].parameters[0].key == StyleParamKey::order);
     REQUIRE(matches[1].parameters[0].value == "value_c");
 
 }
