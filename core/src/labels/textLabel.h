@@ -8,8 +8,8 @@ namespace Tangram {
 class TextLabel : public Label {
 
 public:
-    TextLabel(std::string _text, Label::Transform _transform, Type _type, int _numGlyphs,
-              glm::vec2 _dim, TextBuffer& _mesh, size_t _bufferOffset);
+    TextLabel(std::string _text, Label::Transform _transform, Type _type,
+              glm::vec2 _dim, TextBuffer& _mesh, std::array<int,2> _vertexRange);
     
     std::string getText() { return m_text; }
 

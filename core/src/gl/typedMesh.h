@@ -2,6 +2,7 @@
 
 #include "vboMesh.h"
 #include <cstdlib> // std::abs
+#include <array>
 
 namespace Tangram {
 
@@ -37,29 +38,37 @@ public:
      * after _byteOffset in the mesh vertex data memory
      */
     template<class A>
-    void updateAttribute(GLintptr _byteOffset, unsigned int _nVerts, const A& _newAttributeValue) {
+    void updateAttribute(std::array<int,2> _vertexRange, const A& _newAttributeValue, size_t _attribOffset = 0) {
         if (!m_isCompiled) {
             return;
         }
 
-        size_t aSize = sizeof(A);
-        size_t tSize = sizeof(T);
+        const size_t aSize = sizeof(A);
+        const size_t tSize = sizeof(T);
+        static_assert(aSize <= tSize, "Invalid attribute size");
 
-        // updating an attribute for _nVerts vertex means updating a byte distance
-        // of (_nVerts - 1) * tSize in the buffer
-        size_t attrByteDist = (_nVerts - 1) * tSize;
-
-        if ((size_t)(attrByteDist + _byteOffset) > m_nVertices * tSize) {
+        if (_vertexRange[0] < 0 || _vertexRange[1] < 1) {
+            return;
+        }
+        if (_vertexRange[0] + _vertexRange[1] > m_nVertices) {
+            logMsg("updateAttribute: Invalid range\n");
+            return;
+        }
+        if (_attribOffset >= tSize) {
+            logMsg("updateAttribute: Invalid attribute offset\n");
             return;
         }
 
+        size_t start = _vertexRange[0] * tSize + _attribOffset;
+        size_t end = start + _vertexRange[1] * tSize;
+
         // update the vertices attributes
-        for (size_t i = 0; i < _nVerts; ++i) {
-            std::memcpy(m_glVertexData + _byteOffset + i * tSize, &_newAttributeValue, aSize);
+        for (size_t offset = start; offset < end; offset += tSize) {
+            std::memcpy(m_glVertexData + offset, &_newAttributeValue, aSize);
         }
 
-        // set dirty from _byteOffset by the distance between the two attributes + the size of it
-        setDirty(_byteOffset, attrByteDist + aSize);
+        // set all modified vertices dirty
+        setDirty(start, (_vertexRange[1] - 1) * tSize + aSize);
     }
 
 protected:
@@ -123,7 +132,7 @@ void TypedMesh<T>::updateVertices(GLintptr _byteOffset, unsigned int _nVerts, co
     }
 
     // update the vertices
-    for (int i = 0; i < _nVerts; ++i) {
+    for (size_t i = 0; i < _nVerts; ++i) {
         std::memcpy(m_glVertexData + _byteOffset + i * tSize, &_newVertexValue, tSize);
     }
 

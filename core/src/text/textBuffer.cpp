@@ -37,11 +37,9 @@ bool TextBuffer::addLabel(const std::string& _text, Label::Transform _transform,
     }
 
     auto& vertices = m_vertices[0];
-
-    // byte offset of added vertices
-    size_t bufferPosition = m_vertexLayout->getStride() * vertices.size();
-
-    vertices.reserve(vertices.size() + numGlyphs * 4);
+    int vertexOffset = vertices.size();
+    int numVertices = numGlyphs * 4;
+    vertices.reserve(vertices.size() + numVertices);
 
     float inf = std::numeric_limits<float>::infinity();
     float x0 = inf, x1 = -inf, y0 = inf, y1 = -inf;
@@ -62,9 +60,8 @@ bool TextBuffer::addLabel(const std::string& _text, Label::Transform _transform,
 
     glm::vec2 size((x1 - x0), (y1 - y0));
 
-    m_labels.emplace_back(new TextLabel(_text, _transform, _type,
-                                        numGlyphs, size,
-                                        *this, bufferPosition));
+    m_labels.emplace_back(new TextLabel(_text, _transform, _type, size,
+                                        *this, {vertexOffset, numVertices}));
 
     // TODO: change this in TypeMesh::adVertices()
     m_nVertices = vertices.size();

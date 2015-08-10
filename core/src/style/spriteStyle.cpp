@@ -77,11 +77,10 @@ void SpriteStyle::buildPoint(const Point& _point, const DrawRule& _rule, const P
     SpriteNode spriteNode = m_spriteAtlas->getSpriteNode(kind);
     Label::Transform t = { glm::vec2(_point), glm::vec2(_point), offset };
 
-    size_t bufferOffset = _mesh.numVertices() * m_vertexLayout->getStride();
-
     auto& mesh = static_cast<LabelMesh&>(_mesh);
 
-    std::unique_ptr<SpriteLabel> label(new SpriteLabel(mesh, t, spriteNode.m_size * spriteScale, bufferOffset));
+    std::unique_ptr<SpriteLabel> label(new SpriteLabel(t, spriteNode.m_size * spriteScale,
+                                                       mesh, _mesh.numVertices()));
 
     auto size = spriteNode.m_size * spriteScale;
     float halfWidth = size.x * .5f;

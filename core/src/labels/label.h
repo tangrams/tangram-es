@@ -6,6 +6,7 @@
 #include "isect2d.h"
 #include "fadeEffect.h"
 
+#include <array>
 #include <string>
 
 
@@ -63,7 +64,7 @@ public:
         Vertex::State state;
     };
 
-    Label(Transform _transform, LabelMesh& _mesh, Type _type, size_t _bufferOffset, unsigned int _nVerts);
+    Label(Transform _transform, glm::vec2 _size, Type _type, LabelMesh& _mesh, std::array<int,2> _vertexRange);
 
     ~Label();
 
@@ -132,14 +133,12 @@ protected:
     bool m_dirty;
     Transform m_transform;
     glm::vec2 m_dim;
-    unsigned int m_nVerts;
 
     // Back-pointer to owning container
     LabelMesh& m_mesh;
 
-    // byte-offset in m_mesh vertices
-    size_t m_bufferOffset;
-
+    // first vertex and count in m_mesh vertices
+    std::array<int,2> m_vertexRange;
 };
 
 }

@@ -14,7 +14,7 @@ glm::vec2 screenSize(500.f, 500.f);
 TextBuffer dummy(nullptr);
 
 TextLabel makeLabel(Label::Transform _transform, Label::Type _type) {
-    return TextLabel("label", _transform, _type, 0, {0, 0}, dummy, 0);
+    return TextLabel("label", _transform, _type, {0, 0}, dummy, {0, 0});
 
 }
 

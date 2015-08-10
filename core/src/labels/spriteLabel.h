@@ -7,7 +7,7 @@ namespace Tangram {
 class SpriteLabel : public Label {
 public:
 
-    SpriteLabel(LabelMesh& _mesh, Label::Transform _transform, const glm::vec2& _size, size_t _bufferOffset);
+    SpriteLabel(Label::Transform _transform, glm::vec2 _size, LabelMesh& _mesh, int _vertexOffset);
 
 protected:
 

@@ -5,13 +5,13 @@
 
 namespace Tangram {
 
-Label::Label(Label::Transform _transform, LabelMesh& _mesh, Type _type, size_t _bufferOffset, unsigned int _nVerts) :
+Label::Label(Label::Transform _transform, glm::vec2 _size, Type _type, LabelMesh& _mesh, std::array<int,2> _vertexRange) :
     m_type(_type),
     m_transform(_transform),
-    m_nVerts(_nVerts),
+    m_dim(_size),
     m_mesh(_mesh),
-    m_bufferOffset(_bufferOffset)
-{
+    m_vertexRange(_vertexRange) {
+
     m_transform.state.alpha = m_type == Type::debug ? 1.0 : 0.0;
     m_currentState = m_type == Type::debug ? State::visible : State::wait_occ;
     m_occludedLastFrame = false;
@@ -172,17 +172,17 @@ void Label::pushTransform() {
 
         if (visibleState()) {
             // update the complete state on the mesh
-            m_mesh.updateAttribute(m_bufferOffset + attribOffset, m_nVerts, m_transform.state);
+            m_mesh.updateAttribute(m_vertexRange, m_transform.state, attribOffset);
         } else {
 
             // for any non-visible states, we don't need to overhead the gpu with updates on the
             // alpha attribute, but simply do it once until the label goes back in a visible state
             if (m_updateMeshVisibility) {
-                m_mesh.updateAttribute(m_bufferOffset + alphaOffset, m_nVerts, m_transform.state.alpha);
+                m_mesh.updateAttribute(m_vertexRange, m_transform.state.alpha, alphaOffset);
                 m_updateMeshVisibility = false;
             }
         }
-        
+
         m_dirty = false;
     }
 }
