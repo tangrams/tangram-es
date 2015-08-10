@@ -31,66 +31,29 @@ void PolylineStyle::constructShaderProgram() {
     m_shaderProgram->setSourceStrings(fragShaderSrcStr, vertShaderSrcStr);
 }
 
-void PolylineStyle::parseStyleParams(const StyleParamMap& _styleParamMap, StyleParams& _styleParams) const {
+PolylineStyle::Parameters PolylineStyle::parseRule(const DrawRule& _rule) const {
+    Parameters p;
 
-    auto it = _styleParamMap.find("order");
-    if (it != _styleParamMap.end()) {
-        _styleParams.order = std::stof(it->second);
+    _rule.getValue(StyleParamKey::order, p.order);
+    _rule.getColor(StyleParamKey::color, p.color);
+    _rule.getValue(StyleParamKey::width, p.width);
+    _rule.getLineCap(StyleParamKey::cap, p.cap);
+    _rule.getLineJoin(StyleParamKey::join, p.join);
+
+    if (_rule.getColor(StyleParamKey::outline_color, p.outlineColor) |
+        _rule.getValue(StyleParamKey::outline_width, p.outlineWidth) |
+        _rule.getLineCap(StyleParamKey::outline_cap, p.outlineCap) |
+        _rule.getLineJoin(StyleParamKey::outline_join, p.outlineJoin)) {
+        p.outlineOn = true;
     }
 
-    if ((it = _styleParamMap.find("color")) != _styleParamMap.end()) {
-        _styleParams.color = parseColorProp(it->second);
-    }
-
-    if ((it =_styleParamMap.find("width")) != _styleParamMap.end()) {
-        _styleParams.width = std::stof(it->second);
-    }
-
-    if ((it = _styleParamMap.find("cap")) != _styleParamMap.end()) {
-        const auto& capStr = it->second;
-        if(capStr == "butt") { _styleParams.cap = CapTypes::butt; }
-        else if(capStr == "square") { _styleParams.cap = CapTypes::square; }
-        else if(capStr == "round") { _styleParams.cap = CapTypes::round; }
-    }
-
-    if ((it = _styleParamMap.find("join")) != _styleParamMap.end()) {
-        const auto& joinStr = it->second;
-        if(joinStr == "bevel") { _styleParams.join = JoinTypes::bevel; }
-        else if(joinStr == "miter") { _styleParams.join = JoinTypes::miter; }
-        else if(joinStr == "round") { _styleParams.join = JoinTypes::round; }
-    }
-
-    if ((it = _styleParamMap.find("outline:width")) != _styleParamMap.end()) {
-        _styleParams.outlineOn = true;
-        _styleParams.outlineWidth = std::stof(it->second);
-    }
-
-    if ((it = _styleParamMap.find("outline:color")) != _styleParamMap.end()) {
-        _styleParams.outlineColor =  parseColorProp(it->second);
-    }
-
-    if ((it = _styleParamMap.find("outline:cap")) != _styleParamMap.end()) {
-        _styleParams.outlineOn = true;
-        const auto& capStr = it->second;
-        if(capStr == "butt") { _styleParams.outlineCap = CapTypes::butt; }
-        else if(capStr == "square") { _styleParams.outlineCap = CapTypes::square; }
-        else if(capStr == "round") { _styleParams.outlineCap = CapTypes::round; }
-    }
-
-    if ((it = _styleParamMap.find("outline:join")) != _styleParamMap.end()) {
-        _styleParams.outlineOn = true;
-        const auto& joinStr = it->second;
-        if(joinStr == "bevel") { _styleParams.outlineJoin = JoinTypes::bevel; }
-        else if(joinStr == "miter") { _styleParams.outlineJoin = JoinTypes::miter; }
-        else if(joinStr == "round") { _styleParams.outlineJoin = JoinTypes::round; }
-    }
+    return p;
 }
 
-void PolylineStyle::buildLine(Line& _line, const StyleParamMap& _styleParamMap, Properties& _props, VboMesh& _mesh, Tile& _tile) const {
-    std::vector<PosNormEnormColVertex> vertices;
+void PolylineStyle::buildLine(const Line& _line, const DrawRule& _rule, const Properties& _props, VboMesh& _mesh, Tile& _tile) const {
+    std::vector<PolylineVertex> vertices;
 
-    StyleParams params;
-    parseStyleParams(_styleParamMap, params);
+    Parameters params = parseRule(_rule);
     GLuint abgr = params.color;
 
     if (Tangram::getDebugFlag(Tangram::DebugFlags::proxy_colors)) {
@@ -104,7 +67,8 @@ void PolylineStyle::buildLine(Line& _line, const StyleParamMap& _styleParamMap, 
         [&](const glm::vec3& coord, const glm::vec2& normal, const glm::vec2& uv) {
             vertices.push_back({ coord, uv, normal, halfWidth, abgr, layer });
         },
-        PolyLineOptions(params.cap, params.join)
+        params.cap,
+        params.join
     };
 
     Builders::buildPolyLine(_line, builder);
@@ -116,8 +80,8 @@ void PolylineStyle::buildLine(Line& _line, const StyleParamMap& _styleParamMap, 
 
         if (params.outlineCap != params.cap || params.outlineJoin != params.join) {
             // need to re-triangulate with different cap and/or join
-            builder.options.cap = params.outlineCap;
-            builder.options.join = params.outlineJoin;
+            builder.cap = params.outlineCap;
+            builder.join = params.outlineJoin;
             Builders::buildPolyLine(_line, builder);
         } else {
             // re-use indices from original line

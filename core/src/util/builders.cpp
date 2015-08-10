@@ -30,7 +30,19 @@ static TESSalloc allocator = {&alloc, &realloc, &free, nullptr,
                               64  // extraVertices
                              };
 
-void Builders::buildPolygon(const Polygon& _polygon, PolygonBuilder& _ctx) {
+CapTypes CapTypeFromString(const std::string& str) {
+    if (str == "square") { return CapTypes::square; }
+    if (str == "round") { return CapTypes::round; }
+    return CapTypes::butt;
+}
+
+JoinTypes JoinTypeFromString(const std::string& str) {
+    if (str == "bevel") { return JoinTypes::bevel; }
+    if (str == "round") { return JoinTypes::round; }
+    return JoinTypes::miter;
+}
+
+void Builders::buildPolygon(const Polygon& _polygon, float _height, PolygonBuilder& _ctx) {
     
     TESStesselator* tesselator = tessNewTess(&allocator);
     isect2d::AABB bbox;
@@ -72,7 +84,7 @@ void Builders::buildPolygon(const Polygon& _polygon, PolygonBuilder& _ctx) {
         _ctx.sizeHint(_ctx.numVertices);
 
         for (int i = 0; i < numVertices; i++) {
-            glm::vec3 coord(tessVertices[3*i], tessVertices[3*i+1], tessVertices[3*i+2]);
+            glm::vec3 coord(tessVertices[3*i], tessVertices[3*i+1], tessVertices[3*i+2] + _height);
             glm::vec2 uv(0);
 
             if (_ctx.useTexCoords) {
@@ -89,7 +101,7 @@ void Builders::buildPolygon(const Polygon& _polygon, PolygonBuilder& _ctx) {
     tessDeleteTess(tesselator);
 }
 
-void Builders::buildPolygonExtrusion(const Polygon& _polygon, const float& _minHeight, PolygonBuilder& _ctx) {
+void Builders::buildPolygonExtrusion(const Polygon& _polygon, float _minHeight, float _maxHeight, PolygonBuilder& _ctx) {
     
     int vertexDataOffset = (int)_ctx.numVertices;
     
@@ -110,10 +122,12 @@ void Builders::buildPolygonExtrusion(const Polygon& _polygon, const float& _minH
             normalVector = glm::normalize(normalVector);
             
             // 1st vertex top
-            _ctx.addVertex(line[i], normalVector, glm::vec2(1.,0.));
+            _ctx.addVertex(glm::vec3(line[i].x, line[i].y, _maxHeight),
+                           normalVector, glm::vec2(1.,0.));
 
             // 2nd vertex top
-            _ctx.addVertex(line[i+1], normalVector, glm::vec2(0.,0.));
+            _ctx.addVertex(glm::vec3(line[i+1].x, line[i+1].y, _maxHeight),
+                           normalVector, glm::vec2(0.,0.));
 
             // 1st vertex bottom
             _ctx.addVertex(glm::vec3(line[i].x, line[i].y, _minHeight),
@@ -260,8 +274,8 @@ void Builders::buildPolyLine(const Line& _line, PolyLineBuilder& _ctx) {
     glm::vec3 coordPrev(_line[0]), coordCurr(_line[0]), coordNext(_line[1]);
     glm::vec2 normPrev, normNext, miterVec;
 
-    int cornersOnCap = (int)_ctx.options.cap;
-    int trianglesOnJoin = (int)_ctx.options.join;
+    int cornersOnCap = (int)_ctx.cap;
+    int trianglesOnJoin = (int)_ctx.join;
     
     // Process first point in line with an end cap
     normNext = glm::normalize(perp2d(coordCurr, coordNext));

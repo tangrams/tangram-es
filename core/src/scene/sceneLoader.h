@@ -3,7 +3,6 @@
 #include <string>
 #include <vector>
 #include <memory>
-#include "style/styleParamMap.h"
 
 /* Forward Declaration of yaml-cpp node type */
 namespace YAML {
@@ -18,6 +17,8 @@ class SceneLayer;
 class View;
 class ShaderProgram;
 class Material;
+struct StyleParam;
+struct DrawRule;
 struct MaterialTexture;
 struct Filter;
 
@@ -27,16 +28,16 @@ class SceneLoader {
     void loadLights(YAML::Node lights, Scene& scene);
     void loadCameras(YAML::Node cameras, View& view);
     void loadLayers(YAML::Node layers, Scene& scene, TileManager& tileManager);
-    void loadSublayers(YAML::Node layer, std::vector<std::shared_ptr<Tangram::SceneLayer>>& subLayers);
-    void parseStyleProps(YAML::Node styleProps, StyleParamMap& paramMap, const std::string& propPrefix = "");
     void loadStyles(YAML::Node styles, Scene& scene);
     void loadTextures(YAML::Node textures, Scene& scene);
     void loadMaterial(YAML::Node matNode, Material& material, Scene& scene);
     void loadShaderConfig(YAML::Node shaders, ShaderProgram& shader);
+    std::vector<StyleParam> parseStyleParams(YAML::Node params, const std::string& propPrefix = "");
+    SceneLayer loadSublayer(YAML::Node layer, const std::string& name, Scene& scene);
     MaterialTexture loadMaterialTexture(YAML::Node matCompNode, Scene& scene);
-    Tangram::Filter generateAnyFilter(YAML::Node filter);
-    Tangram::Filter generateNoneFilter(YAML::Node filter);
-    Tangram::Filter generatePredicate(YAML::Node filter, std::string _key);
+    Filter generateAnyFilter(YAML::Node filter);
+    Filter generateNoneFilter(YAML::Node filter);
+    Filter generatePredicate(YAML::Node filter, std::string _key);
 
 public:
 

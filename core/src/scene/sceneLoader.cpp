@@ -16,8 +16,11 @@
 #include "spriteStyle.h"
 #include "filters.h"
 #include "sceneLayer.h"
+#include "scene/dataLayer.h"
 
 #include "yaml-cpp/yaml.h"
+
+#include <algorithm>
 
 using YAML::Node;
 using YAML::BadConversion;
@@ -37,9 +40,14 @@ void SceneLoader::loadScene(const std::string& _file, Scene& _scene, TileManager
     loadCameras(config["cameras"], _view);
     loadLights(config["lights"], _scene);
 
-    for (auto& style : _scene.getStyles()) {
-        style->build(_scene.getLights());
+    for (auto& style : _scene.styles()) {
+        style->build(_scene.lights());
     }
+
+    // Styles that are opaque must be ordered first in the scene so that they are rendered 'under' styles that require blending
+    std::sort(_scene.styles().begin(), _scene.styles().end(), [](std::unique_ptr<Style>& a, std::unique_ptr<Style>& b) {
+        return a->isOpaque();
+    });
 
 }
 
@@ -200,12 +208,15 @@ MaterialTexture SceneLoader::loadMaterialTexture(YAML::Node matCompNode, Scene& 
 
     std::string name = textureNode.as<std::string>();
 
-    auto& sharedTexs = scene.getTextures();
-    if (sharedTexs.find(name) == sharedTexs.end()) {
-        sharedTexs.emplace(name, std::make_shared<Texture>(name));
+    auto& tex = scene.textures()[name];
+
+    if (!tex) {
+        tex = std::make_shared<Texture>(name);
     }
 
-    matTex.tex = sharedTexs.at(name);
+    matTex.tex = tex;
+
+    if (!matTex.tex) { matTex.tex.reset(new Texture(name)); }
 
     if (mappingNode) {
         std::string mapping = mappingNode.as<std::string>();
@@ -272,19 +283,19 @@ void SceneLoader::loadTextures(YAML::Node textures, Scene& scene) {
         Node sprites = textureConfig["sprites"];
         if (sprites) { logMsg("WARNING: sprite mapping not yet implemented\n"); } // TODO
 
-        scene.getTextures().emplace(name, std::make_shared<Texture>(file, options));
+        scene.textures().emplace(name, std::make_shared<Texture>(file, options));
     }
 }
 
 void SceneLoader::loadStyles(YAML::Node styles, Scene& scene) {
 
     // Instantiate built-in styles
-    scene.addStyle(std::unique_ptr<Style>(new PolygonStyle("polygons")));
-    scene.addStyle(std::unique_ptr<Style>(new PolylineStyle("lines")));
-    scene.addStyle(std::unique_ptr<Style>(new TextStyle("FiraSans", "text", 15.0f, 0xF7F0E1, true, true)));
-    scene.addStyle(std::unique_ptr<Style>(new DebugTextStyle("FiraSans", "debugtext", 30.0f, 0xDC3522, true)));
-    scene.addStyle(std::unique_ptr<Style>(new DebugStyle("debug")));
-    scene.addStyle(std::unique_ptr<Style>(new SpriteStyle("sprites")));
+    scene.styles().emplace_back(new PolygonStyle("polygons"));
+    scene.styles().emplace_back(new PolylineStyle("lines"));
+    scene.styles().emplace_back(new TextStyle("FiraSans", "text", 15.0f, 0xF7F0E1, true, true));
+    scene.styles().emplace_back(new DebugTextStyle("FiraSans", "debugtext", 30.0f, 0xDC3522, true));
+    scene.styles().emplace_back(new DebugStyle("debug"));
+    scene.styles().emplace_back(new SpriteStyle("sprites"));
 
     if (!styles) {
         return;
@@ -364,7 +375,7 @@ void SceneLoader::loadStyles(YAML::Node styles, Scene& scene) {
         Node urlNode = styleNode["url"];
         if (urlNode) { logMsg("WARNING: loading style from URL not yet implemented\n"); } // TODO
 
-        scene.addStyle(std::unique_ptr<Style>(style));
+        scene.styles().push_back(std::unique_ptr<Style>(style));
 
     }
 
@@ -384,20 +395,20 @@ void SceneLoader::loadSources(Node sources, TileManager& tileManager) {
         std::string type = source["type"].as<std::string>();
         std::string url = source["url"].as<std::string>();
 
-        std::unique_ptr<DataSource> sourcePtr;
+        std::shared_ptr<DataSource> sourcePtr;
 
         if (type == "GeoJSONTiles") {
-            sourcePtr = std::unique_ptr<DataSource>(new GeoJsonSource(name, url));
+            sourcePtr = std::shared_ptr<DataSource>(new GeoJsonSource(name, url));
         } else if (type == "TopoJSONTiles") {
             logMsg("WARNING: TopoJSON data sources not yet implemented\n"); // TODO
         } else if (type == "MVT") {
-            sourcePtr = std::unique_ptr<DataSource>(new MVTSource(name, url));
+            sourcePtr = std::shared_ptr<DataSource>(new MVTSource(name, url));
         } else {
             logMsg("WARNING: unrecognized data source type \"%s\", skipping\n", type.c_str());
         }
 
         if (sourcePtr) {
-            tileManager.addDataSource(std::move(sourcePtr));
+            tileManager.dataSources().push_back(std::move(sourcePtr));
         }
     }
 
@@ -410,7 +421,7 @@ void SceneLoader::loadLights(Node lights, Scene& scene) {
         // Add an ambient light if nothing else is specified
         std::unique_ptr<AmbientLight> amb(new AmbientLight("defaultLight"));
         amb->setAmbientColor({ .5f, .5f, .5f, 1.f });
-        scene.addLight(std::move(amb));
+        scene.lights().push_back(std::move(amb));
 
         return;
     }
@@ -516,7 +527,7 @@ void SceneLoader::loadLights(Node lights, Scene& scene) {
             lightPtr->setSpecularColor(parseVec4(specular));
         }
 
-        scene.addLight(std::move(lightPtr));
+        scene.lights().push_back(std::move(lightPtr));
 
     }
 
@@ -733,58 +744,67 @@ Filter SceneLoader::generateNoneFilter(YAML::Node _filter) {
     return Filter(Operators::none, std::move(filters));
 }
 
-void SceneLoader::parseStyleProps(Node styleProps, StyleParamMap& paramMap, const std::string& propPrefix) {
+std::vector<StyleParam> SceneLoader::parseStyleParams(Node params, const std::string& prefix) {
 
-    for (const auto& propItr : styleProps) {
-        Node prop = propItr.first;
-        std::string paramKey;
-        if (propPrefix.length() > 0) {
-            paramKey = propPrefix + ":" + prop.as<std::string>();
-        } else {
-            paramKey = prop.as<std::string>();
-        }
-        if (propItr.second.IsScalar()) {
-            paramMap.emplace(paramKey, propItr.second.as<std::string>());
-        } else if (propItr.second.IsSequence()) {
-            paramMap.emplace(paramKey, parseSequence(propItr.second));
-        } else if (propItr.second.IsMap()) {
-            parseStyleProps(propItr.second, paramMap, paramKey);
-        } else {
-            logMsg("Error: Badly formed Style property, need to be a scalar, sequence or map."
-                    "%s will not be added to stype properties.\n", paramKey.c_str());
+    std::vector<StyleParam> out;
+
+    for (const auto& prop : params) {
+
+        std::string key = (prefix.empty() ? "" : (prefix + ":")) + prop.first.as<std::string>();
+
+        Node value = prop.second;
+
+        switch (value.Type()) {
+            case YAML::NodeType::Scalar:   out.push_back({ key, value.as<std::string>() }); break;
+            case YAML::NodeType::Sequence: out.push_back({ key, parseSequence(value) }); break;
+            case YAML::NodeType::Map: {
+                auto subparams = parseStyleParams(value, key);
+                out.insert(out.end(), subparams.begin(), subparams.end());
+                break;
+            }
+            default: logMsg("ERROR: Style parameter %s must be a scalar, sequence, or map.\n", key.c_str());
         }
     }
+
+    return out;
 
 }
 
-void SceneLoader::loadSublayers(YAML::Node layer, std::vector<std::shared_ptr<SceneLayer>>& subLayers) {
+SceneLayer SceneLoader::loadSublayer(YAML::Node layer, const std::string& name, Scene& scene) {
 
-    for (const auto& subLayerItr : layer) {
+    std::vector<SceneLayer> sublayers;
+    std::vector<DrawRule> rules;
+    Filter filter;
 
-        std::string subLayerName = subLayerItr.first.as<std::string>();
+    for (const auto& member : layer) {
 
-        Node drawGroup = subLayerItr.second["draw"];
+        const std::string key = member.first.as<std::string>();
 
-        // If node has a draw group that means its a sublayer (no need to check for reserved)
-        if(drawGroup) {
+        if (key == "data") {
+            // Ignored for sublayers
+        } else if (key == "draw") {
+            // Member is a mapping of draw rules
+            for (auto& ruleNode : member.second) {
 
-            std::vector<std::shared_ptr<SceneLayer>> ssubLayers;
-            Node filter = subLayerItr.second["filter"];
-            Filter subLayerFilter = generateFilter(filter);
+                auto explicitStyle = ruleNode.second["style"];
+                auto style = explicitStyle ? explicitStyle.as<std::string>() : ruleNode.first.as<std::string>();
+                auto params = parseStyleParams(ruleNode.second);
+                rules.push_back({ style, params });
 
-            loadSublayers(layer[subLayerName], ssubLayers);
-
-            for (const auto& groupIt : drawGroup) {
-
-                StyleParamMap paramMap;
-                // TODO: multiple draw groups for a subLayer, NOTE: only one draw for now
-                // TODO: subLayers can have different base style than the parent layer
-                parseStyleProps(groupIt.second, paramMap);
-                subLayers.push_back(std::make_shared<SceneLayer>(ssubLayers, std::move(paramMap), subLayerName,
-                            subLayerFilter));
             }
+        } else if (key == "filter") {
+            filter = generateFilter(member.second);
+        } else if (key == "properties") {
+            // TODO: ignored for now
+        } else if (key == "visible") {
+            // TODO: ignored for now
+        } else {
+            // Member is a sublayer
+            sublayers.push_back(loadSublayer(member.second, key, scene));
         }
     }
+
+    return { name, filter, rules, sublayers };
 }
 
 void SceneLoader::loadLayers(Node layers, Scene& scene, TileManager& tileManager) {
@@ -793,40 +813,22 @@ void SceneLoader::loadLayers(Node layers, Scene& scene, TileManager& tileManager
         return;
     }
 
-    for (const auto& layerIt : layers) {
+    for (const auto& layer : layers) {
 
-        std::vector<std::shared_ptr<SceneLayer>> subLayers;
-        std::string name = layerIt.first.as<std::string>();
-        Node data = layerIt.second["data"];
-        Node filter = layerIt.second["filter"];
-        Filter layerFilter = generateFilter(filter);
-        Node drawGroup = layerIt.second["draw"];
+        std::string name = layer.first.as<std::string>();
 
-        loadSublayers(layers[name], subLayers);
+        Node data = layer.second["data"];
+        Node data_layer = data["layer"];
+        Node data_source = data["source"];
 
-        // TODO: handle data.source
+        std::string collection = data_layer ? data_layer.as<std::string>() : name;
+        std::string source = data_source ? data_source.as<std::string>() : "";
 
-        Node dataLayer = data["layer"];
-        if (dataLayer) { name = dataLayer.as<std::string>(); }
+        auto sublayer = loadSublayer(layer.second, name, scene);
 
-        for (const auto& groupIt : drawGroup) {
-
-            StyleParamMap paramMap;
-            std::string styleName = groupIt.first.as<std::string>();
-            parseStyleProps(groupIt.second, paramMap);
-
-            // match layer to the style in scene with the given name
-            for (const auto& style : scene.getStyles()) {
-                if (style->getName() == styleName) {
-                    style->addLayer(std::make_shared<SceneLayer>(subLayers, std::move(paramMap),
-                                name, layerFilter));
-                }
-			}
-        }
+        scene.layers().push_back({ sublayer, source, collection });
 
     }
-
-    // tileManager isn't used yet, but we'll need it soon to get the list of data sources
 
 }
 

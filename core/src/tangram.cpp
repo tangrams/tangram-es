@@ -84,7 +84,7 @@ void resize(int _newWidth, int _newHeight) {
         m_view->setSize(_newWidth, _newHeight);
     }
 
-    for (auto& style : m_scene->getStyles()) {
+    for (auto& style : m_scene->styles()) {
         style->viewportHasChanged();
     }
 
@@ -113,7 +113,7 @@ void update(float _dt) {
             }
         }
 
-        m_labels->update(*m_view, _dt, m_scene->getStyles(), tileSet);
+        m_labels->update(*m_view, _dt, m_scene->styles(), tileSet);
     }
 
     if (m_scene) {
@@ -127,7 +127,7 @@ void render() {
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
     // Loop over all styles
-    for (const auto& style : m_scene->getStyles()) {
+    for (const auto& style : m_scene->styles()) {
         style->onBeginDrawFrame(*m_view, *m_scene);
 
         // Loop over all tiles in m_tileSet
@@ -222,7 +222,7 @@ void setPixelScale(float _pixelsPerPoint) {
         m_view->setPixelScale(_pixelsPerPoint);
     }
 
-    for (auto& style : m_scene->getStyles()) {
+    for (auto& style : m_scene->styles()) {
         style->setPixelScale(_pixelsPerPoint);
     }
 

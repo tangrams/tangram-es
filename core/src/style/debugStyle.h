@@ -18,7 +18,7 @@ protected:
 
     virtual void constructVertexLayout() override;
     virtual void constructShaderProgram() override;
-    virtual void addData(TileData& _data, Tile& _tile) override;
+    virtual void onBeginBuildTile(Tile& _tile) const override;
 
     typedef TypedMesh<PosColVertex> Mesh;
 

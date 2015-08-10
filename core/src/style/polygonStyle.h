@@ -13,34 +13,27 @@ class PolygonStyle : public Style {
 
 protected:
 
-    struct StyleParams {
+    struct Parameters {
         int32_t order = 0;
         uint32_t color = 0xffffffff;
     };
 
-    struct PosNormColVertex {
-        // Position Data
+    struct PolygonVertex {
         glm::vec3 pos;
-        // Normal Data
         glm::vec3 norm;
-        // UV Data
         glm::vec2 texcoord;
-        // Color Data
         GLuint abgr;
-        // Layer Data
         GLfloat layer;
     };
 
     virtual void constructVertexLayout() override;
     virtual void constructShaderProgram() override;
-    virtual void buildLine(Line& _line, const StyleParamMap& _styleParamMap, Properties& _props, VboMesh& _mesh, Tile& _tile) const override;
-    virtual void buildPolygon(Polygon& _polygon, const StyleParamMap& _styleParamMap, Properties& _props, VboMesh& _mesh, Tile& _tile) const override;
-    /*
-     * Parse StyleParamMap to individual style's StyleParam structure.
-     */
-    void parseStyleParams(const StyleParamMap& _styleParamMap, StyleParams& _styleParams) const;
+    virtual void buildLine(const Line& _line, const DrawRule& _rule, const Properties& _props, VboMesh& _mesh, Tile& _tile) const override;
+    virtual void buildPolygon(const Polygon& _polygon, const DrawRule& _rule, const Properties& _props, VboMesh& _mesh, Tile& _tile) const override;
 
-    typedef TypedMesh<PosNormColVertex> Mesh;
+    Parameters parseRule(const DrawRule& _rule) const;
+
+    typedef TypedMesh<PolygonVertex> Mesh;
 
     virtual VboMesh* newMesh() const override {
         return new Mesh(m_vertexLayout, m_drawMode);

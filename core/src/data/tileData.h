@@ -1,9 +1,9 @@
 #pragma once
 
+#include "glm/vec3.hpp"
 #include <vector>
 #include <string>
 #include <unordered_map>
-#include "glm/vec3.hpp"
 
 /* Notes on TileData implementation:
 

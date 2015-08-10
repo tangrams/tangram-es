@@ -44,7 +44,7 @@ void TextStyle::constructShaderProgram() {
     m_shaderProgram->addSourceBlock("defines", defines);
 }
 
-void TextStyle::buildPoint(Point& _point, const StyleParamMap& _styleParamMap, Properties& _props, VboMesh& _mesh, Tile& _tile) const {
+void TextStyle::buildPoint(const Point& _point, const DrawRule& _rule, const Properties& _props, VboMesh& _mesh, Tile& _tile) const {
     auto& buffer = static_cast<TextBuffer&>(_mesh);
 
     std::string text;
@@ -56,7 +56,7 @@ void TextStyle::buildPoint(Point& _point, const StyleParamMap& _styleParamMap, P
     addTextLabel(buffer, t, text, Label::Type::point);
 }
 
-void TextStyle::buildLine(Line& _line, const StyleParamMap& _styleParamMap, Properties& _props, VboMesh& _mesh, Tile& _tile) const {
+void TextStyle::buildLine(const Line& _line, const DrawRule& _rule, const Properties& _props, VboMesh& _mesh, Tile& _tile) const {
     auto& buffer = static_cast<TextBuffer&>(_mesh);
 
     std::string text;
@@ -84,7 +84,7 @@ void TextStyle::buildLine(Line& _line, const StyleParamMap& _styleParamMap, Prop
     }
 }
 
-void TextStyle::buildPolygon(Polygon& _polygon, const StyleParamMap& _styleParamMap, Properties& _props, VboMesh& _mesh, Tile& _tile) const {
+void TextStyle::buildPolygon(const Polygon& _polygon, const DrawRule& _rule, const Properties& _props, VboMesh& _mesh, Tile& _tile) const {
     auto& buffer = static_cast<TextBuffer&>(_mesh);
 
     std::string text;
@@ -119,17 +119,23 @@ void TextStyle::addTextLabel(TextBuffer& _buffer, Label::Transform _transform, s
     }
 }
 
-void TextStyle::onBeginBuildTile(VboMesh& _mesh) const {
-    auto& buffer = static_cast<TextBuffer&>(_mesh);
+void TextStyle::onBeginBuildTile(Tile& _tile) const {
+    auto& mesh = _tile.getMesh(*this);
+    if (!mesh) {
+        mesh.reset(newMesh());
+    }
+    auto& buffer = static_cast<TextBuffer&>(*mesh);
     auto ftContext = FontContext::GetInstance();
     auto font = ftContext->getFontID(m_fontName);
 
     buffer.init(font, m_fontSize * m_pixelScale, m_sdf ? 2.5 : 0);
 }
 
-void TextStyle::onEndBuildTile(VboMesh& _mesh) const {
+void TextStyle::onEndBuildTile(Tile& _tile) const {
 
-    auto& buffer = static_cast<TextBuffer&>(_mesh);
+    auto& mesh = _tile.getMesh(*this);
+
+    auto& buffer = static_cast<TextBuffer&>(*mesh);
 
     buffer.addBufferVerticesToMesh();
 }

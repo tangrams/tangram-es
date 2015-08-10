@@ -3,15 +3,11 @@
 #include "data/tileData.h"
 #include "material.h"
 #include "gl.h"
-#include "scene/sceneLayer.h"
-#include "styleParamMap.h"
-
 #include "gl/shaderProgram.h"
 #include "gl/renderState.h"
+#include "scene/sceneLayer.h"
 
-#include <bitset>
 #include <memory>
-#include <mutex>
 #include <string>
 #include <vector>
 
@@ -68,10 +64,6 @@ protected:
     /* Draw mode to pass into <VboMesh>es created with this style */
     GLenum m_drawMode;
 
-    /* vector of SceneLayers a style can operator on */
-    /* TODO: decouple layers and styles so that sublayers can apply different styles than the parent */
-    std::vector<std::shared_ptr<SceneLayer>> m_layers;
-
     /* Whether the viewport has changed size */
     bool m_dirtyViewport = true;
 
@@ -82,34 +74,13 @@ protected:
     virtual void constructShaderProgram() = 0;
 
     /* Build styled vertex data for point geometry and add it to the given <VboMesh> */
-    virtual void buildPoint(Point& _point, const StyleParamMap& _styleParamMap, Properties& _props, VboMesh& _mesh, Tile& _tile) const;
+    virtual void buildPoint(const Point& _point, const DrawRule& _rule, const Properties& _props, VboMesh& _mesh, Tile& _tile) const;
 
     /* Build styled vertex data for line geometry and add it to the given <VboMesh> */
-    virtual void buildLine(Line& _line, const StyleParamMap& _styleParamMap, Properties& _props, VboMesh& _mesh, Tile& _tile) const;
+    virtual void buildLine(const Line& _line, const DrawRule& _rule, const Properties& _props, VboMesh& _mesh, Tile& _tile) const;
 
     /* Build styled vertex data for polygon geometry and add it to the given <VboMesh> */
-    virtual void buildPolygon(Polygon& _polygon, const StyleParamMap& _styleParamMap, Properties& _props, VboMesh& _mesh, Tile& _tile) const;
-
-    using StyleCacheKey = std::bitset<MAX_LAYERS>;
-
-    static std::unordered_map<StyleCacheKey, StyleParamMap> s_styleParamMapCache;
-    static std::mutex s_cacheMutex;
-    static uint32_t parseColorProp(const std::string& _colorPropStr) ;
-
-    /*
-     * filter what layer(s) a features match and get style paramaters for this feature based on all subLayers it
-     * matches. Matching is cached for other features to use.
-     * Parameter maps for a set of layers is determined by merging parameters maps for individual layers matching the
-     * filters and keyed based on a uniqueID defined by the id of the matching layers.
-     */
-    void applyLayerFiltering(const Feature& _feature, const Context& _ctx, StyleCacheKey& _uniqueID,
-                             StyleParamMap& _styleParamMapMix, std::shared_ptr<SceneLayer> _uberLayer) const;
-
-    /* Perform any needed setup to process the data for a tile */
-    virtual void onBeginBuildTile(VboMesh& _mesh) const;
-
-    /* Perform any needed teardown after processing data for a tile */
-    virtual void onEndBuildTile(VboMesh& _mesh) const;
+    virtual void buildPolygon(const Polygon& _polygon, const DrawRule& _rule, const Properties& _props, VboMesh& _mesh, Tile& _tile) const;
 
     /* Create a new mesh object using the vertex layout corresponding to this style */
     virtual VboMesh* newMesh() const = 0;
@@ -128,11 +99,13 @@ public:
     /* Make this style ready to be used (call after all needed properties are set) */
     virtual void build(const std::vector<std::unique_ptr<Light>>& _lights);
 
-    /* Add layers to which this style will apply */
-    void addLayer(std::shared_ptr<SceneLayer> _layer);
+    void buildFeature(Tile& _tile, const Feature& _feat, const DrawRule& _rule) const;
 
-    /* Add styled geometry from the given <TileData> object to the given <Tile> */
-    virtual void addData(TileData& _data, Tile& _tile);
+    /* Perform any needed setup to process the data for a tile */
+    virtual void onBeginBuildTile(Tile& _tile) const;
+
+    /* Perform any needed teardown after processing data for a tile */
+    virtual void onEndBuildTile(Tile& _tile) const;
 
     /* Perform any setup needed before drawing each frame */
     virtual void onBeginDrawFrame(const View& _view, const Scene& _scene);

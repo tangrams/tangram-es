@@ -13,12 +13,14 @@
 
 namespace Tangram {
 
+class DataSource;
 class MapProjection;
+class Scene;
 class Style;
 class TextBuffer;
 class VboMesh;
 class View;
-
+struct TileData;
 
 enum class TileState { none, loading, processing, ready, canceled };
 
@@ -52,15 +54,8 @@ public:
     float getInverseScale() const { return m_inverseScale; }
 
     const glm::mat4& getModelMatrix() const { return m_modelMatrix; }
-
-    /* Adds drawable geometry to the tile and associates it with a <Style>
-     *
-     * Use std::move to pass in the mesh by move semantics; Geometry in the mesh
-     * must have coordinates relative to the tile origin.
-     */
-    void addMesh(const Style& _style, std::unique_ptr<VboMesh> _mesh);
-
-    const VboMesh* getMesh(const Style& _style);
+    
+    std::unique_ptr<VboMesh>& getMesh(const Style& _style);
 
     /* uUdate the Tile considering the current view */
     void update(float _dt, const View& _view);
@@ -68,7 +63,9 @@ public:
     /* Draws the geometry associated with the provided <Style> and view-projection matrix */
     void draw(const Style& _style, const View& _view);
 
-    /*
+    void build(const Scene& _scene, const TileData& _data, const DataSource& _source);
+    
+    /* 
      * Methods to set and get proxy counter
      */
     int getProxyCounter() { return m_proxyCounter; }

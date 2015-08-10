@@ -6,41 +6,13 @@
 #include "tile/tile.h"
 #include "gl/vboMesh.h"
 #include "view/view.h"
-#include "csscolorparser.hpp"
-#include "geom.h" // for CLAMP
 
 namespace Tangram {
-
-std::unordered_map<Style::StyleCacheKey, StyleParamMap> Style::s_styleParamMapCache;
-std::mutex Style::s_cacheMutex;
-
-using namespace Tangram;
 
 Style::Style(std::string _name, GLenum _drawMode) : m_name(_name), m_drawMode(_drawMode) {
 }
 
-Style::~Style() {
-    m_layers.clear();
-}
-
-uint32_t Style::parseColorProp(const std::string& _colorPropStr) {
-    uint32_t color = 0;
-
-    if (isdigit(_colorPropStr.front())) {
-        // try to parse as comma-separated rgba components
-        float r, g, b, a = 1.;
-        if (sscanf(_colorPropStr.c_str(), "%f,%f,%f,%f", &r, &g, &b, &a) >= 3) {
-            color = (CLAMP(static_cast<uint32_t>(a * 255.), 0, 255)) << 24
-                  | (CLAMP(static_cast<uint32_t>(r * 255.), 0, 255)) << 16
-                  | (CLAMP(static_cast<uint32_t>(g * 255.), 0, 255)) << 8
-                  | (CLAMP(static_cast<uint32_t>(b * 255.), 0, 255));
-        }
-    } else {
-        // parse as css color or #hex-num
-        color = CSSColorParser::parse(_colorPropStr).getInt();
-    }
-    return color;
-}
+Style::~Style() {}
 
 void Style::build(const std::vector<std::unique_ptr<Light>>& _lights) {
 
@@ -78,118 +50,34 @@ void Style::setLightingType(LightingType _type){
 
 }
 
-void Style::addLayer(std::shared_ptr<SceneLayer> _layer) {
+void Style::buildFeature(Tile& _tile, const Feature& _feat, const DrawRule& _rule) const {
 
-    m_layers.push_back(std::move(_layer));
+    auto& mesh = _tile.getMesh(*this);
 
-}
+    if (!mesh) {
+        mesh.reset(newMesh());
+    }
 
-void Style::applyLayerFiltering(const Feature& _feature, const Context& _ctx, StyleCacheKey& _uniqueID,
-                                   StyleParamMap& _styleParamMapMix, std::shared_ptr<SceneLayer> _uberLayer) const {
-
-    std::vector<std::shared_ptr<SceneLayer>> sLayers;
-    sLayers.reserve(_uberLayer->getSublayers().size() + 1);
-    sLayers.push_back(_uberLayer);
-
-    auto sLayerItr = sLayers.begin();
-
-    // A BFS traversal of the SceneLayer graph
-    while (sLayerItr != sLayers.end()) {
-
-        auto sceneLyr = *sLayerItr;
-
-        if (sceneLyr->getFilter().eval(_feature, _ctx)) { // filter matches
-
-            _uniqueID.set(sceneLyr->getID());
-            {
-                std::lock_guard<std::mutex> lock(s_cacheMutex);
-
-                // Get or create cache entry
-                auto& entry = s_styleParamMapCache[_uniqueID];
-
-                if (!entry.empty()) {
-                    _styleParamMapMix = entry;
-
-                } else {
-                    // Update StyleParam with subLayer parameters
-
-                    auto& layerStyleParamMap = sceneLyr->getStyleParamMap();
-                    for(auto& styleParam : layerStyleParamMap) {
-                        _styleParamMapMix[styleParam.first] = styleParam.second;
-                    }
-                    entry = _styleParamMapMix;
-                }
+    switch (_feat.geometryType) {
+        case GeometryType::points:
+            for (auto& point : _feat.points) {
+                buildPoint(point, _rule, _feat.props, *mesh, _tile);
             }
-
-            // Append sLayers with sublayers of this layer
-            auto& ssLayers = sceneLyr->getSublayers();
-            sLayerItr = sLayers.insert(sLayers.end(), ssLayers.begin(), ssLayers.end());
-        } else {
-            sLayerItr++;
-        }
-    }
-}
-
-void Style::addData(TileData& _data, Tile& _tile) {
-
-    std::unique_ptr<VboMesh> mesh(newMesh());
-    
-    onBeginBuildTile(*mesh);
-
-    Context ctx;
-    ctx["$zoom"] = Value(_tile.getID().z);
-
-    for (auto& layer : _data.layers) {
-
-        // Skip any layers that this style doesn't have a rule for
-        auto it = m_layers.begin();
-        while (it != m_layers.end() && (*it)->getName() != layer.name) { ++it; }
-        if (it == m_layers.end()) { continue; }
-
-        // Loop over all features
-        for (auto& feature : layer.features) {
-
-            StyleCacheKey uniqueID(0);
-            StyleParamMap styleParamMapMix;
-            applyLayerFiltering(feature, ctx, uniqueID, styleParamMapMix, (*it));
-
-            if(uniqueID.any()) { // if a layer matched then uniqueID should be > 0
-
-                switch (feature.geometryType) {
-                    case GeometryType::points:
-                        // Build points
-                        for (auto& point : feature.points) {
-                            buildPoint(point, styleParamMapMix, feature.props, *mesh, _tile);
-                        }
-                        break;
-                    case GeometryType::lines:
-                        // Build lines
-                        for (auto& line : feature.lines) {
-                            buildLine(line, styleParamMapMix, feature.props, *mesh, _tile);
-                        }
-                        break;
-                    case GeometryType::polygons:
-                        // Build polygons
-                        for (auto& polygon : feature.polygons) {
-                            buildPolygon(polygon, styleParamMapMix, feature.props, *mesh, _tile);
-                        }
-                        break;
-                    default:
-                        break;
-                }
+            break;
+        case GeometryType::lines:
+            for (auto& line : _feat.lines) {
+                buildLine(line, _rule, _feat.props, *mesh, _tile);
             }
-        }
+            break;
+        case GeometryType::polygons:
+            for (auto& polygon : _feat.polygons) {
+                buildPolygon(polygon, _rule, _feat.props, *mesh, _tile);
+            }
+            break;
+        default:
+            break;
     }
 
-    onEndBuildTile(*mesh);
-
-    if (mesh->numVertices() == 0) {
-        mesh.reset();
-    } else {
-        mesh->compileVertexBuffer();
-
-        _tile.addMesh(*this, std::move(mesh));
-    }
 }
 
 void Style::onBeginDrawFrame(const View& _view, const Scene& _scene) {
@@ -197,7 +85,7 @@ void Style::onBeginDrawFrame(const View& _view, const Scene& _scene) {
     m_material->setupProgram(*m_shaderProgram);
 
     // Set up lights
-    for (const auto& light : _scene.getLights()) {
+    for (const auto& light : _scene.lights()) {
         light->setupProgram(_view, *m_shaderProgram);
     }
 
@@ -208,23 +96,23 @@ void Style::onBeginDrawFrame(const View& _view, const Scene& _scene) {
     RenderState::depthTest(GL_TRUE);
 }
 
-void Style::onBeginBuildTile(VboMesh& _mesh) const {
+void Style::onBeginBuildTile(Tile& _tile) const {
     // No-op by default
 }
 
-void Style::onEndBuildTile(VboMesh& _mesh) const {
+void Style::onEndBuildTile(Tile& _tile) const {
     // No-op by default
 }
 
-void Style::buildPoint(Point& _point, const StyleParamMap& _styleParamMap, Properties& _props, VboMesh& _mesh, Tile& _tile) const {
+void Style::buildPoint(const Point& _point, const DrawRule& _rule, const Properties& _props, VboMesh& _mesh, Tile& _tile) const {
     // No-op by default
 }
 
-void Style::buildLine(Line& _line, const StyleParamMap& _styleParamMap, Properties& _props, VboMesh& _mesh, Tile& _tile) const {
+void Style::buildLine(const Line& _line, const DrawRule& _rule, const Properties& _props, VboMesh& _mesh, Tile& _tile) const {
     // No-op by default
 }
 
-void Style::buildPolygon(Polygon& _polygon, const StyleParamMap& _styleParamMap, Properties& _props, VboMesh& _mesh, Tile& _tile) const {
+void Style::buildPolygon(const Polygon& _polygon, const DrawRule& _rule, const Properties& _props, VboMesh& _mesh, Tile& _tile) const {
     // No-op by default
 }
 

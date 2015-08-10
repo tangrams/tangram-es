@@ -1,6 +1,7 @@
 #pragma once
 
 #include "scene/light.h"
+#include "scene/dataLayer.h"
 #include <memory>
 #include <string>
 #include <vector>
@@ -19,21 +20,23 @@ class Texture;
 class Scene {
 public:
 
-    Scene();
+    auto& layers() { return m_layers; };
+    auto& styles() { return m_styles; };
+    auto& lights() { return m_lights; };
+    auto& textures() { return m_textures; };
 
-    void addStyle(std::unique_ptr<Style> _style);
-    void addLight(std::unique_ptr<Light> _light);
+    const auto& layers() const { return m_layers; };
+    const auto& styles() const { return m_styles; };
+    const auto& lights() const { return m_lights; };
 
-    const std::vector<std::unique_ptr<Style>>& getStyles() const { return m_styles; };
-    const std::vector<std::unique_ptr<Light>>& getLights() const { return m_lights; };
-
-    std::unordered_map<std::string, std::shared_ptr<Texture>>& getTextures() { return m_textures; };
+    const Style* findStyle(const std::string& _name) const;
+    const Light* findLight(const std::string& _name) const;
 
 private:
 
+    std::vector<DataLayer> m_layers;
     std::vector<std::unique_ptr<Style>> m_styles;
     std::vector<std::unique_ptr<Light>> m_lights;
-
     std::unordered_map<std::string, std::shared_ptr<Texture>> m_textures;
 
 };

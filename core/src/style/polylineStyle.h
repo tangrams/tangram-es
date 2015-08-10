@@ -14,42 +14,35 @@ class PolylineStyle : public Style {
 
 protected:
 
-    struct StyleParams {
+    struct Parameters {
         int32_t order = 0;
         uint32_t color = 0xffffffff;
-        float width = 1.f;
-        CapTypes cap = CapTypes::butt;
-        JoinTypes join = JoinTypes::miter;
-        float outlineWidth = 1.f;
         uint32_t outlineColor = 0xffffffff;
-        bool outlineOn = false;
+        float width = 1.f;
+        float outlineWidth = 1.f;
+        CapTypes cap = CapTypes::butt;
         CapTypes outlineCap = CapTypes::butt;
+        JoinTypes join = JoinTypes::miter;
         JoinTypes outlineJoin = JoinTypes::miter;
+        bool outlineOn = false;
     };
 
-    struct PosNormEnormColVertex {
-        //Position Data
+    struct PolylineVertex {
         glm::vec3 pos;
-        // UV Data
         glm::vec2 texcoord;
-        // Extrude Normals Data
         glm::vec2 enorm;
         GLfloat ewidth;
-        // Color Data
         GLuint abgr;
-        // Layer Data
         GLfloat layer;
     };
 
     virtual void constructVertexLayout() override;
     virtual void constructShaderProgram() override;
-    virtual void buildLine(Line& _line, const StyleParamMap& _styleParamMap, Properties& _props, VboMesh& _mesh, Tile& _tile) const override;
-    /*
-     * Parse StyleParamMap to individual style's StyleParam structure.
-     */
-    void parseStyleParams(const StyleParamMap& _styleParamMap, StyleParams& _styleParams) const;
+    virtual void buildLine(const Line& _line, const DrawRule& _rule, const Properties& _props, VboMesh& _mesh, Tile& _tile) const override;
 
-    typedef TypedMesh<PosNormEnormColVertex> Mesh;
+    Parameters parseRule(const DrawRule& _rule) const;
+
+    typedef TypedMesh<PolylineVertex> Mesh;
 
     virtual VboMesh* newMesh() const override {
         return new Mesh(m_vertexLayout, m_drawMode);

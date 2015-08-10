@@ -9,7 +9,7 @@ class DebugTextStyle : public TextStyle {
 
 protected:
 
-    virtual void addData(TileData& _data, Tile& _tile) override;
+    virtual void onBeginBuildTile(Tile& _tile) const override;
 
 public:
 

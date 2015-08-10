@@ -1,14 +1,61 @@
 #include "sceneLayer.h"
 
+#include <algorithm>
+
 namespace Tangram {
 
-uint8_t SceneLayer::s_layerCount = 0;
+SceneLayer::SceneLayer(std::string _name, Filter _filter, std::vector<DrawRule> _rules, std::vector<SceneLayer> _sublayers) :
+    m_filter(_filter), m_name(_name), m_rules(_rules), m_sublayers(_sublayers), m_depth(0) {
 
-SceneLayer::SceneLayer(const std::vector<std::shared_ptr<SceneLayer>> _subLayers, const StyleParamMap&& _styleParamMap, const std::string _name, Filter _filter) :
-    m_subLayers(std::move(_subLayers)), m_styleParams(std::move(_styleParamMap)), m_name(_name), m_filter(_filter) {
+    // Rules must be sorted to merge correctly
+    std::sort(m_rules.begin(), m_rules.end());
 
-    m_id = s_layerCount++;
+    // m_depth is one more than the maximum depth of any sublayer
+    for (auto& sublayer : m_sublayers) {
+        m_depth = sublayer.m_depth > m_depth ? sublayer.m_depth : m_depth;
+    }
+    m_depth++;
 
+    // Sublayers must be sorted by the depth of their deepest leaf in order to correctly traverse them in match()
+    std::sort(m_sublayers.begin(), m_sublayers.end(), [&](const SceneLayer& a, const SceneLayer& b) {
+        return a.m_depth > b.m_depth;
+    });
+
+}
+
+void SceneLayer::match(const Feature& _feat, const Context& _ctx, std::vector<DrawRule>& _matches) const {
+
+    if (!m_filter.eval(_feat, _ctx)) {
+        return;
+    }
+
+    // Depth-first traversal produces correct parameter precedence when sublayers are sorted by decreasing depth
+    for (auto& layer : m_sublayers) {
+        layer.match(_feat, _ctx, _matches);
+    }
+
+    std::vector<DrawRule> merged;
+
+    // For all of m_rules that have the same style as an existing matched rule, merge the rules;
+    // for others, take existing rule unchanged
+    {
+        auto myRulesIt = m_rules.begin(), myRulesEnd = m_rules.end();
+        auto matchesIt = _matches.begin(), matchesEnd = _matches.end();
+        while (myRulesIt != myRulesEnd && matchesIt != matchesEnd) {
+            if (*myRulesIt < *matchesIt) {
+                merged.push_back(*myRulesIt++);
+            } else if (*matchesIt < *myRulesIt) {
+                merged.push_back(std::move(*matchesIt++));
+            } else {
+                merged.push_back(std::move((*myRulesIt++).merge(*matchesIt++)));
+            }
+        }
+        while (myRulesIt != myRulesEnd) { merged.push_back(*myRulesIt++); }
+        while (matchesIt != matchesEnd) { merged.push_back(std::move(*matchesIt++)); }
+    }
+
+    // Move merged results into output vector
+    std::swap(merged, _matches);
 }
 
 }

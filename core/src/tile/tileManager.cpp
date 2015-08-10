@@ -33,14 +33,7 @@ TileManager::~TileManager() {
     if (m_workers->isRunning()) {
         m_workers->stop();
     }
-    m_dataSources.clear();
-    m_tileSet.clear();
 }
-
-void TileManager::addDataSource(std::unique_ptr<DataSource> _source) { 
-    m_dataSources.push_back(std::move(_source));
-}
-
 
 void TileManager::tileProcessed(std::shared_ptr<TileTask>&& task) {
     std::lock_guard<std::mutex> lock(m_readyTileMutex);

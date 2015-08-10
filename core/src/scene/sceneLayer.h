@@ -1,34 +1,40 @@
 #pragma once
 
+#include "data/filters.h"
+#include "scene/drawRule.h"
+
 #include <memory>
 #include <string>
+#include <utility>
 #include <vector>
-#include <unordered_map>
-
-#include "filters.h"
-#include "style/styleParamMap.h"
-
-#define MAX_LAYERS 256 //2^8
 
 namespace Tangram {
 
-class SceneLayer {
-    std::vector<std::shared_ptr<SceneLayer>> m_subLayers;
-    StyleParamMap m_styleParams;
-    std::string m_name;
-    uint8_t m_id;
-    Filter m_filter;
+class Style;
+struct DrawRule;
+struct Feature;
 
-    static uint8_t s_layerCount;
+class SceneLayer {
+
+    Filter m_filter;
+    std::string m_name;
+    std::vector<DrawRule> m_rules;
+    std::vector<SceneLayer> m_sublayers;
+    size_t m_depth;
 
 public:
-    SceneLayer(const std::vector<std::shared_ptr<SceneLayer>> _subLayers, const StyleParamMap&& _styleParamMap, const std::string _name, Filter _filter);
 
-    uint8_t getID() const { return m_id; }
-    Filter getFilter() const { return m_filter; }
-    std::string getName() const { return m_name; }
-    StyleParamMap& getStyleParamMap() { return m_styleParams; }
-    std::vector< std::shared_ptr<SceneLayer> >& getSublayers() { return m_subLayers; }
+    SceneLayer(std::string _name, Filter _filter,
+        std::vector<DrawRule> _rules, std::vector<SceneLayer> _sublayers);
+
+    const auto& name() const { return m_name; }
+    const auto& filter() const { return m_filter; }
+    const auto& rules() const { return m_rules; }
+    const auto& sublayers() const { return m_sublayers; }
+
+    // Recursively match and combine draw rules that apply to the given Feature in the given Context
+    void match(const Feature& _feat, const Context& _ctx, std::vector<DrawRule>& _matches) const;
+
 };
 
 }
