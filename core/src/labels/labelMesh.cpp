@@ -7,7 +7,7 @@ namespace Tangram {
 GLuint s_quadIndexBuffer = 0;
 int s_quadGeneration = -1;
 
-const size_t maxVertices = 1 << 14;
+const size_t maxVertices = 16384;
 
 LabelMesh::LabelMesh(std::shared_ptr<VertexLayout> _vertexLayout, GLenum _drawMode)
     : TypedMesh<Label::Vertex>(_vertexLayout, _drawMode, GL_DYNAMIC_DRAW) {
