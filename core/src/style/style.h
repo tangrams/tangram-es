@@ -64,10 +64,6 @@ protected:
     /* Draw mode to pass into <VboMesh>es created with this style */
     GLenum m_drawMode;
 
-    /* vector of SceneLayers a style can operator on */
-    /* TODO: decouple layers and styles so that sublayers can apply different styles than the parent */
-    std::vector<std::shared_ptr<SceneLayer>> m_layers;
-
     /* Whether the viewport has changed size */
     bool m_dirtyViewport = true;
 
@@ -104,9 +100,6 @@ public:
 
     /* Make this style ready to be used (call after all needed properties are set) */
     virtual void build(const std::vector<std::unique_ptr<Light>>& _lights);
-
-    /* Add layers to which this style will apply */
-    void addLayer(std::shared_ptr<SceneLayer> _layer);
 
     void buildFeature(Tile& _tile, const Feature& _feat, const DrawRule& _rule) const;
 

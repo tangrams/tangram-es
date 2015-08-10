@@ -71,12 +71,6 @@ void Style::setLightingType(LightingType _type){
 
 }
 
-void Style::addLayer(std::shared_ptr<SceneLayer> _layer) {
-
-    m_layers.push_back(std::move(_layer));
-
-}
-
 void Style::buildFeature(Tile& _tile, const Feature& _feat, const DrawRule& _rule) const {
 
     auto& mesh = _tile.getMesh(*this);
