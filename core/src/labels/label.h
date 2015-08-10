@@ -30,6 +30,9 @@ public:
     };
 
     struct Vertex {
+        Vertex(glm::vec2 pos, glm::vec2 uv)
+            : pos(pos), uv(uv){}
+
         glm::vec2 pos;
         glm::vec2 uv;
         struct State {
@@ -40,6 +43,16 @@ public:
     };
 
     struct Transform {
+        Transform(glm::vec2 _pos)
+            : modelPosition1(_pos),
+              modelPosition2(_pos),
+              offset(glm::vec2(0)){}
+
+        Transform(glm::vec2 _pos1, glm::vec2 _pos2, glm::vec2 _offset)
+            : modelPosition1(_pos1),
+              modelPosition2(_pos2),
+              offset(_offset){}
+
         glm::vec2 modelPosition1;
         glm::vec2 modelPosition2;
         glm::vec2 offset;

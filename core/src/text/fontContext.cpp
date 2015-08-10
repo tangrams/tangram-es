@@ -1,6 +1,6 @@
 #include "fontContext.h"
-#define GLFONTSTASH_IMPLEMENTATION
-#include "glfontstash.h"
+#define FONTSTASH_IMPLEMENTATION
+#include "fontstash.h"
 
 namespace Tangram {
 
@@ -11,7 +11,7 @@ FontContext::FontContext(int _atlasSize) {
 }
 
 FontContext::~FontContext() {
-    glfonsDelete(m_fsContext);
+    fonsDeleteInternal(m_fsContext);
 }
 
 void FontContext::bindAtlas(GLuint _textureUnit) {
@@ -69,7 +69,7 @@ void FontContext::setFont(const std::string& _name, int size) {
     }
 }
 
-fsuint FontContext::getFontID(const std::string& _name) {
+FontID FontContext::getFontID(const std::string& _name) {
     auto it = m_fonts.find(_name);
 
     if (it != m_fonts.end()) {
@@ -80,18 +80,69 @@ fsuint FontContext::getFontID(const std::string& _name) {
     }
 }
 
-void FontContext::updateAtlas(void* _userPtr, unsigned int _xoff, unsigned int _yoff,
-                 unsigned int _width, unsigned int _height, const unsigned int* _pixels) {
+std::vector<FONSquad>& FontContext::rasterize(const std::string& _text, FontID _fontID, float _fontSize, float _sdf) {
 
+    m_quadBuffer.clear();
+
+    fonsSetSize(m_fsContext, _fontSize);
+    fonsSetFont(m_fsContext, _fontID);
+
+    if (_sdf > 0){
+        fonsSetBlur(m_fsContext, _sdf);
+        fonsSetBlurType(m_fsContext, FONS_EFFECT_DISTANCE_FIELD);
+    } else {
+        fonsSetBlurType(m_fsContext, FONS_EFFECT_NONE);
+    }
+
+    float advance = fonsDrawText(m_fsContext, 0, 0, _text.c_str(), nullptr, 0);
+    if (advance < 0) {
+        m_quadBuffer.clear();
+        return m_quadBuffer;
+    }
+
+    return m_quadBuffer;
+}
+
+void FontContext::pushQuad(void* _userPtr, const FONSquad* _quad) {
+    FontContext* fontContext = static_cast<FontContext*>(_userPtr);
+    fontContext->m_quadBuffer.emplace_back(*_quad);
+}
+
+int FontContext::renderCreate(void* _userPtr, int _width, int _height) {
+    return 1;
+}
+
+void FontContext::renderUpdate(void* _userPtr, int* _rect, const unsigned char* _data) {
     FontContext* fontContext = static_cast<FontContext*>(_userPtr);
 
+    uint32_t xoff = 0;
+    uint32_t yoff = _rect[1];
+    uint32_t width = fontContext->m_atlas->getWidth();
+    uint32_t height = _rect[3] - _rect[1];
+
+    auto subdata = reinterpret_cast<const GLuint*>(_data + yoff * width);
+
     std::lock_guard<std::mutex> lock(fontContext->m_atlasMutex);
-    fontContext->m_atlas->setSubData(static_cast<const GLuint*>(_pixels), _xoff, _yoff, _width, _height);
+    fontContext->m_atlas->setSubData(subdata, xoff, yoff, width, height);
 }
 
 void FontContext::initFontContext(int _atlasSize) {
     m_atlas = std::unique_ptr<Texture>(new Texture(_atlasSize, _atlasSize));
-    m_fsContext = glfonsCreate(_atlasSize, _atlasSize, FONS_ZERO_TOPLEFT, { false, nullptr, FontContext::updateAtlas }, (void*) this);
+
+    FONSparams params;
+    params.width = _atlasSize;
+    params.height = _atlasSize;
+    params.flags = (unsigned char)FONS_ZERO_TOPLEFT;
+
+    params.renderCreate = renderCreate;
+    params.renderResize = nullptr;
+    params.renderUpdate = renderUpdate;
+    params.renderDraw = nullptr;
+    params.renderDelete = nullptr;
+    params.pushQuad = pushQuad;
+    params.userPtr = (void*) this;
+
+    m_fsContext = fonsCreateInternal(&params);;
 }
 
 }
