@@ -39,19 +39,19 @@ void SceneLayer::match(const Feature& _feat, const Context& _ctx, std::vector<Dr
     // For all of m_rules that have the same style as an existing matched rule, merge the rules;
     // for others, take existing rule unchanged
     {
-        auto pIt = m_rules.begin(), pEnd = m_rules.end();
-        auto cIt = _matches.begin(), cEnd = _matches.end();
-        while (pIt != pEnd && cIt != cEnd) {
-            if (*pIt < *cIt) {
-                merged.push_back(*pIt++);
-            } else if (*cIt < *pIt) {
-                merged.push_back(std::move(*cIt++));
+        auto myRulesIt = m_rules.begin(), myRulesEnd = m_rules.end();
+        auto matchesIt = _matches.begin(), matchesEnd = _matches.end();
+        while (myRulesIt != myRulesEnd && matchesIt != matchesEnd) {
+            if (*myRulesIt < *matchesIt) {
+                merged.push_back(*myRulesIt++);
+            } else if (*matchesIt < *myRulesIt) {
+                merged.push_back(std::move(*matchesIt++));
             } else {
-                merged.push_back(std::move((*pIt++).merge(*cIt++)));
+                merged.push_back(std::move((*myRulesIt++).merge(*matchesIt++)));
             }
         }
-        while (pIt != pEnd) { merged.push_back(*pIt++); }
-        while (cIt != cEnd) { merged.push_back(std::move(*cIt++)); }
+        while (myRulesIt != myRulesEnd) { merged.push_back(*myRulesIt++); }
+        while (matchesIt != matchesEnd) { merged.push_back(std::move(*matchesIt++)); }
     }
 
     // Move merged results into output vector

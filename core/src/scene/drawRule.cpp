@@ -16,21 +16,21 @@ DrawRule DrawRule::merge(DrawRule& _other) const {
 
     decltype(parameters) merged;
 
-    auto mIt = parameters.begin(), mEnd = parameters.end();
-    auto oIt = _other.parameters.begin(), oEnd = _other.parameters.end();
-    while (mIt != mEnd && oIt != oEnd) {
-        auto c = mIt->key.compare(oIt->key);
+    auto myIt = parameters.begin(), myEnd = parameters.end();
+    auto otherIt = _other.parameters.begin(), otherEnd = _other.parameters.end();
+    while (myIt != myEnd && otherIt != otherEnd) {
+        auto c = myIt->key.compare(otherIt->key);
         if (c < 0) {
-            merged.push_back(*mIt++);
+            merged.push_back(*myIt++);
         } else if (c > 0) {
-            merged.push_back(std::move(*oIt++));
+            merged.push_back(std::move(*otherIt++));
         } else {
-            merged.push_back(*oIt++);
-            mIt++;
+            merged.push_back(*otherIt++);
+            myIt++;
         }
     }
-    while (mIt != mEnd) { merged.push_back(*mIt++); }
-    while (oIt != oEnd) { merged.push_back(std::move(*oIt++)); }
+    while (myIt != myEnd) { merged.push_back(*myIt++); }
+    while (otherIt != otherEnd) { merged.push_back(std::move(*otherIt++)); }
 
     return { style, merged };
 }
