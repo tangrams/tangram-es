@@ -39,20 +39,24 @@ void UrlWorker::perform(std::unique_ptr<UrlTask> _task) {
         logMsg("Fetching URL with curl: %s\n", m_task->url.c_str());
 
         CURLcode result = curl_easy_perform(m_curlHandle);
-        
-        if (result != CURLE_OK) {
-            logMsg("curl_easy_perform failed: %s\n", curl_easy_strerror(result));
+
+        long httpStatusCode = 0;
+        curl_easy_getinfo(m_curlHandle, CURLINFO_RESPONSE_CODE, &httpStatusCode);
+
+        if (result == CURLE_OK && httpStatusCode == 200) {
+            size_t nBytes = m_stream.tellp();
+            m_stream.seekp(0);
+
+            m_task->content.resize(nBytes);
+            m_stream.seekg(0);
+            m_stream.read(m_task->content.data(), nBytes);
+        } else {
+            logMsg("curl_easy_perform failed: %s - %d\n", curl_easy_strerror(result), httpStatusCode);
         }
-
-        size_t nBytes = m_stream.tellp();
-        m_stream.seekp(0);
-
-        m_task->content.resize(nBytes);
-        m_stream.seekg(0);
-        m_stream.read(m_task->content.data(), nBytes);
 
         m_finished = true;
         requestRender();
+
         return std::move(m_task);
     });
 }
