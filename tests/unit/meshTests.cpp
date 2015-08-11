@@ -44,7 +44,7 @@ TEST_CASE( "Simple update on vertices", "[Core][TypedMesh]" ) {
     REQUIRE(mesh->getDirtyOffset() == 0);
     REQUIRE(mesh->getDirtySize() == 0);
 
-    mesh->updateVertices(0, 4, Vertex());
+    mesh->updateVertices({0, 4}, Vertex());
 
     REQUIRE(mesh->getDirtyOffset() == 0);
     REQUIRE(mesh->getDirtySize() == 4 * sizeof(Vertex));
@@ -55,8 +55,8 @@ TEST_CASE( "Simple update on vertices", "[Core][TypedMesh]" ) {
 TEST_CASE( "Left merge on vertices with bigger left size", "[Core][TypedMesh]" ) {
     auto mesh = newMesh(10);
 
-    mesh->updateVertices(2 * sizeof(Vertex), 2, Vertex());
-    mesh->updateVertices(0 * sizeof(Vertex), 8, Vertex());
+    mesh->updateVertices({2, 2}, Vertex());
+    mesh->updateVertices({0, 8}, Vertex());
 
     REQUIRE(mesh->getDirtyOffset() == 0);
     REQUIRE(mesh->getDirtySize() == 8 * sizeof(Vertex));
@@ -67,8 +67,8 @@ TEST_CASE( "Left merge on vertices with bigger left size", "[Core][TypedMesh]" )
 TEST_CASE( "Left merge on vertices with smaller left size", "[Core][TypedMesh]" ) {
     auto mesh = newMesh(10);
 
-    mesh->updateVertices(2 * sizeof(Vertex), 2, Vertex());
-    mesh->updateVertices(0 * sizeof(Vertex), 1, Vertex());
+    mesh->updateVertices({2, 2}, Vertex());
+    mesh->updateVertices({0, 1}, Vertex());
 
     REQUIRE(mesh->getDirtyOffset() == 0);
     REQUIRE(mesh->getDirtySize() == 4 * sizeof(Vertex));
@@ -79,8 +79,8 @@ TEST_CASE( "Left merge on vertices with smaller left size", "[Core][TypedMesh]" 
 TEST_CASE( "Right merge on vertices dirtiness", "[Core][TypedMesh]" ) {
     auto mesh = newMesh(10);
 
-    mesh->updateVertices(2 * sizeof(Vertex), 2, Vertex());
-    mesh->updateVertices(4 * sizeof(Vertex), 2, Vertex());
+    mesh->updateVertices({2, 2}, Vertex());
+    mesh->updateVertices({4, 2}, Vertex());
 
     REQUIRE(mesh->getDirtyOffset() == 2 * sizeof(Vertex));
     REQUIRE(mesh->getDirtySize() == 4 * sizeof(Vertex));
@@ -150,7 +150,7 @@ TEST_CASE( "Check overflow", "[Core][TypedMesh]" ) {
     size_t stride_b = sizeof(float); // stride of b in the struct
 
     mesh->updateAttribute({0, 100}, 0.f, stride_b);
-    mesh->updateVertices(0, 100, Vertex());
+    mesh->updateVertices({0, 100}, Vertex());
     mesh->updateAttribute({10, 1}, Vertex(), stride_b);
     mesh->updateAttribute({-100, 10}, Vertex());
 

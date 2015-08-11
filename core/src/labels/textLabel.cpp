@@ -3,7 +3,7 @@
 namespace Tangram {
 
 TextLabel::TextLabel(std::string _text, Label::Transform _transform, Type _type, glm::vec2 _dim,
-                     TextBuffer& _mesh, std::array<int,2> _vertexRange)
+                     TextBuffer& _mesh, Range _vertexRange)
     : Label(_transform, _dim, _type, static_cast<LabelMesh&>(_mesh), _vertexRange),
       m_text(_text) {}
 

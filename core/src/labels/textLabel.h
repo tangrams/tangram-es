@@ -9,7 +9,7 @@ class TextLabel : public Label {
 
 public:
     TextLabel(std::string _text, Label::Transform _transform, Type _type,
-              glm::vec2 _dim, TextBuffer& _mesh, std::array<int,2> _vertexRange);
+              glm::vec2 _dim, TextBuffer& _mesh, Range _vertexRange);
     
     std::string getText() { return m_text; }
 

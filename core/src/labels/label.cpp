@@ -5,7 +5,7 @@
 
 namespace Tangram {
 
-Label::Label(Label::Transform _transform, glm::vec2 _size, Type _type, LabelMesh& _mesh, std::array<int,2> _vertexRange) :
+Label::Label(Label::Transform _transform, glm::vec2 _size, Type _type, LabelMesh& _mesh, Range _vertexRange) :
     m_type(_type),
     m_transform(_transform),
     m_dim(_size),

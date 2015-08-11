@@ -5,8 +5,8 @@
 #include <climits> // needed in aabb.h
 #include "isect2d.h"
 #include "fadeEffect.h"
+#include "util/types.h"
 
-#include <array>
 #include <string>
 
 
@@ -64,7 +64,7 @@ public:
         Vertex::State state;
     };
 
-    Label(Transform _transform, glm::vec2 _size, Type _type, LabelMesh& _mesh, std::array<int,2> _vertexRange);
+    Label(Transform _transform, glm::vec2 _size, Type _type, LabelMesh& _mesh, Range _vertexRange);
 
     ~Label();
 
@@ -138,7 +138,7 @@ protected:
     LabelMesh& m_mesh;
 
     // first vertex and count in m_mesh vertices
-    std::array<int,2> m_vertexRange;
+    Range m_vertexRange;
 };
 
 }

@@ -1,8 +1,9 @@
 #pragma once
 
 #include "vboMesh.h"
+#include "util/types.h"
+
 #include <cstdlib> // std::abs
-#include <array>
 
 namespace Tangram {
 
@@ -31,14 +32,14 @@ public:
      * Update _nVerts vertices in the mesh with the new T value _newVertexValue starting after
      * _byteOffset in the mesh vertex data memory
      */
-    void updateVertices(GLintptr _byteOffset, unsigned int _nVerts, const T& _newVertexValue);
+    void updateVertices(Range _vertexRange, const T& _newVertexValue);
 
     /*
      * Update _nVerts vertices in the mesh with the new attribute A _newAttributeValue starting
      * after _byteOffset in the mesh vertex data memory
      */
     template<class A>
-    void updateAttribute(std::array<int,2> _vertexRange, const A& _newAttributeValue, size_t _attribOffset = 0) {
+    void updateAttribute(Range _vertexRange, const A& _newAttributeValue, size_t _attribOffset = 0) {
         if (!m_isCompiled) {
             return;
         }
@@ -47,10 +48,10 @@ public:
         const size_t tSize = sizeof(T);
         static_assert(aSize <= tSize, "Invalid attribute size");
 
-        if (_vertexRange[0] < 0 || _vertexRange[1] < 1) {
+        if (_vertexRange.start < 0 || _vertexRange.length < 1) {
             return;
         }
-        if (_vertexRange[0] + _vertexRange[1] > m_nVertices) {
+        if (_vertexRange.start + _vertexRange.length > m_nVertices) {
             logMsg("updateAttribute: Invalid range\n");
             return;
         }
@@ -59,8 +60,8 @@ public:
             return;
         }
 
-        size_t start = _vertexRange[0] * tSize + _attribOffset;
-        size_t end = start + _vertexRange[1] * tSize;
+        size_t start = _vertexRange.start * tSize + _attribOffset;
+        size_t end = start + _vertexRange.length * tSize;
 
         // update the vertices attributes
         for (size_t offset = start; offset < end; offset += tSize) {
@@ -68,7 +69,7 @@ public:
         }
 
         // set all modified vertices dirty
-        setDirty(start, (_vertexRange[1] - 1) * tSize + aSize);
+        setDirty(start, (_vertexRange.length - 1) * tSize + aSize);
     }
 
 protected:
@@ -120,23 +121,27 @@ void TypedMesh<T>::setDirty(GLintptr _byteOffset, GLsizei _byteSize) {
 }
 
 template<class T>
-void TypedMesh<T>::updateVertices(GLintptr _byteOffset, unsigned int _nVerts, const T& _newVertexValue) {
+void TypedMesh<T>::updateVertices(Range _vertexRange, const T& _newVertexValue) {
     if (!m_isCompiled) {
         return;
     }
 
     size_t tSize = sizeof(T);
 
-    if (_nVerts * tSize + _byteOffset > m_nVertices * tSize) {
-            return;
+    if (_vertexRange.start +_vertexRange.length > m_nVertices) {
+        return;
     }
+
+
+    size_t start = _vertexRange.start * tSize;
+    size_t end = start + _vertexRange.length * tSize;
 
     // update the vertices
-    for (size_t i = 0; i < _nVerts; ++i) {
-        std::memcpy(m_glVertexData + _byteOffset + i * tSize, &_newVertexValue, tSize);
+    for (size_t offset = start; offset < end; offset += tSize) {
+        std::memcpy(m_glVertexData + offset, &_newVertexValue, tSize);
     }
 
-    setDirty(_byteOffset, _nVerts * tSize);
+    setDirty(start, end - start);
 }
 
 }

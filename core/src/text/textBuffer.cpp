@@ -61,7 +61,7 @@ bool TextBuffer::addLabel(const std::string& _text, Label::Transform _transform,
     glm::vec2 size((x1 - x0), (y1 - y0));
 
     m_labels.emplace_back(new TextLabel(_text, _transform, _type, size,
-                                        *this, {vertexOffset, numVertices}));
+                                        *this, { vertexOffset, numVertices }));
 
     // TODO: change this in TypeMesh::adVertices()
     m_nVertices = vertices.size();
