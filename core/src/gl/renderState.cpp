@@ -17,6 +17,12 @@ namespace RenderState {
     FrontFace frontFace;
     CullFace cullFace;
 
+    VertexBuffer vertexBuffer;
+    IndexBuffer indexBuffer;
+
+    void bindVertexBuffer(GLint id) { glBindBuffer(GL_ARRAY_BUFFER, id); }
+    void bindIndexBuffer(GLint id) { glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, id); }
+
     void configure() {
         blending.init(GL_FALSE);
         culling.init(GL_TRUE);

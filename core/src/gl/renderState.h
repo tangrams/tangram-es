@@ -110,6 +110,11 @@ namespace RenderState {
     using CullFace = StateWrap<FUN(glCullFace),
                                GLenum>;
 
+    void bindVertexBuffer(GLint id);
+    void bindIndexBuffer(GLint id);
+    using VertexBuffer = StateWrap<FUN(bindVertexBuffer), GLint>;
+    using IndexBuffer = StateWrap<FUN(bindIndexBuffer), GLint>;
+
 #undef FUN
 
     extern DepthTest depthTest;
@@ -124,6 +129,9 @@ namespace RenderState {
     extern FrontFace frontFace;
     extern CullFace cullFace;
     extern Culling culling;
+
+    extern VertexBuffer vertexBuffer;
+    extern IndexBuffer indexBuffer;
 
     void configure();
 }
