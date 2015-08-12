@@ -14,7 +14,7 @@ if [ "${PLATFORM}" = "android" ]; then
         url_snapshot="s3://android.mapzen.com/tangram-snapshots/master-$TRAVIS_BUILD_NUMBER.apk"
         echo "Uploading snapshot build to $url_snapshot"
         s3cmd put android/demo/build/outputs/apk/demo-debug.apk $url_snapshot
-    else
+    elif ! [ "${TRAVIS_BRANCH}" = "master" ]; then
         url_dev="s3://android.mapzen.com/tangram-development/$TRAVIS_BRANCH-$TRAVIS_BUILD_NUMBER.apk"
         echo "Uploading development build to $url_dev"
         s3cmd put android/demo/build/outputs/apk/demo-debug.apk $url_dev
