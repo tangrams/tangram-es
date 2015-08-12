@@ -7,7 +7,7 @@ if [ "${PLATFORM}" = "android" ]; then
     printf "[default]\naccess_key = $S3_ACCESS_KEY\n secret_key = $S3_SECRET_KEY" > ~/.s3cfg
 
     if [ "${TRAVIS_PULL_REQUEST}" = "false" ] && [ "${TRAVIS_BRANCH}" = "master" ]; then
-        url_latest="s3://android.mapzen.com/tangram/latest.apk"
+        url_latest="s3://android.mapzen.com/tangram-latest.apk"
         echo "Uploading latest build to $url_latest"
         s3cmd put android/demo/build/outputs/apk/demo-debug.apk $url_latest
 
