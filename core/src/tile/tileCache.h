@@ -13,13 +13,22 @@ class TileCache {
     using CacheList = std::list<std::shared_ptr<Tile>>;
     using CacheMap = std::unordered_map<TileID, typename CacheList::iterator>;
 
+    // 32 MB
+    const static size_t DEFAULT_CACHE_SIZE = 32*1024*1024;
+
 public:
+
+    TileCache(size_t _cacheSizeMB = DEFAULT_CACHE_SIZE) : m_cacheMaxUsage(_cacheSizeMB) {}
+
     void put(std::shared_ptr<Tile> _tile) {
         m_cacheList.push_front(_tile);
         m_cacheMap[_tile->getID()] = m_cacheList.begin();
+        m_cacheUsage += _tile->getMemoryUsage();
 
-        if ( m_cacheList.size() > m_maxEntries ) {
-            m_cacheMap.erase(m_cacheList.back()->getID());
+        while (m_cacheUsage > m_cacheMaxUsage) {
+            auto& tile = m_cacheList.back();
+            m_cacheUsage -= tile->getMemoryUsage();
+            m_cacheMap.erase(tile->getID());
             m_cacheList.pop_back();
         }
     }
@@ -28,12 +37,11 @@ public:
         std::shared_ptr<Tile> tile;
         auto it = m_cacheMap.find(_tileID);
         if (it != m_cacheMap.end()) {
-
             std::swap(tile, *(it->second));
-
             m_cacheList.erase(it->second);
-
             m_cacheMap.erase(it);
+
+            m_cacheUsage -= tile->getMemoryUsage();
         }
         return tile;
     }
@@ -58,7 +66,8 @@ private:
     CacheMap m_cacheMap;
     CacheList m_cacheList;
 
-    size_t m_maxEntries = 40;
+    size_t m_cacheUsage;
+    size_t m_cacheMaxUsage;
 };
 
 }

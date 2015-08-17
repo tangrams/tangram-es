@@ -27,9 +27,8 @@ using YAML::BadConversion;
 
 namespace Tangram {
 
-// FIXME
-constexpr size_t CACHE_SIZE = 10 * (1024 * 1024);
-
+// TODO: make this configurable: 16MB default in-memory DataSource cache:
+constexpr size_t CACHE_SIZE = 16 * (1024 * 1024);
 
 void SceneLoader::loadScene(const std::string& _file, Scene& _scene, TileManager& _tileManager, View& _view) {
 
