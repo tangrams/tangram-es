@@ -92,19 +92,18 @@ void key_callback(GLFWwindow* window, int key, int scancode, int action, int mod
     if (action == GLFW_PRESS) {
         switch (key) {
             case GLFW_KEY_1:
-                Tangram::setDebugFlag(Tangram::DebugFlags::freeze_tiles, !Tangram::getDebugFlag(Tangram::DebugFlags::freeze_tiles));
+                Tangram::toggleDebugFlag(Tangram::DebugFlags::freeze_tiles);
                 break;
             case GLFW_KEY_2:
-                Tangram::setDebugFlag(Tangram::DebugFlags::proxy_colors, !Tangram::getDebugFlag(Tangram::DebugFlags::proxy_colors));
+                Tangram::toggleDebugFlag(Tangram::DebugFlags::proxy_colors);
                 break;
             case GLFW_KEY_3:
-                Tangram::setDebugFlag(Tangram::DebugFlags::tile_bounds, !Tangram::getDebugFlag(Tangram::DebugFlags::tile_bounds));
-                break;
+                Tangram::toggleDebugFlag(Tangram::DebugFlags::tile_bounds);
             case GLFW_KEY_4:
-                Tangram::setDebugFlag(Tangram::DebugFlags::tile_infos, !Tangram::getDebugFlag(Tangram::DebugFlags::tile_infos));
+                Tangram::toggleDebugFlag(Tangram::DebugFlags::tile_infos);
                 break;
             case GLFW_KEY_5:
-                Tangram::setDebugFlag(Tangram::DebugFlags::labels, !Tangram::getDebugFlag(Tangram::DebugFlags::labels));
+                Tangram::toggleDebugFlag(Tangram::DebugFlags::labels);
                 break;
             case GLFW_KEY_BACKSPACE:
                 init_main_window(); // Simulate GL context loss

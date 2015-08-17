@@ -78,5 +78,8 @@ void setDebugFlag(DebugFlags _flag, bool _on);
 // Get the boolean state of a debug feature (see debug.h)
 bool getDebugFlag(DebugFlags _flag);
 
+// Toggle the boolean state of a debug feature (see debug.h)
+void toggleDebugFlag(DebugFlags _flag);
+
 }
 

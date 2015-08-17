@@ -277,6 +277,13 @@ bool getDebugFlag(DebugFlags _flag) {
 
 }
 
+void toggleDebugFlag(DebugFlags _flag) {
+
+    g_flags.flip(_flag);
+    m_view->setZoom(m_view->getZoom()); // Force the view to refresh
+
+}
+
 void onContextDestroyed() {
 
     logMsg("context destroyed\n");
