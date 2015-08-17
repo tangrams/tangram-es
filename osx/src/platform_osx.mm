@@ -88,6 +88,16 @@ unsigned char* bytesFromResource(const char* _path, unsigned int* _size) {
     return reinterpret_cast<unsigned char *>(cdata);
 }
 
+// Does not provide implementation for this (yet!)
+unsigned char* bytesFromExtMemory(const char* _path, unsigned int* _size) {
+    return nullptr;
+}
+
+// No system fonts implementation (yet!)
+std::string deviceFontsPath() {
+    return "";
+}
+
 void NSurlInit() {
     NSURLSessionConfiguration *defaultConfigObject = [NSURLSessionConfiguration defaultSessionConfiguration];
     NSString *cachePath = [NSTemporaryDirectory() stringByAppendingPathComponent:@"/tile_cache"];
