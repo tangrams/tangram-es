@@ -60,7 +60,7 @@ void initialize(const char* _scenePath) {
         // Font and label setup
         std::string fontsPath = deviceFontsPath();
         m_ftContext = FontContext::GetInstance();
-        //m_ftContext->addFont("FiraSans-Medium.ttf", "FiraSans", fontsPath);
+        m_ftContext->addFont("FiraSans-Medium.ttf", "FiraSans", fontsPath);
         m_ftContext->addFont("Roboto-Regular.ttf", "RobotoRegular", fontsPath);
         m_labels = std::unique_ptr<Labels>(new Labels());
 
