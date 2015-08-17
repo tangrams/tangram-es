@@ -178,7 +178,7 @@ void TileManager::updateTileSet(TileSet& tileSet) {
                 auto& tile = setTilesIter->second;
 
                 if (tile->hasState(TileState::none)) {
-                    enqueueLoadTask(tileSet, visTileId, viewCenter);
+                    enqueueTask(tileSet, visTileId, viewCenter);
                 } else if (tile->isReady()) {
                     m_tiles.push_back(tile);
                 }
@@ -192,7 +192,7 @@ void TileManager::updateTileSet(TileSet& tileSet) {
             } else if (curTileId == NOT_A_TILE || visTileId < curTileId) {
                 // tileSet is missing an element present in visibleTiles
                 if (!addTile(tileSet, visTileId)) {
-                    enqueueLoadTask(tileSet, visTileId, viewCenter);
+                    enqueueTask(tileSet, visTileId, viewCenter);
                 }
 
                 ++visTilesIter;
@@ -246,8 +246,9 @@ void TileManager::updateTileSet(TileSet& tileSet) {
     }
 }
 
-void TileManager::enqueueLoadTask(const TileSet& tileSet, const TileID& tileID,
-                                  const glm::dvec2& viewCenter) {
+void TileManager::enqueueTask(const TileSet& tileSet, const TileID& tileID,
+                              const glm::dvec2& viewCenter) {
+
     // Keep the items sorted by distance
     auto tileCenter = m_view->getMapProjection().TileCenter(tileID);
     double distance = glm::length2(tileCenter - viewCenter);
@@ -353,8 +354,6 @@ void TileManager::updateProxyTiles(TileSet& tileSet, Tile& _tile) {
             auto& parent = it->second;
             if (_tile.setProxy(Tile::parent)) {
                 parent->incProxyCounter();
-                DBG("USE PARENT PROXY\n");
-
                 if (parent->isReady()) {
                     m_tiles.push_back(parent);
                 }
@@ -390,8 +389,6 @@ void TileManager::updateProxyTiles(TileSet& tileSet, Tile& _tile) {
                     if (child->isReady()) {
                         m_tiles.push_back(child);
                     }
-
-                    DBG("USE CHILD PROXY\n");
                 }
             } else {
                 auto child = m_tileCache->get(*tileSet.source.get(), childID);
