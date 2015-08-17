@@ -44,35 +44,48 @@ void logMsg(const char* fmt, ...);
 void requestRender();
 
 /* If called with 'true', the windowing system will re-draw frames continuously;
- * otherwise new frames will only be drawn when 'requestRender' is called. 
+ * otherwise new frames will only be drawn when 'requestRender' is called.
  */
 void setContinuousRendering(bool _isContinuous);
 
 bool isContinuousRendering();
 
+/* Get the system path for font files
+ *  for each platform this will be different
+ */
+std::string deviceFontsPath();
+
 /* Read a bundled resource file as a string
- * 
+ *
  * Opens the file at the given relative path and returns a string with its contents.
  * _path is the location of the file within the core/resources folder. If the file
- * cannot be found or read, the returned string is empty. 
+ * cannot be found or read, the returned string is empty.
  */
 std::string stringFromResource(const char* _path);
 
-/* Read and allocates size bytes of memory  
+/* Read and allocates size bytes of memory
  *
- * Similarly to stringFromResource, _path is the location of file within 
- * core/resources. If the file cannot be read nothing is allocated and 
+ * Similarly to stringFromResource, _path is the location of file within
+ * core/resources. If the file cannot be read nothing is allocated and
  * a nullptr is returned.
- * _size is is an in/out parameter to retrieve the size in bytes of the 
+ * _size is is an in/out parameter to retrieve the size in bytes of the
  * allocated file
- */ 
+ */
 unsigned char* bytesFromResource(const char* _path, unsigned int* _size);
+
+/* Read and allocate size of bytes of memory
+ *
+ * Similar to bytesFromResource,
+ * but reads External memory instead of the app->assets/resource memory
+ * Used to access android system fonts "/system/fonts/"
+ */
+unsigned char* bytesFromExtMemory(const char* _path, unsigned int* _size);
 
 /* Function type for receiving data from a successful network request */
 using UrlCallback = std::function<void(std::vector<char>&&)>;
 
 /* Start retrieving data from a URL asynchronously
- * 
+ *
  * When the request is finished, the callback @_callback will be
  * run with the data that was retrieved from the URL @_url
  */

@@ -103,6 +103,16 @@ unsigned char* bytesFromResource(const char* _path, unsigned int* _size) {
     return reinterpret_cast<unsigned char *>(cdata);
 }
 
+// Does not provide implementation for this (yet!)
+unsigned char* bytesFromExtMemory(const char* _path, unsigned int* _size) {
+    return nullptr;
+}
+
+// No system fonts implementation (yet!)
+std::string deviceFontsPath() {
+    return "";
+}
+
 bool startUrlRequest(const std::string& _url, UrlCallback _callback) {
 
     NSString* nsUrl = [NSString stringWithUTF8String:_url.c_str()];

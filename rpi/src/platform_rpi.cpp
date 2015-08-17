@@ -109,12 +109,22 @@ unsigned char* bytesFromResource(const char* _path, unsigned int* _size) {
     return reinterpret_cast<unsigned char *>(cdata);
 }
 
+// Does not provide implementation for this (yet!)
+unsigned char* bytesFromExtMemory(const char* _path, unsigned int* _size) {
+    return nullptr;
+}
+
+// No system fonts implementation (yet!)
+std::string deviceFontsPath() {
+    return "";
+}
+
 bool startUrlRequest(const std::string& _url, UrlCallback _callback) {
 
     std::unique_ptr<UrlTask> task(new UrlTask(_url, _callback));
     for(auto& worker : s_Workers) {
         if(worker.isAvailable()) {
-            worker.perform(std::move(task)); 
+            worker.perform(std::move(task));
             return true;
         }
     }
