@@ -58,8 +58,10 @@ void initialize(const char* _scenePath) {
         m_tileManager->setScene(m_scene);
 
         // Font and label setup
+        std::string fontsPath = deviceFontsPath();
         m_ftContext = FontContext::GetInstance();
-        m_ftContext->addFont("FiraSans-Medium.ttf", "FiraSans");
+        //m_ftContext->addFont("FiraSans-Medium.ttf", "FiraSans", fontsPath);
+        m_ftContext->addFont("Roboto-Regular.ttf", "RobotoRegular", fontsPath);
         m_labels = std::unique_ptr<Labels>(new Labels());
 
         logMsg("Loading Tangram scene file: %s\n", _scenePath);
