@@ -13,7 +13,6 @@
 
 #define DBG(...)
 //logMsg(__VA_ARGS__)
-#define DBGC(...) logMsg(__VA_ARGS__)
 
 namespace Tangram {
 
@@ -247,7 +246,7 @@ void TileManager::updateTileSet() {
                 DBG("[%d, %d, %d] Load\n", id.z, id.x, id.y);
 
                 if (source->getTileData(task)) {
-                    DBGC("USE RAW CACHE\n");
+                    DBG("USE RAW CACHE\n");
 
                     m_dataCallback(std::move(task));
 
@@ -276,7 +275,7 @@ bool TileManager::addTile(const TileID& _tileID) {
     bool fromCache = false;
 
     if (tile) {
-        DBGC("USING CACHED TILE\n");
+        DBG("USING CACHED TILE\n");
         fromCache = true;
     }
 
@@ -341,7 +340,7 @@ void TileManager::updateProxyTiles(Tile& _tile) {
     {
         auto parent = m_tileCache.get(parentID);
         if (parent) {
-            DBGC("USE CACHED PARENT PROXY\n");
+            DBG("USE CACHED PARENT PROXY\n");
 
             _tile.setProxy(Tile::parent);
             parent->incProxyCounter();
@@ -365,7 +364,7 @@ void TileManager::updateProxyTiles(Tile& _tile) {
             } else {
                 auto child = m_tileCache.get(childID);
                 if (child) {
-                    DBGC("USE CACHED CHILD PROXY\n");
+                    DBG("USE CACHED CHILD PROXY\n");
 
                     _tile.setProxy(static_cast<Tile::ProxyID>(1 << i));
                     child->incProxyCounter();
