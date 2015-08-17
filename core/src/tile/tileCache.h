@@ -13,12 +13,9 @@ class TileCache {
     using CacheList = std::list<std::shared_ptr<Tile>>;
     using CacheMap = std::unordered_map<TileID, typename CacheList::iterator>;
 
-    // 32 MB
-    const static size_t DEFAULT_CACHE_SIZE = 32*1024*1024;
-
 public:
 
-    TileCache(size_t _cacheSizeMB = DEFAULT_CACHE_SIZE) : m_cacheMaxUsage(_cacheSizeMB) {}
+    TileCache(size_t _cacheSizeMB) : m_cacheMaxUsage(_cacheSizeMB) {}
 
     void put(std::shared_ptr<Tile> _tile) {
         m_cacheList.push_front(_tile);
@@ -50,7 +47,6 @@ public:
 
     size_t getMemoryUsage() const {
         size_t sum = 0;
-
         for (auto& tile : m_cacheList) {
             sum += tile->getMemoryUsage();
         }

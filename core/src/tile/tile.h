@@ -138,7 +138,7 @@ public:
         m_state = _state;
     }
 
-    /* Get the sum in bytes of all <VboMesh>es + TODO labels?  */
+    /* Get the sum in bytes of all <VboMesh>es */
     size_t getMemoryUsage() const;
 
 private:

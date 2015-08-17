@@ -5,6 +5,7 @@
 #include "scene/scene.h"
 #include "tile/tile.h"
 #include "view/view.h"
+#include "tileCache.h"
 
 #include "glm/gtx/norm.hpp"
 
@@ -21,6 +22,8 @@ TileManager::TileManager()
 
     // Instantiate workers
     m_workers = std::unique_ptr<TileWorker>(new TileWorker(*this, MAX_WORKERS));
+
+    m_tileCache = std::unique_ptr<TileCache>(new TileCache(DEFAULT_CACHE_SIZE));
 
     m_dataCallback = [this](std::shared_ptr<TileTask>&& task){
         if (setTileState(*task->tile, TileState::processing)) {
@@ -129,7 +132,7 @@ void TileManager::clearTileSet() {
     }
 
     m_tileSet.clear();
-    m_tileCache.clear();
+    m_tileCache->clear();
 
     m_loadPending = 0;
 }
@@ -263,15 +266,15 @@ void TileManager::updateTileSet() {
 
     DBG("all:%d loading:%d pending:%d cached:%d cache: %fMB\n",
         m_tileSet.size(), m_loadTasks.size(),
-        m_loadPending, m_tileCache.size(),
-        (double(m_tileCache.getMemoryUsage()) / (1024 * 1024)));
+        m_loadPending, m_tileCache->size(),
+        (double(m_tileCache->getMemoryUsage()) / (1024 * 1024)));
 
     m_loadTasks.clear();
 }
 
 bool TileManager::addTile(const TileID& _tileID) {
     DBG("[%d, %d, %d] Add\n", _tileID.z, _tileID.x, _tileID.y);
-    auto tile = m_tileCache.get(_tileID);
+    auto tile = m_tileCache->get(_tileID);
     bool fromCache = false;
 
     if (tile) {
@@ -314,7 +317,7 @@ void TileManager::removeTile(std::map<TileID, std::shared_ptr<Tile>>::iterator& 
 
     if (tile->hasState(TileState::ready)) {
         // Add to cache
-        m_tileCache.put(tile);
+        m_tileCache->put(tile);
     }
 
     // Remove tile from set
@@ -338,7 +341,7 @@ void TileManager::updateProxyTiles(Tile& _tile) {
 
     // Get proxy from cache
     {
-        auto parent = m_tileCache.get(parentID);
+        auto parent = m_tileCache->get(parentID);
         if (parent) {
             DBG("USE CACHED PARENT PROXY\n");
 
@@ -362,7 +365,7 @@ void TileManager::updateProxyTiles(Tile& _tile) {
                     child->incProxyCounter();
                 }
             } else {
-                auto child = m_tileCache.get(childID);
+                auto child = m_tileCache->get(childID);
                 if (child) {
                     DBG("USE CACHED CHILD PROXY\n");
 

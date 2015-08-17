@@ -4,7 +4,6 @@
 #include "tile/tileWorker.h"
 #include "tile/tileID.h"
 #include "tileTask.h"
-#include "tileCache.h"
 
 #include <map>
 #include <list>
@@ -20,12 +19,17 @@ class DataSource;
 class Tile;
 class Scene;
 class View;
+class TileCache;
 
 /* Singleton container of <Tile>s
  *
  * TileManager is a singleton that maintains a set of Tiles based on the current view into the map
  */
 class TileManager {
+
+    const static size_t MAX_WORKERS = 2;
+    const static size_t MAX_DOWNLOADS = 4;
+    const static size_t DEFAULT_CACHE_SIZE = 32*1024*1024; // 32 MB
 
 public:
 
@@ -85,9 +89,8 @@ private:
 
     std::vector<std::shared_ptr<DataSource>> m_dataSources;
 
-    TileCache m_tileCache;
+    std::unique_ptr<TileCache> m_tileCache;
 
-    const static size_t MAX_WORKERS = 2;
     std::unique_ptr<TileWorker> m_workers;
 
     bool m_tileSetChanged = false;
@@ -97,7 +100,6 @@ private:
      */
     TileTaskCb m_dataCallback;
 
-    const static int MAX_DOWNLOADS = 4;
     std::vector<std::pair<double, const TileID*>> m_loadTasks;
 
     /*
@@ -127,6 +129,7 @@ private:
     bool setTileState(Tile& tile, TileState state);
 
     void enqueueLoadTask(const TileID& tileID, const glm::dvec2& viewCenter);
+
 };
 
 }
