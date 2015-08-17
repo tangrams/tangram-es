@@ -1,6 +1,5 @@
 #include "tileWorker.h"
 
-#include "data/dataSource.h"
 #include "platform.h"
 #include "tile/tile.h"
 #include "view/view.h"
@@ -75,7 +74,8 @@ void TileWorker::run() {
             continue;
         }
 
-        auto tileData = task->source->parse(*task->tile, *task->rawTileData);
+        auto tileData = task->process();
+
 
         if (tileData) {
             task->tile->build(*m_tileManager.getScene(), *tileData, *task->source);

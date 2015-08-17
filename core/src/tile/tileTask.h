@@ -23,6 +23,7 @@ public:
         tile(_tile),
         source(_source) {
     }
+    virtual std::shared_ptr<TileData> process();
 
     TileTask& operator=(const TileTask& _other) = delete;
 };
