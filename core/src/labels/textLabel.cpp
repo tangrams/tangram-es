@@ -1,12 +1,11 @@
-#include "textLabel.h"
+#include "labels/textLabel.h"
 
 namespace Tangram {
 
-TextLabel::TextLabel(TextBuffer& _mesh, Label::Transform _transform, std::string _text, Type _type) :
-    Label(_transform, _type),
-    m_text(_text),
-    m_mesh(_mesh)
-{}
+TextLabel::TextLabel(std::string _text, Label::Transform _transform, Type _type, glm::vec2 _dim,
+                     TextBuffer& _mesh, Range _vertexRange)
+    : Label(_transform, _dim, _type, static_cast<LabelMesh&>(_mesh), _vertexRange),
+      m_text(_text) {}
 
 void TextLabel::updateBBoxes() {
     glm::vec2 t = glm::vec2(cos(m_transform.state.rotation), sin(m_transform.state.rotation));
@@ -17,26 +16,6 @@ void TextLabel::updateBBoxes() {
 
     m_obb = isect2d::OBB(obbCenter.x, obbCenter.y, m_transform.state.rotation, m_dim.x, m_dim.y);
     m_aabb = m_obb.getExtent();
-}
-
-bool TextLabel::rasterize() {
-
-    m_numGlyphs = m_mesh.rasterize(m_text, m_dim, m_bufferOffset);
-
-    if (m_numGlyphs == 0) {
-        return false;
-    }
-    return true;
-}
-
-void TextLabel::pushTransform() {
-    if (m_dirty) {
-        m_dirty = false;
-        size_t attribOffset = offsetof(Label::Vertex, state);
-        int numVerts = m_numGlyphs * 6;
-
-        m_mesh.updateAttribute(m_bufferOffset + attribOffset, numVerts, m_transform.state);
-    }
 }
 
 }

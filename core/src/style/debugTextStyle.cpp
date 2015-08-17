@@ -33,7 +33,7 @@ void DebugTextStyle::onBeginBuildTile(Tangram::Tile &_tile) const {
         }
 
         std::string tileID = std::to_string(_tile.getID().x) + "/" + std::to_string(_tile.getID().y) + "/" + std::to_string(_tile.getID().z);
-        addTextLabel(buffer, { glm::vec2(0), glm::vec2(0) }, tileID, Label::Type::debug);
+        buffer.addLabel(tileID, { glm::vec2(0) }, Label::Type::debug);
 
         onEndBuildTile(_tile);
 

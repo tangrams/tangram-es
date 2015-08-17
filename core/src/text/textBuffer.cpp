@@ -1,5 +1,5 @@
 #include "textBuffer.h"
-#include "fontContext.h"
+#include "labels/textLabel.h"
 
 #include "gl/texture.h"
 #include "gl/vboMesh.h"
@@ -10,104 +10,63 @@ TextBuffer::TextBuffer(std::shared_ptr<VertexLayout> _vertexLayout)
     : LabelMesh(_vertexLayout, GL_TRIANGLES) {
 
     m_dirtyTransform = false;
-    m_bufferPosition = 0;
-    m_fsBuffer = 0;
+    addVertices({}, {});
 }
 
-void TextBuffer::init(fsuint _fontID, float _size, float _blurSpread) {
+void TextBuffer::init(uint32_t _fontID, float _size, float _blurSpread) {
     m_fontID = _fontID;
     m_fontSize = _size;
     m_fontBlurSpread = _blurSpread;
 }
 
 TextBuffer::~TextBuffer() {
-    if (m_fsBuffer != 0) {
-        auto fontContext = FontContext::GetInstance();
-
-        fontContext->lock();
-        glfonsBufferDelete(fontContext->getFontContext(), m_fsBuffer);
-        fontContext->unlock();
-    }
 }
 
-int TextBuffer::rasterize(const std::string& _text, glm::vec2& _size, size_t& _bufferOffset) {
-    int numGlyphs = 0;
+bool TextBuffer::addLabel(const std::string& _text, Label::Transform _transform, Label::Type _type) {
 
     auto fontContext = FontContext::GetInstance();
 
     fontContext->lock();
 
-    auto ctx = fontContext->getFontContext();
-    if (m_fsBuffer == 0)
-        glfonsBufferCreate(ctx, &m_fsBuffer);
+    auto& quads = fontContext->rasterize(_text, m_fontID, m_fontSize, m_fontBlurSpread);
+    size_t numGlyphs = quads.size();
 
-    glfonsBindBuffer(ctx, m_fsBuffer);
-
-    fonsSetSize(ctx, m_fontSize);
-    fonsSetFont(ctx, m_fontID);
-
-    if (m_fontBlurSpread > 0){
-        fonsSetBlur(ctx, m_fontBlurSpread);
-        fonsSetBlurType(ctx, FONS_EFFECT_DISTANCE_FIELD);
-    } else {
-        fonsSetBlurType(ctx, FONS_EFFECT_NONE);
-    }
-
-    fsuint textID;
-    glfonsGenText(ctx, 1, &textID);
-
-    int status = glfonsRasterize(ctx, textID, _text.c_str());
-    if (status == GLFONS_VALID) {
-        _bufferOffset = m_bufferPosition;
-
-        numGlyphs = glfonsGetGlyphCount(ctx, textID);
-        m_bufferPosition += m_vertexLayout->getStride() * numGlyphs * 6;
-
-        glm::vec4 bbox;
-        glfonsGetBBox(ctx, textID, &bbox.x, &bbox.y, &bbox.z, &bbox.w);
-        _size.x = std::abs(bbox.z - bbox.x);
-        _size.y = std::abs(bbox.w - bbox.y);
-    }
-
-    glfonsBindBuffer(ctx, 0);
-    fontContext->unlock();
-
-    return numGlyphs;
-}
-
-void TextBuffer::addBufferVerticesToMesh() {
-    if (m_fsBuffer == 0)
-        return;
-
-    auto fontContext = FontContext::GetInstance();
-
-    fontContext->lock();
-    auto ctx = fontContext->getFontContext();
-    glfonsBindBuffer(ctx, m_fsBuffer);
-
-    int bufferSize = glfonsVerticesSize(ctx);
-    if (bufferSize == 0) {
-        glfonsBindBuffer(ctx, 0);
-        glfonsBufferDelete(ctx, m_fsBuffer);
-        m_fsBuffer = 0;
-
+    if (numGlyphs == 0) {
         fontContext->unlock();
-        return;
+        return false;
     }
 
-    std::vector<Label::Vertex> vertices(bufferSize);
+    auto& vertices = m_vertices[0];
+    int vertexOffset = vertices.size();
+    int numVertices = numGlyphs * 4;
+    vertices.reserve(vertices.size() + numVertices);
 
-    bool res = glfonsVertices(ctx, reinterpret_cast<float*>(vertices.data()));
+    float inf = std::numeric_limits<float>::infinity();
+    float x0 = inf, x1 = -inf, y0 = inf, y1 = -inf;
 
-    if (res) {
-        addVertices(std::move(vertices), {});
+    for (auto& q : quads) {
+        x0 = std::min(x0, std::min(q.x0, q.x1));
+        x1 = std::max(x1, std::max(q.x0, q.x1));
+        y0 = std::min(y0, std::min(q.y0, q.y1));
+        y1 = std::max(y1, std::max(q.y0, q.y1));
+
+        vertices.push_back({{q.x0, q.y0}, {q.s0, q.t0}});
+        vertices.push_back({{q.x0, q.y1}, {q.s0, q.t1}});
+        vertices.push_back({{q.x1, q.y0}, {q.s1, q.t0}});
+        vertices.push_back({{q.x1, q.y1}, {q.s1, q.t1}});
     }
-
-    glfonsBindBuffer(ctx, 0);
-    glfonsBufferDelete(ctx, m_fsBuffer);
-    m_fsBuffer = 0;
 
     fontContext->unlock();
+
+    glm::vec2 size((x1 - x0), (y1 - y0));
+
+    m_labels.emplace_back(new TextLabel(_text, _transform, _type, size,
+                                        *this, { vertexOffset, numVertices }));
+
+    // TODO: change this in TypeMesh::adVertices()
+    m_nVertices = vertices.size();
+
+    return true;
 }
 
 }
