@@ -12,6 +12,7 @@
 #include <future>
 #include <set>
 #include <mutex>
+#include <tuple>
 
 namespace Tangram {
 
@@ -54,9 +55,9 @@ public:
      * Contacts the <ViewModule> to determine whether the set of visible tiles has changed; if so,
      * constructs or disposes tiles as needed and returns true
      */
-    void updateTileSet();
+    void updateTileSets();
 
-    void clearTileSet();
+    void clearTileSets();
 
     /* For TileWorker: Pass TileTask with processed data back
      * to TileManager.
@@ -64,11 +65,11 @@ public:
     void tileProcessed(std::shared_ptr<TileTask>&& task);
 
     /* Returns the set of currently visible tiles */
-    const auto& getVisibleTiles() { return m_tileSet; }
-
-    auto& dataSources() { return m_dataSources; }
+    const auto& getVisibleTiles() { return m_tiles; }
 
     bool hasTileSetChanged() { return m_tileSetChanged; }
+
+    void addDataSource(std::shared_ptr<DataSource>&& dataSource);
 
     /* @_cacheSize: Set size of in-memory tile cache in bytes.
      * This cache holds recently used <Tile>s that are ready for rendering.
@@ -76,6 +77,11 @@ public:
     void setCacheSize(size_t _cacheSize);
 
 private:
+
+    struct TileSet {
+        std::shared_ptr<DataSource> source;
+        std::map<TileID, std::shared_ptr<Tile>> tiles;
+    };
 
     TileManager();
 
@@ -88,11 +94,10 @@ private:
     std::mutex m_tileStateMutex;
     int32_t m_loadPending;
 
-    // TODO: Might get away with using a vector of pairs here (and for searching
-    // using std:search (binary search))
-    std::map<TileID, std::shared_ptr<Tile>> m_tileSet;
+    std::vector<TileSet> m_tileSets;
 
-    std::vector<std::shared_ptr<DataSource>> m_dataSources;
+    /* Current tiles ready for rendering */
+    std::vector<std::shared_ptr<Tile>> m_tiles;
 
     std::unique_ptr<TileCache> m_tileCache;
 
@@ -105,35 +110,39 @@ private:
      */
     TileTaskCb m_dataCallback;
 
-    std::vector<std::pair<double, const TileID*>> m_loadTasks;
+    std::vector<std::tuple<double, const TileSet*, const TileID*>> m_loadTasks;
+
+    void updateTileSet(TileSet& tileSet);
+
+    bool setTileState(Tile& tile, TileState state);
+
+    void enqueueLoadTask(const TileSet& tileSet, const TileID& tileID, const glm::dvec2& viewCenter);
+
+    void loadTiles();
 
     /*
      * Constructs a future (async) to load data of a new visible tile
      *      this is also responsible for loading proxy tiles for the newly visible tiles
      * @_tileID: TileID for which new Tile needs to be constructed
      */
-    bool addTile(const TileID& _tileID);
+    bool addTile(TileSet& tileSet, const TileID& _tileID);
 
     /*
      * Removes a tile from m_tileSet
      */
-    void removeTile(std::map<TileID, std::shared_ptr<Tile>>::iterator& _tileIter,
+    void removeTile(TileSet& tileSet, std::map<TileID, std::shared_ptr<Tile>>::iterator& _tileIter,
                     std::vector<TileID>& _removes);
 
     /*
      * Checks and updates m_tileSet with proxy tiles for every new visible tile
      *  @_tile: Tile, the new visible tile for which proxies needs to be added
      */
-    void updateProxyTiles(Tile& _tile);
+    void updateProxyTiles(TileSet& tileSet, Tile& _tile);
 
     /*
      *  Once a visible tile finishes loading and is added to m_tileSet, all its proxy(ies) Tiles are removed
      */
-    void clearProxyTiles(Tile& _tile, std::vector<TileID>& _removes);
-
-    bool setTileState(Tile& tile, TileState state);
-
-    void enqueueLoadTask(const TileID& tileID, const glm::dvec2& viewCenter);
+    void clearProxyTiles(TileSet& tileSet, Tile& _tile, std::vector<TileID>& _removes);
 
 };
 

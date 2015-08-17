@@ -413,7 +413,7 @@ void SceneLoader::loadSources(Node sources, TileManager& tileManager) {
         }
 
         if (sourcePtr) {
-            tileManager.dataSources().push_back(std::move(sourcePtr));
+            tileManager.addDataSource(std::move(sourcePtr));
         }
     }
 
