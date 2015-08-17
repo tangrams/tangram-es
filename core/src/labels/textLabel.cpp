@@ -26,6 +26,9 @@ bool TextLabel::rasterize() {
     if (m_numGlyphs == 0) {
         return false;
     }
+
+    debugSize = m_numGlyphs * 6 * sizeof(Label::Vertex);
+
     return true;
 }
 

@@ -98,11 +98,49 @@ void Labels::update(const View& _view, float _dt, const std::vector<std::unique_
     }
 
     //// Update label meshes
+    size_t sumLabelBytes = 0;
 
     for (auto label : m_labels) {
         label->occlusionSolved();
         label->pushTransform();
+        if (label->getState() & (Label::State::fading_in | Label::State::fading_out | Label::State::visible))
+            sumLabelBytes += label->debugSize;
     }
+
+
+    size_t dirtyBytes = 0;
+    size_t dirtyBuffers = 0;
+
+    for (const auto& mapIDandTile : _tiles) {
+        const auto& tile = mapIDandTile.second;
+
+        if (!tile->isReady()) { continue; }
+
+        // discard based on level of detail
+        if ((zoom - tile->getID().z) > LODDiscardFunc(View::s_maxZoom, zoom)) {
+            continue;
+        }
+
+        glm::mat4 mvp = _view.getViewProjectionMatrix() * tile->getModelMatrix();
+
+        for (const auto& style : _styles) {
+            auto mesh = tile->getMesh(*style);
+            if (!mesh) { continue; }
+
+            auto labelMesh = dynamic_cast<LabelMesh*>(mesh.get());
+            if (!labelMesh) { continue; }
+
+            if (labelMesh->getDirtySize() > 0)
+                dirtyBuffers++;
+
+            dirtyBytes += labelMesh->getDirtySize();
+        }
+    }
+
+    logMsg("Buffers %d / Dirty %fMB - Active %fMB\n",
+           dirtyBuffers,
+           double(dirtyBytes) / (1024 * 1024),
+           double(sumLabelBytes) / (1024 * 1024));
 
     // Request for render if labels are in fading in/out states
     if (m_needUpdate)
