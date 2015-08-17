@@ -252,18 +252,11 @@ void TileManager::enqueueLoadTask(const TileSet& tileSet, const TileID& tileID,
     auto tileCenter = m_view->getMapProjection().TileCenter(tileID);
     double distance = glm::length2(tileCenter - viewCenter);
 
-    auto iter = m_loadTasks.begin();
-    while (iter != m_loadTasks.end()) {
-        if (std::get<0>(*iter) > distance) {
-            break;
-        }
-        ++iter;
-    }
-    if (iter == m_loadTasks.end()) {
-        m_loadTasks.push_back(std::make_tuple(distance, &tileSet, &tileID));
-    } else {
-        m_loadTasks.insert(iter, std::make_tuple(distance, &tileSet, &tileID));
-    }
+    auto it = std::upper_bound(m_loadTasks.begin(), m_loadTasks.end(), distance,
+                               [](auto& distance, auto& other){
+                                   return distance < std::get<0>(other);
+                               });
+    m_loadTasks.insert(it, std::make_tuple(distance, &tileSet, &tileID));
 }
 
 void TileManager::loadTiles() {
