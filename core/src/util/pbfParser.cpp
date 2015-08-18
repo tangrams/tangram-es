@@ -3,8 +3,6 @@
 #include "tile/tile.h"
 #include "platform.h"
 
-#include <cmath> // for isnan
-
 namespace Tangram {
 
 void PbfParser::extractGeometry(ParserContext& ctx, protobuf::message& _geomIn, std::vector<Line>& _out) {
@@ -96,20 +94,12 @@ void PbfParser::extractFeature(ParserContext& ctx, protobuf::message& _featureIn
 
                     std::size_t valueKey = tagsMsg.varint();
 
-                    if( ctx.numericValues.size() <= valueKey ) {
+                    if( ctx.values.size() <= valueKey ) {
                         logMsg("ERROR: accessing out of bound values\n");
                         return;
                     }
 
-                    const std::string& key = ctx.keys[tagKey];
-                    const std::string& strVal = ctx.stringValues[valueKey];
-                    float numVal = ctx.numericValues[valueKey];
-
-                    if(!isnan(numVal)) {
-                        _out.props.add(key, numVal);
-                    } else {
-                        _out.props.add(key, strVal);
-                    }
+                    _out.props.add(ctx.keys[tagKey], ctx.values[valueKey]);
                 }
                 break;
             }
@@ -156,8 +146,7 @@ void PbfParser::extractFeature(ParserContext& ctx, protobuf::message& _featureIn
 void PbfParser::extractLayer(ParserContext& ctx, protobuf::message& _layerIn, Layer& _out) {
 
     ctx.keys.clear();
-    ctx.numericValues.clear();
-    ctx.stringValues.clear();
+    ctx.values.clear();
     ctx.featureMsgs.clear();
 
     //iterate layer to populate featureMsgs, keys and values
@@ -182,36 +171,28 @@ void PbfParser::extractLayer(ParserContext& ctx, protobuf::message& _layerIn, La
                 while (valueItr.next()) {
                     switch (valueItr.tag) {
                         case 1: // string value
-                            ctx.stringValues.push_back(valueItr.string());
-                            ctx.numericValues.push_back(NAN);
+                            ctx.values.push_back(valueItr.string());
                             break;
                         case 2: // float value
-                            ctx.numericValues.push_back(valueItr.float32());
-                            ctx.stringValues.push_back("");
+                            ctx.values.push_back(valueItr.float32());
                             break;
                         case 3: // double value
-                            ctx.numericValues.push_back(valueItr.float64());
-                            ctx.stringValues.push_back("");
+                            ctx.values.push_back(valueItr.float64());
                             break;
                         case 4: // int value
-                            ctx.numericValues.push_back(valueItr.int64());
-                            ctx.stringValues.push_back("");
+                            ctx.values.push_back(valueItr.int64());
                             break;
                         case 5: // uint value
-                            ctx.numericValues.push_back(valueItr.varint());
-                            ctx.stringValues.push_back("");
+                            ctx.values.push_back(valueItr.varint());
                             break;
                         case 6: // sint value
-                            ctx.numericValues.push_back(valueItr.int64());
-                            ctx.stringValues.push_back("");
+                            ctx.values.push_back(valueItr.int64());
                             break;
                         case 7: // bool value
-                            ctx.numericValues.push_back(valueItr.boolean());
-                            ctx.stringValues.push_back("");
+                            ctx.values.push_back(valueItr.boolean());
                             break;
                         default:
-                            ctx.numericValues.push_back(NAN);
-                            ctx.stringValues.push_back("");
+                            ctx.values.push_back(Properties::none_type{});
                             valueItr.skip();
                             break;
                     }
