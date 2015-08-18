@@ -188,8 +188,9 @@ void TileManager::updateTileSet() {
 
             } else if (curTileId == NOT_A_TILE || visTileId < curTileId) {
                 // tileSet is missing an element present in visibleTiles
-                if (!addTile(visTileId))
+                if (!addTile(visTileId)) {
                     enqueueLoadTask(visTileId, viewCenter);
+                }
 
                 ++visTilesIter;
             } else {
