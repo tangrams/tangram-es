@@ -175,6 +175,7 @@ private:
 
     std::unordered_map<std::string, std::unique_ptr<VboMesh>> m_geometry; // Map of <Style>s and their associated <VboMesh>es
 
+    mutable size_t m_memoryUsage = 0;
 };
 
 }
