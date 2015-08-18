@@ -94,9 +94,7 @@ namespace Tangram {
                 }
                 case FilterType::existence: {
 
-                    bool found = ctx.find(key) != ctx.end() ||
-                                 feat.props.stringProps.find(key) != feat.props.stringProps.end() ||
-                                 feat.props.numericProps.find(key) != feat.props.numericProps.end();
+                    bool found = ctx.find(key) != ctx.end() || feat.props.contains(key);
 
                     return exists == found;
                 }
@@ -109,18 +107,20 @@ namespace Tangram {
                         }
                         return false;
                     }
-                    auto strIt = feat.props.stringProps.find(key);
-                    if (strIt != feat.props.stringProps.end()) {
+
+                    auto& value = feat.props.get(key);
+                    if (value.is<std::string>()) {
+                        const auto& str = value.get<std::string>();
                         for (const auto& v : values) {
-                            if (v.equals(strIt->second)) { return true; }
+                            if (v.equals(str)) { return true; }
+                        }
+                    } else if (value.is<float>()) {
+                        float num =  value.get<float>();
+                        for (const auto& v : values) {
+                            if (v.equals(num)) { return true; }
                         }
                     }
-                    auto numIt = feat.props.numericProps.find(key);
-                    if (numIt != feat.props.numericProps.end()) {
-                        for (const auto& v : values) {
-                            if (v.equals(numIt->second)) { return true; }
-                        }
-                    }
+
                     return false;
                 }
                 case FilterType::range: {
@@ -133,11 +133,12 @@ namespace Tangram {
                         if (!val.numeric) { return false; } // only check range for numbers
                         return val.num >= min && val.num < max;
                     }
-                    auto numIt = feat.props.numericProps.find(key);
-                    if (numIt != feat.props.numericProps.end()) {
-                        const auto& num = numIt->second;
+                    auto& value = feat.props.get(key);
+                    if (value.is<float>()) {
+                        float num =  value.get<float>();
                         return num >= min && num < max;
                     }
+
                     return false;
                 }
                 default:

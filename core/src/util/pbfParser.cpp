@@ -106,9 +106,9 @@ void PbfParser::extractFeature(ParserContext& ctx, protobuf::message& _featureIn
                     float numVal = ctx.numericValues[valueKey];
 
                     if(!isnan(numVal)) {
-                        _out.props.numericProps[key] = numVal;
+                        _out.props.add(key, numVal);
                     } else {
-                        _out.props.stringProps[key] = strVal;
+                        _out.props.add(key, strVal);
                     }
                 }
                 break;

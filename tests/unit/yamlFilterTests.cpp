@@ -18,32 +18,29 @@ Feature civic, bmw1, bike;
 
 void init() {
 
-    civic.props.stringProps.clear();
-    civic.props.numericProps.clear();
-    civic.props.stringProps["name"] = "civic";
-    civic.props.stringProps["brand"] = "honda";
-    civic.props.numericProps["wheel"] = 4;
-    civic.props.stringProps["drive"] = "fwd";
-    civic.props.stringProps["type"] = "car";
+    civic.props.clear();
+    civic.props.add("name", "civic");
+    civic.props.add("brand", "honda");
+    civic.props.add("wheel",  4);
+    civic.props.add("drive", "fwd");
+    civic.props.add("type", "car");
 
-    bmw1.props.stringProps.clear();
-    bmw1.props.numericProps.clear();
-    bmw1.props.stringProps["name"] = "bmw320i";
-    bmw1.props.stringProps["brand"] = "bmw";
-    bmw1.props.stringProps["check"] = "false";
-    bmw1.props.stringProps["series"] = "3";
-    bmw1.props.numericProps["wheel"] = 4;
-    bmw1.props.stringProps["drive"] = "all";
-    bmw1.props.stringProps["type"] = "car";
+    bmw1.props.clear();
+    bmw1.props.add("name", "bmw320i");
+    bmw1.props.add("brand", "bmw");
+    bmw1.props.add("check", "false");
+    bmw1.props.add("series", "3");
+    bmw1.props.add("wheel", 4);
+    bmw1.props.add("drive", "all");
+    bmw1.props.add("type", "car");
 
-    bike.props.stringProps.clear();
-    bike.props.numericProps.clear();
-    bike.props.stringProps["name"] = "cb1100";
-    bike.props.stringProps["brand"] = "honda";
-    bike.props.numericProps["wheel"] = 2;
-    bike.props.stringProps["type"] = "bike";
-    bike.props.stringProps["series"] = "CB";
-    bike.props.stringProps["check"] = "available";
+    bike.props.clear();
+    bike.props.add("name", "cb1100");
+    bike.props.add("brand", "honda");
+    bike.props.add("wheel", 2);
+    bike.props.add("type", "bike");
+    bike.props.add("series", "CB");
+    bike.props.add("check", "available");
 
     ctx["$vroom"] = Value(1);
     ctx["$zooooom"] = Value("false");

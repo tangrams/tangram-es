@@ -1,6 +1,9 @@
 #pragma once
 
 #include "glm/vec3.hpp"
+#include "variant/variant.hpp"
+#include "variant/optional.hpp"
+
 #include <vector>
 #include <string>
 #include <unordered_map>
@@ -65,46 +68,62 @@ typedef std::vector<Point> Line;
 typedef std::vector<Line> Polygon;
 
 struct Properties {
+    struct none_type {};
 
-    std::unordered_map<std::string, std::string> stringProps;
-    std::unordered_map<std::string, float> numericProps;
+    using Value = mapbox::util::variant<none_type, std::string, float>;
+
+    const Value& get(const std::string& key) const;
+
+    void clear() { props.clear(); }
 
     bool contains(const std::string& key) const {
-        return numericProps.find(key) != numericProps.end();
+        return props.find(key) != props.end();
     }
 
     bool getNumeric(const std::string& key, float& value) const {
-        auto it = numericProps.find(key);
-        if (it != numericProps.end()) {
-            value = it->second;
+        auto it = props.find(key);
+        if (it != props.end()) {
+            // TODO: Cast if string?
+            if (!it->second.is<float>()) { return false; }
+            value = it->second.get<float>();
             return true;
         }
         return false;
     }
 
-    float getNumeric(const std::string& key, float fallback = 0) const {
-        auto it = numericProps.find(key);
-        if (it != numericProps.end()) {
-            return it->second;
+    float getNumeric(const std::string& key) const {
+        auto it = props.find(key);
+        if (it != props.end()) {
+            if (!it->second.is<float>()) { return 0; }
+            return it->second.get<float>();
         }
-        return fallback;
+        return 0;
     }
     bool getString(const std::string& key, std::string& value) const {
-        auto it = stringProps.find(key);
-        if (it != stringProps.end()) {
-            value = it->second;
+        auto it = props.find(key);
+        if (it != props.end()) {
+            if (!it->second.is<std::string>()) { return false; }
+            value = it->second.get<std::string>();
             return true;
         }
         return false;
     }
 
     std::string getString(const std::string& key) const {
-        auto it = stringProps.find(key);
-        if (it != stringProps.end()) {
-            return it->second;
+        auto it = props.find(key);
+        if (it != props.end()) {
+            if (!it->second.is<std::string>()) { return ""; }
+            return it->second.get<std::string>();
         }
         return "";
     }
+
+    template <typename... Args> void add(std::string key, Args&&... args) {
+        props.emplace(std::move(key), Value{std::forward<Args>(args)...});
+    }
+private:
+    std::unordered_map<std::string, Value> props;
+
 };
 
 struct Feature {
