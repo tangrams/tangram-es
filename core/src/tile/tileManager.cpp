@@ -417,4 +417,8 @@ void TileManager::clearProxyTiles(Tile& _tile, std::vector<TileID>& _removes) {
     }
 }
 
+void TileManager::setCacheSize(size_t _cacheSize) {
+    m_tileCache->limitCacheSize(_cacheSize);
+}
+
 }

@@ -70,6 +70,9 @@ public:
 
     bool hasTileSetChanged() { return m_tileSetChanged; }
 
+    /* @_cacheSize: Set size of in-memory tile cache in bytes */
+    void setCacheSize(size_t _cacheSize);
+
 private:
 
     TileManager();

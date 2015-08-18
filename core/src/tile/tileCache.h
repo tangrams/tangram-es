@@ -22,12 +22,7 @@ public:
         m_cacheMap[_tile->getID()] = m_cacheList.begin();
         m_cacheUsage += _tile->getMemoryUsage();
 
-        while (m_cacheUsage > m_cacheMaxUsage) {
-            auto& tile = m_cacheList.back();
-            m_cacheUsage -= tile->getMemoryUsage();
-            m_cacheMap.erase(tile->getID());
-            m_cacheList.pop_back();
-        }
+        limitCacheSize(m_cacheMaxUsage);
     }
 
     std::shared_ptr<Tile> get(TileID _tileID) {
@@ -43,7 +38,16 @@ public:
         return tile;
     }
 
-    size_t size() const { return m_cacheList.size(); }
+    void limitCacheSize(size_t _cacheSizeBytes) {
+        m_cacheMaxUsage = _cacheSizeBytes;
+
+        while (m_cacheUsage > m_cacheMaxUsage) {
+            auto& tile = m_cacheList.back();
+            m_cacheUsage -= tile->getMemoryUsage();
+            m_cacheMap.erase(tile->getID());
+            m_cacheList.pop_back();
+        }
+    }
 
     size_t getMemoryUsage() const {
         size_t sum = 0;

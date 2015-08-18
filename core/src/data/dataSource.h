@@ -50,7 +50,7 @@ public:
 
     const std::string& name() const { return m_name; }
 
-    /* @_cacheSize: Set size of in-memory cache for tile data in bytes. */
+    /* @_cacheSize: Set size of in-memory cache for tile data in bytes */
     void setCacheSize(size_t _cacheSize);
 
 protected:
