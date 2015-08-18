@@ -60,9 +60,6 @@ public class MapController implements Renderer, OnTouchListener, OnScaleGestureL
         shoveGestureDetector = new ShoveGestureDetector(mainApp, this);
         gestureDetector.setOnDoubleTapListener(this);
 
-        // Explicitly enable quick scale with double tap, even though its default for API target 19+
-        scaleGestureDetector.setQuickScaleEnabled(true);
-
         // Set up okHTTP
         okRequestBuilder = new Request.Builder();
         okClient = new OkHttpClient();
