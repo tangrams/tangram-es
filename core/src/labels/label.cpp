@@ -228,18 +228,21 @@ bool Label::updateState(const glm::mat4& _mvp, const glm::vec2& _screenSize, flo
             }
             setAlpha(m_fade.update(_dt));
             animate = true;
-            if (m_fade.isFinished())
+            if (m_fade.isFinished()) {
                 enterState(State::visible, 1.0);
+            }
             break;
         case State::fading_out:
             setAlpha(m_fade.update(_dt));
             animate = true;
-            if (m_fade.isFinished())
+            if (m_fade.isFinished()) {
                 enterState(State::sleep, 0.0);
+            }
             break;
         case State::out_of_screen:
-            if (!offViewport(_screenSize))
+            if (!offViewport(_screenSize)) {
                 enterState(State::wait_occ, 0.0);
+            }
             break;
         case State::wait_occ:
             if (m_occlusionSolved) {

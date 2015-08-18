@@ -29,8 +29,12 @@ VboMesh::VboMesh(std::shared_ptr<VertexLayout> _vertexLayout, GLenum _drawMode, 
 }
 
 VboMesh::~VboMesh() {
-    if (m_glVertexBuffer) glDeleteBuffers(1, &m_glVertexBuffer);
-    if (m_glIndexBuffer) glDeleteBuffers(1, &m_glIndexBuffer);
+    if (m_glVertexBuffer) {
+        glDeleteBuffers(1, &m_glVertexBuffer);
+    }
+    if (m_glIndexBuffer) {
+        glDeleteBuffers(1, &m_glIndexBuffer);
+    }
 
     delete[] m_glVertexData;
     delete[] m_glIndexData;
@@ -141,9 +145,8 @@ void VboMesh::draw(ShaderProgram& _shader) {
 
     checkValidity();
 
-    if (!m_isCompiled) return;
-
-    if (m_nVertices == 0) return;
+    if (!m_isCompiled) { return; }
+    if (m_nVertices == 0) { return; }
 
     // Ensure that geometry is buffered into GPU
     if (!m_isUploaded) {

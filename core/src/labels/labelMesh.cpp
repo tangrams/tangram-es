@@ -77,9 +77,8 @@ void LabelMesh::draw(ShaderProgram& _shader) {
 
     checkValidity();
 
-    if (!m_isCompiled) return;
-
-    if (m_nVertices == 0) return;
+    if (!m_isCompiled) { return; }
+    if (m_nVertices == 0) { return; }
 
     bool bound = false;
 
