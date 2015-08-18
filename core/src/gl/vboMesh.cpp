@@ -1,5 +1,6 @@
 #include "vboMesh.h"
 #include "shaderProgram.h"
+#include "renderState.h"
 
 namespace Tangram {
 
@@ -65,7 +66,7 @@ bool VboMesh::subDataUpload() {
         logMsg("WARNING: wrong usage hint provided to the Vbo\n");
     }
 
-    glBindBuffer(GL_ARRAY_BUFFER, m_glVertexBuffer);
+    RenderState::vertexBuffer(m_glVertexBuffer);
 
     long vertexBytes = m_nVertices * m_vertexLayout->getStride();
 
@@ -85,13 +86,7 @@ bool VboMesh::subDataUpload() {
 
     m_dirtyOffset = 0;
     m_dirtySize = 0;
-
     m_dirty = false;
-
-    // Also bind indices when return 'already bound'.
-    if (m_nIndices > 0) {
-        glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, m_glIndexBuffer);
-    }
 
     return true;
 }
@@ -110,7 +105,7 @@ bool VboMesh::upload() {
     // Buffer vertex data
     int vertexBytes = m_nVertices * m_vertexLayout->getStride();
 
-    glBindBuffer(GL_ARRAY_BUFFER, m_glVertexBuffer);
+    RenderState::vertexBuffer(m_glVertexBuffer);
     glBufferData(GL_ARRAY_BUFFER, vertexBytes, m_glVertexData, m_hint);
 
     if (m_glIndexData) {
@@ -120,7 +115,8 @@ bool VboMesh::upload() {
         }
 
         // Buffer element index data
-        glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, m_glIndexBuffer);
+        RenderState::indexBuffer(m_glIndexBuffer);
+
         glBufferData(GL_ELEMENT_ARRAY_BUFFER, m_nIndices * sizeof(GLushort), m_glIndexData, m_hint);
     }
 
@@ -148,22 +144,18 @@ void VboMesh::draw(ShaderProgram& _shader) {
 
     if (m_nVertices == 0) return;
 
-    bool bound = false;
-
     // Ensure that geometry is buffered into GPU
     if (!m_isUploaded) {
-        bound = upload();
+        upload();
     } else if (m_dirty) {
-        bound = subDataUpload();
+        subDataUpload();
     }
 
-    if (!bound) {
-        // Bind buffers for drawing
-        glBindBuffer(GL_ARRAY_BUFFER, m_glVertexBuffer);
+    // Bind buffers for drawing
+    RenderState::vertexBuffer(m_glVertexBuffer);
 
-        if (m_nIndices > 0) {
-            glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, m_glIndexBuffer);
-        }
+    if (m_nIndices > 0) {
+        RenderState::indexBuffer(m_glIndexBuffer);
     }
 
     // Enable shader program

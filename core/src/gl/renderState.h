@@ -1,8 +1,9 @@
 #pragma once
 
-#include <map>
 #include "gl.h"
 #include "platform.h"
+
+#include <tuple>
 
 namespace Tangram {
 
@@ -22,80 +23,115 @@ namespace RenderState {
                 T::set(m_current);
             }
         }
-
     private:
         typename T::Type m_current;
     };
 
-    struct DepthTest {
+    template <GLenum N>
+    struct BoolSwitch {
         using Type = GLboolean;
         inline static void set(const Type& _type) {
             if (_type) {
-                glEnable(GL_DEPTH_TEST);
+                glEnable(N);
             } else {
-                glDisable(GL_DEPTH_TEST);
+                glDisable(N);
             }
         }
     };
 
-    struct DepthWrite {
-        using Type = GLboolean;
-        inline static void set(const Type& _type) {
-            if (_type) {
-                glDepthMask(GL_TRUE);
-            } else {
-                glDepthMask(GL_FALSE);
+    // http://stackoverflow.com/questions/7858817/unpacking-a-tuple-to-call-a-matching-function-pointer
+    // Generate integer sequece for getting values from 'params' tuple.
+    template<int ...> struct seq {};
+    template<int N, int ...S> struct gens : gens<N-1, N-1, S...> {};
+    template<int ...S> struct gens<0, S...>{ typedef seq<S...> type; };
+
+    template <typename F, F fn, typename ...Args>
+    struct StateWrap {
+
+        using Type = std::tuple<Args...>;
+        Type params;
+
+        void init(Args... _param) {
+            params = std::make_tuple(_param...);
+        }
+
+        inline void operator()(Args... _args) {
+            auto _params = std::make_tuple(_args...);
+
+            if (_params != params) {
+                params = _params;
+                call(typename gens<sizeof...(Args)>::type());
             }
+        }
+
+        template<int ...S>
+        inline void call(seq<S...>) {
+            fn(std::get<S>(params) ...);
         }
     };
 
-    struct Blending {
-        using Type = GLboolean;
-        inline static void set(const Type& _type) {
-            if (_type) {
-                glEnable(GL_BLEND);
-            } else {
-                glDisable(GL_BLEND);
-            }
-        }
-    };
 
-    struct BlendingFunc {
-        struct Type {
-            GLenum src;
-            GLenum dst;
-            inline bool operator!=(const Type& _other) {
-                return src != _other.src || dst != _other.dst;
-            }
-        };
-        inline static void set(const Type& _type) {
-            glBlendFunc(_type.src, _type.dst);
-        }
-    };
+    using DepthTest = State<BoolSwitch<GL_DEPTH_TEST>>;
+    using StencilTest = State<BoolSwitch<GL_STENCIL_TEST>>;
+    using Blending = State<BoolSwitch<GL_BLEND>>;
+    using Culling = State<BoolSwitch<GL_CULL_FACE>>;
 
-    struct Culling {
-        struct Type {
-            GLboolean culling;
-            GLenum frontFaceOrder;
-            GLenum face;
-            inline bool operator!=(const Type& _other) {
-                return culling != _other.culling || frontFaceOrder != _other.frontFaceOrder || face != _other.face;
-            }
-        };
-        inline static void set(const Type& _type) {
-            if (_type.culling) {
-                glEnable(GL_CULL_FACE);
-                glFrontFace(_type.frontFaceOrder);
-                glCullFace(_type.face);
-            }
-        }
-    };
+#define FUN(X) decltype((X)), X
 
-    extern State<DepthTest> depthTest;
-    extern State<DepthWrite> depthWrite;
-    extern State<Blending> blending;
-    extern State<BlendingFunc> blendingFunc;
-    extern State<Culling> culling;
+    using DepthWrite = StateWrap<FUN(glDepthMask),
+                                 GLboolean>; // enabled
+
+    using BlendingFunc = StateWrap<FUN(glBlendFunc),
+                                   GLenum,  // sfactor
+                                   GLenum>; // dfactor
+
+    using StencilWrite = StateWrap<FUN(glStencilMask),
+                                   GLuint>; // mask
+
+    using StencilFunc = StateWrap<FUN(glStencilFunc),
+                                  GLenum,  // func
+                                  GLint,   // ref
+                                  GLuint>; // mask
+
+    using StencilOp = StateWrap<FUN(glStencilOp),
+                                GLenum,  // stencil:fail
+                                GLenum,  // stencil:pass, depth:fail
+                                GLenum>; // both pass
+
+    using ColorWrite = StateWrap<FUN(glColorMask),
+                                 GLboolean,  // red
+                                 GLboolean,  // green
+                                 GLboolean,  // blue
+                                 GLboolean>; // alpha
+
+    using FrontFace = StateWrap<FUN(glFrontFace),
+                                GLenum>;
+
+    using CullFace = StateWrap<FUN(glCullFace),
+                               GLenum>;
+
+    void bindVertexBuffer(GLint id);
+    void bindIndexBuffer(GLint id);
+    using VertexBuffer = StateWrap<FUN(bindVertexBuffer), GLint>;
+    using IndexBuffer = StateWrap<FUN(bindIndexBuffer), GLint>;
+
+#undef FUN
+
+    extern DepthTest depthTest;
+    extern DepthWrite depthWrite;
+    extern Blending blending;
+    extern BlendingFunc blendingFunc;
+    extern StencilTest stencilTest;
+    extern StencilWrite stencilWrite;
+    extern StencilFunc stencilFunc;
+    extern StencilOp stencilOp;
+    extern ColorWrite colorWrite;
+    extern FrontFace frontFace;
+    extern CullFace cullFace;
+    extern Culling culling;
+
+    extern VertexBuffer vertexBuffer;
+    extern IndexBuffer indexBuffer;
 
     void configure();
 }
