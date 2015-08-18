@@ -80,6 +80,12 @@ void DataSource::onTileLoaded(std::vector<char>&& _rawData, std::shared_ptr<Tile
         m_cacheUsage += rawDataRef->size();
 
         while (m_cacheUsage > m_cacheMaxUsage) {
+            if (m_cacheList.empty()) {
+                logMsg("Error: invalid cache state!\n");
+                m_cacheUsage = 0;
+                break;
+            }
+
             // logMsg("Limit raw cache tiles:%d, %fMB \n", m_cacheList.size(),
             //        double(m_cacheUsage) / (1024*1024));
 

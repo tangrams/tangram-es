@@ -84,8 +84,8 @@ protected:
 
     CacheMap m_cacheMap;
     CacheList m_cacheList;
-    size_t m_cacheUsage;
-    size_t m_cacheMaxUsage;
+    int m_cacheUsage;
+    int m_cacheMaxUsage;
 
 };
 

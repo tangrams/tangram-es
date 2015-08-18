@@ -15,7 +15,9 @@ class TileCache {
 
 public:
 
-    TileCache(size_t _cacheSizeMB) : m_cacheMaxUsage(_cacheSizeMB) {}
+    TileCache(size_t _cacheSizeMB) :
+        m_cacheUsage(0),
+        m_cacheMaxUsage(_cacheSizeMB) {}
 
     void put(std::shared_ptr<Tile> _tile) {
         m_cacheList.push_front(_tile);
@@ -42,6 +44,11 @@ public:
         m_cacheMaxUsage = _cacheSizeBytes;
 
         while (m_cacheUsage > m_cacheMaxUsage) {
+            if (m_cacheList.empty()) {
+                logMsg("Error: invalid cache state!\n");
+                m_cacheUsage = 0;
+                break;
+            }
             auto& tile = m_cacheList.back();
             m_cacheUsage -= tile->getMemoryUsage();
             m_cacheMap.erase(tile->getID());
@@ -66,8 +73,8 @@ private:
     CacheMap m_cacheMap;
     CacheList m_cacheList;
 
-    size_t m_cacheUsage;
-    size_t m_cacheMaxUsage;
+    int m_cacheUsage;
+    int m_cacheMaxUsage;
 };
 
 }
