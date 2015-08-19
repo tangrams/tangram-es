@@ -192,7 +192,7 @@ void PbfParser::extractLayer(ParserContext& ctx, protobuf::message& _layerIn, La
                             ctx.values.push_back(valueItr.boolean());
                             break;
                         default:
-                            ctx.values.push_back(Properties::none_type{});
+                            ctx.values.push_back(none_type{});
                             valueItr.skip();
                             break;
                     }

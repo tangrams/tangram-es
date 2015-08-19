@@ -107,11 +107,11 @@ TEST_CASE("SceneLayer correctly merges rules matched from sublayer", "[SceneLaye
     // deeper match from layer_a should override parameters in same style from layer_d
     REQUIRE(matches[0].style == "style_0");
     REQUIRE(matches[0].parameters[0].key == StyleParamKey::order);
-    REQUIRE(matches[0].parameters[0].value == "value_a");
+    REQUIRE(matches[0].parameters[0].value.get<std::string>() == "value_a");
 
     // deeper match from layer_c should override parameters in same style from layer_e
     REQUIRE(matches[1].style == "style_2");
     REQUIRE(matches[1].parameters[0].key == StyleParamKey::order);
-    REQUIRE(matches[1].parameters[0].value == "value_c");
+    REQUIRE(matches[1].parameters[0].value.get<std::string>() == "value_c");
 
 }

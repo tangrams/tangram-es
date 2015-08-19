@@ -1,8 +1,7 @@
 #pragma once
 
 #include "glm/vec3.hpp"
-#include "variant/variant.hpp"
-#include "variant/optional.hpp"
+#include "util/variant.h"
 
 #include <vector>
 #include <string>
@@ -68,9 +67,8 @@ typedef std::vector<Point> Line;
 typedef std::vector<Line> Polygon;
 
 struct Properties {
-    struct none_type {};
 
-    using Value = mapbox::util::variant<none_type, std::string, float>;
+    using Value = variant<none_type, std::string, float>;
 
     const Value& get(const std::string& key) const;
 

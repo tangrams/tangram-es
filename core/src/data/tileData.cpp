@@ -1,7 +1,7 @@
 #include "tileData.h"
 
 namespace Tangram {
-static Properties::Value NOT_FOUND = Properties::none_type{};
+static Properties::Value NOT_FOUND = none_type{};
 
 const Properties::Value& Properties::get(const std::string& key) const {
 
