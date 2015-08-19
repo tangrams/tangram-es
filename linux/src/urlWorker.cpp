@@ -38,6 +38,9 @@ void UrlWorker::perform(std::unique_ptr<UrlTask> _task) {
 
         logMsg("Fetching URL with curl: %s\n", m_task->url.c_str());
 
+        // Reset stream
+        m_stream.seekp(0);
+
         CURLcode result = curl_easy_perform(m_curlHandle);
 
         long httpStatusCode = 0;
