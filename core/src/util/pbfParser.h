@@ -23,11 +23,11 @@ namespace PbfParser {
         int tileExtent = 0;
     };
     
-    void extractGeometry(ParserContext& ctx, protobuf::message& _geomIn);
+    void extractGeometry(ParserContext& _ctx, protobuf::message& _geomIn);
     
-    void extractFeature(ParserContext& ctx, protobuf::message& _featureIn, Feature& _out);
+    void extractFeature(ParserContext& _ctx, protobuf::message& _featureIn, Feature& _out);
     
-    void extractLayer(ParserContext& ctx, protobuf::message& _in, Layer& _out);
+    void extractLayer(ParserContext& _ctx, protobuf::message& _in, Layer& _out);
     
     enum pbfGeomCmd {
         moveTo = 1,
