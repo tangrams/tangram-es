@@ -11,6 +11,7 @@ namespace Tangram {
 const StyleParam NONE;
 
 const std::map<std::string, StyleParamKey> s_StyleParamMap = {
+    {"none", StyleParamKey::none},
     {"order", StyleParamKey::order},
     {"color", StyleParamKey::color},
     {"width", StyleParamKey::width},
@@ -25,6 +26,7 @@ const std::map<std::string, StyleParamKey> s_StyleParamMap = {
 StyleParam::StyleParam(const std::string& _key, const std::string& _value) {
     auto it = s_StyleParamMap.find(_key);
     if (it == s_StyleParamMap.end()) {
+        logMsg("Unknown StyleParam %s:%s\n", _key.c_str(), _value.c_str());
         value = "";
         return;
     }
@@ -73,6 +75,8 @@ std::string StyleParam::toString() const {
     case StyleParamKey::join:
     case StyleParamKey::outline_join:
         return std::to_string(static_cast<int>(value.get<CapTypes>()));
+    case StyleParamKey::none:
+        break;
     }
     return "undefined";
 }

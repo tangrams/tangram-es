@@ -14,11 +14,11 @@ using Color = CSSColorParser::Color;
 namespace Tangram {
 
 enum class StyleParamKey : uint8_t {
-    order, color, width, cap, join, outline_color, outline_width, outline_cap, outline_join,
+    none, order, color, width, cap, join, outline_color, outline_width, outline_cap, outline_join,
 };
 
 struct StyleParam {
-    using Value = variant<none_type, std::string, Color, CapTypes, JoinTypes, float, int32_t>;
+    using Value = variant<none_type, std::string, Color, CapTypes, JoinTypes, int32_t, float>;
 
     StyleParam() {}
     StyleParam(const std::string& _key, const std::string& _value);
