@@ -37,7 +37,6 @@ void DebugTextStyle::onBeginBuildTile(Tangram::Tile &_tile) const {
 
         onEndBuildTile(_tile);
 
-        mesh->compileVertexBuffer();
     }
 
 }

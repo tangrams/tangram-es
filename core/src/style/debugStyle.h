@@ -34,6 +34,8 @@ public:
     virtual ~DebugStyle() {
     }
 
+    virtual bool isOpaque() const override { return false; };
+
 };
 
 }
