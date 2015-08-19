@@ -3,11 +3,11 @@
 #include <curl/curl.h>
 
 static size_t write_data(void *_buffer, size_t _size, size_t _nmemb, void *_dataPtr) {
-    
+
     const size_t realSize = _size * _nmemb;
 
     std::stringstream* stream = (std::stringstream*)_dataPtr;
-    
+
     stream->write((const char*)_buffer, realSize);
 
     return realSize;
@@ -19,10 +19,10 @@ UrlWorker::UrlWorker() {
 
 UrlWorker::~UrlWorker() {
     curl_easy_cleanup(m_curlHandle);
-} 
+}
 
 void UrlWorker::perform(std::unique_ptr<UrlTask> _task) {
-    
+
     m_task = std::move(_task);
     m_available = false;
 
@@ -35,24 +35,28 @@ void UrlWorker::perform(std::unique_ptr<UrlTask> _task) {
         curl_easy_setopt(m_curlHandle, CURLOPT_HEADER, 0L);
         curl_easy_setopt(m_curlHandle, CURLOPT_VERBOSE, 0L);
         curl_easy_setopt(m_curlHandle, CURLOPT_ACCEPT_ENCODING, "gzip");
-    
+
         logMsg("Fetching URL with curl: %s\n", m_task->url.c_str());
 
         CURLcode result = curl_easy_perform(m_curlHandle);
-        
-        if (result != CURLE_OK) {
-            logMsg("curl_easy_perform failed: %s\n", curl_easy_strerror(result));
+
+        long httpStatusCode = 0;
+        curl_easy_getinfo(m_curlHandle, CURLINFO_RESPONSE_CODE, &httpStatusCode);
+
+        if (result == CURLE_OK && httpStatusCode == 200) {
+            size_t nBytes = m_stream.tellp();
+            m_stream.seekp(0);
+
+            m_task->content.resize(nBytes);
+            m_stream.seekg(0);
+            m_stream.read(m_task->content.data(), nBytes);
+        } else {
+            logMsg("curl_easy_perform failed: %s - %d\n", curl_easy_strerror(result), httpStatusCode);
         }
-
-        size_t nBytes = m_stream.tellp();
-        m_stream.seekp(0);
-
-        m_task->content.resize(nBytes);
-        m_stream.seekg(0);
-        m_stream.read(m_task->content.data(), nBytes);
 
         m_finished = true;
         requestRender();
+
         return std::move(m_task);
     });
 }
@@ -70,4 +74,3 @@ bool UrlWorker::hasTask(const std::string& _url) {
 std::unique_ptr<UrlTask> UrlWorker::getResult() {
     return std::move( m_future.get() );
 }
-
