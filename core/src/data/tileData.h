@@ -69,59 +69,70 @@ typedef std::vector<Line> Polygon;
 struct Properties {
 
     using Value = variant<none_type, std::string, float>;
+    struct Item {
+        Item(std::string _key, Value _value) :
+            key(std::move(_key)), value(std::move(_value)) {}
+
+        std::string key;
+        Value value;
+        bool operator<(const Item& _rhs) const { return key < _rhs.key; }
+    };
+
+    Properties() {}
+    Properties(const Properties& _other) = default;
+    Properties(std::vector<Item>&& _items);
+    Properties& operator=(Properties&& _other);
 
     const Value& get(const std::string& key) const;
+
+    void sort();
 
     void clear() { props.clear(); }
 
     bool contains(const std::string& key) const {
-        return props.find(key) != props.end();
+        return !get(key).is<none_type>();
     }
 
     bool getNumeric(const std::string& key, float& value) const {
-        auto it = props.find(key);
-        if (it != props.end()) {
-            // TODO: Cast if string?
-            if (!it->second.is<float>()) { return false; }
-            value = it->second.get<float>();
+        auto& it = get(key);
+        if (it.is<float>()) {
+            value = it.get<float>();
             return true;
         }
         return false;
     }
 
     float getNumeric(const std::string& key) const {
-        auto it = props.find(key);
-        if (it != props.end()) {
-            if (!it->second.is<float>()) { return 0; }
-            return it->second.get<float>();
+        auto& it = get(key);
+        if (it.is<float>()) {
+            return it.get<float>();
         }
         return 0;
     }
     bool getString(const std::string& key, std::string& value) const {
-        auto it = props.find(key);
-        if (it != props.end()) {
-            if (!it->second.is<std::string>()) { return false; }
-            value = it->second.get<std::string>();
+        auto& it = get(key);
+        if (it.is<std::string>()) {
+            value = it.get<std::string>();
             return true;
         }
         return false;
     }
 
     std::string getString(const std::string& key) const {
-        auto it = props.find(key);
-        if (it != props.end()) {
-            if (!it->second.is<std::string>()) { return ""; }
-            return it->second.get<std::string>();
+        auto& it = get(key);
+        if (it.is<std::string>()) {
+            return it.get<std::string>();
         }
         return "";
     }
 
     template <typename... Args> void add(std::string key, Args&&... args) {
-        props.emplace(std::move(key), Value{std::forward<Args>(args)...});
+        props.emplace_back(std::move(key), Value{std::forward<Args>(args)...});
+        sort();
     }
-private:
-    std::unordered_map<std::string, Value> props;
 
+private:
+    std::vector<Item> props;
 };
 
 struct Feature {

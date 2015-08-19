@@ -66,6 +66,8 @@ void PbfParser::extractFeature(ParserContext& ctx, protobuf::message& _featureIn
     std::vector<Line> geometryLines;
     protobuf::message geometry; // By default data_ and end_ are nullptr
 
+    ctx.properties.clear();
+
     while(_featureIn.next()) {
         switch(_featureIn.tag) {
             // Feature ID
@@ -99,7 +101,7 @@ void PbfParser::extractFeature(ParserContext& ctx, protobuf::message& _featureIn
                         return;
                     }
 
-                    _out.props.add(ctx.keys[tagKey], ctx.values[valueKey]);
+                    ctx.properties.emplace_back(ctx.keys[tagKey], ctx.values[valueKey]);
                 }
                 break;
             }
@@ -118,6 +120,7 @@ void PbfParser::extractFeature(ParserContext& ctx, protobuf::message& _featureIn
                 break;
         }
     }
+    _out.props = std::move(ctx.properties);
 
     switch(_out.geometryType) {
         case GeometryType::points:
