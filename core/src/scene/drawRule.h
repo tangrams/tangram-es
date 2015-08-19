@@ -1,9 +1,15 @@
 #pragma once
+
+#include "util/variant.h"
+
 #include <string>
 #include <utility>
 #include <vector>
 
 #include "builders.h" // for Cap/Join types
+#include "csscolorparser.hpp"
+
+using Color = CSSColorParser::Color;
 
 namespace Tangram {
 
@@ -12,20 +18,24 @@ enum class StyleParamKey : uint8_t {
 };
 
 struct StyleParam {
+    using Value = variant<none_type, std::string, Color, CapTypes, JoinTypes, float, int32_t>;
+
     StyleParam() {}
     StyleParam(const std::string& _key, const std::string& _value);
     StyleParam(StyleParamKey _key, std::string _value) : key(_key), value(std::move(_value)){}
 
     StyleParamKey key;
-    std::string value;
+    Value value;
     bool operator<(const StyleParam& _rhs) const { return key < _rhs.key; }
-    bool valid() const { return !value.empty(); }
+    bool valid() const { return !value.is<none_type>(); }
     operator bool() const { return valid(); }
+
+    std::string toString() const;
 };
 
 struct DrawRule {
 
-    static uint32_t parseColor(const std::string& _color);
+    static Color parseColor(const std::string& _color);
 
     std::string style;
     std::vector<StyleParam> parameters;

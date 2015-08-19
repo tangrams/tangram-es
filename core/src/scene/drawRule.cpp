@@ -1,6 +1,7 @@
 #include "drawRule.h"
 #include "csscolorparser.hpp"
 #include "geom.h" // for CLAMP
+#include "platform.h"
 
 #include <algorithm>
 #include <map>
@@ -29,7 +30,51 @@ StyleParam::StyleParam(const std::string& _key, const std::string& _value) {
     }
 
     key = it->second;
-    value = _value;
+
+    switch (key) {
+    case StyleParamKey::order:
+        value = static_cast<int32_t>(std::stoi(_value));
+        break;
+    case StyleParamKey::width:
+    case StyleParamKey::outline_width:
+        value = static_cast<float>(std::stof(_value));
+        break;
+    case StyleParamKey::color:
+    case StyleParamKey::outline_color:
+        value = DrawRule::parseColor(_value);
+        break;
+    case StyleParamKey::cap:
+    case StyleParamKey::outline_cap:
+        value = CapTypeFromString(_value);
+        break;
+    case StyleParamKey::join:
+    case StyleParamKey::outline_join:
+        value = JoinTypeFromString(_value);
+        break;
+    default:
+        value = none_type{};
+    }
+}
+
+std::string StyleParam::toString() const {
+    // TODO: cap, join and color toString()
+    switch (key) {
+    case StyleParamKey::order:
+        return std::to_string(value.get<int32_t>());
+    case StyleParamKey::width:
+    case StyleParamKey::outline_width:
+        return std::to_string(value.get<float>());
+    case StyleParamKey::color:
+    case StyleParamKey::outline_color:
+        return std::to_string(value.get<Color>().getInt());
+    case StyleParamKey::cap:
+    case StyleParamKey::outline_cap:
+        return std::to_string(static_cast<int>(value.get<CapTypes>()));
+    case StyleParamKey::join:
+    case StyleParamKey::outline_join:
+        return std::to_string(static_cast<int>(value.get<CapTypes>()));
+    }
+    return "undefined";
 }
 
 DrawRule::DrawRule(const std::string& _style, const std::vector<StyleParam>& _parameters) :
@@ -68,7 +113,7 @@ std::string DrawRule::toString() const {
     std::string str = "{\n";
 
     for (auto& p : parameters) {
-        str += "    { " + std::to_string(static_cast<int>(p.key)) + ", " + p.value + " }\n";
+         str += "    { " + std::to_string(static_cast<int>(p.key)) + ", " + p.toString() + " }\n";
     }
 
     str += "}\n";
@@ -90,41 +135,65 @@ const StyleParam&  DrawRule::findParameter(StyleParamKey _key) const {
 bool DrawRule::getValue(StyleParamKey _key, std::string& _value) const {
     auto& param = findParameter(_key);
     if (!param) { return false; }
-    _value = param.value;
+    if (!param.value.is<std::string>()) {
+        logMsg("Error: not a string type\n");
+        return false;
+    }
+    _value = param.value.get<std::string>();
     return true;
 };
 
 bool DrawRule::getValue(StyleParamKey _key, float& _value) const {
     auto& param = findParameter(_key);
     if (!param) { return false; }
-    _value = std::stof(param.value);
+    if (!param.value.is<float>()) {
+        logMsg("Error: not a float type\n");
+        return false;
+    }
+    _value = param.value.get<float>();
     return true;
 }
 
 bool DrawRule::getValue(StyleParamKey _key, int32_t& _value) const {
     auto& param = findParameter(_key);
     if (!param) { return false; }
-    _value = std::stoi(param.value);
+    if (!param.value.is<int32_t>()) {
+        logMsg("Error: not a int32_t\n");
+        return false;
+    }
+    _value = param.value.get<int32_t>();
     return true;
 }
 
 bool DrawRule::getColor(StyleParamKey _key, uint32_t& _value) const {
     auto& param = findParameter(_key);
     if (!param) { return false; }
-    _value = parseColor(param.value);
+    if (!param.value.is<Color>()) {
+        logMsg("Error: not a Color\n");
+        return false;
+    }
+    _value = param.value.get<Color>().getInt();
     return true;
 }
 
 bool DrawRule::getLineCap(StyleParamKey _key, CapTypes& _value) const {
     auto& param = findParameter(_key);
     if (!param) { return false; }
-    _value = CapTypeFromString(param.value);
+    if (!param.value.is<CapTypes>()) {
+        logMsg("Error: not a CapType\n");
+        return false;
+    }
+    _value = param.value.get<CapTypes>();
     return true;
 }
 bool DrawRule::getLineJoin(StyleParamKey _key, JoinTypes& _value) const {
     auto& param = findParameter(_key);
     if (!param) { return false; }
-    _value = JoinTypeFromString(param.value);
+    if (!param.value.is<JoinTypes>()) {
+        logMsg("Error: not a JoinType\n");
+        return false;
+    }
+    _value = param.value.get<JoinTypes>();
     return true;
 }
 
@@ -132,21 +201,23 @@ bool DrawRule::operator<(const DrawRule& _rhs) const {
     return style < _rhs.style;
 }
 
-uint32_t DrawRule::parseColor(const std::string& _color) {
-    uint32_t color = 0;
+Color DrawRule::parseColor(const std::string& _color) {
+    Color color;
 
     if (isdigit(_color.front())) {
         // try to parse as comma-separated rgba components
         float r, g, b, a = 1.;
         if (sscanf(_color.c_str(), "%f,%f,%f,%f", &r, &g, &b, &a) >= 3) {
-            color = (CLAMP(static_cast<uint32_t>(a * 255.), 0, 255)) << 24
-                  | (CLAMP(static_cast<uint32_t>(r * 255.), 0, 255)) << 16
-                  | (CLAMP(static_cast<uint32_t>(g * 255.), 0, 255)) << 8
-                  | (CLAMP(static_cast<uint32_t>(b * 255.), 0, 255));
+            color = Color {
+                static_cast<uint8_t>(CLAMP((r * 255.), 0, 255)),
+                static_cast<uint8_t>(CLAMP((g * 255.), 0, 255)),
+                static_cast<uint8_t>(CLAMP((b * 255.), 0, 255)),
+                CLAMP(a, 0, 1)
+            };
         }
     } else {
         // parse as css color or #hex-num
-        color = CSSColorParser::parse(_color).getInt();
+        color = CSSColorParser::parse(_color);
     }
     return color;
 }
