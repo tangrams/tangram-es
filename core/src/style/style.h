@@ -97,6 +97,10 @@ protected:
     /* Build styled vertex data for polygon geometry and add it to the given <VboMesh> */
     virtual void buildPolygon(const Polygon& _polygon, const DrawRule& _rule, const Properties& _props, VboMesh& _mesh, Tile& _tile) const;
 
+    virtual void buildMesh(const std::vector<uint16_t>& _indices, const std::vector<Point>& _points,
+                           const DrawRule& _rule,
+                           const Properties& _props, VboMesh& _mesh, Tile& _tile) const {};
+
     /* Create a new mesh object using the vertex layout corresponding to this style */
     virtual VboMesh* newMesh() const = 0;
 

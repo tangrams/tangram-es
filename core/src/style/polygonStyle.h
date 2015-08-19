@@ -32,6 +32,9 @@ protected:
     virtual void constructShaderProgram() override;
     virtual void buildPolygon(const Polygon& _polygon, const DrawRule& _rule, const Properties& _props, VboMesh& _mesh, Tile& _tile) const override;
 
+    virtual void buildMesh(const std::vector<uint16_t>& indices, const std::vector<Point>& points,
+                           const DrawRule& _rule, const Properties& _props, VboMesh& _mesh, Tile& _tile) const override;
+
     Parameters parseRule(const DrawRule& _rule) const;
 
     typedef TypedMesh<PolygonVertex> Mesh;
@@ -39,6 +42,10 @@ protected:
     virtual VboMesh* newMesh() const override {
         return new Mesh(m_vertexLayout, m_drawMode);
     };
+
+    void addVertex(glm::vec3 p, glm::vec3 n, GLuint abgr, float layer,
+                   std::vector<int>& indices,
+                   std::vector<PolygonVertex>& vertices) const;
 
 public:
 
