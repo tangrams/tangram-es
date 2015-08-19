@@ -17,10 +17,13 @@ namespace PbfParser {
         std::vector<Properties::Value> values;
         std::vector<Properties::Item> properties;
         std::vector<protobuf::message> featureMsgs;
+        std::vector<Point> coordinates;
+        std::vector<int> numCoordinates;
+
         int tileExtent = 0;
     };
     
-    void extractGeometry(ParserContext& ctx, protobuf::message& _geomIn, std::vector<Line>& _out);
+    void extractGeometry(ParserContext& ctx, protobuf::message& _geomIn);
     
     void extractFeature(ParserContext& ctx, protobuf::message& _featureIn, Feature& _out);
     

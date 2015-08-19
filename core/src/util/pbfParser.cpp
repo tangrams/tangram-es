@@ -5,17 +5,17 @@
 
 namespace Tangram {
 
-void PbfParser::extractGeometry(ParserContext& ctx, protobuf::message& _geomIn, std::vector<Line>& _out) {
+void PbfParser::extractGeometry(ParserContext& ctx, protobuf::message& _geomIn) {
 
     pbfGeomCmd cmd = pbfGeomCmd::moveTo;
     uint32_t cmdRepeat = 0;
 
     double invTileExtent = (1.0/(double)ctx.tileExtent);
 
-    Line line;
-
     int64_t x = 0;
     int64_t y = 0;
+
+    size_t numCoordinates = 0;
 
     while(_geomIn.getData() < _geomIn.getEnd()) {
 
@@ -28,10 +28,10 @@ void PbfParser::extractGeometry(ParserContext& ctx, protobuf::message& _geomIn, 
         if(cmd == pbfGeomCmd::moveTo || cmd == pbfGeomCmd::lineTo) { // get parameters/points
             // if cmd is move then move to a new line/set of points and save this line
             if(cmd == pbfGeomCmd::moveTo) {
-                if(line.size() > 0) {
-                    _out.push_back(line);
+                if(ctx.coordinates.size() > 0) {
+                    ctx.numCoordinates.push_back(numCoordinates);
                 }
-                line.clear();
+                numCoordinates = 0;
             }
 
             x += _geomIn.svarint();
@@ -42,31 +42,33 @@ void PbfParser::extractGeometry(ParserContext& ctx, protobuf::message& _geomIn, 
             p.x = invTileExtent * (double)(2 * x - ctx.tileExtent);
             p.y = invTileExtent * (double)(ctx.tileExtent - 2 * y);
 
-            line.push_back(p);
+            ctx.coordinates.push_back(p);
+            numCoordinates++;
 
-        } else if( cmd == pbfGeomCmd::closePath) { // end of a polygon, push first point in this line as last and push line to poly
-            line.push_back(line[0]);
-            _out.push_back(line);
-            line.clear();
+        } else if(cmd == pbfGeomCmd::closePath) {
+            // end of a polygon, push first point in this line as last and push line to poly
+            ctx.coordinates.push_back(ctx.coordinates[ctx.coordinates.size() - numCoordinates]);
+            ctx.numCoordinates.push_back(numCoordinates + 1);
+            numCoordinates = 0;
         }
 
         cmdRepeat--;
     }
 
     // Enter the last line
-    if(line.size() > 0) {
-        _out.push_back(line);
+    if (numCoordinates > 0) {
+        ctx.numCoordinates.push_back(numCoordinates);
     }
-
 }
 
 void PbfParser::extractFeature(ParserContext& ctx, protobuf::message& _featureIn, Feature& _out) {
 
     //Iterate through this feature
-    std::vector<Line> geometryLines;
     protobuf::message geometry; // By default data_ and end_ are nullptr
 
     ctx.properties.clear();
+    ctx.coordinates.clear();
+    ctx.numCoordinates.clear();
 
     while(_featureIn.next()) {
         switch(_featureIn.tag) {
@@ -112,7 +114,7 @@ void PbfParser::extractFeature(ParserContext& ctx, protobuf::message& _featureIn
             // Actual geometry data
             case 4:
                 geometry = _featureIn.getMessage();
-                extractGeometry(ctx, geometry, geometryLines);
+                extractGeometry(ctx, geometry);
                 break;
             // None.. skip
             default:
@@ -122,22 +124,43 @@ void PbfParser::extractFeature(ParserContext& ctx, protobuf::message& _featureIn
     }
     _out.props = std::move(ctx.properties);
 
+
     switch(_out.geometryType) {
         case GeometryType::points:
-            for(auto& line : geometryLines) {
-                for(auto& point : line) {
-                    _out.points.emplace_back(point);
-                }
-            }
+            _out.points.insert(_out.points.begin(),
+                               ctx.coordinates.begin(),
+                               ctx.coordinates.end());
             break;
+
         case GeometryType::lines:
-            for(auto& line : geometryLines) {
-                _out.lines.emplace_back(line);
+        case GeometryType::polygons:
+        {
+            std::vector<Line> lines;
+            int offset = 0;
+            lines.reserve(ctx.numCoordinates.size());
+
+            for (int length : ctx.numCoordinates) {
+                if (length == 0) {
+                    continue;
+                }
+
+                lines.emplace_back();
+                auto& line = lines.back();
+                line.reserve(length);
+
+                line.insert(line.begin(),
+                            ctx.coordinates.begin() + offset,
+                            ctx.coordinates.begin() + offset + length);
+
+                offset += length;
+            }
+            if (_out.geometryType == GeometryType::lines) {
+                _out.lines = std::move(lines);
+            } else {
+                _out.polygons.push_back(std::move(lines));
             }
             break;
-        case GeometryType::polygons:
-            _out.polygons.emplace_back(geometryLines);
-            break;
+        }
         case GeometryType::unknown:
             break;
         default:
@@ -210,7 +233,6 @@ void PbfParser::extractLayer(ParserContext& ctx, protobuf::message& _layerIn, La
             default: // skip
                 _layerIn.skip();
                 break;
-
         }
     }
 
