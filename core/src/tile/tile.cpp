@@ -112,4 +112,16 @@ std::unique_ptr<VboMesh>& Tile::getMesh(const Style& _style) {
     return m_geometry[_style.getName()];
 }
 
+size_t Tile::getMemoryUsage() const {
+    if (m_memoryUsage == 0) {
+        for (auto& entry : m_geometry) {
+            if (entry.second) {
+                m_memoryUsage += entry.second->bufferSize();
+            }
+        }
+    }
+
+    return m_memoryUsage;
+}
+
 }

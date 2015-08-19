@@ -9,38 +9,24 @@
 namespace Tangram {
 
 DataSource::DataSource(const std::string& _name, const std::string& _urlTemplate) :
-    m_name(_name), m_urlTemplate(_urlTemplate) {
-
+    m_name(_name), m_urlTemplate(_urlTemplate),
+    m_cacheUsage(0),
+    m_cacheMaxUsage(0) {
 }
 
-bool DataSource::hasTileData(const TileID& _tileID) const {
-
-    return m_tileStore.find(_tileID) != m_tileStore.end();
+DataSource::~DataSource() {
+    clearData();
 }
 
-std::shared_ptr<TileData> DataSource::getTileData(const TileID& _tileID) const {
-
-    const auto it = m_tileStore.find(_tileID);
-
-    if (it != m_tileStore.end()) {
-        std::shared_ptr<TileData> tileData = it->second;
-        return tileData;
-    } else {
-        return nullptr;
-    }
+void DataSource::setCacheSize(size_t _cacheSize) {
+    m_cacheMaxUsage = _cacheSize;
 }
 
 void DataSource::clearData() {
-    for (auto& mapValue : m_tileStore) {
-        mapValue.second->layers.clear();
-    }
-    m_tileStore.clear();
-}
-
-void DataSource::setTileData(const TileID& _tileID, const std::shared_ptr<TileData>& _tileData) {
-
-        std::lock_guard<std::mutex> lock(m_mutex);
-        m_tileStore[_tileID] = _tileData;
+    std::lock_guard<std::mutex> lock(m_mutex);
+    m_cacheMap.clear();
+    m_cacheList.clear();
+    m_cacheUsage = 0;
 }
 
 void DataSource::constructURL(const TileID& _tileCoord, std::string& _url) const {
@@ -60,26 +46,56 @@ void DataSource::constructURL(const TileID& _tileCoord, std::string& _url) const
     }
 }
 
+bool DataSource::getTileData(std::shared_ptr<TileTask>& _task) {
+    if (m_cacheMaxUsage > 0) {
+        std::lock_guard<std::mutex> lock(m_mutex);
+        auto it = m_cacheMap.find(_task->tile->getID());
+        if (it != m_cacheMap.end()) {
+            // Move cached entry to start of list
+            m_cacheList.splice(m_cacheList.begin(), m_cacheList, it->second);
+            _task->rawTileData = m_cacheList.front().second;
 
-bool DataSource::getTileData(std::shared_ptr<TileTask>&& _task, TileTaskCb _cb) {
-
-    const auto& tileID = _task->tile->getID();
-
-    if (hasTileData(tileID)) {
-        _task->parsedTileData = m_tileStore[tileID];
-        _cb(std::move(_task));
-        requestRender();
-
-        return true;
+            return true;
+        }
     }
 
     return false;
 }
 
-static void onTileLoaded(std::vector<char>&& _rawData, std::shared_ptr<TileTask>& _task, TileTaskCb _cb) {
-    _task->rawTileData = std::move(_rawData);
+void DataSource::onTileLoaded(std::vector<char>&& _rawData, std::shared_ptr<TileTask>& _task, TileTaskCb _cb) {
+    TileID tileID = _task->tile->getID();
+
+    auto rawDataRef = std::make_shared<std::vector<char>>();
+    std::swap(*rawDataRef, _rawData);
+    _task->rawTileData = rawDataRef;
+
     _cb(std::move(_task));
-    requestRender();
+
+    if (m_cacheMaxUsage > 0) {
+        std::lock_guard<std::mutex> lock(m_mutex);
+
+        m_cacheList.push_front({tileID, rawDataRef});
+        m_cacheMap[tileID] = m_cacheList.begin();
+
+        m_cacheUsage += rawDataRef->size();
+
+        while (m_cacheUsage > m_cacheMaxUsage) {
+            if (m_cacheList.empty()) {
+                logMsg("Error: invalid cache state!\n");
+                m_cacheUsage = 0;
+                break;
+            }
+
+            // logMsg("Limit raw cache tiles:%d, %fMB \n", m_cacheList.size(),
+            //        double(m_cacheUsage) / (1024*1024));
+
+            auto& entry = m_cacheList.back();
+            m_cacheUsage -= entry.second->size();
+
+            m_cacheMap.erase(entry.first);
+            m_cacheList.pop_back();
+        }
+    }
 }
 
 
@@ -87,7 +103,9 @@ bool DataSource::loadTileData(std::shared_ptr<TileTask>&& _task, TileTaskCb _cb)
 
     std::string url(constructURL(_task->tile->getID()));
 
-    return startUrlRequest(url, std::bind(&onTileLoaded,
+    // Using bind instead of lambda to be able to 'move' (until c++14)
+    return startUrlRequest(url, std::bind(&DataSource::onTileLoaded,
+                                          this,
                                           std::placeholders::_1,
                                           std::move(_task), _cb));
 

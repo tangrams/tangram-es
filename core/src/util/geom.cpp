@@ -12,15 +12,17 @@ float mapValue(const float& _value, const float& _inputMin, const float& _inputM
 
         if (_clamp) {
             if (_outputMax < _outputMin) {
-                if (outVal < _outputMax)
+                if (outVal < _outputMax) {
                     outVal = _outputMax;
-                else if (outVal > _outputMin)
+                } else if (outVal > _outputMin) {
                     outVal = _outputMin;
+                }
             } else {
-                if (outVal > _outputMax)
+                if (outVal > _outputMax) {
                     outVal = _outputMax;
-                else if (outVal < _outputMin)
+                } else if (outVal < _outputMin) {
                     outVal = _outputMin;
+                }
             }
         }
         return outVal;

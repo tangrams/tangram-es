@@ -5,6 +5,7 @@
 #include "scene/scene.h"
 #include "tile/tile.h"
 #include "view/view.h"
+#include "tileCache.h"
 
 #include "glm/gtx/norm.hpp"
 
@@ -12,7 +13,7 @@
 #include <algorithm>
 
 #define DBG(...)
-// logMsg(__VA_ARGS__)
+//logMsg(__VA_ARGS__)
 
 namespace Tangram {
 
@@ -21,6 +22,8 @@ TileManager::TileManager()
 
     // Instantiate workers
     m_workers = std::unique_ptr<TileWorker>(new TileWorker(*this, MAX_WORKERS));
+
+    m_tileCache = std::unique_ptr<TileCache>(new TileCache(DEFAULT_CACHE_SIZE));
 
     m_dataCallback = [this](std::shared_ptr<TileTask>&& task){
         if (setTileState(*task->tile, TileState::processing)) {
@@ -33,6 +36,8 @@ TileManager::~TileManager() {
     if (m_workers->isRunning()) {
         m_workers->stop();
     }
+    m_dataSources.clear();
+    m_tileSet.clear();
 }
 
 void TileManager::tileProcessed(std::shared_ptr<TileTask>&& task) {
@@ -54,7 +59,6 @@ bool TileManager::setTileState(Tile& tile, TileState state) {
             tile.setState(state);
             return true;
         }
-
         break;
 
     case TileState::loading:
@@ -90,7 +94,7 @@ bool TileManager::setTileState(Tile& tile, TileState state) {
         return true;
     }
 
-    DBG("Wrong state change %d -> %d<<<", tile.state(), state);
+    logMsg("Wrong state change %d -> %d<<<", tile.getState(), state);
     assert(false);
     return false; // ...
 }
@@ -122,9 +126,22 @@ void TileManager::enqueueLoadTask(const TileID& tileID, const glm::dvec2& viewCe
     }
 }
 
+void TileManager::clearTileSet() {
+    for (auto& entry : m_tileSet) {
+        setTileState(*entry.second, TileState::canceled);
+    }
+
+    m_tileSet.clear();
+    m_tileCache->clear();
+
+    m_loadPending = 0;
+}
+
 void TileManager::updateTileSet() {
 
     m_tileSetChanged = false;
+
+    std::vector<TileID> removeTiles;
 
     if (!m_readyTiles.empty()) {
         std::lock_guard<std::mutex> lock(m_readyTileMutex);
@@ -135,7 +152,7 @@ void TileManager::updateTileSet() {
             auto& tile = *(task->tile);
 
             if (setTileState(tile, TileState::ready)) {
-                clearProxyTiles(tile);
+                clearProxyTiles(tile, removeTiles);
                 m_tileSetChanged = true;
             }
             it = m_readyTiles.erase(it);
@@ -143,8 +160,6 @@ void TileManager::updateTileSet() {
     }
 
     const std::set<TileID>& visibleTiles = m_view->getVisibleTiles();
-
-    std::vector<TileID> removeTiles;
 
     glm::dvec2 viewCenter(m_view->getPosition().x, -m_view->getPosition().y);
 
@@ -158,7 +173,6 @@ void TileManager::updateTileSet() {
 
             auto& visTileId = *visTilesIter;
             auto& curTileId = setTilesIter == m_tileSet.end() ? NOT_A_TILE : setTilesIter->first;
-            DBG("visible: [%d, %d, %d]\n", visTileId.z, visTileId.x, visTileId.y);
 
             if (visTileId == curTileId) {
                 if (setTilesIter->second->hasState(TileState::none)) {
@@ -173,8 +187,9 @@ void TileManager::updateTileSet() {
 
             } else if (curTileId == NOT_A_TILE || visTileId < curTileId) {
                 // tileSet is missing an element present in visibleTiles
-                addTile(visTileId);
-                enqueueLoadTask(visTileId, viewCenter);
+                if (!addTile(visTileId)) {
+                    enqueueLoadTask(visTileId, viewCenter);
+                }
 
                 ++visTilesIter;
             } else {
@@ -199,11 +214,13 @@ void TileManager::updateTileSet() {
     }
 
     {
-        for (const auto& id : removeTiles) {
-            auto tileIter = m_tileSet.find(id);
+        while (!removeTiles.empty()) {
+            auto tileIter = m_tileSet.find(removeTiles.back());
+            removeTiles.pop_back();
+
             if (tileIter != m_tileSet.end()) {
                 if (tileIter->second->getProxyCounter() <= 0) {
-                    removeTile(tileIter);
+                    removeTile(tileIter, removeTiles);
                 }
             }
         }
@@ -220,51 +237,62 @@ void TileManager::updateTileSet() {
     {
         for (auto& item : m_loadTasks) {
             auto& id = *item.second;
-            auto& tile = m_tileSet[id];
+            auto it = m_tileSet.find(id);
+            if (it == m_tileSet.end()) {
+                continue;
+            }
+
+            auto& tile = it->second;
 
             for (auto& source : m_dataSources) {
                 auto task = std::make_shared<TileTask>(tile, source.get());
-                DBG("[%d, %d, %d] Load\n", id.z, id.x, id.y);
+                if (source->getTileData(task)) {
+                    m_dataCallback(std::move(task));
 
-                if (source->getTileData(std::move(task), m_dataCallback)) {
-                    continue;
-                }
-
-                if (m_loadPending < MAX_DOWNLOADS) {
+                } else if (m_loadPending < MAX_DOWNLOADS) {
                     setTileState(*tile, TileState::loading);
 
                     if (!source->loadTileData(std::move(task), m_dataCallback)) {
-                        DBG("ERROR: Loading failed for tile [%d, %d, %d]\n", id.z, id.x, id.y);
+                        logMsg("ERROR: Loading failed for tile [%d, %d, %d]\n", id.z, id.x, id.y);
                     }
                 }
             }
         }
     }
-    m_loadTasks.clear();
 
-    // DBG("all:%d loading:%d processing:%d pending:%d\n",
-    //        m_tileSet.size(), m_loadTasks.size(),
-    //        m_queuedTiles.size(), m_loadPending);
+    //DBG("all:%d loading:%d pending:%d cached:%d cache: %fMB\n",
+    //    m_tileSet.size(), m_loadTasks.size(),
+    //    m_loadPending, m_tileCache->size(),
+    //    (double(m_tileCache->getMemoryUsage()) / (1024 * 1024)));
+
+    m_loadTasks.clear();
 }
 
-void TileManager::addTile(const TileID& _tileID) {
-    DBG("[%d, %d, %d] Add\n", _tileID.z, _tileID.x, _tileID.y);
+bool TileManager::addTile(const TileID& _tileID) {
+    auto tile = m_tileCache->get(_tileID);
+    bool fromCache = false;
 
-    std::shared_ptr<Tile> tile(new Tile(_tileID, m_view->getMapProjection()));
+    if (tile) {
+        fromCache = true;
+    } else {
+        tile = std::shared_ptr<Tile>(new Tile(_tileID, m_view->getMapProjection()));
+
+        //Add Proxy if corresponding proxy MapTile ready
+        updateProxyTiles(*tile);
+    }
+
     tile->setVisible(true);
 
-    //Add Proxy if corresponding proxy Tile ready
-    updateProxyTiles(*tile);
+    m_tileSet.emplace(_tileID, std::move(tile));
 
-    m_tileSet.emplace(_tileID, tile);
+    return fromCache;
 }
 
-void TileManager::removeTile(std::map< TileID, std::shared_ptr<Tile> >::iterator& _tileIter) {
+void TileManager::removeTile(std::map<TileID, std::shared_ptr<Tile>>::iterator& _tileIter,
+                             std::vector<TileID>& _removes) {
 
     const TileID& id = _tileIter->first;
     auto& tile = _tileIter->second;
-
-    DBG("[%d, %d, %d] Remove\n", id.z, id.x, id.y);
 
     if (tile->hasState(TileState::loading) &&
         setTileState(*tile, TileState::canceled)) {
@@ -275,7 +303,12 @@ void TileManager::removeTile(std::map< TileID, std::shared_ptr<Tile> >::iterator
         }
     }
 
-    clearProxyTiles(*tile);
+    clearProxyTiles(*tile, _removes);
+
+    if (tile->hasState(TileState::ready)) {
+        // Add to cache
+        m_tileCache->put(tile);
+    }
 
     // Remove tile from set
     _tileIter = m_tileSet.erase(_tileIter);
@@ -285,7 +318,9 @@ void TileManager::removeTile(std::map< TileID, std::shared_ptr<Tile> >::iterator
 void TileManager::updateProxyTiles(Tile& _tile) {
     const TileID& _tileID = _tile.getID();
 
-    const auto& parentTileIter = m_tileSet.find(_tileID.getParent());
+    auto parentID = _tileID.getParent();
+
+    const auto& parentTileIter = m_tileSet.find(parentID);
     if (parentTileIter != m_tileSet.end()) {
         auto& parent = parentTileIter->second;
         if (_tile.setProxy(Tile::parent)) {
@@ -294,24 +329,43 @@ void TileManager::updateProxyTiles(Tile& _tile) {
         return;
     }
 
+    // Get proxy from cache
+    {
+        auto parent = m_tileCache->get(parentID);
+        if (parent) {
+            _tile.setProxy(Tile::parent);
+            parent->incProxyCounter();
+            m_tileSet.emplace(parentID, std::move(parent));
+
+            return;
+        }
+    }
+
     if (m_view->s_maxZoom > _tileID.z) {
         for (int i = 0; i < 4; i++) {
-            const auto& childTileIter = m_tileSet.find(_tileID.getChild(i));
+            auto childID = _tileID.getChild(i);
+
+            const auto& childTileIter = m_tileSet.find(childID);
             if (childTileIter != m_tileSet.end()) {
                 auto& child = childTileIter->second;
 
                 if (_tile.setProxy(static_cast<Tile::ProxyID>(1 << i))) {
                     child->incProxyCounter();
                 }
+            } else {
+                auto child = m_tileCache->get(childID);
+                if (child) {
+                    _tile.setProxy(static_cast<Tile::ProxyID>(1 << i));
+                    child->incProxyCounter();
+                    m_tileSet.emplace(childID, std::move(child));
+                }
             }
         }
     }
 }
 
-void TileManager::clearProxyTiles(Tile& _tile) {
+void TileManager::clearProxyTiles(Tile& _tile, std::vector<TileID>& _removes) {
     const TileID& _tileID = _tile.getID();
-
-    std::vector<TileID> removeTiles;
 
     // Check if parent proxy is present
     if (_tile.unsetProxy(Tile::parent)) {
@@ -322,10 +376,8 @@ void TileManager::clearProxyTiles(Tile& _tile) {
             parent->decProxyCounter();
 
             if (parent->getProxyCounter() == 0 && !parent->isVisible()) {
-                 removeTiles.push_back(parentID);
+                _removes.push_back(parentID);
             }
-        } else {
-            DBG("ERROR: parent proxy unset but not found!\n");
         }
     }
 
@@ -340,20 +392,15 @@ void TileManager::clearProxyTiles(Tile& _tile) {
                 child->decProxyCounter();
 
                 if (child->getProxyCounter() == 0 && !child->isVisible()) {
-                    removeTiles.push_back(childID);
+                    _removes.push_back(childID);
                 }
-            } else {
-                DBG("ERROR: child proxy unset but not found! %d\n", i);
             }
         }
     }
+}
 
-    for (const auto& id : removeTiles) {
-        auto tileIter = m_tileSet.find(id);
-        if (tileIter != m_tileSet.end()) {
-            removeTile(tileIter);
-        }
-    }
+void TileManager::setCacheSize(size_t _cacheSize) {
+    m_tileCache->limitCacheSize(_cacheSize);
 }
 
 }

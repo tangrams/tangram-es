@@ -138,6 +138,9 @@ public:
         m_state = _state;
     }
 
+    /* Get the sum in bytes of all <VboMesh>es */
+    size_t getMemoryUsage() const;
+
 private:
 
     const TileID m_id;
@@ -172,6 +175,7 @@ private:
 
     std::unordered_map<std::string, std::unique_ptr<VboMesh>> m_geometry; // Map of <Style>s and their associated <VboMesh>es
 
+    mutable size_t m_memoryUsage = 0;
 };
 
 }

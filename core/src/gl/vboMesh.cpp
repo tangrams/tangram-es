@@ -29,8 +29,12 @@ VboMesh::VboMesh(std::shared_ptr<VertexLayout> _vertexLayout, GLenum _drawMode, 
 }
 
 VboMesh::~VboMesh() {
-    if (m_glVertexBuffer) glDeleteBuffers(1, &m_glVertexBuffer);
-    if (m_glIndexBuffer) glDeleteBuffers(1, &m_glIndexBuffer);
+    if (m_glVertexBuffer) {
+        glDeleteBuffers(1, &m_glVertexBuffer);
+    }
+    if (m_glIndexBuffer) {
+        glDeleteBuffers(1, &m_glIndexBuffer);
+    }
 
     delete[] m_glVertexData;
     delete[] m_glIndexData;
@@ -64,6 +68,7 @@ bool VboMesh::subDataUpload() {
 
     if (m_hint == GL_STATIC_DRAW) {
         logMsg("WARNING: wrong usage hint provided to the Vbo\n");
+        assert(false);
     }
 
     RenderState::vertexBuffer(m_glVertexBuffer);
@@ -101,12 +106,17 @@ bool VboMesh::upload() {
         glGenBuffers(1, &m_glVertexBuffer);
     }
 
-    // TODO check if compiled?
     // Buffer vertex data
     int vertexBytes = m_nVertices * m_vertexLayout->getStride();
 
     RenderState::vertexBuffer(m_glVertexBuffer);
     glBufferData(GL_ARRAY_BUFFER, vertexBytes, m_glVertexData, m_hint);
+
+    // Clear vertex data that is not supposed to be updated.
+    if (m_hint == GL_STATIC_DRAW) {
+        delete[] m_glVertexData;
+        m_glVertexData = nullptr;
+    }
 
     if (m_glIndexData) {
 
@@ -118,15 +128,10 @@ bool VboMesh::upload() {
         RenderState::indexBuffer(m_glIndexBuffer);
 
         glBufferData(GL_ELEMENT_ARRAY_BUFFER, m_nIndices * sizeof(GLushort), m_glIndexData, m_hint);
+
+        delete[] m_glIndexData;
+        m_glIndexData = nullptr;
     }
-
-    // m_glVertexData.resize(0);
-    // m_glIndexData.resize(0);
-
-    // TODO: For now, we retain copies of the vertex and index data in CPU memory to allow VBOs
-    // to easily rebuild themselves after GL context loss. For optimizing memory usage (and for
-    // other reasons) we'll want to change this in the future. This probably means going back to
-    // data sources and styles to rebuild the vertex data.
 
     m_generation = s_validGeneration;
 
@@ -140,9 +145,8 @@ void VboMesh::draw(ShaderProgram& _shader) {
 
     checkValidity();
 
-    if (!m_isCompiled) return;
-
-    if (m_nVertices == 0) return;
+    if (!m_isCompiled) { return; }
+    if (m_nVertices == 0) { return; }
 
     // Ensure that geometry is buffered into GPU
     if (!m_isUploaded) {
@@ -195,6 +199,11 @@ void VboMesh::checkValidity() {
         m_generation = s_validGeneration;
     }
 }
+
+size_t VboMesh::bufferSize() {
+    return m_nVertices * m_vertexLayout->getStride() + m_nIndices * sizeof(GLushort);
+}
+
 
 void VboMesh::invalidateAllVBOs() {
 

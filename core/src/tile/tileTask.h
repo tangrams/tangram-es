@@ -16,12 +16,8 @@ public:
     std::shared_ptr<Tile> tile;
     /*const*/ DataSource* source;
 
-    // Only one of either parsedTileData or rawTileData will be non-empty for a given task.
-    // If parsedTileData is non-empty, then the data for this tile was previously fetched
-    // and parsed. Otherwise rawTileData will be non-empty, indicating that the data needs
-    // to be parsed using the given DataSource.
-    std::shared_ptr<TileData> parsedTileData;
-    std::vector<char> rawTileData;
+    // Raw tile data that will be processed by DataSource.
+    std::shared_ptr<std::vector<char>> rawTileData;
 
     TileTask(std::shared_ptr<Tile> _tile, DataSource* _source) :
         tile(_tile),

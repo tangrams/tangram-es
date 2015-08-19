@@ -105,8 +105,9 @@ void Labels::update(const View& _view, float _dt, const std::vector<std::unique_
     }
 
     // Request for render if labels are in fading in/out states
-    if (m_needUpdate)
+    if (m_needUpdate) {
         requestRender();
+    }
 }
 
 void Labels::drawDebug(const View& _view) {

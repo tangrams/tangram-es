@@ -288,6 +288,10 @@ void onContextDestroyed() {
 
     logMsg("context destroyed\n");
 
+    if (m_tileManager) {
+        m_tileManager->clearTileSet();
+    }
+
     // The OpenGL context has been destroyed since the last time resources were created,
     // so we invalidate all data that depends on OpenGL object handles.
 

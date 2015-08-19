@@ -19,12 +19,17 @@ class DataSource;
 class Tile;
 class Scene;
 class View;
+class TileCache;
 
 /* Singleton container of <Tile>s
  *
  * TileManager is a singleton that maintains a set of Tiles based on the current view into the map
  */
 class TileManager {
+
+    const static size_t MAX_WORKERS = 2;
+    const static size_t MAX_DOWNLOADS = 4;
+    const static size_t DEFAULT_CACHE_SIZE = 32*1024*1024; // 32 MB
 
 public:
 
@@ -51,6 +56,8 @@ public:
      */
     void updateTileSet();
 
+    void clearTileSet();
+
     /* For TileWorker: Pass TileTask with processed data back
      * to TileManager.
      */
@@ -63,13 +70,17 @@ public:
 
     bool hasTileSetChanged() { return m_tileSetChanged; }
 
+    /* @_cacheSize: Set size of in-memory tile cache in bytes.
+     * This cache holds recently used <Tile>s that are ready for rendering.
+     */
+    void setCacheSize(size_t _cacheSize);
+
 private:
 
     TileManager();
 
     std::shared_ptr<View> m_view;
     std::shared_ptr<Scene> m_scene;
-
 
     std::mutex m_readyTileMutex;
     std::vector<std::shared_ptr<TileTask>> m_readyTiles;
@@ -83,7 +94,8 @@ private:
 
     std::vector<std::shared_ptr<DataSource>> m_dataSources;
 
-    const static size_t MAX_WORKERS = 2;
+    std::unique_ptr<TileCache> m_tileCache;
+
     std::unique_ptr<TileWorker> m_workers;
 
     bool m_tileSetChanged = false;
@@ -93,7 +105,6 @@ private:
      */
     TileTaskCb m_dataCallback;
 
-    const static int MAX_DOWNLOADS = 4;
     std::vector<std::pair<double, const TileID*>> m_loadTasks;
 
     /*
@@ -101,12 +112,13 @@ private:
      *      this is also responsible for loading proxy tiles for the newly visible tiles
      * @_tileID: TileID for which new Tile needs to be constructed
      */
-    void addTile(const TileID& _tileID);
+    bool addTile(const TileID& _tileID);
 
     /*
      * Removes a tile from m_tileSet
      */
-    void removeTile(std::map<TileID, std::shared_ptr<Tile>>::iterator& _tileIter);
+    void removeTile(std::map<TileID, std::shared_ptr<Tile>>::iterator& _tileIter,
+                    std::vector<TileID>& _removes);
 
     /*
      * Checks and updates m_tileSet with proxy tiles for every new visible tile
@@ -117,11 +129,12 @@ private:
     /*
      *  Once a visible tile finishes loading and is added to m_tileSet, all its proxy(ies) Tiles are removed
      */
-    void clearProxyTiles(Tile& _tile);
+    void clearProxyTiles(Tile& _tile, std::vector<TileID>& _removes);
 
     bool setTileState(Tile& tile, TileState state);
 
     void enqueueLoadTask(const TileID& tileID, const glm::dvec2& viewCenter);
+
 };
 
 }

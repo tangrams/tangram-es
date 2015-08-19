@@ -27,6 +27,9 @@ using YAML::BadConversion;
 
 namespace Tangram {
 
+// TODO: make this configurable: 16MB default in-memory DataSource cache:
+constexpr size_t CACHE_SIZE = 16 * (1024 * 1024);
+
 void SceneLoader::loadScene(const std::string& _file, Scene& _scene, TileManager& _tileManager, View& _view) {
 
     std::string configString = stringFromResource(_file.c_str());
@@ -399,10 +402,12 @@ void SceneLoader::loadSources(Node sources, TileManager& tileManager) {
 
         if (type == "GeoJSONTiles") {
             sourcePtr = std::shared_ptr<DataSource>(new GeoJsonSource(name, url));
+            sourcePtr->setCacheSize(CACHE_SIZE);
         } else if (type == "TopoJSONTiles") {
             logMsg("WARNING: TopoJSON data sources not yet implemented\n"); // TODO
         } else if (type == "MVT") {
             sourcePtr = std::shared_ptr<DataSource>(new MVTSource(name, url));
+            sourcePtr->setCacheSize(CACHE_SIZE);
         } else {
             logMsg("WARNING: unrecognized data source type \"%s\", skipping\n", type.c_str());
         }
