@@ -27,3 +27,6 @@
 [submodule "core/include/earcut.hpp"]
 	path = core/include/earcut.hpp
 	url = https://github.com/tangrams/earcut.hpp
+[submodule "core/dependencies/geojson-vt-cpp"]
+	path = core/dependencies/geojson-vt-cpp
+	url = https://github.com/mapbox/geojson-vt-cpp.git
