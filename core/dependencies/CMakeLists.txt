@@ -2,7 +2,7 @@
 ########################
 
 include_directories("css-color-parser-cpp")
-add_library(libcsscolorparser "css-color-parser-cpp/csscolorparser.cpp")
+add_library(css-color-parser-cpp "css-color-parser-cpp/csscolorparser.cpp")
 
 # benchmark #
 #############
@@ -20,7 +20,7 @@ endif()
 add_definitions(-DNDEBUG)
 file(GLOB_RECURSE LIBTESS2_SOURCES "libtess2/Source/*.c")
 include_directories("libtess2/Include")
-add_library(libtess2 ${LIBTESS2_SOURCES})
+add_library(tess2 ${LIBTESS2_SOURCES})
 
 # yaml-cpp #
 ############
