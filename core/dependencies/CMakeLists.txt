@@ -21,3 +21,9 @@ file(GLOB_RECURSE LIBTESS2_SOURCES "libtess2/Source/*.c")
 
 include_directories("libtess2/Include")
 add_library(libtess2 ${LIBTESS2_SOURCES})
+
+# yaml-cpp #
+############
+
+set(YAML_CPP_BUILD_TOOLS OFF CACHE BOOL "Enable testing and parse tools")
+add_subdirectory("yaml-cpp")

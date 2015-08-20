@@ -11,9 +11,6 @@ set(SOURCE_DIR src)
 
 add_subdirectory("${DEPENDENCIES_DIR}")
 
-set(YAML_CPP_BUILD_TOOLS OFF CACHE BOOL "Enable testing and parse tools")
-add_subdirectory("${DEPENDENCIES_DIR}/yaml-cpp")
-
 file(GLOB_RECURSE FOUND_HEADERS "${SOURCE_DIR}/*.h")
 file(GLOB_RECURSE FOUND_SOURCES "${SOURCE_DIR}/*.cpp")
 
