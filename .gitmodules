@@ -19,7 +19,7 @@
 	path = glfw
 	url = https://github.com/glfw/glfw.git
 [submodule "core/dependencies/csscolorparser"]
-	path = core/dependencies/csscolorparser
+	path = core/dependencies/css-color-parser-cpp
 	url = https://github.com/tangrams/css-color-parser-cpp
 [submodule "core/dependencies/benchmark"]
 	path = core/dependencies/benchmark

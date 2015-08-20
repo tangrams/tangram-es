@@ -1,14 +1,16 @@
-set(SOURCE_FILE csscolorparser/csscolorparser.cpp)
-#set(HEADER_FILE csscolorparser.hpp)
-include_directories(csscolorparser)
+# css-color-parser-cpp #
+########################
 
-add_library(libcsscolorparser ${SOURCE_FILE})
+include_directories("css-color-parser-cpp")
+add_library(libcsscolorparser "css-color-parser-cpp/csscolorparser.cpp")
+
+# benchmark #
+#############
 
 if(BENCHMARK)
   option(BENCHMARK_ENABLE_TESTING OFF)
   option(BENCHMARK_ENABLE_LTO OFF)
   set(CMAKE_BUILD_TYPE Release)
-
   add_subdirectory(benchmark)
 endif()
 
@@ -16,9 +18,7 @@ endif()
 ############
 
 add_definitions(-DNDEBUG)
-
 file(GLOB_RECURSE LIBTESS2_SOURCES "libtess2/Source/*.c")
-
 include_directories("libtess2/Include")
 add_library(libtess2 ${LIBTESS2_SOURCES})
 
