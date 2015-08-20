@@ -6,16 +6,16 @@ precision mediump float;
 #endif
 
 uniform sampler2D u_tex;
-uniform LOWP vec3 u_color;
 
 varying vec2 v_uv;
 varying float v_alpha;
+varying vec3 v_color;
 
 void main(void) {
     if (v_alpha < TANGRAM_EPSILON) {
         discard;
     } else {
         vec4 texColor = texture2D(u_tex, v_uv);
-        gl_FragColor = vec4(u_color.rgb, texColor.a * v_alpha);
+        gl_FragColor = vec4(v_color, texColor.a * v_alpha);
     }
 }

@@ -19,7 +19,6 @@ protected:
     virtual void buildLine(const Line& _line, const DrawRule& _rule, const Properties& _props, VboMesh& _mesh, Tile& _tile) const override;
     virtual void buildPolygon(const Polygon& _polygon, const DrawRule& _rule, const Properties& _props, VboMesh& _mesh, Tile& _tile) const override;
     virtual void onBeginBuildTile(Tile& _tile) const override;
-    virtual void onEndBuildTile(Tile& _tile) const override;
 
     virtual VboMesh* newMesh() const override {
         return new TextBuffer(m_vertexLayout);
@@ -32,7 +31,6 @@ protected:
 
     std::string m_fontName;
     float m_fontSize;
-    int m_color;
     bool m_sdf;
     bool m_sdfMultisampling = true;
     bool m_dirtyColor = true;
@@ -41,11 +39,10 @@ public:
 
     bool isOpaque() const override { return false; }
 
-    TextStyle(const std::string& _fontName, std::string _name, float _fontSize, unsigned int _color = 0xffffff,
+    TextStyle(const std::string& _fontName, std::string _name, float _fontSize,
               bool _sdf = false, bool _sdfMultisampling = false, GLenum _drawMode = GL_TRIANGLES);
 
     virtual void onBeginDrawFrame(const View& _view, const Scene& _scene) override;
-    void setColor(unsigned int _color);
 
     virtual ~TextStyle();
 

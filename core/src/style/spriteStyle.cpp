@@ -24,6 +24,7 @@ void SpriteStyle::constructVertexLayout() {
     m_vertexLayout = std::shared_ptr<VertexLayout>(new VertexLayout({
         {"a_position", 2, GL_FLOAT, false, 0},
         {"a_uv", 2, GL_FLOAT, false, 0},
+        {"a_color", 1, GL_UNSIGNED_BYTE, true, 0},
         {"a_screenPosition", 2, GL_FLOAT, false, 0},
         {"a_alpha", 1, GL_FLOAT, false, 0},
         {"a_rotation", 1, GL_FLOAT, false, 0},
@@ -74,12 +75,13 @@ void SpriteStyle::buildPoint(const Point& _point, const DrawRule& _rule, const P
     }
 
     SpriteNode spriteNode = m_spriteAtlas->getSpriteNode(kind);
-    Label::Transform t = { glm::vec2(_point), glm::vec2(_point), offset };
+    Label::Transform t = { glm::vec2(_point), glm::vec2(_point) };
 
     auto& mesh = static_cast<LabelMesh&>(_mesh);
+    
+    Label::Options options = { 0xffffff, offset };
 
-    std::unique_ptr<SpriteLabel> label(new SpriteLabel(t, spriteNode.m_size * spriteScale,
-                                                       mesh, _mesh.numVertices()));
+    std::unique_ptr<SpriteLabel> label(new SpriteLabel(t, spriteNode.m_size * spriteScale, mesh, _mesh.numVertices(), options));
 
     auto size = spriteNode.m_size * spriteScale;
     float halfWidth = size.x * .5f;
@@ -88,10 +90,10 @@ void SpriteStyle::buildPoint(const Point& _point, const DrawRule& _rule, const P
     const glm::vec2& uvTR = spriteNode.m_uvTR;
 
     vertices.reserve(4);
-    vertices.push_back({{-halfWidth, -halfHeight}, {uvBL.x, uvBL.y}});
-    vertices.push_back({{-halfWidth, halfHeight}, {uvBL.x, uvTR.y}});
-    vertices.push_back({{halfWidth, -halfHeight}, {uvTR.x, uvBL.y}});
-    vertices.push_back({{halfWidth, halfHeight}, {uvTR.x, uvTR.y}});
+    vertices.push_back({{-halfWidth, -halfHeight}, {uvBL.x, uvBL.y}, options.color});
+    vertices.push_back({{-halfWidth, halfHeight}, {uvBL.x, uvTR.y}, options.color});
+    vertices.push_back({{halfWidth, -halfHeight}, {uvTR.x, uvBL.y}, options.color});
+    vertices.push_back({{halfWidth, halfHeight}, {uvTR.x, uvTR.y}, options.color});
 
     mesh.addVertices(std::move(vertices), {});
     mesh.addLabel(std::move(label));

@@ -22,7 +22,7 @@ void TextBuffer::init(uint32_t _fontID, float _size, float _blurSpread) {
 TextBuffer::~TextBuffer() {
 }
 
-bool TextBuffer::addLabel(const std::string& _text, Label::Transform _transform, Label::Type _type) {
+bool TextBuffer::addLabel(const std::string& _text, Label::Transform _transform, Label::Type _type, Label::Options _options) {
 
     auto fontContext = FontContext::GetInstance();
 
@@ -52,18 +52,17 @@ bool TextBuffer::addLabel(const std::string& _text, Label::Transform _transform,
         y0 = std::min(y0, std::min(q.y0, q.y1));
         y1 = std::max(y1, std::max(q.y0, q.y1));
 
-        vertices.push_back({{q.x0, q.y0}, {q.s0, q.t0}});
-        vertices.push_back({{q.x0, q.y1}, {q.s0, q.t1}});
-        vertices.push_back({{q.x1, q.y0}, {q.s1, q.t0}});
-        vertices.push_back({{q.x1, q.y1}, {q.s1, q.t1}});
+        vertices.push_back({{q.x0, q.y0}, {q.s0, q.t0}, _options.color});
+        vertices.push_back({{q.x0, q.y1}, {q.s0, q.t1}, _options.color});
+        vertices.push_back({{q.x1, q.y0}, {q.s1, q.t0}, _options.color});
+        vertices.push_back({{q.x1, q.y1}, {q.s1, q.t1}, _options.color});
     }
 
     fontContext->unlock();
 
     glm::vec2 size((x1 - x0), (y1 - y0));
 
-    m_labels.emplace_back(new TextLabel(_text, _transform, _type, size,
-                                        *this, { vertexOffset, numVertices }));
+    m_labels.emplace_back(new TextLabel(_text, _transform, _type, size, *this, { vertexOffset, numVertices }, _options));
 
     // TODO: change this in TypeMesh::adVertices()
     m_nVertices = vertices.size();
