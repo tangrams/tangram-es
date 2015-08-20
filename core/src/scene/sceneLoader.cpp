@@ -659,6 +659,11 @@ Filter SceneLoader::generateFilter(YAML::Node _filter) {
 Filter SceneLoader::generatePredicate(YAML::Node _node, std::string _key) {
 
     if (_node.IsScalar()) {
+        if (_node.Tag() == "tag:yaml.org,2002:str") {
+            // Node was explicitly tagged with '!!str' or the canonical tag 'tag:yaml.org,2002:str'
+            // yaml-cpp normalizes the tag value to the canonical form
+            return Filter(_key, { Value(_node.as<std::string>()) });
+        }
         try {
             return Filter(_key, { Value(_node.as<float>()) });
         } catch (const BadConversion& e) {
