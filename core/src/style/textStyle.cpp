@@ -10,6 +10,8 @@
 
 namespace Tangram {
 
+const static std::string key_name("name");
+
 TextStyle::TextStyle(const std::string& _fontName, std::string _name, float _fontSize, unsigned int _color, bool _sdf, bool _sdfMultisampling, GLenum _drawMode)
 : Style(_name, _drawMode), m_fontName(_fontName), m_fontSize(_fontSize), m_color(_color), m_sdf(_sdf), m_sdfMultisampling(_sdfMultisampling)  {
 }
@@ -47,10 +49,8 @@ void TextStyle::constructShaderProgram() {
 void TextStyle::buildPoint(const Point& _point, const DrawRule& _rule, const Properties& _props, VboMesh& _mesh, Tile& _tile) const {
     auto& buffer = static_cast<TextBuffer&>(_mesh);
 
-    std::string text;
-    if (!_props.getString("name", text)) {
-        return;
-    }
+    const auto& text = _props.getString(key_name);
+    if (text.length() == 0) { return; }
 
     buffer.addLabel(text, { glm::vec2(_point), glm::vec2(_point), glm::vec2(0) }, Label::Type::point);
 }
@@ -58,10 +58,8 @@ void TextStyle::buildPoint(const Point& _point, const DrawRule& _rule, const Pro
 void TextStyle::buildLine(const Line& _line, const DrawRule& _rule, const Properties& _props, VboMesh& _mesh, Tile& _tile) const {
     auto& buffer = static_cast<TextBuffer&>(_mesh);
 
-    std::string text;
-    if (!_props.getString("name", text)) {
-        return;
-    }
+    const auto& text = _props.getString(key_name);
+    if (text.length() == 0) { return; }
 
     int lineLength = _line.size();
     int skipOffset = floor(lineLength / 2);
@@ -86,10 +84,8 @@ void TextStyle::buildLine(const Line& _line, const DrawRule& _rule, const Proper
 void TextStyle::buildPolygon(const Polygon& _polygon, const DrawRule& _rule, const Properties& _props, VboMesh& _mesh, Tile& _tile) const {
     auto& buffer = static_cast<TextBuffer&>(_mesh);
 
-    std::string text;
-    if (!_props.getString("name", text)) {
-        return;
-    }
+    const auto& text = _props.getString(key_name);
+    if (text.length() == 0) { return; }
 
     glm::vec2 centroid;
     int n = 0;

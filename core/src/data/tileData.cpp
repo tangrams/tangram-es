@@ -2,7 +2,6 @@
 #include <algorithm>
 
 namespace Tangram {
-static Properties::Value NOT_FOUND = none_type{};
 
 Properties::Properties(std::vector<Item>&& _items) {
     typedef std::vector<Item>::iterator iter_t;
@@ -21,6 +20,8 @@ Properties& Properties::operator=(Properties&& _other) {
 }
 
 const Properties::Value& Properties::get(const std::string& key) const {
+    const static Properties::Value NOT_FOUND(none_type{});
+
     const auto it = std::lower_bound(props.begin(), props.end(), key,
                                      [](const auto& item, const auto& key) {
                                          return item.key < key;

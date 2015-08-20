@@ -64,7 +64,9 @@ void SpriteStyle::buildPoint(const Point& _point, const DrawRule& _rule, const P
     float spriteScale = .5f;
     glm::vec2 offset = {0.f, 10.f};
 
-    const auto& kind = _props.getString("kind");
+    const static std::string key("kind");
+
+    const std::string& kind = _props.getString(key);
     if(kind.length() == 0) { return; }
 
     if (!m_spriteAtlas->hasSpriteNode(kind)) {
