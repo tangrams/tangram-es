@@ -6,8 +6,8 @@
 
 namespace Tangram {
 
-DebugTextStyle::DebugTextStyle(const std::string& _fontName, std::string _name, float _fontSize, unsigned int _color, bool _sdf, GLenum _drawMode)
-: TextStyle(_fontName, _name, _fontSize, _color, _sdf, false, _drawMode) {
+DebugTextStyle::DebugTextStyle(const std::string& _fontName, std::string _name, float _fontSize, bool _sdf, GLenum _drawMode)
+: TextStyle(_fontName, _name, _fontSize, _sdf, false, _drawMode) {
 }
 
 void DebugTextStyle::onBeginBuildTile(Tangram::Tile &_tile) const {
@@ -32,8 +32,10 @@ void DebugTextStyle::onBeginBuildTile(Tangram::Tile &_tile) const {
             ftContext->setSignedDistanceField(blurSpread);
         }
 
-        std::string tileID = std::to_string(_tile.getID().x) + "/" + std::to_string(_tile.getID().y) + "/" + std::to_string(_tile.getID().z);
-        buffer.addLabel(tileID, { glm::vec2(0) }, Label::Type::debug);
+        Label::Options options;
+        options.color = 0xdc3522;
+
+        buffer.addLabel(_tile.getID().toString(), { glm::vec2(0) }, Label::Type::debug, options);
 
         onEndBuildTile(_tile);
 

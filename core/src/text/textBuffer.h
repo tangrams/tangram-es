@@ -26,7 +26,7 @@ public:
     void init(FontID _fontID, float _size, float _blurSpread);
 
     /* Create and add TextLabel */
-    bool addLabel(const std::string& _text, Label::Transform _transform, Label::Type _type);
+    bool addLabel(const std::string& _text, Label::Transform _transform, Label::Type _type, Label::Options _options);
 
 private:
 

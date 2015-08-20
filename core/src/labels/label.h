@@ -34,11 +34,11 @@ public:
     };
 
     struct Vertex {
-        Vertex(glm::vec2 pos, glm::vec2 uv)
-            : pos(pos), uv(uv){}
+        Vertex(glm::vec2 pos, glm::vec2 uv, unsigned int color) : pos(pos), uv(uv), color(color) {}
 
         glm::vec2 pos;
         glm::vec2 uv;
+        unsigned int color;
         struct State {
             glm::vec2 screenPos;
             float alpha = 0.f;
@@ -47,24 +47,21 @@ public:
     };
 
     struct Transform {
-        Transform(glm::vec2 _pos)
-            : modelPosition1(_pos),
-              modelPosition2(_pos),
-              offset(glm::vec2(0)){}
-
-        Transform(glm::vec2 _pos1, glm::vec2 _pos2, glm::vec2 _offset)
-            : modelPosition1(_pos1),
-              modelPosition2(_pos2),
-              offset(_offset){}
+        Transform(glm::vec2 _pos) : modelPosition1(_pos), modelPosition2(_pos) {}
+        Transform(glm::vec2 _pos1, glm::vec2 _pos2) : modelPosition1(_pos1), modelPosition2(_pos2) {}
 
         glm::vec2 modelPosition1;
         glm::vec2 modelPosition2;
-        glm::vec2 offset;
 
         Vertex::State state;
     };
 
-    Label(Transform _transform, glm::vec2 _size, Type _type, LabelMesh& _mesh, Range _vertexRange);
+    struct Options {
+        unsigned int color = 0xffffff;
+        glm::vec2 offset = glm::vec2(0);
+    };
+
+    Label(Transform _transform, glm::vec2 _size, Type _type, LabelMesh& _mesh, Range _vertexRange, Options _options);
 
     virtual ~Label();
 
@@ -117,26 +114,37 @@ private:
 
     void setRotation(float _rotation);
 
+    // the current label state
     State m_currentState;
+    // the label type (point/line)
     Type m_type;
-    bool m_occludedLastFrame;
-    bool m_occlusionSolved;
+    // the label fade effect
     FadeEffect m_fade;
+    // whether the label was occluded on the previous frame
+    bool m_occludedLastFrame;
+    // whether or not the occlusion has been solved by the occlusion manager
+    bool m_occlusionSolved;
+    // whether or not we need to update the mesh visibilit (alpha channel)
     bool m_updateMeshVisibility;
+    // label options
+    Options m_options;
 
 protected:
 
     virtual void updateBBoxes() = 0;
 
+    // the label oriented bounding box
     isect2d::OBB m_obb;
+    // the label axis aligned bounding box
     isect2d::AABB m_aabb;
+    // whether the label is dirty, this determines whether or no to update the geometry
     bool m_dirty;
+    // the label transforms
     Transform m_transform;
+    // the dimension of the label
     glm::vec2 m_dim;
-
     // Back-pointer to owning container
     LabelMesh& m_mesh;
-
     // first vertex and count in m_mesh vertices
     Range m_vertexRange;
 };
