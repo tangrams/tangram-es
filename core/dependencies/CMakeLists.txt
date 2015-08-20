@@ -17,6 +17,13 @@ if(BENCHMARK)
   add_subdirectory(benchmark)
 endif()
 
+## geojsonvt ##
+###############
+
+file(GLOB_RECURSE GEOJSON_VT_CPP_SOURCES "geojson-vt-cpp/src/*.cpp")
+include_directories(${PROJECT_SOURCE_DIR}/${INCLUDE_DIR} "geojson-vt-cpp/include")
+add_library(geojson-vt-cpp ${GEOJSON_VT_CPP_SOURCES})
+
 # yaml-cpp #
 ############
 
