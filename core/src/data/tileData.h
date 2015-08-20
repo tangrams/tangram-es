@@ -118,13 +118,7 @@ struct Properties {
         return false;
     }
 
-    std::string getString(const std::string& key) const {
-        auto& it = get(key);
-        if (it.is<std::string>()) {
-            return it.get<std::string>();
-        }
-        return "";
-    }
+    const std::string& getString(const std::string& key) const;
 
     template <typename... Args> void add(std::string key, Args&&... args) {
         props.emplace_back(std::move(key), Value{std::forward<Args>(args)...});

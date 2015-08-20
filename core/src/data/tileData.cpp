@@ -33,6 +33,16 @@ const Properties::Value& Properties::get(const std::string& key) const {
     return it->value;
 }
 
+const std::string& Properties::getString(const std::string& key) const {
+    const static std::string EMPTY_STRING = "";
+
+    auto& it = get(key);
+    if (it.is<std::string>()) {
+        return it.get<std::string>();
+    }
+    return EMPTY_STRING;
+}
+
 void Properties::sort() {
     std::sort(props.begin(), props.end());
 }
