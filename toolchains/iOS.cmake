@@ -38,11 +38,6 @@ string(REGEX REPLACE "[.]DS_Store" "" RESOURCES "${RESOURCES}")
 add_subdirectory(${PROJECT_SOURCE_DIR}/core)
 include_directories(${CORE_INCLUDE_DIRS})
 
-find_package(ZLIB REQUIRED)
-if (ZLIB_FOUND)
-    include_directories(${ZLIB_INCLUDE_DIRS})
-endif()
-
 # ios source files
 set(IOS_EXTENSIONS_FILES *.mm *.cpp *.m)
 foreach(_ext ${IOS_EXTENSIONS_FILES})
@@ -54,7 +49,6 @@ endforeach()
 # link and build functions
 function(link_libraries)
     target_link_libraries(${EXECUTABLE_NAME} core)
-    target_link_libraries(${EXECUTABLE_NAME} ${ZLIB_LIBRARIES})
     
     foreach(_framework ${FRAMEWORKS})
         add_framework(${_framework} ${EXECUTABLE_NAME} ${CMAKE_SYSTEM_FRAMEWORK_PATH})

@@ -9,11 +9,7 @@ set(INCLUDE_DIR include)
 set(DEPENDENCIES_DIR dependencies)
 set(SOURCE_DIR src)
 
-add_subdirectory("${DEPENDENCIES_DIR}/tess2")
 add_subdirectory("${DEPENDENCIES_DIR}")
-
-set(YAML_CPP_BUILD_TOOLS OFF CACHE BOOL "Enable testing and parse tools")
-add_subdirectory("${DEPENDENCIES_DIR}/yaml-cpp")
 
 file(GLOB_RECURSE FOUND_HEADERS "${SOURCE_DIR}/*.h")
 file(GLOB_RECURSE FOUND_SOURCES "${SOURCE_DIR}/*.cpp")
@@ -24,8 +20,8 @@ foreach(_headerFile ${FOUND_HEADERS})
     list(APPEND INCLUDE_DIRS ${_dir})
 endforeach()
 set(CORE_INCLUDE_DIRS ${INCLUDE_DIRS} CACHE INTERNAL "core include directories" FORCE)
-list(APPEND INCLUDE_DIRS "${DEPENDENCIES_DIR}/tess2/libtess2/Include")
-list(APPEND INCLUDE_DIRS "${DEPENDENCIES_DIR}/csscolorparser")
+list(APPEND INCLUDE_DIRS "${DEPENDENCIES_DIR}/libtess2/Include")
+list(APPEND INCLUDE_DIRS "${DEPENDENCIES_DIR}/css-color-parser-cpp")
 list(APPEND INCLUDE_DIRS "${DEPENDENCIES_DIR}/yaml-cpp/include")
 list(APPEND INCLUDE_DIRS "${INCLUDE_DIR}/stb")
 list(APPEND INCLUDE_DIRS "${INCLUDE_DIR}/glm")
@@ -36,8 +32,8 @@ list(REMOVE_DUPLICATES INCLUDE_DIRS)
 include_directories(${INCLUDE_DIR} ${INCLUDE_DIRS})
 
 set(CORE_LIBRARIES_INCLUDE_DIRS
-    ${PROJECT_SOURCE_DIR}/${DEPENDENCIES_DIR}/tess2/libtess2/Include/
-    ${PROJECT_SOURCE_DIR}/${DEPENDENCIES_DIR}/csscolorparser/
+    ${PROJECT_SOURCE_DIR}/${DEPENDENCIES_DIR}/libtess2/Include/
+    ${PROJECT_SOURCE_DIR}/${DEPENDENCIES_DIR}/css-color-parser-cpp/
     ${PROJECT_SOURCE_DIR}/${DEPENDENCIES_DIR}/yaml-cpp/include/
     ${PROJECT_SOURCE_DIR}/${INCLUDE_DIR}/
     ${PROJECT_SOURCE_DIR}/${INCLUDE_DIR}/glm/
@@ -50,14 +46,14 @@ set(CORE_LIBRARIES_INCLUDE_DIRS
     CACHE INTERNAL "core libraries include directories" FORCE)
 
 # adding some other dependent target files if needed
-set(FOUND_SOURCES ${FOUND_SOURCES} ${ADDITIONNAL_TARGET_DEPENDENT_SRC_FILES})
+set(FOUND_SOURCES ${FOUND_SOURCES} ${ADDITIONAL_TARGET_DEPENDENT_SRC_FILES})
 
 if(NOT DEFINED CORE_LIB_NAME)
     set(CORE_LIB_NAME core)
 endif()
 
 add_library(${CORE_LIB_NAME} ${CORE_LIB_TYPE} ${FOUND_SOURCES} ${FOUND_HEADERS})
-target_link_libraries(${CORE_LIB_NAME} libtess2 libcsscolorparser yaml-cpp ${CORE_LIB_DEPS})
+target_link_libraries(${CORE_LIB_NAME} tess2 css-color-parser-cpp yaml-cpp ${CORE_LIB_DEPS})
 
 # make groups for xcode
 group_recursive_sources(src "src")

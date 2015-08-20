@@ -14,7 +14,7 @@ set(CXX_FLAGS_DEBUG "${CXX_FLAGS_DEBUG} -g -O0")
 set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -Wall -fPIC")
 
 # adding manually the two jni c++ files
-set(ADDITIONNAL_TARGET_DEPENDENT_SRC_FILES
+set(ADDITIONAL_TARGET_DEPENDENT_SRC_FILES
      ${CMAKE_SOURCE_DIR}/android/tangram/jni/jniExports.cpp
      ${CMAKE_SOURCE_DIR}/android/tangram/jni/platform_android.cpp)
 
