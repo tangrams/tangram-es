@@ -68,7 +68,6 @@ typedef std::vector<Line> Polygon;
 
 struct Properties {
 
-    using Value = variant<none_type, std::string, float>;
     struct Item {
         Item(std::string _key, Value _value) :
             key(std::move(_key)), value(std::move(_value)) {}

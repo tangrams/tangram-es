@@ -19,8 +19,8 @@ Properties& Properties::operator=(Properties&& _other) {
      return *this;
 }
 
-const Properties::Value& Properties::get(const std::string& key) const {
-    const static Properties::Value NOT_FOUND(none_type{});
+const Value& Properties::get(const std::string& key) const {
+    const static Value NOT_FOUND(none_type{});
 
     const auto it = std::lower_bound(props.begin(), props.end(), key,
                                      [](const auto& item, const auto& key) {

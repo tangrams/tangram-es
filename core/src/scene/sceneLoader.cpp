@@ -660,7 +660,7 @@ Filter SceneLoader::generatePredicate(YAML::Node _node, std::string _key) {
 
     if (_node.IsScalar()) {
         try {
-            return Filter(_key, { Value(_node.as<float>(), _node.as<std::string>()) });
+            return Filter(_key, { Value(_node.as<float>()) });
         } catch (const BadConversion& e) {
             std::string value = _node.as<std::string>();
             if (value == "true") {
@@ -675,7 +675,7 @@ Filter SceneLoader::generatePredicate(YAML::Node _node, std::string _key) {
         std::vector<Value> values;
         for (const auto& valItr : _node) {
             try {
-                values.emplace_back(valItr.as<float>(), valItr.as<std::string>());
+                values.emplace_back(valItr.as<float>());
             } catch(const BadConversion& e) {
                 std::string value = valItr.as<std::string>();
                 values.emplace_back(value);

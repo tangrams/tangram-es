@@ -14,7 +14,7 @@ namespace PbfParser {
 
     struct ParserContext {
         std::vector<std::string> keys;
-        std::vector<Properties::Value> values;
+        std::vector<Value> values;
         std::vector<Properties::Item> properties;
         std::vector<protobuf::message> featureMsgs;
         std::vector<Point> coordinates;
