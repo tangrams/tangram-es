@@ -12,6 +12,10 @@ varying vec2 v_uv;
 varying float v_alpha;
 
 void main(void) {
-    vec4 texColor = texture2D(u_tex, v_uv);
-    gl_FragColor = vec4(u_color.rgb, texColor.a * v_alpha);
+    if (v_alpha < TANGRAM_EPSILON) {
+        discard;
+    } else {
+        vec4 texColor = texture2D(u_tex, v_uv);
+        gl_FragColor = vec4(u_color.rgb, texColor.a * v_alpha);
+    }
 }
