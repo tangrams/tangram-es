@@ -9,7 +9,6 @@ set(INCLUDE_DIR include)
 set(DEPENDENCIES_DIR dependencies)
 set(SOURCE_DIR src)
 
-add_subdirectory("${DEPENDENCIES_DIR}/tess2")
 add_subdirectory("${DEPENDENCIES_DIR}")
 
 set(YAML_CPP_BUILD_TOOLS OFF CACHE BOOL "Enable testing and parse tools")
@@ -24,7 +23,7 @@ foreach(_headerFile ${FOUND_HEADERS})
     list(APPEND INCLUDE_DIRS ${_dir})
 endforeach()
 set(CORE_INCLUDE_DIRS ${INCLUDE_DIRS} CACHE INTERNAL "core include directories" FORCE)
-list(APPEND INCLUDE_DIRS "${DEPENDENCIES_DIR}/tess2/libtess2/Include")
+list(APPEND INCLUDE_DIRS "${DEPENDENCIES_DIR}/libtess2/Include")
 list(APPEND INCLUDE_DIRS "${DEPENDENCIES_DIR}/csscolorparser")
 list(APPEND INCLUDE_DIRS "${DEPENDENCIES_DIR}/yaml-cpp/include")
 list(APPEND INCLUDE_DIRS "${INCLUDE_DIR}/stb")
@@ -36,7 +35,7 @@ list(REMOVE_DUPLICATES INCLUDE_DIRS)
 include_directories(${INCLUDE_DIR} ${INCLUDE_DIRS})
 
 set(CORE_LIBRARIES_INCLUDE_DIRS
-    ${PROJECT_SOURCE_DIR}/${DEPENDENCIES_DIR}/tess2/libtess2/Include/
+    ${PROJECT_SOURCE_DIR}/${DEPENDENCIES_DIR}/libtess2/Include/
     ${PROJECT_SOURCE_DIR}/${DEPENDENCIES_DIR}/csscolorparser/
     ${PROJECT_SOURCE_DIR}/${DEPENDENCIES_DIR}/yaml-cpp/include/
     ${PROJECT_SOURCE_DIR}/${INCLUDE_DIR}/
