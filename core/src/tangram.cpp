@@ -67,7 +67,7 @@ void initialize() {
 
     }
 
-    Primitives::setDebugColor(0xffffff);
+    Primitives::setColor(0xffffff);
     RenderState::configure();
 
     while (Error::hadGlError("Tangram::initialize()")) {}
@@ -90,7 +90,7 @@ void resize(int _newWidth, int _newHeight) {
         style->viewportHasChanged();
     }
 
-    Primitives::setDebugResolution(_newWidth, _newHeight);
+    Primitives::setResolution(_newWidth, _newHeight);
 
     while (Error::hadGlError("Tangram::resize()")) {}
 

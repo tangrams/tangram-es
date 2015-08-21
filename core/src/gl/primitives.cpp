@@ -94,7 +94,7 @@ void drawPoly(const glm::vec2* _polygon, size_t _n) {
     popState();
 }
 
-void setDebugColor(unsigned int _color) {
+void setColor(unsigned int _color) {
     init();
 
     float r = (_color >> 16 & 0xff) / 255.0;
@@ -104,7 +104,7 @@ void setDebugColor(unsigned int _color) {
     s_shader->setUniformf("u_color", r, g, b);
 }
 
-void setDebugResolution(float _width, float _height) {
+void setResolution(float _width, float _height) {
     init();
 
     glm::mat4 proj = glm::ortho(0.f, _width, _height, 0.f, -1.f, 1.f);

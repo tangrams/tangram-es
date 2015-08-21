@@ -7,10 +7,10 @@ namespace Tangram {
 namespace Primitives {
 
 /* Setup the debug resolution size */
-void setDebugResolution(float _width, float _height);
+void setResolution(float _width, float _height);
 
 /* Sets the current primitive color */
-void setDebugColor(unsigned int _color);
+void setColor(unsigned int _color);
 
 /* Draws a line from _origin to _destination for the screen resolution _resolution */
 void drawLine(const glm::vec2& _origin, const glm::vec2& _destination);
