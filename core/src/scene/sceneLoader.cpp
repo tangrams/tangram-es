@@ -315,7 +315,7 @@ void SceneLoader::loadStyles(YAML::Node styles, Scene& scene) {
     scene.styles().emplace_back(new PolygonStyle("polygons"));
     scene.styles().emplace_back(new PolylineStyle("lines"));
     scene.styles().emplace_back(new TextStyle("text", true, true));
-    scene.styles().emplace_back(new DebugTextStyle("FiraSans", "debugtext", 30.0f, 0xDC3522, true));
+    scene.styles().emplace_back(new DebugTextStyle("FiraSans-Medium", "debugtext", 30.0f, true));
     scene.styles().emplace_back(new DebugStyle("debug"));
     scene.styles().emplace_back(new SpriteStyle("sprites"));
 
