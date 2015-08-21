@@ -116,12 +116,12 @@ void TextStyle::buildPoint(const Point& _point, const DrawRule& _rule, const Pro
 
     const auto& text = _props.getString(key_name);
     if (text.length() == 0) { return; }
-    
-    Label::Options options;
-    options.color = 0x0000ffff;
 
-    buffer.addLabel(text, { glm::vec2(_point), glm::vec2(_point), glm::vec2(0) }, Label::Type::point, params.fontName,
-            params.fontSize * m_pixelScale, m_sdf ? 2.5f : 0.0f);
+    Label::Options options;
+    options.color = params.fill;
+
+    buffer.addLabel(text, { glm::vec2(_point), glm::vec2(_point) }, Label::Type::point, params.fontName,
+            params.fontSize * m_pixelScale, m_sdf ? 2.5f : 0.0f, options);
 }
 
 void TextStyle::buildLine(const Line& _line, const DrawRule& _rule, const Properties& _props, VboMesh& _mesh, Tile& _tile) const {
@@ -147,16 +147,12 @@ void TextStyle::buildLine(const Line& _line, const DrawRule& _rule, const Proper
         if (length < minLength) {
             continue;
         }
-        
-        Label::Options options;
-        options.color = 0xff000000;
-        
-        options.color |= (rand() % 255) << 0;
-        options.color |= (rand() % 255) << 8;
-        options.color |= (rand() % 255) << 16;
 
-        buffer.addLabel(text, { p1, p2, glm::vec2(0) }, Label::Type::line, params.fontName,
-                params.fontSize * m_pixelScale, m_sdf ? 2.5f : 0.0f);
+        Label::Options options;
+        options.color = params.fill;
+
+        buffer.addLabel(text, { p1, p2 }, Label::Type::line, params.fontName,
+                params.fontSize * m_pixelScale, m_sdf ? 2.5f : 0.0f, options);
     }
 }
 
@@ -181,12 +177,12 @@ void TextStyle::buildPolygon(const Polygon& _polygon, const DrawRule& _rule, con
     if (n == 0) { return; }
 
     centroid /= n;
-    
-    Label::Options options;
-    options.color = 0xffff00ff;
 
-    buffer.addLabel(text, { centroid, centroid, glm::vec2(0) }, Label::Type::point, params.fontName,
-            params.fontSize * m_pixelScale, m_sdf ? 2.5f : 0.0f);
+    Label::Options options;
+    options.color = params.fill;
+
+    buffer.addLabel(text, { centroid, centroid }, Label::Type::point, params.fontName,
+            params.fontSize * m_pixelScale, m_sdf ? 2.5f : 0.0f, options);
 }
 
 void TextStyle::onBeginDrawFrame(const View& _view, const Scene& _scene) {
