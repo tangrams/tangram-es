@@ -15,6 +15,10 @@ public:
 
     DebugTextStyle(const std::string& _fontName, std::string _name, float _fontSize, bool _sdf = false, GLenum _drawMode = GL_TRIANGLES);
 
+    std::string m_fontName;
+    float m_fontSize;
+    bool m_sdf;
+
     virtual bool isOpaque() const override { return false; };
 };
 
