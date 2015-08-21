@@ -6,6 +6,7 @@
 #include "glm/gtc/type_ptr.hpp"
 #include "gl/shaderProgram.h"
 #include "gl/vertexLayout.h"
+#include "gl/renderState.h"
 #include "platform.h"
 
 namespace Tangram {
@@ -17,7 +18,6 @@ static std::unique_ptr<ShaderProgram> s_shader;
 static std::unique_ptr<VertexLayout> s_layout;
 static glm::vec2 s_resolution;
 static GLuint s_boundBuffer;
-static GLboolean s_depthTest;
 
 void init(glm::vec2 _resolution) {
 
@@ -47,22 +47,15 @@ void init(glm::vec2 _resolution) {
 }
 
 void saveState() {
-
     // save the current gl state
     glGetIntegerv(GL_ARRAY_BUFFER_BINDING, (GLint*) &s_boundBuffer);
-    glGetBooleanv(GL_DEPTH_TEST, &s_depthTest);
     glBindBuffer(GL_ARRAY_BUFFER, 0);
-    glDisable(GL_DEPTH_TEST);
+    RenderState::depthTest(GL_FALSE);
 }
 
 void popState() {
-
     // undo modification on the gl states
     glBindBuffer(GL_ARRAY_BUFFER, s_boundBuffer);
-
-    if (s_depthTest) {
-        glEnable(GL_DEPTH_TEST);
-    }
 }
 
 void drawLine(const glm::vec2& _origin, const glm::vec2& _destination, glm::vec2 _resolution) {
