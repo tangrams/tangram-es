@@ -12,7 +12,7 @@
 
 namespace Tangram {
 
-typedef unsigned int FontID;
+typedef int FontID;
 
 class FontContext {
 
