@@ -25,6 +25,7 @@ struct Filter;
 class SceneLoader {
 
     void loadSources(YAML::Node sources, TileManager& tileManager);
+    void loadFonts(YAML::Node fonts);
     void loadLights(YAML::Node lights, Scene& scene);
     void loadCameras(YAML::Node cameras, View& view);
     void loadLayers(YAML::Node layers, Scene& scene, TileManager& tileManager);
