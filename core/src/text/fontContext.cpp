@@ -90,7 +90,7 @@ FontID FontContext::getFontID(const std::string& _name) {
         return it->second;
     } else {
         logMsg("[FontContext] Could not find font %s\n", _name.c_str());
-        return 0;
+        return -1;
     }
 }
 
