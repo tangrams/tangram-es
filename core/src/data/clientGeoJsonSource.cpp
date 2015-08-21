@@ -74,9 +74,14 @@ std::shared_ptr<TileData> ClientGeoJsonSource::parse(const Tile& _tile, std::vec
             }
         }
 
+        std::vector<Properties::Item> items;
+        items.reserve(it.tags.size());
+
         for (auto& tag : it.tags) {
-            feat.props.stringProps[tag.first] = tag.second;
+            items.emplace_back(tag.first, tag.second);
         }
+
+        feat.props = Properties(std::move(items));
 
         layer.features.emplace_back(std::move(feat));
 
