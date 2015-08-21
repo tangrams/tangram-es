@@ -57,7 +57,7 @@ public:
     };
 
     struct Options {
-        unsigned int color = 0xffffff;
+        unsigned int color = 0xffffffff;
         glm::vec2 offset = glm::vec2(0);
     };
 
