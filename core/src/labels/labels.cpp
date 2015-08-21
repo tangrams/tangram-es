@@ -115,19 +115,19 @@ void Labels::drawDebug(const View& _view) {
     if (!Tangram::getDebugFlag(Tangram::DebugFlags::labels)) {
         return;
     }
-    
+
     Primitives::setDebugColor(0xdc3522);
     for (auto label : m_labels) {
         if (label->canOcclude()) {
             Primitives::drawPoly(reinterpret_cast<const glm::vec2*>(label->getOBB().getQuad()), 4);
         }
     }
-    
+
     glm::vec2 split(4, 4);
     glm::vec2 res(_view.getWidth(), _view.getHeight());
     const short xpad = short(ceilf(res.x / split.x));
     const short ypad = short(ceilf(res.y / split.y));
-    
+
     Primitives::setDebugColor(0x7ef586);
     short x = 0, y = 0;
     for (int j = 0; j < split.y; ++j) {
@@ -141,7 +141,6 @@ void Labels::drawDebug(const View& _view) {
             }
         }
     }
-
 }
 
 }
