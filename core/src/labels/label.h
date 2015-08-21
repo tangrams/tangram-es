@@ -34,11 +34,11 @@ public:
     };
 
     struct Vertex {
-        Vertex(glm::vec2 pos, glm::vec2 uv, unsigned int color) : pos(pos), uv(uv), color(color) {}
+        Vertex(glm::vec2 pos, glm::vec2 uv, uint32_t color) : pos(pos), uv(uv), color(color) {}
 
         glm::vec2 pos;
         glm::vec2 uv;
-        unsigned int color;
+        uint32_t color;
         struct State {
             glm::vec2 screenPos;
             float alpha = 0.f;
@@ -57,7 +57,7 @@ public:
     };
 
     struct Options {
-        unsigned int color = 0xffffffff;
+        uint32_t color = 0xffffffff;
         glm::vec2 offset = glm::vec2(0);
     };
 
