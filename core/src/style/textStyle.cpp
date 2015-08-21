@@ -62,7 +62,8 @@ TextStyle::Parameters TextStyle::parseRule(const DrawRule& _rule) const {
     }
     _rule.getValue(StyleParamKey::font_stroke_width, p.strokeWidth);
     if (_rule.getValue(StyleParamKey::font_capitalized, cap) ) {
-        p.capitalized = true;
+        if (cap == "true") { p.capitalized = true; }
+        else { p.capitalized = false; }
     }
 
     // Parse typefaceStr to Property.typeface and Property.size
