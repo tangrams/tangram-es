@@ -49,13 +49,13 @@ void init(glm::vec2 _resolution) {
 void saveState() {
     // save the current gl state
     glGetIntegerv(GL_ARRAY_BUFFER_BINDING, (GLint*) &s_boundBuffer);
-    glBindBuffer(GL_ARRAY_BUFFER, 0);
     RenderState::depthTest(GL_FALSE);
+    RenderState::vertexBuffer(0);
 }
 
 void popState() {
     // undo modification on the gl states
-    glBindBuffer(GL_ARRAY_BUFFER, s_boundBuffer);
+    RenderState::vertexBuffer(s_boundBuffer);
 }
 
 void drawLine(const glm::vec2& _origin, const glm::vec2& _destination, glm::vec2 _resolution) {
