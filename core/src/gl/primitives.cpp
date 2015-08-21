@@ -6,6 +6,7 @@
 #include "glm/gtc/type_ptr.hpp"
 #include "gl/shaderProgram.h"
 #include "gl/vertexLayout.h"
+#include "platform.h"
 
 namespace Tangram {
 
@@ -18,40 +19,17 @@ static glm::vec2 s_resolution;
 static GLuint s_boundBuffer;
 static GLboolean s_depthTest;
 
-static const GLchar* s_vert = R"END(
-#ifdef GL_ES
-precision mediump float;
-#endif
-
-attribute vec2 a_position;
-
-uniform mat4 u_proj;
-
-void main() {
-    gl_Position = u_proj * vec4(a_position, 1.0, 1.0);
-}
-
-)END";
-
-static const GLchar* s_frag = R"END(
-#ifdef GL_ES
-precision mediump float;
-#endif
-
-uniform vec3 u_color;
-
-void main() {
-    gl_FragColor = vec4(u_color, 1.0);
-}
-
-)END";
-
 void init(glm::vec2 _resolution) {
 
     // lazy init
     if (!s_initialized) {
+        std::string vert, frag;
         s_shader = std::unique_ptr<ShaderProgram>(new ShaderProgram());
-        s_shader->setSourceStrings(s_frag, s_vert);
+        
+        vert = stringFromResource("debugPrimitive.vs");
+        frag = stringFromResource("debugPrimitive.fs");
+        
+        s_shader->setSourceStrings(frag, vert);
         s_shader->setUniformf("u_color", 1.f, 1.f, 1.f);
 
         s_layout = std::unique_ptr<VertexLayout>(new VertexLayout({
