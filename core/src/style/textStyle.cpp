@@ -12,9 +12,8 @@ namespace Tangram {
 
 const static std::string key_name("name");
 
-TextStyle::TextStyle(const std::string& _fontName, std::string _name, float _fontSize, bool _sdf, bool _sdfMultisampling, GLenum _drawMode)
-: Style(_name, _drawMode), m_fontName(_fontName), m_fontSize(_fontSize), m_sdf(_sdf), m_sdfMultisampling(_sdfMultisampling)  {
-}
+TextStyle::TextStyle(std::string _name, GLenum _drawMode, bool _sdf, bool _sdfMultisampling) :
+    Style(_name, _drawMode), m_sdf(_sdf), m_sdfMultisampling(_sdfMultisampling) {}
 
 TextStyle::~TextStyle() {
 }
@@ -47,8 +46,72 @@ void TextStyle::constructShaderProgram() {
     m_shaderProgram->addSourceBlock("defines", defines);
 }
 
+TextStyle::Parameters TextStyle::parseRule(const DrawRule& _rule) const {
+    Parameters p;
+
+    //TODO: handle different size formats, px, pt, em
+
+    std::string typefaceStr;
+    std::string cap;
+
+    _rule.getValue(StyleParamKey::font_size, p.fontSize);
+    _rule.getValue(StyleParamKey::font_typeface, typefaceStr);
+    _rule.getColor(StyleParamKey::font_fill, p.fill);
+    if (_rule.getColor(StyleParamKey::font_stroke, p.strokeColor)) {
+        _rule.getColor(StyleParamKey::font_stroke_color, p.strokeColor);
+    }
+    _rule.getValue(StyleParamKey::font_stroke_width, p.strokeWidth);
+    if (_rule.getValue(StyleParamKey::font_capitalized, cap) ) {
+        p.capitalized = true;
+    }
+
+    // Parse typefaceStr to Property.typeface and Property.size
+    // Atleast for android fontName should be like: Roboto-BoldItalic
+    char str[4][40];
+    float size;
+    int num = sscanf(typefaceStr.c_str(), "%s %s %s %s", str[0], str[1], str[2], str[3]);
+    switch(num) {
+        case 0:
+            break;
+        case 1:
+            p.fontName = str[0];
+            break;
+        case 2:
+            try {
+                size = std::stof(std::string(str[0]));
+                p.fontSize = size;
+                p.fontName = str[1];
+            } catch (const std::invalid_argument& e) {
+                p.fontName = std::string(str[1]) + "-" + std::string(str[0]);
+            }
+            break;
+        case 3:
+            try {
+                size = std::stof(std::string(str[1]));
+                p.fontSize = size;
+                p.fontName = std::string(str[2]) + "-" + std::string(str[0]);
+            } catch (const std::invalid_argument& e) {
+                p.fontName = std::string(str[2]) + "-" + std::string(str[1]) + std::string(str[0]);
+            }
+            break;
+        case 4:
+            try {
+                size = std::stof(std::string(str[2]));
+                p.fontSize = size;
+                p.fontName = std::string(str[3]) + "-" + std::string(str[1]) + std::string(str[0]);
+            } catch (const std::invalid_argument& e) {
+                p.fontName = std::string(str[3]) + "-" + std::string(str[2]) + std::string(str[1]) + std::string(str[0]);
+            }
+            break;
+    }
+
+    return p;
+}
+
 void TextStyle::buildPoint(const Point& _point, const DrawRule& _rule, const Properties& _props, VboMesh& _mesh, Tile& _tile) const {
     auto& buffer = static_cast<TextBuffer&>(_mesh);
+
+	Parameters params = parseRule(_rule);
 
     const auto& text = _props.getString(key_name);
     if (text.length() == 0) { return; }
@@ -56,11 +119,14 @@ void TextStyle::buildPoint(const Point& _point, const DrawRule& _rule, const Pro
     Label::Options options;
     options.color = 0x0000ffff;
 
-    buffer.addLabel(text, { glm::vec2(_point), glm::vec2(_point) }, Label::Type::point, options);
+    buffer.addLabel(text, { glm::vec2(_point), glm::vec2(_point), glm::vec2(0) }, Label::Type::point, params.fontName,
+            params.fontSize * m_pixelScale, m_sdf ? 2.5f : 0.0f);
 }
 
 void TextStyle::buildLine(const Line& _line, const DrawRule& _rule, const Properties& _props, VboMesh& _mesh, Tile& _tile) const {
     auto& buffer = static_cast<TextBuffer&>(_mesh);
+
+	Parameters params = parseRule(_rule);
 
     const auto& text = _props.getString(key_name);
     if (text.length() == 0) { return; }
@@ -88,12 +154,15 @@ void TextStyle::buildLine(const Line& _line, const DrawRule& _rule, const Proper
         options.color |= (rand() % 255) << 8;
         options.color |= (rand() % 255) << 16;
 
-        buffer.addLabel(text, { p1, p2, }, Label::Type::line, options);
+        buffer.addLabel(text, { p1, p2, glm::vec2(0) }, Label::Type::line, params.fontName,
+                params.fontSize * m_pixelScale, m_sdf ? 2.5f : 0.0f);
     }
 }
 
 void TextStyle::buildPolygon(const Polygon& _polygon, const DrawRule& _rule, const Properties& _props, VboMesh& _mesh, Tile& _tile) const {
     auto& buffer = static_cast<TextBuffer&>(_mesh);
+
+	Parameters params = parseRule(_rule);
 
     const auto& text = _props.getString(key_name);
     if (text.length() == 0) { return; }
@@ -115,21 +184,10 @@ void TextStyle::buildPolygon(const Polygon& _polygon, const DrawRule& _rule, con
     Label::Options options;
     options.color = 0xffff00ff;
 
-    buffer.addLabel(text, { centroid, centroid, }, Label::Type::point, options);
+    buffer.addLabel(text, { centroid, centroid, glm::vec2(0) }, Label::Type::point, params.fontName,
+            params.fontSize * m_pixelScale, m_sdf ? 2.5f : 0.0f);
 }
 
-void TextStyle::onBeginBuildTile(Tile& _tile) const {
-    auto& mesh = _tile.getMesh(*this);
-    if (!mesh) {
-        mesh.reset(newMesh());
-    }
-    auto& buffer = static_cast<TextBuffer&>(*mesh);
-    auto ftContext = FontContext::GetInstance();
-    auto font = ftContext->getFontID(m_fontName);
-
-    buffer.init(font, m_fontSize * m_pixelScale, m_sdf ? 2.5 : 0);
-}
-    
 void TextStyle::onBeginDrawFrame(const View& _view, const Scene& _scene) {
     bool contextLost = Style::glContextLost();
 

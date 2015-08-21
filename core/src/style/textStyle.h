@@ -1,7 +1,6 @@
 #pragma once
 
 #include "style.h"
-#include "text/fontContext.h"
 #include "text/textBuffer.h"
 
 #include <memory>
@@ -12,13 +11,23 @@ class TextStyle : public Style {
 
 protected:
 
+    struct Parameters {
+        std::string fontName;
+        uint32_t fill = 0x0;
+        uint32_t strokeColor = 0xffffffff;
+        float strokeWidth = 0.0f;
+        float fontSize;
+        bool capitalized = false;
+    };
+
     virtual void constructVertexLayout() override;
     virtual void constructShaderProgram() override;
 
     virtual void buildPoint(const Point& _point, const DrawRule& _rule, const Properties& _props, VboMesh& _mesh, Tile& _tile) const override;
     virtual void buildLine(const Line& _line, const DrawRule& _rule, const Properties& _props, VboMesh& _mesh, Tile& _tile) const override;
     virtual void buildPolygon(const Polygon& _polygon, const DrawRule& _rule, const Properties& _props, VboMesh& _mesh, Tile& _tile) const override;
-    virtual void onBeginBuildTile(Tile& _tile) const override;
+
+    Parameters parseRule(const DrawRule& _rule) const;
 
     virtual VboMesh* newMesh() const override {
         return new TextBuffer(m_vertexLayout);
@@ -29,18 +38,14 @@ protected:
      */
     void addTextLabel(TextBuffer& _buffer, Label::Transform _transform, std::string _text, Label::Type _type) const;
 
-    std::string m_fontName;
-    float m_fontSize;
     bool m_sdf;
     bool m_sdfMultisampling = true;
-    bool m_dirtyColor = true;
 
 public:
 
     bool isOpaque() const override { return false; }
 
-    TextStyle(const std::string& _fontName, std::string _name, float _fontSize,
-              bool _sdf = false, bool _sdfMultisampling = false, GLenum _drawMode = GL_TRIANGLES);
+    TextStyle(std::string _name, GLenum _drawMode = GL_TRIANGLES, bool _sdf = false, bool _sdfMultisampling = false);
 
     virtual void onBeginDrawFrame(const View& _view, const Scene& _scene) override;
 

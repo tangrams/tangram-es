@@ -7,7 +7,7 @@
 namespace Tangram {
 
 DebugTextStyle::DebugTextStyle(const std::string& _fontName, std::string _name, float _fontSize, bool _sdf, GLenum _drawMode)
-: TextStyle(_fontName, _name, _fontSize, _sdf, false, _drawMode) {
+: TextStyle(_name, _drawMode), m_fontName(_fontName), m_fontSize(_fontSize), m_sdf(_sdf) {
 }
 
 void DebugTextStyle::onBeginBuildTile(Tangram::Tile &_tile) const {
@@ -24,18 +24,13 @@ void DebugTextStyle::onBeginBuildTile(Tangram::Tile &_tile) const {
         auto& buffer = static_cast<TextBuffer&>(*mesh);
 
         auto ftContext = FontContext::GetInstance();
-        
-        ftContext->setFont(m_fontName, m_fontSize * m_pixelScale);
 
         if (m_sdf) {
             float blurSpread = 2.5;
             ftContext->setSignedDistanceField(blurSpread);
         }
 
-        Label::Options options;
-        options.color = 0xdc3522;
-
-        buffer.addLabel(_tile.getID().toString(), { glm::vec2(0) }, Label::Type::debug, options);
+        buffer.addLabel(_tile.getID().toString(), { glm::vec2(0) }, Label::Type::debug, m_fontName, m_fontSize * m_pixelScale, m_sdf ? 2.5f : 0.0f, { 0xdc3522 });
 
         onEndBuildTile(_tile);
 
