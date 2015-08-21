@@ -36,6 +36,9 @@ namespace RenderState {
         glClearDepthf(1.0);
         glDepthRangef(0.0, 1.0);
         glClearColor(0.3, 0.3, 0.3, 1.0);
+
+        vertexBuffer(-1);
+        indexBuffer(-1);
     }
 
 }
