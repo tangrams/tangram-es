@@ -65,15 +65,24 @@ StyleParam::StyleParam(const std::string& _key, const std::string& _value) {
             }
         }
         break;
+    case StyleParamKey::font_typeface:
+    case StyleParamKey::font_capitalized:
+        value = _value;
+        break;
     case StyleParamKey::order:
         value = static_cast<int32_t>(std::stoi(_value));
         break;
     case StyleParamKey::width:
     case StyleParamKey::outline_width:
+    case StyleParamKey::font_size:
+    case StyleParamKey::font_stroke_width:
         value = static_cast<float>(std::stof(_value));
         break;
     case StyleParamKey::color:
     case StyleParamKey::outline_color:
+    case StyleParamKey::font_fill:
+    case StyleParamKey::font_stroke:
+    case StyleParamKey::font_stroke_color:
         value = DrawRule::parseColor(_value);
         break;
     case StyleParamKey::cap:
@@ -97,15 +106,23 @@ std::string StyleParam::toString() const {
         auto p = value.get<Extrusion>();
         return "extrude : (" + std::to_string(p.first) + ", " + std::to_string(p.second) + ")";
     }
+    case StyleParamKey::font_typeface:
+    case StyleParamKey::font_capitalized:
+        return value.get<std::string>();
     case StyleParamKey::order:
         if (!value.is<int32_t>()) break;
         return "order : " + std::to_string(value.get<int32_t>());
     case StyleParamKey::width:
     case StyleParamKey::outline_width:
+    case StyleParamKey::font_size:
+    case StyleParamKey::font_stroke_width:
         if (!value.is<float>()) break;
         return "width : " + std::to_string(value.get<float>());
     case StyleParamKey::color:
     case StyleParamKey::outline_color:
+    case StyleParamKey::font_fill:
+    case StyleParamKey::font_stroke:
+    case StyleParamKey::font_stroke_color:
         if (!value.is<Color>()) break;
         return "color : " + std::to_string(value.get<Color>().getInt());
     case StyleParamKey::cap:
