@@ -187,6 +187,7 @@ layers:
             text: 
                 font:
                     typeface: Regular 15 Roboto
+                    fill: white
         highway: 
             filter: { kind: highway, $zoom: { min: 7 } }
             draw: {}
@@ -211,6 +212,7 @@ layers:
             text: 
                 font:
                     typeface: Regular 15 Roboto
+                    fill: black
         continents:
             filter: { kind: continent }
             draw: {}
@@ -243,6 +245,7 @@ layers:
             text:
                 font:
                     typeface: Regular 15 Roboto
+                    fill: darkgreen
 
     pois:
         data: { source: osm }
