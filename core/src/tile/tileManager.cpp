@@ -40,7 +40,7 @@ TileManager::~TileManager() {
 }
 
 void TileManager::addDataSource(std::shared_ptr<DataSource>&& dataSource) {
-    m_tileSets.push_back({dataSource});
+    m_tileSets.push_back({++m_tileSetSerial, dataSource});
 }
 
 void TileManager::tileProcessed(std::shared_ptr<TileTask>&& task) {
@@ -266,10 +266,7 @@ void TileManager::loadTiles() {
         auto& id = *std::get<2>(item);
         auto& tileSet = *std::get<1>(item);
         auto it = tileSet.tiles.find(id);
-        if (it == tileSet.tiles.end()) {
-            DBG("[%d, %d, %d] Eeek\n", id.z, id.x, id.y);
-            continue;
-        }
+        if (it == tileSet.tiles.end()) { continue; }
 
         auto& tile = it->second;
         auto& source = tileSet.source;
@@ -299,7 +296,7 @@ void TileManager::loadTiles() {
 
 bool TileManager::addTile(TileSet& tileSet, const TileID& _tileID) {
 
-    auto tile = m_tileCache->get(*tileSet.source.get(), _tileID);
+    auto tile = m_tileCache->get(tileSet.id, _tileID);
     bool fromCache = false;
 
     if (tile) {
@@ -335,7 +332,7 @@ void TileManager::removeTile(TileSet& tileSet, std::map<TileID,
 
     if (tile->hasState(TileState::ready)) {
         // Add to cache
-        m_tileCache->put(*tileSet.source.get(), tile);
+        m_tileCache->put(tileSet.id, tile);
     }
 
     // Remove tile from set
@@ -363,7 +360,7 @@ void TileManager::updateProxyTiles(TileSet& tileSet, Tile& _tile) {
     }
     // Get parent proxy from cache
     {
-        auto parent = m_tileCache->get(*tileSet.source.get(), parentID);
+        auto parent = m_tileCache->get(tileSet.id, parentID);
         if (parent) {
             _tile.setProxy(Tile::parent);
             parent->incProxyCounter();
@@ -391,7 +388,7 @@ void TileManager::updateProxyTiles(TileSet& tileSet, Tile& _tile) {
                     }
                 }
             } else {
-                auto child = m_tileCache->get(*tileSet.source.get(), childID);
+                auto child = m_tileCache->get(tileSet.id, childID);
                 if (child) {
                     _tile.setProxy(static_cast<Tile::ProxyID>(1 << i));
                     child->incProxyCounter();

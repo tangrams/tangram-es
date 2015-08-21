@@ -8,7 +8,8 @@
 #include <memory>
 
 namespace Tangram {
-    using TileCacheKey = std::pair<DataSource*, TileID>;
+// TileSet serial + TileID
+using TileCacheKey = std::pair<int32_t, TileID>;
 }
 
 namespace std {
@@ -26,7 +27,12 @@ namespace std {
 namespace Tangram {
 
 class TileCache {
-    using CacheList = std::list<std::pair<TileCacheKey, std::shared_ptr<Tile>>>;
+    struct CacheEntry {
+        TileCacheKey key;
+        std::shared_ptr<Tile> tile;
+    };
+
+    using CacheList = std::list<CacheEntry>;
     using CacheMap = std::unordered_map<TileCacheKey, typename CacheList::iterator>;
 
 public:
@@ -35,8 +41,8 @@ public:
         m_cacheUsage(0),
         m_cacheMaxUsage(_cacheSizeMB) {}
 
-    void put(DataSource& _source, std::shared_ptr<Tile> _tile) {
-        TileCacheKey k(&_source, _tile->getID());
+    void put(int32_t _source, std::shared_ptr<Tile> _tile) {
+        TileCacheKey k(_source, _tile->getID());
 
         m_cacheList.push_front({k, _tile});
         m_cacheMap[k] = m_cacheList.begin();
@@ -45,13 +51,13 @@ public:
         limitCacheSize(m_cacheMaxUsage);
     }
 
-    std::shared_ptr<Tile> get(DataSource& _source, TileID _tileID) {
+    std::shared_ptr<Tile> get(int32_t _source, TileID _tileID) {
         std::shared_ptr<Tile> tile;
-        TileCacheKey k(&_source, _tileID);
+        TileCacheKey k(_source, _tileID);
 
         auto it = m_cacheMap.find(k);
         if (it != m_cacheMap.end()) {
-            std::swap(tile, (*(it->second)).second);
+            std::swap(tile, (*(it->second)).tile);
             m_cacheList.erase(it->second);
             m_cacheMap.erase(it);
             m_cacheUsage -= tile->getMemoryUsage();
@@ -68,9 +74,9 @@ public:
                 m_cacheUsage = 0;
                 break;
             }
-            auto& tile = m_cacheList.back().second;
+            auto& tile = m_cacheList.back().tile;
             m_cacheUsage -= tile->getMemoryUsage();
-            m_cacheMap.erase(m_cacheList.back().first);
+            m_cacheMap.erase(m_cacheList.back().key);
             m_cacheList.pop_back();
         }
     }
@@ -78,7 +84,7 @@ public:
     size_t getMemoryUsage() const {
         size_t sum = 0;
         for (auto& entry : m_cacheList) {
-            sum += entry.second->getMemoryUsage();
+            sum += entry.tile->getMemoryUsage();
         }
         return sum;
     }
