@@ -1,6 +1,7 @@
 #pragma once
 
 #include "glm/glm.hpp"
+#include <vector>
 
 #ifndef PI
 #define PI 3.14159265358979323846
@@ -82,5 +83,7 @@ glm::vec2 clipToScreenSpace(const glm::vec4& _clipCoords, const glm::vec2& _scre
 
 /* Computes the screen coordinates from a world position, a model view matrix and a screen size */
 glm::vec2 worldToScreenSpace(const glm::mat4& _mvp, const glm::vec4& _worldPosition, const glm::vec2& _screenSize);
+
+float signedArea(const std::vector<glm::vec3>& _polygon);
 
 }
