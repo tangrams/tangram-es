@@ -16,6 +16,12 @@ textures:
     water-texture:
         url: normals.jpg
         filtering: nearest
+
+# provide global fontfile names to be used for this stylesheet
+# these could be bundled with the tangram repo or could be loaded from system path
+# priority is given to bundled fonts
+fonts: [ Roboto-Regular.ttf, FiraSans-Medium.ttf]
+
 styles:
     pillows:
         base: polygon
@@ -178,7 +184,9 @@ layers:
         data: {source: osm, layer: roads}
         filter: { name: true, aeroway: false, tunnel: false, railway: false, not: { kind: rail }, $zoom: { min: 10 } }
         draw:
-            text: {}
+            text: 
+                font:
+                    typeface: Regular 15 Roboto
         highway: 
             filter: { kind: highway, $zoom: { min: 7 } }
             draw: {}
@@ -200,7 +208,9 @@ layers:
                 # this function matches the "cities" sublayer
                 #- function() {return (feature.scalerank * .75) <= ($zoom - 4); }
         draw:
-            text: {}
+            text: 
+                font:
+                    typeface: Regular 15 Roboto
         continents:
             filter: { kind: continent }
             draw: {}
@@ -230,7 +240,9 @@ layers:
                 - { $zoom: { min: 15 }, area: { min: 10000 } }
                 - { $zoom: { min: 18 } }
         draw:
-            text: {}
+            text:
+                font:
+                    typeface: Regular 15 Roboto
 
     pois:
         data: { source: osm }
