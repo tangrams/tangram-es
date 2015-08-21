@@ -52,11 +52,12 @@ bool FontContext::addFont(const std::string& _fontFile, std::string _name, const
 
     unsigned int dataSize;
     unsigned char* data;
-    std::string deviceFontFile = _deviceFontPath + "/" + _fontFile;
+    std::string deviceFontFile = _deviceFontPath + _fontFile;
 
-    //Try to load from deviceFontsPath first, else load from resources
-    if(_deviceFontPath.length() == 0 || !(data = bytesFromExtMemory(deviceFontFile.c_str(), &dataSize)) ) {
-        data = bytesFromResource(_fontFile.c_str(), &dataSize);
+    if ( !(data = bytesFromResource(_fontFile.c_str(), &dataSize))) {
+        if ( !(data = bytesFromExtMemory(deviceFontFile.c_str(), &dataSize)) ) {
+            return false;
+        }
     }
 
     int font = fonsAddFont(m_fsContext, _name.c_str(), data, dataSize);
