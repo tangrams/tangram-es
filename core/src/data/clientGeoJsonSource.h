@@ -2,7 +2,6 @@
 
 #include "dataSource.h"
 #include "mapbox/geojsonvt/geojsonvt.hpp"
-#include <memory>
 
 namespace Tangram {
 

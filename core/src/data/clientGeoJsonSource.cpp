@@ -1,7 +1,6 @@
 #include "clientGeoJsonSource.h"
 #include "platform.h"
 #include "util/geom.h"
-#include "glm/vec2.hpp"
 
 using namespace mapbox::util;
 
@@ -28,8 +27,6 @@ bool ClientGeoJsonSource::loadTileData(std::shared_ptr<TileTask>&& _task, TileTa
 
     _cb(std::move(_task));
 
-    requestRender();
-
     return true;
 }
 
@@ -46,7 +43,7 @@ std::shared_ptr<TileData> ClientGeoJsonSource::parse(const Tile& _tile, std::vec
 
     auto id = _tile.getID();
 
-    auto tile = m_store->getTile(id.z, id.x, id.y);
+    auto tile = m_store->getTile(id.z, id.x, id.y); // uses a mutex lock internally for thread-safety
 
     Layer layer(m_name);
 
@@ -84,6 +81,8 @@ std::shared_ptr<TileData> ClientGeoJsonSource::parse(const Tile& _tile, std::vec
                     for (const auto& pt : r.get<geojsonvt::TileRing>().points) {
                         line.push_back(transformPoint(pt));
                     }
+                    // Polygons are in a flat list of rings, with ccw rings indicating
+                    // the beginning of a new polygon
                     if (signedArea(line) >= 0 || feat.polygons.empty()) {
                         feat.polygons.emplace_back();
                     }
