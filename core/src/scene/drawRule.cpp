@@ -24,6 +24,13 @@ const std::map<std::string, StyleParamKey> s_StyleParamMap = {
     {"outline:width", StyleParamKey::outline_width},
     {"outline:cap", StyleParamKey::outline_cap},
     {"outline:join", StyleParamKey::outline_join},
+    {"font:size", StyleParamKey::font_size},
+    {"font:typeface", StyleParamKey::font_typeface},
+    {"font:fill", StyleParamKey::font_fill},
+    {"font:stroke", StyleParamKey::font_stroke},
+    {"font:stroke_color", StyleParamKey::font_stroke_color},
+    {"font:stroke_width", StyleParamKey::font_stroke_width},
+    {"font:capitalized", StyleParamKey::font_capitalized},
 };
 
 StyleParam::StyleParam(const std::string& _key, const std::string& _value) {
