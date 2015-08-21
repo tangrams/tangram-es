@@ -19,30 +19,24 @@ static std::unique_ptr<VertexLayout> s_layout;
 static glm::vec2 s_resolution;
 static GLuint s_boundBuffer;
 
-void init(glm::vec2 _resolution) {
+void init() {
 
     // lazy init
     if (!s_initialized) {
         std::string vert, frag;
         s_shader = std::unique_ptr<ShaderProgram>(new ShaderProgram());
-        
+
         vert = stringFromResource("debugPrimitive.vs");
         frag = stringFromResource("debugPrimitive.fs");
-        
+
         s_shader->setSourceStrings(frag, vert);
-        s_shader->setUniformf("u_color", 1.f, 1.f, 1.f);
 
         s_layout = std::unique_ptr<VertexLayout>(new VertexLayout({
             {"a_position", 2, GL_FLOAT, false, 0},
         }));
 
         s_initialized = true;
-    }
-
-    if (s_resolution != _resolution) {
-        glm::mat4 proj = glm::ortho(0.f, _resolution.x, _resolution.y, 0.f, -1.f, 1.f);
-        s_shader->setUniformMatrix4f("u_proj", glm::value_ptr(proj));
-        s_resolution = _resolution;
+        glLineWidth(1.5f);
     }
 }
 
@@ -58,9 +52,9 @@ void popState() {
     RenderState::vertexBuffer(s_boundBuffer);
 }
 
-void drawLine(const glm::vec2& _origin, const glm::vec2& _destination, glm::vec2 _resolution) {
+void drawLine(const glm::vec2& _origin, const glm::vec2& _destination) {
 
-    init(_resolution);
+    init();
 
     glm::vec2 verts[2] = {
         glm::vec2(_origin.x, _origin.y),
@@ -79,16 +73,15 @@ void drawLine(const glm::vec2& _origin, const glm::vec2& _destination, glm::vec2
 
 }
 
-void drawRect(const glm::vec2& _origin, const glm::vec2& _destination, glm::vec2 _resolution) {
-    drawLine(_origin, {_destination.x, _origin.y}, _resolution);
-    drawLine({_destination.x, _origin.y}, _destination, _resolution);
-    drawLine(_destination, {_origin.x, _destination.y}, _resolution);
-    drawLine({_origin.x,_destination.y}, _origin, _resolution);
+void drawRect(const glm::vec2& _origin, const glm::vec2& _destination) {
+    drawLine(_origin, {_destination.x, _origin.y});
+    drawLine({_destination.x, _origin.y}, _destination);
+    drawLine(_destination, {_origin.x, _destination.y});
+    drawLine({_origin.x,_destination.y}, _origin);
 }
 
-void drawPoly(const glm::vec2* _polygon, size_t _n, glm::vec2 _resolution) {
-
-    init(_resolution);
+void drawPoly(const glm::vec2* _polygon, size_t _n) {
+    init();
 
     saveState();
 
@@ -99,6 +92,23 @@ void drawPoly(const glm::vec2* _polygon, size_t _n, glm::vec2 _resolution) {
 
     glDrawArrays(GL_LINE_LOOP, 0, _n);
     popState();
+}
+
+void setDebugColor(unsigned int _color) {
+    init();
+
+    float r = (_color >> 16 & 0xff) / 255.0;
+    float g = (_color >> 8  & 0xff) / 255.0;
+    float b = (_color       & 0xff) / 255.0;
+
+    s_shader->setUniformf("u_color", r, g, b);
+}
+
+void setDebugResolution(float _width, float _height) {
+    init();
+
+    glm::mat4 proj = glm::ortho(0.f, _width, _height, 0.f, -1.f, 1.f);
+    s_shader->setUniformMatrix4f("u_proj", glm::value_ptr(proj));
 }
 
 }
