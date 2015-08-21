@@ -4,7 +4,6 @@
 #include "scene/scene.h"
 #include "scene/sceneLoader.h"
 #include "style/style.h"
-#include "text/fontContext.h"
 #include "labels/labels.h"
 #include "tile/tileManager.h"
 #include "tile/tile.h"
@@ -57,11 +56,7 @@ void initialize(const char* _scenePath) {
         m_tileManager->setView(m_view);
         m_tileManager->setScene(m_scene);
 
-        // Font and label setup
-        std::string fontsPath = deviceFontsPath();
-        m_ftContext = FontContext::GetInstance();
-        m_ftContext->addFont("FiraSans-Medium.ttf", "FiraSans", fontsPath);
-        m_ftContext->addFont("Roboto-Regular.ttf", "RobotoRegular", fontsPath);
+        // label setup
         m_labels = std::unique_ptr<Labels>(new Labels());
 
         logMsg("Loading Tangram scene file: %s\n", _scenePath);
