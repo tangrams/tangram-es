@@ -30,7 +30,10 @@ void DebugTextStyle::onBeginBuildTile(Tangram::Tile &_tile) const {
             ftContext->setSignedDistanceField(blurSpread);
         }
 
-        buffer.addLabel(_tile.getID().toString(), { glm::vec2(0) }, Label::Type::debug, m_fontName, m_fontSize * m_pixelScale, m_sdf ? 2.5f : 0.0f, { 0xdc3522 });
+        Label::Options options;
+        options.color = 0xdc3522;
+
+        buffer.addLabel(_tile.getID().toString(), { glm::vec2(0) }, Label::Type::debug, m_fontName, m_fontSize * m_pixelScale, m_sdf ? 2.5f : 0.0f, options);
 
         onEndBuildTile(_tile);
 
