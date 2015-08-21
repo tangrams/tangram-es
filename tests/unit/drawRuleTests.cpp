@@ -66,11 +66,16 @@ TEST_CASE("DrawRule correctly merges with another DrawRule", "[DrawRule]") {
         // printf("rule_c:\n %s", rule_c.toString().c_str());
         // printf("merged_ac:\n %s", merged_ac.toString().c_str());
 
-        REQUIRE(merged_ab.parameters[0].key == StyleParamKey::order); REQUIRE(merged_ab.parameters[0].value == "value_0b");
-        REQUIRE(merged_ab.parameters[1].key == StyleParamKey::color); REQUIRE(merged_ab.parameters[1].value == "value_1b");
-        REQUIRE(merged_ab.parameters[2].key == StyleParamKey::width); REQUIRE(merged_ab.parameters[2].value == "value_2b");
-        REQUIRE(merged_ab.parameters[3].key == StyleParamKey::cap); REQUIRE(merged_ab.parameters[3].value == "value_3b");
-        REQUIRE(merged_ab.parameters[4].key == StyleParamKey::join); REQUIRE(merged_ab.parameters[4].value == "value_4a");
+        REQUIRE(merged_ab.parameters[0].key == StyleParamKey::order);
+        REQUIRE(merged_ab.parameters[0].value.get<std::string>() == "value_0b");
+        REQUIRE(merged_ab.parameters[1].key == StyleParamKey::color);
+        REQUIRE(merged_ab.parameters[1].value.get<std::string>() == "value_1b");
+        REQUIRE(merged_ab.parameters[2].key == StyleParamKey::width);
+        REQUIRE(merged_ab.parameters[2].value.get<std::string>() == "value_2b");
+        REQUIRE(merged_ab.parameters[3].key == StyleParamKey::cap);
+        REQUIRE(merged_ab.parameters[3].value.get<std::string>() == "value_3b");
+        REQUIRE(merged_ab.parameters[4].key == StyleParamKey::join);
+        REQUIRE(merged_ab.parameters[4].value.get<std::string>() == "value_4a");
     }
 
     {
@@ -79,11 +84,16 @@ TEST_CASE("DrawRule correctly merges with another DrawRule", "[DrawRule]") {
 
         auto merged_ba = rule_b.merge(rule_a);
 
-        REQUIRE(merged_ba.parameters[0].key == StyleParamKey::order); REQUIRE(merged_ba.parameters[0].value == "value_0a");
-        REQUIRE(merged_ba.parameters[1].key == StyleParamKey::color); REQUIRE(merged_ba.parameters[1].value == "value_1a");
-        REQUIRE(merged_ba.parameters[2].key == StyleParamKey::width); REQUIRE(merged_ba.parameters[2].value == "value_2b");
-        REQUIRE(merged_ba.parameters[3].key == StyleParamKey::cap); REQUIRE(merged_ba.parameters[3].value == "value_3b");
-        REQUIRE(merged_ba.parameters[4].key == StyleParamKey::join); REQUIRE(merged_ba.parameters[4].value == "value_4a");
+        REQUIRE(merged_ba.parameters[0].key == StyleParamKey::order);
+        REQUIRE(merged_ba.parameters[0].value.get<std::string>() == "value_0a");
+        REQUIRE(merged_ba.parameters[1].key == StyleParamKey::color);
+        REQUIRE(merged_ba.parameters[1].value.get<std::string>() == "value_1a");
+        REQUIRE(merged_ba.parameters[2].key == StyleParamKey::width);
+        REQUIRE(merged_ba.parameters[2].value.get<std::string>() == "value_2b");
+        REQUIRE(merged_ba.parameters[3].key == StyleParamKey::cap);
+        REQUIRE(merged_ba.parameters[3].value.get<std::string>() == "value_3b");
+        REQUIRE(merged_ba.parameters[4].key == StyleParamKey::join);
+        REQUIRE(merged_ba.parameters[4].value.get<std::string>() == "value_4a");
     }
 
     {
@@ -94,7 +104,8 @@ TEST_CASE("DrawRule correctly merges with another DrawRule", "[DrawRule]") {
 
         for (size_t i = 0; i < merged_bc.parameters.size(); i++) {
             REQUIRE(merged_bc.parameters[i].key == rule_b.parameters[i].key);
-            REQUIRE(merged_bc.parameters[i].value == rule_b.parameters[i].value);
+            REQUIRE(merged_bc.parameters[i].value.get<std::string>() ==
+                    rule_b.parameters[i].value.get<std::string>());
         }
     }
 

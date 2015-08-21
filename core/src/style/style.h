@@ -20,7 +20,6 @@ class VboMesh;
 class VertexLayout;
 class View;
 class Scene;
-struct Value;
 using Context = std::unordered_map<std::string, Value>;
 
 enum class LightingType : char {
