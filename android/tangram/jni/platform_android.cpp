@@ -74,7 +74,7 @@ void requestRender() {
 }
 
 std::string deviceFontsPath() {
-    return "/system/fonts";
+    return "/system/fonts/";
 }
 
 void setContinuousRendering(bool _isContinuous) {
