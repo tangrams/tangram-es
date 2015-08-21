@@ -14,8 +14,7 @@ glm::vec2 screenSize(500.f, 500.f);
 TextBuffer dummy(nullptr);
 
 TextLabel makeLabel(Label::Transform _transform, Label::Type _type) {
-    return TextLabel("label", _transform, _type, {0, 0}, dummy, {0, 0});
-
+    return TextLabel("label", _transform, _type, {0, 0}, dummy, {0, 0}, {0xff, {0.0f, 0.0f}});
 }
 
 TEST_CASE( "Ensure the transition from wait -> sleep when occlusion happens", "[Core][Label]" ) {
