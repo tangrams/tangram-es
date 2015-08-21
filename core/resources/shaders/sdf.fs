@@ -14,12 +14,11 @@ precision mediump float;
 #endif
 
 uniform sampler2D u_tex;
-uniform LOWP vec3 u_color;
 
 varying vec2 v_uv;
 varying float v_alpha;
+varying vec4 v_color;
 
-const float gamma = 2.2;
 const float tint = 1.8;
 const float sdf = 0.8;
 
@@ -51,14 +50,14 @@ float sampleAlpha(in vec2 uv, float distance, in float off) {
 }
 
 void main(void) {
-    if (v_alpha < TANGRAM_EPSILON) {
+	if (v_alpha < TANGRAM_EPSILON) {
         discard;
-    } else {
-        float distance = texture2D(u_tex, v_uv).a;
-        float alpha = sampleAlpha(v_uv, distance, sdf) * tint;
-        alpha = pow(alpha, 1.0 / gamma);
+	} else {
+	    float distance = texture2D(u_tex, v_uv).a;
+    	float alpha = sampleAlpha(v_uv, distance, sdf) * tint;
+    	alpha = pow(alpha, 0.4545);
 
-        gl_FragColor = vec4(u_color, v_alpha * alpha);
-    }
+    	gl_FragColor = vec4(v_color.rgb, v_alpha * alpha * v_color.a);
+	}
 }
 

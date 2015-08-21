@@ -24,7 +24,7 @@ void SpriteStyle::constructVertexLayout() {
     m_vertexLayout = std::shared_ptr<VertexLayout>(new VertexLayout({
         {"a_position", 2, GL_FLOAT, false, 0},
         {"a_uv", 2, GL_FLOAT, false, 0},
-        {"a_color", 1, GL_UNSIGNED_INT, true, 0},
+        {"a_color", 4, GL_UNSIGNED_BYTE, true, 0},
         {"a_screenPosition", 2, GL_FLOAT, false, 0},
         {"a_alpha", 1, GL_FLOAT, false, 0},
         {"a_rotation", 1, GL_FLOAT, false, 0},
@@ -79,7 +79,11 @@ void SpriteStyle::buildPoint(const Point& _point, const DrawRule& _rule, const P
 
     auto& mesh = static_cast<LabelMesh&>(_mesh);
     
-    Label::Options options = { 0xffffff, offset };
+    Label::Options options = { 0xff000000, offset };
+    
+    options.color |= (rand() % 255) << 0;
+    options.color |= (rand() % 255) << 8;
+    options.color |= (rand() % 255) << 16;
 
     std::unique_ptr<SpriteLabel> label(new SpriteLabel(t, spriteNode.m_size * spriteScale, mesh, _mesh.numVertices(), options));
 

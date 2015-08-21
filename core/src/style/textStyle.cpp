@@ -23,7 +23,7 @@ void TextStyle::constructVertexLayout() {
     m_vertexLayout = std::shared_ptr<VertexLayout>(new VertexLayout({
         {"a_position", 2, GL_FLOAT, false, 0},
         {"a_uv", 2, GL_FLOAT, false, 0},
-        {"a_color", 1, GL_UNSIGNED_INT, true, 0},
+        {"a_color", 4, GL_UNSIGNED_BYTE, true, 0},
         {"a_screenPosition", 2, GL_FLOAT, false, 0},
         {"a_alpha", 1, GL_FLOAT, false, 0},
         {"a_rotation", 1, GL_FLOAT, false, 0},
@@ -52,8 +52,11 @@ void TextStyle::buildPoint(const Point& _point, const DrawRule& _rule, const Pro
 
     const auto& text = _props.getString(key_name);
     if (text.length() == 0) { return; }
+    
+    Label::Options options;
+    options.color = 0x0000ffff;
 
-    buffer.addLabel(text, { glm::vec2(_point), glm::vec2(_point) }, Label::Type::point, Label::Options());
+    buffer.addLabel(text, { glm::vec2(_point), glm::vec2(_point) }, Label::Type::point, options);
 }
 
 void TextStyle::buildLine(const Line& _line, const DrawRule& _rule, const Properties& _props, VboMesh& _mesh, Tile& _tile) const {
@@ -77,8 +80,15 @@ void TextStyle::buildLine(const Line& _line, const DrawRule& _rule, const Proper
         if (length < minLength) {
             continue;
         }
+        
+        Label::Options options;
+        options.color = 0xff000000;
+        
+        options.color |= (rand() % 255) << 0;
+        options.color |= (rand() % 255) << 8;
+        options.color |= (rand() % 255) << 16;
 
-        buffer.addLabel(text, { p1, p2, }, Label::Type::line, Label::Options());
+        buffer.addLabel(text, { p1, p2, }, Label::Type::line, options);
     }
 }
 
@@ -101,10 +111,12 @@ void TextStyle::buildPolygon(const Polygon& _polygon, const DrawRule& _rule, con
     if (n == 0) { return; }
 
     centroid /= n;
+    
+    Label::Options options;
+    options.color = 0xffff00ff;
 
-    buffer.addLabel(text, { centroid, centroid, }, Label::Type::point, Label::Options());
+    buffer.addLabel(text, { centroid, centroid, }, Label::Type::point, options);
 }
-
 
 void TextStyle::onBeginBuildTile(Tile& _tile) const {
     auto& mesh = _tile.getMesh(*this);
