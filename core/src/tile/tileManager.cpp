@@ -13,7 +13,7 @@
 #include <algorithm>
 
 #define DBG(...)
-//logMsg(__VA_ARGS__)
+// logMsg(__VA_ARGS__)
 
 namespace Tangram {
 
@@ -166,39 +166,50 @@ void TileManager::updateTileSet(TileSet& tileSet) {
     if (m_view->changedOnLastUpdate() || m_tileSetChanged) {
 
         // Loop over visibleTiles and add any needed tiles to tileSet
-        auto setTilesIter = tiles.begin();
-        auto visTilesIter = visibleTiles.begin();
+        auto curTilesIt = tiles.begin();
+        auto visTilesIt = visibleTiles.begin();
 
-        while (visTilesIter != visibleTiles.end()) {
+        while (visTilesIt != visibleTiles.end() || curTilesIt != tiles.end()) {
 
-            auto& visTileId = *visTilesIter;
-            auto& curTileId = setTilesIter == tiles.end() ? NOT_A_TILE : setTilesIter->first;
+            auto& visTileId = visTilesIt == visibleTiles.end()
+                ? NOT_A_TILE
+                : *visTilesIt;
+
+            auto& curTileId = curTilesIt == tiles.end()
+                ? NOT_A_TILE
+                : curTilesIt->first;
 
             if (visTileId == curTileId) {
-                auto& tile = setTilesIter->second;
+                // tiles in both sets match
 
-                if (tile->hasState(TileState::none)) {
-                    enqueueTask(tileSet, visTileId, viewCenter);
-                } else if (tile->isReady()) {
+                auto& tile = curTilesIt->second;
+                if (tile->isReady()) {
                     m_tiles.push_back(tile);
+                } else if (tile->hasState(TileState::none)) {
+                    enqueueTask(tileSet, visTileId, viewCenter);
                 }
 
                 tile->setVisible(true);
 
-                // tiles in both sets match
-                ++setTilesIter;
-                ++visTilesIter;
+                ++curTilesIt;
+                ++visTilesIt;
 
-            } else if (curTileId == NOT_A_TILE || visTileId < curTileId) {
+            } else if (curTileId > visTileId) {
+                // NB: if (curTileId == NOT_A_TILE) it is always > visTileId
+                //     and if curTileId > visTileId, then visTileId cannot be
+                //     NOT_A_TILE. (for the current implementation of > operator)
+
                 // tileSet is missing an element present in visibleTiles
                 if (!addTile(tileSet, visTileId)) {
                     enqueueTask(tileSet, visTileId, viewCenter);
                 }
 
-                ++visTilesIter;
+                ++visTilesIt;
+
             } else {
-                // visibleTiles is missing an element present in tileSet
-                auto& tile = setTilesIter->second;
+                // tileSet has a tile not present in visibleTiles
+
+                auto& tile = curTilesIt->second;
                 tile->setVisible(false);
                 if (tile->getProxyCounter() <= 0) {
                     removeTiles.push_back(tile->getID());
@@ -206,31 +217,19 @@ void TileManager::updateTileSet(TileSet& tileSet) {
                     m_tiles.push_back(tile);
                 }
 
-                ++setTilesIter;
+                ++curTilesIt;
             }
-        }
-        while (setTilesIter != tiles.end()) {
-            // more visibleTiles missing an element present in tileSet
-            auto& tile = setTilesIter->second;
-            tile->setVisible(false);
-            if (tile->getProxyCounter() <= 0) {
-                removeTiles.push_back(tile->getID());
-            } else if (tile->isReady()) {
-                m_tiles.push_back(tile);
-            }
-
-            ++setTilesIter;
         }
     }
 
     {
         while (!removeTiles.empty()) {
-            auto tileIter = tiles.find(removeTiles.back());
+            auto tileIt = tiles.find(removeTiles.back());
             removeTiles.pop_back();
 
-            if (tileIter != tiles.end()) {
-                if (tileIter->second->getProxyCounter() <= 0) {
-                    removeTile(tileSet, tileIter, removeTiles);
+            if (tileIt != tiles.end()) {
+                if (tileIt->second->getProxyCounter() <= 0) {
+                    removeTile(tileSet, tileIt, removeTiles);
                 }
             }
         }
@@ -286,10 +285,9 @@ void TileManager::loadTiles() {
         }
     }
 
-    //DBG("all:%d loading:%d pending:%d cached:%d cache: %fMB\n",
-    //    m_tileSet.size(), m_loadTasks.size(),
-    //    m_loadPending, m_tileCache->size(),
-    //    (double(m_tileCache->getMemoryUsage()) / (1024 * 1024)));
+    DBG("loading:%d pending:%d cache: %fMB\n",
+       m_loadTasks.size(), m_loadPending,
+       (double(m_tileCache->getMemoryUsage()) / (1024 * 1024)));
 
     m_loadTasks.clear();
 }
@@ -315,11 +313,11 @@ bool TileManager::addTile(TileSet& tileSet, const TileID& _tileID) {
 }
 
 void TileManager::removeTile(TileSet& tileSet, std::map<TileID,
-                             std::shared_ptr<Tile>>::iterator& _tileIter,
+                             std::shared_ptr<Tile>>::iterator& _tileIt,
                              std::vector<TileID>& _removes) {
 
-    const TileID& id = _tileIter->first;
-    auto& tile = _tileIter->second;
+    const TileID& id = _tileIt->first;
+    auto& tile = _tileIt->second;
 
     if (tile->hasState(TileState::loading) &&
         setTileState(*tile, TileState::canceled)) {
@@ -336,7 +334,7 @@ void TileManager::removeTile(TileSet& tileSet, std::map<TileID,
     }
 
     // Remove tile from set
-    _tileIter = tileSet.tiles.erase(_tileIter);
+    _tileIt = tileSet.tiles.erase(_tileIt);
 }
 
 void TileManager::updateProxyTiles(TileSet& tileSet, Tile& _tile) {
