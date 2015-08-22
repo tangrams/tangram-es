@@ -63,13 +63,7 @@ namespace RenderState {
                 call(typename gens<sizeof...(Args)>::type());
             }
         }
-
-        // Force a state to be invalidated by giving non-valid parameters
-        void invalidateState(Args... _args) {
-            auto _params = std::make_tuple(_args...);
-            params = _params;
-        }
-
+        
         template<int ...S>
         inline void call(seq<S...>) {
             fn(std::get<S>(params) ...);
