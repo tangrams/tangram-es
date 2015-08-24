@@ -45,7 +45,7 @@ public:
 
     virtual ~SceneLoader() {};
 
-    void loadScene(const std::string& _file, Scene& _scene, TileManager& _tileManager, View& _view);
+    void loadScene(const std::string& _sceneString, Scene& _scene, TileManager& _tileManager, View& _view);
 
     Tangram::Filter generateFilter(YAML::Node filter);
 };

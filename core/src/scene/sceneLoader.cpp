@@ -30,11 +30,9 @@ namespace Tangram {
 // TODO: make this configurable: 16MB default in-memory DataSource cache:
 constexpr size_t CACHE_SIZE = 16 * (1024 * 1024);
 
-void SceneLoader::loadScene(const std::string& _file, Scene& _scene, TileManager& _tileManager, View& _view) {
+void SceneLoader::loadScene(const std::string& _sceneString, Scene& _scene, TileManager& _tileManager, View& _view) {
 
-    std::string configString = stringFromResource(_file.c_str());
-
-    Node config = YAML::Load(configString);
+    Node config = YAML::Load(_sceneString);
 
     loadSources(config["sources"], _tileManager);
     loadTextures(config["textures"], _scene);

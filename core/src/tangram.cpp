@@ -31,7 +31,7 @@ std::unique_ptr<InputHandler> m_inputHandler;
 static float g_time = 0.0;
 static std::bitset<8> g_flags = 0;
 
-void initialize() {
+void initialize(const char* _scenePath) {
 
     logMsg("initialize\n");
 
@@ -61,8 +61,11 @@ void initialize() {
         m_ftContext->addFont("FiraSans-Medium.ttf", "FiraSans");
         m_labels = std::unique_ptr<Labels>(new Labels());
 
+        logMsg("Loading Tangram scene file: %s\n", _scenePath);
+        auto sceneString = stringFromResource(_scenePath);
+
         SceneLoader loader;
-        loader.loadScene("config.yaml", *m_scene, *m_tileManager, *m_view);
+        loader.loadScene(sceneString, *m_scene, *m_tileManager, *m_view);
 
     }
 
