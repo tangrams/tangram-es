@@ -55,6 +55,10 @@ bool isContinuousRendering();
  */
 std::string deviceFontsPath();
 
+// NOTE: Currently same for all platforms, but once we figure out loading system fonts for other platforms, we can
+// modify this. But for any bundled font, we will follow a fixed naming convension.
+bool parseTypeFaceFontsInfo(const std::string& _typefaceInput, std::string& _fontName, float& _fontSize);
+
 /* Read a bundled resource file as a string
  *
  * Opens the file at the given relative path and returns a string with its contents.
