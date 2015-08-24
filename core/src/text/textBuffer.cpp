@@ -16,7 +16,7 @@ TextBuffer::TextBuffer(std::shared_ptr<VertexLayout> _vertexLayout)
 TextBuffer::~TextBuffer() {
 }
 
-bool TextBuffer::addLabel(const std::string& _text, Label::Transform _transform, Label::Type _type, const std::string& _fontName, const float _fontSize, const float _blurSpread, Label::Options _options) {
+bool TextBuffer::addLabel(const std::string& _text, Label::Transform _transform, Label::Type _type, const Parameters& _params, Label::Options _options) {
 
     auto fontContext = FontContext::GetInstance();
 
@@ -24,11 +24,11 @@ bool TextBuffer::addLabel(const std::string& _text, Label::Transform _transform,
         return false;
     }
 
-    auto fontID = fontContext->getFontID(_fontName);
+    auto fontID = fontContext->getFontID(_params.fontName);
 
     if(fontID < 0) { return false; }
 
-    auto& quads = fontContext->rasterize(_text, fontID, _fontSize, _blurSpread);
+    auto& quads = fontContext->rasterize(_text, fontID, _params.fontSize, _params.blurSpread);
     size_t numGlyphs = quads.size();
 
     if (numGlyphs == 0) {

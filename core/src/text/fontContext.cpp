@@ -26,11 +26,6 @@ void FontContext::clearState() {
     fonsClearState(m_fsContext);
 }
 
-void FontContext::setSignedDistanceField(float _blurSpread) {
-    fonsSetBlur(m_fsContext, _blurSpread);
-    fonsSetBlurType(m_fsContext, FONS_EFFECT_DISTANCE_FIELD);
-}
-
 bool FontContext::lock() {
     try {
         m_contextMutex.lock();

@@ -11,15 +11,6 @@ class TextStyle : public Style {
 
 protected:
 
-    struct Parameters {
-        std::string fontName;
-        uint32_t fill = 0x0;
-        uint32_t strokeColor = 0xffffffff;
-        float strokeWidth = 0.0f;
-        float fontSize;
-        bool capitalized = false;
-    };
-
     virtual void constructVertexLayout() override;
     virtual void constructShaderProgram() override;
 
