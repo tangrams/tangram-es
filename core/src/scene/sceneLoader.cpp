@@ -135,7 +135,6 @@ void SceneLoader::loadShaderConfig(YAML::Node shaders, ShaderProgram& shader) {
             shader.addSourceBlock(name, value); // TODO: Warn on unrecognized injection points
         }
     }
-
 }
 
 void SceneLoader::loadMaterial(YAML::Node matNode, Material& material, Scene& scene) {
@@ -202,7 +201,6 @@ void SceneLoader::loadMaterial(YAML::Node matNode, Material& material, Scene& sc
     if (normal) {
         material.setNormal(loadMaterialTexture(normal, scene));
     }
-
 }
 
 MaterialTexture SceneLoader::loadMaterialTexture(YAML::Node matCompNode, Scene& scene) {
@@ -393,9 +391,7 @@ void SceneLoader::loadStyles(YAML::Node styles, Scene& scene) {
         if (urlNode) { logMsg("WARNING: loading style from URL not yet implemented\n"); } // TODO
 
         scene.styles().push_back(std::unique_ptr<Style>(style));
-
     }
-
 }
 
 void SceneLoader::loadSources(Node sources, TileManager& tileManager) {
@@ -430,7 +426,6 @@ void SceneLoader::loadSources(Node sources, TileManager& tileManager) {
             tileManager.addDataSource(std::move(sourcePtr));
         }
     }
-
 }
 
 void SceneLoader::loadLights(Node lights, Scene& scene) {
@@ -613,9 +608,7 @@ void SceneLoader::loadCameras(Node cameras, View& view) {
         if (active) {
             break;
         }
-
     }
-
 }
 
 Filter SceneLoader::generateFilter(YAML::Node _filter) {
@@ -630,23 +623,18 @@ Filter SceneLoader::generateFilter(YAML::Node _filter) {
         Filter filter;
 
         if (_filter.IsSequence()) {
-
             filter = generateFilter(filtItr);
 
         } else if (filtItr.first.as<std::string>() == "none") {
-
             filter = generateNoneFilter(_filter["none"]);
 
         } else if (filtItr.first.as<std::string>() == "not") {
-
             filter = generateNoneFilter(_filter["not"]);
 
         } else if (filtItr.first.as<std::string>() == "any") {
-
             filter = generateAnyFilter(_filter["any"]);
 
         } else if (filtItr.first.as<std::string>() == "all") {
-
             filter = generateFilter(_filter["all"]);
 
         } else {
@@ -731,7 +719,6 @@ Filter SceneLoader::generatePredicate(YAML::Node _node, std::string _key) {
         logMsg("Error: Badly formed Filter\n");
         return Filter();
     }
-
 }
 
 Filter SceneLoader::generateAnyFilter(YAML::Node _filter) {
@@ -796,7 +783,6 @@ std::vector<StyleParam> SceneLoader::parseStyleParams(Node params, const std::st
     }
 
     return out;
-
 }
 
 void SceneLoader::loadFont(YAML::Node fontProps) {
@@ -876,9 +862,7 @@ void SceneLoader::loadLayers(Node layers, Scene& scene, TileManager& tileManager
         auto sublayer = loadSublayer(layer.second, name, scene);
 
         scene.layers().push_back({ sublayer, source, collection });
-
     }
-
 }
 
 }
