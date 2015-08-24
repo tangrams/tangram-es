@@ -13,12 +13,12 @@ namespace Tangram {
 class FontContext;
 
 struct Parameters {
-    std::string fontName;
-    uint32_t fill = 0x0;
+    std::string fontName = "";
+    uint32_t fill = 0xff000000;
     uint32_t strokeColor = 0xffffffff;
     float strokeWidth = 0.0f;
-    float fontSize;
-    float blurSpread;
+    float fontSize = 12.0f;
+    float blurSpread = 0.0f;
     bool capitalized = false;
 };
 
