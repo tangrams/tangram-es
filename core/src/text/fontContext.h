@@ -35,9 +35,6 @@ public:
 
     FontID getFontID(const std::string& _name);
 
-    /* sets the blur spread when using signed distance field rendering */
-    void setSignedDistanceField(float _blurSpread);
-
     void clearState();
 
     /* lock thread access to this font context */

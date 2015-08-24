@@ -46,7 +46,7 @@ void TextStyle::constructShaderProgram() {
     m_shaderProgram->addSourceBlock("defines", defines);
 }
 
-TextStyle::Parameters TextStyle::parseRule(const DrawRule& _rule) const {
+Parameters TextStyle::parseRule(const DrawRule& _rule) const {
     Parameters p;
 
     //TODO: handle different size formats, px, pt, em
@@ -75,6 +75,10 @@ TextStyle::Parameters TextStyle::parseRule(const DrawRule& _rule) const {
         p.fontSize = 0.0f;
     }
 
+    /* Global operations done for fontsize and sdfblur */
+    p.fontSize *= m_pixelScale;
+    p.blurSpread = m_sdf ? 2.5f : 0.0f;
+
     return p;
 }
 
@@ -89,8 +93,7 @@ void TextStyle::buildPoint(const Point& _point, const DrawRule& _rule, const Pro
     Label::Options options;
     options.color = params.fill;
 
-    buffer.addLabel(text, { glm::vec2(_point), glm::vec2(_point) }, Label::Type::point, params.fontName,
-            params.fontSize * m_pixelScale, m_sdf ? 2.5f : 0.0f, options);
+    buffer.addLabel(text, { glm::vec2(_point), glm::vec2(_point) }, Label::Type::point, params, options);
 }
 
 void TextStyle::buildLine(const Line& _line, const DrawRule& _rule, const Properties& _props, VboMesh& _mesh, Tile& _tile) const {
@@ -120,8 +123,7 @@ void TextStyle::buildLine(const Line& _line, const DrawRule& _rule, const Proper
         Label::Options options;
         options.color = params.fill;
 
-        buffer.addLabel(text, { p1, p2 }, Label::Type::line, params.fontName,
-                params.fontSize * m_pixelScale, m_sdf ? 2.5f : 0.0f, options);
+        buffer.addLabel(text, { p1, p2 }, Label::Type::line, params, options);
     }
 }
 
@@ -150,8 +152,8 @@ void TextStyle::buildPolygon(const Polygon& _polygon, const DrawRule& _rule, con
     Label::Options options;
     options.color = params.fill;
 
-    buffer.addLabel(text, { centroid, centroid }, Label::Type::point, params.fontName,
-            params.fontSize * m_pixelScale, m_sdf ? 2.5f : 0.0f, options);
+    buffer.addLabel(text, { centroid, centroid }, Label::Type::point, params, options);
+
 }
 
 void TextStyle::onBeginDrawFrame(const View& _view, const Scene& _scene) {

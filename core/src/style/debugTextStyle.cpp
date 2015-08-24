@@ -12,6 +12,11 @@ DebugTextStyle::DebugTextStyle(const std::string& _fontName, std::string _name, 
 
 void DebugTextStyle::onBeginBuildTile(Tangram::Tile &_tile) const {
 
+    Parameters params;
+    params.fontName = m_fontName;
+    params.fontSize = m_fontSize * m_pixelScale;
+    params.blurSpread = m_sdf ? 2.5f : 0.0f;
+
     TextStyle::onBeginBuildTile(_tile);
 
     if (Tangram::getDebugFlag(Tangram::DebugFlags::tile_infos)) {
@@ -23,17 +28,10 @@ void DebugTextStyle::onBeginBuildTile(Tangram::Tile &_tile) const {
 
         auto& buffer = static_cast<TextBuffer&>(*mesh);
 
-        auto ftContext = FontContext::GetInstance();
-
-        if (m_sdf) {
-            float blurSpread = 2.5;
-            ftContext->setSignedDistanceField(blurSpread);
-        }
-
         Label::Options options;
         options.color = 0xdc3522;
 
-        buffer.addLabel(_tile.getID().toString(), { glm::vec2(0) }, Label::Type::debug, m_fontName, m_fontSize * m_pixelScale, m_sdf ? 2.5f : 0.0f, options);
+        buffer.addLabel(_tile.getID().toString(), { glm::vec2(0) }, Label::Type::debug, params, options);
 
         onEndBuildTile(_tile);
 
