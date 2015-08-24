@@ -68,42 +68,11 @@ TextStyle::Parameters TextStyle::parseRule(const DrawRule& _rule) const {
 
     // Parse typefaceStr to Property.typeface and Property.size
     // Atleast for android fontName should be like: Roboto-BoldItalic
-    char str[4][40];
-    float size;
-    int num = sscanf(typefaceStr.c_str(), "%s %s %s %s", str[0], str[1], str[2], str[3]);
-    switch(num) {
-        case 0:
-            break;
-        case 1:
-            p.fontName = str[0];
-            break;
-        case 2:
-            try {
-                size = std::stof(std::string(str[0]));
-                p.fontSize = size;
-                p.fontName = str[1];
-            } catch (const std::invalid_argument& e) {
-                p.fontName = std::string(str[1]) + "-" + std::string(str[0]);
-            }
-            break;
-        case 3:
-            try {
-                size = std::stof(std::string(str[1]));
-                p.fontSize = size;
-                p.fontName = std::string(str[2]) + "-" + std::string(str[0]);
-            } catch (const std::invalid_argument& e) {
-                p.fontName = std::string(str[2]) + "-" + std::string(str[1]) + std::string(str[0]);
-            }
-            break;
-        case 4:
-            try {
-                size = std::stof(std::string(str[2]));
-                p.fontSize = size;
-                p.fontName = std::string(str[3]) + "-" + std::string(str[1]) + std::string(str[0]);
-            } catch (const std::invalid_argument& e) {
-                p.fontName = std::string(str[3]) + "-" + std::string(str[2]) + std::string(str[1]) + std::string(str[0]);
-            }
-            break;
+    if( parseTypeFaceFontsInfo(typefaceStr, p.fontName, p.fontSize) ) {
+    } else {
+        logMsg("Error in parsing typeface font information.\n");
+        p.fontName = "";
+        p.fontSize = 0.0f;
     }
 
     return p;
