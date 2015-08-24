@@ -222,7 +222,11 @@ void ShaderProgram::applySourceBlocks(std::string& _vertSrcOut, std::string& _fr
     _fragSrcOut.insert(0, "#pragma tangram: defines\n");
 
     float depthDelta = 1.f / (1 << 16);
-    _vertSrcOut.insert(0, "#define TANGRAM_DEPTH_DELTA "+std::to_string(depthDelta)+"\n");
+
+    // inject tangram defines
+    _vertSrcOut.insert(0, "#define TANGRAM_DEPTH_DELTA " + std::to_string(depthDelta) + "\n");
+    _vertSrcOut.insert(0, "#define TANGRAM_EPSILON 0.00001\n");
+    _fragSrcOut.insert(0, "#define TANGRAM_EPSILON 0.00001\n");
 
     Light::assembleLights(m_sourceBlocks);
 
