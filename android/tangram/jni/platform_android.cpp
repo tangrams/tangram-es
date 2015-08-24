@@ -193,8 +193,6 @@ unsigned char* bytesFromExtMemory(const char* _path, unsigned int* _size) {
     resource.read(cdata, *_size);
     resource.close();
 
-    logMsg("Tangram Testing: Here\n");
-
     return reinterpret_cast<unsigned char *>(cdata);
 
 }
