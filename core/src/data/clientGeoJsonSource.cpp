@@ -12,8 +12,16 @@ Point transformPoint(geojsonvt::TilePoint pt) {
     return { 2 * pt.x / extent - 1, 1 - 2 * pt.y / extent, 0 };
 }
 
-ClientGeoJsonSource::ClientGeoJsonSource(const std::string& _name)
-    : DataSource(_name, "") {}
+ClientGeoJsonSource::ClientGeoJsonSource(const std::string& _name, const std::string& _url)
+    : DataSource(_name, _url) {
+
+    if (!_url.empty()) {
+        // Load from file
+        const auto& string = stringFromResource(_url.c_str());
+        auto features = geojsonvt::GeoJSONVT::convertFeatures(string);
+        m_store = std::make_unique<GeoJSONVT>(features);
+    }
+}
 
 void ClientGeoJsonSource::setData(const std::string& _data) {
 
@@ -45,7 +53,7 @@ std::shared_ptr<TileData> ClientGeoJsonSource::parse(const Tile& _tile, std::vec
 
     auto tile = m_store->getTile(id.z, id.x, id.y); // uses a mutex lock internally for thread-safety
 
-    Layer layer(m_name);
+    Layer layer("");
 
     for (auto& it : tile.features) {
 
