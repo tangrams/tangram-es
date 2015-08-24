@@ -71,8 +71,6 @@ Parameters TextStyle::parseRule(const DrawRule& _rule) const {
     if( parseTypeFaceFontsInfo(typefaceStr, p.fontName, p.fontSize) ) {
     } else {
         logMsg("Error in parsing typeface font information.\n");
-        p.fontName = "";
-        p.fontSize = 0.0f;
     }
 
     /* Global operations done for fontsize and sdfblur */
