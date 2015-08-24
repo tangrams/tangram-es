@@ -78,9 +78,11 @@ void SpriteStyle::buildPoint(const Point& _point, const DrawRule& _rule, const P
     Label::Transform t = { glm::vec2(_point), glm::vec2(_point) };
 
     auto& mesh = static_cast<LabelMesh&>(_mesh);
-    
-    Label::Options options = { 0xff000000, offset };
-    
+
+    Label::Options options;
+    options.color = 0xff000000;
+    options.offset = offset;
+
     options.color |= (rand() % 255) << 0;
     options.color |= (rand() % 255) << 8;
     options.color |= (rand() % 255) << 16;
