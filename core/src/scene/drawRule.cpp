@@ -24,6 +24,7 @@ const std::map<std::string, StyleParamKey> s_StyleParamMap = {
     {"outline:width", StyleParamKey::outline_width},
     {"outline:cap", StyleParamKey::outline_cap},
     {"outline:join", StyleParamKey::outline_join},
+    {"sprite", StyleParamKey::sprite},
     {"font:family", StyleParamKey::font_family},
     {"font:weight", StyleParamKey::font_weight},
     {"font:style", StyleParamKey::font_style},
@@ -115,6 +116,9 @@ StyleParam::StyleParam(const std::string& _key, const std::string& _value) {
     case StyleParamKey::outline_join:
         value = JoinTypeFromString(_value);
         break;
+    case StyleParamKey::sprite:
+        value = _value;
+        break;
     default:
         value = none_type{};
     }
@@ -169,6 +173,8 @@ std::string StyleParam::toString() const {
     case StyleParamKey::outline_join:
         if (!value.is<JoinTypes>()) break;
         return "join : " + std::to_string(static_cast<int>(value.get<JoinTypes>()));
+    case StyleParamKey::sprite:
+        return "sprite: " + value.get<std::string>();
     case StyleParamKey::none:
         break;
     }
