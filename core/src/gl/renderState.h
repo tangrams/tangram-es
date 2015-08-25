@@ -51,9 +51,11 @@ namespace RenderState {
         using Type = std::tuple<Args...>;
         Type params;
 
-        void init(Args... _param) {
+        void init(Args... _param, bool _force = true) {
             params = std::make_tuple(_param...);
-            call(typename gens<sizeof...(Args)>::type());
+            if (_force) {
+                call(typename gens<sizeof...(Args)>::type());
+            }
         }
 
         inline void operator()(Args... _args) {

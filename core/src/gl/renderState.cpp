@@ -38,8 +38,8 @@ namespace RenderState {
         glDepthRangef(0.0, 1.0);
         glClearColor(0.3, 0.3, 0.3, 1.0);
 
-        vertexBuffer.init(std::numeric_limits<unsigned int>::max());
-        indexBuffer.init(std::numeric_limits<unsigned int>::max());
+        vertexBuffer.init(std::numeric_limits<unsigned int>::max(), false);
+        indexBuffer.init(std::numeric_limits<unsigned int>::max(), false);
     }
 
 }
