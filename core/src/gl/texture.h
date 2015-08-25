@@ -42,9 +42,6 @@ public:
 
     virtual ~Texture();
 
-    /* Binds the texture to the specified slot */
-    void bind(GLuint _textureSlot);
-
     /* Perform texture updates, should be called at least once and after adding data or resizing */
     virtual void update(GLuint _textureSlot);
 
@@ -54,6 +51,8 @@ public:
     /* Width and Height texture getters */
     unsigned int getWidth() const { return m_width; }
     unsigned int getHeight() const { return m_height; }
+    
+    void bind(GLuint _unit);
 
     GLuint getGlHandle() { return m_glHandle; }
 
@@ -89,8 +88,6 @@ protected:
     int m_generation;
     static int s_validGeneration;
 
-    static GLuint getTextureUnit(GLuint _slot);
-
 private:
     struct TextureSubData {
         std::unique_ptr<std::vector<GLuint>> m_data;
@@ -106,14 +103,6 @@ private:
 
     // used to queue the subdata updates, each call of setSubData would be treated in the order that they arrived
     std::queue<std::unique_ptr<TextureSubData>> m_subData;
-
-    // We refer to both 'texture slots' and 'texture units', which are almost (but not quite) the same.
-    // Texture slots range from 0 to GL_MAX_COMBINED_TEXTURE_UNITS-1 and the texture unit corresponding to
-    // a given texture slot is (slot + GL_TEXTURE0).
-    static GLuint s_activeSlot;
-
-    // if (s_boundTextures[s] == h) then the texture with handle 'h' is currently bound at slot 's'
-    static GLuint s_boundTextures[TANGRAM_MAX_TEXTURE_UNIT];
 };
 
 }

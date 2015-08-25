@@ -2,6 +2,7 @@
 
 #include "platform.h"
 #include "util/geom.h"
+#include "gl/renderState.h"
 
 #define STB_IMAGE_IMPLEMENTATION
 #include "stb_image.h"
@@ -10,8 +11,6 @@
 
 namespace Tangram {
 
-GLuint Texture::s_boundTextures[] = { 0 };
-GLuint Texture::s_activeSlot = GL_TEXTURE0;
 int Texture::s_validGeneration = 0;
 
 Texture::Texture(unsigned int _width, unsigned int _height, TextureOptions _options, bool _generateMipmaps)
@@ -45,30 +44,8 @@ Texture::Texture(const std::string& _file, TextureOptions _options, bool _genera
 }
 
 Texture::~Texture() {
-    for (size_t i = 0; i < TANGRAM_MAX_TEXTURE_UNIT; i++) {
-        if (s_boundTextures[i] == m_glHandle) { s_boundTextures[i] = 0; }
-    }
-    if (m_glHandle) { glDeleteTextures(1, &m_glHandle); }
-}
-
-void Texture::bind(GLuint _textureSlot) {
-
-    if (_textureSlot >= TANGRAM_MAX_TEXTURE_UNIT) {
-
-        logMsg("Trying to access an invalid texture unit\n");
-        return;
-    }
-
-    if (_textureSlot != s_activeSlot) {
-
-        glActiveTexture(getTextureUnit(_textureSlot));
-        s_activeSlot = _textureSlot;
-    }
-
-    if (s_boundTextures[_textureSlot] != m_glHandle) {
-
-        glBindTexture(m_target, m_glHandle);
-        s_boundTextures[_textureSlot] = m_glHandle;
+    if (m_glHandle) {
+        glDeleteTextures(1, &m_glHandle);
     }
 }
 
@@ -100,6 +77,11 @@ void Texture::setSubData(const GLuint* _subData, unsigned int _xoff, unsigned in
     ));
 
     m_dirty = true;
+}
+    
+void Texture::bind(GLuint _unit) {
+    RenderState::textureUnit(_unit);
+    RenderState::texture(m_target, m_glHandle);
 }
 
 void Texture::generate(GLuint _textureUnit) {
@@ -144,7 +126,9 @@ void Texture::update(GLuint _textureUnit) {
 
         if (m_data.size() == 0) { m_data.assign(m_width * m_height, 0); }
 
-    } else { bind(_textureUnit); }
+    } else {
+        bind(_textureUnit);
+    }
 
     GLuint* data = m_data.size() > 0 ? m_data.data() : nullptr;
 
@@ -195,18 +179,7 @@ size_t Texture::bytesPerPixel() {
     }
 }
 
-GLuint Texture::getTextureUnit(GLuint _unit) {
-    if (_unit >= TANGRAM_MAX_TEXTURE_UNIT) { logMsg("Warning: trying to access unavailable texture unit"); }
-
-    return GL_TEXTURE0 + _unit;
-}
-
 void Texture::invalidateAllTextures() {
-
-    for (GLuint i = 0; i < TANGRAM_MAX_TEXTURE_UNIT; ++i) {
-        s_boundTextures[i] = 0;
-    }
-    s_activeSlot = GL_TEXTURE0;
 
     ++s_validGeneration;
 

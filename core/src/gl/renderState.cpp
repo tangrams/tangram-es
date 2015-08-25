@@ -3,7 +3,7 @@
 namespace Tangram {
 
 namespace RenderState {
-    
+
     Blending blending;
     DepthTest depthTest;
     StencilTest stencilTest;
@@ -20,8 +20,21 @@ namespace RenderState {
     VertexBuffer vertexBuffer;
     IndexBuffer indexBuffer;
 
+    TextureUnit textureUnit;
+    Texture texture;
+
+    GLuint getTextureUnit(GLuint _unit) {
+        if (_unit >= TANGRAM_MAX_TEXTURE_UNIT) {
+            logMsg("Warning: trying to access unavailable texture unit");
+        }
+
+        return GL_TEXTURE0 + _unit;
+    }
+
     void bindVertexBuffer(GLuint _id) { glBindBuffer(GL_ARRAY_BUFFER, _id); }
     void bindIndexBuffer(GLuint _id) { glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, _id); }
+    void activeTextureUnit(GLuint _unit) { glActiveTexture(getTextureUnit(_unit)); }
+    void bindTexture(GLenum _target, GLuint _textureId) { glBindTexture(_target, _textureId); }
 
     void configure() {
         blending.init(GL_FALSE);
@@ -40,6 +53,9 @@ namespace RenderState {
 
         vertexBuffer.init(std::numeric_limits<unsigned int>::max(), false);
         indexBuffer.init(std::numeric_limits<unsigned int>::max(), false);
+        texture.init(GL_TEXTURE_2D, std::numeric_limits<unsigned int>::max(), false);
+        texture.init(GL_TEXTURE_CUBE_MAP, std::numeric_limits<unsigned int>::max(), false);
+        textureUnit.init(std::numeric_limits<unsigned int>::max(), false);
     }
 
 }
