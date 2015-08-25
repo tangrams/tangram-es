@@ -6,7 +6,7 @@
 
 #include <string>
 #include <functional>
-#include <unordered_set>
+#include <unordered_map>
 
 namespace Tangram {
 
@@ -51,7 +51,12 @@ private:
 
     const Feature* m_feature = nullptr;
 
-    std::unordered_set<std::string> m_accessors;
+    struct Accessor {
+        std::string key;
+        FilterContext* ctx;
+    };
+
+    std::unordered_map<std::string, Accessor> m_accessors;
 
     int32_t m_sceneId = -1;
 };

@@ -271,15 +271,14 @@ void FilterContext::addAccessor(const std::string& _name) {
         return;
     }
 
-    auto entry = m_accessors.emplace(_name);
+    auto entry = m_accessors.emplace(_name, Accessor{_name, this});
     if (!entry.second) {
-        return; // already added
+        return; // hmm, already added..
     }
-    auto& attr = *entry.first;
+
+    Accessor& attr = (*entry.first).second;
 
     // push 'feature' obj onto stack
-    // duk_push_global_object(m_ctx);
-    // duk_get_prop_string(m_ctx, -1, "feature");
     if (!duk_get_global_string(m_ctx, "feature")) {
         logMsg("Error: 'feature' not in global scope\n");
         return;
@@ -316,34 +315,21 @@ void FilterContext::addAccessor(const std::string& _name) {
 
 duk_ret_t FilterContext::jsPropertyGetter(duk_context *_ctx) {
 
-    // get data from object to which this function belongs
-    duk_push_this(_ctx);
-
-    if (!duk_get_prop_string(_ctx, -1, DATA_ID)) {
-        printf("no data\n");
-        duk_pop(_ctx);
-        return 0;
-    }
-
-    auto* filterCtx = static_cast<FilterContext*> (duk_to_pointer(_ctx, -1));
-    duk_pop(_ctx);
-
-    if (filterCtx == nullptr) {
-        printf("no context set %p\n", filterCtx);
-        return 0;
-    }
-    if (filterCtx->m_feature == nullptr) {
-        printf("no feature set %p\n", filterCtx);
-        return 0;
-    }
-
     // Storing state for a Duktape/C function:
     // http://duktape.org/guide.html#programming.9
     duk_push_current_function(_ctx);
     duk_get_prop_string(_ctx, -1, ATTR_ID);
-    auto* key = static_cast<const std::string*> (duk_to_pointer(_ctx, -1));
+    auto* attr = static_cast<const Accessor*> (duk_to_pointer(_ctx, -1));
 
-    auto it = filterCtx->m_feature->props.get(*key);
+    if (!attr || !attr->ctx || !attr->ctx->m_feature) {
+        logMsg("no context set %p %p\n",
+               attr,
+               attr ? attr->ctx : nullptr);
+
+        return 0;
+    }
+
+    auto it = attr->ctx->m_feature->props.get(attr->key);
 
     if (it.is<std::string>()) {
         duk_push_string(_ctx, it.get<std::string>().c_str());
@@ -357,41 +343,6 @@ duk_ret_t FilterContext::jsPropertyGetter(duk_context *_ctx) {
 }
 
 duk_ret_t FilterContext::jsPropertySetter(duk_context *_ctx) {
-#if 0
-    // get data from object to which this function belongs
-    duk_push_this(_ctx);
-
-    if (!duk_get_prop_string(_ctx, -1, DATA_ID)) {
-        printf("no data\n");
-        duk_pop(_ctx);
-        return 0;
-    }
-
-    auto* filterCtx = static_cast<FilterContext*> (duk_to_pointer(_ctx, -1));
-    duk_pop(_ctx);
-
-    if (filterCtx == nullptr) {
-        printf("no context set %p\n", filterCtx);
-        return 0;
-    }
-    if (filterCtx->m_feature == nullptr) {
-        printf("no feature set %p\n", filterCtx);
-        return 0;
-    }
-
-    // Storing state for a Duktape/C function:
-    // http://duktape.org/guide.html#programming.9
-    duk_push_current_function(_ctx);
-    duk_get_prop_string(_ctx, -1, ATTR_ID);
-    auto* key = static_cast<const std::string*> (duk_to_pointer(_ctx, -1));
-
-    auto it = filterCtx->m_feature->props.get(*key);
-
-    if (duk_is_string(_ctx, 0)) {
-    } else if (duk_is_number(_ctx, 0)) {
-    } else {
-    }
-#endif
     return 0;
 }
 
