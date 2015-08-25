@@ -40,29 +40,38 @@ void FontContext::unlock() {
     m_contextMutex.unlock();
 }
 
-bool FontContext::addFont(const std::string& _fontFile, std::string _name, const std::string& _deviceFontPath) {
-    if (m_fonts.find(_name) != m_fonts.end()) {
+bool FontContext::addFont(const std::string& _name, const std::string& _weight, const std::string& _face) {
+
+    std::string bundledFontName = _name + "-" + _weight + _face;
+    std::string systemFontName = constructFontFilename(_name, _weight, _face);
+    if (m_fonts.find(bundledFontName) != m_fonts.end() || m_fonts.find(systemFontName) != m_fonts.end()) {
         return true;
     }
 
     unsigned int dataSize;
     unsigned char* data;
-    std::string deviceFontFile = _deviceFontPath + _fontFile;
 
-    if ( !(data = bytesFromResource(_fontFile.c_str(), &dataSize))) {
+    auto& fontName = bundledFontName;
+    auto fontFile = fontName + ".ttf";
+
+    if ( !(data = bytesFromResource(fontFile.c_str(), &dataSize))) {
+
+        fontName = systemFontName;
+        fontFile = fontName + ".ttf";
+        std::string deviceFontFile = deviceFontsPath() + fontFile;
         if ( !(data = bytesFromExtMemory(deviceFontFile.c_str(), &dataSize)) ) {
             return false;
         }
     }
 
-    int font = fonsAddFont(m_fsContext, _name.c_str(), data, dataSize);
+    int font = fonsAddFont(m_fsContext, fontName.c_str(), data, dataSize);
 
     if (font == FONS_INVALID) {
-        logMsg("[FontContext] Error loading font file %s\n", _fontFile.c_str());
+        logMsg("[FontContext] Error loading font file %s\n", fontFile.c_str());
         return false;
     }
 
-    m_fonts.emplace(std::move(_name), font);
+    m_fonts.emplace(std::move(fontName), font);
 
     return true;
 }

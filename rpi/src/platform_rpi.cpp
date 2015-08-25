@@ -119,6 +119,11 @@ std::string deviceFontsPath() {
     return "";
 }
 
+// TODO: Costruct font filename for linux
+std::string constructFontFilename(const std::string& _name, const std::string& _weight, const std::string& _face) {
+    return ""
+}
+
 bool startUrlRequest(const std::string& _url, UrlCallback _callback) {
 
     std::unique_ptr<UrlTask> task(new UrlTask(_url, _callback));

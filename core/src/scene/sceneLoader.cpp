@@ -300,12 +300,24 @@ void SceneLoader::loadTextures(YAML::Node textures, Scene& scene) {
 }
 
 void SceneLoader::loadFonts(YAML::Node fonts) {
-    auto devFontsPath = deviceFontsPath();
     auto fontCtx = FontContext::GetInstance();
 
     for (const auto& fontNode : fonts) {
-        const auto fontName = fontNode.as<std::string>();
-        fontCtx->addFont(fontName, fontName.substr(0, fontName.find(".ttf")), devFontsPath);
+
+        std::string name = "";
+        std::string weight = "";
+        std::string face = "";
+
+        auto fontNameNode = fontNode.second["name"];
+        if(fontNameNode) { name = fontNameNode.as<std::string>(); }
+
+        auto fontWeightNode = fontNode.second["weight"];
+        if(fontWeightNode) { weight = fontWeightNode.as<std::string>(); }
+
+        auto fontFaceNode = fontNode.second["face"];
+        if(fontFaceNode) { face = fontFaceNode.as<std::string>(); }
+
+        fontCtx->addFont(name, weight, face);
     }
 }
 

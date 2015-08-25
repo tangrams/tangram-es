@@ -98,6 +98,11 @@ std::string deviceFontsPath() {
     return "";
 }
 
+// TODO: Costruct font filename for osx
+std::string constructFontFilename(const std::string& _name, const std::string& _weight, const std::string& _face) {
+    return "";
+}
+
 bool parseTypeFaceFontsInfo(const std::string& _typefaceInput, std::string& _fontName, float& _fontSize) {
 
     char str[4][40];

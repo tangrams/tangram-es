@@ -77,6 +77,12 @@ std::string deviceFontsPath() {
     return "/system/fonts/";
 }
 
+std::string constructFontFilename(const std::string& _name, const std::string& _weight, const std::string& _face) {
+    std::string fontFilename;
+    fontFilename = _name + "-" + _weight + _face;
+    return fontFilename;
+}
+
 bool parseTypeFaceFontsInfo(const std::string& _typefaceInput, std::string& _fontName, float& _fontSize) {
 
     char str[4][40];

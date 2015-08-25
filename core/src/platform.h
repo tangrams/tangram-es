@@ -55,6 +55,9 @@ bool isContinuousRendering();
  */
 std::string deviceFontsPath();
 
+/* Construct font file name from font properties specified in yaml */
+std::string constructFontFilename(const std::string& _name, const std::string& _weight, const std::string& _face);
+
 // NOTE: Currently same for all platforms, but once we figure out loading system fonts for other platforms, we can
 // modify this. But for any bundled font, we will follow a fixed naming convension.
 bool parseTypeFaceFontsInfo(const std::string& _typefaceInput, std::string& _fontName, float& _fontSize);
