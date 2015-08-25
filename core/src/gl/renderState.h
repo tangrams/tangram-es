@@ -84,6 +84,11 @@ namespace RenderState {
             }
         }
 
+        inline bool compare(Args... _args) {
+            auto _params = std::make_tuple(_args...);
+            return _params == params;
+        }
+
         template<int ...S>
         inline void call(seq<S...>) {
             fn(std::get<S>(params) ...);

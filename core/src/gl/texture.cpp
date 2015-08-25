@@ -46,6 +46,12 @@ Texture::Texture(const std::string& _file, TextureOptions _options, bool _genera
 Texture::~Texture() {
     if (m_glHandle) {
         glDeleteTextures(1, &m_glHandle);
+
+        // if the texture is bound, and deleted, the binding defaults to 0 according to the OpenGL
+        // spec, in this case we need to force the currently bound texture to 0 in the render states
+        if (RenderState::texture.compare(m_target, m_glHandle)) {
+            RenderState::texture.init(m_target, 0, false);
+        }
     }
 }
 
@@ -78,7 +84,7 @@ void Texture::setSubData(const GLuint* _subData, unsigned int _xoff, unsigned in
 
     m_dirty = true;
 }
-    
+
 void Texture::bind(GLuint _unit) {
     RenderState::textureUnit(_unit);
     RenderState::texture(m_target, m_glHandle);
