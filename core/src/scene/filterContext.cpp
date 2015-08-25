@@ -191,11 +191,11 @@ bool FilterContext::parseStyleResult(StyleParamKey _key, StyleParam::Value& _val
         {
             if (duk_is_string(m_ctx, -1)) {
                 std::string v(duk_get_string(m_ctx, -1));
-                _val = DrawRule::parseColor(v);
+                _val = StyleParam::parseColor(v);
                 result = true;
             } else if (duk_is_number(m_ctx, -1)) {
-                //int v = duk_get_int(m_ctx, -1);
-                // TODO
+
+                _val = static_cast<uint32_t>(duk_get_int(m_ctx, -1));
                 result = true;
             }
             // TODO color object
