@@ -4,6 +4,7 @@
 #include "platform.h"
 
 #include <tuple>
+#include <limits>
 
 namespace Tangram {
 
