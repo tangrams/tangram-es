@@ -25,9 +25,10 @@ namespace RenderState {
 
     void configure() {
         blending.init(GL_FALSE);
+        blendingFunc.init(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
         culling.init(GL_TRUE);
         cullFace.init(GL_BACK);
-        frontFace(GL_CCW);
+        frontFace.init(GL_CCW);
         depthTest.init(GL_TRUE);
         depthWrite.init(GL_TRUE);
 
@@ -37,8 +38,8 @@ namespace RenderState {
         glDepthRangef(0.0, 1.0);
         glClearColor(0.3, 0.3, 0.3, 1.0);
 
-        vertexBuffer(-1);
-        indexBuffer(-1);
+        vertexBuffer.init(-1);
+        indexBuffer.init(-1);
     }
 
 }

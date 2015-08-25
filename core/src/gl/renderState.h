@@ -40,7 +40,7 @@ namespace RenderState {
     };
 
     // http://stackoverflow.com/questions/7858817/unpacking-a-tuple-to-call-a-matching-function-pointer
-    // Generate integer sequece for getting values from 'params' tuple.
+    // Generate integer sequence for getting values from 'params' tuple.
     template<int ...> struct seq {};
     template<int N, int ...S> struct gens : gens<N-1, N-1, S...> {};
     template<int ...S> struct gens<0, S...>{ typedef seq<S...> type; };
@@ -53,6 +53,7 @@ namespace RenderState {
 
         void init(Args... _param) {
             params = std::make_tuple(_param...);
+            call(typename gens<sizeof...(Args)>::type());
         }
 
         inline void operator()(Args... _args) {
