@@ -6,45 +6,54 @@
 
 #include <string>
 #include <functional>
-#include <set>
+#include <unordered_set>
 
 namespace Tangram {
+
+class Scene;
 
 class FilterContext {
 
 public:
 
-    struct Stash {
-        duk_context *ctx;
-    };
+    using FunctionID = uint32_t;
 
     FilterContext();
     ~FilterContext();
 
-    void addAccessor(const std::string& name);
-    duk_context *jsContext() { return m_ctx; }
+    void addAccessor(const std::string& _name);
 
-    bool addFilterFn(const std::string& name, const std::string& function);
+    bool addFilterFn(const std::string& _name, const std::string& _func);
 
-    bool evalFilterFn(const std::string& name);
-    bool evalStyleFn(const std::string& name, StyleParamKey key, StyleParam::Value& value);
+    bool evalFilterFn(const std::string& _name);
+    bool evalFilter(FunctionID id) const;
 
-    void setFeature(const Feature& feature);
+    bool evalStyleFn(const std::string& _name, StyleParamKey _key, StyleParam::Value& _val);
+    bool evalStyle(FunctionID id, StyleParamKey _key, StyleParam::Value& _val) const;
 
-    void setGlobal(const std::string& key, const Value& value);
+    void setFeature(const Feature& _feature);
+
+    void setGlobal(const std::string& _key, const Value& _value);
 
     void clear();
 
-private:
-    static duk_ret_t jsPropertyGetter(duk_context *ctx);
-    static duk_ret_t jsPropertySetter(duk_context *ctx);
+    void initFunctions(const Scene& _scene);
 
-    duk_context *m_ctx;
+    std::unordered_map<std::string, Value> globals;
+
+private:
+    static duk_ret_t jsPropertyGetter(duk_context *_ctx);
+    static duk_ret_t jsPropertySetter(duk_context *_ctx);
+
+    bool parseStyleResult(StyleParamKey _key, StyleParam::Value& _val) const;
+
+    mutable duk_context *m_ctx;
 
     const Feature* m_feature = nullptr;
-    bool m_dirty;
 
-    std::set<std::string> m_accessors;
+    std::unordered_set<std::string> m_accessors;
+
+    int32_t m_sceneId = -1;
 };
 
 }

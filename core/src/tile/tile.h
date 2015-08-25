@@ -20,6 +20,7 @@ class Style;
 class TextBuffer;
 class VboMesh;
 class View;
+class FilterContext;
 struct TileData;
 
 enum class TileState { none, loading, processing, ready, canceled };
@@ -63,7 +64,7 @@ public:
     /* Draws the geometry associated with the provided <Style> and view-projection matrix */
     void draw(const Style& _style, const View& _view);
 
-    void build(const Scene& _scene, const TileData& _data, const DataSource& _source);
+    void build(FilterContext& _ctx, const Scene& _scene, const TileData& _data, const DataSource& _source);
     
     /* 
      * Methods to set and get proxy counter

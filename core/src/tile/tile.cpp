@@ -37,12 +37,12 @@ Tile::~Tile() {
 
 }
 
-void Tile::build(const Scene& _scene, const TileData& _data, const DataSource& _source) {
+void Tile::build(FilterContext& _ctx, const Scene& _scene, const TileData& _data, const DataSource& _source) {
 
     const auto& layers = _scene.layers();
 
-    Context ctx;
-    ctx["$zoom"] = m_id.z;
+    _ctx.globals["$zoom"] = m_id.z;
+    _ctx.setGlobal("$zoom", m_id.z);
 
     for (auto& style : _scene.styles()) {
         style->onBeginBuildTile(*this);
@@ -57,13 +57,18 @@ void Tile::build(const Scene& _scene, const TileData& _data, const DataSource& _
             if (collection.name != datalayer.collection()) { continue; }
 
             for (const auto& feat : collection.features) {
+                _ctx.setFeature(feat);
 
                 std::vector<DrawRule> rules;
-                datalayer.match(feat, ctx, rules);
+                datalayer.match(feat, _ctx, rules);
 
-                for (const auto& rule : rules) {
+                for (auto& rule : rules) {
                     auto* style = _scene.findStyle(rule.style);
-                    if (style) { style->buildFeature(*this, feat, rule); }
+
+                    if (style) {
+                        rule.eval(_ctx);
+                        style->buildFeature(*this, feat, rule);
+                    }
                 }
             }
         }

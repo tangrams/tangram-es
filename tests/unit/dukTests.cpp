@@ -2,23 +2,14 @@
 #include "catch.hpp"
 
 #include "filterContext.h"
+#include "data/filters.h"
+#include "yaml-cpp/yaml.h"
+#include "scene/sceneLoader.h"
+#include "scene/scene.h"
 
 using namespace Tangram;
 
-
-static const char PRINT_PROP_A[] = R"(
-  function () {
-     print(' ==> ' + feature.a);
-     return feature.a == 'A'
-  }
-)";
-
-static const char PRINT_PROP_B[] = R"(
-  function () {
-     print(' ==> ' + feature.b);
-     return feature.b == 'B'
-  }
-)";
+SceneLoader sceneLoader;
 
 
 TEST_CASE( "", "[Duktape][init]") {
@@ -156,5 +147,52 @@ TEST_CASE( "Test evalStyleFn - StyleParamKey::color", "[Duktape][evalStyleFn]") 
         // REQUIRE(ctx.evalStyleFn("fn2", StyleParamKey::color, value) == true);
         // REQUIRE(value.is<Color>() == true);
         // REQUIRE(value.get<Color>().getInt() == 0xffffff00);
+    }
+}
+
+TEST_CASE( "Test evalFilterFn - parse filter", "[Duktape][evalFilterFn]") {
+    {
+        Scene scene;
+        YAML::Node node = YAML::Load("filter: function() { return true }");
+        Filter filter = sceneLoader.generateFilter(node["filter"], scene);
+
+        REQUIRE(filter.type == FilterType::function);
+
+        Feature feat;
+        feat.props.add("sort_key", 2);
+
+        FilterContext ctx;
+        ctx.setFeature(feat);
+        ctx.addFilterFn("fn", R"(function () { return '#f0f' })");
+
+        StyleParam::Value value;
+
+        REQUIRE(ctx.evalStyleFn("fn", StyleParamKey::color, value) == true);
+        REQUIRE(value.is<Color>() == true);
+        REQUIRE(value.get<Color>().getInt() == 0xffff00ff);
+    }
+}
+
+TEST_CASE( "Test evalFilterFn - init function from scene", "[Duktape][evalFilterFn]") {
+    {
+        Scene scene;
+        YAML::Node node = YAML::Load(R"(filter: function() { return feature.sort_key == 2; })");
+        Filter filter = sceneLoader.generateFilter(node["filter"], scene);
+        REQUIRE(filter.type == FilterType::function);
+
+
+        FilterContext ctx;
+        ctx.initFunctions(scene);
+
+        Feature feat1;
+        feat1.props.add("sort_key", 2);
+        ctx.setFeature(feat1);
+
+        REQUIRE(ctx.evalFilter(0) == true);
+
+        Feature feat2;
+        ctx.setFeature(feat2);
+
+        REQUIRE(ctx.evalFilter(0) == false);
     }
 }

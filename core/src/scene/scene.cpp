@@ -5,7 +5,7 @@
 
 namespace Tangram {
 
-Scene::Scene() {}
+Scene::Scene() : id(0) {}
 Scene::~Scene() {}
 
 const Style* Scene::findStyle(const std::string &_name) const {

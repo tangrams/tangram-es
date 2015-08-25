@@ -31,6 +31,8 @@ void TileWorker::run() {
 
     setCurrentThreadPriority(WORKER_NICENESS);
 
+    FilterContext context;
+
     while (true) {
 
         std::shared_ptr<TileTask> task;
@@ -75,9 +77,12 @@ void TileWorker::run() {
 
         auto tileData = task->process();
 
+        auto& scene = *m_tileManager.getScene();
+
+        context.initFunctions(scene);
 
         if (tileData) {
-            task->tile->build(*m_tileManager.getScene(), *tileData, *task->source);
+            task->tile->build(context, scene, *tileData, *task->source);
         }
 
         m_tileManager.tileProcessed(std::move(task));

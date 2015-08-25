@@ -7,6 +7,7 @@
 #include "data/filters.h"
 #include "yaml-cpp/yaml.h"
 #include "scene/sceneLoader.h"
+#include "scene/scene.h"
 
 using namespace Tangram;
 using YAML::Node;
@@ -15,6 +16,12 @@ SceneLoader sceneLoader;
 Context ctx;
 
 Feature civic, bmw1, bike;
+
+Filter load(const std::string& filterYaml) {
+    Scene scene;
+    YAML::Node node = YAML::Load(filterYaml);
+    return sceneLoader.generateFilter(node["filter"], scene);
+}
 
 void init() {
 
@@ -42,16 +49,15 @@ void init() {
     bike.props.add("series", "CB");
     bike.props.add("check", "available");
 
-    ctx["$vroom"] = Value(1);
-    ctx["$zooooom"] = Value("false");
+    ctx.globals["$vroom"] = Value(1);
+    ctx.globals["$zooooom"] = Value("false");
 }
 
 
 //1. basic predicate
 TEST_CASE( "yaml-filter-tests: basic predicate test", "[filters][core][yaml]") {
     init();
-    YAML::Node node = YAML::Load("filter: { series: !!str 3}");
-    Filter filter = sceneLoader.generateFilter(node["filter"]);
+    Filter filter = load("filter: { series: !!str 3}");
 
     REQUIRE(!filter.eval(civic, ctx));
     REQUIRE(filter.eval(bmw1, ctx));
@@ -62,8 +68,7 @@ TEST_CASE( "yaml-filter-tests: basic predicate test", "[filters][core][yaml]") {
 //2. predicate with valueList
 TEST_CASE( "yaml-filter-tests: predicate with valueList", "[filters][core][yaml]") {
     init();
-    YAML::Node node = YAML::Load("filter: { name : [civic, bmw320i] }");
-    Filter filter = sceneLoader.generateFilter(node["filter"]);
+    Filter filter = load("filter: { name : [civic, bmw320i] }");
 
     REQUIRE(filter.eval(civic, ctx));
     REQUIRE(filter.eval(bmw1, ctx));
@@ -74,8 +79,7 @@ TEST_CASE( "yaml-filter-tests: predicate with valueList", "[filters][core][yaml]
 //3. range min
 TEST_CASE( "yaml-filter-tests: range min", "[filters][core][yaml]") {
     init();
-    YAML::Node node = YAML::Load("filter: {wheel : {min : 3}}");
-    Filter filter = sceneLoader.generateFilter(node["filter"]);
+    Filter filter = load("filter: {wheel : {min : 3}}");
 
     REQUIRE(filter.eval(civic, ctx));
     REQUIRE(filter.eval(bmw1, ctx));
@@ -86,8 +90,7 @@ TEST_CASE( "yaml-filter-tests: range min", "[filters][core][yaml]") {
 //4. range max
 TEST_CASE( "yaml-filter-tests: range max", "[filters][core][yaml]") {
     init();
-    YAML::Node node = YAML::Load("filter: {wheel : {max : 2}}");
-    Filter filter = sceneLoader.generateFilter(node["filter"]);
+    Filter filter = load("filter: {wheel : {max : 2}}");
 
     REQUIRE(!filter.eval(civic, ctx));
     REQUIRE(!filter.eval(bmw1, ctx));
@@ -98,8 +101,7 @@ TEST_CASE( "yaml-filter-tests: range max", "[filters][core][yaml]") {
 //5. range min max
 TEST_CASE( "yaml-filter-tests: range min max", "[filters][core][yaml]") {
     init();
-    YAML::Node node = YAML::Load("filter: {wheel : {min : 2, max : 5}}");
-    Filter filter = sceneLoader.generateFilter(node["filter"]);
+    Filter filter = load("filter: {wheel : {min : 2, max : 5}}");
 
     REQUIRE(filter.eval(civic, ctx));
     REQUIRE(filter.eval(bmw1, ctx));
@@ -110,8 +112,7 @@ TEST_CASE( "yaml-filter-tests: range min max", "[filters][core][yaml]") {
 //6. any
 TEST_CASE( "yaml-filter-tests: any", "[filters][core][yaml]") {
     init();
-    YAML::Node node = YAML::Load("filter: {any : [{name : civic}, {name : bmw320i}]}");
-    Filter filter = sceneLoader.generateFilter(node["filter"]);
+    Filter filter = load("filter: {any : [{name : civic}, {name : bmw320i}]}");
 
     REQUIRE(filter.eval(civic, ctx));
     REQUIRE(filter.eval(bmw1, ctx));
@@ -122,9 +123,7 @@ TEST_CASE( "yaml-filter-tests: any", "[filters][core][yaml]") {
 //7. all
 TEST_CASE( "yaml-filter-tests: all", "[filters][core][yaml]") {
     init();
-    //YAML::Node node = YAML::Load("filter: {any : [{name : civic}, {name : bmw320i}]}");
-    YAML::Node node = YAML::Load("filter: {all : [ {name : civic}, {brand : honda}, {wheel: 4} ] }");
-    Filter filter = sceneLoader.generateFilter(node["filter"]);
+    Filter filter = load("filter: {all : [ {name : civic}, {brand : honda}, {wheel: 4} ] }");
 
     REQUIRE(filter.eval(civic, ctx));
     REQUIRE(!filter.eval(bmw1, ctx));
@@ -135,8 +134,7 @@ TEST_CASE( "yaml-filter-tests: all", "[filters][core][yaml]") {
 //8. none
 TEST_CASE( "yaml-filter-tests: none", "[filters][core][yaml]") {
     init();
-    YAML::Node node = YAML::Load("filter: {none : [{name : civic}, {name : bmw320i}]}");
-    Filter filter = sceneLoader.generateFilter(node["filter"]);
+    Filter filter = load("filter: {none : [{name : civic}, {name : bmw320i}]}");
 
     REQUIRE(!filter.eval(civic, ctx));
     REQUIRE(!filter.eval(bmw1, ctx));
@@ -147,8 +145,7 @@ TEST_CASE( "yaml-filter-tests: none", "[filters][core][yaml]") {
 //9. not
 TEST_CASE( "yaml-filter-tests: not", "[filters][core][yaml]") {
     init();
-    YAML::Node node = YAML::Load("filter: {not : {name : civic}}");
-    Filter filter = sceneLoader.generateFilter(node["filter"]);
+    Filter filter = load("filter: {not : {name : civic}}");
 
     REQUIRE(!filter.eval(civic, ctx));
     REQUIRE(filter.eval(bmw1, ctx));
@@ -159,8 +156,7 @@ TEST_CASE( "yaml-filter-tests: not", "[filters][core][yaml]") {
 //10. basic predicate with context
 TEST_CASE( "yaml-filter-tests: context filter", "[filters][core][yaml]") {
     init();
-    YAML::Node node = YAML::Load("filter: {$vroom : 1}");
-    Filter filter = sceneLoader.generateFilter(node["filter"]);
+    Filter filter = load("filter: {$vroom : 1}");
 
     REQUIRE(filter.eval(civic, ctx));
     REQUIRE(filter.eval(bmw1, ctx));
@@ -170,8 +166,7 @@ TEST_CASE( "yaml-filter-tests: context filter", "[filters][core][yaml]") {
 
 TEST_CASE( "yaml-filter-tests: bogus filter", "[filters][core][yaml]") {
     init();
-    YAML::Node node = YAML::Load("filter: {max: bogus}");
-    Filter filter = sceneLoader.generateFilter(node["filter"]);
+    Filter filter = load("filter: {max: bogus}");
 
     REQUIRE(!filter.eval(civic, ctx));
     REQUIRE(!filter.eval(bmw1, ctx));
@@ -181,8 +176,7 @@ TEST_CASE( "yaml-filter-tests: bogus filter", "[filters][core][yaml]") {
 
 TEST_CASE( "yaml-filter-tests: boolean true filter as existence check", "[filters][core][yaml]") {
     init();
-    YAML::Node node = YAML::Load("filter: { drive : true }");
-    Filter filter = sceneLoader.generateFilter(node["filter"]);
+    Filter filter = load("filter: { drive : true }");
 
     REQUIRE(filter.eval(civic, ctx));
     REQUIRE(filter.eval(bmw1, ctx));
@@ -192,8 +186,7 @@ TEST_CASE( "yaml-filter-tests: boolean true filter as existence check", "[filter
 
 TEST_CASE( "yaml-filter-tests: boolean false filter as existence check", "[filters][core][yaml]") {
     init();
-    YAML::Node node = YAML::Load("filter: { drive : false}");
-    Filter filter = sceneLoader.generateFilter(node["filter"]);
+    Filter filter = load("filter: { drive : false}");
 
     REQUIRE(!filter.eval(civic, ctx));
     REQUIRE(!filter.eval(bmw1, ctx));
@@ -203,8 +196,7 @@ TEST_CASE( "yaml-filter-tests: boolean false filter as existence check", "[filte
 
 TEST_CASE( "yaml-filter-tests: boolean true filter as existence check for keyword", "[filters][core][yaml]") {
     init();
-    YAML::Node node = YAML::Load("filter: {$vroom : true}");
-    Filter filter = sceneLoader.generateFilter(node["filter"]);
+    Filter filter = load("filter: {$vroom : true}");
 
     REQUIRE(filter.eval(civic, ctx));
     REQUIRE(filter.eval(bmw1, ctx));
@@ -214,8 +206,7 @@ TEST_CASE( "yaml-filter-tests: boolean true filter as existence check for keywor
 
 TEST_CASE( "yaml-filter-tests: boolean false filter as existence check for keyword", "[filters][core][yaml]") {
     init();
-    YAML::Node node = YAML::Load("filter: {$foo : false}");
-    Filter filter = sceneLoader.generateFilter(node["filter"]);
+    Filter filter = load("filter: {$foo : false}");
 
     REQUIRE(filter.eval(civic, ctx));
     REQUIRE(filter.eval(bmw1, ctx));

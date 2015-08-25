@@ -2,6 +2,7 @@
 #include "csscolorparser.hpp"
 #include "geom.h" // for CLAMP
 #include "platform.h"
+#include "scene/filterContext.h"
 
 #include <algorithm>
 #include <cmath>
@@ -38,6 +39,8 @@ const std::map<std::string, StyleParamKey> s_StyleParamMap = {
 };
 
 StyleParam::StyleParam(const std::string& _key, const std::string& _value) {
+    functionID = -1;
+
     auto it = s_StyleParamMap.find(_key);
     if (it == s_StyleParamMap.end()) {
         logMsg("Unknown StyleParam %s:%s\n", _key.c_str(), _value.c_str());
@@ -286,6 +289,15 @@ bool StyleParam::parseFontSize(const std::string& _str, float& _pxSize) {
     }
 
     return true;
+}
+
+
+void DrawRule::eval(const FilterContext& _ctx) {
+     for (auto& param : parameters) {
+         if (param.functionID >= 0) {
+             _ctx.evalStyle(param.functionID, param.key, param.value);
+         }
+     }
 }
 
 }
