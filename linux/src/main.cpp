@@ -153,7 +153,7 @@ void init_main_window() {
     glfwSetKeyCallback(main_window, key_callback);
 
     // Setup tangram
-    Tangram::initialize();
+    Tangram::initialize("scene.yaml");
     Tangram::resize(width, height);
 
 }
