@@ -30,6 +30,7 @@ const std::map<std::string, StyleParamKey> s_StyleParamMap = {
     {"font:stroke_color", StyleParamKey::font_stroke_color},
     {"font:stroke_width", StyleParamKey::font_stroke_width},
     {"font:capitalized", StyleParamKey::font_capitalized},
+    {"font:visible", StyleParamKey::font_visible}
 };
 
 StyleParam::StyleParam(const std::string& _key, const std::string& _value) {
@@ -66,6 +67,7 @@ StyleParam::StyleParam(const std::string& _key, const std::string& _value) {
         break;
     case StyleParamKey::font_typeface:
     case StyleParamKey::font_capitalized:
+    case StyleParamKey::font_visible:
         value = _value;
         break;
     case StyleParamKey::order:
@@ -106,6 +108,7 @@ std::string StyleParam::toString() const {
     }
     case StyleParamKey::font_typeface:
     case StyleParamKey::font_capitalized:
+    case StyleParamKey::font_visible:
         return value.get<std::string>();
     case StyleParamKey::order:
         if (!value.is<int32_t>()) break;

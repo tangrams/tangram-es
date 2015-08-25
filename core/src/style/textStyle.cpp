@@ -53,6 +53,7 @@ Parameters TextStyle::parseRule(const DrawRule& _rule) const {
 
     std::string typefaceStr;
     std::string cap;
+    std::string visible;
 
     _rule.getValue(StyleParamKey::font_typeface, typefaceStr);
     _rule.getColor(StyleParamKey::font_fill, p.fill);
@@ -63,6 +64,10 @@ Parameters TextStyle::parseRule(const DrawRule& _rule) const {
     if (_rule.getValue(StyleParamKey::font_capitalized, cap) ) {
         if (cap == "true") { p.capitalized = true; }
         else { p.capitalized = false; }
+    }
+    if (_rule.getValue(StyleParamKey::font_visible, visible)) {
+        if (visible == "true") { p.visible = true; }
+        else { p.visible = false; }
     }
 
     // Parse typefaceStr to Property.typeface and Property.size
@@ -82,7 +87,11 @@ Parameters TextStyle::parseRule(const DrawRule& _rule) const {
 void TextStyle::buildPoint(const Point& _point, const DrawRule& _rule, const Properties& _props, VboMesh& _mesh, Tile& _tile) const {
     auto& buffer = static_cast<TextBuffer&>(_mesh);
 
-	Parameters params = parseRule(_rule);
+    Parameters params = parseRule(_rule);
+
+    if (!params.visible) {
+        return;
+    }
 
     const auto& text = _props.getString(key_name);
     if (text.length() == 0) { return; }
@@ -97,6 +106,10 @@ void TextStyle::buildLine(const Line& _line, const DrawRule& _rule, const Proper
     auto& buffer = static_cast<TextBuffer&>(_mesh);
 
 	Parameters params = parseRule(_rule);
+
+    if (!params.visible) {
+        return;
+    }
 
     const auto& text = _props.getString(key_name);
     if (text.length() == 0) { return; }
@@ -128,6 +141,10 @@ void TextStyle::buildPolygon(const Polygon& _polygon, const DrawRule& _rule, con
     auto& buffer = static_cast<TextBuffer&>(_mesh);
 
 	Parameters params = parseRule(_rule);
+
+    if (!params.visible) {
+        return;
+    }
 
     const auto& text = _props.getString(key_name);
     if (text.length() == 0) { return; }
