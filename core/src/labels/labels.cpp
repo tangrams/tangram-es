@@ -19,7 +19,7 @@ int Labels::LODDiscardFunc(float _maxZoom, float _zoom) {
 
 
 void Labels::update(const View& _view, float _dt, const std::vector<std::unique_ptr<Style>>& _styles,
-                    const std::map<TileID, std::shared_ptr<Tile>>& _tiles) {
+                    const std::vector<std::shared_ptr<Tile>>& _tiles) {
 
     m_needUpdate = false;
 
@@ -37,10 +37,7 @@ void Labels::update(const View& _view, float _dt, const std::vector<std::unique_
 
     //// Collect labels from visible tiles
 
-    for (const auto& mapIDandTile : _tiles) {
-        const auto& tile = mapIDandTile.second;
-
-        if (!tile->isReady()) { continue; }
+    for (const auto& tile : _tiles) {
 
         // discard based on level of detail
         // if ((zoom - tile->getID().z) > lodDiscard) {

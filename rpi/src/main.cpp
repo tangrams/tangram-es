@@ -43,7 +43,7 @@ int main(int argc, char **argv){
     curl_global_init(CURL_GLOBAL_DEFAULT);
 
     // Set background color and clear buffers
-    Tangram::initialize();
+    Tangram::initialize("scene.yaml");
     Tangram::resize(getWindowWidth(), getWindowHeight());
 
     setup();

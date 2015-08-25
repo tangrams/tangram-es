@@ -22,7 +22,7 @@ void Skybox::init() {
         {"a_position", 3, GL_FLOAT, false, 0},
     }));
 
-    m_mesh = std::unique_ptr<Mesh>(new Mesh(layout, GL_TRIANGLES));
+    m_mesh = std::unique_ptr<Mesh>(new Mesh(layout, GL_TRIANGLES, GL_STATIC_DRAW, true));
 
     std::vector<int> indices = {
         5, 1, 3, 3, 7, 5, // +x

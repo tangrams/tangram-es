@@ -41,13 +41,29 @@ public class MapController implements Renderer, OnTouchListener, OnScaleGestureL
     }
 
     /**
-     * Construct a MapController
+     * Construct a MapController using the default scene file
      * @param mainApp Activity in which the map will function; the asset bundle for this activity must contain all
      * the local files that the map will need
      * @param view MapView where the map will be displayed; input events from this view will be handled by the
      * resulting MapController
      */
     public MapController(Activity mainApp, MapView view) {
+
+        this(mainApp, view, "scene.yaml");
+
+    }
+
+    /**
+     * Construct a MapController using a custom scene file
+     * @param mainApp Activity in which the map will function; the asset bundle for this activity must contain all
+     * the local files that the map will need
+     * @param view MapView where the map will be displayed; input events from this view will be handled by the
+     * resulting MapController
+     * @param sceneFilePath Location of the YAML scene file within the assets directory
+     */
+    public MapController(Activity mainApp, MapView view, String sceneFilePath) {
+
+        scenePath = sceneFilePath;
 
         // Get configuration info from application
         mainApp.getWindowManager().getDefaultDisplay().getMetrics(displayMetrics);
@@ -233,7 +249,7 @@ public class MapController implements Renderer, OnTouchListener, OnScaleGestureL
     // Native methods
     // ==============
 
-    private synchronized native void init(MapController instance, AssetManager assetManager);
+    private synchronized native void init(MapController instance, AssetManager assetManager, String stylePath);
     private synchronized native void resize(int width, int height);
     private synchronized native void update(float dt);
     private synchronized native void render();
@@ -260,6 +276,7 @@ public class MapController implements Renderer, OnTouchListener, OnScaleGestureL
     // Private members
     // ===============
 
+    private String scenePath;
     private long time = System.nanoTime();
     private boolean initialized = false;
     private double[] mapLonLat = {0, 0};
@@ -330,7 +347,7 @@ public class MapController implements Renderer, OnTouchListener, OnScaleGestureL
 
     public void onSurfaceCreated(GL10 gl, EGLConfig config) {
         onContextDestroyed();
-        init(this, assetManager);
+        init(this, assetManager, scenePath);
         setPosition(mapLonLat[0], mapLonLat[1]);
         setZoom(mapZoom);
         setRotation(mapRotation);
