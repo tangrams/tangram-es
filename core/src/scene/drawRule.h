@@ -11,11 +11,13 @@
 #include "csscolorparser.hpp"
 #include "platform.h"
 
+namespace Tangram {
+
 using Color = CSSColorParser::Color;
 using Extrusion = std::pair<float, float>;
 using Function = std::string;
 
-namespace Tangram {
+class FilterContext;
 
 enum class StyleParamKey : uint8_t {
     none, order, extrude, color, width, cap, join, outline_color, outline_width, outline_cap, outline_join,
@@ -28,10 +30,16 @@ struct StyleParam {
 
     StyleParam() : key(StyleParamKey::none), value(none_type{}) {};
     StyleParam(const std::string& _key, const std::string& _value);
-    StyleParam(StyleParamKey _key, std::string _value) : key(_key), value(std::move(_value)){}
+
+    StyleParam(StyleParamKey _key, std::string _value) :
+        key(_key),
+        value(std::move(_value)),
+        functionID(-1){}
 
     StyleParamKey key;
     Value value;
+    int32_t functionID;
+
     bool operator<(const StyleParam& _rhs) const { return key < _rhs.key; }
     bool valid() const { return !value.is<none_type>(); }
     operator bool() const { return valid(); }
@@ -55,6 +63,8 @@ struct DrawRule {
 
     DrawRule merge(DrawRule& _other) const;
     std::string toString() const;
+
+    void eval(const FilterContext& _ctx);
 
     const StyleParam& findParameter(StyleParamKey _key) const;
 
