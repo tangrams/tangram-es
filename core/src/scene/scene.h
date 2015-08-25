@@ -19,6 +19,8 @@ class Texture;
 
 class Scene {
 public:
+    Scene();
+    ~Scene();
 
     auto& layers() { return m_layers; };
     auto& styles() { return m_styles; };

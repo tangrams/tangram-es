@@ -5,6 +5,9 @@
 
 namespace Tangram {
 
+Scene::Scene() {}
+Scene::~Scene() {}
+
 const Style* Scene::findStyle(const std::string &_name) const {
     for (auto& style : m_styles) {
         if (style->getName() == _name) { return style.get(); }

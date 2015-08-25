@@ -10,7 +10,6 @@
 
 namespace Tangram {
 
-class Style;
 struct DrawRule;
 struct Feature;
 

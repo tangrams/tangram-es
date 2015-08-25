@@ -4,7 +4,6 @@
 #include "tile/tile.h"
 #include "view/view.h"
 #include "tileManager.h"
-#include "style/style.h"
 #include "scene/scene.h"
 
 #include <algorithm>

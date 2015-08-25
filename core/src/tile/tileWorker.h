@@ -1,7 +1,6 @@
 #pragma once
 
 #include "tile/tileID.h"
-#include "style/style.h"
 #include "tileTask.h"
 
 #include <memory>
