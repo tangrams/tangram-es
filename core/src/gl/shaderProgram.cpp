@@ -2,10 +2,10 @@
 
 #include "platform.h"
 #include "scene/light.h"
+#include "gl/renderState.h"
 
 namespace Tangram {
 
-GLuint ShaderProgram::s_activeGlProgram = 0;
 int ShaderProgram::s_validGeneration = 0;
 
 ShaderProgram::ShaderProgram() {
@@ -95,12 +95,10 @@ void ShaderProgram::use() {
     if (m_needsBuild) {
         build();
     }
-
-    if (m_glProgram != 0 && m_glProgram != s_activeGlProgram) {
-        glUseProgram(m_glProgram);
-        s_activeGlProgram = m_glProgram;
+    
+    if (m_glProgram != 0) {
+        RenderState::shaderProgram(m_glProgram);
     }
-
 }
 
 bool ShaderProgram::build() {
@@ -137,13 +135,6 @@ bool ShaderProgram::build() {
         glDeleteShader(vertexShader);
         glDeleteShader(fragmentShader);
         return false;
-    }
-
-    // New shaders linked successfully, so replace old shaders and program
-
-    if (m_glProgram == s_activeGlProgram) {
-        glUseProgram(0);
-        s_activeGlProgram = 0;
     }
 
     // Delete handles for old shaders and program; values of 0 are silently ignored
@@ -267,7 +258,6 @@ void ShaderProgram::checkValidity() {
 
 void ShaderProgram::invalidateAllPrograms() {
 
-    s_activeGlProgram = 0;
     ++s_validGeneration;
 
 }

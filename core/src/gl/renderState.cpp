@@ -20,6 +20,8 @@ namespace RenderState {
     VertexBuffer vertexBuffer;
     IndexBuffer indexBuffer;
 
+    ShaderProgram shaderProgram;
+
     TextureUnit textureUnit;
     Texture texture;
 
@@ -51,6 +53,7 @@ namespace RenderState {
         glDepthRangef(0.0, 1.0);
         glClearColor(0.3, 0.3, 0.3, 1.0);
 
+        shaderProgram.init(std::numeric_limits<unsigned int>::max(), false);
         vertexBuffer.init(std::numeric_limits<unsigned int>::max(), false);
         indexBuffer.init(std::numeric_limits<unsigned int>::max(), false);
         texture.init(GL_TEXTURE_2D, std::numeric_limits<unsigned int>::max(), false);
