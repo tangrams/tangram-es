@@ -14,7 +14,7 @@ static void BM_Tangram_LoadFont(benchmark::State& state) {
         std::shared_ptr<FontContext> m_ftContext;
         m_ftContext = std::make_shared<FontContext>();
         state.ResumeTiming();
-        m_ftContext->addFont("FiraSans-Medium.ttf", "FiraSans");
+        m_ftContext->addFont("FiraSans", "Medium", "");
     }
 }
 BENCHMARK(BM_Tangram_LoadFont);
