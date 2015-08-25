@@ -20,7 +20,17 @@ textures:
 # provide global fontfile names to be used for this stylesheet
 # these could be bundled with the tangram repo or could be loaded from system path
 # priority is given to bundled fonts
-fonts: [ Roboto-Regular.ttf, FiraSans-Medium.ttf]
+fonts:
+    font1:
+        name: Roboto
+        weight: Regular
+    font2:
+        name: FireSans
+        weight: Medium
+    font3:
+        name: Roboto
+        weight: Bold
+        face: Italic
 
 styles:
     pillows:
