@@ -63,10 +63,9 @@ void initialize() {
 
         SceneLoader loader;
         loader.loadScene("config.yaml", *m_scene, *m_tileManager, *m_view);
-
+        
+        RenderState::configure();
     }
-
-    RenderState::configure();
 
     while (Error::hadGlError("Tangram::initialize()")) {}
 
@@ -290,6 +289,10 @@ void onContextDestroyed() {
 
     if (m_tileManager) {
         m_tileManager->clearTileSet();
+        
+        for (auto& style : m_scene->styles()) {
+            style->notifyGLContextLost();
+        }
     }
 
     // The OpenGL context has been destroyed since the last time resources were created,
@@ -306,10 +309,6 @@ void onContextDestroyed() {
 
     // Reconfigure the render states
     RenderState::configure();
-    
-    for (auto& style : m_scene->styles()) {
-        style->notifyGLContextLost();
-    }
 }
 
 }
