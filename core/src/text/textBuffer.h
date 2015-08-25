@@ -21,6 +21,7 @@ struct Parameters {
     float fontSize = 12.0f;
     float blurSpread = 0.0f;
     bool capitalized = false;
+    bool visible = true;
 };
 
 /*
