@@ -83,12 +83,22 @@ protected:
 
     /* Create a new mesh object using the vertex layout corresponding to this style */
     virtual VboMesh* newMesh() const = 0;
+    
+    /* Toggle on read if true, checks whether the context has been lost on last frame */
+    bool glContextLost();
+
+private:
+    
+    /* Whether the context has been lost on last frame */
+    bool m_contextLost;
 
 public:
 
     Style(std::string _name, GLenum _drawMode);
 
     virtual ~Style();
+    
+    void notifyGLContextLost() { m_contextLost = true; }
 
     void viewportHasChanged() { m_dirtyViewport = true; }
 

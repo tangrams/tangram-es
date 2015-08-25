@@ -306,6 +306,10 @@ void onContextDestroyed() {
 
     // Reconfigure the render states
     RenderState::configure();
+    
+    for (auto& style : m_scene->styles()) {
+        style->notifyGLContextLost();
+    }
 }
 
 }
