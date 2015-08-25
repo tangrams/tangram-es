@@ -44,9 +44,11 @@ extern "C" {
         jniEnv->ReleaseDoubleArrayElements(screenPos, arr, 0);
     }
 
-    JNIEXPORT void JNICALL Java_com_mapzen_tangram_MapController_init(JNIEnv* jniEnv, jobject obj, jobject tangramInstance, jobject assetManager) {
+    JNIEXPORT void JNICALL Java_com_mapzen_tangram_MapController_init(JNIEnv* jniEnv, jobject obj, jobject tangramInstance, jobject assetManager, jstring stylePath) {
         setupJniEnv(jniEnv, tangramInstance, assetManager);
-        Tangram::initialize();
+        const char* cStylePath = jniEnv->GetStringUTFChars(stylePath, NULL);
+        Tangram::initialize(cStylePath);
+        jniEnv->ReleaseStringUTFChars(stylePath, cStylePath);
     }
 
     JNIEXPORT void JNICALL Java_com_mapzen_tangram_MapController_resize(JNIEnv* jniEnv, jobject obj, jint width, jint height) {

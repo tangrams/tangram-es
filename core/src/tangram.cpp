@@ -31,7 +31,7 @@ std::unique_ptr<InputHandler> m_inputHandler;
 static float g_time = 0.0;
 static std::bitset<8> g_flags = 0;
 
-void initialize() {
+void initialize(const char* _scenePath) {
 
     logMsg("initialize\n");
 
@@ -61,9 +61,13 @@ void initialize() {
         m_ftContext->addFont("FiraSans-Medium.ttf", "FiraSans");
         m_labels = std::unique_ptr<Labels>(new Labels());
 
+        logMsg("Loading Tangram scene file: %s\n", _scenePath);
+        auto sceneString = stringFromResource(_scenePath);
+
         SceneLoader loader;
-        loader.loadScene("config.yaml", *m_scene, *m_tileManager, *m_view);
-        
+
+        loader.loadScene(sceneString, *m_scene, *m_tileManager, *m_view);
+
         RenderState::configure();
     }
 
@@ -99,20 +103,17 @@ void update(float _dt) {
 
     m_view->update();
 
-    m_tileManager->updateTileSet();
+    m_tileManager->updateTileSets();
 
     if (m_view->changedOnLastUpdate() || m_tileManager->hasTileSetChanged() || m_labels->needUpdate()) {
 
-        auto& tileSet = m_tileManager->getVisibleTiles();
+        auto& tiles = m_tileManager->getVisibleTiles();
 
-        for (const auto& mapIDandTile : tileSet) {
-            const auto& tile = mapIDandTile.second;
-            if (tile->isReady()) {
-                tile->update(_dt, *m_view);
-            }
+        for (const auto& tile : tiles) {
+            tile->update(_dt, *m_view);
         }
 
-        m_labels->update(*m_view, _dt, m_scene->styles(), tileSet);
+        m_labels->update(*m_view, _dt, m_scene->styles(), tiles);
     }
 
     if (m_scene) {
@@ -130,12 +131,8 @@ void render() {
         style->onBeginDrawFrame(*m_view, *m_scene);
 
         // Loop over all tiles in m_tileSet
-        for (const auto& mapIDandTile : m_tileManager->getVisibleTiles()) {
-            const std::shared_ptr<Tile>& tile = mapIDandTile.second;
-            if (tile->isReady()) {
-                // Draw tile!
-                tile->draw(*style, *m_view);
-            }
+        for (const auto& tile : m_tileManager->getVisibleTiles()) {
+            tile->draw(*style, *m_view);
         }
 
         style->onEndDrawFrame();
@@ -288,10 +285,10 @@ void onContextDestroyed() {
     logMsg("context destroyed\n");
 
     if (m_tileManager) {
-        m_tileManager->clearTileSet();
-        
+        m_tileManager->clearTileSets();
+
         for (auto& style : m_scene->styles()) {
-            style->notifyGLContextLost();
+           style->notifyGLContextLost();
         }
     }
 

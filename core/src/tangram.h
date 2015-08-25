@@ -9,8 +9,8 @@
 
 namespace Tangram {
 
-// Create resources and initialize the map view
-void initialize();
+// Create resources and initialize the map view using the scene file at the given resource path
+void initialize(const char* _scenePath);
 
 // Resize the map view to a new width and height (in pixels)
 void resize(int _newWidth, int _newHeight);
