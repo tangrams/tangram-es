@@ -297,6 +297,62 @@ void SceneLoader::loadTextures(YAML::Node textures, Scene& scene) {
     }
 }
 
+void SceneLoader::loadStyleProps(Style& style, YAML::Node styleNode, Scene& scene) {
+
+    if (!styleNode) {
+        logMsg("Error: Can not parse style parameters, bad style YAML Node\n");
+        return;
+    }
+
+    Node animatedNode = styleNode["animated"];
+    if (animatedNode) { logMsg("WARNING: animated styles not yet implemented\n"); } // TODO
+
+    Node blendNode = styleNode["blend"];
+    if (blendNode) {
+
+        logMsg("WARNING: blending modes not yet implemented\n");
+
+        std::string blend = blendNode.as<std::string>();
+        if (blend == "add") { } // TODO
+        else if (blend == "multiply") { } // TODO
+
+    }
+
+    Node texcoordsNode = styleNode["texcoords"];
+    if (texcoordsNode) {
+
+        logMsg("WARNING: texcoords style parameter is currently ignored\n");
+
+        if (texcoordsNode.as<bool>()) { } // TODO
+        else { } // TODO
+
+    }
+
+    Node shadersNode = styleNode["shaders"];
+    if (shadersNode) {
+        loadShaderConfig(shadersNode, *(style.getShaderProgram()));
+    }
+
+    Node materialNode = styleNode["material"];
+    if (materialNode) {
+        loadMaterial(materialNode, *(style.getMaterial()), scene);
+    }
+
+    Node lightingNode = styleNode["lighting"];
+    if (lightingNode) {
+        std::string lighting = lightingNode.as<std::string>();
+        if (lighting == "fragment") { style.setLightingType(LightingType::fragment); }
+        else if (lighting == "vertex") { style.setLightingType(LightingType::vertex); }
+        else if (lighting == "false") { style.setLightingType(LightingType::none); }
+        else if (lighting == "true") { } // use default lighting
+        else { logMsg("WARNING: unrecognized lighting type \"%s\"\n", lighting.c_str()); }
+    }
+
+    Node urlNode = styleNode["url"];
+    if (urlNode) { logMsg("WARNING: loading style from URL not yet implemented\n"); } // TODO
+
+}
+
 void SceneLoader::loadStyles(YAML::Node styles, Scene& scene) {
 
     // Instantiate built-in styles
@@ -338,55 +394,24 @@ void SceneLoader::loadStyles(YAML::Node styles, Scene& scene) {
 
         if (style == nullptr) { style = new PolygonStyle(styleName); }
 
-        Node animatedNode = styleNode["animated"];
-        if (animatedNode) { logMsg("WARNING: animated styles not yet implemented\n"); } // TODO
-
-        Node blendNode = styleNode["blend"];
-        if (blendNode) {
-
-            logMsg("WARNING: blending modes not yet implemented\n");
-
-            std::string blend = blendNode.as<std::string>();
-            if (blend == "add") { } // TODO
-            else if (blend == "multiply") { } // TODO
-
+        Node mixNode = styleNode["mix"];
+        if (mixNode) {
+            if (mixNode.IsScalar()) {
+                std::string mixStyleName = mixNode.as<std::string>();
+                loadStyleProps(*style, styles[mixStyleName], scene);
+            } else if (mixNode.IsSequence()) {
+                for (const auto& mixStyleNode : mixNode) {
+                    std::string mixStyleName = mixStyleNode.as<std::string>();
+                    loadStyleProps(*style, styles[mixStyleName], scene);
+                }
+            } else {
+                logMsg("Error parsing mix param for style: %s. Value needs to be scalar or sequence\n", styleName.c_str());
+            }
         }
 
-        Node texcoordsNode = styleNode["texcoords"];
-        if (texcoordsNode) {
-
-            logMsg("WARNING: texcoords style parameter is currently ignored\n");
-
-            if (texcoordsNode.as<bool>()) { } // TODO
-            else { } // TODO
-
-        }
-
-        Node shadersNode = styleNode["shaders"];
-        if (shadersNode) {
-            loadShaderConfig(shadersNode, *(style->getShaderProgram()));
-        }
-
-        Node materialNode = styleNode["material"];
-        if (materialNode) {
-            loadMaterial(materialNode, *(style->getMaterial()), scene);
-        }
-
-        Node lightingNode = styleNode["lighting"];
-        if (lightingNode) {
-            std::string lighting = lightingNode.as<std::string>();
-            if (lighting == "fragment") { style->setLightingType(LightingType::fragment); }
-            else if (lighting == "vertex") { style->setLightingType(LightingType::vertex); }
-            else if (lighting == "false") { style->setLightingType(LightingType::none); }
-            else if (lighting == "true") { } // use default lighting
-            else { logMsg("WARNING: unrecognized lighting type \"%s\"\n", lighting.c_str()); }
-        }
-
-        Node urlNode = styleNode["url"];
-        if (urlNode) { logMsg("WARNING: loading style from URL not yet implemented\n"); } // TODO
+        loadStyleProps(*style, styleNode, scene);
 
         scene.styles().push_back(std::unique_ptr<Style>(style));
-
     }
 
 }
