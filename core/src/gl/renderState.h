@@ -4,6 +4,7 @@
 #include "platform.h"
 
 #include <tuple>
+#include <limits>
 
 namespace Tangram {
 
@@ -40,7 +41,7 @@ namespace RenderState {
     };
 
     // http://stackoverflow.com/questions/7858817/unpacking-a-tuple-to-call-a-matching-function-pointer
-    // Generate integer sequece for getting values from 'params' tuple.
+    // Generate integer sequence for getting values from 'params' tuple.
     template<int ...> struct seq {};
     template<int N, int ...S> struct gens : gens<N-1, N-1, S...> {};
     template<int ...S> struct gens<0, S...>{ typedef seq<S...> type; };
@@ -51,8 +52,11 @@ namespace RenderState {
         using Type = std::tuple<Args...>;
         Type params;
 
-        void init(Args... _param) {
+        void init(Args... _param, bool _force = true) {
             params = std::make_tuple(_param...);
+            if (_force) {
+                call(typename gens<sizeof...(Args)>::type());
+            }
         }
 
         inline void operator()(Args... _args) {
@@ -110,10 +114,11 @@ namespace RenderState {
     using CullFace = StateWrap<FUN(glCullFace),
                                GLenum>;
 
-    void bindVertexBuffer(GLint id);
-    void bindIndexBuffer(GLint id);
-    using VertexBuffer = StateWrap<FUN(bindVertexBuffer), GLint>;
-    using IndexBuffer = StateWrap<FUN(bindIndexBuffer), GLint>;
+    void bindVertexBuffer(GLuint _id);
+    void bindIndexBuffer(GLuint _id);
+
+    using VertexBuffer = StateWrap<FUN(bindVertexBuffer), GLuint>;
+    using IndexBuffer = StateWrap<FUN(bindIndexBuffer), GLuint>;
 
 #undef FUN
 

@@ -115,5 +115,13 @@ void Style::buildLine(const Line& _line, const DrawRule& _rule, const Properties
 void Style::buildPolygon(const Polygon& _polygon, const DrawRule& _rule, const Properties& _props, VboMesh& _mesh, Tile& _tile) const {
     // No-op by default
 }
+    
+bool Style::glContextLost() {
+    bool contextLost = m_contextLost;
+    if (m_contextLost) {
+        m_contextLost = false;
+    }
+    return contextLost;
+}
 
 }

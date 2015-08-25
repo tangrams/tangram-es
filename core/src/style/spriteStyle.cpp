@@ -98,16 +98,18 @@ void SpriteStyle::buildPoint(const Point& _point, const DrawRule& _rule, const P
 }
 
 void SpriteStyle::onBeginDrawFrame(const View& _view, const Scene& _scene) {
+    bool contextLost = Style::glContextLost();
+    
     m_spriteAtlas->bind();
 
     static bool initUniformSampler = true;
 
-    if (initUniformSampler) {
+    if (initUniformSampler || contextLost) {
         m_shaderProgram->setUniformi("u_tex", 0);
         initUniformSampler = false;
     }
 
-    if (m_dirtyViewport) {
+    if (m_dirtyViewport || contextLost) {
         m_shaderProgram->setUniformMatrix4f("u_proj", glm::value_ptr(_view.getOrthoViewportMatrix()));
         m_dirtyViewport = false;
     }

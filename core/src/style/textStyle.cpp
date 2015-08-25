@@ -125,23 +125,24 @@ void TextStyle::setColor(unsigned int _color) {
 }
 
 void TextStyle::onBeginDrawFrame(const View& _view, const Scene& _scene) {
-
+    bool contextLost = Style::glContextLost();
+    
     FontContext::GetInstance()->bindAtlas(0);
 
     static bool initUniformSampler = true;
 
-    if (initUniformSampler) {
+    if (initUniformSampler || contextLost) {
         m_shaderProgram->setUniformi("u_tex", 0);
         initUniformSampler = false;
     }
 
-    if (m_dirtyViewport) {
+    if (m_dirtyViewport || contextLost) {
         m_shaderProgram->setUniformf("u_resolution", _view.getWidth(), _view.getHeight());
         m_shaderProgram->setUniformMatrix4f("u_proj", glm::value_ptr(_view.getOrthoViewportMatrix()));
         m_dirtyViewport = false;
     }
 
-    if (m_dirtyColor) {
+    if (m_dirtyColor || contextLost) {
         float r = (m_color >> 16 & 0xff) / 255.0;
         float g = (m_color >> 8  & 0xff) / 255.0;
         float b = (m_color       & 0xff) / 255.0;

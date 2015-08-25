@@ -21,9 +21,10 @@ VboMesh::VboMesh() {
     m_generation = -1;
 }
 
-VboMesh::VboMesh(std::shared_ptr<VertexLayout> _vertexLayout, GLenum _drawMode, GLenum _hint) : VboMesh() {
+VboMesh::VboMesh(std::shared_ptr<VertexLayout> _vertexLayout, GLenum _drawMode, GLenum _hint, bool _keepMemoryData) : VboMesh() {
     m_vertexLayout = _vertexLayout;
     m_hint = _hint;
+    m_keepMemoryData = _keepMemoryData;
 
     setDrawMode(_drawMode);
 }
@@ -113,7 +114,7 @@ bool VboMesh::upload() {
     glBufferData(GL_ARRAY_BUFFER, vertexBytes, m_glVertexData, m_hint);
 
     // Clear vertex data that is not supposed to be updated.
-    if (m_hint == GL_STATIC_DRAW) {
+    if (m_hint == GL_STATIC_DRAW && !m_keepMemoryData) {
         delete[] m_glVertexData;
         m_glVertexData = nullptr;
     }
@@ -129,8 +130,10 @@ bool VboMesh::upload() {
 
         glBufferData(GL_ELEMENT_ARRAY_BUFFER, m_nIndices * sizeof(GLushort), m_glIndexData, m_hint);
 
-        delete[] m_glIndexData;
-        m_glIndexData = nullptr;
+        if (!m_keepMemoryData) {
+            delete[] m_glIndexData;
+            m_glIndexData = nullptr;
+        }
     }
 
     m_generation = s_validGeneration;

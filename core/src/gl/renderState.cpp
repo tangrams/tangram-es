@@ -20,14 +20,15 @@ namespace RenderState {
     VertexBuffer vertexBuffer;
     IndexBuffer indexBuffer;
 
-    void bindVertexBuffer(GLint id) { glBindBuffer(GL_ARRAY_BUFFER, id); }
-    void bindIndexBuffer(GLint id) { glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, id); }
+    void bindVertexBuffer(GLuint _id) { glBindBuffer(GL_ARRAY_BUFFER, _id); }
+    void bindIndexBuffer(GLuint _id) { glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, _id); }
 
     void configure() {
         blending.init(GL_FALSE);
+        blendingFunc.init(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
         culling.init(GL_TRUE);
         cullFace.init(GL_BACK);
-        frontFace(GL_CCW);
+        frontFace.init(GL_CCW);
         depthTest.init(GL_TRUE);
         depthWrite.init(GL_TRUE);
 
@@ -36,6 +37,9 @@ namespace RenderState {
         glClearDepthf(1.0);
         glDepthRangef(0.0, 1.0);
         glClearColor(0.3, 0.3, 0.3, 1.0);
+
+        vertexBuffer.init(std::numeric_limits<unsigned int>::max(), false);
+        indexBuffer.init(std::numeric_limits<unsigned int>::max(), false);
     }
 
 }

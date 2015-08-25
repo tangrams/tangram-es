@@ -13,8 +13,8 @@ class TypedMesh : public VboMesh {
 
 public:
 
-    TypedMesh(std::shared_ptr<VertexLayout> _vertexLayout, GLenum _drawMode, GLenum _hint = GL_STATIC_DRAW)
-        : VboMesh(_vertexLayout, _drawMode, _hint) {};
+    TypedMesh(std::shared_ptr<VertexLayout> _vertexLayout, GLenum _drawMode, GLenum _hint = GL_STATIC_DRAW, bool _keepMemoryData = false)
+        : VboMesh(_vertexLayout, _drawMode, _hint, _keepMemoryData) {};
 
     void addVertices(std::vector<T>&& _vertices,
                      std::vector<int>&& _indices) {
