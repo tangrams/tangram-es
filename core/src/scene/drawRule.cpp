@@ -24,7 +24,6 @@ const std::map<std::string, StyleParamKey> s_StyleParamMap = {
     {"outline:width", StyleParamKey::outline_width},
     {"outline:cap", StyleParamKey::outline_cap},
     {"outline:join", StyleParamKey::outline_join},
-    {"font:size", StyleParamKey::font_size},
     {"font:typeface", StyleParamKey::font_typeface},
     {"font:fill", StyleParamKey::font_fill},
     {"font:stroke", StyleParamKey::font_stroke},
@@ -74,7 +73,6 @@ StyleParam::StyleParam(const std::string& _key, const std::string& _value) {
         break;
     case StyleParamKey::width:
     case StyleParamKey::outline_width:
-    case StyleParamKey::font_size:
     case StyleParamKey::font_stroke_width:
         value = static_cast<float>(std::stof(_value));
         break;
@@ -114,7 +112,6 @@ std::string StyleParam::toString() const {
         return "order : " + std::to_string(value.get<int32_t>());
     case StyleParamKey::width:
     case StyleParamKey::outline_width:
-    case StyleParamKey::font_size:
     case StyleParamKey::font_stroke_width:
         if (!value.is<float>()) break;
         return "width : " + std::to_string(value.get<float>());
