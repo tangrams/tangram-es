@@ -28,7 +28,18 @@ bool TextBuffer::addLabel(const std::string& _text, Label::Transform _transform,
 
     if(fontID < 0) { return false; }
 
-    auto& quads = fontContext->rasterize(_text, fontID, _params.fontSize, _params.blurSpread);
+    std::string text = _text;
+
+    // captilize the string
+    if (_params.capitalized) {
+        std::locale loc;
+        for (std::string::size_type i = 0; i < _text.length(); ++i) {
+            text[i] = std::toupper(_text[i], loc);
+        }
+    }
+
+    // rasterize glyphs
+    std::vector<FONSquad>& quads = fontContext->rasterize(text, fontID, _params.fontSize, _params.blurSpread);
     size_t numGlyphs = quads.size();
 
     if (numGlyphs == 0) {

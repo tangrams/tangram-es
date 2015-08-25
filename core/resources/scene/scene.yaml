@@ -186,8 +186,9 @@ layers:
         draw:
             text: 
                 font:
-                    typeface: Regular 15 Roboto
+                    typeface: Regular 17 Roboto
                     fill: white
+                    capitalized: true
         highway: 
             filter: { kind: highway, $zoom: { min: 7 } }
             draw: {}

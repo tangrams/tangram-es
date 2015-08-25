@@ -7,6 +7,7 @@
 #include "glm/vec2.hpp"
 
 #include <memory>
+#include <locale>
 
 namespace Tangram {
 
