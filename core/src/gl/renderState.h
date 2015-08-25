@@ -111,10 +111,11 @@ namespace RenderState {
     using CullFace = StateWrap<FUN(glCullFace),
                                GLenum>;
 
-    void bindVertexBuffer(GLint id);
-    void bindIndexBuffer(GLint id);
-    using VertexBuffer = StateWrap<FUN(bindVertexBuffer), GLint>;
-    using IndexBuffer = StateWrap<FUN(bindIndexBuffer), GLint>;
+    void bindVertexBuffer(GLuint _id);
+    void bindIndexBuffer(GLuint _id);
+
+    using VertexBuffer = StateWrap<FUN(bindVertexBuffer), GLuint>;
+    using IndexBuffer = StateWrap<FUN(bindIndexBuffer), GLuint>;
 
 #undef FUN
 

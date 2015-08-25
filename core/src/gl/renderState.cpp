@@ -20,8 +20,8 @@ namespace RenderState {
     VertexBuffer vertexBuffer;
     IndexBuffer indexBuffer;
 
-    void bindVertexBuffer(GLint id) { glBindBuffer(GL_ARRAY_BUFFER, id); }
-    void bindIndexBuffer(GLint id) { glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, id); }
+    void bindVertexBuffer(GLuint _id) { glBindBuffer(GL_ARRAY_BUFFER, _id); }
+    void bindIndexBuffer(GLuint _id) { glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, _id); }
 
     void configure() {
         blending.init(GL_FALSE);
