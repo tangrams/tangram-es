@@ -64,7 +64,7 @@ namespace RenderState {
                 call(typename gens<sizeof...(Args)>::type());
             }
         }
-        
+
         template<int ...S>
         inline void call(seq<S...>) {
             fn(std::get<S>(params) ...);
