@@ -23,7 +23,7 @@ enum class StyleParamKey : uint8_t {
 };
 
 struct StyleParam {
-    using Value = variant<none_type, std::string, Color, CapTypes, JoinTypes, Extrusion, int32_t, float>;
+    using Value = variant<none_type, bool, std::string, Color, CapTypes, JoinTypes, Extrusion, int32_t, float>;
 
     StyleParam() : key(StyleParamKey::none), value(none_type{}) {};
     StyleParam(const std::string& _key, const std::string& _value);

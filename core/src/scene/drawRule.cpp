@@ -66,9 +66,15 @@ StyleParam::StyleParam(const std::string& _key, const std::string& _value) {
         }
         break;
     case StyleParamKey::font_typeface:
+        value = _value;
+        break;
     case StyleParamKey::font_capitalized:
     case StyleParamKey::font_visible:
-        value = _value;
+        if (_value == "true") { value = true; }
+        else if (_value == "false") { value = false; }
+        else {
+            logMsg("Warning: Bool value required for capitalized/visible. Using Default.");
+        }
         break;
     case StyleParamKey::order:
         value = static_cast<int32_t>(std::stoi(_value));
@@ -107,9 +113,12 @@ std::string StyleParam::toString() const {
         return "extrude : (" + std::to_string(p.first) + ", " + std::to_string(p.second) + ")";
     }
     case StyleParamKey::font_typeface:
+        if (!value.is<std::string>()) break;
+        return value.get<std::string>();
     case StyleParamKey::font_capitalized:
     case StyleParamKey::font_visible:
-        return value.get<std::string>();
+        if (!value.is<bool>()) break;
+        return std::to_string(value.get<bool>());
     case StyleParamKey::order:
         if (!value.is<int32_t>()) break;
         return "order : " + std::to_string(value.get<int32_t>());
