@@ -41,7 +41,6 @@ const std::map<std::string, StyleParamKey> s_StyleParamMap = {
 };
 
 StyleParam::StyleParam(const std::string& _key, const std::string& _value) {
-    functionID = -1;
 
     auto it = s_StyleParamMap.find(_key);
     if (it == s_StyleParamMap.end()) {
@@ -129,6 +128,10 @@ StyleParam::StyleParam(const std::string& _key, const std::string& _value) {
 
 std::string StyleParam::toString() const {
     // TODO: cap, join and color toString()
+    if (value.is<none_type>()) {
+        return "undefined";
+    }
+
     switch (key) {
     case StyleParamKey::extrude: {
         if (!value.is<std::pair<float, float>>()) break;
@@ -347,8 +350,8 @@ bool StyleParam::parseFontSize(const std::string& _str, float& _pxSize) {
 
 void DrawRule::eval(const FilterContext& _ctx) {
      for (auto& param : parameters) {
-         if (param.functionID >= 0) {
-             _ctx.evalStyle(param.functionID, param.key, param.value);
+         if (param.function >= 0) {
+             _ctx.evalStyle(param.function, param.key, param.value);
          }
      }
 }
