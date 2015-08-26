@@ -33,8 +33,12 @@ void PolygonStyle::constructShaderProgram() {
 
 PolygonStyle::Parameters PolygonStyle::parseRule(const DrawRule& _rule) const {
     Parameters p;
+    std::string extrudeStr;
     _rule.getColor(StyleParamKey::color, p.color);
     _rule.getValue(StyleParamKey::order, p.order);
+    _rule.getValue(StyleParamKey::extrude, extrudeStr);
+    if (extrudeStr == "true") { p.extrude = true; }
+    else { p.extrude = false; }
 
     return p;
 }
@@ -89,11 +93,13 @@ void PolygonStyle::buildPolygon(const Polygon& _polygon, const DrawRule& _rule, 
         [&](size_t sizeHint){ vertices.reserve(sizeHint); }
     };
 
-    if (minHeight != height) {
+    if (params.extrude && minHeight != height) {
         Builders::buildPolygonExtrusion(_polygon, minHeight, height, builder);
+        Builders::buildPolygon(_polygon, height, builder);
+    } else {
+        Builders::buildPolygon(_polygon, 0.0f, builder);
     }
 
-    Builders::buildPolygon(_polygon, height, builder);
 
     auto& mesh = static_cast<PolygonStyle::Mesh&>(_mesh);
     mesh.addVertices(std::move(vertices), std::move(builder.indices));

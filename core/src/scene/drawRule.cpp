@@ -13,6 +13,7 @@ const StyleParam NONE;
 const std::map<std::string, StyleParamKey> s_StyleParamMap = {
     {"none", StyleParamKey::none},
     {"order", StyleParamKey::order},
+    {"extrude", StyleParamKey::extrude},
     {"color", StyleParamKey::color},
     {"width", StyleParamKey::width},
     {"cap", StyleParamKey::cap},
@@ -35,6 +36,9 @@ StyleParam::StyleParam(const std::string& _key, const std::string& _value) {
     key = it->second;
 
     switch (key) {
+    case StyleParamKey::extrude:
+        value = _value;
+        break;
     case StyleParamKey::order:
         value = static_cast<int32_t>(std::stoi(_value));
         break;
@@ -62,6 +66,8 @@ StyleParam::StyleParam(const std::string& _key, const std::string& _value) {
 std::string StyleParam::toString() const {
     // TODO: cap, join and color toString()
     switch (key) {
+    case StyleParamKey::extrude:
+        return value.get<std::string>();
     case StyleParamKey::order:
         return std::to_string(value.get<int32_t>());
     case StyleParamKey::width:

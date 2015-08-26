@@ -14,7 +14,7 @@ using Color = CSSColorParser::Color;
 namespace Tangram {
 
 enum class StyleParamKey : uint8_t {
-    none, order, color, width, cap, join, outline_color, outline_width, outline_cap, outline_join,
+    none, order, extrude, color, width, cap, join, outline_color, outline_width, outline_cap, outline_join,
 };
 
 struct StyleParam {
