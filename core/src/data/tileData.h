@@ -124,6 +124,8 @@ struct Properties {
         sort();
     }
 
+    const auto& items() const { return props; }
+
 private:
     std::vector<Item> props;
 };

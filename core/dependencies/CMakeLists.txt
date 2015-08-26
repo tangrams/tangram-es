@@ -33,3 +33,13 @@ target_include_directories(geojson-vt-cpp
 
 set(YAML_CPP_BUILD_TOOLS OFF CACHE BOOL "Enable testing and parse tools")
 add_subdirectory("yaml-cpp")
+
+
+# duktape #
+############
+
+add_library(duktape "${CMAKE_CURRENT_SOURCE_DIR}/duktape/duktape.c")
+target_include_directories(duktape
+  PUBLIC
+  "${CMAKE_CURRENT_SOURCE_DIR}/duktape"
+)
