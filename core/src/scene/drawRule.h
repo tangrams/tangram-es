@@ -33,12 +33,11 @@ struct StyleParam {
 
     StyleParam(StyleParamKey _key, std::string _value) :
         key(_key),
-        value(std::move(_value)),
-        functionID(-1){}
+        value(std::move(_value)) {}
 
     StyleParamKey key;
     Value value;
-    int32_t functionID;
+    int32_t function = -1;
 
     bool operator<(const StyleParam& _rhs) const { return key < _rhs.key; }
     bool valid() const { return !value.is<none_type>(); }
