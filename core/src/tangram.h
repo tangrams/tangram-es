@@ -1,6 +1,7 @@
 #pragma once
 
 #include "debug.h"
+#include "types.h"
 
 /* Tangram API
  *
@@ -53,6 +54,16 @@ void screenToWorldCoordinates(double& _x, double& _y);
 
 // Set the ratio of hardware pixels to logical pixels (defaults to 1.0)
 void setPixelScale(float _pixelsPerPoint);
+
+int addDataSource(const char* _name);
+
+void clearSourceData(int _sourceId);
+
+void addSourceData(int _sourceId, GeoPoint* _points, int _length);
+
+void addSourceData(int _sourceId, GeoLine* _lines, int _length);
+
+void addSourceData(int _sourceId, GeoPolygon* _polygons, int _length);
 
 // Respond to a tap at the given screen coordinates (x right, y down)
 void handleTapGesture(float _posX, float _posY);

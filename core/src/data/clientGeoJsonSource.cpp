@@ -1,4 +1,6 @@
 #include "clientGeoJsonSource.h"
+#include "mapbox/geojsonvt/geojsonvt_convert.hpp"
+#include "mapbox/geojsonvt/geojsonvt_types.hpp"
 #include "platform.h"
 #include "util/geom.h"
 
@@ -7,6 +9,10 @@ using namespace mapbox::util;
 namespace Tangram {
 
 const double extent = 4096;
+const uint8_t maxZoom = 20;
+const uint8_t indexMaxZoom = 5;
+const uint32_t indexMaxPoints = 100000;
+double tolerance = 0;
 
 Point transformPoint(geojsonvt::TilePoint pt) {
     return { 2 * pt.x / extent - 1, 1 - 2 * pt.y / extent, 0 };
@@ -18,16 +24,14 @@ ClientGeoJsonSource::ClientGeoJsonSource(const std::string& _name, const std::st
     if (!_url.empty()) {
         // Load from file
         const auto& string = stringFromResource(_url.c_str());
-        auto features = geojsonvt::GeoJSONVT::convertFeatures(string);
-        m_store = std::make_unique<GeoJSONVT>(features);
+        setData(string);
     }
 }
 
 void ClientGeoJsonSource::setData(const std::string& _data) {
 
-    auto features = geojsonvt::GeoJSONVT::convertFeatures(_data);
-
-    m_store = std::make_unique<GeoJSONVT>(features);
+    m_features = geojsonvt::GeoJSONVT::convertFeatures(_data);
+    m_store = std::make_unique<GeoJSONVT>(m_features);
 
 }
 
@@ -43,6 +47,39 @@ bool ClientGeoJsonSource::getTileData(std::shared_ptr<TileTask>& _task) {
     return true;
 }
 
+void ClientGeoJsonSource::clearData() {
+
+    m_features.clear();
+    m_store.reset();
+    DataSource::clearData();
+}
+
+void ClientGeoJsonSource::addData(GeoPoint* _points, int length) {
+
+    std::vector<geojsonvt::LonLat> coords;
+    for (int i = 0; i < length; i++) {
+        coords.push_back(geojsonvt::LonLat(_points[i].x, _points[i].y));
+    }
+
+    auto container = geojsonvt::Convert::project(coords);
+
+    auto feature = geojsonvt::Convert::create(geojsonvt::Tags(),
+                                              geojsonvt::ProjectedFeatureType::Point,
+                                              container.members);
+
+    m_features.push_back(feature);
+    m_store = std::make_unique<GeoJSONVT>(m_features, maxZoom, indexMaxZoom, indexMaxPoints, tolerance);
+
+}
+
+void ClientGeoJsonSource::addData(GeoLine* _lines, int length) {
+    // TODO
+}
+
+void ClientGeoJsonSource::addData(GeoPolygon* _polygons, int length) {
+    // TODO
+}
+
 std::shared_ptr<TileData> ClientGeoJsonSource::parse(const Tile& _tile, std::vector<char>& _rawData) const {
 
     if (!m_store) { return nullptr; }
@@ -53,7 +90,7 @@ std::shared_ptr<TileData> ClientGeoJsonSource::parse(const Tile& _tile, std::vec
 
     auto tile = m_store->getTile(id.z, id.x, id.y); // uses a mutex lock internally for thread-safety
 
-    Layer layer("");
+    Layer layer(""); // empty name will skip filtering by 'collection'
 
     for (auto& it : tile.features) {
 

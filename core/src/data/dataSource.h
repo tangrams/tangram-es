@@ -46,7 +46,7 @@ public:
     virtual std::shared_ptr<TileData> parse(const Tile& _tile, std::vector<char>& _rawData) const = 0;
 
     /* Clears all data associated with this DataSource */
-    void clearData();
+    virtual void clearData();
 
     const std::string& name() const { return m_name; }
 

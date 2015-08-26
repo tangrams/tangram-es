@@ -14,6 +14,7 @@
 #include "gl/renderState.h"
 #include "gl/primitives.h"
 #include "util/inputHandler.h"
+#include "data/clientGeoJsonSource.h"
 #include <memory>
 #include <cmath>
 #include <bitset>
@@ -218,6 +219,45 @@ void setPixelScale(float _pixelsPerPoint) {
     for (auto& style : m_scene->styles()) {
         style->setPixelScale(_pixelsPerPoint);
     }
+
+}
+
+int addDataSource(const char* _name) {
+
+    if (!m_tileManager) { return -1; }
+    auto source = std::make_shared<ClientGeoJsonSource>(std::string(_name), "");
+    return m_tileManager->addDataSource(source);
+}
+
+void clearSourceData(int _sourceId) {
+
+    if (!m_tileManager) { return; }
+    for (auto& set : m_tileManager->getTileSets()) {
+        if (set.id == _sourceId) {
+            set.source->clearData();
+        }
+    }
+}
+
+void addSourceData(int _sourceId, GeoPoint* _points, int _length) {
+
+    if (!m_tileManager) { return; }
+    for (auto& set : m_tileManager->getTileSets()) {
+        if (set.id == _sourceId) {
+            auto source = std::dynamic_pointer_cast<ClientGeoJsonSource>(set.source);
+            if (source) {
+                source->addData(_points, _length);
+                m_tileManager->clearTileSet(_sourceId);
+            }
+        }
+    }
+}
+
+void addSourceData(int _sourceId, GeoLine* _lines, int _length) {
+
+}
+
+void addSourceData(int _sourceId, GeoPolygon* _polygons, int _length) {
 
 }
 
