@@ -33,12 +33,9 @@ void PolygonStyle::constructShaderProgram() {
 
 PolygonStyle::Parameters PolygonStyle::parseRule(const DrawRule& _rule) const {
     Parameters p;
-    std::string extrudeStr;
     _rule.getColor(StyleParamKey::color, p.color);
     _rule.getValue(StyleParamKey::order, p.order);
-    _rule.getValue(StyleParamKey::extrude, extrudeStr);
-    if (extrudeStr == "true") { p.extrude = true; }
-    else { p.extrude = false; }
+    _rule.getValue(StyleParamKey::extrude, p.extrude);
 
     return p;
 }

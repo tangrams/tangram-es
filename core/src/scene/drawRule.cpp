@@ -37,7 +37,11 @@ StyleParam::StyleParam(const std::string& _key, const std::string& _value) {
 
     switch (key) {
     case StyleParamKey::extrude:
-        value = _value;
+        if (_value == "true") { value = true; }
+        else if (_value == "false") { value = false; }
+        else {
+            logMsg("Warning: Bool value required for extrude. Using Default.");
+        }
         break;
     case StyleParamKey::order:
         value = static_cast<int32_t>(std::stoi(_value));
@@ -67,7 +71,7 @@ std::string StyleParam::toString() const {
     // TODO: cap, join and color toString()
     switch (key) {
     case StyleParamKey::extrude:
-        return value.get<std::string>();
+        return std::to_string(value.get<bool>());
     case StyleParamKey::order:
         return std::to_string(value.get<int32_t>());
     case StyleParamKey::width:
@@ -173,6 +177,17 @@ bool DrawRule::getValue(StyleParamKey _key, int32_t& _value) const {
         return false;
     }
     _value = param.value.get<int32_t>();
+    return true;
+}
+
+bool DrawRule::getValue(StyleParamKey _key, bool& _value) const {
+    auto& param = findParameter(_key);
+    if (!param) { return false; }
+    if (!param.value.is<bool>()) {
+        logMsg("Error: not a bool\n");
+        return false;
+    }
+    _value = param.value.get<bool>();
     return true;
 }
 
