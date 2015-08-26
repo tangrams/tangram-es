@@ -45,7 +45,6 @@ namespace Tangram {
         };
         struct Function {
             uint32_t id;
-            std::string source;
         };
 
         FilterType type;
@@ -69,9 +68,9 @@ namespace Tangram {
         Filter(const std::string& k, bool ex) :
             type(FilterType::existence), data(Existence{ k, ex }) {}
 
-        // Create an 'function' filter
-        Filter(uint32_t id, const std::string& source) :
-            type(FilterType::function), data(Function{ id, source }) {}
+        // Create an 'function' filter with reference to Scene function id
+        Filter(uint32_t id) :
+            type(FilterType::function), data(Function{ id }) {}
 
         bool eval(const Feature& feat, const Context& ctx) const {
 
