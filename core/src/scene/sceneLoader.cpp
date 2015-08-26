@@ -638,9 +638,12 @@ Filter SceneLoader::generateFilter(YAML::Node _filter, Scene& scene) {
     std::vector<Filter> filters;
 
     if (_filter.IsScalar()) {
-        filters.emplace_back(scene.functions().size(), _filter.as<std::string>());
-        scene.functions().push_back(_filter.as<std::string>());
+        auto& val = _filter.as<std::string>();
 
+        if (val.compare(0, 8, "function") == 0) {
+            filters.emplace_back(scene.functions().size());
+            scene.functions().push_back(val);
+        }
     } else {
         for (const auto& filtItr : _filter) {
             Filter filter;
