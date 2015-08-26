@@ -61,14 +61,8 @@ Parameters TextStyle::parseRule(const DrawRule& _rule) const {
         _rule.getColor(StyleParamKey::font_stroke_color, p.strokeColor);
     }
     _rule.getValue(StyleParamKey::font_stroke_width, p.strokeWidth);
-    if (_rule.getValue(StyleParamKey::font_capitalized, cap) ) {
-        if (cap == "true") { p.capitalized = true; }
-        else { p.capitalized = false; }
-    }
-    if (_rule.getValue(StyleParamKey::font_visible, visible)) {
-        if (visible == "true") { p.visible = true; }
-        else { p.visible = false; }
-    }
+    _rule.getValue(StyleParamKey::font_capitalized, p.capitalized);
+    _rule.getValue(StyleParamKey::font_visible, p.visible);
 
     // Parse typefaceStr to Property.typeface and Property.size
     // Atleast for android fontName should be like: Roboto-BoldItalic
