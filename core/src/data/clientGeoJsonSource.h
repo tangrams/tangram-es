@@ -2,7 +2,6 @@
 
 #include "dataSource.h"
 #include "mapbox/geojsonvt/geojsonvt.hpp"
-#include "types.h"
 
 namespace Tangram {
 
@@ -15,9 +14,9 @@ public:
     ClientGeoJsonSource(const std::string& _name, const std::string& _url);
 
     void setData(const std::string& _data);
-    void addData(GeoPoint* _points, int length);
-    void addData(GeoLine* _lines, int length);
-    void addData(GeoPolygon* _polygons, int length);
+    void addPoint(double* _coords);
+    void addLine(double* _coords, int _lineLength);
+    void addPoly(double* _coords, int* _ringLengths, int rings);
 
     virtual bool loadTileData(std::shared_ptr<TileTask>&& _task, TileTaskCb _cb) override;
     virtual bool getTileData(std::shared_ptr<TileTask>& _task) override;

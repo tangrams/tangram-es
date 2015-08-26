@@ -1,7 +1,6 @@
 #pragma once
 
 #include "debug.h"
-#include "types.h"
 
 /* Tangram API
  *
@@ -59,11 +58,13 @@ int addDataSource(const char* _name);
 
 void clearSourceData(int _sourceId);
 
-void addSourceData(int _sourceId, GeoPoint* _points, int _length);
+void addSourcePoint(int _sourceId, double* _coords);
 
-void addSourceData(int _sourceId, GeoLine* _lines, int _length);
+void addSourceLine(int _sourceId, double* _coords, int _lineLength);
 
-void addSourceData(int _sourceId, GeoPolygon* _polygons, int _length);
+void addSourcePoly(int _sourceId, double* _coords, int* _ringLengths, int rings);
+
+void addSourceGeoJSON(int _sourceID, const char* _data);
 
 // Respond to a tap at the given screen coordinates (x right, y down)
 void handleTapGesture(float _posX, float _posY);

@@ -54,14 +54,9 @@ void ClientGeoJsonSource::clearData() {
     DataSource::clearData();
 }
 
-void ClientGeoJsonSource::addData(GeoPoint* _points, int length) {
+void ClientGeoJsonSource::addPoint(double* _coords) {
 
-    std::vector<geojsonvt::LonLat> coords;
-    for (int i = 0; i < length; i++) {
-        coords.push_back(geojsonvt::LonLat(_points[i].x, _points[i].y));
-    }
-
-    auto container = geojsonvt::Convert::project(coords);
+    auto container = geojsonvt::Convert::project({ geojsonvt::LonLat(_coords[0], _coords[1]) });
 
     auto feature = geojsonvt::Convert::create(geojsonvt::Tags(),
                                               geojsonvt::ProjectedFeatureType::Point,
@@ -72,11 +67,11 @@ void ClientGeoJsonSource::addData(GeoPoint* _points, int length) {
 
 }
 
-void ClientGeoJsonSource::addData(GeoLine* _lines, int length) {
+void ClientGeoJsonSource::addLine(double* _coords, int _lineLength) {
     // TODO
 }
 
-void ClientGeoJsonSource::addData(GeoPolygon* _polygons, int length) {
+void ClientGeoJsonSource::addPoly(double* _coords, int* _ringLengths, int _rings) {
     // TODO
 }
 

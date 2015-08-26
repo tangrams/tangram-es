@@ -237,28 +237,33 @@ void clearSourceData(int _sourceId) {
             set.source->clearData();
         }
     }
+    m_tileManager->clearTileSet(_sourceId);
 }
 
-void addSourceData(int _sourceId, GeoPoint* _points, int _length) {
+void addSourcePoint(int _sourceId, double* _coords) {
 
     if (!m_tileManager) { return; }
     for (auto& set : m_tileManager->getTileSets()) {
         if (set.id == _sourceId) {
             auto source = std::dynamic_pointer_cast<ClientGeoJsonSource>(set.source);
             if (source) {
-                source->addData(_points, _length);
+                source->addPoint(_coords);
                 m_tileManager->clearTileSet(_sourceId);
             }
         }
     }
 }
 
-void addSourceData(int _sourceId, GeoLine* _lines, int _length) {
-
+void addSourceLine(int _sourceId, double* _coords, int _lineLength) {
+    // TODO
 }
 
-void addSourceData(int _sourceId, GeoPolygon* _polygons, int _length) {
+void addSourcePoly(int _sourceId, double* _coords, int* _ringLengths, int _rings) {
+    // TODO
+}
 
+void addSourceGeoJSON(int _sourceID, const char* _data) {
+    // TODO
 }
 
 void handleTapGesture(float _posX, float _posY) {
