@@ -13,6 +13,7 @@
 
 using Color = CSSColorParser::Color;
 using Extrusion = std::pair<float, float>;
+using Function = std::string;
 
 namespace Tangram {
 
