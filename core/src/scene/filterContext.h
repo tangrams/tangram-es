@@ -23,7 +23,7 @@ public:
 
     void addAccessor(const std::string& _name);
 
-    bool addFilterFn(const std::string& _name, const std::string& _func);
+    bool addFunction(const std::string& _name, const std::string& _func);
 
     bool evalFilterFn(const std::string& _name);
     bool evalFilter(FunctionID id) const;
