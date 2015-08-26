@@ -12,6 +12,8 @@
 using namespace Tangram;
 using YAML::Node;
 
+using Context = StyleContext;
+
 SceneLoader sceneLoader;
 Context ctx;
 
@@ -49,8 +51,8 @@ void init() {
     bike.props.add("series", "CB");
     bike.props.add("check", "available");
 
-    ctx.globals["$vroom"] = Value(1);
-    ctx.globals["$zooooom"] = Value("false");
+    ctx.setGlobal("$vroom", Value(1));
+    ctx.setGlobal("$zooooom", Value("false"));
 }
 
 

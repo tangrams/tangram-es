@@ -37,11 +37,10 @@ Tile::~Tile() {
 
 }
 
-void Tile::build(FilterContext& _ctx, const Scene& _scene, const TileData& _data, const DataSource& _source) {
+void Tile::build(StyleContext& _ctx, const Scene& _scene, const TileData& _data, const DataSource& _source) {
 
     const auto& layers = _scene.layers();
 
-    _ctx.globals["$zoom"] = m_id.z;
     _ctx.setGlobal("$zoom", m_id.z);
 
     for (auto& style : _scene.styles()) {

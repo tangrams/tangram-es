@@ -31,7 +31,7 @@ void TileWorker::run() {
 
     setCurrentThreadPriority(WORKER_NICENESS);
 
-    FilterContext context;
+    StyleContext context;
 
     while (true) {
 

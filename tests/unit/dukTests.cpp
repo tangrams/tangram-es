@@ -1,7 +1,6 @@
 #define CATCH_CONFIG_MAIN
 #include "catch.hpp"
 
-#include "filterContext.h"
 #include "data/filters.h"
 #include "yaml-cpp/yaml.h"
 #include "scene/sceneLoader.h"
@@ -15,14 +14,14 @@ SceneLoader sceneLoader;
 
 TEST_CASE( "", "[Duktape][init]") {
     {
-        FilterContext();
+        StyleContext();
     }
 }
 
 
 TEST_CASE( "Test filter without feature being set", "[Duktape][evalFilterFn]") {
     {
-        FilterContext ctx;
+        StyleContext ctx;
         ctx.addFunction("fn", R"(function() { return feature.name == undefined; })");
         ctx.addAccessor("name");
         REQUIRE(ctx.evalFilterFn("fn") == true);
@@ -39,7 +38,7 @@ TEST_CASE( "Test evalFilterFn with feature", "[Duktape][evalFilterFn]") {
         feature.props.add("b", "B");
         feature.props.add("n", 42);
 
-        FilterContext ctx;
+        StyleContext ctx;
         ctx.setFeature(feature);
 
         ctx.addFunction("fn_a", R"(function() { return feature.a == 'A' })");
@@ -65,7 +64,7 @@ TEST_CASE( "Test evalFilterFn with feature and globals", "[Duktape][evalFilterFn
         Feature feature;
         feature.props.add("scalerank", 2);
 
-        FilterContext ctx;
+        StyleContext ctx;
         ctx.setFeature(feature);
         ctx.setGlobal("$zoom", 5);
 
@@ -79,7 +78,7 @@ TEST_CASE( "Test evalFilterFn with feature and globals", "[Duktape][evalFilterFn
 
 TEST_CASE( "Test evalFilterFn with different features", "[Duktape][evalFilterFn]") {
     {
-        FilterContext ctx;
+        StyleContext ctx;
 
         ctx.addFunction("fn", R"(function() { return feature.scalerank == 2; })");
 
@@ -99,7 +98,7 @@ TEST_CASE( "Test evalFilterFn with different features", "[Duktape][evalFilterFn]
 }
 TEST_CASE( "Test numeric global", "[Duktape][setGlobal]") {
     {
-        FilterContext ctx;
+        StyleContext ctx;
         ctx.setGlobal("$zoom", 10);
         ctx.addFunction("fn", R"(function() { return $zoom == 10 })");
 
@@ -113,7 +112,7 @@ TEST_CASE( "Test numeric global", "[Duktape][setGlobal]") {
 
 TEST_CASE( "Test string global", "[Duktape][setGlobal]") {
     {
-        FilterContext ctx;
+        StyleContext ctx;
         ctx.setGlobal("$layer", "test");
         ctx.addFunction("fn", R"(function() { return $layer == 'test' })");
 
@@ -130,7 +129,7 @@ TEST_CASE( "Test evalStyleFn - StyleParamKey::order", "[Duktape][evalStyleFn]") 
         Feature feat;
         feat.props.add("sort_key", 2);
 
-        FilterContext ctx;
+        StyleContext ctx;
         ctx.setFeature(feat);
         ctx.addFunction("fn", R"(function () { return feature.sort_key + 5 })");
 
@@ -147,7 +146,7 @@ TEST_CASE( "Test evalStyleFn - StyleParamKey::color", "[Duktape][evalStyleFn]") 
         Feature feat;
         feat.props.add("sort_key", 2);
 
-        FilterContext ctx;
+        StyleContext ctx;
         ctx.setFeature(feat);
         ctx.addFunction("fn", R"(function () { return '#f0f' })");
 
@@ -164,7 +163,7 @@ TEST_CASE( "Test evalStyleFn - StyleParamKey::width", "[Duktape][evalStyleFn]") 
         Feature feat;
         feat.props.add("width", 2.0);
 
-        FilterContext ctx;
+        StyleContext ctx;
         ctx.setFeature(feat);
         ctx.addFunction("fn", R"(function () { return feature.width * 2.3; })");
 
@@ -190,7 +189,7 @@ TEST_CASE( "Test evalFilter - Init filter function from yaml", "[Duktape][evalFi
         REQUIRE(filter0.type == FilterType::function);
         REQUIRE(filter1.type == FilterType::function);
 
-        FilterContext ctx;
+        StyleContext ctx;
         ctx.initFunctions(scene);
 
         Feature feat1;
@@ -238,7 +237,7 @@ TEST_CASE( "Test evalStyle - Init StyleParam function from yaml", "[Duktape][eva
         //     logMsg("F: '%s'\n", str.c_str());
         // }
 
-        FilterContext ctx;
+        StyleContext ctx;
         ctx.initFunctions(scene);
 
         for (auto& style : styles) {

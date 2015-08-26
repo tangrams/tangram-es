@@ -30,7 +30,7 @@ SceneLayer::SceneLayer(std::string _name, Filter _filter, std::vector<DrawRule> 
 
 }
 
-void SceneLayer::match(const Feature& _feat, const FilterContext& _ctx, std::vector<DrawRule>& _matches) const {
+void SceneLayer::match(const Feature& _feat, const StyleContext& _ctx, std::vector<DrawRule>& _matches) const {
 
     if (!m_filter.eval(_feat, _ctx)) {
         return;

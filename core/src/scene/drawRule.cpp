@@ -2,7 +2,7 @@
 #include "csscolorparser.hpp"
 #include "geom.h" // for CLAMP
 #include "platform.h"
-#include "scene/filterContext.h"
+#include "scene/styleContext.h"
 
 #include <algorithm>
 #include <cmath>
@@ -295,7 +295,7 @@ bool StyleParam::parseFontSize(const std::string& _str, float& _pxSize) {
 }
 
 
-void DrawRule::eval(const FilterContext& _ctx) {
+void DrawRule::eval(const StyleContext& _ctx) {
      for (auto& param : parameters) {
          if (param.function >= 0) {
              _ctx.evalStyle(param.function, param.key, param.value);

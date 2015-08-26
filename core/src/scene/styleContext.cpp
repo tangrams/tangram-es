@@ -1,4 +1,4 @@
-#include "filterContext.h"
+#include "styleContext.h"
 #include "platform.h"
 #include "builders.h"
 #include "scene/scene.h"
@@ -15,7 +15,7 @@ const static char DATA_ID[] = "\xff""\xff""data";
 const static char ATTR_ID[] = "\xff""\xff""attr";
 const static char FUNC_ID[] = "\xff""\xff""fns";
 
-FilterContext::FilterContext() {
+StyleContext::StyleContext() {
     m_ctx = duk_create_heap_default();
 
     // add empty feature_object
@@ -35,11 +35,11 @@ FilterContext::FilterContext() {
     DUMP("init\n");
 }
 
-FilterContext::~FilterContext() {
+StyleContext::~StyleContext() {
     duk_destroy_heap(m_ctx);
 }
 
-void FilterContext::initFunctions(const Scene& _scene) {
+void StyleContext::initFunctions(const Scene& _scene) {
 
     if (_scene.id == m_sceneId) {
         return;
@@ -70,7 +70,7 @@ void FilterContext::initFunctions(const Scene& _scene) {
     DUMP("setScene - %d functions\n", id);
 }
 
-void FilterContext::setFeature(const Feature& _feature) {
+void StyleContext::setFeature(const Feature& _feature) {
     m_feature = &_feature;
 
     for (auto& item : _feature.props.items()) {
@@ -78,7 +78,12 @@ void FilterContext::setFeature(const Feature& _feature) {
     }
 }
 
-void FilterContext::setGlobal(const std::string& _key, const Value& _val) {
+void StyleContext::setGlobal(const std::string& _key, const Value& _val) {
+    Value& entry = m_globals[_key];
+    if (entry == _val) { return; }
+    
+    entry = _val;
+
     if (_val.is<float>()) {
         duk_push_number(m_ctx, _val.get<float>());
         duk_put_global_string(m_ctx, _key.c_str());
@@ -89,11 +94,23 @@ void FilterContext::setGlobal(const std::string& _key, const Value& _val) {
     }
 }
 
-void FilterContext::clear() {
+const Value& StyleContext::getGlobal(const std::string& _key) const {
+
+    const static Value NOT_FOUND(none_type{});
+
+    auto it = m_globals.find(_key);
+    if (it != m_globals.end()) {
+        return it->second;
+    }
+    return NOT_FOUND;
+}
+
+
+void StyleContext::clear() {
     m_feature = nullptr;
 }
 
-bool FilterContext::addFunction(const std::string& _name, const std::string& _func) {
+bool StyleContext::addFunction(const std::string& _name, const std::string& _func) {
 
     duk_push_string(m_ctx, _func.c_str());
     duk_push_string(m_ctx, _name.c_str());
@@ -111,7 +128,7 @@ bool FilterContext::addFunction(const std::string& _name, const std::string& _fu
     return true;
 }
 
-bool FilterContext::evalFilter(FunctionID _id) const {
+bool StyleContext::evalFilter(FunctionID _id) const {
     if (!duk_get_global_string(m_ctx, FUNC_ID)) {
         logMsg("Error: evalFilterFn - functions not initialized\n");
         return false;
@@ -140,7 +157,7 @@ bool FilterContext::evalFilter(FunctionID _id) const {
     return result;
 }
 
-bool FilterContext::evalFilterFn(const std::string& _name) {
+bool StyleContext::evalFilterFn(const std::string& _name) {
     if (!duk_get_global_string(m_ctx, _name.c_str())) {
         logMsg("Error: evalFilter %s\n", _name.c_str());
         return false;
@@ -163,7 +180,7 @@ bool FilterContext::evalFilterFn(const std::string& _name) {
     return result;
 }
 
-bool FilterContext::parseStyleResult(StyleParamKey _key, StyleParam::Value& _val) const {
+bool StyleContext::parseStyleResult(StyleParamKey _key, StyleParam::Value& _val) const {
     bool result = false;
 
     switch (_key) {
@@ -207,9 +224,6 @@ bool FilterContext::parseStyleResult(StyleParamKey _key, StyleParam::Value& _val
 
             _val = CapTypeFromString(v);
 
-            logMsg("YO '%s' %d\n", v.c_str(), _val.is<CapTypes>());
-
-
             result = true;
             break;
         }
@@ -231,7 +245,7 @@ bool FilterContext::parseStyleResult(StyleParamKey _key, StyleParam::Value& _val
     return result;
 }
 
-bool FilterContext::evalStyle(FunctionID _id, StyleParamKey _key, StyleParam::Value& _val) const {
+bool StyleContext::evalStyle(FunctionID _id, StyleParamKey _key, StyleParam::Value& _val) const {
     if (!duk_get_global_string(m_ctx, FUNC_ID)) {
         logMsg("Error: evalFilterFn - functions array not initialized\n");
         return false;
@@ -254,7 +268,7 @@ bool FilterContext::evalStyle(FunctionID _id, StyleParamKey _key, StyleParam::Va
 }
 
 
-bool FilterContext::evalStyleFn(const std::string& name, StyleParamKey _key, StyleParam::Value& _val) {
+bool StyleContext::evalStyleFn(const std::string& name, StyleParamKey _key, StyleParam::Value& _val) {
     if (!duk_get_global_string(m_ctx, name.c_str())) {
         logMsg("Error: evalFilter %s\n", name.c_str());
         return false;
@@ -270,7 +284,7 @@ bool FilterContext::evalStyleFn(const std::string& name, StyleParamKey _key, Sty
 }
 
 
-void FilterContext::addAccessor(const std::string& _name) {
+void StyleContext::addAccessor(const std::string& _name) {
 
     auto it = m_accessors.find(_name);
     if (it != m_accessors.end()) {
@@ -319,7 +333,7 @@ void FilterContext::addAccessor(const std::string& _name) {
     DUMP("addAccessor\n");
 }
 
-duk_ret_t FilterContext::jsPropertyGetter(duk_context *_ctx) {
+duk_ret_t StyleContext::jsPropertyGetter(duk_context *_ctx) {
 
     // Storing state for a Duktape/C function:
     // http://duktape.org/guide.html#programming.9
@@ -349,7 +363,7 @@ duk_ret_t FilterContext::jsPropertyGetter(duk_context *_ctx) {
     return 1;
 }
 
-duk_ret_t FilterContext::jsPropertySetter(duk_context *_ctx) {
+duk_ret_t StyleContext::jsPropertySetter(duk_context *_ctx) {
     return 0;
 }
 
