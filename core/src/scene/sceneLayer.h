@@ -32,7 +32,7 @@ public:
     const auto& sublayers() const { return m_sublayers; }
 
     // Recursively match and combine draw rules that apply to the given Feature in the given Context
-    void match(const Feature& _feat, const Context& _ctx, std::vector<DrawRule>& _matches) const;
+    void match(const Feature& _feat, const FilterContext& _ctx, std::vector<DrawRule>& _matches) const;
 
 };
 
