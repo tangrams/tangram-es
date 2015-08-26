@@ -110,16 +110,8 @@ namespace Tangram {
                     }
 
                     auto& value = feat.props.get(f.key);
-                    if (value.is<std::string>()) {
-                        const auto& str = value.get<std::string>();
-                        for (const auto& v : f.values) {
-                            if (v == str) { return true; }
-                        }
-                    } else if (value.is<float>()) {
-                        float num =  value.get<float>();
-                        for (const auto& v : f.values) {
-                            if (v == num) { return true; }
-                        }
+                    for (const auto& v : f.values) {
+                        if (v == value) { return true; }
                     }
 
                     return false;
