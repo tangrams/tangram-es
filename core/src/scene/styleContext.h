@@ -12,14 +12,14 @@ namespace Tangram {
 
 class Scene;
 
-class FilterContext {
+class StyleContext {
 
 public:
 
     using FunctionID = uint32_t;
 
-    FilterContext();
-    ~FilterContext();
+    StyleContext();
+    ~StyleContext();
 
     void addAccessor(const std::string& _name);
 
@@ -35,11 +35,12 @@ public:
 
     void setGlobal(const std::string& _key, const Value& _value);
 
+    const Value& getGlobal(const std::string& _key) const;
+
     void clear();
 
     void initFunctions(const Scene& _scene);
 
-    std::unordered_map<std::string, Value> globals;
 
 private:
     static duk_ret_t jsPropertyGetter(duk_context *_ctx);
@@ -53,10 +54,12 @@ private:
 
     struct Accessor {
         std::string key;
-        FilterContext* ctx;
+        StyleContext* ctx;
     };
 
     std::unordered_map<std::string, Accessor> m_accessors;
+
+    std::unordered_map<std::string, Value> m_globals;
 
     int32_t m_sceneId = -1;
 };

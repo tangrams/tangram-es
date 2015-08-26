@@ -5,6 +5,8 @@
 
 using namespace Tangram;
 
+using Context = StyleContext;
+
 // Functions to initialize SceneLayer instances
 
 SceneLayer instance_a() {

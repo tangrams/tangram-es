@@ -17,7 +17,7 @@ using Color = CSSColorParser::Color;
 using Extrusion = std::pair<float, float>;
 using Function = std::string;
 
-class FilterContext;
+class StyleContext;
 
 enum class StyleParamKey : uint8_t {
     none, order, extrude, color, width, cap, join, outline_color, outline_width, outline_cap, outline_join,
@@ -63,7 +63,7 @@ struct DrawRule {
     DrawRule merge(DrawRule& _other) const;
     std::string toString() const;
 
-    void eval(const FilterContext& _ctx);
+    void eval(const StyleContext& _ctx);
 
     const StyleParam& findParameter(StyleParamKey _key) const;
 

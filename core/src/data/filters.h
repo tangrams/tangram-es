@@ -1,7 +1,7 @@
 #pragma once
 
 #include "tileData.h"
-#include "scene/filterContext.h"
+#include "scene/styleContext.h"
 
 #include <unordered_map>
 #include <vector>
@@ -70,7 +70,7 @@ namespace Tangram {
         Filter(uint32_t id) :
             type(FilterType::function), data(Function{ id }) {}
 
-        bool eval(const Feature& feat, const FilterContext& ctx) const {
+        bool eval(const Feature& feat, const StyleContext& ctx) const {
 
             switch (type) {
 
@@ -94,17 +94,19 @@ namespace Tangram {
                 }
                 case FilterType::existence: {
                     auto& f = data.get<Existence>();
-                    bool found = ctx.globals.find(f.key) != ctx.globals.end() || feat.props.contains(f.key);
+                    auto& global = ctx.getGlobal(f.key);
+
+                    bool found = !global.is<none_type>() || feat.props.contains(f.key);
 
                     return f.exists == found;
                 }
                 case FilterType::equality: {
                     auto& f = data.get<Equality>();
+                    auto& global = ctx.getGlobal(f.key);
 
-                    auto ctxIt = ctx.globals.find(f.key);
-                    if (ctxIt != ctx.globals.end()) {
+                    if (!global.is<none_type>()) {
                         for (const auto& v : f.values) {
-                            if (v == ctxIt->second) { return true; }
+                            if (v == global) { return true; }
                         }
                         return false;
                     }
@@ -118,13 +120,12 @@ namespace Tangram {
                 }
                 case FilterType::range: {
                     auto& f = data.get<Range>();
+                    auto& global = ctx.getGlobal(f.key);
 
-                    auto ctxIt = ctx.globals.find(f.key);
-                    if (ctxIt != ctx.globals.end()) {
-                        const auto& val = ctxIt->second;
+                    if (!global.is<none_type>()) {
                          // only check range for numbers
-                        if (!val.is<float>()) { return false; }
-                        return val.get<float>() >= f.min && val.get<float>() < f.max;
+                        if (!global.is<float>()) { return false; }
+                        return global.get<float>() >= f.min && global.get<float>() < f.max;
                     }
                     auto& value = feat.props.get(f.key);
                     if (value.is<float>()) {
