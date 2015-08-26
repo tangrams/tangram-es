@@ -18,6 +18,7 @@ double last_mouse_up = -double_tap_time; // First click should never trigger a d
 double last_mouse_down = 0.0f;
 double last_x_down = 0.0;
 double last_y_down = 0.0;
+int data_source_id = -1;
 
 void mouse_button_callback(GLFWwindow* window, int button, int action, int mods) {
 
@@ -43,9 +44,13 @@ void mouse_button_callback(GLFWwindow* window, int button, int action, int mods)
     }
 
     if (time - last_mouse_up < double_tap_time) {
-        Tangram::handleDoubleTapGesture(x, y);
+        Tangram::clearSourceData(data_source_id);
+        // Tangram::handleDoubleTapGesture(x, y);
     } else if ( (time - last_mouse_down) < single_tap_time) {
-        Tangram::handleTapGesture(x, y);
+        double point[2] = { x, y };
+        Tangram::screenToWorldCoordinates(point[0], point[1]);
+        Tangram::addSourcePoint(data_source_id, point);
+        // Tangram::handleTapGesture(x, y);
     }
 
     last_mouse_up = time;
@@ -163,6 +168,8 @@ void init_main_window() {
     int fbWidth = 0, fbHeight = 0;
     glfwGetFramebufferSize(main_window, &fbWidth, &fbHeight);
     glViewport(0, 0, fbWidth, fbHeight);
+
+    data_source_id = Tangram::addDataSource("touch");
 
 }
 
