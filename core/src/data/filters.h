@@ -8,8 +8,6 @@
 
 namespace Tangram {
 
-    using Context = FilterContext;
-
     enum class Operators : int {
         any = 0,
         all,
@@ -72,7 +70,7 @@ namespace Tangram {
         Filter(uint32_t id) :
             type(FilterType::function), data(Function{ id }) {}
 
-        bool eval(const Feature& feat, const Context& ctx) const {
+        bool eval(const Feature& feat, const FilterContext& ctx) const {
 
             switch (type) {
 
