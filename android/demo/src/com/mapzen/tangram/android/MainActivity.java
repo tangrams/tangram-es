@@ -8,6 +8,7 @@ import android.view.View;
 import android.view.MotionEvent;
 
 import com.mapzen.tangram.MapController;
+import com.mapzen.tangram.MapData;
 import com.mapzen.tangram.MapView;
 
 import java.io.File;
@@ -16,6 +17,7 @@ public class MainActivity extends Activity {
 
     MapController mapController;
     MapView mapView;
+    MapData touchMarkers;
 
     @Override
     public void onCreate(Bundle savedInstanceState) {
@@ -34,7 +36,16 @@ public class MainActivity extends Activity {
             @Override
             public boolean onGenericMotion(View v, MotionEvent event) {
                 double[] tapCoord = mapController.coordinatesAtScreenPosition(event.getX(), event.getY());
-                mapController.setMapPosition(tapCoord[0], tapCoord[1]);
+                if (touchMarkers == null) { touchMarkers = new MapData("touch"); }
+                touchMarkers.addPoint(tapCoord);
+                return true;
+            }
+        });
+
+        mapController.setLongPressListener(new View.OnGenericMotionListener() {
+            @Override
+            public boolean onGenericMotion(View v, MotionEvent event) {
+                if (touchMarkers != null) { touchMarkers.clear(); }
                 return true;
             }
         });
