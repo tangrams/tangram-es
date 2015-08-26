@@ -5,6 +5,8 @@
 #include "gl/shaderProgram.h"
 #include "tile/tile.h"
 
+#include <cmath>
+
 namespace Tangram {
 
 PolygonStyle::PolygonStyle(std::string _name, GLenum _drawMode) : Style(_name, _drawMode) {
@@ -72,6 +74,7 @@ void PolygonStyle::buildPolygon(const Polygon& _polygon, const DrawRule& _rule, 
 
     GLuint abgr = params.color;
     GLfloat layer = params.order;
+    auto& extrude = params.extrude;
 
     if (Tangram::getDebugFlag(Tangram::DebugFlags::proxy_colors)) {
         abgr = abgr << (_tile.getID().z % 6);
@@ -90,9 +93,11 @@ void PolygonStyle::buildPolygon(const Polygon& _polygon, const DrawRule& _rule, 
         [&](size_t sizeHint){ vertices.reserve(sizeHint); }
     };
 
-    if (params.extrude && minHeight != height) {
-        Builders::buildPolygonExtrusion(_polygon, minHeight, height, builder);
-        Builders::buildPolygon(_polygon, height, builder);
+    if (extrude.first != 0.0f || extrude.second != 0.0f) {
+        float ht = std::isnan(extrude.second) ? ( std::isnan(extrude.first) ? height : extrude.first ) : extrude.second;
+        float minHt = std::isnan(extrude.second) ? minHeight : extrude.first;
+        Builders::buildPolygonExtrusion(_polygon, minHt, ht, builder);
+        Builders::buildPolygon(_polygon, ht, builder);
     } else {
         Builders::buildPolygon(_polygon, 0.0f, builder);
     }

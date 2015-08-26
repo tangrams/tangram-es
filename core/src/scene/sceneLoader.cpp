@@ -55,7 +55,11 @@ void SceneLoader::loadScene(const std::string& _sceneString, Scene& _scene, Tile
 std::string parseSequence(const Node& node) {
     std::stringstream sstream;
     for (const auto& val : node) {
-        sstream << val.as<float>() << ",";
+        try {
+            sstream << val.as<float>() << ",";
+        } catch (const BadConversion& e) {
+            logMsg("Error: Float value was expected for styleParam sequence value\n");
+        }
     }
     return sstream.str();
 }
@@ -607,7 +611,7 @@ Filter SceneLoader::generateFilter(YAML::Node _filter) {
     if (!_filter) {
         return Filter();
     }
-    
+
     std::vector<Filter> filters;
 
     for (const auto& filtItr : _filter) {

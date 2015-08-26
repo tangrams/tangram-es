@@ -5,6 +5,7 @@
 #include <string>
 #include <utility>
 #include <vector>
+#include <tuple>
 
 #include "builders.h" // for Cap/Join types
 #include "csscolorparser.hpp"
@@ -18,7 +19,7 @@ enum class StyleParamKey : uint8_t {
 };
 
 struct StyleParam {
-    using Value = variant<none_type, bool, std::string, Color, CapTypes, JoinTypes, int32_t, float>;
+    using Value = variant<none_type, std::pair<float, float>, std::string, Color, CapTypes, JoinTypes, int32_t, float>;
 
     StyleParam() {}
     StyleParam(const std::string& _key, const std::string& _value);
@@ -48,7 +49,7 @@ struct DrawRule {
     const StyleParam& findParameter(StyleParamKey _key) const;
 
     bool getValue(StyleParamKey _key, std::string& _str) const;
-    bool getValue(StyleParamKey _key, bool& _value) const;
+    bool getValue(StyleParamKey _key, std::pair<float, float>& _value) const;
     bool getValue(StyleParamKey _key, float& _value) const;
     bool getValue(StyleParamKey _key, int32_t& _value) const;
     bool getColor(StyleParamKey _key, uint32_t& _value) const;
