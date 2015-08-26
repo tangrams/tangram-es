@@ -293,20 +293,21 @@ void FilterContext::addAccessor(const std::string& _name) {
     duk_put_prop_string(m_ctx, -2, ATTR_ID);
 
     // push setter function
-    duk_push_c_function(m_ctx, jsPropertySetter, 1 /*nargs*/);
-    duk_push_pointer(m_ctx, (void*)&attr);
-    duk_put_prop_string(m_ctx, -2, ATTR_ID);
+    // duk_push_c_function(m_ctx, jsPropertySetter, 1 /*nargs*/);
+    // duk_push_pointer(m_ctx, (void*)&attr);
+    // duk_put_prop_string(m_ctx, -2, ATTR_ID);
 
     // stack: [ feature_obj, name, getter, setter ] -> [ feature_obj.name ]
-    duk_def_prop(m_ctx, -4,
+    duk_def_prop(m_ctx, -3,
                  DUK_DEFPROP_HAVE_GETTER |
-                 DUK_DEFPROP_HAVE_SETTER |
-                 DUK_DEFPROP_WRITABLE |
-                 /* Note: ignored, no "have writable" flag */
-                 /* enumerable defaults */
-                 //DUK_DEFPROP_HAVE_ENUMERABLE | DUK_DEFPROP_ENUMERABLE |
-                 DUK_DEFPROP_HAVE_CONFIGURABLE | 0);
+                 // DUK_DEFPROP_HAVE_SETTER |
+                 // DUK_DEFPROP_WRITABLE |
+                 // DUK_DEFPROP_HAVE_ENUMERABLE |
+                 // DUK_DEFPROP_ENUMERABLE |
+                 // DUK_DEFPROP_HAVE_CONFIGURABLE |
+                 0);
 
+    // pop feature obj
     duk_pop(m_ctx);
 
     DUMP("addAccessor\n");
