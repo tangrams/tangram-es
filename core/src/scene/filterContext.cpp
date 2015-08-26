@@ -6,7 +6,7 @@
 // TODO
 // - add new properties from js? Not needed for filter I guess
 
-#define DUMP(...) // do { logMsg(__VA_ARGS__); duk_dump_context_stderr(m_ctx); } while(0)
+#define DUMP(...) //do { logMsg(__VA_ARGS__); duk_dump_context_stderr(m_ctx); } while(0)
 
 
 namespace Tangram {
@@ -93,7 +93,7 @@ void FilterContext::clear() {
     m_feature = nullptr;
 }
 
-bool FilterContext::addFilterFn(const std::string& _name, const std::string& _func) {
+bool FilterContext::addFunction(const std::string& _name, const std::string& _func) {
 
     duk_push_string(m_ctx, _func.c_str());
     duk_push_string(m_ctx, _name.c_str());
@@ -107,7 +107,7 @@ bool FilterContext::addFilterFn(const std::string& _name, const std::string& _fu
     duk_put_global_string(m_ctx, _name.c_str());
 
 
-    DUMP("addFilterFn\n");
+    DUMP("addFunction\n");
     return true;
 }
 
@@ -198,15 +198,20 @@ bool FilterContext::parseStyleResult(StyleParamKey _key, StyleParam::Value& _val
                 _val = static_cast<uint32_t>(duk_get_int(m_ctx, -1));
                 result = true;
             }
-            // TODO color object
             break;
         }
         case StyleParamKey::cap:
         case StyleParamKey::outline_cap:
         {
             std::string v(duk_get_string(m_ctx, -1));
+
             _val = CapTypeFromString(v);
+
+            logMsg("YO '%s' %d\n", v.c_str(), _val.is<CapTypes>());
+
+
             result = true;
+            break;
         }
         case StyleParamKey::join:
         case StyleParamKey::outline_join:
@@ -214,6 +219,7 @@ bool FilterContext::parseStyleResult(StyleParamKey _key, StyleParam::Value& _val
             std::string v(duk_get_string(m_ctx, -1));
             _val = JoinTypeFromString(v);
             result = true;
+            break;
         }
         default:
             _val = none_type{};
@@ -311,7 +317,6 @@ void FilterContext::addAccessor(const std::string& _name) {
     duk_pop(m_ctx);
 
     DUMP("addAccessor\n");
-
 }
 
 duk_ret_t FilterContext::jsPropertyGetter(duk_context *_ctx) {
@@ -323,10 +328,11 @@ duk_ret_t FilterContext::jsPropertyGetter(duk_context *_ctx) {
     auto* attr = static_cast<const Accessor*> (duk_to_pointer(_ctx, -1));
 
     if (!attr || !attr->ctx || !attr->ctx->m_feature) {
-        logMsg("no context set %p %p\n",
+        logMsg("Error: no context set %p %p\n",
                attr,
                attr ? attr->ctx : nullptr);
 
+        duk_pop(_ctx);
         return 0;
     }
 
