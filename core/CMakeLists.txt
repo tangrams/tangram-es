@@ -20,9 +20,6 @@ foreach(_headerFile ${FOUND_HEADERS})
     list(APPEND INCLUDE_DIRS ${_dir})
 endforeach()
 set(CORE_INCLUDE_DIRS ${INCLUDE_DIRS} CACHE INTERNAL "core include directories" FORCE)
-list(APPEND INCLUDE_DIRS "${DEPENDENCIES_DIR}/libtess2/Include")
-list(APPEND INCLUDE_DIRS "${DEPENDENCIES_DIR}/css-color-parser-cpp")
-list(APPEND INCLUDE_DIRS "${DEPENDENCIES_DIR}/yaml-cpp/include")
 list(APPEND INCLUDE_DIRS "${INCLUDE_DIR}/stb")
 list(APPEND INCLUDE_DIRS "${INCLUDE_DIR}/glm")
 list(APPEND INCLUDE_DIRS "${INCLUDE_DIR}/isect2d/include")
@@ -32,9 +29,6 @@ list(REMOVE_DUPLICATES INCLUDE_DIRS)
 include_directories(${INCLUDE_DIR} ${INCLUDE_DIRS})
 
 set(CORE_LIBRARIES_INCLUDE_DIRS
-    ${PROJECT_SOURCE_DIR}/${DEPENDENCIES_DIR}/libtess2/Include/
-    ${PROJECT_SOURCE_DIR}/${DEPENDENCIES_DIR}/css-color-parser-cpp/
-    ${PROJECT_SOURCE_DIR}/${DEPENDENCIES_DIR}/yaml-cpp/include/
     ${PROJECT_SOURCE_DIR}/${INCLUDE_DIR}/
     ${PROJECT_SOURCE_DIR}/${INCLUDE_DIR}/glm/
     ${PROJECT_SOURCE_DIR}/${INCLUDE_DIR}/stb/
