@@ -196,16 +196,24 @@ layers:
         draw:
             text: 
                 font:
-                    typeface: Regular 17 Roboto
+                    typeface: Regular 15 Roboto
                     fill: white
-                    capitalized: true
                     visible: true
         highway: 
-            filter: { kind: highway, $zoom: { min: 7 } }
-            draw: {}
+            filter: { kind: highway }
+            draw:
+                text:
+                    font:
+                        typeface: Regular 14 Roboto
+                        fill: black
+                        capitalized: true
         major_road:
-            filter: { kind: major_road, $zoom: { min: 14 } }
-            draw: {}
+            filter: { kind: major_road }
+            draw:
+                text:
+                    font:
+                        typeface: Regular 22 Roboto
+                        capitalized: true
     places:
         data: { sources: osm }
         filter:
