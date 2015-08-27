@@ -193,7 +193,7 @@
 {
     [EAGLContext setCurrentContext:self.context];
     
-    Tangram::initialize("style.yaml");
+    Tangram::initialize("scene.yaml");
     
     int width = self.view.bounds.size.width;
     int height = self.view.bounds.size.height;
