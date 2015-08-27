@@ -115,10 +115,10 @@ protected:
 
     template <typename T>
     void compile(std::vector<std::vector<T>>& _vertices,
-                 std::vector<std::vector<int>>& _indices) {
+                 std::vector<std::vector<uint16_t>>& _indices) {
 
         std::vector<std::vector<T>> vertices;
-        std::vector<std::vector<int>> indices;
+        std::vector<std::vector<uint16_t>> indices;
 
         // take over contents
         std::swap(_vertices, vertices);

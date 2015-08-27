@@ -24,7 +24,7 @@ void Skybox::init() {
 
     m_mesh = std::unique_ptr<Mesh>(new Mesh(layout, GL_TRIANGLES, GL_STATIC_DRAW, true));
 
-    std::vector<int> indices = {
+    std::vector<uint16_t> indices = {
         5, 1, 3, 3, 7, 5, // +x
         6, 2, 0, 0, 4, 6, // -x
         2, 6, 7, 7, 3, 2, // +y
