@@ -13,7 +13,7 @@ public:
 
     ClientGeoJsonSource(const std::string& _name, const std::string& _url);
 
-    void setData(const std::string& _data);
+    void addData(const std::string& _data);
     void addPoint(double* _coords);
     void addLine(double* _coords, int _lineLength);
     void addPoly(double* _coords, int* _ringLengths, int rings);

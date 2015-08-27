@@ -1,6 +1,7 @@
 #include "tileManager.h"
 
 #include "data/dataSource.h"
+#include "data/clientGeoJsonSource.h"
 #include "platform.h"
 #include "scene/scene.h"
 #include "tile/tile.h"
@@ -42,6 +43,15 @@ TileManager::~TileManager() {
 int32_t TileManager::addDataSource(std::shared_ptr<DataSource>&& dataSource) {
     m_tileSets.push_back({++m_tileSetSerial, dataSource});
     return m_tileSetSerial;
+}
+
+std::shared_ptr<ClientGeoJsonSource> TileManager::getClientSourceById(int32_t _id) {
+    for (auto& set : m_tileSets) {
+        if (set.id == _id) {
+            return std::dynamic_pointer_cast<ClientGeoJsonSource>(set.source);
+        }
+    }
+    return nullptr;
 }
 
 void TileManager::tileProcessed(std::shared_ptr<TileTask>&& task) {

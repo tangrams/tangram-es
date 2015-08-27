@@ -235,35 +235,47 @@ void clearSourceData(int _sourceId) {
     for (auto& set : m_tileManager->getTileSets()) {
         if (set.id == _sourceId) {
             set.source->clearData();
+            m_tileManager->clearTileSet(_sourceId);
         }
     }
-    m_tileManager->clearTileSet(_sourceId);
 }
 
 void addSourcePoint(int _sourceId, double* _coords) {
-
     if (!m_tileManager) { return; }
-    for (auto& set : m_tileManager->getTileSets()) {
-        if (set.id == _sourceId) {
-            auto source = std::dynamic_pointer_cast<ClientGeoJsonSource>(set.source);
-            if (source) {
-                source->addPoint(_coords);
-                m_tileManager->clearTileSet(_sourceId);
-            }
-        }
+    auto source = m_tileManager->getClientSourceById(_sourceId);
+    if (source) {
+        source->addPoint(_coords);
+        m_tileManager->clearTileSet(_sourceId);
     }
+    
 }
 
 void addSourceLine(int _sourceId, double* _coords, int _lineLength) {
-    // TODO
+    if (!m_tileManager) { return; }
+    auto source = m_tileManager->getClientSourceById(_sourceId);
+    if (source) {
+        source->addLine(_coords, _lineLength);
+        m_tileManager->clearTileSet(_sourceId);
+    }
+    
 }
 
 void addSourcePoly(int _sourceId, double* _coords, int* _ringLengths, int _rings) {
-    // TODO
+    if (!m_tileManager) { return; }
+    auto source = m_tileManager->getClientSourceById(_sourceId);
+    if (source) {
+        source->addPoly(_coords, _ringLengths, _rings);
+        m_tileManager->clearTileSet(_sourceId);
+    }
 }
 
-void addSourceGeoJSON(int _sourceID, const char* _data) {
-    // TODO
+void addSourceGeoJSON(int _sourceId, const char* _data) {
+    if (!m_tileManager) { return; }
+    auto source = m_tileManager->getClientSourceById(_sourceId);
+    if (source) {
+        source->addData(_data);
+        m_tileManager->clearTileSet(_sourceId);
+    }
 }
 
 void handleTapGesture(float _posX, float _posY) {

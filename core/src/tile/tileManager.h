@@ -21,6 +21,7 @@ class Tile;
 class Scene;
 class View;
 class TileCache;
+class ClientGeoJsonSource;
 
 /* Singleton container of <Tile>s
  *
@@ -76,6 +77,8 @@ public:
     int32_t addDataSource(std::shared_ptr<DataSource>&& dataSource);
 
     const auto getTileSets() { return m_tileSets; }
+
+    std::shared_ptr<ClientGeoJsonSource> getClientSourceById(int32_t _id);
 
     /* @_cacheSize: Set size of in-memory tile cache in bytes.
      * This cache holds recently used <Tile>s that are ready for rendering.

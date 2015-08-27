@@ -24,11 +24,11 @@ ClientGeoJsonSource::ClientGeoJsonSource(const std::string& _name, const std::st
     if (!_url.empty()) {
         // Load from file
         const auto& string = stringFromResource(_url.c_str());
-        setData(string);
+        addData(string);
     }
 }
 
-void ClientGeoJsonSource::setData(const std::string& _data) {
+void ClientGeoJsonSource::addData(const std::string& _data) {
 
     m_features = geojsonvt::GeoJSONVT::convertFeatures(_data);
     m_store = std::make_unique<GeoJSONVT>(m_features);
@@ -68,7 +68,21 @@ void ClientGeoJsonSource::addPoint(double* _coords) {
 }
 
 void ClientGeoJsonSource::addLine(double* _coords, int _lineLength) {
-    // TODO
+    
+    std::vector<geojsonvt::LonLat> line(_lineLength, { 0, 0 });
+    for (int i = 0; i < _lineLength; i++) {
+        line[i] = { _coords[2 * i], _coords[2 * i + 1] };
+    }
+    
+    geojsonvt::ProjectedGeometryContainer container;
+    container.members.push_back(geojsonvt::Convert::project(line));
+    
+    auto feature = geojsonvt::Convert::create(geojsonvt::Tags(),
+                                              geojsonvt::ProjectedFeatureType::LineString,
+                                              container);
+    
+    m_features.push_back(feature);
+    m_store = std::make_unique<GeoJSONVT>(m_features, maxZoom, indexMaxZoom, indexMaxPoints, tolerance);
 }
 
 void ClientGeoJsonSource::addPoly(double* _coords, int* _ringLengths, int _rings) {

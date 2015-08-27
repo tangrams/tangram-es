@@ -40,6 +40,16 @@ sources:
         url:  http://vector.mapzen.com/osm/all/{z}/{x}/{y}.mvt
 
 layers:
+    touch:
+        data: { source: touch }
+        draw:
+            lines:
+                color: 'purple'
+                order: 50
+                width: .03
+            # sprites:
+            #     sprite: sunburst
+
     earth:
         data: { source: osm }
         draw:
