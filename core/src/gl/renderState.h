@@ -6,9 +6,25 @@
 #include <tuple>
 #include <limits>
 
+// Max texture units used at the same time by a shader
+#define TANGRAM_MAX_TEXTURE_UNIT 6
+
 namespace Tangram {
 
 namespace RenderState {
+
+    /* Configure the render states */
+    void configure();
+    /* Get the texture slot from a texture unit from 0 to TANGRAM_MAX_TEXTURE_UNIT-1 */
+    GLuint getTextureUnit(GLuint _unit);
+    /* Bind a vertex buffer */
+    void bindVertexBuffer(GLuint _id);
+    /* Bind an index buffer */
+    void bindIndexBuffer(GLuint _id);
+    /* Sets the currently active texture unit */
+    void activeTextureUnit(GLuint _unit);
+    /* Bind a texture for the specified target */
+    void bindTexture(GLenum _target, GLuint _textureId);
 
     template <typename T>
     class State {
@@ -68,6 +84,11 @@ namespace RenderState {
             }
         }
 
+        inline bool compare(Args... _args) {
+            auto _params = std::make_tuple(_args...);
+            return _params == params;
+        }
+
         template<int ...S>
         inline void call(seq<S...>) {
             fn(std::get<S>(params) ...);
@@ -114,11 +135,11 @@ namespace RenderState {
     using CullFace = StateWrap<FUN(glCullFace),
                                GLenum>;
 
-    void bindVertexBuffer(GLuint _id);
-    void bindIndexBuffer(GLuint _id);
-
     using VertexBuffer = StateWrap<FUN(bindVertexBuffer), GLuint>;
     using IndexBuffer = StateWrap<FUN(bindIndexBuffer), GLuint>;
+
+    using TextureUnit = StateWrap<FUN(activeTextureUnit), GLuint>;
+    using Texture = StateWrap<FUN(bindTexture), GLenum, GLuint>;
 
 #undef FUN
 
@@ -138,7 +159,8 @@ namespace RenderState {
     extern VertexBuffer vertexBuffer;
     extern IndexBuffer indexBuffer;
 
-    void configure();
+    extern TextureUnit textureUnit;
+    extern Texture texture;
 }
 
 }
