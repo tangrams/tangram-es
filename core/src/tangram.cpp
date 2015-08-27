@@ -13,6 +13,7 @@
 #include "scene/skybox.h"
 #include "view/view.h"
 #include "gl/renderState.h"
+#include "gl/primitives.h"
 #include "util/inputHandler.h"
 #include <memory>
 #include <cmath>
@@ -68,6 +69,7 @@ void initialize(const char* _scenePath) {
 
         loader.loadScene(sceneString, *m_scene, *m_tileManager, *m_view);
 
+        Primitives::setColor(0xffffff);
         RenderState::configure();
     }
 
@@ -90,6 +92,8 @@ void resize(int _newWidth, int _newHeight) {
     for (auto& style : m_scene->styles()) {
         style->viewportHasChanged();
     }
+
+    Primitives::setResolution(_newWidth, _newHeight);
 
     while (Error::hadGlError("Tangram::resize()")) {}
 

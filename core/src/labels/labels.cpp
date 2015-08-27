@@ -115,8 +115,20 @@ void Labels::drawDebug(const View& _view) {
 
     for (auto label : m_labels) {
         if (label->canOcclude()) {
-            Primitives::drawPoly(reinterpret_cast<const glm::vec2*>(label->getOBB().getQuad()),
-                                 4, { _view.getWidth(), _view.getHeight() });
+            glm::vec2 offset = label->getTransform().offset;
+            glm::vec2 sp = label->getTransform().state.screenPos;
+            
+            // draw bounding box
+            Primitives::setColor(0xdc3522);
+            Primitives::drawPoly(reinterpret_cast<const glm::vec2*>(label->getOBB().getQuad()), 4);
+            
+            // draw offset
+            Primitives::setColor(0x000000);
+            Primitives::drawLine(sp, sp + offset);
+            // draw projected anchor point
+            
+            Primitives::setColor(0x0000ff);
+            Primitives::drawRect(sp - glm::vec2(1.f), sp + glm::vec2(1.f));
         }
     }
 
@@ -125,11 +137,12 @@ void Labels::drawDebug(const View& _view) {
     const short xpad = short(ceilf(res.x / split.x));
     const short ypad = short(ceilf(res.y / split.y));
 
+    Primitives::setColor(0x7ef586);
     short x = 0, y = 0;
     for (int j = 0; j < split.y; ++j) {
         for (int i = 0; i < split.x; ++i) {
             isect2d::AABB cell(x, y, x + xpad, y + ypad);
-            Primitives::drawRect({x, y}, {x + xpad, y + ypad}, res);
+            Primitives::drawRect({x, y}, {x + xpad, y + ypad});
             x += xpad;
             if (x >= res.x) {
                 x = 0;
@@ -137,7 +150,6 @@ void Labels::drawDebug(const View& _view) {
             }
         }
     }
-
 }
 
 }

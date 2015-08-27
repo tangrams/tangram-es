@@ -6,6 +6,8 @@
 #include "glm/gtc/type_ptr.hpp"
 #include "gl/shaderProgram.h"
 #include "gl/vertexLayout.h"
+#include "gl/renderState.h"
+#include "platform.h"
 
 namespace Tangram {
 
@@ -16,80 +18,43 @@ static std::unique_ptr<ShaderProgram> s_shader;
 static std::unique_ptr<VertexLayout> s_layout;
 static glm::vec2 s_resolution;
 static GLuint s_boundBuffer;
-static GLboolean s_depthTest;
 
-static const GLchar* s_vert = R"END(
-#ifdef GL_ES
-precision mediump float;
-#endif
-
-attribute vec2 a_position;
-
-uniform mat4 u_proj;
-
-void main() {
-    gl_Position = u_proj * vec4(a_position, 1.0, 1.0);
-}
-
-)END";
-
-static const GLchar* s_frag = R"END(
-#ifdef GL_ES
-precision mediump float;
-#endif
-
-uniform vec3 u_color;
-
-void main() {
-    gl_FragColor = vec4(u_color, 1.0);
-}
-
-)END";
-
-void init(glm::vec2 _resolution) {
+void init() {
 
     // lazy init
     if (!s_initialized) {
+        std::string vert, frag;
         s_shader = std::unique_ptr<ShaderProgram>(new ShaderProgram());
-        s_shader->setSourceStrings(s_frag, s_vert);
-        s_shader->setUniformf("u_color", 1.f, 1.f, 1.f);
+
+        vert = stringFromResource("debugPrimitive.vs");
+        frag = stringFromResource("debugPrimitive.fs");
+
+        s_shader->setSourceStrings(frag, vert);
 
         s_layout = std::unique_ptr<VertexLayout>(new VertexLayout({
             {"a_position", 2, GL_FLOAT, false, 0},
         }));
 
         s_initialized = true;
-    }
-
-    if (s_resolution != _resolution) {
-        glm::mat4 proj = glm::ortho(0.f, _resolution.x, _resolution.y, 0.f, -1.f, 1.f);
-        s_shader->setUniformMatrix4f("u_proj", glm::value_ptr(proj));
-        s_resolution = _resolution;
+        glLineWidth(1.5f);
     }
 }
 
 void saveState() {
-
     // save the current gl state
     glGetIntegerv(GL_ARRAY_BUFFER_BINDING, (GLint*) &s_boundBuffer);
-    glGetBooleanv(GL_DEPTH_TEST, &s_depthTest);
-    glBindBuffer(GL_ARRAY_BUFFER, 0);
-    glDisable(GL_DEPTH_TEST);
+    RenderState::depthTest(GL_FALSE);
+    RenderState::vertexBuffer(0);
 }
 
 void popState() {
-
     // undo modification on the gl states
-    glBindBuffer(GL_ARRAY_BUFFER, s_boundBuffer);
-
-    if (s_depthTest) {
-        glEnable(GL_DEPTH_TEST);
-    }
+    RenderState::vertexBuffer(s_boundBuffer);
 }
 
-void drawLine(const glm::vec2& _origin, const glm::vec2& _destination, glm::vec2 _resolution) {
+void drawLine(const glm::vec2& _origin, const glm::vec2& _destination) {
 
-    init(_resolution);
+    init();
 
     glm::vec2 verts[2] = {
         glm::vec2(_origin.x, _origin.y),
@@ -108,16 +73,15 @@ void drawLine(const glm::vec2& _origin, const glm::vec2& _destination, glm::vec2
 
 }
 
-void drawRect(const glm::vec2& _origin, const glm::vec2& _destination, glm::vec2 _resolution) {
-    drawLine(_origin, {_destination.x, _origin.y}, _resolution);
-    drawLine({_destination.x, _origin.y}, _destination, _resolution);
-    drawLine(_destination, {_origin.x, _destination.y}, _resolution);
-    drawLine({_origin.x,_destination.y}, _origin, _resolution);
+void drawRect(const glm::vec2& _origin, const glm::vec2& _destination) {
+    drawLine(_origin, {_destination.x, _origin.y});
+    drawLine({_destination.x, _origin.y}, _destination);
+    drawLine(_destination, {_origin.x, _destination.y});
+    drawLine({_origin.x,_destination.y}, _origin);
 }
 
-void drawPoly(const glm::vec2* _polygon, size_t _n, glm::vec2 _resolution) {
-
-    init(_resolution);
+void drawPoly(const glm::vec2* _polygon, size_t _n) {
+    init();
 
     saveState();
 
@@ -128,6 +92,23 @@ void drawPoly(const glm::vec2* _polygon, size_t _n, glm::vec2 _resolution) {
 
     glDrawArrays(GL_LINE_LOOP, 0, _n);
     popState();
+}
+
+void setColor(unsigned int _color) {
+    init();
+
+    float r = (_color >> 16 & 0xff) / 255.0;
+    float g = (_color >> 8  & 0xff) / 255.0;
+    float b = (_color       & 0xff) / 255.0;
+
+    s_shader->setUniformf("u_color", r, g, b);
+}
+
+void setResolution(float _width, float _height) {
+    init();
+
+    glm::mat4 proj = glm::ortho(0.f, _width, _height, 0.f, -1.f, 1.f);
+    s_shader->setUniformMatrix4f("u_proj", glm::value_ptr(proj));
 }
 
 }
