@@ -76,6 +76,9 @@ public:
     /* Gets the extent of the oriented bounding box of the label */
     const isect2d::AABB& getAABB() const { return m_aabb; }
 
+    /* Gets for label options: color and offset */
+    const Options& getOptions() const { return m_options; }
+
     bool update(const glm::mat4& _mvp, const glm::vec2& _screenSize, float _dt);
 
     /* Push the pending transforms to the vbo by updating the vertices */
