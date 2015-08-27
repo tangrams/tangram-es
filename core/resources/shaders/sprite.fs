@@ -16,6 +16,6 @@ void main(void) {
         discard;
     } else {
         vec4 color = texture2D(u_tex, v_uv);
-		gl_FragColor = vec4(color.rgb * v_color.rgb, v_alpha * color.a * v_color.a);
+        gl_FragColor = vec4(color.rgb * v_color.rgb, v_alpha * color.a * v_color.a);
     }
 }
