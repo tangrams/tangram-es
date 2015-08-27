@@ -41,8 +41,8 @@ public:
         glm::vec2 uv;
         struct State {
             glm::vec2 screenPos;
-            float alpha;
-            float rotation;
+            float alpha = 0.f;
+            float rotation = 0.f;
         } state;
     };
 
