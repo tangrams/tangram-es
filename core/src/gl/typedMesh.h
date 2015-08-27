@@ -17,7 +17,7 @@ public:
         : VboMesh(_vertexLayout, _drawMode, _hint, _keepMemoryData) {};
 
     void addVertices(std::vector<T>&& _vertices,
-                     std::vector<int>&& _indices) {
+                     std::vector<uint16_t>&& _indices) {
         m_vertices.push_back(_vertices);
         m_indices.push_back(_indices);
 
@@ -79,7 +79,7 @@ protected:
     void setDirty(GLintptr _byteOffset, GLsizei _byteSize);
 
     std::vector<std::vector<T>> m_vertices;
-    std::vector<std::vector<int>> m_indices;
+    std::vector<std::vector<uint16_t>> m_indices;
 
 };
 

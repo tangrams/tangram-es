@@ -163,7 +163,7 @@ inline void addPolyLineVertex(const glm::vec3& _coord, const glm::vec2& _normal,
 }
 
 // Helper function for polyline tesselation; adds indices for pairs of vertices arranged like a line strip
-void indexPairs( int _nPairs, int _nVertices, std::vector<int>& _indicesOut) {
+void indexPairs( int _nPairs, int _nVertices, std::vector<uint16_t>& _indicesOut) {
     for (int i = 0; i < _nPairs; i++) {
         _indicesOut.push_back(_nVertices - 2*i - 4);
         _indicesOut.push_back(_nVertices - 2*i - 2);
