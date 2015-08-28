@@ -22,6 +22,7 @@ struct Parameters {
     float blurSpread = 0.0f;
     bool capitalized = false;
     bool visible = true;
+    uint32_t priority = 1 << 31;
 };
 
 /*

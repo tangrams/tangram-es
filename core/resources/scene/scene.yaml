@@ -180,16 +180,17 @@ layers:
         filter: { name: true, aeroway: false, tunnel: false, railway: false, not: { kind: rail }, $zoom: { min: 10 } }
         draw:
             text: 
+                visible: false
                 font:
                     name: Roboto
                     weight: Regular
                     size: 15
                     fill: white
-                    visible: true
         highway: 
             filter: { kind: highway }
             draw:
                 text:
+                    visible: false
                     font:
                         name: Roboto
                         weight: Regular
@@ -200,6 +201,7 @@ layers:
             filter: { kind: major_road }
             draw:
                 text:
+                    visible: true
                     font:
                         name: Roboto
                         weight: Regular
