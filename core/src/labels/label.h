@@ -66,7 +66,7 @@ public:
 
     Label(Transform _transform, glm::vec2 _size, Type _type, LabelMesh& _mesh, Range _vertexRange);
 
-    ~Label();
+    virtual ~Label();
 
     Transform getTransform() const { return m_transform; }
 
