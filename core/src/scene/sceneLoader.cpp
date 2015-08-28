@@ -32,24 +32,29 @@ constexpr size_t CACHE_SIZE = 16 * (1024 * 1024);
 
 void SceneLoader::loadScene(const std::string& _sceneString, Scene& _scene, TileManager& _tileManager, View& _view) {
 
-    Node config = YAML::Load(_sceneString);
+    try {
+        Node config = YAML::Load(_sceneString);
 
-    loadSources(config["sources"], _tileManager);
-    loadTextures(config["textures"], _scene);
-    loadStyles(config["styles"], _scene);
-    loadLayers(config["layers"], _scene, _tileManager);
-    loadCameras(config["cameras"], _view);
-    loadLights(config["lights"], _scene);
+        loadSources(config["sources"], _tileManager);
+        loadTextures(config["textures"], _scene);
+        loadStyles(config["styles"], _scene);
+        loadLayers(config["layers"], _scene, _tileManager);
+        loadCameras(config["cameras"], _view);
+        loadLights(config["lights"], _scene);
 
-    for (auto& style : _scene.styles()) {
-        style->build(_scene.lights());
+        for (auto& style : _scene.styles()) {
+            style->build(_scene.lights());
+        }
+
+        // Styles that are opaque must be ordered first in the scene so that they are rendered 'under' styles that require blending
+        std::sort(_scene.styles().begin(), _scene.styles().end(), [](std::unique_ptr<Style>& a, std::unique_ptr<Style>& b) {
+                return a->isOpaque();
+            });
+    } catch (YAML::ParserException e) {
+        logMsg("Error: Parsing scene config '%s'\n", e.what());
+    } catch (YAML::RepresentationException e) {
+        logMsg("Error: Parsing scene config '%s'\n", e.what());
     }
-
-    // Styles that are opaque must be ordered first in the scene so that they are rendered 'under' styles that require blending
-    std::sort(_scene.styles().begin(), _scene.styles().end(), [](std::unique_ptr<Style>& a, std::unique_ptr<Style>& b) {
-        return a->isOpaque();
-    });
-
 }
 
 std::string parseSequence(const Node& node) {
