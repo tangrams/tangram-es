@@ -59,6 +59,7 @@ public:
     struct Options {
         uint32_t color = 0xffffffff;
         glm::vec2 offset = glm::vec2(0);
+        uint32_t priority = 1 << 31;
     };
 
     Label(Transform _transform, glm::vec2 _size, Type _type, LabelMesh& _mesh, Range _vertexRange, Options _options);
