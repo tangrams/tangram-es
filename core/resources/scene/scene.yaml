@@ -182,8 +182,9 @@ layers:
             text: 
                 visible: false
                 font:
-                    name: Roboto
-                    weight: Regular
+                    family: sans-serif
+                    weight: 400
+                    style: normal
                     size: 15
                     fill: white
         highway: 
@@ -192,8 +193,9 @@ layers:
                 text:
                     visible: false
                     font:
-                        name: Roboto
-                        weight: Regular
+                        family: sans-serif
+                        weight: 400
+                        style: normal
                         size: 14 
                         fill: black
                         capitalized: true
@@ -203,8 +205,9 @@ layers:
                 text:
                     visible: true
                     font:
-                        name: Roboto
-                        weight: Regular
+                        family: sans-serif
+                        weight: 400
+                        style: normal
                         size: 22
                         capitalized: true
     places:
@@ -224,8 +227,9 @@ layers:
         draw:
             text: 
                 font:
-                    name: Roboto
-                    weight: Regular
+                    family: sans-serif
+                    weight: 400
+                    style: normal
                     size: 15
                     fill: black
         continents:
@@ -259,8 +263,9 @@ layers:
         draw:
             text:
                 font:
-                    name: Roboto
-                    weight: Regular
+                    family: sans-serif
+                    weight: 400
+                    style: normal
                     size: 15
                     fill: darkgreen
 

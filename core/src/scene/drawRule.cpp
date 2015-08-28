@@ -24,9 +24,9 @@ const std::map<std::string, StyleParamKey> s_StyleParamMap = {
     {"outline:width", StyleParamKey::outline_width},
     {"outline:cap", StyleParamKey::outline_cap},
     {"outline:join", StyleParamKey::outline_join},
-    {"font:name", StyleParamKey::font_name},
+    {"font:family", StyleParamKey::font_family},
     {"font:weight", StyleParamKey::font_weight},
-    {"font:face", StyleParamKey::font_face},
+    {"font:style", StyleParamKey::font_style},
     {"font:size", StyleParamKey::font_size},
     {"font:fill", StyleParamKey::font_fill},
     {"font:stroke", StyleParamKey::font_stroke},
@@ -69,9 +69,9 @@ StyleParam::StyleParam(const std::string& _key, const std::string& _value) {
             }
         }
         break;
-    case StyleParamKey::font_name:
+    case StyleParamKey::font_family:
     case StyleParamKey::font_weight:
-    case StyleParamKey::font_face:
+    case StyleParamKey::font_style:
         value = _value;
         break;
     case StyleParamKey::font_capitalized:
@@ -120,9 +120,9 @@ std::string StyleParam::toString() const {
         auto p = value.get<Extrusion>();
         return "extrude : (" + std::to_string(p.first) + ", " + std::to_string(p.second) + ")";
     }
-    case StyleParamKey::font_name:
+    case StyleParamKey::font_family:
     case StyleParamKey::font_weight:
-    case StyleParamKey::font_face:
+    case StyleParamKey::font_style:
         if (!value.is<std::string>()) break;
         return value.get<std::string>();
     case StyleParamKey::font_capitalized:
