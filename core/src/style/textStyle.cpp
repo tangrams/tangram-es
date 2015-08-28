@@ -63,7 +63,7 @@ Parameters TextStyle::parseRule(const DrawRule& _rule) const {
     }
     _rule.getValue(StyleParamKey::font_stroke_width, p.strokeWidth);
     _rule.getValue(StyleParamKey::font_capitalized, p.capitalized);
-    _rule.getValue(StyleParamKey::text_visible, p.visible);
+    _rule.getValue(StyleParamKey::visible, p.visible);
 
     p.fontKey = fontName + "_" + fontWeight + "_" + fontFace;
 
