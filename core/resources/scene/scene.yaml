@@ -17,21 +17,6 @@ textures:
         url: normals.jpg
         filtering: nearest
 
-# provide global fontfile names to be used for this stylesheet
-# these could be bundled with the tangram repo or could be loaded from system path
-# priority is given to bundled fonts
-fonts:
-    font1:
-        name: Roboto
-        weight: Regular
-    font2:
-        name: FireSans
-        weight: Medium
-    font3:
-        name: Roboto
-        weight: Bold
-        face: Italic
-
 styles:
     pillows:
         base: polygon
@@ -196,7 +181,9 @@ layers:
         draw:
             text: 
                 font:
-                    typeface: Regular 15 Roboto
+                    name: Roboto
+                    weight: Regular
+                    size: 15
                     fill: white
                     visible: true
         highway: 
@@ -204,7 +191,9 @@ layers:
             draw:
                 text:
                     font:
-                        typeface: Regular 14 Roboto
+                        name: Roboto
+                        weight: Regular
+                        size: 14 
                         fill: black
                         capitalized: true
         major_road:
@@ -212,7 +201,9 @@ layers:
             draw:
                 text:
                     font:
-                        typeface: Regular 22 Roboto
+                        name: Roboto
+                        weight: Regular
+                        size: 22
                         capitalized: true
     places:
         data: { sources: osm }
@@ -231,7 +222,9 @@ layers:
         draw:
             text: 
                 font:
-                    typeface: Regular 15 Roboto
+                    name: Roboto
+                    weight: Regular
+                    size: 15
                     fill: black
         continents:
             filter: { kind: continent }
@@ -264,7 +257,9 @@ layers:
         draw:
             text:
                 font:
-                    typeface: Regular 15 Roboto
+                    name: Roboto
+                    weight: Regular
+                    size: 15
                     fill: darkgreen
 
     pois:
