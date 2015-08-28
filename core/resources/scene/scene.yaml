@@ -43,10 +43,10 @@ layers:
     touch:
         data: { source: touch }
         draw:
-            lines:
+            polygons:
                 color: 'purple'
                 order: 50
-                width: .03
+                # width: .03
             # sprites:
             #     sprite: sunburst
 

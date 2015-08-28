@@ -86,7 +86,25 @@ void ClientGeoJsonSource::addLine(double* _coords, int _lineLength) {
 }
 
 void ClientGeoJsonSource::addPoly(double* _coords, int* _ringLengths, int _rings) {
-    // TODO
+
+    geojsonvt::ProjectedGeometryContainer container;
+    double* ringCoords = _coords;
+    for (int i = 0; i < _rings; i++) {
+        int ringLength = _ringLengths[i];
+        std::vector<geojsonvt::LonLat> ring(ringLength, { 0, 0 });
+        for (int j = 0; j < ringLength; j++) {
+            ring[j] = { ringCoords[2 * j], ringCoords[2 * j + 1] };
+        }
+        container.members.push_back(geojsonvt::Convert::project(ring));
+        ringCoords += 2 * ringLength;
+    }
+
+    auto feature = geojsonvt::Convert::create(geojsonvt::Tags(),
+                                              geojsonvt::ProjectedFeatureType::Polygon,
+                                              container);
+
+    m_features.push_back(feature);
+    m_store = std::make_unique<GeoJSONVT>(m_features, maxZoom, indexMaxZoom, indexMaxPoints, tolerance);
 }
 
 std::shared_ptr<TileData> ClientGeoJsonSource::parse(const Tile& _tile, std::vector<char>& _rawData) const {

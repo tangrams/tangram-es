@@ -47,10 +47,13 @@ void mouse_button_callback(GLFWwindow* window, int button, int action, int mods)
         Tangram::clearSourceData(data_source_id);
         // Tangram::handleDoubleTapGesture(x, y);
     } else if ( (time - last_mouse_down) < single_tap_time) {
-        double coords[4] = { x, y, 0, 0 };
+        double coords[8] = { x, y, 0, 0, x, 0, x, y };
+        int lengths = 4;
         Tangram::screenToWorldCoordinates(coords[0], coords[1]);
         Tangram::screenToWorldCoordinates(coords[2], coords[3]);
-        Tangram::addSourceLine(data_source_id, coords, 2);
+        Tangram::screenToWorldCoordinates(coords[4], coords[5]);
+        Tangram::screenToWorldCoordinates(coords[6], coords[7]);
+        Tangram::addSourcePoly(data_source_id, coords, &lengths, 1);
         // Tangram::handleTapGesture(x, y);
     }
 
