@@ -49,13 +49,14 @@ void TextStyle::constructShaderProgram() {
 Parameters TextStyle::parseRule(const DrawRule& _rule) const {
     Parameters p;
 
+    std::string fontName, fontWeight, fontFace;
+
     //TODO: handle different size formats, px, pt, em
 
-    std::string typefaceStr;
-    std::string cap;
-    std::string visible;
-
-    _rule.getValue(StyleParamKey::font_typeface, typefaceStr);
+    _rule.getValue(StyleParamKey::font_name, fontName);
+    _rule.getValue(StyleParamKey::font_weight, fontWeight);
+    _rule.getValue(StyleParamKey::font_face, fontFace);
+    _rule.getValue(StyleParamKey::font_size, p.fontSize);
     _rule.getColor(StyleParamKey::font_fill, p.fill);
     if (_rule.getColor(StyleParamKey::font_stroke, p.strokeColor)) {
         _rule.getColor(StyleParamKey::font_stroke_color, p.strokeColor);
@@ -64,12 +65,7 @@ Parameters TextStyle::parseRule(const DrawRule& _rule) const {
     _rule.getValue(StyleParamKey::font_capitalized, p.capitalized);
     _rule.getValue(StyleParamKey::font_visible, p.visible);
 
-    // Parse typefaceStr to Property.typeface and Property.size
-    // Atleast for android fontName should be like: Roboto-BoldItalic
-    if( parseTypeFaceFontsInfo(typefaceStr, p.fontName, p.fontSize) ) {
-    } else {
-        logMsg("Error in parsing typeface font information.\n");
-    }
+    p.fontKey = fontName + "_" + fontWeight + "_" + fontFace;
 
     /* Global operations done for fontsize and sdfblur */
     float emSize = p.fontSize / 16.0;
