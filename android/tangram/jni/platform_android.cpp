@@ -73,57 +73,8 @@ void requestRender() {
     }
 }
 
-std::string deviceFontsPath() {
-    return "/system/fonts/";
-}
-
-std::string constructFontFilename(const std::string& _name, const std::string& _weight, const std::string& _face) {
-    std::string fontFilename;
-    fontFilename = _name + "-" + _weight + _face;
-    return fontFilename;
-}
-
-bool parseTypeFaceFontsInfo(const std::string& _typefaceInput, std::string& _fontName, float& _fontSize) {
-
-    char str[4][40];
-    float size;
-    int num = sscanf(_typefaceInput.c_str(), "%s %s %s %s", str[0], str[1], str[2], str[3]);
-    switch(num) {
-        case 1:
-            _fontName = str[0];
-            break;
-        case 2:
-            try {
-                size = std::stof(std::string(str[0]));
-                _fontSize = size;
-                _fontName = str[1];
-            } catch (const std::invalid_argument& e) {
-                _fontName = std::string(str[1]) + "-" + std::string(str[0]);
-            }
-            break;
-        case 3:
-            try {
-                size = std::stof(std::string(str[1]));
-                _fontSize = size;
-                _fontName = std::string(str[2]) + "-" + std::string(str[0]);
-            } catch (const std::invalid_argument& e) {
-                _fontName = std::string(str[2]) + "-" + std::string(str[1]) + std::string(str[0]);
-            }
-            break;
-        case 4:
-            try {
-                size = std::stof(std::string(str[2]));
-                _fontSize = size;
-                _fontName = std::string(str[3]) + "-" + std::string(str[1]) + std::string(str[0]);
-            } catch (const std::invalid_argument& e) {
-                _fontName = std::string(str[3]) + "-" + std::string(str[2]) + std::string(str[1]) + std::string(str[0]);
-            }
-            break;
-        case 0:
-        default:
-            return false;
-    }
-    return true;
+std::string systemFontPath(const std::string& _name, const std::string& _weight, const std::string& _face) {
+    return "/system/fonts/" + _name + "-" + _weight + _face + ".ttf";
 }
 
 void setContinuousRendering(bool _isContinuous) {
@@ -180,7 +131,7 @@ std::string stringFromResource(const char* _path) {
 
 }
 
-unsigned char* bytesFromExtMemory(const char* _path, unsigned int* _size) {
+unsigned char* bytesFromFileSystem(const char* _path, unsigned int* _size) {
 
     std::ifstream resource(_path, std::ifstream::ate | std::ifstream::binary);
 
