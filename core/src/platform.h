@@ -50,17 +50,8 @@ void setContinuousRendering(bool _isContinuous);
 
 bool isContinuousRendering();
 
-/* Get the system path for font files
- *  for each platform this will be different
- */
-std::string deviceFontsPath();
-
-/* Construct font file name from font properties specified in yaml */
-std::string constructFontFilename(const std::string& _name, const std::string& _weight, const std::string& _face);
-
-// NOTE: Currently same for all platforms, but once we figure out loading system fonts for other platforms, we can
-// modify this. But for any bundled font, we will follow a fixed naming convension.
-bool parseTypeFaceFontsInfo(const std::string& _typefaceInput, std::string& _fontName, float& _fontSize);
+/* get system path of a font file */
+std::string systemFontPath(const std::string& _name, const std::string& _weight, const std::string& _face);
 
 /* Read a bundled resource file as a string
  *
@@ -83,10 +74,9 @@ unsigned char* bytesFromResource(const char* _path, unsigned int* _size);
 /* Read and allocate size of bytes of memory
  *
  * Similar to bytesFromResource,
- * but reads External memory instead of the app->assets/resource memory
- * Used to access android system fonts "/system/fonts/"
+ * but reads External/System memory instead of the app->assets/resource memory
  */
-unsigned char* bytesFromExtMemory(const char* _path, unsigned int* _size);
+unsigned char* bytesFromFileSystem(const char* _path, unsigned int* _size);
 
 /* Function type for receiving data from a successful network request */
 using UrlCallback = std::function<void(std::vector<char>&&)>;

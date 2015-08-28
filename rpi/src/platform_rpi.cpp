@@ -110,18 +110,13 @@ unsigned char* bytesFromResource(const char* _path, unsigned int* _size) {
 }
 
 // Does not provide implementation for this (yet!)
-unsigned char* bytesFromExtMemory(const char* _path, unsigned int* _size) {
+unsigned char* bytesFromFileSystem(const char* _path, unsigned int* _size) {
     return nullptr;
 }
 
 // No system fonts implementation (yet!)
-std::string deviceFontsPath() {
+std::string systemFontPath(const std::string& _name, const std::string& _weight, const std::string& _face) {
     return "";
-}
-
-// TODO: Costruct font filename for linux
-std::string constructFontFilename(const std::string& _name, const std::string& _weight, const std::string& _face) {
-    return ""
 }
 
 bool startUrlRequest(const std::string& _url, UrlCallback _callback) {
