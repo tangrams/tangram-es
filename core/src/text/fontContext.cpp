@@ -40,9 +40,9 @@ void FontContext::unlock() {
     m_contextMutex.unlock();
 }
 
-bool FontContext::addFont(const std::string& _name, const std::string& _weight, const std::string& _face) {
+bool FontContext::addFont(const std::string& _family, const std::string& _weight, const std::string& _style) {
 
-    std::string fontKey = _name + "_" + _weight + "_" + _face;
+    std::string fontKey = _family + "_" + _weight + "_" + _style;
     if (m_fonts.find(fontKey) != m_fonts.end()) {
         return true;
     }
@@ -50,9 +50,10 @@ bool FontContext::addFont(const std::string& _name, const std::string& _weight, 
     unsigned int dataSize;
     unsigned char* data = nullptr;
 
-    auto bundledFontPath = _name + "-" + _weight + _face + ".ttf";
+    // Assuming bundled ttf file follows this convention
+    auto bundledFontPath = _family + "-" + _weight + _style + ".ttf";
     if ( !(data = bytesFromResource(bundledFontPath.c_str(), &dataSize))) {
-        const std::string sysFontPath = systemFontPath(_name, _weight, _face);
+        const std::string sysFontPath = systemFontPath(_family, _weight, _style);
         if ( !(data = bytesFromFileSystem(sysFontPath.c_str(), &dataSize)) ) {
             return false;
         }
@@ -70,24 +71,28 @@ bool FontContext::addFont(const std::string& _name, const std::string& _weight, 
     return true;
 }
 
-void FontContext::setFont(const std::string& _name, int size) {
-    auto it = m_fonts.find(_name);
+void FontContext::setFont(const std::string& _key, int size) {
+    auto it = m_fonts.find(_key);
 
     if (it != m_fonts.end()) {
         fonsSetSize(m_fsContext, size);
         fonsSetFont(m_fsContext, it->second);
     } else {
-        logMsg("[FontContext] Could not find font %s\n", _name.c_str());
+        logMsg("[FontContext] Could not find font %s\n", _key.c_str());
     }
 }
 
-FontID FontContext::getFontID(const std::string& _name) {
-    auto it = m_fonts.find(_name);
+FontID FontContext::getFontID(const std::string& _key) {
+    auto it = m_fonts.find(_key);
 
     if (it != m_fonts.end()) {
         return it->second;
     } else {
-        logMsg("[FontContext] Could not find font %s\n", _name.c_str());
+        logMsg("[FontContext] Could not find font %s\n", _key.c_str());
+        if (m_fonts.size() > 0) {
+            logMsg("\tLoading Default Bundled font.\n");
+            return 0; // sceneLoader makes sure that first loaded font is the default bundled font
+        }
         return -1;
     }
 }

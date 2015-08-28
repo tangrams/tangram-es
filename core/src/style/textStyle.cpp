@@ -49,13 +49,13 @@ void TextStyle::constructShaderProgram() {
 Parameters TextStyle::parseRule(const DrawRule& _rule) const {
     Parameters p;
 
-    std::string fontName, fontWeight, fontFace;
+    std::string fontFamily, fontWeight, fontStyle;
 
     //TODO: handle different size formats, px, pt, em
 
-    _rule.getValue(StyleParamKey::font_name, fontName);
+    _rule.getValue(StyleParamKey::font_family, fontFamily);
     _rule.getValue(StyleParamKey::font_weight, fontWeight);
-    _rule.getValue(StyleParamKey::font_face, fontFace);
+    _rule.getValue(StyleParamKey::font_style, fontStyle);
     _rule.getValue(StyleParamKey::font_size, p.fontSize);
     _rule.getColor(StyleParamKey::font_fill, p.fill);
     if (_rule.getColor(StyleParamKey::font_stroke, p.strokeColor)) {
@@ -65,7 +65,7 @@ Parameters TextStyle::parseRule(const DrawRule& _rule) const {
     _rule.getValue(StyleParamKey::font_capitalized, p.capitalized);
     _rule.getValue(StyleParamKey::visible, p.visible);
 
-    p.fontKey = fontName + "_" + fontWeight + "_" + fontFace;
+    p.fontKey = fontFamily + "_" + fontWeight + "_" + fontStyle;
 
     /* Global operations done for fontsize and sdfblur */
     float emSize = p.fontSize / 16.0;

@@ -797,21 +797,21 @@ std::vector<StyleParam> SceneLoader::parseStyleParams(Node params, const std::st
 
 void SceneLoader::loadFont(YAML::Node fontProps) {
 
-    std::string name = "";
+    std::string family = "";
     std::string weight = "";
-    std::string face = "";
+    std::string style = "";
     auto fontCtx = FontContext::GetInstance();
 
-    auto nameNode = fontProps["name"];
-    if (nameNode) { name = nameNode.as<std::string>(); }
+    auto familyNode = fontProps["family"];
+    if (familyNode) { family = familyNode.as<std::string>(); }
 
     auto weightNode = fontProps["weight"];
     if (weightNode) { weight = weightNode.as<std::string>(); }
 
-    auto faceNode = fontProps["face"];
-    if (faceNode) { face = faceNode.as<std::string>(); }
+    auto styleNode = fontProps["style"];
+    if (styleNode) { style = styleNode.as<std::string>(); }
 
-    fontCtx->addFont(std::move(name), std::move(weight), std::move(face));
+    fontCtx->addFont(std::move(family), std::move(weight), std::move(style));
 
 }
 

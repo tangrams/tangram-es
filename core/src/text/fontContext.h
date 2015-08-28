@@ -27,13 +27,13 @@ public:
     FontContext(int _atlasSize);
     ~FontContext();
 
-    /* adds a font from a .ttf font file with a specific name */
-    bool addFont(const std::string& _name, const std::string& _weight, const std::string& _face);
+    /* adds a font from a .ttf font file using "family", "weight" and "style" font properties*/
+    bool addFont(const std::string& _family, const std::string& _weight, const std::string& _style);
 
     /* sets the current font for a size in pixels */
-    void setFont(const std::string& _name, int size);
+    void setFont(const std::string& _key, int size);
 
-    FontID getFontID(const std::string& _name);
+    FontID getFontID(const std::string& _key);
 
     void clearState();
 
