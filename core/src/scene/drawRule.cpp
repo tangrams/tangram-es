@@ -27,7 +27,8 @@ StyleParam::StyleParam(const std::string& _key, const std::string& _value) {
     auto it = s_StyleParamMap.find(_key);
     if (it == s_StyleParamMap.end()) {
         logMsg("Unknown StyleParam %s:%s\n", _key.c_str(), _value.c_str());
-        value = "";
+        key = StyleParamKey::none;
+        value = none_type{};
         return;
     }
 
