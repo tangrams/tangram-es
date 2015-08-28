@@ -180,16 +180,17 @@ void TileManager::updateTileSet(TileSet& tileSet) {
                 : curTilesIt->first;
 
             if (visTileId == curTileId) {
-                // tiles in both sets match
+                assert(!(visTileId == NOT_A_TILE));
 
+                // tiles in both sets match
                 auto& tile = curTilesIt->second;
+                tile->setVisible(true);
+
                 if (tile->isReady()) {
                     m_tiles.push_back(tile);
                 } else if (tile->hasState(TileState::none)) {
                     enqueueTask(tileSet, visTileId, viewCenter);
                 }
-
-                tile->setVisible(true);
 
                 ++curTilesIt;
                 ++visTilesIt;
@@ -198,6 +199,7 @@ void TileManager::updateTileSet(TileSet& tileSet) {
                 // NB: if (curTileId == NOT_A_TILE) it is always > visTileId
                 //     and if curTileId > visTileId, then visTileId cannot be
                 //     NOT_A_TILE. (for the current implementation of > operator)
+                assert(!(visTileId == NOT_A_TILE));
 
                 // tileSet is missing an element present in visibleTiles
                 if (!addTile(tileSet, visTileId)) {
@@ -207,10 +209,11 @@ void TileManager::updateTileSet(TileSet& tileSet) {
                 ++visTilesIt;
 
             } else {
+                assert(!(curTileId == NOT_A_TILE));
                 // tileSet has a tile not present in visibleTiles
-
                 auto& tile = curTilesIt->second;
                 tile->setVisible(false);
+
                 if (tile->getProxyCounter() <= 0) {
                     removeTiles.push_back(tile->getID());
                 } else if (tile->isReady()) {
