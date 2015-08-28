@@ -9,7 +9,10 @@
 
 namespace Tangram {
 
-Style::Style(std::string _name, GLenum _drawMode) : m_name(_name), m_drawMode(_drawMode) {
+Style::Style(std::string _name, GLenum _drawMode) :
+    m_name(_name),
+    m_drawMode(_drawMode),
+    m_contextLost(true) {
 }
 
 Style::~Style() {}
