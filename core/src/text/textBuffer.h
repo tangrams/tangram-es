@@ -14,7 +14,7 @@ namespace Tangram {
 class FontContext;
 
 struct Parameters {
-    std::string fontName = "";
+    std::string fontKey = "";
     uint32_t fill = 0xff000000;
     uint32_t strokeColor = 0xffffffff;
     float strokeWidth = 0.0f;

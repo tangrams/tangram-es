@@ -24,7 +24,7 @@ bool TextBuffer::addLabel(const std::string& _text, Label::Transform _transform,
         return false;
     }
 
-    auto fontID = fontContext->getFontID(_params.fontName);
+    auto fontID = fontContext->getFontID(_params.fontKey);
 
     if(fontID < 0) {
         fontContext->unlock();
