@@ -97,6 +97,7 @@ void TextStyle::buildPolygon(const Polygon& _polygon, const DrawRule& _rule, con
             n++;
         }
     }
+    if (n == 0) { return; }
 
     centroid /= n;
 
