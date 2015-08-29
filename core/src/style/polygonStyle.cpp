@@ -98,7 +98,7 @@ void PolygonStyle::buildPolygon(const Polygon& _polygon, const DrawRule& _rule, 
 
 
 void PolygonStyle::addVertex(glm::vec3 p, glm::vec3 n, GLuint abgr, float layer,
-                   std::vector<int>& indices,
+                   std::vector<uint16_t>& indices,
                    std::vector<PolygonVertex>& vertices) const {
   auto id = vertices.size();
   vertices.push_back({ p, n, glm::vec2(0), abgr, layer });
@@ -114,7 +114,7 @@ void PolygonStyle::buildMesh(const std::vector<uint16_t>& indices,
     std::vector<PolygonVertex> vertices;
     GLfloat layer = 1;
 
-    std::vector<int> newIndices;
+    std::vector<uint16_t> newIndices;
     vertices.reserve(indices.size() * 3);
 
     for (size_t i = 0; i < indices.size(); i += 3) {

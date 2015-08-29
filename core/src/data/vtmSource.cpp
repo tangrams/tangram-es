@@ -126,7 +126,12 @@ static std::vector<Polygon> parsePolys(protobuf::message& it,
         auto numPts = indices[idx];
         if (numPts == 0) break;
 
-        polys.push_back(parseLines(it, indices, idx, lastX, lastY));
+        auto rings = parseLines(it, indices, idx, lastX, lastY);
+        for (auto& ring : rings) {
+            ring.push_back(ring[0]);
+        }
+
+        polys.push_back(std::move(rings));
     }
     return polys;
 }

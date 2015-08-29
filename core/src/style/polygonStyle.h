@@ -44,7 +44,7 @@ protected:
     };
 
     void addVertex(glm::vec3 p, glm::vec3 n, GLuint abgr, float layer,
-                   std::vector<int>& indices,
+                   std::vector<uint16_t>& indices,
                    std::vector<PolygonVertex>& vertices) const;
 
 public:
