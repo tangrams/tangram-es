@@ -9,8 +9,8 @@ lights:
         type: directional
         origin: world
         direction: [1, 1, -1]
-        diffuse: [.7, .7, .7, 1.]
-        ambient: [.3, .3, .3, 1.]
+        diffuse: [.2, .2, .2, 1.]
+        ambient: [1.1, 1.1, 1.1, 1.]
 
 textures:
     water-texture:
@@ -187,7 +187,7 @@ layers:
                     weight: 400
                     style: normal
                     size: 1.em
-                    fill: white
+                    fill: black
         highway: 
             filter: { kind: highway }
             draw:
@@ -219,7 +219,7 @@ layers:
             name: true
             not: { kind: [county, state, island] }
             any: 
-                - { $zoom: { min: 1 }, kind: ocean } 
+                - { $zoom: { min: 1 }, kind: ocean }
                 - { $zoom: { min: 2, max: 5 }, kind: continent }
                 #important contries
                 - { $zoom: { min: 4 }, name: ["United States of America", "Brasil", "Россия", "中华人民共和国"] }
@@ -266,13 +266,14 @@ layers:
                 - { $zoom: { min: 18 } }
         draw:
             text:
+                priority: 0
                 font:
-                    priority: 0
                     family: sans-serif
                     weight: 400
                     style: normal
                     size: 20px
                     fill: darkgreen
+                    capitalized: true
 
     pois:
         data: { source: osm }

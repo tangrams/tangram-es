@@ -103,7 +103,7 @@ public:
 
     /* Checks whether the label is in a visible state */
     bool visibleState() const;
-
+    
 private:
 
     bool offViewport(const glm::vec2& _screenSize);
@@ -112,11 +112,12 @@ private:
 
     bool updateState(const glm::mat4& _mvp, const glm::vec2& _screenSize, float _dt);
 
-    void setAlpha(float _alpha);
 
     void setScreenPosition(const glm::vec2& _screenPosition);
 
     void setRotation(float _rotation);
+
+    void setAlpha(float _alpha);
 
     // the current label state
     State m_currentState;
