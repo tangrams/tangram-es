@@ -32,12 +32,18 @@ public class MainActivity extends Activity {
         mapController.setMapZoom(16);
         mapController.setMapPosition(-74.00976419448854, 40.70532700869127);
 
+        final double[] lastTappedCoord = new double[2];
+
         mapController.setTapGestureListener(new View.OnGenericMotionListener() {
             @Override
             public boolean onGenericMotion(View v, MotionEvent event) {
                 double[] tapCoord = mapController.coordinatesAtScreenPosition(event.getX(), event.getY());
                 if (touchMarkers == null) { touchMarkers = new MapData("touch"); }
-                touchMarkers.addPoint(tapCoord);
+                if (lastTappedCoord[0] != 0 && lastTappedCoord[1] != 0) {
+                    touchMarkers.addLine(new double[][] { tapCoord, lastTappedCoord });
+                }
+                lastTappedCoord[0] = tapCoord[0];
+                lastTappedCoord[1] = tapCoord[1];
                 return true;
             }
         });
