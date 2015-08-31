@@ -28,7 +28,7 @@ protected:
     void addTextLabel(TextBuffer& _buffer, Label::Transform _transform, std::string _text, Label::Type _type) const;
 
     bool m_sdf;
-    bool m_sdfMultisampling = true;
+    bool m_sdfMultisampling;
 
 public:
 
