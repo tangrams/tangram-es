@@ -1,6 +1,7 @@
 #include "labels/labelMesh.h"
 #include "labels/label.h"
 #include "shaderProgram.h"
+#include "gl/renderState.h"
 
 namespace Tangram {
 
@@ -21,7 +22,7 @@ void LabelMesh::addLabel(std::unique_ptr<Label> _label) {
 
 void LabelMesh::loadQuadIndices() {
     if (s_quadGeneration == s_validGeneration) {
-        glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, s_quadIndexBuffer);
+        RenderState::indexBuffer(s_quadIndexBuffer);
 
     } else {
         s_quadGeneration = s_validGeneration;
@@ -39,7 +40,7 @@ void LabelMesh::loadQuadIndices() {
         }
 
         glGenBuffers(1, &s_quadIndexBuffer);
-        glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, s_quadIndexBuffer);
+        RenderState::indexBuffer(s_quadIndexBuffer);
         glBufferData(GL_ELEMENT_ARRAY_BUFFER, indices.size() * sizeof(GLushort),
                      reinterpret_cast<GLbyte*>(indices.data()), GL_STATIC_DRAW);
     }
@@ -80,19 +81,15 @@ void LabelMesh::draw(ShaderProgram& _shader) {
     if (!m_isCompiled) { return; }
     if (m_nVertices == 0) { return; }
 
-    bool bound = false;
-
     // Ensure that geometry is buffered into GPU
     if (!m_isUploaded) {
-        bound = upload();
+        upload();
     } else if (m_dirty) {
-        bound = subDataUpload();
+        subDataUpload();
     }
 
-    if (!bound) {
-        // Bind buffers for drawing
-        glBindBuffer(GL_ARRAY_BUFFER, m_glVertexBuffer);
-    }
+    // Bind buffers for drawing
+    RenderState::vertexBuffer(m_glVertexBuffer);
 
     loadQuadIndices();
 

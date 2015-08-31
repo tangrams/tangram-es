@@ -7,7 +7,7 @@
 namespace Tangram {
 
 DebugTextStyle::DebugTextStyle(const std::string& _fontName, std::string _name, float _fontSize, bool _sdf, GLenum _drawMode)
-: TextStyle(_name, _drawMode), m_fontName(_fontName), m_fontSize(_fontSize), m_sdf(_sdf) {
+: TextStyle(_name, _drawMode, _sdf), m_fontName(_fontName), m_fontSize(_fontSize) {
 }
 
 void DebugTextStyle::onBeginBuildTile(Tangram::Tile &_tile) const {
