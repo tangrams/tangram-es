@@ -26,6 +26,7 @@ static jmethodID requestRenderMethodID;
 static jmethodID setRenderModeMethodID;
 static jmethodID startUrlRequestMID;
 static jmethodID cancelUrlRequestMID;
+static jmethodID getFontFilePath;
 static AAssetManager* assetManager;
 
 static bool s_isContinuousRendering = false;
@@ -38,6 +39,7 @@ void setupJniEnv(JNIEnv* _jniEnv, jobject _tangramInstance, jobject _assetManage
     jclass tangramClass = jniEnv->FindClass("com/mapzen/tangram/MapController");
     startUrlRequestMID = jniEnv->GetMethodID(tangramClass, "startUrlRequest", "(Ljava/lang/String;J)Z");
     cancelUrlRequestMID = jniEnv->GetMethodID(tangramClass, "cancelUrlRequest", "(Ljava/lang/String;)V");
+    getFontFilePath = jniEnv->GetMethodID(tangramClass, "getFontFilePath", "(Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;)Ljava/lang/String;");
 	requestRenderMethodID = _jniEnv->GetMethodID(tangramClass, "requestRender", "()V");
     setRenderModeMethodID = _jniEnv->GetMethodID(tangramClass, "setRenderMode", "(I)V");
 
@@ -73,8 +75,17 @@ void requestRender() {
     }
 }
 
-std::string systemFontPath(const std::string& _name, const std::string& _weight, const std::string& _face) {
-    return "/system/fonts/" + _name + "-" + _weight + _face + ".ttf";
+std::string systemFontPath(const std::string& _family, const std::string& _weight, const std::string& _style) {
+
+    jstring jfamily = jniEnv->NewStringUTF(_family.c_str());
+    jstring jweight = jniEnv->NewStringUTF(_weight.c_str());
+    jstring jstyle = jniEnv->NewStringUTF(_style.c_str());
+    jstring returnStr = (jstring) jniEnv->CallObjectMethod(tangramInstance, getFontFilePath, jfamily, jweight, jstyle);
+
+    size_t length = jniEnv->GetStringUTFLength(returnStr);
+    char* cdata = (char*) malloc(sizeof(char) * (length));
+    jniEnv->GetStringUTFRegion(returnStr, 0, length, cdata);
+    return std::string(cdata, length);
 }
 
 void setContinuousRendering(bool _isContinuous) {
