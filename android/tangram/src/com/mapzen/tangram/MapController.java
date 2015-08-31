@@ -54,13 +54,6 @@ public class MapController implements Renderer, OnTouchListener, OnScaleGestureL
     public MapController(Activity mainApp, MapView view) {
 
         this(mainApp, view, "scene.yaml");
-        try {
-            fontFileParser.init();
-        } catch (XmlPullParserException e) {
-            e.printStackTrace(System.out);
-        } catch (IOException e) {
-            e.printStackTrace(System.out);
-        }
     }
 
     /**
