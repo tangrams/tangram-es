@@ -96,7 +96,8 @@ bool TextStyle::parseFontSize(const std::string& _size, float& _pxSize) const {
     }
 
     if (index == _size.length()) {
-        return std::stof(_size);
+        _pxSize = std::stof(_size);
+        return true;
     }
 
     kind = _size.substr(index, _size.length() - 1);
