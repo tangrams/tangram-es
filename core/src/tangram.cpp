@@ -238,6 +238,7 @@ void clearSourceData(int _sourceId) {
             m_tileManager->clearTileSet(_sourceId);
         }
     }
+    requestRender();
 }
 
 void addSourcePoint(int _sourceId, double* _coords) {
@@ -247,7 +248,7 @@ void addSourcePoint(int _sourceId, double* _coords) {
         source->addPoint(_coords);
         m_tileManager->clearTileSet(_sourceId);
     }
-    
+    requestRender();
 }
 
 void addSourceLine(int _sourceId, double* _coords, int _lineLength) {
@@ -257,7 +258,7 @@ void addSourceLine(int _sourceId, double* _coords, int _lineLength) {
         source->addLine(_coords, _lineLength);
         m_tileManager->clearTileSet(_sourceId);
     }
-    
+    requestRender();
 }
 
 void addSourcePoly(int _sourceId, double* _coords, int* _ringLengths, int _rings) {
@@ -267,6 +268,7 @@ void addSourcePoly(int _sourceId, double* _coords, int* _ringLengths, int _rings
         source->addPoly(_coords, _ringLengths, _rings);
         m_tileManager->clearTileSet(_sourceId);
     }
+    requestRender();
 }
 
 void addSourceGeoJSON(int _sourceId, const char* _data) {
@@ -276,6 +278,7 @@ void addSourceGeoJSON(int _sourceId, const char* _data) {
         source->addData(_data);
         m_tileManager->clearTileSet(_sourceId);
     }
+    requestRender();
 }
 
 void handleTapGesture(float _posX, float _posY) {
