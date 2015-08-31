@@ -24,9 +24,7 @@ protected:
         return new TextBuffer(m_vertexLayout);
     };
 
-    /*
-     * Creates a text label and add it to the processed <TextBuffer>.
-     */
+    /* Creates a text label and add it to the processed <TextBuffer>. */
     void addTextLabel(TextBuffer& _buffer, Label::Transform _transform, std::string _text, Label::Type _type) const;
 
     bool m_sdf;
@@ -41,6 +39,11 @@ public:
     virtual void onBeginDrawFrame(const View& _view, const Scene& _scene) override;
 
     virtual ~TextStyle();
+
+private:
+
+    /* parse a font size (in em, pt, %) and give the appropriate size in pixel */
+    bool parseFontSize(const std::string& _size, float& _pxSize) const;
 
 };
 

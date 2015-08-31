@@ -49,14 +49,12 @@ void TextStyle::constructShaderProgram() {
 Parameters TextStyle::parseRule(const DrawRule& _rule) const {
     Parameters p;
 
-    std::string fontFamily, fontWeight, fontStyle;
-
-    //TODO: handle different size formats, px, pt, em
+    std::string fontFamily, fontWeight, fontStyle, fontSize;
 
     _rule.getValue(StyleParamKey::font_family, fontFamily);
     _rule.getValue(StyleParamKey::font_weight, fontWeight);
     _rule.getValue(StyleParamKey::font_style, fontStyle);
-    _rule.getValue(StyleParamKey::font_size, p.fontSize);
+    _rule.getValue(StyleParamKey::font_size, fontSize);
     _rule.getColor(StyleParamKey::font_fill, p.fill);
     if (_rule.getColor(StyleParamKey::font_stroke, p.strokeColor)) {
         _rule.getColor(StyleParamKey::font_stroke_color, p.strokeColor);
@@ -67,12 +65,57 @@ Parameters TextStyle::parseRule(const DrawRule& _rule) const {
 
     p.fontKey = fontFamily + "_" + fontWeight + "_" + fontStyle;
 
+    if (!parseFontSize(fontSize, p.fontSize)) {
+        logMsg("Error while converting the font size to pixel\n");
+    }
+
     /* Global operations done for fontsize and sdfblur */
-    float emSize = p.fontSize / 16.0;
+    float emSize = p.fontSize / 16.f;
     p.fontSize *= m_pixelScale;
     p.blurSpread = m_sdf ? emSize * 5.0f : 0.0f;
 
     return p;
+}
+
+bool TextStyle::parseFontSize(const std::string& _size, float& _pxSize) const {
+    if (_size == "") {
+        _pxSize = 0.f;
+        return false;
+    }
+
+    std::string::size_type index = 0;
+    std::string kind;
+    float size;
+    bool fract = false;
+
+    while (index < _size.length() && (std::isdigit(_size[index]) || (!fract && _size[index] == '.'))) {
+        if (_size[index] == '.') {
+            fract = true;
+        }
+        ++index;
+    }
+
+    if (index == _size.length()) {
+        return std::stof(_size);
+    }
+
+    kind = _size.substr(index, _size.length() - 1);
+    size = std::stof(_size.substr(0, index));
+
+    if (kind == "px" && !fract) {
+        _pxSize = size;
+    } else if (kind == "em") {
+        _pxSize = 16.f * size;
+    } else if (kind == "pt") {
+        _pxSize = size / 0.75f;
+    } else if (kind == "%") {
+        _pxSize = size / 6.25f;
+    } else {
+        _pxSize = 0.f;
+        return false;
+    }
+    
+    return true;
 }
 
 void TextStyle::buildPoint(const Point& _point, const DrawRule& _rule, const Properties& _props, VboMesh& _mesh, Tile& _tile) const {
