@@ -14,6 +14,8 @@ import android.view.ScaleGestureDetector.OnScaleGestureListener;
 import android.view.View;
 import android.view.View.OnTouchListener;
 
+import com.mapzen.tangram.FontFileParser;
+
 import com.almeros.android.multitouch.RotateGestureDetector;
 import com.almeros.android.multitouch.RotateGestureDetector.OnRotateGestureListener;
 import com.almeros.android.multitouch.ShoveGestureDetector;
@@ -33,6 +35,8 @@ import javax.microedition.khronos.opengles.GL10;
 
 import okio.BufferedSource;
 
+import org.xmlpull.v1.XmlPullParserException;
+
 public class MapController implements Renderer, OnTouchListener, OnScaleGestureListener, OnRotateGestureListener, OnGestureListener, OnDoubleTapListener, OnShoveGestureListener {
 
     static {
@@ -50,7 +54,13 @@ public class MapController implements Renderer, OnTouchListener, OnScaleGestureL
     public MapController(Activity mainApp, MapView view) {
 
         this(mainApp, view, "scene.yaml");
-
+        try {
+            fontFileParser.init();
+        } catch (XmlPullParserException e) {
+            e.printStackTrace(System.out);
+        } catch (IOException e) {
+            e.printStackTrace(System.out);
+        }
     }
 
     /**
@@ -289,6 +299,8 @@ public class MapController implements Renderer, OnTouchListener, OnScaleGestureL
     private ScaleGestureDetector scaleGestureDetector;
     private RotateGestureDetector rotateGestureDetector;
     private ShoveGestureDetector shoveGestureDetector;
+
+    private static final FontFileParser fontFileParser = new FontFileParser();
 
     private static final float PINCH_THRESHOLD = 0.015f; //1.5% of minDim
     private static final float ROTATION_THRESHOLD = 0.30f;
@@ -550,6 +562,12 @@ public class MapController implements Renderer, OnTouchListener, OnScaleGestureL
 
     public void cancelUrlRequest(String url) {
         okClient.cancel(url);
+    }
+
+    public String getFontFilePath(String family, String weight, String style) {
+
+        return fontFileParser.getFontFile(family + "_" + weight + "_" + style);
+
     }
 
     public boolean startUrlRequest(String url, final long callbackPtr) throws Exception {
