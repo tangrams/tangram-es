@@ -17,6 +17,7 @@ Label::Label(Label::Transform _transform, glm::vec2 _size, Type _type, LabelMesh
     m_occludedLastFrame = false;
     m_occlusionSolved = false;
     m_updateMeshVisibility = true;
+    m_dirty = true;
 }
 
 Label::~Label() {}

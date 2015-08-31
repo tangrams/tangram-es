@@ -8,8 +8,11 @@
 
 namespace Tangram {
 
-MercatorProjection::MercatorProjection(int _tileSize) : MapProjection(ProjectionType::mercator), m_TileSize(_tileSize) {
-    double invTileSize = 1.0/m_TileSize;
+MercatorProjection::MercatorProjection(int _tileSize) :
+    MapProjection(ProjectionType::mercator),
+    m_TileSize(_tileSize) {
+
+    double invTileSize = 1.0 / m_TileSize;
     m_Res = 2.0 * HALF_CIRCUMFERENCE * invTileSize;
 }
 

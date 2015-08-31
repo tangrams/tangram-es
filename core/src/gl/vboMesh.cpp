@@ -7,6 +7,9 @@ namespace Tangram {
 int VboMesh::s_validGeneration = 0;
 
 VboMesh::VboMesh() {
+    m_drawMode = GL_TRIANGLES;
+    m_hint = GL_STATIC_DRAW;
+    m_keepMemoryData = false;
     m_glVertexBuffer = 0;
     m_glIndexBuffer = 0;
     m_nVertices = 0;

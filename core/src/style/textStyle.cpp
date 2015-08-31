@@ -97,6 +97,7 @@ void TextStyle::buildPolygon(const Polygon& _polygon, const DrawRule& _rule, con
             n++;
         }
     }
+    if (n == 0) { return; }
 
     centroid /= n;
 
@@ -126,14 +127,11 @@ void TextStyle::setColor(unsigned int _color) {
 
 void TextStyle::onBeginDrawFrame(const View& _view, const Scene& _scene) {
     bool contextLost = Style::glContextLost();
-    
+
     FontContext::GetInstance()->bindAtlas(0);
 
-    static bool initUniformSampler = true;
-
-    if (initUniformSampler || contextLost) {
+    if (contextLost) {
         m_shaderProgram->setUniformi("u_tex", 0);
-        initUniformSampler = false;
     }
 
     if (m_dirtyViewport || contextLost) {

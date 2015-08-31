@@ -9,7 +9,7 @@
 
 namespace Tangram {
 
-Labels::Labels() {}
+Labels::Labels() : m_needUpdate(false) {}
 
 Labels::~Labels() {}
 

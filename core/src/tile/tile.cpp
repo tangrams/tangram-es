@@ -14,9 +14,11 @@
 
 namespace Tangram {
 
-Tile::Tile(TileID _id, const MapProjection& _projection)
-    : m_id(_id),
-      m_projection(&_projection) {
+Tile::Tile(TileID _id, const MapProjection& _projection) :
+    m_id(_id),
+    m_projection(&_projection),
+    m_visible(false),
+    m_priority(0) {
 
     BoundingBox bounds(_projection.TileBounds(_id));
 
