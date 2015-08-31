@@ -29,7 +29,7 @@ void DebugTextStyle::onBeginBuildTile(Tangram::Tile &_tile) const {
         auto& buffer = static_cast<TextBuffer&>(*mesh);
 
         Label::Options options;
-        options.color = 0xdc3522;
+        options.color = 0xdc3522ff;
 
         buffer.addLabel(_tile.getID().toString(), { glm::vec2(0) }, Label::Type::debug, params, options);
 
