@@ -4,6 +4,7 @@ import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.io.FileNotFoundException;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -14,19 +15,16 @@ import org.xmlpull.v1.XmlPullParserFactory;
 import android.util.Xml;
 import android.util.Log;
 
-public class FontFileParser {
-    private static final File fontFile = new File("/system/etc/fonts.xml");
-    private static final File systemFontFile = new File("/system/etc/system_fonts.xml");
-    private static final File fallbackFontFile = new File("/system/etc/fallback_fonts.xml");
+class FontFileParser {
 
-    private static Map<String, String> fontDict = new HashMap<String, String>();
+    private Map<String, String> fontDict = new HashMap<String, String>();
 
     private void processDocument(XmlPullParser parser) throws XmlPullParserException, IOException {
 
         parser.nextTag();
         // Parse Families
         parser.require(XmlPullParser.START_TAG, null, "familyset");
-        while (parser.next() != XmlPullParser.END_TAG) {
+        while (parser.next() != XmlPullParser.END_DOCUMENT) {
             if (parser.getEventType() != XmlPullParser.START_TAG) {
                 continue;
             }
@@ -40,30 +38,35 @@ public class FontFileParser {
                     String tag = parser.getName();
                     if (tag.equals("font")) {
                         String weightStr = parser.getAttributeValue(null, "weight");
+                        weightStr = (weightStr == null) ? "400" : weightStr;
+
                         String styleStr = parser.getAttributeValue(null, "style");
+                        styleStr = (styleStr == null) ? "normal" : styleStr;
+
                         String filename = parser.nextText();
                         String fullFilename = "/system/fonts/" + filename;
+
                         String key = name + "_" + weightStr + "_" + styleStr;
                         fontDict.put(key, fullFilename);
                     } else {
                         skip(parser);
                     }
                 }
-            } /*else if (parser.getName().equals("alias")) {
+            } else if (parser.getName().equals("alias")) {
                 // Parse this alias to font to fileName
                 String aliasName = parser.getAttributeValue(null, "name");
                 String toName = parser.getAttributeValue(null, "to");
                 String weightStr = parser.getAttributeValue(null, "weight");
-                if (weightStr == "") { weightStr = "400"; } // normal
-                String fontFilename = fontDict.get(toName + "_" + weightStr + "_normal"); // alias style is default: normal
+                weightStr = (weightStr == null) ? "400" : weightStr;
+                String fontFilename = fontDict.get(toName + "_" + weightStr + "_normal"); // alias style is default: normal (always)
                 fontDict.put(aliasName + "_" + weightStr, fontFilename);
-            } */else {
+            } else {
                 skip(parser);
             }
         }
     }
 
-    private static void skip(XmlPullParser parser) throws XmlPullParserException, IOException {
+    private void skip(XmlPullParser parser) throws XmlPullParserException, IOException {
         int depth = 1;
         while (depth > 0) {
             switch (parser.next()) {
@@ -77,7 +80,13 @@ public class FontFileParser {
         }
     }
 
-    public void init() throws XmlPullParserException, IOException {
+    public FontFileParser() {
+
+        InputStream in = null;
+        final File fontFile = new File("/system/etc/fonts.xml");
+        final File systemFontFile = new File("/system/etc/system_fonts.xml");
+        final File fallbackFontFile = new File("/system/etc/fallback_fonts.xml");
+
         String fileXml = "";
 
         if (fontFile.exists()) {
@@ -92,13 +101,28 @@ public class FontFileParser {
             return;
         }
 
-        InputStream in = new FileInputStream(fileXml);
         try {
-            XmlPullParser parser = Xml.newPullParser();
+            in = new FileInputStream(fileXml);
+        } catch (FileNotFoundException e) {
+            e.printStackTrace();
+            return;
+        }
+
+        XmlPullParser parser = Xml.newPullParser();
+
+        try {
             parser.setInput(in, null);
             processDocument(parser);
-        } finally {
+        } catch(XmlPullParserException e) {
+            e.printStackTrace();
+        } catch(IOException e) {
+            e.printStackTrace();
+        }
+
+        try {
             in.close();
+        } catch (IOException e) {
+            e.printStackTrace();
         }
     }
 
