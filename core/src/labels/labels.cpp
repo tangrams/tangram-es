@@ -84,13 +84,13 @@ void Labels::update(const View& _view, float _dt, const std::vector<std::unique_
 
     // no priorities, only occlude one of the two occluded label
     for (auto& pair : occlusions) {
-        if (!pair.first->occludedLastFrame()) {
-            if (pair.second->getState() == Label::State::wait_occ) {
+        if (!pair.first->occludedLastFrame() || !pair.second->occludedLastFrame()) {
+            // lower numeric priority means higher priority
+            if (pair.first->getOptions().priority < pair.second->getOptions().priority) {
                 pair.second->setOcclusion(true);
+            } else {
+                pair.first->setOcclusion(true);
             }
-        }
-        if (!pair.second->occludedLastFrame()) {
-            pair.first->setOcclusion(true);
         }
     }
 

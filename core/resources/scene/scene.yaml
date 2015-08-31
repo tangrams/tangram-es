@@ -198,7 +198,7 @@ layers:
                         family: sans-serif
                         weight: 400
                         style: normal
-                        size: 20px
+                        size: 40px
                         fill: black
                         uppercase: true
         major_road:
@@ -266,10 +266,11 @@ layers:
         draw:
             text:
                 font:
+                    priority: 0
                     family: sans-serif
                     weight: 400
                     style: normal
-                    size: 15
+                    size: 20
                     fill: darkgreen
 
     pois:
