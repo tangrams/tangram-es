@@ -180,7 +180,8 @@ layers:
         filter: { name: true, aeroway: false, tunnel: false, railway: false, not: { kind: rail }, $zoom: { min: 10 } }
         draw:
             text: 
-                visible: false
+                visible: true
+                priority: 2
                 font:
                     family: sans-serif
                     weight: 400
@@ -191,7 +192,8 @@ layers:
             filter: { kind: highway }
             draw:
                 text:
-                    visible: false
+                    visible: true
+                    priority: 1
                     font:
                         family: sans-serif
                         weight: 400
@@ -204,6 +206,7 @@ layers:
             draw:
                 text:
                     visible: true
+                    priority: 3
                     font:
                         family: sans-serif
                         weight: 400
