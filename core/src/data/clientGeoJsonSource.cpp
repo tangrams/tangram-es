@@ -9,10 +9,10 @@ using namespace mapbox::util;
 namespace Tangram {
 
 const double extent = 4096;
-const uint8_t maxZoom = 20;
-const uint8_t indexMaxZoom = 5;
+const uint8_t maxZoom = 18;
+const uint8_t indexMaxZoom = 18;
 const uint32_t indexMaxPoints = 100000;
-double tolerance = 0;
+double tolerance = 0.01;
 
 Point transformPoint(geojsonvt::TilePoint pt) {
     return { 2 * pt.x / extent - 1, 1 - 2 * pt.y / extent, 0 };
@@ -31,7 +31,7 @@ ClientGeoJsonSource::ClientGeoJsonSource(const std::string& _name, const std::st
 void ClientGeoJsonSource::addData(const std::string& _data) {
 
     m_features = geojsonvt::GeoJSONVT::convertFeatures(_data);
-    m_store = std::make_unique<GeoJSONVT>(m_features);
+    m_store = std::make_unique<GeoJSONVT>(m_features, maxZoom, indexMaxZoom, indexMaxPoints, tolerance);
 
 }
 
@@ -56,7 +56,7 @@ void ClientGeoJsonSource::clearData() {
 
 void ClientGeoJsonSource::addPoint(double* _coords) {
 
-    auto container = geojsonvt::Convert::project({ geojsonvt::LonLat(_coords[0], _coords[1]) });
+    auto container = geojsonvt::Convert::project({ geojsonvt::LonLat(_coords[0], _coords[1]) }, tolerance);
 
     auto feature = geojsonvt::Convert::create(geojsonvt::Tags(),
                                               geojsonvt::ProjectedFeatureType::Point,
@@ -74,20 +74,19 @@ void ClientGeoJsonSource::addLine(double* _coords, int _lineLength) {
         line[i] = { _coords[2 * i], _coords[2 * i + 1] };
     }
     
-    geojsonvt::ProjectedGeometryContainer container;
-    container.members.push_back(geojsonvt::Convert::project(line));
-    
+    std::vector<geojsonvt::ProjectedGeometry> geometry = { geojsonvt::Convert::project(line, tolerance) };
+
     auto feature = geojsonvt::Convert::create(geojsonvt::Tags(),
                                               geojsonvt::ProjectedFeatureType::LineString,
-                                              container);
+                                              geometry);
     
-    m_features.push_back(feature);
+    m_features.push_back(std::move(feature));
     m_store = std::make_unique<GeoJSONVT>(m_features, maxZoom, indexMaxZoom, indexMaxPoints, tolerance);
 }
 
 void ClientGeoJsonSource::addPoly(double* _coords, int* _ringLengths, int _rings) {
 
-    geojsonvt::ProjectedGeometryContainer container;
+    geojsonvt::ProjectedGeometryContainer geometry;
     double* ringCoords = _coords;
     for (int i = 0; i < _rings; i++) {
         int ringLength = _ringLengths[i];
@@ -95,13 +94,13 @@ void ClientGeoJsonSource::addPoly(double* _coords, int* _ringLengths, int _rings
         for (int j = 0; j < ringLength; j++) {
             ring[j] = { ringCoords[2 * j], ringCoords[2 * j + 1] };
         }
-        container.members.push_back(geojsonvt::Convert::project(ring));
+        geometry.members.push_back(geojsonvt::Convert::project(ring, tolerance));
         ringCoords += 2 * ringLength;
     }
 
     auto feature = geojsonvt::Convert::create(geojsonvt::Tags(),
                                               geojsonvt::ProjectedFeatureType::Polygon,
-                                              container);
+                                              geometry);
 
     m_features.push_back(feature);
     m_store = std::make_unique<GeoJSONVT>(m_features, maxZoom, indexMaxZoom, indexMaxPoints, tolerance);
