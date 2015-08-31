@@ -86,23 +86,29 @@ std::string StyleParam::toString() const {
     // TODO: cap, join and color toString()
     switch (key) {
     case StyleParamKey::extrude: {
+        if (!value.is<std::pair<float, float>>()) break;
         auto p = value.get<std::pair<float, float>>();
         return "extrude : (" + std::to_string(p.first) + ", " + std::to_string(p.second) + ")";
     }
     case StyleParamKey::order:
-        return std::to_string(value.get<int32_t>());
+        if (!value.is<int32_t>()) break;
+        return "order : " + std::to_string(value.get<int32_t>());
     case StyleParamKey::width:
     case StyleParamKey::outline_width:
-        return std::to_string(value.get<float>());
+        if (!value.is<float>()) break;
+        return "width : " + std::to_string(value.get<float>());
     case StyleParamKey::color:
     case StyleParamKey::outline_color:
-        return std::to_string(value.get<Color>().getInt());
+        if (!value.is<Color>()) break;
+        return "color : " + std::to_string(value.get<Color>().getInt());
     case StyleParamKey::cap:
     case StyleParamKey::outline_cap:
-        return std::to_string(static_cast<int>(value.get<CapTypes>()));
+        if (!value.is<CapTypes>()) break;
+        return "cap : " + std::to_string(static_cast<int>(value.get<CapTypes>()));
     case StyleParamKey::join:
     case StyleParamKey::outline_join:
-        return std::to_string(static_cast<int>(value.get<CapTypes>()));
+        if (!value.is<JoinTypes>()) break;
+        return "join : " + std::to_string(static_cast<int>(value.get<JoinTypes>()));
     case StyleParamKey::none:
         break;
     }
