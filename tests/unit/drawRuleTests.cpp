@@ -119,13 +119,13 @@ TEST_CASE("DrawRule locates and outputs a parameter that it contains", "[DrawRul
 
     std::string str;
 
-    REQUIRE(rule_a.getValue(StyleParamKey::order, str)); REQUIRE(str == "value_0a");
-    REQUIRE(rule_a.getValue(StyleParamKey::color, str)); REQUIRE(str == "value_1a");
-    REQUIRE(rule_a.getValue(StyleParamKey::join, str)); REQUIRE(str == "value_4a");
-    REQUIRE(rule_b.getValue(StyleParamKey::color, str)); REQUIRE(str == "value_1b");
-    REQUIRE(rule_b.getValue(StyleParamKey::width, str)); REQUIRE(str == "value_2b");
-    REQUIRE(rule_b.getValue(StyleParamKey::cap, str)); REQUIRE(str == "value_3b");
-    REQUIRE(rule_b.getValue(StyleParamKey::order, str)); REQUIRE(str == "value_0b");
+    REQUIRE(rule_a.get(StyleParamKey::order, str)); REQUIRE(str == "value_0a");
+    REQUIRE(rule_a.get(StyleParamKey::color, str)); REQUIRE(str == "value_1a");
+    REQUIRE(rule_a.get(StyleParamKey::join, str)); REQUIRE(str == "value_4a");
+    REQUIRE(rule_b.get(StyleParamKey::color, str)); REQUIRE(str == "value_1b");
+    REQUIRE(rule_b.get(StyleParamKey::width, str)); REQUIRE(str == "value_2b");
+    REQUIRE(rule_b.get(StyleParamKey::cap, str)); REQUIRE(str == "value_3b");
+    REQUIRE(rule_b.get(StyleParamKey::order, str)); REQUIRE(str == "value_0b");
 
 }
 
@@ -137,7 +137,7 @@ TEST_CASE("DrawRule correctly reports that it doesn't contain a parameter", "[Dr
 
     std::string str;
 
-    REQUIRE(!rule_a.getValue(StyleParamKey::width, str)); REQUIRE(str == "");
-    REQUIRE(!rule_b.getValue(StyleParamKey::join, str)); REQUIRE(str == "");
-    REQUIRE(!rule_c.getValue(StyleParamKey::order, str)); REQUIRE(str == "");
+    REQUIRE(!rule_a.get(StyleParamKey::width, str)); REQUIRE(str == "");
+    REQUIRE(!rule_b.get(StyleParamKey::join, str)); REQUIRE(str == "");
+    REQUIRE(!rule_c.get(StyleParamKey::order, str)); REQUIRE(str == "");
 }

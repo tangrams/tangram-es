@@ -84,24 +84,31 @@ StyleParam::StyleParam(const std::string& _key, const std::string& _value) {
 
 std::string StyleParam::toString() const {
     // TODO: cap, join and color toString()
-    auto p = value.get<std::pair<float, float>>();
     switch (key) {
-    case StyleParamKey::extrude:
-        return "(" + std::to_string(p.first) + ", " + std::to_string(p.second) + ")";
+    case StyleParamKey::extrude: {
+        if (!value.is<Extrusion>()) break;
+        auto p = value.get<Extrusion>();
+        return "extrude : (" + std::to_string(p.first) + ", " + std::to_string(p.second) + ")";
+    }
     case StyleParamKey::order:
-        return std::to_string(value.get<int32_t>());
+        if (!value.is<int32_t>()) break;
+        return "order : " + std::to_string(value.get<int32_t>());
     case StyleParamKey::width:
     case StyleParamKey::outline_width:
-        return std::to_string(value.get<float>());
+        if (!value.is<float>()) break;
+        return "width : " + std::to_string(value.get<float>());
     case StyleParamKey::color:
     case StyleParamKey::outline_color:
-        return std::to_string(value.get<Color>().getInt());
+        if (!value.is<Color>()) break;
+        return "color : " + std::to_string(value.get<Color>().getInt());
     case StyleParamKey::cap:
     case StyleParamKey::outline_cap:
-        return std::to_string(static_cast<int>(value.get<CapTypes>()));
+        if (!value.is<CapTypes>()) break;
+        return "cap : " + std::to_string(static_cast<int>(value.get<CapTypes>()));
     case StyleParamKey::join:
     case StyleParamKey::outline_join:
-        return std::to_string(static_cast<int>(value.get<CapTypes>()));
+        if (!value.is<JoinTypes>()) break;
+        return "join : " + std::to_string(static_cast<int>(value.get<JoinTypes>()));
     case StyleParamKey::none:
         break;
     }
@@ -161,82 +168,6 @@ const StyleParam&  DrawRule::findParameter(StyleParamKey _key) const {
         return *it;
     }
     return NONE;
-}
-
-bool DrawRule::getValue(StyleParamKey _key, std::string& _value) const {
-    auto& param = findParameter(_key);
-    if (!param) { return false; }
-    if (!param.value.is<std::string>()) {
-        logMsg("Error: not a string type\n");
-        return false;
-    }
-    _value = param.value.get<std::string>();
-    return true;
-};
-
-bool DrawRule::getValue(StyleParamKey _key, float& _value) const {
-    auto& param = findParameter(_key);
-    if (!param) { return false; }
-    if (!param.value.is<float>()) {
-        logMsg("Error: not a float type\n");
-        return false;
-    }
-    _value = param.value.get<float>();
-    return true;
-}
-
-bool DrawRule::getValue(StyleParamKey _key, int32_t& _value) const {
-    auto& param = findParameter(_key);
-    if (!param) { return false; }
-    if (!param.value.is<int32_t>()) {
-        logMsg("Error: not a int32_t\n");
-        return false;
-    }
-    _value = param.value.get<int32_t>();
-    return true;
-}
-
-bool DrawRule::getValue(StyleParamKey _key, std::pair<float, float>& _value) const {
-    auto& param = findParameter(_key);
-    if (!param) { return false; }
-    if (!param.value.is<std::pair<float, float>>()) {
-        logMsg("Error: not a std::pair<float, float>\n");
-        return false;
-    }
-    _value = param.value.get<std::pair<float, float>>();
-    return true;
-}
-
-bool DrawRule::getColor(StyleParamKey _key, uint32_t& _value) const {
-    auto& param = findParameter(_key);
-    if (!param) { return false; }
-    if (!param.value.is<Color>()) {
-        logMsg("Error: not a Color\n");
-        return false;
-    }
-    _value = param.value.get<Color>().getInt();
-    return true;
-}
-
-bool DrawRule::getLineCap(StyleParamKey _key, CapTypes& _value) const {
-    auto& param = findParameter(_key);
-    if (!param) { return false; }
-    if (!param.value.is<CapTypes>()) {
-        logMsg("Error: not a CapType\n");
-        return false;
-    }
-    _value = param.value.get<CapTypes>();
-    return true;
-}
-bool DrawRule::getLineJoin(StyleParamKey _key, JoinTypes& _value) const {
-    auto& param = findParameter(_key);
-    if (!param) { return false; }
-    if (!param.value.is<JoinTypes>()) {
-        logMsg("Error: not a JoinType\n");
-        return false;
-    }
-    _value = param.value.get<JoinTypes>();
-    return true;
 }
 
 bool DrawRule::operator<(const DrawRule& _rhs) const {
