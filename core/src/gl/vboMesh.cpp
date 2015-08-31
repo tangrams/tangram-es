@@ -67,7 +67,7 @@ void VboMesh::setDrawMode(GLenum _drawMode) {
 
 void VboMesh::subDataUpload() {
     if (!m_dirty) {
-        return false;
+        return;
     }
 
     if (m_hint == GL_STATIC_DRAW) {
