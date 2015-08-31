@@ -59,6 +59,7 @@ layers:
         draw:
             polygons:
                 order: 1
+                color: '#fffffa'
                 interactive: true # currently ignored
         green:
             filter: { kind: [park, graveyard, cemetery, forest, recreation_ground] }

@@ -16,8 +16,8 @@ protected:
 
     struct Parameters {
         int32_t order = 0;
-        uint32_t color = 0xffffffff;
-        uint32_t outlineColor = 0xffffffff;
+        Color color = { 255, 0, 255, 1};
+        Color outlineColor = { 255, 0, 255, 1};
         float width = 1.f;
         float outlineWidth = 1.f;
         CapTypes cap = CapTypes::butt;

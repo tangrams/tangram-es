@@ -9,6 +9,7 @@
 
 #include "builders.h" // for Cap/Join types
 #include "csscolorparser.hpp"
+#include "platform.h"
 
 using Color = CSSColorParser::Color;
 
@@ -48,13 +49,18 @@ struct DrawRule {
 
     const StyleParam& findParameter(StyleParamKey _key) const;
 
-    bool getValue(StyleParamKey _key, std::string& _str) const;
-    bool getValue(StyleParamKey _key, std::pair<float, float>& _value) const;
-    bool getValue(StyleParamKey _key, float& _value) const;
-    bool getValue(StyleParamKey _key, int32_t& _value) const;
-    bool getColor(StyleParamKey _key, uint32_t& _value) const;
-    bool getLineCap(StyleParamKey _key, CapTypes& _value) const;
-    bool getLineJoin(StyleParamKey _key, JoinTypes& _value) const;
+    template<typename T>
+    bool get(StyleParamKey _key, T& _value) const {
+        auto& param = findParameter(_key);
+        if (!param) { return false; }
+        if (!param.value.is<T>()) {
+            logMsg("Error: wrong type '%d'for StyleParam '%d' \n",
+                   param.value.which(), _key);
+            return false;
+        }
+        _value = param.value.get<T>();
+        return true;
+    }
 
     bool operator<(const DrawRule& _rhs) const;
     int compare(const DrawRule& _rhs) const { return style.compare(_rhs.style); }

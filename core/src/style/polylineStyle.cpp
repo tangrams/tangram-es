@@ -34,16 +34,16 @@ void PolylineStyle::constructShaderProgram() {
 PolylineStyle::Parameters PolylineStyle::parseRule(const DrawRule& _rule) const {
     Parameters p;
 
-    _rule.getValue(StyleParamKey::order, p.order);
-    _rule.getColor(StyleParamKey::color, p.color);
-    _rule.getValue(StyleParamKey::width, p.width);
-    _rule.getLineCap(StyleParamKey::cap, p.cap);
-    _rule.getLineJoin(StyleParamKey::join, p.join);
+    _rule.get(StyleParamKey::order, p.order);
+    _rule.get(StyleParamKey::color, p.color);
+    _rule.get(StyleParamKey::width, p.width);
+    _rule.get(StyleParamKey::cap, p.cap);
+    _rule.get(StyleParamKey::join, p.join);
 
-    if (_rule.getColor(StyleParamKey::outline_color, p.outlineColor) |
-        _rule.getValue(StyleParamKey::outline_width, p.outlineWidth) |
-        _rule.getLineCap(StyleParamKey::outline_cap, p.outlineCap) |
-        _rule.getLineJoin(StyleParamKey::outline_join, p.outlineJoin)) {
+    if (_rule.get(StyleParamKey::outline_color, p.outlineColor) |
+        _rule.get(StyleParamKey::outline_width, p.outlineWidth) |
+        _rule.get(StyleParamKey::outline_cap, p.outlineCap) |
+        _rule.get(StyleParamKey::outline_join, p.outlineJoin)) {
         p.outlineOn = true;
     }
 
@@ -54,7 +54,7 @@ void PolylineStyle::buildLine(const Line& _line, const DrawRule& _rule, const Pr
     std::vector<PolylineVertex> vertices;
 
     Parameters params = parseRule(_rule);
-    GLuint abgr = params.color;
+    GLuint abgr = params.color.getInt();
 
     if (Tangram::getDebugFlag(Tangram::DebugFlags::proxy_colors)) {
         abgr = abgr << (_tile.getID().z % 6);
@@ -76,7 +76,7 @@ void PolylineStyle::buildLine(const Line& _line, const DrawRule& _rule, const Pr
 
     if (params.outlineOn) {
 
-        GLuint abgrOutline = params.outlineColor;
+        GLuint abgrOutline = params.outlineColor.getInt();
         halfWidth += params.outlineWidth * .5f;
 
         if (params.outlineCap != params.cap || params.outlineJoin != params.join) {

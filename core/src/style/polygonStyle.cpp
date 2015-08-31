@@ -35,9 +35,9 @@ void PolygonStyle::constructShaderProgram() {
 
 PolygonStyle::Parameters PolygonStyle::parseRule(const DrawRule& _rule) const {
     Parameters p;
-    _rule.getColor(StyleParamKey::color, p.color);
-    _rule.getValue(StyleParamKey::order, p.order);
-    _rule.getValue(StyleParamKey::extrude, p.extrude);
+    _rule.get(StyleParamKey::color, p.color);
+    _rule.get(StyleParamKey::order, p.order);
+    _rule.get(StyleParamKey::extrude, p.extrude);
 
     return p;
 }
@@ -47,7 +47,7 @@ void PolygonStyle::buildLine(const Line& _line, const DrawRule& _rule, const Pro
 
     Parameters params = parseRule(_rule);
 
-    GLuint abgr = params.color;
+    GLuint abgr = params.color.getInt();
     GLfloat layer = params.order;
 
     PolyLineBuilder builder = {
@@ -72,7 +72,7 @@ void PolygonStyle::buildPolygon(const Polygon& _polygon, const DrawRule& _rule, 
 
     Parameters params = parseRule(_rule);
 
-    GLuint abgr = params.color;
+    GLuint abgr = params.color.getInt();
     GLfloat layer = params.order;
     auto& extrude = params.extrude;
 

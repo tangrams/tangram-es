@@ -16,7 +16,7 @@ protected:
 
     struct Parameters {
         int32_t order = 0;
-        uint32_t color = 0xffffffff;
+        Color color = { 255, 0, 255, 1};
         std::pair<float, float> extrude;
     };
 
