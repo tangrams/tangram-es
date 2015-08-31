@@ -54,16 +54,26 @@ void screenToWorldCoordinates(double& _x, double& _y);
 // Set the ratio of hardware pixels to logical pixels (defaults to 1.0)
 void setPixelScale(float _pixelsPerPoint);
 
+// Create a data source for adding drawable map data, which will be styled according to the scene file using the provided data source name;
+// Returns an integer ID for use with the addSource* and clearSource* functions
 int addDataSource(const char* _name);
 
+// Removes all data from the source with the provided ID
 void clearSourceData(int _sourceId);
 
-void addSourcePoint(int _sourceId, double* _coords);
+// Add a point geometry to the source with the provided ID; coordinates are longitude and latitude in a two-element double-precision array
+void addSourcePoint(int _sourceId, double* _coordinates);
 
-void addSourceLine(int _sourceId, double* _coords, int _lineLength);
+// Add a line geometry to the source with the provided ID; coordinates are a sequence of longitude and latitude pairs,
+// lineLength is the number of points in the line
+void addSourceLine(int _sourceId, double* _coordinates, int _lineLength);
 
-void addSourcePoly(int _sourceId, double* _coords, int* _ringLengths, int rings);
+// Add a polygon geometry to the source with the provided ID; coordinates are a sequence of longitude and latitude pairs,
+// ringLengths is a sequence of successive counts of coordinates that represent rings in the polygon (the sum of ringLengths is
+// the total number of coordinate pairs) and rings is the number of rings in the polygon (and the number of ringLengths)
+void addSourcePoly(int _sourceId, double* _coordinates, int* _ringLengths, int rings);
 
+// Add geometry from a GeoJSON string to the source with the provided ID
 void addSourceGeoJSON(int _sourceID, const char* _data);
 
 // Respond to a tap at the given screen coordinates (x right, y down)
