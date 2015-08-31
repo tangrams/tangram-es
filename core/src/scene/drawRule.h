@@ -5,6 +5,7 @@
 #include <string>
 #include <utility>
 #include <vector>
+#include <tuple>
 
 #include "builders.h" // for Cap/Join types
 #include "csscolorparser.hpp"
@@ -14,11 +15,11 @@ using Color = CSSColorParser::Color;
 namespace Tangram {
 
 enum class StyleParamKey : uint8_t {
-    none, order, color, width, cap, join, outline_color, outline_width, outline_cap, outline_join,
+    none, order, extrude, color, width, cap, join, outline_color, outline_width, outline_cap, outline_join,
 };
 
 struct StyleParam {
-    using Value = variant<none_type, std::string, Color, CapTypes, JoinTypes, int32_t, float>;
+    using Value = variant<none_type, std::pair<float, float>, std::string, Color, CapTypes, JoinTypes, int32_t, float>;
 
     StyleParam() {}
     StyleParam(const std::string& _key, const std::string& _value);
@@ -48,11 +49,12 @@ struct DrawRule {
     const StyleParam& findParameter(StyleParamKey _key) const;
 
     bool getValue(StyleParamKey _key, std::string& _str) const;
-    bool getValue(StyleParamKey _key, float& value) const;
-    bool getValue(StyleParamKey _key, int32_t& value) const;
-    bool getColor(StyleParamKey _key, uint32_t& value) const;
-    bool getLineCap(StyleParamKey _key, CapTypes& value) const;
-    bool getLineJoin(StyleParamKey _key, JoinTypes& value) const;
+    bool getValue(StyleParamKey _key, std::pair<float, float>& _value) const;
+    bool getValue(StyleParamKey _key, float& _value) const;
+    bool getValue(StyleParamKey _key, int32_t& _value) const;
+    bool getColor(StyleParamKey _key, uint32_t& _value) const;
+    bool getLineCap(StyleParamKey _key, CapTypes& _value) const;
+    bool getLineJoin(StyleParamKey _key, JoinTypes& _value) const;
 
     bool operator<(const DrawRule& _rhs) const;
     int compare(const DrawRule& _rhs) const { return style.compare(_rhs.style); }

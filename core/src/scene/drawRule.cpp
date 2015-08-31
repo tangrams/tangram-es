@@ -4,7 +4,9 @@
 #include "platform.h"
 
 #include <algorithm>
+#include <cmath>
 #include <map>
+#include <utility>
 
 namespace Tangram {
 
@@ -13,6 +15,7 @@ const StyleParam NONE;
 const std::map<std::string, StyleParamKey> s_StyleParamMap = {
     {"none", StyleParamKey::none},
     {"order", StyleParamKey::order},
+    {"extrude", StyleParamKey::extrude},
     {"color", StyleParamKey::color},
     {"width", StyleParamKey::width},
     {"cap", StyleParamKey::cap},
@@ -35,6 +38,26 @@ StyleParam::StyleParam(const std::string& _key, const std::string& _value) {
     key = it->second;
 
     switch (key) {
+    case StyleParamKey::extrude:
+        if (_value == "true") { value = std::make_pair(NAN, NAN); }
+        else if (_value == "false") { value = std::make_pair(0.0f, 0.0f) ; }
+        else {
+            float f1, f2;
+            int num = std::sscanf(_value.c_str(), "%f, %f", &f1, &f2);
+            switch(num) {
+                case 1:
+                    value = std::make_pair(f1, NAN);
+                    break;
+                case 2:
+                    value = std::make_pair(f1, f2);
+                    break;
+                case 0:
+                default:
+                    logMsg("Warning: Badly formed extrude parameter.\n");
+                    break;
+            }
+        }
+        break;
     case StyleParamKey::order:
         value = static_cast<int32_t>(std::stoi(_value));
         break;
@@ -61,7 +84,10 @@ StyleParam::StyleParam(const std::string& _key, const std::string& _value) {
 
 std::string StyleParam::toString() const {
     // TODO: cap, join and color toString()
+    auto p = value.get<std::pair<float, float>>();
     switch (key) {
+    case StyleParamKey::extrude:
+        return "(" + std::to_string(p.first) + ", " + std::to_string(p.second) + ")";
     case StyleParamKey::order:
         return std::to_string(value.get<int32_t>());
     case StyleParamKey::width:
@@ -167,6 +193,17 @@ bool DrawRule::getValue(StyleParamKey _key, int32_t& _value) const {
         return false;
     }
     _value = param.value.get<int32_t>();
+    return true;
+}
+
+bool DrawRule::getValue(StyleParamKey _key, std::pair<float, float>& _value) const {
+    auto& param = findParameter(_key);
+    if (!param) { return false; }
+    if (!param.value.is<std::pair<float, float>>()) {
+        logMsg("Error: not a std::pair<float, float>\n");
+        return false;
+    }
+    _value = param.value.get<std::pair<float, float>>();
     return true;
 }
 
