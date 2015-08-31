@@ -86,8 +86,8 @@ std::string StyleParam::toString() const {
     // TODO: cap, join and color toString()
     switch (key) {
     case StyleParamKey::extrude: {
-        if (!value.is<std::pair<float, float>>()) break;
-        auto p = value.get<std::pair<float, float>>();
+        if (!value.is<Extrusion>()) break;
+        auto p = value.get<Extrusion>();
         return "extrude : (" + std::to_string(p.first) + ", " + std::to_string(p.second) + ")";
     }
     case StyleParamKey::order:
