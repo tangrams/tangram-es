@@ -185,7 +185,7 @@ layers:
                     family: sans-serif
                     weight: 400
                     style: normal
-                    size: 15
+                    size: 1.em
                     fill: white
         highway: 
             filter: { kind: highway }
@@ -196,7 +196,7 @@ layers:
                         family: sans-serif
                         weight: 400
                         style: normal
-                        size: 14 
+                        size: 20px
                         fill: black
                         capitalized: true
         major_road:
@@ -208,7 +208,7 @@ layers:
                         family: sans-serif
                         weight: 400
                         style: normal
-                        size: 22
+                        size: 20.5pt
                         capitalized: true
     places:
         data: { sources: osm }

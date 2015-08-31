@@ -72,6 +72,7 @@ StyleParam::StyleParam(const std::string& _key, const std::string& _value) {
     case StyleParamKey::font_family:
     case StyleParamKey::font_weight:
     case StyleParamKey::font_style:
+    case StyleParamKey::font_size:
         value = _value;
         break;
     case StyleParamKey::font_capitalized:
@@ -88,7 +89,6 @@ StyleParam::StyleParam(const std::string& _key, const std::string& _value) {
         break;
     case StyleParamKey::width:
     case StyleParamKey::outline_width:
-    case StyleParamKey::font_size:
     case StyleParamKey::font_stroke_width:
         value = static_cast<float>(std::stof(_value));
         break;
@@ -123,6 +123,7 @@ std::string StyleParam::toString() const {
     case StyleParamKey::font_family:
     case StyleParamKey::font_weight:
     case StyleParamKey::font_style:
+    case StyleParamKey::font_size:
         if (!value.is<std::string>()) break;
         return value.get<std::string>();
     case StyleParamKey::font_capitalized:
@@ -135,7 +136,6 @@ std::string StyleParam::toString() const {
         return "order : " + std::to_string(value.get<int32_t>());
     case StyleParamKey::width:
     case StyleParamKey::outline_width:
-    case StyleParamKey::font_size:
     case StyleParamKey::font_stroke_width:
         if (!value.is<float>()) break;
         return "width : " + std::to_string(value.get<float>());

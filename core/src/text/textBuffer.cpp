@@ -17,6 +17,9 @@ TextBuffer::~TextBuffer() {
 }
 
 bool TextBuffer::addLabel(const std::string& _text, Label::Transform _transform, Label::Type _type, const Parameters& _params, Label::Options _options) {
+    if (_params.fontSize <= 0.f) {
+        return false;
+    }
 
     auto fontContext = FontContext::GetInstance();
 
