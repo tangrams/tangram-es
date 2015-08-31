@@ -67,7 +67,7 @@ void SpriteStyle::buildPoint(const Point& _point, const DrawRule& _rule, const P
 
     const static std::string key("kind");
     std::string spriteName;
-    if (!_rule.getValue(StyleParamKey::sprite, spriteName)) {
+    if (!_rule.get(StyleParamKey::sprite, spriteName)) {
         spriteName = _props.getString(key);
     }
     if (spriteName.empty() || !m_spriteAtlas->hasSpriteNode(spriteName)) {
