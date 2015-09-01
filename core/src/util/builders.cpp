@@ -39,7 +39,16 @@ void Builders::buildPolygon(const Polygon& _polygon, float _height, PolygonBuild
 
     earcut(_polygon);
 
-    _ctx.indices = std::move(earcut.indices);
+    uint16_t vertexDataOffset = _ctx.numVertices;
+
+    if (vertexDataOffset == 0) {
+        _ctx.indices = std::move(earcut.indices);
+    } else {
+        _ctx.indices.reserve(_ctx.indices.size() +  earcut.indices.size());
+        for (auto i : earcut.indices) {
+            _ctx.indices.push_back(vertexDataOffset + i);
+        }
+    }
 
     isect2d::AABB bbox;
 
