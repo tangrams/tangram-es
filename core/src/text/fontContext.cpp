@@ -72,11 +72,11 @@ bool FontContext::addFont(const std::string& _family, const std::string& _weight
 }
 
 void FontContext::setFont(const std::string& _key, int size) {
-    auto it = m_fonts.find(_key);
+    FontID id = getFontID(_key);
 
-    if (it != m_fonts.end()) {
+    if (id >= 0) {
         fonsSetSize(m_fsContext, size);
-        fonsSetFont(m_fsContext, it->second);
+        fonsSetFont(m_fsContext, id);
     } else {
         logMsg("[FontContext] Could not find font %s\n", _key.c_str());
     }
@@ -87,12 +87,15 @@ FontID FontContext::getFontID(const std::string& _key) {
 
     if (it != m_fonts.end()) {
         return it->second;
+    }
+
+    if (m_fonts.size() > 0) {
+        // sceneLoader makes sure that first loaded font is the default bundled font
+        logMsg("Warning: Using default font for '%s'.\n", _key.c_str());
+        m_fonts.emplace(_key, 0);
+        return 0;
     } else {
-        logMsg("[FontContext] Could not find font %s\n", _key.c_str());
-        if (m_fonts.size() > 0) {
-            logMsg("\tLoading Default Bundled font.\n");
-            return 0; // sceneLoader makes sure that first loaded font is the default bundled font
-        }
+        logMsg("Error: No default font loaded.\n");
         return -1;
     }
 }
