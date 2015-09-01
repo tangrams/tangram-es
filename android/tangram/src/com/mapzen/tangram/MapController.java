@@ -35,8 +35,6 @@ import javax.microedition.khronos.opengles.GL10;
 
 import okio.BufferedSource;
 
-import org.xmlpull.v1.XmlPullParserException;
-
 public class MapController implements Renderer, OnTouchListener, OnScaleGestureListener, OnRotateGestureListener, OnGestureListener, OnDoubleTapListener, OnShoveGestureListener {
 
     static {

@@ -28,7 +28,7 @@ class FontFileParser {
             if (parser.getEventType() != XmlPullParser.START_TAG) {
                 continue;
             }
-            if (parser.getName().equals("family")) {
+            if ("family".equals(parser.getName())) {
                 // Parse this family:
                 String name = parser.getAttributeValue(null, "name");
                 while (parser.next() != XmlPullParser.END_TAG) {
@@ -36,7 +36,7 @@ class FontFileParser {
                         continue;
                     }
                     String tag = parser.getName();
-                    if (tag.equals("font")) {
+                    if ("font".equals(tag)) {
                         String weightStr = parser.getAttributeValue(null, "weight");
                         weightStr = (weightStr == null) ? "400" : weightStr;
 
@@ -52,7 +52,7 @@ class FontFileParser {
                         skip(parser);
                     }
                 }
-            } else if (parser.getName().equals("alias")) {
+            } else if ("alias".equals(parser.getName())) {
                 // Parse this alias to font to fileName
                 String aliasName = parser.getAttributeValue(null, "name");
                 String toName = parser.getAttributeValue(null, "to");
