@@ -249,46 +249,42 @@ uint32_t StyleParam::parseColor(const std::string& _color) {
     return color.getInt();
 }
 
-bool StyleParam::parseFontSize(const std::string& _size, float& _pxSize) {
-    if (_size == "") {
+bool StyleParam::parseFontSize(const std::string& _str, float& _pxSize) {
+    if (_str.empty()) {
         return false;
     }
 
-    std::string::size_type index = 0;
+    size_t index = 0;
     std::string kind;
-    float size;
-    bool fract = false;
-
-    while (index < _size.length() && (std::isdigit(_size[index]) || (!fract && _size[index] == '.'))) {
-        if (_size[index] == '.') {
-            fract = true;
-        }
-        ++index;
-    }
 
     try {
-        if (index == _size.length()) {
-            _pxSize = std::stof(_size);
-            return true;
-        }
-
-        kind = _size.substr(index, _size.length() - 1);
-        size = std::stof(_size.substr(0, index));
-
-        if (kind == "px" && !fract) {
-            _pxSize = size;
-        } else if (kind == "em") {
-            _pxSize = 16.f * size;
-        } else if (kind == "pt") {
-            _pxSize = size / 0.75f;
-        } else if (kind == "%") {
-            _pxSize = size / 6.25f;
-        } else {
-            return false;
-        }
+        _pxSize = std::stof(_str, &index);
     } catch (std::invalid_argument) {
         return false;
+    } catch (std::out_of_range) {
+        return false;
     }
+
+    if (index == _str.length()) {
+        return true;
+    }
+
+    kind = _str.substr(index, _str.length() - 1);
+
+    if (kind == "px") {
+        // px may not be fractional value
+        if (_str.find('.') != std::string::npos)
+            return false;
+    } else if (kind == "em") {
+        _pxSize *= 16.f;
+    } else if (kind == "pt") {
+        _pxSize /= 0.75f;
+    } else if (kind == "%") {
+        _pxSize /= 6.25f;
+    } else {
+        return false;
+    }
+
     return true;
 }
 
