@@ -265,7 +265,7 @@ bool StyleParam::parseFontSize(const std::string& _str, float& _pxSize) {
         return false;
     }
 
-    if (index == _str.length()) {
+    if (index == _str.length() && (_str.find('.') == std::string::npos)) {
         return true;
     }
 
