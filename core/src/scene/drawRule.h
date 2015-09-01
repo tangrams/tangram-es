@@ -19,11 +19,11 @@ namespace Tangram {
 enum class StyleParamKey : uint8_t {
     none, order, extrude, color, width, cap, join, outline_color, outline_width, outline_cap, outline_join,
     font_family, font_weight, font_style, font_size, font_fill, font_stroke, font_stroke_color, font_stroke_width, font_capitalized,
-    visible, prioriy
+    visible, priority
 };
 
 struct StyleParam {
-    using Value = variant<none_type, bool, std::string, Color, CapTypes, JoinTypes, Extrusion, int32_t, float>;
+    using Value = variant<none_type, std::string, CapTypes, JoinTypes, Extrusion, int32_t, uint32_t, float, bool>;
 
     StyleParam() : key(StyleParamKey::none), value(none_type{}) {};
     StyleParam(const std::string& _key, const std::string& _value);
@@ -40,7 +40,7 @@ struct StyleParam {
 
 struct DrawRule {
 
-    static Color parseColor(const std::string& _color);
+    static uint32_t parseColor(const std::string& _color);
 
     std::string style;
     std::vector<StyleParam> parameters;

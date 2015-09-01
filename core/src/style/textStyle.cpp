@@ -51,17 +51,17 @@ Parameters TextStyle::parseRule(const DrawRule& _rule) const {
 
     std::string fontFamily, fontWeight, fontStyle, fontSize;
 
-    _rule.getValue(StyleParamKey::font_family, fontFamily);
-    _rule.getValue(StyleParamKey::font_weight, fontWeight);
-    _rule.getValue(StyleParamKey::font_style, fontStyle);
-    _rule.getValue(StyleParamKey::font_size, fontSize);
-    _rule.getColor(StyleParamKey::font_fill, p.fill);
-    if (_rule.getColor(StyleParamKey::font_stroke, p.strokeColor)) {
-        _rule.getColor(StyleParamKey::font_stroke_color, p.strokeColor);
+    _rule.get(StyleParamKey::font_family, fontFamily);
+    _rule.get(StyleParamKey::font_weight, fontWeight);
+    _rule.get(StyleParamKey::font_style, fontStyle);
+    _rule.get(StyleParamKey::font_size, fontSize);
+    _rule.get(StyleParamKey::font_fill, p.fill);
+    if (_rule.get(StyleParamKey::font_stroke, p.strokeColor)) {
+        _rule.get(StyleParamKey::font_stroke_color, p.strokeColor);
     }
-    _rule.getValue(StyleParamKey::font_stroke_width, p.strokeWidth);
-    _rule.getValue(StyleParamKey::font_capitalized, p.capitalized);
-    _rule.getValue(StyleParamKey::visible, p.visible);
+    _rule.get(StyleParamKey::font_stroke_width, p.strokeWidth);
+    _rule.get(StyleParamKey::font_capitalized, p.capitalized);
+    _rule.get(StyleParamKey::visible, p.visible);
 
     p.fontKey = fontFamily + "_" + fontWeight + "_" + fontStyle;
 
@@ -115,7 +115,7 @@ bool TextStyle::parseFontSize(const std::string& _size, float& _pxSize) const {
         _pxSize = 0.f;
         return false;
     }
-    
+
     return true;
 }
 

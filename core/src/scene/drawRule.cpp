@@ -34,7 +34,7 @@ const std::map<std::string, StyleParamKey> s_StyleParamMap = {
     {"font:stroke_width", StyleParamKey::font_stroke_width},
     {"font:capitalized", StyleParamKey::font_capitalized},
     {"visible", StyleParamKey::visible},
-    {"priority", StyleParamKey::prioriy},
+    {"priority", StyleParamKey::priority},
 };
 
 StyleParam::StyleParam(const std::string& _key, const std::string& _value) {
@@ -84,7 +84,7 @@ StyleParam::StyleParam(const std::string& _key, const std::string& _value) {
         }
         break;
     case StyleParamKey::order:
-    case StyleParamKey::prioriy:
+    case StyleParamKey::priority:
         value = static_cast<int32_t>(std::stoi(_value));
         break;
     case StyleParamKey::width:
@@ -131,7 +131,7 @@ std::string StyleParam::toString() const {
         if (!value.is<bool>()) break;
         return std::to_string(value.get<bool>());
     case StyleParamKey::order:
-    case StyleParamKey::prioriy:
+    case StyleParamKey::priority:
         if (!value.is<int32_t>()) break;
         return "order : " + std::to_string(value.get<int32_t>());
     case StyleParamKey::width:
@@ -144,8 +144,8 @@ std::string StyleParam::toString() const {
     case StyleParamKey::font_fill:
     case StyleParamKey::font_stroke:
     case StyleParamKey::font_stroke_color:
-        if (!value.is<Color>()) break;
-        return "color : " + std::to_string(value.get<Color>().getInt());
+        if (!value.is<uint32_t>()) break;
+        return "color : " + std::to_string(value.get<uint32_t>());
     case StyleParamKey::cap:
     case StyleParamKey::outline_cap:
         if (!value.is<CapTypes>()) break;
@@ -219,7 +219,7 @@ bool DrawRule::operator<(const DrawRule& _rhs) const {
     return style < _rhs.style;
 }
 
-Color DrawRule::parseColor(const std::string& _color) {
+uint32_t DrawRule::parseColor(const std::string& _color) {
     Color color;
 
     if (isdigit(_color.front())) {
@@ -237,7 +237,7 @@ Color DrawRule::parseColor(const std::string& _color) {
         // parse as css color or #hex-num
         color = CSSColorParser::parse(_color);
     }
-    return color;
+    return color.getInt();
 }
 
 }

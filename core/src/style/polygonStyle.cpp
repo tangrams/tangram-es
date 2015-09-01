@@ -47,7 +47,7 @@ void PolygonStyle::buildLine(const Line& _line, const DrawRule& _rule, const Pro
 
     Parameters params = parseRule(_rule);
 
-    GLuint abgr = params.color.getInt();
+    GLuint abgr = params.color;
     GLfloat layer = params.order;
 
     PolyLineBuilder builder = {
@@ -72,7 +72,7 @@ void PolygonStyle::buildPolygon(const Polygon& _polygon, const DrawRule& _rule, 
 
     Parameters params = parseRule(_rule);
 
-    GLuint abgr = params.color.getInt();
+    GLuint abgr = params.color;
     GLfloat layer = params.order;
     auto& extrude = params.extrude;
 

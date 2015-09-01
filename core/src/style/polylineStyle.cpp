@@ -54,7 +54,7 @@ void PolylineStyle::buildLine(const Line& _line, const DrawRule& _rule, const Pr
     std::vector<PolylineVertex> vertices;
 
     Parameters params = parseRule(_rule);
-    GLuint abgr = params.color.getInt();
+    GLuint abgr = params.color;
 
     if (Tangram::getDebugFlag(Tangram::DebugFlags::proxy_colors)) {
         abgr = abgr << (_tile.getID().z % 6);
@@ -76,7 +76,7 @@ void PolylineStyle::buildLine(const Line& _line, const DrawRule& _rule, const Pr
 
     if (params.outlineOn) {
 
-        GLuint abgrOutline = params.outlineColor.getInt();
+        GLuint abgrOutline = params.outlineColor;
         halfWidth += params.outlineWidth * .5f;
 
         if (params.outlineCap != params.cap || params.outlineJoin != params.join) {
