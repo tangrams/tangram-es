@@ -169,7 +169,7 @@ layers:
             filter: { $zoom: { min: 15 } }
             draw:
                 heightglow:
-                    extrude: [0, 1.2]
+                    extrude: [0m, 1.2m]
         high-line:
             filter: {roof_material: grass}
             draw:
@@ -181,7 +181,7 @@ layers:
         draw:
             text: 
                 visible: false
-                offset: [0, 10]
+                offset: [0, 10px]
                 font:
                     family: sans-serif
                     weight: 400
@@ -193,7 +193,7 @@ layers:
             draw:
                 text:
                     visible: true
-                    offset: [0, 10px]
+                    offset: [0px, 10px]
                     font:
                         family: sans-serif
                         weight: 400
