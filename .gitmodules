@@ -30,3 +30,6 @@
 [submodule "core/dependencies/geojson-vt-cpp"]
 	path = core/dependencies/geojson-vt-cpp
 	url = https://github.com/mapbox/geojson-vt-cpp.git
+[submodule "core/dependencies/duktape"]
+	path = core/dependencies/duktape
+	url = https://github.com/tangrams/duktape.git
