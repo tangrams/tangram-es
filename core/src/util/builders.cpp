@@ -48,10 +48,8 @@ void Builders::buildPolygon(const Polygon& _polygon, float _height, PolygonBuild
             // initialize the axis-aligned bounding box of the polygon
             bbox = isect2d::AABB(_polygon[0][0].x, _polygon[0][0].y, 0, 0);
         }
-        for (auto& line : _polygon) {
-            for (auto& p : line) {
-                bbox.include(p.x, p.y);
-            }
+        for (auto& p : _polygon[0]) {
+            bbox.include(p.x, p.y);
         }
     }
 
