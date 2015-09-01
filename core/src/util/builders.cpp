@@ -6,27 +6,18 @@
 #include "platform.h"
 #include <memory>
 
-#if USE_LIBTESS
-#include "tesselator.h"
-#else
 #include "earcut.hpp/include/earcut.hpp"
 
 namespace mapbox { namespace util {
 template <>
 struct nth<0, Tangram::Point> {
-    inline static float get(const Tangram::Point &t) {
-        return t.x;
-    };
+    inline static float get(const Tangram::Point &t) { return t.x; };
 };
 template <>
 struct nth<1, Tangram::Point> {
-    inline static float get(const Tangram::Point &t) {
-        return t.y;
-    };
+    inline static float get(const Tangram::Point &t) { return t.y; };
 };
 }}
-
-#endif
 
 namespace Tangram {
 
@@ -41,91 +32,6 @@ JoinTypes JoinTypeFromString(const std::string& str) {
     if (str == "round") { return JoinTypes::round; }
     return JoinTypes::miter;
 }
-
-#if USE_LIBTESS
-
-void* alloc(void* _userData, unsigned int _size) {
-    return malloc(_size);
-}
-
-void* realloc(void* _userData, void* _ptr, unsigned int _size) {
-    return realloc(_ptr, _size);
-}
-
-void free(void* _userData, void* _ptr) {
-    free(_ptr);
-}
-
-static TESSalloc allocator = {&alloc, &realloc, &free, nullptr,
-                              64, // meshEdgeBucketSize
-                              64, // meshVertexBucketSize
-                              16,  // meshFaceBucketSize
-                              64, // dictNodeBucketSize
-                              16,  // regionBucketSize
-                              64  // extraVertices
-                             };
-
-void Builders::buildPolygon(const Polygon& _polygon, float _height, PolygonBuilder& _ctx) {
-
-    TESStesselator* tesselator = tessNewTess(&allocator);
-    isect2d::AABB bbox;
-
-    if (_ctx.useTexCoords && _polygon.size() > 0 && _polygon[0].size() > 0) {
-        // initialize the axis-aligned bounding box of the polygon
-        bbox = isect2d::AABB(_polygon[0][0].x, _polygon[0][0].y, 0, 0);
-    }
-
-    // add polygon contour for every ring
-    for (auto& line : _polygon) {
-        if (_ctx.useTexCoords) {
-            for (auto& p : line) {
-                bbox.include(p.x, p.y);
-            }
-        }
-        tessAddContour(tesselator, 3, line.data(), sizeof(Point), (int)line.size());
-    }
-
-    // call the tesselator
-    glm::vec3 normal(0.0, 0.0, 1.0);
-
-    if (tessTesselate(tesselator, TessWindingRule::TESS_WINDING_NONZERO, TessElementType::TESS_POLYGONS, 3, 3, &normal[0])) {
-
-        const int numElements = tessGetElementCount(tesselator);
-        const TESSindex* tessElements = tessGetElements(tesselator);
-        _ctx.indices.reserve(_ctx.indices.size() + numElements * 3); // Pre-allocate index vector
-        for (int i = 0; i < numElements; i++) {
-            const TESSindex* tessElement = &tessElements[i * 3];
-            for (int j = 0; j < 3; j++) {
-                _ctx.indices.push_back(tessElement[j] + _ctx.numVertices);
-            }
-        }
-
-        const int numVertices = tessGetVertexCount(tesselator);
-        const float* tessVertices = tessGetVertices(tesselator);
-
-        _ctx.numVertices += numVertices;
-        _ctx.sizeHint(_ctx.numVertices);
-
-        for (int i = 0; i < numVertices; i++) {
-            glm::vec3 coord(tessVertices[3*i], tessVertices[3*i+1], _height);
-            glm::vec2 uv(0);
-
-            if (_ctx.useTexCoords) {
-                float u = mapValue(coord.x, bbox.m_min.x, bbox.m_max.x, 0., 1.);
-                float v = mapValue(coord.y, bbox.m_min.y, bbox.m_max.y, 0., 1.);
-                uv = glm::vec2(u, v);
-            }
-            _ctx.addVertex(coord, normal, uv);
-        }
-    } else {
-        logMsg("Tesselator cannot tesselate!!\n");
-    }
-
-    tessDeleteTess(tesselator);
-}
-
-#else
-
 
 void Builders::buildPolygon(const Polygon& _polygon, float _height, PolygonBuilder& _ctx) {
 
@@ -167,9 +73,6 @@ void Builders::buildPolygon(const Polygon& _polygon, float _height, PolygonBuild
         _ctx.addVertex(coord, normal, uv);
     }
 }
-
-
-#endif
 
 void Builders::buildPolygonExtrusion(const Polygon& _polygon, float _minHeight, float _maxHeight, PolygonBuilder& _ctx) {
 

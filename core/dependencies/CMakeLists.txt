@@ -17,17 +17,6 @@ if(BENCHMARK)
   add_subdirectory(benchmark)
 endif()
 
-# libtess2 #
-############
-
-add_definitions(-DNDEBUG)
-file(GLOB_RECURSE LIBTESS2_SOURCES "libtess2/Source/*.c")
-add_library(tess2 ${LIBTESS2_SOURCES})
-target_include_directories(tess2
-  PUBLIC
-  ${CMAKE_CURRENT_SOURCE_DIR}/libtess2/Include
-)
-
 # yaml-cpp #
 ############
 
