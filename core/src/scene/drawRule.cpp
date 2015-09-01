@@ -72,9 +72,16 @@ StyleParam::StyleParam(const std::string& _key, const std::string& _value) {
     case StyleParamKey::font_family:
     case StyleParamKey::font_weight:
     case StyleParamKey::font_style:
-    case StyleParamKey::font_size:
         value = _value;
         break;
+    case StyleParamKey::font_size: {
+        float fontSize = 16;
+        if (!StyleParam::parseFontSize(_value, fontSize)) {
+            logMsg("Warning: Invalid font-size '%s'.\n", _value.c_str());
+        }
+        value = fontSize;
+        break;
+    }
     case StyleParamKey::font_capitalized:
     case StyleParamKey::visible:
         if (_value == "true") { value = true; }
@@ -97,7 +104,7 @@ StyleParam::StyleParam(const std::string& _key, const std::string& _value) {
     case StyleParamKey::font_fill:
     case StyleParamKey::font_stroke:
     case StyleParamKey::font_stroke_color:
-        value = DrawRule::parseColor(_value);
+        value = StyleParam::parseColor(_value);
         break;
     case StyleParamKey::cap:
     case StyleParamKey::outline_cap:
@@ -123,9 +130,11 @@ std::string StyleParam::toString() const {
     case StyleParamKey::font_family:
     case StyleParamKey::font_weight:
     case StyleParamKey::font_style:
-    case StyleParamKey::font_size:
         if (!value.is<std::string>()) break;
         return value.get<std::string>();
+    case StyleParamKey::font_size:
+        if (!value.is<float>()) break;
+        return "font-size : " + std::to_string(value.get<float>());
     case StyleParamKey::font_capitalized:
     case StyleParamKey::visible:
         if (!value.is<bool>()) break;
@@ -219,7 +228,7 @@ bool DrawRule::operator<(const DrawRule& _rhs) const {
     return style < _rhs.style;
 }
 
-uint32_t DrawRule::parseColor(const std::string& _color) {
+uint32_t StyleParam::parseColor(const std::string& _color) {
     Color color;
 
     if (isdigit(_color.front())) {
@@ -238,6 +247,49 @@ uint32_t DrawRule::parseColor(const std::string& _color) {
         color = CSSColorParser::parse(_color);
     }
     return color.getInt();
+}
+
+bool StyleParam::parseFontSize(const std::string& _size, float& _pxSize) {
+    if (_size == "") {
+        return false;
+    }
+
+    std::string::size_type index = 0;
+    std::string kind;
+    float size;
+    bool fract = false;
+
+    while (index < _size.length() && (std::isdigit(_size[index]) || (!fract && _size[index] == '.'))) {
+        if (_size[index] == '.') {
+            fract = true;
+        }
+        ++index;
+    }
+
+    try {
+        if (index == _size.length()) {
+            _pxSize = std::stof(_size);
+            return true;
+        }
+
+        kind = _size.substr(index, _size.length() - 1);
+        size = std::stof(_size.substr(0, index));
+
+        if (kind == "px" && !fract) {
+            _pxSize = size;
+        } else if (kind == "em") {
+            _pxSize = 16.f * size;
+        } else if (kind == "pt") {
+            _pxSize = size / 0.75f;
+        } else if (kind == "%") {
+            _pxSize = size / 6.25f;
+        } else {
+            return false;
+        }
+    } catch (std::invalid_argument) {
+        return false;
+    }
+    return true;
 }
 
 }

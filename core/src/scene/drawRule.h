@@ -36,11 +36,14 @@ struct StyleParam {
     operator bool() const { return valid(); }
 
     std::string toString() const;
+
+    /* parse a font size (in em, pt, %) and give the appropriate size in pixel */
+    static bool parseFontSize(const std::string& _size, float& _pxSize);
+
+    static uint32_t parseColor(const std::string& _color);
 };
 
 struct DrawRule {
-
-    static uint32_t parseColor(const std::string& _color);
 
     std::string style;
     std::vector<StyleParam> parameters;
@@ -67,6 +70,7 @@ struct DrawRule {
 
     bool operator<(const DrawRule& _rhs) const;
     int compare(const DrawRule& _rhs) const { return style.compare(_rhs.style); }
+
 };
 
 }

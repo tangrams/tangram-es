@@ -40,11 +40,6 @@ public:
 
     virtual ~TextStyle();
 
-private:
-
-    /* parse a font size (in em, pt, %) and give the appropriate size in pixel */
-    bool parseFontSize(const std::string& _size, float& _pxSize) const;
-
 };
 
 }
