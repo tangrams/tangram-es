@@ -66,7 +66,11 @@ std::string parseSequence(const Node& node) {
         try {
             sstream << val.as<float>() << ",";
         } catch (const BadConversion& e) {
-            logMsg("Error: Float value was expected for styleParam sequence value\n");
+            try {
+                sstream << val.as<std::string>() << ",";
+            } catch (const BadConversion& e) {
+                logMsg("Error: Float or Unit expected for styleParam sequence value\n");
+            }
         }
     }
     return sstream.str();
