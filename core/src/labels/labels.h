@@ -43,7 +43,7 @@ private:
     bool m_needUpdate;
 
     // temporary data used in update()
-    std::vector<Label*> m_labels;
+    std::vector<std::shared_ptr<Label>> m_labels;
     std::vector<isect2d::AABB> m_aabbs;
 };
 

@@ -61,7 +61,22 @@ void Labels::update(const View& _view, float _dt, const std::vector<std::unique_
                     m_aabbs.push_back(label->getAABB());
                     m_aabbs.back().m_userData = (void*)label.get();
                 }
-                m_labels.push_back(label.get());
+                m_labels.push_back(label);
+            }
+        }
+    }
+
+    /// Merge labels together
+
+    for (auto& l1 : m_labels) {
+        for (auto& l2 : m_labels) {
+            if (l1 == l2 || !l1->visibleState() || !l2->visibleState() || l1->getAttachedLabel() || l2->getAttachedLabel()) {
+                continue;
+            }
+
+            if (l1->compareGeoLocation(*l2)) {
+                l1->attachLabel(l2);
+                l2->attachLabel(l1);
             }
         }
     }
@@ -96,7 +111,7 @@ void Labels::update(const View& _view, float _dt, const std::vector<std::unique_
 
     //// Update label meshes
 
-    for (auto label : m_labels) {
+    for (auto& label : m_labels) {
         label->occlusionSolved();
         label->pushTransform();
     }
@@ -125,10 +140,16 @@ void Labels::drawDebug(const View& _view) {
             // draw offset
             Primitives::setColor(0x000000);
             Primitives::drawLine(sp, sp - offset);
-            // draw projected anchor point
 
+            // draw projected anchor point
             Primitives::setColor(0x0000ff);
             Primitives::drawRect(sp - glm::vec2(1.f), sp + glm::vec2(1.f));
+
+            if(label->getAttachedLabel()) {
+                Primitives::setColor(0x00ff00);
+                Primitives::drawPoly(reinterpret_cast<const glm::vec2*>(label->getOBB().getQuad()), 4);
+                Primitives::drawPoly(reinterpret_cast<const glm::vec2*>(label->getAttachedLabel()->getOBB().getQuad()), 4);
+            }
         }
     }
 

@@ -101,8 +101,16 @@ public:
 
     State getState() const { return m_currentState; }
 
+    Type getType() const { return m_type; }
+
     /* Checks whether the label is in a visible state */
     bool visibleState() const;
+
+    bool compareGeoLocation(const Label& _label);
+
+    void attachLabel(std::shared_ptr<Label> _label);
+
+    std::shared_ptr<Label> getAttachedLabel() const { return m_attachedLabel; }
 
 private:
 
@@ -151,6 +159,8 @@ protected:
     LabelMesh& m_mesh;
     // first vertex and count in m_mesh vertices
     Range m_vertexRange;
+
+    std::shared_ptr<Label> m_attachedLabel;
 };
 
 }

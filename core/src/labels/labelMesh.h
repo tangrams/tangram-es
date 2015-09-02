@@ -14,9 +14,9 @@ public:
 
     virtual ~LabelMesh();
 
-    void addLabel(std::unique_ptr<Label> _label);
+    void addLabel(std::shared_ptr<Label> _label);
 
-    const std::vector<std::unique_ptr<Label>>& getLabels() const {
+    const std::vector<std::shared_ptr<Label>>& getLabels() const {
         return m_labels;
     }
     virtual void compileVertexBuffer() override;
@@ -26,7 +26,7 @@ public:
 protected:
     void loadQuadIndices();
 
-    std::vector<std::unique_ptr<Label>> m_labels;
+    std::vector<std::shared_ptr<Label>> m_labels;
 };
 
 }

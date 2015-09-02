@@ -120,6 +120,16 @@ void Label::setOcclusion(bool _occlusion) {
     }
 
     m_occludedLastFrame = _occlusion;
+
+    if (m_attachedLabel && m_attachedLabel->canOcclude()) {
+        m_attachedLabel->m_occludedLastFrame = _occlusion;
+    }
+}
+
+void Label::attachLabel(std::shared_ptr<Label> _label) {
+    if (_label.get() != this) {
+        m_attachedLabel = _label;
+    }
 }
 
 bool Label::canOcclude() {
@@ -163,6 +173,23 @@ void Label::setScreenPosition(const glm::vec2& _screenPosition) {
 void Label::setRotation(float _rotation) {
     m_transform.state.rotation = _rotation;
     m_dirty = true;
+}
+
+bool Label::compareGeoLocation(const Label& _label) {
+    if (_label.getType() != m_type) {
+        return false;
+    }
+
+    switch (m_type) {
+        case Type::debug:
+        case Type::point:
+            return m_transform.modelPosition1 == _label.m_transform.modelPosition1;
+        case Type::line:
+            return m_transform.modelPosition1 == _label.m_transform.modelPosition1 &&
+            m_transform.modelPosition2 == _label.m_transform.modelPosition2;
+    }
+
+    return false;
 }
 
 void Label::pushTransform() {
