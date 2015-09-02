@@ -1,16 +1,16 @@
 #ifdef TANGRAM_SDF_MULTISAMPLING
-#ifdef GL_OES_standard_derivatives
-#extension GL_OES_standard_derivatives : enable
-#else
-#undef TANGRAM_SDF_MULTISAMPLING
-#endif
+    #ifdef GL_OES_standard_derivatives
+        #extension GL_OES_standard_derivatives : enable
+    #else
+        #undef TANGRAM_SDF_MULTISAMPLING
+    #endif
 #endif
 
 #ifdef GL_ES
-precision mediump float;
-#define LOWP lowp
+    precision mediump float;
+    #define LOWP lowp
 #else
-#define LOWP
+    #define LOWP
 #endif
 
 // TODO: use this as attribute
