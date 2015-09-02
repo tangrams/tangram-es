@@ -88,6 +88,8 @@ public class MapController implements Renderer, OnTouchListener, OnScaleGestureL
         view.setRenderer(this);
         view.setRenderMode(GLSurfaceView.RENDERMODE_WHEN_DIRTY);
 
+        init(this, assetManager, scenePath);
+
     }
 
     /**
@@ -110,9 +112,7 @@ public class MapController implements Renderer, OnTouchListener, OnScaleGestureL
      * @param lat Degrees latitude of the position to set
      */
     public void setMapPosition(double lon, double lat) {
-        mapLonLat[0] = lon;
-        mapLonLat[1] = lat;
-        if (initialized) { setPosition(lon, lat); }
+        setPosition(lon, lat);
     }
 
     /**
@@ -129,9 +129,7 @@ public class MapController implements Renderer, OnTouchListener, OnScaleGestureL
      * @return Degrees longitude and latitude of the current map position, in a two-element array
      */
     public double[] getMapPosition(double[] coordinatesOut) {
-        if (initialized) { getPosition(mapLonLat); }
-        coordinatesOut[0] = mapLonLat[0];
-        coordinatesOut[1] = mapLonLat[1];
+        getPosition(coordinatesOut);
         return coordinatesOut;
     }
 
@@ -140,8 +138,7 @@ public class MapController implements Renderer, OnTouchListener, OnScaleGestureL
      * @param zoom Fractional zoom level
      */
     public void setMapZoom(float zoom) {
-        mapZoom = zoom;
-        if (initialized) { setZoom(zoom); }
+        setZoom(zoom);
     }
 
     /**
@@ -149,8 +146,7 @@ public class MapController implements Renderer, OnTouchListener, OnScaleGestureL
      * @return Fractional zoom level
      */
     public float getMapZoom() {
-        if (initialized) { mapZoom = getZoom(); }
-        return mapZoom;
+        return getZoom();
     }
 
     /**
@@ -158,8 +154,7 @@ public class MapController implements Renderer, OnTouchListener, OnScaleGestureL
      * @param radians Rotation in radians
      */
     public void setMapRotation(float radians) {
-        mapRotation = radians;
-        if (initialized) { setRotation(radians); }
+        setRotation(radians);
     }
 
     /**
@@ -167,8 +162,7 @@ public class MapController implements Renderer, OnTouchListener, OnScaleGestureL
      * @return Rotation in radians
      */
     public float getMapRotation() {
-        if (initialized) { mapRotation = getRotation(); }
-        return mapRotation;
+        return getRotation();
     }
 
     /**
@@ -176,8 +170,7 @@ public class MapController implements Renderer, OnTouchListener, OnScaleGestureL
      * @param radians Tilt angle in radians
      */
     public void setMapTilt(float radians) {
-        mapTilt = radians;
-        if (initialized) { setTilt(radians); }
+        setTilt(radians);
     }
 
     /**
@@ -185,8 +178,7 @@ public class MapController implements Renderer, OnTouchListener, OnScaleGestureL
      * @return Tilt angle in radians
      */
     public float getMapTilt() {
-        if (initialized) { mapTilt = getTilt(); }
-        return mapTilt;
+        return getTilt();
     }
 
     /**
@@ -206,7 +198,7 @@ public class MapController implements Renderer, OnTouchListener, OnScaleGestureL
      * @return Degrees longitude and latitude corresponding to the given point, in a two-element array
      */
     public double[] coordinatesAtScreenPosition(double[] coordinatesInOut) {
-        if (initialized) { screenToWorldCoordinates(coordinatesInOut); }
+        screenToWorldCoordinates(coordinatesInOut);
         return coordinatesInOut;
     }
 
@@ -278,11 +270,6 @@ public class MapController implements Renderer, OnTouchListener, OnScaleGestureL
 
     private String scenePath;
     private long time = System.nanoTime();
-    private boolean initialized = false;
-    private double[] mapLonLat = {0, 0};
-    private float mapZoom = 0;
-    private float mapRotation = 0;
-    private float mapTilt = 0;
     private MapView mapView;
     private AssetManager assetManager;
     private GestureDetector gestureDetector;
@@ -348,11 +335,6 @@ public class MapController implements Renderer, OnTouchListener, OnScaleGestureL
     public void onSurfaceCreated(GL10 gl, EGLConfig config) {
         onContextDestroyed();
         init(this, assetManager, scenePath);
-        setPosition(mapLonLat[0], mapLonLat[1]);
-        setZoom(mapZoom);
-        setRotation(mapRotation);
-        setTilt(mapTilt);
-        initialized = true;
     }
 
     // GestureDetector.OnDoubleTapListener methods
