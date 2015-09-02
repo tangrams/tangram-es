@@ -23,8 +23,6 @@ public:
         return instance;
     }
 
-    FontContext();
-    FontContext(int _atlasSize);
     ~FontContext();
 
     /* adds a font from a .ttf font file using "family", "weight" and "style" font properties*/
@@ -57,6 +55,9 @@ private:
     static void renderUpdate(void* _userPtr, int* _rect, const unsigned char* _data);
     static int renderCreate(void* _userPtr, int _width, int _height);
     static void pushQuad(void* _userPtr, const FONSquad* _quad);
+
+    FontContext();
+    FontContext(int _atlasSize);
 
     void initFontContext(int _atlasSize);
 
