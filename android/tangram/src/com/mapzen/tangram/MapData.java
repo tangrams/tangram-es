@@ -1,5 +1,7 @@
 package com.mapzen.tangram;
 
+import java.util.List;
+
 public class MapData {
 
     /**
@@ -40,51 +42,51 @@ public class MapData {
 
     /**
      * Add a point geometry to this data source
-     * @param point Two-element array of longitude and latitude (in that order) in degrees
+     * @param point LngLat with the coordinates of the point
      * @return This object, for chaining
      */
-    public MapData addPoint(double[] point) {
-        addSourcePoint(id, point);
+    public MapData addPoint(LngLat point) {
+        addSourcePoint(id, new double[]{ point.longitude, point.latitude });
         return this;
     }
 
     /**
      * Add a line geometry to this data source
-     * @param line Array of points, where points are as described in {@link #addPoint(double[])}
+     * @param line List of LngLat points comprising the line
      * @return This object, for chaining
      */
-    public MapData addLine(double[][] line) {
-        // need to concatenate nested arrays
-        double[] coords = new double[2 * line.length];
+    public MapData addLine(List<LngLat> line) {
+        // need to concatenate points
+        double[] coords = new double[2 * line.size()];
         int i = 0;
-        for (double[] point : line) {
-            coords[i++] = point[0];
-            coords[i++] = point[1];
+        for (LngLat point : line) {
+            coords[i++] = point.longitude;
+            coords[i++] = point.latitude;
         }
-        addSourceLine(id, coords, line.length);
+        addSourceLine(id, coords, line.size());
         return this;
     }
 
     /**
      * Add a polygon geometry to this data source
-     * @param polygon Array of lines, where lines are as described in {@link #addLine(double[][])};
-     *                each line represents a ring in the polygon as specified in GeoJSON
+     * @param polygon List of lines of LngLat points, where each line represents a ring in the
+     *                polygon as described in the GeoJSON spec
      * @return This object, for chaining
      */
-    public MapData addPolygon(double[][][] polygon) {
-        // need to concatenate nested arrays
+    public MapData addPolygon(List<List<LngLat>> polygon) {
+        // need to concatenate points
         int n = 0, i = 0, j = 0;
-        for (double[][] ring : polygon) { n += ring.length; }
+        for (List<LngLat> ring : polygon) { n += ring.size(); }
         double[] coords = new double[2 * n];
-        int[] ringLengths = new int[polygon.length];
-        for (double[][] ring : polygon) {
-            ringLengths[j++] = ring.length;
-            for (double[] point : ring) {
-                coords[i++] = point[0];
-                coords[i++] = point[1];
+        int[] ringLengths = new int[polygon.size()];
+        for (List<LngLat> ring : polygon) {
+            ringLengths[j++] = ring.size();
+            for (LngLat point : ring) {
+                coords[i++] = point.longitude;
+                coords[i++] = point.latitude;
             }
         }
-        addSourcePoly(id, coords, ringLengths, polygon.length);
+        addSourcePoly(id, coords, ringLengths, polygon.size());
         return this;
     }
 

@@ -2,16 +2,17 @@ package com.mapzen.tangram.android;
 
 import android.app.Activity;
 import android.os.Bundle;
+import android.view.MotionEvent;
+import android.view.View;
 import android.view.Window;
 
-import android.view.View;
-import android.view.MotionEvent;
-
+import com.mapzen.tangram.LngLat;
 import com.mapzen.tangram.MapController;
 import com.mapzen.tangram.MapData;
 import com.mapzen.tangram.MapView;
 
 import java.io.File;
+import java.util.Arrays;
 
 public class MainActivity extends Activity {
 
@@ -32,18 +33,17 @@ public class MainActivity extends Activity {
         mapController.setMapZoom(16);
         mapController.setMapPosition(-74.00976419448854, 40.70532700869127);
 
-        final double[] lastTappedCoord = new double[2];
+        final LngLat lastTappedPoint = new LngLat();
 
         mapController.setTapGestureListener(new View.OnGenericMotionListener() {
             @Override
             public boolean onGenericMotion(View v, MotionEvent event) {
-                double[] tapCoord = mapController.coordinatesAtScreenPosition(event.getX(), event.getY());
+                LngLat tapPoint = mapController.coordinatesAtScreenPosition(event.getX(), event.getY());
                 if (touchMarkers == null) { touchMarkers = new MapData("touch"); }
-                if (lastTappedCoord[0] != 0 && lastTappedCoord[1] != 0) {
-                    touchMarkers.addLine(new double[][] { tapCoord, lastTappedCoord });
+                if (lastTappedPoint.longitude != 0 && lastTappedPoint.latitude != 0) {
+                    touchMarkers.addLine(Arrays.asList(tapPoint, lastTappedPoint));
                 }
-                lastTappedCoord[0] = tapCoord[0];
-                lastTappedCoord[1] = tapCoord[1];
+                lastTappedPoint.set(tapPoint);
                 return true;
             }
         });
