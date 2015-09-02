@@ -83,9 +83,9 @@ std::string systemFontPath(const std::string& _family, const std::string& _weigh
     jstring returnStr = (jstring) jniEnv->CallObjectMethod(tangramInstance, getFontFilePath, jfamily, jweight, jstyle);
 
     size_t length = jniEnv->GetStringUTFLength(returnStr);
-    char* cdata = (char*) malloc(sizeof(char) * (length));
-    jniEnv->GetStringUTFRegion(returnStr, 0, length, cdata);
-    return std::string(cdata, length);
+    std::string fontPath = std::string(length, 0);
+    jniEnv->GetStringUTFRegion(returnStr, 0, length, &fontPath[0]);
+    return fontPath;
 }
 
 void setContinuousRendering(bool _isContinuous) {
