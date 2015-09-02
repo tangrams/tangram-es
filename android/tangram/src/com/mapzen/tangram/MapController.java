@@ -14,8 +14,6 @@ import android.view.ScaleGestureDetector.OnScaleGestureListener;
 import android.view.View;
 import android.view.View.OnTouchListener;
 
-import com.mapzen.tangram.FontFileParser;
-
 import com.almeros.android.multitouch.RotateGestureDetector;
 import com.almeros.android.multitouch.RotateGestureDetector.OnRotateGestureListener;
 import com.almeros.android.multitouch.ShoveGestureDetector;
@@ -291,7 +289,7 @@ public class MapController implements Renderer, OnTouchListener, OnScaleGestureL
     private RotateGestureDetector rotateGestureDetector;
     private ShoveGestureDetector shoveGestureDetector;
 
-    private static final FontFileParser fontFileParser = new FontFileParser();
+    private final FontFileParser fontFileParser = new FontFileParser();
 
     private static final float PINCH_THRESHOLD = 0.015f; //1.5% of minDim
     private static final float ROTATION_THRESHOLD = 0.30f;
@@ -555,12 +553,6 @@ public class MapController implements Renderer, OnTouchListener, OnScaleGestureL
         okClient.cancel(url);
     }
 
-    public String getFontFilePath(String family, String weight, String style) {
-
-        return fontFileParser.getFontFile(family + "_" + weight + "_" + style);
-
-    }
-
     public boolean startUrlRequest(String url, final long callbackPtr) throws Exception {
         Request request = okRequestBuilder.tag(url).url(url).build();
 
@@ -586,5 +578,14 @@ public class MapController implements Renderer, OnTouchListener, OnScaleGestureL
         });
         return true;
     }
+
+    // Font Fetching
+    // =============
+    public String getFontFilePath(String family, String weight, String style) {
+
+        return fontFileParser.getFontFile(family + "_" + weight + "_" + style);
+
+    }
+
 }
 
