@@ -67,8 +67,6 @@ void Texture::setData(const GLuint* _data, unsigned int _dataSize) {
 void Texture::setSubData(const GLuint* _subData, unsigned int _xoff, unsigned int _yoff, unsigned int _width,
                          unsigned int _height) {
 
-    std::unique_ptr<std::vector<GLuint>> subData(new std::vector<GLuint>(_subData, _subData + (_width * _height)));
-
     // update m_data with subdata
     size_t bpp = bytesPerPixel();
     size_t divisor = sizeof(GLuint) / bpp;
@@ -78,9 +76,7 @@ void Texture::setSubData(const GLuint* _subData, unsigned int _xoff, unsigned in
         std::memcpy(&m_data[dpos], &_subData[spos], _width * bpp);
     }
 
-    m_subData.push(std::unique_ptr<TextureSubData>(new TextureSubData
-        {std::move(subData), _xoff, _yoff, _width, _height}
-    ));
+    m_subData.push({{_subData, _subData + (_width * _height)}, _xoff, _yoff, _width, _height});
 
     m_dirty = true;
 }
@@ -152,10 +148,10 @@ void Texture::update(GLuint _textureUnit) {
 
     // process queued sub data updates
     while (m_subData.size() > 0) {
-        const TextureSubData* subData = m_subData.front().get();
+        TextureSubData& subData = m_subData.front();
 
-        glTexSubImage2D(m_target, 0, subData->m_xoff, subData->m_yoff, subData->m_width, subData->m_height,
-                        m_options.m_format, GL_UNSIGNED_BYTE, subData->m_data->data());
+        glTexSubImage2D(m_target, 0, subData.m_xoff, subData.m_yoff, subData.m_width, subData.m_height,
+                        m_options.m_format, GL_UNSIGNED_BYTE, subData.m_data.data());
 
         m_subData.pop();
     }
