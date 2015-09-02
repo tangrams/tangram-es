@@ -88,13 +88,21 @@ void Builders::buildPolygonExtrusion(const Polygon& _polygon, float _minHeight, 
     glm::vec3 upVector(0.0f, 0.0f, 1.0f);
     glm::vec3 normalVector;
 
+    size_t sumIndices = _ctx.indices.size();
+    size_t sumVertices = _ctx.numVertices;
+
+    for (auto& line : _polygon) {
+        size_t lineSize = line.size();
+        sumIndices += lineSize * 6;
+        sumVertices += (lineSize - 1) * 4;
+    }
+
+    _ctx.indices.reserve(sumIndices);
+    _ctx.sizeHint(sumVertices);
+
     for (auto& line : _polygon) {
 
         size_t lineSize = line.size();
-        _ctx.indices.reserve(_ctx.indices.size() + lineSize * 6);
-
-        _ctx.numVertices += (lineSize - 1) * 4;
-        _ctx.sizeHint(_ctx.numVertices);
 
         for (size_t i = 0; i < lineSize - 1; i++) {
 
