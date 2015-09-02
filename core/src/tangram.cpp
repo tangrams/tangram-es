@@ -280,9 +280,9 @@ void toggleDebugFlag(DebugFlags _flag) {
 
 }
 
-void onContextDestroyed() {
+void setupGL() {
 
-    logMsg("context destroyed\n");
+    logMsg("setup GL\n");
 
     if (m_tileManager) {
         m_tileManager->clearTileSets();

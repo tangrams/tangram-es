@@ -242,6 +242,7 @@ public class MapController implements Renderer, OnTouchListener, OnScaleGestureL
     // ==============
 
     private synchronized native void init(MapController instance, AssetManager assetManager, String stylePath);
+    private synchronized native void setupGL();
     private synchronized native void resize(int width, int height);
     private synchronized native void update(float dt);
     private synchronized native void render();
@@ -254,7 +255,6 @@ public class MapController implements Renderer, OnTouchListener, OnScaleGestureL
     private synchronized native void setTilt(float radians);
     private synchronized native float getTilt();
     private synchronized native void screenToWorldCoordinates(double[] screenCoords);
-    private synchronized native void onContextDestroyed();
     private synchronized native void setPixelScale(float scale);
     private synchronized native void handleTapGesture(float posX, float posY);
     private synchronized native void handleDoubleTapGesture(float posX, float posY);
@@ -333,8 +333,8 @@ public class MapController implements Renderer, OnTouchListener, OnScaleGestureL
     }
 
     public void onSurfaceCreated(GL10 gl, EGLConfig config) {
-        onContextDestroyed();
         init(this, assetManager, scenePath);
+        setupGL();
     }
 
     // GestureDetector.OnDoubleTapListener methods

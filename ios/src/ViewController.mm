@@ -194,6 +194,7 @@
     [EAGLContext setCurrentContext:self.context];
     
     Tangram::initialize("scene.yaml");
+    Tangram::setupGL();
     
     int width = self.view.bounds.size.width;
     int height = self.view.bounds.size.height;
@@ -205,8 +206,6 @@
 
 - (void)tearDownGL
 {
-    [EAGLContext setCurrentContext:self.context];
-    Tangram::onContextDestroyed();
 }
 
 - (void)viewWillTransitionToSize:(CGSize)size withTransitionCoordinator:(id<UIViewControllerTransitionCoordinator>)coordinator

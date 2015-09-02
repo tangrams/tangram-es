@@ -63,8 +63,8 @@ extern "C" {
         Tangram::render();
     }
 
-    JNIEXPORT void JNICALL Java_com_mapzen_tangram_MapController_onContextDestroyed(JNIEnv* jniEnv, jobject obj) {
-        Tangram::onContextDestroyed();
+    JNIEXPORT void JNICALL Java_com_mapzen_tangram_MapController_setupGL(JNIEnv* jniEnv, jobject obj) {
+        Tangram::setupGL();
     }
 
     JNIEXPORT void JNICALL Java_com_mapzen_tangram_MapController_setPixelScale(JNIEnv* jniEnv, jobject obj, jfloat scale) {
