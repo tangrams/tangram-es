@@ -9,8 +9,8 @@ lights:
         type: directional
         origin: world
         direction: [1, 1, -1]
-        diffuse: [.7, .7, .7, 1.]
-        ambient: [.3, .3, .3, 1.]
+        diffuse: [.3, .3, .3, 1.]
+        ambient: [0.6, 0.6, 0.6, 1.]
 
 textures:
     water-texture:
@@ -175,13 +175,26 @@ layers:
             draw:
                 heightglow:
                     color: '#bddec5'
+
+    poi_labels:
+        data: { source: osm, layer: pois }
+        filter: { name: true, not: { kind: [peak, viewpoint, bicycle_rental, car_sharing] }, $zoom: { min: 15 } }
+        draw:
+            text:
+                offset: [0px, -13px]
+                font:
+                    family: sans-serif
+                    weight: 400
+                    style: normal
+                    size: 1.2em
+                    fill: white
     road_labels:
         data: {source: osm, layer: roads}
         filter: { name: true, aeroway: false, tunnel: false, railway: false, not: { kind: rail }, $zoom: { min: 10 } }
         draw:
             text: 
                 visible: false
-                offset: [0, 10px]
+                offset: [0, -100px]
                 font:
                     family: sans-serif
                     weight: 400
