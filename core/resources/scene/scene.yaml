@@ -198,7 +198,7 @@ layers:
                         style: normal
                         size: 20px
                         fill: black
-                        capitalized: true
+                        uppercase: true
         major_road:
             filter: { kind: major_road }
             draw:
@@ -209,7 +209,7 @@ layers:
                         weight: 400
                         style: normal
                         size: 20.5pt
-                        capitalized: true
+                        uppercase: true
     places:
         data: { sources: osm }
         filter:
