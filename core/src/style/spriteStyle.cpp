@@ -80,12 +80,7 @@ void SpriteStyle::buildPoint(const Point& _point, const DrawRule& _rule, const P
     auto& mesh = static_cast<LabelMesh&>(_mesh);
 
     Label::Options options;
-    options.color = 0xff000000;
     options.offset = offset;
-
-    options.color |= (rand() % 255) << 0;
-    options.color |= (rand() % 255) << 8;
-    options.color |= (rand() % 255) << 16;
 
     std::unique_ptr<SpriteLabel> label(new SpriteLabel(t, spriteNode.m_size * spriteScale, mesh, _mesh.numVertices(), options));
 
