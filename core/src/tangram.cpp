@@ -69,11 +69,7 @@ void initialize(const char* _scenePath) {
 
         loader.loadScene(sceneString, *m_scene, *m_tileManager, *m_view);
 
-        Primitives::setColor(0xffffff);
-        RenderState::configure();
     }
-
-    while (Error::hadGlError("Tangram::initialize()")) {}
 
     logMsg("finish initialize\n");
 
@@ -310,6 +306,8 @@ void onContextDestroyed() {
 
     // Reconfigure the render states
     RenderState::configure();
+
+    Primitives::setColor(0xffffff);
 }
 
 }

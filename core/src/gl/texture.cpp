@@ -37,7 +37,6 @@ Texture::Texture(const std::string& _file, TextureOptions _options, bool _genera
 
     resize(width, height);
     setData(reinterpret_cast<GLuint*>(pixels), width * height);
-    update(0);
 
     free(data);
     stbi_image_free(pixels);
