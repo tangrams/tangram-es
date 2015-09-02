@@ -130,12 +130,12 @@ void window_size_callback(GLFWwindow* window, int width, int height) {
 
 void init_main_window() {
 
-    bool contextDestroyed = false;
+    // Setup tangram
+    Tangram::initialize("scene.yaml");
 
     // Destroy old window
     if (main_window != nullptr) {
         glfwDestroyWindow(main_window);
-        contextDestroyed = true;
     }
 
     // Create a windowed mode window and its OpenGL context
@@ -148,10 +148,6 @@ void init_main_window() {
     // Make the main_window's context current
     glfwMakeContextCurrent(main_window);
 
-    if (contextDestroyed) {
-        Tangram::onContextDestroyed();
-    }
-
     // Set input callbacks
     glfwSetWindowSizeCallback(main_window, window_size_callback);
     glfwSetMouseButtonCallback(main_window, mouse_button_callback);
@@ -159,8 +155,8 @@ void init_main_window() {
     glfwSetScrollCallback(main_window, scroll_callback);
     glfwSetKeyCallback(main_window, key_callback);
 
-    // Setup tangram
-    Tangram::initialize("scene.yaml");
+    // Setup graphics
+    Tangram::setupGL();
     Tangram::resize(width, height);
 
 }
