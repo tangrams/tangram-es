@@ -97,7 +97,7 @@ class FontFileParser {
             fileXml = systemFontFile.getAbsolutePath();
         }
 
-        if(fileXml == "") {
+        if("".equals(fileXml)) {
             return;
         }
 
