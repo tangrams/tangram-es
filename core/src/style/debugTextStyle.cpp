@@ -31,7 +31,7 @@ void DebugTextStyle::onBeginBuildTile(Tangram::Tile &_tile) const {
         Label::Options options;
         options.color = 0xdc3522ff;
 
-        buffer.addLabel(_tile.getID().toString(), { glm::vec2(0) }, Label::Type::debug, params, options);
+        buffer.addLabel(_tile.getID(), _tile.getID().toString(), { glm::vec2(0) }, Label::Type::debug, params, options);
 
         onEndBuildTile(_tile);
 

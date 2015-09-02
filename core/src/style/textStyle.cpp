@@ -93,7 +93,7 @@ void TextStyle::buildPoint(const Point& _point, const DrawRule& _rule, const Pro
     options.color = params.fill;
     options.offset = params.offset;
 
-    buffer.addLabel(text, { glm::vec2(_point), glm::vec2(_point) }, Label::Type::point, params, options);
+    buffer.addLabel(_tile.getID(), text, { glm::vec2(_point), glm::vec2(_point) }, Label::Type::point, params, options);
 }
 
 void TextStyle::buildLine(const Line& _line, const DrawRule& _rule, const Properties& _props, VboMesh& _mesh, Tile& _tile) const {
@@ -128,7 +128,7 @@ void TextStyle::buildLine(const Line& _line, const DrawRule& _rule, const Proper
         options.color = params.fill;
         options.offset = params.offset;
 
-        buffer.addLabel(text, { p1, p2 }, Label::Type::line, params, options);
+        buffer.addLabel(_tile.getID(), text, { p1, p2 }, Label::Type::line, params, options);
     }
 }
 
@@ -162,7 +162,7 @@ void TextStyle::buildPolygon(const Polygon& _polygon, const DrawRule& _rule, con
     options.color = params.fill;
     options.offset = params.offset;
 
-    buffer.addLabel(text, { centroid, centroid }, Label::Type::point, params, options);
+    buffer.addLabel(_tile.getID(), text, { centroid, centroid }, Label::Type::point, params, options);
 
 }
 

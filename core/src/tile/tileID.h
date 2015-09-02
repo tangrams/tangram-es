@@ -29,6 +29,7 @@ struct TileID {
     bool operator<=(const TileID& _rhs) const { return !(*this > _rhs); }
     bool operator>=(const TileID& _rhs) const { return !(*this < _rhs); }
     bool operator==(const TileID& _rhs) const { return x == _rhs.x && y == _rhs.y && z == _rhs.z; }
+    bool operator!=(const TileID& _rhs) const { return !(*this == _rhs); }
     
     TileID& operator=(const TileID& _rhs) = delete;
     

@@ -70,7 +70,8 @@ void Labels::update(const View& _view, float _dt, const std::vector<std::unique_
 
     for (auto& l1 : m_labels) {
         for (auto& l2 : m_labels) {
-            if (l1 == l2 || !l1->visibleState() || !l2->visibleState() || l1->getAttachedLabel() || l2->getAttachedLabel()) {
+            if (l1 == l2 || !l1->visibleState() || !l2->visibleState()
+                || l1->getAttachedLabel() || l2->getAttachedLabel()) {
                 continue;
             }
 

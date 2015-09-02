@@ -6,6 +6,7 @@
 #include "isect2d.h"
 #include "fadeEffect.h"
 #include "util/types.h"
+#include "tile/tileID.h"
 
 #include <string>
 
@@ -62,7 +63,7 @@ public:
         uint32_t priority = 1 << 31;
     };
 
-    Label(Transform _transform, glm::vec2 _size, Type _type, LabelMesh& _mesh, Range _vertexRange, Options _options);
+    Label(TileID _tileID, Transform _transform, glm::vec2 _size, Type _type, LabelMesh& _mesh, Range _vertexRange, Options _options);
 
     virtual ~Label();
 
@@ -159,7 +160,9 @@ protected:
     LabelMesh& m_mesh;
     // first vertex and count in m_mesh vertices
     Range m_vertexRange;
-
+    // where the label lives
+    TileID m_tileID;
+    // attachement to any other label
     std::shared_ptr<Label> m_attachedLabel;
 };
 

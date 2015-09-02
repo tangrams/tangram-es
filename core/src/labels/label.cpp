@@ -5,13 +5,14 @@
 
 namespace Tangram {
 
-Label::Label(Label::Transform _transform, glm::vec2 _size, Type _type, LabelMesh& _mesh, Range _vertexRange, Options _options) :
+Label::Label(TileID _tile, Label::Transform _transform, glm::vec2 _size, Type _type, LabelMesh& _mesh, Range _vertexRange, Options _options) :
     m_type(_type),
     m_options(_options),
     m_transform(_transform),
     m_dim(_size),
     m_mesh(_mesh),
-    m_vertexRange(_vertexRange) {
+    m_vertexRange(_vertexRange),
+    m_tileID(_tile) {
 
     m_transform.state.alpha = m_type == Type::debug ? 1.0 : 0.0;
     m_currentState = m_type == Type::debug ? State::visible : State::wait_occ;
@@ -176,7 +177,7 @@ void Label::setRotation(float _rotation) {
 }
 
 bool Label::compareGeoLocation(const Label& _label) {
-    if (_label.getType() != m_type) {
+    if (_label.getType() != m_type || _label.m_tileID != m_tileID) {
         return false;
     }
 
