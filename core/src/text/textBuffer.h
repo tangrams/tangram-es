@@ -20,7 +20,7 @@ struct Parameters {
     float strokeWidth = 0.0f;
     float fontSize = 12.0f;
     float blurSpread = 0.0f;
-    bool capitalized = false;
+    bool uppercase = false;
     bool visible = true;
     uint32_t priority = 1 << 31;
 };

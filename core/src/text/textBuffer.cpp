@@ -36,7 +36,7 @@ bool TextBuffer::addLabel(const std::string& _text, Label::Transform _transform,
     std::string text = _text;
 
     // captilize the string
-    if (_params.capitalized) {
+    if (_params.uppercase) {
         std::locale loc;
         for (std::string::size_type i = 0; i < _text.length(); ++i) {
             text[i] = std::toupper(_text[i], loc);
