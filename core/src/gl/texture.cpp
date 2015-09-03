@@ -76,7 +76,7 @@ void Texture::setSubData(const GLuint* _subData, unsigned int _xoff, unsigned in
         std::memcpy(&m_data[dpos], &_subData[spos], _width * bpp);
     }
 
-    m_subData.push({{_subData, _subData + (_width * _height)}, _xoff, _yoff, _width, _height});
+    m_subData.push_back({{_subData, _subData + (_width * _height) / divisor}, _xoff, _yoff, _width, _height});
 
     m_dirty = true;
 }
