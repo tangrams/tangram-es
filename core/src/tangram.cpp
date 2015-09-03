@@ -65,11 +65,7 @@ void initialize(const char* _scenePath) {
 
         loader.loadScene(sceneString, *m_scene, *m_tileManager, *m_view);
 
-        Primitives::setColor(0xffffff);
-        RenderState::configure();
     }
-
-    while (Error::hadGlError("Tangram::initialize()")) {}
 
     logMsg("finish initialize\n");
 
@@ -280,9 +276,9 @@ void toggleDebugFlag(DebugFlags _flag) {
 
 }
 
-void onContextDestroyed() {
+void setupGL() {
 
-    logMsg("context destroyed\n");
+    logMsg("setup GL\n");
 
     if (m_tileManager) {
         m_tileManager->clearTileSets();
@@ -306,6 +302,10 @@ void onContextDestroyed() {
 
     // Reconfigure the render states
     RenderState::configure();
+
+    Primitives::setColor(0xffffff);
+
+    while (Error::hadGlError("Tangram::setupGL()")) {}
 }
 
 }

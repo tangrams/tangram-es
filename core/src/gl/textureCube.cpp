@@ -56,7 +56,6 @@ void TextureCube::load(const std::string& _file) {
     free(data);
     stbi_image_free(pixels);
 
-    update(0);
 }
 
 void TextureCube::update(GLuint _textureUnit) {

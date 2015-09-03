@@ -12,6 +12,9 @@ namespace Tangram {
 // Create resources and initialize the map view using the scene file at the given resource path
 void initialize(const char* _scenePath);
 
+// Initialize graphics resources; OpenGL context must be created prior to calling this
+void setupGL();
+
 // Resize the map view to a new width and height (in pixels)
 void resize(int _newWidth, int _newHeight);
 
@@ -47,9 +50,6 @@ float getTilt();
 
 // Transform coordinates in screen space (x right, y down) into their longitude and latitude in the map view
 void screenToWorldCoordinates(double& _x, double& _y);
-
-// Invalidate and re-create all OpenGL resources
-void onContextDestroyed();
 
 // Set the ratio of hardware pixels to logical pixels (defaults to 1.0)
 void setPixelScale(float _pixelsPerPoint);
