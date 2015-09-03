@@ -64,8 +64,9 @@ void Texture::setData(const GLuint* _data, unsigned int _dataSize) {
     m_dirty = true;
 }
 
-void Texture::setSubData(const GLuint* _subData, unsigned int _xoff, unsigned int _yoff, unsigned int _width,
-                         unsigned int _height) {
+void Texture::setSubData(const GLuint* _subData, unsigned int _xoff, unsigned int _yoff,
+                         unsigned int _width, unsigned int _height) {
+
     size_t bpp = bytesPerPixel();
     size_t divisor = sizeof(GLuint) / bpp;
 
@@ -75,13 +76,15 @@ void Texture::setSubData(const GLuint* _subData, unsigned int _xoff, unsigned in
     }
 
     // update m_data with subdata
-    for (size_t j = 0; j < _height; j++) {
-        size_t dpos = ((j + _yoff) * m_width + _xoff) / divisor;
-        size_t spos = (j * _width) / divisor;
-        std::memcpy(&m_data[dpos], &_subData[spos], _width * bpp);
+    for (size_t row = 0; row < _height; row++) {
+        size_t dpos = (row + _yoff) * m_width + _xoff;
+        size_t spos = row * _width;
+
+        std::memcpy(&m_data[dpos / divisor], &_subData[spos / divisor], _width * bpp);
     }
 
-    m_subData.push_back({{_subData, _subData + (_width * _height) / divisor}, _xoff, _yoff, _width, _height});
+    m_subData.push_back({{_subData, _subData + (_width * _height) / divisor},
+                        _xoff, _yoff, _width, _height});
 
     m_dirty = true;
 }
@@ -97,7 +100,8 @@ void Texture::generate(GLuint _textureUnit) {
     bind(_textureUnit);
 
     if (m_generateMipmaps) {
-        GLenum mipmapFlags = GL_LINEAR_MIPMAP_LINEAR | GL_LINEAR_MIPMAP_NEAREST | GL_NEAREST_MIPMAP_LINEAR | GL_NEAREST_MIPMAP_NEAREST;
+        GLenum mipmapFlags = GL_LINEAR_MIPMAP_LINEAR | GL_LINEAR_MIPMAP_NEAREST |
+                             GL_NEAREST_MIPMAP_LINEAR | GL_NEAREST_MIPMAP_NEAREST;
         if (m_options.m_filtering.m_min & mipmapFlags) {
             logMsg("Warning: wrong options provided for the usage of mipmap generation\n");
         }
@@ -144,7 +148,8 @@ void Texture::update(GLuint _textureUnit) {
 
     // resize or push data
     if (m_shouldResize) {
-        glTexImage2D(m_target, 0, m_options.m_internalFormat, m_width, m_height, 0, m_options.m_format, GL_UNSIGNED_BYTE, data);
+        glTexImage2D(m_target, 0, m_options.m_internalFormat, m_width, m_height, 0,
+                     m_options.m_format, GL_UNSIGNED_BYTE, data);
 
         if (data && m_generateMipmaps) {
             // generate the mipmaps for this texture
@@ -152,16 +157,19 @@ void Texture::update(GLuint _textureUnit) {
         }
 
         m_shouldResize = false;
-    }
 
-    // process queued sub data updates
-    while (m_subData.size() > 0) {
-        TextureSubData& subData = m_subData.front();
+        m_subData.clear();
 
-        glTexSubImage2D(m_target, 0, subData.m_xoff, subData.m_yoff, subData.m_width, subData.m_height,
-                        m_options.m_format, GL_UNSIGNED_BYTE, subData.m_data.data());
+    } else {
+        // process queued sub data updates
+        while (m_subData.size() > 0) {
+            TextureSubData& subData = m_subData.front();
 
-        m_subData.pop();
+            glTexSubImage2D(m_target, 0, subData.m_xoff, subData.m_yoff, subData.m_width, subData.m_height,
+                            m_options.m_format, GL_UNSIGNED_BYTE, subData.m_data.data());
+
+            m_subData.pop_front();
+        }
     }
 
     m_dirty = false;
