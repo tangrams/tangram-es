@@ -10,7 +10,6 @@ import java.util.Map;
 
 import org.xmlpull.v1.XmlPullParser;
 import org.xmlpull.v1.XmlPullParserException;
-import org.xmlpull.v1.XmlPullParserFactory;
 
 import android.util.Xml;
 import android.util.Log;
@@ -84,17 +83,15 @@ class FontFileParser {
 
         InputStream in = null;
         final File fontFile = new File("/system/etc/fonts.xml");
-        final File systemFontFile = new File("/system/etc/system_fonts.xml");
-        final File fallbackFontFile = new File("/system/etc/fallback_fonts.xml");
+
+        // TODO: Handle system_fonts parsing which has a different xml layout as compared to fonts.xml
+        //       system_fonts.xml also does not seem to have a good css style font parameter mapping as is the case with
+        //       fonts.xml (fonts.xml is available in android L and above)
 
         String fileXml = "";
 
         if (fontFile.exists()) {
             fileXml = fontFile.getAbsolutePath();
-        } else if (systemFontFile.exists()) {
-            fileXml = systemFontFile.getAbsolutePath();
-        } else if (fallbackFontFile.exists()) {
-            fileXml = systemFontFile.getAbsolutePath();
         }
 
         if("".equals(fileXml)) {
