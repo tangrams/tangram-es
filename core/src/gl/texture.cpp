@@ -66,10 +66,15 @@ void Texture::setData(const GLuint* _data, unsigned int _dataSize) {
 
 void Texture::setSubData(const GLuint* _subData, unsigned int _xoff, unsigned int _yoff, unsigned int _width,
                          unsigned int _height) {
-
-    // update m_data with subdata
     size_t bpp = bytesPerPixel();
     size_t divisor = sizeof(GLuint) / bpp;
+
+    // Init m_data if update() was not called after resize()
+    if (m_data.size() != (m_width * m_height) / divisor) {
+        m_data.resize((m_width * m_height) / divisor);
+    }
+
+    // update m_data with subdata
     for (size_t j = 0; j < _height; j++) {
         size_t dpos = ((j + _yoff) * m_width + _xoff) / divisor;
         size_t spos = (j * _width) / divisor;
@@ -126,7 +131,10 @@ void Texture::update(GLuint _textureUnit) {
 
         generate(_textureUnit);
 
-        if (m_data.size() == 0) { m_data.assign(m_width * m_height, 0); }
+        if (m_data.size() == 0) {
+            size_t divisor = sizeof(GLuint) / bytesPerPixel();
+            m_data.resize((m_width * m_height) / divisor, 0);
+        }
 
     } else {
         bind(_textureUnit);
