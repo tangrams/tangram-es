@@ -28,13 +28,10 @@ protected:
 
 public:
 
-    DebugStyle(GLenum _drawMode = GL_LINE_LOOP);
     DebugStyle(std::string _name, Blending _blendMode = Blending::overlay, GLenum _drawMode = GL_LINE_LOOP);
 
     virtual ~DebugStyle() {
     }
-
-    virtual bool isOpaque() const override { return false; };
 
 };
 

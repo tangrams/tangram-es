@@ -17,8 +17,6 @@ public:
 
     std::string m_fontName;
     float m_fontSize;
-
-    virtual bool isOpaque() const override { return false; };
 };
 
 }
