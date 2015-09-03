@@ -26,7 +26,9 @@ bool TextBuffer::addLabel(const std::string& _text, Label::Transform _transform,
 
     auto fontContext = FontContext::GetInstance();
 
-    fontContext->lock();
+    if (!fontContext->lock()) {
+        return false;
+    }
 
     auto& quads = fontContext->rasterize(_text, m_fontID, m_fontSize, m_fontBlurSpread);
     size_t numGlyphs = quads.size();

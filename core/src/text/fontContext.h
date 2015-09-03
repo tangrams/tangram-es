@@ -41,7 +41,7 @@ public:
     void clearState();
 
     /* lock thread access to this font context */
-    void lock();
+    bool lock();
 
     /* unlock thread access to this font context */
     void unlock();
