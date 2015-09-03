@@ -17,6 +17,7 @@ class SceneLayer;
 class View;
 class ShaderProgram;
 class Material;
+class Style;
 struct StyleParam;
 struct DrawRule;
 struct MaterialTexture;
@@ -30,6 +31,7 @@ class SceneLoader {
     void loadCameras(YAML::Node cameras, View& view);
     void loadLayers(YAML::Node layers, Scene& scene, TileManager& tileManager);
     void loadStyles(YAML::Node styles, Scene& scene);
+    void loadStyleProps(Style& style, YAML::Node styleNode, Scene& scene);
     void loadTextures(YAML::Node textures, Scene& scene);
     void loadMaterial(YAML::Node matNode, Material& material, Scene& scene);
     void loadShaderConfig(YAML::Node shaders, ShaderProgram& shader);
