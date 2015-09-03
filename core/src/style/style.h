@@ -112,8 +112,9 @@ public:
 
     void viewportHasChanged() { m_dirtyViewport = true; }
 
-    /* Whether or not the style uses blending operation for drawing */
-    bool isOpaque() const { return m_blend == Blending::none; };
+    Blending blendMode() const { return m_blend; };
+
+    void setBlendMode(Blending _blendMode) { m_blend = _blendMode; }
 
     /* Make this style ready to be used (call after all needed properties are set) */
     virtual void build(const std::vector<std::unique_ptr<Light>>& _lights);
