@@ -18,11 +18,12 @@ public:
 
     void addVertices(std::vector<T>&& _vertices,
                      std::vector<uint16_t>&& _indices) {
-        m_vertices.push_back(_vertices);
-        m_indices.push_back(_indices);
 
         m_nVertices += _vertices.size();
         m_nIndices += _indices.size();
+
+        m_vertices.push_back(std::move(_vertices));
+        m_indices.push_back(std::move(_indices));
     }
 
     virtual void compileVertexBuffer() override {

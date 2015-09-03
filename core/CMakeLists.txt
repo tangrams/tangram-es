@@ -47,7 +47,7 @@ if(NOT DEFINED CORE_LIB_NAME)
 endif()
 
 add_library(${CORE_LIB_NAME} ${CORE_LIB_TYPE} ${FOUND_SOURCES} ${FOUND_HEADERS})
-target_link_libraries(${CORE_LIB_NAME} tess2 css-color-parser-cpp yaml-cpp ${CORE_LIB_DEPS})
+target_link_libraries(${CORE_LIB_NAME} css-color-parser-cpp yaml-cpp ${CORE_LIB_DEPS})
 
 # make groups for xcode
 group_recursive_sources(src "src")
