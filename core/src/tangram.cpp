@@ -135,7 +135,7 @@ void render() {
         style->onEndDrawFrame();
     }
 
-    //m_skybox->draw(*m_view);
+    m_skybox->draw(*m_view);
 
     m_labels->drawDebug(*m_view);
 

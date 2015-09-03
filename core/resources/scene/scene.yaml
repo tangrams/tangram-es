@@ -10,7 +10,7 @@ lights:
         origin: world
         direction: [1, 1, -1]
         diffuse: [.3, .3, .3, 1.]
-        ambient: [0.6, 0.6, 0.6, 1.]
+        ambient: [0.7, 0.7, 0.7, 1.]
 
 textures:
     water-texture:
@@ -104,10 +104,10 @@ layers:
                 width: .02
                 cap: round
                 color: white
-                outline:
-                    width: .01
-                    cap: round
-                    color: '#999'
+#outline:
+#                    width: .01
+#                    cap: round
+#                    color: '#999'
         rounded:
             filter: { $zoom: { min: 18 } }
             draw:
@@ -194,7 +194,7 @@ layers:
         draw:
             text: 
                 visible: false
-                offset: [0, -100px]
+                offset: [0, 8px]
                 font:
                     family: sans-serif
                     weight: 400
@@ -206,7 +206,7 @@ layers:
             draw:
                 text:
                     visible: true
-                    offset: [0px, 100px]
+                    offset: [0px, 5px]
                     font:
                         family: sans-serif
                         weight: 400
