@@ -13,7 +13,7 @@ protected:
 
 public:
 
-    DebugTextStyle(const std::string& _fontName, std::string _name, float _fontSize, bool _sdf = false, GLenum _drawMode = GL_TRIANGLES);
+    DebugTextStyle(const std::string& _fontName, std::string _name, float _fontSize, bool _sdf = false, bool _sdfMultisampling = false, GLenum _drawMode = GL_TRIANGLES);
 
     std::string m_fontName;
     float m_fontSize;
