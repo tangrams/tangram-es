@@ -6,8 +6,8 @@
 
 namespace Tangram {
 
-DebugTextStyle::DebugTextStyle(const std::string& _fontName, std::string _name, float _fontSize, bool _sdf, bool _sdfMultisampling, GLenum _drawMode)
-: TextStyle(_name, _sdf, _sdfMultisampling, _drawMode), m_fontName(_fontName), m_fontSize(_fontSize) {
+DebugTextStyle::DebugTextStyle(const std::string& _fontName, std::string _name, float _fontSize, bool _sdf, bool _sdfMultisampling, Blending _blendMode, GLenum _drawMode)
+: TextStyle(_name, _sdf, _sdfMultisampling, _blendMode, _drawMode), m_fontName(_fontName), m_fontSize(_fontSize) {
 }
 
 void DebugTextStyle::onBeginBuildTile(Tangram::Tile &_tile) const {

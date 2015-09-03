@@ -32,7 +32,7 @@ public:
 
     virtual void onBeginDrawFrame(const View& _view, const Scene& _scene) override;
 
-    SpriteStyle(std::string _name, GLenum _drawMode = GL_TRIANGLES);
+    SpriteStyle(std::string _name, Blending _blendMode = Blending::overlay, GLenum _drawMode = GL_TRIANGLES);
 
     virtual ~SpriteStyle();
 

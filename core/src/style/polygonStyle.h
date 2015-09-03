@@ -44,7 +44,7 @@ protected:
 public:
 
     PolygonStyle(GLenum _drawMode = GL_TRIANGLES);
-    PolygonStyle(std::string _name, GLenum _drawMode = GL_TRIANGLES);
+    PolygonStyle(std::string _name, Blending _blendMode = Blending::none, GLenum _drawMode = GL_TRIANGLES);
 
     virtual ~PolygonStyle() {
     }

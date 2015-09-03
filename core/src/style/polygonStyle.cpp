@@ -9,7 +9,7 @@
 
 namespace Tangram {
 
-PolygonStyle::PolygonStyle(std::string _name, GLenum _drawMode) : Style(_name, _drawMode) {
+PolygonStyle::PolygonStyle(std::string _name, Blending _blendMode, GLenum _drawMode) : Style(_name, _blendMode, _drawMode) {
 }
 
 void PolygonStyle::constructVertexLayout() {

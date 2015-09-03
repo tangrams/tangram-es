@@ -9,8 +9,9 @@
 
 namespace Tangram {
 
-Style::Style(std::string _name, GLenum _drawMode) :
+    Style::Style(std::string _name, Blending _blendMode, GLenum _drawMode) :
     m_name(_name),
+    m_blend(_blendMode),
     m_drawMode(_drawMode),
     m_contextLost(true) {
 }
@@ -94,9 +95,41 @@ void Style::onBeginDrawFrame(const View& _view, const Scene& _scene) {
 
     m_shaderProgram->setUniformf("u_zoom", _view.getZoom());
     
-    // default capabilities
-    RenderState::blending(GL_FALSE);
-    RenderState::depthTest(GL_TRUE);
+    // Configure render state
+    switch (m_blend) {
+        case Blending::none:
+            RenderState::blending(GL_FALSE);
+            RenderState::blendingFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+            RenderState::depthTest(GL_TRUE);
+            RenderState::depthWrite(GL_TRUE);
+            break;
+        case Blending::add:
+            RenderState::blending(GL_TRUE);
+            RenderState::blendingFunc(GL_ONE, GL_ONE);
+            RenderState::depthTest(GL_FALSE);
+            RenderState::depthWrite(GL_TRUE);
+            break;
+        case Blending::multiply:
+            RenderState::blending(GL_TRUE);
+            RenderState::blendingFunc(GL_ZERO, GL_SRC_COLOR);
+            RenderState::depthTest(GL_FALSE);
+            RenderState::depthWrite(GL_TRUE);
+            break;
+        case Blending::overlay:
+            RenderState::blending(GL_TRUE);
+            RenderState::blendingFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+            RenderState::depthTest(GL_FALSE);
+            RenderState::depthWrite(GL_FALSE);
+            break;
+        case Blending::inlay:
+            RenderState::blending(GL_TRUE);
+            RenderState::blendingFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+            RenderState::depthTest(GL_TRUE);
+            RenderState::depthWrite(GL_FALSE);
+            break;
+        default:
+            break;
+    }
 }
 
 void Style::onBeginBuildTile(Tile& _tile) const {

@@ -12,10 +12,9 @@ namespace Tangram {
 
 const static std::string key_name("name");
 
-TextStyle::TextStyle(std::string _name, bool _sdf, bool _sdfMultisampling, GLenum _drawMode) :
-    Style(_name, _drawMode), m_sdf(_sdf), m_sdfMultisampling(_sdfMultisampling) {
-        logMsg("multisam: %d\n", _sdfMultisampling);
-    }
+TextStyle::TextStyle(std::string _name, bool _sdf, bool _sdfMultisampling, Blending _blendMode, GLenum _drawMode) :
+    Style(_name, _blendMode, _drawMode), m_sdf(_sdf), m_sdfMultisampling(_sdfMultisampling) {
+}
 
 TextStyle::~TextStyle() {
 }
@@ -175,10 +174,9 @@ void TextStyle::onBeginDrawFrame(const View& _view, const Scene& _scene) {
         m_shaderProgram->setUniformMatrix4f("u_proj", glm::value_ptr(_view.getOrthoViewportMatrix()));
         m_dirtyViewport = false;
     }
+    
+    Style::onBeginDrawFrame(_view, _scene);
 
-    RenderState::blending(GL_TRUE);
-    RenderState::blendingFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
-    RenderState::depthTest(GL_FALSE);
 }
 
 }

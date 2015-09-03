@@ -6,7 +6,7 @@
 
 namespace Tangram {
 
-PolylineStyle::PolylineStyle(std::string _name, GLenum _drawMode) : Style(_name, _drawMode) {
+PolylineStyle::PolylineStyle(std::string _name, Blending _blendMode, GLenum _drawMode) : Style(_name, _blendMode, _drawMode) {
 }
 
 void PolylineStyle::constructVertexLayout() {
