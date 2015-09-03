@@ -12,9 +12,10 @@ namespace Tangram {
 
 const static std::string key_name("name");
 
-TextStyle::TextStyle(const std::string& _fontName, std::string _name, float _fontSize, unsigned int _color, bool _sdf, bool _sdfMultisampling, GLenum _drawMode)
-: Style(_name, _drawMode), m_fontName(_fontName), m_fontSize(_fontSize), m_color(_color), m_sdf(_sdf), m_sdfMultisampling(_sdfMultisampling)  {
-}
+TextStyle::TextStyle(std::string _name, bool _sdf, bool _sdfMultisampling, GLenum _drawMode) :
+    Style(_name, _drawMode), m_sdf(_sdf), m_sdfMultisampling(_sdfMultisampling) {
+        logMsg("multisam: %d\n", _sdfMultisampling);
+    }
 
 TextStyle::~TextStyle() {
 }
@@ -23,6 +24,7 @@ void TextStyle::constructVertexLayout() {
     m_vertexLayout = std::shared_ptr<VertexLayout>(new VertexLayout({
         {"a_position", 2, GL_FLOAT, false, 0},
         {"a_uv", 2, GL_FLOAT, false, 0},
+        {"a_color", 4, GL_UNSIGNED_BYTE, true, 0},
         {"a_screenPosition", 2, GL_FLOAT, false, 0},
         {"a_alpha", 1, GL_FLOAT, false, 0},
         {"a_rotation", 1, GL_FLOAT, false, 0},
@@ -46,17 +48,59 @@ void TextStyle::constructShaderProgram() {
     m_shaderProgram->addSourceBlock("defines", defines);
 }
 
+Parameters TextStyle::parseRule(const DrawRule& _rule) const {
+    Parameters p;
+
+    std::string fontFamily, fontWeight, fontStyle;
+
+    _rule.get(StyleParamKey::font_family, fontFamily);
+    _rule.get(StyleParamKey::font_weight, fontWeight);
+    _rule.get(StyleParamKey::font_style, fontStyle);
+    _rule.get(StyleParamKey::font_size, p.fontSize);
+    _rule.get(StyleParamKey::font_fill, p.fill);
+    if (_rule.get(StyleParamKey::font_stroke, p.strokeColor)) {
+        _rule.get(StyleParamKey::font_stroke_color, p.strokeColor);
+    }
+    _rule.get(StyleParamKey::font_stroke_width, p.strokeWidth);
+    _rule.get(StyleParamKey::font_uppercase, p.uppercase);
+    _rule.get(StyleParamKey::visible, p.visible);
+
+    p.fontKey = fontFamily + "_" + fontWeight + "_" + fontStyle;
+
+    /* Global operations done for fontsize and sdfblur */
+    float emSize = p.fontSize / 16.f;
+    p.fontSize *= m_pixelScale;
+    p.blurSpread = m_sdf ? emSize * 5.0f : 0.0f;
+
+    return p;
+}
+
 void TextStyle::buildPoint(const Point& _point, const DrawRule& _rule, const Properties& _props, VboMesh& _mesh, Tile& _tile) const {
     auto& buffer = static_cast<TextBuffer&>(_mesh);
+
+    Parameters params = parseRule(_rule);
+
+    if (!params.visible) {
+        return;
+    }
 
     const auto& text = _props.getString(key_name);
     if (text.length() == 0) { return; }
 
-    buffer.addLabel(text, { glm::vec2(_point), glm::vec2(_point), glm::vec2(0) }, Label::Type::point);
+    Label::Options options;
+    options.color = params.fill;
+
+    buffer.addLabel(text, { glm::vec2(_point), glm::vec2(_point) }, Label::Type::point, params, options);
 }
 
 void TextStyle::buildLine(const Line& _line, const DrawRule& _rule, const Properties& _props, VboMesh& _mesh, Tile& _tile) const {
     auto& buffer = static_cast<TextBuffer&>(_mesh);
+
+	Parameters params = parseRule(_rule);
+
+    if (!params.visible) {
+        return;
+    }
 
     const auto& text = _props.getString(key_name);
     if (text.length() == 0) { return; }
@@ -77,12 +121,21 @@ void TextStyle::buildLine(const Line& _line, const DrawRule& _rule, const Proper
             continue;
         }
 
-        buffer.addLabel(text, { p1, p2, glm::vec2(0) }, Label::Type::line);
+        Label::Options options;
+        options.color = params.fill;
+
+        buffer.addLabel(text, { p1, p2 }, Label::Type::line, params, options);
     }
 }
 
 void TextStyle::buildPolygon(const Polygon& _polygon, const DrawRule& _rule, const Properties& _props, VboMesh& _mesh, Tile& _tile) const {
     auto& buffer = static_cast<TextBuffer&>(_mesh);
+
+	Parameters params = parseRule(_rule);
+
+    if (!params.visible) {
+        return;
+    }
 
     const auto& text = _props.getString(key_name);
     if (text.length() == 0) { return; }
@@ -101,28 +154,11 @@ void TextStyle::buildPolygon(const Polygon& _polygon, const DrawRule& _rule, con
 
     centroid /= n;
 
-    buffer.addLabel(text, { centroid, centroid, glm::vec2(0) }, Label::Type::point);
-}
+    Label::Options options;
+    options.color = params.fill;
 
+    buffer.addLabel(text, { centroid, centroid }, Label::Type::point, params, options);
 
-void TextStyle::onBeginBuildTile(Tile& _tile) const {
-    auto& mesh = _tile.getMesh(*this);
-    if (!mesh) {
-        mesh.reset(newMesh());
-    }
-    auto& buffer = static_cast<TextBuffer&>(*mesh);
-    auto ftContext = FontContext::GetInstance();
-    auto font = ftContext->getFontID(m_fontName);
-
-    buffer.init(font, m_fontSize * m_pixelScale, m_sdf ? 2.5 : 0);
-}
-
-void TextStyle::onEndBuildTile(Tile& _tile) const {
-}
-
-void TextStyle::setColor(unsigned int _color) {
-    m_color = _color;
-    m_dirtyColor = true;
 }
 
 void TextStyle::onBeginDrawFrame(const View& _view, const Scene& _scene) {
@@ -138,15 +174,6 @@ void TextStyle::onBeginDrawFrame(const View& _view, const Scene& _scene) {
         m_shaderProgram->setUniformf("u_resolution", _view.getWidth(), _view.getHeight());
         m_shaderProgram->setUniformMatrix4f("u_proj", glm::value_ptr(_view.getOrthoViewportMatrix()));
         m_dirtyViewport = false;
-    }
-
-    if (m_dirtyColor || contextLost) {
-        float r = (m_color >> 16 & 0xff) / 255.0;
-        float g = (m_color >> 8  & 0xff) / 255.0;
-        float b = (m_color       & 0xff) / 255.0;
-
-        m_shaderProgram->setUniformf("u_color", r, g, b);
-        m_dirtyColor = false;
     }
 
     RenderState::blending(GL_TRUE);

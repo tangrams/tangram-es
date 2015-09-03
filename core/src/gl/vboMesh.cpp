@@ -65,9 +65,9 @@ void VboMesh::setDrawMode(GLenum _drawMode) {
     }
 }
 
-bool VboMesh::subDataUpload() {
+void VboMesh::subDataUpload() {
     if (!m_dirty) {
-        return false;
+        return;
     }
 
     if (m_hint == GL_STATIC_DRAW) {
@@ -96,14 +96,9 @@ bool VboMesh::subDataUpload() {
     m_dirtyOffset = 0;
     m_dirtySize = 0;
     m_dirty = false;
-
-    return true;
 }
 
-bool VboMesh::upload() {
-    if (m_isUploaded) {
-        return false;
-    }
+void VboMesh::upload() {
 
     // Generate vertex buffer, if needed
     if (m_glVertexBuffer == 0) {
@@ -142,9 +137,6 @@ bool VboMesh::upload() {
     m_generation = s_validGeneration;
 
     m_isUploaded = true;
-
-    return true;
-
 }
 
 void VboMesh::draw(ShaderProgram& _shader) {

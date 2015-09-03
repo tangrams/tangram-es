@@ -3,7 +3,7 @@
 #include "gl.h"
 
 #include <vector>
-#include <queue>
+#include <deque>
 #include <memory>
 #include <string>
 
@@ -63,7 +63,8 @@ public:
     void setData(const GLuint* _data, unsigned int _dataSize);
 
     /* Update a region of the texture */
-    void setSubData(const GLuint* _subData, unsigned int _xoff, unsigned int _yoff, unsigned int _width, unsigned int _height);
+    void setSubData(const GLuint* _subData, unsigned int _xoff, unsigned int _yoff,
+                    unsigned int _width, unsigned int _height);
 
     typedef std::pair<GLuint, GLuint> TextureSlot;
 
@@ -90,7 +91,7 @@ protected:
 
 private:
     struct TextureSubData {
-        std::unique_ptr<std::vector<GLuint>> m_data;
+        std::vector<GLuint> m_data;
         unsigned int m_xoff;
         unsigned int m_yoff;
         unsigned int m_width;
@@ -102,7 +103,7 @@ private:
     bool m_generateMipmaps;
 
     // used to queue the subdata updates, each call of setSubData would be treated in the order that they arrived
-    std::queue<std::unique_ptr<TextureSubData>> m_subData;
+    std::deque<TextureSubData> m_subData;
 };
 
 }

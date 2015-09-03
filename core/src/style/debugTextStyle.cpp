@@ -6,11 +6,16 @@
 
 namespace Tangram {
 
-DebugTextStyle::DebugTextStyle(const std::string& _fontName, std::string _name, float _fontSize, unsigned int _color, bool _sdf, GLenum _drawMode)
-: TextStyle(_fontName, _name, _fontSize, _color, _sdf, false, _drawMode) {
+DebugTextStyle::DebugTextStyle(const std::string& _fontName, std::string _name, float _fontSize, bool _sdf, bool _sdfMultisampling, GLenum _drawMode)
+: TextStyle(_name, _sdf, _sdfMultisampling, _drawMode), m_fontName(_fontName), m_fontSize(_fontSize) {
 }
 
 void DebugTextStyle::onBeginBuildTile(Tangram::Tile &_tile) const {
+
+    Parameters params;
+    params.fontKey = m_fontName;
+    params.fontSize = m_fontSize * m_pixelScale;
+    params.blurSpread = m_sdf ? 2.5f : 0.0f;
 
     TextStyle::onBeginBuildTile(_tile);
 
@@ -23,17 +28,10 @@ void DebugTextStyle::onBeginBuildTile(Tangram::Tile &_tile) const {
 
         auto& buffer = static_cast<TextBuffer&>(*mesh);
 
-        auto ftContext = FontContext::GetInstance();
-        
-        ftContext->setFont(m_fontName, m_fontSize * m_pixelScale);
+        Label::Options options;
+        options.color = 0xdc3522ff;
 
-        if (m_sdf) {
-            float blurSpread = 2.5;
-            ftContext->setSignedDistanceField(blurSpread);
-        }
-
-        std::string tileID = std::to_string(_tile.getID().x) + "/" + std::to_string(_tile.getID().y) + "/" + std::to_string(_tile.getID().z);
-        buffer.addLabel(tileID, { glm::vec2(0) }, Label::Type::debug);
+        buffer.addLabel(_tile.getID().toString(), { glm::vec2(0) }, Label::Type::debug, params, options);
 
         onEndBuildTile(_tile);
 

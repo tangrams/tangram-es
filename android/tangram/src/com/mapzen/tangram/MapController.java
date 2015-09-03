@@ -50,7 +50,6 @@ public class MapController implements Renderer, OnTouchListener, OnScaleGestureL
     public MapController(Activity mainApp, MapView view) {
 
         this(mainApp, view, "scene.yaml");
-
     }
 
     /**
@@ -289,6 +288,8 @@ public class MapController implements Renderer, OnTouchListener, OnScaleGestureL
     private ScaleGestureDetector scaleGestureDetector;
     private RotateGestureDetector rotateGestureDetector;
     private ShoveGestureDetector shoveGestureDetector;
+
+    private final FontFileParser fontFileParser = new FontFileParser();
 
     private static final float PINCH_THRESHOLD = 0.015f; //1.5% of minDim
     private static final float ROTATION_THRESHOLD = 0.30f;
@@ -577,5 +578,14 @@ public class MapController implements Renderer, OnTouchListener, OnScaleGestureL
         });
         return true;
     }
+
+    // Font Fetching
+    // =============
+    public String getFontFilePath(String family, String weight, String style) {
+
+        return fontFileParser.getFontFile(family + "_" + weight + "_" + style);
+
+    }
+
 }
 

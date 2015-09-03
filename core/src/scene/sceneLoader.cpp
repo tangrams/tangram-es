@@ -17,6 +17,7 @@
 #include "filters.h"
 #include "sceneLayer.h"
 #include "scene/dataLayer.h"
+#include "text/fontContext.h"
 
 #include "yaml-cpp/yaml.h"
 
@@ -299,11 +300,13 @@ void SceneLoader::loadTextures(YAML::Node textures, Scene& scene) {
 
 void SceneLoader::loadStyles(YAML::Node styles, Scene& scene) {
 
+    auto fontCtx = FontContext::GetInstance(); // To add font for debugTextStyle
+    fontCtx->addFont("FiraSans", "Medium", "");
     // Instantiate built-in styles
     scene.styles().emplace_back(new PolygonStyle("polygons"));
     scene.styles().emplace_back(new PolylineStyle("lines"));
-    scene.styles().emplace_back(new TextStyle("FiraSans", "text", 15.0f, 0xF7F0E1, true, true));
-    scene.styles().emplace_back(new DebugTextStyle("FiraSans", "debugtext", 30.0f, 0xDC3522, true));
+    scene.styles().emplace_back(new TextStyle("text", true, true));
+    scene.styles().emplace_back(new DebugTextStyle("FiraSans_Medium_", "debugtext", 30.0f, true, false));
     scene.styles().emplace_back(new DebugStyle("debug"));
     scene.styles().emplace_back(new SpriteStyle("sprites"));
 
@@ -331,7 +334,7 @@ void SceneLoader::loadStyles(YAML::Node styles, Scene& scene) {
         if (baseNode) {
             std::string baseString = baseNode.as<std::string>();
             if (baseString == "lines") { style = new PolylineStyle(styleName); }
-            else if (baseString == "text") { style = new TextStyle("FiraSans", styleName, 15.0f, 0xF7F0E1, true, true); }
+            else if (baseString == "text") { style = new TextStyle(styleName, true, true); }
             else if (baseString == "sprites") { logMsg("WARNING: sprite base styles not yet implemented\n"); } // TODO
             else { logMsg("WARNING: base style \"%s\" not recognized, defaulting to polygons\n", baseString.c_str()); }
         }
@@ -767,6 +770,11 @@ std::vector<StyleParam> SceneLoader::parseStyleParams(Node params, const std::st
 
     for (const auto& prop : params) {
 
+        // Load Fonts if prop is font
+        if (prop.first.as<std::string>() == "font") {
+            loadFont(prop.second);
+        }
+
         std::string key = (prefix.empty() ? "" : (prefix + ":")) + prop.first.as<std::string>();
 
         Node value = prop.second;
@@ -784,6 +792,26 @@ std::vector<StyleParam> SceneLoader::parseStyleParams(Node params, const std::st
     }
 
     return out;
+
+}
+
+void SceneLoader::loadFont(YAML::Node fontProps) {
+
+    std::string family = "";
+    std::string weight = "";
+    std::string style = "";
+    auto fontCtx = FontContext::GetInstance();
+
+    auto familyNode = fontProps["family"];
+    if (familyNode) { family = familyNode.as<std::string>(); }
+
+    auto weightNode = fontProps["weight"];
+    if (weightNode) { weight = weightNode.as<std::string>(); }
+
+    auto styleNode = fontProps["style"];
+    if (styleNode) { style = styleNode.as<std::string>(); }
+
+    fontCtx->addFont(std::move(family), std::move(weight), std::move(style));
 
 }
 

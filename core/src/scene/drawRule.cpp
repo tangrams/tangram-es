@@ -24,6 +24,17 @@ const std::map<std::string, StyleParamKey> s_StyleParamMap = {
     {"outline:width", StyleParamKey::outline_width},
     {"outline:cap", StyleParamKey::outline_cap},
     {"outline:join", StyleParamKey::outline_join},
+    {"font:family", StyleParamKey::font_family},
+    {"font:weight", StyleParamKey::font_weight},
+    {"font:style", StyleParamKey::font_style},
+    {"font:size", StyleParamKey::font_size},
+    {"font:fill", StyleParamKey::font_fill},
+    {"font:stroke", StyleParamKey::font_stroke},
+    {"font:stroke_color", StyleParamKey::font_stroke_color},
+    {"font:stroke_width", StyleParamKey::font_stroke_width},
+    {"font:uppercase", StyleParamKey::font_uppercase},
+    {"visible", StyleParamKey::visible},
+    {"priority", StyleParamKey::priority},
 };
 
 StyleParam::StyleParam(const std::string& _key, const std::string& _value) {
@@ -58,16 +69,42 @@ StyleParam::StyleParam(const std::string& _key, const std::string& _value) {
             }
         }
         break;
+    case StyleParamKey::font_family:
+    case StyleParamKey::font_weight:
+    case StyleParamKey::font_style:
+        value = _value;
+        break;
+    case StyleParamKey::font_size: {
+        float fontSize = 16;
+        if (!StyleParam::parseFontSize(_value, fontSize)) {
+            logMsg("Warning: Invalid font-size '%s'.\n", _value.c_str());
+        }
+        value = fontSize;
+        break;
+    }
+    case StyleParamKey::font_uppercase:
+    case StyleParamKey::visible:
+        if (_value == "true") { value = true; }
+        else if (_value == "false") { value = false; }
+        else {
+            logMsg("Warning: Bool value required for capitalized/visible. Using Default.");
+        }
+        break;
     case StyleParamKey::order:
+    case StyleParamKey::priority:
         value = static_cast<int32_t>(std::stoi(_value));
         break;
     case StyleParamKey::width:
     case StyleParamKey::outline_width:
+    case StyleParamKey::font_stroke_width:
         value = static_cast<float>(std::stof(_value));
         break;
     case StyleParamKey::color:
     case StyleParamKey::outline_color:
-        value = DrawRule::parseColor(_value);
+    case StyleParamKey::font_fill:
+    case StyleParamKey::font_stroke:
+    case StyleParamKey::font_stroke_color:
+        value = StyleParam::parseColor(_value);
         break;
     case StyleParamKey::cap:
     case StyleParamKey::outline_cap:
@@ -90,17 +127,34 @@ std::string StyleParam::toString() const {
         auto p = value.get<Extrusion>();
         return "extrude : (" + std::to_string(p.first) + ", " + std::to_string(p.second) + ")";
     }
+    case StyleParamKey::font_family:
+    case StyleParamKey::font_weight:
+    case StyleParamKey::font_style:
+        if (!value.is<std::string>()) break;
+        return value.get<std::string>();
+    case StyleParamKey::font_size:
+        if (!value.is<float>()) break;
+        return "font-size : " + std::to_string(value.get<float>());
+    case StyleParamKey::font_uppercase:
+    case StyleParamKey::visible:
+        if (!value.is<bool>()) break;
+        return std::to_string(value.get<bool>());
     case StyleParamKey::order:
+    case StyleParamKey::priority:
         if (!value.is<int32_t>()) break;
         return "order : " + std::to_string(value.get<int32_t>());
     case StyleParamKey::width:
     case StyleParamKey::outline_width:
+    case StyleParamKey::font_stroke_width:
         if (!value.is<float>()) break;
         return "width : " + std::to_string(value.get<float>());
     case StyleParamKey::color:
     case StyleParamKey::outline_color:
-        if (!value.is<Color>()) break;
-        return "color : " + std::to_string(value.get<Color>().getInt());
+    case StyleParamKey::font_fill:
+    case StyleParamKey::font_stroke:
+    case StyleParamKey::font_stroke_color:
+        if (!value.is<uint32_t>()) break;
+        return "color : " + std::to_string(value.get<uint32_t>());
     case StyleParamKey::cap:
     case StyleParamKey::outline_cap:
         if (!value.is<CapTypes>()) break;
@@ -174,7 +228,7 @@ bool DrawRule::operator<(const DrawRule& _rhs) const {
     return style < _rhs.style;
 }
 
-Color DrawRule::parseColor(const std::string& _color) {
+uint32_t StyleParam::parseColor(const std::string& _color) {
     Color color;
 
     if (isdigit(_color.front())) {
@@ -192,7 +246,46 @@ Color DrawRule::parseColor(const std::string& _color) {
         // parse as css color or #hex-num
         color = CSSColorParser::parse(_color);
     }
-    return color;
+    return color.getInt();
+}
+
+bool StyleParam::parseFontSize(const std::string& _str, float& _pxSize) {
+    if (_str.empty()) {
+        return false;
+    }
+
+    size_t index = 0;
+    std::string kind;
+
+    try {
+        _pxSize = std::stof(_str, &index);
+    } catch (std::invalid_argument) {
+        return false;
+    } catch (std::out_of_range) {
+        return false;
+    }
+
+    if (index == _str.length() && (_str.find('.') == std::string::npos)) {
+        return true;
+    }
+
+    kind = _str.substr(index, _str.length() - 1);
+
+    if (kind == "px") {
+        // px may not be fractional value
+        if (_str.find('.') != std::string::npos)
+            return false;
+    } else if (kind == "em") {
+        _pxSize *= 16.f;
+    } else if (kind == "pt") {
+        _pxSize /= 0.75f;
+    } else if (kind == "%") {
+        _pxSize /= 6.25f;
+    } else {
+        return false;
+    }
+
+    return true;
 }
 
 }

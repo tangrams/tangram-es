@@ -16,7 +16,7 @@ protected:
 
     struct Parameters {
         int32_t order = 0;
-        Color color = { 255, 0, 255, 1};
+        uint32_t color = 0xff00ffff;
         Extrusion extrude;
     };
 

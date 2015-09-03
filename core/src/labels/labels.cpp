@@ -115,18 +115,18 @@ void Labels::drawDebug(const View& _view) {
 
     for (auto label : m_labels) {
         if (label->canOcclude()) {
-            glm::vec2 offset = label->getTransform().offset;
+            const glm::vec2& offset = label->getOptions().offset;
             glm::vec2 sp = label->getTransform().state.screenPos;
-            
+
             // draw bounding box
             Primitives::setColor(0xdc3522);
             Primitives::drawPoly(reinterpret_cast<const glm::vec2*>(label->getOBB().getQuad()), 4);
-            
+
             // draw offset
             Primitives::setColor(0x000000);
             Primitives::drawLine(sp, sp + offset);
             // draw projected anchor point
-            
+
             Primitives::setColor(0x0000ff);
             Primitives::drawRect(sp - glm::vec2(1.f), sp + glm::vec2(1.f));
         }
