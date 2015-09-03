@@ -308,6 +308,8 @@ void setupGL() {
     RenderState::configure();
 
     Primitives::setColor(0xffffff);
+
+    while (Error::hadGlError("Tangram::setupGL()")) {}
 }
 
 }
