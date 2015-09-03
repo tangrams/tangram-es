@@ -334,6 +334,8 @@ public class MapController implements Renderer, OnTouchListener, OnScaleGestureL
 
     public void onSurfaceCreated(GL10 gl, EGLConfig config) {
         init(this, assetManager, scenePath);
+        // init() is safe to call twice, this invocation ensures that the jni
+        // environment is attached to the rendering thread
         setupGL();
     }
 
