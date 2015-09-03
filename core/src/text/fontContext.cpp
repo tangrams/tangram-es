@@ -31,8 +31,14 @@ void FontContext::setSignedDistanceField(float _blurSpread) {
     fonsSetBlurType(m_fsContext, FONS_EFFECT_DISTANCE_FIELD);
 }
 
-void FontContext::lock() {
-    m_contextMutex.lock();
+bool FontContext::lock() {
+    try {
+        m_contextMutex.lock();
+    } catch (std::system_error& e) {
+        logMsg("Dead lock: aborting\n");
+        return false;
+    }
+    return true;
 }
 
 void FontContext::unlock() {
