@@ -12,8 +12,10 @@ namespace Tangram {
 
 const static std::string key_name("name");
 
-TextStyle::TextStyle(std::string _name, GLenum _drawMode, bool _sdf, bool _sdfMultisampling) :
-    Style(_name, _drawMode), m_sdf(_sdf), m_sdfMultisampling(_sdfMultisampling) {}
+TextStyle::TextStyle(std::string _name, bool _sdf, bool _sdfMultisampling, GLenum _drawMode) :
+    Style(_name, _drawMode), m_sdf(_sdf), m_sdfMultisampling(_sdfMultisampling) {
+        logMsg("multisam: %d\n", _sdfMultisampling);
+    }
 
 TextStyle::~TextStyle() {
 }

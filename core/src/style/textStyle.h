@@ -34,7 +34,7 @@ public:
 
     bool isOpaque() const override { return false; }
 
-    TextStyle(std::string _name, GLenum _drawMode = GL_TRIANGLES, bool _sdf = false, bool _sdfMultisampling = false);
+    TextStyle(std::string _name,  bool _sdf = false, bool _sdfMultisampling = false, GLenum _drawMode = GL_TRIANGLES);
 
     virtual void onBeginDrawFrame(const View& _view, const Scene& _scene) override;
 
