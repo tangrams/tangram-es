@@ -104,10 +104,10 @@ layers:
                 width: .02
                 cap: round
                 color: white
-#outline:
-#                    width: .01
-#                    cap: round
-#                    color: '#999'
+                outline:
+                    width: .01
+                    cap: round
+                    color: '#999'
         rounded:
             filter: { $zoom: { min: 18 } }
             draw:
