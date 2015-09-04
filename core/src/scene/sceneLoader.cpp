@@ -48,9 +48,11 @@ void SceneLoader::loadScene(const std::string& _sceneString, Scene& _scene, Tile
         }
 
         // Styles that are opaque must be ordered first in the scene so that they are rendered 'under' styles that require blending
-        std::sort(_scene.styles().begin(), _scene.styles().end(), [](std::unique_ptr<Style>& a, std::unique_ptr<Style>& b) {
-                return a->isOpaque();
-            });
+        std::sort(_scene.styles().begin(), _scene.styles().end(),
+                  [](std::unique_ptr<Style>& a, std::unique_ptr<Style>& b) {
+                      return a->blendMode() == Blending::none;
+                  });
+
     } catch (YAML::ParserException e) {
         logMsg("Error: Parsing scene config '%s'\n", e.what());
     } catch (YAML::RepresentationException e) {
@@ -344,14 +346,16 @@ void SceneLoader::loadStyles(YAML::Node styles, Scene& scene) {
         Node animatedNode = styleNode["animated"];
         if (animatedNode) { logMsg("WARNING: animated styles not yet implemented\n"); } // TODO
 
-        Node blendNode = styleNode["blend"];
-        if (blendNode) {
+        if (Node blendNode = styleNode["blend"]) {
 
-            logMsg("WARNING: blending modes not yet implemented\n");
+            std::string str = blendNode.as<std::string>();
 
-            std::string blend = blendNode.as<std::string>();
-            if (blend == "add") { } // TODO
-            else if (blend == "multiply") { } // TODO
+            if      (str == "none")     { style->setBlendMode(Blending::none); }
+            else if (str == "add")      { style->setBlendMode(Blending::add); }
+            else if (str == "multiply") { style->setBlendMode(Blending::multiply); }
+            else if (str == "overlay")  { style->setBlendMode(Blending::overlay); }
+            else if (str == "inlay")    { style->setBlendMode(Blending::inlay); }
+            else { logMsg("WARNING: invalid blend mode \"%s\"\n", str.c_str()); }
 
         }
 

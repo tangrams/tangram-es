@@ -120,6 +120,7 @@ void update(float _dt) {
 void render() {
 
     // Set up openGL for new frame
+    RenderState::depthWrite(GL_TRUE);
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
     // Loop over all styles

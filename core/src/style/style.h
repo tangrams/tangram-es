@@ -28,6 +28,14 @@ enum class LightingType : char {
     fragment
 };
 
+enum class Blending : char {
+    none,
+    add,
+    multiply,
+    overlay,
+    inlay,
+};
+
 /* Means of constructing and rendering map geometry
  *
  * A Style defines a way to
@@ -59,6 +67,8 @@ protected:
 
     /* <LightingType> to determine how lighting will be calculated for this style */
     LightingType m_lightingType = LightingType::fragment;
+    
+    Blending m_blend = Blending::none;
 
     /* Draw mode to pass into <VboMesh>es created with this style */
     GLenum m_drawMode;
@@ -94,7 +104,7 @@ private:
 
 public:
 
-    Style(std::string _name, GLenum _drawMode);
+    Style(std::string _name, Blending _blendMode, GLenum _drawMode);
 
     virtual ~Style();
     
@@ -102,8 +112,9 @@ public:
 
     void viewportHasChanged() { m_dirtyViewport = true; }
 
-    /* Whether or not the style uses blending operation for drawing */
-    virtual bool isOpaque() const { return true; };
+    Blending blendMode() const { return m_blend; };
+
+    void setBlendMode(Blending _blendMode) { m_blend = _blendMode; }
 
     /* Make this style ready to be used (call after all needed properties are set) */
     virtual void build(const std::vector<std::unique_ptr<Light>>& _lights);

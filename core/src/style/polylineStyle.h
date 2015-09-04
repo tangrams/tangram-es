@@ -50,8 +50,7 @@ protected:
 
 public:
 
-    PolylineStyle(GLenum _drawMode = GL_TRIANGLES);
-    PolylineStyle(std::string _name, GLenum _drawMode = GL_TRIANGLES);
+    PolylineStyle(std::string _name, Blending _blendMode = Blending::none, GLenum _drawMode = GL_TRIANGLES);
 
     virtual ~PolylineStyle() {
     }

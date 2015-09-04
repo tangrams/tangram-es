@@ -13,7 +13,7 @@
 
 namespace Tangram {
 
-SpriteStyle::SpriteStyle(std::string _name, GLenum _drawMode) : Style(_name, _drawMode) {
+SpriteStyle::SpriteStyle(std::string _name, Blending _blendMode, GLenum _drawMode) : Style(_name, _blendMode, _drawMode) {
 }
 
 SpriteStyle::~SpriteStyle() {}
@@ -117,9 +117,7 @@ void SpriteStyle::onBeginDrawFrame(const View& _view, const Scene& _scene) {
         m_dirtyViewport = false;
     }
 
-    RenderState::blending(GL_TRUE);
-    RenderState::blendingFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
-    RenderState::depthTest(GL_FALSE);
+    Style::onBeginDrawFrame(_view, _scene);
 }
 
 }

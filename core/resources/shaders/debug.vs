@@ -14,5 +14,4 @@ void main() {
     v_color = a_color;
 
     gl_Position = u_modelViewProj * a_position;
-    gl_Position.z = 0.0; // Debug geometry draws above everything else
 }
