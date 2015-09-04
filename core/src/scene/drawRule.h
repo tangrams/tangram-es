@@ -17,8 +17,8 @@ namespace Tangram {
 
 enum class StyleParamKey : uint8_t {
     none, order, extrude, color, width, cap, join, outline_color, outline_width, outline_cap, outline_join,
-    font_family, font_weight, font_style, font_size, font_fill, font_stroke, font_stroke_color, font_stroke_width, font_uppercase,
-    font_lowercase, font_capitalize, visible, priority, offset,
+    font_family, font_weight, font_style, font_size, font_fill, font_stroke, font_stroke_color, font_stroke_width,
+    transform, visible, priority, offset
 };
 
 struct StyleParam {

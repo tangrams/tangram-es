@@ -195,6 +195,7 @@ layers:
             text:
                 visible: true
                 priority: 2
+                transform: capitalize
                 offset: [0, 8px]
                 font:
                     family: sans-serif
@@ -202,7 +203,7 @@ layers:
                     style: normal
                     size: 1.em
                     fill: black
-                    capitalize: true
+
         highway:
             filter: { kind: highway }
             draw:
@@ -210,17 +211,19 @@ layers:
                     visible: true
                     offset: [0px, 5px]
                     priority: 1
+                    transform: lowercase
+                    visible: false
                     font:
                         family: sans-serif
                         weight: 400
                         style: normal
                         size: 25px
                         fill: black
-                        lowercase: true
         major_road:
             filter: { kind: major_road }
             draw:
                 text:
+                    transform: capitalize
                     visible: true
                     priority: 3
                     font:
@@ -228,7 +231,6 @@ layers:
                         weight: 400
                         style: normal
                         size: 20.5pt
-                        capitalize: true
     places:
         data: { sources: osm }
         filter:
@@ -283,13 +285,13 @@ layers:
         draw:
             text:
                 priority: 0
+                transform: lowercase
                 font:
                     family: sans-serif
                     weight: 400
                     style: normal
                     size: 15px
                     fill: darkgreen
-                    uppercase: true
 
     pois:
         data: { source: osm }

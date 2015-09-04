@@ -51,7 +51,7 @@ void TextStyle::constructShaderProgram() {
 Parameters TextStyle::parseRule(const DrawRule& _rule) const {
     Parameters p;
 
-    std::string fontFamily, fontWeight, fontStyle;
+    std::string fontFamily, fontWeight, fontStyle, transform;
     std::pair<float, float> offset;
 
     _rule.get(StyleParamKey::font_family, fontFamily);
@@ -64,11 +64,17 @@ Parameters TextStyle::parseRule(const DrawRule& _rule) const {
         _rule.get(StyleParamKey::font_stroke_color, p.strokeColor);
     }
     _rule.get(StyleParamKey::font_stroke_width, p.strokeWidth);
-    _rule.get(StyleParamKey::font_uppercase, p.uppercase);
-    _rule.get(StyleParamKey::font_lowercase, p.lowercase);
-    _rule.get(StyleParamKey::font_capitalize, p.capitalize);
+    _rule.get(StyleParamKey::transform, transform);
     _rule.get(StyleParamKey::visible, p.visible);
     _rule.get(StyleParamKey::priority, p.priority);
+
+    if (transform == "capitalize") {
+        p.transform = TextTransform::capitalize;
+    } else if (transform == "lowercase") {
+        p.transform = TextTransform::lowercase;
+    } else if (transform == "uppercase") {
+        p.transform = TextTransform::uppercase;
+    }
 
     p.fontKey = fontFamily + "_" + fontWeight + "_" + fontStyle;
     p.offset = glm::vec2(offset.first, offset.second);
