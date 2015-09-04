@@ -22,6 +22,8 @@ struct Parameters {
     float fontSize = 12.0f;
     float blurSpread = 0.0f;
     bool uppercase = false;
+    bool lowercase = false;
+    bool capitalize = false;
     bool visible = true;
     int32_t priority = std::numeric_limits<int32_t>::max();
     glm::vec2 offset;

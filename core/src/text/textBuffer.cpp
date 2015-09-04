@@ -16,7 +16,7 @@ TextBuffer::~TextBuffer() {
 }
 
 bool TextBuffer::addLabel(const std::string& _text, Label::Transform _transform, Label::Type _type, const Parameters& _params, Label::Options _options) {
-    if (_params.fontSize <= 0.f) {
+    if (_params.fontSize <= 0.f || _text.size() == 0) {
         return false;
     }
 
@@ -35,11 +35,23 @@ bool TextBuffer::addLabel(const std::string& _text, Label::Transform _transform,
 
     std::string text = _text;
 
-    // captilize the string
-    if (_params.uppercase) {
+    // perfom text modification
+    if (_params.uppercase || _params.lowercase) {
         std::locale loc;
+
+        // TOOD : use to wupper when any wide character is detected
         for (std::string::size_type i = 0; i < _text.length(); ++i) {
-            text[i] = std::toupper(_text[i], loc);
+            text[i] = _params.uppercase ? toupper(_text[i], loc) : std::tolower(_text[i], loc);
+        }
+    } else if (_params.capitalize) {
+        std::locale loc;
+        text[0] = toupper(_text[0], loc);
+        if (text.size() > 1) {
+            for (std::string::size_type i = 1; i < _text.length(); ++i) {
+                if (text[i - 1] == ' ') {
+                    text[i] = toupper(text[i]);
+                }
+            }
         }
     }
 

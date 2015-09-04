@@ -202,7 +202,8 @@ layers:
                     style: normal
                     size: 1.em
                     fill: black
-        highway: 
+                    capitalize: true
+        highway:
             filter: { kind: highway }
             draw:
                 text:
@@ -215,7 +216,7 @@ layers:
                         style: normal
                         size: 25px
                         fill: black
-                        uppercase: true
+                        lowercase: true
         major_road:
             filter: { kind: major_road }
             draw:
@@ -227,7 +228,7 @@ layers:
                         weight: 400
                         style: normal
                         size: 20.5pt
-                        uppercase: true
+                        capitalize: true
     places:
         data: { sources: osm }
         filter:

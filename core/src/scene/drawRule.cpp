@@ -34,6 +34,8 @@ const std::map<std::string, StyleParamKey> s_StyleParamMap = {
     {"font:stroke_width", StyleParamKey::font_stroke_width},
     {"font:uppercase", StyleParamKey::font_uppercase},
     {"offset", StyleParamKey::offset},
+    {"font:lowercase", StyleParamKey::font_lowercase},
+    {"font:capitalize", StyleParamKey::font_capitalize},
     {"visible", StyleParamKey::visible},
     {"priority", StyleParamKey::priority},
 };
@@ -84,6 +86,8 @@ StyleParam::StyleParam(const std::string& _key, const std::string& _value) {
         break;
     }
     case StyleParamKey::font_uppercase:
+    case StyleParamKey::font_capitalize:
+    case StyleParamKey::font_lowercase:
     case StyleParamKey::visible:
         if (_value == "true") { value = true; }
         else if (_value == "false") { value = false; }
@@ -142,6 +146,8 @@ std::string StyleParam::toString() const {
         if (!value.is<float>()) break;
         return "font-size : " + std::to_string(value.get<float>());
     case StyleParamKey::font_uppercase:
+    case StyleParamKey::font_capitalize:
+    case StyleParamKey::font_lowercase:
     case StyleParamKey::visible:
         if (!value.is<bool>()) break;
         return std::to_string(value.get<bool>());
