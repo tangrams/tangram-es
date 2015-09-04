@@ -75,7 +75,7 @@ void SpriteStyle::buildPoint(const Point& _point, const DrawRule& _rule, const P
     }
 
     SpriteNode spriteNode = m_spriteAtlas->getSpriteNode(spriteName);
-    Label::Transform t = { glm::vec2(_point), glm::vec2(_point), offset };
+    Label::Transform t = { glm::vec2(_point) };
 
     auto& mesh = static_cast<LabelMesh&>(_mesh);
 
