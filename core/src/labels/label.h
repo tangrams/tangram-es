@@ -58,7 +58,7 @@ public:
 
     struct Options {
         uint32_t color = 0xffffffff;
-        glm::vec2 offset = glm::vec2(0);
+        glm::vec2 offset;
         uint32_t priority = 1 << 31;
     };
 

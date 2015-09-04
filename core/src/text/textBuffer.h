@@ -23,6 +23,7 @@ struct Parameters {
     bool uppercase = false;
     bool visible = true;
     uint32_t priority = 1 << 31;
+    glm::vec2 offset;
 };
 
 /*
