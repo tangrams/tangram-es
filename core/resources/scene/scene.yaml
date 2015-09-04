@@ -212,7 +212,6 @@ layers:
                     offset: [0px, 5px]
                     priority: 1
                     transform: lowercase
-                    visible: false
                     font:
                         family: sans-serif
                         weight: 400
@@ -290,7 +289,7 @@ layers:
                     family: sans-serif
                     weight: 400
                     style: normal
-                    size: 15px
+                    size: 18px
                     fill: darkgreen
 
     pois:

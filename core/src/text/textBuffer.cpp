@@ -33,38 +33,45 @@ bool TextBuffer::addLabel(const std::string& _text, Label::Transform _transform,
         return false;
     }
 
-    std::string text = _text;
-    std::locale loc;
+    const std::string* text = &_text;
+    std::string transformedText;
 
-    // perfom text transforms
-    switch (_params.transform) {
-        case TextTransform::capitalize:
-            text[0] = toupper(_text[0], loc);
-            if (text.size() > 1) {
-                for (std::string::size_type i = 1; i < _text.length(); ++i) {
-                    if (text[i - 1] == ' ') {
-                        text[i] = toupper(text[i]);
+    if (_params.transform != TextTransform::none) {
+        transformedText = _text;
+        std::locale loc;
+
+        // perfom text transforms
+        switch (_params.transform) {
+            case TextTransform::capitalize:
+                transformedText[0] = toupper(_text[0], loc);
+                if (_text.size() > 1) {
+                    for (std::string::size_type i = 1; i < _text.length(); ++i) {
+                        if (_text[i - 1] == ' ') {
+                            transformedText[i] = std::toupper(_text[i], loc);
+                        }
                     }
                 }
-            }
-            break;
-        case TextTransform::lowercase:
-            for (std::string::size_type i = 0; i < _text.length(); ++i) {
-                text[i] = std::tolower(_text[i], loc);
-            }
-            break;
-        case TextTransform::uppercase:
-            // TOOD : use to wupper when any wide character is detected
-            for (std::string::size_type i = 0; i < _text.length(); ++i) {
-                text[i] = toupper(_text[i], loc);
-            }
-            break;
-        default:
-            break;
+                break;
+            case TextTransform::lowercase:
+                for (std::string::size_type i = 0; i < _text.length(); ++i) {
+                    transformedText[i] = std::tolower(_text[i], loc);
+                }
+                break;
+            case TextTransform::uppercase:
+                // TOOD : use to wupper when any wide character is detected
+                for (std::string::size_type i = 0; i < _text.length(); ++i) {
+                    transformedText[i] = std::toupper(_text[i], loc);
+                }
+                break;
+            default:
+                break;
+        }
+
+        text = &transformedText;
     }
 
     // rasterize glyphs
-    std::vector<FONSquad>& quads = fontContext->rasterize(text, fontID, _params.fontSize, _params.blurSpread);
+    std::vector<FONSquad>& quads = fontContext->rasterize(*text, fontID, _params.fontSize, _params.blurSpread);
     size_t numGlyphs = quads.size();
 
     if (numGlyphs == 0) {
