@@ -51,7 +51,7 @@ Parameters TextStyle::parseRule(const DrawRule& _rule) const {
     Parameters p;
 
     std::string fontFamily, fontWeight, fontStyle;
-    Offset offset;
+    std::pair<float, float> offset;
 
     _rule.get(StyleParamKey::font_family, fontFamily);
     _rule.get(StyleParamKey::font_weight, fontWeight);

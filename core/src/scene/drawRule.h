@@ -12,8 +12,6 @@
 #include "platform.h"
 
 using Color = CSSColorParser::Color;
-using Extrusion = std::pair<float, float>;
-using Offset = std::pair<float, float>;
 
 namespace Tangram {
 
@@ -24,7 +22,7 @@ enum class StyleParamKey : uint8_t {
 };
 
 struct StyleParam {
-    using Value = variant<none_type, std::string, CapTypes, JoinTypes, Extrusion, Offset, int32_t, uint32_t, float, bool>;
+    using Value = variant<none_type, std::string, CapTypes, JoinTypes, std::pair<float, float>, int32_t, uint32_t, float, bool>;
 
     StyleParam() : key(StyleParamKey::none), value(none_type{}) {};
     StyleParam(const std::string& _key, const std::string& _value);

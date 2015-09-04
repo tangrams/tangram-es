@@ -17,7 +17,7 @@ protected:
     struct Parameters {
         int32_t order = 0;
         uint32_t color = 0xff00ffff;
-        Extrusion extrude;
+        std::pair<float, float> extrude;
     };
 
     struct PolygonVertex {

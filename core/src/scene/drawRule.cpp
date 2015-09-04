@@ -124,13 +124,13 @@ std::string StyleParam::toString() const {
     // TODO: cap, join and color toString()
     switch (key) {
     case StyleParamKey::extrude: {
-        if (!value.is<Extrusion>()) break;
-        auto p = value.get<Extrusion>();
+        if (!value.is<std::pair<float, float>>()) break;
+        auto p = value.get<std::pair<float, float>>();
         return "extrude : (" + std::to_string(p.first) + ", " + std::to_string(p.second) + ")";
     }
     case StyleParamKey::offset: {
-        if (!value.is<Offset>()) break;
-        auto p = value.get<Offset>();
+        if (!value.is<std::pair<float, float>>()) break;
+        auto p = value.get<std::pair<float, float>>();
         return "offset : (" + std::to_string(p.first) + "px, " + std::to_string(p.second) + "px)";
     }
     case StyleParamKey::font_family:
