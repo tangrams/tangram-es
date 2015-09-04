@@ -251,8 +251,14 @@ bool StyleParam::parseVec2(const std::string& _value, const std::vector<std::str
         }
     }
 
+    std::replace(value.begin(), value.end(), ',', ' ');
+
+    if (std::any_of(value.begin(), value.end(), ::isalpha)) {
+        return false;
+    }
+
     float f1, f2;
-    int num = std::sscanf(value.c_str(), "%f,%f", &f1, &f2);
+    int num = std::sscanf(value.c_str(), "%f %f", &f1, &f2);
 
     switch(num) {
         case 1:
