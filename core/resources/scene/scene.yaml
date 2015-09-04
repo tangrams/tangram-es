@@ -169,7 +169,7 @@ layers:
             filter: { $zoom: { min: 15 } }
             draw:
                 heightglow:
-                    extrude: true
+                    extrude: [0, 1.2]
         high-line:
             filter: {roof_material: grass}
             draw:
@@ -181,6 +181,7 @@ layers:
         draw:
             text: 
                 visible: false
+                offset: [0, 10]
                 font:
                     family: sans-serif
                     weight: 400
@@ -191,12 +192,13 @@ layers:
             filter: { kind: highway }
             draw:
                 text:
-                    visible: false
+                    visible: true
+                    offset: [0, 10px]
                     font:
                         family: sans-serif
                         weight: 400
                         style: normal
-                        size: 20px
+                        size: 20.5
                         fill: black
                         uppercase: true
         major_road:
@@ -230,7 +232,7 @@ layers:
                     family: sans-serif
                     weight: 400
                     style: normal
-                    size: 15
+                    size: 15px
                     fill: black
         continents:
             filter: { kind: continent }
@@ -266,7 +268,7 @@ layers:
                     family: sans-serif
                     weight: 400
                     style: normal
-                    size: 15
+                    size: 15px
                     fill: darkgreen
 
     pois:
