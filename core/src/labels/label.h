@@ -3,6 +3,7 @@
 #include "glm/vec2.hpp"
 #include "glm/mat4x4.hpp"
 #include <climits> // needed in aabb.h
+#include <memory>
 #include "isect2d.h"
 #include "fadeEffect.h"
 #include "util/types.h"
