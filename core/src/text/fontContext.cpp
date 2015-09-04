@@ -26,57 +26,77 @@ void FontContext::clearState() {
     fonsClearState(m_fsContext);
 }
 
-void FontContext::setSignedDistanceField(float _blurSpread) {
-    fonsSetBlur(m_fsContext, _blurSpread);
-    fonsSetBlurType(m_fsContext, FONS_EFFECT_DISTANCE_FIELD);
-}
-
-void FontContext::lock() {
-    m_contextMutex.lock();
+bool FontContext::lock() {
+    try {
+        m_contextMutex.lock();
+    } catch (std::system_error& e) {
+        logMsg("Dead lock: aborting\n");
+        return false;
+    }
+    return true;
 }
 
 void FontContext::unlock() {
     m_contextMutex.unlock();
 }
 
-bool FontContext::addFont(const std::string& _fontFile, std::string _name) {
-    if (m_fonts.find(_name) != m_fonts.end()) {
+bool FontContext::addFont(const std::string& _family, const std::string& _weight, const std::string& _style) {
+
+    std::string fontKey = _family + "_" + _weight + "_" + _style;
+    if (m_fonts.find(fontKey) != m_fonts.end()) {
         return true;
     }
 
     unsigned int dataSize;
-    unsigned char* data = bytesFromResource(_fontFile.c_str(), &dataSize);
-    int font = fonsAddFont(m_fsContext, "droid-serif", data, dataSize);
+    unsigned char* data = nullptr;
+
+    // Assuming bundled ttf file follows this convention
+    auto bundledFontPath = _family + "-" + _weight + _style + ".ttf";
+    if ( !(data = bytesFromResource(bundledFontPath.c_str(), &dataSize))) {
+        const std::string sysFontPath = systemFontPath(_family, _weight, _style);
+        if ( !(data = bytesFromFileSystem(sysFontPath.c_str(), &dataSize)) ) {
+            return false;
+        }
+    }
+
+    int font = fonsAddFont(m_fsContext, fontKey.c_str(), data, dataSize);
 
     if (font == FONS_INVALID) {
-        logMsg("[FontContext] Error loading font file %s\n", _fontFile.c_str());
+        logMsg("[FontContext] Error loading font %s\n", fontKey.c_str());
         return false;
     }
 
-    m_fonts.emplace(std::move(_name), font);
+    m_fonts.emplace(std::move(fontKey), font);
 
     return true;
 }
 
-void FontContext::setFont(const std::string& _name, int size) {
-    auto it = m_fonts.find(_name);
+void FontContext::setFont(const std::string& _key, int size) {
+    FontID id = getFontID(_key);
 
-    if (it != m_fonts.end()) {
+    if (id >= 0) {
         fonsSetSize(m_fsContext, size);
-        fonsSetFont(m_fsContext, it->second);
+        fonsSetFont(m_fsContext, id);
     } else {
-        logMsg("[FontContext] Could not find font %s\n", _name.c_str());
+        logMsg("[FontContext] Could not find font %s\n", _key.c_str());
     }
 }
 
-FontID FontContext::getFontID(const std::string& _name) {
-    auto it = m_fonts.find(_name);
+FontID FontContext::getFontID(const std::string& _key) {
+    auto it = m_fonts.find(_key);
 
     if (it != m_fonts.end()) {
         return it->second;
-    } else {
-        logMsg("[FontContext] Could not find font %s\n", _name.c_str());
+    }
+
+    if (m_fonts.size() > 0) {
+        // sceneLoader makes sure that first loaded font is the default bundled font
+        logMsg("Warning: Using default font for '%s'.\n", _key.c_str());
+        m_fonts.emplace(_key, 0);
         return 0;
+    } else {
+        logMsg("Error: No default font loaded.\n");
+        return -1;
     }
 }
 

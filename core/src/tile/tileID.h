@@ -1,6 +1,7 @@
 #pragma once
 
 #include <functional> // for hash function
+#include <string>
 
 /* An immutable identifier for a map tile 
  * 
@@ -58,6 +59,10 @@ struct TileID {
         // j:      0, 1, 0, 1
         
         return TileID((x<<1)+i, (y<<1)+j, z+1);
+    }
+    
+    std::string toString() const {
+        return std::to_string(x) + "/" + std::to_string(y) + "/" + std::to_string(z);
     }
     
 };

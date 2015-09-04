@@ -17,6 +17,7 @@
 #include "filters.h"
 #include "sceneLayer.h"
 #include "scene/dataLayer.h"
+#include "text/fontContext.h"
 
 #include "yaml-cpp/yaml.h"
 
@@ -32,30 +33,39 @@ constexpr size_t CACHE_SIZE = 16 * (1024 * 1024);
 
 void SceneLoader::loadScene(const std::string& _sceneString, Scene& _scene, TileManager& _tileManager, View& _view) {
 
-    Node config = YAML::Load(_sceneString);
+    try {
+        Node config = YAML::Load(_sceneString);
 
-    loadSources(config["sources"], _tileManager);
-    loadTextures(config["textures"], _scene);
-    loadStyles(config["styles"], _scene);
-    loadLayers(config["layers"], _scene, _tileManager);
-    loadCameras(config["cameras"], _view);
-    loadLights(config["lights"], _scene);
+        loadSources(config["sources"], _tileManager);
+        loadTextures(config["textures"], _scene);
+        loadStyles(config["styles"], _scene);
+        loadLayers(config["layers"], _scene, _tileManager);
+        loadCameras(config["cameras"], _view);
+        loadLights(config["lights"], _scene);
 
-    for (auto& style : _scene.styles()) {
-        style->build(_scene.lights());
+        for (auto& style : _scene.styles()) {
+            style->build(_scene.lights());
+        }
+
+        // Styles that are opaque must be ordered first in the scene so that they are rendered 'under' styles that require blending
+        std::sort(_scene.styles().begin(), _scene.styles().end(), [](std::unique_ptr<Style>& a, std::unique_ptr<Style>& b) {
+                return a->isOpaque();
+            });
+    } catch (YAML::ParserException e) {
+        logMsg("Error: Parsing scene config '%s'\n", e.what());
+    } catch (YAML::RepresentationException e) {
+        logMsg("Error: Parsing scene config '%s'\n", e.what());
     }
-
-    // Styles that are opaque must be ordered first in the scene so that they are rendered 'under' styles that require blending
-    std::sort(_scene.styles().begin(), _scene.styles().end(), [](std::unique_ptr<Style>& a, std::unique_ptr<Style>& b) {
-        return a->isOpaque();
-    });
-
 }
 
 std::string parseSequence(const Node& node) {
     std::stringstream sstream;
     for (const auto& val : node) {
-        sstream << val.as<float>() << ",";
+        try {
+            sstream << val.as<float>() << ",";
+        } catch (const BadConversion& e) {
+            logMsg("Error: Float value was expected for styleParam sequence value\n");
+        }
     }
     return sstream.str();
 }
@@ -290,11 +300,13 @@ void SceneLoader::loadTextures(YAML::Node textures, Scene& scene) {
 
 void SceneLoader::loadStyles(YAML::Node styles, Scene& scene) {
 
+    auto fontCtx = FontContext::GetInstance(); // To add font for debugTextStyle
+    fontCtx->addFont("FiraSans", "Medium", "");
     // Instantiate built-in styles
     scene.styles().emplace_back(new PolygonStyle("polygons"));
     scene.styles().emplace_back(new PolylineStyle("lines"));
-    scene.styles().emplace_back(new TextStyle("FiraSans", "text", 15.0f, 0xF7F0E1, true, true));
-    scene.styles().emplace_back(new DebugTextStyle("FiraSans", "debugtext", 30.0f, 0xDC3522, true));
+    scene.styles().emplace_back(new TextStyle("text", true, true));
+    scene.styles().emplace_back(new DebugTextStyle("FiraSans_Medium_", "debugtext", 30.0f, true, false));
     scene.styles().emplace_back(new DebugStyle("debug"));
     scene.styles().emplace_back(new SpriteStyle("sprites"));
 
@@ -322,7 +334,7 @@ void SceneLoader::loadStyles(YAML::Node styles, Scene& scene) {
         if (baseNode) {
             std::string baseString = baseNode.as<std::string>();
             if (baseString == "lines") { style = new PolylineStyle(styleName); }
-            else if (baseString == "text") { style = new TextStyle("FiraSans", styleName, 15.0f, 0xF7F0E1, true, true); }
+            else if (baseString == "text") { style = new TextStyle(styleName, true, true); }
             else if (baseString == "sprites") { logMsg("WARNING: sprite base styles not yet implemented\n"); } // TODO
             else { logMsg("WARNING: base style \"%s\" not recognized, defaulting to polygons\n", baseString.c_str()); }
         }
@@ -607,7 +619,7 @@ Filter SceneLoader::generateFilter(YAML::Node _filter) {
     if (!_filter) {
         return Filter();
     }
-    
+
     std::vector<Filter> filters;
 
     for (const auto& filtItr : _filter) {
@@ -758,6 +770,11 @@ std::vector<StyleParam> SceneLoader::parseStyleParams(Node params, const std::st
 
     for (const auto& prop : params) {
 
+        // Load Fonts if prop is font
+        if (prop.first.as<std::string>() == "font") {
+            loadFont(prop.second);
+        }
+
         std::string key = (prefix.empty() ? "" : (prefix + ":")) + prop.first.as<std::string>();
 
         Node value = prop.second;
@@ -775,6 +792,26 @@ std::vector<StyleParam> SceneLoader::parseStyleParams(Node params, const std::st
     }
 
     return out;
+
+}
+
+void SceneLoader::loadFont(YAML::Node fontProps) {
+
+    std::string family = "";
+    std::string weight = "";
+    std::string style = "";
+    auto fontCtx = FontContext::GetInstance();
+
+    auto familyNode = fontProps["family"];
+    if (familyNode) { family = familyNode.as<std::string>(); }
+
+    auto weightNode = fontProps["weight"];
+    if (weightNode) { weight = weightNode.as<std::string>(); }
+
+    auto styleNode = fontProps["style"];
+    if (styleNode) { style = styleNode.as<std::string>(); }
+
+    fontCtx->addFont(std::move(family), std::move(weight), std::move(style));
 
 }
 

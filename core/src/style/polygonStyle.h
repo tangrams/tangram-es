@@ -6,6 +6,7 @@
 #include "glm/vec3.hpp"
 
 #include <mutex>
+#include <tuple>
 
 namespace Tangram {
 
@@ -15,7 +16,8 @@ protected:
 
     struct Parameters {
         int32_t order = 0;
-        uint32_t color = 0xffffffff;
+        uint32_t color = 0xff00ffff;
+        Extrusion extrude;
     };
 
     struct PolygonVertex {

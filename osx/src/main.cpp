@@ -99,6 +99,7 @@ void key_callback(GLFWwindow* window, int key, int scancode, int action, int mod
                 break;
             case GLFW_KEY_3:
                 Tangram::toggleDebugFlag(Tangram::DebugFlags::tile_bounds);
+                break;
             case GLFW_KEY_4:
                 Tangram::toggleDebugFlag(Tangram::DebugFlags::tile_infos);
                 break;
@@ -129,11 +130,12 @@ void window_size_callback(GLFWwindow* window, int width, int height) {
 
 void init_main_window() {
 
+    // Setup tangram
+    Tangram::initialize("scene.yaml");
+
     // Destroy old window
-    bool contextDestroyed = false;
     if (main_window != nullptr) {
         glfwDestroyWindow(main_window);
-        contextDestroyed = true;
     }
 
     // Create a windowed mode window and its OpenGL context
@@ -146,10 +148,6 @@ void init_main_window() {
     // Make the main_window's context current
     glfwMakeContextCurrent(main_window);
     
-    if (contextDestroyed) {
-        Tangram::onContextDestroyed();
-    }
-    
     // Set input callbacks
     glfwSetWindowSizeCallback(main_window, window_size_callback);
     glfwSetMouseButtonCallback(main_window, mouse_button_callback);
@@ -157,8 +155,8 @@ void init_main_window() {
     glfwSetScrollCallback(main_window, scroll_callback);
     glfwSetKeyCallback(main_window, key_callback);
     
-    // Setup tangram
-    Tangram::initialize("scene.yaml");
+    // Setup graphics
+    Tangram::setupGL();
     Tangram::resize(width, height);
 
     // Work-around for a bug in GLFW on retina displays

@@ -10,6 +10,7 @@
 
 #include <unistd.h>
 #include <sys/resource.h>
+#include <fstream>
 
 /* Followed the following document for JavaVM tips when used with native threads
  * http://android.wooyd.org/JNIExample/#NWD1sCYeT-I
@@ -25,6 +26,7 @@ static jmethodID requestRenderMethodID;
 static jmethodID setRenderModeMethodID;
 static jmethodID startUrlRequestMID;
 static jmethodID cancelUrlRequestMID;
+static jmethodID getFontFilePath;
 static AAssetManager* assetManager;
 
 static bool s_isContinuousRendering = false;
@@ -37,6 +39,7 @@ void setupJniEnv(JNIEnv* _jniEnv, jobject _tangramInstance, jobject _assetManage
     jclass tangramClass = jniEnv->FindClass("com/mapzen/tangram/MapController");
     startUrlRequestMID = jniEnv->GetMethodID(tangramClass, "startUrlRequest", "(Ljava/lang/String;J)Z");
     cancelUrlRequestMID = jniEnv->GetMethodID(tangramClass, "cancelUrlRequest", "(Ljava/lang/String;)V");
+    getFontFilePath = jniEnv->GetMethodID(tangramClass, "getFontFilePath", "(Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;)Ljava/lang/String;");
 	requestRenderMethodID = _jniEnv->GetMethodID(tangramClass, "requestRender", "()V");
     setRenderModeMethodID = _jniEnv->GetMethodID(tangramClass, "setRenderMode", "(I)V");
 
@@ -58,7 +61,7 @@ void logMsg(const char* fmt, ...) {
 }
 
 void requestRender() {
-    
+
     JNIEnv *jniEnv;
     int status = jvm->GetEnv((void**)&jniEnv, JNI_VERSION_1_6);
     if(status == JNI_EDETACHED) {
@@ -70,6 +73,19 @@ void requestRender() {
     if(status == JNI_EDETACHED) {
         jvm->DetachCurrentThread();
     }
+}
+
+std::string systemFontPath(const std::string& _family, const std::string& _weight, const std::string& _style) {
+
+    jstring jfamily = jniEnv->NewStringUTF(_family.c_str());
+    jstring jweight = jniEnv->NewStringUTF(_weight.c_str());
+    jstring jstyle = jniEnv->NewStringUTF(_style.c_str());
+    jstring returnStr = (jstring) jniEnv->CallObjectMethod(tangramInstance, getFontFilePath, jfamily, jweight, jstyle);
+
+    size_t length = jniEnv->GetStringUTFLength(returnStr);
+    std::string fontPath = std::string(length, 0);
+    jniEnv->GetStringUTFRegion(returnStr, 0, length, &fontPath[0]);
+    return fontPath;
 }
 
 void setContinuousRendering(bool _isContinuous) {
@@ -99,10 +115,10 @@ bool isContinuousRendering() {
 std::string stringFromResource(const char* _path) {
 
     std::string out;
-    
+
     // Open asset
     AAsset* asset = AAssetManager_open(assetManager, _path, AASSET_MODE_STREAMING);
-    
+
     if (asset == nullptr) {
         logMsg("Failed to open asset at path: %s\n", _path);
         return out;
@@ -111,7 +127,7 @@ std::string stringFromResource(const char* _path) {
     // Allocate string
     int length = AAsset_getLength(asset);
     out.resize(length);
-    
+
     // Read data
     int read = AAsset_read(asset, &out.front(), length);
 
@@ -123,6 +139,29 @@ std::string stringFromResource(const char* _path) {
     }
 
     return out;
+
+}
+
+unsigned char* bytesFromFileSystem(const char* _path, unsigned int* _size) {
+
+    std::ifstream resource(_path, std::ifstream::ate | std::ifstream::binary);
+
+    if(!resource.is_open()) {
+        logMsg("Failed to read file at path: %s\n", _path);
+        *_size = 0;
+        return nullptr;
+    }
+
+    *_size = resource.tellg();
+
+    resource.seekg(std::ifstream::beg);
+
+    char* cdata = (char*) malloc(sizeof(char) * (*_size));
+
+    resource.read(cdata, *_size);
+    resource.close();
+
+    return reinterpret_cast<unsigned char *>(cdata);
 
 }
 
@@ -154,15 +193,15 @@ unsigned char* bytesFromResource(const char* _path, unsigned int* _size) {
 }
 
 bool startUrlRequest(const std::string& _url, UrlCallback _callback) {
-    
+
     jstring jUrl = jniEnv->NewStringUTF(_url.c_str());
 
     // This is probably super dangerous. In order to pass a reference to our callback we have to convert it
-    // to a Java type. We allocate a new callback object and then reinterpret the pointer to it as a Java long. 
+    // to a Java type. We allocate a new callback object and then reinterpret the pointer to it as a Java long.
     // In Java, we associate this long with the current network request and pass it back to native code when
     // the request completes (either in onUrlSuccess or onUrlFailure), reinterpret the long back into a
-    // pointer, call the callback function if the request succeeded, and delete the heap-allocated UrlCallback 
-    // to make sure nothing is leaked. 
+    // pointer, call the callback function if the request succeeded, and delete the heap-allocated UrlCallback
+    // to make sure nothing is leaked.
     jlong jCallbackPtr = reinterpret_cast<jlong>(new UrlCallback(_callback));
 
     jboolean methodResult = jniEnv->CallBooleanMethod(tangramInstance, startUrlRequestMID, jUrl, jCallbackPtr);

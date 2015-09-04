@@ -16,7 +16,6 @@ class MapProjection {
 protected:
     /* m_type: type of map projection: example: mercator*/
     ProjectionType m_type;
-    double m_Res;
 public:
     constexpr static double INV_360 = 1.0/360.0;
     constexpr static double INV_180 = 1.0/180.0;
@@ -137,6 +136,8 @@ class MercatorProjection : public MapProjection {
      * Following define the boundry covered by this mercator projection
      */
     int m_TileSize;
+    double m_Res;
+
 public:
     /*
      * Constructor for MercatorProjection

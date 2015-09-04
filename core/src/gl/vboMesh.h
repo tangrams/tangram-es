@@ -53,14 +53,13 @@ public:
     /*
      * Copies all added vertices and indices into OpenGL buffer objects; After geometry is uploaded,
      * no more vertices or indices can be added
-     * Returns true if the upload results in a buffer binding
      */
-    bool upload();
+    void upload();
 
     /*
      * Sub data upload of the mesh, returns true if this results in a buffer binding
      */
-    bool subDataUpload();
+    void subDataUpload();
 
     /*
      * Renders the geometry in this mesh using the ShaderProgram _shader; if geometry has not already
@@ -115,10 +114,10 @@ protected:
 
     template <typename T>
     void compile(std::vector<std::vector<T>>& _vertices,
-                 std::vector<std::vector<int>>& _indices) {
+                 std::vector<std::vector<uint16_t>>& _indices) {
 
         std::vector<std::vector<T>> vertices;
-        std::vector<std::vector<int>> indices;
+        std::vector<std::vector<uint16_t>> indices;
 
         // take over contents
         std::swap(_vertices, vertices);

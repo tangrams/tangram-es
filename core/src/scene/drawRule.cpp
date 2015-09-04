@@ -4,7 +4,9 @@
 #include "platform.h"
 
 #include <algorithm>
+#include <cmath>
 #include <map>
+#include <utility>
 
 namespace Tangram {
 
@@ -13,6 +15,7 @@ const StyleParam NONE;
 const std::map<std::string, StyleParamKey> s_StyleParamMap = {
     {"none", StyleParamKey::none},
     {"order", StyleParamKey::order},
+    {"extrude", StyleParamKey::extrude},
     {"color", StyleParamKey::color},
     {"width", StyleParamKey::width},
     {"cap", StyleParamKey::cap},
@@ -21,29 +24,87 @@ const std::map<std::string, StyleParamKey> s_StyleParamMap = {
     {"outline:width", StyleParamKey::outline_width},
     {"outline:cap", StyleParamKey::outline_cap},
     {"outline:join", StyleParamKey::outline_join},
+    {"font:family", StyleParamKey::font_family},
+    {"font:weight", StyleParamKey::font_weight},
+    {"font:style", StyleParamKey::font_style},
+    {"font:size", StyleParamKey::font_size},
+    {"font:fill", StyleParamKey::font_fill},
+    {"font:stroke", StyleParamKey::font_stroke},
+    {"font:stroke_color", StyleParamKey::font_stroke_color},
+    {"font:stroke_width", StyleParamKey::font_stroke_width},
+    {"font:uppercase", StyleParamKey::font_uppercase},
+    {"visible", StyleParamKey::visible},
+    {"priority", StyleParamKey::priority},
 };
 
 StyleParam::StyleParam(const std::string& _key, const std::string& _value) {
     auto it = s_StyleParamMap.find(_key);
     if (it == s_StyleParamMap.end()) {
         logMsg("Unknown StyleParam %s:%s\n", _key.c_str(), _value.c_str());
-        value = "";
+        key = StyleParamKey::none;
+        value = none_type{};
         return;
     }
 
     key = it->second;
 
     switch (key) {
+    case StyleParamKey::extrude:
+        if (_value == "true") { value = std::make_pair(NAN, NAN); }
+        else if (_value == "false") { value = std::make_pair(0.0f, 0.0f) ; }
+        else {
+            float f1, f2;
+            int num = std::sscanf(_value.c_str(), "%f, %f", &f1, &f2);
+            switch(num) {
+                case 1:
+                    value = std::make_pair(f1, NAN);
+                    break;
+                case 2:
+                    value = std::make_pair(f1, f2);
+                    break;
+                case 0:
+                default:
+                    logMsg("Warning: Badly formed extrude parameter.\n");
+                    break;
+            }
+        }
+        break;
+    case StyleParamKey::font_family:
+    case StyleParamKey::font_weight:
+    case StyleParamKey::font_style:
+        value = _value;
+        break;
+    case StyleParamKey::font_size: {
+        float fontSize = 16;
+        if (!StyleParam::parseFontSize(_value, fontSize)) {
+            logMsg("Warning: Invalid font-size '%s'.\n", _value.c_str());
+        }
+        value = fontSize;
+        break;
+    }
+    case StyleParamKey::font_uppercase:
+    case StyleParamKey::visible:
+        if (_value == "true") { value = true; }
+        else if (_value == "false") { value = false; }
+        else {
+            logMsg("Warning: Bool value required for capitalized/visible. Using Default.");
+        }
+        break;
     case StyleParamKey::order:
+    case StyleParamKey::priority:
         value = static_cast<int32_t>(std::stoi(_value));
         break;
     case StyleParamKey::width:
     case StyleParamKey::outline_width:
+    case StyleParamKey::font_stroke_width:
         value = static_cast<float>(std::stof(_value));
         break;
     case StyleParamKey::color:
     case StyleParamKey::outline_color:
-        value = DrawRule::parseColor(_value);
+    case StyleParamKey::font_fill:
+    case StyleParamKey::font_stroke:
+    case StyleParamKey::font_stroke_color:
+        value = StyleParam::parseColor(_value);
         break;
     case StyleParamKey::cap:
     case StyleParamKey::outline_cap:
@@ -61,20 +122,47 @@ StyleParam::StyleParam(const std::string& _key, const std::string& _value) {
 std::string StyleParam::toString() const {
     // TODO: cap, join and color toString()
     switch (key) {
+    case StyleParamKey::extrude: {
+        if (!value.is<Extrusion>()) break;
+        auto p = value.get<Extrusion>();
+        return "extrude : (" + std::to_string(p.first) + ", " + std::to_string(p.second) + ")";
+    }
+    case StyleParamKey::font_family:
+    case StyleParamKey::font_weight:
+    case StyleParamKey::font_style:
+        if (!value.is<std::string>()) break;
+        return value.get<std::string>();
+    case StyleParamKey::font_size:
+        if (!value.is<float>()) break;
+        return "font-size : " + std::to_string(value.get<float>());
+    case StyleParamKey::font_uppercase:
+    case StyleParamKey::visible:
+        if (!value.is<bool>()) break;
+        return std::to_string(value.get<bool>());
     case StyleParamKey::order:
-        return std::to_string(value.get<int32_t>());
+    case StyleParamKey::priority:
+        if (!value.is<int32_t>()) break;
+        return "order : " + std::to_string(value.get<int32_t>());
     case StyleParamKey::width:
     case StyleParamKey::outline_width:
-        return std::to_string(value.get<float>());
+    case StyleParamKey::font_stroke_width:
+        if (!value.is<float>()) break;
+        return "width : " + std::to_string(value.get<float>());
     case StyleParamKey::color:
     case StyleParamKey::outline_color:
-        return std::to_string(value.get<Color>().getInt());
+    case StyleParamKey::font_fill:
+    case StyleParamKey::font_stroke:
+    case StyleParamKey::font_stroke_color:
+        if (!value.is<uint32_t>()) break;
+        return "color : " + std::to_string(value.get<uint32_t>());
     case StyleParamKey::cap:
     case StyleParamKey::outline_cap:
-        return std::to_string(static_cast<int>(value.get<CapTypes>()));
+        if (!value.is<CapTypes>()) break;
+        return "cap : " + std::to_string(static_cast<int>(value.get<CapTypes>()));
     case StyleParamKey::join:
     case StyleParamKey::outline_join:
-        return std::to_string(static_cast<int>(value.get<CapTypes>()));
+        if (!value.is<JoinTypes>()) break;
+        return "join : " + std::to_string(static_cast<int>(value.get<JoinTypes>()));
     case StyleParamKey::none:
         break;
     }
@@ -136,76 +224,11 @@ const StyleParam&  DrawRule::findParameter(StyleParamKey _key) const {
     return NONE;
 }
 
-bool DrawRule::getValue(StyleParamKey _key, std::string& _value) const {
-    auto& param = findParameter(_key);
-    if (!param) { return false; }
-    if (!param.value.is<std::string>()) {
-        logMsg("Error: not a string type\n");
-        return false;
-    }
-    _value = param.value.get<std::string>();
-    return true;
-};
-
-bool DrawRule::getValue(StyleParamKey _key, float& _value) const {
-    auto& param = findParameter(_key);
-    if (!param) { return false; }
-    if (!param.value.is<float>()) {
-        logMsg("Error: not a float type\n");
-        return false;
-    }
-    _value = param.value.get<float>();
-    return true;
-}
-
-bool DrawRule::getValue(StyleParamKey _key, int32_t& _value) const {
-    auto& param = findParameter(_key);
-    if (!param) { return false; }
-    if (!param.value.is<int32_t>()) {
-        logMsg("Error: not a int32_t\n");
-        return false;
-    }
-    _value = param.value.get<int32_t>();
-    return true;
-}
-
-bool DrawRule::getColor(StyleParamKey _key, uint32_t& _value) const {
-    auto& param = findParameter(_key);
-    if (!param) { return false; }
-    if (!param.value.is<Color>()) {
-        logMsg("Error: not a Color\n");
-        return false;
-    }
-    _value = param.value.get<Color>().getInt();
-    return true;
-}
-
-bool DrawRule::getLineCap(StyleParamKey _key, CapTypes& _value) const {
-    auto& param = findParameter(_key);
-    if (!param) { return false; }
-    if (!param.value.is<CapTypes>()) {
-        logMsg("Error: not a CapType\n");
-        return false;
-    }
-    _value = param.value.get<CapTypes>();
-    return true;
-}
-bool DrawRule::getLineJoin(StyleParamKey _key, JoinTypes& _value) const {
-    auto& param = findParameter(_key);
-    if (!param) { return false; }
-    if (!param.value.is<JoinTypes>()) {
-        logMsg("Error: not a JoinType\n");
-        return false;
-    }
-    _value = param.value.get<JoinTypes>();
-    return true;
-}
-
 bool DrawRule::operator<(const DrawRule& _rhs) const {
     return style < _rhs.style;
 }
 
-Color DrawRule::parseColor(const std::string& _color) {
+uint32_t StyleParam::parseColor(const std::string& _color) {
     Color color;
 
     if (isdigit(_color.front())) {
@@ -223,7 +246,46 @@ Color DrawRule::parseColor(const std::string& _color) {
         // parse as css color or #hex-num
         color = CSSColorParser::parse(_color);
     }
-    return color;
+    return color.getInt();
+}
+
+bool StyleParam::parseFontSize(const std::string& _str, float& _pxSize) {
+    if (_str.empty()) {
+        return false;
+    }
+
+    size_t index = 0;
+    std::string kind;
+
+    try {
+        _pxSize = std::stof(_str, &index);
+    } catch (std::invalid_argument) {
+        return false;
+    } catch (std::out_of_range) {
+        return false;
+    }
+
+    if (index == _str.length() && (_str.find('.') == std::string::npos)) {
+        return true;
+    }
+
+    kind = _str.substr(index, _str.length() - 1);
+
+    if (kind == "px") {
+        // px may not be fractional value
+        if (_str.find('.') != std::string::npos)
+            return false;
+    } else if (kind == "em") {
+        _pxSize *= 16.f;
+    } else if (kind == "pt") {
+        _pxSize /= 0.75f;
+    } else if (kind == "%") {
+        _pxSize /= 6.25f;
+    } else {
+        return false;
+    }
+
+    return true;
 }
 
 }

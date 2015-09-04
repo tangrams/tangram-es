@@ -3,8 +3,8 @@
 namespace Tangram {
 
 SpriteLabel::SpriteLabel(Label::Transform _transform, glm::vec2 _size,
-                         LabelMesh& _mesh, int _vertexOffset) :
-    Label(_transform, _size, Label::Type::point, _mesh, {_vertexOffset, 4}) {}
+                         LabelMesh& _mesh, int _vertexOffset, Label::Options _options) :
+    Label(_transform, _size, Label::Type::point, _mesh, {_vertexOffset, 4}, _options) {}
 
 void SpriteLabel::updateBBoxes() {
     glm::vec2 sp = m_transform.state.screenPos;

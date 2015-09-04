@@ -4,7 +4,6 @@
 #include "scene/scene.h"
 #include "scene/sceneLoader.h"
 #include "style/style.h"
-#include "text/fontContext.h"
 #include "labels/labels.h"
 #include "tile/tileManager.h"
 #include "tile/tile.h"
@@ -25,7 +24,6 @@ std::unique_ptr<TileManager> m_tileManager;
 std::shared_ptr<Scene> m_scene;
 std::shared_ptr<View> m_view;
 std::unique_ptr<Labels> m_labels;
-std::shared_ptr<FontContext> m_ftContext;
 std::unique_ptr<Skybox> m_skybox;
 std::unique_ptr<InputHandler> m_inputHandler;
 
@@ -57,9 +55,7 @@ void initialize(const char* _scenePath) {
         m_tileManager->setView(m_view);
         m_tileManager->setScene(m_scene);
 
-        // Font and label setup
-        m_ftContext = FontContext::GetInstance();
-        m_ftContext->addFont("FiraSans-Medium.ttf", "FiraSans");
+        // label setup
         m_labels = std::unique_ptr<Labels>(new Labels());
 
         logMsg("Loading Tangram scene file: %s\n", _scenePath);
@@ -69,11 +65,7 @@ void initialize(const char* _scenePath) {
 
         loader.loadScene(sceneString, *m_scene, *m_tileManager, *m_view);
 
-        Primitives::setColor(0xffffff);
-        RenderState::configure();
     }
-
-    while (Error::hadGlError("Tangram::initialize()")) {}
 
     logMsg("finish initialize\n");
 
@@ -284,9 +276,9 @@ void toggleDebugFlag(DebugFlags _flag) {
 
 }
 
-void onContextDestroyed() {
+void setupGL() {
 
-    logMsg("context destroyed\n");
+    logMsg("setup GL\n");
 
     if (m_tileManager) {
         m_tileManager->clearTileSets();
@@ -310,6 +302,10 @@ void onContextDestroyed() {
 
     // Reconfigure the render states
     RenderState::configure();
+
+    Primitives::setColor(0xffffff);
+
+    while (Error::hadGlError("Tangram::setupGL()")) {}
 }
 
 }

@@ -12,7 +12,7 @@
 
 namespace Tangram {
 
-typedef unsigned int FontID;
+typedef int FontID;
 
 class FontContext {
 
@@ -23,25 +23,20 @@ public:
         return instance;
     }
 
-    FontContext();
-    FontContext(int _atlasSize);
     ~FontContext();
 
-    /* adds a font from a .ttf font file with a specific name */
-    bool addFont(const std::string& _fontFile, std::string _name);
+    /* adds a font from a .ttf font file using "family", "weight" and "style" font properties*/
+    bool addFont(const std::string& _family, const std::string& _weight, const std::string& _style);
 
     /* sets the current font for a size in pixels */
-    void setFont(const std::string& _name, int size);
+    void setFont(const std::string& _key, int size);
 
-    FontID getFontID(const std::string& _name);
-
-    /* sets the blur spread when using signed distance field rendering */
-    void setSignedDistanceField(float _blurSpread);
+    FontID getFontID(const std::string& _key);
 
     void clearState();
 
     /* lock thread access to this font context */
-    void lock();
+    bool lock();
 
     /* unlock thread access to this font context */
     void unlock();
@@ -60,6 +55,9 @@ private:
     static void renderUpdate(void* _userPtr, int* _rect, const unsigned char* _data);
     static int renderCreate(void* _userPtr, int _width, int _height);
     static void pushQuad(void* _userPtr, const FONSquad* _quad);
+
+    FontContext();
+    FontContext(int _atlasSize);
 
     void initFontContext(int _atlasSize);
 

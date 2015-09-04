@@ -4,31 +4,22 @@
 #include "geom.h"
 #include "glm/gtx/rotate_vector.hpp"
 #include "platform.h"
-#include "tesselator.h"
 #include <memory>
 
-void* alloc(void* _userData, unsigned int _size) {
-    return malloc(_size);
-}
+#include "earcut.hpp/include/earcut.hpp"
 
-void* realloc(void* _userData, void* _ptr, unsigned int _size) {
-    return realloc(_ptr, _size);
-}
-
-void free(void* _userData, void* _ptr) {
-    free(_ptr);
-}
+namespace mapbox { namespace util {
+template <>
+struct nth<0, Tangram::Point> {
+    inline static float get(const Tangram::Point &t) { return t.x; };
+};
+template <>
+struct nth<1, Tangram::Point> {
+    inline static float get(const Tangram::Point &t) { return t.y; };
+};
+}}
 
 namespace Tangram {
-
-static TESSalloc allocator = {&alloc, &realloc, &free, nullptr,
-                              64, // meshEdgeBucketSize
-                              64, // meshVertexBucketSize
-                              16,  // meshFaceBucketSize
-                              64, // dictNodeBucketSize
-                              16,  // regionBucketSize
-                              64  // extraVertices
-                             };
 
 CapTypes CapTypeFromString(const std::string& str) {
     if (str == "square") { return CapTypes::square; }
@@ -44,98 +35,98 @@ JoinTypes JoinTypeFromString(const std::string& str) {
 
 void Builders::buildPolygon(const Polygon& _polygon, float _height, PolygonBuilder& _ctx) {
 
-    TESStesselator* tesselator = tessNewTess(&allocator);
-    isect2d::AABB bbox;
+    mapbox::Earcut<float, uint16_t> earcut;
 
-    if (_ctx.useTexCoords && _polygon.size() > 0 && _polygon[0].size() > 0) {
-        // initialize the axis-aligned bounding box of the polygon
-        bbox = isect2d::AABB(_polygon[0][0].x, _polygon[0][0].y, 0, 0);
+    earcut(_polygon);
+
+    uint16_t vertexDataOffset = _ctx.numVertices;
+
+    if (vertexDataOffset == 0) {
+        _ctx.indices = std::move(earcut.indices);
+    } else {
+        _ctx.indices.reserve(_ctx.indices.size() +  earcut.indices.size());
+        for (auto i : earcut.indices) {
+            _ctx.indices.push_back(vertexDataOffset + i);
+        }
     }
 
-    // add polygon contour for every ring
-    for (auto& line : _polygon) {
-        if (_ctx.useTexCoords) {
-            for (auto& p : line) {
-                bbox.include(p.x, p.y);
-            }
+    isect2d::AABB bbox;
+
+    if (_ctx.useTexCoords) {
+        if (_polygon.size() > 0 && _polygon[0].size() > 0) {
+            // initialize the axis-aligned bounding box of the polygon
+            bbox = isect2d::AABB(_polygon[0][0].x, _polygon[0][0].y, 0, 0);
         }
-        tessAddContour(tesselator, 3, line.data(), sizeof(Point), (int)line.size());
+        for (auto& p : _polygon[0]) {
+            bbox.include(p.x, p.y);
+        }
     }
 
     // call the tesselator
     glm::vec3 normal(0.0, 0.0, 1.0);
 
-    if ( tessTesselate(tesselator, TessWindingRule::TESS_WINDING_NONZERO, TessElementType::TESS_POLYGONS, 3, 3, &normal[0]) ) {
+    _ctx.numVertices += earcut.vertices.size();
+    _ctx.sizeHint(_ctx.numVertices);
 
-        const int numElements = tessGetElementCount(tesselator);
-        const TESSindex* tessElements = tessGetElements(tesselator);
-        _ctx.indices.reserve(_ctx.indices.size() + numElements * 3); // Pre-allocate index vector
-        for (int i = 0; i < numElements; i++) {
-            const TESSindex* tessElement = &tessElements[i * 3];
-            for (int j = 0; j < 3; j++) {
-                _ctx.indices.push_back(tessElement[j] + _ctx.numVertices);
-            }
+    for (auto& p : earcut.vertices) {
+        glm::vec2 uv(0);
+        glm::vec3 coord(p[0], p[1], _height);
+
+        if (_ctx.useTexCoords) {
+            float u = mapValue(coord.x, bbox.m_min.x, bbox.m_max.x, 0., 1.);
+            float v = mapValue(coord.y, bbox.m_min.y, bbox.m_max.y, 0., 1.);
+            uv = glm::vec2(u, v);
         }
-
-        const int numVertices = tessGetVertexCount(tesselator);
-        const float* tessVertices = tessGetVertices(tesselator);
-
-        _ctx.numVertices += numVertices;
-        _ctx.sizeHint(_ctx.numVertices);
-
-        for (int i = 0; i < numVertices; i++) {
-            glm::vec3 coord(tessVertices[3*i], tessVertices[3*i+1], tessVertices[3*i+2] + _height);
-            glm::vec2 uv(0);
-
-            if (_ctx.useTexCoords) {
-                float u = mapValue(tessVertices[3*i], bbox.m_min.x, bbox.m_max.x, 0., 1.);
-                float v = mapValue(tessVertices[3*i+1], bbox.m_min.y, bbox.m_max.y, 0., 1.);
-                uv = glm::vec2(u, v);
-            }
-            _ctx.addVertex(coord, normal, uv);
-        }
-    } else {
-        logMsg("Tesselator cannot tesselate!!\n");
+        _ctx.addVertex(coord, normal, uv);
     }
-
-    tessDeleteTess(tesselator);
 }
 
 void Builders::buildPolygonExtrusion(const Polygon& _polygon, float _minHeight, float _maxHeight, PolygonBuilder& _ctx) {
-    
+
     int vertexDataOffset = (int)_ctx.numVertices;
 
     glm::vec3 upVector(0.0f, 0.0f, 1.0f);
     glm::vec3 normalVector;
 
+    size_t sumIndices = _ctx.indices.size();
+    size_t sumVertices = _ctx.numVertices;
+
+    for (auto& line : _polygon) {
+        size_t lineSize = line.size();
+        sumIndices += lineSize * 6;
+        sumVertices += (lineSize - 1) * 4;
+    }
+
+    _ctx.indices.reserve(sumIndices);
+    _ctx.sizeHint(sumVertices);
+
     for (auto& line : _polygon) {
 
         size_t lineSize = line.size();
-        _ctx.indices.reserve(_ctx.indices.size() + lineSize * 6); // Pre-allocate index vector
-
-        _ctx.numVertices += (lineSize - 1) * 4;
-        _ctx.sizeHint(_ctx.numVertices);
 
         for (size_t i = 0; i < lineSize - 1; i++) {
 
-            normalVector = glm::cross(upVector, (line[i+1] - line[i]));
+            glm::vec3 a(line[i]);
+            glm::vec3 b(line[i+1]);
+
+            normalVector = glm::cross(upVector, b - a);
             normalVector = glm::normalize(normalVector);
 
             // 1st vertex top
-            _ctx.addVertex(glm::vec3(line[i].x, line[i].y, _maxHeight),
-                           normalVector, glm::vec2(1.,0.));
+            a.z = _maxHeight;
+            _ctx.addVertex(a, normalVector, glm::vec2(1.,0.));
 
             // 2nd vertex top
-            _ctx.addVertex(glm::vec3(line[i+1].x, line[i+1].y, _maxHeight),
-                           normalVector, glm::vec2(0.,0.));
+            b.z = _maxHeight;
+            _ctx.addVertex(b, normalVector, glm::vec2(0.,0.));
 
             // 1st vertex bottom
-            _ctx.addVertex(glm::vec3(line[i].x, line[i].y, _minHeight),
-                           normalVector, glm::vec2(1.,1.));
+            a.z = _minHeight;
+            _ctx.addVertex(a, normalVector, glm::vec2(1.,1.));
 
             // 2nd vertex bottom
-            _ctx.addVertex(glm::vec3(line[i+1].x, line[i+1].y, _minHeight),
-                           normalVector, glm::vec2(0.,1.));
+            b.z = _minHeight;
+            _ctx.addVertex(b, normalVector, glm::vec2(0.,1.));
 
             // Start the index from the previous state of the vertex Data
             _ctx.indices.push_back(vertexDataOffset);
@@ -163,7 +154,7 @@ inline void addPolyLineVertex(const glm::vec3& _coord, const glm::vec2& _normal,
 }
 
 // Helper function for polyline tesselation; adds indices for pairs of vertices arranged like a line strip
-void indexPairs( int _nPairs, int _nVertices, std::vector<int>& _indicesOut) {
+void indexPairs( int _nPairs, int _nVertices, std::vector<uint16_t>& _indicesOut) {
     for (int i = 0; i < _nPairs; i++) {
         _indicesOut.push_back(_nVertices - 2*i - 4);
         _indicesOut.push_back(_nVertices - 2*i - 2);

@@ -16,18 +16,17 @@ double invLodFunc(double d) {
     return exp2(d) - 1.0;
 }
 
-View::View(int _width, int _height, ProjectionType _projType) {
+View::View(int _width, int _height, ProjectionType _projType) :
+    m_zoomAltitude(0.0),
+    m_width(0),
+    m_height(0),
+    m_changed(false) {
 
     setMapProjection(_projType);
     setSize(_width, _height);
     setZoom(m_initZoom); // Arbitrary zoom for testing
 
     setPosition(0.0, 0.0);
-
-    m_changed = false;
-    m_dirtyMatrices = true;
-    m_dirtyTiles = true;
-
 }
 
 void View::setMapProjection(ProjectionType _projType) {

@@ -37,7 +37,7 @@ typedef std::function<void(size_t reserve)> SizeHintFn;
  * see Builders::buildPolygon() and Builders::buildPolygonExtrusion()
  */
 struct PolygonBuilder {
-    std::vector<int> indices; // indices for drawing the polyon as triangles are added to this vector
+    std::vector<uint16_t> indices; // indices for drawing the polyon as triangles are added to this vector
     PolygonVertexFn addVertex;
     SizeHintFn sizeHint;
     size_t numVertices = 0;
@@ -60,7 +60,7 @@ typedef std::function<void(const glm::vec3& coord, const glm::vec2& enormal, con
  * see Builders::buildPolyLine()
  */
 struct PolyLineBuilder {
-    std::vector<int> indices; // indices for drawing the polyline as triangles are added to this vector
+    std::vector<uint16_t> indices; // indices for drawing the polyline as triangles are added to this vector
     PolyLineVertexFn addVertex;
     SizeHintFn sizeHint;
     size_t numVertices = 0;
@@ -81,7 +81,7 @@ typedef std::function<void(const glm::vec2& coord, const glm::vec2& screenPos, c
 /* SpriteBuidler context
  */
 struct SpriteBuilder {
-    std::vector<int> indices;
+    std::vector<uint16_t> indices;
     SpriteBuilderFn addVertex;
     size_t numVerts = 0;
 

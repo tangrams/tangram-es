@@ -5,6 +5,8 @@
 #include "gl/shaderProgram.h"
 #include "tile/tile.h"
 
+#include <cmath>
+
 namespace Tangram {
 
 PolygonStyle::PolygonStyle(std::string _name, GLenum _drawMode) : Style(_name, _drawMode) {
@@ -33,8 +35,9 @@ void PolygonStyle::constructShaderProgram() {
 
 PolygonStyle::Parameters PolygonStyle::parseRule(const DrawRule& _rule) const {
     Parameters p;
-    _rule.getColor(StyleParamKey::color, p.color);
-    _rule.getValue(StyleParamKey::order, p.order);
+    _rule.get(StyleParamKey::color, p.color);
+    _rule.get(StyleParamKey::order, p.order);
+    _rule.get(StyleParamKey::extrude, p.extrude);
 
     return p;
 }
@@ -71,6 +74,7 @@ void PolygonStyle::buildPolygon(const Polygon& _polygon, const DrawRule& _rule, 
 
     GLuint abgr = params.color;
     GLfloat layer = params.order;
+    auto& extrude = params.extrude;
 
     if (Tangram::getDebugFlag(Tangram::DebugFlags::proxy_colors)) {
         abgr = abgr << (_tile.getID().z % 6);
@@ -89,13 +93,26 @@ void PolygonStyle::buildPolygon(const Polygon& _polygon, const DrawRule& _rule, 
         [&](size_t sizeHint){ vertices.reserve(sizeHint); }
     };
 
-    if (minHeight != height) {
+    auto& mesh = static_cast<PolygonStyle::Mesh&>(_mesh);
+
+    if (extrude.first != 0.0f || extrude.second != 0.0f) {
+        height = std::isnan(extrude.second)
+            ? ( std::isnan(extrude.first) ? height : extrude.first )
+            : extrude.second;
+
+        minHeight = std::isnan(extrude.second) ? minHeight : extrude.first;
+
         Builders::buildPolygonExtrusion(_polygon, minHeight, height, builder);
+        mesh.addVertices(std::move(vertices), std::move(builder.indices));
+
+        // TODO add builder.clear() ?;
+        builder.numVertices = 0;
+
+    } else {
+        height = 0.0f;
     }
 
     Builders::buildPolygon(_polygon, height, builder);
-
-    auto& mesh = static_cast<PolygonStyle::Mesh&>(_mesh);
     mesh.addVertices(std::move(vertices), std::move(builder.indices));
 }
 

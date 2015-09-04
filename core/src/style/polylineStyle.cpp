@@ -34,16 +34,16 @@ void PolylineStyle::constructShaderProgram() {
 PolylineStyle::Parameters PolylineStyle::parseRule(const DrawRule& _rule) const {
     Parameters p;
 
-    _rule.getValue(StyleParamKey::order, p.order);
-    _rule.getColor(StyleParamKey::color, p.color);
-    _rule.getValue(StyleParamKey::width, p.width);
-    _rule.getLineCap(StyleParamKey::cap, p.cap);
-    _rule.getLineJoin(StyleParamKey::join, p.join);
+    _rule.get(StyleParamKey::order, p.order);
+    _rule.get(StyleParamKey::color, p.color);
+    _rule.get(StyleParamKey::width, p.width);
+    _rule.get(StyleParamKey::cap, p.cap);
+    _rule.get(StyleParamKey::join, p.join);
 
-    if (_rule.getColor(StyleParamKey::outline_color, p.outlineColor) |
-        _rule.getValue(StyleParamKey::outline_width, p.outlineWidth) |
-        _rule.getLineCap(StyleParamKey::outline_cap, p.outlineCap) |
-        _rule.getLineJoin(StyleParamKey::outline_join, p.outlineJoin)) {
+    if (_rule.get(StyleParamKey::outline_color, p.outlineColor) |
+        _rule.get(StyleParamKey::outline_width, p.outlineWidth) |
+        _rule.get(StyleParamKey::outline_cap, p.outlineCap) |
+        _rule.get(StyleParamKey::outline_join, p.outlineJoin)) {
         p.outlineOn = true;
     }
 

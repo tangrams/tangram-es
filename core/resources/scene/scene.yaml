@@ -16,6 +16,7 @@ textures:
     water-texture:
         url: normals.jpg
         filtering: nearest
+
 styles:
     pillows:
         base: polygon
@@ -59,6 +60,7 @@ layers:
         draw:
             polygons:
                 order: 1
+                color: '#fffffa'
                 interactive: true # currently ignored
         green:
             filter: { kind: [park, graveyard, cemetery, forest, recreation_ground] }
@@ -177,13 +179,37 @@ layers:
         data: {source: osm, layer: roads}
         filter: { name: true, aeroway: false, tunnel: false, railway: false, not: { kind: rail }, $zoom: { min: 10 } }
         draw:
-            text: {}
+            text: 
+                visible: false
+                font:
+                    family: sans-serif
+                    weight: 400
+                    style: normal
+                    size: 1.em
+                    fill: white
         highway: 
-            filter: { kind: highway, $zoom: { min: 7 } }
-            draw: {}
+            filter: { kind: highway }
+            draw:
+                text:
+                    visible: false
+                    font:
+                        family: sans-serif
+                        weight: 400
+                        style: normal
+                        size: 20px
+                        fill: black
+                        uppercase: true
         major_road:
-            filter: { kind: major_road, $zoom: { min: 14 } }
-            draw: {}
+            filter: { kind: major_road }
+            draw:
+                text:
+                    visible: true
+                    font:
+                        family: sans-serif
+                        weight: 400
+                        style: normal
+                        size: 20.5pt
+                        uppercase: true
     places:
         data: { sources: osm }
         filter:
@@ -199,7 +225,13 @@ layers:
                 # this function matches the "cities" sublayer
                 #- function() {return (feature.scalerank * .75) <= ($zoom - 4); }
         draw:
-            text: {}
+            text: 
+                font:
+                    family: sans-serif
+                    weight: 400
+                    style: normal
+                    size: 15
+                    fill: black
         continents:
             filter: { kind: continent }
             draw: {}
@@ -229,7 +261,13 @@ layers:
                 - { $zoom: { min: 15 }, area: { min: 10000 } }
                 - { $zoom: { min: 18 } }
         draw:
-            text: {}
+            text:
+                font:
+                    family: sans-serif
+                    weight: 400
+                    style: normal
+                    size: 15
+                    fill: darkgreen
 
     pois:
         data: { source: osm }
