@@ -273,7 +273,7 @@ layers:
                     style: normal
                     size: 20px
                     fill: darkgreen
-                    capitalized: true
+                    uppercase: true
 
     pois:
         data: { source: osm }

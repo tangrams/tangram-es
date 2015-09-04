@@ -82,7 +82,6 @@ void Labels::update(const View& _view, float _dt, const std::vector<std::unique_
         if (intersect(l1->getOBB(), l2->getOBB())) { occlusions.insert({l1, l2}); }
     }
 
-    // no priorities, only occlude one of the two occluded label
     for (auto& pair : occlusions) {
         if (!pair.first->occludedLastFrame() || !pair.second->occludedLastFrame()) {
             // lower numeric priority means higher priority
