@@ -82,7 +82,7 @@ void SpriteStyle::buildPoint(const Point& _point, const DrawRule& _rule, const P
     Label::Options options;
     options.offset = offset;
 
-    std::unique_ptr<SpriteLabel> label(new SpriteLabel(t, spriteNode.m_size * spriteScale, mesh, _mesh.numVertices(), options));
+    std::unique_ptr<SpriteLabel> label(new SpriteLabel(_tile.getID(), t, spriteNode.m_size * spriteScale, mesh, _mesh.numVertices(), options));
 
     auto size = spriteNode.m_size * spriteScale;
     float halfWidth = size.x * .5f;

@@ -51,12 +51,14 @@ Parameters TextStyle::parseRule(const DrawRule& _rule) const {
     Parameters p;
 
     std::string fontFamily, fontWeight, fontStyle;
+    Offset offset;
 
     _rule.get(StyleParamKey::font_family, fontFamily);
     _rule.get(StyleParamKey::font_weight, fontWeight);
     _rule.get(StyleParamKey::font_style, fontStyle);
     _rule.get(StyleParamKey::font_size, p.fontSize);
     _rule.get(StyleParamKey::font_fill, p.fill);
+    _rule.get(StyleParamKey::offset, offset);
     if (_rule.get(StyleParamKey::font_stroke, p.strokeColor)) {
         _rule.get(StyleParamKey::font_stroke_color, p.strokeColor);
     }
@@ -65,6 +67,7 @@ Parameters TextStyle::parseRule(const DrawRule& _rule) const {
     _rule.get(StyleParamKey::visible, p.visible);
 
     p.fontKey = fontFamily + "_" + fontWeight + "_" + fontStyle;
+    p.offset = glm::vec2(offset.first, offset.second);
 
     /* Global operations done for fontsize and sdfblur */
     float emSize = p.fontSize / 16.f;
@@ -88,8 +91,9 @@ void TextStyle::buildPoint(const Point& _point, const DrawRule& _rule, const Pro
 
     Label::Options options;
     options.color = params.fill;
+    options.offset = params.offset;
 
-    buffer.addLabel(text, { glm::vec2(_point), glm::vec2(_point) }, Label::Type::point, params, options);
+    buffer.addLabel(_tile.getID(), text, { glm::vec2(_point), glm::vec2(_point) }, Label::Type::point, params, options);
 }
 
 void TextStyle::buildLine(const Line& _line, const DrawRule& _rule, const Properties& _props, VboMesh& _mesh, Tile& _tile) const {
@@ -122,8 +126,9 @@ void TextStyle::buildLine(const Line& _line, const DrawRule& _rule, const Proper
 
         Label::Options options;
         options.color = params.fill;
+        options.offset = params.offset;
 
-        buffer.addLabel(text, { p1, p2 }, Label::Type::line, params, options);
+        buffer.addLabel(_tile.getID(), text, { p1, p2 }, Label::Type::line, params, options);
     }
 }
 
@@ -155,8 +160,9 @@ void TextStyle::buildPolygon(const Polygon& _polygon, const DrawRule& _rule, con
 
     Label::Options options;
     options.color = params.fill;
+    options.offset = params.offset;
 
-    buffer.addLabel(text, { centroid, centroid }, Label::Type::point, params, options);
+    buffer.addLabel(_tile.getID(), text, { centroid, centroid }, Label::Type::point, params, options);
 
 }
 

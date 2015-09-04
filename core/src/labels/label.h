@@ -3,9 +3,11 @@
 #include "glm/vec2.hpp"
 #include "glm/mat4x4.hpp"
 #include <climits> // needed in aabb.h
+#include <memory>
 #include "isect2d.h"
 #include "fadeEffect.h"
 #include "util/types.h"
+#include "tile/tileID.h"
 
 #include <string>
 
@@ -58,11 +60,11 @@ public:
 
     struct Options {
         uint32_t color = 0xffffffff;
-        glm::vec2 offset = glm::vec2(0);
+        glm::vec2 offset;
         uint32_t priority = 1 << 31;
     };
 
-    Label(Transform _transform, glm::vec2 _size, Type _type, LabelMesh& _mesh, Range _vertexRange, Options _options);
+    Label(TileID _tileID, Transform _transform, glm::vec2 _size, Type _type, LabelMesh& _mesh, Range _vertexRange, Options _options);
 
     virtual ~Label();
 
@@ -101,8 +103,16 @@ public:
 
     State getState() const { return m_currentState; }
 
+    Type getType() const { return m_type; }
+
     /* Checks whether the label is in a visible state */
     bool visibleState() const;
+
+    bool compareGeoLocation(const Label& _label);
+
+    void attachLabel(std::shared_ptr<Label> _label);
+
+    std::shared_ptr<Label> getAttachedLabel() const { return m_attachedLabel; }
 
 private:
 
@@ -151,6 +161,10 @@ protected:
     LabelMesh& m_mesh;
     // first vertex and count in m_mesh vertices
     Range m_vertexRange;
+    // where the label lives
+    TileID m_tileID;
+    // attachement to any other label
+    std::shared_ptr<Label> m_attachedLabel;
 };
 
 }

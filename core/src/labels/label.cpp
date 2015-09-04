@@ -5,13 +5,14 @@
 
 namespace Tangram {
 
-Label::Label(Label::Transform _transform, glm::vec2 _size, Type _type, LabelMesh& _mesh, Range _vertexRange, Options _options) :
+Label::Label(TileID _tile, Label::Transform _transform, glm::vec2 _size, Type _type, LabelMesh& _mesh, Range _vertexRange, Options _options) :
     m_type(_type),
     m_options(_options),
     m_transform(_transform),
     m_dim(_size),
     m_mesh(_mesh),
-    m_vertexRange(_vertexRange) {
+    m_vertexRange(_vertexRange),
+    m_tileID(_tile) {
 
     m_transform.state.alpha = m_type == Type::debug ? 1.0 : 0.0;
     m_currentState = m_type == Type::debug ? State::visible : State::wait_occ;
@@ -41,7 +42,7 @@ bool Label::updateScreenTransform(const glm::mat4& _mvp, const glm::vec2& _scree
             screenPosition = clipToScreenSpace(v1, _screenSize);
 
             // center on half the width
-            screenPosition.x -= m_dim.x / 2;
+            screenPosition.x -= m_dim.x * 0.5f;
 
             break;
         }
@@ -70,7 +71,6 @@ bool Label::updateScreenTransform(const glm::mat4& _mvp, const glm::vec2& _scree
 
             glm::vec2 p1p2 = p2 - p1;
             glm::vec2 t = glm::normalize(-p1p2);
-            glm::vec2 tperp = glm::vec2(-t.y, t.x);
 
             float length = glm::length(p1p2);
 
@@ -83,7 +83,7 @@ bool Label::updateScreenTransform(const glm::mat4& _mvp, const glm::vec2& _scree
                 }
             }
 
-            screenPosition = (p1 + p2) * 0.5f + t * m_dim.x * 0.5f - tperp * (m_dim.y / 6);
+            screenPosition = (p1 + p2) * 0.5f + t * m_dim.x * 0.5f;
 
             break;
         }
@@ -121,6 +121,16 @@ void Label::setOcclusion(bool _occlusion) {
     }
 
     m_occludedLastFrame = _occlusion;
+
+    if (m_attachedLabel && m_attachedLabel->canOcclude()) {
+        m_attachedLabel->m_occludedLastFrame = _occlusion;
+    }
+}
+
+void Label::attachLabel(std::shared_ptr<Label> _label) {
+    if (_label.get() != this) {
+        m_attachedLabel = _label;
+    }
 }
 
 bool Label::canOcclude() {
@@ -164,6 +174,23 @@ void Label::setScreenPosition(const glm::vec2& _screenPosition) {
 void Label::setRotation(float _rotation) {
     m_transform.state.rotation = _rotation;
     m_dirty = true;
+}
+
+bool Label::compareGeoLocation(const Label& _label) {
+    if (_label.getType() != m_type || _label.m_tileID != m_tileID) {
+        return false;
+    }
+
+    switch (m_type) {
+        case Type::debug:
+        case Type::point:
+            return m_transform.modelPosition1 == _label.m_transform.modelPosition1;
+        case Type::line:
+            return m_transform.modelPosition1 == _label.m_transform.modelPosition1 &&
+            m_transform.modelPosition2 == _label.m_transform.modelPosition2;
+    }
+
+    return false;
 }
 
 void Label::pushTransform() {

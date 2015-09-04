@@ -15,7 +15,9 @@ TextBuffer::TextBuffer(std::shared_ptr<VertexLayout> _vertexLayout)
 TextBuffer::~TextBuffer() {
 }
 
-bool TextBuffer::addLabel(const std::string& _text, Label::Transform _transform, Label::Type _type, const Parameters& _params, Label::Options _options) {
+bool TextBuffer::addLabel(TileID _tileID, const std::string& _text, Label::Transform _transform,
+                          Label::Type _type, const Parameters& _params, Label::Options _options) {
+
     if (_params.fontSize <= 0.f) {
         return false;
     }
@@ -76,7 +78,7 @@ bool TextBuffer::addLabel(const std::string& _text, Label::Transform _transform,
 
     glm::vec2 size((x1 - x0), (y1 - y0));
 
-    m_labels.emplace_back(new TextLabel(_text, _transform, _type, size, *this, { vertexOffset, numVertices }, _options));
+    m_labels.emplace_back(new TextLabel(_tileID, _text, _transform, _type, size, *this, { vertexOffset, numVertices }, _options));
 
     // TODO: change this in TypeMesh::adVertices()
     m_nVertices = vertices.size();

@@ -16,8 +16,8 @@ LabelMesh::LabelMesh(std::shared_ptr<VertexLayout> _vertexLayout, GLenum _drawMo
 
 LabelMesh::~LabelMesh() {}
 
-void LabelMesh::addLabel(std::unique_ptr<Label> _label) {
-    m_labels.push_back(std::move(_label));
+void LabelMesh::addLabel(std::shared_ptr<Label> _label) {
+    m_labels.push_back(_label);
 }
 
 void LabelMesh::loadQuadIndices() {

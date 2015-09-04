@@ -12,12 +12,13 @@ using namespace Tangram;
 
 glm::vec2 screenSize(500.f, 500.f);
 TextBuffer dummy(nullptr);
+TileID id(0, 0, 0);
 
 TextLabel makeLabel(Label::Transform _transform, Label::Type _type) {
     Label::Options options;
     options.color = 0xff;
     options.offset = {0.0f, 0.0f};
-    return TextLabel("label", _transform, _type, {0, 0}, dummy, {0, 0}, options);
+    return TextLabel(id, "label", _transform, _type, {0, 0}, dummy, {0, 0}, options);
 }
 
 TEST_CASE( "Ensure the transition from wait -> sleep when occlusion happens", "[Core][Label]" ) {

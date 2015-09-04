@@ -33,6 +33,7 @@ const std::map<std::string, StyleParamKey> s_StyleParamMap = {
     {"font:stroke_color", StyleParamKey::font_stroke_color},
     {"font:stroke_width", StyleParamKey::font_stroke_width},
     {"font:uppercase", StyleParamKey::font_uppercase},
+    {"offset", StyleParamKey::offset},
     {"visible", StyleParamKey::visible},
     {"priority", StyleParamKey::priority},
 };
@@ -49,26 +50,26 @@ StyleParam::StyleParam(const std::string& _key, const std::string& _value) {
     key = it->second;
 
     switch (key) {
-    case StyleParamKey::extrude:
+    case StyleParamKey::extrude: {
         if (_value == "true") { value = std::make_pair(NAN, NAN); }
         else if (_value == "false") { value = std::make_pair(0.0f, 0.0f) ; }
         else {
-            float f1, f2;
-            int num = std::sscanf(_value.c_str(), "%f, %f", &f1, &f2);
-            switch(num) {
-                case 1:
-                    value = std::make_pair(f1, NAN);
-                    break;
-                case 2:
-                    value = std::make_pair(f1, f2);
-                    break;
-                case 0:
-                default:
-                    logMsg("Warning: Badly formed extrude parameter.\n");
-                    break;
+            std::pair<float, float> vec2 = std::make_pair(NAN, NAN);
+            if (!StyleParam::parseVec2(_value, {"m", "px"}, vec2)) {
+                logMsg("Warning: Badly formed extrude parameter %s.\n", _value.c_str());
             }
+            value = vec2;
         }
         break;
+    }
+    case StyleParamKey::offset: {
+        std::pair<float, float> vec2 = std::make_pair(0.f, 0.f);
+        if (!StyleParam::parseVec2(_value, {"px"}, vec2)) {
+            logMsg("Warning: Badly formed offset parameter %s.\n", _value.c_str());
+        }
+        value = vec2;
+        break;
+    }
     case StyleParamKey::font_family:
     case StyleParamKey::font_weight:
     case StyleParamKey::font_style:
@@ -126,6 +127,11 @@ std::string StyleParam::toString() const {
         if (!value.is<Extrusion>()) break;
         auto p = value.get<Extrusion>();
         return "extrude : (" + std::to_string(p.first) + ", " + std::to_string(p.second) + ")";
+    }
+    case StyleParamKey::offset: {
+        if (!value.is<Offset>()) break;
+        auto p = value.get<Offset>();
+        return "offset : (" + std::to_string(p.first) + "px, " + std::to_string(p.second) + "px)";
     }
     case StyleParamKey::font_family:
     case StyleParamKey::font_weight:
@@ -226,6 +232,41 @@ const StyleParam&  DrawRule::findParameter(StyleParamKey _key) const {
 
 bool DrawRule::operator<(const DrawRule& _rhs) const {
     return style < _rhs.style;
+}
+
+bool StyleParam::parseVec2(const std::string& _value, const std::vector<std::string>& _allowedUnit, std::pair<float, float>& _vec2) {
+    if (_value.empty()) {
+        return false;
+    }
+
+    std::string value = _value;
+
+    // replace all unit occurences
+    for (auto& unit : _allowedUnit) {
+        auto i = value.find(unit);
+        // TODO: conversion
+        while (i != std::string::npos) {
+            value.replace(i, unit.size(), "");
+            i = value.find(unit);
+        }
+    }
+
+    float f1, f2;
+    int num = std::sscanf(value.c_str(), "%f,%f", &f1, &f2);
+
+    switch(num) {
+        case 1:
+            _vec2 = std::make_pair(f1, NAN);
+            break;
+        case 2:
+            _vec2 = std::make_pair(f1, f2);
+            break;
+        case 0:
+        default:
+            return false;
+    }
+
+    return true;
 }
 
 uint32_t StyleParam::parseColor(const std::string& _color) {

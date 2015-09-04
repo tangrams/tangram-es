@@ -23,6 +23,7 @@ struct Parameters {
     bool uppercase = false;
     bool visible = true;
     uint32_t priority = 1 << 31;
+    glm::vec2 offset;
 };
 
 /*
@@ -36,7 +37,7 @@ public:
     ~TextBuffer();
 
     /* Create and add TextLabel */
-    bool addLabel(const std::string& _text, Label::Transform _transform, Label::Type _type, const Parameters& _params, Label::Options _options);
+    bool addLabel(TileID _tileID, const std::string& _text, Label::Transform _transform, Label::Type _type, const Parameters& _params, Label::Options _options);
 
 private:
 
