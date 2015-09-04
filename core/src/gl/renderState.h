@@ -138,6 +138,8 @@ namespace RenderState {
     using VertexBuffer = StateWrap<FUN(bindVertexBuffer), GLuint>;
     using IndexBuffer = StateWrap<FUN(bindIndexBuffer), GLuint>;
 
+    using ShaderProgram = StateWrap<FUN(glUseProgram), GLuint>;
+
     using TextureUnit = StateWrap<FUN(activeTextureUnit), GLuint>;
     using Texture = StateWrap<FUN(bindTexture), GLenum, GLuint>;
 
@@ -155,6 +157,7 @@ namespace RenderState {
     extern FrontFace frontFace;
     extern CullFace cullFace;
     extern Culling culling;
+    extern ShaderProgram shaderProgram;
 
     extern VertexBuffer vertexBuffer;
     extern IndexBuffer indexBuffer;

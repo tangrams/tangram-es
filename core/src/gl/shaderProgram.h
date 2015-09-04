@@ -107,7 +107,6 @@ private:
         // to a value that is not a valid uniform or attribute location.
     };
 
-    static GLuint s_activeGlProgram;
     static int s_validGeneration; // Incremented when GL context is invalidated
 
     int m_generation;
