@@ -7,6 +7,7 @@
 #include "view/view.h"
 #include "labels/textLabel.h"
 #include "glm/gtc/type_ptr.hpp"
+#include "tangram.h"
 
 namespace Tangram {
 
@@ -94,6 +95,11 @@ void TextStyle::buildPoint(const Point& _point, const DrawRule& _rule, const Pro
     const auto& text = _props.getString(key_name);
     if (text.length() == 0) { return; }
 
+
+    if (Tangram::getDebugFlag(Tangram::DebugFlags::labels)) {
+        buffer.addLabel(std::to_string(params.priority), { glm::vec2(_point), glm::vec2(_point) }, Label::Type::debug, params, optionsFromTextParams(params));
+    }
+
     buffer.addLabel(text, { glm::vec2(_point), glm::vec2(_point) }, Label::Type::point, params, optionsFromTextParams(params));
 }
 
@@ -126,7 +132,12 @@ void TextStyle::buildLine(const Line& _line, const DrawRule& _rule, const Proper
         }
 
         buffer.addLabel(text, { p1, p2 }, Label::Type::line, params, optionsFromTextParams(params));
+
+        if (Tangram::getDebugFlag(Tangram::DebugFlags::labels)) {
+            buffer.addLabel(std::to_string(params.priority), { p1, p2 }, Label::Type::debug, params, optionsFromTextParams(params));
+        }
     }
+
 }
 
 void TextStyle::buildPolygon(const Polygon& _polygon, const DrawRule& _rule, const Properties& _props, VboMesh& _mesh, Tile& _tile) const {
@@ -156,6 +167,10 @@ void TextStyle::buildPolygon(const Polygon& _polygon, const DrawRule& _rule, con
     centroid /= n;
 
     buffer.addLabel(text, { centroid, centroid }, Label::Type::point, params, optionsFromTextParams(params));
+
+    if (Tangram::getDebugFlag(Tangram::DebugFlags::labels)) {
+        buffer.addLabel(std::to_string(params.priority), { centroid, centroid }, Label::Type::debug, params, optionsFromTextParams(params));
+    }
 
 }
 
