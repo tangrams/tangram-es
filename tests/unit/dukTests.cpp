@@ -19,11 +19,11 @@ TEST_CASE( "", "[Duktape][init]") {
 
 TEST_CASE( "Test filter without feature being set", "[Duktape][evalFilterFn]") {
     StyleContext ctx;
-    ctx.addFunction("fn", R"(function() { return feature.name == undefined; })");
+    ctx.addFunction("fn", R"(function() { return feature.name === undefined; })");
     ctx.addAccessor("name");
     REQUIRE(ctx.evalFilterFn("fn") == true);
 
-    ctx.addFunction("fn2", R"(function() { return feature.name == ''; })");
+    ctx.addFunction("fn2", R"(function() { return feature.name === ''; })");
     REQUIRE(ctx.evalFilterFn("fn2") == false);
 }
 
@@ -36,21 +36,20 @@ TEST_CASE( "Test evalFilterFn with feature", "[Duktape][evalFilterFn]") {
     StyleContext ctx;
     ctx.setFeature(feature);
 
-    ctx.addFunction("fn_a", R"(function() { return feature.a == 'A' })");
+    ctx.addFunction("fn_a", R"(function() { return feature.a === 'A' })");
     REQUIRE(ctx.evalFilterFn("fn_a") == true);
 
-    ctx.addFunction("fn_b", R"(function() { return feature.b == 'B' })");
+    ctx.addFunction("fn_b", R"(function() { return feature.b === 'B' })");
     REQUIRE(ctx.evalFilterFn("fn_b") == true);
 
-    ctx.addFunction("fn_n", R"(function() { return feature.n == 42 })");
+    ctx.addFunction("fn_n", R"(function() { return feature.n === 42 })");
     REQUIRE(ctx.evalFilterFn("fn_n") == true);
 
-    ctx.addFunction("fn_n2", R"(function() { return feature.n == 43 })");
+    ctx.addFunction("fn_n2", R"(function() { return feature.n === 43 })");
     REQUIRE(ctx.evalFilterFn("fn_n2") == false);
 
-    // OK?
-    ctx.addFunction("fn_n3", R"(function() { return feature.n == '42' })");
-    REQUIRE(ctx.evalFilterFn("fn_n3") == true);
+    ctx.addFunction("fn_n3", R"(function() { return feature.n === '42' })");
+    REQUIRE(ctx.evalFilterFn("fn_n3") == false);
 }
 
 TEST_CASE( "Test evalFilterFn with feature and globals", "[Duktape][evalFilterFn]") {
@@ -71,7 +70,7 @@ TEST_CASE( "Test evalFilterFn with feature and globals", "[Duktape][evalFilterFn
 TEST_CASE( "Test evalFilterFn with different features", "[Duktape][evalFilterFn]") {
     StyleContext ctx;
 
-    ctx.addFunction("fn", R"(function() { return feature.scalerank == 2; })");
+    ctx.addFunction("fn", R"(function() { return feature.scalerank === 2; })");
 
     Feature feat1;
     feat1.props.add("scalerank", 2);
@@ -90,7 +89,7 @@ TEST_CASE( "Test evalFilterFn with different features", "[Duktape][evalFilterFn]
 TEST_CASE( "Test numeric global", "[Duktape][setGlobal]") {
     StyleContext ctx;
     ctx.setGlobal("$zoom", 10);
-    ctx.addFunction("fn", R"(function() { return $zoom == 10 })");
+    ctx.addFunction("fn", R"(function() { return $zoom === 10 })");
 
     REQUIRE(ctx.evalFilterFn("fn") == true);
 
@@ -102,7 +101,7 @@ TEST_CASE( "Test numeric global", "[Duktape][setGlobal]") {
 TEST_CASE( "Test string global", "[Duktape][setGlobal]") {
     StyleContext ctx;
     ctx.setGlobal("$layer", "test");
-    ctx.addFunction("fn", R"(function() { return $layer == 'test' })");
+    ctx.addFunction("fn", R"(function() { return $layer === 'test' })");
 
     REQUIRE(ctx.evalFilterFn("fn") == true);
 
@@ -158,8 +157,8 @@ TEST_CASE( "Test evalStyleFn - StyleParamKey::width", "[Duktape][evalStyleFn]") 
 
 TEST_CASE( "Test evalFilter - Init filter function from yaml", "[Duktape][evalFilter]") {
     Scene scene;
-    YAML::Node n0 = YAML::Load(R"(filter: function() { return feature.sort_key == 2; })");
-    YAML::Node n1 = YAML::Load(R"(filter: function() { return feature.name == 'test'; })");
+    YAML::Node n0 = YAML::Load(R"(filter: function() { return feature.sort_key === 2; })");
+    YAML::Node n1 = YAML::Load(R"(filter: function() { return feature.name === 'test'; })");
 
     Filter filter0 = sceneLoader.generateFilter(n0["filter"], scene);
     Filter filter1 = sceneLoader.generateFilter(n1["filter"], scene);
