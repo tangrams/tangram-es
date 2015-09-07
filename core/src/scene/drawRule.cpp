@@ -93,14 +93,26 @@ StyleParam::StyleParam(const std::string& _key, const std::string& _value) {
         }
         break;
     case StyleParamKey::order:
-    case StyleParamKey::priority:
-        value = static_cast<int32_t>(std::stoi(_value));
+    case StyleParamKey::priority: {
+        try {
+            value = static_cast<int32_t>(std::stoi(_value));
+            break;
+        } catch (std::invalid_argument) {
+        } catch (std::out_of_range) {}
+        value = none_type{};
         break;
+    }
     case StyleParamKey::width:
     case StyleParamKey::outline_width:
-    case StyleParamKey::font_stroke_width:
-        value = static_cast<float>(std::stof(_value));
+    case StyleParamKey::font_stroke_width: {
+        try {
+            value = static_cast<float>(std::stof(_value));
+            break;
+        } catch (std::invalid_argument) {
+        } catch (std::out_of_range) {}
+        value = none_type{};
         break;
+    }
     case StyleParamKey::color:
     case StyleParamKey::outline_color:
     case StyleParamKey::font_fill:
