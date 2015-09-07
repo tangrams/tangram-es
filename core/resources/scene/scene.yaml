@@ -97,9 +97,7 @@ layers:
     roads:
         data: { source: osm }
         filter:
-          #   not: {kind: [rail]}
-          # function () { print(feature.kind); return feature.kind != 'rail'; }
-          function() { return feature.kind != 'rail'; }
+            not: {kind: [rail]}
         draw:
             lines:
                 order: 4
@@ -162,16 +160,7 @@ layers:
         draw:
             heightglow:
                 order: 50
-                color: 
-                  function() {
-                  var color = [
-                     0.9 * (parseInt(feature.id, 16) / 100 % 1) * 255 | 0,
-                     0.9 * (parseInt(feature.id, 16) / 10000 % 1) * 255 | 0,
-                     0.9 * (parseInt(feature.id, 16) / 1000000 % 1) * 255 | 0
-                     ];
-                  var str =  '#' + color[0].toString(16) + color[1].toString(16) + color[2].toString(16);
-                  return str;
-                  }
+                color: [.65, .65, .65]
         # turn interactive feature selection on for buildings with names
         interactive:
             filter: { name: true }
@@ -228,7 +217,7 @@ layers:
         data: { sources: osm }
         filter:
             name: true
-            #not: { kind: [county, state, island] }
+            not: { kind: [county, state, island] }
             any: 
                 - { $zoom: { min: 1 }, kind: ocean }
                 - { $zoom: { min: 2, max: 5 }, kind: continent }
@@ -237,7 +226,7 @@ layers:
                 # unimportant countries
                 - { $zoom: { min: 5 }, kind: country }
                 # this function matches the "cities" sublayer
-                # - function() {return (feature.scalerank * .75) <= ($zoom - 4); }
+                #- function() {return (feature.scalerank * .75) <= ($zoom - 4); }
         draw:
             text: 
                 priority: 5
@@ -260,11 +249,9 @@ layers:
             filter: { kind: [hamlet, village, town, neighbourhood, suburb, quarter], $zoom: { max: 13 } }
             draw: {}
             #visible: false 
-        cities:
+        #cities:
             # this filter shows lower scaleranks at higher zooms, starting at z4
-            # filter: function() { return (feature.scalerank * .75) <= ($zoom - 4); }
-            # draw: {}
-
+            #filter: function() { return (feature.scalerank * .75) <= ($zoom - 4); }
     landuse_labels:
         data: { source: osm }
         filter:
