@@ -11,6 +11,18 @@
 
 namespace Tangram {
 
+static constexpr const char* s_styleParamNames[] = {
+    "none", "order", "extrude", "color", "width", "cap", "join",
+    "outline:color", "outline:width", "outline:cap", "outline:join"
+    "font:family", "font:weight", "font:style", "font:size", "font:fill",
+    "font:stroke", "font:stroke:color", "font:stroke:width", "font:uppercase",
+    "visible", "priority"
+};
+
+static constexpr const char* keyName(StyleParamKey key) {
+    return s_styleParamNames[static_cast<uint8_t>(key)];
+}
+
 const StyleParam NONE;
 
 const std::map<std::string, StyleParamKey> s_StyleParamMap = {
@@ -99,6 +111,8 @@ StyleParam::StyleParam(const std::string& _key, const std::string& _value) {
             break;
         } catch (std::invalid_argument) {
         } catch (std::out_of_range) {}
+        logMsg("Warning: Not an Integer '%s', key: '%s'",
+               _value.c_str(), keyName(key));
         value = none_type{};
         break;
     }
@@ -110,6 +124,8 @@ StyleParam::StyleParam(const std::string& _key, const std::string& _value) {
             break;
         } catch (std::invalid_argument) {
         } catch (std::out_of_range) {}
+        logMsg("Warning: Not a Float '%s', key: '%s'",
+               _value.c_str(), keyName(key));
         value = none_type{};
         break;
     }
@@ -134,57 +150,61 @@ StyleParam::StyleParam(const std::string& _key, const std::string& _value) {
 }
 
 std::string StyleParam::toString() const {
+
+    std::string k(keyName(key));
+    k += " : ";
+
     // TODO: cap, join and color toString()
     if (value.is<none_type>()) {
-        return "undefined";
+        return k + "undefined";
     }
 
     switch (key) {
     case StyleParamKey::extrude: {
         if (!value.is<Extrusion>()) break;
         auto p = value.get<Extrusion>();
-        return "extrude : (" + std::to_string(p.first) + ", " + std::to_string(p.second) + ")";
+        return k + "(" + std::to_string(p.first) + ", " + std::to_string(p.second) + ")";
     }
     case StyleParamKey::font_family:
     case StyleParamKey::font_weight:
     case StyleParamKey::font_style:
         if (!value.is<std::string>()) break;
-        return value.get<std::string>();
+        return k + value.get<std::string>();
     case StyleParamKey::font_size:
         if (!value.is<float>()) break;
-        return "font-size : " + std::to_string(value.get<float>());
+        return k + std::to_string(value.get<float>());
     case StyleParamKey::font_uppercase:
     case StyleParamKey::visible:
         if (!value.is<bool>()) break;
-        return std::to_string(value.get<bool>());
+        return k + std::to_string(value.get<bool>());
     case StyleParamKey::order:
     case StyleParamKey::priority:
         if (!value.is<int32_t>()) break;
-        return "order : " + std::to_string(value.get<int32_t>());
+        return k + std::to_string(value.get<int32_t>());
     case StyleParamKey::width:
     case StyleParamKey::outline_width:
     case StyleParamKey::font_stroke_width:
         if (!value.is<float>()) break;
-        return "width : " + std::to_string(value.get<float>());
+        return k + std::to_string(value.get<float>());
     case StyleParamKey::color:
     case StyleParamKey::outline_color:
     case StyleParamKey::font_fill:
     case StyleParamKey::font_stroke:
     case StyleParamKey::font_stroke_color:
         if (!value.is<uint32_t>()) break;
-        return "color : " + std::to_string(value.get<uint32_t>());
+        return k + std::to_string(value.get<uint32_t>());
     case StyleParamKey::cap:
     case StyleParamKey::outline_cap:
         if (!value.is<CapTypes>()) break;
-        return "cap : " + std::to_string(static_cast<int>(value.get<CapTypes>()));
+        return k + std::to_string(static_cast<int>(value.get<CapTypes>()));
     case StyleParamKey::join:
     case StyleParamKey::outline_join:
         if (!value.is<JoinTypes>()) break;
-        return "join : " + std::to_string(static_cast<int>(value.get<JoinTypes>()));
+        return k + std::to_string(static_cast<int>(value.get<JoinTypes>()));
     case StyleParamKey::none:
         break;
     }
-    return "undefined";
+    return k + "undefined";
 }
 
 DrawRule::DrawRule(const std::string& _style, const std::vector<StyleParam>& _parameters) :
