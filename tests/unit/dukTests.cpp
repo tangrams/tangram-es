@@ -163,6 +163,7 @@ TEST_CASE( "Test evalStyleFn - StyleParamKey::extrude", "[Duktape][evalStyleFn]"
     ctx.setFeature(feat);
     ctx.addFunction("fn_t", R"(function () { return true; })");
     ctx.addFunction("fn_f", R"(function () { return false; })");
+    ctx.addFunction("fn_a", R"(function () { return [1.1, 2.2]; })");
 
     StyleParam::Value value;
 
@@ -175,6 +176,12 @@ TEST_CASE( "Test evalStyleFn - StyleParamKey::extrude", "[Duktape][evalStyleFn]"
     REQUIRE(value.is<Extrusion>() == true);
     StyleParam::Value e2(std::make_pair(0.0f, 0.0f));
     REQUIRE(value == e2);
+
+    REQUIRE(ctx.evalStyleFn("fn_a", StyleParamKey::extrude, value) == true);
+    REQUIRE(value.is<Extrusion>() == true);
+    StyleParam::Value e3(std::make_pair(1.1f, 2.2f));
+    REQUIRE(value == e3);
+
 }
 
 TEST_CASE( "Test evalFilter - Init filter function from yaml", "[Duktape][evalFilter]") {
