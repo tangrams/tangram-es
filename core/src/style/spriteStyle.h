@@ -24,13 +24,14 @@ protected:
         return new LabelMesh(m_vertexLayout, m_drawMode);
     };
 
-    std::unique_ptr<SpriteAtlas> m_spriteAtlas;
+    std::shared_ptr<SpriteAtlas> m_spriteAtlas;
 
 public:
 
     virtual void onBeginDrawFrame(const View& _view, const Scene& _scene) override;
 
     SpriteStyle(std::string _name, Blending _blendMode = Blending::overlay, GLenum _drawMode = GL_TRIANGLES);
+    void setSpriteAtlas(std::shared_ptr<SpriteAtlas> _spriteAtlas) { m_spriteAtlas = _spriteAtlas; }
 
     virtual ~SpriteStyle();
 

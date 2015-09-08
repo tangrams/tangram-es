@@ -85,7 +85,11 @@ void SpriteStyle::buildPoint(const Point& _point, const DrawRule& _rule, const P
 
 void SpriteStyle::onBeginDrawFrame(const View& _view, const Scene& _scene) {
     bool contextLost = Style::glContextLost();
-    
+
+    if (!m_spriteAtlas) {
+        return;
+    }
+
     m_spriteAtlas->bind();
 
     static bool initUniformSampler = true;

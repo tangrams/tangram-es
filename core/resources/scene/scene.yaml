@@ -51,6 +51,10 @@ styles:
             blocks:
                 color: "color.rgb += vec3(0.3 * position.z);"
 
+    icons:
+        base: points
+        texture: pois
+
 sources:
     osm:
         type: MVT

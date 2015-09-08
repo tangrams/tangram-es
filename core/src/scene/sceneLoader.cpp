@@ -293,36 +293,37 @@ void SceneLoader::loadTextures(Node textures, Scene& scene) {
         }
 
         Node filtering = textureConfig["filtering"];
+        bool generateMipmaps = false;
         if (filtering) {
             std::string f = filtering.as<std::string>();
             if (f == "linear") { options.m_filtering = { GL_LINEAR, GL_LINEAR }; }
-            else if (f == "mipmap") { options.m_filtering = { GL_LINEAR_MIPMAP_LINEAR, GL_LINEAR_MIPMAP_LINEAR }; }
-            else if (f == "nearest") { options.m_filtering = { GL_NEAREST, GL_NEAREST }; }
+            else if (f == "mipmap") {
+                options.m_filtering = { GL_LINEAR_MIPMAP_LINEAR, GL_LINEAR_MIPMAP_LINEAR };
+                generateMipmaps = true;
+            } else if (f == "nearest") { options.m_filtering = { GL_NEAREST, GL_NEAREST }; }
         }
 
-        std::shared_ptr<Texture> texture(new Texture(file, options));
+        std::shared_ptr<Texture> texture(new Texture(file, options, generateMipmaps));
+
         Node sprites = textureConfig["sprites"];
-
         if (sprites) {
-            if (sprites) {
-                std::shared_ptr<SpriteAtlas> atlas(new SpriteAtlas(texture, file));
+            std::shared_ptr<SpriteAtlas> atlas(new SpriteAtlas(texture, file));
 
-                for (auto it = sprites.begin(); it != sprites.end(); ++it) {
+            for (auto it = sprites.begin(); it != sprites.end(); ++it) {
 
-                    const Node sprite = it->second;
-                    std::string spriteName = it->first.as<std::string>();
+                const Node sprite = it->second;
+                std::string spriteName = it->first.as<std::string>();
 
-                    if (sprite) {
-                        glm::vec4 desc = parseVec4(sprite);
-                        glm::vec2 pos = glm::vec2(desc.x, desc.y);
-                        glm::vec2 size = glm::vec2(desc.z, desc.w);
+                if (sprite) {
+                    glm::vec4 desc = parseVec4(sprite);
+                    glm::vec2 pos = glm::vec2(desc.x, desc.y);
+                    glm::vec2 size = glm::vec2(desc.z, desc.w);
 
-                        atlas->addSpriteNode(spriteName, pos, size);
-                    }
+                    atlas->addSpriteNode(spriteName, pos, size);
                 }
-
-                scene.spriteAtlases()[name] = atlas;
             }
+
+            scene.spriteAtlases()[name] = atlas;
         }
 
         scene.textures().emplace(name, std::make_shared<Texture>(file, options));
@@ -366,7 +367,7 @@ void SceneLoader::loadStyles(Node styles, Scene& scene) {
             std::string baseString = baseNode.as<std::string>();
             if (baseString == "lines") { style = new PolylineStyle(styleName); }
             else if (baseString == "text") { style = new TextStyle(styleName, true, true); }
-            else if (baseString == "sprites") { logMsg("WARNING: sprite base styles not yet implemented\n"); } // TODO
+            else if (baseString == "points") { style = new SpriteStyle(styleName); } // TODO
             else { logMsg("WARNING: base style \"%s\" not recognized, defaulting to polygons\n", baseString.c_str()); }
         }
 
@@ -416,6 +417,21 @@ void SceneLoader::loadStyles(Node styles, Scene& scene) {
             else if (lighting == "false") { style->setLightingType(LightingType::none); }
             else if (lighting == "true") { } // use default lighting
             else { logMsg("WARNING: unrecognized lighting type \"%s\"\n", lighting.c_str()); }
+        }
+
+        Node textureNode = styleNode["texture"];
+        if (textureNode) {
+            auto spriteStyle = static_cast<SpriteStyle*>(style);
+            if (spriteStyle) {
+                std::string textureName = textureNode.as<std::string>();
+                auto atlases = scene.spriteAtlases();
+                auto it = atlases.find(textureName);
+                if (it != atlases.end()) {
+                    spriteStyle->setSpriteAtlas(it->second);
+                } else {
+                    logMsg("WARNING: undefined texture name %s", textureName.c_str());
+                }
+            }
         }
 
         Node urlNode = styleNode["url"];
