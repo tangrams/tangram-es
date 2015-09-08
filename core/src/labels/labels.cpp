@@ -82,15 +82,14 @@ void Labels::update(const View& _view, float _dt, const std::vector<std::unique_
         if (intersect(l1->getOBB(), l2->getOBB())) { occlusions.insert({l1, l2}); }
     }
 
-    // no priorities, only occlude one of the two occluded label
     for (auto& pair : occlusions) {
-        if (!pair.first->occludedLastFrame()) {
-            if (pair.second->getState() == Label::State::wait_occ) {
+        if (!pair.first->occludedLastFrame() || !pair.second->occludedLastFrame()) {
+            // lower numeric priority means higher priority
+            if (pair.first->getOptions().priority < pair.second->getOptions().priority) {
                 pair.second->setOcclusion(true);
+            } else {
+                pair.first->setOcclusion(true);
             }
-        }
-        if (!pair.second->occludedLastFrame()) {
-            pair.first->setOcclusion(true);
         }
     }
 
@@ -125,8 +124,8 @@ void Labels::drawDebug(const View& _view) {
             // draw offset
             Primitives::setColor(0x000000);
             Primitives::drawLine(sp, sp + offset);
-            // draw projected anchor point
 
+            // draw projected anchor point
             Primitives::setColor(0x0000ff);
             Primitives::drawRect(sp - glm::vec2(1.f), sp + glm::vec2(1.f));
         }

@@ -38,6 +38,10 @@ public:
 
     virtual ~TextStyle();
 
+private:
+
+    inline Label::Options optionsFromTextParams(const Parameters& _params) const;
+
 };
 
 }
