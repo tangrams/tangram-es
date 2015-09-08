@@ -178,18 +178,13 @@ bool StyleContext::evalFilterFn(const std::string& _name) {
 }
 
 bool StyleContext::parseStyleResult(StyleParamKey _key, StyleParam::Value& _val) const {
-    bool result = false;
     _val = none_type{};
 
     if (duk_is_string(m_ctx, -1)) {
         std::string value(duk_get_string(m_ctx, -1));
         _val = StyleParam::parseString(_key, value);
 
-        duk_pop(m_ctx);
-        return !_val.is<none_type>();
-    }
-
-    if (duk_is_boolean(m_ctx, -1)) {
+    } else if (duk_is_boolean(m_ctx, -1)) {
         bool value = duk_get_boolean(m_ctx, -1);
 
         switch (_key) {
@@ -203,11 +198,7 @@ bool StyleContext::parseStyleResult(StyleParamKey _key, StyleParam::Value& _val)
                 break;
         }
 
-        duk_pop(m_ctx);
-        return !_val.is<none_type>();
-    }
-
-    if (duk_is_array(m_ctx, -1)) {
+    } else if (duk_is_array(m_ctx, -1)) {
         duk_get_prop_string(m_ctx, -1, "length");
         int len = duk_get_int(m_ctx, -1);
         duk_pop(m_ctx);
@@ -259,60 +250,51 @@ bool StyleContext::parseStyleResult(StyleParamKey _key, StyleParam::Value& _val)
                 }
 
                 _val = (((uint32_t)(255.0 * a) & 0xff) << 24) |
-                    (((uint32_t)(255.0 * r) & 0xff)<< 16) |
-                    (((uint32_t)(255.0 * g) & 0xff)<< 8) |
-                    (((uint32_t)(255.0 * b) & 0xff));
+                       (((uint32_t)(255.0 * r) & 0xff)<< 16) |
+                       (((uint32_t)(255.0 * g) & 0xff)<< 8) |
+                       (((uint32_t)(255.0 * b) & 0xff));
                 break;
             }
             default:
                 break;
         }
 
-        duk_pop(m_ctx);
-        return !_val.is<none_type>();
-    }
+    } else if (duk_is_number(m_ctx, -1)) {
 
-
-    if (!duk_is_number(m_ctx, -1)) {
-        logMsg("Warning: Unhandled return value from Javascript function.\n");
-        duk_pop(m_ctx);
-        return false;
-    }
-
-    switch (_key) {
-        case StyleParamKey::order:
-        case StyleParamKey::priority: {
-            int v = duk_get_int(m_ctx, -1);
-            _val = static_cast<int32_t>(v);
-            result = true;
-            break;
+        switch (_key) {
+            case StyleParamKey::order:
+            case StyleParamKey::priority: {
+                int v = duk_get_int(m_ctx, -1);
+                _val = static_cast<int32_t>(v);
+                break;
+            }
+            case StyleParamKey::width:
+            case StyleParamKey::outline_width:
+            case StyleParamKey::font_stroke_width:
+            {
+                double v = duk_get_number(m_ctx, -1);
+                _val = static_cast<float>(v);
+                break;
+            }
+            case StyleParamKey::color:
+            case StyleParamKey::outline_color:
+            case StyleParamKey::font_fill:
+            case StyleParamKey::font_stroke:
+            case StyleParamKey::font_stroke_color: {
+                _val = static_cast<uint32_t>(duk_get_uint(m_ctx, -1));
+                break;
+            }
+            default:
+                break;
         }
-        case StyleParamKey::width:
-        case StyleParamKey::outline_width:
-        case StyleParamKey::font_stroke_width:
-        {
-            double v = duk_get_number(m_ctx, -1);
-            _val = static_cast<float>(v);
-            result = true;
-            break;
-        }
-        case StyleParamKey::color:
-        case StyleParamKey::outline_color:
-        case StyleParamKey::font_fill:
-        case StyleParamKey::font_stroke:
-        case StyleParamKey::font_stroke_color: {
-            _val = static_cast<uint32_t>(duk_get_uint(m_ctx, -1));
-            result = true;
-            break;
-        }
-        default:
-            break;
+    } else {
+        logMsg("Warning: Unhandled return type from Javascript function.\n");
     }
 
     duk_pop(m_ctx);
 
     DUMP("parseStyleResult\n");
-    return result;
+    return !_val.is<none_type>();
 }
 
 bool StyleContext::evalStyle(FunctionID _id, StyleParamKey _key, StyleParam::Value& _val) const {
