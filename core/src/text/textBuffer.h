@@ -14,6 +14,13 @@ namespace Tangram {
 
 class FontContext;
 
+enum class TextTransform {
+    none,
+    capitalize,
+    uppercase,
+    lowercase,
+};
+
 struct Parameters {
     std::string fontKey = "";
     uint32_t fill = 0xff000000;
@@ -21,7 +28,7 @@ struct Parameters {
     float strokeWidth = 0.0f;
     float fontSize = 12.0f;
     float blurSpread = 0.0f;
-    bool uppercase = false;
+    TextTransform transform = TextTransform::none;
     bool visible = true;
     int32_t priority = std::numeric_limits<int32_t>::max();
     glm::vec2 offset;
