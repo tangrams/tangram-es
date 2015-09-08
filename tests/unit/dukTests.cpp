@@ -169,17 +169,17 @@ TEST_CASE( "Test evalStyleFn - StyleParamKey::extrude", "[Duktape][evalStyleFn]"
 
     REQUIRE(ctx.evalStyleFn("fn_t", StyleParamKey::extrude, value) == true);
     REQUIRE(value.is<Extrusion>() == true);
-    StyleParam::Value e1(std::make_pair(NAN, NAN));
+    StyleParam::Value e1(Extrusion{NAN, NAN});
     REQUIRE(isnan(value.get<Extrusion>().first) == true);
 
     REQUIRE(ctx.evalStyleFn("fn_f", StyleParamKey::extrude, value) == true);
     REQUIRE(value.is<Extrusion>() == true);
-    StyleParam::Value e2(std::make_pair(0.0f, 0.0f));
+    StyleParam::Value e2(Extrusion{0.0f, 0.0f});
     REQUIRE(value == e2);
 
     REQUIRE(ctx.evalStyleFn("fn_a", StyleParamKey::extrude, value) == true);
     REQUIRE(value.is<Extrusion>() == true);
-    StyleParam::Value e3(std::make_pair(1.1f, 2.2f));
+    StyleParam::Value e3(Extrusion{1.1f, 2.2f});
     REQUIRE(value == e3);
 
 }

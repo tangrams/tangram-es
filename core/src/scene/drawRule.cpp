@@ -68,16 +68,16 @@ StyleParam::Value StyleParam::parseString(StyleParamKey key, const std::string& 
 
     switch (key) {
     case StyleParamKey::extrude:
-        if (_value == "true") { return std::make_pair(NAN, NAN); }
-        else if (_value == "false") { return std::make_pair(0.0f, 0.0f) ; }
+        if (_value == "true") { return Extrusion{NAN, NAN}; }
+        else if (_value == "false") { return Extrusion{0.0f, 0.0f} ; }
         else {
             float f1, f2;
             int num = std::sscanf(_value.c_str(), "%f, %f", &f1, &f2);
             switch(num) {
                 case 1:
-                    return std::make_pair(f1, NAN);
+                    return Extrusion{f1, NAN};
                 case 2:
-                    return std::make_pair(f1, f2);
+                    return Extrusion{f1, f2};
                 case 0:
                 default:
                     logMsg("Warning: Badly formed extrude parameter.\n");

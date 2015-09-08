@@ -197,7 +197,7 @@ bool StyleContext::parseStyleResult(StyleParamKey _key, StyleParam::Value& _val)
                 _val = value;
                 break;
             case StyleParamKey::extrude:
-                _val = value ? std::make_pair(NAN, NAN) : std::make_pair(0.0f, 0.0f);
+                _val = value ? Extrusion{NAN, NAN} : Extrusion{0.0f, 0.0f};
                 break;
             default:
                 break;
@@ -227,7 +227,7 @@ bool StyleContext::parseStyleResult(StyleParamKey _key, StyleParam::Value& _val)
                 double v2 = duk_get_number(m_ctx, -1);
                 duk_pop(m_ctx);
 
-                _val = std::make_pair(v1, v2);
+                _val = Extrusion{v1, v2};
                 break;
             }
             default:
