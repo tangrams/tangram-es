@@ -12,14 +12,21 @@ namespace Tangram {
 
 class Texture;
 
+
 class SpriteStyle : public Style {
 
 protected:
+
+    struct Parameters {
+        std::string sprite = "";
+    };
 
     virtual void constructVertexLayout() override;
     virtual void constructShaderProgram() override;
     virtual void buildPoint(const Point& _point, const DrawRule& _rule, const Properties& _props, VboMesh& _mesh, Tile& _tile) const override;
 
+    Parameters parseRule(const DrawRule& _rule) const;
+    
     virtual VboMesh* newMesh() const override {
         return new LabelMesh(m_vertexLayout, m_drawMode);
     };

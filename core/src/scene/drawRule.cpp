@@ -50,6 +50,7 @@ const std::map<std::string, StyleParamKey> s_StyleParamMap = {
     {"transform", StyleParamKey::transform},
     {"visible", StyleParamKey::visible},
     {"priority", StyleParamKey::priority},
+    {"sprite", StyleParamKey::sprite}
 };
 
 StyleParam::StyleParam(const std::string& _key, const std::string& _value) {
@@ -178,6 +179,7 @@ std::string StyleParam::toString() const {
     case StyleParamKey::font_weight:
     case StyleParamKey::font_style:
     case StyleParamKey::transform:
+    case StyleParamKey::sprite:
         if (!value.is<std::string>()) break;
         return k + value.get<std::string>();
     case StyleParamKey::font_size:
@@ -210,8 +212,6 @@ std::string StyleParam::toString() const {
     case StyleParamKey::outline_join:
         if (!value.is<JoinTypes>()) break;
         return k + std::to_string(static_cast<int>(value.get<JoinTypes>()));
-    case StyleParamKey::sprite:
-        return k + value.get<std::string>();
     case StyleParamKey::none:
         break;
     }

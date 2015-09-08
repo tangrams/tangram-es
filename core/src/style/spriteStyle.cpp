@@ -39,25 +39,34 @@ void SpriteStyle::constructShaderProgram() {
     m_shaderProgram->setSourceStrings(fragShaderSrcStr, vertShaderSrcStr);
 }
 
+
+SpriteStyle::Parameters SpriteStyle::parseRule(const DrawRule& _rule) const {
+    Parameters p;
+    _rule.get(StyleParamKey::sprite, p.sprite);
+    return p;
+}
+
 void SpriteStyle::buildPoint(const Point& _point, const DrawRule& _rule, const Properties& _props, VboMesh& _mesh, Tile& _tile) const {
-    // TODO : make this configurable
+    if (!m_spriteAtlas) {
+        return;
+    }
+
+    Parameters p = parseRule(_rule);
+
     std::vector<Label::Vertex> vertices;
 
     // TODO : configure this
     float spriteScale = .5f;
     glm::vec2 offset = {0.f, 10.f};
+    //const static std::string key("kind");
+    //const std::string& kind = _props.getString(key);
+    //if(kind.length() == 0) { return; }
 
-    const static std::string key("kind");
-
-    std::string spriteName;
-    if (!_rule.get(StyleParamKey::sprite, spriteName)) {
-        spriteName = _props.getString(key);
-    }
-    if (spriteName.empty() || !m_spriteAtlas->hasSpriteNode(spriteName)) {
+    if (!m_spriteAtlas->hasSpriteNode(p.sprite)) {
         return;
     }
 
-    SpriteNode spriteNode = m_spriteAtlas->getSpriteNode(spriteName);
+    SpriteNode spriteNode = m_spriteAtlas->getSpriteNode(p.sprite);
     Label::Transform t = { glm::vec2(_point) };
 
     auto& mesh = static_cast<LabelMesh&>(_mesh);
