@@ -6,7 +6,7 @@
 #include "gl/typedMesh.h"
 #include "labels/labelMesh.h"
 #include "labels/label.h"
-#include "labels/spriteAtlas.h"
+#include "scene/spriteAtlas.h"
 
 namespace Tangram {
 
