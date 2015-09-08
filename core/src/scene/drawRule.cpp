@@ -70,8 +70,8 @@ StyleParam::Value StyleParam::parseString(StyleParamKey key, const std::string& 
 
     switch (key) {
     case StyleParamKey::extrude:
-        if (_value == "true") { return std::make_pair(NAN, NAN); }
-        else if (_value == "false") { return std::make_pair(0.0f, 0.0f) ; }
+        if (_value == "true") { return Extrusion{NAN, NAN}; }
+        else if (_value == "false") { return Extrusion{0.0f, 0.0f} ; }
         else {
             std::pair<float, float> vec2 = std::make_pair(NAN, NAN);
             if (!StyleParam::parseVec2(_value, {"m", "px"}, vec2)) {
