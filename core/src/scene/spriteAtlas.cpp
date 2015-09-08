@@ -3,9 +3,7 @@
 
 namespace Tangram {
 
-SpriteAtlas::SpriteAtlas(const std::string& _file) : m_file(_file) {
-    m_texture = std::unique_ptr<Texture>(new Texture(_file));
-}
+SpriteAtlas::SpriteAtlas(std::shared_ptr<Texture> _texture, const std::string& _file) : m_texture(_texture), m_file(_file) {}
 
 void SpriteAtlas::addSpriteNode(const std::string& _name, glm::vec2 _origin, glm::vec2 _size) {
 

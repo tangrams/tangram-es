@@ -37,24 +37,6 @@ void SpriteStyle::constructShaderProgram() {
     std::string vertShaderSrcStr = stringFromResource("point.vs");
 
     m_shaderProgram->setSourceStrings(fragShaderSrcStr, vertShaderSrcStr);
-
-    // TODO : load this from stylesheet
-    m_spriteAtlas = std::unique_ptr<SpriteAtlas>(new SpriteAtlas("poi_icons_32.png"));
-
-    m_spriteAtlas->addSpriteNode("plane", {0, 0}, {32, 32});
-    m_spriteAtlas->addSpriteNode("tree", {0, 185}, {32, 32});
-    m_spriteAtlas->addSpriteNode("sunburst", {0, 629}, {32, 32});
-    m_spriteAtlas->addSpriteNode("restaurant", {0, 777}, {32, 32});
-    m_spriteAtlas->addSpriteNode("cafe", {0, 814}, {32, 32});
-    m_spriteAtlas->addSpriteNode("museum", {0, 518}, {32, 32});
-    m_spriteAtlas->addSpriteNode("bar", {0, 887}, {32, 32});
-    m_spriteAtlas->addSpriteNode("train", {0, 74}, {32, 32});
-    m_spriteAtlas->addSpriteNode("bus", {0, 148}, {32, 32});
-    m_spriteAtlas->addSpriteNode("hospital", {0, 444}, {32, 32});
-    m_spriteAtlas->addSpriteNode("parking", {0, 1073}, {32, 32});
-    m_spriteAtlas->addSpriteNode("info", {0, 1110}, {32, 32});
-    m_spriteAtlas->addSpriteNode("hotel", {0, 259}, {32, 32});
-    m_spriteAtlas->addSpriteNode("bookstore", {0, 333}, {32, 32});
 }
 
 void SpriteStyle::buildPoint(const Point& _point, const DrawRule& _rule, const Properties& _props, VboMesh& _mesh, Tile& _tile) const {
@@ -66,6 +48,7 @@ void SpriteStyle::buildPoint(const Point& _point, const DrawRule& _rule, const P
     glm::vec2 offset = {0.f, 10.f};
 
     const static std::string key("kind");
+
     std::string spriteName;
     if (!_rule.get(StyleParamKey::sprite, spriteName)) {
         spriteName = _props.getString(key);

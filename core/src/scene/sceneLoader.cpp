@@ -300,8 +300,30 @@ void SceneLoader::loadTextures(Node textures, Scene& scene) {
             else if (f == "nearest") { options.m_filtering = { GL_NEAREST, GL_NEAREST }; }
         }
 
+        std::shared_ptr<Texture> texture(new Texture(file, options));
         Node sprites = textureConfig["sprites"];
-        if (sprites) { logMsg("WARNING: sprite mapping not yet implemented\n"); } // TODO
+
+        if (sprites) {
+            if (sprites) {
+                std::shared_ptr<SpriteAtlas> atlas(new SpriteAtlas(texture, file));
+
+                for (auto it = sprites.begin(); it != sprites.end(); ++it) {
+
+                    const Node sprite = it->second;
+                    std::string spriteName = it->first.as<std::string>();
+
+                    if (sprite) {
+                        glm::vec4 desc = parseVec4(sprite);
+                        glm::vec2 pos = glm::vec2(desc.x, desc.y);
+                        glm::vec2 size = glm::vec2(desc.z, desc.w);
+
+                        atlas->addSpriteNode(spriteName, pos, size);
+                    }
+                }
+
+                scene.spriteAtlases()[name] = atlas;
+            }
+        }
 
         scene.textures().emplace(name, std::make_shared<Texture>(file, options));
     }
