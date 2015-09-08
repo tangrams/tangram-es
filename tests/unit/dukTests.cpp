@@ -126,18 +126,30 @@ TEST_CASE( "Test evalStyleFn - StyleParamKey::order", "[Duktape][evalStyleFn]") 
 }
 
 TEST_CASE( "Test evalStyleFn - StyleParamKey::color", "[Duktape][evalStyleFn]") {
-    Feature feat;
-    feat.props.add("sort_key", 2);
 
     StyleContext ctx;
-    ctx.setFeature(feat);
-    ctx.addFunction("fn", R"(function () { return '#f0f' })");
-
     StyleParam::Value value;
 
-    REQUIRE(ctx.evalStyleFn("fn", StyleParamKey::color, value) == true);
+    ctx.addFunction("fn_s", R"(function () { return '#f0f'; })");
+    REQUIRE(ctx.evalStyleFn("fn_s", StyleParamKey::color, value) == true);
     REQUIRE(value.is<uint32_t>() == true);
     REQUIRE(value.get<uint32_t>() == 0xffff00ff);
+
+    ctx.addFunction("fn_i", R"(function () { return 0xff00ffff; })");
+    REQUIRE(ctx.evalStyleFn("fn_i", StyleParamKey::color, value) == true);
+    REQUIRE(value.is<uint32_t>() == true);
+    REQUIRE(value.get<uint32_t>() == 0xff00ffff);
+
+    ctx.addFunction("fn_a", R"(function () { return [1.0, 1.0, 0.0, 1.0] })");
+    REQUIRE(ctx.evalStyleFn("fn_a", StyleParamKey::color, value) == true);
+    REQUIRE(value.is<uint32_t>() == true);
+    REQUIRE(value.get<uint32_t>() == 0xffffff00);
+
+    ctx.addFunction("fn_a2", R"(function () { return [0.0, 1.0, 0.0] })");
+    REQUIRE(ctx.evalStyleFn("fn_a2", StyleParamKey::color, value) == true);
+    REQUIRE(value.is<uint32_t>() == true);
+    REQUIRE(value.get<uint32_t>() == 0xff00ff00);
+
 }
 
 TEST_CASE( "Test evalStyleFn - StyleParamKey::width", "[Duktape][evalStyleFn]") {
@@ -226,7 +238,7 @@ TEST_CASE( "Test evalFilter - Init filter function from yaml", "[Duktape][evalFi
 
 }
 
-TEST_CASE( "Test evalStyle - Init StyleParam function from yaml", "[Duktape][evalStyle]") {
+TEST_CASE("Test evalStyle - Init StyleParam function from yaml", "[Duktape][evalStyle]") {
     Scene scene;
     YAML::Node n0 = YAML::Load(R"(
             draw:

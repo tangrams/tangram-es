@@ -230,6 +230,40 @@ bool StyleContext::parseStyleResult(StyleParamKey _key, StyleParam::Value& _val)
                 _val = Extrusion{v1, v2};
                 break;
             }
+            case StyleParamKey::color:
+            case StyleParamKey::outline_color:
+            case StyleParamKey::font_fill:
+            case StyleParamKey::font_stroke:
+            case StyleParamKey::font_stroke_color: {
+                if (len < 3 || len > 4) {
+                    logMsg("Warning: Wrong array size for color: '%d'.\n", len);
+                    break;
+                }
+                duk_get_prop_index(m_ctx, -1, 0);
+                double r = duk_get_number(m_ctx, -1);
+                duk_pop(m_ctx);
+
+                duk_get_prop_index(m_ctx, -1, 1);
+                double g = duk_get_number(m_ctx, -1);
+                duk_pop(m_ctx);
+
+                duk_get_prop_index(m_ctx, -1, 2);
+                double b = duk_get_number(m_ctx, -1);
+                duk_pop(m_ctx);
+
+                double a = 1.0;
+                if (len == 4) {
+                    duk_get_prop_index(m_ctx, -1, 3);
+                    a = duk_get_number(m_ctx, -1);
+                    duk_pop(m_ctx);
+                }
+
+                _val = (((uint32_t)(255.0 * a) & 0xff) << 24) |
+                    (((uint32_t)(255.0 * r) & 0xff)<< 16) |
+                    (((uint32_t)(255.0 * g) & 0xff)<< 8) |
+                    (((uint32_t)(255.0 * b) & 0xff));
+                break;
+            }
             default:
                 break;
         }
@@ -237,6 +271,7 @@ bool StyleContext::parseStyleResult(StyleParamKey _key, StyleParam::Value& _val)
         duk_pop(m_ctx);
         return !_val.is<none_type>();
     }
+
 
     if (!duk_is_number(m_ctx, -1)) {
         logMsg("Warning: Unhandled return value from Javascript function.\n");
@@ -265,9 +300,8 @@ bool StyleContext::parseStyleResult(StyleParamKey _key, StyleParam::Value& _val)
         case StyleParamKey::outline_color:
         case StyleParamKey::font_fill:
         case StyleParamKey::font_stroke:
-        case StyleParamKey::font_stroke_color:
-        {
-            _val = static_cast<uint32_t>(duk_get_int(m_ctx, -1));
+        case StyleParamKey::font_stroke_color: {
+            _val = static_cast<uint32_t>(duk_get_uint(m_ctx, -1));
             result = true;
             break;
         }
