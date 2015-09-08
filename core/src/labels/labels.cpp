@@ -123,7 +123,7 @@ void Labels::drawDebug(const View& _view) {
 
             // draw offset
             Primitives::setColor(0x000000);
-            Primitives::drawLine(sp, sp + offset);
+            Primitives::drawLine(sp, sp - offset);
 
             // draw projected anchor point
             Primitives::setColor(0x0000ff);

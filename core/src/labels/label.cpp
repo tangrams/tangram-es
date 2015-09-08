@@ -41,7 +41,7 @@ bool Label::updateScreenTransform(const glm::mat4& _mvp, const glm::vec2& _scree
             screenPosition = clipToScreenSpace(v1, _screenSize);
 
             // center on half the width
-            screenPosition.x -= m_dim.x / 2;
+            screenPosition.x -= m_dim.x * 0.5f;
 
             break;
         }
@@ -70,7 +70,6 @@ bool Label::updateScreenTransform(const glm::mat4& _mvp, const glm::vec2& _scree
 
             glm::vec2 p1p2 = p2 - p1;
             glm::vec2 t = glm::normalize(-p1p2);
-            glm::vec2 tperp = glm::vec2(-t.y, t.x);
 
             float length = glm::length(p1p2);
 
@@ -83,7 +82,7 @@ bool Label::updateScreenTransform(const glm::mat4& _mvp, const glm::vec2& _scree
                 }
             }
 
-            screenPosition = (p1 + p2) * 0.5f + t * m_dim.x * 0.5f - tperp * (m_dim.y / 6);
+            screenPosition = (p1 + p2) * 0.5f + t * m_dim.x * 0.5f;
 
             break;
         }

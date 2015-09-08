@@ -52,12 +52,14 @@ Parameters TextStyle::parseRule(const DrawRule& _rule) const {
     Parameters p;
 
     std::string fontFamily, fontWeight, fontStyle;
+    std::pair<float, float> offset;
 
     _rule.get(StyleParamKey::font_family, fontFamily);
     _rule.get(StyleParamKey::font_weight, fontWeight);
     _rule.get(StyleParamKey::font_style, fontStyle);
     _rule.get(StyleParamKey::font_size, p.fontSize);
     _rule.get(StyleParamKey::font_fill, p.fill);
+    _rule.get(StyleParamKey::offset, offset);
     if (_rule.get(StyleParamKey::font_stroke, p.strokeColor)) {
         _rule.get(StyleParamKey::font_stroke_color, p.strokeColor);
     }
@@ -67,6 +69,7 @@ Parameters TextStyle::parseRule(const DrawRule& _rule) const {
     _rule.get(StyleParamKey::priority, p.priority);
 
     p.fontKey = fontFamily + "_" + fontWeight + "_" + fontStyle;
+    p.offset = glm::vec2(offset.first, offset.second);
 
     /* Global operations done for fontsize and sdfblur */
     float emSize = p.fontSize / 16.f;
@@ -80,6 +83,7 @@ Label::Options TextStyle::optionsFromTextParams(const Parameters& _params) const
     Label::Options options;
     options.color = _params.fill;
     options.priority = _params.priority;
+    options.offset = _params.offset;
     return options;
 }
 
@@ -94,7 +98,6 @@ void TextStyle::buildPoint(const Point& _point, const DrawRule& _rule, const Pro
 
     const auto& text = _props.getString(key_name);
     if (text.length() == 0) { return; }
-
 
     if (Tangram::getDebugFlag(Tangram::DebugFlags::labels)) {
         buffer.addLabel(std::to_string(params.priority), { glm::vec2(_point), glm::vec2(_point) }, Label::Type::debug, params, optionsFromTextParams(params));

@@ -12,18 +12,17 @@
 #include "platform.h"
 
 using Color = CSSColorParser::Color;
-using Extrusion = std::pair<float, float>;
 
 namespace Tangram {
 
 enum class StyleParamKey : uint8_t {
     none, order, extrude, color, width, cap, join, outline_color, outline_width, outline_cap, outline_join,
     font_family, font_weight, font_style, font_size, font_fill, font_stroke, font_stroke_color, font_stroke_width, font_uppercase,
-    visible, priority
+    visible, priority, offset
 };
 
 struct StyleParam {
-    using Value = variant<none_type, std::string, CapTypes, JoinTypes, Extrusion, int32_t, uint32_t, float, bool>;
+    using Value = variant<none_type, std::string, CapTypes, JoinTypes, std::pair<float, float>, int32_t, uint32_t, float, bool>;
 
     StyleParam() : key(StyleParamKey::none), value(none_type{}) {};
     StyleParam(const std::string& _key, const std::string& _value);
@@ -41,6 +40,8 @@ struct StyleParam {
     static bool parseFontSize(const std::string& _size, float& _pxSize);
 
     static uint32_t parseColor(const std::string& _color);
+
+    static bool parseVec2(const std::string& _value, const std::vector<std::string>& _allowedUnits, std::pair<float, float>& _vec2);
 };
 
 struct DrawRule {

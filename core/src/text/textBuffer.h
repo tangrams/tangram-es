@@ -24,6 +24,7 @@ struct Parameters {
     bool uppercase = false;
     bool visible = true;
     int32_t priority = std::numeric_limits<int32_t>::max();
+    glm::vec2 offset;
 };
 
 /*
