@@ -3,9 +3,6 @@
 #include "builders.h"
 #include "scene/scene.h"
 
-// TODO
-// - add new properties from js? Not needed for filter I guess
-
 #define DUMP(...) //do { logMsg(__VA_ARGS__); duk_dump_context_stderr(m_ctx); } while(0)
 
 
@@ -182,6 +179,7 @@ bool StyleContext::evalFilterFn(const std::string& _name) {
 
 bool StyleContext::parseStyleResult(StyleParamKey _key, StyleParam::Value& _val) const {
     bool result = false;
+    _val = none_type{};
 
     if (duk_is_string(m_ctx, -1)) {
         std::string value(duk_get_string(m_ctx, -1));
@@ -202,7 +200,37 @@ bool StyleContext::parseStyleResult(StyleParamKey _key, StyleParam::Value& _val)
                 _val = value ? std::make_pair(NAN, NAN) : std::make_pair(0.0f, 0.0f);
                 break;
             default:
-                _val = none_type{};
+                break;
+        }
+
+        duk_pop(m_ctx);
+        return !_val.is<none_type>();
+    }
+
+    if (duk_is_array(m_ctx, -1)) {
+        duk_get_prop_string(m_ctx, -1, "length");
+        int len = duk_get_int(m_ctx, -1);
+        duk_pop(m_ctx);
+
+        switch (_key) {
+            case StyleParamKey::extrude: {
+                if (len != 2) {
+                    logMsg("Warning: Wrong array size for extrusion: '%d'.\n", len);
+                    break;
+                }
+
+                duk_get_prop_index(m_ctx, -1, 0);
+                double v1 = duk_get_number(m_ctx, -1);
+                duk_pop(m_ctx);
+
+                duk_get_prop_index(m_ctx, -1, 1);
+                double v2 = duk_get_number(m_ctx, -1);
+                duk_pop(m_ctx);
+
+                _val = std::make_pair(v1, v2);
+                break;
+            }
+            default:
                 break;
         }
 
@@ -244,7 +272,7 @@ bool StyleContext::parseStyleResult(StyleParamKey _key, StyleParam::Value& _val)
             break;
         }
         default:
-            _val = none_type{};
+            break;
     }
 
     duk_pop(m_ctx);
