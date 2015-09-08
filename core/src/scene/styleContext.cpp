@@ -191,6 +191,25 @@ bool StyleContext::parseStyleResult(StyleParamKey _key, StyleParam::Value& _val)
         return !_val.is<none_type>();
     }
 
+    if (duk_is_boolean(m_ctx, -1)) {
+        bool value = duk_get_boolean(m_ctx, -1);
+
+        switch (_key) {
+            case StyleParamKey::visible:
+                _val = value;
+                break;
+            case StyleParamKey::extrude:
+                _val = value ? std::make_pair(NAN, NAN) : std::make_pair(0.0f, 0.0f);
+                break;
+            default:
+                _val = none_type{};
+                break;
+        }
+
+        duk_pop(m_ctx);
+        return !_val.is<none_type>();
+    }
+
     if (!duk_is_number(m_ctx, -1)) {
         logMsg("Warning: Unhandled return value from Javascript function.\n");
         duk_pop(m_ctx);
