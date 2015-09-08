@@ -43,6 +43,7 @@ void SpriteStyle::constructShaderProgram() {
 SpriteStyle::Parameters SpriteStyle::parseRule(const DrawRule& _rule) const {
     Parameters p;
     _rule.get(StyleParamKey::sprite, p.sprite);
+    _rule.get(StyleParamKey::offset, p.offset);
     return p;
 }
 
@@ -57,10 +58,6 @@ void SpriteStyle::buildPoint(const Point& _point, const DrawRule& _rule, const P
 
     // TODO : configure this
     float spriteScale = .5f;
-    glm::vec2 offset = {0.f, 10.f};
-    //const static std::string key("kind");
-    //const std::string& kind = _props.getString(key);
-    //if(kind.length() == 0) { return; }
 
     if (!m_spriteAtlas->hasSpriteNode(p.sprite)) {
         return;
@@ -72,7 +69,7 @@ void SpriteStyle::buildPoint(const Point& _point, const DrawRule& _rule, const P
     auto& mesh = static_cast<LabelMesh&>(_mesh);
 
     Label::Options options;
-    options.offset = offset;
+    options.offset = glm::vec2(p.offset.first, p.offset.second);
 
     std::unique_ptr<SpriteLabel> label(new SpriteLabel(t, spriteNode.m_size * spriteScale, mesh, _mesh.numVertices(), options));
 

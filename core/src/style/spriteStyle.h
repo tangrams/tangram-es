@@ -18,7 +18,8 @@ class SpriteStyle : public Style {
 protected:
 
     struct Parameters {
-        std::string sprite = "";
+        std::string sprite;
+        std::pair<float, float> offset;
     };
 
     virtual void constructVertexLayout() override;
