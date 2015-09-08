@@ -51,6 +51,8 @@ struct StyleParam {
     static uint32_t parseColor(const std::string& _color);
 
     static bool parseVec2(const std::string& _value, const std::vector<std::string>& _allowedUnits, std::pair<float, float>& _vec2);
+
+    static Value parseString(StyleParamKey key, const std::string& _value);
 };
 
 struct DrawRule {

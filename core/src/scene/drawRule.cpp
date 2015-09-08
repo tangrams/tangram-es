@@ -63,45 +63,50 @@ StyleParam::StyleParam(const std::string& _key, const std::string& _value) {
     }
 
     key = it->second;
+    value = parseString(key, _value);
+}
+
+StyleParam::Value StyleParam::parseString(StyleParamKey key, const std::string& _value) {
 
     switch (key) {
-    case StyleParamKey::extrude: {
-        if (_value == "true") { value = std::make_pair(NAN, NAN); }
-        else if (_value == "false") { value = std::make_pair(0.0f, 0.0f) ; }
+    case StyleParamKey::extrude:
+        if (_value == "true") { return std::make_pair(NAN, NAN); }
+        else if (_value == "false") { return std::make_pair(0.0f, 0.0f) ; }
         else {
             std::pair<float, float> vec2 = std::make_pair(NAN, NAN);
             if (!StyleParam::parseVec2(_value, {"m", "px"}, vec2)) {
                 logMsg("Warning: Badly formed extrude parameter %s.\n", _value.c_str());
             }
-            value = vec2;
+            return vec2;
         }
-        break;
     }
     case StyleParamKey::offset: {
         std::pair<float, float> vec2 = std::make_pair(0.f, 0.f);
         if (!StyleParam::parseVec2(_value, {"px"}, vec2)) {
             logMsg("Warning: Badly formed offset parameter %s.\n", _value.c_str());
         }
-        value = vec2;
-        break;
+        return vec2;
     }
     case StyleParamKey::font_family:
     case StyleParamKey::font_weight:
     case StyleParamKey::font_style:
     case StyleParamKey::transform:
-        value = _value;
-        break;
+    case StyleParamKey::sprite:
+        return _value;
     case StyleParamKey::font_size: {
         float fontSize = 16;
         if (!StyleParam::parseFontSize(_value, fontSize)) {
             logMsg("Warning: Invalid font-size '%s'.\n", _value.c_str());
         }
-        value = fontSize;
-        break;
+        return fontSize;
     }
     case StyleParamKey::visible:
-        if (_value == "true") { value = true; }
-        else if (_value == "false") { value = false; }
+        if (_value == "true") {
+            return true;
+        }
+        else if (_value == "false") {
+            return false;
+        }
         else {
             logMsg("Warning: Bool value required for capitalized/visible. Using Default.");
         }
@@ -109,26 +114,22 @@ StyleParam::StyleParam(const std::string& _key, const std::string& _value) {
     case StyleParamKey::order:
     case StyleParamKey::priority: {
         try {
-            value = static_cast<int32_t>(std::stoi(_value));
-            break;
+            return static_cast<int32_t>(std::stoi(_value));
         } catch (std::invalid_argument) {
         } catch (std::out_of_range) {}
         logMsg("Warning: Not an Integer '%s', key: '%s'",
                _value.c_str(), keyName(key));
-        value = none_type{};
         break;
     }
     case StyleParamKey::width:
     case StyleParamKey::outline_width:
     case StyleParamKey::font_stroke_width: {
         try {
-            value = static_cast<float>(std::stof(_value));
-            break;
+            return static_cast<float>(std::stof(_value));
         } catch (std::invalid_argument) {
         } catch (std::out_of_range) {}
         logMsg("Warning: Not a Float '%s', key: '%s'",
                _value.c_str(), keyName(key));
-        value = none_type{};
         break;
     }
     case StyleParamKey::color:
@@ -136,22 +137,21 @@ StyleParam::StyleParam(const std::string& _key, const std::string& _value) {
     case StyleParamKey::font_fill:
     case StyleParamKey::font_stroke:
     case StyleParamKey::font_stroke_color:
-        value = StyleParam::parseColor(_value);
-        break;
+        return StyleParam::parseColor(_value);
+
     case StyleParamKey::cap:
     case StyleParamKey::outline_cap:
-        value = CapTypeFromString(_value);
-        break;
+        return CapTypeFromString(_value);
+
     case StyleParamKey::join:
     case StyleParamKey::outline_join:
-        value = JoinTypeFromString(_value);
+        return JoinTypeFromString(_value);
+
+    case StyleParamKey::none:
         break;
-    case StyleParamKey::sprite:
-        value = _value;
-        break;
-    default:
-        value = none_type{};
     }
+
+    return none_type{};
 }
 
 std::string StyleParam::toString() const {

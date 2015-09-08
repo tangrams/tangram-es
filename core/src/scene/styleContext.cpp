@@ -81,7 +81,7 @@ void StyleContext::setFeature(const Feature& _feature) {
 void StyleContext::setGlobal(const std::string& _key, const Value& _val) {
     Value& entry = m_globals[_key];
     if (entry == _val) { return; }
-    
+
     entry = _val;
 
     if (_val.is<float>()) {
@@ -183,55 +183,44 @@ bool StyleContext::evalFilterFn(const std::string& _name) {
 bool StyleContext::parseStyleResult(StyleParamKey _key, StyleParam::Value& _val) const {
     bool result = false;
 
+    if (duk_is_string(m_ctx, -1)) {
+        std::string value(duk_get_string(m_ctx, -1));
+        _val = StyleParam::parseString(_key, value);
+
+        duk_pop(m_ctx);
+        return !_val.is<none_type>();
+    }
+
+    if (!duk_is_number(m_ctx, -1)) {
+        logMsg("Warning: Unhandled return value from Javascript function.\n");
+        duk_pop(m_ctx);
+        return false;
+    }
+
     switch (_key) {
         case StyleParamKey::order:
-        {
-            if (duk_is_number(m_ctx, -1)) {
-                int v = duk_get_int(m_ctx, -1);
-                _val = static_cast<int32_t>(v);
-                result = true;
-            }
+        case StyleParamKey::priority: {
+            int v = duk_get_int(m_ctx, -1);
+            _val = static_cast<int32_t>(v);
+            result = true;
             break;
         }
         case StyleParamKey::width:
         case StyleParamKey::outline_width:
+        case StyleParamKey::font_stroke_width:
         {
-            if (duk_is_number(m_ctx, -1)) {
-                double v = duk_get_number(m_ctx, -1);
-                _val = static_cast<float>(v);
-                result = true;
-            }
+            double v = duk_get_number(m_ctx, -1);
+            _val = static_cast<float>(v);
+            result = true;
             break;
         }
         case StyleParamKey::color:
         case StyleParamKey::outline_color:
+        case StyleParamKey::font_fill:
+        case StyleParamKey::font_stroke:
+        case StyleParamKey::font_stroke_color:
         {
-            if (duk_is_string(m_ctx, -1)) {
-                std::string v(duk_get_string(m_ctx, -1));
-                _val = StyleParam::parseColor(v);
-                result = true;
-            } else if (duk_is_number(m_ctx, -1)) {
-
-                _val = static_cast<uint32_t>(duk_get_int(m_ctx, -1));
-                result = true;
-            }
-            break;
-        }
-        case StyleParamKey::cap:
-        case StyleParamKey::outline_cap:
-        {
-            std::string v(duk_get_string(m_ctx, -1));
-
-            _val = CapTypeFromString(v);
-
-            result = true;
-            break;
-        }
-        case StyleParamKey::join:
-        case StyleParamKey::outline_join:
-        {
-            std::string v(duk_get_string(m_ctx, -1));
-            _val = JoinTypeFromString(v);
+            _val = static_cast<uint32_t>(duk_get_int(m_ctx, -1));
             result = true;
             break;
         }
