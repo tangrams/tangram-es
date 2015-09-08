@@ -49,6 +49,8 @@ struct StyleParam {
     static bool parseFontSize(const std::string& _size, float& _pxSize);
 
     static uint32_t parseColor(const std::string& _color);
+
+    static Value parseString(StyleParamKey key, const std::string& _value);
 };
 
 struct DrawRule {

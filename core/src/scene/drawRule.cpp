@@ -61,45 +61,49 @@ StyleParam::StyleParam(const std::string& _key, const std::string& _value) {
     }
 
     key = it->second;
+    value = parseString(key, _value);
+}
+
+StyleParam::Value StyleParam::parseString(StyleParamKey key, const std::string& _value) {
 
     switch (key) {
     case StyleParamKey::extrude:
-        if (_value == "true") { value = std::make_pair(NAN, NAN); }
-        else if (_value == "false") { value = std::make_pair(0.0f, 0.0f) ; }
+        if (_value == "true") { return std::make_pair(NAN, NAN); }
+        else if (_value == "false") { return std::make_pair(0.0f, 0.0f) ; }
         else {
             float f1, f2;
             int num = std::sscanf(_value.c_str(), "%f, %f", &f1, &f2);
             switch(num) {
                 case 1:
-                    value = std::make_pair(f1, NAN);
-                    break;
+                    return std::make_pair(f1, NAN);
                 case 2:
-                    value = std::make_pair(f1, f2);
-                    break;
+                    return std::make_pair(f1, f2);
                 case 0:
                 default:
                     logMsg("Warning: Badly formed extrude parameter.\n");
-                    break;
             }
         }
         break;
     case StyleParamKey::font_family:
     case StyleParamKey::font_weight:
     case StyleParamKey::font_style:
-        value = _value;
-        break;
+        return _value;
+
     case StyleParamKey::font_size: {
         float fontSize = 16;
         if (!StyleParam::parseFontSize(_value, fontSize)) {
             logMsg("Warning: Invalid font-size '%s'.\n", _value.c_str());
         }
-        value = fontSize;
-        break;
+        return fontSize;
     }
     case StyleParamKey::font_uppercase:
     case StyleParamKey::visible:
-        if (_value == "true") { value = true; }
-        else if (_value == "false") { value = false; }
+        if (_value == "true") {
+            return true;
+        }
+        else if (_value == "false") {
+            return false;
+        }
         else {
             logMsg("Warning: Bool value required for capitalized/visible. Using Default.");
         }
@@ -107,26 +111,22 @@ StyleParam::StyleParam(const std::string& _key, const std::string& _value) {
     case StyleParamKey::order:
     case StyleParamKey::priority: {
         try {
-            value = static_cast<int32_t>(std::stoi(_value));
-            break;
+            return static_cast<int32_t>(std::stoi(_value));
         } catch (std::invalid_argument) {
         } catch (std::out_of_range) {}
         logMsg("Warning: Not an Integer '%s', key: '%s'",
                _value.c_str(), keyName(key));
-        value = none_type{};
         break;
     }
     case StyleParamKey::width:
     case StyleParamKey::outline_width:
     case StyleParamKey::font_stroke_width: {
         try {
-            value = static_cast<float>(std::stof(_value));
-            break;
+            return static_cast<float>(std::stof(_value));
         } catch (std::invalid_argument) {
         } catch (std::out_of_range) {}
         logMsg("Warning: Not a Float '%s', key: '%s'",
                _value.c_str(), keyName(key));
-        value = none_type{};
         break;
     }
     case StyleParamKey::color:
@@ -134,19 +134,21 @@ StyleParam::StyleParam(const std::string& _key, const std::string& _value) {
     case StyleParamKey::font_fill:
     case StyleParamKey::font_stroke:
     case StyleParamKey::font_stroke_color:
-        value = StyleParam::parseColor(_value);
-        break;
+        return StyleParam::parseColor(_value);
+
     case StyleParamKey::cap:
     case StyleParamKey::outline_cap:
-        value = CapTypeFromString(_value);
-        break;
+        return CapTypeFromString(_value);
+
     case StyleParamKey::join:
     case StyleParamKey::outline_join:
-        value = JoinTypeFromString(_value);
+        return JoinTypeFromString(_value);
+
+    case StyleParamKey::none:
         break;
-    default:
-        value = none_type{};
     }
+
+    return none_type{};
 }
 
 std::string StyleParam::toString() const {
