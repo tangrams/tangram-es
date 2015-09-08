@@ -155,6 +155,28 @@ TEST_CASE( "Test evalStyleFn - StyleParamKey::width", "[Duktape][evalStyleFn]") 
     REQUIRE(value.get<float>() == 4.6f);
 }
 
+TEST_CASE( "Test evalStyleFn - StyleParamKey::extrude", "[Duktape][evalStyleFn]") {
+    Feature feat;
+    feat.props.add("width", 2.0);
+
+    StyleContext ctx;
+    ctx.setFeature(feat);
+    ctx.addFunction("fn_t", R"(function () { return true; })");
+    ctx.addFunction("fn_f", R"(function () { return false; })");
+
+    StyleParam::Value value;
+
+    REQUIRE(ctx.evalStyleFn("fn_t", StyleParamKey::extrude, value) == true);
+    REQUIRE(value.is<Extrusion>() == true);
+    StyleParam::Value e1(std::make_pair(NAN, NAN));
+    REQUIRE(isnan(value.get<Extrusion>().first) == true);
+
+    REQUIRE(ctx.evalStyleFn("fn_f", StyleParamKey::extrude, value) == true);
+    REQUIRE(value.is<Extrusion>() == true);
+    StyleParam::Value e2(std::make_pair(0.0f, 0.0f));
+    REQUIRE(value == e2);
+}
+
 TEST_CASE( "Test evalFilter - Init filter function from yaml", "[Duktape][evalFilter]") {
     Scene scene;
     YAML::Node n0 = YAML::Load(R"(filter: function() { return feature.sort_key === 2; })");
