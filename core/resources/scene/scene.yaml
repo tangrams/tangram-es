@@ -192,26 +192,28 @@ layers:
         data: {source: osm, layer: roads}
         filter: { name: true, aeroway: false, tunnel: false, railway: false, not: { kind: rail }, $zoom: { min: 10 } }
         draw:
-            text: 
-                visible: false
+            text:
+                visible: true
+                priority: 2
                 offset: [0, 8px]
                 font:
                     family: sans-serif
                     weight: 400
                     style: normal
                     size: 1.em
-                    fill: white
+                    fill: black
         highway: 
             filter: { kind: highway }
             draw:
                 text:
                     visible: true
                     offset: [0px, 5px]
+                    priority: 1
                     font:
                         family: sans-serif
                         weight: 400
                         style: normal
-                        size: 20.5
+                        size: 25px
                         fill: black
                         uppercase: true
         major_road:
@@ -219,6 +221,7 @@ layers:
             draw:
                 text:
                     visible: true
+                    priority: 3
                     font:
                         family: sans-serif
                         weight: 400
@@ -231,7 +234,7 @@ layers:
             name: true
             not: { kind: [county, state, island] }
             any: 
-                - { $zoom: { min: 1 }, kind: ocean } 
+                - { $zoom: { min: 1 }, kind: ocean }
                 - { $zoom: { min: 2, max: 5 }, kind: continent }
                 #important contries
                 - { $zoom: { min: 4 }, name: ["United States of America", "Brasil", "Россия", "中华人民共和国"] }
@@ -241,6 +244,7 @@ layers:
                 #- function() {return (feature.scalerank * .75) <= ($zoom - 4); }
         draw:
             text: 
+                priority: 5
                 font:
                     family: sans-serif
                     weight: 400
@@ -277,12 +281,14 @@ layers:
                 - { $zoom: { min: 18 } }
         draw:
             text:
+                priority: 0
                 font:
                     family: sans-serif
                     weight: 400
                     style: normal
                     size: 15px
                     fill: darkgreen
+                    uppercase: true
 
     pois:
         data: { source: osm }

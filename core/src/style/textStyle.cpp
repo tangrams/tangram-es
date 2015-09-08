@@ -7,6 +7,7 @@
 #include "view/view.h"
 #include "labels/textLabel.h"
 #include "glm/gtc/type_ptr.hpp"
+#include "tangram.h"
 
 namespace Tangram {
 
@@ -65,6 +66,7 @@ Parameters TextStyle::parseRule(const DrawRule& _rule) const {
     _rule.get(StyleParamKey::font_stroke_width, p.strokeWidth);
     _rule.get(StyleParamKey::font_uppercase, p.uppercase);
     _rule.get(StyleParamKey::visible, p.visible);
+    _rule.get(StyleParamKey::priority, p.priority);
 
     p.fontKey = fontFamily + "_" + fontWeight + "_" + fontStyle;
     p.offset = glm::vec2(offset.first, offset.second);
@@ -75,6 +77,14 @@ Parameters TextStyle::parseRule(const DrawRule& _rule) const {
     p.blurSpread = m_sdf ? emSize * 5.0f : 0.0f;
 
     return p;
+}
+
+Label::Options TextStyle::optionsFromTextParams(const Parameters& _params) const {
+    Label::Options options;
+    options.color = _params.fill;
+    options.priority = _params.priority;
+    options.offset = _params.offset;
+    return options;
 }
 
 void TextStyle::buildPoint(const Point& _point, const DrawRule& _rule, const Properties& _props, VboMesh& _mesh, Tile& _tile) const {
@@ -89,11 +99,11 @@ void TextStyle::buildPoint(const Point& _point, const DrawRule& _rule, const Pro
     const auto& text = _props.getString(key_name);
     if (text.length() == 0) { return; }
 
-    Label::Options options;
-    options.color = params.fill;
-    options.offset = params.offset;
+    if (Tangram::getDebugFlag(Tangram::DebugFlags::labels)) {
+        buffer.addLabel(std::to_string(params.priority), { glm::vec2(_point), glm::vec2(_point) }, Label::Type::debug, params, optionsFromTextParams(params));
+    }
 
-    buffer.addLabel(text, { glm::vec2(_point), glm::vec2(_point) }, Label::Type::point, params, options);
+    buffer.addLabel(text, { glm::vec2(_point), glm::vec2(_point) }, Label::Type::point, params, optionsFromTextParams(params));
 }
 
 void TextStyle::buildLine(const Line& _line, const DrawRule& _rule, const Properties& _props, VboMesh& _mesh, Tile& _tile) const {
@@ -124,12 +134,13 @@ void TextStyle::buildLine(const Line& _line, const DrawRule& _rule, const Proper
             continue;
         }
 
-        Label::Options options;
-        options.color = params.fill;
-        options.offset = params.offset;
+        buffer.addLabel(text, { p1, p2 }, Label::Type::line, params, optionsFromTextParams(params));
 
-        buffer.addLabel(text, { p1, p2 }, Label::Type::line, params, options);
+        if (Tangram::getDebugFlag(Tangram::DebugFlags::labels)) {
+            buffer.addLabel(std::to_string(params.priority), { p1, p2 }, Label::Type::debug, params, optionsFromTextParams(params));
+        }
     }
+
 }
 
 void TextStyle::buildPolygon(const Polygon& _polygon, const DrawRule& _rule, const Properties& _props, VboMesh& _mesh, Tile& _tile) const {
@@ -158,11 +169,11 @@ void TextStyle::buildPolygon(const Polygon& _polygon, const DrawRule& _rule, con
 
     centroid /= n;
 
-    Label::Options options;
-    options.color = params.fill;
-    options.offset = params.offset;
+    buffer.addLabel(text, { centroid, centroid }, Label::Type::point, params, optionsFromTextParams(params));
 
-    buffer.addLabel(text, { centroid, centroid }, Label::Type::point, params, options);
+    if (Tangram::getDebugFlag(Tangram::DebugFlags::labels)) {
+        buffer.addLabel(std::to_string(params.priority), { centroid, centroid }, Label::Type::debug, params, optionsFromTextParams(params));
+    }
 
 }
 

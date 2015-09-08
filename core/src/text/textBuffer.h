@@ -8,6 +8,7 @@
 
 #include <memory>
 #include <locale>
+#include <limits>
 
 namespace Tangram {
 
@@ -22,7 +23,7 @@ struct Parameters {
     float blurSpread = 0.0f;
     bool uppercase = false;
     bool visible = true;
-    uint32_t priority = 1 << 31;
+    int32_t priority = std::numeric_limits<int32_t>::max();
     glm::vec2 offset;
 };
 
