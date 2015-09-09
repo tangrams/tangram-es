@@ -51,7 +51,7 @@ void ClientGeoJsonSource::clearData() {
 
     m_features.clear();
     m_store.reset();
-    DataSource::clearData();
+
 }
 
 void ClientGeoJsonSource::addPoint(double* _coords) {
