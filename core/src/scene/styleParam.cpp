@@ -3,6 +3,7 @@
 #include "platform.h"
 #include "util/builders.h" // for cap, join
 #include "util/geom.h" // for CLAMP
+#include <algorithm>
 #include <map>
 
 namespace Tangram {
