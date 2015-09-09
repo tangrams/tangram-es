@@ -21,6 +21,7 @@ protected:
         std::string sprite;
         std::pair<float, float> offset;
         glm::vec2 size;
+        int32_t priority = std::numeric_limits<int32_t>::max();
     };
 
     virtual void constructVertexLayout() override;

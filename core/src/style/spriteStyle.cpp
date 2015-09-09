@@ -46,6 +46,7 @@ SpriteStyle::Parameters SpriteStyle::parseRule(const DrawRule& _rule) const {
 
     _rule.get(StyleParamKey::sprite, p.sprite);
     _rule.get(StyleParamKey::offset, p.offset);
+    _rule.get(StyleParamKey::priority, p.priority);
     if (_rule.get(StyleParamKey::size, size)) {
         if (size.second == 0.f || std::isnan(size.second)) {
             p.size.x = p.size.y = size.first;
@@ -84,6 +85,7 @@ void SpriteStyle::buildPoint(const Point& _point, const DrawRule& _rule, const P
 
     Label::Options options;
     options.offset = glm::vec2(p.offset.first, p.offset.second);
+    options.priority = p.priority;
 
     std::unique_ptr<SpriteLabel> label(new SpriteLabel(t, p.size, mesh, _mesh.numVertices(), options));
 
