@@ -14,17 +14,15 @@ void SpriteAtlas::addSpriteNode(const std::string& _name, glm::vec2 _origin, glm
     m_spritesNodes[_name] = SpriteNode { uvBL, uvTR, _size };
 }
 
-SpriteNode SpriteAtlas::getSpriteNode(const std::string& _name) {
-    if (!hasSpriteNode(_name)) {
+bool SpriteAtlas::getSpriteNode(const std::string& _name, SpriteNode& _node) {
+    auto it = m_spritesNodes.find(_name);
+    if (it == m_spritesNodes.end()) {
         logMsg("WARNING: trying to access unrecognized sprite node named %s\n", _name.c_str());
-        return {};
+        return false;
     }
 
-    return m_spritesNodes.at(_name);
-}
-
-bool SpriteAtlas::hasSpriteNode(const std::string& _name) const {
-    return m_spritesNodes.find(_name) != m_spritesNodes.end();
+    _node = it->second;
+    return true;
 }
 
 void SpriteAtlas::bind(GLuint _slot) {

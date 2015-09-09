@@ -67,14 +67,14 @@ void SpriteStyle::buildPoint(const Point& _point, const DrawRule& _rule, const P
     }
 
     Parameters p = parseRule(_rule);
+    SpriteNode spriteNode;
 
-    if (!m_spriteAtlas->hasSpriteNode(p.sprite)) {
+    if (!m_spriteAtlas->getSpriteNode(p.sprite, spriteNode)) {
         return;
     }
 
     std::vector<Label::Vertex> vertices;
 
-    SpriteNode spriteNode = m_spriteAtlas->getSpriteNode(p.sprite);
     Label::Transform t = { glm::vec2(_point) };
 
     if (std::isnan(p.size.x)) {
