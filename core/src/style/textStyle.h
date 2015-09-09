@@ -42,6 +42,8 @@ private:
 
     inline Label::Options optionsFromTextParams(const Parameters& _params) const;
 
+    const std::string& applyTextSource(const Parameters& _parameters, const Properties& _props) const;
+
 };
 
 }

@@ -8,8 +8,6 @@
 
 namespace Tangram {
 
-using Function = std::string;
-
 class StyleContext;
 
 struct DrawRule {

@@ -12,6 +12,9 @@
 namespace Tangram {
 
 const static std::string key_name("name");
+const static std::string uppercase("uppercase");
+const static std::string lowercase("lowercase");
+const static std::string capitalize("capitalize");
 
 TextStyle::TextStyle(std::string _name, bool _sdf, bool _sdfMultisampling, Blending _blendMode, GLenum _drawMode) :
     Style(_name, _blendMode, _drawMode), m_sdf(_sdf), m_sdfMultisampling(_sdfMultisampling) {
@@ -67,12 +70,13 @@ Parameters TextStyle::parseRule(const DrawRule& _rule) const {
     _rule.get(StyleParamKey::transform, transform);
     _rule.get(StyleParamKey::visible, p.visible);
     _rule.get(StyleParamKey::priority, p.priority);
+    _rule.get(StyleParamKey::text_source, p.textSource);
 
-    if (transform == "capitalize") {
+    if (transform == capitalize) {
         p.transform = TextTransform::capitalize;
-    } else if (transform == "lowercase") {
+    } else if (transform == lowercase) {
         p.transform = TextTransform::lowercase;
-    } else if (transform == "uppercase") {
+    } else if (transform == uppercase) {
         p.transform = TextTransform::uppercase;
     }
 
@@ -94,6 +98,14 @@ Label::Options TextStyle::optionsFromTextParams(const Parameters& _params) const
     return options;
 }
 
+const std::string& TextStyle::applyTextSource(const Parameters& _parameters, const Properties& _props) const {
+    if (!_parameters.textSource.empty()) {
+        // TODO: check whether the text source was a js function
+        return _parameters.textSource;
+    }
+    return _props.getString(key_name);
+}
+
 void TextStyle::buildPoint(const Point& _point, const DrawRule& _rule, const Properties& _props, VboMesh& _mesh, Tile& _tile) const {
     auto& buffer = static_cast<TextBuffer&>(_mesh);
 
@@ -103,12 +115,9 @@ void TextStyle::buildPoint(const Point& _point, const DrawRule& _rule, const Pro
         return;
     }
 
-    const auto& text = _props.getString(key_name);
-    if (text.length() == 0) { return; }
+    const std::string text = applyTextSource(params, _props);
 
-    if (Tangram::getDebugFlag(Tangram::DebugFlags::labels)) {
-        buffer.addLabel(std::to_string(params.priority), { glm::vec2(_point), glm::vec2(_point) }, Label::Type::debug, params, optionsFromTextParams(params));
-    }
+    if (text.length() == 0) { return; }
 
     buffer.addLabel(text, { glm::vec2(_point), glm::vec2(_point) }, Label::Type::point, params, optionsFromTextParams(params));
 }
@@ -122,7 +131,8 @@ void TextStyle::buildLine(const Line& _line, const DrawRule& _rule, const Proper
         return;
     }
 
-    const auto& text = _props.getString(key_name);
+    const std::string text = applyTextSource(params, _props);
+
     if (text.length() == 0) { return; }
 
     int lineLength = _line.size();
@@ -142,10 +152,6 @@ void TextStyle::buildLine(const Line& _line, const DrawRule& _rule, const Proper
         }
 
         buffer.addLabel(text, { p1, p2 }, Label::Type::line, params, optionsFromTextParams(params));
-
-        if (Tangram::getDebugFlag(Tangram::DebugFlags::labels)) {
-            buffer.addLabel(std::to_string(params.priority), { p1, p2 }, Label::Type::debug, params, optionsFromTextParams(params));
-        }
     }
 
 }
@@ -159,7 +165,8 @@ void TextStyle::buildPolygon(const Polygon& _polygon, const DrawRule& _rule, con
         return;
     }
 
-    const auto& text = _props.getString(key_name);
+    const std::string text = applyTextSource(params, _props);
+
     if (text.length() == 0) { return; }
 
     glm::vec2 centroid;
@@ -177,11 +184,6 @@ void TextStyle::buildPolygon(const Polygon& _polygon, const DrawRule& _rule, con
     centroid /= n;
 
     buffer.addLabel(text, { centroid, centroid }, Label::Type::point, params, optionsFromTextParams(params));
-
-    if (Tangram::getDebugFlag(Tangram::DebugFlags::labels)) {
-        buffer.addLabel(std::to_string(params.priority), { centroid, centroid }, Label::Type::debug, params, optionsFromTextParams(params));
-    }
-
 }
 
 void TextStyle::onBeginDrawFrame(const View& _view, const Scene& _scene) {
