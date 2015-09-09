@@ -119,7 +119,7 @@ void TextStyle::buildPoint(const Point& _point, const DrawRule& _rule, const Pro
         return;
     }
 
-    const std::string text = applyTextSource(params, _props);
+    const std::string& text = applyTextSource(params, _props);
 
     if (text.length() == 0) { return; }
 
@@ -135,7 +135,7 @@ void TextStyle::buildLine(const Line& _line, const DrawRule& _rule, const Proper
         return;
     }
 
-    const std::string text = applyTextSource(params, _props);
+    const std::string& text = applyTextSource(params, _props);
 
     if (text.length() == 0) { return; }
 
@@ -169,7 +169,7 @@ void TextStyle::buildPolygon(const Polygon& _polygon, const DrawRule& _rule, con
         return;
     }
 
-    const std::string text = applyTextSource(params, _props);
+    const std::string& text = applyTextSource(params, _props);
 
     if (text.length() == 0) { return; }
 
