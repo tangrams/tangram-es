@@ -20,6 +20,7 @@ foreach(_headerFile ${FOUND_HEADERS})
     list(APPEND INCLUDE_DIRS ${_dir})
 endforeach()
 set(CORE_INCLUDE_DIRS ${INCLUDE_DIRS} CACHE INTERNAL "core include directories" FORCE)
+list(APPEND INCLUDE_DIRS "${INCLUDE_DIR}/")
 list(APPEND INCLUDE_DIRS "${INCLUDE_DIR}/stb")
 list(APPEND INCLUDE_DIRS "${INCLUDE_DIR}/glm")
 list(APPEND INCLUDE_DIRS "${INCLUDE_DIR}/isect2d/include")
@@ -47,7 +48,7 @@ if(NOT DEFINED CORE_LIB_NAME)
 endif()
 
 add_library(${CORE_LIB_NAME} ${CORE_LIB_TYPE} ${FOUND_SOURCES} ${FOUND_HEADERS})
-target_link_libraries(${CORE_LIB_NAME} css-color-parser-cpp yaml-cpp ${CORE_LIB_DEPS})
+target_link_libraries(${CORE_LIB_NAME} css-color-parser-cpp yaml-cpp geojson-vt-cpp ${CORE_LIB_DEPS})
 
 # make groups for xcode
 group_recursive_sources(src "src")

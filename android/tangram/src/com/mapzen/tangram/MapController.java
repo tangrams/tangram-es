@@ -107,29 +107,38 @@ public class MapController implements Renderer, OnTouchListener, OnScaleGestureL
 
     /**
      * Set the geographic position of the center of the map view
-     * @param lon Degrees longitude of the position to set
+     * @param position LngLat of the position to set
+     */
+    public void setMapPosition(LngLat position) {
+        setMapPosition(position.longitude, position.latitude);
+    }
+
+    /**
+     * Set the geographic position of the center of the map view
+     * @param lng Degrees longitude of the position to set
      * @param lat Degrees latitude of the position to set
      */
-    public void setMapPosition(double lon, double lat) {
-        setPosition(lon, lat);
+    public void setMapPosition(double lng, double lat) {
+        setPosition(lng, lat);
     }
 
     /**
      * Get the geographic position of the center of the map view
-     * @return Degrees longitude and latitude of the current map position, in a two-element array
+     * @return The current map position in a LngLat
      */
-    public double[] getMapPosition() {
-        return getMapPosition(new double[2]);
+    public LngLat getMapPosition() {
+        return getMapPosition(new LngLat());
     }
 
     /**
      * Get the geographic position of the center of the map view
-     * @param coordinatesOut Two-element array to be returned as the result
+     * @param out LngLat to be reused as the output
      * @return Degrees longitude and latitude of the current map position, in a two-element array
      */
-    public double[] getMapPosition(double[] coordinatesOut) {
-        getPosition(coordinatesOut);
-        return coordinatesOut;
+    public LngLat getMapPosition(LngLat out) {
+        double[] tmp = { 0, 0 };
+        getPosition(tmp);
+        return out.set(tmp[0], tmp[1]);
     }
 
     /**
@@ -184,21 +193,12 @@ public class MapController implements Renderer, OnTouchListener, OnScaleGestureL
      * Find the geographic coordinates corresponding to the given position on screen
      * @param screenX Pixels from the left edge of the screen
      * @param screenY Pixels from the top edge of the screen
-     * @return Degrees longitude and latitude corresponding to the given point, in a two-element array
+     * @return LngLat corresponding to the given point
      */
-    public double[] coordinatesAtScreenPosition(double screenX, double screenY) {
-        return coordinatesAtScreenPosition(new double[] {screenX, screenY});
-    }
-
-    /**
-     * Find geographic coordinates corrseponding to the given position on screen
-     * @param coordinatesInOut Two-element array of the x and y screen coordinates in pixels, the same
-     * array will be returned with the values modified
-     * @return Degrees longitude and latitude corresponding to the given point, in a two-element array
-     */
-    public double[] coordinatesAtScreenPosition(double[] coordinatesInOut) {
-        screenToWorldCoordinates(coordinatesInOut);
-        return coordinatesInOut;
+    public LngLat coordinatesAtScreenPosition(double screenX, double screenY) {
+        double[] tmp = { screenX, screenY };
+        screenToWorldCoordinates(tmp);
+        return new LngLat(tmp[0], tmp[1]);
     }
 
     /**

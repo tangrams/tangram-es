@@ -1,6 +1,7 @@
 #include "tileManager.h"
 
 #include "data/dataSource.h"
+#include "data/clientGeoJsonSource.h"
 #include "platform.h"
 #include "scene/scene.h"
 #include "tile/tile.h"
@@ -39,8 +40,18 @@ TileManager::~TileManager() {
     m_tileSets.clear();
 }
 
-void TileManager::addDataSource(std::shared_ptr<DataSource>&& dataSource) {
+int32_t TileManager::addDataSource(std::shared_ptr<DataSource>&& dataSource) {
     m_tileSets.push_back({++m_tileSetSerial, dataSource});
+    return m_tileSetSerial;
+}
+
+std::shared_ptr<ClientGeoJsonSource> TileManager::getClientSourceById(int32_t _id) {
+    for (auto& set : m_tileSets) {
+        if (set.id == _id) {
+            return std::dynamic_pointer_cast<ClientGeoJsonSource>(set.source);
+        }
+    }
+    return nullptr;
 }
 
 void TileManager::tileProcessed(std::shared_ptr<TileTask>&& task) {
@@ -112,6 +123,20 @@ void TileManager::clearTileSets() {
 
     m_tileCache->clear();
     m_loadPending = 0;
+}
+
+void TileManager::clearTileSet(int32_t _id) {
+    for (auto& tileSet : m_tileSets) {
+        if (tileSet.id != _id) { continue; }
+        for (auto& tile : tileSet.tiles) {
+            setTileState(*tile.second, TileState::canceled);
+        }
+        tileSet.tiles.clear();
+    }
+
+    m_tileCache->clear();
+    m_loadPending = 0;
+    m_tileSetChanged = true;
 }
 
 void TileManager::updateTileSets() {

@@ -54,7 +54,7 @@ void Tile::build(const Scene& _scene, const TileData& _data, const DataSource& _
 
         for (const auto& collection : _data.layers) {
 
-            if (collection.name != datalayer.collection()) { continue; }
+            if (!collection.name.empty() && collection.name != datalayer.collection()) { continue; }
 
             for (const auto& feat : collection.features) {
 

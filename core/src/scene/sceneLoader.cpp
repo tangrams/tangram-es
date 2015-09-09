@@ -5,6 +5,7 @@
 #include "tileManager.h"
 #include "view.h"
 #include "lights.h"
+#include "clientGeoJsonSource.h"
 #include "geoJsonSource.h"
 #include "material.h"
 #include "mvtSource.h"
@@ -416,21 +417,29 @@ void SceneLoader::loadSources(Node sources, TileManager& tileManager) {
         std::string type = source["type"].as<std::string>();
         std::string url = source["url"].as<std::string>();
 
+        // distinguish tiled and non-tiled sources by url
+        bool tiled = url.find("{x}") != std::string::npos &&
+                     url.find("{y}") != std::string::npos &&
+                     url.find("{z}") != std::string::npos;
+
         std::shared_ptr<DataSource> sourcePtr;
 
         if (type == "GeoJSONTiles") {
-            sourcePtr = std::shared_ptr<DataSource>(new GeoJsonSource(name, url));
-            sourcePtr->setCacheSize(CACHE_SIZE);
+            if (tiled) {
+                sourcePtr = std::shared_ptr<DataSource>(new GeoJsonSource(name, url));
+            } else {
+                sourcePtr = std::shared_ptr<DataSource>(new ClientGeoJsonSource(name, url));
+            }
         } else if (type == "TopoJSONTiles") {
             logMsg("WARNING: TopoJSON data sources not yet implemented\n"); // TODO
         } else if (type == "MVT") {
             sourcePtr = std::shared_ptr<DataSource>(new MVTSource(name, url));
-            sourcePtr->setCacheSize(CACHE_SIZE);
         } else {
             logMsg("WARNING: unrecognized data source type \"%s\", skipping\n", type.c_str());
         }
 
         if (sourcePtr) {
+            sourcePtr->setCacheSize(CACHE_SIZE);
             tileManager.addDataSource(std::move(sourcePtr));
         }
     }

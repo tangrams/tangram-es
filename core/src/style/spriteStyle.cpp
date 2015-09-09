@@ -66,16 +66,16 @@ void SpriteStyle::buildPoint(const Point& _point, const DrawRule& _rule, const P
     glm::vec2 offset = {0.f, 10.f};
 
     const static std::string key("kind");
-
-    const std::string& kind = _props.getString(key);
-    if(kind.length() == 0) { return; }
-
-    if (!m_spriteAtlas->hasSpriteNode(kind)) {
+    std::string spriteName;
+    if (!_rule.get(StyleParamKey::sprite, spriteName)) {
+        spriteName = _props.getString(key);
+    }
+    if (spriteName.empty() || !m_spriteAtlas->hasSpriteNode(spriteName)) {
         return;
     }
 
-    SpriteNode spriteNode = m_spriteAtlas->getSpriteNode(kind);
-    Label::Transform t = { glm::vec2(_point), glm::vec2(_point) };
+    SpriteNode spriteNode = m_spriteAtlas->getSpriteNode(spriteName);
+    Label::Transform t = { glm::vec2(_point) };
 
     auto& mesh = static_cast<LabelMesh&>(_mesh);
 

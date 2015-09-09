@@ -14,6 +14,7 @@
 #include "gl/renderState.h"
 #include "gl/primitives.h"
 #include "util/inputHandler.h"
+#include "data/clientGeoJsonSource.h"
 #include <memory>
 #include <cmath>
 #include <bitset>
@@ -219,6 +220,65 @@ void setPixelScale(float _pixelsPerPoint) {
         style->setPixelScale(_pixelsPerPoint);
     }
 
+}
+
+int addDataSource(const char* _name) {
+
+    if (!m_tileManager) { return -1; }
+    auto source = std::make_shared<ClientGeoJsonSource>(std::string(_name), "");
+    return m_tileManager->addDataSource(source);
+}
+
+void clearSourceData(int _sourceId) {
+
+    if (!m_tileManager) { return; }
+    for (auto& set : m_tileManager->getTileSets()) {
+        if (set.id == _sourceId) {
+            set.source->clearData();
+            m_tileManager->clearTileSet(_sourceId);
+        }
+    }
+    requestRender();
+}
+
+void addSourcePoint(int _sourceId, double* _coords) {
+    if (!m_tileManager) { return; }
+    auto source = m_tileManager->getClientSourceById(_sourceId);
+    if (source) {
+        source->addPoint(_coords);
+        m_tileManager->clearTileSet(_sourceId);
+    }
+    requestRender();
+}
+
+void addSourceLine(int _sourceId, double* _coords, int _lineLength) {
+    if (!m_tileManager) { return; }
+    auto source = m_tileManager->getClientSourceById(_sourceId);
+    if (source) {
+        source->addLine(_coords, _lineLength);
+        m_tileManager->clearTileSet(_sourceId);
+    }
+    requestRender();
+}
+
+void addSourcePoly(int _sourceId, double* _coords, int* _ringLengths, int _rings) {
+    if (!m_tileManager) { return; }
+    auto source = m_tileManager->getClientSourceById(_sourceId);
+    if (source) {
+        source->addPoly(_coords, _ringLengths, _rings);
+        m_tileManager->clearTileSet(_sourceId);
+    }
+    requestRender();
+}
+
+void addSourceGeoJSON(int _sourceId, const char* _data) {
+    if (!m_tileManager) { return; }
+    auto source = m_tileManager->getClientSourceById(_sourceId);
+    if (source) {
+        source->addData(_data);
+        m_tileManager->clearTileSet(_sourceId);
+    }
+    requestRender();
 }
 
 void handleTapGesture(float _posX, float _posY) {
