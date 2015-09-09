@@ -26,6 +26,8 @@ public:
 protected:
 
     virtual std::shared_ptr<TileData> parse(const Tile& _tile, std::vector<char>& _rawData) const override;
+
+    // Transform a geojsonvt::TilePoint into the corresponding Tangram::Point
     Point transformPoint(mapbox::util::geojsonvt::TilePoint pt) const;
 
     std::unique_ptr<GeoJSONVT> m_store;
