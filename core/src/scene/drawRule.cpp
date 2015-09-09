@@ -8,12 +8,14 @@ namespace Tangram {
 
 const StyleParam NONE;
 
-DrawRule::DrawRule(const std::string& _style, const std::vector<StyleParam>& _parameters) :
+DrawRule::DrawRule(const std::string& _style, const std::vector<StyleParam>& _parameters, bool _sorted) :
     style(_style),
     parameters(_parameters) {
 
-    // Parameters within each rule must be sorted lexicographically by key to merge correctly
-    std::sort(parameters.begin(), parameters.end());
+    if (!_sorted) {
+        // Parameters within each rule must be sorted lexicographically by key to merge correctly
+        std::sort(parameters.begin(), parameters.end());
+    }
 
 }
 
@@ -36,7 +38,7 @@ DrawRule DrawRule::merge(DrawRule& _other) const {
     while (myIt != myEnd) { merged.push_back(*myIt++); }
     while (otherIt != otherEnd) { merged.push_back(std::move(*otherIt++)); }
 
-    return { style, merged };
+    return { style, merged, true };
 }
 
 std::string DrawRule::toString() const {

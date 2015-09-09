@@ -17,7 +17,7 @@ struct DrawRule {
     std::string style;
     std::vector<StyleParam> parameters;
 
-    DrawRule(const std::string& _style, const std::vector<StyleParam>& _parameters);
+    DrawRule(const std::string& _style, const std::vector<StyleParam>& _parameters, bool _sorted = false);
 
     DrawRule merge(DrawRule& _other) const;
     std::string toString() const;
