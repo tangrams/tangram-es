@@ -180,6 +180,22 @@ layers:
             draw:
                 heightglow:
                     extrude: true
+        label_building:
+            filter: { name: true, height: true }
+            draw:
+                text:
+                    text_source: |
+                        function() {
+                            if (feature.height > 100) { return 'high'; }
+                            else { return 'low'; }
+                        }
+                    priority: 0
+                    font:
+                        family: sans-serif
+                        weight: 400
+                        style: normal
+                        size: 1.5em
+                        fill: yellow
         high-line:
             filter: {roof_material: grass}
             draw:
@@ -245,7 +261,7 @@ layers:
         filter:
             name: true
             not: { kind: [county, state, island] }
-            any: 
+            any:
                 - { $zoom: { min: 1 }, kind: ocean }
                 - { $zoom: { min: 2, max: 5 }, kind: continent }
                 #important contries
