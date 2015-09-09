@@ -103,6 +103,16 @@ layers:
             polygons:
                 order: 3
                 color: '#9dc3de'
+        label_water:
+            draw:
+                text:
+                    text_source: kind
+                    font:
+                        family: sans-serif
+                        weight: 400
+                        style: normal
+                        size: 1.2em
+                        fill: magenta
 
     roads:
         data: { source: osm }
@@ -184,10 +194,11 @@ layers:
             filter: { name: true, height: true }
             draw:
                 text:
+                    #text_source: kind
                     text_source: |
                         function() {
                             if (feature.height > 100) { return 'high'; }
-                            else { return 'low'; }
+                           else { return 'low'; }
                         }
                     priority: 0
                     font:

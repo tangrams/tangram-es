@@ -70,7 +70,8 @@ Parameters TextStyle::parseRule(const DrawRule& _rule) const {
     _rule.get(StyleParamKey::transform, transform);
     _rule.get(StyleParamKey::visible, p.visible);
     _rule.get(StyleParamKey::priority, p.priority);
-    _rule.get(StyleParamKey::text_source, p.textSource);
+    _rule.get(StyleParamKey::text_source, p.textSource.second);
+    p.textSource.first = _rule.isJSFunction(StyleParamKey::text_source);
 
     if (transform == capitalize) {
         p.transform = TextTransform::capitalize;
@@ -99,9 +100,12 @@ Label::Options TextStyle::optionsFromTextParams(const Parameters& _params) const
 }
 
 const std::string& TextStyle::applyTextSource(const Parameters& _parameters, const Properties& _props) const {
-    if (!_parameters.textSource.empty()) {
-        // TODO: check whether the text source was a js function
-        return _parameters.textSource;
+    if (!_parameters.textSource.second.empty()) {
+        if (_parameters.textSource.first) {
+            return _parameters.textSource.second;
+        } else {
+            return _props.getString(_parameters.textSource.second);
+        }
     }
     return _props.getString(key_name);
 }

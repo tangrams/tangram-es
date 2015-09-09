@@ -24,6 +24,8 @@ struct DrawRule {
 
     const StyleParam& findParameter(StyleParamKey _key) const;
 
+    bool isJSFunction(StyleParamKey _key) const;
+
     template<typename T>
     bool get(StyleParamKey _key, T& _value) const {
         auto& param = findParameter(_key);
