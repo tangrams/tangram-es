@@ -42,10 +42,21 @@ void SpriteStyle::constructShaderProgram() {
 
 SpriteStyle::Parameters SpriteStyle::parseRule(const DrawRule& _rule) const {
     Parameters p;
-    std::string size;
+    std::pair<float, float> size;
+
     _rule.get(StyleParamKey::sprite, p.sprite);
     _rule.get(StyleParamKey::offset, p.offset);
-    _rule.get(StyleParamKey::size, size);
+    if (_rule.get(StyleParamKey::size, size)) {
+        if (size.second == 0.f || std::isnan(size.second)) {
+            p.size.x = p.size.y = size.first;
+        } else {
+            p.size.x = size.first;
+            p.size.y = size.second;
+        }
+    } else {
+        p.size = { NAN, NAN };
+    }
+
     return p;
 }
 
@@ -56,28 +67,28 @@ void SpriteStyle::buildPoint(const Point& _point, const DrawRule& _rule, const P
 
     Parameters p = parseRule(_rule);
 
-    std::vector<Label::Vertex> vertices;
-
-    // TODO : configure this
-    float spriteScale = .5f;
-
     if (!m_spriteAtlas->hasSpriteNode(p.sprite)) {
         return;
     }
 
+    std::vector<Label::Vertex> vertices;
+
     SpriteNode spriteNode = m_spriteAtlas->getSpriteNode(p.sprite);
     Label::Transform t = { glm::vec2(_point) };
+
+    if (std::isnan(p.size.x)) {
+        p.size = spriteNode.m_size;
+    }
 
     auto& mesh = static_cast<LabelMesh&>(_mesh);
 
     Label::Options options;
     options.offset = glm::vec2(p.offset.first, p.offset.second);
 
-    std::unique_ptr<SpriteLabel> label(new SpriteLabel(t, spriteNode.m_size * spriteScale, mesh, _mesh.numVertices(), options));
+    std::unique_ptr<SpriteLabel> label(new SpriteLabel(t, p.size, mesh, _mesh.numVertices(), options));
 
-    auto size = spriteNode.m_size * spriteScale;
-    float halfWidth = size.x * .5f;
-    float halfHeight = size.y * .5f;
+    float halfWidth = p.size.x * .5f;
+    float halfHeight = p.size.y * .5f;
     const glm::vec2& uvBL = spriteNode.m_uvBL;
     const glm::vec2& uvTR = spriteNode.m_uvTR;
 

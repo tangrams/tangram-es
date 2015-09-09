@@ -81,15 +81,13 @@ StyleParam::Value StyleParam::parseString(StyleParamKey key, const std::string& 
             }
             return vec2;
         }
+    case StyleParamKey::size:
     case StyleParamKey::offset: {
         std::pair<float, float> vec2 = std::make_pair(0.f, 0.f);
         if (!StyleParam::parseVec2(_value, {"px"}, vec2)) {
             logMsg("Warning: Badly formed offset parameter %s.\n", _value.c_str());
         }
         return vec2;
-    }
-    case StyleParamKey::size: {
-
     }
     case StyleParamKey::font_family:
     case StyleParamKey::font_weight:
@@ -174,17 +172,17 @@ std::string StyleParam::toString() const {
         auto p = value.get<Extrusion>();
         return k + "(" + std::to_string(p.first) + ", " + std::to_string(p.second) + ")";
     }
-    case StyleParamKey::offset: {
+    case StyleParamKey::offset:
+    case StyleParamKey::size: {
         if (!value.is<std::pair<float, float>>()) break;
         auto p = value.get<std::pair<float, float>>();
-        return "offset : (" + std::to_string(p.first) + "px, " + std::to_string(p.second) + "px)";
+        return k + "(" + std::to_string(p.first) + "px, " + std::to_string(p.second) + "px)";
     }
     case StyleParamKey::font_family:
     case StyleParamKey::font_weight:
     case StyleParamKey::font_style:
     case StyleParamKey::transform:
     case StyleParamKey::sprite:
-    case StyleParamKey::size:
         if (!value.is<std::string>()) break;
         return k + value.get<std::string>();
     case StyleParamKey::font_size:

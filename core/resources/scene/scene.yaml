@@ -193,6 +193,7 @@ layers:
             icons:
                 offset: [0px, -15px]
                 size: 20px
+                #sprite: function() { return feature.kind; }
                 #size: [[13, 12px], [15, 18px]]
                 #interactive: true
 
