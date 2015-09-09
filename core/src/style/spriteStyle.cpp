@@ -47,6 +47,7 @@ SpriteStyle::Parameters SpriteStyle::parseRule(const DrawRule& _rule) const {
     _rule.get(StyleParamKey::sprite, p.sprite);
     _rule.get(StyleParamKey::offset, p.offset);
     _rule.get(StyleParamKey::priority, p.priority);
+    _rule.get(StyleParamKey::sprite_default, p.spriteDefault);
     if (_rule.get(StyleParamKey::size, size)) {
         if (size.second == 0.f || std::isnan(size.second)) {
             p.size.x = p.size.y = size.first;
@@ -69,7 +70,7 @@ void SpriteStyle::buildPoint(const Point& _point, const DrawRule& _rule, const P
     Parameters p = parseRule(_rule);
     SpriteNode spriteNode;
 
-    if (!m_spriteAtlas->getSpriteNode(p.sprite, spriteNode)) {
+    if (!m_spriteAtlas->getSpriteNode(p.sprite, spriteNode) && !m_spriteAtlas->getSpriteNode(p.spriteDefault, spriteNode)) {
         return;
     }
 

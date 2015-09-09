@@ -17,7 +17,6 @@ void SpriteAtlas::addSpriteNode(const std::string& _name, glm::vec2 _origin, glm
 bool SpriteAtlas::getSpriteNode(const std::string& _name, SpriteNode& _node) {
     auto it = m_spritesNodes.find(_name);
     if (it == m_spritesNodes.end()) {
-        logMsg("WARNING: trying to access unrecognized sprite node named %s\n", _name.c_str());
         return false;
     }
 

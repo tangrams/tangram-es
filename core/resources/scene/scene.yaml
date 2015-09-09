@@ -194,14 +194,17 @@ layers:
                 offset: [0px, -15px]
                 size: 20px
                 priority: 2
-                #sprite: function() { return feature.kind; }
                 #size: [[13, 12px], [15, 18px]]
                 #interactive: true
 
         # add generic icon at high zoom
         generic:
             filter: { $zoom: { min: 18 } }
-            draw: { icons: { sprite: info } }
+            draw:
+                icons:
+                    sprite: function() { return feature.kind; }
+                    sprite_default: info
+                    #sprite: info
 
         # examples of different icons mapped to feature properties
         icons:

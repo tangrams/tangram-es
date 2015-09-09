@@ -19,6 +19,7 @@ protected:
 
     struct Parameters {
         std::string sprite;
+        std::string spriteDefault;
         std::pair<float, float> offset;
         glm::vec2 size;
         int32_t priority = std::numeric_limits<int32_t>::max();
