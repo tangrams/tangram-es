@@ -62,7 +62,7 @@ void ClientGeoJsonSource::addPoint(double* _coords) {
                                               geojsonvt::ProjectedFeatureType::Point,
                                               container.members);
 
-    m_features.push_back(feature);
+    m_features.push_back(std::move(feature));
     m_store = std::make_unique<GeoJSONVT>(m_features, maxZoom, indexMaxZoom, indexMaxPoints, tolerance);
 
 }
@@ -102,7 +102,7 @@ void ClientGeoJsonSource::addPoly(double* _coords, int* _ringLengths, int _rings
                                               geojsonvt::ProjectedFeatureType::Polygon,
                                               geometry);
 
-    m_features.push_back(feature);
+    m_features.push_back(std::move(feature));
     m_store = std::make_unique<GeoJSONVT>(m_features, maxZoom, indexMaxZoom, indexMaxPoints, tolerance);
 }
 
@@ -157,7 +157,7 @@ std::shared_ptr<TileData> ClientGeoJsonSource::parse(const Tile& _tile, std::vec
                     if (signedArea(line) >= 0 || feat.polygons.empty()) {
                         feat.polygons.emplace_back();
                     }
-                    feat.polygons.back().push_back(line);
+                    feat.polygons.back().push_back(std::move(line));
                 }
                 break;
             }
