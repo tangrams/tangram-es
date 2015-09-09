@@ -262,20 +262,15 @@ bool StyleContext::parseStyleResult(StyleParamKey _key, StyleParam::Value& _val)
     } else if (duk_is_number(m_ctx, -1)) {
 
         switch (_key) {
-            case StyleParamKey::order:
-            case StyleParamKey::priority: {
-                int v = duk_get_int(m_ctx, -1);
-                _val = static_cast<int32_t>(v);
-                break;
-            }
             case StyleParamKey::width:
             case StyleParamKey::outline_width:
-            case StyleParamKey::font_stroke_width:
-            {
+            case StyleParamKey::font_stroke_width: {
                 double v = duk_get_number(m_ctx, -1);
                 _val = static_cast<float>(v);
                 break;
             }
+            case StyleParamKey::order:
+            case StyleParamKey::priority:
             case StyleParamKey::color:
             case StyleParamKey::outline_color:
             case StyleParamKey::font_fill:
