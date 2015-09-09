@@ -52,14 +52,14 @@ Parameters TextStyle::parseRule(const DrawRule& _rule) const {
     Parameters p;
 
     std::string fontFamily, fontWeight, fontStyle, transform;
-    std::pair<float, float> offset;
+    glm::vec2 offset;
 
     _rule.get(StyleParamKey::font_family, fontFamily);
     _rule.get(StyleParamKey::font_weight, fontWeight);
     _rule.get(StyleParamKey::font_style, fontStyle);
     _rule.get(StyleParamKey::font_size, p.fontSize);
     _rule.get(StyleParamKey::font_fill, p.fill);
-    _rule.get(StyleParamKey::offset, offset);
+    _rule.get(StyleParamKey::offset, p.offset);
     if (_rule.get(StyleParamKey::font_stroke, p.strokeColor)) {
         _rule.get(StyleParamKey::font_stroke_color, p.strokeColor);
     }
@@ -77,7 +77,6 @@ Parameters TextStyle::parseRule(const DrawRule& _rule) const {
     }
 
     p.fontKey = fontFamily + "_" + fontWeight + "_" + fontStyle;
-    p.offset = glm::vec2(offset.first, offset.second);
 
     /* Global operations done for fontsize and sdfblur */
     float emSize = p.fontSize / 16.f;
