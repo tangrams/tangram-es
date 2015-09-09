@@ -79,7 +79,6 @@ StyleParam::Value StyleParam::parseString(StyleParamKey key, const std::string& 
             }
             return vec2;
         }
-    }
     case StyleParamKey::offset: {
         std::pair<float, float> vec2 = std::make_pair(0.f, 0.f);
         if (!StyleParam::parseVec2(_value, {"px"}, vec2)) {
