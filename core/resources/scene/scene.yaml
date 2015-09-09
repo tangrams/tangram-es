@@ -192,6 +192,7 @@ layers:
         draw:
             icons:
                 offset: [0px, -15px]
+                size: 20px
                 #size: [[13, 12px], [15, 18px]]
                 #interactive: true
 

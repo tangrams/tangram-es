@@ -20,6 +20,7 @@ protected:
     struct Parameters {
         std::string sprite;
         std::pair<float, float> offset;
+        float size;
     };
 
     virtual void constructVertexLayout() override;

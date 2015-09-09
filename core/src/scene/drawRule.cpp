@@ -50,7 +50,8 @@ const std::map<std::string, StyleParamKey> s_StyleParamMap = {
     {"transform", StyleParamKey::transform},
     {"visible", StyleParamKey::visible},
     {"priority", StyleParamKey::priority},
-    {"sprite", StyleParamKey::sprite}
+    {"sprite", StyleParamKey::sprite},
+    {"size", StyleParamKey::size}
 };
 
 StyleParam::StyleParam(const std::string& _key, const std::string& _value) {
@@ -86,6 +87,9 @@ StyleParam::Value StyleParam::parseString(StyleParamKey key, const std::string& 
             logMsg("Warning: Badly formed offset parameter %s.\n", _value.c_str());
         }
         return vec2;
+    }
+    case StyleParamKey::size: {
+
     }
     case StyleParamKey::font_family:
     case StyleParamKey::font_weight:
@@ -180,6 +184,7 @@ std::string StyleParam::toString() const {
     case StyleParamKey::font_style:
     case StyleParamKey::transform:
     case StyleParamKey::sprite:
+    case StyleParamKey::size:
         if (!value.is<std::string>()) break;
         return k + value.get<std::string>();
     case StyleParamKey::font_size:

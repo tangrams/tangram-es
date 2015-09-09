@@ -42,8 +42,10 @@ void SpriteStyle::constructShaderProgram() {
 
 SpriteStyle::Parameters SpriteStyle::parseRule(const DrawRule& _rule) const {
     Parameters p;
+    std::string size;
     _rule.get(StyleParamKey::sprite, p.sprite);
     _rule.get(StyleParamKey::offset, p.offset);
+    _rule.get(StyleParamKey::size, size);
     return p;
 }
 
