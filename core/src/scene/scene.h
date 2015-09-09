@@ -19,18 +19,24 @@ class Texture;
 
 class Scene {
 public:
+    Scene();
+    ~Scene();
 
     auto& layers() { return m_layers; };
     auto& styles() { return m_styles; };
     auto& lights() { return m_lights; };
     auto& textures() { return m_textures; };
+    auto& functions() { return m_jsFunctions; };
 
     const auto& layers() const { return m_layers; };
     const auto& styles() const { return m_styles; };
     const auto& lights() const { return m_lights; };
+    const auto& functions() const { return m_jsFunctions; };
 
     const Style* findStyle(const std::string& _name) const;
     const Light* findLight(const std::string& _name) const;
+
+    const int32_t id;
 
 private:
 
@@ -39,6 +45,7 @@ private:
     std::vector<std::unique_ptr<Light>> m_lights;
     std::unordered_map<std::string, std::shared_ptr<Texture>> m_textures;
 
+    std::vector<std::string> m_jsFunctions;
 };
 
 }

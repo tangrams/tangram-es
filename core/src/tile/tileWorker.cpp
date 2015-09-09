@@ -4,7 +4,6 @@
 #include "tile/tile.h"
 #include "view/view.h"
 #include "tileManager.h"
-#include "style/style.h"
 #include "scene/scene.h"
 
 #include <algorithm>
@@ -31,6 +30,8 @@ TileWorker::~TileWorker(){
 void TileWorker::run() {
 
     setCurrentThreadPriority(WORKER_NICENESS);
+
+    StyleContext context;
 
     while (true) {
 
@@ -76,9 +77,12 @@ void TileWorker::run() {
 
         auto tileData = task->process();
 
+        auto& scene = *m_tileManager.getScene();
+
+        context.initFunctions(scene);
 
         if (tileData) {
-            task->tile->build(*m_tileManager.getScene(), *tileData, *task->source);
+            task->tile->build(context, scene, *tileData, *task->source);
         }
 
         m_tileManager.tileProcessed(std::move(task));

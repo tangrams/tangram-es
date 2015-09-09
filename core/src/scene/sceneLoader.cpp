@@ -25,6 +25,7 @@
 #include <algorithm>
 
 using YAML::Node;
+using YAML::NodeType;
 using YAML::BadConversion;
 
 namespace Tangram {
@@ -32,7 +33,8 @@ namespace Tangram {
 // TODO: make this configurable: 16MB default in-memory DataSource cache:
 constexpr size_t CACHE_SIZE = 16 * (1024 * 1024);
 
-void SceneLoader::loadScene(const std::string& _sceneString, Scene& _scene, TileManager& _tileManager, View& _view) {
+void SceneLoader::loadScene(const std::string& _sceneString, Scene& _scene,
+                            TileManager& _tileManager, View& _view) {
 
     try {
         Node config = YAML::Load(_sceneString);
@@ -103,7 +105,7 @@ glm::vec3 parseVec3(const Node& node) {
     return vec;
 }
 
-void SceneLoader::loadShaderConfig(YAML::Node shaders, ShaderProgram& shader) {
+void SceneLoader::loadShaderConfig(Node shaders, ShaderProgram& shader) {
 
     if (!shaders) {
         return;
@@ -115,9 +117,11 @@ void SceneLoader::loadShaderConfig(YAML::Node shaders, ShaderProgram& shader) {
             std::string name = define.first.as<std::string>();
             std::string value = define.second.as<std::string>();
             if (value == "true") {
-                value = ""; // specifying a define to be 'true' means that it is simply defined and has no value
+                // specifying a define to be 'true' means that it is simply defined and has no value
+                value = "";
             } else if (value == "false") {
-                continue; // specifying a define to be 'false' means that the define will not be defined at all
+                // specifying a define to be 'false' means that the define will not be defined at all
+                continue;
             }
             shader.addSourceBlock("defines", "#define " + name + " " + value);
         }
@@ -140,10 +144,9 @@ void SceneLoader::loadShaderConfig(YAML::Node shaders, ShaderProgram& shader) {
             shader.addSourceBlock(name, value); // TODO: Warn on unrecognized injection points
         }
     }
-
 }
 
-void SceneLoader::loadMaterial(YAML::Node matNode, Material& material, Scene& scene) {
+void SceneLoader::loadMaterial(Node matNode, Material& material, Scene& scene) {
 
     Node diffuse = matNode["diffuse"];
     if (diffuse) {
@@ -207,10 +210,9 @@ void SceneLoader::loadMaterial(YAML::Node matNode, Material& material, Scene& sc
     if (normal) {
         material.setNormal(loadMaterialTexture(normal, scene));
     }
-
 }
 
-MaterialTexture SceneLoader::loadMaterialTexture(YAML::Node matCompNode, Scene& scene) {
+MaterialTexture SceneLoader::loadMaterialTexture(Node matCompNode, Scene& scene) {
 
     MaterialTexture matTex;
 
@@ -268,7 +270,7 @@ MaterialTexture SceneLoader::loadMaterialTexture(YAML::Node matCompNode, Scene& 
     return matTex;
 }
 
-void SceneLoader::loadTextures(YAML::Node textures, Scene& scene) {
+void SceneLoader::loadTextures(Node textures, Scene& scene) {
 
     if (!textures) {
         return;
@@ -305,7 +307,7 @@ void SceneLoader::loadTextures(YAML::Node textures, Scene& scene) {
     }
 }
 
-void SceneLoader::loadStyles(YAML::Node styles, Scene& scene) {
+void SceneLoader::loadStyles(Node styles, Scene& scene) {
 
     auto fontCtx = FontContext::GetInstance(); // To add font for debugTextStyle
     fontCtx->addFont("FiraSans", "Medium", "");
@@ -398,9 +400,7 @@ void SceneLoader::loadStyles(YAML::Node styles, Scene& scene) {
         if (urlNode) { logMsg("WARNING: loading style from URL not yet implemented\n"); } // TODO
 
         scene.styles().push_back(std::unique_ptr<Style>(style));
-
     }
-
 }
 
 void SceneLoader::loadSources(Node sources, TileManager& tileManager) {
@@ -443,7 +443,6 @@ void SceneLoader::loadSources(Node sources, TileManager& tileManager) {
             tileManager.addDataSource(std::move(sourcePtr));
         }
     }
-
 }
 
 void SceneLoader::loadLights(Node lights, Scene& scene) {
@@ -567,8 +566,10 @@ void SceneLoader::loadLights(Node lights, Scene& scene) {
 
 void SceneLoader::loadCameras(Node cameras, View& view) {
 
-    // To correctly match the behavior of the webGL library we'll need a place to store multiple view instances.
-    // Since we only have one global view right now, we'll just apply the settings from the first active camera we find.
+    // To correctly match the behavior of the webGL library we'll need a place
+    // to store multiple view instances.  Since we only have one global view
+    // right now, we'll just apply the settings from the first active camera we
+    // find.
 
     for (const auto& cam : cameras) {
 
@@ -626,12 +627,10 @@ void SceneLoader::loadCameras(Node cameras, View& view) {
         if (active) {
             break;
         }
-
     }
-
 }
 
-Filter SceneLoader::generateFilter(YAML::Node _filter) {
+Filter SceneLoader::generateFilter(Node _filter, Scene& scene) {
 
     if (!_filter) {
         return Filter();
@@ -639,38 +638,40 @@ Filter SceneLoader::generateFilter(YAML::Node _filter) {
 
     std::vector<Filter> filters;
 
-    for (const auto& filtItr : _filter) {
-        Filter filter;
+    if (_filter.IsScalar()) {
+        auto& val = _filter.as<std::string>();
 
-        if (_filter.IsSequence()) {
-
-            filter = generateFilter(filtItr);
-
-        } else if (filtItr.first.as<std::string>() == "none") {
-
-            filter = generateNoneFilter(_filter["none"]);
-
-        } else if (filtItr.first.as<std::string>() == "not") {
-
-            filter = generateNoneFilter(_filter["not"]);
-
-        } else if (filtItr.first.as<std::string>() == "any") {
-
-            filter = generateAnyFilter(_filter["any"]);
-
-        } else if (filtItr.first.as<std::string>() == "all") {
-
-            filter = generateFilter(_filter["all"]);
-
-        } else {
-
-            std::string key = filtItr.first.as<std::string>();
-            filter = generatePredicate(_filter[key], key);
-
+        if (val.compare(0, 8, "function") == 0) {
+            filters.emplace_back(scene.functions().size());
+            scene.functions().push_back(val);
         }
+    } else {
+        for (const auto& filtItr : _filter) {
+            Filter filter;
 
-        filters.push_back(filter);
+            if (_filter.IsSequence()) {
+                filter = generateFilter(filtItr, scene);
 
+            } else if (filtItr.first.as<std::string>() == "none") {
+                filter = generateNoneFilter(_filter["none"], scene);
+
+            } else if (filtItr.first.as<std::string>() == "not") {
+                filter = generateNoneFilter(_filter["not"], scene);
+
+            } else if (filtItr.first.as<std::string>() == "any") {
+                filter = generateAnyFilter(_filter["any"], scene);
+
+            } else if (filtItr.first.as<std::string>() == "all") {
+                filter = generateFilter(_filter["all"], scene);
+
+            } else {
+
+                std::string key = filtItr.first.as<std::string>();
+                filter = generatePredicate(_filter[key], key);
+
+            }
+            filters.push_back(filter);
+        }
     }
 
     if (filters.size() == 1) {
@@ -683,7 +684,7 @@ Filter SceneLoader::generateFilter(YAML::Node _filter) {
 
 }
 
-Filter SceneLoader::generatePredicate(YAML::Node _node, std::string _key) {
+Filter SceneLoader::generatePredicate(Node _node, std::string _key) {
 
     if (_node.IsScalar()) {
         if (_node.Tag() == "tag:yaml.org,2002:str") {
@@ -744,10 +745,9 @@ Filter SceneLoader::generatePredicate(YAML::Node _node, std::string _key) {
         logMsg("Error: Badly formed Filter\n");
         return Filter();
     }
-
 }
 
-Filter SceneLoader::generateAnyFilter(YAML::Node _filter) {
+Filter SceneLoader::generateAnyFilter(Node _filter, Scene& scene) {
     std::vector<Filter> filters;
 
     if (!_filter.IsSequence()) {
@@ -755,18 +755,18 @@ Filter SceneLoader::generateAnyFilter(YAML::Node _filter) {
         return Filter();
     }
     for (const auto& filt : _filter) {
-        filters.emplace_back(generateFilter(filt));
+        filters.emplace_back(generateFilter(filt, scene));
     }
     return Filter(Operators::any, std::move(filters));
 }
 
-Filter SceneLoader::generateNoneFilter(YAML::Node _filter) {
+Filter SceneLoader::generateNoneFilter(Node _filter, Scene& scene) {
 
     std::vector<Filter> filters;
 
     if (_filter.IsSequence()) {
         for (const auto& filt : _filter) {
-            filters.emplace_back(generateFilter(filt));
+            filters.emplace_back(generateFilter(filt, scene));
         }
     } else if (_filter.IsMap()) { // not case
         for (const auto& filt : _filter) {
@@ -781,7 +781,7 @@ Filter SceneLoader::generateNoneFilter(YAML::Node _filter) {
     return Filter(Operators::none, std::move(filters));
 }
 
-std::vector<StyleParam> SceneLoader::parseStyleParams(Node params, const std::string& prefix) {
+std::vector<StyleParam> SceneLoader::parseStyleParams(Node params, Scene& scene, const std::string& prefix) {
 
     std::vector<StyleParam> out;
 
@@ -797,10 +797,24 @@ std::vector<StyleParam> SceneLoader::parseStyleParams(Node params, const std::st
         Node value = prop.second;
 
         switch (value.Type()) {
-            case YAML::NodeType::Scalar:   out.push_back({ key, value.as<std::string>() }); break;
-            case YAML::NodeType::Sequence: out.push_back({ key, parseSequence(value) }); break;
-            case YAML::NodeType::Map: {
-                auto subparams = parseStyleParams(value, key);
+             case NodeType::Scalar: {
+                 auto& val = value.as<std::string>();
+
+                 if (val.compare(0, 8, "function") == 0) {
+                     StyleParam param(key, "");
+                     param.function = scene.functions().size();
+                     scene.functions().push_back(val);
+                     out.push_back(std::move(param));
+                 } else {
+                     out.push_back({ key, val });
+                 }
+                 break;
+             }
+
+            case NodeType::Sequence: out.push_back({ key, parseSequence(value) });
+                break;
+            case NodeType::Map: {
+                auto subparams = parseStyleParams(value, scene, key);
                 out.insert(out.end(), subparams.begin(), subparams.end());
                 break;
             }
@@ -809,10 +823,9 @@ std::vector<StyleParam> SceneLoader::parseStyleParams(Node params, const std::st
     }
 
     return out;
-
 }
 
-void SceneLoader::loadFont(YAML::Node fontProps) {
+void SceneLoader::loadFont(Node fontProps) {
 
     std::string family = "";
     std::string weight = "";
@@ -832,7 +845,7 @@ void SceneLoader::loadFont(YAML::Node fontProps) {
 
 }
 
-SceneLayer SceneLoader::loadSublayer(YAML::Node layer, const std::string& name, Scene& scene) {
+SceneLayer SceneLoader::loadSublayer(Node layer, const std::string& name, Scene& scene) {
 
     std::vector<SceneLayer> sublayers;
     std::vector<DrawRule> rules;
@@ -849,13 +862,15 @@ SceneLayer SceneLoader::loadSublayer(YAML::Node layer, const std::string& name, 
             for (auto& ruleNode : member.second) {
 
                 auto explicitStyle = ruleNode.second["style"];
-                auto style = explicitStyle ? explicitStyle.as<std::string>() : ruleNode.first.as<std::string>();
-                auto params = parseStyleParams(ruleNode.second);
-                rules.push_back({ style, params });
+                auto style = explicitStyle
+                    ? explicitStyle.as<std::string>()
+                    : ruleNode.first.as<std::string>();
 
+                auto params = parseStyleParams(ruleNode.second, scene);
+                rules.push_back({ style, params });
             }
         } else if (key == "filter") {
-            filter = generateFilter(member.second);
+            filter = generateFilter(member.second, scene);
         } else if (key == "properties") {
             // TODO: ignored for now
         } else if (key == "visible") {
@@ -889,9 +904,7 @@ void SceneLoader::loadLayers(Node layers, Scene& scene, TileManager& tileManager
         auto sublayer = loadSublayer(layer.second, name, scene);
 
         scene.layers().push_back({ sublayer, source, collection });
-
     }
-
 }
 
 }
