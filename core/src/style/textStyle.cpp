@@ -11,11 +11,6 @@
 
 namespace Tangram {
 
-const static std::string key_name("name");
-const static std::string uppercase("uppercase");
-const static std::string lowercase("lowercase");
-const static std::string capitalize("capitalize");
-
 TextStyle::TextStyle(std::string _name, bool _sdf, bool _sdfMultisampling, Blending _blendMode, GLenum _drawMode) :
     Style(_name, _blendMode, _drawMode), m_sdf(_sdf), m_sdfMultisampling(_sdfMultisampling) {
 }
@@ -74,11 +69,11 @@ Parameters TextStyle::parseRule(const DrawRule& _rule) const {
         p.textSource.isFunction = _rule.isJSFunction(StyleParamKey::text_source);
     }
 
-    if (transform == capitalize) {
+    if (transform == "capitalize") {
         p.transform = TextTransform::capitalize;
-    } else if (transform == lowercase) {
+    } else if (transform == "lowercase") {
         p.transform = TextTransform::lowercase;
-    } else if (transform == uppercase) {
+    } else if (transform == "uppercase") {
         p.transform = TextTransform::uppercase;
     }
 
@@ -104,7 +99,7 @@ const std::string& TextStyle::applyTextSource(const Parameters& _parameters, con
 
     if (_parameters.textSource.text.empty()) {
         // Default: use 'name' property
-        return _props.getString(key_name);
+        return _props.getString("name");
     }
 
     if (_parameters.textSource.isFunction) {
