@@ -65,6 +65,14 @@ const StyleParam& DrawRule::findParameter(StyleParamKey _key) const {
     return NONE;
 }
 
+bool DrawRule::isJSFunction(StyleParamKey _key) const {
+    auto& param = findParameter(_key);
+    if (!param) {
+        return false;
+    }
+    return param.function >= 0;
+}
+
 bool DrawRule::operator<(const DrawRule& _rhs) const {
     return style < _rhs.style;
 }

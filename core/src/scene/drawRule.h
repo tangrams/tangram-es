@@ -8,8 +8,6 @@
 
 namespace Tangram {
 
-using Function = std::string;
-
 class StyleContext;
 
 struct DrawRule {
@@ -25,6 +23,8 @@ struct DrawRule {
     void eval(const StyleContext& _ctx);
 
     const StyleParam& findParameter(StyleParamKey _key) const;
+
+    bool isJSFunction(StyleParamKey _key) const;
 
     template<typename T>
     bool get(StyleParamKey _key, T& _value) const {

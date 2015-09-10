@@ -11,8 +11,6 @@
 
 namespace Tangram {
 
-const static std::string key_name("name");
-
 TextStyle::TextStyle(std::string _name, bool _sdf, bool _sdfMultisampling, Blending _blendMode, GLenum _drawMode) :
     Style(_name, _blendMode, _drawMode), m_sdf(_sdf), m_sdfMultisampling(_sdfMultisampling) {
 }
@@ -67,6 +65,9 @@ Parameters TextStyle::parseRule(const DrawRule& _rule) const {
     _rule.get(StyleParamKey::transform, transform);
     _rule.get(StyleParamKey::visible, p.visible);
     _rule.get(StyleParamKey::priority, p.priority);
+    if (_rule.get(StyleParamKey::text_source, p.textSource.text)) {
+        p.textSource.isFunction = _rule.isJSFunction(StyleParamKey::text_source);
+    }
 
     if (transform == "capitalize") {
         p.transform = TextTransform::capitalize;
@@ -94,6 +95,22 @@ Label::Options TextStyle::optionsFromTextParams(const Parameters& _params) const
     return options;
 }
 
+const std::string& TextStyle::applyTextSource(const Parameters& _parameters, const Properties& _props) const {
+
+    const static std::string key_name("name");
+
+    if (_parameters.textSource.isFunction) {
+        return _parameters.textSource.text;
+    }
+
+    if (_parameters.textSource.text.empty()) {
+        // Default: use 'name' property
+        return _props.getString(key_name);
+    } else {
+        return _props.getString(_parameters.textSource.text);
+    }
+}
+
 void TextStyle::buildPoint(const Point& _point, const DrawRule& _rule, const Properties& _props, VboMesh& _mesh, Tile& _tile) const {
     auto& buffer = static_cast<TextBuffer&>(_mesh);
 
@@ -103,26 +120,23 @@ void TextStyle::buildPoint(const Point& _point, const DrawRule& _rule, const Pro
         return;
     }
 
-    const auto& text = _props.getString(key_name);
+    const std::string& text = applyTextSource(params, _props);
+
     if (text.length() == 0) { return; }
-
-    if (Tangram::getDebugFlag(Tangram::DebugFlags::labels)) {
-        buffer.addLabel(std::to_string(params.priority), { glm::vec2(_point), glm::vec2(_point) }, Label::Type::debug, params, optionsFromTextParams(params));
-    }
-
     buffer.addLabel(text, { glm::vec2(_point), glm::vec2(_point) }, Label::Type::point, params, optionsFromTextParams(params));
 }
 
 void TextStyle::buildLine(const Line& _line, const DrawRule& _rule, const Properties& _props, VboMesh& _mesh, Tile& _tile) const {
     auto& buffer = static_cast<TextBuffer&>(_mesh);
 
-	Parameters params = parseRule(_rule);
+    Parameters params = parseRule(_rule);
 
     if (!params.visible) {
         return;
     }
 
-    const auto& text = _props.getString(key_name);
+    const std::string& text = applyTextSource(params, _props);
+
     if (text.length() == 0) { return; }
 
     int lineLength = _line.size();
@@ -142,10 +156,6 @@ void TextStyle::buildLine(const Line& _line, const DrawRule& _rule, const Proper
         }
 
         buffer.addLabel(text, { p1, p2 }, Label::Type::line, params, optionsFromTextParams(params));
-
-        if (Tangram::getDebugFlag(Tangram::DebugFlags::labels)) {
-            buffer.addLabel(std::to_string(params.priority), { p1, p2 }, Label::Type::debug, params, optionsFromTextParams(params));
-        }
     }
 
 }
@@ -153,13 +163,14 @@ void TextStyle::buildLine(const Line& _line, const DrawRule& _rule, const Proper
 void TextStyle::buildPolygon(const Polygon& _polygon, const DrawRule& _rule, const Properties& _props, VboMesh& _mesh, Tile& _tile) const {
     auto& buffer = static_cast<TextBuffer&>(_mesh);
 
-	Parameters params = parseRule(_rule);
+    Parameters params = parseRule(_rule);
 
     if (!params.visible) {
         return;
     }
 
-    const auto& text = _props.getString(key_name);
+    const std::string& text = applyTextSource(params, _props);
+
     if (text.length() == 0) { return; }
 
     glm::vec2 centroid;
@@ -177,11 +188,6 @@ void TextStyle::buildPolygon(const Polygon& _polygon, const DrawRule& _rule, con
     centroid /= n;
 
     buffer.addLabel(text, { centroid, centroid }, Label::Type::point, params, optionsFromTextParams(params));
-
-    if (Tangram::getDebugFlag(Tangram::DebugFlags::labels)) {
-        buffer.addLabel(std::to_string(params.priority), { centroid, centroid }, Label::Type::debug, params, optionsFromTextParams(params));
-    }
-
 }
 
 void TextStyle::onBeginDrawFrame(const View& _view, const Scene& _scene) {
@@ -198,7 +204,7 @@ void TextStyle::onBeginDrawFrame(const View& _view, const Scene& _scene) {
         m_shaderProgram->setUniformMatrix4f("u_proj", glm::value_ptr(_view.getOrthoViewportMatrix()));
         m_dirtyViewport = false;
     }
-    
+
     Style::onBeginDrawFrame(_view, _scene);
 
 }

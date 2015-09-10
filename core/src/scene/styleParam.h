@@ -9,6 +9,7 @@
 namespace Tangram {
 
 using Color = CSSColorParser::Color;
+using Function = std::string;
 
 enum class StyleParamKey : uint8_t {
     cap,
@@ -32,6 +33,7 @@ enum class StyleParamKey : uint8_t {
     outline_width,
     priority,
     sprite,
+    text_source,
     transform,
     visible,
     width,

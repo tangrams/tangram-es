@@ -30,6 +30,7 @@ const std::map<std::string, StyleParamKey> s_StyleParamMap = {
     {"outline:width", StyleParamKey::outline_width},
     {"priority", StyleParamKey::priority},
     {"sprite", StyleParamKey::sprite},
+    {"text_source", StyleParamKey::text_source},
     {"transform", StyleParamKey::transform},
     {"visible", StyleParamKey::visible},
     {"width", StyleParamKey::width},
@@ -79,6 +80,7 @@ StyleParam::Value StyleParam::parseString(StyleParamKey key, const std::string& 
     case StyleParamKey::font_family:
     case StyleParamKey::font_weight:
     case StyleParamKey::font_style:
+    case StyleParamKey::text_source:
     case StyleParamKey::transform:
     case StyleParamKey::sprite:
         return _value;
@@ -161,6 +163,7 @@ std::string StyleParam::toString() const {
     case StyleParamKey::font_family:
     case StyleParamKey::font_weight:
     case StyleParamKey::font_style:
+    case StyleParamKey::text_source:
     case StyleParamKey::transform:
     case StyleParamKey::sprite:
         if (!value.is<std::string>()) break;
