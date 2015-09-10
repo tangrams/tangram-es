@@ -33,7 +33,7 @@ struct Parameters {
     uint32_t priority = std::numeric_limits<uint32_t>::max();
     glm::vec2 offset;
     struct {
-        bool isFunction;
+        bool isFunction = false;
         std::string text;
     } textSource;
 };

@@ -97,13 +97,15 @@ Label::Options TextStyle::optionsFromTextParams(const Parameters& _params) const
 
 const std::string& TextStyle::applyTextSource(const Parameters& _parameters, const Properties& _props) const {
 
-    if (_parameters.textSource.text.empty()) {
-        // Default: use 'name' property
-        return _props.getString("name");
-    }
+    const static std::string key_name("name");
 
     if (_parameters.textSource.isFunction) {
         return _parameters.textSource.text;
+    }
+
+    if (_parameters.textSource.text.empty()) {
+        // Default: use 'name' property
+        return _props.getString(key_name);
     } else {
         return _props.getString(_parameters.textSource.text);
     }
