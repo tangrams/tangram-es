@@ -105,7 +105,7 @@ void SpriteStyle::buildPoint(const Point& _point, const DrawRule& _rule, const P
     } else {
         // default point size
         if (std::isnan(p.size.x)) {
-            p.size = glm::vec2(6.0);
+            p.size = glm::vec2(8.0);
         }
     }
 

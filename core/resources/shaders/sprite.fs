@@ -17,6 +17,10 @@ varying float v_alpha;
 varying vec4 v_color;
 
 #ifdef TANGRAM_POINT
+const float borderWidth = 0.3;
+const float circleRadiusIn = 0.5;
+const float circleRadiusOut = circleRadiusIn + borderWidth;
+
 float circle(vec2 r, vec2 center, float radius) {
     return 1.0 - smoothstep(radius - 0.2, radius + 0.2, length(r - center));
 }
@@ -30,8 +34,9 @@ void main(void) {
     } else {
         #ifdef TANGRAM_POINT
             vec2 uv = v_uv * 2.0 - 1.0;
-            float c = circle(uv, vec2(0.0), 0.8);
-            gl_FragColor = vec4(vec3(c), c * v_alpha);
+            float c1 = circle(uv, vec2(0.0), circleRadiusIn);
+            float c2 = circle(uv, vec2(0.0), circleRadiusOut);
+            gl_FragColor = vec4(vec3(c1) * v_color.rgb, c2 * v_alpha * v_color.a);
         #else
             vec4 color = texture2D(u_tex, v_uv);
             gl_FragColor = vec4(color.rgb * v_color.rgb, v_alpha * color.a * v_color.a);
