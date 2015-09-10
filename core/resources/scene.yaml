@@ -54,6 +54,8 @@ styles:
     icons:
         base: points
         texture: pois
+    icons_points:
+        base: points
 
 sources:
     osm:
@@ -225,20 +227,28 @@ layers:
                             color: orange
                             width: [[11, 0], [12, 1.], [17, 2.]]
 
+    poi_icon_points:
+        data: { source: osm, layer: pois }
+        filter: { name: true, not: { kind: [peak, viewpoint, bicycle_rental, car_sharing] }, $zoom: { min: 17 } }
+        draw:
+            icons_points:
+                offset: [0px, -8px]
+                priority: 1
+
     poi_icons:
         data: { source: osm, layer: pois }
-        filter: { name: true, not: { kind: [peak, viewpoint, bicycle_rental, car_sharing] }, $zoom: { min: 15 } }
+        filter: { name: true, not: { kind: [peak, viewpoint, bicycle_rental, car_sharing] }, $zoom: { min: 14, max: 16 } }
         draw:
             icons:
                 offset: [0px, -15px]
-                size: 20px
+                size: 15px
                 priority: 5
                 #size: [[13, 12px], [15, 18px]]
                 #interactive: true
 
         # add generic icon at high zoom
         generic:
-            filter: { $zoom: { min: 18 } }
+            filter: { $zoom: { min: 15 } }
             draw:
                 icons:
                     sprite: function() { return feature.kind; }
