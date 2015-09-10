@@ -418,8 +418,7 @@ Node SceneLoader::propORing(const std::string& propStr, Node& styles, const MIXE
     Node propNode;
     for (const auto& mixStyleName : mixes) {
         auto mixStyleNode = styles[mixStyleName];
-        propNode = mixStyleNode[propStr];
-        if (propNode) {
+        if ( (propNode = mixStyleNode[propStr]) ) {
             bool val = propNode.as<bool>();
             if (val) { return propNode; }
         }
@@ -432,13 +431,9 @@ Node SceneLoader::propOverwrite(const std::string& propStr, const std::string& s
     Node node;
     for (const auto& mixStyleName : mixes) {
         auto mixStyleNode = styles[mixStyleName];
-        auto propNode = mixStyleNode[propStr];
-        if (propNode) {
+        if (auto propNode = mixStyleNode[propStr]) {
             if (subPropStr.size() == 0) { node = propNode; }
-            else {
-                auto subPropNode = propNode[subPropStr];
-                if (subPropNode) { node = subPropNode; }
-            }
+            else if (auto subPropNode = propNode[subPropStr]) { node = subPropNode; }
         }
     }
     return node;
@@ -449,10 +444,8 @@ Node SceneLoader::propMerge(const std::string& propStr, const std::string& subPr
     Node node;
     for (const auto& mixStyleName : mixes) {
         auto mixStyleNode = styles[mixStyleName];
-        auto propNode = mixStyleNode[propStr];
-        if (propNode) {
-            auto subPropNode = propNode[subPropStr];
-            if (subPropNode) {
+        if (auto propNode = mixStyleNode[propStr]) {
+            if (auto subPropNode = propNode[subPropStr]) {
                 if (subPropNode.IsMap()) {
                     for (const auto& val : subPropNode) {
                         node[val.first] = val.second;
@@ -475,14 +468,11 @@ Node SceneLoader::mergeShaderBlocks(Node& styles, const MIXES& mixes) {
 
     for (const auto& mixStyleName : mixes) {
         auto mixStyleNode = styles[mixStyleName];
-        auto shadersNode = mixStyleNode["shaders"];
-        if (shadersNode) {
-            auto blocksNode = shadersNode["blocks"];
-            for (const auto& block : blocksNode) {
+        if (auto shadersNode = mixStyleNode["shaders"]) {
+            for (const auto& block : shadersNode["blocks"]) {
                 std::string tag = block.first.as<std::string>();
                 std::string value = block.second.as<std::string>();
-                Node blockNode = node[tag];
-                if (blockNode) {
+                if (node[tag]) {
                     node[tag] = node[tag].as<std::string>() + "\n" + value;
                 } else {
                     node[tag] = value;
@@ -539,8 +529,7 @@ Style* SceneLoader::loadStyle(Node& styles, const MIXES& mixes, Scene& scene) {
 
     // Construct style instance using the merged properties
     const std::string& styleName = mixes.back();
-    Node baseNode = styleNode["base"];
-    if (baseNode) {
+    if (Node baseNode = styleNode["base"]) {
         std::string baseString = baseNode.as<std::string>();
         if (baseString == "lines") {
             style = new PolylineStyle(styleName);
@@ -594,9 +583,8 @@ void SceneLoader::loadStyles(Node styles, Scene& scene) {
             continue;
         }
 
-        Node mixNode = styleNode["mix"];
         MIXES mixes;
-        if (mixNode) {
+        if (Node mixNode = styleNode["mix"]) {
             if (mixNode.IsScalar()) {
                 mixes.reserve(2);
                 mixes.push_back(mixNode.as<std::string>());
@@ -606,7 +594,7 @@ void SceneLoader::loadStyles(Node styles, Scene& scene) {
                     mixes.push_back(mixStyleNode.as<std::string>());
                 }
             } else {
-                logMsg("Error parsing mix param for style: %s. Value needs to be scalar or sequence\n", styleName.c_str());
+                logMsg("Error parsing mix param for style: %s. Expected scalar or sequence value\n", styleName.c_str());
             }
         }
         mixes.push_back(styleName);
