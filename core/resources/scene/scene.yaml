@@ -27,8 +27,14 @@ styles:
                 mapping: uv
             diffuse: 0.75
 
+    testStyle:
+        shaders:
+            blocks:
+                color: "color.rgb += vec3(0.5, 0.0, 0.0);"
+
     heightglow:
         base: polygon
+        mix: testStyle
         lighting: vertex
         shaders:
             blocks:
