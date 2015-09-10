@@ -126,14 +126,13 @@ void TextStyle::buildPoint(const Point& _point, const DrawRule& _rule, const Pro
     const std::string& text = applyTextSource(params, _props);
 
     if (text.length() == 0) { return; }
-
     buffer.addLabel(text, { glm::vec2(_point), glm::vec2(_point) }, Label::Type::point, params, optionsFromTextParams(params));
 }
 
 void TextStyle::buildLine(const Line& _line, const DrawRule& _rule, const Properties& _props, VboMesh& _mesh, Tile& _tile) const {
     auto& buffer = static_cast<TextBuffer&>(_mesh);
 
-	Parameters params = parseRule(_rule);
+    Parameters params = parseRule(_rule);
 
     if (!params.visible) {
         return;
@@ -167,7 +166,7 @@ void TextStyle::buildLine(const Line& _line, const DrawRule& _rule, const Proper
 void TextStyle::buildPolygon(const Polygon& _polygon, const DrawRule& _rule, const Properties& _props, VboMesh& _mesh, Tile& _tile) const {
     auto& buffer = static_cast<TextBuffer&>(_mesh);
 
-	Parameters params = parseRule(_rule);
+    Parameters params = parseRule(_rule);
 
     if (!params.visible) {
         return;
@@ -208,7 +207,7 @@ void TextStyle::onBeginDrawFrame(const View& _view, const Scene& _scene) {
         m_shaderProgram->setUniformMatrix4f("u_proj", glm::value_ptr(_view.getOrthoViewportMatrix()));
         m_dirtyViewport = false;
     }
-    
+
     Style::onBeginDrawFrame(_view, _scene);
 
 }
