@@ -23,6 +23,8 @@ struct DrawRule;
 struct MaterialTexture;
 struct Filter;
 
+using MIXES = std::vector<std::string>;
+
 class SceneLoader {
 
     void loadSources(YAML::Node sources, TileManager& tileManager);
@@ -31,6 +33,7 @@ class SceneLoader {
     void loadCameras(YAML::Node cameras, View& view);
     void loadLayers(YAML::Node layers, Scene& scene, TileManager& tileManager);
     void loadStyles(YAML::Node styles, Scene& scene);
+    Style* loadStyle(YAML::Node& styles, const MIXES& mixes, Scene& scene);
     void loadStyleProps(Style& style, YAML::Node styleNode, Scene& scene);
     void loadTextures(YAML::Node textures, Scene& scene);
     void loadMaterial(YAML::Node matNode, Material& material, Scene& scene);
@@ -40,6 +43,14 @@ class SceneLoader {
     Filter generateAnyFilter(YAML::Node filter, Scene& scene);
     Filter generateNoneFilter(YAML::Node filter, Scene& scene);
     Filter generatePredicate(YAML::Node filter, std::string _key);
+
+    // Style Mixing helper methods
+    YAML::Node propORing(const std::string& propStr, YAML::Node& styles, const MIXES& mixes);
+    YAML::Node propOverwrite(const std::string& propStr, const std::string& subPropStr, YAML::Node& styles,
+            const MIXES& mixes);
+    YAML::Node propMerge(const std::string& propStr, const std::string& subPropStr, YAML::Node& styles,
+            const MIXES& mixes);
+    YAML::Node mergeShaderBlocks(YAML::Node& styles, const MIXES& mixes);
 
 public:
 
