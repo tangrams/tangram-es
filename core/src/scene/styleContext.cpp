@@ -192,7 +192,7 @@ bool StyleContext::parseStyleResult(StyleParamKey _key, StyleParam::Value& _val)
                 _val = value;
                 break;
             case StyleParamKey::extrude:
-                _val = value ? Extrusion{NAN, NAN} : Extrusion{0.0f, 0.0f};
+                _val = value ? glm::vec2(NAN, NAN) : glm::vec2(0.0f, 0.0f);
                 break;
             default:
                 break;
@@ -218,7 +218,7 @@ bool StyleContext::parseStyleResult(StyleParamKey _key, StyleParam::Value& _val)
                 double v2 = duk_get_number(m_ctx, -1);
                 duk_pop(m_ctx);
 
-                _val = Extrusion{v1, v2};
+                _val = glm::vec2(v1, v2);
                 break;
             }
             case StyleParamKey::color:
@@ -262,20 +262,15 @@ bool StyleContext::parseStyleResult(StyleParamKey _key, StyleParam::Value& _val)
     } else if (duk_is_number(m_ctx, -1)) {
 
         switch (_key) {
-            case StyleParamKey::order:
-            case StyleParamKey::priority: {
-                int v = duk_get_int(m_ctx, -1);
-                _val = static_cast<int32_t>(v);
-                break;
-            }
             case StyleParamKey::width:
             case StyleParamKey::outline_width:
-            case StyleParamKey::font_stroke_width:
-            {
+            case StyleParamKey::font_stroke_width: {
                 double v = duk_get_number(m_ctx, -1);
                 _val = static_cast<float>(v);
                 break;
             }
+            case StyleParamKey::order:
+            case StyleParamKey::priority:
             case StyleParamKey::color:
             case StyleParamKey::outline_color:
             case StyleParamKey::font_fill:

@@ -5,6 +5,7 @@
 #include "yaml-cpp/yaml.h"
 #include "scene/sceneLoader.h"
 #include "scene/scene.h"
+#include "util/builders.h"
 #include "platform.h"
 
 using namespace Tangram;
@@ -121,8 +122,8 @@ TEST_CASE( "Test evalStyleFn - StyleParamKey::order", "[Duktape][evalStyleFn]") 
     StyleParam::Value value;
 
     REQUIRE(ctx.evalStyleFn("fn", StyleParamKey::order, value) == true);
-    REQUIRE(value.is<int32_t>() == true);
-    REQUIRE(value.get<int32_t>() == 7);
+    REQUIRE(value.is<uint32_t>() == true);
+    REQUIRE(value.get<uint32_t>() == 7);
 }
 
 TEST_CASE( "Test evalStyleFn - StyleParamKey::color", "[Duktape][evalStyleFn]") {
@@ -180,18 +181,18 @@ TEST_CASE( "Test evalStyleFn - StyleParamKey::extrude", "[Duktape][evalStyleFn]"
     StyleParam::Value value;
 
     REQUIRE(ctx.evalStyleFn("fn_t", StyleParamKey::extrude, value) == true);
-    REQUIRE(value.is<Extrusion>() == true);
-    StyleParam::Value e1(Extrusion{NAN, NAN});
-    REQUIRE(isnan(value.get<Extrusion>().first) == true);
+    REQUIRE(value.is<glm::vec2>() == true);
+    StyleParam::Value e1(glm::vec2(NAN, NAN));
+    REQUIRE(isnan(value.get<glm::vec2>()[0]) == true);
 
     REQUIRE(ctx.evalStyleFn("fn_f", StyleParamKey::extrude, value) == true);
-    REQUIRE(value.is<Extrusion>() == true);
-    StyleParam::Value e2(Extrusion{0.0f, 0.0f});
+    REQUIRE(value.is<glm::vec2>() == true);
+    StyleParam::Value e2(glm::vec2(0.0f, 0.0f));
     REQUIRE(value == e2);
 
     REQUIRE(ctx.evalStyleFn("fn_a", StyleParamKey::extrude, value) == true);
-    REQUIRE(value.is<Extrusion>() == true);
-    StyleParam::Value e3(Extrusion{1.1f, 2.2f});
+    REQUIRE(value.is<glm::vec2>() == true);
+    StyleParam::Value e3(glm::vec2(1.1f, 2.2f));
     REQUIRE(value == e3);
 
 }
@@ -276,8 +277,8 @@ TEST_CASE("Test evalStyle - Init StyleParam function from yaml", "[Duktape][eval
         } else if (style.key == StyleParamKey::cap) {
             StyleParam::Value value;
             REQUIRE(ctx.evalStyle(style.function, style.key, value) == true);
-            REQUIRE(value.is<CapTypes>() == true);
-            REQUIRE(value.get<CapTypes>() == CapTypes::round);
+            REQUIRE(value.is<uint32_t>() == true);
+            REQUIRE(static_cast<CapTypes>(value.get<uint32_t>()) == CapTypes::round);
         } else {
             REQUIRE(true == false);
         }

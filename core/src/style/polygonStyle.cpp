@@ -95,12 +95,12 @@ void PolygonStyle::buildPolygon(const Polygon& _polygon, const DrawRule& _rule, 
 
     auto& mesh = static_cast<PolygonStyle::Mesh&>(_mesh);
 
-    if (extrude.first != 0.0f || extrude.second != 0.0f) {
-        height = std::isnan(extrude.second)
-            ? ( std::isnan(extrude.first) ? height : extrude.first )
-            : extrude.second;
+    if (extrude[0] != 0.0f || extrude[1] != 0.0f) {
+        height = std::isnan(extrude[1])
+            ? ( std::isnan(extrude[0]) ? height : extrude[0] )
+            : extrude[1];
 
-        minHeight = std::isnan(extrude.second) ? minHeight : extrude.first;
+        minHeight = std::isnan(extrude[1]) ? minHeight : extrude[0];
 
         Builders::buildPolygonExtrusion(_polygon, minHeight, height, builder);
         mesh.addVertices(std::move(vertices), std::move(builder.indices));
