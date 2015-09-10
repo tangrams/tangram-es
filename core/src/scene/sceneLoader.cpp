@@ -457,6 +457,12 @@ Node SceneLoader::propMerge(const std::string& propStr, const std::string& subPr
                     for (const auto& val : subPropNode) {
                         node[val.first] = val.second;
                     }
+                } else if (subPropNode.IsScalar()) {
+                    node.push_back(subPropNode);
+                } else if (subPropNode.IsSequence()) {
+                    for (const auto& n : subPropNode) {
+                        node.push_back(n);
+                    }
                 }
             }
         }
@@ -519,7 +525,7 @@ Style* SceneLoader::loadStyle(Node& styles, const MIXES& mixes, Scene& scene) {
     // shader prooerties merging
     Node shadersNode;
     // Merge shader uniform and defines (concatinate all)
-    for (auto param : {"defines", "uniform"}) {
+    for (auto param : {"defines", "uniform", "extensions"}) {
         Node node = propMerge("shaders", param, styles, mixes);
         if (!node.IsNull()) { shadersNode[param] = node; }
     }
