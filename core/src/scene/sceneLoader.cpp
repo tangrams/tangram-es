@@ -355,11 +355,11 @@ void SceneLoader::loadStyleProps(Style& style, YAML::Node styleNode, Scene& scen
 
         std::string str = blendNode.as<std::string>();
 
-        if      (str == "none")     { style->setBlendMode(Blending::none); }
-        else if (str == "add")      { style->setBlendMode(Blending::add); }
-        else if (str == "multiply") { style->setBlendMode(Blending::multiply); }
-        else if (str == "overlay")  { style->setBlendMode(Blending::overlay); }
-        else if (str == "inlay")    { style->setBlendMode(Blending::inlay); }
+        if      (str == "none")     { style.setBlendMode(Blending::none); }
+        else if (str == "add")      { style.setBlendMode(Blending::add); }
+        else if (str == "multiply") { style.setBlendMode(Blending::multiply); }
+        else if (str == "overlay")  { style.setBlendMode(Blending::overlay); }
+        else if (str == "inlay")    { style.setBlendMode(Blending::inlay); }
         else { logMsg("WARNING: invalid blend mode \"%s\"\n", str.c_str()); }
 
     }
