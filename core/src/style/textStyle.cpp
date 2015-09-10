@@ -70,8 +70,9 @@ Parameters TextStyle::parseRule(const DrawRule& _rule) const {
     _rule.get(StyleParamKey::transform, transform);
     _rule.get(StyleParamKey::visible, p.visible);
     _rule.get(StyleParamKey::priority, p.priority);
-    _rule.get(StyleParamKey::text_source, p.textSource.second);
-    p.textSource.first = _rule.isJSFunction(StyleParamKey::text_source);
+    if (_rule.get(StyleParamKey::text_source, p.textSource.text)) {
+        p.textSource.isFunction = _rule.isJSFunction(StyleParamKey::text_source);
+    }
 
     if (transform == capitalize) {
         p.transform = TextTransform::capitalize;
@@ -100,14 +101,17 @@ Label::Options TextStyle::optionsFromTextParams(const Parameters& _params) const
 }
 
 const std::string& TextStyle::applyTextSource(const Parameters& _parameters, const Properties& _props) const {
-    if (!_parameters.textSource.second.empty()) {
-        if (_parameters.textSource.first) {
-            return _parameters.textSource.second;
-        } else {
-            return _props.getString(_parameters.textSource.second);
-        }
+
+    if (_parameters.textSource.text.empty()) {
+        // Default: use 'name' property
+        return _props.getString(key_name);
     }
-    return _props.getString(key_name);
+
+    if (_parameters.textSource.isFunction) {
+        return _parameters.textSource.text;
+    } else {
+        return _props.getString(_parameters.textSource.text);
+    }
 }
 
 void TextStyle::buildPoint(const Point& _point, const DrawRule& _rule, const Properties& _props, VboMesh& _mesh, Tile& _tile) const {

@@ -32,7 +32,10 @@ struct Parameters {
     bool visible = true;
     uint32_t priority = std::numeric_limits<uint32_t>::max();
     glm::vec2 offset;
-    std::pair<bool, std::string> textSource;
+    struct {
+        bool isFunction;
+        std::string text;
+    } textSource;
 };
 
 /*
