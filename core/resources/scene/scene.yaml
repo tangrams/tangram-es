@@ -180,8 +180,6 @@ layers:
             draw:
                 heightglow:
                     extrude: true
-        label_building:
-            filter: { name: true, height: true }
         high-line:
             filter: {roof_material: grass}
             draw:
