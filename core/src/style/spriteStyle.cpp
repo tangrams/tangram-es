@@ -38,6 +38,14 @@ void SpriteStyle::constructShaderProgram() {
     std::string vertShaderSrcStr = stringFromResource("shaders/point.vs");
 
     m_shaderProgram->setSourceStrings(fragShaderSrcStr, vertShaderSrcStr);
+
+    std::string defines;
+
+    if (!m_spriteAtlas) {
+        defines += "#define TANGRAM_POINT\n";
+    }
+
+    m_shaderProgram->addSourceBlock("defines", defines);
 }
 
 
@@ -65,24 +73,12 @@ SpriteStyle::Parameters SpriteStyle::parseRule(const DrawRule& _rule) const {
 }
 
 void SpriteStyle::buildPoint(const Point& _point, const DrawRule& _rule, const Properties& _props, VboMesh& _mesh, Tile& _tile) const {
-    if (!m_spriteAtlas) {
-        return;
-    }
 
     Parameters p = parseRule(_rule);
-    SpriteNode spriteNode;
-
-    if (!m_spriteAtlas->getSpriteNode(p.sprite, spriteNode) && !m_spriteAtlas->getSpriteNode(p.spriteDefault, spriteNode)) {
-        return;
-    }
 
     std::vector<Label::Vertex> vertices;
 
     Label::Transform t = { glm::vec2(_point) };
-
-    if (std::isnan(p.size.x)) {
-        p.size = spriteNode.m_size;
-    }
 
     auto& mesh = static_cast<LabelMesh&>(_mesh);
 
@@ -90,12 +86,33 @@ void SpriteStyle::buildPoint(const Point& _point, const DrawRule& _rule, const P
     options.offset = p.offset;
     options.priority = p.priority;
 
+    glm::vec2 uvBL = glm::vec2(0.0);
+    glm::vec2 uvTR = glm::vec2(1.0);
+
+    if (m_spriteAtlas) {
+        SpriteNode spriteNode;
+
+        if (!m_spriteAtlas->getSpriteNode(p.sprite, spriteNode) && !m_spriteAtlas->getSpriteNode(p.spriteDefault, spriteNode)) {
+            return;
+        }
+
+        if (std::isnan(p.size.x)) {
+            p.size = spriteNode.m_size;
+        }
+
+        uvBL = spriteNode.m_uvBL;
+        uvTR = spriteNode.m_uvTR;
+    } else {
+        // default point size
+        if (std::isnan(p.size.x)) {
+            p.size = glm::vec2(6.0);
+        }
+    }
+
     std::unique_ptr<SpriteLabel> label(new SpriteLabel(t, p.size, mesh, _mesh.numVertices(), options));
 
     float halfWidth = p.size.x * .5f;
     float halfHeight = p.size.y * .5f;
-    const glm::vec2& uvBL = spriteNode.m_uvBL;
-    const glm::vec2& uvTR = spriteNode.m_uvTR;
 
     vertices.reserve(4);
     vertices.push_back({{-halfWidth, -halfHeight}, {uvBL.x, uvBL.y}, options.color});
@@ -110,11 +127,10 @@ void SpriteStyle::buildPoint(const Point& _point, const DrawRule& _rule, const P
 void SpriteStyle::onBeginDrawFrame(const View& _view, Scene& _scene) {
     bool contextLost = Style::glContextLost();
 
-    if (!m_spriteAtlas) {
-        return;
+    if (m_spriteAtlas) {
+        m_spriteAtlas->bind(0);
     }
 
-    m_spriteAtlas->bind(0);
     setupShaderUniforms(1, contextLost, _scene);
 
     static bool initUniformSampler = true;
