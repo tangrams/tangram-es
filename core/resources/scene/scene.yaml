@@ -193,7 +193,7 @@ layers:
             icons:
                 offset: [0px, -15px]
                 size: 20px
-                priority: 2
+                priority: 5
                 #size: [[13, 12px], [15, 18px]]
                 #interactive: true
 

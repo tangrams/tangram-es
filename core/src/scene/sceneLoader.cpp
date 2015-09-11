@@ -326,7 +326,7 @@ void SceneLoader::loadTextures(Node textures, Scene& scene) {
             scene.spriteAtlases()[name] = atlas;
         }
 
-        scene.textures().emplace(name, std::make_shared<Texture>(file, options));
+        scene.textures().emplace(name, texture);
     }
 }
 

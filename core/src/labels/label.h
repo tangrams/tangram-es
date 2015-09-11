@@ -59,7 +59,7 @@ public:
     struct Options {
         uint32_t color = 0xffffffff;
         glm::vec2 offset;
-        int32_t priority = std::numeric_limits<int32_t>::max();
+        uint32_t priority = std::numeric_limits<uint32_t>::max();
     };
 
     Label(Transform _transform, glm::vec2 _size, Type _type, LabelMesh& _mesh, Range _vertexRange, Options _options);
