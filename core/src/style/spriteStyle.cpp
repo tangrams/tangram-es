@@ -67,8 +67,6 @@ SpriteStyle::Parameters SpriteStyle::parseRule(const DrawRule& _rule) const {
         p.size = glm::vec2(NAN, NAN);
     }
 
-    p.size *= m_pixelScale;
-
     return p;
 }
 
@@ -83,7 +81,7 @@ void SpriteStyle::buildPoint(const Point& _point, const DrawRule& _rule, const P
     auto& mesh = static_cast<LabelMesh&>(_mesh);
 
     Label::Options options;
-    options.offset = p.offset;
+    options.offset = p.offset * m_pixelScale;
     options.priority = p.priority;
 
     glm::vec2 uvBL = glm::vec2(0.0);
@@ -109,7 +107,7 @@ void SpriteStyle::buildPoint(const Point& _point, const DrawRule& _rule, const P
         }
     }
 
-    std::unique_ptr<SpriteLabel> label(new SpriteLabel(t, p.size, mesh, _mesh.numVertices(), options));
+    std::unique_ptr<SpriteLabel> label(new SpriteLabel(t, p.size * m_pixelScale, mesh, _mesh.numVertices(), options));
 
     float halfWidth = p.size.x * .5f;
     float halfHeight = p.size.y * .5f;

@@ -91,7 +91,7 @@ Label::Options TextStyle::optionsFromTextParams(const Parameters& _params) const
     Label::Options options;
     options.color = _params.fill;
     options.priority = _params.priority;
-    options.offset = _params.offset;
+    options.offset = _params.offset * m_pixelScale;
     return options;
 }
 
