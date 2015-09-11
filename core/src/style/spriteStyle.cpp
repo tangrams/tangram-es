@@ -58,6 +58,8 @@ SpriteStyle::Parameters SpriteStyle::parseRule(const DrawRule& _rule) const {
         p.size = glm::vec2(NAN, NAN);
     }
 
+    p.size *= m_pixelScale;
+
     return p;
 }
 
