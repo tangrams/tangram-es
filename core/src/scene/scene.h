@@ -2,6 +2,7 @@
 
 #include "scene/light.h"
 #include "scene/dataLayer.h"
+#include "scene/spriteAtlas.h"
 #include <memory>
 #include <string>
 #include <vector>
@@ -27,6 +28,7 @@ public:
     auto& lights() { return m_lights; };
     auto& textures() { return m_textures; };
     auto& functions() { return m_jsFunctions; };
+    auto& spriteAtlases() { return m_spriteAtlases; };
 
     const auto& layers() const { return m_layers; };
     const auto& styles() const { return m_styles; };
@@ -44,6 +46,7 @@ private:
     std::vector<std::unique_ptr<Style>> m_styles;
     std::vector<std::unique_ptr<Light>> m_lights;
     std::unordered_map<std::string, std::shared_ptr<Texture>> m_textures;
+    std::unordered_map<std::string, std::shared_ptr<SpriteAtlas>> m_spriteAtlases;
 
     std::vector<std::string> m_jsFunctions;
 };

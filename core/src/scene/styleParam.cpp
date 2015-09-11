@@ -30,6 +30,8 @@ const std::map<std::string, StyleParamKey> s_StyleParamMap = {
     {"outline:width", StyleParamKey::outline_width},
     {"priority", StyleParamKey::priority},
     {"sprite", StyleParamKey::sprite},
+    {"sprite_default", StyleParamKey::sprite_default},
+    {"size", StyleParamKey::size},
     {"text_source", StyleParamKey::text_source},
     {"transform", StyleParamKey::transform},
     {"visible", StyleParamKey::visible},
@@ -70,7 +72,8 @@ StyleParam::Value StyleParam::parseString(StyleParamKey key, const std::string& 
         }
         return vec2;
     }
-    case StyleParamKey::offset: {
+    case StyleParamKey::offset:
+    case StyleParamKey::size: {
         auto vec2 = glm::vec2(0.f, 0.f);
         if (!parseVec2(_value, {"px"}, vec2)) {
             logMsg("Warning: Badly formed offset parameter %s.\n", _value.c_str());
@@ -83,6 +86,7 @@ StyleParam::Value StyleParam::parseString(StyleParamKey key, const std::string& 
     case StyleParamKey::text_source:
     case StyleParamKey::transform:
     case StyleParamKey::sprite:
+    case StyleParamKey::sprite_default:
         return _value;
     case StyleParamKey::font_size: {
         float fontSize = 16;
@@ -155,10 +159,11 @@ std::string StyleParam::toString() const {
         auto p = value.get<glm::vec2>();
         return k + "(" + std::to_string(p[0]) + ", " + std::to_string(p[1]) + ")";
     }
+    case StyleParamKey::size:
     case StyleParamKey::offset: {
         if (!value.is<glm::vec2>()) break;
         auto p = value.get<glm::vec2>();
-        return "offset : (" + std::to_string(p.x) + "px, " + std::to_string(p.y) + "px)";
+        return k + "(" + std::to_string(p.x) + "px, " + std::to_string(p.y) + "px)";
     }
     case StyleParamKey::font_family:
     case StyleParamKey::font_weight:
@@ -166,6 +171,7 @@ std::string StyleParam::toString() const {
     case StyleParamKey::text_source:
     case StyleParamKey::transform:
     case StyleParamKey::sprite:
+    case StyleParamKey::sprite_default:
         if (!value.is<std::string>()) break;
         return k + value.get<std::string>();
     case StyleParamKey::visible:

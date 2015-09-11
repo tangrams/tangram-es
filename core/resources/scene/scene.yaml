@@ -16,6 +16,23 @@ textures:
     water-texture:
         url: normals.jpg
         filtering: nearest
+    pois:
+        url: poi_icons_32.png
+        sprites:
+            plane: [0, 0, 32, 32]
+            tree: [0, 185, 32, 32]
+            sunburst: [0, 629, 32, 32]
+            restaurant: [0, 777, 32, 32]
+            cafe: [0, 814, 32, 32]
+            museum: [0, 518, 32, 32]
+            bar: [0, 887, 32, 32]
+            train: [0, 74, 32, 32]
+            bus: [0, 148, 32, 32]
+            hospital: [0, 444, 32, 32]
+            parking: [0, 1073, 32, 32]
+            info: [0, 1110, 32, 32]
+            hotel: [0, 259, 32, 32]
+            bookstore: [0, 333, 32, 32]
 
 styles:
     pillows:
@@ -33,6 +50,10 @@ styles:
         shaders:
             blocks:
                 color: "color.rgb += vec3(0.3 * position.z);"
+
+    icons:
+        base: points
+        texture: pois
 
 sources:
     osm:
@@ -164,6 +185,57 @@ layers:
                         outline:
                             color: orange
                             width: 0.01
+
+    poi_icons:
+        data: { source: osm, layer: pois }
+        filter: { name: true, not: { kind: [peak, viewpoint, bicycle_rental, car_sharing] }, $zoom: { min: 15 } }
+        draw:
+            icons:
+                offset: [0px, -15px]
+                size: 20px
+                priority: 5
+                #size: [[13, 12px], [15, 18px]]
+                #interactive: true
+
+        # add generic icon at high zoom
+        generic:
+            filter: { $zoom: { min: 18 } }
+            draw:
+                icons:
+                    sprite: function() { return feature.kind; }
+                    sprite_default: info
+                    #sprite: info
+
+        # examples of different icons mapped to feature properties
+        icons:
+            restaurant:
+                filter: { kind: [restaurant] }
+                draw: { icons: { sprite: restaurant } }
+            cafe:
+                filter: { kind: [cafe, convenience] }
+                draw: { icons: { sprite: cafe } }
+            bar:
+                filter: { kind: [bar, pub] }
+                draw: { icons: { sprite: bar } }
+            culture:
+                filter: { kind: [museum, library, church, place_of_worship, bank] }
+                draw: { icons: { sprite: museum } }
+            station:
+                filter: { kind: [station] }
+                draw: { icons: { sprite: train } }
+            hospital:
+                filter: { kind: [hospital, pharmacy] }
+                draw: { icons: { sprite: hospital } }
+            hotel:
+                filter: { kind: [hotel, hostel] }
+                draw: { icons: { sprite: hotel } }
+            bus_stop:
+                filter: { kind: [bus_stop] }
+                draw: { icons: { sprite: bus } }
+            bookstore:
+                filter: { kind: [bookstore] }
+                draw: { icons: { sprite: bookstore } }
+
     buildings:
         data: { source: osm }
         filter: { $zoom: { min: 14 } }
@@ -191,7 +263,7 @@ layers:
         filter: { name: true, not: { kind: [peak, viewpoint, bicycle_rental, car_sharing] }, $zoom: { min: 15 } }
         draw:
             text:
-                offset: [0px, -13px]
+                offset: [0px, 13px]
                 font:
                     family: sans-serif
                     weight: 400

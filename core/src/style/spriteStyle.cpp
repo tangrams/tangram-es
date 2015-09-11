@@ -37,56 +37,60 @@ void SpriteStyle::constructShaderProgram() {
     std::string vertShaderSrcStr = stringFromResource("point.vs");
 
     m_shaderProgram->setSourceStrings(fragShaderSrcStr, vertShaderSrcStr);
+}
 
-    // TODO : load this from stylesheet
-    m_spriteAtlas = std::unique_ptr<SpriteAtlas>(new SpriteAtlas("poi_icons_32.png"));
 
-    m_spriteAtlas->addSpriteNode("plane", {0, 0}, {32, 32});
-    m_spriteAtlas->addSpriteNode("tree", {0, 185}, {32, 32});
-    m_spriteAtlas->addSpriteNode("sunburst", {0, 629}, {32, 32});
-    m_spriteAtlas->addSpriteNode("restaurant", {0, 777}, {32, 32});
-    m_spriteAtlas->addSpriteNode("cafe", {0, 814}, {32, 32});
-    m_spriteAtlas->addSpriteNode("museum", {0, 518}, {32, 32});
-    m_spriteAtlas->addSpriteNode("bar", {0, 887}, {32, 32});
-    m_spriteAtlas->addSpriteNode("train", {0, 74}, {32, 32});
-    m_spriteAtlas->addSpriteNode("bus", {0, 148}, {32, 32});
-    m_spriteAtlas->addSpriteNode("hospital", {0, 444}, {32, 32});
-    m_spriteAtlas->addSpriteNode("parking", {0, 1073}, {32, 32});
-    m_spriteAtlas->addSpriteNode("info", {0, 1110}, {32, 32});
-    m_spriteAtlas->addSpriteNode("hotel", {0, 259}, {32, 32});
-    m_spriteAtlas->addSpriteNode("bookstore", {0, 333}, {32, 32});
+SpriteStyle::Parameters SpriteStyle::parseRule(const DrawRule& _rule) const {
+    Parameters p;
+    glm::vec2 size;
+
+    _rule.get(StyleParamKey::sprite, p.sprite);
+    _rule.get(StyleParamKey::offset, p.offset);
+    _rule.get(StyleParamKey::priority, p.priority);
+    _rule.get(StyleParamKey::sprite_default, p.spriteDefault);
+    if (_rule.get(StyleParamKey::size, size)) {
+        if (size.x == 0.f || std::isnan(size.y)) {
+            p.size = glm::vec2(size.x);
+        } else {
+            p.size = size;
+        }
+    } else {
+        p.size = glm::vec2(NAN, NAN);
+    }
+
+    return p;
 }
 
 void SpriteStyle::buildPoint(const Point& _point, const DrawRule& _rule, const Properties& _props, VboMesh& _mesh, Tile& _tile) const {
-    // TODO : make this configurable
-    std::vector<Label::Vertex> vertices;
-
-    // TODO : configure this
-    float spriteScale = .5f;
-    glm::vec2 offset = {0.f, 10.f};
-
-    const static std::string key("kind");
-    std::string spriteName;
-    if (!_rule.get(StyleParamKey::sprite, spriteName)) {
-        spriteName = _props.getString(key);
-    }
-    if (spriteName.empty() || !m_spriteAtlas->hasSpriteNode(spriteName)) {
+    if (!m_spriteAtlas) {
         return;
     }
 
-    SpriteNode spriteNode = m_spriteAtlas->getSpriteNode(spriteName);
+    Parameters p = parseRule(_rule);
+    SpriteNode spriteNode;
+
+    if (!m_spriteAtlas->getSpriteNode(p.sprite, spriteNode) && !m_spriteAtlas->getSpriteNode(p.spriteDefault, spriteNode)) {
+        return;
+    }
+
+    std::vector<Label::Vertex> vertices;
+
     Label::Transform t = { glm::vec2(_point) };
+
+    if (std::isnan(p.size.x)) {
+        p.size = spriteNode.m_size;
+    }
 
     auto& mesh = static_cast<LabelMesh&>(_mesh);
 
     Label::Options options;
-    options.offset = offset;
+    options.offset = p.offset;
+    options.priority = p.priority;
 
-    std::unique_ptr<SpriteLabel> label(new SpriteLabel(t, spriteNode.m_size * spriteScale, mesh, _mesh.numVertices(), options));
+    std::unique_ptr<SpriteLabel> label(new SpriteLabel(t, p.size, mesh, _mesh.numVertices(), options));
 
-    auto size = spriteNode.m_size * spriteScale;
-    float halfWidth = size.x * .5f;
-    float halfHeight = size.y * .5f;
+    float halfWidth = p.size.x * .5f;
+    float halfHeight = p.size.y * .5f;
     const glm::vec2& uvBL = spriteNode.m_uvBL;
     const glm::vec2& uvTR = spriteNode.m_uvTR;
 
@@ -102,7 +106,11 @@ void SpriteStyle::buildPoint(const Point& _point, const DrawRule& _rule, const P
 
 void SpriteStyle::onBeginDrawFrame(const View& _view, const Scene& _scene) {
     bool contextLost = Style::glContextLost();
-    
+
+    if (!m_spriteAtlas) {
+        return;
+    }
+
     m_spriteAtlas->bind();
 
     static bool initUniformSampler = true;
