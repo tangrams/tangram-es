@@ -155,7 +155,6 @@ void SceneLoader::loadShaderConfig(Node shaders, ShaderProgram& shader) {
         }
     }
 
-    // TODO: global shader injection points
     Node blocksNode = shaders["blocks"];
     if (blocksNode) {
         for (const auto& block : blocksNode) {

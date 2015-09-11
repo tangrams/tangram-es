@@ -1,6 +1,10 @@
+#pragma tangram: extensions
+
 #ifdef GL_ES
 precision highp float;
 #endif
+
+#pragma tangram: defines
 
 #define TANGRAM_WORLD_POSITION_WRAP vec3(100000.0)
 
@@ -10,6 +14,8 @@ uniform mat3 u_normalMatrix;
 uniform float u_tile_zoom;
 uniform float u_time;
 uniform float u_zoom;
+
+#pragma tangram: uniforms
 
 attribute vec4 a_position;
 attribute vec4 a_color;

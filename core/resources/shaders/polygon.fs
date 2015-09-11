@@ -1,11 +1,17 @@
+#pragma tangram: extensions
+
 #ifdef GL_ES
 precision highp float;
 #endif
+
+#pragma tangram: defines
 
 uniform mat4 u_modelView;
 uniform mat4 u_modelViewProj;
 uniform mat3 u_normalMatrix;
 uniform float u_time;
+
+#pragma tangram: uniforms
 
 varying vec4 v_color;
 varying vec3 v_eyeToPoint;
