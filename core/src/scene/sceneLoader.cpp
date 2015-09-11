@@ -397,7 +397,7 @@ void SceneLoader::loadStyleProps(Style* style, YAML::Node styleNode, Scene& scen
 
 	Node textureNode = styleNode["texture"];
     if (textureNode) {
-    	auto spriteStyle = static_cast<SpriteStyle*>(style);
+    	auto spriteStyle = dynamic_cast<SpriteStyle*>(style);
         if (spriteStyle) {
         	std::string textureName = textureNode.as<std::string>();
             auto atlases = scene.spriteAtlases();
@@ -546,10 +546,10 @@ Style* SceneLoader::loadStyle(Node& styles, const MIXES& mixes, Scene& scene) {
         else if (baseString == "text") {
             style = new TextStyle(styleName, true, true);
         }
-        else if (baseString == "sprites") {
-            logMsg("WARNING: sprite base styles not yet implemented\n"); // TODO
+        else if (baseString == "points") {
+            style = new SpriteStyle(styleName);
         } else {
-            logMsg("WARNING: base style \"%s\" not recognized, defaulting to polygons\n", baseString.c_str());
+            logMsg("WARNING: base style \"%s\" not recognized, can not instantiate.\n", baseString.c_str());
             style = new PolygonStyle(styleName);
         }
 
