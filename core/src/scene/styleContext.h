@@ -11,6 +11,8 @@
 namespace Tangram {
 
 class Scene;
+enum class StyleParamKey : uint8_t;
+struct StyleParam;
 
 class StyleContext {
 

@@ -317,7 +317,7 @@ layers:
         filter:
             name: true
             not: { kind: [county, state, island] }
-            any: 
+            any:
                 - { $zoom: { min: 1 }, kind: ocean }
                 - { $zoom: { min: 2, max: 5 }, kind: continent }
                 #important contries
@@ -327,7 +327,7 @@ layers:
                 # this function matches the "cities" sublayer
                 #- function() {return (feature.scalerank * .75) <= ($zoom - 4); }
         draw:
-            text: 
+            text:
                 priority: 5
                 font:
                     family: sans-serif
@@ -347,7 +347,7 @@ layers:
         minor-places:
             filter: { kind: [hamlet, village, town, neighbourhood, suburb, quarter], $zoom: { max: 13 } }
             draw: {}
-            #visible: false 
+            #visible: false
         #cities:
             # this filter shows lower scaleranks at higher zooms, starting at z4
             #filter: function() { return (feature.scalerank * .75) <= ($zoom - 4); }

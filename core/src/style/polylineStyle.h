@@ -15,7 +15,7 @@ class PolylineStyle : public Style {
 protected:
 
     struct Parameters {
-        int32_t order = 0;
+        uint32_t order = 0;
         uint32_t color = 0xff00ffff;
         uint32_t outlineColor = 0xff00ffff;
         float width = 1.f;

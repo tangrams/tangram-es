@@ -42,21 +42,20 @@ void SpriteStyle::constructShaderProgram() {
 
 SpriteStyle::Parameters SpriteStyle::parseRule(const DrawRule& _rule) const {
     Parameters p;
-    std::pair<float, float> size;
+    glm::vec2 size;
 
     _rule.get(StyleParamKey::sprite, p.sprite);
     _rule.get(StyleParamKey::offset, p.offset);
     _rule.get(StyleParamKey::priority, p.priority);
     _rule.get(StyleParamKey::sprite_default, p.spriteDefault);
     if (_rule.get(StyleParamKey::size, size)) {
-        if (size.second == 0.f || std::isnan(size.second)) {
-            p.size.x = p.size.y = size.first;
+        if (size.x == 0.f || std::isnan(size.y)) {
+            p.size = glm::vec2(size.x);
         } else {
-            p.size.x = size.first;
-            p.size.y = size.second;
+            p.size = size;
         }
     } else {
-        p.size = { NAN, NAN };
+        p.size = glm::vec2(NAN, NAN);
     }
 
     return p;
@@ -85,7 +84,7 @@ void SpriteStyle::buildPoint(const Point& _point, const DrawRule& _rule, const P
     auto& mesh = static_cast<LabelMesh&>(_mesh);
 
     Label::Options options;
-    options.offset = glm::vec2(p.offset.first, p.offset.second);
+    options.offset = p.offset;
     options.priority = p.priority;
 
     std::unique_ptr<SpriteLabel> label(new SpriteLabel(t, p.size, mesh, _mesh.numVertices(), options));

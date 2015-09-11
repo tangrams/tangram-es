@@ -30,8 +30,12 @@ struct Parameters {
     float blurSpread = 0.0f;
     TextTransform transform = TextTransform::none;
     bool visible = true;
-    int32_t priority = std::numeric_limits<int32_t>::max();
+    uint32_t priority = std::numeric_limits<uint32_t>::max();
     glm::vec2 offset;
+    struct {
+        bool isFunction = false;
+        std::string text;
+    } textSource;
 };
 
 /*

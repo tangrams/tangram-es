@@ -15,9 +15,9 @@ class PolygonStyle : public Style {
 protected:
 
     struct Parameters {
-        int32_t order = 0;
+        uint32_t order = 0;
         uint32_t color = 0xff00ffff;
-        std::pair<float, float> extrude;
+        glm::vec2 extrude;
     };
 
     struct PolygonVertex {
