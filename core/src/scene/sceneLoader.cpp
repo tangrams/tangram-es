@@ -23,6 +23,7 @@
 #include "yaml-cpp/yaml.h"
 
 #include <algorithm>
+#include <unordered_set>
 
 using YAML::Node;
 using YAML::NodeType;
@@ -331,7 +332,7 @@ void SceneLoader::loadTextures(Node textures, Scene& scene) {
     }
 }
 
-void SceneLoader::loadStyleProps(Style& style, YAML::Node styleNode, Scene& scene) {
+void SceneLoader::loadStyleProps(Style* style, YAML::Node styleNode, Scene& scene) {
 
     if (!styleNode) {
         logMsg("Error: Can not parse style parameters, bad style YAML Node\n");
@@ -344,7 +345,7 @@ void SceneLoader::loadStyleProps(Style& style, YAML::Node styleNode, Scene& scen
         if (!animatedNode.IsScalar()) { logMsg("WARNING: animated flag should be a scalar\n"); }
         else {
             try {
-                style.setAnimated(animatedNode.as<bool>());
+                style->setAnimated(animatedNode.as<bool>());
             } catch(const BadConversion& e) {
                 logMsg("WARNING: Expected a boolean value in animated property. Using default (false).\n");
             }
@@ -355,11 +356,11 @@ void SceneLoader::loadStyleProps(Style& style, YAML::Node styleNode, Scene& scen
 
         std::string str = blendNode.as<std::string>();
 
-        if      (str == "none")     { style.setBlendMode(Blending::none); }
-        else if (str == "add")      { style.setBlendMode(Blending::add); }
-        else if (str == "multiply") { style.setBlendMode(Blending::multiply); }
-        else if (str == "overlay")  { style.setBlendMode(Blending::overlay); }
-        else if (str == "inlay")    { style.setBlendMode(Blending::inlay); }
+        if      (str == "none")     { style->setBlendMode(Blending::none); }
+        else if (str == "add")      { style->setBlendMode(Blending::add); }
+        else if (str == "multiply") { style->setBlendMode(Blending::multiply); }
+        else if (str == "overlay")  { style->setBlendMode(Blending::overlay); }
+        else if (str == "inlay")    { style->setBlendMode(Blending::inlay); }
         else { logMsg("WARNING: invalid blend mode \"%s\"\n", str.c_str()); }
 
     }
@@ -376,20 +377,20 @@ void SceneLoader::loadStyleProps(Style& style, YAML::Node styleNode, Scene& scen
 
     Node shadersNode = styleNode["shaders"];
     if (shadersNode) {
-        loadShaderConfig(shadersNode, *(style.getShaderProgram()));
+        loadShaderConfig(shadersNode, *(style->getShaderProgram()));
     }
 
     Node materialNode = styleNode["material"];
     if (materialNode) {
-        loadMaterial(materialNode, *(style.getMaterial()), scene);
+        loadMaterial(materialNode, *(style->getMaterial()), scene);
     }
 
     Node lightingNode = styleNode["lighting"];
     if (lightingNode) {
         std::string lighting = lightingNode.as<std::string>();
-        if (lighting == "fragment") { style.setLightingType(LightingType::fragment); }
-        else if (lighting == "vertex") { style.setLightingType(LightingType::vertex); }
-        else if (lighting == "false") { style.setLightingType(LightingType::none); }
+        if (lighting == "fragment") { style->setLightingType(LightingType::fragment); }
+        else if (lighting == "vertex") { style->setLightingType(LightingType::vertex); }
+        else if (lighting == "false") { style->setLightingType(LightingType::none); }
         else if (lighting == "true") { } // use default lighting
         else { logMsg("WARNING: unrecognized lighting type \"%s\"\n", lighting.c_str()); }
     }
@@ -441,20 +442,28 @@ Node SceneLoader::propOverwrite(const std::string& propStr, const std::string& s
 
 Node SceneLoader::propMerge(const std::string& propStr, const std::string& subPropStr, Node& styles,
         const MIXES& mixes) {
+
+    std::unordered_set<std::string> uniqueList;
     Node node;
     for (const auto& mixStyleName : mixes) {
         auto mixStyleNode = styles[mixStyleName];
         if (auto propNode = mixStyleNode[propStr]) {
             if (auto subPropNode = propNode[subPropStr]) {
-                if (subPropNode.IsMap()) {
+                if (subPropNode.IsMap()) { // for something like shaders: defines or unique
                     for (const auto& val : subPropNode) {
                         node[val.first] = val.second;
                     }
-                } else if (subPropNode.IsScalar()) {
-                    node.push_back(subPropNode);
-                } else if (subPropNode.IsSequence()) {
+                } else if (subPropNode.IsScalar()) { // for something like shaders: extension (scalar)
+                    if (uniqueList.find(subPropNode.as<std::string>()) == uniqueList.end()) {
+                        node.push_back(subPropNode);
+                        uniqueList.insert(subPropNode.as<std::string>());
+                    }
+                } else if (subPropNode.IsSequence()) { // for something like shaders: extensions (sequence)
                     for (const auto& n : subPropNode) {
-                        node.push_back(n);
+                        if (uniqueList.find(n.as<std::string>()) == uniqueList.end()) {
+                            node.push_back(n);
+                            uniqueList.insert(n.as<std::string>());
+                        }
                     }
                 }
             }
@@ -544,7 +553,7 @@ Style* SceneLoader::loadStyle(Node& styles, const MIXES& mixes, Scene& scene) {
             style = new PolygonStyle(styleName);
         }
 
-        loadStyleProps(*style, styleNode, scene);
+        loadStyleProps(style, styleNode, scene);
 
     } else {
         // No baseNode, this is an abstract styleNode

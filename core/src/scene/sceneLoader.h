@@ -34,7 +34,7 @@ class SceneLoader {
     void loadLayers(YAML::Node layers, Scene& scene, TileManager& tileManager);
     void loadStyles(YAML::Node styles, Scene& scene);
     Style* loadStyle(YAML::Node& styles, const MIXES& mixes, Scene& scene);
-    void loadStyleProps(Style& style, YAML::Node styleNode, Scene& scene);
+    void loadStyleProps(Style* style, YAML::Node styleNode, Scene& scene);
     void loadTextures(YAML::Node textures, Scene& scene);
     void loadMaterial(YAML::Node matNode, Material& material, Scene& scene);
     void loadShaderConfig(YAML::Node shaders, ShaderProgram& shader);
