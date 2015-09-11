@@ -112,6 +112,24 @@ void SceneLoader::loadShaderConfig(Node shaders, ShaderProgram& shader) {
         return;
     }
 
+    if (Node extensionsNode = shaders["extensions"]) {
+        std::vector<std::string> extensions;
+        if (extensionsNode.IsScalar()) {
+            extensions.push_back(extensionsNode.as<std::string>());
+        } else if(extensionsNode.IsSequence()) {
+            extensions.reserve(extensionsNode.size());
+            for (const auto& extNode : extensionsNode) {
+                extensions.push_back(extNode.as<std::string>());
+            }
+        }
+        for (const auto& extName : extensions) {
+            char buffer[1000]; //sufficient space
+            sprintf(buffer, "#ifdef %s\n    #extension %s : enable\n    #define TANGRAM_EXTENSION_%s\n#endif",
+                    extName.c_str(), extName.c_str(), extName.c_str());
+            shader.addSourceBlock("extensions", std::string(buffer));
+        }
+    }
+
     Node definesNode = shaders["defines"];
     if (definesNode) {
         for (const auto& define : definesNode) {
