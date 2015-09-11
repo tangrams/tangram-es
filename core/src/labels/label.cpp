@@ -190,7 +190,7 @@ void Label::pushTransform() {
 }
 
 bool Label::updateState(const glm::mat4& _mvp, const glm::vec2& _screenSize, float _dt) {
-    if (m_currentState == State::sleep) {
+    if (m_currentState == State::dead) {
         // no-op state for now, when label-collision has less complexity, this state
         // would lead to FADE_IN state if no collision occured
         return false;
@@ -219,7 +219,7 @@ bool Label::updateState(const glm::mat4& _mvp, const glm::vec2& _screenSize, flo
     switch (m_currentState) {
         case State::visible:
             if (occludedLastFrame) {
-                m_fade = FadeEffect(false, FadeEffect::Interpolation::sine, 1.0);
+                m_fade = FadeEffect(false, FadeEffect::Interpolation::sine, 0.2);
                 enterState(State::fading_out, 1.0);
             }
             break;
@@ -249,16 +249,20 @@ bool Label::updateState(const glm::mat4& _mvp, const glm::vec2& _screenSize, flo
         case State::wait_occ:
             if (m_occlusionSolved) {
                 if (occludedLastFrame) {
-                    enterState(State::sleep, 0.0);
+                    enterState(State::dead, 0.0); // dead
                 }  else {
                     m_fade = FadeEffect(true, FadeEffect::Interpolation::pow, 0.2);
                     enterState(State::fading_in, 0.0);
                 }
             }
-
             break;
-        case State::sleep:;
-            // dead state
+        case State::sleep:
+            if (!occludedLastFrame) {
+                m_fade = FadeEffect(true, FadeEffect::Interpolation::pow, 0.2);
+                enterState(State::fading_in, 0.0);
+            }
+            break;
+        case State::dead:;
     }
 
     return animate;

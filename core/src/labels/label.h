@@ -31,6 +31,7 @@ public:
         sleep           = 1 << 3,
         out_of_screen   = 1 << 4,
         wait_occ        = 1 << 5, // state waiting for first occlusion result
+        dead            = 1 << 6,
     };
 
     struct Vertex {
