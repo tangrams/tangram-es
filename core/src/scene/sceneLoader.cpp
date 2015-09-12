@@ -466,7 +466,7 @@ Node SceneLoader::propMerge(const std::string& propStr, const std::string& subPr
         auto mixStyleNode = styles[mixStyleName];
         if (auto propNode = mixStyleNode[propStr]) {
             if (auto subPropNode = propNode[subPropStr]) {
-                if (subPropNode.IsMap()) { // for something like shaders: defines or unique
+                if (subPropNode.IsMap()) { // for something like shaders: defines or uniforms
                     for (const auto& val : subPropNode) {
                         node[val.first] = val.second;
                     }
@@ -522,7 +522,7 @@ Style* SceneLoader::loadStyle(Node& styles, const MIXES& mixes, Scene& scene) {
         if (!node.IsNull()) { styleNode[property] = node; }
     }
 
-    // Overwriten style properties (last wins)
+    // Overwritten style properties (last wins)
     for (auto property : {"base", "lighting", "texture", "blend"}) {
         Node node = propOverwrite(property, "", styles, mixes);
         if (!node.IsNull()) { styleNode[property] = node; }
@@ -538,10 +538,10 @@ Style* SceneLoader::loadStyle(Node& styles, const MIXES& mixes, Scene& scene) {
     if (!materialNode.IsNull()) { styleNode["material"] = materialNode; }
 
 
-    // shader prooerties merging
+    // shader properties merging
     Node shadersNode;
     // Merge shader uniform and defines (concatinate all)
-    for (auto param : {"defines", "uniform", "extensions"}) {
+    for (auto param : {"defines", "uniforms", "extensions"}) {
         Node node = propMerge("shaders", param, styles, mixes);
         if (!node.IsNull()) { shadersNode[param] = node; }
     }
@@ -557,25 +557,24 @@ Style* SceneLoader::loadStyle(Node& styles, const MIXES& mixes, Scene& scene) {
     const std::string& styleName = mixes.back();
     if (Node baseNode = styleNode["base"]) {
         std::string baseString = baseNode.as<std::string>();
-        if (baseString == "lines") {
+        if (baseString == "polygons") {
+            style = new PolygonStyle(styleName);
+        } else if (baseString == "lines") {
             style = new PolylineStyle(styleName);
-        }
-        else if (baseString == "text") {
+        } else if (baseString == "text") {
             style = new TextStyle(styleName, true, true);
-        }
-        else if (baseString == "points") {
+        } else if (baseString == "points") {
             style = new SpriteStyle(styleName);
         } else {
             logMsg("WARNING: base style \"%s\" not recognized, can not instantiate.\n", baseString.c_str());
-            style = new PolygonStyle(styleName);
+            return nullptr;
         }
-
         loadStyleProps(style, styleNode, scene);
-
     } else {
         // No baseNode, this is an abstract styleNode
         return nullptr;
     }
+
     return style;
 }
 

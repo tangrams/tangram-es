@@ -36,7 +36,7 @@ textures:
 
 styles:
     pillows:
-        base: polygon
+        base: polygons
         lighting: fragment
         material:
             normal:
@@ -50,7 +50,7 @@ styles:
                 color: "color.rgb += vec3(0.5, 0.0, 0.0);"
 
     heightglow:
-        base: polygon
+        base: polygons
         mix: testStyle
         lighting: vertex
         shaders:
