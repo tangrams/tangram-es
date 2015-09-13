@@ -251,6 +251,7 @@ layers:
         filter: { name: true, not: { kind: [peak, viewpoint, bicycle_rental, car_sharing] }, $zoom: { min: 15 } }
         draw:
             text:
+                feature_id: function() { return feature.name; }
                 offset: [0px, 13px]
                 font:
                     family: sans-serif
@@ -263,6 +264,7 @@ layers:
         filter: { name: true, aeroway: false, tunnel: false, railway: false, not: { kind: rail }, $zoom: { min: 10 } }
         draw:
             text:
+                feature_id: function() { return feature.name; }
                 visible: true
                 priority: 2
                 transform: capitalize
@@ -278,6 +280,7 @@ layers:
             filter: { kind: highway }
             draw:
                 text:
+                    feature_id: function() { return feature.name; }
                     visible: true
                     offset: [0px, 5px]
                     priority: 1
@@ -292,6 +295,7 @@ layers:
             filter: { kind: major_road }
             draw:
                 text:
+                    feature_id: function() { return feature.name; }
                     transform: capitalize
                     visible: true
                     priority: 3
@@ -316,6 +320,7 @@ layers:
                 #- function() {return (feature.scalerank * .75) <= ($zoom - 4); }
         draw:
             text:
+                feature_id: function() { return feature.name; }
                 priority: 5
                 font:
                     family: sans-serif
@@ -353,6 +358,7 @@ layers:
                 - { $zoom: { min: 18 } }
         draw:
             text:
+                feature_id: function() { return feature.name; }
                 priority: 0
                 transform: lowercase
                 font:
