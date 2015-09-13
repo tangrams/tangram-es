@@ -35,7 +35,7 @@ TEST_CASE( "Ensure the transition from wait -> sleep when occlusion happens", "[
     l.occlusionSolved();
     l.update(glm::ortho(0.f, screenSize.x, screenSize.y, 0.f, -1.f, 1.f), screenSize, 0);
 
-    REQUIRE(l.getState() == Label::State::sleep);
+    REQUIRE(l.getState() == Label::State::dead);
     REQUIRE(!l.canOcclude());
 }
 
