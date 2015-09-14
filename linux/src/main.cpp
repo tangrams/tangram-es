@@ -114,9 +114,9 @@ void key_callback(GLFWwindow* window, int key, int scancode, int action, int mod
                 auto& items = Tangram::pickFeaturesAt(last_x_down, last_y_down);
                 logMsg("Touch Features %d\n", items.size());
                 for (auto& it : items) {
-                    logMsg("\t %d - %f \t %s - %s\n",
+                    logMsg("\t %d - %f \t %d - %s\n",
                            it.isLabel, it.distance,
-                           it.style.c_str(), it.id.c_str());
+                           it.source, it.id.c_str());
                 }
 
                 break;

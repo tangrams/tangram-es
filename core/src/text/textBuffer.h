@@ -24,6 +24,7 @@ enum class TextTransform {
 struct Parameters {
     std::string text = "";
     std::string featureId = "";
+    int32_t sourceId;
 
     std::string fontKey = "";
     uint32_t fill = 0xff000000;

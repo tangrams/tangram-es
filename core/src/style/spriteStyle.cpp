@@ -101,6 +101,7 @@ void SpriteStyle::buildPoint(const Point& _point, const DrawRule& _rule, const P
     options.offset = p.offset;
     options.priority = p.priority;
     options.id = p.featureId;
+    options.sourceId = _props.sourceId;
 
     std::unique_ptr<SpriteLabel> label(new SpriteLabel(t, p.size, mesh, _mesh.numVertices(), options));
 

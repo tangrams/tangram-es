@@ -238,7 +238,7 @@ void PbfParser::extractLayer(ParserContext& _ctx, protobuf::message& _layerIn, L
 
     _out.features.reserve(_ctx.featureMsgs.size());
     for(auto& featureMsg : _ctx.featureMsgs) {
-        _out.features.emplace_back();
+        _out.features.emplace_back(_ctx.sourceId);
         extractFeature(_ctx, featureMsg, _out.features.back());
     }
 }

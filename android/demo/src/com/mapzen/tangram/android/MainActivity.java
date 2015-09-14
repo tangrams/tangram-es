@@ -61,9 +61,9 @@ public class MainActivity extends Activity {
 
         mapController.setFeatureTouchListener(new MapController.FeatureTouchListener() {
             @Override
-            public void onTouch(String style, String feature) {
-                Toast.makeText(getApplicationContext(), 
-                               "Selected: " + style + "/" + feature, 
+            public void onTouch(int dataSource, String feature) {
+                Toast.makeText(getApplicationContext(),
+                               "Selected: " + dataSource + "/" + feature,
                                Toast.LENGTH_SHORT).show();
             }
         });

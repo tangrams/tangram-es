@@ -106,7 +106,7 @@ bool getDebugFlag(DebugFlags _flag);
 void toggleDebugFlag(DebugFlags _flag);
 
 struct TouchItem {
-    std::string style;
+    int32_t source;
     std::string id;
     float distance;
     bool isLabel;

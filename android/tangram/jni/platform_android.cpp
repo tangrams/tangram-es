@@ -44,7 +44,7 @@ void setupJniEnv(JNIEnv* _jniEnv, jobject _tangramInstance, jobject _assetManage
     getFontFilePath = jniEnv->GetMethodID(tangramClass, "getFontFilePath", "(Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;)Ljava/lang/String;");
 	requestRenderMethodID = _jniEnv->GetMethodID(tangramClass, "requestRender", "()V");
     setRenderModeMethodID = _jniEnv->GetMethodID(tangramClass, "setRenderMode", "(I)V");
-    featureSelectionCbMID = _jniEnv->GetMethodID(tangramClass, "featureSelectionCb", "(Ljava/lang/String;Ljava/lang/String;)V");
+    featureSelectionCbMID = _jniEnv->GetMethodID(tangramClass, "featureSelectionCb", "(ILjava/lang/String;)V");
 
     assetManager = AAssetManager_fromJava(jniEnv, _assetManager);
 
@@ -254,13 +254,13 @@ void featureSelectionCallback(const std::vector<Tangram::TouchItem>& items) {
         jvm->AttachCurrentThread(&jniEnv, NULL);
     }
     
-    logMsg("Touch Features %d\n", items.size());
-    logMsg(" - %s\n", items[0].style.c_str());
-    logMsg(" - %s\n", items[0].id.c_str());
+    // logMsg("Touch Features %d\n", items.size());
+    // logMsg(" - %s\n", items[0].style.c_str());
+    // logMsg(" - %s\n", items[0].id.c_str());
 
-    jstring jSource = jniEnv->NewStringUTF(items[0].style.c_str());
+    //jstring jSource = jniEnv->NewStringUTF(items[0].style.c_str());
     jstring jFeature = jniEnv->NewStringUTF(items[0].id.c_str());
-    jniEnv->CallVoidMethod(tangramInstance, featureSelectionCbMID, jSource, jFeature);
+    jniEnv->CallVoidMethod(tangramInstance, featureSelectionCbMID, items[0].source, jFeature);
 
     if(status == JNI_EDETACHED) {
         jvm->DetachCurrentThread();

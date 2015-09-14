@@ -62,6 +62,7 @@ public:
         glm::vec2 offset;
         uint32_t priority = std::numeric_limits<uint32_t>::max();
         std::string id;
+        int32_t sourceId;
     };
 
     Label(Transform _transform, glm::vec2 _size, Type _type, LabelMesh& _mesh, Range _vertexRange, Options _options);

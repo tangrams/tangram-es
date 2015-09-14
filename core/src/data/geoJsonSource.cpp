@@ -39,7 +39,7 @@ std::shared_ptr<TileData> GeoJsonSource::parse(const Tile& _tile, std::vector<ch
     // transform JSON data into a TileData using GeoJson functions
     for (auto layer = doc.MemberBegin(); layer != doc.MemberEnd(); ++layer) {
         tileData->layers.emplace_back(std::string(layer->name.GetString()));
-        GeoJson::extractLayer(layer->value, tileData->layers.back(), _tile);
+        GeoJson::extractLayer(m_id, layer->value, tileData->layers.back(), _tile);
     }
 
 

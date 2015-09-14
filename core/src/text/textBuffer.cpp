@@ -21,6 +21,7 @@ Label::Options optionsFromTextParams(const Parameters& _params) {
     options.priority = _params.priority;
     options.offset = _params.offset;
     options.id = _params.featureId;
+    options.sourceId = _params.sourceId;
 
     return options;
 }

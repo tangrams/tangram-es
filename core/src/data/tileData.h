@@ -133,11 +133,15 @@ struct Properties {
 
     const auto& items() const { return props; }
 
+    int32_t sourceId;
+
 private:
     std::vector<Item> props;
 };
 
 struct Feature {
+    Feature() {}
+    Feature(int32_t _sourceId) { props.sourceId = _sourceId; }
 
     GeometryType geometryType = GeometryType::polygons;
 
@@ -146,7 +150,6 @@ struct Feature {
     std::vector<Polygon> polygons;
 
     Properties props;
-
 };
 
 struct Layer {

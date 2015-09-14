@@ -167,7 +167,9 @@ const std::vector<TouchItem>& Labels::getFeaturesAtPoint(const View& _view, floa
                 // }
                 bool isLabel = label->visibleState() ?  isect2d::intersect(label->getOBB(), obb) : false;
 
-                m_touchItems.push_back({style->getName(), label->getOptions().id, distance, isLabel});
+                auto& options = label->getOptions();
+
+                m_touchItems.push_back({options.sourceId, options.id, distance, isLabel});
             }
         }
     }

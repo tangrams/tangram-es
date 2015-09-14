@@ -51,6 +51,7 @@ Parameters TextStyle::applyRule(const DrawRule& _rule, const Properties& _props)
     const static std::string key_id("id");
 
     Parameters p;
+    p.sourceId = _props.sourceId;
 
     std::string fontFamily, fontWeight, fontStyle, transform;
     glm::vec2 offset;

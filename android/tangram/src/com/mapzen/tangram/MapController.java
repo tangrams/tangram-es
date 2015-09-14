@@ -36,7 +36,7 @@ import okio.BufferedSource;
 public class MapController implements Renderer, OnTouchListener, OnScaleGestureListener, OnRotateGestureListener, OnGestureListener, OnDoubleTapListener, OnShoveGestureListener {
 
     public interface FeatureTouchListener {
-        void onTouch(String style, String feature);
+        void onTouch(int dataSource, String feature);
     }
 
     static {
@@ -586,9 +586,9 @@ public class MapController implements Renderer, OnTouchListener, OnScaleGestureL
 
     }
 
-    public void featureSelectionCb(String style, String featureId) {
+    public void featureSelectionCb(int dataSource, String featureId) {
         if (featureTouchListener != null) {
-            featureTouchListener.onTouch(style, featureId);
+            featureTouchListener.onTouch(dataSource, featureId);
         }
     }
 
