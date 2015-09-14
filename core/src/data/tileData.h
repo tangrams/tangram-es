@@ -94,19 +94,24 @@ struct Properties {
         return !get(key).is<none_type>();
     }
 
-    bool getNumeric(const std::string& key, float& value) const {
+    bool getNumeric(const std::string& key, double& value) const {
         auto& it = get(key);
         if (it.is<float>()) {
             value = it.get<float>();
+            return true;
+        } else if (it.is<int64_t>()) {
+            value = it.get<int64_t>();
             return true;
         }
         return false;
     }
 
-    float getNumeric(const std::string& key) const {
+    double getNumeric(const std::string& key) const {
         auto& it = get(key);
         if (it.is<float>()) {
             return it.get<float>();
+        } else if (it.is<int64_t>()) {
+            return it.get<int64_t>();
         }
         return 0;
     }
@@ -120,6 +125,8 @@ struct Properties {
     }
 
     const std::string& getString(const std::string& key) const;
+
+    std::string getAsString(const std::string& key) const;
 
     template <typename... Args> void add(std::string key, Args&&... args) {
         props.emplace_back(std::move(key), Value{std::forward<Args>(args)...});

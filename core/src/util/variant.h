@@ -21,7 +21,7 @@ using variant = mapbox::util::variant<Types...>;
 
 
 /* Common Value type for Feature Properties and Filter Values */
-using Value = variant<none_type, std::string, float>;
+using Value = variant<none_type, float, int64_t, std::string>;
 
 /* Style Block Uniform types */
 using UniformValue = variant<none_type, bool, std::string, float, glm::vec2, glm::vec3, glm::vec4>;

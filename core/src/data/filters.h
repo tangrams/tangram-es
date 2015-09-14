@@ -134,12 +134,24 @@ namespace Tangram {
 
                     if (!global.is<none_type>()) {
                          // only check range for numbers
-                        if (!global.is<float>()) { return false; }
-                        return global.get<float>() >= f.min && global.get<float>() < f.max;
+                        if (global.is<int64_t>()) {
+                            auto num = global.get<int64_t>();
+                            return num >= f.min && num < f.max;
+                        }
+                        if (global.is<float>()) {
+                            auto num = global.get<float>();
+                            return num >= f.min && num < f.max;
+                        }
+                        return false;
                     }
                     auto& value = feat.props.get(f.key);
+
+                    if (value.is<int64_t>()) {
+                        auto num = value.get<int64_t>();
+                        return num >= f.min && num < f.max;
+                    }
                     if (value.is<float>()) {
-                        float num =  value.get<float>();
+                        auto num = value.get<float>();
                         return num >= f.min && num < f.max;
                     }
                     return false;

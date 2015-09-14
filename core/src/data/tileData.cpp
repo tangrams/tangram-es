@@ -51,6 +51,19 @@ const std::string& Properties::getString(const std::string& key) const {
     return EMPTY_STRING;
 }
 
+std::string Properties::getAsString(const std::string& key) const {
+
+    auto& it = get(key);
+    if (it.is<std::string>()) {
+        return it.get<std::string>();
+    } else if (it.is<int64_t>()) {
+        return std::to_string(it.get<int64_t>());
+    } else if (it.is<float>()) {
+        return std::to_string(it.get<float>());
+    }
+    return "";
+}
+
 void Properties::sort() {
     std::sort(props.begin(), props.end());
 }
