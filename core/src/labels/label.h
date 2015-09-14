@@ -61,13 +61,14 @@ public:
         uint32_t color = 0xffffffff;
         glm::vec2 offset;
         uint32_t priority = std::numeric_limits<uint32_t>::max();
+        std::string id;
     };
 
     Label(Transform _transform, glm::vec2 _size, Type _type, LabelMesh& _mesh, Range _vertexRange, Options _options);
 
     virtual ~Label();
 
-    Transform getTransform() const { return m_transform; }
+    const Transform& getTransform() const { return m_transform; }
 
     /* Update the transform of the label in world space, and project it to screen space */
     void updateTransform(const Transform& _transform, const glm::mat4& _mvp, const glm::vec2& _screenSize);

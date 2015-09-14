@@ -40,7 +40,9 @@ void SpriteStyle::constructShaderProgram() {
 }
 
 
-SpriteStyle::Parameters SpriteStyle::parseRule(const DrawRule& _rule) const {
+SpriteStyle::Parameters SpriteStyle::applyRule(const DrawRule& _rule, const Properties& _props) const {
+    const static std::string key_id("id");
+
     Parameters p;
     glm::vec2 size;
 
@@ -60,6 +62,15 @@ SpriteStyle::Parameters SpriteStyle::parseRule(const DrawRule& _rule) const {
 
     p.size *= m_pixelScale;
 
+    _rule.get(StyleParamKey::feature_id, p.featureId);
+    if (!_rule.isJSFunction(StyleParamKey::feature_id)) {
+        if (p.featureId.empty()) {
+            p.featureId = _props.getAsString(key_id);
+        } else {
+            p.featureId = _props.getAsString(p.featureId);
+        }
+    }
+
     return p;
 }
 
@@ -68,10 +79,11 @@ void SpriteStyle::buildPoint(const Point& _point, const DrawRule& _rule, const P
         return;
     }
 
-    Parameters p = parseRule(_rule);
+    Parameters p = applyRule(_rule, _props);
     SpriteNode spriteNode;
 
-    if (!m_spriteAtlas->getSpriteNode(p.sprite, spriteNode) && !m_spriteAtlas->getSpriteNode(p.spriteDefault, spriteNode)) {
+    if (!m_spriteAtlas->getSpriteNode(p.sprite, spriteNode) &&
+        !m_spriteAtlas->getSpriteNode(p.spriteDefault, spriteNode)) {
         return;
     }
 
@@ -88,6 +100,7 @@ void SpriteStyle::buildPoint(const Point& _point, const DrawRule& _rule, const P
     Label::Options options;
     options.offset = p.offset;
     options.priority = p.priority;
+    options.id = p.featureId;
 
     std::unique_ptr<SpriteLabel> label(new SpriteLabel(t, p.size, mesh, _mesh.numVertices(), options));
 

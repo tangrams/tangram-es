@@ -15,6 +15,7 @@ enum class StyleParamKey : uint8_t {
     cap,
     color,
     extrude,
+    feature_id,
     font_family,
     font_fill,
     font_size,
