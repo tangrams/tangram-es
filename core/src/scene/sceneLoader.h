@@ -23,7 +23,7 @@ struct DrawRule;
 struct MaterialTexture;
 struct Filter;
 
-using MIXES = std::vector<std::string>;
+using MIXES = std::vector<YAML::Node>;
 
 class SceneLoader {
 
@@ -33,7 +33,6 @@ class SceneLoader {
     void loadCameras(YAML::Node cameras, View& view);
     void loadLayers(YAML::Node layers, Scene& scene, TileManager& tileManager);
     void loadStyles(YAML::Node styles, Scene& scene);
-    Style* loadStyle(YAML::Node& styles, const MIXES& mixes, Scene& scene);
     void loadStyleProps(Style* style, YAML::Node styleNode, Scene& scene);
     void loadTextures(YAML::Node textures, Scene& scene);
     void loadMaterial(YAML::Node matNode, Material& material, Scene& scene);
@@ -45,12 +44,16 @@ class SceneLoader {
     Filter generatePredicate(YAML::Node filter, std::string _key);
 
     // Style Mixing helper methods
-    YAML::Node propORing(const std::string& propStr, YAML::Node& styles, const MIXES& mixes);
-    YAML::Node propOverwrite(const std::string& propStr, const std::string& subPropStr, YAML::Node& styles,
-            const MIXES& mixes);
-    YAML::Node propMerge(const std::string& propStr, const std::string& subPropStr, YAML::Node& styles,
-            const MIXES& mixes);
-    YAML::Node mergeShaderBlocks(YAML::Node& styles, const MIXES& mixes);
+    YAML::Node mixStyle(const MIXES& mixes);
+    
+    // Generic methods to merge properties
+    YAML::Node propMerge(const std::string& propStr, const MIXES& mixes);
+    
+    // Methods to merge shader blocks
+    YAML::Node shaderBlockMerge(const MIXES& mixes);
+    
+    // Methods to merge shader extensions
+    YAML::Node shaderExtMerge(const MIXES& mixes);
 
 public:
 
