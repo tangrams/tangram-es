@@ -21,7 +21,8 @@ namespace Tangram {
         existence,
         equality,
         range,
-        function
+        function,
+        undefined
     };
 
     struct Filter {
@@ -48,27 +49,32 @@ namespace Tangram {
         FilterType type;
         variant<none_type, Operator, Equality, Range, Existence, Function> data;
 
-        Filter() : data(none_type{}) {}
+        Filter() : type(FilterType::undefined), data(none_type{}) {}
 
         // Create an 'any', 'all', or 'none' filter
         Filter(Operators op, const std::vector<Filter>& filters) :
-            type(static_cast<FilterType>(op)), data(Operator{ filters }) {}
+            type(static_cast<FilterType>(op)),
+            data(Operator{ filters }) {}
 
         // Create an 'equality' filter
         Filter(const std::string& k, const std::vector<Value>& vals) :
-            type(FilterType::equality), data(Equality{ k, vals }) {}
+            type(FilterType::equality),
+            data(Equality{ k, vals }) {}
 
         // Create a 'range' filter
         Filter(const std::string& k, float min, float max) :
-            type(FilterType::range), data(Range{ k, min, max }) {}
+            type(FilterType::range),
+            data(Range{ k, min, max }) {}
 
         // Create an 'existence' filter
         Filter(const std::string& k, bool ex) :
-            type(FilterType::existence), data(Existence{ k, ex }) {}
+            type(FilterType::existence),
+            data(Existence{ k, ex }) {}
 
         // Create an 'function' filter with reference to Scene function id
         Filter(uint32_t id) :
-            type(FilterType::function), data(Function{ id }) {}
+            type(FilterType::function),
+            data(Function{ id }) {}
 
         bool eval(const Feature& feat, const StyleContext& ctx) const {
 
@@ -132,14 +138,13 @@ namespace Tangram {
                         float num =  value.get<float>();
                         return num >= f.min && num < f.max;
                     }
-
                     return false;
                 }
                 case FilterType::function: {
                     auto& f = data.get<Function>();
                     return ctx.evalFilter(f.id);
                 }
-                default:
+                case FilterType::undefined:
                     return true;
             }
         }
