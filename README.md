@@ -29,7 +29,7 @@ Currently we are targeting five platforms: OS X, Ubuntu Linux, iOS, Android, and
 
 ## platforms ##
 
-### OS X ###
+### OS X (command line) ###
 To build a runnable OS X application bundle, run:
 
 ```bash
@@ -41,8 +41,8 @@ And open the application with:
 open build/osx/bin/tangram.app
 ```
 
-### OSX XCode Simulator ###
-For running on the OSX simulator, generate and compile an Xcode project:
+### OS X (Xcode) ###
+For running on OS X from Xcode, generate and compile an Xcode project:
 
 ```bash
 make xcode
