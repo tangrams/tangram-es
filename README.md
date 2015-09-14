@@ -41,6 +41,21 @@ And open the application with:
 open build/osx/bin/tangram.app
 ```
 
+### OSX XCode Simulator ###
+For running on the OSX simulator, generate and compile an Xcode project:
+
+```bash
+make xcode
+```
+
+Then just open the Xcode project and run/debug from there: 
+
+```bash
+open build/xcode/tangram.xcodeproj
+```
+
+Note that any Xcode configuration change you make to the project won't be preserved when CMake runs again. Build configuration is defined only in the CMakeLists file(s).
+
 ### Ubuntu Linux ###
 To build on Ubuntu you will need to install a libcurl development package:
 
