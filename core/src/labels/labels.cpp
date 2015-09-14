@@ -4,7 +4,6 @@
 #include "gl/primitives.h"
 #include "view/view.h"
 #include "style/style.h"
-
 #include "glm/gtc/matrix_transform.hpp"
 
 namespace Tangram {
@@ -106,6 +105,87 @@ void Labels::update(const View& _view, float _dt, const std::vector<std::unique_
     }
 }
 
+const std::vector<TouchItem>& Labels::getFeaturesAtPoint(const View& _view, float _dt,
+                                                         const std::vector<std::unique_ptr<Style>>& _styles,
+                                                         const std::vector<std::shared_ptr<Tile>>& _tiles,
+                                                         float _x, float _y) {
+
+    m_touchItems.clear();
+
+    // float zoom = _view.getZoom();
+    // int lodDiscard = LODDiscardFunc(View::s_maxZoom, zoom);
+    // logMsg("loddiscard %f %d\n", zoom, lodDiscard);
+
+    glm::vec2 screenSize = glm::vec2(_view.getWidth(), _view.getHeight());
+    glm::vec2 touchPoint(_x, _y);
+
+    isect2d::OBB obb(_x, _y, 0, 20, 20);
+    // isect2d::AABB aabb(obb.getExtent());
+    m_touchPoint = obb;
+
+    for (const auto& tile : _tiles) {
+
+        // discard based on level of detail
+        // if ((zoom - tile->getID().z) > lodDiscard) {
+        //     logMsg("discard %d %d %d\n", tile->getID().z, tile->getID().x, tile->getID().y);
+        //     continue;
+        // }
+
+        glm::mat4 mvp = _view.getViewProjectionMatrix() * tile->getModelMatrix();
+
+        for (const auto& style : _styles) {
+            const auto& mesh = tile->getMesh(*style);
+            if (!mesh) { continue; }
+
+            const LabelMesh* labelMesh = dynamic_cast<const LabelMesh*>(mesh.get());
+            if (!labelMesh) { continue; }
+
+            for (auto& label : labelMesh->getLabels()) {
+
+                auto& transform = label->getTransform();
+                glm::vec4 v1 = worldToClipSpace(mvp, glm::vec4(transform.modelPosition1, 0.0, 1.0));
+                glm::vec4 v2 = worldToClipSpace(mvp, glm::vec4(transform.modelPosition2, 0.0, 1.0));
+
+                // check whether the label is behind the camera using the perspective division factor
+                if (v1.w <= 0 || v2.w <= 0) { continue; }
+
+                // project to screen space
+                glm::vec2 p1 = clipToScreenSpace(v1, screenSize);
+                glm::vec2 p2 = clipToScreenSpace(v2, screenSize);
+
+                float distance = sqrt(sqSegmentDistance(touchPoint, p1, p2));
+
+                // FIXME dpi dependent threshold
+                if (distance > 100) { continue; }
+
+                // auto textLabel = dynamic_cast<const TextLabel*>(label.get());
+                // std::string text;
+                // if (textLabel) {
+                //     text = textLabel->getText();
+                // } else {
+                //     text = label->getOptions().id;
+                // }
+                bool isLabel = label->visibleState() ?  isect2d::intersect(label->getOBB(), obb) : false;
+
+                m_touchItems.push_back({style->getName(), label->getOptions().id, distance, isLabel});
+            }
+        }
+    }
+
+    if (!m_touchItems.empty()) {
+        std::sort(std::begin(m_touchItems), std::end(m_touchItems),
+                  [](const auto& a, const auto& b){
+                      return a.isLabel == b.isLabel
+                          ? a.distance < b.distance
+                          : a.isLabel;
+                  });
+
+    }
+    return m_touchItems;
+}
+
+
+
 void Labels::drawDebug(const View& _view) {
 
     if (!Tangram::getDebugFlag(Tangram::DebugFlags::labels)) {
@@ -130,6 +210,9 @@ void Labels::drawDebug(const View& _view) {
             Primitives::drawRect(sp - glm::vec2(1.f), sp + glm::vec2(1.f));
         }
     }
+
+    Primitives::setColor(0xff00ff);
+    Primitives::drawPoly(reinterpret_cast<const glm::vec2*>(m_touchPoint.getQuad()), 4);
 
     glm::vec2 split(4, 4);
     glm::vec2 res(_view.getWidth(), _view.getHeight());

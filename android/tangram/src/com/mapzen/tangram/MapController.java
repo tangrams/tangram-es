@@ -35,6 +35,10 @@ import okio.BufferedSource;
 
 public class MapController implements Renderer, OnTouchListener, OnScaleGestureListener, OnRotateGestureListener, OnGestureListener, OnDoubleTapListener, OnShoveGestureListener {
 
+    public interface FeatureTouchListener {
+        void onTouch(String style, String feature);
+    }
+
     static {
         System.loadLibrary("c++_shared");
         System.loadLibrary("tangram");
@@ -237,6 +241,14 @@ public class MapController implements Renderer, OnTouchListener, OnScaleGestureL
         tapGestureListener = listener;
     }
 
+    /**
+     * Set a listener for Feature touch events
+     * @param listener Listen to call
+     */
+    public void setFeatureTouchListener(FeatureTouchListener listener) {
+        featureTouchListener = listener;
+    }
+
     // Native methods
     // ==============
 
@@ -263,6 +275,7 @@ public class MapController implements Renderer, OnTouchListener, OnScaleGestureL
     private synchronized native void handleShoveGesture(float distance);
     private synchronized native void onUrlSuccess(byte[] rawDataBytes, long callbackPtr);
     private synchronized native void onUrlFailure(long callbackPtr);
+    public synchronized native void pickFeature(float posX, float posY);
 
     // Private members
     // ===============
@@ -302,6 +315,8 @@ public class MapController implements Renderer, OnTouchListener, OnScaleGestureL
 
     private OkHttpClient okClient;
     private Request.Builder okRequestBuilder;
+
+    private FeatureTouchListener featureTouchListener;
 
     // View.OnTouchListener methods
     // ============================
@@ -569,6 +584,12 @@ public class MapController implements Renderer, OnTouchListener, OnScaleGestureL
 
         return fontFileParser.getFontFile(family + "_" + weight + "_" + style);
 
+    }
+
+    public void featureSelectionCb(String style, String featureId) {
+        if (featureTouchListener != null) {
+            featureTouchListener.onTouch(style, featureId);
+        }
     }
 
 }

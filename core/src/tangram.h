@@ -1,6 +1,8 @@
 #pragma once
 
 #include "debug.h"
+#include <vector>
+#include <string>
 
 /* Tangram API
  *
@@ -102,6 +104,15 @@ bool getDebugFlag(DebugFlags _flag);
 
 // Toggle the boolean state of a debug feature (see debug.h)
 void toggleDebugFlag(DebugFlags _flag);
+
+struct TouchItem {
+    std::string style;
+    std::string id;
+    float distance;
+    bool isLabel;
+};
+
+const std::vector<TouchItem>& pickFeaturesAt(float _x, float _y);
 
 }
 

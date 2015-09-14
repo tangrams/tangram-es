@@ -16,7 +16,7 @@ class FontContext;
 class Tile;
 class View;
 class Style;
-
+struct TouchItem;
 
 /*
  * Singleton class containing all labels
@@ -34,6 +34,11 @@ public:
     void update(const View& _view, float _dt, const std::vector<std::unique_ptr<Style>>& _styles,
                 const std::vector<std::shared_ptr<Tile>>& _tiles);
 
+    const std::vector<TouchItem>& getFeaturesAtPoint(const View& _view, float _dt,
+                                                     const std::vector<std::unique_ptr<Style>>& _styles,
+                                                     const std::vector<std::shared_ptr<Tile>>& _tiles,
+                                                     float _x, float _y);
+
     bool needUpdate() { return m_needUpdate; }
 
 private:
@@ -45,6 +50,10 @@ private:
     // temporary data used in update()
     std::vector<Label*> m_labels;
     std::vector<isect2d::AABB> m_aabbs;
+    std::vector<TouchItem> m_touchItems;
+
+    isect2d::OBB m_touchPoint{0,0,0,0,0};
+
 };
 
 }
