@@ -433,7 +433,7 @@ void SceneLoader::loadStyleProps(Style* style, YAML::Node styleNode, Scene& scen
 
 }
 
-Node SceneLoader::propMerge(const std::string& propStr, const MIXES& mixes) {
+Node SceneLoader::propMerge(const std::string& propStr, const Mixes& mixes) {
 
     Node node;
 
@@ -442,7 +442,7 @@ Node SceneLoader::propMerge(const std::string& propStr, const MIXES& mixes) {
     }
 
     std::vector<std::string> mapTags;
-    std::unordered_map<std::string, MIXES> mapMixes;
+    std::unordered_map<std::string, Mixes> mapMixes;
 
     for (const auto& mixNode: mixes) {
         if (Node propNode = mixNode[propStr]) {
@@ -475,7 +475,7 @@ Node SceneLoader::propMerge(const std::string& propStr, const MIXES& mixes) {
     return node;
 }
 
-Node SceneLoader::shaderBlockMerge(const MIXES& mixes) {
+Node SceneLoader::shaderBlockMerge(const Mixes& mixes) {
 
     Node node;
     for (const auto& mixNode : mixes) {
@@ -496,7 +496,7 @@ Node SceneLoader::shaderBlockMerge(const MIXES& mixes) {
     return node;
 }
 
-Node SceneLoader::shaderExtMerge(const MIXES& mixes) {
+Node SceneLoader::shaderExtMerge(const Mixes& mixes) {
 
     Node node;
     std::unordered_set<std::string> uniqueList;
@@ -529,7 +529,7 @@ Node SceneLoader::shaderExtMerge(const MIXES& mixes) {
     return node;
 }
 
-Node SceneLoader::mixStyle(const MIXES& mixes) {
+Node SceneLoader::mixStyle(const Mixes& mixes) {
 
     Node styleNode;
 
@@ -581,7 +581,7 @@ void SceneLoader::loadStyles(Node styles, Scene& scene) {
             continue;
         }
 
-        MIXES mixes;
+        Mixes mixes;
         if (Node mixNode = styleNode["mix"]) {
             if (mixNode.IsScalar()) {
                 mixes.reserve(2);

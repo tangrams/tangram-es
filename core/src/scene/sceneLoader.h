@@ -23,7 +23,7 @@ struct DrawRule;
 struct MaterialTexture;
 struct Filter;
 
-using MIXES = std::vector<YAML::Node>;
+using Mixes = std::vector<YAML::Node>;
 
 class SceneLoader {
 
@@ -44,16 +44,16 @@ class SceneLoader {
     Filter generatePredicate(YAML::Node filter, std::string _key);
 
     // Style Mixing helper methods
-    YAML::Node mixStyle(const MIXES& mixes);
-    
+    YAML::Node mixStyle(const Mixes& mixes);
+
     // Generic methods to merge properties
-    YAML::Node propMerge(const std::string& propStr, const MIXES& mixes);
-    
+    YAML::Node propMerge(const std::string& propStr, const Mixes& mixes);
+
     // Methods to merge shader blocks
-    YAML::Node shaderBlockMerge(const MIXES& mixes);
-    
+    YAML::Node shaderBlockMerge(const Mixes& mixes);
+
     // Methods to merge shader extensions
-    YAML::Node shaderExtMerge(const MIXES& mixes);
+    YAML::Node shaderExtMerge(const Mixes& mixes);
 
 public:
 
