@@ -246,26 +246,9 @@ void setCurrentThreadPriority(int priority) {
     setpriority(PRIO_PROCESS, tid, priority);
 }
 
-void featureSelectionCallback(const std::vector<Tangram::TouchItem>& items) {
-
-    JNIEnv *jniEnv;
-    int status = jvm->GetEnv((void**)&jniEnv, JNI_VERSION_1_6);
-    if(status == JNI_EDETACHED) {
-        jvm->AttachCurrentThread(&jniEnv, NULL);
-    }
-    
-    // logMsg("Touch Features %d\n", items.size());
-    // logMsg(" - %s\n", items[0].style.c_str());
-    // logMsg(" - %s\n", items[0].id.c_str());
-
-    //jstring jSource = jniEnv->NewStringUTF(items[0].style.c_str());
+void featureSelectionCallback(JNIEnv* jniEnv, const std::vector<Tangram::TouchItem>& items) {
     jstring jFeature = jniEnv->NewStringUTF(items[0].id.c_str());
     jniEnv->CallVoidMethod(tangramInstance, featureSelectionCbMID, items[0].source, jFeature);
-
-    if(status == JNI_EDETACHED) {
-        jvm->DetachCurrentThread();
-    }
-
 }
 
 
