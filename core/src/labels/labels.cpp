@@ -74,8 +74,8 @@ void Labels::update(const View& _view, float _dt, const std::vector<std::unique_
         const auto& aabb1 = m_aabbs[pair.first];
         const auto& aabb2 = m_aabbs[pair.second];
 
-        auto l1 = (Label*)aabb1.m_userData;
-        auto l2 = (Label*)aabb2.m_userData;
+        auto l1 = static_cast<Label*>(aabb1.m_userData);
+        auto l2 = static_cast<Label*>(aabb2.m_userData);
 
         // narrow phase
         if (intersect(l1->getOBB(), l2->getOBB())) { occlusions.insert({l1, l2}); }
@@ -109,27 +109,19 @@ const std::vector<TouchItem>& Labels::getFeaturesAtPoint(const View& _view, floa
                                                          const std::vector<std::unique_ptr<Style>>& _styles,
                                                          const std::vector<std::shared_ptr<Tile>>& _tiles,
                                                          float _x, float _y) {
+    // FIXME dpi dependent threshold
+    const float thumbSize = 20;
+    const float threshold = 100;
 
     m_touchItems.clear();
-
-    // float zoom = _view.getZoom();
-    // int lodDiscard = LODDiscardFunc(View::s_maxZoom, zoom);
-    // logMsg("loddiscard %f %d\n", zoom, lodDiscard);
 
     glm::vec2 screenSize = glm::vec2(_view.getWidth(), _view.getHeight());
     glm::vec2 touchPoint(_x, _y);
 
-    isect2d::OBB obb(_x, _y, 0, 20, 20);
-    // isect2d::AABB aabb(obb.getExtent());
+    isect2d::OBB obb(_x - thumbSize/2, _y - thumbSize/2, 0, thumbSize, thumbSize);
     m_touchPoint = obb;
 
     for (const auto& tile : _tiles) {
-
-        // discard based on level of detail
-        // if ((zoom - tile->getID().z) > lodDiscard) {
-        //     logMsg("discard %d %d %d\n", tile->getID().z, tile->getID().x, tile->getID().y);
-        //     continue;
-        // }
 
         glm::mat4 mvp = _view.getViewProjectionMatrix() * tile->getModelMatrix();
 
@@ -155,18 +147,9 @@ const std::vector<TouchItem>& Labels::getFeaturesAtPoint(const View& _view, floa
 
                 float distance = sqrt(sqSegmentDistance(touchPoint, p1, p2));
 
-                // FIXME dpi dependent threshold
-                if (distance > 100) { continue; }
+                if (distance > threshold) { continue; }
 
-                // auto textLabel = dynamic_cast<const TextLabel*>(label.get());
-                // std::string text;
-                // if (textLabel) {
-                //     text = textLabel->getText();
-                // } else {
-                //     text = label->getOptions().id;
-                // }
-                bool isLabel = label->visibleState() ?  isect2d::intersect(label->getOBB(), obb) : false;
-
+                bool isLabel = label->visibleState() ? isect2d::intersect(label->getOBB(), obb) : false;
                 auto& options = label->getOptions();
 
                 m_touchItems.push_back({options.sourceId, options.id, distance, isLabel});
