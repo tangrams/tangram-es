@@ -370,7 +370,7 @@ void SceneLoader::loadStyleProps(Style* style, YAML::Node styleNode, Scene& scen
         }
     }
 
-	if (Node blendNode = styleNode["blend"]) {
+    if (Node blendNode = styleNode["blend"]) {
 
         std::string str = blendNode.as<std::string>();
 
@@ -413,20 +413,20 @@ void SceneLoader::loadStyleProps(Style* style, YAML::Node styleNode, Scene& scen
         else { logMsg("WARNING: unrecognized lighting type \"%s\"\n", lighting.c_str()); }
     }
 
-	Node textureNode = styleNode["texture"];
+    Node textureNode = styleNode["texture"];
     if (textureNode) {
-    	auto spriteStyle = dynamic_cast<SpriteStyle*>(style);
+        auto spriteStyle = dynamic_cast<SpriteStyle*>(style);
         if (spriteStyle) {
-        	std::string textureName = textureNode.as<std::string>();
+            std::string textureName = textureNode.as<std::string>();
             auto atlases = scene.spriteAtlases();
             auto it = atlases.find(textureName);
             if (it != atlases.end()) {
-            	spriteStyle->setSpriteAtlas(it->second);
+                spriteStyle->setSpriteAtlas(it->second);
             } else {
-            	logMsg("WARNING: undefined texture name %s", textureName.c_str());
+                logMsg("WARNING: undefined texture name %s", textureName.c_str());
             }
         }
-	}
+    }
 
     Node urlNode = styleNode["url"];
     if (urlNode) { logMsg("WARNING: loading style from URL not yet implemented\n"); } // TODO
