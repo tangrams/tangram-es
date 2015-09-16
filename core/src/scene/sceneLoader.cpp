@@ -451,10 +451,9 @@ Node SceneLoader::propMerge(const std::string& propStr, const Mixes& mixes) {
                 break;
             } else if (propNode.IsScalar() || propNode.IsSequence()) {              // Overwrite Properties
                 node = propNode;
-                // this overwrites the previous map value
-                mapMixes.clear();
-                mapTags.clear();
             } else { // Map...
+                // Reset previous scalar/sequence node
+                node = Node::Node();
                 for (const auto& tag : propNode) {
                     auto tagName = tag.first.as<std::string>();
                     if (mapMixes.find(tagName) == mapMixes.end()) {                 // Deep Merge for all Map Props
@@ -464,6 +463,11 @@ Node SceneLoader::propMerge(const std::string& propStr, const Mixes& mixes) {
                 }
             }
         }
+    }
+
+    if (node.IsScalar() || node.IsSequence()) {
+        mapMixes.clear();
+        mapTags.clear();
     }
 
     // Recursively merge map nodes from this propStr node
@@ -533,7 +537,7 @@ Node SceneLoader::mixStyle(const Mixes& mixes) {
 
     Node styleNode;
 
-    for (auto property : {"animated", "texcoords", "base", "lighting", "texture", "blend", "material", "shaders"}) {
+    for (auto& property : {"animated", "texcoords", "base", "lighting", "texture", "blend", "material", "shaders"}) {
         Node node = propMerge(property, mixes);
         if (!node.IsNull()) { styleNode[property] = node; }
     }
@@ -573,7 +577,7 @@ void SceneLoader::loadStyles(Node styles, Scene& scene) {
         Node styleNode = styleIt.second;
 
         bool validName = true;
-        for (auto builtIn : { "polygons", "lines", "points", "text", "debug", "debugtext" }) {
+        for (auto& builtIn : { "polygons", "lines", "points", "text", "debug", "debugtext" }) {
             if (styleName == builtIn) { validName = false; }
         }
         if (!validName) {

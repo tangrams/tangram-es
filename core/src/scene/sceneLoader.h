@@ -46,15 +46,6 @@ class SceneLoader {
     // Style Mixing helper methods
     YAML::Node mixStyle(const Mixes& mixes);
 
-    // Generic methods to merge properties
-    YAML::Node propMerge(const std::string& propStr, const Mixes& mixes);
-
-    // Methods to merge shader blocks
-    YAML::Node shaderBlockMerge(const Mixes& mixes);
-
-    // Methods to merge shader extensions
-    YAML::Node shaderExtMerge(const Mixes& mixes);
-
 public:
 
     SceneLoader() {};
@@ -65,6 +56,15 @@ public:
 
     // public for testing
     std::vector<StyleParam> parseStyleParams(YAML::Node params, Scene& scene, const std::string& propPrefix = "");
+
+    // Generic methods to merge properties
+    YAML::Node propMerge(const std::string& propStr, const Mixes& mixes);
+
+    // Methods to merge shader blocks
+    YAML::Node shaderBlockMerge(const Mixes& mixes);
+
+    // Methods to merge shader extensions
+    YAML::Node shaderExtMerge(const Mixes& mixes);
     Tangram::Filter generateFilter(YAML::Node filter, Scene& scene);
 };
 
