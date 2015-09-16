@@ -436,6 +436,7 @@ void SceneLoader::loadStyleProps(Style* style, YAML::Node styleNode, Scene& scen
 Node SceneLoader::propMerge(const std::string& propStr, const Mixes& mixes) {
 
     Node node;
+    Node nullNode;
 
     if (propStr == "extensions" || propStr == "blocks") { //handled by explicit methods
         return node;
@@ -453,7 +454,7 @@ Node SceneLoader::propMerge(const std::string& propStr, const Mixes& mixes) {
                 node = propNode;
             } else { // Map...
                 // Reset previous scalar/sequence node
-                node = Node::Node();
+                node.reset();
                 for (const auto& tag : propNode) {
                     auto tagName = tag.first.as<std::string>();
                     if (mapMixes.find(tagName) == mapMixes.end()) {                 // Deep Merge for all Map Props
