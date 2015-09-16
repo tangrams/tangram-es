@@ -17,7 +17,6 @@ double invLodFunc(double d) {
 }
 
 View::View(int _width, int _height, ProjectionType _projType) :
-    m_zoomAltitude(0.0),
     m_width(0),
     m_height(0),
     m_changed(false) {
@@ -98,14 +97,7 @@ void View::setRoll(float _roll) {
 
 void View::setPitch(float _pitch) {
 
-    _pitch = glm::clamp(_pitch, 0.f, (float)HALF_PI);
-
-    // Orbit vertically around the ground plane at the screen center
-    glm::vec2 radial = glm::vec2(-sin(m_roll), cos(m_roll));
-    radial *= m_zoomAltitude * (sin(m_pitch) - sin(_pitch));
-    translate(radial.x, radial.y);
-
-    m_pitch = _pitch;
+    m_pitch = glm::clamp(_pitch, 0.f, (float)HALF_PI);
     m_dirtyMatrices = true;
     m_dirtyTiles = true;
 
@@ -169,11 +161,12 @@ float View::screenToGroundPlane(float& _screenX, float& _screenY) {
     // following the technique described here: http://antongerdelan.net/opengl/raycasting.html
 
     glm::vec4 ray_clip = { 2.f * _screenX / m_vpWidth - 1.f, 1.f - 2.f * _screenY / m_vpHeight, -1.f, 1.f }; // Ray from camera in clip space
-    glm::vec3 ray_world = glm::vec3(m_invViewProj * ray_clip); // Ray from camera in world space
+    glm::vec4 ray_eye = m_invViewProj * ray_clip;
+    glm::vec3 ray_world = glm::vec3(ray_eye / ray_eye.w) - m_eye;
 
     float t = 0; // Distance along ray to ground plane
     if (ray_world.z != 0.f) {
-        t = -m_pos.z / ray_world.z;
+        t = -m_eye.z / ray_world.z;
     }
 
     ray_world *= fabs(t);
@@ -187,8 +180,8 @@ float View::screenToGroundPlane(float& _screenX, float& _screenY) {
         ray_world *= maxTileDistance / rayDistanceXY;
     }
 
-    _screenX = ray_world.x;
-    _screenY = ray_world.y;
+    _screenX = ray_world.x + m_eye.x;
+    _screenY = ray_world.y + m_eye.y;
 
     return t;
 }
@@ -214,9 +207,7 @@ void View::updateMatrices() {
     }
 
     // set camera z to produce desired viewable area
-    m_zoomAltitude = m_height * 0.5 / tan(fovy * 0.5);
-
-    m_pos.z = m_zoomAltitude * cos(m_pitch);
+    m_pos.z = m_height * 0.5 / tan(fovy * 0.5);
 
     // set near clipping distance as a function of camera z
     // TODO: this is a simple heuristic that deserves more thought
@@ -226,19 +217,19 @@ void View::updateMatrices() {
     // the "top" face of the view frustum with the ground plane
 
     // NOTE: far here can go to infinity and hence a std::min below!
-    float far = m_pos.z / cos(m_pitch + 0.5 * fovy);
+    float far = m_pos.z / std::min(0., cos(m_pitch + 0.5 * fovy));
 
     // limit the far clipping distance to be no greater than the maximum
     // distance of visible tiles
     float maxTileDistance = worldTileSize * invLodFunc(MAX_LOD + 1);
     far = std::min(far, maxTileDistance);
 
-    glm::vec3 eye = { 0.f, 0.f, 0.f };
-    glm::vec3 at = glm::rotateZ(glm::rotateX(glm::vec3(0.f, 0.f, -1.f), m_pitch), m_roll);
+    m_eye = glm::rotateZ(glm::rotateX(glm::vec3(0.f, 0.f, m_pos.z), m_pitch), m_roll);
+    glm::vec3 at = { 0.f, 0.f, 0.f };
     glm::vec3 up = glm::rotateZ(glm::rotateX(glm::vec3(0.f, 1.f, 0.f), m_pitch), m_roll);
 
     // update view and projection matrices
-    m_view = glm::lookAt(eye, at, up);
+    m_view = glm::lookAt(m_eye, at, up);
     m_proj = glm::perspective(fovy, m_aspect, near, far);
 
     m_viewProj = m_proj * m_view;

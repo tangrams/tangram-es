@@ -88,7 +88,6 @@ void Tile::update(float _dt, const View& _view) {
     const auto& viewOrigin = _view.getPosition();
     m_modelMatrix[3][0] = m_tileOrigin.x - viewOrigin.x;
     m_modelMatrix[3][1] = m_tileOrigin.y - viewOrigin.y;
-    m_modelMatrix[3][2] = -viewOrigin.z;
 
 }
 

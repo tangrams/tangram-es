@@ -132,6 +132,7 @@ protected:
     std::set<TileID> m_visibleTiles;
 
     glm::dvec3 m_pos;
+    glm::vec3 m_eye;
 
     glm::mat4 m_view;
     glm::mat4 m_orthoViewport;
@@ -144,7 +145,6 @@ protected:
     float m_pitch = 0.f;
 
     float m_zoom;
-    float m_zoomAltitude;
     float m_initZoom = 16.0;
 
     float m_width;

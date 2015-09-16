@@ -56,6 +56,9 @@ void Skybox::draw(const View& _view) {
 
     glm::mat4 vp = _view.getViewProjectionMatrix();
 
+    // Remove translation so that skybox is centered on view
+    vp[3] = { 0, 0, 0, 0 };
+
     m_shader->setUniformMatrix4f("u_modelViewProj", glm::value_ptr(vp));
     m_shader->setUniformi("u_tex", 0);
     
