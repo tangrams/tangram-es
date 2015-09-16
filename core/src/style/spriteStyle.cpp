@@ -62,12 +62,14 @@ SpriteStyle::Parameters SpriteStyle::applyRule(const DrawRule& _rule, const Prop
 
     p.size *= m_pixelScale;
 
-    _rule.get(StyleParamKey::feature_id, p.featureId);
-    if (!_rule.isJSFunction(StyleParamKey::feature_id)) {
-        if (p.featureId.empty()) {
-            p.featureId = _props.getAsString(key_id);
-        } else {
-            p.featureId = _props.getAsString(p.featureId);
+    if (_rule.get(StyleParamKey::interactive, p.interactive) && p.interactive) {
+        _rule.get(StyleParamKey::feature_id, p.featureId);
+        if (!_rule.isJSFunction(StyleParamKey::feature_id)) {
+            if (p.featureId.empty()) {
+                p.featureId = _props.getAsString(key_id);
+            } else {
+                p.featureId = _props.getAsString(p.featureId);
+            }
         }
     }
 
@@ -100,8 +102,11 @@ void SpriteStyle::buildPoint(const Point& _point, const DrawRule& _rule, const P
     Label::Options options;
     options.offset = p.offset;
     options.priority = p.priority;
-    options.id = p.featureId;
-    options.sourceId = _props.sourceId;
+    options.interactive = p.interactive;
+    if (p.interactive) {
+        options.id = p.featureId;
+        options.sourceId = _props.sourceId;
+    }
 
     std::unique_ptr<SpriteLabel> label(new SpriteLabel(t, p.size, mesh, _mesh.numVertices(), options));
 

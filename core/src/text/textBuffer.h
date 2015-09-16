@@ -23,6 +23,8 @@ enum class TextTransform {
 
 struct Parameters {
     std::string text = "";
+
+    bool interactive = false;
     std::string featureId = "";
     int32_t sourceId;
 

@@ -61,6 +61,8 @@ public:
         uint32_t color = 0xffffffff;
         glm::vec2 offset;
         uint32_t priority = std::numeric_limits<uint32_t>::max();
+
+        bool interactive = false;
         std::string id;
         int32_t sourceId;
     };

@@ -23,6 +23,8 @@ protected:
         glm::vec2 offset;
         glm::vec2 size;
         uint32_t priority = std::numeric_limits<uint32_t>::max();
+
+        bool interactive;
         std::string featureId;
     };
 

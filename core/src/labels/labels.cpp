@@ -134,6 +134,9 @@ const std::vector<TouchItem>& Labels::getFeaturesAtPoint(const View& _view, floa
 
             for (auto& label : labelMesh->getLabels()) {
 
+                auto& options = label->getOptions();
+                if (!options.interactive) { continue; }
+
                 auto& transform = label->getTransform();
                 glm::vec4 v1 = worldToClipSpace(mvp, glm::vec4(transform.modelPosition1, 0.0, 1.0));
                 glm::vec4 v2 = worldToClipSpace(mvp, glm::vec4(transform.modelPosition2, 0.0, 1.0));
@@ -150,7 +153,6 @@ const std::vector<TouchItem>& Labels::getFeaturesAtPoint(const View& _view, floa
                 if (distance > threshold) { continue; }
 
                 bool isLabel = label->visibleState() ? isect2d::intersect(label->getOBB(), obb) : false;
-                auto& options = label->getOptions();
 
                 m_touchItems.push_back({options.sourceId, options.id, distance, isLabel});
             }

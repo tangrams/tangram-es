@@ -21,6 +21,7 @@ std::unique_ptr<TextLabel> makeLabel(Label::Transform _transform, Label::Type _t
     options.color = 0xff;
     options.offset = {0.0f, 0.0f};
     options.id = id;
+    options.interactive = true;
     return std::unique_ptr<TextLabel>(new TextLabel("label",
                                                     _transform, _type, {0, 0},
                                                     dummy, {0, 0}, options));

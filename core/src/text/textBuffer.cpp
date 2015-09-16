@@ -20,8 +20,12 @@ Label::Options optionsFromTextParams(const Parameters& _params) {
     options.color = _params.fill;
     options.priority = _params.priority;
     options.offset = _params.offset;
-    options.id = _params.featureId;
-    options.sourceId = _params.sourceId;
+
+    options.interactive = _params.interactive;
+    if (options.interactive) {
+        options.id = _params.featureId;
+        options.sourceId = _params.sourceId;
+    }
 
     return options;
 }

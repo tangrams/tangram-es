@@ -79,12 +79,14 @@ Parameters TextStyle::applyRule(const DrawRule& _rule, const Properties& _props)
         }
     }
 
-    _rule.get(StyleParamKey::feature_id, p.featureId);
-    if (!_rule.isJSFunction(StyleParamKey::feature_id)) {
-        if (p.featureId.empty()) {
-            p.featureId = _props.getAsString(key_id);
-        } else {
-            p.featureId = _props.getAsString(p.featureId);
+    if (_rule.get(StyleParamKey::interactive, p.interactive) && p.interactive) {
+        _rule.get(StyleParamKey::feature_id, p.featureId);
+        if (!_rule.isJSFunction(StyleParamKey::feature_id)) {
+            if (p.featureId.empty()) {
+                p.featureId = _props.getAsString(key_id);
+            } else {
+                p.featureId = _props.getAsString(p.featureId);
+            }
         }
     }
 

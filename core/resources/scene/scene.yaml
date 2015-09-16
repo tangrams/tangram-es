@@ -179,6 +179,7 @@ layers:
         filter: { name: true, not: { kind: [peak, viewpoint, bicycle_rental, car_sharing] }, $zoom: { min: 15 } }
         draw:
             icons:
+                interactive: true
                 offset: [0px, -15px]
                 size: 20px
                 priority: 5
@@ -252,6 +253,7 @@ layers:
         draw:
             text:
                 feature_id: function() { return feature.name; }
+                interactive: true
                 offset: [0px, 13px]
                 font:
                     family: sans-serif
@@ -265,6 +267,7 @@ layers:
         draw:
             text:
                 feature_id: function() { return feature.name; }
+                interactive: true
                 visible: true
                 priority: 2
                 transform: capitalize
@@ -296,6 +299,7 @@ layers:
             draw:
                 text:
                     feature_id: function() { return feature.name; }
+                    interactive: true
                     transform: capitalize
                     visible: true
                     priority: 3
@@ -321,6 +325,7 @@ layers:
         draw:
             text:
                 feature_id: function() { return feature.name; }
+                interactive: true
                 priority: 5
                 font:
                     family: sans-serif
@@ -359,6 +364,7 @@ layers:
         draw:
             text:
                 feature_id: function() { return feature.name; }
+                interactive: true
                 priority: 0
                 transform: lowercase
                 font:
