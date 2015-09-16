@@ -32,14 +32,8 @@ textures:
             bookstore: [0, 333, 32, 32]
 
 styles:
-    testStyle:
-        shaders:
-            blocks:
-                color: "color.rgb += vec3(0.5, 0.0, 0.0);"
-
     heightglow:
         base: polygons
-        mix: testStyle
         lighting: vertex
         shaders:
             blocks:

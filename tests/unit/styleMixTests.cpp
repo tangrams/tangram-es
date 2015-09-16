@@ -13,7 +13,7 @@
 using namespace Tangram;
 using YAML::Node;
 
-TEST_CASE( "Style Mixing Test1: Shader Extensions Merging ()", "[mixing][core][yaml]") {
+TEST_CASE( "Style Mixing Test: Shader Extensions Merging", "[mixing][core][yaml]") {
     SceneLoader sceneLoader;
     Node node = YAML::Load("{ \
                                 Node1: { \
@@ -56,7 +56,7 @@ TEST_CASE( "Style Mixing Test1: Shader Extensions Merging ()", "[mixing][core][y
 
 }
 
-TEST_CASE( "Style Mixing Test1: Shader Blocks Merging ()", "[mixing][core][yaml]") {
+TEST_CASE( "Style Mixing Test: Shader Blocks Merging", "[mixing][core][yaml]") {
     SceneLoader sceneLoader;
     Node node = YAML::Load("{ \
                                 Node1: { \
@@ -111,7 +111,7 @@ TEST_CASE( "Style Mixing Test1: Shader Blocks Merging ()", "[mixing][core][yaml]
     REQUIRE(shaderBlocksNode["filter"].as<std::string>() == "filterBlockC;");
 }
 
-TEST_CASE( "Style Mixing Test1: propMerge Tests (recursive overWrite properties)", "[mixing][core][yaml]") {
+TEST_CASE( "Style Mixing Test: propMerge Tests (recursive overWrite properties)", "[mixing][core][yaml]") {
     SceneLoader sceneLoader;
     Node node = YAML::Load("{ \
                                 Node1: { \
@@ -179,7 +179,7 @@ TEST_CASE( "Style Mixing Test1: propMerge Tests (recursive overWrite properties)
     REQUIRE(mixedNode["prop2"]["subProp3"]["tag2"].as<std::string>() == "value2");
 }
 
-TEST_CASE( "Style Mixing Test1: propMerge Tests (overWrite properties)", "[mixing][core][yaml]") {
+TEST_CASE( "Style Mixing Test: propMerge Tests (overWrite properties)", "[mixing][core][yaml]") {
     SceneLoader sceneLoader;
     Node node = YAML::Load("{ \
                                 Node1: { \
@@ -204,7 +204,7 @@ TEST_CASE( "Style Mixing Test1: propMerge Tests (overWrite properties)", "[mixin
     REQUIRE(mixedNode["prop2"].as<std::string>() == "value2");
 }
 
-TEST_CASE( "Style Mixing Test1: propMerge Tests (boolean properties)", "[mixing][core][yaml]") {
+TEST_CASE( "Style Mixing Test: propMerge Tests (boolean properties)", "[mixing][core][yaml]") {
 
     SceneLoader sceneLoader;
     Node node = YAML::Load("{ \
