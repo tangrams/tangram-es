@@ -21,6 +21,7 @@ const std::map<std::string, StyleParamKey> s_StyleParamMap = {
     {"font:stroke_width", StyleParamKey::font_stroke_width},
     {"font:style", StyleParamKey::font_style},
     {"font:weight", StyleParamKey::font_weight},
+    {"interactive", StyleParamKey::interactive},
     {"join", StyleParamKey::join},
     {"none", StyleParamKey::none},
     {"offset", StyleParamKey::offset},
@@ -97,6 +98,7 @@ StyleParam::Value StyleParam::parseString(StyleParamKey key, const std::string& 
         }
         return fontSize;
     }
+    case StyleParamKey::interactive:
     case StyleParamKey::visible:
         if (_value == "true") { return true; }
         if (_value == "false") { return false; }
@@ -177,6 +179,7 @@ std::string StyleParam::toString() const {
     case StyleParamKey::sprite_default:
         if (!value.is<std::string>()) break;
         return k + value.get<std::string>();
+    case StyleParamKey::interactive:
     case StyleParamKey::visible:
         if (!value.is<bool>()) break;
         return k + std::to_string(value.get<bool>());
