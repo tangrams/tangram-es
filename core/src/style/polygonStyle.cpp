@@ -83,9 +83,6 @@ void PolygonStyle::buildPolygon(const Polygon& _polygon, const DrawRule& _rule, 
     const static std::string key_height("height");
     const static std::string key_min_height("min_height");
 
-    float height = _props.getNumeric(key_height) * _tile.getInverseScale();
-    float minHeight = _props.getNumeric(key_min_height) * _tile.getInverseScale();
-
     PolygonBuilder builder = {
         [&](const glm::vec3& coord, const glm::vec3& normal, const glm::vec2& uv){
             vertices.push_back({ coord, normal, uv, abgr, layer });
@@ -95,21 +92,27 @@ void PolygonStyle::buildPolygon(const Polygon& _polygon, const DrawRule& _rule, 
 
     auto& mesh = static_cast<PolygonStyle::Mesh&>(_mesh);
 
-    if (extrude[0] != 0.0f || extrude[1] != 0.0f) {
-        height = std::isnan(extrude[1])
-            ? ( std::isnan(extrude[0]) ? height : extrude[0] )
-            : extrude[1];
+    float height = 0.0f, minHeight = 0.0f;
 
-        minHeight = std::isnan(extrude[1]) ? minHeight : extrude[0];
+    if (extrude[0] != 0.0f || extrude[1] != 0.0f) {
+
+        height = _props.getNumeric(key_height) * _tile.getInverseScale();
+        minHeight = _props.getNumeric(key_min_height) * _tile.getInverseScale();
+
+        if (std::isnan(extrude[1])) {
+            if (!std::isnan(extrude[0])) {
+                height = extrude[0];
+            }
+        } else {
+            minHeight = extrude[0];
+            height = extrude[1];
+        }
 
         Builders::buildPolygonExtrusion(_polygon, minHeight, height, builder);
         mesh.addVertices(std::move(vertices), std::move(builder.indices));
 
         // TODO add builder.clear() ?;
         builder.numVertices = 0;
-
-    } else {
-        height = 0.0f;
     }
 
     Builders::buildPolygon(_polygon, height, builder);
