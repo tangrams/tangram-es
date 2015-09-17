@@ -1,5 +1,4 @@
 #include "stops.h"
-#include "csscolorparser.hpp"
 #include "util/geom.h"
 #include "yaml-cpp/yaml.h"
 #include <cassert>
@@ -16,17 +15,18 @@ Stops::Stops(const YAML::Node& _node, bool _isColor) {
         float key = frameNode[0].as<float>();
         if (_isColor) {
             // parse color from sequence or string
-            uint32_t color = 0;
+            Color color;
             YAML::Node colorNode = frameNode[1];
             if (colorNode.IsScalar()) {
-                color = CSSColorParser::parse(colorNode.as<std::string>()).getInt();
-            } else if (colorNode.IsSequence()) {
-                uint32_t r, g, b, a;
-                r = CLAMP(colorNode[0].as<float>() * 255., 0., 255.);
-                g = CLAMP(colorNode[1].as<float>() * 255., 0., 255.);
-                b = CLAMP(colorNode[2].as<float>() * 255., 0., 255.);
-                a = CLAMP(colorNode[3].as<float>() * 255., 0., 255.);
-                color = (a << 24) + (b << 16) + (g << 8) + (r);
+                color = CSSColorParser::parse(colorNode.as<std::string>());
+            } else if (colorNode.IsSequence() && colorNode.size() >= 3) {
+                float alpha = colorNode.size() > 3 ? colorNode[3].as<float>() : 1.f;
+                color = Color(
+                    colorNode[0].as<float>() * 255,
+                    colorNode[1].as<float>() * 255,
+                    colorNode[2].as<float>() * 255,
+                    alpha
+                );
             }
             frames.emplace_back(key, color);
         } else {
@@ -54,10 +54,20 @@ auto Stops::evalFloat(float _key) const -> float {
 auto Stops::evalColor(float _key) const -> uint32_t {
 
     auto upper = nearestHigherFrame(_key);
-    return (upper == frames.end()) ? (upper - 1)->color : upper->color;
+    auto lower = upper - 1;
+    if (upper == frames.end()) { return lower->color.getInt(); }
+    if (lower < frames.begin()) { return upper->color.getInt(); }
 
-    // Colors aren't interpolated. Linear interpolation in RGBA is usually not what you want,
-    // but I need to check on how tangram-js handles this. 
+    float lerp = (_key - lower->key) / (upper->key - lower->key);
+    auto lowerColor = lower->color;
+    auto upperColor = upper->color;
+
+    return Color(
+        (1. - lerp) * lowerColor.r + lerp * upperColor.r,
+        (1. - lerp) * lowerColor.g + lerp * upperColor.g,
+        (1. - lerp) * lowerColor.b + lerp * upperColor.b,
+        (1. - lerp) * lowerColor.a + lerp * upperColor.a
+    ).getInt();
 
 }
 

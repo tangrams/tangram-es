@@ -122,7 +122,7 @@ layers:
                 order: 4
                 width: .02
                 cap: round
-                color: [ [13, '#000'], [14, '#555'], [15, '#777'], [16, '#999'] ]
+                color: [ [13, '#000'], [16, '#999'] ]
                 outline:
                     width: .01
                     cap: round
