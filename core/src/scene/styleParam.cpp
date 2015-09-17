@@ -1,5 +1,6 @@
 #include "styleParam.h"
 
+#include "csscolorparser.hpp"
 #include "platform.h"
 #include "util/builders.h" // for cap, join
 #include "util/geom.h" // for CLAMP
@@ -7,6 +8,8 @@
 #include <map>
 
 namespace Tangram {
+
+using Color = CSSColorParser::Color;
 
 const std::map<std::string, StyleParamKey> s_StyleParamMap = {
     {"cap", StyleParamKey::cap},
@@ -45,6 +48,8 @@ static const char* keyName(StyleParamKey key) {
     }
     return empty.c_str();
 }
+
+
 
 StyleParam::StyleParam(const std::string& _key, const std::string& _value) {
 
@@ -301,6 +306,21 @@ bool StyleParam::parseFontSize(const std::string& _str, float& _pxSize) {
     }
 
     return true;
+}
+
+bool StyleParam::isColor(const std::string &_keyName) {
+    auto it = s_StyleParamMap.find(_keyName);
+    if (it == s_StyleParamMap.end()) { return false; }
+    switch (it->second) {
+        case StyleParamKey::color:
+        case StyleParamKey::outline_color:
+        case StyleParamKey::font_fill:
+        case StyleParamKey::font_stroke:
+        case StyleParamKey::font_stroke_color:
+            return true;
+        default:
+            return false;
+    }
 }
 
 }

@@ -2,14 +2,12 @@
 
 #include "util/variant.h"
 #include "glm/vec2.hpp"
-#include "csscolorparser.hpp"
 #include <string>
 #include <vector>
 
 namespace Tangram {
 
-using Color = CSSColorParser::Color;
-using Function = std::string;
+struct Stops;
 
 enum class StyleParamKey : uint8_t {
     cap,
@@ -53,6 +51,7 @@ struct StyleParam {
 
     StyleParamKey key;
     Value value;
+    Stops* stops = nullptr;
     int32_t function = -1;
 
     bool operator<(const StyleParam& _rhs) const { return key < _rhs.key; }
@@ -69,6 +68,8 @@ struct StyleParam {
     static bool parseVec2(const std::string& _value, const std::vector<std::string>& _allowedUnits, glm::vec2& _vec2);
 
     static Value parseString(StyleParamKey key, const std::string& _value);
+
+    static bool isColor(const std::string& _keyName);
 };
 
 }
