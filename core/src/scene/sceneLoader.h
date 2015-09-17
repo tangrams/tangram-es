@@ -17,10 +17,13 @@ class SceneLayer;
 class View;
 class ShaderProgram;
 class Material;
+class Style;
 struct StyleParam;
 struct DrawRule;
 struct MaterialTexture;
 struct Filter;
+
+using Mixes = std::vector<YAML::Node>;
 
 class SceneLoader {
 
@@ -30,6 +33,7 @@ class SceneLoader {
     void loadCameras(YAML::Node cameras, View& view);
     void loadLayers(YAML::Node layers, Scene& scene, TileManager& tileManager);
     void loadStyles(YAML::Node styles, Scene& scene);
+    void loadStyleProps(Style* style, YAML::Node styleNode, Scene& scene);
     void loadTextures(YAML::Node textures, Scene& scene);
     void loadMaterial(YAML::Node matNode, Material& material, Scene& scene);
     void loadShaderConfig(YAML::Node shaders, ShaderProgram& shader);
@@ -38,6 +42,9 @@ class SceneLoader {
     Filter generateAnyFilter(YAML::Node filter, Scene& scene);
     Filter generateNoneFilter(YAML::Node filter, Scene& scene);
     Filter generatePredicate(YAML::Node filter, std::string _key);
+
+    // Style Mixing helper methods
+    YAML::Node mixStyle(const Mixes& mixes);
 
 public:
 
@@ -49,6 +56,15 @@ public:
 
     // public for testing
     std::vector<StyleParam> parseStyleParams(YAML::Node params, Scene& scene, const std::string& propPrefix = "");
+
+    // Generic methods to merge properties
+    YAML::Node propMerge(const std::string& propStr, const Mixes& mixes);
+
+    // Methods to merge shader blocks
+    YAML::Node shaderBlockMerge(const Mixes& mixes);
+
+    // Methods to merge shader extensions
+    YAML::Node shaderExtMerge(const Mixes& mixes);
     Tangram::Filter generateFilter(YAML::Node filter, Scene& scene);
 };
 

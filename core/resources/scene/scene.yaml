@@ -13,9 +13,6 @@ lights:
         ambient: [0.7, 0.7, 0.7, 1.]
 
 textures:
-    water-texture:
-        url: normals.jpg
-        filtering: nearest
     pois:
         url: poi_icons_32.png
         sprites:
@@ -35,17 +32,8 @@ textures:
             bookstore: [0, 333, 32, 32]
 
 styles:
-    pillows:
-        base: polygon
-        lighting: fragment
-        material:
-            normal:
-                texture: water-texture
-                mapping: uv
-            diffuse: 0.75
-
     heightglow:
-        base: polygon
+        base: polygons
         lighting: vertex
         shaders:
             blocks:
