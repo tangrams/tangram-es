@@ -122,7 +122,7 @@ layers:
                 order: 4
                 width: .02
                 cap: round
-                color: white
+                color: [ [13, '#000'], [14, '#555'], [15, '#777'], [16, '#999'] ]
                 outline:
                     width: .01
                     cap: round
@@ -137,7 +137,7 @@ layers:
             draw:
                 lines:
                     color: '#D16768'
-                    width: .04
+                    width: [ [10, 0], [12, .02], [16, .04], [18, .2] ]
             link:
                 filter: { is_link: yes }
                 draw:
