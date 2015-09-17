@@ -30,8 +30,7 @@ protected:
     struct PolylineVertex {
         glm::vec3 pos;
         glm::vec2 texcoord;
-        glm::vec2 enorm;
-        GLfloat ewidth;
+        glm::vec4 extrude;
         GLuint abgr;
         GLfloat layer;
     };

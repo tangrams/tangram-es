@@ -19,8 +19,7 @@ uniform float u_zoom;
 
 attribute vec4 a_position;
 attribute vec4 a_color;
-attribute vec3 a_extrudeNormal;
-attribute float a_extrudeWidth;
+attribute vec4 a_extrude;
 attribute vec2 a_texcoord;
 attribute float a_layer;
 
@@ -41,7 +40,18 @@ varying vec2 v_texcoord;
 void main() {
 
     vec4 position = a_position;
-    position.xyz += a_extrudeNormal * (a_extrudeWidth * 2.) * pow(2., abs(u_tile_zoom) - u_zoom);
+
+    {
+        float width = a_extrude.z;
+        float dwdz = a_extrude.w;
+        float dz = abs(u_tile_zoom) - u_zoom;
+        // scale to screen-space
+        width *= exp2(dz);
+        // interpolate between zoom levels
+        width += dwdz * dz;
+
+        position.xy += a_extrude.xy * width;
+    }
 
     // Modify position before camera projection
     #pragma tangram: position
