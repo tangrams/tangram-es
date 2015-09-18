@@ -43,8 +43,39 @@ const std::string& Properties::getString(const std::string& key) const {
     return EMPTY_STRING;
 }
 
+std::string Properties::asString(const Value& value) const {
+    if (value.is<std::string>()) {
+        return value.get<std::string>();
+    } else if (value.is<int64_t>()) {
+        return std::to_string(value.get<int64_t>());
+    } else if (value.is<float>()) {
+        return std::to_string(value.get<float>());
+    }
+    return "";
+}
+
+std::string Properties::getAsString(const std::string& key) const {
+
+    return asString(get(key));
+
+}
+
 void Properties::sort() {
     std::sort(props.begin(), props.end());
+}
+
+std::string Properties::toJson() const {
+
+    std::string json = "{ ";
+
+    for (const auto& item : props) {
+        bool last = (&item == &props.back());
+        json += "\"" + item.key + "\": \"" + asString(item.value) + (last ? "\"" : "\",");
+    }
+
+    json += " }";
+
+    return json;
 }
 
 }

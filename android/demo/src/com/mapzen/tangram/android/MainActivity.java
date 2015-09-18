@@ -5,11 +5,15 @@ import android.os.Bundle;
 import android.view.MotionEvent;
 import android.view.View;
 import android.view.Window;
+import android.widget.Toast;
 
 import com.mapzen.tangram.LngLat;
 import com.mapzen.tangram.MapController;
 import com.mapzen.tangram.MapData;
 import com.mapzen.tangram.MapView;
+
+import org.json.JSONException;
+import org.json.JSONObject;
 
 import java.io.File;
 import java.util.Arrays;
@@ -44,6 +48,8 @@ public class MainActivity extends Activity {
                     touchMarkers.addLine(Arrays.asList(tapPoint, lastTappedPoint));
                 }
                 lastTappedPoint.set(tapPoint);
+
+                mapController.pickFeature(event.getX(), event.getY());
                 return true;
             }
         });
@@ -56,6 +62,19 @@ public class MainActivity extends Activity {
             }
         });
 
+        mapController.setFeatureTouchListener(new MapController.FeatureTouchListener() {
+            @Override
+            public void onTouch(JSONObject properties) {
+                String name = "unnamed";
+                try {
+                    name = properties.getString("name");
+                } catch (JSONException ignored) {}
+
+                Toast.makeText(getApplicationContext(),
+                        "Selected: " + name,
+                        Toast.LENGTH_SHORT).show();
+            }
+        });
         try {
             File cacheDir = new File(getExternalCacheDir().getAbsolutePath() + "/tile_cache");
             mapController.setTileCache(cacheDir, 30 * 1024 * 1024);

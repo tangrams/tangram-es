@@ -1,3 +1,5 @@
+#pragma tangram: extensions
+
 #ifdef TANGRAM_SDF_MULTISAMPLING
     #ifdef GL_OES_standard_derivatives
         #extension GL_OES_standard_derivatives : enable
@@ -13,15 +15,21 @@
     #define LOWP
 #endif
 
+#pragma tangram: defines
+
 // TODO: use this as attribute
 const float textSize = 15.0;
 const float emSize = textSize / 16.0;
 
 uniform sampler2D u_tex;
 
+#pragma tangram: uniforms
+
 varying vec2 v_uv;
 varying float v_alpha;
 varying vec4 v_color;
+
+#pragma tangram: global
 
 float contour(in float d, in float w) {
     return smoothstep(0.5 - w, 0.5 + w, d);
@@ -56,12 +64,19 @@ void main(void) {
     if (v_alpha < TANGRAM_EPSILON) {
         discard;
     } else {
+        vec4 color;
+
         float distance = texture2D(u_tex, v_uv).a;
 
         float alpha = sampleAlpha(v_uv, distance);
         alpha = pow(alpha, 0.4545);
 
-        gl_FragColor = vec4(v_color.rgb, v_alpha * alpha * v_color.a);
+        color = vec4(v_color.rgb, v_alpha * alpha * v_color.a);
+
+        #pragma tangram: color
+        #pragma tangram: filter
+
+        gl_FragColor = color;
     }
 }
 

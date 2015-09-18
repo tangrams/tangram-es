@@ -12,6 +12,7 @@ const std::map<std::string, StyleParamKey> s_StyleParamMap = {
     {"cap", StyleParamKey::cap},
     {"color", StyleParamKey::color},
     {"extrude", StyleParamKey::extrude},
+    {"feature_id", StyleParamKey::feature_id},
     {"font:family", StyleParamKey::font_family},
     {"font:fill", StyleParamKey::font_fill},
     {"font:size", StyleParamKey::font_size},
@@ -20,6 +21,7 @@ const std::map<std::string, StyleParamKey> s_StyleParamMap = {
     {"font:stroke_width", StyleParamKey::font_stroke_width},
     {"font:style", StyleParamKey::font_style},
     {"font:weight", StyleParamKey::font_weight},
+    {"interactive", StyleParamKey::interactive},
     {"join", StyleParamKey::join},
     {"none", StyleParamKey::none},
     {"offset", StyleParamKey::offset},
@@ -80,6 +82,7 @@ StyleParam::Value StyleParam::parseString(StyleParamKey key, const std::string& 
         }
         return vec2;
     }
+    case StyleParamKey::feature_id:
     case StyleParamKey::font_family:
     case StyleParamKey::font_weight:
     case StyleParamKey::font_style:
@@ -95,6 +98,7 @@ StyleParam::Value StyleParam::parseString(StyleParamKey key, const std::string& 
         }
         return fontSize;
     }
+    case StyleParamKey::interactive:
     case StyleParamKey::visible:
         if (_value == "true") { return true; }
         if (_value == "false") { return false; }
@@ -165,6 +169,7 @@ std::string StyleParam::toString() const {
         auto p = value.get<glm::vec2>();
         return k + "(" + std::to_string(p.x) + "px, " + std::to_string(p.y) + "px)";
     }
+    case StyleParamKey::feature_id:
     case StyleParamKey::font_family:
     case StyleParamKey::font_weight:
     case StyleParamKey::font_style:
@@ -174,6 +179,7 @@ std::string StyleParam::toString() const {
     case StyleParamKey::sprite_default:
         if (!value.is<std::string>()) break;
         return k + value.get<std::string>();
+    case StyleParamKey::interactive:
     case StyleParamKey::visible:
         if (!value.is<bool>()) break;
         return k + std::to_string(value.get<bool>());

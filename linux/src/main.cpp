@@ -109,6 +109,17 @@ void key_callback(GLFWwindow* window, int key, int scancode, int action, int mod
             case GLFW_KEY_BACKSPACE:
                 init_main_window(); // Simulate GL context loss
                 break;
+            case GLFW_KEY_P: {
+
+                auto& items = Tangram::pickFeaturesAt(last_x_down, last_y_down);
+                logMsg("Touch Features %d\n", items.size());
+                for (auto& it : items) {
+                    logMsg("\t %s\n", it.c_str());
+                }
+
+                break;
+            }
+
             default:
                 break;
         }

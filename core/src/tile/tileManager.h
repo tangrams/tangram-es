@@ -74,7 +74,7 @@ public:
 
     bool hasTileSetChanged() { return m_tileSetChanged; }
 
-    int32_t addDataSource(std::shared_ptr<DataSource>&& dataSource);
+    void addDataSource(std::shared_ptr<DataSource>&& dataSource);
 
     const auto getTileSets() { return m_tileSets; }
 
@@ -136,7 +136,6 @@ private:
     int32_t m_loadPending;
 
     std::vector<TileSet> m_tileSets;
-    int32_t m_tileSetSerial = 0;
 
     /* Current tiles ready for rendering */
     std::vector<std::shared_ptr<Tile>> m_tiles;

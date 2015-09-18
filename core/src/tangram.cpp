@@ -226,7 +226,9 @@ int addDataSource(const char* _name) {
 
     if (!m_tileManager) { return -1; }
     auto source = std::make_shared<ClientGeoJsonSource>(std::string(_name), "");
-    return m_tileManager->addDataSource(source);
+    m_tileManager->addDataSource(source);
+
+    return source->id();
 }
 
 void clearSourceData(int _sourceId) {
@@ -336,6 +338,14 @@ void toggleDebugFlag(DebugFlags _flag) {
     m_view->setZoom(m_view->getZoom()); // Force the view to refresh
 
 }
+
+const std::vector<std::string>& pickFeaturesAt(float _x, float _y) {
+    return m_labels->getFeaturesAtPoint(*m_view, 0, m_scene->styles(),
+                                        m_tileManager->getVisibleTiles(),
+                                        _x, _y);
+}
+
+
 
 void setupGL() {
 

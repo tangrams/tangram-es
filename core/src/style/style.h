@@ -75,6 +75,9 @@ protected:
     /* Whether the viewport has changed size */
     bool m_dirtyViewport = true;
 
+    /* animated property */
+    bool m_animated = false;
+
     /* Create <VertexLayout> corresponding to this style; subclasses must implement this and call it on construction */
     virtual void constructVertexLayout() = 0;
 
@@ -92,12 +95,12 @@ protected:
 
     /* Create a new mesh object using the vertex layout corresponding to this style */
     virtual VboMesh* newMesh() const = 0;
-    
+
     /* Toggle on read if true, checks whether the context has been lost on last frame */
     bool glContextLost();
 
 private:
-    
+
     /* Whether the context has been lost on last frame */
     bool m_contextLost;
 
@@ -106,7 +109,7 @@ public:
     Style(std::string _name, Blending _blendMode, GLenum _drawMode);
 
     virtual ~Style();
-    
+
     void notifyGLContextLost() { m_contextLost = true; }
 
     void viewportHasChanged() { m_dirtyViewport = true; }
@@ -114,6 +117,9 @@ public:
     Blending blendMode() const { return m_blend; };
 
     void setBlendMode(Blending _blendMode) { m_blend = _blendMode; }
+
+    /* Whether or not the style is animated */
+    bool isAnimated() { return m_animated; }
 
     /* Make this style ready to be used (call after all needed properties are set) */
     virtual void build(const std::vector<std::unique_ptr<Light>>& _lights);
@@ -133,6 +139,8 @@ public:
     virtual void onEndDrawFrame() {}
 
     virtual void setLightingType(LightingType _lType);
+
+    void setAnimated(bool _animated) { m_animated = _animated; }
 
     void setMaterial(const std::shared_ptr<Material>& _material);
 

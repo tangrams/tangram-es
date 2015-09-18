@@ -114,7 +114,9 @@ std::vector<FONSquad>& FontContext::rasterize(const std::string& _text, FontID _
         fonsSetBlurType(m_fsContext, FONS_EFFECT_NONE);
     }
 
-    float advance = fonsDrawText(m_fsContext, 0, 0, _text.c_str(), nullptr, 0);
+    float advance = fonsDrawText(m_fsContext, 0, 0,
+                                 _text.c_str(), _text.c_str() + _text.length(),
+                                 0);
     if (advance < 0) {
         m_quadBuffer.clear();
         return m_quadBuffer;

@@ -1,6 +1,8 @@
 #pragma once
 
 #include "debug.h"
+#include <vector>
+#include <string>
 
 /* Tangram API
  *
@@ -102,6 +104,8 @@ bool getDebugFlag(DebugFlags _flag);
 
 // Toggle the boolean state of a debug feature (see debug.h)
 void toggleDebugFlag(DebugFlags _flag);
+
+const std::vector<std::string>& pickFeaturesAt(float _x, float _y);
 
 }
 

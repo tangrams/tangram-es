@@ -23,6 +23,8 @@
 #include "yaml-cpp/yaml.h"
 
 #include <algorithm>
+#include <unordered_set>
+#include <unordered_map>
 
 using YAML::Node;
 using YAML::NodeType;
@@ -109,6 +111,24 @@ void SceneLoader::loadShaderConfig(Node shaders, ShaderProgram& shader) {
 
     if (!shaders) {
         return;
+    }
+
+    if (Node extensionsNode = shaders["extensions"]) {
+        std::vector<std::string> extensions;
+        if (extensionsNode.IsScalar()) {
+            extensions.push_back(extensionsNode.as<std::string>());
+        } else if(extensionsNode.IsSequence()) {
+            extensions.reserve(extensionsNode.size());
+            for (const auto& extNode : extensionsNode) {
+                extensions.push_back(extNode.as<std::string>());
+            }
+        }
+        for (const auto& extName : extensions) {
+            char buffer[1000]; //sufficient space
+            sprintf(buffer, "#ifdef %s\n    #extension %s : enable\n    #define TANGRAM_EXTENSION_%s\n#endif",
+                    extName.c_str(), extName.c_str(), extName.c_str());
+            shader.addSourceBlock("extensions", std::string(buffer));
+        }
     }
 
     Node definesNode = shaders["defines"];
@@ -330,7 +350,212 @@ void SceneLoader::loadTextures(Node textures, Scene& scene) {
     }
 }
 
+void SceneLoader::loadStyleProps(Style* style, YAML::Node styleNode, Scene& scene) {
+
+    if (!styleNode) {
+        logMsg("Error: Can not parse style parameters, bad style YAML Node\n");
+        return;
+    }
+
+    Node animatedNode = styleNode["animated"];
+    if (animatedNode) {
+        logMsg("WARNING: animated property will be set but not yet implemented in styles\n"); // TODO
+        if (!animatedNode.IsScalar()) { logMsg("WARNING: animated flag should be a scalar\n"); }
+        else {
+            try {
+                style->setAnimated(animatedNode.as<bool>());
+            } catch(const BadConversion& e) {
+                logMsg("WARNING: Expected a boolean value in animated property. Using default (false).\n");
+            }
+        }
+    }
+
+    if (Node blendNode = styleNode["blend"]) {
+
+        std::string str = blendNode.as<std::string>();
+
+        if      (str == "none")     { style->setBlendMode(Blending::none); }
+        else if (str == "add")      { style->setBlendMode(Blending::add); }
+        else if (str == "multiply") { style->setBlendMode(Blending::multiply); }
+        else if (str == "overlay")  { style->setBlendMode(Blending::overlay); }
+        else if (str == "inlay")    { style->setBlendMode(Blending::inlay); }
+        else { logMsg("WARNING: invalid blend mode \"%s\"\n", str.c_str()); }
+
+    }
+
+    Node texcoordsNode = styleNode["texcoords"];
+    if (texcoordsNode) {
+
+        logMsg("WARNING: texcoords style parameter is currently ignored\n");
+
+        if (texcoordsNode.as<bool>()) { } // TODO
+        else { } // TODO
+
+    }
+
+    Node shadersNode = styleNode["shaders"];
+    if (shadersNode) {
+        loadShaderConfig(shadersNode, *(style->getShaderProgram()));
+    }
+
+    Node materialNode = styleNode["material"];
+    if (materialNode) {
+        loadMaterial(materialNode, *(style->getMaterial()), scene);
+    }
+
+    Node lightingNode = styleNode["lighting"];
+    if (lightingNode) {
+        std::string lighting = lightingNode.as<std::string>();
+        if (lighting == "fragment") { style->setLightingType(LightingType::fragment); }
+        else if (lighting == "vertex") { style->setLightingType(LightingType::vertex); }
+        else if (lighting == "false") { style->setLightingType(LightingType::none); }
+        else if (lighting == "true") { } // use default lighting
+        else { logMsg("WARNING: unrecognized lighting type \"%s\"\n", lighting.c_str()); }
+    }
+
+    Node textureNode = styleNode["texture"];
+    if (textureNode) {
+        auto spriteStyle = dynamic_cast<SpriteStyle*>(style);
+        if (spriteStyle) {
+            std::string textureName = textureNode.as<std::string>();
+            auto atlases = scene.spriteAtlases();
+            auto it = atlases.find(textureName);
+            if (it != atlases.end()) {
+                spriteStyle->setSpriteAtlas(it->second);
+            } else {
+                logMsg("WARNING: undefined texture name %s", textureName.c_str());
+            }
+        }
+    }
+
+    Node urlNode = styleNode["url"];
+    if (urlNode) { logMsg("WARNING: loading style from URL not yet implemented\n"); } // TODO
+
+}
+
+Node SceneLoader::propMerge(const std::string& propStr, const Mixes& mixes) {
+
+    Node node;
+
+    if (propStr == "extensions" || propStr == "blocks") { //handled by explicit methods
+        return node;
+    }
+
+    std::vector<std::string> mapTags;
+    std::unordered_map<std::string, Mixes> mapMixes;
+
+    for (const auto& mixNode: mixes) {
+        if (Node propNode = mixNode[propStr]) {
+            if (propNode.IsScalar() && propNode.as<std::string>() == "true") {      // OR Properties
+                node = propNode;
+                break;
+            } else if (propNode.IsScalar() || propNode.IsSequence()) {              // Overwrite Properties
+                node = propNode;
+            } else { // Map...
+                // Reset previous scalar/sequence node
+                node.reset();
+                for (const auto& tag : propNode) {
+                    auto tagName = tag.first.as<std::string>();
+                    if (mapMixes.find(tagName) == mapMixes.end()) {                 // Deep Merge for all Map Props
+                        mapTags.push_back(tagName);
+                    }
+                    mapMixes[tagName].push_back(propNode);
+                }
+            }
+        }
+    }
+
+    if (node.IsScalar() || node.IsSequence()) {
+        mapMixes.clear();
+        mapTags.clear();
+    }
+
+    // Recursively merge map nodes from this propStr node
+    for (auto& mapTag : mapTags) {
+        Node n = propMerge(mapTag, mapMixes[mapTag]);
+        node[mapTag] = n;
+    }
+
+    return node;
+}
+
+Node SceneLoader::shaderBlockMerge(const Mixes& mixes) {
+
+    Node node;
+    for (const auto& mixNode : mixes) {
+        if (Node shaderNode = mixNode["shaders"]) {
+            if (Node blocks = shaderNode["blocks"]) {
+                for (const auto& block : blocks) {
+                    std::string blockName = block.first.as<std::string>();
+                    std::string value = block.second.as<std::string>();
+                    if (node[blockName]) {
+                        node[blockName] = node[blockName].as<std::string>() + "\n" + value;
+                    } else {
+                        node[blockName] = value;
+                    }
+                }
+            }
+        }
+    }
+    return node;
+}
+
+Node SceneLoader::shaderExtMerge(const Mixes& mixes) {
+
+    Node node;
+    std::unordered_set<std::string> uniqueList;
+
+    for (const auto& mixNode : mixes) {
+        if (Node shaderNode = mixNode["shaders"]) {
+            if (Node extNode = shaderNode["extensions"]) {
+                if (extNode.IsScalar()) {
+                    auto val = extNode.as<std::string>();
+                    if (uniqueList.find(val) == uniqueList.end()) {
+                        node.push_back(extNode);
+                        uniqueList.insert(val);
+                    }
+                } else if (extNode.IsSequence()) {
+                    for (const auto& n : extNode) {
+                        auto val = n.as<std::string>();
+                        if (uniqueList.find(val) == uniqueList.end()) {
+                            node.push_back(n);
+                            uniqueList.insert(val);
+                        }
+                    }
+                } else {
+                    logMsg("Warning: Expected scalar or sequence value for extensions node.\n");
+                    continue;
+                }
+            }
+        }
+    }
+
+    return node;
+}
+
+Node SceneLoader::mixStyle(const Mixes& mixes) {
+
+    Node styleNode;
+
+    for (auto& property : {"animated", "texcoords", "base", "lighting", "texture", "blend", "material", "shaders"}) {
+        Node node = propMerge(property, mixes);
+        if (!node.IsNull()) { styleNode[property] = node; }
+    }
+
+    Node shaderNode = styleNode["shaders"];
+
+    Node shaderExtNode = shaderExtMerge(mixes);
+    if (!shaderExtNode.IsNull()) { shaderNode["extensions"] = shaderExtNode; }
+
+    Node shaderBlocksNode = shaderBlockMerge(mixes);
+    if (!shaderBlocksNode.IsNull()) { shaderNode["blocks"] = shaderBlocksNode; }
+
+    return styleNode;
+}
+
 void SceneLoader::loadStyles(Node styles, Scene& scene) {
+
+    Style* style = nullptr;
 
     auto fontCtx = FontContext::GetInstance(); // To add font for debugTextStyle
     fontCtx->addFont("FiraSans", "Medium", "");
@@ -348,13 +573,11 @@ void SceneLoader::loadStyles(Node styles, Scene& scene) {
 
     for (const auto& styleIt : styles) {
 
-        Style* style = nullptr;
-
         std::string styleName = styleIt.first.as<std::string>();
         Node styleNode = styleIt.second;
 
         bool validName = true;
-        for (auto builtIn : { "polygons", "lines", "points", "text", "debug", "debugtext" }) {
+        for (auto& builtIn : { "polygons", "lines", "points", "text", "debug", "debugtext" }) {
             if (styleName == builtIn) { validName = false; }
         }
         if (!validName) {
@@ -362,82 +585,45 @@ void SceneLoader::loadStyles(Node styles, Scene& scene) {
             continue;
         }
 
-        Node baseNode = styleNode["base"];
-        if (baseNode) {
-            std::string baseString = baseNode.as<std::string>();
-            if (baseString == "lines") { style = new PolylineStyle(styleName); }
-            else if (baseString == "text") { style = new TextStyle(styleName, true, true); }
-            else if (baseString == "points") { style = new SpriteStyle(styleName); } // TODO
-            else { logMsg("WARNING: base style \"%s\" not recognized, defaulting to polygons\n", baseString.c_str()); }
-        }
-
-        if (style == nullptr) { style = new PolygonStyle(styleName); }
-
-        Node animatedNode = styleNode["animated"];
-        if (animatedNode) { logMsg("WARNING: animated styles not yet implemented\n"); } // TODO
-
-        if (Node blendNode = styleNode["blend"]) {
-
-            std::string str = blendNode.as<std::string>();
-
-            if      (str == "none")     { style->setBlendMode(Blending::none); }
-            else if (str == "add")      { style->setBlendMode(Blending::add); }
-            else if (str == "multiply") { style->setBlendMode(Blending::multiply); }
-            else if (str == "overlay")  { style->setBlendMode(Blending::overlay); }
-            else if (str == "inlay")    { style->setBlendMode(Blending::inlay); }
-            else { logMsg("WARNING: invalid blend mode \"%s\"\n", str.c_str()); }
-
-        }
-
-        Node texcoordsNode = styleNode["texcoords"];
-        if (texcoordsNode) {
-
-            logMsg("WARNING: texcoords style parameter is currently ignored\n");
-
-            if (texcoordsNode.as<bool>()) { } // TODO
-            else { } // TODO
-
-        }
-
-        Node shadersNode = styleNode["shaders"];
-        if (shadersNode) {
-            loadShaderConfig(shadersNode, *(style->getShaderProgram()));
-        }
-
-        Node materialNode = styleNode["material"];
-        if (materialNode) {
-            loadMaterial(materialNode, *(style->getMaterial()), scene);
-        }
-
-        Node lightingNode = styleNode["lighting"];
-        if (lightingNode) {
-            std::string lighting = lightingNode.as<std::string>();
-            if (lighting == "fragment") { style->setLightingType(LightingType::fragment); }
-            else if (lighting == "vertex") { style->setLightingType(LightingType::vertex); }
-            else if (lighting == "false") { style->setLightingType(LightingType::none); }
-            else if (lighting == "true") { } // use default lighting
-            else { logMsg("WARNING: unrecognized lighting type \"%s\"\n", lighting.c_str()); }
-        }
-
-        Node textureNode = styleNode["texture"];
-        if (textureNode) {
-            auto spriteStyle = static_cast<SpriteStyle*>(style);
-            if (spriteStyle) {
-                std::string textureName = textureNode.as<std::string>();
-                auto atlases = scene.spriteAtlases();
-                auto it = atlases.find(textureName);
-                if (it != atlases.end()) {
-                    spriteStyle->setSpriteAtlas(it->second);
-                } else {
-                    logMsg("WARNING: undefined texture name %s", textureName.c_str());
+        Mixes mixes;
+        if (Node mixNode = styleNode["mix"]) {
+            if (mixNode.IsScalar()) {
+                mixes.reserve(2);
+                mixes.push_back(styles[mixNode.as<std::string>()]);
+            } else if (mixNode.IsSequence()) {
+                mixes.reserve(mixNode.size() + 1);
+                for (const auto& mixStyleNode : mixNode) {
+                    mixes.push_back(styles[mixStyleNode.as<std::string>()]);
                 }
+            } else {
+                logMsg("Error parsing mix param for style: %s. Expected scalar or sequence value\n", styleName.c_str());
             }
         }
+        mixes.push_back(styles[styleName]);
 
-        Node urlNode = styleNode["url"];
-        if (urlNode) { logMsg("WARNING: loading style from URL not yet implemented\n"); } // TODO
+        Node mixedStyleNode = mixStyle(mixes);
 
-        scene.styles().push_back(std::unique_ptr<Style>(style));
+        // Construct style instance using the merged properties
+        if (Node baseNode = mixedStyleNode["base"]) {
+            std::string baseString = baseNode.as<std::string>();
+            if (baseString == "polygons") {
+                style = new PolygonStyle(styleName);
+            } else if (baseString == "lines") {
+                style = new PolylineStyle(styleName);
+            } else if (baseString == "text") {
+                style = new TextStyle(styleName, true, true);
+            } else if (baseString == "points") {
+                style = new SpriteStyle(styleName);
+            } else {
+                logMsg("WARNING: base style \"%s\" not recognized, can not instantiate.\n", baseString.c_str());
+                continue;
+            }
+            loadStyleProps(style, mixedStyleNode, scene);
+            scene.styles().push_back(std::unique_ptr<Style>(style));
+        } else {
+            // No baseNode, this is an abstract styleNode
+            continue;
+        }
     }
 }
 

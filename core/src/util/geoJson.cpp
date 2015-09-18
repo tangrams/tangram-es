@@ -114,7 +114,7 @@ void GeoJson::extractFeature(const rapidjson::Value& _in, Feature& _out, const T
 
 }
 
-void GeoJson::extractLayer(const rapidjson::Value& _in, Layer& _out, const Tile& _tile) {
+void GeoJson::extractLayer(int32_t _sourceId, const rapidjson::Value& _in, Layer& _out, const Tile& _tile) {
 
     const auto& featureIter = _in.FindMember("features");
 
@@ -125,7 +125,7 @@ void GeoJson::extractLayer(const rapidjson::Value& _in, Layer& _out, const Tile&
 
     const auto& features = featureIter->value;
     for (auto featureJson = features.Begin(); featureJson != features.End(); ++featureJson) {
-        _out.features.emplace_back();
+        _out.features.emplace_back(_sourceId);
         extractFeature(*featureJson, _out.features.back(), _tile);
     }
 

@@ -86,4 +86,6 @@ glm::vec2 worldToScreenSpace(const glm::mat4& _mvp, const glm::vec4& _worldPosit
 
 float signedArea(const std::vector<glm::vec3>& _polygon);
 
+float sqSegmentDistance(const glm::vec2& _p, const glm::vec2& _p1, const glm::vec2& _p2);
+
 }

@@ -24,6 +24,9 @@ import com.squareup.okhttp.OkHttpClient;
 import com.squareup.okhttp.Request;
 import com.squareup.okhttp.Response;
 
+import org.json.JSONException;
+import org.json.JSONObject;
+
 import java.io.File;
 import java.io.IOException;
 import java.util.concurrent.TimeUnit;
@@ -34,6 +37,10 @@ import javax.microedition.khronos.opengles.GL10;
 import okio.BufferedSource;
 
 public class MapController implements Renderer, OnTouchListener, OnScaleGestureListener, OnRotateGestureListener, OnGestureListener, OnDoubleTapListener, OnShoveGestureListener {
+
+    public interface FeatureTouchListener {
+        void onTouch(JSONObject properties);
+    }
 
     static {
         System.loadLibrary("c++_shared");
@@ -237,6 +244,14 @@ public class MapController implements Renderer, OnTouchListener, OnScaleGestureL
         tapGestureListener = listener;
     }
 
+    /**
+     * Set a listener for Feature touch events
+     * @param listener Listen to call
+     */
+    public void setFeatureTouchListener(FeatureTouchListener listener) {
+        featureTouchListener = listener;
+    }
+
     // Native methods
     // ==============
 
@@ -263,6 +278,7 @@ public class MapController implements Renderer, OnTouchListener, OnScaleGestureL
     private synchronized native void handleShoveGesture(float distance);
     private synchronized native void onUrlSuccess(byte[] rawDataBytes, long callbackPtr);
     private synchronized native void onUrlFailure(long callbackPtr);
+    public synchronized native void pickFeature(float posX, float posY);
 
     // Private members
     // ===============
@@ -302,6 +318,8 @@ public class MapController implements Renderer, OnTouchListener, OnScaleGestureL
 
     private OkHttpClient okClient;
     private Request.Builder okRequestBuilder;
+
+    private FeatureTouchListener featureTouchListener;
 
     // View.OnTouchListener methods
     // ============================
@@ -569,6 +587,16 @@ public class MapController implements Renderer, OnTouchListener, OnScaleGestureL
 
         return fontFileParser.getFontFile(family + "_" + weight + "_" + style);
 
+    }
+
+    // Feature selection
+    // =================
+    public void featureSelectionCb(String properties) {
+        if (featureTouchListener != null) {
+            try {
+                featureTouchListener.onTouch(new JSONObject(properties));
+            } catch (JSONException ignored) {}
+        }
     }
 
 }

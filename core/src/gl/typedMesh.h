@@ -87,40 +87,18 @@ protected:
 template<class T>
 void TypedMesh<T>::setDirty(GLintptr _byteOffset, GLsizei _byteSize) {
 
-    // not dirty at all, init the dirtiness of the buffer
     if (!m_dirty) {
+        m_dirty = true;
 
         m_dirtySize = _byteSize;
         m_dirtyOffset = _byteOffset;
-        m_dirty = true;
 
     } else {
-        GLsizei dBytes = std::abs(_byteOffset - m_dirtyOffset); // distance in bytes
-        GLintptr nOff = _byteOffset + _byteSize; // new offset
-        GLintptr pOff = m_dirtySize + m_dirtyOffset; // previous offset
+        size_t end = std::max(m_dirtyOffset + m_dirtySize, _byteOffset + _byteSize);
 
-        if (_byteOffset < m_dirtyOffset) { // left part of the buffer
-
-            // update before the old buffer offset
-            m_dirtyOffset = _byteOffset;
-
-            // merge sizes
-            if (nOff > pOff) {
-                m_dirtySize = _byteSize;
-            } else {
-                m_dirtySize += dBytes;
-            }
-
-            m_dirty = true;
-
-        } else if (nOff > pOff) { // right part of the buffer
-
-            // update starting after the old buffer offset
-            m_dirtySize = dBytes + _byteSize;
-            m_dirty = true;
-        }
+        m_dirtyOffset = std::min(m_dirtyOffset, _byteOffset);
+        m_dirtySize = end - m_dirtyOffset;
     }
-
 }
 
 template<class T>

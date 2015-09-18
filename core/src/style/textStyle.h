@@ -18,7 +18,7 @@ protected:
     virtual void buildLine(const Line& _line, const DrawRule& _rule, const Properties& _props, VboMesh& _mesh, Tile& _tile) const override;
     virtual void buildPolygon(const Polygon& _polygon, const DrawRule& _rule, const Properties& _props, VboMesh& _mesh, Tile& _tile) const override;
 
-    Parameters parseRule(const DrawRule& _rule) const;
+    Parameters applyRule(const DrawRule& _rule, const Properties& _props) const;
 
     virtual VboMesh* newMesh() const override {
         return new TextBuffer(m_vertexLayout);
@@ -40,9 +40,6 @@ public:
 
 private:
 
-    inline Label::Options optionsFromTextParams(const Parameters& _params) const;
-
-    const std::string& applyTextSource(const Parameters& _parameters, const Properties& _props) const;
 
 };
 

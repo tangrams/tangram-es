@@ -23,13 +23,16 @@ protected:
         glm::vec2 offset;
         glm::vec2 size;
         uint32_t priority = std::numeric_limits<uint32_t>::max();
+
+        bool interactive;
+        std::string featureId;
     };
 
     virtual void constructVertexLayout() override;
     virtual void constructShaderProgram() override;
     virtual void buildPoint(const Point& _point, const DrawRule& _rule, const Properties& _props, VboMesh& _mesh, Tile& _tile) const override;
 
-    Parameters parseRule(const DrawRule& _rule) const;
+    Parameters applyRule(const DrawRule& _rule, const Properties& _props) const;
     
     virtual VboMesh* newMesh() const override {
         return new LabelMesh(m_vertexLayout, m_drawMode);

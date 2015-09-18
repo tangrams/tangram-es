@@ -1,6 +1,7 @@
 #ifdef PLATFORM_ANDROID
 
 #include "platform.h"
+#include "tangram.h"
 
 #include <android/log.h>
 #include <android/asset_manager.h>
@@ -27,12 +28,13 @@ static jmethodID setRenderModeMethodID;
 static jmethodID startUrlRequestMID;
 static jmethodID cancelUrlRequestMID;
 static jmethodID getFontFilePath;
+static jmethodID featureSelectionCbMID;
 static AAssetManager* assetManager;
 
 static bool s_isContinuousRendering = false;
 
 void setupJniEnv(JNIEnv* _jniEnv, jobject _tangramInstance, jobject _assetManager) {
-	_jniEnv->GetJavaVM(&jvm);
+    _jniEnv->GetJavaVM(&jvm);
     jniEnv = _jniEnv;
 
     tangramInstance = jniEnv->NewGlobalRef(_tangramInstance);
@@ -42,6 +44,7 @@ void setupJniEnv(JNIEnv* _jniEnv, jobject _tangramInstance, jobject _assetManage
     getFontFilePath = jniEnv->GetMethodID(tangramClass, "getFontFilePath", "(Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;)Ljava/lang/String;");
 	requestRenderMethodID = _jniEnv->GetMethodID(tangramClass, "requestRender", "()V");
     setRenderModeMethodID = _jniEnv->GetMethodID(tangramClass, "setRenderMode", "(I)V");
+    featureSelectionCbMID = _jniEnv->GetMethodID(tangramClass, "featureSelectionCb", "(Ljava/lang/String;)V");
 
     assetManager = AAssetManager_fromJava(jniEnv, _assetManager);
 
@@ -241,6 +244,11 @@ void onUrlFailure(JNIEnv* _jniEnv, jlong _jCallbackPtr) {
 void setCurrentThreadPriority(int priority) {
     int  tid = gettid();
     setpriority(PRIO_PROCESS, tid, priority);
+}
+
+void featureSelectionCallback(JNIEnv* jniEnv, const std::vector<std::string>& items) {
+    jstring jFeature = jniEnv->NewStringUTF(items[0].c_str());
+    jniEnv->CallVoidMethod(tangramInstance, featureSelectionCbMID, jFeature);
 }
 
 

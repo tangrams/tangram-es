@@ -29,13 +29,32 @@ Currently we are targeting five platforms: OS X, Ubuntu Linux, iOS, Android, and
 
 ## platforms ##
 
-### OS X ###
-To build a runnable OS X application bundle, run
+### OS X (command line) ###
+To build a runnable OS X application bundle, run:
 
 ```bash
 make osx
 ```
-And open the application from `build/osx/bin`
+And open the application with:
+
+```bash
+open build/osx/bin/tangram.app
+```
+
+### OS X (Xcode) ###
+For running on OS X from Xcode, generate and compile an Xcode project:
+
+```bash
+make xcode
+```
+
+Then just open the Xcode project and run/debug from there: 
+
+```bash
+open build/xcode/tangram.xcodeproj
+```
+
+Note that any Xcode configuration change you make to the project won't be preserved when CMake runs again. Build configuration is defined only in the CMakeLists file(s).
 
 ### Ubuntu Linux ###
 To build on Ubuntu you will need to install a libcurl development package:
@@ -66,7 +85,7 @@ make ios-sim
 Then just open the Xcode project and run/debug from there: 
 
 ```bash
-open build/ios/tangram.xcodeproject
+open build/ios-sim/tangram.xcodeproj
 ```
 
 Note that any Xcode configuration change you make to the project won't be preserved when CMake runs again. Build configuration is defined only in the CMakeLists file(s).

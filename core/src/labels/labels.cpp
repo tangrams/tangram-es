@@ -1,10 +1,10 @@
 #include "labels.h"
+#include "data/tileData.h"
 #include "tangram.h"
 #include "tile/tile.h"
 #include "gl/primitives.h"
 #include "view/view.h"
 #include "style/style.h"
-
 #include "glm/gtc/matrix_transform.hpp"
 
 namespace Tangram {
@@ -75,8 +75,8 @@ void Labels::update(const View& _view, float _dt, const std::vector<std::unique_
         const auto& aabb1 = m_aabbs[pair.first];
         const auto& aabb2 = m_aabbs[pair.second];
 
-        auto l1 = (Label*)aabb1.m_userData;
-        auto l2 = (Label*)aabb2.m_userData;
+        auto l1 = static_cast<Label*>(aabb1.m_userData);
+        auto l2 = static_cast<Label*>(aabb2.m_userData);
 
         // narrow phase
         if (intersect(l1->getOBB(), l2->getOBB())) { occlusions.insert({l1, l2}); }
@@ -106,6 +106,65 @@ void Labels::update(const View& _view, float _dt, const std::vector<std::unique_
     }
 }
 
+const std::vector<std::string>& Labels::getFeaturesAtPoint(const View& _view, float _dt,
+                                                           const std::vector<std::unique_ptr<Style>>& _styles,
+                                                           const std::vector<std::shared_ptr<Tile>>& _tiles,
+                                                           float _x, float _y, bool _visibleOnly) {
+    // FIXME dpi dependent threshold
+    const float thumbSize = 20;
+    const float threshold = 100;
+
+    m_touchItems.clear();
+
+    glm::vec2 screenSize = glm::vec2(_view.getWidth(), _view.getHeight());
+    glm::vec2 touchPoint(_x, _y);
+
+    isect2d::OBB obb(_x - thumbSize/2, _y - thumbSize/2, 0, thumbSize, thumbSize);
+    m_touchPoint = obb;
+
+    for (const auto& tile : _tiles) {
+
+        glm::mat4 mvp = _view.getViewProjectionMatrix() * tile->getModelMatrix();
+
+        for (const auto& style : _styles) {
+            const auto& mesh = tile->getMesh(*style);
+            if (!mesh) { continue; }
+
+            const LabelMesh* labelMesh = dynamic_cast<const LabelMesh*>(mesh.get());
+            if (!labelMesh) { continue; }
+
+            for (auto& label : labelMesh->getLabels()) {
+
+                auto& options = label->getOptions();
+                if (!options.interactive) { continue; }
+
+                auto& transform = label->getTransform();
+                glm::vec4 v1 = worldToClipSpace(mvp, glm::vec4(transform.modelPosition1, 0.0, 1.0));
+                glm::vec4 v2 = worldToClipSpace(mvp, glm::vec4(transform.modelPosition2, 0.0, 1.0));
+
+                // check whether the label is behind the camera using the perspective division factor
+                if (v1.w <= 0 || v2.w <= 0) { continue; }
+
+                // project to screen space
+                glm::vec2 p1 = clipToScreenSpace(v1, screenSize);
+                glm::vec2 p2 = clipToScreenSpace(v2, screenSize);
+
+                float distance = sqrt(sqSegmentDistance(touchPoint, p1, p2));
+
+                if (distance > threshold) { continue; }
+
+                if (!_visibleOnly || (label->visibleState() && isect2d::intersect(label->getOBB(), obb))) {
+                    m_touchItems.push_back(options.properties);
+                }
+            }
+        }
+    }
+
+    return m_touchItems;
+}
+
+
+
 void Labels::drawDebug(const View& _view) {
 
     if (!Tangram::getDebugFlag(Tangram::DebugFlags::labels)) {
@@ -130,6 +189,9 @@ void Labels::drawDebug(const View& _view) {
             Primitives::drawRect(sp - glm::vec2(1.f), sp + glm::vec2(1.f));
         }
     }
+
+    Primitives::setColor(0xff00ff);
+    Primitives::drawPoly(reinterpret_cast<const glm::vec2*>(m_touchPoint.getQuad()), 4);
 
     glm::vec2 split(4, 4);
     glm::vec2 res(_view.getWidth(), _view.getHeight());
