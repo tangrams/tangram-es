@@ -51,7 +51,6 @@ Parameters TextStyle::applyRule(const DrawRule& _rule, const Properties& _props)
     const static std::string key_id("id");
 
     Parameters p;
-    p.sourceId = _props.sourceId;
 
     std::string fontFamily, fontWeight, fontStyle, transform;
     glm::vec2 offset;
@@ -79,16 +78,9 @@ Parameters TextStyle::applyRule(const DrawRule& _rule, const Properties& _props)
         }
     }
 
-    if (_rule.get(StyleParamKey::interactive, p.interactive) && p.interactive) {
-        _rule.get(StyleParamKey::feature_id, p.featureId);
-        if (!_rule.isJSFunction(StyleParamKey::feature_id)) {
-            if (p.featureId.empty()) {
-                p.featureId = _props.getAsString(key_id);
-            } else {
-                p.featureId = _props.getAsString(p.featureId);
-            }
-        }
-    }
+   if (_rule.get(StyleParamKey::interactive, p.interactive) && p.interactive) {
+       p.properties = _props.toJson();
+   }
 
     if (transform == "capitalize") {
         p.transform = TextTransform::capitalize;

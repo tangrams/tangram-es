@@ -12,6 +12,9 @@ import com.mapzen.tangram.MapController;
 import com.mapzen.tangram.MapData;
 import com.mapzen.tangram.MapView;
 
+import org.json.JSONException;
+import org.json.JSONObject;
+
 import java.io.File;
 import java.util.Arrays;
 
@@ -61,10 +64,15 @@ public class MainActivity extends Activity {
 
         mapController.setFeatureTouchListener(new MapController.FeatureTouchListener() {
             @Override
-            public void onTouch(int dataSource, String feature) {
+            public void onTouch(JSONObject properties) {
+                String name = "unnamed";
+                try {
+                    name = properties.getString("name");
+                } catch (JSONException ignored) {}
+
                 Toast.makeText(getApplicationContext(),
-                               "Selected: " + dataSource + "/" + feature,
-                               Toast.LENGTH_SHORT).show();
+                        "Selected: " + name,
+                        Toast.LENGTH_SHORT).show();
             }
         });
         try {

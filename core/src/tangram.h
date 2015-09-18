@@ -105,14 +105,7 @@ bool getDebugFlag(DebugFlags _flag);
 // Toggle the boolean state of a debug feature (see debug.h)
 void toggleDebugFlag(DebugFlags _flag);
 
-struct TouchItem {
-    int32_t source;
-    std::string id;
-    float distance;
-    bool isLabel;
-};
-
-const std::vector<TouchItem>& pickFeaturesAt(float _x, float _y);
+const std::vector<std::string>& pickFeaturesAt(float _x, float _y);
 
 }
 

@@ -104,8 +104,7 @@ void SpriteStyle::buildPoint(const Point& _point, const DrawRule& _rule, const P
     options.priority = p.priority;
     options.interactive = p.interactive;
     if (p.interactive) {
-        options.id = p.featureId;
-        options.sourceId = _props.sourceId;
+        options.properties = _props.toJson();
     }
 
     std::unique_ptr<SpriteLabel> label(new SpriteLabel(t, p.size, mesh, _mesh.numVertices(), options));

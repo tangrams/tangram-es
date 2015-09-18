@@ -25,8 +25,7 @@ struct Parameters {
     std::string text = "";
 
     bool interactive = false;
-    std::string featureId = "";
-    int32_t sourceId;
+    std::string properties;
 
     std::string fontKey = "";
     uint32_t fill = 0xff000000;

@@ -44,7 +44,7 @@ void setupJniEnv(JNIEnv* _jniEnv, jobject _tangramInstance, jobject _assetManage
     getFontFilePath = jniEnv->GetMethodID(tangramClass, "getFontFilePath", "(Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;)Ljava/lang/String;");
 	requestRenderMethodID = _jniEnv->GetMethodID(tangramClass, "requestRender", "()V");
     setRenderModeMethodID = _jniEnv->GetMethodID(tangramClass, "setRenderMode", "(I)V");
-    featureSelectionCbMID = _jniEnv->GetMethodID(tangramClass, "featureSelectionCb", "(ILjava/lang/String;)V");
+    featureSelectionCbMID = _jniEnv->GetMethodID(tangramClass, "featureSelectionCb", "(Ljava/lang/String;)V");
 
     assetManager = AAssetManager_fromJava(jniEnv, _assetManager);
 
@@ -246,9 +246,9 @@ void setCurrentThreadPriority(int priority) {
     setpriority(PRIO_PROCESS, tid, priority);
 }
 
-void featureSelectionCallback(JNIEnv* jniEnv, const std::vector<Tangram::TouchItem>& items) {
-    jstring jFeature = jniEnv->NewStringUTF(items[0].id.c_str());
-    jniEnv->CallVoidMethod(tangramInstance, featureSelectionCbMID, items[0].source, jFeature);
+void featureSelectionCallback(JNIEnv* jniEnv, const std::vector<std::string>& items) {
+    jstring jFeature = jniEnv->NewStringUTF(items[0].c_str());
+    jniEnv->CallVoidMethod(tangramInstance, featureSelectionCbMID, jFeature);
 }
 
 

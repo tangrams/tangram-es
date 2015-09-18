@@ -1,4 +1,5 @@
 #include "labels.h"
+#include "data/tileData.h"
 #include "tangram.h"
 #include "tile/tile.h"
 #include "gl/primitives.h"
@@ -105,10 +106,10 @@ void Labels::update(const View& _view, float _dt, const std::vector<std::unique_
     }
 }
 
-const std::vector<TouchItem>& Labels::getFeaturesAtPoint(const View& _view, float _dt,
-                                                         const std::vector<std::unique_ptr<Style>>& _styles,
-                                                         const std::vector<std::shared_ptr<Tile>>& _tiles,
-                                                         float _x, float _y) {
+const std::vector<std::string>& Labels::getFeaturesAtPoint(const View& _view, float _dt,
+                                                           const std::vector<std::unique_ptr<Style>>& _styles,
+                                                           const std::vector<std::shared_ptr<Tile>>& _tiles,
+                                                           float _x, float _y) {
     // FIXME dpi dependent threshold
     const float thumbSize = 20;
     const float threshold = 100;
@@ -152,22 +153,14 @@ const std::vector<TouchItem>& Labels::getFeaturesAtPoint(const View& _view, floa
 
                 if (distance > threshold) { continue; }
 
-                bool isLabel = label->visibleState() ? isect2d::intersect(label->getOBB(), obb) : false;
+                if (label->visibleState() && isect2d::intersect(label->getOBB(), obb)) {
+                    m_touchItems.push_back(options.properties);
+                }
 
-                m_touchItems.push_back({options.sourceId, options.id, distance, isLabel});
             }
         }
     }
 
-    if (!m_touchItems.empty()) {
-        std::sort(std::begin(m_touchItems), std::end(m_touchItems),
-                  [](const auto& a, const auto& b){
-                      return a.isLabel == b.isLabel
-                          ? a.distance < b.distance
-                          : a.isLabel;
-                  });
-
-    }
     return m_touchItems;
 }
 

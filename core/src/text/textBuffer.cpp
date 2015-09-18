@@ -23,8 +23,7 @@ Label::Options optionsFromTextParams(const Parameters& _params) {
 
     options.interactive = _params.interactive;
     if (options.interactive) {
-        options.id = _params.featureId;
-        options.sourceId = _params.sourceId;
+        options.properties = _params.properties;
     }
 
     return options;

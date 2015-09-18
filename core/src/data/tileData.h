@@ -124,7 +124,11 @@ struct Properties {
 
     const std::string& getString(const std::string& key) const;
 
+    std::string asString(const Value& value) const;
+
     std::string getAsString(const std::string& key) const;
+
+    std::string toJson() const;
 
     template <typename... Args> void add(std::string key, Args&&... args) {
         props.emplace_back(std::move(key), Value{std::forward<Args>(args)...});

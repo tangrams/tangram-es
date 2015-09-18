@@ -24,6 +24,9 @@ import com.squareup.okhttp.OkHttpClient;
 import com.squareup.okhttp.Request;
 import com.squareup.okhttp.Response;
 
+import org.json.JSONException;
+import org.json.JSONObject;
+
 import java.io.File;
 import java.io.IOException;
 import java.util.concurrent.TimeUnit;
@@ -36,7 +39,7 @@ import okio.BufferedSource;
 public class MapController implements Renderer, OnTouchListener, OnScaleGestureListener, OnRotateGestureListener, OnGestureListener, OnDoubleTapListener, OnShoveGestureListener {
 
     public interface FeatureTouchListener {
-        void onTouch(int dataSource, String feature);
+        void onTouch(JSONObject properties);
     }
 
     static {
@@ -586,9 +589,13 @@ public class MapController implements Renderer, OnTouchListener, OnScaleGestureL
 
     }
 
-    public void featureSelectionCb(int dataSource, String featureId) {
+    // Feature selection
+    // =================
+    public void featureSelectionCb(String properties) {
         if (featureTouchListener != null) {
-            featureTouchListener.onTouch(dataSource, featureId);
+            try {
+                featureTouchListener.onTouch(new JSONObject(properties));
+            } catch (JSONException ignored) {}
         }
     }
 

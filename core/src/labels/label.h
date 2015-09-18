@@ -63,8 +63,7 @@ public:
         uint32_t priority = std::numeric_limits<uint32_t>::max();
 
         bool interactive = false;
-        std::string id;
-        int32_t sourceId;
+        std::string properties;
     };
 
     Label(Transform _transform, glm::vec2 _size, Type _type, LabelMesh& _mesh, Range _vertexRange, Options _options);

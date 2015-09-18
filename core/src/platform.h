@@ -14,14 +14,10 @@ class _jbyteArray;
 typedef _jbyteArray* jbyteArray;
 typedef long long jlong;
 
-namespace Tangram {
-struct TouchItem;
-}
-
 void setupJniEnv(JNIEnv* _jniEnv, jobject _tangramInstance, jobject _assetManager);
 void onUrlSuccess(JNIEnv* jniEnv, jbyteArray jFetchedBytes, jlong jCallbackPtr);
 void onUrlFailure(JNIEnv* jniEnv, jlong jCallbackPtr);
-void featureSelectionCallback(JNIEnv* jniEnv, const std::vector<Tangram::TouchItem>& items);
+void featureSelectionCallback(JNIEnv* jniEnv, const std::vector<std::string>& items);
 #endif
 
 
