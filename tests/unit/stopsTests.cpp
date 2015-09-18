@@ -2,6 +2,7 @@
 #include "catch.hpp"
 
 #include "scene/stops.h"
+#include "yaml-cpp/yaml.h"
 
 using namespace Tangram;
 
@@ -22,7 +23,7 @@ Stops instance_color() {
     });
 }
 
-TEST_CASE( "Stops evaluate float values correctly at and between key frames", "[Stops]" ) {
+TEST_CASE("Stops evaluate float values correctly at and between key frames", "[Stops]") {
 
     auto stops = instance_float();
 
@@ -38,7 +39,7 @@ TEST_CASE( "Stops evaluate float values correctly at and between key frames", "[
 
 }
 
-TEST_CASE( "Stops evaluate color values correctly at and between key frames", "[Stops]" ) {
+TEST_CASE("Stops evaluate color values correctly at and between key frames", "[Stops]") {
 
     auto stops = instance_color();
 
@@ -46,5 +47,37 @@ TEST_CASE( "Stops evaluate color values correctly at and between key frames", "[
     REQUIRE(stops.evalColor(1) == 0xffeeeeee);
     REQUIRE(stops.evalColor(2) == 0xffdddddd);
     REQUIRE(stops.evalColor(7) == 0xffaaaaaa);
+
+}
+
+TEST_CASE("Stops parses correctly from YAML distance values", "[Stops][YAML]") {
+
+    YAML::Node node = YAML::Load("[ [10, 0], [16, .04], [18, .2] ]");
+
+    Stops stops(node);
+
+    REQUIRE(stops.frames.size() == 3);
+    REQUIRE(stops.frames[0].key == 10.f);
+    REQUIRE(stops.frames[1].key == 16.f);
+    REQUIRE(stops.frames[2].key == 18.f);
+    REQUIRE(stops.frames[0].value == 0.f);
+    REQUIRE(stops.frames[1].value == .04f);
+    REQUIRE(stops.frames[2].value == .2f);
+
+}
+
+TEST_CASE("Stops parses correctly from YAML color values", "[Stops][YAML]") {
+
+    YAML::Node node = YAML::Load("[ [10, '#aaa'], [16, [0, .5, 1] ], [18, [0, .25, 1, .5] ] ]");
+
+    Stops stops(node, true);
+
+    REQUIRE(stops.frames.size() == 3);
+    REQUIRE(stops.frames[0].key == 10.f);
+    REQUIRE(stops.frames[1].key == 16.f);
+    REQUIRE(stops.frames[2].key == 18.f);
+    REQUIRE(stops.frames[0].color.getInt() == 0xffaaaaaa);
+    REQUIRE(stops.frames[1].color.getInt() == 0xffff7f00);
+    REQUIRE(stops.frames[2].color.getInt() == 0x7fff3f00);
 
 }
