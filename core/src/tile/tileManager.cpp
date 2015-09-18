@@ -40,9 +40,8 @@ TileManager::~TileManager() {
     m_tileSets.clear();
 }
 
-int32_t TileManager::addDataSource(std::shared_ptr<DataSource>&& dataSource) {
-    m_tileSets.push_back({++m_tileSetSerial, dataSource});
-    return m_tileSetSerial;
+void TileManager::addDataSource(std::shared_ptr<DataSource>&& dataSource) {
+    m_tileSets.push_back({dataSource->id(), dataSource});
 }
 
 std::shared_ptr<ClientGeoJsonSource> TileManager::getClientSourceById(int32_t _id) {
