@@ -40,7 +40,15 @@ TileManager::~TileManager() {
     m_tileSets.clear();
 }
 
-void TileManager::addDataSource(std::shared_ptr<DataSource>&& dataSource) {
+void TileManager::setScene(std::shared_ptr<Scene> _scene) {
+    m_scene = _scene;
+
+    for (auto& source : _scene->dataSources()) {
+        addDataSource(source);
+    }
+}
+
+void TileManager::addDataSource(std::shared_ptr<DataSource> dataSource) {
     m_tileSets.push_back({dataSource->id(), dataSource});
 }
 

@@ -32,11 +32,11 @@ using StyleUniforms = std::pair<std::string, std::vector<UniformValue>>;
 
 class SceneLoader {
 
-    void loadSources(YAML::Node sources, TileManager& tileManager);
+    void loadSources(YAML::Node sources, Scene& scene);
     void loadFont(YAML::Node fontProps);
     void loadLights(YAML::Node lights, Scene& scene);
-    void loadCameras(YAML::Node cameras, View& view);
-    void loadLayers(YAML::Node layers, Scene& scene, TileManager& tileManager);
+    void loadCameras(YAML::Node cameras, Scene& scene);
+    void loadLayers(YAML::Node layers, Scene& scene);
     void loadStyles(YAML::Node styles, Scene& scene);
     void loadStyleProps(Style* style, YAML::Node styleNode, Scene& scene);
     void loadTextures(YAML::Node textures, Scene& scene);
@@ -58,7 +58,7 @@ public:
 
     virtual ~SceneLoader() {};
 
-    void loadScene(const std::string& _sceneString, Scene& _scene, TileManager& _tileManager, View& _view);
+    bool loadScene(const std::string& _sceneString, Scene& _scene);
 
     // public for testing
     std::vector<StyleParam> parseStyleParams(YAML::Node params, Scene& scene, const std::string& propPrefix = "");
