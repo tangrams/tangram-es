@@ -55,6 +55,8 @@ public:
      */
     void setCacheSize(size_t _cacheSize);
 
+    int32_t id() { return m_id; }
+
 protected:
 
     void onTileLoaded(std::vector<char>&& _rawData, std::shared_ptr<TileTask>& _task, TileTaskCb _cb);
@@ -71,6 +73,8 @@ protected:
     // Name used to identify this source in the style sheet
     std::string m_name;
 
+    // Unique id for DataSource
+    int32_t m_id;
     // URL template for requesting tiles from a network or filesystem
     std::string m_urlTemplate;
 

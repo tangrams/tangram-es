@@ -239,7 +239,9 @@ int addDataSource(const char* _name) {
     if (!m_tileManager) { return -1; }
     std::lock_guard<std::mutex> lock(m_tilesMutex);
     auto source = std::make_shared<ClientGeoJsonSource>(std::string(_name), "");
-    return m_tileManager->addDataSource(source);
+    m_tileManager->addDataSource(source);
+
+    return source->id();
 }
 
 void clearSourceData(int _sourceId) {
