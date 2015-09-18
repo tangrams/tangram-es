@@ -44,11 +44,11 @@ void main() {
     {
         float width = a_extrude.z;
         float dwdz = a_extrude.w;
-        float dz = abs(u_tile_zoom) - u_zoom;
-        // scale to screen-space
-        width *= exp2(dz);
+        float dz =  u_zoom - abs(u_tile_zoom);
         // interpolate between zoom levels
         width += dwdz * dz;
+        // scale to screen-space
+        width *= exp2(-dz);
 
         position.xy += a_extrude.xy * width;
     }
