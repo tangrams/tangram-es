@@ -48,7 +48,7 @@ public:
     void setView(std::shared_ptr<View> _view) { m_view = _view; }
 
     /* Sets the scene which the TileManager will use to style tiles */
-    void setScene(std::shared_ptr<Scene> _scene) { m_scene = _scene; }
+    void setScene(std::shared_ptr<Scene> _scene);
 
     std::shared_ptr<Scene>& getScene() { return m_scene; }
 
@@ -74,7 +74,7 @@ public:
 
     bool hasTileSetChanged() { return m_tileSetChanged; }
 
-    void addDataSource(std::shared_ptr<DataSource>&& dataSource);
+    void addDataSource(std::shared_ptr<DataSource> dataSource);
 
     const auto getTileSets() { return m_tileSets; }
 
