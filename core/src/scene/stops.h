@@ -1,6 +1,6 @@
 #pragma once
 
-#include "csscolorparser.hpp"
+#include <cstdint>
 #include <vector>
 
 namespace YAML {
@@ -9,16 +9,14 @@ namespace YAML {
 
 namespace Tangram {
 
-using Color = CSSColorParser::Color;
-
 struct Frame {
     float key = 0;
     union {
         float value;
-        Color color;
+        uint32_t color = 0;
     };
     Frame(float _k, float _v) : key(_k), value(_v) {}
-    Frame(float _k, Color _c) : key(_k), color(_c) {}
+    Frame(float _k, uint32_t _c) : key(_k), color(_c) {}
 };
 
 struct Stops {

@@ -17,9 +17,9 @@ Stops instance_float() {
 
 Stops instance_color() {
     return Stops({
-        Frame(0, Color(0xff, 0xff, 0xff, 1.)),
-        Frame(1, Color(0xee, 0xee, 0xee, 1.)),
-        Frame(5, Color(0xaa, 0xaa, 0xaa, 1.))
+        Frame(0, 0xffffffff),
+        Frame(1, 0xffeeeeee),
+        Frame(5, 0xffaaaaaa)
     });
 }
 
@@ -76,8 +76,8 @@ TEST_CASE("Stops parses correctly from YAML color values", "[Stops][YAML]") {
     REQUIRE(stops.frames[0].key == 10.f);
     REQUIRE(stops.frames[1].key == 16.f);
     REQUIRE(stops.frames[2].key == 18.f);
-    REQUIRE(stops.frames[0].color.getInt() == 0xffaaaaaa);
-    REQUIRE(stops.frames[1].color.getInt() == 0xffff7f00);
-    REQUIRE(stops.frames[2].color.getInt() == 0x7fff3f00);
+    REQUIRE(stops.frames[0].color == 0xffaaaaaa);
+    REQUIRE(stops.frames[1].color == 0xffff7f00);
+    REQUIRE(stops.frames[2].color == 0x7fff3f00);
 
 }
