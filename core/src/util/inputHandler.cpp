@@ -90,11 +90,6 @@ void InputHandler::handlePinchGesture(float _posX, float _posY, float _scale, fl
 void InputHandler::handleRotateGesture(float _posX, float _posY, float _radians) {
 
     onGesture();
-    m_view->screenToGroundPlane(_posX, _posY);
-    glm::vec2 radial = { _posX, _posY };
-    glm::vec2 displacement = radial - glm::rotate(radial, _radians);
-
-    m_view->translate(displacement.x, displacement.y);
     m_view->roll(_radians);
 
 }
