@@ -20,7 +20,7 @@ std::unique_ptr<TextLabel> makeLabel(Label::Transform _transform, Label::Type _t
     Label::Options options;
     options.color = 0xff;
     options.offset = {0.0f, 0.0f};
-    options.id = id;
+    options.properties = id;
     options.interactive = true;
     return std::unique_ptr<TextLabel>(new TextLabel("label",
                                                     _transform, _type, {0, 0},
@@ -53,20 +53,20 @@ TEST_CASE("Test getFeaturesAtPoint", "[Labels][FeaturePicking]") {
 
     tiles.push_back(tile);
     {
-        auto& items = labels->getFeaturesAtPoint(view, 0, styles, tiles, 128, 128);
+        auto& items = labels->getFeaturesAtPoint(view, 0, styles, tiles, 128, 128, false);
         REQUIRE(items.size() == 1);
-        REQUIRE(items[0].id == "0");
+        REQUIRE(items[0] == "0");
     }
     {
-        auto& items = labels->getFeaturesAtPoint(view, 0, styles, tiles, 256, 256);
+        auto& items = labels->getFeaturesAtPoint(view, 0, styles, tiles, 256, 256, false);
         REQUIRE(items.size() == 1);
-        REQUIRE(items[0].id == "1");
+        REQUIRE(items[0] == "1");
     }
 
     {
-        auto& items = labels->getFeaturesAtPoint(view, 0, styles, tiles, 256, 0);
+        auto& items = labels->getFeaturesAtPoint(view, 0, styles, tiles, 256, 0, false);
         REQUIRE(items.size() == 1);
-        REQUIRE(items[0].id == "2");
+        REQUIRE(items[0] == "2");
     }
 }
 

@@ -109,7 +109,7 @@ void Labels::update(const View& _view, float _dt, const std::vector<std::unique_
 const std::vector<std::string>& Labels::getFeaturesAtPoint(const View& _view, float _dt,
                                                            const std::vector<std::unique_ptr<Style>>& _styles,
                                                            const std::vector<std::shared_ptr<Tile>>& _tiles,
-                                                           float _x, float _y) {
+                                                           float _x, float _y, bool _visibleOnly) {
     // FIXME dpi dependent threshold
     const float thumbSize = 20;
     const float threshold = 100;
@@ -153,10 +153,9 @@ const std::vector<std::string>& Labels::getFeaturesAtPoint(const View& _view, fl
 
                 if (distance > threshold) { continue; }
 
-                if (label->visibleState() && isect2d::intersect(label->getOBB(), obb)) {
+                if (!_visibleOnly || (label->visibleState() && isect2d::intersect(label->getOBB(), obb))) {
                     m_touchItems.push_back(options.properties);
                 }
-
             }
         }
     }

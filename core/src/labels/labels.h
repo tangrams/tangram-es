@@ -37,7 +37,7 @@ public:
     const std::vector<std::string>& getFeaturesAtPoint(const View& _view, float _dt,
                                                        const std::vector<std::unique_ptr<Style>>& _styles,
                                                        const std::vector<std::shared_ptr<Tile>>& _tiles,
-                                                       float _x, float _y);
+                                                       float _x, float _y, bool _visibleOnly = true);
 
     bool needUpdate() { return m_needUpdate; }
 
