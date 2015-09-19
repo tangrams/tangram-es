@@ -380,6 +380,9 @@ static void SWIG_JavaArrayArgoutInt (JNIEnv *jenv, jint *jarr, int *carr, jintAr
 static jintArray SWIG_JavaArrayOutInt (JNIEnv *jenv, int *result, jsize sz);
 
 
+#include "tangram.h"
+
+
 #ifdef __cplusplus
 extern "C" {
 #endif
@@ -727,6 +730,23 @@ SWIGEXPORT void JNICALL Java_com_mapzen_tangram_tangramJNI_delete_1ClientGeoJson
   smartarg1 = *(std::shared_ptr<  Tangram::ClientGeoJsonSource > **)&jarg1;
   arg1 = (Tangram::ClientGeoJsonSource *)(smartarg1 ? smartarg1->get() : 0);
   (void)arg1; delete smartarg1;
+}
+
+
+SWIGEXPORT jint JNICALL Java_com_mapzen_tangram_tangramJNI_addDataSource(JNIEnv *jenv, jclass jcls, jlong jarg1, jobject jarg1_) {
+  jint jresult = 0 ;
+  std::shared_ptr< Tangram::DataSource > arg1 ;
+  std::shared_ptr< Tangram::DataSource > *argp1 ;
+  int result;
+
+  (void)jenv;
+  (void)jcls;
+  (void)jarg1_;
+  argp1 = *(std::shared_ptr< Tangram::DataSource > **)&jarg1;
+  if (argp1) arg1 = *argp1;
+  result = (int)Tangram::addDataSource(arg1);
+  jresult = (jint)result;
+  return jresult;
 }
 
 

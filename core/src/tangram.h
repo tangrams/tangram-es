@@ -14,6 +14,8 @@
 
 namespace Tangram {
 
+class DataSource;
+
 // Create resources and initialize the map view using the scene file at the given resource path
 void initialize(const char* _scenePath);
 
@@ -62,6 +64,8 @@ void setPixelScale(float _pixelsPerPoint);
 // Create a data source for adding drawable map data, which will be styled according to the scene file using the provided data source name;
 // Returns an integer ID for use with the addSource* and clearSource* functions
 int addDataSource(const char* _name);
+
+int addDataSource(std::shared_ptr<DataSource> _source);
 
 // Removes all data from the source with the provided ID
 void clearSourceData(int _sourceId);
