@@ -211,8 +211,6 @@ static void SWIGUNUSED SWIG_JavaThrowException(JNIEnv *jenv, SWIG_JavaExceptionC
 #define SWIG_contract_assert(nullreturn, expr, msg) if (!(expr)) {SWIG_JavaThrowException(jenv, SWIG_JavaIllegalArgumentException, msg); return nullreturn; } else
 
 
-// #include "debug.h"
-// #include "tangram.h"
 #include "data/properties.h"
 #include <string>
 #include <memory>
@@ -239,6 +237,148 @@ SWIGINTERN void Tangram_Properties_add__SWIG_0(Tangram::Properties *self,std::st
 SWIGINTERN void Tangram_Properties_add__SWIG_1(Tangram::Properties *self,std::string key,float value){
         self->add(key, value);
     }
+
+#include "data/dataSource.h"
+#include "data/clientGeoJsonSource.h"
+
+
+static int SWIG_JavaArrayInFloat (JNIEnv *jenv, jfloat **jarr, float **carr, jfloatArray input) {
+  if (!input) {
+    SWIG_JavaThrowException(jenv, SWIG_JavaNullPointerException, "null array");
+    return 0;
+  }
+
+   jboolean isCopy;
+
+   *carr = (float*) jenv->GetPrimitiveArrayCritical(input, &isCopy);
+   if (!*carr)
+      return 0;
+
+  return 1;
+}
+
+static void SWIG_JavaArrayArgoutFloat (JNIEnv *jenv, jfloat *jarr, float *carr, jfloatArray input) {
+  /* int i;
+   * jsize sz = jenv->GetArrayLength(input);
+   * for (i=0; i<sz; i++)
+   *   jarr[i] = (jfloat)carr[i];
+   * jenv->ReleaseFloatArrayElements(input, jarr, 0); */
+
+  jenv->ReleasePrimitiveArrayCritical(input, carr, JNI_ABORT);
+}
+
+static jfloatArray SWIG_JavaArrayOutFloat (JNIEnv *jenv, float *result, jsize sz) {
+  jfloat *arr;
+  int i;
+  jfloatArray jresult = jenv->NewFloatArray(sz);
+  if (!jresult)
+    return NULL;
+  arr = jenv->GetFloatArrayElements(jresult, 0);
+  if (!arr)
+    return NULL;
+  for (i=0; i<sz; i++)
+    arr[i] = (jfloat)result[i];
+  jenv->ReleaseFloatArrayElements(jresult, arr, 0);
+  return jresult;
+}
+
+
+static int SWIG_JavaArrayInFloat (JNIEnv *jenv, jfloat **jarr, float **carr, jfloatArray input);
+static void SWIG_JavaArrayArgoutFloat (JNIEnv *jenv, jfloat *jarr, float *carr, jfloatArray input);
+static jfloatArray SWIG_JavaArrayOutFloat (JNIEnv *jenv, float *result, jsize sz);
+
+
+static int SWIG_JavaArrayInDouble (JNIEnv *jenv, jdouble **jarr, double **carr, jdoubleArray input) {
+  if (!input) {
+    SWIG_JavaThrowException(jenv, SWIG_JavaNullPointerException, "null array");
+    return 0;
+  }
+
+   jboolean isCopy;
+
+   *carr = (double*) jenv->GetPrimitiveArrayCritical(input, &isCopy);
+   if (!*carr)
+      return 0;
+
+  return 1;
+}
+
+static void SWIG_JavaArrayArgoutDouble (JNIEnv *jenv, jdouble *jarr, double *carr, jdoubleArray input) {
+  /* int i;
+   * jsize sz = jenv->GetArrayLength(input);
+   * for (i=0; i<sz; i++)
+   *   jarr[i] = (jdouble)carr[i];
+   * jenv->ReleaseDoubleArrayElements(input, jarr, 0); */
+
+  jenv->ReleasePrimitiveArrayCritical(input, carr, JNI_ABORT);
+}
+
+static jdoubleArray SWIG_JavaArrayOutDouble (JNIEnv *jenv, double *result, jsize sz) {
+  jdouble *arr;
+  int i;
+  jdoubleArray jresult = jenv->NewDoubleArray(sz);
+  if (!jresult)
+    return NULL;
+  arr = jenv->GetDoubleArrayElements(jresult, 0);
+  if (!arr)
+    return NULL;
+  for (i=0; i<sz; i++)
+    arr[i] = (jdouble)result[i];
+  jenv->ReleaseDoubleArrayElements(jresult, arr, 0);
+  return jresult;
+}
+
+
+static int SWIG_JavaArrayInDouble (JNIEnv *jenv, jdouble **jarr, double **carr, jdoubleArray input);
+static void SWIG_JavaArrayArgoutDouble (JNIEnv *jenv, jdouble *jarr, double *carr, jdoubleArray input);
+static jdoubleArray SWIG_JavaArrayOutDouble (JNIEnv *jenv, double *result, jsize sz);
+
+
+static int SWIG_JavaArrayInInt (JNIEnv *jenv, jint **jarr, int **carr, jintArray input) {
+  if (!input) {
+    SWIG_JavaThrowException(jenv, SWIG_JavaNullPointerException, "null array");
+    return 0;
+  }
+
+   jboolean isCopy;
+
+   *carr = (int*) jenv->GetPrimitiveArrayCritical(input, &isCopy);
+   if (!*carr)
+      return 0;
+
+  return 1;
+}
+
+static void SWIG_JavaArrayArgoutInt (JNIEnv *jenv, jint *jarr, int *carr, jintArray input) {
+  /* int i;
+   * jsize sz = jenv->GetArrayLength(input);
+   * for (i=0; i<sz; i++)
+   *   jarr[i] = (jint)carr[i];
+   * jenv->ReleaseIntArrayElements(input, jarr, 0); */
+
+  jenv->ReleasePrimitiveArrayCritical(input, carr, JNI_ABORT);
+}
+
+static jintArray SWIG_JavaArrayOutInt (JNIEnv *jenv, int *result, jsize sz) {
+  jint *arr;
+  int i;
+  jintArray jresult = jenv->NewIntArray(sz);
+  if (!jresult)
+    return NULL;
+  arr = jenv->GetIntArrayElements(jresult, 0);
+  if (!arr)
+    return NULL;
+  for (i=0; i<sz; i++)
+    arr[i] = (jint)result[i];
+  jenv->ReleaseIntArrayElements(jresult, arr, 0);
+  return jresult;
+}
+
+
+static int SWIG_JavaArrayInInt (JNIEnv *jenv, jint **jarr, int **carr, jintArray input);
+static void SWIG_JavaArrayArgoutInt (JNIEnv *jenv, jint *jarr, int *carr, jintArray input);
+static jintArray SWIG_JavaArrayOutInt (JNIEnv *jenv, int *result, jsize sz);
+
 
 #ifdef __cplusplus
 extern "C" {
@@ -425,6 +565,180 @@ SWIGEXPORT void JNICALL Java_com_mapzen_tangram_tangramJNI_delete_1Properties(JN
   (void)arg1; delete smartarg1;
 }
 
+
+SWIGEXPORT void JNICALL Java_com_mapzen_tangram_tangramJNI_delete_1DataSource(JNIEnv *jenv, jclass jcls, jlong jarg1) {
+  Tangram::DataSource *arg1 = (Tangram::DataSource *) 0 ;
+  std::shared_ptr< Tangram::DataSource > *smartarg1 = 0 ;
+
+  (void)jenv;
+  (void)jcls;
+
+  smartarg1 = *(std::shared_ptr<  Tangram::DataSource > **)&jarg1;
+  arg1 = (Tangram::DataSource *)(smartarg1 ? smartarg1->get() : 0);
+  (void)arg1; delete smartarg1;
+}
+
+
+SWIGEXPORT jlong JNICALL Java_com_mapzen_tangram_tangramJNI_new_1ClientGeoJsonSource(JNIEnv *jenv, jclass jcls, jstring jarg1, jstring jarg2) {
+  jlong jresult = 0 ;
+  std::string *arg1 = 0 ;
+  std::string *arg2 = 0 ;
+  Tangram::ClientGeoJsonSource *result = 0 ;
+
+  (void)jenv;
+  (void)jcls;
+  if(!jarg1) {
+    SWIG_JavaThrowException(jenv, SWIG_JavaNullPointerException, "null string");
+    return 0;
+  }
+  const char *arg1_pstr = (const char *)jenv->GetStringUTFChars(jarg1, 0);
+  if (!arg1_pstr) return 0;
+  std::string arg1_str(arg1_pstr);
+  arg1 = &arg1_str;
+  jenv->ReleaseStringUTFChars(jarg1, arg1_pstr);
+  if(!jarg2) {
+    SWIG_JavaThrowException(jenv, SWIG_JavaNullPointerException, "null string");
+    return 0;
+  }
+  const char *arg2_pstr = (const char *)jenv->GetStringUTFChars(jarg2, 0);
+  if (!arg2_pstr) return 0;
+  std::string arg2_str(arg2_pstr);
+  arg2 = &arg2_str;
+  jenv->ReleaseStringUTFChars(jarg2, arg2_pstr);
+  result = (Tangram::ClientGeoJsonSource *)new Tangram::ClientGeoJsonSource((std::string const &)*arg1,(std::string const &)*arg2);
+
+  *(std::shared_ptr<  Tangram::ClientGeoJsonSource > **)&jresult = result ? new std::shared_ptr<  Tangram::ClientGeoJsonSource >(result SWIG_NO_NULL_DELETER_1) : 0;
+
+  return jresult;
+}
+
+
+SWIGEXPORT void JNICALL Java_com_mapzen_tangram_tangramJNI_ClientGeoJsonSource_1addData(JNIEnv *jenv, jclass jcls, jlong jarg1, jobject jarg1_, jstring jarg2) {
+  Tangram::ClientGeoJsonSource *arg1 = (Tangram::ClientGeoJsonSource *) 0 ;
+  std::string *arg2 = 0 ;
+  std::shared_ptr< Tangram::ClientGeoJsonSource > *smartarg1 = 0 ;
+
+  (void)jenv;
+  (void)jcls;
+  (void)jarg1_;
+
+  smartarg1 = *(std::shared_ptr<  Tangram::ClientGeoJsonSource > **)&jarg1;
+  arg1 = (Tangram::ClientGeoJsonSource *)(smartarg1 ? smartarg1->get() : 0);
+  if(!jarg2) {
+    SWIG_JavaThrowException(jenv, SWIG_JavaNullPointerException, "null string");
+    return ;
+  }
+  const char *arg2_pstr = (const char *)jenv->GetStringUTFChars(jarg2, 0);
+  if (!arg2_pstr) return ;
+  std::string arg2_str(arg2_pstr);
+  arg2 = &arg2_str;
+  jenv->ReleaseStringUTFChars(jarg2, arg2_pstr);
+  (arg1)->addData((std::string const &)*arg2);
+}
+
+
+SWIGEXPORT void JNICALL Java_com_mapzen_tangram_tangramJNI_ClientGeoJsonSource_1addPoint(JNIEnv *jenv, jclass jcls, jlong jarg1, jobject jarg1_, jdoubleArray jarg2) {
+  Tangram::ClientGeoJsonSource *arg1 = (Tangram::ClientGeoJsonSource *) 0 ;
+  double *arg2 ;
+  std::shared_ptr< Tangram::ClientGeoJsonSource > *smartarg1 = 0 ;
+  jdouble *jarr2 ;
+
+  (void)jenv;
+  (void)jcls;
+  (void)jarg1_;
+
+  smartarg1 = *(std::shared_ptr<  Tangram::ClientGeoJsonSource > **)&jarg1;
+  arg1 = (Tangram::ClientGeoJsonSource *)(smartarg1 ? smartarg1->get() : 0);
+  if (!SWIG_JavaArrayInDouble(jenv, &jarr2, (double **)&arg2, jarg2)) return ;
+  (arg1)->addPoint(arg2);
+  SWIG_JavaArrayArgoutDouble(jenv, jarr2, (double *)arg2, jarg2);
+
+}
+
+
+SWIGEXPORT void JNICALL Java_com_mapzen_tangram_tangramJNI_ClientGeoJsonSource_1addLine(JNIEnv *jenv, jclass jcls, jlong jarg1, jobject jarg1_, jdoubleArray jarg2, jint jarg3) {
+  Tangram::ClientGeoJsonSource *arg1 = (Tangram::ClientGeoJsonSource *) 0 ;
+  double *arg2 ;
+  int arg3 ;
+  std::shared_ptr< Tangram::ClientGeoJsonSource > *smartarg1 = 0 ;
+  jdouble *jarr2 ;
+
+  (void)jenv;
+  (void)jcls;
+  (void)jarg1_;
+
+  smartarg1 = *(std::shared_ptr<  Tangram::ClientGeoJsonSource > **)&jarg1;
+  arg1 = (Tangram::ClientGeoJsonSource *)(smartarg1 ? smartarg1->get() : 0);
+  if (!SWIG_JavaArrayInDouble(jenv, &jarr2, (double **)&arg2, jarg2)) return ;
+  arg3 = (int)jarg3;
+  (arg1)->addLine(arg2,arg3);
+  SWIG_JavaArrayArgoutDouble(jenv, jarr2, (double *)arg2, jarg2);
+
+}
+
+
+SWIGEXPORT void JNICALL Java_com_mapzen_tangram_tangramJNI_ClientGeoJsonSource_1addPoly(JNIEnv *jenv, jclass jcls, jlong jarg1, jobject jarg1_, jdoubleArray jarg2, jintArray jarg3, jint jarg4) {
+  Tangram::ClientGeoJsonSource *arg1 = (Tangram::ClientGeoJsonSource *) 0 ;
+  double *arg2 ;
+  int *arg3 ;
+  int arg4 ;
+  std::shared_ptr< Tangram::ClientGeoJsonSource > *smartarg1 = 0 ;
+  jdouble *jarr2 ;
+  jint *jarr3 ;
+
+  (void)jenv;
+  (void)jcls;
+  (void)jarg1_;
+
+  smartarg1 = *(std::shared_ptr<  Tangram::ClientGeoJsonSource > **)&jarg1;
+  arg1 = (Tangram::ClientGeoJsonSource *)(smartarg1 ? smartarg1->get() : 0);
+  if (!SWIG_JavaArrayInDouble(jenv, &jarr2, (double **)&arg2, jarg2)) return ;
+  if (!SWIG_JavaArrayInInt(jenv, &jarr3, (int **)&arg3, jarg3)) return ;
+  arg4 = (int)jarg4;
+  (arg1)->addPoly(arg2,arg3,arg4);
+  SWIG_JavaArrayArgoutDouble(jenv, jarr2, (double *)arg2, jarg2);
+  SWIG_JavaArrayArgoutInt(jenv, jarr3, (int *)arg3, jarg3);
+
+
+}
+
+
+SWIGEXPORT void JNICALL Java_com_mapzen_tangram_tangramJNI_ClientGeoJsonSource_1clearData(JNIEnv *jenv, jclass jcls, jlong jarg1, jobject jarg1_) {
+  Tangram::ClientGeoJsonSource *arg1 = (Tangram::ClientGeoJsonSource *) 0 ;
+  std::shared_ptr< Tangram::ClientGeoJsonSource > *smartarg1 = 0 ;
+
+  (void)jenv;
+  (void)jcls;
+  (void)jarg1_;
+
+  smartarg1 = *(std::shared_ptr<  Tangram::ClientGeoJsonSource > **)&jarg1;
+  arg1 = (Tangram::ClientGeoJsonSource *)(smartarg1 ? smartarg1->get() : 0);
+  (arg1)->clearData();
+}
+
+
+SWIGEXPORT void JNICALL Java_com_mapzen_tangram_tangramJNI_delete_1ClientGeoJsonSource(JNIEnv *jenv, jclass jcls, jlong jarg1) {
+  Tangram::ClientGeoJsonSource *arg1 = (Tangram::ClientGeoJsonSource *) 0 ;
+  std::shared_ptr< Tangram::ClientGeoJsonSource > *smartarg1 = 0 ;
+
+  (void)jenv;
+  (void)jcls;
+
+  smartarg1 = *(std::shared_ptr<  Tangram::ClientGeoJsonSource > **)&jarg1;
+  arg1 = (Tangram::ClientGeoJsonSource *)(smartarg1 ? smartarg1->get() : 0);
+  (void)arg1; delete smartarg1;
+}
+
+
+SWIGEXPORT jlong JNICALL Java_com_mapzen_tangram_tangramJNI_ClientGeoJsonSource_1SWIGSmartPtrUpcast(JNIEnv *jenv, jclass jcls, jlong jarg1) {
+    jlong baseptr = 0;
+    std::shared_ptr< Tangram::ClientGeoJsonSource > *argp1;
+    (void)jenv;
+    (void)jcls;
+    argp1 = *(std::shared_ptr< Tangram::ClientGeoJsonSource > **)&jarg1;
+    *(std::shared_ptr< Tangram::DataSource > **)&baseptr = argp1 ? new std::shared_ptr< Tangram::DataSource >(*argp1) : 0;
+    return baseptr;
+}
 
 #ifdef __cplusplus
 }

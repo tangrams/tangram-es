@@ -41,3 +41,37 @@ struct Properties {
         $self->add(key, value);
     }
 }
+
+%{
+#include "data/dataSource.h"
+#include "data/clientGeoJsonSource.h"
+%}
+
+%shared_ptr(Tangram::DataSource);
+%shared_ptr(Tangram::ClientGeoJsonSource);
+
+%include "array_nocpy.i"
+
+namespace Tangram {
+
+class DataSource {
+protected:
+    DataSource(const std::string& _name, const std::string& _url);
+};
+
+class ClientGeoJsonSource : public DataSource {
+
+public:
+
+    ClientGeoJsonSource(const std::string& _name, const std::string& _url);
+
+    void addData(const std::string& _data);
+    void addPoint(double _coords[]);
+    void addLine(double _coords[], int _lineLength);
+    void addPoly(double _coords[], int _ringLengths[], int rings);
+
+    virtual void clearData() override;
+
+};
+
+}
