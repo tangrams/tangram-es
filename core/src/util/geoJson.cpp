@@ -3,6 +3,7 @@
 #include "platform.h"
 #include "tile/tile.h"
 #include "util/mapProjection.h"
+#include "data/propertyItem.h"
 
 namespace Tangram {
 

@@ -1,7 +1,12 @@
+#include "propertyItem.h"
 #include "properties.h"
 #include <algorithm>
 
 namespace Tangram {
+
+Properties::Properties() {}
+
+Properties::~Properties() {}
 
 Properties::Properties(std::vector<Item>&& _items) {
     typedef std::vector<Item>::iterator iter_t;
@@ -33,6 +38,42 @@ const Value& Properties::get(const std::string& key) const {
     return it->value;
 }
 
+void Properties::clear() { props.clear(); }
+
+bool Properties::contains(const std::string& key) const {
+    return !get(key).is<none_type>();
+}
+
+bool Properties::getNumeric(const std::string& key, double& value) const {
+    auto& it = get(key);
+    if (it.is<float>()) {
+        value = it.get<float>();
+        return true;
+    } else if (it.is<int64_t>()) {
+        value = it.get<int64_t>();
+        return true;
+    }
+    return false;
+}
+
+double Properties::getNumeric(const std::string& key) const {
+    auto& it = get(key);
+    if (it.is<float>()) {
+        return it.get<float>();
+    } else if (it.is<int64_t>()) {
+        return it.get<int64_t>();
+    }
+    return 0;
+}
+bool Properties::getString(const std::string& key, std::string& value) const {
+    auto& it = get(key);
+    if (it.is<std::string>()) {
+        value = it.get<std::string>();
+        return true;
+    }
+    return false;
+}
+
 const std::string& Properties::getString(const std::string& key) const {
     const static std::string EMPTY_STRING = "";
 
@@ -62,6 +103,15 @@ std::string Properties::getAsString(const std::string& key) const {
 
 void Properties::sort() {
     std::sort(props.begin(), props.end());
+}
+
+void Properties::add(std::string key, std::string value) {
+    props.emplace_back(std::move(key), Value{std::move(value)});
+    sort();
+}
+void Properties::add(std::string key, float value) {
+    props.emplace_back(std::move(key), Value{value});
+    sort();
 }
 
 std::string Properties::toJson() const {

@@ -4,6 +4,7 @@
 #include "mapbox/geojsonvt/geojsonvt_types.hpp"
 #include "platform.h"
 #include "util/geom.h"
+#include "data/propertyItem.h"
 
 using namespace mapbox::util;
 

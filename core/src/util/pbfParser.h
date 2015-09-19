@@ -1,6 +1,8 @@
 #pragma once
 
 #include "data/tileData.h"
+#include "data/propertyItem.h"
+
 #include "pbf/pbf.hpp"
 
 #include <vector>

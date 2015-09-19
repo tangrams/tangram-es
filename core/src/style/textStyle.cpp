@@ -9,6 +9,7 @@
 #include "glm/gtc/type_ptr.hpp"
 #include "tangram.h"
 #include "text/fontContext.h"
+#include "data/propertyItem.h" // Include wherever Properties is used!
 
 namespace Tangram {
 

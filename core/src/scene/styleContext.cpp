@@ -2,6 +2,7 @@
 #include "platform.h"
 #include "builders.h"
 #include "scene/scene.h"
+#include "data/propertyItem.h"
 
 #define DUMP(...) //do { logMsg(__VA_ARGS__); duk_dump_context_stderr(m_ctx); } while(0)
 

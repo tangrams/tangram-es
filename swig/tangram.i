@@ -3,7 +3,7 @@
 %module tangram
 
 %{
-#include "data/tileData.h"
+#include "data/properties.h"
 #include <string>
 #include <memory>
 %}

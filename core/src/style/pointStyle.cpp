@@ -8,6 +8,7 @@
 #include "util/builders.h"
 #include "view/view.h"
 #include "labels/spriteLabel.h"
+#include "data/propertyItem.h" // Include wherever Properties is used!
 
 #include "glm/gtc/type_ptr.hpp"
 
