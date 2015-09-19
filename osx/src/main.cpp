@@ -49,8 +49,11 @@ void mouse_button_callback(GLFWwindow* window, int button, int action, int mods)
         Tangram::clearSourceData(data_source_id);
 
         auto picks = Tangram::pickFeaturesAt(x, y);
+        std::string name;
         for (const auto& it : picks) {
-            logMsg("picked: %s\n", it.c_str());
+            if (it->getString("name", name)) {
+                logMsg("\t %s\n", name.c_str());
+            }
         }
     } else if ( (time - last_mouse_down) < single_tap_time) {
         double coords[4] = { x, y, 0, 0 };
