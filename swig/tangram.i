@@ -74,4 +74,10 @@ public:
 
 };
 
+%{
+#include "tangram.h"
+%}
+
+namespace Tangram {
+int addDataSource(std::shared_ptr<Tangram::DataSource> _source);
 }

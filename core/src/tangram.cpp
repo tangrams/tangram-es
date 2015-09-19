@@ -275,6 +275,11 @@ int addDataSource(const char* _name) {
     return source->id();
 }
 
+int addDataSource(std::shared_ptr<DataSource> _source) {
+    m_tileManager->addDataSource(_source);
+    return _source->id();
+}
+
 void clearSourceData(int _sourceId) {
 
     if (!m_tileManager) { return; }

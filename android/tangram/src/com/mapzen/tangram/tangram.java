@@ -9,4 +9,8 @@
 package com.mapzen.tangram;
 
 public class tangram {
+  public static int addDataSource(DataSource _source) {
+    return tangramJNI.addDataSource(DataSource.getCPtr(_source), _source);
+  }
+
 }
