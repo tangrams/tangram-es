@@ -17,4 +17,13 @@ public class tangramJNI {
   public final static native void Properties_add__SWIG_0(long jarg1, Properties jarg1_, String jarg2, String jarg3);
   public final static native void Properties_add__SWIG_1(long jarg1, Properties jarg1_, String jarg2, float jarg3);
   public final static native void delete_Properties(long jarg1);
+  public final static native void delete_DataSource(long jarg1);
+  public final static native long new_ClientGeoJsonSource(String jarg1, String jarg2);
+  public final static native void ClientGeoJsonSource_addData(long jarg1, ClientGeoJsonSource jarg1_, String jarg2);
+  public final static native void ClientGeoJsonSource_addPoint(long jarg1, ClientGeoJsonSource jarg1_, double[] jarg2);
+  public final static native void ClientGeoJsonSource_addLine(long jarg1, ClientGeoJsonSource jarg1_, double[] jarg2, int jarg3);
+  public final static native void ClientGeoJsonSource_addPoly(long jarg1, ClientGeoJsonSource jarg1_, double[] jarg2, int[] jarg3, int jarg4);
+  public final static native void ClientGeoJsonSource_clearData(long jarg1, ClientGeoJsonSource jarg1_);
+  public final static native void delete_ClientGeoJsonSource(long jarg1);
+  public final static native long ClientGeoJsonSource_SWIGSmartPtrUpcast(long jarg1);
 }

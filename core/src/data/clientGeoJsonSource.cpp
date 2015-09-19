@@ -58,7 +58,7 @@ void ClientGeoJsonSource::clearData() {
 
 }
 
-void ClientGeoJsonSource::addPoint(double* _coords) {
+void ClientGeoJsonSource::addPoint(double _coords[]) {
 
     auto container = geojsonvt::Convert::project({ geojsonvt::LonLat(_coords[0], _coords[1]) }, tolerance);
 
@@ -71,7 +71,7 @@ void ClientGeoJsonSource::addPoint(double* _coords) {
 
 }
 
-void ClientGeoJsonSource::addLine(double* _coords, int _lineLength) {
+void ClientGeoJsonSource::addLine(double _coords[], int _lineLength) {
     
     std::vector<geojsonvt::LonLat> line(_lineLength, { 0, 0 });
     for (int i = 0; i < _lineLength; i++) {
@@ -88,7 +88,7 @@ void ClientGeoJsonSource::addLine(double* _coords, int _lineLength) {
     m_store = std::make_unique<GeoJSONVT>(m_features, maxZoom, indexMaxZoom, indexMaxPoints, tolerance);
 }
 
-void ClientGeoJsonSource::addPoly(double* _coords, int* _ringLengths, int _rings) {
+void ClientGeoJsonSource::addPoly(double _coords[], int _ringLengths[], int _rings) {
 
     geojsonvt::ProjectedGeometryContainer geometry;
     double* ringCoords = _coords;
