@@ -213,7 +213,7 @@ static void SWIGUNUSED SWIG_JavaThrowException(JNIEnv *jenv, SWIG_JavaExceptionC
 
 // #include "debug.h"
 // #include "tangram.h"
-#include "data/tileData.h"
+#include "data/properties.h"
 #include <string>
 #include <memory>
 
@@ -222,11 +222,6 @@ static void SWIGUNUSED SWIG_JavaThrowException(JNIEnv *jenv, SWIG_JavaExceptionC
 
 
 #include <string>
-
-
-#include <map>
-#include <algorithm>
-#include <stdexcept>
 
 
 struct SWIG_null_deleter {
@@ -244,11 +239,6 @@ SWIGINTERN void Tangram_Properties_add__SWIG_0(Tangram::Properties *self,std::st
 SWIGINTERN void Tangram_Properties_add__SWIG_1(Tangram::Properties *self,std::string key,float value){
         self->add(key, value);
     }
-
-static std::shared_ptr<Tangram::Properties> getProp() {
-    return nullptr;
-}
-
 
 #ifdef __cplusplus
 extern "C" {
@@ -433,18 +423,6 @@ SWIGEXPORT void JNICALL Java_com_mapzen_tangram_tangramJNI_delete_1Properties(JN
   smartarg1 = *(std::shared_ptr<  Tangram::Properties > **)&jarg1;
   arg1 = (Tangram::Properties *)(smartarg1 ? smartarg1->get() : 0);
   (void)arg1; delete smartarg1;
-}
-
-
-SWIGEXPORT jlong JNICALL Java_com_mapzen_tangram_tangramJNI_getProp(JNIEnv *jenv, jclass jcls) {
-  jlong jresult = 0 ;
-  std::shared_ptr< Tangram::Properties > result;
-
-  (void)jenv;
-  (void)jcls;
-  result = getProp();
-  *(std::shared_ptr< Tangram::Properties > **)&jresult = result ? new std::shared_ptr< Tangram::Properties >(result) : 0;
-  return jresult;
 }
 
 

@@ -17,5 +17,4 @@ public class tangramJNI {
   public final static native void Properties_add__SWIG_0(long jarg1, Properties jarg1_, String jarg2, String jarg3);
   public final static native void Properties_add__SWIG_1(long jarg1, Properties jarg1_, String jarg2, float jarg3);
   public final static native void delete_Properties(long jarg1);
-  public final static native long getProp();
 }

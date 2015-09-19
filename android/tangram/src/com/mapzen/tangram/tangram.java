@@ -9,9 +9,4 @@
 package com.mapzen.tangram;
 
 public class tangram {
-  public static Properties getProp() {
-    long cPtr = tangramJNI.getProp();
-    return (cPtr == 0) ? null : new Properties(cPtr, true);
-  }
-
 }
