@@ -57,7 +57,9 @@ public:
     static MaterialTexture loadMaterialTexture(YAML::Node matCompNode, Scene& scene);
 
     // public for testing
-    static std::vector<StyleParam> parseStyleParams(YAML::Node params, Scene& scene, const std::string& propPrefix = "");
+    static void parseStyleParams(YAML::Node params, Scene& scene, const std::string& propPrefix,
+                                 std::vector<StyleParam>& out);
+
     static StyleUniforms parseStyleUniforms(const YAML::Node& uniform, Scene& scene);
     static YAML::Node mixStyle(const std::vector<YAML::Node>& mixes);
 
