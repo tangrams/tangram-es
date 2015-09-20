@@ -86,12 +86,12 @@ void TileManager::setScene(std::shared_ptr<Scene> _scene) {
 }
 
 void TileManager::addDataSource(std::shared_ptr<DataSource> dataSource) {
-    m_tileSets.push_back({dataSource->id(), dataSource});
+    m_tileSets.push_back({ dataSource });
 }
 
 std::shared_ptr<ClientGeoJsonSource> TileManager::getClientSourceById(int32_t _id) {
     for (auto& set : m_tileSets) {
-        if (set.id == _id) {
+        if (set.source->id() == _id) {
             return std::dynamic_pointer_cast<ClientGeoJsonSource>(set.source);
         }
     }
@@ -171,7 +171,7 @@ void TileManager::clearTileSets() {
 
 void TileManager::clearTileSet(int32_t _id) {
     for (auto& tileSet : m_tileSets) {
-        if (tileSet.id != _id) { continue; }
+        if (tileSet.source->id() != _id) { continue; }
         for (auto& tile : tileSet.tiles) {
             setTileState(*tile.second, TileState::canceled);
         }
@@ -366,7 +366,7 @@ void TileManager::loadTiles() {
 
 bool TileManager::addTile(TileSet& tileSet, const TileID& _tileID) {
 
-    auto tile = m_tileCache->get(tileSet.id, _tileID);
+    auto tile = m_tileCache->get(tileSet.source->id(), _tileID);
     bool fromCache = false;
 
     if (tile) {
@@ -402,7 +402,7 @@ void TileManager::removeTile(TileSet& tileSet, std::map<TileID,
 
     if (tile->hasState(TileState::ready)) {
         // Add to cache
-        m_tileCache->put(tileSet.id, tile);
+        m_tileCache->put(tileSet.source->id(), tile);
     }
 
     // Remove tile from set
@@ -430,7 +430,7 @@ void TileManager::updateProxyTiles(TileSet& tileSet, Tile& _tile) {
     }
     // Get parent proxy from cache
     {
-        auto parent = m_tileCache->get(tileSet.id, parentID);
+        auto parent = m_tileCache->get(tileSet.source->id(), parentID);
         if (parent) {
             _tile.setProxy(Tile::parent);
             parent->incProxyCounter();
@@ -458,7 +458,7 @@ void TileManager::updateProxyTiles(TileSet& tileSet, Tile& _tile) {
                     }
                 }
             } else {
-                auto child = m_tileCache->get(tileSet.id, childID);
+                auto child = m_tileCache->get(tileSet.source->id(), childID);
                 if (child) {
                     _tile.setProxy(static_cast<Tile::ProxyID>(1 << i));
                     child->incProxyCounter();
