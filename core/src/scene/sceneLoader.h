@@ -30,7 +30,11 @@ struct Filter;
 // 0: type, 1: values
 using StyleUniforms = std::pair<std::string, std::vector<UniformValue>>;
 
-class SceneLoader {
+struct SceneLoader {
+
+    static bool loadScene(const std::string& _sceneString, Scene& _scene);
+
+    /*** all public for testing ***/
 
     static void loadBackground(YAML::Node background, Scene& scene);
     static void loadSources(YAML::Node sources, Scene& scene);
@@ -50,14 +54,8 @@ class SceneLoader {
     static Filter generateNoneFilter(YAML::Node filter, Scene& scene);
     static Filter generatePredicate(YAML::Node filter, std::string _key);
 
-public:
-    SceneLoader() = delete;
-
-    static bool loadScene(const std::string& _sceneString, Scene& _scene);
-
     static MaterialTexture loadMaterialTexture(YAML::Node matCompNode, Scene& scene);
 
-    // public for testing
     static void parseStyleParams(YAML::Node params, Scene& scene, const std::string& propPrefix,
                                  std::vector<StyleParam>& out);
 
@@ -83,6 +81,9 @@ public:
     // Methods to merge shader extensions
     static YAML::Node shaderExtMerge(const std::vector<YAML::Node>& mixes);
     static Filter generateFilter(YAML::Node filter, Scene& scene);
+
+    SceneLoader() = delete;
+
 };
 
 }
