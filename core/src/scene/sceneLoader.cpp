@@ -69,9 +69,9 @@ bool SceneLoader::loadScene(const std::string& _sceneString, Scene& _scene) {
 
 void SceneLoader::loadShaderConfig(Node shaders, Style& style, Scene& scene) {
 
-    auto& shader = *(style.getShaderProgram());
-
     if (!shaders) { return; }
+
+    auto& shader = *(style.getShaderProgram());
 
     if (Node extensionsNode = shaders["extensions"]) {
         if(extensionsNode.IsSequence()) {
@@ -1048,9 +1048,8 @@ Filter SceneLoader::generateNoneFilter(Node _filter, Scene& scene) {
     return Filter(Operators::none, std::move(filters));
 }
 
-std::vector<StyleParam> SceneLoader::parseStyleParams(Node params, Scene& scene, const std::string& prefix) {
-
-    std::vector<StyleParam> out;
+void SceneLoader::parseStyleParams(Node params, Scene& scene, const std::string& prefix,
+                                   std::vector<StyleParam>& out) {
 
     for (const auto& prop : params) {
 
@@ -1096,15 +1095,13 @@ std::vector<StyleParam> SceneLoader::parseStyleParams(Node params, Scene& scene,
                 break;
             }
             case NodeType::Map: {
-                auto subparams = parseStyleParams(value, scene, key);
-                out.insert(out.end(), subparams.begin(), subparams.end());
+                // NB: Flatten parameter map
+                parseStyleParams(value, scene, key, out);
                 break;
             }
             default: logMsg("ERROR: Style parameter %s must be a scalar, sequence, or map.\n", key.c_str());
         }
     }
-
-    return out;
 }
 
 StyleUniforms SceneLoader::parseStyleUniforms(const Node& value, Scene& scene) {
@@ -1209,8 +1206,9 @@ SceneLayer SceneLoader::loadSublayer(Node layer, const std::string& name, Scene&
                     ? explicitStyle.as<std::string>()
                     : ruleNode.first.as<std::string>();
 
-                auto params = parseStyleParams(ruleNode.second, scene);
-                rules.push_back({ style, params });
+                std::vector<StyleParam> params;
+                parseStyleParams(ruleNode.second, scene, "", params);
+                rules.push_back({ style, std::move(params) });
             }
         } else if (key == "filter") {
             filter = generateFilter(member.second, scene);
