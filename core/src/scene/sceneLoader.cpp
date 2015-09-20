@@ -139,6 +139,8 @@ void loadMaterialProperty(const Node& prop, Scene& scene,
                           std::function<void(MaterialTexture)> texFunc,
                           std::function<void(glm::vec4)> vecFunc) {
 
+    if (!prop) { return; }
+
     switch (prop.Type()) {
     case NodeType::Map:
         texFunc(SceneLoader::loadMaterialTexture(prop, scene));
@@ -148,13 +150,15 @@ void loadMaterialProperty(const Node& prop, Scene& scene,
         break;
     case NodeType::Scalar:
         try {
-            float difValue = prop.as<float>();
-            vecFunc(glm::vec4(difValue, difValue, difValue, 1.0));
+            float value = prop.as<float>();
+            vecFunc(glm::vec4(value, value, value, 1.0));
         } catch (const BadConversion& e) {
             // TODO: css color parser and hex_values
         }
         break;
     default:
+        logMsg("Warning: Unexpected value for material '%s'",
+               Dump(prop).c_str());
         break;
     }
 }
@@ -162,33 +166,21 @@ void loadMaterialProperty(const Node& prop, Scene& scene,
 void SceneLoader::loadMaterial(Node matNode, Material& material, Scene& scene) {
     using namespace std::placeholders;
 
-    Node emission = matNode["emission"];
-    if (emission) {
-        loadMaterialProperty(emission, scene, material,
-                             std::bind(&Material::setEmissionTex, &material, _1),
-                             std::bind(&Material::setEmission, &material, _1));
-    }
+    loadMaterialProperty(matNode["emission"], scene, material,
+                         std::bind(&Material::setEmissionTex, &material, _1),
+                         std::bind(&Material::setEmission, &material, _1));
 
-    Node diffuse = matNode["diffuse"];
-    if (diffuse) {
-        loadMaterialProperty(diffuse, scene, material,
-                             std::bind(&Material::setDiffuseTex, &material, _1),
-                             std::bind(&Material::setDiffuse, &material, _1));
-    }
+    loadMaterialProperty(matNode["diffuse"], scene, material,
+                         std::bind(&Material::setDiffuseTex, &material, _1),
+                         std::bind(&Material::setDiffuse, &material, _1));
 
-    Node ambient = matNode["ambient"];
-    if (ambient) {
-        loadMaterialProperty(ambient, scene, material,
-                             std::bind(&Material::setAmbientTex, &material, _1),
-                             std::bind(&Material::setAmbient, &material, _1));
-    }
+    loadMaterialProperty(matNode["ambient"], scene, material,
+                         std::bind(&Material::setAmbientTex, &material, _1),
+                         std::bind(&Material::setAmbient, &material, _1));
 
-    Node specular = matNode["specular"];
-    if (specular) {
-        loadMaterialProperty(specular, scene, material,
-                             std::bind(&Material::setSpecularTex, &material, _1),
-                             std::bind(&Material::setSpecular, &material, _1));
-    }
+    loadMaterialProperty(matNode["specular"], scene, material,
+                         std::bind(&Material::setSpecularTex, &material, _1),
+                         std::bind(&Material::setSpecular, &material, _1));
 
     Node shininess = matNode["shininess"];
 
@@ -200,16 +192,14 @@ void SceneLoader::loadMaterial(Node matNode, Material& material, Scene& scene) {
         }
     }
 
-    Node normal = matNode["normal"];
-    if (normal) {
-        material.setNormal(loadMaterialTexture(normal, scene));
-    }
+    material.setNormal(loadMaterialTexture(matNode["normal"], scene));
 }
 
 MaterialTexture SceneLoader::loadMaterialTexture(Node matCompNode, Scene& scene) {
 
-    MaterialTexture matTex;
+    if (!matCompNode) { return MaterialTexture{}; }
 
+    MaterialTexture matTex;
     Node textureNode = matCompNode["texture"];
     Node mappingNode = matCompNode["mapping"];
     Node scaleNode = matCompNode["scale"];
