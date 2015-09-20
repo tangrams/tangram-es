@@ -62,7 +62,7 @@ StyleParam::StyleParam(const std::string& _key, const std::string& _value) {
     }
 
     key = it->second;
-    value = parseString(key, _value);
+    value = _value.empty() ? none_type{} : parseString(key, _value);
 }
 
 StyleParam::Value StyleParam::parseString(StyleParamKey key, const std::string& _value) {
@@ -73,7 +73,7 @@ StyleParam::Value StyleParam::parseString(StyleParamKey key, const std::string& 
         if (_value == "false") { return glm::vec2(0, 0) ; }
         auto vec2 = glm::vec2(NAN, NAN);
         if (!parseVec2(_value, {"m", "px"}, vec2)) {
-            logMsg("Warning: Badly formed extrude parameter %s.\n", _value.c_str());
+            logMsg("Warning: Badly formed extrude parameter '%s'.\n", _value.c_str());
         }
         return vec2;
     }
@@ -81,7 +81,7 @@ StyleParam::Value StyleParam::parseString(StyleParamKey key, const std::string& 
     case StyleParamKey::size: {
         auto vec2 = glm::vec2(0.f, 0.f);
         if (!parseVec2(_value, {"px"}, vec2)) {
-            logMsg("Warning: Badly formed offset parameter %s.\n", _value.c_str());
+            logMsg("Warning: Badly formed offset parameter '%s'.\n", _value.c_str());
         }
         return vec2;
     }
