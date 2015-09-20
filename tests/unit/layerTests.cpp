@@ -20,7 +20,7 @@ SceneLayer instance_a() {
 
 SceneLayer instance_b() {
 
-    Filter f = Filter(Operators::any, {}); // passes nothing
+    Filter f = Filter::MatchAny({}); // passes nothing
 
     DrawRule rule = { "style_1", { { StyleParamKey::order, "value_b" } } };
 
