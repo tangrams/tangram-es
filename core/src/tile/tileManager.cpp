@@ -41,11 +41,48 @@ TileManager::~TileManager() {
 }
 
 void TileManager::setScene(std::shared_ptr<Scene> _scene) {
-    m_scene = _scene;
+    m_tileCache->clear();
 
-    for (auto& source : _scene->dataSources()) {
-        addDataSource(source);
+    auto& sources = _scene->dataSources();
+
+    // remove sources that are not in new scene - there must be a better way..
+    auto it = std::remove_if(
+        m_tileSets.begin(), m_tileSets.end(),
+        [&](auto& tileSet) {
+            auto sIt = std::find_if(
+                sources.begin(), sources.end(),
+                [&](auto& s){ return tileSet.source->name() == s->name(); });
+
+            if (sIt != sources.end()) {
+                for_each(tileSet.tiles.begin(), tileSet.tiles.end(),
+                         [&](auto& tile){ this->setTileState(*tile.second, TileState::canceled);});
+
+                tileSet.tiles.clear();
+                return false;
+            }
+
+            logMsg("remove source %s\n", tileSet.source->name().c_str());
+            return true;
+
+        });
+
+    m_tileSets.erase(it, m_tileSets.end());
+
+    // add new sources
+    for (const auto& source : sources) {
+
+        if(std::find_if(
+               m_tileSets.begin(), m_tileSets.end(),
+               [&](const TileSet& a) {
+                            return a.source->name() == source->name();
+                        }) == m_tileSets.end()) {
+            logMsg("add source %s\n", source->name().c_str());
+
+            addDataSource(source);
+        }
     }
+
+    m_scene = _scene;
 }
 
 void TileManager::addDataSource(std::shared_ptr<DataSource> dataSource) {
@@ -178,7 +215,7 @@ void TileManager::updateTileSet(TileSet& tileSet) {
             auto& task = *it;
             auto& tile = *(task->tile);
 
-            if (tileSet.source.get() == task->source) {
+            if (tileSet.source == task->source) {
 
                 if (setTileState(tile, TileState::ready)) {
                     clearProxyTiles(tileSet, tile, removeTiles);
@@ -305,7 +342,7 @@ void TileManager::loadTiles() {
         auto& tile = it->second;
         auto& source = tileSet.source;
 
-        auto task = std::make_shared<TileTask>(tile, source.get());
+        auto task = std::make_shared<TileTask>(tile, source);
         if (source->getTileData(task)) {
             m_dataCallback(std::move(task));
 

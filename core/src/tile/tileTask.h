@@ -14,12 +14,14 @@ class TileTask {
 
 public:
     std::shared_ptr<Tile> tile;
-    /*const*/ DataSource* source;
+
+    // NB: Save shared reference to Datasource while building tile
+    std::shared_ptr<DataSource> source;
 
     // Raw tile data that will be processed by DataSource.
     std::shared_ptr<std::vector<char>> rawTileData;
 
-    TileTask(std::shared_ptr<Tile> _tile, DataSource* _source) :
+    TileTask(std::shared_ptr<Tile> _tile, std::shared_ptr<DataSource> _source) :
         tile(_tile),
         source(_source) {
     }
