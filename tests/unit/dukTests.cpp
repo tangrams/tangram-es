@@ -10,13 +10,9 @@
 
 using namespace Tangram;
 
-SceneLoader sceneLoader;
-
-
 TEST_CASE( "", "[Duktape][init]") {
     StyleContext();
 }
-
 
 TEST_CASE( "Test filter without feature being set", "[Duktape][evalFilterFn]") {
     StyleContext ctx;
@@ -202,8 +198,8 @@ TEST_CASE( "Test evalFilter - Init filter function from yaml", "[Duktape][evalFi
     YAML::Node n0 = YAML::Load(R"(filter: function() { return feature.sort_key === 2; })");
     YAML::Node n1 = YAML::Load(R"(filter: function() { return feature.name === 'test'; })");
 
-    Filter filter0 = sceneLoader.generateFilter(n0["filter"], scene);
-    Filter filter1 = sceneLoader.generateFilter(n1["filter"], scene);
+    Filter filter0 = SceneLoader::generateFilter(n0["filter"], scene);
+    Filter filter1 = SceneLoader::generateFilter(n1["filter"], scene);
 
     REQUIRE(scene.functions().size() == 2);
 
@@ -248,7 +244,7 @@ TEST_CASE("Test evalStyle - Init StyleParam function from yaml", "[Duktape][eval
                 cap: function() { return 'round'; }
             )");
 
-    std::vector<StyleParam> styles(sceneLoader.parseStyleParams(n0["draw"], scene));
+    std::vector<StyleParam> styles(SceneLoader::parseStyleParams(n0["draw"], scene));
 
     REQUIRE(scene.functions().size() == 3);
 

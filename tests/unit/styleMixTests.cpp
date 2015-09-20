@@ -14,7 +14,6 @@ using namespace Tangram;
 using YAML::Node;
 
 TEST_CASE( "Style Mixing Test: Shader Extensions Merging", "[mixing][core][yaml]") {
-    SceneLoader sceneLoader;
     Node node = YAML::Load(R"END(
         Node1:
             shaders:
@@ -32,12 +31,12 @@ TEST_CASE( "Style Mixing Test: Shader Extensions Merging", "[mixing][core][yaml]
 
     Node extNode;
 
-    extNode = sceneLoader.shaderExtMerge( { node["Node1"] } );
+    extNode = SceneLoader::shaderExtMerge( { node["Node1"] } );
     // extNode: [extension1]
     REQUIRE(extNode.size() == 1);
     REQUIRE(extNode[0].as<std::string>() == "extension1");
 
-    extNode = sceneLoader.shaderExtMerge( { node["Node1"], node["Node2"], node["Node3"], node["Node4"] } );
+    extNode = SceneLoader::shaderExtMerge( { node["Node1"], node["Node2"], node["Node3"], node["Node4"] } );
     // extNode: [extension1, extension2, extension3, extension4]
     REQUIRE(extNode.size() == 4);
     REQUIRE(extNode[0].as<std::string>() == "extension1");
@@ -48,7 +47,6 @@ TEST_CASE( "Style Mixing Test: Shader Extensions Merging", "[mixing][core][yaml]
 }
 
 TEST_CASE( "Style Mixing Test: Shader Blocks Merging", "[mixing][core][yaml]") {
-    SceneLoader sceneLoader;
 
     Node node = YAML::Load(R"END(
         Node1:
@@ -69,7 +67,7 @@ TEST_CASE( "Style Mixing Test: Shader Blocks Merging", "[mixing][core][yaml]") {
                     filter: filterBlockC;
         )END");
 
-    Node shaderBlocksNode = sceneLoader.shaderBlockMerge( { node["Node1"] } );
+    Node shaderBlocksNode = SceneLoader::shaderBlockMerge( { node["Node1"] } );
     // shaderBlocksNode:
     //          color: colorBlockA;
     //          normal: normalBlockA;
@@ -78,7 +76,7 @@ TEST_CASE( "Style Mixing Test: Shader Blocks Merging", "[mixing][core][yaml]") {
     REQUIRE(shaderBlocksNode["normal"].as<std::string>() == "normalBlockA;");
     REQUIRE(!shaderBlocksNode["global"]);
 
-    shaderBlocksNode = sceneLoader.shaderBlockMerge( { node["Node1"], node["Node2"], node["Node3"] } );
+    shaderBlocksNode = SceneLoader::shaderBlockMerge( { node["Node1"], node["Node2"], node["Node3"] } );
 
     // shaderBlocksNode:
     //          color: colorBlockA;\ncolorBlockB;
@@ -95,7 +93,6 @@ TEST_CASE( "Style Mixing Test: Shader Blocks Merging", "[mixing][core][yaml]") {
 }
 
 TEST_CASE( "Style Mixing Test: propMerge Tests (recursive overWrite properties)", "[mixing][core][yaml]") {
-    SceneLoader sceneLoader;
 
     Node node = YAML::Load(R"END(
         Node1:
@@ -136,7 +133,7 @@ TEST_CASE( "Style Mixing Test: propMerge Tests (recursive overWrite properties)"
     Node mixedNode;
 
     for (auto& property : {"prop1", "prop2"}) {
-        mixedNode[property] = sceneLoader.propMerge(property, { node["Node1"], node["Node2"], node["Node3"] });
+        mixedNode[property] = SceneLoader::propMerge(property, { node["Node1"], node["Node2"], node["Node3"] });
     }
 
     REQUIRE(mixedNode["prop1"].IsMap());
@@ -153,7 +150,6 @@ TEST_CASE( "Style Mixing Test: propMerge Tests (recursive overWrite properties)"
 }
 
 TEST_CASE( "Style Mixing Test: propMerge Tests (overWrite properties)", "[mixing][core][yaml]") {
-    SceneLoader sceneLoader;
 
     Node node = YAML::Load(R"END(
         Node1:
@@ -171,7 +167,7 @@ TEST_CASE( "Style Mixing Test: propMerge Tests (overWrite properties)", "[mixing
 
     Node mixedNode;
     for (auto& property : {"prop1", "prop2"}) {
-        mixedNode[property] = sceneLoader.propMerge(property, { node["Node1"], node["Node2"], node["Node3"] });
+        mixedNode[property] = SceneLoader::propMerge(property, { node["Node1"], node["Node2"], node["Node3"] });
     }
 
     REQUIRE(mixedNode["prop1"].as<std::string>() == "value1_3");
@@ -179,8 +175,6 @@ TEST_CASE( "Style Mixing Test: propMerge Tests (overWrite properties)", "[mixing
 }
 
 TEST_CASE( "Style Mixing Test: propMerge Tests (boolean properties)", "[mixing][core][yaml]") {
-
-    SceneLoader sceneLoader;
 
     Node node = YAML::Load(R"END(
         Node1:
@@ -196,7 +190,7 @@ TEST_CASE( "Style Mixing Test: propMerge Tests (boolean properties)", "[mixing][
 
     Node mixedNode;
     for (auto& property : {"prop1"}) {
-        mixedNode[property] = sceneLoader.propMerge(property, { node["Node1"], node["Node2"], node["Node3"] });
+        mixedNode[property] = SceneLoader::propMerge(property, { node["Node1"], node["Node2"], node["Node3"] });
     }
 
     REQUIRE(mixedNode["prop1"].as<bool>());
