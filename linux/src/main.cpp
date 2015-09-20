@@ -7,6 +7,8 @@
 // Forward declaration
 void init_main_window();
 
+const char* sceneFile = "scene.yaml";
+
 // Input handling
 // ==============
 
@@ -106,6 +108,9 @@ void key_callback(GLFWwindow* window, int key, int scancode, int action, int mod
             case GLFW_KEY_5:
                 Tangram::toggleDebugFlag(Tangram::DebugFlags::labels);
                 break;
+            case GLFW_KEY_R:
+                Tangram::loadScene(sceneFile);
+                break;
             case GLFW_KEY_BACKSPACE:
                 init_main_window(); // Simulate GL context loss
                 break;
@@ -131,7 +136,7 @@ void window_size_callback(GLFWwindow* window, int width, int height) {
 void init_main_window() {
 
     // Setup tangram
-    Tangram::initialize("scene.yaml");
+    Tangram::initialize(sceneFile);
 
     // Destroy old window
     if (main_window != nullptr) {

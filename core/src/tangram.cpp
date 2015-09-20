@@ -78,6 +78,18 @@ void initialize(const char* _scenePath) {
 
 }
 
+void loadScene(const char* _scenePath) {
+
+    m_scene = std::make_shared<Scene>();
+
+    logMsg("Loading Tangram scene file: %s\n", _scenePath);
+    auto sceneString = stringFromResource(_scenePath);
+
+    if (SceneLoader::loadScene(sceneString, *m_scene)) {
+        m_tileManager->setScene(m_scene);
+    }
+}
+
 void resize(int _newWidth, int _newHeight) {
 
     logMsg("resize: %d x %d\n", _newWidth, _newHeight);
@@ -237,7 +249,6 @@ void setPixelScale(float _pixelsPerPoint) {
     for (auto& style : m_scene->styles()) {
         style->setPixelScale(_pixelsPerPoint);
     }
-
 }
 
 int addDataSource(const char* _name) {
