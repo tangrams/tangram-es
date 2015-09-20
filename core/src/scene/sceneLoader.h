@@ -45,7 +45,6 @@ class SceneLoader {
     void loadMaterial(YAML::Node matNode, Material& material, Scene& scene);
     void loadShaderConfig(YAML::Node shaders, Style& style, Scene& scene);
     SceneLayer loadSublayer(YAML::Node layer, const std::string& name, Scene& scene);
-    MaterialTexture loadMaterialTexture(YAML::Node matCompNode, Scene& scene);
     Filter generateAnyFilter(YAML::Node filter, Scene& scene);
     Filter generateNoneFilter(YAML::Node filter, Scene& scene);
     Filter generatePredicate(YAML::Node filter, std::string _key);
@@ -60,6 +59,8 @@ public:
     virtual ~SceneLoader() {};
 
     bool loadScene(const std::string& _sceneString, Scene& _scene);
+
+    static MaterialTexture loadMaterialTexture(YAML::Node matCompNode, Scene& scene);
 
     // public for testing
     std::vector<StyleParam> parseStyleParams(YAML::Node params, Scene& scene, const std::string& propPrefix = "");

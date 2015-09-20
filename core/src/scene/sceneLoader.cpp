@@ -135,54 +135,60 @@ void SceneLoader::loadShaderConfig(Node shaders, Style& style, Scene& scene) {
     }
 }
 
+void loadMaterialProperty(const Node& prop, Scene& scene,
+                          Material& material,
+                          std::function<void(MaterialTexture)> texFunc,
+                          std::function<void(glm::vec4)> vecFunc) {
+
+    switch (prop.Type()) {
+    case NodeType::Map:
+        texFunc(SceneLoader::loadMaterialTexture(prop, scene));
+        break;
+    case NodeType::Sequence:
+        vecFunc(parseVec<glm::vec4>(prop));
+        break;
+    case NodeType::Scalar:
+        try {
+            float difValue = prop.as<float>();
+            vecFunc(glm::vec4(difValue, difValue, difValue, 1.0));
+        } catch (const BadConversion& e) {
+            // TODO: css color parser and hex_values
+        }
+        break;
+    default:
+        break;
+    }
+}
+
 void SceneLoader::loadMaterial(Node matNode, Material& material, Scene& scene) {
+    using namespace std::placeholders;
+
+    Node emission = matNode["emission"];
+    if (emission) {
+        loadMaterialProperty(emission, scene, material,
+                             std::bind(&Material::setEmissionTex, &material, _1),
+                             std::bind(&Material::setEmission, &material, _1));
+    }
 
     Node diffuse = matNode["diffuse"];
     if (diffuse) {
-        if (diffuse.IsMap()) {
-            material.setDiffuse(loadMaterialTexture(diffuse, scene));
-        } else if (diffuse.IsSequence()) {
-            material.setDiffuse(parseVec<glm::vec4>(diffuse));
-        } else {
-            try {
-                float difValue = diffuse.as<float>();
-                material.setDiffuse(glm::vec4(difValue, difValue, difValue, 1.0));
-            } catch (const BadConversion& e) {
-                // TODO: css color parser and hex_values
-            }
-        }
+        loadMaterialProperty(diffuse, scene, material,
+                             std::bind(&Material::setDiffuseTex, &material, _1),
+                             std::bind(&Material::setDiffuse, &material, _1));
     }
 
     Node ambient = matNode["ambient"];
     if (ambient) {
-        if (ambient.IsMap()) {
-            material.setAmbient(loadMaterialTexture(ambient, scene));
-        } else if (ambient.IsSequence()) {
-            material.setAmbient(parseVec<glm::vec4>(ambient));
-        } else {
-            try {
-                float ambientValue = ambient.as<float>();
-                material.setAmbient(glm::vec4(ambientValue, ambientValue, ambientValue, 1.0));
-            } catch (const BadConversion& e) {
-                // TODO: css color parser and hex_values
-            }
-        }
+        loadMaterialProperty(ambient, scene, material,
+                             std::bind(&Material::setAmbientTex, &material, _1),
+                             std::bind(&Material::setAmbient, &material, _1));
     }
 
     Node specular = matNode["specular"];
     if (specular) {
-        if (specular.IsMap()) {
-            material.setSpecular(loadMaterialTexture(specular, scene));
-        } else if (specular.IsSequence()) {
-            material.setSpecular(parseVec<glm::vec4>(specular));
-        } else {
-            try {
-                float specValue = specular.as<float>();
-                material.setSpecular(glm::vec4(specValue, specValue, specValue, 1.0));
-            } catch (const BadConversion& e) {
-                // TODO: css color parser and hex_values
-            }
-        }
+        loadMaterialProperty(specular, scene, material,
+                             std::bind(&Material::setSpecularTex, &material, _1),
+                             std::bind(&Material::setSpecular, &material, _1));
     }
 
     Node shininess = matNode["shininess"];
