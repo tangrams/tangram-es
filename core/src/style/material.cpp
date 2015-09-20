@@ -15,7 +15,7 @@ void Material::setEmission(glm::vec4 _emission){
     setEmissionEnabled(true);
 }
 
-void Material::setEmissionTex(MaterialTexture _emissionTexture){
+void Material::setEmission(MaterialTexture _emissionTexture){
     m_emission_texture = _emissionTexture;
     m_emission = glm::vec4(m_emission_texture.amount, 1.f);
     setEmissionEnabled((bool)m_emission_texture.tex);
@@ -27,7 +27,7 @@ void Material::setAmbient(glm::vec4 _ambient){
     setAmbientEnabled(true);
 }
 
-void Material::setAmbientTex(MaterialTexture _ambientTexture){
+void Material::setAmbient(MaterialTexture _ambientTexture){
     m_ambient_texture = _ambientTexture;
     m_ambient = glm::vec4(m_ambient_texture.amount, 1.f);
     setAmbientEnabled((bool)m_ambient_texture.tex);
@@ -39,7 +39,7 @@ void Material::setDiffuse(glm::vec4 _diffuse){
     setDiffuseEnabled(true);
 }
 
-void Material::setDiffuseTex(MaterialTexture _diffuseTexture){
+void Material::setDiffuse(MaterialTexture _diffuseTexture){
     m_diffuse_texture = _diffuseTexture;
     m_diffuse = glm::vec4(m_diffuse_texture.amount, 1.f);
     setDiffuseEnabled((bool)m_diffuse_texture.tex);
@@ -51,7 +51,7 @@ void Material::setSpecular(glm::vec4 _specular){
     setSpecularEnabled(true);
 }
 
-void Material::setSpecularTex(MaterialTexture _specularTexture){
+void Material::setSpecular(MaterialTexture _specularTexture){
     m_specular_texture = _specularTexture;
     m_specular = glm::vec4(m_specular_texture.amount, 1.f);
     setSpecularEnabled((bool)m_specular_texture.tex);
