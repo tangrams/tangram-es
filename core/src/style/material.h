@@ -40,22 +40,22 @@ public:
     /*  Emission color is by default disabled and vec4(0.0).
      *  Setting this property enables it and changes require reloading the shader. */
     void setEmission(glm::vec4 _emission);
-    void setEmissionTex(MaterialTexture _emissionTexture);
+    void setEmission(MaterialTexture _emissionTexture);
 
     /*  Ambient color is by default disabled and vec4(1.0).
      *  Setting this property enables it and changes require reloading the shader. */
     void setAmbient(glm::vec4 _ambient);
-    void setAmbientTex(MaterialTexture _ambientTexture);
+    void setAmbient(MaterialTexture _ambientTexture);
 
     /*  Diffuse color is by default enabled and vec4(1.0).
      *  Changes require reloading the shader. */
     void setDiffuse(glm::vec4 _diffuse);
-    void setDiffuseTex(MaterialTexture _diffuseTexture);
+    void setDiffuse(MaterialTexture _diffuseTexture);
 
     /*  Specular color is by default disabled and vec4(0.2) with a shininess factor of 0.2.
      *  Setting this property enables it and changes require reloading the shader. */
     void setSpecular(glm::vec4 _specular);
-    void setSpecularTex(MaterialTexture _specularTexture);
+    void setSpecular(MaterialTexture _specularTexture);
 
     void setShininess(float _shiny);
 
