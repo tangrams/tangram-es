@@ -41,7 +41,6 @@ class SceneLoader {
     static void loadStyles(YAML::Node styles, Scene& scene);
     static void loadStyleProps(Style* style, YAML::Node styleNode, Scene& scene);
     static void loadTextures(YAML::Node textures, Scene& scene);
-    static MaterialTexture loadMaterialTexture(YAML::Node matCompNode, Scene& scene);
     /* loads a texture with default texture properties */
     static void loadTexture(const std::string& url, Scene& scene);
     static void loadMaterial(YAML::Node matNode, Material& material, Scene& scene);
@@ -55,6 +54,8 @@ public:
     SceneLoader() = delete;
 
     static bool loadScene(const std::string& _sceneString, Scene& _scene);
+
+    static MaterialTexture loadMaterialTexture(YAML::Node matCompNode, Scene& scene);
 
     // public for testing
     static std::vector<StyleParam> parseStyleParams(YAML::Node params, Scene& scene, const std::string& propPrefix = "");

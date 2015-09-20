@@ -131,76 +131,79 @@ void SceneLoader::loadShaderConfig(Node shaders, Style& style, Scene& scene) {
     }
 }
 
+glm::vec4 parseMaterialVec(const Node& prop) {
+
+    switch (prop.Type()) {
+    case NodeType::Sequence:
+        return parseVec<glm::vec4>(prop);
+    case NodeType::Scalar:
+        try {
+            float value = prop.as<float>();
+            return glm::vec4(value, value, value, 1.0);
+        } catch (const BadConversion& e) {
+            logMsg("Scene: Invalid material value:\n'%s'\n",
+                   Dump(prop).c_str());
+            // TODO: css color parser and hex_values
+        }
+        break;
+    case NodeType::Map:
+        // Handled as texture
+        break;
+    default:
+        logMsg("Scene: Invalid material value:\n'%s'\n",
+               Dump(prop).c_str());
+        break;
+    }
+    return glm::vec4(0.0);
+}
+
 void SceneLoader::loadMaterial(Node matNode, Material& material, Scene& scene) {
 
-    Node diffuse = matNode["diffuse"];
-    if (diffuse) {
-        if (diffuse.IsMap()) {
-            material.setDiffuse(loadMaterialTexture(diffuse, scene));
-        } else if (diffuse.IsSequence()) {
-            material.setDiffuse(parseVec<glm::vec4>(diffuse));
+    if (Node n = matNode["emission"]) {
+        if (n.IsMap()) {
+            material.setEmission(loadMaterialTexture(n, scene));
         } else {
-            try {
-                float difValue = diffuse.as<float>();
-                material.setDiffuse(glm::vec4(difValue, difValue, difValue, 1.0));
-            } catch (const BadConversion& e) {
-                // TODO: css color parser and hex_values
-            }
+            material.setEmission(parseMaterialVec(n));
         }
     }
-
-    Node ambient = matNode["ambient"];
-    if (ambient) {
-        if (ambient.IsMap()) {
-            material.setAmbient(loadMaterialTexture(ambient, scene));
-        } else if (ambient.IsSequence()) {
-            material.setAmbient(parseVec<glm::vec4>(ambient));
+    if (Node n = matNode["diffuse"]) {
+        if (n.IsMap()) {
+            material.setDiffuse(loadMaterialTexture(n, scene));
         } else {
-            try {
-                float ambientValue = ambient.as<float>();
-                material.setAmbient(glm::vec4(ambientValue, ambientValue, ambientValue, 1.0));
-            } catch (const BadConversion& e) {
-                // TODO: css color parser and hex_values
-            }
+            material.setDiffuse(parseMaterialVec(n));
         }
     }
-
-    Node specular = matNode["specular"];
-    if (specular) {
-        if (specular.IsMap()) {
-            material.setSpecular(loadMaterialTexture(specular, scene));
-        } else if (specular.IsSequence()) {
-            material.setSpecular(parseVec<glm::vec4>(specular));
+    if (Node n = matNode["ambient"]) {
+        if (n.IsMap()) {
+            material.setAmbient(loadMaterialTexture(n, scene));
         } else {
-            try {
-                float specValue = specular.as<float>();
-                material.setSpecular(glm::vec4(specValue, specValue, specValue, 1.0));
-            } catch (const BadConversion& e) {
-                // TODO: css color parser and hex_values
-            }
+            material.setAmbient(parseMaterialVec(n));
+        }
+    }
+    if (Node n = matNode["specular"]) {
+        if (n.IsMap()) {
+            material.setSpecular(loadMaterialTexture(n, scene));
+        } else {
+            material.setSpecular(parseMaterialVec(n));
         }
     }
 
-    Node shininess = matNode["shininess"];
-
-    if (shininess) {
-        try {
-            material.setShininess(shininess.as<float>());
-        } catch(const BadConversion& e) {
-            logMsg("Error: float value expected for shininess material parameter");
+    if (Node shininess = matNode["shininess"]) {
+        try { material.setShininess(shininess.as<float>()); }
+        catch(const BadConversion& e) {
+            logMsg("Scene: Expected float value for 'shininess':\n'%s'\n",
+                Dump(matNode).c_str());
         }
     }
 
-    Node normal = matNode["normal"];
-    if (normal) {
-        material.setNormal(loadMaterialTexture(normal, scene));
-    }
+    material.setNormal(loadMaterialTexture(matNode["normal"], scene));
 }
 
 MaterialTexture SceneLoader::loadMaterialTexture(Node matCompNode, Scene& scene) {
 
-    MaterialTexture matTex;
+    if (!matCompNode) { return MaterialTexture{}; }
 
+    MaterialTexture matTex;
     Node textureNode = matCompNode["texture"];
     Node mappingNode = matCompNode["mapping"];
     Node scaleNode = matCompNode["scale"];
