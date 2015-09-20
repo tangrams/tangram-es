@@ -941,80 +941,79 @@ void SceneLoader::loadCameras(Node _cameras, Scene& _scene) {
 
 Filter SceneLoader::generateFilter(Node _filter, Scene& scene) {
 
-    if (!_filter) {
-        return Filter();
-    }
+    if (!_filter) {  return Filter(); }
 
     std::vector<Filter> filters;
 
-    if (_filter.IsScalar()) {
+    switch (_filter.Type()) {
+    case NodeType::Scalar: {
+
         auto& val = _filter.as<std::string>();
 
         if (val.compare(0, 8, "function") == 0) {
-            filters.emplace_back(scene.functions().size());
             scene.functions().push_back(val);
+            return Filter::MatchFunction(scene.functions().size()-1);
         }
-    } else {
+        break;
+    }
+    case NodeType::Sequence: {
         for (const auto& filtItr : _filter) {
-            Filter filter;
-
-            if (_filter.IsSequence()) {
-                filter = generateFilter(filtItr, scene);
-
-            } else if (filtItr.first.as<std::string>() == "none") {
-                filter = generateNoneFilter(_filter["none"], scene);
-
-            } else if (filtItr.first.as<std::string>() == "not") {
-                filter = generateNoneFilter(_filter["not"], scene);
-
-            } else if (filtItr.first.as<std::string>() == "any") {
-                filter = generateAnyFilter(_filter["any"], scene);
-
-            } else if (filtItr.first.as<std::string>() == "all") {
-                filter = generateFilter(_filter["all"], scene);
-
-            } else {
-
-                std::string key = filtItr.first.as<std::string>();
-                filter = generatePredicate(_filter[key], key);
-
-            }
-            filters.push_back(filter);
+            filters.push_back(generateFilter(filtItr, scene));
         }
+        break;
+    }
+    case NodeType::Map: {
+        for (const auto& filtItr : _filter) {
+            std::string key = filtItr.first.as<std::string>();
+            Node node = _filter[key];
+
+            if (key == "none") {
+                filters.push_back(generateNoneFilter(node, scene));
+            } else if (key == "not") {
+                filters.push_back(generateNoneFilter(node, scene));
+            } else if (key == "any") {
+                filters.push_back(generateAnyFilter(node, scene));
+            } else if (key == "all") {
+                filters.push_back(generateFilter(node, scene));
+            } else {
+                filters.push_back(generatePredicate(node, key));
+            }
+        }
+        break;
+    }
+    default:
+        // logMsg
+        break;
     }
 
-    if (filters.size() == 1) {
-        return filters.front();
-    } else if (filters.size() > 0) {
-        return (Filter(Operators::all, filters));
-    } else {
-        return Filter();
-    }
-
+    if (filters.size() == 0) { return Filter(); }
+    if (filters.size() == 1) { return filters.front(); }
+    return (Filter::MatchAll(filters));
 }
 
 Filter SceneLoader::generatePredicate(Node _node, std::string _key) {
 
-    if (_node.IsScalar()) {
+    switch (_node.Type()) {
+    case NodeType::Scalar:
         if (_node.Tag() == "tag:yaml.org,2002:str") {
             // Node was explicitly tagged with '!!str' or the canonical tag
             // 'tag:yaml.org,2002:str' yaml-cpp normalizes the tag value to the
             // canonical form
-            return Filter(_key, { Value(_node.as<std::string>()) });
+            return Filter::MatchEquality(_key, { Value(_node.as<std::string>()) });
         }
         try {
-            return Filter(_key, { Value(_node.as<float>()) });
+            return Filter::MatchEquality(_key, { Value(_node.as<float>()) });
         } catch (const BadConversion& e) {
             std::string value = _node.as<std::string>();
             if (value == "true") {
-                return Filter(_key, true);
+                return Filter::MatchExistence(_key, true);
             } else if (value == "false") {
-                return Filter(_key, false);
+                return Filter::MatchExistence(_key, false);
             } else {
-                return Filter(_key, { Value(value) });
+                return Filter::MatchEquality(_key, { Value(value) });
             }
         }
-    } else if (_node.IsSequence()) {
+    case NodeType::Sequence: {
         std::vector<Value> values;
         for (const auto& valItr : _node) {
             try {
@@ -1024,8 +1023,9 @@ Filter SceneLoader::generatePredicate(Node _node, std::string _key) {
                 values.emplace_back(value);
             }
         }
-        return Filter(_key, std::move(values));
-    } else if (_node.IsMap()) {
+        return Filter::MatchEquality(_key, std::move(values));
+    }
+    case NodeType::Map: {
         float minVal = -std::numeric_limits<float>::infinity();
         float maxVal = std::numeric_limits<float>::infinity();
 
@@ -1049,10 +1049,10 @@ Filter SceneLoader::generatePredicate(Node _node, std::string _key) {
                 return Filter();
             }
         }
-        return Filter(_key, minVal, maxVal);
-
-    } else {
-        logMsg("Scene: Badly formed Filter\n");
+        return Filter::MatchRange(_key, minVal, maxVal);
+    }
+    default:
+        logMsg("Scene: Badly formed Filter '%s'\n", Dump(_node).c_str());
         return Filter();
     }
 }
@@ -1067,7 +1067,7 @@ Filter SceneLoader::generateAnyFilter(Node _filter, Scene& scene) {
     for (const auto& filt : _filter) {
         filters.emplace_back(generateFilter(filt, scene));
     }
-    return Filter(Operators::any, std::move(filters));
+    return Filter::MatchAny(std::move(filters));
 }
 
 Filter SceneLoader::generateNoneFilter(Node _filter, Scene& scene) {
@@ -1088,7 +1088,7 @@ Filter SceneLoader::generateNoneFilter(Node _filter, Scene& scene) {
         return Filter();
     }
 
-    return Filter(Operators::none, std::move(filters));
+    return Filter::MatchNone(std::move(filters));
 }
 
 void SceneLoader::parseStyleParams(Node params, Scene& scene, const std::string& prefix,

@@ -47,34 +47,38 @@ namespace Tangram {
         };
 
         FilterType type;
-        variant<none_type, Operator, Equality, Range, Existence, Function> data;
+        using Data = variant<none_type, Operator, Equality, Range, Existence, Function>;
+        Data data;
 
         Filter() : type(FilterType::undefined), data(none_type{}) {}
+        Filter(FilterType _type, Data _data) : type(_type), data(std::move(_data)) {}
 
         // Create an 'any', 'all', or 'none' filter
-        Filter(Operators op, const std::vector<Filter>& filters) :
-            type(static_cast<FilterType>(op)),
-            data(Operator{ filters }) {}
-
+        inline static Filter MatchAny(const std::vector<Filter>& filters) {
+            return { FilterType::any,  Operator{ filters }};
+        }
+        inline static Filter MatchAll(const std::vector<Filter>& filters) {
+            return { FilterType::all,  Operator{ filters }};
+        }
+        inline static Filter MatchNone(const std::vector<Filter>& filters) {
+            return { FilterType::none, Operator{ filters }};
+        }
         // Create an 'equality' filter
-        Filter(const std::string& k, const std::vector<Value>& vals) :
-            type(FilterType::equality),
-            data(Equality{ k, vals }) {}
-
+        inline static Filter MatchEquality(const std::string& k, const std::vector<Value>& vals) {
+            return { FilterType::equality, Equality{ k, vals }};
+        }
         // Create a 'range' filter
-        Filter(const std::string& k, float min, float max) :
-            type(FilterType::range),
-            data(Range{ k, min, max }) {}
-
+        inline static Filter MatchRange(const std::string& k, float min, float max) {
+            return { FilterType::range, Range{ k, min, max }};
+        }
         // Create an 'existence' filter
-        Filter(const std::string& k, bool ex) :
-            type(FilterType::existence),
-            data(Existence{ k, ex }) {}
-
+        inline static Filter MatchExistence(const std::string& k, bool ex) {
+            return { FilterType::existence, Existence{ k, ex }};
+        }
         // Create an 'function' filter with reference to Scene function id
-        Filter(uint32_t id) :
-            type(FilterType::function),
-            data(Function{ id }) {}
+        inline static Filter MatchFunction(uint32_t id) {
+            return { FilterType::function, Function{ id }};
+        }
 
         bool eval(const Feature& feat, const StyleContext& ctx) const {
 
