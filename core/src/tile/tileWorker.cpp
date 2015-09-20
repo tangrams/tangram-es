@@ -77,12 +77,13 @@ void TileWorker::run() {
 
         auto tileData = task->process();
 
-        auto& scene = *m_tileManager.getScene();
+        // NB: Save shared reference to Scene while building tile
+        auto scene = m_tileManager.getScene();
 
-        context.initFunctions(scene);
+        context.initFunctions(*scene);
 
         if (tileData) {
-            task->tile->build(context, scene, *tileData, *task->source);
+            task->tile->build(context, *scene, *tileData, *task->source);
         }
 
         m_tileManager.tileProcessed(std::move(task));

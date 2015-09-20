@@ -88,7 +88,7 @@ public:
 private:
 
     struct TileSet {
-        const int32_t id;
+        int32_t id;
         std::shared_ptr<DataSource> source;
         std::map<TileID, std::shared_ptr<Tile>> tiles;
     };
