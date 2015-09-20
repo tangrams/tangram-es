@@ -73,7 +73,8 @@ void SceneLoader::loadShaderConfig(Node shaders, Style& style, Scene& scene) {
     auto& shader = *(style.getShaderProgram());
 
     if (Node extensionsNode = shaders["extensions"]) {
-        if(extensionsNode.IsSequence()) {
+        switch (extensionsNode.Type()) {
+        case NodeType::Sequence:
             for (const auto& extNode : extensionsNode) {
                 const char* extTemplate = "#ifdef %s\n    #extension %s : enable\n    #define TANGRAM_EXTENSION_%s\n#endif";
                 auto extName = "GL_" + extNode.as<std::string>();
@@ -82,6 +83,9 @@ void SceneLoader::loadShaderConfig(Node shaders, Style& style, Scene& scene) {
                 std::snprintf(&buffer[0], buffer.size(), extTemplate, extName.c_str(), extName.c_str(), extName.c_str());
                 shader.addSourceBlock("extensions", std::string(buffer.begin(), buffer.end()-1));
             }
+            break;
+        default:
+            logMsg("Warning: Unexpected Node: '%s'\n", Dump(extensionsNode).c_str());
         }
     }
 
@@ -192,7 +196,7 @@ void SceneLoader::loadMaterial(Node matNode, Material& material, Scene& scene) {
         try {
             material.setShininess(shininess.as<float>());
         } catch(const BadConversion& e) {
-            logMsg("Error: float value expected for shininess material parameter");
+            logMsg("Warning: float value expected for shininess material parameter");
         }
     }
 
@@ -212,7 +216,9 @@ MaterialTexture SceneLoader::loadMaterialTexture(Node matCompNode, Scene& scene)
     Node amountNode = matCompNode["amount"];
 
     if (!textureNode) {
-        logMsg("WARNING: Expected a \"texture\" parameter; Material may be incorrect.\n");
+        logMsg("Warning: Expected a \"texture\" parameter: '%s'\n",
+               Dump(matCompNode).c_str());
+
         return matTex;
     }
 
@@ -231,10 +237,10 @@ MaterialTexture SceneLoader::loadMaterialTexture(Node matCompNode, Scene& scene)
     if (mappingNode) {
         std::string mapping = mappingNode.as<std::string>();
         if (mapping == "uv") { matTex.mapping = MappingType::uv; }
-        else if (mapping == "planar") { logMsg("WARNING: planar texture mapping not yet implemented\n"); } // TODO
-        else if (mapping == "triplanar") { logMsg("WARNING: triplanar texture mapping not yet implemented\n"); } // TODO
+        else if (mapping == "planar") { logMsg("Warning: planar texture mapping not yet implemented\n"); } // TODO
+        else if (mapping == "triplanar") { logMsg("Warning: triplanar texture mapping not yet implemented\n"); } // TODO
         else if (mapping == "spheremap") { matTex.mapping = MappingType::spheremap; }
-        else { logMsg("WARNING: unrecognized texture mapping \"%s\"\n", mapping.c_str()); }
+        else { logMsg("Warning: unrecognized texture mapping \"%s\"\n", mapping.c_str()); }
     }
 
     if (scaleNode) {
@@ -243,7 +249,7 @@ MaterialTexture SceneLoader::loadMaterialTexture(Node matCompNode, Scene& scene)
         } else if (scaleNode.IsScalar()) {
             matTex.scale = glm::vec3(scaleNode.as<float>());
         } else {
-            logMsg("WARNING: unrecognized scale parameter in material\n");
+            logMsg("Warning: unrecognized scale parameter in material\n");
         }
     }
 
@@ -253,7 +259,7 @@ MaterialTexture SceneLoader::loadMaterialTexture(Node matCompNode, Scene& scene)
         } else if (amountNode.IsScalar()) {
             matTex.amount = glm::vec3(amountNode.as<float>());
         } else {
-            logMsg("WARNING: unrecognized amount parameter in material\n");
+            logMsg("Warning: unrecognized amount parameter in material\n");
         }
     }
 
@@ -284,7 +290,7 @@ void SceneLoader::loadTextures(Node textures, Scene& scene) {
         if (url) {
             file = url.as<std::string>();
         } else {
-            logMsg("WARNING: No url specified for texture \"%s\", skipping.\n", name.c_str());
+            logMsg("Warning: No url specified for texture \"%s\", skipping.\n", name.c_str());
             continue;
         }
 
@@ -335,13 +341,13 @@ void SceneLoader::loadStyleProps(Style* style, Node styleNode, Scene& scene) {
 
     Node animatedNode = styleNode["animated"];
     if (animatedNode) {
-        logMsg("WARNING: animated property will be set but not yet implemented in styles\n"); // TODO
-        if (!animatedNode.IsScalar()) { logMsg("WARNING: animated flag should be a scalar\n"); }
+        logMsg("Warning: animated property will be set but not yet implemented in styles\n"); // TODO
+        if (!animatedNode.IsScalar()) { logMsg("Warning: animated flag should be a scalar\n"); }
         else {
             try {
                 style->setAnimated(animatedNode.as<bool>());
             } catch(const BadConversion& e) {
-                logMsg("WARNING: Expected a boolean value in animated property. Using default (false).\n");
+                logMsg("Warning: Expected a boolean value in animated property. Using default (false).\n");
             }
         }
     }
@@ -355,14 +361,14 @@ void SceneLoader::loadStyleProps(Style* style, Node styleNode, Scene& scene) {
         else if (str == "multiply") { style->setBlendMode(Blending::multiply); }
         else if (str == "overlay")  { style->setBlendMode(Blending::overlay); }
         else if (str == "inlay")    { style->setBlendMode(Blending::inlay); }
-        else { logMsg("WARNING: invalid blend mode \"%s\"\n", str.c_str()); }
+        else { logMsg("Warning: invalid blend mode \"%s\"\n", str.c_str()); }
 
     }
 
     Node texcoordsNode = styleNode["texcoords"];
     if (texcoordsNode) {
 
-        logMsg("WARNING: texcoords style parameter is currently ignored\n");
+        logMsg("Warning: texcoords style parameter is currently ignored\n");
 
         if (texcoordsNode.as<bool>()) { } // TODO
         else { } // TODO
@@ -386,7 +392,7 @@ void SceneLoader::loadStyleProps(Style* style, Node styleNode, Scene& scene) {
         else if (lighting == "vertex") { style->setLightingType(LightingType::vertex); }
         else if (lighting == "false") { style->setLightingType(LightingType::none); }
         else if (lighting == "true") { } // use default lighting
-        else { logMsg("WARNING: unrecognized lighting type \"%s\"\n", lighting.c_str()); }
+        else { logMsg("Warning: unrecognized lighting type \"%s\"\n", lighting.c_str()); }
     }
 
     Node textureNode = styleNode["texture"];
@@ -399,13 +405,13 @@ void SceneLoader::loadStyleProps(Style* style, Node styleNode, Scene& scene) {
             if (it != atlases.end()) {
                 spriteStyle->setSpriteAtlas(it->second);
             } else {
-                logMsg("WARNING: undefined texture name %s", textureName.c_str());
+                logMsg("Warning: undefined texture name %s", textureName.c_str());
             }
         }
     }
 
     Node urlNode = styleNode["url"];
-    if (urlNode) { logMsg("WARNING: loading style from URL not yet implemented\n"); } // TODO
+    if (urlNode) { logMsg("Warning: loading style from URL not yet implemented\n"); } // TODO
 
 }
 
@@ -506,13 +512,16 @@ Node SceneLoader::shaderExtMerge(const std::vector<Node>& mixes) {
         if (!mixNode.IsMap()) { continue; }
         if (Node shaderNode = mixNode["shaders"]) {
             if (Node extNode = shaderNode["extensions"]) {
-                if (extNode.IsScalar()) {
+                switch(extNode.Type()) {
+                case NodeType::Scalar: {
                     auto val = extNode.as<std::string>();
                     if (uniqueList.find(val) == uniqueList.end()) {
                         node.push_back(extNode);
                         uniqueList.insert(val);
                     }
-                } else if (extNode.IsSequence()) {
+                    break;
+                }
+                case NodeType::Sequence: {
                     for (const auto& n : extNode) {
                         auto val = n.as<std::string>();
                         if (uniqueList.find(val) == uniqueList.end()) {
@@ -520,9 +529,10 @@ Node SceneLoader::shaderExtMerge(const std::vector<Node>& mixes) {
                             uniqueList.insert(val);
                         }
                     }
-                } else {
+                    break;
+                }
+                default:
                     logMsg("Warning: Expected scalar or sequence value for extensions node.\n");
-                    continue;
                 }
             }
         }
@@ -633,7 +643,7 @@ void SceneLoader::loadStyles(Node styles, Scene& scene) {
             if (styleName == builtIn) { validName = false; }
         }
         if (!validName) {
-            logMsg("WARNING: cannot use built-in style name \"%s\" for new style\n", styleName.c_str());
+            logMsg("Warning: cannot use built-in style name \"%s\" for new style\n", styleName.c_str());
             continue;
         }
 
@@ -656,7 +666,7 @@ void SceneLoader::loadStyles(Node styles, Scene& scene) {
             } else if (baseString == "points") {
                 style = new SpriteStyle(styleName);
             } else {
-                logMsg("WARNING: base style \"%s\" not recognized, can not instantiate.\n", baseString.c_str());
+                logMsg("Warning: base style \"%s\" not recognized, can not instantiate.\n", baseString.c_str());
                 continue;
             }
             loadStyleProps(style, mixedStyleNode, scene);
@@ -696,11 +706,11 @@ void SceneLoader::loadSources(Node sources, Scene& _scene) {
                 sourcePtr = std::shared_ptr<DataSource>(new ClientGeoJsonSource(name, url));
             }
         } else if (type == "TopoJSONTiles") {
-            logMsg("WARNING: TopoJSON data sources not yet implemented\n"); // TODO
+            logMsg("Warning: TopoJSON data sources not yet implemented\n"); // TODO
         } else if (type == "MVT") {
             sourcePtr = std::shared_ptr<DataSource>(new MVTSource(name, url));
         } else {
-            logMsg("WARNING: unrecognized data source type \"%s\", skipping\n", type.c_str());
+            logMsg("Warning: unrecognized data source type \"%s\", skipping\n", type.c_str());
         }
 
         if (sourcePtr) {
