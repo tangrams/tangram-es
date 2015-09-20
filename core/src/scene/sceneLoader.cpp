@@ -36,35 +36,104 @@ constexpr size_t CACHE_SIZE = 16 * (1024 * 1024);
 
 bool SceneLoader::loadScene(const std::string& _sceneString, Scene& _scene) {
 
-    try {
-        Node config = YAML::Load(_sceneString);
+    Node config;
 
-        loadSources(config["sources"], _scene);
-        loadTextures(config["textures"], _scene);
-        loadStyles(config["styles"], _scene);
-        loadLayers(config["layers"], _scene);
-        loadCameras(config["cameras"], _scene);
-        loadLights(config["lights"], _scene);
-
-        for (auto& style : _scene.styles()) {
-            style->build(_scene.lights());
-        }
-
-        // Styles that are opaque must be ordered first in the scene so that
-        // they are rendered 'under' styles that require blending
-        std::sort(_scene.styles().begin(), _scene.styles().end(),
-                  [](std::unique_ptr<Style>& a, std::unique_ptr<Style>& b) {
-                      return a->blendMode() == Blending::none;
-                  });
-
-        return true;
-
-    } catch (YAML::ParserException e) {
+    try { config = YAML::Load(_sceneString); }
+    catch (YAML::ParserException e) {
         logMsg("Error: Parsing scene config '%s'\n", e.what());
-    } catch (YAML::RepresentationException e) {
-        logMsg("Error: Parsing scene config '%s'\n", e.what());
+        return false;
     }
-    return false;
+
+    auto fontCtx = FontContext::GetInstance(); // To add font for debugTextStyle
+    fontCtx->addFont("FiraSans", "Medium", "");
+    // Instantiate built-in styles
+    _scene.styles().emplace_back(new PolygonStyle("polygons"));
+    _scene.styles().emplace_back(new PolylineStyle("lines"));
+    _scene.styles().emplace_back(new TextStyle("text", true, false));
+    _scene.styles().emplace_back(new DebugTextStyle("FiraSans_Medium_", "debugtext", 30.0f, true, false));
+    _scene.styles().emplace_back(new DebugStyle("debug"));
+    _scene.styles().emplace_back(new SpriteStyle("sprites"));
+
+    Node sources = config["sources"];
+    if (sources) {
+        for (const auto& source : sources) {
+            try { loadSource(source, _scene); }
+            catch (YAML::RepresentationException e) {
+                logMsg("Error: Parsing source: '%s' in:\n%s\n",
+                       e.what(), Dump(source).c_str());
+            }
+        }
+    } else {
+        logMsg("Scene: No source defined in the yaml scene configuration.\n");
+    }
+
+    Node textures = config["textures"];
+    if (textures) {
+        for (const auto& texture : textures) {
+            try { loadTexture(texture, _scene); }
+            catch (YAML::RepresentationException e) {
+                logMsg("Error: Parsing texture: '%s' in:\n%s\n",
+                       e.what(), Dump(texture).c_str());
+            }
+        }
+    }
+
+    Node styles = config["styles"];
+    if (styles) {
+        for (const auto& style : styles) {
+            try { loadStyle(style, styles, _scene); }
+            catch (YAML::RepresentationException e) {
+                logMsg("Error: Parsing style: '%s' in:\n%s\n",
+                       e.what(), Dump(style).c_str());
+            }
+        }
+    }
+
+    Node layers = config["layers"];
+    if (layers) {
+        for (const auto& layer : layers) {
+            try { loadLayer(layer, _scene); }
+            catch (YAML::RepresentationException e) {
+                logMsg("Error: Parsing layer: '%s' in:\n%s\n",
+                       e.what(), Dump(layer).c_str());
+            }
+        }
+    }
+
+    Node lights = config["lights"];
+    if (lights) {
+        for (const auto& light : lights) {
+            try { loadLight(light, _scene); }
+            catch (YAML::RepresentationException e) {
+                logMsg("Error: Parsing light: '%s' in:\n%s\n",
+                       e.what(), Dump(light).c_str());
+            }
+        }
+    } else {
+        // Add an ambient light if nothing else is specified
+        std::unique_ptr<AmbientLight> amb(new AmbientLight("defaultLight"));
+        amb->setAmbientColor({ .5f, .5f, .5f, 1.f });
+        _scene.lights().push_back(std::move(amb));
+    }
+
+    try { loadCameras(config["cameras"], _scene); }
+    catch (YAML::RepresentationException e) {
+        logMsg("Error: Parsing cameras: '%s' in:\n%s\n",
+               e.what(), Dump(config["cameras"]).c_str());
+    }
+
+    for (auto& style : _scene.styles()) {
+        style->build(_scene.lights());
+    }
+
+    // Styles that are opaque must be ordered first in the scene so that
+    // they are rendered 'under' styles that require blending
+    std::sort(_scene.styles().begin(), _scene.styles().end(),
+              [](std::unique_ptr<Style>& a, std::unique_ptr<Style>& b) {
+                  return a->blendMode() == Blending::none;
+              });
+
+    return true;
 }
 
 void SceneLoader::loadShaderConfig(Node shaders, Style& style, Scene& scene) {
@@ -265,62 +334,57 @@ void SceneLoader::loadTexture(const std::string& url, Scene& scene) {
     scene.textures().emplace(url, texture);
 }
 
-void SceneLoader::loadTextures(Node textures, Scene& scene) {
+void SceneLoader::loadTexture(const std::pair<Node, Node>& node, Scene& scene) {
 
-    if (!textures) { return; }
+    std::string name = node.first.as<std::string>();
+    Node textureConfig = node.second;
 
-    for (const auto& textureNode : textures) {
+    std::string file;
+    TextureOptions options = {GL_RGBA, GL_RGBA, {GL_LINEAR, GL_LINEAR}, {GL_CLAMP_TO_EDGE, GL_CLAMP_TO_EDGE} };
 
-        std::string name = textureNode.first.as<std::string>();
-        Node textureConfig = textureNode.second;
-
-        std::string file;
-        TextureOptions options = {GL_RGBA, GL_RGBA, {GL_LINEAR, GL_LINEAR}, {GL_CLAMP_TO_EDGE, GL_CLAMP_TO_EDGE} };
-
-        Node url = textureConfig["url"];
-        if (url) {
-            file = url.as<std::string>();
-        } else {
-            logMsg("Scene: No url specified for texture '%s', skipping.\n", name.c_str());
-            continue;
-        }
-
-        Node filtering = textureConfig["filtering"];
-        bool generateMipmaps = false;
-        if (filtering) {
-            std::string f = filtering.as<std::string>();
-            if (f == "linear") { options.m_filtering = { GL_LINEAR, GL_LINEAR }; }
-            else if (f == "mipmap") {
-                options.m_filtering = { GL_LINEAR_MIPMAP_LINEAR, GL_LINEAR_MIPMAP_LINEAR };
-                generateMipmaps = true;
-            } else if (f == "nearest") { options.m_filtering = { GL_NEAREST, GL_NEAREST }; }
-        }
-
-        std::shared_ptr<Texture> texture(new Texture(file, options, generateMipmaps));
-
-        Node sprites = textureConfig["sprites"];
-        if (sprites) {
-            std::shared_ptr<SpriteAtlas> atlas(new SpriteAtlas(texture, file));
-
-            for (auto it = sprites.begin(); it != sprites.end(); ++it) {
-
-                const Node sprite = it->second;
-                std::string spriteName = it->first.as<std::string>();
-
-                if (sprite) {
-                    glm::vec4 desc = parseVec<glm::vec4>(sprite);
-                    glm::vec2 pos = glm::vec2(desc.x, desc.y);
-                    glm::vec2 size = glm::vec2(desc.z, desc.w);
-
-                    atlas->addSpriteNode(spriteName, pos, size);
-                }
-            }
-
-            scene.spriteAtlases()[name] = atlas;
-        }
-
-        scene.textures().emplace(name, texture);
+    Node url = textureConfig["url"];
+    if (url) {
+        file = url.as<std::string>();
+    } else {
+        logMsg("Scene: No url specified for texture '%s', skipping.\n", name.c_str());
+        return;
     }
+
+    Node filtering = textureConfig["filtering"];
+    bool generateMipmaps = false;
+    if (filtering) {
+        std::string f = filtering.as<std::string>();
+        if (f == "linear") { options.m_filtering = { GL_LINEAR, GL_LINEAR }; }
+        else if (f == "mipmap") {
+            options.m_filtering = { GL_LINEAR_MIPMAP_LINEAR, GL_LINEAR_MIPMAP_LINEAR };
+            generateMipmaps = true;
+        } else if (f == "nearest") { options.m_filtering = { GL_NEAREST, GL_NEAREST }; }
+    }
+
+    std::shared_ptr<Texture> texture(new Texture(file, options, generateMipmaps));
+
+    Node sprites = textureConfig["sprites"];
+    if (sprites) {
+        std::shared_ptr<SpriteAtlas> atlas(new SpriteAtlas(texture, file));
+
+        for (auto it = sprites.begin(); it != sprites.end(); ++it) {
+
+            const Node sprite = it->second;
+            std::string spriteName = it->first.as<std::string>();
+
+            if (sprite) {
+                glm::vec4 desc = parseVec<glm::vec4>(sprite);
+                glm::vec2 pos = glm::vec2(desc.x, desc.y);
+                glm::vec2 size = glm::vec2(desc.z, desc.w);
+
+                atlas->addSpriteNode(spriteName, pos, size);
+            }
+        }
+
+        scene.spriteAtlases()[name] = atlas;
+    }
+
+    scene.textures().emplace(name, texture);
 }
 
 void SceneLoader::loadStyleProps(Style* style, Node styleNode, Scene& scene) {
@@ -609,226 +673,188 @@ std::vector<Node> SceneLoader::recursiveMixins(const std::string& styleName, Nod
     return mixes;
 }
 
-void SceneLoader::loadStyles(Node styles, Scene& scene) {
+void SceneLoader::loadStyle(const std::pair<Node, Node>& styleIt, Node styles, Scene& scene) {
 
-    Style* style = nullptr;
+    std::string styleName = styleIt.first.as<std::string>();
+
+    bool validName = true;
+    for (auto& builtIn : { "polygons", "lines", "points", "text", "debug", "debugtext" }) {
+        if (styleName == builtIn) { validName = false; }
+    }
+    if (!validName) {
+        logMsg("Scene: Cannot use built-in style name '%s' for new style\n", styleName.c_str());
+        return;
+    }
+
     std::unordered_set<std::string> mixedStyles;
+    std::unordered_set<std::string> uniqueStyles;
+    auto mixes = recursiveMixins(styleName, styles, uniqueStyles, mixedStyles);
 
-    auto fontCtx = FontContext::GetInstance(); // To add font for debugTextStyle
-    fontCtx->addFont("FiraSans", "Medium", "");
-    // Instantiate built-in styles
-    scene.styles().emplace_back(new PolygonStyle("polygons"));
-    scene.styles().emplace_back(new PolylineStyle("lines"));
-    scene.styles().emplace_back(new TextStyle("text", true, false));
-    scene.styles().emplace_back(new DebugTextStyle("FiraSans_Medium_", "debugtext", 30.0f, true, false));
-    scene.styles().emplace_back(new DebugStyle("debug"));
-    scene.styles().emplace_back(new SpriteStyle("sprites"));
+    Node mixedStyleNode = mixStyle(mixes);
 
-    if (!styles) {
+    // Update styleNode with mixedStyleNode (for future uses)
+    styles[styleName] = mixedStyleNode;
+
+    Node baseNode = mixedStyleNode["base"];
+    if (!baseNode) {
+        // No base style, this is an abstract styleNode
         return;
     }
 
-    for (const auto& styleIt : styles) {
+    // Construct style instance using the merged properties
+    Style* style = nullptr;
+    std::string baseStyle = baseNode.as<std::string>();
+    if (baseStyle == "polygons") {
+        style = new PolygonStyle(styleName);
+    } else if (baseStyle == "lines") {
+        style = new PolylineStyle(styleName);
+    } else if (baseStyle == "text") {
+        style = new TextStyle(styleName, true, true);
+    } else if (baseStyle == "points") {
+        style = new SpriteStyle(styleName);
+    } else {
+        logMsg("Scene: Base style '%s' not recognized, cannot instantiate.\n", baseStyle.c_str());
+        return;
+    }
+    loadStyleProps(style, mixedStyleNode, scene);
+    scene.styles().push_back(std::unique_ptr<Style>(style));
+}
 
-        std::string styleName = styleIt.first.as<std::string>();
-        Node styleNode = styleIt.second;
+void SceneLoader::loadSource(const std::pair<Node, Node>& src, Scene& _scene) {
 
-        bool validName = true;
-        for (auto& builtIn : { "polygons", "lines", "points", "text", "debug", "debugtext" }) {
-            if (styleName == builtIn) { validName = false; }
-        }
-        if (!validName) {
-            logMsg("Scene: Cannot use built-in style name '%s' for new style\n", styleName.c_str());
-            continue;
-        }
+    const Node source = src.second;
+    std::string name = src.first.as<std::string>();
+    std::string type = source["type"].as<std::string>();
+    std::string url = source["url"].as<std::string>();
 
-        std::unordered_set<std::string> uniqueStyles; //Used to make sure mixes result has a unique set of styles
-        auto mixes = recursiveMixins(styleName, styles, uniqueStyles, mixedStyles);
-        Node mixedStyleNode = mixStyle(mixes);
+    // distinguish tiled and non-tiled sources by url
+    bool tiled = url.find("{x}") != std::string::npos &&
+        url.find("{y}") != std::string::npos &&
+        url.find("{z}") != std::string::npos;
 
-        // Update styleNode with mixedStyleNode (for future uses)
-        styles[styleName] = mixedStyleNode;
+    std::shared_ptr<DataSource> sourcePtr;
 
-        // Construct style instance using the merged properties
-        if (Node baseNode = mixedStyleNode["base"]) {
-            std::string baseString = baseNode.as<std::string>();
-            if (baseString == "polygons") {
-                style = new PolygonStyle(styleName);
-            } else if (baseString == "lines") {
-                style = new PolylineStyle(styleName);
-            } else if (baseString == "text") {
-                style = new TextStyle(styleName, true, false);
-            } else if (baseString == "points") {
-                style = new SpriteStyle(styleName);
-            } else {
-                logMsg("Scene: Base style '%s' not recognized, cannot instantiate.\n", baseString.c_str());
-                continue;
-            }
-            loadStyleProps(style, mixedStyleNode, scene);
-            scene.styles().push_back(std::unique_ptr<Style>(style));
+    if (type == "GeoJSONTiles") {
+        if (tiled) {
+            sourcePtr = std::shared_ptr<DataSource>(new GeoJsonSource(name, url));
         } else {
-            // No baseNode, this is an abstract styleNode
-            continue;
+            sourcePtr = std::shared_ptr<DataSource>(new ClientGeoJsonSource(name, url));
         }
+    } else if (type == "TopoJSONTiles") {
+        logMsg("Scene: TopoJSON data sources not yet implemented\n"); // TODO
+    } else if (type == "MVT") {
+        sourcePtr = std::shared_ptr<DataSource>(new MVTSource(name, url));
+    } else {
+        logMsg("Scene: Unrecognized data source type '%s', skipping\n", type.c_str());
+    }
+
+    if (sourcePtr) {
+        sourcePtr->setCacheSize(CACHE_SIZE);
+        _scene.dataSources().push_back(sourcePtr);
     }
 }
 
-void SceneLoader::loadSources(Node sources, Scene& _scene) {
+void SceneLoader::loadLight(const std::pair<Node, Node>& node, Scene& scene) {
 
-    if (!sources) {
-        logMsg("Scene: No source defined in the yaml scene configuration.\n");
-        return;
-    }
+    const Node light = node.second;
+    const std::string name = node.first.Scalar();
+    const std::string type = light["type"].as<std::string>();
 
-    for (const auto& src : sources) {
+    std::unique_ptr<Light> lightPtr;
 
-        const Node source = src.second;
-        std::string name = src.first.as<std::string>();
-        std::string type = source["type"].as<std::string>();
-        std::string url = source["url"].as<std::string>();
+    if (type == "ambient") {
 
-        // distinguish tiled and non-tiled sources by url
-        bool tiled = url.find("{x}") != std::string::npos &&
-                     url.find("{y}") != std::string::npos &&
-                     url.find("{z}") != std::string::npos;
+        lightPtr = std::make_unique<AmbientLight>(name);
 
-        std::shared_ptr<DataSource> sourcePtr;
+    } else if (type == "directional") {
 
-        if (type == "GeoJSONTiles") {
-            if (tiled) {
-                sourcePtr = std::shared_ptr<DataSource>(new GeoJsonSource(name, url));
+        auto dLightPtr(std::make_unique<DirectionalLight>(name));
+        Node direction = light["direction"];
+        if (direction) {
+            dLightPtr->setDirection(parseVec<glm::vec3>(direction));
+        }
+        lightPtr = std::move(dLightPtr);
+
+    } else if (type == "point") {
+
+        auto pLightPtr(std::make_unique<PointLight>(name));
+        Node position = light["position"];
+        if (position) {
+            pLightPtr->setPosition(parseVec<glm::vec3>(position));
+        }
+        Node radius = light["radius"];
+        if (radius) {
+            if (radius.size() > 1) {
+                pLightPtr->setRadius(radius[0].as<float>(), radius[1].as<float>());
             } else {
-                sourcePtr = std::shared_ptr<DataSource>(new ClientGeoJsonSource(name, url));
+                pLightPtr->setRadius(radius.as<float>());
             }
-        } else if (type == "TopoJSONTiles") {
-            logMsg("Scene: TopoJSON data sources not yet implemented\n"); // TODO
-        } else if (type == "MVT") {
-            sourcePtr = std::shared_ptr<DataSource>(new MVTSource(name, url));
-        } else {
-            logMsg("Scene: Unrecognized data source type '%s', skipping\n", type.c_str());
+        }
+        Node att = light["attenuation"];
+        if (att) {
+            pLightPtr->setAttenuation(att.as<float>());
+        }
+        lightPtr = std::move(pLightPtr);
+
+    } else if (type == "spotlight") {
+
+        auto sLightPtr(std::make_unique<SpotLight>(name));
+        Node position = light["position"];
+        if (position) {
+            sLightPtr->setPosition(parseVec<glm::vec3>(position));
+        }
+        Node direction = light["direction"];
+        if (direction) {
+            sLightPtr->setDirection(parseVec<glm::vec3>(direction));
+        }
+        Node radius = light["radius"];
+        if (radius) {
+            if (radius.size() > 1) {
+                sLightPtr->setRadius(radius[0].as<float>(), radius[1].as<float>());
+            } else {
+                sLightPtr->setRadius(radius.as<float>());
+            }
+        }
+        Node angle = light["angle"];
+        if (angle) {
+            sLightPtr->setCutoffAngle(angle.as<float>());
+        }
+        Node exponent = light["exponent"];
+        if (exponent) {
+            sLightPtr->setCutoffExponent(exponent.as<float>());
         }
 
-        if (sourcePtr) {
-            sourcePtr->setCacheSize(CACHE_SIZE);
-            _scene.dataSources().push_back(sourcePtr);
+        lightPtr = std::move(sLightPtr);
+    }
+
+    Node origin = light["origin"];
+    if (origin) {
+        const std::string originStr = origin.as<std::string>();
+        if (originStr == "world") {
+            lightPtr->setOrigin(LightOrigin::world);
+        } else if (originStr == "camera") {
+            lightPtr->setOrigin(LightOrigin::camera);
+        } else if (originStr == "ground") {
+            lightPtr->setOrigin(LightOrigin::ground);
         }
     }
-}
 
-void SceneLoader::loadLights(Node lights, Scene& scene) {
-
-    if (!lights) {
-
-        // Add an ambient light if nothing else is specified
-        std::unique_ptr<AmbientLight> amb(new AmbientLight("defaultLight"));
-        amb->setAmbientColor({ .5f, .5f, .5f, 1.f });
-        scene.lights().push_back(std::move(amb));
-
-        return;
+    Node ambient = light["ambient"];
+    if (ambient) {
+        lightPtr->setAmbientColor(parseVec<glm::vec4>(ambient));
     }
 
-    for (const auto& lt : lights) {
-
-        const Node light = lt.second;
-        const std::string name = lt.first.Scalar();
-        const std::string type = light["type"].as<std::string>();
-
-        std::unique_ptr<Light> lightPtr;
-
-        if (type == "ambient") {
-
-            lightPtr = std::make_unique<AmbientLight>(name);
-
-        } else if (type == "directional") {
-
-            auto dLightPtr(std::make_unique<DirectionalLight>(name));
-            Node direction = light["direction"];
-            if (direction) {
-                dLightPtr->setDirection(parseVec<glm::vec3>(direction));
-            }
-            lightPtr = std::move(dLightPtr);
-
-        } else if (type == "point") {
-
-            auto pLightPtr(std::make_unique<PointLight>(name));
-            Node position = light["position"];
-            if (position) {
-                pLightPtr->setPosition(parseVec<glm::vec3>(position));
-            }
-            Node radius = light["radius"];
-            if (radius) {
-                if (radius.size() > 1) {
-                    pLightPtr->setRadius(radius[0].as<float>(), radius[1].as<float>());
-                } else {
-                    pLightPtr->setRadius(radius.as<float>());
-                }
-            }
-            Node att = light["attenuation"];
-            if (att) {
-                pLightPtr->setAttenuation(att.as<float>());
-            }
-            lightPtr = std::move(pLightPtr);
-
-        } else if (type == "spotlight") {
-
-            auto sLightPtr(std::make_unique<SpotLight>(name));
-            Node position = light["position"];
-            if (position) {
-                sLightPtr->setPosition(parseVec<glm::vec3>(position));
-            }
-            Node direction = light["direction"];
-            if (direction) {
-                sLightPtr->setDirection(parseVec<glm::vec3>(direction));
-            }
-            Node radius = light["radius"];
-            if (radius) {
-                if (radius.size() > 1) {
-                    sLightPtr->setRadius(radius[0].as<float>(), radius[1].as<float>());
-                } else {
-                    sLightPtr->setRadius(radius.as<float>());
-                }
-            }
-            Node angle = light["angle"];
-            if (angle) {
-                sLightPtr->setCutoffAngle(angle.as<float>());
-            }
-            Node exponent = light["exponent"];
-            if (exponent) {
-                sLightPtr->setCutoffExponent(exponent.as<float>());
-            }
-
-            lightPtr = std::move(sLightPtr);
-        }
-
-        Node origin = light["origin"];
-        if (origin) {
-            const std::string originStr = origin.as<std::string>();
-            if (originStr == "world") {
-                lightPtr->setOrigin(LightOrigin::world);
-            } else if (originStr == "camera") {
-                lightPtr->setOrigin(LightOrigin::camera);
-            } else if (originStr == "ground") {
-                lightPtr->setOrigin(LightOrigin::ground);
-            }
-        }
-
-        Node ambient = light["ambient"];
-        if (ambient) {
-            lightPtr->setAmbientColor(parseVec<glm::vec4>(ambient));
-        }
-
-        Node diffuse = light["diffuse"];
-        if (diffuse) {
-            lightPtr->setDiffuseColor(parseVec<glm::vec4>(diffuse));
-        }
-
-        Node specular = light["specular"];
-        if (specular) {
-            lightPtr->setSpecularColor(parseVec<glm::vec4>(specular));
-        }
-
-        scene.lights().push_back(std::move(lightPtr));
+    Node diffuse = light["diffuse"];
+    if (diffuse) {
+        lightPtr->setDiffuseColor(parseVec<glm::vec4>(diffuse));
     }
+
+    Node specular = light["specular"];
+    if (specular) {
+        lightPtr->setSpecularColor(parseVec<glm::vec4>(specular));
+    }
+
+    scene.lights().push_back(std::move(lightPtr));
 }
 
 void SceneLoader::loadCameras(Node _cameras, Scene& _scene) {
@@ -1226,27 +1252,20 @@ SceneLayer SceneLoader::loadSublayer(Node layer, const std::string& name, Scene&
     return { name, filter, rules, sublayers };
 }
 
-void SceneLoader::loadLayers(Node layers, Scene& scene) {
+void SceneLoader::loadLayer(const std::pair<Node, Node>& layer, Scene& scene) {
 
-    if (!layers) {
-        return;
-    }
+    std::string name = layer.first.as<std::string>();
 
-    for (const auto& layer : layers) {
+    Node data = layer.second["data"];
+    Node data_layer = data["layer"];
+    Node data_source = data["source"];
 
-        std::string name = layer.first.as<std::string>();
+    std::string collection = data_layer ? data_layer.as<std::string>() : name;
+    std::string source = data_source ? data_source.as<std::string>() : "";
 
-        Node data = layer.second["data"];
-        Node data_layer = data["layer"];
-        Node data_source = data["source"];
+    auto sublayer = loadSublayer(layer.second, name, scene);
 
-        std::string collection = data_layer ? data_layer.as<std::string>() : name;
-        std::string source = data_source ? data_source.as<std::string>() : "";
-
-        auto sublayer = loadSublayer(layer.second, name, scene);
-
-        scene.layers().push_back({ sublayer, source, collection });
-    }
+    scene.layers().push_back({ sublayer, source, collection });
 }
 
 }
