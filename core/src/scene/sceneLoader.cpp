@@ -672,20 +672,20 @@ void SceneLoader::loadLights(Node lights, Scene& scene) {
 
         if (type == "ambient") {
 
-            lightPtr = std::unique_ptr<Light>(new AmbientLight(name));
+            lightPtr = std::make_unique<AmbientLight>(name);
 
         } else if (type == "directional") {
 
-            DirectionalLight* dLightPtr = new DirectionalLight(name);
+            auto dLightPtr(std::make_unique<DirectionalLight>(name));
             Node direction = light["direction"];
             if (direction) {
                 dLightPtr->setDirection(parseVec<glm::vec3>(direction));
             }
-            lightPtr = std::unique_ptr<Light>(dLightPtr);
+            lightPtr = std::move(dLightPtr);
 
         } else if (type == "point") {
 
-            PointLight* pLightPtr = new PointLight(name);
+            auto pLightPtr(std::make_unique<PointLight>(name));
             Node position = light["position"];
             if (position) {
                 pLightPtr->setPosition(parseVec<glm::vec3>(position));
@@ -702,11 +702,11 @@ void SceneLoader::loadLights(Node lights, Scene& scene) {
             if (att) {
                 pLightPtr->setAttenuation(att.as<float>());
             }
-            lightPtr = std::unique_ptr<Light>(pLightPtr);
+            lightPtr = std::move(pLightPtr);
 
         } else if (type == "spotlight") {
 
-            SpotLight* sLightPtr = new SpotLight(name);
+            auto sLightPtr(std::make_unique<SpotLight>(name));
             Node position = light["position"];
             if (position) {
                 sLightPtr->setPosition(parseVec<glm::vec3>(position));
@@ -732,8 +732,7 @@ void SceneLoader::loadLights(Node lights, Scene& scene) {
                 sLightPtr->setCutoffExponent(exponent.as<float>());
             }
 
-            lightPtr = std::unique_ptr<Light>(sLightPtr);
-
+            lightPtr = std::move(sLightPtr);
         }
 
         Node origin = light["origin"];
