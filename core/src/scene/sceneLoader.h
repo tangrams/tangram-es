@@ -30,7 +30,11 @@ using Mixes = std::vector<YAML::Node>;
 // 0: type, 1: values
 using StyleUniforms = std::pair<std::string, std::vector<UniformValue>>;
 
-class SceneLoader {
+struct SceneLoader {
+
+    static bool loadScene(const std::string& _sceneString, Scene& _scene);
+
+    /*** public for testing ***/
 
     static void loadSources(YAML::Node sources, Scene& scene);
     static void loadFont(YAML::Node fontProps);
@@ -52,14 +56,8 @@ class SceneLoader {
     // Style Mixing helper methods
     static YAML::Node mixStyle(const Mixes& mixes);
 
-public:
-    SceneLoader() = delete;
-
-    static bool loadScene(const std::string& _sceneString, Scene& _scene);
-
     static MaterialTexture loadMaterialTexture(YAML::Node matCompNode, Scene& scene);
 
-    // public for testing
     static void parseStyleParams(YAML::Node params, Scene& scene, const std::string& propPrefix,
                                  std::vector<StyleParam>& out);
 
@@ -74,6 +72,8 @@ public:
     // Methods to merge shader extensions
     static YAML::Node shaderExtMerge(const Mixes& mixes);
     static Tangram::Filter generateFilter(YAML::Node filter, Scene& scene);
+
+    SceneLoader() = delete;
 };
 
 }
