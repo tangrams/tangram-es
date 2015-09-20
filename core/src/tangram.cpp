@@ -266,7 +266,7 @@ void clearSourceData(int _sourceId) {
     if (!m_tileManager) { return; }
     std::lock_guard<std::mutex> lock(m_tilesMutex);
     for (auto& set : m_tileManager->getTileSets()) {
-        if (set.id == _sourceId) {
+        if (set.source->id() == _sourceId) {
             set.source->clearData();
             m_tileManager->clearTileSet(_sourceId);
         }
