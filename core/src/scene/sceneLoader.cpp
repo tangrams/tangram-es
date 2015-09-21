@@ -19,6 +19,7 @@
 #include "sceneLayer.h"
 #include "scene/dataLayer.h"
 #include "text/fontContext.h"
+#include "util/yamlHelper.h"
 
 #include "yaml-cpp/yaml.h"
 
@@ -65,49 +66,9 @@ void SceneLoader::loadScene(const std::string& _sceneString, Scene& _scene,
     }
 }
 
-std::string parseSequence(const Node& node) {
-    std::stringstream sstream;
-    for (const auto& val : node) {
-        try {
-            sstream << val.as<float>() << ",";
-        } catch (const BadConversion& e) {
-            try {
-                sstream << val.as<std::string>() << ",";
-            } catch (const BadConversion& e) {
-                logMsg("Error: Float or Unit expected for styleParam sequence value\n");
-            }
-        }
-    }
-    return sstream.str();
-}
+void SceneLoader::loadShaderConfig(Node shaders, Style& style, Scene& scene) {
 
-glm::vec4 parseVec4(const Node& node) {
-    glm::vec4 vec;
-    int i = 0;
-    for (const auto& nodeVal : node) {
-        if (i < 4) {
-            vec[i++] = nodeVal.as<float>();
-        } else {
-            break;
-        }
-    }
-    return vec;
-}
-
-glm::vec3 parseVec3(const Node& node) {
-    glm::vec3 vec;
-    int i = 0;
-    for (const auto& nodeVal : node) {
-        if (i < 3) {
-            vec[i++] = nodeVal.as<float>();
-        } else {
-            break;
-        }
-    }
-    return vec;
-}
-
-void SceneLoader::loadShaderConfig(Node shaders, ShaderProgram& shader) {
+    auto& shader = *(style.getShaderProgram());
 
     if (!shaders) {
         return;
@@ -150,9 +111,29 @@ void SceneLoader::loadShaderConfig(Node shaders, ShaderProgram& shader) {
     Node uniformsNode = shaders["uniforms"];
     if (uniformsNode) {
         for (const auto& uniform : uniformsNode) {
-            std::string name = uniform.first.as<std::string>();
-            std::string value = uniform.first.as<std::string>();
-            shader.addSourceBlock("uniforms", "uniform " + name + " = " + value + ";");
+            auto name = uniform.first.as<std::string>();
+            auto uniforms = parseStyleUniforms(uniform.second, scene);
+            auto& type = uniforms.first;
+            auto& uniformValues = uniforms.second;
+            int size = uniformValues.size();
+            if (size == 1) {
+                shader.addSourceBlock("uniforms", "uniform " + type + " " + name + ";");
+                style.styleUniforms().emplace_back(name, uniformValues[0]);
+                if (uniformValues[0].is<std::string>()) {
+                    auto textureName = uniformValues[0].get<std::string>();
+                    style.uniformTextures().emplace(textureName, scene.textures()[textureName]);
+                }
+            } else {
+                shader.addSourceBlock("uniforms", "uniform " + type + " " + name +
+                                                        "[" + std::to_string(size) + "];");
+                for (int i = 0; i < size; i++) {
+                    style.styleUniforms().emplace_back(name + "[" + std::to_string(i) + "]", uniformValues[i]);
+                    if (uniformValues[i].is<std::string>()) {
+                        auto textureName = uniformValues[i].get<std::string>();
+                        style.uniformTextures().emplace(textureName, scene.textures()[textureName]);
+                    }
+                }
+            }
         }
     }
 
@@ -173,7 +154,7 @@ void SceneLoader::loadMaterial(Node matNode, Material& material, Scene& scene) {
         if (diffuse.IsMap()) {
             material.setDiffuse(loadMaterialTexture(diffuse, scene));
         } else if (diffuse.IsSequence()) {
-            material.setDiffuse(parseVec4(diffuse));
+            material.setDiffuse(parseVec<glm::vec4>(diffuse));
         } else {
             try {
                 float difValue = diffuse.as<float>();
@@ -189,7 +170,7 @@ void SceneLoader::loadMaterial(Node matNode, Material& material, Scene& scene) {
         if (ambient.IsMap()) {
             material.setAmbient(loadMaterialTexture(ambient, scene));
         } else if (ambient.IsSequence()) {
-            material.setAmbient(parseVec4(ambient));
+            material.setAmbient(parseVec<glm::vec4>(ambient));
         } else {
             try {
                 float ambientValue = ambient.as<float>();
@@ -205,7 +186,7 @@ void SceneLoader::loadMaterial(Node matNode, Material& material, Scene& scene) {
         if (specular.IsMap()) {
             material.setSpecular(loadMaterialTexture(specular, scene));
         } else if (specular.IsSequence()) {
-            material.setSpecular(parseVec4(specular));
+            material.setSpecular(parseVec<glm::vec4>(specular));
         } else {
             try {
                 float specValue = specular.as<float>();
@@ -290,6 +271,12 @@ MaterialTexture SceneLoader::loadMaterialTexture(Node matCompNode, Scene& scene)
     return matTex;
 }
 
+void SceneLoader::loadDefaultTexture(const std::string& url, Scene& scene) {
+    TextureOptions options = {GL_RGBA, GL_RGBA, {GL_LINEAR, GL_LINEAR}, {GL_CLAMP_TO_EDGE, GL_CLAMP_TO_EDGE} };
+    std::shared_ptr<Texture> texture(new Texture(url, options, false));
+    scene.textures().emplace(url, texture);
+}
+
 void SceneLoader::loadTextures(Node textures, Scene& scene) {
 
     if (!textures) {
@@ -335,7 +322,7 @@ void SceneLoader::loadTextures(Node textures, Scene& scene) {
                 std::string spriteName = it->first.as<std::string>();
 
                 if (sprite) {
-                    glm::vec4 desc = parseVec4(sprite);
+                    glm::vec4 desc = parseVec<glm::vec4>(sprite);
                     glm::vec2 pos = glm::vec2(desc.x, desc.y);
                     glm::vec2 size = glm::vec2(desc.z, desc.w);
 
@@ -395,7 +382,7 @@ void SceneLoader::loadStyleProps(Style* style, YAML::Node styleNode, Scene& scen
 
     Node shadersNode = styleNode["shaders"];
     if (shadersNode) {
-        loadShaderConfig(shadersNode, *(style->getShaderProgram()));
+        loadShaderConfig(shadersNode, *style, scene);
     }
 
     Node materialNode = styleNode["material"];
@@ -698,7 +685,7 @@ void SceneLoader::loadLights(Node lights, Scene& scene) {
             DirectionalLight* dLightPtr = new DirectionalLight(name);
             Node direction = light["direction"];
             if (direction) {
-                dLightPtr->setDirection(parseVec3(direction));
+                dLightPtr->setDirection(parseVec<glm::vec3>(direction));
             }
             lightPtr = std::unique_ptr<Light>(dLightPtr);
 
@@ -707,7 +694,7 @@ void SceneLoader::loadLights(Node lights, Scene& scene) {
             PointLight* pLightPtr = new PointLight(name);
             Node position = light["position"];
             if (position) {
-                pLightPtr->setPosition(parseVec3(position));
+                pLightPtr->setPosition(parseVec<glm::vec3>(position));
             }
             Node radius = light["radius"];
             if (radius) {
@@ -728,11 +715,11 @@ void SceneLoader::loadLights(Node lights, Scene& scene) {
             SpotLight* sLightPtr = new SpotLight(name);
             Node position = light["position"];
             if (position) {
-                sLightPtr->setPosition(parseVec3(position));
+                sLightPtr->setPosition(parseVec<glm::vec3>(position));
             }
             Node direction = light["direction"];
             if (direction) {
-                sLightPtr->setDirection(parseVec3(direction));
+                sLightPtr->setDirection(parseVec<glm::vec3>(direction));
             }
             Node radius = light["radius"];
             if (radius) {
@@ -769,17 +756,17 @@ void SceneLoader::loadLights(Node lights, Scene& scene) {
 
         Node ambient = light["ambient"];
         if (ambient) {
-            lightPtr->setAmbientColor(parseVec4(ambient));
+            lightPtr->setAmbientColor(parseVec<glm::vec4>(ambient));
         }
 
         Node diffuse = light["diffuse"];
         if (diffuse) {
-            lightPtr->setDiffuseColor(parseVec4(diffuse));
+            lightPtr->setDiffuseColor(parseVec<glm::vec4>(diffuse));
         }
 
         Node specular = light["specular"];
         if (specular) {
-            lightPtr->setSpecularColor(parseVec4(specular));
+            lightPtr->setSpecularColor(parseVec<glm::vec4>(specular));
         }
 
         scene.lights().push_back(std::move(lightPtr));
@@ -1047,6 +1034,69 @@ std::vector<StyleParam> SceneLoader::parseStyleParams(Node params, Scene& scene,
     }
 
     return out;
+}
+
+StyleUniforms SceneLoader::parseStyleUniforms(const Node& value, Scene& scene) {
+    std::string type = "";
+    std::vector<UniformValue> uniformValues;
+    if (value.IsScalar()) { //float, int (bool), string (texture)
+        UniformValue uVal;
+        try {
+            uVal = value.as<float>();
+            type = "float";
+        } catch (const BadConversion& e) {
+            auto strVal = value.as<std::string>();
+            type = "int";
+            if (strVal == "true") {
+                uVal = 1;
+            } else if (strVal == "false") {
+                uVal = 0;
+            } else {
+                type = "sampler2D";
+                auto texItr = scene.textures().find(strVal);
+                if (texItr == scene.textures().end()) {
+                    loadDefaultTexture(strVal, scene);
+                }
+                uVal = strVal;
+            }
+        }
+        uniformValues.push_back(uVal);
+    } else if (value.IsSequence()) {
+        int size = value.size();
+        try {
+            type = "vec" + std::to_string(size);
+            UniformValue uVal;
+            switch (size) {
+                case 2:
+                    uVal = parseVec<glm::vec2>(value);
+                    break;
+                case 3:
+                    uVal = parseVec<glm::vec3>(value);
+                    break;
+                case 4:
+                    uVal = parseVec<glm::vec4>(value);
+                    break;
+                default:
+                    break;
+                    // TODO: Handle numeric arrays past 4 elements
+            }
+            uniformValues.push_back(uVal);
+        } catch (const BadConversion& e) { // array of strings (textures)
+            uniformValues.reserve(size);
+            type = "sampler2D";
+            for (const auto& strVal : value) {
+                auto textureName = strVal.as<std::string>();
+                uniformValues.push_back(textureName);
+                auto texItr = scene.textures().find(textureName);
+                if (texItr == scene.textures().end()) {
+                    loadDefaultTexture(textureName, scene);
+                }
+            }
+        }
+    } else {
+        logMsg("Warning: Expected a scalar or sequence value for uniforms\n");
+    }
+    return std::make_pair(type, std::move(uniformValues));
 }
 
 void SceneLoader::loadFont(Node fontProps) {
