@@ -8,7 +8,7 @@
 
 package com.mapzen.tangram;
 
-public class tangramJNI {
+public class TangramJNI {
   public final static native long new_Properties();
   public final static native void Properties_clear(long jarg1, Properties jarg1_);
   public final static native boolean Properties_contains(long jarg1, Properties jarg1_, String jarg2);
@@ -29,15 +29,16 @@ public class tangramJNI {
   public final static native void delete_Tags(long jarg1);
   public final static native void DataSource_update(long jarg1, DataSource jarg1_);
   public final static native void DataSource_clear(long jarg1, DataSource jarg1_);
+  public final static native String DataSource_name(long jarg1, DataSource jarg1_);
   public final static native void delete_DataSource(long jarg1);
-  public final static native long new_ClientGeoJsonSource(String jarg1, String jarg2);
-  public final static native void ClientGeoJsonSource_addData(long jarg1, ClientGeoJsonSource jarg1_, String jarg2);
-  public final static native void ClientGeoJsonSource_addPoint(long jarg1, ClientGeoJsonSource jarg1_, long jarg2, Tags jarg2_, double[] jarg3);
-  public final static native void ClientGeoJsonSource_addLine(long jarg1, ClientGeoJsonSource jarg1_, long jarg2, Tags jarg2_, double[] jarg3, int jarg4);
-  public final static native void ClientGeoJsonSource_addPoly(long jarg1, ClientGeoJsonSource jarg1_, long jarg2, Tags jarg2_, double[] jarg3, int[] jarg4, int jarg5);
-  public final static native void ClientGeoJsonSource_clearData(long jarg1, ClientGeoJsonSource jarg1_);
-  public final static native void delete_ClientGeoJsonSource(long jarg1);
+  public final static native long new_MapData(String jarg1, String jarg2);
+  public final static native void MapData_addData(long jarg1, MapData jarg1_, String jarg2);
+  public final static native void MapData_addPoint(long jarg1, MapData jarg1_, long jarg2, Tags jarg2_, double[] jarg3);
+  public final static native void MapData_addLine(long jarg1, MapData jarg1_, long jarg2, Tags jarg2_, double[] jarg3, int jarg4);
+  public final static native void MapData_addPoly(long jarg1, MapData jarg1_, long jarg2, Tags jarg2_, double[] jarg3, int[] jarg4, int jarg5);
+  public final static native void MapData_clearData(long jarg1, MapData jarg1_);
+  public final static native void delete_MapData(long jarg1);
   public final static native int addDataSource(long jarg1, DataSource jarg1_);
   public final static native void clearDataSource(long jarg1, DataSource jarg1_, boolean jarg2, boolean jarg3);
-  public final static native long ClientGeoJsonSource_SWIGSmartPtrUpcast(long jarg1);
+  public final static native long MapData_SWIGSmartPtrUpcast(long jarg1);
 }
