@@ -70,6 +70,8 @@ int addDataSource(std::shared_ptr<DataSource> _source);
 // Removes all data from the source with the provided ID
 void clearSourceData(int _sourceId);
 
+void clearDataSource(DataSource& _source, bool _data, bool _tiles);
+
 // Add a point geometry to the source with the provided ID; coordinates are longitude and latitude in a two-element double-precision array
 void addSourcePoint(int _sourceId, double* _coordinates);
 

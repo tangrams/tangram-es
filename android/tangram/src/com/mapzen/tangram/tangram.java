@@ -13,4 +13,8 @@ public class tangram {
     return tangramJNI.addDataSource(DataSource.getCPtr(_source), _source);
   }
 
+  public static void clearDataSource(DataSource _source, boolean _data, boolean _tiles) {
+    tangramJNI.clearDataSource(DataSource.getCPtr(_source), _source, _data, _tiles);
+  }
+
 }

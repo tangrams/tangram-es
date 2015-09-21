@@ -264,6 +264,7 @@ SWIGINTERN bool std_map_Sl_std_string_Sc_std_string_Sg__has_key(std::map< std::s
                 return i != self->end();
             }
 
+#include "tangram.h"
 #include "data/dataSource.h"
 #include "data/clientGeoJsonSource.h"
 
@@ -405,9 +406,12 @@ static int SWIG_JavaArrayInInt (JNIEnv *jenv, jint **jarr, int **carr, jintArray
 static void SWIG_JavaArrayArgoutInt (JNIEnv *jenv, jint *jarr, int *carr, jintArray input);
 static jintArray SWIG_JavaArrayOutInt (JNIEnv *jenv, int *result, jsize sz);
 
-
-#include "tangram.h"
-
+SWIGINTERN void Tangram_DataSource_update(Tangram::DataSource *self){
+        Tangram::clearDataSource(*(self), false, true);
+    }
+SWIGINTERN void Tangram_DataSource_clear(Tangram::DataSource *self){
+        Tangram::clearDataSource(*(self), true, true);
+    }
 
 #ifdef __cplusplus
 extern "C" {
@@ -793,6 +797,34 @@ SWIGEXPORT void JNICALL Java_com_mapzen_tangram_tangramJNI_delete_1Tags(JNIEnv *
 }
 
 
+SWIGEXPORT void JNICALL Java_com_mapzen_tangram_tangramJNI_DataSource_1update(JNIEnv *jenv, jclass jcls, jlong jarg1, jobject jarg1_) {
+  Tangram::DataSource *arg1 = (Tangram::DataSource *) 0 ;
+  std::shared_ptr< Tangram::DataSource > *smartarg1 = 0 ;
+
+  (void)jenv;
+  (void)jcls;
+  (void)jarg1_;
+
+  smartarg1 = *(std::shared_ptr<  Tangram::DataSource > **)&jarg1;
+  arg1 = (Tangram::DataSource *)(smartarg1 ? smartarg1->get() : 0);
+  Tangram_DataSource_update(arg1);
+}
+
+
+SWIGEXPORT void JNICALL Java_com_mapzen_tangram_tangramJNI_DataSource_1clear(JNIEnv *jenv, jclass jcls, jlong jarg1, jobject jarg1_) {
+  Tangram::DataSource *arg1 = (Tangram::DataSource *) 0 ;
+  std::shared_ptr< Tangram::DataSource > *smartarg1 = 0 ;
+
+  (void)jenv;
+  (void)jcls;
+  (void)jarg1_;
+
+  smartarg1 = *(std::shared_ptr<  Tangram::DataSource > **)&jarg1;
+  arg1 = (Tangram::DataSource *)(smartarg1 ? smartarg1->get() : 0);
+  Tangram_DataSource_clear(arg1);
+}
+
+
 SWIGEXPORT void JNICALL Java_com_mapzen_tangram_tangramJNI_delete_1DataSource(JNIEnv *jenv, jclass jcls, jlong jarg1) {
   Tangram::DataSource *arg1 = (Tangram::DataSource *) 0 ;
   std::shared_ptr< Tangram::DataSource > *smartarg1 = 0 ;
@@ -998,6 +1030,26 @@ SWIGEXPORT jint JNICALL Java_com_mapzen_tangram_tangramJNI_addDataSource(JNIEnv 
   result = (int)Tangram::addDataSource(arg1);
   jresult = (jint)result;
   return jresult;
+}
+
+
+SWIGEXPORT void JNICALL Java_com_mapzen_tangram_tangramJNI_clearDataSource(JNIEnv *jenv, jclass jcls, jlong jarg1, jobject jarg1_, jboolean jarg2, jboolean jarg3) {
+  Tangram::DataSource *arg1 = 0 ;
+  bool arg2 ;
+  bool arg3 ;
+
+  (void)jenv;
+  (void)jcls;
+  (void)jarg1_;
+
+  arg1 = (Tangram::DataSource *)((*(std::shared_ptr<  Tangram::DataSource > **)&jarg1) ? (*(std::shared_ptr<  Tangram::DataSource > **)&jarg1)->get() : 0);
+  if (!arg1) {
+    SWIG_JavaThrowException(jenv, SWIG_JavaNullPointerException, "Tangram::DataSource & reference is null");
+    return ;
+  }
+  arg2 = jarg2 ? true : false;
+  arg3 = jarg3 ? true : false;
+  Tangram::clearDataSource(*arg1,arg2,arg3);
 }
 
 

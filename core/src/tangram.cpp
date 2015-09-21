@@ -280,6 +280,15 @@ int addDataSource(std::shared_ptr<DataSource> _source) {
     return _source->id();
 }
 
+void clearDataSource(DataSource& _source, bool _data, bool _tiles) {
+    if (!m_tileManager) { return; }
+
+    if (_tiles) { m_tileManager->clearTileSet(_source.id()); }
+    if (_data) { _source.clearData(); }
+
+    requestRender();
+}
+
 void clearSourceData(int _sourceId) {
 
     if (!m_tileManager) { return; }

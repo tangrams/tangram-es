@@ -70,7 +70,7 @@ layers:
         data: { source: touch }
         draw:
             lines:
-                color: 'purple'
+                color: function () { return feature.color || 'pink'; }
                 order: 50
                 width: .03
             icons:
@@ -446,6 +446,3 @@ layers:
         data: { source: osm }
         draw:
             sprites: {}
-
-
-
