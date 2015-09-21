@@ -46,7 +46,7 @@ styles:
 sources:
     osm:
         type: MVT
-        url:  http://vector.mapzen.com/osm/all/{z}/{x}/{y}.mvt
+        url:  https://vector.mapzen.com/osm/all/{z}/{x}/{y}.mvt
 
 layers:
     touch:
