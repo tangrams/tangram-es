@@ -1,0 +1,290 @@
+# Author @patriciogv - 2015
+
+cameras:
+    camera1:
+        type: perspective #currently ignored
+        focal_length: [[16, 2], [20, 6]] # currently ignored
+        vanishing_point: [-250, -250] # currently ignored
+lights:
+    directional1:
+        type: directional
+        origin: world
+        direction: [-1, -1, -1]
+        diffuse: [.5, .5, .5, 1.]
+        ambient: [0.3, 0.3, 0.3, 1.]
+        specular: 1.
+    point1:
+        type: point
+        position: [0, -100, 0]
+        origin: ground
+        ambient: .2
+        diffuse: .5
+        specular: .4
+styles:
+    tools:
+        base: polygons
+        shaders:
+            blocks:
+                global: |
+                    float fade(float z) { return smoothstep(.0,.5,z) - smoothstep(.5,1.,z); }
+                    float grid(vec2 pos, float zoom, float lineWidth){
+                        pos = fract(pos*zoom);
+                        pos += .5;
+                        vec2 g = smoothstep(vec2(0.5-lineWidth),vec2(0.5),pos)-smoothstep(vec2(0.5),vec2(0.5+lineWidth),pos);
+                        return clamp(g.x+g.y,0.0,1.);
+                    }
+                    float infinitGrid(vec2 st, float zoom){
+                        float grid1 = grid(st,.0000004*pow(2.,floor(zoom/2.)*2.),.05);
+                        float grid2 = grid(st,.0000001*pow(2.,floor((zoom+1.)/2.)*2.),.05);
+                        return grid1 * fade(fract(zoom/2.)) + grid2 * fade(fract((zoom+1.)/2.));
+                    }
+                    float random(in float x){return fract(sin(x)*43758.5453);}
+                    float random(vec2 p) { return fract(1e4 * sin(17.0 * p.x + p.y * 0.1) * (0.1 + abs(sin(p.y * 13.0 + p.x)))); }
+                    vec2 random2( vec2 p ) { p=vec2(dot(p,vec2(127.1,311.7)),dot(p,vec2(269.5,183.3))); return fract(sin(p)*18.5453); }
+                    float noise(vec2 x) {
+                        vec2 i = floor(x);
+                        vec2 f = fract(x);
+                        float a = random(i);
+                        float b = random(i + vec2(1.0, 0.0));
+                        float c = random(i + vec2(0.0, 1.0));
+                        float d = random(i + vec2(1.0, 1.0));
+                        vec2 u = f * f * (3.0 - 2.0 * f);
+                        return mix(a, b, u.x) + (c - a) * u.y * (1.0 - u.x) + (d - b) * u.x * u.y;
+                    }
+                    float fbm( in vec2 p ){
+                        float s = 0.0;
+                        float m = 0.0;
+                        float a = 0.5;
+                        for(int i=0; i<2; i++ ){
+                            s += a * noise(p);
+                            m += a;
+                            a *= 0.5;
+                            p *= 2.0;
+                        }
+                        return s/m;
+                    }
+                    float grain(vec2 pos){
+                        vec2 st = pos/u_resolution.xy-vec2(.5);
+                        return dot(st,st)+(fbm(pos*0.6)*0.1);
+                    }
+                    vec3 voronoi(vec2 st) {
+                        vec2 ipos = floor(st);
+                        vec2 fpos = fract(st);
+                        vec3 m = vec3( 8.0 );
+                        for( int j=-1; j<=1; j++ ){
+                            for( int i=-1; i<=1; i++ ){
+                                vec2  g = vec2( float(i), float(j) );
+                                vec2  o = random2( ipos + g );
+                                vec2  r = g - fpos + o;
+                                float d = dot( r, r );
+                                if( d<m.x )
+                                    m = vec3( d, o );
+                            }
+                        }
+                        return m;
+                    }
+    grain:
+        base: polygons
+        mix: tools
+        shaders:
+            blocks:
+                filter: |
+                    color.rgb -= grain(gl_FragCoord.xy)*0.3;
+    buildings:
+        animated: true
+        texcoords: true
+        base: polygons
+        mix: tools
+        material:
+            shininess: 1.
+            specular: 0.0
+            emission: 0.0
+        shaders:
+            blocks:
+                color: |
+                    color.rgb *= vec3(min((v_world_position.z*.001 + .5),1.));
+                    float t = fract(u_time*0.0000005);
+                    //if (dot(v_normal,vec3(0.,0.,1.)) == 0.0){
+                    if (abs(dot(v_normal, u_normalMatrix * vec3(0.,0.,1.))) < 0.01){
+                        vec2 st = vec2(v_texcoord.x*10.,v_world_position.z*0.2);
+                        vec2 ipos = floor(st);
+                        vec2 fpos = fract(st);
+                        if ( step(0.6,fpos.x)*step(0.4,fpos.y) > 0.0 ){
+                            material.specular = vec4(1.) * max( 1.-(v_world_position.z*.001 + .5), 0. );
+                            material.emission = vec4(0.988,0.983,0.880,1.0) * step(.5,random(ipos+floor(v_normal.xy*10.0)+t));
+                        }
+                    }
+                filter: |
+                    color.rgb += vec3(1.)* min( 1.-(v_world_position.z*.001 + .7) , 0.5 );
+                    color.rgb -= grain(gl_FragCoord.xy);
+    offices:
+        texcoords: true
+        base: polygons
+        mix: tools
+        material:
+            shininess: 1.
+            specular: 0.0
+            emission: 0.0
+        shaders:
+            blocks:
+                color: |
+                    color.rgb *= vec3(min((v_world_position.z*.001 + .5),1.));
+                    //if (dot(v_normal,vec3(0.,0.,1.)) == 0.0){
+                    if (abs(dot(v_normal, u_normalMatrix * vec3(0.,0.,1.))) < 0.01){
+                        vec2 st = vec2(v_texcoord.x*10.,v_world_position.z*0.2);
+                        vec2 ipos = floor(st);
+                        vec2 fpos = fract(st);
+                        if ( step(0.01,fpos.x)*step(0.1,fpos.y) > 0.0 ){
+                            material.specular = vec4(1.) * max( 1.-(v_world_position.z*.001 + .5), 0. );
+                            material.emission = vec4(0.957,0.988,0.976,1.0) * step(.5,random(ipos*vec2(0.0000001,0.01)+floor(v_normal.xy*10.0)));
+                            material.emission *= vec4(0.988,0.983,0.880,1.0) * step(.5,random(ipos));
+                        }
+                    }
+
+                filter: |
+                    color.rgb += vec3(1.)* min( 1.-(v_world_position.z*.001 + .7) , 0.5 );
+                    color.rgb -= grain(gl_FragCoord.xy);
+    modern-buildings:
+        texcoords: true
+        base: polygons
+        mix: tools
+        material:
+            shininess: 1.
+            specular: 1.0
+            emission: 0.0
+        shaders:
+            blocks:
+                color: |
+                    color.rgb *= vec3(min((v_world_position.z*.001 + .5),1.));
+                    //if (dot(v_normal,vec3(0.,0.,1.)) == 0.0){
+                    if (abs(dot(v_normal, u_normalMatrix * vec3(0.,0.,1.))) < 0.01){
+                        vec2 st = vec2(v_texcoord.x*10.,v_world_position.z*0.2);
+                        float scale = 0.8;
+
+                        vec3 c = voronoi(st*scale);
+                        vec3 col = 0.6 + cos( c.y*0.6 + vec3(1.5) );
+                        vec2 e = vec2( 2.0, 0.0 )/vec2(50.);
+                        vec3 ca = voronoi( scale*(st + e.xy) );
+                        vec3 cb = voronoi( scale*(st + e.yx) );
+                        col *= 1.0 - clamp( abs(2.0*c.z-ca.z-cb.z)*1000.0,0.0,1.0);
+
+                        material.specular = vec4(0.957,0.988,0.976,1.0) * step(0.1,col.r);
+                        material.emission = vec4(0.857,0.888,0.980,1.0) * smoothstep(0.9,1.,col.r * 2.);
+                    }
+                filter: |
+                    color.rgb += vec3(1.)* min( 1.-(v_world_position.z*.001 + .7) , 0.5 );
+                    color.rgb -= grain(gl_FragCoord.xy);
+    roads:
+        animated: false
+        texcoords: true
+        base: lines
+        mix: tools
+        material:
+            diffuse: .9
+            emission: 0.0
+        shaders:
+            blocks:
+                global: |
+                    float car(vec2 st){
+                        return (0.7-dot(st-.5,st-vec2(.5,.9))*3.);
+                    }
+                color: |
+                    vec2 st = v_texcoord.xy;
+                    float dir = -0.1;
+                    if ( v_color.r < 0.5) {
+                         if (st.x < 0.5) {
+                         st.y = 1.-st.y;
+                         }
+                         st.x = fract(st.x*2.0);
+                    }
+                    float v = u_time*dir;
+                    st *= vec2(4.,1.);
+                    st += vec2(1.);
+                    vec2 ipos = floor(st);
+                    vec2 fpos = fract(st);
+                    fpos = fpos+vec2(.0,v*random(ipos.x));
+                    ipos = floor(fpos*vec2(10.));
+                    fpos = fract(fpos*vec2(1.,10.));
+
+                    st = v_world_position.xy*0.04;
+                    float n = noise(st);
+
+                    material.emission = vec4(0.957,0.988,0.976,1.0) * max(0.0,car(fpos) * step(0.5,random(ipos.y)));
+
+                    float lineWidth = 0.2;
+                    float borders = 1.0-(step(lineWidth,v_texcoord.x)-step(1.0-lineWidth,v_texcoord.x));
+                    material.emission *= 1.-borders;
+
+                    color.rgb = vec3(0.4)*borders+n;
+                filter: |
+                    color.rgb -= grain(gl_FragCoord.xy);
+sources:
+    osm:
+        type: MVT
+        url: https://vector.mapzen.com/osm/all/{z}/{x}/{y}.mvt
+layers:
+    water:
+        data: { source: osm }
+        filter:
+            any:
+                # show smaller water areas at higher zooms
+                - { $zoom: { min: 0 }, area: { min: 10000000 } }
+                - { $zoom: { min: 10 }, area: { min: 1000000 } }
+                - { $zoom: { min: 12 }, area: { min: 100000 } }
+                - { $zoom: { min: 15 }, area: { min: 1000 } }
+                - { $zoom: { min: 18 } }
+        draw:
+            grain:
+                order: 2
+                color: '#353535'
+    earth:
+        data: { source: osm }
+        draw:
+            grain:
+                order: 0
+                color: '#555'
+    landuse:
+        data: { source: osm }
+        draw:
+            grain:
+                order: 1
+                color: '#666'
+    roads:
+        data: { source: osm }
+        filter: { not: { highway: service, kind: rail } }
+        # properties: { width: 3 }
+        draw:
+            roads:
+                order: 2
+                color: black
+                width: [[0, 2.], [15, 4.0]]
+        oneway:
+            filter: { oneway: yes }
+            draw: { roads: { color: red } }
+    buildings:
+        data: { source: osm }
+        filter: { $zoom: { min: 10 } }
+        draw:
+            polygons:
+                order: 50
+                color: '#999'
+        offices:
+            filter: function(){ return feature.height > 100; }
+            draw:
+                offices:
+                    order: 50
+                    color: '#999'
+                    extrude: function() { return feature.height > 0 || $zoom >= 16; }
+        apartments:
+            filter: function(){ return feature.height < 100; }
+            draw:
+                buildings:
+                    order: 50
+                    color: '#999'
+                    extrude: function() { return feature.height > 0 || $zoom >= 16; }
+        modern:
+            filter: { kind: museum, $zoom: { min: 10 } }
+            draw:
+                modern-buildings:
+                    order: 50
+                    color: '#999'

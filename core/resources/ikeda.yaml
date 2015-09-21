@@ -1,0 +1,326 @@
+﻿# Author @patriciogv - 2015
+
+cameras:
+    camera1:
+        type: perspective
+        focal_length: [[16, 2], [20, 6]] # pairs of [zoom, focal len]
+        vanishing_point: [-250, -250] # relative to center of screen, in pixels
+styles:
+    tools:
+        shaders:
+            blocks:
+                global: |
+                    // Tile Coords System
+                    //=============================
+                    varying vec3 v_pos;
+                    vec2 TileCoords(){return fract(v_pos.xy*0.0002445);}
+                    //  Simple Grid
+                    //=============================
+                    float grid(in vec2 st, in float res, in float press){
+                        st = fract(st*res);
+                        return 1.0-(step(press*res,st.x) * step(press*res,st.y));
+                    }
+                    float grid(in vec2 st, in float res){
+                        return grid(st,res,0.005);
+                    }
+                    // GridTile
+                    //=============================
+                    vec3 TileGrid(float res){
+                        vec2 st = TileCoords()*100.*res;
+                        vec3 color = vec3(0.0);
+                        float press = 0.5+(1.0-fract(u_map_position.z))*0.1;
+                        color += vec3(0.1,0.,0.)*grid(st,0.02,press);
+                        color += vec3(0.5,0.,0.)*grid(st,0.01,press);
+                        color += 0.1*grid(st,0.1,press);
+                        return color;
+                    }
+                    vec3 TileGrid(){ return mix(TileGrid(1.),TileGrid(2.),fract(u_map_position.z)); }
+                    // Random
+                    //=============================
+                    float random(float x){ return fract(sin(x)*43758.5453);}
+                    float random(vec2 p) { return fract(1e4 * sin(17.0 * p.x + p.y * 0.1) * (0.1 + abs(sin(p.y * 13.0 + p.x)))); }
+                    //  Crosses
+                    //=============================
+                    float box(in vec2 st, in vec2 size){
+                        size = vec2(0.5) - size*0.5;
+                        vec2 uv = smoothstep(size,
+                                            size+vec2(0.001),
+                                            st);
+                        uv *= smoothstep(size,
+                                        size+vec2(0.001),
+                                        vec2(1.0)-st);
+                        return uv.x*uv.y;
+                    }
+                    float cross(in vec2 st, vec2 size){
+                        return  clamp(box(st, vec2(size.x*0.5,size.y*0.125)) +
+                                box(st, vec2(size.y*0.125,size.x*0.5)),0.,1.);
+                    }
+                    //  Color
+                    //=============================
+                    float getBrightness(in vec3 _rgb){
+                        return 0.212655 * _rgb.r + 0.715158 * _rgb.g + 0.072187 * _rgb.b;
+                    }
+                position: |
+                    // GridTile
+                    v_pos = a_position.xyz * 32767.;
+    roads:
+        base: lines
+        mix: tools
+        animated: true
+        texcoords: true
+        shaders:
+            blocks:
+                global: |
+                    float randomSerie(float x, float freq, float t) {
+                        return step(.8,random( floor(x*freq)-floor(t) ));
+                    }
+                color: |
+                    vec2 st = v_texcoord.xy;
+                    float t = 12.*u_time;
+                    float freq = 100.;
+                    if ( v_color.r < 0.5) {
+                        float cols = 2.;
+                        if (fract(st.x*cols* 0.5) < 0.5){
+                            t *= -1.0;
+                        }
+                    }
+                    float offset = 0.025;
+                    color.r = randomSerie(st.y, freq, t+offset);
+                    color.g = randomSerie(st.y, freq, t);
+                    color.b = randomSerie(st.y, freq, t-offset);
+                    color.rgb *= step(0.1,st.x)-step(0.9,st.x);
+    simple-grid:
+        base: polygons
+        mix: tools
+        animated: false
+        shaders:
+            blocks:
+                color: |
+                    color.rgb *= TileGrid();
+                    vec2 st = u_tile_origin.xy+floor(TileCoords()*2.);
+                    float t = u_time*.8+random(st);
+                    float time_i = floor(t);
+                    float time_f = fract(t);
+                    color.rgb += step(0.9,random(st+time_i))*(1.0-time_f);
+    numeric-grid:
+        base: polygons
+        mix: tools
+        animated: true
+        shaders:
+            blocks:
+                global: |
+                    float bin(vec2 ipos, float n){
+                        //float remain = mod(n,33554432.);
+                        //for(float i = 0.0; i < 25.0; i++){
+                        //    if ( floor(i/3.) == ipos.y && mod(i,3.) == ipos.x ) {
+                        //        return step(1.0,mod(remain,2.));
+                        //    }
+                        //    remain = ceil(remain/2.);
+                        //}
+                        return 0.0;
+                    }
+                    float char(vec2 st, float n){
+                        st.x = st.x*2.-0.5;
+                        st.y = st.y*1.2-0.1;
+                        vec2 grid = vec2(3.,5.);
+                        vec2 ipos = floor(st*grid);
+                        n = floor(mod(n,10.));
+                        float digit = 0.0;
+                        if (n < 1. ) { digit = 31600.; } 
+                        else if (n < 2. ) { digit = 9363.0; } 
+                        else if (n < 3. ) { digit = 31184.0; } 
+                        else if (n < 4. ) { digit = 31208.0; } 
+                        else if (n < 5. ) { digit = 23525.0; } 
+                        else if (n < 6. ) { digit = 29672.0; } 
+                        else if (n < 7. ) { digit = 29680.0; } 
+                        else if (n < 8. ) { digit = 31013.0; } 
+                        else if (n < 9. ) { digit = 31728.0; } 
+                        else if (n < 10. ) { digit = 31717.0; }
+                        float pct = bin(ipos, digit);
+                        vec2 borders = vec2(1.);
+                        // vec2 fpos = fract(st*grid);
+                        // borders *= step(0.01,fpos.x) * step(0.01,fpos.y);   // inner
+                        borders *= step(0.0,st)*step(0.0,1.-st);            // outer
+                        return step(.5,1.0-pct) * borders.x * borders.y;
+                    }
+                color: |
+                    vec2 st = TileCoords();
+                    color.rgb = TileGrid();
+                    float zoom = 0.0001+fract(u_map_position.z);
+                    // Crosses
+                    vec2 crosses_st = st + .5;
+                    vec2 crosses_st_f = fract(crosses_st);
+                    color.rgb *= 1.-cross(crosses_st_f,vec2(.08)*(1.+(1.-zoom)));
+                    color.rgb += vec3(.9)*cross(crosses_st_f,vec2(.05)*(1.+(1.-zoom)));
+                    
+                    // Digits
+                    vec2 digits_st = mod(st*(30.+30.*zoom),60.);
+                    vec2 digits_st_i = floor(digits_st);
+                    if (digits_st_i.y == 1. &&
+                        digits_st_i.x > 0. && digits_st_i.x < 7. ) {
+                        vec2 digits_st_f = fract(digits_st);
+                        float x = u_tile_origin.x+floor(u_time*20.);
+                        float pct = x/pow(10.,5.-digits_st_i.x);
+                        // pct = 100.*random(digits_st_i+floor(crosses_st)+floor(u_time*20.));
+                        color.rgb += vec3(char(digits_st_f,pct));
+                    } else if ( digits_st_i.y == 2. &&
+                                digits_st_i.x > 0. && digits_st_i.x < 8. ) {
+                        vec2 digits_st_f = fract(digits_st);
+                        float x = u_tile_origin.y+floor(u_time*20.);
+                        float pct = x/pow(10.,5.-digits_st_i.x);
+                        // pct = 100.*random(digits_st_i+floor(crosses_st)+floor(u_time*20.));
+                        color.rgb += vec3(char(digits_st_f,pct));
+                    }
+                    
+    
+    buildings:
+        base: polygons
+        mix: tools
+        animated: true
+        texcoords: true
+        shaders:
+            blocks:
+                global: |
+                    float pattern(vec2 st, vec2 v, float t) {
+                        vec2 p = floor(st+v);
+                        return step(t, random(100.+p*.000001)+random(p.x)*0.5 );
+                    }
+                position: |
+                    position.z *= max(1.0,0.5+(1.0-(u_map_position.z/20.0))*5.0);
+                color: |
+                    if (abs(dot(v_normal, u_normalMatrix * vec3(0.,0.,1.))) < 0.0001) {
+                        //if (dot(v_normal,vec3(0.,0.,1.)) == 0.){
+                        float r = random(getBrightness(color.rgb));
+                        float amount = 0.5+random(color.rg)*0.5;
+                        
+                        if ( r > .3) {
+                            // DeFrag
+                            vec2 st = v_texcoord.xy;
+                            st.y *= 1.+amount*2.;
+                            st.y = fract(st.y);
+                            st *= vec2(50.0,10.);
+                            
+                            vec2 ipos = floor(st);
+                            ipos += vec2(0.,floor(v_texcoord.y*(1.+amount*5.)));
+                            
+                            // Random Cells
+                            vec2 vel = floor(vec2(u_time*6.)); // time
+                            vel *= vec2(-1.,0.); // direction
+                            vel *= (step(1., mod(ipos.y,2.0))-0.5)*2.; // Oposite directions
+                            vel *= random(ipos.y); // random speed
+
+                            // 100%
+                            float t = mod(u_time*20.*(1.+r*.5)+(4324.*amount),500.);
+                            vec2 head = vec2(mod(t,50.), floor(t/50.));
+
+                            vec2 offset = vec2(0.1,0.);
+                            float pct = 1.0;
+                            pct *= step(10.-head.y,ipos.y);// Y
+                            pct += (1.0-step(head.x,ipos.x))*step(10.-head.y,ipos.y+1.);   // X
+                            pct = clamp(pct,0.,1.);
+                            color.rgb = vec3(pct);
+                            
+                            // Assign a random value base on the integer coord
+                            color.r *= random(floor(st+vel+offset));
+                            color.g *= random(floor(st+vel));
+                            color.b *= random(floor(st+vel-offset));
+
+                            color.rgb = smoothstep(0.,amount,color.rgb*color.rgb);
+
+                            //  Margin
+                            color.rgb *= step(.1,fract(st.x+vel.x))*step(.1,fract(st.y+vel.y));
+                        } else {
+                            // Running lines
+                            vec2 st = vec2(v_texcoord.x,v_world_position.z*0.005); 
+                            vec2 grid = vec2(100.0,20.);
+                            st *= grid;
+
+                            vec2 ipos = floor(st);  // integer
+                            vec2 fpos = fract(st);  // fraction
+
+                            vec2 vel = vec2(u_time*max(grid.x,grid.y)); // time
+                            vel *= vec2(-1.,0.0) * random(1.0+ipos.y); // direction
+
+                            // Assign a random value base on the integer coord
+                            vec2 offset = vec2(0.1,0.);
+
+                            color.r = pattern(st+offset,vel,amount);
+                            color.g = pattern(st,vel,amount);
+                            color.b = pattern(st-offset,vel,amount);
+                            color.rgb *= step(0.2,fpos.y);
+                        }
+                    } else {
+                        color.rgb = vec3(0.);
+                    }
+                    
+    buildingsLines:
+        base: lines
+        mix: tools
+        lighting: false
+        texcoords: true
+        shaders:
+            blocks:
+                position: |
+                    position.z *= max(1.0,0.5+(1.0-(u_map_position.z/20.0))*5.0);
+sources:
+    osm:
+        type: MVT
+        url: https://vector.mapzen.com/osm/all/{z}/{x}/{y}.mvt
+layers:
+    earth:
+        data: { source: osm }
+        draw:
+            simple-grid:
+                order: 0
+                color: [0.362,0.362,0.362]
+    landuse:
+        data: { source: osm }
+        draw:
+            lines:
+                order: 1
+                color: [0.703,0.703,0.703]
+                width: 1px
+    water:
+        data: { source: osm }
+        draw:
+            numeric-grid:
+                order: 3
+                color: [1.000,1.000,1.000]
+            outline:
+                order: 2
+                style: lines
+                color: [1.000,1.000,1.000]
+                width: 2px
+                tile_edges: false
+    roads:
+        data: { source: osm }
+        filter: { not: { highway: service, kind: rail } }
+        draw:
+            roads:
+                order: 5
+                color: [0, 0, 0]
+                width: 8
+            outline:
+                style: lines
+                order: 4
+                color: [0.773,0.763,0.763]
+                width: 8.5
+        oneway:
+            filter: { oneway: yes }
+            draw: { roads: { color: red } }
+    buildings:
+        data: { source: osm }
+        draw:
+            buildings:
+                order: 7
+                color: Style.color.pseudoRandomColor()
+        3d-buildings:
+            filter: { $zoom: { min: 13 } }
+            draw:
+                buildings:
+                    extrude: true
+                buildingsLines:
+                    order: 8
+                    color: [0.687,0.660,0.660]
+                    width: .5px
+                    extrude: true
