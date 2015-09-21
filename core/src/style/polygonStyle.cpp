@@ -101,7 +101,7 @@ void PolygonStyle::addVertex(glm::vec3 p, glm::vec3 n, GLuint abgr, float layer,
                    std::vector<uint16_t>& indices,
                    std::vector<PolygonVertex>& vertices) const {
   auto id = vertices.size();
-  vertices.push_back({ p, n, glm::vec2(0), abgr, layer });
+  vertices.push_back({ p, n, glm::vec2(p.x, p.y), abgr, layer });
   indices.push_back(id);
 }
 
@@ -110,24 +110,29 @@ void PolygonStyle::buildMesh(const std::vector<uint16_t>& indices,
                              const DrawRule& _rule,
                              const Properties& _props,
                              VboMesh& _mesh, Tile& _tile) const {
-    GLuint abgr = 0xffe6f0f2;
+    Parameters params = parseRule(_rule);
+
+    GLuint abgr = params.color;
+    GLfloat layer = params.order;
+
     std::vector<PolygonVertex> vertices;
-    GLfloat layer = 1;
 
     std::vector<uint16_t> newIndices;
     vertices.reserve(indices.size() * 3);
+
+    //glm::vec3 upVector(0.0f, 0.0f, 1.0f);
 
     for (size_t i = 0; i < indices.size(); i += 3) {
         auto p1 = points[indices[i + 0]];
         auto p2 = points[indices[i + 1]];
         auto p3 = points[indices[i + 2]];
 
-        auto a = p2 - p1;
-        auto b = p3 - p1;
+        auto a = p1 - p2;
+        auto b = p3 - p2;
 
         auto c = glm::cross(a, b);
-        auto n = glm::normalize(glm::vec3(0,0,0.25)) - glm::normalize(c);
-        //auto n =  glm::normalize(c);
+        //auto n = glm::normalize(glm::vec3(0,0,0.25)) - glm::normalize(c);
+        auto n = glm::normalize(c);
 
         addVertex(p1, n, abgr, layer, newIndices, vertices);
         addVertex(p3, n, abgr, layer, newIndices, vertices);
