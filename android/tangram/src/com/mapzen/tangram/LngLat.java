@@ -76,7 +76,7 @@ public class LngLat {
     return TangramJNI.LngLat_latitude_get(swigCPtr, this);
   }
 
-  public void setLngLat(double lng, double lat) {
+  private void setLngLat(double lng, double lat) {
     TangramJNI.LngLat_setLngLat(swigCPtr, this, lng, lat);
   }
 

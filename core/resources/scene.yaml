@@ -59,11 +59,19 @@ sources:
 layers:
     touch:
         data: { source: touch }
-        draw:
+        line:
+          filter: { type: line }
+          draw:
             lines:
-                color: function () { return feature.color || 'pink'; }
-                order: 50
-                width: .03
+              color: function () { return feature.color || 'black'; }
+              order: 50
+              width: .03
+        poly:
+            filter: { type: poly }
+            draw:
+              polygons:
+                color: magenta
+                order: 40
             # sprites:
             #     sprite: sunburst
 

@@ -2,7 +2,8 @@
 %include "std_shared_ptr.i"
 
 // For optimized coordinate array passing
-%include "array_nocpy.i"
+// was only needed for old double* MapData api
+// %include "array_nocpy.i"
 
 namespace std {
 %template(Tags) map<string, string>;
@@ -49,14 +50,14 @@ import java.util.List;
         this(TangramJNI.new_MapData(name, ""), true);
     }
 
-    // /**
-    //  * Remove all data from this source
-    //  * @return This object, for chaining
-    //  */
-    // public MapData clear() {
-    //     //clearSourceData(id);
-    //     return this;
-    // }
+    /**
+     * Remove all data from this source
+     * @return This object, for chaining
+     */
+    public MapData clear() {
+        clearJNI();
+        return this;
+    }
 
     /**
      * Add geometry from a GeoJSON string to this data source
@@ -74,7 +75,8 @@ import java.util.List;
      * @return This object, for chaining
      */
     public MapData addPoint(Tags tags, LngLat point) {
-        addPoint(tags, new double[]{ point.getLongitude(), point.getLatitude() });
+        //addPoint(tags, new double[]{ point.getLongitude(), point.getLatitude() });
+        addPointJNI(tags, point);
         return this;
     }
 
@@ -85,13 +87,17 @@ import java.util.List;
      */
     public MapData addLine(Tags tags, List<LngLat> line) {
         // need to concatenate points
-        double[] coords = new double[2 * line.size()];
-        int i = 0;
+        Coordinates coords = new Coordinates();
         for (LngLat point : line) {
-            coords[i++] = point.getLongitude();
-            coords[i++] = point.getLatitude();
+            coords.add(point);
         }
-        addLine(tags, coords, line.size());
+        //addLine(tags, coords, line.size());
+        addLineJNI(tags, coords);
+        return this;
+    }
+
+    public MapData addLine(Tags tags, Coordinates line) {
+        addLineJNI(tags, line);
         return this;
     }
 
@@ -102,22 +108,48 @@ import java.util.List;
      * @return This object, for chaining
      */
     public MapData addPolygon(Tags tags, List<List<LngLat>> polygon) {
-        // need to concatenate points
-        int n = 0, i = 0, j = 0;
-        for (List<LngLat> ring : polygon) { n += ring.size(); }
-        double[] coords = new double[2 * n];
-        int[] ringLengths = new int[polygon.size()];
+        Polygon poly = new Polygon();
+
+        // for (List<LngLat> ring : polygon) {
+        //     Coordinates out = new Coordinates();
+        //     for (LngLat point : ring) {
+        //         out.add(point);
+        //     }
+        //     poly.add(out);
+        // }
+
+        // TODO add method to add empty ring and get handle to it.
+        Coordinates dummy = new Coordinates();
+        int rings = 0;
+
         for (List<LngLat> ring : polygon) {
-            ringLengths[j++] = ring.size();
+            poly.add(dummy);
+
+            Coordinates out = poly.get(rings);
+
             for (LngLat point : ring) {
-                coords[i++] = point.getLongitude();
-                coords[i++] = point.getLatitude();
+                out.add(point);
             }
+            rings++;
         }
-        addPoly(tags, coords, ringLengths, polygon.size());
+        addPolyJNI(tags, poly);
+        return this;
+    }
+
+    public MapData addPolygon(Tags tags, Polygon polygon) {
+        addPolyJNI(tags, polygon);
         return this;
     }
 %}
+
+// Hide generated (extension) methods in favor of this-returning java methods
+%rename(addPointJNI) Tangram::ClientGeoJsonSource::addPoint;
+%rename(addLineJNI) Tangram::ClientGeoJsonSource::addLine;
+%rename(addPolyJNI) Tangram::ClientGeoJsonSource::addPoly;
+%rename(addPolyJNI) Tangram::ClientGeoJsonSource::addPoly;
+%javamethodmodifiers Tangram::ClientGeoJsonSource::addPoint "private"
+%javamethodmodifiers Tangram::ClientGeoJsonSource::addLine "private"
+%javamethodmodifiers Tangram::ClientGeoJsonSource::addPoly "private"
 
 namespace Tangram {
 typedef std::map<std::string,std::string> Tags;
@@ -132,10 +164,12 @@ class ClientGeoJsonSource : public DataSource {
 public:
     ClientGeoJsonSource(const std::string& _name, const std::string& _url);
     void addData(const std::string& _data);
-    void addPoint(Tags tags, double _coords[]);
-    void addLine(Tags tags, double _coords[], int _lineLength);
-    void addLine(Tags tags, const Tangram::Coordinates& coordinates);
-    void addPoly(Tags tags, double _coords[], int _ringLengths[], int rings);
+    //void addPoint(Tags tags, double _coords[]);
+    void addPoint(Tags tags, LngLat point);
+    //void addLine(Tags tags, double _coords[], int _lineLength);
+    void addLine(Tags tags, const Tangram::Coordinates& line);
+    //void addPoly(Tags tags, double _coords[], int _ringLengths[], int rings);
+    void addPoly(Tags tags, const std::vector<Tangram::Coordinates>& polygon);
 };
 } // namespace
 
@@ -144,7 +178,7 @@ public:
     void update() {
         Tangram::clearDataSource(*($self), false, true);
     }
-    void clear() {
+    void clearJNI() {
         Tangram::clearDataSource(*($self), true, true);
     }
     std::string name() {

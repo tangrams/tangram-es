@@ -261,151 +261,27 @@ SWIGINTERN void std_vector_Sl_Tangram_LngLat_Sg__set(std::vector< Tangram::LngLa
                 else
                     throw std::out_of_range("vector index out of range");
             }
-SWIGINTERN void std_vector_Sl_Tangram_LngLat_Sg__append(std::vector< Tangram::LngLat > *self,double lng,double lat){
+SWIGINTERN void std_vector_Sl_Tangram_LngLat_Sg__add__SWIG_1(std::vector< Tangram::LngLat > *self,double lng,double lat){
         self->push_back({lng, lat});
     }
+SWIGINTERN std::vector< std::vector< Tangram::LngLat > >::const_reference std_vector_Sl_std_vector_Sl_Tangram_LngLat_Sg__Sg__get(std::vector< std::vector< Tangram::LngLat > > *self,int i){
+                int size = int(self->size());
+                if (i>=0 && i<size)
+                    return (*self)[i];
+                else
+                    throw std::out_of_range("vector index out of range");
+            }
+SWIGINTERN void std_vector_Sl_std_vector_Sl_Tangram_LngLat_Sg__Sg__set(std::vector< std::vector< Tangram::LngLat > > *self,int i,std::vector< std::vector< Tangram::LngLat > >::value_type const &val){
+                int size = int(self->size());
+                if (i>=0 && i<size)
+                    (*self)[i] = val;
+                else
+                    throw std::out_of_range("vector index out of range");
+            }
 
 #include <map>
 #include <algorithm>
 #include <stdexcept>
-
-
-static int SWIG_JavaArrayInFloat (JNIEnv *jenv, jfloat **jarr, float **carr, jfloatArray input) {
-  if (!input) {
-    SWIG_JavaThrowException(jenv, SWIG_JavaNullPointerException, "null array");
-    return 0;
-  }
-
-   jboolean isCopy;
-
-   *carr = (float*) jenv->GetPrimitiveArrayCritical(input, &isCopy);
-   if (!*carr)
-      return 0;
-
-  return 1;
-}
-
-static void SWIG_JavaArrayArgoutFloat (JNIEnv *jenv, jfloat *jarr, float *carr, jfloatArray input) {
-  /* int i;
-   * jsize sz = jenv->GetArrayLength(input);
-   * for (i=0; i<sz; i++)
-   *   jarr[i] = (jfloat)carr[i];
-   * jenv->ReleaseFloatArrayElements(input, jarr, 0); */
-
-  jenv->ReleasePrimitiveArrayCritical(input, carr, JNI_ABORT);
-}
-
-static jfloatArray SWIG_JavaArrayOutFloat (JNIEnv *jenv, float *result, jsize sz) {
-  jfloat *arr;
-  int i;
-  jfloatArray jresult = jenv->NewFloatArray(sz);
-  if (!jresult)
-    return NULL;
-  arr = jenv->GetFloatArrayElements(jresult, 0);
-  if (!arr)
-    return NULL;
-  for (i=0; i<sz; i++)
-    arr[i] = (jfloat)result[i];
-  jenv->ReleaseFloatArrayElements(jresult, arr, 0);
-  return jresult;
-}
-
-
-static int SWIG_JavaArrayInFloat (JNIEnv *jenv, jfloat **jarr, float **carr, jfloatArray input);
-static void SWIG_JavaArrayArgoutFloat (JNIEnv *jenv, jfloat *jarr, float *carr, jfloatArray input);
-static jfloatArray SWIG_JavaArrayOutFloat (JNIEnv *jenv, float *result, jsize sz);
-
-
-static int SWIG_JavaArrayInDouble (JNIEnv *jenv, jdouble **jarr, double **carr, jdoubleArray input) {
-  if (!input) {
-    SWIG_JavaThrowException(jenv, SWIG_JavaNullPointerException, "null array");
-    return 0;
-  }
-
-   jboolean isCopy;
-
-   *carr = (double*) jenv->GetPrimitiveArrayCritical(input, &isCopy);
-   if (!*carr)
-      return 0;
-
-  return 1;
-}
-
-static void SWIG_JavaArrayArgoutDouble (JNIEnv *jenv, jdouble *jarr, double *carr, jdoubleArray input) {
-  /* int i;
-   * jsize sz = jenv->GetArrayLength(input);
-   * for (i=0; i<sz; i++)
-   *   jarr[i] = (jdouble)carr[i];
-   * jenv->ReleaseDoubleArrayElements(input, jarr, 0); */
-
-  jenv->ReleasePrimitiveArrayCritical(input, carr, JNI_ABORT);
-}
-
-static jdoubleArray SWIG_JavaArrayOutDouble (JNIEnv *jenv, double *result, jsize sz) {
-  jdouble *arr;
-  int i;
-  jdoubleArray jresult = jenv->NewDoubleArray(sz);
-  if (!jresult)
-    return NULL;
-  arr = jenv->GetDoubleArrayElements(jresult, 0);
-  if (!arr)
-    return NULL;
-  for (i=0; i<sz; i++)
-    arr[i] = (jdouble)result[i];
-  jenv->ReleaseDoubleArrayElements(jresult, arr, 0);
-  return jresult;
-}
-
-
-static int SWIG_JavaArrayInDouble (JNIEnv *jenv, jdouble **jarr, double **carr, jdoubleArray input);
-static void SWIG_JavaArrayArgoutDouble (JNIEnv *jenv, jdouble *jarr, double *carr, jdoubleArray input);
-static jdoubleArray SWIG_JavaArrayOutDouble (JNIEnv *jenv, double *result, jsize sz);
-
-
-static int SWIG_JavaArrayInInt (JNIEnv *jenv, jint **jarr, int **carr, jintArray input) {
-  if (!input) {
-    SWIG_JavaThrowException(jenv, SWIG_JavaNullPointerException, "null array");
-    return 0;
-  }
-
-   jboolean isCopy;
-
-   *carr = (int*) jenv->GetPrimitiveArrayCritical(input, &isCopy);
-   if (!*carr)
-      return 0;
-
-  return 1;
-}
-
-static void SWIG_JavaArrayArgoutInt (JNIEnv *jenv, jint *jarr, int *carr, jintArray input) {
-  /* int i;
-   * jsize sz = jenv->GetArrayLength(input);
-   * for (i=0; i<sz; i++)
-   *   jarr[i] = (jint)carr[i];
-   * jenv->ReleaseIntArrayElements(input, jarr, 0); */
-
-  jenv->ReleasePrimitiveArrayCritical(input, carr, JNI_ABORT);
-}
-
-static jintArray SWIG_JavaArrayOutInt (JNIEnv *jenv, int *result, jsize sz) {
-  jint *arr;
-  int i;
-  jintArray jresult = jenv->NewIntArray(sz);
-  if (!jresult)
-    return NULL;
-  arr = jenv->GetIntArrayElements(jresult, 0);
-  if (!arr)
-    return NULL;
-  for (i=0; i<sz; i++)
-    arr[i] = (jint)result[i];
-  jenv->ReleaseIntArrayElements(jresult, arr, 0);
-  return jresult;
-}
-
-
-static int SWIG_JavaArrayInInt (JNIEnv *jenv, jint **jarr, int **carr, jintArray input);
-static void SWIG_JavaArrayArgoutInt (JNIEnv *jenv, jint *jarr, int *carr, jintArray input);
-static jintArray SWIG_JavaArrayOutInt (JNIEnv *jenv, int *result, jsize sz);
 
 SWIGINTERN std::string const &std_map_Sl_std_string_Sc_std_string_Sg__get(std::map< std::string,std::string > *self,std::string const &key){
                 std::map<std::string,std::string >::iterator i = self->find(key);
@@ -436,7 +312,7 @@ SWIGINTERN bool std_map_Sl_std_string_Sc_std_string_Sg__has_key(std::map< std::s
 SWIGINTERN void Tangram_DataSource_update(Tangram::DataSource *self){
         Tangram::clearDataSource(*(self), false, true);
     }
-SWIGINTERN void Tangram_DataSource_clear(Tangram::DataSource *self){
+SWIGINTERN void Tangram_DataSource_clearJNI(Tangram::DataSource *self){
         Tangram::clearDataSource(*(self), true, true);
     }
 SWIGINTERN std::string Tangram_DataSource_name(Tangram::DataSource *self){
@@ -896,7 +772,7 @@ SWIGEXPORT void JNICALL Java_com_mapzen_tangram_TangramJNI_Coordinates_1clear(JN
 }
 
 
-SWIGEXPORT void JNICALL Java_com_mapzen_tangram_TangramJNI_Coordinates_1add(JNIEnv *jenv, jclass jcls, jlong jarg1, jobject jarg1_, jlong jarg2, jobject jarg2_) {
+SWIGEXPORT void JNICALL Java_com_mapzen_tangram_TangramJNI_Coordinates_1add_1_1SWIG_10(JNIEnv *jenv, jclass jcls, jlong jarg1, jobject jarg1_, jlong jarg2, jobject jarg2_) {
   std::vector< Tangram::LngLat > *arg1 = (std::vector< Tangram::LngLat > *) 0 ;
   std::vector< Tangram::LngLat >::value_type *arg2 = 0 ;
 
@@ -965,7 +841,7 @@ SWIGEXPORT void JNICALL Java_com_mapzen_tangram_TangramJNI_Coordinates_1set(JNIE
 }
 
 
-SWIGEXPORT void JNICALL Java_com_mapzen_tangram_TangramJNI_Coordinates_1append(JNIEnv *jenv, jclass jcls, jlong jarg1, jobject jarg1_, jdouble jarg2, jdouble jarg3) {
+SWIGEXPORT void JNICALL Java_com_mapzen_tangram_TangramJNI_Coordinates_1add_1_1SWIG_11(JNIEnv *jenv, jclass jcls, jlong jarg1, jobject jarg1_, jdouble jarg2, jdouble jarg3) {
   std::vector< Tangram::LngLat > *arg1 = (std::vector< Tangram::LngLat > *) 0 ;
   double arg2 ;
   double arg3 ;
@@ -976,7 +852,7 @@ SWIGEXPORT void JNICALL Java_com_mapzen_tangram_TangramJNI_Coordinates_1append(J
   arg1 = *(std::vector< Tangram::LngLat > **)&jarg1;
   arg2 = (double)jarg2;
   arg3 = (double)jarg3;
-  std_vector_Sl_Tangram_LngLat_Sg__append(arg1,arg2,arg3);
+  std_vector_Sl_Tangram_LngLat_Sg__add__SWIG_1(arg1,arg2,arg3);
 }
 
 
@@ -986,6 +862,180 @@ SWIGEXPORT void JNICALL Java_com_mapzen_tangram_TangramJNI_delete_1Coordinates(J
   (void)jenv;
   (void)jcls;
   arg1 = *(std::vector< Tangram::LngLat > **)&jarg1;
+  delete arg1;
+}
+
+
+SWIGEXPORT jlong JNICALL Java_com_mapzen_tangram_TangramJNI_new_1Polygon_1_1SWIG_10(JNIEnv *jenv, jclass jcls) {
+  jlong jresult = 0 ;
+  std::vector< std::vector< Tangram::LngLat > > *result = 0 ;
+
+  (void)jenv;
+  (void)jcls;
+  result = (std::vector< std::vector< Tangram::LngLat > > *)new std::vector< std::vector< Tangram::LngLat > >();
+  *(std::vector< std::vector< Tangram::LngLat > > **)&jresult = result;
+  return jresult;
+}
+
+
+SWIGEXPORT jlong JNICALL Java_com_mapzen_tangram_TangramJNI_new_1Polygon_1_1SWIG_11(JNIEnv *jenv, jclass jcls, jlong jarg1) {
+  jlong jresult = 0 ;
+  std::vector< std::vector< Tangram::LngLat > >::size_type arg1 ;
+  std::vector< std::vector< Tangram::LngLat > > *result = 0 ;
+
+  (void)jenv;
+  (void)jcls;
+  arg1 = (std::vector< std::vector< Tangram::LngLat > >::size_type)jarg1;
+  result = (std::vector< std::vector< Tangram::LngLat > > *)new std::vector< std::vector< Tangram::LngLat > >(arg1);
+  *(std::vector< std::vector< Tangram::LngLat > > **)&jresult = result;
+  return jresult;
+}
+
+
+SWIGEXPORT jlong JNICALL Java_com_mapzen_tangram_TangramJNI_Polygon_1size(JNIEnv *jenv, jclass jcls, jlong jarg1, jobject jarg1_) {
+  jlong jresult = 0 ;
+  std::vector< std::vector< Tangram::LngLat > > *arg1 = (std::vector< std::vector< Tangram::LngLat > > *) 0 ;
+  std::vector< std::vector< Tangram::LngLat > >::size_type result;
+
+  (void)jenv;
+  (void)jcls;
+  (void)jarg1_;
+  arg1 = *(std::vector< std::vector< Tangram::LngLat > > **)&jarg1;
+  result = ((std::vector< std::vector< Tangram::LngLat > > const *)arg1)->size();
+  jresult = (jlong)result;
+  return jresult;
+}
+
+
+SWIGEXPORT jlong JNICALL Java_com_mapzen_tangram_TangramJNI_Polygon_1capacity(JNIEnv *jenv, jclass jcls, jlong jarg1, jobject jarg1_) {
+  jlong jresult = 0 ;
+  std::vector< std::vector< Tangram::LngLat > > *arg1 = (std::vector< std::vector< Tangram::LngLat > > *) 0 ;
+  std::vector< std::vector< Tangram::LngLat > >::size_type result;
+
+  (void)jenv;
+  (void)jcls;
+  (void)jarg1_;
+  arg1 = *(std::vector< std::vector< Tangram::LngLat > > **)&jarg1;
+  result = ((std::vector< std::vector< Tangram::LngLat > > const *)arg1)->capacity();
+  jresult = (jlong)result;
+  return jresult;
+}
+
+
+SWIGEXPORT void JNICALL Java_com_mapzen_tangram_TangramJNI_Polygon_1reserve(JNIEnv *jenv, jclass jcls, jlong jarg1, jobject jarg1_, jlong jarg2) {
+  std::vector< std::vector< Tangram::LngLat > > *arg1 = (std::vector< std::vector< Tangram::LngLat > > *) 0 ;
+  std::vector< std::vector< Tangram::LngLat > >::size_type arg2 ;
+
+  (void)jenv;
+  (void)jcls;
+  (void)jarg1_;
+  arg1 = *(std::vector< std::vector< Tangram::LngLat > > **)&jarg1;
+  arg2 = (std::vector< std::vector< Tangram::LngLat > >::size_type)jarg2;
+  (arg1)->reserve(arg2);
+}
+
+
+SWIGEXPORT jboolean JNICALL Java_com_mapzen_tangram_TangramJNI_Polygon_1isEmpty(JNIEnv *jenv, jclass jcls, jlong jarg1, jobject jarg1_) {
+  jboolean jresult = 0 ;
+  std::vector< std::vector< Tangram::LngLat > > *arg1 = (std::vector< std::vector< Tangram::LngLat > > *) 0 ;
+  bool result;
+
+  (void)jenv;
+  (void)jcls;
+  (void)jarg1_;
+  arg1 = *(std::vector< std::vector< Tangram::LngLat > > **)&jarg1;
+  result = (bool)((std::vector< std::vector< Tangram::LngLat > > const *)arg1)->empty();
+  jresult = (jboolean)result;
+  return jresult;
+}
+
+
+SWIGEXPORT void JNICALL Java_com_mapzen_tangram_TangramJNI_Polygon_1clear(JNIEnv *jenv, jclass jcls, jlong jarg1, jobject jarg1_) {
+  std::vector< std::vector< Tangram::LngLat > > *arg1 = (std::vector< std::vector< Tangram::LngLat > > *) 0 ;
+
+  (void)jenv;
+  (void)jcls;
+  (void)jarg1_;
+  arg1 = *(std::vector< std::vector< Tangram::LngLat > > **)&jarg1;
+  (arg1)->clear();
+}
+
+
+SWIGEXPORT void JNICALL Java_com_mapzen_tangram_TangramJNI_Polygon_1add(JNIEnv *jenv, jclass jcls, jlong jarg1, jobject jarg1_, jlong jarg2, jobject jarg2_) {
+  std::vector< std::vector< Tangram::LngLat > > *arg1 = (std::vector< std::vector< Tangram::LngLat > > *) 0 ;
+  std::vector< std::vector< Tangram::LngLat > >::value_type *arg2 = 0 ;
+
+  (void)jenv;
+  (void)jcls;
+  (void)jarg1_;
+  (void)jarg2_;
+  arg1 = *(std::vector< std::vector< Tangram::LngLat > > **)&jarg1;
+  arg2 = *(std::vector< std::vector< Tangram::LngLat > >::value_type **)&jarg2;
+  if (!arg2) {
+    SWIG_JavaThrowException(jenv, SWIG_JavaNullPointerException, "std::vector< std::vector< Tangram::LngLat > >::value_type const & reference is null");
+    return ;
+  }
+  (arg1)->push_back((std::vector< std::vector< Tangram::LngLat > >::value_type const &)*arg2);
+}
+
+
+SWIGEXPORT jlong JNICALL Java_com_mapzen_tangram_TangramJNI_Polygon_1get(JNIEnv *jenv, jclass jcls, jlong jarg1, jobject jarg1_, jint jarg2) {
+  jlong jresult = 0 ;
+  std::vector< std::vector< Tangram::LngLat > > *arg1 = (std::vector< std::vector< Tangram::LngLat > > *) 0 ;
+  int arg2 ;
+  std::vector< std::vector< Tangram::LngLat > >::value_type *result = 0 ;
+
+  (void)jenv;
+  (void)jcls;
+  (void)jarg1_;
+  arg1 = *(std::vector< std::vector< Tangram::LngLat > > **)&jarg1;
+  arg2 = (int)jarg2;
+  try {
+    result = (std::vector< std::vector< Tangram::LngLat > >::value_type *) &std_vector_Sl_std_vector_Sl_Tangram_LngLat_Sg__Sg__get(arg1,arg2);
+  }
+  catch(std::out_of_range &_e) {
+    SWIG_JavaThrowException(jenv, SWIG_JavaIndexOutOfBoundsException, (&_e)->what());
+    return 0;
+  }
+
+  *(std::vector< std::vector< Tangram::LngLat > >::value_type **)&jresult = result;
+  return jresult;
+}
+
+
+SWIGEXPORT void JNICALL Java_com_mapzen_tangram_TangramJNI_Polygon_1set(JNIEnv *jenv, jclass jcls, jlong jarg1, jobject jarg1_, jint jarg2, jlong jarg3, jobject jarg3_) {
+  std::vector< std::vector< Tangram::LngLat > > *arg1 = (std::vector< std::vector< Tangram::LngLat > > *) 0 ;
+  int arg2 ;
+  std::vector< std::vector< Tangram::LngLat > >::value_type *arg3 = 0 ;
+
+  (void)jenv;
+  (void)jcls;
+  (void)jarg1_;
+  (void)jarg3_;
+  arg1 = *(std::vector< std::vector< Tangram::LngLat > > **)&jarg1;
+  arg2 = (int)jarg2;
+  arg3 = *(std::vector< std::vector< Tangram::LngLat > >::value_type **)&jarg3;
+  if (!arg3) {
+    SWIG_JavaThrowException(jenv, SWIG_JavaNullPointerException, "std::vector< std::vector< Tangram::LngLat > >::value_type const & reference is null");
+    return ;
+  }
+  try {
+    std_vector_Sl_std_vector_Sl_Tangram_LngLat_Sg__Sg__set(arg1,arg2,(std::vector< Tangram::LngLat > const &)*arg3);
+  }
+  catch(std::out_of_range &_e) {
+    SWIG_JavaThrowException(jenv, SWIG_JavaIndexOutOfBoundsException, (&_e)->what());
+    return ;
+  }
+
+}
+
+
+SWIGEXPORT void JNICALL Java_com_mapzen_tangram_TangramJNI_delete_1Polygon(JNIEnv *jenv, jclass jcls, jlong jarg1) {
+  std::vector< std::vector< Tangram::LngLat > > *arg1 = (std::vector< std::vector< Tangram::LngLat > > *) 0 ;
+
+  (void)jenv;
+  (void)jcls;
+  arg1 = *(std::vector< std::vector< Tangram::LngLat > > **)&jarg1;
   delete arg1;
 }
 
@@ -1202,7 +1252,7 @@ SWIGEXPORT void JNICALL Java_com_mapzen_tangram_TangramJNI_DataSource_1update(JN
 }
 
 
-SWIGEXPORT void JNICALL Java_com_mapzen_tangram_TangramJNI_DataSource_1clear(JNIEnv *jenv, jclass jcls, jlong jarg1, jobject jarg1_) {
+SWIGEXPORT void JNICALL Java_com_mapzen_tangram_TangramJNI_DataSource_1clearJNI(JNIEnv *jenv, jclass jcls, jlong jarg1, jobject jarg1_) {
   Tangram::DataSource *arg1 = (Tangram::DataSource *) 0 ;
   std::shared_ptr< Tangram::DataSource > *smartarg1 = 0 ;
 
@@ -1212,7 +1262,7 @@ SWIGEXPORT void JNICALL Java_com_mapzen_tangram_TangramJNI_DataSource_1clear(JNI
 
   smartarg1 = *(std::shared_ptr<  Tangram::DataSource > **)&jarg1;
   arg1 = (Tangram::DataSource *)(smartarg1 ? smartarg1->get() : 0);
-  Tangram_DataSource_clear(arg1);
+  Tangram_DataSource_clearJNI(arg1);
 }
 
 
@@ -1305,18 +1355,19 @@ SWIGEXPORT void JNICALL Java_com_mapzen_tangram_TangramJNI_MapData_1addData(JNIE
 }
 
 
-SWIGEXPORT void JNICALL Java_com_mapzen_tangram_TangramJNI_MapData_1addPoint(JNIEnv *jenv, jclass jcls, jlong jarg1, jobject jarg1_, jlong jarg2, jobject jarg2_, jdoubleArray jarg3) {
+SWIGEXPORT void JNICALL Java_com_mapzen_tangram_TangramJNI_MapData_1addPointJNI(JNIEnv *jenv, jclass jcls, jlong jarg1, jobject jarg1_, jlong jarg2, jobject jarg2_, jlong jarg3, jobject jarg3_) {
   Tangram::ClientGeoJsonSource *arg1 = (Tangram::ClientGeoJsonSource *) 0 ;
   Tangram::Tags arg2 ;
-  double *arg3 ;
+  Tangram::LngLat arg3 ;
   std::shared_ptr< Tangram::ClientGeoJsonSource > *smartarg1 = 0 ;
   Tangram::Tags *argp2 ;
-  jdouble *jarr3 ;
+  Tangram::LngLat *argp3 ;
 
   (void)jenv;
   (void)jcls;
   (void)jarg1_;
   (void)jarg2_;
+  (void)jarg3_;
 
   smartarg1 = *(std::shared_ptr<  Tangram::ClientGeoJsonSource > **)&jarg1;
   arg1 = (Tangram::ClientGeoJsonSource *)(smartarg1 ? smartarg1->get() : 0);
@@ -1326,44 +1377,17 @@ SWIGEXPORT void JNICALL Java_com_mapzen_tangram_TangramJNI_MapData_1addPoint(JNI
     return ;
   }
   arg2 = *argp2;
-  if (!SWIG_JavaArrayInDouble(jenv, &jarr3, (double **)&arg3, jarg3)) return ;
+  argp3 = *(Tangram::LngLat **)&jarg3;
+  if (!argp3) {
+    SWIG_JavaThrowException(jenv, SWIG_JavaNullPointerException, "Attempt to dereference null Tangram::LngLat");
+    return ;
+  }
+  arg3 = *argp3;
   (arg1)->addPoint(arg2,arg3);
-  SWIG_JavaArrayArgoutDouble(jenv, jarr3, (double *)arg3, jarg3);
-
 }
 
 
-SWIGEXPORT void JNICALL Java_com_mapzen_tangram_TangramJNI_MapData_1addLine_1_1SWIG_10(JNIEnv *jenv, jclass jcls, jlong jarg1, jobject jarg1_, jlong jarg2, jobject jarg2_, jdoubleArray jarg3, jint jarg4) {
-  Tangram::ClientGeoJsonSource *arg1 = (Tangram::ClientGeoJsonSource *) 0 ;
-  Tangram::Tags arg2 ;
-  double *arg3 ;
-  int arg4 ;
-  std::shared_ptr< Tangram::ClientGeoJsonSource > *smartarg1 = 0 ;
-  Tangram::Tags *argp2 ;
-  jdouble *jarr3 ;
-
-  (void)jenv;
-  (void)jcls;
-  (void)jarg1_;
-  (void)jarg2_;
-
-  smartarg1 = *(std::shared_ptr<  Tangram::ClientGeoJsonSource > **)&jarg1;
-  arg1 = (Tangram::ClientGeoJsonSource *)(smartarg1 ? smartarg1->get() : 0);
-  argp2 = *(Tangram::Tags **)&jarg2;
-  if (!argp2) {
-    SWIG_JavaThrowException(jenv, SWIG_JavaNullPointerException, "Attempt to dereference null Tangram::Tags");
-    return ;
-  }
-  arg2 = *argp2;
-  if (!SWIG_JavaArrayInDouble(jenv, &jarr3, (double **)&arg3, jarg3)) return ;
-  arg4 = (int)jarg4;
-  (arg1)->addLine(arg2,arg3,arg4);
-  SWIG_JavaArrayArgoutDouble(jenv, jarr3, (double *)arg3, jarg3);
-
-}
-
-
-SWIGEXPORT void JNICALL Java_com_mapzen_tangram_TangramJNI_MapData_1addLine_1_1SWIG_11(JNIEnv *jenv, jclass jcls, jlong jarg1, jobject jarg1_, jlong jarg2, jobject jarg2_, jlong jarg3, jobject jarg3_) {
+SWIGEXPORT void JNICALL Java_com_mapzen_tangram_TangramJNI_MapData_1addLineJNI(JNIEnv *jenv, jclass jcls, jlong jarg1, jobject jarg1_, jlong jarg2, jobject jarg2_, jlong jarg3, jobject jarg3_) {
   Tangram::ClientGeoJsonSource *arg1 = (Tangram::ClientGeoJsonSource *) 0 ;
   Tangram::Tags arg2 ;
   Tangram::Coordinates *arg3 = 0 ;
@@ -1393,21 +1417,18 @@ SWIGEXPORT void JNICALL Java_com_mapzen_tangram_TangramJNI_MapData_1addLine_1_1S
 }
 
 
-SWIGEXPORT void JNICALL Java_com_mapzen_tangram_TangramJNI_MapData_1addPoly(JNIEnv *jenv, jclass jcls, jlong jarg1, jobject jarg1_, jlong jarg2, jobject jarg2_, jdoubleArray jarg3, jintArray jarg4, jint jarg5) {
+SWIGEXPORT void JNICALL Java_com_mapzen_tangram_TangramJNI_MapData_1addPolyJNI(JNIEnv *jenv, jclass jcls, jlong jarg1, jobject jarg1_, jlong jarg2, jobject jarg2_, jlong jarg3, jobject jarg3_) {
   Tangram::ClientGeoJsonSource *arg1 = (Tangram::ClientGeoJsonSource *) 0 ;
   Tangram::Tags arg2 ;
-  double *arg3 ;
-  int *arg4 ;
-  int arg5 ;
+  std::vector< Tangram::Coordinates > *arg3 = 0 ;
   std::shared_ptr< Tangram::ClientGeoJsonSource > *smartarg1 = 0 ;
   Tangram::Tags *argp2 ;
-  jdouble *jarr3 ;
-  jint *jarr4 ;
 
   (void)jenv;
   (void)jcls;
   (void)jarg1_;
   (void)jarg2_;
+  (void)jarg3_;
 
   smartarg1 = *(std::shared_ptr<  Tangram::ClientGeoJsonSource > **)&jarg1;
   arg1 = (Tangram::ClientGeoJsonSource *)(smartarg1 ? smartarg1->get() : 0);
@@ -1417,14 +1438,12 @@ SWIGEXPORT void JNICALL Java_com_mapzen_tangram_TangramJNI_MapData_1addPoly(JNIE
     return ;
   }
   arg2 = *argp2;
-  if (!SWIG_JavaArrayInDouble(jenv, &jarr3, (double **)&arg3, jarg3)) return ;
-  if (!SWIG_JavaArrayInInt(jenv, &jarr4, (int **)&arg4, jarg4)) return ;
-  arg5 = (int)jarg5;
-  (arg1)->addPoly(arg2,arg3,arg4,arg5);
-  SWIG_JavaArrayArgoutDouble(jenv, jarr3, (double *)arg3, jarg3);
-  SWIG_JavaArrayArgoutInt(jenv, jarr4, (int *)arg4, jarg4);
-
-
+  arg3 = *(std::vector< Tangram::Coordinates > **)&jarg3;
+  if (!arg3) {
+    SWIG_JavaThrowException(jenv, SWIG_JavaNullPointerException, "std::vector< Tangram::Coordinates > const & reference is null");
+    return ;
+  }
+  (arg1)->addPoly(arg2,(std::vector< Tangram::Coordinates > const &)*arg3);
 }
 
 
@@ -1441,20 +1460,16 @@ SWIGEXPORT void JNICALL Java_com_mapzen_tangram_TangramJNI_delete_1MapData(JNIEn
 }
 
 
-SWIGEXPORT jint JNICALL Java_com_mapzen_tangram_TangramJNI_addDataSource(JNIEnv *jenv, jclass jcls, jlong jarg1, jobject jarg1_) {
-  jint jresult = 0 ;
+SWIGEXPORT void JNICALL Java_com_mapzen_tangram_TangramJNI_addDataSource(JNIEnv *jenv, jclass jcls, jlong jarg1, jobject jarg1_) {
   std::shared_ptr< Tangram::DataSource > arg1 ;
   std::shared_ptr< Tangram::DataSource > *argp1 ;
-  int result;
 
   (void)jenv;
   (void)jcls;
   (void)jarg1_;
   argp1 = *(std::shared_ptr< Tangram::DataSource > **)&jarg1;
   if (argp1) arg1 = *argp1;
-  result = (int)Tangram::addDataSource(arg1);
-  jresult = (jint)result;
-  return jresult;
+  Tangram::addDataSource(arg1);
 }
 
 

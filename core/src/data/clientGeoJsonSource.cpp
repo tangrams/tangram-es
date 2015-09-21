@@ -58,9 +58,9 @@ void ClientGeoJsonSource::clearData() {
 
 }
 
-void ClientGeoJsonSource::addPoint(const Tags& _tags, double _coords[]) {
+void ClientGeoJsonSource::addPoint(const Tags& _tags, LngLat _point) {
 
-    auto container = geojsonvt::Convert::project({ geojsonvt::LonLat(_coords[0], _coords[1]) }, tolerance);
+    auto container = geojsonvt::Convert::project({ geojsonvt::LonLat(_point.longitude, _point.latitude) }, tolerance);
 
     auto feature = geojsonvt::Convert::create(_tags,
                                               geojsonvt::ProjectedFeatureType::Point,
@@ -69,14 +69,6 @@ void ClientGeoJsonSource::addPoint(const Tags& _tags, double _coords[]) {
     m_features.push_back(std::move(feature));
     m_store = std::make_unique<GeoJSONVT>(m_features, maxZoom, indexMaxZoom, indexMaxPoints, tolerance);
 
-}
-
-void ClientGeoJsonSource::addLine(const Tags& _tags, double* _coords, int _lineLength) {
-    std::vector<LngLat> line(_lineLength, { 0, 0 });
-    for (int i = 0; i < _lineLength; i++) {
-        line[i] = { _coords[2 * i], _coords[2 * i + 1] };
-    }
-    addLine(_tags, line);
 }
 
 void ClientGeoJsonSource::addLine(const Tags& _tags, const Coordinates& _line) {
@@ -92,18 +84,12 @@ void ClientGeoJsonSource::addLine(const Tags& _tags, const Coordinates& _line) {
     m_store = std::make_unique<GeoJSONVT>(m_features, maxZoom, indexMaxZoom, indexMaxPoints, tolerance);
 }
 
-void ClientGeoJsonSource::addPoly(const Tags& _tags, double _coords[], int _ringLengths[], int _rings) {
+void ClientGeoJsonSource::addPoly(const Tags& _tags, const std::vector<Coordinates>& _poly) {
 
     geojsonvt::ProjectedGeometryContainer geometry;
-    double* ringCoords = _coords;
-    for (int i = 0; i < _rings; i++) {
-        int ringLength = _ringLengths[i];
-        std::vector<geojsonvt::LonLat> ring(ringLength, { 0, 0 });
-        for (int j = 0; j < ringLength; j++) {
-            ring[j] = { ringCoords[2 * j], ringCoords[2 * j + 1] };
-        }
+    for (auto& _ring : _poly) {
+        auto& ring = reinterpret_cast<const std::vector<geojsonvt::LonLat>&>(_ring);
         geometry.members.push_back(geojsonvt::Convert::project(ring, tolerance));
-        ringCoords += 2 * ringLength;
     }
 
     auto feature = geojsonvt::Convert::create(_tags,

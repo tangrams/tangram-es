@@ -103,43 +103,6 @@ extern "C" {
         onUrlFailure(jniEnv, callbackPtr);
     }
 
-    JNIEXPORT int JNICALL Java_com_mapzen_tangram_MapData_addDataSource(JNIEnv* jniEnv, jobject obj, jstring name) {
-        const char* cname = jniEnv->GetStringUTFChars(name, NULL);
-        int id = Tangram::addDataSource(cname);
-        jniEnv->ReleaseStringUTFChars(name, cname);
-        return id;
-    }
-
-    JNIEXPORT void JNICALL Java_com_mapzen_tangram_MapData_clearSourceData(JNIEnv* jniEnv, jobject obj, jint id) {
-        Tangram::clearSourceData(id);
-    }
-
-    JNIEXPORT void JNICALL Java_com_mapzen_tangram_MapData_addSourceGeoJSON(JNIEnv* jniEnv, jobject obj, jint id, jstring name) {
-        const char* cstring = jniEnv->GetStringUTFChars(name, NULL);
-        Tangram::addSourceGeoJSON(id, cstring);
-        jniEnv->ReleaseStringUTFChars(name, NULL);
-    }
-
-    JNIEXPORT void JNICALL Java_com_mapzen_tangram_MapData_addSourcePoint(JNIEnv* jniEnv, jobject obj, jint id, jdoubleArray coords) {
-        double* coord_ptr = jniEnv->GetDoubleArrayElements(coords, NULL);
-        Tangram::addSourcePoint(id, coord_ptr);
-        jniEnv->ReleaseDoubleArrayElements(coords, coord_ptr, 0);
-    }
-
-    JNIEXPORT void JNICALL Java_com_mapzen_tangram_MapData_addSourceLine(JNIEnv* jniEnv, jobject obj, jint id, jdoubleArray coords, jint length) {
-        double* coord_ptr = jniEnv->GetDoubleArrayElements(coords, NULL);
-        Tangram::addSourceLine(id, coord_ptr, length);
-        jniEnv->ReleaseDoubleArrayElements(coords, coord_ptr, 0);
-    }
-
-    JNIEXPORT void JNICALL Java_com_mapzen_tangram_MapData_addSourcePoly(JNIEnv* jniEnv, jobject obj, jint id, jdoubleArray coords, jintArray ringLengths, jint rings) {
-        double* coord_ptr = jniEnv->GetDoubleArrayElements(coords, NULL);
-        int* ring_length_ptr = jniEnv->GetIntArrayElements(ringLengths, NULL);
-        Tangram::addSourcePoly(id, coord_ptr, ring_length_ptr, rings);
-        jniEnv->ReleaseDoubleArrayElements(coords, coord_ptr, 0);
-        jniEnv->ReleaseIntArrayElements(ringLengths, ring_length_ptr, 0);
-    }
-
     JNIEXPORT void JNICALL Java_com_mapzen_tangram_MapController_pickFeature(JNIEnv* jniEnv, jobject obj, jfloat posX, jfloat posY) {
         auto& items = Tangram::pickFeaturesAt(posX, posY);
         if (!items.empty()) {

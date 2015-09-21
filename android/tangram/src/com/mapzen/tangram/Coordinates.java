@@ -64,7 +64,7 @@ public class Coordinates {
   }
 
   public void add(LngLat x) {
-    TangramJNI.Coordinates_add(swigCPtr, this, LngLat.getCPtr(x), x);
+    TangramJNI.Coordinates_add__SWIG_0(swigCPtr, this, LngLat.getCPtr(x), x);
   }
 
   public LngLat get(int i) {
@@ -75,8 +75,8 @@ public class Coordinates {
     TangramJNI.Coordinates_set(swigCPtr, this, i, LngLat.getCPtr(val), val);
   }
 
-  public void append(double lng, double lat) {
-    TangramJNI.Coordinates_append(swigCPtr, this, lng, lat);
+  public void add(double lng, double lat) {
+    TangramJNI.Coordinates_add__SWIG_1(swigCPtr, this, lng, lat);
   }
 
 }

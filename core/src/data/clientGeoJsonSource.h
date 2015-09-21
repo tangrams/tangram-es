@@ -23,11 +23,11 @@ public:
     ClientGeoJsonSource(const std::string& _name, const std::string& _url);
     ~ClientGeoJsonSource();
 
+    // Add geometry from a GeoJSON string
     void addData(const std::string& _data);
-    void addPoint(const Tags& _tags, double _coords[]);
-    void addLine(const Tags& _tags, double _coords[], int _lineLength);
+    void addPoint(const Tags& _tags, LngLat _point);
     void addLine(const Tags& _tags, const Coordinates& _line);
-    void addPoly(const Tags& _tags, double _coords[], int _ringLengths[], int rings);
+    void addPoly(const Tags& _tags, const std::vector<Coordinates>& _poly);
 
     virtual bool loadTileData(std::shared_ptr<TileTask>&& _task, TileTaskCb _cb) override;
     virtual bool getTileData(std::shared_ptr<TileTask>& _task) override;
