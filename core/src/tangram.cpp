@@ -87,6 +87,7 @@ void loadScene(const char* _scenePath) {
     if (SceneLoader::loadScene(sceneString, *scene)) {
         m_scene = scene;
         m_tileManager->setScene(scene);
+        FontContext::GetInstance()->clearState();
     }
 }
 
