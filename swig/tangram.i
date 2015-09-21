@@ -53,13 +53,15 @@ struct Properties {
 %rename (set) Tangram::LngLat::operator=;
 %rename (equals) Tangram::LngLat::operator==;
 
-// Extend LngLat on the java side
+// Extend LngLat on the java side, using setLngLat extension method
 %typemap(javacode) Tangram::LngLat %{
     public LngLat set(double lng, double lat) {
          setLngLat(lng, lat);
          return this;
      }
 %}
+// Hide generated (extension) method in favor of this-returning java method
+%javamethodmodifiers Tangram::LngLat::setLngLat "private"
 
 // Include
 // - LngLat struct as is,
@@ -67,7 +69,7 @@ struct Properties {
 %ignore Tangram::Range;
 %include "util/types.h"
 
-// Or extend on the native side - cannot return self here though
+// Extend on the native side - cannot return self here though
 %extend Tangram::LngLat {
     void setLngLat(double lng, double lat) {
         $self->longitude = lng;
@@ -75,12 +77,16 @@ struct Properties {
     }
 }
 
+// Create wrapper for Coordinates std::vector
 %template(Coordinates) std::vector<Tangram::LngLat>;
+// Add add() method for efficiency (without creating temporary LonLat)
 %extend std::vector<Tangram::LngLat> {
-    void append(double lng, double lat) {
+    void add(double lng, double lat) {
         $self->push_back({lng, lat});
     }
 }
+
+%template(Polygon) std::vector<std::vector<Tangram::LngLat>>;
 
 // Include external description for
 // - Tags aka map<string,string>
@@ -89,6 +95,6 @@ struct Properties {
 %include "jni_datasource.i"
 
 namespace Tangram {
-int addDataSource(std::shared_ptr<Tangram::DataSource> _source);
+void addDataSource(std::shared_ptr<Tangram::DataSource> _source);
 void clearDataSource(DataSource& _source, bool _data, bool _tiles);
 }

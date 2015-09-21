@@ -48,14 +48,14 @@ public class MapData extends DataSource {
         this(TangramJNI.new_MapData(name, ""), true);
     }
 
-    // /**
-    //  * Remove all data from this source
-    //  * @return This object, for chaining
-    //  */
-    // public MapData clear() {
-    //     //clearSourceData(id);
-    //     return this;
-    // }
+    /**
+     * Remove all data from this source
+     * @return This object, for chaining
+     */
+    public MapData clear() {
+        clearJNI();
+        return this;
+    }
 
     /**
      * Add geometry from a GeoJSON string to this data source
@@ -73,7 +73,8 @@ public class MapData extends DataSource {
      * @return This object, for chaining
      */
     public MapData addPoint(Tags tags, LngLat point) {
-        addPoint(tags, new double[]{ point.getLongitude(), point.getLatitude() });
+        //addPoint(tags, new double[]{ point.getLongitude(), point.getLatitude() });
+        addPointJNI(tags, point);
         return this;
     }
 
@@ -84,13 +85,17 @@ public class MapData extends DataSource {
      */
     public MapData addLine(Tags tags, List<LngLat> line) {
         // need to concatenate points
-        double[] coords = new double[2 * line.size()];
-        int i = 0;
+        Coordinates coords = new Coordinates();
         for (LngLat point : line) {
-            coords[i++] = point.getLongitude();
-            coords[i++] = point.getLatitude();
+            coords.add(point);
         }
-        addLine(tags, coords, line.size());
+        //addLine(tags, coords, line.size());
+        addLineJNI(tags, coords);
+        return this;
+    }
+
+    public MapData addLine(Tags tags, Coordinates line) {
+        addLineJNI(tags, line);
         return this;
     }
 
@@ -101,19 +106,36 @@ public class MapData extends DataSource {
      * @return This object, for chaining
      */
     public MapData addPolygon(Tags tags, List<List<LngLat>> polygon) {
-        // need to concatenate points
-        int n = 0, i = 0, j = 0;
-        for (List<LngLat> ring : polygon) { n += ring.size(); }
-        double[] coords = new double[2 * n];
-        int[] ringLengths = new int[polygon.size()];
+        Polygon poly = new Polygon();
+
+        // for (List<LngLat> ring : polygon) {
+        //     Coordinates out = new Coordinates();
+        //     for (LngLat point : ring) {
+        //         out.add(point);
+        //     }
+        //     poly.add(out);
+        // }
+
+        // TODO add method to add empty ring and get handle to it.
+        Coordinates dummy = new Coordinates();
+        int rings = 0;
+
         for (List<LngLat> ring : polygon) {
-            ringLengths[j++] = ring.size();
+            poly.add(dummy);
+
+            Coordinates out = poly.get(rings);
+
             for (LngLat point : ring) {
-                coords[i++] = point.getLongitude();
-                coords[i++] = point.getLatitude();
+                out.add(point);
             }
+            rings++;
         }
-        addPoly(tags, coords, ringLengths, polygon.size());
+        addPolyJNI(tags, poly);
+        return this;
+    }
+
+    public MapData addPolygon(Tags tags, Polygon polygon) {
+        addPolyJNI(tags, polygon);
         return this;
     }
 
@@ -125,20 +147,16 @@ public class MapData extends DataSource {
     TangramJNI.MapData_addData(swigCPtr, this, _data);
   }
 
-  public void addPoint(Tags tags, double[] _coords) {
-    TangramJNI.MapData_addPoint(swigCPtr, this, Tags.getCPtr(tags), tags, _coords);
+  private void addPointJNI(Tags tags, LngLat point) {
+    TangramJNI.MapData_addPointJNI(swigCPtr, this, Tags.getCPtr(tags), tags, LngLat.getCPtr(point), point);
   }
 
-  public void addLine(Tags tags, double[] _coords, int _lineLength) {
-    TangramJNI.MapData_addLine__SWIG_0(swigCPtr, this, Tags.getCPtr(tags), tags, _coords, _lineLength);
+  private void addLineJNI(Tags tags, Coordinates line) {
+    TangramJNI.MapData_addLineJNI(swigCPtr, this, Tags.getCPtr(tags), tags, Coordinates.getCPtr(line), line);
   }
 
-  public void addLine(Tags tags, Coordinates coordinates) {
-    TangramJNI.MapData_addLine__SWIG_1(swigCPtr, this, Tags.getCPtr(tags), tags, Coordinates.getCPtr(coordinates), coordinates);
-  }
-
-  public void addPoly(Tags tags, double[] _coords, int[] _ringLengths, int rings) {
-    TangramJNI.MapData_addPoly(swigCPtr, this, Tags.getCPtr(tags), tags, _coords, _ringLengths, rings);
+  private void addPolyJNI(Tags tags, Polygon polygon) {
+    TangramJNI.MapData_addPolyJNI(swigCPtr, this, Tags.getCPtr(tags), tags, Polygon.getCPtr(polygon), polygon);
   }
 
 }

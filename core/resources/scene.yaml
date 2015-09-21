@@ -68,7 +68,9 @@ sources:
 layers:
     touch:
         data: { source: touch }
-        draw:
+        line:
+          filter: { type: line }
+          draw:
             lines:
                 color: function () { return feature.color || 'pink'; }
                 order: 50

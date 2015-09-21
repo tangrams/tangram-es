@@ -21,6 +21,7 @@ import com.squareup.okhttp.Callback;
 
 import java.io.File;
 import java.util.Arrays;
+import java.util.LinkedList;
 import java.lang.Math;
 
 public class MainActivity extends Activity {
@@ -45,8 +46,28 @@ public class MainActivity extends Activity {
         mapController.setMapPosition(-74.00976419448854, 40.70532700869127);
 
         final MapData touchMarkers = new MapData("touch");
-        Tangram.addDataSource(touchMarkers);
         final Tags tags = new Tags();
+        Tangram.addDataSource(touchMarkers);
+
+        tags.set("color", "magenta");
+        tags.set("type", "poly");
+        touchMarkers.addPolygon(tags, Arrays.asList(Arrays.asList(
+            new LngLat(-74.0, 40.7),
+            new LngLat(-74.1, 40.7),
+            new LngLat(-74.1, 40.8),
+            new LngLat(-74.0, 40.8),
+            new LngLat(-74.0, 40.7))));
+
+        tags.set("color", "black");
+        tags.set("type", "line");
+        touchMarkers.addLine(tags, Arrays.asList(
+            new LngLat(-74.0, 40.7),
+            new LngLat(-74.1, 40.7),
+            new LngLat(-74.1, 40.8),
+            new LngLat(-74.0, 40.8),
+            new LngLat(-74.0, 40.7)));
+  
+        touchMarkers.update();
 
         final LngLat lastTappedPoint = new LngLat();
         final String colors[] = {"blue", "red", "green" };
