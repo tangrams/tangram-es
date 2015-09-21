@@ -35,44 +35,49 @@ static std::bitset<8> g_flags = 0;
 
 void initialize(const char* _scenePath) {
 
+    if (m_tileManager) {
+        logMsg("Notice: Already initialized\n");
+        return;
+    }
+
     logMsg("initialize\n");
 
     auto sceneRelPath = setResourceRoot(_scenePath);
 
-    if (!m_tileManager) {
+    // Create view
+    m_view = std::make_shared<View>();
 
-        // Create view
-        m_view = std::make_shared<View>();
+    // Create a scene object
+    m_scene = std::make_shared<Scene>();
 
-        // Create a scene object
-        m_scene = std::make_shared<Scene>();
+    // Input handler
+    m_inputHandler = std::unique_ptr<InputHandler>(new InputHandler(m_view));
 
-        // Input handler
-        m_inputHandler = std::unique_ptr<InputHandler>(new InputHandler(m_view));
+    // Create a tileManager
+    m_tileManager = TileManager::GetInstance();
 
-        // Create a tileManager
-        m_tileManager = TileManager::GetInstance();
+    // Pass references to the view and scene into the tile manager
+    m_tileManager->setView(m_view);
 
-        // Pass references to the view and scene into the tile manager
-        m_tileManager->setView(m_view);
+    // label setup
+    m_labels = std::unique_ptr<Labels>(new Labels());
 
-        // label setup
-        m_labels = std::unique_ptr<Labels>(new Labels());
+    // To add font for debugTextStyle
+    FontContext::GetInstance()->addFont("FiraSans", "Medium", "");
 
-        logMsg("Loading Tangram scene file: %s\n", sceneRelPath.c_str());
-        auto sceneString = stringFromResource(sceneRelPath.c_str());
+    logMsg("Loading Tangram scene file: %s\n", sceneRelPath.c_str());
+    auto sceneString = stringFromResource(sceneRelPath.c_str());
 
-        if (SceneLoader::loadScene(sceneString, *m_scene)) {
-            m_tileManager->setScene(m_scene);
+    if (SceneLoader::loadScene(sceneString, *m_scene)) {
+        m_tileManager->setScene(m_scene);
 
-            glm::dvec2 projPos = m_view->getMapProjection().LonLatToMeters(m_scene->startPosition);
-            m_view->setPosition(projPos.x, projPos.y);
-            m_view->setZoom(m_scene->startZoom);
-        }
-
-        m_skybox = std::unique_ptr<Skybox>(new Skybox("img/cubemap.png"));
-        m_skybox->init();
+        glm::dvec2 projPos = m_view->getMapProjection().LonLatToMeters(m_scene->startPosition);
+        m_view->setPosition(projPos.x, projPos.y);
+        m_view->setZoom(m_scene->startZoom);
     }
+
+    m_skybox = std::unique_ptr<Skybox>(new Skybox("img/cubemap.png"));
+    m_skybox->init();
 
     logMsg("finish initialize\n");
 
