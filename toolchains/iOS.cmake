@@ -22,7 +22,7 @@ if(${IOS_PLATFORM} STREQUAL "SIMULATOR")
     set(ARCH "i386")
 else()
     set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS}")
-    set(ARCH "armv6 armv7")
+    set(ARCH "armv7 armv7s arm64")
 endif()
 
 set(FRAMEWORKS CoreGraphics CoreFoundation QuartzCore UIKit OpenGLES Security CFNetwork GLKit) 
