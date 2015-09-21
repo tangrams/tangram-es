@@ -70,9 +70,7 @@ void SceneLoader::loadShaderConfig(Node shaders, Style& style, Scene& scene) {
 
     auto& shader = *(style.getShaderProgram());
 
-    if (!shaders) {
-        return;
-    }
+    if (!shaders) { return; }
 
     if (Node extensionsNode = shaders["extensions"]) {
         std::vector<std::string> extensions;
@@ -92,8 +90,7 @@ void SceneLoader::loadShaderConfig(Node shaders, Style& style, Scene& scene) {
         }
     }
 
-    Node definesNode = shaders["defines"];
-    if (definesNode) {
+    if (Node definesNode = shaders["defines"]) {
         for (const auto& define : definesNode) {
             std::string name = define.first.as<std::string>();
             std::string value = define.second.as<std::string>();
@@ -108,8 +105,7 @@ void SceneLoader::loadShaderConfig(Node shaders, Style& style, Scene& scene) {
         }
     }
 
-    Node uniformsNode = shaders["uniforms"];
-    if (uniformsNode) {
+    if (Node uniformsNode = shaders["uniforms"]) {
         for (const auto& uniform : uniformsNode) {
             auto name = uniform.first.as<std::string>();
             auto uniforms = parseStyleUniforms(uniform.second, scene);
