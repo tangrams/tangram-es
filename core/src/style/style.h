@@ -6,6 +6,7 @@
 #include "gl/shaderProgram.h"
 #include "gl/renderState.h"
 #include "scene/sceneLayer.h"
+#include "util/variant.h"
 
 #include <memory>
 #include <string>
@@ -35,6 +36,7 @@ enum class Blending : char {
     inlay,
 };
 
+
 /* Means of constructing and rendering map geometry
  *
  * A Style defines a way to
@@ -46,6 +48,8 @@ enum class Blending : char {
  * geometry into meshes. See <PolygonStyle> for a basic implementation.
  */
 class Style {
+
+using StyleUniform = std::pair< std::string, UniformValue >;
 
 protected:
 
@@ -66,7 +70,7 @@ protected:
 
     /* <LightingType> to determine how lighting will be calculated for this style */
     LightingType m_lightingType = LightingType::fragment;
-    
+
     Blending m_blend = Blending::none;
 
     /* Draw mode to pass into <VboMesh>es created with this style */
@@ -99,10 +103,14 @@ protected:
     /* Toggle on read if true, checks whether the context has been lost on last frame */
     bool glContextLost();
 
+    void setupShaderUniforms(int _lastBoundTex);
+
 private:
 
     /* Whether the context has been lost on last frame */
     bool m_contextLost;
+    std::vector<StyleUniform> m_styleUniforms;
+    std::unordered_map<std::string, std::shared_ptr<Texture>> m_uniformTextures;
 
 public:
 
@@ -151,6 +159,9 @@ public:
     const std::unique_ptr<ShaderProgram>& getShaderProgram() const { return m_shaderProgram; }
 
     const std::string& getName() const { return m_name; }
+
+    std::vector<StyleUniform>& styleUniforms() { return m_styleUniforms; }
+    std::unordered_map<std::string, std::shared_ptr<Texture>>& uniformTextures() { return m_uniformTextures; }
 
 };
 

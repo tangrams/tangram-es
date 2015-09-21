@@ -120,6 +120,7 @@ void SpriteStyle::onBeginDrawFrame(const View& _view, const Scene& _scene) {
     if (initUniformSampler || contextLost) {
         m_shaderProgram->setUniformi("u_tex", 0);
         initUniformSampler = false;
+        setupShaderUniforms(0);
     }
 
     if (m_dirtyViewport || contextLost) {
