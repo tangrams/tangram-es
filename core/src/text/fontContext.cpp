@@ -56,6 +56,8 @@ bool FontContext::addFont(const std::string& _family, const std::string& _weight
         !(data = bytesFromFile(bundledFontPath.c_str(), PathType::internal, &dataSize))) {
         const std::string sysFontPath = systemFontPath(_family, _weight, _style);
         if ( !(data = bytesFromFile(sysFontPath.c_str(), PathType::absolute, &dataSize)) ) {
+            logMsg("[FontContext] Error loading font file %s\n", fontKey.c_str());
+            m_fonts.emplace(std::move(fontKey), FONS_INVALID);
             return false;
         }
     }
