@@ -33,6 +33,11 @@ Texture::Texture(const std::string& _file, TextureOptions _options, bool _genera
     unsigned char* pixels;
     int width, height, comp;
 
+    if (data == nullptr || size == 0) {
+        logMsg("ERROR: Texture not found! '%s'\n", _file.c_str());
+        return;
+    }
+
     pixels = stbi_load_from_memory(data, size, &width, &height, &comp, STBI_rgb_alpha);
 
     resize(width, height);
@@ -143,10 +148,10 @@ void Texture::update(GLuint _textureUnit) {
         bind(_textureUnit);
     }
 
-    GLuint* data = m_data.size() > 0 ? m_data.data() : nullptr;
-
     // resize or push data
     if (m_shouldResize) {
+        GLuint* data = m_data.size() > 0 ? m_data.data() : nullptr;
+
         glTexImage2D(m_target, 0, m_options.m_internalFormat, m_width, m_height, 0,
                      m_options.m_format, GL_UNSIGNED_BYTE, data);
 
