@@ -68,7 +68,7 @@ FontID FontContext::addFont(const std::string& _family, const std::string& _weig
             const std::string sysFontPath = systemFontPath(_family, _weight, _style);
             if ( !(data = bytesFromFile(sysFontPath.c_str(), PathType::absolute, &dataSize)) ) {
                 
-                logMsg("[FontContext] Error loading font file %s\n", fontKey.c_str());
+                LOGE("Could not load font file %s", fontKey.c_str());
                 m_fonts.emplace(std::move(fontKey), INVALID_FONT);
                 goto fallback;
             }
@@ -77,7 +77,7 @@ FontID FontContext::addFont(const std::string& _family, const std::string& _weig
     font = fonsAddFont(m_fsContext, fontKey.c_str(), data, dataSize);
 
     if (font == FONS_INVALID) {
-        LOGE("loading font %s", fontKey.c_str());
+        LOGE("Could not load font %s", fontKey.c_str());
         m_fonts.emplace(std::move(fontKey), INVALID_FONT);
         goto fallback;
     }
@@ -122,7 +122,8 @@ FontID FontContext::getFontID(const std::string& _key) {
     }
 }
 
-std::vector<FONSquad>& FontContext::rasterize(const std::string& _text, FontID _fontID, float _fontSize, float _sdf) {
+std::vector<FONSquad>& FontContext::rasterize(const std::string& _text, FontID _fontID,
+                                              float _fontSize, float _sdf) {
 
     m_quadBuffer.clear();
 
@@ -168,6 +169,21 @@ void FontContext::renderUpdate(void* _userPtr, int* _rect, const unsigned char* 
     fontContext->m_atlas->setSubData(subdata, xoff, yoff, width, height);
 }
 
+void FontContext::fontstashError(void* uptr, int error, int val) {
+    switch(error) {
+    case FONS_ATLAS_FULL:
+        LOGE("Texture Atlas full!");
+        break;
+
+    case FONS_SCRATCH_FULL:
+    case FONS_STATES_OVERFLOW:
+    case FONS_STATES_UNDERFLOW:
+    default:
+        LOGE("Unexpected error in Fontstash %d:%d!", error, val);
+        break;
+    }
+}
+
 void FontContext::initFontContext(int _atlasSize) {
     m_atlas = std::unique_ptr<Texture>(new Texture(_atlasSize, _atlasSize));
 
@@ -184,7 +200,9 @@ void FontContext::initFontContext(int _atlasSize) {
     params.pushQuad = pushQuad;
     params.userPtr = (void*) this;
 
-    m_fsContext = fonsCreateInternal(&params);;
+    m_fsContext = fonsCreateInternal(&params);
+
+    fonsSetErrorCallback(m_fsContext, &fontstashError, (void*) this);
 }
 
 }
