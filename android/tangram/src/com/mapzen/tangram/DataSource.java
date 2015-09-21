@@ -29,18 +29,31 @@ public class DataSource {
     if (swigCPtr != 0) {
       if (swigCMemOwn) {
         swigCMemOwn = false;
-        tangramJNI.delete_DataSource(swigCPtr);
+        TangramJNI.delete_DataSource(swigCPtr);
       }
       swigCPtr = 0;
     }
   }
 
+
+    /**
+     * Get the name of this data source
+     * @return The name
+     */
+    public String getName() {
+        return name();
+    }
+
   public void update() {
-    tangramJNI.DataSource_update(swigCPtr, this);
+    TangramJNI.DataSource_update(swigCPtr, this);
   }
 
   public void clear() {
-    tangramJNI.DataSource_clear(swigCPtr, this);
+    TangramJNI.DataSource_clear(swigCPtr, this);
+  }
+
+  public String name() {
+    return TangramJNI.DataSource_name(swigCPtr, this);
   }
 
 }

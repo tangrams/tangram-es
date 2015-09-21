@@ -29,46 +29,46 @@ public class Tags {
     if (swigCPtr != 0) {
       if (swigCMemOwn) {
         swigCMemOwn = false;
-        tangramJNI.delete_Tags(swigCPtr);
+        TangramJNI.delete_Tags(swigCPtr);
       }
       swigCPtr = 0;
     }
   }
 
   public Tags() {
-    this(tangramJNI.new_Tags__SWIG_0(), true);
+    this(TangramJNI.new_Tags__SWIG_0(), true);
   }
 
   public Tags(Tags arg0) {
-    this(tangramJNI.new_Tags__SWIG_1(Tags.getCPtr(arg0), arg0), true);
+    this(TangramJNI.new_Tags__SWIG_1(Tags.getCPtr(arg0), arg0), true);
   }
 
   public long size() {
-    return tangramJNI.Tags_size(swigCPtr, this);
+    return TangramJNI.Tags_size(swigCPtr, this);
   }
 
   public boolean empty() {
-    return tangramJNI.Tags_empty(swigCPtr, this);
+    return TangramJNI.Tags_empty(swigCPtr, this);
   }
 
   public void clear() {
-    tangramJNI.Tags_clear(swigCPtr, this);
+    TangramJNI.Tags_clear(swigCPtr, this);
   }
 
   public String get(String key) {
-    return tangramJNI.Tags_get(swigCPtr, this, key);
+    return TangramJNI.Tags_get(swigCPtr, this, key);
   }
 
   public void set(String key, String x) {
-    tangramJNI.Tags_set(swigCPtr, this, key, x);
+    TangramJNI.Tags_set(swigCPtr, this, key, x);
   }
 
   public void del(String key) {
-    tangramJNI.Tags_del(swigCPtr, this, key);
+    TangramJNI.Tags_del(swigCPtr, this, key);
   }
 
   public boolean has_key(String key) {
-    return tangramJNI.Tags_has_key(swigCPtr, this, key);
+    return TangramJNI.Tags_has_key(swigCPtr, this, key);
   }
 
 }

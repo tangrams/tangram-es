@@ -13,8 +13,8 @@ import com.mapzen.tangram.MapController;
 import com.mapzen.tangram.MapData;
 import com.mapzen.tangram.MapView;
 import com.mapzen.tangram.Properties;
-import com.mapzen.tangram.tangram;
-import com.mapzen.tangram.ClientGeoJsonSource;
+import com.mapzen.tangram.Tangram;
+import com.mapzen.tangram.MapData;
 import com.mapzen.tangram.Tags;
 
 import com.squareup.okhttp.Callback;
@@ -44,8 +44,8 @@ public class MainActivity extends Activity {
         mapController.setMapZoom(16);
         mapController.setMapPosition(-74.00976419448854, 40.70532700869127);
 
-        final ClientGeoJsonSource touchMarkers = new ClientGeoJsonSource("touch", "");
-        tangram.addDataSource(touchMarkers);
+        final MapData touchMarkers = new MapData("touch", "");
+        Tangram.addDataSource(touchMarkers);
         final Tags tags = new Tags();
 
         final LngLat lastTappedPoint = new LngLat();
@@ -57,9 +57,12 @@ public class MainActivity extends Activity {
 
                 if (lastTappedPoint.longitude != 0 && lastTappedPoint.latitude != 0) {
                     tags.set("color", colors[(int)(Math.random() * 2.0 + 0.5)] );
-                    touchMarkers.addLine(tags, new double[] {
-                            tapPoint.longitude, tapPoint.latitude,
-                            lastTappedPoint.longitude, lastTappedPoint.latitude}, 2);
+
+                    touchMarkers.addLine(tags, Arrays.asList(tapPoint, lastTappedPoint));
+
+                    // touchMarkers.addLine(tags, new double[] {
+                    //         tapPoint.longitude, tapPoint.latitude,
+                    //         lastTappedPoint.longitude, lastTappedPoint.latitude}, 2);
 
                     touchMarkers.update();
                 }

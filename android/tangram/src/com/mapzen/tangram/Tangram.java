@@ -8,13 +8,13 @@
 
 package com.mapzen.tangram;
 
-public class tangram {
+public class Tangram {
   public static int addDataSource(DataSource _source) {
-    return tangramJNI.addDataSource(DataSource.getCPtr(_source), _source);
+    return TangramJNI.addDataSource(DataSource.getCPtr(_source), _source);
   }
 
   public static void clearDataSource(DataSource _source, boolean _data, boolean _tiles) {
-    tangramJNI.clearDataSource(DataSource.getCPtr(_source), _source, _data, _tiles);
+    TangramJNI.clearDataSource(DataSource.getCPtr(_source), _source, _data, _tiles);
   }
 
 }
