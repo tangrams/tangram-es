@@ -73,7 +73,7 @@ public class MapData extends DataSource {
      * @return This object, for chaining
      */
     public MapData addPoint(Tags tags, LngLat point) {
-        addPoint(tags, new double[]{ point.longitude, point.latitude });
+        addPoint(tags, new double[]{ point.getLongitude(), point.getLatitude() });
         return this;
     }
 
@@ -87,8 +87,8 @@ public class MapData extends DataSource {
         double[] coords = new double[2 * line.size()];
         int i = 0;
         for (LngLat point : line) {
-            coords[i++] = point.longitude;
-            coords[i++] = point.latitude;
+            coords[i++] = point.getLongitude();
+            coords[i++] = point.getLatitude();
         }
         addLine(tags, coords, line.size());
         return this;
@@ -109,8 +109,8 @@ public class MapData extends DataSource {
         for (List<LngLat> ring : polygon) {
             ringLengths[j++] = ring.size();
             for (LngLat point : ring) {
-                coords[i++] = point.longitude;
-                coords[i++] = point.latitude;
+                coords[i++] = point.getLongitude();
+                coords[i++] = point.getLatitude();
             }
         }
         addPoly(tags, coords, ringLengths, polygon.size());
@@ -130,15 +130,15 @@ public class MapData extends DataSource {
   }
 
   public void addLine(Tags tags, double[] _coords, int _lineLength) {
-    TangramJNI.MapData_addLine(swigCPtr, this, Tags.getCPtr(tags), tags, _coords, _lineLength);
+    TangramJNI.MapData_addLine__SWIG_0(swigCPtr, this, Tags.getCPtr(tags), tags, _coords, _lineLength);
+  }
+
+  public void addLine(Tags tags, Coordinates coordinates) {
+    TangramJNI.MapData_addLine__SWIG_1(swigCPtr, this, Tags.getCPtr(tags), tags, Coordinates.getCPtr(coordinates), coordinates);
   }
 
   public void addPoly(Tags tags, double[] _coords, int[] _ringLengths, int rings) {
     TangramJNI.MapData_addPoly(swigCPtr, this, Tags.getCPtr(tags), tags, _coords, _ringLengths, rings);
-  }
-
-  public void clearData() {
-    TangramJNI.MapData_clearData(swigCPtr, this);
   }
 
 }

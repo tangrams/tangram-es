@@ -5,14 +5,15 @@
 %{
 #include "tangram.h"
 #include "data/properties.h"
+#include "util/types.h"
 #include <string>
 #include <memory>
 %}
 
-// knows about things like int *OUTPUT:
 %include "typemaps.i"
 %include "std_common.i"
 %include "std_string.i"
+%include "std_vector.i"
 %include "std_shared_ptr.i"
 
 // http://www.swig.org/Doc3.0/Java.html#Java_imclass_pragmas
@@ -46,6 +47,45 @@ struct Properties {
     }
 }
 
+// %rename (set) *::operator=;
+// %rename (equals) *::operator==;
+
+%rename (set) Tangram::LngLat::operator=;
+%rename (equals) Tangram::LngLat::operator==;
+
+// Extend LngLat on the java side
+%typemap(javacode) Tangram::LngLat %{
+    public LngLat set(double lng, double lat) {
+         setLngLat(lng, lat);
+         return this;
+     }
+%}
+
+// Include
+// - LngLat struct as is,
+// - ignore Range type
+%ignore Tangram::Range;
+%include "util/types.h"
+
+// Or extend on the native side - cannot return self here though
+%extend Tangram::LngLat {
+    void setLngLat(double lng, double lat) {
+        $self->longitude = lng;
+        $self->latitude = lat;
+    }
+}
+
+%template(Coordinates) std::vector<Tangram::LngLat>;
+%extend std::vector<Tangram::LngLat> {
+    void append(double lng, double lat) {
+        $self->push_back({lng, lat});
+    }
+}
+
+// Include external description for
+// - Tags aka map<string,string>
+// - DataSource
+// - ClientGeoJsonSource
 %include "jni_datasource.i"
 
 namespace Tangram {

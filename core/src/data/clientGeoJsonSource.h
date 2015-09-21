@@ -2,6 +2,7 @@
 
 #include "dataSource.h"
 #include "data/tileData.h"
+#include "util/types.h"
 
 namespace mapbox {
 namespace util {
@@ -24,9 +25,10 @@ public:
     ~ClientGeoJsonSource();
 
     void addData(const std::string& _data);
-    void addPoint(Tags _tags, double _coords[]);
-    void addLine(Tags _tags, double _coords[], int _lineLength);
-    void addPoly(Tags _tags, double _coords[], int _ringLengths[], int rings);
+    void addPoint(const Tags& _tags, double _coords[]);
+    void addLine(const Tags& _tags, double _coords[], int _lineLength);
+    void addLine(const Tags& _tags, const Coordinates& _line);
+    void addPoly(const Tags& _tags, double _coords[], int _ringLengths[], int rings);
 
     virtual bool loadTileData(std::shared_ptr<TileTask>&& _task, TileTaskCb _cb) override;
     virtual bool getTileData(std::shared_ptr<TileTask>& _task) override;

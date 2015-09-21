@@ -1,17 +1,19 @@
-// JNI Bindings for std::map<std::string,std::string>
 %include "std_map.i"
 %include "std_shared_ptr.i"
+
+// For optimized coordinate array passing
+%include "array_nocpy.i"
 
 namespace std {
 %template(Tags) map<string, string>;
 }
 
+// Let swig consider these headers
 %{
 #include "tangram.h"
 #include "data/dataSource.h"
 #include "data/clientGeoJsonSource.h"
 %}
-
 
 // Rename ClientGeoJsonSource to MapData on the Java side.
 %rename(MapData) Tangram::ClientGeoJsonSource;
@@ -20,8 +22,8 @@ namespace std {
 %shared_ptr(Tangram::DataSource);
 %shared_ptr(Tangram::ClientGeoJsonSource);
 
+// Additional methods for DataSource
 %typemap(javacode) Tangram::DataSource %{
-
     /**
      * Get the name of this data source
      * @return The name
@@ -31,10 +33,12 @@ namespace std {
     }
 %}
 
+// Additional imports for MapData
 %typemap(javaimports) Tangram::ClientGeoJsonSource %{
 import java.util.List;
 %}
 
+// Additional methods for MapData
 %typemap(javacode) Tangram::ClientGeoJsonSource %{
 
     /**
@@ -70,7 +74,7 @@ import java.util.List;
      * @return This object, for chaining
      */
     public MapData addPoint(Tags tags, LngLat point) {
-        addPoint(tags, new double[]{ point.longitude, point.latitude });
+        addPoint(tags, new double[]{ point.getLongitude(), point.getLatitude() });
         return this;
     }
 
@@ -84,8 +88,8 @@ import java.util.List;
         double[] coords = new double[2 * line.size()];
         int i = 0;
         for (LngLat point : line) {
-            coords[i++] = point.longitude;
-            coords[i++] = point.latitude;
+            coords[i++] = point.getLongitude();
+            coords[i++] = point.getLatitude();
         }
         addLine(tags, coords, line.size());
         return this;
@@ -106,8 +110,8 @@ import java.util.List;
         for (List<LngLat> ring : polygon) {
             ringLengths[j++] = ring.size();
             for (LngLat point : ring) {
-                coords[i++] = point.longitude;
-                coords[i++] = point.latitude;
+                coords[i++] = point.getLongitude();
+                coords[i++] = point.getLatitude();
             }
         }
         addPoly(tags, coords, ringLengths, polygon.size());
@@ -115,27 +119,23 @@ import java.util.List;
     }
 %}
 
-%include "array_nocpy.i"
-
 namespace Tangram {
+typedef std::map<std::string,std::string> Tags;
 
 class DataSource {
 protected:
     DataSource(const std::string& _name, const std::string& _url);
+    virtual void clearData() override;
 };
 
 class ClientGeoJsonSource : public DataSource {
-
 public:
     ClientGeoJsonSource(const std::string& _name, const std::string& _url);
-
     void addData(const std::string& _data);
-    void addPoint(std::map<std::string,std::string> tags, double _coords[]);
-    void addLine(std::map<std::string,std::string> tags, double _coords[], int _lineLength);
-    void addPoly(std::map<std::string,std::string> tags, double _coords[], int _ringLengths[], int rings);
-
-    virtual void clearData() override;
-
+    void addPoint(Tags tags, double _coords[]);
+    void addLine(Tags tags, double _coords[], int _lineLength);
+    void addLine(Tags tags, const Tangram::Coordinates& coordinates);
+    void addPoly(Tags tags, double _coords[], int _ringLengths[], int rings);
 };
 } // namespace
 
@@ -147,7 +147,7 @@ public:
     void clear() {
         Tangram::clearDataSource(*($self), true, true);
     }
-    const std::string& name() {
-         $self->name();
+    std::string name() {
+        return $self->name();
     }
 }
