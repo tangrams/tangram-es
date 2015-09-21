@@ -103,7 +103,9 @@ protected:
     /* Toggle on read if true, checks whether the context has been lost on last frame */
     bool glContextLost();
 
-    void setupShaderUniforms(int _lastBoundTex, bool _ctxLost, Scene& _scene);
+    /* Set uniform values when @_updateUniforms is true,
+       and bind textures starting at @_textureUnit */
+    void setupShaderUniforms(int _textureUnit, bool _updateUniforms, Scene& _scene);
 
 private:
 

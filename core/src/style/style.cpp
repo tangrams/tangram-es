@@ -84,7 +84,7 @@ void Style::buildFeature(Tile& _tile, const Feature& _feat, const DrawRule& _rul
 
 }
 
-void Style::setupShaderUniforms(int _lastBoundTex, bool _ctxLost, Scene& _scene) {
+void Style::setupShaderUniforms(int _textureUnit, bool _update, Scene& _scene) {
     for (const auto& uniformPair : m_styleUniforms) {
         const auto& name = uniformPair.first;
         const auto& value = uniformPair.second;
@@ -92,27 +92,34 @@ void Style::setupShaderUniforms(int _lastBoundTex, bool _ctxLost, Scene& _scene)
         auto& textures = _scene.textures();
 
         if (value.is<std::string>()) {
-            auto texName = value.get<std::string>();
-            textures[texName]->update(++_lastBoundTex);
-            textures[texName]->bind(_lastBoundTex);
-            if (_ctxLost) {
-                m_shaderProgram->setUniformi(name, _lastBoundTex);
+
+            auto& tex = textures[value.get<std::string>()];
+
+            tex->update(_textureUnit);
+            tex->bind(_textureUnit);
+
+            if (_update) {
+                m_shaderProgram->setUniformi(name, _textureUnit);
             }
+
+            _textureUnit++;
+
         } else {
-            if (_ctxLost) {
-                if (value.is<int>()) {
-                    m_shaderProgram->setUniformi(name, value.get<int>());
-                } else if(value.is<float>()) {
-                    m_shaderProgram->setUniformf(name, value.get<float>());
-                } else if(value.is<glm::vec2>()) {
-                    m_shaderProgram->setUniformf(name, value.get<glm::vec2>());
-                } else if(value.is<glm::vec3>()) {
-                    m_shaderProgram->setUniformf(name, value.get<glm::vec3>());
-                } else if(value.is<glm::vec4>()) {
-                    m_shaderProgram->setUniformf(name, value.get<glm::vec4>());
-                } else {
-                    // none_type
-                }
+            if (!_update) { continue; }
+
+            if (value.is<int>()) {
+                m_shaderProgram->setUniformi(name, value.get<int>());
+            } else if(value.is<float>()) {
+                m_shaderProgram->setUniformf(name, value.get<float>());
+            } else if(value.is<glm::vec2>()) {
+                m_shaderProgram->setUniformf(name, value.get<glm::vec2>());
+            } else if(value.is<glm::vec3>()) {
+                m_shaderProgram->setUniformf(name, value.get<glm::vec3>());
+            } else if(value.is<glm::vec4>()) {
+                m_shaderProgram->setUniformf(name, value.get<glm::vec4>());
+            } else {
+                // TODO: Throw away uniform on loading!
+                // none_type
             }
         }
     }
@@ -131,7 +138,7 @@ void Style::onBeginDrawFrame(const View& _view, Scene& _scene) {
 
     m_shaderProgram->setUniformf("u_zoom", _view.getZoom());
 
-    setupShaderUniforms(-1, contextLost, _scene);
+    setupShaderUniforms(0, contextLost, _scene);
 
     // Configure render state
     switch (m_blend) {
