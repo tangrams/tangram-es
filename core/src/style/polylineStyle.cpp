@@ -4,6 +4,7 @@
 #include "gl/shaderProgram.h"
 #include "scene/stops.h"
 #include "tile/tile.h"
+#include "util/mapProjection.h"
 
 namespace Tangram {
 
@@ -63,10 +64,21 @@ void PolylineStyle::buildLine(const Line& _line, const DrawRule& _rule, const Pr
     Parameters params = parseRule(_rule);
     GLuint abgr = params.color;
 
+    // NB: Tile vertex coordinates are in the range -1..1 => 2,
+    // * 0.5 for half-width == 1.0 => 1.0 / tileSize
+    double tileRes = 1.0 / _tile.getProjection()->TileSize();
+
     float dWdZ = 0.f;
+    float width = params.width * tileRes;
+
     auto wp = _rule.findParameter(StyleParamKey::width);
     if (wp && wp.stops) {
-        dWdZ = wp.stops->evalFloat(_tile.getID().z + 1) - params.width;
+        width = wp.stops->evalFloat(_tile.getID().z);
+        width *= tileRes;
+
+        dWdZ = wp.stops->evalFloat(_tile.getID().z + 1);
+        dWdZ *= tileRes;
+        dWdZ -= width;
     }
 
     if (Tangram::getDebugFlag(Tangram::DebugFlags::proxy_colors)) {
@@ -74,7 +86,6 @@ void PolylineStyle::buildLine(const Line& _line, const DrawRule& _rule, const Pr
     }
 
     GLfloat layer = _props.getNumeric("sort_key") + params.order;
-    float width = params.width;
 
     PolyLineBuilder builder {
         [&](const glm::vec3& coord, const glm::vec2& normal, const glm::vec2& uv) {
@@ -91,12 +102,24 @@ void PolylineStyle::buildLine(const Line& _line, const DrawRule& _rule, const Pr
     if (params.outlineOn) {
 
         GLuint abgrOutline = params.outlineColor;
-        float widthOutline = width + params.outlineWidth;
 
-        dWdZ = 0.f;
+        // NB: Multiply by 2 for the outline to get the expected stroke pixel width.
+        float widthOutline = width + params.outlineWidth * tileRes * 2.0;
+        float dWdZcore = dWdZ;
+
+        dWdZ = 0.0f;
         auto owp = _rule.findParameter(StyleParamKey::outline_width);
         if (owp && owp.stops) {
-            dWdZ = owp.stops->evalFloat(_tile.getID().z + 1) - params.outlineWidth;
+
+            widthOutline = owp.stops->evalFloat(_tile.getID().z);
+            widthOutline *= tileRes * 2.0;
+
+            dWdZ = owp.stops->evalFloat(_tile.getID().z + 1);
+            dWdZ *= tileRes * 2.0;
+            dWdZ -= widthOutline;
+
+            widthOutline += width;
+            dWdZ += dWdZcore;
         }
 
         if (params.outlineCap != params.cap || params.outlineJoin != params.join) {
@@ -116,7 +139,7 @@ void PolylineStyle::buildLine(const Line& _line, const DrawRule& _rule, const Pr
             for (size_t i = 0; i < offset; i++) {
                 const auto& v = vertices[i];
                 glm::vec4 extrudeOutline = { v.extrude.x, v.extrude.y, widthOutline, dWdZ };
-                vertices.push_back({ v.pos, v.texcoord, extrudeOutline, abgrOutline, layer - 1.f });
+                vertices.push_back({ v.pos, v.texcoord, extrudeOutline, abgrOutline, params.order - 1.f });
             }
         }
     }
