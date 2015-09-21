@@ -2,6 +2,7 @@
 
 #include "tangram.h"
 #include "gl/shaderProgram.h"
+#include "scene/stops.h"
 #include "tile/tile.h"
 
 namespace Tangram {
@@ -15,8 +16,7 @@ void PolylineStyle::constructVertexLayout() {
     m_vertexLayout = std::shared_ptr<VertexLayout>(new VertexLayout({
         {"a_position", 3, GL_FLOAT, false, 0},
         {"a_texcoord", 2, GL_FLOAT, false, 0},
-        {"a_extrudeNormal", 2, GL_FLOAT, false, 0},
-        {"a_extrudeWidth", 1, GL_FLOAT, false, 0},
+        {"a_extrude", 4, GL_FLOAT, false, 0},
         {"a_color", 4, GL_UNSIGNED_BYTE, true, 0},
         {"a_layer", 1, GL_FLOAT, false, 0}
     }));
@@ -63,16 +63,23 @@ void PolylineStyle::buildLine(const Line& _line, const DrawRule& _rule, const Pr
     Parameters params = parseRule(_rule);
     GLuint abgr = params.color;
 
+    float dWdZ = 0.f;
+    auto wp = _rule.findParameter(StyleParamKey::width);
+    if (wp && wp.stops) {
+        dWdZ = wp.stops->evalFloat(_tile.getID().z + 1) - params.width;
+    }
+
     if (Tangram::getDebugFlag(Tangram::DebugFlags::proxy_colors)) {
         abgr = abgr << (_tile.getID().z % 6);
     }
 
     GLfloat layer = _props.getNumeric("sort_key") + params.order;
-    float halfWidth = params.width * .5f;
+    float width = params.width;
 
     PolyLineBuilder builder {
         [&](const glm::vec3& coord, const glm::vec2& normal, const glm::vec2& uv) {
-            vertices.push_back({ coord, uv, normal, halfWidth, abgr, layer });
+            glm::vec4 extrude = { normal.x, normal.y, width, dWdZ };
+            vertices.push_back({ coord, uv, extrude, abgr, layer });
         },
         [&](size_t sizeHint){ vertices.reserve(sizeHint); },
         params.cap,
@@ -84,7 +91,13 @@ void PolylineStyle::buildLine(const Line& _line, const DrawRule& _rule, const Pr
     if (params.outlineOn) {
 
         GLuint abgrOutline = params.outlineColor;
-        halfWidth += params.outlineWidth * .5f;
+        float widthOutline = width + params.outlineWidth;
+
+        dWdZ = 0.f;
+        auto owp = _rule.findParameter(StyleParamKey::outline_width);
+        if (owp && owp.stops) {
+            dWdZ = owp.stops->evalFloat(_tile.getID().z + 1) - params.outlineWidth;
+        }
 
         if (params.outlineCap != params.cap || params.outlineJoin != params.join) {
             // need to re-triangulate with different cap and/or join
@@ -102,7 +115,8 @@ void PolylineStyle::buildLine(const Line& _line, const DrawRule& _rule, const Pr
             }
             for (size_t i = 0; i < offset; i++) {
                 const auto& v = vertices[i];
-                vertices.push_back({ v.pos, v.texcoord, v.enorm, halfWidth, abgrOutline, layer - 1.f });
+                glm::vec4 extrudeOutline = { v.extrude.x, v.extrude.y, widthOutline, dWdZ };
+                vertices.push_back({ v.pos, v.texcoord, extrudeOutline, abgrOutline, layer - 1.f });
             }
         }
     }

@@ -116,17 +116,15 @@ layers:
     roads:
         data: { source: osm }
         filter:
-            not: {kind: [rail]}
+            not: { kind: [rail] }
         draw:
             lines:
-                order: 4
-                width: .02
-                cap: round
                 color: white
+                width: .02
+                order: 4
                 outline:
-                    width: .01
-                    cap: round
-                    color: '#999'
+                    color: [[16, '#999'], [18, '#aaa']]
+                    width: [[15, 0], [16, .01]]
         rounded:
             filter: { $zoom: { min: 18 } }
             draw:
@@ -137,42 +135,56 @@ layers:
             draw:
                 lines:
                     color: '#D16768'
-                    width: .04
+                    width: [[14, .01], [15, .05]]
+                    outline:
+                        width: [[14, 0], [15, .01]]
             link:
                 filter: { is_link: yes }
                 draw:
                     lines:
                         color: '#aaa'
-                        width: .001
-        path:
-            filter:
-                kind: path
+                        width: [[13, 0], [14, .025]]
+        major_road:
+            filter: { kind: major_road, $zoom: { min: 10 } }
+            draw:
+                lines:
+                    width: [[10, 0], [13, .01], [14, .01], [16, .05]]
+                    outline:
+                        width: [[16, 0], [17, .03]]
+        minor_road:
+            filter: { kind: minor_road }
+            draw:
+                lines:
+                    width: [[13, 0], [14, .005], [15, .02]]
+                    outline:
+                        width: [[17, 0], [18, .005]]
+        paths:
+            filter: { kind: path }
             draw:
                 lines:
                     color: '#bbb'
-                    width: .001
+                    width: [[15, 0], [18, .01]]
         airports:
             filter: { aeroway: true }
             draw:
                 lines:
                     color: '#ddd'
-                    outline:
-                        width: 0
             taxiways:
                 filter: { aeroway: taxiway }
                 draw:
                     lines:
-                        width: .005
+                        width: [[13, 0], [14, .01], [17, .05]]
             runways:
                 filter: { aeroway: runway }
                 draw:
                     lines:
-                        color: '#FFE4B5'
-                        width: .02
+                        color: [[13, '#FFE4B5'], [16, white]]
+                        width: [[11, .015], [12, .025], [13, .05], [15, .07]]
+                        order: 39
                         cap: square
                         outline:
                             color: orange
-                            width: 0.01
+                            width: [[11, 0], [12, .005], [13, .01], [15, .02]]
 
     poi_icons:
         data: { source: osm, layer: pois }
