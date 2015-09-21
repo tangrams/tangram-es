@@ -8,6 +8,7 @@
 #include "labels/textLabel.h"
 #include "glm/gtc/type_ptr.hpp"
 #include "tangram.h"
+#include "text/fontContext.h"
 
 namespace Tangram {
 
@@ -56,6 +57,17 @@ Parameters TextStyle::parseRule(const DrawRule& _rule) const {
     _rule.get(StyleParamKey::font_family, fontFamily);
     _rule.get(StyleParamKey::font_weight, fontWeight);
     _rule.get(StyleParamKey::font_style, fontStyle);
+    std::string fontKey = fontFamily + "_" + fontWeight + "_" + fontStyle;
+    {
+        auto fontContext = FontContext::GetInstance();
+        if (!fontContext->lock()) { return p; }
+
+        p.fontId = fontContext->addFont(fontFamily, fontWeight, fontStyle);
+
+        fontContext->unlock();
+        if(p.fontId < 0) { return p; }
+    }
+
     _rule.get(StyleParamKey::font_size, p.fontSize);
     _rule.get(StyleParamKey::font_fill, p.fill);
     _rule.get(StyleParamKey::offset, p.offset);
@@ -75,8 +87,6 @@ Parameters TextStyle::parseRule(const DrawRule& _rule) const {
     } else if (transform == "uppercase") {
         p.transform = TextTransform::uppercase;
     }
-
-    p.fontKey = fontFamily + "_" + fontWeight + "_" + fontStyle;
 
     /* Global operations done for fontsize and sdfblur */
     float emSize = p.fontSize / 16.f;

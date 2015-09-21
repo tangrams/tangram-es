@@ -43,7 +43,6 @@ struct SceneLoader {
                           std::unordered_set<std::string>& mixedStyles);
     static void loadLayer(const std::pair<Node, Node>& layer, Scene& scene);
     static void loadLight(const std::pair<Node, Node>& light, Scene& scene);
-    static void loadFont(Node fontProps);
     static void loadCameras(Node cameras, Scene& scene);
     static void loadStyleProps(Style& style, Node styleNode, Scene& scene);
     static void loadMaterial(Node matNode, Material& material, Scene& scene);
