@@ -50,12 +50,18 @@ public:
 
     const std::string& name() const { return m_name; }
 
+    virtual bool equals(const DataSource& _other) const {
+        return m_name == _other.m_name &&
+               m_urlTemplate == _other.m_urlTemplate;
+    }
+
     /* @_cacheSize: Set size of in-memory cache for tile data in bytes.
      * This cache holds unprocessed tile data for fast recreation of recently used tiles.
      */
     void setCacheSize(size_t _cacheSize);
 
     int32_t id() { return m_id; }
+
 
 protected:
 
