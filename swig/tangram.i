@@ -47,46 +47,11 @@ struct Properties {
     }
 }
 
-// %rename (set) *::operator=;
-// %rename (equals) *::operator==;
-
-%rename (set) Tangram::LngLat::operator=;
-%rename (equals) Tangram::LngLat::operator==;
-
-// Extend LngLat on the java side, using setLngLat extension method
-%typemap(javacode) Tangram::LngLat %{
-    public LngLat set(double lng, double lat) {
-         setLngLat(lng, lat);
-         return this;
-     }
-%}
-// Hide generated (extension) method in favor of this-returning java method
-%javamethodmodifiers Tangram::LngLat::setLngLat "private"
-
-// Include
-// - LngLat struct as is,
-// - ignore Range type
-%ignore Tangram::Range;
-%include "util/types.h"
-
-// Extend on the native side - cannot return self here though
-%extend Tangram::LngLat {
-    void setLngLat(double lng, double lat) {
-        $self->longitude = lng;
-        $self->latitude = lat;
-    }
-}
-
-// Create wrapper for Coordinates std::vector
-%template(Coordinates) std::vector<Tangram::LngLat>;
-// Add add() method for efficiency (without creating temporary LonLat)
-%extend std::vector<Tangram::LngLat> {
-    void add(double lng, double lat) {
-        $self->push_back({lng, lat});
-    }
-}
-
-%template(Polygon) std::vector<std::vector<Tangram::LngLat>>;
+// Include external description for
+// - LngLat
+// - Coordinates aka std::vector<LngLat>
+// - Polygon aka std::vector<Coordinates>
+%include "jni_geometry.i"
 
 // Include external description for
 // - Tags aka map<string,string>
