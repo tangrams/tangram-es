@@ -1,4 +1,5 @@
 #include "clientGeoJsonSource.h"
+#include "mapbox/geojsonvt/geojsonvt.hpp"
 #include "mapbox/geojsonvt/geojsonvt_convert.hpp"
 #include "mapbox/geojsonvt/geojsonvt_types.hpp"
 #include "platform.h"
@@ -27,6 +28,8 @@ ClientGeoJsonSource::ClientGeoJsonSource(const std::string& _name, const std::st
         addData(string);
     }
 }
+
+ClientGeoJsonSource::~ClientGeoJsonSource() {}
 
 void ClientGeoJsonSource::addData(const std::string& _data) {
 

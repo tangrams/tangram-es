@@ -1,7 +1,14 @@
 #pragma once
 
 #include "dataSource.h"
-#include "mapbox/geojsonvt/geojsonvt.hpp"
+
+namespace mapbox {
+namespace util {
+namespace geojsonvt {
+class GeoJSONVT;
+class TilePoint;
+class ProjectedFeature;
+}}}
 
 namespace Tangram {
 
@@ -12,6 +19,7 @@ class ClientGeoJsonSource : public DataSource {
 public:
 
     ClientGeoJsonSource(const std::string& _name, const std::string& _url);
+    ~ClientGeoJsonSource();
 
     void addData(const std::string& _data);
     void addPoint(double* _coords);
