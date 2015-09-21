@@ -5,6 +5,8 @@
 #include "platform.h"
 #include "util/geom.h"
 #include "data/propertyItem.h"
+#include "data/tileData.h"
+#include "tile/tile.h"
 
 using namespace mapbox::util;
 
@@ -16,7 +18,8 @@ const uint8_t indexMaxZoom = 18;
 const uint32_t indexMaxPoints = 100000;
 double tolerance = 1E-8;
 
-Point ClientGeoJsonSource::transformPoint(geojsonvt::TilePoint pt) const {
+// Transform a geojsonvt::TilePoint into the corresponding Tangram::Point
+Point transformPoint(geojsonvt::TilePoint pt) {
     return { pt.x / extent, 1. - pt.y / extent, 0 };
 }
 
