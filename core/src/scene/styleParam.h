@@ -42,12 +42,21 @@ enum class StyleParamKey : uint8_t {
 struct StyleParam {
     using Value = variant<none_type, bool, float, uint32_t, std::string, glm::vec2>;
 
-    StyleParam() : key(StyleParamKey::none), value(none_type{}) {};
+    StyleParam() :
+        key(StyleParamKey::none),
+        value(none_type{}) {};
+
     StyleParam(const std::string& _key, const std::string& _value);
 
     StyleParam(StyleParamKey _key, std::string _value) :
         key(_key),
         value(std::move(_value)) {}
+
+    StyleParam(StyleParamKey _key, Stops* _stops) :
+        key(_key),
+        value(none_type{}),
+        stops(_stops) {
+    }
 
     StyleParamKey key;
     Value value;
@@ -69,7 +78,9 @@ struct StyleParam {
 
     static Value parseString(StyleParamKey key, const std::string& _value);
 
-    static bool isColor(const std::string& _keyName);
+    static bool isColor(StyleParamKey _key);
+
+    static StyleParamKey getKey(const std::string& _key);
 };
 
 }

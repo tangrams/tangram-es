@@ -50,19 +50,25 @@ static const char* keyName(StyleParamKey key) {
 }
 
 
-
-StyleParam::StyleParam(const std::string& _key, const std::string& _value) {
-
+StyleParamKey StyleParam::getKey(const std::string& _key) {
     auto it = s_StyleParamMap.find(_key);
     if (it == s_StyleParamMap.end()) {
+        return StyleParamKey::none;
+    }
+    return it->second;
+}
+
+StyleParam::StyleParam(const std::string& _key, const std::string& _value) {
+    key = getKey(_key);
+    value = none_type{};
+
+    if (key == StyleParamKey::none) {
         logMsg("Unknown StyleParam %s:%s\n", _key.c_str(), _value.c_str());
-        key = StyleParamKey::none;
-        value = none_type{};
         return;
     }
-
-    key = it->second;
-    value = _value.empty() ? none_type{} : parseString(key, _value);
+    if (!_value.empty()) {
+        value = parseString(key, _value);
+    }
 }
 
 StyleParam::Value StyleParam::parseString(StyleParamKey key, const std::string& _value) {
@@ -308,10 +314,8 @@ bool StyleParam::parseFontSize(const std::string& _str, float& _pxSize) {
     return true;
 }
 
-bool StyleParam::isColor(const std::string &_keyName) {
-    auto it = s_StyleParamMap.find(_keyName);
-    if (it == s_StyleParamMap.end()) { return false; }
-    switch (it->second) {
+bool StyleParam::isColor(StyleParamKey _key) {
+    switch (_key) {
         case StyleParamKey::color:
         case StyleParamKey::outline_color:
         case StyleParamKey::font_fill:

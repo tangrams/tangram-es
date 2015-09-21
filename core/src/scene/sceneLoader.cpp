@@ -1030,18 +1030,24 @@ std::vector<StyleParam> SceneLoader::parseStyleParams(Node params, Scene& scene,
                      scene.functions().push_back(val);
                      out.push_back(std::move(param));
                  } else {
-                     out.push_back({ key, val });
+                     out.push_back(StyleParam{ key, val });
                  }
                  break;
             }
             case NodeType::Sequence: {
                 if (value[0].IsSequence()) {
-                    StyleParam p = { key, value[0][1].Scalar() }; // TODO ensure valid placeholder value
-                    scene.stops().push_back(Stops(value, StyleParam::isColor(key)));
-                    p.stops = &scene.stops().back();
-                    out.push_back(p);
+                    auto styleKey = StyleParam::getKey(key);
+                    if (styleKey != StyleParamKey::none) {
+
+                        scene.stops().push_back(Stops(value, StyleParam::isColor(styleKey)));
+
+                        out.push_back(StyleParam{ styleKey, &(scene.stops().back()) });
+                    } else {
+                        logMsg("Unknown style parameter %s\n", key.c_str());
+                    }
+
                 } else {
-                    out.push_back({ key, parseSequence(value) });
+                    out.push_back(StyleParam{ key, parseSequence(value) });
                 }
                 break;
             }

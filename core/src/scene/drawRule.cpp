@@ -85,10 +85,10 @@ void DrawRule::eval(const StyleContext& _ctx) {
             _ctx.evalStyle(param.function, param.key, param.value);
         }
         if (param.stops) {
-            if (param.value.is<float>()) {
-                param.value = param.stops->evalFloat(_ctx.getGlobalZoom());
-            } else if (param.value.is<uint32_t>()) {
+            if (StyleParam::isColor(param.key)) {
                 param.value = param.stops->evalColor(_ctx.getGlobalZoom());
+            } else {
+                param.value = param.stops->evalFloat(_ctx.getGlobalZoom());
             }
         }
     }
