@@ -74,7 +74,7 @@ void Builders::buildPolygon(const Polygon& _polygon, float _height, PolygonBuild
 
         if (_ctx.useTexCoords) {
             glm::vec2 uv(mapValue(coord.x, min.x, max.x, 0., 1.),
-                         mapValue(coord.y, min.y, max.y, 0., 1.));
+                         mapValue(coord.y, min.y, max.y, 1., 0.));
 
             _ctx.addVertex(coord, normal, uv);
         } else {
