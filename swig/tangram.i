@@ -42,6 +42,7 @@ struct Properties {
 
 // JNI Bindings for std::map<std::string,std::string>
 %include "std_map.i"
+
 namespace std {
 %template(Tags) map<string, string>;
 }
@@ -70,9 +71,9 @@ public:
     ClientGeoJsonSource(const std::string& _name, const std::string& _url);
 
     void addData(const std::string& _data);
-    void addPoint(double _coords[]);
-    void addLine(double _coords[], int _lineLength);
-    void addPoly(double _coords[], int _ringLengths[], int rings);
+    void addPoint(std::map<std::string,std::string> tags, double _coords[]);
+    void addLine(std::map<std::string,std::string> tags, double _coords[], int _lineLength);
+    void addPoly(std::map<std::string,std::string> tags, double _coords[], int _ringLengths[], int rings);
 
     virtual void clearData() override;
 
