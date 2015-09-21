@@ -68,8 +68,14 @@ public class Polygon {
   }
 
   public Coordinates get(int i) {
-    return new Coordinates(TangramJNI.Polygon_get(swigCPtr, this, i), false);
-  }
+    long cPtr = TangramJNI.Polygon_get(swigCPtr, this, i);
+    Coordinates ret = null;
+    if (cPtr != 0) {
+      ret = new Coordinates(cPtr, false);
+      ret.addReference(this);
+    }
+    return ret;
+}
 
   public void set(int i, Coordinates val) {
     TangramJNI.Polygon_set(swigCPtr, this, i, Coordinates.getCPtr(val), val);

@@ -35,6 +35,12 @@ public class Coordinates {
     }
   }
 
+  // Ensure that the GC doesn't collect any Polygon instance set from Java
+  private Object owner;
+  protected void addReference(Object obj) {
+    owner = obj;
+  }
+
   public Coordinates() {
     this(TangramJNI.new_Coordinates__SWIG_0(), true);
   }
@@ -68,8 +74,14 @@ public class Coordinates {
   }
 
   public LngLat get(int i) {
-    return new LngLat(TangramJNI.Coordinates_get(swigCPtr, this, i), false);
-  }
+    long cPtr = TangramJNI.Coordinates_get(swigCPtr, this, i);
+    LngLat ret = null;
+    if (cPtr != 0) {
+      ret = new LngLat(cPtr, false);
+      ret.addReference(this);
+    }
+    return ret;
+}
 
   public void set(int i, LngLat val) {
     TangramJNI.Coordinates_set(swigCPtr, this, i, LngLat.getCPtr(val), val);

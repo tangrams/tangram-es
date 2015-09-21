@@ -35,10 +35,16 @@ public class LngLat {
     }
   }
 
-    public LngLat set(double lng, double lat) {
-         setLngLat(lng, lat);
-         return this;
-     }
+  // Ensure that the GC doesn't collect any Polygon instance set from Java
+  private Object owner;
+  protected void addReference(Object obj) {
+    owner = obj;
+  }
+
+  public LngLat set(double lng, double lat) {
+    setLngLat(lng, lat);
+    return this;
+  }
 
   public LngLat() {
     this(TangramJNI.new_LngLat__SWIG_0(), true);
