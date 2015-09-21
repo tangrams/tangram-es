@@ -4,6 +4,9 @@
 #include "platform.h"
 #include "gl.h"
 
+#include <sys/types.h>
+#include <sys/stat.h>
+
 // Forward declaration
 void init_main_window();
 
@@ -176,12 +179,22 @@ int main(void) {
         return -1;
     }
 
+    struct stat sb;
+    if (stat(sceneFile, &sb) == -1) {
+        logMsg("scene file not found!");
+        exit(EXIT_FAILURE);
+    }
+    auto last_mod = sb.st_mtime;
+
     init_main_window();
 
     // Initialize cURL
     curl_global_init(CURL_GLOBAL_DEFAULT);
 
     double lastTime = glfwGetTime();
+
+    setContinuousRendering(false);
+    glfwSwapInterval(0);
 
     // Loop until the user closes the window
     while (!glfwWindowShouldClose(main_window)) {
@@ -204,6 +217,12 @@ int main(void) {
             glfwPollEvents();
         } else {
             glfwWaitEvents();
+        }
+        if (stat(sceneFile, &sb) == 0) {
+            if (last_mod != sb.st_mtime) {
+                Tangram::loadScene(sceneFile);
+                last_mod = sb.st_mtime;
+            }
         }
     }
 
