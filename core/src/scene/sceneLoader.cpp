@@ -470,43 +470,60 @@ void SceneLoader::loadStyleProps(Style& style, YAML::Node styleNode, Scene& scen
     }
 }
 
-Node SceneLoader::propMerge(const std::string& propStr, const Mixes& mixes) {
+Node SceneLoader::propMerge(const std::string& propName, const Mixes& mixes) {
 
-    Node node;
+    Node result;
 
-    if (propStr == "extensions" || propStr == "blocks") {
+    if (propName == "extensions" || propName == "blocks") {
          // handled by explicit methods
-        return node;
+        return result;
     }
 
     std::vector<std::string> mapTags;
     std::unordered_map<std::string, Mixes> mapMixes;
 
-    for (const auto& mixNode: mixes) {
-        if (Node propNode = mixNode[propStr]) {
-            if (propNode.IsScalar() && propNode.as<std::string>() == "true") {
-                // OR Properties
-                node = propNode;
-                break;
-            } else if (propNode.IsScalar() || propNode.IsSequence()) {
+    for (const auto& mixNode : mixes) {
+        Node propValue = mixNode[propName];
+        if (!propValue) { continue; }
+
+        switch (propValue.Type()) {
+        case NodeType::Scalar:
+            if (propValue.as<std::string>() == "true") {
+                result = propValue;
+                // NB: Boolean are or'ed so we can leave the loop
+                // when at least one value is 'true'.
+                goto endLoop;
+            } else  {
                 // Overwrite Properties
-                node = propNode;
-            } else { // Map...
-                // Reset previous scalar/sequence node
-                node.reset();
-                for (const auto& tag : propNode) {
-                    auto tagName = tag.first.as<std::string>();
-                    // Deep Merge for all Map Props
-                    if (mapMixes.find(tagName) == mapMixes.end()) {
-                        mapTags.push_back(tagName);
-                    }
-                    mapMixes[tagName].push_back(propNode);
-                }
+                result = propValue;
             }
+            break;
+
+        case NodeType::Sequence:
+            // Overwrite Properties
+            result = propValue;
+            break;
+
+        case NodeType::Map:
+            // Reset previous scalar/sequence node
+            result.reset();
+            for (const auto& tag : propValue) {
+                auto tagName = tag.first.as<std::string>();
+                // Deep Merge for all Map Props
+                if (mapMixes.find(tagName) == mapMixes.end()) {
+                    mapTags.push_back(tagName);
+                }
+                mapMixes[tagName].push_back(propValue);
+            }
+            break;
+        default:
+            logMsg("Scene: Cannot merge property:\n'%s'\n", Dump(propValue).c_str());
+            break;
         }
     }
 
-    if (node.IsScalar() || node.IsSequence()) {
+endLoop:
+    if (result.IsScalar() || result.IsSequence()) {
         mapMixes.clear();
         mapTags.clear();
     }
@@ -514,27 +531,38 @@ Node SceneLoader::propMerge(const std::string& propStr, const Mixes& mixes) {
     // Recursively merge map nodes from this propStr node
     for (auto& mapTag : mapTags) {
         Node n = propMerge(mapTag, mapMixes[mapTag]);
-        node[mapTag] = n;
+        result[mapTag] = n;
     }
 
-    return node;
+    return result;
 }
 
 Node SceneLoader::shaderBlockMerge(const Mixes& mixes) {
 
     Node node;
     for (const auto& mixNode : mixes) {
-        if (Node shaderNode = mixNode["shaders"]) {
-            if (Node blocks = shaderNode["blocks"]) {
-                for (const auto& block : blocks) {
-                    std::string blockName = block.first.as<std::string>();
-                    std::string value = block.second.as<std::string>();
-                    if (node[blockName]) {
-                        node[blockName] = node[blockName].as<std::string>() + "\n" + value;
-                    } else {
-                        node[blockName] = value;
-                    }
-                }
+        Node shaderNode = mixNode["shaders"];
+        if (!shaderNode) { continue; }
+        if (!shaderNode.IsMap()) {
+            logMsg("Scene: Expected map for 'shader':\n'%s'\n",
+                Dump(shaderNode).c_str());
+            continue;
+        }
+        Node blocks = shaderNode["blocks"];
+        if (!blocks) { continue; }
+        if (!blocks.IsMap()) {
+            logMsg("Scene: Expected map for 'blocks':\n'%s'\n",
+                Dump(shaderNode).c_str());
+            continue;
+        }
+
+        for (const auto& block : blocks) {
+            std::string blockName = block.first.as<std::string>();
+            std::string value = block.second.as<std::string>();
+            if (node[blockName]) {
+                node[blockName] = node[blockName].as<std::string>() + "\n" + value;
+            } else {
+                node[blockName] = value;
             }
         }
     }
@@ -548,32 +576,37 @@ Node SceneLoader::shaderExtMerge(const Mixes& mixes) {
 
     for (const auto& mixNode : mixes) {
         Node shaderNode = mixNode["shaders"];
+        if (!shaderNode) { continue; }
+        if (!shaderNode.IsMap()) {
+            logMsg("Scene: Expected map for 'shader':\n%s\n",
+                Dump(shaderNode).c_str());
+            continue;
+        }
         Node extNode = shaderNode["extensions"];
+        if (!extNode) { continue; }
 
-        if (shaderNode && extNode) {
-            switch(extNode.Type()) {
-            case NodeType::Scalar: {
-                auto val = extNode.as<std::string>();
+        switch(extNode.Type()) {
+        case NodeType::Scalar: {
+            auto val = extNode.as<std::string>();
+            if (uniqueList.find(val) == uniqueList.end()) {
+                node.push_back(extNode);
+                uniqueList.insert(val);
+            }
+            break;
+        }
+        case NodeType::Sequence: {
+            for (const auto& n : extNode) {
+                auto val = n.as<std::string>();
                 if (uniqueList.find(val) == uniqueList.end()) {
-                    node.push_back(extNode);
+                    node.push_back(n);
                     uniqueList.insert(val);
                 }
-                break;
             }
-            case NodeType::Sequence: {
-                for (const auto& n : extNode) {
-                    auto val = n.as<std::string>();
-                    if (uniqueList.find(val) == uniqueList.end()) {
-                        node.push_back(n);
-                        uniqueList.insert(val);
-                    }
-                }
-                break;
-            }
-            default:
-                logMsg("Scene: Expected scalar or sequence value for extensions node '%s'.\n",
-                       Dump(node).c_str());
-            }
+            break;
+        }
+        default:
+            logMsg("Scene: Expected scalar or sequence value for 'extensions' node:\n%s\n",
+                   Dump(node).c_str());
         }
     }
 
@@ -593,10 +626,14 @@ Node SceneLoader::mixStyle(const Mixes& mixes) {
     Node shaderNode = styleNode["shaders"];
 
     Node shaderExtNode = shaderExtMerge(mixes);
-    if (!shaderExtNode.IsNull()) { shaderNode["extensions"] = shaderExtNode; }
+    if (!shaderExtNode.IsNull()) {
+        shaderNode["extensions"] = shaderExtNode;
+    }
 
     Node shaderBlocksNode = shaderBlockMerge(mixes);
-    if (!shaderBlocksNode.IsNull()) { shaderNode["blocks"] = shaderBlocksNode; }
+    if (!shaderBlocksNode.IsNull()) {
+        shaderNode["blocks"] = shaderBlocksNode;
+    }
 
     return styleNode;
 }
