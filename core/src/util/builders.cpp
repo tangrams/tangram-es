@@ -1,6 +1,5 @@
 #include "builders.h"
 
-#include "aabb.h"
 #include "geom.h"
 #include "glm/gtx/rotate_vector.hpp"
 #include "platform.h"
@@ -50,15 +49,17 @@ void Builders::buildPolygon(const Polygon& _polygon, float _height, PolygonBuild
         }
     }
 
-    isect2d::AABB bbox;
+    glm::vec2 min, max;
 
     if (_ctx.useTexCoords) {
-        if (_polygon.size() > 0 && _polygon[0].size() > 0) {
-            // initialize the axis-aligned bounding box of the polygon
-            bbox = isect2d::AABB(_polygon[0][0].x, _polygon[0][0].y, 0, 0);
-        }
+        min = glm::vec2(std::numeric_limits<float>::max());
+        max = glm::vec2(std::numeric_limits<float>::min());
+
         for (auto& p : _polygon[0]) {
-            bbox.include(p.x, p.y);
+            min.x = std::min(min.x, p.x);
+            min.y = std::min(min.y, p.y);
+            max.x = std::max(max.x, p.x);
+            max.y = std::max(max.y, p.y);
         }
     }
 
@@ -69,15 +70,16 @@ void Builders::buildPolygon(const Polygon& _polygon, float _height, PolygonBuild
     _ctx.sizeHint(_ctx.numVertices);
 
     for (auto& p : earcut.vertices) {
-        glm::vec2 uv(0);
         glm::vec3 coord(p[0], p[1], _height);
 
         if (_ctx.useTexCoords) {
-            float u = mapValue(coord.x, bbox.m_min.x, bbox.m_max.x, 0., 1.);
-            float v = mapValue(coord.y, bbox.m_min.y, bbox.m_max.y, 0., 1.);
-            uv = glm::vec2(u, v);
+            glm::vec2 uv(mapValue(coord.x, min.x, max.x, 0., 1.),
+                         mapValue(coord.y, min.y, max.y, 0., 1.));
+
+            _ctx.addVertex(coord, normal, uv);
+        } else {
+            _ctx.addVertex(coord, normal, glm::vec2(0));
         }
-        _ctx.addVertex(coord, normal, uv);
     }
 }
 
