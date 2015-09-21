@@ -17,6 +17,16 @@ public class tangramJNI {
   public final static native void Properties_add__SWIG_0(long jarg1, Properties jarg1_, String jarg2, String jarg3);
   public final static native void Properties_add__SWIG_1(long jarg1, Properties jarg1_, String jarg2, float jarg3);
   public final static native void delete_Properties(long jarg1);
+  public final static native long new_Tags__SWIG_0();
+  public final static native long new_Tags__SWIG_1(long jarg1, Tags jarg1_);
+  public final static native long Tags_size(long jarg1, Tags jarg1_);
+  public final static native boolean Tags_empty(long jarg1, Tags jarg1_);
+  public final static native void Tags_clear(long jarg1, Tags jarg1_);
+  public final static native String Tags_get(long jarg1, Tags jarg1_, String jarg2);
+  public final static native void Tags_set(long jarg1, Tags jarg1_, String jarg2, String jarg3);
+  public final static native void Tags_del(long jarg1, Tags jarg1_, String jarg2);
+  public final static native boolean Tags_has_key(long jarg1, Tags jarg1_, String jarg2);
+  public final static native void delete_Tags(long jarg1);
   public final static native void delete_DataSource(long jarg1);
   public final static native long new_ClientGeoJsonSource(String jarg1, String jarg2);
   public final static native void ClientGeoJsonSource_addData(long jarg1, ClientGeoJsonSource jarg1_, String jarg2);
