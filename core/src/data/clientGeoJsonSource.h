@@ -4,6 +4,8 @@
 #include "data/tileData.h"
 #include "util/types.h"
 
+#include <map>
+
 namespace mapbox {
 namespace util {
 namespace geojsonvt {
@@ -38,9 +40,6 @@ public:
 protected:
 
     virtual std::shared_ptr<TileData> parse(const Tile& _tile, std::vector<char>& _rawData) const override;
-
-    // Transform a geojsonvt::TilePoint into the corresponding Tangram::Point
-    Point transformPoint(mapbox::util::geojsonvt::TilePoint pt) const;
 
     std::unique_ptr<GeoJSONVT> m_store;
     std::vector<mapbox::util::geojsonvt::ProjectedFeature> m_features;
