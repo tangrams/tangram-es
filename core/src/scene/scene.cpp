@@ -3,9 +3,13 @@
 #include "platform.h"
 #include "style/style.h"
 
+#include <atomic>
+
 namespace Tangram {
 
-Scene::Scene() : id(0) {}
+static std::atomic<int32_t> s_serial;
+
+Scene::Scene() : id(s_serial++) {}
 Scene::~Scene() {}
 
 const Style* Scene::findStyle(const std::string &_name) const {
