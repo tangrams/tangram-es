@@ -58,11 +58,11 @@ void ClientGeoJsonSource::clearData() {
 
 }
 
-void ClientGeoJsonSource::addPoint(double _coords[]) {
+void ClientGeoJsonSource::addPoint(Tags _tags, double _coords[]) {
 
     auto container = geojsonvt::Convert::project({ geojsonvt::LonLat(_coords[0], _coords[1]) }, tolerance);
 
-    auto feature = geojsonvt::Convert::create(geojsonvt::Tags(),
+    auto feature = geojsonvt::Convert::create(_tags,
                                               geojsonvt::ProjectedFeatureType::Point,
                                               container.members);
 
@@ -71,7 +71,7 @@ void ClientGeoJsonSource::addPoint(double _coords[]) {
 
 }
 
-void ClientGeoJsonSource::addLine(double _coords[], int _lineLength) {
+void ClientGeoJsonSource::addLine(Tags _tags, double _coords[], int _lineLength) {
     
     std::vector<geojsonvt::LonLat> line(_lineLength, { 0, 0 });
     for (int i = 0; i < _lineLength; i++) {
@@ -80,7 +80,7 @@ void ClientGeoJsonSource::addLine(double _coords[], int _lineLength) {
     
     std::vector<geojsonvt::ProjectedGeometry> geometry = { geojsonvt::Convert::project(line, tolerance) };
 
-    auto feature = geojsonvt::Convert::create(geojsonvt::Tags(),
+    auto feature = geojsonvt::Convert::create(_tags,
                                               geojsonvt::ProjectedFeatureType::LineString,
                                               geometry);
     
@@ -88,7 +88,7 @@ void ClientGeoJsonSource::addLine(double _coords[], int _lineLength) {
     m_store = std::make_unique<GeoJSONVT>(m_features, maxZoom, indexMaxZoom, indexMaxPoints, tolerance);
 }
 
-void ClientGeoJsonSource::addPoly(double _coords[], int _ringLengths[], int _rings) {
+void ClientGeoJsonSource::addPoly(Tags _tags, double _coords[], int _ringLengths[], int _rings) {
 
     geojsonvt::ProjectedGeometryContainer geometry;
     double* ringCoords = _coords;
@@ -102,7 +102,7 @@ void ClientGeoJsonSource::addPoly(double _coords[], int _ringLengths[], int _rin
         ringCoords += 2 * ringLength;
     }
 
-    auto feature = geojsonvt::Convert::create(geojsonvt::Tags(),
+    auto feature = geojsonvt::Convert::create(_tags,
                                               geojsonvt::ProjectedFeatureType::Polygon,
                                               geometry);
 

@@ -296,7 +296,7 @@ void addSourcePoint(int _sourceId, double* _coords) {
     std::lock_guard<std::mutex> lock(m_tilesMutex);
     auto source = m_tileManager->getClientSourceById(_sourceId);
     if (source) {
-        source->addPoint(_coords);
+        source->addPoint({}, _coords);
         m_tileManager->clearTileSet(_sourceId);
     }
     requestRender();
@@ -307,7 +307,7 @@ void addSourceLine(int _sourceId, double* _coords, int _lineLength) {
     std::lock_guard<std::mutex> lock(m_tilesMutex);
     auto source = m_tileManager->getClientSourceById(_sourceId);
     if (source) {
-        source->addLine(_coords, _lineLength);
+        source->addLine({},_coords, _lineLength);
         m_tileManager->clearTileSet(_sourceId);
     }
     requestRender();
@@ -318,7 +318,7 @@ void addSourcePoly(int _sourceId, double* _coords, int* _ringLengths, int _rings
     std::lock_guard<std::mutex> lock(m_tilesMutex);
     auto source = m_tileManager->getClientSourceById(_sourceId);
     if (source) {
-        source->addPoly(_coords, _ringLengths, _rings);
+        source->addPoly({},_coords, _ringLengths, _rings);
         m_tileManager->clearTileSet(_sourceId);
     }
     requestRender();

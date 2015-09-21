@@ -45,16 +45,16 @@ public class ClientGeoJsonSource extends DataSource {
     tangramJNI.ClientGeoJsonSource_addData(swigCPtr, this, _data);
   }
 
-  public void addPoint(double[] _coords) {
-    tangramJNI.ClientGeoJsonSource_addPoint(swigCPtr, this, _coords);
+  public void addPoint(Tags tags, double[] _coords) {
+    tangramJNI.ClientGeoJsonSource_addPoint(swigCPtr, this, Tags.getCPtr(tags), tags, _coords);
   }
 
-  public void addLine(double[] _coords, int _lineLength) {
-    tangramJNI.ClientGeoJsonSource_addLine(swigCPtr, this, _coords, _lineLength);
+  public void addLine(Tags tags, double[] _coords, int _lineLength) {
+    tangramJNI.ClientGeoJsonSource_addLine(swigCPtr, this, Tags.getCPtr(tags), tags, _coords, _lineLength);
   }
 
-  public void addPoly(double[] _coords, int[] _ringLengths, int rings) {
-    tangramJNI.ClientGeoJsonSource_addPoly(swigCPtr, this, _coords, _ringLengths, rings);
+  public void addPoly(Tags tags, double[] _coords, int[] _ringLengths, int rings) {
+    tangramJNI.ClientGeoJsonSource_addPoly(swigCPtr, this, Tags.getCPtr(tags), tags, _coords, _ringLengths, rings);
   }
 
   public void clearData() {

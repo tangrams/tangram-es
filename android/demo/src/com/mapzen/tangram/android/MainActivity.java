@@ -15,6 +15,7 @@ import com.mapzen.tangram.MapView;
 import com.mapzen.tangram.Properties;
 import com.mapzen.tangram.tangram;
 import com.mapzen.tangram.ClientGeoJsonSource;
+import com.mapzen.tangram.Tags;
 
 import com.squareup.okhttp.Callback;
 
@@ -44,7 +45,8 @@ public class MainActivity extends Activity {
 
         ClientGeoJsonSource source = new ClientGeoJsonSource("touch", "");
         tangram.addDataSource(source);
-        source.addLine(new double[] { 8.8, 53.1, 8.85, 53.05 }, 2);
+        final Tags tags = new Tags();
+        source.addLine(tags, new double[] { 8.8, 53.1, 8.85, 53.05 }, 2);
 
         final LngLat lastTappedPoint = new LngLat();
 

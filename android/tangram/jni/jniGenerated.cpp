@@ -864,67 +864,94 @@ SWIGEXPORT void JNICALL Java_com_mapzen_tangram_tangramJNI_ClientGeoJsonSource_1
 }
 
 
-SWIGEXPORT void JNICALL Java_com_mapzen_tangram_tangramJNI_ClientGeoJsonSource_1addPoint(JNIEnv *jenv, jclass jcls, jlong jarg1, jobject jarg1_, jdoubleArray jarg2) {
+SWIGEXPORT void JNICALL Java_com_mapzen_tangram_tangramJNI_ClientGeoJsonSource_1addPoint(JNIEnv *jenv, jclass jcls, jlong jarg1, jobject jarg1_, jlong jarg2, jobject jarg2_, jdoubleArray jarg3) {
   Tangram::ClientGeoJsonSource *arg1 = (Tangram::ClientGeoJsonSource *) 0 ;
-  double *arg2 ;
+  std::map< std::string,std::string > arg2 ;
+  double *arg3 ;
   std::shared_ptr< Tangram::ClientGeoJsonSource > *smartarg1 = 0 ;
-  jdouble *jarr2 ;
+  std::map< std::string,std::string > *argp2 ;
+  jdouble *jarr3 ;
 
   (void)jenv;
   (void)jcls;
   (void)jarg1_;
+  (void)jarg2_;
 
   smartarg1 = *(std::shared_ptr<  Tangram::ClientGeoJsonSource > **)&jarg1;
   arg1 = (Tangram::ClientGeoJsonSource *)(smartarg1 ? smartarg1->get() : 0);
-  if (!SWIG_JavaArrayInDouble(jenv, &jarr2, (double **)&arg2, jarg2)) return ;
-  (arg1)->addPoint(arg2);
-  SWIG_JavaArrayArgoutDouble(jenv, jarr2, (double *)arg2, jarg2);
+  argp2 = *(std::map< std::string,std::string > **)&jarg2;
+  if (!argp2) {
+    SWIG_JavaThrowException(jenv, SWIG_JavaNullPointerException, "Attempt to dereference null std::map< std::string,std::string >");
+    return ;
+  }
+  arg2 = *argp2;
+  if (!SWIG_JavaArrayInDouble(jenv, &jarr3, (double **)&arg3, jarg3)) return ;
+  (arg1)->addPoint(arg2,arg3);
+  SWIG_JavaArrayArgoutDouble(jenv, jarr3, (double *)arg3, jarg3);
 
 }
 
 
-SWIGEXPORT void JNICALL Java_com_mapzen_tangram_tangramJNI_ClientGeoJsonSource_1addLine(JNIEnv *jenv, jclass jcls, jlong jarg1, jobject jarg1_, jdoubleArray jarg2, jint jarg3) {
+SWIGEXPORT void JNICALL Java_com_mapzen_tangram_tangramJNI_ClientGeoJsonSource_1addLine(JNIEnv *jenv, jclass jcls, jlong jarg1, jobject jarg1_, jlong jarg2, jobject jarg2_, jdoubleArray jarg3, jint jarg4) {
   Tangram::ClientGeoJsonSource *arg1 = (Tangram::ClientGeoJsonSource *) 0 ;
-  double *arg2 ;
-  int arg3 ;
-  std::shared_ptr< Tangram::ClientGeoJsonSource > *smartarg1 = 0 ;
-  jdouble *jarr2 ;
-
-  (void)jenv;
-  (void)jcls;
-  (void)jarg1_;
-
-  smartarg1 = *(std::shared_ptr<  Tangram::ClientGeoJsonSource > **)&jarg1;
-  arg1 = (Tangram::ClientGeoJsonSource *)(smartarg1 ? smartarg1->get() : 0);
-  if (!SWIG_JavaArrayInDouble(jenv, &jarr2, (double **)&arg2, jarg2)) return ;
-  arg3 = (int)jarg3;
-  (arg1)->addLine(arg2,arg3);
-  SWIG_JavaArrayArgoutDouble(jenv, jarr2, (double *)arg2, jarg2);
-
-}
-
-
-SWIGEXPORT void JNICALL Java_com_mapzen_tangram_tangramJNI_ClientGeoJsonSource_1addPoly(JNIEnv *jenv, jclass jcls, jlong jarg1, jobject jarg1_, jdoubleArray jarg2, jintArray jarg3, jint jarg4) {
-  Tangram::ClientGeoJsonSource *arg1 = (Tangram::ClientGeoJsonSource *) 0 ;
-  double *arg2 ;
-  int *arg3 ;
+  std::map< std::string,std::string > arg2 ;
+  double *arg3 ;
   int arg4 ;
   std::shared_ptr< Tangram::ClientGeoJsonSource > *smartarg1 = 0 ;
-  jdouble *jarr2 ;
-  jint *jarr3 ;
+  std::map< std::string,std::string > *argp2 ;
+  jdouble *jarr3 ;
 
   (void)jenv;
   (void)jcls;
   (void)jarg1_;
+  (void)jarg2_;
 
   smartarg1 = *(std::shared_ptr<  Tangram::ClientGeoJsonSource > **)&jarg1;
   arg1 = (Tangram::ClientGeoJsonSource *)(smartarg1 ? smartarg1->get() : 0);
-  if (!SWIG_JavaArrayInDouble(jenv, &jarr2, (double **)&arg2, jarg2)) return ;
-  if (!SWIG_JavaArrayInInt(jenv, &jarr3, (int **)&arg3, jarg3)) return ;
+  argp2 = *(std::map< std::string,std::string > **)&jarg2;
+  if (!argp2) {
+    SWIG_JavaThrowException(jenv, SWIG_JavaNullPointerException, "Attempt to dereference null std::map< std::string,std::string >");
+    return ;
+  }
+  arg2 = *argp2;
+  if (!SWIG_JavaArrayInDouble(jenv, &jarr3, (double **)&arg3, jarg3)) return ;
   arg4 = (int)jarg4;
-  (arg1)->addPoly(arg2,arg3,arg4);
-  SWIG_JavaArrayArgoutDouble(jenv, jarr2, (double *)arg2, jarg2);
-  SWIG_JavaArrayArgoutInt(jenv, jarr3, (int *)arg3, jarg3);
+  (arg1)->addLine(arg2,arg3,arg4);
+  SWIG_JavaArrayArgoutDouble(jenv, jarr3, (double *)arg3, jarg3);
+
+}
+
+
+SWIGEXPORT void JNICALL Java_com_mapzen_tangram_tangramJNI_ClientGeoJsonSource_1addPoly(JNIEnv *jenv, jclass jcls, jlong jarg1, jobject jarg1_, jlong jarg2, jobject jarg2_, jdoubleArray jarg3, jintArray jarg4, jint jarg5) {
+  Tangram::ClientGeoJsonSource *arg1 = (Tangram::ClientGeoJsonSource *) 0 ;
+  std::map< std::string,std::string > arg2 ;
+  double *arg3 ;
+  int *arg4 ;
+  int arg5 ;
+  std::shared_ptr< Tangram::ClientGeoJsonSource > *smartarg1 = 0 ;
+  std::map< std::string,std::string > *argp2 ;
+  jdouble *jarr3 ;
+  jint *jarr4 ;
+
+  (void)jenv;
+  (void)jcls;
+  (void)jarg1_;
+  (void)jarg2_;
+
+  smartarg1 = *(std::shared_ptr<  Tangram::ClientGeoJsonSource > **)&jarg1;
+  arg1 = (Tangram::ClientGeoJsonSource *)(smartarg1 ? smartarg1->get() : 0);
+  argp2 = *(std::map< std::string,std::string > **)&jarg2;
+  if (!argp2) {
+    SWIG_JavaThrowException(jenv, SWIG_JavaNullPointerException, "Attempt to dereference null std::map< std::string,std::string >");
+    return ;
+  }
+  arg2 = *argp2;
+  if (!SWIG_JavaArrayInDouble(jenv, &jarr3, (double **)&arg3, jarg3)) return ;
+  if (!SWIG_JavaArrayInInt(jenv, &jarr4, (int **)&arg4, jarg4)) return ;
+  arg5 = (int)jarg5;
+  (arg1)->addPoly(arg2,arg3,arg4,arg5);
+  SWIG_JavaArrayArgoutDouble(jenv, jarr3, (double *)arg3, jarg3);
+  SWIG_JavaArrayArgoutInt(jenv, jarr4, (int *)arg4, jarg4);
 
 
 }

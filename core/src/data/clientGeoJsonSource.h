@@ -13,6 +13,7 @@ class ProjectedFeature;
 namespace Tangram {
 
 using GeoJSONVT = mapbox::util::geojsonvt::GeoJSONVT;
+using Tags = std::map<std::string, std::string>;
 
 class ClientGeoJsonSource : public DataSource {
 
@@ -22,9 +23,9 @@ public:
     ~ClientGeoJsonSource();
 
     void addData(const std::string& _data);
-    void addPoint(double _coords[]);
-    void addLine(double _coords[], int _lineLength);
-    void addPoly(double _coords[], int _ringLengths[], int rings);
+    void addPoint(Tags _tags, double _coords[]);
+    void addLine(Tags _tags, double _coords[], int _lineLength);
+    void addPoly(Tags _tags, double _coords[], int _ringLengths[], int rings);
 
     virtual bool loadTileData(std::shared_ptr<TileTask>&& _task, TileTaskCb _cb) override;
     virtual bool getTileData(std::shared_ptr<TileTask>& _task) override;

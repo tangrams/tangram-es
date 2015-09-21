@@ -30,9 +30,9 @@ public class tangramJNI {
   public final static native void delete_DataSource(long jarg1);
   public final static native long new_ClientGeoJsonSource(String jarg1, String jarg2);
   public final static native void ClientGeoJsonSource_addData(long jarg1, ClientGeoJsonSource jarg1_, String jarg2);
-  public final static native void ClientGeoJsonSource_addPoint(long jarg1, ClientGeoJsonSource jarg1_, double[] jarg2);
-  public final static native void ClientGeoJsonSource_addLine(long jarg1, ClientGeoJsonSource jarg1_, double[] jarg2, int jarg3);
-  public final static native void ClientGeoJsonSource_addPoly(long jarg1, ClientGeoJsonSource jarg1_, double[] jarg2, int[] jarg3, int jarg4);
+  public final static native void ClientGeoJsonSource_addPoint(long jarg1, ClientGeoJsonSource jarg1_, long jarg2, Tags jarg2_, double[] jarg3);
+  public final static native void ClientGeoJsonSource_addLine(long jarg1, ClientGeoJsonSource jarg1_, long jarg2, Tags jarg2_, double[] jarg3, int jarg4);
+  public final static native void ClientGeoJsonSource_addPoly(long jarg1, ClientGeoJsonSource jarg1_, long jarg2, Tags jarg2_, double[] jarg3, int[] jarg4, int jarg5);
   public final static native void ClientGeoJsonSource_clearData(long jarg1, ClientGeoJsonSource jarg1_);
   public final static native void delete_ClientGeoJsonSource(long jarg1);
   public final static native int addDataSource(long jarg1, DataSource jarg1_);
