@@ -35,4 +35,12 @@ public class DataSource {
     }
   }
 
+  public void update() {
+    tangramJNI.DataSource_update(swigCPtr, this);
+  }
+
+  public void clear() {
+    tangramJNI.DataSource_clear(swigCPtr, this);
+  }
+
 }

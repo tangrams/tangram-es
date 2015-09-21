@@ -21,6 +21,7 @@ import com.squareup.okhttp.Callback;
 
 import java.io.File;
 import java.util.Arrays;
+import java.lang.Math;
 
 public class MainActivity extends Activity {
 
@@ -43,22 +44,24 @@ public class MainActivity extends Activity {
         mapController.setMapZoom(16);
         mapController.setMapPosition(-74.00976419448854, 40.70532700869127);
 
-        ClientGeoJsonSource source = new ClientGeoJsonSource("touch", "");
-        tangram.addDataSource(source);
+        final ClientGeoJsonSource touchMarkers = new ClientGeoJsonSource("touch", "");
+        tangram.addDataSource(touchMarkers);
         final Tags tags = new Tags();
-        source.addLine(tags, new double[] { 8.8, 53.1, 8.85, 53.05 }, 2);
 
         final LngLat lastTappedPoint = new LngLat();
-
+        final String colors[] = {"blue", "red", "green" };
         mapController.setTapGestureListener(new View.OnGenericMotionListener() {
             @Override
             public boolean onGenericMotion(View v, MotionEvent event) {
                 LngLat tapPoint = mapController.coordinatesAtScreenPosition(event.getX(), event.getY());
-                if (touchMarkers == null) {
-                    touchMarkers = new MapData("touch");
-                }
+
                 if (lastTappedPoint.longitude != 0 && lastTappedPoint.latitude != 0) {
-                    touchMarkers.addLine(Arrays.asList(tapPoint, lastTappedPoint));
+                    tags.set("color", colors[(int)(Math.random() * 2.0 + 0.5)] );
+                    touchMarkers.addLine(tags, new double[] {
+                            tapPoint.longitude, tapPoint.latitude,
+                            lastTappedPoint.longitude, lastTappedPoint.latitude}, 2);
+
+                    touchMarkers.update();
                 }
                 lastTappedPoint.set(tapPoint);
 

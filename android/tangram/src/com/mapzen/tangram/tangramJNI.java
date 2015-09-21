@@ -27,6 +27,8 @@ public class tangramJNI {
   public final static native void Tags_del(long jarg1, Tags jarg1_, String jarg2);
   public final static native boolean Tags_has_key(long jarg1, Tags jarg1_, String jarg2);
   public final static native void delete_Tags(long jarg1);
+  public final static native void DataSource_update(long jarg1, DataSource jarg1_);
+  public final static native void DataSource_clear(long jarg1, DataSource jarg1_);
   public final static native void delete_DataSource(long jarg1);
   public final static native long new_ClientGeoJsonSource(String jarg1, String jarg2);
   public final static native void ClientGeoJsonSource_addData(long jarg1, ClientGeoJsonSource jarg1_, String jarg2);
@@ -36,5 +38,6 @@ public class tangramJNI {
   public final static native void ClientGeoJsonSource_clearData(long jarg1, ClientGeoJsonSource jarg1_);
   public final static native void delete_ClientGeoJsonSource(long jarg1);
   public final static native int addDataSource(long jarg1, DataSource jarg1_);
+  public final static native void clearDataSource(long jarg1, DataSource jarg1_, boolean jarg2, boolean jarg3);
   public final static native long ClientGeoJsonSource_SWIGSmartPtrUpcast(long jarg1);
 }

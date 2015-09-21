@@ -48,6 +48,7 @@ namespace std {
 }
 
 %{
+#include "tangram.h"
 #include "data/dataSource.h"
 #include "data/clientGeoJsonSource.h"
 %}
@@ -80,10 +81,16 @@ public:
 };
 } // namespace
 
-%{
-#include "tangram.h"
-%}
+%extend Tangram::DataSource {
+    void update() {
+        Tangram::clearDataSource(*($self), false, true);
+    }
+    void clear() {
+        Tangram::clearDataSource(*($self), true, true);
+    }
+}
 
 namespace Tangram {
 int addDataSource(std::shared_ptr<Tangram::DataSource> _source);
+void clearDataSource(DataSource& _source, bool _data, bool _tiles);
 }
