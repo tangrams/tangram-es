@@ -38,6 +38,7 @@ PolylineStyle::Parameters PolylineStyle::parseRule(const DrawRule& _rule) const 
     uint32_t cap = 0, join = 0;
 
     _rule.get(StyleParamKey::order, p.order);
+    _rule.get(StyleParamKey::extrude, p.extrude);
     _rule.get(StyleParamKey::color, p.color);
     _rule.get(StyleParamKey::width, p.width);
     _rule.get(StyleParamKey::cap, cap);
@@ -56,6 +57,12 @@ PolylineStyle::Parameters PolylineStyle::parseRule(const DrawRule& _rule) const 
     }
 
     return p;
+}
+
+void PolylineStyle::buildPolygon(const Polygon& _poly, const DrawRule& _rule, const Properties& _props, VboMesh& _mesh, Tile& _tile) const {
+    for (const auto& line : _poly) {
+        buildLine(line, _rule, _props, _mesh, _tile);
+    }
 }
 
 void PolylineStyle::buildLine(const Line& _line, const DrawRule& _rule, const Properties& _props, VboMesh& _mesh, Tile& _tile) const {
@@ -85,12 +92,26 @@ void PolylineStyle::buildLine(const Line& _line, const DrawRule& _rule, const Pr
         abgr = abgr << (_tile.getID().z % 6);
     }
 
+    float height = 0.0f;
+    auto& extrude = params.extrude;
+
+    if (extrude[0] != 0.0f || extrude[1] != 0.0f) {
+        const static std::string key_height("height");
+
+        height = _props.getNumeric(key_height) * _tile.getInverseScale();
+        if (std::isnan(extrude[1])) {
+            if (!std::isnan(extrude[0])) {
+                height = extrude[0];
+            }
+        } else { height = extrude[1]; }
+    }
+
     GLfloat layer = _props.getNumeric("sort_key") + params.order;
 
     PolyLineBuilder builder {
         [&](const glm::vec3& coord, const glm::vec2& normal, const glm::vec2& uv) {
             glm::vec4 extrude = { normal.x, normal.y, width, dWdZ };
-            vertices.push_back({ coord, uv, extrude, abgr, layer });
+            vertices.push_back({ {coord.x, coord.y, height}, uv, extrude, abgr, layer });
         },
         [&](size_t sizeHint){ vertices.reserve(sizeHint); },
         params.cap,

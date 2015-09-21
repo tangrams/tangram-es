@@ -42,30 +42,6 @@ PolygonStyle::Parameters PolygonStyle::parseRule(const DrawRule& _rule) const {
     return p;
 }
 
-void PolygonStyle::buildLine(const Line& _line, const DrawRule& _rule, const Properties& _props, VboMesh& _mesh, Tile& _tile) const {
-    std::vector<PolygonVertex> vertices;
-
-    Parameters params = parseRule(_rule);
-
-    GLuint abgr = params.color;
-    GLfloat layer = params.order;
-
-    PolyLineBuilder builder = {
-        [&](const glm::vec3& coord, const glm::vec2& normal, const glm::vec2& uv) {
-            float halfWidth =  0.2f;
-
-            glm::vec3 point(coord.x + normal.x * halfWidth, coord.y + normal.y * halfWidth, coord.z);
-            vertices.push_back({ point, glm::vec3(0.0f, 0.0f, 1.0f), uv, abgr, layer });
-        },
-        [&](size_t sizeHint){ vertices.reserve(sizeHint); }
-    };
-
-    Builders::buildPolyLine(_line, builder);
-
-    auto& mesh = static_cast<PolygonStyle::Mesh&>(_mesh);
-    mesh.addVertices(std::move(vertices), std::move(builder.indices));
-}
-
 void PolygonStyle::buildPolygon(const Polygon& _polygon, const DrawRule& _rule, const Properties& _props, VboMesh& _mesh, Tile& _tile) const {
 
     std::vector<PolygonVertex> vertices;
