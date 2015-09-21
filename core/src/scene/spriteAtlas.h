@@ -23,7 +23,7 @@ public:
     bool getSpriteNode(const std::string& _name, SpriteNode& _node);
 
     /* Bind the atlas in the driver */
-    void bind(GLuint _slot = 0);
+    void bind(GLuint _slot);
 
 private:
     std::map<std::string, SpriteNode> m_spritesNodes;
