@@ -10,7 +10,6 @@
 
 // knows about things like int *OUTPUT:
 %include "typemaps.i"
-//%include "inttypes.i"
 %include "std_common.i"
 %include "std_string.i"
 
@@ -32,7 +31,6 @@ struct Properties {
     const std::string& getString(const std::string& key) const;
 };
 }
-
 %extend Tangram::Properties {
     void add(std::string key, std::string value) {
         $self->add(key, value);
@@ -40,6 +38,12 @@ struct Properties {
     void add(std::string key, float value) {
         $self->add(key, value);
     }
+}
+
+// JNI Bindings for std::map<std::string,std::string>
+%include "std_map.i"
+namespace std {
+%template(Tags) map<string, string>;
 }
 
 %{
@@ -73,6 +77,7 @@ public:
     virtual void clearData() override;
 
 };
+} // namespace
 
 %{
 #include "tangram.h"
