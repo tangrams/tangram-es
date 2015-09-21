@@ -4,6 +4,9 @@
 #include "platform.h"
 #include "gl.h"
 
+#include <sys/types.h>
+#include <sys/stat.h>
+
 // Forward declaration
 void init_main_window();
 
@@ -21,6 +24,7 @@ double last_mouse_up = -double_tap_time; // First click should never trigger a d
 double last_mouse_down = 0.0f;
 double last_x_down = 0.0;
 double last_y_down = 0.0;
+bool scene_editing_mode = false;
 
 void mouse_button_callback(GLFWwindow* window, int button, int action, int mods) {
 
@@ -111,6 +115,18 @@ void key_callback(GLFWwindow* window, int key, int scancode, int action, int mod
             case GLFW_KEY_R:
                 Tangram::loadScene(sceneFile);
                 break;
+            case GLFW_KEY_E:
+                if (scene_editing_mode) {
+                    scene_editing_mode = false;
+                    setContinuousRendering(false);
+                    glfwSwapInterval(0);
+                } else {
+                    scene_editing_mode = true;
+                    setContinuousRendering(true);
+                    glfwSwapInterval(1);
+                }
+                Tangram::loadScene(sceneFile);
+                break;
             case GLFW_KEY_BACKSPACE:
                 init_main_window(); // Simulate GL context loss
                 break;
@@ -176,12 +192,22 @@ int main(void) {
         return -1;
     }
 
+    struct stat sb;
+    if (stat(sceneFile, &sb) == -1) {
+        logMsg("scene file not found!");
+        exit(EXIT_FAILURE);
+    }
+    auto last_mod = sb.st_mtime;
+
     init_main_window();
 
     // Initialize cURL
     curl_global_init(CURL_GLOBAL_DEFAULT);
 
     double lastTime = glfwGetTime();
+
+    setContinuousRendering(false);
+    glfwSwapInterval(0);
 
     // Loop until the user closes the window
     while (!glfwWindowShouldClose(main_window)) {
@@ -204,6 +230,14 @@ int main(void) {
             glfwPollEvents();
         } else {
             glfwWaitEvents();
+        }
+        if (scene_editing_mode) {
+            if (stat(sceneFile, &sb) == 0) {
+                if (last_mod != sb.st_mtime) {
+                    Tangram::loadScene(sceneFile);
+                    last_mod = sb.st_mtime;
+                }
+            }
         }
     }
 
