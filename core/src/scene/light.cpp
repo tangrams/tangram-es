@@ -76,7 +76,7 @@ void Light::assembleLights(std::map<std::string, std::vector<std::string>>& _sou
 
     // After lights definitions are all added, add the main lighting functions
     if (s_mainLightingBlock.empty()) {
-        s_mainLightingBlock = stringFromResource("lights.glsl");
+        s_mainLightingBlock = stringFromResource("shaders/lights.glsl");
     }
     lightingBlock += s_mainLightingBlock;
 

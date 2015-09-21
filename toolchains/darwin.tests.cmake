@@ -15,6 +15,8 @@ set(OSX_PLATFORM_SRC ${PROJECT_SOURCE_DIR}/osx/src/platform_osx.mm)
 
 file(GLOB TEST_SOURCES tests/unit/*.cpp)
 
+set(LAST_TARGET "")
+
 # create an executable per test
 foreach(_src_file_path ${TEST_SOURCES})
     string(REPLACE ".cpp" "" test_case ${_src_file_path})
@@ -26,10 +28,10 @@ foreach(_src_file_path ${TEST_SOURCES})
 
     target_link_libraries(${EXECUTABLE_NAME} core glfw ${GLFW_LIBRARIES})
 
+    set(LAST_TARGET ${EXECUTABLE_NAME})
+
 endforeach(_src_file_path ${TEST_SOURCES})
 
 # copy resources in order to make tests with resources dependency
-file(GLOB_RECURSE RESOURCES ${PROJECT_SOURCE_DIR}/core/resources/*)
-foreach(_resource ${RESOURCES})
-    file(COPY ${_resource} DESTINATION ${PROJECT_SOURCE_DIR}/build/tests/unit/bin)
-endforeach()
+add_custom_command(TARGET ${LAST_TARGET} POST_BUILD COMMAND ${CMAKE_COMMAND} -E copy_directory
+                   ${PROJECT_SOURCE_DIR}/core/resources $<TARGET_FILE_DIR:${LAST_TARGET}>)

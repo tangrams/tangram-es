@@ -19,6 +19,8 @@ set(LINUX_PLATFORM_SRC
 
 file(GLOB BENCH_SOURCES bench/*.cpp)
 
+set(LAST_TARGET "")
+
 # create an executable per test
 foreach(_src_file_path ${BENCH_SOURCES})
     string(REPLACE ".cpp" "" bench ${_src_file_path})
@@ -29,10 +31,11 @@ foreach(_src_file_path ${BENCH_SOURCES})
     add_executable(${EXECUTABLE_NAME} ${_src_file_path} ${LINUX_PLATFORM_SRC})
 
     target_link_libraries(${EXECUTABLE_NAME} benchmark core -lcurl glfw ${GLFW_LIBRARIES})
+
+    set(LAST_TARGET ${EXECUTABLE_NAME})
+
 endforeach(_src_file_path ${BENCH_SOURCES})
 
 # copy resources in order to make tests with resources dependency
-file(GLOB_RECURSE RESOURCES ${PROJECT_SOURCE_DIR}/core/resources/*)
-foreach(_resource ${RESOURCES})
-    file(COPY ${_resource} DESTINATION ${PROJECT_SOURCE_DIR}/build/bench/bin)
-endforeach()
+add_custom_command(TARGET ${LAST_TARGET} POST_BUILD COMMAND ${CMAKE_COMMAND} -E copy_directory
+                   ${PROJECT_SOURCE_DIR}/core/resources $<TARGET_FILE_DIR:${LAST_TARGET}>)

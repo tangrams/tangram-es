@@ -29,9 +29,7 @@ function(build)
 
     add_executable(${EXECUTABLE_NAME} ${SOURCES})
 
-    file(GLOB_RECURSE RESOURCES ${PROJECT_SOURCE_DIR}/core/resources/*)
-    foreach(_resource ${RESOURCES})
-        file(COPY ${_resource} DESTINATION ${PROJECT_SOURCE_DIR}/build/linux/bin)
-    endforeach()
+    add_custom_command(TARGET tangram POST_BUILD COMMAND ${CMAKE_COMMAND} -E copy_directory
+                       ${PROJECT_SOURCE_DIR}/core/resources $<TARGET_FILE_DIR:tangram>)
 
 endfunction()

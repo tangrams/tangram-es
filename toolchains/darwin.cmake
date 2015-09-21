@@ -20,11 +20,10 @@ foreach(_ext ${OSX_EXTENSIONS_FILES})
         ${PROJECT_SOURCE_DIR}/osx/src/${_ext})
 endforeach()
 
-# locate resource files to include
-file(GLOB_RECURSE RESOURCES ${PROJECT_SOURCE_DIR}/osx/resources/**)
-file(GLOB_RECURSE CORE_RESOURCES ${PROJECT_SOURCE_DIR}/core/resources/**)
-list(APPEND RESOURCES ${CORE_RESOURCES})
-string(REGEX REPLACE "[.]DS_Store" "" RESOURCES "${RESOURCES}")
+add_bundle_resources(RESOURCES "${PROJECT_SOURCE_DIR}/core/resources" "Resources")
+
+file(GLOB_RECURSE OSX_RESOURCES "${PROJECT_SOURCE_DIR}/osx/resources/**")
+string(REGEX REPLACE "[.]DS_Store" "" OSX_RESOURCES "${OSX_RESOURCES}")
 
 # link and build functions
 function(link_libraries)
@@ -34,12 +33,12 @@ function(link_libraries)
     # add resource files and property list
     set_target_properties(${EXECUTABLE_NAME} PROPERTIES
         MACOSX_BUNDLE_INFO_PLIST "${PROJECT_SOURCE_DIR}/osx/resources/tangram-Info.plist"
-        RESOURCE "${RESOURCES}")
+        RESOURCE "${OSX_RESOURCES}")
 
 endfunction()
 
 function(build) 
 
-    add_executable(${EXECUTABLE_NAME} MACOSX_BUNDLE ${SOURCES} ${RESOURCES})
+    add_executable(${EXECUTABLE_NAME} MACOSX_BUNDLE ${SOURCES} ${RESOURCES} ${OSX_RESOURCES})
 
 endfunction()

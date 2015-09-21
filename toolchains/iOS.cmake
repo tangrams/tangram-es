@@ -29,11 +29,6 @@ set(FRAMEWORKS CoreGraphics CoreFoundation QuartzCore UIKit OpenGLES Security CF
 set(MACOSX_BUNDLE_GUI_IDENTIFIER "com.mapzen.\${PRODUCT_NAME:Tangram}")
 set(APP_TYPE MACOSX_BUNDLE)
 
-file(GLOB_RECURSE RESOURCES ${PROJECT_SOURCE_DIR}/ios/resources/**)
-file(GLOB_RECURSE CORE_RESOURCES ${PROJECT_SOURCE_DIR}/core/resources/**)
-list(APPEND RESOURCES ${CORE_RESOURCES})
-string(REGEX REPLACE "[.]DS_Store" "" RESOURCES "${RESOURCES}")
-
 # load core library
 add_subdirectory(${PROJECT_SOURCE_DIR}/core)
 include_directories(${CORE_INCLUDE_DIRS})
@@ -46,6 +41,11 @@ foreach(_ext ${IOS_EXTENSIONS_FILES})
         ${PROJECT_SOURCE_DIR}/ios/src/${_ext})
 endforeach()
 
+add_bundle_resources(RESOURCES "${PROJECT_SOURCE_DIR}/core/resources" "${EXECUTABLE_NAME}.app")
+
+file(GLOB_RECURSE IOS_RESOURCES ${PROJECT_SOURCE_DIR}/ios/resources/**)
+string(REGEX REPLACE "[.]DS_Store" "" IOS_RESOURCES "${IOS_RESOURCES}")
+
 # link and build functions
 function(link_libraries)
     target_link_libraries(${EXECUTABLE_NAME} core)
@@ -56,18 +56,19 @@ function(link_libraries)
 endfunction()
 
 function(build)
-    add_executable(${EXECUTABLE_NAME} ${APP_TYPE} ${HEADERS} ${SOURCES} ${RESOURCES})
+    add_executable(${EXECUTABLE_NAME} ${APP_TYPE} ${HEADERS} ${SOURCES} ${RESOURCES} ${IOS_RESOURCES})
 
     # setting xcode properties
     set_target_properties(${EXECUTABLE_NAME} PROPERTIES
         MACOSX_BUNDLE_INFO_PLIST ${PROJECT_SOURCE_DIR}/ios/resources/tangram-Info.plist
-        RESOURCE "${RESOURCES}")
+        RESOURCE "${IOS_RESOURCES}")
 
     set_xcode_property(${EXECUTABLE_NAME} GCC_GENERATE_DEBUGGING_SYMBOLS YES)
     set_xcode_property(${EXECUTABLE_NAME} SUPPORTED_PLATFORMS "iphonesimulator iphoneos")
-    set_xcode_property(${EXECUTABLE_NAME} ONLY_ACTIVE_ARCH "NO")
+    set_xcode_property(${EXECUTABLE_NAME} ONLY_ACTIVE_ARCH "YES")
     set_xcode_property(${EXECUTABLE_NAME} VALID_ARCHS "${ARCH}")
     set_xcode_property(${EXECUTABLE_NAME} TARGETED_DEVICE_FAMILY "1,2")
+
 endfunction()
 
 macro(add_framework FWNAME APPNAME LIBPATH)

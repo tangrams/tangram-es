@@ -11,8 +11,8 @@ Skybox::Skybox(std::string _file) : m_file(_file) {}
 
 void Skybox::init() {
 
-    std::string fragShaderSrcStr = stringFromResource("cubemap.fs");
-    std::string vertShaderSrcStr = stringFromResource("cubemap.vs");
+    std::string fragShaderSrcStr = stringFromResource("shaders/cubemap.fs");
+    std::string vertShaderSrcStr = stringFromResource("shaders/cubemap.vs");
 
     m_shader = std::make_unique<ShaderProgram>();
     m_shader->setSourceStrings(fragShaderSrcStr, vertShaderSrcStr);

@@ -8,11 +8,11 @@
 
 TEST_CASE( "Compare byte size of allocated resource to os file size", "[Core][bytesFromResource]" ) {
     unsigned int size;
-    unsigned char* data = bytesFromResource("polygon.fs", &size);
+    unsigned char* data = bytesFromResource("shaders/polygon.fs", &size);
 
     // ask os for size
     struct stat st;
-    stat("polygon.fs", &st);
+    stat("shaders/polygon.fs", &st);
     unsigned int sys_size = st.st_size;
 
     REQUIRE(sys_size == size);

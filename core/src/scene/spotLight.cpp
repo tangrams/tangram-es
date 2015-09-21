@@ -55,7 +55,7 @@ void SpotLight::setupProgram(const View& _view, ShaderProgram& _shader ) {
 
 std::string SpotLight::getClassBlock() {
     if (s_classBlock.empty()) {
-        s_classBlock = stringFromResource("spotLight.glsl")+"\n";
+        s_classBlock = stringFromResource("shaders/spotLight.glsl")+"\n";
     }
     return s_classBlock;
 }

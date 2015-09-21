@@ -46,7 +46,7 @@ void initialize(const char* _scenePath) {
         // Input handler
         m_inputHandler = std::unique_ptr<InputHandler>(new InputHandler(m_view));
 
-        m_skybox = std::unique_ptr<Skybox>(new Skybox("cubemap.png"));
+        m_skybox = std::unique_ptr<Skybox>(new Skybox("img/cubemap.png"));
         m_skybox->init();
 
         // Create a tileManager

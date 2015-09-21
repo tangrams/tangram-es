@@ -27,7 +27,7 @@ void AmbientLight::setupProgram(const View& _view, ShaderProgram& _shader ) {
 
 std::string AmbientLight::getClassBlock() {
     if (s_classBlock.empty()) {
-        s_classBlock = stringFromResource("ambientLight.glsl")+"\n";
+        s_classBlock = stringFromResource("shaders/ambientLight.glsl")+"\n";
     }
     return s_classBlock;
 }

@@ -25,8 +25,8 @@ void PolylineStyle::constructVertexLayout() {
 
 void PolylineStyle::constructShaderProgram() {
 
-    std::string vertShaderSrcStr = stringFromResource("polyline.vs");
-    std::string fragShaderSrcStr = stringFromResource("polyline.fs");
+    std::string vertShaderSrcStr = stringFromResource("shaders/polyline.vs");
+    std::string fragShaderSrcStr = stringFromResource("shaders/polyline.fs");
 
     m_shaderProgram->setSourceStrings(fragShaderSrcStr, vertShaderSrcStr);
 }

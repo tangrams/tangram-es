@@ -15,6 +15,8 @@ set(OSX_PLATFORM_SRC ${PROJECT_SOURCE_DIR}/osx/src/platform_osx.mm)
 
 file(GLOB BENCH_SOURCES bench/*.cpp)
 
+set(LAST_TARGET "")
+
 # create an executable per benchmark
 foreach(_src_file_path ${BENCH_SOURCES})
     string(REPLACE ".cpp" "" bench ${_src_file_path})
@@ -26,10 +28,10 @@ foreach(_src_file_path ${BENCH_SOURCES})
 
     target_link_libraries(${EXECUTABLE_NAME} benchmark core glfw ${GLFW_LIBRARIES})
 
+    set(LAST_TARGET ${EXECUTABLE_NAME})
+
 endforeach(_src_file_path ${BENCH_SOURCES})
 
-# copy resources in order to make tests benchmark resources dependency
-file(GLOB_RECURSE RESOURCES ${PROJECT_SOURCE_DIR}/core/resources/*)
-foreach(_resource ${RESOURCES})
-    file(COPY ${_resource} DESTINATION ${PROJECT_SOURCE_DIR}/build/bench/bin)
-endforeach()
+# copy resources in order to make tests with resources dependency
+add_custom_command(TARGET ${LAST_TARGET} POST_BUILD COMMAND ${CMAKE_COMMAND} -E copy_directory
+                   ${PROJECT_SOURCE_DIR}/core/resources $<TARGET_FILE_DIR:${LAST_TARGET}>)
