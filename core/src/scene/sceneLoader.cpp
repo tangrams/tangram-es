@@ -29,9 +29,9 @@ using YAML::Node;
 using YAML::NodeType;
 using YAML::BadConversion;
 
-#define LOGE(fmt, ...) do { logMsg("SceneLoader/Error:" fmt , ## __VA_ARGS__); } while(0)
-#define LOGW(fmt, ...) do { logMsg("SceneLoader/Warn:" fmt , ## __VA_ARGS__); } while(0)
-#define LOGN(fmt, node) do { logMsg("SceneLoader/Warn:" fmt ":\n'%s'\n", Dump(node).c_str())); } while(0)
+#define LOGE(fmt, ...) do { logMsg("SceneLoader/Error: " fmt "\n", ## __VA_ARGS__); } while(0)
+#define LOGW(fmt, ...) do { logMsg("SceneLoader/Warn: " fmt "\n", ## __VA_ARGS__); } while(0)
+#define LOGN(fmt, node) do { logMsg("SceneLoader/Warn: " fmt ":\n'%s'\n", Dump(node).c_str()); } while(0)
 
 namespace Tangram {
 
@@ -44,7 +44,7 @@ bool SceneLoader::loadScene(const std::string& _sceneString, Scene& _scene) {
 
     try { config = YAML::Load(_sceneString); }
     catch (YAML::ParserException e) {
-        LOGE("Parsing scene config '%s'\n", e.what());
+        LOGE("Parsing scene config '%s'", e.what());
         return false;
     }
 
@@ -63,19 +63,19 @@ bool SceneLoader::loadScene(const std::string& _sceneString, Scene& _scene) {
         for (const auto& source : sources) {
             try { loadSource(source, _scene); }
             catch (YAML::RepresentationException e) {
-                LOGE("Parsing source: '%s' in:\n%s\n",
+                LOGE("Parsing source: '%s' in:\n%s",
                      e.what(), Dump(source).c_str());
             }
         }
     } else {
-        LOGW("No source defined in the yaml scene configuration.\n");
+        LOGW("No source defined in the yaml scene configuration.");
     }
 
     if (Node textures = config["textures"]) {
         for (const auto& texture : textures) {
             try { loadTexture(texture, _scene); }
             catch (YAML::RepresentationException e) {
-                LOGE("Parsing texture: '%s' in:\n%s\n",
+                LOGE("Parsing texture: '%s' in:\n%s",
                      e.what(), Dump(texture).c_str());
             }
         }
@@ -85,7 +85,7 @@ bool SceneLoader::loadScene(const std::string& _sceneString, Scene& _scene) {
         for (const auto& style : styles) {
             try { loadStyle(style, styles, _scene); }
             catch (YAML::RepresentationException e) {
-                LOGE("Parsing style: '%s' in:\n%s\n",
+                LOGE("Parsing style: '%s' in:\n%s",
                      e.what(), Dump(style).c_str());
             }
         }
@@ -95,7 +95,7 @@ bool SceneLoader::loadScene(const std::string& _sceneString, Scene& _scene) {
         for (const auto& layer : layers) {
             try { loadLayer(layer, _scene); }
             catch (YAML::RepresentationException e) {
-                LOGE("Parsing layer: '%s' in:\n%s\n",
+                LOGE("Parsing layer: '%s' in:\n%s",
                      e.what(), Dump(layer).c_str());
             }
         }
@@ -105,7 +105,7 @@ bool SceneLoader::loadScene(const std::string& _sceneString, Scene& _scene) {
         for (const auto& light : lights) {
             try { loadLight(light, _scene); }
             catch (YAML::RepresentationException e) {
-                LOGE("Parsing light: '%s' in:\n%s\n",
+                LOGE("Parsing light: '%s' in:\n%s",
                      e.what(), Dump(light).c_str());
             }
         }
@@ -119,7 +119,7 @@ bool SceneLoader::loadScene(const std::string& _sceneString, Scene& _scene) {
     if (Node cameras = config["cameras"]) {
         try { loadCameras(cameras, _scene); }
         catch (YAML::RepresentationException e) {
-            LOGE("Parsing cameras: '%s' in:\n%s\n",
+            LOGE("Parsing cameras: '%s' in:\n%s",
                    e.what(), Dump(cameras).c_str());
         }
     }
@@ -158,7 +158,7 @@ void SceneLoader::loadShaderConfig(Node shaders, Style& style, Scene& scene) {
             }
             break;
         default:
-            LOGW("Invalid 'extensions':\n'%s'\n", Dump(extensionsNode).c_str());
+            LOGN("Invalid 'extensions'", extensionsNode);
         }
 
         for (const auto& extName : extensions) {
@@ -227,7 +227,7 @@ glm::vec4 parseMaterialVec(const Node& prop) {
             float value = prop.as<float>();
             return glm::vec4(value, value, value, 1.0);
         } catch (const BadConversion& e) {
-            LOGW("Invalid 'material':\n'%s'\n", Dump(prop).c_str());
+            LOGN("Invalid 'material'", prop);
             // TODO: css color parser and hex_values
         }
         break;
@@ -235,7 +235,7 @@ glm::vec4 parseMaterialVec(const Node& prop) {
         // Handled as texture
         break;
     default:
-        LOGW("Invalid 'material':\n'%s'\n", Dump(prop).c_str());
+        LOGN("Invalid 'material'", prop);
         break;
     }
     return glm::vec4(0.0);
@@ -275,8 +275,7 @@ void SceneLoader::loadMaterial(Node matNode, Material& material, Scene& scene) {
     if (Node shininess = matNode["shininess"]) {
         try { material.setShininess(shininess.as<float>()); }
         catch(const BadConversion& e) {
-            LOGW("Expected float value for 'shininess':\n'%s'\n",
-                Dump(matNode).c_str());
+            LOGN("Expected float value for 'shininess'", matNode);
         }
     }
 
@@ -289,8 +288,7 @@ MaterialTexture SceneLoader::loadMaterialTexture(Node matCompNode, Scene& scene)
 
     Node textureNode = matCompNode["texture"];
     if (!textureNode) {
-        LOGW("Expected a 'texture' parameter: '%s'\n",
-               Dump(matCompNode).c_str());
+        LOGN("Expected a 'texture' parameter", matCompNode);
 
         return MaterialTexture{};
     }
@@ -310,12 +308,12 @@ MaterialTexture SceneLoader::loadMaterialTexture(Node matCompNode, Scene& scene)
             matTex.mapping = MappingType::spheremap;
         } else if (mapping == "planar") {
             // TODO
-            LOGW("Planar texture mapping not yet implemented\n");
+            LOGW("Planar texture mapping not yet implemented");
         } else if (mapping == "triplanar") {
             // TODO
-            LOGW("Triplanar texture mapping not yet implemented\n");
+            LOGW("Triplanar texture mapping not yet implemented");
         } else {
-            LOGW("Unrecognized texture mapping '%s'\n", mapping.c_str());
+            LOGW("Unrecognized texture mapping '%s'", mapping.c_str());
         }
     }
 
@@ -325,7 +323,7 @@ MaterialTexture SceneLoader::loadMaterialTexture(Node matCompNode, Scene& scene)
         } else if (scaleNode.IsScalar()) {
             matTex.scale = glm::vec3(scaleNode.as<float>());
         } else {
-            LOGW("Unrecognized scale parameter in material\n");
+            LOGW("Unrecognized scale parameter in material");
         }
     }
 
@@ -337,7 +335,7 @@ MaterialTexture SceneLoader::loadMaterialTexture(Node matCompNode, Scene& scene)
         } else if (amountNode.IsScalar()) {
             matTex.amount = glm::vec3(amountNode.as<float>());
         } else {
-            LOGW("Unrecognized amount parameter in material\n");
+            LOGW("Unrecognized amount parameter in material");
         }
     }
 
@@ -361,7 +359,7 @@ void SceneLoader::loadTexture(const std::pair<Node, Node>& node, Scene& scene) {
     if (Node url = textureConfig["url"]) {
         file = url.as<std::string>();
     } else {
-        LOGW("No url specified for texture '%s', skipping.\n", name.c_str());
+        LOGW("No url specified for texture '%s', skipping.", name.c_str());
         return;
     }
 
@@ -402,18 +400,18 @@ void SceneLoader::loadTexture(const std::pair<Node, Node>& node, Scene& scene) {
 void SceneLoader::loadStyleProps(Style& style, YAML::Node styleNode, Scene& scene) {
 
     if (!styleNode) {
-        LOGW("Can not parse style parameters, bad style YAML Node\n");
+        LOGW("Can not parse style parameters, bad style YAML Node");
         return;
     }
 
     if (Node animatedNode = styleNode["animated"]) {
-        LOGW("'animated' property will be set but not yet implemented in styles\n"); // TODO
-        if (!animatedNode.IsScalar()) { LOGW("animated flag should be a scalar\n"); }
+        LOGW("'animated' property will be set but not yet implemented in styles"); // TODO
+        if (!animatedNode.IsScalar()) { LOGW("animated flag should be a scalar"); }
         else {
             try {
                 style.setAnimated(animatedNode.as<bool>());
             } catch(const BadConversion& e) {
-                LOGW("Expected a boolean value in 'animated' property. Using default (false).\n");
+                LOGW("Expected a boolean value in 'animated' property. Using default (false).");
             }
         }
     }
@@ -425,11 +423,11 @@ void SceneLoader::loadStyleProps(Style& style, YAML::Node styleNode, Scene& scen
         else if (str == "multiply") { style.setBlendMode(Blending::multiply); }
         else if (str == "overlay")  { style.setBlendMode(Blending::overlay); }
         else if (str == "inlay")    { style.setBlendMode(Blending::inlay); }
-        else { LOGW("Invalid blend mode '%s'\n", str.c_str()); }
+        else { LOGW("Invalid blend mode '%s'", str.c_str()); }
     }
 
     if (Node texcoordsNode = styleNode["texcoords"]) {
-        LOGW("'texcoords' style parameter is currently ignored\n");
+        LOGW("'texcoords' style parameter is currently ignored");
         if (texcoordsNode.as<bool>()) { } // TODO
         else { } // TODO
     }
@@ -448,7 +446,7 @@ void SceneLoader::loadStyleProps(Style& style, YAML::Node styleNode, Scene& scen
         else if (lighting == "vertex") { style.setLightingType(LightingType::vertex); }
         else if (lighting == "false") { style.setLightingType(LightingType::none); }
         else if (lighting == "true") { } // use default lighting
-        else { LOGW("Unrecognized lighting type '%s'\n", lighting.c_str()); }
+        else { LOGW("Unrecognized lighting type '%s'", lighting.c_str()); }
     }
 
     if (Node textureNode = styleNode["texture"]) {
@@ -468,7 +466,7 @@ void SceneLoader::loadStyleProps(Style& style, YAML::Node styleNode, Scene& scen
 
     if (Node urlNode = styleNode["url"]) {
         // TODO
-        LOGW("Loading style from URL not yet implemented\n");
+        LOGW("Loading style from URL not yet implemented");
     }
 }
 
@@ -519,7 +517,7 @@ Node SceneLoader::propMerge(const std::string& propName, const Mixes& mixes) {
             }
             break;
         default:
-            LOGW("Cannot merge property:\n'%s'\n", Dump(propValue).c_str());
+            LOGN("Cannot merge property", propValue);
             break;
         }
     }
@@ -546,15 +544,13 @@ Node SceneLoader::shaderBlockMerge(const Mixes& mixes) {
         Node shaderNode = mixNode["shaders"];
         if (!shaderNode) { continue; }
         if (!shaderNode.IsMap()) {
-            LOGW("Expected map for 'shader':\n'%s'\n",
-                Dump(shaderNode).c_str());
+            LOGN("Expected map for 'shader'", shaderNode);
             continue;
         }
         Node blocks = shaderNode["blocks"];
         if (!blocks) { continue; }
         if (!blocks.IsMap()) {
-            LOGW("Expected map for 'blocks':\n'%s'\n",
-                Dump(shaderNode).c_str());
+            LOGN("Expected map for 'blocks'", shaderNode);
             continue;
         }
 
@@ -580,8 +576,7 @@ Node SceneLoader::shaderExtMerge(const Mixes& mixes) {
         Node shaderNode = mixNode["shaders"];
         if (!shaderNode) { continue; }
         if (!shaderNode.IsMap()) {
-            LOGW("Expected map for 'shader':\n%s\n",
-                Dump(shaderNode).c_str());
+            LOGN("Expected map for 'shader'", shaderNode);
             continue;
         }
         Node extNode = shaderNode["extensions"];
@@ -607,8 +602,7 @@ Node SceneLoader::shaderExtMerge(const Mixes& mixes) {
             break;
         }
         default:
-            LOGW("Expected scalar or sequence value for 'extensions' node:\n%s\n",
-                 Dump(node).c_str());
+            LOGN("Expected scalar or sequence value for 'extensions' node", node);
         }
     }
 
@@ -650,7 +644,7 @@ void SceneLoader::loadStyle(const std::pair<Node, Node>& styleIt, Node styles, S
         if (styleName == builtIn) { validName = false; }
     }
     if (!validName) {
-        LOGW("Cannot use built-in style name '%s' for new style\n", styleName.c_str());
+        LOGW("Cannot use built-in style name '%s' for new style", styleName.c_str());
         return;
     }
 
@@ -665,7 +659,7 @@ void SceneLoader::loadStyle(const std::pair<Node, Node>& styleIt, Node styles, S
                 mixes.push_back(styles[mixStyleNode.as<std::string>()]);
             }
         } else {
-            LOGW("Parsing mix param for style: '%s'. Expected scalar or sequence value\n",
+            LOGW("Parsing mix param for style: '%s'. Expected scalar or sequence value",
                  styleName.c_str());
         }
     }
@@ -687,7 +681,7 @@ void SceneLoader::loadStyle(const std::pair<Node, Node>& styleIt, Node styles, S
         } else if (baseString == "points") {
             style = std::make_unique<SpriteStyle>(styleName);
         } else {
-            LOGW("Base style '%s' not recognized, cannot instantiate.\n", baseString.c_str());
+            LOGW("Base style '%s' not recognized, cannot instantiate.", baseString.c_str());
             return;
         }
 
@@ -723,11 +717,11 @@ void SceneLoader::loadSource(const std::pair<Node, Node>& src, Scene& _scene) {
             sourcePtr = std::shared_ptr<DataSource>(new ClientGeoJsonSource(name, url));
         }
     } else if (type == "TopoJSONTiles") {
-        LOGW("TopoJSON data sources not yet implemented\n"); // TODO
+        LOGW("TopoJSON data sources not yet implemented"); // TODO
     } else if (type == "MVT") {
         sourcePtr = std::shared_ptr<DataSource>(new MVTSource(name, url));
     } else {
-        LOGW("Unrecognized data source type '%s', skipping\n", type.c_str());
+        LOGW("Unrecognized data source type '%s', skipping", type.c_str());
     }
 
     if (sourcePtr) {
@@ -981,27 +975,25 @@ Filter SceneLoader::generatePredicate(Node _node, std::string _key) {
                 try {
                     minVal = valItr.second.as<float>();
                 } catch (const BadConversion& e) {
-                    LOGW("Invalid  'filter', expect a float value type:\n'%s'\n",
-                         Dump(_node).c_str());
+                    LOGN("Invalid  'filter', expect a float value type\n", _node);
                     return Filter();
                 }
             } else if (valItr.first.as<std::string>() == "max") {
                 try {
                     maxVal = valItr.second.as<float>();
                 } catch (const BadConversion& e) {
-                    LOGW("Invalid  'filter', expect a float value type:\n'%s'\n",
-                         Dump(_node).c_str());
+                    LOGN("Invalid  'filter', expect a float value type", _node);
                     return Filter();
                 }
             } else {
-                LOGW("Invalid  'filter'\n");
+                LOGN("Invalid  'filter'", _node);
                 return Filter();
             }
         }
         return Filter::MatchRange(_key, minVal, maxVal);
     }
     default:
-        LOGW("Invalid Filter '%s'\n", Dump(_node).c_str());
+        LOGN("Invalid 'filter'", _node);
         return Filter();
     }
 }
@@ -1010,7 +1002,7 @@ Filter SceneLoader::generateAnyFilter(Node _filter, Scene& scene) {
     std::vector<Filter> filters;
 
     if (!_filter.IsSequence()) {
-        LOGW("Invalid filter. 'Any' expects a list.\n");
+        LOGW("Invalid filter. 'Any' expects a list.");
         return Filter();
     }
     for (const auto& filt : _filter) {
@@ -1033,7 +1025,7 @@ Filter SceneLoader::generateNoneFilter(Node _filter, Scene& scene) {
             filters.emplace_back(generatePredicate(_filter[keyFilter], keyFilter));
         }
     } else {
-        LOGW("Invalid filter. 'None' expects a list or an object.\n");
+        LOGW("Invalid filter. 'None' expects a list or an object.");
         return Filter();
     }
 
@@ -1077,7 +1069,7 @@ void SceneLoader::parseStyleParams(Node params, Scene& scene, const std::string&
 
                     out.push_back(StyleParam{ styleKey, &(scene.stops().back()) });
                 } else {
-                    LOGW("Unknown style parameter %s\n", key.c_str());
+                    LOGW("Unknown style parameter %s", key.c_str());
                 }
 
             } else {
@@ -1091,7 +1083,7 @@ void SceneLoader::parseStyleParams(Node params, Scene& scene, const std::string&
             break;
         }
         default:
-            LOGW("Style parameter %s must be a scalar, sequence, or map.\n", key.c_str());
+            LOGW("Style parameter %s must be a scalar, sequence, or map.", key.c_str());
         }
     }
 }
@@ -1152,7 +1144,7 @@ StyleUniforms SceneLoader::parseStyleUniforms(const Node& value, Scene& scene) {
             }
         }
     } else {
-        LOGW("Expected a scalar or sequence value for uniforms\n");
+        LOGW("Expected a scalar or sequence value for uniforms");
     }
     return std::make_pair(type, std::move(uniformValues));
 }
