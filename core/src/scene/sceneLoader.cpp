@@ -693,6 +693,9 @@ void SceneLoader::loadStyle(const std::pair<Node, Node>& styleIt, Node styles, S
         scene.styles().push_back(std::move(style));
     } else {
         // No baseNode, this is an abstract styleNode
+        //
+        // TODO check why do all the merging above then?
+        // when the mixedStyleNode is lost now
         return;
     }
 }
