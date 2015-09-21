@@ -51,12 +51,14 @@ void TileManager::setScene(std::shared_ptr<Scene> _scene) {
         [&](auto& tileSet) {
             auto sIt = std::find_if(
                 sources.begin(), sources.end(),
-                [&](auto& s){ return tileSet.source->name() == s->name(); });
+                [&](auto& s){ return tileSet.source->equals(*s); });
 
             if (sIt != sources.end()) {
+                // Cancel pending  tiles
                 for_each(tileSet.tiles.begin(), tileSet.tiles.end(),
                          [&](auto& tile){ this->setTileState(*tile.second, TileState::canceled);});
 
+                // Clear cache
                 tileSet.tiles.clear();
                 return false;
             }
