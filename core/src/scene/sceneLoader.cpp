@@ -16,7 +16,6 @@
 #include "filters.h"
 #include "sceneLayer.h"
 #include "scene/dataLayer.h"
-#include "text/fontContext.h"
 #include "util/yamlHelper.h"
 
 #include "yaml-cpp/yaml.h"
@@ -51,14 +50,11 @@ bool SceneLoader::loadScene(const std::string& _sceneString, Scene& _scene) {
 
 bool SceneLoader::loadScene(Node& config, Scene& _scene) {
 
-    // To add font for debugTextStyle
-    FontContext::GetInstance()->addFont("FiraSans", "Medium", "");
-
     // Instantiate built-in styles
     _scene.styles().emplace_back(new PolygonStyle("polygons"));
     _scene.styles().emplace_back(new PolylineStyle("lines"));
     _scene.styles().emplace_back(new TextStyle("text", true, false));
-    _scene.styles().emplace_back(new DebugTextStyle("FiraSans_Medium_", "debugtext", 30.0f, true, false));
+    _scene.styles().emplace_back(new DebugTextStyle(0, "debugtext", 30.0f, true, false));
     _scene.styles().emplace_back(new DebugStyle("debug"));
     _scene.styles().emplace_back(new PointStyle("point"));
 
@@ -1125,12 +1121,12 @@ void SceneLoader::parseStyleParams(Node params, Scene& scene, const std::string&
 
     for (const auto& prop : params) {
 
-        // Load Fonts if prop is font
-        if (prop.first.as<std::string>() == "font") {
-            loadFont(prop.second);
+        std::string key;
+        if (!prefix.empty()) {
+            key = prefix + ":" + prop.first.Scalar();
+        } else {
+            key = prop.first.as<std::string>();
         }
-
-        std::string key = (prefix.empty() ? "" : (prefix + ":")) + prop.first.as<std::string>();
         if (key == "style") { continue; }
 
         Node value = prop.second;
@@ -1245,26 +1241,6 @@ StyleUniforms SceneLoader::parseStyleUniforms(const Node& value, Scene& scene) {
         LOGW("Expected a scalar or sequence value for uniforms");
     }
     return std::make_pair(type, std::move(uniformValues));
-}
-
-void SceneLoader::loadFont(Node fontProps) {
-
-    std::string family = "";
-    std::string weight = "";
-    std::string style = "";
-    auto fontCtx = FontContext::GetInstance();
-
-    auto familyNode = fontProps["family"];
-    if (familyNode) { family = familyNode.as<std::string>(); }
-
-    auto weightNode = fontProps["weight"];
-    if (weightNode) { weight = weightNode.as<std::string>(); }
-
-    auto styleNode = fontProps["style"];
-    if (styleNode) { style = styleNode.as<std::string>(); }
-
-    fontCtx->addFont(std::move(family), std::move(weight), std::move(style));
-
 }
 
 SceneLayer SceneLoader::loadSublayer(Node layer, const std::string& name, Scene& scene) {
