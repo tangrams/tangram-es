@@ -381,20 +381,19 @@ void SceneLoader::loadTexture(const std::pair<Node, Node>& node, Scene& scene) {
     scene.textures().emplace(name, texture);
 }
 
-void SceneLoader::loadStyleProps(Style* style, Node styleNode, Scene& scene) {
+void SceneLoader::loadStyleProps(Style& style, Node styleNode, Scene& scene) {
 
     if (!styleNode) {
         logMsg("Scene: Can not parse style parameters, bad style YAML Node\n");
         return;
     }
 
-    Node animatedNode = styleNode["animated"];
-    if (animatedNode) {
+    if (Node animatedNode = styleNode["animated"]) {
         logMsg("Scene: 'animated' property will be set but not yet implemented in styles\n"); // TODO
         if (!animatedNode.IsScalar()) { logMsg("Scene: animated flag should be a scalar\n"); }
         else {
             try {
-                style->setAnimated(animatedNode.as<bool>());
+                style.setAnimated(animatedNode.as<bool>());
             } catch(const BadConversion& e) {
                 logMsg("Scene: Expected a boolean value in 'animated' property. Using default (false).\n");
             }
@@ -402,53 +401,43 @@ void SceneLoader::loadStyleProps(Style* style, Node styleNode, Scene& scene) {
     }
 
     if (Node blendNode = styleNode["blend"]) {
-
-        std::string str = blendNode.as<std::string>();
-
-        if      (str == "none")     { style->setBlendMode(Blending::none); }
-        else if (str == "add")      { style->setBlendMode(Blending::add); }
-        else if (str == "multiply") { style->setBlendMode(Blending::multiply); }
-        else if (str == "overlay")  { style->setBlendMode(Blending::overlay); }
-        else if (str == "inlay")    { style->setBlendMode(Blending::inlay); }
+        auto str = blendNode.as<std::string>();
+        if      (str == "none")     { style.setBlendMode(Blending::none); }
+        else if (str == "add")      { style.setBlendMode(Blending::add); }
+        else if (str == "multiply") { style.setBlendMode(Blending::multiply); }
+        else if (str == "overlay")  { style.setBlendMode(Blending::overlay); }
+        else if (str == "inlay")    { style.setBlendMode(Blending::inlay); }
         else { logMsg("Scene: Invalid blend mode '%s'\n", str.c_str()); }
-
     }
 
-    Node texcoordsNode = styleNode["texcoords"];
-    if (texcoordsNode) {
-
+    if (Node texcoordsNode = styleNode["texcoords"]) {
         logMsg("Scene: 'texcoords' style parameter is currently ignored\n");
-
         if (texcoordsNode.as<bool>()) { } // TODO
         else { } // TODO
-
     }
 
-    Node shadersNode = styleNode["shaders"];
-    if (shadersNode) {
-        loadShaderConfig(shadersNode, *style, scene);
+    if (Node shadersNode = styleNode["shaders"]) {
+        loadShaderConfig(shadersNode, style, scene);
     }
 
-    Node materialNode = styleNode["material"];
-    if (materialNode) {
-        loadMaterial(materialNode, *(style->getMaterial()), scene);
+    if (Node materialNode = styleNode["material"]) {
+        loadMaterial(materialNode, *(style.getMaterial()), scene);
     }
 
-    Node lightingNode = styleNode["lighting"];
-    if (lightingNode) {
-        std::string lighting = lightingNode.as<std::string>();
-        if (lighting == "fragment") { style->setLightingType(LightingType::fragment); }
-        else if (lighting == "vertex") { style->setLightingType(LightingType::vertex); }
-        else if (lighting == "false") { style->setLightingType(LightingType::none); }
+    if (Node lightingNode = styleNode["lighting"]) {
+        auto lighting = lightingNode.as<std::string>();
+        if (lighting == "fragment") { style.setLightingType(LightingType::fragment); }
+        else if (lighting == "vertex") { style.setLightingType(LightingType::vertex); }
+        else if (lighting == "false") { style.setLightingType(LightingType::none); }
         else if (lighting == "true") { } // use default lighting
         else { logMsg("Scene: Unrecognized lighting type '%s'\n", lighting.c_str()); }
     }
 
-    Node textureNode = styleNode["texture"];
-    if (textureNode) {
-        auto spriteStyle = dynamic_cast<SpriteStyle*>(style);
-        if (spriteStyle) {
-            std::string textureName = textureNode.as<std::string>();
+    if (Node textureNode = styleNode["texture"]) {
+
+        if (auto spriteStyle = dynamic_cast<SpriteStyle*>(&style)) {
+
+            auto textureName = textureNode.as<std::string>();
             auto atlases = scene.spriteAtlases();
             auto it = atlases.find(textureName);
             if (it != atlases.end()) {
@@ -459,9 +448,10 @@ void SceneLoader::loadStyleProps(Style* style, Node styleNode, Scene& scene) {
         }
     }
 
-    Node urlNode = styleNode["url"];
-    if (urlNode) { logMsg("Scene: Loading style from URL not yet implemented\n"); } // TODO
-
+    if (Node urlNode = styleNode["url"]) {
+        // TODO
+        logMsg("Scene: Loading style from URL not yet implemented\n");
+    }
 }
 
 Node SceneLoader::propOr(const std::string& propStr, const std::vector<Node>& mixes) {
@@ -735,7 +725,7 @@ void SceneLoader::loadStyle(const std::pair<Node, Node>& styleIt, Node styles, S
         logMsg("Scene: Base style '%s' not recognized, cannot instantiate.\n", baseStyle.c_str());
         return;
     }
-    loadStyleProps(style.get(), mixedStyleNode, scene);
+    loadStyleProps(*style.get(), mixedStyleNode, scene);
     scene.styles().push_back(std::move(style));
 }
 
