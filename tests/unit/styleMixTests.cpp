@@ -15,29 +15,20 @@ using YAML::Node;
 
 TEST_CASE( "Style Mixing Test: Shader Extensions Merging", "[mixing][core][yaml]") {
     SceneLoader sceneLoader;
-    Node node = YAML::Load("{ \
-                                Node1: { \
-                                    shaders: { \
-                                        extensions: extension1 \
-                                    } \
-                                }, \
-                                Node2: { \
-                                    shaders: { \
-                                        extensions: [extension1, extension2, extension3] \
-                                    } \
-                                }, \
-                                Node3: { \
-                                    shaders: { \
-                                        extensions: extension3 \
-                                        } \
-                                }, \
-                                Node4: { \
-                                    shaders: { \
-                                        extensions: [extension4] \
-                                        } \
-                                } \
-                            }");
-
+    Node node = YAML::Load(R"END(
+        Node1:
+            shaders:
+                extensions: extension1
+        Node2:
+            shaders:
+                extensions: [extension1, extension2, extension3]
+        Node3:
+            shaders:
+                extensions: extension3
+        Node4:
+            shaders:
+                extensions: [extension4]
+        )END");
 
     Node extNode;
 
@@ -58,33 +49,25 @@ TEST_CASE( "Style Mixing Test: Shader Extensions Merging", "[mixing][core][yaml]
 
 TEST_CASE( "Style Mixing Test: Shader Blocks Merging", "[mixing][core][yaml]") {
     SceneLoader sceneLoader;
-    Node node = YAML::Load("{ \
-                                Node1: { \
-                                    shaders: { \
-                                        blocks: { \
-                                            color: colorBlockA; ,\
-                                            normal: normalBlockA; ,\
-                                        } \
-                                    } \
-                                }, \
-                                Node2: { \
-                                    shaders: { \
-                                        blocks: { \
-                                            color: colorBlockB; ,\
-                                            position: posBlockB; ,\
-                                            global: globalBlockB; \
-                                        } \
-                                    } \
-                                }, \
-                                Node3: { \
-                                    shaders: { \
-                                        blocks: { \
-                                            global: globalBlockC; ,\
-                                            filter: filterBlockC; \
-                                        } \
-                                    } \
-                                }, \
-                            }");
+
+    Node node = YAML::Load(R"END(
+        Node1:
+            shaders:
+                blocks:
+                    color: colorBlockA;
+                    normal: normalBlockA;
+        Node2:
+            shaders:
+                blocks:
+                    color: colorBlockB;
+                    position: posBlockB;
+                    global: globalBlockB;
+        Node3:
+            shaders:
+                blocks:
+                    global: globalBlockC;
+                    filter: filterBlockC;
+        )END");
 
     Node shaderBlocksNode = sceneLoader.shaderBlockMerge( { node["Node1"] } );
     // shaderBlocksNode:
@@ -113,41 +96,31 @@ TEST_CASE( "Style Mixing Test: Shader Blocks Merging", "[mixing][core][yaml]") {
 
 TEST_CASE( "Style Mixing Test: propMerge Tests (recursive overWrite properties)", "[mixing][core][yaml]") {
     SceneLoader sceneLoader;
-    Node node = YAML::Load("{ \
-                                Node1: { \
-                                    prop1: { \
-                                        subProp1: { \
-                                            tag1: value1 } \
-                                    }, \
-                                    prop2: { \
-                                        subProp3: { \
-                                            tag2: value2 } \
-                                    } \
-                                }, \
-                                Node2: { \
-                                    prop1: { \
-                                        subProp1: { \
-                                            tag3: value3 } \
-                                    }, \
-                                    prop2: { \
-                                        subProp2: value_scalar, \
-                                        subProp3: value_scalar2 \
-                                    } \
-                                }, \
-                                Node3: { \
-                                    prop1: { \
-                                        subProp1: {\
-                                            tag1: value1_3 \
-                                        } \
-                                    }, \
-                                    prop2: { \
-                                        subProp2: [v1, v2], \
-                                        subProp3: { \
-                                            tag4: value4 \
-                                        } \
-                                   } \
-                                }, \
-                            }");
+
+    Node node = YAML::Load(R"END(
+        Node1:
+            prop1:
+                subProp1:
+                    tag1: value1
+            prop2:
+                subProp3:
+                    tag2: value2
+        Node2:
+            prop1:
+                subProp1:
+                    tag3: value3
+            prop2:
+                subProp2: value_scalar
+                subProp3: value_scalar2
+        Node3:
+            prop1:
+                subProp1:
+                    tag1: value1_3
+            prop2:
+                subProp2: [v1, v2]
+                subProp3:
+                    tag4: value4
+        )END");
 
     // NodeMix:
     //      prop1:
@@ -181,15 +154,16 @@ TEST_CASE( "Style Mixing Test: propMerge Tests (recursive overWrite properties)"
 
 TEST_CASE( "Style Mixing Test: propMerge Tests (overWrite properties)", "[mixing][core][yaml]") {
     SceneLoader sceneLoader;
-    Node node = YAML::Load("{ \
-                                Node1: { \
-                                    prop1: value1 }, \
-                                Node2: { \
-                                    prop1: value1_2, \
-                                    prop2: value2 }, \
-                                Node3: { \
-                                    prop1: value1_3 } \
-                                }");
+
+    Node node = YAML::Load(R"END(
+        Node1:
+            prop1: value1
+        Node2:
+            prop1: value1_2
+            prop2: value2
+        Node3:
+            prop1: value1_3
+        )END");
 
     // NodeMix:
     //      prop1: value1_3
@@ -207,14 +181,15 @@ TEST_CASE( "Style Mixing Test: propMerge Tests (overWrite properties)", "[mixing
 TEST_CASE( "Style Mixing Test: propMerge Tests (boolean properties)", "[mixing][core][yaml]") {
 
     SceneLoader sceneLoader;
-    Node node = YAML::Load("{ \
-                                Node1: { \
-                                    prop1: false }, \
-                                Node2: { \
-                                    prop1: true }, \
-                                Node3: { \
-                                    prop1: false } \
-                            }");
+
+    Node node = YAML::Load(R"END(
+        Node1:
+            prop1: false
+        Node2:
+            prop1: true
+        Node3:
+            prop1: false
+        )END");
 
     // NodeMix:
     //      prop1: true
