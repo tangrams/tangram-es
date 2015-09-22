@@ -35,6 +35,8 @@ void initialize(const char* _scenePath) {
 
     logMsg("initialize\n");
 
+    auto sceneRelPath = setResourceRoot(_scenePath);
+
     if (!m_tileManager) {
 
         // Create view
@@ -46,9 +48,6 @@ void initialize(const char* _scenePath) {
         // Input handler
         m_inputHandler = std::unique_ptr<InputHandler>(new InputHandler(m_view));
 
-        m_skybox = std::unique_ptr<Skybox>(new Skybox("img/cubemap.png"));
-        m_skybox->init();
-
         // Create a tileManager
         m_tileManager = TileManager::GetInstance();
 
@@ -59,12 +58,15 @@ void initialize(const char* _scenePath) {
         // label setup
         m_labels = std::unique_ptr<Labels>(new Labels());
 
-        logMsg("Loading Tangram scene file: %s\n", _scenePath);
-        auto sceneString = stringFromResource(_scenePath);
+        logMsg("Loading Tangram scene file: %s\n", sceneRelPath.c_str());
+        auto sceneString = stringFromResource(sceneRelPath.c_str());
 
         SceneLoader loader;
 
         loader.loadScene(sceneString, *m_scene, *m_tileManager, *m_view);
+
+        m_skybox = std::unique_ptr<Skybox>(new Skybox("img/cubemap.png"));
+        m_skybox->init();
 
     }
 

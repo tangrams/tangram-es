@@ -8,6 +8,7 @@
 #include <jni.h>
 #include <cstdarg>
 
+#include <libgen.h>
 #include <unistd.h>
 #include <sys/resource.h>
 #include <fstream>
@@ -30,6 +31,8 @@ static jmethodID getFontFilePath;
 static AAssetManager* assetManager;
 
 static bool s_isContinuousRendering = false;
+static bool s_useInternalResources = true;
+static std::string s_resourceRoot;
 
 void setupJniEnv(JNIEnv* _jniEnv, jobject _tangramInstance, jobject _assetManager) {
 	_jniEnv->GetJavaVM(&jvm);
@@ -112,31 +115,63 @@ bool isContinuousRendering() {
 
 }
 
-std::string stringFromResource(const char* _path) {
+std::string setResourceRoot(const char* _path) {
 
-    std::string out;
+    s_resourceRoot = std::string(dirname(_path));
 
-    // Open asset
-    AAsset* asset = AAssetManager_open(assetManager, _path, AASSET_MODE_STREAMING);
+    s_useInternalResources = (*_path != '/');
+
+    if (s_resourceRoot.front() == '.') {
+        s_resourceRoot = "";
+    } else {
+        s_resourceRoot += '/';
+    }
+
+    return std::string(basename(_path));
+
+}
+
+unsigned char* bytesFromAssetManager(const char* _path, unsigned int* _size) {
+
+    unsigned char* data = nullptr;
+
+    AAsset* asset = AAssetManager_open(assetManager, _path, AASSET_MODE_UNKNOWN);
 
     if (asset == nullptr) {
         logMsg("Failed to open asset at path: %s\n", _path);
-        return out;
+        *_size = 0;
+        return data;
     }
 
-    // Allocate string
-    int length = AAsset_getLength(asset);
-    out.resize(length);
+    *_size = AAsset_getLength(asset);
 
-    // Read data
-    int read = AAsset_read(asset, &out.front(), length);
+    data = (unsigned char*) malloc(sizeof(unsigned char) * (*_size));
 
-    // Clean up
-    AAsset_close(asset);
+    int read = AAsset_read(asset, data, *_size);
 
     if (read <= 0) {
         logMsg("Failed to read asset at path: %s\n", _path);
     }
+
+    AAsset_close(asset);
+
+    return data;
+}
+
+std::string stringFromResource(const char* _path) {
+
+    std::string path = s_resourceRoot + _path;
+    unsigned int length = 0;
+    unsigned char* bytes = nullptr;
+
+    if (s_useInternalResources) {
+        bytes = bytesFromResource(path.c_str(), &length);
+    } else {
+        bytes = bytesFromFileSystem(path.c_str(), &length);
+    }
+
+    std::string out(reinterpret_cast<char*>(bytes), length);
+    free(bytes);
 
     return out;
 
@@ -167,29 +202,13 @@ unsigned char* bytesFromFileSystem(const char* _path, unsigned int* _size) {
 
 unsigned char* bytesFromResource(const char* _path, unsigned int* _size) {
 
-    unsigned char* data = nullptr;
-
-    AAsset* asset = AAssetManager_open(assetManager, _path, AASSET_MODE_UNKNOWN);
-
-    if (asset == nullptr) {
-        logMsg("Failed to open asset at path: %s\n", _path);
-        *_size = 0;
-        return data;
+    std::string path = s_resourceRoot + _path;
+    if (s_useInternalResources) {
+        return bytesFromAssetManager(path.c_str(), _size);
+    } else {
+        return bytesFromFileSystem(path.c_str(), _size);
     }
 
-    *_size = AAsset_getLength(asset);
-
-    data = (unsigned char*) malloc(sizeof(unsigned char) * (*_size));
-
-    int read = AAsset_read(asset, data, *_size);
-
-    if (read <= 0) {
-        logMsg("Failed to read asset at path: %s\n", _path);
-    }
-
-    AAsset_close(asset);
-
-    return data;
 }
 
 bool startUrlRequest(const std::string& _url, UrlCallback _callback) {

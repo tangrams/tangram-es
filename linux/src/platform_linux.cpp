@@ -11,6 +11,7 @@
 #include "platform.h"
 #include "gl.h"
 
+#include <libgen.h>
 #include <unistd.h>
 #include <sys/resource.h>
 #include <sys/syscall.h>
@@ -18,6 +19,7 @@
 #define NUM_WORKERS 3
 
 static bool s_isContinuousRendering = false;
+static std::string s_resourceRoot;
 
 static UrlWorker s_Workers[NUM_WORKERS];
 static std::list<std::unique_ptr<UrlTask>> s_urlTaskQueue;
@@ -77,28 +79,39 @@ bool isContinuousRendering() {
 
 }
 
+std::string setResourceRoot(const char* _path) {
+
+    std::string dir(_path);
+
+    s_resourceRoot = std::string(dirname(&dir[0])) + '/';
+
+    std::string base(_path);
+
+    return std::string(basename(&base[0]));
+
+}
+
 std::string stringFromResource(const char* _path) {
-    std::string into;
 
-    std::ifstream file;
-    std::string buffer;
+    unsigned int length = 0;
+    unsigned char* bytes = bytesFromResource(_path, &length);
 
-    file.open(_path);
-    if(!file.is_open()) {
-        logMsg("Failed to open file at path: %s\n", _path);
-        return std::string();
-    }
+    std::string out(reinterpret_cast<char*>(bytes), length);
+    free(bytes);
 
-    while(!file.eof()) {
-        getline(file, buffer);
-        into += buffer + "\n";
-    }
+    return out;
 
-    file.close();
-    return into;
 }
 
 unsigned char* bytesFromResource(const char* _path, unsigned int* _size) {
+
+    std::string path = s_resourceRoot + _path;
+    return bytesFromFileSystem(path.c_str(), _size);
+
+}
+
+unsigned char* bytesFromFileSystem(const char* _path, unsigned int* _size) {
+
     std::ifstream resource(_path, std::ifstream::ate | std::ifstream::binary);
 
     if(!resource.is_open()) {
@@ -117,11 +130,6 @@ unsigned char* bytesFromResource(const char* _path, unsigned int* _size) {
     resource.close();
 
     return reinterpret_cast<unsigned char *>(cdata);
-}
-
-// Does not provide implementation for this (yet!)
-unsigned char* bytesFromFileSystem(const char* _path, unsigned int* _size) {
-    return nullptr;
 }
 
 // No system fonts implementation (yet!)
