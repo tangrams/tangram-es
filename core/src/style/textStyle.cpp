@@ -194,10 +194,11 @@ void TextStyle::onBeginDrawFrame(const View& _view, const Scene& _scene) {
     bool contextLost = Style::glContextLost();
 
     FontContext::GetInstance()->bindAtlas(0);
-
+    
+    setupShaderUniforms(0, contextLost);
+    
     if (contextLost) {
         m_shaderProgram->setUniformi("u_tex", 0);
-        setupShaderUniforms(0);
     }
 
     if (m_dirtyViewport || contextLost) {

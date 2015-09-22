@@ -84,32 +84,41 @@ void Style::buildFeature(Tile& _tile, const Feature& _feat, const DrawRule& _rul
 
 }
 
-void Style::setupShaderUniforms(int _lastBoundTex) {
+void Style::setupShaderUniforms(int _lastBoundTex, bool _ctxLost) {
     for (const auto& uniformPair : m_styleUniforms) {
         const auto& name = uniformPair.first;
         const auto& value = uniformPair.second;
 
-        if (value.is<int>()) {
-            m_shaderProgram->setUniformi(name, value.get<int>());
-        } else if(value.is<std::string>()) {
+        if (value.is<std::string>()) {
             auto texName = value.get<std::string>();
             m_uniformTextures[texName]->update(++_lastBoundTex);
-            m_shaderProgram->setUniformi(name, _lastBoundTex);
-        } else if(value.is<float>()) {
-            m_shaderProgram->setUniformf(name, value.get<float>());
-        } else if(value.is<glm::vec2>()) {
-            m_shaderProgram->setUniformf(name, value.get<glm::vec2>());
-        } else if(value.is<glm::vec3>()) {
-            m_shaderProgram->setUniformf(name, value.get<glm::vec3>());
-        } else if(value.is<glm::vec4>()) {
-            m_shaderProgram->setUniformf(name, value.get<glm::vec4>());
+            m_uniformTextures[texName]->bind(_lastBoundTex);
+            if (_ctxLost) {
+                m_shaderProgram->setUniformi(name, _lastBoundTex);
+            }
         } else {
-            // none_type
+            if (_ctxLost) {
+                if (value.is<int>()) {
+                    m_shaderProgram->setUniformi(name, value.get<int>());
+                } else if(value.is<float>()) {
+                    m_shaderProgram->setUniformf(name, value.get<float>());
+                } else if(value.is<glm::vec2>()) {
+                    m_shaderProgram->setUniformf(name, value.get<glm::vec2>());
+                } else if(value.is<glm::vec3>()) {
+                    m_shaderProgram->setUniformf(name, value.get<glm::vec3>());
+                } else if(value.is<glm::vec4>()) {
+                    m_shaderProgram->setUniformf(name, value.get<glm::vec4>());
+                } else {
+                    // none_type
+                }
+            }
         }
     }
 }
 
 void Style::onBeginDrawFrame(const View& _view, const Scene& _scene) {
+    
+    bool contextLost = glContextLost();
 
     m_material->setupProgram(*m_shaderProgram);
 
@@ -120,9 +129,7 @@ void Style::onBeginDrawFrame(const View& _view, const Scene& _scene) {
 
     m_shaderProgram->setUniformf("u_zoom", _view.getZoom());
 
-    if (glContextLost()) {
-        setupShaderUniforms(-1);
-    }
+    setupShaderUniforms(-1, contextLost);
 
     // Configure render state
     switch (m_blend) {

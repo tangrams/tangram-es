@@ -103,7 +103,7 @@ protected:
     /* Toggle on read if true, checks whether the context has been lost on last frame */
     bool glContextLost();
 
-    void setupShaderUniforms(int _lastBoundTex);
+    void setupShaderUniforms(int _lastBoundTex, bool _ctxLost);
 
 private:
 
