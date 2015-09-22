@@ -103,14 +103,13 @@ protected:
     /* Toggle on read if true, checks whether the context has been lost on last frame */
     bool glContextLost();
 
-    void setupShaderUniforms(int _lastBoundTex, bool _ctxLost);
+    void setupShaderUniforms(int _lastBoundTex, bool _ctxLost, Scene& _scene);
 
 private:
 
     /* Whether the context has been lost on last frame */
     bool m_contextLost;
     std::vector<StyleUniform> m_styleUniforms;
-    std::unordered_map<std::string, std::shared_ptr<Texture>> m_uniformTextures;
 
 public:
 
@@ -141,7 +140,7 @@ public:
     virtual void onEndBuildTile(Tile& _tile) const;
 
     /* Perform any setup needed before drawing each frame */
-    virtual void onBeginDrawFrame(const View& _view, const Scene& _scene);
+    virtual void onBeginDrawFrame(const View& _view, Scene& _scene);
 
     /* Perform any unsetup needed after drawing each frame */
     virtual void onEndDrawFrame() {}
@@ -161,7 +160,6 @@ public:
     const std::string& getName() const { return m_name; }
 
     std::vector<StyleUniform>& styleUniforms() { return m_styleUniforms; }
-    std::unordered_map<std::string, std::shared_ptr<Texture>>& uniformTextures() { return m_uniformTextures; }
 
 };
 

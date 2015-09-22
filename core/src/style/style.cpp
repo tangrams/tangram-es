@@ -84,15 +84,17 @@ void Style::buildFeature(Tile& _tile, const Feature& _feat, const DrawRule& _rul
 
 }
 
-void Style::setupShaderUniforms(int _lastBoundTex, bool _ctxLost) {
+void Style::setupShaderUniforms(int _lastBoundTex, bool _ctxLost, Scene& _scene) {
     for (const auto& uniformPair : m_styleUniforms) {
         const auto& name = uniformPair.first;
         const auto& value = uniformPair.second;
 
+        auto& textures = _scene.textures();
+
         if (value.is<std::string>()) {
             auto texName = value.get<std::string>();
-            m_uniformTextures[texName]->update(++_lastBoundTex);
-            m_uniformTextures[texName]->bind(_lastBoundTex);
+            textures[texName]->update(++_lastBoundTex);
+            textures[texName]->bind(_lastBoundTex);
             if (_ctxLost) {
                 m_shaderProgram->setUniformi(name, _lastBoundTex);
             }
@@ -116,8 +118,8 @@ void Style::setupShaderUniforms(int _lastBoundTex, bool _ctxLost) {
     }
 }
 
-void Style::onBeginDrawFrame(const View& _view, const Scene& _scene) {
-    
+void Style::onBeginDrawFrame(const View& _view, Scene& _scene) {
+
     bool contextLost = glContextLost();
 
     m_material->setupProgram(*m_shaderProgram);
@@ -129,7 +131,7 @@ void Style::onBeginDrawFrame(const View& _view, const Scene& _scene) {
 
     m_shaderProgram->setUniformf("u_zoom", _view.getZoom());
 
-    setupShaderUniforms(-1, contextLost);
+    setupShaderUniforms(-1, contextLost, _scene);
 
     // Configure render state
     switch (m_blend) {

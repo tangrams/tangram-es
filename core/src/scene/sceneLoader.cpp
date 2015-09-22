@@ -121,7 +121,6 @@ void SceneLoader::loadShaderConfig(Node shaders, Style& style, Scene& scene) {
                 style.styleUniforms().emplace_back(name, uniformValues[0]);
                 if (uniformValues[0].is<std::string>()) {
                     auto textureName = uniformValues[0].get<std::string>();
-                    style.uniformTextures().emplace(textureName, scene.textures()[textureName]);
                 }
             } else {
                 shader.addSourceBlock("uniforms", "uniform " + type + " " + name +
@@ -130,7 +129,6 @@ void SceneLoader::loadShaderConfig(Node shaders, Style& style, Scene& scene) {
                     style.styleUniforms().emplace_back(name + "[" + std::to_string(i) + "]", uniformValues[i]);
                     if (uniformValues[i].is<std::string>()) {
                         auto textureName = uniformValues[i].get<std::string>();
-                        style.uniformTextures().emplace(textureName, scene.textures()[textureName]);
                     }
                 }
             }
@@ -1053,11 +1051,11 @@ StyleUniforms SceneLoader::parseStyleUniforms(const Node& value, Scene& scene) {
                 uVal = 0;
             } else {
                 type = "sampler2D";
+                uVal = strVal;
                 auto texItr = scene.textures().find(strVal);
                 if (texItr == scene.textures().end()) {
                     loadDefaultTexture(strVal, scene);
                 }
-                uVal = strVal;
             }
         }
         uniformValues.push_back(uVal);

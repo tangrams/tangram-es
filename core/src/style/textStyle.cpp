@@ -190,13 +190,13 @@ void TextStyle::buildPolygon(const Polygon& _polygon, const DrawRule& _rule, con
     buffer.addLabel(text, { centroid, centroid }, Label::Type::point, params, optionsFromTextParams(params));
 }
 
-void TextStyle::onBeginDrawFrame(const View& _view, const Scene& _scene) {
+void TextStyle::onBeginDrawFrame(const View& _view, Scene& _scene) {
     bool contextLost = Style::glContextLost();
 
     FontContext::GetInstance()->bindAtlas(0);
-    
-    setupShaderUniforms(0, contextLost);
-    
+
+    setupShaderUniforms(0, contextLost, _scene);
+
     if (contextLost) {
         m_shaderProgram->setUniformi("u_tex", 0);
     }
