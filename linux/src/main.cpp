@@ -131,7 +131,7 @@ void window_size_callback(GLFWwindow* window, int width, int height) {
 void init_main_window() {
 
     // Setup tangram
-    Tangram::initialize("scene/scene.yaml");
+    Tangram::initialize("scene.yaml");
 
     // Destroy old window
     if (main_window != nullptr) {

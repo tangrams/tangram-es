@@ -49,7 +49,7 @@ public class MapController implements Renderer, OnTouchListener, OnScaleGestureL
      */
     public MapController(Activity mainApp, MapView view) {
 
-        this(mainApp, view, "scene/scene.yaml");
+        this(mainApp, view, "scene.yaml");
     }
 
     /**
