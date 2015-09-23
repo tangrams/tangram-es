@@ -17,7 +17,7 @@ using YAML::Node;
 Scene scene;
 SceneLoader sceneLoader;
 
-TEST_CASE( "Style Mixing Test: Float uniform value", "[mixing][core][yaml]") {
+TEST_CASE( "Style Uniforms Parsing and Injection Test: Float uniform value", "[StyleUniforms][core][yaml]") {
 
     Node node = YAML::Load(R"END(
         u_float: 0.5
@@ -30,7 +30,7 @@ TEST_CASE( "Style Mixing Test: Float uniform value", "[mixing][core][yaml]") {
     REQUIRE(uniformValues.first == "float");
 }
 
-TEST_CASE( "Style Mixing Test: Boolean uniform value", "[mixing][core][yaml]") {
+TEST_CASE( "Style Uniforms Parsing and Injection Test: Boolean uniform value", "[StyleUniforms][core][yaml]") {
 
     Node node = YAML::Load(R"END(
         u_true: true
@@ -50,7 +50,7 @@ TEST_CASE( "Style Mixing Test: Boolean uniform value", "[mixing][core][yaml]") {
     REQUIRE(uniformValues.first == "bool");
 }
 
-TEST_CASE( "Style Mixing Test: vec2, vec3, vec4 uniform value", "[mixing][core][yaml]") {
+TEST_CASE( "Style Uniforms Parsing and Injection Test: vec2, vec3, vec4 uniform value", "[StyleUniforms][core][yaml]") {
 
     Node node = YAML::Load(R"END(
         u_vec2: [0.1, 0.2]
@@ -84,7 +84,7 @@ TEST_CASE( "Style Mixing Test: vec2, vec3, vec4 uniform value", "[mixing][core][
     REQUIRE(uniformValues.first == "vec4");
 }
 
-TEST_CASE( "Style Mixing Test: textures uniform value", "[mixing][core][yaml]") {
+TEST_CASE( "Style Uniforms Parsing and Injection Test: textures uniform value", "[StyleUniforms][core][yaml]") {
 
     Node node = YAML::Load(R"END(
         u_tex : texture1.png
