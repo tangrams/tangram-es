@@ -102,4 +102,6 @@ glm::dvec2 MercatorProjection::TileCenter(const TileID _tileCoord) const {
                           _tileCoord.z);
 }
 
+double MercatorProjection::TileSize() const { return m_TileSize; }
+
 }

@@ -75,6 +75,13 @@ void StyleContext::setFeature(const Feature& _feature) {
     }
 }
 
+void StyleContext::setGlobalZoom(float _zoom) {
+    static const std::string _key("$zoom");
+    if (_zoom != m_globalZoom) {
+        setGlobal(_key, _zoom);
+    }
+}
+
 void StyleContext::setGlobal(const std::string& _key, const Value& _val) {
     Value& entry = m_globals[_key];
     if (entry == _val) { return; }
@@ -84,6 +91,8 @@ void StyleContext::setGlobal(const std::string& _key, const Value& _val) {
     if (_val.is<float>()) {
         duk_push_number(m_ctx, _val.get<float>());
         duk_put_global_string(m_ctx, _key.c_str());
+
+        if (_key == "$zoom") { m_globalZoom = _val.get<float>(); }
 
     } else if (_val.is<std::string>()) {
         duk_push_string(m_ctx, _val.get<std::string>().c_str());

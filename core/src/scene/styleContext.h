@@ -36,8 +36,10 @@ public:
     void setFeature(const Feature& _feature);
 
     void setGlobal(const std::string& _key, const Value& _value);
+    void setGlobalZoom(float _zoom);
 
     const Value& getGlobal(const std::string& _key) const;
+    float getGlobalZoom() const { return m_globalZoom; }
 
     void clear();
 
@@ -64,6 +66,8 @@ private:
     std::unordered_map<std::string, Value> m_globals;
 
     int32_t m_sceneId = -1;
+
+    float m_globalZoom = -1;
 };
 
 }

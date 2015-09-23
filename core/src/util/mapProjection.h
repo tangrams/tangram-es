@@ -128,6 +128,8 @@ public:
      */
     virtual ProjectionType GetMapProjectionType() const {return m_type;}
 
+    virtual double TileSize() const = 0;
+
     virtual ~MapProjection() {}
 };
 
@@ -156,6 +158,8 @@ public:
     virtual BoundingBox TileBounds(const TileID _tileCoord) const override;
     virtual BoundingBox TileLonLatBounds(const TileID _tileCoord) const override;
     virtual glm::dvec2 TileCenter(const TileID _tileCoord) const override;
+    virtual double TileSize() const override;
+
     virtual ~MercatorProjection() {}
 };
 
