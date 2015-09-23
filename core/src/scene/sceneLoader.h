@@ -3,11 +3,14 @@
 #include <string>
 #include <vector>
 #include <memory>
+#include <tuple>
 
-/* Forward Declaration of yaml-cpp node type */
-namespace YAML {
-    class Node;
-}
+#include "yaml-cpp/yaml.h"
+#include "glm/vec2.hpp"
+#include "glm/vec3.hpp"
+#include "glm/vec4.hpp"
+
+#include "util/variant.h"
 
 namespace Tangram {
 
@@ -24,6 +27,8 @@ struct MaterialTexture;
 struct Filter;
 
 using Mixes = std::vector<YAML::Node>;
+// 0: type, 1: values
+using StyleUniforms = std::pair<std::string, std::vector<UniformValue>>;
 
 class SceneLoader {
 
@@ -35,8 +40,10 @@ class SceneLoader {
     void loadStyles(YAML::Node styles, Scene& scene);
     void loadStyleProps(Style* style, YAML::Node styleNode, Scene& scene);
     void loadTextures(YAML::Node textures, Scene& scene);
+    /* loads a texture with default texture properties */
+    void loadTexture(const std::string& url, Scene& scene);
     void loadMaterial(YAML::Node matNode, Material& material, Scene& scene);
-    void loadShaderConfig(YAML::Node shaders, ShaderProgram& shader);
+    void loadShaderConfig(YAML::Node shaders, Style& style, Scene& scene);
     SceneLayer loadSublayer(YAML::Node layer, const std::string& name, Scene& scene);
     MaterialTexture loadMaterialTexture(YAML::Node matCompNode, Scene& scene);
     Filter generateAnyFilter(YAML::Node filter, Scene& scene);
@@ -56,6 +63,7 @@ public:
 
     // public for testing
     std::vector<StyleParam> parseStyleParams(YAML::Node params, Scene& scene, const std::string& propPrefix = "");
+    StyleUniforms parseStyleUniforms(const YAML::Node& uniform, Scene& scene);
 
     // Generic methods to merge properties
     YAML::Node propMerge(const std::string& propStr, const Mixes& mixes);

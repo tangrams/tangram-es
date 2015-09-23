@@ -6,6 +6,7 @@
 #include "gl/shaderProgram.h"
 #include "gl/renderState.h"
 #include "scene/sceneLayer.h"
+#include "util/variant.h"
 
 #include <memory>
 #include <string>
@@ -35,6 +36,7 @@ enum class Blending : char {
     inlay,
 };
 
+
 /* Means of constructing and rendering map geometry
  *
  * A Style defines a way to
@@ -46,6 +48,8 @@ enum class Blending : char {
  * geometry into meshes. See <PolygonStyle> for a basic implementation.
  */
 class Style {
+
+using StyleUniform = std::pair< std::string, UniformValue >;
 
 protected:
 
@@ -66,7 +70,7 @@ protected:
 
     /* <LightingType> to determine how lighting will be calculated for this style */
     LightingType m_lightingType = LightingType::fragment;
-    
+
     Blending m_blend = Blending::none;
 
     /* Draw mode to pass into <VboMesh>es created with this style */
@@ -99,10 +103,15 @@ protected:
     /* Toggle on read if true, checks whether the context has been lost on last frame */
     bool glContextLost();
 
+    /* Set uniform values when @_updateUniforms is true,
+       and bind textures starting at @_textureUnit */
+    void setupShaderUniforms(int _textureUnit, bool _updateUniforms, Scene& _scene);
+
 private:
 
     /* Whether the context has been lost on last frame */
     bool m_contextLost;
+    std::vector<StyleUniform> m_styleUniforms;
 
 public:
 
@@ -133,7 +142,7 @@ public:
     virtual void onEndBuildTile(Tile& _tile) const;
 
     /* Perform any setup needed before drawing each frame */
-    virtual void onBeginDrawFrame(const View& _view, const Scene& _scene);
+    virtual void onBeginDrawFrame(const View& _view, Scene& _scene);
 
     /* Perform any unsetup needed after drawing each frame */
     virtual void onEndDrawFrame() {}
@@ -151,6 +160,8 @@ public:
     const std::unique_ptr<ShaderProgram>& getShaderProgram() const { return m_shaderProgram; }
 
     const std::string& getName() const { return m_name; }
+
+    std::vector<StyleUniform>& styleUniforms() { return m_styleUniforms; }
 
 };
 
