@@ -121,7 +121,11 @@ std::string setResourceRoot(const char* _path) {
 
     s_useInternalResources = (*_path != '/');
 
-    if (s_resourceRoot.front() == '.') {
+    // For unclear reasons, the AAssetManager will fail to open a file at
+    // path "filepath" if the path is instead given as "./filepath", so in
+    // cases where dirname returns "." we simply use an empty string. For
+    // all other cases, we add a "/" for appending relative paths.
+    if (!s_resourceRoot.empty() && s_resourceRoot.front() == '.') {
         s_resourceRoot = "";
     } else {
         s_resourceRoot += '/';
