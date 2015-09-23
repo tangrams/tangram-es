@@ -18,6 +18,7 @@
 #include <memory>
 #include <cmath>
 #include <bitset>
+#include <mutex>
 
 namespace Tangram {
 
@@ -27,6 +28,7 @@ std::shared_ptr<View> m_view;
 std::unique_ptr<Labels> m_labels;
 std::unique_ptr<Skybox> m_skybox;
 std::unique_ptr<InputHandler> m_inputHandler;
+std::mutex m_tilesMutex;
 
 static float g_time = 0.0;
 static std::bitset<8> g_flags = 0;
@@ -100,17 +102,21 @@ void update(float _dt) {
 
     m_view->update();
 
-    m_tileManager->updateTileSets();
+    {
+        std::lock_guard<std::mutex> lock(m_tilesMutex);
 
-    if (m_view->changedOnLastUpdate() || m_tileManager->hasTileSetChanged() || m_labels->needUpdate()) {
+        m_tileManager->updateTileSets();
 
-        auto& tiles = m_tileManager->getVisibleTiles();
+        if (m_view->changedOnLastUpdate() || m_tileManager->hasTileSetChanged() || m_labels->needUpdate()) {
 
-        for (const auto& tile : tiles) {
-            tile->update(_dt, *m_view);
+            auto& tiles = m_tileManager->getVisibleTiles();
+
+            for (const auto& tile : tiles) {
+                tile->update(_dt, *m_view);
+            }
+
+            m_labels->update(*m_view, _dt, m_scene->styles(), tiles);
         }
-
-        m_labels->update(*m_view, _dt, m_scene->styles(), tiles);
     }
 
     if (m_scene) {
@@ -124,16 +130,20 @@ void render() {
     RenderState::depthWrite(GL_TRUE);
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
-    // Loop over all styles
-    for (const auto& style : m_scene->styles()) {
-        style->onBeginDrawFrame(*m_view, *m_scene);
+    {
+        std::lock_guard<std::mutex> lock(m_tilesMutex);
 
-        // Loop over all tiles in m_tileSet
-        for (const auto& tile : m_tileManager->getVisibleTiles()) {
-            tile->draw(*style, *m_view);
+        // Loop over all styles
+        for (const auto& style : m_scene->styles()) {
+            style->onBeginDrawFrame(*m_view, *m_scene);
+
+            // Loop over all tiles in m_tileSet
+            for (const auto& tile : m_tileManager->getVisibleTiles()) {
+                tile->draw(*style, *m_view);
+            }
+
+            style->onEndDrawFrame();
         }
-
-        style->onEndDrawFrame();
     }
 
     m_skybox->draw(*m_view);
@@ -225,6 +235,7 @@ void setPixelScale(float _pixelsPerPoint) {
 int addDataSource(const char* _name) {
 
     if (!m_tileManager) { return -1; }
+    std::lock_guard<std::mutex> lock(m_tilesMutex);
     auto source = std::make_shared<ClientGeoJsonSource>(std::string(_name), "");
     return m_tileManager->addDataSource(source);
 }
@@ -232,6 +243,7 @@ int addDataSource(const char* _name) {
 void clearSourceData(int _sourceId) {
 
     if (!m_tileManager) { return; }
+    std::lock_guard<std::mutex> lock(m_tilesMutex);
     for (auto& set : m_tileManager->getTileSets()) {
         if (set.id == _sourceId) {
             set.source->clearData();
@@ -243,6 +255,7 @@ void clearSourceData(int _sourceId) {
 
 void addSourcePoint(int _sourceId, double* _coords) {
     if (!m_tileManager) { return; }
+    std::lock_guard<std::mutex> lock(m_tilesMutex);
     auto source = m_tileManager->getClientSourceById(_sourceId);
     if (source) {
         source->addPoint(_coords);
@@ -253,6 +266,7 @@ void addSourcePoint(int _sourceId, double* _coords) {
 
 void addSourceLine(int _sourceId, double* _coords, int _lineLength) {
     if (!m_tileManager) { return; }
+    std::lock_guard<std::mutex> lock(m_tilesMutex);
     auto source = m_tileManager->getClientSourceById(_sourceId);
     if (source) {
         source->addLine(_coords, _lineLength);
@@ -263,6 +277,7 @@ void addSourceLine(int _sourceId, double* _coords, int _lineLength) {
 
 void addSourcePoly(int _sourceId, double* _coords, int* _ringLengths, int _rings) {
     if (!m_tileManager) { return; }
+    std::lock_guard<std::mutex> lock(m_tilesMutex);
     auto source = m_tileManager->getClientSourceById(_sourceId);
     if (source) {
         source->addPoly(_coords, _ringLengths, _rings);
@@ -273,6 +288,7 @@ void addSourcePoly(int _sourceId, double* _coords, int* _ringLengths, int _rings
 
 void addSourceGeoJSON(int _sourceId, const char* _data) {
     if (!m_tileManager) { return; }
+    std::lock_guard<std::mutex> lock(m_tilesMutex);
     auto source = m_tileManager->getClientSourceById(_sourceId);
     if (source) {
         source->addData(_data);
