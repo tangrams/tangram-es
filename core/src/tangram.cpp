@@ -96,25 +96,27 @@ void resize(int _newWidth, int _newHeight) {
 
 void update(float _dt) {
 
-    std::lock_guard<std::mutex> lock(m_tilesMutex);
-
     g_time += _dt;
 
     m_inputHandler->update(_dt);
 
     m_view->update();
 
-    m_tileManager->updateTileSets();
+    {
+        std::lock_guard<std::mutex> lock(m_tilesMutex);
 
-    if (m_view->changedOnLastUpdate() || m_tileManager->hasTileSetChanged() || m_labels->needUpdate()) {
+        m_tileManager->updateTileSets();
 
-        auto& tiles = m_tileManager->getVisibleTiles();
+        if (m_view->changedOnLastUpdate() || m_tileManager->hasTileSetChanged() || m_labels->needUpdate()) {
 
-        for (const auto& tile : tiles) {
-            tile->update(_dt, *m_view);
+            auto& tiles = m_tileManager->getVisibleTiles();
+
+            for (const auto& tile : tiles) {
+                tile->update(_dt, *m_view);
+            }
+
+            m_labels->update(*m_view, _dt, m_scene->styles(), tiles);
         }
-
-        m_labels->update(*m_view, _dt, m_scene->styles(), tiles);
     }
 
     if (m_scene) {
@@ -124,22 +126,24 @@ void update(float _dt) {
 
 void render() {
 
-    std::lock_guard<std::mutex> lock(m_tilesMutex);
-
     // Set up openGL for new frame
     RenderState::depthWrite(GL_TRUE);
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
-    // Loop over all styles
-    for (const auto& style : m_scene->styles()) {
-        style->onBeginDrawFrame(*m_view, *m_scene);
+    {
+        std::lock_guard<std::mutex> lock(m_tilesMutex);
 
-        // Loop over all tiles in m_tileSet
-        for (const auto& tile : m_tileManager->getVisibleTiles()) {
-            tile->draw(*style, *m_view);
+        // Loop over all styles
+        for (const auto& style : m_scene->styles()) {
+            style->onBeginDrawFrame(*m_view, *m_scene);
+
+            // Loop over all tiles in m_tileSet
+            for (const auto& tile : m_tileManager->getVisibleTiles()) {
+                tile->draw(*style, *m_view);
+            }
+
+            style->onEndDrawFrame();
         }
-
-        style->onEndDrawFrame();
     }
 
     m_skybox->draw(*m_view);
