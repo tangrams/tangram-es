@@ -39,15 +39,15 @@ TEST_CASE( "Style Mixing Test: Boolean uniform value", "[mixing][core][yaml]") {
 
     auto uniformValues = sceneLoader.parseStyleUniforms(node["u_true"], scene);
     REQUIRE(uniformValues.second.size() == 1);
-    REQUIRE(uniformValues.second[0].is<int>());
-    REQUIRE(uniformValues.second[0].get<int>() == 1);
-    REQUIRE(uniformValues.first == "int");
+    REQUIRE(uniformValues.second[0].is<bool>());
+    REQUIRE(uniformValues.second[0].get<bool>() == 1);
+    REQUIRE(uniformValues.first == "bool");
 
     uniformValues = sceneLoader.parseStyleUniforms(node["u_false"], scene);
     REQUIRE(uniformValues.second.size() == 1);
-    REQUIRE(uniformValues.second[0].is<int>());
-    REQUIRE(uniformValues.second[0].get<int>() == 0);
-    REQUIRE(uniformValues.first == "int");
+    REQUIRE(uniformValues.second[0].is<bool>());
+    REQUIRE(uniformValues.second[0].get<bool>() == 0);
+    REQUIRE(uniformValues.first == "bool");
 }
 
 TEST_CASE( "Style Mixing Test: vec2, vec3, vec4 uniform value", "[mixing][core][yaml]") {

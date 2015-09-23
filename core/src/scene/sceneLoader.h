@@ -39,8 +39,9 @@ class SceneLoader {
     void loadLayers(YAML::Node layers, Scene& scene, TileManager& tileManager);
     void loadStyles(YAML::Node styles, Scene& scene);
     void loadStyleProps(Style* style, YAML::Node styleNode, Scene& scene);
-    void loadDefaultTexture(const std::string& url, Scene& scene);
     void loadTextures(YAML::Node textures, Scene& scene);
+    /* loads a texture with default texture properties */
+    void loadTexture(const std::string& url, Scene& scene);
     void loadMaterial(YAML::Node matNode, Material& material, Scene& scene);
     void loadShaderConfig(YAML::Node shaders, Style& style, Scene& scene);
     SceneLayer loadSublayer(YAML::Node layer, const std::string& name, Scene& scene);

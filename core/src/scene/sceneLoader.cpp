@@ -259,7 +259,7 @@ MaterialTexture SceneLoader::loadMaterialTexture(Node matCompNode, Scene& scene)
     return matTex;
 }
 
-void SceneLoader::loadDefaultTexture(const std::string& url, Scene& scene) {
+void SceneLoader::loadTexture(const std::string& url, Scene& scene) {
     TextureOptions options = {GL_RGBA, GL_RGBA, {GL_LINEAR, GL_LINEAR}, {GL_CLAMP_TO_EDGE, GL_CLAMP_TO_EDGE} };
     std::shared_ptr<Texture> texture(new Texture(url, options, false));
     scene.textures().emplace(url, texture);
@@ -1033,18 +1033,16 @@ StyleUniforms SceneLoader::parseStyleUniforms(const Node& value, Scene& scene) {
             uVal = value.as<float>();
             type = "float";
         } catch (const BadConversion& e) {
-            auto strVal = value.as<std::string>();
-            type = "int";
-            if (strVal == "true") {
-                uVal = 1;
-            } else if (strVal == "false") {
-                uVal = 0;
-            } else {
+            try {
+                uVal = value.as<bool>();
+                type = "bool";
+            } catch (const BadConversion& e) {
+                auto strVal = value.as<std::string>();
                 type = "sampler2D";
                 uVal = strVal;
                 auto texItr = scene.textures().find(strVal);
                 if (texItr == scene.textures().end()) {
-                    loadDefaultTexture(strVal, scene);
+                    loadTexture(strVal, scene);
                 }
             }
         }
@@ -1077,7 +1075,7 @@ StyleUniforms SceneLoader::parseStyleUniforms(const Node& value, Scene& scene) {
                 uniformValues.push_back(textureName);
                 auto texItr = scene.textures().find(textureName);
                 if (texItr == scene.textures().end()) {
-                    loadDefaultTexture(textureName, scene);
+                    loadTexture(textureName, scene);
                 }
             }
         }

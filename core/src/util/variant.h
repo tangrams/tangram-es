@@ -24,6 +24,6 @@ using variant = mapbox::util::variant<Types...>;
 using Value = variant<none_type, std::string, float>;
 
 /* Style Block Uniform types */
-using UniformValue = variant<none_type, std::string, int, float, glm::vec2, glm::vec3, glm::vec4>;
+using UniformValue = variant<none_type, bool, std::string, float, glm::vec2, glm::vec3, glm::vec4>;
 
 }

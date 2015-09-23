@@ -107,8 +107,8 @@ void Style::setupShaderUniforms(int _textureUnit, bool _update, Scene& _scene) {
         } else {
             if (!_update) { continue; }
 
-            if (value.is<int>()) {
-                m_shaderProgram->setUniformi(name, value.get<int>());
+            if (value.is<bool>()) {
+                m_shaderProgram->setUniformi(name, value.get<bool>());
             } else if(value.is<float>()) {
                 m_shaderProgram->setUniformf(name, value.get<float>());
             } else if(value.is<glm::vec2>()) {
