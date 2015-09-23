@@ -31,28 +31,28 @@ varying vec4 v_color;
 
 #pragma tangram: global
 
-float contour(in float d, in float w) {
-    return smoothstep(0.5 - w, 0.5 + w, d);
+float contour(in float d, in float w, float t) {
+    return smoothstep(t - w, t + w, d);
 }
 
-float sample(in vec2 uv, float w) {
-    return contour(texture2D(u_tex, uv).a, w);
+float sample(in vec2 uv, float w, float t) {
+    return contour(texture2D(u_tex, uv).a, w, t);
 }
 
-float sampleAlpha(in vec2 uv, float distance) {
-    const float smooth = 0.0625 * emSize; // 0.0625 = 1.0/1em ratio
-    float alpha = contour(distance, smooth);
+float sampleAlpha(in vec2 uv, float distance, float threshold) {
+    const float smoothing = 0.0625 * emSize; // 0.0625 = 1.0/1em ratio
+    float alpha = contour(distance, smoothing, threshold);
 
 #ifdef TANGRAM_SDF_MULTISAMPLING
-    const float aaSmooth = smooth / 2.0;
+    const float aaSmooth = smoothing / 2.0;
     float dscale = 0.354; // 1 / sqrt(2)
     vec2 duv = dscale * (dFdx(uv) + dFdy(uv));
     vec4 box = vec4(uv - duv, uv + duv);
 
-    float asum = sample(box.xy, aaSmooth)
-        + sample(box.zw, aaSmooth)
-        + sample(box.xw, aaSmooth)
-        + sample(box.zy, aaSmooth);
+    float asum = sample(box.xy, aaSmooth, threshold)
+               + sample(box.zw, aaSmooth, threshold)
+               + sample(box.xw, aaSmooth, threshold)
+               + sample(box.zy, aaSmooth, threshold);
 
     alpha = mix(alpha, asum, 0.25);
 #endif
@@ -64,14 +64,17 @@ void main(void) {
     if (v_alpha < TANGRAM_EPSILON) {
         discard;
     } else {
-        vec4 color;
 
         float distance = texture2D(u_tex, v_uv).a;
 
-        float alpha = sampleAlpha(v_uv, distance);
-        alpha = pow(alpha, 0.4545);
+        float alpha_fill = pow(sampleAlpha(v_uv, distance, 0.5), 0.4545);
+        float alpha_stroke = pow(sampleAlpha(v_uv, distance, 0.4), 0.4545);
 
-        color = vec4(v_color.rgb, v_alpha * alpha * v_color.a);
+        vec4 color_fill = v_color;
+        vec4 color_stroke = vec4(1.);
+
+        vec4 color = mix(color_stroke, color_fill, alpha_fill);
+        color.a = max(alpha_fill, alpha_stroke) * v_alpha;
 
         #pragma tangram: color
         #pragma tangram: filter
