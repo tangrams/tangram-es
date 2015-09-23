@@ -119,17 +119,11 @@ void SceneLoader::loadShaderConfig(Node shaders, Style& style, Scene& scene) {
             if (size == 1) {
                 shader.addSourceBlock("uniforms", "uniform " + type + " " + name + ";");
                 style.styleUniforms().emplace_back(name, uniformValues[0]);
-                if (uniformValues[0].is<std::string>()) {
-                    auto textureName = uniformValues[0].get<std::string>();
-                }
             } else {
                 shader.addSourceBlock("uniforms", "uniform " + type + " " + name +
                                                         "[" + std::to_string(size) + "];");
                 for (int i = 0; i < size; i++) {
                     style.styleUniforms().emplace_back(name + "[" + std::to_string(i) + "]", uniformValues[i]);
-                    if (uniformValues[i].is<std::string>()) {
-                        auto textureName = uniformValues[i].get<std::string>();
-                    }
                 }
             }
         }
