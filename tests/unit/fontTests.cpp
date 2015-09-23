@@ -38,7 +38,7 @@ FONScontext* initContext(void* _usrPtr) {
 
 int initFont(FONScontext* _context) {
     unsigned int dataSize;
-    unsigned char* data = bytesFromResource("Roboto-Regular.ttf", &dataSize);
+    unsigned char* data = bytesFromResource("fonts/Roboto-Regular.ttf", &dataSize);
 
     return fonsAddFont(_context, "droid-serif", data, dataSize);
 }

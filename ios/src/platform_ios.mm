@@ -11,6 +11,7 @@
 
 static ViewController* viewController;
 NSURLSession* defaultSession;
+NSString* s_resourceRoot = NULL;
 
 void init(ViewController* _controller) {
     
@@ -57,12 +58,29 @@ bool isContinuousRendering() {
     
 }
 
+std::string setResourceRoot(const char* _path) {
+
+    NSString* path = [NSString stringWithUTF8String:_path];
+
+    if (*_path != '/') {
+        NSString* resources = [[NSBundle mainBundle] resourcePath];
+        path = [resources stringByAppendingPathComponent:path];
+    }
+
+    s_resourceRoot = [path stringByDeletingLastPathComponent];
+
+    return std::string([[path lastPathComponent] UTF8String]);
+
+}
+
 NSString* resolveResourcePath(const char* _path) {
-    
-    NSString* resourcePath = [[[NSBundle mainBundle] resourcePath] stringByAppendingString:@"/"];
-    NSString* internalPath = [NSString stringWithUTF8String:_path];
-    return [resourcePath stringByAppendingString:internalPath];
-    
+
+    if (s_resourceRoot == NULL) {
+        setResourceRoot(".");
+    }
+
+    return [s_resourceRoot stringByAppendingPathComponent:[NSString stringWithUTF8String:_path]];
+
 }
 
 std::string stringFromResource(const char* _path) {

@@ -27,8 +27,8 @@ void PolygonStyle::constructVertexLayout() {
 
 void PolygonStyle::constructShaderProgram() {
 
-    std::string vertShaderSrcStr = stringFromResource("polygon.vs");
-    std::string fragShaderSrcStr = stringFromResource("polygon.fs");
+    std::string vertShaderSrcStr = stringFromResource("shaders/polygon.vs");
+    std::string fragShaderSrcStr = stringFromResource("shaders/polygon.fs");
 
     m_shaderProgram->setSourceStrings(fragShaderSrcStr, vertShaderSrcStr);
 }

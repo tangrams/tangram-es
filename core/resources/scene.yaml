@@ -14,7 +14,7 @@ lights:
 
 textures:
     pois:
-        url: poi_icons_32.png
+        url: img/poi_icons_32.png
         sprites:
             plane: [0, 0, 32, 32]
             tree: [0, 185, 32, 32]

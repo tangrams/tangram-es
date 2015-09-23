@@ -67,3 +67,16 @@ macro(group_recursive_sources CURDIR CURGROUP)
     file(GLOB FOUND_SOURCES ${CURGROUP}/*.cpp)
     source_group(${CURGROUP} FILES ${FOUND_HEADERS} ${FOUND_SOURCES})
 endmacro()
+
+macro(add_bundle_resources RESOURCE_LIST RESOURCE_DIR RESOURCE_BASE)
+
+    file(GLOB_RECURSE FULL_RESOURCE_PATHS "${RESOURCE_DIR}/**")
+    foreach(_full_resource_path ${FULL_RESOURCE_PATHS})
+        file(RELATIVE_PATH REL_RESOURCE_PATH ${RESOURCE_DIR} ${_full_resource_path})
+        get_filename_component(REL_RESOURCE_DIR ${REL_RESOURCE_PATH} PATH)
+        set_source_files_properties(${_full_resource_path} PROPERTIES MACOSX_PACKAGE_LOCATION "${RESOURCE_BASE}/${REL_RESOURCE_DIR}")
+        # message(STATUS "resource at: ${_full_resource_path}\n   remapped to: ${RESOURCE_BASE}/${REL_RESOURCE_DIR}")
+    endforeach()
+    list(APPEND ${RESOURCE_LIST} ${FULL_RESOURCE_PATHS})
+
+endmacro(add_bundle_resources)

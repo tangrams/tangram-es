@@ -26,8 +26,8 @@ void init() {
         std::string vert, frag;
         s_shader = std::unique_ptr<ShaderProgram>(new ShaderProgram());
 
-        vert = stringFromResource("debugPrimitive.vs");
-        frag = stringFromResource("debugPrimitive.fs");
+        vert = stringFromResource("shaders/debugPrimitive.vs");
+        frag = stringFromResource("shaders/debugPrimitive.fs");
 
         s_shader->setSourceStrings(frag, vert);
 

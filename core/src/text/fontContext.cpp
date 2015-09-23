@@ -51,7 +51,7 @@ bool FontContext::addFont(const std::string& _family, const std::string& _weight
     unsigned char* data = nullptr;
 
     // Assuming bundled ttf file follows this convention
-    auto bundledFontPath = _family + "-" + _weight + _style + ".ttf";
+    auto bundledFontPath = "fonts/" + _family + "-" + _weight + _style + ".ttf";
     if ( !(data = bytesFromResource(bundledFontPath.c_str(), &dataSize))) {
         const std::string sysFontPath = systemFontPath(_family, _weight, _style);
         if ( !(data = bytesFromFileSystem(sysFontPath.c_str(), &dataSize)) ) {

@@ -53,6 +53,10 @@ bool isContinuousRendering();
 /* get system path of a font file */
 std::string systemFontPath(const std::string& _name, const std::string& _weight, const std::string& _face);
 
+/* Set a path to act as the resource root. All other resource paths will be resolved relative to this root. 
+ * The string returned is the path to the given file relative to the new root resource directory. */
+std::string setResourceRoot(const char* _path);
+
 /* Read a bundled resource file as a string
  *
  * Opens the file at the given relative path and returns a string with its contents.
