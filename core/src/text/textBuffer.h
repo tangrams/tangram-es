@@ -22,7 +22,7 @@ enum class TextTransform {
 };
 
 struct Parameters {
-    std::string fontKey = "";
+    FontID fontId = -1;
     uint32_t fill = 0xff000000;
     uint32_t strokeColor = 0xffffffff;
     float strokeWidth = 0.0f;

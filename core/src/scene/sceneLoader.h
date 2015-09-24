@@ -30,50 +30,50 @@ using Mixes = std::vector<YAML::Node>;
 // 0: type, 1: values
 using StyleUniforms = std::pair<std::string, std::vector<UniformValue>>;
 
-class SceneLoader {
+struct SceneLoader {
+    using Node = YAML::Node;
 
-    void loadSources(YAML::Node sources, TileManager& tileManager);
-    void loadFont(YAML::Node fontProps);
-    void loadLights(YAML::Node lights, Scene& scene);
-    void loadCameras(YAML::Node cameras, View& view);
-    void loadLayers(YAML::Node layers, Scene& scene, TileManager& tileManager);
-    void loadStyles(YAML::Node styles, Scene& scene);
-    void loadStyleProps(Style* style, YAML::Node styleNode, Scene& scene);
-    void loadTextures(YAML::Node textures, Scene& scene);
+    static bool loadScene(const std::string& _sceneString, Scene& _scene);
+
+    /*** public for testing ***/
+
+    static void loadSource(const std::pair<Node, Node>& source, Scene& scene);
+    static void loadTexture(const std::pair<Node, Node>& texture, Scene& scene);
+    static void loadStyle(const std::pair<Node, Node>& style, Node styles, Scene& scene);
+    static void loadLayer(const std::pair<Node, Node>& layer, Scene& scene);
+    static void loadLight(const std::pair<Node, Node>& light, Scene& scene);
+    static void loadCameras(Node cameras, Scene& scene);
+    static void loadStyleProps(Style& style, Node styleNode, Scene& scene);
+    static void loadMaterial(Node matNode, Material& material, Scene& scene);
+    static void loadShaderConfig(Node shaders, Style& style, Scene& scene);
+    static SceneLayer loadSublayer(Node layer, const std::string& name, Scene& scene);
+    static Filter generateAnyFilter(Node filter, Scene& scene);
+    static Filter generateNoneFilter(Node filter, Scene& scene);
+    static Filter generatePredicate(Node filter, std::string _key);
     /* loads a texture with default texture properties */
-    void loadTexture(const std::string& url, Scene& scene);
-    void loadMaterial(YAML::Node matNode, Material& material, Scene& scene);
-    void loadShaderConfig(YAML::Node shaders, Style& style, Scene& scene);
-    SceneLayer loadSublayer(YAML::Node layer, const std::string& name, Scene& scene);
-    MaterialTexture loadMaterialTexture(YAML::Node matCompNode, Scene& scene);
-    Filter generateAnyFilter(YAML::Node filter, Scene& scene);
-    Filter generateNoneFilter(YAML::Node filter, Scene& scene);
-    Filter generatePredicate(YAML::Node filter, std::string _key);
+    static void loadTexture(const std::string& url, Scene& scene);
 
     // Style Mixing helper methods
-    YAML::Node mixStyle(const Mixes& mixes);
+    static Node mixStyle(const Mixes& mixes);
 
-public:
+    static MaterialTexture loadMaterialTexture(Node matCompNode, Scene& scene);
 
-    SceneLoader() {};
+    static void parseStyleParams(Node params, Scene& scene, const std::string& propPrefix,
+                                 std::vector<StyleParam>& out);
 
-    virtual ~SceneLoader() {};
-
-    void loadScene(const std::string& _sceneString, Scene& _scene, TileManager& _tileManager, View& _view);
-
-    // public for testing
-    std::vector<StyleParam> parseStyleParams(YAML::Node params, Scene& scene, const std::string& propPrefix = "");
-    StyleUniforms parseStyleUniforms(const YAML::Node& uniform, Scene& scene);
+    static StyleUniforms parseStyleUniforms(const YAML::Node& uniform, Scene& scene);
 
     // Generic methods to merge properties
-    YAML::Node propMerge(const std::string& propStr, const Mixes& mixes);
+    static Node propMerge(const std::string& propStr, const Mixes& mixes);
 
     // Methods to merge shader blocks
-    YAML::Node shaderBlockMerge(const Mixes& mixes);
+    static Node shaderBlockMerge(const Mixes& mixes);
 
     // Methods to merge shader extensions
-    YAML::Node shaderExtMerge(const Mixes& mixes);
-    Tangram::Filter generateFilter(YAML::Node filter, Scene& scene);
+    static Node shaderExtMerge(const Mixes& mixes);
+    static Tangram::Filter generateFilter(Node filter, Scene& scene);
+
+    SceneLoader() = delete;
 };
 
 }

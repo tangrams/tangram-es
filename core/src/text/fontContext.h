@@ -26,7 +26,8 @@ public:
     ~FontContext();
 
     /* adds a font from a .ttf font file using "family", "weight" and "style" font properties*/
-    bool addFont(const std::string& _family, const std::string& _weight, const std::string& _style);
+    FontID addFont(const std::string& _family, const std::string& _weight,
+                   const std::string& _style, bool _tryFallback = true);
 
     /* sets the current font for a size in pixels */
     void setFont(const std::string& _key, int size);
@@ -55,6 +56,7 @@ private:
     static void renderUpdate(void* _userPtr, int* _rect, const unsigned char* _data);
     static int renderCreate(void* _userPtr, int _width, int _height);
     static void pushQuad(void* _userPtr, const FONSquad* _quad);
+    static void fontstashError(void* uptr, int error, int val);
 
     FontContext();
     FontContext(int _atlasSize);

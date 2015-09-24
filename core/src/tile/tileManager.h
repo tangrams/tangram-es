@@ -48,7 +48,7 @@ public:
     void setView(std::shared_ptr<View> _view) { m_view = _view; }
 
     /* Sets the scene which the TileManager will use to style tiles */
-    void setScene(std::shared_ptr<Scene> _scene) { m_scene = _scene; }
+    void setScene(std::shared_ptr<Scene> _scene);
 
     std::shared_ptr<Scene>& getScene() { return m_scene; }
 
@@ -74,7 +74,7 @@ public:
 
     bool hasTileSetChanged() { return m_tileSetChanged; }
 
-    int32_t addDataSource(std::shared_ptr<DataSource>&& dataSource);
+    void addDataSource(std::shared_ptr<DataSource> dataSource);
 
     const auto getTileSets() { return m_tileSets; }
 
@@ -88,7 +88,6 @@ public:
 private:
 
     struct TileSet {
-        const int32_t id;
         std::shared_ptr<DataSource> source;
         std::map<TileID, std::shared_ptr<Tile>> tiles;
     };
@@ -136,7 +135,6 @@ private:
     int32_t m_loadPending;
 
     std::vector<TileSet> m_tileSets;
-    int32_t m_tileSetSerial = 0;
 
     /* Current tiles ready for rendering */
     std::vector<std::shared_ptr<Tile>> m_tiles;

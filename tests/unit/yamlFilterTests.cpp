@@ -14,7 +14,6 @@ using YAML::Node;
 
 using Context = StyleContext;
 
-SceneLoader sceneLoader;
 Context ctx;
 
 Feature civic, bmw1, bike;
@@ -22,7 +21,7 @@ Feature civic, bmw1, bike;
 Filter load(const std::string& filterYaml) {
     Scene scene;
     YAML::Node node = YAML::Load(filterYaml);
-    return sceneLoader.generateFilter(node["filter"], scene);
+    return SceneLoader::generateFilter(node["filter"], scene);
 }
 
 void init() {

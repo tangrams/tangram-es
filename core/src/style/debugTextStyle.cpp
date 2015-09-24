@@ -6,14 +6,14 @@
 
 namespace Tangram {
 
-DebugTextStyle::DebugTextStyle(const std::string& _fontName, std::string _name, float _fontSize, bool _sdf, bool _sdfMultisampling, Blending _blendMode, GLenum _drawMode)
-: TextStyle(_name, _sdf, _sdfMultisampling, _blendMode, _drawMode), m_fontName(_fontName), m_fontSize(_fontSize) {
+DebugTextStyle::DebugTextStyle(FontID _fontId, std::string _name, float _fontSize, bool _sdf, bool _sdfMultisampling, Blending _blendMode, GLenum _drawMode)
+: TextStyle(_name, _sdf, _sdfMultisampling, _blendMode, _drawMode), m_font(_fontId), m_fontSize(_fontSize) {
 }
 
 void DebugTextStyle::onBeginBuildTile(Tangram::Tile &_tile) const {
 
     Parameters params;
-    params.fontKey = m_fontName;
+    params.fontId = m_font;
     params.fontSize = m_fontSize * m_pixelScale;
     params.blurSpread = m_sdf ? 2.5f : 0.0f;
 

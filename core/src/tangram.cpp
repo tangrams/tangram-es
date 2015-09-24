@@ -35,45 +35,64 @@ static std::bitset<8> g_flags = 0;
 
 void initialize(const char* _scenePath) {
 
+    if (m_tileManager) {
+        logMsg("Notice: Already initialized\n");
+        return;
+    }
+
     logMsg("initialize\n");
 
     auto sceneRelPath = setResourceRoot(_scenePath);
 
-    if (!m_tileManager) {
+    // Create view
+    m_view = std::make_shared<View>();
 
-        // Create view
-        m_view = std::make_shared<View>();
+    // Create a scene object
+    m_scene = std::make_shared<Scene>();
 
-        // Create a scene object
-        m_scene = std::make_shared<Scene>();
+    // Input handler
+    m_inputHandler = std::unique_ptr<InputHandler>(new InputHandler(m_view));
 
-        // Input handler
-        m_inputHandler = std::unique_ptr<InputHandler>(new InputHandler(m_view));
+    // Create a tileManager
+    m_tileManager = TileManager::GetInstance();
 
-        // Create a tileManager
-        m_tileManager = TileManager::GetInstance();
+    // Pass references to the view and scene into the tile manager
+    m_tileManager->setView(m_view);
 
-        // Pass references to the view and scene into the tile manager
-        m_tileManager->setView(m_view);
+    // label setup
+    m_labels = std::unique_ptr<Labels>(new Labels());
+
+    // To add font for debugTextStyle
+    FontContext::GetInstance()->addFont("FiraSans", "Medium", "");
+
+    logMsg("Loading Tangram scene file: %s\n", sceneRelPath.c_str());
+    auto sceneString = stringFromResource(sceneRelPath.c_str());
+
+    if (SceneLoader::loadScene(sceneString, *m_scene)) {
         m_tileManager->setScene(m_scene);
 
-        // label setup
-        m_labels = std::unique_ptr<Labels>(new Labels());
-
-        logMsg("Loading Tangram scene file: %s\n", sceneRelPath.c_str());
-        auto sceneString = stringFromResource(sceneRelPath.c_str());
-
-        SceneLoader loader;
-
-        loader.loadScene(sceneString, *m_scene, *m_tileManager, *m_view);
-
-        m_skybox = std::unique_ptr<Skybox>(new Skybox("img/cubemap.png"));
-        m_skybox->init();
-
+        glm::dvec2 projPos = m_view->getMapProjection().LonLatToMeters(m_scene->startPosition);
+        m_view->setPosition(projPos.x, projPos.y);
+        m_view->setZoom(m_scene->startZoom);
     }
+
+    m_skybox = std::unique_ptr<Skybox>(new Skybox("img/cubemap.png"));
+    m_skybox->init();
 
     logMsg("finish initialize\n");
 
+}
+
+void loadScene(const char* _scenePath) {
+
+    m_scene = std::make_shared<Scene>();
+
+    logMsg("Loading Tangram scene file: %s\n", _scenePath);
+    auto sceneString = stringFromResource(_scenePath);
+
+    if (SceneLoader::loadScene(sceneString, *m_scene)) {
+        m_tileManager->setScene(m_scene);
+    }
 }
 
 void resize(int _newWidth, int _newHeight) {
@@ -231,7 +250,6 @@ void setPixelScale(float _pixelsPerPoint) {
     for (auto& style : m_scene->styles()) {
         style->setPixelScale(_pixelsPerPoint);
     }
-
 }
 
 int addDataSource(const char* _name) {
@@ -239,7 +257,9 @@ int addDataSource(const char* _name) {
     if (!m_tileManager) { return -1; }
     std::lock_guard<std::mutex> lock(m_tilesMutex);
     auto source = std::make_shared<ClientGeoJsonSource>(std::string(_name), "");
-    return m_tileManager->addDataSource(source);
+    m_tileManager->addDataSource(source);
+
+    return source->id();
 }
 
 void clearSourceData(int _sourceId) {
@@ -247,7 +267,7 @@ void clearSourceData(int _sourceId) {
     if (!m_tileManager) { return; }
     std::lock_guard<std::mutex> lock(m_tilesMutex);
     for (auto& set : m_tileManager->getTileSets()) {
-        if (set.id == _sourceId) {
+        if (set.source->id() == _sourceId) {
             set.source->clearData();
             m_tileManager->clearTileSet(_sourceId);
         }
