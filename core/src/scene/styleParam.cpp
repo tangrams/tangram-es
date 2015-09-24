@@ -18,9 +18,8 @@ const std::map<std::string, StyleParamKey> s_StyleParamMap = {
     {"font:family", StyleParamKey::font_family},
     {"font:fill", StyleParamKey::font_fill},
     {"font:size", StyleParamKey::font_size},
-    {"font:stroke", StyleParamKey::font_stroke},
-    {"font:stroke_color", StyleParamKey::font_stroke_color},
-    {"font:stroke_width", StyleParamKey::font_stroke_width},
+    {"font:stroke:color", StyleParamKey::font_stroke_color},
+    {"font:stroke:width", StyleParamKey::font_stroke_width},
     {"font:style", StyleParamKey::font_style},
     {"font:weight", StyleParamKey::font_weight},
     {"join", StyleParamKey::join},
@@ -135,7 +134,6 @@ StyleParam::Value StyleParam::parseString(StyleParamKey key, const std::string& 
     case StyleParamKey::color:
     case StyleParamKey::outline_color:
     case StyleParamKey::font_fill:
-    case StyleParamKey::font_stroke:
     case StyleParamKey::font_stroke_color:
         return parseColor(_value);
 
@@ -199,7 +197,6 @@ std::string StyleParam::toString() const {
     case StyleParamKey::color:
     case StyleParamKey::outline_color:
     case StyleParamKey::font_fill:
-    case StyleParamKey::font_stroke:
     case StyleParamKey::font_stroke_color:
     case StyleParamKey::cap:
     case StyleParamKey::outline_cap:
@@ -319,7 +316,6 @@ bool StyleParam::isColor(StyleParamKey _key) {
         case StyleParamKey::color:
         case StyleParamKey::outline_color:
         case StyleParamKey::font_fill:
-        case StyleParamKey::font_stroke:
         case StyleParamKey::font_stroke_color:
             return true;
         default:

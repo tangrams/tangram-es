@@ -87,16 +87,19 @@ bool TextBuffer::addLabel(const std::string& _text, Label::Transform _transform,
     float inf = std::numeric_limits<float>::infinity();
     float x0 = inf, x1 = -inf, y0 = inf, y1 = -inf;
 
+    uint32_t strokeWidth = _params.strokeWidth * 255.;
+    uint32_t stroke = (_params.strokeColor & 0x00ffffff) + (strokeWidth << 24);
+
     for (auto& q : quads) {
         x0 = std::min(x0, std::min(q.x0, q.x1));
         x1 = std::max(x1, std::max(q.x0, q.x1));
         y0 = std::min(y0, std::min(q.y0, q.y1));
         y1 = std::max(y1, std::max(q.y0, q.y1));
 
-        vertices.push_back({{q.x0, q.y0}, {q.s0, q.t0}, _options.color});
-        vertices.push_back({{q.x0, q.y1}, {q.s0, q.t1}, _options.color});
-        vertices.push_back({{q.x1, q.y0}, {q.s1, q.t0}, _options.color});
-        vertices.push_back({{q.x1, q.y1}, {q.s1, q.t1}, _options.color});
+        vertices.push_back({{q.x0, q.y0}, {q.s0, q.t0}, _options.color, stroke});
+        vertices.push_back({{q.x0, q.y1}, {q.s0, q.t1}, _options.color, stroke});
+        vertices.push_back({{q.x1, q.y0}, {q.s1, q.t0}, _options.color, stroke});
+        vertices.push_back({{q.x1, q.y1}, {q.s1, q.t1}, _options.color, stroke});
     }
 
     fontContext->unlock();

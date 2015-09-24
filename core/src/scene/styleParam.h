@@ -16,7 +16,6 @@ enum class StyleParamKey : uint8_t {
     font_family,
     font_fill,
     font_size,
-    font_stroke,
     font_stroke_color,
     font_stroke_width,
     font_style,

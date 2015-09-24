@@ -23,6 +23,7 @@ void TextStyle::constructVertexLayout() {
         {"a_position", 2, GL_FLOAT, false, 0},
         {"a_uv", 2, GL_FLOAT, false, 0},
         {"a_color", 4, GL_UNSIGNED_BYTE, true, 0},
+        {"a_stroke", 4, GL_UNSIGNED_BYTE, true, 0},
         {"a_screenPosition", 2, GL_FLOAT, false, 0},
         {"a_alpha", 1, GL_FLOAT, false, 0},
         {"a_rotation", 1, GL_FLOAT, false, 0},
@@ -58,9 +59,7 @@ Parameters TextStyle::parseRule(const DrawRule& _rule) const {
     _rule.get(StyleParamKey::font_size, p.fontSize);
     _rule.get(StyleParamKey::font_fill, p.fill);
     _rule.get(StyleParamKey::offset, p.offset);
-    if (_rule.get(StyleParamKey::font_stroke, p.strokeColor)) {
-        _rule.get(StyleParamKey::font_stroke_color, p.strokeColor);
-    }
+    _rule.get(StyleParamKey::font_stroke_color, p.strokeColor);
     _rule.get(StyleParamKey::font_stroke_width, p.strokeWidth);
     _rule.get(StyleParamKey::transform, transform);
     _rule.get(StyleParamKey::visible, p.visible);

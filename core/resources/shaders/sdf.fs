@@ -28,6 +28,8 @@ uniform sampler2D u_tex;
 varying vec2 v_uv;
 varying float v_alpha;
 varying vec4 v_color;
+varying vec4 v_strokeColor;
+varying float v_strokeWidth;
 
 #pragma tangram: global
 
@@ -65,15 +67,15 @@ void main(void) {
         discard;
     } else {
 
+        float threshold_fill = 0.5;
+        float threshold_stroke = threshold_fill - 0.1 * v_strokeWidth;
+
         float distance = texture2D(u_tex, v_uv).a;
 
-        float alpha_fill = pow(sampleAlpha(v_uv, distance, 0.5), 0.4545);
-        float alpha_stroke = pow(sampleAlpha(v_uv, distance, 0.4), 0.4545);
+        float alpha_fill = pow(sampleAlpha(v_uv, distance, threshold_fill), 0.4545);
+        float alpha_stroke = pow(sampleAlpha(v_uv, distance, threshold_stroke), 0.4545);
 
-        vec4 color_fill = v_color;
-        vec4 color_stroke = vec4(1.);
-
-        vec4 color = mix(color_stroke, color_fill, alpha_fill);
+        vec4 color = mix(v_strokeColor, v_color, alpha_fill);
         color.a = max(alpha_fill, alpha_stroke) * v_alpha;
 
         #pragma tangram: color

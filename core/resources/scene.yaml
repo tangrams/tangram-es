@@ -312,7 +312,7 @@ layers:
                     style: normal
                     size: 1.em
                     fill: black
-
+                    stroke: { color: white, width: 1 }
         highway:
             filter: { kind: highway }
             draw:

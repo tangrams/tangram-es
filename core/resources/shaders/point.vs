@@ -15,6 +15,7 @@ attribute vec2 a_uv;
 attribute LOWP float a_alpha;
 attribute LOWP float a_rotation;
 attribute LOWP vec4 a_color;
+attribute LOWP vec4 a_stroke;
 
 uniform mat4 u_proj;
 
@@ -23,6 +24,8 @@ uniform mat4 u_proj;
 varying vec2 v_uv;
 varying float v_alpha;
 varying vec4 v_color;
+varying vec4 v_strokeColor;
+varying float v_strokeWidth;
 
 #pragma tangram: global
 
@@ -47,5 +50,7 @@ void main() {
 
     v_alpha = a_alpha;
     v_uv = a_uv;
-	v_color = a_color;
+    v_color = a_color;
+    v_strokeColor = vec4(a_stroke.rgb, v_color.a);
+    v_strokeWidth = a_stroke.a;
 }
