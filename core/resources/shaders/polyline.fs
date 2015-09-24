@@ -24,7 +24,7 @@ varying vec2 v_texcoord;
 
 #pragma tangram: material
 #pragma tangram: lighting
-#pragma tangram: globals
+#pragma tangram: global
 
 void main(void) {
     vec4 color = v_color;
