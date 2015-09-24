@@ -50,9 +50,6 @@ class SceneLoader {
     Filter generateNoneFilter(YAML::Node filter, Scene& scene);
     Filter generatePredicate(YAML::Node filter, std::string _key);
 
-    // Style Mixing helper methods
-    YAML::Node mixStyle(const Mixes& mixes);
-
 public:
 
     SceneLoader() {};
@@ -64,7 +61,10 @@ public:
     // public for testing
     std::vector<StyleParam> parseStyleParams(YAML::Node params, Scene& scene, const std::string& propPrefix = "");
     StyleUniforms parseStyleUniforms(const YAML::Node& uniform, Scene& scene);
+    YAML::Node mixStyle(const Mixes& mixes);
 
+    // Generate style mixins for a given style node
+    Mixes recursiveMixins(Mixes mixenIn, const std::string& styleName, YAML::Node styles);
     // Generic methods to merge properties
     YAML::Node propMerge(const std::string& propStr, const Mixes& mixes);
 

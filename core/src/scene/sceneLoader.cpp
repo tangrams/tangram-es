@@ -414,6 +414,7 @@ Node SceneLoader::propMerge(const std::string& propStr, const Mixes& mixes) {
     std::unordered_map<std::string, Mixes> mapMixes;
 
     for (const auto& mixNode: mixes) {
+        if (!mixNode.IsMap()) { continue; }
         if (Node propNode = mixNode[propStr]) {
             if (propNode.IsScalar() && propNode.as<std::string>() == "true") {      // OR Properties
                 node = propNode;
@@ -452,6 +453,7 @@ Node SceneLoader::shaderBlockMerge(const Mixes& mixes) {
 
     Node node;
     for (const auto& mixNode : mixes) {
+        if (!mixNode.IsMap()) { continue; }
         if (Node shaderNode = mixNode["shaders"]) {
             if (Node blocks = shaderNode["blocks"]) {
                 for (const auto& block : blocks) {
@@ -475,6 +477,7 @@ Node SceneLoader::shaderExtMerge(const Mixes& mixes) {
     std::unordered_set<std::string> uniqueList;
 
     for (const auto& mixNode : mixes) {
+        if (!mixNode.IsMap()) { continue; }
         if (Node shaderNode = mixNode["shaders"]) {
             if (Node extNode = shaderNode["extensions"]) {
                 if (extNode.IsScalar()) {
@@ -522,6 +525,44 @@ Node SceneLoader::mixStyle(const Mixes& mixes) {
     return styleNode;
 }
 
+Mixes SceneLoader::recursiveMixins(Mixes mixesIn, const std::string& styleName, Node styles) {
+    Mixes mixes;
+    mixes.swap(mixesIn);
+
+    static std::unordered_set<std::string> mixedStyles;
+
+    auto styleNode = styles[styleName];
+
+    if (Node mixNode = styleNode["mix"]) {
+        if (mixNode.IsScalar()) {
+            auto mixStyleName = mixNode.as<std::string>();
+            mixes.reserve(mixes.size() + 1);
+            if (mixedStyles.find(mixStyleName) != mixedStyles.end()) {
+                mixes.push_back(mixNode);
+            } else {
+                mixes = recursiveMixins(mixes, mixStyleName, styles);
+            }
+        } else if (mixNode.IsSequence()) {
+            mixes.reserve(mixes.size() + mixNode.size() + 1);
+            for (const auto& mixStyleNode : mixNode) {
+                auto mixStyleName = mixStyleNode.as<std::string>();
+                if (mixedStyles.find(mixStyleName) != mixedStyles.end()) {
+                    mixes.push_back(mixStyleNode);
+                } else {
+                    mixes = recursiveMixins(mixes, mixStyleName, styles);
+                }
+            }
+        } else {
+            logMsg("Error parsing mix param for style: %s. Expected scalar or sequence value\n", styleName.c_str());
+        }
+    }
+
+    mixes.push_back(styleNode);
+    mixedStyles.insert(styleName);
+
+    return mixes;
+}
+
 void SceneLoader::loadStyles(Node styles, Scene& scene) {
 
     Style* style = nullptr;
@@ -555,22 +596,11 @@ void SceneLoader::loadStyles(Node styles, Scene& scene) {
         }
 
         Mixes mixes;
-        if (Node mixNode = styleNode["mix"]) {
-            if (mixNode.IsScalar()) {
-                mixes.reserve(2);
-                mixes.push_back(styles[mixNode.as<std::string>()]);
-            } else if (mixNode.IsSequence()) {
-                mixes.reserve(mixNode.size() + 1);
-                for (const auto& mixStyleNode : mixNode) {
-                    mixes.push_back(styles[mixStyleNode.as<std::string>()]);
-                }
-            } else {
-                logMsg("Error parsing mix param for style: %s. Expected scalar or sequence value\n", styleName.c_str());
-            }
-        }
-        mixes.push_back(styles[styleName]);
+        mixes = recursiveMixins(mixes, styleName, styles);
 
         Node mixedStyleNode = mixStyle(mixes);
+        // Update styleNode with mixedStyleNode (for future uses)
+        styles[styleName] = mixedStyleNode;
 
         // Construct style instance using the merged properties
         if (Node baseNode = mixedStyleNode["base"]) {
