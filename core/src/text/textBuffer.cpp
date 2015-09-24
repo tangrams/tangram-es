@@ -87,7 +87,11 @@ bool TextBuffer::addLabel(const std::string& _text, Label::Transform _transform,
     float inf = std::numeric_limits<float>::infinity();
     float x0 = inf, x1 = -inf, y0 = inf, y1 = -inf;
 
-    uint32_t strokeWidth = _params.strokeWidth * 255.;
+    // Stroke width is normalized by the distance of the SDF spread, then scaled
+    // to a char, then packed into the "alpha" channel of stroke. The .25 scaling
+    // probably has to do with how the SDF is generated, but honestly I'm not sure
+    // what it represents.
+    uint32_t strokeWidth = _params.strokeWidth / _params.blurSpread * 255. * .25;
     uint32_t stroke = (_params.strokeColor & 0x00ffffff) + (strokeWidth << 24);
 
     for (auto& q : quads) {

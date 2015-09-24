@@ -51,6 +51,9 @@ void main() {
     v_alpha = a_alpha;
     v_uv = a_uv;
     v_color = a_color;
-    v_strokeColor = vec4(a_stroke.rgb, v_color.a);
     v_strokeWidth = a_stroke.a;
+
+    // If width of stroke is zero, set the stroke color to the fill color -
+    // the border pixel of the fill is always slightly mixed with the stroke color
+    v_strokeColor.rgb = (v_strokeWidth > TANGRAM_EPSILON) ? a_stroke.rgb : a_color.rgb;
 }

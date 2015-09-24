@@ -68,7 +68,7 @@ void main(void) {
     } else {
 
         float threshold_fill = 0.5;
-        float threshold_stroke = threshold_fill - 0.1 * v_strokeWidth;
+        float threshold_stroke = threshold_fill - v_strokeWidth;
 
         float distance = texture2D(u_tex, v_uv).a;
 
