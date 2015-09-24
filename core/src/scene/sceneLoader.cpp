@@ -537,7 +537,7 @@ void SceneLoader::loadStyles(Node styles, Scene& scene) {
     // Instantiate built-in styles
     scene.styles().emplace_back(new PolygonStyle("polygons"));
     scene.styles().emplace_back(new PolylineStyle("lines"));
-    scene.styles().emplace_back(new TextStyle("text", true, true));
+    scene.styles().emplace_back(new TextStyle("text", true, false));
     scene.styles().emplace_back(new DebugTextStyle("FiraSans_Medium_", "debugtext", 30.0f, true, false));
     scene.styles().emplace_back(new DebugStyle("debug"));
     scene.styles().emplace_back(new SpriteStyle("sprites"));
@@ -586,7 +586,7 @@ void SceneLoader::loadStyles(Node styles, Scene& scene) {
             } else if (baseString == "lines") {
                 style = new PolylineStyle(styleName);
             } else if (baseString == "text") {
-                style = new TextStyle(styleName, true, true);
+                style = new TextStyle(styleName, true, false);
             } else if (baseString == "points") {
                 style = new SpriteStyle(styleName);
             } else {
