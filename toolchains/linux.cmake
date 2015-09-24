@@ -29,7 +29,12 @@ function(build)
 
     add_executable(${EXECUTABLE_NAME} ${SOURCES})
 
-    add_custom_command(TARGET tangram POST_BUILD COMMAND ${CMAKE_COMMAND} -E copy_directory
-                       ${PROJECT_SOURCE_DIR}/core/resources $<TARGET_FILE_DIR:tangram>)
+    add_custom_command(TARGET tangram POST_BUILD COMMAND
+      COMMAND ${CMAKE_COMMAND} -E echo "Copying data..."
+      COMMAND ${CMAKE_COMMAND} -E copy_directory ${PROJECT_SOURCE_DIR}/core/resources/shaders $<TARGET_FILE_DIR:tangram>/shaders
+      COMMAND ${CMAKE_COMMAND} -E copy_directory ${PROJECT_SOURCE_DIR}/core/resources/img $<TARGET_FILE_DIR:tangram>/img
+      COMMAND ${CMAKE_COMMAND} -E copy_directory ${PROJECT_SOURCE_DIR}/core/resources/fonts $<TARGET_FILE_DIR:tangram>/fonts
+      COMMAND ${CMAKE_COMMAND} -E copy ${PROJECT_SOURCE_DIR}/core/resources/scene.yaml $<TARGET_FILE_DIR:tangram>
+    )
 
 endfunction()

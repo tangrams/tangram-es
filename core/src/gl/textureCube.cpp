@@ -19,6 +19,11 @@ void TextureCube::load(const std::string& _file) {
     unsigned char* pixels;
     int width, height, comp;
 
+    if (data == nullptr || size == 0) {
+        logMsg("ERROR: Texture not found! '%s'\n", _file.c_str());
+        return;
+    }
+
     pixels = stbi_load_from_memory(data, size, &width, &height, &comp, STBI_rgb_alpha);
 
     size = width * height;

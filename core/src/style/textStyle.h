@@ -34,7 +34,7 @@ public:
 
     TextStyle(std::string _name, bool _sdf = false, bool _sdfMultisampling = false, Blending _blendMode = Blending::overlay, GLenum _drawMode = GL_TRIANGLES);
 
-    virtual void onBeginDrawFrame(const View& _view, const Scene& _scene) override;
+    virtual void onBeginDrawFrame(const View& _view, Scene& _scene) override;
 
     virtual ~TextStyle();
 

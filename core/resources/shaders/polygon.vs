@@ -32,7 +32,7 @@ varying vec2 v_texcoord;
 
 #pragma tangram: material
 #pragma tangram: lighting
-#pragma tangram: globals
+#pragma tangram: global
 
 void main() {
 

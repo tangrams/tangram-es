@@ -39,7 +39,14 @@ enum class StyleParamKey : uint8_t {
     width,
 };
 
+enum class Unit { pixel, meter };
+
 struct StyleParam {
+    struct ValueUnitPair {
+        float value;
+        Unit unit = Unit::meter;
+    };
+
     using Value = variant<none_type, bool, float, uint32_t, std::string, glm::vec2>;
 
     StyleParam() :
@@ -74,7 +81,7 @@ struct StyleParam {
 
     static uint32_t parseColor(const std::string& _color);
 
-    static bool parseVec2(const std::string& _value, const std::vector<std::string>& _allowedUnits, glm::vec2& _vec2);
+    static bool parseVec2(const std::string& _value, const std::vector<Unit> _allowedUnits, glm::vec2& _vec2);
 
     static Value parseString(StyleParamKey key, const std::string& _value);
 

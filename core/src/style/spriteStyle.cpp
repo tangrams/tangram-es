@@ -106,14 +106,15 @@ void SpriteStyle::buildPoint(const Point& _point, const DrawRule& _rule, const P
     mesh.addLabel(std::move(label));
 }
 
-void SpriteStyle::onBeginDrawFrame(const View& _view, const Scene& _scene) {
+void SpriteStyle::onBeginDrawFrame(const View& _view, Scene& _scene) {
     bool contextLost = Style::glContextLost();
 
     if (!m_spriteAtlas) {
         return;
     }
 
-    m_spriteAtlas->bind();
+    m_spriteAtlas->bind(0);
+    setupShaderUniforms(1, contextLost, _scene);
 
     static bool initUniformSampler = true;
 

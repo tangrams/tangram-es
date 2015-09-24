@@ -38,6 +38,12 @@ styles:
         shaders:
             blocks:
                 color: "color.rgb += vec3(0.3 * position.z * exp2(16. - abs(u_tile_zoom)));"
+    heightglowline:
+        base: lines
+        lighting: vertex
+        shaders:
+            blocks:
+                color: "color.rgb += vec3(0.3 * position.z * exp2(16. - abs(u_tile_zoom)));"
 
     icons:
         base: points
@@ -278,6 +284,12 @@ layers:
             filter: { $zoom: { min: 15 } }
             draw:
                 heightglow:
+                    extrude: true
+            draw:
+                heightglowline:
+                    width: 1.0
+                    color: [.75, .75, .73]
+                    order: 52
                     extrude: true
         high-line:
             filter: {roof_material: grass}

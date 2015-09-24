@@ -30,7 +30,7 @@ protected:
     virtual void buildPoint(const Point& _point, const DrawRule& _rule, const Properties& _props, VboMesh& _mesh, Tile& _tile) const override;
 
     Parameters parseRule(const DrawRule& _rule) const;
-    
+
     virtual VboMesh* newMesh() const override {
         return new LabelMesh(m_vertexLayout, m_drawMode);
     };
@@ -39,7 +39,7 @@ protected:
 
 public:
 
-    virtual void onBeginDrawFrame(const View& _view, const Scene& _scene) override;
+    virtual void onBeginDrawFrame(const View& _view, Scene& _scene) override;
 
     SpriteStyle(std::string _name, Blending _blendMode = Blending::overlay, GLenum _drawMode = GL_TRIANGLES);
     void setSpriteAtlas(std::shared_ptr<SpriteAtlas> _spriteAtlas) { m_spriteAtlas = _spriteAtlas; }

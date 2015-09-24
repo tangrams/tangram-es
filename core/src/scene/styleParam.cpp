@@ -6,6 +6,7 @@
 #include "util/geom.h" // for CLAMP
 #include <algorithm>
 #include <map>
+#include <cstring>
 
 namespace Tangram {
 
@@ -49,6 +50,29 @@ static const char* keyName(StyleParamKey key) {
     return empty.c_str();
 }
 
+static int parseInt(const std::string& _str, int& _value) {
+    try {
+        size_t index;
+        _value = std::stoi(_str, &index);
+        return index;
+    } catch (std::invalid_argument) {
+    } catch (std::out_of_range) {}
+    logMsg("Warning: Not an Integer '%s'", _str.c_str());
+
+    return -1;
+}
+
+static int parseFloat(const std::string& _str, double& _value) {
+    try {
+        size_t index;
+        _value = std::stof(_str, &index);
+        return index;
+    } catch (std::invalid_argument) {
+    } catch (std::out_of_range) {}
+    logMsg("Warning: Not a Float '%s'", _str.c_str());
+
+    return -1;
+}
 
 StyleParamKey StyleParam::getKey(const std::string& _key) {
     auto it = s_StyleParamMap.find(_key);
@@ -78,16 +102,22 @@ StyleParam::Value StyleParam::parseString(StyleParamKey key, const std::string& 
         if (_value == "true") { return glm::vec2(NAN, NAN); }
         if (_value == "false") { return glm::vec2(0, 0) ; }
         auto vec2 = glm::vec2(NAN, NAN);
-        if (!parseVec2(_value, {"m", "px"}, vec2)) {
-            logMsg("Warning: Badly formed extrude parameter '%s'.\n", _value.c_str());
+        if (!parseVec2(_value, { Unit::meter, Unit::pixel }, vec2)) {
+            logMsg("Warning: Invalid extrude parameter '%s'.\n", _value.c_str());
         }
         return vec2;
     }
-    case StyleParamKey::offset:
+    case StyleParamKey::offset: {
+        auto vec2 = glm::vec2(0.f, 0.f);
+        if (!parseVec2(_value, { Unit::pixel }, vec2) || isnan(vec2.y)) {
+            logMsg("Warning: Invalid offset parameter '%s'.\n", _value.c_str());
+        }
+        return vec2;
+    }
     case StyleParamKey::size: {
         auto vec2 = glm::vec2(0.f, 0.f);
-        if (!parseVec2(_value, {"px"}, vec2)) {
-            logMsg("Warning: Badly formed offset parameter '%s'.\n", _value.c_str());
+        if (!parseVec2(_value, { Unit::pixel }, vec2)) {
+            logMsg("Warning: Invalid size parameter '%s'.\n", _value.c_str());
         }
         return vec2;
     }
@@ -113,23 +143,19 @@ StyleParam::Value StyleParam::parseString(StyleParamKey key, const std::string& 
         break;
     case StyleParamKey::order:
     case StyleParamKey::priority: {
-        try {
-            return static_cast<uint32_t>(std::stoi(_value));
-        } catch (std::invalid_argument) {
-        } catch (std::out_of_range) {}
-        logMsg("Warning: Not an Integer '%s', key: '%s'",
-               _value.c_str(), keyName(key));
+        int num;
+        if (parseInt(_value, num) > 0) {
+             return static_cast<uint32_t>(num);
+        }
         break;
     }
     case StyleParamKey::width:
     case StyleParamKey::outline_width:
     case StyleParamKey::font_stroke_width: {
-        try {
-            return static_cast<float>(std::stof(_value));
-        } catch (std::invalid_argument) {
-        } catch (std::out_of_range) {}
-        logMsg("Warning: Not a Float '%s', key: '%s'",
-               _value.c_str(), keyName(key));
+        double num;
+        if (parseFloat(_value, num) > 0) {
+             return static_cast<float>(num);
+        }
         break;
     }
     case StyleParamKey::color:
@@ -213,44 +239,65 @@ std::string StyleParam::toString() const {
     return k + "undefined";
 }
 
-bool StyleParam::parseVec2(const std::string& _value, const std::vector<std::string>& _allowedUnit, glm::vec2& _vec2) {
-    if (_value.empty()) {
-        return false;
-    }
+int parseValueUnitPair(const std::string& _value, size_t start,
+                       StyleParam::ValueUnitPair& _result) {
 
-    std::string value = _value;
+    static const char* units[] = { "px", "m" };
+    static const size_t ulen[] = { 2, 1 };
 
-    // replace all unit occurences
-    for (auto& unit : _allowedUnit) {
-        auto i = value.find(unit);
-        // TODO: conversion
-        while (i != std::string::npos) {
-            value.replace(i, unit.size(), "");
-            i = value.find(unit);
+    if (start >= _value.length()) { return -1; }
+
+    float num;
+    int end;
+
+    int ok = std::sscanf(_value.c_str() + start, "%f%n", &num, &end);
+
+    if (!ok) { return -1; }
+
+    _result.value = static_cast<float>(num);
+
+    start += end;
+
+    if (start >= _value.length()) { return start; }
+
+    for (int i = 0; i < 2; i++) {
+        if (_value.compare(start, ulen[i], units[i]) == 0) {
+            _result.unit = static_cast<Unit>(i);
+            start += ulen[i];
+            break;
         }
     }
 
-    std::replace(value.begin(), value.end(), ',', ' ');
+    // TODO skip whitespace , whitespace
+    return std::min(_value.length(), start + 1);
+}
 
-    if (std::any_of(value.begin(), value.end(), ::isalpha)) {
+bool StyleParam::parseVec2(const std::string& _value, const std::vector<Unit> units, glm::vec2& _vec) {
+    ValueUnitPair v1, v2;
+
+    // initialize with defaults
+    v1.unit = v2.unit = units[0];
+
+    int pos = parseValueUnitPair(_value, 0, v1);
+    if (pos < 0) {
         return false;
     }
 
-    float f1, f2;
-    int num = std::sscanf(value.c_str(), "%f %f", &f1, &f2);
-
-    switch(num) {
-        case 1:
-            _vec2 = { f1, NAN };
-            break;
-        case 2:
-            _vec2 = { f1, f2 };
-            break;
-        case 0:
-        default:
-            return false;
+    if (std::find(units.begin(), units.end(), v1.unit) == units.end()) {
+        return false;
     }
 
+    pos = parseValueUnitPair(_value, pos, v2);
+    if (pos < 0) {
+        _vec = { v1.value, NAN };
+        return true;
+    }
+
+    if (std::find(units.begin(), units.end(), v1.unit) == units.end()) {
+        return false;
+    }
+
+    _vec = { v1.value, v2.value };
     return true;
 }
 
@@ -280,32 +327,27 @@ bool StyleParam::parseFontSize(const std::string& _str, float& _pxSize) {
         return false;
     }
 
-    size_t index = 0;
-    std::string kind;
+    double num;
+    int index = parseFloat(_str, num);
+    if (index < 0) { return false; }
 
-    try {
-        _pxSize = std::stof(_str, &index);
-    } catch (std::invalid_argument) {
-        return false;
-    } catch (std::out_of_range) {
-        return false;
-    }
+    _pxSize = static_cast<float>(num);
 
-    if (index == _str.length() && (_str.find('.') == std::string::npos)) {
+    if (size_t(index) == _str.length() && (_str.find('.') == std::string::npos)) {
         return true;
     }
 
-    kind = _str.substr(index, _str.length() - 1);
+    size_t end = _str.length() - 1;
 
-    if (kind == "px") {
-        // px may not be fractional value
+    if (_str.compare(index, end, "px") == 0) {
+        // px may not be fractional value here
         if (_str.find('.') != std::string::npos)
             return false;
-    } else if (kind == "em") {
+    } else if (_str.compare(index, end, "em") == 0) {
         _pxSize *= 16.f;
-    } else if (kind == "pt") {
+    } else if (_str.compare(index, end, "pt") == 0) {
         _pxSize /= 0.75f;
-    } else if (kind == "%") {
+    } else if (_str.compare(index, end, "%") == 0) {
         _pxSize /= 6.25f;
     } else {
         return false;
