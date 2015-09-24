@@ -13,6 +13,25 @@
 using namespace Tangram;
 using YAML::Node;
 
+TEST_CASE( "Style Mixing Test: Concrete Overwrite value check", "[mixing][core][yaml]") {
+    SceneLoader sceneLoader;
+    UniqueStyles uniqueStyles;
+    Mixes mix;
+    Node mixNode;
+    Node node = YAML::Load(R"END(
+        StyleA:
+            mix: StyleB
+        StyleB:
+            mix: StyleC
+        StyleC:
+            material: valueC
+        )END");
+
+    mix = sceneLoader.recursiveMixins({}, "StyleA", node, uniqueStyles);
+    mixNode = sceneLoader.mixStyle(mix);
+    REQUIRE(mixNode["material"].as<std::string>() == "valueC");
+}
+
 TEST_CASE( "Style Mixing Test: Nested Style Mixin Nodes", "[mixing][core][yaml]") {
     SceneLoader sceneLoader;
     UniqueStyles uniqueStyles;
