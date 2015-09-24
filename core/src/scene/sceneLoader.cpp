@@ -24,7 +24,6 @@
 #include "yaml-cpp/yaml.h"
 
 #include <algorithm>
-#include <unordered_set>
 #include <unordered_map>
 
 using YAML::Node;
@@ -525,9 +524,9 @@ Node SceneLoader::mixStyle(const Mixes& mixes) {
     return styleNode;
 }
 
-Mixes SceneLoader::recursiveMixins(Mixes mixesIn, const std::string& styleName, Node styles) {
+Mixes SceneLoader::recursiveMixins(Mixes mixIn, const std::string& styleName, Node styles, UniqueStyles& uniqueStyles) {
     Mixes mixes;
-    mixes.swap(mixesIn);
+    mixes.swap(mixIn);
 
     static std::unordered_set<std::string> mixedStyles;
 
@@ -538,18 +537,24 @@ Mixes SceneLoader::recursiveMixins(Mixes mixesIn, const std::string& styleName, 
             auto mixStyleName = mixNode.as<std::string>();
             mixes.reserve(mixes.size() + 1);
             if (mixedStyles.find(mixStyleName) != mixedStyles.end()) {
-                mixes.push_back(mixNode);
+                if (uniqueStyles.find(mixStyleName) == uniqueStyles.end()) {
+                    mixes.push_back(mixNode);
+                    uniqueStyles.insert(mixStyleName);
+                }
             } else {
-                mixes = recursiveMixins(mixes, mixStyleName, styles);
+                mixes = recursiveMixins(mixes, mixStyleName, styles, uniqueStyles);
             }
         } else if (mixNode.IsSequence()) {
             mixes.reserve(mixes.size() + mixNode.size() + 1);
             for (const auto& mixStyleNode : mixNode) {
                 auto mixStyleName = mixStyleNode.as<std::string>();
                 if (mixedStyles.find(mixStyleName) != mixedStyles.end()) {
-                    mixes.push_back(mixStyleNode);
+                    if (uniqueStyles.find(mixStyleName) == uniqueStyles.end()) {
+                        mixes.push_back(mixStyleNode);
+                        uniqueStyles.insert(mixStyleName);
+                    }
                 } else {
-                    mixes = recursiveMixins(mixes, mixStyleName, styles);
+                    mixes = recursiveMixins(mixes, mixStyleName, styles, uniqueStyles);
                 }
             }
         } else {
@@ -558,6 +563,7 @@ Mixes SceneLoader::recursiveMixins(Mixes mixesIn, const std::string& styleName, 
     }
 
     mixes.push_back(styleNode);
+    uniqueStyles.insert(styleName);
     mixedStyles.insert(styleName);
 
     return mixes;
@@ -596,9 +602,10 @@ void SceneLoader::loadStyles(Node styles, Scene& scene) {
         }
 
         Mixes mixes;
-        mixes = recursiveMixins(mixes, styleName, styles);
-
+        UniqueStyles uniqueStyles; //Used to make sure mixes result has a unique set of styles
+        mixes = recursiveMixins(mixes, styleName, styles, uniqueStyles);
         Node mixedStyleNode = mixStyle(mixes);
+
         // Update styleNode with mixedStyleNode (for future uses)
         styles[styleName] = mixedStyleNode;
 

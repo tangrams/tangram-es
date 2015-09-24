@@ -15,6 +15,7 @@ using YAML::Node;
 
 TEST_CASE( "Style Mixing Test: Nested Style Mixin Nodes", "[mixing][core][yaml]") {
     SceneLoader sceneLoader;
+    UniqueStyles uniqueStyles;
     Mixes mix;
     Node mixNode;
     Node node = YAML::Load(R"END(
@@ -30,32 +31,37 @@ TEST_CASE( "Style Mixing Test: Nested Style Mixin Nodes", "[mixing][core][yaml]"
             mix: styleA
         )END");
 
-    mix = sceneLoader.recursiveMixins({}, "styleA", node);
+    mix = sceneLoader.recursiveMixins({}, "styleA", node, uniqueStyles);
     REQUIRE(mix.size() == 1);
     mixNode = sceneLoader.mixStyle(mix);
     node["styleA"] = mixNode;
+    uniqueStyles.clear();
 
-    mix = sceneLoader.recursiveMixins({}, "styleB", node);
+    mix = sceneLoader.recursiveMixins({}, "styleB", node, uniqueStyles);
     REQUIRE(mix.size() == 1);
     mixNode = sceneLoader.mixStyle(mix);
     node["styleB"] = mixNode;
+    uniqueStyles.clear();
 
-    mix = sceneLoader.recursiveMixins({}, "styleC", node);
+    mix = sceneLoader.recursiveMixins({}, "styleC", node, uniqueStyles);
     REQUIRE(mix.size() == 3);
     mixNode = sceneLoader.mixStyle(mix);
     node["styleC"] = mixNode;
+    uniqueStyles.clear();
 
-    mix = sceneLoader.recursiveMixins({}, "styleD", node);
+    mix = sceneLoader.recursiveMixins({}, "styleD", node, uniqueStyles);
     REQUIRE(mix.size() == 3);
     mixNode = sceneLoader.mixStyle(mix);
     node["styleD"] = mixNode;
+    uniqueStyles.clear();
 
-    mix = sceneLoader.recursiveMixins({}, "styleE", node);
-    //REQUIRE(mix.size() == 4);
+    mix = sceneLoader.recursiveMixins({}, "styleE", node, uniqueStyles);
+    REQUIRE(mix.size() == 4);
     mixNode = sceneLoader.mixStyle(mix);
     node["styleE"] = mixNode;
+    uniqueStyles.clear();
 
-    mix = sceneLoader.recursiveMixins({}, "styleF", node);
+    mix = sceneLoader.recursiveMixins({}, "styleF", node, uniqueStyles);
     REQUIRE(mix.size() == 2);
     mixNode = sceneLoader.mixStyle(mix);
     node["styleF"] = mixNode;

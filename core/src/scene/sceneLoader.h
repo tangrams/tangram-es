@@ -4,6 +4,7 @@
 #include <vector>
 #include <memory>
 #include <tuple>
+#include <unordered_set>
 
 #include "yaml-cpp/yaml.h"
 #include "glm/vec2.hpp"
@@ -27,6 +28,7 @@ struct MaterialTexture;
 struct Filter;
 
 using Mixes = std::vector<YAML::Node>;
+using UniqueStyles = std::unordered_set<std::string>;
 // 0: type, 1: values
 using StyleUniforms = std::pair<std::string, std::vector<UniformValue>>;
 
@@ -63,8 +65,13 @@ public:
     StyleUniforms parseStyleUniforms(const YAML::Node& uniform, Scene& scene);
     YAML::Node mixStyle(const Mixes& mixes);
 
-    // Generate style mixins for a given style node
-    Mixes recursiveMixins(Mixes mixenIn, const std::string& styleName, YAML::Node styles);
+    /* Generate style mixins for a given style node
+     * @mixIn: current state of mixin list
+     * @styleName: styleName to be mixed
+     * @styles: YAML::Node for all styles
+     * @uniqueStyles: to make sure Mixes returned is a uniqueSet
+     */
+    Mixes recursiveMixins(Mixes mixIn, const std::string& styleName, YAML::Node styles, UniqueStyles& uniqueStyles);
     // Generic methods to merge properties
     YAML::Node propMerge(const std::string& propStr, const Mixes& mixes);
 
