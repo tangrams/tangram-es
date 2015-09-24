@@ -13,6 +13,54 @@
 using namespace Tangram;
 using YAML::Node;
 
+TEST_CASE( "Style Mixing Test: Nested Style Mixin Nodes", "[mixing][core][yaml]") {
+    SceneLoader sceneLoader;
+    Mixes mix;
+    Node mixNode;
+    Node node = YAML::Load(R"END(
+        styleA:
+        styleB:
+        styleC:
+            mix: [styleA, styleB]
+        styleD:
+            mix: [styleC, styleA]
+        styleE:
+            mix: [styleA, styleB, styleF]
+        styleF:
+            mix: styleA
+        )END");
+
+    mix = sceneLoader.recursiveMixins({}, "styleA", node);
+    REQUIRE(mix.size() == 1);
+    mixNode = sceneLoader.mixStyle(mix);
+    node["styleA"] = mixNode;
+
+    mix = sceneLoader.recursiveMixins({}, "styleB", node);
+    REQUIRE(mix.size() == 1);
+    mixNode = sceneLoader.mixStyle(mix);
+    node["styleB"] = mixNode;
+
+    mix = sceneLoader.recursiveMixins({}, "styleC", node);
+    REQUIRE(mix.size() == 3);
+    mixNode = sceneLoader.mixStyle(mix);
+    node["styleC"] = mixNode;
+
+    mix = sceneLoader.recursiveMixins({}, "styleD", node);
+    REQUIRE(mix.size() == 3);
+    mixNode = sceneLoader.mixStyle(mix);
+    node["styleD"] = mixNode;
+
+    mix = sceneLoader.recursiveMixins({}, "styleE", node);
+    //REQUIRE(mix.size() == 4);
+    mixNode = sceneLoader.mixStyle(mix);
+    node["styleE"] = mixNode;
+
+    mix = sceneLoader.recursiveMixins({}, "styleF", node);
+    REQUIRE(mix.size() == 2);
+    mixNode = sceneLoader.mixStyle(mix);
+    node["styleF"] = mixNode;
+}
+
 TEST_CASE( "Style Mixing Test: Shader Extensions Merging", "[mixing][core][yaml]") {
     SceneLoader sceneLoader;
     Node node = YAML::Load(R"END(
