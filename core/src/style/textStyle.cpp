@@ -201,7 +201,6 @@ void TextStyle::onBeginDrawFrame(const View& _view, Scene& _scene) {
     }
 
     if (m_dirtyViewport || contextLost) {
-        m_shaderProgram->setUniformf("u_resolution", _view.getWidth(), _view.getHeight());
         m_shaderProgram->setUniformMatrix4f("u_proj", glm::value_ptr(_view.getOrthoViewportMatrix()));
         m_dirtyViewport = false;
     }

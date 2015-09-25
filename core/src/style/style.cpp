@@ -137,8 +137,11 @@ void Style::onBeginDrawFrame(const View& _view, Scene& _scene) {
     }
 
     // Set Map Position
-    const auto& mapPos = _view.getPosition();
-    m_shaderProgram->setUniformf("u_map_position", mapPos.x, mapPos.y, _view.getZoom());
+    if (m_dirtyViewport) {
+        const auto& mapPos = _view.getPosition();
+        m_shaderProgram->setUniformf("u_resolution", _view.getWidth(), _view.getHeight());
+        m_shaderProgram->setUniformf("u_map_position", mapPos.x, mapPos.y, _view.getZoom());
+    }
 
     setupShaderUniforms(0, contextLost, _scene);
 

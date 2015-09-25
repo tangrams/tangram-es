@@ -6,6 +6,7 @@ precision mediump float;
 #endif
 
 uniform sampler2D u_tex;
+uniform vec2 u_resolution;
 uniform vec3 u_map_position;
 
 varying vec2 v_uv;
