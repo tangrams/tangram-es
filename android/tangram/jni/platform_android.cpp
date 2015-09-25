@@ -21,7 +21,8 @@
  */
 
 static JavaVM* jvm;
-static JNIEnv* jniEnv;
+// JNI Env bound on androids render thread (our native main thread)
+static JNIEnv* jniRenderThreadEnv;
 static jobject tangramInstance;
 static jmethodID requestRenderMethodID;
 static jmethodID setRenderModeMethodID;
@@ -35,15 +36,16 @@ static bool s_useInternalResources = true;
 static std::string s_resourceRoot;
 
 void setupJniEnv(JNIEnv* _jniEnv, jobject _tangramInstance, jobject _assetManager) {
-	_jniEnv->GetJavaVM(&jvm);
-    jniEnv = _jniEnv;
+    _jniEnv->GetJavaVM(&jvm);
+    JNIEnv* jniEnv = _jniEnv;
+    jniRenderThreadEnv = _jniEnv;
 
     tangramInstance = jniEnv->NewGlobalRef(_tangramInstance);
     jclass tangramClass = jniEnv->FindClass("com/mapzen/tangram/MapController");
     startUrlRequestMID = jniEnv->GetMethodID(tangramClass, "startUrlRequest", "(Ljava/lang/String;J)Z");
     cancelUrlRequestMID = jniEnv->GetMethodID(tangramClass, "cancelUrlRequest", "(Ljava/lang/String;)V");
     getFontFilePath = jniEnv->GetMethodID(tangramClass, "getFontFilePath", "(Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;)Ljava/lang/String;");
-	requestRenderMethodID = _jniEnv->GetMethodID(tangramClass, "requestRender", "()V");
+        requestRenderMethodID = _jniEnv->GetMethodID(tangramClass, "requestRender", "()V");
     setRenderModeMethodID = _jniEnv->GetMethodID(tangramClass, "setRenderMode", "(I)V");
 
     assetManager = AAssetManager_fromJava(jniEnv, _assetManager);
@@ -63,22 +65,35 @@ void logMsg(const char* fmt, ...) {
 
 }
 
+class JniThreadBinding {
+private:
+    JavaVM* jvm;
+    JNIEnv *jniEnv;
+    int status;
+public:
+    JniThreadBinding(JavaVM* _jvm) : jvm(_jvm) {
+        status = jvm->GetEnv((void**)&jniEnv, JNI_VERSION_1_6);
+        if (status == JNI_EDETACHED) { jvm->AttachCurrentThread(&jniEnv, NULL);}
+    }
+    ~JniThreadBinding() {
+        if (status == JNI_EDETACHED) { jvm->DetachCurrentThread(); }
+    }
+
+    JNIEnv* operator->() const {
+        return jniEnv;
+    }
+};
+
 void requestRender() {
 
-    JNIEnv *jniEnv;
-    int status = jvm->GetEnv((void**)&jniEnv, JNI_VERSION_1_6);
-    if(status == JNI_EDETACHED) {
-        jvm->AttachCurrentThread(&jniEnv, NULL);
-    }
+    JniThreadBinding jniEnv(jvm);
 
     jniEnv->CallVoidMethod(tangramInstance, requestRenderMethodID);
-
-    if(status == JNI_EDETACHED) {
-        jvm->DetachCurrentThread();
-    }
 }
 
 std::string systemFontPath(const std::string& _family, const std::string& _weight, const std::string& _style) {
+
+    JniThreadBinding jniEnv(jvm);
 
     jstring jfamily = jniEnv->NewStringUTF(_family.c_str());
     jstring jweight = jniEnv->NewStringUTF(_weight.c_str());
@@ -95,18 +110,9 @@ void setContinuousRendering(bool _isContinuous) {
 
     s_isContinuousRendering = _isContinuous;
 
-    JNIEnv *jniEnv;
-    int status = jvm->GetEnv((void**)&jniEnv, JNI_VERSION_1_6);
-    if(status == JNI_EDETACHED) {
-        jvm->AttachCurrentThread(&jniEnv, NULL);
-    }
+    JniThreadBinding jniEnv(jvm);
 
     jniEnv->CallVoidMethod(tangramInstance, requestRenderMethodID, _isContinuous ? 1 : 0);
-
-    if(status == JNI_EDETACHED) {
-        jvm->DetachCurrentThread();
-    }
-
 }
 
 bool isContinuousRendering() {
@@ -217,7 +223,7 @@ unsigned char* bytesFromResource(const char* _path, unsigned int* _size) {
 
 bool startUrlRequest(const std::string& _url, UrlCallback _callback) {
 
-    jstring jUrl = jniEnv->NewStringUTF(_url.c_str());
+    jstring jUrl = jniRenderThreadEnv->NewStringUTF(_url.c_str());
 
     // This is probably super dangerous. In order to pass a reference to our callback we have to convert it
     // to a Java type. We allocate a new callback object and then reinterpret the pointer to it as a Java long.
@@ -227,15 +233,15 @@ bool startUrlRequest(const std::string& _url, UrlCallback _callback) {
     // to make sure nothing is leaked.
     jlong jCallbackPtr = reinterpret_cast<jlong>(new UrlCallback(_callback));
 
-    jboolean methodResult = jniEnv->CallBooleanMethod(tangramInstance, startUrlRequestMID, jUrl, jCallbackPtr);
+    jboolean methodResult = jniRenderThreadEnv->CallBooleanMethod(tangramInstance, startUrlRequestMID, jUrl, jCallbackPtr);
 
     return methodResult;
 }
 
 void cancelUrlRequest(const std::string& _url) {
 
-    jstring jUrl = jniEnv->NewStringUTF(_url.c_str());
-    jniEnv->CallVoidMethod(tangramInstance, cancelUrlRequestMID, jUrl);
+    jstring jUrl = jniRenderThreadEnv->NewStringUTF(_url.c_str());
+    jniRenderThreadEnv->CallVoidMethod(tangramInstance, cancelUrlRequestMID, jUrl);
 
 }
 
