@@ -50,6 +50,9 @@ void main() {
         // scale to screen-space
         width *= exp2(-dz);
 
+        // Modify line width before extrusion
+        #pragma tangram: width
+
         position.xy += a_extrude.xy * width;
     }
 
