@@ -75,12 +75,6 @@ public class MapController implements Renderer, OnTouchListener, OnScaleGestureL
         shoveGestureDetector = new ShoveGestureDetector(mainApp, this);
         gestureDetector.setOnDoubleTapListener(this);
 
-        // Set up okHTTP
-        okRequestBuilder = new Request.Builder();
-        okClient = new OkHttpClient();
-        okClient.setConnectTimeout(10, TimeUnit.SECONDS);
-        okClient.setReadTimeout(30, TimeUnit.SECONDS);
-
         // Set up MapView
         mapView = view;
         view.setOnTouchListener(this);
@@ -91,18 +85,8 @@ public class MapController implements Renderer, OnTouchListener, OnScaleGestureL
 
     }
 
-    /**
-     * Cache map data in a directory with a specified size limit
-     * @param directory Directory in which map data will be cached
-     * @param maxSize Maximum size of data to cache, in bytes
-     * @return true if cache was successfully created
-     */
-    public boolean setTileCache(File directory, long maxSize) {
-        try {
-            Cache okTileCache = new Cache(directory, maxSize);
-            okClient.setCache(okTileCache);
-        } catch (IOException ignored) { return false; }
-        return true;
+    public void setHttpHandler(HttpHandler handler) {
+        this.httpHandler = handler;
     }
 
     /**
@@ -300,8 +284,7 @@ public class MapController implements Renderer, OnTouchListener, OnScaleGestureL
     private View.OnGenericMotionListener tapGestureListener;
     private DisplayMetrics displayMetrics = new DisplayMetrics();
 
-    private OkHttpClient okClient;
-    private Request.Builder okRequestBuilder;
+    private HttpHandler httpHandler;
 
     // View.OnTouchListener methods
     // ============================
@@ -534,30 +517,32 @@ public class MapController implements Renderer, OnTouchListener, OnScaleGestureL
     // ==================
 
     public void cancelUrlRequest(String url) {
-        okClient.cancel(url);
+        if (httpHandler == null) {
+            return;
+        }
+        httpHandler.onCancel(url);
     }
 
     public boolean startUrlRequest(String url, final long callbackPtr) throws Exception {
-        Request request = okRequestBuilder.tag(url).url(url).build();
-
-        okClient.newCall(request).enqueue(new Callback() {
+        if (httpHandler == null) {
+            return false;
+        }
+        httpHandler.onRequest(url, new Callback() {
             @Override
             public void onFailure(Request request, IOException e) {
-
                 onUrlFailure(callbackPtr);
                 e.printStackTrace();
             }
 
             @Override
             public void onResponse(Response response) throws IOException {
-
                 if (!response.isSuccessful()) {
                     onUrlFailure(callbackPtr);
-                    throw new IOException("Unexpected code " + response);
+                    throw new IOException("Unexpected response code: " + response);
                 }
-                BufferedSource src = response.body().source();
-                byte[] rawDataBytes = src.readByteArray();
-                onUrlSuccess(rawDataBytes, callbackPtr);
+                BufferedSource source = response.body().source();
+                byte[] bytes = source.readByteArray();
+                onUrlSuccess(bytes, callbackPtr);
             }
         });
         return true;
