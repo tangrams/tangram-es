@@ -74,11 +74,12 @@ void SceneLoader::loadShaderConfig(Node shaders, Style& style, Scene& scene) {
     if (Node extensionsNode = shaders["extensions"]) {
         if(extensionsNode.IsSequence()) {
             for (const auto& extNode : extensionsNode) {
-                char buffer[1000]; //sufficient space
+                const char* extTemplate = "#ifdef %s\n    #extension %s : enable\n    #define TANGRAM_EXTENSION_%s\n#endif";
                 auto extName = extNode.as<std::string>();
-                sprintf(buffer, "#ifdef %s\n    #extension %s : enable\n    #define TANGRAM_EXTENSION_%s\n#endif",
-                        extName.c_str(), extName.c_str(), extName.c_str());
-                shader.addSourceBlock("extensions", std::string(buffer));
+                size_t bufSize = std::snprintf(nullptr, 0, extTemplate, extName.c_str(), extName.c_str(), extName.c_str());
+                std::vector<char> buffer(bufSize + 1);
+                std::snprintf(&buffer[0], buffer.size(), extTemplate, extName.c_str(), extName.c_str(), extName.c_str());
+                shader.addSourceBlock("extensions", std::string(buffer.begin(), buffer.end()-1));
             }
         }
     }
