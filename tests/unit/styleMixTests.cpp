@@ -15,8 +15,8 @@ using YAML::Node;
 
 TEST_CASE( "Style Mixing Test: Concrete Overwrite value check", "[mixing][core][yaml]") {
     SceneLoader sceneLoader;
-    UniqueStyles uniqueStyles;
-    Mixes mix;
+    std::unordered_set<std::string> uniqueStyles;
+    std::vector<Node> mix;
     Node mixNode;
     Node node = YAML::Load(R"END(
         StyleA:
@@ -27,15 +27,15 @@ TEST_CASE( "Style Mixing Test: Concrete Overwrite value check", "[mixing][core][
             material: valueC
         )END");
 
-    mix = sceneLoader.recursiveMixins({}, "StyleA", node, uniqueStyles);
+    mix = sceneLoader.recursiveMixins("StyleA", node, uniqueStyles);
     mixNode = sceneLoader.mixStyle(mix);
     REQUIRE(mixNode["material"].as<std::string>() == "valueC");
 }
 
 TEST_CASE( "Style Mixing Test: Nested Style Mixin Nodes", "[mixing][core][yaml]") {
     SceneLoader sceneLoader;
-    UniqueStyles uniqueStyles;
-    Mixes mix;
+    std::unordered_set<std::string> uniqueStyles;
+    std::vector<Node> mix;
     Node mixNode;
     Node node = YAML::Load(R"END(
         styleA:
@@ -50,37 +50,37 @@ TEST_CASE( "Style Mixing Test: Nested Style Mixin Nodes", "[mixing][core][yaml]"
             mix: styleA
         )END");
 
-    mix = sceneLoader.recursiveMixins({}, "styleA", node, uniqueStyles);
+    mix = sceneLoader.recursiveMixins("styleA", node, uniqueStyles);
     REQUIRE(mix.size() == 1);
     mixNode = sceneLoader.mixStyle(mix);
     node["styleA"] = mixNode;
     uniqueStyles.clear();
 
-    mix = sceneLoader.recursiveMixins({}, "styleB", node, uniqueStyles);
+    mix = sceneLoader.recursiveMixins("styleB", node, uniqueStyles);
     REQUIRE(mix.size() == 1);
     mixNode = sceneLoader.mixStyle(mix);
     node["styleB"] = mixNode;
     uniqueStyles.clear();
 
-    mix = sceneLoader.recursiveMixins({}, "styleC", node, uniqueStyles);
+    mix = sceneLoader.recursiveMixins("styleC", node, uniqueStyles);
     REQUIRE(mix.size() == 3);
     mixNode = sceneLoader.mixStyle(mix);
     node["styleC"] = mixNode;
     uniqueStyles.clear();
 
-    mix = sceneLoader.recursiveMixins({}, "styleD", node, uniqueStyles);
+    mix = sceneLoader.recursiveMixins("styleD", node, uniqueStyles);
     REQUIRE(mix.size() == 3);
     mixNode = sceneLoader.mixStyle(mix);
     node["styleD"] = mixNode;
     uniqueStyles.clear();
 
-    mix = sceneLoader.recursiveMixins({}, "styleE", node, uniqueStyles);
+    mix = sceneLoader.recursiveMixins("styleE", node, uniqueStyles);
     REQUIRE(mix.size() == 4);
     mixNode = sceneLoader.mixStyle(mix);
     node["styleE"] = mixNode;
     uniqueStyles.clear();
 
-    mix = sceneLoader.recursiveMixins({}, "styleF", node, uniqueStyles);
+    mix = sceneLoader.recursiveMixins("styleF", node, uniqueStyles);
     REQUIRE(mix.size() == 2);
     mixNode = sceneLoader.mixStyle(mix);
     node["styleF"] = mixNode;
