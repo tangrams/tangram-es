@@ -10,6 +10,7 @@ uniform mat4 u_modelView;
 uniform mat4 u_modelViewProj;
 uniform mat3 u_normalMatrix;
 uniform vec3 u_tile_origin;
+uniform vec3 u_map_position;
 uniform float u_tile_zoom;
 uniform float u_time;
 

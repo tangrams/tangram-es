@@ -11,9 +11,9 @@ precision highp float;
 uniform mat4 u_modelView;
 uniform mat4 u_modelViewProj;
 uniform mat3 u_normalMatrix;
+uniform vec3 u_map_position;
 uniform float u_tile_zoom;
 uniform float u_time;
-uniform float u_zoom;
 
 #pragma tangram: uniforms
 
@@ -44,7 +44,7 @@ void main() {
     {
         float width = a_extrude.z;
         float dwdz = a_extrude.w;
-        float dz =  u_zoom - abs(u_tile_zoom);
+        float dz =  u_map_position.z - abs(u_tile_zoom);
         // interpolate between zoom levels
         width += dwdz * dz;
         // scale to screen-space

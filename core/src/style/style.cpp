@@ -136,7 +136,9 @@ void Style::onBeginDrawFrame(const View& _view, Scene& _scene) {
         light->setupProgram(_view, *m_shaderProgram);
     }
 
-    m_shaderProgram->setUniformf("u_zoom", _view.getZoom());
+    // Set Map Position
+    const auto& mapPos = _view.getPosition();
+    m_shaderProgram->setUniformf("u_map_position", mapPos.x, mapPos.y, _view.getZoom());
 
     setupShaderUniforms(0, contextLost, _scene);
 

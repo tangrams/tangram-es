@@ -10,6 +10,7 @@ precision mediump float;
 #pragma tangram: defines
 
 uniform sampler2D u_tex;
+uniform vec3 u_map_position;
 
 #pragma tangram: uniforms
 
