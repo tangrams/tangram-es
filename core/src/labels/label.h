@@ -34,11 +34,12 @@ public:
     };
 
     struct Vertex {
-        Vertex(glm::vec2 pos, glm::vec2 uv, uint32_t color) : pos(pos), uv(uv), color(color) {}
+        Vertex(glm::vec2 pos, glm::vec2 uv, uint32_t color, uint32_t stroke = 0) : pos(pos), uv(uv), color(color), stroke(stroke) {}
 
         glm::vec2 pos;
         glm::vec2 uv;
         uint32_t color;
+        uint32_t stroke;
         struct State {
             glm::vec2 screenPos;
             float alpha = 0.f;

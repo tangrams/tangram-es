@@ -25,6 +25,7 @@ void SpriteStyle::constructVertexLayout() {
         {"a_position", 2, GL_FLOAT, false, 0},
         {"a_uv", 2, GL_FLOAT, false, 0},
         {"a_color", 4, GL_UNSIGNED_BYTE, true, 0},
+        {"a_stroke", 4, GL_UNSIGNED_BYTE, true, 0},
         {"a_screenPosition", 2, GL_FLOAT, false, 0},
         {"a_alpha", 1, GL_FLOAT, false, 0},
         {"a_rotation", 1, GL_FLOAT, false, 0},
