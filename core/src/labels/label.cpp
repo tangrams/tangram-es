@@ -102,7 +102,7 @@ bool Label::update(const glm::mat4& _mvp, const glm::vec2& _screenSize, float _d
 }
 
 bool Label::offViewport(const glm::vec2& _screenSize) {
-    const isect2d::Vec2* quad = m_obb.getQuad();
+    const auto& quad = m_obb.getQuad();
 
     for (int i = 0; i < 4; ++i) {
         const auto& p = quad[i];
@@ -262,7 +262,8 @@ bool Label::updateState(const glm::mat4& _mvp, const glm::vec2& _screenSize, flo
                 enterState(State::fading_in, 0.0);
             }
             break;
-        case State::dead:;
+        case State::dead:
+            break;
     }
 
     return animate;

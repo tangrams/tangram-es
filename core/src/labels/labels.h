@@ -4,6 +4,8 @@
 #include "textLabel.h"
 #include "spriteLabel.h"
 #include "tile/tileID.h"
+#include "isect2d.h"
+#include "glm_vec.h" // for isect2d.h
 
 #include <memory>
 #include <mutex>
@@ -42,9 +44,13 @@ private:
 
     bool m_needUpdate;
 
+    using AABB = isect2d::AABB<glm::vec2>;
+
     // temporary data used in update()
     std::vector<Label*> m_labels;
-    std::vector<isect2d::AABB> m_aabbs;
+    std::vector<AABB> m_aabbs;
+
+    isect2d::ISect2D<glm::vec2> m_isect2d;
 };
 
 }
