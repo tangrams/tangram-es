@@ -49,15 +49,17 @@ void ShaderProgram::setSourceStrings(const std::string& _fragSrc, const std::str
 
 void ShaderProgram::addSourceBlock(const std::string& _tagName, const std::string &_glslSource, bool _allowDuplicate){
 
+    auto glslSource = "\n" + _glslSource;
+
     if (!_allowDuplicate) {
         for (auto& source : m_sourceBlocks[_tagName]) {
-            if (_glslSource == source) {
+            if (glslSource == source) {
                 return;
             }
         }
     }
 
-    m_sourceBlocks[_tagName].push_back("\n" + _glslSource);
+    m_sourceBlocks[_tagName].push_back(glslSource);
     m_needsBuild = true;
 
     //  TODO:
@@ -101,7 +103,7 @@ void ShaderProgram::use() {
     if (m_needsBuild) {
         build();
     }
-    
+
     if (m_glProgram != 0) {
         RenderState::shaderProgram(m_glProgram);
     }
