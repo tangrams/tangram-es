@@ -104,6 +104,11 @@ void update(float _dt) {
 
     m_view->update();
 
+    // Set time uniforms for all style's shader programs
+    for (auto& style : m_scene->styles()) {
+        style->getShaderProgram()->setUniformf("u_time", _dt);
+    }
+
     {
         std::lock_guard<std::mutex> lock(m_tilesMutex);
 

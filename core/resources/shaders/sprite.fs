@@ -8,6 +8,7 @@ precision mediump float;
 uniform sampler2D u_tex;
 uniform vec2 u_resolution;
 uniform vec3 u_map_position;
+uniform float u_time;
 
 varying vec2 v_uv;
 varying float v_alpha;

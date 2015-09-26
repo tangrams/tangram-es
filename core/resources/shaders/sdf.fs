@@ -24,6 +24,7 @@ const float emSize = textSize / 16.0;
 uniform sampler2D u_tex;
 uniform vec2 u_resolution;
 uniform vec3 u_map_position;
+uniform float u_time;
 
 #pragma tangram: uniforms
 

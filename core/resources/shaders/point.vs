@@ -20,6 +20,7 @@ attribute LOWP vec4 a_stroke;
 uniform mat4 u_proj;
 uniform vec2 u_resolution;
 uniform vec3 u_map_position;
+uniform float u_time;
 
 #pragma tangram: uniforms
 
