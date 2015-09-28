@@ -1,3 +1,6 @@
+scene:
+    background:
+        color: '#8db7d5'
 cameras:
     camera1:
         type: perspective #currently ignored
@@ -32,6 +35,9 @@ textures:
             bookstore: [0, 333, 32, 32]
 
 styles:
+    flatcolor:
+        base: polygons
+        lighting: false
     heightglow:
         base: polygons
         lighting: vertex
@@ -115,7 +121,7 @@ layers:
                 - { $zoom: { min: 15 }, area: { min: 1000 } }
                 - { $zoom: { min: 18 } }
         draw:
-            polygons:
+            flatcolor:
                 order: 3
                 color: '#8db7d5'
 
