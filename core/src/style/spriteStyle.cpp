@@ -74,7 +74,6 @@ SpriteStyle::Parameters SpriteStyle::parseRule(const DrawRule& _rule) const {
 }
 
 void SpriteStyle::buildPoint(const Point& _point, const DrawRule& _rule, const Properties& _props, VboMesh& _mesh, Tile& _tile) const {
-
     Parameters p = parseRule(_rule);
 
     if (!p.valid) {
@@ -128,6 +127,19 @@ void SpriteStyle::buildPoint(const Point& _point, const DrawRule& _rule, const P
 
     mesh.addVertices(std::move(vertices), {});
     mesh.addLabel(std::move(label));
+}
+
+
+void SpriteStyle::buildLine(const Line& _line, const DrawRule& _rule, const Properties& _props, VboMesh& _mesh, Tile& _tile) const {
+    for (size_t i = 0; i < _line.size(); ++i) {
+        Point p = glm::vec3(glm::vec2(_line[i]), 0.0);
+        buildPoint(p, _rule, _props, _mesh, _tile);
+    }
+}
+
+void SpriteStyle::buildPolygon(const Polygon& _polygon, const DrawRule& _rule, const Properties& _props, VboMesh& _mesh, Tile& _tile) const {
+    Point p = glm::vec3(centroid(_polygon), 0.0);
+    buildPoint(p, _rule, _props, _mesh, _tile);
 }
 
 void SpriteStyle::onBeginDrawFrame(const View& _view, Scene& _scene) {

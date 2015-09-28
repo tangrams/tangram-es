@@ -84,6 +84,10 @@ layers:
             polygons:
                 order: 0
                 color: '#f0ebeb'
+        draw:
+            icons_points:
+                color: green
+                priority: 0
 
     landuse:
         data: { source: osm }
@@ -144,6 +148,10 @@ layers:
                 outline:
                     color: '#fff'
                     width: 0.5
+        draw:
+            icons_points:
+                color: magenta
+                priority: 5
 
         rounded:
             filter: { $zoom: { min: 17 } }

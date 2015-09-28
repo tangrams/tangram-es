@@ -65,4 +65,26 @@ float signedArea(const std::vector<glm::vec3>& _polygon) {
     return 0.5 * area;
 }
 
+
+glm::vec2 centroid(const std::vector<std::vector<glm::vec3>>& _polygon) {
+    glm::vec2 centroid;
+    int n = 0;
+
+    for (auto& l : _polygon) {
+        for (auto& p : l) {
+            centroid.x += p.x;
+            centroid.y += p.y;
+            n++;
+        }
+    }
+
+    if (n == 0) {
+        return centroid;
+    }
+
+    centroid /= n;
+
+    return centroid;
+}
+
 }

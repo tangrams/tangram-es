@@ -173,21 +173,9 @@ void TextStyle::buildPolygon(const Polygon& _polygon, const DrawRule& _rule, con
 
     if (text.length() == 0) { return; }
 
-    glm::vec2 centroid;
-    int n = 0;
+    glm::vec2 c = centroid(_polygon);
 
-    for (auto& l : _polygon) {
-        for (auto& p : l) {
-            centroid.x += p.x;
-            centroid.y += p.y;
-            n++;
-        }
-    }
-    if (n == 0) { return; }
-
-    centroid /= n;
-
-    buffer.addLabel(text, { centroid, centroid }, Label::Type::point, params, optionsFromTextParams(params));
+    buffer.addLabel(text, { c, c }, Label::Type::point, params, optionsFromTextParams(params));
 }
 
 void TextStyle::onBeginDrawFrame(const View& _view, Scene& _scene) {
