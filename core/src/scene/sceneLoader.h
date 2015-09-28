@@ -40,7 +40,8 @@ struct SceneLoader {
     static void loadBackground(Node background, Scene& scene);
     static void loadSource(const std::pair<Node, Node>& source, Scene& scene);
     static void loadTexture(const std::pair<Node, Node>& texture, Scene& scene);
-    static void loadStyle(const std::pair<Node, Node>& style, Node styles, Scene& scene);
+    static void loadStyle(const std::pair<Node, Node>& style, Node styles, Scene& scene,
+                          std::unordered_set<std::string>& mixedStyles);
     static void loadLayer(const std::pair<Node, Node>& layer, Scene& scene);
     static void loadLight(const std::pair<Node, Node>& light, Scene& scene);
     static void loadFont(Node fontProps);
@@ -68,9 +69,13 @@ struct SceneLoader {
      * @styles: YAML::Node for all styles
      * @uniqueStyles: to make sure Mixes returned is a uniqueSet
      */
-    static std::vector<Node> recursiveMixins(const std::string& styleName, Node styles,
-                                                   std::unordered_set<std::string>& uniqueStyles,
-                                                   std::unordered_set<std::string>& mixedStyles);
+    static std::vector<Node> recursiveMixins(const std::string& styleName, const Node styles,
+                                             std::unordered_set<std::string>& uniqueStyles,
+                                             std::unordered_set<std::string>& mixedStyles);
+
+    static void addMixinNode(const Node mixNode, const Node styles, std::vector<Node>& mixes,
+                      std::unordered_set<std::string>& uniqueStyles,
+                      std::unordered_set<std::string>& mixedStyles);
 
     // Generic methods to merge properties
     static Node propOr(const std::string& propStr, const std::vector<Node>& mixes);
