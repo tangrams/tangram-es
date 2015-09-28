@@ -407,7 +407,8 @@ Node SceneLoader::propOr(const std::string& propStr, const std::vector<Node>& mi
 
     Node node;
 
-    for (const auto& mixNode: mixes) {
+    for (const auto& mixNode : mixes) {
+        if (!mixNode.IsMap()) { continue; }
         if (Node propNode = mixNode[propStr]) {
             if (propNode.IsScalar()) {
                 try {
@@ -440,7 +441,7 @@ Node SceneLoader::propMerge(const std::string& propStr, const std::vector<Node>&
         if (Node propNode = mixNode[propStr]) {
             if (propNode.IsScalar() || propNode.IsSequence()) {              // Overwrite Properties
                 node = Clone(propNode);
-            } else { // Map...
+            } else if (propNode.IsMap()) {
                 // Reset previous scalar/sequence node
                 node.reset();
                 for (const auto& tag : propNode) {
