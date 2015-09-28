@@ -79,14 +79,15 @@ void initialize(const char* _scenePath) {
 }
 
 void loadScene(const char* _scenePath) {
+    logMsg("Loading scene file: %s\n", _scenePath);
 
-    m_scene = std::make_shared<Scene>();
-
-    logMsg("Loading Tangram scene file: %s\n", _scenePath);
+    auto sceneRelPath = setResourceRoot(_scenePath);
     auto sceneString = stringFromResource(_scenePath);
 
-    if (SceneLoader::loadScene(sceneString, *m_scene)) {
-        m_tileManager->setScene(m_scene);
+    auto scene = std::make_shared<Scene>();
+    if (SceneLoader::loadScene(sceneString, *scene)) {
+        m_scene = scene;
+        m_tileManager->setScene(scene);
     }
 }
 
