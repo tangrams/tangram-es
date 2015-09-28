@@ -4,6 +4,7 @@
 #include "glm/mat4x4.hpp"
 #include <climits> // needed in aabb.h
 #include "isect2d.h"
+#include "glm_vec.h" // for isect2d.h
 #include "fadeEffect.h"
 #include "util/types.h"
 
@@ -18,6 +19,9 @@ class Label {
 
 public:
 
+    using OBB = isect2d::OBB<glm::vec2>;
+    using AABB = isect2d::AABB<glm::vec2>;
+
     enum class Type {
         point,
         line,
@@ -31,6 +35,7 @@ public:
         sleep           = 1 << 3,
         out_of_screen   = 1 << 4,
         wait_occ        = 1 << 5, // state waiting for first occlusion result
+        dead            = 1 << 6,
     };
 
     struct Vertex {
@@ -73,10 +78,10 @@ public:
     void updateTransform(const Transform& _transform, const glm::mat4& _mvp, const glm::vec2& _screenSize);
 
     /* Gets the oriented bounding box of the label */
-    const isect2d::OBB& getOBB() const { return m_obb; }
+    const OBB& getOBB() const { return m_obb; }
 
     /* Gets the extent of the oriented bounding box of the label */
-    const isect2d::AABB& getAABB() const { return m_aabb; }
+    const AABB& getAABB() const { return m_aabb; }
 
     /* Gets for label options: color and offset */
     const Options& getOptions() const { return m_options; }
@@ -113,7 +118,6 @@ private:
 
     bool updateState(const glm::mat4& _mvp, const glm::vec2& _screenSize, float _dt);
 
-
     void setScreenPosition(const glm::vec2& _screenPosition);
 
     void setRotation(float _rotation);
@@ -140,9 +144,9 @@ protected:
     virtual void updateBBoxes() = 0;
 
     // the label oriented bounding box
-    isect2d::OBB m_obb;
+    OBB m_obb;
     // the label axis aligned bounding box
-    isect2d::AABB m_aabb;
+    AABB m_aabb;
     // whether the label is dirty, this determines whether or no to update the geometry
     bool m_dirty;
     // the label transforms

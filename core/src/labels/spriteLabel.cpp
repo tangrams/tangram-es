@@ -8,7 +8,7 @@ SpriteLabel::SpriteLabel(Label::Transform _transform, glm::vec2 _size,
 
 void SpriteLabel::updateBBoxes() {
     glm::vec2 sp = m_transform.state.screenPos;
-    m_obb = isect2d::OBB(sp.x, sp.y, m_transform.state.rotation, m_dim.x, m_dim.y);
+    m_obb = OBB(sp.x, sp.y, m_transform.state.rotation, m_dim.x, m_dim.y);
     m_aabb = m_obb.getExtent();
 }
 
