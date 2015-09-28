@@ -186,6 +186,12 @@ float View::screenToGroundPlane(float& _screenX, float& _screenY) {
     return t;
 }
 
+float View::pixelsPerMeter() const {
+
+    double metersPerTile = MapProjection::HALF_CIRCUMFERENCE * exp2(-m_zoom);
+    return m_pixelsPerTile / metersPerTile;
+}
+
 void View::updateMatrices() {
 
     // find dimensions of tiles in world space at new zoom level
