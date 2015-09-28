@@ -152,12 +152,14 @@ void SceneLoader::loadShaderConfig(Node shaders, Style& style, Scene& scene) {
         switch (extensionsNode.Type()) {
         case NodeType::Sequence:
             for (const auto& extNode : extensionsNode) {
-                const char* extTemplate = "#ifdef GL_%s\n    #extension GL_%s : enable\n    #define TANGRAM_EXTENSION_%s\n#endif";
                 auto extName = extNode.as<std::string>();
-                size_t bufSize = std::snprintf(nullptr, 0, extTemplate, extName.c_str(), extName.c_str(), extName.c_str());
-                std::vector<char> buffer(bufSize + 1);
-                std::snprintf(&buffer[0], buffer.size(), extTemplate, extName.c_str(), extName.c_str(), extName.c_str());
-                shader.addSourceBlock("extensions", std::string(buffer.begin(), buffer.end()-1));
+                std::ostringstream ext;
+                ext << "#ifdef GL_" << extName << '\n';
+                ext << "    #extension GL_" << extName << " : enable\n";
+                ext << "    #define TANGRAM_EXTENSION_" << extName << '\n';
+                ext << "#endif\n";
+
+                shader.addSourceBlock("extensions", ext.str());
             }
             break;
         default:
