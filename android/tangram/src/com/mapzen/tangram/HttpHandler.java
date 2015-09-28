@@ -21,12 +21,22 @@ public class HttpHandler {
         okClient.setReadTimeout(30, TimeUnit.SECONDS);
     }
 
+    /**
+     * Begin an HTTP request
+     * @param url URL for the requested resource
+     * @param cb Callback for handling request result
+     * @return true if request was successfully started
+     */
     public boolean onRequest(String url, Callback cb) {
         Request request = okRequestBuilder.tag(url).url(url).build();
         okClient.newCall(request).enqueue(cb);
         return true;
     }
 
+    /**
+     * Cancel an HTTP request
+     * @param url URL of the request to be cancelled
+     */
     public void onCancel(String url) {
         okClient.cancel(url);
     }

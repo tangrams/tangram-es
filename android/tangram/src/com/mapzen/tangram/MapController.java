@@ -6,8 +6,8 @@ import android.opengl.GLSurfaceView;
 import android.opengl.GLSurfaceView.Renderer;
 import android.util.DisplayMetrics;
 import android.view.GestureDetector;
-import android.view.GestureDetector.OnGestureListener;
 import android.view.GestureDetector.OnDoubleTapListener;
+import android.view.GestureDetector.OnGestureListener;
 import android.view.MotionEvent;
 import android.view.ScaleGestureDetector;
 import android.view.ScaleGestureDetector.OnScaleGestureListener;
@@ -18,15 +18,11 @@ import com.almeros.android.multitouch.RotateGestureDetector;
 import com.almeros.android.multitouch.RotateGestureDetector.OnRotateGestureListener;
 import com.almeros.android.multitouch.ShoveGestureDetector;
 import com.almeros.android.multitouch.ShoveGestureDetector.OnShoveGestureListener;
-import com.squareup.okhttp.Cache;
 import com.squareup.okhttp.Callback;
-import com.squareup.okhttp.OkHttpClient;
 import com.squareup.okhttp.Request;
 import com.squareup.okhttp.Response;
 
-import java.io.File;
 import java.io.IOException;
-import java.util.concurrent.TimeUnit;
 
 import javax.microedition.khronos.egl.EGLConfig;
 import javax.microedition.khronos.opengles.GL10;
@@ -85,6 +81,11 @@ public class MapController implements Renderer, OnTouchListener, OnScaleGestureL
 
     }
 
+    /**
+     * Set the {@link HttpHandler} for retrieving remote map resources; a default-constructed
+     * HttpHandler is suitable for most cases, but methods can be extended to modify resource URLs
+     * @param handler the HttpHandler to use
+     */
     public void setHttpHandler(HttpHandler handler) {
         this.httpHandler = handler;
     }
