@@ -249,6 +249,13 @@ TEST_CASE( "Style Mixing Test: propMerge Tests (overWrite properties)", "[mixing
 
     REQUIRE(mixedNode["prop1"].as<std::string>() == "value1_3");
     REQUIRE(mixedNode["prop2"].as<std::string>() == "value2");
+
+    // Verify that the original node was not modified
+    REQUIRE(node["Node1"]["prop1"].as<std::string>() == "value1");
+    REQUIRE(node["Node2"]["prop1"].as<std::string>() == "value1_2");
+    REQUIRE(node["Node2"]["prop2"].as<std::string>() == "value2");
+    REQUIRE(node["Node3"]["prop1"].as<std::string>() == "value1_3");
+
 }
 
 TEST_CASE( "Style Mixing Test: propOr Tests (boolean properties)", "[mixing][core][yaml]") {
@@ -273,6 +280,7 @@ TEST_CASE( "Style Mixing Test: propOr Tests (boolean properties)", "[mixing][cor
     }
 
     REQUIRE(mixedNode["prop1"].as<bool>());
+
 }
 
 
