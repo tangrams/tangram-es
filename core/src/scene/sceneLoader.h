@@ -4,6 +4,7 @@
 #include <vector>
 #include <memory>
 #include <tuple>
+#include <unordered_set>
 
 #include "yaml-cpp/yaml.h"
 #include "glm/vec2.hpp"
@@ -26,7 +27,6 @@ struct DrawRule;
 struct MaterialTexture;
 struct Filter;
 
-using Mixes = std::vector<YAML::Node>;
 // 0: type, 1: values
 using StyleUniforms = std::pair<std::string, std::vector<UniformValue>>;
 
@@ -43,15 +43,14 @@ class SceneLoader {
     /* loads a texture with default texture properties */
     void loadTexture(const std::string& url, Scene& scene);
     void loadMaterial(YAML::Node matNode, Material& material, Scene& scene);
+    MaterialTexture loadMaterialTexture(YAML::Node matCompNode, Scene& scene);
     void loadShaderConfig(YAML::Node shaders, Style& style, Scene& scene);
     SceneLayer loadSublayer(YAML::Node layer, const std::string& name, Scene& scene);
-    MaterialTexture loadMaterialTexture(YAML::Node matCompNode, Scene& scene);
     Filter generateAnyFilter(YAML::Node filter, Scene& scene);
     Filter generateNoneFilter(YAML::Node filter, Scene& scene);
     Filter generatePredicate(YAML::Node filter, std::string _key);
 
-    // Style Mixing helper methods
-    YAML::Node mixStyle(const Mixes& mixes);
+    std::unordered_set<std::string> m_mixedStyles;
 
 public:
 
@@ -64,16 +63,25 @@ public:
     // public for testing
     std::vector<StyleParam> parseStyleParams(YAML::Node params, Scene& scene, const std::string& propPrefix = "");
     StyleUniforms parseStyleUniforms(const YAML::Node& uniform, Scene& scene);
+    YAML::Node mixStyle(const std::vector<YAML::Node>& mixes);
+
+    /* Generate style mixins for a given style node
+     * @styleName: styleName to be mixed
+     * @styles: YAML::Node for all styles
+     * @uniqueStyles: to make sure Mixes returned is a uniqueSet
+     */
+    std::vector<YAML::Node> recursiveMixins(const std::string& styleName, YAML::Node styles,
+            std::unordered_set<std::string>& uniqueStyles);
 
     // Generic methods to merge properties
-    YAML::Node propMerge(const std::string& propStr, const Mixes& mixes);
+    YAML::Node propMerge(const std::string& propStr, const std::vector<YAML::Node>& mixes);
 
     // Methods to merge shader blocks
-    YAML::Node shaderBlockMerge(const Mixes& mixes);
+    YAML::Node shaderBlockMerge(const std::vector<YAML::Node>& mixes);
 
     // Methods to merge shader extensions
-    YAML::Node shaderExtMerge(const Mixes& mixes);
-    Tangram::Filter generateFilter(YAML::Node filter, Scene& scene);
+    YAML::Node shaderExtMerge(const std::vector<YAML::Node>& mixes);
+    Filter generateFilter(YAML::Node filter, Scene& scene);
 };
 
 }
