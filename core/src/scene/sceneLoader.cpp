@@ -206,7 +206,6 @@ void SceneLoader::loadShaderConfig(Node shaders, Style& style, Scene& scene) {
         for (const auto& block : blocksNode) {
             std::string name = block.first.as<std::string>();
             std::string value = block.second.as<std::string>();
-            //logMsg("add block '%s - %s'\n",name.c_str(), value.c_str());
 
             shader.addSourceBlock(name, value); // TODO: Warn on unrecognized injection points
         }
