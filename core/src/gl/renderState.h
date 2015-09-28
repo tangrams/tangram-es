@@ -143,6 +143,12 @@ namespace RenderState {
     using TextureUnit = StateWrap<FUN(activeTextureUnit), GLuint>;
     using Texture = StateWrap<FUN(bindTexture), GLenum, GLuint>;
 
+    using ClearColor = StateWrap<FUN(glClearColor),
+                                 GLclampf,  // red
+                                 GLclampf,  // green
+                                 GLclampf,  // blue
+                                 GLclampf>; // alpha
+
 #undef FUN
 
     extern DepthTest depthTest;
@@ -164,6 +170,8 @@ namespace RenderState {
 
     extern TextureUnit textureUnit;
     extern Texture texture;
+
+    extern ClearColor clearColor;
 }
 
 }
