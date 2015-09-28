@@ -1228,15 +1228,30 @@ void SceneLoader::loadLayers(Node layers, Scene& scene, TileManager& tileManager
         std::string name = layer.first.as<std::string>();
 
         Node data = layer.second["data"];
-        Node data_layer = data["layer"];
-        Node data_source = data["source"];
 
-        std::string collection = data_layer ? data_layer.as<std::string>() : name;
-        std::string source = data_source ? data_source.as<std::string>() : "";
+        std::string source;
+        if (Node data_source = data["source"]) {
+            if (data_source.IsScalar()) {
+                source = data_source.Scalar();
+            }
+        }
+
+        std::vector<std::string> collections;
+        if (Node data_layer = data["layer"]) {
+            if (data_layer.IsScalar()) {
+                collections.push_back(data_layer.Scalar());
+            } else if (data_layer.IsSequence()) {
+                collections = data_layer.as<std::vector<std::string>>();
+            }
+        }
+
+        if (collections.empty()) {
+            collections.push_back(name);
+        }
 
         auto sublayer = loadSublayer(layer.second, name, scene);
 
-        scene.layers().push_back({ sublayer, source, collection });
+        scene.layers().push_back({ sublayer, source, collections });
     }
 }
 
