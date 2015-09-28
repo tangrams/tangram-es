@@ -249,9 +249,16 @@ TEST_CASE( "Style Mixing Test: propMerge Tests (overWrite properties)", "[mixing
 
     REQUIRE(mixedNode["prop1"].as<std::string>() == "value1_3");
     REQUIRE(mixedNode["prop2"].as<std::string>() == "value2");
+
+    // Verify that the original node was not modified
+    REQUIRE(node["Node1"]["prop1"].as<std::string>() == "value1");
+    REQUIRE(node["Node2"]["prop1"].as<std::string>() == "value1_2");
+    REQUIRE(node["Node2"]["prop2"].as<std::string>() == "value2");
+    REQUIRE(node["Node3"]["prop1"].as<std::string>() == "value1_3");
+
 }
 
-TEST_CASE( "Style Mixing Test: propMerge Tests (boolean properties)", "[mixing][core][yaml]") {
+TEST_CASE( "Style Mixing Test: propOr Tests (boolean properties)", "[mixing][core][yaml]") {
 
     SceneLoader sceneLoader;
 
@@ -269,10 +276,11 @@ TEST_CASE( "Style Mixing Test: propMerge Tests (boolean properties)", "[mixing][
 
     Node mixedNode;
     for (auto& property : {"prop1"}) {
-        mixedNode[property] = sceneLoader.propMerge(property, { node["Node1"], node["Node2"], node["Node3"] });
+        mixedNode[property] = sceneLoader.propOr(property, { node["Node1"], node["Node2"], node["Node3"] });
     }
 
     REQUIRE(mixedNode["prop1"].as<bool>());
+
 }
 
 
