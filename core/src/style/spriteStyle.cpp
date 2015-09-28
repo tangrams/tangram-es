@@ -34,25 +34,28 @@ void SpriteStyle::constructVertexLayout() {
 
 void SpriteStyle::constructShaderProgram() {
 
-    std::string fragShaderSrcStr = stringFromResource("shaders/sprite.fs");
+    std::string fragShaderSrcStr = stringFromResource("shaders/point.fs");
     std::string vertShaderSrcStr = stringFromResource("shaders/point.vs");
 
     m_shaderProgram->setSourceStrings(fragShaderSrcStr, vertShaderSrcStr);
 
     std::string defines;
 
-    if (!m_spriteAtlas) {
+    if (!m_spriteAtlas && !m_texture) {
         defines += "#define TANGRAM_POINT\n";
     }
 
     m_shaderProgram->addSourceBlock("defines", defines);
 }
 
-
 SpriteStyle::Parameters SpriteStyle::parseRule(const DrawRule& _rule) const {
     Parameters p;
     glm::vec2 size;
 
+    // require a color of texture atlas/texture to be valid
+    if (!_rule.get(StyleParamKey::color, p.color) && !m_texture && !m_spriteAtlas) {
+        p.valid = false;
+    }
     _rule.get(StyleParamKey::sprite, p.sprite);
     _rule.get(StyleParamKey::offset, p.offset);
     _rule.get(StyleParamKey::priority, p.priority);
@@ -74,6 +77,10 @@ void SpriteStyle::buildPoint(const Point& _point, const DrawRule& _rule, const P
 
     Parameters p = parseRule(_rule);
 
+    if (!p.valid) {
+        return;
+    }
+
     std::vector<Label::Vertex> vertices;
 
     Label::Transform t = { glm::vec2(_point) };
@@ -83,6 +90,7 @@ void SpriteStyle::buildPoint(const Point& _point, const DrawRule& _rule, const P
     Label::Options options;
     options.offset = p.offset * m_pixelScale;
     options.priority = p.priority;
+    options.color = p.color;
 
     glm::vec2 uvBL = glm::vec2(0.0);
     glm::vec2 uvTR = glm::vec2(1.0);
@@ -127,6 +135,9 @@ void SpriteStyle::onBeginDrawFrame(const View& _view, Scene& _scene) {
 
     if (m_spriteAtlas) {
         m_spriteAtlas->bind(0);
+    } else if (m_texture) {
+        m_texture->update(0);
+        m_texture->bind(0);
     }
 
     setupShaderUniforms(1, contextLost, _scene);

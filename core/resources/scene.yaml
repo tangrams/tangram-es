@@ -33,7 +33,8 @@ textures:
             info: [0, 1110, 32, 32]
             hotel: [0, 259, 32, 32]
             bookstore: [0, 333, 32, 32]
-
+    cross:
+        url: img/cross.png
 
 styles:
     flatcolor:
@@ -55,6 +56,9 @@ styles:
     icons:
         base: points
         texture: pois
+    icons_points_texture:
+        base: points
+        texture: cross
     icons_points:
         base: points
 
@@ -230,11 +234,16 @@ layers:
 
     poi_icon_points:
         data: { source: osm, layer: pois }
-        filter: { name: true, not: { kind: [peak, viewpoint, bicycle_rental, car_sharing] }, $zoom: { min: 17 } }
         draw:
             icons_points:
                 offset: [0px, -8px]
-                priority: 1
+                color: yellow
+                priority: 5
+        point_texture:
+            filter: { name: true, not: { kind: [peak, viewpoint, bicycle_rental, car_sharing] }, $zoom: { min: 17 } }
+            draw:
+                icons_points_texture:
+                    priority: 1
 
     poi_icons:
         data: { source: osm, layer: pois }

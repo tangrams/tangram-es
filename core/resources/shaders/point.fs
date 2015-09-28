@@ -15,7 +15,15 @@ varying vec4 v_color;
 
 #pragma tangram: uniforms
 
-#ifdef TANGRAM_POINT
+uniform vec3 u_map_position;
+uniform vec3 u_tile_origin;
+uniform vec2 u_resolution;
+uniform float u_time;
+uniform float u_meters_per_pixel;
+
+#ifndef TANGRAM_POINT
+uniform sampler2D u_tex;
+#else
 const float borderWidth = 0.3;
 const float circleRadiusIn = 0.5;
 const float circleRadiusOut = circleRadiusIn + borderWidth;
@@ -23,8 +31,6 @@ const float circleRadiusOut = circleRadiusIn + borderWidth;
 float circle(vec2 r, vec2 center, float radius) {
     return 1.0 - smoothstep(radius - 0.2, radius + 0.2, length(r - center));
 }
-#else
-uniform sampler2D u_tex;
 #endif
 
 #pragma tangram: global

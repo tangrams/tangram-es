@@ -22,7 +22,9 @@ protected:
         std::string spriteDefault;
         glm::vec2 offset;
         glm::vec2 size;
+        uint32_t color = 0xffffffff;
         uint32_t priority = std::numeric_limits<uint32_t>::max();
+        bool valid = true;
     };
 
     virtual void constructVertexLayout() override;
@@ -36,6 +38,7 @@ protected:
     };
 
     std::shared_ptr<SpriteAtlas> m_spriteAtlas;
+    std::shared_ptr<Texture> m_texture;
 
 public:
 
@@ -43,6 +46,7 @@ public:
 
     SpriteStyle(std::string _name, Blending _blendMode = Blending::overlay, GLenum _drawMode = GL_TRIANGLES);
     void setSpriteAtlas(std::shared_ptr<SpriteAtlas> _spriteAtlas) { m_spriteAtlas = _spriteAtlas; }
+    void setTexture(std::shared_ptr<Texture> _texture) { m_texture = _texture; }
 
     virtual ~SpriteStyle();
 

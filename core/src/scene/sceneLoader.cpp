@@ -390,11 +390,17 @@ void SceneLoader::loadStyleProps(Style* style, Node styleNode, Scene& scene) {
         if (spriteStyle) {
             std::string textureName = textureNode.as<std::string>();
             auto atlases = scene.spriteAtlases();
-            auto it = atlases.find(textureName);
-            if (it != atlases.end()) {
-                spriteStyle->setSpriteAtlas(it->second);
+            auto atlasIt = atlases.find(textureName);
+            if (atlasIt != atlases.end()) {
+                spriteStyle->setSpriteAtlas(atlasIt->second);
             } else {
-                logMsg("WARNING: undefined texture name %s", textureName.c_str());
+                auto textures = scene.textures();
+                auto texIt = textures.find(textureName);
+                if (texIt != textures.end()) {
+                    spriteStyle->setTexture(texIt->second);
+                } else {
+                    logMsg("WARNING: undefined texture name %s", textureName.c_str());
+                }
             }
         }
     }
