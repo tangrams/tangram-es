@@ -104,11 +104,6 @@ void update(float _dt) {
 
     m_view->update();
 
-    // Set time uniforms for all style's shader programs
-    for (auto& style : m_scene->styles()) {
-        style->getShaderProgram()->setUniformf("u_time", _dt);
-    }
-
     {
         std::lock_guard<std::mutex> lock(m_tilesMutex);
 
@@ -142,6 +137,10 @@ void render() {
 
         // Loop over all styles
         for (const auto& style : m_scene->styles()) {
+
+            // Set time uniforms style's shader programs
+            style->getShaderProgram()->setUniformf("u_time", g_time);
+
             style->onBeginDrawFrame(*m_view, *m_scene);
 
             // Loop over all tiles in m_tileSet
