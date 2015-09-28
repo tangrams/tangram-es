@@ -13,6 +13,24 @@
 using namespace Tangram;
 using YAML::Node;
 
+TEST_CASE( "Test style loading with builin style name" ) {
+    Scene scene;
+
+    YAML::Node node = YAML::Load(R"END(
+    polygons:
+      base: polyons
+     )END");
+
+    REQUIRE(node.IsMap());
+    REQUIRE(node.size() == 1);
+
+    const auto& n = node.begin();
+    std::unordered_set<std::string> mixedStyles;
+    SceneLoader::loadStyle(*n, node, scene, mixedStyles);
+    // builtin should not be added
+    REQUIRE(scene.styles().size() == 0);
+}
+
 TEST_CASE( "Test style loading" ) {
     Scene scene;
 

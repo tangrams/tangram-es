@@ -721,13 +721,13 @@ std::vector<Node> SceneLoader::recursiveMixins(const std::string& styleName, con
 void SceneLoader::loadStyle(const std::pair<Node, Node>& styleIt, Node styles, Scene& scene,
                             std::unordered_set<std::string>& mixedStyles) {
 
+    static const auto builtIn = {
+        "polygons", "lines", "points", "text", "debug", "debugtext"
+    };
+
     std::string styleName = styleIt.first.as<std::string>();
 
-    bool validName = true;
-    for (auto& builtIn : { "polygons", "lines", "points", "text", "debug", "debugtext" }) {
-        if (styleName == builtIn) { validName = false; }
-    }
-    if (!validName) {
+    if (std::find(builtIn.begin(), builtIn.end(), styleName) != builtIn.end()) {
         LOGW("Cannot use built-in style name '%s' for new style", styleName.c_str());
         return;
     }
