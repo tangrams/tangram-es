@@ -403,6 +403,23 @@ void SceneLoader::loadStyleProps(Style* style, Node styleNode, Scene& scene) {
 
 }
 
+Node SceneLoader::propOr(const std::string& propStr, const std::vector<Node>& mixes) {
+
+    Node node;
+
+    for (const auto& mixNode: mixes) {
+        if (Node propNode = mixNode[propStr]) {
+            if (propNode.IsScalar()) {
+                if (propNode.as<std::string>() == "true") {
+                    node = true;
+                    break;
+                }
+            }
+        }
+    }
+    return node;
+}
+
 Node SceneLoader::propMerge(const std::string& propStr, const std::vector<Node>& mixes) {
 
     Node node;
@@ -417,17 +434,14 @@ Node SceneLoader::propMerge(const std::string& propStr, const std::vector<Node>&
     for (const auto& mixNode: mixes) {
         if (!mixNode.IsMap()) { continue; }
         if (Node propNode = mixNode[propStr]) {
-            if (propNode.IsScalar() && propNode.as<std::string>() == "true") {      // OR Properties
-                node = Clone(propNode);
-                break;
-            } else if (propNode.IsScalar() || propNode.IsSequence()) {              // Overwrite Properties
+            if (propNode.IsScalar() || propNode.IsSequence()) {              // Overwrite Properties
                 node = Clone(propNode);
             } else { // Map...
                 // Reset previous scalar/sequence node
                 node.reset();
                 for (const auto& tag : propNode) {
                     auto tagName = tag.first.as<std::string>();
-                    if (mapMixes.find(tagName) == mapMixes.end()) {                 // Deep Merge for all Map Props
+                    if (mapMixes.find(tagName) == mapMixes.end()) {          // Deep Merge for all Map Props
                         mapTags.push_back(tagName);
                     }
                     mapMixes[tagName].push_back(propNode);
@@ -510,7 +524,12 @@ Node SceneLoader::mixStyle(const std::vector<Node>& mixes) {
 
     Node styleNode;
 
-    for (auto& property : {"animated", "texcoords", "base", "lighting", "texture", "blend", "material", "shaders"}) {
+    for (auto& property: {"animated", "texcoords"}) {
+        Node node = propOr(property, mixes);
+        if (!node.IsNull()) { styleNode[property] = node; }
+    }
+
+    for (auto& property : {"base", "lighting", "texture", "blend", "material", "shaders"}) {
         Node node = propMerge(property, mixes);
         if (!node.IsNull()) { styleNode[property] = node; }
     }

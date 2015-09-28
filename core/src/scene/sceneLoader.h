@@ -74,6 +74,7 @@ public:
             std::unordered_set<std::string>& uniqueStyles);
 
     // Generic methods to merge properties
+    YAML::Node propOr(const std::string& propStr, const std::vector<YAML::Node>& mixes);
     YAML::Node propMerge(const std::string& propStr, const std::vector<YAML::Node>& mixes);
 
     // Methods to merge shader blocks
