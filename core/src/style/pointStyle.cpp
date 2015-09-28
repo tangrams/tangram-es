@@ -1,4 +1,4 @@
-#include "spriteStyle.h"
+#include "pointStyle.h"
 
 #include "platform.h"
 #include "tile/tile.h"
@@ -13,14 +13,13 @@
 
 namespace Tangram {
 
-SpriteStyle::SpriteStyle(std::string _name, Blending _blendMode, GLenum _drawMode) : Style(_name, _blendMode, _drawMode) {
+PointStyle::PointStyle(std::string _name, Blending _blendMode, GLenum _drawMode) : Style(_name, _blendMode, _drawMode) {
 }
 
-SpriteStyle::~SpriteStyle() {}
+PointStyle::~PointStyle() {}
 
-void SpriteStyle::constructVertexLayout() {
+void PointStyle::constructVertexLayout() {
 
-    // 32 bytes, good for memory aligments
     m_vertexLayout = std::shared_ptr<VertexLayout>(new VertexLayout({
         {"a_position", 2, GL_FLOAT, false, 0},
         {"a_uv", 2, GL_FLOAT, false, 0},
@@ -32,7 +31,7 @@ void SpriteStyle::constructVertexLayout() {
     }));
 }
 
-void SpriteStyle::constructShaderProgram() {
+void PointStyle::constructShaderProgram() {
 
     std::string fragShaderSrcStr = stringFromResource("shaders/point.fs");
     std::string vertShaderSrcStr = stringFromResource("shaders/point.vs");
@@ -48,11 +47,11 @@ void SpriteStyle::constructShaderProgram() {
     m_shaderProgram->addSourceBlock("defines", defines);
 }
 
-SpriteStyle::Parameters SpriteStyle::parseRule(const DrawRule& _rule) const {
+PointStyle::Parameters PointStyle::parseRule(const DrawRule& _rule) const {
     Parameters p;
     glm::vec2 size;
 
-    // require a color of texture atlas/texture to be valid
+    // require a color or texture atlas/texture to be valid
     if (!_rule.get(StyleParamKey::color, p.color) && !m_texture && !m_spriteAtlas) {
         p.valid = false;
     }
@@ -73,7 +72,7 @@ SpriteStyle::Parameters SpriteStyle::parseRule(const DrawRule& _rule) const {
     return p;
 }
 
-void SpriteStyle::buildPoint(const Point& _point, const DrawRule& _rule, const Properties& _props, VboMesh& _mesh, Tile& _tile) const {
+void PointStyle::buildPoint(const Point& _point, const DrawRule& _rule, const Properties& _props, VboMesh& _mesh, Tile& _tile) const {
     Parameters p = parseRule(_rule);
 
     if (!p.valid) {
@@ -130,19 +129,19 @@ void SpriteStyle::buildPoint(const Point& _point, const DrawRule& _rule, const P
 }
 
 
-void SpriteStyle::buildLine(const Line& _line, const DrawRule& _rule, const Properties& _props, VboMesh& _mesh, Tile& _tile) const {
+void PointStyle::buildLine(const Line& _line, const DrawRule& _rule, const Properties& _props, VboMesh& _mesh, Tile& _tile) const {
     for (size_t i = 0; i < _line.size(); ++i) {
         Point p = glm::vec3(glm::vec2(_line[i]), 0.0);
         buildPoint(p, _rule, _props, _mesh, _tile);
     }
 }
 
-void SpriteStyle::buildPolygon(const Polygon& _polygon, const DrawRule& _rule, const Properties& _props, VboMesh& _mesh, Tile& _tile) const {
+void PointStyle::buildPolygon(const Polygon& _polygon, const DrawRule& _rule, const Properties& _props, VboMesh& _mesh, Tile& _tile) const {
     Point p = glm::vec3(centroid(_polygon), 0.0);
     buildPoint(p, _rule, _props, _mesh, _tile);
 }
 
-void SpriteStyle::onBeginDrawFrame(const View& _view, Scene& _scene) {
+void PointStyle::onBeginDrawFrame(const View& _view, Scene& _scene) {
     bool contextLost = Style::glContextLost();
 
     if (m_spriteAtlas) {
