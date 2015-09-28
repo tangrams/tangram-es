@@ -123,6 +123,8 @@ public:
 
     const glm::mat4& getOrthoViewportMatrix() const { return m_orthoViewport; };
 
+    float pixelsPerMeter() const;
+
 protected:
 
     void updateMatrices();

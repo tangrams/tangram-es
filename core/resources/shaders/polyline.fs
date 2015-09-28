@@ -9,7 +9,11 @@ precision highp float;
 uniform mat4 u_modelView;
 uniform mat4 u_modelViewProj;
 uniform mat3 u_normalMatrix;
+uniform vec3 u_map_position;
+uniform vec3 u_tile_origin;
+uniform vec2 u_resolution;
 uniform float u_time;
+uniform float u_meters_per_pixel;
 
 #pragma tangram: uniforms
 

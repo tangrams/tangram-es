@@ -37,13 +37,13 @@ styles:
         lighting: vertex
         shaders:
             blocks:
-                color: "color.rgb += vec3(0.3 * position.z * exp2(16. - abs(u_tile_zoom)));"
+                color: "color.rgb += vec3(0.3 * position.z * exp2(16. - abs(u_tile_origin.z)));"
     heightglowline:
         base: lines
         lighting: vertex
         shaders:
             blocks:
-                color: "color.rgb += vec3(0.3 * position.z * exp2(16. - abs(u_tile_zoom)));"
+                color: "color.rgb += vec3(0.3 * position.z * exp2(16. - abs(u_tile_origin.z)));"
 
     icons:
         base: points
