@@ -689,7 +689,11 @@ std::vector<Node> SceneLoader::recursiveMixins(const std::string& styleName, con
     // TODO check, is insertion order correct when there are mutliple branches?
     std::vector<Node> mixes;
 
-    auto styleNode = styles[styleName];
+    Node styleNode = styles[styleName];
+    if (!styleNode) {
+        LOGW("Referenced 'mix' style not defined: '%s'", styleName.c_str());
+        return mixes;
+    }
 
     if (Node mixNode = styleNode["mix"]) {
         if (mixNode.IsScalar()) {
@@ -702,7 +706,7 @@ std::vector<Node> SceneLoader::recursiveMixins(const std::string& styleName, con
                 addMixinNode(mixStyleNode, styles, mixes, uniqueStyles, mixedStyles);
             }
         } else {
-            LOGW("Parsing mix param for style: '%s'. Expected scalar or sequence value",
+            LOGW("Expected scalar or sequence value as 'mix' parameter: %s. ",
                  styleName.c_str());
         }
     }
