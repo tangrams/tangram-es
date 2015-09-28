@@ -410,9 +410,13 @@ Node SceneLoader::propOr(const std::string& propStr, const std::vector<Node>& mi
     for (const auto& mixNode: mixes) {
         if (Node propNode = mixNode[propStr]) {
             if (propNode.IsScalar()) {
-                if (propNode.as<std::string>() == "true") {
-                    node = true;
-                    break;
+                try {
+                    if (propNode.as<bool>()) {
+                        node = true;
+                        break;
+                    }
+                } catch (const BadConversion& e) {
+                    logMsg("Error: Expected a boolean value for %s.\n", propStr.c_str());
                 }
             }
         }
