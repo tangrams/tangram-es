@@ -93,7 +93,8 @@ std::string Material::getDefinesBlock(){
         defines += "#define TANGRAM_MATERIAL_EMISSION\n";
         if (m_emission_texture.tex) {
             defines += "#define TANGRAM_MATERIAL_EMISSION_TEXTURE\n";
-            defines += "#define TANGRAM_MATERIAL_EMISSION_TEXTURE_" + mappingTypeToString(m_emission_texture.mapping) + "\n";
+            defines += "#define TANGRAM_MATERIAL_EMISSION_TEXTURE_" +
+                mappingTypeToString(m_emission_texture.mapping) + "\n";
             mappings[(int)m_emission_texture.mapping] = true;
         }
     }
@@ -102,7 +103,8 @@ std::string Material::getDefinesBlock(){
         defines += "#define TANGRAM_MATERIAL_AMBIENT\n";
         if (m_ambient_texture.tex) {
             defines += "#define TANGRAM_MATERIAL_AMBIENT_TEXTURE\n";
-            defines += "#define TANGRAM_MATERIAL_AMBIENT_TEXTURE_" + mappingTypeToString(m_ambient_texture.mapping) + "\n";
+            defines += "#define TANGRAM_MATERIAL_AMBIENT_TEXTURE_" +
+                mappingTypeToString(m_ambient_texture.mapping) + "\n";
             mappings[(int)m_ambient_texture.mapping] = true;
         }
     }
@@ -111,7 +113,8 @@ std::string Material::getDefinesBlock(){
         defines += "#define TANGRAM_MATERIAL_DIFFUSE\n";
         if (m_diffuse_texture.tex) {
             defines += "#define TANGRAM_MATERIAL_DIFFUSE_TEXTURE\n";
-            defines += "#define TANGRAM_MATERIAL_DIFFUSE_TEXTURE_" + mappingTypeToString(m_diffuse_texture.mapping) + "\n";
+            defines += "#define TANGRAM_MATERIAL_DIFFUSE_TEXTURE_" +
+                mappingTypeToString(m_diffuse_texture.mapping) + "\n";
             mappings[(int)m_diffuse_texture.mapping] = true;
         }
     }
@@ -120,14 +123,16 @@ std::string Material::getDefinesBlock(){
         defines += "#define TANGRAM_MATERIAL_SPECULAR\n";
         if (m_specular_texture.tex) {
             defines += "#define TANGRAM_MATERIAL_SPECULAR_TEXTURE\n";
-            defines += "#define TANGRAM_MATERIAL_SPECULAR_TEXTURE_" + mappingTypeToString(m_specular_texture.mapping) + "\n";
+            defines += "#define TANGRAM_MATERIAL_SPECULAR_TEXTURE_" +
+                mappingTypeToString(m_specular_texture.mapping) + "\n";
             mappings[(int)m_specular_texture.mapping] = true;
         }
     }
 
     if (m_normal_texture.tex){
         defines += "#define TANGRAM_MATERIAL_NORMAL_TEXTURE\n";
-        defines += "#define TANGRAM_MATERIAL_NORMAL_TEXTURE_" + mappingTypeToString(m_normal_texture.mapping) + "\n";
+        defines += "#define TANGRAM_MATERIAL_NORMAL_TEXTURE_" +
+            mappingTypeToString(m_normal_texture.mapping) + "\n";
         mappings[(int)m_specular_texture.mapping] = true;
     }
 
