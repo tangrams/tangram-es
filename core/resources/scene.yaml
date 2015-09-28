@@ -34,6 +34,7 @@ textures:
             hotel: [0, 259, 32, 32]
             bookstore: [0, 333, 32, 32]
 
+
 styles:
     flatcolor:
         base: polygons
