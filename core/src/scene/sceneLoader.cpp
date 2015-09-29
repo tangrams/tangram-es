@@ -562,7 +562,7 @@ std::vector<Node> SceneLoader::recursiveMixins(const std::string& styleName, Nod
             auto mixStyleName = mixNode.as<std::string>();
             if (m_mixedStyles.find(mixStyleName) != m_mixedStyles.end()) {
                 if (uniqueStyles.find(mixStyleName) == uniqueStyles.end()) {
-                    mixes.push_back(mixNode);
+                    mixes.push_back(styles[mixStyleName]);
                     uniqueStyles.insert(mixStyleName);
                 }
             } else {
@@ -576,7 +576,7 @@ std::vector<Node> SceneLoader::recursiveMixins(const std::string& styleName, Nod
                 auto mixStyleName = mixStyleNode.as<std::string>();
                 if (m_mixedStyles.find(mixStyleName) != m_mixedStyles.end()) {
                     if (uniqueStyles.find(mixStyleName) == uniqueStyles.end()) {
-                        mixes.push_back(mixStyleNode);
+                        mixes.push_back(styles[mixStyleName]);
                         uniqueStyles.insert(mixStyleName);
                     }
                 } else {

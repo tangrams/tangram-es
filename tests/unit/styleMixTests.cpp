@@ -13,6 +13,36 @@
 using namespace Tangram;
 using YAML::Node;
 
+TEST_CASE( "Style Mixing Test: Actual Property recursive merge check!!!", "[mixing][core][yaml]") {
+    SceneLoader sceneLoader;
+    std::unordered_set<std::string> uniqueStyles;
+    std::vector<Node> mix;
+    Node mixNode;
+    Node node = YAML::Load(R"END(
+        styleA:
+            material: A
+        styleB:
+            mix: styleA
+            base: wheresmymix?
+        )END");
+    
+    mix = sceneLoader.recursiveMixins("styleA", node, uniqueStyles);
+    REQUIRE(mix.size() == 1);
+    mixNode = sceneLoader.mixStyle(mix);
+    node["styleA"] = mixNode;
+    uniqueStyles.clear();
+    
+    mix = sceneLoader.recursiveMixins("styleB", node, uniqueStyles);
+    REQUIRE(mix.size() == 2);
+    mixNode = sceneLoader.mixStyle(mix);
+    node["styleB"] = mixNode;
+    uniqueStyles.clear();
+    
+    REQUIRE(mixNode["material"].IsScalar());
+    REQUIRE(mixNode["material"].as<std::string>() ==  "A");
+}
+
+
 TEST_CASE( "Style Mixing Test: Concrete Overwrite value check", "[mixing][core][yaml]") {
     SceneLoader sceneLoader;
     std::unordered_set<std::string> uniqueStyles;
