@@ -60,7 +60,7 @@ void TileManager::setScene(std::shared_ptr<Scene> _scene) {
                 return false;
             }
 
-            logMsg("remove source %s\n", tileSet.source->name().c_str());
+            LOG("remove source %s", tileSet.source->name().c_str());
             return true;
 
         });
@@ -75,7 +75,7 @@ void TileManager::setScene(std::shared_ptr<Scene> _scene) {
                [&](const TileSet& a) {
                             return a.source->name() == source->name();
                         }) == m_tileSets.end()) {
-            logMsg("add source %s\n", source->name().c_str());
+            LOG("add source %s", source->name().c_str());
 
             addDataSource(source);
         }

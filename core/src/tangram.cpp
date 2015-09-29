@@ -78,7 +78,7 @@ void initialize(const char* _scenePath) {
 }
 
 void loadScene(const char* _scenePath) {
-    logMsg("Loading scene file: %s\n", _scenePath);
+    LOG("Loading scene file: %s", _scenePath);
 
     auto sceneString = stringFromResource(setResourceRoot(_scenePath).c_str());
 

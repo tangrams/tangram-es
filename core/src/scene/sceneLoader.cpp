@@ -159,7 +159,7 @@ void SceneLoader::loadShaderConfig(Node shaders, Style& style, Scene& scene) {
             }
             break;
         default:
-            LOGN("Invalid 'extensions'", extensionsNode);
+            LOGW("Invalid 'extensions'", Dump(extensionsNode).c_str());
         }
     }
 
@@ -224,7 +224,7 @@ glm::vec4 parseMaterialVec(const Node& prop) {
             float value = prop.as<float>();
             return glm::vec4(value, value, value, 1.0);
         } catch (const BadConversion& e) {
-            LOGN("Invalid 'material'", prop);
+            LOGW("Invalid 'material'", Dump(prop).c_str());
             // TODO: css color parser and hex_values
         }
         break;
@@ -232,7 +232,7 @@ glm::vec4 parseMaterialVec(const Node& prop) {
         // Handled as texture
         break;
     default:
-        LOGN("Invalid 'material'", prop);
+        LOGW("Invalid 'material'", Dump(prop).c_str());
         break;
     }
     return glm::vec4(0.0);
@@ -273,7 +273,7 @@ void SceneLoader::loadMaterial(Node matNode, Material& material, Scene& scene) {
     if (Node shininess = matNode["shininess"]) {
         try { material.setShininess(shininess.as<float>()); }
         catch(const BadConversion& e) {
-            LOGN("Expected float value for 'shininess'", matNode);
+            LOGW("Expected float value for 'shininess'", Dump(matNode).c_str());
         }
     }
 
@@ -473,9 +473,6 @@ void SceneLoader::loadStyleProps(Style& style, Node styleNode, Scene& scene) {
         // TODO
         LOGW("Loading style from URL not yet implemented");
     }
-    Node urlNode = styleNode["url"];
-    if (urlNode) { LOGW("loading style from URL not yet implemented"); } // TODO
-
 }
 
 bool SceneLoader::propOr(const std::string& propStr, const std::vector<Node>& mixes) {
@@ -563,13 +560,13 @@ Node SceneLoader::shaderBlockMerge(const std::vector<Node>& mixes) {
         Node shaderNode = mixNode["shaders"];
         if (!shaderNode) { continue; }
         if (!shaderNode.IsMap()) {
-            LOGN("Expected map for 'shader'", shaderNode);
+            LOGW("Expected map for 'shader'", Dump(shaderNode).c_str());
             continue;
         }
         Node blocks = shaderNode["blocks"];
         if (!blocks) { continue; }
         if (!blocks.IsMap()) {
-            LOGN("Expected map for 'blocks'", shaderNode);
+            LOGW("Expected map for 'blocks'", Dump(shaderNode).c_str());
             continue;
         }
 
@@ -623,7 +620,7 @@ Node SceneLoader::shaderExtMerge(const std::vector<Node>& mixes) {
             break;
         }
         default:
-            LOGN("Expected scalar or sequence value for 'extensions' node", mixNode);
+            LOGW("Expected scalar or sequence value for 'extensions' node", Dump(mixNode).c_str());
         }
     }
 
