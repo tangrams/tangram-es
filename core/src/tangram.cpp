@@ -32,6 +32,7 @@ std::mutex m_tilesMutex;
 
 static float g_time = 0.0;
 static std::bitset<8> g_flags = 0;
+int log_level = 2;
 
 void initialize(const char* _scenePath) {
 

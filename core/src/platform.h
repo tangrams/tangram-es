@@ -104,18 +104,26 @@ void setCurrentThreadPriority(int priority);
 
 /* Log utilities */
 
-#define LOGW(fmt, ...) do { \
-logMsg("WARNING %s:%d: " fmt "\n", __FILE__, __LINE__, ## __VA_ARGS__); \
-} while(0)
+#if LOG_LEVEL >= 3
+#define LOGD(fmt, ...) do { logMsg("DEBUG %s:%d: " fmt "\n", __FILE__, __LINE__, ## __VA_ARGS__); } while(0)
+#else
+#define LOGD(fmt, ...)
+#endif
 
-#define LOGE(fmt, ...) do { \
-logMsg("ERROR %s:%d: " fmt "\n", __FILE__, __LINE__, ## __VA_ARGS__); \
-} while(0)
+#if LOG_LEVEL >= 2
+#define LOGW(fmt, ...) do { logMsg("WARNING %s:%d: " fmt "\n", __FILE__, __LINE__, ## __VA_ARGS__); } while(0)
+#else 
+#define LOGW(fmt, ...)
+#endif
 
-#define LOGD(fmt, ...) do { \
-logMsg("DEBUG %s:%d: " fmt "\n", __FILE__, __LINE__, ## __VA_ARGS__); \
-} while(0)
+#if LOG_LEVEL >= 1
+#define LOGE(fmt, ...) do { logMsg("ERROR %s:%d: " fmt "\n", __FILE__, __LINE__, ## __VA_ARGS__); } while(0)
+#else
+#define LOGE(fmt, ...)
+#endif
 
-#define LOG(fmt, ...) do { \
-logMsg("TANGRAM %s:%d: " fmt "\n", __FILE__, __LINE__, ## __VA_ARGS__); \
-} while(0)
+#if LOG_LEVEL >= 0
+#define LOG(fmt, ...) do { logMsg("TANGRAM %s:%d: " fmt "\n", __FILE__, __LINE__, ## __VA_ARGS__); } while(0)
+#else
+#define LOG(fmt, ...)
+#endif
