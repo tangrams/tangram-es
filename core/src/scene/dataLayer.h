@@ -10,14 +10,14 @@ namespace Tangram {
 class DataLayer : public SceneLayer {
 
     std::string m_source;
-    std::string m_collection;
+    std::vector<std::string> m_collections;
 
 public:
 
-    DataLayer(SceneLayer _layer, const std::string& _source, const std::string& _collection);
+    DataLayer(SceneLayer _layer, const std::string& _source, const std::vector<std::string>& _collections);
 
     const auto& source() const { return m_source; }
-    const auto& collection() const { return m_collection; }
+    const auto& collections() const { return m_collections; }
 
 };
 
