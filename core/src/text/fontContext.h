@@ -18,12 +18,9 @@ class FontContext {
 
 public:
 
-    static std::shared_ptr<FontContext> GetInstance() {
-        static std::shared_ptr<FontContext> instance(new FontContext());
-        return instance;
-    }
 
     ~FontContext();
+    FontContext();
 
     /* adds a font from a .ttf font file using "family", "weight" and "style" font properties*/
     FontID addFont(const std::string& _family, const std::string& _weight,
@@ -58,7 +55,6 @@ private:
     static void pushQuad(void* _userPtr, const FONSquad* _quad);
     static void fontstashError(void* uptr, int error, int val);
 
-    FontContext();
     FontContext(int _atlasSize);
 
     void initFontContext(int _atlasSize);

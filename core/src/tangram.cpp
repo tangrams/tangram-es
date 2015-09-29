@@ -62,13 +62,13 @@ void initialize(const char* _scenePath) {
     // label setup
     m_labels = std::unique_ptr<Labels>(new Labels());
 
-    // To add font for debugTextStyle
-    FontContext::GetInstance()->addFont("FiraSans", "Medium", "");
-
     logMsg("Loading Tangram scene file: %s\n", sceneRelPath.c_str());
     auto sceneString = stringFromResource(sceneRelPath.c_str());
 
     if (SceneLoader::loadScene(sceneString, *m_scene)) {
+        // To add font for debugTextStyle
+        m_scene->fontContext()->addFont("FiraSans", "Medium", "");
+
         m_tileManager->setScene(m_scene);
 
         glm::dvec2 projPos = m_view->getMapProjection().LonLatToMeters(m_scene->startPosition);
@@ -92,8 +92,9 @@ void loadScene(const char* _scenePath) {
     auto scene = std::make_shared<Scene>();
     if (SceneLoader::loadScene(sceneString, *scene)) {
         m_scene = scene;
+        m_scene->fontContext()->addFont("FiraSans", "Medium", "");
+
         m_tileManager->setScene(scene);
-        FontContext::GetInstance()->clearState();
     }
 }
 

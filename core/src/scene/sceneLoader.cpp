@@ -50,8 +50,8 @@ bool SceneLoader::loadScene(const std::string& _sceneString, Scene& _scene) {
     // Instantiate built-in styles
     _scene.styles().emplace_back(new PolygonStyle("polygons"));
     _scene.styles().emplace_back(new PolylineStyle("lines"));
-    _scene.styles().emplace_back(new TextStyle("text", true, false));
-    _scene.styles().emplace_back(new DebugTextStyle(0, "debugtext", 30.0f, true, false));
+    _scene.styles().emplace_back(new TextStyle("text", _scene.fontContext(), true, false));
+    _scene.styles().emplace_back(new DebugTextStyle(_scene.fontContext(), 0, "debugtext", 30.0f, true, false));
     _scene.styles().emplace_back(new DebugStyle("debug"));
     _scene.styles().emplace_back(new SpriteStyle("sprites"));
 
@@ -751,7 +751,7 @@ void SceneLoader::loadStyle(const std::pair<Node, Node>& styleIt, Node styles, S
     } else if (baseStyle == "lines") {
         style = std::make_unique<PolylineStyle>(styleName);
     } else if (baseStyle == "text") {
-        style = std::make_unique<TextStyle>(styleName, true, true);
+        style = std::make_unique<TextStyle>(styleName, scene.fontContext(), true, true);
     } else if (baseStyle == "points") {
         style = std::make_unique<SpriteStyle>(styleName);
     } else {

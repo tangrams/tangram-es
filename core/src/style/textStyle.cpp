@@ -12,8 +12,10 @@
 
 namespace Tangram {
 
-TextStyle::TextStyle(std::string _name, bool _sdf, bool _sdfMultisampling, Blending _blendMode, GLenum _drawMode) :
-    Style(_name, _blendMode, _drawMode), m_sdf(_sdf), m_sdfMultisampling(_sdfMultisampling) {
+TextStyle::TextStyle(std::string _name, std::shared_ptr<FontContext> _fontContext, bool _sdf,
+                     bool _sdfMultisampling, Blending _blendMode, GLenum _drawMode) :
+    Style(_name, _blendMode, _drawMode), m_sdf(_sdf), m_sdfMultisampling(_sdfMultisampling),
+    m_fontContext(_fontContext) {
 }
 
 TextStyle::~TextStyle() {
@@ -59,13 +61,12 @@ Parameters TextStyle::parseRule(const DrawRule& _rule) const {
     _rule.get(StyleParamKey::font_style, fontStyle);
     std::string fontKey = fontFamily + "_" + fontWeight + "_" + fontStyle;
     {
-        auto fontContext = FontContext::GetInstance();
-        if (!fontContext->lock()) { return p; }
+        if (!m_fontContext->lock()) { return p; }
 
-        p.fontId = fontContext->addFont(fontFamily, fontWeight, fontStyle);
+        p.fontId = m_fontContext->addFont(fontFamily, fontWeight, fontStyle);
 
-        fontContext->unlock();
-        if(p.fontId < 0) { return p; }
+        m_fontContext->unlock();
+        if (p.fontId < 0) { return p; }
     }
 
     _rule.get(StyleParamKey::font_size, p.fontSize);
@@ -132,7 +133,9 @@ void TextStyle::buildPoint(const Point& _point, const DrawRule& _rule, const Pro
     const std::string& text = applyTextSource(params, _props);
 
     if (text.length() == 0) { return; }
-    buffer.addLabel(text, { glm::vec2(_point), glm::vec2(_point) }, Label::Type::point, params, optionsFromTextParams(params));
+    buffer.addLabel(text, { glm::vec2(_point), glm::vec2(_point) },
+                    Label::Type::point, params, optionsFromTextParams(params),
+                    *m_fontContext);
 }
 
 void TextStyle::buildLine(const Line& _line, const DrawRule& _rule, const Properties& _props, VboMesh& _mesh, Tile& _tile) const {
@@ -164,7 +167,8 @@ void TextStyle::buildLine(const Line& _line, const DrawRule& _rule, const Proper
             continue;
         }
 
-        buffer.addLabel(text, { p1, p2 }, Label::Type::line, params, optionsFromTextParams(params));
+        buffer.addLabel(text, { p1, p2 }, Label::Type::line, params,
+                        optionsFromTextParams(params), *m_fontContext);
     }
 
 }
@@ -196,13 +200,14 @@ void TextStyle::buildPolygon(const Polygon& _polygon, const DrawRule& _rule, con
 
     centroid /= n;
 
-    buffer.addLabel(text, { centroid, centroid }, Label::Type::point, params, optionsFromTextParams(params));
+    buffer.addLabel(text, { centroid, centroid }, Label::Type::point, params,
+                    optionsFromTextParams(params), *m_fontContext);
 }
 
 void TextStyle::onBeginDrawFrame(const View& _view, Scene& _scene) {
     bool contextLost = Style::glContextLost();
 
-    FontContext::GetInstance()->bindAtlas(0);
+    m_fontContext->bindAtlas(0);
 
     setupShaderUniforms(1, contextLost, _scene);
 

@@ -17,6 +17,7 @@ namespace Tangram {
 class Style;
 class Texture;
 class DataSource;
+class FontContext;
 
 /* Singleton container of <Style> information
  *
@@ -36,12 +37,14 @@ public:
     auto& functions() { return m_jsFunctions; };
     auto& spriteAtlases() { return m_spriteAtlases; };
     auto& stops() { return m_stops; }
+    auto& fontContext() { return m_fontContext; }
 
     const auto& dataSources() const { return m_dataSources; };
     const auto& layers() const { return m_layers; };
     const auto& styles() const { return m_styles; };
     const auto& lights() const { return m_lights; };
     const auto& functions() const { return m_jsFunctions; };
+    const auto& fontContext() const { return m_fontContext; }
 
     const Style* findStyle(const std::string& _name) const;
     const Light* findLight(const std::string& _name) const;
@@ -62,6 +65,7 @@ private:
 
     std::vector<std::string> m_jsFunctions;
     std::list<Stops> m_stops;
+    std::shared_ptr<FontContext> m_fontContext;
 };
 
 }
