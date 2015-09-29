@@ -139,43 +139,17 @@ void TextStyle::buildLine(const Line& _line, const DrawRule& _rule, const Proper
 
     if (text.length() == 0) { return; }
 
-    int lineLength = _line.size();
-    int skipOffset = floor(lineLength / 2);
-    float minLength = 0.15; // default, probably need some more thoughts
-
-
-    for (size_t i = 0; i < _line.size() - 1; i += skipOffset) {
+    for (size_t i = 0; i < _line.size() - 1; i++) {
         glm::vec2 p1 = glm::vec2(_line[i]);
         glm::vec2 p2 = glm::vec2(_line[i + 1]);
 
-        glm::vec2 p1p2 = p2 - p1;
-        float length = glm::length(p1p2);
-
-        if (length < minLength) {
-            continue;
-        }
-
         buffer.addLabel(text, { p1, p2 }, Label::Type::line, params, optionsFromTextParams(params));
     }
-
 }
 
 void TextStyle::buildPolygon(const Polygon& _polygon, const DrawRule& _rule, const Properties& _props, VboMesh& _mesh, Tile& _tile) const {
-    auto& buffer = static_cast<TextBuffer&>(_mesh);
-
-    Parameters params = parseRule(_rule);
-
-    if (!params.visible) {
-        return;
-    }
-
-    const std::string& text = applyTextSource(params, _props);
-
-    if (text.length() == 0) { return; }
-
-    glm::vec2 c = centroid(_polygon);
-
-    buffer.addLabel(text, { c, c }, Label::Type::point, params, optionsFromTextParams(params));
+    Point p = glm::vec3(centroid(_polygon), 0.0);
+    buildPoint(p, _rule, _props, _mesh, _tile);
 }
 
 void TextStyle::onBeginDrawFrame(const View& _view, Scene& _scene) {
