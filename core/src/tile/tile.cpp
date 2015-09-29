@@ -110,8 +110,6 @@ void Tile::draw(const Style& _style, const View& _view) {
 
         shader->setUniformMatrix4f("u_modelView", glm::value_ptr(modelViewMatrix));
         shader->setUniformMatrix4f("u_modelViewProj", glm::value_ptr(modelViewProjMatrix));
-        shader->setUniformMatrix3f("u_normalMatrix", glm::value_ptr(_view.getNormalMatrix()));
-        shader->setUniformf("u_meters_per_pixel", _view.pixelsPerMeter());
         shader->setUniformf("u_tile_origin", m_tileOrigin.x - m_scale, m_tileOrigin.y - m_scale, zoomAndProxy);
 
         styleMesh->draw(*shader);
