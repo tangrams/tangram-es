@@ -355,9 +355,9 @@ void Builders::buildPolyLine(const Line& _line, PolyLineBuilder& _ctx) {
 
 #if 1
     if (nIndices != _ctx.indices.size() || nVertices != _ctx.numVertices) {
-        logMsg("expected indices = %d => %d (%d / %d / %d)\n", nIndices, _ctx.indices.size(), lineSize,
+        LOGW("expected indices = %d => %d (%d / %d / %d)", nIndices, _ctx.indices.size(), lineSize,
                cornersOnCap, trianglesOnJoin);
-        logMsg("expected vertices = %d => %d (%d / %d / %d)\n", nVertices, _ctx.numVertices, lineSize,
+        LOGW("expected vertices = %d => %d (%d / %d / %d)", nVertices, _ctx.numVertices, lineSize,
                cornersOnCap, trianglesOnJoin);
     }
 #endif

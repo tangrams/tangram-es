@@ -60,7 +60,7 @@ void VboMesh::setDrawMode(GLenum _drawMode) {
             m_drawMode = _drawMode;
             break;
         default:
-            logMsg("WARNING: Invalid draw mode for mesh! Defaulting to GL_TRIANGLES\n");
+            LOGW("Invalid draw mode for mesh! Defaulting to GL_TRIANGLES");
             m_drawMode = GL_TRIANGLES;
     }
 }
@@ -71,7 +71,7 @@ void VboMesh::subDataUpload() {
     }
 
     if (m_hint == GL_STATIC_DRAW) {
-        logMsg("WARNING: wrong usage hint provided to the Vbo\n");
+        LOGW("Wrong usage hint provided to the Vbo");
         assert(false);
     }
 

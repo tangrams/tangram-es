@@ -101,3 +101,21 @@ void cancelUrlRequest(const std::string& _url);
  * to pthread niceness.
  */
 void setCurrentThreadPriority(int priority);
+
+/* Log utilities */
+
+#define LOGW(fmt, ...) do { \
+logMsg("WARNING %s:%d: " fmt "\n", __FILE__, __LINE__, ## __VA_ARGS__); \
+} while(0)
+
+#define LOGE(fmt, ...) do { \
+logMsg("ERROR %s:%d: " fmt "\n", __FILE__, __LINE__, ## __VA_ARGS__); \
+} while(0)
+
+#define LOGD(fmt, ...) do { \
+logMsg("DEBUG %s:%d: " fmt "\n", __FILE__, __LINE__, ## __VA_ARGS__); \
+} while(0)
+
+#define LOG(fmt, ...) do { \
+logMsg("TANGRAM %s:%d: " fmt "\n", __FILE__, __LINE__, ## __VA_ARGS__); \
+} while(0)

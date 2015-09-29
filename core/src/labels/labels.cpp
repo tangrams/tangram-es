@@ -25,7 +25,7 @@ void Labels::update(const View& _view, float _dt, const std::vector<std::unique_
 
     // float zoom = _view.getZoom();
     // int lodDiscard = LODDiscardFunc(View::s_maxZoom, zoom);
-    // logMsg("loddiscard %f %d\n", zoom, lodDiscard);
+    // LOG("loddiscard %f %d", zoom, lodDiscard);
 
     std::set<std::pair<Label*, Label*>> occlusions;
 
@@ -41,7 +41,7 @@ void Labels::update(const View& _view, float _dt, const std::vector<std::unique_
 
         // discard based on level of detail
         // if ((zoom - tile->getID().z) > lodDiscard) {
-        //     logMsg("discard %d %d %d\n", tile->getID().z, tile->getID().x, tile->getID().y);
+        //     LOG("discard %d %d %d", tile->getID().z, tile->getID().x, tile->getID().y);
         //     continue;
         // }
 

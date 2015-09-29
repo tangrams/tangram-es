@@ -35,7 +35,7 @@ void View::setMapProjection(ProjectionType _projType) {
             m_projection.reset(new MercatorProjection());
             break;
         default:
-            logMsg("Error: not a valid map projection specified.\n Setting map projection to mercator by default");
+            LOGE("Not a valid map projection specified.\n Setting map projection to mercator by default");
             m_projection.reset(new MercatorProjection());
             break;
     }

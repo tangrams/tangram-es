@@ -58,7 +58,7 @@ static int parseInt(const std::string& _str, int& _value) {
         return index;
     } catch (std::invalid_argument) {
     } catch (std::out_of_range) {}
-    logMsg("Warning: Not an Integer '%s'", _str.c_str());
+    LOGW("Not an Integer '%s'", _str.c_str());
 
     return -1;
 }
@@ -70,7 +70,7 @@ static int parseFloat(const std::string& _str, double& _value) {
         return index;
     } catch (std::invalid_argument) {
     } catch (std::out_of_range) {}
-    logMsg("Warning: Not a Float '%s'", _str.c_str());
+    LOGW("Not a Float '%s'", _str.c_str());
 
     return -1;
 }
@@ -88,7 +88,7 @@ StyleParam::StyleParam(const std::string& _key, const std::string& _value) {
     value = none_type{};
 
     if (key == StyleParamKey::none) {
-        logMsg("Unknown StyleParam %s:%s\n", _key.c_str(), _value.c_str());
+        LOGW("Unknown StyleParam %s:%s", _key.c_str(), _value.c_str());
         return;
     }
     if (!_value.empty()) {
@@ -104,21 +104,21 @@ StyleParam::Value StyleParam::parseString(StyleParamKey key, const std::string& 
         if (_value == "false") { return glm::vec2(0, 0) ; }
         auto vec2 = glm::vec2(NAN, NAN);
         if (!parseVec2(_value, { Unit::meter, Unit::pixel }, vec2)) {
-            logMsg("Warning: Invalid extrude parameter '%s'.\n", _value.c_str());
+            LOGW("Invalid extrude parameter '%s'.", _value.c_str());
         }
         return vec2;
     }
     case StyleParamKey::offset: {
         auto vec2 = glm::vec2(0.f, 0.f);
         if (!parseVec2(_value, { Unit::pixel }, vec2) || isnan(vec2.y)) {
-            logMsg("Warning: Invalid offset parameter '%s'.\n", _value.c_str());
+            LOGW("Invalid offset parameter '%s'.", _value.c_str());
         }
         return vec2;
     }
     case StyleParamKey::size: {
         auto vec2 = glm::vec2(0.f, 0.f);
         if (!parseVec2(_value, { Unit::pixel }, vec2)) {
-            logMsg("Warning: Invalid size parameter '%s'.\n", _value.c_str());
+            LOGW("Invalid size parameter '%s'.", _value.c_str());
         }
         return vec2;
     }
@@ -133,7 +133,7 @@ StyleParam::Value StyleParam::parseString(StyleParamKey key, const std::string& 
     case StyleParamKey::font_size: {
         float fontSize = 16;
         if (!parseFontSize(_value, fontSize)) {
-            logMsg("Warning: Invalid font-size '%s'.\n", _value.c_str());
+            LOGW("Invalid font-size '%s'.", _value.c_str());
         }
         return fontSize;
     }
@@ -141,7 +141,7 @@ StyleParam::Value StyleParam::parseString(StyleParamKey key, const std::string& 
     case StyleParamKey::visible:
         if (_value == "true") { return true; }
         if (_value == "false") { return false; }
-        logMsg("Warning: Bool value required for capitalized/visible. Using Default.");
+        LOGW("Bool value required for capitalized/visible. Using Default.");
         break;
     case StyleParamKey::order:
     case StyleParamKey::outline_order:

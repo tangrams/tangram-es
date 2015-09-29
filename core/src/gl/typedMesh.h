@@ -55,11 +55,11 @@ public:
             return;
         }
         if (_vertexRange.start + _vertexRange.length > m_nVertices) {
-            logMsg("updateAttribute: Invalid range\n");
+            LOGW("Invalid range");
             return;
         }
         if (_attribOffset >= tSize) {
-            logMsg("updateAttribute: Invalid attribute offset\n");
+            LOGW("Invalid attribute offset");
             return;
         }
 

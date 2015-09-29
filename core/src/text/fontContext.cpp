@@ -30,7 +30,7 @@ bool FontContext::lock() {
     try {
         m_contextMutex.lock();
     } catch (std::system_error& e) {
-        logMsg("Dead lock: aborting\n");
+        LOGW("Dead lock: aborting");
         return false;
     }
     return true;
@@ -62,7 +62,7 @@ bool FontContext::addFont(const std::string& _family, const std::string& _weight
     int font = fonsAddFont(m_fsContext, fontKey.c_str(), data, dataSize);
 
     if (font == FONS_INVALID) {
-        logMsg("[FontContext] Error loading font %s\n", fontKey.c_str());
+        LOGE("loading font %s", fontKey.c_str());
         return false;
     }
 
@@ -78,7 +78,7 @@ void FontContext::setFont(const std::string& _key, int size) {
         fonsSetSize(m_fsContext, size);
         fonsSetFont(m_fsContext, id);
     } else {
-        logMsg("[FontContext] Could not find font %s\n", _key.c_str());
+        LOGW("Could not find font %s", _key.c_str());
     }
 }
 
@@ -91,11 +91,11 @@ FontID FontContext::getFontID(const std::string& _key) {
 
     if (m_fonts.size() > 0) {
         // sceneLoader makes sure that first loaded font is the default bundled font
-        logMsg("Warning: Using default font for '%s'.\n", _key.c_str());
+        LOGW("Using default font for '%s'.", _key.c_str());
         m_fonts.emplace(_key, 0);
         return 0;
     } else {
-        logMsg("Error: No default font loaded.\n");
+        LOGE("No default font loaded.");
         return -1;
     }
 }

@@ -29,7 +29,7 @@ namespace RenderState {
 
     GLuint getTextureUnit(GLuint _unit) {
         if (_unit >= TANGRAM_MAX_TEXTURE_UNIT) {
-            logMsg("Warning: trying to access unavailable texture unit");
+            LOGW("trying to access unavailable texture unit");
         }
 
         return GL_TEXTURE0 + _unit;

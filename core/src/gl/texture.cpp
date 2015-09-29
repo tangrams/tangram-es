@@ -34,7 +34,7 @@ Texture::Texture(const std::string& _file, TextureOptions _options, bool _genera
     int width, height, comp;
 
     if (data == nullptr || size == 0) {
-        logMsg("ERROR: Texture not found! '%s'\n", _file.c_str());
+        LOGE("Texture not found! '%s'", _file.c_str());
         return;
     }
 

@@ -146,7 +146,7 @@ protected:
 
             if (useIndices) {
                 if (vertexOffset + nVertices > MAX_INDEX_VALUE) {
-                    logMsg("NOTICE: Big Mesh %d\n", vertexOffset + nVertices);
+                    LOGD("Big Mesh %d\n", vertexOffset + nVertices);
 
                     m_vertexOffsets.emplace_back(indexOffset, vertexOffset);
                     vertexOffset = 0;

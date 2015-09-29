@@ -52,7 +52,7 @@ size_t VertexLayout::getOffset(std::string _attribName) {
         }
     }
 
-    logMsg("Error - No such attribute %s\n", _attribName.c_str());
+    LOGE("No such attribute %s", _attribName.c_str());
     return 0;
 }
 

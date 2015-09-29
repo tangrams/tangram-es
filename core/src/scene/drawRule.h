@@ -31,7 +31,7 @@ struct DrawRule {
         auto& param = findParameter(_key);
         if (!param) { return false; }
         if (!param.value.is<T>()) {
-            logMsg("Error: wrong type '%d'for StyleParam '%d' \n",
+            LOGE("wrong type '%d'for StyleParam '%d'",
                    param.value.which(), _key);
             return false;
         }

@@ -87,19 +87,19 @@ void PbfParser::extractFeature(ParserContext& _ctx, protobuf::message& _featureI
                     std::size_t tagKey = tagsMsg.varint();
 
                     if(_ctx.keys.size() <= tagKey) {
-                        logMsg("ERROR: accessing out of bound key\n");
+                        LOGE("accessing out of bound key");
                         return;
                     }
 
                     if(!tagsMsg) {
-                        logMsg("ERROR: uneven number of feature tag ids\n");
+                        LOGE("uneven number of feature tag ids");
                         return;
                     }
 
                     std::size_t valueKey = tagsMsg.varint();
 
                     if( _ctx.values.size() <= valueKey ) {
-                        logMsg("ERROR: accessing out of bound values\n");
+                        LOGE("accessing out of bound values");
                         return;
                     }
 

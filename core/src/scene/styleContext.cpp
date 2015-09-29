@@ -21,12 +21,12 @@ StyleContext::StyleContext() {
     // assign instance to feature_object
     duk_push_pointer(m_ctx, this);
     if (!duk_put_prop_string(m_ctx, -2, DATA_ID)) {
-        logMsg("Error: ctx not assigned\n");
+        LOGE("Ctx not assigned");
     }
 
     // put object in global scope
     if (!duk_put_global_string(m_ctx, "feature")) {
-        logMsg("Error: feature not assigned\n");
+        LOGE("Feature not assigned");
     }
 
     DUMP("init\n");
@@ -47,21 +47,21 @@ void StyleContext::initFunctions(const Scene& _scene) {
     int id = 0;
 
     for (auto& function : _scene.functions()) {
-        //logMsg("compile '%s'\n", function.c_str());
+        LOGD("compile '%s'", function.c_str());
         duk_push_string(m_ctx, function.c_str());
         duk_push_string(m_ctx, "");
 
         if (duk_pcompile(m_ctx, DUK_COMPILE_FUNCTION) == 0) {
             duk_put_prop_index(m_ctx, arr_idx, id);
         } else {
-            logMsg("Error: compile failed: %s\n", duk_safe_to_string(m_ctx, -1));
+            LOGE("Compile failed: %s", duk_safe_to_string(m_ctx, -1));
             duk_pop(m_ctx);
         }
         id++;
     }
 
     if (!duk_put_global_string(m_ctx, FUNC_ID)) {
-        logMsg("Error: 'fns' object not set\n");
+        LOGE("'fns' object not set");
     }
 
     DUMP("setScene - %d functions\n", id);
@@ -122,7 +122,7 @@ bool StyleContext::addFunction(const std::string& _name, const std::string& _fun
     duk_push_string(m_ctx, _name.c_str());
 
     if (duk_pcompile(m_ctx, DUK_COMPILE_FUNCTION) != 0) {
-        logMsg("Error: compile failed: %s\n", duk_safe_to_string(m_ctx, -1));
+        LOGE("Compile failed: %s", duk_safe_to_string(m_ctx, -1));
         return false;
     }
 
@@ -136,16 +136,16 @@ bool StyleContext::addFunction(const std::string& _name, const std::string& _fun
 
 bool StyleContext::evalFilter(FunctionID _id) const {
     if (!duk_get_global_string(m_ctx, FUNC_ID)) {
-        logMsg("Error: evalFilterFn - functions not initialized\n");
+        LOGE("EvalFilterFn - functions not initialized");
         return false;
     }
 
     if (!duk_get_prop_index(m_ctx, -1, _id)) {
-        logMsg("Error: evalFilterFn - function %d not set\n", _id);
+        LOGE("EvalFilterFn - function %d not set", _id);
     }
 
     if (duk_pcall(m_ctx, 0) != 0) {
-        logMsg("Error: evalFilterFn: %s\n", duk_safe_to_string(m_ctx, -1));
+        LOGE("EvalFilterFn: %s", duk_safe_to_string(m_ctx, -1));
     }
 
     bool result = false;
@@ -165,12 +165,12 @@ bool StyleContext::evalFilter(FunctionID _id) const {
 
 bool StyleContext::evalFilterFn(const std::string& _name) {
     if (!duk_get_global_string(m_ctx, _name.c_str())) {
-        logMsg("Error: evalFilter %s\n", _name.c_str());
+        LOGE("EvalFilter %s", _name.c_str());
         return false;
     }
 
     if (duk_pcall(m_ctx, 0) != 0) {
-        logMsg("Error: evalFilterFn: %s\n", duk_safe_to_string(m_ctx, -1));
+        LOGE("EvalFilterFn: %s", duk_safe_to_string(m_ctx, -1));
     }
 
     bool result = false;
@@ -215,7 +215,7 @@ bool StyleContext::parseStyleResult(StyleParamKey _key, StyleParam::Value& _val)
         switch (_key) {
             case StyleParamKey::extrude: {
                 if (len != 2) {
-                    logMsg("Warning: Wrong array size for extrusion: '%d'.\n", len);
+                    LOGW("Wrong array size for extrusion: '%d'.", len);
                     break;
                 }
 
@@ -235,7 +235,7 @@ bool StyleContext::parseStyleResult(StyleParamKey _key, StyleParam::Value& _val)
             case StyleParamKey::font_fill:
             case StyleParamKey::font_stroke_color: {
                 if (len < 3 || len > 4) {
-                    logMsg("Warning: Wrong array size for color: '%d'.\n", len);
+                    LOGW("Wrong array size for color: '%d'.", len);
                     break;
                 }
                 duk_get_prop_index(m_ctx, -1, 0);
@@ -290,7 +290,7 @@ bool StyleContext::parseStyleResult(StyleParamKey _key, StyleParam::Value& _val)
                 break;
         }
     } else {
-        logMsg("Warning: Unhandled return type from Javascript function.\n");
+        LOGW("Unhandled return type from Javascript function.");
     }
 
     duk_pop(m_ctx);
@@ -301,19 +301,19 @@ bool StyleContext::parseStyleResult(StyleParamKey _key, StyleParam::Value& _val)
 
 bool StyleContext::evalStyle(FunctionID _id, StyleParamKey _key, StyleParam::Value& _val) const {
     if (!duk_get_global_string(m_ctx, FUNC_ID)) {
-        logMsg("Error: evalFilterFn - functions array not initialized\n");
+        LOGE("EvalFilterFn - functions array not initialized");
         return false;
     }
 
     if (!duk_get_prop_index(m_ctx, -1, _id)) {
-        logMsg("Error: evalFilterFn - function %d not set\n", _id);
+        LOGE("EvalFilterFn - function %d not set", _id);
     }
 
     // pop fns array
     duk_remove(m_ctx, -2);
 
     if (duk_pcall(m_ctx, 0) != 0) {
-        logMsg("Error: evalFilterFn: %s\n", duk_safe_to_string(m_ctx, -1));
+        LOGE("EvalFilterFn: %s", duk_safe_to_string(m_ctx, -1));
         duk_pop(m_ctx);
         return false;
     }
@@ -324,12 +324,12 @@ bool StyleContext::evalStyle(FunctionID _id, StyleParamKey _key, StyleParam::Val
 
 bool StyleContext::evalStyleFn(const std::string& name, StyleParamKey _key, StyleParam::Value& _val) {
     if (!duk_get_global_string(m_ctx, name.c_str())) {
-        logMsg("Error: evalFilter %s\n", name.c_str());
+        LOGE("EvalFilter %s", name.c_str());
         return false;
     }
 
     if (duk_pcall(m_ctx, 0) != 0) {
-        logMsg("Error: evalStyleFn: %s\n", duk_safe_to_string(m_ctx, -1));
+        LOGE("EvalStyleFn: %s", duk_safe_to_string(m_ctx, -1));
         duk_pop(m_ctx);
         return false;
     }
@@ -354,7 +354,7 @@ void StyleContext::addAccessor(const std::string& _name) {
 
     // push 'feature' obj onto stack
     if (!duk_get_global_string(m_ctx, "feature")) {
-        logMsg("Error: 'feature' not in global scope\n");
+        LOGE("'feature' not in global scope");
         return;
     }
 
@@ -396,7 +396,7 @@ duk_ret_t StyleContext::jsPropertyGetter(duk_context *_ctx) {
     auto* attr = static_cast<const Accessor*> (duk_to_pointer(_ctx, -1));
 
     if (!attr || !attr->ctx || !attr->ctx->m_feature) {
-        logMsg("Error: no context set %p %p\n",
+        LOGE("Error: no context set %p %p",
                attr,
                attr ? attr->ctx : nullptr);
 

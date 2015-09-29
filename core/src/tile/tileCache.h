@@ -70,7 +70,7 @@ public:
 
         while (m_cacheUsage > m_cacheMaxUsage) {
             if (m_cacheList.empty()) {
-                logMsg("Error: invalid cache state!\n");
+                LOGE("Invalid cache state!");
                 m_cacheUsage = 0;
                 break;
             }

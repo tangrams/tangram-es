@@ -119,7 +119,7 @@ void GeoJson::extractLayer(const rapidjson::Value& _in, Layer& _out, const Tile&
     const auto& featureIter = _in.FindMember("features");
 
     if (featureIter == _in.MemberEnd()) {
-        logMsg("ERROR: GeoJSON missing 'features' member\n");
+        LOGE("GeoJSON missing 'features' member");
         return;
     }
 
