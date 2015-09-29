@@ -93,6 +93,7 @@ public:
      */
     static void invalidateAllPrograms();
 
+    auto getSourceBlocks() const { return  m_sourceBlocks; }
 private:
 
     struct ShaderLocation {

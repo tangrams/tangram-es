@@ -79,6 +79,11 @@ public:
     /*  Method to pass it self as a uniform to the shader program */
     virtual void setupProgram(ShaderProgram& _shader);
 
+    bool hasEmission() const { return m_bEmission; }
+    bool hasAmbient() const { return m_bAmbient; }
+    bool hasDiffuse() const { return m_bDiffuse; }
+    bool hasSpecular() const { return m_bSpecular; }
+
 private:
 
     /* Get defines that need to be injected on top of the shader */
@@ -102,7 +107,7 @@ private:
     bool m_bSpecular = false;
     glm::vec4 m_specular = glm::vec4(.2f);
     MaterialTexture m_specular_texture;
-    
+
     MaterialTexture m_normal_texture;
 
     float m_shininess = .2f;
