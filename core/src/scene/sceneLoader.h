@@ -33,7 +33,7 @@ using StyleUniforms = std::pair<std::string, std::vector<UniformValue>>;
 class SceneLoader {
 
     static void loadBackground(YAML::Node background, Scene& scene);
-	static void loadSources(YAML::Node sources, Scene& scene);
+    static void loadSources(YAML::Node sources, Scene& scene);
     static void loadFont(YAML::Node fontProps);
     static void loadLights(YAML::Node lights, Scene& scene);
     static void loadCameras(YAML::Node cameras, Scene& scene);
