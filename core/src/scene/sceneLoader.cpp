@@ -2,8 +2,6 @@
 #include "platform.h"
 #include "scene.h"
 #include "sceneLoader.h"
-#include "tileManager.h"
-#include "view.h"
 #include "lights.h"
 #include "clientGeoJsonSource.h"
 #include "geoJsonSource.h"
@@ -36,17 +34,16 @@ namespace Tangram {
 // TODO: make this configurable: 16MB default in-memory DataSource cache:
 constexpr size_t CACHE_SIZE = 16 * (1024 * 1024);
 
-void SceneLoader::loadScene(const std::string& _sceneString, Scene& _scene,
-                            TileManager& _tileManager, View& _view) {
+bool SceneLoader::loadScene(const std::string& _sceneString, Scene& _scene) {
 
     try {
         Node config = YAML::Load(_sceneString);
 
-        loadSources(config["sources"], _tileManager);
+        loadSources(config["sources"], _scene);
         loadTextures(config["textures"], _scene);
         loadStyles(config["styles"], _scene);
-        loadLayers(config["layers"], _scene, _tileManager);
-        loadCameras(config["cameras"], _view);
+        loadLayers(config["layers"], _scene);
+        loadCameras(config["cameras"], _scene);
         loadLights(config["lights"], _scene);
 
         for (auto& style : _scene.styles()) {
@@ -59,11 +56,14 @@ void SceneLoader::loadScene(const std::string& _sceneString, Scene& _scene,
                       return a->blendMode() == Blending::none;
                   });
 
+        return true;
+
     } catch (YAML::ParserException e) {
         logMsg("Error: Parsing scene config '%s'\n", e.what());
     } catch (YAML::RepresentationException e) {
         logMsg("Error: Parsing scene config '%s'\n", e.what());
     }
+    return false;
 }
 
 void SceneLoader::loadShaderConfig(Node shaders, Style& style, Scene& scene) {
@@ -551,7 +551,8 @@ Node SceneLoader::mixStyle(const std::vector<Node>& mixes) {
 }
 
 std::vector<Node> SceneLoader::recursiveMixins(const std::string& styleName, Node styles,
-        std::unordered_set<std::string>& uniqueStyles) {
+                                               std::unordered_set<std::string>& uniqueStyles,
+                                               std::unordered_set<std::string>& mixedStyles) {
 
     std::vector<Node> mixes;
 
@@ -560,13 +561,13 @@ std::vector<Node> SceneLoader::recursiveMixins(const std::string& styleName, Nod
     if (Node mixNode = styleNode["mix"]) {
         if (mixNode.IsScalar()) {
             auto mixStyleName = mixNode.as<std::string>();
-            if (m_mixedStyles.find(mixStyleName) != m_mixedStyles.end()) {
+            if (mixedStyles.find(mixStyleName) != mixedStyles.end()) {
                 if (uniqueStyles.find(mixStyleName) == uniqueStyles.end()) {
                     mixes.push_back(styles[mixStyleName]);
                     uniqueStyles.insert(mixStyleName);
                 }
             } else {
-                auto recurMixes = recursiveMixins(mixStyleName, styles, uniqueStyles);
+                auto recurMixes = recursiveMixins(mixStyleName, styles, uniqueStyles, mixedStyles);
                 mixes.reserve(mixes.size() + recurMixes.size());
                 std::move(recurMixes.begin(), recurMixes.end(), std::back_inserter(mixes));
             }
@@ -574,13 +575,13 @@ std::vector<Node> SceneLoader::recursiveMixins(const std::string& styleName, Nod
             mixes.reserve(mixes.size() + mixNode.size() + 1);
             for (const auto& mixStyleNode : mixNode) {
                 auto mixStyleName = mixStyleNode.as<std::string>();
-                if (m_mixedStyles.find(mixStyleName) != m_mixedStyles.end()) {
+                if (mixedStyles.find(mixStyleName) != mixedStyles.end()) {
                     if (uniqueStyles.find(mixStyleName) == uniqueStyles.end()) {
                         mixes.push_back(styles[mixStyleName]);
                         uniqueStyles.insert(mixStyleName);
                     }
                 } else {
-                    auto recurMixes= recursiveMixins(mixStyleName, styles, uniqueStyles);
+                    auto recurMixes= recursiveMixins(mixStyleName, styles, uniqueStyles, mixedStyles);
                     mixes.reserve(mixes.size() + recurMixes.size());
                     std::move(recurMixes.begin(), recurMixes.end(), std::back_inserter(mixes));
                 }
@@ -592,7 +593,7 @@ std::vector<Node> SceneLoader::recursiveMixins(const std::string& styleName, Nod
 
     mixes.push_back(styleNode);
     uniqueStyles.insert(styleName);
-    m_mixedStyles.insert(styleName);
+    mixedStyles.insert(styleName);
 
     return mixes;
 }
@@ -600,6 +601,7 @@ std::vector<Node> SceneLoader::recursiveMixins(const std::string& styleName, Nod
 void SceneLoader::loadStyles(Node styles, Scene& scene) {
 
     Style* style = nullptr;
+    std::unordered_set<std::string> mixedStyles;
 
     auto fontCtx = FontContext::GetInstance(); // To add font for debugTextStyle
     fontCtx->addFont("FiraSans", "Medium", "");
@@ -630,7 +632,7 @@ void SceneLoader::loadStyles(Node styles, Scene& scene) {
         }
 
         std::unordered_set<std::string> uniqueStyles; //Used to make sure mixes result has a unique set of styles
-        auto mixes = recursiveMixins(styleName, styles, uniqueStyles);
+        auto mixes = recursiveMixins(styleName, styles, uniqueStyles, mixedStyles);
         Node mixedStyleNode = mixStyle(mixes);
 
         // Update styleNode with mixedStyleNode (for future uses)
@@ -658,10 +660,9 @@ void SceneLoader::loadStyles(Node styles, Scene& scene) {
             continue;
         }
     }
-    m_mixedStyles.clear();
 }
 
-void SceneLoader::loadSources(Node sources, TileManager& tileManager) {
+void SceneLoader::loadSources(Node sources, Scene& _scene) {
 
     if (!sources) {
         logMsg("Warning: No source defined in the yaml scene configuration.\n");
@@ -698,7 +699,7 @@ void SceneLoader::loadSources(Node sources, TileManager& tileManager) {
 
         if (sourcePtr) {
             sourcePtr->setCacheSize(CACHE_SIZE);
-            tileManager.addDataSource(std::move(sourcePtr));
+            _scene.dataSources().push_back(sourcePtr);
         }
     }
 }
@@ -817,19 +818,17 @@ void SceneLoader::loadLights(Node lights, Scene& scene) {
         }
 
         scene.lights().push_back(std::move(lightPtr));
-
     }
-
 }
 
-void SceneLoader::loadCameras(Node cameras, View& view) {
+void SceneLoader::loadCameras(Node _cameras, Scene& _scene) {
 
     // To correctly match the behavior of the webGL library we'll need a place
     // to store multiple view instances.  Since we only have one global view
     // right now, we'll just apply the settings from the first active camera we
     // find.
 
-    for (const auto& cam : cameras) {
+    for (const auto& cam : _cameras) {
 
         const Node camera = cam.second;
 
@@ -872,14 +871,14 @@ void SceneLoader::loadCameras(Node cameras, View& view) {
                 z = position[2].as<float>();
             }
         }
-        glm::dvec2 projPos = view.getMapProjection().LonLatToMeters(glm::dvec2(x, y));
-        view.setPosition(projPos.x, projPos.y);
 
         Node zoom = camera["zoom"];
         if (zoom) {
             z = zoom.as<float>();
         }
-        view.setZoom(z);
+
+        _scene.startPosition = glm::dvec2(x, y);
+        _scene.startZoom = z;
 
         Node active = camera["active"];
         if (active) {
@@ -1218,7 +1217,7 @@ SceneLayer SceneLoader::loadSublayer(Node layer, const std::string& name, Scene&
     return { name, filter, rules, sublayers };
 }
 
-void SceneLoader::loadLayers(Node layers, Scene& scene, TileManager& tileManager) {
+void SceneLoader::loadLayers(Node layers, Scene& scene) {
 
     if (!layers) {
         return;

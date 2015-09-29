@@ -55,7 +55,6 @@ void initialize(const char* _scenePath) {
 
         // Pass references to the view and scene into the tile manager
         m_tileManager->setView(m_view);
-        m_tileManager->setScene(m_scene);
 
         // label setup
         m_labels = std::unique_ptr<Labels>(new Labels());
@@ -63,17 +62,32 @@ void initialize(const char* _scenePath) {
         logMsg("Loading Tangram scene file: %s\n", sceneRelPath.c_str());
         auto sceneString = stringFromResource(sceneRelPath.c_str());
 
-        SceneLoader loader;
+        if (SceneLoader::loadScene(sceneString, *m_scene)) {
+            m_tileManager->setScene(m_scene);
 
-        loader.loadScene(sceneString, *m_scene, *m_tileManager, *m_view);
+            glm::dvec2 projPos = m_view->getMapProjection().LonLatToMeters(m_scene->startPosition);
+            m_view->setPosition(projPos.x, projPos.y);
+            m_view->setZoom(m_scene->startZoom);
+        }
 
         m_skybox = std::unique_ptr<Skybox>(new Skybox("img/cubemap.png"));
         m_skybox->init();
-
     }
 
     logMsg("finish initialize\n");
 
+}
+
+void loadScene(const char* _scenePath) {
+    logMsg("Loading scene file: %s\n", _scenePath);
+
+    auto sceneString = stringFromResource(setResourceRoot(_scenePath).c_str());
+
+    auto scene = std::make_shared<Scene>();
+    if (SceneLoader::loadScene(sceneString, *scene)) {
+        m_scene = scene;
+        m_tileManager->setScene(scene);
+    }
 }
 
 void resize(int _newWidth, int _newHeight) {
@@ -235,7 +249,6 @@ void setPixelScale(float _pixelsPerPoint) {
     for (auto& style : m_scene->styles()) {
         style->setPixelScale(_pixelsPerPoint);
     }
-
 }
 
 int addDataSource(const char* _name) {
@@ -243,7 +256,9 @@ int addDataSource(const char* _name) {
     if (!m_tileManager) { return -1; }
     std::lock_guard<std::mutex> lock(m_tilesMutex);
     auto source = std::make_shared<ClientGeoJsonSource>(std::string(_name), "");
-    return m_tileManager->addDataSource(source);
+    m_tileManager->addDataSource(source);
+
+    return source->id();
 }
 
 void clearSourceData(int _sourceId) {
@@ -251,7 +266,7 @@ void clearSourceData(int _sourceId) {
     if (!m_tileManager) { return; }
     std::lock_guard<std::mutex> lock(m_tilesMutex);
     for (auto& set : m_tileManager->getTileSets()) {
-        if (set.id == _sourceId) {
+        if (set.source->id() == _sourceId) {
             set.source->clearData();
             m_tileManager->clearTileSet(_sourceId);
         }

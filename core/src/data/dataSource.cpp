@@ -6,12 +6,18 @@
 #include "tile/tile.h"
 #include "tile/tileManager.h"
 
+#include <atomic>
+
 namespace Tangram {
+
+static std::atomic<int32_t> s_serial;
 
 DataSource::DataSource(const std::string& _name, const std::string& _urlTemplate) :
     m_name(_name), m_urlTemplate(_urlTemplate),
     m_cacheUsage(0),
     m_cacheMaxUsage(0) {
+
+    m_id = s_serial++;
 }
 
 DataSource::~DataSource() {
