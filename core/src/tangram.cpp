@@ -81,8 +81,7 @@ void initialize(const char* _scenePath) {
 void loadScene(const char* _scenePath) {
     logMsg("Loading scene file: %s\n", _scenePath);
 
-    auto sceneRelPath = setResourceRoot(_scenePath);
-    auto sceneString = stringFromResource(_scenePath);
+    auto sceneString = stringFromResource(setResourceRoot(_scenePath).c_str());
 
     auto scene = std::make_shared<Scene>();
     if (SceneLoader::loadScene(sceneString, *scene)) {
