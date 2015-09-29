@@ -87,6 +87,7 @@ layers:
         draw:
             icons_points:
                 color: green
+                centroid: false
                 priority: 0
 
     landuse:

@@ -59,6 +59,7 @@ PointStyle::Parameters PointStyle::parseRule(const DrawRule& _rule) const {
     _rule.get(StyleParamKey::offset, p.offset);
     _rule.get(StyleParamKey::priority, p.priority);
     _rule.get(StyleParamKey::sprite_default, p.spriteDefault);
+    _rule.get(StyleParamKey::centroid, p.centroid);
     if (_rule.get(StyleParamKey::size, size)) {
         if (size.x == 0.f || std::isnan(size.y)) {
             p.size = glm::vec2(size.x);
@@ -72,73 +73,128 @@ PointStyle::Parameters PointStyle::parseRule(const DrawRule& _rule) const {
     return p;
 }
 
-void PointStyle::buildPoint(const Point& _point, const DrawRule& _rule, const Properties& _props, VboMesh& _mesh, Tile& _tile) const {
-    Parameters p = parseRule(_rule);
+void PointStyle::pushQuad(std::vector<Label::Vertex>& _vertices, glm::vec2 _size, glm::vec2 _uvBL, glm::vec2 _uvTR, unsigned int _color) const {
+    _vertices.push_back({{-_size.x, -_size.y}, {_uvBL.x, _uvBL.y}, _color});
+    _vertices.push_back({{-_size.x, _size.y}, {_uvBL.x, _uvTR.y}, _color});
+    _vertices.push_back({{_size.x, -_size.y}, {_uvTR.x, _uvBL.y}, _color});
+    _vertices.push_back({{_size.x, _size.y}, {_uvTR.x, _uvTR.y}, _color});
+}
 
-    if (!p.valid) {
-        return;
-    }
-
-    std::vector<Label::Vertex> vertices;
-
-    Label::Transform t = { glm::vec2(_point) };
-
-    auto& mesh = static_cast<LabelMesh&>(_mesh);
-
+Label::Options PointStyle::optionsFromPointParams(const Parameters& _params) const {
     Label::Options options;
-    options.offset = p.offset * m_pixelScale;
-    options.priority = p.priority;
-    options.color = p.color;
+    options.offset = _params.offset * m_pixelScale;
+    options.priority = _params.priority;
+    options.color = _params.color;
+    return options;
+}
 
-    glm::vec2 uvBL = glm::vec2(0.0);
-    glm::vec2 uvTR = glm::vec2(1.0);
+bool PointStyle::getUVQuad(Parameters& _params, glm::vec4& _quad) const {
+    _quad = glm::vec4(0.0, 0.0, 1.0, 1.0);
 
     if (m_spriteAtlas) {
         SpriteNode spriteNode;
 
-        if (!m_spriteAtlas->getSpriteNode(p.sprite, spriteNode) && !m_spriteAtlas->getSpriteNode(p.spriteDefault, spriteNode)) {
-            return;
+        if (!m_spriteAtlas->getSpriteNode(_params.sprite, spriteNode) && !m_spriteAtlas->getSpriteNode(_params.spriteDefault, spriteNode)) {
+            return false;
         }
 
-        if (std::isnan(p.size.x)) {
-            p.size = spriteNode.m_size;
+        if (std::isnan(_params.size.x)) {
+            _params.size = spriteNode.m_size;
         }
 
-        uvBL = spriteNode.m_uvBL;
-        uvTR = spriteNode.m_uvTR;
+        _quad.x = spriteNode.m_uvBL.x;
+        _quad.y = spriteNode.m_uvBL.y;
+        _quad.z = spriteNode.m_uvTR.x;
+        _quad.w = spriteNode.m_uvTR.y;
     } else {
         // default point size
-        if (std::isnan(p.size.x)) {
-            p.size = glm::vec2(8.0);
+        if (std::isnan(_params.size.x)) {
+            _params.size = glm::vec2(8.0);
         }
     }
 
-    std::unique_ptr<SpriteLabel> label(new SpriteLabel(t, p.size * m_pixelScale, mesh, _mesh.numVertices(), options));
-
-    float halfWidth = p.size.x * .5f;
-    float halfHeight = p.size.y * .5f;
-
-    vertices.reserve(4);
-    vertices.push_back({{-halfWidth, -halfHeight}, {uvBL.x, uvBL.y}, options.color});
-    vertices.push_back({{-halfWidth, halfHeight}, {uvBL.x, uvTR.y}, options.color});
-    vertices.push_back({{halfWidth, -halfHeight}, {uvTR.x, uvBL.y}, options.color});
-    vertices.push_back({{halfWidth, halfHeight}, {uvTR.x, uvTR.y}, options.color});
-
-    mesh.addVertices(std::move(vertices), {});
-    mesh.addLabel(std::move(label));
+    return true;
 }
 
+void PointStyle::buildPoint(const Point& _point, const DrawRule& _rule, const Properties& _props, VboMesh& _mesh, Tile& _tile) const {
+    Parameters p = parseRule(_rule);
+    glm::vec4 uvsQuad;
+
+    if (!p.valid || !getUVQuad(p, uvsQuad)) {
+        return;
+    }
+
+    auto& mesh = static_cast<LabelMesh&>(_mesh);
+    Label::Transform transform = { glm::vec2(_point) };
+    Label::Options options = optionsFromPointParams(p);
+
+    mesh.addLabel(std::make_unique<SpriteLabel>(transform, p.size * m_pixelScale, mesh, _mesh.numVertices(), options));
+
+    std::vector<Label::Vertex> vertices;
+
+    vertices.reserve(4);
+    pushQuad(vertices, p.size * 0.5f, {uvsQuad.x, uvsQuad.y}, {uvsQuad.z, uvsQuad.w}, options.color);
+    mesh.addVertices(std::move(vertices), {});
+}
 
 void PointStyle::buildLine(const Line& _line, const DrawRule& _rule, const Properties& _props, VboMesh& _mesh, Tile& _tile) const {
-    for (size_t i = 0; i < _line.size(); ++i) {
-        Point p = glm::vec3(glm::vec2(_line[i]), 0.0);
-        buildPoint(p, _rule, _props, _mesh, _tile);
+    Parameters p = parseRule(_rule);
+    glm::vec4 uvsQuad;
+
+    if (!p.valid || !getUVQuad(p, uvsQuad)) {
+        return;
     }
+
+    std::vector<Label::Vertex> vertices;
+    auto& mesh = static_cast<LabelMesh&>(_mesh);
+
+    vertices.reserve(4 * _line.size());
+    Label::Options options = optionsFromPointParams(p);
+
+    for (size_t i = 0; i < _line.size(); ++i) {
+        Label::Transform transform = { glm::vec2(_line[i]) };
+
+        mesh.addLabel(std::make_unique<SpriteLabel>(transform, p.size * m_pixelScale, mesh, _mesh.numVertices(), options));
+        pushQuad(vertices, p.size * 0.5f, {uvsQuad.x, uvsQuad.y}, {uvsQuad.z, uvsQuad.w}, options.color);
+    }
+
+    mesh.addVertices(std::move(vertices), {});
 }
 
 void PointStyle::buildPolygon(const Polygon& _polygon, const DrawRule& _rule, const Properties& _props, VboMesh& _mesh, Tile& _tile) const {
-    Point p = glm::vec3(centroid(_polygon), 0.0);
-    buildPoint(p, _rule, _props, _mesh, _tile);
+    Parameters p = parseRule(_rule);
+    glm::vec4 uvsQuad;
+
+    if (!p.valid || !getUVQuad(p, uvsQuad)) {
+        return;
+    }
+
+    Label::Options options = optionsFromPointParams(p);
+
+    std::vector<Label::Vertex> vertices;
+    auto& mesh = static_cast<LabelMesh&>(_mesh);
+
+    if (!p.centroid) {
+        vertices.reserve(polygonSize(_polygon));
+
+        for (auto line : _polygon) {
+            for (auto point : line) {
+                Label::Transform transform = { glm::vec2(point) };
+
+                mesh.addLabel(std::make_unique<SpriteLabel>(transform, p.size * m_pixelScale, mesh, _mesh.numVertices(), options));
+                pushQuad(vertices, p.size * 0.5f, {uvsQuad.x, uvsQuad.y}, {uvsQuad.z, uvsQuad.w}, options.color);
+                mesh.addVertices(std::move(vertices), {});
+            }
+        }
+    } else {
+        vertices.reserve(4);
+        glm::vec2 c = centroid(_polygon);
+        Label::Transform transform = { c };
+
+        mesh.addLabel(std::make_unique<SpriteLabel>(transform, p.size * m_pixelScale, mesh, _mesh.numVertices(), options));
+        pushQuad(vertices, p.size * 0.5f, {uvsQuad.x, uvsQuad.y}, {uvsQuad.z, uvsQuad.w}, options.color);
+        mesh.addVertices(std::move(vertices), {});
+    }
 }
 
 void PointStyle::onBeginDrawFrame(const View& _view, Scene& _scene) {

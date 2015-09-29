@@ -66,6 +66,8 @@ typedef std::vector<Point> Line;
 
 typedef std::vector<Line> Polygon;
 
+int polygonSize(const Polygon& _polygon);
+
 struct Properties {
 
     struct Item {

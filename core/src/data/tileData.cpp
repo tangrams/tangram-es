@@ -3,6 +3,14 @@
 
 namespace Tangram {
 
+int polygonSize(const Polygon& _polygon) {
+    int size = 0;
+    for (auto line : _polygon) {
+        size += line.size();
+    }
+    return size;
+}
+
 Properties::Properties(std::vector<Item>&& _items) {
     typedef std::vector<Item>::iterator iter_t;
 
