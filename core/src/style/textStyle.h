@@ -30,9 +30,14 @@ protected:
     bool m_sdf;
     bool m_sdfMultisampling;
 
+    std::shared_ptr<FontContext> m_fontContext;
+
 public:
 
-    TextStyle(std::string _name, bool _sdf = false, bool _sdfMultisampling = false, Blending _blendMode = Blending::overlay, GLenum _drawMode = GL_TRIANGLES);
+    TextStyle(std::string _name, std::shared_ptr<FontContext> _fontContext,
+              bool _sdf = false, bool _sdfMultisampling = false,
+              Blending _blendMode = Blending::overlay,
+              GLenum _drawMode = GL_TRIANGLES);
 
     virtual void onBeginDrawFrame(const View& _view, Scene& _scene) override;
 
@@ -43,7 +48,6 @@ private:
     inline Label::Options optionsFromTextParams(const Parameters& _params) const;
 
     const std::string& applyTextSource(const Parameters& _parameters, const Properties& _props) const;
-
 };
 
 }

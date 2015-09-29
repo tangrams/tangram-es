@@ -2,6 +2,7 @@
 
 #include "platform.h"
 #include "style/style.h"
+#include "text/fontContext.h"
 
 #include <atomic>
 
@@ -10,6 +11,7 @@ namespace Tangram {
 static std::atomic<int32_t> s_serial;
 
 Scene::Scene() : id(s_serial++) {
+    m_fontContext = std::make_shared<FontContext>();
     // For now we only have one projection..
     // TODO how to share projection with view?
     m_mapProjection.reset(new MercatorProjection());

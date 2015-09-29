@@ -49,7 +49,9 @@ public:
     ~TextBuffer();
 
     /* Create and add TextLabel */
-    bool addLabel(const std::string& _text, Label::Transform _transform, Label::Type _type, const Parameters& _params, Label::Options _options);
+    bool addLabel(const std::string& _text, Label::Transform _transform,
+                  Label::Type _type, const Parameters& _params,
+                  Label::Options _options, FontContext& _fontContext);
 
 private:
 
