@@ -1051,6 +1051,7 @@ std::vector<StyleParam> SceneLoader::parseStyleParams(Node params, Scene& scene,
         }
 
         std::string key = (prefix.empty() ? "" : (prefix + ":")) + prop.first.as<std::string>();
+        if (key == "style") { continue; }
 
         Node value = prop.second;
 
