@@ -146,23 +146,26 @@ void Label::setAlpha(float _alpha) {
     if (m_transform.state.alpha != alpha) {
         m_transform.state.alpha = alpha;
         m_dirty = true;
+    }
 
-        if (alpha == 0.f) {
-            m_updateMeshVisibility = true;
-        }
+    if (alpha == 0.f) {
+        m_updateMeshVisibility = true;
     }
 }
 
 void Label::setScreenPosition(const glm::vec2& _screenPosition) {
-    if (_screenPosition != m_transform.state.screenPos) {
-        m_transform.state.screenPos = _screenPosition + m_options.offset;
+    glm::vec2 newScreenPos = _screenPosition + m_options.offset;
+    if (newScreenPos != m_transform.state.screenPos) {
+        m_transform.state.screenPos = newScreenPos;
         m_dirty = true;
     }
 }
 
 void Label::setRotation(float _rotation) {
-    m_transform.state.rotation = _rotation;
-    m_dirty = true;
+    if (m_transform.state.rotation != _rotation) {
+        m_transform.state.rotation = _rotation;
+        m_dirty = true;
+    }
 }
 
 void Label::pushTransform() {
