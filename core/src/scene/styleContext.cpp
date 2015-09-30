@@ -271,10 +271,16 @@ bool StyleContext::parseStyleResult(StyleParamKey _key, StyleParam::Value& _val)
 
         switch (_key) {
             case StyleParamKey::width:
-            case StyleParamKey::outline_width:
-            case StyleParamKey::font_stroke_width: {
+            case StyleParamKey::outline_width: {
+                // TODO more efficient way to return pixels.
+                // atm this only works by return value as string
                 double v = duk_get_number(m_ctx, -1);
                 _val = StyleParam::Width{static_cast<float>(v)};
+                break;
+            }
+            case StyleParamKey::font_stroke_width: {
+                double v = duk_get_number(m_ctx, -1);
+                _val = static_cast<float>(v);
                 break;
             }
             case StyleParamKey::order:
