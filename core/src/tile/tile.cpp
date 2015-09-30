@@ -12,6 +12,8 @@
 #include "glm/gtc/matrix_transform.hpp"
 #include "glm/gtc/type_ptr.hpp"
 
+#include <algorithm>
+
 namespace Tangram {
 
 Tile::Tile(TileID _id, const MapProjection& _projection) :
@@ -53,7 +55,10 @@ void Tile::build(StyleContext& _ctx, const Scene& _scene, const TileData& _data,
 
         for (const auto& collection : _data.layers) {
 
-            if (!collection.name.empty() && collection.name != datalayer.collection()) { continue; }
+            const auto& dlc = datalayer.collections();
+            bool layerContainsCollection = std::find(dlc.begin(), dlc.end(), collection.name) != dlc.end();
+
+            if (!collection.name.empty() && !layerContainsCollection) { continue; }
 
             for (const auto& feat : collection.features) {
                 _ctx.setFeature(feat);

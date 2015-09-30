@@ -4,7 +4,9 @@
 
 namespace Tangram {
 
-FontContext::FontContext() : FontContext(512) {}
+#define ATLAS_SIZE 512
+
+FontContext::FontContext() : FontContext(ATLAS_SIZE) {}
 
 FontContext::FontContext(int _atlasSize) {
     initFontContext(_atlasSize);
@@ -23,7 +25,11 @@ void FontContext::bindAtlas(GLuint _textureUnit) {
 }
 
 void FontContext::clearState() {
-    fonsClearState(m_fsContext);
+    if (lock()) {
+        fonsClearState(m_fsContext);
+        fonsResetAtlas(m_fsContext, ATLAS_SIZE, ATLAS_SIZE, 0);
+        unlock();
+    }
 }
 
 bool FontContext::lock() {

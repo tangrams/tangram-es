@@ -2,6 +2,20 @@
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wall -std=c++1y")
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wno-unknown-pragmas")
 set(CXX_FLAGS_DEBUG "-g -O0")
+
+# For CMake 3.0
+if (CMAKE_CXX_COMPILER_ID MATCHES "Clang")
+# using regular Clang or AppleClang
+set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wno-gnu-zero-variadic-macro-arguments")
+endif()
+
+# if ("${CMAKE_CXX_COMPILER_ID}" STREQUAL "Clang" OR 
+#     "${CMAKE_CXX_COMPILER_ID}" STREQUAL "AppleClang")
+#   # using Clang
+# elseif ("${CMAKE_CXX_COMPILER_ID}" STREQUAL "GNU")
+#   # using GCC
+# endif()
+
 set(EXECUTABLE_NAME "tangram")
 
 add_definitions(-DPLATFORM_LINUX)

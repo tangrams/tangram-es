@@ -31,6 +31,7 @@ const std::map<std::string, StyleParamKey> s_StyleParamMap = {
     {"outline:color", StyleParamKey::outline_color},
     {"outline:join", StyleParamKey::outline_join},
     {"outline:width", StyleParamKey::outline_width},
+    {"outline:order", StyleParamKey::outline_order},
     {"priority", StyleParamKey::priority},
     {"sprite", StyleParamKey::sprite},
     {"sprite_default", StyleParamKey::sprite_default},
@@ -141,6 +142,7 @@ StyleParam::Value StyleParam::parseString(StyleParamKey key, const std::string& 
         logMsg("Warning: Bool value required for capitalized/visible. Using Default.");
         break;
     case StyleParamKey::order:
+    case StyleParamKey::outline_order:
     case StyleParamKey::priority: {
         int num;
         if (parseInt(_value, num) > 0) {
@@ -219,6 +221,7 @@ std::string StyleParam::toString() const {
         if (!value.is<float>()) break;
         return k + std::to_string(value.get<float>());
     case StyleParamKey::order:
+    case StyleParamKey::outline_order:
     case StyleParamKey::priority:
     case StyleParamKey::color:
     case StyleParamKey::outline_color:

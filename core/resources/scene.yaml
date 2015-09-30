@@ -391,7 +391,7 @@ layers:
             # this filter shows lower scaleranks at higher zooms, starting at z4
             #filter: function() { return (feature.scalerank * .75) <= ($zoom - 4); }
     landuse_labels:
-        data: { source: osm }
+        data: { source: osm, layer: [landuse_labels, pois] }
         filter:
             name: true
             kind: [park, forest, cemetery, graveyard]
