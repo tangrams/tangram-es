@@ -77,7 +77,7 @@ TEST_CASE( "Ensure the end state after occlusion is leep state", "[Core][Label]"
     l.update(glm::ortho(0.f, screenSize.x, screenSize.y, 0.f, -1.f, 1.f), screenSize, 0.f);
 
     REQUIRE(l.getState() == Label::State::sleep);
-    REQUIRE(!l.canOcclude());
+    REQUIRE(l.canOcclude());
 }
 
 TEST_CASE( "Ensure the out of screen state transition", "[Core][Label]" ) {

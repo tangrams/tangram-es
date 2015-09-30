@@ -119,7 +119,24 @@ void Labels::drawDebug(const View& _view) {
             glm::vec2 sp = label->getTransform().state.screenPos;
 
             // draw bounding box
-            Primitives::setColor(0xdc3522);
+            Label::State state = label->getState();
+            switch (state) {
+                case Label::State::sleep:
+                    Primitives::setColor(0x00ff00);
+                    break;
+                case Label::State::visible:
+                    Primitives::setColor(0xffffff);
+                    break;
+                case Label::State::wait_occ:
+                    Primitives::setColor(0x0000ff);
+                    break;
+                case Label::State::fading_in:
+                case Label::State::fading_out:
+                    Primitives::setColor(0xffff00);
+                    break;
+                default:
+                    Primitives::setColor(0xff0000);
+            }
 
             Primitives::drawPoly(&(label->getOBB().getQuad())[0], 4);
 

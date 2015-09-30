@@ -39,14 +39,14 @@ void main() {
         float st = sin(a_rotation);
         float ct = cos(a_rotation);
 
-        #pragma tangram: position
-
         // rotates first around +z-axis (0,0,1) and then translates by (tx,ty,0)
         vec4 position = vec4(
             a_position.x * ct - a_position.y * st + a_screenPosition.x,
             a_position.x * st + a_position.y * ct + a_screenPosition.y,
             0.0, 1.0
         );
+
+        #pragma tangram: position
 
         gl_Position = u_proj * position;
     } else {

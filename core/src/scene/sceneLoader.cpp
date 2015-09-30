@@ -12,7 +12,7 @@
 #include "textStyle.h"
 #include "debugStyle.h"
 #include "debugTextStyle.h"
-#include "spriteStyle.h"
+#include "pointStyle.h"
 #include "filters.h"
 #include "sceneLayer.h"
 #include "scene/dataLayer.h"
@@ -386,15 +386,21 @@ void SceneLoader::loadStyleProps(Style* style, Node styleNode, Scene& scene) {
 
     Node textureNode = styleNode["texture"];
     if (textureNode) {
-        auto spriteStyle = dynamic_cast<SpriteStyle*>(style);
-        if (spriteStyle) {
+        auto pointStyle = dynamic_cast<PointStyle*>(style);
+        if (pointStyle) {
             std::string textureName = textureNode.as<std::string>();
             auto atlases = scene.spriteAtlases();
-            auto it = atlases.find(textureName);
-            if (it != atlases.end()) {
-                spriteStyle->setSpriteAtlas(it->second);
+            auto atlasIt = atlases.find(textureName);
+            if (atlasIt != atlases.end()) {
+                pointStyle->setSpriteAtlas(atlasIt->second);
             } else {
-                logMsg("WARNING: undefined texture name %s", textureName.c_str());
+                auto textures = scene.textures();
+                auto texIt = textures.find(textureName);
+                if (texIt != textures.end()) {
+                    pointStyle->setTexture(texIt->second);
+                } else {
+                    logMsg("WARNING: undefined texture name %s", textureName.c_str());
+                }
             }
         }
     }
@@ -612,7 +618,7 @@ void SceneLoader::loadStyles(Node styles, Scene& scene) {
     scene.styles().emplace_back(new TextStyle("text", true, false));
     scene.styles().emplace_back(new DebugTextStyle("FiraSans_Medium_", "debugtext", 30.0f, true, false));
     scene.styles().emplace_back(new DebugStyle("debug"));
-    scene.styles().emplace_back(new SpriteStyle("sprites"));
+    scene.styles().emplace_back(new PointStyle("point"));
 
     if (!styles) {
         return;
@@ -649,7 +655,7 @@ void SceneLoader::loadStyles(Node styles, Scene& scene) {
             } else if (baseString == "text") {
                 style = new TextStyle(styleName, true, false);
             } else if (baseString == "points") {
-                style = new SpriteStyle(styleName);
+                style = new PointStyle(styleName);
             } else {
                 logMsg("WARNING: base style \"%s\" not recognized, can not instantiate.\n", baseString.c_str());
                 continue;

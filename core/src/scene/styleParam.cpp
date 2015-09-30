@@ -40,6 +40,7 @@ const std::map<std::string, StyleParamKey> s_StyleParamMap = {
     {"transform", StyleParamKey::transform},
     {"visible", StyleParamKey::visible},
     {"width", StyleParamKey::width},
+    {"centroid", StyleParamKey::centroid},
 };
 
 static const char* keyName(StyleParamKey key) {
@@ -136,6 +137,7 @@ StyleParam::Value StyleParam::parseString(StyleParamKey key, const std::string& 
         }
         return fontSize;
     }
+    case StyleParamKey::centroid:
     case StyleParamKey::visible:
         if (_value == "true") { return true; }
         if (_value == "false") { return false; }
@@ -212,6 +214,7 @@ std::string StyleParam::toString() const {
         if (!value.is<std::string>()) break;
         return k + value.get<std::string>();
     case StyleParamKey::visible:
+    case StyleParamKey::centroid:
         if (!value.is<bool>()) break;
         return k + std::to_string(value.get<bool>());
     case StyleParamKey::width:
