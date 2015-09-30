@@ -103,14 +103,6 @@ void Texture::generate(GLuint _textureUnit) {
 
     bind(_textureUnit);
 
-    if (m_generateMipmaps) {
-        GLenum mipmapFlags = GL_LINEAR_MIPMAP_LINEAR | GL_LINEAR_MIPMAP_NEAREST |
-                             GL_NEAREST_MIPMAP_LINEAR | GL_NEAREST_MIPMAP_NEAREST;
-        if (m_options.m_filtering.m_min & mipmapFlags) {
-            logMsg("Warning: wrong options provided for the usage of mipmap generation\n");
-        }
-    }
-
     glTexParameteri(m_target, GL_TEXTURE_MIN_FILTER, m_options.m_filtering.m_min);
     glTexParameteri(m_target, GL_TEXTURE_MAG_FILTER, m_options.m_filtering.m_mag);
 

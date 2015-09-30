@@ -289,7 +289,7 @@ void SceneLoader::loadTextures(Node textures, Scene& scene) {
             std::string f = filtering.as<std::string>();
             if (f == "linear") { options.m_filtering = { GL_LINEAR, GL_LINEAR }; }
             else if (f == "mipmap") {
-                options.m_filtering = { GL_LINEAR_MIPMAP_LINEAR, GL_LINEAR_MIPMAP_LINEAR };
+                options.m_filtering = { GL_LINEAR_MIPMAP_LINEAR, GL_LINEAR };
                 generateMipmaps = true;
             } else if (f == "nearest") { options.m_filtering = { GL_NEAREST, GL_NEAREST }; }
         }
