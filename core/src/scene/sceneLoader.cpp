@@ -1159,8 +1159,9 @@ void SceneLoader::parseStyleParams(Node params, Scene& scene, const std::string&
                         out.push_back(StyleParam{ styleKey, &(scene.stops().back()) });
 
                     } else if (StyleParam::isWidth(styleKey)) {
-                        scene.stops().push_back(Stops::Width(value));
+                        scene.stops().push_back(Stops::Width(value, *scene.mapProjection()));
                         out.push_back(StyleParam{ styleKey, &(scene.stops().back()) });
+
                     } else {
                         // TODO other stops
                     }

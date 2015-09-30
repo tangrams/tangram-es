@@ -1,4 +1,6 @@
 #include "stops.h"
+#include "scene/styleParam.h"
+
 #include "csscolorparser.hpp"
 #include "yaml-cpp/yaml.h"
 #include <cassert>
@@ -36,20 +38,33 @@ auto Stops::Color(const YAML::Node& _node) -> Stops {
     return stops;
 }
 
-auto Stops::Width(const YAML::Node& _node) -> Stops {
+double meterToPixel(int _zoom, double _tileSize) {
+    double meterRes = 2.0 * MapProjection::HALF_CIRCUMFERENCE / _tileSize;
+    double invRes = (1 << _zoom) / meterRes;
+    return invRes;
+}
+
+auto Stops::Width(const YAML::Node& _node, const MapProjection& _projection) -> Stops {
     Stops stops;
     if (!_node.IsSequence()) { return stops; }
+
+    double tileSize = _projection.TileSize();
 
     for (const auto& frameNode : _node) {
         if (!frameNode.IsSequence() || frameNode.size() != 2) { continue; }
         float key = frameNode[0].as<float>();
 
-        StyleParam::Width widthValue;
-        widthValue.unit = Unit::meter;
+        StyleParam::ValueUnitPair width;
+        width.unit = Unit::meter;
         size_t start = 0;
 
-        if (StyleParam::parseValueUnitPair(frameNode[1].Scalar(), start, widthValue)){
-            stops.frames.emplace_back(key, widthValue);
+        if (StyleParam::parseValueUnitPair(frameNode[1].Scalar(), start, width)){
+            if (width.unit == Unit::meter) {
+                // TODO: can a key be something different than integer?
+                stops.frames.emplace_back(key, float(width.value * meterToPixel(key, tileSize)));
+            } else {
+                stops.frames.emplace_back(key, width.value);
+            }
         }
     }
     return stops;
@@ -67,25 +82,6 @@ auto Stops::evalFloat(float _key) const -> float {
 
     return (lower->value * (1 - lerp) + upper->value * lerp);
 
-}
-
-auto Stops::evalWidth(float _key, float meterScale) const -> float {
-
-    auto upper = nearestHigherFrame(_key);
-    auto lower = upper - 1;
-
-    if (upper == frames.end()) { return lower->value; }
-    if (lower < frames.begin()) { return upper->value; }
-
-    float lerp = (_key - lower->key) / (upper->key - lower->key);
-
-    float lowerValue = lower->width.value;
-    if (lower->width.isMeter()) { lowerValue *= meterScale; }
-
-    float upperValue = upper->width.value;
-    if (upper->width.isMeter()) { upperValue *= meterScale; }
-
-    return (lower->value * (1 - lerp) + upper->value * lerp);
 }
 
 auto Stops::evalColor(float _key) const -> uint32_t {
