@@ -54,6 +54,7 @@ namespace RenderState {
         glClearDepthf(1.0);
         glDepthRangef(0.0, 1.0);
 
+        clearColor.init(0.0, 0.0, 0.0, 0.0);
         shaderProgram.init(std::numeric_limits<unsigned int>::max(), false);
         vertexBuffer.init(std::numeric_limits<unsigned int>::max(), false);
         indexBuffer.init(std::numeric_limits<unsigned int>::max(), false);
