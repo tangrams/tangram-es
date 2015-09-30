@@ -125,6 +125,13 @@ void Labels::drawDebug(const View& _view) {
                     Primitives::setColor(0x00ff00);
                     break;
                 case Label::State::visible:
+                    Primitives::setColor(0xffffff);
+                    break;
+                case Label::State::wait_occ:
+                    Primitives::setColor(0x0000ff);
+                    break;
+                case Label::State::fading_in:
+                case Label::State::fading_out:
                     Primitives::setColor(0xffff00);
                     break;
                 default:
