@@ -81,6 +81,7 @@ Parameters TextStyle::parseRule(const DrawRule& _rule) const {
     /* Global operations done for fontsize and sdfblur */
     float emSize = p.fontSize / 16.f;
     p.fontSize *= m_pixelScale;
+    p.strokeWidth *= m_pixelScale;
     p.blurSpread = m_sdf ? emSize * 5.0f : 0.0f;
 
     return p;
