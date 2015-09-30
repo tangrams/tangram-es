@@ -43,12 +43,39 @@ enum class StyleParamKey : uint8_t {
 enum class Unit { pixel, meter };
 
 struct StyleParam {
+
     struct ValueUnitPair {
+        ValueUnitPair() = default;
+        ValueUnitPair(float _value, Unit _unit)
+            : value(_value), unit(_unit) {}
+
         float value;
         Unit unit = Unit::meter;
+
+        bool isMeter() const { return unit == Unit::meter; }
+        bool isPixel() const { return unit == Unit::pixel; }
+
+    };
+    struct Width : ValueUnitPair {
+
+        Width() = default;
+        Width(float _value) :
+            ValueUnitPair(_value, Unit::meter) {}
+        Width(float _value, Unit _unit)
+            : ValueUnitPair(_value, _unit) {}
+
+        Width(ValueUnitPair& _other) :
+            ValueUnitPair(_other) {}
+
+        bool operator==(const Width& _other) const {
+            return value == _other.value && unit == _other.unit;
+        }
+        bool operator!=(const Width& _other) const {
+            return value != _other.value || unit != _other.unit;
+        }
     };
 
-    using Value = variant<none_type, bool, float, uint32_t, std::string, glm::vec2>;
+    using Value = variant<none_type, bool, float, uint32_t, std::string, glm::vec2, Width>;
 
     StyleParam() :
         key(StyleParamKey::none),
@@ -72,7 +99,7 @@ struct StyleParam {
     int32_t function = -1;
 
     bool operator<(const StyleParam& _rhs) const { return key < _rhs.key; }
-    bool valid() const { return !value.is<none_type>(); }
+    bool valid() const { return !value.is<none_type>() || stops != nullptr || function >= 0; }
     operator bool() const { return valid(); }
 
     std::string toString() const;
@@ -84,9 +111,13 @@ struct StyleParam {
 
     static bool parseVec2(const std::string& _value, const std::vector<Unit> _allowedUnits, glm::vec2& _vec2);
 
+    static int parseValueUnitPair(const std::string& _value, size_t start,
+                                  StyleParam::ValueUnitPair& _result);
+
     static Value parseString(StyleParamKey key, const std::string& _value);
 
     static bool isColor(StyleParamKey _key);
+    static bool isWidth(StyleParamKey _key);
 
     static StyleParamKey getKey(const std::string& _key);
 };

@@ -18,8 +18,6 @@ protected:
         uint32_t order = 0;
         uint32_t color = 0xff00ffff;
         uint32_t outlineColor = 0xff00ffff;
-        float width = 1.f;
-        float outlineWidth = 1.f;
         CapTypes cap = CapTypes::butt;
         CapTypes outlineCap = CapTypes::butt;
         JoinTypes join = JoinTypes::miter;

@@ -162,7 +162,8 @@ layers:
                 lines:
                     #color: '#000000'
                     color: '#D16768'
-                    width: [[0, 2.], [11, 2.], [12, 3.], [13, 4.], [14, 5.], [15, 6.]]
+                    #width: [[0, 2], [11, 2.], [12, 3.], [13, 4.], [14, 5.], [15, 6.]]
+                    width: [[10, 2px], [15, 10m]]
                     outline:
                         #color: '#ff0000'
                         #width: 3.0
@@ -187,9 +188,10 @@ layers:
             draw:
                 lines:
                     color: '#bbbbb8'
-                    width: [[12, 0], [13, 1], [14, 3.], [18, 6.]]
-                    outline:
-                        width: [[14, 1], [18, 2.0]]
+                    width: 4m
+                    # width: [[12, 0], [13, 1], [14, 3.], [18, 6.]]
+                    # outline:
+                    #     width: [[14, 1], [18, 2.0]]
         paths:
             filter: { kind: path }
             draw:

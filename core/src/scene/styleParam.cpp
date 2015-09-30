@@ -153,7 +153,19 @@ StyleParam::Value StyleParam::parseString(StyleParamKey key, const std::string& 
         break;
     }
     case StyleParamKey::width:
-    case StyleParamKey::outline_width:
+    case StyleParamKey::outline_width: {
+        ValueUnitPair width;
+        width.unit = Unit::meter;
+
+        int pos = parseValueUnitPair(_value, 0, width);
+        if (pos < 0) {
+            logMsg("Warning: Invalid width value '%s'\n", _value.c_str());
+            width.value =  2.0f;
+            width.unit = Unit::pixel;
+        }
+
+        return Width(width);
+    }
     case StyleParamKey::font_stroke_width: {
         double num;
         if (parseFloat(_value, num) > 0) {
@@ -161,6 +173,7 @@ StyleParam::Value StyleParam::parseString(StyleParamKey key, const std::string& 
         }
         break;
     }
+
     case StyleParamKey::color:
     case StyleParamKey::outline_color:
     case StyleParamKey::font_fill:
@@ -221,8 +234,8 @@ std::string StyleParam::toString() const {
     case StyleParamKey::outline_width:
     case StyleParamKey::font_stroke_width:
     case StyleParamKey::font_size:
-        if (!value.is<float>()) break;
-        return k + std::to_string(value.get<float>());
+        if (!value.is<Width>()) break;
+        return k + std::to_string(value.get<Width>().value);
     case StyleParamKey::order:
     case StyleParamKey::outline_order:
     case StyleParamKey::priority:
@@ -242,8 +255,8 @@ std::string StyleParam::toString() const {
     return k + "undefined";
 }
 
-int parseValueUnitPair(const std::string& _value, size_t start,
-                       StyleParam::ValueUnitPair& _result) {
+int StyleParam::parseValueUnitPair(const std::string& _value, size_t start,
+                                   StyleParam::ValueUnitPair& _result) {
 
     static const char* units[] = { "px", "m" };
     static const size_t ulen[] = { 2, 1 };
@@ -365,6 +378,15 @@ bool StyleParam::isColor(StyleParamKey _key) {
         case StyleParamKey::outline_color:
         case StyleParamKey::font_fill:
         case StyleParamKey::font_stroke_color:
+            return true;
+        default:
+            return false;
+    }
+}
+bool StyleParam::isWidth(StyleParamKey _key) {
+    switch (_key) {
+        case StyleParamKey::width:
+        case StyleParamKey::outline_width:
             return true;
         default:
             return false;

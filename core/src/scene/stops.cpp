@@ -11,33 +11,48 @@
 
 namespace Tangram {
 
-Stops::Stops(const YAML::Node& _node, bool _isColor) {
-
-    if (!_node.IsSequence()) { return; }
+auto Stops::Color(const YAML::Node& _node) -> Stops {
+    Stops stops;
+    if (!_node.IsSequence()) { return stops; }
 
     for (const auto& frameNode : _node) {
         if (!frameNode.IsSequence() || frameNode.size() != 2) { continue; }
         float key = frameNode[0].as<float>();
-        if (_isColor) {
-            // parse color from sequence or string
-            uint32_t color = 0;
-            YAML::Node colorNode = frameNode[1];
-            if (colorNode.IsScalar()) {
-                color = CSSColorParser::parse(colorNode.as<std::string>()).getInt();
-            } else if (colorNode.IsSequence() && colorNode.size() >= 3) {
-                float alpha = colorNode.size() > 3 ? colorNode[3].as<float>() : 1.f;
-                color = alpha * 255.;
-                color = (color << 8) + colorNode[2].as<float>() * 255.;
-                color = (color << 8) + colorNode[1].as<float>() * 255.;
-                color = (color << 8) + colorNode[0].as<float>() * 255.;
-            }
-            frames.emplace_back(key, color);
-        } else {
-            // parse distance from string
-            float value = frameNode[1].as<float>();
-            frames.emplace_back(key, value);
+
+        // parse color from sequence or string
+        uint32_t color = 0;
+        YAML::Node colorNode = frameNode[1];
+        if (colorNode.IsScalar()) {
+            color = CSSColorParser::parse(colorNode.as<std::string>()).getInt();
+        } else if (colorNode.IsSequence() && colorNode.size() >= 3) {
+            float alpha = colorNode.size() > 3 ? colorNode[3].as<float>() : 1.f;
+            color = alpha * 255.;
+            color = (color << 8) + colorNode[2].as<float>() * 255.;
+            color = (color << 8) + colorNode[1].as<float>() * 255.;
+            color = (color << 8) + colorNode[0].as<float>() * 255.;
+        }
+        stops.frames.emplace_back(key, color);
+    }
+    return stops;
+}
+
+auto Stops::Width(const YAML::Node& _node) -> Stops {
+    Stops stops;
+    if (!_node.IsSequence()) { return stops; }
+
+    for (const auto& frameNode : _node) {
+        if (!frameNode.IsSequence() || frameNode.size() != 2) { continue; }
+        float key = frameNode[0].as<float>();
+
+        StyleParam::Width widthValue;
+        widthValue.unit = Unit::meter;
+        size_t start = 0;
+
+        if (StyleParam::parseValueUnitPair(frameNode[1].Scalar(), start, widthValue)){
+            stops.frames.emplace_back(key, widthValue);
         }
     }
+    return stops;
 }
 
 auto Stops::evalFloat(float _key) const -> float {
@@ -52,6 +67,25 @@ auto Stops::evalFloat(float _key) const -> float {
 
     return (lower->value * (1 - lerp) + upper->value * lerp);
 
+}
+
+auto Stops::evalWidth(float _key, float meterScale) const -> float {
+
+    auto upper = nearestHigherFrame(_key);
+    auto lower = upper - 1;
+
+    if (upper == frames.end()) { return lower->value; }
+    if (lower < frames.begin()) { return upper->value; }
+
+    float lerp = (_key - lower->key) / (upper->key - lower->key);
+
+    float lowerValue = lower->width.value;
+    if (lower->width.isMeter()) { lowerValue *= meterScale; }
+
+    float upperValue = upper->width.value;
+    if (upper->width.isMeter()) { upperValue *= meterScale; }
+
+    return (lower->value * (1 - lerp) + upper->value * lerp);
 }
 
 auto Stops::evalColor(float _key) const -> uint32_t {
@@ -78,7 +112,7 @@ auto Stops::nearestHigherFrame(float _key) const -> std::vector<Frame>::const_it
 
     return std::lower_bound(frames.begin(), frames.end(), _key,
                             [](const Frame& f, float z) { return f.key < z; });
-    
+
 }
 
 }

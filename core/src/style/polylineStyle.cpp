@@ -8,7 +8,8 @@
 
 namespace Tangram {
 
-PolylineStyle::PolylineStyle(std::string _name, Blending _blendMode, GLenum _drawMode) : Style(_name, _blendMode, _drawMode) {
+PolylineStyle::PolylineStyle(std::string _name, Blending _blendMode, GLenum _drawMode)
+    : Style(_name, _blendMode, _drawMode) {
 }
 
 void PolylineStyle::constructVertexLayout() {
@@ -40,7 +41,6 @@ PolylineStyle::Parameters PolylineStyle::parseRule(const DrawRule& _rule) const 
     _rule.get(StyleParamKey::order, p.order);
     _rule.get(StyleParamKey::extrude, p.extrude);
     _rule.get(StyleParamKey::color, p.color);
-    _rule.get(StyleParamKey::width, p.width);
     _rule.get(StyleParamKey::cap, cap);
     _rule.get(StyleParamKey::join, join);
 
@@ -48,7 +48,7 @@ PolylineStyle::Parameters PolylineStyle::parseRule(const DrawRule& _rule) const 
     p.join = static_cast<JoinTypes>(join);
 
     if (_rule.get(StyleParamKey::outline_color, p.outlineColor) |
-        _rule.get(StyleParamKey::outline_width, p.outlineWidth) |
+        _rule.contains(StyleParamKey::outline_width) |
         _rule.get(StyleParamKey::outline_cap, cap) |
         _rule.get(StyleParamKey::outline_join, join)) {
         p.outlineOn = true;
@@ -59,33 +59,84 @@ PolylineStyle::Parameters PolylineStyle::parseRule(const DrawRule& _rule) const 
     return p;
 }
 
-void PolylineStyle::buildPolygon(const Polygon& _poly, const DrawRule& _rule, const Properties& _props, VboMesh& _mesh, Tile& _tile) const {
+void PolylineStyle::buildPolygon(const Polygon& _poly, const DrawRule& _rule, const Properties& _props,
+                                 VboMesh& _mesh, Tile& _tile) const {
+
     for (const auto& line : _poly) {
         buildLine(line, _rule, _props, _mesh, _tile);
     }
 }
 
-void PolylineStyle::buildLine(const Line& _line, const DrawRule& _rule, const Properties& _props, VboMesh& _mesh, Tile& _tile) const {
+double widthMetersWithToPixel(int _zoom, double _tileSize, double _width) {
+    double meterRes = 2.0 * MapProjection::HALF_CIRCUMFERENCE / _tileSize;
+    double invRes = (1 << _zoom) / meterRes;
+    return _width * invRes;
+}
+bool evalStyleParamWidth(StyleParamKey _key, const DrawRule& _rule, const Tile& _tile,
+                         float& width, float& dWdZ){
+
+    int zoom  = _tile.getID().z;
+    double tileSize = _tile.getProjection()->TileSize();
+
+    // NB: Tile vertex coordinates are in the range -1..1 => 2,
+    // * 0.5 for half-width == 1.0 => 1.0 / tileSize
+    //double tileRes = 1.0 / _tile.getProjection()->TileSize();
+    double tileRes = 1.0 / tileSize;
+
+
+    auto& styleParam = _rule.findParameter(_key);
+    if (styleParam.stops) {
+        float meterToPixel = widthMetersWithToPixel(zoom, tileSize, 1);
+
+        width = styleParam.stops->evalWidth(zoom, meterToPixel);
+        width *= tileRes;
+
+        dWdZ = styleParam.stops->evalWidth(zoom + 1, meterToPixel);
+        dWdZ *= tileRes;
+        // NB: Multiply by 2 for the outline to get the expected stroke pixel width.
+        if (_key == StyleParamKey::outline_width) {
+            width *= 2;
+            dWdZ *= 2;
+        }
+
+        dWdZ -= width;
+
+        return true;
+    }
+
+    if (styleParam.value.is<StyleParam::Width>()) {
+        auto& widthParam = styleParam.value.get<StyleParam::Width>();
+
+        width = widthParam.value;
+
+        if (widthParam.isMeter()) {
+            width = widthMetersWithToPixel(zoom, tileSize, width);
+            width *= tileRes;
+            dWdZ = width;
+            return true;
+        }
+
+        width *= tileRes;
+        return true;
+    }
+
+    logMsg("Error: Invalid type for Width '%d'\n", styleParam.value.which());
+    return false;
+}
+
+void PolylineStyle::buildLine(const Line& _line, const DrawRule& _rule, const Properties& _props,
+                              VboMesh& _mesh, Tile& _tile) const {
     std::vector<PolylineVertex> vertices;
 
     Parameters params = parseRule(_rule);
     GLuint abgr = params.color;
 
-    // NB: Tile vertex coordinates are in the range -1..1 => 2,
-    // * 0.5 for half-width == 1.0 => 1.0 / tileSize
-    double tileRes = 1.0 / _tile.getProjection()->TileSize();
 
     float dWdZ = 0.f;
-    float width = params.width * tileRes;
+    float width = 0.f;
 
-    auto wp = _rule.findParameter(StyleParamKey::width);
-    if (wp && wp.stops) {
-        width = wp.stops->evalFloat(_tile.getID().z);
-        width *= tileRes;
-
-        dWdZ = wp.stops->evalFloat(_tile.getID().z + 1);
-        dWdZ *= tileRes;
-        dWdZ -= width;
+    if (!evalStyleParamWidth(StyleParamKey::width, _rule, _tile, width, dWdZ)) {
+        return;
     }
 
     if (Tangram::getDebugFlag(Tangram::DebugFlags::proxy_colors)) {
@@ -124,24 +175,16 @@ void PolylineStyle::buildLine(const Line& _line, const DrawRule& _rule, const Pr
 
         GLuint abgrOutline = params.outlineColor;
 
-        // NB: Multiply by 2 for the outline to get the expected stroke pixel width.
-        float widthOutline = width + params.outlineWidth * tileRes * 2.0;
-        float dWdZcore = dWdZ;
+        float widthOutline = 0.f;
+        float dWdZOutline = 0.f;
 
-        dWdZ = 0.0f;
-        auto owp = _rule.findParameter(StyleParamKey::outline_width);
-        if (owp && owp.stops) {
-
-            widthOutline = owp.stops->evalFloat(_tile.getID().z);
-            widthOutline *= tileRes * 2.0;
-
-            dWdZ = owp.stops->evalFloat(_tile.getID().z + 1);
-            dWdZ *= tileRes * 2.0;
-            dWdZ -= widthOutline;
-
-            widthOutline += width;
-            dWdZ += dWdZcore;
+        if (!evalStyleParamWidth(StyleParamKey::outline_width, _rule, _tile,
+                                 widthOutline, dWdZOutline)) {
+            return;
         }
+
+        widthOutline += width;
+        dWdZOutline += dWdZ;
 
         if (params.outlineCap != params.cap || params.outlineJoin != params.join) {
             // need to re-triangulate with different cap and/or join

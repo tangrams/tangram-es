@@ -8,18 +8,18 @@ using namespace Tangram;
 
 Stops instance_float() {
     return Stops({
-        Frame(0, 0.f),
-        Frame(1, 10.f),
-        Frame(5, 50.f),
-        Frame(7, 0.f)
+        Stops::Frame(0, 0.f),
+        Stops::Frame(1, 10.f),
+        Stops::Frame(5, 50.f),
+        Stops::Frame(7, 0.f)
     });
 }
 
 Stops instance_color() {
     return Stops({
-        Frame(0, 0xffffffff),
-        Frame(1, 0xffeeeeee),
-        Frame(5, 0xffaaaaaa)
+        Stops::Frame(0, 0xffffffff),
+        Stops::Frame(1, 0xffeeeeee),
+        Stops::Frame(5, 0xffaaaaaa)
     });
 }
 
@@ -54,15 +54,15 @@ TEST_CASE("Stops parses correctly from YAML distance values", "[Stops][YAML]") {
 
     YAML::Node node = YAML::Load("[ [10, 0], [16, .04], [18, .2] ]");
 
-    Stops stops(node);
+    Stops stops(Stops::Width(node));
 
     REQUIRE(stops.frames.size() == 3);
     REQUIRE(stops.frames[0].key == 10.f);
     REQUIRE(stops.frames[1].key == 16.f);
     REQUIRE(stops.frames[2].key == 18.f);
-    REQUIRE(stops.frames[0].value == 0.f);
-    REQUIRE(stops.frames[1].value == .04f);
-    REQUIRE(stops.frames[2].value == .2f);
+    REQUIRE(stops.frames[0].width.value == 0.f);
+    REQUIRE(stops.frames[1].width.value == .04f);
+    REQUIRE(stops.frames[2].width.value == .2f);
 
 }
 
@@ -70,7 +70,7 @@ TEST_CASE("Stops parses correctly from YAML color values", "[Stops][YAML]") {
 
     YAML::Node node = YAML::Load("[ [10, '#aaa'], [16, [0, .5, 1] ], [18, [0, .25, 1, .5] ] ]");
 
-    Stops stops(node, true);
+    Stops stops(Stops::Color(node));
 
     REQUIRE(stops.frames.size() == 3);
     REQUIRE(stops.frames[0].key == 10.f);
