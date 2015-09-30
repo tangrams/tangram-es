@@ -25,6 +25,8 @@ namespace RenderState {
     TextureUnit textureUnit;
     Texture texture;
 
+    ClearColor clearColor;
+
     GLuint getTextureUnit(GLuint _unit) {
         if (_unit >= TANGRAM_MAX_TEXTURE_UNIT) {
             logMsg("Warning: trying to access unavailable texture unit");
@@ -51,7 +53,6 @@ namespace RenderState {
         glDepthFunc(GL_LEQUAL);
         glClearDepthf(1.0);
         glDepthRangef(0.0, 1.0);
-        glClearColor(0.3, 0.3, 0.3, 1.0);
 
         shaderProgram.init(std::numeric_limits<unsigned int>::max(), false);
         vertexBuffer.init(std::numeric_limits<unsigned int>::max(), false);

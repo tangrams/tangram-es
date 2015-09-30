@@ -4,6 +4,7 @@
 #include "scene/dataLayer.h"
 #include "scene/spriteAtlas.h"
 #include "scene/stops.h"
+#include "util/color.h"
 #include <list>
 #include <memory>
 #include <string>
@@ -36,6 +37,7 @@ public:
     auto& functions() { return m_jsFunctions; };
     auto& spriteAtlases() { return m_spriteAtlases; };
     auto& stops() { return m_stops; }
+    auto& background() { return m_background; }
 
     const auto& dataSources() const { return m_dataSources; };
     const auto& layers() const { return m_layers; };
@@ -62,6 +64,8 @@ private:
 
     std::vector<std::string> m_jsFunctions;
     std::list<Stops> m_stops;
+
+    Color m_background;
 };
 
 }

@@ -70,8 +70,6 @@ void initialize(const char* _scenePath) {
             m_view->setZoom(m_scene->startZoom);
         }
 
-        m_skybox = std::unique_ptr<Skybox>(new Skybox("img/cubemap.png"));
-        m_skybox->init();
     }
 
     logMsg("finish initialize\n");
@@ -144,6 +142,8 @@ void render() {
 
     // Set up openGL for new frame
     RenderState::depthWrite(GL_TRUE);
+    auto& color = m_scene->background();
+    RenderState::clearColor(color.r / 255.f, color.g / 255.f, color.b / 255.f, color.a / 255.f);
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
     {
@@ -165,8 +165,6 @@ void render() {
             style->onEndDrawFrame();
         }
     }
-
-    m_skybox->draw(*m_view);
 
     m_labels->drawDebug(*m_view);
 

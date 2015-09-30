@@ -45,6 +45,7 @@ bool SceneLoader::loadScene(const std::string& _sceneString, Scene& _scene) {
         loadLayers(config["layers"], _scene);
         loadCameras(config["cameras"], _scene);
         loadLights(config["lights"], _scene);
+        loadBackground(config["scene"]["background"], _scene);
 
         for (auto& style : _scene.styles()) {
             style->build(_scene.lights());
@@ -1252,6 +1253,21 @@ void SceneLoader::loadLayers(Node layers, Scene& scene) {
         auto sublayer = loadSublayer(layer.second, name, scene);
 
         scene.layers().push_back({ sublayer, source, collections });
+    }
+}
+
+void SceneLoader::loadBackground(Node background, Scene& scene) {
+
+    if (!background) { return; }
+
+    if (Node colorNode = background["color"]) {
+        std::string str;
+        if (colorNode.IsScalar()) {
+            str = colorNode.Scalar();
+        } else if (colorNode.IsSequence()) {
+            str = parseSequence(colorNode);
+        }
+        scene.background().abgr = StyleParam::parseColor(str);
     }
 }
 
