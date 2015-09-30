@@ -33,8 +33,6 @@ textures:
             info: [0, 1110, 32, 32]
             hotel: [0, 259, 32, 32]
             bookstore: [0, 333, 32, 32]
-    cross:
-        url: img/cross.png
 
 styles:
     flatcolor:
@@ -56,11 +54,6 @@ styles:
     icons:
         base: points
         texture: pois
-    icons_points_texture:
-        base: points
-        texture: cross
-    icons_points:
-        base: points
 
 sources:
     osm:
@@ -84,11 +77,6 @@ layers:
             polygons:
                 order: 0
                 color: '#f0ebeb'
-        draw:
-            icons_points:
-                color: green
-                centroid: false
-                priority: 0
 
     landuse:
         data: { source: osm }
@@ -149,10 +137,6 @@ layers:
                 outline:
                     color: '#fff'
                     width: 0.5
-        draw:
-            icons_points:
-                color: magenta
-                priority: 5
 
         rounded:
             filter: { $zoom: { min: 17 } }
@@ -241,33 +225,20 @@ layers:
                             color: orange
                             width: [[11, 0], [12, 1.], [17, 2.]]
 
-    poi_icon_points:
-        data: { source: osm, layer: pois }
-        draw:
-            icons_points:
-                offset: [0px, -8px]
-                color: yellow
-                priority: 5
-        point_texture:
-            filter: { name: true, not: { kind: [peak, viewpoint, bicycle_rental, car_sharing] }, $zoom: { min: 17 } }
-            draw:
-                icons_points_texture:
-                    priority: 1
-
     poi_icons:
         data: { source: osm, layer: pois }
-        filter: { name: true, not: { kind: [peak, viewpoint, bicycle_rental, car_sharing] }, $zoom: { min: 14, max: 16 } }
+        filter: { name: true, not: { kind: [peak, viewpoint, bicycle_rental, car_sharing] }, $zoom: { min: 15 } }
         draw:
             icons:
                 offset: [0px, -15px]
-                size: 15px
+                size: 20px
                 priority: 5
                 #size: [[13, 12px], [15, 18px]]
                 #interactive: true
 
         # add generic icon at high zoom
         generic:
-            filter: { $zoom: { min: 15 } }
+            filter: { $zoom: { min: 18 } }
             draw:
                 icons:
                     sprite: function() { return feature.kind; }
