@@ -76,8 +76,8 @@ void SceneLoader::loadShaderConfig(Node shaders, Style& style, Scene& scene) {
     if (Node extensionsNode = shaders["extensions"]) {
         if(extensionsNode.IsSequence()) {
             for (const auto& extNode : extensionsNode) {
-                const char* extTemplate = "#ifdef %s\n    #extension %s : enable\n    #define TANGRAM_EXTENSION_%s\n#endif";
-                auto extName = "GL_" + extNode.as<std::string>();
+                const char* extTemplate = "#ifdef GL_%s\n    #extension GL_%s : enable\n    #define TANGRAM_EXTENSION_%s\n#endif";
+                auto extName = extNode.as<std::string>();
                 size_t bufSize = std::snprintf(nullptr, 0, extTemplate, extName.c_str(), extName.c_str(), extName.c_str());
                 std::vector<char> buffer(bufSize + 1);
                 std::snprintf(&buffer[0], buffer.size(), extTemplate, extName.c_str(), extName.c_str(), extName.c_str());
