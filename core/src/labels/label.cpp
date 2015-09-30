@@ -202,8 +202,13 @@ bool Label::updateState(const glm::mat4& _mvp, const glm::vec2& _screenSize, flo
 
     bool ruleSatisfied = updateScreenTransform(_mvp, _screenSize);
 
-    if (!ruleSatisfied) { // one of the label rules not satisfied
-        enterState(State::sleep, 0.0);
+    // one of the label rules has not been satisfied
+    if (!ruleSatisfied) {
+
+        // go to dead state, this breaks determinism, but reduce potential label set since a lot
+        // of discarded labels are discared for line exceed (lots of tiny small lines on a curve
+        // for example), which won't have their rule satisfied
+        enterState(State::dead, 0.0);
         return false;
     }
 
