@@ -17,7 +17,7 @@ DrawRule instance_a() {
         { StyleParamKey::color, "value_1a" }
     };
 
-    return { "style_1", params };
+    return { "dg1", "style_1", params };
 
 }
 
@@ -30,7 +30,7 @@ DrawRule instance_b() {
         { StyleParamKey::cap, "value_3b" }
     };
 
-    return { "style_1", params };
+    return { "dg1", "style_2", params };
 
 }
 
@@ -38,7 +38,7 @@ DrawRule instance_c() {
 
     std::vector<StyleParam> params = {};
 
-    return { "style_2", params };
+    return { "dg2", "style_1", params };
 
 }
 
