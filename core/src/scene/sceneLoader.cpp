@@ -1260,6 +1260,7 @@ SceneLayer SceneLoader::loadSublayer(Node layer, const std::string& name, Scene&
             // Member is a mapping of draw rules
             for (auto& ruleNode : member.second) {
 
+                auto name = ruleNode.first.as<std::string>();
                 auto explicitStyle = ruleNode.second["style"];
                 auto style = explicitStyle
                     ? explicitStyle.as<std::string>()
@@ -1267,7 +1268,7 @@ SceneLayer SceneLoader::loadSublayer(Node layer, const std::string& name, Scene&
 
                 std::vector<StyleParam> params;
                 parseStyleParams(ruleNode.second, scene, "", params);
-                rules.push_back({ style, std::move(params) });
+                rules.push_back({ name, style, std::move(params) });
             }
         } else if (key == "filter") {
             filter = generateFilter(member.second, scene);
