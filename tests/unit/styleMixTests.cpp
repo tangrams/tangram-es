@@ -25,19 +25,19 @@ TEST_CASE( "Style Mixing Test: Actual Property recursive merge check!!!", "[mixi
             mix: styleA
             base: wheresmymix?
         )END");
-    
+
     mix = SceneLoader::recursiveMixins("styleA", node, uniqueStyles, mixedStyles);
     REQUIRE(mix.size() == 1);
     mixNode = SceneLoader::mixStyle(mix);
     node["styleA"] = mixNode;
     uniqueStyles.clear();
-    
+
     mix = SceneLoader::recursiveMixins("styleB", node, uniqueStyles, mixedStyles);
     REQUIRE(mix.size() == 2);
     mixNode = SceneLoader::mixStyle(mix);
     node["styleB"] = mixNode;
     uniqueStyles.clear();
-    
+
     REQUIRE(mixNode["material"].IsScalar());
     REQUIRE(mixNode["material"].as<std::string>() ==  "A");
 }
@@ -86,37 +86,44 @@ TEST_CASE( "Style Mixing Test: Nested Style Mixin Nodes", "[mixing][core][yaml]"
     REQUIRE(mix.size() == 1);
     mixNode = SceneLoader::mixStyle(mix);
     node["styleA"] = mixNode;
+    mixedStyles.insert("styleA");
     uniqueStyles.clear();
 
     mix = SceneLoader::recursiveMixins("styleB", node, uniqueStyles, mixedStyles);
     REQUIRE(mix.size() == 1);
     mixNode = SceneLoader::mixStyle(mix);
     node["styleB"] = mixNode;
+    mixedStyles.insert("styleB");
     uniqueStyles.clear();
 
     mix = SceneLoader::recursiveMixins("styleC", node, uniqueStyles, mixedStyles);
     REQUIRE(mix.size() == 3);
     mixNode = SceneLoader::mixStyle(mix);
     node["styleC"] = mixNode;
+    mixedStyles.insert("styleC");
     uniqueStyles.clear();
 
     mix = SceneLoader::recursiveMixins("styleD", node, uniqueStyles, mixedStyles);
     REQUIRE(mix.size() == 3);
     mixNode = SceneLoader::mixStyle(mix);
     node["styleD"] = mixNode;
+    mixedStyles.insert("styleD");
     uniqueStyles.clear();
 
     mix = SceneLoader::recursiveMixins("styleE", node, uniqueStyles, mixedStyles);
     REQUIRE(mix.size() == 4);
     mixNode = SceneLoader::mixStyle(mix);
     node["styleE"] = mixNode;
+    mixedStyles.insert("styleE");
     uniqueStyles.clear();
 
     mix = SceneLoader::recursiveMixins("styleF", node, uniqueStyles, mixedStyles);
     REQUIRE(mix.size() == 2);
     mixNode = SceneLoader::mixStyle(mix);
+    mixedStyles.insert("styleF");
     node["styleF"] = mixNode;
 }
+
 
 TEST_CASE( "Style Mixing Test: Shader Extensions Merging", "[mixing][core][yaml]") {
     Node node = YAML::Load(R"END(
@@ -309,4 +316,47 @@ TEST_CASE( "Style Mixing Test: propOr Tests (boolean properties)", "[mixing][cor
 
 }
 
+TEST_CASE( "Style Mixing Test: Actual Property recursive merge check - part 2", "[mixing][core][yaml]") {
+    std::unordered_set<std::string> uniqueStyles;
+    std::unordered_set<std::string> mixedStyles;
+    std::vector<Node> mix;
+    Node mixNode;
+    Node node = YAML::Load(R"END(
+        styleLighter:
+            lighting: lighter
+        stylePocket:
+            mix: styleLighter
+        stylePants:
+            material: A
+            mix: stylePocket
+            base: where's my lighter?
+        styleDude:
+            mix: stylePants
+            base: got the lighter!
+        )END");
 
+    mix = SceneLoader::recursiveMixins("styleDude", node, uniqueStyles, mixedStyles);
+    REQUIRE(mix.size() == 4);
+    mixNode = SceneLoader::mixStyle(mix);
+    node["styleDude"] = mixNode;
+    mixedStyles.insert("styleDude");
+    uniqueStyles.clear();
+
+    REQUIRE(mixNode["material"].IsScalar());
+    REQUIRE(mixNode["material"].as<std::string>() ==  "A");
+    REQUIRE(mixNode["base"].as<std::string>() ==  "got the lighter!");
+    REQUIRE(mixNode["lighting"].as<std::string>() ==  "lighter");
+
+    mix = SceneLoader::recursiveMixins("stylePants", node, uniqueStyles, mixedStyles);
+    REQUIRE(mix.size() == 3);
+    mixNode = SceneLoader::mixStyle(mix);
+    node["stylePants"] = mixNode;
+    mixedStyles.insert("stylePants");
+    uniqueStyles.clear();
+
+    REQUIRE(mixNode["material"].IsScalar());
+    REQUIRE(mixNode["material"].as<std::string>() ==  "A");
+    REQUIRE(mixNode["base"].as<std::string>() ==  "where's my lighter?");
+    REQUIRE(mixNode["lighting"].as<std::string>() ==  "lighter");
+
+}

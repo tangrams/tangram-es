@@ -600,7 +600,6 @@ std::vector<Node> SceneLoader::recursiveMixins(const std::string& styleName, Nod
 
     mixes.push_back(styleNode);
     uniqueStyles.insert(styleName);
-    mixedStyles.insert(styleName);
 
     return mixes;
 }
@@ -644,6 +643,7 @@ void SceneLoader::loadStyles(Node styles, Scene& scene) {
 
         // Update styleNode with mixedStyleNode (for future uses)
         styles[styleName] = mixedStyleNode;
+        mixedStyles.insert(styleName);
 
         // Construct style instance using the merged properties
         if (Node baseNode = mixedStyleNode["base"]) {
