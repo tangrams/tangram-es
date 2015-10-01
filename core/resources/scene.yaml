@@ -161,13 +161,15 @@ layers:
             draw:
                 lines:
                     #color: '#000000'
-                    color: '#D16768'
+                    color: '#ff0000'
                     #width: [[0, 2], [11, 2.], [12, 3.], [13, 4.], [14, 5.], [15, 6.]]
-                    width: [[10, 2px], [15, 10m]]
+                    #width: [[10, 2px], [12, 20m], [11, 20m], [18, 20m]]
+                    #width: [[10, 2px], [12, 10m], [18, 10m]]
+                    width: [[12, 2px], [18, 10m]]
                     outline:
-                        #color: '#ff0000'
-                        #width: 3.0
-                        width: [[14, 0], [15, .01]]
+                        color: '#0000ff'
+                        width: [[14, 0.5px], [16, 2px]]
+                        #width: 8px
             link:
                 filter: { is_link: yes }
                 draw:
@@ -430,6 +432,3 @@ layers:
         data: { source: osm }
         draw:
             sprites: {}
-
-
-

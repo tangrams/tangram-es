@@ -68,9 +68,12 @@ void PolylineStyle::buildPolygon(const Polygon& _poly, const DrawRule& _rule, co
 }
 
 double widthMeterToPixel(int _zoom, double _tileSize, double _width) {
-    double meterRes = 2.0 * MapProjection::HALF_CIRCUMFERENCE / _tileSize;
-    double invRes = (1 << _zoom) / meterRes;
-    return _width * invRes;
+    // pixel per meter at z == 0
+    double meterRes = _tileSize / (2.0 * MapProjection::HALF_CIRCUMFERENCE);
+    // pixel per meter at zoom
+    meterRes *= exp2(_zoom);
+
+    return _width * meterRes;
 }
 
 bool evalStyleParamWidth(StyleParamKey _key, const DrawRule& _rule, const Tile& _tile,
@@ -88,10 +91,10 @@ bool evalStyleParamWidth(StyleParamKey _key, const DrawRule& _rule, const Tile& 
     auto& styleParam = _rule.findParameter(_key);
     if (styleParam.stops) {
 
-        width = styleParam.stops->evalFloat(zoom);
+        width = styleParam.stops->evalWidth(zoom);
         width *= tileRes;
 
-        dWdZ = styleParam.stops->evalFloat(zoom + 1);
+        dWdZ = styleParam.stops->evalWidth(zoom + 1);
         dWdZ *= tileRes;
         // NB: Multiply by 2 for the outline to get the expected stroke pixel width.
         if (_key == StyleParamKey::outline_width) {
@@ -110,13 +113,21 @@ bool evalStyleParamWidth(StyleParamKey _key, const DrawRule& _rule, const Tile& 
         width = widthParam.value;
 
         if (widthParam.isMeter()) {
+
             width = widthMeterToPixel(zoom, tileSize, width);
             width *= tileRes;
             dWdZ = width;
-            return true;
+        } else {
+            width *= tileRes;
         }
 
-        width *= tileRes;
+        if (_key == StyleParamKey::outline_width) {
+            width *= 2;
+            dWdZ *= 2;
+        }
+
+        dWdZ -= width;
+
         return true;
     }
 

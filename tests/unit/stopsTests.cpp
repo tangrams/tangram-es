@@ -6,15 +6,6 @@
 
 using namespace Tangram;
 
-Stops instance_float() {
-    return Stops({
-        Stops::Frame(0, 0.f),
-        Stops::Frame(1, 10.f),
-        Stops::Frame(5, 50.f),
-        Stops::Frame(7, 0.f)
-    });
-}
-
 Stops instance_color() {
     return Stops({
         Stops::Frame(0, 0xffffffff),
@@ -25,7 +16,12 @@ Stops instance_color() {
 
 TEST_CASE("Stops evaluate float values correctly at and between key frames", "[Stops]") {
 
-    auto stops = instance_float();
+    Stops stops({
+            Stops::Frame(0, 0.f),
+            Stops::Frame(1, 10.f),
+            Stops::Frame(5, 50.f),
+            Stops::Frame(7, 0.f)
+    });
 
     REQUIRE(stops.evalFloat(-3) == 0.f);
     REQUIRE(stops.evalFloat(0) == 0.f);
@@ -36,6 +32,33 @@ TEST_CASE("Stops evaluate float values correctly at and between key frames", "[S
     REQUIRE(stops.evalFloat(6) == 25.f);
     REQUIRE(stops.evalFloat(7) == 0.f);
     REQUIRE(stops.evalFloat(8) == 0.f);
+
+}
+
+TEST_CASE("Stops evaluate width values correctly at and between key frames", "[Stops]") {
+
+    Stops stops({
+            Stops::Frame(0, 0.f),
+            Stops::Frame(1, 10.f),
+            Stops::Frame(5, 50.f),
+            Stops::Frame(7, 0.f),
+            Stops::Frame(8, 3.f),
+            Stops::Frame(10, 3.f),
+
+    });
+
+    REQUIRE(stops.evalWidth(-3) == 0.f);
+    REQUIRE(stops.evalWidth(0) == 0.f);
+    REQUIRE(std::abs(stops.evalWidth(0.3) - 2.31144f) < 0.00001);
+    REQUIRE(stops.evalWidth(1) == 10.f);
+    REQUIRE(stops.evalWidth(3) == 18.f);
+    REQUIRE(stops.evalWidth(5) == 50.f);
+    REQUIRE(std::abs(stops.evalWidth(6) - 33.33333f) < 0.00001);
+    REQUIRE(stops.evalWidth(7) == 0.f);
+    REQUIRE(stops.evalWidth(8) == 3.f);
+    REQUIRE(stops.evalWidth(8.4) == 3.f); // flat interpolation
+    REQUIRE(stops.evalWidth(9.3) == 3.f); // flat interpolation
+    REQUIRE(stops.evalWidth(10) == 3.f);
 
 }
 
@@ -52,18 +75,22 @@ TEST_CASE("Stops evaluate color values correctly at and between key frames", "[S
 
 TEST_CASE("Stops parses correctly from YAML distance values", "[Stops][YAML]") {
 
-    YAML::Node node = YAML::Load("[ [10, 0], [16, .04], [18, .2] ]");
+    YAML::Node node = YAML::Load("[ [10, 0], [16, .04], [18, .2], [19, .2] ]");
 
-    Stops stops(Stops::Width(node));
+    MercatorProjection proj;
 
-    REQUIRE(stops.frames.size() == 3);
+    Stops stops(Stops::Width(node, proj));
+
+    // +1 added for meter end stop
+    REQUIRE(stops.frames.size() == 5);
     REQUIRE(stops.frames[0].key == 10.f);
     REQUIRE(stops.frames[1].key == 16.f);
     REQUIRE(stops.frames[2].key == 18.f);
-    REQUIRE(stops.frames[0].width.value == 0.f);
-    REQUIRE(stops.frames[1].width.value == .04f);
-    REQUIRE(stops.frames[2].width.value == .2f);
+    REQUIRE(stops.frames[3].key == 19.f);
+    REQUIRE(stops.frames[0].value == 0.f);
 
+    // check if same meters have twice the width in pixel one zoom-level above
+    REQUIRE(std::abs(stops.frames[2].value * 2.0 - stops.frames[3].value) < 0.00001);
 }
 
 TEST_CASE("Stops parses correctly from YAML color values", "[Stops][YAML]") {
