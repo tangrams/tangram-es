@@ -54,6 +54,87 @@ SceneLayer instance_e() {
     return { "layer_e", f, { rule }, { instance_c(), instance_d() } };
 }
 
+SceneLayer instance_2() {
+
+    Filter f = Filter("two", true);
+
+    DrawRule rule = { "group2", "styleA", {} };
+
+    return { "subLayer2", f, { rule }, {} };
+}
+
+SceneLayer instance_1() {
+
+    Filter f = Filter("one", true);
+
+    DrawRule rule = { "group1", "styleB", {} };
+
+    return { "subLayer1", f, { rule }, {} };
+}
+
+SceneLayer instance() {
+
+    Filter f = Filter("base", true);
+
+    DrawRule rule = { "group1", "styleA", { {StyleParamKey::order, "a" } } };
+
+    return { "layer", f, { rule }, { instance_1(), instance_2() } };
+}
+
+TEST_CASE("SceneLayer", "[SceneLayer][Filter][DrawRule][Match][Merge]") {
+
+    Feature f1;
+    Feature f2;
+    Feature f3;
+    Feature f4;
+    Context ctx;
+
+    auto layer = instance();
+    std::vector<DrawRule> matches;
+
+    {
+        f1.props.add("base", "blah"); // Should match Base Layer
+        layer.match(f1, ctx, matches);
+
+        REQUIRE(matches.size() == 1);
+        REQUIRE(matches[0].style == "styleA");
+    }
+
+    {
+        matches.clear();
+        f2.props.add("one", "blah"); // Should match Base and subLayer1
+        f2.props.add("base", "blah");
+        layer.match(f2, ctx, matches);
+
+        REQUIRE(matches.size() == 1);
+        REQUIRE(matches[0].style == "styleB");
+        REQUIRE(matches[0].parameters[0].key == StyleParamKey::order);
+        REQUIRE(matches[0].parameters[0].value.get<std::string>() == "a");
+    }
+
+    {
+        matches.clear();
+        f3.props.add("two", "blah"); // Should not match anything as uber layer will not be satisfied
+        layer.match(f3, ctx, matches);
+
+        REQUIRE(matches.size() == 0);
+    }
+
+    {
+        matches.clear();
+        f4.props.add("two", "blah");
+        f4.props.add("base", "blah"); // Should match Base and subLayer2
+        layer.match(f4, ctx, matches);
+
+        REQUIRE(matches.size() == 2);
+        REQUIRE(matches[0].style == "styleA");
+        REQUIRE(matches[0].parameters[0].key == StyleParamKey::order);
+        REQUIRE(matches[0].parameters[0].value.get<std::string>() == "a");
+        REQUIRE(matches[1].style == "styleA");
+    }
+
+}
+
 TEST_CASE("SceneLayer matches correct rules for a feature and context", "[SceneLayer][Filter]") {
 
     Feature feat;
