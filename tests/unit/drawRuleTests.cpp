@@ -76,6 +76,9 @@ TEST_CASE("DrawRule correctly merges with another DrawRule", "[DrawRule]") {
         REQUIRE(merged_ab.parameters[3].value.get<std::string>() == "value_0b");
         REQUIRE(merged_ab.parameters[4].key == StyleParamKey::width);
         REQUIRE(merged_ab.parameters[4].value.get<std::string>() == "value_2b");
+
+        // B's style wins
+        REQUIRE(merged_ab.style == rule_b.style);
     }
 
     {
@@ -94,6 +97,9 @@ TEST_CASE("DrawRule correctly merges with another DrawRule", "[DrawRule]") {
         REQUIRE(merged_ba.parameters[3].value.get<std::string>() == "value_0a");
         REQUIRE(merged_ba.parameters[4].key == StyleParamKey::width);
         REQUIRE(merged_ba.parameters[4].value.get<std::string>() == "value_2b");
+
+        // A's style wins
+        REQUIRE(merged_ba.style == rule_a.style);
     }
 
     {
@@ -107,6 +113,9 @@ TEST_CASE("DrawRule correctly merges with another DrawRule", "[DrawRule]") {
             REQUIRE(merged_bc.parameters[i].value.get<std::string>() ==
                     rule_b.parameters[i].value.get<std::string>());
         }
+
+        // C's style wins
+        REQUIRE(merged_bc.style == rule_c.style);
     }
 
 }
