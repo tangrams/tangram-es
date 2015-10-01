@@ -477,26 +477,23 @@ void SceneLoader::loadStyleProps(Style& style, Node styleNode, Scene& scene) {
     }
 }
 
-Node SceneLoader::propOr(const std::string& propStr, const std::vector<Node>& mixes) {
-
-    Node node;
+bool SceneLoader::propOr(const std::string& propStr, const std::vector<Node>& mixes) {
 
     for (const auto& mixNode : mixes) {
         if (!mixNode.IsMap()) { continue; }
-        if (Node propNode = mixNode[propStr]) {
-            if (propNode.IsScalar()) {
-                try {
-                    if (propNode.as<bool>()) {
-                        node = true;
-                        break;
-                    }
-                } catch (const BadConversion& e) {
-                    logMsg("Error: Expected a boolean value for %s.\n", propStr.c_str());
+
+        Node node = mixNode[propStr];
+        if (node && node.IsScalar()) {
+            try {
+                if (node.as<bool>()) {
+                    return true;
                 }
+            } catch (const BadConversion& e) {
+                LOGW("Error: Expected a boolean value for %s.", propStr.c_str());
             }
         }
     }
-    return node;
+    return false;
 }
 
 Node SceneLoader::propMerge(const std::string& propName, const std::vector<Node>& mixes) {
@@ -558,7 +555,7 @@ Node SceneLoader::propMerge(const std::string& propName, const std::vector<Node>
 
 Node SceneLoader::shaderBlockMerge(const std::vector<Node>& mixes) {
 
-    Node node;
+    Node result;
     for (const auto& mixNode : mixes) {
         if (!mixNode.IsMap()) { continue; }
 
@@ -578,19 +575,19 @@ Node SceneLoader::shaderBlockMerge(const std::vector<Node>& mixes) {
         for (const auto& block : blocks) {
             std::string blockName = block.first.as<std::string>();
             std::string value = block.second.as<std::string>();
-            if (node[blockName]) {
-                node[blockName] = node[blockName].as<std::string>() + "\n" + value;
+            if (result[blockName]) {
+                result[blockName] = result[blockName].as<std::string>() + "\n" + value;
             } else {
-                node[blockName] = value;
+                result[blockName] = value;
             }
         }
     }
-    return node;
+    return result;
 }
 
 Node SceneLoader::shaderExtMerge(const std::vector<Node>& mixes) {
 
-    Node node;
+    Node result;
     std::unordered_set<std::string> uniqueList;
 
     for (const auto& mixNode : mixes) {
@@ -609,7 +606,7 @@ Node SceneLoader::shaderExtMerge(const std::vector<Node>& mixes) {
         case NodeType::Scalar: {
             auto val = extNode.as<std::string>();
             if (uniqueList.find(val) == uniqueList.end()) {
-                node.push_back(extNode);
+                result.push_back(extNode);
                 uniqueList.insert(val);
             }
             break;
@@ -618,35 +615,38 @@ Node SceneLoader::shaderExtMerge(const std::vector<Node>& mixes) {
             for (const auto& n : extNode) {
                 auto val = n.as<std::string>();
                 if (uniqueList.find(val) == uniqueList.end()) {
-                    node.push_back(n);
+                    result.push_back(n);
                     uniqueList.insert(val);
                 }
             }
             break;
         }
         default:
-            LOGN("Expected scalar or sequence value for 'extensions' node", node);
+            LOGN("Expected scalar or sequence value for 'extensions' node", mixNode);
         }
     }
 
-    return node;
+    return result;
 }
 
 Node SceneLoader::mixStyle(const std::vector<Node>& mixes) {
 
-    Node styleNode;
+    Node result;
 
     for (auto& property: {"animated", "texcoords"}) {
-        Node node = propOr(property, mixes);
-        if (!node.IsNull()) { styleNode[property] = node; }
+        if (propOr(property, mixes)) {
+            result[property] = true;
+        }
     }
 
     for (auto& property : {"base", "lighting", "texture", "blend", "material", "shaders"}) {
         Node node = propMerge(property, mixes);
-        if (!node.IsNull()) { styleNode[property] = node; }
+        if (!node.IsNull()) {
+            result[property] = node;
+        }
     }
 
-    Node shaderNode = styleNode["shaders"];
+    Node shaderNode = result["shaders"];
 
     Node shaderExtNode = shaderExtMerge(mixes);
     if (!shaderExtNode.IsNull()) {
@@ -658,7 +658,7 @@ Node SceneLoader::mixStyle(const std::vector<Node>& mixes) {
         shaderNode["blocks"] = shaderBlocksNode;
     }
 
-    return styleNode;
+    return result;
 }
 
 void SceneLoader::addMixinNode(const Node mixNode, const Node styles, std::vector<Node>& mixes,

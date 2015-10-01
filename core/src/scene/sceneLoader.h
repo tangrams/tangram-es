@@ -78,7 +78,7 @@ struct SceneLoader {
                       std::unordered_set<std::string>& mixedStyles);
 
     // Generic methods to merge properties
-    static Node propOr(const std::string& propStr, const std::vector<Node>& mixes);
+    static bool propOr(const std::string& propStr, const std::vector<Node>& mixes);
     static Node propMerge(const std::string& propStr, const std::vector<Node>& mixes);
 
     // Methods to merge shader blocks
