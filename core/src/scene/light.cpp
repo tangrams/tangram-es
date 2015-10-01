@@ -4,6 +4,8 @@
 #include "platform.h"
 #include "gl/shaderProgram.h"
 
+#include <sstream>
+
 namespace Tangram {
 
 std::string Light::s_mainLightingBlock;
@@ -65,35 +67,38 @@ void Light::setupProgram(const View& _view, ShaderProgram& _shader) {
 void Light::assembleLights(std::map<std::string, std::vector<std::string>>& _sourceBlocks) {
 
     // Create strings to contain the assembled lighting source code
-    std::string lightingBlock;
+    std::stringstream lighting;
 
     // Concatenate all strings at the "__lighting" keys
     // (struct definitions and function definitions)
-
     for (const auto& string : _sourceBlocks["__lighting"]) {
-        lightingBlock += string;
+        lighting << '\n';
+        lighting << string;
     }
 
     // After lights definitions are all added, add the main lighting functions
     if (s_mainLightingBlock.empty()) {
         s_mainLightingBlock = stringFromResource("shaders/lights.glsl");
     }
-    lightingBlock += s_mainLightingBlock;
+    std::string lightingBlock = s_mainLightingBlock;
 
     // The main lighting functions each contain a tag where all light instances should be computed;
     // Insert all of our "lights_to_compute" at this tag
 
     std::string tag = "#pragma tangram: lights_to_compute";
-    size_t pos = lightingBlock.find(tag) + tag.length();
+    std::stringstream lights;
     for (const auto& string : _sourceBlocks["__lights_to_compute"]) {
-        lightingBlock.insert(pos, string);
-        pos += string.length();
+        lights << '\n';
+        lights << string;
     }
+
+    size_t pos = lightingBlock.find(tag) + tag.length();
+    lightingBlock.insert(pos, lights.str());
 
     // Place our assembled lighting source code back into the map of "source blocks";
     // The assembled strings will then be injected into a shader at the "vertex_lighting"
     // and "fragment_lighting" tags
-    _sourceBlocks["lighting"] = { lightingBlock };
+    _sourceBlocks["lighting"] = { lighting.str() + lightingBlock  };
 }
 
 LightType Light::getType() {
