@@ -96,6 +96,14 @@ bool Label::updateScreenTransform(const glm::mat4& _mvp, const glm::vec2& _scree
 }
 
 bool Label::update(const glm::mat4& _mvp, const glm::vec2& _screenSize, float _dt) {
+
+    // allow persistent labels
+    if (m_options.persistent) {
+        enterState(State::visible, 1.0);
+        updateScreenTransform(_mvp, _screenSize);
+        return false;
+    }
+
     bool animate =  updateState(_mvp, _screenSize, _dt);
     m_occlusionSolved = false;
 
@@ -124,6 +132,10 @@ void Label::setOcclusion(bool _occlusion) {
 }
 
 bool Label::canOcclude() {
+    if (m_options.persistent) {
+        return false;
+    }
+
     int occludeFlags = (State::visible | State::wait_occ | State::fading_in | State::sleep);
     return (occludeFlags & m_currentState) && !(m_type == Type::debug);
 }

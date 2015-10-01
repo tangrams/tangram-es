@@ -27,6 +27,7 @@ protected:
         uint32_t priority = std::numeric_limits<uint32_t>::max();
         bool interactive;
         bool valid = true;
+        bool persistent = false;
     };
 
     virtual void constructVertexLayout() override;

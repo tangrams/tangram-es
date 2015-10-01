@@ -68,9 +68,9 @@ public:
         uint32_t color = 0xffffffff;
         glm::vec2 offset;
         uint32_t priority = std::numeric_limits<uint32_t>::max();
-
         bool interactive = false;
         std::shared_ptr<Properties> properties;
+        bool persistent = false;
     };
 
     Label(Transform _transform, glm::vec2 _size, Type _type, LabelMesh& _mesh, Range _vertexRange, Options _options);

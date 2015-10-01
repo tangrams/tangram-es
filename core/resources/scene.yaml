@@ -64,8 +64,9 @@ layers:
                 color: 'purple'
                 order: 50
                 width: .03
-            # sprites:
-            #     sprite: sunburst
+            icons:
+                persistent: true
+                sprite: sunburst
 
     earth:
         data: { source: osm }

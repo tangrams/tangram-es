@@ -39,6 +39,7 @@ enum class StyleParamKey : uint8_t {
     visible,
     width,
     centroid,
+    persistent,
 };
 
 enum class Unit { pixel, meter };

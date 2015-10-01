@@ -60,7 +60,8 @@ void mouse_button_callback(GLFWwindow* window, int button, int action, int mods)
         double coords[4] = { x, y, 0, 0 };
         Tangram::screenToWorldCoordinates(coords[0], coords[1]);
         Tangram::screenToWorldCoordinates(coords[2], coords[3]);
-        Tangram::addSourceLine(data_source_id, coords, 2);
+        //Tangram::addSourceLine(data_source_id, coords, 2);
+        Tangram::addSourcePoint(data_source_id, coords);
         // Tangram::handleTapGesture(x, y);
     }
 
@@ -173,7 +174,7 @@ void init_main_window() {
 
     // Make the main_window's context current
     glfwMakeContextCurrent(main_window);
-    
+
     // Set input callbacks
     glfwSetWindowSizeCallback(main_window, window_size_callback);
     glfwSetMouseButtonCallback(main_window, mouse_button_callback);
@@ -181,7 +182,7 @@ void init_main_window() {
     glfwSetScrollCallback(main_window, scroll_callback);
     glfwSetKeyCallback(main_window, key_callback);
     glfwSetDropCallback(main_window, drop_callback);
-    
+
     // Setup graphics
     Tangram::setupGL();
     Tangram::resize(width, height);

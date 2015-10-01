@@ -64,6 +64,7 @@ PointStyle::Parameters PointStyle::applyRule(const DrawRule& _rule) const {
     _rule.get(StyleParamKey::sprite_default, p.spriteDefault);
     _rule.get(StyleParamKey::centroid, p.centroid);
     _rule.get(StyleParamKey::interactive, p.interactive);
+    _rule.get(StyleParamKey::persistent, p.persistent);
 
     auto sizeParam = _rule.findParameter(StyleParamKey::size);
     if (sizeParam.stops && sizeParam.value.is<float>()) {
@@ -95,7 +96,7 @@ Label::Options PointStyle::optionsFromPointParams(const Parameters& _params) con
     options.priority = _params.priority;
     options.color = _params.color;
     options.interactive = _params.interactive;
-
+    options.persistent = _params.persistent;
     return options;
 }
 
