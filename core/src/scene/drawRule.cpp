@@ -41,7 +41,7 @@ DrawRule DrawRule::merge(DrawRule& _other) const {
     while (myIt != myEnd) { merged.push_back(*myIt++); }
     while (otherIt != otherEnd) { merged.push_back(std::move(*otherIt++)); }
 
-    return { name, style, merged, true };
+    return { name, _other.style, merged, true };
 }
 
 std::string DrawRule::toString() const {
