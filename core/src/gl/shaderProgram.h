@@ -121,12 +121,13 @@ private:
     std::map<std::string, std::vector<std::string>> m_sourceBlocks;
 
     bool m_needsBuild;
+    bool m_invalidShaderSource;
 
     void checkValidity();
     GLuint makeLinkedShaderProgram(GLint _fragShader, GLint _vertShader);
     GLuint makeCompiledShader(const std::string& _src, GLenum _type);
 
-    void applySourceBlocks(std::string& _vertSrcOut, std::string& _fragSrcOut);
+    std::string applySourceBlocks(const std::string& source, bool fragShader);
 
 };
 

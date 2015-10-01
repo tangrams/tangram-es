@@ -4,6 +4,10 @@
 #include "scene/light.h"
 #include "gl/renderState.h"
 
+#include <sstream>
+#include <regex>
+#include <set>
+
 namespace Tangram {
 
 int ShaderProgram::s_validGeneration = 0;
@@ -15,6 +19,7 @@ ShaderProgram::ShaderProgram() {
     m_glVertexShader = 0;
     m_needsBuild = true;
     m_generation = -1;
+    m_invalidShaderSource = false;
 }
 
 ShaderProgram::~ShaderProgram() {
@@ -47,19 +52,17 @@ void ShaderProgram::setSourceStrings(const std::string& _fragSrc, const std::str
     m_needsBuild = true;
 }
 
-void ShaderProgram::addSourceBlock(const std::string& _tagName, const std::string &_glslSource, bool _allowDuplicate){
-
-    auto glslSource = "\n" + _glslSource;
+void ShaderProgram::addSourceBlock(const std::string& _tagName, const std::string& _glslSource, bool _allowDuplicate){
 
     if (!_allowDuplicate) {
         for (auto& source : m_sourceBlocks[_tagName]) {
-            if (glslSource == source) {
+            if (_glslSource == source) {
                 return;
             }
         }
     }
 
-    m_sourceBlocks[_tagName].push_back(glslSource);
+    m_sourceBlocks[_tagName].push_back(_glslSource);
     m_needsBuild = true;
 
     //  TODO:
@@ -114,11 +117,14 @@ bool ShaderProgram::build() {
     m_needsBuild = false;
     m_generation = s_validGeneration;
 
+    if (m_invalidShaderSource) { return false; }
+
     // Inject source blocks
 
-    std::string vertSrc = m_vertexShaderSource;
-    std::string fragSrc = m_fragmentShaderSource;
-    applySourceBlocks(vertSrc, fragSrc);
+    Light::assembleLights(m_sourceBlocks);
+
+    auto vertSrc = applySourceBlocks(m_vertexShaderSource, false);
+    auto fragSrc = applySourceBlocks(m_fragmentShaderSource, true);
 
     // Try to compile vertex and fragment shaders, releasing resources and quiting on failure
 
@@ -182,6 +188,7 @@ GLuint ShaderProgram::makeLinkedShaderProgram(GLint _fragShader, GLint _vertShad
             logMsg("Error linking program:\n%s\n", &infoLog[0]);
         }
         glDeleteProgram(program);
+        m_invalidShaderSource = true;
         return 0;
     }
 
@@ -208,6 +215,7 @@ GLuint ShaderProgram::makeCompiledShader(const std::string& _src, GLenum _type) 
             //logMsg("\n%s\n", source);
         }
         glDeleteShader(shader);
+        m_invalidShaderSource = true;
         return 0;
     }
 
@@ -215,45 +223,77 @@ GLuint ShaderProgram::makeCompiledShader(const std::string& _src, GLenum _type) 
 
 }
 
-void ShaderProgram::applySourceBlocks(std::string& _vertSrcOut, std::string& _fragSrcOut) {
 
-    _vertSrcOut.insert(0, "#pragma tangram: defines\n");
-    _fragSrcOut.insert(0, "#pragma tangram: defines\n");
+std::string ShaderProgram::applySourceBlocks(const std::string& source, bool fragShader) {
 
-    float depthDelta = 1.f / (1 << 16);
+    static const std::regex pragmaLine("^\\s*#pragma tangram:\\s+(\\w+).*$");
 
-    // inject tangram defines
-    _vertSrcOut.insert(0, "#define TANGRAM_VERTEX_SHADER\n");
-    _vertSrcOut.insert(0, "#define TANGRAM_DEPTH_DELTA " + std::to_string(depthDelta) + "\n");
-    _vertSrcOut.insert(0, "#define TANGRAM_EPSILON 0.00001\n");
-    _fragSrcOut.insert(0, "#define TANGRAM_FRAGMENT_SHADER\n");
-    _fragSrcOut.insert(0, "#define TANGRAM_EPSILON 0.00001\n");
+    std::stringstream sourceOut;
+    std::set<std::string> pragmas;
+    std::smatch sm;
 
-    Light::assembleLights(m_sourceBlocks);
+    sourceOut << "#define TANGRAM_EPSILON 0.00001\n";
 
-    for (auto& block : m_sourceBlocks) {
+    if (fragShader) {
+        sourceOut << "#define TANGRAM_FRAGMENT_SHADER\n";
+    } else {
+        float depthDelta = 1.f / (1 << 16);
+        sourceOut << "#define TANGRAM_DEPTH_DELTA " << std::to_string(depthDelta) << '\n';
+        sourceOut << "#define TANGRAM_VERTEX_SHADER\n";
+    }
 
-        std::string tag = "#pragma tangram: " + block.first;
+    auto sourcePos = source.begin();
+    size_t lineStart = 0, lineEnd;
 
-        size_t vertSrcPos = _vertSrcOut.find(tag);
-        size_t fragSrcPos = _fragSrcOut.find(tag);
+    while ((lineEnd = source.find('\n', lineStart)) != std::string::npos) {
 
-        if (vertSrcPos != std::string::npos) {
-            vertSrcPos += tag.length();
-            for (auto& source : block.second) {
-                _vertSrcOut.insert(vertSrcPos, source);
-                vertSrcPos += source.length();
-            }
+        if (lineEnd - lineStart == 0) {
+            // skip empty lines
+            lineStart += 1;
+            continue;
         }
-        if (fragSrcPos != std::string::npos) {
-            fragSrcPos += tag.length();
-            for (auto& source : block.second) {
-                _fragSrcOut.insert(fragSrcPos, source);
-                fragSrcPos += source.length();
+
+        auto matchPos = source.begin() + lineStart;
+        auto matchEnd = source.begin() + lineEnd;
+        lineStart = lineEnd + 1;
+
+        if (std::regex_match(matchPos, matchEnd, sm, pragmaLine)) {
+
+            std::string pragmaName = sm[1];
+
+            bool unique;
+            std::tie(std::ignore, unique) = pragmas.emplace(std::move(pragmaName));
+
+            // ignore duplicates
+            if (!unique) { continue; }
+
+            auto block = m_sourceBlocks.find(sm[1]);
+            if (block == m_sourceBlocks.end()) { continue; }
+
+            // write from last source position to end of pragma
+            sourceOut << '\n';
+            std::copy(sourcePos, matchEnd, std::ostream_iterator<char>(sourceOut));
+            sourcePos = matchEnd;
+
+            // insert blocks
+            for (auto& source : block->second) {
+                sourceOut << '\n';
+                sourceOut << source;
             }
         }
     }
 
+    // write from last written source position to end of source
+    std::copy(sourcePos, source.end(), std::ostream_iterator<char>(sourceOut));
+
+    // for (auto& block : m_sourceBlocks) {
+    //     if (pragmas.find(block.first) == pragmas.end()) {
+    //         logMsg("Warning: expected pragma '%s' in shader source\n",
+    //                block.first.c_str());
+    //     }
+    // }
+
+    return sourceOut.str();
 }
 
 void ShaderProgram::checkValidity() {
