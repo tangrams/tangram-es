@@ -2,6 +2,7 @@
 
 #include "util/geom.h"
 #include "labels/labelMesh.h"
+#include "glm/gtx/rotate_vector.hpp"
 
 namespace Tangram {
 
@@ -73,7 +74,7 @@ bool Label::updateScreenTransform(const glm::mat4& _mvp, const glm::vec2& _scree
 
             float length = glm::length(p1p2);
 
-            float exceedHeuristic = 80; // default heuristic : 80%
+            float exceedHeuristic = 30; // default heuristic : 30%
 
             if (m_dim.x > length) {
                 float exceed = (1 - (length / m_dim.x)) * 100;
@@ -154,7 +155,13 @@ void Label::setAlpha(float _alpha) {
 }
 
 void Label::setScreenPosition(const glm::vec2& _screenPosition) {
-    glm::vec2 newScreenPos = _screenPosition + m_options.offset;
+    glm::vec2 offset = m_options.offset;
+
+    if (m_transform.state.rotation != 0.f) {
+        offset = glm::rotate(offset, m_transform.state.rotation);
+    }
+
+    glm::vec2 newScreenPos = _screenPosition + offset;
     if (newScreenPos != m_transform.state.screenPos) {
         m_transform.state.screenPos = newScreenPos;
         m_dirty = true;

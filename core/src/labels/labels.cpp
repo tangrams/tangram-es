@@ -6,6 +6,7 @@
 #include "style/style.h"
 
 #include "glm/gtc/matrix_transform.hpp"
+#include "glm/gtx/rotate_vector.hpp"
 
 namespace Tangram {
 
@@ -115,8 +116,10 @@ void Labels::drawDebug(const View& _view) {
 
     for (auto label : m_labels) {
         if (label->canOcclude()) {
-            const glm::vec2& offset = label->getOptions().offset;
+            glm::vec2 offset = label->getOptions().offset;
             glm::vec2 sp = label->getTransform().state.screenPos;
+            float angle = label->getTransform().state.rotation;
+            offset = glm::rotate(offset, angle);
 
             // draw bounding box
             Label::State state = label->getState();
