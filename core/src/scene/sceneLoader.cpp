@@ -717,7 +717,7 @@ void SceneLoader::loadLights(Node lights, Scene& scene) {
 
         // Add an ambient light if nothing else is specified
         std::unique_ptr<AmbientLight> amb(new AmbientLight("defaultLight"));
-        amb->setAmbientColor({ .5f, .5f, .5f, 1.f });
+        amb->setAmbientColor({ 1.f, 1.f, 1.f, 1.f });
         scene.lights().push_back(std::move(amb));
 
         return;
