@@ -62,6 +62,14 @@ public class MainActivity extends Activity {
             }
         });
 
+        mapController.setGenericMotionEventListener(new View.OnGenericMotionListener() {
+            @Override
+            public boolean onGenericMotion(View v, MotionEvent event) {
+                // Handle generic motion event.
+                return false;
+            }
+        });
+
         HttpHandler handler = new HttpHandler() {
             @Override
             public boolean onRequest(String url, Callback cb) {
