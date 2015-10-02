@@ -82,7 +82,6 @@ bool TextBuffer::addLabel(const std::string& _text, Label::Transform _transform,
     auto& vertices = m_vertices[0];
     int vertexOffset = vertices.size();
     int numVertices = numGlyphs * 4;
-    vertices.reserve(vertices.size() + numVertices);
 
     float inf = std::numeric_limits<float>::infinity();
     float x0 = inf, x1 = -inf, y0 = inf, y1 = -inf;
