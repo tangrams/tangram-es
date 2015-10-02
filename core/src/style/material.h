@@ -39,22 +39,22 @@ public:
 
     /*  Emission color is by default disabled and vec4(0.0).
      *  Setting this property enables it and changes require reloading the shader. */
-    void setEmission(const glm::vec4 _emission);
+    void setEmission(glm::vec4 _emission);
     void setEmission(MaterialTexture _emissionTexture);
 
     /*  Ambient color is by default disabled and vec4(1.0).
      *  Setting this property enables it and changes require reloading the shader. */
-    void setAmbient(const glm::vec4 _ambient);
+    void setAmbient(glm::vec4 _ambient);
     void setAmbient(MaterialTexture _ambientTexture);
 
     /*  Diffuse color is by default enabled and vec4(1.0).
      *  Changes require reloading the shader. */
-    void setDiffuse(const glm::vec4 _diffuse);
+    void setDiffuse(glm::vec4 _diffuse);
     void setDiffuse(MaterialTexture _diffuseTexture);
 
     /*  Specular color is by default disabled and vec4(0.2) with a shininess factor of 0.2.
      *  Setting this property enables it and changes require reloading the shader. */
-    void setSpecular(const glm::vec4 _specular);
+    void setSpecular(glm::vec4 _specular);
     void setSpecular(MaterialTexture _specularTexture);
 
     void setShininess(float _shiny);
@@ -79,6 +79,11 @@ public:
     /*  Method to pass it self as a uniform to the shader program */
     virtual void setupProgram(ShaderProgram& _shader);
 
+    bool hasEmission() const { return m_bEmission; }
+    bool hasAmbient() const { return m_bAmbient; }
+    bool hasDiffuse() const { return m_bDiffuse; }
+    bool hasSpecular() const { return m_bSpecular; }
+
 private:
 
     /* Get defines that need to be injected on top of the shader */
@@ -102,7 +107,7 @@ private:
     bool m_bSpecular = false;
     glm::vec4 m_specular = glm::vec4(.2f);
     MaterialTexture m_specular_texture;
-    
+
     MaterialTexture m_normal_texture;
 
     float m_shininess = .2f;

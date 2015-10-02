@@ -244,7 +244,9 @@ TEST_CASE("Test evalStyle - Init StyleParam function from yaml", "[Duktape][eval
                 cap: function() { return 'round'; }
             )");
 
-    std::vector<StyleParam> styles(SceneLoader::parseStyleParams(n0["draw"], scene));
+    std::vector<StyleParam> styles;
+
+    SceneLoader::parseStyleParams(n0["draw"], scene, "", styles);
 
     REQUIRE(scene.functions().size() == 3);
 
