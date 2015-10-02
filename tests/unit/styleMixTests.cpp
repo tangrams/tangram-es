@@ -375,3 +375,33 @@ TEST_CASE( "Style Mixing Test: Actual Property recursive merge check - part 2", 
     REQUIRE(mixNode["lighting"].as<std::string>() ==  "lighter");
 
 }
+
+TEST_CASE( "Style Mixing Test: Dont allow loops in mix inheritance", "[mixing][core][yaml]") {
+    std::unordered_set<std::string> mixedStyles;
+    Scene scene;
+
+    std::vector<Node> mix;
+    Node mixNode;
+    Node node = YAML::Load(R"END(
+        styleA:
+            mix: styleB
+            base: A
+        styleB:
+            mix: styleC
+            lighting: B
+        styleC:
+            mix: styleA
+            material: C
+        )END");
+
+    SceneLoader::loadStyle("styleA", node, scene, mixedStyles);
+    mixNode = node["styleA"];
+
+    REQUIRE(mixNode["base"].IsScalar());
+    REQUIRE(mixNode["lighting"].IsScalar());
+    REQUIRE(mixNode["material"].IsScalar());
+    REQUIRE(mixNode["base"].as<std::string>() ==  "A");
+    REQUIRE(mixNode["lighting"].as<std::string>() ==  "B");
+    REQUIRE(mixNode["material"].as<std::string>() ==  "C");
+
+}
