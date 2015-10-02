@@ -426,6 +426,8 @@ void setupGL() {
 
     Primitives::setColor(0xffffff);
 
+    GLExtensions::load(true);
+
     while (Error::hadGlError("Tangram::setupGL()")) {}
 }
 

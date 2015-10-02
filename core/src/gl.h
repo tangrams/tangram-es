@@ -1,5 +1,25 @@
 #pragma once
 
+
+#ifdef PLATFORM_ANDROID
+typedef long GLsizeiptr;
+typedef long GLintptr;
+#else
+#include <stddef.h>
+typedef ptrdiff_t GLsizeiptr;
+typedef ptrdiff_t GLintptr;
+#endif
+
+#ifdef PLATFORM_OSX
+#define glClearDepthf glClearDepth
+#define glDepthRangef glDepthRange
+#endif
+
+#if defined(PLATFORM_ANDROID) || defined(PLATFORM_IOS)
+#define glMapBuffer glMapBufferOES
+#define glUnmapBuffer glUnmapBufferOES
+#endif
+
 /*
  * Mesa 3-D graphics library
  *
@@ -42,14 +62,6 @@ typedef double		GLdouble;	/* double precision float */
 typedef double		GLclampd;	/* double precision float in [0,1] */
 typedef char GLchar;
 
-#ifdef PLATFORM_ANDROID
-typedef long GLsizeiptr;
-typedef long GLintptr;
-#else
-#include <stddef.h>
-typedef ptrdiff_t GLsizeiptr;
-typedef ptrdiff_t GLintptr;
-#endif
 
 /* Boolean values */
 #define GL_FALSE                        0
