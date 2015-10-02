@@ -56,7 +56,7 @@ SceneLayer instance_e() {
 
 SceneLayer instance_2() {
 
-    Filter f = Filter("two", true);
+    Filter f = Filter::MatchExistence("two", true);
 
     DrawRule rule = { "group2", "styleA", {} };
 
@@ -65,7 +65,7 @@ SceneLayer instance_2() {
 
 SceneLayer instance_1() {
 
-    Filter f = Filter("one", true);
+    Filter f = Filter::MatchExistence("one", true);
 
     DrawRule rule = { "group1", "styleB", {} };
 
@@ -74,7 +74,7 @@ SceneLayer instance_1() {
 
 SceneLayer instance() {
 
-    Filter f = Filter("base", true);
+    Filter f = Filter::MatchExistence("base", true);
 
     DrawRule rule = { "group1", "styleA", { {StyleParamKey::order, "a" } } };
 
