@@ -201,8 +201,8 @@ TEST_CASE( "Style Mixing Test: Shader Blocks Merging", "[mixing][core][yaml]") {
     //          color: colorBlockA;
     //          normal: normalBlockA;
 
-    REQUIRE(shaderBlocksNode["color"].as<std::string>() == "colorBlockA;");
-    REQUIRE(shaderBlocksNode["normal"].as<std::string>() == "normalBlockA;");
+    REQUIRE(shaderBlocksNode["color"][0].as<std::string>() == "colorBlockA;");
+    REQUIRE(shaderBlocksNode["normal"][0].as<std::string>() == "normalBlockA;");
     REQUIRE(!shaderBlocksNode["global"]);
 
     shaderBlocksNode = SceneLoader::shaderBlockMerge( { node["Node1"], node["Node2"], node["Node3"] } );
@@ -214,11 +214,13 @@ TEST_CASE( "Style Mixing Test: Shader Blocks Merging", "[mixing][core][yaml]") {
     //          global: globalBlockB;\nglobalBlockC;
     //          filter: filterBlockC;
 
-    REQUIRE(shaderBlocksNode["color"].as<std::string>() == "colorBlockA;\ncolorBlockB;");
-    REQUIRE(shaderBlocksNode["normal"].as<std::string>() == "normalBlockA;");
-    REQUIRE(shaderBlocksNode["position"].as<std::string>() == "posBlockB;");
-    REQUIRE(shaderBlocksNode["global"].as<std::string>() == "globalBlockB;\nglobalBlockC;");
-    REQUIRE(shaderBlocksNode["filter"].as<std::string>() == "filterBlockC;");
+    REQUIRE(shaderBlocksNode["color"][0].as<std::string>() == "colorBlockA;");
+    REQUIRE(shaderBlocksNode["color"][1].as<std::string>() == "colorBlockB;");
+    REQUIRE(shaderBlocksNode["normal"][0].as<std::string>() == "normalBlockA;");
+    REQUIRE(shaderBlocksNode["position"][0].as<std::string>() == "posBlockB;");
+    REQUIRE(shaderBlocksNode["global"][0].as<std::string>() == "globalBlockB;");
+    REQUIRE(shaderBlocksNode["global"][1].as<std::string>() == "globalBlockC;");
+    REQUIRE(shaderBlocksNode["filter"][0].as<std::string>() == "filterBlockC;");
 }
 
 TEST_CASE( "Style Mixing Test: propMerge Tests (recursive overWrite properties)", "[mixing][core][yaml]") {

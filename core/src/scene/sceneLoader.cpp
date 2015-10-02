@@ -161,6 +161,8 @@ void SceneLoader::loadShaderConfig(Node shaders, Style& style, Scene& scene) {
             LOGNode("Invalid 'extensions'", extensionsNode);
         }
     }
+    //shader.addSourceBlock("defines", "#define " + name + " " + value);
+    shaders["defines"]["STYLE"] = style.getName();
 
     if (Node definesNode = shaders["defines"]) {
         for (const auto& define : definesNode) {
@@ -205,10 +207,16 @@ void SceneLoader::loadShaderConfig(Node shaders, Style& style, Scene& scene) {
 
     if (Node blocksNode = shaders["blocks"]) {
         for (const auto& block : blocksNode) {
-            std::string name = block.first.as<std::string>();
-            std::string value = block.second.as<std::string>();
+            auto& name = block.first.as<std::string>();
+            if (block.second.IsSequence()){
+                for (auto & n : block.second) {
+                    auto& value = n.as<std::string>();
+                    shader.addSourceBlock(name, value, false);
 
-            shader.addSourceBlock(name, value); // TODO: Warn on unrecognized injection points
+                }
+            } else {
+                LOGNode("Invalid merged shader %s 'block'", block, name.c_str());
+            }
         }
     }
 }
@@ -554,7 +562,10 @@ Node SceneLoader::shaderBlockMerge(const std::vector<Node>& mixes) {
 
     Node result;
     for (const auto& mixNode : mixes) {
-        if (!mixNode.IsMap()) { continue; }
+        if (!mixNode.IsMap()) {
+            LOGNode("Expected map for 'mix'", mixNode);
+            continue;
+        }
 
         Node shaderNode = mixNode["shaders"];
         if (!shaderNode) { continue; }
@@ -570,15 +581,18 @@ Node SceneLoader::shaderBlockMerge(const std::vector<Node>& mixes) {
         }
 
         for (const auto& block : blocks) {
-            std::string blockName = block.first.as<std::string>();
-            std::string value = block.second.as<std::string>();
-            if (result[blockName]) {
-                result[blockName] = result[blockName].as<std::string>() + "\n" + value;
-            } else {
-                result[blockName] = value;
+            const auto& blockName = block.first.Scalar();
+
+            if (block.second.IsSequence()) {
+                for (auto& n : block.second)
+                    result[blockName].push_back(n);
+
+            } else if (block.second.IsScalar()) {
+                result[blockName].push_back(block.second);
             }
         }
     }
+
     return result;
 }
 

@@ -26,7 +26,7 @@ TEST_CASE( "Test style loading with builin style name" ) {
 
     const auto& n = node.begin();
     std::unordered_set<std::string> mixedStyles;
-    SceneLoader::loadStyle(*n, node, scene, mixedStyles);
+    SceneLoader::loadStyle("polygons", node, scene, mixedStyles);
     // builtin should not be added
     REQUIRE(scene.styles().size() == 0);
 }
@@ -56,7 +56,7 @@ TEST_CASE( "Test style loading" ) {
     const auto& n = node.begin();
 
     std::unordered_set<std::string> mixedStyles;
-    SceneLoader::loadStyle(*n, node, scene, mixedStyles);
+    SceneLoader::loadStyle("roads", node, scene, mixedStyles);
 
     auto& styles = scene.styles();
 
@@ -79,7 +79,6 @@ TEST_CASE( "Test style merging - shader global" ) {
     scene.styles().emplace_back(new PolygonStyle("polygons"));
 
     YAML::Node node = YAML::Load(R"END(
-    styles:
       mixedstyle:
         base: polygons
         mix: tools
@@ -92,14 +91,10 @@ TEST_CASE( "Test style merging - shader global" ) {
             global: tools
      )END");
 
-    {
-        auto styles = node["styles"];
+    std::unordered_set<std::string> mixedStyles;
 
-        for (const auto& style : styles) {
-            std::unordered_set<std::string> mixedStyles;
-            SceneLoader::loadStyle(style, styles, scene, mixedStyles);
-        }
-    }
+    SceneLoader::loadStyle("mixedstyle", node, scene, mixedStyles);
+    SceneLoader::loadStyle("tools", node, scene, mixedStyles);
 
     auto& styles = scene.styles();
 
@@ -117,53 +112,46 @@ TEST_CASE( "Test style merging - shader global" ) {
     REQUIRE(styles[1]->getShaderProgram()->getSourceBlocks()["global"].empty() == false);
 }
 
-#if 0
 TEST_CASE( "Test style merging two levels - shader global" ) {
 
     Scene scene;
     scene.styles().emplace_back(new PolygonStyle("polygons"));
 
     YAML::Node node = YAML::Load(R"END(
-    styles:
-      mixedstyle:
-        base: polygons
-        mix: [ kitchensink, toolbox ]
-        shaders:
-          blocks:
-            global: mixed
-      toolbox:
-        mix: kitchensink
-        shaders:
-          blocks:
-            global: toolbox
-      kitchensink:
-        shaders:
-          blocks:
-            global: kitchensink
+  blueprint:
+    base: polygons
+    shaders:
+       blocks:
+        global: |
+          blueprint...
+
+  base:
+    base: polygons
+    mix: blueprint
+    lighting: false
+
+  buildings:
+    base: polygons
+    mix: blueprint
+    texcoords: true
+    lighting: false
+    shaders:
+      blocks:
+        color: |
+          color...
+
      )END");
 
-    {
-        auto styles = node["styles"];
+    std::unordered_set<std::string> mixedStyles;
 
-        for (const auto& style : styles) {
-            std::unordered_set<std::string> mixedStyles;
-            SceneLoader::loadStyle(style, styles, scene, mixedStyles);
-        }
-    }
+    SceneLoader::loadStyle("blueprint", node, scene, mixedStyles);
+    SceneLoader::loadStyle("base", node, scene, mixedStyles);
+    SceneLoader::loadStyle("buildings", node, scene, mixedStyles);
 
     auto& styles = scene.styles();
+    REQUIRE(styles.size() == 4);
 
-    REQUIRE(styles.size() == 2);
-
-    for (auto& style : styles) {
-        for (auto& block : style->getShaderProgram()->getSourceBlocks()) {
-            logMsg("block '%s'\n", block.first.c_str());
-            for (auto& val : block.second)
-                logMsg("- '%s'\n", val.c_str());
-        }
-    }
-
-    REQUIRE(styles[1]->getShaderProgram()->getSourceBlocks()["global"].empty() == false);
-    REQUIRE(styles[1]->getShaderProgram()->getSourceBlocks()["global"][0] == "\nkitchensink\ntoolbox\nmixed");
+    REQUIRE(styles[3]->getShaderProgram()->getSourceBlocks()["global"].empty() == false);
+    REQUIRE(styles[3]->getShaderProgram()->getSourceBlocks()["global"][0] == "blueprint...\n");
+    REQUIRE(styles[3]->getShaderProgram()->getSourceBlocks()["color"][0] == "color...\n");
 }
-#endif
