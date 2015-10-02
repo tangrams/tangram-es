@@ -13,9 +13,6 @@
 #include <chrono>
 #include <algorithm>
 
-#define DBG(...)
-// logMsg(__VA_ARGS__)
-
 namespace Tangram {
 
 TileManager::TileManager()
@@ -63,7 +60,7 @@ void TileManager::setScene(std::shared_ptr<Scene> _scene) {
                 return false;
             }
 
-            logMsg("remove source %s\n", tileSet.source->name().c_str());
+            LOG("remove source %s", tileSet.source->name().c_str());
             return true;
 
         });
@@ -78,7 +75,7 @@ void TileManager::setScene(std::shared_ptr<Scene> _scene) {
                [&](const TileSet& a) {
                             return a.source->name() == source->name();
                         }) == m_tileSets.end()) {
-            logMsg("add source %s\n", source->name().c_str());
+            LOG("add source %s", source->name().c_str());
 
             addDataSource(source);
         }
@@ -154,7 +151,7 @@ bool TileManager::setTileState(Tile& tile, TileState state) {
         return true;
     }
 
-    logMsg("Wrong state change %d -> %d<<<", tile.getState(), state);
+    LOGE("Wrong state change %d -> %d<<<", tile.getState(), state);
     assert(false);
     return false; // ...
 }
@@ -352,14 +349,13 @@ void TileManager::loadTiles() {
             setTileState(*tile, TileState::loading);
 
             if (!source->loadTileData(std::move(task), m_dataCallback)) {
-                logMsg("ERROR: Loading failed for tile [%d, %d, %d]\n",
-                       id.z, id.x, id.y);
+                LOGE("Loading failed for tile [%d, %d, %d]", id.z, id.x, id.y);
                 m_loadPending--;
             }
         }
     }
 
-    DBG("loading:%d pending:%d cache: %fMB\n",
+    LOGD("loading:%d pending:%d cache: %fMB",
        m_loadTasks.size(), m_loadPending,
        (double(m_tileCache->getMemoryUsage()) / (1024 * 1024)));
 

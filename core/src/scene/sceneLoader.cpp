@@ -29,10 +29,6 @@ using YAML::Node;
 using YAML::NodeType;
 using YAML::BadConversion;
 
-#define LOGE(fmt, ...) do { logMsg("SceneLoader/Error: " fmt "\n", ## __VA_ARGS__); } while(0)
-#define LOGW(fmt, ...) do { logMsg("SceneLoader/Warn: " fmt "\n", ## __VA_ARGS__); } while(0)
-#define LOGN(fmt, node) do { logMsg("SceneLoader/Warn: " fmt ":\n'%s'\n", Dump(node).c_str()); } while(0)
-
 namespace Tangram {
 
 // TODO: make this configurable: 16MB default in-memory DataSource cache:
@@ -163,7 +159,7 @@ void SceneLoader::loadShaderConfig(Node shaders, Style& style, Scene& scene) {
             }
             break;
         default:
-            LOGN("Invalid 'extensions'", extensionsNode);
+            LOGW("Invalid 'extensions'", Dump(extensionsNode).c_str());
         }
     }
 
@@ -228,7 +224,7 @@ glm::vec4 parseMaterialVec(const Node& prop) {
             float value = prop.as<float>();
             return glm::vec4(value, value, value, 1.0);
         } catch (const BadConversion& e) {
-            LOGN("Invalid 'material'", prop);
+            LOGW("Invalid 'material'", Dump(prop).c_str());
             // TODO: css color parser and hex_values
         }
         break;
@@ -236,7 +232,7 @@ glm::vec4 parseMaterialVec(const Node& prop) {
         // Handled as texture
         break;
     default:
-        LOGN("Invalid 'material'", prop);
+        LOGW("Invalid 'material'", Dump(prop).c_str());
         break;
     }
     return glm::vec4(0.0);
@@ -265,6 +261,7 @@ void SceneLoader::loadMaterial(Node matNode, Material& material, Scene& scene) {
             material.setAmbient(parseMaterialVec(n));
         }
     }
+
     if (Node n = matNode["specular"]) {
         if (n.IsMap()) {
             material.setSpecular(loadMaterialTexture(n, scene));
@@ -276,7 +273,7 @@ void SceneLoader::loadMaterial(Node matNode, Material& material, Scene& scene) {
     if (Node shininess = matNode["shininess"]) {
         try { material.setShininess(shininess.as<float>()); }
         catch(const BadConversion& e) {
-            LOGN("Expected float value for 'shininess'", matNode);
+            LOGW("Expected float value for 'shininess'", Dump(matNode).c_str());
         }
     }
 
@@ -289,7 +286,7 @@ MaterialTexture SceneLoader::loadMaterialTexture(Node matCompNode, Scene& scene)
 
     Node textureNode = matCompNode["texture"];
     if (!textureNode) {
-        LOGN("Expected a 'texture' parameter", matCompNode);
+        LOGW("Expected a 'texture' parameter %s", Dump(matCompNode).c_str());
 
         return MaterialTexture{};
     }
@@ -429,6 +426,7 @@ void SceneLoader::loadStyleProps(Style& style, Node styleNode, Scene& scene) {
 
     if (Node texcoordsNode = styleNode["texcoords"]) {
         LOGW("'texcoords' style parameter is currently ignored");
+
         if (texcoordsNode.as<bool>()) { } // TODO
         else { } // TODO
     }
@@ -533,7 +531,7 @@ Node SceneLoader::propMerge(const std::string& propName, const std::vector<Node>
             }
             break;
         default:
-            LOGN("Cannot merge property", propValue);
+            LOGW("Cannot merge property", Dump(propValue).c_str());
             break;
         }
     }
@@ -562,13 +560,13 @@ Node SceneLoader::shaderBlockMerge(const std::vector<Node>& mixes) {
         Node shaderNode = mixNode["shaders"];
         if (!shaderNode) { continue; }
         if (!shaderNode.IsMap()) {
-            LOGN("Expected map for 'shader'", shaderNode);
+            LOGW("Expected map for 'shader'", Dump(shaderNode).c_str());
             continue;
         }
         Node blocks = shaderNode["blocks"];
         if (!blocks) { continue; }
         if (!blocks.IsMap()) {
-            LOGN("Expected map for 'blocks'", shaderNode);
+            LOGW("Expected map for 'blocks'", Dump(shaderNode).c_str());
             continue;
         }
 
@@ -596,7 +594,7 @@ Node SceneLoader::shaderExtMerge(const std::vector<Node>& mixes) {
         Node shaderNode = mixNode["shaders"];
         if (!shaderNode) { continue; }
         if (!shaderNode.IsMap()) {
-            LOGN("Expected map for 'shader'", shaderNode);
+            LOGW("Expected map for 'shader'", Dump(shaderNode).c_str());
             continue;
         }
         Node extNode = shaderNode["extensions"];
@@ -622,7 +620,7 @@ Node SceneLoader::shaderExtMerge(const std::vector<Node>& mixes) {
             break;
         }
         default:
-            LOGN("Expected scalar or sequence value for 'extensions' node", mixNode);
+            LOGW("Expected scalar or sequence value for 'extensions' node", Dump(mixNode).c_str());
         }
     }
 
@@ -749,6 +747,7 @@ void SceneLoader::loadStyle(const std::pair<Node, Node>& styleIt, Node styles, S
     if (!baseNode) {
         // No base style, this is an abstract styleNode
         return;
+
     }
 
     // Construct style instance using the merged properties
@@ -1049,25 +1048,25 @@ Filter SceneLoader::generatePredicate(Node _node, std::string _key) {
                 try {
                     minVal = valItr.second.as<float>();
                 } catch (const BadConversion& e) {
-                    LOGN("Invalid  'filter', expect a float value type\n", _node);
+                    LOGW("Invalid  'filter', expect a float value type\n", Dump(_node).c_str());
                     return Filter();
                 }
             } else if (valItr.first.as<std::string>() == "max") {
                 try {
                     maxVal = valItr.second.as<float>();
                 } catch (const BadConversion& e) {
-                    LOGN("Invalid  'filter', expect a float value type", _node);
+                    LOGW("Invalid  'filter', expect a float value type", Dump(_node).c_str());
                     return Filter();
                 }
             } else {
-                LOGN("Invalid  'filter'", _node);
+                LOGW("Invalid  'filter'", Dump(_node).c_str());
                 return Filter();
             }
         }
         return Filter::MatchRange(_key, minVal, maxVal);
     }
     default:
-        LOGN("Invalid 'filter'", _node);
+        LOGW("Invalid 'filter'", Dump(_node).c_str());
         return Filter();
     }
 }

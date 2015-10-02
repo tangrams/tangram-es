@@ -9,6 +9,8 @@ set(INCLUDE_DIR include)
 set(DEPENDENCIES_DIR dependencies)
 set(SOURCE_DIR src)
 
+add_definitions(-DLOG_LEVEL=2)
+
 add_subdirectory("${DEPENDENCIES_DIR}")
 
 file(GLOB_RECURSE FOUND_HEADERS "${SOURCE_DIR}/*.h")

@@ -32,10 +32,11 @@ std::mutex m_tilesMutex;
 
 static float g_time = 0.0;
 static std::bitset<8> g_flags = 0;
+int log_level = 2;
 
 void initialize(const char* _scenePath) {
 
-    logMsg("initialize\n");
+    LOG("initialize");
 
     auto sceneRelPath = setResourceRoot(_scenePath);
 
@@ -59,7 +60,7 @@ void initialize(const char* _scenePath) {
         // label setup
         m_labels = std::unique_ptr<Labels>(new Labels());
 
-        logMsg("Loading Tangram scene file: %s\n", sceneRelPath.c_str());
+        LOG("Loading Tangram scene file: %s", sceneRelPath.c_str());
         auto sceneString = stringFromResource(sceneRelPath.c_str());
 
         if (SceneLoader::loadScene(sceneString, *m_scene)) {
@@ -72,12 +73,12 @@ void initialize(const char* _scenePath) {
 
     }
 
-    logMsg("finish initialize\n");
+    LOG("finish initialize");
 
 }
 
 void loadScene(const char* _scenePath) {
-    logMsg("Loading scene file: %s\n", _scenePath);
+    LOG("Loading scene file: %s", _scenePath);
 
     auto sceneString = stringFromResource(setResourceRoot(_scenePath).c_str());
 
@@ -90,7 +91,7 @@ void loadScene(const char* _scenePath) {
 
 void resize(int _newWidth, int _newHeight) {
 
-    logMsg("resize: %d x %d\n", _newWidth, _newHeight);
+    LOG("resize: %d x %d", _newWidth, _newHeight);
 
     glViewport(0, 0, _newWidth, _newHeight);
 
@@ -374,7 +375,7 @@ void toggleDebugFlag(DebugFlags _flag) {
 
 void setupGL() {
 
-    logMsg("setup GL\n");
+    LOG("setup GL");
 
     if (m_tileManager) {
         m_tileManager->clearTileSets();

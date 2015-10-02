@@ -48,7 +48,7 @@ void DataSource::constructURL(const TileID& _tileCoord, std::string& _url) const
     _url.replace(zpos, 3, std::to_string(_tileCoord.z));
 
     if (xpos == std::string::npos || ypos == std::string::npos || zpos == std::string::npos) {
-        logMsg("Bad URL template!!\n");
+        LOGE("Bad URL template!!");
     }
 }
 
@@ -87,12 +87,12 @@ void DataSource::onTileLoaded(std::vector<char>&& _rawData, std::shared_ptr<Tile
 
         while (m_cacheUsage > m_cacheMaxUsage) {
             if (m_cacheList.empty()) {
-                logMsg("Error: invalid cache state!\n");
+                LOGE("Error: invalid cache state!");
                 m_cacheUsage = 0;
                 break;
             }
 
-            // logMsg("Limit raw cache tiles:%d, %fMB \n", m_cacheList.size(),
+            // LOGE("Limit raw cache tiles:%d, %fMB ", m_cacheList.size(),
             //        double(m_cacheUsage) / (1024*1024));
 
             auto& entry = m_cacheList.back();

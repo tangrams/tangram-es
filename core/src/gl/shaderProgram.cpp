@@ -185,7 +185,7 @@ GLuint ShaderProgram::makeLinkedShaderProgram(GLint _fragShader, GLint _vertShad
         if (infoLength > 1) {
             std::vector<GLchar> infoLog(infoLength);
             glGetProgramInfoLog(program, infoLength, NULL, &infoLog[0]);
-            logMsg("Error linking program:\n%s\n", &infoLog[0]);
+            LOGE("linking program:\n%s", &infoLog[0]);
         }
         glDeleteProgram(program);
         m_invalidShaderSource = true;
@@ -211,7 +211,7 @@ GLuint ShaderProgram::makeCompiledShader(const std::string& _src, GLenum _type) 
         if (infoLength > 1) {
             std::vector<GLchar> infoLog(infoLength);
             glGetShaderInfoLog(shader, infoLength, NULL, &infoLog[0]);
-            logMsg("Error compiling shader:\n%s\n", &infoLog[0]);
+            LOGE("Compiling shader:\n%s", &infoLog[0]);
             //logMsg("\n%s\n", source);
         }
         glDeleteShader(shader);

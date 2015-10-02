@@ -76,7 +76,7 @@ std::string stringFromResource(const char* _path) {
                                                  error:NULL];
     
     if (str == nil) {
-        logMsg("Failed to read file at path: %s\n", _path);
+        LOGW("Failed to read file at path: %s", _path);
         return std::move(std::string());
     }
     
@@ -89,7 +89,7 @@ unsigned char* bytesFromResource(const char* _path, unsigned int* _size) {
     std::ifstream resource([path UTF8String], std::ifstream::ate | std::ifstream::binary);
 
     if(!resource.is_open()) {
-        logMsg("Failed to read file at path: %s\n", _path);
+        LOGW("Failed to read file at path: %s", _path);
         *_size = 0;
         return nullptr;
     }
@@ -144,7 +144,7 @@ bool startUrlRequest(const std::string& _url, UrlCallback _callback) {
             
         } else {
             
-            logMsg("ERROR: response \"%s\" with error \"%s\".\n", response, std::string([error.localizedDescription UTF8String]).c_str());
+            LOGE("Response \"%s\" with error \"%s\".", response, std::string([error.localizedDescription UTF8String]).c_str());
 
         }
         

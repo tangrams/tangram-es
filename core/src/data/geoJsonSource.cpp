@@ -31,7 +31,7 @@ std::shared_ptr<TileData> GeoJsonSource::parse(const Tile& _tile, std::vector<ch
 
         size_t offset = doc.GetErrorOffset();
         const char* error = rapidjson::GetParseError_En(doc.GetParseError());
-        logMsg("Json parsing failed on tile [%d, %d, %d]: %s (%u)\n", _tile.getID().z, _tile.getID().x, _tile.getID().y, error, offset);
+        LOGE("Json parsing failed on tile [%d, %d, %d]: %s (%u)", _tile.getID().z, _tile.getID().x, _tile.getID().y, error, offset);
         return tileData;
 
     }
