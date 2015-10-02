@@ -12,10 +12,12 @@ class StyleContext;
 
 struct DrawRule {
 
+    std::string name;
     std::string style;
     std::vector<StyleParam> parameters;
 
-    DrawRule(const std::string& _style, const std::vector<StyleParam>& _parameters, bool _sorted = false);
+    DrawRule(const std::string& _name, const std::string& _style, const std::vector<StyleParam>& _parameters,
+             bool _sorted = false);
 
     DrawRule merge(DrawRule& _other) const;
     std::string toString() const;
@@ -40,7 +42,7 @@ struct DrawRule {
     }
 
     bool operator<(const DrawRule& _rhs) const;
-    int compare(const DrawRule& _rhs) const { return style.compare(_rhs.style); }
+    int compare(const DrawRule& _rhs) const { return name.compare(_rhs.name); }
 
 };
 

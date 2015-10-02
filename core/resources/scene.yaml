@@ -279,20 +279,28 @@ layers:
         data: { source: osm }
         filter: { $zoom: { min: 14 } }
         draw:
-            heightglow:
+            noglow:
+                style: polygons 
                 order: 50
                 color: [.85, .85, .83]
         # turn interactive feature selection on for buildings with names
         interactive:
             filter: { name: true }
-            draw: { heightglow: { interactive: true } }
+            draw:
+                glow:
+                    style: heightglow
+                    color: [.65, .65, .63]
+                    interactive: true  
         extruded:
             filter: { $zoom: { min: 15 } }
             draw:
-                heightglow:
+                glow:
+                    style: heightglow
+                    color: [.65, .65, .63]
                     extrude: true
             draw:
-                heightglowline:
+                glowLines:
+                    style: heightglowline
                     width: 1.0
                     color: [.75, .75, .73]
                     order: 52
@@ -300,7 +308,8 @@ layers:
         high-line:
             filter: {roof_material: grass}
             draw:
-                heightglow:
+                noglow:
+                    style: polygons
                     color: '#bddec5'
 
     poi_labels:
