@@ -146,7 +146,7 @@ std::string Material::getDefinesBlock(){
 }
 
 std::string Material::getClassBlock() {
-    return stringFromResource("shaders/material.glsl") + "\n";
+    return stringFromFile("shaders/material.glsl", PathType::internal) + "\n";
 }
 
 void Material::injectOnProgram(ShaderProgram& _shader ) {

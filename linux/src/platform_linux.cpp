@@ -91,31 +91,36 @@ std::string setResourceRoot(const char* _path) {
 
 }
 
-std::string stringFromResource(const char* _path) {
+std::string resolvePath(const char* _path, PathType _type) {
+
+    switch (_type) {
+    case PathType::absolute:
+    case PathType::internal:
+        return std::string(_path);
+    case PathType::resource:
+        return s_resourceRoot + _path;
+    }
+}
+
+std::string stringFromFile(const char* _path, PathType _type) {
 
     unsigned int length = 0;
-    unsigned char* bytes = bytesFromResource(_path, &length);
+    unsigned char* bytes = bytesFromFile(_path, _type, &length);
 
     std::string out(reinterpret_cast<char*>(bytes), length);
     free(bytes);
 
     return out;
-
 }
 
-unsigned char* bytesFromResource(const char* _path, unsigned int* _size) {
+unsigned char* bytesFromFile(const char* _path, PathType _type, unsigned int* _size) {
 
-    std::string path = s_resourceRoot + _path;
-    return bytesFromFileSystem(path.c_str(), _size);
+    std::string path = resolvePath(_path, _type);
 
-}
-
-unsigned char* bytesFromFileSystem(const char* _path, unsigned int* _size) {
-
-    std::ifstream resource(_path, std::ifstream::ate | std::ifstream::binary);
+    std::ifstream resource(path.c_str(), std::ifstream::ate | std::ifstream::binary);
 
     if(!resource.is_open()) {
-        logMsg("Failed to read file at path: %s\n", _path);
+        logMsg("Failed to read file at path: %s\n", path.c_str());
         *_size = 0;
         return nullptr;
     }

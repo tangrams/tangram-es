@@ -24,7 +24,7 @@ ClientGeoJsonSource::ClientGeoJsonSource(const std::string& _name, const std::st
 
     if (!_url.empty()) {
         // Load from file
-        const auto& string = stringFromResource(_url.c_str());
+        const auto& string = stringFromFile(_url.c_str(), PathType::resource);
         addData(string);
     }
 }

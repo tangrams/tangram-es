@@ -15,7 +15,7 @@ TextureCube::TextureCube(std::string _file, TextureOptions _options) : Texture(0
 
 void TextureCube::load(const std::string& _file) {
     unsigned int size;
-    unsigned char* data = bytesFromResource(_file.c_str(), &size);
+    unsigned char* data = bytesFromFile(_file.c_str(), PathType::resource, &size);
     unsigned char* pixels;
     int width, height, comp;
 

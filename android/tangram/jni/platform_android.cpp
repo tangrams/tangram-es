@@ -162,25 +162,6 @@ unsigned char* bytesFromAssetManager(const char* _path, unsigned int* _size) {
     return data;
 }
 
-std::string stringFromResource(const char* _path) {
-
-    std::string path = s_resourceRoot + _path;
-    unsigned int length = 0;
-    unsigned char* bytes = nullptr;
-
-    if (s_useInternalResources) {
-        bytes = bytesFromResource(path.c_str(), &length);
-    } else {
-        bytes = bytesFromFileSystem(path.c_str(), &length);
-    }
-
-    std::string out(reinterpret_cast<char*>(bytes), length);
-    free(bytes);
-
-    return out;
-
-}
-
 unsigned char* bytesFromFileSystem(const char* _path, unsigned int* _size) {
 
     std::ifstream resource(_path, std::ifstream::ate | std::ifstream::binary);
@@ -204,13 +185,32 @@ unsigned char* bytesFromFileSystem(const char* _path, unsigned int* _size) {
 
 }
 
-unsigned char* bytesFromResource(const char* _path, unsigned int* _size) {
+std::string stringFromFile(const char* _path, PathType _type) {
 
-    std::string path = s_resourceRoot + _path;
-    if (s_useInternalResources) {
-        return bytesFromAssetManager(path.c_str(), _size);
-    } else {
-        return bytesFromFileSystem(path.c_str(), _size);
+    unsigned int length = 0;
+    unsigned char* bytes = bytesFromFile(_path, _type, &length);
+    std::string out(reinterpret_cast<char*>(bytes), length);
+    free(bytes);
+
+    return out;
+
+}
+
+unsigned char* bytesFromFile(const char* _path, PathType _type, unsigned int* _size) {
+
+    std::string resourcePath = s_resourceRoot + _path;
+
+    switch (_type) {
+    case PathType::absolute:
+        return bytesFromFileSystem(_path, _size);
+    case PathType::internal:
+        return bytesFromAssetManager(_path, _size);
+    case PathType::resource:
+        if (s_useInternalResources) {
+            return bytesFromAssetManager(resourcePath.c_str(), _size);
+        } else {
+            return bytesFromFileSystem(resourcePath.c_str(), _size);
+        }
     }
 
 }

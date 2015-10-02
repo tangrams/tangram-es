@@ -29,7 +29,7 @@ Texture::Texture(const std::string& _file, TextureOptions _options, bool _genera
     : Texture(0, 0, _options, _generateMipmaps) {
 
     unsigned int size;
-    unsigned char* data = bytesFromResource(_file.c_str(), &size);
+    unsigned char* data = bytesFromFile(_file.c_str(), PathType::resource, &size);
     unsigned char* pixels;
     int width, height, comp;
 

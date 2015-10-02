@@ -73,57 +73,55 @@ std::string setResourceRoot(const char* _path) {
 
 }
 
-NSString* resolveResourcePath(const char* _path) {
+NSString* resolvePath(const char* _path, PathType _type) {
 
     if (s_resourceRoot == NULL) {
         setResourceRoot(".");
     }
 
-    return [s_resourceRoot stringByAppendingPathComponent:[NSString stringWithUTF8String:_path]];
+    NSString* path = [NSString stringWithUTF8String:_path];
 
+    switch (_type) {
+    case PathType::internal:
+        return [[[NSBundle mainBundle] resourcePath] stringByAppendingPathComponent:path];
+    case PathType::resource:
+        return [s_resourceRoot stringByAppendingPathComponent:path];
+    case PathType::absolute:
+        return path;
+    }
 }
 
-std::string stringFromResource(const char* _path) {
+std::string stringFromFile(const char* _path, PathType _type) {
     
-    NSString* path = resolveResourcePath(_path);
+    NSString* path = resolvePath(_path, _type);
     NSString* str = [NSString stringWithContentsOfFile:path
                                               encoding:NSASCIIStringEncoding
                                                  error:NULL];
 
     if (str == nil) {
-        logMsg("Failed to read file at path: %s\n", _path);
+        logMsg("Failed to read file at path: %s\n", [path UTF8String]);
         return std::move(std::string());
     }
     
     return std::move(std::string([str UTF8String]));
 }
 
-unsigned char* bytesFromResource(const char* _path, unsigned int* _size) {
+unsigned char* bytesFromFile(const char* _path, PathType _type, unsigned int* _size) {
 
-    NSString* path = resolveResourcePath(_path);
-    std::ifstream resource([path UTF8String], std::ifstream::ate | std::ifstream::binary);
+    NSString* path = resolvePath(_path, _type);
+    NSMutableData* data = [NSMutableData dataWithContentsOfFile:path];
 
-    if(!resource.is_open()) {
-        logMsg("Failed to read file at path: %s\n", _path);
+    if (data == nil) {
+        logMsg("Failed to read file at path: %s\n", [path UTF8String]);
         *_size = 0;
         return nullptr;
     }
 
-    *_size = (unsigned int)resource.tellg();
+    *_size = data.length;
+    unsigned char* ptr = (unsigned char*)malloc(*_size);
+    [data getBytes:ptr length:*_size];
 
-    resource.seekg(std::ifstream::beg);
-
-    char* cdata = (char*) malloc(sizeof(char) * (*_size));
-
-    resource.read(cdata, *_size);
-    resource.close();
-
-    return reinterpret_cast<unsigned char *>(cdata);
-}
-
-// Does not provide implementation for this (yet!)
-unsigned char* bytesFromFileSystem(const char* _path, unsigned int* _size) {
-    return nullptr;
+    return ptr;
 }
 
 // No system fonts implementation (yet!)
