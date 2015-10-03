@@ -29,6 +29,8 @@ using YAML::Node;
 using YAML::NodeType;
 using YAML::BadConversion;
 
+#define LOGNode(fmt, node, ...) LOGW(fmt ":\n'%s'\n", ## __VA_ARGS__, Dump(node).c_str())
+
 namespace Tangram {
 
 // TODO: make this configurable: 16MB default in-memory DataSource cache:
@@ -59,8 +61,7 @@ bool SceneLoader::loadScene(const std::string& _sceneString, Scene& _scene) {
         for (const auto& source : sources) {
             try { loadSource(source, _scene); }
             catch (YAML::RepresentationException e) {
-                LOGE("Parsing source: '%s' in:\n%s",
-                     e.what(), Dump(source).c_str());
+                LOGNode("Parsing sources: '%s'", source, e.what());
             }
         }
     } else {
@@ -71,8 +72,7 @@ bool SceneLoader::loadScene(const std::string& _sceneString, Scene& _scene) {
         for (const auto& texture : textures) {
             try { loadTexture(texture, _scene); }
             catch (YAML::RepresentationException e) {
-                LOGE("Parsing texture: '%s' in:\n%s",
-                     e.what(), Dump(texture).c_str());
+                LOGNode("Parsing texture: '%s'", texture, e.what());
             }
         }
     }
@@ -83,8 +83,7 @@ bool SceneLoader::loadScene(const std::string& _sceneString, Scene& _scene) {
         for (const auto& style : styles) {
             try { loadStyle(style, styles, _scene, mixedStyles); }
             catch (YAML::RepresentationException e) {
-                LOGE("Parsing style: '%s' in:\n%s",
-                     e.what(), Dump(style).c_str());
+                LOGNode("Parsing style: '%s'", style, e.what());
             }
         }
     }
@@ -93,8 +92,7 @@ bool SceneLoader::loadScene(const std::string& _sceneString, Scene& _scene) {
         for (const auto& layer : layers) {
             try { loadLayer(layer, _scene); }
             catch (YAML::RepresentationException e) {
-                LOGE("Parsing layer: '%s' in:\n%s",
-                     e.what(), Dump(layer).c_str());
+                LOGNode("Parsing layer: '%s'", layer, e.what());
             }
         }
     }
@@ -103,8 +101,7 @@ bool SceneLoader::loadScene(const std::string& _sceneString, Scene& _scene) {
         for (const auto& light : lights) {
             try { loadLight(light, _scene); }
             catch (YAML::RepresentationException e) {
-                LOGE("Parsing light: '%s' in:\n%s",
-                     e.what(), Dump(light).c_str());
+                LOGNode("Parsing light: '%s'", light, e.what());
             }
         }
     } else {
@@ -117,8 +114,7 @@ bool SceneLoader::loadScene(const std::string& _sceneString, Scene& _scene) {
     if (Node cameras = config["cameras"]) {
         try { loadCameras(cameras, _scene); }
         catch (YAML::RepresentationException e) {
-            LOGE("Parsing cameras: '%s' in:\n%s",
-                   e.what(), Dump(cameras).c_str());
+            LOGNode("Parsing cameras: '%s'", cameras, e.what());
         }
     }
 
@@ -159,7 +155,7 @@ void SceneLoader::loadShaderConfig(Node shaders, Style& style, Scene& scene) {
             }
             break;
         default:
-            LOGW("Invalid 'extensions'", Dump(extensionsNode).c_str());
+            LOGNode("Invalid 'extensions'", extensionsNode);
         }
     }
 
@@ -224,7 +220,7 @@ glm::vec4 parseMaterialVec(const Node& prop) {
             float value = prop.as<float>();
             return glm::vec4(value, value, value, 1.0);
         } catch (const BadConversion& e) {
-            LOGW("Invalid 'material'", Dump(prop).c_str());
+            LOGNode("Invalid 'material'", prop);
             // TODO: css color parser and hex_values
         }
         break;
@@ -232,7 +228,7 @@ glm::vec4 parseMaterialVec(const Node& prop) {
         // Handled as texture
         break;
     default:
-        LOGW("Invalid 'material'", Dump(prop).c_str());
+        LOGNode("Invalid 'material'", prop);
         break;
     }
     return glm::vec4(0.0);
@@ -273,7 +269,7 @@ void SceneLoader::loadMaterial(Node matNode, Material& material, Scene& scene) {
     if (Node shininess = matNode["shininess"]) {
         try { material.setShininess(shininess.as<float>()); }
         catch(const BadConversion& e) {
-            LOGW("Expected float value for 'shininess'", Dump(matNode).c_str());
+            LOGNode("Expected float value for 'shininess'", matNode);
         }
     }
 
@@ -286,7 +282,7 @@ MaterialTexture SceneLoader::loadMaterialTexture(Node matCompNode, Scene& scene)
 
     Node textureNode = matCompNode["texture"];
     if (!textureNode) {
-        LOGW("Expected a 'texture' parameter %s", Dump(matCompNode).c_str());
+        LOGNode("Expected a 'texture' parameter", matCompNode);
 
         return MaterialTexture{};
     }
@@ -463,7 +459,7 @@ void SceneLoader::loadStyleProps(Style& style, Node styleNode, Scene& scene) {
                 if (texIt != textures.end()) {
                     pointStyle->setTexture(texIt->second);
                 } else {
-                    LOGW("Wndefined texture name %s", textureName.c_str());
+                    LOGW("Undefined texture name %s", textureName.c_str());
                 }
             }
         }
@@ -514,7 +510,7 @@ Node SceneLoader::propMerge(const std::string& propName, const std::vector<Node>
         switch (propValue.Type()) {
         case NodeType::Scalar:
         case NodeType::Sequence:
-            // Overwrite Properties
+            // Overwrite Property
             result = Clone(propValue);
             break;
 
@@ -531,7 +527,7 @@ Node SceneLoader::propMerge(const std::string& propName, const std::vector<Node>
             }
             break;
         default:
-            LOGW("Cannot merge property", Dump(propValue).c_str());
+            LOGNode("Cannot merge property '%s'", mixNode, propName.c_str());
             break;
         }
     }
@@ -560,13 +556,13 @@ Node SceneLoader::shaderBlockMerge(const std::vector<Node>& mixes) {
         Node shaderNode = mixNode["shaders"];
         if (!shaderNode) { continue; }
         if (!shaderNode.IsMap()) {
-            LOGW("Expected map for 'shader'", Dump(shaderNode).c_str());
+            LOGNode("Expected map for 'shader'", shaderNode);
             continue;
         }
         Node blocks = shaderNode["blocks"];
         if (!blocks) { continue; }
         if (!blocks.IsMap()) {
-            LOGW("Expected map for 'blocks'", Dump(shaderNode).c_str());
+            LOGNode("Expected map for 'blocks'", shaderNode);
             continue;
         }
 
@@ -594,7 +590,7 @@ Node SceneLoader::shaderExtMerge(const std::vector<Node>& mixes) {
         Node shaderNode = mixNode["shaders"];
         if (!shaderNode) { continue; }
         if (!shaderNode.IsMap()) {
-            LOGW("Expected map for 'shader'", Dump(shaderNode).c_str());
+            LOGNode("Expected map for 'shader'", shaderNode);
             continue;
         }
         Node extNode = shaderNode["extensions"];
@@ -620,7 +616,7 @@ Node SceneLoader::shaderExtMerge(const std::vector<Node>& mixes) {
             break;
         }
         default:
-            LOGW("Expected scalar or sequence value for 'extensions' node", Dump(mixNode).c_str());
+            LOGNode("Expected scalar or sequence value for 'extensions' node", shaderNode);
         }
     }
 
