@@ -15,56 +15,73 @@ TextBuffer::TextBuffer(std::shared_ptr<VertexLayout> _vertexLayout)
 TextBuffer::~TextBuffer() {
 }
 
-bool TextBuffer::addLabel(const std::string& _text, Label::Transform _transform, Label::Type _type,
-                          const Parameters& _params, Label::Options _options,
-                          FontContext& _fontContext) {
-    if (_params.fontId < 0 || _params.fontSize <= 0.f || _text.size() == 0) {
+Label::Options optionsFromTextParams(const Parameters& _params) {
+    Label::Options options;
+    options.color = _params.fill;
+    options.priority = _params.priority;
+    options.offset = _params.offset;
+
+    options.interactive = _params.interactive;
+    if (options.interactive) {
+        options.properties = _params.properties;
+    }
+
+    return options;
+}
+
+bool TextBuffer::addLabel(const Parameters& _params, Label::Transform _transform,
+                          Label::Type _type, FontContext& _fontContext) {
+
+    if (_params.fontId < 0 || _params.fontSize <= 0.f) {
         return false;
+    }
+
+    auto options = optionsFromTextParams(_params);
+
+    const std::string* renderText;
+    std::string text;
+
+    if (_params.transform == TextTransform::none) {
+        renderText = &_params.text;
+    } else {
+        text = _params.text;
+        std::locale loc;
+
+        // perfom text transforms
+        switch (_params.transform) {
+            case TextTransform::capitalize:
+                text[0] = toupper(text[0], loc);
+                if (text.size() > 1) {
+                    for (auto i = 1; i < text.length(); ++i) {
+                        if (text[i - 1] == ' ') {
+                            text[i] = std::toupper(text[i], loc);
+                        }
+                    }
+                }
+                break;
+            case TextTransform::lowercase:
+                for (auto i = 0; i < text.length(); ++i) {
+                    text[i] = std::tolower(text[i], loc);
+                }
+                break;
+            case TextTransform::uppercase:
+                // TOOD : use to wupper when any wide character is detected
+                for (auto i = 0; i < text.length(); ++i) {
+                    text[i] = std::toupper(text[i], loc);
+                }
+                break;
+            default:
+                break;
+        }
+        renderText = &text;
     }
 
     if (!_fontContext.lock()) {
         return false;
     }
 
-    const std::string* text = &_text;
-    std::string transformedText;
-
-    if (_params.transform != TextTransform::none) {
-        transformedText = _text;
-        std::locale loc;
-
-        // perfom text transforms
-        switch (_params.transform) {
-            case TextTransform::capitalize:
-                transformedText[0] = toupper(_text[0], loc);
-                if (_text.size() > 1) {
-                    for (std::string::size_type i = 1; i < _text.length(); ++i) {
-                        if (_text[i - 1] == ' ') {
-                            transformedText[i] = std::toupper(_text[i], loc);
-                        }
-                    }
-                }
-                break;
-            case TextTransform::lowercase:
-                for (std::string::size_type i = 0; i < _text.length(); ++i) {
-                    transformedText[i] = std::tolower(_text[i], loc);
-                }
-                break;
-            case TextTransform::uppercase:
-                // TOOD : use to wupper when any wide character is detected
-                for (std::string::size_type i = 0; i < _text.length(); ++i) {
-                    transformedText[i] = std::toupper(_text[i], loc);
-                }
-                break;
-            default:
-                break;
-        }
-
-        text = &transformedText;
-    }
-
     // rasterize glyphs
-    std::vector<FONSquad>& quads = _fontContext.rasterize(*text, _params.fontId,
+    std::vector<FONSquad>& quads = _fontContext.rasterize(*renderText, _params.fontId,
                                                           _params.fontSize,
                                                           _params.blurSpread);
     size_t numGlyphs = quads.size();
@@ -94,19 +111,19 @@ bool TextBuffer::addLabel(const std::string& _text, Label::Transform _transform,
         y0 = std::min(y0, std::min(q.y0, q.y1));
         y1 = std::max(y1, std::max(q.y0, q.y1));
 
-        vertices.push_back({{q.x0, q.y0}, {q.s0, q.t0}, _options.color, stroke});
-        vertices.push_back({{q.x0, q.y1}, {q.s0, q.t1}, _options.color, stroke});
-        vertices.push_back({{q.x1, q.y0}, {q.s1, q.t0}, _options.color, stroke});
-        vertices.push_back({{q.x1, q.y1}, {q.s1, q.t1}, _options.color, stroke});
+        vertices.push_back({{q.x0, q.y0}, {q.s0, q.t0}, options.color, stroke});
+        vertices.push_back({{q.x0, q.y1}, {q.s0, q.t1}, options.color, stroke});
+        vertices.push_back({{q.x1, q.y0}, {q.s1, q.t0}, options.color, stroke});
+        vertices.push_back({{q.x1, q.y1}, {q.s1, q.t1}, options.color, stroke});
     }
 
     _fontContext.unlock();
 
     glm::vec2 size((x1 - x0), (y1 - y0));
 
-    m_labels.emplace_back(new TextLabel(_text, _transform, _type, size,
-                                        *this, { vertexOffset, numVertices },
-                                        _options));
+
+    m_labels.emplace_back(new TextLabel(_params.text, _transform, _type, size, *this,
+                                        { vertexOffset, numVertices }, options));
 
     // TODO: change this in TypeMesh::adVertices()
     m_nVertices = vertices.size();

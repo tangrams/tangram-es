@@ -25,6 +25,7 @@ protected:
         glm::vec2 size;
         uint32_t color = 0xffffffff;
         uint32_t priority = std::numeric_limits<uint32_t>::max();
+        bool interactive;
         bool valid = true;
     };
 
@@ -39,7 +40,7 @@ protected:
 
     Label::Options optionsFromPointParams(const Parameters& _params) const;
 
-    Parameters parseRule(const DrawRule& _rule) const;
+    Parameters applyRule(const DrawRule& _rule) const;
 
     virtual VboMesh* newMesh() const override {
         return new LabelMesh(m_vertexLayout, m_drawMode);
