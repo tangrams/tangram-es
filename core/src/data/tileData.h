@@ -57,10 +57,10 @@ Data heirarchy:
 namespace Tangram {
 
 enum GeometryType {
-    unknown,
     points,
     lines,
-    polygons
+    polygons,
+    unknown,
 };
 
 typedef glm::vec3 Point;

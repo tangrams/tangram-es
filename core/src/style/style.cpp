@@ -110,7 +110,7 @@ void Style::buildFeature(Tile& _tile, const Feature& _feat, const DrawRule& _rul
                 buildPolygon(polygon, _rule, _feat.props, *mesh, _tile);
             }
             break;
-        default:
+        case GeometryType::unknown:
             break;
     }
 

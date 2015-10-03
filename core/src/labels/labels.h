@@ -57,6 +57,7 @@ private:
     // temporary data used in update()
     std::vector<Label*> m_labels;
     std::vector<AABB> m_aabbs;
+    std::vector<std::pair<Label*, Label*>> m_occlusions;
 
     isect2d::ISect2D<glm::vec2> m_isect2d;
 

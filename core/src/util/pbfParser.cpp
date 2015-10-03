@@ -111,7 +111,7 @@ void PbfParser::extractFeature(ParserContext& _ctx, protobuf::message& _featureI
             }
             // Feature Type
             case 3:
-                _out.geometryType = (GeometryType)_featureIn.varint();
+                _out.geometryType = (GeometryType)(_featureIn.varint()-1);
                 break;
             // Actual geometry data
             case 4:
