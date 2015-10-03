@@ -123,7 +123,7 @@ std::shared_ptr<TileData> ClientGeoJsonSource::parse(const Tile& _tile, std::vec
 
     for (auto& it : tile.features) {
 
-        Feature feat;
+        Feature feat(m_id);
 
         const auto& geom = it.tileGeometry;
         const auto type = it.type;

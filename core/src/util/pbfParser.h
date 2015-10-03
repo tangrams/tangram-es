@@ -13,6 +13,9 @@ class Tile;
 namespace PbfParser {
 
     struct ParserContext {
+        ParserContext(int32_t _sourceId) : sourceId(_sourceId){}
+
+        int32_t sourceId;
         std::vector<std::string> keys;
         std::vector<Value> values;
         std::vector<Properties::Item> properties;
