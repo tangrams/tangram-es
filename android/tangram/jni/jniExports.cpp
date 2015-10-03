@@ -140,5 +140,12 @@ extern "C" {
         jniEnv->ReleaseIntArrayElements(ringLengths, ring_length_ptr, 0);
     }
 
+    JNIEXPORT void JNICALL Java_com_mapzen_tangram_MapController_pickFeature(JNIEnv* jniEnv, jobject obj, jfloat posX, jfloat posY) {
+        auto& items = Tangram::pickFeaturesAt(posX, posY);
+        if (!items.empty()) {
+            featureSelectionCallback(jniEnv, items);
+        }
+    }
+
 }
 

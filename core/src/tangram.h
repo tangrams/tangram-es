@@ -1,6 +1,11 @@
 #pragma once
 
 #include "debug.h"
+#include <vector>
+#include <string>
+
+#include <memory>
+#include "data/properties.h"
 
 /* Tangram API
  *
@@ -104,6 +109,8 @@ bool getDebugFlag(DebugFlags _flag);
 void toggleDebugFlag(DebugFlags _flag);
 
 void loadScene(const char* _scenePath);
+
+const std::vector<std::shared_ptr<Properties>>& pickFeaturesAt(float _x, float _y);
 
 }
 

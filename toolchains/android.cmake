@@ -22,6 +22,7 @@ endif()
 # adding manually the two jni c++ files
 set(ADDITIONAL_TARGET_DEPENDENT_SRC_FILES
      ${CMAKE_SOURCE_DIR}/android/tangram/jni/jniExports.cpp
+     ${CMAKE_SOURCE_DIR}/android/tangram/jni/jniGenerated.cpp
      ${CMAKE_SOURCE_DIR}/android/tangram/jni/platform_android.cpp)
 
 # load core library
@@ -33,6 +34,7 @@ set(CORE_LIB_NAME tangram) # in order to have libtangram.so
 
 add_subdirectory(${PROJECT_SOURCE_DIR}/core)
 include_directories(${CORE_INCLUDE_DIRS})
+include_directories(${CORE_LIBRARIES_INCLUDE_DIRS})
 
 # link and build functions
 function(link_libraries)

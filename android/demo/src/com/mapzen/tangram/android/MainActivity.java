@@ -5,12 +5,14 @@ import android.os.Bundle;
 import android.view.MotionEvent;
 import android.view.View;
 import android.view.Window;
+import android.widget.Toast;
 
 import com.mapzen.tangram.HttpHandler;
 import com.mapzen.tangram.LngLat;
 import com.mapzen.tangram.MapController;
 import com.mapzen.tangram.MapData;
 import com.mapzen.tangram.MapView;
+import com.mapzen.tangram.Properties;
 import com.squareup.okhttp.Callback;
 
 import java.io.File;
@@ -50,6 +52,8 @@ public class MainActivity extends Activity {
                     touchMarkers.addLine(Arrays.asList(tapPoint, lastTappedPoint));
                 }
                 lastTappedPoint.set(tapPoint);
+
+                mapController.pickFeature(event.getX(), event.getY());
                 return true;
             }
         });
@@ -67,6 +71,19 @@ public class MainActivity extends Activity {
             public boolean onGenericMotion(View v, MotionEvent event) {
                 // Handle generic motion event.
                 return false;
+            }
+        });
+
+        mapController.setFeatureTouchListener(new MapController.FeatureTouchListener() {
+            @Override
+            public void onTouch(Properties properties) {
+                String name = properties.getString("name");
+                if (name.length() == 0) {
+                    name = "unnamed...";
+                }
+                Toast.makeText(getApplicationContext(),
+                        "Selected: " + name,
+                        Toast.LENGTH_SHORT).show();
             }
         });
 

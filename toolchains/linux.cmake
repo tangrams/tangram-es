@@ -31,6 +31,7 @@ include(${PROJECT_SOURCE_DIR}/toolchains/add_glfw.cmake)
 # load core library
 add_subdirectory(${PROJECT_SOURCE_DIR}/core)
 include_directories(${CORE_INCLUDE_DIRS})
+include_directories(${CORE_LIBRARIES_INCLUDE_DIRS})
 
 # link and build functions
 function(link_libraries)

@@ -7,6 +7,9 @@
 
 #ifdef PLATFORM_ANDROID
 
+#include "data/properties.h"
+#include <memory>
+
 struct _JNIEnv;
 typedef _JNIEnv JNIEnv;
 class _jobject;
@@ -18,6 +21,7 @@ typedef long long jlong;
 void setupJniEnv(JNIEnv* _jniEnv, jobject _tangramInstance, jobject _assetManager);
 void onUrlSuccess(JNIEnv* jniEnv, jbyteArray jFetchedBytes, jlong jCallbackPtr);
 void onUrlFailure(JNIEnv* jniEnv, jlong jCallbackPtr);
+void featureSelectionCallback(JNIEnv* jniEnv, const std::vector<std::shared_ptr<Tangram::Properties>>& items);
 #endif
 
 
