@@ -1057,14 +1057,12 @@ Filter SceneLoader::generatePredicate(Node _node, std::string _key) {
         if (getFloat(_node, number)) {
             return Filter::MatchEquality(_key, { Value(number) });
         }
-        std::string value = _node.as<std::string>();
-        if (value == "true") {
-            return Filter::MatchExistence(_key, true);
-        } else if (value == "false") {
-            return Filter::MatchExistence(_key, false);
-        } else {
-            return Filter::MatchEquality(_key, { Value(value) });
+        bool existence;
+        if (getBool(_node, existence)) {
+            return Filter::MatchExistence(_key, existence);
         }
+        std::string value = _node.as<std::string>();
+        return Filter::MatchEquality(_key, { Value(std::move(value)) });
     }
     case NodeType::Sequence: {
         std::vector<Value> values;
