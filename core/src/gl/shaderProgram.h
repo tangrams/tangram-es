@@ -38,6 +38,8 @@ public:
     // successful it returns true.
     bool build(RenderState& rs);
 
+    bool getSource(std::string& vertSrc, std::string& fragSrc);
+
     // Getters
     GLuint getGlProgram() const { return m_glProgram; };
     GLuint getGlFragmentShader() const { return m_glFragmentShader; };
