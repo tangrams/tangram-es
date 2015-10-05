@@ -132,10 +132,17 @@ void update(float _dt) {
 
             m_labels->update(*m_view, _dt, m_scene->styles(), tiles);
         }
-    }
 
-    if (m_scene) {
-        // Update lights and styles
+        bool animated = false;
+        for (const auto& style : m_scene->styles()) {
+            if (style->isAnimated()) {
+                animated = true;
+                break;
+            }
+        }
+        if (animated != isContinuousRendering()) {
+            setContinuousRendering(animated);
+        }
     }
 }
 

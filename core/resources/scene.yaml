@@ -41,9 +41,10 @@ styles:
     heightglow:
         base: polygons
         lighting: vertex
+        animated: true
         shaders:
             blocks:
-                color: "color.rgb += vec3(0.3 * position.z * exp2(16. - abs(u_tile_origin.z)));"
+                color: "color.rgb += vec3((cos(u_time) * 0.5 + 0.5) * position.z * exp2(16. - abs(u_tile_origin.z)));"
     heightglowline:
         base: lines
         lighting: vertex
