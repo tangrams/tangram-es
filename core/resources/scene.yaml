@@ -41,17 +41,12 @@ styles:
     heightglow:
         base: polygons
         lighting: vertex
-        animated: true
-        shaders:
-            blocks:
-                color: "color.rgb += vec3((cos(u_time) * 0.5 + 0.5) * position.z * exp2(16. - abs(u_tile_origin.z)));"
-    heightglowline:
-        base: lines
-        lighting: vertex
         shaders:
             blocks:
                 color: "color.rgb += vec3(0.3 * position.z * exp2(16. - abs(u_tile_origin.z)));"
-
+    heightglowline:
+        base: lines
+        mix: heightglow
     icons:
         base: points
         texture: pois
@@ -280,7 +275,7 @@ layers:
         data: { source: osm }
         filter: { $zoom: { min: 14 } }
         draw:
-            noglow:
+            polygons:
                 style: polygons 
                 order: 50
                 color: [.85, .85, .83]
@@ -288,19 +283,19 @@ layers:
         interactive:
             filter: { name: true }
             draw:
-                glow:
+                polygons:
                     style: heightglow
                     color: [.65, .65, .63]
                     interactive: true  
         extruded:
             filter: { $zoom: { min: 15 } }
             draw:
-                glow:
+                polygons:
                     style: heightglow
                     color: [.65, .65, .63]
                     extrude: true
             draw:
-                glowLines:
+                lines:
                     style: heightglowline
                     width: 1.0
                     color: [.75, .75, .73]
@@ -309,7 +304,7 @@ layers:
         high-line:
             filter: {roof_material: grass}
             draw:
-                noglow:
+                polygons:
                     style: polygons
                     color: '#bddec5'
 
