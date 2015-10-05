@@ -46,7 +46,7 @@ void clearEase(EaseField _f) {
     m_eases[static_cast<size_t>(_f)] = none;
 }
 
-std::shared_ptr<Scene> m_oldScene;
+std::shared_ptr<Scene> m_newScene;
 
 static float g_time = 0.0;
 static std::bitset<8> g_flags = 0;
@@ -102,25 +102,16 @@ void loadScene(const char* _scenePath, bool _setPositionFromScene) {
         // So this  has to be done on androids GL-Thread!
         // TODO use shared references for GL resources with custom deleter
         // that puts stuff into a queue to be released in render..
-        // For now release in update()
-        m_oldScene = m_scene;
+        // Same for tiles of the tilemanager
+        // For now release all stuff in update()
+        scene->fontContext()->addFont("FiraSans", "Medium", "");
 
-        m_scene = scene;
-        m_scene->fontContext()->addFont("firasans", "medium", "");
         if (setPositionFromCurrentView && !_setPositionFromScene) {
-            m_scene->view()->setPosition(m_view->getPosition());
-            m_scene->view()->setZoom(m_view->getZoom());
+            scene->view()->setPosition(m_view->getPosition());
+            scene->view()->setZoom(m_view->getZoom());
         }
-        m_view = m_scene->view();
-        m_inputHandler->setView(m_view);
-        m_tileManager->setView(m_view);
-        m_tileManager->setScene(scene);
+        m_newScene = scene;
 
-        float pixelScale = m_view->getPixelScale();
-
-        for (auto& style : m_scene->styles()) {
-            style->setPixelScale(pixelScale);
-        }
         requestRender();
     }
 }
@@ -144,8 +135,19 @@ void resize(int _newWidth, int _newHeight) {
 void update(float _dt) {
 
     // Now we are on the GL thread - free GL resources
-    if (m_oldScene) {
-        m_oldScene.reset();
+    if (m_newScene) {
+        m_scene = m_newScene;
+        m_newScene.reset();
+
+        m_scene->fontContext()->addFont("FiraSans", "Medium", "");
+
+        m_tileManager->setScene(m_scene);
+
+        float pixelScale = m_view->getPixelScale();
+
+        for (auto& style : m_scene->styles()) {
+            style->setPixelScale(pixelScale);
+        }
     }
 
     g_time += _dt;
