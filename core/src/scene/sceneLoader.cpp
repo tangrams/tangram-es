@@ -36,6 +36,32 @@ namespace Tangram {
 // TODO: make this configurable: 16MB default in-memory DataSource cache:
 constexpr size_t CACHE_SIZE = 16 * (1024 * 1024);
 
+
+bool getFloat(const Node& node, float& value, const char* name = nullptr) {
+    try {
+        value = node.as<float>();
+        return true;
+    } catch (const BadConversion& e) {}
+
+    if (name) {
+        LOGNode("Expected a float value for '%s' property.", node, name);
+    }
+    return false;
+}
+
+bool getBool(const Node& node, bool& value, const char* name = nullptr) {
+    try {
+        value = node.as<bool>();
+        return true;
+    } catch (const BadConversion& e) {}
+
+    if (name) {
+        LOGNode("Expected a boolean value for '%s' property.", node, name);
+    }
+    return false;
+}
+
+
 bool SceneLoader::loadScene(const std::string& _sceneString, Scene& _scene) {
 
     Node config;
@@ -167,8 +193,10 @@ void SceneLoader::loadShaderConfig(Node shaders, Style& style, Scene& scene) {
     if (Node definesNode = shaders["defines"]) {
         for (const auto& define : definesNode) {
             std::string name = define.first.as<std::string>();
-            try {
-                if (!define.second.as<bool>()){
+            bool bValue;
+
+            if (getBool(define.second, bValue)) {
+                if (!bValue) {
                     // specifying a define to be 'false' means that the define will
                     // not be defined at all
                     continue;
@@ -176,9 +204,7 @@ void SceneLoader::loadShaderConfig(Node shaders, Style& style, Scene& scene) {
                 // specifying a define to be 'true' means that it is simply
                 // defined and has no value
                 shader.addSourceBlock("defines", "#define " + name);
-
-            } catch(const BadConversion& e) {
-
+            } else {
                 std::string value = define.second.as<std::string>();
                 shader.addSourceBlock("defines", "#define " + name + " " + value);
             }
@@ -226,15 +252,16 @@ glm::vec4 parseMaterialVec(const Node& prop) {
     switch (prop.Type()) {
     case NodeType::Sequence:
         return parseVec<glm::vec4>(prop);
-    case NodeType::Scalar:
-        try {
-            float value = prop.as<float>();
+    case NodeType::Scalar: {
+        float value;
+        if (getFloat(prop, value)) {
             return glm::vec4(value, value, value, 1.0);
-        } catch (const BadConversion& e) {
+        } else {
             LOGNode("Invalid 'material'", prop);
             // TODO: css color parser and hex_values
         }
         break;
+    }
     case NodeType::Map:
         // Handled as texture
         break;
@@ -279,9 +306,9 @@ void SceneLoader::loadMaterial(Node matNode, Material& material, Scene& scene) {
     }
 
     if (Node shininess = matNode["shininess"]) {
-        try { material.setShininess(shininess.as<float>()); }
-        catch(const BadConversion& e) {
-            LOGNode("Expected float value for 'shininess'", matNode);
+        float value;
+        if (getFloat(shininess, value, "shininess")) {
+            material.setShininess(value);
         }
     }
 
@@ -414,10 +441,9 @@ void SceneLoader::loadStyleProps(Style& style, Node styleNode, Scene& scene) {
         LOGW("'animated' property will be set but not yet implemented in styles"); // TODO
         if (!animatedNode.IsScalar()) { LOGW("animated flag should be a scalar"); }
         else {
-            try {
-                style.setAnimated(animatedNode.as<bool>());
-            } catch(const BadConversion& e) {
-                LOGW("Expected a boolean value in 'animated' property. Using default (false).");
+            bool animate;
+            if (getBool(animatedNode, animate, "animated")) {
+                style.setAnimated(animate);
             }
         }
     }
@@ -490,12 +516,9 @@ bool SceneLoader::propOr(const std::string& propStr, const std::vector<Node>& mi
 
         Node node = mixNode[propStr];
         if (node && node.IsScalar()) {
-            try {
-                if (node.as<bool>()) {
-                    return true;
-                }
-            } catch (const BadConversion& e) {
-                LOGW("Error: Expected a boolean value for %s.", propStr.c_str());
+            bool bValue;
+            if (getBool(node, bValue, propStr.c_str()) && bValue) {
+                return true;
             }
         }
     }
@@ -1018,33 +1041,35 @@ Filter SceneLoader::generateFilter(Node _filter, Scene& scene) {
 Filter SceneLoader::generatePredicate(Node _node, std::string _key) {
 
     switch (_node.Type()) {
-    case NodeType::Scalar:
+    case NodeType::Scalar: {
         if (_node.Tag() == "tag:yaml.org,2002:str") {
             // Node was explicitly tagged with '!!str' or the canonical tag
             // 'tag:yaml.org,2002:str' yaml-cpp normalizes the tag value to the
             // canonical form
             return Filter::MatchEquality(_key, { Value(_node.as<std::string>()) });
         }
-        try {
-            return Filter::MatchEquality(_key, { Value(_node.as<float>()) });
-        } catch (const BadConversion& e) {
-            std::string value = _node.as<std::string>();
-            if (value == "true") {
-                return Filter::MatchExistence(_key, true);
-            } else if (value == "false") {
-                return Filter::MatchExistence(_key, false);
-            } else {
-                return Filter::MatchEquality(_key, { Value(value) });
-            }
+        float number;
+        if (getFloat(_node, number)) {
+            return Filter::MatchEquality(_key, { Value(number) });
         }
+        std::string value = _node.as<std::string>();
+        if (value == "true") {
+            return Filter::MatchExistence(_key, true);
+        } else if (value == "false") {
+            return Filter::MatchExistence(_key, false);
+        } else {
+            return Filter::MatchEquality(_key, { Value(value) });
+        }
+    }
     case NodeType::Sequence: {
         std::vector<Value> values;
         for (const auto& valItr : _node) {
-            try {
-                values.emplace_back(valItr.as<float>());
-            } catch(const BadConversion& e) {
+            float number;
+            if (getFloat(valItr, number)) {
+                values.emplace_back(number);
+            } else {
                 std::string value = valItr.as<std::string>();
-                values.emplace_back(value);
+                values.emplace_back(std::move(value));
             }
         }
         return Filter::MatchEquality(_key, std::move(values));
@@ -1054,29 +1079,27 @@ Filter SceneLoader::generatePredicate(Node _node, std::string _key) {
         float maxVal = std::numeric_limits<float>::infinity();
 
         for (const auto& valItr : _node) {
-            if (valItr.first.as<std::string>() == "min") {
-                try {
-                    minVal = valItr.second.as<float>();
-                } catch (const BadConversion& e) {
-                    LOGNode("Invalid  'filter', expect a float value type", _node);
+            if (valItr.first.Scalar() == "min") {
+
+                if (!getFloat(valItr.second, minVal, "min")) {
+                    LOGNode("Invalid  'filter'", _node);
                     return Filter();
                 }
-            } else if (valItr.first.as<std::string>() == "max") {
-                try {
-                    maxVal = valItr.second.as<float>();
-                } catch (const BadConversion& e) {
-                    LOGW("Invalid  'filter', expect a float value type", Dump(_node).c_str());
+            } else if (valItr.first.Scalar() == "max") {
+
+                if (!getFloat(valItr.second, maxVal, "max")) {
+                    LOGNode("Invalid  'filter'", _node);
                     return Filter();
                 }
             } else {
-                LOGW("Invalid  'filter'", Dump(_node).c_str());
+                LOGNode("Invalid  'filter'", _node);
                 return Filter();
             }
         }
         return Filter::MatchRange(_key, minVal, maxVal);
     }
     default:
-        LOGW("Invalid 'filter'", Dump(_node).c_str());
+        LOGNode("Invalid 'filter'", _node);
         return Filter();
     }
 }
@@ -1175,26 +1198,27 @@ void SceneLoader::parseStyleParams(Node params, Scene& scene, const std::string&
 StyleUniforms SceneLoader::parseStyleUniforms(const Node& value, Scene& scene) {
     std::string type = "";
     std::vector<UniformValue> uniformValues;
-    if (value.IsScalar()) { //float, int (bool), string (texture)
-        UniformValue uVal;
-        try {
-            uVal = value.as<float>();
+    if (value.IsScalar()) { // float, bool or string (texture)
+        float fValue;
+        bool bValue;
+        if (getFloat(value, fValue)) {
             type = "float";
-        } catch (const BadConversion& e) {
-            try {
-                uVal = value.as<bool>();
-                type = "bool";
-            } catch (const BadConversion& e) {
-                auto strVal = value.as<std::string>();
-                type = "sampler2D";
-                uVal = strVal;
-                auto texItr = scene.textures().find(strVal);
-                if (texItr == scene.textures().end()) {
-                    loadTexture(strVal, scene);
-                }
+            uniformValues.push_back(fValue);
+
+        } else if (getBool(value, bValue)) {
+            type = "bool";
+            uniformValues.push_back(bValue);
+
+        } else {
+            auto strVal = value.as<std::string>();
+            type = "sampler2D";
+            auto texItr = scene.textures().find(strVal);
+            if (texItr == scene.textures().end()) {
+                loadTexture(strVal, scene);
             }
+            uniformValues.push_back(strVal);
         }
-        uniformValues.push_back(uVal);
+
     } else if (value.IsSequence()) {
         int size = value.size();
         try {
