@@ -3,29 +3,15 @@
 
 #pragma once
 
+#include "yaml-cpp/yaml.h"
+
 using YAML::Node;
 using YAML::BadConversion;
 
 namespace Tangram {
 
-std::string parseSequence(const Node& node) {
-    std::stringstream sstream;
-    for (const auto& val : node) {
-        try {
-            sstream << val.as<float>() << ",";
-        } catch (const BadConversion& e) {
-            try {
-                sstream << val.as<std::string>() << ",";
-            } catch (const BadConversion& e) {
-                LOGE("Float or Unit expected for styleParam sequence value");
-            }
-        }
-    }
-    return sstream.str();
-}
-
 template<typename T>
-T parseVec(const Node& node) {
+inline T parseVec(const Node& node) {
     T vec;
     int i = 0;
     for (const auto& nodeVal : node) {
@@ -37,5 +23,11 @@ T parseVec(const Node& node) {
     }
     return vec;
 }
+
+std::string parseSequence(const Node& node);
+
+bool getFloat(const Node& node, float& value, const char* name = nullptr);
+
+bool getBool(const Node& node, bool& value, const char* name = nullptr);
 
 }

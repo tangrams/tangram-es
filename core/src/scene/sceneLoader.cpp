@@ -37,31 +37,6 @@ namespace Tangram {
 constexpr size_t CACHE_SIZE = 16 * (1024 * 1024);
 
 
-bool getFloat(const Node& node, float& value, const char* name = nullptr) {
-    try {
-        value = node.as<float>();
-        return true;
-    } catch (const BadConversion& e) {}
-
-    if (name) {
-        LOGNode("Expected a float value for '%s' property.", node, name);
-    }
-    return false;
-}
-
-bool getBool(const Node& node, bool& value, const char* name = nullptr) {
-    try {
-        value = node.as<bool>();
-        return true;
-    } catch (const BadConversion& e) {}
-
-    if (name) {
-        LOGNode("Expected a boolean value for '%s' property.", node, name);
-    }
-    return false;
-}
-
-
 bool SceneLoader::loadScene(const std::string& _sceneString, Scene& _scene) {
 
     Node config;
