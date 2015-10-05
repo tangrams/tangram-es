@@ -115,6 +115,15 @@ bool ShaderProgram::use() {
     return false;
 }
 
+bool ShaderProgram::getSource(std::string& vertSrc, std::string& fragSrc) {
+    Light::assembleLights(m_sourceBlocks);
+
+    vertSrc = applySourceBlocks(m_vertexShaderSource, false);
+    fragSrc = applySourceBlocks(m_fragmentShaderSource, true);
+
+    return true;
+}
+
 bool ShaderProgram::build() {
 
     m_needsBuild = false;
