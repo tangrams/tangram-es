@@ -49,6 +49,7 @@ public:
      * If unset, default is 1.0
      */
     void setPixelScale(float _pixelsPerPoint);
+    float getPixelScale() { return m_pixelScale; }
 
     /* Sets the size of the viewable area in pixels */
     void setSize(int _width, int _height);

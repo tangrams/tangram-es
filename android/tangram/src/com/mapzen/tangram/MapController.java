@@ -286,6 +286,8 @@ public class MapController implements Renderer, OnTouchListener, OnScaleGestureL
     // ==============
 
     private synchronized native void init(MapController instance, AssetManager assetManager, String stylePath);
+    public synchronized native void setScene(String stylePath);
+
     private synchronized native void setupGL();
     private synchronized native void resize(int width, int height);
     private synchronized native void update(float dt);

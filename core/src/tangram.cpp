@@ -46,6 +46,8 @@ void clearEase(EaseField _f) {
     m_eases[static_cast<size_t>(_f)] = none;
 }
 
+std::shared_ptr<Scene> m_oldScene;
+
 static float g_time = 0.0;
 static std::bitset<8> g_flags = 0;
 int log_level = 2;
@@ -96,6 +98,13 @@ void loadScene(const char* _scenePath, bool _setPositionFromScene) {
 
     auto scene = std::make_shared<Scene>();
     if (SceneLoader::loadScene(sceneString, *scene)) {
+        // old scene looses references and frees its textures
+        // So this  has to be done on androids GL-Thread!
+        // TODO use shared references for GL resources with custom deleter
+        // that puts stuff into a queue to be released in render..
+        // For now release in update()
+        m_oldScene = m_scene;
+
         m_scene = scene;
         m_scene->fontContext()->addFont("firasans", "medium", "");
         if (setPositionFromCurrentView && !_setPositionFromScene) {
@@ -107,6 +116,12 @@ void loadScene(const char* _scenePath, bool _setPositionFromScene) {
         m_tileManager->setView(m_view);
         m_tileManager->setScene(scene);
 
+        float pixelScale = m_view->getPixelScale();
+
+        for (auto& style : m_scene->styles()) {
+            style->setPixelScale(pixelScale);
+        }
+        requestRender();
     }
 }
 
@@ -127,6 +142,11 @@ void resize(int _newWidth, int _newHeight) {
 }
 
 void update(float _dt) {
+
+    // Now we are on the GL thread - free GL resources
+    if (m_oldScene) {
+        m_oldScene.reset();
+    }
 
     g_time += _dt;
 
