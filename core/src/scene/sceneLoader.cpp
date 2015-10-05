@@ -577,21 +577,23 @@ Node SceneLoader::propMerge(const std::string& propName, const std::vector<Node>
     return result;
 }
 
-Node SceneLoader::shaderBlockMerge(const std::vector<Node>& mixes) {
+Node SceneLoader::shaderBlockMerge(const std::vector<Node>& styles) {
 
     Node result;
-    for (const auto& mixNode : mixes) {
-        if (!mixNode.IsMap()) {
-            LOGNode("Expected map for 'mix'", mixNode);
+
+    for (const auto& style : styles) {
+        if (!style.IsMap()) {
+            LOGNode("Expected map for 'style'", style);
             continue;
         }
 
-        Node shaderNode = mixNode["shaders"];
+        Node shaderNode = style["shaders"];
         if (!shaderNode) { continue; }
         if (!shaderNode.IsMap()) {
             LOGNode("Expected map for 'shader'", shaderNode);
             continue;
         }
+
         Node blocks = shaderNode["blocks"];
         if (!blocks) { continue; }
         if (!blocks.IsMap()) {
@@ -615,15 +617,18 @@ Node SceneLoader::shaderBlockMerge(const std::vector<Node>& mixes) {
     return result;
 }
 
-Node SceneLoader::shaderExtMerge(const std::vector<Node>& mixes) {
+Node SceneLoader::shaderExtMerge(const std::vector<Node>& styles) {
 
     Node result;
     std::unordered_set<std::string> uniqueList;
 
-    for (const auto& mixNode : mixes) {
-        if (!mixNode.IsMap()) { continue; }
+    for (const auto& style : styles) {
+        if (!style.IsMap()) {
+            LOGNode("Expected map for 'style'", style);
+            continue;
+        }
 
-        Node shaderNode = mixNode["shaders"];
+        Node shaderNode = style["shaders"];
         if (!shaderNode) { continue; }
         if (!shaderNode.IsMap()) {
             LOGNode("Expected map for 'shader'", shaderNode);
@@ -659,18 +664,18 @@ Node SceneLoader::shaderExtMerge(const std::vector<Node>& mixes) {
     return result;
 }
 
-Node SceneLoader::mixStyles(const std::vector<Node>& mixes) {
+Node SceneLoader::mixStyles(const std::vector<Node>& styles) {
 
     Node result;
 
     for (auto& property: {"animated", "texcoords"}) {
-        if (propOr(property, mixes)) {
+        if (propOr(property, styles)) {
             result[property] = true;
         }
     }
 
     for (auto& property : {"base", "lighting", "texture", "blend", "material", "shaders"}) {
-        Node node = propMerge(property, mixes);
+        Node node = propMerge(property, styles);
         if (!node.IsNull()) {
             result[property] = node;
         }
@@ -678,12 +683,12 @@ Node SceneLoader::mixStyles(const std::vector<Node>& mixes) {
 
     Node shaderNode = result["shaders"];
 
-    Node shaderExtNode = shaderExtMerge(mixes);
+    Node shaderExtNode = shaderExtMerge(styles);
     if (!shaderExtNode.IsNull()) {
         shaderNode["extensions"] = shaderExtNode;
     }
 
-    Node shaderBlocksNode = shaderBlockMerge(mixes);
+    Node shaderBlocksNode = shaderBlockMerge(styles);
     if (!shaderBlocksNode.IsNull()) {
         shaderNode["blocks"] = shaderBlocksNode;
     }
