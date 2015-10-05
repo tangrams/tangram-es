@@ -29,10 +29,13 @@ using YAML::Node;
 using YAML::NodeType;
 using YAML::BadConversion;
 
+#define LOGNode(fmt, node, ...) LOGW(fmt ":\n'%s'\n", ## __VA_ARGS__, Dump(node).c_str())
+
 namespace Tangram {
 
 // TODO: make this configurable: 16MB default in-memory DataSource cache:
 constexpr size_t CACHE_SIZE = 16 * (1024 * 1024);
+
 
 bool SceneLoader::loadScene(const std::string& _sceneString, Scene& _scene) {
 
@@ -43,6 +46,10 @@ bool SceneLoader::loadScene(const std::string& _sceneString, Scene& _scene) {
         LOGE("Parsing scene config '%s'", e.what());
         return false;
     }
+    return loadScene(config, _scene);
+}
+
+bool SceneLoader::loadScene(Node& config, Scene& _scene) {
 
     // To add font for debugTextStyle
     FontContext::GetInstance()->addFont("FiraSans", "Medium", "");
@@ -59,8 +66,7 @@ bool SceneLoader::loadScene(const std::string& _sceneString, Scene& _scene) {
         for (const auto& source : sources) {
             try { loadSource(source, _scene); }
             catch (YAML::RepresentationException e) {
-                LOGE("Parsing source: '%s' in:\n%s",
-                     e.what(), Dump(source).c_str());
+                LOGNode("Parsing sources: '%s'", source, e.what());
             }
         }
     } else {
@@ -71,8 +77,7 @@ bool SceneLoader::loadScene(const std::string& _sceneString, Scene& _scene) {
         for (const auto& texture : textures) {
             try { loadTexture(texture, _scene); }
             catch (YAML::RepresentationException e) {
-                LOGE("Parsing texture: '%s' in:\n%s",
-                     e.what(), Dump(texture).c_str());
+                LOGNode("Parsing texture: '%s'", texture, e.what());
             }
         }
     }
@@ -81,10 +86,12 @@ bool SceneLoader::loadScene(const std::string& _sceneString, Scene& _scene) {
 
     if (Node styles = config["styles"]) {
         for (const auto& style : styles) {
-            try { loadStyle(style, styles, _scene, mixedStyles); }
+            try {
+                std::string styleName = style.first.as<std::string>();
+                loadStyle(styleName, styles, _scene, mixedStyles);
+            }
             catch (YAML::RepresentationException e) {
-                LOGE("Parsing style: '%s' in:\n%s",
-                     e.what(), Dump(style).c_str());
+                LOGNode("Parsing style: '%s'", style, e.what());
             }
         }
     }
@@ -93,8 +100,7 @@ bool SceneLoader::loadScene(const std::string& _sceneString, Scene& _scene) {
         for (const auto& layer : layers) {
             try { loadLayer(layer, _scene); }
             catch (YAML::RepresentationException e) {
-                LOGE("Parsing layer: '%s' in:\n%s",
-                     e.what(), Dump(layer).c_str());
+                LOGNode("Parsing layer: '%s'", layer, e.what());
             }
         }
     }
@@ -103,8 +109,7 @@ bool SceneLoader::loadScene(const std::string& _sceneString, Scene& _scene) {
         for (const auto& light : lights) {
             try { loadLight(light, _scene); }
             catch (YAML::RepresentationException e) {
-                LOGE("Parsing light: '%s' in:\n%s",
-                     e.what(), Dump(light).c_str());
+                LOGNode("Parsing light: '%s'", light, e.what());
             }
         }
     } else {
@@ -117,8 +122,7 @@ bool SceneLoader::loadScene(const std::string& _sceneString, Scene& _scene) {
     if (Node cameras = config["cameras"]) {
         try { loadCameras(cameras, _scene); }
         catch (YAML::RepresentationException e) {
-            LOGE("Parsing cameras: '%s' in:\n%s",
-                   e.what(), Dump(cameras).c_str());
+            LOGNode("Parsing cameras: '%s'", cameras, e.what());
         }
     }
 
@@ -159,15 +163,19 @@ void SceneLoader::loadShaderConfig(Node shaders, Style& style, Scene& scene) {
             }
             break;
         default:
-            LOGW("Invalid 'extensions'", Dump(extensionsNode).c_str());
+            LOGNode("Invalid 'extensions'", extensionsNode);
         }
     }
+    //shader.addSourceBlock("defines", "#define " + name + " " + value);
+    shaders["defines"]["STYLE"] = style.getName();
 
     if (Node definesNode = shaders["defines"]) {
         for (const auto& define : definesNode) {
             std::string name = define.first.as<std::string>();
-            try {
-                if (!define.second.as<bool>()){
+            bool bValue;
+
+            if (getBool(define.second, bValue)) {
+                if (!bValue) {
                     // specifying a define to be 'false' means that the define will
                     // not be defined at all
                     continue;
@@ -175,9 +183,7 @@ void SceneLoader::loadShaderConfig(Node shaders, Style& style, Scene& scene) {
                 // specifying a define to be 'true' means that it is simply
                 // defined and has no value
                 shader.addSourceBlock("defines", "#define " + name);
-
-            } catch(const BadConversion& e) {
-
+            } else {
                 std::string value = define.second.as<std::string>();
                 shader.addSourceBlock("defines", "#define " + name + " " + value);
             }
@@ -206,10 +212,16 @@ void SceneLoader::loadShaderConfig(Node shaders, Style& style, Scene& scene) {
 
     if (Node blocksNode = shaders["blocks"]) {
         for (const auto& block : blocksNode) {
-            std::string name = block.first.as<std::string>();
-            std::string value = block.second.as<std::string>();
+            auto& name = block.first.as<std::string>();
+            if (block.second.IsSequence()){
+                for (auto & n : block.second) {
+                    auto& value = n.as<std::string>();
+                    shader.addSourceBlock(name, value, false);
 
-            shader.addSourceBlock(name, value); // TODO: Warn on unrecognized injection points
+                }
+            } else {
+                LOGNode("Invalid merged shader %s 'block'", block, name.c_str());
+            }
         }
     }
 }
@@ -219,26 +231,28 @@ glm::vec4 parseMaterialVec(const Node& prop) {
     switch (prop.Type()) {
     case NodeType::Sequence:
         return parseVec<glm::vec4>(prop);
-    case NodeType::Scalar:
-        try {
-            float value = prop.as<float>();
+    case NodeType::Scalar: {
+        float value;
+        if (getFloat(prop, value)) {
             return glm::vec4(value, value, value, 1.0);
-        } catch (const BadConversion& e) {
-            LOGW("Invalid 'material'", Dump(prop).c_str());
+        } else {
+            LOGNode("Invalid 'material'", prop);
             // TODO: css color parser and hex_values
         }
         break;
+    }
     case NodeType::Map:
         // Handled as texture
         break;
     default:
-        LOGW("Invalid 'material'", Dump(prop).c_str());
+        LOGNode("Invalid 'material'", prop);
         break;
     }
     return glm::vec4(0.0);
 }
 
 void SceneLoader::loadMaterial(Node matNode, Material& material, Scene& scene) {
+    if (!matNode.IsMap()) { return; }
 
     if (Node n = matNode["emission"]) {
         if (n.IsMap()) {
@@ -271,9 +285,9 @@ void SceneLoader::loadMaterial(Node matNode, Material& material, Scene& scene) {
     }
 
     if (Node shininess = matNode["shininess"]) {
-        try { material.setShininess(shininess.as<float>()); }
-        catch(const BadConversion& e) {
-            LOGW("Expected float value for 'shininess'", Dump(matNode).c_str());
+        float value;
+        if (getFloat(shininess, value, "shininess")) {
+            material.setShininess(value);
         }
     }
 
@@ -286,7 +300,7 @@ MaterialTexture SceneLoader::loadMaterialTexture(Node matCompNode, Scene& scene)
 
     Node textureNode = matCompNode["texture"];
     if (!textureNode) {
-        LOGW("Expected a 'texture' parameter %s", Dump(matCompNode).c_str());
+        LOGNode("Expected a 'texture' parameter", matCompNode);
 
         return MaterialTexture{};
     }
@@ -406,10 +420,9 @@ void SceneLoader::loadStyleProps(Style& style, Node styleNode, Scene& scene) {
         LOGW("'animated' property will be set but not yet implemented in styles"); // TODO
         if (!animatedNode.IsScalar()) { LOGW("animated flag should be a scalar"); }
         else {
-            try {
-                style.setAnimated(animatedNode.as<bool>());
-            } catch(const BadConversion& e) {
-                LOGW("Expected a boolean value in 'animated' property. Using default (false).");
+            bool animate;
+            if (getBool(animatedNode, animate, "animated")) {
+                style.setAnimated(animate);
             }
         }
     }
@@ -463,7 +476,7 @@ void SceneLoader::loadStyleProps(Style& style, Node styleNode, Scene& scene) {
                 if (texIt != textures.end()) {
                     pointStyle->setTexture(texIt->second);
                 } else {
-                    LOGW("Wndefined texture name %s", textureName.c_str());
+                    LOGW("Undefined texture name %s", textureName.c_str());
                 }
             }
         }
@@ -482,12 +495,9 @@ bool SceneLoader::propOr(const std::string& propStr, const std::vector<Node>& mi
 
         Node node = mixNode[propStr];
         if (node && node.IsScalar()) {
-            try {
-                if (node.as<bool>()) {
-                    return true;
-                }
-            } catch (const BadConversion& e) {
-                LOGW("Error: Expected a boolean value for %s.", propStr.c_str());
+            bool bValue;
+            if (getBool(node, bValue, propStr.c_str()) && bValue) {
+                return true;
             }
         }
     }
@@ -502,7 +512,6 @@ Node SceneLoader::propMerge(const std::string& propName, const std::vector<Node>
         return result;
     }
 
-    std::vector<std::string> mapTags;
     std::unordered_map<std::string, std::vector<Node>> mapMixes;
 
     for (const auto& mixNode : mixes) {
@@ -514,7 +523,7 @@ Node SceneLoader::propMerge(const std::string& propName, const std::vector<Node>
         switch (propValue.Type()) {
         case NodeType::Scalar:
         case NodeType::Sequence:
-            // Overwrite Properties
+            // Overwrite Property
             result = Clone(propValue);
             break;
 
@@ -522,79 +531,86 @@ Node SceneLoader::propMerge(const std::string& propName, const std::vector<Node>
             // Reset previous scalar/sequence node
             result.reset();
             for (const auto& tag : propValue) {
-                auto tagName = tag.first.as<std::string>();
                 // Deep Merge for all Map Props
-                if (mapMixes.find(tagName) == mapMixes.end()) {
-                    mapTags.push_back(tagName);
-                }
+                const std::string& tagName = tag.first.Scalar();
                 mapMixes[tagName].push_back(propValue);
             }
             break;
         default:
-            LOGW("Cannot merge property", Dump(propValue).c_str());
+            LOGNode("Cannot merge property '%s'", mixNode, propName.c_str());
             break;
         }
     }
 
     if (result.IsScalar() || result.IsSequence()) {
         mapMixes.clear();
-        mapTags.clear();
     }
 
     // Recursively merge map nodes from this propStr node
-    for (auto& mapTag : mapTags) {
-        if (Node n = propMerge(mapTag, mapMixes[mapTag])) {
-            result[mapTag] = n;
+    for (auto& it : mapMixes) {
+        if (Node n = propMerge(it.first, it.second)) {
+            result[it.first] = n;
         }
     }
 
     return result;
 }
 
-Node SceneLoader::shaderBlockMerge(const std::vector<Node>& mixes) {
+Node SceneLoader::shaderBlockMerge(const std::vector<Node>& styles) {
 
     Node result;
-    for (const auto& mixNode : mixes) {
-        if (!mixNode.IsMap()) { continue; }
 
-        Node shaderNode = mixNode["shaders"];
-        if (!shaderNode) { continue; }
-        if (!shaderNode.IsMap()) {
-            LOGW("Expected map for 'shader'", Dump(shaderNode).c_str());
+    for (const auto& style : styles) {
+        if (!style.IsMap()) {
+            LOGNode("Expected map for 'style'", style);
             continue;
         }
+
+        Node shaderNode = style["shaders"];
+        if (!shaderNode) { continue; }
+        if (!shaderNode.IsMap()) {
+            LOGNode("Expected map for 'shader'", shaderNode);
+            continue;
+        }
+
         Node blocks = shaderNode["blocks"];
         if (!blocks) { continue; }
         if (!blocks.IsMap()) {
-            LOGW("Expected map for 'blocks'", Dump(shaderNode).c_str());
+            LOGNode("Expected map for 'blocks'", shaderNode);
             continue;
         }
 
         for (const auto& block : blocks) {
-            std::string blockName = block.first.as<std::string>();
-            std::string value = block.second.as<std::string>();
-            if (result[blockName]) {
-                result[blockName] = result[blockName].as<std::string>() + "\n" + value;
-            } else {
-                result[blockName] = value;
+            const auto& blockName = block.first.Scalar();
+
+            if (block.second.IsSequence()) {
+                for (auto& n : block.second)
+                    result[blockName].push_back(n);
+
+            } else if (block.second.IsScalar()) {
+                result[blockName].push_back(block.second);
             }
         }
     }
+
     return result;
 }
 
-Node SceneLoader::shaderExtMerge(const std::vector<Node>& mixes) {
+Node SceneLoader::shaderExtMerge(const std::vector<Node>& styles) {
 
     Node result;
     std::unordered_set<std::string> uniqueList;
 
-    for (const auto& mixNode : mixes) {
-        if (!mixNode.IsMap()) { continue; }
+    for (const auto& style : styles) {
+        if (!style.IsMap()) {
+            LOGNode("Expected map for 'style'", style);
+            continue;
+        }
 
-        Node shaderNode = mixNode["shaders"];
+        Node shaderNode = style["shaders"];
         if (!shaderNode) { continue; }
         if (!shaderNode.IsMap()) {
-            LOGW("Expected map for 'shader'", Dump(shaderNode).c_str());
+            LOGNode("Expected map for 'shader'", shaderNode);
             continue;
         }
         Node extNode = shaderNode["extensions"];
@@ -620,25 +636,25 @@ Node SceneLoader::shaderExtMerge(const std::vector<Node>& mixes) {
             break;
         }
         default:
-            LOGW("Expected scalar or sequence value for 'extensions' node", Dump(mixNode).c_str());
+            LOGNode("Expected scalar or sequence value for 'extensions' node", shaderNode);
         }
     }
 
     return result;
 }
 
-Node SceneLoader::mixStyle(const std::vector<Node>& mixes) {
+Node SceneLoader::mixStyles(const std::vector<Node>& styles) {
 
     Node result;
 
     for (auto& property: {"animated", "texcoords"}) {
-        if (propOr(property, mixes)) {
+        if (propOr(property, styles)) {
             result[property] = true;
         }
     }
 
     for (auto& property : {"base", "lighting", "texture", "blend", "material", "shaders"}) {
-        Node node = propMerge(property, mixes);
+        Node node = propMerge(property, styles);
         if (!node.IsNull()) {
             result[property] = node;
         }
@@ -646,12 +662,12 @@ Node SceneLoader::mixStyle(const std::vector<Node>& mixes) {
 
     Node shaderNode = result["shaders"];
 
-    Node shaderExtNode = shaderExtMerge(mixes);
+    Node shaderExtNode = shaderExtMerge(styles);
     if (!shaderExtNode.IsNull()) {
         shaderNode["extensions"] = shaderExtNode;
     }
 
-    Node shaderBlocksNode = shaderBlockMerge(mixes);
+    Node shaderBlocksNode = shaderBlockMerge(styles);
     if (!shaderBlocksNode.IsNull()) {
         shaderNode["blocks"] = shaderBlocksNode;
     }
@@ -659,95 +675,92 @@ Node SceneLoader::mixStyle(const std::vector<Node>& mixes) {
     return result;
 }
 
-void SceneLoader::addMixinNode(const Node mixNode, const Node styles, std::vector<Node>& mixes,
-                               std::unordered_set<std::string>& uniqueStyles,
-                               std::unordered_set<std::string>& mixedStyles) {
+std::vector<Node> SceneLoader::getMixins(const Node& styleNode, const Node& styles, Scene& scene,
+                                         std::unordered_set<std::string>& mixedStyles) {
 
-    auto& name = mixNode.as<std::string>();
-
-    // Check if this style has already been processed
-    if (mixedStyles.find(name) != mixedStyles.end()) {
-
-        // Check if this style has been added to the current style
-        if (uniqueStyles.find(name) == uniqueStyles.end()) {
-            uniqueStyles.insert(name);
-
-            // Use the processed style
-            mixes.push_back(styles[name]);
-        }
-    } else {
-        // Further traverse the mixNode
-        auto recurMixes = recursiveMixins(name, styles, uniqueStyles, mixedStyles);
-
-        mixes.reserve(mixes.size() + recurMixes.size());
-        std::move(recurMixes.begin(), recurMixes.end(), std::back_inserter(mixes));
-    }
-}
-
-std::vector<Node> SceneLoader::recursiveMixins(const std::string& styleName, const Node styles,
-                                               std::unordered_set<std::string>& uniqueStyles,
-                                               std::unordered_set<std::string>& mixedStyles) {
-
-    // TODO check, is insertion order correct when there are mutliple branches?
+    Node mixNode = styleNode["mix"];
     std::vector<Node> mixes;
 
-    Node styleNode = styles[styleName];
-    if (!styleNode) {
-        LOGW("Referenced 'mix' style not defined: '%s'", styleName.c_str());
-        return mixes;
+    if (!mixNode) {
+        return {};
     }
 
-    if (Node mixNode = styleNode["mix"]) {
-        if (mixNode.IsScalar()) {
-            addMixinNode(mixNode, styles, mixes, uniqueStyles, mixedStyles);
+    std::unordered_set<std::string> uniqueStyles;
+    Node mixNodes;
 
-        } else if (mixNode.IsSequence()) {
-            mixes.reserve(mixes.size() + mixNode.size() + 1);
+    if (mixNode.IsScalar()) {
+        // NB: Would be nice if scalar node had a single item iterator.
+        mixes.reserve(2);
+        mixNodes.push_back(mixNode);
+    } else if (mixNode.IsSequence()) {
+        mixes.reserve(mixNode.size() + 1);
+        mixNodes = mixNode;
+    } else {
+        // LOGW("Expected scalar or sequence value as 'mix' parameter: %s.",
+        //      styleName.c_str());
+        return {};
+    }
 
-            for (const auto& mixStyleNode : mixNode) {
-                addMixinNode(mixStyleNode, styles, mixes, uniqueStyles, mixedStyles);
+    for (const auto& mixNode : mixNodes) {
+        auto& mixName = mixNode.Scalar();
+
+        if (mixedStyles.find(mixName) == mixedStyles.end()) {
+            // Recursively process the mix style first
+            if (!loadStyle(mixName, styles, scene, mixedStyles)) {
+                continue;
             }
-        } else {
-            LOGW("Expected scalar or sequence value as 'mix' parameter: %s. ",
-                 styleName.c_str());
+
+        } else if (uniqueStyles.find(mixName) != uniqueStyles.end()) {
+            // This mix has already been added to the current style
+            continue;
+        }
+        uniqueStyles.insert(mixName);
+
+        if (Node mixStyle = styles[mixName]) {
+            mixes.push_back(mixStyle);
         }
     }
-
-    mixes.push_back(styleNode);
-    uniqueStyles.insert(styleName);
 
     return mixes;
 }
 
-void SceneLoader::loadStyle(const std::pair<Node, Node>& styleIt, Node styles, Scene& scene,
+bool SceneLoader::loadStyle(const std::string& styleName, Node styles, Scene& scene,
                             std::unordered_set<std::string>& mixedStyles) {
 
     static const auto builtIn = {
         "polygons", "lines", "points", "text", "debug", "debugtext"
     };
 
-    std::string styleName = styleIt.first.as<std::string>();
-
     if (std::find(builtIn.begin(), builtIn.end(), styleName) != builtIn.end()) {
         LOGW("Cannot use built-in style name '%s' for new style", styleName.c_str());
-        return;
+        return false;
     }
 
-    //Used to make sure mixes result has a unique set of styles
-    std::unordered_set<std::string> uniqueStyles;
-    auto mixes = recursiveMixins(styleName, styles, uniqueStyles, mixedStyles);
+    Node styleNode = styles[styleName];
+    if (!styleNode) {
+        LOGW("Style name '%s' is not defined", styleName.c_str());
+        return false;
+    }
 
-    Node mixedStyleNode = mixStyle(mixes);
+    if (mixedStyles.find(styleName) != mixedStyles.end()) {
+        return false;  // This style is already added
+    }
 
-    // Update styleNode with mixedStyleNode (for future uses)
-    styles[styleName] = mixedStyleNode;
+    // Add here to not allow loops in addMixinNode recursion!
     mixedStyles.insert(styleName);
 
-    Node baseNode = mixedStyleNode["base"];
+    std::vector<Node> mixes = getMixins(styleNode, styles, scene, mixedStyles);
+
+    // Finally through our self into the mix!
+    mixes.push_back(styleNode);
+
+    // Update styleNode with mixed style (also for future uses)
+    styleNode = mixStyles(mixes);
+
+    Node baseNode = styleNode["base"];
     if (!baseNode) {
         // No base style, this is an abstract styleNode
-        return;
-
+        return true;
     }
 
     // Construct style instance using the merged properties
@@ -762,11 +775,15 @@ void SceneLoader::loadStyle(const std::pair<Node, Node>& styleIt, Node styles, S
     } else if (baseStyle == "points") {
         style = std::make_unique<PointStyle>(styleName);
     } else {
-        LOGW("Base style '%s' not recognized, cannot instantiate.\n", baseStyle.c_str());
-        return;
+        LOGW("Base style '%s' not recognized, cannot instantiate.", baseStyle.c_str());
+        return false;
     }
-    loadStyleProps(*style.get(), mixedStyleNode, scene);
+
+    loadStyleProps(*style.get(), styleNode, scene);
+
     scene.styles().push_back(std::move(style));
+
+    return true;
 }
 
 void SceneLoader::loadSource(const std::pair<Node, Node>& src, Scene& _scene) {
@@ -1008,33 +1025,33 @@ Filter SceneLoader::generateFilter(Node _filter, Scene& scene) {
 Filter SceneLoader::generatePredicate(Node _node, std::string _key) {
 
     switch (_node.Type()) {
-    case NodeType::Scalar:
+    case NodeType::Scalar: {
         if (_node.Tag() == "tag:yaml.org,2002:str") {
             // Node was explicitly tagged with '!!str' or the canonical tag
             // 'tag:yaml.org,2002:str' yaml-cpp normalizes the tag value to the
             // canonical form
             return Filter::MatchEquality(_key, { Value(_node.as<std::string>()) });
         }
-        try {
-            return Filter::MatchEquality(_key, { Value(_node.as<float>()) });
-        } catch (const BadConversion& e) {
-            std::string value = _node.as<std::string>();
-            if (value == "true") {
-                return Filter::MatchExistence(_key, true);
-            } else if (value == "false") {
-                return Filter::MatchExistence(_key, false);
-            } else {
-                return Filter::MatchEquality(_key, { Value(value) });
-            }
+        float number;
+        if (getFloat(_node, number)) {
+            return Filter::MatchEquality(_key, { Value(number) });
         }
+        bool existence;
+        if (getBool(_node, existence)) {
+            return Filter::MatchExistence(_key, existence);
+        }
+        std::string value = _node.as<std::string>();
+        return Filter::MatchEquality(_key, { Value(std::move(value)) });
+    }
     case NodeType::Sequence: {
         std::vector<Value> values;
         for (const auto& valItr : _node) {
-            try {
-                values.emplace_back(valItr.as<float>());
-            } catch(const BadConversion& e) {
+            float number;
+            if (getFloat(valItr, number)) {
+                values.emplace_back(number);
+            } else {
                 std::string value = valItr.as<std::string>();
-                values.emplace_back(value);
+                values.emplace_back(std::move(value));
             }
         }
         return Filter::MatchEquality(_key, std::move(values));
@@ -1044,29 +1061,27 @@ Filter SceneLoader::generatePredicate(Node _node, std::string _key) {
         float maxVal = std::numeric_limits<float>::infinity();
 
         for (const auto& valItr : _node) {
-            if (valItr.first.as<std::string>() == "min") {
-                try {
-                    minVal = valItr.second.as<float>();
-                } catch (const BadConversion& e) {
-                    LOGW("Invalid  'filter', expect a float value type\n", Dump(_node).c_str());
+            if (valItr.first.Scalar() == "min") {
+
+                if (!getFloat(valItr.second, minVal, "min")) {
+                    LOGNode("Invalid  'filter'", _node);
                     return Filter();
                 }
-            } else if (valItr.first.as<std::string>() == "max") {
-                try {
-                    maxVal = valItr.second.as<float>();
-                } catch (const BadConversion& e) {
-                    LOGW("Invalid  'filter', expect a float value type", Dump(_node).c_str());
+            } else if (valItr.first.Scalar() == "max") {
+
+                if (!getFloat(valItr.second, maxVal, "max")) {
+                    LOGNode("Invalid  'filter'", _node);
                     return Filter();
                 }
             } else {
-                LOGW("Invalid  'filter'", Dump(_node).c_str());
+                LOGNode("Invalid  'filter'", _node);
                 return Filter();
             }
         }
         return Filter::MatchRange(_key, minVal, maxVal);
     }
     default:
-        LOGW("Invalid 'filter'", Dump(_node).c_str());
+        LOGNode("Invalid 'filter'", _node);
         return Filter();
     }
 }
@@ -1165,26 +1180,27 @@ void SceneLoader::parseStyleParams(Node params, Scene& scene, const std::string&
 StyleUniforms SceneLoader::parseStyleUniforms(const Node& value, Scene& scene) {
     std::string type = "";
     std::vector<UniformValue> uniformValues;
-    if (value.IsScalar()) { //float, int (bool), string (texture)
-        UniformValue uVal;
-        try {
-            uVal = value.as<float>();
+    if (value.IsScalar()) { // float, bool or string (texture)
+        float fValue;
+        bool bValue;
+        if (getFloat(value, fValue)) {
             type = "float";
-        } catch (const BadConversion& e) {
-            try {
-                uVal = value.as<bool>();
-                type = "bool";
-            } catch (const BadConversion& e) {
-                auto strVal = value.as<std::string>();
-                type = "sampler2D";
-                uVal = strVal;
-                auto texItr = scene.textures().find(strVal);
-                if (texItr == scene.textures().end()) {
-                    loadTexture(strVal, scene);
-                }
+            uniformValues.push_back(fValue);
+
+        } else if (getBool(value, bValue)) {
+            type = "bool";
+            uniformValues.push_back(bValue);
+
+        } else {
+            auto strVal = value.as<std::string>();
+            type = "sampler2D";
+            auto texItr = scene.textures().find(strVal);
+            if (texItr == scene.textures().end()) {
+                loadTexture(strVal, scene);
             }
+            uniformValues.push_back(strVal);
         }
-        uniformValues.push_back(uVal);
+
     } else if (value.IsSequence()) {
         int size = value.size();
         try {

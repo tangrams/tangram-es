@@ -14,10 +14,10 @@ using namespace Tangram;
 using YAML::Node;
 
 TEST_CASE( "Style Mixing Test: Actual Property recursive merge check!!!", "[mixing][core][yaml]") {
-    std::unordered_set<std::string> uniqueStyles;
     std::unordered_set<std::string> mixedStyles;
     std::vector<Node> mix;
     Node mixNode;
+    Scene scene;
     Node node = YAML::Load(R"END(
         styleA:
             material: A
@@ -26,17 +26,11 @@ TEST_CASE( "Style Mixing Test: Actual Property recursive merge check!!!", "[mixi
             base: wheresmymix?
         )END");
 
-    mix = SceneLoader::recursiveMixins("styleA", node, uniqueStyles, mixedStyles);
-    REQUIRE(mix.size() == 1);
-    mixNode = SceneLoader::mixStyle(mix);
-    node["styleA"] = mixNode;
-    uniqueStyles.clear();
+    SceneLoader::loadStyle("styleA", node, scene, mixedStyles);
+    mixNode = node["styleA"];
 
-    mix = SceneLoader::recursiveMixins("styleB", node, uniqueStyles, mixedStyles);
-    REQUIRE(mix.size() == 2);
-    mixNode = SceneLoader::mixStyle(mix);
-    node["styleB"] = mixNode;
-    uniqueStyles.clear();
+    SceneLoader::loadStyle("styleB", node, scene, mixedStyles);
+    mixNode = node["styleB"];
 
     REQUIRE(mixNode["material"].IsScalar());
     REQUIRE(mixNode["material"].as<std::string>() ==  "A");
@@ -44,10 +38,10 @@ TEST_CASE( "Style Mixing Test: Actual Property recursive merge check!!!", "[mixi
 
 
 TEST_CASE( "Style Mixing Test: Concrete Overwrite value check", "[mixing][core][yaml]") {
-    std::unordered_set<std::string> uniqueStyles;
     std::unordered_set<std::string> mixedStyles;
     std::vector<Node> mix;
     Node mixNode;
+    Scene scene;
 
     Node node = YAML::Load(R"END(
         StyleA:
@@ -58,8 +52,8 @@ TEST_CASE( "Style Mixing Test: Concrete Overwrite value check", "[mixing][core][
             material: valueC
         )END");
 
-    mix = SceneLoader::recursiveMixins("StyleA", node, uniqueStyles, mixedStyles);
-    mixNode = SceneLoader::mixStyle(mix);
+    SceneLoader::loadStyle("StyleA", node, scene, mixedStyles);
+    mixNode = node["StyleA"];
     REQUIRE(mixNode["material"].as<std::string>() == "valueC");
 }
 
@@ -68,8 +62,9 @@ TEST_CASE( "Style Mixing Test: Nested Style Mixin Nodes", "[mixing][core][yaml]"
     std::unordered_set<std::string> mixedStyles;
     std::vector<Node> mix;
     Node mixNode;
+    Scene scene;
 
-    Node node = YAML::Load(R"END(
+    Node styles = YAML::Load(R"END(
         styleA:
         styleB:
         styleC:
@@ -82,46 +77,47 @@ TEST_CASE( "Style Mixing Test: Nested Style Mixin Nodes", "[mixing][core][yaml]"
             mix: styleA
         )END");
 
-    mix = SceneLoader::recursiveMixins("styleA", node, uniqueStyles, mixedStyles);
-    REQUIRE(mix.size() == 1);
-    mixNode = SceneLoader::mixStyle(mix);
-    node["styleA"] = mixNode;
-    mixedStyles.insert("styleA");
-    uniqueStyles.clear();
+    // From SceneLoader::loadStyle()
+    auto countMixes = [&](const std::string& styleName) {
 
-    mix = SceneLoader::recursiveMixins("styleB", node, uniqueStyles, mixedStyles);
-    REQUIRE(mix.size() == 1);
-    mixNode = SceneLoader::mixStyle(mix);
-    node["styleB"] = mixNode;
-    mixedStyles.insert("styleB");
-    uniqueStyles.clear();
+        mixedStyles.insert(styleName);
+        Node styleNode = styles[styleName];
 
-    mix = SceneLoader::recursiveMixins("styleC", node, uniqueStyles, mixedStyles);
-    REQUIRE(mix.size() == 3);
-    mixNode = SceneLoader::mixStyle(mix);
-    node["styleC"] = mixNode;
-    mixedStyles.insert("styleC");
-    uniqueStyles.clear();
+        std::vector<Node> mixes = SceneLoader::getMixins(styleNode, styles, scene, mixedStyles);
 
-    mix = SceneLoader::recursiveMixins("styleD", node, uniqueStyles, mixedStyles);
-    REQUIRE(mix.size() == 3);
-    mixNode = SceneLoader::mixStyle(mix);
-    node["styleD"] = mixNode;
-    mixedStyles.insert("styleD");
-    uniqueStyles.clear();
+        // Finally through our self into the mix!
+        mixes.push_back(styleNode);
 
-    mix = SceneLoader::recursiveMixins("styleE", node, uniqueStyles, mixedStyles);
-    REQUIRE(mix.size() == 4);
-    mixNode = SceneLoader::mixStyle(mix);
-    node["styleE"] = mixNode;
-    mixedStyles.insert("styleE");
-    uniqueStyles.clear();
+        Node mixedStyleNode = SceneLoader::mixStyles(mixes);
 
-    mix = SceneLoader::recursiveMixins("styleF", node, uniqueStyles, mixedStyles);
-    REQUIRE(mix.size() == 2);
-    mixNode = SceneLoader::mixStyle(mix);
-    mixedStyles.insert("styleF");
-    node["styleF"] = mixNode;
+        // Remember that this style has been processed and
+        // update styleNode with mixedStyleNode (for future uses)
+        styles[styleName] = mixedStyleNode;
+
+        return mixes.size();
+    };
+
+    int count = countMixes("styleA");
+    REQUIRE(count == 1);
+
+    count = countMixes("styleB");
+    REQUIRE(count == 1);
+
+    count = countMixes("styleB");
+    REQUIRE(count == 1);
+
+    count = countMixes("styleC");
+    REQUIRE(count == 3);
+
+    count = countMixes("styleD");
+    REQUIRE(count == 3);
+
+    count = countMixes("styleE");
+    REQUIRE(count == 4);
+
+    count = countMixes("styleF");
+    REQUIRE(count == 1);
+
 }
 
 
@@ -184,8 +180,8 @@ TEST_CASE( "Style Mixing Test: Shader Blocks Merging", "[mixing][core][yaml]") {
     //          color: colorBlockA;
     //          normal: normalBlockA;
 
-    REQUIRE(shaderBlocksNode["color"].as<std::string>() == "colorBlockA;");
-    REQUIRE(shaderBlocksNode["normal"].as<std::string>() == "normalBlockA;");
+    REQUIRE(shaderBlocksNode["color"][0].as<std::string>() == "colorBlockA;");
+    REQUIRE(shaderBlocksNode["normal"][0].as<std::string>() == "normalBlockA;");
     REQUIRE(!shaderBlocksNode["global"]);
 
     shaderBlocksNode = SceneLoader::shaderBlockMerge( { node["Node1"], node["Node2"], node["Node3"] } );
@@ -197,11 +193,13 @@ TEST_CASE( "Style Mixing Test: Shader Blocks Merging", "[mixing][core][yaml]") {
     //          global: globalBlockB;\nglobalBlockC;
     //          filter: filterBlockC;
 
-    REQUIRE(shaderBlocksNode["color"].as<std::string>() == "colorBlockA;\ncolorBlockB;");
-    REQUIRE(shaderBlocksNode["normal"].as<std::string>() == "normalBlockA;");
-    REQUIRE(shaderBlocksNode["position"].as<std::string>() == "posBlockB;");
-    REQUIRE(shaderBlocksNode["global"].as<std::string>() == "globalBlockB;\nglobalBlockC;");
-    REQUIRE(shaderBlocksNode["filter"].as<std::string>() == "filterBlockC;");
+    REQUIRE(shaderBlocksNode["color"][0].as<std::string>() == "colorBlockA;");
+    REQUIRE(shaderBlocksNode["color"][1].as<std::string>() == "colorBlockB;");
+    REQUIRE(shaderBlocksNode["normal"][0].as<std::string>() == "normalBlockA;");
+    REQUIRE(shaderBlocksNode["position"][0].as<std::string>() == "posBlockB;");
+    REQUIRE(shaderBlocksNode["global"][0].as<std::string>() == "globalBlockB;");
+    REQUIRE(shaderBlocksNode["global"][1].as<std::string>() == "globalBlockC;");
+    REQUIRE(shaderBlocksNode["filter"][0].as<std::string>() == "filterBlockC;");
 }
 
 TEST_CASE( "Style Mixing Test: propMerge Tests (recursive overWrite properties)", "[mixing][core][yaml]") {
@@ -319,6 +317,8 @@ TEST_CASE( "Style Mixing Test: propOr Tests (boolean properties)", "[mixing][cor
 TEST_CASE( "Style Mixing Test: Actual Property recursive merge check - part 2", "[mixing][core][yaml]") {
     std::unordered_set<std::string> uniqueStyles;
     std::unordered_set<std::string> mixedStyles;
+    Scene scene;
+
     std::vector<Node> mix;
     Node mixNode;
     Node node = YAML::Load(R"END(
@@ -329,34 +329,64 @@ TEST_CASE( "Style Mixing Test: Actual Property recursive merge check - part 2", 
         stylePants:
             material: A
             mix: stylePocket
-            base: where's my lighter?
+            # base: where's my lighter?
+            base: polygons
         styleDude:
             mix: stylePants
-            base: got the lighter!
+            # base: got the lighter!
+            base: polygons
         )END");
 
-    mix = SceneLoader::recursiveMixins("styleDude", node, uniqueStyles, mixedStyles);
-    REQUIRE(mix.size() == 4);
-    mixNode = SceneLoader::mixStyle(mix);
-    node["styleDude"] = mixNode;
-    mixedStyles.insert("styleDude");
+    SceneLoader::loadStyle("styleDude", node, scene, mixedStyles);
+    mixNode = node["styleDude"];
     uniqueStyles.clear();
 
     REQUIRE(mixNode["material"].IsScalar());
     REQUIRE(mixNode["material"].as<std::string>() ==  "A");
-    REQUIRE(mixNode["base"].as<std::string>() ==  "got the lighter!");
+    // REQUIRE(mixNode["base"].as<std::string>() ==  "got the lighter!");
+    REQUIRE(mixNode["base"].as<std::string>() ==  "polygons");
     REQUIRE(mixNode["lighting"].as<std::string>() ==  "lighter");
 
-    mix = SceneLoader::recursiveMixins("stylePants", node, uniqueStyles, mixedStyles);
-    REQUIRE(mix.size() == 3);
-    mixNode = SceneLoader::mixStyle(mix);
-    node["stylePants"] = mixNode;
-    mixedStyles.insert("stylePants");
+    SceneLoader::loadStyle("stylePants", node, scene, mixedStyles);
+    mixNode = node["stylePants"];
     uniqueStyles.clear();
 
     REQUIRE(mixNode["material"].IsScalar());
     REQUIRE(mixNode["material"].as<std::string>() ==  "A");
-    REQUIRE(mixNode["base"].as<std::string>() ==  "where's my lighter?");
+    // REQUIRE(mixNode["base"].as<std::string>() ==  "where's my lighter?");
+    REQUIRE(mixNode["base"].as<std::string>() ==  "polygons");
     REQUIRE(mixNode["lighting"].as<std::string>() ==  "lighter");
+
+}
+
+TEST_CASE( "Style Mixing Test: Dont allow loops in mix inheritance", "[mixing][core][yaml]") {
+    std::unordered_set<std::string> mixedStyles;
+    Scene scene;
+
+    std::vector<Node> mix;
+    Node mixNode;
+    Node node = YAML::Load(R"END(
+        styleA:
+            mix: styleB
+            # base: A
+            base: polygons
+        styleB:
+            mix: styleC
+            lighting: B
+        styleC:
+            mix: styleA
+            material: C
+        )END");
+
+    SceneLoader::loadStyle("styleA", node, scene, mixedStyles);
+    mixNode = node["styleA"];
+
+    REQUIRE(mixNode["base"].IsScalar());
+    REQUIRE(mixNode["lighting"].IsScalar());
+    REQUIRE(mixNode["material"].IsScalar());
+    // REQUIRE(mixNode["base"].as<std::string>() ==  "A");
+    REQUIRE(mixNode["base"].as<std::string>() ==  "polygons");
+    REQUIRE(mixNode["lighting"].as<std::string>() ==  "B");
+    REQUIRE(mixNode["material"].as<std::string>() ==  "C");
 
 }
