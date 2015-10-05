@@ -92,6 +92,7 @@ public:
     void clear() {
         m_cacheMap.clear();
         m_cacheList.clear();
+        m_cacheUsage = 0;
     }
 
 private:
