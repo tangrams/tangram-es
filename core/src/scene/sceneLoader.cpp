@@ -71,6 +71,10 @@ bool SceneLoader::loadScene(const std::string& _sceneString, Scene& _scene) {
         LOGE("Parsing scene config '%s'", e.what());
         return false;
     }
+    return loadScene(config, _scene);
+}
+
+bool SceneLoader::loadScene(Node& config, Scene& _scene) {
 
     // To add font for debugTextStyle
     FontContext::GetInstance()->addFont("FiraSans", "Medium", "");

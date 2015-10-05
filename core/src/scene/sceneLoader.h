@@ -34,6 +34,7 @@ struct SceneLoader {
     using Node = YAML::Node;
 
     static bool loadScene(const std::string& _sceneString, Scene& _scene);
+    static bool loadScene(Node& config, Scene& _scene);
 
     /*** all public for testing ***/
 
