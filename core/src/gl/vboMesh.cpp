@@ -1,6 +1,7 @@
 #include "vboMesh.h"
 #include "shaderProgram.h"
 #include "renderState.h"
+#include "extension.h"
 #include "platform.h"
 
 namespace Tangram {
@@ -83,8 +84,10 @@ void VboMesh::subDataUpload() {
     // when all vertices are modified, it's better to update the entire mesh
     if (vertexBytes - m_dirtySize < m_vertexLayout->getStride()) {
 
+        // invalidate/orphane the data store on the driver
+        glBufferData(GL_ARRAY_BUFFER, vertexBytes, NULL, m_hint);
+
         if (GLExtensions::supportsMapBuffer) {
-            glBufferData(GL_ARRAY_BUFFER, vertexBytes, NULL, m_hint);
             GLvoid* dataStore = glMapBuffer(GL_ARRAY_BUFFER, GL_WRITE_ONLY);
 
             // write memory client side
@@ -92,9 +95,6 @@ void VboMesh::subDataUpload() {
 
             glUnmapBuffer(GL_ARRAY_BUFFER);
         } else {
-
-            // invalidate the data store on the driver
-            glBufferData(GL_ARRAY_BUFFER, vertexBytes, NULL, m_hint);
 
             // if this buffer is still used by gpu on current frame this call will not wait
             // for the frame to finish using the vbo but "directly" send command to upload the data
@@ -170,29 +170,44 @@ void VboMesh::draw(ShaderProgram& _shader) {
         subDataUpload();
     }
 
-    // Bind buffers for drawing
-    RenderState::vertexBuffer(m_glVertexBuffer);
+    if (GLExtensions::supportsVAOs) {
+        if (!m_vaos) {
+            m_vaos = std::make_unique<Vao>();
 
-    if (m_nIndices > 0) {
-        RenderState::indexBuffer(m_glIndexBuffer);
+            // Capture vao state
+            GLuint indexBuffer = m_nIndices > 0 ? m_glIndexBuffer : -1;
+
+            m_vaos->init(_shader, m_vertexOffsets, *m_vertexLayout, m_glVertexBuffer, indexBuffer);
+        }
+    } else {
+        // Bind buffers for drawing
+        RenderState::vertexBuffer(m_glVertexBuffer);
+
+        if (m_nIndices > 0) {
+            RenderState::indexBuffer(m_glIndexBuffer);
+        }
     }
 
     size_t indiceOffset = 0;
     size_t vertexOffset = 0;
 
-    for (auto& o : m_vertexOffsets) {
+    for (int i = 0; i < m_vertexOffsets.size(); ++i) {
+        auto& o = m_vertexOffsets[i];
         uint32_t nIndices = o.first;
         uint32_t nVertices = o.second;
 
-        size_t byteOffset = vertexOffset * m_vertexLayout->getStride();
-
-        // Enable vertex attribs via vertex layout object
-        m_vertexLayout->enable(_shader, byteOffset);
+        if (!GLExtensions::supportsVAOs) {
+            // Enable vertex attribs via vertex layout object
+            size_t byteOffset = vertexOffset * m_vertexLayout->getStride();
+            m_vertexLayout->enable(_shader, byteOffset);
+        } else {
+            // Bind the corresponding vao relative to the current offset
+            m_vaos->bind(i);
+        }
 
         // Draw as elements or arrays
         if (nIndices > 0) {
-            glDrawElements(m_drawMode, nIndices, GL_UNSIGNED_SHORT,
-                           (void*)(indiceOffset * sizeof(GLushort)));
+            glDrawElements(m_drawMode, nIndices, GL_UNSIGNED_SHORT, (void*)(indiceOffset * sizeof(GLushort)));
         } else if (nVertices > 0) {
             glDrawArrays(m_drawMode, 0, nVertices);
         }
@@ -200,16 +215,25 @@ void VboMesh::draw(ShaderProgram& _shader) {
         vertexOffset += nVertices;
         indiceOffset += nIndices;
     }
+
+    if (GLExtensions::supportsVAOs) {
+        m_vaos->unbind();
+    }
 }
 
-void VboMesh::checkValidity() {
+bool VboMesh::checkValidity() {
     if (m_generation != s_validGeneration) {
         m_isUploaded = false;
         m_glVertexBuffer = 0;
         m_glIndexBuffer = 0;
+        m_vaos.reset();
 
         m_generation = s_validGeneration;
+
+        return false;
     }
+
+    return true;
 }
 
 size_t VboMesh::bufferSize() {

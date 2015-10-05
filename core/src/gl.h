@@ -13,11 +13,20 @@ typedef ptrdiff_t GLintptr;
 #ifdef PLATFORM_OSX
 #define glClearDepthf glClearDepth
 #define glDepthRangef glDepthRange
+#define glDeleteVertexArrays glDeleteVertexArraysAPPLE
+#define glGenVertexArrays glGenVertexArraysAPPLE
+#define glBindVertexArray glBindVertexArrayAPPLE
 #endif
 
 #if defined(PLATFORM_ANDROID) || defined(PLATFORM_IOS)
 #define glMapBuffer glMapBufferOES
 #define glUnmapBuffer glUnmapBufferOES
+#endif
+
+#if defined(PLATFORM_IOS)
+#define glDeleteVertexArrays glDeleteVertexArraysOES
+#define glGenVertexArrays glGenVertexArraysOES
+#define glBindVertexArray glBindVertexArrayOES
 #endif
 
 /*
@@ -62,6 +71,11 @@ typedef double		GLdouble;	/* double precision float */
 typedef double		GLclampd;	/* double precision float in [0,1] */
 typedef char GLchar;
 
+/* Utility */
+#define GL_VENDOR                       0x1F00
+#define GL_RENDERER                     0x1F01
+#define GL_VERSION                      0x1F02
+#define GL_EXTENSIONS                   0x1F03
 
 /* Boolean values */
 #define GL_FALSE                        0
@@ -235,9 +249,16 @@ typedef char GLchar;
 #define GL_LINK_STATUS                  0x8B82
 #define GL_INFO_LOG_LENGTH              0x8B84
 
+// mapbuffer
+#define GL_READ_ONLY                    0x88B8
+#define GL_WRITE_ONLY                   0x88B9
+#define GL_READ_WRITE                   0x88BA
+
+
 #ifdef PLATFORM_ANDROID
 #define GL_APICALL  __attribute__((visibility("default")))
 #define GL_APIENTRY
+#define GL_APIENTRYP GL_APIENTRY*
 #else
 #define GL_APICALL
 #define GL_APIENTRY
@@ -245,7 +266,9 @@ typedef char GLchar;
 
 extern "C" {
 
+
     GL_APICALL GLenum GL_APIENTRY glGetError(void);
+    GL_APICALL const GLubyte* GL_APIENTRY glGetString(GLenum name);
 
     GL_APICALL void GL_APIENTRY glClear( GLbitfield mask );
     GL_APICALL void GL_APIENTRY glLineWidth( GLfloat width );
@@ -349,5 +372,30 @@ extern "C" {
     GL_APICALL void GL_APIENTRY glUniformMatrix2fv (GLint location, GLsizei count, GLboolean transpose, const GLfloat *value);
     GL_APICALL void GL_APIENTRY glUniformMatrix3fv (GLint location, GLsizei count, GLboolean transpose, const GLfloat *value);
     GL_APICALL void GL_APIENTRY glUniformMatrix4fv (GLint location, GLsizei count, GLboolean transpose, const GLfloat *value);
+
+    // mapbuffer
+    GL_APICALL void *GL_APIENTRY glMapBuffer(GLenum target, GLenum access);
+    GL_APICALL GLboolean GL_APIENTRY glUnmapBuffer(GLenum target);
+
+    // VAO
+#if defined(PLATFORM_ANDROID)
+    typedef void (GL_APIENTRYP PFNGLBINDVERTEXARRAYOESPROC) (GLuint array);
+    typedef void (GL_APIENTRYP PFNGLDELETEVERTEXARRAYSOESPROC) (GLsizei n, const GLuint *arrays);
+    typedef void (GL_APIENTRYP PFNGLGENVERTEXARRAYSOESPROC) (GLsizei n, GLuint *arrays);
+    typedef GLboolean (GL_APIENTRYP PFNGLISVERTEXARRAYOESPROC) (GLuint array);
+
+    extern PFNGLBINDVERTEXARRAYOESPROC glBindVertexArrayOESEXT;
+    extern PFNGLDELETEVERTEXARRAYSOESPROC glDeleteVertexArraysOESEXT;
+    extern PFNGLGENVERTEXARRAYSOESPROC glGenVertexArraysOESEXT;
+
+    #define glDeleteVertexArrays glDeleteVertexArraysOESEXT
+    #define glGenVertexArrays glGenVertexArraysOESEXT
+    #define glBindVertexArray glBindVertexArrayOESEXT
+
+#else
+    GL_APICALL void GL_APIENTRY glBindVertexArray (GLuint array);
+    GL_APICALL void GL_APIENTRY glDeleteVertexArrays (GLsizei n, const GLuint *arrays);
+    GL_APICALL void GL_APIENTRY glGenVertexArrays (GLsizei n, GLuint *arrays);
+#endif
 
 };

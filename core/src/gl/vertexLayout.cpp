@@ -45,7 +45,7 @@ VertexLayout::~VertexLayout() {
 }
 
 size_t VertexLayout::getOffset(std::string _attribName) {
-    
+
     for (auto& attrib : m_attribs) {
         if (attrib.name == _attribName) {
             return attrib.offset;
@@ -56,7 +56,27 @@ size_t VertexLayout::getOffset(std::string _attribName) {
     return 0;
 }
 
-void VertexLayout::enable(ShaderProgram& _program, size_t byteOffset, void* _ptr) {
+void VertexLayout::enable(const std::unordered_map<std::string, GLuint>& _locations, size_t _byteOffset) {
+
+    for (auto& attrib : m_attribs) {
+        auto it = _locations.find(attrib.name);
+
+        if (it == _locations.end()) {
+            continue;
+        }
+
+        GLint location = it->second;;
+
+        if (location != -1) {
+            void* offset = ((unsigned char*) attrib.offset) + _byteOffset;
+            glEnableVertexAttribArray(location);
+            glVertexAttribPointer(location, attrib.size, attrib.type, attrib.normalized, m_stride, offset);
+        }
+    }
+
+}
+
+void VertexLayout::enable(ShaderProgram& _program, size_t _byteOffset, void* _ptr) {
 
     GLuint glProgram = _program.getGlProgram();
 
@@ -72,7 +92,7 @@ void VertexLayout::enable(ShaderProgram& _program, size_t byteOffset, void* _ptr
                 s_enabledAttribs[location] = glProgram;
             }
 
-            void* data = _ptr ? _ptr : ((unsigned char*) attrib.offset) + byteOffset;
+            void* data = _ptr ? _ptr : ((unsigned char*) attrib.offset) + _byteOffset;
             glVertexAttribPointer(location, attrib.size, attrib.type, attrib.normalized, m_stride, data);
         }
     }

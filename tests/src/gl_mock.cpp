@@ -2,6 +2,9 @@
 
 extern "C" {
 
+    GLenum glGetError( void ){ return 0; }
+    const GLubyte* glGetString(GLenum name){ return nullptr; }
+
     void glEnable(GLenum){}
     void glDisable(GLenum){}
     void glDepthFunc(GLenum func){}
@@ -24,7 +27,6 @@ extern "C" {
     void glClear( GLbitfield mask ){}
     void glViewport( GLint x, GLint y, GLsizei width, GLsizei height ){}
     void glLineWidth( GLfloat width ){}
-    GLenum glGetError( void ){ return 0; }
 
     void glDeleteProgram (GLuint program) {}
     void glDeleteShader (GLuint shader) {}
@@ -139,4 +141,14 @@ extern "C" {
     void glVertexAttrib4ubv (GLuint index, const GLubyte *v){}
     void glVertexAttrib4uiv (GLuint index, const GLuint *v){}
     void glVertexAttrib4usv (GLuint index, const GLushort *v){}
+
+    // mapbuffer
+    void* glMapBuffer(GLenum target, GLenum access){ return nullptr; }
+    GLboolean glUnmapBuffer(GLenum target){ return false; }
+
+    // VAO
+    void glBindVertexArray (GLuint array){}
+    void glDeleteVertexArrays (GLsizei n, const GLuint *arrays){}
+    void glGenVertexArrays (GLsizei n, GLuint *arrays){}
+
 }

@@ -17,6 +17,7 @@
 #include "view/view.h"
 #include "data/clientGeoJsonSource.h"
 #include "gl.h"
+#include "gl/extension.h"
 #include <memory>
 #include <cmath>
 #include <bitset>
@@ -424,9 +425,13 @@ void setupGL() {
     // Reconfigure the render states
     RenderState::configure();
 
+    // Set default primitive render color
     Primitives::setColor(0xffffff);
 
-    GLExtensions::load(true);
+    // Load GL extensions
+    GLExtensions::load();
+
+    GLExtensions::printAvailableExtensions();
 
     while (Error::hadGlError("Tangram::setupGL()")) {}
 }
