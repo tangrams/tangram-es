@@ -100,10 +100,10 @@ std::string stringFromFile(const char* _path, PathType _type) {
 
     if (str == nil) {
         logMsg("Failed to read file at path: %s\n", [path UTF8String]);
-        return std::move(std::string());
+        return std::string();
     }
     
-    return std::move(std::string([str UTF8String]));
+    return std::string([str UTF8String]);
 }
 
 unsigned char* bytesFromFile(const char* _path, PathType _type, unsigned int* _size) {
