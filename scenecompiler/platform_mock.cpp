@@ -1,0 +1,106 @@
+#include <stdio.h>
+#include <stdarg.h>
+#include <iostream>
+#include <fstream>
+#include <string>
+
+#include "platform.h"
+#include "gl.h"
+
+#include <libgen.h>
+#include <unistd.h>
+#include <sys/resource.h>
+#include <sys/syscall.h>
+
+static std::string s_resourceRoot;
+
+void logMsg(const char* fmt, ...) {
+    va_list args;
+    va_start(args, fmt);
+    vfprintf(stderr, fmt, args);
+    va_end(args);
+}
+
+void requestRender() {
+}
+
+void setContinuousRendering(bool _isContinuous) {
+}
+
+bool isContinuousRendering() {
+    return true;
+}
+
+std::string resolvePath(const char* _path, PathType _type) {
+
+    switch (_type) {
+    case PathType::absolute:
+    case PathType::internal:
+        return std::string(_path);
+    case PathType::resource:
+        return s_resourceRoot + _path;
+    }
+}
+
+std::string setResourceRoot(const char* _path) {
+
+    std::string dir(_path);
+
+    s_resourceRoot = std::string(dirname(&dir[0])) + '/';
+
+    std::string base(_path);
+
+    return std::string(basename(&base[0]));
+
+}
+
+std::string stringFromFile(const char* _path, PathType _type) {
+
+    unsigned int length = 0;
+    unsigned char* bytes = bytesFromFile(_path, _type, &length);
+
+    std::string out(reinterpret_cast<char*>(bytes), length);
+    free(bytes);
+
+    return out;
+}
+
+unsigned char* bytesFromFile(const char* _path, PathType _type, unsigned int* _size) {
+
+    std::string path = resolvePath(_path, _type);
+
+    std::ifstream resource(path.c_str(), std::ifstream::ate | std::ifstream::binary);
+
+    if(!resource.is_open()) {
+        logMsg("Failed to read file at path: %s\n", path.c_str());
+        *_size = 0;
+        return nullptr;
+    }
+
+    *_size = resource.tellg();
+
+    resource.seekg(std::ifstream::beg);
+
+    char* cdata = (char*) malloc(sizeof(char) * (*_size));
+
+    resource.read(cdata, *_size);
+    resource.close();
+
+    return reinterpret_cast<unsigned char *>(cdata);
+}
+
+// No system fonts implementation (yet!)
+std::string systemFontPath(const std::string& _name, const std::string& _weight, const std::string& _face) {
+    return "";
+}
+
+void setCurrentThreadPriority(int priority){
+}
+
+bool startUrlRequest(const std::string& _url, UrlCallback _callback) {
+    return true;
+
+}
+
+void cancelUrlRequest(const std::string& _url) {
+}

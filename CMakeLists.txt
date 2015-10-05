@@ -84,3 +84,7 @@ if(BENCHMARK)
   message(STATUS "Build with benchmarks")
   add_subdirectory(${PROJECT_SOURCE_DIR}/bench)
 endif()
+
+if(PLATFORM_TARGET STREQUAL "linux")
+  add_subdirectory(scenecompiler)
+endif()
