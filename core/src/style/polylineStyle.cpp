@@ -113,12 +113,12 @@ bool evalStyleParamWidth(StyleParamKey _key, const DrawRule& _rule, const Tile& 
         width = widthParam.value;
 
         if (widthParam.isMeter()) {
-
             width = widthMeterToPixel(zoom, tileSize, width);
             width *= tileRes;
-            dWdZ = width;
+            dWdZ = width * 2;
         } else {
             width *= tileRes;
+            dWdZ = width;
         }
 
         if (_key == StyleParamKey::outline_width) {
