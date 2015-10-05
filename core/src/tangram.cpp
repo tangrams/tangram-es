@@ -61,7 +61,7 @@ void initialize(const char* _scenePath) {
         m_labels = std::unique_ptr<Labels>(new Labels());
 
         LOG("Loading Tangram scene file: %s", sceneRelPath.c_str());
-        auto sceneString = stringFromResource(sceneRelPath.c_str());
+        auto sceneString = stringFromFile(sceneRelPath.c_str(), PathType::resource);
 
         if (SceneLoader::loadScene(sceneString, *m_scene)) {
             m_tileManager->setScene(m_scene);
@@ -80,7 +80,7 @@ void initialize(const char* _scenePath) {
 void loadScene(const char* _scenePath) {
     LOG("Loading scene file: %s", _scenePath);
 
-    auto sceneString = stringFromResource(setResourceRoot(_scenePath).c_str());
+    auto sceneString = stringFromFile(setResourceRoot(_scenePath).c_str(), PathType::resource);
 
     auto scene = std::make_shared<Scene>();
     if (SceneLoader::loadScene(sceneString, *scene)) {

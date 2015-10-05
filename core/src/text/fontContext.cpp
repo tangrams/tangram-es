@@ -52,9 +52,10 @@ bool FontContext::addFont(const std::string& _family, const std::string& _weight
 
     // Assuming bundled ttf file follows this convention
     auto bundledFontPath = "fonts/" + _family + "-" + _weight + _style + ".ttf";
-    if ( !(data = bytesFromResource(bundledFontPath.c_str(), &dataSize))) {
+    if (!(data = bytesFromFile(bundledFontPath.c_str(), PathType::resource, &dataSize)) &&
+        !(data = bytesFromFile(bundledFontPath.c_str(), PathType::internal, &dataSize))) {
         const std::string sysFontPath = systemFontPath(_family, _weight, _style);
-        if ( !(data = bytesFromFileSystem(sysFontPath.c_str(), &dataSize)) ) {
+        if ( !(data = bytesFromFile(sysFontPath.c_str(), PathType::absolute, &dataSize)) ) {
             return false;
         }
     }

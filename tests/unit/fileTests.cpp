@@ -8,7 +8,7 @@
 
 TEST_CASE( "Compare byte size of allocated resource to os file size", "[Core][bytesFromResource]" ) {
     unsigned int size;
-    unsigned char* data = bytesFromResource("shaders/polygon.fs", &size);
+    unsigned char* data = bytesFromFile("shaders/polygon.fs", PathType::internal, &size);
 
     // ask os for size
     struct stat st;

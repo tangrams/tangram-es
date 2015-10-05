@@ -33,8 +33,8 @@ void TextStyle::constructVertexLayout() {
 void TextStyle::constructShaderProgram() {
     std::string frag = m_sdf ? "shaders/sdf.fs" : "shaders/text.fs";
 
-    std::string vertShaderSrcStr = stringFromResource("shaders/point.vs");
-    std::string fragShaderSrcStr = stringFromResource(frag.c_str());
+    std::string vertShaderSrcStr = stringFromFile("shaders/point.vs", PathType::internal);
+    std::string fragShaderSrcStr = stringFromFile(frag.c_str(), PathType::internal);
 
     m_shaderProgram->setSourceStrings(fragShaderSrcStr, vertShaderSrcStr);
 
