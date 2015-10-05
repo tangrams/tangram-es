@@ -179,4 +179,6 @@ void setCurrentThreadPriority(int priority){
     //logMsg("set niceness: %d -> %d\n", p1, p2);
 }
 
+void initGLExtensions() {}
+
 #endif

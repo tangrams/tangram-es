@@ -27,6 +27,7 @@ void LabelMesh::reset() {
 }
 
 void LabelMesh::loadQuadIndices() {
+    return;
     if (s_quadGeneration == s_validGeneration) {
         RenderState::indexBuffer(s_quadIndexBuffer);
 
@@ -53,7 +54,7 @@ void LabelMesh::loadQuadIndices() {
 }
 
 void LabelMesh::compileVertexBuffer() {
-
+    return;
     size_t sumVertices = 0;
     int stride = m_vertexLayout->getStride();
     m_glVertexData = new GLbyte[stride * m_nVertices];
@@ -81,7 +82,7 @@ void LabelMesh::compileVertexBuffer() {
 }
 
 void LabelMesh::draw(ShaderProgram& _shader) {
-
+    return;
     checkValidity();
 
     if (!m_isCompiled) { return; }

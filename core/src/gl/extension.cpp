@@ -11,6 +11,7 @@ namespace Tangram {
 namespace GLExtensions {
 
 bool supportsMapBuffer = false;
+bool supportsVAOs = false;
 static char* s_glExtensions;
 
 bool isAvailable(std::string _extension) {
@@ -21,8 +22,13 @@ void load(bool _log) {
     s_glExtensions = (char*) glGetString(GL_EXTENSIONS);
 
     supportsMapBuffer = isAvailable("mapbuffer");
+    supportsVAOs = isAvailable("vertex_array_object");
 
-    LOG("Driver support map buffer %d", supportsMapBuffer);
+    LOG("Driver supports map buffer %d", supportsMapBuffer);
+    LOG("Driver supports vaos %d", supportsVAOs);
+
+    // find extension symbols if needed
+    initGLExtensions();
 
     if (!_log) {
         return;

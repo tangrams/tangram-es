@@ -6,6 +6,7 @@ namespace Tangram {
 namespace GLExtensions {
 
 extern bool supportsMapBuffer;
+extern bool supportsVAOs;
     
 bool isAvailable(std::string _extension);
 void load(bool _log = false);

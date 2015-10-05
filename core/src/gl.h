@@ -12,11 +12,24 @@
 #endif
 #include <GLES2/gl2.h>
 #include <GLES2/gl2ext.h>
+#include <dlfcn.h> // dlopen, dlsym
+
+extern PFNGLBINDVERTEXARRAYOESPROC glBindVertexArrayOESEXT;
+extern PFNGLDELETEVERTEXARRAYSOESPROC glDeleteVertexArraysOESEXT;
+extern PFNGLGENVERTEXARRAYSOESPROC glGenVertexArraysOESEXT;
+
+#define glDeleteVertexArrays glDeleteVertexArraysOESEXT
+#define glGenVertexArrays glGenVertexArraysOESEXT
+#define glBindVertexArray glBindVertexArrayOESEXT
 #endif
 
 #ifdef PLATFORM_IOS
 #include <OpenGLES/ES2/gl.h>
 #include <OpenGLES/ES2/glext.h>
+
+#define glDeleteVertexArrays glDeleteVertexArraysOES
+#define glGenVertexArrays glGenVertexArraysOES
+#define glBindVertexArray glBindVertexArrayOES
 #endif
 
 #if defined(PLATFORM_ANDROID) || defined(PLATFORM_IOS)
@@ -31,6 +44,9 @@
  */
 #define glClearDepthf glClearDepth
 #define glDepthRangef glDepthRange
+#define glDeleteVertexArrays glDeleteVertexArraysAPPLE
+#define glGenVertexArrays glGenVertexArraysAPPLE
+#define glBindVertexArray glBindVertexArrayAPPLE
 #endif
 
 #ifdef PLATFORM_LINUX

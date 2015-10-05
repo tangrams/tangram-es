@@ -30,6 +30,8 @@ public:
     void enable(ShaderProgram& _program, size_t byteOffset, void* _ptr = nullptr);
 
     GLint getStride() const { return m_stride; };
+
+    const std::vector<VertexAttrib> getAttribs() const { return m_attribs; }
     
     size_t getOffset(std::string _attribName);
 

@@ -175,4 +175,6 @@ void setCurrentThreadPriority(int priority) {
     setpriority(PRIO_PROCESS, tid, priority);
 }
 
+void initGLExtensions() {}
+
 #endif //PLATFORM_OSX

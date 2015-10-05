@@ -91,6 +91,7 @@ protected:
 
     size_t m_nVertices;
     GLuint m_glVertexBuffer;
+    GLuint m_glVAO;
     // Compiled vertices for upload
     GLbyte* m_glVertexData = nullptr;
 
