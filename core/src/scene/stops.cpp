@@ -80,8 +80,6 @@ auto Stops::Width(const YAML::Node& _node, const MapProjection& _projection) -> 
                 lastIsMeter = true;
                 lastMeter = width.value;
 
-                logMsg("Insert stop %d: %f => %f\n", int(key), w, width.value);
-
             } else {
                 stops.frames.emplace_back(key, width.value);
                 lastIsMeter = false;
@@ -95,7 +93,6 @@ auto Stops::Width(const YAML::Node& _node, const MapProjection& _projection) -> 
     // TODO: define MAX_ZOOM == 24
     if (lastIsMeter && lastKey < 24) {
         float w = widthMeterToPixel(24, tileSize, lastMeter);
-        logMsg("Insert last stop  %f\n", w);
         stops.frames.emplace_back(24, w);
     }
 
@@ -113,12 +110,8 @@ auto Stops::evalWidth(float _key) const -> float {
     if (upper->key <= _key) { return upper->value; }
     if (lower->key >= _key) { return lower->value; }
 
-    // double range1 = exp2(upper->key) / exp2(lower->key) - 1.0;
-    // double pos1 = exp2(_key) / exp2(lower->key) - 1.0;
-
     double range = exp2(upper->key - lower->key) - 1.0;
     double pos = exp2(_key - lower->key) - 1.0;
-    //logMsg("p: %f / %f r:%f / %f\n", pos1, pos, range1, range);
 
     double lerp = pos / range;
 

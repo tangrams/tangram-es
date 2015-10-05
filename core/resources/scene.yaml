@@ -161,15 +161,12 @@ layers:
             draw:
                 lines:
                     #color: '#000000'
-                    color: '#ff0000'
-                    #width: [[0, 2], [11, 2.], [12, 3.], [13, 4.], [14, 5.], [15, 6.]]
-                    #width: [[10, 2px], [12, 20m], [11, 20m], [18, 20m]]
-                    #width: [[10, 2px], [12, 10m], [18, 10m]]
-                    width: [[12, 2px], [18, 10m]]
+                    color: '#D16768'
+                    width: [[0, 2.], [11, 2.], [12, 3.], [13, 4.], [14, 5.], [15, 6.]]
                     outline:
-                        color: '#0000ff'
-                        width: [[14, 0.5px], [16, 2px]]
-                        #width: 8px
+                        #color: '#ff0000'
+                        #width: 3.0
+                        width: [[14, 0], [15, .01]]
             link:
                 filter: { is_link: yes }
                 draw:
@@ -190,10 +187,9 @@ layers:
             draw:
                 lines:
                     color: '#bbbbb8'
-                    width: 4m
-                    # width: [[12, 0], [13, 1], [14, 3.], [18, 6.]]
-                    # outline:
-                    #     width: [[14, 1], [18, 2.0]]
+                    width: [[12, 0], [13, 1], [14, 3.], [18, 6.]]
+                    outline:
+                        width: [[14, 1], [18, 2.0]]
         paths:
             filter: { kind: path }
             draw:
@@ -432,3 +428,6 @@ layers:
         data: { source: osm }
         draw:
             sprites: {}
+
+
+
