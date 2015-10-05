@@ -60,9 +60,9 @@ struct SceneLoader {
                                  std::vector<StyleParam>& out);
 
     static StyleUniforms parseStyleUniforms(const Node& uniform, Scene& scene);
-    static Node mixStyle(const std::vector<Node>& mixes);
+    static Node mixStyles(const std::vector<Node>& mixes);
 
-    static void loadStyle(const std::string& styleName, Node styles, Scene& scene,
+    static bool loadStyle(const std::string& styleName, Node styles, Scene& scene,
                           std::unordered_set<std::string>& mixedStyles);
 
     /* Generate style mixins for a given style node
@@ -70,10 +70,8 @@ struct SceneLoader {
      * @styles: YAML::Node for all styles
      * @uniqueStyles: to make sure Mixes returned is a uniqueSet
      */
-
-    static void addMixinNode(const Node mixNode, const Node styles, Scene& scene, std::vector<Node>& mixes,
-                      std::unordered_set<std::string>& uniqueStyles,
-                      std::unordered_set<std::string>& mixedStyles);
+    static std::vector<Node> getMixins(const Node& styleNode, const Node& styles, Scene& scene,
+                                       std::unordered_set<std::string>& mixedStyles);
 
     // Generic methods to merge properties
     static bool propOr(const std::string& propStr, const std::vector<Node>& mixes);

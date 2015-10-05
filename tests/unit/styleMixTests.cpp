@@ -80,36 +80,15 @@ TEST_CASE( "Style Mixing Test: Nested Style Mixin Nodes", "[mixing][core][yaml]"
     // From SceneLoader::loadStyle()
     auto countMixes = [&](const std::string& styleName) {
 
-        std::unordered_set<std::string> uniqueStyles;
-        // Dont allow loops in recursion!
         mixedStyles.insert(styleName);
-        // and also insert styles nodes only once
-        uniqueStyles.insert(styleName);
-
-        std::vector<Node> mixes;
-
         Node styleNode = styles[styleName];
 
-        if (Node mixNode = styleNode["mix"]) {
-            if (mixNode.IsScalar()) {
-                SceneLoader::addMixinNode(mixNode, styles,  scene, mixes, uniqueStyles, mixedStyles);
-
-            } else if (mixNode.IsSequence()) {
-                mixes.reserve(mixes.size() + mixNode.size() + 1);
-
-                for (const auto& mixStyleNode : mixNode) {
-                    SceneLoader::addMixinNode(mixStyleNode, styles, scene, mixes, uniqueStyles, mixedStyles);
-                }
-            } else {
-                //LOGW("Expected scalar or sequence value as 'mix' parameter: %s. ",
-                //     styleName.c_str());
-            }
-        }
+        std::vector<Node> mixes = SceneLoader::getMixins(styleNode, styles, scene, mixedStyles);
 
         // Finally through our self into the mix!
         mixes.push_back(styleNode);
 
-        Node mixedStyleNode = SceneLoader::mixStyle(mixes);
+        Node mixedStyleNode = SceneLoader::mixStyles(mixes);
 
         // Remember that this style has been processed and
         // update styleNode with mixedStyleNode (for future uses)
@@ -350,10 +329,12 @@ TEST_CASE( "Style Mixing Test: Actual Property recursive merge check - part 2", 
         stylePants:
             material: A
             mix: stylePocket
-            base: where's my lighter?
+            # base: where's my lighter?
+            base: polygons
         styleDude:
             mix: stylePants
-            base: got the lighter!
+            # base: got the lighter!
+            base: polygons
         )END");
 
     SceneLoader::loadStyle("styleDude", node, scene, mixedStyles);
@@ -362,7 +343,8 @@ TEST_CASE( "Style Mixing Test: Actual Property recursive merge check - part 2", 
 
     REQUIRE(mixNode["material"].IsScalar());
     REQUIRE(mixNode["material"].as<std::string>() ==  "A");
-    REQUIRE(mixNode["base"].as<std::string>() ==  "got the lighter!");
+    // REQUIRE(mixNode["base"].as<std::string>() ==  "got the lighter!");
+    REQUIRE(mixNode["base"].as<std::string>() ==  "polygons");
     REQUIRE(mixNode["lighting"].as<std::string>() ==  "lighter");
 
     SceneLoader::loadStyle("stylePants", node, scene, mixedStyles);
@@ -371,7 +353,8 @@ TEST_CASE( "Style Mixing Test: Actual Property recursive merge check - part 2", 
 
     REQUIRE(mixNode["material"].IsScalar());
     REQUIRE(mixNode["material"].as<std::string>() ==  "A");
-    REQUIRE(mixNode["base"].as<std::string>() ==  "where's my lighter?");
+    // REQUIRE(mixNode["base"].as<std::string>() ==  "where's my lighter?");
+    REQUIRE(mixNode["base"].as<std::string>() ==  "polygons");
     REQUIRE(mixNode["lighting"].as<std::string>() ==  "lighter");
 
 }
@@ -385,7 +368,8 @@ TEST_CASE( "Style Mixing Test: Dont allow loops in mix inheritance", "[mixing][c
     Node node = YAML::Load(R"END(
         styleA:
             mix: styleB
-            base: A
+            # base: A
+            base: polygons
         styleB:
             mix: styleC
             lighting: B
@@ -400,7 +384,8 @@ TEST_CASE( "Style Mixing Test: Dont allow loops in mix inheritance", "[mixing][c
     REQUIRE(mixNode["base"].IsScalar());
     REQUIRE(mixNode["lighting"].IsScalar());
     REQUIRE(mixNode["material"].IsScalar());
-    REQUIRE(mixNode["base"].as<std::string>() ==  "A");
+    // REQUIRE(mixNode["base"].as<std::string>() ==  "A");
+    REQUIRE(mixNode["base"].as<std::string>() ==  "polygons");
     REQUIRE(mixNode["lighting"].as<std::string>() ==  "B");
     REQUIRE(mixNode["material"].as<std::string>() ==  "C");
 

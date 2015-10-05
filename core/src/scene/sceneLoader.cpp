@@ -246,6 +246,7 @@ glm::vec4 parseMaterialVec(const Node& prop) {
 }
 
 void SceneLoader::loadMaterial(Node matNode, Material& material, Scene& scene) {
+    if (!matNode.IsMap()) { return; }
 
     if (Node n = matNode["emission"]) {
         if (n.IsMap()) {
@@ -509,7 +510,6 @@ Node SceneLoader::propMerge(const std::string& propName, const std::vector<Node>
         return result;
     }
 
-    std::vector<std::string> mapTags;
     std::unordered_map<std::string, std::vector<Node>> mapMixes;
 
     for (const auto& mixNode : mixes) {
@@ -529,11 +529,8 @@ Node SceneLoader::propMerge(const std::string& propName, const std::vector<Node>
             // Reset previous scalar/sequence node
             result.reset();
             for (const auto& tag : propValue) {
-                auto tagName = tag.first.as<std::string>();
                 // Deep Merge for all Map Props
-                if (mapMixes.find(tagName) == mapMixes.end()) {
-                    mapTags.push_back(tagName);
-                }
+                const std::string& tagName = tag.first.Scalar();
                 mapMixes[tagName].push_back(propValue);
             }
             break;
@@ -545,13 +542,12 @@ Node SceneLoader::propMerge(const std::string& propName, const std::vector<Node>
 
     if (result.IsScalar() || result.IsSequence()) {
         mapMixes.clear();
-        mapTags.clear();
     }
 
     // Recursively merge map nodes from this propStr node
-    for (auto& mapTag : mapTags) {
-        if (Node n = propMerge(mapTag, mapMixes[mapTag])) {
-            result[mapTag] = n;
+    for (auto& it : mapMixes) {
+        if (Node n = propMerge(it.first, it.second)) {
+            result[it.first] = n;
         }
     }
 
@@ -640,7 +636,7 @@ Node SceneLoader::shaderExtMerge(const std::vector<Node>& mixes) {
     return result;
 }
 
-Node SceneLoader::mixStyle(const std::vector<Node>& mixes) {
+Node SceneLoader::mixStyles(const std::vector<Node>& mixes) {
 
     Node result;
 
@@ -672,42 +668,57 @@ Node SceneLoader::mixStyle(const std::vector<Node>& mixes) {
     return result;
 }
 
-void SceneLoader::addMixinNode(const Node mixNode, const Node styles, Scene& scene,
-                               std::vector<Node>& mixes,
-                               std::unordered_set<std::string>& uniqueStyles,
-                               std::unordered_set<std::string>& mixedStyles) {
+std::vector<Node> SceneLoader::getMixins(const Node& styleNode, const Node& styles, Scene& scene,
+                                         std::unordered_set<std::string>& mixedStyles) {
 
-    auto& name = mixNode.as<std::string>();
+    Node mixNode = styleNode["mix"];
+    std::vector<Node> mixes;
 
-    if (!styles[name]) {
-        LOGW("Referenced 'mix' style not defined: '%s'", name.c_str());
-        return ;
+    if (!mixNode) {
+        return {};
     }
-
-    // Check if this style has already been processed
-    if (mixedStyles.find(name) != mixedStyles.end()) {
-        // Check if this style has been added to the current style
-        if (uniqueStyles.find(name) == uniqueStyles.end()) {
-
-            // TODO also insert all the mixins of this mixNode?
-            uniqueStyles.insert(name);
-
-            // Use the processed style
-            mixes.push_back(styles[name]);
-        }
-    } else {
-
-        loadStyle(name, styles, scene, mixedStyles);
-        mixes.push_back(styles[name]);
-
-        uniqueStyles.insert(name);
-    }
-}
-
-void SceneLoader::loadStyle(const std::string& styleName, Node styles, Scene& scene,
-                            std::unordered_set<std::string>& mixedStyles) {
 
     std::unordered_set<std::string> uniqueStyles;
+    Node mixNodes;
+
+    if (mixNode.IsScalar()) {
+        // NB: Would be nice if scalar node had a single item iterator.
+        mixes.reserve(2);
+        mixNodes.push_back(mixNode);
+    } else if (mixNode.IsSequence()) {
+        mixes.reserve(mixNode.size() + 1);
+        mixNodes = mixNode;
+    } else {
+        // LOGW("Expected scalar or sequence value as 'mix' parameter: %s.",
+        //      styleName.c_str());
+        return {};
+    }
+
+    for (const auto& mixNode : mixNodes) {
+        auto& mixName = mixNode.Scalar();
+
+        if (mixedStyles.find(mixName) == mixedStyles.end()) {
+            // Recursively process the mix style first
+            if (!loadStyle(mixName, styles, scene, mixedStyles)) {
+                continue;
+            }
+
+        } else if (uniqueStyles.find(mixName) != uniqueStyles.end()) {
+            // This mix has already been added to the current style
+            continue;
+        }
+        uniqueStyles.insert(mixName);
+
+        if (Node mixStyle = styles[mixName]) {
+            mixes.push_back(mixStyle);
+        }
+    }
+
+    return mixes;
+}
+
+bool SceneLoader::loadStyle(const std::string& styleName, Node styles, Scene& scene,
+                            std::unordered_set<std::string>& mixedStyles) {
 
     static const auto builtIn = {
         "polygons", "lines", "points", "text", "debug", "debugtext"
@@ -715,57 +726,34 @@ void SceneLoader::loadStyle(const std::string& styleName, Node styles, Scene& sc
 
     if (std::find(builtIn.begin(), builtIn.end(), styleName) != builtIn.end()) {
         LOGW("Cannot use built-in style name '%s' for new style", styleName.c_str());
-        return;
+        return false;
     }
 
     Node styleNode = styles[styleName];
     if (!styleNode) {
         LOGW("Style name '%s' is not defined", styleName.c_str());
-        return;
+        return false;
     }
 
     if (mixedStyles.find(styleName) != mixedStyles.end()) {
-        // Already mixed
-        return;
+        return false;  // This style is already added
     }
 
-    // Dont allow loops in recursion!
+    // Add here to not allow loops in addMixinNode recursion!
     mixedStyles.insert(styleName);
-    // and also insert styles nodes only once
-    uniqueStyles.insert(styleName);
 
-    std::vector<Node> mixes;
-
-    if (Node mixNode = styleNode["mix"]) {
-        if (mixNode.IsScalar()) {
-            addMixinNode(mixNode, styles,  scene, mixes, uniqueStyles, mixedStyles);
-
-        } else if (mixNode.IsSequence()) {
-            mixes.reserve(mixes.size() + mixNode.size() + 1);
-
-            for (const auto& mixStyleNode : mixNode) {
-                addMixinNode(mixStyleNode, styles, scene, mixes, uniqueStyles, mixedStyles);
-            }
-        } else {
-            LOGW("Expected scalar or sequence value as 'mix' parameter: %s. ",
-                 styleName.c_str());
-        }
-    }
+    std::vector<Node> mixes = getMixins(styleNode, styles, scene, mixedStyles);
 
     // Finally through our self into the mix!
     mixes.push_back(styleNode);
 
-    Node mixedStyleNode = mixStyle(mixes);
+    // Update styleNode with mixed style (also for future uses)
+    styleNode = mixStyles(mixes);
 
-    // Remember that this style has been processed and
-    // update styleNode with mixedStyleNode (for future uses)
-    styles[styleName] = mixedStyleNode;
-
-    Node baseNode = mixedStyleNode["base"];
+    Node baseNode = styleNode["base"];
     if (!baseNode) {
         // No base style, this is an abstract styleNode
-        return;
-
+        return true;
     }
 
     // Construct style instance using the merged properties
@@ -781,12 +769,14 @@ void SceneLoader::loadStyle(const std::string& styleName, Node styles, Scene& sc
         style = std::make_unique<PointStyle>(styleName);
     } else {
         LOGW("Base style '%s' not recognized, cannot instantiate.", baseStyle.c_str());
-        return;
+        return false;
     }
 
-    loadStyleProps(*style.get(), mixedStyleNode, scene);
+    loadStyleProps(*style.get(), styleNode, scene);
 
     scene.styles().push_back(std::move(style));
+
+    return true;
 }
 
 void SceneLoader::loadSource(const std::pair<Node, Node>& src, Scene& _scene) {
