@@ -213,7 +213,7 @@ void PolylineStyle::buildLine(const Line& _line, const DrawRule& _rule, const Pr
             }
             for (size_t i = 0; i < offset; i++) {
                 const auto& v = vertices[i];
-                glm::vec4 extrudeOutline = { v.extrude.x, v.extrude.y, widthOutline, dWdZ };
+                glm::vec4 extrudeOutline = { v.extrude.x, v.extrude.y, widthOutline, dWdZOutline };
                 vertices.push_back({ v.pos, v.texcoord, extrudeOutline, abgrOutline, params.order - 1.f });
             }
         }
