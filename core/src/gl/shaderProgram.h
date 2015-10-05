@@ -57,9 +57,10 @@ public:
 
     /*
      * Binds the program in openGL if it is not already bound; If the shader sources
-     * have been modified since the last time build() was called, also calls build()
+     * have been modified since the last time build() was called, also calls build().
+     * Returns true if shader can be used (i.e. is valid)
      */
-    void use();
+    bool use();
 
     /*
      * Ensures the program is bound and then sets the named uniform to the given value(s)

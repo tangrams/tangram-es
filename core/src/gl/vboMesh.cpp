@@ -146,6 +146,11 @@ void VboMesh::draw(ShaderProgram& _shader) {
     if (!m_isCompiled) { return; }
     if (m_nVertices == 0) { return; }
 
+    // Enable shader program
+    if (!_shader.use()) {
+        return;
+    }
+
     // Ensure that geometry is buffered into GPU
     if (!m_isUploaded) {
         upload();
@@ -159,9 +164,6 @@ void VboMesh::draw(ShaderProgram& _shader) {
     if (m_nIndices > 0) {
         RenderState::indexBuffer(m_glIndexBuffer);
     }
-
-    // Enable shader program
-    _shader.use();
 
     size_t indiceOffset = 0;
     size_t vertexOffset = 0;

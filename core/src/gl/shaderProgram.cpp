@@ -99,7 +99,7 @@ GLint ShaderProgram::getUniformLocation(const std::string& _uniformName) {
 
 }
 
-void ShaderProgram::use() {
+bool ShaderProgram::use() {
 
     checkValidity();
 
@@ -109,7 +109,9 @@ void ShaderProgram::use() {
 
     if (m_glProgram != 0) {
         RenderState::shaderProgram(m_glProgram);
+        return true;
     }
+    return false;
 }
 
 bool ShaderProgram::build() {
