@@ -42,7 +42,6 @@ public:
      */
     template<class A>
     void updateAttribute(Range _vertexRange, const A& _newAttributeValue, size_t _attribOffset = 0) {
-        return;
         if (m_glVertexData == nullptr) {
             assert(false);
             return;

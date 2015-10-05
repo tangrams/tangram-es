@@ -179,10 +179,10 @@ void VboMesh::draw(ShaderProgram& _shader) {
             glGenVertexArrays(1, &m_glVAO);
             glBindVertexArray(m_glVAO);
 
-            RenderState::vertexBuffer.init(m_glVertexBuffer);
+            RenderState::vertexBuffer.init(m_glVertexBuffer, true);
 
             if (m_nIndices > 0) {
-                RenderState::indexBuffer.init(m_glIndexBuffer);
+                RenderState::indexBuffer.init(m_glIndexBuffer, true);
             }
 
             for (auto& attrib : m_vertexLayout->getAttribs()) {
