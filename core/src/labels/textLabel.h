@@ -13,14 +13,12 @@ public:
     
     const std::string& getText() const { return m_text; }
 
+    void updateBBoxes() override;
+
 private:
 
     std::string m_text;
 
-
-protected:
-
-    void updateBBoxes() override;
 };
 
 }

@@ -4,8 +4,10 @@
 #include "gl/primitives.h"
 #include "view/view.h"
 #include "style/style.h"
+#include "glm/glm.hpp"
 #include "glm/gtc/matrix_transform.hpp"
 #include "glm/gtx/rotate_vector.hpp"
+#include "glm/gtx/norm.hpp"
 
 namespace Tangram {
 
@@ -112,8 +114,7 @@ const std::vector<std::shared_ptr<Properties>>& Labels::getFeaturesAtPoint(const
                                                                            const std::vector<std::shared_ptr<Tile>>& _tiles,
                                                                            float _x, float _y, bool _visibleOnly) {
     // FIXME dpi dependent threshold
-    const float thumbSize = 20;
-    const float threshold = 100;
+    const float thumbSize = 50;
 
     m_touchItems.clear();
 
@@ -121,7 +122,9 @@ const std::vector<std::shared_ptr<Properties>>& Labels::getFeaturesAtPoint(const
     glm::vec2 touchPoint(_x, _y);
 
     OBB obb(_x - thumbSize/2, _y - thumbSize/2, 0, thumbSize, thumbSize);
-    m_touchPoint = obb;
+
+    std::shared_ptr<Properties> selectedItem;
+    float minDistance = std::numeric_limits<float>::max();
 
     for (const auto& tile : _tiles) {
 
@@ -139,26 +142,25 @@ const std::vector<std::shared_ptr<Properties>>& Labels::getFeaturesAtPoint(const
                 auto& options = label->getOptions();
                 if (!options.interactive) { continue; }
 
-                auto& transform = label->getTransform();
-                glm::vec4 v1 = worldToClipSpace(mvp, glm::vec4(transform.modelPosition1, 0.0, 1.0));
-                glm::vec4 v2 = worldToClipSpace(mvp, glm::vec4(transform.modelPosition2, 0.0, 1.0));
+                if (!_visibleOnly) {
+                    label->updateScreenTransform(mvp, screenSize, false);
+                    label->updateBBoxes();
+                }
 
-                // check whether the label is behind the camera using the perspective division factor
-                if (v1.w <= 0 || v2.w <= 0) { continue; }
+                if (isect2d::intersect(label->getOBB(), obb)) {
+                    float distance = glm::length2(label->getTransform().state.screenPos - touchPoint);
 
-                // project to screen space
-                glm::vec2 p1 = clipToScreenSpace(v1, screenSize);
-                glm::vec2 p2 = clipToScreenSpace(v2, screenSize);
-
-                float distance = sqrt(sqSegmentDistance(touchPoint, p1, p2));
-
-                if (distance > threshold) { continue; }
-
-                if (!_visibleOnly || (label->visibleState() && isect2d::intersect(label->getOBB(), obb))) {
-                    m_touchItems.push_back(options.properties);
+                    if (distance < minDistance) {
+                        minDistance = distance;
+                        selectedItem = options.properties;
+                    }
                 }
             }
         }
+    }
+
+    if (selectedItem) {
+        m_touchItems.push_back(selectedItem);
     }
 
     return m_touchItems;

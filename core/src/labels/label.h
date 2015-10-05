@@ -97,7 +97,10 @@ public:
     void pushTransform();
 
     /* Update the screen position of the label */
-    bool updateScreenTransform(const glm::mat4& _mvp, const glm::vec2& _screenSize);
+    bool updateScreenTransform(const glm::mat4& _mvp, const glm::vec2& _screenSize,
+                               bool _testVisibility = true);
+
+    virtual void updateBBoxes() = 0;
 
     /* Sets the occlusion */
     void setOcclusion(bool _occlusion);
@@ -145,8 +148,6 @@ private:
     Options m_options;
 
 protected:
-
-    virtual void updateBBoxes() = 0;
 
     // the label oriented bounding box
     OBB m_obb;

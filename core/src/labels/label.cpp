@@ -24,7 +24,7 @@ Label::Label(Label::Transform _transform, glm::vec2 _size, Type _type, LabelMesh
 
 Label::~Label() {}
 
-bool Label::updateScreenTransform(const glm::mat4& _mvp, const glm::vec2& _screenSize) {
+bool Label::updateScreenTransform(const glm::mat4& _mvp, const glm::vec2& _screenSize, bool _testVisibility) {
 
     glm::vec2 screenPosition;
     float rot = 0;
@@ -35,7 +35,7 @@ bool Label::updateScreenTransform(const glm::mat4& _mvp, const glm::vec2& _scree
         {
             glm::vec4 v1 = worldToClipSpace(_mvp, glm::vec4(m_transform.modelPosition1, 0.0, 1.0));
 
-            if (v1.w <= 0) {
+            if (_testVisibility && (v1.w <= 0)) {
                 return false;
             }
 
@@ -53,7 +53,7 @@ bool Label::updateScreenTransform(const glm::mat4& _mvp, const glm::vec2& _scree
             glm::vec4 v2 = worldToClipSpace(_mvp, glm::vec4(m_transform.modelPosition2, 0.0, 1.0));
 
             // check whether the label is behind the camera using the perspective division factor
-            if (v1.w <= 0 || v2.w <= 0) {
+            if (_testVisibility && (v1.w <= 0 || v2.w <= 0)) {
                 return false;
             }
 
@@ -76,7 +76,7 @@ bool Label::updateScreenTransform(const glm::mat4& _mvp, const glm::vec2& _scree
 
             float exceedHeuristic = 30; // default heuristic : 30%
 
-            if (m_dim.x > length) {
+            if (_testVisibility && (m_dim.x > length)) {
                 float exceed = (1 - (length / m_dim.x)) * 100;
                 if (exceed > exceedHeuristic) {
                     return false;

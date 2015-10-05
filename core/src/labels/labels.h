@@ -59,8 +59,6 @@ private:
     isect2d::ISect2D<glm::vec2> m_isect2d;
 
     std::vector<std::shared_ptr<Properties>> m_touchItems;
-
-    OBB m_touchPoint{0,0,0,0,0};
 };
 
 }
