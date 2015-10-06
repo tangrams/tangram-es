@@ -16,7 +16,7 @@ add_subdirectory(${PROJECT_SOURCE_DIR}/core)
 include_directories(${CORE_INCLUDE_DIRS})
 include_directories(${CORE_LIBRARIES_INCLUDE_DIRS})
 
-set(LINUX_PLATFORM_SRC
+add_library(linux_platform
   ${PROJECT_SOURCE_DIR}/linux/src/platform_linux.cpp
   ${PROJECT_SOURCE_DIR}/linux/src/urlWorker.cpp
 )
@@ -32,9 +32,10 @@ foreach(_src_file_path ${TEST_SOURCES})
 
     set(EXECUTABLE_NAME "${test_name}.out")
 
-    add_executable(${EXECUTABLE_NAME} ${_src_file_path} ${LINUX_PLATFORM_SRC})
+    add_executable(${EXECUTABLE_NAME} ${_src_file_path})
 
-    target_link_libraries(${EXECUTABLE_NAME} core -lcurl glfw ${GLFW_LIBRARIES})
+    target_link_libraries(${EXECUTABLE_NAME}
+      core linux_platform -lcurl glfw ${GLFW_LIBRARIES})
 
     set(LAST_TARGET ${EXECUTABLE_NAME})
 
