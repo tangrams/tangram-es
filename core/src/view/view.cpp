@@ -72,8 +72,11 @@ void View::setSize(int _width, int _height) {
 
 void View::setPosition(double _x, double _y) {
 
-    m_pos.x = _x;
-    m_pos.y = _y;
+    auto mapBounds = m_projection->MapBounds();
+
+    m_pos.x = glm::clamp(_x, mapBounds.min.x, mapBounds.max.x);
+    m_pos.y = glm::clamp(_y, mapBounds.min.y, mapBounds.max.y);
+
     m_dirtyTiles = true;
 
 }
@@ -81,7 +84,7 @@ void View::setPosition(double _x, double _y) {
 void View::setZoom(float _z) {
 
     // ensure zoom value is allowed
-    m_zoom = glm::clamp(_z, 0.0f, s_maxZoom);
+    m_zoom = glm::clamp(_z, s_minZoom, s_maxZoom);
     m_dirtyMatrices = true;
     m_dirtyTiles = true;
 
@@ -130,7 +133,7 @@ void View::pitch(float _dpitch) {
 void View::update() {
 
     if (m_dirtyMatrices) {
-        
+
         updateMatrices(); // Resets dirty flag
         m_changed = true;
 
