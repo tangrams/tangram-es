@@ -33,7 +33,7 @@ void DebugTextStyle::onBeginBuildTile(Tangram::Tile &_tile) const {
 
         auto& buffer = static_cast<TextBuffer&>(*mesh);
 
-        buffer.addLabel(params, { glm::vec2(0) }, Label::Type::debug, *m_fontContext);
+        buffer.addLabel(params, { glm::vec2(.5f) }, Label::Type::debug, *m_fontContext);
 
         onEndBuildTile(_tile);
 
