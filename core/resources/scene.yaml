@@ -127,15 +127,15 @@ layers:
             not: { kind: [rail] }
         draw:
             lines:
-                color: '#ff00ff'
-                width: 10.
-                order: 4
+                color: white
+                width: 12.
+                order: 5
                 outline:
-                    color: '#fff'
-                    width: 0.5
+                    color: [[16, '#999'], [18, '#aaa']]
+                    width: [[15, 0], [16, 2]]
 
         rounded:
-            filter: { $zoom: { min: 17 } }
+            filter: { $zoom: { min: 18 } }
             draw:
                 lines:
                     cap: round
@@ -160,45 +160,40 @@ layers:
             filter: { kind: highway }
             draw:
                 lines:
-                    #color: '#000000'
                     color: '#D16768'
-                    width: [[0, 2.], [11, 2.], [12, 3.], [13, 4.], [14, 5.], [15, 6.]]
+                    width: [[14, 2px], [15, 12]]
                     outline:
-                        #color: '#ff0000'
-                        #width: 3.0
-                        width: [[14, 0], [15, .01]]
+                        width: [[14, 0], [15, 2]]
             link:
                 filter: { is_link: yes }
                 draw:
                     lines:
                         color: '#aaa'
-                        width: [[13, 0], [14, 2.]]
+                        width: [[13, 0], [14, 12]]
         major_road:
             filter: { kind: major_road, $zoom: { min: 10 } }
             draw:
                 lines:
-                    #color: '#bbbbb8'
                     color: '#aaaaa4'
-                    width: [[0, 2.], [11, 2.], [12, 3.], [13, 4.], [14, 5.], [15, 6.]]
+                    width: [[10, 0], [13, 2px], [14, 2px], [16, 12]]
                     outline:
-                        width: [[13, 1], [18, 3.0]]
+                        width: [[16, 0], [17, 1]]
         minor_road:
             filter: { kind: minor_road }
             draw:
                 lines:
                     color: '#bbbbb8'
-                    width: [[12, 0], [13, 1], [14, 3.], [18, 6.]]
+                    width: [[13, 0], [14, 1px], [15, 8]]
                     outline:
-                        width: [[14, 1], [18, 2.0]]
+                        width: [[17, 0], [18, 1]]
         paths:
             filter: { kind: path }
             draw:
                 lines:
                     color: '#fff'
-                    width: [[15, 1], [18, 3.]]
+                    width: [[15, 0], [17, 2px]]
                     outline:
-                        color: '#888884'
-                        width: [[15, 1.0], [18, 2.0]]
+                        width: 0
         airports:
             filter: { aeroway: true }
             draw:
