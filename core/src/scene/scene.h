@@ -44,6 +44,7 @@ public:
     const auto& styles() const { return m_styles; };
     const auto& lights() const { return m_lights; };
     const auto& functions() const { return m_jsFunctions; };
+    const auto& mapProjection() const { return m_mapProjection; };
 
     const Style* findStyle(const std::string& _name) const;
     const Light* findLight(const std::string& _name) const;
@@ -54,6 +55,8 @@ public:
     float startZoom = 0;
 
 private:
+
+    std::unique_ptr<MapProjection> m_mapProjection;
 
     std::vector<DataLayer> m_layers;
     std::vector<std::shared_ptr<DataSource>> m_dataSources;

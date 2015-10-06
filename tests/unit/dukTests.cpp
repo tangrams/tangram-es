@@ -160,8 +160,8 @@ TEST_CASE( "Test evalStyleFn - StyleParamKey::width", "[Duktape][evalStyleFn]") 
     StyleParam::Value value;
 
     REQUIRE(ctx.evalStyleFn("fn", StyleParamKey::width, value) == true);
-    REQUIRE(value.is<float>() == true);
-    REQUIRE(value.get<float>() == 4.6f);
+    REQUIRE(value.is<StyleParam::Width>() == true);
+    REQUIRE(value.get<StyleParam::Width>().value == 4.6f);
 }
 
 TEST_CASE( "Test evalStyleFn - StyleParamKey::extrude", "[Duktape][evalStyleFn]") {
@@ -269,8 +269,8 @@ TEST_CASE("Test evalStyle - Init StyleParam function from yaml", "[Duktape][eval
         } else if (style.key == StyleParamKey::width) {
             StyleParam::Value value;
             REQUIRE(ctx.evalStyle(style.function, style.key, value) == true);
-            REQUIRE(value.is<float>() == true);
-            REQUIRE(value.get<float>() == 2);
+            REQUIRE(value.is<StyleParam::Width>() == true);
+            REQUIRE(value.get<StyleParam::Width>().value == 2);
 
         } else if (style.key == StyleParamKey::cap) {
             StyleParam::Value value;

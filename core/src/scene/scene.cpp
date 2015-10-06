@@ -9,7 +9,12 @@ namespace Tangram {
 
 static std::atomic<int32_t> s_serial;
 
-Scene::Scene() : id(s_serial++) {}
+Scene::Scene() : id(s_serial++) {
+    // For now we only have one projection..
+    // TODO how to share projection with view?
+    m_mapProjection.reset(new MercatorProjection());
+}
+
 Scene::~Scene() {}
 
 const Style* Scene::findStyle(const std::string &_name) const {

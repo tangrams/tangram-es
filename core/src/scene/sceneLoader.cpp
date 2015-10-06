@@ -1154,9 +1154,17 @@ void SceneLoader::parseStyleParams(Node params, Scene& scene, const std::string&
                 auto styleKey = StyleParam::getKey(key);
                 if (styleKey != StyleParamKey::none) {
 
-                    scene.stops().push_back(Stops(value, StyleParam::isColor(styleKey)));
+                    if (StyleParam::isColor(styleKey)) {
+                        scene.stops().push_back(Stops::Color(value));
+                        out.push_back(StyleParam{ styleKey, &(scene.stops().back()) });
 
-                    out.push_back(StyleParam{ styleKey, &(scene.stops().back()) });
+                    } else if (StyleParam::isWidth(styleKey)) {
+                        scene.stops().push_back(Stops::Width(value, *scene.mapProjection()));
+                        out.push_back(StyleParam{ styleKey, &(scene.stops().back()) });
+
+                    } else {
+                        // TODO other stops
+                    }
                 } else {
                     LOGW("Unknown style parameter %s", key.c_str());
                 }
