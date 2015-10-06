@@ -56,7 +56,7 @@ bool SceneLoader::loadScene(Node& config, Scene& _scene) {
     _scene.styles().emplace_back(new TextStyle("text", _scene.fontContext(), true, false));
     _scene.styles().emplace_back(new DebugTextStyle(_scene.fontContext(), 0, "debugtext", 30.0f, true, false));
     _scene.styles().emplace_back(new DebugStyle("debug"));
-    _scene.styles().emplace_back(new PointStyle("point"));
+    _scene.styles().emplace_back(new PointStyle("points"));
 
     if (Node sources = config["sources"]) {
         for (const auto& source : sources) {
