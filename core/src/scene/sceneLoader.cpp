@@ -132,7 +132,12 @@ bool SceneLoader::loadScene(Node& config, Scene& _scene) {
     // they are rendered 'under' styles that require blending
     std::sort(_scene.styles().begin(), _scene.styles().end(),
               [](std::unique_ptr<Style>& a, std::unique_ptr<Style>& b) {
-                  return a->blendMode() == Blending::none;
+                  if (a->blendMode() != b->blendMode()) {
+                      return a->blendMode() == Blending::none;
+                  }
+                  // Just for consistent ordering
+                  // anytime the scene is loaded
+                  return a->getName() < b->getName();
               });
 
     return true;
