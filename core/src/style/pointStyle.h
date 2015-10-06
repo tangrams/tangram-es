@@ -26,8 +26,8 @@ protected:
         uint32_t color = 0xffffffff;
         uint32_t priority = std::numeric_limits<uint32_t>::max();
         bool interactive;
+        bool collide = true;
         bool valid = true;
-        bool persistent = false;
     };
 
     virtual void constructVertexLayout() override;

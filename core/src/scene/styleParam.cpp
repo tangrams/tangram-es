@@ -42,7 +42,7 @@ const std::map<std::string, StyleParamKey> s_StyleParamMap = {
     {"visible", StyleParamKey::visible},
     {"width", StyleParamKey::width},
     {"centroid", StyleParamKey::centroid},
-    {"persistent", StyleParamKey::persistent},
+    {"collide", StyleParamKey::collide},
 };
 
 static const char* keyName(StyleParamKey key) {
@@ -142,7 +142,7 @@ StyleParam::Value StyleParam::parseString(StyleParamKey key, const std::string& 
     case StyleParamKey::centroid:
     case StyleParamKey::interactive:
     case StyleParamKey::visible:
-    case StyleParamKey::persistent:
+    case StyleParamKey::collide:
         if (_value == "true") { return true; }
         if (_value == "false") { return false; }
         LOGW("Bool value required for capitalized/visible. Using Default.");
@@ -233,7 +233,7 @@ std::string StyleParam::toString() const {
     case StyleParamKey::interactive:
     case StyleParamKey::visible:
     case StyleParamKey::centroid:
-    case StyleParamKey::persistent:
+    case StyleParamKey::collide:
         if (!value.is<bool>()) break;
         return k + std::to_string(value.get<bool>());
     case StyleParamKey::width:

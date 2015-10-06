@@ -65,7 +65,7 @@ layers:
                 order: 50
                 width: .03
             icons:
-                persistent: true
+                collide: false
                 sprite: sunburst
 
     earth:

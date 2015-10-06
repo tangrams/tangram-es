@@ -96,15 +96,16 @@ bool Label::updateScreenTransform(const glm::mat4& _mvp, const glm::vec2& _scree
 }
 
 bool Label::update(const glm::mat4& _mvp, const glm::vec2& _screenSize, float _dt) {
+    bool animate = false;
 
     // allow persistent labels
-    if (m_options.persistent) {
+    if (!m_options.collide) {
         enterState(State::visible, 1.0);
         updateScreenTransform(_mvp, _screenSize);
-        return false;
+        return animate;
     }
 
-    bool animate =  updateState(_mvp, _screenSize, _dt);
+    animate = updateState(_mvp, _screenSize, _dt);
     m_occlusionSolved = false;
 
     return animate;
@@ -132,7 +133,7 @@ void Label::setOcclusion(bool _occlusion) {
 }
 
 bool Label::canOcclude() {
-    if (m_options.persistent) {
+    if (!m_options.collide) {
         return false;
     }
 
@@ -252,7 +253,8 @@ bool Label::updateState(const glm::mat4& _mvp, const glm::vec2& _screenSize, flo
     switch (m_currentState) {
         case State::visible:
             if (occludedLastFrame) {
-                m_fade = FadeEffect(false, FadeEffect::Interpolation::sine, 0.2);
+                Transition t = m_options.hideTransition;
+                m_fade = FadeEffect(false, t.ease, t.time);
                 enterState(State::fading_out, 1.0);
             }
             break;
@@ -284,14 +286,16 @@ bool Label::updateState(const glm::mat4& _mvp, const glm::vec2& _screenSize, flo
                 if (occludedLastFrame) {
                     enterState(State::dead, 0.0); // dead
                 }  else {
-                    m_fade = FadeEffect(true, FadeEffect::Interpolation::pow, 0.2);
+                    Transition t = m_options.showTransition;
+                    m_fade = FadeEffect(true, t.ease, t.time);
                     enterState(State::fading_in, 0.0);
                 }
             }
             break;
         case State::sleep:
             if (!occludedLastFrame) {
-                m_fade = FadeEffect(true, FadeEffect::Interpolation::pow, 0.2);
+                Transition t = m_options.showTransition;
+                m_fade = FadeEffect(true, t.ease, t.time);
                 enterState(State::fading_in, 0.0);
             }
             break;

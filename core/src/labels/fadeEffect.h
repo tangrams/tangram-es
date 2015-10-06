@@ -41,7 +41,7 @@ public:
 private:
 
     Interpolation m_interpolation = Interpolation::linear;
-    float m_duration = 0.5;
+    float m_duration;
     float m_step = 0.0;
     bool m_in;
 };
