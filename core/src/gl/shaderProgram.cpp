@@ -131,12 +131,17 @@ bool ShaderProgram::build() {
 
     if (m_invalidShaderSource) { return false; }
 
-    // Inject source blocks
+    std::string vertSrc, fragSrc;
 
-    Light::assembleLights(m_sourceBlocks);
-
-    auto vertSrc = applySourceBlocks(m_vertexShaderSource, false);
-    auto fragSrc = applySourceBlocks(m_fragmentShaderSource, true);
+    if (!m_sourceBlocks["vertex_shader"].empty()){
+        vertSrc = m_sourceBlocks["vertex_shader"][0];
+        fragSrc = m_sourceBlocks["fragment_shader"][0];
+    } else {
+        // Inject source blocks
+        Light::assembleLights(m_sourceBlocks);
+        vertSrc = applySourceBlocks(m_vertexShaderSource, false);
+        fragSrc = applySourceBlocks(m_fragmentShaderSource, true);
+    }
 
     // Try to compile vertex and fragment shaders, releasing resources and quiting on failure
 
