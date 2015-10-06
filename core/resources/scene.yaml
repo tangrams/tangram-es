@@ -65,7 +65,7 @@ layers:
             lines:
               color: function () { return feature.color || 'black'; }
               order: 50
-              width: .03
+              width: 2px
         poly:
             filter: { type: poly }
             draw:
