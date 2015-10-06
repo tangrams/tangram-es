@@ -11,7 +11,7 @@
 
 static ViewController* viewController;
 NSURLSession* defaultSession;
-NSString* s_resourceRoot = NULL;
+static NSMutableString* s_resourceRoot = NULL;
 
 void init(ViewController* _controller) {
     
@@ -67,7 +67,7 @@ std::string setResourceRoot(const char* _path) {
         path = [resources stringByAppendingPathComponent:path];
     }
 
-    s_resourceRoot = [path stringByDeletingLastPathComponent];
+    s_resourceRoot = [ [path stringByDeletingLastPathComponent] mutableCopy];
 
     return std::string([[path lastPathComponent] UTF8String]);
 
