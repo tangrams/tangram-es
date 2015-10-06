@@ -71,7 +71,6 @@ public class MainActivity extends Activity {
         final String colors[] = {"blue", "red", "green" };
         final LngLat zeroCoord = new LngLat();
         final Coordinates line = new Coordinates();
-        tags.set("type", "line");
 
         mapController.setTapGestureListener(new View.OnGenericMotionListener() {
             @Override
@@ -79,14 +78,16 @@ public class MainActivity extends Activity {
                 LngLat tapPoint = mapController.coordinatesAtScreenPosition(event.getX(), event.getY());
 
                 if (!lastTappedPoint.equals(zeroCoord)) {
+                    tags.set("type", "line");
                     tags.set("color", colors[(int)(Math.random() * 2.0 + 0.5)] );
 
                     line.clear();
                     line.add(tapPoint);
+                    tags.set("type", "point");
                     line.add(lastTappedPoint);
 
                     touchMarkers.addLine(tags, line);
-
+                    touchMarkers.addPoint(tags, lastTappedPoint);
                     touchMarkers.update();
                 }
                 lastTappedPoint.set(tapPoint);

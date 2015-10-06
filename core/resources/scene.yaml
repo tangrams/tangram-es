@@ -72,8 +72,13 @@ layers:
               polygons:
                 color: magenta
                 order: 40
-            # sprites:
-            #     sprite: sunburst
+        point:
+            filter: { type: point }
+            draw:
+              points:
+                size: 13px
+                color: "#f00"
+                centroid: false
 
     earth:
         data: { source: osm }
