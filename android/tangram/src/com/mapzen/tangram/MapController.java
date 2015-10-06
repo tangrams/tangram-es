@@ -207,6 +207,14 @@ public class MapController implements Renderer, OnTouchListener, OnScaleGestureL
     }
 
     /**
+     * Set a listener for raw motion events
+     * @param listener Listener to call
+     */
+    public void setGenericMotionEventListener(View.OnGenericMotionListener listener) {
+        genericMotionListener = listener;
+    }
+
+    /**
      * Set a listener for long press events
      * @param listener Listener to call
      */
@@ -281,6 +289,7 @@ public class MapController implements Renderer, OnTouchListener, OnScaleGestureL
 
     private long mLastDoubleGestureTime = -SCROLL_TIME_THRESHOLD;
 
+    private View.OnGenericMotionListener genericMotionListener;
     private View.OnGenericMotionListener longPressListener;
     private View.OnGenericMotionListener tapGestureListener;
     private DisplayMetrics displayMetrics = new DisplayMetrics();
@@ -291,6 +300,10 @@ public class MapController implements Renderer, OnTouchListener, OnScaleGestureL
     // ============================
 
     public boolean onTouch(View v, MotionEvent event) {
+
+        if (genericMotionListener != null) {
+            genericMotionListener.onGenericMotion(v, event);
+        }
 
         gestureDetector.onTouchEvent(event);
         scaleGestureDetector.onTouchEvent(event);
