@@ -91,7 +91,8 @@ protected:
 
     size_t m_nVertices;
     GLuint m_glVertexBuffer;
-    GLuint m_glVAO;
+    GLuint* m_glVAOs;
+    GLuint m_glnVAOs;
     // Compiled vertices for upload
     GLbyte* m_glVertexData = nullptr;
 
@@ -112,6 +113,8 @@ protected:
     GLintptr m_dirtyOffset;
 
     void checkValidity();
+
+    void initVAO(ShaderProgram& _shader);
 
     template <typename T>
     void compile(std::vector<std::vector<T>>& _vertices,

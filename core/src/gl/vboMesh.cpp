@@ -16,7 +16,7 @@ VboMesh::VboMesh() {
     m_nIndices = 0;
     m_dirtyOffset = 0;
     m_dirtySize = 0;
-    m_glVAO = 0;
+    m_glVAOs = nullptr;
 
     m_dirty = false;
     m_isUploaded = false;
@@ -40,8 +40,9 @@ VboMesh::~VboMesh() {
     if (m_glIndexBuffer) {
         glDeleteBuffers(1, &m_glIndexBuffer);
     }
-    if (m_glVAO) {
-        glDeleteVertexArrays(1, &m_glVAO);
+    if (m_glVAOs) {
+        glDeleteVertexArrays(m_vertexOffsets.size(), m_glVAOs);
+        delete[] m_glVAOs;
     }
 
     delete[] m_glVertexData;
@@ -154,6 +155,35 @@ void VboMesh::upload() {
     m_isUploaded = true;
 }
 
+void VboMesh::initVAO(ShaderProgram& _shader) {
+    m_glVAOs = new GLuint[m_vertexOffsets.size()];
+    glGenVertexArrays(m_vertexOffsets.size(), m_glVAOs);
+    int vertexOffset = 0;
+
+    for (int i = 0; i < m_vertexOffsets.size(); ++i) {
+        auto vertexIndexOffset = m_vertexOffsets[i];
+        int nVerts = vertexIndexOffset.second;
+        glBindVertexArray(m_glVAOs[i]);
+
+        RenderState::vertexBuffer.init(m_glVertexBuffer, true);
+
+        if (m_nIndices > 0) {
+            RenderState::indexBuffer.init(m_glIndexBuffer, true);
+        }
+
+        for (auto& attrib : m_vertexLayout->getAttribs()) {
+            GLint location = _shader.getAttribLocation(attrib.name);
+            if (location != -1) {
+                void* offset = ((unsigned char*) attrib.offset) + vertexOffset;
+                glEnableVertexAttribArray(location);
+                glVertexAttribPointer(location, attrib.size, attrib.type, attrib.normalized, m_vertexLayout->getStride(), offset);
+            }
+        }
+
+        vertexOffset += nVerts;
+    }
+}
+
 void VboMesh::draw(ShaderProgram& _shader) {
 
     checkValidity();
@@ -175,26 +205,8 @@ void VboMesh::draw(ShaderProgram& _shader) {
 
     if (GLExtensions::supportsVAOs) {
         // Capture vao state
-        if (m_glVAO == 0) {
-            glGenVertexArrays(1, &m_glVAO);
-            glBindVertexArray(m_glVAO);
-
-            RenderState::vertexBuffer.init(m_glVertexBuffer, true);
-
-            if (m_nIndices > 0) {
-                RenderState::indexBuffer.init(m_glIndexBuffer, true);
-            }
-
-            for (auto& attrib : m_vertexLayout->getAttribs()) {
-
-                GLint location = _shader.getAttribLocation(attrib.name);
-                if (location != -1) {
-                    glEnableVertexAttribArray(location);
-                    glVertexAttribPointer(location, attrib.size, attrib.type, attrib.normalized, m_vertexLayout->getStride(), ((unsigned char*) attrib.offset));
-                }
-            }
-        } else {
-            glBindVertexArray(m_glVAO);
+        if (!m_glVAOs) {
+            initVAO(_shader);
         }
     } else {
         // Bind buffers for drawing
@@ -208,28 +220,28 @@ void VboMesh::draw(ShaderProgram& _shader) {
     size_t indiceOffset = 0;
     size_t vertexOffset = 0;
 
-    for (auto& o : m_vertexOffsets) {
+    for (int i = 0; i < m_vertexOffsets.size(); ++i) {
+        auto o = m_vertexOffsets[i];
         uint32_t nIndices = o.first;
         uint32_t nVertices = o.second;
 
-        size_t byteOffset = vertexOffset * m_vertexLayout->getStride();
-
         // Enable vertex attribs via vertex layout object
         if (!GLExtensions::supportsVAOs) {
+            size_t byteOffset = vertexOffset * m_vertexLayout->getStride();
             m_vertexLayout->enable(_shader, byteOffset);
+        } else {
+            glBindVertexArray(m_glVAOs[i]);
         }
 
         // Draw as elements or arrays
         if (nIndices > 0) {
-            glDrawElements(m_drawMode, nIndices, GL_UNSIGNED_SHORT,
-                           (void*)(indiceOffset * sizeof(GLushort)));
+            glDrawElements(m_drawMode, nIndices, GL_UNSIGNED_SHORT, (void*)(indiceOffset * sizeof(GLushort)));
         } else if (nVertices > 0) {
             glDrawArrays(m_drawMode, 0, nVertices);
         }
 
         vertexOffset += nVertices;
         indiceOffset += nIndices;
-        break;
     }
 
     if (GLExtensions::supportsVAOs) {
@@ -243,7 +255,7 @@ void VboMesh::checkValidity() {
         m_isUploaded = false;
         m_glVertexBuffer = 0;
         m_glIndexBuffer = 0;
-        m_glVAO = 0;
+        m_glVAOs = nullptr;
 
         m_generation = s_validGeneration;
     }
