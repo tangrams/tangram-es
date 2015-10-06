@@ -24,10 +24,10 @@ Tile::Tile(TileID _id, const MapProjection& _projection) :
 
     BoundingBox bounds(_projection.TileBounds(_id));
 
-    m_scale = 0.5 * bounds.width();
+    m_scale = bounds.width();
     m_inverseScale = 1.0/m_scale;
 
-    m_tileOrigin = bounds.center();
+    m_tileOrigin = { bounds.min.x, bounds.max.y }; // South-West corner
     // negative y coordinate: to change from y down to y up (tile system has y down and gl context we use has y up).
     m_tileOrigin.y *= -1.0;
 
