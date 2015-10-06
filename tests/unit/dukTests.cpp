@@ -1,8 +1,8 @@
 #define CATCH_CONFIG_MAIN
 #include "catch.hpp"
 
-#include "data/filters.h"
 #include "yaml-cpp/yaml.h"
+#include "scene/filters.h"
 #include "scene/sceneLoader.h"
 #include "scene/scene.h"
 #include "util/builders.h"

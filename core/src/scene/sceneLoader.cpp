@@ -13,7 +13,7 @@
 #include "style/debugStyle.h"
 #include "style/debugTextStyle.h"
 #include "style/pointStyle.h"
-#include "data/filters.h"
+#include "scene/filters.h"
 #include "sceneLayer.h"
 #include "scene/dataLayer.h"
 #include "util/yamlHelper.h"

@@ -5,8 +5,8 @@
 #include <vector>
 #include <string>
 
-#include "data/filters.h"
 #include "yaml-cpp/yaml.h"
+#include "scene/filters.h"
 #include "scene/sceneLoader.h"
 #include "scene/scene.h"
 
