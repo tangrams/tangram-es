@@ -41,7 +41,7 @@ VboMesh::~VboMesh() {
         glDeleteBuffers(1, &m_glIndexBuffer);
     }
     if (m_glVAOs) {
-        glDeleteVertexArrays(m_vertexOffsets.size(), m_glVAOs);
+        glDeleteVertexArrays(m_glnVAOs, m_glVAOs);
         delete[] m_glVAOs;
     }
 
@@ -156,8 +156,9 @@ void VboMesh::upload() {
 }
 
 void VboMesh::initVAO(ShaderProgram& _shader) {
-    m_glVAOs = new GLuint[m_vertexOffsets.size()];
-    glGenVertexArrays(m_vertexOffsets.size(), m_glVAOs);
+    m_glnVAOs = m_vertexOffsets.size();
+    m_glVAOs = new GLuint[m_glnVAOs];
+    glGenVertexArrays(m_glnVAOs, m_glVAOs);
     int vertexOffset = 0;
 
     for (int i = 0; i < m_vertexOffsets.size(); ++i) {

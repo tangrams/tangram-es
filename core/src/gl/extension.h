@@ -9,7 +9,8 @@ extern bool supportsMapBuffer;
 extern bool supportsVAOs;
     
 bool isAvailable(std::string _extension);
-void load(bool _log = false);
+void load();
+void printAvailableExtensions();
 
 }
 }

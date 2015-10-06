@@ -80,7 +80,6 @@ void LabelMesh::compileVertexBuffer() {
 }
 
 void LabelMesh::draw(ShaderProgram& _shader) {
-    return;
     checkValidity();
 
     if (!m_isCompiled) { return; }

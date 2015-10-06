@@ -18,7 +18,22 @@ bool isAvailable(std::string _extension) {
     return strstr(s_glExtensions, _extension.c_str());
 }
 
-void load(bool _log) {
+void printAvailableExtensions() {
+    std::string exts(s_glExtensions);
+    std::istringstream iss(exts);
+    std::vector<std::string> extensions;
+    auto s0 = std::istream_iterator<std::string>(iss);
+    auto s1 = std::istream_iterator<std::string>();
+
+    std::copy(s0, s1, back_inserter(extensions));
+
+    LOG("GL Extensions available: ");
+    for (auto ext : extensions) {
+        LOG("\t %s", ext.c_str());
+    }
+}
+
+void load() {
     s_glExtensions = (char*) glGetString(GL_EXTENSIONS);
 
     supportsMapBuffer = isAvailable("mapbuffer");
@@ -29,20 +44,6 @@ void load(bool _log) {
 
     // find extension symbols if needed
     initGLExtensions();
-
-    if (!_log) {
-        return;
-    }
-
-    std::string exts(s_glExtensions);
-    std::istringstream iss(exts);
-    std::vector<std::string> extensions;
-    std::copy(std::istream_iterator<std::string>(iss), std::istream_iterator<std::string>(), back_inserter(extensions));
-
-    LOG("GL Extensions available: ");
-    for (auto ext : extensions) {
-        LOG("\t %s", ext.c_str());
-    }
 }
 
 }
