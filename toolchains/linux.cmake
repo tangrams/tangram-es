@@ -1,11 +1,11 @@
 # options
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wall -std=c++1y")
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wno-unknown-pragmas")
+set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wparentheses")
+#set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wuninitialized")
 set(CXX_FLAGS_DEBUG "-g -O0")
 
-# For CMake 3.0
 if (CMAKE_CXX_COMPILER_ID MATCHES "Clang")
-# using regular Clang or AppleClang
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wno-gnu-zero-variadic-macro-arguments")
 endif()
 
@@ -45,10 +45,7 @@ function(build)
 
     add_custom_command(TARGET tangram POST_BUILD COMMAND
       COMMAND ${CMAKE_COMMAND} -E echo "Copying data..."
-      COMMAND ${CMAKE_COMMAND} -E copy_directory ${PROJECT_SOURCE_DIR}/core/resources/shaders $<TARGET_FILE_DIR:tangram>/shaders
-      COMMAND ${CMAKE_COMMAND} -E copy_directory ${PROJECT_SOURCE_DIR}/core/resources/img $<TARGET_FILE_DIR:tangram>/img
-      COMMAND ${CMAKE_COMMAND} -E copy_directory ${PROJECT_SOURCE_DIR}/core/resources/fonts $<TARGET_FILE_DIR:tangram>/fonts
-      COMMAND ${CMAKE_COMMAND} -E copy ${PROJECT_SOURCE_DIR}/core/resources/scene.yaml $<TARGET_FILE_DIR:tangram>
+      COMMAND ${CMAKE_COMMAND} -E copy_directory ${PROJECT_SOURCE_DIR}/core/resources $<TARGET_FILE_DIR:tangram>
     )
 
 endfunction()
