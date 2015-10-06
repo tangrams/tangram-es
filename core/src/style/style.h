@@ -5,7 +5,7 @@
 #include "gl.h"
 #include "gl/shaderProgram.h"
 #include "gl/renderState.h"
-#include "scene/sceneLayer.h"
+#include "scene/drawRule.h"
 #include "util/variant.h"
 
 #include <memory>

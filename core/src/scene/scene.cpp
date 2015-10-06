@@ -2,6 +2,7 @@
 
 #include "platform.h"
 #include "style/style.h"
+#include "scene/dataLayer.h"
 #include "text/fontContext.h"
 
 #include <atomic>

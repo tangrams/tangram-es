@@ -1,7 +1,6 @@
 #include "style.h"
 
 #include "scene/scene.h"
-#include "scene/sceneLayer.h"
 #include "scene/light.h"
 #include "scene/styleParam.h"
 #include "tile/tile.h"

@@ -5,6 +5,7 @@
 #include "view/view.h"
 #include "tileManager.h"
 #include "scene/scene.h"
+#include "scene/styleContext.h"
 
 #include <algorithm>
 
