@@ -72,10 +72,19 @@ layers:
           filter: { type: line }
           draw:
             lines:
-                color: function () { return feature.color || 'pink'; }
-                order: 50
-                width: .03
-            icons:
+              color: function () { return feature.color || 'black'; }
+              order: 50
+              width: 2px
+        poly:
+            filter: { type: poly }
+            draw:
+              polygons:
+                color: magenta
+                order: 40
+        point:
+            filter: { type: point }
+            draw:
+              icons:
                 sprite: sunburst
                 collide: false
                 transition:
