@@ -9,10 +9,10 @@
 using namespace Tangram;
 
 static void BM_Tangram_LoadFont(benchmark::State& state) {
+    auto m_ftContext = std::make_shared<FontContext>();
+
     while(state.KeepRunning()) {
         state.PauseTiming();
-        std::shared_ptr<FontContext> m_ftContext;
-        m_ftContext = FontContext::GetInstance();
         state.ResumeTiming();
         m_ftContext->addFont("FiraSans", "Medium", "");
     }

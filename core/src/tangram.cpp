@@ -36,41 +36,45 @@ int log_level = 2;
 
 void initialize(const char* _scenePath) {
 
+    if (m_tileManager) {
+        LOG("Notice: Already initialized");
+        return;
+    }
+
     LOG("initialize");
 
     auto sceneRelPath = setResourceRoot(_scenePath);
 
-    if (!m_tileManager) {
+    // Create view
+    m_view = std::make_shared<View>();
 
-        // Create view
-        m_view = std::make_shared<View>();
+    // Create a scene object
+    m_scene = std::make_shared<Scene>();
 
-        // Create a scene object
-        m_scene = std::make_shared<Scene>();
+    // Input handler
+    m_inputHandler = std::unique_ptr<InputHandler>(new InputHandler(m_view));
 
-        // Input handler
-        m_inputHandler = std::unique_ptr<InputHandler>(new InputHandler(m_view));
+    // Create a tileManager
+    m_tileManager = TileManager::GetInstance();
 
-        // Create a tileManager
-        m_tileManager = TileManager::GetInstance();
+    // Pass references to the view and scene into the tile manager
+    m_tileManager->setView(m_view);
 
-        // Pass references to the view and scene into the tile manager
-        m_tileManager->setView(m_view);
+    // label setup
+    m_labels = std::unique_ptr<Labels>(new Labels());
 
-        // label setup
-        m_labels = std::unique_ptr<Labels>(new Labels());
+    LOG("Loading Tangram scene file: %s", sceneRelPath.c_str());
+    auto sceneString = stringFromFile(sceneRelPath.c_str(), PathType::resource);
 
-        LOG("Loading Tangram scene file: %s", sceneRelPath.c_str());
-        auto sceneString = stringFromFile(sceneRelPath.c_str(), PathType::resource);
+    if (SceneLoader::loadScene(sceneString, *m_scene)) {
+        // To add font for debugTextStyle
+        m_scene->fontContext()->addFont("FiraSans", "Medium", "");
 
-        if (SceneLoader::loadScene(sceneString, *m_scene)) {
-            m_tileManager->setScene(m_scene);
+        m_tileManager->setScene(m_scene);
 
-            glm::dvec2 projPos = m_view->getMapProjection().LonLatToMeters(m_scene->startPosition);
-            m_view->setPosition(projPos.x, projPos.y);
-            m_view->setZoom(m_scene->startZoom);
-        }
-
+        glm::dvec2 projPos = m_view->getMapProjection().LonLatToMeters(m_scene->startPosition);
+        m_view->setPosition(projPos.x, projPos.y);
+        m_view->setZoom(m_scene->startZoom);
     }
 
     LOG("finish initialize");
@@ -85,6 +89,8 @@ void loadScene(const char* _scenePath) {
     auto scene = std::make_shared<Scene>();
     if (SceneLoader::loadScene(sceneString, *scene)) {
         m_scene = scene;
+        m_scene->fontContext()->addFont("FiraSans", "Medium", "");
+
         m_tileManager->setScene(scene);
     }
 }

@@ -8,11 +8,14 @@
 #include "labels/textLabel.h"
 #include "glm/gtc/type_ptr.hpp"
 #include "tangram.h"
+#include "text/fontContext.h"
 
 namespace Tangram {
 
-TextStyle::TextStyle(std::string _name, bool _sdf, bool _sdfMultisampling, Blending _blendMode, GLenum _drawMode) :
-    Style(_name, _blendMode, _drawMode), m_sdf(_sdf), m_sdfMultisampling(_sdfMultisampling) {
+TextStyle::TextStyle(std::string _name, std::shared_ptr<FontContext> _fontContext, bool _sdf,
+                     bool _sdfMultisampling, Blending _blendMode, GLenum _drawMode) :
+    Style(_name, _blendMode, _drawMode), m_sdf(_sdf), m_sdfMultisampling(_sdfMultisampling),
+    m_fontContext(_fontContext) {
 }
 
 TextStyle::~TextStyle() {
@@ -56,6 +59,16 @@ Parameters TextStyle::parseRule(const DrawRule& _rule) const {
     _rule.get(StyleParamKey::font_family, fontFamily);
     _rule.get(StyleParamKey::font_weight, fontWeight);
     _rule.get(StyleParamKey::font_style, fontStyle);
+    std::string fontKey = fontFamily + "_" + fontWeight + "_" + fontStyle;
+    {
+        if (!m_fontContext->lock()) { return p; }
+
+        p.fontId = m_fontContext->addFont(fontFamily, fontWeight, fontStyle);
+
+        m_fontContext->unlock();
+        if (p.fontId < 0) { return p; }
+    }
+
     _rule.get(StyleParamKey::font_size, p.fontSize);
     _rule.get(StyleParamKey::font_fill, p.fill);
     _rule.get(StyleParamKey::offset, p.offset);
@@ -75,8 +88,6 @@ Parameters TextStyle::parseRule(const DrawRule& _rule) const {
     } else if (transform == "uppercase") {
         p.transform = TextTransform::uppercase;
     }
-
-    p.fontKey = fontFamily + "_" + fontWeight + "_" + fontStyle;
 
     /* Global operations done for fontsize and sdfblur */
     float emSize = p.fontSize / 16.f;
@@ -123,7 +134,9 @@ void TextStyle::buildPoint(const Point& _point, const DrawRule& _rule, const Pro
     const std::string& text = applyTextSource(params, _props);
 
     if (text.length() == 0) { return; }
-    buffer.addLabel(text, { glm::vec2(_point), glm::vec2(_point) }, Label::Type::point, params, optionsFromTextParams(params));
+    buffer.addLabel(text, { glm::vec2(_point), glm::vec2(_point) },
+                    Label::Type::point, params, optionsFromTextParams(params),
+                    *m_fontContext);
 }
 
 void TextStyle::buildLine(const Line& _line, const DrawRule& _rule, const Properties& _props, VboMesh& _mesh, Tile& _tile) const {
@@ -143,7 +156,8 @@ void TextStyle::buildLine(const Line& _line, const DrawRule& _rule, const Proper
         glm::vec2 p1 = glm::vec2(_line[i]);
         glm::vec2 p2 = glm::vec2(_line[i + 1]);
 
-        buffer.addLabel(text, { p1, p2 }, Label::Type::line, params, optionsFromTextParams(params));
+        buffer.addLabel(text, { p1, p2 }, Label::Type::line, params,
+                        optionsFromTextParams(params), *m_fontContext);
     }
 }
 
@@ -155,7 +169,7 @@ void TextStyle::buildPolygon(const Polygon& _polygon, const DrawRule& _rule, con
 void TextStyle::onBeginDrawFrame(const View& _view, Scene& _scene) {
     bool contextLost = Style::glContextLost();
 
-    FontContext::GetInstance()->bindAtlas(0);
+    m_fontContext->bindAtlas(0);
 
     setupShaderUniforms(1, contextLost, _scene);
 

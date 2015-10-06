@@ -15,21 +15,14 @@ TextBuffer::TextBuffer(std::shared_ptr<VertexLayout> _vertexLayout)
 TextBuffer::~TextBuffer() {
 }
 
-bool TextBuffer::addLabel(const std::string& _text, Label::Transform _transform, Label::Type _type, const Parameters& _params, Label::Options _options) {
-    if (_params.fontSize <= 0.f || _text.size() == 0) {
+bool TextBuffer::addLabel(const std::string& _text, Label::Transform _transform, Label::Type _type,
+                          const Parameters& _params, Label::Options _options,
+                          FontContext& _fontContext) {
+    if (_params.fontId < 0 || _params.fontSize <= 0.f || _text.size() == 0) {
         return false;
     }
 
-    auto fontContext = FontContext::GetInstance();
-
-    if (!fontContext->lock()) {
-        return false;
-    }
-
-    auto fontID = fontContext->getFontID(_params.fontKey);
-
-    if(fontID < 0) {
-        fontContext->unlock();
+    if (!_fontContext.lock()) {
         return false;
     }
 
@@ -71,11 +64,13 @@ bool TextBuffer::addLabel(const std::string& _text, Label::Transform _transform,
     }
 
     // rasterize glyphs
-    std::vector<FONSquad>& quads = fontContext->rasterize(*text, fontID, _params.fontSize, _params.blurSpread);
+    std::vector<FONSquad>& quads = _fontContext.rasterize(*text, _params.fontId,
+                                                          _params.fontSize,
+                                                          _params.blurSpread);
     size_t numGlyphs = quads.size();
 
     if (numGlyphs == 0) {
-        fontContext->unlock();
+        _fontContext.unlock();
         return false;
     }
 
@@ -105,11 +100,13 @@ bool TextBuffer::addLabel(const std::string& _text, Label::Transform _transform,
         vertices.push_back({{q.x1, q.y1}, {q.s1, q.t1}, _options.color, stroke});
     }
 
-    fontContext->unlock();
+    _fontContext.unlock();
 
     glm::vec2 size((x1 - x0), (y1 - y0));
 
-    m_labels.emplace_back(new TextLabel(_text, _transform, _type, size, *this, { vertexOffset, numVertices }, _options));
+    m_labels.emplace_back(new TextLabel(_text, _transform, _type, size,
+                                        *this, { vertexOffset, numVertices },
+                                        _options));
 
     // TODO: change this in TypeMesh::adVertices()
     m_nVertices = vertices.size();

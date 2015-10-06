@@ -13,9 +13,11 @@ protected:
 
 public:
 
-    DebugTextStyle(const std::string& _fontName, std::string _name, float _fontSize, bool _sdf = false, bool _sdfMultisampling = false, Blending _blendMode = Blending::overlay, GLenum _drawMode = GL_TRIANGLES);
+    DebugTextStyle(std::shared_ptr<FontContext> _fontContext, FontID _fontId, std::string _name,
+                   float _fontSize, bool _sdf = false, bool _sdfMultisampling = false,
+                   Blending _blendMode = Blending::overlay, GLenum _drawMode = GL_TRIANGLES);
 
-    std::string m_fontName;
+    FontID m_font;
     float m_fontSize;
 };
 

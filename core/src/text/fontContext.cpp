@@ -4,7 +4,10 @@
 
 namespace Tangram {
 
-FontContext::FontContext() : FontContext(512) {}
+#define INVALID_FONT -2
+#define ATLAS_SIZE 512
+
+FontContext::FontContext() : FontContext(ATLAS_SIZE) {}
 
 FontContext::FontContext(int _atlasSize) {
     initFontContext(_atlasSize);
@@ -40,36 +43,54 @@ void FontContext::unlock() {
     m_contextMutex.unlock();
 }
 
-bool FontContext::addFont(const std::string& _family, const std::string& _weight, const std::string& _style) {
+FontID FontContext::addFont(const std::string& _family, const std::string& _weight,
+                            const std::string& _style, bool _tryFallback) {
+
+    unsigned int dataSize = 0;
+    unsigned char* data = nullptr;
+    int font = FONS_INVALID;
 
     std::string fontKey = _family + "_" + _weight + "_" + _style;
-    if (m_fonts.find(fontKey) != m_fonts.end()) {
-        return true;
+
+    auto it = m_fonts.find(fontKey);
+    if (it != m_fonts.end()) {
+        if (it->second < 0) {
+            goto fallback;
+        }
+        return it->second;
     }
 
-    unsigned int dataSize;
-    unsigned char* data = nullptr;
-
-    // Assuming bundled ttf file follows this convention
-    auto bundledFontPath = "fonts/" + _family + "-" + _weight + _style + ".ttf";
-    if (!(data = bytesFromFile(bundledFontPath.c_str(), PathType::resource, &dataSize)) &&
-        !(data = bytesFromFile(bundledFontPath.c_str(), PathType::internal, &dataSize))) {
-        const std::string sysFontPath = systemFontPath(_family, _weight, _style);
-        if ( !(data = bytesFromFile(sysFontPath.c_str(), PathType::absolute, &dataSize)) ) {
-            return false;
+    {
+        // Assuming bundled ttf file follows this convention
+        auto bundledFontPath = "fonts/" + _family + "-" + _weight + _style + ".ttf";
+        if (!(data = bytesFromFile(bundledFontPath.c_str(), PathType::resource, &dataSize)) &&
+            !(data = bytesFromFile(bundledFontPath.c_str(), PathType::internal, &dataSize))) {
+            const std::string sysFontPath = systemFontPath(_family, _weight, _style);
+            if ( !(data = bytesFromFile(sysFontPath.c_str(), PathType::absolute, &dataSize)) ) {
+                
+                LOGE("Could not load font file %s", fontKey.c_str());
+                m_fonts.emplace(std::move(fontKey), INVALID_FONT);
+                goto fallback;
+            }
         }
     }
-
-    int font = fonsAddFont(m_fsContext, fontKey.c_str(), data, dataSize);
+    font = fonsAddFont(m_fsContext, fontKey.c_str(), data, dataSize);
 
     if (font == FONS_INVALID) {
-        LOGE("loading font %s", fontKey.c_str());
-        return false;
+        LOGE("Could not load font %s", fontKey.c_str());
+        m_fonts.emplace(std::move(fontKey), INVALID_FONT);
+        goto fallback;
     }
 
     m_fonts.emplace(std::move(fontKey), font);
 
-    return true;
+    return font;
+
+fallback:
+    if (_tryFallback && m_fonts.size() > 0) {
+        return 0;
+    }
+    return INVALID_FONT;
 }
 
 void FontContext::setFont(const std::string& _key, int size) {
@@ -101,7 +122,8 @@ FontID FontContext::getFontID(const std::string& _key) {
     }
 }
 
-std::vector<FONSquad>& FontContext::rasterize(const std::string& _text, FontID _fontID, float _fontSize, float _sdf) {
+std::vector<FONSquad>& FontContext::rasterize(const std::string& _text, FontID _fontID,
+                                              float _fontSize, float _sdf) {
 
     m_quadBuffer.clear();
 
@@ -147,6 +169,21 @@ void FontContext::renderUpdate(void* _userPtr, int* _rect, const unsigned char* 
     fontContext->m_atlas->setSubData(subdata, xoff, yoff, width, height);
 }
 
+void FontContext::fontstashError(void* uptr, int error, int val) {
+    switch(error) {
+    case FONS_ATLAS_FULL:
+        LOGE("Texture Atlas full!");
+        break;
+
+    case FONS_SCRATCH_FULL:
+    case FONS_STATES_OVERFLOW:
+    case FONS_STATES_UNDERFLOW:
+    default:
+        LOGE("Unexpected error in Fontstash %d:%d!", error, val);
+        break;
+    }
+}
+
 void FontContext::initFontContext(int _atlasSize) {
     m_atlas = std::unique_ptr<Texture>(new Texture(_atlasSize, _atlasSize));
 
@@ -163,7 +200,9 @@ void FontContext::initFontContext(int _atlasSize) {
     params.pushQuad = pushQuad;
     params.userPtr = (void*) this;
 
-    m_fsContext = fonsCreateInternal(&params);;
+    m_fsContext = fonsCreateInternal(&params);
+
+    fonsSetErrorCallback(m_fsContext, &fontstashError, (void*) this);
 }
 
 }

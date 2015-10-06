@@ -12,7 +12,7 @@
 #include "gl.h"
 
 static bool s_isContinuousRendering = false;
-static NSString* s_resourceRoot = NULL;
+static NSMutableString* s_resourceRoot = NULL;
 
 NSURLSession* defaultSession;
 
@@ -52,7 +52,7 @@ std::string setResourceRoot(const char* _path) {
         path = [resources stringByAppendingPathComponent:path];
     }
 
-    s_resourceRoot = [path stringByDeletingLastPathComponent];
+    s_resourceRoot = [ [path stringByDeletingLastPathComponent] mutableCopy];
 
     return std::string([[path lastPathComponent] UTF8String]);
 
