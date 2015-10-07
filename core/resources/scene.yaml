@@ -229,7 +229,7 @@ layers:
                 transition:
                     [show, hide]:
                         effect: fade
-                        time: 0s
+                        time: 1000ms
                     selected:
                         time: 0s
                 #size: [[13, 12px], [15, 18px]]
