@@ -1,7 +1,7 @@
 #pragma once
 
 #include "duktape.h"
-#include "tileData.h"
+#include "data/tileData.h"
 #include "scene/drawRule.h"
 
 #include <string>

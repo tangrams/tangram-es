@@ -13,16 +13,13 @@ add_definitions(-DLOG_LEVEL=2)
 
 add_subdirectory("${DEPENDENCIES_DIR}")
 
-file(GLOB_RECURSE FOUND_HEADERS "${SOURCE_DIR}/*.h")
-file(GLOB_RECURSE FOUND_SOURCES "${SOURCE_DIR}/*.cpp")
+file(GLOB_RECURSE FOUND_SOURCES "${CMAKE_CURRENT_SOURCE_DIR}/${SOURCE_DIR}/*.cpp")
 
 set(INCLUDE_DIRS "")
-foreach(_headerFile ${FOUND_HEADERS})
-    get_filename_component(_dir ${_headerFile} PATH)
-    list(APPEND INCLUDE_DIRS ${_dir})
-endforeach()
+list(APPEND INCLUDE_DIRS "${CMAKE_CURRENT_SOURCE_DIR}/${SOURCE_DIR}")
+
 set(CORE_INCLUDE_DIRS ${INCLUDE_DIRS} CACHE INTERNAL "core include directories" FORCE)
-list(APPEND INCLUDE_DIRS "${INCLUDE_DIR}/")
+list(APPEND INCLUDE_DIRS "${INCLUDE_DIR}")
 list(APPEND INCLUDE_DIRS "${INCLUDE_DIR}/stb")
 list(APPEND INCLUDE_DIRS "${INCLUDE_DIR}/glm")
 list(APPEND INCLUDE_DIRS "${INCLUDE_DIR}/isect2d/include")
@@ -32,13 +29,13 @@ list(REMOVE_DUPLICATES INCLUDE_DIRS)
 include_directories(${INCLUDE_DIR} ${INCLUDE_DIRS})
 
 set(CORE_LIBRARIES_INCLUDE_DIRS
-    ${PROJECT_SOURCE_DIR}/${INCLUDE_DIR}/
-    ${PROJECT_SOURCE_DIR}/${INCLUDE_DIR}/glm/
-    ${PROJECT_SOURCE_DIR}/${INCLUDE_DIR}/stb/
-    ${PROJECT_SOURCE_DIR}/${INCLUDE_DIR}/catch/
-    ${PROJECT_SOURCE_DIR}/${INCLUDE_DIR}/fontstash-es/fontstash/
-    ${PROJECT_SOURCE_DIR}/${INCLUDE_DIR}/pbf/
-    ${PROJECT_SOURCE_DIR}/${INCLUDE_DIR}/rapidjson/
+    ${PROJECT_SOURCE_DIR}/${INCLUDE_DIR}
+    ${PROJECT_SOURCE_DIR}/${INCLUDE_DIR}/glm
+    ${PROJECT_SOURCE_DIR}/${INCLUDE_DIR}/stb
+    ${PROJECT_SOURCE_DIR}/${INCLUDE_DIR}/catch
+    ${PROJECT_SOURCE_DIR}/${INCLUDE_DIR}/fontstash-es/fontstash
+    ${PROJECT_SOURCE_DIR}/${INCLUDE_DIR}/pbf
+    ${PROJECT_SOURCE_DIR}/${INCLUDE_DIR}/rapidjson
     ${PROJECT_SOURCE_DIR}/${INCLUDE_DIR}/isect2d/include
     CACHE INTERNAL "core libraries include directories" FORCE)
 
@@ -49,7 +46,7 @@ if(NOT DEFINED CORE_LIB_NAME)
     set(CORE_LIB_NAME core)
 endif()
 
-add_library(${CORE_LIB_NAME} ${CORE_LIB_TYPE} ${FOUND_SOURCES} ${FOUND_HEADERS})
+add_library(${CORE_LIB_NAME} ${CORE_LIB_TYPE} ${FOUND_SOURCES})
 target_link_libraries(${CORE_LIB_NAME} duktape css-color-parser-cpp yaml-cpp geojson-vt-cpp ${CORE_LIB_DEPS})
 
 # make groups for xcode

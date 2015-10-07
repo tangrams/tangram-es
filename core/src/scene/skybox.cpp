@@ -1,9 +1,9 @@
 #include "skybox.h"
-#include "shaderProgram.h"
-#include "textureCube.h"
 #include "view/view.h"
 #include "glm/gtc/type_ptr.hpp"
 #include "gl/renderState.h"
+#include "gl/shaderProgram.h"
+#include "gl/textureCube.h"
 
 namespace Tangram {
 
