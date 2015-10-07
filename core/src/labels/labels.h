@@ -7,6 +7,7 @@
 #include "data/properties.h"
 #include "isect2d.h"
 #include "glm_vec.h" // for isect2d.h
+#include "tangram.h"
 
 #include <memory>
 #include <mutex>
@@ -36,10 +37,10 @@ public:
     void update(const View& _view, float _dt, const std::vector<std::unique_ptr<Style>>& _styles,
                 const std::vector<std::shared_ptr<Tile>>& _tiles);
 
-    const std::vector<std::shared_ptr<Properties>>& getFeaturesAtPoint(const View& _view, float _dt,
-                                                                       const std::vector<std::unique_ptr<Style>>& _styles,
-                                                                       const std::vector<std::shared_ptr<Tile>>& _tiles,
-                                                                       float _x, float _y, bool _visibleOnly = true);
+    const std::vector<TouchItem>& getFeaturesAtPoint(const View& _view, float _dt,
+                                                     const std::vector<std::unique_ptr<Style>>& _styles,
+                                                     const std::vector<std::shared_ptr<Tile>>& _tiles,
+                                                     float _x, float _y, bool _visibleOnly = true);
 
     bool needUpdate() { return m_needUpdate; }
 
@@ -58,7 +59,7 @@ private:
 
     isect2d::ISect2D<glm::vec2> m_isect2d;
 
-    std::vector<std::shared_ptr<Properties>> m_touchItems;
+    std::vector<TouchItem> m_touchItems;
 };
 
 }

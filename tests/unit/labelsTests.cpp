@@ -57,18 +57,18 @@ TEST_CASE("Test getFeaturesAtPoint", "[Labels][FeaturePicking]") {
     {
         auto& items = labels->getFeaturesAtPoint(view, 0, styles, tiles, 128, 128, false);
         REQUIRE(items.size() == 1);
-        REQUIRE(items[0]->getString("id") == "0");
+        REQUIRE(items[0].properties->getString("id") == "0");
     }
     {
         auto& items = labels->getFeaturesAtPoint(view, 0, styles, tiles, 256, 256, false);
         REQUIRE(items.size() == 1);
-        REQUIRE(items[0]->getString("id") == "1");
+        REQUIRE(items[0].properties->getString("id") == "1");
     }
 
     {
         auto& items = labels->getFeaturesAtPoint(view, 0, styles, tiles, 256, 0, false);
         REQUIRE(items.size() == 1);
-        REQUIRE(items[0]->getString("id") == "2");
+        REQUIRE(items[0].properties->getString("id") == "2");
     }
 }
 

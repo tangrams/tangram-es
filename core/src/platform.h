@@ -21,7 +21,10 @@ typedef long long jlong;
 void setupJniEnv(JNIEnv* _jniEnv, jobject _tangramInstance, jobject _assetManager);
 void onUrlSuccess(JNIEnv* jniEnv, jbyteArray jFetchedBytes, jlong jCallbackPtr);
 void onUrlFailure(JNIEnv* jniEnv, jlong jCallbackPtr);
-void featureSelectionCallback(JNIEnv* jniEnv, const std::vector<std::shared_ptr<Tangram::Properties>>& items);
+namespace Tangram {
+struct TouchItem;
+}
+void featureSelectionCallback(JNIEnv* jniEnv, const std::vector<Tangram::TouchItem>& items);
 #endif
 
 

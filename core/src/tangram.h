@@ -110,7 +110,12 @@ void toggleDebugFlag(DebugFlags _flag);
 
 void loadScene(const char* _scenePath);
 
-const std::vector<std::shared_ptr<Properties>>& pickFeaturesAt(float _x, float _y);
+struct TouchItem {
+    std::shared_ptr<Properties> properties;
+    float distance;
+};
+
+const std::vector<TouchItem>& pickFeaturesAt(float _x, float _y);
 
 }
 

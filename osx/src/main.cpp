@@ -50,9 +50,10 @@ void mouse_button_callback(GLFWwindow* window, int button, int action, int mods)
 
         auto picks = Tangram::pickFeaturesAt(x, y);
         std::string name;
+        logMsg("picked %d features\n", picks.size());
         for (const auto& it : picks) {
-            if (it->getString("name", name)) {
-                logMsg("\t %s\n", name.c_str());
+            if (it.properties->getString("name", name)) {
+                logMsg(" - %f\t %s\n", it.distance, name.c_str());
             }
         }
     } else if ( (time - last_mouse_down) < single_tap_time) {

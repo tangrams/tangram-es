@@ -282,12 +282,12 @@ void setCurrentThreadPriority(int priority) {
     setpriority(PRIO_PROCESS, tid, priority);
 }
 
-void featureSelectionCallback(JNIEnv* jniEnv, const std::vector<std::shared_ptr<Tangram::Properties>>& items) {
+void featureSelectionCallback(JNIEnv* jniEnv, const std::vector<Tangram::TouchItem>& items) {
 
     jlong jresult = 0;
     jclass propertiesClass = jniEnv->FindClass("com/mapzen/tangram/Properties");
 
-    jresult = reinterpret_cast<jlong>(new std::shared_ptr<Tangram::Properties >(items[0]));
+    jresult = reinterpret_cast<jlong>(new std::shared_ptr<Tangram::Properties >(items[0].properties));
     jobject object = jniEnv->NewObject(propertiesClass, propertiesConstructorMID, jresult, true);
 
     jniEnv->CallVoidMethod(tangramInstance, featureSelectionCbMID, object);

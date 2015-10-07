@@ -386,7 +386,7 @@ void toggleDebugFlag(DebugFlags _flag) {
 
 }
 
-const std::vector<std::shared_ptr<Properties>>& pickFeaturesAt(float _x, float _y) {
+const std::vector<TouchItem>& pickFeaturesAt(float _x, float _y) {
     return m_labels->getFeaturesAtPoint(*m_view, 0, m_scene->styles(),
                                         m_tileManager->getVisibleTiles(),
                                         _x, _y);

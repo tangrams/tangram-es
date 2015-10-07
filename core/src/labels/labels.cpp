@@ -109,10 +109,10 @@ void Labels::update(const View& _view, float _dt, const std::vector<std::unique_
     }
 }
 
-const std::vector<std::shared_ptr<Properties>>& Labels::getFeaturesAtPoint(const View& _view, float _dt,
-                                                                           const std::vector<std::unique_ptr<Style>>& _styles,
-                                                                           const std::vector<std::shared_ptr<Tile>>& _tiles,
-                                                                           float _x, float _y, bool _visibleOnly) {
+const std::vector<TouchItem>& Labels::getFeaturesAtPoint(const View& _view, float _dt,
+                                                         const std::vector<std::unique_ptr<Style>>& _styles,
+                                                         const std::vector<std::shared_ptr<Tile>>& _tiles,
+                                                         float _x, float _y, bool _visibleOnly) {
     // FIXME dpi dependent threshold
     const float thumbSize = 50;
 
@@ -122,9 +122,6 @@ const std::vector<std::shared_ptr<Properties>>& Labels::getFeaturesAtPoint(const
     glm::vec2 touchPoint(_x, _y);
 
     OBB obb(_x - thumbSize/2, _y - thumbSize/2, 0, thumbSize, thumbSize);
-
-    std::shared_ptr<Properties> selectedItem;
-    float minDistance = std::numeric_limits<float>::max();
 
     for (const auto& tile : _tiles) {
 
@@ -150,18 +147,15 @@ const std::vector<std::shared_ptr<Properties>>& Labels::getFeaturesAtPoint(const
                 if (isect2d::intersect(label->getOBB(), obb)) {
                     float distance = glm::length2(label->getTransform().state.screenPos - touchPoint);
 
-                    if (distance < minDistance) {
-                        minDistance = distance;
-                        selectedItem = options.properties;
-                    }
+                    m_touchItems.push_back({options.properties, std::sqrt(distance)});
                 }
             }
         }
     }
 
-    if (selectedItem) {
-        m_touchItems.push_back(selectedItem);
-    }
+    std::sort(m_touchItems.begin(), m_touchItems.end(),
+              [](auto& a, auto& b){ return a.distance < b.distance; });
+
 
     return m_touchItems;
 }
