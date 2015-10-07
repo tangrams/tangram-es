@@ -6,6 +6,7 @@
 #include "gl/vboMesh.h"
 #include "scene/light.h"
 #include "scene/styleParam.h"
+#include "scene/drawRule.h"
 #include "scene/scene.h"
 #include "scene/spriteAtlas.h"
 #include "tile/tile.h"

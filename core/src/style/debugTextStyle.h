@@ -1,7 +1,6 @@
 #pragma once
 
 #include "textStyle.h"
-#include "tangram.h"
 
 namespace Tangram {
 

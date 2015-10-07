@@ -5,12 +5,27 @@
 #include "material.h"
 #include "util/builders.h"
 #include "gl/shaderProgram.h"
+#include "gl/typedMesh.h"
 #include "tile/tile.h"
 #include "scene/drawRule.h"
+
+#include "glm/vec2.hpp"
+#include "glm/vec3.hpp"
 
 #include <cmath>
 
 namespace Tangram {
+
+struct PolygonVertex {
+    glm::vec3 pos;
+    glm::vec3 norm;
+    glm::vec2 texcoord;
+    GLuint abgr;
+    GLfloat layer;
+};
+
+using Mesh = TypedMesh<PolygonVertex>;
+
 
 PolygonStyle::PolygonStyle(std::string _name, Blending _blendMode, GLenum _drawMode) : Style(_name, _blendMode, _drawMode) {
 }
@@ -34,6 +49,10 @@ void PolygonStyle::constructShaderProgram() {
     std::string fragShaderSrcStr = stringFromFile("shaders/polygon.fs", PathType::internal);
 
     m_shaderProgram->setSourceStrings(fragShaderSrcStr, vertShaderSrcStr);
+}
+
+VboMesh* PolygonStyle::newMesh() const {
+    return new Mesh(m_vertexLayout, m_drawMode);
 }
 
 PolygonStyle::Parameters PolygonStyle::parseRule(const DrawRule& _rule) const {
@@ -78,7 +97,7 @@ void PolygonStyle::buildPolygon(const Polygon& _polygon, const DrawRule& _rule, 
         [&](size_t sizeHint){ vertices.reserve(sizeHint); }
     };
 
-    auto& mesh = static_cast<PolygonStyle::Mesh&>(_mesh);
+    auto& mesh = static_cast<Mesh&>(_mesh);
 
     float height = 0.0f, minHeight = 0.0f;
 

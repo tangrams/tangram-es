@@ -1,9 +1,6 @@
 #pragma once
 
 #include "style.h"
-#include "gl/typedMesh.h"
-#include "glm/vec2.hpp"
-#include "glm/vec3.hpp"
 
 #include <mutex>
 #include <tuple>
@@ -20,25 +17,13 @@ protected:
         glm::vec2 extrude;
     };
 
-    struct PolygonVertex {
-        glm::vec3 pos;
-        glm::vec3 norm;
-        glm::vec2 texcoord;
-        GLuint abgr;
-        GLfloat layer;
-    };
-
     virtual void constructVertexLayout() override;
     virtual void constructShaderProgram() override;
     virtual void buildPolygon(const Polygon& _polygon, const DrawRule& _rule, const Properties& _props, VboMesh& _mesh, Tile& _tile) const override;
 
     Parameters parseRule(const DrawRule& _rule) const;
 
-    typedef TypedMesh<PolygonVertex> Mesh;
-
-    virtual VboMesh* newMesh() const override {
-        return new Mesh(m_vertexLayout, m_drawMode);
-    };
+    virtual VboMesh* newMesh() const override;
 
 public:
 
