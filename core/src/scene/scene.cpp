@@ -1,5 +1,6 @@
 #include "scene.h"
 
+#include "gl/shaderProgram.h"
 #include "platform.h"
 #include "style/style.h"
 #include "scene/dataLayer.h"

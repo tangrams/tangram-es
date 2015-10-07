@@ -1,8 +1,9 @@
 #include "debugTextStyle.h"
 
+#include "gl/shaderProgram.h"
+#include "gl/vboMesh.h"
 #include "text/fontContext.h"
 #include "tile/tile.h"
-#include "gl/vboMesh.h"
 
 namespace Tangram {
 

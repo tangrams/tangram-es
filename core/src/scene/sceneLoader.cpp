@@ -6,6 +6,7 @@
 #include "data/clientGeoJsonSource.h"
 #include "data/geoJsonSource.h"
 #include "data/mvtSource.h"
+#include "gl/shaderProgram.h"
 #include "style/material.h"
 #include "style/polygonStyle.h"
 #include "style/polylineStyle.h"

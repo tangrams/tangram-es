@@ -3,7 +3,6 @@
 #include "data/tileData.h"
 #include "material.h"
 #include "gl.h"
-#include "gl/shaderProgram.h"
 #include "gl/renderState.h"
 #include "util/variant.h"
 
@@ -21,6 +20,7 @@ class VboMesh;
 class VertexLayout;
 class View;
 class Scene;
+class ShaderProgram;
 
 enum class LightingType : char {
     none,
