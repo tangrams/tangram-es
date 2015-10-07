@@ -3,6 +3,7 @@
 #include "gl/shaderProgram.h"
 #include "style/material.h"
 #include "text/fontContext.h"
+#include "text/textBuffer.h"
 #include "tile/tile.h"
 #include "tangram.h"
 
@@ -17,7 +18,7 @@ DebugTextStyle::DebugTextStyle(std::shared_ptr<FontContext> _fontContext, FontID
 
 void DebugTextStyle::onBeginBuildTile(Tangram::Tile &_tile) const {
 
-    Parameters params;
+    TextStyle::Parameters params;
     params.fontId = m_font;
     params.fontSize = m_fontSize * m_pixelScale;
     params.blurSpread = m_sdf ? 2.5f : 0.0f;

@@ -18,6 +18,8 @@ namespace Tangram {
 
     Style::Style(std::string _name, Blending _blendMode, GLenum _drawMode) :
     m_name(_name),
+    m_shaderProgram(std::make_unique<ShaderProgram>()),
+    m_material(std::make_shared<Material>()),
     m_blend(_blendMode),
     m_drawMode(_drawMode),
     m_contextLost(true) {

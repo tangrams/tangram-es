@@ -8,11 +8,14 @@
 #include "gl/vboMesh.h"
 #include "view/view.h"
 #include "labels/textLabel.h"
-#include "glm/gtc/type_ptr.hpp"
-#include "tangram.h"
-#include "platform.h"
 #include "text/fontContext.h"
 #include "data/propertyItem.h" // Include wherever Properties is used!
+#include "text/textBuffer.h"
+
+#include "platform.h"
+#include "tangram.h"
+
+#include "glm/gtc/type_ptr.hpp"
 
 namespace Tangram {
 
@@ -54,7 +57,11 @@ void TextStyle::constructShaderProgram() {
     m_shaderProgram->addSourceBlock("defines", defines);
 }
 
-Parameters TextStyle::applyRule(const DrawRule& _rule, const Properties& _props) const {
+VboMesh* TextStyle::newMesh() const {
+    return new TextBuffer(m_vertexLayout);
+}
+
+auto TextStyle::applyRule(const DrawRule& _rule, const Properties& _props) const -> Parameters {
     const static std::string key_name("name");
 
     Parameters p;

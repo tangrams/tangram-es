@@ -4,6 +4,8 @@
 
 namespace Tangram {
 
+typedef int FontID;
+
 class DebugTextStyle : public TextStyle {
 
 protected:
