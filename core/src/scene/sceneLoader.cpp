@@ -1126,7 +1126,6 @@ void SceneLoader::parseStyleParams(Node params, Scene& scene, const std::string&
                                    std::vector<StyleParam>& out) {
 
     for (const auto& prop : params) {
-
         std::string key;
         if (!prefix.empty()) {
             key = prefix + ":" + prop.first.Scalar();
@@ -1134,6 +1133,11 @@ void SceneLoader::parseStyleParams(Node params, Scene& scene, const std::string&
             key = prop.first.as<std::string>();
         }
         if (key == "style") { continue; }
+
+        if (key == "transition") {
+            parseTransition(prop.second, scene, key, out);
+            continue;
+        }
 
         Node value = prop.second;
 
@@ -1247,6 +1251,47 @@ StyleUniforms SceneLoader::parseStyleUniforms(const Node& value, Scene& scene) {
         LOGW("Expected a scalar or sequence value for uniforms");
     }
     return std::make_pair(type, std::move(uniformValues));
+}
+
+void SceneLoader::parseTransition(Node params, Scene& scene, const std::string& prefix,
+                                  std::vector<StyleParam>& out) {
+
+    for (const auto& prop : params) {
+        switch (prop.first.Type()) {
+            case YAML::NodeType::Sequence:
+            {
+                auto rawKeys = parseSequence(prop.first);
+                std::stringstream ss(rawKeys);
+                std::vector<std::string> keys;
+                std::string key;
+
+                while (std::getline(ss, key, ',')) {
+                    keys.push_back(key);
+                }
+
+                for (auto key : keys) {
+                    std::string prefixedKey = prefix + ":" + key;
+                    for (const auto& child : prop.second) {
+                        auto childKey = prefixedKey + ":" + child.first.as<std::string>();
+                        out.push_back(StyleParam{ childKey, child.second.as<std::string>() });
+                    }
+                }
+                break;
+            }
+            case YAML::NodeType::Scalar:
+            {
+                auto key = prefix + ":" + prop.first.as<std::string>();
+                for (auto child : prop.second) {
+                    auto childKey = key + ":" + child.first.as<std::string>();
+                    out.push_back(StyleParam{ childKey, child.second.as<std::string>() });
+                }
+                break;
+            }
+            default:
+                LOGW("Expected a scalar or sequence value for transition");
+                break;
+        }
+    }
 }
 
 SceneLayer SceneLoader::loadSublayer(Node layer, const std::string& name, Scene& scene) {

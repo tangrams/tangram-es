@@ -43,6 +43,7 @@ const std::map<std::string, StyleParamKey> s_StyleParamMap = {
     {"width", StyleParamKey::width},
     {"centroid", StyleParamKey::centroid},
     {"collide", StyleParamKey::collide},
+    {"time", StyleParamKey::time},
 };
 
 static const char* keyName(StyleParamKey key) {
@@ -130,6 +131,7 @@ StyleParam::Value StyleParam::parseString(StyleParamKey key, const std::string& 
     case StyleParamKey::text_source:
     case StyleParamKey::transform:
     case StyleParamKey::sprite:
+    case StyleParamKey::time:
     case StyleParamKey::sprite_default:
         return _value;
     case StyleParamKey::font_size: {
@@ -228,6 +230,7 @@ std::string StyleParam::toString() const {
     case StyleParamKey::transform:
     case StyleParamKey::sprite:
     case StyleParamKey::sprite_default:
+    case StyleParamKey::time:
         if (!value.is<std::string>()) break;
         return k + value.get<std::string>();
     case StyleParamKey::interactive:

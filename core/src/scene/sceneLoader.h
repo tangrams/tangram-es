@@ -5,6 +5,7 @@
 #include <memory>
 #include <tuple>
 #include <unordered_set>
+#include <sstream>
 
 #include "yaml-cpp/yaml.h"
 #include "glm/vec2.hpp"
@@ -58,6 +59,8 @@ struct SceneLoader {
 
     static void parseStyleParams(Node params, Scene& scene, const std::string& propPrefix,
                                  std::vector<StyleParam>& out);
+    static void parseTransition(Node params, Scene& scene, const std::string& prefix,
+                                std::vector<StyleParam>& out);
 
     static StyleUniforms parseStyleUniforms(const Node& uniform, Scene& scene);
     static Node mixStyles(const std::vector<Node>& mixes);

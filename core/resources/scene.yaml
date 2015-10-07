@@ -65,7 +65,6 @@ layers:
                 order: 50
                 width: .03
             icons:
-                collide: false
                 sprite: sunburst
 
     earth:
@@ -226,6 +225,13 @@ layers:
                 offset: [0px, -15px]
                 size: 20px
                 priority: 5
+                collide: false
+                transition:
+                    [show, hide]:
+                        effect: fade
+                        time: 0s
+                    selected:
+                        time: 0s
                 #size: [[13, 12px], [15, 18px]]
                 #interactive: true
 

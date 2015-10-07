@@ -40,6 +40,7 @@ enum class StyleParamKey : uint8_t {
     width,
     centroid,
     collide,
+    time,
 };
 
 enum class Unit { pixel, meter };
