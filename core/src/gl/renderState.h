@@ -1,7 +1,6 @@
 #pragma once
 
 #include "gl.h"
-#include "platform.h"
 
 #include <tuple>
 #include <limits>

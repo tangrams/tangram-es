@@ -98,4 +98,8 @@ void DrawRule::eval(const StyleContext& _ctx) {
     }
 }
 
+void DrawRule::logGetError(StyleParamKey _expectedKey, const StyleParam& _param) {
+    LOGE("wrong type '%d'for StyleParam '%d'", _param.value.which(), _expectedKey);
+}
+
 }

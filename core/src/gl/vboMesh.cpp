@@ -1,6 +1,7 @@
 #include "vboMesh.h"
 #include "shaderProgram.h"
 #include "renderState.h"
+#include "platform.h"
 
 namespace Tangram {
 

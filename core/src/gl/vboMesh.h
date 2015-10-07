@@ -1,7 +1,6 @@
 #pragma once
 
 #include "gl.h"
-#include "platform.h"
 #include "vertexLayout.h"
 
 #include <cstring> // for memcpy
@@ -146,7 +145,7 @@ protected:
 
             if (useIndices) {
                 if (vertexOffset + nVertices > MAX_INDEX_VALUE) {
-                    LOGD("Big Mesh %d\n", vertexOffset + nVertices);
+                    //LOGD("Big Mesh %d\n", vertexOffset + nVertices);
 
                     m_vertexOffsets.emplace_back(indexOffset, vertexOffset);
                     vertexOffset = 0;

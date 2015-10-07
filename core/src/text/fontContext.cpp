@@ -2,6 +2,8 @@
 #define FONTSTASH_IMPLEMENTATION
 #include "fontstash.h"
 
+#include "platform.h"
+
 namespace Tangram {
 
 #define INVALID_FONT -2
