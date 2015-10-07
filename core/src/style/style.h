@@ -3,7 +3,6 @@
 #include "data/tileData.h"
 #include "material.h"
 #include "gl.h"
-#include "gl/renderState.h"
 #include "util/variant.h"
 
 #include <memory>
