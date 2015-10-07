@@ -13,9 +13,10 @@
 #include "style/debugStyle.h"
 #include "style/debugTextStyle.h"
 #include "style/pointStyle.h"
-#include "scene/filters.h"
-#include "sceneLayer.h"
 #include "scene/dataLayer.h"
+#include "scene/filters.h"
+#include "scene/sceneLayer.h"
+#include "scene/stops.h"
 #include "util/yamlHelper.h"
 
 #include "yaml-cpp/yaml.h"

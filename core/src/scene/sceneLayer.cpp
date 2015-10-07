@@ -6,10 +6,10 @@ namespace Tangram {
 
 SceneLayer::SceneLayer(std::string _name, Filter _filter, std::vector<DrawRule> _rules,
                        std::vector<SceneLayer> _sublayers) :
-    m_filter(_filter),
-    m_name(_name),
-    m_rules(_rules),
-    m_sublayers(_sublayers),
+    m_filter(std::move(_filter)),
+    m_name(std::move(_name)),
+    m_rules(std::move(_rules)),
+    m_sublayers(std::move(_sublayers)),
     m_depth(0) {
 
     // Rules must be sorted to merge correctly

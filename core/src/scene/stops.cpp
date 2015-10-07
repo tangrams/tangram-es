@@ -1,5 +1,7 @@
 #include "stops.h"
+
 #include "scene/styleParam.h"
+#include "util/mapProjection.h"
 #include "platform.h"
 
 #include "csscolorparser.hpp"
