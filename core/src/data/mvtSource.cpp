@@ -3,6 +3,7 @@
 #include "tileData.h"
 #include "tile/tileID.h"
 #include "tile/tile.h"
+#include "tile/tileTask.h"
 #include "util/pbfParser.h"
 #include "platform.h"
 

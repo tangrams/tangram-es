@@ -30,6 +30,8 @@ public:
     TileTask& operator=(const TileTask& _other) = delete;
 };
 
-typedef std::function<void(std::shared_ptr<TileTask>&&)> TileTaskCb;
+struct TileTaskCb {
+    std::function<void(std::shared_ptr<TileTask>&&)> func;
+};
 
 }
