@@ -2,6 +2,7 @@
 
 #include <limits>
 #include <cmath>
+#include "glm/gtx/norm.hpp"
 
 namespace Tangram {
 
@@ -85,6 +86,26 @@ glm::vec2 centroid(const std::vector<std::vector<glm::vec3>>& _polygon) {
     centroid /= n;
 
     return centroid;
+}
+
+// square distance from a point <_p> to a segment <_p1,_p2>
+// http://stackoverflow.com/questions/849211/shortest-distance-between-a-point-and-a-line-segment
+//
+float sqSegmentDistance(const glm::vec2& _p, const glm::vec2& _p1, const glm::vec2& _p2) {
+    glm::vec2 d(_p2 - _p1);
+    float lengthSq = glm::length2(d);
+
+    if (lengthSq != 0) {
+
+        float t = glm::dot(_p - _p1, d) / lengthSq;
+
+        if (t > 1) {
+            return glm::length2(_p - _p2);
+        } else if (t > 0) {
+            return glm::length2(_p - (_p1 + d * t));
+        }
+    }
+    return glm::length2(_p - _p1);
 }
 
 }

@@ -2,6 +2,7 @@
 #include "platform.h"
 #include "builders.h"
 #include "scene/scene.h"
+#include "data/propertyItem.h"
 
 #define DUMP(...) //do { logMsg(__VA_ARGS__); duk_dump_context_stderr(m_ctx); } while(0)
 
@@ -197,6 +198,7 @@ bool StyleContext::parseStyleResult(StyleParamKey _key, StyleParam::Value& _val)
         bool value = duk_get_boolean(m_ctx, -1);
 
         switch (_key) {
+            case StyleParamKey::interactive:
             case StyleParamKey::visible:
                 _val = value;
                 break;
@@ -279,8 +281,7 @@ bool StyleContext::parseStyleResult(StyleParamKey _key, StyleParam::Value& _val)
                 break;
             }
             case StyleParamKey::font_stroke_width: {
-                double v = duk_get_number(m_ctx, -1);
-                _val = static_cast<float>(v);
+                _val = static_cast<float>(duk_get_number(m_ctx, -1));
                 break;
             }
             case StyleParamKey::order:

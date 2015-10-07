@@ -11,16 +11,14 @@ public:
     TextLabel(std::string _text, Label::Transform _transform, Type _type,
               glm::vec2 _dim, TextBuffer& _mesh, Range _vertexRange, Label::Options _options);
     
-    std::string getText() { return m_text; }
+    const std::string& getText() const { return m_text; }
+
+    void updateBBoxes() override;
 
 private:
 
     std::string m_text;
 
-
-protected:
-
-    void updateBBoxes() override;
 };
 
 }

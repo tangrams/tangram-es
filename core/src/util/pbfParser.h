@@ -1,6 +1,8 @@
 #pragma once
 
 #include "data/tileData.h"
+#include "data/propertyItem.h"
+
 #include "pbf/pbf.hpp"
 
 #include <vector>
@@ -13,6 +15,9 @@ class Tile;
 namespace PbfParser {
 
     struct ParserContext {
+        ParserContext(int32_t _sourceId) : sourceId(_sourceId){}
+
+        int32_t sourceId;
         std::vector<std::string> keys;
         std::vector<Value> values;
         std::vector<Properties::Item> properties;

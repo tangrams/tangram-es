@@ -18,7 +18,7 @@ std::shared_ptr<TileData> MVTSource::parse(const Tile& _tile, std::vector<char>&
     std::shared_ptr<TileData> tileData = std::make_shared<TileData>();
 
     protobuf::message item(_rawData.data(), _rawData.size());
-    PbfParser::ParserContext ctx;
+    PbfParser::ParserContext ctx(m_id);
 
     while(item.next()) {
         if(item.tag == 3) {

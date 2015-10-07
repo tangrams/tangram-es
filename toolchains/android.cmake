@@ -22,6 +22,7 @@ endif()
 # adding manually the two jni c++ files
 set(ADDITIONAL_TARGET_DEPENDENT_SRC_FILES
      ${CMAKE_SOURCE_DIR}/android/tangram/jni/jniExports.cpp
+     ${CMAKE_SOURCE_DIR}/android/tangram/jni/jniGenerated.cpp
      ${CMAKE_SOURCE_DIR}/android/tangram/jni/platform_android.cpp)
 
 # load core library

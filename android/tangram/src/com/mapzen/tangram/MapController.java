@@ -22,6 +22,7 @@ import com.squareup.okhttp.Callback;
 import com.squareup.okhttp.Request;
 import com.squareup.okhttp.Response;
 
+import java.io.File;
 import java.io.IOException;
 
 import javax.microedition.khronos.egl.EGLConfig;
@@ -30,6 +31,10 @@ import javax.microedition.khronos.opengles.GL10;
 import okio.BufferedSource;
 
 public class MapController implements Renderer, OnTouchListener, OnScaleGestureListener, OnRotateGestureListener, OnGestureListener, OnDoubleTapListener, OnShoveGestureListener {
+
+    public interface FeatureTouchListener {
+        void onTouch(Properties properties);
+    }
 
     static {
         System.loadLibrary("c++_shared");
@@ -230,6 +235,14 @@ public class MapController implements Renderer, OnTouchListener, OnScaleGestureL
         tapGestureListener = listener;
     }
 
+    /**
+     * Set a listener for Feature touch events
+     * @param listener Listen to call
+     */
+    public void setFeatureTouchListener(FeatureTouchListener listener) {
+        featureTouchListener = listener;
+    }
+
     // Native methods
     // ==============
 
@@ -256,6 +269,7 @@ public class MapController implements Renderer, OnTouchListener, OnScaleGestureL
     private synchronized native void handleShoveGesture(float distance);
     private synchronized native void onUrlSuccess(byte[] rawDataBytes, long callbackPtr);
     private synchronized native void onUrlFailure(long callbackPtr);
+    public synchronized native void pickFeature(float posX, float posY);
 
     // Private members
     // ===============
@@ -295,6 +309,8 @@ public class MapController implements Renderer, OnTouchListener, OnScaleGestureL
     private DisplayMetrics displayMetrics = new DisplayMetrics();
 
     private HttpHandler httpHandler;
+
+    private FeatureTouchListener featureTouchListener;
 
     // View.OnTouchListener methods
     // ============================
@@ -568,6 +584,14 @@ public class MapController implements Renderer, OnTouchListener, OnScaleGestureL
 
         return fontFileParser.getFontFile(family + "_" + weight + "_" + style);
 
+    }
+
+    // Feature selection
+    // =================
+    public void featureSelectionCb(Properties properties) {
+        if (featureTouchListener != null) {
+            featureTouchListener.onTouch(properties);
+        }
     }
 
 }

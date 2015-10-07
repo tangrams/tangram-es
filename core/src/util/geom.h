@@ -89,4 +89,6 @@ float signedArea(const std::vector<glm::vec3>& _polygon);
 /* Computes the geometric center of the two dimentionnal region defined by the polygon */
 glm::vec2 centroid(const std::vector<std::vector<glm::vec3>>& _polygon);
 
+float sqSegmentDistance(const glm::vec2& _p, const glm::vec2& _p1, const glm::vec2& _p2);
+
 }

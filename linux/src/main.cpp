@@ -17,7 +17,7 @@ const char* sceneFile = "scene.yaml";
 
 const double double_tap_time = 0.5; // seconds
 const double scroll_multiplier = 0.05; // scaling for zoom
-const double single_tap_time = 0.25; //seconds (to avoid a long press being considered as a tap)
+// const double single_tap_time = 0.25; //seconds (to avoid a long press being considered as a tap)
 
 bool was_panning = false;
 double last_mouse_up = -double_tap_time; // First click should never trigger a double tap
@@ -48,11 +48,16 @@ void mouse_button_callback(GLFWwindow* window, int button, int action, int mods)
         last_mouse_down = glfwGetTime();
         return;
     }
-
     if (time - last_mouse_up < double_tap_time) {
-        Tangram::handleDoubleTapGesture(x, y);
-    } else if ( (time - last_mouse_down) < single_tap_time) {
-        Tangram::handleTapGesture(x, y);
+
+        auto picks = Tangram::pickFeaturesAt(x, y);
+        std::string name;
+        logMsg("picked %d features\n", picks.size());
+        for (const auto& it : picks) {
+            if (it.properties->getString("name", name)) {
+                logMsg(" - %f\t %s\n", it.distance, name.c_str());
+            }
+        }
     }
 
     last_mouse_up = time;
@@ -179,7 +184,6 @@ void init_main_window() {
     // Setup graphics
     Tangram::setupGL();
     Tangram::resize(width, height);
-
 }
 
 // Main program

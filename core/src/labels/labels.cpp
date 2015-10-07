@@ -4,9 +4,10 @@
 #include "gl/primitives.h"
 #include "view/view.h"
 #include "style/style.h"
-
+#include "glm/glm.hpp"
 #include "glm/gtc/matrix_transform.hpp"
 #include "glm/gtx/rotate_vector.hpp"
+#include "glm/gtx/norm.hpp"
 
 namespace Tangram {
 
@@ -107,6 +108,59 @@ void Labels::update(const View& _view, float _dt, const std::vector<std::unique_
         requestRender();
     }
 }
+
+const std::vector<TouchItem>& Labels::getFeaturesAtPoint(const View& _view, float _dt,
+                                                         const std::vector<std::unique_ptr<Style>>& _styles,
+                                                         const std::vector<std::shared_ptr<Tile>>& _tiles,
+                                                         float _x, float _y, bool _visibleOnly) {
+    // FIXME dpi dependent threshold
+    const float thumbSize = 50;
+
+    m_touchItems.clear();
+
+    glm::vec2 screenSize = glm::vec2(_view.getWidth(), _view.getHeight());
+    glm::vec2 touchPoint(_x, _y);
+
+    OBB obb(_x - thumbSize/2, _y - thumbSize/2, 0, thumbSize, thumbSize);
+
+    for (const auto& tile : _tiles) {
+
+        glm::mat4 mvp = _view.getViewProjectionMatrix() * tile->getModelMatrix();
+
+        for (const auto& style : _styles) {
+            const auto& mesh = tile->getMesh(*style);
+            if (!mesh) { continue; }
+
+            const LabelMesh* labelMesh = dynamic_cast<const LabelMesh*>(mesh.get());
+            if (!labelMesh) { continue; }
+
+            for (auto& label : labelMesh->getLabels()) {
+
+                auto& options = label->getOptions();
+                if (!options.interactive) { continue; }
+
+                if (!_visibleOnly) {
+                    label->updateScreenTransform(mvp, screenSize, false);
+                    label->updateBBoxes();
+                }
+
+                if (isect2d::intersect(label->getOBB(), obb)) {
+                    float distance = glm::length2(label->getTransform().state.screenPos - touchPoint);
+
+                    m_touchItems.push_back({options.properties, std::sqrt(distance)});
+                }
+            }
+        }
+    }
+
+    std::sort(m_touchItems.begin(), m_touchItems.end(),
+              [](auto& a, auto& b){ return a.distance < b.distance; });
+
+
+    return m_touchItems;
+}
+
+
 
 void Labels::drawDebug(const View& _view) {
 

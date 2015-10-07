@@ -20,6 +20,7 @@ enum class StyleParamKey : uint8_t {
     font_stroke_width,
     font_style,
     font_weight,
+    interactive,
     join,
     none,
     offset,

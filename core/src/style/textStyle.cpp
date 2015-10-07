@@ -9,6 +9,7 @@
 #include "glm/gtc/type_ptr.hpp"
 #include "tangram.h"
 #include "text/fontContext.h"
+#include "data/propertyItem.h" // Include wherever Properties is used!
 
 namespace Tangram {
 
@@ -50,7 +51,9 @@ void TextStyle::constructShaderProgram() {
     m_shaderProgram->addSourceBlock("defines", defines);
 }
 
-Parameters TextStyle::parseRule(const DrawRule& _rule) const {
+Parameters TextStyle::applyRule(const DrawRule& _rule, const Properties& _props) const {
+    const static std::string key_name("name");
+
     Parameters p;
 
     std::string fontFamily, fontWeight, fontStyle, transform;
@@ -77,9 +80,19 @@ Parameters TextStyle::parseRule(const DrawRule& _rule) const {
     _rule.get(StyleParamKey::transform, transform);
     _rule.get(StyleParamKey::visible, p.visible);
     _rule.get(StyleParamKey::priority, p.priority);
-    if (_rule.get(StyleParamKey::text_source, p.textSource.text)) {
-        p.textSource.isFunction = _rule.isJSFunction(StyleParamKey::text_source);
+
+    _rule.get(StyleParamKey::text_source, p.text);
+    if (!_rule.isJSFunction(StyleParamKey::text_source)) {
+        if (p.text.empty()) {
+            p.text = _props.getString(key_name);
+        } else {
+            p.text = _props.getString(p.text);
+        }
     }
+
+   if (_rule.get(StyleParamKey::interactive, p.interactive) && p.interactive) {
+       p.properties = std::make_shared<Properties>(_props);
+   }
 
     if (transform == "capitalize") {
         p.transform = TextTransform::capitalize;
@@ -98,66 +111,29 @@ Parameters TextStyle::parseRule(const DrawRule& _rule) const {
     return p;
 }
 
-Label::Options TextStyle::optionsFromTextParams(const Parameters& _params) const {
-    Label::Options options;
-    options.color = _params.fill;
-    options.priority = _params.priority;
-    options.offset = _params.offset * m_pixelScale;
-    return options;
-}
-
-const std::string& TextStyle::applyTextSource(const Parameters& _parameters, const Properties& _props) const {
-
-    const static std::string key_name("name");
-
-    if (_parameters.textSource.isFunction) {
-        return _parameters.textSource.text;
-    }
-
-    if (_parameters.textSource.text.empty()) {
-        // Default: use 'name' property
-        return _props.getString(key_name);
-    } else {
-        return _props.getString(_parameters.textSource.text);
-    }
-}
-
 void TextStyle::buildPoint(const Point& _point, const DrawRule& _rule, const Properties& _props, VboMesh& _mesh, Tile& _tile) const {
     auto& buffer = static_cast<TextBuffer&>(_mesh);
 
-    Parameters params = parseRule(_rule);
+    Parameters params = applyRule(_rule, _props);
 
-    if (!params.visible) {
-        return;
-    }
+    if (!params.visible || !params.isValid()) { return; }
 
-    const std::string& text = applyTextSource(params, _props);
-
-    if (text.length() == 0) { return; }
-    buffer.addLabel(text, { glm::vec2(_point), glm::vec2(_point) },
-                    Label::Type::point, params, optionsFromTextParams(params),
-                    *m_fontContext);
+    buffer.addLabel(params, { glm::vec2(_point), glm::vec2(_point) },
+                    Label::Type::point, *m_fontContext);
 }
 
 void TextStyle::buildLine(const Line& _line, const DrawRule& _rule, const Properties& _props, VboMesh& _mesh, Tile& _tile) const {
     auto& buffer = static_cast<TextBuffer&>(_mesh);
 
-    Parameters params = parseRule(_rule);
+    Parameters params = applyRule(_rule, _props);
 
-    if (!params.visible) {
-        return;
-    }
-
-    const std::string& text = applyTextSource(params, _props);
-
-    if (text.length() == 0) { return; }
+    if (!params.visible || !params.isValid()) { return; }
 
     for (size_t i = 0; i < _line.size() - 1; i++) {
         glm::vec2 p1 = glm::vec2(_line[i]);
         glm::vec2 p2 = glm::vec2(_line[i + 1]);
 
-        buffer.addLabel(text, { p1, p2 }, Label::Type::line, params,
-                        optionsFromTextParams(params), *m_fontContext);
+        buffer.addLabel(params, { p1, p2 }, Label::Type::line, *m_fontContext);
     }
 }
 
