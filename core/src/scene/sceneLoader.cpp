@@ -1156,11 +1156,11 @@ void SceneLoader::parseStyleParams(Node params, Scene& scene, const std::string&
                 if (styleKey != StyleParamKey::none) {
 
                     if (StyleParam::isColor(styleKey)) {
-                        scene.stops().push_back(Stops::Color(value));
+                        scene.stops().push_back(Stops::Colors(value));
                         out.push_back(StyleParam{ styleKey, &(scene.stops().back()) });
 
                     } else if (StyleParam::isWidth(styleKey)) {
-                        scene.stops().push_back(Stops::Width(value, *scene.mapProjection()));
+                        scene.stops().push_back(Stops::Widths(value, *scene.mapProjection()));
                         out.push_back(StyleParam{ styleKey, &(scene.stops().back()) });
 
                     } else {

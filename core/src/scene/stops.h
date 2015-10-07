@@ -1,8 +1,8 @@
 #pragma once
 
 #include "util/mapProjection.h"
+#include "util/color.h"
 
-#include <cstdint>
 #include <vector>
 
 namespace YAML {
@@ -17,15 +17,15 @@ struct Stops {
         float key = 0;
         union {
             float value;
-            uint32_t color = 0;
+            Color color;
         };
         Frame(float _k, float _v) : key(_k), value(_v) {}
-        Frame(float _k, uint32_t _c) : key(_k), color(_c) {}
+        Frame(float _k, Color _c) : key(_k), color(_c) {}
     };
 
     std::vector<Frame> frames;
-    static Stops Color(const YAML::Node& _node);
-    static Stops Width(const YAML::Node& _node, const MapProjection& _projection);
+    static Stops Colors(const YAML::Node& _node);
+    static Stops Widths(const YAML::Node& _node, const MapProjection& _projection);
 
     Stops(const std::vector<Frame>& _frames) : frames(_frames) {}
     Stops() {}
