@@ -198,7 +198,11 @@ void PointStyle::buildPolygon(const Polygon& _polygon, const DrawRule& _rule, co
     auto& mesh = static_cast<LabelMesh&>(_mesh);
 
     if (!p.centroid) {
-        vertices.reserve(Geometry::polygonSize(_polygon));
+
+        int size = 0;
+        for (auto line : _polygon) { size += line.size(); }
+
+        vertices.reserve(size);
 
         for (auto line : _polygon) {
             for (auto point : line) {

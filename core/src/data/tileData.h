@@ -66,17 +66,6 @@ typedef std::vector<Point> Line;
 
 typedef std::vector<Line> Polygon;
 
-struct Geometry {
-    static int polygonSize(const Polygon& _polygon) {
-        int size = 0;
-        for (auto line : _polygon) {
-            size += line.size();
-        }
-        return size;
-    }
-};
-
-
 struct Feature {
     Feature() {}
     Feature(int32_t _sourceId) { props.sourceId = _sourceId; }
