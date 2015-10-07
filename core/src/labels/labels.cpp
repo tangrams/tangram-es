@@ -2,10 +2,12 @@
 
 #include "tangram.h"
 #include "platform.h"
-#include "tile/tile.h"
+#include "gl/shaderProgram.h"
 #include "gl/primitives.h"
 #include "view/view.h"
 #include "style/style.h"
+#include "tile/tile.h"
+
 #include "glm/glm.hpp"
 #include "glm/gtc/matrix_transform.hpp"
 #include "glm/gtx/rotate_vector.hpp"
