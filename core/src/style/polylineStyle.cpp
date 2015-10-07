@@ -4,6 +4,7 @@
 #include "platform.h"
 #include "gl/shaderProgram.h"
 #include "scene/stops.h"
+#include "scene/drawRule.h"
 #include "tile/tile.h"
 #include "util/mapProjection.h"
 

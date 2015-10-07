@@ -1,5 +1,6 @@
 #include "textStyle.h"
 
+#include "scene/drawRule.h"
 #include "text/fontContext.h"
 #include "tile/tile.h"
 #include "gl/shaderProgram.h"

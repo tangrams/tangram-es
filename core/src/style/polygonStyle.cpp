@@ -5,6 +5,7 @@
 #include "util/builders.h"
 #include "gl/shaderProgram.h"
 #include "tile/tile.h"
+#include "scene/drawRule.h"
 
 #include <cmath>
 
