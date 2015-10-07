@@ -15,27 +15,12 @@ TextBuffer::TextBuffer(std::shared_ptr<VertexLayout> _vertexLayout)
 TextBuffer::~TextBuffer() {
 }
 
-Label::Options optionsFromTextParams(const Parameters& _params) {
-    Label::Options options;
-    options.priority = _params.priority;
-    options.offset = _params.offset;
-
-    options.interactive = _params.interactive;
-    if (options.interactive) {
-        options.properties = _params.properties;
-    }
-
-    return options;
-}
-
 bool TextBuffer::addLabel(const Parameters& _params, Label::Transform _transform,
                           Label::Type _type, FontContext& _fontContext) {
 
     if (_params.fontId < 0 || _params.fontSize <= 0.f) {
         return false;
     }
-
-    auto options = optionsFromTextParams(_params);
 
     const std::string* renderText;
     std::string text;
@@ -120,9 +105,8 @@ bool TextBuffer::addLabel(const Parameters& _params, Label::Transform _transform
 
     glm::vec2 size((x1 - x0), (y1 - y0));
 
-
-    m_labels.emplace_back(new TextLabel(_params.text, _transform, _type, size, *this,
-                                        { vertexOffset, numVertices }, options));
+    m_labels.emplace_back(new TextLabel(*renderText, _transform, _type, size, *this,
+                                        { vertexOffset, numVertices }, _params.labelOptions));
 
     // TODO: change this in TypeMesh::adVertices()
     m_nVertices = vertices.size();

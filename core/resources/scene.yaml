@@ -225,7 +225,7 @@ layers:
                 offset: [0px, -15px]
                 size: 20px
                 priority: 5
-                collide: false
+                collide: true
                 transition:
                     [show, hide]:
                         effect: fade

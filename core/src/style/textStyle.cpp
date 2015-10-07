@@ -74,12 +74,13 @@ Parameters TextStyle::applyRule(const DrawRule& _rule, const Properties& _props)
 
     _rule.get(StyleParamKey::font_size, p.fontSize);
     _rule.get(StyleParamKey::font_fill, p.fill);
-    _rule.get(StyleParamKey::offset, p.offset);
+    _rule.get(StyleParamKey::offset, p.labelOptions.offset);
     _rule.get(StyleParamKey::font_stroke_color, p.strokeColor);
     _rule.get(StyleParamKey::font_stroke_width, p.strokeWidth);
     _rule.get(StyleParamKey::transform, transform);
     _rule.get(StyleParamKey::visible, p.visible);
-    _rule.get(StyleParamKey::priority, p.priority);
+    _rule.get(StyleParamKey::priority, p.labelOptions.priority);
+    _rule.get(StyleParamKey::collide, p.labelOptions.collide);
 
     _rule.get(StyleParamKey::text_source, p.text);
     if (!_rule.isJSFunction(StyleParamKey::text_source)) {
@@ -105,12 +106,15 @@ Parameters TextStyle::applyRule(const DrawRule& _rule, const Properties& _props)
     /* Global operations done for fontsize and sdfblur */
     float emSize = p.fontSize / 16.f;
     p.fontSize *= m_pixelScale;
+    p.labelOptions.offset *= m_pixelScale;
     p.blurSpread = m_sdf ? emSize * 5.0f : 0.0f;
 
     return p;
 }
 
-void TextStyle::buildPoint(const Point& _point, const DrawRule& _rule, const Properties& _props, VboMesh& _mesh, Tile& _tile) const {
+void TextStyle::buildPoint(const Point& _point, const DrawRule& _rule, const Properties& _props,
+                           VboMesh& _mesh, Tile& _tile) const {
+
     auto& buffer = static_cast<TextBuffer&>(_mesh);
 
     Parameters params = applyRule(_rule, _props);
@@ -121,7 +125,9 @@ void TextStyle::buildPoint(const Point& _point, const DrawRule& _rule, const Pro
                     Label::Type::point, *m_fontContext);
 }
 
-void TextStyle::buildLine(const Line& _line, const DrawRule& _rule, const Properties& _props, VboMesh& _mesh, Tile& _tile) const {
+void TextStyle::buildLine(const Line& _line, const DrawRule& _rule, const Properties& _props,
+        VboMesh& _mesh, Tile& _tile) const {
+
     auto& buffer = static_cast<TextBuffer&>(_mesh);
 
     Parameters params = applyRule(_rule, _props);
@@ -136,7 +142,8 @@ void TextStyle::buildLine(const Line& _line, const DrawRule& _rule, const Proper
     }
 }
 
-void TextStyle::buildPolygon(const Polygon& _polygon, const DrawRule& _rule, const Properties& _props, VboMesh& _mesh, Tile& _tile) const {
+void TextStyle::buildPolygon(const Polygon& _polygon, const DrawRule& _rule,
+                             const Properties& _props, VboMesh& _mesh, Tile& _tile) const {
     Point p = glm::vec3(centroid(_polygon), 0.0);
     buildPoint(p, _rule, _props, _mesh, _tile);
 }

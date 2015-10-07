@@ -32,11 +32,10 @@ struct Parameters {
     float strokeWidth = 0.0f;
     float fontSize = 12.0f;
     float blurSpread = 0.0f;
-    bool visible = true;
-    bool collide = true;
-    TextTransform transform = TextTransform::none;
-    uint32_t priority = std::numeric_limits<uint32_t>::max();
     glm::vec2 offset;
+    TextTransform transform = TextTransform::none;
+    bool visible = true;
+    Label::Options labelOptions;
 
     bool isValid() {
         return fontSize > 0.f && !text.empty();

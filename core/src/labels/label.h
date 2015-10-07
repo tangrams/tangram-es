@@ -74,7 +74,7 @@ public:
         uint32_t priority = std::numeric_limits<uint32_t>::max();
         bool interactive = false;
         std::shared_ptr<Properties> properties;
-        bool collide = false;
+        bool collide = true;
         Transition selectTransition;
         Transition hideTransition;
         Transition showTransition;
