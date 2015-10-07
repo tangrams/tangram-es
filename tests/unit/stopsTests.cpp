@@ -8,9 +8,9 @@ using namespace Tangram;
 
 Stops instance_color() {
     return Stops({
-        Stops::Frame(0, 0xffffffff),
-        Stops::Frame(1, 0xffeeeeee),
-        Stops::Frame(5, 0xffaaaaaa)
+        Stops::Frame(0, Color(0xffffffff)),
+        Stops::Frame(1, Color(0xffeeeeee)),
+        Stops::Frame(5, Color(0xffaaaaaa))
     });
 }
 
@@ -79,7 +79,7 @@ TEST_CASE("Stops parses correctly from YAML distance values", "[Stops][YAML]") {
 
     MercatorProjection proj;
 
-    Stops stops(Stops::Width(node, proj));
+    Stops stops(Stops::Widths(node, proj));
 
     // +1 added for meter end stop
     REQUIRE(stops.frames.size() == 5);
@@ -97,14 +97,14 @@ TEST_CASE("Stops parses correctly from YAML color values", "[Stops][YAML]") {
 
     YAML::Node node = YAML::Load("[ [10, '#aaa'], [16, [0, .5, 1] ], [18, [0, .25, 1, .5] ] ]");
 
-    Stops stops(Stops::Color(node));
+    Stops stops(Stops::Colors(node));
 
     REQUIRE(stops.frames.size() == 3);
     REQUIRE(stops.frames[0].key == 10.f);
     REQUIRE(stops.frames[1].key == 16.f);
     REQUIRE(stops.frames[2].key == 18.f);
-    REQUIRE(stops.frames[0].color == 0xffaaaaaa);
-    REQUIRE(stops.frames[1].color == 0xffff7f00);
-    REQUIRE(stops.frames[2].color == 0x7fff3f00);
+    REQUIRE(stops.frames[0].color.abgr == 0xffaaaaaa);
+    REQUIRE(stops.frames[1].color.abgr == 0xffff7f00);
+    REQUIRE(stops.frames[2].color.abgr == 0x7fff3f00);
 
 }
