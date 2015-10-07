@@ -1,6 +1,7 @@
 #include "polylineStyle.h"
 
 #include "tangram.h"
+#include "platform.h"
 #include "gl/shaderProgram.h"
 #include "scene/stops.h"
 #include "tile/tile.h"

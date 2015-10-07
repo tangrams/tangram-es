@@ -1,6 +1,7 @@
 #include "polygonStyle.h"
 
 #include "tangram.h"
+#include "platform.h"
 #include "util/builders.h"
 #include "gl/shaderProgram.h"
 #include "tile/tile.h"

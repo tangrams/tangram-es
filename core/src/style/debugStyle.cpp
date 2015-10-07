@@ -1,6 +1,7 @@
 #include "debugStyle.h"
 
 #include "tangram.h"
+#include "platform.h"
 #include "tile/tile.h"
 #include "gl/shaderProgram.h"
 

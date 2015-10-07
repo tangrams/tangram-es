@@ -4,6 +4,7 @@
 #include "gl/renderState.h"
 #include "gl/shaderProgram.h"
 #include "gl/textureCube.h"
+#include "platform.h"
 
 namespace Tangram {
 

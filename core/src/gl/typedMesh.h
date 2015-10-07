@@ -3,7 +3,6 @@
 #include "vboMesh.h"
 #include "util/types.h"
 
-#include <cstdlib> // std::abs
 #include <cassert>
 
 namespace Tangram {
@@ -55,11 +54,11 @@ public:
             return;
         }
         if (_vertexRange.start + _vertexRange.length > m_nVertices) {
-            LOGW("Invalid range");
+            //LOGW("Invalid range");
             return;
         }
         if (_attribOffset >= tSize) {
-            LOGW("Invalid attribute offset");
+            //LOGW("Invalid attribute offset");
             return;
         }
 

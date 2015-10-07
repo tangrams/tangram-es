@@ -1,5 +1,7 @@
 #include "renderState.h"
 
+#include "platform.h"
+
 namespace Tangram {
 
 namespace RenderState {

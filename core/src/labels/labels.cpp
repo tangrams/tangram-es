@@ -1,5 +1,7 @@
 #include "labels.h"
+
 #include "tangram.h"
+#include "platform.h"
 #include "tile/tile.h"
 #include "gl/primitives.h"
 #include "view/view.h"

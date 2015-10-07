@@ -3,7 +3,6 @@
 #include "gl.h"
 #include "fontstash.h"
 #include "gl/texture.h"
-#include "platform.h"
 #include <memory>
 #include <mutex>
 #include <string>
