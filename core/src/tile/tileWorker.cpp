@@ -3,9 +3,11 @@
 #include "platform.h"
 #include "tile/tile.h"
 #include "view/view.h"
-#include "tileManager.h"
 #include "scene/scene.h"
 #include "scene/styleContext.h"
+#include "tile/tileManager.h"
+#include "tile/tileID.h"
+#include "tile/tileTask.h"
 
 #include <algorithm>
 
