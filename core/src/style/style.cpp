@@ -1,5 +1,6 @@
 #include "style.h"
 
+#include "material.h"
 #include "gl/renderState.h"
 #include "gl/shaderProgram.h"
 #include "gl/vboMesh.h"

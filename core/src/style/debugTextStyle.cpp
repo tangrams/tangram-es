@@ -2,6 +2,7 @@
 
 #include "gl/shaderProgram.h"
 #include "gl/vboMesh.h"
+#include "style/material.h"
 #include "text/fontContext.h"
 #include "tile/tile.h"
 
