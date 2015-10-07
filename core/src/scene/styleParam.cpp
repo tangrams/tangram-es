@@ -44,6 +44,9 @@ const std::map<std::string, StyleParamKey> s_StyleParamMap = {
     {"centroid", StyleParamKey::centroid},
     {"collide", StyleParamKey::collide},
     {"time", StyleParamKey::time},
+    {"transition:show:time", StyleParamKey::transition_show_time},
+    {"transition:hide:time", StyleParamKey::transition_hide_time},
+    {"transition:selected:time", StyleParamKey::transition_selected_time},
 };
 
 static const char* keyName(StyleParamKey key) {

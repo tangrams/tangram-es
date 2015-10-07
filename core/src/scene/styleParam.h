@@ -41,6 +41,9 @@ enum class StyleParamKey : uint8_t {
     centroid,
     collide,
     time,
+    transition_show_time,
+    transition_hide_time,
+    transition_selected_time
 };
 
 enum class Unit { pixel, meter };
