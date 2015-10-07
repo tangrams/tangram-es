@@ -1,8 +1,10 @@
 #include "mvtSource.h"
 
+#include "tileData.h"
+#include "tile/tileID.h"
+#include "tile/tile.h"
 #include "util/pbfParser.h"
 #include "platform.h"
-#include "tile/tileID.h"
 
 #include <sstream>
 #include <fstream>
