@@ -1,6 +1,6 @@
 #pragma once
 
-#include "gl.h"
+#include "gl/gl_fwd.h"
 #include "vertexLayout.h"
 #include "util/types.h"
 

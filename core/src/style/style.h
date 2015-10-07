@@ -1,7 +1,7 @@
 #pragma once
 
 #include "data/tileData.h"
-#include "gl.h"
+#include "gl/gl_fwd.h"
 #include "util/variant.h"
 
 #include <memory>

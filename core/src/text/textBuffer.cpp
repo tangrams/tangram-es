@@ -1,6 +1,7 @@
 #include "textBuffer.h"
-#include "labels/textLabel.h"
 
+#include "gl.h"
+#include "labels/textLabel.h"
 #include "gl/texture.h"
 #include "gl/vboMesh.h"
 
