@@ -16,6 +16,7 @@
 #include "util/inputHandler.h"
 #include "view/view.h"
 #include "data/clientGeoJsonSource.h"
+#include "gl.h"
 #include <memory>
 #include <cmath>
 #include <bitset>

@@ -1,5 +1,6 @@
 #include "renderState.h"
 
+#include "gl.h"
 #include "platform.h"
 
 namespace Tangram {

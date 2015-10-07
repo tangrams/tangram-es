@@ -8,6 +8,7 @@
 #include "gl/vertexLayout.h"
 #include "gl/renderState.h"
 #include "platform.h"
+#include "gl.h"
 
 namespace Tangram {
 

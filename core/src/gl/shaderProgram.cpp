@@ -1,5 +1,6 @@
 #include "shaderProgram.h"
 
+#include "gl.h"
 #include "platform.h"
 #include "scene/light.h"
 #include "gl/renderState.h"

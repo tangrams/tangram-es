@@ -1,6 +1,7 @@
 #include "vertexLayout.h"
 #include "shaderProgram.h"
 #include "platform.h"
+#include "gl.h"
 
 namespace Tangram {
 

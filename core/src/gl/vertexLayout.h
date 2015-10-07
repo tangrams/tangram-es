@@ -1,6 +1,6 @@
 #pragma once
 
-#include "gl.h"
+#include "gl/gl_fwd.h"
 
 #include <vector>
 #include <unordered_map>

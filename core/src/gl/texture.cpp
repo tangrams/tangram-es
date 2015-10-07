@@ -1,5 +1,6 @@
 #include "texture.h"
 
+#include "gl.h"
 #include "platform.h"
 #include "util/geom.h"
 #include "gl/renderState.h"
