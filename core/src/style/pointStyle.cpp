@@ -65,6 +65,9 @@ PointStyle::Parameters PointStyle::applyRule(const DrawRule& _rule, const Proper
     _rule.get(StyleParamKey::centroid, p.centroid);
     _rule.get(StyleParamKey::interactive, p.labelOptions.interactive);
     _rule.get(StyleParamKey::collide, p.labelOptions.collide);
+    _rule.get(StyleParamKey::transition_hide_time, p.labelOptions.hideTransition.time);
+    _rule.get(StyleParamKey::transition_selected_time, p.labelOptions.selectTransition.time);
+    _rule.get(StyleParamKey::transition_show_time, p.labelOptions.showTransition.time);
 
     auto sizeParam = _rule.findParameter(StyleParamKey::size);
     if (sizeParam.stops && sizeParam.value.is<float>()) {

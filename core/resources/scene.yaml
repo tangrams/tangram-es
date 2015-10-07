@@ -66,6 +66,10 @@ layers:
                 width: .03
             icons:
                 sprite: sunburst
+                collide: false
+                transition:
+                    [show, hide]:
+                        time: 0s
 
     earth:
         data: { source: osm }
@@ -226,12 +230,6 @@ layers:
                 size: 20px
                 priority: 5
                 collide: true
-                transition:
-                    [show, hide]:
-                        effect: fade
-                        time: 1000ms
-                    selected:
-                        time: 0s
                 #size: [[13, 12px], [15, 18px]]
                 #interactive: true
 

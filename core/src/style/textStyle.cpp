@@ -81,6 +81,9 @@ Parameters TextStyle::applyRule(const DrawRule& _rule, const Properties& _props)
     _rule.get(StyleParamKey::visible, p.visible);
     _rule.get(StyleParamKey::priority, p.labelOptions.priority);
     _rule.get(StyleParamKey::collide, p.labelOptions.collide);
+    _rule.get(StyleParamKey::transition_hide_time, p.labelOptions.hideTransition.time);
+    _rule.get(StyleParamKey::transition_selected_time, p.labelOptions.selectTransition.time);
+    _rule.get(StyleParamKey::transition_show_time, p.labelOptions.showTransition.time);
 
     _rule.get(StyleParamKey::text_source, p.text);
     if (!_rule.isJSFunction(StyleParamKey::text_source)) {

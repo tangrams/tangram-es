@@ -278,7 +278,7 @@ std::string StyleParam::toString() const {
 int StyleParam::parseValueUnitPair(const std::string& _value, size_t start,
                                    StyleParam::ValueUnitPair& _result) {
 
-    static const std::vector<std::string> units = { "px", "m", "s", "ms" };
+    static const std::vector<std::string> units = { "px", "ms", "m", "s" };
 
     if (start >= _value.length()) { return -1; }
 
@@ -297,6 +297,7 @@ int StyleParam::parseValueUnitPair(const std::string& _value, size_t start,
 
     for (int i = 0; i < units.size(); ++i) {
         const auto& unit = units[i];
+        std::string valueUnit;
         if (unit == _value.substr(start, std::min<int>(_value.length(), unit.length()))) {
             _result.unit = static_cast<Unit>(i);
             start += unit.length();
@@ -317,10 +318,10 @@ bool StyleParam::parseTime(const std::string &_value, float &_time) {
 
     switch (p.unit) {
         case Unit::milliseconds:
-            _time = p.value;
+            _time = p.value / 1000.f;
             break;
         case Unit::seconds:
-            _time = p.value * 1000.f;
+            _time = p.value;
             break;
         default:
             LOGW("Invalid unit provided for time %s", _value.c_str());

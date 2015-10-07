@@ -45,7 +45,7 @@ enum class StyleParamKey : uint8_t {
     transition_selected_time
 };
 
-enum class Unit { pixel, meter, seconds, milliseconds };
+enum class Unit { pixel, milliseconds, meter, seconds };
 
 struct StyleParam {
 
