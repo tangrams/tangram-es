@@ -17,7 +17,6 @@ TextBuffer::~TextBuffer() {
 
 Label::Options optionsFromTextParams(const Parameters& _params) {
     Label::Options options;
-    options.color = _params.fill;
     options.priority = _params.priority;
     options.offset = _params.offset;
 
@@ -111,10 +110,10 @@ bool TextBuffer::addLabel(const Parameters& _params, Label::Transform _transform
         y0 = std::min(y0, std::min(q.y0, q.y1));
         y1 = std::max(y1, std::max(q.y0, q.y1));
 
-        vertices.push_back({{q.x0, q.y0}, {q.s0, q.t0}, options.color, stroke});
-        vertices.push_back({{q.x0, q.y1}, {q.s0, q.t1}, options.color, stroke});
-        vertices.push_back({{q.x1, q.y0}, {q.s1, q.t0}, options.color, stroke});
-        vertices.push_back({{q.x1, q.y1}, {q.s1, q.t1}, options.color, stroke});
+        vertices.push_back({{q.x0, q.y0}, {q.s0, q.t0}, _params.fill, stroke});
+        vertices.push_back({{q.x0, q.y1}, {q.s0, q.t1}, _params.fill, stroke});
+        vertices.push_back({{q.x1, q.y0}, {q.s1, q.t0}, _params.fill, stroke});
+        vertices.push_back({{q.x1, q.y1}, {q.s1, q.t1}, _params.fill, stroke});
     }
 
     _fontContext.unlock();

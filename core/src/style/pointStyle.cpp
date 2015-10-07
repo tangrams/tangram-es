@@ -95,8 +95,6 @@ Label::Options PointStyle::optionsFromPointParams(const Parameters& _params) con
     Label::Options options;
     options.offset = _params.offset * m_pixelScale;
     options.priority = _params.priority;
-    options.color = _params.color;
-    options.interactive = _params.interactive;
     options.collide = _params.collide;
     return options;
 }
@@ -153,7 +151,7 @@ void PointStyle::buildPoint(const Point& _point, const DrawRule& _rule, const Pr
     std::vector<Label::Vertex> vertices;
 
     vertices.reserve(4);
-    pushQuad(vertices, p.size * 0.5f, {uvsQuad.x, uvsQuad.y}, {uvsQuad.z, uvsQuad.w}, options.color);
+    pushQuad(vertices, p.size * 0.5f, {uvsQuad.x, uvsQuad.y}, {uvsQuad.z, uvsQuad.w}, p.color);
     mesh.addVertices(std::move(vertices), {});
 }
 
@@ -179,7 +177,7 @@ void PointStyle::buildLine(const Line& _line, const DrawRule& _rule, const Prope
         Label::Transform transform = { glm::vec2(_line[i]) };
 
         mesh.addLabel(std::make_unique<SpriteLabel>(transform, p.size, mesh, _mesh.numVertices(), options));
-        pushQuad(vertices, p.size * 0.5f, {uvsQuad.x, uvsQuad.y}, {uvsQuad.z, uvsQuad.w}, options.color);
+        pushQuad(vertices, p.size * 0.5f, {uvsQuad.x, uvsQuad.y}, {uvsQuad.z, uvsQuad.w}, p.color);
     }
 
     mesh.addVertices(std::move(vertices), {});
@@ -214,7 +212,7 @@ void PointStyle::buildPolygon(const Polygon& _polygon, const DrawRule& _rule, co
                 Label::Transform transform = { glm::vec2(point) };
 
                 mesh.addLabel(std::make_unique<SpriteLabel>(transform, p.size, mesh, _mesh.numVertices(), options));
-                pushQuad(vertices, p.size * 0.5f, {uvsQuad.x, uvsQuad.y}, {uvsQuad.z, uvsQuad.w}, options.color);
+                pushQuad(vertices, p.size * 0.5f, {uvsQuad.x, uvsQuad.y}, {uvsQuad.z, uvsQuad.w}, p.color);
             }
         }
     } else {
@@ -223,7 +221,7 @@ void PointStyle::buildPolygon(const Polygon& _polygon, const DrawRule& _rule, co
         Label::Transform transform = { c };
 
         mesh.addLabel(std::make_unique<SpriteLabel>(transform, p.size, mesh, _mesh.numVertices(), options));
-        pushQuad(vertices, p.size * 0.5f, {uvsQuad.x, uvsQuad.y}, {uvsQuad.z, uvsQuad.w}, options.color);
+        pushQuad(vertices, p.size * 0.5f, {uvsQuad.x, uvsQuad.y}, {uvsQuad.z, uvsQuad.w}, p.color);
     }
 
     mesh.addVertices(std::move(vertices), {});
