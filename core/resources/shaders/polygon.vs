@@ -41,6 +41,8 @@ void main() {
     // Position
     vec4 position = a_position;
 
+    v_texcoord = a_texcoord;
+
     // Modify position before camera projection
     #pragma tangram: position
 
@@ -48,8 +50,6 @@ void main() {
     
     v_eyeToPoint = vec3(u_modelView * position);
     v_normal = normalize(u_normalMatrix * a_normal);
-
-    v_texcoord = a_texcoord;
 
     #ifdef TANGRAM_LIGHTING_VERTEX
         vec4 color = v_color;

@@ -26,8 +26,8 @@ uniform float u_meters_per_pixel;
 
 #pragma tangram: uniforms
 
-varying vec2 v_uv;
 varying float v_alpha;
+varying vec2 v_texcoords;
 varying vec4 v_color;
 varying vec4 v_strokeColor;
 varying float v_strokeWidth;
@@ -35,6 +35,12 @@ varying float v_strokeWidth;
 #pragma tangram: global
 
 void main() {
+
+    v_alpha = a_alpha;
+    v_texcoords = a_uv;
+    v_color = a_color;
+    v_strokeWidth = a_stroke.a;
+
     if (a_alpha > TANGRAM_EPSILON) {
         float st = sin(a_rotation);
         float ct = cos(a_rotation);
@@ -52,11 +58,6 @@ void main() {
     } else {
         gl_Position = vec4(0.0, 0.0, 0.0, 1.0);
     }
-
-    v_alpha = a_alpha;
-    v_uv = a_uv;
-    v_color = a_color;
-    v_strokeWidth = a_stroke.a;
 
     // If width of stroke is zero, set the stroke color to the fill color -
     // the border pixel of the fill is always slightly mixed with the stroke color

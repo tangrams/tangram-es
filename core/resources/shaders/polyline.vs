@@ -43,6 +43,8 @@ void main() {
 
     vec4 position = a_position;
 
+    v_texcoord = a_texcoord;
+
     {
         float width = a_extrude.z;
         float dwdz = a_extrude.w;
@@ -64,7 +66,6 @@ void main() {
     v_color = a_color;
     v_eyeToPoint = vec3(u_modelView * a_position);
     v_normal = u_normalMatrix * vec3(0.,0.,1.);
-    v_texcoord = a_texcoord;
         
     #ifdef TANGRAM_LIGHTING_VERTEX
         vec4 color = v_color;
