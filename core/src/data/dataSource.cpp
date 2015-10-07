@@ -11,6 +11,7 @@
 #include <atomic>
 #include <mutex>
 #include <list>
+#include <functional>
 
 namespace Tangram {
 
@@ -131,7 +132,7 @@ void DataSource::onTileLoaded(std::vector<char>&& _rawData, std::shared_ptr<Tile
     std::swap(*rawDataRef, _rawData);
     _task->rawTileData = rawDataRef;
 
-    _cb(std::move(_task));
+    _cb.func(std::move(_task));
 
     m_cache->put(tileID, rawDataRef);
 }

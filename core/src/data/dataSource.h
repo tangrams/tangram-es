@@ -3,7 +3,6 @@
 #include <string>
 #include <memory>
 #include <vector>
-#include "tile/tileTask.h"
 
 namespace Tangram {
 
@@ -12,6 +11,8 @@ struct TileID;
 class Tile;
 class TileManager;
 struct RawCache;
+class TileTask;
+struct TileTaskCb;
 
 class DataSource {
     
