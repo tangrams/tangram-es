@@ -1,8 +1,6 @@
 #pragma once
 
 #include "dataSource.h"
-#include "tile/tile.h"
-#include "tileData.h"
 
 namespace Tangram {
 

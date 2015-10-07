@@ -1,8 +1,10 @@
 #include "geoJsonSource.h"
 
+#include "tileData.h"
+#include "tile/tile.h"
+#include "tile/tileID.h"
 #include "util/geoJson.h"
 #include "platform.h"
-#include "tile/tileID.h"
 
 #include "rapidjson/error/en.h"
 #include "rapidjson/memorystream.h"

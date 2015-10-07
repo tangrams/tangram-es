@@ -1,11 +1,8 @@
 #pragma once
 
 #include <string>
-#include <map>
 #include <memory>
 #include <vector>
-#include <mutex>
-#include <list>
 #include "tile/tileTask.h"
 
 namespace Tangram {
@@ -14,6 +11,7 @@ struct TileData;
 struct TileID;
 class Tile;
 class TileManager;
+struct RawCache;
 
 class DataSource {
     
@@ -84,19 +82,7 @@ protected:
     // URL template for requesting tiles from a network or filesystem
     std::string m_urlTemplate;
 
-    // Used to ensure safe access from async loading threads
-    std::mutex m_mutex;
-
-    // LRU in-memory cache for raw tile data
-    using CacheEntry = std::pair<TileID, std::shared_ptr<std::vector<char>>>;
-    using CacheList = std::list<CacheEntry>;
-    using CacheMap = std::unordered_map<TileID, typename CacheList::iterator>;
-
-    CacheMap m_cacheMap;
-    CacheList m_cacheList;
-    int m_cacheUsage;
-    int m_cacheMaxUsage;
-
+    std::unique_ptr<RawCache> m_cache;
 };
 
 }
