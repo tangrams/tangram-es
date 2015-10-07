@@ -7,7 +7,6 @@
 #include "data/properties.h"
 #include "isect2d.h"
 #include "glm_vec.h" // for isect2d.h
-#include "tangram.h"
 
 #include <memory>
 #include <mutex>
@@ -20,6 +19,7 @@ class FontContext;
 class Tile;
 class View;
 class Style;
+struct TouchItem;
 
 /*
  * Singleton class containing all labels
