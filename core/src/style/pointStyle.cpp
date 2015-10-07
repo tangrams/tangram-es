@@ -1,6 +1,7 @@
 #include "pointStyle.h"
 
 #include "platform.h"
+#include "material.h"
 #include "gl/shaderProgram.h"
 #include "gl/texture.h"
 #include "gl/vertexLayout.h"

@@ -1,7 +1,6 @@
 #pragma once
 
 #include "data/tileData.h"
-#include "material.h"
 #include "gl.h"
 #include "util/variant.h"
 
@@ -15,6 +14,7 @@ struct DrawRule;
 class Light;
 class Tile;
 class MapProjection;
+class Material;
 class VboMesh;
 class VertexLayout;
 class View;

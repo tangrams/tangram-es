@@ -2,6 +2,7 @@
 
 #include "tangram.h"
 #include "platform.h"
+#include "material.h"
 #include "tile/tile.h"
 #include "gl/shaderProgram.h"
 

@@ -1,5 +1,6 @@
 #include "textStyle.h"
 
+#include "material.h"
 #include "scene/drawRule.h"
 #include "text/fontContext.h"
 #include "tile/tile.h"

@@ -4,6 +4,7 @@
 #include "scene/scene.h"
 #include "scene/dataLayer.h"
 #include "scene/styleContext.h"
+#include "style/material.h"
 #include "style/style.h"
 #include "view/view.h"
 #include "tile/tileID.h"

@@ -2,6 +2,7 @@
 
 #include "tangram.h"
 #include "platform.h"
+#include "material.h"
 #include "gl/shaderProgram.h"
 #include "scene/stops.h"
 #include "scene/drawRule.h"
