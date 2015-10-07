@@ -8,6 +8,8 @@
 
 namespace Tangram {
 
+class ShaderProgram;
+
 class LabelMesh : public TypedMesh<Label::Vertex> {
 public:
     LabelMesh(std::shared_ptr<VertexLayout> _vertexLayout, GLenum _drawMode);

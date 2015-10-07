@@ -59,13 +59,13 @@ protected:
     std::string m_name;
 
     /* <ShaderProgram> used to draw meshes using this style */
-    std::unique_ptr<ShaderProgram> m_shaderProgram = std::make_unique<ShaderProgram>();
+    std::unique_ptr<ShaderProgram> m_shaderProgram;
 
     /* <VertexLayout> shared between meshes using this style */
     std::shared_ptr<VertexLayout> m_vertexLayout;
 
     /* <Material> used for drawing meshes that use this style */
-    std::shared_ptr<Material> m_material = std::make_shared<Material>();
+    std::shared_ptr<Material> m_material;
 
     /* <LightingType> to determine how lighting will be calculated for this style */
     LightingType m_lightingType = LightingType::fragment;

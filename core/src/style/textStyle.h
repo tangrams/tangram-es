@@ -1,13 +1,46 @@
 #pragma once
 
 #include "style.h"
-#include "text/textBuffer.h"
+#include "labels/label.h"
 
 #include <memory>
 
 namespace Tangram {
 
+class TextBuffer;
+class FontContext;
+struct Properties;
+typedef int FontID;
+
+enum class TextTransform {
+    none,
+    capitalize,
+    uppercase,
+    lowercase,
+};
+
 class TextStyle : public Style {
+
+public:
+
+    struct Parameters {
+        FontID fontId = -1;
+        std::string text = "";
+        bool interactive = false;
+        std::shared_ptr<Properties> properties;
+        uint32_t fill = 0xff000000;
+        uint32_t strokeColor = 0xffffffff;
+        float strokeWidth = 0.0f;
+        float fontSize = 12.0f;
+        float blurSpread = 0.0f;
+        TextTransform transform = TextTransform::none;
+        bool visible = true;
+        Label::Options labelOptions;
+
+        bool isValid() {
+            return fontSize > 0.f && !text.empty();
+        }
+    };
 
 protected:
 
@@ -18,11 +51,9 @@ protected:
     virtual void buildLine(const Line& _line, const DrawRule& _rule, const Properties& _props, VboMesh& _mesh, Tile& _tile) const override;
     virtual void buildPolygon(const Polygon& _polygon, const DrawRule& _rule, const Properties& _props, VboMesh& _mesh, Tile& _tile) const override;
 
-    Parameters applyRule(const DrawRule& _rule, const Properties& _props) const;
+    virtual VboMesh* newMesh() const override;
 
-    virtual VboMesh* newMesh() const override {
-        return new TextBuffer(m_vertexLayout);
-    };
+    Parameters applyRule(const DrawRule& _rule, const Properties& _props) const;
 
     /* Creates a text label and add it to the processed <TextBuffer>. */
     void addTextLabel(TextBuffer& _buffer, Label::Transform _transform, std::string _text, Label::Type _type) const;
