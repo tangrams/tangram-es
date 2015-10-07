@@ -2,11 +2,8 @@
 
 #include "style.h"
 #include "glm/vec2.hpp"
-#include "glm/vec3.hpp"
-#include "gl/typedMesh.h"
+// TODO move cap/join types to types.h
 #include "util/builders.h"
-
-#include <mutex>
 
 namespace Tangram {
 
@@ -26,14 +23,6 @@ protected:
         glm::vec2 extrude;
     };
 
-    struct PolylineVertex {
-        glm::vec3 pos;
-        glm::vec2 texcoord;
-        glm::vec4 extrude;
-        GLuint abgr;
-        GLfloat layer;
-    };
-
     virtual void constructVertexLayout() override;
     virtual void constructShaderProgram() override;
     virtual void buildLine(const Line& _line, const DrawRule& _rule, const Properties& _props, VboMesh& _mesh, Tile& _tile) const override;
@@ -41,11 +30,7 @@ protected:
 
     Parameters parseRule(const DrawRule& _rule) const;
 
-    typedef TypedMesh<PolylineVertex> Mesh;
-
-    virtual VboMesh* newMesh() const override {
-        return new Mesh(m_vertexLayout, m_drawMode);
-    };
+    virtual VboMesh* newMesh() const override;
 
 public:
 

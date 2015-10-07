@@ -4,12 +4,24 @@
 #include "platform.h"
 #include "material.h"
 #include "gl/shaderProgram.h"
+#include "gl/typedMesh.h"
 #include "scene/stops.h"
 #include "scene/drawRule.h"
 #include "tile/tile.h"
 #include "util/mapProjection.h"
+#include "glm/vec3.hpp"
 
 namespace Tangram {
+
+struct PolylineVertex {
+    glm::vec3 pos;
+    glm::vec2 texcoord;
+    glm::vec4 extrude;
+    GLuint abgr;
+    GLfloat layer;
+};
+
+using Mesh = TypedMesh<PolylineVertex>;
 
 PolylineStyle::PolylineStyle(std::string _name, Blending _blendMode, GLenum _drawMode)
     : Style(_name, _blendMode, _drawMode) {
@@ -34,6 +46,10 @@ void PolylineStyle::constructShaderProgram() {
     std::string fragShaderSrcStr = stringFromFile("shaders/polyline.fs", PathType::internal);
 
     m_shaderProgram->setSourceStrings(fragShaderSrcStr, vertShaderSrcStr);
+}
+
+VboMesh* PolylineStyle::newMesh() const {
+    return new Mesh(m_vertexLayout, m_drawMode);
 }
 
 PolylineStyle::Parameters PolylineStyle::parseRule(const DrawRule& _rule) const {
@@ -231,7 +247,7 @@ void PolylineStyle::buildLine(const Line& _line, const DrawRule& _rule, const Pr
         }
     }
 
-    auto& mesh = static_cast<PolylineStyle::Mesh&>(_mesh);
+    auto& mesh = static_cast<Mesh&>(_mesh);
     mesh.addVertices(std::move(vertices), std::move(builder.indices));
 }
 

@@ -5,12 +5,23 @@
 #include "material.h"
 #include "tile/tile.h"
 #include "gl/shaderProgram.h"
+#include "gl/typedMesh.h"
 
 #include <vector>
 #include <memory>
 #include <string>
 
 namespace Tangram {
+
+struct PosColVertex {
+    // Position Data
+    glm::vec3 pos;
+    // Color Data
+    GLuint abgr;
+};
+
+using Mesh = TypedMesh<PosColVertex>;
+
 
 DebugStyle::DebugStyle(std::string _name, Blending _blendMode, GLenum _drawMode) : Style(_name, _blendMode, _drawMode) {
 }

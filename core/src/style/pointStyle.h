@@ -3,14 +3,12 @@
 #include "style.h"
 #include "glm/vec2.hpp"
 #include "glm/vec3.hpp"
-#include "labels/labelMesh.h"
 #include "labels/label.h"
-#include "scene/spriteAtlas.h"
 
 namespace Tangram {
 
 class Texture;
-
+class SpriteAtlas;
 
 class PointStyle : public Style {
 
@@ -37,9 +35,7 @@ protected:
 
     Parameters applyRule(const DrawRule& _rule, const Properties& _props) const;
 
-    virtual VboMesh* newMesh() const override {
-        return new LabelMesh(m_vertexLayout, m_drawMode);
-    };
+    virtual VboMesh* newMesh() const override;
 
     std::shared_ptr<SpriteAtlas> m_spriteAtlas;
     std::shared_ptr<Texture> m_texture;

@@ -17,6 +17,7 @@
 #include "scene/dataLayer.h"
 #include "scene/filters.h"
 #include "scene/sceneLayer.h"
+#include "scene/spriteAtlas.h"
 #include "scene/stops.h"
 #include "util/yamlHelper.h"
 
