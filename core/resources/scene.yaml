@@ -43,7 +43,7 @@ styles:
         lighting: vertex
         shaders:
             blocks:
-                color: "color.rgb += vec3(0.3 * position.z * exp2(16. - abs(u_tile_origin.z)));"
+                color: "color.rgb += vec3(position.z / 800.);"
     heightglowline:
         base: lines
         mix: heightglow

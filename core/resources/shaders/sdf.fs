@@ -28,14 +28,13 @@ uniform vec2 u_resolution;
 uniform float u_time;
 uniform float u_meters_per_pixel;
 
-
 #pragma tangram: uniforms
 
-varying float v_alpha;
-varying vec2 v_texcoords;
 varying vec4 v_color;
 varying vec4 v_strokeColor;
+varying vec2 v_texcoords;
 varying float v_strokeWidth;
+varying float v_alpha;
 
 #pragma tangram: global
 

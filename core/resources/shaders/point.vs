@@ -9,15 +9,7 @@ precision mediump float;
 
 #pragma tangram: defines
 
-attribute LOWP vec2 a_position;
-attribute LOWP vec2 a_screenPosition;
-attribute vec2 a_uv;
-attribute LOWP float a_alpha;
-attribute LOWP float a_rotation;
-attribute LOWP vec4 a_color;
-attribute LOWP vec4 a_stroke;
-
-uniform mat4 u_proj;
+uniform mat4 u_ortho;
 uniform vec3 u_map_position;
 uniform vec3 u_tile_origin;
 uniform vec2 u_resolution;
@@ -26,11 +18,19 @@ uniform float u_meters_per_pixel;
 
 #pragma tangram: uniforms
 
-varying float v_alpha;
-varying vec2 v_texcoords;
+attribute vec2 a_uv;
+attribute LOWP vec2 a_position;
+attribute LOWP vec2 a_screenPosition;
+attribute LOWP float a_alpha;
+attribute LOWP float a_rotation;
+attribute LOWP vec4 a_color;
+attribute LOWP vec4 a_stroke;
+
 varying vec4 v_color;
 varying vec4 v_strokeColor;
+varying vec2 v_texcoords;
 varying float v_strokeWidth;
+varying float v_alpha;
 
 #pragma tangram: global
 
@@ -54,7 +54,7 @@ void main() {
 
         #pragma tangram: position
 
-        gl_Position = u_proj * position;
+        gl_Position = u_ortho * position;
     } else {
         gl_Position = vec4(0.0, 0.0, 0.0, 1.0);
     }

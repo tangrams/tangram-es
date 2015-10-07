@@ -6,10 +6,11 @@ precision highp float;
 
 #pragma tangram: defines
 
-#define TANGRAM_WORLD_POSITION_WRAP vec3(100000.0)
+#define TANGRAM_WORLD_POSITION_WRAP 100000.0
 
-uniform mat4 u_modelView;
-uniform mat4 u_modelViewProj;
+uniform mat4 u_model;
+uniform mat4 u_view;
+uniform mat4 u_proj;
 uniform mat3 u_normalMatrix;
 uniform vec3 u_map_position;
 uniform vec3 u_tile_origin;
@@ -26,14 +27,26 @@ attribute vec2 a_texcoord;
 attribute float a_layer;
 
 varying vec4 v_world_position;
+varying vec4 v_position;
 varying vec4 v_color;
-varying vec3 v_eyeToPoint;
 varying vec3 v_normal;
 varying vec2 v_texcoord;
 
 #ifdef TANGRAM_LIGHTING_VERTEX
     varying vec4 v_lighting;
 #endif
+
+vec4 modelPosition() {
+    return a_position;
+}
+
+vec4 worldPosition() {
+    vec4 worldPosition = a_position * u_model + vec4(u_map_position.xy, 0., 1.);
+    #ifdef TANGRAM_WORLD_POSITION_WRAP
+        worldPosition = mod(worldPosition, TANGRAM_WORLD_POSITION_WRAP);
+    #endif
+    return worldPosition;
+}
 
 #pragma tangram: material
 #pragma tangram: lighting
@@ -43,15 +56,18 @@ void main() {
 
     vec4 position = a_position;
 
+    v_color = a_color;
     v_texcoord = a_texcoord;
+    v_world_position = worldPosition();
+    v_normal = u_normalMatrix * vec3(0.,0.,1.);
 
     {
         float width = a_extrude.z;
         float dwdz = a_extrude.w;
-        float dz =  u_map_position.z - abs(u_tile_origin.z);
-        // interpolate between zoom levels
+        float dz = u_map_position.z - abs(u_tile_origin.z);
+        // Interpolate between zoom levels
         width += dwdz * dz;
-        // scale to screen-space
+        // Scale to screen-space
         width *= exp2(-dz);
 
         // Modify line width before extrusion
@@ -60,12 +76,14 @@ void main() {
         position.xy += a_extrude.xy * width;
     }
 
-    // Modify position before camera projection
+    // Transform position into meters relative to map center
+    position = u_model * position;
+
+    // Modify position before lighting and camera projection
     #pragma tangram: position
 
-    v_color = a_color;
-    v_eyeToPoint = vec3(u_modelView * a_position);
-    v_normal = u_normalMatrix * vec3(0.,0.,1.);
+    // Set position varying to the camera-space vertex position
+    v_position = u_view * position;
         
     #ifdef TANGRAM_LIGHTING_VERTEX
         vec4 color = v_color;
@@ -74,16 +92,15 @@ void main() {
         // Modify normal before lighting
         #pragma tangram: normal
 
-        v_normal = normal;
-
         // Modify color and material properties before lighting
         #pragma tangram: color
 
-        v_lighting = calculateLighting(v_eyeToPoint.xyz, normal, color);
+        v_lighting = calculateLighting(v_position.xyz, normal, color);
         v_color = color;
+        v_normal = normal;
     #endif
 
-    gl_Position = u_modelViewProj * position;
+    gl_Position = u_proj * v_position;
     
     // Proxy tiles have u_tile_zoom < 0, so this re-scaling will place proxy tiles deeper in
     // the depth buffer than non-proxy tiles by a distance that increases with tile zoom
