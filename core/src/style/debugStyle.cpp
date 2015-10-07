@@ -44,10 +44,10 @@ void DebugStyle::onBeginBuildTile(Tile &_tile) const {
         GLuint abgr = 0xff0000ff;
 
         vertices.reserve(4);
-        vertices.push_back({{ -1.f, -1.f, 0.f }, abgr });
-        vertices.push_back({{  1.f, -1.f, 0.f }, abgr });
-        vertices.push_back({{  1.f,  1.f, 0.f }, abgr });
-        vertices.push_back({{ -1.f,  1.f, 0.f }, abgr });
+        vertices.push_back({{ 0.f, 0.f, 0.f }, abgr });
+        vertices.push_back({{ 1.f, 0.f, 0.f }, abgr });
+        vertices.push_back({{ 1.f, 1.f, 0.f }, abgr });
+        vertices.push_back({{ 0.f, 1.f, 0.f }, abgr });
 
         mesh->addVertices(std::move(vertices), { 0, 1, 2, 3, 0 });
 
