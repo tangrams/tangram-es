@@ -1,8 +1,9 @@
 #include "style.h"
 
-#include "scene/scene.h"
 #include "scene/light.h"
 #include "scene/styleParam.h"
+#include "scene/scene.h"
+#include "scene/spriteAtlas.h"
 #include "tile/tile.h"
 #include "gl/vboMesh.h"
 #include "view/view.h"

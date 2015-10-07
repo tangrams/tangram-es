@@ -1,17 +1,19 @@
 #pragma once
 
-#include "duktape.h"
-#include "data/tileData.h"
-#include "scene/drawRule.h"
+#include "scene/styleParam.h"
 
 #include <string>
 #include <functional>
 #include <unordered_map>
 
+struct duk_hthread;
+typedef struct duk_hthread duk_context;
+
 namespace Tangram {
 
 class Scene;
 enum class StyleParamKey : uint8_t;
+struct Feature;
 struct StyleParam;
 
 class StyleContext {
@@ -47,8 +49,10 @@ public:
 
 
 private:
-    static duk_ret_t jsPropertyGetter(duk_context *_ctx);
-    static duk_ret_t jsPropertySetter(duk_context *_ctx);
+    // static duk_ret_t jsPropertyGetter(duk_context *_ctx);
+    // static duk_ret_t jsPropertySetter(duk_context *_ctx);
+    static int jsPropertyGetter(duk_context *_ctx);
+    static int jsPropertySetter(duk_context *_ctx);
 
     bool parseStyleResult(StyleParamKey _key, StyleParam::Value& _val) const;
 
