@@ -260,7 +260,12 @@ void TileManager::updateTileSet(TileSet& tileSet) {
                 if (tile->isReady()) {
                     m_tiles.push_back(tile);
                 } else if (tile->hasState(TileState::none)) {
+                    // Not yet available - enqueue for loading
                     enqueueTask(tileSet, visTileId, viewCenter);
+                    if (m_tileSetChanged) {
+                        // check again for proxies
+                        updateProxyTiles(tileSet, *tile);
+                    }
                 }
 
                 ++curTilesIt;
@@ -274,6 +279,7 @@ void TileManager::updateTileSet(TileSet& tileSet) {
 
                 // tileSet is missing an element present in visibleTiles
                 if (!addTile(tileSet, visTileId)) {
+                    // Not in cache - enqueue for loading
                     enqueueTask(tileSet, visTileId, viewCenter);
                 }
 
@@ -316,7 +322,10 @@ void TileManager::updateTileSet(TileSet& tileSet) {
     for (auto& entry : tiles) {
         auto& tile = entry.second;
         auto tileCenter = m_view->getMapProjection().TileCenter(tile->getID());
-        tile->setPriority(glm::length2(tileCenter - viewCenter));
+        double scaleDiv = exp2(tile->getID().z - m_view->getZoom());
+        // prefer parent tiles
+        if (scaleDiv < 1) { scaleDiv = 0.1/scaleDiv; }
+        tile->setPriority(glm::length2(tileCenter - viewCenter) * scaleDiv);
     }
 }
 
