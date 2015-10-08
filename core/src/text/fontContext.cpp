@@ -67,7 +67,7 @@ FontID FontContext::addFont(const std::string& _family, const std::string& _weig
             !(data = bytesFromFile(bundledFontPath.c_str(), PathType::internal, &dataSize))) {
             const std::string sysFontPath = systemFontPath(_family, _weight, _style);
             if ( !(data = bytesFromFile(sysFontPath.c_str(), PathType::absolute, &dataSize)) ) {
-                
+
                 LOGE("Could not load font file %s", fontKey.c_str());
                 m_fonts.emplace(std::move(fontKey), INVALID_FONT);
                 goto fallback;
@@ -171,12 +171,16 @@ void FontContext::renderUpdate(void* _userPtr, int* _rect, const unsigned char* 
     fontContext->m_atlas->setSubData(subdata, xoff, yoff, width, height);
 }
 
-void FontContext::fontstashError(void* uptr, int error, int val) {
+void FontContext::fontstashError(void* _userPtr, int error, int val) {
     switch(error) {
-    case FONS_ATLAS_FULL:
-        LOGE("Texture Atlas full!");
+    case FONS_ATLAS_FULL: {
+        FontContext* fontContext = static_cast<FontContext*>(_userPtr);
+        if (!fontContext->m_atlasFull) {
+            fontContext->m_atlasFull = true;
+            LOGE("Texture Atlas full!");
+        }
         break;
-
+    }
     case FONS_SCRATCH_FULL:
     case FONS_STATES_OVERFLOW:
     case FONS_STATES_UNDERFLOW:

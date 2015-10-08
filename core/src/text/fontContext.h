@@ -67,6 +67,7 @@ private:
     FONScontext* m_fsContext;
     std::vector<FONSquad> m_quadBuffer;
 
+    bool m_atlasFull = false;
 };
 
 }
