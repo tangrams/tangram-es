@@ -3,6 +3,7 @@
 #include "scene/scene.h"
 #include "scene/sceneLayer.h"
 #include "scene/light.h"
+#include "scene/styleParam.h"
 #include "tile/tile.h"
 #include "gl/vboMesh.h"
 #include "view/view.h"
@@ -55,6 +56,11 @@ void Style::setLightingType(LightingType _type){
 }
 
 void Style::buildFeature(Tile& _tile, const Feature& _feat, const DrawRule& _rule) const {
+
+    bool visible;
+    if (_rule.get(StyleParamKey::visible, visible) && !visible) {
+        return;
+    }
 
     auto& mesh = _tile.getMesh(*this);
 
