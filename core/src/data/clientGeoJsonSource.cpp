@@ -1,7 +1,8 @@
 #include "clientGeoJsonSource.h"
+#define GEOJSONVT_CUSTOM_TAGS
+#include "mapbox/geojsonvt/geojsonvt_types.hpp"
 #include "mapbox/geojsonvt/geojsonvt.hpp"
 #include "mapbox/geojsonvt/geojsonvt_convert.hpp"
-#include "mapbox/geojsonvt/geojsonvt_types.hpp"
 #include "platform.h"
 #include "util/geom.h"
 #include "data/propertyItem.h"
@@ -61,11 +62,13 @@ void ClientGeoJsonSource::clearData() {
 
 }
 
-void ClientGeoJsonSource::addPoint(const Tags& _tags, LngLat _point) {
+void ClientGeoJsonSource::addPoint(const Properties& _tags, LngLat _point) {
 
     auto container = geojsonvt::Convert::project({ geojsonvt::LonLat(_point.longitude, _point.latitude) }, tolerance);
 
-    auto feature = geojsonvt::Convert::create(_tags,
+    geojsonvt::Tags tags;
+
+    auto feature = geojsonvt::Convert::create(geojsonvt::Tags{std::make_shared<Properties>(_tags)},
                                               geojsonvt::ProjectedFeatureType::Point,
                                               container.members);
 
@@ -74,20 +77,20 @@ void ClientGeoJsonSource::addPoint(const Tags& _tags, LngLat _point) {
 
 }
 
-void ClientGeoJsonSource::addLine(const Tags& _tags, const Coordinates& _line) {
+void ClientGeoJsonSource::addLine(const Properties& _tags, const Coordinates& _line) {
     auto& line = reinterpret_cast<const std::vector<geojsonvt::LonLat>&>(_line);
-    
+
     std::vector<geojsonvt::ProjectedGeometry> geometry = { geojsonvt::Convert::project(line, tolerance) };
 
-    auto feature = geojsonvt::Convert::create(_tags,
+    auto feature = geojsonvt::Convert::create(geojsonvt::Tags{std::make_shared<Properties>(_tags)},
                                               geojsonvt::ProjectedFeatureType::LineString,
                                               geometry);
-    
+
     m_features.push_back(std::move(feature));
     m_store = std::make_unique<GeoJSONVT>(m_features, maxZoom, indexMaxZoom, indexMaxPoints, tolerance);
 }
 
-void ClientGeoJsonSource::addPoly(const Tags& _tags, const std::vector<Coordinates>& _poly) {
+void ClientGeoJsonSource::addPoly(const Properties& _tags, const std::vector<Coordinates>& _poly) {
 
     geojsonvt::ProjectedGeometryContainer geometry;
     for (auto& _ring : _poly) {
@@ -95,7 +98,7 @@ void ClientGeoJsonSource::addPoly(const Tags& _tags, const std::vector<Coordinat
         geometry.members.push_back(geojsonvt::Convert::project(ring, tolerance));
     }
 
-    auto feature = geojsonvt::Convert::create(_tags,
+    auto feature = geojsonvt::Convert::create(geojsonvt::Tags{std::make_shared<Properties>(_tags)},
                                               geojsonvt::ProjectedFeatureType::Polygon,
                                               geometry);
 
@@ -161,15 +164,7 @@ std::shared_ptr<TileData> ClientGeoJsonSource::parse(const Tile& _tile, std::vec
             default: break;
         }
 
-        std::vector<Properties::Item> items;
-        items.reserve(it.tags.size());
-
-        for (auto& tag : it.tags) {
-            items.emplace_back(tag.first, tag.second);
-        }
-
-        feat.props = Properties(std::move(items));
-
+        feat.props = *it.tags.map;
         layer.features.emplace_back(std::move(feat));
 
     }
@@ -177,7 +172,7 @@ std::shared_ptr<TileData> ClientGeoJsonSource::parse(const Tile& _tile, std::vec
     data->layers.emplace_back(std::move(layer));
 
     return data;
-    
+
 }
 
 }

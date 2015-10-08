@@ -73,7 +73,14 @@ void mouse_button_callback(GLFWwindow* window, int button, int action, int mods)
                    p1.longitude, p1.latitude,
                    p2.longitude, p2.latitude);
 
-            data_source->addLine(Tags{{"type", "line" }}, {p1, p2});
+            // data_source->addLine(Properties{{"type", "line" }}, {p1, p2});
+            // data_source->addPoint(Properties{{"type", "point" }}, p2);
+            Properties prop1;
+            prop1.add("type", "line");
+            data_source->addLine(prop1, {p1, p2});
+            Properties prop2;
+            prop2.add("type", "point");
+            data_source->addPoint(prop2, p2);
         }
         last_point = p1;
         Tangram::clearDataSource(*data_source, false, true);

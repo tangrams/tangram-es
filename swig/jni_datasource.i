@@ -74,9 +74,8 @@ import java.util.List;
      * @param point LngLat with the coordinates of the point
      * @return This object, for chaining
      */
-    public MapData addPoint(Tags tags, LngLat point) {
-        //addPoint(tags, new double[]{ point.getLongitude(), point.getLatitude() });
-        addPointJNI(tags, point);
+    public MapData addPoint(Properties props, LngLat point) {
+        addPointJNI(props, point);
         return this;
     }
 
@@ -85,19 +84,18 @@ import java.util.List;
      * @param line List of LngLat points comprising the line
      * @return This object, for chaining
      */
-    public MapData addLine(Tags tags, List<LngLat> line) {
+    public MapData addLine(Properties props, List<LngLat> line) {
         // need to concatenate points
         Coordinates coords = new Coordinates();
         for (LngLat point : line) {
             coords.add(point);
         }
-        //addLine(tags, coords, line.size());
-        addLineJNI(tags, coords);
+        addLineJNI(props, coords);
         return this;
     }
 
-    public MapData addLine(Tags tags, Coordinates line) {
-        addLineJNI(tags, line);
+    public MapData addLine(Properties props, Coordinates line) {
+        addLineJNI(props, line);
         return this;
     }
 
@@ -107,7 +105,7 @@ import java.util.List;
      *                polygon as described in the GeoJSON spec
      * @return This object, for chaining
      */
-    public MapData addPolygon(Tags tags, List<List<LngLat>> polygon) {
+    public MapData addPolygon(Properties props, List<List<LngLat>> polygon) {
         Polygon poly = new Polygon();
 
         // for (List<LngLat> ring : polygon) {
@@ -132,12 +130,12 @@ import java.util.List;
             }
             rings++;
         }
-        addPolyJNI(tags, poly);
+        addPolyJNI(props, poly);
         return this;
     }
 
-    public MapData addPolygon(Tags tags, Polygon polygon) {
-        addPolyJNI(tags, polygon);
+    public MapData addPolygon(Properties props, Polygon polygon) {
+        addPolyJNI(props, polygon);
         return this;
     }
 %}
@@ -152,7 +150,6 @@ import java.util.List;
 %javamethodmodifiers Tangram::ClientGeoJsonSource::addPoly "private"
 
 namespace Tangram {
-typedef std::map<std::string,std::string> Tags;
 
 class DataSource {
 protected:
@@ -164,14 +161,11 @@ class ClientGeoJsonSource : public DataSource {
 public:
     ClientGeoJsonSource(const std::string& _name, const std::string& _url);
     void addData(const std::string& _data);
-    //void addPoint(Tags tags, double _coords[]);
-    void addPoint(Tags tags, LngLat point);
-    //void addLine(Tags tags, double _coords[], int _lineLength);
-    void addLine(Tags tags, const Tangram::Coordinates& line);
-    //void addPoly(Tags tags, double _coords[], int _ringLengths[], int rings);
-    void addPoly(Tags tags, const std::vector<Tangram::Coordinates>& polygon);
+    void addPoint(const Properties& props, LngLat point);
+    void addLine(const Properties& props, const Tangram::Coordinates& line);
+    void addPoly(const Properties& props, const std::vector<Tangram::Coordinates>& polygon);
 };
-} // namespace
+} // namespace Tangram
 
 %extend Tangram::DataSource {
 

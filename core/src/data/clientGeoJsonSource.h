@@ -3,8 +3,6 @@
 #include "dataSource.h"
 #include "util/types.h"
 
-#include <map>
-
 namespace mapbox {
 namespace util {
 namespace geojsonvt {
@@ -16,7 +14,8 @@ class ProjectedFeature;
 namespace Tangram {
 
 using GeoJSONVT = mapbox::util::geojsonvt::GeoJSONVT;
-using Tags = std::map<std::string, std::string>;
+
+struct Properties;
 
 class ClientGeoJsonSource : public DataSource {
 
@@ -27,9 +26,9 @@ public:
 
     // Add geometry from a GeoJSON string
     void addData(const std::string& _data);
-    void addPoint(const Tags& _tags, LngLat _point);
-    void addLine(const Tags& _tags, const Coordinates& _line);
-    void addPoly(const Tags& _tags, const std::vector<Coordinates>& _poly);
+    void addPoint(const Properties& _tags, LngLat _point);
+    void addLine(const Properties& _tags, const Coordinates& _line);
+    void addPoly(const Properties& _tags, const std::vector<Coordinates>& _poly);
 
     virtual bool loadTileData(std::shared_ptr<TileTask>&& _task, TileTaskCb _cb) override;
     virtual bool getTileData(std::shared_ptr<TileTask>& _task) override;

@@ -72,9 +72,8 @@ public class MapData extends DataSource {
      * @param point LngLat with the coordinates of the point
      * @return This object, for chaining
      */
-    public MapData addPoint(Tags tags, LngLat point) {
-        //addPoint(tags, new double[]{ point.getLongitude(), point.getLatitude() });
-        addPointJNI(tags, point);
+    public MapData addPoint(Properties props, LngLat point) {
+        addPointJNI(props, point);
         return this;
     }
 
@@ -83,19 +82,18 @@ public class MapData extends DataSource {
      * @param line List of LngLat points comprising the line
      * @return This object, for chaining
      */
-    public MapData addLine(Tags tags, List<LngLat> line) {
+    public MapData addLine(Properties props, List<LngLat> line) {
         // need to concatenate points
         Coordinates coords = new Coordinates();
         for (LngLat point : line) {
             coords.add(point);
         }
-        //addLine(tags, coords, line.size());
-        addLineJNI(tags, coords);
+        addLineJNI(props, coords);
         return this;
     }
 
-    public MapData addLine(Tags tags, Coordinates line) {
-        addLineJNI(tags, line);
+    public MapData addLine(Properties props, Coordinates line) {
+        addLineJNI(props, line);
         return this;
     }
 
@@ -105,7 +103,7 @@ public class MapData extends DataSource {
      *                polygon as described in the GeoJSON spec
      * @return This object, for chaining
      */
-    public MapData addPolygon(Tags tags, List<List<LngLat>> polygon) {
+    public MapData addPolygon(Properties props, List<List<LngLat>> polygon) {
         Polygon poly = new Polygon();
 
         // for (List<LngLat> ring : polygon) {
@@ -130,12 +128,12 @@ public class MapData extends DataSource {
             }
             rings++;
         }
-        addPolyJNI(tags, poly);
+        addPolyJNI(props, poly);
         return this;
     }
 
-    public MapData addPolygon(Tags tags, Polygon polygon) {
-        addPolyJNI(tags, polygon);
+    public MapData addPolygon(Properties props, Polygon polygon) {
+        addPolyJNI(props, polygon);
         return this;
     }
 
@@ -147,16 +145,16 @@ public class MapData extends DataSource {
     TangramJNI.MapData_addData(swigCPtr, this, _data);
   }
 
-  private void addPointJNI(Tags tags, LngLat point) {
-    TangramJNI.MapData_addPointJNI(swigCPtr, this, Tags.getCPtr(tags), tags, LngLat.getCPtr(point), point);
+  private void addPointJNI(Properties props, LngLat point) {
+    TangramJNI.MapData_addPointJNI(swigCPtr, this, Properties.getCPtr(props), props, LngLat.getCPtr(point), point);
   }
 
-  private void addLineJNI(Tags tags, Coordinates line) {
-    TangramJNI.MapData_addLineJNI(swigCPtr, this, Tags.getCPtr(tags), tags, Coordinates.getCPtr(line), line);
+  private void addLineJNI(Properties props, Coordinates line) {
+    TangramJNI.MapData_addLineJNI(swigCPtr, this, Properties.getCPtr(props), props, Coordinates.getCPtr(line), line);
   }
 
-  private void addPolyJNI(Tags tags, Polygon polygon) {
-    TangramJNI.MapData_addPolyJNI(swigCPtr, this, Tags.getCPtr(tags), tags, Polygon.getCPtr(polygon), polygon);
+  private void addPolyJNI(Properties props, Polygon polygon) {
+    TangramJNI.MapData_addPolyJNI(swigCPtr, this, Properties.getCPtr(props), props, Polygon.getCPtr(polygon), polygon);
   }
 
 }
