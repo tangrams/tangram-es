@@ -121,3 +121,6 @@ install_manifest.txt
 # vim 
 *.swp
 *.swo
+
+# perf files
+perf.data
