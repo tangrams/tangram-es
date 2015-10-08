@@ -3,7 +3,6 @@
 #include "tileData.h"
 #include "scene/styleContext.h"
 
-#include <unordered_map>
 #include <vector>
 
 namespace Tangram {

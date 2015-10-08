@@ -7,7 +7,6 @@
 #include <map>
 #include <memory>
 #include <string>
-#include <unordered_map>
 #include <vector>
 #include <atomic>
 
@@ -55,6 +54,9 @@ public:
     float getInverseScale() const { return m_inverseScale; }
 
     const glm::mat4& getModelMatrix() const { return m_modelMatrix; }
+
+    // Exposing for labelsTest
+    void initGeometry(uint32_t _size);
 
     std::unique_ptr<VboMesh>& getMesh(const Style& _style);
 
@@ -176,7 +178,7 @@ private:
     // Distances from the global origin are too large to represent precisely in 32-bit floats, so we only apply the
     // relative translation from the view origin to the model origin immediately before drawing the tile.
 
-    std::unordered_map<std::string, std::unique_ptr<VboMesh>> m_geometry; // Map of <Style>s and their associated <VboMesh>es
+    std::vector<std::unique_ptr<VboMesh>> m_geometry; // Map of <Style>s and their associated <VboMesh>es
 
     mutable size_t m_memoryUsage = 0;
 };

@@ -140,6 +140,13 @@ bool SceneLoader::loadScene(Node& config, Scene& _scene) {
                   return a->getName() < b->getName();
               });
 
+    // Post style sorting set their respective IDs=>vector indices
+    // These indices are used for style geometry lookup in tiles
+    auto& styles = _scene.styles();
+    for(uint32_t i = 0; i < styles.size(); i++) {
+        styles[i]->setID(i);
+    }
+
     return true;
 }
 
