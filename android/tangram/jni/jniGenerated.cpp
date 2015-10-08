@@ -1357,10 +1357,9 @@ SWIGEXPORT void JNICALL Java_com_mapzen_tangram_TangramJNI_MapData_1addData(JNIE
 
 SWIGEXPORT void JNICALL Java_com_mapzen_tangram_TangramJNI_MapData_1addPointJNI(JNIEnv *jenv, jclass jcls, jlong jarg1, jobject jarg1_, jlong jarg2, jobject jarg2_, jlong jarg3, jobject jarg3_) {
   Tangram::ClientGeoJsonSource *arg1 = (Tangram::ClientGeoJsonSource *) 0 ;
-  Tangram::Tags arg2 ;
+  Tangram::Properties *arg2 = 0 ;
   Tangram::LngLat arg3 ;
   std::shared_ptr< Tangram::ClientGeoJsonSource > *smartarg1 = 0 ;
-  Tangram::Tags *argp2 ;
   Tangram::LngLat *argp3 ;
 
   (void)jenv;
@@ -1371,28 +1370,27 @@ SWIGEXPORT void JNICALL Java_com_mapzen_tangram_TangramJNI_MapData_1addPointJNI(
 
   smartarg1 = *(std::shared_ptr<  Tangram::ClientGeoJsonSource > **)&jarg1;
   arg1 = (Tangram::ClientGeoJsonSource *)(smartarg1 ? smartarg1->get() : 0);
-  argp2 = *(Tangram::Tags **)&jarg2;
-  if (!argp2) {
-    SWIG_JavaThrowException(jenv, SWIG_JavaNullPointerException, "Attempt to dereference null Tangram::Tags");
+
+  arg2 = (Tangram::Properties *)((*(std::shared_ptr< const Tangram::Properties > **)&jarg2) ? (*(std::shared_ptr< const Tangram::Properties > **)&jarg2)->get() : 0);
+  if (!arg2) {
+    SWIG_JavaThrowException(jenv, SWIG_JavaNullPointerException, "Tangram::Properties const & reference is null");
     return ;
   }
-  arg2 = *argp2;
   argp3 = *(Tangram::LngLat **)&jarg3;
   if (!argp3) {
     SWIG_JavaThrowException(jenv, SWIG_JavaNullPointerException, "Attempt to dereference null Tangram::LngLat");
     return ;
   }
   arg3 = *argp3;
-  (arg1)->addPoint(arg2,arg3);
+  (arg1)->addPoint((Tangram::Properties const &)*arg2,arg3);
 }
 
 
 SWIGEXPORT void JNICALL Java_com_mapzen_tangram_TangramJNI_MapData_1addLineJNI(JNIEnv *jenv, jclass jcls, jlong jarg1, jobject jarg1_, jlong jarg2, jobject jarg2_, jlong jarg3, jobject jarg3_) {
   Tangram::ClientGeoJsonSource *arg1 = (Tangram::ClientGeoJsonSource *) 0 ;
-  Tangram::Tags arg2 ;
+  Tangram::Properties *arg2 = 0 ;
   Tangram::Coordinates *arg3 = 0 ;
   std::shared_ptr< Tangram::ClientGeoJsonSource > *smartarg1 = 0 ;
-  Tangram::Tags *argp2 ;
 
   (void)jenv;
   (void)jcls;
@@ -1402,27 +1400,26 @@ SWIGEXPORT void JNICALL Java_com_mapzen_tangram_TangramJNI_MapData_1addLineJNI(J
 
   smartarg1 = *(std::shared_ptr<  Tangram::ClientGeoJsonSource > **)&jarg1;
   arg1 = (Tangram::ClientGeoJsonSource *)(smartarg1 ? smartarg1->get() : 0);
-  argp2 = *(Tangram::Tags **)&jarg2;
-  if (!argp2) {
-    SWIG_JavaThrowException(jenv, SWIG_JavaNullPointerException, "Attempt to dereference null Tangram::Tags");
+
+  arg2 = (Tangram::Properties *)((*(std::shared_ptr< const Tangram::Properties > **)&jarg2) ? (*(std::shared_ptr< const Tangram::Properties > **)&jarg2)->get() : 0);
+  if (!arg2) {
+    SWIG_JavaThrowException(jenv, SWIG_JavaNullPointerException, "Tangram::Properties const & reference is null");
     return ;
   }
-  arg2 = *argp2;
   arg3 = *(Tangram::Coordinates **)&jarg3;
   if (!arg3) {
     SWIG_JavaThrowException(jenv, SWIG_JavaNullPointerException, "Tangram::Coordinates const & reference is null");
     return ;
   }
-  (arg1)->addLine(arg2,(Tangram::Coordinates const &)*arg3);
+  (arg1)->addLine((Tangram::Properties const &)*arg2,(Tangram::Coordinates const &)*arg3);
 }
 
 
 SWIGEXPORT void JNICALL Java_com_mapzen_tangram_TangramJNI_MapData_1addPolyJNI(JNIEnv *jenv, jclass jcls, jlong jarg1, jobject jarg1_, jlong jarg2, jobject jarg2_, jlong jarg3, jobject jarg3_) {
   Tangram::ClientGeoJsonSource *arg1 = (Tangram::ClientGeoJsonSource *) 0 ;
-  Tangram::Tags arg2 ;
+  Tangram::Properties *arg2 = 0 ;
   std::vector< Tangram::Coordinates > *arg3 = 0 ;
   std::shared_ptr< Tangram::ClientGeoJsonSource > *smartarg1 = 0 ;
-  Tangram::Tags *argp2 ;
 
   (void)jenv;
   (void)jcls;
@@ -1432,18 +1429,18 @@ SWIGEXPORT void JNICALL Java_com_mapzen_tangram_TangramJNI_MapData_1addPolyJNI(J
 
   smartarg1 = *(std::shared_ptr<  Tangram::ClientGeoJsonSource > **)&jarg1;
   arg1 = (Tangram::ClientGeoJsonSource *)(smartarg1 ? smartarg1->get() : 0);
-  argp2 = *(Tangram::Tags **)&jarg2;
-  if (!argp2) {
-    SWIG_JavaThrowException(jenv, SWIG_JavaNullPointerException, "Attempt to dereference null Tangram::Tags");
+
+  arg2 = (Tangram::Properties *)((*(std::shared_ptr< const Tangram::Properties > **)&jarg2) ? (*(std::shared_ptr< const Tangram::Properties > **)&jarg2)->get() : 0);
+  if (!arg2) {
+    SWIG_JavaThrowException(jenv, SWIG_JavaNullPointerException, "Tangram::Properties const & reference is null");
     return ;
   }
-  arg2 = *argp2;
   arg3 = *(std::vector< Tangram::Coordinates > **)&jarg3;
   if (!arg3) {
     SWIG_JavaThrowException(jenv, SWIG_JavaNullPointerException, "std::vector< Tangram::Coordinates > const & reference is null");
     return ;
   }
-  (arg1)->addPoly(arg2,(std::vector< Tangram::Coordinates > const &)*arg3);
+  (arg1)->addPoly((Tangram::Properties const &)*arg2,(std::vector< Tangram::Coordinates > const &)*arg3);
 }
 
 

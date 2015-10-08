@@ -15,7 +15,6 @@ import com.mapzen.tangram.MapView;
 import com.mapzen.tangram.Properties;
 import com.mapzen.tangram.Tangram;
 import com.mapzen.tangram.Coordinates;
-import com.mapzen.tangram.Tags;
 
 import com.squareup.okhttp.Callback;
 
@@ -46,7 +45,6 @@ public class MainActivity extends Activity {
         mapController.setMapPosition(-74.00976419448854, 40.70532700869127);
 
         final MapData touchMarkers = new MapData("touch");
-        final Tags tags = new Tags();
         Tangram.addDataSource(touchMarkers);
 
         // tags.set("color", "magenta");
@@ -78,16 +76,18 @@ public class MainActivity extends Activity {
                 LngLat tapPoint = mapController.coordinatesAtScreenPosition(event.getX(), event.getY());
 
                 if (!lastTappedPoint.equals(zeroCoord)) {
-                    tags.set("type", "line");
-                    tags.set("color", colors[(int)(Math.random() * 2.0 + 0.5)] );
+                    Properties props = new Properties();
+                    props.add("type", "line");
+                    props.add("color", colors[(int)(Math.random() * 2.0 + 0.5)] );
 
                     line.clear();
                     line.add(tapPoint);
-                    tags.set("type", "point");
                     line.add(lastTappedPoint);
+                    touchMarkers.addLine(props, line);
 
-                    touchMarkers.addLine(tags, line);
-                    touchMarkers.addPoint(tags, lastTappedPoint);
+                    props = new Properties();
+                    props.add("type", "point");
+                    touchMarkers.addPoint(props, lastTappedPoint);
                     touchMarkers.update();
                 }
                 lastTappedPoint.set(tapPoint);

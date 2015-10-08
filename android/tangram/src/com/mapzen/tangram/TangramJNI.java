@@ -67,9 +67,9 @@ public class TangramJNI {
   public final static native void delete_DataSource(long jarg1);
   public final static native long new_MapData(String jarg1, String jarg2);
   public final static native void MapData_addData(long jarg1, MapData jarg1_, String jarg2);
-  public final static native void MapData_addPointJNI(long jarg1, MapData jarg1_, long jarg2, Tags jarg2_, long jarg3, LngLat jarg3_);
-  public final static native void MapData_addLineJNI(long jarg1, MapData jarg1_, long jarg2, Tags jarg2_, long jarg3, Coordinates jarg3_);
-  public final static native void MapData_addPolyJNI(long jarg1, MapData jarg1_, long jarg2, Tags jarg2_, long jarg3, Polygon jarg3_);
+  public final static native void MapData_addPointJNI(long jarg1, MapData jarg1_, long jarg2, Properties jarg2_, long jarg3, LngLat jarg3_);
+  public final static native void MapData_addLineJNI(long jarg1, MapData jarg1_, long jarg2, Properties jarg2_, long jarg3, Coordinates jarg3_);
+  public final static native void MapData_addPolyJNI(long jarg1, MapData jarg1_, long jarg2, Properties jarg2_, long jarg3, Polygon jarg3_);
   public final static native void delete_MapData(long jarg1);
   public final static native void addDataSource(long jarg1, DataSource jarg1_);
   public final static native void clearDataSource(long jarg1, DataSource jarg1_, boolean jarg2, boolean jarg3);
