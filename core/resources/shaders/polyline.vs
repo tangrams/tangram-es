@@ -41,11 +41,7 @@ vec4 modelPosition() {
 }
 
 vec4 worldPosition() {
-    vec4 worldPosition = a_position * u_model + vec4(u_map_position.xy, 0., 1.);
-    #ifdef TANGRAM_WORLD_POSITION_WRAP
-        worldPosition = mod(worldPosition, TANGRAM_WORLD_POSITION_WRAP);
-    #endif
-    return worldPosition;
+    return v_world_position;
 }
 
 #pragma tangram: material
@@ -58,7 +54,6 @@ void main() {
 
     v_color = a_color;
     v_texcoord = a_texcoord;
-    v_world_position = worldPosition();
     v_normal = u_normalMatrix * vec3(0.,0.,1.);
 
     {
@@ -78,6 +73,13 @@ void main() {
 
     // Transform position into meters relative to map center
     position = u_model * position;
+
+    // World coordinates for 3d procedural textures
+    vec4 local_origin = vec4(u_map_position.xy, 0., 0.);
+    #ifdef TANGRAM_WORLD_POSITION_WRAP
+        local_origin = mod(local_origin, TANGRAM_WORLD_POSITION_WRAP);
+    #endif
+    v_world_position = position + local_origin;
 
     // Modify position before lighting and camera projection
     #pragma tangram: position
