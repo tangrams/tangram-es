@@ -57,6 +57,7 @@ protected:
 
     /* Unique name for a style instance */
     std::string m_name;
+    uint32_t m_id;
 
     /* <ShaderProgram> used to draw meshes using this style */
     std::unique_ptr<ShaderProgram> m_shaderProgram;
@@ -158,11 +159,14 @@ public:
 
     void setPixelScale(float _pixelScale) { m_pixelScale = _pixelScale; }
 
+    void setID(uint32_t _id) { m_id = _id; }
+
     std::shared_ptr<Material> getMaterial() { return m_material; }
 
     const std::unique_ptr<ShaderProgram>& getShaderProgram() const { return m_shaderProgram; }
 
     const std::string& getName() const { return m_name; }
+    const uint32_t& getID() const { return m_id; }
 
     std::vector<StyleUniform>& styleUniforms() { return m_styleUniforms; }
 
