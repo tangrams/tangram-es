@@ -137,11 +137,18 @@ bool evalStyleParamWidth(StyleParamKey _key, const DrawRule& _rule, const Tile& 
 
 void PolylineStyle::buildLine(const Line& _line, const DrawRule& _rule, const Properties& _props,
                               VboMesh& _mesh, Tile& _tile) const {
+
+    if (!_rule.contains(StyleParamKey::color)) {
+        const auto& blocks = m_shaderProgram->getSourceBlocks();
+        if (blocks.find("color") == blocks.end() && blocks.find("filter") == blocks.end()) {
+            return; // No color parameter or color block? NO SOUP FOR YOU
+        }
+    }
+
     std::vector<PolylineVertex> vertices;
 
     Parameters params = parseRule(_rule);
     GLuint abgr = params.color;
-
 
     float dWdZ = 0.f;
     float width = 0.f;

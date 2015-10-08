@@ -44,6 +44,13 @@ PolygonStyle::Parameters PolygonStyle::parseRule(const DrawRule& _rule) const {
 
 void PolygonStyle::buildPolygon(const Polygon& _polygon, const DrawRule& _rule, const Properties& _props, VboMesh& _mesh, Tile& _tile) const {
 
+    if (!_rule.contains(StyleParamKey::color)) {
+        const auto& blocks = m_shaderProgram->getSourceBlocks();
+        if (blocks.find("color") == blocks.end() && blocks.find("filter") == blocks.end()) {
+            return; // No color parameter or color block? NO SOUP FOR YOU
+        }
+    }
+
     std::vector<PolygonVertex> vertices;
 
     Parameters params = parseRule(_rule);
