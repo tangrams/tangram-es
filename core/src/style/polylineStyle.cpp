@@ -140,7 +140,7 @@ void PolylineStyle::buildLine(const Line& _line, const DrawRule& _rule, const Pr
 
     if (!_rule.contains(StyleParamKey::color)) {
         const auto& blocks = m_shaderProgram->getSourceBlocks();
-        if (blocks.find("color") == blocks.end()) {
+        if (blocks.find("color") == blocks.end() && blocks.find("filter") == blocks.end()) {
             return; // No color parameter or color block? NO SOUP FOR YOU
         }
     }
