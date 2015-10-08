@@ -89,8 +89,24 @@ bool Label::updateScreenTransform(const glm::mat4& _mvp, const glm::vec2& _scree
         }
     }
 
-    setScreenPosition(screenPosition);
-    setRotation(rot);
+    // update screen position
+    glm::vec2 offset = m_options.offset;
+
+    if (m_transform.state.rotation != 0.f) {
+        offset = glm::rotate(offset, m_transform.state.rotation);
+    }
+
+    glm::vec2 newScreenPos = screenPosition + offset;
+    if (newScreenPos != m_transform.state.screenPos) {
+        m_transform.state.screenPos = newScreenPos;
+        m_dirty = true;
+    }
+
+    // update screen rotation
+    if (m_transform.state.rotation != rot) {
+        m_transform.state.rotation = rot;
+        m_dirty = true;
+    }
 
     return true;
 }
@@ -150,7 +166,7 @@ void Label::occlusionSolved() {
     m_occlusionSolved = true;
 }
 
-void Label::enterState(State _state, float _alpha) {
+void Label::enterState(const State& _state, float _alpha) {
     m_currentState = _state;
     setAlpha(_alpha);
 }
@@ -164,27 +180,6 @@ void Label::setAlpha(float _alpha) {
 
     if (alpha == 0.f) {
         m_updateMeshVisibility = true;
-    }
-}
-
-void Label::setScreenPosition(const glm::vec2& _screenPosition) {
-    glm::vec2 offset = m_options.offset;
-
-    if (m_transform.state.rotation != 0.f) {
-        offset = glm::rotate(offset, m_transform.state.rotation);
-    }
-
-    glm::vec2 newScreenPos = _screenPosition + offset;
-    if (newScreenPos != m_transform.state.screenPos) {
-        m_transform.state.screenPos = newScreenPos;
-        m_dirty = true;
-    }
-}
-
-void Label::setRotation(float _rotation) {
-    if (m_transform.state.rotation != _rotation) {
-        m_transform.state.rotation = _rotation;
-        m_dirty = true;
     }
 }
 
@@ -253,8 +248,7 @@ bool Label::updateState(const glm::mat4& _mvp, const glm::vec2& _screenSize, flo
     switch (m_currentState) {
         case State::visible:
             if (occludedLastFrame) {
-                Transition t = m_options.hideTransition;
-                m_fade = FadeEffect(false, t.ease, t.time);
+                m_fade = FadeEffect(false, m_options.showTransition.ease, m_options.showTransition.time);
                 enterState(State::fading_out, 1.0);
             }
             break;
@@ -286,16 +280,14 @@ bool Label::updateState(const glm::mat4& _mvp, const glm::vec2& _screenSize, flo
                 if (occludedLastFrame) {
                     enterState(State::dead, 0.0); // dead
                 }  else {
-                    Transition t = m_options.showTransition;
-                    m_fade = FadeEffect(true, t.ease, t.time);
+                    m_fade = FadeEffect(true, m_options.showTransition.ease, m_options.showTransition.time);
                     enterState(State::fading_in, 0.0);
                 }
             }
             break;
         case State::sleep:
             if (!occludedLastFrame) {
-                Transition t = m_options.showTransition;
-                m_fade = FadeEffect(true, t.ease, t.time);
+                m_fade = FadeEffect(true, m_options.showTransition.ease, m_options.showTransition.time);
                 enterState(State::fading_in, 0.0);
             }
             break;

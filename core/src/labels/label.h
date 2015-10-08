@@ -131,13 +131,9 @@ private:
 
     bool offViewport(const glm::vec2& _screenSize);
 
-    void enterState(State _state, float _alpha = 1.0f);
+    inline void enterState(const State& _state, float _alpha = 1.0f);
 
     bool updateState(const glm::mat4& _mvp, const glm::vec2& _screenSize, float _dt);
-
-    void setScreenPosition(const glm::vec2& _screenPosition);
-
-    void setRotation(float _rotation);
 
     void setAlpha(float _alpha);
 
