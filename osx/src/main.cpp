@@ -1,6 +1,6 @@
 #include "tangram.h"
 #include "platform.h"
-#include "gl.h"
+#include "platform_gl.h"
 #include <cmath>
 
 // Forward declaration

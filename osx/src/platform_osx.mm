@@ -9,7 +9,7 @@
 #include <sys/syscall.h>
 
 #include "platform.h"
-#include "gl.h"
+#include "platform_gl.h"
 
 static bool s_isContinuousRendering = false;
 static NSMutableString* s_resourceRoot = NULL;
