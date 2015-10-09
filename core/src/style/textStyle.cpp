@@ -146,8 +146,6 @@ void TextStyle::onBeginDrawFrame(const View& _view, Scene& _scene, int _textureU
 
     m_fontContext->bindAtlas(0);
 
-    setupShaderUniforms(1, contextLost, _scene);
-
     if (contextLost) {
         m_shaderProgram->setUniformi("u_tex", 0);
     }
