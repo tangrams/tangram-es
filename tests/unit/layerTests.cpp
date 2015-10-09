@@ -2,6 +2,8 @@
 #include "catch.hpp"
 
 #include "scene/sceneLayer.h"
+#include "data/tileData.h"
+#include "scene/styleContext.h"
 
 using namespace Tangram;
 

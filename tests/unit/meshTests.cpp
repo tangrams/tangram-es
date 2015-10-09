@@ -22,7 +22,7 @@ std::shared_ptr<VertexLayout> layout = std::shared_ptr<VertexLayout>(new VertexL
 std::shared_ptr<TypedMesh<Vertex>> newMesh(unsigned int size) {
     auto mesh = std::shared_ptr<TypedMesh<Vertex>>(new TypedMesh<Vertex>(layout, GL_TRIANGLES));
     std::vector<Vertex> vertices;
-    for (int i = 0; i < size; ++i) {
+    for (size_t i = 0; i < size; ++i) {
         vertices.push_back({0,0,0,0});
     }
     mesh->addVertices(std::move(vertices), {});

@@ -5,6 +5,7 @@
 #include "scene/filters.h"
 #include "scene/sceneLoader.h"
 #include "scene/scene.h"
+#include "scene/styleContext.h"
 #include "util/builders.h"
 #include "platform.h"
 
