@@ -2,8 +2,10 @@
 #include "catch.hpp"
 
 #include "yaml-cpp/yaml.h"
-#include "sceneLoader.h"
+#include "gl/shaderProgram.h"
+#include "scene/sceneLoader.h"
 #include "scene/scene.h"
+#include "style/material.h"
 #include "style/style.h"
 #include "style/polylineStyle.h"
 #include "style/polygonStyle.h"
