@@ -137,6 +137,11 @@ void Style::onBeginDrawFrame(const View& _view, Scene& _scene) {
 
     bool contextLost = glContextLost();
 
+    // Setup constant uniforms
+    if (contextLost) {
+        m_shaderProgram->setUniformf("u_device_pixel_ratio", m_pixelScale);
+    }
+
     m_material->setupProgram(*m_shaderProgram);
 
     // Set up lights

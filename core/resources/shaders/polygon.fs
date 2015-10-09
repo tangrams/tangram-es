@@ -13,6 +13,7 @@ uniform mat3 u_normalMatrix;
 uniform vec2 u_resolution;
 uniform vec3 u_map_position;
 uniform float u_time;
+uniform float u_device_pixel_ratio;
 
 #pragma tangram: uniforms
 
