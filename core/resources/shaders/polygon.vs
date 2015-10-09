@@ -87,7 +87,7 @@ void main() {
 
     gl_Position = u_proj * v_position;
     
-    // Proxy tiles have u_tile_zoom < 0, so this re-scaling will place proxy tiles deeper in
+    // Proxy tiles have u_tile_origin.z < 0, so this re-scaling will place proxy tiles deeper in
     // the depth buffer than non-proxy tiles by a distance that increases with tile zoom
     gl_Position.z /= 1. + .1 * (abs(u_tile_origin.z) - u_tile_origin.z);
     
