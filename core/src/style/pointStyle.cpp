@@ -65,7 +65,10 @@ PointStyle::Parameters PointStyle::applyRule(const DrawRule& _rule) const {
     _rule.get(StyleParamKey::centroid, p.centroid);
     _rule.get(StyleParamKey::interactive, p.interactive);
 
-    if (_rule.get(StyleParamKey::size, size)) {
+    auto sizeParam = _rule.findParameter(StyleParamKey::size);
+    if (sizeParam.stops && sizeParam.value.is<float>()) {
+        p.size = glm::vec2(sizeParam.value.get<float>());
+    } else if (_rule.get(StyleParamKey::size, size)) {
         if (size.x == 0.f || std::isnan(size.y)) {
             p.size = glm::vec2(size.x);
         } else {
