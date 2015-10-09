@@ -801,13 +801,13 @@ void SceneLoader::loadSource(const std::pair<Node, Node>& src, Scene& _scene) {
 
     std::shared_ptr<DataSource> sourcePtr;
 
-    if (type == "GeoJSONTiles") {
+    if (type == "GeoJSON") {
         if (tiled) {
             sourcePtr = std::shared_ptr<DataSource>(new GeoJsonSource(name, url));
         } else {
             sourcePtr = std::shared_ptr<DataSource>(new ClientGeoJsonSource(name, url));
         }
-    } else if (type == "TopoJSONTiles") {
+    } else if (type == "TopoJSON") {
         LOGW("TopoJSON data sources not yet implemented"); // TODO
     } else if (type == "MVT") {
         sourcePtr = std::shared_ptr<DataSource>(new MVTSource(name, url));
