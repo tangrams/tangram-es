@@ -16,7 +16,7 @@ TextBuffer dummy(nullptr);
 TextLabel makeLabel(Label::Transform _transform, Label::Type _type) {
     Label::Options options;
     options.offset = {0.0f, 0.0f};
-    return TextLabel("label", _transform, _type, {0, 0}, dummy, {0, 0}, options);
+    return TextLabel(_transform, _type, {0, 0}, dummy, {0, 0}, options);
 }
 
 TEST_CASE( "Ensure the transition from wait -> sleep when occlusion happens", "[Core][Label]" ) {
