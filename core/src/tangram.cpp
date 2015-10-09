@@ -28,6 +28,7 @@ namespace Tangram {
 #ifdef USE_REMOTERY
 struct rmtDeleter {
    void operator()(Remotery *rmt) const {
+       LOG("FINISH REMOTERY %p", rmt);
        rmt_DestroyGlobalInstance(rmt);
    }
 };
@@ -50,10 +51,14 @@ int log_level = 2;
 void initialize(const char* _scenePath) {
 
 #ifdef USE_REMOTERY
+    rmt = nullptr;
+
     Remotery* _rmt = nullptr;
     rmt_CreateGlobalInstance(&_rmt);
     rmt = std::unique_ptr<Remotery, rmtDeleter>(_rmt);
     rmt_SetCurrentThreadName("MainThread");
+
+    LOG("INITIALIZE REMOTERY %p", _rmt);
 #endif
 
     if (m_tileManager) {
