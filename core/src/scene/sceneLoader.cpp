@@ -96,6 +96,25 @@ bool SceneLoader::loadScene(Node& config, Scene& _scene) {
         }
     }
 
+    // Styles that are opaque must be ordered first in the scene so that
+    // they are rendered 'under' styles that require blending
+    std::sort(_scene.styles().begin(), _scene.styles().end(),
+              [](std::unique_ptr<Style>& a, std::unique_ptr<Style>& b) {
+                  if (a->blendMode() != b->blendMode()) {
+                      return a->blendMode() == Blending::none;
+                  }
+                  // Just for consistent ordering
+                  // anytime the scene is loaded
+                  return a->getName() < b->getName();
+              });
+
+    // Post style sorting set their respective IDs=>vector indices
+    // These indices are used for style geometry lookup in tiles
+    auto& styles = _scene.styles();
+    for(uint32_t i = 0; i < styles.size(); i++) {
+        styles[i]->setID(i);
+    }
+
     if (Node layers = config["layers"]) {
         for (const auto& layer : layers) {
             try { loadLayer(layer, _scene); }
@@ -130,25 +149,6 @@ bool SceneLoader::loadScene(Node& config, Scene& _scene) {
 
     for (auto& style : _scene.styles()) {
         style->build(_scene.lights());
-    }
-
-    // Styles that are opaque must be ordered first in the scene so that
-    // they are rendered 'under' styles that require blending
-    std::sort(_scene.styles().begin(), _scene.styles().end(),
-              [](std::unique_ptr<Style>& a, std::unique_ptr<Style>& b) {
-                  if (a->blendMode() != b->blendMode()) {
-                      return a->blendMode() == Blending::none;
-                  }
-                  // Just for consistent ordering
-                  // anytime the scene is loaded
-                  return a->getName() < b->getName();
-              });
-
-    // Post style sorting set their respective IDs=>vector indices
-    // These indices are used for style geometry lookup in tiles
-    auto& styles = _scene.styles();
-    for(uint32_t i = 0; i < styles.size(); i++) {
-        styles[i]->setID(i);
     }
 
     return true;
@@ -1316,9 +1316,20 @@ SceneLayer SceneLoader::loadSublayer(Node layer, const std::string& name, Scene&
             // Member is a mapping of draw rules
             for (auto& ruleNode : member.second) {
                 auto name = ruleNode.first.as<std::string>();
+                auto explicitStyle = ruleNode.second["style"];
+                auto style = explicitStyle
+                    ? explicitStyle.as<std::string>()
+                    : name;
+
+                int styleId = scene.getStyleId(style);
+                if (styleId < 0) {
+                    LOGE("TODO Invalid style reference! %s", style.c_str());
+                    continue;
+                }
                 std::vector<StyleParam> params;
                 parseStyleParams(ruleNode.second, scene, "", params);
-                rules.push_back({ name, std::move(params) });
+                int nameId = scene.addStyleNameId(name);
+                rules.push_back({ name, nameId, std::move(params) });
             }
         } else if (key == "filter") {
             filter = generateFilter(member.second, scene);

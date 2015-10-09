@@ -89,12 +89,15 @@ void Tile::build(StyleContext& _ctx, const Scene& _scene, const TileData& _data,
                 auto rules = datalayer.match(feat, _ctx);
 
                 for (auto& rule : rules) {
-                    auto* style = _scene.findStyle(rule.getStyleName());
-
-                    if (style) {
-                        if (!rule.eval(_ctx)) { continue; }
-                        style->buildFeature(*this, feat, rule);
+                    int styleId = _scene.getStyleId(rule.getStyleName());
+                    if (styleId < 0){
+                        LOGE("Invalid style %s", rule.getStyleName().c_str());
+                        continue;
                     }
+
+                    auto* style = _scene.findStyle(styleId);
+                    if (!rule.eval(_ctx)) { continue; }
+                    style->buildFeature(*this, feat, rule);
                 }
             }
         }

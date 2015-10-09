@@ -7,6 +7,8 @@
 using namespace Tangram;
 
 // Functions to initialize DrawRule instances
+const int dg1 = 0;
+const int dg2 = 1;
 
 DrawRule instance_a() {
 
@@ -16,7 +18,7 @@ DrawRule instance_a() {
         { StyleParamKey::color, "value_1a" }
     };
 
-    return { "dg1", params };
+    return { "dg1", dg1, params };
 
 }
 
@@ -30,7 +32,7 @@ DrawRule instance_b() {
         { StyleParamKey::style, "value_4b" }
     };
 
-    return { "dg1", params };
+    return { "dg1", dg1, params };
 
 }
 
@@ -38,7 +40,7 @@ DrawRule instance_c() {
 
     std::vector<StyleParam> params = {};
 
-    return { "dg2", params };
+    return { "dg2", dg2, params };
 
 }
 

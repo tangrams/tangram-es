@@ -13,6 +13,7 @@
 #include "view/view.h"
 
 #include <atomic>
+#include <algorithm>
 
 namespace Tangram {
 
@@ -28,11 +29,33 @@ Scene::Scene() : id(s_serial++) {
 
 Scene::~Scene() {}
 
-const Style* Scene::findStyle(const std::string &_name) const {
+const Style* Scene::findStyle(int _name) const {
+    return  m_styles[_name].get();
+}
+
+int Scene::getStyleId(const std::string& _name) const {
     for (auto& style : m_styles) {
-        if (style->getName() == _name) { return style.get(); }
+         if (style->getName() == _name) { return style->getID(); }
     }
-    return nullptr;
+    return -1;
+}
+
+int Scene::addStyleNameId(const std::string& _name) {
+    int id = getStyleNameId(_name);
+
+    if (id < 0) {
+        m_styleNames.push_back(_name);
+        return m_styleNames.size()-1;
+    }
+    return id;
+}
+
+int Scene::getStyleNameId(const std::string& _name) const {
+    auto it = std::find(m_styleNames.begin(), m_styleNames.end(), _name);
+    if (it == m_styleNames.end()) {
+        return -1;
+    }
+    return it - m_styleNames.begin();
 }
 
 const Light* Scene::findLight(const std::string &_name) const {

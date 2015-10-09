@@ -11,10 +11,11 @@ class StyleContext;
 
 struct DrawRule {
 
-    std::string name;
+    std::string styleName;
+    int styleId;
     std::vector<StyleParam> parameters;
 
-    DrawRule(const std::string& _name, const std::vector<StyleParam>& _parameters,
+    DrawRule(std::string _styleName, int _styleId, const std::vector<StyleParam>& _parameters,
              bool _sorted = false);
 
     //Merge properties of _other and retain self
@@ -44,7 +45,6 @@ struct DrawRule {
     }
 
     bool operator<(const DrawRule& _rhs) const;
-    int compare(const DrawRule& _rhs) const { return name.compare(_rhs.name); }
 
 private:
     void logGetError(StyleParamKey _expectedKey, const StyleParam& _param);

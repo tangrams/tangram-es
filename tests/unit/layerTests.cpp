@@ -9,12 +9,18 @@ using namespace Tangram;
 using Context = StyleContext;
 
 // Functions to initialize SceneLayer instances
+const int dg0 = 0;
+const int dg1 = 1;
+const int dg2 = 2;
+
+const int group1 = 1;
+const int group2 = 2;
 
 SceneLayer instance_a() {
 
     Filter f = Filter(); // passes everything
 
-    DrawRule rule = { "dg0", { { StyleParamKey::order, "value_a" } } };
+    DrawRule rule = { "dg0", dg0, { { StyleParamKey::order, "value_a" } } };
 
     return { "layer_a", f, { rule }, {} };
 }
@@ -23,7 +29,7 @@ SceneLayer instance_b() {
 
     Filter f = Filter::MatchAny({}); // passes nothing
 
-    DrawRule rule = { "dg1", { { StyleParamKey::order, "value_b" } } };
+    DrawRule rule = { "dg1", dg1, { { StyleParamKey::order, "value_b" } } };
 
     return { "layer_b", f, { rule }, {} };
 }
@@ -32,7 +38,7 @@ SceneLayer instance_c() {
 
     Filter f = Filter(); // passes everything
 
-    DrawRule rule = { "dg2", { { StyleParamKey::order, "value_c" } } };
+    DrawRule rule = { "dg2", dg2, { { StyleParamKey::order, "value_c" } } };
 
     return { "layer_c", f, { rule }, { instance_a(), instance_b() } };
 }
@@ -41,7 +47,7 @@ SceneLayer instance_d() {
 
     Filter f = Filter(); // passes everything
 
-    DrawRule rule = { "dg0", { { StyleParamKey::order, "value_d" } } };
+    DrawRule rule = { "dg0", dg0, { { StyleParamKey::order, "value_d" } } };
 
     return { "layer_d", f, { rule }, {} };
 }
@@ -50,7 +56,7 @@ SceneLayer instance_e() {
 
     Filter f = Filter(); // passes everything
 
-    DrawRule rule = { "dg2", { { StyleParamKey::order, "value_e" } } };
+    DrawRule rule = { "dg2", dg2, { { StyleParamKey::order, "value_e" } } };
 
     return { "layer_e", f, { rule }, { instance_c(), instance_d() } };
 }
@@ -59,7 +65,7 @@ SceneLayer instance_2() {
 
     Filter f = Filter::MatchExistence("two", true);
 
-    DrawRule rule = { "group2", {} };
+    DrawRule rule = { "group2", group2, {} };
 
     return { "subLayer2", f, { rule }, {} };
 }
@@ -68,7 +74,7 @@ SceneLayer instance_1() {
 
     Filter f = Filter::MatchExistence("one", true);
 
-    DrawRule rule = { "group1", {} };
+    DrawRule rule = { "group1", group1, {} };
 
     return { "subLayer1", f, { rule }, {} };
 }
@@ -77,7 +83,7 @@ SceneLayer instance() {
 
     Filter f = Filter::MatchExistence("base", true);
 
-    DrawRule rule = { "group1", { {StyleParamKey::order, "a" } } };
+    DrawRule rule = { "group1", group1, { {StyleParamKey::order, "a" } } };
 
     return { "layer", f, { rule }, { instance_1(), instance_2() } };
 }
