@@ -177,9 +177,9 @@ void SceneLoader::loadShaderConfig(Node shaders, Style& style, Scene& scene) {
 
             if (getBool(define.second, bValue)) {
                 if (!bValue) {
-                    // specifying a define to be 'false' means that the define will
-                    // not be defined at all
-                    continue;
+                    // Explicitly set false defines (to make sure it overwrites a predefined define
+                    // Example: TANGRAM_WORLD_POSITION_WRAP
+                    shader.addSourceBlock("defines", "#define " + name + " " + "false");
                 }
                 // specifying a define to be 'true' means that it is simply
                 // defined and has no value

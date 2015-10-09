@@ -242,6 +242,7 @@ std::string ShaderProgram::applySourceBlocks(const std::string& source, bool fra
         float depthDelta = 1.f / (1 << 16);
         sourceOut << "#define TANGRAM_DEPTH_DELTA " << std::to_string(depthDelta) << '\n';
         sourceOut << "#define TANGRAM_VERTEX_SHADER\n";
+        sourceOut << "#define TANGRAM_WORLD_POSITION_WRAP 100000\n";
     }
 
     auto sourcePos = source.begin();
