@@ -3,7 +3,6 @@
 #include "style.h"
 #include "glm/vec2.hpp"
 #include "glm/vec3.hpp"
-#include "gl/typedMesh.h"
 #include "labels/labelMesh.h"
 #include "labels/label.h"
 #include "scene/spriteAtlas.h"
