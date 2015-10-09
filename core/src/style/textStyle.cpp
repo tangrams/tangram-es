@@ -141,7 +141,7 @@ void TextStyle::buildPolygon(const Polygon& _polygon, const DrawRule& _rule, con
     buildPoint(p, _rule, _props, _mesh, _tile);
 }
 
-void TextStyle::onBeginDrawFrame(const View& _view, Scene& _scene) {
+void TextStyle::onBeginDrawFrame(const View& _view, Scene& _scene, int _textureUnit) {
     bool contextLost = Style::glContextLost();
 
     m_fontContext->bindAtlas(0);
@@ -157,7 +157,7 @@ void TextStyle::onBeginDrawFrame(const View& _view, Scene& _scene) {
         m_dirtyViewport = false;
     }
 
-    Style::onBeginDrawFrame(_view, _scene);
+    Style::onBeginDrawFrame(_view, _scene, 1);
 
 }
 

@@ -133,7 +133,7 @@ void Style::setupShaderUniforms(int _textureUnit, bool _update, Scene& _scene) {
     }
 }
 
-void Style::onBeginDrawFrame(const View& _view, Scene& _scene) {
+void Style::onBeginDrawFrame(const View& _view, Scene& _scene, int _textureUnit) {
 
     bool contextLost = glContextLost();
 
@@ -161,7 +161,7 @@ void Style::onBeginDrawFrame(const View& _view, Scene& _scene) {
     m_shaderProgram->setUniformMatrix4f("u_view", glm::value_ptr(_view.getViewMatrix()));
     m_shaderProgram->setUniformMatrix4f("u_proj", glm::value_ptr(_view.getProjectionMatrix()));
 
-    setupShaderUniforms(0, contextLost, _scene);
+    setupShaderUniforms(_textureUnit, contextLost, _scene);
 
     // Configure render state
     switch (m_blend) {

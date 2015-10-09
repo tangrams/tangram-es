@@ -142,7 +142,7 @@ public:
     virtual void onEndBuildTile(Tile& _tile) const;
 
     /* Perform any setup needed before drawing each frame */
-    virtual void onBeginDrawFrame(const View& _view, Scene& _scene);
+    virtual void onBeginDrawFrame(const View& _view, Scene& _scene, int _textureUnit = 0);
 
     /* Perform any unsetup needed after drawing each frame */
     virtual void onEndDrawFrame() {}
