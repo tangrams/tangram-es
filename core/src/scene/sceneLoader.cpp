@@ -155,7 +155,7 @@ void SceneLoader::loadShaderConfig(Node shaders, Style& style, Scene& scene) {
             for (const auto& extNode : extensionsNode) {
                 auto extName = extNode.as<std::string>();
                 std::ostringstream ext;
-                ext << "#ifdef GL_" << extName << '\n';
+                ext << "#if defined(GL_ES) == 0 || defined(GL_" << extName << ")\n";
                 ext << "    #extension GL_" << extName << " : enable\n";
                 ext << "    #define TANGRAM_EXTENSION_" << extName << '\n';
                 ext << "#endif\n";
