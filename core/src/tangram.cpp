@@ -22,6 +22,16 @@
 
 namespace Tangram {
 
+#ifdef USE_REMOTERY
+struct rmtDeleter {
+   void operator()(Remotery *rmt) const {
+       rmt_DestroyGlobalInstance(rmt);
+   }
+};
+
+static std::unique_ptr<Remotery, rmtDeleter> rmt = nullptr;
+#endif
+
 std::unique_ptr<TileManager> m_tileManager;
 std::shared_ptr<Scene> m_scene;
 std::shared_ptr<View> m_view;
@@ -35,6 +45,13 @@ static std::bitset<8> g_flags = 0;
 int log_level = 2;
 
 void initialize(const char* _scenePath) {
+
+#ifdef USE_REMOTERY
+    Remotery* _rmt = nullptr;
+    rmt_CreateGlobalInstance(&_rmt);
+    rmt = std::unique_ptr<Remotery, rmtDeleter>(_rmt);
+    rmt_SetCurrentThreadName("MainThread");
+#endif
 
     if (m_tileManager) {
         LOG("Notice: Already initialized");
@@ -116,17 +133,23 @@ void resize(int _newWidth, int _newHeight) {
 }
 
 void update(float _dt) {
+    RMT_Sample(update);
 
     g_time += _dt;
 
     m_inputHandler->update(_dt);
 
-    m_view->update();
+    {
+        RMT_Sample(updateView);
+        m_view->update();
+    }
 
     {
         std::lock_guard<std::mutex> lock(m_tilesMutex);
 
+        RMT_BeginSample(updateTileSets);
         m_tileManager->updateTileSets();
+        RMT_EndSample();
 
         if (m_view->changedOnLastUpdate() || m_tileManager->hasTileSetChanged() || m_labels->needUpdate()) {
 
@@ -153,18 +176,24 @@ void update(float _dt) {
 }
 
 void render() {
+    RMT_Sample(render);
 
-    // Set up openGL for new frame
+    RMT_BeginSample(clear);
+
+// Set up openGL for new frame
     RenderState::depthWrite(GL_TRUE);
     auto& color = m_scene->background();
     RenderState::clearColor(color.r / 255.f, color.g / 255.f, color.b / 255.f, color.a / 255.f);
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+
+    RMT_EndSample();
 
     {
         std::lock_guard<std::mutex> lock(m_tilesMutex);
 
         // Loop over all styles
         for (const auto& style : m_scene->styles()) {
+            RMT_BeginSample(style);
 
             // Set time uniforms style's shader programs
             style->getShaderProgram()->setUniformf("u_time", g_time);
@@ -173,10 +202,14 @@ void render() {
 
             // Loop over all tiles in m_tileSet
             for (const auto& tile : m_tileManager->getVisibleTiles()) {
+                RMT_Sample(tile);
+
                 tile->draw(*style, *m_view);
             }
 
             style->onEndDrawFrame();
+
+            RMT_EndSample();
         }
     }
 

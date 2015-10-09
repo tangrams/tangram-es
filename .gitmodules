@@ -33,3 +33,6 @@
 [submodule "core/dependencies/duktape"]
 	path = core/dependencies/duktape
 	url = https://github.com/tangrams/duktape.git
+[submodule "core/dependencies/Remotery"]
+	path = core/dependencies/Remotery
+	url = https://github.com/Celtoys/Remotery.git

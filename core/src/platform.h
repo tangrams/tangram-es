@@ -5,6 +5,17 @@
 #include <vector>
 #include <functional>
 
+#ifdef USE_REMOTERY
+#include "Remotery.h"
+#define RMT_Sample(name) rmt_ScopedCPUSample(name)
+#define RMT_BeginSample(name) do { rmt_BeginCPUSample(name); } while(0)
+#define RMT_EndSample() do { rmt_EndCPUSample(); } while(0)
+#else
+#define RMT_Sample(name)
+#define RMT_BeginSample(name)
+#define RMT_EndSample()
+#endif
+
 #ifdef PLATFORM_ANDROID
 
 #include "data/properties.h"
