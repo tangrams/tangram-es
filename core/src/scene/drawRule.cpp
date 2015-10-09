@@ -89,6 +89,8 @@ void DrawRule::eval(const StyleContext& _ctx) {
         if (param.stops) {
             if (StyleParam::isColor(param.key)) {
                 param.value = param.stops->evalColor(_ctx.getGlobalZoom());
+            } else if (StyleParam::isWidth(param.key)) {
+                param.value = param.stops->evalWidth(_ctx.getGlobalZoom());
             } else {
                 param.value = param.stops->evalFloat(_ctx.getGlobalZoom());
             }
