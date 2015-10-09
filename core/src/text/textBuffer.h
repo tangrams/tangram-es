@@ -32,7 +32,6 @@ struct Parameters {
     float strokeWidth = 0.0f;
     float fontSize = 12.0f;
     float blurSpread = 0.0f;
-    glm::vec2 offset;
     TextTransform transform = TextTransform::none;
     bool visible = true;
     Label::Options labelOptions;

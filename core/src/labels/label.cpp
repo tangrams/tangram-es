@@ -114,13 +114,6 @@ bool Label::updateScreenTransform(const glm::mat4& _mvp, const glm::vec2& _scree
 bool Label::update(const glm::mat4& _mvp, const glm::vec2& _screenSize, float _dt) {
     bool animate = false;
 
-    // allow persistent labels
-    //if (!m_options.collide) {
-    //    enterState(State::visible, 1.0);
-    //    updateScreenTransform(_mvp, _screenSize);
-    //    return animate;
-    //}
-
     animate = updateState(_mvp, _screenSize, _dt);
     m_occlusionSolved = false;
 

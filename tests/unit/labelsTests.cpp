@@ -18,7 +18,6 @@ TextBuffer dummy(nullptr);
 
 std::unique_ptr<TextLabel> makeLabel(Label::Transform _transform, Label::Type _type, std::string id) {
     Label::Options options;
-    options.color = 0xff;
     options.offset = {0.0f, 0.0f};
     options.properties = std::make_shared<Properties>();
     options.properties->add("id", id);
