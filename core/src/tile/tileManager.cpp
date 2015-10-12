@@ -369,6 +369,10 @@ bool TileManager::addTile(TileSet& tileSet, const TileID& _tileID) {
 
     if (tile) {
         m_tiles.push_back(tile);
+
+        // Reset tile on potential internal dynamic data set
+        tile->reset();
+
         fromCache = true;
     } else {
         tile = std::shared_ptr<Tile>(new Tile(_tileID, m_view->getMapProjection()));
