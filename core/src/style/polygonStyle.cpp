@@ -36,8 +36,10 @@ void PolygonStyle::constructShaderProgram() {
 PolygonStyle::Parameters PolygonStyle::parseRule(const DrawRule& _rule) const {
     Parameters p;
     _rule.get(StyleParamKey::color, p.color);
-    _rule.get(StyleParamKey::order, p.order);
     _rule.get(StyleParamKey::extrude, p.extrude);
+    if (!_rule.get(StyleParamKey::order, p.order)) {
+        LOGW("No 'order' specified for feature, ordering cannot be guaranteed :(");
+    }
 
     return p;
 }

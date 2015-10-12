@@ -38,11 +38,13 @@ PolylineStyle::Parameters PolylineStyle::parseRule(const DrawRule& _rule) const 
 
     uint32_t cap = 0, join = 0;
 
-    _rule.get(StyleParamKey::order, p.order);
     _rule.get(StyleParamKey::extrude, p.extrude);
     _rule.get(StyleParamKey::color, p.color);
     _rule.get(StyleParamKey::cap, cap);
     _rule.get(StyleParamKey::join, join);
+    if (!_rule.get(StyleParamKey::order, p.order)) {
+        LOGW("No 'order' specified for feature, ordering cannot be guaranteed :(");
+    }
 
     p.cap = static_cast<CapTypes>(cap);
     p.join = static_cast<JoinTypes>(join);
