@@ -1135,7 +1135,7 @@ void SceneLoader::parseStyleParams(Node params, Scene& scene, const std::string&
         if (key == "style") { continue; }
 
         if (key == "transition") {
-            parseTransition(prop.second, scene, key, out);
+            parseTransition(prop.second, scene, out);
             continue;
         }
 
@@ -1253,8 +1253,9 @@ StyleUniforms SceneLoader::parseStyleUniforms(const Node& value, Scene& scene) {
     return std::make_pair(type, std::move(uniformValues));
 }
 
-void SceneLoader::parseTransition(Node params, Scene& scene, const std::string& prefix,
-                                  std::vector<StyleParam>& out) {
+void SceneLoader::parseTransition(Node params, Scene& scene, std::vector<StyleParam>& out) {
+
+    static const std::string prefix = "transition";
 
     for (const auto& prop : params) {
         switch (prop.first.Type()) {

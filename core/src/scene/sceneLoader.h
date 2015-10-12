@@ -59,8 +59,7 @@ struct SceneLoader {
 
     static void parseStyleParams(Node params, Scene& scene, const std::string& propPrefix,
                                  std::vector<StyleParam>& out);
-    static void parseTransition(Node params, Scene& scene, const std::string& prefix,
-                                std::vector<StyleParam>& out);
+    static void parseTransition(Node params, Scene& scene, std::vector<StyleParam>& out);
 
     static StyleUniforms parseStyleUniforms(const Node& uniform, Scene& scene);
     static Node mixStyles(const std::vector<Node>& mixes);
