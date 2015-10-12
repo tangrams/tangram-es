@@ -60,10 +60,10 @@ void main() {
         float dz = u_map_position.z - abs(u_tile_origin.z);
         // Interpolate between zoom levels
         width += dwdz * dz;
-        // Scale to screen-space
+        // Scale pixel dimensions to be consistent in screen space
         width *= exp2(-dz);
 
-        // Modify line width before extrusion
+        // Modify line width in model space before extrusion
         #pragma tangram: width
 
         position.xy += a_extrude.xy * width;
