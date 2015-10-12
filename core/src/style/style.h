@@ -141,7 +141,9 @@ public:
     /* Perform any needed teardown after processing data for a tile */
     virtual void onEndBuildTile(Tile& _tile) const;
 
-    /* Perform any setup needed before drawing each frame */
+    /* Perform any setup needed before drawing each frame
+     * _textUnit is the next available texture unit
+     */
     virtual void onBeginDrawFrame(const View& _view, Scene& _scene, int _textureUnit = 0);
 
     /* Perform any unsetup needed after drawing each frame */
