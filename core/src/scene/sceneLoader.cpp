@@ -1258,39 +1258,30 @@ void SceneLoader::parseTransition(Node params, Scene& scene, std::vector<StylePa
     static const std::string prefix = "transition";
 
     for (const auto& prop : params) {
-        switch (prop.first.Type()) {
-            case YAML::NodeType::Sequence:
-            {
-                auto rawKeys = parseSequence(prop.first);
-                std::stringstream ss(rawKeys);
-                std::vector<std::string> keys;
-                std::string key;
+        if (!prop.first) {
+            continue;
+        }
+        auto keys = prop.first.as<std::vector<std::string>>();
 
-                while (std::getline(ss, key, ',')) {
-                    keys.push_back(key);
-                }
+        for (const auto& key : keys) {
+            std::string prefixedKey;
+            switch (prop.first.Type()) {
+                case YAML::NodeType::Sequence:
+                    prefixedKey = prefix + ":" + key;
+                    break;
+                case YAML::NodeType::Scalar:
+                    prefixedKey = prefix + ":" + prop.first.as<std::string>();
+                    break;
+                default:
+                    LOGW("Expected a scalar or sequence value for transition");
+                    continue;
+                    break;
+            }
 
-                for (auto key : keys) {
-                    std::string prefixedKey = prefix + ":" + key;
-                    for (const auto& child : prop.second) {
-                        auto childKey = prefixedKey + ":" + child.first.as<std::string>();
-                        out.push_back(StyleParam{ childKey, child.second.as<std::string>() });
-                    }
-                }
-                break;
+            for (auto child : prop.second) {
+                auto childKey = prefixedKey + ":" + child.first.as<std::string>();
+                out.push_back(StyleParam{ childKey, child.second.as<std::string>() });
             }
-            case YAML::NodeType::Scalar:
-            {
-                auto key = prefix + ":" + prop.first.as<std::string>();
-                for (auto child : prop.second) {
-                    auto childKey = key + ":" + child.first.as<std::string>();
-                    out.push_back(StyleParam{ childKey, child.second.as<std::string>() });
-                }
-                break;
-            }
-            default:
-                LOGW("Expected a scalar or sequence value for transition");
-                break;
         }
     }
 }
