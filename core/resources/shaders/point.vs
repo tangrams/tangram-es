@@ -18,9 +18,9 @@ uniform float u_meters_per_pixel;
 
 #pragma tangram: uniforms
 
-attribute vec2 a_uv;
-attribute LOWP vec2 a_position;
-attribute LOWP vec2 a_screenPosition;
+attribute LOWP vec2 a_uv;
+attribute vec2 a_position;
+attribute vec2 a_screenPosition;
 attribute LOWP float a_alpha;
 attribute LOWP float a_rotation;
 attribute LOWP vec4 a_color;
