@@ -241,7 +241,7 @@ bool Label::updateState(const glm::mat4& _mvp, const glm::vec2& _screenSize, flo
     switch (m_currentState) {
         case State::visible:
             if (occludedLastFrame) {
-                m_fade = FadeEffect(false, m_options.showTransition.ease, m_options.showTransition.time);
+                m_fade = FadeEffect(false, m_options.hideTransition.ease, m_options.hideTransition.time);
                 enterState(State::fading_out, 1.0);
             }
             break;
