@@ -146,7 +146,7 @@ void Style::onBeginDrawFrame(const View& _view, Scene& _scene) {
     const auto& mapPos = _view.getPosition();
     m_shaderProgram->setUniformf("u_map_position", mapPos.x, mapPos.y, _view.getZoom());
     m_shaderProgram->setUniformMatrix3f("u_normalMatrix", glm::value_ptr(_view.getNormalMatrix()));
-    m_shaderProgram->setUniformf("u_meters_per_pixel", _view.pixelsPerMeter());
+    m_shaderProgram->setUniformf("u_meters_per_pixel", 1.0 / _view.pixelsPerMeter());
     m_shaderProgram->setUniformMatrix4f("u_view", glm::value_ptr(_view.getViewMatrix()));
     m_shaderProgram->setUniformMatrix4f("u_proj", glm::value_ptr(_view.getProjectionMatrix()));
 
