@@ -3,6 +3,7 @@
 #include "gl.h"
 #include "platform.h"
 #include "vertexLayout.h"
+#include "vao.h"
 
 #include <cstring> // for memcpy
 #include <vector>
@@ -91,8 +92,9 @@ protected:
 
     size_t m_nVertices;
     GLuint m_glVertexBuffer;
-    GLuint* m_glVAOs;
-    GLuint m_glnVAOs;
+
+    std::unique_ptr<Vao> m_vaos;
+
     // Compiled vertices for upload
     GLbyte* m_glVertexData = nullptr;
 
