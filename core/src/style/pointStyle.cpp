@@ -247,7 +247,7 @@ void PointStyle::onBeginDrawFrame(const View& _view, Scene& _scene) {
     }
 
     if (m_dirtyViewport || contextLost) {
-        m_shaderProgram->setUniformMatrix4f("u_proj", glm::value_ptr(_view.getOrthoViewportMatrix()));
+        m_shaderProgram->setUniformMatrix4f("u_ortho", glm::value_ptr(_view.getOrthoViewportMatrix()));
         m_dirtyViewport = false;
     }
 

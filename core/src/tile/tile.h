@@ -167,7 +167,7 @@ private:
 
     std::atomic<double> m_priority;
 
-    glm::dvec2 m_tileOrigin; // Center of the tile in 2D projection space in meters (e.g. mercator meters)
+    glm::dvec2 m_tileOrigin; // South-West corner of the tile in 2D projection space in meters (e.g. mercator meters)
 
     glm::mat4 m_modelMatrix; // Matrix relating tile-local coordinates to global projection space coordinates;
     // Note that this matrix does not contain the relative translation from the global origin to the tile origin.

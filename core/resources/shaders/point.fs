@@ -9,17 +9,17 @@ precision mediump float;
 
 #pragma tangram: defines
 
-varying float v_alpha;
-varying vec2 v_texcoords;
-varying vec4 v_color;
-
-#pragma tangram: uniforms
-
 uniform vec3 u_map_position;
 uniform vec3 u_tile_origin;
 uniform vec2 u_resolution;
 uniform float u_time;
 uniform float u_meters_per_pixel;
+
+#pragma tangram: uniforms
+
+varying vec4 v_color;
+varying vec2 v_texcoords;
+varying float v_alpha;
 
 #ifndef TANGRAM_POINT
 uniform sampler2D u_tex;

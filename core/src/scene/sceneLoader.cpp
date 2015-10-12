@@ -173,17 +173,18 @@ void SceneLoader::loadShaderConfig(Node shaders, Style& style, Scene& scene) {
     if (Node definesNode = shaders["defines"]) {
         for (const auto& define : definesNode) {
             std::string name = define.first.as<std::string>();
+
+            // undefine any previous definitions
+            shader.addSourceBlock("defines", "#undef " + name);
+
             bool bValue;
 
             if (getBool(define.second, bValue)) {
-                if (!bValue) {
-                    // specifying a define to be 'false' means that the define will
-                    // not be defined at all
-                    continue;
-                }
                 // specifying a define to be 'true' means that it is simply
                 // defined and has no value
-                shader.addSourceBlock("defines", "#define " + name);
+                if (bValue) {
+                    shader.addSourceBlock("defines", "#define " + name);
+                }
             } else {
                 std::string value = define.second.as<std::string>();
                 shader.addSourceBlock("defines", "#define " + name + " " + value);
