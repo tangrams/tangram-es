@@ -17,7 +17,7 @@ const uint32_t indexMaxPoints = 100000;
 double tolerance = 1E-8;
 
 Point ClientGeoJsonSource::transformPoint(geojsonvt::TilePoint pt) const {
-    return { 2 * pt.x / extent - 1, 1 - 2 * pt.y / extent, 0 };
+    return { pt.x / extent, 1. - pt.y / extent, 0 };
 }
 
 ClientGeoJsonSource::ClientGeoJsonSource(const std::string& _name, const std::string& _url)
