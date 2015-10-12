@@ -29,7 +29,7 @@ public:
 
     void enable(ShaderProgram& _program, size_t _byteOffset, void* _ptr = nullptr);
 
-    void enable(const std::unordered_map<std::string, GLuint>& _locations, size_t _bytOffset, void* _ptr = nullptr);
+    void enable(const std::unordered_map<std::string, GLuint>& _locations, size_t _bytOffset);
 
     GLint getStride() const { return m_stride; };
 

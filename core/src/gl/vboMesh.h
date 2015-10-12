@@ -114,9 +114,7 @@ protected:
     GLsizei m_dirtySize;
     GLintptr m_dirtyOffset;
 
-    void checkValidity();
-
-    void initVAO(ShaderProgram& _shader);
+    bool checkValidity();
 
     template <typename T>
     void compile(std::vector<std::vector<T>>& _vertices,

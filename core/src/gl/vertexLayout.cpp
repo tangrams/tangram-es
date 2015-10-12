@@ -56,7 +56,7 @@ size_t VertexLayout::getOffset(std::string _attribName) {
     return 0;
 }
 
-void VertexLayout::enable(const std::unordered_map<std::string, GLuint>& _locations, size_t _byteOffset, void* _ptr) {
+void VertexLayout::enable(const std::unordered_map<std::string, GLuint>& _locations, size_t _byteOffset) {
 
     for (auto& attrib : m_attribs) {
         auto it = _locations.find(attrib.name);
