@@ -33,8 +33,8 @@ DrawRule DrawRule::merge(DrawRule& _other) const {
         } else if (*otherIt < *myIt) {
             merged.push_back(std::move(*otherIt++));
         } else {
-            merged.push_back(*otherIt++);
-            myIt++;
+            merged.push_back(*myIt++);
+            otherIt++;
         }
     }
     while (myIt != myEnd) { merged.push_back(*myIt++); }

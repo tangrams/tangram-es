@@ -1,69 +1,75 @@
 #include "sceneLayer.h"
 
 #include <algorithm>
+#include <queue>
 
 namespace Tangram {
 
 SceneLayer::SceneLayer(std::string _name, Filter _filter, std::vector<DrawRule> _rules,
                        std::vector<SceneLayer> _sublayers) :
-    m_filter(std::move(_filter)),
-    m_name(std::move(_name)),
-    m_rules(std::move(_rules)),
-    m_sublayers(std::move(_sublayers)),
-    m_depth(0) {
+    m_filter(_filter),
+    m_name(_name),
+    m_rules(_rules),
+    m_sublayers(_sublayers) {
 
     // Rules must be sorted to merge correctly
     std::sort(m_rules.begin(), m_rules.end());
 
-    // m_depth is one more than the maximum depth of any sublayer
-    for (auto& sublayer : m_sublayers) {
-        m_depth = sublayer.m_depth > m_depth ? sublayer.m_depth : m_depth;
-    }
-    m_depth++;
-
-    // Sublayers must be sorted by the depth of their deepest leaf in order to
-    // correctly traverse them in match()
-    std::sort(m_sublayers.begin(), m_sublayers.end(),
-              [&](const auto& a, const auto& b) {
-                  return a.m_depth > b.m_depth;
-              });
-
 }
 
-void SceneLayer::match(const Feature& _feat, const StyleContext& _ctx, std::vector<DrawRule>& _matches) const {
+std::vector<DrawRule> SceneLayer::match(const Feature& _feat, const StyleContext& _ctx) const {
+
+    std::vector<DrawRule> matches;
+    std::queue<std::vector<SceneLayer>::const_iterator> processQ;
 
     if (!m_filter.eval(_feat, _ctx)) {
-        return;
+        return matches;
     }
 
-    // Depth-first traversal produces correct parameter precedence when
-    // sublayers are sorted by decreasing depth
-    for (auto& layer : m_sublayers) {
-        layer.match(_feat, _ctx, _matches);
+    matches.insert(matches.end(), rules().begin(), rules().end());
+    for (auto iter = m_sublayers.begin(); iter != m_sublayers.end(); ++iter) {
+        processQ.push(iter);
     }
 
-    std::vector<DrawRule> merged;
+    while (!processQ.empty()) {
 
-    // For all of m_rules that have the same name as an existing matched rule,
-    // merge the rules; for others, take existing rule unchanged
-    {
-        auto myRulesIt = m_rules.begin(), myRulesEnd = m_rules.end();
-        auto matchesIt = _matches.begin(), matchesEnd = _matches.end();
-        while (myRulesIt != myRulesEnd && matchesIt != matchesEnd) {
-            if (*myRulesIt < *matchesIt) {
-                merged.push_back(*myRulesIt++);
-            } else if (*matchesIt < *myRulesIt) {
-                merged.push_back(std::move(*matchesIt++));
-            } else {
-                merged.push_back((*myRulesIt++).merge(*matchesIt++));
-            }
+        const auto& layer = *processQ.front();
+        if (!layer.filter().eval(_feat, _ctx)) {
+            processQ.pop();
+            continue;
         }
-        while (myRulesIt != myRulesEnd) { merged.push_back(*myRulesIt++); }
-        while (matchesIt != matchesEnd) { merged.push_back(std::move(*matchesIt++)); }
+
+        const auto& subLayers = layer.sublayers();
+        for (auto iter = subLayers.begin(); iter != subLayers.end(); ++iter) {
+            processQ.push(iter);
+        }
+        processQ.pop();
+
+        const auto& rules = layer.rules();
+
+        {
+            std::vector<DrawRule> merged;
+            merged.reserve(rules.size() + matches.size());
+            auto myRulesIt = rules.begin(), myRulesEnd = rules.end();
+            auto matchesIt = matches.begin(), matchesEnd = matches.end();
+            while (myRulesIt != myRulesEnd && matchesIt != matchesEnd) {
+                if (*myRulesIt < *matchesIt) {
+                    merged.push_back(*myRulesIt++);
+                } else if (*matchesIt < *myRulesIt) {
+                    merged.push_back(std::move(*matchesIt++));
+                } else {
+                    //merge parent properties, retain self properties
+                    merged.push_back((*myRulesIt++).merge(*matchesIt++));
+                }
+            }
+            while (myRulesIt != myRulesEnd) { merged.push_back(*myRulesIt++); }
+            while (matchesIt != matchesEnd) { merged.push_back(std::move(*matchesIt++)); }
+            matches.swap(merged);
+        }
     }
 
-    // Move merged results into output vector
-    std::swap(merged, _matches);
+    return matches;
+
 }
 
 }

@@ -60,7 +60,7 @@ TEST_CASE("DrawRule correctly merges with another DrawRule", "[DrawRule]") {
         auto rule_a = instance_a();
         auto rule_b = instance_b();
 
-        auto merged_ab = rule_a.merge(rule_b);
+        auto merged_ab = rule_b.merge(rule_a);
 
         // printf("rule_a:\n %s", rule_a.toString().c_str());
         // printf("rule_c:\n %s", rule_c.toString().c_str());
@@ -87,7 +87,7 @@ TEST_CASE("DrawRule correctly merges with another DrawRule", "[DrawRule]") {
         auto rule_a = instance_a();
         auto rule_b = instance_b();
 
-        auto merged_ba = rule_b.merge(rule_a);
+        auto merged_ba = rule_a.merge(rule_b);
 
         REQUIRE(merged_ba.parameters[0].key == StyleParamKey::cap);
         REQUIRE(merged_ba.parameters[0].value.get<std::string>() == "value_3b");

@@ -86,8 +86,7 @@ void Tile::build(StyleContext& _ctx, const Scene& _scene, const TileData& _data,
             for (const auto& feat : collection.features) {
                 _ctx.setFeature(feat);
 
-                std::vector<DrawRule> rules;
-                datalayer.match(feat, _ctx, rules);
+                auto rules = datalayer.match(feat, _ctx);
 
                 for (auto& rule : rules) {
                     auto* style = _scene.findStyle(rule.getStyleName());

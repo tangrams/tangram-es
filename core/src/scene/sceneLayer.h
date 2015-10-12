@@ -19,7 +19,6 @@ class SceneLayer {
     std::string m_name;
     std::vector<DrawRule> m_rules;
     std::vector<SceneLayer> m_sublayers;
-    size_t m_depth;
 
 public:
 
@@ -31,8 +30,8 @@ public:
     const auto& rules() const { return m_rules; }
     const auto& sublayers() const { return m_sublayers; }
 
-    // Recursively match and combine draw rules that apply to the given Feature in the given Context
-    void match(const Feature& _feat, const StyleContext& _ctx, std::vector<DrawRule>& _matches) const;
+    // Match and combine draw rules that apply to the given Feature in the given Context
+    std::vector<DrawRule> match(const Feature& _feat, const StyleContext& _ctx) const;
 
 };
 

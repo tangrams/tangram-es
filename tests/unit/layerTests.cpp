@@ -95,7 +95,7 @@ TEST_CASE("SceneLayer", "[SceneLayer][Filter][DrawRule][Match][Merge]") {
 
     {
         f1.props.add("base", "blah"); // Should match Base Layer
-        layer.match(f1, ctx, matches);
+        matches = layer.match(f1, ctx);
 
         REQUIRE(matches.size() == 1);
         REQUIRE(matches[0].getStyleName() == "group1");
@@ -105,7 +105,7 @@ TEST_CASE("SceneLayer", "[SceneLayer][Filter][DrawRule][Match][Merge]") {
         matches.clear();
         f2.props.add("one", "blah"); // Should match Base and subLayer1
         f2.props.add("base", "blah");
-        layer.match(f2, ctx, matches);
+        matches = layer.match(f2, ctx);
 
         REQUIRE(matches.size() == 1);
         REQUIRE(matches[0].getStyleName() == "group1");
@@ -116,7 +116,7 @@ TEST_CASE("SceneLayer", "[SceneLayer][Filter][DrawRule][Match][Merge]") {
     {
         matches.clear();
         f3.props.add("two", "blah"); // Should not match anything as uber layer will not be satisfied
-        layer.match(f3, ctx, matches);
+        matches = layer.match(f3, ctx);
 
         REQUIRE(matches.size() == 0);
     }
@@ -125,7 +125,7 @@ TEST_CASE("SceneLayer", "[SceneLayer][Filter][DrawRule][Match][Merge]") {
         matches.clear();
         f4.props.add("two", "blah");
         f4.props.add("base", "blah"); // Should match Base and subLayer2
-        layer.match(f4, ctx, matches);
+        matches = layer.match(f4, ctx);
 
         REQUIRE(matches.size() == 2);
         REQUIRE(matches[0].getStyleName() == "group1");
@@ -144,7 +144,7 @@ TEST_CASE("SceneLayer matches correct rules for a feature and context", "[SceneL
     auto layer_a = instance_a();
 
     std::vector<DrawRule> matches_a;
-    layer_a.match(feat, ctx, matches_a);
+    matches_a = layer_a.match(feat, ctx);
 
     REQUIRE(matches_a.size() == 1);
     REQUIRE(matches_a[0].getStyleName() == "dg0");
@@ -152,7 +152,7 @@ TEST_CASE("SceneLayer matches correct rules for a feature and context", "[SceneL
     auto layer_b = instance_b();
 
     std::vector<DrawRule> matches_b;
-    layer_b.match(feat, ctx, matches_b);
+    matches_b = layer_b.match(feat, ctx);
 
     REQUIRE(matches_b.size() == 0);
 
@@ -166,7 +166,7 @@ TEST_CASE("SceneLayer matches correct sublayer rules for a feature and context",
     auto layer_c = instance_c();
 
     std::vector<DrawRule> matches;
-    layer_c.match(feat, ctx, matches);
+    matches = layer_c.match(feat, ctx);
 
     REQUIRE(matches.size() == 2);
 
@@ -184,7 +184,7 @@ TEST_CASE("SceneLayer correctly merges rules matched from sublayer", "[SceneLaye
     auto layer_e = instance_e();
 
     std::vector<DrawRule> matches;
-    layer_e.match(feat, ctx, matches);
+    matches = layer_e.match(feat, ctx);
 
     REQUIRE(matches.size() == 2);
 
