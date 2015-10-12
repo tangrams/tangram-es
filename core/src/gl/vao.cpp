@@ -26,8 +26,15 @@ void Vao::init(ShaderProgram& _program, const std::vector<std::pair<uint32_t, ui
 
     glGenVertexArrays(m_glnVAOs, m_glVAOs);
 
-    int vertexOffset = 0;
+    std::unordered_map<std::string, GLuint> locations;
 
+    // FIXME (use a bindAttrib instead of getLocation) to make those locations shader independent
+    for (auto& attrib : _layout.getAttribs()) {
+        GLint location = _program.getAttribLocation(attrib.name);
+        locations[attrib.name] = location;
+    }
+
+    int vertexOffset = 0;
     for (int i = 0; i < _vertexOffsets.size(); ++i) {
         auto vertexIndexOffset = _vertexOffsets[i];
         int nVerts = vertexIndexOffset.second;
@@ -39,16 +46,8 @@ void Vao::init(ShaderProgram& _program, const std::vector<std::pair<uint32_t, ui
             RenderState::indexBuffer.init(_indexBuffer, true);
         }
 
-        std::unordered_map<std::string, GLuint> locations;
-
-        // FIXME (use a bindAttrib instead of getLocation) to make those locations shader independent
-        for (auto& attrib : _layout.getAttribs()) {
-            GLint location = _program.getAttribLocation(attrib.name);
-            locations[attrib.name] = location;
-        }
-
         // Enable vertex layout on the specified locations
-        _layout.enable(locations, vertexOffset);
+        _layout.enable(locations, vertexOffset * _layout.getStride());
 
         vertexOffset += nVerts;
     }

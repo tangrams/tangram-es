@@ -169,13 +169,13 @@ void VboMesh::draw(ShaderProgram& _shader) {
         subDataUpload();
     }
 
-    if (GLExtensions::supportsVAOs) {
-        if (!m_vaos) {
-            m_vaos = std::unique_ptr<Vao>(new Vao());
-            // Capture vao state
-            GLuint indexBuffer = m_nIndices > 0 ? m_glIndexBuffer : -1;
-            m_vaos->init(_shader, m_vertexOffsets, *m_vertexLayout, m_glVertexBuffer, indexBuffer);
-        }
+    if (GLExtensions::supportsVAOs && !m_vaos) {
+        m_vaos = std::make_unique<Vao>();
+
+        // Capture vao state
+        GLuint indexBuffer = m_nIndices > 0 ? m_glIndexBuffer : -1;
+
+        m_vaos->init(_shader, m_vertexOffsets, *m_vertexLayout, m_glVertexBuffer, indexBuffer);
     } else {
         // Bind buffers for drawing
         RenderState::vertexBuffer(m_glVertexBuffer);
