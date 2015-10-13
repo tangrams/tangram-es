@@ -201,11 +201,11 @@ void Label::pushTransform() {
 }
 
 void Label::resetState() {
-    m_currentState = State::wait_occ;
     m_occludedLastFrame = false;
     m_occlusionSolved = false;
     m_updateMeshVisibility = true;
     m_dirty = true;
+    enterState(State::wait_occ, 0.0);
 }
 
 bool Label::updateState(const glm::mat4& _mvp, const glm::vec2& _screenSize, float _dt) {
