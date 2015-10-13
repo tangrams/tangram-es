@@ -75,5 +75,5 @@ bool UrlWorker::hasTask(const std::string& _url) {
 }
 
 std::unique_ptr<UrlTask> UrlWorker::getResult() {
-    return std::move( m_future.get() );
+    return m_future.get();
 }
