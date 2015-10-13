@@ -9,81 +9,82 @@
 package com.mapzen.tangram;
 
 public class LngLat {
-  private long swigCPtr;
-  protected boolean swigCMemOwn;
+    private long swigCPtr;
+    protected boolean swigCMemOwn;
 
-  protected LngLat(long cPtr, boolean cMemoryOwn) {
-    swigCMemOwn = cMemoryOwn;
-    swigCPtr = cPtr;
-  }
-
-  protected static long getCPtr(LngLat obj) {
-    return (obj == null) ? 0 : obj.swigCPtr;
-  }
-
-  protected void finalize() {
-    delete();
-  }
-
-  public synchronized void delete() {
-    if (swigCPtr != 0) {
-      if (swigCMemOwn) {
-        swigCMemOwn = false;
-        TangramJNI.delete_LngLat(swigCPtr);
-      }
-      swigCPtr = 0;
+    protected LngLat(long cPtr, boolean cMemoryOwn) {
+        swigCMemOwn = cMemoryOwn;
+        swigCPtr = cPtr;
     }
-  }
 
-  // Ensure that the GC doesn't collect any Polygon instance set from Java
-  private Object owner;
-  protected void addReference(Object obj) {
-    owner = obj;
-  }
+    protected static long getCPtr(LngLat obj) {
+        return (obj == null) ? 0 : obj.swigCPtr;
+    }
 
-  public LngLat set(double lng, double lat) {
-    setLngLat(lng, lat);
-    return this;
-  }
+    protected void finalize() {
+        delete();
+    }
 
-  public LngLat() {
-    this(TangramJNI.new_LngLat__SWIG_0(), true);
-  }
+    public synchronized void delete() {
+        if (swigCPtr != 0) {
+            if (swigCMemOwn) {
+                swigCMemOwn = false;
+                TangramJNI.delete_LngLat(swigCPtr);
+            }
+            swigCPtr = 0;
+        }
+    }
 
-  public LngLat(double _lon, double _lat) {
-    this(TangramJNI.new_LngLat__SWIG_1(_lon, _lat), true);
-  }
+    // Ensure that the GC doesn't collect any Polygon instance set from Java
+    private Object owner;
 
-  public LngLat(LngLat _other) {
-    this(TangramJNI.new_LngLat__SWIG_2(LngLat.getCPtr(_other), _other), true);
-  }
+    protected void addReference(Object obj) {
+        owner = obj;
+    }
 
-  public LngLat set(LngLat _other) {
-    return new LngLat(TangramJNI.LngLat_set__SWIG_0(swigCPtr, this, LngLat.getCPtr(_other), _other), false);
-  }
+    public LngLat set(double lng, double lat) {
+        setLngLat(lng, lat);
+        return this;
+    }
 
-  public boolean equals(LngLat _other) {
-    return TangramJNI.LngLat_equals(swigCPtr, this, LngLat.getCPtr(_other), _other);
-  }
+    public LngLat() {
+        this(TangramJNI.new_LngLat__SWIG_0(), true);
+    }
 
-  public void setLongitude(double value) {
-    TangramJNI.LngLat_longitude_set(swigCPtr, this, value);
-  }
+    public LngLat(double _lon, double _lat) {
+        this(TangramJNI.new_LngLat__SWIG_1(_lon, _lat), true);
+    }
 
-  public double getLongitude() {
-    return TangramJNI.LngLat_longitude_get(swigCPtr, this);
-  }
+    public LngLat(LngLat _other) {
+        this(TangramJNI.new_LngLat__SWIG_2(LngLat.getCPtr(_other), _other), true);
+    }
 
-  public void setLatitude(double value) {
-    TangramJNI.LngLat_latitude_set(swigCPtr, this, value);
-  }
+    public LngLat set(LngLat _other) {
+        return new LngLat(TangramJNI.LngLat_set__SWIG_0(swigCPtr, this, LngLat.getCPtr(_other), _other), false);
+    }
 
-  public double getLatitude() {
-    return TangramJNI.LngLat_latitude_get(swigCPtr, this);
-  }
+    public boolean equals(LngLat _other) {
+        return TangramJNI.LngLat_equals(swigCPtr, this, LngLat.getCPtr(_other), _other);
+    }
 
-  private void setLngLat(double lng, double lat) {
-    TangramJNI.LngLat_setLngLat(swigCPtr, this, lng, lat);
-  }
+    public void setLongitude(double value) {
+        TangramJNI.LngLat_longitude_set(swigCPtr, this, value);
+    }
+
+    public double getLongitude() {
+        return TangramJNI.LngLat_longitude_get(swigCPtr, this);
+    }
+
+    public void setLatitude(double value) {
+        TangramJNI.LngLat_latitude_set(swigCPtr, this, value);
+    }
+
+    public double getLatitude() {
+        return TangramJNI.LngLat_latitude_get(swigCPtr, this);
+    }
+
+    private void setLngLat(double lng, double lat) {
+        TangramJNI.LngLat_setLngLat(swigCPtr, this, lng, lat);
+    }
 
 }

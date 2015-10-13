@@ -9,58 +9,58 @@
 package com.mapzen.tangram;
 
 public class Properties {
-  private long swigCPtr;
-  private boolean swigCMemOwn;
+    private long swigCPtr;
+    private boolean swigCMemOwn;
 
-  protected Properties(long cPtr, boolean cMemoryOwn) {
-    swigCMemOwn = cMemoryOwn;
-    swigCPtr = cPtr;
-  }
-
-  protected static long getCPtr(Properties obj) {
-    return (obj == null) ? 0 : obj.swigCPtr;
-  }
-
-  protected void finalize() {
-    delete();
-  }
-
-  public synchronized void delete() {
-    if (swigCPtr != 0) {
-      if (swigCMemOwn) {
-        swigCMemOwn = false;
-        TangramJNI.delete_Properties(swigCPtr);
-      }
-      swigCPtr = 0;
+    protected Properties(long cPtr, boolean cMemoryOwn) {
+        swigCMemOwn = cMemoryOwn;
+        swigCPtr = cPtr;
     }
-  }
 
-  public Properties() {
-    this(TangramJNI.new_Properties(), true);
-  }
+    protected static long getCPtr(Properties obj) {
+        return (obj == null) ? 0 : obj.swigCPtr;
+    }
 
-  public void clear() {
-    TangramJNI.Properties_clear(swigCPtr, this);
-  }
+    protected void finalize() {
+        delete();
+    }
 
-  public boolean contains(String key) {
-    return TangramJNI.Properties_contains(swigCPtr, this, key);
-  }
+    public synchronized void delete() {
+        if (swigCPtr != 0) {
+            if (swigCMemOwn) {
+                swigCMemOwn = false;
+                TangramJNI.delete_Properties(swigCPtr);
+            }
+            swigCPtr = 0;
+        }
+    }
 
-  public float getNumeric(String key) {
-    return TangramJNI.Properties_getNumeric(swigCPtr, this, key);
-  }
+    public Properties() {
+        this(TangramJNI.new_Properties(), true);
+    }
 
-  public String getString(String key) {
-    return TangramJNI.Properties_getString(swigCPtr, this, key);
-  }
+    public void clear() {
+        TangramJNI.Properties_clear(swigCPtr, this);
+    }
 
-  public void add(String key, String value) {
-    TangramJNI.Properties_add__SWIG_0(swigCPtr, this, key, value);
-  }
+    public boolean contains(String key) {
+        return TangramJNI.Properties_contains(swigCPtr, this, key);
+    }
 
-  public void add(String key, float value) {
-    TangramJNI.Properties_add__SWIG_1(swigCPtr, this, key, value);
-  }
+    public float getNumeric(String key) {
+        return TangramJNI.Properties_getNumeric(swigCPtr, this, key);
+    }
+
+    public String getString(String key) {
+        return TangramJNI.Properties_getString(swigCPtr, this, key);
+    }
+
+    public void add(String key, String value) {
+        TangramJNI.Properties_add__SWIG_0(swigCPtr, this, key, value);
+    }
+
+    public void add(String key, float value) {
+        TangramJNI.Properties_add__SWIG_1(swigCPtr, this, key, value);
+    }
 
 }

@@ -5,9 +5,9 @@
 // was only needed for old double* MapData api
 // %include "array_nocpy.i"
 
-namespace std {
-%template(Tags) map<string, string>;
-}
+// namespace std {
+// %template(Tags) map<string, string>;
+// }
 
 // Let swig consider these headers
 %{

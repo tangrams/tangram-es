@@ -11,37 +11,38 @@ package com.mapzen.tangram;
 import java.util.List;
 
 public class MapData extends DataSource {
-  private long swigCPtr;
-  private boolean swigCMemOwnDerived;
+    private long swigCPtr;
+    private boolean swigCMemOwnDerived;
 
-  protected MapData(long cPtr, boolean cMemoryOwn) {
-    super(TangramJNI.MapData_SWIGSmartPtrUpcast(cPtr), true);
-    swigCMemOwnDerived = cMemoryOwn;
-    swigCPtr = cPtr;
-  }
-
-  protected static long getCPtr(MapData obj) {
-    return (obj == null) ? 0 : obj.swigCPtr;
-  }
-
-  protected void finalize() {
-    delete();
-  }
-
-  public synchronized void delete() {
-    if (swigCPtr != 0) {
-      if (swigCMemOwnDerived) {
-        swigCMemOwnDerived = false;
-        TangramJNI.delete_MapData(swigCPtr);
-      }
-      swigCPtr = 0;
+    protected MapData(long cPtr, boolean cMemoryOwn) {
+        super(TangramJNI.MapData_SWIGSmartPtrUpcast(cPtr), true);
+        swigCMemOwnDerived = cMemoryOwn;
+        swigCPtr = cPtr;
     }
-    super.delete();
-  }
+
+    protected static long getCPtr(MapData obj) {
+        return (obj == null) ? 0 : obj.swigCPtr;
+    }
+
+    protected void finalize() {
+        delete();
+    }
+
+    public synchronized void delete() {
+        if (swigCPtr != 0) {
+            if (swigCMemOwnDerived) {
+                swigCMemOwnDerived = false;
+                TangramJNI.delete_MapData(swigCPtr);
+            }
+            swigCPtr = 0;
+        }
+        super.delete();
+    }
 
 
     /**
      * Construct a new MapData object for adding drawable data to the map
+     *
      * @param name Name of the data source in the scene file for styling this object's data
      */
     public MapData(String name) {
@@ -50,6 +51,7 @@ public class MapData extends DataSource {
 
     /**
      * Remove all data from this source
+     *
      * @return This object, for chaining
      */
     public MapData clear() {
@@ -59,6 +61,7 @@ public class MapData extends DataSource {
 
     /**
      * Add geometry from a GeoJSON string to this data source
+     *
      * @param data String of GeoJSON containing a Feature or FeatureCollection
      * @return This object, for chaining
      */
@@ -69,6 +72,7 @@ public class MapData extends DataSource {
 
     /**
      * Add a point geometry to this data source
+     *
      * @param point LngLat with the coordinates of the point
      * @return This object, for chaining
      */
@@ -79,6 +83,7 @@ public class MapData extends DataSource {
 
     /**
      * Add a line geometry to this data source
+     *
      * @param line List of LngLat points comprising the line
      * @return This object, for chaining
      */
@@ -99,6 +104,7 @@ public class MapData extends DataSource {
 
     /**
      * Add a polygon geometry to this data source
+     *
      * @param polygon List of lines of LngLat points, where each line represents a ring in the
      *                polygon as described in the GeoJSON spec
      * @return This object, for chaining
@@ -137,24 +143,24 @@ public class MapData extends DataSource {
         return this;
     }
 
-  public MapData(String _name, String _url) {
-    this(TangramJNI.new_MapData(_name, _url), true);
-  }
+    public MapData(String _name, String _url) {
+        this(TangramJNI.new_MapData(_name, _url), true);
+    }
 
-  public void addData(String _data) {
-    TangramJNI.MapData_addData(swigCPtr, this, _data);
-  }
+    public void addData(String _data) {
+        TangramJNI.MapData_addData(swigCPtr, this, _data);
+    }
 
-  private void addPointJNI(Properties props, LngLat point) {
-    TangramJNI.MapData_addPointJNI(swigCPtr, this, Properties.getCPtr(props), props, LngLat.getCPtr(point), point);
-  }
+    private void addPointJNI(Properties props, LngLat point) {
+        TangramJNI.MapData_addPointJNI(swigCPtr, this, Properties.getCPtr(props), props, LngLat.getCPtr(point), point);
+    }
 
-  private void addLineJNI(Properties props, Coordinates line) {
-    TangramJNI.MapData_addLineJNI(swigCPtr, this, Properties.getCPtr(props), props, Coordinates.getCPtr(line), line);
-  }
+    private void addLineJNI(Properties props, Coordinates line) {
+        TangramJNI.MapData_addLineJNI(swigCPtr, this, Properties.getCPtr(props), props, Coordinates.getCPtr(line), line);
+    }
 
-  private void addPolyJNI(Properties props, Polygon polygon) {
-    TangramJNI.MapData_addPolyJNI(swigCPtr, this, Properties.getCPtr(props), props, Polygon.getCPtr(polygon), polygon);
-  }
+    private void addPolyJNI(Properties props, Polygon polygon) {
+        TangramJNI.MapData_addPolyJNI(swigCPtr, this, Properties.getCPtr(props), props, Polygon.getCPtr(polygon), polygon);
+    }
 
 }
