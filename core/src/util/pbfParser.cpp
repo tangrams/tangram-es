@@ -37,10 +37,10 @@ void PbfParser::extractGeometry(ParserContext& _ctx, protobuf::message& _geomIn)
             x += _geomIn.svarint();
             y += _geomIn.svarint();
 
-            // bring the points in -1 to 1 space
+            // bring the points in 0 to 1 space
             Point p;
-            p.x = invTileExtent * (double)(2 * x - _ctx.tileExtent);
-            p.y = invTileExtent * (double)(_ctx.tileExtent - 2 * y);
+            p.x = invTileExtent * (double)x;
+            p.y = invTileExtent * (double)(_ctx.tileExtent - y);
 
             _ctx.coordinates.push_back(p);
             numCoordinates++;
@@ -197,7 +197,7 @@ void PbfParser::extractLayer(ParserContext& _ctx, protobuf::message& _layerIn, L
                 while (valueItr.next()) {
                     switch (valueItr.tag) {
                         case 1: // string value
-                            _ctx.values.push_back(std::move(valueItr.string()));
+                            _ctx.values.push_back(valueItr.string());
                             break;
                         case 2: // float value
                             _ctx.values.push_back(valueItr.float32());

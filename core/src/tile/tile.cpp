@@ -6,6 +6,7 @@
 #include "style/style.h"
 #include "view/view.h"
 #include "tile/tileID.h"
+#include "labels/labelMesh.h"
 #include "gl/vboMesh.h"
 #include "gl/shaderProgram.h"
 
@@ -24,10 +25,10 @@ Tile::Tile(TileID _id, const MapProjection& _projection) :
 
     BoundingBox bounds(_projection.TileBounds(_id));
 
-    m_scale = 0.5 * bounds.width();
+    m_scale = bounds.width();
     m_inverseScale = 1.0/m_scale;
 
-    m_tileOrigin = bounds.center();
+    m_tileOrigin = { bounds.min.x, bounds.max.y }; // South-West corner
     // negative y coordinate: to change from y down to y up (tile system has y down and gl context we use has y up).
     m_tileOrigin.y *= -1.0;
 
@@ -96,6 +97,15 @@ void Tile::update(float _dt, const View& _view) {
 
 }
 
+void Tile::reset() {
+    for (auto& entry : m_geometry) {
+        if (!entry.second) { continue; }
+        auto labelMesh = dynamic_cast<LabelMesh*>(entry.second.get());
+        if (!labelMesh) { continue; }
+        labelMesh->reset();
+    }
+}
+
 void Tile::draw(const Style& _style, const View& _view) {
 
     const auto& styleMesh = m_geometry[_style.getName()];
@@ -104,15 +114,12 @@ void Tile::draw(const Style& _style, const View& _view) {
 
         auto& shader = _style.getShaderProgram();
 
-        glm::mat4 modelViewMatrix = _view.getViewMatrix() * m_modelMatrix;
         glm::mat4 modelViewProjMatrix = _view.getViewProjectionMatrix() * m_modelMatrix;
         float zoomAndProxy = m_proxyCounter > 0 ? -m_id.z : m_id.z;
 
-        shader->setUniformMatrix4f("u_modelView", glm::value_ptr(modelViewMatrix));
+        shader->setUniformMatrix4f("u_model", glm::value_ptr(m_modelMatrix));
         shader->setUniformMatrix4f("u_modelViewProj", glm::value_ptr(modelViewProjMatrix));
-        shader->setUniformMatrix3f("u_normalMatrix", glm::value_ptr(_view.getNormalMatrix()));
-        shader->setUniformf("u_meters_per_pixel", _view.pixelsPerMeter());
-        shader->setUniformf("u_tile_origin", m_tileOrigin.x - m_scale, m_tileOrigin.y - m_scale, zoomAndProxy);
+        shader->setUniformf("u_tile_origin", m_tileOrigin.x, m_tileOrigin.y, zoomAndProxy);
 
         styleMesh->draw(*shader);
     }

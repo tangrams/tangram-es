@@ -13,6 +13,13 @@ version = VERSION_NAME
 
 android {
   compileSdkVersion 22
+
+  /*
+   * Ubuntu can't run the aapt on 64 bit before installing this packages
+   *    sudo apt-get install lib32stdc++6
+   *    sudo apt-get install lib32z1
+   */
+
   buildToolsVersion "21.1.2"
 
   defaultConfig {

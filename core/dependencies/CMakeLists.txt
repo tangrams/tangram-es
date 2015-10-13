@@ -19,13 +19,23 @@ endif()
 
 ## geojsonvt ##
 ###############
+#add_definitions("-DGEOJSONVT_CUSTOM_TAGS")
 
 file(GLOB_RECURSE GEOJSON_VT_CPP_SOURCES "geojson-vt-cpp/src/*.cpp")
-include_directories(${PROJECT_SOURCE_DIR}/${INCLUDE_DIR})
+# use our variant and geojsonvt_types.hpp
+# instead of the provided ones
+include_directories(
+  ${PROJECT_SOURCE_DIR}/${INCLUDE_DIR}
+  ${PROJECT_SOURCE_DIR}/${INCLUDE_DIR}/mapbox
+)
+
 add_library(geojson-vt-cpp ${GEOJSON_VT_CPP_SOURCES})
 target_include_directories(geojson-vt-cpp
   PUBLIC
   ${CMAKE_CURRENT_SOURCE_DIR}/geojson-vt-cpp/include
+)
+set_target_properties(geojson-vt-cpp
+  PROPERTIES COMPILE_FLAGS -DGEOJSONVT_CUSTOM_TAGS
 )
 
 # yaml-cpp #

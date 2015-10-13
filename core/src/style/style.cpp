@@ -3,9 +3,12 @@
 #include "scene/scene.h"
 #include "scene/sceneLayer.h"
 #include "scene/light.h"
+#include "scene/styleParam.h"
 #include "tile/tile.h"
 #include "gl/vboMesh.h"
 #include "view/view.h"
+
+#include "glm/gtc/type_ptr.hpp"
 
 namespace Tangram {
 
@@ -55,6 +58,11 @@ void Style::setLightingType(LightingType _type){
 }
 
 void Style::buildFeature(Tile& _tile, const Feature& _feat, const DrawRule& _rule) const {
+
+    bool visible;
+    if (_rule.get(StyleParamKey::visible, visible) && !visible) {
+        return;
+    }
 
     auto& mesh = _tile.getMesh(*this);
 
@@ -138,10 +146,15 @@ void Style::onBeginDrawFrame(const View& _view, Scene& _scene) {
 
     // Set Map Position
     if (m_dirtyViewport) {
-        const auto& mapPos = _view.getPosition();
         m_shaderProgram->setUniformf("u_resolution", _view.getWidth(), _view.getHeight());
-        m_shaderProgram->setUniformf("u_map_position", mapPos.x, mapPos.y, _view.getZoom());
     }
+
+    const auto& mapPos = _view.getPosition();
+    m_shaderProgram->setUniformf("u_map_position", mapPos.x, mapPos.y, _view.getZoom());
+    m_shaderProgram->setUniformMatrix3f("u_normalMatrix", glm::value_ptr(_view.getNormalMatrix()));
+    m_shaderProgram->setUniformf("u_meters_per_pixel", 1.0 / _view.pixelsPerMeter());
+    m_shaderProgram->setUniformMatrix4f("u_view", glm::value_ptr(_view.getViewMatrix()));
+    m_shaderProgram->setUniformMatrix4f("u_proj", glm::value_ptr(_view.getProjectionMatrix()));
 
     setupShaderUniforms(0, contextLost, _scene);
 

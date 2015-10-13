@@ -28,14 +28,13 @@ uniform vec2 u_resolution;
 uniform float u_time;
 uniform float u_meters_per_pixel;
 
-
 #pragma tangram: uniforms
 
-varying vec2 v_uv;
-varying float v_alpha;
 varying vec4 v_color;
 varying vec4 v_strokeColor;
+varying vec2 v_texcoords;
 varying float v_strokeWidth;
+varying float v_alpha;
 
 #pragma tangram: global
 
@@ -76,10 +75,10 @@ void main(void) {
         float threshold_fill = 0.5;
         float threshold_stroke = threshold_fill - v_strokeWidth;
 
-        float distance = texture2D(u_tex, v_uv).a;
+        float distance = texture2D(u_tex, v_texcoords).a;
 
-        float alpha_fill = pow(sampleAlpha(v_uv, distance, threshold_fill), 0.4545);
-        float alpha_stroke = pow(sampleAlpha(v_uv, distance, threshold_stroke), 0.4545);
+        float alpha_fill = pow(sampleAlpha(v_texcoords, distance, threshold_fill), 0.4545);
+        float alpha_stroke = pow(sampleAlpha(v_texcoords, distance, threshold_stroke), 0.4545);
 
         vec4 color = mix(v_strokeColor, v_color, alpha_fill);
         color.a = max(alpha_fill, alpha_stroke) * v_alpha;

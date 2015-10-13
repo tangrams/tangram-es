@@ -13,10 +13,15 @@ import com.mapzen.tangram.MapController;
 import com.mapzen.tangram.MapData;
 import com.mapzen.tangram.MapView;
 import com.mapzen.tangram.Properties;
+import com.mapzen.tangram.Tangram;
+import com.mapzen.tangram.Coordinates;
+
 import com.squareup.okhttp.Callback;
 
 import java.io.File;
 import java.util.Arrays;
+import java.util.LinkedList;
+import java.lang.Math;
 
 public class MainActivity extends Activity {
 
@@ -39,17 +44,51 @@ public class MainActivity extends Activity {
         mapController.setMapZoom(16);
         mapController.setMapPosition(-74.00976419448854, 40.70532700869127);
 
+        final MapData touchMarkers = new MapData("touch");
+        Tangram.addDataSource(touchMarkers);
+
+        // tags.set("color", "magenta");
+        // tags.set("type", "poly");
+        // touchMarkers.addPolygon(tags, Arrays.asList(Arrays.asList(
+        //     new LngLat(-74.0, 40.7),
+        //     new LngLat(-74.1, 40.7),
+        //     new LngLat(-74.1, 40.8),
+        //     new LngLat(-74.0, 40.8),
+        //     new LngLat(-74.0, 40.7))));
+        // tags.set("color", "black");
+        // tags.set("type", "line");
+        // touchMarkers.addLine(tags, Arrays.asList(
+        //     new LngLat(-74.0, 40.7),
+        //     new LngLat(-74.1, 40.7),
+        //     new LngLat(-74.1, 40.8),
+        //     new LngLat(-74.0, 40.8),
+        //     new LngLat(-74.0, 40.7)));
+        // touchMarkers.update();
+
         final LngLat lastTappedPoint = new LngLat();
+        final String colors[] = {"blue", "red", "green" };
+        final LngLat zeroCoord = new LngLat();
+        final Coordinates line = new Coordinates();
 
         mapController.setTapGestureListener(new View.OnGenericMotionListener() {
             @Override
             public boolean onGenericMotion(View v, MotionEvent event) {
                 LngLat tapPoint = mapController.coordinatesAtScreenPosition(event.getX(), event.getY());
-                if (touchMarkers == null) {
-                    touchMarkers = new MapData("touch");
-                }
-                if (lastTappedPoint.longitude != 0 && lastTappedPoint.latitude != 0) {
-                    touchMarkers.addLine(Arrays.asList(tapPoint, lastTappedPoint));
+
+                if (!lastTappedPoint.equals(zeroCoord)) {
+                    Properties props = new Properties();
+                    props.add("type", "line");
+                    props.add("color", colors[(int)(Math.random() * 2.0 + 0.5)] );
+
+                    line.clear();
+                    line.add(tapPoint);
+                    line.add(lastTappedPoint);
+                    touchMarkers.addLine(props, line);
+
+                    props = new Properties();
+                    props.add("type", "point");
+                    touchMarkers.addPoint(props, lastTappedPoint);
+                    touchMarkers.update();
                 }
                 lastTappedPoint.set(tapPoint);
 

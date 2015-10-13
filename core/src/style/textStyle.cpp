@@ -105,7 +105,6 @@ Parameters TextStyle::applyRule(const DrawRule& _rule, const Properties& _props)
     /* Global operations done for fontsize and sdfblur */
     float emSize = p.fontSize / 16.f;
     p.fontSize *= m_pixelScale;
-    p.strokeWidth *= m_pixelScale;
     p.blurSpread = m_sdf ? emSize * 5.0f : 0.0f;
 
     return p;
@@ -154,7 +153,7 @@ void TextStyle::onBeginDrawFrame(const View& _view, Scene& _scene) {
     }
 
     if (m_dirtyViewport || contextLost) {
-        m_shaderProgram->setUniformMatrix4f("u_proj", glm::value_ptr(_view.getOrthoViewportMatrix()));
+        m_shaderProgram->setUniformMatrix4f("u_ortho", glm::value_ptr(_view.getOrthoViewportMatrix()));
         m_dirtyViewport = false;
     }
 

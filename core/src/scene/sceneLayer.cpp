@@ -55,7 +55,7 @@ void SceneLayer::match(const Feature& _feat, const StyleContext& _ctx, std::vect
             } else if (*matchesIt < *myRulesIt) {
                 merged.push_back(std::move(*matchesIt++));
             } else {
-                merged.push_back(std::move((*myRulesIt++).merge(*matchesIt++)));
+                merged.push_back((*myRulesIt++).merge(*matchesIt++));
             }
         }
         while (myRulesIt != myRulesEnd) { merged.push_back(*myRulesIt++); }

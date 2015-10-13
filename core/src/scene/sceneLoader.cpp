@@ -155,7 +155,7 @@ void SceneLoader::loadShaderConfig(Node shaders, Style& style, Scene& scene) {
             for (const auto& extNode : extensionsNode) {
                 auto extName = extNode.as<std::string>();
                 std::ostringstream ext;
-                ext << "#ifdef GL_" << extName << '\n';
+                ext << "#if defined(GL_ES) == 0 || defined(GL_" << extName << ")\n";
                 ext << "    #extension GL_" << extName << " : enable\n";
                 ext << "    #define TANGRAM_EXTENSION_" << extName << '\n';
                 ext << "#endif\n";
@@ -173,17 +173,18 @@ void SceneLoader::loadShaderConfig(Node shaders, Style& style, Scene& scene) {
     if (Node definesNode = shaders["defines"]) {
         for (const auto& define : definesNode) {
             std::string name = define.first.as<std::string>();
+
+            // undefine any previous definitions
+            shader.addSourceBlock("defines", "#undef " + name);
+
             bool bValue;
 
             if (getBool(define.second, bValue)) {
-                if (!bValue) {
-                    // specifying a define to be 'false' means that the define will
-                    // not be defined at all
-                    continue;
-                }
                 // specifying a define to be 'true' means that it is simply
                 // defined and has no value
-                shader.addSourceBlock("defines", "#define " + name);
+                if (bValue) {
+                    shader.addSourceBlock("defines", "#define " + name);
+                }
             } else {
                 std::string value = define.second.as<std::string>();
                 shader.addSourceBlock("defines", "#define " + name + " " + value);
@@ -801,13 +802,13 @@ void SceneLoader::loadSource(const std::pair<Node, Node>& src, Scene& _scene) {
 
     std::shared_ptr<DataSource> sourcePtr;
 
-    if (type == "GeoJSONTiles") {
+    if (type == "GeoJSON") {
         if (tiled) {
             sourcePtr = std::shared_ptr<DataSource>(new GeoJsonSource(name, url));
         } else {
             sourcePtr = std::shared_ptr<DataSource>(new ClientGeoJsonSource(name, url));
         }
-    } else if (type == "TopoJSONTiles") {
+    } else if (type == "TopoJSON") {
         LOGW("TopoJSON data sources not yet implemented"); // TODO
     } else if (type == "MVT") {
         sourcePtr = std::shared_ptr<DataSource>(new MVTSource(name, url));
@@ -1156,11 +1157,11 @@ void SceneLoader::parseStyleParams(Node params, Scene& scene, const std::string&
                 if (styleKey != StyleParamKey::none) {
 
                     if (StyleParam::isColor(styleKey)) {
-                        scene.stops().push_back(Stops::Color(value));
+                        scene.stops().push_back(Stops::Colors(value));
                         out.push_back(StyleParam{ styleKey, &(scene.stops().back()) });
 
                     } else if (StyleParam::isWidth(styleKey)) {
-                        scene.stops().push_back(Stops::Width(value, *scene.mapProjection()));
+                        scene.stops().push_back(Stops::Widths(value, *scene.mapProjection()));
                         out.push_back(StyleParam{ styleKey, &(scene.stops().back()) });
 
                     } else {

@@ -1,11 +1,12 @@
 #pragma once
 
 #include <string>
-#include <map>
+#include <unordered_map>
 #include <memory>
 #include <vector>
 #include <mutex>
 #include <list>
+#include "tile/tileID.h"
 #include "tile/tileTask.h"
 
 namespace Tangram {

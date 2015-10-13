@@ -29,38 +29,38 @@ public class Properties {
     if (swigCPtr != 0) {
       if (swigCMemOwn) {
         swigCMemOwn = false;
-        tangramJNI.delete_Properties(swigCPtr);
+        TangramJNI.delete_Properties(swigCPtr);
       }
       swigCPtr = 0;
     }
   }
 
   public Properties() {
-    this(tangramJNI.new_Properties(), true);
+    this(TangramJNI.new_Properties(), true);
   }
 
   public void clear() {
-    tangramJNI.Properties_clear(swigCPtr, this);
+    TangramJNI.Properties_clear(swigCPtr, this);
   }
 
   public boolean contains(String key) {
-    return tangramJNI.Properties_contains(swigCPtr, this, key);
+    return TangramJNI.Properties_contains(swigCPtr, this, key);
   }
 
   public float getNumeric(String key) {
-    return tangramJNI.Properties_getNumeric(swigCPtr, this, key);
+    return TangramJNI.Properties_getNumeric(swigCPtr, this, key);
   }
 
   public String getString(String key) {
-    return tangramJNI.Properties_getString(swigCPtr, this, key);
+    return TangramJNI.Properties_getString(swigCPtr, this, key);
   }
 
   public void add(String key, String value) {
-    tangramJNI.Properties_add__SWIG_0(swigCPtr, this, key, value);
+    TangramJNI.Properties_add__SWIG_0(swigCPtr, this, key, value);
   }
 
   public void add(String key, float value) {
-    tangramJNI.Properties_add__SWIG_1(swigCPtr, this, key, value);
+    TangramJNI.Properties_add__SWIG_1(swigCPtr, this, key, value);
   }
 
 }

@@ -6,8 +6,9 @@ precision highp float;
 
 #pragma tangram: defines
 
-uniform mat4 u_modelView;
-uniform mat4 u_modelViewProj;
+uniform mat4 u_model;
+uniform mat4 u_view;
+uniform mat4 u_proj;
 uniform mat3 u_normalMatrix;
 uniform vec2 u_resolution;
 uniform vec3 u_map_position;
@@ -15,8 +16,9 @@ uniform float u_time;
 
 #pragma tangram: uniforms
 
+varying vec4 v_world_position;
+varying vec4 v_position;
 varying vec4 v_color;
-varying vec3 v_eyeToPoint;
 varying vec3 v_normal;
 varying vec2 v_texcoord;
 
@@ -45,7 +47,7 @@ void main(void) {
     #endif
 
     #ifdef TANGRAM_LIGHTING_FRAGMENT
-        color = calculateLighting(v_eyeToPoint.xyz, normal, color);
+        color = calculateLighting(v_position.xyz, normal, color);
     #else
         #ifdef TANGRAM_LIGHTING_VERTEX
             color = v_lighting;

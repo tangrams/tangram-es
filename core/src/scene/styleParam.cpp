@@ -390,6 +390,7 @@ bool StyleParam::isWidth(StyleParamKey _key) {
     switch (_key) {
         case StyleParamKey::width:
         case StyleParamKey::outline_width:
+        case StyleParamKey::size:
             return true;
         default:
             return false;

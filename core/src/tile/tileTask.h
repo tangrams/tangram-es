@@ -1,14 +1,16 @@
 #pragma once
 
-#include "tile.h"
-#include "data/tileData.h"
 
 #include <memory>
+#include <vector>
+#include <functional>
 
 namespace Tangram {
 
 class TileManager;
 class DataSource;
+class Tile;
+struct TileData;
 
 class TileTask {
 

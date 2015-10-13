@@ -20,6 +20,12 @@ void LabelMesh::addLabel(std::unique_ptr<Label> _label) {
     m_labels.push_back(std::move(_label));
 }
 
+void LabelMesh::reset() {
+    for (auto& label : m_labels) {
+        label->resetState();
+    }
+}
+
 void LabelMesh::loadQuadIndices() {
     if (s_quadGeneration == s_validGeneration) {
         RenderState::indexBuffer(s_quadIndexBuffer);

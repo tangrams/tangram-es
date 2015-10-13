@@ -55,7 +55,7 @@ public:
     float getInverseScale() const { return m_inverseScale; }
 
     const glm::mat4& getModelMatrix() const { return m_modelMatrix; }
-    
+
     std::unique_ptr<VboMesh>& getMesh(const Style& _style);
 
     /* uUdate the Tile considering the current view */
@@ -65,8 +65,10 @@ public:
     void draw(const Style& _style, const View& _view);
 
     void build(StyleContext& _ctx, const Scene& _scene, const TileData& _data, const DataSource& _source);
-    
-    /* 
+
+    void reset();
+
+    /*
      * Methods to set and get proxy counter
      */
     int getProxyCounter() { return m_proxyCounter; }
@@ -167,7 +169,7 @@ private:
 
     std::atomic<double> m_priority;
 
-    glm::dvec2 m_tileOrigin; // Center of the tile in 2D projection space in meters (e.g. mercator meters)
+    glm::dvec2 m_tileOrigin; // South-West corner of the tile in 2D projection space in meters (e.g. mercator meters)
 
     glm::mat4 m_modelMatrix; // Matrix relating tile-local coordinates to global projection space coordinates;
     // Note that this matrix does not contain the relative translation from the global origin to the tile origin.

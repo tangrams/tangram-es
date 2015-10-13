@@ -235,6 +235,7 @@ std::string ShaderProgram::applySourceBlocks(const std::string& source, bool fra
     std::smatch sm;
 
     sourceOut << "#define TANGRAM_EPSILON 0.00001\n";
+    sourceOut << "#define TANGRAM_WORLD_POSITION_WRAP 100000.\n";
 
     if (fragShader) {
         sourceOut << "#define TANGRAM_FRAGMENT_SHADER\n";

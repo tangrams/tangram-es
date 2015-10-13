@@ -1,10 +1,13 @@
 #include "clientGeoJsonSource.h"
+#define GEOJSONVT_CUSTOM_TAGS
+#include "mapbox/geojsonvt/geojsonvt_types.hpp"
 #include "mapbox/geojsonvt/geojsonvt.hpp"
 #include "mapbox/geojsonvt/geojsonvt_convert.hpp"
-#include "mapbox/geojsonvt/geojsonvt_types.hpp"
 #include "platform.h"
 #include "util/geom.h"
 #include "data/propertyItem.h"
+#include "data/tileData.h"
+#include "tile/tile.h"
 
 using namespace mapbox::util;
 
@@ -16,8 +19,9 @@ const uint8_t indexMaxZoom = 18;
 const uint32_t indexMaxPoints = 100000;
 double tolerance = 1E-8;
 
-Point ClientGeoJsonSource::transformPoint(geojsonvt::TilePoint pt) const {
-    return { 2 * pt.x / extent - 1, 1 - 2 * pt.y / extent, 0 };
+// Transform a geojsonvt::TilePoint into the corresponding Tangram::Point
+Point transformPoint(geojsonvt::TilePoint pt) {
+    return { pt.x / extent, 1. - pt.y / extent, 0 };
 }
 
 ClientGeoJsonSource::ClientGeoJsonSource(const std::string& _name, const std::string& _url)
@@ -58,11 +62,13 @@ void ClientGeoJsonSource::clearData() {
 
 }
 
-void ClientGeoJsonSource::addPoint(double* _coords) {
+void ClientGeoJsonSource::addPoint(const Properties& _tags, LngLat _point) {
 
-    auto container = geojsonvt::Convert::project({ geojsonvt::LonLat(_coords[0], _coords[1]) }, tolerance);
+    auto container = geojsonvt::Convert::project({ geojsonvt::LonLat(_point.longitude, _point.latitude) }, tolerance);
 
-    auto feature = geojsonvt::Convert::create(geojsonvt::Tags(),
+    geojsonvt::Tags tags;
+
+    auto feature = geojsonvt::Convert::create(geojsonvt::Tags{std::make_shared<Properties>(_tags)},
                                               geojsonvt::ProjectedFeatureType::Point,
                                               container.members);
 
@@ -71,38 +77,28 @@ void ClientGeoJsonSource::addPoint(double* _coords) {
 
 }
 
-void ClientGeoJsonSource::addLine(double* _coords, int _lineLength) {
-    
-    std::vector<geojsonvt::LonLat> line(_lineLength, { 0, 0 });
-    for (int i = 0; i < _lineLength; i++) {
-        line[i] = { _coords[2 * i], _coords[2 * i + 1] };
-    }
-    
+void ClientGeoJsonSource::addLine(const Properties& _tags, const Coordinates& _line) {
+    auto& line = reinterpret_cast<const std::vector<geojsonvt::LonLat>&>(_line);
+
     std::vector<geojsonvt::ProjectedGeometry> geometry = { geojsonvt::Convert::project(line, tolerance) };
 
-    auto feature = geojsonvt::Convert::create(geojsonvt::Tags(),
+    auto feature = geojsonvt::Convert::create(geojsonvt::Tags{std::make_shared<Properties>(_tags)},
                                               geojsonvt::ProjectedFeatureType::LineString,
                                               geometry);
-    
+
     m_features.push_back(std::move(feature));
     m_store = std::make_unique<GeoJSONVT>(m_features, maxZoom, indexMaxZoom, indexMaxPoints, tolerance);
 }
 
-void ClientGeoJsonSource::addPoly(double* _coords, int* _ringLengths, int _rings) {
+void ClientGeoJsonSource::addPoly(const Properties& _tags, const std::vector<Coordinates>& _poly) {
 
     geojsonvt::ProjectedGeometryContainer geometry;
-    double* ringCoords = _coords;
-    for (int i = 0; i < _rings; i++) {
-        int ringLength = _ringLengths[i];
-        std::vector<geojsonvt::LonLat> ring(ringLength, { 0, 0 });
-        for (int j = 0; j < ringLength; j++) {
-            ring[j] = { ringCoords[2 * j], ringCoords[2 * j + 1] };
-        }
+    for (auto& _ring : _poly) {
+        auto& ring = reinterpret_cast<const std::vector<geojsonvt::LonLat>&>(_ring);
         geometry.members.push_back(geojsonvt::Convert::project(ring, tolerance));
-        ringCoords += 2 * ringLength;
     }
 
-    auto feature = geojsonvt::Convert::create(geojsonvt::Tags(),
+    auto feature = geojsonvt::Convert::create(geojsonvt::Tags{std::make_shared<Properties>(_tags)},
                                               geojsonvt::ProjectedFeatureType::Polygon,
                                               geometry);
 
@@ -168,15 +164,7 @@ std::shared_ptr<TileData> ClientGeoJsonSource::parse(const Tile& _tile, std::vec
             default: break;
         }
 
-        std::vector<Properties::Item> items;
-        items.reserve(it.tags.size());
-
-        for (auto& tag : it.tags) {
-            items.emplace_back(tag.first, tag.second);
-        }
-
-        feat.props = Properties(std::move(items));
-
+        feat.props = *it.tags.map;
         layer.features.emplace_back(std::move(feat));
 
     }
@@ -184,7 +172,7 @@ std::shared_ptr<TileData> ClientGeoJsonSource::parse(const Tile& _tile, std::vec
     data->layers.emplace_back(std::move(layer));
 
     return data;
-    
+
 }
 
 }

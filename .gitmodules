@@ -23,13 +23,13 @@
 	url = https://github.com/google/benchmark
 [submodule "core/include/variant"]
 	path = core/include/variant
-	url = https://github.com/mapbox/variant
+	url = https://github.com/tangrams/variant
 [submodule "core/include/earcut.hpp"]
 	path = core/include/earcut.hpp
 	url = https://github.com/tangrams/earcut.hpp
 [submodule "core/dependencies/geojson-vt-cpp"]
 	path = core/dependencies/geojson-vt-cpp
-	url = https://github.com/mapbox/geojson-vt-cpp.git
+	url = https://github.com/tangrams/geojson-vt-cpp.git
 [submodule "core/dependencies/duktape"]
 	path = core/dependencies/duktape
 	url = https://github.com/tangrams/duktape.git
