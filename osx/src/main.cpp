@@ -160,6 +160,33 @@ void key_callback(GLFWwindow* window, int key, int scancode, int action, int mod
                 break;
             case GLFW_KEY_Z:
                 Tangram::setZoom(Tangram::getZoom() + 1.f, 1.5f);
+            case GLFW_KEY_F1:
+                sceneFile = "scene.yaml";
+                Tangram::loadScene(sceneFile.c_str());
+                break;
+            case GLFW_KEY_F2:
+                sceneFile = "blueprint.yaml";
+                Tangram::loadScene(sceneFile.c_str());
+                break;
+            case GLFW_KEY_F3:
+                sceneFile = "pericoli.yaml";
+                Tangram::loadScene(sceneFile.c_str());
+                break;
+            case GLFW_KEY_F4:
+                sceneFile = "gotham.yaml";
+                Tangram::loadScene(sceneFile.c_str());
+                break;
+            case GLFW_KEY_F5:
+                sceneFile = "ikeda.yaml";
+                Tangram::loadScene(sceneFile.c_str());
+                break;
+            case GLFW_KEY_F6:
+                sceneFile = "eraser.yaml";
+                Tangram::loadScene(sceneFile.c_str());
+                break;
+            case GLFW_KEY_F7:
+                sceneFile = "crosshatch.yaml";
+                Tangram::loadScene(sceneFile.c_str());
                 break;
             case GLFW_KEY_N:
                 Tangram::setRotation(0.f, 1.f);
