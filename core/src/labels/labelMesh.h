@@ -23,6 +23,8 @@ public:
 
     virtual void draw(ShaderProgram& _shader) override;
 
+    void reset();
+
 protected:
     void loadQuadIndices();
 

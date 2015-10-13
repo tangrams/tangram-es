@@ -6,6 +6,7 @@
 #include "style/style.h"
 #include "view/view.h"
 #include "tile/tileID.h"
+#include "labels/labelMesh.h"
 #include "gl/vboMesh.h"
 #include "gl/shaderProgram.h"
 
@@ -94,6 +95,15 @@ void Tile::update(float _dt, const View& _view) {
     m_modelMatrix[3][0] = m_tileOrigin.x - viewOrigin.x;
     m_modelMatrix[3][1] = m_tileOrigin.y - viewOrigin.y;
 
+}
+
+void Tile::reset() {
+    for (auto& entry : m_geometry) {
+        if (!entry.second) { continue; }
+        auto labelMesh = dynamic_cast<LabelMesh*>(entry.second.get());
+        if (!labelMesh) { continue; }
+        labelMesh->reset();
+    }
 }
 
 void Tile::draw(const Style& _style, const View& _view) {

@@ -118,6 +118,8 @@ public:
     /* Checks whether the label is in a visible state */
     bool visibleState() const;
 
+    void resetState();
+
 private:
 
     bool offViewport(const glm::vec2& _screenSize);

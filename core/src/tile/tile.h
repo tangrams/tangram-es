@@ -55,7 +55,7 @@ public:
     float getInverseScale() const { return m_inverseScale; }
 
     const glm::mat4& getModelMatrix() const { return m_modelMatrix; }
-    
+
     std::unique_ptr<VboMesh>& getMesh(const Style& _style);
 
     /* uUdate the Tile considering the current view */
@@ -65,8 +65,10 @@ public:
     void draw(const Style& _style, const View& _view);
 
     void build(StyleContext& _ctx, const Scene& _scene, const TileData& _data, const DataSource& _source);
-    
-    /* 
+
+    void reset();
+
+    /*
      * Methods to set and get proxy counter
      */
     int getProxyCounter() { return m_proxyCounter; }
