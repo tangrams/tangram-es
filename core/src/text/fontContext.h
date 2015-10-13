@@ -53,7 +53,7 @@ private:
     static void renderUpdate(void* _userPtr, int* _rect, const unsigned char* _data);
     static int renderCreate(void* _userPtr, int _width, int _height);
     static void pushQuad(void* _userPtr, const FONSquad* _quad);
-    static void fontstashError(void* uptr, int error, int val);
+    static void fontstashError(void* _uptr, int _error, int _val);
 
     FontContext(int _atlasSize);
 

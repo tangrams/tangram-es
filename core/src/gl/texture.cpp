@@ -154,18 +154,16 @@ void Texture::update(GLuint _textureUnit) {
 
         m_shouldResize = false;
 
-        m_subData.clear();
+    }
 
-    } else {
-        // process queued sub data updates
-        while (m_subData.size() > 0) {
-            TextureSubData& subData = m_subData.front();
+    // process queued sub data updates
+    while (m_subData.size() > 0) {
+        TextureSubData& subData = m_subData.front();
 
-            glTexSubImage2D(m_target, 0, subData.m_xoff, subData.m_yoff, subData.m_width, subData.m_height,
-                            m_options.m_format, GL_UNSIGNED_BYTE, subData.m_data.data());
+        glTexSubImage2D(m_target, 0, subData.m_xoff, subData.m_yoff, subData.m_width, subData.m_height,
+                        m_options.m_format, GL_UNSIGNED_BYTE, subData.m_data.data());
 
-            m_subData.pop_front();
-        }
+        m_subData.pop_front();
     }
 
     m_dirty = false;
