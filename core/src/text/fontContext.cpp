@@ -69,7 +69,7 @@ FontID FontContext::addFont(const std::string& _family, const std::string& _weig
             !(data = bytesFromFile(bundledFontPath.c_str(), PathType::internal, &dataSize))) {
             const std::string sysFontPath = systemFontPath(_family, _weight, _style);
             if ( !(data = bytesFromFile(sysFontPath.c_str(), PathType::absolute, &dataSize)) ) {
-                
+
                 LOGE("Could not load font file %s", fontKey.c_str());
                 m_fonts.emplace(std::move(fontKey), INVALID_FONT);
                 goto fallback;
@@ -173,17 +173,29 @@ void FontContext::renderUpdate(void* _userPtr, int* _rect, const unsigned char* 
     fontContext->m_atlas->setSubData(subdata, xoff, yoff, width, height);
 }
 
-void FontContext::fontstashError(void* uptr, int error, int val) {
-    switch(error) {
-    case FONS_ATLAS_FULL:
-        LOGE("Texture Atlas full!");
-        break;
+void FontContext::fontstashError(void* _uptr, int _error, int _val) {
+    FontContext* fontContext = static_cast<FontContext*>(_uptr);
 
+    switch(_error) {
+    case FONS_ATLAS_FULL: {
+        const auto& tex = fontContext->m_atlas;
+        unsigned int nw = tex->getWidth() * 2;
+        unsigned int nh = tex->getHeight() * 2;
+
+        if (nw > TANGRAM_MAX_TEXTURE_WIDTH || nh > TANGRAM_MAX_TEXTURE_HEIGHT) {
+            LOGE("Full font texture atlas size reached!");
+        } else {
+            fonsExpandAtlas(fontContext->m_fsContext, nw, nh, 1);
+            tex->resize(nw, nh);
+            LOGW("Texture Atlas resize to %d %d", nw, nh);
+        }
+        break;
+    }
     case FONS_SCRATCH_FULL:
     case FONS_STATES_OVERFLOW:
     case FONS_STATES_UNDERFLOW:
     default:
-        LOGE("Unexpected error in Fontstash %d:%d!", error, val);
+        LOGE("Unexpected error in Fontstash %d:%d!", _error, _val);
         break;
     }
 }
