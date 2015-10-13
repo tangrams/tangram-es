@@ -2,9 +2,13 @@ package com.mapzen.tangram.android;
 
 import android.app.Activity;
 import android.os.Bundle;
+import android.util.Log;
+import android.view.ContextMenu;
+import android.view.MenuItem;
 import android.view.MotionEvent;
 import android.view.View;
 import android.view.Window;
+import android.widget.AdapterView;
 import android.widget.Toast;
 
 import com.mapzen.tangram.DebugFlags;
@@ -27,13 +31,28 @@ import java.lang.Math;
 
 public class MainActivity extends Activity {
 
+    private static final int CONTEXT_MENU_DEFAULT = 0;
+    private static final int CONTEXT_MENU_BLUEPRINT = 1;
+    private static final int CONTEXT_MENU_GOTHAM = 2;
+    private static final int CONTEXT_MENU_PERICOLI = 3;
+    private static final int CONTEXT_MENU_CROSSHATCH = 4;
+    private static final int CONTEXT_MENU_ERASER = 5;
+    private static final int CONTEXT_MENU_IKEDA = 6;
+
+    private static final int CONTEXT_MENU_BLUEPRINT2 = 11;
+    private static final int CONTEXT_MENU_GOTHAM2 = 12;
+    private static final int CONTEXT_MENU_PERICOLI2 = 13;
+    private static final int CONTEXT_MENU_CROSSHATCH2 = 14;
+    private static final int CONTEXT_MENU_ERASER2 = 15;
+    private static final int CONTEXT_MENU_IKEDA2 = 16;
+
     MapController mapController;
     MapView mapView;
     MapData touchMarkers;
 
     boolean tileInfo;
 
-    String tileApiKey = "?api_key=vector-tiles-tyHL4AY";
+    String tileApiKey = ""; // "?api_key=vector-tiles-tyHL4AY";
 
     @Override
     public void onCreate(Bundle savedInstanceState) {
@@ -44,54 +63,16 @@ public class MainActivity extends Activity {
         setContentView(R.layout.main);
 
         mapView = (MapView)findViewById(R.id.map);
-        mapController = new MapController(this, mapView);
+        mapController = new MapController(this, mapView, "es2_ikeda.yaml");
         mapController.setMapZoom(16);
         mapController.setMapPosition(-74.00976419448854, 40.70532700869127);
 
-        final MapData touchMarkers = new MapData("touch");
-        Tangram.addDataSource(touchMarkers);
-
-        final LngLat lastTappedPoint = new LngLat();
-        final String colors[] = {"blue", "red", "green" };
-        final LngLat zeroCoord = new LngLat();
-        final Coordinates line = new Coordinates();
-
-        mapController.setTapGestureListener(new View.OnGenericMotionListener() {
-            @Override
-            public boolean onGenericMotion(View v, MotionEvent event) {
-                LngLat tapPoint = mapController.coordinatesAtScreenPosition(event.getX(), event.getY());
-
-                if (!lastTappedPoint.equals(zeroCoord)) {
-                    Properties props = new Properties();
-                    props.add("type", "line");
-                    props.add("color", colors[(int)(Math.random() * 2.0 + 0.5)] );
-
-                    line.clear();
-                    line.add(tapPoint);
-                    line.add(lastTappedPoint);
-                    touchMarkers.addLine(props, line);
-
-                    props = new Properties();
-                    props.add("type", "point");
-                    touchMarkers.addPoint(props, lastTappedPoint);
-                }
-                lastTappedPoint.set(tapPoint);
-
-                mapController.pickFeature(event.getX(), event.getY());
-
-                mapController.setMapPosition(tapPoint.longitude, tapPoint.latitude, 1);
-
-                return true;
-            }
-        });
+        registerForContextMenu(mapView);
 
         mapController.setLongPressListener(new View.OnGenericMotionListener() {
             @Override
             public boolean onGenericMotion(View v, MotionEvent event) {
-                if (touchMarkers != null) { touchMarkers.clear(); }
-
-                tileInfo = !tileInfo;
-                Tangram.setDebugFlag(DebugFlags.TILE_INFOS, tileInfo);
+                openContextMenu(mapView);
                 return true;
             }
         });
@@ -140,6 +121,86 @@ public class MainActivity extends Activity {
 
         mapController.setHttpHandler(handler);
 
+    }
+
+    @Override
+    public void onCreateContextMenu(ContextMenu menu, View v,
+                                    ContextMenu.ContextMenuInfo menuInfo) {
+        super.onCreateContextMenu(menu, v, menuInfo);
+
+        menu.add(0, CONTEXT_MENU_DEFAULT, 0, "TangramES");
+        menu.add(0, CONTEXT_MENU_BLUEPRINT, 0, "Blueprint");
+        menu.add(0, CONTEXT_MENU_BLUEPRINT2, 0, "Blueprint (opt)");
+        menu.add(0, CONTEXT_MENU_GOTHAM, 0, "Gotham");
+        menu.add(0, CONTEXT_MENU_GOTHAM2, 0, "Gotham (opt)");
+        menu.add(0, CONTEXT_MENU_PERICOLI, 0, "Pericoli");
+        menu.add(0, CONTEXT_MENU_PERICOLI2, 0, "Pericoli (opt)");
+        menu.add(0, CONTEXT_MENU_CROSSHATCH, 0, "Crosshatch");
+        menu.add(0, CONTEXT_MENU_CROSSHATCH2, 0, "Crosshatch (opt)");
+        menu.add(0, CONTEXT_MENU_ERASER, 0, "Eraser Map");
+        menu.add(0, CONTEXT_MENU_ERASER2, 0, "Eraser Map (opt)");
+        menu.add(0, CONTEXT_MENU_IKEDA, 0, "Ikeda");
+        menu.add(0, CONTEXT_MENU_IKEDA2, 0, "Ikeda (opt)");
+    }
+
+    @Override
+    public boolean onMenuItemSelected(int featureId, MenuItem item) {
+
+        switch (item.getItemId()) {
+            case CONTEXT_MENU_DEFAULT:
+                mapController.setScene("scene.yaml");
+                return true;
+
+            case CONTEXT_MENU_BLUEPRINT:
+                mapController.setScene("blueprint.yaml");
+                return true;
+
+            case CONTEXT_MENU_GOTHAM:
+                mapController.setScene("gotham.yaml");
+                return true;
+
+            case CONTEXT_MENU_PERICOLI:
+                mapController.setScene("pericoli.yaml");
+                return true;
+
+            case CONTEXT_MENU_CROSSHATCH:
+                mapController.setScene("crosshatch.yaml");
+                return true;
+
+            case CONTEXT_MENU_ERASER:
+                mapController.setScene("eraser.yaml");
+                return true;
+
+            case CONTEXT_MENU_IKEDA:
+                mapController.setScene("ikeda.yaml");
+                return true;
+
+            case CONTEXT_MENU_BLUEPRINT2:
+                mapController.setScene("es2_blueprint.yaml");
+                return true;
+
+            case CONTEXT_MENU_GOTHAM2:
+                mapController.setScene("es2_gotham.yaml");
+                return true;
+
+            case CONTEXT_MENU_PERICOLI2:
+                mapController.setScene("es2_pericoli.yaml");
+                return true;
+
+            case CONTEXT_MENU_CROSSHATCH2:
+                mapController.setScene("es2_crosshatch.yaml");
+                return true;
+
+            case CONTEXT_MENU_ERASER2:
+                mapController.setScene("es2_eraser.yaml");
+                return true;
+
+            case CONTEXT_MENU_IKEDA2:
+                mapController.setScene("es2_ikeda.yaml");
+                return true;
+
+        }
+        return true;
     }
 
 }
