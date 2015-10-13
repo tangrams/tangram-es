@@ -4,7 +4,7 @@
 precision mediump float;
 #define LOWP lowp
 #else
-#define LOWP 
+#define LOWP
 #endif
 
 #pragma tangram: defines
@@ -15,6 +15,7 @@ uniform vec3 u_tile_origin;
 uniform vec2 u_resolution;
 uniform float u_time;
 uniform float u_meters_per_pixel;
+uniform float u_device_pixel_ratio;
 
 #pragma tangram: uniforms
 

@@ -15,6 +15,7 @@ uniform vec3 u_tile_origin;
 uniform vec2 u_resolution;
 uniform float u_time;
 uniform float u_meters_per_pixel;
+uniform float u_device_pixel_ratio;
 
 #pragma tangram: uniforms
 
@@ -86,11 +87,11 @@ void main() {
     #endif
 
     gl_Position = u_proj * v_position;
-    
+
     // Proxy tiles have u_tile_origin.z < 0, so this re-scaling will place proxy tiles deeper in
     // the depth buffer than non-proxy tiles by a distance that increases with tile zoom
     gl_Position.z /= 1. + .1 * (abs(u_tile_origin.z) - u_tile_origin.z);
-    
+
     #ifdef TANGRAM_DEPTH_DELTA
         gl_Position.z -= a_layer * TANGRAM_DEPTH_DELTA * gl_Position.w;
     #endif

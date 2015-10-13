@@ -227,7 +227,7 @@ void PointStyle::buildPolygon(const Polygon& _polygon, const DrawRule& _rule, co
     mesh.addVertices(std::move(vertices), {});
 }
 
-void PointStyle::onBeginDrawFrame(const View& _view, Scene& _scene) {
+void PointStyle::onBeginDrawFrame(const View& _view, Scene& _scene, int _textureUnit) {
     bool contextLost = Style::glContextLost();
 
     if (m_spriteAtlas) {
@@ -236,8 +236,6 @@ void PointStyle::onBeginDrawFrame(const View& _view, Scene& _scene) {
         m_texture->update(0);
         m_texture->bind(0);
     }
-
-    setupShaderUniforms(1, contextLost, _scene);
 
     static bool initUniformSampler = true;
 
@@ -251,7 +249,7 @@ void PointStyle::onBeginDrawFrame(const View& _view, Scene& _scene) {
         m_dirtyViewport = false;
     }
 
-    Style::onBeginDrawFrame(_view, _scene);
+    Style::onBeginDrawFrame(_view, _scene, 1);
 }
 
 }

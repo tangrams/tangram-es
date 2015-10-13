@@ -39,7 +39,7 @@ public:
               Blending _blendMode = Blending::overlay,
               GLenum _drawMode = GL_TRIANGLES);
 
-    virtual void onBeginDrawFrame(const View& _view, Scene& _scene) override;
+    virtual void onBeginDrawFrame(const View& _view, Scene& _scene, int _textureUnit = 0) override;
 
     virtual ~TextStyle();
 
