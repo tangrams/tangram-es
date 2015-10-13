@@ -36,6 +36,7 @@ public class Coordinates {
     }
 
     // Ensure that the GC doesn't collect any Polygon instance set from Java
+    // While we holding a Coordinates Ring of it.
     private Object owner;
 
     protected void addReference(Object obj) {
@@ -71,21 +72,15 @@ public class Coordinates {
     }
 
     public void add(LngLat x) {
-        TangramJNI.Coordinates_add__SWIG_0(swigCPtr, this, LngLat.getCPtr(x), x);
+        TangramJNI.Coordinates_add__SWIG_0(swigCPtr, this, x);
     }
 
     public LngLat get(int i) {
-        long cPtr = TangramJNI.Coordinates_get(swigCPtr, this, i);
-        LngLat ret = null;
-        if (cPtr != 0) {
-            ret = new LngLat(cPtr, false);
-            ret.addReference(this);
-        }
-        return ret;
+        return TangramJNI.Coordinates_get(swigCPtr, this, i);
     }
 
     public void set(int i, LngLat val) {
-        TangramJNI.Coordinates_set(swigCPtr, this, i, LngLat.getCPtr(val), val);
+        TangramJNI.Coordinates_set(swigCPtr, this, i, val);
     }
 
     public void add(double lng, double lat) {

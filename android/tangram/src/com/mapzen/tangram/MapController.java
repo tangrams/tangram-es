@@ -100,7 +100,7 @@ public class MapController implements Renderer, OnTouchListener, OnScaleGestureL
      * @param position LngLat of the position to set
      */
     public void setMapPosition(LngLat position) {
-        setMapPosition(position.getLongitude(), position.getLatitude());
+        setMapPosition(position.longitude, position.latitude);
     }
 
     /**

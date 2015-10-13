@@ -15,6 +15,7 @@ import com.mapzen.tangram.MapView;
 import com.mapzen.tangram.Properties;
 import com.mapzen.tangram.Tangram;
 import com.mapzen.tangram.Coordinates;
+import com.mapzen.tangram.Polygon;
 
 import com.squareup.okhttp.Callback;
 
@@ -69,6 +70,11 @@ public class MainActivity extends Activity {
         final String colors[] = {"blue", "red", "green" };
         final LngLat zeroCoord = new LngLat();
         final Coordinates line = new Coordinates();
+        final Polygon poly = new Polygon();
+        // add Ring
+        poly.add(new Coordinates());
+        // get direct reference to ring
+        final Coordinates ring = poly.get(0);
 
         mapController.setTapGestureListener(new View.OnGenericMotionListener() {
             @Override
@@ -88,6 +94,12 @@ public class MainActivity extends Activity {
                     props = new Properties();
                     props.add("type", "point");
                     touchMarkers.addPoint(props, lastTappedPoint);
+
+                    ring.add(lastTappedPoint);
+                    props = new Properties();
+                    props.add("type", "poly");
+                    touchMarkers.addPolygon(props, poly);
+
                     touchMarkers.update();
                 }
                 lastTappedPoint.set(tapPoint);

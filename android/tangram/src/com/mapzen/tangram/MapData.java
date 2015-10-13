@@ -43,7 +43,8 @@ public class MapData extends DataSource {
     /**
      * Construct a new MapData object for adding drawable data to the map
      *
-     * @param name Name of the data source in the scene file for styling this object's data
+     * @param name Name of the data source in the scene file for styling this
+     *             object's data
      */
     public MapData(String name) {
         this(TangramJNI.new_MapData(name, ""), true);
@@ -105,8 +106,8 @@ public class MapData extends DataSource {
     /**
      * Add a polygon geometry to this data source
      *
-     * @param polygon List of lines of LngLat points, where each line represents a ring in the
-     *                polygon as described in the GeoJSON spec
+     * @param polygon List of lines of LngLat points, where each line represents
+     *                a ring in the polygon as described in the GeoJSON spec
      * @return This object, for chaining
      */
     public MapData addPolygon(Properties props, List<List<LngLat>> polygon) {
@@ -152,7 +153,7 @@ public class MapData extends DataSource {
     }
 
     private void addPointJNI(Properties props, LngLat point) {
-        TangramJNI.MapData_addPointJNI(swigCPtr, this, Properties.getCPtr(props), props, LngLat.getCPtr(point), point);
+        TangramJNI.MapData_addPointJNI(swigCPtr, this, Properties.getCPtr(props), props, point);
     }
 
     private void addLineJNI(Properties props, Coordinates line) {

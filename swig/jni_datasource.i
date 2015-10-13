@@ -1,20 +1,10 @@
-%include "std_map.i"
-%include "std_shared_ptr.i"
-
-// For optimized coordinate array passing
-// was only needed for old double* MapData api
-// %include "array_nocpy.i"
-
-// namespace std {
-// %template(Tags) map<string, string>;
-// }
-
-// Let swig consider these headers
 %{
 #include "tangram.h"
 #include "data/dataSource.h"
 #include "data/clientGeoJsonSource.h"
 %}
+
+%include "std_shared_ptr.i"
 
 // Rename ClientGeoJsonSource to MapData on the Java side.
 %rename(MapData) Tangram::ClientGeoJsonSource;
@@ -38,13 +28,13 @@
 %typemap(javaimports) Tangram::ClientGeoJsonSource %{
 import java.util.List;
 %}
-
 // Additional methods for MapData
 %typemap(javacode) Tangram::ClientGeoJsonSource %{
 
     /**
      * Construct a new MapData object for adding drawable data to the map
-     * @param name Name of the data source in the scene file for styling this object's data
+     * @param name Name of the data source in the scene file for styling this
+     *             object's data
      */
     public MapData(String name) {
         this(TangramJNI.new_MapData(name, ""), true);
@@ -101,8 +91,8 @@ import java.util.List;
 
     /**
      * Add a polygon geometry to this data source
-     * @param polygon List of lines of LngLat points, where each line represents a ring in the
-     *                polygon as described in the GeoJSON spec
+     * @param polygon List of lines of LngLat points, where each line represents
+     *                a ring in the polygon as described in the GeoJSON spec
      * @return This object, for chaining
      */
     public MapData addPolygon(Properties props, List<List<LngLat>> polygon) {
@@ -144,12 +134,14 @@ import java.util.List;
 %rename(addPointJNI) Tangram::ClientGeoJsonSource::addPoint;
 %rename(addLineJNI) Tangram::ClientGeoJsonSource::addLine;
 %rename(addPolyJNI) Tangram::ClientGeoJsonSource::addPoly;
-%rename(addPolyJNI) Tangram::ClientGeoJsonSource::addPoly;
 %javamethodmodifiers Tangram::ClientGeoJsonSource::addPoint "private"
 %javamethodmodifiers Tangram::ClientGeoJsonSource::addLine "private"
 %javamethodmodifiers Tangram::ClientGeoJsonSource::addPoly "private"
 
+
 namespace Tangram {
+
+typedef std::vector<Tangram::LngLat> Coordinates;
 
 class DataSource {
 protected:
@@ -158,14 +150,16 @@ protected:
 };
 
 class ClientGeoJsonSource : public DataSource {
+
 public:
     ClientGeoJsonSource(const std::string& _name, const std::string& _url);
     void addData(const std::string& _data);
-    void addPoint(const Properties& props, LngLat point);
-    void addLine(const Properties& props, const Tangram::Coordinates& line);
-    void addPoly(const Properties& props, const std::vector<Tangram::Coordinates>& polygon);
+    void addPoint(const Properties& props, Tangram::LngLat point);
+    void addLine(const Properties& props, const Coordinates& line);
+    void addPoly(const Properties& props, const std::vector<Coordinates>& polygon);
 };
 } // namespace Tangram
+
 
 %extend Tangram::DataSource {
 

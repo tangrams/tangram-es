@@ -243,10 +243,10 @@ SWIGINTERN void Tangram_Properties_add__SWIG_0(Tangram::Properties *self,std::st
 SWIGINTERN void Tangram_Properties_add__SWIG_1(Tangram::Properties *self,std::string key,float value){
         self->add(key, value);
     }
-SWIGINTERN void Tangram_LngLat_setLngLat(Tangram::LngLat *self,double lng,double lat){
-        self->longitude = lng;
-        self->latitude = lat;
-    }
+
+// Include LngLat class
+#include "util/types.h"
+
 SWIGINTERN std::vector< Tangram::LngLat >::const_reference std_vector_Sl_Tangram_LngLat_Sg__get(std::vector< Tangram::LngLat > *self,int i){
                 int size = int(self->size());
                 if (i>=0 && i<size)
@@ -278,11 +278,6 @@ SWIGINTERN void std_vector_Sl_std_vector_Sl_Tangram_LngLat_Sg__Sg__set(std::vect
                 else
                     throw std::out_of_range("vector index out of range");
             }
-
-#include <map>
-#include <algorithm>
-#include <stdexcept>
-
 
 #include "tangram.h"
 #include "data/dataSource.h"
@@ -484,178 +479,6 @@ SWIGEXPORT void JNICALL Java_com_mapzen_tangram_TangramJNI_delete_1Properties(JN
 }
 
 
-SWIGEXPORT jlong JNICALL Java_com_mapzen_tangram_TangramJNI_new_1LngLat_1_1SWIG_10(JNIEnv *jenv, jclass jcls) {
-  jlong jresult = 0 ;
-  Tangram::LngLat *result = 0 ;
-
-  (void)jenv;
-  (void)jcls;
-  result = (Tangram::LngLat *)new Tangram::LngLat();
-  *(Tangram::LngLat **)&jresult = result;
-  return jresult;
-}
-
-
-SWIGEXPORT jlong JNICALL Java_com_mapzen_tangram_TangramJNI_new_1LngLat_1_1SWIG_11(JNIEnv *jenv, jclass jcls, jdouble jarg1, jdouble jarg2) {
-  jlong jresult = 0 ;
-  double arg1 ;
-  double arg2 ;
-  Tangram::LngLat *result = 0 ;
-
-  (void)jenv;
-  (void)jcls;
-  arg1 = (double)jarg1;
-  arg2 = (double)jarg2;
-  result = (Tangram::LngLat *)new Tangram::LngLat(arg1,arg2);
-  *(Tangram::LngLat **)&jresult = result;
-  return jresult;
-}
-
-
-SWIGEXPORT jlong JNICALL Java_com_mapzen_tangram_TangramJNI_new_1LngLat_1_1SWIG_12(JNIEnv *jenv, jclass jcls, jlong jarg1, jobject jarg1_) {
-  jlong jresult = 0 ;
-  Tangram::LngLat *arg1 = 0 ;
-  Tangram::LngLat *result = 0 ;
-
-  (void)jenv;
-  (void)jcls;
-  (void)jarg1_;
-  arg1 = *(Tangram::LngLat **)&jarg1;
-  if (!arg1) {
-    SWIG_JavaThrowException(jenv, SWIG_JavaNullPointerException, "Tangram::LngLat const & reference is null");
-    return 0;
-  }
-  result = (Tangram::LngLat *)new Tangram::LngLat((Tangram::LngLat const &)*arg1);
-  *(Tangram::LngLat **)&jresult = result;
-  return jresult;
-}
-
-
-SWIGEXPORT jlong JNICALL Java_com_mapzen_tangram_TangramJNI_LngLat_1set_1_1SWIG_10(JNIEnv *jenv, jclass jcls, jlong jarg1, jobject jarg1_, jlong jarg2, jobject jarg2_) {
-  jlong jresult = 0 ;
-  Tangram::LngLat *arg1 = (Tangram::LngLat *) 0 ;
-  Tangram::LngLat *arg2 = 0 ;
-  Tangram::LngLat *result = 0 ;
-
-  (void)jenv;
-  (void)jcls;
-  (void)jarg1_;
-  (void)jarg2_;
-  arg1 = *(Tangram::LngLat **)&jarg1;
-  arg2 = *(Tangram::LngLat **)&jarg2;
-  if (!arg2) {
-    SWIG_JavaThrowException(jenv, SWIG_JavaNullPointerException, "Tangram::LngLat const & reference is null");
-    return 0;
-  }
-  result = (Tangram::LngLat *) &(arg1)->operator =((Tangram::LngLat const &)*arg2);
-  *(Tangram::LngLat **)&jresult = result;
-  return jresult;
-}
-
-
-SWIGEXPORT jboolean JNICALL Java_com_mapzen_tangram_TangramJNI_LngLat_1equals(JNIEnv *jenv, jclass jcls, jlong jarg1, jobject jarg1_, jlong jarg2, jobject jarg2_) {
-  jboolean jresult = 0 ;
-  Tangram::LngLat *arg1 = (Tangram::LngLat *) 0 ;
-  Tangram::LngLat *arg2 = 0 ;
-  bool result;
-
-  (void)jenv;
-  (void)jcls;
-  (void)jarg1_;
-  (void)jarg2_;
-  arg1 = *(Tangram::LngLat **)&jarg1;
-  arg2 = *(Tangram::LngLat **)&jarg2;
-  if (!arg2) {
-    SWIG_JavaThrowException(jenv, SWIG_JavaNullPointerException, "Tangram::LngLat const & reference is null");
-    return 0;
-  }
-  result = (bool)(arg1)->operator ==((Tangram::LngLat const &)*arg2);
-  jresult = (jboolean)result;
-  return jresult;
-}
-
-
-SWIGEXPORT void JNICALL Java_com_mapzen_tangram_TangramJNI_LngLat_1longitude_1set(JNIEnv *jenv, jclass jcls, jlong jarg1, jobject jarg1_, jdouble jarg2) {
-  Tangram::LngLat *arg1 = (Tangram::LngLat *) 0 ;
-  double arg2 ;
-
-  (void)jenv;
-  (void)jcls;
-  (void)jarg1_;
-  arg1 = *(Tangram::LngLat **)&jarg1;
-  arg2 = (double)jarg2;
-  if (arg1) (arg1)->longitude = arg2;
-}
-
-
-SWIGEXPORT jdouble JNICALL Java_com_mapzen_tangram_TangramJNI_LngLat_1longitude_1get(JNIEnv *jenv, jclass jcls, jlong jarg1, jobject jarg1_) {
-  jdouble jresult = 0 ;
-  Tangram::LngLat *arg1 = (Tangram::LngLat *) 0 ;
-  double result;
-
-  (void)jenv;
-  (void)jcls;
-  (void)jarg1_;
-  arg1 = *(Tangram::LngLat **)&jarg1;
-  result = (double) ((arg1)->longitude);
-  jresult = (jdouble)result;
-  return jresult;
-}
-
-
-SWIGEXPORT void JNICALL Java_com_mapzen_tangram_TangramJNI_LngLat_1latitude_1set(JNIEnv *jenv, jclass jcls, jlong jarg1, jobject jarg1_, jdouble jarg2) {
-  Tangram::LngLat *arg1 = (Tangram::LngLat *) 0 ;
-  double arg2 ;
-
-  (void)jenv;
-  (void)jcls;
-  (void)jarg1_;
-  arg1 = *(Tangram::LngLat **)&jarg1;
-  arg2 = (double)jarg2;
-  if (arg1) (arg1)->latitude = arg2;
-}
-
-
-SWIGEXPORT jdouble JNICALL Java_com_mapzen_tangram_TangramJNI_LngLat_1latitude_1get(JNIEnv *jenv, jclass jcls, jlong jarg1, jobject jarg1_) {
-  jdouble jresult = 0 ;
-  Tangram::LngLat *arg1 = (Tangram::LngLat *) 0 ;
-  double result;
-
-  (void)jenv;
-  (void)jcls;
-  (void)jarg1_;
-  arg1 = *(Tangram::LngLat **)&jarg1;
-  result = (double) ((arg1)->latitude);
-  jresult = (jdouble)result;
-  return jresult;
-}
-
-
-SWIGEXPORT void JNICALL Java_com_mapzen_tangram_TangramJNI_LngLat_1setLngLat(JNIEnv *jenv, jclass jcls, jlong jarg1, jobject jarg1_, jdouble jarg2, jdouble jarg3) {
-  Tangram::LngLat *arg1 = (Tangram::LngLat *) 0 ;
-  double arg2 ;
-  double arg3 ;
-
-  (void)jenv;
-  (void)jcls;
-  (void)jarg1_;
-  arg1 = *(Tangram::LngLat **)&jarg1;
-  arg2 = (double)jarg2;
-  arg3 = (double)jarg3;
-  Tangram_LngLat_setLngLat(arg1,arg2,arg3);
-}
-
-
-SWIGEXPORT void JNICALL Java_com_mapzen_tangram_TangramJNI_delete_1LngLat(JNIEnv *jenv, jclass jcls, jlong jarg1) {
-  Tangram::LngLat *arg1 = (Tangram::LngLat *) 0 ;
-
-  (void)jenv;
-  (void)jcls;
-  arg1 = *(Tangram::LngLat **)&jarg1;
-  delete arg1;
-}
-
-
 SWIGEXPORT jlong JNICALL Java_com_mapzen_tangram_TangramJNI_new_1Coordinates_1_1SWIG_10(JNIEnv *jenv, jclass jcls) {
   jlong jresult = 0 ;
   std::vector< Tangram::LngLat > *result = 0 ;
@@ -751,26 +574,36 @@ SWIGEXPORT void JNICALL Java_com_mapzen_tangram_TangramJNI_Coordinates_1clear(JN
 }
 
 
-SWIGEXPORT void JNICALL Java_com_mapzen_tangram_TangramJNI_Coordinates_1add_1_1SWIG_10(JNIEnv *jenv, jclass jcls, jlong jarg1, jobject jarg1_, jlong jarg2, jobject jarg2_) {
+SWIGEXPORT void JNICALL Java_com_mapzen_tangram_TangramJNI_Coordinates_1add_1_1SWIG_10(JNIEnv *jenv, jclass jcls, jlong jarg1, jobject jarg1_, jobject jarg2) {
   std::vector< Tangram::LngLat > *arg1 = (std::vector< Tangram::LngLat > *) 0 ;
   std::vector< Tangram::LngLat >::value_type *arg2 = 0 ;
 
   (void)jenv;
   (void)jcls;
   (void)jarg1_;
-  (void)jarg2_;
   arg1 = *(std::vector< Tangram::LngLat > **)&jarg1;
-  arg2 = *(std::vector< Tangram::LngLat >::value_type **)&jarg2;
-  if (!arg2) {
-    SWIG_JavaThrowException(jenv, SWIG_JavaNullPointerException, "std::vector< Tangram::LngLat >::value_type const & reference is null");
+
+  if(!jarg2) {
+    SWIG_JavaThrowException(jenv, SWIG_JavaNullPointerException, "null LngLat");
     return ;
   }
+
+  static jclass clazz = jenv->FindClass("com/mapzen/tangram/LngLat");
+
+  static jfieldID lonId = jenv->GetFieldID(clazz, "longitude", "D");
+  static jfieldID latId = jenv->GetFieldID(clazz, "latitude", "D");
+
+  Tangram::LngLat arg2_out;
+  arg2_out.longitude = jenv->GetDoubleField(jarg2, lonId);
+  arg2_out.latitude = jenv->GetDoubleField(jarg2, latId);
+  arg2 = &arg2_out;
+
   (arg1)->push_back((std::vector< Tangram::LngLat >::value_type const &)*arg2);
 }
 
 
-SWIGEXPORT jlong JNICALL Java_com_mapzen_tangram_TangramJNI_Coordinates_1get(JNIEnv *jenv, jclass jcls, jlong jarg1, jobject jarg1_, jint jarg2) {
-  jlong jresult = 0 ;
+SWIGEXPORT jobject JNICALL Java_com_mapzen_tangram_TangramJNI_Coordinates_1get(JNIEnv *jenv, jclass jcls, jlong jarg1, jobject jarg1_, jint jarg2) {
+  jobject jresult = 0 ;
   std::vector< Tangram::LngLat > *arg1 = (std::vector< Tangram::LngLat > *) 0 ;
   int arg2 ;
   std::vector< Tangram::LngLat >::value_type *result = 0 ;
@@ -788,12 +621,16 @@ SWIGEXPORT jlong JNICALL Java_com_mapzen_tangram_TangramJNI_Coordinates_1get(JNI
     return 0;
   }
 
-  *(std::vector< Tangram::LngLat >::value_type **)&jresult = result;
+
+  static jclass clazz = jenv->FindClass("com/mapzen/tangram/LngLat");
+  static jmethodID constructor = jenv->GetMethodID(clazz, "<init>", "(DD)V");
+  jresult = jenv->NewObject(clazz, constructor, result->longitude, result->latitude);
+
   return jresult;
 }
 
 
-SWIGEXPORT void JNICALL Java_com_mapzen_tangram_TangramJNI_Coordinates_1set(JNIEnv *jenv, jclass jcls, jlong jarg1, jobject jarg1_, jint jarg2, jlong jarg3, jobject jarg3_) {
+SWIGEXPORT void JNICALL Java_com_mapzen_tangram_TangramJNI_Coordinates_1set(JNIEnv *jenv, jclass jcls, jlong jarg1, jobject jarg1_, jint jarg2, jobject jarg3) {
   std::vector< Tangram::LngLat > *arg1 = (std::vector< Tangram::LngLat > *) 0 ;
   int arg2 ;
   std::vector< Tangram::LngLat >::value_type *arg3 = 0 ;
@@ -801,14 +638,24 @@ SWIGEXPORT void JNICALL Java_com_mapzen_tangram_TangramJNI_Coordinates_1set(JNIE
   (void)jenv;
   (void)jcls;
   (void)jarg1_;
-  (void)jarg3_;
   arg1 = *(std::vector< Tangram::LngLat > **)&jarg1;
   arg2 = (int)jarg2;
-  arg3 = *(std::vector< Tangram::LngLat >::value_type **)&jarg3;
-  if (!arg3) {
-    SWIG_JavaThrowException(jenv, SWIG_JavaNullPointerException, "std::vector< Tangram::LngLat >::value_type const & reference is null");
+
+  if(!jarg3) {
+    SWIG_JavaThrowException(jenv, SWIG_JavaNullPointerException, "null LngLat");
     return ;
   }
+
+  static jclass clazz = jenv->FindClass("com/mapzen/tangram/LngLat");
+
+  static jfieldID lonId = jenv->GetFieldID(clazz, "longitude", "D");
+  static jfieldID latId = jenv->GetFieldID(clazz, "latitude", "D");
+
+  Tangram::LngLat arg3_out;
+  arg3_out.longitude = jenv->GetDoubleField(jarg3, lonId);
+  arg3_out.latitude = jenv->GetDoubleField(jarg3, latId);
+  arg3 = &arg3_out;
+
   try {
     std_vector_Sl_Tangram_LngLat_Sg__set(arg1,arg2,(Tangram::LngLat const &)*arg3);
   }
@@ -1136,18 +983,16 @@ SWIGEXPORT void JNICALL Java_com_mapzen_tangram_TangramJNI_MapData_1addData(JNIE
 }
 
 
-SWIGEXPORT void JNICALL Java_com_mapzen_tangram_TangramJNI_MapData_1addPointJNI(JNIEnv *jenv, jclass jcls, jlong jarg1, jobject jarg1_, jlong jarg2, jobject jarg2_, jlong jarg3, jobject jarg3_) {
+SWIGEXPORT void JNICALL Java_com_mapzen_tangram_TangramJNI_MapData_1addPointJNI(JNIEnv *jenv, jclass jcls, jlong jarg1, jobject jarg1_, jlong jarg2, jobject jarg2_, jobject jarg3) {
   Tangram::ClientGeoJsonSource *arg1 = (Tangram::ClientGeoJsonSource *) 0 ;
   Tangram::Properties *arg2 = 0 ;
   Tangram::LngLat arg3 ;
   std::shared_ptr< Tangram::ClientGeoJsonSource > *smartarg1 = 0 ;
-  Tangram::LngLat *argp3 ;
 
   (void)jenv;
   (void)jcls;
   (void)jarg1_;
   (void)jarg2_;
-  (void)jarg3_;
 
   smartarg1 = *(std::shared_ptr<  Tangram::ClientGeoJsonSource > **)&jarg1;
   arg1 = (Tangram::ClientGeoJsonSource *)(smartarg1 ? smartarg1->get() : 0);
@@ -1157,12 +1002,20 @@ SWIGEXPORT void JNICALL Java_com_mapzen_tangram_TangramJNI_MapData_1addPointJNI(
     SWIG_JavaThrowException(jenv, SWIG_JavaNullPointerException, "Tangram::Properties const & reference is null");
     return ;
   }
-  argp3 = *(Tangram::LngLat **)&jarg3;
-  if (!argp3) {
-    SWIG_JavaThrowException(jenv, SWIG_JavaNullPointerException, "Attempt to dereference null Tangram::LngLat");
+
+  if(!jarg3) {
+    SWIG_JavaThrowException(jenv, SWIG_JavaNullPointerException, "null LngLat");
     return ;
   }
-  arg3 = *argp3;
+
+  static jclass clazz = jenv->FindClass("com/mapzen/tangram/LngLat");
+  static jfieldID lonId = jenv->GetFieldID(clazz, "longitude", "D");
+  static jfieldID latId = jenv->GetFieldID(clazz, "latitude", "D");
+
+  (&arg3)->longitude = jenv->GetDoubleField(jarg3, lonId);
+  (&arg3)->latitude = jenv->GetDoubleField(jarg3, latId);
+
+
   (arg1)->addPoint((Tangram::Properties const &)*arg2,arg3);
 }
 

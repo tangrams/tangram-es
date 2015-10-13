@@ -1,56 +1,8 @@
-// %rename (set) *::operator=;
-// %rename (equals) *::operator==;
-
-%rename (set) Tangram::LngLat::operator=;
-%rename (equals) Tangram::LngLat::operator==;
-
-// Hide generated (extension) method in favor of this-returning java method
-%javamethodmodifiers Tangram::LngLat::setLngLat "private"
-
-// Create wrapper for Coordinates std::vector<LngLat>
-// Extend LngLat on the java side, using setLngLat extension method +
-// Docs: 25.10.11 Memory management when returning references to member variables
-%typemap(javacode) Tangram::LngLat %{
-  // Ensure that the GC doesn't collect any Polygon instance set from Java
-  private Object owner;
-  protected void addReference(Object obj) {
-    owner = obj;
-  }
-
-  public LngLat set(double lng, double lat) {
-    setLngLat(lng, lat);
-    return this;
-  }
-%}
-// Add a Java reference to prevent premature garbage collection and resulting use
-// of dangling C++ pointer. Intended for methods that return pointers or
-// references to a member variable.  In this case
-%typemap(javaout) Tangram::LngLat& get {
-    long cPtr = $jnicall;
-    $javaclassname ret = null;
-    if (cPtr != 0) {
-      ret = new $javaclassname(cPtr, $owner);
-      ret.addReference(this);
-    }
-    return ret;
-}
-
-// Include
-// - LngLat struct as is,
-// - ignore Range type
-%ignore Tangram::Range;
-%include "util/types.h"
-
-// Extend on the native side - cannot return self here though
-%extend Tangram::LngLat {
-    void setLngLat(double lng, double lat) {
-        $self->longitude = lng;
-        $self->latitude = lat;
-    }
-}
+%include "jni_lnglat.i"
 
 %typemap(javacode) std::vector<Tangram::LngLat> %{
   // Ensure that the GC doesn't collect any Polygon instance set from Java
+  // While we holding a Coordinates Ring of it.
   private Object owner;
   protected void addReference(Object obj) {
     owner = obj;

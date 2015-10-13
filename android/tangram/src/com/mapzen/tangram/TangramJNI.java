@@ -25,28 +25,6 @@ public class TangramJNI {
 
     public final static native void delete_Properties(long jarg1);
 
-    public final static native long new_LngLat__SWIG_0();
-
-    public final static native long new_LngLat__SWIG_1(double jarg1, double jarg2);
-
-    public final static native long new_LngLat__SWIG_2(long jarg1, LngLat jarg1_);
-
-    public final static native long LngLat_set__SWIG_0(long jarg1, LngLat jarg1_, long jarg2, LngLat jarg2_);
-
-    public final static native boolean LngLat_equals(long jarg1, LngLat jarg1_, long jarg2, LngLat jarg2_);
-
-    public final static native void LngLat_longitude_set(long jarg1, LngLat jarg1_, double jarg2);
-
-    public final static native double LngLat_longitude_get(long jarg1, LngLat jarg1_);
-
-    public final static native void LngLat_latitude_set(long jarg1, LngLat jarg1_, double jarg2);
-
-    public final static native double LngLat_latitude_get(long jarg1, LngLat jarg1_);
-
-    public final static native void LngLat_setLngLat(long jarg1, LngLat jarg1_, double jarg2, double jarg3);
-
-    public final static native void delete_LngLat(long jarg1);
-
     public final static native long new_Coordinates__SWIG_0();
 
     public final static native long new_Coordinates__SWIG_1(long jarg1);
@@ -61,11 +39,11 @@ public class TangramJNI {
 
     public final static native void Coordinates_clear(long jarg1, Coordinates jarg1_);
 
-    public final static native void Coordinates_add__SWIG_0(long jarg1, Coordinates jarg1_, long jarg2, LngLat jarg2_);
+    public final static native void Coordinates_add__SWIG_0(long jarg1, Coordinates jarg1_, LngLat jarg2);
 
-    public final static native long Coordinates_get(long jarg1, Coordinates jarg1_, int jarg2);
+    public final static native LngLat Coordinates_get(long jarg1, Coordinates jarg1_, int jarg2);
 
-    public final static native void Coordinates_set(long jarg1, Coordinates jarg1_, int jarg2, long jarg3, LngLat jarg3_);
+    public final static native void Coordinates_set(long jarg1, Coordinates jarg1_, int jarg2, LngLat jarg3);
 
     public final static native void Coordinates_add__SWIG_1(long jarg1, Coordinates jarg1_, double jarg2, double jarg3);
 
@@ -105,7 +83,7 @@ public class TangramJNI {
 
     public final static native void MapData_addData(long jarg1, MapData jarg1_, String jarg2);
 
-    public final static native void MapData_addPointJNI(long jarg1, MapData jarg1_, long jarg2, Properties jarg2_, long jarg3, LngLat jarg3_);
+    public final static native void MapData_addPointJNI(long jarg1, MapData jarg1_, long jarg2, Properties jarg2_, LngLat jarg3);
 
     public final static native void MapData_addLineJNI(long jarg1, MapData jarg1_, long jarg2, Properties jarg2_, long jarg3, Coordinates jarg3_);
 
