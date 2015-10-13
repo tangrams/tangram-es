@@ -240,7 +240,7 @@ std::string ShaderProgram::applySourceBlocks(const std::string& source, bool fra
     if (fragShader) {
         sourceOut << "#define TANGRAM_FRAGMENT_SHADER\n";
     } else {
-        float depthDelta = 1.f / (1 << 16);
+        float depthDelta = 2.f / (1 << 16);
         sourceOut << "#define TANGRAM_DEPTH_DELTA " << std::to_string(depthDelta) << '\n';
         sourceOut << "#define TANGRAM_VERTEX_SHADER\n";
     }
