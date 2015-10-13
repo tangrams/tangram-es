@@ -81,28 +81,27 @@ void VboMesh::subDataUpload() {
 
     long vertexBytes = m_nVertices * m_vertexLayout->getStride();
 
-    // when all vertices are modified, it's better to update the entire mesh
-    if (vertexBytes - m_dirtySize < m_vertexLayout->getStride()) {
-
+    if (GLExtensions::supportsMapBuffer) {
         // invalidate/orphane the data store on the driver
         glBufferData(GL_ARRAY_BUFFER, vertexBytes, NULL, m_hint);
+        GLvoid* dataStore = glMapBuffer(GL_ARRAY_BUFFER, GL_WRITE_ONLY);
 
-        if (GLExtensions::supportsMapBuffer) {
-            GLvoid* dataStore = glMapBuffer(GL_ARRAY_BUFFER, GL_WRITE_ONLY);
+        // write memory client side
+        std::memcpy(dataStore, m_glVertexData, vertexBytes);
 
-            // write memory client side
-            std::memcpy(dataStore, m_glVertexData, vertexBytes);
-
-            glUnmapBuffer(GL_ARRAY_BUFFER);
-        } else {
-
+        glUnmapBuffer(GL_ARRAY_BUFFER);
+    } else {
+        // when all vertices are modified, it's better to update the entire mesh
+        if (vertexBytes - m_dirtySize < m_vertexLayout->getStride()) {
+            // invalidate/orphane the data store on the driver
+            glBufferData(GL_ARRAY_BUFFER, vertexBytes, NULL, m_hint);
             // if this buffer is still used by gpu on current frame this call will not wait
             // for the frame to finish using the vbo but "directly" send command to upload the data
             glBufferData(GL_ARRAY_BUFFER, vertexBytes, m_glVertexData, m_hint);
+        } else {
+            // perform simple sub data upload for part of the buffer
+            glBufferSubData(GL_ARRAY_BUFFER, m_dirtyOffset, m_dirtySize, m_glVertexData + m_dirtyOffset);
         }
-    } else {
-        // perform simple sub data upload for part of the buffer
-        glBufferSubData(GL_ARRAY_BUFFER, m_dirtyOffset, m_dirtySize, m_glVertexData + m_dirtyOffset);
     }
 
     m_dirtyOffset = 0;
