@@ -2,10 +2,10 @@
 
 namespace Tangram {
 
-TextLabel::TextLabel(std::string _text, Label::Transform _transform, Type _type, glm::vec2 _dim,
+TextLabel::TextLabel(Label::Transform _transform, Type _type, glm::vec2 _dim,
                      TextBuffer& _mesh, Range _vertexRange, Label::Options _options)
-    : Label(_transform, _dim, _type, static_cast<LabelMesh&>(_mesh), _vertexRange, _options),
-      m_text(_text) {}
+    : Label(_transform, _dim, _type, static_cast<LabelMesh&>(_mesh), _vertexRange, _options)
+{}
 
 void TextLabel::updateBBoxes() {
     glm::vec2 t = glm::vec2(cos(m_transform.state.rotation), sin(m_transform.state.rotation));

@@ -34,8 +34,7 @@ struct Parameters {
     float blurSpread = 0.0f;
     TextTransform transform = TextTransform::none;
     bool visible = true;
-    uint32_t priority = std::numeric_limits<uint32_t>::max();
-    glm::vec2 offset;
+    Label::Options labelOptions;
 
     bool isValid() {
         return fontSize > 0.f && !text.empty();

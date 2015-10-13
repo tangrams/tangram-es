@@ -64,8 +64,12 @@ layers:
                 color: 'purple'
                 order: 50
                 width: .03
-            # sprites:
-            #     sprite: sunburst
+            icons:
+                sprite: sunburst
+                collide: false
+                transition:
+                    [show, hide]:
+                        time: 0s
 
     earth:
         data: { source: osm }
@@ -225,6 +229,10 @@ layers:
                 offset: [0px, -15px]
                 size: 20px
                 priority: 5
+                collide: true
+                transition:
+                    [show, hide]:
+                        time: .3s
                 #size: [[13, 12px], [15, 18px]]
                 #interactive: true
 
@@ -272,7 +280,7 @@ layers:
         filter: { $zoom: { min: 14 } }
         draw:
             polygons:
-                style: polygons 
+                style: polygons
                 order: 50
                 color: [.85, .85, .83]
         # turn interactive feature selection on for buildings with names
@@ -282,7 +290,7 @@ layers:
                 polygons:
                     style: heightglow
                     color: [.65, .65, .63]
-                    interactive: true  
+                    interactive: true
         extruded:
             filter: { $zoom: { min: 15 } }
             draw:

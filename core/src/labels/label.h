@@ -64,13 +64,20 @@ public:
         Vertex::State state;
     };
 
+    struct Transition {
+        FadeEffect::Interpolation ease = FadeEffect::Interpolation::sine;
+        float time = 0.2;
+    };
+
     struct Options {
-        uint32_t color = 0xffffffff;
         glm::vec2 offset;
         uint32_t priority = std::numeric_limits<uint32_t>::max();
-
         bool interactive = false;
         std::shared_ptr<Properties> properties;
+        bool collide = true;
+        Transition selectTransition;
+        Transition hideTransition;
+        Transition showTransition;
     };
 
     Label(Transform _transform, glm::vec2 _size, Type _type, LabelMesh& _mesh, Range _vertexRange, Options _options);
@@ -124,13 +131,9 @@ private:
 
     bool offViewport(const glm::vec2& _screenSize);
 
-    void enterState(State _state, float _alpha = 1.0f);
+    inline void enterState(const State& _state, float _alpha = 1.0f);
 
     bool updateState(const glm::mat4& _mvp, const glm::vec2& _screenSize, float _dt);
-
-    void setScreenPosition(const glm::vec2& _screenPosition);
-
-    void setRotation(float _rotation);
 
     void setAlpha(float _alpha);
 

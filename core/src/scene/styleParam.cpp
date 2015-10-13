@@ -42,6 +42,10 @@ const std::map<std::string, StyleParamKey> s_StyleParamMap = {
     {"visible", StyleParamKey::visible},
     {"width", StyleParamKey::width},
     {"centroid", StyleParamKey::centroid},
+    {"collide", StyleParamKey::collide},
+    {"transition:show:time", StyleParamKey::transition_show_time},
+    {"transition:hide:time", StyleParamKey::transition_hide_time},
+    {"transition:selected:time", StyleParamKey::transition_selected_time},
 };
 
 static const char* keyName(StyleParamKey key) {
@@ -123,6 +127,14 @@ StyleParam::Value StyleParam::parseString(StyleParamKey key, const std::string& 
         }
         return vec2;
     }
+    case StyleParamKey::transition_hide_time:
+    case StyleParamKey::transition_show_time:
+    case StyleParamKey::transition_selected_time:
+        float time;
+        if (!parseTime(_value, time)) {
+            LOGW("Invalid time param '%s'", _value.c_str());
+        }
+        return time;
     case StyleParamKey::font_family:
     case StyleParamKey::font_weight:
     case StyleParamKey::font_style:
@@ -141,6 +153,7 @@ StyleParam::Value StyleParam::parseString(StyleParamKey key, const std::string& 
     case StyleParamKey::centroid:
     case StyleParamKey::interactive:
     case StyleParamKey::visible:
+    case StyleParamKey::collide:
         if (_value == "true") { return true; }
         if (_value == "false") { return false; }
         LOGW("Bool value required for capitalized/visible. Using Default.");
@@ -219,6 +232,9 @@ std::string StyleParam::toString() const {
         auto p = value.get<glm::vec2>();
         return k + "(" + std::to_string(p.x) + "px, " + std::to_string(p.y) + "px)";
     }
+    case StyleParamKey::transition_hide_time:
+    case StyleParamKey::transition_show_time:
+    case StyleParamKey::transition_selected_time:
     case StyleParamKey::font_family:
     case StyleParamKey::font_weight:
     case StyleParamKey::font_style:
@@ -231,6 +247,7 @@ std::string StyleParam::toString() const {
     case StyleParamKey::interactive:
     case StyleParamKey::visible:
     case StyleParamKey::centroid:
+    case StyleParamKey::collide:
         if (!value.is<bool>()) break;
         return k + std::to_string(value.get<bool>());
     case StyleParamKey::width:
@@ -261,8 +278,7 @@ std::string StyleParam::toString() const {
 int StyleParam::parseValueUnitPair(const std::string& _value, size_t start,
                                    StyleParam::ValueUnitPair& _result) {
 
-    static const char* units[] = { "px", "m" };
-    static const size_t ulen[] = { 2, 1 };
+    static const std::vector<std::string> units = { "px", "ms", "m", "s" };
 
     if (start >= _value.length()) { return -1; }
 
@@ -279,16 +295,41 @@ int StyleParam::parseValueUnitPair(const std::string& _value, size_t start,
 
     if (start >= _value.length()) { return start; }
 
-    for (int i = 0; i < 2; i++) {
-        if (_value.compare(start, ulen[i], units[i]) == 0) {
+    for (int i = 0; i < units.size(); ++i) {
+        const auto& unit = units[i];
+        std::string valueUnit;
+        if (unit == _value.substr(start, std::min<int>(_value.length(), unit.length()))) {
             _result.unit = static_cast<Unit>(i);
-            start += ulen[i];
+            start += unit.length();
             break;
         }
     }
 
     // TODO skip whitespace , whitespace
     return std::min(_value.length(), start + 1);
+}
+
+bool StyleParam::parseTime(const std::string &_value, float &_time) {
+    ValueUnitPair p;
+
+    if (!parseValueUnitPair(_value, 0, p)) {
+        return false;
+    }
+
+    switch (p.unit) {
+        case Unit::milliseconds:
+            _time = p.value / 1000.f;
+            break;
+        case Unit::seconds:
+            _time = p.value;
+            break;
+        default:
+            LOGW("Invalid unit provided for time %s", _value.c_str());
+            return false;
+            break;
+    }
+
+    return true;
 }
 
 bool StyleParam::parseVec2(const std::string& _value, const std::vector<Unit> units, glm::vec2& _vec) {

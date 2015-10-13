@@ -39,9 +39,13 @@ enum class StyleParamKey : uint8_t {
     visible,
     width,
     centroid,
+    collide,
+    transition_show_time,
+    transition_hide_time,
+    transition_selected_time
 };
 
-enum class Unit { pixel, meter };
+enum class Unit { pixel, milliseconds, meter, seconds };
 
 struct StyleParam {
 
@@ -55,6 +59,8 @@ struct StyleParam {
 
         bool isMeter() const { return unit == Unit::meter; }
         bool isPixel() const { return unit == Unit::pixel; }
+        bool isSeconds() const { return unit == Unit::seconds; }
+        bool isMilliseconds() const { return unit == Unit::milliseconds; }
 
     };
     struct Width : ValueUnitPair {
@@ -109,6 +115,8 @@ struct StyleParam {
     static bool parseFontSize(const std::string& _size, float& _pxSize);
 
     static uint32_t parseColor(const std::string& _color);
+
+    static bool parseTime(const std::string& _value, float& _time);
 
     static bool parseVec2(const std::string& _value, const std::vector<Unit> _allowedUnits, glm::vec2& _vec2);
 

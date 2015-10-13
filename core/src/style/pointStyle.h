@@ -21,12 +21,10 @@ protected:
         bool centroid = false;
         std::string sprite;
         std::string spriteDefault;
-        glm::vec2 offset;
         glm::vec2 size;
         uint32_t color = 0xffffffff;
-        uint32_t priority = std::numeric_limits<uint32_t>::max();
-        bool interactive;
         bool valid = true;
+        Label::Options labelOptions;
     };
 
     virtual void constructVertexLayout() override;
@@ -38,9 +36,7 @@ protected:
     void pushQuad(std::vector<Label::Vertex>& _vertices, const glm::vec2& _size, const glm::vec2& _uvBL, const glm::vec2& _uvTR, unsigned int _color) const;
     bool getUVQuad(Parameters& _params, glm::vec4& _quad) const;
 
-    Label::Options optionsFromPointParams(const Parameters& _params) const;
-
-    Parameters applyRule(const DrawRule& _rule) const;
+    Parameters applyRule(const DrawRule& _rule, const Properties& _props) const;
 
     virtual VboMesh* newMesh() const override {
         return new LabelMesh(m_vertexLayout, m_drawMode);
