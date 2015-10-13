@@ -21,6 +21,13 @@ inline T parseVec(const Node& node) {
             break;
         }
     }
+    if (node.IsScalar()) {
+        vec[0] = node.as<float>();
+        for (i = 1; i < vec.length(); i++) {
+            vec[i] = vec[0];
+        }
+    }
+
     return vec;
 }
 

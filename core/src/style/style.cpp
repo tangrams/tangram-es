@@ -168,6 +168,21 @@ void Style::onBeginDrawFrame(const View& _view, Scene& _scene, int _textureUnit)
     // Set Map Position
     m_shaderProgram->setUniformf("u_resolution", _view.getWidth(), _view.getHeight());
 
+    // const auto& mapPos = _view.getPosition();
+    // m_shaderProgram->setUniformf("u_map_position", mapPos.x, mapPos.y, _view.getZoom());
+    // m_shaderProgram->setUniformf("u_meters_per_pixel", _view.pixelsPerMeter());
+    // m_shaderProgram->setUniformMatrix3f("u_normalMatrix", glm::value_ptr(_view.getNormalMatrix()));
+    // m_shaderProgram->setUniformf("u_zoom", _view.getZoom());
+    // m_shaderProgram->setUniformf("u_resolution",
+    //                              _view.getWidth(),
+    //                              _view.getHeight());
+    // m_shaderProgram->setUniformf("u_map_position",
+    //                              _view.getPosition().x,
+    //                              _view.getPosition().y,
+    //                              _view.getPosition().z);
+    // m_shaderProgram->setUniformf("u_meters_per_pixel",
+    //                              (6378137.0 * M_PI * 2) / (256.0 * pow(2., _view.getZoom())));
+
     const auto& mapPos = _view.getPosition();
     m_shaderProgram->setUniformf("u_map_position", mapPos.x, mapPos.y, _view.getZoom());
     m_shaderProgram->setUniformMatrix3f("u_normalMatrix", _view.getNormalMatrix());

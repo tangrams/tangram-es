@@ -33,6 +33,7 @@ using YAML::NodeType;
 using YAML::BadConversion;
 
 #define LOGNode(fmt, node, ...) LOGW(fmt ":\n'%s'\n", ## __VA_ARGS__, Dump(node).c_str())
+#define LOGV(fmt, ...) // do { logMsg("SceneLoader: " fmt "\n", ## __VA_ARGS__); } while(0)
 
 namespace Tangram {
 
@@ -62,6 +63,7 @@ bool SceneLoader::loadScene(Node& config, Scene& _scene) {
     _scene.styles().emplace_back(new DebugStyle("debug"));
     _scene.styles().emplace_back(new PointStyle("points"));
 
+    LOGV("Loading sources:");
     if (Node sources = config["sources"]) {
         for (const auto& source : sources) {
             try { loadSource(source, _scene); }
@@ -73,6 +75,7 @@ bool SceneLoader::loadScene(Node& config, Scene& _scene) {
         LOGW("No source defined in the yaml scene configuration.");
     }
 
+    LOGV("Loading textures:");
     if (Node textures = config["textures"]) {
         for (const auto& texture : textures) {
             try { loadTexture(texture, _scene); }
@@ -84,6 +87,7 @@ bool SceneLoader::loadScene(Node& config, Scene& _scene) {
 
     std::unordered_set<std::string> mixedStyles;
 
+    LOGV("Loading styles:");
     if (Node styles = config["styles"]) {
         for (const auto& style : styles) {
             try {
@@ -115,6 +119,7 @@ bool SceneLoader::loadScene(Node& config, Scene& _scene) {
         styles[i]->setID(i);
     }
 
+    LOGV("Loading layers:");
     if (Node layers = config["layers"]) {
         for (const auto& layer : layers) {
             try { loadLayer(layer, _scene); }
@@ -124,6 +129,7 @@ bool SceneLoader::loadScene(Node& config, Scene& _scene) {
         }
     }
 
+    LOGV("Loading lights:");
     if (Node lights = config["lights"]) {
         for (const auto& light : lights) {
             try { loadLight(light, _scene); }
@@ -138,19 +144,23 @@ bool SceneLoader::loadScene(Node& config, Scene& _scene) {
         _scene.lights().push_back(std::move(amb));
     }
 
+    LOGV("Loading cameras:");
     if (Node cameras = config["cameras"]) {
         try { loadCameras(cameras, _scene); }
         catch (YAML::RepresentationException e) {
             LOGNode("Parsing cameras: '%s'", cameras, e.what());
         }
     }
+    LOGV("Done loading");
 
     loadBackground(config["scene"]["background"], _scene);
 
+    LOGV("Shader setup");
     for (auto& style : _scene.styles()) {
         style->build(_scene.lights());
     }
 
+    LOGV("Done");
     return true;
 }
 
@@ -845,55 +855,56 @@ void SceneLoader::loadLight(const std::pair<Node, Node>& node, Scene& scene) {
         sceneLight = std::make_unique<AmbientLight>(name);
 
     } else if (type == "directional") {
-        auto dLight(std::make_unique<DirectionalLight>(name));
+        auto l = std::make_unique<DirectionalLight>(name);
 
         if (Node direction = light["direction"]) {
-            dLight->setDirection(parseVec<glm::vec3>(direction));
+            l->setDirection(parseVec<glm::vec3>(direction));
         }
-        sceneLight = std::move(dLight);
+        sceneLight = std::move(l);
 
     } else if (type == "point") {
-        auto pLight(std::make_unique<PointLight>(name));
+        auto l = std::make_unique<PointLight>(name);
 
         if (Node position = light["position"]) {
-            pLight->setPosition(parseVec<glm::vec3>(position));
+            l->setPosition(parseVec<glm::vec3>(position));
         }
         if (Node radius = light["radius"]) {
             if (radius.size() > 1) {
-                pLight->setRadius(radius[0].as<float>(), radius[1].as<float>());
+                l->setRadius(radius[0].as<float>(), radius[1].as<float>());
             } else {
-                pLight->setRadius(radius.as<float>());
+                l->setRadius(radius.as<float>());
             }
         }
         if (Node att = light["attenuation"]) {
-            pLight->setAttenuation(att.as<float>());
+            l->setAttenuation(att.as<float>());
         }
-        sceneLight = std::move(pLight);
+        sceneLight = std::move(l);
 
     } else if (type == "spotlight") {
-        auto sLight(std::make_unique<SpotLight>(name));
+        auto l = std::make_unique<SpotLight>(name);
 
         if (Node position = light["position"]) {
-            sLight->setPosition(parseVec<glm::vec3>(position));
+            l->setPosition(parseVec<glm::vec3>(position));
         }
         if (Node direction = light["direction"]) {
-            sLight->setDirection(parseVec<glm::vec3>(direction));
+            l->setDirection(parseVec<glm::vec3>(direction));
         }
         if (Node radius = light["radius"]) {
             if (radius.size() > 1) {
-                sLight->setRadius(radius[0].as<float>(), radius[1].as<float>());
+                l->setRadius(radius[0].as<float>(), radius[1].as<float>());
             } else {
-                sLight->setRadius(radius.as<float>());
+                l->setRadius(radius.as<float>());
             }
         }
         if (Node angle = light["angle"]) {
-            sLight->setCutoffAngle(angle.as<float>());
+            l->setCutoffAngle(angle.as<float>());
         }
         if (Node exponent = light["exponent"]) {
-            sLight->setCutoffExponent(exponent.as<float>());
+            l->setCutoffExponent(exponent.as<float>());
         }
-        sceneLight = std::move(sLight);
+        sceneLight = std::move(l);
     }
+
     if (Node origin = light["origin"]) {
         const std::string originStr = origin.as<std::string>();
         if (originStr == "world") {
@@ -1314,7 +1325,7 @@ SceneLayer SceneLoader::loadSublayer(Node layer, const std::string& name, Scene&
 
     for (const auto& member : layer) {
 
-        const std::string key = member.first.as<std::string>();
+        auto& key = member.first.as<std::string>();
 
         if (key == "data") {
             // Ignored for sublayers
@@ -1337,6 +1348,7 @@ SceneLayer SceneLoader::loadSublayer(Node layer, const std::string& name, Scene&
         } else if (key == "visible") {
             // TODO: ignored for now
         } else {
+            LOGV(" -- sublayer %s", key.c_str());
             // Member is a sublayer
             sublayers.push_back(loadSublayer(member.second, (name + ":" + key), scene));
         }
@@ -1347,7 +1359,8 @@ SceneLayer SceneLoader::loadSublayer(Node layer, const std::string& name, Scene&
 
 void SceneLoader::loadLayer(const std::pair<Node, Node>& layer, Scene& scene) {
 
-    std::string name = layer.first.as<std::string>();
+    auto& name = layer.first.as<std::string>();
+    LOGV(" - layer: '%s'", name.c_str());
 
     std::string source;
     std::vector<std::string> collections;

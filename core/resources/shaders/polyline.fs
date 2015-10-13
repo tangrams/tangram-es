@@ -1,3 +1,4 @@
+#pragma POLYLINE-FS
 #pragma tangram: extensions
 
 #ifdef GL_ES
