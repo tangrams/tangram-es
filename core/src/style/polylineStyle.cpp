@@ -84,10 +84,8 @@ bool evalStyleParamWidth(StyleParamKey _key, const DrawRule& _rule, const Tile& 
     int zoom  = _tile.getID().z;
     double tileSize = _tile.getProjection()->TileSize();
 
-    // NB: Tile vertex coordinates are in the range -1..1 => 2,
-    // * 0.5 for half-width == 1.0 => 1.0 / tileSize
-    //double tileRes = 1.0 / _tile.getProjection()->TileSize();
-    double tileRes = 1.0 / tileSize;
+    // NB: 0.5 because 'width' will be extruded in both directions
+    double tileRes = 0.5 / _tile.getProjection()->TileSize();
 
 
     auto& styleParam = _rule.findParameter(_key);
