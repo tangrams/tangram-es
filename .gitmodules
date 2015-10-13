@@ -23,7 +23,7 @@
 	url = https://github.com/google/benchmark
 [submodule "core/include/variant"]
 	path = core/include/variant
-	url = https://github.com/mapbox/variant
+	url = https://github.com/tangrams/variant
 [submodule "core/include/earcut.hpp"]
 	path = core/include/earcut.hpp
 	url = https://github.com/tangrams/earcut.hpp
