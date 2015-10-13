@@ -1,252 +1,260 @@
 # Author @patriciogv - 2015
 
 cameras:
-  camera1:
-    type: isometric
+    camera1:
+        type: isometric
 
 lights:
-  directional1:
-    type: directional
-    origin: world
-    direction: [-1, -1, -1]
-    diffuse: [.5, .5, .5, 1.]
-    ambient: [0.3, 0.3, 0.3, 1.]
-    specular: 1.
-  point1:
-    type: point
-    position: [0, -100, 0]
-    origin: ground
-    ambient: .2
-    diffuse: .5
-    specular: .4
+    directional1:
+        type: directional
+        origin: world
+        direction: [-1, -1, -1]
+        diffuse: [.5, .5, .5, 1.]
+        ambient: [0.3, 0.3, 0.3, 1.]
+        specular: 1.
+    point1:
+        type: point
+        position: [0, -100, 0]
+        origin: ground
+        ambient: .2
+        diffuse: .5
+        specular: .4
 
-  # light1:
-  #   type: directional
-  #   direction: [0, 1, -.5]
-  #   diffuse: .5
-  #   ambient: .3
-  # light2:
-  #   type: point
-  #   position: [0, -500px, 500px]
-  #   origin: ground
-  #   diffuse: .5
-  #   ambient: .3
+    # light1:
+    #     type: directional
+    #     direction: [0, 1, -.5]
+    #     diffuse: .5
+    #     ambient: .3
+    # light2:
+    #     type: point
+    #     position: [0, -500px, 500px]
+    #     origin: ground
+    #     diffuse: .5
+    #     ambient: .3
 
 scene:
-  background:
-    color: [0.302,0.302,0.306]
+    background:
+        color: [0.302,0.302,0.306]
 
 styles:
-  earth-hatch:
-    base: polygons
-    lighting: false
-    mix: tools
-    shaders:
-      uniforms:
-          u_hatch: img/hatch_0.png
-      blocks:
-        # position: |
-        #   v_position = a_position.xyz * 32767.;
-        global: |
-          vec4 TileTexture(sampler2D tex, float scale) {
-            vec2 IN = TileCoords()*scale;
-            vec2 OUT = TileCoords()*scale*2.;
-            return mix(texture2D(tex,fract(IN)), texture2D(tex,fract(OUT)), fract(u_map_position.z));
-          }
-        color: |
-          float pattern = 1.0-TileTexture(u_hatch,3.).a;
-          color.rgb = mix(vec3(0.302,0.302,0.306), vec3(0.976,0.953,0.890), pattern);
+    normal_model:
+        shaders:
+            blocks:
+                global: |
+                    varying vec3 v_normalModel;
+                position: |
+                    #ifdef TANGRAM_VERTEX_SHADER
+                    v_normalModel = a_normal;
+                    #endif
+    earth-hatch:
+        base: polygons
+        lighting: false
+        mix: tools
+        shaders:
+            uniforms:
+                    u_hatch: img/hatch_0.png
+            blocks:
+                # position: |
+                #     v_position = a_position.xyz * 32767.;
+                global: |
+                    vec4 TileTexture(sampler2D tex, float scale) {
+                        vec2 IN = TileCoords()*scale;
+                        vec2 OUT = TileCoords()*scale*2.;
+                        return mix(texture2D(tex,fract(IN)), texture2D(tex,fract(OUT)), fract(u_map_position.z));
+                    }
+                color: |
+                    float pattern = 1.0-TileTexture(u_hatch,3.).a;
+                    color.rgb = mix(vec3(0.302,0.302,0.306), vec3(0.976,0.953,0.890), pattern);
 
-  landuse-hatch:
-    base: polygons
-    mix: [ tools, earth-hatch ]
-    shaders:
-      uniforms:
-          u_hatch: img/hatch_2.png
-  paper:
-    base: polygons
-    texcoords: true
-    material:
-      normal:
-        texture: img/normal-0031.jpg
-        mapping: planar
-        scale: 0.001
-      ambient: 1.
-      diffuse: 1.
-  tools:
-    shaders:
-      blocks:
-        global: |
-          // Coord System
-          //================================
-          varying vec3 v_pos;
-          vec2 TileCoords(){return fract(v_pos.xy);}
-          //vec2 TileCoords(){return fract(v_pos.xy*0.0002445);}
-          //vec2 TileCoords(){return fract(v_world_position.xy);}
-          // Color
-          //================================
-          float getBrightness(in vec3 _rgb){
-            return 0.212655 * _rgb.r + 0.715158 * _rgb.g + 0.072187 * _rgb.b;
-          }
-          // Random & Noise
-          //================================
-          float random(in vec2 _st){
-            return fract(sin(dot(_st.xy,
-                       vec2(12.9898,78.233)))*
-              43758.5453123);
-          }
-          float noise (in vec2 _st) {
-            vec2 i = floor(_st);
-            vec2 f = fract(_st);
-            float a = random(i);
-            float b = random(i + vec2(1.0, 0.0));
-            float c = random(i + vec2(0.0, 1.0));
-            float d = random(i + vec2(1.0, 1.0));
-            vec2 u = f * f * (3.0 - 2.0 * f);
-            return mix(a, b, u.x) +
-                (c - a)* u.y * (1.0 - u.x) +
-                (d - b) * u.x * u.y;
-          }
-          // Cross Hatch LUT
-          //==============================
-          float hatch( sampler2D hatchmap, vec2 st, float brightness ){
-            st  = fract(st)/3.;
-            brightness = clamp(brightness,0.,0.9999999);
-            vec2 pos1 = vec2(floor(brightness*9.0)/3.,
-                     floor(brightness*3.0)/3.) + st;
-            float minBrightness = clamp(brightness-0.111111111,0.,1.0);
-            vec2 pos2 = vec2(floor(minBrightness*9.0)/3.,
-                     floor(minBrightness*3.0)/3.)+st;
-            return mix(texture2D( hatchmap,fract(pos1) ).a,
-                   texture2D( hatchmap,fract(pos2) ).a,
-                   1.0-fract(brightness*9.0));
-          }
-        position: |
-          v_pos = a_position.xyz; // * 32767.;
-  ink-lines:
-    base: lines
-    mix: tools
-    texcoords: true
-    lighting: false
-    shaders:
-      blocks:
-        color: |
-          vec2 uv = v_texcoord;
-          color.rgb = mix(vec3(0.302,0.302,0.306),vec3(0.976,0.953,0.890),1.0-
-                     (smoothstep(0.0,0.1,uv.x) * smoothstep(0.0,0.1,1.0-uv.x)+noise(uv*vec2(2.,70.)) ));
-  buildings:
-    base: polygons
-    mix: tools
-    texcoords: true
-    material:
-      ambient: 1.
-      diffuse: 1.
-    shaders:
-      uniforms:
-        u_hatchmap: img/hatch-0002.png
-      blocks:
-        position: |
-          position.z *= max(1.0,0.5+(1.0-(u_map_position.z/20.0))*5.0);
-        filter: |
-          vec2 uv = v_texcoord;
-          float b = getBrightness(light_accumulator_diffuse.rgb);
-          float pattern = 1.0;
-          if (abs(dot(v_normal, u_normalMatrix * vec3(0.,0.,1.))) < 0.01){
-          //if ( dot(v_normal,vec3(0.,0.,1.)) == 0.0 ){
-            // Walls
-            b *=  clamp(uv.y*1.5,0.0,1.0)+0.2;
-            pattern = 1.-hatch(u_hatchmap,uv,b);
-            vec2 edge = vec2(0.1,0.05)*noise(uv*20.);
-            vec2 blend = smoothstep(vec2(0.0),edge,uv)*smoothstep(vec2(0.0),edge,vec2(1.)-uv);
-            pattern = mix(1.0,pattern,blend.x*blend.y);
-          } else {
-            // Roof
-            b *= 10.8;
-            uv = v_world_position.xy*0.01;
-            const float pixel_scale = 695.;
-            float meter_pixels = u_meters_per_pixel * 5.0;
-            //uv = gl_FragCoord.xy / pixel_scale;
-            const float dot_wrap = 1000.;
-            uv += mod(u_map_position.xy / meter_pixels, dot_wrap) / pixel_scale;
-            uv *= 1.00;
-            pattern = 1.-hatch(u_hatchmap,uv,b);
-            //pattern = 1.0-TileTexture(u_hatchmap,0.5).a;
-          }
-          color.rgb = mix(vec3(0.302,0.302,0.306),vec3(0.976,0.953,0.890),pattern);
-  buildingsLines:
-    base: lines
-    lighting: false
-    shaders:
-      blocks:
-        width: |
-          width *= 0.2+min(pow(position.z*0.006,2.),.6);
-        position: |
-          position.z *= max(1.0,0.5+(1.0-(u_map_position.z/20.0))*5.0);
+    landuse-hatch:
+        base: polygons
+        mix: [ tools, earth-hatch ]
+        shaders:
+            uniforms:
+                    u_hatch: img/hatch_2.png
+    paper:
+        base: polygons
+        texcoords: true
+        material:
+            normal:
+                texture: img/normal-0031.jpg
+                mapping: planar
+                scale: 0.001
+            ambient: 1.
+            diffuse: 1.
+    tools:
+        shaders:
+            blocks:
+                global: |
+                    // Coord System
+                    //================================
+                    varying vec3 v_pos;
+                    vec2 TileCoords(){return fract(v_pos.xy);}
+                    //vec2 TileCoords(){return fract(v_pos.xy*0.0002445);}
+                    //vec2 TileCoords(){return fract(v_world_position.xy);}
+                    // Color
+                    //================================
+                    float getBrightness(in vec3 _rgb){
+                        return 0.212655 * _rgb.r + 0.715158 * _rgb.g + 0.072187 * _rgb.b;
+                    }
+                    // Random & Noise
+                    //================================
+                    float random(in vec2 _st){
+                        return fract(sin(dot(_st.xy,
+                                             vec2(12.9898,78.233)))*
+                            43758.5453123);
+                    }
+                    float noise (in vec2 _st) {
+                        vec2 i = floor(_st);
+                        vec2 f = fract(_st);
+                        float a = random(i);
+                        float b = random(i + vec2(1.0, 0.0));
+                        float c = random(i + vec2(0.0, 1.0));
+                        float d = random(i + vec2(1.0, 1.0));
+                        vec2 u = f * f * (3.0 - 2.0 * f);
+                        return mix(a, b, u.x) +
+                                (c - a)* u.y * (1.0 - u.x) +
+                                (d - b) * u.x * u.y;
+                    }
+                    // Cross Hatch LUT
+                    //==============================
+                    float hatch( sampler2D hatchmap, vec2 st, float brightness ){
+                        st    = fract(st)/3.;
+                        brightness = clamp(brightness,0.,0.9999999);
+                        vec2 pos1 = vec2(floor(brightness*9.0)/3.,
+                                         floor(brightness*3.0)/3.) + st;
+                        float minBrightness = clamp(brightness-0.111111111,0.,1.0);
+                        vec2 pos2 = vec2(floor(minBrightness*9.0)/3.,
+                                         floor(minBrightness*3.0)/3.)+st;
+                        return mix(texture2D( hatchmap,fract(pos1) ).a,
+                                     texture2D( hatchmap,fract(pos2) ).a,
+                                     1.0-fract(brightness*9.0));
+                    }
+                position: |
+                    v_pos = a_position.xyz; // * 32767.;
+    ink-lines:
+        base: lines
+        mix: tools
+        texcoords: true
+        lighting: false
+        shaders:
+            blocks:
+                color: |
+                    vec2 uv = v_texcoord;
+                    color.rgb = mix(vec3(0.302,0.302,0.306),vec3(0.976,0.953,0.890),1.0-
+                               (smoothstep(0.0,0.1,uv.x) * smoothstep(0.0,0.1,1.0-uv.x)+noise(uv*vec2(2.,70.)) ));
+    buildings:
+        base: polygons
+        mix: [tools, normal_model]
+        texcoords: true
+        material:
+            ambient: 1.
+            diffuse: 1.
+        shaders:
+            uniforms:
+                u_hatchmap: img/hatch-0002.png
+            blocks:
+                position: |
+                    position.z *= max(1.0,0.5+(1.0-(u_map_position.z/20.0))*5.0);
+                filter: |
+                    vec2 uv = v_texcoord;
+                    float b = getBrightness(light_accumulator_diffuse.rgb);
+                    float pattern = 1.0;
+                    if (dot(v_normalModel,vec3(0.,0.,1.)) == 0.0){
+                        // Walls
+                        b *= clamp(uv.y*1.5,0.0,1.0)+0.2;
+                        pattern = 1.-hatch(u_hatchmap,uv,b);
+                        vec2 edge = vec2(0.1,0.05)*noise(uv*20.);
+                        vec2 blend = smoothstep(vec2(0.0),edge,uv)*smoothstep(vec2(0.0),edge,vec2(1.)-uv);
+                        pattern = mix(1.0,pattern,blend.x*blend.y);
+                    } else {
+                        // Roof
+                        b *= 10.8;
+                        uv = v_world_position.xy*0.01;
+                        const float pixel_scale = 695.;
+                        float meter_pixels = u_meters_per_pixel * 5.0;
+                        //uv = gl_FragCoord.xy / pixel_scale;
+                        const float dot_wrap = 1000.;
+                        uv += mod(u_map_position.xy / meter_pixels, dot_wrap) / pixel_scale;
+                        uv *= 1.00;
+                        pattern = 1.-hatch(u_hatchmap,uv,b);
+                        //pattern = 1.0-TileTexture(u_hatchmap,0.5).a;
+                    }
+                    color.rgb = mix(vec3(0.302,0.302,0.306),vec3(0.976,0.953,0.890),pattern);
+    buildingsLines:
+        base: lines
+        lighting: false
+        shaders:
+            blocks:
+                width: |
+                    width *= 0.2+min(pow(position.z*0.006,2.),.6);
+                position: |
+                    position.z *= max(1.0,0.5+(1.0-(u_map_position.z/20.0))*5.0);
 sources:
-  osm:
-    type: MVT
-    url: https://vector.mapzen.com/osm/all/{z}/{x}/{y}.mvt
+    osm:
+        type: MVT
+        url: https://vector.mapzen.com/osm/all/{z}/{x}/{y}.mvt
 
 layers:
-  earth:
-    data: { source: osm }
-    draw:
-      earth-hatch:
-        order: 0
-        color: [[14,[1.,1.,1.]],[18,[1.,1.,1.]]]
-  landuse:
-    data: { source: osm }
-    draw:
-      landuse-hatch:
-        order: 1
-        color: [0.302,0.302,0.306]
-  water:
-    data: { source: osm }
-    draw:
-      paper:
-        order: 2
-        color: '#343434'
-  roads:
-    data: { source: osm }
-    filter: { not: { highway: service, kind: rail } }
-    properties: { width: 0.03 }
-    draw:
-      ink-lines:
-        order: 3
-        color: '#343434'
-        width: 0.08
-  buildings:
-    data: { source: osm }
-    draw:
-      buildings:
-        order: 4
-        color: '#ff00ff'
-        #Style.color.pseudoRandomColor()
-    extruded:
-      filter: { $zoom: { min: 13 } }
-      draw:
-        buildings:
-          extrude: true
-        buildingsLines:
-          order: 6
-          width: [[12, 0.01], [14, 0.01], [15, 0.05], [17, 0.01], [18, 0.01]]
-          extrude: true
-          color: [0.217,0.217,0.217]
-  places:
-    data: { source: osm }
-    filter: { name: true }
-    draw:
-      text:
-        font:
-          typeface: Italic 20px Baskerville
-          fill: black
-          stroke: { color: [0.976,0.953,0.890] , width: 7 }
-  landuse_labels:
-    data: { source: osm }
-    filter: { name: true, kind: park, $zoom: { min: 16 } }
-    draw:
-      text:
-        font:
-          typeface: Italic 18px Baskerville
-          fill: black
-          stroke: { color: [0.976,0.953,0.890] , width: 7 }
+    earth:
+        data: { source: osm }
+        draw:
+            earth-hatch:
+                order: 0
+                color: [[14,[1.,1.,1.]],[18,[1.,1.,1.]]]
+    landuse:
+        data: { source: osm }
+        draw:
+            landuse-hatch:
+                order: 1
+                color: [0.302,0.302,0.306]
+    water:
+        data: { source: osm }
+        draw:
+            paper:
+                order: 2
+                color: '#343434'
+    roads:
+        data: { source: osm }
+        filter: { not: { highway: service, kind: rail } }
+        properties: { width: 0.03 }
+        draw:
+            ink-lines:
+                order: 3
+                color: '#343434'
+                width: 0.08
+    buildings:
+        data: { source: osm }
+        draw:
+            buildings:
+                order: 4
+                color: '#ff00ff'
+                #Style.color.pseudoRandomColor()
+        extruded:
+            filter: { $zoom: { min: 13 } }
+            draw:
+                buildings:
+                    extrude: true
+                buildingsLines:
+                    order: 6
+                    width: [[12, 0.01], [14, 0.01], [15, 0.05], [17, 0.01], [18, 0.01]]
+                    extrude: true
+                    color: [0.217,0.217,0.217]
+    places:
+        data: { source: osm }
+        filter: { name: true }
+        draw:
+            text:
+                font:
+                    typeface: Italic 20px Baskerville
+                    fill: black
+                    stroke: { color: [0.976,0.953,0.890] , width: 7 }
+    landuse_labels:
+        data: { source: osm }
+        filter: { name: true, kind: park, $zoom: { min: 16 } }
+        draw:
+            text:
+                font:
+                    typeface: Italic 18px Baskerville
+                    fill: black
+                    stroke: { color: [0.976,0.953,0.890] , width: 7 }

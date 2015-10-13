@@ -21,8 +21,16 @@ lights:
         diffuse: .5
         specular: .4
 styles:
+    normal_model:
+        shaders:
+            blocks:
+                global: |
+                    varying vec3 v_normalModel;
+                position: |
+                    #ifdef TANGRAM_VERTEX_SHADER
+                    v_normalModel = a_normal;
+                    #endif
     tools:
-        base: polygons
         shaders:
             blocks:
                 global: |
@@ -83,6 +91,7 @@ styles:
                         }
                         return m;
                     }
+
     grain:
         base: polygons
         mix: tools
@@ -94,7 +103,7 @@ styles:
         animated: true
         texcoords: true
         base: polygons
-        mix: tools
+        mix: [tools, normal_model]
         material:
             shininess: 1.
             specular: 0.0
@@ -104,8 +113,7 @@ styles:
                 color: |
                     color.rgb *= vec3(min((v_world_position.z*.001 + .5),1.));
                     float t = fract(u_time*0.0000005);
-                    //if (dot(v_normal,vec3(0.,0.,1.)) == 0.0){
-                    if (abs(dot(v_normal, u_normalMatrix * vec3(0.,0.,1.))) < 0.01){
+                    if (abs(dot(v_normalModel,vec3(0.,0.,1.))) == 0.0){
                         vec2 st = vec2(v_texcoord.x*10.,v_world_position.z*0.2);
                         vec2 ipos = floor(st);
                         vec2 fpos = fract(st);
@@ -120,7 +128,7 @@ styles:
     offices:
         texcoords: true
         base: polygons
-        mix: tools
+        mix: [tools, normal_model]
         material:
             shininess: 1.
             specular: 0.0
@@ -129,8 +137,7 @@ styles:
             blocks:
                 color: |
                     color.rgb *= vec3(min((v_world_position.z*.001 + .5),1.));
-                    //if (dot(v_normal,vec3(0.,0.,1.)) == 0.0){
-                    if (abs(dot(v_normal, u_normalMatrix * vec3(0.,0.,1.))) < 0.01){
+                    if (dot(v_normalModel,vec3(0.,0.,1.)) == 0.0){
                         vec2 st = vec2(v_texcoord.x*10.,v_world_position.z*0.2);
                         vec2 ipos = floor(st);
                         vec2 fpos = fract(st);
@@ -147,7 +154,7 @@ styles:
     modern-buildings:
         texcoords: true
         base: polygons
-        mix: tools
+        mix: [tools, normal_model]
         material:
             shininess: 1.
             specular: 1.0
@@ -156,8 +163,7 @@ styles:
             blocks:
                 color: |
                     color.rgb *= vec3(min((v_world_position.z*.001 + .5),1.));
-                    //if (dot(v_normal,vec3(0.,0.,1.)) == 0.0){
-                    if (abs(dot(v_normal, u_normalMatrix * vec3(0.,0.,1.))) < 0.01){
+                    if (dot(v_normalModel,vec3(0.,0.,1.)) == 0.0){
                         vec2 st = vec2(v_texcoord.x*10.,v_world_position.z*0.2);
                         float scale = 0.8;
 

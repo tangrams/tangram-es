@@ -6,6 +6,15 @@ cameras:
         focal_length: [[16, 2], [20, 6]] # pairs of [zoom, focal len]
         vanishing_point: [-250, -250] # relative to center of screen, in pixels
 styles:
+    normal_model:
+        shaders:
+            blocks:
+                global: |
+                    varying vec3 v_normalModel;
+                position: |
+                    #ifdef TANGRAM_VERTEX_SHADER
+                    v_normalModel = a_normal;
+                    #endif
     tools:
         shaders:
             blocks:
@@ -175,7 +184,7 @@ styles:
     
     buildings:
         base: polygons
-        mix: tools
+        mix: [tools, normal_model]
         animated: true
         texcoords: true
         shaders:
@@ -188,8 +197,7 @@ styles:
                 position: |
                     position.z *= max(1.0,0.5+(1.0-(u_map_position.z/20.0))*5.0);
                 color: |
-                    if (abs(dot(v_normal, u_normalMatrix * vec3(0.,0.,1.))) < 0.0001) {
-                        //if (dot(v_normal,vec3(0.,0.,1.)) == 0.){
+                    if (dot(v_normalModel,vec3(0.,0.,1.)) == 0.){
                         float r = random(getBrightness(color.rgb));
                         float amount = 0.5+random(color.rg)*0.5;
                         

@@ -1,0 +1,181 @@
+cameras:
+  camera1:
+    type: isometric
+lights:
+  light1:
+    direction: [0, 1, -.5]
+    type: directional
+    ambient: [.3, .3, .3]
+    diffuse: [.6, .6, .6]
+  lightTopRight:
+    radius: 1000
+    origin: ground
+    position: [500, 200, 500]
+    type: point
+    diffuse: .35
+    ambient: .1
+  lightBottomLeft:
+    position: [-700, -800, 200]
+    type: point
+    radius: 1000
+    origin: ground
+    diffuse: .35
+    ambient: .1
+  lightTopLeft:
+    radius: 1000
+    type: point
+    origin: ground
+    ambient: [.1, .1, .1]
+    position: [-500, 200, 500]
+    diffuse: [.35, .35, .35]
+  lightBottomRight:
+    radius: 1000
+    diffuse: .35
+    origin: ground
+    position: [700, -800, 200]
+    type: point
+    ambient: .1
+styles:
+  landuse-hatch:
+    base: polygons
+    lighting: false
+    shaders:
+      defines:
+        STYLE: landuse-hatch
+      uniforms:
+        u_hatch: img/hatch_2.png
+      blocks:
+        vertex_shader: "precision highp float;\nuniform mat4 u_model;\nuniform mat4 u_view;\nuniform mat4 u_proj;\nuniform mat3 u_normalMatrix;\nuniform vec3 u_map_position;\nuniform vec3 u_tile_origin;\nattribute vec4 a_position;\nattribute vec4 a_color;\nattribute vec3 a_normal;\nattribute vec2 a_texcoord;\nattribute float a_layer;\nvarying vec4 v_world_position;\nvarying vec4 v_position;\nvarying vec4 v_color;\nvarying vec3 v_normal;\nvarying vec2 v_texcoord;\nvarying vec3 v_pos;\nvoid main ()\n{\n  vec4 position_1;\n  v_color = a_color;\n  v_texcoord = a_texcoord;\n  v_normal = normalize((u_normalMatrix * a_normal));\n  position_1 = (u_model * a_position);\n  vec4 tmpvar_2;\n  tmpvar_2.zw = vec2(0.0, 0.0);\n  tmpvar_2.xy = u_map_position.xy;\n  v_world_position = (position_1 + (vec4(mod (tmpvar_2, 100000.0))));\n  v_pos = (a_position.xyz * 2048.0);\n  v_position = (u_view * position_1);\n  gl_Position = (u_proj * v_position);\n  gl_Position.z = (gl_Position.z / (1.0 + (0.1 * \n    (abs(u_tile_origin.z) - u_tile_origin.z)\n  )));\n  gl_Position.z = (gl_Position.z - ((a_layer * 1.5e-05) * gl_Position.w));\n}\n\n"
+        fragment_shader: "precision highp float;\nuniform vec3 u_map_position;\nuniform sampler2D u_hatch;\nvarying vec4 v_color;\nvarying vec3 v_pos;\nvoid main ()\n{\n  lowp vec4 color_1;\n  color_1.w = v_color.w;\n  vec2 tmpvar_2;\n  tmpvar_2 = (v_pos.xy * 0.0002445);\n  color_1.xyz = mix (vec3(0.271, 0.267, 0.243), vec3(0.949, 0.957, 0.949), (1.0 - mix (texture2D (u_hatch, \n    fract((fract(tmpvar_2) * 3.0))\n  ), texture2D (u_hatch, \n    fract((6.0 * fract(tmpvar_2)))\n  ), \n    fract(u_map_position.z)\n  ).w));\n  gl_FragColor = color_1;\n}\n\n"
+  buildingsLines:
+    lighting: false
+    shaders:
+      blocks:
+        fragment_shader: "precision highp float;\nvarying vec4 v_color;\nvoid main ()\n{\n  gl_FragColor = v_color;\n}\n\n"
+        vertex_shader: "precision highp float;\nuniform mat4 u_model;\nuniform mat4 u_view;\nuniform mat4 u_proj;\nuniform mat3 u_normalMatrix;\nuniform vec3 u_map_position;\nuniform vec3 u_tile_origin;\nattribute vec4 a_position;\nattribute vec4 a_color;\nattribute vec4 a_extrude;\nattribute vec2 a_texcoord;\nattribute float a_layer;\nvarying vec4 v_world_position;\nvarying vec4 v_position;\nvarying vec4 v_color;\nvarying vec3 v_normal;\nvarying vec2 v_texcoord;\nvoid main ()\n{\n  float width_1;\n  vec4 position_2;\n  position_2.zw = a_position.zw;\n  v_color = a_color;\n  v_texcoord = a_texcoord;\n  v_normal = (u_normalMatrix * vec3(0.0, 0.0, 1.0));\n  float tmpvar_3;\n  float tmpvar_4;\n  tmpvar_4 = abs(u_tile_origin.z);\n  tmpvar_3 = (u_map_position.z - tmpvar_4);\n  width_1 = (a_extrude.z + (a_extrude.w * tmpvar_3));\n  width_1 = (width_1 * exp2(-(tmpvar_3)));\n  float tmpvar_5;\n  tmpvar_5 = (a_position.z * 0.006);\n  width_1 = (width_1 * (0.2 + min (\n    (tmpvar_5 * tmpvar_5)\n  , 0.6)));\n  position_2.xy = (a_position.xy + (a_extrude.xy * width_1));\n  position_2 = (u_model * position_2);\n  vec4 tmpvar_6;\n  tmpvar_6.zw = vec2(0.0, 0.0);\n  tmpvar_6.xy = u_map_position.xy;\n  v_world_position = (position_2 + (vec4(mod (tmpvar_6, 100000.0))));\n  position_2.z = (position_2.z * max (1.0, (0.5 + \n    ((1.0 - (u_map_position.z / 20.0)) * 5.0)\n  )));\n  v_position = (u_view * position_2);\n  gl_Position = (u_proj * v_position);\n  gl_Position.z = (gl_Position.z / (1.0 + (0.1 * \n    (tmpvar_4 - u_tile_origin.z)\n  )));\n  gl_Position.z = (gl_Position.z - ((a_layer * 1.5e-05) * gl_Position.w));\n}\n\n"
+      defines:
+        STYLE: buildingsLines
+    base: lines
+  buildings:
+    texcoords: true
+    base: polygons
+    material:
+      diffuse: 1.
+      ambient:
+        texture: img/sem-pericoli.png
+        mapping: spheremap
+    shaders:
+      uniforms:
+        u_hatchmap: img/hatch-0002.png
+      blocks:
+        fragment_shader: "precision highp float;\nstruct Material {\n  vec4 ambient;\n  vec3 ambientScale;\n  vec4 diffuse;\n};\nstruct PointLight {\n  vec4 ambient;\n  vec4 diffuse;\n  vec4 specular;\n  vec4 position;\n  float outerRadius;\n};\nuniform mat3 u_normalMatrix;\nuniform vec3 u_map_position;\nuniform float u_meters_per_pixel;\nuniform float u_device_pixel_ratio;\nuniform sampler2D u_hatchmap;\nvarying vec4 v_position;\nvarying vec4 v_color;\nvarying vec3 v_normal;\nvarying vec2 v_texcoord;\nuniform Material u_material;\nuniform sampler2D u_material_ambient_texture;\nvec4 light_accumulator_ambient;\nvec4 light_accumulator_diffuse;\nuniform PointLight u_lightTopRight;\nuniform PointLight u_lightBottomLeft;\nuniform PointLight u_lightTopLeft;\nuniform PointLight u_lightBottomRight;\nvoid main ()\n{\n  vec4 tmpvar_1;\n  vec4 tmpvar_2;\n  vec4 tmpvar_3;\n  vec4 tmpvar_4;\n  tmpvar_4 = u_lightTopRight.position;\n  tmpvar_3 = u_lightBottomLeft.position;\n  tmpvar_2 = u_lightTopLeft.position;\n  tmpvar_1 = u_lightBottomRight.position;\n  lowp float pattern_5;\n  highp float b_6;\n  highp vec2 uv_7;\n  lowp vec4 color_8;\n  lowp vec4 color_9;\n  vec3 r_10;\n  vec3 tmpvar_11;\n  tmpvar_11 = normalize(normalize(v_position.xyz));\n  vec3 tmpvar_12;\n  tmpvar_12 = (tmpvar_11 - (2.0 * (\n    dot (v_normal, tmpvar_11)\n   * v_normal)));\n  r_10.xy = tmpvar_12.xy;\n  r_10.z = (tmpvar_12.z + 1.0);\n  light_accumulator_diffuse = (vec4(0.6, 0.6, 0.6, 0.0) * clamp (dot (v_normal, vec3(-0.0, -0.894427, 0.447214)), 0.0, 1.0));\n  float attenuation_13;\n  float tmpvar_14;\n  vec3 x_15;\n  x_15 = (tmpvar_4.xyz - v_position.xyz);\n  tmpvar_14 = sqrt(dot (x_15, x_15));\n  float tmpvar_16;\n  tmpvar_16 = clamp ((tmpvar_14 / u_lightTopRight.outerRadius), 0.0, 1.0);\n  attenuation_13 = (1.0 - (tmpvar_16 * tmpvar_16));\n  light_accumulator_ambient = (vec4(0.3, 0.3, 0.3, 0.0) + (u_lightTopRight.ambient * attenuation_13));\n  light_accumulator_diffuse = (light_accumulator_diffuse + ((u_lightTopRight.diffuse * \n    clamp (dot (((tmpvar_4.xyz - v_position.xyz) / tmpvar_14), v_normal), 0.0, 1.0)\n  ) * attenuation_13));\n  float attenuation_17;\n  float tmpvar_18;\n  vec3 x_19;\n  x_19 = (tmpvar_3.xyz - v_position.xyz);\n  tmpvar_18 = sqrt(dot (x_19, x_19));\n  float tmpvar_20;\n  tmpvar_20 = clamp ((tmpvar_18 / u_lightBottomLeft.outerRadius), 0.0, 1.0);\n  attenuation_17 = (1.0 - (tmpvar_20 * tmpvar_20));\n  light_accumulator_ambient = (light_accumulator_ambient + (u_lightBottomLeft.ambient * attenuation_17));\n  light_accumulator_diffuse = (light_accumulator_diffuse + ((u_lightBottomLeft.diffuse * \n    clamp (dot (((tmpvar_3.xyz - v_position.xyz) / tmpvar_18), v_normal), 0.0, 1.0)\n  ) * attenuation_17));\n  float attenuation_21;\n  float tmpvar_22;\n  vec3 x_23;\n  x_23 = (tmpvar_2.xyz - v_position.xyz);\n  tmpvar_22 = sqrt(dot (x_23, x_23));\n  float tmpvar_24;\n  tmpvar_24 = clamp ((tmpvar_22 / u_lightTopLeft.outerRadius), 0.0, 1.0);\n  attenuation_21 = (1.0 - (tmpvar_24 * tmpvar_24));\n  light_accumulator_ambient = (light_accumulator_ambient + (u_lightTopLeft.ambient * attenuation_21));\n  light_accumulator_diffuse = (light_accumulator_diffuse + ((u_lightTopLeft.diffuse * \n    clamp (dot (((tmpvar_2.xyz - v_position.xyz) / tmpvar_22), v_normal), 0.0, 1.0)\n  ) * attenuation_21));\n  float attenuation_25;\n  float tmpvar_26;\n  vec3 x_27;\n  x_27 = (tmpvar_1.xyz - v_position.xyz);\n  tmpvar_26 = sqrt(dot (x_27, x_27));\n  float tmpvar_28;\n  tmpvar_28 = clamp ((tmpvar_26 / u_lightBottomRight.outerRadius), 0.0, 1.0);\n  attenuation_25 = (1.0 - (tmpvar_28 * tmpvar_28));\n  light_accumulator_ambient = (light_accumulator_ambient + (u_lightBottomRight.ambient * attenuation_25));\n  light_accumulator_diffuse = (light_accumulator_diffuse + ((u_lightBottomRight.diffuse * \n    clamp (dot (((tmpvar_1.xyz - v_position.xyz) / tmpvar_26), v_normal), 0.0, 1.0)\n  ) * attenuation_25));\n  color_9 = ((light_accumulator_ambient * v_color) * (u_material.ambient * texture2D (u_material_ambient_texture, (\n    (tmpvar_12.xy / (2.0 * sqrt(dot (r_10, r_10))))\n   + 0.5))));\n  color_9 = (color_9 + ((light_accumulator_diffuse * v_color) * u_material.diffuse));\n  lowp vec4 tmpvar_29;\n  tmpvar_29 = clamp (color_9, 0.0, 1.0);\n  color_9 = tmpvar_29;\n  color_8 = tmpvar_29;\n  uv_7 = v_texcoord;\n  highp float tmpvar_30;\n  tmpvar_30 = (((0.212655 * light_accumulator_diffuse.x) + (0.715158 * light_accumulator_diffuse.y)) + (0.072187 * light_accumulator_diffuse.z));\n  b_6 = tmpvar_30;\n  pattern_5 = 1.0;\n  float tmpvar_31;\n  tmpvar_31 = abs(dot (v_normal, (u_normalMatrix * vec3(0.0, 0.0, 1.0))));\n  if ((tmpvar_31 < 0.01)) {\n    b_6 = (tmpvar_30 * (clamp (\n      (v_texcoord.y * 1.5)\n    , 0.0, 1.0) + 0.2));\n    highp vec2 st_32;\n    st_32 = (fract(v_texcoord) / 3.0);\n    highp float tmpvar_33;\n    tmpvar_33 = clamp (b_6, 0.0, 0.9999999);\n    highp vec2 tmpvar_34;\n    tmpvar_34.x = (floor((tmpvar_33 * 9.0)) / 3.0);\n    tmpvar_34.y = (floor((tmpvar_33 * 3.0)) / 3.0);\n    highp float tmpvar_35;\n    tmpvar_35 = clamp ((tmpvar_33 - 0.1111111), 0.0, 1.0);\n    highp vec2 tmpvar_36;\n    tmpvar_36.x = (floor((tmpvar_35 * 9.0)) / 3.0);\n    tmpvar_36.y = (floor((tmpvar_35 * 3.0)) / 3.0);\n    highp vec2 tmpvar_37;\n    tmpvar_37 = fract((tmpvar_34 + st_32));\n    highp vec2 tmpvar_38;\n    tmpvar_38 = fract((tmpvar_36 + st_32));\n    highp float a_39;\n    a_39 = (1.0 - fract((tmpvar_33 * 9.0)));\n    pattern_5 = (1.0 - mix (texture2D (u_hatchmap, tmpvar_37).w, texture2D (u_hatchmap, tmpvar_38).w, a_39));\n    highp vec2 _st_40;\n    _st_40 = (v_texcoord * 20.0);\n    highp vec2 tmpvar_41;\n    tmpvar_41 = floor(_st_40);\n    highp vec2 tmpvar_42;\n    tmpvar_42 = fract(_st_40);\n    highp float tmpvar_43;\n    tmpvar_43 = fract((sin(\n      dot (tmpvar_41, vec2(12.9898, 78.233))\n    ) * 43758.55));\n    highp float tmpvar_44;\n    tmpvar_44 = fract((sin(\n      dot ((tmpvar_41 + vec2(1.0, 0.0)), vec2(12.9898, 78.233))\n    ) * 43758.55));\n    highp vec2 tmpvar_45;\n    tmpvar_45 = ((tmpvar_42 * tmpvar_42) * (3.0 - (2.0 * tmpvar_42)));\n    highp vec2 tmpvar_46;\n    tmpvar_46 = (vec2(0.1, 0.05) * ((\n      mix (tmpvar_43, tmpvar_44, tmpvar_45.x)\n     + \n      (((fract(\n        (sin(dot ((tmpvar_41 + vec2(0.0, 1.0)), vec2(12.9898, 78.233))) * 43758.55)\n      ) - tmpvar_43) * tmpvar_45.y) * (1.0 - tmpvar_45.x))\n    ) + (\n      ((fract((\n        sin(dot ((tmpvar_41 + vec2(1.0, 1.0)), vec2(12.9898, 78.233)))\n       * 43758.55)) - tmpvar_44) * tmpvar_45.x)\n     * tmpvar_45.y)));\n    highp vec2 tmpvar_47;\n    tmpvar_47 = clamp ((v_texcoord / tmpvar_46), 0.0, 1.0);\n    highp vec2 tmpvar_48;\n    tmpvar_48 = clamp (((vec2(1.0, 1.0) - v_texcoord) / tmpvar_46), 0.0, 1.0);\n    highp vec2 tmpvar_49;\n    tmpvar_49 = ((tmpvar_47 * (tmpvar_47 * \n      (3.0 - (2.0 * tmpvar_47))\n    )) * (tmpvar_48 * (tmpvar_48 * \n      (3.0 - (2.0 * tmpvar_48))\n    )));\n    highp float a_50;\n    a_50 = (tmpvar_49.x * tmpvar_49.y);\n    pattern_5 = mix (1.0, pattern_5, a_50);\n  } else {\n    b_6 = (b_6 * 1.8);\n    uv_7 = (gl_FragCoord.xy / 695.0);\n    uv_7 = (uv_7 + ((vec2(mod (\n      (u_map_position.xy / (u_meters_per_pixel / u_device_pixel_ratio))\n    , 1000.0))) / 695.0));\n    uv_7 = (uv_7 * 5.0);\n    highp vec2 st_51;\n    st_51 = (fract(uv_7) / 3.0);\n    highp float tmpvar_52;\n    tmpvar_52 = clamp (b_6, 0.0, 0.9999999);\n    highp vec2 tmpvar_53;\n    tmpvar_53.x = (floor((tmpvar_52 * 9.0)) / 3.0);\n    tmpvar_53.y = (floor((tmpvar_52 * 3.0)) / 3.0);\n    highp float tmpvar_54;\n    tmpvar_54 = clamp ((tmpvar_52 - 0.1111111), 0.0, 1.0);\n    highp vec2 tmpvar_55;\n    tmpvar_55.x = (floor((tmpvar_54 * 9.0)) / 3.0);\n    tmpvar_55.y = (floor((tmpvar_54 * 3.0)) / 3.0);\n    highp vec2 tmpvar_56;\n    tmpvar_56 = fract((tmpvar_53 + st_51));\n    highp vec2 tmpvar_57;\n    tmpvar_57 = fract((tmpvar_55 + st_51));\n    highp float a_58;\n    a_58 = (1.0 - fract((tmpvar_52 * 9.0)));\n    pattern_5 = (1.0 - mix (texture2D (u_hatchmap, tmpvar_56).w, texture2D (u_hatchmap, tmpvar_57).w, a_58));\n  };\n  vec2 _st_59;\n  _st_59 = (v_texcoord * 5.0);\n  vec2 tmpvar_60;\n  tmpvar_60 = floor(_st_59);\n  vec2 tmpvar_61;\n  tmpvar_61 = fract(_st_59);\n  float tmpvar_62;\n  tmpvar_62 = fract((sin(\n    dot (tmpvar_60, vec2(12.9898, 78.233))\n  ) * 43758.55));\n  float tmpvar_63;\n  tmpvar_63 = fract((sin(\n    dot ((tmpvar_60 + vec2(1.0, 0.0)), vec2(12.9898, 78.233))\n  ) * 43758.55));\n  vec2 tmpvar_64;\n  tmpvar_64 = ((tmpvar_61 * tmpvar_61) * (3.0 - (2.0 * tmpvar_61)));\n  color_8.xyz = clamp ((tmpvar_29.xyz + (\n    ((mix (tmpvar_62, tmpvar_63, tmpvar_64.x) + ((\n      (fract((sin(\n        dot ((tmpvar_60 + vec2(0.0, 1.0)), vec2(12.9898, 78.233))\n      ) * 43758.55)) - tmpvar_62)\n     * tmpvar_64.y) * (1.0 - tmpvar_64.x))) + (((\n      fract((sin(dot (\n        (tmpvar_60 + vec2(1.0, 1.0))\n      , vec2(12.9898, 78.233))) * 43758.55))\n     - tmpvar_63) * tmpvar_64.x) * tmpvar_64.y))\n   * 0.2)), 0.0, 1.0);\n  color_8.xyz = (color_8.xyz * mix (vec3(0.271, 0.267, 0.243), vec3(0.949, 0.957, 0.949), pattern_5));\n  gl_FragColor = color_8;\n}\n\n"
+        vertex_shader: "precision highp float;\nuniform mat4 u_model;\nuniform mat4 u_view;\nuniform mat4 u_proj;\nuniform mat3 u_normalMatrix;\nuniform vec3 u_map_position;\nuniform vec3 u_tile_origin;\nattribute vec4 a_position;\nattribute vec4 a_color;\nattribute vec3 a_normal;\nattribute vec2 a_texcoord;\nattribute float a_layer;\nvarying vec4 v_world_position;\nvarying vec4 v_position;\nvarying vec4 v_color;\nvarying vec3 v_normal;\nvarying vec2 v_texcoord;\nvarying vec3 v_pos;\nvoid main ()\n{\n  vec4 position_1;\n  v_color = a_color;\n  v_texcoord = a_texcoord;\n  v_normal = normalize((u_normalMatrix * a_normal));\n  position_1 = (u_model * a_position);\n  vec4 tmpvar_2;\n  tmpvar_2.zw = vec2(0.0, 0.0);\n  tmpvar_2.xy = u_map_position.xy;\n  v_world_position = (position_1 + (vec4(mod (tmpvar_2, 100000.0))));\n  v_pos = (a_position.xyz * 2048.0);\n  position_1.z = (position_1.z * max (1.0, (0.5 + \n    ((1.0 - (u_map_position.z / 20.0)) * 5.0)\n  )));\n  v_position = (u_view * position_1);\n  gl_Position = (u_proj * v_position);\n  gl_Position.z = (gl_Position.z / (1.0 + (0.1 * \n    (abs(u_tile_origin.z) - u_tile_origin.z)\n  )));\n  gl_Position.z = (gl_Position.z - ((a_layer * 1.5e-05) * gl_Position.w));\n}\n\n"
+      defines:
+        STYLE: buildings
+  earth-hatch:
+    shaders:
+      uniforms:
+        u_hatch: img/hatch_1.png
+      blocks:
+        fragment_shader: "precision highp float;\nuniform vec3 u_map_position;\nuniform sampler2D u_hatch;\nvarying vec4 v_color;\nvarying vec3 v_pos;\nvoid main ()\n{\n  lowp vec4 color_1;\n  color_1.w = v_color.w;\n  vec2 tmpvar_2;\n  tmpvar_2 = (v_pos.xy * 0.0002445);\n  color_1.xyz = mix (vec3(0.271, 0.267, 0.243), vec3(0.949, 0.957, 0.949), (1.0 - mix (texture2D (u_hatch, \n    fract((fract(tmpvar_2) * 3.0))\n  ), texture2D (u_hatch, \n    fract((6.0 * fract(tmpvar_2)))\n  ), \n    fract(u_map_position.z)\n  ).w));\n  gl_FragColor = color_1;\n}\n\n"
+        vertex_shader: "precision highp float;\nuniform mat4 u_model;\nuniform mat4 u_view;\nuniform mat4 u_proj;\nuniform mat3 u_normalMatrix;\nuniform vec3 u_map_position;\nuniform vec3 u_tile_origin;\nattribute vec4 a_position;\nattribute vec4 a_color;\nattribute vec3 a_normal;\nattribute vec2 a_texcoord;\nattribute float a_layer;\nvarying vec4 v_world_position;\nvarying vec4 v_position;\nvarying vec4 v_color;\nvarying vec3 v_normal;\nvarying vec2 v_texcoord;\nvarying vec3 v_pos;\nvoid main ()\n{\n  vec4 position_1;\n  v_color = a_color;\n  v_texcoord = a_texcoord;\n  v_normal = normalize((u_normalMatrix * a_normal));\n  position_1 = (u_model * a_position);\n  vec4 tmpvar_2;\n  tmpvar_2.zw = vec2(0.0, 0.0);\n  tmpvar_2.xy = u_map_position.xy;\n  v_world_position = (position_1 + (vec4(mod (tmpvar_2, 100000.0))));\n  v_pos = (a_position.xyz * 2048.0);\n  v_position = (u_view * position_1);\n  gl_Position = (u_proj * v_position);\n  gl_Position.z = (gl_Position.z / (1.0 + (0.1 * \n    (abs(u_tile_origin.z) - u_tile_origin.z)\n  )));\n  gl_Position.z = (gl_Position.z - ((a_layer * 1.5e-05) * gl_Position.w));\n}\n\n"
+      defines:
+        STYLE: earth-hatch
+    base: polygons
+    lighting: false
+  water-hatch:
+    base: polygons
+    shaders:
+      defines:
+        STYLE: water-hatch
+      uniforms:
+        u_hatch: img/hatch_0.png
+      blocks:
+        vertex_shader: "precision highp float;\nuniform mat4 u_model;\nuniform mat4 u_view;\nuniform mat4 u_proj;\nuniform mat3 u_normalMatrix;\nuniform vec3 u_map_position;\nuniform vec3 u_tile_origin;\nattribute vec4 a_position;\nattribute vec4 a_color;\nattribute vec3 a_normal;\nattribute vec2 a_texcoord;\nattribute float a_layer;\nvarying vec4 v_world_position;\nvarying vec4 v_position;\nvarying vec4 v_color;\nvarying vec3 v_normal;\nvarying vec2 v_texcoord;\nvarying vec3 v_pos;\nvoid main ()\n{\n  vec4 position_1;\n  v_color = a_color;\n  v_texcoord = a_texcoord;\n  v_normal = normalize((u_normalMatrix * a_normal));\n  position_1 = (u_model * a_position);\n  vec4 tmpvar_2;\n  tmpvar_2.zw = vec2(0.0, 0.0);\n  tmpvar_2.xy = u_map_position.xy;\n  v_world_position = (position_1 + (vec4(mod (tmpvar_2, 100000.0))));\n  v_pos = (a_position.xyz * 2048.0);\n  v_position = (u_view * position_1);\n  gl_Position = (u_proj * v_position);\n  gl_Position.z = (gl_Position.z / (1.0 + (0.1 * \n    (abs(u_tile_origin.z) - u_tile_origin.z)\n  )));\n  gl_Position.z = (gl_Position.z - ((a_layer * 1.5e-05) * gl_Position.w));\n}\n\n"
+        fragment_shader: "precision highp float;\nuniform vec3 u_map_position;\nuniform sampler2D u_hatch;\nvarying vec4 v_color;\nvarying vec3 v_pos;\nvoid main ()\n{\n  lowp vec4 color_1;\n  color_1.w = v_color.w;\n  vec2 tmpvar_2;\n  tmpvar_2 = (v_pos.xy * 0.0002445);\n  color_1.xyz = mix (vec3(0.396, 0.867, 1.0), vec3(0.271, 0.267, 0.243), (1.0 - mix (texture2D (u_hatch, \n    fract((fract(tmpvar_2) * 3.0))\n  ), texture2D (u_hatch, \n    fract((6.0 * fract(tmpvar_2)))\n  ), \n    fract(u_map_position.z)\n  ).w));\n  gl_FragColor = color_1;\n}\n\n"
+    lighting: false
+  ink-lines:
+    texcoords: true
+    base: lines
+    lighting: false
+    shaders:
+      blocks:
+        fragment_shader: "precision highp float;\nvarying vec4 v_color;\nvarying vec2 v_texcoord;\nvoid main ()\n{\n  vec4 color_1;\n  color_1.w = v_color.w;\n  float tmpvar_2;\n  tmpvar_2 = clamp ((v_texcoord.x / 0.1), 0.0, 1.0);\n  float tmpvar_3;\n  tmpvar_3 = clamp (((1.0 - v_texcoord.x) / 0.1), 0.0, 1.0);\n  vec2 _st_4;\n  _st_4 = (v_texcoord * vec2(2.0, 70.0));\n  vec2 tmpvar_5;\n  tmpvar_5 = floor(_st_4);\n  vec2 tmpvar_6;\n  tmpvar_6 = fract(_st_4);\n  float tmpvar_7;\n  tmpvar_7 = fract((sin(\n    dot (tmpvar_5, vec2(12.9898, 78.233))\n  ) * 43758.55));\n  float tmpvar_8;\n  tmpvar_8 = fract((sin(\n    dot ((tmpvar_5 + vec2(1.0, 0.0)), vec2(12.9898, 78.233))\n  ) * 43758.55));\n  vec2 tmpvar_9;\n  tmpvar_9 = ((tmpvar_6 * tmpvar_6) * (3.0 - (2.0 * tmpvar_6)));\n  color_1.xyz = mix (vec3(0.302, 0.302, 0.306), vec3(0.976, 0.953, 0.89), (1.0 - (\n    ((tmpvar_2 * (tmpvar_2 * (3.0 - \n      (2.0 * tmpvar_2)\n    ))) * (tmpvar_3 * (tmpvar_3 * (3.0 - \n      (2.0 * tmpvar_3)\n    ))))\n   + \n    ((mix (tmpvar_7, tmpvar_8, tmpvar_9.x) + ((\n      (fract((sin(\n        dot ((tmpvar_5 + vec2(0.0, 1.0)), vec2(12.9898, 78.233))\n      ) * 43758.55)) - tmpvar_7)\n     * tmpvar_9.y) * (1.0 - tmpvar_9.x))) + (((\n      fract((sin(dot (\n        (tmpvar_5 + vec2(1.0, 1.0))\n      , vec2(12.9898, 78.233))) * 43758.55))\n     - tmpvar_8) * tmpvar_9.x) * tmpvar_9.y))\n  )));\n  gl_FragColor = color_1;\n}\n\n"
+        vertex_shader: "precision highp float;\nuniform mat4 u_model;\nuniform mat4 u_view;\nuniform mat4 u_proj;\nuniform mat3 u_normalMatrix;\nuniform vec3 u_map_position;\nuniform vec3 u_tile_origin;\nattribute vec4 a_position;\nattribute vec4 a_color;\nattribute vec4 a_extrude;\nattribute vec2 a_texcoord;\nattribute float a_layer;\nvarying vec4 v_world_position;\nvarying vec4 v_position;\nvarying vec4 v_color;\nvarying vec3 v_normal;\nvarying vec2 v_texcoord;\nvarying vec3 v_pos;\nvoid main ()\n{\n  float width_1;\n  vec4 position_2;\n  position_2.zw = a_position.zw;\n  v_color = a_color;\n  v_texcoord = a_texcoord;\n  v_normal = (u_normalMatrix * vec3(0.0, 0.0, 1.0));\n  float tmpvar_3;\n  float tmpvar_4;\n  tmpvar_4 = abs(u_tile_origin.z);\n  tmpvar_3 = (u_map_position.z - tmpvar_4);\n  width_1 = (a_extrude.z + (a_extrude.w * tmpvar_3));\n  width_1 = (width_1 * exp2(-(tmpvar_3)));\n  position_2.xy = (a_position.xy + (a_extrude.xy * width_1));\n  position_2 = (u_model * position_2);\n  vec4 tmpvar_5;\n  tmpvar_5.zw = vec2(0.0, 0.0);\n  tmpvar_5.xy = u_map_position.xy;\n  v_world_position = (position_2 + (vec4(mod (tmpvar_5, 100000.0))));\n  v_pos = (a_position.xyz * 2048.0);\n  v_position = (u_view * position_2);\n  gl_Position = (u_proj * v_position);\n  gl_Position.z = (gl_Position.z / (1.0 + (0.1 * \n    (tmpvar_4 - u_tile_origin.z)\n  )));\n  gl_Position.z = (gl_Position.z - ((a_layer * 1.5e-05) * gl_Position.w));\n}\n\n"
+      defines:
+        STYLE: ink-lines
+scene:
+  background:
+    color: [0.788, 0.773, 0.765]
+sources:
+  osm:
+    url: http://vector.mapzen.com/osm/all/{z}/{x}/{y}.mvt?api_key=vector-tiles-VMSYhD4
+    type: MVT
+layers:
+  landuse:
+    data: {source: osm}
+    draw:
+      landuse-hatch:
+        color: [0.271, 0.267, 0.243]
+        order: 1
+  earth:
+    data: {source: osm}
+    draw:
+      earth-hatch:
+        order: 0
+        color: [0.271, 0.267, 0.243]
+  water:
+    data: {source: osm}
+    draw:
+      water-hatch:
+        color: [0.271, 0.267, 0.243]
+        order: 3
+  buildings:
+    data: {source: osm}
+    draw:
+      buildings:
+        color: white
+        order: 5
+    extruded:
+      draw:
+        buildings:
+          extrude: !<!> "function() {\n  h = feature['__height'] = [0.0, 0.0];\n  if (feature.height) {\n     h[1] = feature.height;\n     if (feature.min_height) {\n       h[0] = feature.min_height;\n     }\n  } else if (feature.area) {\n     h[1] = 8.0 + Math.sqrt(feature.area);\n  }\n  return h;\n}\n"
+        buildingsLines:
+          order: 6
+          extrude: !<!> "function() {\n  return feature['__height'];\n  //print(feature['__height']);\n}\n"
+          width: [[12, .1], [14, 0.1], [15, 0.5], [17, 1.0], [18, 1]]
+          color: [0.217, 0.217, 0.217]
+      filter: {$zoom: {min: 13}}
+  roads:
+    data: {source: osm}
+    filter: {not: {kind: rail, highway: service}}
+    properties: {width: 3}
+    draw:
+      ink-lines:
+        order: 4
+        color: !<!> "#343434"
+        width: [[0, 1.0], [18, 4.0]]
+  landuse_labels:
+    data: {source: osm}
+    filter: {name: true, kind: park, $zoom: {min: 16}}
+    draw:
+      text:
+        font:
+          style: normal
+          size: 20px
+          stroke: {color: white, width: 7}
+          family: sans-serif
+          weight: 400
+          fill: white
+  places:
+    draw:
+      text:
+        font:
+          style: normal
+          weight: 400
+          family: sans-serif
+          size: 22px
+          fill: black
+          stroke: {color: white, width: 7}
+    data: {source: osm}
+    filter: {name: true}

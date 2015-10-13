@@ -1,0 +1,413 @@
+cameras:
+  camera1:
+    type: perspective
+    focal_length: [[16, 2], [20, 6]]
+    vanishing_point: [-250, -250]
+scene:
+  background:
+    color: !<!> "#8db7d5"
+textures:
+  pois:
+    sprites:
+      cafe: [0, 814, 32, 32]
+      plane: [0, 0, 32, 32]
+      restaurant: [0, 777, 32, 32]
+      tree: [0, 185, 32, 32]
+      sunburst: [0, 629, 32, 32]
+      hospital: [0, 444, 32, 32]
+      hotel: [0, 259, 32, 32]
+      museum: [0, 518, 32, 32]
+      bus: [0, 148, 32, 32]
+      bar: [0, 887, 32, 32]
+      bookstore: [0, 333, 32, 32]
+      train: [0, 74, 32, 32]
+      parking: [0, 1073, 32, 32]
+      info: [0, 1110, 32, 32]
+    url: img/poi_icons_32.png
+lights:
+  light1:
+    direction: [1, 1, -1]
+    type: directional
+    ambient: [0.7, 0.7, 0.7, 1.]
+    origin: world
+    diffuse: [.3, .3, .3, 1.]
+styles:
+  icons:
+    base: points
+    texture: pois
+    shaders:
+      blocks:
+        vertex_shader: "precision mediump float;\nuniform mat4 u_ortho;\nattribute lowp vec2 a_uv;\nattribute vec2 a_position;\nattribute vec2 a_screenPosition;\nattribute lowp float a_alpha;\nattribute lowp float a_rotation;\nattribute lowp vec4 a_color;\nattribute lowp vec4 a_stroke;\nvarying lowp vec4 v_color;\nvarying lowp vec4 v_strokeColor;\nvarying lowp vec2 v_texcoords;\nvarying lowp float v_strokeWidth;\nvarying lowp float v_alpha;\nvoid main ()\n{\n  v_alpha = a_alpha;\n  v_texcoords = a_uv;\n  v_color = a_color;\n  v_strokeWidth = a_stroke.w;\n  if ((a_alpha > 1e-05)) {\n    lowp float tmpvar_1;\n    tmpvar_1 = sin(a_rotation);\n    lowp float tmpvar_2;\n    tmpvar_2 = cos(a_rotation);\n    lowp vec4 tmpvar_3;\n    tmpvar_3.zw = vec2(0.0, 1.0);\n    tmpvar_3.x = (((a_position.x * tmpvar_2) - (a_position.y * tmpvar_1)) + a_screenPosition.x);\n    tmpvar_3.y = (((a_position.x * tmpvar_1) + (a_position.y * tmpvar_2)) + a_screenPosition.y);\n    gl_Position = (u_ortho * tmpvar_3);\n  } else {\n    gl_Position = vec4(0.0, 0.0, 0.0, 1.0);\n  };\n  lowp vec3 tmpvar_4;\n  if ((a_stroke.w > 1e-05)) {\n    tmpvar_4 = a_stroke.xyz;\n  } else {\n    tmpvar_4 = a_color.xyz;\n  };\n  v_strokeColor.xyz = tmpvar_4;\n}\n\n"
+        fragment_shader: "precision mediump float;\nvarying vec4 v_color;\nvarying vec2 v_texcoords;\nvarying float v_alpha;\nuniform sampler2D u_tex;\nvoid main ()\n{\n  if ((v_alpha < 1e-05)) {\n    discard;\n  } else {\n    lowp vec4 tmpvar_1;\n    tmpvar_1 = texture2D (u_tex, v_texcoords);\n    lowp vec4 tmpvar_2;\n    tmpvar_2.xyz = (tmpvar_1.xyz * v_color.xyz);\n    tmpvar_2.w = ((v_alpha * tmpvar_1.w) * v_color.w);\n    gl_FragColor = tmpvar_2;\n  };\n}\n\n"
+  heightglowline:
+    base: lines
+    lighting: vertex
+    shaders:
+      defines:
+        STYLE: heightglowline
+      blocks:
+        fragment_shader: "precision highp float;\nvarying vec4 v_lighting;\nvoid main ()\n{\n  gl_FragColor = v_lighting;\n}\n\n"
+        vertex_shader: "precision highp float;\nstruct Material {\n  vec4 ambient;\n  vec4 diffuse;\n};\nstruct DirectionalLight {\n  vec4 ambient;\n  vec4 diffuse;\n  vec4 specular;\n  vec3 direction;\n};\nuniform mat4 u_model;\nuniform mat4 u_view;\nuniform mat4 u_proj;\nuniform mat3 u_normalMatrix;\nuniform vec3 u_map_position;\nuniform vec3 u_tile_origin;\nattribute vec4 a_position;\nattribute vec4 a_color;\nattribute vec4 a_extrude;\nattribute vec2 a_texcoord;\nattribute float a_layer;\nvarying vec4 v_world_position;\nvarying vec4 v_position;\nvarying vec4 v_color;\nvarying vec3 v_normal;\nvarying vec2 v_texcoord;\nvarying vec4 v_lighting;\nuniform Material u_material;\nuniform DirectionalLight u_light1;\nvoid main ()\n{\n  vec4 color_1;\n  float width_2;\n  vec4 position_3;\n  position_3.zw = a_position.zw;\n  v_texcoord = a_texcoord;\n  v_normal = (u_normalMatrix * vec3(0.0, 0.0, 1.0));\n  float tmpvar_4;\n  float tmpvar_5;\n  tmpvar_5 = abs(u_tile_origin.z);\n  tmpvar_4 = (u_map_position.z - tmpvar_5);\n  width_2 = (a_extrude.z + (a_extrude.w * tmpvar_4));\n  width_2 = (width_2 * exp2(-(tmpvar_4)));\n  position_3.xy = (a_position.xy + (a_extrude.xy * width_2));\n  position_3 = (u_model * position_3);\n  vec4 tmpvar_6;\n  tmpvar_6.zw = vec2(0.0, 0.0);\n  tmpvar_6.xy = u_map_position.xy;\n  v_world_position = (position_3 + (vec4(mod (tmpvar_6, 100000.0))));\n  v_position = (u_view * position_3);\n  color_1.w = a_color.w;\n  color_1.xyz = (a_color.xyz + vec3((position_3.z / 800.0)));\n  vec4 color_7;\n  color_7 = ((u_light1.ambient * color_1) * u_material.ambient);\n  color_7 = (color_7 + ((\n    (u_light1.diffuse * clamp (dot (v_normal, -(u_light1.direction)), 0.0, 1.0))\n   * color_1) * u_material.diffuse));\n  vec4 tmpvar_8;\n  tmpvar_8 = clamp (color_7, 0.0, 1.0);\n  color_7 = tmpvar_8;\n  v_lighting = tmpvar_8;\n  v_color = color_1;\n  gl_Position = (u_proj * v_position);\n  gl_Position.z = (gl_Position.z / (1.0 + (0.1 * \n    (tmpvar_5 - u_tile_origin.z)\n  )));\n  gl_Position.z = (gl_Position.z - ((a_layer * 1.5e-05) * gl_Position.w));\n}\n\n"
+  heightglow:
+    base: polygons
+    lighting: vertex
+    shaders:
+      blocks:
+        vertex_shader: "precision highp float;\nstruct Material {\n  vec4 ambient;\n  vec4 diffuse;\n};\nstruct DirectionalLight {\n  vec4 ambient;\n  vec4 diffuse;\n  vec4 specular;\n  vec3 direction;\n};\nuniform mat4 u_model;\nuniform mat4 u_view;\nuniform mat4 u_proj;\nuniform mat3 u_normalMatrix;\nuniform vec3 u_map_position;\nuniform vec3 u_tile_origin;\nattribute vec4 a_position;\nattribute vec4 a_color;\nattribute vec3 a_normal;\nattribute vec2 a_texcoord;\nattribute float a_layer;\nvarying vec4 v_world_position;\nvarying vec4 v_position;\nvarying vec4 v_color;\nvarying vec3 v_normal;\nvarying vec2 v_texcoord;\nvarying vec4 v_lighting;\nuniform Material u_material;\nuniform DirectionalLight u_light1;\nvoid main ()\n{\n  vec4 color_1;\n  vec4 position_2;\n  v_texcoord = a_texcoord;\n  vec3 tmpvar_3;\n  tmpvar_3 = normalize((u_normalMatrix * a_normal));\n  position_2 = (u_model * a_position);\n  vec4 tmpvar_4;\n  tmpvar_4.zw = vec2(0.0, 0.0);\n  tmpvar_4.xy = u_map_position.xy;\n  v_world_position = (position_2 + (vec4(mod (tmpvar_4, 100000.0))));\n  v_position = (u_view * position_2);\n  color_1.w = a_color.w;\n  color_1.xyz = (a_color.xyz + vec3((position_2.z / 800.0)));\n  vec4 color_5;\n  color_5 = ((u_light1.ambient * color_1) * u_material.ambient);\n  color_5 = (color_5 + ((\n    (u_light1.diffuse * clamp (dot (tmpvar_3, -(u_light1.direction)), 0.0, 1.0))\n   * color_1) * u_material.diffuse));\n  vec4 tmpvar_6;\n  tmpvar_6 = clamp (color_5, 0.0, 1.0);\n  color_5 = tmpvar_6;\n  v_lighting = tmpvar_6;\n  v_color = color_1;\n  v_normal = tmpvar_3;\n  gl_Position = (u_proj * v_position);\n  gl_Position.z = (gl_Position.z / (1.0 + (0.1 * \n    (abs(u_tile_origin.z) - u_tile_origin.z)\n  )));\n  gl_Position.z = (gl_Position.z - ((a_layer * 1.5e-05) * gl_Position.w));\n}\n\n"
+        fragment_shader: "precision highp float;\nvarying vec4 v_lighting;\nvoid main ()\n{\n  gl_FragColor = v_lighting;\n}\n\n"
+      defines:
+        STYLE: heightglow
+  flatcolor:
+    base: polygons
+    lighting: false
+    shaders:
+      blocks:
+        fragment_shader: "precision highp float;\nvarying vec4 v_color;\nvoid main ()\n{\n  gl_FragColor = v_color;\n}\n\n"
+        vertex_shader: "precision highp float;\nuniform mat4 u_model;\nuniform mat4 u_view;\nuniform mat4 u_proj;\nuniform mat3 u_normalMatrix;\nuniform vec3 u_map_position;\nuniform vec3 u_tile_origin;\nattribute vec4 a_position;\nattribute vec4 a_color;\nattribute vec3 a_normal;\nattribute vec2 a_texcoord;\nattribute float a_layer;\nvarying vec4 v_world_position;\nvarying vec4 v_position;\nvarying vec4 v_color;\nvarying vec3 v_normal;\nvarying vec2 v_texcoord;\nvoid main ()\n{\n  vec4 position_1;\n  v_color = a_color;\n  v_texcoord = a_texcoord;\n  v_normal = normalize((u_normalMatrix * a_normal));\n  position_1 = (u_model * a_position);\n  vec4 tmpvar_2;\n  tmpvar_2.zw = vec2(0.0, 0.0);\n  tmpvar_2.xy = u_map_position.xy;\n  v_world_position = (position_1 + (vec4(mod (tmpvar_2, 100000.0))));\n  v_position = (u_view * position_1);\n  gl_Position = (u_proj * v_position);\n  gl_Position.z = (gl_Position.z / (1.0 + (0.1 * \n    (abs(u_tile_origin.z) - u_tile_origin.z)\n  )));\n  gl_Position.z = (gl_Position.z - ((a_layer * 1.5e-05) * gl_Position.w));\n}\n\n"
+sources:
+  osm:
+    type: MVT
+    url: https://vector.mapzen.com/osm/all/{z}/{x}/{y}.mvt
+layers:
+  touch:
+    data: {source: touch}
+    draw:
+      lines:
+        color: !<!> purple
+        order: 50
+        width: .03
+      icons:
+        transition:
+          [show, hide]:
+            time: 0s
+        collide: false
+        sprite: sunburst
+  earth:
+    draw:
+      polygons:
+        order: 0
+        color: !<!> "#f0ebeb"
+    data: {source: osm}
+  landuse:
+    filter:
+      name: true
+      any:
+        - {$zoom: {min: 9}, area: {min: 10000000}}
+        - {area: {min: 3300000}, $zoom: {min: 10}}
+        - {area: {min: 1000000}, $zoom: {min: 12}}
+        - {area: {min: 10000}, $zoom: {min: 13}}
+        - {$zoom: {min: 15}}
+    green:
+      filter: {kind: [park, graveyard, cemetery, forest, recreation_ground]}
+      draw:
+        polygons:
+          color: !<!> "#89ab84"
+          order: 2
+    data: {source: osm}
+    draw:
+      polygons:
+        interactive: true
+        color: !<!> "#fffffa"
+        order: 1
+    blue:
+      draw:
+        polygons:
+          color: !<!> "#C0CDCD"
+      filter: {kind: [commercial, industrial]}
+    orange:
+      draw:
+        polygons:
+          color: !<!> "#D9CFC3"
+      filter: {kind: [university]}
+  water:
+    data: {source: osm}
+    filter:
+      any:
+        - {area: {min: 10000000}, $zoom: {min: 0}}
+        - {area: {min: 1000000}, $zoom: {min: 10}}
+        - {area: {min: 100000}, $zoom: {min: 12}}
+        - {area: {min: 1000}, $zoom: {min: 15}}
+        - {$zoom: {min: 18}}
+    draw:
+      flatcolor:
+        color: !<!> "#8db7d5"
+        order: 3
+  roads:
+    data: {source: osm}
+    filter:
+      not: {kind: [rail]}
+    draw:
+      lines:
+        width: 12.
+        color: white
+        outline:
+          width: [[15, 0], [16, 2]]
+          color: [[16, !<!> "#999"], [18, !<!> "#aaa"]]
+        order: 5
+    routes:
+      filter: {$zoom: {max: 10}}
+      draw:
+        lines:
+          width: 2.
+          color: !<!> "#aaa"
+    rounded:
+      draw:
+        lines:
+          cap: round
+      filter: {$zoom: {min: 18}}
+    highway:
+      filter: {kind: highway}
+      draw:
+        lines:
+          color: !<!> "#D16768"
+          width: [[14, 2px], [15, 12]]
+          outline:
+            width: [[14, 0], [15, 2]]
+      link:
+        filter: {is_link: yes}
+        draw:
+          lines:
+            color: !<!> "#aaa"
+            width: [[13, 0], [14, 12]]
+    major_road:
+      filter: {kind: major_road, $zoom: {min: 10}}
+      draw:
+        lines:
+          width: [[10, 0], [13, 2px], [14, 2px], [16, 12]]
+          color: !<!> "#aaaaa4"
+          outline:
+            width: [[16, 0], [17, 1]]
+    paths:
+      filter: {kind: path}
+      draw:
+        lines:
+          color: !<!> "#fff"
+          width: [[15, 0], [17, 2px]]
+          outline:
+            width: 0
+    minor_road:
+      filter: {kind: minor_road}
+      draw:
+        lines:
+          color: !<!> "#bbbbb8"
+          outline:
+            width: [[17, 0], [18, 1]]
+          width: [[13, 0], [14, 1px], [15, 8]]
+    airports:
+      taxiways:
+        draw:
+          lines:
+            width: [[13, 0], [14, 2.0], [17, 5.0]]
+        filter: {aeroway: taxiway}
+      runways:
+        draw:
+          lines:
+            width: [[11, 2.], [12, 3.], [13, 4.], [17, 8.]]
+            cap: square
+            color: [[13, !<!> "#FFE4B5"], [16, white]]
+            outline:
+              width: [[11, 0], [12, 1.], [17, 2.]]
+              color: orange
+            order: 39
+        filter: {aeroway: runway}
+      draw:
+        lines:
+          color: !<!> "#f00"
+      filter: {aeroway: true}
+  poi_icons:
+    filter: {name: true, $zoom: {min: 15}, not: {kind: [peak, viewpoint, bicycle_rental, car_sharing]}}
+    data: {source: osm, layer: pois}
+    draw:
+      icons:
+        size: 20px
+        transition:
+          [show, hide]:
+            time: .3s
+        offset: [0px, -15px]
+        interactive: true
+        priority: 5
+        collide: true
+    generic:
+      draw:
+        icons:
+          sprite_default: info
+          sprite: function() { return feature.kind; }
+      filter: {$zoom: {min: 18}}
+    icons:
+      restaurant:
+        filter: {kind: [restaurant]}
+        draw: {icons: {sprite: restaurant}}
+      cafe:
+        filter: {kind: [cafe, convenience]}
+        draw: {icons: {sprite: cafe}}
+      bar:
+        draw: {icons: {sprite: bar}}
+        filter: {kind: [bar, pub]}
+      hospital:
+        filter: {kind: [hospital, pharmacy]}
+        draw: {icons: {sprite: hospital}}
+      culture:
+        draw: {icons: {sprite: museum}}
+        filter: {kind: [museum, library, church, place_of_worship, bank]}
+      station:
+        draw: {icons: {sprite: train}}
+        filter: {kind: [station]}
+      bookstore:
+        filter: {kind: [bookstore]}
+        draw: {icons: {sprite: bookstore}}
+      hotel:
+        filter: {kind: [hotel, hostel]}
+        draw: {icons: {sprite: hotel}}
+      bus_stop:
+        draw: {icons: {sprite: bus}}
+        filter: {kind: [bus_stop]}
+  buildings:
+    data: {source: osm}
+    draw:
+      polygons:
+        color: [.85, .85, .83]
+        order: 50
+        style: polygons
+    filter: {$zoom: {min: 14}}
+    interactive:
+      filter: {name: true}
+      draw:
+        polygons:
+          color: [.65, .65, .63]
+          style: heightglow
+          interactive: true
+    extruded:
+      draw:
+        polygons:
+          extrude: true
+          color: [.65, .65, .63]
+          style: heightglow
+      filter: {$zoom: {min: 15}}
+      draw:
+        lines:
+          width: 1.0
+          style: heightglowline
+          color: [.75, .75, .73]
+          order: 52
+          extrude: true
+    high-line:
+      filter: {roof_material: grass}
+      draw:
+        polygons:
+          style: polygons
+          color: !<!> "#bddec5"
+  poi_labels:
+    data: {layer: pois, source: osm}
+    filter: {$zoom: {min: 15}, name: true, not: {kind: [peak, viewpoint, bicycle_rental, car_sharing]}}
+    draw:
+      text:
+        offset: [0px, 13px]
+        font:
+          size: 1.2em
+          style: normal
+          family: sans-serif
+          weight: 400
+          fill: white
+        interactive: true
+  road_labels:
+    filter: {tunnel: false, railway: false, name: true, not: {kind: rail}, aeroway: false, $zoom: {min: 10}}
+    draw:
+      text:
+        visible: true
+        transform: capitalize
+        priority: 2
+        interactive: true
+        offset: [0, 8px]
+        font:
+          size: 1.em
+          style: normal
+          family: sans-serif
+          weight: 400
+          fill: black
+          stroke: {color: white, width: 2}
+    data: {layer: roads, source: osm}
+    highway:
+      draw:
+        text:
+          offset: [0px, 5px]
+          visible: true
+          transform: lowercase
+          font:
+            family: sans-serif
+            weight: 400
+            style: normal
+            size: 25px
+            fill: black
+          priority: 1
+      filter: {kind: highway}
+    major_road:
+      draw:
+        text:
+          visible: true
+          transform: capitalize
+          priority: 3
+          interactive: true
+          font:
+            weight: 400
+            size: 20.5pt
+            style: normal
+            family: sans-serif
+      filter: {kind: major_road}
+  places:
+    filter:
+      not: {kind: [county, state, island]}
+      name: true
+      any:
+        - {$zoom: {min: 1}, kind: ocean}
+        - {$zoom: {max: 5, min: 2}, kind: continent}
+        - {$zoom: {min: 4}, name: [!<!> United States of America, !<!> Brasil, !<!> Россия, !<!> 中华人民共和国]}
+        - {kind: country, $zoom: {min: 5}}
+    data: {sources: osm}
+    draw:
+      text:
+        font:
+          weight: 400
+          style: normal
+          family: sans-serif
+          size: 15px
+          fill: black
+        priority: 5
+        interactive: true
+    countries:
+      filter: {kind: country}
+      draw: {}
+    continents:
+      draw: {}
+      filter: {kind: continent}
+    oceans:
+      filter: {kind: ocean}
+      draw: {}
+    minor-places:
+      filter: {kind: [hamlet, village, town, neighbourhood, suburb, quarter], $zoom: {max: 13}}
+      draw: {}
+  landuse_labels:
+    data: {source: osm, layer: [landuse_labels, pois]}
+    filter:
+      name: true
+      kind: [park, forest, cemetery, graveyard]
+      any:
+        - {area: {min: 100000000}, $zoom: {min: 9}}
+        - {area: {min: 10000000}, $zoom: {min: 10}}
+        - {area: {min: 1000000}, $zoom: {min: 12}}
+        - {area: {min: 10000}, $zoom: {min: 15}}
+        - {$zoom: {min: 18}}
+    draw:
+      text:
+        transform: lowercase
+        font:
+          weight: 400
+          style: normal
+          size: 18px
+          family: sans-serif
+          fill: darkgreen
+        priority: 0
+        interactive: true
+  pois:
+    draw:
+      sprites: {}
+    data: {source: osm}

@@ -1,0 +1,279 @@
+﻿# Author @patriciogv - 2015
+
+cameras:
+  camera1:
+    type: isometric
+lights:
+  light1:
+    type: directional
+    direction: [0, 1, -.5]
+    diffuse: [.6, .6, .6]
+    ambient: [.3, .3, .3]
+  lightTopLeft:
+    type: point
+    position: [-500, 200, 500]
+    origin: ground
+    diffuse: [.35, .35, .35]
+    ambient: [.1, .1, .1]
+    radius: 1000
+  lightTopRight:
+    type: point
+    position: [500, 200, 500]
+    origin: ground
+    diffuse: .35
+    ambient: .1
+    radius: 1000
+  lightBottomRight:
+    type: point
+    position: [700, -800, 200]
+    origin: ground
+    diffuse: .35
+    ambient: .1
+    radius: 1000
+  lightBottomLeft:
+    type: point
+    position: [-700, -800, 200]
+    origin: ground
+    diffuse: .35
+    ambient: .1
+    radius: 1000
+scene:
+  background:
+    color: [0.788,0.773,0.765]
+styles:
+  tools:
+    shaders:
+      blocks: 
+        global: |
+          // Coord System
+          //================================
+          varying vec3 v_pos;
+          vec2 TileCoords(){return fract(v_pos.xy*0.0002445);}
+          // Color
+          //================================
+          float getBrightness(in vec3 _rgb){
+            return 0.212655 * _rgb.r + 0.715158 * _rgb.g + 0.072187 * _rgb.b;
+          }
+          // Random & Noise
+          //================================
+          float random(in vec2 _st){
+            return fract(sin(dot(_st.xy,
+                       vec2(12.9898,78.233)))*
+              43758.5453123);
+          }
+          float noise (in vec2 _st) {
+            vec2 i = floor(_st);
+            vec2 f = fract(_st);
+            float a = random(i);
+            float b = random(i + vec2(1.0, 0.0));
+            float c = random(i + vec2(0.0, 1.0));
+            float d = random(i + vec2(1.0, 1.0));
+            vec2 u = f * f * (3.0 - 2.0 * f);
+            return mix(a, b, u.x) +
+                (c - a)* u.y * (1.0 - u.x) +
+                (d - b) * u.x * u.y;
+          }
+          // Cross Hatch LUT
+          //==============================
+          float hatch( sampler2D hatchmap, vec2 st, float brightness ){
+            st  = fract(st)/3.;
+            brightness = clamp(brightness,0.,0.9999999);
+            vec2 pos1 = vec2(floor(brightness*9.0)/3.,
+                     floor(brightness*3.0)/3.) + st;
+            float minBrightness = clamp(brightness-0.111111111,0.,1.0);
+            vec2 pos2 = vec2(floor(minBrightness*9.0)/3.,
+                     floor(minBrightness*3.0)/3.)+st;
+            return mix(texture2D( hatchmap,fract(pos1) ).a,
+                   texture2D( hatchmap,fract(pos2) ).a,
+                   1.0-fract(brightness*9.0));
+          }
+        position: |
+          //v_pos = (u_model * a_position).xyz * 10.;// * 32767.;
+          v_pos = a_position.xyz * 2048.;
+  earth-hatch:
+    base: polygons
+    mix: tools 
+    lighting: false
+    shaders:
+      uniforms:
+          u_hatch: img/hatch_1.png
+      blocks:
+        global: |
+          vec4 TileTexture(sampler2D tex, float scale) {
+            vec2 IN = TileCoords()*scale;
+            vec2 OUT = TileCoords()*scale*2.;
+            return mix(texture2D(tex,fract(IN)), texture2D(tex,fract(OUT)), fract(u_map_position.z));
+          }
+        color: |
+          float pattern = 1.0-TileTexture(u_hatch,3.).a;
+          color.rgb = mix(vec3(0.271,0.267,0.243), vec3(0.949,0.957,0.949), pattern);
+  landuse-hatch:
+    base: polygons
+    mix: [ tools, earth-hatch ]
+    shaders:
+      uniforms:
+          u_hatch: img/hatch_2.png
+  water-hatch:
+    base: polygons
+    mix: [ tools, earth-hatch ]
+    shaders:
+      uniforms:
+          u_hatch: img/hatch_0.png
+      blocks:
+        filter: |
+          color.rgb = mix(vec3(0.396,0.867,1.000),vec3(0.271,0.267,0.243),pattern);
+  ink-lines:
+    base: lines
+    mix: tools
+    texcoords: true
+    lighting: false
+    shaders:
+      blocks:
+        color: |
+          vec2 uv = v_texcoord;
+          color.rgb = mix(vec3(0.302,0.302,0.306),vec3(0.976,0.953,0.890),1.0-(smoothstep(0.0,0.1,uv.x) * smoothstep(0.0,0.1,1.0-uv.x)+noise(uv*vec2(2.,70.)) ));
+  buildings:
+    base: polygons
+    mix: tools
+    texcoords: true
+    material:
+      diffuse: 1.
+      ambient:
+        texture: img/sem-pericoli.png
+        mapping: spheremap
+    shaders:
+      uniforms:
+        u_hatchmap: img/hatch-0002.png
+        # u_device_pixel_ratio: 1.0
+      blocks:
+        position: |
+          position.z *= max(1.0,0.5+(1.0-(u_map_position.z/20.0))*5.0);
+        filter: |
+          vec2 uv = v_texcoord;
+          float b = getBrightness(light_accumulator_diffuse.rgb);
+          float pattern = 1.0;
+          // if ( dot(v_normal,vec3(0.,0.,1.)) == 0.0 ){
+          if (abs(dot(v_normal, u_normalMatrix * vec3(0.,0.,1.))) < 0.01){
+            // Walls
+            b *=  clamp(uv.y*1.5,0.0,1.0)+0.2;
+            pattern = 1.-hatch(u_hatchmap,uv,b);
+            vec2 edge = vec2(0.1,0.05)*noise(uv*20.);
+            vec2 blend = smoothstep(vec2(0.0),edge,uv)*smoothstep(vec2(0.0),edge,vec2(1.)-uv);
+            pattern = mix(1.0,pattern,blend.x*blend.y);
+          } else {
+            // Roof
+            b *= 1.8;
+            //uv = v_world_position.xy*0.01;
+            const float pixel_scale = 695.;
+            float meter_pixels = u_meters_per_pixel / u_device_pixel_ratio;
+            uv = gl_FragCoord.xy/pixel_scale;
+            const float dot_wrap = 1000.;
+            uv += mod(u_map_position.xy / meter_pixels, dot_wrap)/pixel_scale;
+            uv *= 5.00;
+            pattern = 1.-hatch(u_hatchmap,uv,b);
+          }
+          color.rgb = clamp(color.rgb+noise(v_texcoord*5.)*0.2,0.,1.);
+          color.rgb *= mix(vec3(0.271,0.267,0.243),vec3(0.949,0.957,0.949),pattern);
+  buildingsLines:
+    base: lines
+    lighting: false
+    shaders:
+      blocks:
+        width: |
+          width *= 0.2+min(pow(position.z*0.006,2.),.6);
+        position: |
+          position.z *= max(1.0,0.5+(1.0-(u_map_position.z/20.0))*5.0);
+sources:
+  osm:
+    type: MVT
+    url:    http://vector.mapzen.com/osm/all/{z}/{x}/{y}.mvt?api_key=vector-tiles-VMSYhD4
+layers:
+  earth:
+    data: { source: osm }
+    draw:
+      earth-hatch:
+        order: 0
+        color: [0.271,0.267,0.243]
+  landuse:
+    data: { source: osm }
+    draw:
+      landuse-hatch:
+        order: 1
+        color: [0.271,0.267,0.243]
+  water:
+    data: { source: osm }
+    draw:
+      water-hatch:
+        order: 3
+        color: [0.271,0.267,0.243]
+  roads:
+    data: { source: osm }
+    filter: { not: { highway: service, kind: rail } }
+    properties: { width: 3 }
+    draw:
+      ink-lines:
+        order: 4
+        color: '#343434'
+        width: [[0, 1.0], [18, 4.0]]
+  buildings:
+    data: { source: osm }
+    draw:
+      buildings:
+        order: 5
+        color: white
+      # baseline:
+      #   style: lines
+      #   order: 5
+      #   width: [[12, .1], [18, 4]]
+      #   color: black
+    extruded:
+      filter: { $zoom: { min: 13 } }
+      draw:
+        buildings:
+          extrude: |
+            function() {
+              h = feature['__height'] = [0.0, 0.0];
+              if (feature.height) {
+                 h[1] = feature.height;
+                 if (feature.min_height) {
+                   h[0] = feature.min_height;
+                 }
+              } else if (feature.area) {
+                 h[1] = 8.0 + Math.sqrt(feature.area);
+              }
+              return h;
+            }
+        buildingsLines:
+          order: 6
+          width: [[12, .1], [14, 0.1], [15, 0.5], [17, 1.0], [18, 1]]
+          extrude: |
+            function() {
+              return feature['__height'];
+              //print(feature['__height']);
+            }
+          color: [0.217,0.217,0.217]
+  places:
+    data: { source: osm }
+    filter: { name: true }
+    draw:
+      text:
+        font:
+          family: sans-serif
+          weight: 400
+          style: normal
+          size: 22px
+          fill: black
+          stroke: { color: white , width: 7 }
+  landuse_labels:
+    data: { source: osm }
+    filter: { name: true, kind: park, $zoom: { min: 16 } }
+    draw:
+      text:
+        font:
+          #typeface: Italic 18px Baskerville
+          family: sans-serif
+          weight: 400
+          style: normal
+          size: 20px
+          fill: white
+          stroke: { color: white , width: 7 }

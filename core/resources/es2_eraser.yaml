@@ -1,0 +1,2292 @@
+settings:
+  styles:
+    - lines
+    - polygons
+  cameras:
+    - {vanishing_point: [0, -500], axis: [0, .1], type: isometric}
+  lights:
+    - direction: [1, 1, -1]
+      origin: world
+      type: directional
+      ambient: [1.0, 0.7, 0.7, 1.0]
+      diffuse: [.3, .3, .3., 1.0]
+  roads:
+    - &1 [0.988, 0.495, 0.439]
+    - &2 [1.000, 0.631, 0.590]
+    - &3 [0.859, 0.859, 0.859]
+    - &4 [0.800, 0.800, 0.800]
+    - &5 [0.870, 0.870, 0.870]
+    - [0.8, 0.8, 0.7]
+    - !<!> &6 "#8bb5e4"
+    - &7 [1, 1, 1]
+    - [1.0, 1.0, 1.0]
+    - [1.0, 1.0, 1.0]
+    - [1.0, 1.0, 1.0]
+    - [1.0, 1.0, 1.0]
+    - [1.0, 1.0, 1.0]
+    - [0.859, 0.859, 0.859]
+    - &8 [0.859, 0.859, 0.859]
+    - &9 [.870, 0.870, 0.870]
+    - &10 [0.780, 0.780, 0.780]
+    - &11 [1.000, 0.631, 0.590]
+    - [1.000, 0.752, 0.730]
+    - [1.000, 0.631, 0.590]
+    - &12 [0.9, 0.9, 0.9]
+    - &13 [0.9, 0.9, 0.9]
+    - &14 [0.9, 0.9, 0.9]
+    - &15 [0.9, 0.9, 0.9]
+    - [0.9, 0.9, 0.9]
+    - [0.9, 0.9, 0.9]
+    - [0.8, 0.8, 0.7]
+    - &16 white
+    - &17 white
+    - [0.770, 0.770, 0.770]
+    - [0.91, 0.91, 0.91]
+    - [0.91, 0.91, 0.91]
+    - [0.875, 0.875, 0.875]
+    - &18 [0.870, 0.870, 0.870]
+    - &19 [0.870, 0.870, 0.870]
+    - &20 [0.91, 0.91, 0.91]
+  boundaries:
+    - &21 [1.0, 1.0, 1.0]
+    - &22 [1.0, 1.0, 1.0]
+    - !<!> "#bbb"
+  areas:
+    - !<!> &23 "#eee"
+    - &24 [0.83, 0.83, 0.83]
+    - !<!> &25 "#666"
+    - &26 [0.140, 0.843, 0.824]
+    - [0.140, 0.843, 0.824]
+    - !<!> "#94d8d6"
+    - !<!> "#7fc3c1"
+    - &27 [0.547, 0.760, 0.590]
+    - &28 [0.000, 0.779, 0.328]
+    - !<!> "#526054"
+    - !<!> "#5a695c"
+    - !<!> "#648560"
+    - [0.169, 0.651, 0.631]
+    - &29 [0.123, 0.770, 0.587]
+    - !<!> &30 "#bfb08e"
+    - &31 [0.814, 0.692, 0.570]
+    - [0.814, 0.692, 0.570]
+    - !<!> "#ada497"
+    - !<!> "#c7b7a2"
+    - &32 [0.840, 0.503, 0.541]
+    - &33 [0.840, 0.503, 0.541]
+    - !<!> "#717171"
+    - [0.5, 0.5, 0.5]
+    - grey
+    - !<!> "#bfb08e"
+    - [0.784, 0.784, 0.784]
+    - [.81, .81, .81]
+    - 5
+  labels:
+    - &34 black
+    - &35 [0.870, 0.870, 0.870]
+    - &36 townspot-m-rev
+Author: Geraldine Sarmiento, Nathaniel V. Kelso, Patricio Gonzalez Vivo
+labels-global:
+  - &37 true
+  - &38 true
+  - &39 true
+  - true
+  - true
+  - true
+  - true
+  - true
+  - true
+  - &40 true
+  - &41 true
+  - &42 false
+  - &43 false
+  - &44 false
+  - &45 false
+  - &46 false
+  - &47 false
+lights:
+  light1:
+    origin: world
+    ambient: [0.7, 0.7, 0.7, 1.]
+    direction: [1, 1, -1]
+    type: directional
+    diffuse: [.3, .3, .3, 1.]
+textures:
+  pois:
+    url: img/poi_icons_18@2x.png
+    sprites:
+      bagel-shop: [468, 288, 36, 36]
+      adult-boutique: [252, 108, 36, 36]
+      arcade: [576, 252, 36, 36]
+      airport: [180, 36, 36, 36]
+      animal-shelter: [432, 0, 36, 36]
+      art-gallery: [540, 252, 36, 36]
+      antique-shop: [216, 108, 36, 36]
+      athletics-sports: [288, 216, 36, 36]
+      arts-crafts: [180, 108, 36, 36]
+      atm: [36, 216, 36, 36]
+      aquarium: [684, 252, 36, 36]
+      bakery: [144, 252, 36, 36]
+      automotive-shop: [108, 216, 36, 36]
+      bank: [72, 216, 36, 36]
+      bar: [468, 216, 36, 36]
+      baseball-field: [72, 144, 36, 36]
+      basketball-court: [36, 144, 36, 36]
+      basketball-stadium: [360, 252, 36, 36]
+      bathroom: [216, 144, 36, 36]
+      bike-shop: [0, 216, 36, 36]
+      breakfast: [108, 288, 36, 36]
+      boat-ferry: [144, 36, 36, 36]
+      boat-ramp: [360, 108, 36, 36]
+      bicycle-parking: [648, 180, 36, 36]
+      battlefield: [360, 144, 36, 36]
+      bbq: [36, 288, 36, 36]
+      beach: [288, 144, 36, 36]
+      bench: [756, 0, 36, 36]
+      beach-resort: [252, 144, 36, 36]
+      beer-garden: [576, 288, 36, 36]
+      bridal-shop: [144, 72, 36, 36]
+      bridge: [540, 144, 36, 36]
+      building: [684, 216, 36, 36]
+      bookstore: [937, 180, 36, 36]
+      burger: [360, 288, 36, 36]
+      bowling-alley: [504, 252, 36, 36]
+      bus-station: [72, 36, 36, 36]
+      capital-l: [841, 288, 23, 23]
+      capital-m: [822, 288, 18, 18]
+      car-wash: [828, 180, 36, 36]
+      butcher: [900, 72, 36, 36]
+      capital-s: [806, 288, 17, 17]
+      campground: [504, 144, 36, 36]
+      camera-store: [901, 180, 36, 36]
+      candy-store: [180, 288, 36, 36]
+      car-dealership: [864, 180, 36, 36]
+      carribean-restaurant: [36, 252, 36, 36]
+      casino: [468, 252, 36, 36]
+      capital-xl: [863, 288, 25, 25]
+      cheese-shop: [144, 288, 36, 36]
+      castle: [180, 72, 36, 36]
+      capital-xs: [792, 288, 13, 13]
+      cemetery: [468, 144, 36, 36]
+      chinese-restaurant: [72, 252, 36, 36]
+      daycare: [36, 108, 36, 36]
+      church: [72, 180, 36, 36]
+      city: [756, 108, 36, 36]
+      clinic: [216, 0, 36, 36]
+      clothing-store: [756, 252, 36, 36]
+      cocktail-bar: [432, 216, 36, 36]
+      coffee-shop: [108, 252, 36, 36]
+      college-university: [864, 252, 36, 36]
+      comedy-club: [432, 252, 36, 36]
+      concert-hall: [396, 252, 36, 36]
+      convenience-store: [108, 108, 36, 36]
+      courthouse: [396, 0, 36, 36]
+      credit-union: [792, 180, 36, 36]
+      dessert: [36, 0, 36, 36]
+      cosmetics-shop: [72, 108, 36, 36]
+      department-store: [756, 180, 36, 36]
+      dentist: [252, 0, 36, 36]
+      design-studio: [108, 72, 36, 36]
+      cupcake-shop: [937, 216, 36, 36]
+      dog-run: [216, 216, 36, 36]
+      electronics-store: [612, 180, 36, 36]
+      ev-charging-station: [720, 180, 36, 36]
+      factory: [648, 216, 36, 36]
+      farm: [432, 144, 36, 36]
+      financial-service: [576, 180, 36, 36]
+      donut: [252, 288, 36, 36]
+      fire-station: [360, 0, 36, 36]
+      fish-market: [504, 180, 36, 36]
+      farmers-market: [540, 180, 36, 36]
+      flower-shop: [937, 144, 36, 36]
+      fitness: [792, 72, 36, 36]
+      field: [396, 144, 36, 36]
+      flea-market: [937, 72, 36, 36]
+      food-court: [468, 180, 36, 36]
+      ford: [576, 0, 36, 36]
+      fishing-spot: [648, 252, 36, 36]
+      football-stadium: [828, 252, 36, 36]
+      forest: [103, 324, 36, 36]
+      fountain: [144, 180, 36, 36]
+      fried-chicken-joint: [901, 216, 36, 36]
+      furniture-store: [360, 180, 36, 36]
+      food-drink-shop: [864, 72, 36, 36]
+      fun-fair: [612, 144, 36, 36]
+      gaming-cafe: [864, 144, 36, 36]
+      garden: [324, 144, 36, 36]
+      garden-center: [828, 72, 36, 36]
+      gas-station: [0, 288, 36, 36]
+      gastropub: [0, 252, 36, 36]
+      gate: [684, 0, 36, 36]
+      gay-bar: [396, 216, 36, 36]
+      general-entertainment: [324, 252, 36, 36]
+      general-travel: [36, 36, 36, 36]
+      generic: [756, 288, 36, 36]
+      german-restaurant: [864, 216, 36, 36]
+      gift-shop: [828, 144, 36, 36]
+      golf-course: [0, 144, 36, 36]
+      gourmet-shop: [901, 144, 36, 36]
+      grocery-store: [432, 180, 36, 36]
+      harbor-marina: [180, 216, 36, 36]
+      hobby-shop: [684, 72, 36, 36]
+      hiking-trail: [720, 108, 36, 36]
+      historic-site: [792, 144, 36, 36]
+      government-building: [252, 216, 36, 36]
+      hockey-field: [937, 108, 36, 36]
+      hot-pot-restaurant: [216, 288, 36, 36]
+      hardware-store: [756, 72, 36, 36]
+      hot-dog-joint: [612, 288, 36, 36]
+      hot-spring: [252, 72, 36, 36]
+      hotel: [0, 36, 36, 36]
+      information: [720, 288, 36, 36]
+      hospital: [180, 0, 36, 36]
+      internet-cafe: [612, 72, 36, 36]
+      island: [684, 108, 36, 36]
+      hunting-supply: [648, 72, 36, 36]
+      lighthouse: [576, 108, 36, 36]
+      karaoke: [0, 180, 36, 36]
+      ice-cream-shop: [648, 288, 36, 36]
+      lake: [648, 108, 36, 36]
+      medical-center: [576, 216, 36, 36]
+      jewelry-store: [576, 72, 36, 36]
+      landmark: [324, 0, 36, 36]
+      light-rail: [937, 0, 36, 36]
+      laundry: [540, 72, 36, 36]
+      library: [0, 0, 36, 36]
+      market: [432, 72, 36, 36]
+      liquor-store: [396, 180, 36, 36]
+      mall: [504, 72, 36, 36]
+      marijuana-dispensary: [468, 72, 36, 36]
+      lounge: [360, 216, 36, 36]
+      military-base: [180, 144, 36, 36]
+      mine: [720, 72, 36, 36]
+      miscellaneous-shop: [360, 72, 36, 36]
+      mobile-phone-shop: [324, 72, 36, 36]
+      molecular-gastronomy: [324, 288, 36, 36]
+      mosque: [108, 0, 36, 36]
+      motorcycle-shop: [72, 72, 36, 36]
+      mountain: [540, 108, 36, 36]
+      movie-theatre: [720, 252, 36, 36]
+      nail-salon: [0, 72, 36, 36]
+      museum: [756, 144, 36, 36]
+      office-supplies: [864, 36, 36, 36]
+      neighborhood: [504, 108, 36, 36]
+      pier: [864, 0, 36, 36]
+      music-venue: [288, 252, 36, 36]
+      moving-target: [901, 0, 36, 36]
+      music-store: [36, 72, 36, 36]
+      office: [144, 144, 36, 36]
+      nightlife: [180, 252, 36, 36]
+      performing-arts: [252, 252, 36, 36]
+      newsstand: [937, 36, 36, 36]
+      noodle-shop: [432, 288, 36, 36]
+      pet-store: [828, 36, 36, 36]
+      parking: [684, 180, 36, 36]
+      other-outdoors: [468, 108, 36, 36]
+      optical-shop: [900, 36, 36, 36]
+      park: [108, 180, 36, 36]
+      picnic-spot: [720, 0, 36, 36]
+      pizza: [684, 288, 36, 36]
+      pharmacy: [0, 108, 36, 36]
+      pool-hall: [720, 144, 36, 36]
+      photography-lab: [792, 36, 36, 36]
+      pool: [432, 108, 36, 36]
+      post-office: [540, 216, 36, 36]
+      power-pylon: [612, 216, 36, 36]
+      playground: [288, 72, 36, 36]
+      ramen: [396, 288, 36, 36]
+      public-art: [216, 252, 36, 36]
+      police: [288, 0, 36, 36]
+      racetrack: [684, 144, 36, 36]
+      real-estate: [756, 36, 36, 36]
+      record-shop: [720, 36, 36, 36]
+      recycling-facility: [684, 36, 36, 36]
+      rental-car: [828, 0, 36, 36]
+      rest-area: [792, 0, 36, 36]
+      restaurant: [288, 288, 36, 36]
+      river: [396, 108, 36, 36]
+      road: [612, 0, 36, 36]
+      ruin: [648, 0, 36, 36]
+      salon-barber: [648, 36, 36, 36]
+      school: [108, 144, 36, 36]
+      ship-wreck: [108, 36, 36, 36]
+      shoe-store: [396, 72, 36, 36]
+      skating-rink: [864, 108, 36, 36]
+      smoke-shop: [612, 36, 36, 36]
+      skate-park: [900, 108, 36, 36]
+      soccer-stadium: [792, 252, 36, 36]
+      ski-area: [180, 180, 36, 36]
+      soup-place: [828, 216, 36, 36]
+      stable: [324, 108, 36, 36]
+      soccer-field: [828, 108, 36, 36]
+      stadium: [288, 180, 36, 36]
+      spring: [612, 108, 36, 36]
+      spiritual-center: [504, 216, 36, 36]
+      surf-shop: [144, 108, 36, 36]
+      storage-facility: [504, 36, 36, 36]
+      spa-massage: [576, 36, 36, 36]
+      sporting-goods-shop: [540, 36, 36, 36]
+      subway: [540, 0, 36, 36]
+      sushi-restaurant: [36, 180, 36, 36]
+      tailor-shop: [468, 36, 36, 36]
+      steakhouse: [72, 288, 36, 36]
+      tanning-salon: [432, 36, 36, 36]
+      tattoo-parlor: [396, 36, 36, 36]
+      swimming: [324, 180, 36, 36]
+      theme-park: [648, 144, 36, 36]
+      tea-room: [792, 216, 36, 36]
+      synagogue: [72, 0, 36, 36]
+      tennis: [216, 180, 36, 36]
+      thrift-vintage-store: [360, 36, 36, 36]
+      toll-booth: [937, 252, 36, 36]
+      townspot-l-rev: [940, 288, 23, 23]
+      taxi: [504, 0, 36, 36]
+      townspot-l: [52, 324, 23, 23]
+      townspot-m: [32, 324, 20, 20]
+      townspot-m-rev: [920, 288, 20, 20]
+      townspot-s: [13, 324, 18, 18]
+      townspot-s-rev: [902, 288, 18, 18]
+      townspot-xl: [75, 324, 28, 28]
+      townspot-xl-rev: [964, 288, 28, 28]
+      traffic-signal: [901, 252, 36, 36]
+      townspot-xs: [0, 324, 13, 13]
+      track: [252, 180, 36, 36]
+      townspot-xs-rev: [889, 288, 13, 13]
+      toy-game-store: [324, 36, 36, 36]
+      train-station: [468, 0, 36, 36]
+      whisky-bar: [324, 216, 36, 36]
+      veterinarian: [144, 0, 36, 36]
+      travel-agency: [288, 36, 36, 36]
+      video-store: [216, 36, 36, 36]
+      video-game-store: [252, 36, 36, 36]
+      winery: [756, 216, 36, 36]
+      volleyball-court: [792, 108, 36, 36]
+      wings-joint: [720, 216, 36, 36]
+      well: [216, 72, 36, 36]
+      volcano: [288, 108, 36, 36]
+      view-point: [612, 252, 36, 36]
+      vineyard: [144, 216, 36, 36]
+      zoo: [576, 144, 36, 36]
+      wine-bar: [540, 288, 36, 36]
+      wine-shop: [504, 288, 36, 36]
+cameras:
+  camera1:
+    type: perspective
+    vanishing_point: [-250, -250]
+    focal_length: [[16, 2], [20, 6]]
+cameras:
+  isometric:
+    type: isometric
+sources:
+  osm:
+    url: https://vector.mapzen.com/osm/all/{z}/{x}/{y}.mvt
+    type: MVT
+styles:
+  ground:
+    shaders:
+      blocks:
+        vertex_shader: "#extension GL_OES_standard_derivatives : enable\nprecision highp float;\nuniform mat4 u_model;\nuniform mat4 u_view;\nuniform mat4 u_proj;\nuniform mat3 u_normalMatrix;\nuniform vec3 u_map_position;\nuniform vec3 u_tile_origin;\nattribute vec4 a_position;\nattribute vec4 a_color;\nattribute vec3 a_normal;\nattribute vec2 a_texcoord;\nattribute float a_layer;\nvarying vec4 v_world_position;\nvarying vec4 v_position;\nvarying vec4 v_color;\nvarying vec3 v_normal;\nvarying vec2 v_texcoord;\nvarying vec3 v_pos;\nvoid main ()\n{\n  vec4 position_1;\n  v_color = a_color;\n  v_texcoord = a_texcoord;\n  v_normal = normalize((u_normalMatrix * a_normal));\n  position_1 = (u_model * a_position);\n  vec4 tmpvar_2;\n  tmpvar_2.zw = vec2(0.0, 0.0);\n  tmpvar_2.xy = u_map_position.xy;\n  v_world_position = (position_1 + (vec4(mod (tmpvar_2, 100000.0))));\n  v_pos = (a_position.xyz * 32767.0);\n  v_position = (u_view * position_1);\n  gl_Position = (u_proj * v_position);\n  gl_Position.z = (gl_Position.z / (1.0 + (0.1 * \n    (abs(u_tile_origin.z) - u_tile_origin.z)\n  )));\n  gl_Position.z = (gl_Position.z - ((a_layer * 1.5e-05) * gl_Position.w));\n}\n\n"
+        fragment_shader: "#extension GL_OES_standard_derivatives : enable\nprecision highp float;\nstruct Material {\n  vec4 ambient;\n  vec4 diffuse;\n};\nstruct DirectionalLight {\n  vec4 ambient;\n  vec4 diffuse;\n  vec4 specular;\n  vec3 direction;\n};\nuniform vec2 u_resolution;\nvarying vec4 v_color;\nvarying vec3 v_normal;\nuniform Material u_material;\nuniform DirectionalLight u_light1;\nvoid main ()\n{\n  highp vec4 color_1;\n  highp vec4 color_2;\n  color_2 = ((u_light1.ambient * v_color) * u_material.ambient);\n  color_2 = (color_2 + ((\n    (u_light1.diffuse * clamp (dot (v_normal, -(u_light1.direction)), 0.0, 1.0))\n   * v_color) * u_material.diffuse));\n  highp vec4 tmpvar_3;\n  tmpvar_3 = clamp (color_2, 0.0, 1.0);\n  color_2 = tmpvar_3;\n  color_1.w = tmpvar_3.w;\n  highp vec2 tmpvar_4;\n  tmpvar_4 = ((gl_FragCoord.xy / u_resolution) - vec2(0.5, 0.5));\n  highp vec2 p_5;\n  p_5 = (gl_FragCoord.xy * 0.6);\n  highp float s_6;\n  highp vec2 tmpvar_7;\n  tmpvar_7 = floor(p_5);\n  highp vec2 tmpvar_8;\n  tmpvar_8 = fract(p_5);\n  highp float tmpvar_9;\n  tmpvar_9 = fract(((10000.0 * \n    sin(((17.0 * tmpvar_7.x) + (tmpvar_7.y * 0.1)))\n  ) * (0.1 + \n    abs(sin(((tmpvar_7.y * 13.0) + tmpvar_7.x)))\n  )));\n  highp vec2 p_10;\n  p_10 = (tmpvar_7 + vec2(1.0, 0.0));\n  highp float tmpvar_11;\n  tmpvar_11 = fract(((10000.0 * \n    sin(((17.0 * p_10.x) + (p_10.y * 0.1)))\n  ) * (0.1 + \n    abs(sin(((p_10.y * 13.0) + p_10.x)))\n  )));\n  highp vec2 p_12;\n  p_12 = (tmpvar_7 + vec2(0.0, 1.0));\n  highp vec2 p_13;\n  p_13 = (tmpvar_7 + vec2(1.0, 1.0));\n  highp vec2 tmpvar_14;\n  tmpvar_14 = ((tmpvar_8 * tmpvar_8) * (3.0 - (2.0 * tmpvar_8)));\n  s_6 = (0.5 * ((\n    mix (tmpvar_9, tmpvar_11, tmpvar_14.x)\n   + \n    (((fract(\n      ((10000.0 * sin((\n        (17.0 * p_12.x)\n       + \n        (p_12.y * 0.1)\n      ))) * (0.1 + abs(sin(\n        ((p_12.y * 13.0) + p_12.x)\n      ))))\n    ) - tmpvar_9) * tmpvar_14.y) * (1.0 - tmpvar_14.x))\n  ) + (\n    ((fract((\n      (10000.0 * sin(((17.0 * p_13.x) + (p_13.y * 0.1))))\n     * \n      (0.1 + abs(sin((\n        (p_13.y * 13.0)\n       + p_13.x))))\n    )) - tmpvar_11) * tmpvar_14.x)\n   * tmpvar_14.y)));\n  p_5 = (p_5 * 2.0);\n  highp vec2 tmpvar_15;\n  tmpvar_15 = floor(p_5);\n  highp vec2 tmpvar_16;\n  tmpvar_16 = fract(p_5);\n  highp float tmpvar_17;\n  tmpvar_17 = fract(((10000.0 * \n    sin(((17.0 * tmpvar_15.x) + (tmpvar_15.y * 0.1)))\n  ) * (0.1 + \n    abs(sin(((tmpvar_15.y * 13.0) + tmpvar_15.x)))\n  )));\n  highp vec2 p_18;\n  p_18 = (tmpvar_15 + vec2(1.0, 0.0));\n  highp float tmpvar_19;\n  tmpvar_19 = fract(((10000.0 * \n    sin(((17.0 * p_18.x) + (p_18.y * 0.1)))\n  ) * (0.1 + \n    abs(sin(((p_18.y * 13.0) + p_18.x)))\n  )));\n  highp vec2 p_20;\n  p_20 = (tmpvar_15 + vec2(0.0, 1.0));\n  highp vec2 p_21;\n  p_21 = (tmpvar_15 + vec2(1.0, 1.0));\n  highp vec2 tmpvar_22;\n  tmpvar_22 = ((tmpvar_16 * tmpvar_16) * (3.0 - (2.0 * tmpvar_16)));\n  s_6 = (s_6 + (0.25 * (\n    (mix (tmpvar_17, tmpvar_19, tmpvar_22.x) + (((\n      fract(((10000.0 * sin(\n        ((17.0 * p_20.x) + (p_20.y * 0.1))\n      )) * (0.1 + abs(\n        sin(((p_20.y * 13.0) + p_20.x))\n      ))))\n     - tmpvar_17) * tmpvar_22.y) * (1.0 - tmpvar_22.x)))\n   + \n    (((fract(\n      ((10000.0 * sin((\n        (17.0 * p_21.x)\n       + \n        (p_21.y * 0.1)\n      ))) * (0.1 + abs(sin(\n        ((p_21.y * 13.0) + p_21.x)\n      ))))\n    ) - tmpvar_19) * tmpvar_22.x) * tmpvar_22.y)\n  )));\n  p_5 = (p_5 * 2.0);\n  color_1.xyz = (tmpvar_3.xyz - ((0.22 - \n    (dot (tmpvar_4, tmpvar_4) + ((s_6 / 0.75) * 0.1))\n  ) * 0.21));\n  gl_FragColor = color_1;\n}\n\n"
+      extensions:
+        - &48 OES_standard_derivatives
+      defines:
+        STYLE: ground
+    base: polygons
+  buildings_grid-univ:
+    texcoords: true
+    base: polygons
+    shaders:
+      defines:
+        STYLE: buildings_grid-univ
+      blocks:
+        vertex_shader: "precision highp float;\nuniform mat4 u_model;\nuniform mat4 u_view;\nuniform mat4 u_proj;\nuniform mat3 u_normalMatrix;\nuniform vec3 u_map_position;\nuniform vec3 u_tile_origin;\nattribute vec4 a_position;\nattribute vec4 a_color;\nattribute vec3 a_normal;\nattribute vec2 a_texcoord;\nattribute float a_layer;\nvarying vec4 v_world_position;\nvarying vec4 v_position;\nvarying vec4 v_color;\nvarying vec3 v_normal;\nvarying vec2 v_texcoord;\nvarying vec3 v_normalModel;\nvoid main ()\n{\n  vec4 position_1;\n  v_color = a_color;\n  v_texcoord = a_texcoord;\n  v_normal = normalize((u_normalMatrix * a_normal));\n  position_1 = (u_model * a_position);\n  vec4 tmpvar_2;\n  tmpvar_2.zw = vec2(0.0, 0.0);\n  tmpvar_2.xy = u_map_position.xy;\n  v_world_position = (position_1 + (vec4(mod (tmpvar_2, 100000.0))));\n  v_normalModel = a_normal;\n  v_position = (u_view * position_1);\n  gl_Position = (u_proj * v_position);\n  gl_Position.z = (gl_Position.z / (1.0 + (0.1 * \n    (abs(u_tile_origin.z) - u_tile_origin.z)\n  )));\n  gl_Position.z = (gl_Position.z - ((a_layer * 1.5e-05) * gl_Position.w));\n}\n\n"
+        fragment_shader: "precision highp float;\nstruct Material {\n  vec4 ambient;\n  vec4 diffuse;\n};\nstruct DirectionalLight {\n  vec4 ambient;\n  vec4 diffuse;\n  vec4 specular;\n  vec3 direction;\n};\nvarying vec4 v_color;\nvarying vec3 v_normal;\nvarying vec2 v_texcoord;\nuniform Material u_material;\nvec4 light_accumulator_diffuse;\nuniform DirectionalLight u_light1;\nvarying vec3 v_normalModel;\nvoid main ()\n{\n  vec4 tmpvar_1;\n  vec4 tmpvar_2;\n  vec3 tmpvar_3;\n  vec4 tmpvar_4;\n  vec4 tmpvar_5;\n  tmpvar_4 = u_material.ambient;\n  tmpvar_5 = u_material.diffuse;\n  light_accumulator_diffuse = vec4(0.0, 0.0, 0.0, 0.0);\n  tmpvar_1 = u_light1.ambient;\n  tmpvar_2 = u_light1.diffuse;\n  tmpvar_3 = u_light1.direction;\n  mediump vec4 color_6;\n  color_6.w = v_color.w;\n  vec2 tmpvar_7;\n  tmpvar_7 = vec2(greaterThanEqual (fract(\n    (v_texcoord * 10.0)\n  ), vec2(0.09, 0.09)));\n  color_6.xyz = (v_color.xyz - mix (vec3(0.0, 0.06, 0.061), vec3(0.35, 0.35, 0.35), (1.0 - \n    (tmpvar_7.x * tmpvar_7.y)\n  )));\n  if ((v_normalModel.z == 1.0)) {\n    color_6.xyz = vec3(0.87, 0.87, 0.87);\n  };\n  mediump vec4 color_8;\n  light_accumulator_diffuse = (tmpvar_2 * clamp (dot (v_normal, \n    -(tmpvar_3)\n  ), 0.0, 1.0));\n  color_8 = ((tmpvar_1 * color_6) * tmpvar_4);\n  color_8 = (color_8 + ((light_accumulator_diffuse * color_6) * tmpvar_5));\n  mediump vec4 tmpvar_9;\n  tmpvar_9 = clamp (color_8, 0.0, 1.0);\n  color_8 = tmpvar_9;\n  color_6 = tmpvar_9;\n  gl_FragColor = tmpvar_9;\n}\n\n"
+  dots-rev:
+    base: polygons
+    shaders:
+      defines:
+        STYLE: dots-rev
+        SIZE: 2.
+        BACKGROUND: vec3(0.850,0.850,0.850)
+      blocks:
+        fragment_shader: "#extension GL_OES_standard_derivatives : enable\nprecision highp float;\nstruct Material {\n  vec4 ambient;\n  vec4 diffuse;\n};\nstruct DirectionalLight {\n  vec4 ambient;\n  vec4 diffuse;\n  vec4 specular;\n  vec3 direction;\n};\nuniform vec3 u_map_position;\nvarying vec4 v_color;\nvarying vec3 v_normal;\nuniform Material u_material;\nvec4 light_accumulator_diffuse;\nuniform DirectionalLight u_light1;\nvarying vec3 v_pos;\nvoid main ()\n{\n  vec4 tmpvar_1;\n  vec4 tmpvar_2;\n  vec3 tmpvar_3;\n  vec4 tmpvar_4;\n  vec4 tmpvar_5;\n  tmpvar_4 = u_material.ambient;\n  tmpvar_5 = u_material.diffuse;\n  light_accumulator_diffuse = vec4(0.0, 0.0, 0.0, 0.0);\n  tmpvar_1 = u_light1.ambient;\n  tmpvar_2 = u_light1.diffuse;\n  tmpvar_3 = u_light1.direction;\n  mediump vec4 color_6;\n  color_6 = v_color;\n  float d_7;\n  vec2 tmpvar_8;\n  vec2 tmpvar_9;\n  tmpvar_9 = (v_pos.xy * 0.0002445);\n  tmpvar_8 = (70.0 * fract(tmpvar_9));\n  float tmpvar_10;\n  tmpvar_10 = pow (fract(u_map_position.z), 15.0);\n  d_7 = 0.0;\n  vec2 st_11;\n  st_11 = (fract((\n    fract(tmpvar_9)\n   * 35.0)) * 2.0);\n  float tmpvar_12;\n  tmpvar_12 = fract((st_11.y * 0.5));\n  if ((tmpvar_12 > 0.5)) {\n    st_11.x = (st_11.x + 0.5);\n  };\n  float tmpvar_13;\n  vec2 tmpvar_14;\n  tmpvar_14 = (vec2(0.5, 0.5) - fract(st_11));\n  tmpvar_13 = (dot (tmpvar_14, tmpvar_14) * 3.14);\n  vec2 st_15;\n  st_15 = (fract(tmpvar_8) * 2.0);\n  float tmpvar_16;\n  tmpvar_16 = fract((st_15.y * 0.5));\n  if ((tmpvar_16 > 0.5)) {\n    st_15.x = (st_15.x + 0.5);\n  };\n  vec2 tmpvar_17;\n  tmpvar_17 = (vec2(0.5, 0.5) - fract(st_15));\n  d_7 = ((tmpvar_13 * (1.0 - tmpvar_10)) + ((\n    dot (tmpvar_17, tmpvar_17)\n   * 3.14) * tmpvar_10));\n  vec2 tmpvar_18;\n  tmpvar_18.x = dFdx(d_7);\n  tmpvar_18.y = dFdy(d_7);\n  float tmpvar_19;\n  tmpvar_19 = (sqrt(dot (tmpvar_18, tmpvar_18)) * 0.7071068);\n  float edge0_20;\n  edge0_20 = (0.21 - tmpvar_19);\n  float tmpvar_21;\n  tmpvar_21 = clamp (((d_7 - edge0_20) / (\n    (0.21 + tmpvar_19)\n   - edge0_20)), 0.0, 1.0);\n  d_7 = (1.0 - (tmpvar_21 * (tmpvar_21 * \n    (3.0 - (2.0 * tmpvar_21))\n  )));\n  color_6.xyz = mix (v_color.xyz, vec3(0.85, 0.85, 0.85), d_7);\n  mediump vec4 color_22;\n  light_accumulator_diffuse = (tmpvar_2 * clamp (dot (v_normal, \n    -(tmpvar_3)\n  ), 0.0, 1.0));\n  color_22 = ((tmpvar_1 * color_6) * tmpvar_4);\n  color_22 = (color_22 + ((light_accumulator_diffuse * color_6) * tmpvar_5));\n  mediump vec4 tmpvar_23;\n  tmpvar_23 = clamp (color_22, 0.0, 1.0);\n  color_22 = tmpvar_23;\n  color_6 = tmpvar_23;\n  gl_FragColor = tmpvar_23;\n}\n\n"
+        vertex_shader: "#extension GL_OES_standard_derivatives : enable\nprecision highp float;\nuniform mat4 u_model;\nuniform mat4 u_view;\nuniform mat4 u_proj;\nuniform mat3 u_normalMatrix;\nuniform vec3 u_map_position;\nuniform vec3 u_tile_origin;\nattribute vec4 a_position;\nattribute vec4 a_color;\nattribute vec3 a_normal;\nattribute vec2 a_texcoord;\nattribute float a_layer;\nvarying vec4 v_world_position;\nvarying vec4 v_position;\nvarying vec4 v_color;\nvarying vec3 v_normal;\nvarying vec2 v_texcoord;\nvarying vec3 v_pos;\nvoid main ()\n{\n  vec4 position_1;\n  v_color = a_color;\n  v_texcoord = a_texcoord;\n  v_normal = normalize((u_normalMatrix * a_normal));\n  position_1 = (u_model * a_position);\n  vec4 tmpvar_2;\n  tmpvar_2.zw = vec2(0.0, 0.0);\n  tmpvar_2.xy = u_map_position.xy;\n  v_world_position = (position_1 + (vec4(mod (tmpvar_2, 100000.0))));\n  v_pos = (a_position.xyz * 32767.0);\n  v_position = (u_view * position_1);\n  gl_Position = (u_proj * v_position);\n  gl_Position.z = (gl_Position.z / (1.0 + (0.1 * \n    (abs(u_tile_origin.z) - u_tile_origin.z)\n  )));\n  gl_Position.z = (gl_Position.z - ((a_layer * 1.5e-05) * gl_Position.w));\n}\n\n"
+      extensions:
+        - *48
+  buildings_grid:
+    texcoords: true
+    base: polygons
+    shaders:
+      extensions:
+        - OES_standard_derivatives
+      blocks:
+        fragment_shader: "#extension GL_OES_standard_derivatives : enable\nprecision highp float;\nstruct Material {\n  vec4 ambient;\n  vec4 diffuse;\n};\nstruct DirectionalLight {\n  vec4 ambient;\n  vec4 diffuse;\n  vec4 specular;\n  vec3 direction;\n};\nvarying vec4 v_color;\nvarying vec3 v_normal;\nvarying vec2 v_texcoord;\nuniform Material u_material;\nvec4 light_accumulator_diffuse;\nuniform DirectionalLight u_light1;\nvarying vec3 v_normalModel;\nvoid main ()\n{\n  vec4 tmpvar_1;\n  vec4 tmpvar_2;\n  vec3 tmpvar_3;\n  vec4 tmpvar_4;\n  vec4 tmpvar_5;\n  tmpvar_4 = u_material.ambient;\n  tmpvar_5 = u_material.diffuse;\n  light_accumulator_diffuse = vec4(0.0, 0.0, 0.0, 0.0);\n  tmpvar_1 = u_light1.ambient;\n  tmpvar_2 = u_light1.diffuse;\n  tmpvar_3 = u_light1.direction;\n  mediump vec4 color_6;\n  color_6.w = v_color.w;\n  vec2 tmpvar_7;\n  tmpvar_7 = (abs(dFdx(v_texcoord)) + abs(dFdy(v_texcoord)));\n  vec2 tmpvar_8;\n  vec2 edge0_9;\n  edge0_9 = (vec2(0.012, 0.012) - tmpvar_7);\n  vec2 tmpvar_10;\n  tmpvar_10 = clamp (((\n    (abs((fract(\n      (v_texcoord * 10.0)\n    ) - 0.5)) * 2.0)\n   - edge0_9) / (\n    (vec2(0.2, 0.2) + tmpvar_7)\n   - edge0_9)), 0.0, 1.0);\n  tmpvar_8 = (tmpvar_10 * (tmpvar_10 * (3.0 - \n    (2.0 * tmpvar_10)\n  )));\n  color_6.xyz = (v_color.xyz - (vec3(0.35, 0.35, 0.35) * (1.0 - \n    (tmpvar_8.x * tmpvar_8.y)\n  )));\n  if ((v_normalModel.z == 1.0)) {\n    color_6.xyz = vec3(0.87, 0.87, 0.87);\n  };\n  mediump vec4 color_11;\n  light_accumulator_diffuse = (tmpvar_2 * clamp (dot (v_normal, \n    -(tmpvar_3)\n  ), 0.0, 1.0));\n  color_11 = ((tmpvar_1 * color_6) * tmpvar_4);\n  color_11 = (color_11 + ((light_accumulator_diffuse * color_6) * tmpvar_5));\n  mediump vec4 tmpvar_12;\n  tmpvar_12 = clamp (color_11, 0.0, 1.0);\n  color_11 = tmpvar_12;\n  color_6 = tmpvar_12;\n  gl_FragColor = tmpvar_12;\n}\n\n"
+        vertex_shader: "#extension GL_OES_standard_derivatives : enable\nprecision highp float;\nuniform mat4 u_model;\nuniform mat4 u_view;\nuniform mat4 u_proj;\nuniform mat3 u_normalMatrix;\nuniform vec3 u_map_position;\nuniform vec3 u_tile_origin;\nattribute vec4 a_position;\nattribute vec4 a_color;\nattribute vec3 a_normal;\nattribute vec2 a_texcoord;\nattribute float a_layer;\nvarying vec4 v_world_position;\nvarying vec4 v_position;\nvarying vec4 v_color;\nvarying vec3 v_normal;\nvarying vec2 v_texcoord;\nvarying vec3 v_normalModel;\nvoid main ()\n{\n  vec4 position_1;\n  v_color = a_color;\n  v_texcoord = a_texcoord;\n  v_normal = normalize((u_normalMatrix * a_normal));\n  position_1 = (u_model * a_position);\n  vec4 tmpvar_2;\n  tmpvar_2.zw = vec2(0.0, 0.0);\n  tmpvar_2.xy = u_map_position.xy;\n  v_world_position = (position_1 + (vec4(mod (tmpvar_2, 100000.0))));\n  v_normalModel = a_normal;\n  v_position = (u_view * position_1);\n  gl_Position = (u_proj * v_position);\n  gl_Position.z = (gl_Position.z / (1.0 + (0.1 * \n    (abs(u_tile_origin.z) - u_tile_origin.z)\n  )));\n  gl_Position.z = (gl_Position.z - ((a_layer * 1.5e-05) * gl_Position.w));\n}\n\n"
+      defines:
+        STYLE: buildings_grid
+  icons:
+    base: points
+    shaders:
+      blocks:
+        vertex_shader: "precision mediump float;\nuniform mat4 u_ortho;\nattribute lowp vec2 a_uv;\nattribute vec2 a_position;\nattribute vec2 a_screenPosition;\nattribute lowp float a_alpha;\nattribute lowp float a_rotation;\nattribute lowp vec4 a_color;\nattribute lowp vec4 a_stroke;\nvarying lowp vec4 v_color;\nvarying lowp vec4 v_strokeColor;\nvarying lowp vec2 v_texcoords;\nvarying lowp float v_strokeWidth;\nvarying lowp float v_alpha;\nvoid main ()\n{\n  v_alpha = a_alpha;\n  v_texcoords = a_uv;\n  v_color = a_color;\n  v_strokeWidth = a_stroke.w;\n  if ((a_alpha > 1e-05)) {\n    lowp float tmpvar_1;\n    tmpvar_1 = sin(a_rotation);\n    lowp float tmpvar_2;\n    tmpvar_2 = cos(a_rotation);\n    lowp vec4 tmpvar_3;\n    tmpvar_3.zw = vec2(0.0, 1.0);\n    tmpvar_3.x = (((a_position.x * tmpvar_2) - (a_position.y * tmpvar_1)) + a_screenPosition.x);\n    tmpvar_3.y = (((a_position.x * tmpvar_1) + (a_position.y * tmpvar_2)) + a_screenPosition.y);\n    gl_Position = (u_ortho * tmpvar_3);\n  } else {\n    gl_Position = vec4(0.0, 0.0, 0.0, 1.0);\n  };\n  lowp vec3 tmpvar_4;\n  if ((a_stroke.w > 1e-05)) {\n    tmpvar_4 = a_stroke.xyz;\n  } else {\n    tmpvar_4 = a_color.xyz;\n  };\n  v_strokeColor.xyz = tmpvar_4;\n}\n\n"
+        fragment_shader: "precision mediump float;\nvarying vec4 v_color;\nvarying vec2 v_texcoords;\nvarying float v_alpha;\nuniform sampler2D u_tex;\nvoid main ()\n{\n  if ((v_alpha < 1e-05)) {\n    discard;\n  } else {\n    lowp vec4 tmpvar_1;\n    tmpvar_1 = texture2D (u_tex, v_texcoords);\n    lowp vec4 tmpvar_2;\n    tmpvar_2.xyz = (tmpvar_1.xyz * v_color.xyz);\n    tmpvar_2.w = ((v_alpha * tmpvar_1.w) * v_color.w);\n    gl_FragColor = tmpvar_2;\n  };\n}\n\n"
+    texture: pois
+  dashedline:
+    shaders:
+      defines:
+        STYLE: dashedline
+      blocks:
+        fragment_shader: "precision highp float;\nstruct Material {\n  vec4 ambient;\n  vec4 diffuse;\n};\nstruct DirectionalLight {\n  vec4 ambient;\n  vec4 diffuse;\n  vec4 specular;\n  vec3 direction;\n};\nvarying vec4 v_color;\nvarying vec3 v_normal;\nvarying vec2 v_texcoord;\nuniform Material u_material;\nvec4 light_accumulator_diffuse;\nuniform DirectionalLight u_light1;\nvoid main ()\n{\n  vec4 tmpvar_1;\n  vec4 tmpvar_2;\n  vec3 tmpvar_3;\n  vec4 tmpvar_4;\n  vec4 tmpvar_5;\n  tmpvar_4 = u_material.ambient;\n  tmpvar_5 = u_material.diffuse;\n  light_accumulator_diffuse = vec4(0.0, 0.0, 0.0, 0.0);\n  tmpvar_1 = u_light1.ambient;\n  tmpvar_2 = u_light1.diffuse;\n  tmpvar_3 = u_light1.direction;\n  vec2 _st_6;\n  _st_6 = (v_texcoord * vec2(1.0, 6.0));\n  float tmpvar_7;\n  tmpvar_7 = fract((_st_6.y * 0.5));\n  if ((tmpvar_7 > 0.5)) {\n    _st_6.x = (_st_6.x + 0.5);\n    _st_6.y = (1.0 - _st_6.y);\n  };\n  float tmpvar_8;\n  tmpvar_8 = clamp (((\n    abs(sin(((v_texcoord * 10.0).y * 3.1415)))\n   - 0.3) / 0.7), 0.0, 1.0);\n  vec4 tmpvar_9;\n  tmpvar_9 = mix (v_color, vec4(1.0, 1.0, 1.0, 1.0), float((\n    (1.0 - (tmpvar_8 * (tmpvar_8 * (3.0 - \n      (2.0 * tmpvar_8)\n    ))))\n   >= 0.5)));\n  mediump vec4 color_10;\n  light_accumulator_diffuse = (tmpvar_2 * clamp (dot (v_normal, \n    -(tmpvar_3)\n  ), 0.0, 1.0));\n  color_10 = ((tmpvar_1 * tmpvar_9) * tmpvar_4);\n  color_10 = (color_10 + ((light_accumulator_diffuse * tmpvar_9) * tmpvar_5));\n  mediump vec4 tmpvar_11;\n  tmpvar_11 = clamp (color_10, 0.0, 1.0);\n  color_10 = tmpvar_11;\n  gl_FragColor = tmpvar_11;\n}\n\n"
+        vertex_shader: "precision highp float;\nuniform mat4 u_model;\nuniform mat4 u_view;\nuniform mat4 u_proj;\nuniform mat3 u_normalMatrix;\nuniform vec3 u_map_position;\nuniform vec3 u_tile_origin;\nattribute vec4 a_position;\nattribute vec4 a_color;\nattribute vec4 a_extrude;\nattribute vec2 a_texcoord;\nattribute float a_layer;\nvarying vec4 v_world_position;\nvarying vec4 v_position;\nvarying vec4 v_color;\nvarying vec3 v_normal;\nvarying vec2 v_texcoord;\nvoid main ()\n{\n  float width_1;\n  vec4 position_2;\n  position_2.zw = a_position.zw;\n  v_color = a_color;\n  v_texcoord = a_texcoord;\n  v_normal = (u_normalMatrix * vec3(0.0, 0.0, 1.0));\n  float tmpvar_3;\n  float tmpvar_4;\n  tmpvar_4 = abs(u_tile_origin.z);\n  tmpvar_3 = (u_map_position.z - tmpvar_4);\n  width_1 = (a_extrude.z + (a_extrude.w * tmpvar_3));\n  width_1 = (width_1 * exp2(-(tmpvar_3)));\n  position_2.xy = (a_position.xy + (a_extrude.xy * width_1));\n  position_2 = (u_model * position_2);\n  vec4 tmpvar_5;\n  tmpvar_5.zw = vec2(0.0, 0.0);\n  tmpvar_5.xy = u_map_position.xy;\n  v_world_position = (position_2 + (vec4(mod (tmpvar_5, 100000.0))));\n  v_position = (u_view * position_2);\n  gl_Position = (u_proj * v_position);\n  gl_Position.z = (gl_Position.z / (1.0 + (0.1 * \n    (tmpvar_4 - u_tile_origin.z)\n  )));\n  gl_Position.z = (gl_Position.z - ((a_layer * 1.5e-05) * gl_Position.w));\n}\n\n"
+    base: lines
+    texcoords: true
+  grid:
+    base: polygons
+    shaders:
+      defines:
+        STYLE: grid
+      blocks:
+        vertex_shader: "#extension GL_OES_standard_derivatives : enable\nprecision highp float;\nuniform mat4 u_model;\nuniform mat4 u_view;\nuniform mat4 u_proj;\nuniform mat3 u_normalMatrix;\nuniform vec3 u_map_position;\nuniform vec3 u_tile_origin;\nattribute vec4 a_position;\nattribute vec4 a_color;\nattribute vec3 a_normal;\nattribute vec2 a_texcoord;\nattribute float a_layer;\nvarying vec4 v_world_position;\nvarying vec4 v_position;\nvarying vec4 v_color;\nvarying vec3 v_normal;\nvarying vec2 v_texcoord;\nvarying vec3 v_pos;\nvoid main ()\n{\n  vec4 position_1;\n  v_color = a_color;\n  v_texcoord = a_texcoord;\n  v_normal = normalize((u_normalMatrix * a_normal));\n  position_1 = (u_model * a_position);\n  vec4 tmpvar_2;\n  tmpvar_2.zw = vec2(0.0, 0.0);\n  tmpvar_2.xy = u_map_position.xy;\n  v_world_position = (position_1 + (vec4(mod (tmpvar_2, 100000.0))));\n  v_pos = (a_position.xyz * 32767.0);\n  v_position = (u_view * position_1);\n  gl_Position = (u_proj * v_position);\n  gl_Position.z = (gl_Position.z / (1.0 + (0.1 * \n    (abs(u_tile_origin.z) - u_tile_origin.z)\n  )));\n  gl_Position.z = (gl_Position.z - ((a_layer * 1.5e-05) * gl_Position.w));\n}\n\n"
+        fragment_shader: "#extension GL_OES_standard_derivatives : enable\nprecision highp float;\nstruct Material {\n  vec4 ambient;\n  vec4 diffuse;\n};\nstruct DirectionalLight {\n  vec4 ambient;\n  vec4 diffuse;\n  vec4 specular;\n  vec3 direction;\n};\nuniform vec3 u_map_position;\nuniform vec2 u_resolution;\nvarying vec4 v_color;\nvarying vec3 v_normal;\nuniform Material u_material;\nuniform DirectionalLight u_light1;\nvarying vec3 v_pos;\nvoid main ()\n{\n  highp vec4 color_1;\n  highp vec4 color_2;\n  color_2 = ((u_light1.ambient * v_color) * u_material.ambient);\n  color_2 = (color_2 + ((\n    (u_light1.diffuse * clamp (dot (v_normal, -(u_light1.direction)), 0.0, 1.0))\n   * v_color) * u_material.diffuse));\n  highp vec4 tmpvar_3;\n  tmpvar_3 = clamp (color_2, 0.0, 1.0);\n  color_2 = tmpvar_3;\n  color_1.w = tmpvar_3.w;\n  highp vec2 tmpvar_4;\n  tmpvar_4 = ((gl_FragCoord.xy / u_resolution) - vec2(0.5, 0.5));\n  highp vec2 p_5;\n  p_5 = (gl_FragCoord.xy * 0.6);\n  highp float s_6;\n  highp vec2 tmpvar_7;\n  tmpvar_7 = floor(p_5);\n  highp vec2 tmpvar_8;\n  tmpvar_8 = fract(p_5);\n  highp float tmpvar_9;\n  tmpvar_9 = fract(((10000.0 * \n    sin(((17.0 * tmpvar_7.x) + (tmpvar_7.y * 0.1)))\n  ) * (0.1 + \n    abs(sin(((tmpvar_7.y * 13.0) + tmpvar_7.x)))\n  )));\n  highp vec2 p_10;\n  p_10 = (tmpvar_7 + vec2(1.0, 0.0));\n  highp float tmpvar_11;\n  tmpvar_11 = fract(((10000.0 * \n    sin(((17.0 * p_10.x) + (p_10.y * 0.1)))\n  ) * (0.1 + \n    abs(sin(((p_10.y * 13.0) + p_10.x)))\n  )));\n  highp vec2 p_12;\n  p_12 = (tmpvar_7 + vec2(0.0, 1.0));\n  highp vec2 p_13;\n  p_13 = (tmpvar_7 + vec2(1.0, 1.0));\n  highp vec2 tmpvar_14;\n  tmpvar_14 = ((tmpvar_8 * tmpvar_8) * (3.0 - (2.0 * tmpvar_8)));\n  s_6 = (0.5 * ((\n    mix (tmpvar_9, tmpvar_11, tmpvar_14.x)\n   + \n    (((fract(\n      ((10000.0 * sin((\n        (17.0 * p_12.x)\n       + \n        (p_12.y * 0.1)\n      ))) * (0.1 + abs(sin(\n        ((p_12.y * 13.0) + p_12.x)\n      ))))\n    ) - tmpvar_9) * tmpvar_14.y) * (1.0 - tmpvar_14.x))\n  ) + (\n    ((fract((\n      (10000.0 * sin(((17.0 * p_13.x) + (p_13.y * 0.1))))\n     * \n      (0.1 + abs(sin((\n        (p_13.y * 13.0)\n       + p_13.x))))\n    )) - tmpvar_11) * tmpvar_14.x)\n   * tmpvar_14.y)));\n  p_5 = (p_5 * 2.0);\n  highp vec2 tmpvar_15;\n  tmpvar_15 = floor(p_5);\n  highp vec2 tmpvar_16;\n  tmpvar_16 = fract(p_5);\n  highp float tmpvar_17;\n  tmpvar_17 = fract(((10000.0 * \n    sin(((17.0 * tmpvar_15.x) + (tmpvar_15.y * 0.1)))\n  ) * (0.1 + \n    abs(sin(((tmpvar_15.y * 13.0) + tmpvar_15.x)))\n  )));\n  highp vec2 p_18;\n  p_18 = (tmpvar_15 + vec2(1.0, 0.0));\n  highp float tmpvar_19;\n  tmpvar_19 = fract(((10000.0 * \n    sin(((17.0 * p_18.x) + (p_18.y * 0.1)))\n  ) * (0.1 + \n    abs(sin(((p_18.y * 13.0) + p_18.x)))\n  )));\n  highp vec2 p_20;\n  p_20 = (tmpvar_15 + vec2(0.0, 1.0));\n  highp vec2 p_21;\n  p_21 = (tmpvar_15 + vec2(1.0, 1.0));\n  highp vec2 tmpvar_22;\n  tmpvar_22 = ((tmpvar_16 * tmpvar_16) * (3.0 - (2.0 * tmpvar_16)));\n  s_6 = (s_6 + (0.25 * (\n    (mix (tmpvar_17, tmpvar_19, tmpvar_22.x) + (((\n      fract(((10000.0 * sin(\n        ((17.0 * p_20.x) + (p_20.y * 0.1))\n      )) * (0.1 + abs(\n        sin(((p_20.y * 13.0) + p_20.x))\n      ))))\n     - tmpvar_17) * tmpvar_22.y) * (1.0 - tmpvar_22.x)))\n   + \n    (((fract(\n      ((10000.0 * sin((\n        (17.0 * p_21.x)\n       + \n        (p_21.y * 0.1)\n      ))) * (0.1 + abs(sin(\n        ((p_21.y * 13.0) + p_21.x)\n      ))))\n    ) - tmpvar_19) * tmpvar_22.x) * tmpvar_22.y)\n  )));\n  p_5 = (p_5 * 2.0);\n  color_1.xyz = (vec3(0.899, 0.95, 1.0) - ((\n    dot (tmpvar_4, tmpvar_4)\n   + \n    ((s_6 / 0.75) * 0.1)\n  ) * 0.1));\n  float pct_23;\n  vec2 tmpvar_24;\n  tmpvar_24 = (fract((v_pos.xy * 0.0002445)) * 100.0);\n  pct_23 = 0.0;\n  float tmpvar_25;\n  tmpvar_25 = (0.4 + ((1.0 - \n    fract(u_map_position.z)\n  ) * 0.1));\n  vec2 tmpvar_26;\n  tmpvar_26 = fract((tmpvar_24 * 0.01));\n  if (((tmpvar_26.x < (0.01 * tmpvar_25)) || (tmpvar_26.y < (0.01 * tmpvar_25)))) {\n    pct_23 = 0.5;\n  };\n  vec2 tmpvar_27;\n  tmpvar_27 = fract((tmpvar_24 * 0.1));\n  if (((tmpvar_27.x < (0.1 * tmpvar_25)) || (tmpvar_27.y < (0.1 * tmpvar_25)))) {\n    pct_23 += 0.1;\n  };\n  float pct_28;\n  vec2 tmpvar_29;\n  tmpvar_29 = (200.0 * fract((v_pos.xy * 0.0002445)));\n  pct_28 = 0.0;\n  float tmpvar_30;\n  tmpvar_30 = (0.4 + ((1.0 - \n    fract(u_map_position.z)\n  ) * 0.1));\n  vec2 tmpvar_31;\n  tmpvar_31 = fract((tmpvar_29 * 0.01));\n  if (((tmpvar_31.x < (0.01 * tmpvar_30)) || (tmpvar_31.y < (0.01 * tmpvar_30)))) {\n    pct_28 = 0.5;\n  };\n  vec2 tmpvar_32;\n  tmpvar_32 = fract((tmpvar_29 * 0.1));\n  if (((tmpvar_32.x < (0.1 * tmpvar_30)) || (tmpvar_32.y < (0.1 * tmpvar_30)))) {\n    pct_28 += 0.1;\n  };\n  color_1.xyz = mix (color_1.xyz, vec3(0.639, 0.886, 0.906), mix (pct_23, pct_28, fract(u_map_position.z)));\n  gl_FragColor = color_1;\n}\n\n"
+      extensions:
+        - *48
+  buildings_lines:
+    texcoords: true
+    shaders:
+      defines:
+        STYLE: buildings_lines
+      blocks:
+        vertex_shader: "precision highp float;\nuniform mat4 u_model;\nuniform mat4 u_view;\nuniform mat4 u_proj;\nuniform mat3 u_normalMatrix;\nuniform vec3 u_map_position;\nuniform vec3 u_tile_origin;\nattribute vec4 a_position;\nattribute vec4 a_color;\nattribute vec4 a_extrude;\nattribute vec2 a_texcoord;\nattribute float a_layer;\nvarying vec4 v_world_position;\nvarying vec4 v_position;\nvarying vec4 v_color;\nvarying vec3 v_normal;\nvarying vec2 v_texcoord;\nvoid main ()\n{\n  float width_1;\n  vec4 position_2;\n  position_2.zw = a_position.zw;\n  v_color = a_color;\n  v_texcoord = a_texcoord;\n  v_normal = (u_normalMatrix * vec3(0.0, 0.0, 1.0));\n  float tmpvar_3;\n  float tmpvar_4;\n  tmpvar_4 = abs(u_tile_origin.z);\n  tmpvar_3 = (u_map_position.z - tmpvar_4);\n  width_1 = (a_extrude.z + (a_extrude.w * tmpvar_3));\n  width_1 = (width_1 * exp2(-(tmpvar_3)));\n  position_2.xy = (a_position.xy + (a_extrude.xy * width_1));\n  position_2 = (u_model * position_2);\n  vec4 tmpvar_5;\n  tmpvar_5.zw = vec2(0.0, 0.0);\n  tmpvar_5.xy = u_map_position.xy;\n  v_world_position = (position_2 + (vec4(mod (tmpvar_5, 100000.0))));\n  position_2.z = (position_2.z * ((0.9 / \n    (1.0 + pow (2.71828, ((u_map_position.z - 16.0) / 0.4)))\n  ) + 0.1));\n  v_position = (u_view * position_2);\n  gl_Position = (u_proj * v_position);\n  gl_Position.z = (gl_Position.z / (1.0 + (0.1 * \n    (tmpvar_4 - u_tile_origin.z)\n  )));\n  gl_Position.z = (gl_Position.z - ((a_layer * 1.5e-05) * gl_Position.w));\n}\n\n"
+        fragment_shader: "precision highp float;\nstruct Material {\n  vec4 ambient;\n  vec4 diffuse;\n};\nstruct DirectionalLight {\n  vec4 ambient;\n  vec4 diffuse;\n  vec4 specular;\n  vec3 direction;\n};\nvarying vec4 v_color;\nvarying vec3 v_normal;\nuniform Material u_material;\nuniform DirectionalLight u_light1;\nvoid main ()\n{\n  mediump vec4 color_1;\n  color_1 = ((u_light1.ambient * v_color) * u_material.ambient);\n  color_1 = (color_1 + ((\n    (u_light1.diffuse * clamp (dot (v_normal, -(u_light1.direction)), 0.0, 1.0))\n   * v_color) * u_material.diffuse));\n  mediump vec4 tmpvar_2;\n  tmpvar_2 = clamp (color_1, 0.0, 1.0);\n  color_1 = tmpvar_2;\n  gl_FragColor = tmpvar_2;\n}\n\n"
+    base: lines
+  dots:
+    base: polygons
+    shaders:
+      defines:
+        SIZE: 2.
+        BACKGROUND: vec3(0.850,0.850,0.850)
+        STYLE: dots
+      blocks:
+        vertex_shader: "#extension GL_OES_standard_derivatives : enable\nprecision highp float;\nuniform mat4 u_model;\nuniform mat4 u_view;\nuniform mat4 u_proj;\nuniform mat3 u_normalMatrix;\nuniform vec3 u_map_position;\nuniform vec3 u_tile_origin;\nattribute vec4 a_position;\nattribute vec4 a_color;\nattribute vec3 a_normal;\nattribute vec2 a_texcoord;\nattribute float a_layer;\nvarying vec4 v_world_position;\nvarying vec4 v_position;\nvarying vec4 v_color;\nvarying vec3 v_normal;\nvarying vec2 v_texcoord;\nvarying vec3 v_pos;\nvoid main ()\n{\n  vec4 position_1;\n  v_color = a_color;\n  v_texcoord = a_texcoord;\n  v_normal = normalize((u_normalMatrix * a_normal));\n  position_1 = (u_model * a_position);\n  vec4 tmpvar_2;\n  tmpvar_2.zw = vec2(0.0, 0.0);\n  tmpvar_2.xy = u_map_position.xy;\n  v_world_position = (position_1 + (vec4(mod (tmpvar_2, 100000.0))));\n  v_pos = (a_position.xyz * 32767.0);\n  v_position = (u_view * position_1);\n  gl_Position = (u_proj * v_position);\n  gl_Position.z = (gl_Position.z / (1.0 + (0.1 * \n    (abs(u_tile_origin.z) - u_tile_origin.z)\n  )));\n  gl_Position.z = (gl_Position.z - ((a_layer * 1.5e-05) * gl_Position.w));\n}\n\n"
+        fragment_shader: "#extension GL_OES_standard_derivatives : enable\nprecision highp float;\nstruct Material {\n  vec4 ambient;\n  vec4 diffuse;\n};\nstruct DirectionalLight {\n  vec4 ambient;\n  vec4 diffuse;\n  vec4 specular;\n  vec3 direction;\n};\nuniform vec3 u_map_position;\nvarying vec4 v_color;\nvarying vec3 v_normal;\nuniform Material u_material;\nvec4 light_accumulator_diffuse;\nuniform DirectionalLight u_light1;\nvarying vec3 v_pos;\nvoid main ()\n{\n  vec4 tmpvar_1;\n  vec4 tmpvar_2;\n  vec3 tmpvar_3;\n  vec4 tmpvar_4;\n  vec4 tmpvar_5;\n  tmpvar_4 = u_material.ambient;\n  tmpvar_5 = u_material.diffuse;\n  light_accumulator_diffuse = vec4(0.0, 0.0, 0.0, 0.0);\n  tmpvar_1 = u_light1.ambient;\n  tmpvar_2 = u_light1.diffuse;\n  tmpvar_3 = u_light1.direction;\n  mediump vec4 color_6;\n  color_6 = v_color;\n  float d_7;\n  vec2 tmpvar_8;\n  vec2 tmpvar_9;\n  tmpvar_9 = (v_pos.xy * 0.0002445);\n  tmpvar_8 = (70.0 * fract(tmpvar_9));\n  float tmpvar_10;\n  tmpvar_10 = pow (fract(u_map_position.z), 15.0);\n  d_7 = 0.0;\n  vec2 st_11;\n  st_11 = (fract((\n    fract(tmpvar_9)\n   * 35.0)) * 2.0);\n  float tmpvar_12;\n  tmpvar_12 = fract((st_11.y * 0.5));\n  if ((tmpvar_12 > 0.5)) {\n    st_11.x = (st_11.x + 0.5);\n  };\n  float tmpvar_13;\n  vec2 tmpvar_14;\n  tmpvar_14 = (vec2(0.5, 0.5) - fract(st_11));\n  tmpvar_13 = (dot (tmpvar_14, tmpvar_14) * 3.14);\n  vec2 st_15;\n  st_15 = (fract(tmpvar_8) * 2.0);\n  float tmpvar_16;\n  tmpvar_16 = fract((st_15.y * 0.5));\n  if ((tmpvar_16 > 0.5)) {\n    st_15.x = (st_15.x + 0.5);\n  };\n  vec2 tmpvar_17;\n  tmpvar_17 = (vec2(0.5, 0.5) - fract(st_15));\n  d_7 = ((tmpvar_13 * (1.0 - tmpvar_10)) + ((\n    dot (tmpvar_17, tmpvar_17)\n   * 3.14) * tmpvar_10));\n  vec2 tmpvar_18;\n  tmpvar_18.x = dFdx(d_7);\n  tmpvar_18.y = dFdy(d_7);\n  float tmpvar_19;\n  tmpvar_19 = (sqrt(dot (tmpvar_18, tmpvar_18)) * 0.7071068);\n  float edge0_20;\n  edge0_20 = (0.21 - tmpvar_19);\n  float tmpvar_21;\n  tmpvar_21 = clamp (((d_7 - edge0_20) / (\n    (0.21 + tmpvar_19)\n   - edge0_20)), 0.0, 1.0);\n  d_7 = (1.0 - (tmpvar_21 * (tmpvar_21 * \n    (3.0 - (2.0 * tmpvar_21))\n  )));\n  color_6.xyz = mix (vec3(0.85, 0.85, 0.85), v_color.xyz, d_7);\n  mediump vec4 color_22;\n  light_accumulator_diffuse = (tmpvar_2 * clamp (dot (v_normal, \n    -(tmpvar_3)\n  ), 0.0, 1.0));\n  color_22 = ((tmpvar_1 * color_6) * tmpvar_4);\n  color_22 = (color_22 + ((light_accumulator_diffuse * color_6) * tmpvar_5));\n  mediump vec4 tmpvar_23;\n  tmpvar_23 = clamp (color_22, 0.0, 1.0);\n  color_22 = tmpvar_23;\n  color_6 = tmpvar_23;\n  gl_FragColor = tmpvar_23;\n}\n\n"
+      extensions:
+        - *48
+  border:
+    shaders:
+      extensions:
+        - OES_standard_derivatives
+      blocks:
+        vertex_shader: "#extension GL_OES_standard_derivatives : enable\nprecision highp float;\nuniform mat4 u_model;\nuniform mat4 u_view;\nuniform mat4 u_proj;\nuniform mat3 u_normalMatrix;\nuniform vec3 u_map_position;\nuniform vec3 u_tile_origin;\nattribute vec4 a_position;\nattribute vec4 a_color;\nattribute vec4 a_extrude;\nattribute vec2 a_texcoord;\nattribute float a_layer;\nvarying vec4 v_world_position;\nvarying vec4 v_position;\nvarying vec4 v_color;\nvarying vec3 v_normal;\nvarying vec2 v_texcoord;\nvoid main ()\n{\n  float width_1;\n  vec4 position_2;\n  position_2.zw = a_position.zw;\n  v_color = a_color;\n  v_texcoord = a_texcoord;\n  v_normal = (u_normalMatrix * vec3(0.0, 0.0, 1.0));\n  float tmpvar_3;\n  float tmpvar_4;\n  tmpvar_4 = abs(u_tile_origin.z);\n  tmpvar_3 = (u_map_position.z - tmpvar_4);\n  width_1 = (a_extrude.z + (a_extrude.w * tmpvar_3));\n  width_1 = (width_1 * exp2(-(tmpvar_3)));\n  position_2.xy = (a_position.xy + (a_extrude.xy * width_1));\n  position_2 = (u_model * position_2);\n  vec4 tmpvar_5;\n  tmpvar_5.zw = vec2(0.0, 0.0);\n  tmpvar_5.xy = u_map_position.xy;\n  v_world_position = (position_2 + (vec4(mod (tmpvar_5, 100000.0))));\n  v_position = (u_view * position_2);\n  gl_Position = (u_proj * v_position);\n  gl_Position.z = (gl_Position.z / (1.0 + (0.1 * \n    (tmpvar_4 - u_tile_origin.z)\n  )));\n  gl_Position.z = (gl_Position.z - ((a_layer * 1.5e-05) * gl_Position.w));\n}\n\n"
+        fragment_shader: "#extension GL_OES_standard_derivatives : enable\nprecision highp float;\nstruct Material {\n  vec4 ambient;\n  vec4 diffuse;\n};\nstruct DirectionalLight {\n  vec4 ambient;\n  vec4 diffuse;\n  vec4 specular;\n  vec3 direction;\n};\nvarying vec4 v_color;\nvarying vec3 v_normal;\nvarying vec2 v_texcoord;\nuniform Material u_material;\nvec4 tmpvar_1;\nvec4 tmpvar_2;\nvec4 light_accumulator_diffuse;\nuniform DirectionalLight u_light1;\nvec4 tmpvar_3;\nvec4 tmpvar_4;\nvec3 tmpvar_5;\nvoid main ()\n{\n  tmpvar_1 = u_material.ambient;\n  tmpvar_2 = u_material.diffuse;\n  light_accumulator_diffuse = vec4(0.0, 0.0, 0.0, 0.0);\n  tmpvar_3 = u_light1.ambient;\n  tmpvar_4 = u_light1.diffuse;\n  tmpvar_5 = u_light1.direction;\n  mediump vec4 color_6;\n  color_6 = v_color;\n  float x_7;\n  float tmpvar_8;\n  float tmpvar_9;\n  tmpvar_9 = abs((v_texcoord.x - 0.8));\n  x_7 = tmpvar_9;\n  if ((tmpvar_9 > 0.25)) {\n    tmpvar_8 = 0.0;\n  } else {\n    x_7 = (tmpvar_9 / 0.25);\n    tmpvar_8 = (1.0 - ((x_7 * x_7) * (3.0 - \n      (2.0 * x_7)\n    )));\n  };\n  float x_10;\n  float tmpvar_11;\n  float tmpvar_12;\n  tmpvar_12 = abs((v_texcoord.x - 0.5));\n  x_10 = tmpvar_12;\n  if ((tmpvar_12 > 0.12)) {\n    tmpvar_11 = 0.0;\n  } else {\n    x_10 = (tmpvar_12 / 0.12);\n    tmpvar_11 = (1.0 - ((x_10 * x_10) * (3.0 - \n      (2.0 * x_10)\n    )));\n  };\n  float x_13;\n  float tmpvar_14;\n  float tmpvar_15;\n  tmpvar_15 = abs((v_texcoord.x - 0.1));\n  x_13 = tmpvar_15;\n  if ((tmpvar_15 > 0.1)) {\n    tmpvar_14 = 0.0;\n  } else {\n    x_13 = (tmpvar_15 / 0.1);\n    tmpvar_14 = (1.0 - ((x_13 * x_13) * (3.0 - \n      (2.0 * x_13)\n    )));\n  };\n  float value_16;\n  value_16 = ((tmpvar_8 + tmpvar_11) + tmpvar_14);\n  vec2 tmpvar_17;\n  tmpvar_17.x = dFdx(value_16);\n  tmpvar_17.y = dFdy(value_16);\n  float tmpvar_18;\n  tmpvar_18 = (sqrt(dot (tmpvar_17, tmpvar_17)) * 0.7071068);\n  float edge0_19;\n  edge0_19 = (0.5 - tmpvar_18);\n  float tmpvar_20;\n  tmpvar_20 = clamp (((value_16 - edge0_19) / (\n    (0.5 + tmpvar_18)\n   - edge0_19)), 0.0, 1.0);\n  color_6.xyz = mix (v_color.xyz, vec3(0.396, 0.833, 0.92), (tmpvar_20 * (tmpvar_20 * \n    (3.0 - (2.0 * tmpvar_20))\n  )));\n  mediump vec4 color_21;\n  light_accumulator_diffuse = (tmpvar_4 * clamp (dot (v_normal, \n    -(tmpvar_5)\n  ), 0.0, 1.0));\n  color_21 = ((tmpvar_3 * color_6) * tmpvar_1);\n  color_21 = (color_21 + ((light_accumulator_diffuse * color_6) * tmpvar_2));\n  mediump vec4 tmpvar_22;\n  tmpvar_22 = clamp (color_21, 0.0, 1.0);\n  color_21 = tmpvar_22;\n  color_6 = tmpvar_22;\n  gl_FragColor = tmpvar_22;\n}\n\n"
+      defines:
+        STYLE: border
+    base: lines
+    texcoords: true
+  dots2:
+    base: polygons
+    shaders:
+      defines:
+        TILE_SCALE: 0.0002445
+        PI: 3.14159265358979323846
+        NORMALIZED_SHORT(x): (x * 32767.)
+        STYLE: dots2
+      blocks:
+        vertex_shader: "#extension GL_OES_standard_derivatives : enable\nprecision highp float;\nuniform mat4 u_model;\nuniform mat4 u_view;\nuniform mat4 u_proj;\nuniform mat3 u_normalMatrix;\nuniform vec3 u_map_position;\nuniform vec3 u_tile_origin;\nattribute vec4 a_position;\nattribute vec4 a_color;\nattribute vec3 a_normal;\nattribute vec2 a_texcoord;\nattribute float a_layer;\nvarying vec4 v_world_position;\nvarying vec4 v_position;\nvarying vec4 v_color;\nvarying vec3 v_normal;\nvarying vec2 v_texcoord;\nvarying vec3 v_pos;\nvoid main ()\n{\n  vec4 position_1;\n  v_color = a_color;\n  v_texcoord = a_texcoord;\n  v_normal = normalize((u_normalMatrix * a_normal));\n  position_1 = (u_model * a_position);\n  vec4 tmpvar_2;\n  tmpvar_2.zw = vec2(0.0, 0.0);\n  tmpvar_2.xy = u_map_position.xy;\n  v_world_position = (position_1 + (vec4(mod (tmpvar_2, 100000.0))));\n  v_pos = (a_position.xyz * 32767.0);\n  v_position = (u_view * position_1);\n  gl_Position = (u_proj * v_position);\n  gl_Position.z = (gl_Position.z / (1.0 + (0.1 * \n    (abs(u_tile_origin.z) - u_tile_origin.z)\n  )));\n  gl_Position.z = (gl_Position.z - ((a_layer * 1.5e-05) * gl_Position.w));\n}\n\n"
+        fragment_shader: "#extension GL_OES_standard_derivatives : enable\nprecision highp float;\nstruct Material {\n  vec4 ambient;\n  vec4 diffuse;\n};\nstruct DirectionalLight {\n  vec4 ambient;\n  vec4 diffuse;\n  vec4 specular;\n  vec3 direction;\n};\nuniform vec3 u_map_position;\nvarying vec4 v_color;\nvarying vec3 v_normal;\nuniform Material u_material;\nvec4 light_accumulator_diffuse;\nuniform DirectionalLight u_light1;\nvarying vec3 v_pos;\nvoid main ()\n{\n  vec4 tmpvar_1;\n  vec4 tmpvar_2;\n  vec3 tmpvar_3;\n  vec4 tmpvar_4;\n  vec4 tmpvar_5;\n  tmpvar_4 = u_material.ambient;\n  tmpvar_5 = u_material.diffuse;\n  light_accumulator_diffuse = vec4(0.0, 0.0, 0.0, 0.0);\n  tmpvar_1 = u_light1.ambient;\n  tmpvar_2 = u_light1.diffuse;\n  tmpvar_3 = u_light1.direction;\n  mediump vec4 color_6;\n  color_6 = v_color;\n  float d_7;\n  vec2 st_8;\n  st_8 = (fract((v_pos.xy * 0.0002445)) * 40.0);\n  st_8 = (st_8 * 2.0);\n  st_8.x = (st_8.x + (float(\n    ((float(mod (st_8.y, 2.0))) >= 1.0)\n  ) * 0.5));\n  vec2 st_9;\n  st_9 = (vec2(0.5, 0.5) - fract(st_8));\n  float tmpvar_10;\n  tmpvar_10 = (dot (st_9, st_9) * 1.8);\n  d_7 = 0.0;\n  if ((u_map_position.z < 18.0)) {\n    vec2 tmpvar_11;\n    tmpvar_11 = fract((80.0 * fract(\n      (v_pos.xy * 0.0002445)\n    )));\n    vec2 st_12;\n    st_12 = (vec2(0.25, 0.25) - tmpvar_11);\n    vec2 st_13;\n    st_13 = (vec2(0.75, 0.25) - tmpvar_11);\n    vec2 st_14;\n    st_14 = (vec2(0.5, 0.75) - tmpvar_11);\n    vec2 st_15;\n    st_15 = (vec2(0.0, 0.75) - tmpvar_11);\n    vec2 st_16;\n    st_16 = (vec2(1.0, 0.75) - tmpvar_11);\n    d_7 = mix (tmpvar_10, min (min (\n      min (min ((dot (st_12, st_12) * 7.0), (dot (st_13, st_13) * 7.0)), (dot (st_14, st_14) * 7.0))\n    , \n      (dot (st_15, st_15) * 7.0)\n    ), (\n      dot (st_16, st_16)\n     * 7.0)), pow (fract(u_map_position.z), 10.0));\n  } else {\n    d_7 = tmpvar_10;\n  };\n  vec2 tmpvar_17;\n  tmpvar_17.x = dFdx(d_7);\n  tmpvar_17.y = dFdy(d_7);\n  float tmpvar_18;\n  tmpvar_18 = (sqrt(dot (tmpvar_17, tmpvar_17)) * 0.7071068);\n  float edge0_19;\n  edge0_19 = (0.18 - tmpvar_18);\n  float tmpvar_20;\n  tmpvar_20 = clamp (((d_7 - edge0_19) / (\n    (0.18 + tmpvar_18)\n   - edge0_19)), 0.0, 1.0);\n  color_6.xyz = mix (v_color.xyz, vec3(0.85, 0.85, 0.85), (tmpvar_20 * (tmpvar_20 * \n    (3.0 - (2.0 * tmpvar_20))\n  )));\n  mediump vec4 color_21;\n  light_accumulator_diffuse = (tmpvar_2 * clamp (dot (v_normal, \n    -(tmpvar_3)\n  ), 0.0, 1.0));\n  color_21 = ((tmpvar_1 * color_6) * tmpvar_4);\n  color_21 = (color_21 + ((light_accumulator_diffuse * color_6) * tmpvar_5));\n  mediump vec4 tmpvar_22;\n  tmpvar_22 = clamp (color_21, 0.0, 1.0);\n  color_21 = tmpvar_22;\n  color_6 = tmpvar_22;\n  gl_FragColor = tmpvar_22;\n}\n\n"
+      extensions:
+        - OES_standard_derivatives
+layers:
+  earth:
+    draw:
+      ground:
+        order: 0
+        color: [0.870, 0.870, 0.870]
+    data: {layer: earth, source: osm}
+  water:
+    draw:
+      grid:
+        color: *24
+        order: 4
+    data: {source: osm, layer: water}
+    lakes:
+      filter:
+        all:
+          - kind: [ocean, lake, water, reservoir, playa]
+        any:
+          - {area: {min: 15000000000}, $zoom: {min: 4}}
+          - {area: {min: 1000000000}, $zoom: {min: 5}}
+          - {area: {min: 500000000}, $zoom: {min: 6}}
+          - {area: {min: 160000000}, $zoom: {min: 7}}
+          - {area: {min: 40000000}, $zoom: {min: 8}}
+          - {area: {min: 10000000}, $zoom: {min: 9}}
+          - {area: {min: 8000000}, $zoom: {min: 10}}
+          - {area: {min: 2000000}, $zoom: {min: 11}}
+          - {area: {min: 500000}, $zoom: {min: 12}}
+          - {area: {min: 100000}, $zoom: {min: 13}}
+          - {area: {min: 50000}, $zoom: {min: 14}}
+          - {area: {min: 20000}, $zoom: {min: 15}}
+          - {area: {min: 2000}, $zoom: {min: 15}}
+          - {$zoom: {min: 16}}
+      draw:
+        grid:
+          color: *24
+    water-boundary-ocean-early:
+      filter: {$zoom: {max: 17, min: 4}, boundary: yes, kind: ocean}
+      draw:
+        line2:
+          style: lines
+          order: 4
+          width: [[9, 0.25px], [10, 2px], [13, 4px]]
+          color: [[9, [0.396, 0.833, 0.920]], [10, [0.886, 0.937, 0.988]]]
+        lines:
+          width: [[9, 0px], [10, 1px]]
+          color: [0.396, 0.833, 0.920]
+          order: 10
+    other-water-areas:
+      filter: {not: {kind: [ocean, lake, water, reservoir, playa]}, area: {min: 100}, $zoom: {min: 11}}
+      draw:
+        grid:
+          color: *24
+    playas-early:
+      filter: {$zoom: {max:6: ~}, kind: playa}
+      draw:
+        ground:
+          visible: false
+    playas:
+      draw:
+        polygons:
+          color: [0.870, 0.870, 0.870]
+          order: 5
+      filter: {kind: playa, $zoom: {min:6: ~}}
+    water_boundaries-not-ocean:
+      filter: {boundary: yes, not: {kind: ocean}, $zoom: {min: 16}}
+      draw:
+        lines:
+          color: [0.886, 0.937, 0.988]
+          width: [[14, 1.0px], [16, 1.5px], [18, 2m]]
+          order: 5
+          join: round
+    water-boundary-ocean-late:
+      filter: {boundary: yes, $zoom: {min: 17}, kind: ocean}
+      draw:
+        border:
+          width: 20px
+          color: [0.886, 0.937, 0.988]
+          order: 10
+    river:
+      filter: {kind: [river, canal, stream, dam, ditch, drain], $zoom: {min: 13}}
+      draw:
+        lines:
+          width: [[13, 0.5px], [14, 1.0px], [16, 1.5px], [18, 4m]]
+          color: [0.886, 0.937, 0.988]
+          order: 3
+          join: round
+  roads:
+    draw:
+      text:
+        visible: false
+        font:
+          weight: 500
+          fill: *34
+          family: Helvetica
+      lines:
+        interactive: true
+    filter: {not: {kind: rail}}
+    data: {source: osm}
+    natural_earth_highways:
+      filter: {source: !<!> naturalearthdata.com}
+      draw:
+        lines:
+          order: 8
+          width: [[5, 1px], [7, 1.4px], [9, 1.5px], [14, 3px], [16, 4px], [17, 10m]]
+          color: *1
+          outline:
+            color: *3
+            width: [[9, 0], [12, 1px], [16, 2px]]
+      ferry:
+        draw:
+          lines:
+            width: [[12, 1.0px], [14, 1.5px], [15, 3px], [16, 5m]]
+            color: *6
+            outline:
+              width: [[12, 0px], [14, .5px], [17, 1px]]
+        filter: {kind: Ferry}
+      major_road:
+        filter: {type: [!<!> Secondary Highway, !<!> Road]}
+        draw:
+          lines:
+            outline:
+              width: [[8, 0.0px], [9, 0.0px], [11, .5px], [16, .75px]]
+            width: [[5, 0.45px], [6, 0.75px], [7, 1.0px], [8, 1px]]
+            color: [0.980, 0.601, 0.559]
+      minor_road:
+        filter: {type: !<!> Unknown}
+        draw:
+          lines:
+            color: [[12, *13], [17, *14]]
+            outline:
+              width: [[12, 0px], [14, .5px], [17, 1px]]
+            width: [[12, 1.0px], [14, 1.5px], [15, 3px], [16, 5m]]
+    highway:
+      draw:
+        lines:
+          color: [[8, *1], [14, *1], [15, [1.0, 1.0, 1.0]], [17, [1.0, 1.0, 1.0]]]
+          width: [[8, 1px], [9, 1.25px], [11, 1.2px], [12, 1.3px], [13, 1.5px], [14, 2.25px], [15, 0.15px], [16, 5.5px], [17, 12m]]
+          order: 8
+          outline:
+            color: [[9, *3], [13, *3], [15, [0.988, 0.495, 0.439]], [17, [0.988, 0.495, 0.439]]]
+            width: [[9, 0.5px], [12, 1px], [15, 2px], [16, 2.25px], [17, 3px], [18, 3px]]
+      filter: {kind: highway}
+      round:
+        draw:
+          lines:
+            cap: round
+        filter: {$zoom: {min: 17}}
+      link:
+        draw:
+          lines:
+            outline:
+              color: [[10, *3], [16, [0.988, 0.495, 0.439]], [17, [0.988, 0.495, 0.439]]]
+              width: [[10, 1px], [14, 1px], [14, 0px], [15, 0.85px], [17, 1.125px], [18, 1.5px]]
+            color: [[9, *2], [14, *2], [15, [1.0, 1.0, 1.0]], [17, [1.0, 1.0, 1.0]]]
+            width: [[9, 0px], [11, 0.5px], [13, 1px], [14, 1px], [15, 0.15px], [16, 3px], [17, 4m], [18, 5m]]
+            cap: butt
+        filter: {is_link: yes}
+        early_link:
+          filter: {$zoom: {max: 15, min: 13}}
+          draw:
+            lines:
+              order: function() { return 7 + feature.sort_key; }
+        tunnel-link:
+          filter: {$zoom: {min: 13}, is_tunnel: yes}
+          draw:
+            lines:
+              outline:
+                color: *5
+              color: *4
+      not_link:
+        filter: {$zoom: {max: 15}, not: {is_link: yes}}
+        draw:
+          lines:
+            outline:
+              order: function() { return 7 + feature.sort_key; }
+            order: function() { return 7 + feature.sort_key; }
+      tunnel:
+        draw:
+          lines:
+            outline:
+              color: [[13, [0.890, 0.890, 0.890]], [14, [0.870, 0.870, 0.870]], [16, [0.840, 0.704, 0.689]]]
+            color: [[16, [0.85, 0.85, 0.85]]]
+            order: 6
+        filter: {$zoom: {min: 13}, is_tunnel: yes}
+      highway_bridge:
+        filter: {is_bridge: yes}
+        draw:
+          lines:
+            cap: butt
+      labels-highway-early:
+        draw:
+          text:
+            text_source: ref
+            priority: 2
+            visible: *40
+            font:
+              size: 10px
+              fill: [0.0, 0.0, 0.0]
+        filter: {$zoom: {max: 9, min: 7}}
+      labels-highway-z10:
+        draw:
+          text:
+            text_source: ref
+            visible: *40
+            font:
+              stroke: {width: 3, color: [0.976, 0.541, 0.490]}
+              fill: [1.0, 1.0, 1.0]
+              size: 9px
+        filter:
+          $zoom: 10
+      labels-highway-z11:
+        draw:
+          text:
+            text_source: ref
+            visible: *40
+            font:
+              stroke: {width: 3, color: [0.976, 0.541, 0.490]}
+              fill: [1.0, 1.0, 1.0]
+              size: 10px
+        filter:
+          $zoom: 11
+      labels-highway-z12:
+        draw:
+          text:
+            text_source: ref
+            visible: *40
+            font:
+              fill: [1.0, 1.0, 1.0]
+              stroke: {width: 3, color: [0.976, 0.541, 0.490]}
+              size: 10px
+        filter:
+          $zoom: 12
+      labels-highway-z13:
+        filter:
+          $zoom: 13
+        draw:
+          text:
+            priority: 2
+            visible: *40
+            font:
+              size: 14px
+              fill: [0.0, 0.0, 0.0]
+            text_source: function() { if( feature.ref && feature.name ) { return feature.ref + " " + feature.name; } else { return feature.name } }
+      later2:
+        draw:
+          text:
+            visible: *40
+            priority: 2
+            font:
+              size: 18px
+        filter: {$zoom: {max: 18, min: 16}}
+      labels-highway-z14:
+        draw:
+          text:
+            visible: *40
+            font:
+              size: 16px
+              fill: [0.0, 0.0, 0.0]
+            priority: 2
+            text_source: function() { if( feature.ref && feature.name ) { return feature.ref + " " + feature.name; } else { return feature.name } }
+        filter:
+          $zoom: 14
+      labels-highway-z15:
+        draw:
+          text:
+            font:
+              size: 18px
+              fill: [0.0, 0.0, 0.0]
+            visible: *40
+        filter:
+          $zoom: 15
+      later3:
+        draw:
+          text:
+            visible: *40
+            priority: 2
+            font:
+              size: 18px
+        filter: {$zoom: {min: 18}}
+    major_road:
+      draw:
+        lines:
+          color: [[8, *12], [13, major_road2], [17, *7]]
+          width: [[13, 0px], [14, 2px], [16, 2.5px], [19, 8m]]
+          outline:
+            width: [[12, 0px], [13, .5px], [15, 1px]]
+      trunk_primary:
+        filter: {highway: [trunk, primary]}
+        draw:
+          lines:
+            width: [[9, 0.5px], [10, 0.5px], [11, 1.0px], [12, 1.0px], [13, 1.5px], [14, 2.5px], [15, 5px], [16, 10m], [17, 10m]]
+            color: [1.0, 1.0, 1.0]
+            outline:
+              color: [[13, [0.827, 0.827, 0.827]], [15, [1.000, 0.739, 0.710]]]
+              width: [[9, 0.0px], [11, 0px], [12, 0px], [14, 0px], [15, 1.75px], [16, 2px], [17, 3px]]
+        routes:
+          draw:
+            lines:
+              outline:
+                color: [[13, [0.870, 0.870, 0.870]], [15, [0.976, 0.612, 0.573]]]
+                width: [[9, 0.0px], [12, 0px], [15, 2px], [16, 2px], [17, 3px]]
+              color: [[9, *11], [14, *11], [15, [1.0, 1.0, 1.0]], [16, [1.0, 1.0, 1.0]]]
+              width: [[9, 1.0px], [10, 1.0px], [11, 1.2px], [12, 1.25px], [13, 1.5px], [14, 1.6px], [15, 0.15px], [16, 5.25px], [17, 12m]]
+          filter: {ref: true}
+          tunnel:
+            filter: {is_tunnel: yes, $zoom: {min: 13}}
+            draw:
+              lines:
+                color: *9
+                outline:
+                  color: *10
+                order: 6
+          z-order:
+            draw:
+              lines:
+                outline:
+                  order: 23
+                order: function() { return 8 + feature.sort_key; }
+        labels-trunk_primary-z11:
+          draw:
+            text:
+              font:
+                size: 9px
+                fill: [0.3, 0.3, 0.3]
+              visible: *41
+              priority: 3
+              text_source: function() { if( feature.ref && feature.name ) { if( feature.ref.length < 6 ) { return feature.ref + " " + feature.name; } else { return feature.name; } } else { return feature.name; } }
+          filter:
+            $zoom: 11
+        labels-trunk_primary-z10:
+          filter:
+            $zoom: 10
+          draw:
+            text:
+              visible: *41
+              priority: 3
+              font:
+                size: 7px
+                fill: [0.3, 0.3, 0.3]
+              text_source: function() { if( feature.ref && feature.name ) { if( feature.ref.length < 6 ) { return feature.ref + " " + feature.name; } else { return feature.name; } } else { return feature.name; } }
+        labels-trunk_primary-z12:
+          draw:
+            text:
+              font:
+                size: 8px
+                fill: [0.3, 0.3, 0.3]
+              visible: *41
+              priority: 3
+              text_source: function() { if( feature.ref && feature.name ) { if( feature.ref.length < 6 ) { return feature.ref + " " + feature.name; } else { return feature.name; } } else { return feature.name; } }
+          filter:
+            $zoom: 12
+        labels-trunk_primary-z13:
+          draw:
+            text:
+              visible: *41
+              font:
+                size: 9px
+                fill: [0.3, 0.3, 0.3]
+              priority: 3
+              text_source: function() { if( feature.ref && feature.name ) { if( feature.ref.length < 6 ) { return feature.ref + " " + feature.name; } else { return feature.name; } } else { return feature.name; } }
+          filter:
+            $zoom: 13
+        labels-trunk_primary-late:
+          draw:
+            text:
+              visible: *41
+              font:
+                size: 11px
+                fill: [0.15, 0.15, 0.15]
+              text_source: function() { if( feature.ref && feature.name ) { return feature.ref + " " + feature.name; } else { return feature.name } }
+          filter: {$zoom: {max: 18, min: 15}}
+        labels-trunk_primary-late2:
+          draw:
+            text:
+              visible: *41
+              text_source: function() { if( feature.ref && feature.name ) { return feature.ref + " " + feature.name; } else { return feature.name } }
+              font:
+                size: 18px
+              priority: 3
+          filter: {$zoom: {min: 18}}
+      filter: {kind: major_road}
+      link:
+        draw:
+          lines:
+            width: [[10, 0.5px], [14, 2px], [16, 4m], [17, 5m], [18, 6m]]
+            outline:
+              color: [[13, [0.827, 0.827, 0.827]], [15, [1.000, 0.739, 0.710]]]
+              width: [[10, 1px], [14, 1px], [16, 1.5px], [17, 2px]]
+        filter: {is_link: yes}
+      tunnel:
+        draw:
+          lines:
+            color: *9
+            outline:
+              color: *10
+            order: 6
+        filter: {is_tunnel: yes, $zoom: {min: 13}}
+      secondary:
+        filter: {highway: secondary}
+        draw:
+          lines:
+            color: [1.0, 1.0, 1.0]
+            width: [[11, 0.65px], [12, 0.75px], [13, 1.25px], [14, 2px], [15, 5px], [16, 10m], [17, 10m]]
+            outline:
+              color: [[15, [1.000, 0.739, 0.710]]]
+              width: [[11, 0px], [14, 0px], [15, 1.75px], [16, 2px], [17, 3px]]
+        routes:
+          filter: {ref: true, $zoom: {min: 12}}
+          draw:
+            lines:
+              width: [[11, 0.65px], [12, 0.75px], [13, 1.25px], [14, 2px], [15, 5px], [16, 12m], [17, 12m]]
+              color: [1.0, 1.0, 1.0]
+              outline:
+                width: [[11, 0px], [14, 0px], [15, 1.75px], [16, 2px], [17, 3px]]
+                color: [0.827, 0.827, 0.827]
+          tunnel:
+            filter: {$zoom: {min: 13}, is_tunnel: yes}
+            draw:
+              lines:
+                color: *9
+                outline:
+                  color: *10
+                order: 6
+          labels-secondary-routes:
+            filter: {$zoom: {max: 14, min: 13}}
+            draw:
+              text:
+                priority: 4
+                text_source: function() { if( feature.ref && feature.name ) { if( feature.ref.length < 6 ) { return feature.ref + " " + feature.name; } else { return feature.name; } } else { return feature.name; } }
+                visible: *42
+                font:
+                  stroke: {color: *35, width: 4}
+                  size: 12px
+        in_park:
+          filter: {landuse_kind: [park, forest, nature_reserve, conservation, golf_course, garden]}
+          draw:
+            lines:
+              outline:
+                color: [[14, [0.800, 0.851, 0.847]], [15, [0.678, 0.796, 0.792]]]
+              color: [1.0, 1.0, 1.0]
+          golf_course:
+            draw:
+              lines:
+                outline:
+                  color: red
+            filter: {landuse_kind: golf_course}
+          nature_reserve:
+            draw:
+              lines:
+                outline:
+                  color: blue
+            filter: {landuse_kind: nature_reserve}
+          conservation:
+            draw:
+              lines:
+                outline:
+                  color: orange
+            filter: {landuse_kind: conservation}
+          zoo:
+            draw:
+              lines:
+                outline:
+                  color: pink
+            filter: {landuse_kind: zoo}
+        labels-secondary2:
+          draw:
+            text:
+              priority: 4
+              visible: *42
+              text_source: function() { if( feature.ref && feature.name ) { if( feature.ref.length < 6 ) { return feature.ref + " " + feature.name; } else { return feature.name; } } else { return feature.name; } }
+              font:
+                fill: [0.15, 0.15, 0.15]
+                size: 11px
+          filter: {$zoom: {max: 18, min: 15}}
+        labels-secondary:
+          filter: {$zoom: {max: 15, min: 13}}
+          draw:
+            text:
+              priority: 4
+              text_source: function() { if( feature.ref && feature.name ) { if( feature.ref.length < 6 ) { return feature.ref + " " + feature.name; } else { return feature.name; } } else { return feature.name; } }
+              visible: *42
+              font:
+                size: 10px
+                fill: [0.35, 0.35, 0.35]
+        labels-secondary3:
+          draw:
+            text:
+              font:
+                size: 18px
+              visible: *42
+              priority: 4
+              text_source: function() { if( feature.ref && feature.name ) { return feature.ref + " " + feature.name; } else { return feature.name } }
+          filter: {$zoom: {min: 18}}
+      tertiary:
+        filter: {highway: [tertiary, tertiary_link]}
+        draw:
+          lines:
+            width: [[11, 0.5px], [12, 0.5px], [13, 0.65px], [14, 1.0px], [15, 2px], [16, 8m], [19, 10m]]
+            outline:
+              width: [[12, 0px], [13, 0px], [14, 0px], [15, 0px], [16, 1.0px], [18, 3.5px]]
+              color: [0.827, 0.827, 0.827]
+            color: [1.0, 1.0, 1.0]
+        routes:
+          filter: {$zoom: {min: 12}, ref: true}
+          draw:
+            lines:
+              width: [[11, 0.5px], [12, 0.5px], [13, 0.65px], [14, 1.0px], [15, 2px], [16, 8m], [19, 10m]]
+              outline:
+                width: [[12, 0px], [13, 0px], [14, 0px], [15, 0px], [16, 1.0px], [18, 3.5px]]
+                color: [0.827, 0.827, 0.827]
+              color: [1.0, 1.0, 1.0]
+          tunnel:
+            filter: {is_tunnel: yes, $zoom: {min: 13}}
+            draw:
+              lines:
+                color: *9
+                order: 6
+                outline:
+                  color: *10
+        link:
+          filter: {is_link: yes}
+          draw:
+            lines:
+              color: *7
+              width: [[10, 0.5px], [14, 2px], [16, 4m], [17, 5m], [18, 6m]]
+              outline:
+                color: [[12, *8]]
+                width: [[12, 0px], [14, 1px], [16, 1.5px], [17, 2px]]
+        in_park:
+          filter: {landuse_kind: [park, forest, nature_reserve, conservation, golf_course, garden]}
+          draw:
+            lines:
+              outline:
+                color: [[14, [0.800, 0.851, 0.847]], [15, [0.678, 0.796, 0.792]]]
+                width: [[12, 0px], [13, 0.5px], [14, 1.0px], [15, 1.0px], [16, 1.5px], [18, 3.0px]]
+              color: [[12, [0.9, 0.9, 0.9]], [13, [0.9, 0.9, 0.9]], [14, [0.98, 0.98, 0.98]]]
+          golf_course:
+            draw:
+              lines:
+                outline:
+                  color: [0.698, 0.835, 0.765]
+            filter: {landuse_kind: golf_course}
+          nature_reserve:
+            filter: {landuse_kind: nature_reserve}
+            draw:
+              lines:
+                outline:
+                  color: blue
+          conservation:
+            filter: {landuse_kind: conservation}
+            draw:
+              lines:
+                outline:
+                  color: orange
+          zoo:
+            filter: {landuse_kind: zoo}
+            draw:
+              lines:
+                outline:
+                  color: pink
+        labels-tertiary:
+          filter: {$zoom: {max: 15, min: 14}}
+          draw:
+            text:
+              text_source: function() { if( feature.ref && feature.name ) { if( feature.ref.length < 6 ) { return feature.ref + " " + feature.name; } else { return feature.name; } } else { return feature.name; } }
+              font:
+                size: 10px
+                fill: [0.35, 0.35, 0.35]
+              visible: *43
+              priority: 5
+        labels-tertiary3:
+          draw:
+            text:
+              visible: *43
+              text_source: function() { if( feature.ref && feature.name ) { if( feature.ref.length < 6 ) { return feature.ref + " " + feature.name; } else { return feature.name; } } else { return feature.name; } }
+              font:
+                stroke: {color: *7, width: 4}
+                size: 15px
+              priority: 5
+          filter: {$zoom: {min: 18}}
+        labels-tertiary2:
+          draw:
+            text:
+              priority: 5
+              visible: *43
+              text_source: function() { if( feature.ref && feature.name ) { if( feature.ref.length < 6 ) { return feature.ref + " " + feature.name; } else { return feature.name; } } else { return feature.name; } }
+              font:
+                size: 11px
+                fill: [0.15, 0.15, 0.15]
+          filter: {$zoom: {max: 18, min: 15}}
+    minor_road:
+      labels-minor_road2:
+        draw:
+          text:
+            visible: *44
+            text_source: name
+            font:
+              size: 15px
+            priority: 6
+        filter: {$zoom: {min: 18}}
+      draw:
+        lines:
+          color: [[12, [0.9, 0.9, 0.9]], [13, [0.9, 0.9, 0.9]], [14, [1.0, 1.0, 1.0]]]
+          width: [[12, 0.65px], [13, 0.75px], [14, 0.85px], [15, 2px], [16, 8m], [17, 9m]]
+          outline:
+            color: [0.843, 0.843, 0.843]
+            width: [[12, 0.0px], [13, 0px], [15, 0px], [16, 2px], [17, 3px]]
+      filter: {kind: minor_road, not: {highway: service}}
+      in_park:
+        filter: {landuse_kind: [park, forest, nature_reserve, conservation, golf_course, garden]}
+        draw:
+          lines:
+            color: [[12, [0.9, 0.9, 0.9]], [13, [0.96, 0.96, 0.96]], [14, [1.0, 1.0, 1.0]]]
+            outline:
+              color: [[14, [0.800, 0.851, 0.847]], [15, [0.678, 0.796, 0.792]]]
+              width: [[13, 0px], [14, 0.25px], [17, 2.0px], [18, 4.0px]]
+        residential:
+          draw:
+            lines:
+              outline:
+                color: red
+          filter: {landuse_kind: residential}
+        golf_course:
+          filter: {landuse_kind: golf_course}
+          draw:
+            lines:
+              outline:
+                color: red
+        nature_reserve:
+          draw:
+            lines:
+              outline:
+                color: blue
+          filter: {landuse_kind: nature_reserve}
+        conservation:
+          draw:
+            lines:
+              outline:
+                color: orange
+          filter: {landuse_kind: conservation}
+        zoo:
+          draw:
+            lines:
+              outline:
+                color: pink
+          filter: {landuse_kind: zoo}
+      round:
+        filter: {$zoom: {min: 17}}
+        draw:
+          lines:
+            join: round
+            cap: round
+      in_hospital:
+        draw:
+          lines:
+            color: [[12, [0.9, 0.9, 0.9]], [13, [0.96, 0.96, 0.96]], [14, [1.0, 1.0, 1.0]]]
+            outline:
+              width: [[13, 0px], [14, 0.5px], [17, 2.0px], [18, 4.0px]]
+              color: [0.818, 0.702, 0.713]
+        filter: {landuse_kind: hospital}
+      in_university:
+        draw:
+          lines:
+            color: [[12, [0.9, 0.9, 0.9]], [13, [0.96, 0.96, 0.96]], [14, [1.0, 1.0, 1.0]]]
+            outline:
+              width: [[13, 0px], [14, 0.5px], [17, 2.0px], [18, 4.0px]]
+              color: [0.806, 0.763, 0.717]
+        filter: {landuse_kind: university}
+      tunnel:
+        draw:
+          lines:
+            outline:
+              color: *16
+            color: [0.870, 0.870, 0.870]
+            order: 6
+        filter: {is_tunnel: yes, $zoom: {min: 13}}
+      minor_road_bridge:
+        filter: {is_bridge: yes}
+        draw:
+          lines:
+            cap: butt
+      labels-minor_road:
+        filter: {$zoom: {min: 16, max: 18}}
+        draw:
+          text:
+            visible: *44
+            font:
+              size: 15px
+              fill: [0.15, 0.15, 0.15]
+            priority: 6
+            text_source: name
+    service_road:
+      filter: {highway: service, kind: minor_road}
+      draw:
+        lines:
+          color: [1.0, 1.0, 1.0]
+          width: [[15, 1.25px], [16, 2.0px], [18, 6m]]
+          outline:
+            width: [[15, 0px], [16, 1.0px]]
+            color: [0.827, 0.827, 0.827]
+      in_park:
+        filter: {landuse_kind: [park, forest, nature_reserve, conservation, golf_course, garden]}
+        draw:
+          lines:
+            outline:
+              color: [[14, [0.800, 0.851, 0.847]], [15, [0.678, 0.796, 0.792]]]
+              width: [[13, 0px], [14, 0.5px], [17, 2.0px], [18, 4.0px]]
+            color: [0.976, 0.976, 0.976]
+        nature_reserve:
+          filter: {landuse_kind: nature_reserve}
+          draw:
+            lines:
+              outline:
+                color: blue
+        golf_course:
+          draw:
+            lines:
+              outline:
+                color: [0.698, 0.835, 0.765]
+          filter: {landuse_kind: golf_course}
+        conservation:
+          filter: {landuse_kind: conservation}
+          draw:
+            lines:
+              outline:
+                color: orange
+        zoo:
+          filter: {landuse_kind: zoo}
+          draw:
+            lines:
+              outline:
+                color: pink
+      in_cemetery:
+        draw:
+          lines:
+            outline:
+              color: [0.737, 0.816, 0.753]
+              width: [[13, 0px], [14, 0.5px], [17, 2.0px], [18, 4.0px]]
+        filter: {landuse_kind: cemetery}
+      in_university:
+        filter: {landuse_kind: university}
+        draw:
+          lines:
+            color: [1.0, 1.0, 1.0]
+            outline:
+              color: [0.806, 0.763, 0.717]
+              width: [[13, 0px], [14, 0.5px], [17, 2.0px], [18, 4.0px]]
+      labels-service_road:
+        filter: {$zoom: {min: 18, min: 17}}
+        draw:
+          text:
+            text_source: name
+            visible: *45
+            priority: 7
+            font:
+              stroke: {color: *35, width: 4}
+              size: 12px
+      in_hospital:
+        filter: {landuse_kind: hospital}
+        draw:
+          lines:
+            color: [1.0, 1.0, 1.0]
+            outline:
+              width: [[13, 0px], [14, 0.5px], [17, 2.0px], [18, 4.0px]]
+              color: [0.818, 0.702, 0.713]
+      labels-service_road2:
+        draw:
+          text:
+            visible: *45
+            text_source: name
+            font:
+              stroke: {color: *17, width: 4}
+              size: 12px
+            priority: 7
+        filter: {$zoom: {min: 18}}
+    path:
+      draw:
+        lines:
+          color: [[15, [0.97, 0.97, 0.97]], [16, [0.96, 0.96, 0.96]]]
+          order: 6
+          width: [[15, 0.6px], [16, 1px], [17, 2.5m]]
+          outline:
+            width: [[15, 0.0], [16, 0.5px], [18, 3px]]
+            color: [0.799, 0.799, 0.799]
+      in_zoo:
+        filter: {landuse_kind: zoo}
+        draw:
+          lines:
+            outline:
+              width: [[15, 0px], [16, 0.5px], [18, 3px]]
+              color: [0.708, 0.881, 0.831]
+      filter: {kind: path, not: {highway: steps}}
+      bridge:
+        draw:
+          lines:
+            color: [[15, [1.0, 1.0, 1.0]], [18, [1.0, 1.0, 1.0]]]
+            width: [[15, 1.5px], [16, 4m], [17, 2m], [18, 2m]]
+            outline:
+              color: [[15, *19], [16, *18]]
+              width: [[15, 0px], [16, 1.0px], [18, 3px]]
+        filter: {is_bridge: yes}
+      in_park:
+        filter: {landuse_kind: [park, forest, nature_reserve, conservation, golf_course, garden, wood]}
+        draw:
+          lines:
+            outline:
+              color: [[16, [0.725, 0.847, 0.847]], [17, [0.663, 0.847, 0.843]]]
+              width: [[15, 0px], [16, 0.5px], [18, 3px]]
+            color: [[15, white], [16, white], [17, [0.95, 0.95, 0.95]]]
+        golf_course:
+          draw:
+            lines:
+              outline:
+                color: [0.698, 0.835, 0.765]
+          filter: {landuse_kind: golf_course}
+        nature_reserve:
+          filter: {landuse_kind: nature_reserve}
+          draw:
+            lines:
+              outline:
+                color: blue
+        conservation:
+          filter: {landuse_kind: conservation}
+          draw:
+            lines:
+              outline:
+                color: orange
+      in_cemetery:
+        filter: {landuse_kind: cemetery}
+        draw:
+          lines:
+            outline:
+              color: [0.737, 0.816, 0.753]
+              width: [[15, 0px], [16, 0.5px], [18, 3px]]
+      in_university:
+        draw:
+          lines:
+            color: [[15, [0.97, 0.97, 0.97]], [16, [0.96, 0.96, 0.96]]]
+            outline:
+              width: [[15, 0px], [16, 0.5px], [18, 3px]]
+              color: [0.806, 0.763, 0.717]
+        filter: {landuse_kind: university}
+      labels-path:
+        filter: {$zoom: {min: 17}}
+        draw:
+          text:
+            visible: *46
+            font:
+              stroke: {color: *35, width: 4}
+              size: 12px
+            priority: 8
+            text_source: name
+      in_hospital:
+        draw:
+          lines:
+            color: [[15, *33], [16, *15]]
+            outline:
+              color: *33
+              width: [[15, 0px], [16, 0.5px], [18, 3px]]
+        filter: {landuse_kind: hospital}
+    steps:
+      filter: {kind: path, highway: steps}
+      draw:
+        dashedline:
+          color: *25
+          order: 23
+          width: [[15, 0.6px], [16, 1px], [17, 2.5m]]
+          outline:
+            width: [[15, 1.5], [18, 3m]]
+            color: *20
+      labels-steps:
+        filter: {$zoom: {min: 17}}
+        draw:
+          text:
+            visible: *47
+            text_source: name
+            font:
+              stroke: {color: *35, width: 4}
+              size: 12px
+            priority: 9
+    airport-lines:
+      draw:
+        lines:
+          width: [[10, 1px], [11, 1.5px], [12, 2px], [13, 4px], [14, 8px], [15, 16px], [16, 32px], [17, 60m]]
+          cap: butt
+          color: white
+          outline:
+            color: [0.7, 0.7, 0.7]
+      filter: {aeroway: [runway, taxiway], kind: minor_road}
+      taxiway:
+        filter: {aeroway: taxiway}
+        draw:
+          lines:
+            color: [[13, [0.8, 0.8, 0.8]], [15, [0.75, 0.75, 0.75]]]
+            outline:
+              color: [0.85, 0.85, 0.85]
+            width: [[13, 1px], [14, 2px], [15, 4px], [16, 8px], [17, 25m]]
+        early:
+          filter: {$zoom: {max: 14}}
+          draw:
+            lines:
+              visible: false
+      not-round:
+        filter: {$zoom: {min: 17}}
+        draw:
+          lines:
+            cap: butt
+    z-order:
+      draw:
+        lines:
+          outline:
+            order: 21
+          order: function() { return 6 + feature.sort_key; }
+      bridges-tunnels:
+        filter: {any: [{is_bridge: yes}, {is_tunnel: yes}]}
+        draw:
+          lines:
+            outline:
+              order: function() { return 6 + feature.sort_key; }
+  buildings:
+    data: {source: osm}
+    filter:
+      any:
+        - {height: {min: 190}, $zoom: {min: 15}}
+        - {height: {min: 100}, $zoom: {min: 16}}
+        - {area: {min: 5000}, $zoom: {min: 15}}
+        - {area: {min: 100}, $zoom: {min: 16}}
+        - {area: {min: 10}, $zoom: {min: 17}}
+        - {$zoom: {min: 18}}
+    draw:
+      polygons:
+        order: 0
+        color: [.65, .65, .65]
+    interactive:
+      filter: {name: true}
+      draw: {polygons: {interactive: true}}
+    extruded:
+      draw:
+        lines:
+          order: 2
+          color: [0.600, 0.600, 0.600]
+          width: [[14, 0.1px], [16, 1px], [18, 1.25px]]
+          extrude: true
+          tile_edges: true
+        buildings_grid:
+          color: white
+          extrude: true
+      filter: {$zoom: {min: 15}}
+    high-line:
+      draw:
+        polygons:
+          color: red
+      filter: {roof_material: grass}
+    in_university:
+      filter: {landuse_kind: [university, school]}
+      draw:
+        polygons:
+          style: buildings_grid-univ
+          order: 52
+  boundaries:
+    country:
+      draw:
+        lines:
+          width: [[0, 1.5px], [5, 2.5px], [7, 3.5px], [9, 7px], [14, 10px], [16, 12px], [17, 14m]]
+          interactive: true
+          order: 8
+          color: *21
+      filter:
+        any:
+          - type: country
+          - kind: nation
+      water:
+        draw:
+          lines:
+            color: blue
+            order: 9
+        filter: {kind: territorial, boundary: maritime}
+    data: {layer: boundaries, source: osm}
+    regions:
+      water:
+        draw:
+          lines:
+            color: blue
+            order: 8
+        filter: {boundary: maritime, kind: territorial}
+      filter:
+        any:
+          - type: state
+          - kind: [state, departement, region, provincial, territorial]
+      draw:
+        lines:
+          order: 7
+          interactive: true
+          width: [[0, 0.5px], [2, 1.0px], [5, 1.25px], [6, 1.5px], [7, 1.75px], [9, 3.5px], [14, 5.5px], [16, 6.5px], [17, 16m]]
+          color: *22
+      early:
+        filter: {scalerank: [3, 4, 5, 6, 7, 8, 9], $zoom: {max: 8}}
+  places:
+    data: {source: osm}
+    continent:
+      filter: {name: true, kind: [continent], $zoom: {max: 5}}
+      draw:
+        text:
+          font:
+            transform: uppercase
+            weight: bold
+            size: 16px
+          visible: *37
+    country-z3:
+      draw:
+        text:
+          priority: 2
+          visible: *38
+          font:
+            size: 11px
+            transform: uppercase
+            weight: 200
+          text_source: function() { return feature["name:en"] || feature["name"]; }
+      filter: {kind: [country], population: true, name: true, $zoom: [3]}
+      early-ones:
+        draw:
+          text:
+            visible: false
+        filter: {not: {name: [!<!> United States of America, !<!> Brasil, !<!> 中华人民共和国, !<!> Россия, !<!> Canada, !<!> Kalaallit Nunaat, !<!> Ísland, !<!> Australia, !<!> India, !<!> 日本, !<!> Guam, !<!> Indonesia, !<!> South Africa, !<!> مصر, !<!> Nigeria, !<!> Kenya]}, $zoom: {max: 4, min: 3}}
+    country-z4:
+      filter: {name: true, population: true, kind: [country], $zoom: [4]}
+      draw:
+        text:
+          text_source: function() { return feature["name:en"] || feature["name"]; }
+          visible: *38
+          priority: 2
+          font:
+            transform: uppercase
+            size: 12px
+            weight: 200
+      early-ones-z4:
+        filter: {name: [Nederland, Luxembourg, Liechtenstein, San Marino, Civitatis Vaticanæ, Crna Gora, Македонија, The Gambia, Burundi, Swaziland, الإمارات العربية المتحدة, العراق, Singapore, El Salvador, Belize, Trinidad and Tobago, Saint Lucia, Montserrat, Anguilla, República Dominicana, Bahamas, British Virgin Islands, Antigua and Barbuda, Grenada, Sint Maarten, Saint Kitts and Nevis, Cayman Islands, België - Belgique - Belgien], $zoom: {max: 5, min: 4}}
+        draw:
+          text:
+            visible: false
+    country-z5:
+      filter: {name: true, kind: [country], population: true, $zoom: [5]}
+      early-ones-z5:
+        draw:
+          text:
+            visible: false
+        filter: {name: [Luxembourg, Liechtenstein, San Marino, Civitatis Vaticanæ, El Salvador, Belize, België - Belgique - Belgien], $zoom: {min: 5, max: 6}}
+      draw:
+        text:
+          visible: *38
+          priority: 2
+          text_source: function() { return feature["name:en"] || feature["name"]; }
+          font:
+            transform: uppercase
+            size: 16px
+            weight: 200
+    country:
+      early-ones-z6:
+        draw:
+          text:
+            visible: false
+        filter: {name: [Luxembourg, Liechtenstein, San Marino, Civitatis Vaticanæ, België - Belgique - Belgien, Хуссар Ирыстон, Аҧсны - Абхазия], $zoom: {min: 6, max: 7}}
+      filter: {kind: [country], name: true, $zoom: {min: 6}}
+      early-ones-z7:
+        draw:
+          text:
+            visible: false
+        filter: {name: [Liechtenstein, San Marino, Civitatis Vaticanæ, Хуссар Ирыстон, Аҧсны - Абхазия], $zoom: {min: 7, max: 8}}
+      draw:
+        text:
+          visible: *38
+          priority: 2
+          text_source: function() { return feature["name:en"] || feature["name"]; }
+          font:
+            size: 18px
+            transform: uppercase
+            weight: 200
+    region-early:
+      filter: {not: {name: [!<!> Western Cape, !<!> Eastern Cape, !<!> Northern Cape, !<!> North West, !<!> Limpopo, !<!> KwaZulu-Natal, !<!> Hamburg, !<!> Freie und Hansestadt Hamburg, !<!> Neuchâtel, !<!> Nordrhein-Westfalen, !<!> Haute-Normandie, !<!> Baden-Württemberg, !<!> Bayern, !<!> Sachsen-Anhalt, !<!> Berlin, !<!> Mecklenburg-Vorpommern, !<!> Schleswig-Holstein, !<!> Brandenburg, !<!> Niedersachsen, !<!> Saarland, !<!> Thüringen, !<!> Hessen, !<!> Sachsen]}, $zoom: {min: 4, max: 6}, name: true, kind: [state]}
+      draw:
+        text:
+          text_source: !<!> name:short
+          font:
+            size: 12px
+            weight: 400
+          visible: *38
+          priority: 2
+    region:
+      filter: {$zoom: {min: 6, max: 9}, kind: [state], name: true}
+      draw:
+        text:
+          visible: *38
+          font:
+            transform: uppercase
+            weight: 800
+            size: 14px
+          priority: 2
+          text_source: function() { if(feature["name:short"]) { return feature["name"]; } else { return "" } }
+      small-ones:
+        draw:
+          text:
+            text_source: function() { return feature["name:abbreviation"] || feature["name"]; }
+            font: {transform: uppercase}
+        filter: {$zoom: {max: 8, min: 6}, name: [!<!> Delaware, !<!> New Jersey, !<!> Connecticut, !<!> Rhode Island, !<!> Massachusetts, !<!> New Hampshire, !<!> Vermont]}
+    populated-places:
+      draw:
+        text:
+          offset: [0, 8px]
+      populated-places-natural-earth-z2-z3:
+        filter: {source: naturalearthdata.com, name: true, $zoom: {min: 2, max: 4}, scalerank: 0}
+        draw:
+          text:
+            font:
+              size: 10px
+            priority: 1
+            interactive: true
+            visible: *39
+          icons:
+            interactive: true
+            size: [[13, 12px], [15, 18px]]
+            sprite: *36
+      populated-places-natural-earth-z4:
+        filter: {source: naturalearthdata.com, $zoom: {min: 4, max: 5}, scalerank: [0, 1], name: true}
+        draw:
+          icons:
+            sprite: *36
+            interactive: true
+            size: [[13, 12px], [15, 18px]]
+          text:
+            font:
+              size: 10px
+            interactive: true
+            visible: *39
+            priority: 1
+      populated-places-natural-earth-z5:
+        filter: {source: naturalearthdata.com, $zoom: {min: 5, max: 6}, scalerank: [0, 1, 2, 3], name: true}
+        draw:
+          text:
+            font:
+              size: 10px
+            visible: *39
+            interactive: true
+            priority: 1
+          icons:
+            interactive: true
+            size: [[13, 12px], [15, 18px]]
+            sprite: *36
+      populated-places-natural-earth-z6-z7:
+        filter: {source: naturalearthdata.com, $zoom: {min: 6, max: 8}, name: true}
+        draw:
+          icons:
+            size: [[13, 12px], [15, 18px]]
+            interactive: true
+            sprite: *36
+          text:
+            visible: *39
+            interactive: true
+            font:
+              size: 11px
+            priority: 1
+      populated-places-osm:
+        filter: {not: {kind: [country, county, state, island, neighbourhood, suburb, quarter]}, source: openstreetmap, name: true, $zoom: {min: 8}}
+        townspots:
+          draw:
+            icons:
+              sprite: *36
+              interactive: true
+              size: [[13, 12px], [15, 18px]]
+          filter: {$zoom: {max: 11}}
+        draw:
+          text:
+            visible: *39
+            interactive: true
+            font:
+              size: 13px
+            priority: 1
+        major-places:
+          filter: {$zoom: {min: 13, max: 15}, kind: [city]}
+          visible: false
+          draw:
+            text:
+              font:
+                size: 14px
+        major-places:
+          filter: {$zoom: {min: 15}, kind: [city]}
+          visible: false
+          draw:
+            text:
+              font:
+                size: 14px
+              visible: false
+        medium-places:
+          visible: false
+          filter: {$zoom: {max: 11}, kind: [town]}
+        minor-places:
+          filter: {kind: [locality, hamlet, village], $zoom: {max: 15}}
+          visible: false
+      neighborhood:
+        filter: {name: true, kind: [neighbourhood, suburb, quarter], $zoom: {min: 14}}
+        draw:
+          text:
+            visible: *38
+            priority: 2
+            font:
+              transform: uppercase
+              fill: [0.40, 0.40, 0.40]
+              size: 12px
+              weight: 600
+  pois_and_landuse_labels:
+    visible: true
+    direct-match:
+      draw:
+        icons:
+          sprite: function() { return feature.kind }
+          visible: true
+          interactive: true
+    draw:
+      text:
+        visible: false
+        font:
+          fill: *34
+          family: Helvetica
+          weight: 500
+        offset: [0, 19px]
+      icons:
+        interactive: true
+        size: 18px
+    data: {source: osm, layer: pois}
+    filter:
+      not: {kind: [farm, peak, tree, gate]}
+      name: true
+    default-label-text:
+      draw:
+        text:
+          font:
+            size: 12px
+            stroke: {color: *35, width: 4}
+          interactive: true
+          visible: true
+      filter: {$zoom: {min: 18}}
+    generic-icons:
+      draw:
+        icons:
+          interactive: true
+          visible: true
+          sprite_default: generic
+      filter: {$zoom: {min: 18}}
+    landuse-labels:
+      filter:
+        area: true
+        $zoom: {min: 15}
+      draw:
+        text:
+          interactive: true
+          font:
+            size: 12px
+          visible: true
+    landuse-labels-early:
+      draw:
+        text:
+          interactive: true
+          offset: [0, 14px]
+          font:
+            size: 12px
+          visible: true
+      filter:
+        $zoom: {max: 15, min: 0}
+        area: true
+      nature-reserve:
+        filter:
+          kind: nature_reserve
+        draw:
+          icons:
+            sprite: forest
+        wilderness-areas-early:
+          filter: function() { return $zoom < 10 && feature.name.includes("Wilderness") }
+          draw:
+            icons: {visible: false}
+            text: {visible: false}
+        national-park:
+          draw:
+            icons:
+              sprite: park
+          filter: function() { return feature.name.includes("Park") }
+    residential-labels:
+      filter:
+        kind: [residential]
+        $zoom: {min: 17}
+    parking-labels:
+      filter:
+        kind: [parking]
+        $zoom: {min: 17}
+      draw:
+        text:
+          visible: true
+          font:
+            size: 12px
+            stroke: {color: *35, width: 4}
+          interactive: true
+    tram-stop:
+      draw:
+        icons:
+          visible: false
+      filter: {kind: tram_stop, $zoom: {max: 16}}
+    bus-stop-labels:
+      draw:
+        text:
+          visible: true
+          font:
+            size: 12px
+            stroke: {color: *35, width: 4}
+          interactive: true
+      filter:
+        $zoom: {min: 18}
+        kind: [bus_stop, bus_station]
+    car-sharing:
+      draw:
+        icons:
+          visible: false
+      filter: {kind: car_sharing, $zoom: {max: 17}}
+    icons:
+      airport:
+        filter: {kind: [airport, aerodrome]}
+        draw: {icons: {sprite: airport}}
+      adult-boutique:
+        filter: {kind: [erotic, adult_boutique]}
+        draw: {icons: {sprite: adult-boutique}}
+      animal-shelter:
+        draw: {icons: {sprite: animal-shelter}}
+        filter: {kind: [animal_shelter, animal-shelter, animal_boarding]}
+      antique-shop:
+        draw: {icons: {sprite: antique-shop}}
+        filter: {kind: [antiques, antique-shop]}
+      art-gallery:
+        draw: {icons: {sprite: art-gallery}}
+        filter: {kind: [art_gallery, art-gallery, art]}
+      athletics-sports:
+        filter: {kind: [pitch, athletic_sports, recreation_ground]}
+        draw: {icons: {sprite: athletics-sports}}
+      automotive-shop:
+        filter: {kind: [car_repair, automotive-shop, automotive, tyres]}
+        draw: {icons: {sprite: automotive-shop}}
+      bakery:
+        draw: {icons: {sprite: bakery}}
+        filter: {kind: [bakery, pastry, chocolate]}
+      bar:
+        filter: {kind: [pub, bar]}
+        draw: {icons: {sprite: bar}}
+      beer-garden:
+        draw: {icons: {sprite: beer-garden}}
+        filter: {kind: [biergarten, beer-garden, brewery]}
+      bike-shop:
+        filter: {kind: [bicycle, bicycle_rental, bike, bike_shop]}
+        draw: {icons: {sprite: bike-shop}}
+      boat-ferry:
+        filter: {kind: [ferry_terminal, boat-ferry, ferry-boat, ferry]}
+        draw: {icons: {sprite: boat-ferry}}
+      boat-ramp:
+        draw: {icons: {sprite: boat-ramp}}
+        filter: {kind: [slipway, boat-ramp, boat_ramp]}
+      bookstore:
+        filter: {kind: [books, bookstore]}
+        draw: {icons: {sprite: bookstore}}
+      bowling-alley:
+        draw: {icons: {sprite: bowling-alley}}
+        filter: {kind: [bowling_alley, bowling-alley]}
+      building:
+        filter: {kind: [building, auditorium, terminal, hangar, retirement_home, manor, recreation_center, apartments]}
+        draw: {icons: {sprite: building}}
+      bridal-shop:
+        draw: {icons: {sprite: bridal-shop}}
+        filter: {kind: [bridal, bridal-shop]}
+      burger:
+        filter: {kind: [fast_food, burger]}
+        draw: {icons: {sprite: burger}}
+      bus-station:
+        draw: {icons: {sprite: bus-station}}
+        filter: {kind: [bus_stop, bus_station]}
+      camera-store:
+        draw: {icons: {sprite: camera-store}}
+        filter: {kind: [camera, camera-store, photo]}
+      campground:
+        filter: {kind: [campground, camp_site, caravan_site]}
+        draw: {icons: {sprite: campground}}
+      candy-store:
+        filter: {kind: [candy, candy-store, confectionery]}
+        draw: {icons: {sprite: candy-store}}
+      car-dealership:
+        filter: {kind: [car, car-dealership]}
+        draw: {icons: {sprite: car-dealership}}
+      car-wash:
+        draw: {icons: {sprite: car-wash}}
+        filter: {kind: [car_wash, car-wash]}
+      castle:
+        draw: {icons: {sprite: castle}}
+        filter: {kind: [castle, fort]}
+      cemetery:
+        draw: {icons: {sprite: cemetery}}
+        filter: {kind: [grave_yard, cemetery]}
+      cheese-shop:
+        draw: {icons: {sprite: cheese-shop}}
+        filter: {kind: [cheese, cheese-shop]}
+      clothing-store:
+        filter: {kind: [clothes, chothing-store, !<!> clothes store, fashion]}
+        draw: {icons: {sprite: clothing-store}}
+      coffee-shop:
+        draw: {icons: {sprite: coffee-shop}}
+        filter: {kind: [cafe, coffee-shop]}
+      college-university:
+        draw: {icons: {sprite: college-university}}
+        filter: {kind: [university, college, college-university]}
+      concert-hall:
+        draw: {icons: {sprite: concert-hall}}
+        filter: {kind: [music_venue]}
+      convenience-store:
+        draw: {icons: {sprite: convenience-store}}
+        filter: {kind: [convenience, convenience-store, convenience_store, beverages]}
+      department-store:
+        filter: {kind: [department_store, department-store]}
+        draw: {icons: {sprite: department-store}}
+      cosmetics-shop:
+        filter: {kind: [cosmetics, cosmetics-shop, beauty]}
+        draw: {icons: {sprite: cosmetics-shop}}
+      dog-run:
+        draw: {icons: {sprite: dog-run}}
+        filter: {kind: [dog_park, dog_run, dog-run]}
+      electronics-store:
+        filter: {kind: [electronics, electronics-store, computer]}
+        draw: {icons: {sprite: electronics-store}}
+      factory:
+        filter: {kind: [factory, industrial, chimney, sub_station, substation, wastewater_plant, works, water_works, plant, generator]}
+        draw: {icons: {sprite: factory}}
+      farmers-market:
+        draw: {icons: {sprite: farmers-market}}
+        filter: {kind: [farmers_market, farmers-market]}
+      fire-station:
+        draw: {icons: {sprite: fire-station}}
+        filter: {kind: [fire_station, fire-station]}
+      fish-market:
+        draw: {icons: {sprite: fish-market}}
+        filter: {kind: [fish, fish-market, seafood, fishmonger]}
+      fishing-spot:
+        draw: {icons: {sprite: fishing-spot}}
+        filter: {kind: [fishing_spot, fishing-spot, fishing]}
+      fitness:
+        draw: {icons: {sprite: fitness}}
+        filter: {kind: [gym, fitness, fitness_center]}
+      flea-market:
+        filter: {kind: [flea_market, flea-market]}
+        draw: {icons: {sprite: flea-market}}
+      flower-shop:
+        draw: {icons: {sprite: flower-shop}}
+        filter: {kind: [florist, flower-shop]}
+      forest:
+        draw: {icons: {sprite: forest}}
+        filter: {kind: [forest, conservation]}
+      furniture-store:
+        draw: {icons: {sprite: furniture-store}}
+        filter: {kind: [furniture, furniture-store]}
+      garden-center:
+        draw: {icons: {sprite: garden-center}}
+        filter: {kind: [garden_centre, garden_center]}
+      gas-station:
+        draw: {icons: {sprite: gas-station}}
+        filter: {kind: [fuel, gas-station]}
+      general-entertainment:
+        draw: {icons: {sprite: general-entertainment}}
+        filter: {kind: [ticket, general_entertainment]}
+      generic:
+        draw: {icons: {sprite: generic}}
+        filter: {kind: [generic, subway_entrance]}
+      gift-shop:
+        filter: {kind: [gift, gift-shop]}
+        draw: {icons: {sprite: gift-shop}}
+      golf-course:
+        draw: {icons: {sprite: golf-course}}
+        filter: {kind: [golf-course, golf_course]}
+      government-building:
+        draw: {icons: {sprite: government-building}}
+        filter: {kind: [townhall, public_building, embassy]}
+      grocery-store:
+        filter: {kind: [supermarket, grocery-store, health_food, greengrocer]}
+        draw: {icons: {sprite: grocery-store}}
+      harbor-marina:
+        filter: {kind: [marina, harbor, harbor-marina, harbor_marina, dock, mooring]}
+        draw: {icons: {sprite: harbor-marina}}
+      hardware-store:
+        filter: {kind: [hardware, hardware-store, doityourself, paint]}
+        draw: {icons: {sprite: hardware-store}}
+      hotel:
+        draw: {icons: {sprite: hotel}}
+        filter: {kind: [hotel, motel, hostel]}
+      hiking-trail:
+        filter: {kind: [trailhead, hiking_trail]}
+        draw: {icons: {sprite: hiking-trail}}
+      hunting-supply:
+        draw: {icons: {sprite: hunting-supply}}
+        filter: {kind: [hunting, fishing]}
+      ice-cream-shop:
+        draw: {icons: {sprite: ice-cream-shop}}
+        filter: {kind: [ice_cream]}
+      information:
+        filter: {kind: [info, information]}
+        draw: {icons: {sprite: information}}
+      jewelry-store:
+        draw: {icons: {sprite: jewelry-store}}
+        filter: {kind: [jewelry, jewelry_store, jewelry-store]}
+      laundry:
+        draw: {icons: {sprite: laundry}}
+        filter: {kind: [laundry, dry_cleaning]}
+      landmark:
+        filter: {kind: [landmark, memorial, monument, wayside_shrine, tower, beacon]}
+        draw: {icons: {sprite: landmark}}
+      mine:
+        filter: {kind: [mind, quarry, mineshaft, adit]}
+        draw: {icons: {sprite: mine}}
+      light-rail:
+        draw: {icons: {sprite: light-rail}}
+        filter: {kind: [light-rail, light_rail, tram_stop]}
+      liquor-store:
+        filter: {kind: [alcohol, liquor-store, liquor]}
+        draw: {icons: {sprite: liquor-store}}
+      market:
+        filter: {kind: [market, variety_store, boutique, dairy, retail]}
+        draw: {icons: {sprite: market}}
+      mobile-phone-shop:
+        draw: {icons: {sprite: mobile-phone-shop}}
+        filter: {kind: [mobile_phone]}
+      miscellaneous-shop:
+        draw: {icons: {sprite: miscellaneous-shop}}
+        filter: {kind: [houseware, miscellaneous-shop]}
+      motorcycle-shop:
+        filter: {kind: [motorcycle, motorcycle_shop, motorcycle_repair]}
+        draw: {icons: {sprite: motorcycle-shop}}
+      mountain:
+        draw: {icons: {sprite: mountain}}
+        filter: {kind: [mountain, peak]}
+      movie-theatre:
+        draw: {icons: {sprite: movie-theatre}}
+        filter: {kind: [cinema, movie-theatre, movie-theater]}
+      museum:
+        draw: {icons: {sprite: museum}}
+        filter: {kind: [museum, observatory]}
+      music-store:
+        draw: {icons: {sprite: music-store}}
+        filter: {kind: [music, music-store, musical_instrument]}
+      newsstand:
+        filter: {kind: [kiosk, newsstand, newsagent]}
+        draw: {icons: {sprite: newsstand}}
+      nightlife:
+        filter: {kind: [nightclub, nightlife]}
+        draw: {icons: {sprite: nightlife}}
+      office:
+        draw: {icons: {sprite: office}}
+        filter: {kind: [insurance, office, company]}
+      office-supplies:
+        filter: {kind: [office_supplies, office-supplies, stationery]}
+        draw: {icons: {sprite: office-supplies}}
+      optical-shop:
+        filter: {kind: [optician, optical_shop, optical-shop]}
+        draw: {icons: {sprite: optical-shop}}
+      picnic-spot:
+        filter: {kind: [picnic_site, picnic_spot, picnic-spot]}
+        draw: {icons: {sprite: picnic-spot}}
+      performing-arts:
+        filter: {kind: [theater, theatre, performing-arts]}
+        draw: {icons: {sprite: performing-arts}}
+      pet-store:
+        filter: {kind: [pet, pet-store, pet-service, pet_store]}
+        draw: {icons: {sprite: pet-store}}
+      photography-lab:
+        draw: {icons: {sprite: photography-lab}}
+        filter: {kind: [photo_studio, photography_lab, photographer]}
+      pharmacy:
+        draw: {icons: {sprite: pharmacy}}
+        filter: {kind: [pharmacy, chemist]}
+      pool:
+        draw: {icons: {sprite: pool}}
+        filter: {kind: [pool, swimming_pool, water_park]}
+      pool-hall:
+        filter: {kind: [billiards, pool-hall]}
+        draw: {icons: {sprite: pool-hall}}
+      post-office:
+        draw: {icons: {sprite: post-office}}
+        filter: {kind: [post_office, post-office]}
+      power-pylon:
+        draw: {icons: {sprite: power-pylon}}
+        filter: {kind: [tower, power-pylon, pylon]}
+      real-estate:
+        draw: {icons: {sprite: real-estate}}
+        filter: {kind: [estate_agent, real_estate]}
+      recycling-facility:
+        draw: {icons: {sprite: recycling-facility}}
+        filter: {kind: [recycling, recycling-facility]}
+      rental-car:
+        draw: {icons: {sprite: rental-car}}
+        filter: {kind: [rental-car, car_rental, car_sharing]}
+      rest-area:
+        draw: {icons: {sprite: rest-area}}
+        filter: {kind: [rest_area, rest-area]}
+      ship-wreck:
+        draw: {icons: {sprite: ship-wreck}}
+        filter: {kind: [wreck]}
+      restaurant:
+        draw: {icons: {sprite: restaurant}}
+        filter: {kind: [restaurant, deli]}
+      ruin:
+        draw: {icons: {sprite: ruin}}
+        filter: {kind: [ruins, archaeological_site]}
+      salon-barber:
+        draw: {icons: {sprite: salon-barber}}
+        filter: {kind: [hairdresser, salon-barber, salon, beauty_salon]}
+      school:
+        draw: {icons: {sprite: school}}
+        filter: {kind: [school, kindergarten]}
+      shoe-store:
+        filter: {kind: [shoes, shoe-store, shoe_store]}
+        draw: {icons: {sprite: shoe-store}}
+      smoke-shop:
+        filter: {kind: [smoke_shop, tobacco]}
+        draw: {icons: {sprite: smoke-shop}}
+      stable:
+        draw: {icons: {sprite: stable}}
+        filter: {kind: [stable, horse_riding]}
+      spa-massage:
+        draw: {icons: {sprite: spa-massage}}
+        filter: {kind: [spa, spa-massage, sauna, massage]}
+      sporting-goods-shop:
+        filter: {kind: [sporting_goods, sporting-goods-shop, sports, outdoor]}
+        draw: {icons: {sprite: sporting-goods-shop}}
+      spiritual-center:
+        filter: {kind: [spiritual_center, spiritual-center, place_of_worship, wayside_chapel]}
+        draw: {icons: {sprite: spiritual-center}}
+      storage-facility:
+        draw: {icons: {sprite: storage-facility}}
+        filter: {kind: [storage, storage-facility]}
+      tailor-shop:
+        draw: {icons: {sprite: tailor-shop}}
+        filter: {kind: [tailor, tailor-shop]}
+      tattoo-parlor:
+        draw: {icons: {sprite: tattoo-parlor}}
+        filter: {kind: [tattoo, tattoo_parlor, tattoo-parlor]}
+      theme-park:
+        filter: {kind: [theme_park, theme-park, miniature_golf]}
+        draw: {icons: {sprite: theme-park}}
+      thrift-vintage-store:
+        filter: {kind: [thrift, thrift-vintage-store, second_hand]}
+        draw: {icons: {sprite: thrift-vintage-store}}
+      toll-booth:
+        filter: {kind: [toll_booth, checkpoint, border_control]}
+        draw: {icons: {sprite: toll-booth}}
+      toy-game-store:
+        filter: {kind: [toys, toy-game-store, baby_goods]}
+        draw: {icons: {sprite: toy-game-store}}
+      traffic-signal:
+        draw: {icons: {sprite: traffic-signal}}
+        filter: {kind: [traffic_signals]}
+      train-station:
+        filter: {kind: [station, train-staion]}
+        draw: {icons: {sprite: train-station}}
+      veterinarian:
+        draw: {icons: {sprite: veterinarian}}
+        filter: {kind: [pet_care, veterinarian, veterinary]}
+      video-game-store:
+        draw: {icons: {sprite: video-game-store}}
+        filter: {kind: [video_games]}
+      video-store:
+        filter: {kind: [video, video_store]}
+        draw: {icons: {sprite: video-store}}
+      view-point:
+        draw: {icons: {sprite: view-point}}
+        filter: {kind: [viewpoint, view_point, view-point, vista]}
+      wine-shop:
+        draw: {icons: {sprite: wine-shop}}
+        filter: {kind: [wine, wine-shop]}
+      well:
+        draw: {icons: {sprite: well}}
+        filter: {kind: [well, water_well]}
+      winery:
+        draw: {icons: {sprite: winery}}
+        filter: {kind: [winery, wine]}
+  landuse:
+    filter:
+      any:
+        - {area: {min: 10000000}, $zoom: {min: 9}}
+        - {area: {min: 8000000}, $zoom: {min: 10}}
+        - {area: {min: 2000000}, $zoom: {min: 11}}
+        - {area: {min: 500000}, $zoom: {min: 12}}
+        - {area: {min: 100000}, $zoom: {min: 13}}
+        - {area: {min: 50000}, $zoom: {min: 14}}
+        - {area: {min: 20000}, $zoom: {min: 15}}
+        - {area: {min: 2000}, $zoom: {min: 15}}
+        - {$zoom: {min: 16}}
+    data: {source: osm}
+    park:
+      filter:
+        kind: [park, !<!> park or protected land]
+      draw:
+        dots:
+          color: *26
+          order: 1
+    forest:
+      draw:
+        dots:
+          color: [[9, [0.562, 0.750, 0.741]], [10, [0.562, 0.750, 0.741]], [11, [0.392, 0.700, 0.685]], [12, [0.194, 0.748, 0.721]]]
+          order: 1
+      filter:
+        kind: forest
+    conservation:
+      filter:
+        kind: conservation
+      draw:
+        dots:
+          order: 1
+          color: *29
+    cemetery:
+      filter:
+        kind: cemetery
+      draw:
+        dots2:
+          color: *27
+          order: 2
+    stadium:
+      filter:
+        kind: stadium
+      draw:
+        dots:
+          color: *30
+          order: 1
+    garden:
+      draw:
+        dots:
+          color: [0.604, 0.973, 0.722]
+          order: 2
+      filter:
+        kind: garden
+    golf_course:
+      draw:
+        dots:
+          color: *28
+          order: 2
+      filter:
+        kind: golf_course
+    university:
+      filter:
+        kind: university
+      draw:
+        dots:
+          order: 2
+          color: *31
+    recreation_ground:
+      draw:
+        dots:
+          order: 1
+          color: *26
+      filter:
+        kind: recreation_ground
+    farm:
+      draw:
+        dots:
+          order: 2
+          color: [0.600, 0.790, 0.714]
+      filter:
+        kind: [farm, farmland]
+        $zoom: {min: 10}
+    nature_reserve:
+      draw:
+        dots:
+          color: [0.326, 0.740, 0.678]
+          order: 1
+      filter:
+        kind: nature_reserve
+    hospital:
+      draw:
+        dots:
+          color: *32
+          order: 2
+      filter:
+        kind: hospital
+    school:
+      filter:
+        kind: school
+      draw:
+        dots:
+          color: [0.730, 0.697, 0.664]
+          order: 2
+    playground:
+      filter:
+        kind: playground
+      draw:
+        dots-rev:
+          order: 2
+          color: [0.247, 0.800, 0.698]
+scene:
+  background:
+    color: *23

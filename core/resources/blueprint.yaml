@@ -1,204 +1,212 @@
 ﻿# Author @patriciogv - 2015
 
 cameras:
-  perspective:
-    type: perspective
-    vanishing_point: [0, -500]
+    perspective:
+        type: perspective
+        vanishing_point: [0, -500]
 lights:
-  directional1:
-    type: directional
-    origin: world
-    direction: [-1, -1, -1]
-    diffuse: [.7, .7, .7, 1.]
-    ambient: [0.5, 0.5, 0.5, 1.]
-    specular: 1.
-  # directional1:
-  #   type: directional
-  #   direction: [.1, .5, -1]
-  #   diffuse: .7
-  #   ambient: .5
+    directional1:
+        type: directional
+        origin: world
+        direction: [-1, -1, -1]
+        diffuse: [.7, .7, .7, 1.]
+        ambient: [0.5, 0.5, 0.5, 1.]
+        specular: 1.
+    # directional1:
+    #     type: directional
+    #     direction: [.1, .5, -1]
+    #     diffuse: .7
+    #     ambient: .5
 scene:
-  background:
-    color: [0.,0.5,0.8]
+    background:
+        color: [0.,0.5,0.8]
 styles:
-  blueprint:
-    base: polygons
-    shaders:
-       blocks:
-        global: |
-          float getIntensity(vec3 a){ return (a.x+a.y+a.z)/3.0; }
-          float hash(vec2 p) { return fract(1e4 * sin(17.0 * p.x + p.y * 0.1) * (0.1 + abs(sin(p.y * 13.0 + p.x)))); }
-          float noise(vec2 x) {
-            vec2 i = floor(x);
-            vec2 f = fract(x);
+    normal_model:
+        shaders:
+            blocks:
+                global: |
+                    varying vec3 v_normalModel;
+                position: |
+                    #ifdef TANGRAM_VERTEX_SHADER
+                    v_normalModel = a_normal;
+                    #endif
+    blueprint:
+        base: polygons
+        shaders:
+             blocks:
+                global: |
+                    float getIntensity(vec3 a){ return (a.x+a.y+a.z)/3.0; }
+                    float hash(vec2 p) { return fract(1e4 * sin(17.0 * p.x + p.y * 0.1) * (0.1 + abs(sin(p.y * 13.0 + p.x)))); }
+                    float noise(vec2 x) {
+                        vec2 i = floor(x);
+                        vec2 f = fract(x);
 
-            float a = hash(i);
-            float b = hash(i + vec2(1.0, 0.0));
-            float c = hash(i + vec2(0.0, 1.0));
-            float d = hash(i + vec2(1.0, 1.0));
+                        float a = hash(i);
+                        float b = hash(i + vec2(1.0, 0.0));
+                        float c = hash(i + vec2(0.0, 1.0));
+                        float d = hash(i + vec2(1.0, 1.0));
 
-            vec2 u = f * f * (3.0 - 2.0 * f);
-            return mix(a, b, u.x) + (c - a) * u.y * (1.0 - u.x) + (d - b) * u.x * u.y;
-          }
-          float fbm( in vec2 p ){
-            float s = 0.0;
-            float m = 0.0;
-            float a = 0.5;
-            for(int i=0; i<2; i++ ){
-              s += a * noise(p);
-              m += a;
-              a *= 0.5;
-              p *= 2.0;
-            }
-            return s/m;
-          }
-          bool grid(vec2 _pos, float _res){
-            vec2 grid = fract(_pos*_res);
-            return grid.x < _res || grid.y < _res;
-          }
-          vec3 BluePrint(vec2 _pos){
-            vec2 st = _pos/u_resolution.xy-vec2(.5);
-            vec3 background = mix(  vec3(0.,0.5,0.8), 
-                        vec3(0.,0.0,0.3), 
-                        dot(st,st) + (fbm(_pos*0.6)*0.1) );
-            if(grid(_pos,0.01)){
-              background += vec3(0.05);
-            }
+                        vec2 u = f * f * (3.0 - 2.0 * f);
+                        return mix(a, b, u.x) + (c - a) * u.y * (1.0 - u.x) + (d - b) * u.x * u.y;
+                    }
+                    float fbm( in vec2 p ){
+                        float s = 0.0;
+                        float m = 0.0;
+                        float a = 0.5;
+                        for(int i=0; i<2; i++ ){
+                            s += a * noise(p);
+                            m += a;
+                            a *= 0.5;
+                            p *= 2.0;
+                        }
+                        return s/m;
+                    }
+                    bool grid(vec2 _pos, float _res){
+                        vec2 grid = fract(_pos*_res);
+                        return grid.x < _res || grid.y < _res;
+                    }
+                    vec3 BluePrint(vec2 _pos){
+                        vec2 st = _pos/u_resolution.xy-vec2(.5);
+                        vec3 background = mix(    vec3(0.,0.5,0.8), 
+                                                vec3(0.,0.0,0.3), 
+                                                dot(st,st) + (fbm(_pos*0.6)*0.1) );
+                        if(grid(_pos,0.01)){
+                            background += vec3(0.05);
+                        }
 
-            if(grid(_pos,0.1)){
-              background += vec3(0.02);
-            }
+                        if(grid(_pos,0.1)){
+                            background += vec3(0.02);
+                        }
 
-            return background;
-          }
-        filter: |
-          color.rgb += BluePrint(gl_FragCoord.xy);
-  base:
-    base: polygons
-    mix: blueprint
-    lighting: false
+                        return background;
+                    }
+                filter: |
+                    color.rgb += BluePrint(gl_FragCoord.xy);
+    base:
+        base: polygons
+        mix: blueprint
+        lighting: false
 
-  buildings:
-    base: polygons
-    mix: blueprint
-    texcoords: true
-    lighting: false
-    shaders:
-      blocks:
-        # position: |
-        #   position.z *= max(1.0,0.5+(1.0-(u_map_position.z/20.0))*5.0);
-        color: |
-          //if (dot(v_normal,vec3(0.,0.,1.)) == 0.0){
-          if (abs(dot(v_normal, u_normalMatrix * vec3(0.,0.,1.))) < 0.01){
-              float lineWidth = 0.003*(u_tile_origin.z/20.0);
-            color.rgb = 1.0-vec3(step(lineWidth,v_texcoord.x)-step(1.0-lineWidth,v_texcoord.x));
-          }
-  buildingsLines:
-    base: lines
-    mix: blueprint
-    lighting: false
-    shaders:
-      blocks:
-        width: |
-          width *= 0.2+min(pow(position.z*0.006,2.),.6);
-        # position: |
-        #   position.z *= max(1.0,0.5+(1.0-(u_map_position.z/20.0))*5.0);
-        filter: |
-          color.rgb = mix(BluePrint(gl_FragCoord.xy),
-                  vec3(1.),
-                  min(max(0.001,(u_map_position.z-13.))/3.,1.0) );
-  roads:
-    base: lines
-    mix: blueprint
-    lighting: false
-    texcoords: true
-    shaders:
-      blocks:
-        color: |
-          float lineWidth = 0.1;
-          float pct = 1.0-(step(lineWidth,v_texcoord.x)-step(1.0-lineWidth,v_texcoord.x));
-          color.rgb = vec3(0.14+pct*0.1); 
+    buildings:
+        base: polygons
+        mix: [blueprint, normal_model]
+        texcoords: true
+        lighting: false
+        shaders:
+            blocks:
+                # position: |
+                #     position.z *= max(1.0,0.5+(1.0-(u_map_position.z/20.0))*5.0);
+                color: |
+                    if (dot(v_normalModel,vec3(0.,0.,1.)) == 0.0){
+                            float lineWidth = 0.003*(u_tile_origin.z/20.0);
+                        color.rgb = 1.0-vec3(step(lineWidth,v_texcoord.x)-step(1.0-lineWidth,v_texcoord.x));
+                    }
+    buildingsLines:
+        base: lines
+        mix: blueprint
+        lighting: false
+        shaders:
+            blocks:
+                width: |
+                    width *= 0.2+min(pow(position.z*0.006,2.),.6);
+                # position: |
+                #     position.z *= max(1.0,0.5+(1.0-(u_map_position.z/20.0))*5.0);
+                filter: |
+                    color.rgb = mix(BluePrint(gl_FragCoord.xy),
+                                    vec3(1.),
+                                    min(max(0.001,(u_map_position.z-13.))/3.,1.0) );
+    roads:
+        base: lines
+        mix: blueprint
+        lighting: false
+        texcoords: true
+        shaders:
+            blocks:
+                color: |
+                    float lineWidth = 0.1;
+                    float pct = 1.0-(step(lineWidth,v_texcoord.x)-step(1.0-lineWidth,v_texcoord.x));
+                    color.rgb = vec3(0.14+pct*0.1); 
 sources:
-  osm:
-    type: MVT
-    url: https://vector.mapzen.com/osm/all/{z}/{x}/{y}.mvt
+    osm:
+        type: MVT
+        url: https://vector.mapzen.com/osm/all/{z}/{x}/{y}.mvt
 layers:
-  water:
-    data: { source: osm }
-    draw:
-      # lines:
-      #   order: 4
-      #   color: '#C1D3DC' 
-      #   width: 1.5px
-      base:
-        order: 3
-        color: [.1,.1,.1]
-  earth:
-    data: { source: osm }
-    draw:
-      # lines:
-      #   order: 4
-      #   color: '#C1D3DC' 
-      #   width: 1.5px
-      base:
-        order: 0
-        color: [0.080,0.080,0.080]
+    water:
+        data: { source: osm }
+        draw:
+            # lines:
+            #     order: 4
+            #     color: '#C1D3DC' 
+            #     width: 1.5px
+            base:
+                order: 3
+                color: [.1,.1,.1]
+    earth:
+        data: { source: osm }
+        draw:
+            # lines:
+            #     order: 4
+            #     color: '#C1D3DC' 
+            #     width: 1.5px
+            base:
+                order: 0
+                color: [0.080,0.080,0.080]
 
-  landuse:
-    data: { source: osm }
-    draw:
-      lines:
-        order: 2
-        width: 0.5px
-        color: white 
-      base:
-        order: 1
-        color: [0.116,0.116,0.116]
-  roads:
-    data: { source: osm }
-    properties: { width: 3 }
-    draw:
-      roads:
-        order: 4
-        color: '#C1D3DC'
-        width: 6
-  buildings:
-    data: { source: osm }
-    filter: { $zoom: { min: 10 } }
-    draw:
-      buildings:
-        order: 5
-        color: [.05,.05,0.05]
-      baseline:
-        #style: lines
-        order: 5
-        width: [[12, .1], [18, 4.0]] 
-        color: '#C1D3DC'
-    extruded:
-      filter: { $zoom: { min: 13 } }
-      draw:
-        buildings:
-          extrude: true
-        buildingsLines:
-          order: 6
-          color: white
-          width: [[12, .1], [14, 0.1], [15, 0.5], [17, 1.0], [18, 1]]
-          extrude: true
-  road_labels:
-    data: { source: osm, layer: roads }
-    filter: { name: true, aeroway: false, tunnel: false, railway: false, not: { kind: rail } }
+    landuse:
+        data: { source: osm }
+        draw:
+            lines:
+                order: 2
+                width: 0.5px
+                color: white 
+            base:
+                order: 1
+                color: [0.116,0.116,0.116]
+    roads:
+        data: { source: osm }
+        properties: { width: 3 }
+        draw:
+            roads:
+                order: 4
+                color: '#C1D3DC'
+                width: 6
+    buildings:
+        data: { source: osm }
+        filter: { $zoom: { min: 10 } }
+        draw:
+            buildings:
+                order: 5
+                color: [.05,.05,0.05]
+            baseline:
+                #style: lines
+                order: 5
+                width: [[12, .1], [18, 4.0]] 
+                color: '#C1D3DC'
+        extruded:
+            filter: { $zoom: { min: 13 } }
+            draw:
+                buildings:
+                    extrude: true
+                buildingsLines:
+                    order: 6
+                    color: white
+                    width: [[12, .1], [14, 0.1], [15, 0.5], [17, 1.0], [18, 1]]
+                    extrude: true
+    road_labels:
+        data: { source: osm, layer: roads }
+        filter: { name: true, aeroway: false, tunnel: false, railway: false, not: { kind: rail } }
 
-    highway:
-      filter: { kind: highway, $zoom: { min: 13 } }
-      draw:
-        text:
-          font:
-            fill: white
-            typeface: 100 16px Helvetica
-    not_highway:
-      filter: { not: { kind: highway }, $zoom: { min: 13 } }
-      draw:
-        text:
-          font:
-            fill: [0.940,0.958,0.966]
-            typeface: 100 12px Helvetica
+        highway:
+            filter: { kind: highway, $zoom: { min: 13 } }
+            draw:
+                text:
+                    font:
+                        fill: white
+                        typeface: 100 16px Helvetica
+        not_highway:
+            filter: { not: { kind: highway }, $zoom: { min: 13 } }
+            draw:
+                text:
+                    font:
+                        fill: [0.940,0.958,0.966]
+                        typeface: 100 12px Helvetica

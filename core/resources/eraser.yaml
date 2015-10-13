@@ -411,6 +411,15 @@ cameras:
     #     active: true
 
 styles:
+    normal_model:
+        shaders:
+            blocks:
+                global: |
+                    varying vec3 v_normalModel;
+                position: |
+                    #ifdef TANGRAM_VERTEX_SHADER
+                    v_normalModel = a_normal;
+                    #endif
     dashedline:
         base: lines
         texcoords: true
@@ -762,6 +771,7 @@ styles:
 
     buildings_grid:
         base: polygons
+        mix: normal_model
         texcoords: true
         shaders:
             extensions: OES_standard_derivatives
@@ -787,8 +797,7 @@ styles:
                     //color.rg = pct.xy;
                     color.rgb -= mix(vec3(0.0), vec3(0.35),(1.0-(pct.x * pct.y)));
                     
-                    //if ( dot(vec3(0.,0.,1.),normal) == 1.0 ) {
-                    if (abs(dot(v_normal, u_normalMatrix * vec3(0.,0.,1.))) > 0.0001){
+                    if ( dot(vec3(0.,0.,1.),v_normalModel) == 1.0 ) {
                         // If it's a roof
                         color.rgb = vec3(.870);
                     }
@@ -796,6 +805,7 @@ styles:
 
     buildings_grid-univ:
         base: polygons
+        mix: normal_model
         texcoords: true
         shaders:
             blocks:
@@ -817,7 +827,7 @@ styles:
                     vec2 pct = step(vec2(0.09),f_st);;
                     color.rgb -= mix(vec3(0.0,0.060,0.061), vec3(0.35),(1.0-(pct.x * pct.y)));
                     
-                    if ( dot(vec3(0.,0.,1.),normal) == 1.0 ) {
+                    if ( dot(vec3(0.,0.,1.),v_normalModel) == 1.0 ) {
                         // If it's a roof
                         color.rgb = vec3(.870);
                     }
