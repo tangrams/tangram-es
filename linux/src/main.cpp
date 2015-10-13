@@ -10,7 +10,7 @@
 // Forward declaration
 void init_main_window();
 
-const char* sceneFile = "scene.yaml";
+std::string sceneFile = "scene.yaml";
 
 // Input handling
 // ==============
@@ -118,7 +118,7 @@ void key_callback(GLFWwindow* window, int key, int scancode, int action, int mod
                 Tangram::toggleDebugFlag(Tangram::DebugFlags::labels);
                 break;
             case GLFW_KEY_R:
-                Tangram::loadScene(sceneFile);
+                Tangram::loadScene(sceneFile.c_str());
                 break;
             case GLFW_KEY_E:
                 if (scene_editing_mode) {
@@ -130,7 +130,7 @@ void key_callback(GLFWwindow* window, int key, int scancode, int action, int mod
                     setContinuousRendering(true);
                     glfwSwapInterval(1);
                 }
-                Tangram::loadScene(sceneFile);
+                Tangram::loadScene(sceneFile.c_str());
                 break;
             case GLFW_KEY_BACKSPACE:
                 init_main_window(); // Simulate GL context loss
@@ -139,6 +139,13 @@ void key_callback(GLFWwindow* window, int key, int scancode, int action, int mod
                 break;
         }
     }
+}
+
+void drop_callback(GLFWwindow* window, int count, const char** paths) {
+
+    sceneFile = std::string(paths[0]);
+    Tangram::loadScene(sceneFile.c_str());
+
 }
 
 // Window handling
@@ -157,7 +164,7 @@ void window_size_callback(GLFWwindow* window, int width, int height) {
 void init_main_window() {
 
     // Setup tangram
-    Tangram::initialize(sceneFile);
+    Tangram::initialize(sceneFile.c_str());
 
     // Destroy old window
     if (main_window != nullptr) {
@@ -180,6 +187,7 @@ void init_main_window() {
     glfwSetCursorPosCallback(main_window, cursor_pos_callback);
     glfwSetScrollCallback(main_window, scroll_callback);
     glfwSetKeyCallback(main_window, key_callback);
+    glfwSetDropCallback(main_window, drop_callback);
 
     // Setup graphics
     Tangram::setupGL();
@@ -197,7 +205,7 @@ int main(void) {
     }
 
     struct stat sb;
-    if (stat(sceneFile, &sb) == -1) {
+    if (stat(sceneFile.c_str(), &sb) == -1) {
         logMsg("scene file not found!");
         exit(EXIT_FAILURE);
     }
@@ -236,9 +244,9 @@ int main(void) {
             glfwWaitEvents();
         }
         if (scene_editing_mode) {
-            if (stat(sceneFile, &sb) == 0) {
+            if (stat(sceneFile.c_str(), &sb) == 0) {
                 if (last_mod != sb.st_mtime) {
-                    Tangram::loadScene(sceneFile);
+                    Tangram::loadScene(sceneFile.c_str());
                     last_mod = sb.st_mtime;
                 }
             }
