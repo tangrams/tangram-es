@@ -197,7 +197,7 @@ void PbfParser::extractLayer(ParserContext& _ctx, protobuf::message& _layerIn, L
                 while (valueItr.next()) {
                     switch (valueItr.tag) {
                         case 1: // string value
-                            _ctx.values.push_back(std::move(valueItr.string()));
+                            _ctx.values.push_back(valueItr.string());
                             break;
                         case 2: // float value
                             _ctx.values.push_back(valueItr.float32());
