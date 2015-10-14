@@ -229,6 +229,11 @@ void TileManager::updateTileSet(TileSet& tileSet) {
 
     glm::dvec2 viewCenter(m_view->getPosition().x, -m_view->getPosition().y);
 
+    // Tile load request above this zoom-level will be canceled in order to
+    // not wait for tiles that are too small to contribute significantly to
+    // the current view.
+    int maxZoom = m_view->getZoom() + 2;
+
     if (m_view->changedOnLastUpdate() || m_tileSetChanged) {
 
         // Loop over visibleTiles and add any needed tiles to tileSet
@@ -284,6 +289,10 @@ void TileManager::updateTileSet(TileSet& tileSet) {
                     removeTiles.push_back(tile->getID());
                 } else if (tile->isReady()) {
                     m_tiles.push_back(tile);
+                } else if (tile->getID().z > maxZoom) {
+                    // cancel requsts for tiles that
+                    // are too small on screen
+                    removeTiles.push_back(tile->getID());
                 }
 
                 ++curTilesIt;
@@ -291,26 +300,23 @@ void TileManager::updateTileSet(TileSet& tileSet) {
         }
     }
 
-    {
-        while (!removeTiles.empty()) {
-            auto tileIt = tiles.find(removeTiles.back());
-            removeTiles.pop_back();
+    while (!removeTiles.empty()) {
+        auto tileIt = tiles.find(removeTiles.back());
+        removeTiles.pop_back();
 
-            if (tileIt != tiles.end()) {
-                if (tileIt->second->getProxyCounter() <= 0) {
-                    removeTile(tileSet, tileIt, removeTiles);
-                }
-            }
+        if ((tileIt != tiles.end()) &&
+            (tileIt->second->getProxyCounter() <= 0 ||
+             tileIt->second->getID().z > maxZoom)) {
+
+            removeTile(tileSet, tileIt, removeTiles);
         }
     }
 
     // Update tile distance to map center for load priority
-    {
-        for (auto& entry : tiles) {
-            auto& tile = entry.second;
-            auto tileCenter = m_view->getMapProjection().TileCenter(tile->getID());
-            tile->setPriority(glm::length2(tileCenter - viewCenter));
-        }
+    for (auto& entry : tiles) {
+        auto& tile = entry.second;
+        auto tileCenter = m_view->getMapProjection().TileCenter(tile->getID());
+        tile->setPriority(glm::length2(tileCenter - viewCenter));
     }
 }
 
