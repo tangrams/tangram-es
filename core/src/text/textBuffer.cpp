@@ -7,8 +7,7 @@
 namespace Tangram {
 
 TextBuffer::TextBuffer(std::shared_ptr<VertexLayout> _vertexLayout)
-    : LabelMesh(_vertexLayout, GL_TRIANGLES) {
-    m_dirtyTransform = false;
+    : LabelMesh(_vertexLayout, GL_TRIANGLES), m_atlasRes({0.0, 0.0}) {
     addVertices({}, {});
 }
 

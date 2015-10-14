@@ -34,7 +34,6 @@ public:
 private:
 
     glm::vec2 m_atlasRes;
-    bool m_dirtyTransform;
 };
 
 }
