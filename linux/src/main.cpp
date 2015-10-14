@@ -197,7 +197,12 @@ void init_main_window() {
 // Main program
 // ============
 
-int main(void) {
+int main(int argc, char* argv[]) {
+
+    if (argc > 1) {
+        sceneFile = std::string(argv[1]);
+        logMsg("File from command line: %s\n", argv[1]);
+    }
 
     // Initialize the windowing library
     if (!glfwInit()) {
