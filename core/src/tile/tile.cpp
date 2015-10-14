@@ -3,6 +3,7 @@
 #include "data/dataSource.h"
 #include "scene/scene.h"
 #include "scene/dataLayer.h"
+#include "scene/drawRule.h"
 #include "style/style.h"
 #include "view/view.h"
 #include "tile/tileID.h"
@@ -29,7 +30,8 @@ Tile::Tile(TileID _id, const MapProjection& _projection) :
     m_inverseScale = 1.0/m_scale;
 
     m_tileOrigin = { bounds.min.x, bounds.max.y }; // South-West corner
-    // negative y coordinate: to change from y down to y up (tile system has y down and gl context we use has y up).
+    // negative y coordinate: to change from y down to y up
+    // (tile system has y down and gl context we use has y up).
     m_tileOrigin.y *= -1.0;
 
     // Init model matrix to size of tile
@@ -44,7 +46,8 @@ void Tile::initGeometry(uint32_t _size) {
     m_geometry.resize(_size);
 }
 
-void Tile::build(StyleContext& _ctx, const Scene& _scene, const TileData& _data, const DataSource& _source) {
+void Tile::build(StyleContext& _ctx, const Scene& _scene, const TileData& _data,
+                 const DataSource& _source) {
 
     // Initialize m_geometry
     initGeometry(_scene.styles().size());
@@ -57,33 +60,28 @@ void Tile::build(StyleContext& _ctx, const Scene& _scene, const TileData& _data,
         style->onBeginBuildTile(*this);
     }
 
+    Styling styling;
+
     for (const auto& datalayer : layers) {
 
         if (datalayer.source() != _source.name()) { continue; }
 
         for (const auto& collection : _data.layers) {
 
-            const auto& dlc = datalayer.collections();
-            bool layerContainsCollection = std::find(dlc.begin(), dlc.end(), collection.name) != dlc.end();
+            if (!collection.name.empty()) {
+                const auto& dlc = datalayer.collections();
+                bool layerContainsCollection =
+                    std::find(dlc.begin(), dlc.end(), collection.name) != dlc.end();
 
-            if (!collection.name.empty() && !layerContainsCollection) { continue; }
-
+                if (!layerContainsCollection) { continue; }
+            }
             for (const auto& feat : collection.features) {
                 _ctx.setFeature(feat);
 
-                auto rules = datalayer.match(feat, _ctx);
+                styling.styles.clear();
+                if (!datalayer.match(feat, _ctx, styling)) { continue; }
 
-                for (auto& rule : rules) {
-                    int styleId = _scene.getStyleId(rule.getStyleName());
-                    if (styleId < 0){
-                        LOGE("Invalid style %s", rule.getStyleName().c_str());
-                        continue;
-                    }
-
-                    auto* style = _scene.findStyle(styleId);
-                    rule.eval(_ctx);
-                    style->buildFeature(*this, feat, rule);
-                }
+                styling.apply(*this, feat, _scene, _ctx);
             }
         }
     }

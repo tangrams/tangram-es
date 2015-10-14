@@ -50,7 +50,7 @@ const std::map<std::string, StyleParamKey> s_StyleParamMap = {
 };
 
 static const char* keyName(StyleParamKey key) {
-    static std::string empty = "";
+    static std::string empty = "bug";
     for (const auto& entry : s_StyleParamMap) {
         if (entry.second == key) { return entry.first.c_str(); }
     }
@@ -219,7 +219,7 @@ std::string StyleParam::toString() const {
 
     // TODO: cap, join and color toString()
     if (value.is<none_type>()) {
-        return k + "undefined";
+        return k + "none";
     }
 
     switch (key) {
@@ -275,7 +275,13 @@ std::string StyleParam::toString() const {
     case StyleParamKey::none:
         break;
     }
-    return k + "undefined";
+
+    if (value.is<std::string>()) {
+        return k + "wrong type: " + value.get<std::string>();
+
+    }
+
+    return k + "undefined " + std::to_string(static_cast<uint8_t>(key));
 }
 
 int StyleParam::parseValueUnitPair(const std::string& _value, size_t start,

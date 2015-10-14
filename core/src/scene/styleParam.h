@@ -46,6 +46,9 @@ enum class StyleParamKey : uint8_t {
     transition_selected_time
 };
 
+// UPDATE WITH StyleParamKey CHANGES!
+constexpr size_t StyleParamKeySize = static_cast<size_t>(StyleParamKey::transition_selected_time)+1;
+
 enum class Unit { pixel, milliseconds, meter, seconds };
 
 struct StyleParam {
