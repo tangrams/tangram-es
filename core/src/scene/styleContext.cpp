@@ -4,7 +4,8 @@
 #include "scene/scene.h"
 #include "data/propertyItem.h"
 
-#define DUMP(...) //do { logMsg(__VA_ARGS__); duk_dump_context_stderr(m_ctx); } while(0)
+#define DUMP(...) // do { logMsg(__VA_ARGS__); duk_dump_context_stderr(m_ctx); } while(0)
+#define DBG(...) do { logMsg(__VA_ARGS__); duk_dump_context_stderr(m_ctx); } while(0)
 
 
 namespace Tangram {
@@ -136,6 +137,7 @@ bool StyleContext::addFunction(const std::string& _name, const std::string& _fun
 }
 
 bool StyleContext::evalFilter(FunctionID _id) const {
+
     if (!duk_get_global_string(m_ctx, FUNC_ID)) {
         LOGE("EvalFilterFn - functions not initialized");
         return false;
@@ -143,10 +145,17 @@ bool StyleContext::evalFilter(FunctionID _id) const {
 
     if (!duk_get_prop_index(m_ctx, -1, _id)) {
         LOGE("EvalFilterFn - function %d not set", _id);
+        duk_pop(m_ctx);
+        DBG("evalFilterFn\n");
+        return false;
     }
 
     if (duk_pcall(m_ctx, 0) != 0) {
         LOGE("EvalFilterFn: %s", duk_safe_to_string(m_ctx, -1));
+        duk_pop(m_ctx);
+        duk_pop(m_ctx);
+        DBG("evalFilterFn\n");
+        return false;
     }
 
     bool result = false;
