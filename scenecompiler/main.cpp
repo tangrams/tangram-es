@@ -1,13 +1,18 @@
 #include "glsl_optimizer.h"
 #include "platform.h"
 #include "scene/sceneLoader.h"
+#include "scene/styleContext.h"
 #include "scene/scene.h"
+#include "scene/dataLayer.h"
 #include "style/style.h"
+#include "gl/shaderProgram.h"
 
 #include <fstream>
 #include <algorithm>
 
 using namespace Tangram;
+
+void testLayer(const SceneLayer& layer, StyleContext& ctx, int level);
 
 bool optimizeShader(glslopt_ctx* ctx, std::string& source, bool vertexShader) {
 
@@ -125,5 +130,56 @@ int main(int argc, char *argv[]) {
     std::ofstream fout(prefix + fileName.substr(fileName.find_last_of("/")+1));
     fout << sceneNode;
 
+    logMsg("\n ----------- Testing: %s ------------- \n", argv[1]);
+
+    StyleContext styleContext;
+    styleContext.initFunctions(scene);
+    Feature feature;
+    feature.props.add("name", "check");
+    styleContext.setFeature(feature);
+    styleContext.setGlobal("$zoom", 15);
+
+    for (auto& layer : scene.layers()) {
+        testLayer(layer, styleContext, 0);
+    }
+
     return 0;
+}
+
+void testFilter(const Filter& filter, StyleContext& ctx, int level) {
+    if (filter.type == FilterType::function) {
+        auto id = filter.data.get<Filter::Function>().id;
+        logMsg("%*s filter function: %d\n", level+2, "", id);
+        ctx.evalFilter(id);
+    }
+    if (filter.type == FilterType::all ||
+        filter.type == FilterType::none ||
+        filter.type == FilterType::any) {
+        for (const auto& filt : filter.data.get<Filter::Operator>().operands) {
+            testFilter(filt, ctx, level + 2);
+        }
+    }
+}
+
+void testLayer(const SceneLayer& layer, StyleContext& ctx, int level) {
+
+    logMsg("%*s <layer: %s>\n", level, "", layer.name().c_str());
+
+    testFilter(layer.filter(), ctx, level);
+
+    for (auto& rule : layer.rules()) {
+        for (auto& styleParam : rule.parameters) {
+            if (styleParam.function >= 0) {
+
+                logMsg("%*s function: %s - %s\n", level+4, "", rule.name.c_str(),
+                       StyleParam::getKeyName(styleParam.key).c_str());
+
+                StyleParam::Value val;
+                ctx.evalStyle(styleParam.function, styleParam.key, val);
+            }
+        }
+    }
+    for (auto& sublayer : layer.sublayers()) {
+        testLayer(sublayer, ctx, level+4);
+    }
 }
