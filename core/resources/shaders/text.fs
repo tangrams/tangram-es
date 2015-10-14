@@ -16,6 +16,7 @@ uniform vec2 u_resolution;
 uniform float u_time;
 uniform float u_meters_per_pixel;
 uniform float u_device_pixel_ratio;
+uniform vec2 u_uv_scale_factor;
 
 #pragma tangram: uniforms
 
@@ -30,7 +31,7 @@ void main(void) {
         discard;
     } else {
         vec4 color;
-        vec4 texColor = texture2D(u_tex, v_uv);
+        vec4 texColor = texture2D(u_tex, v_uv * u_uv_scale_factor);
 
         color = vec4(v_color.rgb, texColor.a * v_alpha * v_color.a);
 

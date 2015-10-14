@@ -51,6 +51,8 @@ protected:
     virtual void buildLine(const Line& _line, const DrawRule& _rule, const Properties& _props, VboMesh& _mesh, Tile& _tile) const override;
     virtual void buildPolygon(const Polygon& _polygon, const DrawRule& _rule, const Properties& _props, VboMesh& _mesh, Tile& _tile) const override;
 
+    virtual void onBeginDrawMesh(VboMesh& _mesh) const override;
+
     virtual VboMesh* newMesh() const override;
 
     Parameters applyRule(const DrawRule& _rule, const Properties& _props) const;
