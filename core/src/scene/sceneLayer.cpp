@@ -5,72 +5,73 @@
 
 namespace Tangram {
 
-SceneLayer::SceneLayer(std::string _name, Filter _filter, std::vector<DrawRule> _rules,
+SceneLayer::SceneLayer(std::string _name, Filter _filter,
+                       std::vector<StaticDrawRule> _rules,
                        std::vector<SceneLayer> _sublayers) :
     m_filter(_filter),
     m_name(_name),
     m_rules(_rules),
     m_sublayers(_sublayers) {
 
-    // Rules must be sorted to merge correctly
+    // Rules must be sorted to merge correctly - not anymore
     std::sort(m_rules.begin(), m_rules.end());
-
 }
 
-std::vector<DrawRule> SceneLayer::match(const Feature& _feat, const StyleContext& _ctx) const {
+bool SceneLayer::match(const Feature& _feat, const StyleContext& _ctx,
+                       Styling& styling) const {
 
-    std::vector<DrawRule> matches;
     std::queue<std::vector<SceneLayer>::const_iterator> processQ;
 
+    // not adding self to queue to avoid queue
+    // allocation when there are now sublayers
+    // - overoptimization?
     if (!m_filter.eval(_feat, _ctx)) {
-        return matches;
+        return false;
     }
 
-    matches.insert(matches.end(), rules().begin(), rules().end());
-    for (auto iter = m_sublayers.begin(); iter != m_sublayers.end(); ++iter) {
-        processQ.push(iter);
+    // add initial drawrules
+    styling.mergeRules(m_rules);
+    for (auto it = m_sublayers.begin(); it != m_sublayers.end(); ++it) {
+        processQ.push(it);
     }
 
     while (!processQ.empty()) {
-
         const auto& layer = *processQ.front();
+        processQ.pop();
+
         if (!layer.filter().eval(_feat, _ctx)) {
-            processQ.pop();
             continue;
         }
 
         const auto& subLayers = layer.sublayers();
-        for (auto iter = subLayers.begin(); iter != subLayers.end(); ++iter) {
-            processQ.push(iter);
+        for (auto it = subLayers.begin(); it != subLayers.end(); ++it) {
+            processQ.push(it);
         }
-        processQ.pop();
-
-        const auto& rules = layer.rules();
-
-        {
-            std::vector<DrawRule> merged;
-            merged.reserve(rules.size() + matches.size());
-            auto myRulesIt = rules.begin(), myRulesEnd = rules.end();
-            auto matchesIt = matches.begin(), matchesEnd = matches.end();
-            while (myRulesIt != myRulesEnd && matchesIt != matchesEnd) {
-                if (*myRulesIt < *matchesIt) {
-                    merged.push_back(*myRulesIt++);
-                } else if (*matchesIt < *myRulesIt) {
-                    merged.push_back(std::move(*matchesIt++));
-                } else {
-                    //merge parent properties, retain self properties
-                    merged.push_back((*myRulesIt++).merge(*matchesIt++));
-                }
-            }
-            while (myRulesIt != myRulesEnd) { merged.push_back(*myRulesIt++); }
-            while (matchesIt != matchesEnd) { merged.push_back(std::move(*matchesIt++)); }
-            matches.swap(merged);
-        }
+        // override with sublayer drawrules
+        styling.mergeRules(layer.rules());
     }
 
-    return matches;
+    return true;
+}
 
+StaticDrawRule::StaticDrawRule(std::string _styleName, int _styleId, const std::vector<StyleParam>& _parameters) :
+    styleName(std::move(_styleName)),
+    styleId(_styleId),
+    parameters(_parameters) {
+}
+
+std::string StaticDrawRule::toString() const {
+    std::string str = "{\n";
+    for (auto& p : parameters) {
+         str += " { "
+             + std::to_string(static_cast<int>(p.key))
+             + ", "
+             + p.toString()
+             + " }\n";
+    }
+    str += "}\n";
+
+    return str;
 }
 
 }
-

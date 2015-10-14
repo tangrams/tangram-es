@@ -4,7 +4,7 @@
 #include "scene/scene.h"
 #include "scene/dataLayer.h"
 #include "scene/styleContext.h"
-#include "style/material.h"
+#include "scene/drawRule.h"
 #include "style/style.h"
 #include "view/view.h"
 #include "tile/tileID.h"
@@ -59,7 +59,8 @@ void Tile::initGeometry(uint32_t _size) {
     m_geometry.resize(_size);
 }
 
-void Tile::build(StyleContext& _ctx, const Scene& _scene, const TileData& _data, const DataSource& _source) {
+void Tile::build(StyleContext& _ctx, const Scene& _scene, const TileData& _data,
+                 const DataSource& _source) {
 
     // Initialize m_geometry
     initGeometry(_scene.styles().size());
@@ -72,33 +73,28 @@ void Tile::build(StyleContext& _ctx, const Scene& _scene, const TileData& _data,
         style->onBeginBuildTile(*this);
     }
 
+    Styling styling;
+
     for (const auto& datalayer : layers) {
 
         if (datalayer.source() != _source.name()) { continue; }
 
         for (const auto& collection : _data.layers) {
 
-            const auto& dlc = datalayer.collections();
-            bool layerContainsCollection = std::find(dlc.begin(), dlc.end(), collection.name) != dlc.end();
+            if (!collection.name.empty()) {
+                const auto& dlc = datalayer.collections();
+                bool layerContainsCollection =
+                    std::find(dlc.begin(), dlc.end(), collection.name) != dlc.end();
 
-            if (!collection.name.empty() && !layerContainsCollection) { continue; }
-
+                if (!layerContainsCollection) { continue; }
+            }
             for (const auto& feat : collection.features) {
                 _ctx.setFeature(feat);
 
-                auto rules = datalayer.match(feat, _ctx);
+                styling.styles.clear();
+                if (!datalayer.match(feat, _ctx, styling)) { continue; }
 
-                for (auto& rule : rules) {
-                    int styleId = _scene.getStyleId(rule.getStyleName());
-                    if (styleId < 0){
-                        LOGE("Invalid style %s", rule.getStyleName().c_str());
-                        continue;
-                    }
-
-                    auto* style = _scene.findStyle(styleId);
-                    if (!rule.eval(_ctx)) { continue; }
-                    style->buildFeature(*this, feat, rule);
-                }
+                styling.apply(*this, feat, _scene, _ctx);
             }
         }
     }
@@ -134,7 +130,7 @@ void Tile::reset() {
 
 void Tile::draw(const Style& _style, const View& _view) {
 
-    const auto& styleMesh = m_geometry[_style.getID()];
+    auto& styleMesh = getMesh(_style);
 
     if (styleMesh) {
         auto& shader = _style.getShaderProgram();
@@ -149,6 +145,10 @@ void Tile::draw(const Style& _style, const View& _view) {
 }
 
 std::unique_ptr<VboMesh>& Tile::getMesh(const Style& _style) {
+    static std::unique_ptr<VboMesh> NONE = nullptr;
+    if (_style.getID() >= m_geometry.size())
+        return NONE;
+
     return m_geometry[_style.getID()];
 }
 

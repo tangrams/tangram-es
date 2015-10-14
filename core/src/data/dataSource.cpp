@@ -12,6 +12,7 @@
 #include <mutex>
 #include <list>
 #include <functional>
+#include <unordered_map>
 
 namespace Tangram {
 

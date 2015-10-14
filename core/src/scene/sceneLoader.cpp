@@ -1303,7 +1303,7 @@ void SceneLoader::parseTransition(Node params, Scene& scene, std::vector<StylePa
 SceneLayer SceneLoader::loadSublayer(Node layer, const std::string& name, Scene& scene) {
 
     std::vector<SceneLayer> sublayers;
-    std::vector<DrawRule> rules;
+    std::vector<StaticDrawRule> rules;
     Filter filter;
 
     for (const auto& member : layer) {

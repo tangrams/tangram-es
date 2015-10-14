@@ -2,6 +2,7 @@
 
 #include "scene/drawRule.h"
 #include "scene/filters.h"
+#include "scene/styleParam.h"
 
 #include <memory>
 #include <string>
@@ -10,20 +11,34 @@
 
 namespace Tangram {
 
-struct DrawRule;
 struct Feature;
+
+struct StaticDrawRule {
+    std::string styleName;
+    int styleId;
+    std::vector<StyleParam> parameters;
+
+    StaticDrawRule(std::string _styleName, int _styleId, const std::vector<StyleParam>& _parameters);
+
+    std::string toString() const;
+
+    bool operator<(const StaticDrawRule& _rhs) const {
+        return styleId < _rhs.styleId;
+    }
+};
 
 class SceneLayer {
 
     Filter m_filter;
     std::string m_name;
-    std::vector<DrawRule> m_rules;
+    std::vector<StaticDrawRule> m_rules;
     std::vector<SceneLayer> m_sublayers;
 
 public:
 
     SceneLayer(std::string _name, Filter _filter,
-        std::vector<DrawRule> _rules, std::vector<SceneLayer> _sublayers);
+               std::vector<StaticDrawRule> _rules,
+               std::vector<SceneLayer> _sublayers);
 
     const auto& name() const { return m_name; }
     const auto& filter() const { return m_filter; }
@@ -31,7 +46,7 @@ public:
     const auto& sublayers() const { return m_sublayers; }
 
     // Match and combine draw rules that apply to the given Feature in the given Context
-    std::vector<DrawRule> match(const Feature& _feat, const StyleContext& _ctx) const;
+    bool match(const Feature& _feat, const StyleContext& _ctx, Styling& _styling) const;
 
 };
 
