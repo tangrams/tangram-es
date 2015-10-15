@@ -193,7 +193,7 @@ void PolylineStyle::buildLine(const Line& _line, const DrawRule& _rule, const Pr
     if (params.outlineOn) {
 
         GLuint abgrOutline = params.outlineColor;
-        float outlineOrder = std::min((float)params.outlineOrder, params.order - .5f);
+        float outlineOrder = std::min(params.outlineOrder, params.order) - .5f;
 
         float widthOutline = 0.f;
         float dWdZOutline = 0.f;
