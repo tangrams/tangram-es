@@ -131,11 +131,13 @@ protected:
 
     void updateMatrices();
     void updateTiles();
+    bool checkMapBound();
 
     std::unique_ptr<MapProjection> m_projection;
     std::set<TileID> m_visibleTiles;
 
     glm::dvec3 m_pos;
+    glm::dvec3 m_pos_prev;
     glm::vec3 m_eye;
 
     glm::mat4 m_view;
@@ -146,9 +148,12 @@ protected:
     glm::mat3 m_normalMatrix;
 
     float m_roll = 0.f;
+    float m_roll_prev;
     float m_pitch = 0.f;
+    float m_pitch_prev;
 
     float m_zoom;
+    float m_zoom_prev;
     float m_initZoom = 16.0;
 
     float m_width;
