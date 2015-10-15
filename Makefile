@@ -34,7 +34,6 @@ IOS_SIM_BUILD_DIR = build/ios-sim
 RPI_BUILD_DIR = build/rpi
 LINUX_BUILD_DIR = build/linux
 TESTS_BUILD_DIR = build/tests
-UNIT_TESTS_BUILD_DIR = ${TESTS_BUILD_DIR}/unit
 BENCH_BUILD_DIR = build/bench
 
 TOOLCHAIN_DIR = toolchains
@@ -53,10 +52,12 @@ endif
 
 BENCH_CMAKE_PARAMS = \
 	-DBENCHMARK=1 \
+	-DAPPLICATION=0 \
 	-DCMAKE_BUILD_TYPE=Release
 
 UNIT_TESTS_CMAKE_PARAMS = \
 	-DUNIT_TESTS=1 \
+	-DAPPLICATION=0 \
 	-DCMAKE_BUILD_TYPE=Debug
 
 ANDROID_CMAKE_PARAMS = \
@@ -76,17 +77,21 @@ IOS_CMAKE_PARAMS = \
 	-G Xcode
 
 DARWIN_XCODE_CMAKE_PARAMS = \
+        ${TANGRAM_CMAKE_OPTIONS} \
 	-DPLATFORM_TARGET=darwin \
 	-DCMAKE_OSX_DEPLOYMENT_TARGET:STRING="10.9" \
 	-G Xcode
 
 DARWIN_CMAKE_PARAMS = \
+        ${TANGRAM_CMAKE_OPTIONS} \
 	-DPLATFORM_TARGET=darwin
 
 RPI_CMAKE_PARAMS = \
+        ${TANGRAM_CMAKE_OPTIONS} \
 	-DPLATFORM_TARGET=raspberrypi
 
 LINUX_CMAKE_PARAMS = \
+        ${TANGRAM_CMAKE_OPTIONS} \
 	-DPLATFORM_TARGET=linux
 
 clean: clean-android clean-osx clean-ios clean-rpi clean-tests clean-xcode clean-linux
@@ -198,8 +203,8 @@ cmake-linux:
 tests: unit-tests
 
 unit-tests:
-	@mkdir -p ${UNIT_TESTS_BUILD_DIR}
-	@cd ${UNIT_TESTS_BUILD_DIR} && \
+	@mkdir -p ${TESTS_BUILD_DIR}
+	@cd ${TESTS_BUILD_DIR} && \
 	cmake ../../.. ${UNIT_TESTS_CMAKE_PARAMS} && \
 	${MAKE}
 

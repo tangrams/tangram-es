@@ -7,16 +7,6 @@ target_include_directories(css-color-parser-cpp
   ${CMAKE_CURRENT_SOURCE_DIR}/css-color-parser-cpp
 )
 
-# benchmark #
-#############
-
-if(BENCHMARK)
-  option(BENCHMARK_ENABLE_TESTING OFF)
-  option(BENCHMARK_ENABLE_LTO OFF)
-  set(CMAKE_BUILD_TYPE Release)
-  add_subdirectory(benchmark)
-endif()
-
 ## geojsonvt ##
 ###############
 

@@ -34,12 +34,3 @@ set(CORE_LIB_NAME tangram) # in order to have libtangram.so
 
 add_subdirectory(${PROJECT_SOURCE_DIR}/core)
 include_directories(${CORE_INCLUDE_DIRS})
-
-# link and build functions
-function(link_libraries)
-    # nothing to do
-endfunction()
-
-function(build)
-    # nothing to do
-endfunction()

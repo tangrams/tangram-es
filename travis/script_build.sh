@@ -6,13 +6,13 @@ set -o pipefail
 if [[ ${PLATFORM} == "osx" ]]; then
     # Build osx project
     echo "Building osx project"
-    make -j osx
+    TANGRAM_CMAKE_OPTIONS="-DUNIT_TESTS=1 -DBENCHMARK=1" make -j osx
 fi
 
 if [[ ${PLATFORM} == "linux" ]]; then
     # Build linux project
     echo "Building linux project"
-    make linux
+    TANGRAM_CMAKE_OPTIONS="-DUNIT_TESTS=1 -DBENCHMARK=1" make -j 4 linux
 fi
 
 if [[ ${PLATFORM} == "ios" ]]; then
