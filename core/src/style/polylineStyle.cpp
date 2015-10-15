@@ -88,7 +88,7 @@ bool evalStyleParamWidth(StyleParamKey _key, const DrawRule& _rule, const Tile& 
     double tileSize = _tile.getProjection()->TileSize();
 
     // NB: 0.5 because 'width' will be extruded in both directions
-    double tileRes = 0.5 / _tile.getProjection()->TileSize();
+    double tileRes = 0.5 / tileSize;
 
 
     auto& styleParam = _rule.findParameter(_key);
