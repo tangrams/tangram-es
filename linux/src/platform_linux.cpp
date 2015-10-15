@@ -18,6 +18,10 @@
 
 #define NUM_WORKERS 3
 
+PFNGLBINDVERTEXARRAYPROC glBindVertexArrayOESEXT = 0;
+PFNGLDELETEVERTEXARRAYSPROC glDeleteVertexArraysOESEXT = 0;
+PFNGLGENVERTEXARRAYSPROC glGenVertexArraysOESEXT = 0;
+
 static bool s_isContinuousRendering = false;
 static std::string s_resourceRoot;
 
@@ -100,6 +104,7 @@ std::string resolvePath(const char* _path, PathType _type) {
     case PathType::resource:
         return s_resourceRoot + _path;
     }
+    return "";
 }
 
 std::string stringFromFile(const char* _path, PathType _type) {
@@ -179,6 +184,11 @@ void setCurrentThreadPriority(int priority){
     //logMsg("set niceness: %d -> %d\n", p1, p2);
 }
 
-void initGLExtensions() {}
+void initGLExtensions() {
+     glBindVertexArrayOESEXT = (PFNGLBINDVERTEXARRAYPROC)glfwGetProcAddress("glBindVertexArray");
+     glDeleteVertexArraysOESEXT = (PFNGLDELETEVERTEXARRAYSPROC)glfwGetProcAddress("glDeleteVertexArrays");
+     glGenVertexArraysOESEXT = (PFNGLGENVERTEXARRAYSPROC)glfwGetProcAddress("glGenVertexArrays");
+
+}
 
 #endif
