@@ -1,12 +1,12 @@
 #pragma once
 
 #ifdef PLATFORM_ANDROID
-#include <GLES2/gl2.h>
-#include <GLES2/gl2ext.h>
+#define GL_APICALL  __attribute__((visibility("default")))
+#define GL_APIENTRY
 #else
-
 #define GL_APICALL
 #define GL_APIENTRY
+#endif
 
 /*
  * Mesa 3-D graphics library
@@ -50,9 +50,14 @@ typedef double		GLdouble;	/* double precision float */
 typedef double		GLclampd;	/* double precision float in [0,1] */
 typedef char GLchar;
 
+#ifdef PLATFORM_ANDROID
+typedef long GLsizeiptr;
+typedef long GLintptr;
+#else
 #include <stddef.h>
 typedef ptrdiff_t GLsizeiptr;
 typedef ptrdiff_t GLintptr;
+#endif
 
 /* Boolean values */
 #define GL_FALSE				0
@@ -262,7 +267,11 @@ extern "C" {
     GL_APICALL void GL_APIENTRY glCompileShader (GLuint shader);
     GL_APICALL void GL_APIENTRY glAttachShader (GLuint program, GLuint shader);
     GL_APICALL void GL_APIENTRY glLinkProgram (GLuint program);
+#ifdef PLATFORM_ANDROID
+    GL_APICALL void GL_APIENTRY glShaderSource (GLuint shader, GLsizei count, const GLchar** string, const GLint *length);
+#else
     GL_APICALL void GL_APIENTRY glShaderSource (GLuint shader, GLsizei count, const GLchar *const*string, const GLint *length);
+#endif
     GL_APICALL void GL_APIENTRY glGetShaderInfoLog (GLuint shader, GLsizei bufSize, GLsizei *length, GLchar *infoLog);
     GL_APICALL void GL_APIENTRY glGetProgramInfoLog (GLuint program, GLsizei bufSize, GLsizei *length, GLchar *infoLog);
     GL_APICALL GLint GL_APIENTRY glGetUniformLocation (GLuint program, const GLchar *name);
@@ -330,5 +339,3 @@ extern "C" {
     GL_APICALL void GL_APIENTRY glUniformMatrix3fv (GLint location, GLsizei count, GLboolean transpose, const GLfloat *value);
     GL_APICALL void GL_APIENTRY glUniformMatrix4fv (GLint location, GLsizei count, GLboolean transpose, const GLfloat *value);
 };
-
-#endif
