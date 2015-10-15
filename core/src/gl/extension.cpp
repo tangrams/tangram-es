@@ -15,7 +15,7 @@ bool supportsVAOs = false;
 static char* s_glExtensions;
 
 bool isAvailable(std::string _extension) {
-    return strstr(s_glExtensions, _extension.c_str());
+    return bool(s_glExtensions) ? strstr(s_glExtensions, _extension.c_str()) >= 0 : false;
 }
 
 void printAvailableExtensions() {
