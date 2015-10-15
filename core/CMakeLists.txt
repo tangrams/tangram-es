@@ -46,7 +46,12 @@ if(NOT DEFINED CORE_LIB_NAME)
 endif()
 
 add_library(${CORE_LIB_NAME} ${CORE_LIB_TYPE} ${FOUND_SOURCES})
-target_link_libraries(${CORE_LIB_NAME} duktape css-color-parser-cpp yaml-cpp geojson-vt-cpp ${CORE_LIB_DEPS})
+target_link_libraries(${CORE_LIB_NAME}
+  duktape
+  css-color-parser-cpp
+  yaml-cpp
+  geojson-vt-cpp
+  ${CORE_LIB_DEPS})
 
 # make groups for xcode
 group_recursive_sources(src "src")
@@ -61,3 +66,14 @@ add_custom_command(TARGET ${CORE_LIB_NAME}
 if(INSTALL_CORE_LIBRARY STREQUAL "ON")
     install(TARGETS ${CORE_LIB_NAME} DESTINATION ${CORE_INSTALLATION_PATH})
 endif()
+
+
+### Resources
+file(GLOB_RECURSE RESOURCE_FILES "${CMAKE_CURRENT_SOURCE_DIR}/resources/*")
+
+add_custom_target(copy_resources
+  COMMAND ${CMAKE_COMMAND} -E copy_directory
+    ${CMAKE_CURRENT_SOURCE_DIR}/resources
+    ${CMAKE_BINARY_DIR}/bin
+  # Make resources show up in IDE, at least this should do it
+  SOURCES ${RESOURCE_FILES})

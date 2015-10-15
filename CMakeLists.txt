@@ -45,13 +45,11 @@ set(CMAKE_TARGET_FILE ${PROJECT_SOURCE_DIR}/toolchains/${PLATFORM_TARGET}.cmake)
 
 message(STATUS "Including ${varplatform} dependent cmake file : ${CMAKE_TARGET_FILE}")
 
-
-add_custom_target(copy_resources
-  COMMAND ${CMAKE_COMMAND} -E copy_directory
-    ${PROJECT_SOURCE_DIR}/core/resources
-    ${CMAKE_BINARY_DIR}/bin)
-
-
+## set platform configuration, build library and application.
+# adds targets:
+# - core
+# - tangram
+# - copy_resources
 include(${CMAKE_TARGET_FILE})
 
 if(BENCHMARK OR UNIT_TESTS)
