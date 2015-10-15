@@ -133,7 +133,7 @@ layers:
             lines:
                 color: white
                 width: 12.
-                order: 5
+                order: 'function() { return feature.sort_key + 5 }'
                 outline:
                     color: [[16, '#999'], [18, '#aaa']]
                     width: [[15, 0], [16, 2]]

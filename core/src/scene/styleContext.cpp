@@ -426,6 +426,8 @@ duk_ret_t StyleContext::jsPropertyGetter(duk_context *_ctx) {
         duk_push_string(_ctx, it.get<std::string>().c_str());
     } else if (it.is<float>()) {
         duk_push_number(_ctx, it.get<float>());
+    } else if (it.is<int64_t>()) {
+        duk_push_number(_ctx, it.get<int64_t>());
     } else {
         duk_push_undefined(_ctx);
     }
