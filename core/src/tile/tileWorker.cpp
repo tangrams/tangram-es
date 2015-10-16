@@ -8,6 +8,7 @@
 #include "tile/tileManager.h"
 #include "tile/tileID.h"
 #include "tile/tileTask.h"
+#include "data/propertyItem.h"
 
 #include <algorithm>
 
@@ -79,6 +80,78 @@ void TileWorker::run() {
         }
 
         auto tileData = task->process();
+
+        Feature f;
+        // f.lines.push_back({
+        //         {0.f,0.f,0.f},
+        //         {0.f,1.f,0.f},
+        //         {1.f,1.f,0.f},
+        //         {1.f,0.f,0.f},
+        //         {0.f,0.f,0.f}
+        //     });
+
+        tileData->layers.push_back({"grid"});
+
+        for (float y= 0; y < 1; y+=0.05) {
+            Line line_x;
+            Line line_y;
+            for (float x= 0; x < 1; x+=0.05) {
+                line_x.push_back({x,y,0.f});
+                line_y.push_back({y,x,0.f});
+
+            }
+            f.lines.push_back(std::move(line_x));
+            f.lines.push_back(std::move(line_y));
+        }
+        f.geometryType = GeometryType::lines;
+        tileData->layers.back().features.push_back(f);
+
+        f.lines.clear();
+        Line line_x;
+        Line line_y;
+        for (float x= 0; x < 1; x+=0.05) {
+            line_x.push_back({x,0.f,0.f});
+            line_y.push_back({0.f,x,0.f});
+
+        }
+        f.lines.push_back(std::move(line_x));
+        f.lines.push_back(std::move(line_y));
+        f.props.add("border","yes");
+        tileData->layers.back().features.push_back(f);
+
+        f.lines.clear();
+        f.props.clear();
+        f.props.add("poly","yes");
+        int tx = task->tile->getID().x;
+        int ty = task->tile->getID().y;
+        f.props.add("color", tx % 2 == 0
+                    ? (ty % 2 == 0 ? "green" : "blue")
+                    : (ty % 2 == 0 ? "red" : "yellow"));
+
+        f.geometryType = GeometryType::polygons;
+        for (float y= 0; y < 1; y+=0.05) {
+
+            for (float x= 0; x < 1; x+=0.05) {
+                Line line;
+
+                line.push_back({x,y,0.f});
+                line.push_back({x+0.05,y,0.f});
+                line.push_back({x+0.05,y+0.05,0.f});
+                line.push_back({x,y+0.05,0.f});
+                line.push_back({x,y,0.f});
+
+                f.polygons.push_back({std::move(line)});
+            }
+        }
+        tileData->layers.back().features.push_back({f});
+
+        f.polygons.clear();
+        f.props.clear();
+        f.props.add("point","yes");
+        f.props.add("name",task->tile->getID().toString());
+        f.geometryType = GeometryType::points;
+        f.points.push_back({0.5f,0.5f,0.f});
+        tileData->layers.back().features.push_back({f});
 
         // NB: Save shared reference to Scene while building tile
         auto scene = m_tileManager.getScene();

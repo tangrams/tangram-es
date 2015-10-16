@@ -215,7 +215,7 @@ GLuint ShaderProgram::makeCompiledShader(const std::string& _src, GLenum _type) 
             std::vector<GLchar> infoLog(infoLength);
             glGetShaderInfoLog(shader, infoLength, NULL, &infoLog[0]);
             LOGE("Compiling shader:\n%s", &infoLog[0]);
-            //logMsg("\n%s\n", source);
+            logMsg("\n%s\n", source);
         }
         glDeleteShader(shader);
         m_invalidShaderSource = true;

@@ -178,7 +178,7 @@ void SceneLoader::loadShaderConfig(Node shaders, Style& style, Scene& scene) {
             std::string name = define.first.as<std::string>();
 
             // undefine any previous definitions
-            shader.addSourceBlock("defines", "#undef " + name);
+            //shader.addSourceBlock("defines", "#undef " + name);
 
             bool bValue;
 
@@ -947,9 +947,12 @@ void SceneLoader::loadCameras(Node _cameras, Scene& _scene) {
             // TODO
         }
 
-        double x = -74.00976419448854;
-        double y = 40.70532700869127;
-        float z = 16;
+        // double x = -74.00976419448854;
+        // double y = 40.70532700869127;
+        // float z = 16;
+        double x = 0;
+        double y = 0;
+        float z = 1;
 
         Node position = camera["position"];
         if (position) {
