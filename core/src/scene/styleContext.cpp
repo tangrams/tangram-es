@@ -294,6 +294,7 @@ bool StyleContext::parseStyleResult(StyleParamKey _key, StyleParam::Value& _val)
                 break;
             }
             case StyleParamKey::order:
+            case StyleParamKey::outline_order:
             case StyleParamKey::priority:
             case StyleParamKey::color:
             case StyleParamKey::outline_color:

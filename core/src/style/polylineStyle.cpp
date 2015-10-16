@@ -49,7 +49,10 @@ PolylineStyle::Parameters PolylineStyle::parseRule(const DrawRule& _rule) const 
     p.cap = static_cast<CapTypes>(cap);
     p.join = static_cast<JoinTypes>(join);
 
+    p.outlineOrder = p.order; // will offset from fill later
+
     if (_rule.get(StyleParamKey::outline_color, p.outlineColor) |
+        _rule.get(StyleParamKey::outline_order, p.outlineOrder) |
         _rule.contains(StyleParamKey::outline_width) |
         _rule.get(StyleParamKey::outline_cap, cap) |
         _rule.get(StyleParamKey::outline_join, join)) {
@@ -84,10 +87,8 @@ bool evalStyleParamWidth(StyleParamKey _key, const DrawRule& _rule, const Tile& 
     int zoom  = _tile.getID().z;
     double tileSize = _tile.getProjection()->TileSize();
 
-    // NB: Tile vertex coordinates are in the range -1..1 => 2,
-    // * 0.5 for half-width == 1.0 => 1.0 / tileSize
-    //double tileRes = 1.0 / _tile.getProjection()->TileSize();
-    double tileRes = 1.0 / tileSize;
+    // NB: 0.5 because 'width' will be extruded in both directions
+    double tileRes = 0.5 / tileSize;
 
 
     auto& styleParam = _rule.findParameter(_key);
@@ -177,12 +178,10 @@ void PolylineStyle::buildLine(const Line& _line, const DrawRule& _rule, const Pr
         } else { height = extrude[1]; }
     }
 
-    GLfloat layer = _props.getNumeric("sort_key") + params.order;
-
     PolyLineBuilder builder {
         [&](const glm::vec3& coord, const glm::vec2& normal, const glm::vec2& uv) {
             glm::vec4 extrude = { normal.x, normal.y, width, dWdZ };
-            vertices.push_back({ {coord.x, coord.y, height}, uv, extrude, abgr, layer });
+            vertices.push_back({ {coord.x, coord.y, height}, uv, extrude, abgr, (float)params.order });
         },
         [&](size_t sizeHint){ vertices.reserve(sizeHint); },
         params.cap,
@@ -194,6 +193,7 @@ void PolylineStyle::buildLine(const Line& _line, const DrawRule& _rule, const Pr
     if (params.outlineOn) {
 
         GLuint abgrOutline = params.outlineColor;
+        float outlineOrder = std::min(params.outlineOrder, params.order) - .5f;
 
         float widthOutline = 0.f;
         float dWdZOutline = 0.f;
@@ -223,7 +223,7 @@ void PolylineStyle::buildLine(const Line& _line, const DrawRule& _rule, const Pr
             for (size_t i = 0; i < offset; i++) {
                 const auto& v = vertices[i];
                 glm::vec4 extrudeOutline = { v.extrude.x, v.extrude.y, widthOutline, dWdZOutline };
-                vertices.push_back({ v.pos, v.texcoord, extrudeOutline, abgrOutline, params.order - 1.f });
+                vertices.push_back({ v.pos, v.texcoord, extrudeOutline, abgrOutline, outlineOrder });
             }
         }
     }
