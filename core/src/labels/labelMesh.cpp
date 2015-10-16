@@ -79,7 +79,7 @@ void LabelMesh::compileVertexBuffer() {
 }
 
 void LabelMesh::draw(ShaderProgram& _shader) {
-    checkValidity();
+    bool valid = checkValidity();
 
     if (!m_isCompiled) { return; }
     if (m_nVertices == 0) { return; }
@@ -91,18 +91,13 @@ void LabelMesh::draw(ShaderProgram& _shader) {
         subDataUpload();
     }
 
-    loadQuadIndices();
-
-    if (GLExtensions::supportsVAOs) {
-        if (!m_vaos) {
-            m_vaos = std::make_unique<Vao>();
-            m_vaos->init(_shader, m_vertexOffsets, *m_vertexLayout, m_glVertexBuffer, s_quadIndexBuffer);
-        }
-    } else {
-        // Bind buffers for drawing
-        RenderState::vertexBuffer(m_glVertexBuffer);
-        RenderState::indexBuffer(s_quadIndexBuffer);
+    if (!valid) {
+        loadQuadIndices();
     }
+
+    // Bind buffers for drawing
+    RenderState::vertexBuffer(m_glVertexBuffer);
+    RenderState::indexBuffer(s_quadIndexBuffer);
 
     // Enable shader program
     _shader.use();
@@ -114,22 +109,13 @@ void LabelMesh::draw(ShaderProgram& _shader) {
         uint32_t nIndices = o.first;
         uint32_t nVertices = o.second;
 
-        if (!GLExtensions::supportsVAOs) {
-            // Enable vertex attribs via vertex layout object
-            size_t byteOffset = vertexOffset * m_vertexLayout->getStride();
-            m_vertexLayout->enable(_shader, byteOffset);
-        } else {
-            // Bind the corresponding vao relative to the current offset
-            m_vaos->bind(i);
-        }
+        size_t byteOffset = vertexOffset * m_vertexLayout->getStride();
+
+        m_vertexLayout->enable(_shader, byteOffset);
 
         glDrawElements(m_drawMode, nIndices, GL_UNSIGNED_SHORT, 0);
 
         vertexOffset += nVertices;
-    }
-
-    if (GLExtensions::supportsVAOs) {
-        m_vaos->unbind();
     }
 }
 
