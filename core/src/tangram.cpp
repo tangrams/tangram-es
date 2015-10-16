@@ -246,9 +246,8 @@ float getTilt() {
 
 void screenToWorldCoordinates(double& _x, double& _y) {
 
-    float screenX = _x, screenY = _y;
-    m_view->screenToGroundPlane(screenX, screenY);
-    glm::dvec2 meters(screenX + m_view->getPosition().x, screenY + m_view->getPosition().y);
+    m_view->screenToGroundPlane(_x, _y);
+    glm::dvec2 meters(_x + m_view->getPosition().x, _y + m_view->getPosition().y);
     glm::dvec2 lonLat = m_view->getMapProjection().MetersToLonLat(meters);
     _x = lonLat.x;
     _y = lonLat.y;
