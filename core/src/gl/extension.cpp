@@ -43,7 +43,7 @@ void load() {
         return;
     }
 
-    supportsMapBuffer = isAvailable("mapbuffer");
+    supportsMapBuffer = DESKTOP_GL || isAvailable("mapbuffer");
     supportsVAOs = isAvailable("vertex_array_object");
 
     LOG("Driver supports map buffer %d", supportsMapBuffer);

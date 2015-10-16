@@ -1,5 +1,11 @@
 #pragma once
 
+#if defined(PLATFORM_OSX) || defined(PLATFORM_LINUX)
+#define DESKTOP_GL true
+#else
+#define DESKTOP_GL false
+#endif
+
 #if defined(PLATFORM_ANDROID) || defined(PLATFORM_IOS)
 #define glMapBuffer glMapBufferOES
 #define glUnmapBuffer glUnmapBufferOES
