@@ -106,7 +106,7 @@ styles:
                         float zoom = u_map_position.z;
                         //radius *= 4.0;
                         //radius /= pow(2., zoom); //  (zoom * zoom);
-                        radius /= pow(2.0, zoom) / zoom * 0.5;
+                        radius /= pow(2.0, zoom) / zoom;
                         float phi = (lat) * PI/180.0; // *  PI;
                         float theta = (lon) * PI/180.0; // *  PI;
                         
@@ -124,9 +124,9 @@ styles:
                     float lat = y2lat_m(mercator.y);
                     float lon = x2lon_m(mercator.x);
 
-                    // v_color = mix(vec4((lon + 180.0)/360.0,
-                    //                (lat + 90.0)/180.0,
-                    //                0.0, 1.0), v_color, 0.9);
+                     //v_color = mix(vec4((lon + 180.0)/360.0,
+                     //               (lat + 90.0)/180.0,
+                     //               0.0, 1.0), v_color, 0.0);
 
                     // Latitude_Of_Origin
                     float centerlat = y2lat_m(u_map_position.y); // * u_map_position.z;
@@ -138,13 +138,16 @@ styles:
                     //                0.0, 1.0);
                     
                     // bend map into globe
-                    position.xyz = latLongToVector3(lat, lon, 3.) * EARTH_RADIUS;
+                    position.xyz = latLongToVector3(lat, lon, 4.0) * EARTH_RADIUS;
                     
                     // rotate globe with map navigation
                     position.xyz *= rotateY3D((-centerlon - 90.) * PI/180.0);
                     position.xyz *= rotateX3D((-centerlat) * PI/180.0);
-                    position.z *= -0.5;
+                    position.z *= -1.0;
 
+                    float zoom = u_map_position.z;
+                    float radius = 1.0 * ER / (pow(2.0, zoom) * zoom);
+                    position.z -= radius;
                     v_normal = normalize(position.xyz);
                     //v_color = vec4(v_normal, 1.0);
                     
