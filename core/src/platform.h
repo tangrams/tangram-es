@@ -106,6 +106,8 @@ void cancelUrlRequest(const std::string& _url);
  */
 void setCurrentThreadPriority(int priority);
 
+void initGLExtensions();
+
 /* Log utilities */
 
 #define __FILENAME__ (strrchr(__FILE__, '/') ? strrchr(__FILE__, '/') + 1 : __FILE__)
