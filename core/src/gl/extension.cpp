@@ -22,16 +22,12 @@ bool isAvailable(std::string _extension) {
 
 void printAvailableExtensions() {
     std::string exts(s_glExtensions);
-    std::istringstream iss(exts);
-    std::vector<std::string> extensions;
-    auto s0 = std::istream_iterator<std::string>(iss);
-    auto s1 = std::istream_iterator<std::string>();
+    std::stringstream ss(exts);
 
-    std::copy(s0, s1, back_inserter(extensions));
-
+    std::string extension;
     LOG("GL Extensions available: ");
-    for (auto ext : extensions) {
-        LOG("\t %s", ext.c_str());
+    while (std::getline(ss, extension, ',')) {
+        LOG("\t %s", extension.c_str());
     }
 }
 
@@ -43,7 +39,7 @@ void load() {
         return;
     }
 
-    supportsMapBuffer = isAvailable("mapbuffer");
+    supportsMapBuffer = DESKTOP_GL || isAvailable("mapbuffer");
     supportsVAOs = isAvailable("vertex_array_object");
 
     LOG("Driver supports map buffer %d", supportsMapBuffer);
