@@ -14,6 +14,8 @@ using Color = CSSColorParser::Color;
 
 const std::map<std::string, StyleParamKey> s_StyleParamMap = {
     {"cap", StyleParamKey::cap},
+    {"centroid", StyleParamKey::centroid},
+    {"collide", StyleParamKey::collide},
     {"color", StyleParamKey::color},
     {"extrude", StyleParamKey::extrude},
     {"font:family", StyleParamKey::font_family},
@@ -32,21 +34,19 @@ const std::map<std::string, StyleParamKey> s_StyleParamMap = {
     {"outline:cap", StyleParamKey::outline_cap},
     {"outline:color", StyleParamKey::outline_color},
     {"outline:join", StyleParamKey::outline_join},
-    {"outline:width", StyleParamKey::outline_width},
     {"outline:order", StyleParamKey::outline_order},
+    {"outline:width", StyleParamKey::outline_width},
     {"priority", StyleParamKey::priority},
     {"size", StyleParamKey::size},
     {"sprite", StyleParamKey::sprite},
     {"sprite_default", StyleParamKey::sprite_default},
     {"style", StyleParamKey::style},
     {"text_source", StyleParamKey::text_source},
-    {"visible", StyleParamKey::visible},
-    {"width", StyleParamKey::width},
-    {"centroid", StyleParamKey::centroid},
-    {"collide", StyleParamKey::collide},
-    {"transition:show:time", StyleParamKey::transition_show_time},
     {"transition:hide:time", StyleParamKey::transition_hide_time},
     {"transition:selected:time", StyleParamKey::transition_selected_time},
+    {"transition:show:time", StyleParamKey::transition_show_time},
+    {"visible", StyleParamKey::visible},
+    {"width", StyleParamKey::width},
 };
 
 static const char* keyName(StyleParamKey key) {
