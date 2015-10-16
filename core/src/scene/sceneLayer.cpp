@@ -44,7 +44,7 @@ void SceneLayer::match(const Feature& _feat, const StyleContext& _ctx, std::vect
 
     std::vector<DrawRule> merged;
 
-    // For all of m_rules that have the same style as an existing matched rule,
+    // For all of m_rules that have the same name as an existing matched rule,
     // merge the rules; for others, take existing rule unchanged
     {
         auto myRulesIt = m_rules.begin(), myRulesEnd = m_rules.end();

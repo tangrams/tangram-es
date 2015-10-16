@@ -9,10 +9,9 @@ namespace Tangram {
 
 const StyleParam NONE;
 
-DrawRule::DrawRule(const std::string& _name, const std::string& _style, const std::vector<StyleParam>& _parameters,
+DrawRule::DrawRule(const std::string& _name, const std::vector<StyleParam>& _parameters,
                    bool _sorted) :
     name(_name),
-    style(_style),
     parameters(_parameters) {
 
     if (!_sorted) {
@@ -41,7 +40,7 @@ DrawRule DrawRule::merge(DrawRule& _other) const {
     while (myIt != myEnd) { merged.push_back(*myIt++); }
     while (otherIt != otherEnd) { merged.push_back(std::move(*otherIt++)); }
 
-    return { name, _other.style, merged, true };
+    return { name, merged, true };
 }
 
 std::string DrawRule::toString() const {
@@ -96,6 +95,18 @@ void DrawRule::eval(const StyleContext& _ctx) {
             }
         }
     }
+}
+
+const std::string& DrawRule::getStyleName() const {
+
+    const auto& style = findParameter(StyleParamKey::style);
+
+    if (style) {
+        return style.value.get<std::string>();
+    } else {
+        return name;
+    }
+
 }
 
 }

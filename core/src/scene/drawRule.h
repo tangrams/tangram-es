@@ -13,16 +13,17 @@ class StyleContext;
 struct DrawRule {
 
     std::string name;
-    std::string style;
     std::vector<StyleParam> parameters;
 
-    DrawRule(const std::string& _name, const std::string& _style, const std::vector<StyleParam>& _parameters,
+    DrawRule(const std::string& _name, const std::vector<StyleParam>& _parameters,
              bool _sorted = false);
 
     DrawRule merge(DrawRule& _other) const;
     std::string toString() const;
 
     void eval(const StyleContext& _ctx);
+
+    const std::string& getStyleName() const;
 
     const StyleParam& findParameter(StyleParamKey _key) const;
 
