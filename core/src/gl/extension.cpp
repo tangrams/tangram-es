@@ -38,6 +38,11 @@ void printAvailableExtensions() {
 void load() {
     s_glExtensions = (char*) glGetString(GL_EXTENSIONS);
 
+    if (s_glExtensions == NULL) {
+        LOGE("glGetString( GL_EXTENSIONS ) returned NULL");
+        return;
+    }
+
     supportsMapBuffer = isAvailable("mapbuffer");
     supportsVAOs = isAvailable("vertex_array_object");
 
