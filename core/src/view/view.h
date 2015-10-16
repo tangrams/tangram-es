@@ -109,7 +109,9 @@ public:
      * @return the un-normalized distance 'into the screen' to the ground plane
      * (if < 0, intersection is behind the screen)
     */
-    float screenToGroundPlane(float& _screenX, float& _screenY);
+    double screenToGroundPlane(double& _screenX, double& _screenY);
+    /* Provide an overloaded method for platform specific API support, which pass float screen positions */
+    double screenToGroundPlane(float& _screenX, float& _screenY);
 
     /* Returns the set of all tiles visible at the current position and zoom */
     const std::set<TileID>& getVisibleTiles() { return m_visibleTiles; }
