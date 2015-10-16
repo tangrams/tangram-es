@@ -28,11 +28,7 @@ bool Filter::eval(const Feature& feat, const StyleContext& ctx) const {
     }
     case FilterType::existence: {
         auto& f = data.get<Existence>();
-        auto& global = ctx.getGlobal(f.key);
-
-        bool found = !global.is<none_type>() || feat.props.contains(f.key);
-
-        return f.exists == found;
+        return f.exists == feat.props.contains(f.key);
     }
     case FilterType::equality: {
         auto& f = data.get<Equality>();
