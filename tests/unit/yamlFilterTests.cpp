@@ -199,7 +199,7 @@ TEST_CASE( "yaml-filter-tests: boolean false filter as existence check", "[filte
 
 TEST_CASE( "yaml-filter-tests: boolean true filter as existence check for keyword", "[filters][core][yaml]") {
     init();
-    Filter filter = load("filter: {$vroom : true}");
+    Filter filter = load("filter: {$vroom : 1}");
 
     REQUIRE(filter.eval(civic, ctx));
     REQUIRE(filter.eval(bmw1, ctx));
@@ -216,4 +216,3 @@ TEST_CASE( "yaml-filter-tests: boolean false filter as existence check for keywo
     REQUIRE(filter.eval(bike, ctx));
 
 }
-
