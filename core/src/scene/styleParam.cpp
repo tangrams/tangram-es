@@ -35,9 +35,10 @@ const std::map<std::string, StyleParamKey> s_StyleParamMap = {
     {"outline:width", StyleParamKey::outline_width},
     {"outline:order", StyleParamKey::outline_order},
     {"priority", StyleParamKey::priority},
+    {"size", StyleParamKey::size},
     {"sprite", StyleParamKey::sprite},
     {"sprite_default", StyleParamKey::sprite_default},
-    {"size", StyleParamKey::size},
+    {"style", StyleParamKey::style},
     {"text_source", StyleParamKey::text_source},
     {"visible", StyleParamKey::visible},
     {"width", StyleParamKey::width},
@@ -142,6 +143,7 @@ StyleParam::Value StyleParam::parseString(StyleParamKey key, const std::string& 
     case StyleParamKey::transform:
     case StyleParamKey::sprite:
     case StyleParamKey::sprite_default:
+    case StyleParamKey::style:
         return _value;
     case StyleParamKey::font_size: {
         float fontSize = 16;
@@ -242,6 +244,7 @@ std::string StyleParam::toString() const {
     case StyleParamKey::transform:
     case StyleParamKey::sprite:
     case StyleParamKey::sprite_default:
+    case StyleParamKey::style:
         if (!value.is<std::string>()) break;
         return k + value.get<std::string>();
     case StyleParamKey::interactive:
