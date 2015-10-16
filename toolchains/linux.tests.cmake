@@ -7,18 +7,16 @@ set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wno-gnu-zero-variadic-macro-arguments")
 endif()
 
 add_definitions(-DPLATFORM_LINUX)
-
-# load glfw
-include(${PROJECT_SOURCE_DIR}/toolchains/add_glfw.cmake)
+add_definitions(-DUNIT_TESTS)
 
 # load core library
 add_subdirectory(${PROJECT_SOURCE_DIR}/core)
 include_directories(${CORE_INCLUDE_DIRS})
 include_directories(${CORE_LIBRARIES_INCLUDE_DIRS})
 
-add_library(linux_platform
-  ${PROJECT_SOURCE_DIR}/linux/src/platform_linux.cpp
-  ${PROJECT_SOURCE_DIR}/linux/src/urlWorker.cpp
+add_library(platform_mock
+  ${PROJECT_SOURCE_DIR}/tests/src/platform_mock.cpp
+  ${PROJECT_SOURCE_DIR}/tests/src/gl_mock.cpp
 )
 
 file(GLOB TEST_SOURCES tests/unit/*.cpp)
@@ -35,7 +33,7 @@ foreach(_src_file_path ${TEST_SOURCES})
     add_executable(${EXECUTABLE_NAME} ${_src_file_path})
 
     target_link_libraries(${EXECUTABLE_NAME}
-      core linux_platform -lcurl glfw ${GLFW_LIBRARIES})
+      core platform_mock -lpthread)
 
     set(LAST_TARGET ${EXECUTABLE_NAME})
 

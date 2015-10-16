@@ -1,13 +1,17 @@
 #include "pointStyle.h"
 
 #include "platform.h"
-#include "tile/tile.h"
+#include "material.h"
 #include "gl/shaderProgram.h"
 #include "gl/texture.h"
 #include "gl/vertexLayout.h"
+#include "labels/labelMesh.h"
+#include "labels/spriteLabel.h"
+#include "scene/drawRule.h"
+#include "scene/spriteAtlas.h"
+#include "tile/tile.h"
 #include "util/builders.h"
 #include "view/view.h"
-#include "labels/spriteLabel.h"
 #include "data/propertyItem.h" // Include wherever Properties is used!
 
 #include "glm/gtc/type_ptr.hpp"
@@ -46,6 +50,10 @@ void PointStyle::constructShaderProgram() {
     }
 
     m_shaderProgram->addSourceBlock("defines", defines);
+}
+
+VboMesh* PointStyle::newMesh() const {
+    return new LabelMesh(m_vertexLayout, m_drawMode);
 }
 
 PointStyle::Parameters PointStyle::applyRule(const DrawRule& _rule, const Properties& _props) const {

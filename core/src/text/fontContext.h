@@ -1,9 +1,9 @@
 #pragma once
 
-#include "gl.h"
-#include "fontstash.h"
+#include "gl/gl_fwd.h"
 #include "gl/texture.h"
-#include "platform.h"
+#include "fontstash.h"
+
 #include <memory>
 #include <mutex>
 #include <string>

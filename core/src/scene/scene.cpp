@@ -1,8 +1,15 @@
 #include "scene.h"
 
+#include "gl/shaderProgram.h"
 #include "platform.h"
+#include "style/material.h"
 #include "style/style.h"
+#include "scene/dataLayer.h"
+#include "scene/light.h"
+#include "scene/spriteAtlas.h"
+#include "scene/stops.h"
 #include "text/fontContext.h"
+#include "util/mapProjection.h"
 
 #include <atomic>
 

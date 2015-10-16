@@ -1,6 +1,5 @@
 #pragma once
 
-#include "platform.h"
 #include "scene/styleParam.h"
 
 #include <string>
@@ -34,8 +33,6 @@ struct DrawRule {
         auto& param = findParameter(_key);
         if (!param) { return false; }
         if (!param.value.is<T>()) {
-            LOGE("wrong type '%d'for StyleParam '%d'",
-                   param.value.which(), _key);
             return false;
         }
         _value = param.value.get<T>();
@@ -48,6 +45,8 @@ struct DrawRule {
     bool operator<(const DrawRule& _rhs) const;
     int compare(const DrawRule& _rhs) const { return name.compare(_rhs.name); }
 
+private:
+    void logGetError(StyleParamKey _expectedKey, const StyleParam& _param);
 };
 
 }

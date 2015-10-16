@@ -1,9 +1,5 @@
 #pragma once
 
-#include "scene/light.h"
-#include "scene/dataLayer.h"
-#include "scene/spriteAtlas.h"
-#include "scene/stops.h"
 #include "util/color.h"
 #include <list>
 #include <memory>
@@ -18,7 +14,12 @@ namespace Tangram {
 class Style;
 class Texture;
 class DataSource;
+class DataLayer;
 class FontContext;
+class Light;
+class MapProjection;
+class SpriteAtlas;
+struct Stops;
 
 /* Singleton container of <Style> information
  *

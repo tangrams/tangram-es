@@ -4,10 +4,12 @@
 #include <iostream>
 #include <vector>
 
-#include "data/filters.h"
 #include "yaml-cpp/yaml.h"
+#include "scene/filters.h"
+#include "data/tileData.h"
 #include "scene/sceneLoader.h"
 #include "scene/scene.h"
+#include "scene/styleContext.h"
 
 using namespace Tangram;
 using YAML::Node;

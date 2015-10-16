@@ -1,9 +1,14 @@
 #include "labels.h"
+
 #include "tangram.h"
-#include "tile/tile.h"
+#include "platform.h"
+#include "gl/shaderProgram.h"
 #include "gl/primitives.h"
 #include "view/view.h"
+#include "style/material.h"
 #include "style/style.h"
+#include "tile/tile.h"
+
 #include "glm/glm.hpp"
 #include "glm/gtc/matrix_transform.hpp"
 #include "glm/gtx/rotate_vector.hpp"

@@ -1,10 +1,5 @@
 #pragma once
 
-#include "tile/tileID.h"
-#include "tileTask.h"
-
-#include <memory>
-#include <future>
 #include <memory>
 #include <vector>
 #include <condition_variable>
@@ -16,6 +11,7 @@ namespace Tangram {
 class TileManager;
 class DataSource;
 class Tile;
+class TileTask;
 class View;
 
 class TileWorker {

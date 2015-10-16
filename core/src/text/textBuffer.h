@@ -1,10 +1,11 @@
 #pragma once
 
-#include "gl.h"
+#include "gl/gl_fwd.h"
 #include "labels/labelMesh.h"
 #include "text/fontContext.h" // for FontID
 #include "glm/vec4.hpp"
 #include "glm/vec2.hpp"
+#include "style/textStyle.h"
 
 #include <memory>
 #include <locale>
@@ -13,33 +14,6 @@
 namespace Tangram {
 
 class FontContext;
-struct Properties;
-
-enum class TextTransform {
-    none,
-    capitalize,
-    uppercase,
-    lowercase,
-};
-
-struct Parameters {
-    FontID fontId = -1;
-    std::string text = "";
-    bool interactive = false;
-    std::shared_ptr<Properties> properties;
-    uint32_t fill = 0xff000000;
-    uint32_t strokeColor = 0xffffffff;
-    float strokeWidth = 0.0f;
-    float fontSize = 12.0f;
-    float blurSpread = 0.0f;
-    TextTransform transform = TextTransform::none;
-    bool visible = true;
-    Label::Options labelOptions;
-
-    bool isValid() {
-        return fontSize > 0.f && !text.empty();
-    }
-};
 
 /*
  * This class holds TextLabels together with their VboMesh
@@ -52,7 +26,7 @@ public:
     ~TextBuffer();
 
     /* Create and add TextLabel */
-    bool addLabel(const Parameters& _params, Label::Transform _transform,
+    bool addLabel(const TextStyle::Parameters& _params, Label::Transform _transform,
                   Label::Type _type, FontContext& _fontContext);
 
 private:

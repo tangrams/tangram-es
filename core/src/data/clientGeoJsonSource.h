@@ -1,6 +1,7 @@
 #pragma once
 
 #include "dataSource.h"
+#include "data/tileData.h"
 
 namespace mapbox {
 namespace util {

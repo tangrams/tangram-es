@@ -1,6 +1,5 @@
 #pragma once
 
-#include "util/mapProjection.h"
 #include "util/color.h"
 
 #include <vector>
@@ -10,6 +9,8 @@ namespace YAML {
 }
 
 namespace Tangram {
+
+class MapProjection;
 
 struct Stops {
 

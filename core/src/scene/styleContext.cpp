@@ -1,8 +1,12 @@
 #include "styleContext.h"
+
 #include "platform.h"
-#include "builders.h"
+#include "data/tileData.h"
+#include "util/builders.h"
 #include "scene/scene.h"
 #include "data/propertyItem.h"
+
+#include "duktape.h"
 
 #define DUMP(...) // do { logMsg(__VA_ARGS__); duk_dump_context_stderr(m_ctx); } while(0)
 #define DBG(...) do { logMsg(__VA_ARGS__); duk_dump_context_stderr(m_ctx); } while(0)

@@ -1,10 +1,9 @@
 #pragma once
 
-#include "gl.h"
-#include "platform.h"
+#include "gl/gl_fwd.h"
 #include "vertexLayout.h"
+#include "util/types.h"
 
-#include <cstring> // for memcpy
 #include <vector>
 #include <memory>
 
@@ -19,10 +18,11 @@ class VboMesh {
 public:
 
     /*
-     * Creates a VboMesh for vertex data arranged in the structure described by _vertexLayout to be drawn
-     * using the OpenGL primitive type _drawMode
+     * Creates a VboMesh for vertex data arranged in the structure described by
+     * _vertexLayout to be drawn using the OpenGL primitive type _drawMode
      */
-    VboMesh(std::shared_ptr<VertexLayout> _vertexlayout, GLenum _drawMode = GL_TRIANGLES, GLenum _hint = GL_STATIC_DRAW, bool _keepMemoryData = false);
+    VboMesh(std::shared_ptr<VertexLayout> _vertexlayout, GLenum _drawMode = GL_TRIANGLES,
+            GLenum _hint = GL_STATIC_DRAW, bool _keepMemoryData = false);
     VboMesh();
 
     /*
@@ -51,8 +51,8 @@ public:
     virtual void compileVertexBuffer() = 0;
 
     /*
-     * Copies all added vertices and indices into OpenGL buffer objects; After geometry is uploaded,
-     * no more vertices or indices can be added
+     * Copies all added vertices and indices into OpenGL buffer objects; After
+     * geometry is uploaded, no more vertices or indices can be added
      */
     void upload();
 
@@ -62,16 +62,12 @@ public:
     void subDataUpload();
 
     /*
-     * Renders the geometry in this mesh using the ShaderProgram _shader; if geometry has not already
-     * been uploaded it will be uploaded at this point
+     * Renders the geometry in this mesh using the ShaderProgram _shader; if
+     * geometry has not already been uploaded it will be uploaded at this point
      */
     virtual void draw(ShaderProgram& _shader);
 
     size_t bufferSize();
-
-    static void addManagedVBO(VboMesh* _vbo);
-
-    static void removeManagedVBO(VboMesh* _vbo);
 
     static void invalidateAllVBOs();
 
@@ -112,59 +108,7 @@ protected:
 
     void checkValidity();
 
-    template <typename T>
-    void compile(std::vector<std::vector<T>>& _vertices,
-                 std::vector<std::vector<uint16_t>>& _indices) {
-
-        std::vector<std::vector<T>> vertices;
-        std::vector<std::vector<uint16_t>> indices;
-
-        // take over contents
-        std::swap(_vertices, vertices);
-        std::swap(_indices, indices);
-
-        int vertexOffset = 0, indexOffset = 0;
-
-        // Buffer positions: vertex byte and index short
-        int vPos = 0, iPos = 0;
-
-        int stride = m_vertexLayout->getStride();
-        m_glVertexData = new GLbyte[stride * m_nVertices];
-
-        bool useIndices = m_nIndices > 0;
-        if (useIndices) {
-            m_glIndexData = new GLushort[m_nIndices];
-        }
-
-        for (size_t i = 0; i < vertices.size(); i++) {
-            auto& curVertices = vertices[i];
-            size_t nVertices = curVertices.size();
-            int nBytes = nVertices * stride;
-
-            std::memcpy(m_glVertexData + vPos, (GLbyte*)curVertices.data(), nBytes);
-            vPos += nBytes;
-
-            if (useIndices) {
-                if (vertexOffset + nVertices > MAX_INDEX_VALUE) {
-                    LOGD("Big Mesh %d\n", vertexOffset + nVertices);
-
-                    m_vertexOffsets.emplace_back(indexOffset, vertexOffset);
-                    vertexOffset = 0;
-                    indexOffset = 0;
-                }
-
-                for (int idx : indices[i]) {
-                    m_glIndexData[iPos++] = idx + vertexOffset;
-                }
-                indexOffset += indices[i].size();
-            }
-            vertexOffset += nVertices;
-        }
-
-        m_vertexOffsets.emplace_back(indexOffset, vertexOffset);
-
-        m_isCompiled = true;
-    }
 };
+
 
 }

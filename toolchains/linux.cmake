@@ -20,6 +20,10 @@ set(EXECUTABLE_NAME "tangram")
 
 add_definitions(-DPLATFORM_LINUX)
 
+# load core library
+add_subdirectory(${PROJECT_SOURCE_DIR}/core)
+include_directories(${CORE_INCLUDE_DIRS})
+
 # add sources and include headers
 find_sources_and_include_directories(
     ${PROJECT_SOURCE_DIR}/linux/src/*.h 
@@ -27,10 +31,6 @@ find_sources_and_include_directories(
 
 # load glfw
 include(${PROJECT_SOURCE_DIR}/toolchains/add_glfw.cmake)
-
-# load core library
-add_subdirectory(${PROJECT_SOURCE_DIR}/core)
-include_directories(${CORE_INCLUDE_DIRS})
 
 # link and build functions
 function(link_libraries)

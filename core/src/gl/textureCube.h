@@ -1,6 +1,7 @@
 #pragma once
 
 #include "texture.h"
+#include "gl/gl_fwd.h"
 
 #include <vector>
 #include <string>

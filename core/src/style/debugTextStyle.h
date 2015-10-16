@@ -1,9 +1,10 @@
 #pragma once
 
 #include "textStyle.h"
-#include "tangram.h"
 
 namespace Tangram {
+
+typedef int FontID;
 
 class DebugTextStyle : public TextStyle {
 

@@ -1,11 +1,15 @@
 #include "style.h"
 
-#include "scene/scene.h"
-#include "scene/sceneLayer.h"
+#include "material.h"
+#include "gl/renderState.h"
+#include "gl/shaderProgram.h"
+#include "gl/vboMesh.h"
 #include "scene/light.h"
 #include "scene/styleParam.h"
+#include "scene/drawRule.h"
+#include "scene/scene.h"
+#include "scene/spriteAtlas.h"
 #include "tile/tile.h"
-#include "gl/vboMesh.h"
 #include "view/view.h"
 
 #include "glm/gtc/type_ptr.hpp"
@@ -14,6 +18,8 @@ namespace Tangram {
 
     Style::Style(std::string _name, Blending _blendMode, GLenum _drawMode) :
     m_name(_name),
+    m_shaderProgram(std::make_unique<ShaderProgram>()),
+    m_material(std::make_shared<Material>()),
     m_blend(_blendMode),
     m_drawMode(_drawMode),
     m_contextLost(true) {

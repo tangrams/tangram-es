@@ -1,7 +1,7 @@
 #pragma once
 
-#include "data/filters.h"
 #include "scene/drawRule.h"
+#include "scene/filters.h"
 
 #include <memory>
 #include <string>

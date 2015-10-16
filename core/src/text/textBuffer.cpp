@@ -1,6 +1,7 @@
 #include "textBuffer.h"
-#include "labels/textLabel.h"
 
+#include "gl.h"
+#include "labels/textLabel.h"
 #include "gl/texture.h"
 #include "gl/vboMesh.h"
 
@@ -15,7 +16,7 @@ TextBuffer::TextBuffer(std::shared_ptr<VertexLayout> _vertexLayout)
 TextBuffer::~TextBuffer() {
 }
 
-bool TextBuffer::addLabel(const Parameters& _params, Label::Transform _transform,
+bool TextBuffer::addLabel(const TextStyle::Parameters& _params, Label::Transform _transform,
                           Label::Type _type, FontContext& _fontContext) {
 
     if (_params.fontId < 0 || _params.fontSize <= 0.f) {

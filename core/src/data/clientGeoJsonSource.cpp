@@ -1,8 +1,10 @@
 #include "clientGeoJsonSource.h"
+
 #include "mapbox/geojsonvt/geojsonvt.hpp"
 #include "mapbox/geojsonvt/geojsonvt_convert.hpp"
 #include "mapbox/geojsonvt/geojsonvt_types.hpp"
 #include "platform.h"
+#include "tile/tileTask.h"
 #include "util/geom.h"
 #include "data/propertyItem.h"
 
@@ -41,7 +43,7 @@ void ClientGeoJsonSource::addData(const std::string& _data) {
 
 bool ClientGeoJsonSource::loadTileData(std::shared_ptr<TileTask>&& _task, TileTaskCb _cb) {
 
-    _cb(std::move(_task));
+    _cb.func(std::move(_task));
 
     return true;
 }

@@ -1,7 +1,8 @@
 #pragma once
 
-#include "tileID.h"
-#include "tile.h"
+#include "tile/tile.h"
+#include "tile/tileHash.h"
+#include "tile/tileID.h"
 
 #include <unordered_map>
 #include <list>

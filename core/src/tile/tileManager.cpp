@@ -23,11 +23,11 @@ TileManager::TileManager()
 
     m_tileCache = std::unique_ptr<TileCache>(new TileCache(DEFAULT_CACHE_SIZE));
 
-    m_dataCallback = [this](std::shared_ptr<TileTask>&& task){
+    m_dataCallback = TileTaskCb{[this](std::shared_ptr<TileTask>&& task){
         if (setTileState(*task->tile, TileState::processing)) {
             m_workers->enqueue(std::move(task));
         }
-    };
+    }};
 }
 
 TileManager::~TileManager() {
@@ -343,7 +343,7 @@ void TileManager::loadTiles() {
 
         auto task = std::make_shared<TileTask>(tile, source);
         if (source->getTileData(task)) {
-            m_dataCallback(std::move(task));
+            m_dataCallback.func(std::move(task));
 
         } else if (m_loadPending < (int)MAX_DOWNLOADS) {
             setTileState(*tile, TileState::loading);

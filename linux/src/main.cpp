@@ -2,7 +2,7 @@
 
 #include "tangram.h"
 #include "platform.h"
-#include "gl.h"
+#include "platform_gl.h"
 
 #include <sys/types.h>
 #include <sys/stat.h>
