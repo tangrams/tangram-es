@@ -10,7 +10,9 @@ namespace Tangram {
 struct Stops;
 
 enum class StyleParamKey : uint8_t {
-    cap,
+    cap = 0,
+    centroid,
+    collide,
     color,
     extrude,
     font_family,
@@ -28,8 +30,8 @@ enum class StyleParamKey : uint8_t {
     outline_cap,
     outline_color,
     outline_join,
-    outline_width,
     outline_order,
+    outline_width,
     priority,
     size,
     sprite,
@@ -37,17 +39,15 @@ enum class StyleParamKey : uint8_t {
     style,
     text_source,
     transform,
+    transition_hide_time,
+    transition_selected_time,
+    transition_show_time,
     visible,
     width,
-    centroid,
-    collide,
-    transition_show_time,
-    transition_hide_time,
-    transition_selected_time
 };
 
 // UPDATE WITH StyleParamKey CHANGES!
-constexpr size_t StyleParamKeySize = static_cast<size_t>(StyleParamKey::transition_selected_time)+1;
+constexpr size_t StyleParamKeySize = static_cast<size_t>(StyleParamKey::width)+1;
 
 enum class Unit { pixel, milliseconds, meter, seconds };
 
