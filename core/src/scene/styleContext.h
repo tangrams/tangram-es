@@ -3,6 +3,7 @@
 #include "duktape.h"
 #include "tileData.h"
 #include "scene/drawRule.h"
+#include "scene/styleParam.h"
 
 #include <string>
 #include <functional>

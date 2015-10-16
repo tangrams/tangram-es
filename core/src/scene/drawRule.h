@@ -1,33 +1,41 @@
 #pragma once
 
+#include "styleParam.h"
 #include "platform.h"
-#include "scene/styleParam.h"
 
-#include <string>
 #include <vector>
 
 namespace Tangram {
 
+class Style;
+class Scene;
+class Tile;
 class StyleContext;
+struct Feature;
+struct StaticDrawRule;
 
 struct DrawRule {
 
-    std::string name;
-    std::vector<StyleParam> parameters;
+    // Reference to original StyleParams
+    const StyleParam* params[StyleParamKeySize];
 
-    DrawRule(const std::string& _name, const std::vector<StyleParam>& _parameters,
-             bool _sorted = false);
+    // Evaluated params for stops and functions
+    StyleParam evaluated[StyleParamKeySize];
 
-    DrawRule merge(DrawRule& _other) const;
-    std::string toString() const;
+    std::string styleName;
+    int styleId;
 
-    void eval(const StyleContext& _ctx);
+    bool isJSFunction(StyleParamKey _key) const {
+        auto& param = findParameter(_key);
+        if (!param) {
+            return false;
+        }
+        return param.function >= 0;
+    }
 
     const std::string& getStyleName() const;
 
     const StyleParam& findParameter(StyleParamKey _key) const;
-
-    bool isJSFunction(StyleParamKey _key) const;
 
     template<typename T>
     bool get(StyleParamKey _key, T& _value) const {
@@ -41,12 +49,18 @@ struct DrawRule {
         _value = param.value.get<T>();
         return true;
     }
+
     bool contains(StyleParamKey _key) const {
         return findParameter(_key) != false;
     }
+};
 
-    bool operator<(const DrawRule& _rhs) const;
-    int compare(const DrawRule& _rhs) const { return name.compare(_rhs.name); }
+struct Styling {
+    std::vector<DrawRule> styles;
+
+    void apply(Tile& _tile, const Feature& _feature, const Scene& _scene, StyleContext& _ctx);
+
+    void mergeRules(const std::vector<StaticDrawRule>& rules);
 
 };
 

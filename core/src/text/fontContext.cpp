@@ -5,7 +5,7 @@
 namespace Tangram {
 
 #define INVALID_FONT -2
-#define ATLAS_SIZE 512
+#define ATLAS_SIZE 1024
 
 FontContext::FontContext() : FontContext(ATLAS_SIZE) {}
 

@@ -1,70 +1,77 @@
 #include "sceneLayer.h"
 
 #include <algorithm>
+#include <queue>
 
 namespace Tangram {
 
-SceneLayer::SceneLayer(std::string _name, Filter _filter, std::vector<DrawRule> _rules,
+SceneLayer::SceneLayer(std::string _name, Filter _filter,
+                       std::vector<StaticDrawRule> _rules,
                        std::vector<SceneLayer> _sublayers) :
     m_filter(_filter),
     m_name(_name),
     m_rules(_rules),
-    m_sublayers(_sublayers),
-    m_depth(0) {
+    m_sublayers(_sublayers) {
 
-    // Rules must be sorted to merge correctly
+    // Rules must be sorted to merge correctly - not anymore
     std::sort(m_rules.begin(), m_rules.end());
-
-    // m_depth is one more than the maximum depth of any sublayer
-    for (auto& sublayer : m_sublayers) {
-        m_depth = sublayer.m_depth > m_depth ? sublayer.m_depth : m_depth;
-    }
-    m_depth++;
-
-    // Sublayers must be sorted by the depth of their deepest leaf in order to
-    // correctly traverse them in match()
-    std::sort(m_sublayers.begin(), m_sublayers.end(),
-              [&](const auto& a, const auto& b) {
-                  return a.m_depth > b.m_depth;
-              });
-
 }
 
-void SceneLayer::match(const Feature& _feat, const StyleContext& _ctx, std::vector<DrawRule>& _matches) const {
+bool SceneLayer::match(const Feature& _feat, const StyleContext& _ctx,
+                       Styling& styling) const {
 
+    std::queue<std::vector<SceneLayer>::const_iterator> processQ;
+
+    // not adding self to queue to avoid queue
+    // allocation when there are now sublayers
+    // - overoptimization?
     if (!m_filter.eval(_feat, _ctx)) {
-        return;
+        return false;
     }
 
-    // Depth-first traversal produces correct parameter precedence when
-    // sublayers are sorted by decreasing depth
-    for (auto& layer : m_sublayers) {
-        layer.match(_feat, _ctx, _matches);
+    // add initial drawrules
+    styling.mergeRules(m_rules);
+    for (auto it = m_sublayers.begin(); it != m_sublayers.end(); ++it) {
+        processQ.push(it);
     }
 
-    std::vector<DrawRule> merged;
+    while (!processQ.empty()) {
+        const auto& layer = *processQ.front();
+        processQ.pop();
 
-    // For all of m_rules that have the same name as an existing matched rule,
-    // merge the rules; for others, take existing rule unchanged
-    {
-        auto myRulesIt = m_rules.begin(), myRulesEnd = m_rules.end();
-        auto matchesIt = _matches.begin(), matchesEnd = _matches.end();
-        while (myRulesIt != myRulesEnd && matchesIt != matchesEnd) {
-            if (*myRulesIt < *matchesIt) {
-                merged.push_back(*myRulesIt++);
-            } else if (*matchesIt < *myRulesIt) {
-                merged.push_back(std::move(*matchesIt++));
-            } else {
-                merged.push_back((*myRulesIt++).merge(*matchesIt++));
-            }
+        if (!layer.filter().eval(_feat, _ctx)) {
+            continue;
         }
-        while (myRulesIt != myRulesEnd) { merged.push_back(*myRulesIt++); }
-        while (matchesIt != matchesEnd) { merged.push_back(std::move(*matchesIt++)); }
+
+        const auto& subLayers = layer.sublayers();
+        for (auto it = subLayers.begin(); it != subLayers.end(); ++it) {
+            processQ.push(it);
+        }
+        // override with sublayer drawrules
+        styling.mergeRules(layer.rules());
     }
 
-    // Move merged results into output vector
-    std::swap(merged, _matches);
+    return true;
+}
+
+StaticDrawRule::StaticDrawRule(std::string _styleName, int _styleId, const std::vector<StyleParam>& _parameters) :
+    styleName(std::move(_styleName)),
+    styleId(_styleId),
+    parameters(_parameters) {
+}
+
+std::string StaticDrawRule::toString() const {
+    std::string str = "{\n";
+    for (auto& p : parameters) {
+         str += " { "
+             + std::to_string(static_cast<int>(p.key))
+             + ", "
+             + p.toString()
+             + " }\n";
+    }
+    str += "}\n";
+
+    return str;
 }
 
 }
-

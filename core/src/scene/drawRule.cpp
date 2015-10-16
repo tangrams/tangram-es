@@ -1,100 +1,27 @@
 #include "drawRule.h"
-#include "platform.h"
-#include "scene/stops.h"
+
+#include "tile/tile.h"
+#include "scene/scene.h"
 #include "scene/styleContext.h"
+#include "style/style.h"
+#include "platform.h"
 
 #include <algorithm>
 
 namespace Tangram {
 
-const StyleParam NONE;
-
-DrawRule::DrawRule(const std::string& _name, const std::vector<StyleParam>& _parameters,
-                   bool _sorted) :
-    name(_name),
-    parameters(_parameters) {
-
-    if (!_sorted) {
-        // Parameters within each rule must be sorted lexicographically by key to merge correctly
-        std::sort(parameters.begin(), parameters.end());
-    }
-
-}
-
-DrawRule DrawRule::merge(DrawRule& _other) const {
-
-    decltype(parameters) merged;
-
-    auto myIt = parameters.begin(), myEnd = parameters.end();
-    auto otherIt = _other.parameters.begin(), otherEnd = _other.parameters.end();
-    while (myIt != myEnd && otherIt != otherEnd) {
-        if (*myIt < *otherIt) {
-            merged.push_back(*myIt++);
-        } else if (*otherIt < *myIt) {
-            merged.push_back(std::move(*otherIt++));
-        } else {
-            merged.push_back(*otherIt++);
-            myIt++;
-        }
-    }
-    while (myIt != myEnd) { merged.push_back(*myIt++); }
-    while (otherIt != otherEnd) { merged.push_back(std::move(*otherIt++)); }
-
-    return { name, merged, true };
-}
-
-std::string DrawRule::toString() const {
-
-    std::string str = "{\n";
-
-    for (auto& p : parameters) {
-         str += "    { " + std::to_string(static_cast<int>(p.key)) + ", " + p.toString() + " }\n";
-    }
-
-    str += "}\n";
-
-    return str;
-}
-
 const StyleParam& DrawRule::findParameter(StyleParamKey _key) const {
+    static const StyleParam NONE;
 
-    auto it = std::lower_bound(parameters.begin(), parameters.end(), _key,
-                               [](auto& p, auto& k) { return p.key < k; });
-
-    if (it != parameters.end() && it->key == _key) {
-        return *it;
+    const auto* p = params[static_cast<uint8_t>(_key)];
+    if (p) {
+        if (p->function >= 0 || p->stops != nullptr) {
+            return evaluated[static_cast<uint8_t>(_key)];
+        }
+        return *p;
     }
+
     return NONE;
-}
-
-bool DrawRule::isJSFunction(StyleParamKey _key) const {
-    auto& param = findParameter(_key);
-    if (!param) {
-        return false;
-    }
-    return param.function >= 0;
-}
-
-bool DrawRule::operator<(const DrawRule& _rhs) const {
-    return name < _rhs.name;
-}
-
-void DrawRule::eval(const StyleContext& _ctx) {
-
-    for (auto& param : parameters) {
-        if (param.function >= 0) {
-            _ctx.evalStyle(param.function, param.key, param.value);
-        }
-        if (param.stops) {
-            if (StyleParam::isColor(param.key)) {
-                param.value = param.stops->evalColor(_ctx.getGlobalZoom());
-            } else if (StyleParam::isWidth(param.key)) {
-                param.value = param.stops->evalWidth(_ctx.getGlobalZoom());
-            } else {
-                param.value = param.stops->evalFloat(_ctx.getGlobalZoom());
-            }
-        }
-    }
 }
 
 const std::string& DrawRule::getStyleName() const {
@@ -104,9 +31,71 @@ const std::string& DrawRule::getStyleName() const {
     if (style) {
         return style.value.get<std::string>();
     } else {
-        return name;
+        return styleName;
     }
+}
 
+void Styling::apply(Tile& _tile, const Feature& _feature,
+                    const Scene& _scene, StyleContext& _ctx) {
+
+    for (auto& rule : styles) {
+
+        auto& styleName = rule.getStyleName();
+        int styleId = styleName.empty()
+            ? rule.styleId
+            : _scene.getStyleId(styleName);
+
+        if (styleId < 0){
+            LOGE("Invalid style %s", rule.getStyleName().c_str());
+            continue;
+        }
+
+        for (size_t i = 0; i < StyleParamKeySize; ++i) {
+            auto* param = rule.params[i];
+            if (!param) { continue; }
+
+            if (param->function >= 0) {
+                _ctx.evalStyle(param->function, param->key, rule.evaluated[i].value);
+            }
+            if (param->stops) {
+                rule.evaluated[i].stops = param->stops;
+
+                if (StyleParam::isColor(param->key)) {
+                    rule.evaluated[i].value = param->stops->evalColor(_ctx.getGlobalZoom());
+                } else if (StyleParam::isWidth(param->key)) {
+                    // FIXME widht result is isgnored from here..
+                    rule.evaluated[i].value = param->stops->evalWidth(_ctx.getGlobalZoom());
+                } else {
+                    rule.evaluated[i].value = param->stops->evalFloat(_ctx.getGlobalZoom());
+                }
+            }
+            rule.evaluated[i].key = param->key;
+        }
+
+        auto& style = _scene.styles()[styleId];
+        style->buildFeature(_tile, _feature, rule);
+    }
+}
+
+void Styling::mergeRules(const std::vector<StaticDrawRule>& rules) {
+    for (auto& rule : rules) {
+
+        auto it = std::find_if(styles.begin(), styles.end(), [&](auto& m) {
+                return rule.styleId == m.styleId; });
+
+        if (it == styles.end()) {
+            styles.emplace_back();
+            it = styles.end()-1;
+            it->styleId = rule.styleId;
+            it->styleName = rule.styleName;
+            LOGD("add style..");
+        }
+
+        for (auto& param : rule.parameters) {
+            LOGE("insert: %d %d %s", static_cast<uint8_t>(param.key), param.key, param.toString().c_str());
+            it->params[static_cast<uint8_t>(param.key)] = &param;
+        }
+    }
 }
 
 }
