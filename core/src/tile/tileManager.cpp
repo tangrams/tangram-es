@@ -57,19 +57,18 @@ void TileManager::setScene(std::shared_ptr<Scene> _scene) {
                 sources.begin(), sources.end(),
                 [&](auto& s){ return tileSet.source->equals(*s); });
 
-            if (sIt != sources.end()) {
-                // Cancel pending  tiles
-                for_each(tileSet.tiles.begin(), tileSet.tiles.end(), [&](auto& tile) {
-                        this->setTileState(*tile.second, TileState::canceled); });
-
-                // Clear cache
-                tileSet.tiles.clear();
-                return false;
+            if (sIt == sources.end()) {
+                LOG("remove source %s", tileSet.source->name().c_str());
+                return true;
             }
 
-            LOG("remove source %s", tileSet.source->name().c_str());
-            return true;
+            // Cancel pending  tiles
+            for_each(tileSet.tiles.begin(), tileSet.tiles.end(), [&](auto& tile) {
+                    this->setTileState(*tile.second, TileState::canceled); });
 
+            // Clear cache
+            tileSet.tiles.clear();
+            return false;
         });
 
     m_tileSets.erase(it, m_tileSets.end());
