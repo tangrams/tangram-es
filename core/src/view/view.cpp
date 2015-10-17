@@ -19,11 +19,12 @@ double invLodFunc(double d) {
 View::View(int _width, int _height, ProjectionType _projType) :
     m_width(0),
     m_height(0),
+    m_type(CameraType::perspective),
     m_changed(false) {
 
     setMapProjection(_projType);
-    setZoom(m_initZoom); // Arbitrary zoom for testing
     setSize(_width, _height);
+    setZoom(m_initZoom); // Arbitrary zoom for testing
 
     setPosition(0.0, 0.0);
 }
@@ -110,7 +111,6 @@ void View::setPosition(double _x, double _y) {
 
     m_pos.x = _x;
     m_pos.y = _y;
-
     m_dirtyTiles = true;
 
 }
@@ -232,14 +232,26 @@ double View::screenToGroundPlane(double& _screenX, double& _screenY) {
     // Cast a ray and find its intersection with the z = 0 plane,
     // following the technique described here: http://antongerdelan.net/opengl/raycasting.html
 
-    // Ray from camera in clip space
     glm::dvec4 ray_clip = { 2. * _screenX / m_vpWidth - 1., 1. - 2. * _screenY / m_vpHeight, -1., 1. };
+    glm::dvec4 origin_clip;
+
+    switch (m_type) {
+        case CameraType::perspective:
+            origin_clip = glm::dvec4(0., 0., 0., 1.);
+            break;
+        case CameraType::isometric:
+        case CameraType::flat:
+            origin_clip = ray_clip * glm::dvec4(m_width * .5, m_height * .5, 0., 1.);
+            break;
+    }
+
+    glm::dvec3 origin_world = glm::dvec3(glm::inverse(m_view) * origin_clip);
     glm::dvec4 ray_eye = m_invViewProj * ray_clip;
-    glm::dvec3 ray_world = glm::dvec3(ray_eye / ray_eye.w) - glm::dvec3(m_eye);
+    glm::dvec3 ray_world = glm::dvec3(ray_eye / ray_eye.w) - origin_world;
 
     double t = 0; // Distance along ray to ground plane
     if (ray_world.z != 0.f) {
-        t = -m_eye.z / ray_world.z;
+        t = -origin_world.z / ray_world.z;
     }
 
     ray_world *= std::abs(t);
@@ -253,8 +265,8 @@ double View::screenToGroundPlane(double& _screenX, double& _screenY) {
         ray_world *= maxTileDistance / rayDistanceXY;
     }
 
-    _screenX = ray_world.x + m_eye.x;
-    _screenY = ray_world.y + m_eye.y;
+    _screenX = ray_world.x + origin_world.x;
+    _screenY = ray_world.y + origin_world.y;
 
     return t;
 }
@@ -296,7 +308,7 @@ void View::updateMatrices() {
     // the "top" face of the view frustum with the ground plane
 
     // NOTE: far here can go to infinity and hence a std::min below!
-    float far = m_pos.z / std::max(0., cos(m_pitch + 0.5 * fovy));
+    float far = 4. * m_pos.z / std::max(0., cos(m_pitch + 0.5 * fovy));
 
     // limit the far clipping distance to be no greater than the maximum
     // distance of visible tiles
@@ -309,7 +321,21 @@ void View::updateMatrices() {
 
     // update view and projection matrices
     m_view = glm::lookAt(m_eye, at, up);
-    m_proj = glm::perspective(fovy, m_aspect, near, far);
+
+    glm::vec2 oblique_axis = { 0.f, 1.f };
+
+    // Generate perspective matrix based on camera type
+    switch (m_type) {
+        case CameraType::perspective:
+            m_proj = glm::perspective(fovy, m_aspect, near, far);
+            break;
+        case CameraType::isometric:
+            m_view[2][0] += oblique_axis.x;
+            m_view[2][1] += oblique_axis.y;
+        case CameraType::flat:
+            m_proj = glm::ortho(-m_width * .5f, m_width * .5f, -m_height * .5f, m_height * .5f, near, far);
+            break;
+    }
 
     m_viewProj = m_proj * m_view;
     m_invViewProj = glm::inverse(m_viewProj);
