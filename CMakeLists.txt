@@ -1,7 +1,12 @@
-cmake_minimum_required(VERSION 2.8.11)
+cmake_minimum_required(VERSION 2.8.12)
+
 project(tangram)
 
 set(APPLICATION ON)
+
+if(NOT CMAKE_BUILD_TYPE)
+  set(CMAKE_BUILD_TYPE Release)
+endif()
 
 include(${PROJECT_SOURCE_DIR}/toolchains/utils.cmake)
 
@@ -40,10 +45,12 @@ endif()
 set(PLATFORM ${varplatform} CACHE INTERNAL "platform" FORCE)
 
 # cmake inclusions and definitions
-# set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} ${CMAKE_SOURCE_DIR}/build/modules)
 set(CMAKE_TARGET_FILE ${PROJECT_SOURCE_DIR}/toolchains/${PLATFORM_TARGET}.cmake)
 
 message(STATUS "Including ${varplatform} dependent cmake file : ${CMAKE_TARGET_FILE}")
+
+set(EXTERNAL_LIBS_DIR ${CMAKE_SOURCE_DIR}/external/exports/${PLATFORM_TARGET}
+    CACHE INTERNAL "external-libs" FORCE)
 
 ## set platform configuration, build library and application.
 # adds targets:
@@ -62,6 +69,10 @@ if(BENCHMARK OR UNIT_TESTS)
 
   target_compile_definitions(platform_mock
     PUBLIC -DUNIT_TESTS)
+
+  target_link_libraries(platform_mock
+    PUBLIC core)
+
 endif()
 
 if(UNIT_TESTS)

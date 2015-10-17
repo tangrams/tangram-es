@@ -18,8 +18,6 @@ foreach(_src_file_path ${TEST_SOURCES})
 
   set_target_properties(${EXECUTABLE_NAME}
     PROPERTIES
-    #ARCHIVE_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/lib"
-    #LIBRARY_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/lib"
     RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/bin/unit"
     )
 

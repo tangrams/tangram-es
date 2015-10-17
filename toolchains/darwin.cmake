@@ -1,28 +1,30 @@
+# set for test in other cmake files
+set(PLATFORM_OSX ON)
+
 # options
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wall -stdlib=libc++ -std=c++1y")
 set(CXX_FLAGS_DEBUG "-g -O0")
 
-# For CMake 3.0
-if (CMAKE_CXX_COMPILER_ID MATCHES "Clang")
-    # using regular Clang or AppleClang
-    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wno-gnu-anonymous-struct")
-    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wno-nested-anon-types")
-    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wno-gnu-zero-variadic-macro-arguments")
+
+if (USE_EXTERNAL_LIBS)
+include(${EXTERNAL_LIBS_DIR}/yaml-cpp.cmake)
+include(${EXTERNAL_LIBS_DIR}/glfw.cmake)
+else()
+# build dependencies (yaml, benchmark, glfw)
+add_subdirectory(${PROJECT_SOURCE_DIR}/external)
 endif()
 
-add_definitions(-DPLATFORM_OSX)
+# compile definitions (adds -DPLATFORM_OSX)
+set(CORE_COMPILE_DEFS PLATFORM_OSX)
 
 # load core library
 add_subdirectory(${PROJECT_SOURCE_DIR}/core)
-include_directories(${CORE_INCLUDE_DIRS})
-
 
 if(APPLICATION)
 
-  # load glfw
-  include(${PROJECT_SOURCE_DIR}/toolchains/add_glfw.cmake)
-
   set(EXECUTABLE_NAME "tangram")
+
+  find_package(OpenGL REQUIRED)
 
   # add sources and include headers
   set(OSX_EXTENSIONS_FILES *.mm *.cpp)
@@ -39,7 +41,9 @@ if(APPLICATION)
 
   add_executable(${EXECUTABLE_NAME} MACOSX_BUNDLE ${SOURCES} ${RESOURCES} ${OSX_RESOURCES})
 
-  target_link_libraries(${EXECUTABLE_NAME} core glfw ${GLFW_LIBRARIES})
+  target_link_libraries(${EXECUTABLE_NAME}
+    core glfw
+    ${OPENGL_LIBRARIES})
 
   # add resource files and property list
   set_target_properties(${EXECUTABLE_NAME} PROPERTIES

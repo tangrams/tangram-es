@@ -7,14 +7,6 @@
 [submodule "core/include/isect2d"]
 	path = core/include/isect2d
 	url = https://github.com/tangrams/isect2d.git
-[submodule "core/dependencies/yaml-cpp"]
-	path = core/dependencies/yaml-cpp
-	url = https://github.com/tangrams/yaml-cpp.git
-	branch = no-boost
-	ignore = untracked
-[submodule "glfw"]
-	path = glfw
-	url = https://github.com/glfw/glfw.git
 [submodule "core/dependencies/csscolorparser"]
 	path = core/dependencies/css-color-parser-cpp
 	url = https://github.com/tangrams/css-color-parser-cpp
@@ -30,6 +22,12 @@
 [submodule "core/dependencies/duktape"]
 	path = core/dependencies/duktape
 	url = https://github.com/tangrams/duktape.git
-[submodule "bench/benchmark"]
-	path = bench/benchmark
+[submodule "external/yaml-cpp"]
+	path = external/yaml-cpp
+	url = https://github.com/tangrams/yaml-cpp
+[submodule "external/glfw"]
+	path = external/glfw
+	url = https://github.com/glfw/glfw
+[submodule "external/benchmark"]
+	path = external/benchmark
 	url = https://github.com/google/benchmark

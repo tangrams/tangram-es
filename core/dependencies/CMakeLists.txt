@@ -9,32 +9,25 @@ target_include_directories(css-color-parser-cpp
 
 ## geojsonvt ##
 ###############
-#add_definitions("-DGEOJSONVT_CUSTOM_TAGS")
 
 file(GLOB_RECURSE GEOJSON_VT_CPP_SOURCES "geojson-vt-cpp/src/*.cpp")
-# use our variant and geojsonvt_types.hpp
-# instead of the provided ones
-include_directories(
-  ${PROJECT_SOURCE_DIR}/${INCLUDE_DIR}
-  ${PROJECT_SOURCE_DIR}/${INCLUDE_DIR}/mapbox
-)
 
 add_library(geojson-vt-cpp ${GEOJSON_VT_CPP_SOURCES})
 target_include_directories(geojson-vt-cpp
   PUBLIC
+  ${PROJECT_SOURCE_DIR}/${INCLUDE_DIR}/mapbox
   ${CMAKE_CURRENT_SOURCE_DIR}/geojson-vt-cpp/include
-)
+  # use our variant and geojsonvt_types.hpp
+  # instead of the provided ones
+  PRIVATE
+  ${PROJECT_SOURCE_DIR}/${INCLUDE_DIR})
+
 set_target_properties(geojson-vt-cpp
-  PROPERTIES COMPILE_FLAGS -DGEOJSONVT_CUSTOM_TAGS
-)
+  PROPERTIES COMPILE_FLAGS -DGEOJSONVT_CUSTOM_TAGS)
 
-# yaml-cpp #
-############
-
-set(YAML_CPP_BUILD_TOOLS OFF CACHE BOOL "Enable testing and parse tools")
-set(YAML_CPP_BUILD_CONTRIB OFF CACHE BOOL "Enable contrib stuff in library")
-add_subdirectory("yaml-cpp")
-
+target_compile_options(geojson-vt-cpp
+  PUBLIC
+  -Wno-unknown-pragmas)
 
 # duktape #
 ############

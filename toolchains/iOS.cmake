@@ -17,8 +17,6 @@ set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS}
     -fobjc-arc
     -isysroot ${CMAKE_IOS_SDK_ROOT}")
 
-set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wno-gnu-anonymous-struct -Wno-nested-anon-types -Wno-gnu-zero-variadic-macro-arguments")
-
 if(${IOS_PLATFORM} STREQUAL "SIMULATOR")
     set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -mios-simulator-version-min=6.0")
     set(ARCH "i386")
@@ -32,8 +30,8 @@ set(MACOSX_BUNDLE_GUI_IDENTIFIER "com.mapzen.\${PRODUCT_NAME:Tangram}")
 set(APP_TYPE MACOSX_BUNDLE)
 
 # load core library
+add_subdirectory(${PROJECT_SOURCE_DIR}/external)
 add_subdirectory(${PROJECT_SOURCE_DIR}/core)
-include_directories(${CORE_INCLUDE_DIRS})
 
 # ios source files
 set(IOS_EXTENSIONS_FILES *.mm *.cpp *.m)
@@ -61,6 +59,8 @@ endmacro(add_framework)
 
 add_executable(${EXECUTABLE_NAME} ${APP_TYPE} ${HEADERS} ${SOURCES} ${RESOURCES} ${IOS_RESOURCES})
 
+target_link_libraries(${EXECUTABLE_NAME} core)
+
 # setting xcode properties
 set_target_properties(${EXECUTABLE_NAME} PROPERTIES
   MACOSX_BUNDLE_INFO_PLIST ${PROJECT_SOURCE_DIR}/ios/resources/tangram-Info.plist
@@ -71,8 +71,6 @@ set_xcode_property(${EXECUTABLE_NAME} SUPPORTED_PLATFORMS "iphonesimulator iphon
 set_xcode_property(${EXECUTABLE_NAME} ONLY_ACTIVE_ARCH "YES")
 set_xcode_property(${EXECUTABLE_NAME} VALID_ARCHS "${ARCH}")
 set_xcode_property(${EXECUTABLE_NAME} TARGETED_DEVICE_FAMILY "1,2")
-
-target_link_libraries(${EXECUTABLE_NAME} core)
 
 foreach(_framework ${FRAMEWORKS})
   add_framework(${_framework} ${EXECUTABLE_NAME} ${CMAKE_SYSTEM_FRAMEWORK_PATH})
