@@ -1,5 +1,5 @@
 #define CATCH_CONFIG_MAIN
-#include "catch/catch.hpp"
+#include "catch.hpp"
 #include "tangram.h"
 #include "labels/label.h"
 #include "labels/textLabel.h"

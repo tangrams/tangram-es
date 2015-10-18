@@ -1,7 +1,6 @@
 # Defines the following cached variables
 #   - CORE_INCLUDE_DIRS, the path where to CORE headers are located
 #   - CORE_LIBRARIES_INCLUDE_DIRS, the path to CORE libraries headers
-#   - CORE_LIBRARY, the core library name
 
 cmake_minimum_required(VERSION 2.8)
 project(core)
@@ -9,7 +8,6 @@ project(core)
 set(INCLUDE_DIR include)
 set(DEPENDENCIES_DIR dependencies)
 set(SOURCE_DIR src)
-set(CORE_LIBRARY core CACHE INTERNAL "core library name" FORCE)
 
 add_definitions(-DLOG_LEVEL=2)
 
@@ -33,7 +31,6 @@ set(CORE_LIBRARIES_INCLUDE_DIRS
     ${PROJECT_SOURCE_DIR}/${INCLUDE_DIR}
     ${PROJECT_SOURCE_DIR}/${INCLUDE_DIR}/glm
     ${PROJECT_SOURCE_DIR}/${INCLUDE_DIR}/stb
-    ${PROJECT_SOURCE_DIR}/${INCLUDE_DIR}/catch
     ${PROJECT_SOURCE_DIR}/${INCLUDE_DIR}/fontstash-es/fontstash
     ${PROJECT_SOURCE_DIR}/${INCLUDE_DIR}/pbf
     ${PROJECT_SOURCE_DIR}/${INCLUDE_DIR}/rapidjson
@@ -43,10 +40,18 @@ set(CORE_LIBRARIES_INCLUDE_DIRS
 # adding some other dependent target files if needed
 set(FOUND_SOURCES ${FOUND_SOURCES} ${ADDITIONAL_TARGET_DEPENDENT_SRC_FILES})
 
-add_library(${CORE_LIBRARY} ${CORE_LIB_TYPE} ${FOUND_SOURCES})
-target_link_libraries(${CORE_LIBRARY} duktape css-color-parser-cpp yaml-cpp geojson-vt-cpp ${CORE_LIB_DEPS})
+if(NOT DEFINED CORE_LIB_NAME)
+    set(CORE_LIB_NAME core)
+endif()
 
-target_include_directories(${CORE_LIBRARY}
+add_library(${CORE_LIB_NAME} ${CORE_LIB_TYPE} ${FOUND_SOURCES})
+target_link_libraries(${CORE_LIB_NAME}
+  duktape
+  css-color-parser-cpp
+  yaml-cpp
+  geojson-vt-cpp)
+
+target_include_directories(${CORE_LIB_NAME}
   PRIVATE
   ${INCLUDE_DIRS}
   PUBLIC
@@ -55,3 +60,18 @@ target_include_directories(${CORE_LIBRARY}
 # make groups for xcode
 group_recursive_sources(src "src")
 
+# post build commands
+add_custom_command(TARGET ${CORE_LIB_NAME}
+        POST_BUILD
+        COMMAND ${CORE_POSTBUILD_COMMANDS}
+        COMMENT ${CORE_COMMAND_MSG} VERBATIM)
+
+### Resources
+file(GLOB_RECURSE RESOURCE_FILES "${CMAKE_CURRENT_SOURCE_DIR}/resources/*")
+
+add_custom_target(copy_resources
+  COMMAND ${CMAKE_COMMAND} -E copy_directory
+    ${CMAKE_CURRENT_SOURCE_DIR}/resources
+    ${CMAKE_BINARY_DIR}/bin
+  # Make resources show up in IDE, at least this should do it
+  SOURCES ${RESOURCE_FILES})

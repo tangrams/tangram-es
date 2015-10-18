@@ -18,9 +18,6 @@
 [submodule "core/dependencies/csscolorparser"]
 	path = core/dependencies/css-color-parser-cpp
 	url = https://github.com/tangrams/css-color-parser-cpp
-[submodule "core/dependencies/benchmark"]
-	path = core/dependencies/benchmark
-	url = https://github.com/google/benchmark
 [submodule "core/include/variant"]
 	path = core/include/variant
 	url = https://github.com/tangrams/variant
@@ -33,3 +30,6 @@
 [submodule "core/dependencies/duktape"]
 	path = core/dependencies/duktape
 	url = https://github.com/tangrams/duktape.git
+[submodule "bench/benchmark"]
+	path = bench/benchmark
+	url = https://github.com/google/benchmark

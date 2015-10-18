@@ -48,31 +48,6 @@ add_bundle_resources(RESOURCES "${PROJECT_SOURCE_DIR}/core/resources" "${EXECUTA
 file(GLOB_RECURSE IOS_RESOURCES ${PROJECT_SOURCE_DIR}/ios/resources/**)
 string(REGEX REPLACE "[.]DS_Store" "" IOS_RESOURCES "${IOS_RESOURCES}")
 
-# link and build functions
-function(link_libraries)
-    target_link_libraries(${EXECUTABLE_NAME} ${CORE_LIBRARY})
-
-    foreach(_framework ${FRAMEWORKS})
-        add_framework(${_framework} ${EXECUTABLE_NAME} ${CMAKE_SYSTEM_FRAMEWORK_PATH})
-    endforeach()
-endfunction()
-
-function(build)
-    add_executable(${EXECUTABLE_NAME} ${APP_TYPE} ${HEADERS} ${SOURCES} ${RESOURCES} ${IOS_RESOURCES})
-
-    # setting xcode properties
-    set_target_properties(${EXECUTABLE_NAME} PROPERTIES
-        MACOSX_BUNDLE_INFO_PLIST ${PROJECT_SOURCE_DIR}/ios/resources/tangram-Info.plist
-        RESOURCE "${IOS_RESOURCES}")
-
-    set_xcode_property(${EXECUTABLE_NAME} GCC_GENERATE_DEBUGGING_SYMBOLS YES)
-    set_xcode_property(${EXECUTABLE_NAME} SUPPORTED_PLATFORMS "iphonesimulator iphoneos")
-    set_xcode_property(${EXECUTABLE_NAME} ONLY_ACTIVE_ARCH "YES")
-    set_xcode_property(${EXECUTABLE_NAME} VALID_ARCHS "${ARCH}")
-    set_xcode_property(${EXECUTABLE_NAME} TARGETED_DEVICE_FAMILY "1,2")
-
-endfunction()
-
 macro(add_framework FWNAME APPNAME LIBPATH)
     find_library(FRAMEWORK_${FWNAME} NAMES ${FWNAME} PATHS ${LIBPATH} PATH_SUFFIXES Frameworks NO_DEFAULT_PATH)
     if(${FRAMEWORK_${FWNAME}} STREQUAL FRAMEWORK_${FWNAME}-NOTFOUND)
@@ -82,3 +57,23 @@ macro(add_framework FWNAME APPNAME LIBPATH)
         message(STATUS "Framework ${FWNAME} found")
     endif()
 endmacro(add_framework)
+
+
+add_executable(${EXECUTABLE_NAME} ${APP_TYPE} ${HEADERS} ${SOURCES} ${RESOURCES} ${IOS_RESOURCES})
+
+# setting xcode properties
+set_target_properties(${EXECUTABLE_NAME} PROPERTIES
+  MACOSX_BUNDLE_INFO_PLIST ${PROJECT_SOURCE_DIR}/ios/resources/tangram-Info.plist
+  RESOURCE "${IOS_RESOURCES}")
+
+set_xcode_property(${EXECUTABLE_NAME} GCC_GENERATE_DEBUGGING_SYMBOLS YES)
+set_xcode_property(${EXECUTABLE_NAME} SUPPORTED_PLATFORMS "iphonesimulator iphoneos")
+set_xcode_property(${EXECUTABLE_NAME} ONLY_ACTIVE_ARCH "YES")
+set_xcode_property(${EXECUTABLE_NAME} VALID_ARCHS "${ARCH}")
+set_xcode_property(${EXECUTABLE_NAME} TARGETED_DEVICE_FAMILY "1,2")
+
+target_link_libraries(${EXECUTABLE_NAME} core)
+
+foreach(_framework ${FRAMEWORKS})
+  add_framework(${_framework} ${EXECUTABLE_NAME} ${CMAKE_SYSTEM_FRAMEWORK_PATH})
+endforeach()
