@@ -67,7 +67,7 @@ private:
     std::unique_ptr<Texture> m_atlas;
     std::mutex m_contextMutex;
     std::mutex m_atlasMutex;
-
+    bool m_handleAtlasFull = false;
     FONScontext* m_fsContext;
     std::vector<FONSquad> m_quadBuffer;
     glm::vec2 m_boundAtlasSize;
