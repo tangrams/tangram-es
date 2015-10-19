@@ -282,9 +282,13 @@ extern "C" {
     GL_APICALL void GL_APIENTRY glDisable(GLenum);
     GL_APICALL void GL_APIENTRY glDepthFunc(GLenum func);
     GL_APICALL void GL_APIENTRY glDepthMask(GLboolean flag);
+#ifdef PLATFORM_OSX
+    GL_APICALL void GL_APIENTRY glDepthRange(GLclampd n, GLclampd f);
+    GL_APICALL void GL_APIENTRY glClearDepth(GLclampd d);
+#else
     GL_APICALL void GL_APIENTRY glDepthRangef(GLfloat n, GLfloat f);
-    GL_APICALL void GL_APIENTRY glClearDepth(GLclampd depth);
     GL_APICALL void GL_APIENTRY glClearDepthf(GLfloat d);
+#endif
     GL_APICALL void GL_APIENTRY glBlendFunc(GLenum sfactor, GLenum dfactor);
     GL_APICALL void GL_APIENTRY glStencilFunc(GLenum func, GLint ref, GLuint mask);
     GL_APICALL void GL_APIENTRY glStencilMask(GLuint mask);
@@ -382,12 +386,13 @@ extern "C" {
     GL_APICALL GLboolean GL_APIENTRY glUnmapBuffer(GLenum target);
 
     // VAO
-#if defined(PLATFORM_ANDROID)
+#ifdef PLATFORM_ANDROID
     typedef void (GL_APIENTRYP PFNGLBINDVERTEXARRAYOESPROC) (GLuint array);
     typedef void (GL_APIENTRYP PFNGLDELETEVERTEXARRAYSOESPROC) (GLsizei n, const GLuint *arrays);
     typedef void (GL_APIENTRYP PFNGLGENVERTEXARRAYSOESPROC) (GLsizei n, GLuint *arrays);
     typedef GLboolean (GL_APIENTRYP PFNGLISVERTEXARRAYOESPROC) (GLuint array);
 
+    // defined in platform_android.cpp
     extern PFNGLBINDVERTEXARRAYOESPROC glBindVertexArrayOESEXT;
     extern PFNGLDELETEVERTEXARRAYSOESPROC glDeleteVertexArraysOESEXT;
     extern PFNGLGENVERTEXARRAYSOESPROC glGenVertexArraysOESEXT;
