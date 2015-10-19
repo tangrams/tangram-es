@@ -139,7 +139,7 @@ protected:
     std::set<TileID> m_visibleTiles;
 
     glm::dvec3 m_pos;
-    glm::dvec3 m_pos_prev;
+    glm::dvec3 m_pos_prev = glm::dvec3(0.0, 0.0, 0.0);
     glm::vec3 m_eye;
 
     glm::mat4 m_view;
@@ -150,12 +150,12 @@ protected:
     glm::mat3 m_normalMatrix;
 
     float m_roll = 0.f;
-    float m_roll_prev;
+    float m_roll_prev = 0.f;
     float m_pitch = 0.f;
-    float m_pitch_prev;
+    float m_pitch_prev = 0.f;
 
     float m_zoom;
-    float m_zoom_prev;
+    float m_zoom_prev = 0.0f;
     float m_initZoom = 16.0;
 
     float m_width;
