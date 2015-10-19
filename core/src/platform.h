@@ -5,42 +5,6 @@
 #include <vector>
 #include <functional>
 
-#ifdef PLATFORM_ANDROID
-
-#include "data/properties.h"
-#include <memory>
-
-struct _JNIEnv;
-typedef _JNIEnv JNIEnv;
-class _jobject;
-typedef _jobject* jobject;
-class _jbyteArray;
-typedef _jbyteArray* jbyteArray;
-typedef long long jlong;
-
-void setupJniEnv(JNIEnv* _jniEnv, jobject _tangramInstance, jobject _assetManager);
-void onUrlSuccess(JNIEnv* jniEnv, jbyteArray jFetchedBytes, jlong jCallbackPtr);
-void onUrlFailure(JNIEnv* jniEnv, jlong jCallbackPtr);
-namespace Tangram {
-struct TouchItem;
-}
-void featureSelectionCallback(JNIEnv* jniEnv, const std::vector<Tangram::TouchItem>& items);
-#endif
-
-
-#if (defined PLATFORM_IOS) && (defined __OBJC__)
-#import "ViewController.h"
-void init(ViewController* _controller);
-#endif
-
-#ifdef PLATFORM_OSX
-void NSurlInit();
-#endif
-
-#if (defined PLATFORM_LINUX) || (defined PLATFORM_RPI)
-void processNetworkQueue();
-#endif
-
 /* Print a formatted message to the console
  *
  * Uses printf syntax to write a string to stderr (or logcat, on Android)

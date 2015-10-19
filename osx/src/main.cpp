@@ -1,6 +1,5 @@
 #include "tangram.h"
-#include "platform.h"
-#include "platform_gl.h"
+#include "platform_osx.h"
 #include <cmath>
 
 // Forward declaration

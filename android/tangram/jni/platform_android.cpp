@@ -1,12 +1,11 @@
 #ifdef PLATFORM_ANDROID
 
-#include "platform.h"
+#include "platform_android.h"
 #include "tangram.h"
 
 #include <android/log.h>
 #include <android/asset_manager.h>
 #include <android/asset_manager_jni.h>
-#include <jni.h>
 #include <cstdarg>
 
 #include <libgen.h>

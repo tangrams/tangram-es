@@ -6,7 +6,7 @@
 #import <cstdarg>
 #import <fstream>
 
-#include "platform.h"
+#include "platform_ios.h"
 #include "ViewController.h"
 
 static ViewController* viewController;

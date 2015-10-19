@@ -1,6 +1,6 @@
 #pragma once
 
-#include "gl/gl_fwd.h"
+#include "gl.h"
 #include "labels/labelMesh.h"
 #include "text/fontContext.h" // for FontID
 #include "glm/vec4.hpp"

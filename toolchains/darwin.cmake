@@ -22,7 +22,7 @@ include_directories(${CORE_INCLUDE_DIRS})
 set(OSX_EXTENSIONS_FILES *.mm *.cpp)
 foreach(_ext ${OSX_EXTENSIONS_FILES})
     find_sources_and_include_directories(
-        ${PROJECT_SOURCE_DIR}/osx/src/*.h 
+        ${PROJECT_SOURCE_DIR}/osx/src/*.h
         ${PROJECT_SOURCE_DIR}/osx/src/${_ext})
 endforeach()
 
@@ -34,7 +34,7 @@ string(REGEX REPLACE "[.]DS_Store" "" OSX_RESOURCES "${OSX_RESOURCES}")
 # link and build functions
 function(link_libraries)
 
-    target_link_libraries(${EXECUTABLE_NAME} core glfw ${GLFW_LIBRARIES})
+    target_link_libraries(${EXECUTABLE_NAME} ${CORE_LIBRARY} glfw ${GLFW_LIBRARIES})
 
     # add resource files and property list
     set_target_properties(${EXECUTABLE_NAME} PROPERTIES
@@ -43,7 +43,7 @@ function(link_libraries)
 
 endfunction()
 
-function(build) 
+function(build)
 
     add_executable(${EXECUTABLE_NAME} MACOSX_BUNDLE ${SOURCES} ${RESOURCES} ${OSX_RESOURCES})
 

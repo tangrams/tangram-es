@@ -26,7 +26,7 @@ foreach(_src_file_path ${TEST_SOURCES})
 
     add_executable(${EXECUTABLE_NAME} ${_src_file_path} ${OSX_PLATFORM_SRC})
 
-    target_link_libraries(${EXECUTABLE_NAME} core glfw ${GLFW_LIBRARIES})
+    target_link_libraries(${EXECUTABLE_NAME} ${CORE_LIBRARY} glfw ${GLFW_LIBRARIES})
 
     set(LAST_TARGET ${EXECUTABLE_NAME})
 

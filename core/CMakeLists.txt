@@ -1,6 +1,7 @@
 # Defines the following cached variables
 #   - CORE_INCLUDE_DIRS, the path where to CORE headers are located
 #   - CORE_LIBRARIES_INCLUDE_DIRS, the path to CORE libraries headers
+#   - CORE_LIBRARY, the core library name
 
 cmake_minimum_required(VERSION 2.8)
 project(core)
@@ -8,6 +9,7 @@ project(core)
 set(INCLUDE_DIR include)
 set(DEPENDENCIES_DIR dependencies)
 set(SOURCE_DIR src)
+set(CORE_LIBRARY core CACHE INTERNAL "core library name" FORCE)
 
 add_definitions(-DLOG_LEVEL=2)
 
@@ -26,8 +28,6 @@ list(APPEND INCLUDE_DIRS "${INCLUDE_DIR}/isect2d/include")
 list(APPEND INCLUDE_DIRS "${INCLUDE_DIR}/fontstash-es/fontstash")
 list(REMOVE_DUPLICATES INCLUDE_DIRS)
 
-include_directories(${INCLUDE_DIR} ${INCLUDE_DIRS})
-
 set(CORE_LIBRARIES_INCLUDE_DIRS
     ${PROJECT_SOURCE_DIR}/${INCLUDE_DIR}
     ${PROJECT_SOURCE_DIR}/${INCLUDE_DIR}/glm
@@ -42,23 +42,15 @@ set(CORE_LIBRARIES_INCLUDE_DIRS
 # adding some other dependent target files if needed
 set(FOUND_SOURCES ${FOUND_SOURCES} ${ADDITIONAL_TARGET_DEPENDENT_SRC_FILES})
 
-if(NOT DEFINED CORE_LIB_NAME)
-    set(CORE_LIB_NAME core)
-endif()
+add_library(${CORE_LIBRARY} ${CORE_LIB_TYPE} ${FOUND_SOURCES})
+target_link_libraries(${CORE_LIBRARY} duktape css-color-parser-cpp yaml-cpp geojson-vt-cpp ${CORE_LIB_DEPS})
 
-add_library(${CORE_LIB_NAME} ${CORE_LIB_TYPE} ${FOUND_SOURCES})
-target_link_libraries(${CORE_LIB_NAME} duktape css-color-parser-cpp yaml-cpp geojson-vt-cpp ${CORE_LIB_DEPS})
+target_include_directories(${CORE_LIBRARY}
+  PRIVATE
+  ${INCLUDE_DIRS}
+  PUBLIC
+  ${CORE_INCLUDE_DIRS})
 
 # make groups for xcode
 group_recursive_sources(src "src")
 
-# post build commands
-add_custom_command(TARGET ${CORE_LIB_NAME}
-        POST_BUILD
-        COMMAND ${CORE_POSTBUILD_COMMANDS}
-        COMMENT ${CORE_COMMAND_MSG} VERBATIM)
-
-# installation step
-if(INSTALL_CORE_LIBRARY STREQUAL "ON")
-    install(TARGETS ${CORE_LIB_NAME} DESTINATION ${CORE_INSTALLATION_PATH})
-endif()

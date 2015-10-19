@@ -1,6 +1,5 @@
-#include <jni.h>
 #include "tangram.h"
-#include "platform.h"
+#include "platform_android.h"
 
 extern "C" {
 
