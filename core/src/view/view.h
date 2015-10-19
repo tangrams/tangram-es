@@ -15,7 +15,7 @@
 namespace Tangram {
 
 enum class CameraType : uint8_t {
-    perspective,
+    perspective = 0,
     isometric,
     flat,
 };
@@ -40,7 +40,7 @@ public:
 
     void setCameraType(CameraType _type);
 
-    auto CameraType() const { return m_type; }
+    auto cameraType() const { return m_type; }
 
     /* Sets the ratio of hardware pixels to logical pixels (for high-density screens)
      *
@@ -173,7 +173,7 @@ protected:
     float m_pixelScale = 1.0f;
     float m_pixelsPerTile = 256.0;
 
-    enum CameraType m_type;
+    CameraType m_type;
 
     bool m_dirtyMatrices;
     bool m_dirtyTiles;
