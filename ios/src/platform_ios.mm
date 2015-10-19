@@ -95,7 +95,7 @@ std::string stringFromFile(const char* _path, PathType _type) {
     
     NSString* path = resolvePath(_path, _type);
     NSString* str = [NSString stringWithContentsOfFile:path
-                                              encoding:NSASCIIStringEncoding
+                                          usedEncoding:NULL
                                                  error:NULL];
 
     if (str == nil) {
