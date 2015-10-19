@@ -22,8 +22,8 @@ View::View(int _width, int _height, ProjectionType _projType) :
     m_changed(false) {
 
     setMapProjection(_projType);
-    setSize(_width, _height);
     setZoom(m_initZoom); // Arbitrary zoom for testing
+    setSize(_width, _height);
 
     setPosition(0.0, 0.0);
 }
@@ -70,10 +70,46 @@ void View::setSize(int _width, int _height) {
 
 }
 
+bool contains(const glm::dvec2& _point, const BoundingBox& _bounds) {
+    if ( _point.y < _bounds.min.y || _point.y > _bounds.max.y ) { return false; }
+    return true;
+}
+
+bool View::checkMapBound() {
+
+    auto mapBounds = m_projection->MapBounds();
+
+    // Make sure world space view trapezoid bounds are within mapBounds
+    // If any of the 4 view trapezoid bounds are off the mapBounds, do not set the view Position
+    glm::dvec2 bottomLeft = { 0.f, m_vpHeight};
+    glm::dvec2 bottomRight = { m_vpWidth, m_vpHeight};
+    glm::dvec2 topRight = { m_vpWidth, 0.f};
+    glm::dvec2 topLeft = { 0.f, 0.f};
+
+    screenToGroundPlane(bottomLeft.x, bottomLeft.y);
+    bottomLeft += glm::dvec2(m_pos.x, m_pos.y);
+    if (!contains(bottomLeft, mapBounds)) { return false; }
+
+    screenToGroundPlane(bottomRight.x, bottomRight.y);
+    bottomRight += glm::dvec2(m_pos.x, m_pos.y);
+    if (!contains(bottomRight, mapBounds)) { return false; }
+
+    screenToGroundPlane(topRight.x, topRight.y);
+    topRight += glm::dvec2(m_pos.x, m_pos.y);
+    if (!contains(topRight, mapBounds)) { return false; }
+
+    screenToGroundPlane(topLeft.x, topLeft.y);
+    topLeft += glm::dvec2(m_pos.x, m_pos.y);
+    if (!contains(topLeft, mapBounds)) { return false; }
+
+    return true;
+}
+
 void View::setPosition(double _x, double _y) {
 
     m_pos.x = _x;
     m_pos.y = _y;
+
     m_dirtyTiles = true;
 
 }
@@ -81,7 +117,7 @@ void View::setPosition(double _x, double _y) {
 void View::setZoom(float _z) {
 
     // ensure zoom value is allowed
-    m_zoom = glm::clamp(_z, 0.0f, s_maxZoom);
+    m_zoom = glm::clamp(_z, s_minZoom, s_maxZoom);
     m_dirtyMatrices = true;
     m_dirtyTiles = true;
 
@@ -130,11 +166,27 @@ void View::pitch(float _dpitch) {
 void View::update() {
 
     if (m_dirtyMatrices) {
-        
+
         updateMatrices(); // Resets dirty flag
         m_changed = true;
 
     }
+
+    if(!checkMapBound()) {
+
+        // Reset view values to previous legal values
+        m_pos = m_pos_prev;
+        m_roll = m_roll_prev;
+        m_zoom = m_zoom_prev;
+        m_pitch = m_pitch_prev;
+        m_dirtyMatrices = true;
+        updateMatrices();
+    }
+
+    m_pos_prev = m_pos;
+    m_roll_prev = m_roll;
+    m_zoom_prev = m_zoom;
+    m_pitch_prev = m_pitch;
 
     if (m_dirtyTiles && !Tangram::getDebugFlag(Tangram::DebugFlags::freeze_tiles)) {
 
@@ -143,6 +195,9 @@ void View::update() {
 
     }
 
+    // If the viewport dimention change and the view trapezoid is not within the mapbound,
+    // zoom in to get view trapezoid within map bounds
+    if(!checkMapBound()) { m_zoom_prev += 1; }
 }
 
 glm::dmat2 View::getBoundsRect() const {
@@ -153,29 +208,38 @@ glm::dmat2 View::getBoundsRect() const {
 
 }
 
-float View::screenToGroundPlane(float& _screenX, float& _screenY) {
+double View::screenToGroundPlane(float& _screenX, float& _screenY) {
+    double x = _screenX, y = _screenY;
+    double t = screenToGroundPlane(x, y);
+    _screenX = x;
+    _screenY = y;
+    return t;
+}
+
+double View::screenToGroundPlane(double& _screenX, double& _screenY) {
 
     if (m_dirtyMatrices) { updateMatrices(); } // Need the view matrices to be up-to-date
 
     // Cast a ray and find its intersection with the z = 0 plane,
     // following the technique described here: http://antongerdelan.net/opengl/raycasting.html
 
-    glm::vec4 ray_clip = { 2.f * _screenX / m_vpWidth - 1.f, 1.f - 2.f * _screenY / m_vpHeight, -1.f, 1.f }; // Ray from camera in clip space
-    glm::vec4 ray_eye = m_invViewProj * ray_clip;
-    glm::vec3 ray_world = glm::vec3(ray_eye / ray_eye.w) - m_eye;
+    // Ray from camera in clip space
+    glm::dvec4 ray_clip = { 2. * _screenX / m_vpWidth - 1., 1. - 2. * _screenY / m_vpHeight, -1., 1. };
+    glm::dvec4 ray_eye = m_invViewProj * ray_clip;
+    glm::dvec3 ray_world = glm::dvec3(ray_eye / ray_eye.w) - glm::dvec3(m_eye);
 
-    float t = 0; // Distance along ray to ground plane
+    double t = 0; // Distance along ray to ground plane
     if (ray_world.z != 0.f) {
         t = -m_eye.z / ray_world.z;
     }
 
-    ray_world *= fabs(t);
+    ray_world *= std::abs(t);
 
     // Determine the maximum distance from the view position at which tiles can be drawn; If the projected point
     // is farther than this maximum or if the point is above the horizon (t < 0) then we set the distance of the
     // point to always be this maximum distance.
-    float maxTileDistance = invLodFunc(MAX_LOD + 1) * 2 * MapProjection::HALF_CIRCUMFERENCE * pow(2, -m_zoom);
-    float rayDistanceXY = sqrtf(ray_world.x * ray_world.x + ray_world.y * ray_world.y);
+    double maxTileDistance = invLodFunc(MAX_LOD + 1) * 2.0 * MapProjection::HALF_CIRCUMFERENCE * pow(2, -m_zoom);
+    double rayDistanceXY = sqrt(ray_world.x * ray_world.x + ray_world.y * ray_world.y);
     if (rayDistanceXY > maxTileDistance || t < 0) {
         ray_world *= maxTileDistance / rayDistanceXY;
     }
@@ -298,7 +362,7 @@ static void scanSpan(edge _e0, edge _e1, int _min, int _max, Scan& _s) {
     for (int y = y0; y < y1; y++) {
         double x0 = m0 * fmax(0.0, fmin(_e0.dy, y + d0 - _e0.y0)) + _e0.x0;
         double x1 = m1 * fmax(0.0, fmin(_e1.dy, y + d1 - _e1.y0)) + _e1.x0;
-        scanLine(fmax(_min, floor(x1)), fmin(_max, ceil(x0)), y, _s);
+        scanLine(floor(x1), ceil(x0), y, _s);
     }
 
 }
@@ -323,25 +387,27 @@ void View::updateTiles() {
 
     m_visibleTiles.clear();
 
-    // Bounds of view trapezoid in world space (i.e. view frustum projected onto z = 0 plane)
-    glm::vec2 viewBL = { 0.f,       m_vpHeight }; // bottom left
-    glm::vec2 viewBR = { m_vpWidth, m_vpHeight }; // bottom right
-    glm::vec2 viewTR = { m_vpWidth, 0.f        }; // top right
-    glm::vec2 viewTL = { 0.f,       0.f        }; // top left
+    int maxTileIndex = 1 << int(m_zoom);
 
-    float t0 = screenToGroundPlane(viewBL.x, viewBL.y);
-    float t1 = screenToGroundPlane(viewBR.x, viewBR.y);
-    float t2 = screenToGroundPlane(viewTR.x, viewTR.y);
-    float t3 = screenToGroundPlane(viewTL.x, viewTL.y);
+    // Bounds of view trapezoid in world space (i.e. view frustum projected onto z = 0 plane)
+    glm::dvec2 viewBL = { 0.f,       m_vpHeight }; // bottom left
+    glm::dvec2 viewBR = { m_vpWidth, m_vpHeight }; // bottom right
+    glm::dvec2 viewTR = { m_vpWidth, 0.f        }; // top right
+    glm::dvec2 viewTL = { 0.f,       0.f        }; // top left
+
+    double t0 = screenToGroundPlane(viewBL.x, viewBL.y);
+    double t1 = screenToGroundPlane(viewBR.x, viewBR.y);
+    double t2 = screenToGroundPlane(viewTR.x, viewTR.y);
+    double t3 = screenToGroundPlane(viewTL.x, viewTL.y);
 
     // if all of our raycasts have a negative intersection distance, we have no area to cover
-    if (t0 < .0f && t1 < 0.f && t2 < 0.f && t3 < 0.f) {
+    if (t0 < .0 && t1 < 0. && t2 < 0. && t3 < 0.) {
         return;
     }
 
     // Transformation from world space to tile space
     double hc = MapProjection::HALF_CIRCUMFERENCE;
-    double invTileSize = double(1 << int(m_zoom)) / (hc * 2);
+    double invTileSize = double(maxTileIndex) / (hc * 2);
     glm::dvec2 tileSpaceOrigin(-hc, hc);
     glm::dvec2 tileSpaceAxes(invTileSize, -invTileSize);
 
@@ -381,17 +447,27 @@ void View::updateTiles() {
         while (lod < MAX_LOD && y <  y_l_neg[lod]) { lod++; }
 
         int z = int(m_zoom);
+        int maxX = (1 << z);
 
         x >>= lod;
         y >>= lod;
         z = glm::clamp((z-lod), 0, (int)s_maxZoom);
 
-        m_visibleTiles.emplace(x, y, z);
+        TileWrap wrap = TileWrap::none;
+
+        if (x < 0) {
+            wrap = TileWrap::negative;
+            x = maxX + (x % maxX);
+        } else if (x >= maxX) {
+            wrap = TileWrap::positive;
+            x %= maxX;
+        }
+
+        m_visibleTiles.emplace(x, y, z, wrap);
 
     };
 
     // Rasterize view trapezoid into tiles
-    int maxTileIndex = 1 << int(m_zoom);
     scanTriangle(a, b, c, 0, maxTileIndex, s);
     scanTriangle(c, d, a, 0, maxTileIndex, s);
 

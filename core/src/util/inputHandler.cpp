@@ -34,8 +34,8 @@ void InputHandler::handleTapGesture(float _posX, float _posY) {
 
     onGesture();
 
-    float viewCenterX = 0.5f * m_view->getWidth();
-    float viewCenterY = 0.5f * m_view->getHeight();
+    double viewCenterX = 0.5 * m_view->getWidth();
+    double viewCenterY = 0.5 * m_view->getHeight();
 
     m_view->screenToGroundPlane(viewCenterX, viewCenterY);
     m_view->screenToGroundPlane(_posX, _posY);
