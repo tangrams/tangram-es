@@ -22,7 +22,11 @@ FontContext::~FontContext() {
 void FontContext::bindAtlas(GLuint _textureUnit) {
     {
         std::lock_guard<std::mutex> lock(m_atlasMutex);
+
         m_atlas->update(_textureUnit);
+        // use size of bound texture for drawing, since
+        // atlas size can change on tile-worker thread
+        m_boundAtlasSize = { m_atlas->getWidth(), m_atlas->getHeight() };
     }
     m_atlas->bind(_textureUnit);
 }
@@ -201,10 +205,6 @@ void FontContext::fontstashError(void* _uptr, int _error, int _val) {
         LOGE("Unexpected error in Fontstash %d:%d!", _error, _val);
         break;
     }
-}
-
-glm::vec2 FontContext::getAtlasResolution() const {
-    return glm::vec2(m_atlas->getWidth(), m_atlas->getHeight());
 }
 
 void FontContext::initFontContext(int _atlasSize) {

@@ -49,7 +49,9 @@ public:
      */
     std::vector<FONSquad>& rasterize(const std::string& _text, FontID _fontID, float _fontSize, float _sdf);
 
-    glm::vec2 getAtlasResolution() const;
+    glm::vec2 getAtlasResolution() const {
+        return m_boundAtlasSize;
+    }
 
 private:
     static void renderUpdate(void* _userPtr, int* _rect, const unsigned char* _data);
@@ -68,7 +70,7 @@ private:
 
     FONScontext* m_fsContext;
     std::vector<FONSquad> m_quadBuffer;
-
+    glm::vec2 m_boundAtlasSize;
 };
 
 }
