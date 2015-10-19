@@ -19,7 +19,7 @@ uniform float u_device_pixel_ratio;
 
 #pragma tangram: uniforms
 
-attribute LOWP vec2 a_uv;
+attribute vec2 a_uv;
 attribute vec2 a_position;
 attribute vec2 a_screenPosition;
 attribute LOWP float a_alpha;

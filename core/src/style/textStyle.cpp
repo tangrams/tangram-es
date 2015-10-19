@@ -167,15 +167,15 @@ void TextStyle::buildPolygon(const Polygon& _polygon, const DrawRule& _rule,
 }
 
 void TextStyle::onBeginDrawMesh(VboMesh& _mesh) const {
-    auto& buffer = static_cast<TextBuffer&>(_mesh);
-    glm::vec2 uvScaleFactor = buffer.getAtlasResolution() / m_fontContext->getAtlasResolution();
-    m_shaderProgram->setUniformf("u_uv_scale_factor", uvScaleFactor);
 }
 
 void TextStyle::onBeginDrawFrame(const View& _view, Scene& _scene, int _textureUnit) {
     bool contextLost = Style::glContextLost();
 
     m_fontContext->bindAtlas(0);
+
+    m_shaderProgram->setUniformf("u_uv_scale_factor",
+                                 1.0f / m_fontContext->getAtlasResolution());
 
     if (contextLost) {
         m_shaderProgram->setUniformi("u_tex", 0);

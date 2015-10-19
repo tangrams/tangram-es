@@ -213,7 +213,7 @@ void FontContext::initFontContext(int _atlasSize) {
     FONSparams params;
     params.width = _atlasSize;
     params.height = _atlasSize;
-    params.flags = (unsigned char)FONS_ZERO_TOPLEFT | FONS_NORMALIZE_TEX_COORDS;
+    params.flags = (unsigned char)FONS_ZERO_TOPLEFT;
 
     params.renderCreate = renderCreate;
     params.renderResize = nullptr;
