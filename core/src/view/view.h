@@ -39,8 +39,10 @@ public:
     const MapProjection& getMapProjection() const;
 
     void setCameraType(CameraType _type);
-
     auto cameraType() const { return m_type; }
+
+    void setObliqueAxis(float _x, float _y) { m_obliqueAxis = { _x, _y}; }
+    auto obliqueAxis() const { return m_obliqueAxis; }
 
     /* Sets the ratio of hardware pixels to logical pixels (for high-density screens)
      *
@@ -147,6 +149,7 @@ protected:
     glm::dvec3 m_pos;
     glm::dvec3 m_pos_prev = glm::dvec3(0.0, 0.0, 0.0);
     glm::vec3 m_eye;
+    glm::vec2 m_obliqueAxis;
 
     glm::mat4 m_view;
     glm::mat4 m_orthoViewport;

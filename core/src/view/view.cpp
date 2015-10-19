@@ -17,6 +17,7 @@ double invLodFunc(double d) {
 }
 
 View::View(int _width, int _height, ProjectionType _projType) :
+    m_obliqueAxis(0, 1),
     m_width(0),
     m_height(0),
     m_type(CameraType::perspective),
@@ -232,22 +233,22 @@ double View::screenToGroundPlane(double& _screenX, double& _screenY) {
     // Cast a ray and find its intersection with the z = 0 plane,
     // following the technique described here: http://antongerdelan.net/opengl/raycasting.html
 
-    glm::dvec4 ray_clip = { 2. * _screenX / m_vpWidth - 1., 1. - 2. * _screenY / m_vpHeight, -1., 1. };
-    glm::dvec4 origin_clip;
+    glm::dvec4 target_clip = { 2. * _screenX / m_vpWidth - 1., 1. - 2. * _screenY / m_vpHeight, -1., 1. };
+    glm::dvec4 target_world = m_invViewProj * target_clip;
+    target_world /= target_world.w;
 
+    glm::dvec4 origin_world;
     switch (m_type) {
         case CameraType::perspective:
-            origin_clip = glm::dvec4(0., 0., 0., 1.);
+            origin_world = glm::dvec4(m_eye, 1);
             break;
         case CameraType::isometric:
         case CameraType::flat:
-            origin_clip = ray_clip * glm::dvec4(m_width * .5, m_height * .5, 0., 1.);
+            origin_world = m_invViewProj * (target_clip * glm::dvec4(1, 1, 0, 1));
             break;
     }
 
-    glm::dvec3 origin_world = glm::dvec3(glm::inverse(m_view) * origin_clip);
-    glm::dvec4 ray_eye = m_invViewProj * ray_clip;
-    glm::dvec3 ray_world = glm::dvec3(ray_eye / ray_eye.w) - origin_world;
+    glm::dvec4 ray_world = target_world - origin_world;
 
     double t = 0; // Distance along ray to ground plane
     if (ray_world.z != 0.f) {
@@ -322,19 +323,21 @@ void View::updateMatrices() {
     // update view and projection matrices
     m_view = glm::lookAt(m_eye, at, up);
 
-    glm::vec2 oblique_axis = { 0.f, 1.f };
-
     // Generate perspective matrix based on camera type
     switch (m_type) {
         case CameraType::perspective:
             m_proj = glm::perspective(fovy, m_aspect, near, far);
             break;
         case CameraType::isometric:
-            m_view[2][0] += oblique_axis.x;
-            m_view[2][1] += oblique_axis.y;
         case CameraType::flat:
             m_proj = glm::ortho(-m_width * .5f, m_width * .5f, -m_height * .5f, m_height * .5f, near, far);
             break;
+    }
+
+    // Add the oblique projection scaling factors to the view matrix
+    if (m_type == CameraType::isometric) {
+        m_view[2][0] += m_obliqueAxis.x;
+        m_view[2][1] += m_obliqueAxis.y;
     }
 
     m_viewProj = m_proj * m_view;
