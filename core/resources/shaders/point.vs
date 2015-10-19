@@ -33,6 +33,7 @@ varying vec4 v_strokeColor;
 varying vec2 v_texcoords;
 varying float v_strokeWidth;
 varying float v_alpha;
+const vec4 clipped = vec4(2.0, 0.0, 2.0, 1.0);
 
 #pragma tangram: global
 
@@ -64,11 +65,12 @@ void main() {
         #pragma tangram: position
 
         gl_Position = u_ortho * position;
+
+        // If width of stroke is zero, set the stroke color to the fill color -
+        // the border pixel of the fill is always slightly mixed with the stroke color
+        v_strokeColor.rgb = (v_strokeWidth > TANGRAM_EPSILON) ? a_stroke.rgb : a_color.rgb;
     } else {
-        gl_Position = vec4(0.0, 0.0, 0.0, 1.0);
+        gl_Position = clipped;
     }
 
-    // If width of stroke is zero, set the stroke color to the fill color -
-    // the border pixel of the fill is always slightly mixed with the stroke color
-    v_strokeColor.rgb = (v_strokeWidth > TANGRAM_EPSILON) ? a_stroke.rgb : a_color.rgb;
 }
