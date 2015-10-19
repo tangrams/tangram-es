@@ -68,10 +68,12 @@ void View::setSize(int _width, int _height) {
     // Screen space orthographic projection matrix, top left origin, y pointing down
     m_orthoViewport = glm::ortho(0.f, (float)m_vpWidth, (float)m_vpHeight, 0.f, -1.f, 1.f);
 
-    // If the viewport dimention change and the view trapezoid is not within the mapbound,
-    // zoom in to get view trapezoid within map bounds
-    if(!checkMapBound()) { m_zoom_prev += 1; }
+}
 
+bool contains(const glm::dvec2& _point, const BoundingBox& _bounds) {
+    if ( _point.x < _bounds.min.x || _point.x > _bounds.max.x ||
+         _point.y < _bounds.min.y || _point.y > _bounds.max.y ) { return false; }
+    return true;
 }
 
 bool View::checkMapBound() {
@@ -87,20 +89,19 @@ bool View::checkMapBound() {
 
     screenToGroundPlane(bottomLeft.x, bottomLeft.y);
     bottomLeft += glm::dvec2(m_pos.x, m_pos.y);
-    if ( bottomLeft.x < mapBounds.min.x || bottomLeft.x > mapBounds.max.x ||
-         bottomLeft.y < mapBounds.min.y || bottomLeft.y > mapBounds.max.y ) { return false; }
+    if (!contains(bottomLeft, mapBounds)) { return false; }
+
     screenToGroundPlane(bottomRight.x, bottomRight.y);
     bottomRight += glm::dvec2(m_pos.x, m_pos.y);
-    if ( bottomRight.x < mapBounds.min.x || bottomRight.x > mapBounds.max.x ||
-         bottomRight.y < mapBounds.min.y || bottomRight.y > mapBounds.max.y ) { return false; }
+    if (!contains(bottomRight, mapBounds)) { return false; }
+
     screenToGroundPlane(topRight.x, topRight.y);
     topRight += glm::dvec2(m_pos.x, m_pos.y);
-    if ( topRight.x < mapBounds.min.x || topRight.x > mapBounds.max.x ||
-         topRight.y < mapBounds.min.y || topRight.y > mapBounds.max.y ) { return false; }
+    if (!contains(topRight, mapBounds)) { return false; }
+
     screenToGroundPlane(topLeft.x, topLeft.y);
     topLeft += glm::dvec2(m_pos.x, m_pos.y);
-    if ( topLeft.x < mapBounds.min.x || topLeft.x > mapBounds.max.x ||
-         topLeft.y < mapBounds.min.y || topLeft.y > mapBounds.max.y ) { return false; }
+    if (!contains(topLeft, mapBounds)) { return false; }
 
     return true;
 }
@@ -195,6 +196,9 @@ void View::update() {
 
     }
 
+    // If the viewport dimention change and the view trapezoid is not within the mapbound,
+    // zoom in to get view trapezoid within map bounds
+    if(!checkMapBound()) { m_zoom_prev += 1; }
 }
 
 glm::dmat2 View::getBoundsRect() const {
