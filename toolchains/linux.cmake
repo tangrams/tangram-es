@@ -9,7 +9,7 @@ if (CMAKE_CXX_COMPILER_ID MATCHES "Clang")
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wno-gnu-zero-variadic-macro-arguments")
 endif()
 
-# if ("${CMAKE_CXX_COMPILER_ID}" STREQUAL "Clang" OR 
+# if ("${CMAKE_CXX_COMPILER_ID}" STREQUAL "Clang" OR
 #     "${CMAKE_CXX_COMPILER_ID}" STREQUAL "AppleClang")
 #   # using Clang
 # elseif ("${CMAKE_CXX_COMPILER_ID}" STREQUAL "GNU")
@@ -26,7 +26,7 @@ include_directories(${CORE_INCLUDE_DIRS})
 
 # add sources and include headers
 find_sources_and_include_directories(
-    ${PROJECT_SOURCE_DIR}/linux/src/*.h 
+    ${PROJECT_SOURCE_DIR}/linux/src/*.h
     ${PROJECT_SOURCE_DIR}/linux/src/*.cpp)
 
 # load glfw
@@ -35,11 +35,11 @@ include(${PROJECT_SOURCE_DIR}/toolchains/add_glfw.cmake)
 # link and build functions
 function(link_libraries)
 
-    target_link_libraries(${EXECUTABLE_NAME} core -lcurl glfw ${GLFW_LIBRARIES})
+    target_link_libraries(${EXECUTABLE_NAME} ${CORE_LIBRARY} -lcurl glfw ${GLFW_LIBRARIES})
 
 endfunction()
 
-function(build) 
+function(build)
 
     add_executable(${EXECUTABLE_NAME} ${SOURCES})
 

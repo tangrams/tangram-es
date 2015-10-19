@@ -28,7 +28,7 @@ add_library(${LIB_NAME} SHARED
 
 target_link_libraries(${LIB_NAME}
   PUBLIC
-  core
+  ${CORE_LIBRARY}
   # android libaries
   GLESv2 log z android)
 
