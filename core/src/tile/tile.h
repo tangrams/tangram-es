@@ -58,8 +58,11 @@ public:
 
     std::unique_ptr<VboMesh>& getMesh(const Style& _style);
 
-    /* uUdate the Tile considering the current view */
+    /* Update the Tile considering the current view */
     void update(float _dt, const View& _view);
+
+    /* Update tile origin based on wraping for this tile */
+    void updateTileOrigin();
 
     /* Draws the geometry associated with the provided <Style> and view-projection matrix */
     void draw(const Style& _style, const View& _view);
