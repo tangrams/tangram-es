@@ -2,10 +2,15 @@ scene:
     background:
         color: '#8db7d5'
 cameras:
-    camera1:
+    iso-camera:
+        type: isometric
+        axis: [0, 1]
+        active: false
+    perspective-camera:
         type: perspective #currently ignored
         focal_length: [[16, 2], [20, 6]] # currently ignored
         vanishing_point: [-250, -250] # currently ignored
+        active: true
 
 lights:
     light1:
