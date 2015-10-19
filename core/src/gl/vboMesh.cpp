@@ -2,7 +2,6 @@
 #include "shaderProgram.h"
 #include "renderState.h"
 #include "platform.h"
-#include "gl.h"
 
 namespace Tangram {
 

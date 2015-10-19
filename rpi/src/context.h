@@ -1,6 +1,6 @@
 #pragma once
 
-#include "gl.h"
+#include "platform_rpi.h"
 #include "glm/glm.hpp"
 
 // GL Context

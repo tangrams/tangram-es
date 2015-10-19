@@ -8,8 +8,7 @@
 #include <list>
 
 #include "urlWorker.h"
-#include "platform.h"
-#include "platform_gl.h"
+#include "platform_linux.h"
 
 #include <libgen.h>
 #include <unistd.h>

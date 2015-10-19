@@ -8,8 +8,7 @@
 #include <sys/resource.h>
 #include <sys/syscall.h>
 
-#include "platform.h"
-#include "platform_gl.h"
+#include "platform_osx.h"
 
 static bool s_isContinuousRendering = false;
 static NSMutableString* s_resourceRoot = NULL;

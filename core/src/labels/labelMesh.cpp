@@ -2,7 +2,6 @@
 #include "labels/label.h"
 #include "gl/renderState.h"
 #include "gl/shaderProgram.h"
-#include "gl.h"
 
 namespace Tangram {
 

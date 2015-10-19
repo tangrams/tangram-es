@@ -1,6 +1,6 @@
 #pragma once
 
-#include "gl/gl_fwd.h"
+#include "gl.h"
 
 #include <tuple>
 #include <limits>

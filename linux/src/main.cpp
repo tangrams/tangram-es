@@ -1,8 +1,7 @@
 #include <curl/curl.h>
 
 #include "tangram.h"
-#include "platform.h"
-#include "platform_gl.h"
+#include "platform_linux.h"
 
 #include <sys/types.h>
 #include <sys/stat.h>

@@ -1,6 +1,6 @@
 #pragma once
 
-#include "gl_fwd.h"
+#include "gl.h"
 
 #include <vector>
 #include <deque>

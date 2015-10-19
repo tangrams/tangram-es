@@ -1,6 +1,5 @@
 #include "textureCube.h"
 
-#include "gl.h"
 #include "platform.h"
 #include "stb_image.h"
 

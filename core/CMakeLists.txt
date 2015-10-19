@@ -26,8 +26,6 @@ list(APPEND INCLUDE_DIRS "${INCLUDE_DIR}/isect2d/include")
 list(APPEND INCLUDE_DIRS "${INCLUDE_DIR}/fontstash-es/fontstash")
 list(REMOVE_DUPLICATES INCLUDE_DIRS)
 
-include_directories(${INCLUDE_DIR} ${INCLUDE_DIRS})
-
 set(CORE_LIBRARIES_INCLUDE_DIRS
     ${PROJECT_SOURCE_DIR}/${INCLUDE_DIR}
     ${PROJECT_SOURCE_DIR}/${INCLUDE_DIR}/glm
@@ -49,6 +47,12 @@ endif()
 add_library(${CORE_LIB_NAME} ${CORE_LIB_TYPE} ${FOUND_SOURCES})
 target_link_libraries(${CORE_LIB_NAME} duktape css-color-parser-cpp yaml-cpp geojson-vt-cpp ${CORE_LIB_DEPS})
 
+target_include_directories(${CORE_LIB_NAME}
+  PRIVATE
+  ${INCLUDE_DIRS}
+  PUBLIC
+  ${CORE_INCLUDE_DIRS})
+
 # make groups for xcode
 group_recursive_sources(src "src")
 
@@ -57,8 +61,3 @@ add_custom_command(TARGET ${CORE_LIB_NAME}
         POST_BUILD
         COMMAND ${CORE_POSTBUILD_COMMANDS}
         COMMENT ${CORE_COMMAND_MSG} VERBATIM)
-
-# installation step
-if(INSTALL_CORE_LIBRARY STREQUAL "ON")
-    install(TARGETS ${CORE_LIB_NAME} DESTINATION ${CORE_INSTALLATION_PATH})
-endif()
