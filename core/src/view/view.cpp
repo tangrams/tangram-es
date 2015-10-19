@@ -73,8 +73,7 @@ void View::setSize(int _width, int _height) {
 }
 
 bool contains(const glm::dvec2& _point, const BoundingBox& _bounds) {
-    if ( _point.x < _bounds.min.x || _point.x > _bounds.max.x ||
-         _point.y < _bounds.min.y || _point.y > _bounds.max.y ) { return false; }
+    if ( _point.y < _bounds.min.y || _point.y > _bounds.max.y ) { return false; }
     return true;
 }
 
@@ -401,7 +400,7 @@ static void scanSpan(edge _e0, edge _e1, int _min, int _max, Scan& _s) {
     for (int y = y0; y < y1; y++) {
         double x0 = m0 * fmax(0.0, fmin(_e0.dy, y + d0 - _e0.y0)) + _e0.x0;
         double x1 = m1 * fmax(0.0, fmin(_e1.dy, y + d1 - _e1.y0)) + _e1.x0;
-        scanLine(fmax(_min, floor(x1)), fmin(_max, ceil(x0)), y, _s);
+        scanLine(floor(x1), ceil(x0), y, _s);
     }
 
 }
@@ -426,6 +425,8 @@ void View::updateTiles() {
 
     m_visibleTiles.clear();
 
+    int maxTileIndex = 1 << int(m_zoom);
+
     // Bounds of view trapezoid in world space (i.e. view frustum projected onto z = 0 plane)
     glm::dvec2 viewBL = { 0.f,       m_vpHeight }; // bottom left
     glm::dvec2 viewBR = { m_vpWidth, m_vpHeight }; // bottom right
@@ -444,7 +445,7 @@ void View::updateTiles() {
 
     // Transformation from world space to tile space
     double hc = MapProjection::HALF_CIRCUMFERENCE;
-    double invTileSize = double(1 << int(m_zoom)) / (hc * 2);
+    double invTileSize = double(maxTileIndex) / (hc * 2);
     glm::dvec2 tileSpaceOrigin(-hc, hc);
     glm::dvec2 tileSpaceAxes(invTileSize, -invTileSize);
 
@@ -494,17 +495,27 @@ void View::updateTiles() {
         while (lod < MAX_LOD && y <  y_limit_neg[lod]) { lod++; }
 
         int z = (int)m_zoom;
+        int maxX = (1 << z);
 
         x >>= lod;
         y >>= lod;
         z = glm::clamp((z-lod), 0, (int)s_maxZoom);
 
-        m_visibleTiles.emplace(x, y, z);
+        TileWrap wrap = TileWrap::none;
+
+        if (x < 0) {
+            wrap = TileWrap::negative;
+            x = maxX + (x % maxX);
+        } else if (x >= maxX) {
+            wrap = TileWrap::positive;
+            x %= maxX;
+        }
+
+        m_visibleTiles.emplace(x, y, z, wrap);
 
     };
 
     // Rasterize view trapezoid into tiles
-    int maxTileIndex = 1 << int(m_zoom);
     scanTriangle(a, b, c, 0, maxTileIndex, s);
     scanTriangle(c, d, a, 0, maxTileIndex, s);
 

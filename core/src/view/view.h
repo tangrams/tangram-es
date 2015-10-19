@@ -144,6 +144,10 @@ protected:
 
     void updateMatrices();
     void updateTiles();
+
+    /*
+     * Make sures map always remains within the world's latitude bounds
+     */
     bool checkMapBound();
 
     std::unique_ptr<MapProjection> m_projection;
