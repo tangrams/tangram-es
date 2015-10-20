@@ -22,8 +22,10 @@ FontContext::~FontContext() {
 void FontContext::bindAtlas(GLuint _textureUnit) {
     {
         std::lock_guard<std::mutex> lock(m_atlasMutex);
+        int width, height;
+        auto* tex = fonsGetTextureData(m_fsContext, &width, &height);
+        m_atlas->update(_textureUnit, reinterpret_cast<const GLuint*>(tex));
 
-        m_atlas->update(_textureUnit);
         // use size of bound texture for drawing, since
         // atlas size can change on tile-worker thread
         m_boundAtlasSize = { m_atlas->getWidth(), m_atlas->getHeight() };
@@ -169,15 +171,11 @@ void FontContext::renderUpdate(void* _userPtr, int* _rect, const unsigned char* 
     // DONT: deadlock here when the lock is held by FONS_ATLAS_FULL
     if (fontContext->m_handleAtlasFull) { return; }
 
-    uint32_t xoff = 0;
     uint32_t yoff = _rect[1];
-    uint32_t width = fontContext->m_atlas->getWidth();
     uint32_t height = _rect[3] - _rect[1];
 
-    auto subdata = reinterpret_cast<const GLuint*>(_data + yoff * width);
-
     std::lock_guard<std::mutex> lock(fontContext->m_atlasMutex);
-    fontContext->m_atlas->setSubData(subdata, xoff, yoff, width, height);
+    fontContext->m_atlas->setDirty(yoff, height);
 }
 
 void FontContext::fontstashError(void* _uptr, int _error, int _val) {
