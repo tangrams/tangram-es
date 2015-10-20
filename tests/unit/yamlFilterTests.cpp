@@ -52,8 +52,8 @@ void init() {
     bike.props.add("series", "CB");
     bike.props.add("check", "available");
 
-    ctx.setGlobal("$vroom", Value(1));
-    ctx.setGlobal("$zooooom", Value("false"));
+    ctx.setGlobal("$geometry", Value(1));
+    ctx.setGlobal("$zoom", Value("false"));
 }
 
 
@@ -159,7 +159,7 @@ TEST_CASE( "yaml-filter-tests: not", "[filters][core][yaml]") {
 //10. basic predicate with context
 TEST_CASE( "yaml-filter-tests: context filter", "[filters][core][yaml]") {
     init();
-    Filter filter = load("filter: {$vroom : 1}");
+    Filter filter = load("filter: {$geometry : 1}");
 
     REQUIRE(filter.eval(civic, ctx));
     REQUIRE(filter.eval(bmw1, ctx));
@@ -199,7 +199,7 @@ TEST_CASE( "yaml-filter-tests: boolean false filter as existence check", "[filte
 
 TEST_CASE( "yaml-filter-tests: boolean true filter as existence check for keyword", "[filters][core][yaml]") {
     init();
-    Filter filter = load("filter: {$vroom : 1}");
+    Filter filter = load("filter: {$geometry : 1}");
 
     REQUIRE(filter.eval(civic, ctx));
     REQUIRE(filter.eval(bmw1, ctx));
@@ -209,7 +209,7 @@ TEST_CASE( "yaml-filter-tests: boolean true filter as existence check for keywor
 
 TEST_CASE( "yaml-filter-tests: boolean false filter as existence check for keyword", "[filters][core][yaml]") {
     init();
-    Filter filter = load("filter: {$foo : false}");
+    Filter filter = load("filter: {$zoom : false}");
 
     REQUIRE(filter.eval(civic, ctx));
     REQUIRE(filter.eval(bmw1, ctx));

@@ -26,15 +26,23 @@ enum class FilterType : int {
     undefined
 };
 
+enum class FilterGlobal : int {
+    undefined,
+    zoom,
+    geometry,
+};
+
 struct Filter {
     struct Operator {
         std::vector<Filter> operands;
     };
     struct Equality {
+        FilterGlobal global;
         std::string key;
         std::vector<Value> values;
     };
     struct Range {
+        FilterGlobal global;
         std::string key;
         float min;
         float max;
@@ -66,11 +74,11 @@ struct Filter {
     }
     // Create an 'equality' filter
     inline static Filter MatchEquality(const std::string& k, const std::vector<Value>& vals) {
-        return { FilterType::equality, Equality{ k, vals }};
+        return { FilterType::equality, Equality{ globalType(k), k, vals }};
     }
     // Create a 'range' filter
     inline static Filter MatchRange(const std::string& k, float min, float max) {
-        return { FilterType::range, Range{ k, min, max }};
+        return { FilterType::range, Range{ globalType(k), k, min, max }};
     }
     // Create an 'existence' filter
     inline static Filter MatchExistence(const std::string& k, bool ex) {
@@ -82,5 +90,15 @@ struct Filter {
     }
 
     bool eval(const Feature& feat, const StyleContext& ctx) const;
+
+private:
+    static FilterGlobal globalType(const std::string& _key) {
+        if (_key == "$geometry") {
+            return FilterGlobal::geometry;
+        } else if (_key == "$zoom") {
+            return  FilterGlobal::zoom;
+        }
+        return  FilterGlobal::undefined;
+    }
 };
 }

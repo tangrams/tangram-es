@@ -32,46 +32,50 @@ bool Filter::eval(const Feature& feat, const StyleContext& ctx) const {
     }
     case FilterType::equality: {
         auto& f = data.get<Equality>();
-        auto& global = ctx.getGlobal(f.key);
 
-        if (!global.is<none_type>()) {
+        if (f.global == FilterGlobal::undefined) {
+            auto& value = feat.props.get(f.key);
             for (const auto& v : f.values) {
-                if (v == global) { return true; }
+                if (v == value) { return true; }
             }
-            return false;
-        }
-
-        auto& value = feat.props.get(f.key);
-        for (const auto& v : f.values) {
-            if (v == value) { return true; }
+        } else {
+            auto& global = ctx.getGlobal(f.key);
+            if (!global.is<none_type>()) {
+                for (const auto& v : f.values) {
+                    if (v == global) { return true; }
+                }
+                return false;
+            }
         }
 
         return false;
     }
     case FilterType::range: {
         auto& f = data.get<Range>();
-        auto& global = ctx.getGlobal(f.key);
 
-        if (!global.is<none_type>()) {
-            // only check range for numbers
-            if (global.is<int64_t>()) {
-                auto num = global.get<int64_t>();
+        if (f.global == FilterGlobal::undefined) {
+            auto& value = feat.props.get(f.key);
+            if (value.is<float>()) {
+                auto num =  value.get<float>();
                 return num >= f.min && num < f.max;
             }
-            if (global.is<float>()) {
-                auto num = global.get<float>();
+            if (value.is<int64_t>()) {
+                auto num =  value.get<int64_t>();
                 return num >= f.min && num < f.max;
             }
-            return false;
-        }
-        auto& value = feat.props.get(f.key);
-        if (value.is<float>()) {
-            auto num =  value.get<float>();
-            return num >= f.min && num < f.max;
-        }
-        if (value.is<int64_t>()) {
-            auto num =  value.get<int64_t>();
-            return num >= f.min && num < f.max;
+        } else {
+            auto& global = ctx.getGlobal(f.key);
+            if (!global.is<none_type>()) {
+                // only check range for numbers
+                if (global.is<int64_t>()) {
+                    auto num = global.get<int64_t>();
+                    return num >= f.min && num < f.max;
+                }
+                if (global.is<float>()) {
+                    auto num = global.get<float>();
+                    return num >= f.min && num < f.max;
+                }
+            }
         }
         return false;
     }
