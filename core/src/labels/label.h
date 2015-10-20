@@ -41,10 +41,12 @@ public:
     };
 
     struct Vertex {
-        Vertex(glm::vec2 pos, glm::vec2 uv, uint32_t color, uint32_t stroke = 0) : pos(pos), uv(uv), color(color), stroke(stroke) {}
+        Vertex(glm::vec2 pos, glm::vec2 uv, glm::vec3 extrude, uint32_t color, uint32_t stroke = 0)
+            : pos(pos), uv(uv), extrude(extrude), color(color), stroke(stroke) {}
 
         glm::vec2 pos;
         glm::vec2 uv;
+        glm::vec3 extrude;
         uint32_t color;
         uint32_t stroke;
         struct State {
