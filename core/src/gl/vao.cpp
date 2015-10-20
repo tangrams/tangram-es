@@ -26,7 +26,7 @@ void Vao::init(ShaderProgram& _program, const std::vector<std::pair<uint32_t, ui
 
     glGenVertexArrays(m_glnVAOs, m_glVAOs);
 
-    std::unordered_map<std::string, GLuint> locations;
+    fastmap<std::string, GLuint> locations;
 
     // FIXME (use a bindAttrib instead of getLocation) to make those locations shader independent
     for (auto& attrib : _layout.getAttribs()) {
