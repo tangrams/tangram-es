@@ -262,16 +262,13 @@ bool startUrlRequest(const std::string& _url, UrlCallback _callback) {
 }
 
 void cancelUrlRequest(const std::string& _url) {
-
     jstring jUrl = jniRenderThreadEnv->NewStringUTF(_url.c_str());
     jniRenderThreadEnv->CallVoidMethod(tangramInstance, cancelUrlRequestMID, jUrl);
-
 }
 
 void onUrlSuccess(JNIEnv* _jniEnv, jbyteArray _jBytes, jlong _jCallbackPtr) {
 
     size_t length = _jniEnv->GetArrayLength(_jBytes);
-
     std::vector<char> content;
     content.resize(length);
 
@@ -280,14 +277,14 @@ void onUrlSuccess(JNIEnv* _jniEnv, jbyteArray _jBytes, jlong _jCallbackPtr) {
     UrlCallback* callback = reinterpret_cast<UrlCallback*>(_jCallbackPtr);
     (*callback)(std::move(content));
     delete callback;
-
 }
 
 void onUrlFailure(JNIEnv* _jniEnv, jlong _jCallbackPtr) {
+    std::vector<char> empty;
 
     UrlCallback* callback = reinterpret_cast<UrlCallback*>(_jCallbackPtr);
+    (*callback)(std::move(empty));
     delete callback;
-
 }
 
 void setCurrentThreadPriority(int priority) {
