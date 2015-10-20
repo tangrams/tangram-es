@@ -35,7 +35,7 @@ void Vao::init(ShaderProgram& _program, const std::vector<std::pair<uint32_t, ui
     }
 
     int vertexOffset = 0;
-    for (int i = 0; i < _vertexOffsets.size(); ++i) {
+    for (size_t i = 0; i < _vertexOffsets.size(); ++i) {
         auto vertexIndexOffset = _vertexOffsets[i];
         int nVerts = vertexIndexOffset.second;
         glBindVertexArray(m_glVAOs[i]);

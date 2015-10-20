@@ -190,7 +190,7 @@ void VboMesh::draw(ShaderProgram& _shader) {
     size_t indiceOffset = 0;
     size_t vertexOffset = 0;
 
-    for (int i = 0; i < m_vertexOffsets.size(); ++i) {
+    for (size_t i = 0; i < m_vertexOffsets.size(); ++i) {
         auto& o = m_vertexOffsets[i];
         uint32_t nIndices = o.first;
         uint32_t nVertices = o.second;

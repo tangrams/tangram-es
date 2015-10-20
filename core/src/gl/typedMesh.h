@@ -126,7 +126,7 @@ void TypedMesh<T>::updateAttribute(Range _vertexRange, const A& _newAttributeVal
     if (_vertexRange.start < 0 || _vertexRange.length < 1) {
         return;
     }
-    if (_vertexRange.start + _vertexRange.length > m_nVertices) {
+    if (size_t(_vertexRange.start + _vertexRange.length) > m_nVertices) {
         //LOGW("Invalid range");
         return;
     }

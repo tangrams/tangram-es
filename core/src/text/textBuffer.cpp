@@ -36,7 +36,7 @@ bool TextBuffer::addLabel(const TextStyle::Parameters& _params, Label::Transform
             case TextTransform::capitalize:
                 text[0] = toupper(text[0], loc);
                 if (text.size() > 1) {
-                    for (auto i = 1; i < text.length(); ++i) {
+                    for (size_t i = 1; i < text.length(); ++i) {
                         if (text[i - 1] == ' ') {
                             text[i] = std::toupper(text[i], loc);
                         }
@@ -44,13 +44,13 @@ bool TextBuffer::addLabel(const TextStyle::Parameters& _params, Label::Transform
                 }
                 break;
             case TextTransform::lowercase:
-                for (auto i = 0; i < text.length(); ++i) {
+                for (size_t i = 0; i < text.length(); ++i) {
                     text[i] = std::tolower(text[i], loc);
                 }
                 break;
             case TextTransform::uppercase:
                 // TOOD : use to wupper when any wide character is detected
-                for (auto i = 0; i < text.length(); ++i) {
+                for (size_t i = 0; i < text.length(); ++i) {
                     text[i] = std::toupper(text[i], loc);
                 }
                 break;
