@@ -109,7 +109,9 @@ public:
      * @return the un-normalized distance 'into the screen' to the ground plane
      * (if < 0, intersection is behind the screen)
     */
-    float screenToGroundPlane(float& _screenX, float& _screenY);
+    double screenToGroundPlane(double& _screenX, double& _screenY);
+    /* Provide an overloaded method for platform specific API support, which pass float screen positions */
+    double screenToGroundPlane(float& _screenX, float& _screenY);
 
     /* Returns the set of all tiles visible at the current position and zoom */
     const std::set<TileID>& getVisibleTiles() { return m_visibleTiles; }
@@ -119,7 +121,9 @@ public:
 
     virtual ~View() {}
 
+    /* TODO: API for setting these */
     constexpr static float s_maxZoom = 18.0;
+    constexpr static float s_minZoom = 0.0;
 
     const glm::mat4& getOrthoViewportMatrix() const { return m_orthoViewport; };
 
@@ -129,11 +133,13 @@ protected:
 
     void updateMatrices();
     void updateTiles();
+    bool checkMapBound();
 
     std::unique_ptr<MapProjection> m_projection;
     std::set<TileID> m_visibleTiles;
 
     glm::dvec3 m_pos;
+    glm::dvec3 m_pos_prev = glm::dvec3(0.0, 0.0, 0.0);
     glm::vec3 m_eye;
 
     glm::mat4 m_view;
@@ -144,9 +150,12 @@ protected:
     glm::mat3 m_normalMatrix;
 
     float m_roll = 0.f;
+    float m_roll_prev = 0.f;
     float m_pitch = 0.f;
+    float m_pitch_prev = 0.f;
 
     float m_zoom;
+    float m_zoom_prev = 0.0f;
     float m_initZoom = 16.0;
 
     float m_width;

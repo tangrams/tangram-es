@@ -123,6 +123,16 @@ public:
     virtual glm::dvec2 TileCenter(const TileID _tileCoord) const = 0;
 
     /*
+     * Returns the bounds (projection units) of the map per the map projection
+     */
+    virtual BoundingBox MapBounds() const = 0;
+
+    /*
+     * Returns the bounds (lon, lat) of the map per the map projection
+     */
+    virtual BoundingBox MapLonLatBounds() const = 0;
+
+    /*
      * Returns the projection type of a given projection instance
      *   (example: ProjectionType::Mercator)
      */
@@ -158,6 +168,9 @@ public:
     virtual BoundingBox TileBounds(const TileID _tileCoord) const override;
     virtual BoundingBox TileLonLatBounds(const TileID _tileCoord) const override;
     virtual glm::dvec2 TileCenter(const TileID _tileCoord) const override;
+    /* Map Bounds for mercator projection */
+    virtual BoundingBox MapBounds() const override;
+    virtual BoundingBox MapLonLatBounds() const override;
     virtual double TileSize() const override;
 
     virtual ~MercatorProjection() {}

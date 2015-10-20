@@ -102,6 +102,16 @@ glm::dvec2 MercatorProjection::TileCenter(const TileID _tileCoord) const {
                           _tileCoord.z);
 }
 
+// Reference: https://en.wikipedia.org/wiki/Mercator_projection#Truncation_and_aspect_ratio
+BoundingBox MercatorProjection::MapLonLatBounds() const {
+    return { glm::dvec2(-180, -85.05113), glm::dvec2(180, 85.05113) } ;
+}
+
+BoundingBox MercatorProjection::MapBounds() const {
+    BoundingBox bound = MapLonLatBounds();
+    return { LonLatToMeters(bound.min), LonLatToMeters(bound.max) };
+}
+
 double MercatorProjection::TileSize() const { return m_TileSize; }
 
 }
