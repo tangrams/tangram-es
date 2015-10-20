@@ -174,7 +174,7 @@ void VboMesh::draw(ShaderProgram& _shader) {
             m_vaos = std::make_unique<Vao>();
 
             // Capture vao state
-            GLuint indexBuffer = m_nIndices > 0 ? m_glIndexBuffer : -1;
+            GLint indexBuffer = m_nIndices > 0 ? m_glIndexBuffer : -1;
 
             m_vaos->init(_shader, m_vertexOffsets, *m_vertexLayout, m_glVertexBuffer, indexBuffer);
         }

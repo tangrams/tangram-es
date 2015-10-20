@@ -19,7 +19,7 @@ Vao::~Vao() {
 }
 
 void Vao::init(ShaderProgram& _program, const std::vector<std::pair<uint32_t, uint32_t>>& _vertexOffsets,
-               VertexLayout& _layout, GLuint _vertexBuffer, GLuint _indexBuffer) {
+               VertexLayout& _layout, GLint _vertexBuffer, GLint _indexBuffer) {
 
     m_glnVAOs = _vertexOffsets.size();
     m_glVAOs = new GLuint[m_glnVAOs];
