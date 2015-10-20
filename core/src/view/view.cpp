@@ -173,7 +173,9 @@ void View::update() {
 
     }
 
-    if(!checkMapBound()) {
+    bool inBounds = checkMapBound();
+
+    if(!inBounds) {
 
         // Reset view values to previous legal values
         m_pos = m_pos_prev;
@@ -182,6 +184,8 @@ void View::update() {
         m_pitch = m_pitch_prev;
         m_dirtyMatrices = true;
         updateMatrices();
+
+        inBounds = checkMapBound();
     }
 
     m_pos_prev = m_pos;
@@ -198,7 +202,10 @@ void View::update() {
 
     // If the viewport dimention change and the view trapezoid is not within the mapbound,
     // zoom in to get view trapezoid within map bounds
-    if(!checkMapBound()) { m_zoom_prev += 1; }
+    if(!inBounds) {
+        m_zoom_prev += 1;
+        requestRender();
+    }
 }
 
 glm::dmat2 View::getBoundsRect() const {
