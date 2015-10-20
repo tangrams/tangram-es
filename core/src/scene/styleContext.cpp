@@ -35,6 +35,10 @@ StyleContext::StyleContext() {
         LOGE("Feature not assigned");
     }
 
+    setGlobal("point", GeometryType::points);
+    setGlobal("line", GeometryType::lines);
+    setGlobal("polygon", GeometryType::polygons);
+
     DUMP("init\n");
 }
 
@@ -74,7 +78,11 @@ void StyleContext::initFunctions(const Scene& _scene) {
 }
 
 void StyleContext::setFeature(const Feature& _feature) {
+    static const std::string _geometry("$geometry");
+
     m_feature = &_feature;
+
+    setGlobal(_geometry, _feature.geometryType);
 
     for (auto& item : _feature.props.items()) {
         addAccessor(item.key);
@@ -102,6 +110,10 @@ void StyleContext::setGlobal(const std::string& _key, const Value& _val) {
 
     } else if (_val.is<std::string>()) {
         duk_push_string(m_ctx, _val.get<std::string>().c_str());
+        duk_put_global_string(m_ctx, _key.c_str());
+
+    } else if (_val.is<int64_t>()) {
+        duk_push_number(m_ctx, (int)_val.get<int64_t>());
         duk_put_global_string(m_ctx, _key.c_str());
     }
 }
