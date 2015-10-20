@@ -6,7 +6,7 @@
 #import <cstdarg>
 #import <fstream>
 
-#include "platform.h"
+#include "platform_ios.h"
 #include "ViewController.h"
 
 static ViewController* viewController;
@@ -95,7 +95,7 @@ std::string stringFromFile(const char* _path, PathType _type) {
     
     NSString* path = resolvePath(_path, _type);
     NSString* str = [NSString stringWithContentsOfFile:path
-                                              encoding:NSASCIIStringEncoding
+                                          usedEncoding:NULL
                                                  error:NULL];
 
     if (str == nil) {
@@ -176,5 +176,7 @@ void cancelUrlRequest(const std::string& _url) {
 }
 
 void setCurrentThreadPriority(int priority) {}
+
+void initGLExtensions() {}
 
 #endif //PLATFORM_IOS

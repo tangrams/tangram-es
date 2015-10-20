@@ -1,9 +1,12 @@
 #pragma once
 
-#include "gl/gl_fwd.h"
+#include "gl.h"
 #include "vertexLayout.h"
+#include "vao.h"
 #include "util/types.h"
+#include "platform.h"
 
+#include <string>
 #include <vector>
 #include <memory>
 
@@ -87,6 +90,9 @@ protected:
 
     size_t m_nVertices;
     GLuint m_glVertexBuffer;
+
+    std::unique_ptr<Vao> m_vaos;
+
     // Compiled vertices for upload
     GLbyte* m_glVertexData = nullptr;
 
@@ -106,9 +112,8 @@ protected:
     GLsizei m_dirtySize;
     GLintptr m_dirtyOffset;
 
-    void checkValidity();
+    bool checkValidity();
 
 };
-
 
 }

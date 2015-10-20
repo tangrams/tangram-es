@@ -370,6 +370,8 @@ bool TileManager::addTile(TileSet& tileSet, const TileID& _tileID) {
     if (tile) {
         m_tiles.push_back(tile);
 
+        // Update tile origin based on wrap (set in the new tileID)
+        tile->updateTileOrigin();
         // Reset tile on potential internal dynamic data set
         tile->reset();
 

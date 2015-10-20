@@ -1,6 +1,6 @@
 #pragma once
 
-#include "gl/gl_fwd.h"
+#include "gl.h"
 
 #include <vector>
 #include <unordered_map>
@@ -12,7 +12,7 @@ namespace Tangram {
 class ShaderProgram;
 
 class VertexLayout {
-    
+
 public:
 
     struct VertexAttrib {
@@ -27,10 +27,14 @@ public:
 
     virtual ~VertexLayout();
 
-    void enable(ShaderProgram& _program, size_t byteOffset, void* _ptr = nullptr);
+    void enable(ShaderProgram& _program, size_t _byteOffset, void* _ptr = nullptr);
+
+    void enable(const std::unordered_map<std::string, GLuint>& _locations, size_t _bytOffset);
 
     GLint getStride() const { return m_stride; };
-    
+
+    const std::vector<VertexAttrib> getAttribs() const { return m_attribs; }
+
     size_t getOffset(std::string _attribName);
 
 private:

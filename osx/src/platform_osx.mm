@@ -8,8 +8,7 @@
 #include <sys/resource.h>
 #include <sys/syscall.h>
 
-#include "platform.h"
-#include "platform_gl.h"
+#include "platform_osx.h"
 
 static bool s_isContinuousRendering = false;
 static NSMutableString* s_resourceRoot = NULL;
@@ -80,7 +79,7 @@ std::string stringFromFile(const char* _path, PathType _type) {
     
     NSString* path = resolvePath(_path, _type);
     NSString* str = [NSString stringWithContentsOfFile:path
-                                              encoding:NSASCIIStringEncoding
+                                          usedEncoding:NULL
                                                  error:NULL];
 
     if (str == nil) {
@@ -174,5 +173,7 @@ void setCurrentThreadPriority(int priority) {
     int tid = syscall(SYS_gettid);
     setpriority(PRIO_PROCESS, tid, priority);
 }
+
+void initGLExtensions() {}
 
 #endif //PLATFORM_OSX

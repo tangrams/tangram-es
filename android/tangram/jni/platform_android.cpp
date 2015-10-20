@@ -1,12 +1,21 @@
 #ifdef PLATFORM_ANDROID
 
-#include "platform.h"
+#include "platform_android.h"
 #include "tangram.h"
+
+#include <GLES2/gl2platform.h>
+
+#ifndef GL_GLEXT_PROTOTYPES
+#define GL_GLEXT_PROTOTYPES 1
+#endif
+
+#include <GLES2/gl2.h>
+#include <GLES2/gl2ext.h>
+#include <dlfcn.h> // dlopen, dlsym
 
 #include <android/log.h>
 #include <android/asset_manager.h>
 #include <android/asset_manager_jni.h>
-#include <jni.h>
 #include <cstdarg>
 
 #include <libgen.h>
@@ -39,6 +48,10 @@ static AAssetManager* assetManager;
 static bool s_isContinuousRendering = false;
 static bool s_useInternalResources = true;
 static std::string s_resourceRoot;
+
+PFNGLBINDVERTEXARRAYOESPROC glBindVertexArrayOESEXT = 0;
+PFNGLDELETEVERTEXARRAYSOESPROC glDeleteVertexArraysOESEXT = 0;
+PFNGLGENVERTEXARRAYSOESPROC glGenVertexArraysOESEXT = 0;
 
 void setupJniEnv(JNIEnv* _jniEnv, jobject _tangramInstance, jobject _assetManager) {
     _jniEnv->GetJavaVM(&jvm);
@@ -291,6 +304,14 @@ void featureSelectionCallback(JNIEnv* jniEnv, const std::vector<Tangram::TouchIt
     jobject object = jniEnv->NewObject(propertiesClass, propertiesConstructorMID, jresult, true);
 
     jniEnv->CallVoidMethod(tangramInstance, featureSelectionCbMID, object);
+}
+
+void initGLExtensions() {
+    void* libhandle = dlopen("libGLESv2.so", RTLD_LAZY);
+
+    glBindVertexArrayOESEXT = (PFNGLBINDVERTEXARRAYOESPROC) dlsym(libhandle, "glBindVertexArrayOES");
+    glDeleteVertexArraysOESEXT = (PFNGLDELETEVERTEXARRAYSOESPROC) dlsym(libhandle, "glDeleteVertexArraysOES");
+    glGenVertexArraysOESEXT = (PFNGLGENVERTEXARRAYSOESPROC) dlsym(libhandle, "glGenVertexArraysOES");
 }
 
 

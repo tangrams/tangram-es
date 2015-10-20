@@ -21,7 +21,7 @@ endif()
 
 # add sources and include headers
 find_sources_and_include_directories(
-	${PROJECT_SOURCE_DIR}/rpi/src/*.h 
+	${PROJECT_SOURCE_DIR}/rpi/src/*.h
 	${PROJECT_SOURCE_DIR}/rpi/src/*.cpp)
 
 # add sources and include headers
@@ -42,12 +42,11 @@ include_directories(${CORE_LIBRARIES_INCLUDE_DIRS})
 # link and build functions
 function(link_libraries)
 
-	target_link_libraries(${EXECUTABLE_NAME} -lcurl) #use system libcurl
-    target_link_libraries(${EXECUTABLE_NAME} core)
+    target_link_libraries(${EXECUTABLE_NAME} ${CORE_LIBRARY} -lcurl)
 
 endfunction()
 
-function(build) 
+function(build)
 
     add_executable(${EXECUTABLE_NAME} ${SOURCES})
 
