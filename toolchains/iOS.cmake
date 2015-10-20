@@ -59,7 +59,8 @@ endmacro(add_framework)
 
 add_executable(${EXECUTABLE_NAME} ${APP_TYPE} ${HEADERS} ${SOURCES} ${RESOURCES} ${IOS_RESOURCES})
 
-target_link_libraries(${EXECUTABLE_NAME} core)
+target_link_libraries(${EXECUTABLE_NAME}
+  ${CORE_LIBRARY})
 
 # setting xcode properties
 set_target_properties(${EXECUTABLE_NAME} PROPERTIES

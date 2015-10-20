@@ -42,7 +42,8 @@ if(APPLICATION)
   add_executable(${EXECUTABLE_NAME} MACOSX_BUNDLE ${SOURCES} ${RESOURCES} ${OSX_RESOURCES})
 
   target_link_libraries(${EXECUTABLE_NAME}
-    core glfw
+    ${CORE_LIBRARY}
+    glfw
     ${OPENGL_LIBRARIES})
 
   # add resource files and property list

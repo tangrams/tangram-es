@@ -10,7 +10,8 @@ foreach(_src_file_path ${TEST_SOURCES})
   add_executable(${EXECUTABLE_NAME} ${_src_file_path})
 
   target_link_libraries(${EXECUTABLE_NAME}
-    core platform_mock -lpthread)
+    ${CORE_LIBRARY}
+    platform_mock -lpthread)
 
   target_include_directories(${EXECUTABLE_NAME}
     PUBLIC

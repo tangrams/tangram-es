@@ -36,11 +36,11 @@ include_directories(/opt/vc/include/interface/vmcs_host/linux)
 
 # load core library
 add_subdirectory(${PROJECT_SOURCE_DIR}/core)
-include_directories(${CORE_INCLUDE_DIRS})
 include_directories(${CORE_LIBRARIES_INCLUDE_DIRS})
 
 add_executable(${EXECUTABLE_NAME} ${SOURCES})
 
-target_link_libraries(${EXECUTABLE_NAME} core -lcurl)
+target_link_libraries(${EXECUTABLE_NAME}
+    ${CORE_LIBRARY} -lcurl)
 
 add_dependencies(${EXECUTABLE_NAME} copy_resources)

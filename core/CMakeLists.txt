@@ -1,6 +1,7 @@
 # Defines the following cached variables
 #   - CORE_INCLUDE_DIRS, the path where to CORE headers are located
 #   - CORE_LIBRARIES_INCLUDE_DIRS, the path to CORE libraries headers
+#   - CORE_LIBRARY, the core library name
 
 project(core)
 
@@ -14,6 +15,7 @@ endif()
 set(INCLUDE_DIR include)
 set(DEPENDENCIES_DIR dependencies)
 set(SOURCE_DIR src)
+set(CORE_LIBRARY core CACHE INTERNAL "core library name" FORCE)
 
 add_definitions(-DLOG_LEVEL=2)
 
@@ -43,39 +45,29 @@ set(CORE_LIBRARIES_INCLUDE_DIRS
     ${PROJECT_SOURCE_DIR}/${INCLUDE_DIR}/isect2d/include
     CACHE INTERNAL "core libraries include directories" FORCE)
 
-#if(NOT DEFINED CORE_LIB_NAME)
-set(CORE_LIB_NAME core)
-#endif()
+add_library(${CORE_LIBRARY} ${FOUND_SOURCES})
 
-add_library(${CORE_LIB_NAME} ${FOUND_SOURCES})
-
-target_link_libraries(${CORE_LIB_NAME}
+target_link_libraries(${CORE_LIBRARY}
   PUBLIC
   duktape
   css-color-parser-cpp
   geojson-vt-cpp
   yaml-cpp)
 
-target_include_directories(${CORE_LIB_NAME}
+target_include_directories(${CORE_LIBRARY}
   PUBLIC
   ${INCLUDE_DIRS})
 
-target_compile_options(${CORE_LIB_NAME}
+target_compile_options(${CORE_LIBRARY}
   PUBLIC
   ${CORE_CXX_FLAGS})
 
-target_compile_definitions(${CORE_LIB_NAME}
+target_compile_definitions(${CORE_LIBRARY}
   PUBLIC
   ${CORE_COMPILE_DEFS})
 
 # make groups for xcode
 group_recursive_sources(src "src")
-
-# post build commands
-add_custom_command(TARGET ${CORE_LIB_NAME}
-        POST_BUILD
-        COMMAND ${CORE_POSTBUILD_COMMANDS}
-        COMMENT ${CORE_COMMAND_MSG} VERBATIM)
 
 ### Resources
 file(GLOB_RECURSE RESOURCE_FILES "${CMAKE_CURRENT_SOURCE_DIR}/resources/*")

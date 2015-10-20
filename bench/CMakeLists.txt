@@ -15,7 +15,10 @@ foreach(_src_file_path ${BENCH_SOURCES})
   add_executable(${EXECUTABLE_NAME} ${_src_file_path})
 
   target_link_libraries(${EXECUTABLE_NAME}
-    benchmark core platform_mock -lpthread)
+    ${CORE_LIBRARY}
+    benchmark
+    platform_mock
+    -lpthread)
 
   set_target_properties(${EXECUTABLE_NAME}
     PROPERTIES

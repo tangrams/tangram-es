@@ -35,7 +35,8 @@ if(APPLICATION)
   add_executable(${EXECUTABLE_NAME} ${SOURCES})
 
   target_link_libraries(${EXECUTABLE_NAME}
-    core -lcurl glfw
+    ${CORE_LIBRARY}
+    -lcurl glfw
     # only used when not using external lib
     -ldl
     ${GLFW_LIBRARIES}
