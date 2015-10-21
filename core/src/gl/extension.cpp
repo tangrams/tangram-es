@@ -31,9 +31,9 @@ void printAvailableExtensions() {
 
     ss >> std::noskipws;
     std::string extension;
-    LOG("GL Extensions available: ");
+    LOGD("GL Extensions available: ");
     while (std::getline(ss, extension, ' ')) {
-        LOG("\t - %s", extension.c_str());
+        LOGD("\t - %s", extension.c_str());
     }
 }
 
