@@ -183,6 +183,7 @@ void View::update() {
         m_zoom = m_zoom_prev;
         m_pitch = m_pitch_prev;
         m_dirtyMatrices = true;
+        m_dirtyTiles = true;
         updateMatrices();
 
         inBounds = checkMapBound();
