@@ -88,13 +88,9 @@ void Tile::build(StyleContext& _ctx, const Scene& _scene, const TileData& _data,
 
                 if (!layerContainsCollection) { continue; }
             }
+
             for (const auto& feat : collection.features) {
-                _ctx.setFeature(feat);
-
-                styling.styles.clear();
-                if (!datalayer.match(feat, _ctx, styling)) { continue; }
-
-                styling.apply(*this, feat, _scene, _ctx);
+                styling.apply(feat, _scene, datalayer, _ctx, *this);
             }
         }
     }

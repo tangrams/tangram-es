@@ -18,7 +18,8 @@ struct StaticDrawRule {
     int styleId;
     std::vector<StyleParam> parameters;
 
-    StaticDrawRule(std::string _styleName, int _styleId, const std::vector<StyleParam>& _parameters);
+    StaticDrawRule(std::string _styleName, int _styleId,
+                   const std::vector<StyleParam>& _parameters);
 
     std::string toString() const;
 
@@ -44,10 +45,6 @@ public:
     const auto& filter() const { return m_filter; }
     const auto& rules() const { return m_rules; }
     const auto& sublayers() const { return m_sublayers; }
-
-    // Match and combine draw rules that apply to the given Feature in the given Context
-    bool match(const Feature& _feat, const StyleContext& _ctx, Styling& _styling) const;
-
 };
 
 }

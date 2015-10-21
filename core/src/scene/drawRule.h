@@ -3,6 +3,7 @@
 #include "scene/styleParam.h"
 
 #include <vector>
+#include <deque>
 
 namespace Tangram {
 
@@ -10,6 +11,7 @@ class Style;
 class Scene;
 class Tile;
 class StyleContext;
+class SceneLayer;
 struct Feature;
 struct StaticDrawRule;
 
@@ -57,11 +59,25 @@ private:
 };
 
 struct Styling {
-    std::vector<DrawRule> styles;
 
-    void apply(Tile& _tile, const Feature& _feature, const Scene& _scene, StyleContext& _ctx);
+    /* Determine and apply DrawRules for a @_feature and add
+     * the result to @_tile
+     */
+    void apply(const Feature& _feature, const Scene& _scene,
+               const SceneLayer& _sceneLayer,
+               StyleContext& _ctx, Tile& _tile);
 
+protected:
     void mergeRules(const std::vector<StaticDrawRule>& rules);
+
+    // Reusable 'styles' and 'processQ'
+    std::vector<DrawRule> styles;
+    // NB: Minimal memory usage of deque:
+    // http://info.prelert.com/blog/stl-container-memory-usage
+    // libdc++   4096 + 8 bytes heap
+    // libstdc++ 512 + 64 bytes heap
+    std::deque<std::vector<SceneLayer>::const_iterator> processQ;
+
 };
 
 }
