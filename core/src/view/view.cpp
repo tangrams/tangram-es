@@ -175,6 +175,7 @@ void View::update() {
     if (m_dirtyMatrices) {
 
         updateMatrices(); // Resets dirty flag
+        setPitch(m_pitch); // Ensure pitch is still valid for viewport
         m_changed = true;
 
     }
