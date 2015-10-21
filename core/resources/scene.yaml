@@ -236,7 +236,7 @@ layers:
             icons:
                 interactive: true
                 offset: [0px, 0px]
-                size: [[13, 30px], [18, 10px]]
+                size: [[15, 80px], [17, 20px]]
                 priority: -1000
                 collide: true
                 transition:

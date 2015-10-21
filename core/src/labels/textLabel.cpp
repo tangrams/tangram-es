@@ -7,7 +7,7 @@ TextLabel::TextLabel(Label::Transform _transform, Type _type, glm::vec2 _dim,
     : Label(_transform, _dim, _type, static_cast<LabelMesh&>(_mesh), _vertexRange, _options)
 {}
 
-void TextLabel::updateBBoxes() {
+void TextLabel::updateBBoxes(float _zoomFract) {
     glm::vec2 t = glm::vec2(cos(m_transform.state.rotation), sin(m_transform.state.rotation));
     glm::vec2 tperp = glm::vec2(-t.y, t.x);
     glm::vec2 obbCenter;

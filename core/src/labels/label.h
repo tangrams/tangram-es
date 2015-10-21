@@ -100,7 +100,7 @@ public:
     /* Gets for label options: color and offset */
     const Options& getOptions() const { return m_options; }
 
-    bool update(const glm::mat4& _mvp, const glm::vec2& _screenSize, float _dt);
+    bool update(const glm::mat4& _mvp, const glm::vec2& _screenSize, float _dt, float _zoomFract);
 
     /* Push the pending transforms to the vbo by updating the vertices */
     void pushTransform();
@@ -109,7 +109,7 @@ public:
     bool updateScreenTransform(const glm::mat4& _mvp, const glm::vec2& _screenSize,
                                bool _testVisibility = true);
 
-    virtual void updateBBoxes() = 0;
+    virtual void updateBBoxes(float _zoomFract) = 0;
 
     /* Sets the occlusion */
     void setOcclusion(bool _occlusion);
@@ -135,7 +135,7 @@ private:
 
     inline void enterState(const State& _state, float _alpha = 1.0f);
 
-    bool updateState(const glm::mat4& _mvp, const glm::vec2& _screenSize, float _dt);
+    bool updateState(const glm::mat4& _mvp, const glm::vec2& _screenSize, float _dt, float _zoomFract);
 
     void setAlpha(float _alpha);
 

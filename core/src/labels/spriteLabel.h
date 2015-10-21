@@ -7,10 +7,14 @@ namespace Tangram {
 class SpriteLabel : public Label {
 public:
 
-    SpriteLabel(Label::Transform _transform, glm::vec2 _size, LabelMesh& _mesh, int _vertexOffset, Label::Options _options);
+    SpriteLabel(Label::Transform _transform, glm::vec2 _size, LabelMesh& _mesh, int _vertexOffset,
+                Label::Options _options, float _extrudeScale);
 
-    void updateBBoxes() override;
+    void updateBBoxes(float _zoomFract) override;
 
+private:
+
+    float m_extrudeScale;
 };
 
 }

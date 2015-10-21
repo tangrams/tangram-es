@@ -42,6 +42,9 @@ void Labels::update(const View& _view, float _dt, const std::vector<std::unique_
 
     glm::vec2 screenSize = glm::vec2(_view.getWidth(), _view.getHeight());
 
+    float z = _view.getZoom();
+    float dz = z - std::floor(z);
+
     //// Collect labels from visible tiles
 
     for (const auto& tile : _tiles) {
@@ -62,7 +65,7 @@ void Labels::update(const View& _view, float _dt, const std::vector<std::unique_
             if (!labelMesh) { continue; }
 
             for (auto& label : labelMesh->getLabels()) {
-                m_needUpdate |= label->update(mvp, screenSize, _dt);
+                m_needUpdate |= label->update(mvp, screenSize, _dt, dz);
 
                 if (label->canOcclude()) {
                     m_aabbs.push_back(label->getAABB());
@@ -128,6 +131,9 @@ const std::vector<TouchItem>& Labels::getFeaturesAtPoint(const View& _view, floa
 
     OBB obb(_x - thumbSize/2, _y - thumbSize/2, 0, thumbSize, thumbSize);
 
+    float z = _view.getZoom();
+    float dz = z - std::floor(z);
+
     for (const auto& tile : _tiles) {
 
         glm::mat4 mvp = _view.getViewProjectionMatrix() * tile->getModelMatrix();
@@ -146,7 +152,7 @@ const std::vector<TouchItem>& Labels::getFeaturesAtPoint(const View& _view, floa
 
                 if (!_visibleOnly) {
                     label->updateScreenTransform(mvp, screenSize, false);
-                    label->updateBBoxes();
+                    label->updateBBoxes(dz);
                 }
 
                 if (isect2d::intersect(label->getOBB(), obb)) {

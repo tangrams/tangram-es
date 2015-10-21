@@ -11,7 +11,7 @@ public:
     TextLabel(Label::Transform _transform, Type _type,
               glm::vec2 _dim, TextBuffer& _mesh, Range _vertexRange, Label::Options _options);
 
-    void updateBBoxes() override;
+    void updateBBoxes(float _zoomFract) override;
 
 };
 
