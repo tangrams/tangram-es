@@ -13,6 +13,7 @@
 #include "util/builders.h"
 #include "view/view.h"
 #include "data/propertyItem.h" // Include wherever Properties is used!
+#include "scene/stops.h"
 
 #include "glm/gtc/type_ptr.hpp"
 
@@ -28,7 +29,7 @@ void PointStyle::constructVertexLayout() {
     m_vertexLayout = std::shared_ptr<VertexLayout>(new VertexLayout({
         {"a_position", 2, GL_FLOAT, false, 0},
         {"a_uv", 2, GL_FLOAT, false, 0},
-        {"a_extrude", 3, GL_FLOAT, false, 0},
+        {"a_extrude", 2, GL_FLOAT, false, 0},
         {"a_color", 4, GL_UNSIGNED_BYTE, true, 0},
         {"a_stroke", 4, GL_UNSIGNED_BYTE, true, 0},
         {"a_screenPosition", 2, GL_FLOAT, false, 0},
@@ -57,7 +58,7 @@ VboMesh* PointStyle::newMesh() const {
     return new LabelMesh(m_vertexLayout, m_drawMode);
 }
 
-PointStyle::Parameters PointStyle::applyRule(const DrawRule& _rule, const Properties& _props) const {
+PointStyle::Parameters PointStyle::applyRule(const DrawRule& _rule, const Properties& _props, float _zoom) const {
 
     Parameters p;
     glm::vec2 size;
@@ -80,7 +81,13 @@ PointStyle::Parameters PointStyle::applyRule(const DrawRule& _rule, const Proper
 
     auto sizeParam = _rule.findParameter(StyleParamKey::size);
     if (sizeParam.stops && sizeParam.value.is<float>()) {
-        p.size = glm::vec2(sizeParam.value.get<float>());
+        float lowerSize = sizeParam.value.get<float>();
+        float higherSize = sizeParam.stops->evalWidth(_zoom + 1);
+        p.extrudeScale = (higherSize - lowerSize) * 0.5f;
+
+        LOG("%f", p.extrudeScale);
+
+        p.size = glm::vec2(lowerSize);
     } else if (_rule.get(StyleParamKey::size, size)) {
         if (size.x == 0.f || std::isnan(size.y)) {
             p.size = glm::vec2(size.x);
@@ -99,11 +106,11 @@ PointStyle::Parameters PointStyle::applyRule(const DrawRule& _rule, const Proper
 }
 
 void PointStyle::pushQuad(std::vector<Label::Vertex>& _vertices, const glm::vec2& _size,
-                          const glm::vec2& _uvBL, const glm::vec2& _uvTR, unsigned int _color) const {
-    _vertices.push_back({{-_size.x, -_size.y}, {_uvBL.x, _uvBL.y}, {0, 0, 0}, _color});
-    _vertices.push_back({{-_size.x, _size.y}, {_uvBL.x, _uvTR.y}, {2, 0, 0}, _color});
-    _vertices.push_back({{_size.x, -_size.y}, {_uvTR.x, _uvBL.y}, {1, 0, 0}, _color});
-    _vertices.push_back({{_size.x, _size.y}, {_uvTR.x, _uvTR.y}, {3, 0, 0}, _color});
+                          const glm::vec2& _uvBL, const glm::vec2& _uvTR, unsigned int _color, float _extrudeScale) const {
+    _vertices.push_back({{-_size.x, -_size.y}, {_uvBL.x, _uvBL.y}, {0, _extrudeScale}, _color});
+    _vertices.push_back({{-_size.x,  _size.y}, {_uvBL.x, _uvTR.y}, {2, _extrudeScale}, _color});
+    _vertices.push_back({{_size.x,  -_size.y}, {_uvTR.x, _uvBL.y}, {1, _extrudeScale}, _color});
+    _vertices.push_back({{_size.x,   _size.y}, {_uvTR.x, _uvTR.y}, {3, _extrudeScale}, _color});
 }
 
 bool PointStyle::getUVQuad(Parameters& _params, glm::vec4& _quad) const {
@@ -139,7 +146,7 @@ bool PointStyle::getUVQuad(Parameters& _params, glm::vec4& _quad) const {
 
 void PointStyle::buildPoint(const Point& _point, const DrawRule& _rule, const Properties& _props,
                             VboMesh& _mesh, Tile& _tile) const {
-    Parameters p = applyRule(_rule, _props);
+    Parameters p = applyRule(_rule, _props, _tile.getID().z);
     glm::vec4 uvsQuad;
 
     if (!p.valid || !getUVQuad(p, uvsQuad)) {
@@ -154,13 +161,13 @@ void PointStyle::buildPoint(const Point& _point, const DrawRule& _rule, const Pr
     std::vector<Label::Vertex> vertices;
 
     vertices.reserve(4);
-    pushQuad(vertices, p.size * 0.5f, {uvsQuad.x, uvsQuad.y}, {uvsQuad.z, uvsQuad.w}, p.color);
+    pushQuad(vertices, p.size * 0.5f, {uvsQuad.x, uvsQuad.y}, {uvsQuad.z, uvsQuad.w}, p.color, p.extrudeScale);
     mesh.addVertices(std::move(vertices), {});
 }
 
 void PointStyle::buildLine(const Line& _line, const DrawRule& _rule, const Properties& _props,
                            VboMesh& _mesh, Tile& _tile) const {
-    Parameters p = applyRule(_rule, _props);
+    Parameters p = applyRule(_rule, _props, _tile.getID().z);
     glm::vec4 uvsQuad;
 
     if (!p.valid || !getUVQuad(p, uvsQuad)) {
@@ -176,7 +183,7 @@ void PointStyle::buildLine(const Line& _line, const DrawRule& _rule, const Prope
         Label::Transform transform = { glm::vec2(_line[i]) };
 
         mesh.addLabel(std::make_unique<SpriteLabel>(transform, p.size, mesh, _mesh.numVertices(), p.labelOptions));
-        pushQuad(vertices, p.size * 0.5f, {uvsQuad.x, uvsQuad.y}, {uvsQuad.z, uvsQuad.w}, p.color);
+        pushQuad(vertices, p.size * 0.5f, {uvsQuad.x, uvsQuad.y}, {uvsQuad.z, uvsQuad.w}, p.color, p.extrudeScale);
     }
 
     mesh.addVertices(std::move(vertices), {});
@@ -184,7 +191,7 @@ void PointStyle::buildLine(const Line& _line, const DrawRule& _rule, const Prope
 
 void PointStyle::buildPolygon(const Polygon& _polygon, const DrawRule& _rule, const Properties& _props,
                               VboMesh& _mesh, Tile& _tile) const {
-    Parameters p = applyRule(_rule, _props);
+    Parameters p = applyRule(_rule, _props, _tile.getID().z);
     glm::vec4 uvsQuad;
 
     if (!p.valid || !getUVQuad(p, uvsQuad)) {
@@ -206,7 +213,7 @@ void PointStyle::buildPolygon(const Polygon& _polygon, const DrawRule& _rule, co
                 Label::Transform transform = { glm::vec2(point) };
 
                 mesh.addLabel(std::make_unique<SpriteLabel>(transform, p.size, mesh, _mesh.numVertices(), p.labelOptions));
-                pushQuad(vertices, p.size * 0.5f, {uvsQuad.x, uvsQuad.y}, {uvsQuad.z, uvsQuad.w}, p.color);
+                pushQuad(vertices, p.size * 0.5f, {uvsQuad.x, uvsQuad.y}, {uvsQuad.z, uvsQuad.w}, p.color, p.extrudeScale);
             }
         }
     } else {
@@ -215,7 +222,7 @@ void PointStyle::buildPolygon(const Polygon& _polygon, const DrawRule& _rule, co
         Label::Transform transform = { c };
 
         mesh.addLabel(std::make_unique<SpriteLabel>(transform, p.size, mesh, _mesh.numVertices(), p.labelOptions));
-        pushQuad(vertices, p.size * 0.5f, {uvsQuad.x, uvsQuad.y}, {uvsQuad.z, uvsQuad.w}, p.color);
+        pushQuad(vertices, p.size * 0.5f, {uvsQuad.x, uvsQuad.y}, {uvsQuad.z, uvsQuad.w}, p.color, p.extrudeScale);
     }
 
     mesh.addVertices(std::move(vertices), {});
