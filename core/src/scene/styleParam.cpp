@@ -298,7 +298,7 @@ int StyleParam::parseValueUnitPair(const std::string& _value, size_t start,
 
     if (start >= _value.length()) { return start; }
 
-    for (int i = 0; i < units.size(); ++i) {
+    for (size_t i = 0; i < units.size(); ++i) {
         const auto& unit = units[i];
         std::string valueUnit;
         if (unit == _value.substr(start, std::min<int>(_value.length(), unit.length()))) {
