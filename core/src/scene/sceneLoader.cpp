@@ -958,9 +958,10 @@ void SceneLoader::loadCameras(Node _cameras, Scene& _scene) {
 
         }
 
-        double x = -74.00976419448854;
-        double y = 40.70532700869127;
-        float z = 16;
+        // Default is world origin at 0 zoom
+        double x = 0;
+        double y = 0;
+        float z = 0;
 
         if (Node position = camera["position"]) {
             x = position[0].as<double>();
