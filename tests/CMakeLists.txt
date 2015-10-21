@@ -1,4 +1,16 @@
 
+add_library(platform_test
+  ${CMAKE_CURRENT_SOURCE_DIR}/src/catch.cpp)
+
+target_link_libraries(platform_test
+  PUBLIC
+  platform_mock
+  -lpthread)
+
+target_include_directories(platform_test
+    PUBLIC
+    ${CMAKE_CURRENT_SOURCE_DIR}/catch)
+
 file(GLOB TEST_SOURCES ${CMAKE_CURRENT_SOURCE_DIR}/unit/*.cpp)
 
 # create an executable per test
@@ -11,11 +23,7 @@ foreach(_src_file_path ${TEST_SOURCES})
 
   target_link_libraries(${EXECUTABLE_NAME}
     ${CORE_LIBRARY}
-    platform_mock -lpthread)
-
-  target_include_directories(${EXECUTABLE_NAME}
-    PUBLIC
-    ${CMAKE_CURRENT_SOURCE_DIR}/catch)
+    platform_test)
 
   set_target_properties(${EXECUTABLE_NAME}
     PROPERTIES
