@@ -17,13 +17,15 @@ double invLodFunc(double d) {
 }
 
 View::View(int _width, int _height, ProjectionType _projType) :
+    m_obliqueAxis(0, 1),
     m_width(0),
     m_height(0),
+    m_type(CameraType::perspective),
     m_changed(false) {
 
     setMapProjection(_projType);
-    setZoom(m_initZoom); // Arbitrary zoom for testing
     setSize(_width, _height);
+    setZoom(m_initZoom); // Arbitrary zoom for testing
 
     setPosition(0.0, 0.0);
 }
@@ -110,7 +112,6 @@ void View::setPosition(double _x, double _y) {
 
     m_pos.x = _x;
     m_pos.y = _y;
-
     m_dirtyTiles = true;
 
 }
@@ -134,7 +135,12 @@ void View::setRoll(float _roll) {
 
 void View::setPitch(float _pitch) {
 
-    m_pitch = glm::clamp(_pitch, 0.f, (float)HALF_PI);
+    float max_pitch = HALF_PI;
+    if (m_type != CameraType::perspective) {
+        // Prevent projection plane from intersecting ground plane
+        max_pitch = atan2(m_pos.z, m_height * .5f);
+    }
+    m_pitch = glm::clamp(_pitch, 0.f, max_pitch);
     m_dirtyMatrices = true;
     m_dirtyTiles = true;
 
@@ -169,6 +175,7 @@ void View::update() {
     if (m_dirtyMatrices) {
 
         updateMatrices(); // Resets dirty flag
+        setPitch(m_pitch); // Ensure pitch is still valid for viewport
         m_changed = true;
 
     }
@@ -232,14 +239,26 @@ double View::screenToGroundPlane(double& _screenX, double& _screenY) {
     // Cast a ray and find its intersection with the z = 0 plane,
     // following the technique described here: http://antongerdelan.net/opengl/raycasting.html
 
-    // Ray from camera in clip space
-    glm::dvec4 ray_clip = { 2. * _screenX / m_vpWidth - 1., 1. - 2. * _screenY / m_vpHeight, -1., 1. };
-    glm::dvec4 ray_eye = m_invViewProj * ray_clip;
-    glm::dvec3 ray_world = glm::dvec3(ray_eye / ray_eye.w) - glm::dvec3(m_eye);
+    glm::dvec4 target_clip = { 2. * _screenX / m_vpWidth - 1., 1. - 2. * _screenY / m_vpHeight, -1., 1. };
+    glm::dvec4 target_world = m_invViewProj * target_clip;
+    target_world /= target_world.w;
+
+    glm::dvec4 origin_world;
+    switch (m_type) {
+        case CameraType::perspective:
+            origin_world = glm::dvec4(m_eye, 1);
+            break;
+        case CameraType::isometric:
+        case CameraType::flat:
+            origin_world = m_invViewProj * (target_clip * glm::dvec4(1, 1, 0, 1));
+            break;
+    }
+
+    glm::dvec4 ray_world = target_world - origin_world;
 
     double t = 0; // Distance along ray to ground plane
     if (ray_world.z != 0.f) {
-        t = -m_eye.z / ray_world.z;
+        t = -origin_world.z / ray_world.z;
     }
 
     ray_world *= std::abs(t);
@@ -253,8 +272,8 @@ double View::screenToGroundPlane(double& _screenX, double& _screenY) {
         ray_world *= maxTileDistance / rayDistanceXY;
     }
 
-    _screenX = ray_world.x + m_eye.x;
-    _screenY = ray_world.y + m_eye.y;
+    _screenX = ray_world.x + origin_world.x;
+    _screenY = ray_world.y + origin_world.y;
 
     return t;
 }
@@ -288,28 +307,39 @@ void View::updateMatrices() {
     // set camera z to produce desired viewable area
     m_pos.z = m_height * 0.5 / tan(fovy * 0.5);
 
-    // set near clipping distance as a function of camera z
-    // TODO: this is a simple heuristic that deserves more thought
-    float near = m_pos.z / 50.0;
-
-    // set far clipping distance to the distance of the intersection of
-    // the "top" face of the view frustum with the ground plane
-
-    // NOTE: far here can go to infinity and hence a std::min below!
-    float far = m_pos.z / std::max(0., cos(m_pitch + 0.5 * fovy));
-
-    // limit the far clipping distance to be no greater than the maximum
-    // distance of visible tiles
-    float maxTileDistance = worldTileSize * invLodFunc(MAX_LOD + 1);
-    far = std::min(far, maxTileDistance);
-
     m_eye = glm::rotateZ(glm::rotateX(glm::vec3(0.f, 0.f, m_pos.z), m_pitch), m_roll);
     glm::vec3 at = { 0.f, 0.f, 0.f };
     glm::vec3 up = glm::rotateZ(glm::rotateX(glm::vec3(0.f, 1.f, 0.f), m_pitch), m_roll);
 
-    // update view and projection matrices
+    // Generate view matrix
     m_view = glm::lookAt(m_eye, at, up);
-    m_proj = glm::perspective(fovy, m_aspect, near, far);
+
+    float maxTileDistance = worldTileSize * invLodFunc(MAX_LOD + 1);
+    float near = m_pos.z / 50.f;
+    float far = 1;
+    float hw = 0.5 * m_width;
+    float hh = 0.5 * m_height;
+
+    // Generate projection matrix based on camera type
+    switch (m_type) {
+        case CameraType::perspective:
+            far = 2. * m_pos.z / std::max(0., cos(m_pitch + 0.5 * fovy));
+            far = std::min(far, maxTileDistance);
+            m_proj = glm::perspective(fovy, m_aspect, near, far);
+            break;
+        case CameraType::isometric:
+        case CameraType::flat:
+            far = 2. * (m_pos.z + hh * std::abs(tan(m_pitch)));
+            far = std::min(far, maxTileDistance);
+            m_proj = glm::ortho(-hw, hw, -hh, hh, near, far);
+            break;
+    }
+
+    if (m_type == CameraType::isometric) {
+        // Add the oblique projection scaling factors to the view matrix
+        m_view[2][0] += m_obliqueAxis.x;
+        m_view[2][1] += m_obliqueAxis.y;
+    }
 
     m_viewProj = m_proj * m_view;
     m_invViewProj = glm::inverse(m_viewProj);
@@ -427,33 +457,43 @@ void View::updateTiles() {
     // Location of the view center in tile space
     glm::dvec2 e = (glm::dvec2(m_pos.x, m_pos.y) - tileSpaceOrigin) * tileSpaceAxes;
 
-    // Determine zoom reduction for tiles far from the center of view
-    double tilesAtFullZoom = std::max(m_width, m_height) * invTileSize * 0.5;
-    double viewCenterX = (m_pos.x + hc) * invTileSize;
-    double viewCenterY = (m_pos.y - hc) * -invTileSize;
+    int imax = std::numeric_limits<int>::max();
+    int imin = std::numeric_limits<int>::min();
 
-    int x_l_pos[MAX_LOD] = { 0 };
-    int x_l_neg[MAX_LOD] = { 0 };
-    int y_l_pos[MAX_LOD] = { 0 };
-    int y_l_neg[MAX_LOD] = { 0 };
+    // Distance thresholds in tile space for levels of detail:
+    // Element [n] in each array is the minimum tile index at which level-of-detail n
+    // should be applied in that direction.
+    int x_limit_pos[MAX_LOD] = { imax };
+    int x_limit_neg[MAX_LOD] = { imin };
+    int y_limit_pos[MAX_LOD] = { imax };
+    int y_limit_neg[MAX_LOD] = { imin };
 
-    for (int i = 0; i < MAX_LOD; i++) {
-        int j = i + 1;
-        x_l_neg[i] = ((int(viewCenterX - tilesAtFullZoom - invLodFunc(i)) >> j) - 1) << j;
-        y_l_pos[i] = ((int(viewCenterY + tilesAtFullZoom + invLodFunc(i)) >> j) + 1) << j;
-        y_l_neg[i] = ((int(viewCenterY - tilesAtFullZoom - invLodFunc(i)) >> j) - 1) << j;
-        x_l_pos[i] = ((int(viewCenterX + tilesAtFullZoom + invLodFunc(i)) >> j) + 1) << j;
+    if (m_type == CameraType::perspective) {
+
+        // Determine zoom reduction for tiles far from the center of view
+        double tilesAtFullZoom = std::max(m_width, m_height) * invTileSize * 0.5;
+        double viewCenterX = (m_pos.x + hc) * invTileSize;
+        double viewCenterY = (m_pos.y - hc) * -invTileSize;
+
+        for (int i = 0; i < MAX_LOD; i++) {
+            int j = i + 1;
+            double r = invLodFunc(i) + tilesAtFullZoom;
+            x_limit_neg[i] = ((int(viewCenterX - r) >> j) - 1) << j;
+            y_limit_pos[i] = ((int(viewCenterY + r) >> j) + 1) << j;
+            y_limit_neg[i] = ((int(viewCenterY - r) >> j) - 1) << j;
+            x_limit_pos[i] = ((int(viewCenterX + r) >> j) + 1) << j;
+        }
     }
 
     Scan s = [&](int x, int y) {
 
         int lod = 0;
-        while (lod < MAX_LOD && x >= x_l_pos[lod]) { lod++; }
-        while (lod < MAX_LOD && x <  x_l_neg[lod]) { lod++; }
-        while (lod < MAX_LOD && y >= y_l_pos[lod]) { lod++; }
-        while (lod < MAX_LOD && y <  y_l_neg[lod]) { lod++; }
+        while (lod < MAX_LOD && x >= x_limit_pos[lod]) { lod++; }
+        while (lod < MAX_LOD && x <  x_limit_neg[lod]) { lod++; }
+        while (lod < MAX_LOD && y >= y_limit_pos[lod]) { lod++; }
+        while (lod < MAX_LOD && y <  y_limit_neg[lod]) { lod++; }
 
-        int z = int(m_zoom);
+        int z = (int)m_zoom;
 
         x >>= lod;
         y >>= lod;

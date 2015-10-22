@@ -19,6 +19,7 @@ class FontContext;
 class Light;
 class MapProjection;
 class SpriteAtlas;
+class View;
 struct Stops;
 
 /* Singleton container of <Style> information
@@ -31,6 +32,7 @@ public:
     Scene();
     ~Scene();
 
+    auto& view() { return m_view; }
     auto& dataSources() { return m_dataSources; };
     auto& layers() { return m_layers; };
     auto& styles() { return m_styles; };
@@ -61,6 +63,7 @@ public:
 private:
 
     std::unique_ptr<MapProjection> m_mapProjection;
+    std::shared_ptr<View> m_view;
 
     std::vector<DataLayer> m_layers;
     std::vector<std::shared_ptr<DataSource>> m_dataSources;

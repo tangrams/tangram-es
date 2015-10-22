@@ -14,14 +14,16 @@
 
 namespace Tangram {
 
+enum class CameraType : uint8_t {
+    perspective = 0,
+    isometric,
+    flat,
+};
+
 /* View
  * 1. Stores a representation of the current view into the map world
  * 2. Determines which tiles are visible in the current view
  * 3. Tracks changes in the view state to determine when new rendering is needed
- *
- * TODO: Make this into an interface for different implementations
- * For now, this is a simple implementation of the viewModule responsibilities
- * using a top-down axis-aligned orthographic view
 */
 
 class View {
@@ -35,6 +37,12 @@ public:
 
     /* Gets the current map projection */
     const MapProjection& getMapProjection() const;
+
+    void setCameraType(CameraType _type) { m_type = _type; }
+    auto cameraType() const { return m_type; }
+
+    void setObliqueAxis(float _x, float _y) { m_obliqueAxis = { _x, _y}; }
+    auto obliqueAxis() const { return m_obliqueAxis; }
 
     /* Sets the ratio of hardware pixels to logical pixels (for high-density screens)
      *
@@ -141,6 +149,7 @@ protected:
     glm::dvec3 m_pos;
     glm::dvec3 m_pos_prev = glm::dvec3(0.0, 0.0, 0.0);
     glm::vec3 m_eye;
+    glm::vec2 m_obliqueAxis;
 
     glm::mat4 m_view;
     glm::mat4 m_orthoViewport;
@@ -166,6 +175,8 @@ protected:
     float m_aspect;
     float m_pixelScale = 1.0f;
     float m_pixelsPerTile = 256.0;
+
+    CameraType m_type;
 
     bool m_dirtyMatrices;
     bool m_dirtyTiles;

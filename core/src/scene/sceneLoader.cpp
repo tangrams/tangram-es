@@ -20,6 +20,7 @@
 #include "scene/spriteAtlas.h"
 #include "scene/stops.h"
 #include "util/yamlHelper.h"
+#include "view/view.h"
 
 #include "yaml-cpp/yaml.h"
 
@@ -916,43 +917,53 @@ void SceneLoader::loadCameras(Node _cameras, Scene& _scene) {
     // right now, we'll just apply the settings from the first active camera we
     // find.
 
-    for (const auto& cam : _cameras) {
+    auto& view = _scene.view();
 
-        const Node camera = cam.second;
+    for (const auto& entry : _cameras) {
 
-        const std::string type = camera["type"].as<std::string>();
+        const Node camera = entry.second;
+
+        if (Node active = camera["active"]) {
+            if (!active.as<bool>()) {
+                continue;
+            }
+        }
+
+        auto type = camera["type"].Scalar();
         if (type == "perspective") {
-            // The default camera
-            Node fov = camera["fov"];
-            if (fov) {
+
+            view->setCameraType(CameraType::perspective);
+
+            if (Node fov = camera["fov"]) {
                 // TODO
             }
 
-            Node focal = camera["focal_length"];
-            if (focal) {
+            if (Node focal = camera["focal_length"]) {
                 // TODO
             }
 
-            Node vanishing = camera["vanishing_point"];
-            if (vanishing) {
+            if (Node vanishing = camera["vanishing_point"]) {
                 // TODO
             }
         } else if (type == "isometric") {
-            // TODO
-            Node axis = camera["axis"];
-            if (axis) {
-                // TODO
+
+            view->setCameraType(CameraType::isometric);
+
+            if (Node axis = camera["axis"]) {
+                view->setObliqueAxis(axis[0].as<float>(), axis[1].as<float>());
             }
         } else if (type == "flat") {
-            // TODO
+
+            view->setCameraType(CameraType::flat);
+
         }
 
-        double x = -74.00976419448854;
-        double y = 40.70532700869127;
-        float z = 16;
+        // Default is world origin at 0 zoom
+        double x = 0;
+        double y = 0;
+        float z = 0;
 
-        Node position = camera["position"];
-        if (position) {
+        if (Node position = camera["position"]) {
             x = position[0].as<double>();
             y = position[1].as<double>();
             if (position.size() > 2) {
@@ -960,18 +971,13 @@ void SceneLoader::loadCameras(Node _cameras, Scene& _scene) {
             }
         }
 
-        Node zoom = camera["zoom"];
-        if (zoom) {
+        if (Node zoom = camera["zoom"]) {
             z = zoom.as<float>();
         }
 
         _scene.startPosition = glm::dvec2(x, y);
         _scene.startZoom = z;
 
-        Node active = camera["active"];
-        if (active) {
-            break;
-        }
     }
 }
 

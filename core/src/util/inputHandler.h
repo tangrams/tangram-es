@@ -20,6 +20,8 @@ public:
 
     void update(float _dt);
 
+    void setView(std::shared_ptr<View> _view) { m_view = _view; }
+
 private:
 
     void setDeltas(float _zoom, glm::vec2 _translate);
