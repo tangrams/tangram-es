@@ -37,7 +37,6 @@ public class DataSource {
 
     /**
      * Get the name of this data source
-     *
      * @return The name
      */
     public String getName() {

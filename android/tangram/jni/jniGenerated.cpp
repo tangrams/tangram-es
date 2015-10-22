@@ -17,16 +17,33 @@ template<typename T> class SwigValueWrapper {
   struct SwigMovePointer {
     T *ptr;
     SwigMovePointer(T *p) : ptr(p) { }
-    ~SwigMovePointer() { delete ptr; }
-    SwigMovePointer& operator=(SwigMovePointer& rhs) { T* oldptr = ptr; ptr = 0; delete oldptr; ptr = rhs.ptr; rhs.ptr = 0; return *this; }
+    ~SwigMovePointer() {
+      delete ptr;
+    }
+    SwigMovePointer& operator=(SwigMovePointer& rhs) {
+      T* oldptr = ptr;
+      ptr = 0;
+      delete oldptr;
+      ptr = rhs.ptr;
+      rhs.ptr = 0;
+      return *this;
+    }
   } pointer;
   SwigValueWrapper& operator=(const SwigValueWrapper<T>& rhs);
   SwigValueWrapper(const SwigValueWrapper<T>& rhs);
 public:
   SwigValueWrapper() : pointer(0) { }
-  SwigValueWrapper& operator=(const T& t) { SwigMovePointer tmp(new T(t)); pointer = tmp; return *this; }
-  operator T&() const { return *pointer.ptr; }
-  T *operator&() { return pointer.ptr; }
+  SwigValueWrapper& operator=(const T& t) {
+    SwigMovePointer tmp(new T(t));
+    pointer = tmp;
+    return *this;
+  }
+  operator T&() const {
+    return *pointer.ptr;
+  }
+  T *operator&() {
+    return pointer.ptr;
+  }
 };
 
 template <typename T> T SwigValueInit() {
@@ -146,7 +163,7 @@ template <typename T> T SwigValueInit() {
 
 /* Fix for jlong on some versions of gcc on Windows */
 #if defined(__GNUC__) && !defined(__INTEL_COMPILER)
-  typedef long long __int64;
+typedef long long __int64;
 #endif
 
 /* Fix for jlong on 64-bit x86 Solaris */
@@ -237,61 +254,61 @@ struct SWIG_null_deleter {
 #define SWIG_NO_NULL_DELETER_SWIG_POINTER_NEW
 #define SWIG_NO_NULL_DELETER_SWIG_POINTER_OWN
 
-SWIGINTERN void Tangram_Properties_add__SWIG_0(Tangram::Properties *self,std::string key,std::string value){
-        self->add(key, value);
-    }
-SWIGINTERN void Tangram_Properties_add__SWIG_1(Tangram::Properties *self,std::string key,float value){
-        self->add(key, value);
-    }
+SWIGINTERN void Tangram_Properties_add__SWIG_0(Tangram::Properties *self,std::string key,std::string value) {
+  self->add(key, value);
+}
+SWIGINTERN void Tangram_Properties_add__SWIG_1(Tangram::Properties *self,std::string key,float value) {
+  self->add(key, value);
+}
 
 // Include LngLat class
 #include "util/types.h"
 
-SWIGINTERN std::vector< Tangram::LngLat >::const_reference std_vector_Sl_Tangram_LngLat_Sg__get(std::vector< Tangram::LngLat > *self,int i){
-                int size = int(self->size());
-                if (i>=0 && i<size)
-                    return (*self)[i];
-                else
-                    throw std::out_of_range("vector index out of range");
-            }
-SWIGINTERN void std_vector_Sl_Tangram_LngLat_Sg__set(std::vector< Tangram::LngLat > *self,int i,std::vector< Tangram::LngLat >::value_type const &val){
-                int size = int(self->size());
-                if (i>=0 && i<size)
-                    (*self)[i] = val;
-                else
-                    throw std::out_of_range("vector index out of range");
-            }
-SWIGINTERN void std_vector_Sl_Tangram_LngLat_Sg__add__SWIG_1(std::vector< Tangram::LngLat > *self,double lng,double lat){
-        self->push_back({lng, lat});
-    }
-SWIGINTERN std::vector< std::vector< Tangram::LngLat > >::const_reference std_vector_Sl_std_vector_Sl_Tangram_LngLat_Sg__Sg__get(std::vector< std::vector< Tangram::LngLat > > *self,int i){
-                int size = int(self->size());
-                if (i>=0 && i<size)
-                    return (*self)[i];
-                else
-                    throw std::out_of_range("vector index out of range");
-            }
-SWIGINTERN void std_vector_Sl_std_vector_Sl_Tangram_LngLat_Sg__Sg__set(std::vector< std::vector< Tangram::LngLat > > *self,int i,std::vector< std::vector< Tangram::LngLat > >::value_type const &val){
-                int size = int(self->size());
-                if (i>=0 && i<size)
-                    (*self)[i] = val;
-                else
-                    throw std::out_of_range("vector index out of range");
-            }
+SWIGINTERN std::vector< Tangram::LngLat >::const_reference std_vector_Sl_Tangram_LngLat_Sg__get(std::vector< Tangram::LngLat > *self,int i) {
+  int size = int(self->size());
+  if (i>=0 && i<size)
+    return (*self)[i];
+  else
+    throw std::out_of_range("vector index out of range");
+}
+SWIGINTERN void std_vector_Sl_Tangram_LngLat_Sg__set(std::vector< Tangram::LngLat > *self,int i,std::vector< Tangram::LngLat >::value_type const &val) {
+  int size = int(self->size());
+  if (i>=0 && i<size)
+    (*self)[i] = val;
+  else
+    throw std::out_of_range("vector index out of range");
+}
+SWIGINTERN void std_vector_Sl_Tangram_LngLat_Sg__add__SWIG_1(std::vector< Tangram::LngLat > *self,double lng,double lat) {
+  self->push_back({lng, lat});
+}
+SWIGINTERN std::vector< std::vector< Tangram::LngLat > >::const_reference std_vector_Sl_std_vector_Sl_Tangram_LngLat_Sg__Sg__get(std::vector< std::vector< Tangram::LngLat > > *self,int i) {
+  int size = int(self->size());
+  if (i>=0 && i<size)
+    return (*self)[i];
+  else
+    throw std::out_of_range("vector index out of range");
+}
+SWIGINTERN void std_vector_Sl_std_vector_Sl_Tangram_LngLat_Sg__Sg__set(std::vector< std::vector< Tangram::LngLat > > *self,int i,std::vector< std::vector< Tangram::LngLat > >::value_type const &val) {
+  int size = int(self->size());
+  if (i>=0 && i<size)
+    (*self)[i] = val;
+  else
+    throw std::out_of_range("vector index out of range");
+}
 
 #include "tangram.h"
 #include "data/dataSource.h"
 #include "data/clientGeoJsonSource.h"
 
-SWIGINTERN void Tangram_DataSource_update(Tangram::DataSource *self){
-        Tangram::clearDataSource(*(self), false, true);
-    }
-SWIGINTERN void Tangram_DataSource_clearJNI(Tangram::DataSource *self){
-        Tangram::clearDataSource(*(self), true, true);
-    }
-SWIGINTERN std::string Tangram_DataSource_name(Tangram::DataSource *self){
-        return self->name();
-    }
+SWIGINTERN void Tangram_DataSource_update(Tangram::DataSource *self) {
+  Tangram::clearDataSource(*(self), false, true);
+}
+SWIGINTERN void Tangram_DataSource_clearJNI(Tangram::DataSource *self) {
+  Tangram::clearDataSource(*(self), true, true);
+}
+SWIGINTERN std::string Tangram_DataSource_name(Tangram::DataSource *self) {
+  return self->name();
+}
 
 #ifdef __cplusplus
 extern "C" {
@@ -475,7 +492,8 @@ SWIGEXPORT void JNICALL Java_com_mapzen_tangram_TangramJNI_delete_1Properties(JN
 
   smartarg1 = *(std::shared_ptr<  Tangram::Properties > **)&jarg1;
   arg1 = (Tangram::Properties *)(smartarg1 ? smartarg1->get() : 0);
-  (void)arg1; delete smartarg1;
+  (void)arg1;
+  delete smartarg1;
 }
 
 
@@ -615,8 +633,7 @@ SWIGEXPORT jobject JNICALL Java_com_mapzen_tangram_TangramJNI_Coordinates_1get(J
   arg2 = (int)jarg2;
   try {
     result = (std::vector< Tangram::LngLat >::value_type *) &std_vector_Sl_Tangram_LngLat_Sg__get(arg1,arg2);
-  }
-  catch(std::out_of_range &_e) {
+  } catch(std::out_of_range &_e) {
     SWIG_JavaThrowException(jenv, SWIG_JavaIndexOutOfBoundsException, (&_e)->what());
     return 0;
   }
@@ -658,8 +675,7 @@ SWIGEXPORT void JNICALL Java_com_mapzen_tangram_TangramJNI_Coordinates_1set(JNIE
 
   try {
     std_vector_Sl_Tangram_LngLat_Sg__set(arg1,arg2,(Tangram::LngLat const &)*arg3);
-  }
-  catch(std::out_of_range &_e) {
+  } catch(std::out_of_range &_e) {
     SWIG_JavaThrowException(jenv, SWIG_JavaIndexOutOfBoundsException, (&_e)->what());
     return ;
   }
@@ -818,8 +834,7 @@ SWIGEXPORT jlong JNICALL Java_com_mapzen_tangram_TangramJNI_Polygon_1get(JNIEnv 
   arg2 = (int)jarg2;
   try {
     result = (std::vector< std::vector< Tangram::LngLat > >::value_type *) &std_vector_Sl_std_vector_Sl_Tangram_LngLat_Sg__Sg__get(arg1,arg2);
-  }
-  catch(std::out_of_range &_e) {
+  } catch(std::out_of_range &_e) {
     SWIG_JavaThrowException(jenv, SWIG_JavaIndexOutOfBoundsException, (&_e)->what());
     return 0;
   }
@@ -847,8 +862,7 @@ SWIGEXPORT void JNICALL Java_com_mapzen_tangram_TangramJNI_Polygon_1set(JNIEnv *
   }
   try {
     std_vector_Sl_std_vector_Sl_Tangram_LngLat_Sg__Sg__set(arg1,arg2,(std::vector< Tangram::LngLat > const &)*arg3);
-  }
-  catch(std::out_of_range &_e) {
+  } catch(std::out_of_range &_e) {
     SWIG_JavaThrowException(jenv, SWIG_JavaIndexOutOfBoundsException, (&_e)->what());
     return ;
   }
@@ -921,7 +935,8 @@ SWIGEXPORT void JNICALL Java_com_mapzen_tangram_TangramJNI_delete_1DataSource(JN
 
   smartarg1 = *(std::shared_ptr<  Tangram::DataSource > **)&jarg1;
   arg1 = (Tangram::DataSource *)(smartarg1 ? smartarg1->get() : 0);
-  (void)arg1; delete smartarg1;
+  (void)arg1;
+  delete smartarg1;
 }
 
 
@@ -1087,7 +1102,8 @@ SWIGEXPORT void JNICALL Java_com_mapzen_tangram_TangramJNI_delete_1MapData(JNIEn
 
   smartarg1 = *(std::shared_ptr<  Tangram::ClientGeoJsonSource > **)&jarg1;
   arg1 = (Tangram::ClientGeoJsonSource *)(smartarg1 ? smartarg1->get() : 0);
-  (void)arg1; delete smartarg1;
+  (void)arg1;
+  delete smartarg1;
 }
 
 
@@ -1125,15 +1141,16 @@ SWIGEXPORT void JNICALL Java_com_mapzen_tangram_TangramJNI_clearDataSource(JNIEn
 
 
 SWIGEXPORT jlong JNICALL Java_com_mapzen_tangram_TangramJNI_MapData_1SWIGSmartPtrUpcast(JNIEnv *jenv, jclass jcls, jlong jarg1) {
-    jlong baseptr = 0;
-    std::shared_ptr< Tangram::ClientGeoJsonSource > *argp1;
-    (void)jenv;
-    (void)jcls;
-    argp1 = *(std::shared_ptr< Tangram::ClientGeoJsonSource > **)&jarg1;
-    *(std::shared_ptr< Tangram::DataSource > **)&baseptr = argp1 ? new std::shared_ptr< Tangram::DataSource >(*argp1) : 0;
-    return baseptr;
+  jlong baseptr = 0;
+  std::shared_ptr< Tangram::ClientGeoJsonSource > *argp1;
+  (void)jenv;
+  (void)jcls;
+  argp1 = *(std::shared_ptr< Tangram::ClientGeoJsonSource > **)&jarg1;
+  *(std::shared_ptr< Tangram::DataSource > **)&baseptr = argp1 ? new std::shared_ptr< Tangram::DataSource >(*argp1) : 0;
+  return baseptr;
 }
 
 #ifdef __cplusplus
 }
 #endif
+

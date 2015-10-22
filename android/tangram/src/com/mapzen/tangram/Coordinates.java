@@ -38,7 +38,6 @@ public class Coordinates {
     // Ensure that the GC doesn't collect any Polygon instance set from Java
     // While we holding a Coordinates Ring of it.
     private Object owner;
-
     protected void addReference(Object obj) {
         owner = obj;
     }

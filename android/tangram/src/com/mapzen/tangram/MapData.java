@@ -42,7 +42,6 @@ public class MapData extends DataSource {
 
     /**
      * Construct a new MapData object for adding drawable data to the map
-     *
      * @param name Name of the data source in the scene file for styling this
      *             object's data
      */
@@ -52,7 +51,6 @@ public class MapData extends DataSource {
 
     /**
      * Remove all data from this source
-     *
      * @return This object, for chaining
      */
     public MapData clear() {
@@ -62,7 +60,6 @@ public class MapData extends DataSource {
 
     /**
      * Add geometry from a GeoJSON string to this data source
-     *
      * @param data String of GeoJSON containing a Feature or FeatureCollection
      * @return This object, for chaining
      */
@@ -73,7 +70,6 @@ public class MapData extends DataSource {
 
     /**
      * Add a point geometry to this data source
-     *
      * @param point LngLat with the coordinates of the point
      * @return This object, for chaining
      */
@@ -84,7 +80,6 @@ public class MapData extends DataSource {
 
     /**
      * Add a line geometry to this data source
-     *
      * @param line List of LngLat points comprising the line
      * @return This object, for chaining
      */
@@ -105,7 +100,6 @@ public class MapData extends DataSource {
 
     /**
      * Add a polygon geometry to this data source
-     *
      * @param polygon List of lines of LngLat points, where each line represents
      *                a ring in the polygon as described in the GeoJSON spec
      * @return This object, for chaining

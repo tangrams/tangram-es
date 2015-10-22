@@ -219,3 +219,12 @@ format:
 		if [[ -e $$file ]]; then clang-format -i $$file; fi \
 	done
 	@echo "format done on `git diff --diff-filter=ACMRTUXB --name-only -- '*.cpp' '*.h'`"
+
+swig-bindings:
+	@mkdir -p generated
+	@swig -v -c++  -Icore/src -o android/tangram/jni/jniGenerated.cpp \
+		-outdir generated \
+		-package com.mapzen.tangram -java swig/tangram.i
+	@astyle --style=attach --indent=spaces=2 android/tangram/jni/jniGenerated.cpp
+	@astyle --style=java generated/*.java
+	@mv generated/*.java android/tangram/src/com/mapzen/tangram
