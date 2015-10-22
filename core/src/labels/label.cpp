@@ -8,8 +8,8 @@
 namespace Tangram {
 
 Label::Label(Label::Transform _transform, glm::vec2 _size, Type _type, LabelMesh& _mesh, Range _vertexRange, Options _options) :
-    m_type(_type),
     m_options(_options),
+    m_type(_type),
     m_transform(_transform),
     m_dim(_size),
     m_mesh(_mesh),
@@ -25,10 +25,16 @@ Label::Label(Label::Transform _transform, glm::vec2 _size, Type _type, LabelMesh
 
 Label::~Label() {}
 
+void Label::align(glm::vec2& _screenPosition, const glm::vec2& _ap1, const glm::vec2& _ap2) {
+    // No-op by default
+}
+
 bool Label::updateScreenTransform(const glm::mat4& _mvp, const glm::vec2& _screenSize, bool _testVisibility) {
 
     glm::vec2 screenPosition;
     float rot = 0;
+
+    glm::vec2 ap1, ap2;
 
     switch (m_type) {
         case Type::debug:
@@ -42,8 +48,7 @@ bool Label::updateScreenTransform(const glm::mat4& _mvp, const glm::vec2& _scree
 
             screenPosition = clipToScreenSpace(v1, _screenSize);
 
-            // center on half the width
-            screenPosition.x -= m_dim.x * 0.5f;
+            ap1 = screenPosition;
 
             break;
         }
@@ -70,10 +75,7 @@ bool Label::updateScreenTransform(const glm::mat4& _mvp, const glm::vec2& _scree
                 std::swap(p1, p2);
             }
 
-            glm::vec2 p1p2 = p2 - p1;
-            glm::vec2 t = glm::normalize(-p1p2);
-
-            float length = glm::length(p1p2);
+            float length = glm::length(p2 - p1);
 
             float exceedHeuristic = 30; // default heuristic : 30%
 
@@ -84,11 +86,14 @@ bool Label::updateScreenTransform(const glm::mat4& _mvp, const glm::vec2& _scree
                 }
             }
 
-            screenPosition = (p1 + p2) * 0.5f + t * m_dim.x * 0.5f;
+            ap1 = p1;
+            ap2 = p2;
 
             break;
         }
     }
+
+    align(screenPosition, ap1, ap2);
 
     // update screen position
     glm::vec2 offset = m_options.offset;

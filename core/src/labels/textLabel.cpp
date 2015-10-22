@@ -18,4 +18,20 @@ void TextLabel::updateBBoxes(float _zoomFract) {
     m_aabb = m_obb.getExtent();
 }
 
+void TextLabel::align(glm::vec2& _screenPosition, const glm::vec2& _ap1, const glm::vec2& _ap2) {
+    glm::vec2 ap1ap2 = _ap2 - _ap1;
+    glm::vec2 t = glm::normalize(-ap1ap2);
+
+    switch (m_type) {
+        case Type::debug:
+        case Type::point:
+            _screenPosition.x -= m_dim.x * 0.5f;
+            break;
+        case Type::line:
+            _screenPosition = (_ap1 + _ap2) * 0.5f + t * m_dim.x * 0.5f;
+            break;
+    }
+
+}
+
 }
