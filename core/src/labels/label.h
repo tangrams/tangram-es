@@ -156,7 +156,7 @@ private:
 protected:
 
     // set alignment on _screenPosition based on anchor points _ap1, _ap2
-    virtual void align(glm::vec2& _screenPosition, const glm::vec2& _ap1, const glm::vec2& _ap2);
+    virtual void align(glm::vec2& _screenPosition, const glm::vec2& _ap1, const glm::vec2& _ap2) = 0;
 
     // the label type (point/line)
     Type m_type;

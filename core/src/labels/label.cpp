@@ -25,10 +25,6 @@ Label::Label(Label::Transform _transform, glm::vec2 _size, Type _type, LabelMesh
 
 Label::~Label() {}
 
-void Label::align(glm::vec2& _screenPosition, const glm::vec2& _ap1, const glm::vec2& _ap2) {
-    // No-op by default
-}
-
 bool Label::updateScreenTransform(const glm::mat4& _mvp, const glm::vec2& _screenSize, bool _testVisibility) {
 
     glm::vec2 screenPosition;
@@ -48,7 +44,7 @@ bool Label::updateScreenTransform(const glm::mat4& _mvp, const glm::vec2& _scree
 
             screenPosition = clipToScreenSpace(v1, _screenSize);
 
-            ap1 = screenPosition;
+            ap1 = ap2 = screenPosition;
 
             break;
         }
