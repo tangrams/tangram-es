@@ -73,7 +73,7 @@ void Tile::build(StyleContext& _ctx, const Scene& _scene, const TileData& _data,
                     auto* style = _scene.findStyle(rule.getStyleName());
 
                     if (style) {
-                        rule.eval(_ctx);
+                        if (!rule.eval(_ctx)) { continue; }
                         style->buildFeature(*this, feat, rule);
                     }
                 }

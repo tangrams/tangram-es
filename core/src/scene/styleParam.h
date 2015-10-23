@@ -4,6 +4,7 @@
 #include "glm/vec2.hpp"
 #include <string>
 #include <vector>
+#include <set>
 
 namespace Tangram {
 
@@ -82,6 +83,8 @@ struct StyleParam {
             return value != _other.value || unit != _other.unit;
         }
     };
+
+    static const std::set<StyleParamKey> requiredKeys;
 
     using Value = variant<none_type, bool, float, uint32_t, std::string, glm::vec2, Width>;
 

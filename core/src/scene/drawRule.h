@@ -20,7 +20,7 @@ struct DrawRule {
     DrawRule merge(DrawRule& _other) const;
     std::string toString() const;
 
-    void eval(const StyleContext& _ctx);
+    bool eval(const StyleContext& _ctx);
 
     const std::string& getStyleName() const;
 

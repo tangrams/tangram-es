@@ -79,11 +79,15 @@ bool DrawRule::operator<(const DrawRule& _rhs) const {
     return name < _rhs.name;
 }
 
-void DrawRule::eval(const StyleContext& _ctx) {
+bool DrawRule::eval(const StyleContext& _ctx) {
 
     for (auto& param : parameters) {
         if (param.function >= 0) {
-            _ctx.evalStyle(param.function, param.key, param.value);
+            if (!_ctx.evalStyle(param.function, param.key, param.value)) {
+                if (StyleParam::requiredKeys.find(param.key) != StyleParam::requiredKeys.end()) {
+                    return false;
+                }
+            }
         }
         if (param.stops) {
             if (StyleParam::isColor(param.key)) {
@@ -95,6 +99,7 @@ void DrawRule::eval(const StyleContext& _ctx) {
             }
         }
     }
+    return true;
 }
 
 const std::string& DrawRule::getStyleName() const {
