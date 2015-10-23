@@ -310,8 +310,10 @@ bool StyleContext::parseStyleResult(StyleParamKey _key, StyleParam::Value& _val)
             default:
                 break;
         }
+    } else if (duk_is_null_or_undefined(m_ctx, -1)) {
+        // Ignore setting value
     } else {
-        LOGW("Unhandled return type from Javascript function.");
+        LOGW("Warning: Unhandled return type from Javascript style function for %d.", _key);
     }
 
     duk_pop(m_ctx);
