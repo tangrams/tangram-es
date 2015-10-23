@@ -153,7 +153,7 @@ bool evalStyleParamWidth(StyleParamKey _key, const DrawRule& _rule, const Tile& 
         return true;
     }
 
-    logMsg("Error: Invalid type for Width '%d'\n", styleParam.value.which());
+    LOGD("Invalid type for Width '%d'\n", styleParam.value.which());
     return false;
 }
 
