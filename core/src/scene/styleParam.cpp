@@ -12,9 +12,6 @@ namespace Tangram {
 
 using Color = CSSColorParser::Color;
 
-const std::set<StyleParamKey> StyleParam::requiredKeys =
-{ StyleParamKey::color, StyleParamKey::order, StyleParamKey::priority, StyleParamKey::width };
-
 const std::map<std::string, StyleParamKey> s_StyleParamMap = {
     {"cap", StyleParamKey::cap},
     {"centroid", StyleParamKey::centroid},
@@ -444,4 +441,11 @@ bool StyleParam::isWidth(StyleParamKey _key) {
     }
 }
 
+bool StyleParam::isRequired(StyleParamKey _key) {
+    static const std::vector<StyleParamKey> requiredKeys =
+        { StyleParamKey::color, StyleParamKey::order,
+          StyleParamKey::priority, StyleParamKey::width };
+
+    return std::find(requiredKeys.begin(), requiredKeys.end(), _key) != requiredKeys.end();
+}
 }

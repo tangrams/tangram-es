@@ -84,7 +84,7 @@ bool DrawRule::eval(const StyleContext& _ctx) {
     for (auto& param : parameters) {
         if (param.function >= 0) {
             if (!_ctx.evalStyle(param.function, param.key, param.value)) {
-                if (StyleParam::requiredKeys.find(param.key) != StyleParam::requiredKeys.end()) {
+                if (StyleParam::isRequired(param.key)){
                     return false;
                 }
             }

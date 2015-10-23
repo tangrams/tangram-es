@@ -4,7 +4,6 @@
 #include "glm/vec2.hpp"
 #include <string>
 #include <vector>
-#include <set>
 
 namespace Tangram {
 
@@ -84,8 +83,6 @@ struct StyleParam {
         }
     };
 
-    static const std::set<StyleParamKey> requiredKeys;
-
     using Value = variant<none_type, bool, float, uint32_t, std::string, glm::vec2, Width>;
 
     StyleParam() :
@@ -131,6 +128,7 @@ struct StyleParam {
 
     static bool isColor(StyleParamKey _key);
     static bool isWidth(StyleParamKey _key);
+    static bool isRequired(StyleParamKey _key);
 
     static StyleParamKey getKey(const std::string& _key);
 };
