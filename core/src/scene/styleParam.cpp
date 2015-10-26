@@ -443,8 +443,7 @@ bool StyleParam::isWidth(StyleParamKey _key) {
 
 bool StyleParam::isRequired(StyleParamKey _key) {
     static const std::vector<StyleParamKey> requiredKeys =
-        { StyleParamKey::color, StyleParamKey::order,
-          StyleParamKey::priority, StyleParamKey::width };
+        { StyleParamKey::color, StyleParamKey::order, StyleParamKey::width };
 
     return std::find(requiredKeys.begin(), requiredKeys.end(), _key) != requiredKeys.end();
 }
