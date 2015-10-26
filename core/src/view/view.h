@@ -56,6 +56,9 @@ public:
     /* Sets the position of the view within the world (in projection units) */
     void setPosition(double _x, double _y);
 
+    void setPosition(const glm::dvec3 pos) { setPosition(pos.x, pos.y); }
+    void setPosition(const glm::dvec2 pos) { setPosition(pos.x, pos.y); }
+
     /* Sets the zoom level of the view */
     void setZoom(float _z);
 

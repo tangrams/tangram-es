@@ -108,7 +108,7 @@ bool getDebugFlag(DebugFlags _flag);
 // Toggle the boolean state of a debug feature (see debug.h)
 void toggleDebugFlag(DebugFlags _flag);
 
-void loadScene(const char* _scenePath);
+void loadScene(const char* _scenePath, bool _setPositionFromScene = false);
 
 struct TouchItem {
     std::shared_ptr<Properties> properties;

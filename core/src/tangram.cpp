@@ -64,7 +64,7 @@ void initialize(const char* _scenePath) {
     // label setup
     m_labels = std::unique_ptr<Labels>(new Labels());
 
-    loadScene(_scenePath);
+    loadScene(_scenePath, true);
 
     glm::dvec2 projPos = m_view->getMapProjection().LonLatToMeters(m_scene->startPosition);
     m_view->setPosition(projPos.x, projPos.y);
@@ -74,16 +74,21 @@ void initialize(const char* _scenePath) {
 
 }
 
-void loadScene(const char* _scenePath) {
+void loadScene(const char* _scenePath, bool _setPositionFromScene) {
     LOG("Loading scene file: %s", _scenePath);
 
     auto sceneString = stringFromFile(setResourceRoot(_scenePath).c_str(), PathType::resource);
+
+    bool setPositionFromCurrentView = bool(m_scene);
 
     auto scene = std::make_shared<Scene>();
     if (SceneLoader::loadScene(sceneString, *scene)) {
         m_scene = scene;
         m_scene->fontContext()->addFont("FiraSans", "Medium", "");
-
+        if (setPositionFromCurrentView && !_setPositionFromScene) {
+            m_scene->view()->setPosition(m_view->getPosition());
+            m_scene->view()->setZoom(m_view->getZoom());
+        }
         m_view = m_scene->view();
         m_inputHandler->setView(m_view);
         m_tileManager->setView(m_view);
