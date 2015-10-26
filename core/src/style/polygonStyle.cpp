@@ -59,21 +59,12 @@ PolygonStyle::Parameters PolygonStyle::parseRule(const DrawRule& _rule) const {
     Parameters p;
     _rule.get(StyleParamKey::color, p.color);
     _rule.get(StyleParamKey::extrude, p.extrude);
-    if (!_rule.get(StyleParamKey::order, p.order)) {
-        LOGW("No 'order' specified for feature, ordering cannot be guaranteed :(");
-    }
+    _rule.get(StyleParamKey::order, p.order);
 
     return p;
 }
 
 void PolygonStyle::buildPolygon(const Polygon& _polygon, const DrawRule& _rule, const Properties& _props, VboMesh& _mesh, Tile& _tile) const {
-
-    if (!_rule.contains(StyleParamKey::color)) {
-        const auto& blocks = m_shaderProgram->getSourceBlocks();
-        if (blocks.find("color") == blocks.end() && blocks.find("filter") == blocks.end()) {
-            return; // No color parameter or color block? NO SOUP FOR YOU
-        }
-    }
 
     std::vector<PolygonVertex> vertices;
 

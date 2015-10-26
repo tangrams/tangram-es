@@ -61,9 +61,7 @@ PolylineStyle::Parameters PolylineStyle::parseRule(const DrawRule& _rule) const 
     _rule.get(StyleParamKey::color, p.color);
     _rule.get(StyleParamKey::cap, cap);
     _rule.get(StyleParamKey::join, join);
-    if (!_rule.get(StyleParamKey::order, p.order)) {
-        LOGW("No 'order' specified for feature, ordering cannot be guaranteed :(");
-    }
+    _rule.get(StyleParamKey::order, p.order);
 
     p.cap = static_cast<CapTypes>(cap);
     p.join = static_cast<JoinTypes>(join);
@@ -160,13 +158,6 @@ bool evalStyleParamWidth(StyleParamKey _key, const DrawRule& _rule, const Tile& 
 void PolylineStyle::buildLine(const Line& _line, const DrawRule& _rule, const Properties& _props,
                               VboMesh& _mesh, Tile& _tile) const {
 
-    if (!_rule.contains(StyleParamKey::color)) {
-        const auto& blocks = m_shaderProgram->getSourceBlocks();
-        if (blocks.find("color") == blocks.end() && blocks.find("filter") == blocks.end()) {
-            return; // No color parameter or color block? NO SOUP FOR YOU
-        }
-    }
-
     std::vector<PolylineVertex> vertices;
 
     Parameters params = parseRule(_rule);
@@ -178,6 +169,9 @@ void PolylineStyle::buildLine(const Line& _line, const DrawRule& _rule, const Pr
     if (!evalStyleParamWidth(StyleParamKey::width, _rule, _tile, width, dWdZ)) {
         return;
     }
+
+    // Make sure main line width is not zero
+    if (width == 0.0f) { return; }
 
     if (Tangram::getDebugFlag(Tangram::DebugFlags::proxy_colors)) {
         abgr = abgr << (_tile.getID().z % 6);

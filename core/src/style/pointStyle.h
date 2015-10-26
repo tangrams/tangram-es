@@ -20,7 +20,6 @@ protected:
         std::string spriteDefault;
         glm::vec2 size;
         uint32_t color = 0xffffffff;
-        bool valid = true;
         Label::Options labelOptions;
         float extrudeScale = 1.f;
     };
@@ -30,6 +29,7 @@ protected:
     virtual void buildPoint(const Point& _point, const DrawRule& _rule, const Properties& _props, VboMesh& _mesh, Tile& _tile) const override;
     virtual void buildLine(const Line& _line, const DrawRule& _rule, const Properties& _props, VboMesh& _mesh, Tile& _tile) const override;
     virtual void buildPolygon(const Polygon& _polygon, const DrawRule& _rule, const Properties& _props, VboMesh& _mesh, Tile& _tile) const override;
+    virtual bool checkRule(const DrawRule& _rule) const override;
 
     void pushQuad(std::vector<Label::Vertex>& _vertices, const glm::vec2& _size, const glm::vec2& _uvBL,
             const glm::vec2& _uvTR, unsigned int _color, float _extrudeScale) const;

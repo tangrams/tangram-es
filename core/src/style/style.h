@@ -132,6 +132,8 @@ public:
     /* Make this style ready to be used (call after all needed properties are set) */
     virtual void build(const std::vector<std::unique_ptr<Light>>& _lights);
 
+    virtual bool checkRule(const DrawRule& _rule) const;
+
     void buildFeature(Tile& _tile, const Feature& _feat, const DrawRule& _rule) const;
 
     /* Perform any needed setup to process the data for a tile */
