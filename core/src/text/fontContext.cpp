@@ -82,15 +82,15 @@ FontID FontContext::addFont(const std::string& _family, const std::string& _weig
             }
         }
     }
+
     font = fonsAddFont(m_fsContext, fontKey.c_str(), data, dataSize);
+    m_fonts.emplace(std::move(fontKey), font);
 
     if (font == FONS_INVALID) {
         LOGE("Could not load font %s", fontKey.c_str());
         m_fonts.emplace(std::move(fontKey), INVALID_FONT);
         goto fallback;
     }
-
-    m_fonts.emplace(std::move(fontKey), font);
 
     return font;
 
@@ -99,6 +99,12 @@ fallback:
         return 0;
     }
     return INVALID_FONT;
+}
+
+FontContext::FontMetrics FontContext::getMetrics() {
+    FontMetrics metrics;
+    fonsVertMetrics(m_fsContext, &metrics.ascender, &metrics.descender, &metrics.lineHeight);
+    return metrics;
 }
 
 void FontContext::setFont(const std::string& _key, int size) {

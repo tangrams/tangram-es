@@ -36,6 +36,8 @@ public:
         TextTransform transform = TextTransform::none;
         bool visible = true;
         Label::Options labelOptions;
+        bool wordWrap = true;
+        int maxLineWidth = 15;
 
         bool isValid() {
             return fontSize > 0.f && !text.empty();

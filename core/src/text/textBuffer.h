@@ -26,6 +26,15 @@ public:
     bool addLabel(const TextStyle::Parameters& _params, Label::Transform _transform,
                   Label::Type _type, FontContext& _fontContext);
 
+private:
+
+    struct WordBreak {
+        int start;
+        int end;
+    };
+
+    std::vector<WordBreak> findWordBreaks(const std::string& _text);
+
 };
 
 }
