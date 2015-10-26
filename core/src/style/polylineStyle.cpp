@@ -170,8 +170,8 @@ void PolylineStyle::buildLine(const Line& _line, const DrawRule& _rule, const Pr
         return;
     }
 
-    // Make sure main line width is not zero
-    if (width == 0.0f) { return; }
+    if ( (width > -FLT_EPSILON && width < FLT_EPSILON) &&
+         (dWdZ > -FLT_EPSILON && dWdZ < FLT_EPSILON) ) { return; }
 
     if (Tangram::getDebugFlag(Tangram::DebugFlags::proxy_colors)) {
         abgr = abgr << (_tile.getID().z % 6);
@@ -211,32 +211,32 @@ void PolylineStyle::buildLine(const Line& _line, const DrawRule& _rule, const Pr
         float widthOutline = 0.f;
         float dWdZOutline = 0.f;
 
-        if (!evalStyleParamWidth(StyleParamKey::outline_width, _rule, _tile,
-                                 widthOutline, dWdZOutline)) {
-            return;
-        }
+        if (evalStyleParamWidth(StyleParamKey::outline_width, _rule, _tile, widthOutline, dWdZOutline) &&
+           ((widthOutline < -FLT_EPSILON || widthOutline > FLT_EPSILON) ||
+           (dWdZOutline < -FLT_EPSILON || dWdZOutline > FLT_EPSILON)) ) {
 
-        widthOutline += width;
-        dWdZOutline += dWdZ;
+            widthOutline += width;
+            dWdZOutline += dWdZ;
 
-        if (params.outlineCap != params.cap || params.outlineJoin != params.join) {
-            // need to re-triangulate with different cap and/or join
-            builder.cap = params.outlineCap;
-            builder.join = params.outlineJoin;
-            Builders::buildPolyLine(_line, builder);
-        } else {
-            // re-use indices from original line
-            size_t oldSize = builder.indices.size();
-            size_t offset = vertices.size();
-            builder.indices.reserve(2 * oldSize);
+            if (params.outlineCap != params.cap || params.outlineJoin != params.join) {
+                // need to re-triangulate with different cap and/or join
+                builder.cap = params.outlineCap;
+                builder.join = params.outlineJoin;
+                Builders::buildPolyLine(_line, builder);
+            } else {
+                // re-use indices from original line
+                size_t oldSize = builder.indices.size();
+                size_t offset = vertices.size();
+                builder.indices.reserve(2 * oldSize);
 
-            for(size_t i = 0; i < oldSize; i++) {
-                 builder.indices.push_back(offset + builder.indices[i]);
-            }
-            for (size_t i = 0; i < offset; i++) {
-                const auto& v = vertices[i];
-                glm::vec4 extrudeOutline = { v.extrude.x, v.extrude.y, widthOutline, dWdZOutline };
-                vertices.push_back({ v.pos, v.texcoord, extrudeOutline, abgrOutline, outlineOrder });
+                for(size_t i = 0; i < oldSize; i++) {
+                    builder.indices.push_back(offset + builder.indices[i]);
+                }
+                for (size_t i = 0; i < offset; i++) {
+                    const auto& v = vertices[i];
+                    glm::vec4 extrudeOutline = { v.extrude.x, v.extrude.y, widthOutline, dWdZOutline };
+                    vertices.push_back({ v.pos, v.texcoord, extrudeOutline, abgrOutline, outlineOrder });
+                }
             }
         }
     }
