@@ -29,31 +29,15 @@ void logMsg(const char* fmt, ...) {
 }
 
 void processNetworkQueue() {
-
-    // check if any of the workers is done
-    {
-        for(auto& worker : s_Workers) {
-            if(worker.isFinished() && !worker.isAvailable()) {
-                auto result = worker.getResult();
-                worker.reset();
-                if(result->content.size() != 0) {
-                    result->callback(std::move(result->content));
-                }
-            }
-        }
-    }
-
     // attach workers to NetWorkerData
-    {
-        auto taskItr = s_urlTaskQueue.begin();
-        for(auto& worker : s_Workers) {
-            if(taskItr == s_urlTaskQueue.end()) {
-                break;
-            }
-            if(worker.isAvailable()) {
-                worker.perform(std::move(*taskItr));
-                taskItr = s_urlTaskQueue.erase(taskItr);
-            }
+    auto taskItr = s_urlTaskQueue.begin();
+    for(auto& worker : s_Workers) {
+        if(taskItr == s_urlTaskQueue.end()) {
+            break;
+        }
+        if(worker.isAvailable()) {
+            worker.perform(std::move(*taskItr));
+            taskItr = s_urlTaskQueue.erase(taskItr);
         }
     }
 }
@@ -129,7 +113,8 @@ unsigned char* bytesFromFile(const char* _path, PathType _type, unsigned int* _s
 }
 
 // No system fonts implementation (yet!)
-std::string systemFontPath(const std::string& _name, const std::string& _weight, const std::string& _face) {
+std::string systemFontPath(const std::string& _name, const std::string& _weight,
+                           const std::string& _face) {
     return "";
 }
 
@@ -149,7 +134,8 @@ bool startUrlRequest(const std::string& _url, UrlCallback _callback) {
 
 void cancelUrlRequest(const std::string& _url) {
 
-    // Only clear this request if a worker has not started operating on it!! otherwise it gets too convoluted with curl!
+    // Only clear this request if a worker has not started operating on it!
+    // otherwise it gets too convoluted with curl!
     auto itr = s_urlTaskQueue.begin();
     while(itr != s_urlTaskQueue.end()) {
         if((*itr)->url == _url) {

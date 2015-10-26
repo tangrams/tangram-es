@@ -30,10 +30,8 @@ class UrlWorker {
     public:
         void perform(std::unique_ptr<UrlTask> _task);
         void reset();
-        bool isAvailable() { return m_available; }
-        bool isFinished() { return m_finished; }
+        bool isAvailable() { return !bool(m_task); }
         bool hasTask(const std::string& _url);
-        std::unique_ptr<UrlTask> getResult();
 
         UrlWorker();
         ~UrlWorker();
@@ -41,10 +39,8 @@ class UrlWorker {
     private:
         std::unique_ptr<UrlTask> m_task;
         std::stringstream m_stream;
-        bool m_available = true;
-        bool m_finished = false;
         CURL* m_curlHandle = nullptr;
 
-        std::future< std::unique_ptr<UrlTask> > m_future;
+        std::future<bool> m_future;
 };
 
