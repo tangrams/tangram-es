@@ -1,5 +1,3 @@
-#ifdef PLATFORM_RPI
-
 #include <stdio.h>
 #include <stdarg.h>
 #include <iostream>
@@ -149,5 +147,3 @@ void cancelUrlRequest(const std::string& _url) {
 void setCurrentThreadPriority(int priority) {}
 
 void initGLExtensions() {}
-
-#endif

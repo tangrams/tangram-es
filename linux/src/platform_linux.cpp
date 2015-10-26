@@ -1,5 +1,3 @@
-#ifdef PLATFORM_LINUX
-
 #include <stdio.h>
 #include <stdarg.h>
 #include <iostream>
@@ -175,5 +173,3 @@ void initGLExtensions() {
      glGenVertexArraysOESEXT = (PFNGLGENVERTEXARRAYSPROC)glfwGetProcAddress("glGenVertexArrays");
 
 }
-
-#endif
