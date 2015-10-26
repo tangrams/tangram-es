@@ -18,6 +18,9 @@ UrlWorker::UrlWorker() {
 }
 
 UrlWorker::~UrlWorker() {
+    // wait for thread to finish
+    if (m_future.valid()) { m_future.get(); }
+
     curl_easy_cleanup(m_curlHandle);
 }
 
