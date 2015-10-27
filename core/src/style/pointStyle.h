@@ -22,6 +22,7 @@ protected:
         uint32_t color = 0xffffffff;
         bool valid = true;
         Label::Options labelOptions;
+        float extrudeScale = 1.f;
     };
 
     virtual void constructVertexLayout() override;
@@ -30,10 +31,11 @@ protected:
     virtual void buildLine(const Line& _line, const DrawRule& _rule, const Properties& _props, VboMesh& _mesh, Tile& _tile) const override;
     virtual void buildPolygon(const Polygon& _polygon, const DrawRule& _rule, const Properties& _props, VboMesh& _mesh, Tile& _tile) const override;
 
-    void pushQuad(std::vector<Label::Vertex>& _vertices, const glm::vec2& _size, const glm::vec2& _uvBL, const glm::vec2& _uvTR, unsigned int _color) const;
+    void pushQuad(std::vector<Label::Vertex>& _vertices, const glm::vec2& _size, const glm::vec2& _uvBL,
+            const glm::vec2& _uvTR, unsigned int _color, float _extrudeScale) const;
     bool getUVQuad(Parameters& _params, glm::vec4& _quad) const;
 
-    Parameters applyRule(const DrawRule& _rule, const Properties& _props) const;
+    Parameters applyRule(const DrawRule& _rule, const Properties& _props, float _zoom) const;
 
     virtual VboMesh* newMesh() const override;
 

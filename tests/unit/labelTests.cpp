@@ -24,7 +24,7 @@ TEST_CASE( "Ensure the transition from wait -> sleep when occlusion happens", "[
 
     REQUIRE(l.getState() == Label::State::wait_occ);
     l.setOcclusion(true);
-    l.update(glm::ortho(0.f, screenSize.x, screenSize.y, 0.f, -1.f, 1.f), screenSize, 0);
+    l.update(glm::ortho(0.f, screenSize.x, screenSize.y, 0.f, -1.f, 1.f), screenSize, 0, 0);
 
     REQUIRE(l.getState() != Label::State::sleep);
     REQUIRE(l.getState() == Label::State::wait_occ);
@@ -32,7 +32,7 @@ TEST_CASE( "Ensure the transition from wait -> sleep when occlusion happens", "[
 
     l.setOcclusion(true);
     l.occlusionSolved();
-    l.update(glm::ortho(0.f, screenSize.x, screenSize.y, 0.f, -1.f, 1.f), screenSize, 0);
+    l.update(glm::ortho(0.f, screenSize.x, screenSize.y, 0.f, -1.f, 1.f), screenSize, 0, 0);
 
     REQUIRE(l.getState() == Label::State::dead);
     REQUIRE(!l.canOcclude());
@@ -44,19 +44,19 @@ TEST_CASE( "Ensure the transition from wait -> visible when no occlusion happens
     REQUIRE(l.getState() == Label::State::wait_occ);
 
     l.setOcclusion(false);
-    l.update(glm::ortho(0.f, screenSize.x, screenSize.y, 0.f, -1.f, 1.f), screenSize, 0);
+    l.update(glm::ortho(0.f, screenSize.x, screenSize.y, 0.f, -1.f, 1.f), screenSize, 0, 0);
 
     REQUIRE(l.getState() != Label::State::sleep);
     REQUIRE(l.getState() == Label::State::wait_occ);
 
     l.setOcclusion(false);
     l.occlusionSolved();
-    l.update(glm::ortho(0.f, screenSize.x, screenSize.y, 0.f, -1.f, 1.f), screenSize, 0);
+    l.update(glm::ortho(0.f, screenSize.x, screenSize.y, 0.f, -1.f, 1.f), screenSize, 0, 0);
 
     REQUIRE(l.getState() == Label::State::fading_in);
     REQUIRE(l.canOcclude());
 
-    l.update(glm::ortho(0.f, screenSize.x, screenSize.y, 0.f, -1.f, 1.f), screenSize, 1.f);
+    l.update(glm::ortho(0.f, screenSize.x, screenSize.y, 0.f, -1.f, 1.f), screenSize, 1.f, 0);
     REQUIRE(l.getState() == Label::State::visible);
     REQUIRE(l.canOcclude());
 }
@@ -66,14 +66,14 @@ TEST_CASE( "Ensure the end state after occlusion is leep state", "[Core][Label]"
 
     l.setOcclusion(false);
     l.occlusionSolved();
-    l.update(glm::ortho(0.f, screenSize.x, screenSize.y, 0.f, -1.f, 1.f), screenSize, 0.f);
+    l.update(glm::ortho(0.f, screenSize.x, screenSize.y, 0.f, -1.f, 1.f), screenSize, 0.f, 0);
 
     REQUIRE(l.getState() == Label::State::fading_in);
     REQUIRE(l.canOcclude());
 
     l.setOcclusion(true);
     l.occlusionSolved();
-    l.update(glm::ortho(0.f, screenSize.x, screenSize.y, 0.f, -1.f, 1.f), screenSize, 0.f);
+    l.update(glm::ortho(0.f, screenSize.x, screenSize.y, 0.f, -1.f, 1.f), screenSize, 0.f, 0);
 
     REQUIRE(l.getState() == Label::State::sleep);
     REQUIRE(l.canOcclude());
@@ -84,24 +84,24 @@ TEST_CASE( "Ensure the out of screen state transition", "[Core][Label]" ) {
 
     REQUIRE(l.getState() == Label::State::wait_occ);
 
-    l.update(glm::ortho(0.f, screenSize.x, screenSize.y, 0.f, -1.f, 1.f), screenSize, 0.f);
+    l.update(glm::ortho(0.f, screenSize.x, screenSize.y, 0.f, -1.f, 1.f), screenSize, 0.f, 0);
 
     REQUIRE(l.getState() == Label::State::out_of_screen);
     REQUIRE(!l.canOcclude());
 
-    l.update(glm::ortho(0.f, screenSize.x * 4.f, screenSize.y * 4.f, 0.f, -1.f, 1.f), screenSize, 0.f);
+    l.update(glm::ortho(0.f, screenSize.x * 4.f, screenSize.y * 4.f, 0.f, -1.f, 1.f), screenSize, 0.f, 0);
     REQUIRE(l.getState() == Label::State::wait_occ);
     REQUIRE(l.canOcclude());
 
     l.setOcclusion(false);
     l.occlusionSolved();
-    l.update(glm::ortho(0.f, screenSize.x * 4.f, screenSize.y * 4.f, 0.f, -1.f, 1.f), screenSize, 0.f);
+    l.update(glm::ortho(0.f, screenSize.x * 4.f, screenSize.y * 4.f, 0.f, -1.f, 1.f), screenSize, 0.f, 0);
     REQUIRE(l.getState() != Label::State::wait_occ);
 
     REQUIRE(l.getState() == Label::State::fading_in);
     REQUIRE(l.canOcclude());
 
-    l.update(glm::ortho(0.f, screenSize.x * 4.f, screenSize.y * 4.f, 0.f, -1.f, 1.f), screenSize, 1.f);
+    l.update(glm::ortho(0.f, screenSize.x * 4.f, screenSize.y * 4.f, 0.f, -1.f, 1.f), screenSize, 1.f, 0);
 
     REQUIRE(l.getState() == Label::State::visible);
     REQUIRE(l.canOcclude());
@@ -113,7 +113,7 @@ TEST_CASE( "Ensure debug labels are always visible and cannot occlude", "[Core][
     REQUIRE(l.getState() == Label::State::visible);
     REQUIRE(!l.canOcclude());
 
-    l.update(glm::ortho(0.f, screenSize.x, screenSize.y, 0.f, -1.f, 1.f), screenSize, 1.f);
+    l.update(glm::ortho(0.f, screenSize.x, screenSize.y, 0.f, -1.f, 1.f), screenSize, 1.f, 0);
 
     REQUIRE(l.getState() == Label::State::visible);
     REQUIRE(!l.canOcclude());

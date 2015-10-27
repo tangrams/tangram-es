@@ -112,10 +112,10 @@ bool Label::updateScreenTransform(const glm::mat4& _mvp, const glm::vec2& _scree
     return true;
 }
 
-bool Label::update(const glm::mat4& _mvp, const glm::vec2& _screenSize, float _dt) {
+bool Label::update(const glm::mat4& _mvp, const glm::vec2& _screenSize, float _dt, float _zoomFract) {
     bool animate = false;
 
-    animate = updateState(_mvp, _screenSize, _dt);
+    animate = updateState(_mvp, _screenSize, _dt, _zoomFract);
     m_occlusionSolved = false;
 
     return animate;
@@ -209,7 +209,7 @@ void Label::resetState() {
     enterState(State::wait_occ, 0.0);
 }
 
-bool Label::updateState(const glm::mat4& _mvp, const glm::vec2& _screenSize, float _dt) {
+bool Label::updateState(const glm::mat4& _mvp, const glm::vec2& _screenSize, float _dt, float _zoomFract) {
     if (m_currentState == State::dead) {
         return false;
     }
@@ -230,7 +230,7 @@ bool Label::updateState(const glm::mat4& _mvp, const glm::vec2& _screenSize, flo
     }
 
     // update the view-space bouding box
-    updateBBoxes();
+    updateBBoxes(_zoomFract);
 
     // checks whether the label is out of the viewport
     if (offViewport(_screenSize)) {
