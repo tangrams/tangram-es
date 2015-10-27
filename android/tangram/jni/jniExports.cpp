@@ -66,6 +66,12 @@ extern "C" {
         jniEnv->ReleaseStringUTFChars(stylePath, cStylePath);
     }
 
+    JNIEXPORT void JNICALL Java_com_mapzen_tangram_MapController_setScene(JNIEnv* jniEnv, jobject obj, jstring stylePath) {
+        const char* cStylePath = jniEnv->GetStringUTFChars(stylePath, NULL);
+        Tangram::loadScene(cStylePath);
+        jniEnv->ReleaseStringUTFChars(stylePath, cStylePath);
+    }
+
     JNIEXPORT void JNICALL Java_com_mapzen_tangram_MapController_resize(JNIEnv* jniEnv, jobject obj, jint width, jint height) {
         Tangram::resize(width, height);
     }
