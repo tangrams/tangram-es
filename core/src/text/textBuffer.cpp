@@ -95,10 +95,10 @@ bool TextBuffer::addLabel(const TextStyle::Parameters& _params, Label::Transform
         y0 = std::min(y0, std::min(q.y0, q.y1));
         y1 = std::max(y1, std::max(q.y0, q.y1));
 
-        vertices.push_back({{q.x0, q.y0}, {q.s0, q.t0}, {0, 1}, _params.fill, stroke});
-        vertices.push_back({{q.x0, q.y1}, {q.s0, q.t1}, {2, 1}, _params.fill, stroke});
-        vertices.push_back({{q.x1, q.y0}, {q.s1, q.t0}, {1, 1}, _params.fill, stroke});
-        vertices.push_back({{q.x1, q.y1}, {q.s1, q.t1}, {3, 1}, _params.fill, stroke});
+        vertices.push_back({{q.x0, q.y0}, {q.s0, q.t0}, {-1.f, -1.f, 0.f}, _params.fill, stroke});
+        vertices.push_back({{q.x0, q.y1}, {q.s0, q.t1}, {-1.f,  1.f, 0.f}, _params.fill, stroke});
+        vertices.push_back({{q.x1, q.y0}, {q.s1, q.t0}, { 1.f, -1.f, 0.f}, _params.fill, stroke});
+        vertices.push_back({{q.x1, q.y1}, {q.s1, q.t1}, { 1.f,  1.f, 0.f}, _params.fill, stroke});
     }
 
     _fontContext.unlock();

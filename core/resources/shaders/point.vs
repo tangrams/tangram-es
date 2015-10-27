@@ -26,7 +26,7 @@ attribute LOWP float a_alpha;
 attribute LOWP float a_rotation;
 attribute LOWP vec4 a_color;
 attribute LOWP vec4 a_stroke;
-attribute vec2 a_extrude;
+attribute vec3 a_extrude;
 
 varying vec4 v_color;
 varying vec4 v_strokeColor;
@@ -35,13 +35,6 @@ varying float v_strokeWidth;
 varying float v_alpha;
 
 #pragma tangram: global
-
-const mat4 unitExtrude = mat4(
-    -1.0, -1.0, 0.0, 0.0,
-     1.0, -1.0, 0.0, 0.0,
-    -1.0,  1.0, 0.0, 0.0,
-     1.0,  1.0, 0.0, 0.0
-);
 
 void main() {
     v_texcoords = a_uv;
@@ -54,11 +47,11 @@ void main() {
         float ct = cos(a_rotation);
 
         vec2 vertexPos = a_position;
-        float de = a_extrude.y;
+        float de = a_extrude.z;
 
         if (de != 0.0) {
             float dz = u_map_position.z - abs(u_tile_origin.z);
-            vertexPos.xy += dz * unitExtrude[int(a_extrude.x)].xy * de;
+            vertexPos.xy += dz * a_extrude.xy * de;
         }
 
         // rotates first around +z-axis (0,0,1) and then translates by (tx,ty,0)
