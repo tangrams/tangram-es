@@ -29,7 +29,7 @@ void PointStyle::constructVertexLayout() {
     m_vertexLayout = std::shared_ptr<VertexLayout>(new VertexLayout({
         {"a_position", 2, GL_FLOAT, false, 0},
         {"a_uv", 2, GL_FLOAT, false, 0},
-        {"a_extrude", 2, GL_FLOAT, false, 0},
+        {"a_extrude", 3, GL_FLOAT, false, 0},
         {"a_color", 4, GL_UNSIGNED_BYTE, true, 0},
         {"a_stroke", 4, GL_UNSIGNED_BYTE, true, 0},
         {"a_screenPosition", 2, GL_FLOAT, false, 0},
@@ -105,10 +105,10 @@ PointStyle::Parameters PointStyle::applyRule(const DrawRule& _rule, const Proper
 void PointStyle::pushQuad(std::vector<Label::Vertex>& _vertices, const glm::vec2& _size, const glm::vec2& _uvBL,
                           const glm::vec2& _uvTR, unsigned int _color, float _extrudeScale) const {
 
-    _vertices.push_back({{-_size.x, -_size.y}, {_uvBL.x, _uvBL.y}, {0, _extrudeScale}, _color});
-    _vertices.push_back({{-_size.x,  _size.y}, {_uvBL.x, _uvTR.y}, {2, _extrudeScale}, _color});
-    _vertices.push_back({{_size.x,  -_size.y}, {_uvTR.x, _uvBL.y}, {1, _extrudeScale}, _color});
-    _vertices.push_back({{_size.x,   _size.y}, {_uvTR.x, _uvTR.y}, {3, _extrudeScale}, _color});
+    _vertices.push_back({{-_size.x, -_size.y}, {_uvBL.x, _uvBL.y}, {-1.f, -1.f, _extrudeScale}, _color});
+    _vertices.push_back({{-_size.x,  _size.y}, {_uvBL.x, _uvTR.y}, {-1.f,  1.f, _extrudeScale}, _color});
+    _vertices.push_back({{_size.x,  -_size.y}, {_uvTR.x, _uvBL.y}, { 1.f, -1.f, _extrudeScale}, _color});
+    _vertices.push_back({{_size.x,   _size.y}, {_uvTR.x, _uvTR.y}, { 1.f,  1.f, _extrudeScale}, _color});
 }
 
 bool PointStyle::getUVQuad(Parameters& _params, glm::vec4& _quad) const {
