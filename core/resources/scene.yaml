@@ -231,17 +231,17 @@ layers:
 
     poi_icons:
         data: { source: osm, layer: pois }
-        filter: { name: true, $zoom: { min: 12 } }
+        filter: { name: true, not: { kind: [peak, viewpoint, bicycle_rental, car_sharing] }, $zoom: { min: 15 } }
         draw:
             icons:
                 interactive: true
-                offset: [0px, 0px]
-                size: [[15, 80px], [17, 20px]]
-                priority: -1000
+                offset: [0px, -15px]
+                size: 20px
+                priority: 5
                 collide: true
                 transition:
                     [show, hide]:
-                        time: .0s
+                        time: .3s
                 #size: [[13, 12px], [15, 18px]]
                 #interactive: true
 
