@@ -58,16 +58,21 @@ VboMesh* PointStyle::newMesh() const {
     return new LabelMesh(m_vertexLayout, m_drawMode);
 }
 
+bool PointStyle::checkRule(const DrawRule& _rule) const {
+    uint32_t checkColor;
+    // require a color or texture atlas/texture to be valid
+    if (!_rule.get(StyleParamKey::color, checkColor) && !m_texture && !m_spriteAtlas) {
+        return false;
+    }
+    return true;
+}
+
 PointStyle::Parameters PointStyle::applyRule(const DrawRule& _rule, const Properties& _props, float _zoom) const {
 
     Parameters p;
     glm::vec2 size;
 
-    // require a color or texture atlas/texture to be valid
-    if (!_rule.get(StyleParamKey::color, p.color) && !m_texture && !m_spriteAtlas) {
-        p.valid = false;
-        return p;
-    }
+    _rule.get(StyleParamKey::color, p.color);
     _rule.get(StyleParamKey::sprite, p.sprite);
     _rule.get(StyleParamKey::offset, p.labelOptions.offset);
     _rule.get(StyleParamKey::priority, p.labelOptions.priority);
@@ -147,7 +152,7 @@ void PointStyle::buildPoint(const Point& _point, const DrawRule& _rule, const Pr
     Parameters p = applyRule(_rule, _props, _tile.getID().z);
     glm::vec4 uvsQuad;
 
-    if (!p.valid || !getUVQuad(p, uvsQuad)) {
+    if (!getUVQuad(p, uvsQuad)) {
         return;
     }
 
@@ -170,7 +175,7 @@ void PointStyle::buildLine(const Line& _line, const DrawRule& _rule, const Prope
     Parameters p = applyRule(_rule, _props, _tile.getID().z);
     glm::vec4 uvsQuad;
 
-    if (!p.valid || !getUVQuad(p, uvsQuad)) {
+    if (!getUVQuad(p, uvsQuad)) {
         return;
     }
 
@@ -196,7 +201,7 @@ void PointStyle::buildPolygon(const Polygon& _polygon, const DrawRule& _rule, co
     Parameters p = applyRule(_rule, _props, _tile.getID().z);
     glm::vec4 uvsQuad;
 
-    if (!p.valid || !getUVQuad(p, uvsQuad)) {
+    if (!getUVQuad(p, uvsQuad)) {
         return;
     }
 

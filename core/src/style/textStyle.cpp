@@ -62,6 +62,10 @@ VboMesh* TextStyle::newMesh() const {
     return new TextBuffer(m_vertexLayout);
 }
 
+bool TextStyle::checkRule(const DrawRule& _rule) const {
+    return true;
+}
+
 auto TextStyle::applyRule(const DrawRule& _rule, const Properties& _props) const -> Parameters {
     const static std::string key_name("name");
 

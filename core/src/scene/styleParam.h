@@ -128,6 +128,7 @@ struct StyleParam {
 
     static bool isColor(StyleParamKey _key);
     static bool isWidth(StyleParamKey _key);
+    static bool isRequired(StyleParamKey _key);
 
     static StyleParamKey getKey(const std::string& _key);
 };

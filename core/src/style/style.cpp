@@ -63,7 +63,28 @@ void Style::setLightingType(LightingType _type){
 
 }
 
+bool Style::checkRule(const DrawRule& _rule) const {
+
+    uint32_t checkColor;
+    uint32_t checkOrder;
+
+    if (!_rule.get(StyleParamKey::color, checkColor)) {
+        const auto& blocks = m_shaderProgram->getSourceBlocks();
+        if (blocks.find("color") == blocks.end() && blocks.find("filter") == blocks.end()) {
+            return false; // No color parameter or color block? NO SOUP FOR YOU
+        }
+    }
+
+    if (!_rule.get(StyleParamKey::order, checkOrder)) {
+        return false;
+    }
+
+    return true;
+}
+
 void Style::buildFeature(Tile& _tile, const Feature& _feat, const DrawRule& _rule) const {
+
+    if (!checkRule(_rule)) { return; }
 
     bool visible;
     if (_rule.get(StyleParamKey::visible, visible) && !visible) {

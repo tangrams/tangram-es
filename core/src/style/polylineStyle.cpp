@@ -61,9 +61,7 @@ PolylineStyle::Parameters PolylineStyle::parseRule(const DrawRule& _rule) const 
     _rule.get(StyleParamKey::color, p.color);
     _rule.get(StyleParamKey::cap, cap);
     _rule.get(StyleParamKey::join, join);
-    if (!_rule.get(StyleParamKey::order, p.order)) {
-        LOGW("No 'order' specified for feature, ordering cannot be guaranteed :(");
-    }
+    _rule.get(StyleParamKey::order, p.order);
 
     p.cap = static_cast<CapTypes>(cap);
     p.join = static_cast<JoinTypes>(join);
@@ -153,19 +151,12 @@ bool evalStyleParamWidth(StyleParamKey _key, const DrawRule& _rule, const Tile& 
         return true;
     }
 
-    logMsg("Error: Invalid type for Width '%d'\n", styleParam.value.which());
+    LOGD("Invalid type for Width '%d'\n", styleParam.value.which());
     return false;
 }
 
 void PolylineStyle::buildLine(const Line& _line, const DrawRule& _rule, const Properties& _props,
                               VboMesh& _mesh, Tile& _tile) const {
-
-    if (!_rule.contains(StyleParamKey::color)) {
-        const auto& blocks = m_shaderProgram->getSourceBlocks();
-        if (blocks.find("color") == blocks.end() && blocks.find("filter") == blocks.end()) {
-            return; // No color parameter or color block? NO SOUP FOR YOU
-        }
-    }
 
     std::vector<PolylineVertex> vertices;
 
@@ -178,6 +169,8 @@ void PolylineStyle::buildLine(const Line& _line, const DrawRule& _rule, const Pr
     if (!evalStyleParamWidth(StyleParamKey::width, _rule, _tile, width, dWdZ)) {
         return;
     }
+
+    if (width <= 0.0f && dWdZ <= 0.0f ) { return; }
 
     if (Tangram::getDebugFlag(Tangram::DebugFlags::proxy_colors)) {
         abgr = abgr << (_tile.getID().z % 6);
@@ -217,32 +210,31 @@ void PolylineStyle::buildLine(const Line& _line, const DrawRule& _rule, const Pr
         float widthOutline = 0.f;
         float dWdZOutline = 0.f;
 
-        if (!evalStyleParamWidth(StyleParamKey::outline_width, _rule, _tile,
-                                 widthOutline, dWdZOutline)) {
-            return;
-        }
+        if (evalStyleParamWidth(StyleParamKey::outline_width, _rule, _tile, widthOutline, dWdZOutline) &&
+            ((widthOutline > 0.0f || dWdZOutline > 0.0f)) ) {
 
-        widthOutline += width;
-        dWdZOutline += dWdZ;
+            widthOutline += width;
+            dWdZOutline += dWdZ;
 
-        if (params.outlineCap != params.cap || params.outlineJoin != params.join) {
-            // need to re-triangulate with different cap and/or join
-            builder.cap = params.outlineCap;
-            builder.join = params.outlineJoin;
-            Builders::buildPolyLine(_line, builder);
-        } else {
-            // re-use indices from original line
-            size_t oldSize = builder.indices.size();
-            size_t offset = vertices.size();
-            builder.indices.reserve(2 * oldSize);
+            if (params.outlineCap != params.cap || params.outlineJoin != params.join) {
+                // need to re-triangulate with different cap and/or join
+                builder.cap = params.outlineCap;
+                builder.join = params.outlineJoin;
+                Builders::buildPolyLine(_line, builder);
+            } else {
+                // re-use indices from original line
+                size_t oldSize = builder.indices.size();
+                size_t offset = vertices.size();
+                builder.indices.reserve(2 * oldSize);
 
-            for(size_t i = 0; i < oldSize; i++) {
-                 builder.indices.push_back(offset + builder.indices[i]);
-            }
-            for (size_t i = 0; i < offset; i++) {
-                const auto& v = vertices[i];
-                glm::vec4 extrudeOutline = { v.extrude.x, v.extrude.y, widthOutline, dWdZOutline };
-                vertices.push_back({ v.pos, v.texcoord, extrudeOutline, abgrOutline, outlineOrder });
+                for(size_t i = 0; i < oldSize; i++) {
+                    builder.indices.push_back(offset + builder.indices[i]);
+                }
+                for (size_t i = 0; i < offset; i++) {
+                    const auto& v = vertices[i];
+                    glm::vec4 extrudeOutline = { v.extrude.x, v.extrude.y, widthOutline, dWdZOutline };
+                    vertices.push_back({ v.pos, v.texcoord, extrudeOutline, abgrOutline, outlineOrder });
+                }
             }
         }
     }

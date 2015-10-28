@@ -282,6 +282,9 @@ bool StyleContext::parseStyleResult(StyleParamKey _key, StyleParam::Value& _val)
                 break;
         }
 
+    } else if (duk_is_nan(m_ctx, -1)) {
+        // Ignore setting value
+        LOGD("duk evaluates JS method to NAN.\n");
     } else if (duk_is_number(m_ctx, -1)) {
 
         switch (_key) {
@@ -310,8 +313,11 @@ bool StyleContext::parseStyleResult(StyleParamKey _key, StyleParam::Value& _val)
             default:
                 break;
         }
+    } else if (duk_is_null_or_undefined(m_ctx, -1)) {
+        // Ignore setting value
+        LOGD("duk evaluates JS method to null or undefined.\n");
     } else {
-        LOGW("Unhandled return type from Javascript function.");
+        LOGW("Warning: Unhandled return type from Javascript style function for %d.", _key);
     }
 
     duk_pop(m_ctx);
