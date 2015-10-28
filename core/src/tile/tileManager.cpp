@@ -24,7 +24,14 @@ TileManager::TileManager()
     m_tileCache = std::unique_ptr<TileCache>(new TileCache(DEFAULT_CACHE_SIZE));
 
     m_dataCallback = TileTaskCb{[this](std::shared_ptr<TileTask>&& task){
-        if (setTileState(*task->tile, TileState::processing)) {
+        if (!task->rawTileData || task->rawTileData->empty()) {
+            // Set 'canceled' state when no data was received,
+            // when state is already 'canceled' the state
+            // remains canceled.
+            setTileState(*task->tile, TileState::canceled);
+        }
+        else if (setTileState(*task->tile, TileState::processing)) {
+            // Enqueue tile for processing by TileWorker
             m_workers->enqueue(std::move(task));
         }
     }};
@@ -52,8 +59,8 @@ void TileManager::setScene(std::shared_ptr<Scene> _scene) {
 
             if (sIt != sources.end()) {
                 // Cancel pending  tiles
-                for_each(tileSet.tiles.begin(), tileSet.tiles.end(),
-                         [&](auto& tile){ this->setTileState(*tile.second, TileState::canceled);});
+                for_each(tileSet.tiles.begin(), tileSet.tiles.end(), [&](auto& tile) {
+                        this->setTileState(*tile.second, TileState::canceled); });
 
                 // Clear cache
                 tileSet.tiles.clear();
@@ -97,61 +104,60 @@ std::shared_ptr<ClientGeoJsonSource> TileManager::getClientSourceById(int32_t _i
     return nullptr;
 }
 
-void TileManager::tileProcessed(std::shared_ptr<TileTask>&& task) {
+void TileManager::tileProcessed(std::shared_ptr<TileTask>&& _task) {
     std::lock_guard<std::mutex> lock(m_readyTileMutex);
-    m_readyTiles.push_back(std::move(task));
+    m_readyTiles.push_back(std::move(_task));
 }
 
-bool TileManager::setTileState(Tile& tile, TileState state) {
+bool TileManager::setTileState(Tile& _tile, TileState _newState) {
     std::lock_guard<std::mutex> lock(m_tileStateMutex);
 
-    switch (tile.getState()) {
+    switch (_tile.getState()) {
     case TileState::none:
-        if (state == TileState::loading) {
-            tile.setState(state);
+        if (_newState == TileState::loading) {
+            _tile.setState(_newState);
             m_loadPending++;
             return true;
         }
-        if (state == TileState::processing) {
-            tile.setState(state);
+        if (_newState == TileState::processing) {
+            _tile.setState(_newState);
+            return true;
+        }
+        if (_newState == TileState::none) {
             return true;
         }
         break;
 
     case TileState::loading:
-        if (state == TileState::processing) {
-            tile.setState(state);
-            m_loadPending--;
-            return true;
-        }
-        if (state == TileState::canceled) {
-            tile.setState(state);
+        if (_newState == TileState::processing ||
+            _newState == TileState::canceled) {
+            _tile.setState(_newState);
             m_loadPending--;
             return true;
         }
         break;
 
     case TileState::processing:
-        if (state == TileState::ready) {
-            tile.setState(state);
+        if (_newState == TileState::ready) {
+            _tile.setState(_newState);
             return true;
         }
         break;
 
     case TileState::canceled:
         // Ignore any state change when tile was canceled
-         return false;
+        return false;
 
     default:
         break;
     }
 
-    if (state == TileState::canceled) {
-        tile.setState(state);
+    if (_newState == TileState::canceled) {
+        _tile.setState(_newState);
         return true;
     }
 
-    LOGE("Wrong state change %d -> %d<<<", tile.getState(), state);
+    LOGE("Wrong state change %d -> %d<<<", _tile.getState(), _newState);
     assert(false);
     return false; // ...
 }
@@ -193,9 +199,10 @@ void TileManager::updateTileSets() {
 
     loadTiles();
 
+    // Make m_tiles an unique list of tiles for rendering sorted from
+    // high to low zoom-levels.
     std::sort(m_tiles.begin(), m_tiles.end(), [](auto& a, auto& b){
-            return a->getID() < b->getID();
-        });
+            return a->getID() < b->getID(); });
 
     m_tiles.erase(std::unique(m_tiles.begin(), m_tiles.end()), m_tiles.end());
 }
@@ -343,6 +350,7 @@ void TileManager::loadTiles() {
 
         auto task = std::make_shared<TileTask>(tile, source);
         if (source->getTileData(task)) {
+            setTileState(*tile, TileState::loading);
             m_dataCallback.func(std::move(task));
 
         } else if (m_loadPending < (int)MAX_DOWNLOADS) {
@@ -473,7 +481,8 @@ void TileManager::updateProxyTiles(TileSet& tileSet, Tile& _tile) {
     }
 }
 
-void TileManager::clearProxyTiles(TileSet& tileSet, Tile& _tile, std::vector<TileID>& _removes) {
+void TileManager::clearProxyTiles(TileSet& tileSet, Tile& _tile,
+                                  std::vector<TileID>& _removes) {
     const TileID& _tileID = _tile.getID();
     auto& tiles = tileSet.tiles;
 
