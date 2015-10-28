@@ -106,18 +106,15 @@ void DataSource::clearData() {
 
 void DataSource::constructURL(const TileID& _tileCoord, std::string& _url) const {
     _url.assign(m_urlTemplate);
-
-    size_t xpos = _url.find("{x}");
-    _url.replace(xpos, 3, std::to_string(_tileCoord.x));
-
-    size_t ypos = _url.find("{y}");
-    _url.replace(ypos, 3, std::to_string(_tileCoord.y));
-
-    size_t zpos = _url.find("{z}");
-    _url.replace(zpos, 3, std::to_string(_tileCoord.z));
-
-    if (xpos == std::string::npos || ypos == std::string::npos || zpos == std::string::npos) {
-        LOGE("Bad URL template!!");
+    try {
+        size_t xpos = _url.find("{x}");
+        _url.replace(xpos, 3, std::to_string(_tileCoord.x));
+        size_t ypos = _url.find("{y}");
+        _url.replace(ypos, 3, std::to_string(_tileCoord.y));
+        size_t zpos = _url.find("{z}");
+        _url.replace(zpos, 3, std::to_string(_tileCoord.z));
+    } catch(...) {
+        LOGE("Bad URL template!");
     }
 }
 
