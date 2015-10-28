@@ -4,6 +4,7 @@
 
 #include <string>
 #include <functional>
+#include <memory>
 #include <unordered_map>
 
 struct duk_hthread;
@@ -65,7 +66,7 @@ private:
         StyleContext* ctx;
     };
 
-    std::unordered_map<std::string, Accessor> m_accessors;
+    std::unordered_map<std::string, std::unique_ptr<Accessor>> m_accessors;
 
     std::unordered_map<std::string, Value> m_globals;
 
