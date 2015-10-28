@@ -170,7 +170,7 @@ void PolylineStyle::buildLine(const Line& _line, const DrawRule& _rule, const Pr
         return;
     }
 
-    if (width < FLT_EPSILON && dWdZ < FLT_EPSILON) { return; }
+    if (width <= 0.0f && dWdZ <= 0.0f ) { return; }
 
     if (Tangram::getDebugFlag(Tangram::DebugFlags::proxy_colors)) {
         abgr = abgr << (_tile.getID().z % 6);
@@ -211,8 +211,7 @@ void PolylineStyle::buildLine(const Line& _line, const DrawRule& _rule, const Pr
         float dWdZOutline = 0.f;
 
         if (evalStyleParamWidth(StyleParamKey::outline_width, _rule, _tile, widthOutline, dWdZOutline) &&
-            ((widthOutline > FLT_EPSILON && dWdZOutline >= 0) ||
-             (dWdZOutline > FLT_EPSILON && widthOutline >= 0))) {
+            ((widthOutline > 0.0f || dWdZOutline > 0.0f)) ) {
 
             widthOutline += width;
             dWdZOutline += dWdZ;
