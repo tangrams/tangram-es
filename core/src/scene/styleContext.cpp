@@ -282,6 +282,9 @@ bool StyleContext::parseStyleResult(StyleParamKey _key, StyleParam::Value& _val)
                 break;
         }
 
+    } else if (duk_is_nan(m_ctx, -1)) {
+        // Ignore setting value
+        LOGD("duk evaluates JS method to NAN.\n");
     } else if (duk_is_number(m_ctx, -1)) {
 
         switch (_key) {
