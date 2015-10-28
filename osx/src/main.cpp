@@ -1,6 +1,8 @@
 #include "tangram.h"
 #include "platform_osx.h"
+#include "data/clientGeoJsonSource.h"
 #include <cmath>
+#include <memory>
 
 // Forward declaration
 void init_main_window();
@@ -19,7 +21,11 @@ double last_mouse_up = -double_tap_time; // First click should never trigger a d
 double last_mouse_down = 0.0f;
 double last_x_down = 0.0;
 double last_y_down = 0.0;
-int data_source_id = -1;
+
+using namespace Tangram;
+
+std::shared_ptr<ClientGeoJsonSource> data_source;
+LngLat last_point;
 
 void mouse_button_callback(GLFWwindow* window, int button, int action, int mods) {
 
@@ -45,7 +51,8 @@ void mouse_button_callback(GLFWwindow* window, int button, int action, int mods)
     }
 
     if (time - last_mouse_up < double_tap_time) {
-        Tangram::clearSourceData(data_source_id);
+        logMsg("pick feature\n");
+        Tangram::clearDataSource(*data_source, true, true);
 
         auto picks = Tangram::pickFeaturesAt(x, y);
         std::string name;
@@ -56,12 +63,26 @@ void mouse_button_callback(GLFWwindow* window, int button, int action, int mods)
             }
         }
     } else if ( (time - last_mouse_down) < single_tap_time) {
-        double coords[4] = { x, y, 0, 0 };
-        Tangram::screenToWorldCoordinates(coords[0], coords[1]);
-        Tangram::screenToWorldCoordinates(coords[2], coords[3]);
-        //Tangram::addSourceLine(data_source_id, coords, 2);
-        Tangram::addSourcePoint(data_source_id, coords);
-        // Tangram::handleTapGesture(x, y);
+        LngLat p1 {x, y};
+        Tangram::screenToWorldCoordinates(p1.longitude, p1.latitude);
+
+        if (!(last_point == LngLat{0, 0})) {
+            LngLat p2 = last_point;
+            logMsg("add line %f %f - %f %f\n",
+                   p1.longitude, p1.latitude,
+                   p2.longitude, p2.latitude);
+
+            // data_source->addLine(Properties{{"type", "line" }}, {p1, p2});
+            // data_source->addPoint(Properties{{"type", "point" }}, p2);
+            Properties prop1;
+            prop1.add("type", "line");
+            data_source->addLine(prop1, {p1, p2});
+            Properties prop2;
+            prop2.add("type", "point");
+            data_source->addPoint(prop2, p2);
+        }
+        last_point = p1;
+        Tangram::clearDataSource(*data_source, false, true);
     }
 
     last_mouse_up = time;
@@ -191,7 +212,8 @@ void init_main_window() {
     glfwGetFramebufferSize(main_window, &fbWidth, &fbHeight);
     glViewport(0, 0, fbWidth, fbHeight);
 
-    data_source_id = Tangram::addDataSource("touch");
+    data_source = std::make_shared<ClientGeoJsonSource>("touch", "");
+    Tangram::addDataSource(data_source);
 
 }
 

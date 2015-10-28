@@ -28,4 +28,11 @@ public class LngLat {
         return this;
     }
 
+    public boolean equals(Object other) {
+        if (other instanceof LngLat) {
+            return longitude == ((LngLat) other).longitude
+                && latitude == ((LngLat) other).latitude;
+        }
+        return false;
+    }
 }

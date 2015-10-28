@@ -2,6 +2,7 @@
 
 #include "data/tileData.h"
 #include "tile/tileWorker.h"
+#include "tile/tile.h"
 #include "tile/tileID.h"
 #include "tileTask.h"
 
@@ -17,7 +18,6 @@
 namespace Tangram {
 
 class DataSource;
-class Tile;
 class Scene;
 class View;
 class TileCache;

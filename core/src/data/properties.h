@@ -15,6 +15,7 @@ struct Properties {
     ~Properties();
 
     Properties(const Properties& _other) = default;
+    Properties(Properties&& _other) = default;
     Properties(std::vector<Item>&& _items);
     Properties& operator=(const Properties& _other) = default;
     Properties& operator=(Properties&& _other);

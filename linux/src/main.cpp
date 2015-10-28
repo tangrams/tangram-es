@@ -1,10 +1,14 @@
 #include <curl/curl.h>
+#include <memory>
 
 #include "tangram.h"
+#include "data/clientGeoJsonSource.h"
 #include "platform_linux.h"
 
 #include <sys/types.h>
 #include <sys/stat.h>
+
+using namespace Tangram;
 
 // Forward declaration
 void init_main_window();
@@ -16,7 +20,7 @@ std::string sceneFile = "scene.yaml";
 
 const double double_tap_time = 0.5; // seconds
 const double scroll_multiplier = 0.05; // scaling for zoom
-// const double single_tap_time = 0.25; //seconds (to avoid a long press being considered as a tap)
+const double single_tap_time = 0.25; //seconds (to avoid a long press being considered as a tap)
 
 bool was_panning = false;
 double last_mouse_up = -double_tap_time; // First click should never trigger a double tap
@@ -24,6 +28,9 @@ double last_mouse_down = 0.0f;
 double last_x_down = 0.0;
 double last_y_down = 0.0;
 bool scene_editing_mode = false;
+
+std::shared_ptr<ClientGeoJsonSource> data_source;
+LngLat last_point;
 
 void mouse_button_callback(GLFWwindow* window, int button, int action, int mods) {
 
@@ -47,7 +54,10 @@ void mouse_button_callback(GLFWwindow* window, int button, int action, int mods)
         last_mouse_down = glfwGetTime();
         return;
     }
+
     if (time - last_mouse_up < double_tap_time) {
+        logMsg("pick feature\n");
+        Tangram::clearDataSource(*data_source, true, true);
 
         auto picks = Tangram::pickFeaturesAt(x, y);
         std::string name;
@@ -57,6 +67,29 @@ void mouse_button_callback(GLFWwindow* window, int button, int action, int mods)
                 logMsg(" - %f\t %s\n", it.distance, name.c_str());
             }
         }
+    } else if ( (time - last_mouse_down) < single_tap_time) {
+        LngLat p1 {x, y};
+        Tangram::screenToWorldCoordinates(p1.longitude, p1.latitude);
+
+        if (!(last_point == LngLat{0, 0})) {
+            LngLat p2 = last_point;
+
+            logMsg("add line %f %f - %f %f\n",
+                   p1.longitude, p1.latitude,
+                   p2.longitude, p2.latitude);
+
+            // Let's make variant public!
+            // data_source->addLine(Properties{{"type", "line" }}, {p1, p2});
+            // data_source->addPoint(Properties{{"type", "point" }}, p2);
+            Properties prop1;
+            prop1.add("type", "line");
+            data_source->addLine(prop1, {p1, p2});
+            Properties prop2;
+            prop2.add("type", "point");
+            data_source->addPoint(prop2, p2);
+        }
+        last_point = p1;
+        Tangram::clearDataSource(*data_source, false, true);
     }
 
     last_mouse_up = time;
@@ -191,6 +224,9 @@ void init_main_window() {
     // Setup graphics
     Tangram::setupGL();
     Tangram::resize(width, height);
+
+    data_source = std::make_shared<ClientGeoJsonSource>("touch", "");
+    Tangram::addDataSource(data_source);
 }
 
 // Main program

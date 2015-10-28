@@ -265,70 +265,20 @@ void setPixelScale(float _pixelsPerPoint) {
     }
 }
 
-int addDataSource(const char* _name) {
-
-    if (!m_tileManager) { return -1; }
-    std::lock_guard<std::mutex> lock(m_tilesMutex);
-    auto source = std::make_shared<ClientGeoJsonSource>(std::string(_name), "");
-    m_tileManager->addDataSource(source);
-
-    return source->id();
-}
-
-void clearSourceData(int _sourceId) {
-
+void addDataSource(std::shared_ptr<DataSource> _source) {
     if (!m_tileManager) { return; }
     std::lock_guard<std::mutex> lock(m_tilesMutex);
-    for (auto& set : m_tileManager->getTileSets()) {
-        if (set.source->id() == _sourceId) {
-            set.source->clearData();
-            m_tileManager->clearTileSet(_sourceId);
-        }
-    }
-    requestRender();
+
+    m_tileManager->addDataSource(_source);
 }
 
-void addSourcePoint(int _sourceId, double* _coords) {
+void clearDataSource(DataSource& _source, bool _data, bool _tiles) {
     if (!m_tileManager) { return; }
     std::lock_guard<std::mutex> lock(m_tilesMutex);
-    auto source = m_tileManager->getClientSourceById(_sourceId);
-    if (source) {
-        source->addPoint(_coords);
-        m_tileManager->clearTileSet(_sourceId);
-    }
-    requestRender();
-}
 
-void addSourceLine(int _sourceId, double* _coords, int _lineLength) {
-    if (!m_tileManager) { return; }
-    std::lock_guard<std::mutex> lock(m_tilesMutex);
-    auto source = m_tileManager->getClientSourceById(_sourceId);
-    if (source) {
-        source->addLine(_coords, _lineLength);
-        m_tileManager->clearTileSet(_sourceId);
-    }
-    requestRender();
-}
+    if (_tiles) { m_tileManager->clearTileSet(_source.id()); }
+    if (_data) { _source.clearData(); }
 
-void addSourcePoly(int _sourceId, double* _coords, int* _ringLengths, int _rings) {
-    if (!m_tileManager) { return; }
-    std::lock_guard<std::mutex> lock(m_tilesMutex);
-    auto source = m_tileManager->getClientSourceById(_sourceId);
-    if (source) {
-        source->addPoly(_coords, _ringLengths, _rings);
-        m_tileManager->clearTileSet(_sourceId);
-    }
-    requestRender();
-}
-
-void addSourceGeoJSON(int _sourceId, const char* _data) {
-    if (!m_tileManager) { return; }
-    std::lock_guard<std::mutex> lock(m_tilesMutex);
-    auto source = m_tileManager->getClientSourceById(_sourceId);
-    if (source) {
-        source->addData(_data);
-        m_tileManager->clearTileSet(_sourceId);
-    }
     requestRender();
 }
 

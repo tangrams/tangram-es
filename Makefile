@@ -43,6 +43,14 @@ IOS_TARGET = tangram
 OSX_XCODE_PROJ = tangram.xcodeproj
 IOS_XCODE_PROJ = tangram.xcodeproj
 
+ifdef ANDROID_X86
+	ANDROID_BUILD_DIR = build/android-x86
+	ANDROID_TOOLCHAIN = x86-clang3.5
+	ANDROID_ARCH = x86
+else
+	ANDROID_TOOLCHAIN = arm-linux-androideabi-clang3.5
+endif
+
 ifndef ANDROID_ARCH
 	ANDROID_ARCH = armeabi-v7a
 endif
@@ -66,7 +74,7 @@ ANDROID_CMAKE_PARAMS = \
 	-DMAKE_BUILD_TOOL=$$ANDROID_NDK/prebuilt/darwin-x86_64/bin/make \
 	-DANDROID_ABI=${ANDROID_ARCH} \
 	-DANDROID_STL=c++_shared \
-	-DANDROID_TOOLCHAIN_NAME=arm-linux-androideabi-clang3.5 \
+	-DANDROID_TOOLCHAIN_NAME=${ANDROID_TOOLCHAIN} \
 	-DANDROID_NATIVE_API_LEVEL=${ANDROID_API_LEVEL} \
 	-DLIBRARY_OUTPUT_PATH_ROOT=../../android/tangram
 
@@ -219,3 +227,12 @@ format:
 		if [[ -e $$file ]]; then clang-format -i $$file; fi \
 	done
 	@echo "format done on `git diff --diff-filter=ACMRTUXB --name-only -- '*.cpp' '*.h'`"
+
+swig-bindings:
+	@mkdir -p generated
+	@swig -v -c++  -Icore/src -o android/tangram/jni/jniGenerated.cpp \
+		-outdir generated \
+		-package com.mapzen.tangram -java swig/tangram.i
+	@astyle --style=attach --indent=spaces=2 android/tangram/jni/jniGenerated.cpp
+	@astyle --style=java generated/*.java
+	@mv generated/*.java android/tangram/src/com/mapzen/tangram
