@@ -166,9 +166,6 @@ void TextStyle::buildPolygon(const Polygon& _polygon, const DrawRule& _rule,
     buildPoint(p, _rule, _props, _mesh, _tile);
 }
 
-void TextStyle::onBeginDrawMesh(VboMesh& _mesh) const {
-}
-
 void TextStyle::onBeginDrawFrame(const View& _view, Scene& _scene, int _textureUnit) {
     bool contextLost = Style::glContextLost();
 

@@ -113,8 +113,6 @@ void Tile::draw(const Style& _style, const View& _view) {
     const auto& styleMesh = m_geometry[_style.getName()];
 
     if (styleMesh) {
-        _style.onBeginDrawMesh(*styleMesh);
-
         auto& shader = _style.getShaderProgram();
 
         glm::mat4 modelViewProjMatrix = _view.getViewProjectionMatrix() * m_modelMatrix;

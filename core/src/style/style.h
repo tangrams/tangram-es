@@ -147,8 +147,6 @@ public:
      */
     virtual void onBeginDrawFrame(const View& _view, Scene& _scene, int _textureUnit = 0);
 
-    virtual void onBeginDrawMesh(VboMesh& _mesh) const;
-
     /* Perform any unsetup needed after drawing each frame */
     virtual void onEndDrawFrame() {}
 
