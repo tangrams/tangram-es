@@ -29,9 +29,11 @@ public:
     bool addLabel(const TextStyle::Parameters& _params, Label::Transform _transform,
                   Label::Type _type, FontContext& _fontContext);
 
+    glm::vec2 getAtlasResolution() { return m_atlasRes; }
+
 private:
 
-
+    glm::vec2 m_atlasRes;
     bool m_dirtyTransform;
 };
 

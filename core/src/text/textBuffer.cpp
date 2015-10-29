@@ -68,6 +68,12 @@ bool TextBuffer::addLabel(const TextStyle::Parameters& _params, Label::Transform
     std::vector<FONSquad>& quads = _fontContext.rasterize(*renderText, _params.fontId,
                                                           _params.fontSize,
                                                           _params.blurSpread);
+
+    // the current atlas resolution
+    if (m_atlasRes.x == 0) {
+        m_atlasRes = _fontContext.getAtlasResolution();
+    }
+
     size_t numGlyphs = quads.size();
 
     if (numGlyphs == 0) {
@@ -90,15 +96,28 @@ bool TextBuffer::addLabel(const TextStyle::Parameters& _params, Label::Transform
     uint32_t stroke = (_params.strokeColor & 0x00ffffff) + (strokeWidth << 24);
 
     for (auto& q : quads) {
+        // the atlas resolution at which the quad uvs have been generated onto
+        glm::vec2 atlasResolution(q.atlasWidth, q.atlasHeight);
+        glm::vec2 uvScaleFactor(1.f, 1.f);
+
+        if (atlasResolution != m_atlasRes) {
+            uvScaleFactor = atlasResolution / m_atlasRes;
+        }
+
         x0 = std::min(x0, std::min(q.x0, q.x1));
         x1 = std::max(x1, std::max(q.x0, q.x1));
         y0 = std::min(y0, std::min(q.y0, q.y1));
         y1 = std::max(y1, std::max(q.y0, q.y1));
 
-        vertices.push_back({{q.x0, q.y0}, {q.s0, q.t0}, {-1.f, -1.f, 0.f}, _params.fill, stroke});
-        vertices.push_back({{q.x0, q.y1}, {q.s0, q.t1}, {-1.f,  1.f, 0.f}, _params.fill, stroke});
-        vertices.push_back({{q.x1, q.y0}, {q.s1, q.t0}, { 1.f, -1.f, 0.f}, _params.fill, stroke});
-        vertices.push_back({{q.x1, q.y1}, {q.s1, q.t1}, { 1.f,  1.f, 0.f}, _params.fill, stroke});
+        glm::vec2 uvBL = glm::vec2(q.s0, q.t0) * uvScaleFactor;
+        glm::vec2 uvBR = glm::vec2(q.s0, q.t1) * uvScaleFactor;
+        glm::vec2 uvTL = glm::vec2(q.s1, q.t0) * uvScaleFactor;
+        glm::vec2 uvTR = glm::vec2(q.s1, q.t1) * uvScaleFactor;
+
+        vertices.push_back({{q.x0, q.y0}, uvBL, {-1.f, -1.f, 0.f}, _params.fill, stroke});
+        vertices.push_back({{q.x0, q.y1}, uvBR, {-1.f,  1.f, 0.f}, _params.fill, stroke});
+        vertices.push_back({{q.x1, q.y0}, uvTL, { 1.f, -1.f, 0.f}, _params.fill, stroke});
+        vertices.push_back({{q.x1, q.y1}, uvTR, { 1.f,  1.f, 0.f}, _params.fill, stroke});
     }
 
     _fontContext.unlock();

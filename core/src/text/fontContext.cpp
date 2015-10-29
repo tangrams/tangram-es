@@ -185,9 +185,12 @@ void FontContext::fontstashError(void* _uptr, int _error, int _val) {
         if (nw > TANGRAM_MAX_TEXTURE_WIDTH || nh > TANGRAM_MAX_TEXTURE_HEIGHT) {
             LOGE("Full font texture atlas size reached!");
         } else {
-            fonsExpandAtlas(fontContext->m_fsContext, nw, nh, 1);
-            tex->resize(nw, nh);
-            LOGW("Texture Atlas resize to %d %d", nw, nh);
+            if (fonsExpandAtlas(fontContext->m_fsContext, nw, nh, 1)) {
+                tex->resize(nw, nh);
+                LOGW("Texture Atlas resized to %d %d", nw, nh);
+            } else {
+                LOGE("Unexpected error while expanding the font atlas");
+            }
         }
         break;
     }
@@ -198,6 +201,10 @@ void FontContext::fontstashError(void* _uptr, int _error, int _val) {
         LOGE("Unexpected error in Fontstash %d:%d!", _error, _val);
         break;
     }
+}
+
+glm::vec2 FontContext::getAtlasResolution() const {
+    return glm::vec2(m_atlas->getWidth(), m_atlas->getHeight());
 }
 
 void FontContext::initFontContext(int _atlasSize) {

@@ -4,6 +4,7 @@
 #include "gl/texture.h"
 #include "fontstash.h"
 
+#include "glm/vec2.hpp"
 #include <memory>
 #include <mutex>
 #include <string>
@@ -48,6 +49,7 @@ public:
      */
     std::vector<FONSquad>& rasterize(const std::string& _text, FontID _fontID, float _fontSize, float _sdf);
 
+    glm::vec2 getAtlasResolution() const;
 
 private:
     static void renderUpdate(void* _userPtr, int* _rect, const unsigned char* _data);

@@ -248,6 +248,10 @@ void Style::buildPolygon(const Polygon& _polygon, const DrawRule& _rule, const P
     // No-op by default
 }
 
+void Style::onBeginDrawMesh(VboMesh& _mesh) const {
+    // No-op by default
+}
+
 bool Style::glContextLost() {
     bool contextLost = m_contextLost;
     if (m_contextLost) {

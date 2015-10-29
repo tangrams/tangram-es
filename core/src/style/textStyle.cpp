@@ -166,6 +166,12 @@ void TextStyle::buildPolygon(const Polygon& _polygon, const DrawRule& _rule,
     buildPoint(p, _rule, _props, _mesh, _tile);
 }
 
+void TextStyle::onBeginDrawMesh(VboMesh& _mesh) const {
+    auto& buffer = static_cast<TextBuffer&>(_mesh);
+    glm::vec2 uvScaleFactor = buffer.getAtlasResolution() / m_fontContext->getAtlasResolution();
+    m_shaderProgram->setUniformf("u_uv_scale_factor", uvScaleFactor);
+}
+
 void TextStyle::onBeginDrawFrame(const View& _view, Scene& _scene, int _textureUnit) {
     bool contextLost = Style::glContextLost();
 
