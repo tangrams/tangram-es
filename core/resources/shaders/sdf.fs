@@ -28,6 +28,7 @@ uniform vec2 u_resolution;
 uniform float u_time;
 uniform float u_meters_per_pixel;
 uniform float u_device_pixel_ratio;
+uniform vec2 u_uv_scale_factor;
 
 #pragma tangram: uniforms
 
@@ -44,7 +45,7 @@ float contour(in float d, in float w, float t) {
 }
 
 float sample(in vec2 uv, float w, float t) {
-    return contour(texture2D(u_tex, uv).a, w, t);
+    return contour(texture2D(u_tex, uv * u_uv_scale_factor).a, w, t);
 }
 
 float sampleAlpha(in vec2 uv, float distance, float threshold) {
@@ -69,25 +70,21 @@ float sampleAlpha(in vec2 uv, float distance, float threshold) {
 }
 
 void main(void) {
-    if (v_alpha < TANGRAM_EPSILON) {
-        discard;
-    } else {
 
-        float threshold_fill = 0.5;
-        float threshold_stroke = threshold_fill - v_strokeWidth;
+    float threshold_fill = 0.5;
+    float threshold_stroke = threshold_fill - v_strokeWidth;
 
-        float distance = texture2D(u_tex, v_texcoords).a;
+    float distance = texture2D(u_tex, v_texcoords * u_uv_scale_factor).a;
 
-        float alpha_fill = pow(sampleAlpha(v_texcoords, distance, threshold_fill), 0.4545);
-        float alpha_stroke = pow(sampleAlpha(v_texcoords, distance, threshold_stroke), 0.4545);
+    float alpha_fill = pow(sampleAlpha(v_texcoords, distance, threshold_fill), 0.4545);
+    float alpha_stroke = pow(sampleAlpha(v_texcoords, distance, threshold_stroke), 0.4545);
 
-        vec4 color = mix(v_strokeColor, v_color, alpha_fill);
-        color.a = max(alpha_fill, alpha_stroke) * v_alpha;
+    vec4 color = mix(v_strokeColor, v_color, alpha_fill);
+    color.a = max(alpha_fill, alpha_stroke) * v_alpha;
 
-        #pragma tangram: color
-        #pragma tangram: filter
+    #pragma tangram: color
+    #pragma tangram: filter
 
-        gl_FragColor = color;
-    }
+    gl_FragColor = color;
 }
 

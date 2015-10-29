@@ -22,7 +22,13 @@ FontContext::~FontContext() {
 void FontContext::bindAtlas(GLuint _textureUnit) {
     {
         std::lock_guard<std::mutex> lock(m_atlasMutex);
-        m_atlas->update(_textureUnit);
+        int width, height;
+        auto* tex = fonsGetTextureData(m_fsContext, &width, &height);
+        m_atlas->update(_textureUnit, reinterpret_cast<const GLuint*>(tex));
+
+        // use size of bound texture for drawing, since
+        // atlas size can change on tile-worker thread
+        m_boundAtlasSize = { m_atlas->getWidth(), m_atlas->getHeight() };
     }
     m_atlas->bind(_textureUnit);
 }
@@ -69,7 +75,7 @@ FontID FontContext::addFont(const std::string& _family, const std::string& _weig
             !(data = bytesFromFile(bundledFontPath.c_str(), PathType::internal, &dataSize))) {
             const std::string sysFontPath = systemFontPath(_family, _weight, _style);
             if ( !(data = bytesFromFile(sysFontPath.c_str(), PathType::absolute, &dataSize)) ) {
-                
+
                 LOGE("Could not load font file %s", fontKey.c_str());
                 m_fonts.emplace(std::move(fontKey), INVALID_FONT);
                 goto fallback;
@@ -162,28 +168,47 @@ int FontContext::renderCreate(void* _userPtr, int _width, int _height) {
 void FontContext::renderUpdate(void* _userPtr, int* _rect, const unsigned char* _data) {
     FontContext* fontContext = static_cast<FontContext*>(_userPtr);
 
-    uint32_t xoff = 0;
+    // DONT: deadlock here when the lock is held by FONS_ATLAS_FULL
+    if (fontContext->m_handleAtlasFull) { return; }
+
     uint32_t yoff = _rect[1];
-    uint32_t width = fontContext->m_atlas->getWidth();
     uint32_t height = _rect[3] - _rect[1];
 
-    auto subdata = reinterpret_cast<const GLuint*>(_data + yoff * width);
-
     std::lock_guard<std::mutex> lock(fontContext->m_atlasMutex);
-    fontContext->m_atlas->setSubData(subdata, xoff, yoff, width, height);
+    fontContext->m_atlas->setDirty(yoff, height);
 }
 
-void FontContext::fontstashError(void* uptr, int error, int val) {
-    switch(error) {
-    case FONS_ATLAS_FULL:
-        LOGE("Texture Atlas full!");
-        break;
+void FontContext::fontstashError(void* _uptr, int _error, int _val) {
+    FontContext* fontContext = static_cast<FontContext*>(_uptr);
 
+    switch(_error) {
+    case FONS_ATLAS_FULL: {
+        // callback during rasterize ()
+        fontContext->m_handleAtlasFull = true;
+        const auto& tex = fontContext->m_atlas;
+        unsigned int nw = tex->getWidth() * 2;
+        unsigned int nh = tex->getHeight() * 2;
+
+        if (nw > TANGRAM_MAX_TEXTURE_WIDTH || nh > TANGRAM_MAX_TEXTURE_HEIGHT) {
+            LOGE("Full font texture atlas size reached!");
+        } else {
+            std::lock_guard<std::mutex> lock(fontContext->m_atlasMutex);
+
+            if (fonsExpandAtlas(fontContext->m_fsContext, nw, nh, 1)) {
+                tex->resize(nw, nh);
+                LOGW("Texture Atlas resized to %d %d", nw, nh);
+            } else {
+                LOGE("Unexpected error while expanding the font atlas");
+            }
+        }
+        fontContext->m_handleAtlasFull = false;
+        break;
+    }
     case FONS_SCRATCH_FULL:
     case FONS_STATES_OVERFLOW:
     case FONS_STATES_UNDERFLOW:
     default:
-        LOGE("Unexpected error in Fontstash %d:%d!", error, val);
+        LOGE("Unexpected error in Fontstash %d:%d!", _error, _val);
         break;
     }
 }
@@ -194,7 +219,7 @@ void FontContext::initFontContext(int _atlasSize) {
     FONSparams params;
     params.width = _atlasSize;
     params.height = _atlasSize;
-    params.flags = (unsigned char)FONS_ZERO_TOPLEFT | FONS_NORMALIZE_TEX_COORDS;
+    params.flags = (unsigned char)FONS_ZERO_TOPLEFT;
 
     params.renderCreate = renderCreate;
     params.renderResize = nullptr;

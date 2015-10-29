@@ -3,7 +3,6 @@
 #include "gl.h"
 
 #include <vector>
-#include <deque>
 #include <memory>
 #include <string>
 
@@ -26,7 +25,9 @@ struct TextureOptions {
     TextureWrapping m_wrapping;
 };
 
-#define TANGRAM_MAX_TEXTURE_UNIT 6
+#define TANGRAM_MAX_TEXTURE_UNIT    6
+#define TANGRAM_MAX_TEXTURE_WIDTH   2048
+#define TANGRAM_MAX_TEXTURE_HEIGHT  2048
 
 class Texture {
 
@@ -45,6 +46,8 @@ public:
     /* Perform texture updates, should be called at least once and after adding data or resizing */
     virtual void update(GLuint _textureSlot);
 
+    virtual void update(GLuint _textureSlot, const GLuint* data);
+
     /* Resize the texture */
     void resize(const unsigned int _width, const unsigned int _height);
 
@@ -53,6 +56,8 @@ public:
     unsigned int getHeight() const { return m_height; }
     
     void bind(GLuint _unit);
+
+    void setDirty(size_t yOffset, size_t height);
 
     GLuint getGlHandle() { return m_glHandle; }
 
@@ -63,8 +68,8 @@ public:
     void setData(const GLuint* _data, unsigned int _dataSize);
 
     /* Update a region of the texture */
-    void setSubData(const GLuint* _subData, unsigned int _xoff, unsigned int _yoff,
-                    unsigned int _width, unsigned int _height);
+    void setSubData(const GLuint* _subData, uint16_t _xoff, uint16_t _yoff,
+                    uint16_t _width, uint16_t _height);
 
     typedef std::pair<GLuint, GLuint> TextureSlot;
 
@@ -78,7 +83,12 @@ protected:
     std::vector<GLuint> m_data;
     GLuint m_glHandle;
 
-    bool m_dirty;
+    struct DirtyRange {
+        size_t min;
+        size_t max;
+    };
+    std::vector<DirtyRange> m_dirtyRanges;
+
     bool m_shouldResize;
 
     unsigned int m_width;
@@ -90,20 +100,10 @@ protected:
     static int s_validGeneration;
 
 private:
-    struct TextureSubData {
-        std::vector<GLuint> m_data;
-        unsigned int m_xoff;
-        unsigned int m_yoff;
-        unsigned int m_width;
-        unsigned int m_height;
-    };
 
     size_t bytesPerPixel();
 
     bool m_generateMipmaps;
-
-    // used to queue the subdata updates, each call of setSubData would be treated in the order that they arrived
-    std::deque<TextureSubData> m_subData;
 };
 
 }

@@ -4,6 +4,7 @@
 #include "gl/texture.h"
 #include "fontstash.h"
 
+#include "glm/vec2.hpp"
 #include <memory>
 #include <mutex>
 #include <string>
@@ -48,12 +49,15 @@ public:
      */
     std::vector<FONSquad>& rasterize(const std::string& _text, FontID _fontID, float _fontSize, float _sdf);
 
+    glm::vec2 getAtlasResolution() const {
+        return m_boundAtlasSize;
+    }
 
 private:
     static void renderUpdate(void* _userPtr, int* _rect, const unsigned char* _data);
     static int renderCreate(void* _userPtr, int _width, int _height);
     static void pushQuad(void* _userPtr, const FONSquad* _quad);
-    static void fontstashError(void* uptr, int error, int val);
+    static void fontstashError(void* _uptr, int _error, int _val);
 
     FontContext(int _atlasSize);
 
@@ -63,10 +67,10 @@ private:
     std::unique_ptr<Texture> m_atlas;
     std::mutex m_contextMutex;
     std::mutex m_atlasMutex;
-
+    bool m_handleAtlasFull = false;
     FONScontext* m_fsContext;
     std::vector<FONSquad> m_quadBuffer;
-
+    glm::vec2 m_boundAtlasSize;
 };
 
 }

@@ -171,6 +171,9 @@ void TextStyle::onBeginDrawFrame(const View& _view, Scene& _scene, int _textureU
 
     m_fontContext->bindAtlas(0);
 
+    m_shaderProgram->setUniformf("u_uv_scale_factor",
+                                 1.0f / m_fontContext->getAtlasResolution());
+
     if (contextLost) {
         m_shaderProgram->setUniformi("u_tex", 0);
     }
