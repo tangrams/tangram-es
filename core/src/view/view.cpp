@@ -455,7 +455,7 @@ void View::updateTiles() {
     glm::dvec2 d = (glm::dvec2(viewTL.x + m_pos.x, viewTL.y + m_pos.y) - tileSpaceOrigin) * tileSpaceAxes;
 
     // Location of the view center in tile space
-    glm::dvec2 e = (glm::dvec2(m_pos.x, m_pos.y) - tileSpaceOrigin) * tileSpaceAxes;
+    glm::dvec2 e = (glm::dvec2(m_pos.x + m_eye.x, m_pos.y + m_eye.y) - tileSpaceOrigin) * tileSpaceAxes;
 
     int imax = std::numeric_limits<int>::max();
     int imin = std::numeric_limits<int>::min();
