@@ -2,9 +2,10 @@
 
 namespace Tangram {
 
-TextLabel::TextLabel(Label::Transform _transform, Type _type, glm::vec2 _dim,
-                     TextBuffer& _mesh, Range _vertexRange, Label::Options _options)
-    : Label(_transform, _dim, _type, static_cast<LabelMesh&>(_mesh), _vertexRange, _options)
+TextLabel::TextLabel(Label::Transform _transform, Type _type, glm::vec2 _dim, TextBuffer& _mesh,
+                     Range _vertexRange, Label::Options _options, FontContext::FontMetrics _metrics, int _nLines)
+    : Label(_transform, _dim, _type, static_cast<LabelMesh&>(_mesh), _vertexRange, _options),
+    m_metrics(_metrics), m_nLines(_nLines)
 {}
 
 void TextLabel::updateBBoxes(float _zoomFract) {
@@ -20,9 +21,8 @@ void TextLabel::updateBBoxes(float _zoomFract) {
     obbCenter = m_transform.state.screenPos;
     // move forward on line by half the text length
     obbCenter += t * m_dim.x * 0.5f;
-    // TODO: use real font metrics
     // move down on the perpendicular to estimated font baseline
-    obbCenter -= tperp * (m_dim.y / 8);
+    obbCenter -= m_dim.y * 0.5f + m_metrics.descender * (float) m_nLines;
 
     m_obb = OBB(obbCenter.x, obbCenter.y, m_transform.state.rotation, m_dim.x, m_dim.y);
     m_aabb = m_obb.getExtent();
