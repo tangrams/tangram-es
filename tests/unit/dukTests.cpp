@@ -63,6 +63,41 @@ TEST_CASE( "Test evalFilterFn with feature and globals", "[Duktape][evalFilterFn
 
     ctx.setGlobal("$zoom", 4);
     REQUIRE(ctx.evalFilterFn("fn") == false);
+
+}
+
+TEST_CASE( "Test evalFilterFn with feature and global geometry", "[Duktape][evalFilterFn]") {
+    Feature points;
+    points.geometryType = GeometryType::points;
+
+    Feature lines;
+    lines.geometryType = GeometryType::lines;
+
+    Feature polygons;
+    polygons.geometryType = GeometryType::polygons;
+
+    StyleContext ctx;
+
+    // Test $geometry global
+    ctx.addFunction("fn1", R"(function() { return $geometry === point; })");
+    ctx.addFunction("fn2", R"(function() { return $geometry === line; })");
+    ctx.addFunction("fn3", R"(function() { return $geometry === polygon; })");
+
+    ctx.setFeature(points);
+    REQUIRE(ctx.evalFilterFn("fn1") == true);
+    REQUIRE(ctx.evalFilterFn("fn2") == false);
+    REQUIRE(ctx.evalFilterFn("fn3") == false);
+
+    ctx.setFeature(lines);
+    REQUIRE(ctx.evalFilterFn("fn1") == false);
+    REQUIRE(ctx.evalFilterFn("fn2") == true);
+    REQUIRE(ctx.evalFilterFn("fn3") == false);
+
+    ctx.setFeature(polygons);
+    REQUIRE(ctx.evalFilterFn("fn1") == false);
+    REQUIRE(ctx.evalFilterFn("fn2") == false);
+    REQUIRE(ctx.evalFilterFn("fn3") == true);
+
 }
 
 TEST_CASE( "Test evalFilterFn with different features", "[Duktape][evalFilterFn]") {
@@ -204,8 +239,8 @@ TEST_CASE( "Test evalFilter - Init filter function from yaml", "[Duktape][evalFi
 
     REQUIRE(scene.functions().size() == 2);
 
-    REQUIRE(filter0.type == FilterType::function);
-    REQUIRE(filter1.type == FilterType::function);
+    REQUIRE(filter0.data.is<Filter::Function>());
+    REQUIRE(filter1.data.is<Filter::Function>());
 
     StyleContext ctx;
     ctx.initFunctions(scene);

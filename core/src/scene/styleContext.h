@@ -1,11 +1,11 @@
 #pragma once
 
 #include "scene/styleParam.h"
+#include "util/fastmap.h"
 
 #include <string>
 #include <functional>
 #include <memory>
-#include <unordered_map>
 
 struct duk_hthread;
 typedef struct duk_hthread duk_context;
@@ -50,8 +50,6 @@ public:
 
 
 private:
-    // static duk_ret_t jsPropertyGetter(duk_context *_ctx);
-    // static duk_ret_t jsPropertySetter(duk_context *_ctx);
     static int jsPropertyGetter(duk_context *_ctx);
     static int jsPropertySetter(duk_context *_ctx);
 
@@ -66,9 +64,8 @@ private:
         StyleContext* ctx;
     };
 
-    std::unordered_map<std::string, std::unique_ptr<Accessor>> m_accessors;
-
-    std::unordered_map<std::string, Value> m_globals;
+    fastmap<std::string, std::unique_ptr<Accessor>> m_accessors;
+    fastmap<std::string, Value> m_globals;
 
     int32_t m_sceneId = -1;
 

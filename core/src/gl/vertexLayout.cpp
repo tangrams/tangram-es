@@ -4,7 +4,7 @@
 
 namespace Tangram {
 
-std::unordered_map<GLint, GLuint> VertexLayout::s_enabledAttribs = std::unordered_map<GLint, GLuint>();
+fastmap<GLint, GLuint> VertexLayout::s_enabledAttribs = {};
 
 VertexLayout::VertexLayout(std::vector<VertexAttrib> _attribs) : m_attribs(_attribs) {
 
@@ -56,7 +56,7 @@ size_t VertexLayout::getOffset(std::string _attribName) {
     return 0;
 }
 
-void VertexLayout::enable(const std::unordered_map<std::string, GLuint>& _locations, size_t _byteOffset) {
+void VertexLayout::enable(const fastmap<std::string, GLuint>& _locations, size_t _byteOffset) {
 
     for (auto& attrib : m_attribs) {
         auto it = _locations.find(attrib.name);
@@ -86,10 +86,11 @@ void VertexLayout::enable(ShaderProgram& _program, size_t _byteOffset, void* _pt
         GLint location = _program.getAttribLocation(attrib.name);
 
         if (location != -1) {
+            auto& loc = s_enabledAttribs[location];
             // Track currently enabled attribs by the program to which they are bound
-            if (s_enabledAttribs[location] != glProgram) {
+            if (loc != glProgram) {
                 glEnableVertexAttribArray(location);
-                s_enabledAttribs[location] = glProgram;
+                loc = glProgram;
             }
 
             void* data = _ptr ? _ptr : ((unsigned char*) attrib.offset) + _byteOffset;

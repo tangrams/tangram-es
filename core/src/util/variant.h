@@ -1,6 +1,19 @@
 #pragma once
 
+// Always compile variant with NDEBUG
+// to properly inline functions
+#ifdef NDEBUG
+#define KEEP_NDEBUG
+#else
+#define NDEBUG
+#endif
+
 #include "variant/variant.hpp"
+
+#ifndef KEEP_NDEBUG
+#undef NDEBUG
+#endif
+
 #include "glm/vec2.hpp"
 #include "glm/vec3.hpp"
 #include "glm/vec4.hpp"

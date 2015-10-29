@@ -2,8 +2,9 @@
 
 #include "gl.h"
 
+#include "util/fastmap.h"
+
 #include <vector>
-#include <unordered_map>
 #include <memory>
 #include <string>
 
@@ -29,7 +30,7 @@ public:
 
     void enable(ShaderProgram& _program, size_t _byteOffset, void* _ptr = nullptr);
 
-    void enable(const std::unordered_map<std::string, GLuint>& _locations, size_t _bytOffset);
+    void enable(const fastmap<std::string, GLuint>& _locations, size_t _bytOffset);
 
     GLint getStride() const { return m_stride; };
 
@@ -39,7 +40,7 @@ public:
 
 private:
 
-    static std::unordered_map<GLint, GLuint> s_enabledAttribs; // Map from attrib locations to bound shader program
+    static fastmap<GLint, GLuint> s_enabledAttribs; // Map from attrib locations to bound shader program
 
     std::vector<VertexAttrib> m_attribs;
     GLint m_stride;
