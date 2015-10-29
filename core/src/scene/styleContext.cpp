@@ -18,6 +18,9 @@ const static char DATA_ID[] = "\xff""\xff""data";
 const static char ATTR_ID[] = "\xff""\xff""attr";
 const static char FUNC_ID[] = "\xff""\xff""fns";
 
+static const std::string key_geometry = "$geomtry";
+static const std::string key_zoom("$zoom");
+
 StyleContext::StyleContext() {
     m_ctx = duk_create_heap_default();
 
@@ -78,21 +81,14 @@ void StyleContext::initFunctions(const Scene& _scene) {
 }
 
 void StyleContext::setFeature(const Feature& _feature) {
-    static const std::string _geometry("$geometry");
 
     m_feature = &_feature;
-
-    setGlobal(_geometry, _feature.geometryType);
-
-    for (auto& item : _feature.props.items()) {
-        addAccessor(item.key);
-    }
+    m_featureIsReady = false;
 }
 
 void StyleContext::setGlobalZoom(float _zoom) {
-    static const std::string _key("$zoom");
     if (_zoom != m_globalZoom) {
-        setGlobal(_key, _zoom);
+        setGlobal(key_zoom, _zoom);
     }
 }
 
@@ -147,12 +143,14 @@ bool StyleContext::addFunction(const std::string& _name, const std::string& _fun
     // Put function in global scope
     duk_put_global_string(m_ctx, _name.c_str());
 
-
     DUMP("addFunction\n");
     return true;
 }
 
-bool StyleContext::evalFilter(FunctionID _id) const {
+bool StyleContext::evalFilter(FunctionID _id) {
+    if (!m_featureIsReady) {
+        setAccessors();
+    }
 
     if (!duk_get_global_string(m_ctx, FUNC_ID)) {
         LOGE("EvalFilterFn - functions not initialized");
@@ -190,6 +188,10 @@ bool StyleContext::evalFilter(FunctionID _id) const {
 }
 
 bool StyleContext::evalFilterFn(const std::string& _name) {
+    if (!m_featureIsReady) {
+        setAccessors();
+    }
+
     if (!duk_get_global_string(m_ctx, _name.c_str())) {
         LOGE("EvalFilter %s", _name.c_str());
         return false;
@@ -329,7 +331,7 @@ bool StyleContext::parseStyleResult(StyleParamKey _key, StyleParam::Value& _val)
         // Ignore setting value
         LOGD("duk evaluates JS method to null or undefined.\n");
     } else {
-        LOGW("Warning: Unhandled return type from Javascript style function for %d.", _key);
+        LOGW("Unhandled return type from Javascript style function for %d.", _key);
     }
 
     duk_pop(m_ctx);
@@ -338,7 +340,11 @@ bool StyleContext::parseStyleResult(StyleParamKey _key, StyleParam::Value& _val)
     return !_val.is<none_type>();
 }
 
-bool StyleContext::evalStyle(FunctionID _id, StyleParamKey _key, StyleParam::Value& _val) const {
+bool StyleContext::evalStyle(FunctionID _id, StyleParamKey _key, StyleParam::Value& _val) {
+    if (!m_featureIsReady) {
+        setAccessors();
+    }
+
     if (!duk_get_global_string(m_ctx, FUNC_ID)) {
         LOGE("EvalFilterFn - functions array not initialized");
         return false;
@@ -362,6 +368,10 @@ bool StyleContext::evalStyle(FunctionID _id, StyleParamKey _key, StyleParam::Val
 
 
 bool StyleContext::evalStyleFn(const std::string& name, StyleParamKey _key, StyleParam::Value& _val) {
+    if (!m_featureIsReady) {
+        setAccessors();
+    }
+
     if (!duk_get_global_string(m_ctx, name.c_str())) {
         LOGE("EvalFilter %s", name.c_str());
         return false;
@@ -376,6 +386,17 @@ bool StyleContext::evalStyleFn(const std::string& name, StyleParamKey _key, Styl
     return parseStyleResult(_key, _val);
 }
 
+
+void StyleContext::setAccessors() {
+
+    m_featureIsReady = true;
+
+    setGlobal(key_geometry, m_feature->geometryType);
+
+    for (auto& item : m_feature->props.items()) {
+        addAccessor(item.key);
+    }
+}
 
 void StyleContext::addAccessor(const std::string& _name) {
 

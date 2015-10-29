@@ -84,7 +84,7 @@ struct Filter {
         return { Function{ id }};
     }
 
-    bool eval(const Feature& feat, const StyleContext& ctx) const;
+    bool eval(const Feature& feat, StyleContext& ctx) const;
 
 private:
 

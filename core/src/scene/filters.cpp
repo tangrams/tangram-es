@@ -4,7 +4,7 @@
 
 namespace Tangram {
 
-bool Filter::eval(const Feature& feat, const StyleContext& ctx) const {
+bool Filter::eval(const Feature& feat, StyleContext& ctx) const {
 
     switch (data.get_type_index()) {
 

@@ -26,15 +26,13 @@ public:
     StyleContext();
     ~StyleContext();
 
-    void addAccessor(const std::string& _name);
-
     bool addFunction(const std::string& _name, const std::string& _func);
 
     bool evalFilterFn(const std::string& _name);
-    bool evalFilter(FunctionID id) const;
+    bool evalFilter(FunctionID id);
 
     bool evalStyleFn(const std::string& _name, StyleParamKey _key, StyleParam::Value& _val);
-    bool evalStyle(FunctionID id, StyleParamKey _key, StyleParam::Value& _val) const;
+    bool evalStyle(FunctionID id, StyleParamKey _key, StyleParam::Value& _val);
 
     void setFeature(const Feature& _feature);
 
@@ -55,9 +53,13 @@ private:
 
     bool parseStyleResult(StyleParamKey _key, StyleParam::Value& _val) const;
 
+    void setAccessors();
+    void addAccessor(const std::string& _name);
+
     mutable duk_context *m_ctx;
 
     const Feature* m_feature = nullptr;
+    bool m_featureIsReady;
 
     struct Accessor {
         std::string key;
