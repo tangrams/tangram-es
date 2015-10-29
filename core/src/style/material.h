@@ -96,7 +96,7 @@ private:
     glm::vec4 m_emission = glm::vec4(1.f);
     MaterialTexture m_emission_texture;
 
-    bool m_bAmbient = true;
+    bool m_bAmbient = false;
     glm::vec4 m_ambient = glm::vec4(1.f);
     MaterialTexture m_ambient_texture;
 

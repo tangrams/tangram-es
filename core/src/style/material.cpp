@@ -193,9 +193,9 @@ void Material::setupProgram(ShaderProgram& _shader) {
         _shader.setUniformf("u_material.specular", m_specular);
         _shader.setUniformf("u_material.shininess", m_shininess);
 
-        if (m_diffuse_texture.tex) {
-            m_diffuse_texture.tex->update(4);
-            m_diffuse_texture.tex->bind(4);
+        if (m_specular_texture.tex) {
+            m_specular_texture.tex->update(4);
+            m_specular_texture.tex->bind(4);
             _shader.setUniformi("u_material_specular_texture", 4);
             _shader.setUniformf("u_material.specularScale", m_specular_texture.scale);
         }
