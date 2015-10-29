@@ -71,7 +71,7 @@ TEST_CASE( "Test style loading" ) {
 
     REQUIRE(styles[2]->getMaterial()->hasEmission() == true);
     REQUIRE(styles[2]->getMaterial()->hasDiffuse() == true);
-    REQUIRE(styles[2]->getMaterial()->hasAmbient() == true);
+    REQUIRE(styles[2]->getMaterial()->hasAmbient() == false);
     REQUIRE(styles[2]->getMaterial()->hasSpecular() == false);
 }
 
