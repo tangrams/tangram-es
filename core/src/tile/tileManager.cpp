@@ -24,7 +24,8 @@ TileManager::TileManager()
     m_tileCache = std::unique_ptr<TileCache>(new TileCache(DEFAULT_CACHE_SIZE));
 
     m_dataCallback = TileTaskCb{[this](std::shared_ptr<TileTask>&& task){
-        if (!task->rawTileData || task->rawTileData->empty()) {
+        auto clientDS = std::dynamic_pointer_cast<ClientGeoJsonSource>(task->source);
+        if (!clientDS && (!task->rawTileData || task->rawTileData->empty())) {
             // Set 'canceled' state when no data was received,
             // when state is already 'canceled' the state
             // remains canceled.
