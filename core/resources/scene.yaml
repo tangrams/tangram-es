@@ -353,7 +353,6 @@ layers:
                 interactive: true
                 visible: true
                 priority: 2
-                transform: capitalize
                 offset: [0, 8px]
                 font:
                     family: sans-serif
@@ -369,19 +368,18 @@ layers:
                     visible: true
                     offset: [0px, 5px]
                     priority: 1
-                    transform: lowercase
                     font:
                         family: sans-serif
                         weight: 400
                         style: normal
                         size: 25px
                         fill: black
+                        transform: capitalize
         major_road:
             filter: { kind: major_road }
             draw:
                 text:
                     interactive: true
-                    transform: capitalize
                     visible: true
                     priority: 3
                     font:
@@ -445,7 +443,6 @@ layers:
             text:
                 interactive: true
                 priority: 0
-                transform: lowercase
                 font:
                     family: sans-serif
                     weight: 400
