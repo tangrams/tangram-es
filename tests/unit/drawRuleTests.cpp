@@ -2,6 +2,7 @@
 
 #include "scene/drawRule.h"
 #include "scene/sceneLayer.h"
+#include "platform.h"
 
 #include <cstdio>
 #include <algorithm>

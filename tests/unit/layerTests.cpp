@@ -152,7 +152,7 @@ TEST_CASE("SceneLayer matches correct rules for a feature and context", "[SceneL
         Styling styling;
         auto layer_a = instance_a();
 
-        layer_a.match(feat, ctx, styling);
+        styling.match(feat, layer_a, ctx);
         auto& matches_a = styling.styles;
 
         REQUIRE(matches_a.size() == 1);
@@ -163,7 +163,7 @@ TEST_CASE("SceneLayer matches correct rules for a feature and context", "[SceneL
         Styling styling;
         auto layer_b = instance_b();
 
-        layer_b.match(feat, ctx, styling);
+        styling.match(feat, layer_b, ctx);
         auto& matches_b = styling.styles;
 
         REQUIRE(matches_b.size() == 0);

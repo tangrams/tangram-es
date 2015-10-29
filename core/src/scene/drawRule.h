@@ -67,7 +67,10 @@ struct Styling {
                const SceneLayer& _sceneLayer,
                StyleContext& _ctx, Tile& _tile);
 
-protected:
+    // internal
+    bool match(const Feature& _feature, const SceneLayer& _layer, StyleContext& _ctx);
+
+    // internal
     void mergeRules(const std::vector<StaticDrawRule>& rules);
 
     // Reusable 'styles' and 'processQ'

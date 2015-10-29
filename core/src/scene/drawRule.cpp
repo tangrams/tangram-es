@@ -42,16 +42,14 @@ void DrawRule::logGetError(StyleParamKey _expectedKey, const StyleParam& _param)
     LOGE("wrong type '%d'for StyleParam '%d'", _param.value.which(), _expectedKey);
 }
 
-void Styling::apply(const Feature& _feature, const Scene& _scene, const SceneLayer& _layer,
-                    StyleContext& _ctx, Tile& _tile) {
+bool Styling::match(const Feature& _feature, const SceneLayer& _layer, StyleContext& _ctx) {
 
     _ctx.setFeature(_feature);
-
-    // Match layers
-    if (!_layer.filter().eval(_feature, _ctx)) { return; }
-
     styles.clear();
     processQ.clear();
+
+    // Match layers
+    if (!_layer.filter().eval(_feature, _ctx)) { return false; }
 
     // Add initial drawrules
     mergeRules(_layer.rules());
@@ -76,6 +74,13 @@ void Styling::apply(const Feature& _feature, const Scene& _scene, const SceneLay
         // override with sublayer drawrules
         mergeRules(layer.rules());
     }
+    return true;
+}
+
+void Styling::apply(const Feature& _feature, const Scene& _scene, const SceneLayer& _layer,
+                    StyleContext& _ctx, Tile& _tile) {
+
+    if (!match(_feature, _layer, _ctx)) { return; }
 
     // Apply styles
     for (auto& rule : styles) {
