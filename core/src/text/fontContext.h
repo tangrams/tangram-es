@@ -78,7 +78,6 @@ private:
     std::mutex m_contextMutex;
     std::mutex m_atlasMutex;
     bool m_handleAtlasFull = false;
-    FontMetrics m_currentFontMetrics;
 
     FONScontext* m_fsContext;
     std::vector<FONSquad> m_quadBuffer;

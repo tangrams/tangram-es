@@ -109,16 +109,6 @@ bool TextBuffer::addLabel(const TextStyle::Parameters& _params, Label::Transform
        breaks = findWordBreaks(_params.text);
     }
 
-    float inf = std::numeric_limits<float>::infinity();
-    float y0 = inf, y1 = -inf;
-
-    for (auto& q : quads) {
-        y0 = std::min(y0, std::min(q.y0, q.y1));
-        y1 = std::max(y1, std::max(q.y0, q.y1));
-    }
-
-    float bboxHeight = y1 - y0;
-
     FontContext::FontMetrics metrics = _fontContext.getMetrics();
 
     float yOffset = 0.f, xOffset = 0.f;
@@ -159,7 +149,11 @@ bool TextBuffer::addLabel(const TextStyle::Parameters& _params, Label::Transform
 
     // Adjust the bounding box on y
     bbox.y = metrics.lineHeight * nLine;
-    float offsetY = bbox.y * .5f + metrics.descender;
+    float offsetY = 0.0;
+
+    if (nLine > 1) {
+        offsetY += bbox.y * 0.5f;
+    }
 
     /// Generate the quads
     for (const auto& q : quads) {
@@ -173,7 +167,7 @@ bool TextBuffer::addLabel(const TextStyle::Parameters& _params, Label::Transform
 
     m_labels.emplace_back(new TextLabel(_transform, _type, bbox, *this,
                                         { vertexOffset, numVertices },
-                                        _params.labelOptions));
+                                        _params.labelOptions, metrics, nLine));
 
     // TODO: change this in TypeMesh::adVertices()
     m_nVertices = vertices.size();
