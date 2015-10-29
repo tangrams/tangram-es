@@ -76,12 +76,11 @@ if(BENCHMARK OR UNIT_TESTS)
 endif()
 
 if(UNIT_TESTS)
-  message(STATUS "Build tests:")
+  message(STATUS "Build with tests")
   add_subdirectory(${PROJECT_SOURCE_DIR}/tests)
 endif()
 
-
 if(BENCHMARK)
-  message(STATUS "Build benchmarks:")
+  message(STATUS "Build with benchmarks")
   add_subdirectory(${PROJECT_SOURCE_DIR}/bench)
 endif()
