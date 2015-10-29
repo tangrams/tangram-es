@@ -6,31 +6,31 @@ namespace Tangram {
 
 bool Filter::eval(const Feature& feat, const StyleContext& ctx) const {
 
-    switch (type) {
+    switch (data.get_type_index()) {
 
-    case FilterType::any: {
-        for (const auto& filt : data.get<Operator>().operands) {
+    case Data::type<OperatorAny>::value: {
+        for (const auto& filt : data.get<OperatorAny>().operands) {
             if (filt.eval(feat, ctx)) { return true; }
         }
         return false;
     }
-    case FilterType::all: {
-        for (const auto& filt : data.get<Operator>().operands) {
+    case Data::type<OperatorAll>::value: {
+        for (const auto& filt : data.get<OperatorAll>().operands) {
             if (!filt.eval(feat, ctx)) { return false; }
         }
         return true;
     }
-    case FilterType::none: {
-        for (const auto& filt : data.get<Operator>().operands) {
+    case Data::type<OperatorNone>::value: {
+        for (const auto& filt : data.get<OperatorNone>().operands) {
             if (filt.eval(feat, ctx)) { return false; }
         }
         return true;
     }
-    case FilterType::existence: {
+    case Data::type<Existence>::value: {
         auto& f = data.get<Existence>();
         return f.exists == feat.props.contains(f.key);
     }
-    case FilterType::equality: {
+    case Data::type<Equality>::value: {
         auto& f = data.get<Equality>();
 
         if (f.global == FilterGlobal::undefined) {
@@ -50,7 +50,7 @@ bool Filter::eval(const Feature& feat, const StyleContext& ctx) const {
 
         return false;
     }
-    case FilterType::range: {
+    case Data::type<Range>::value: {
         auto& f = data.get<Range>();
 
         if (f.global == FilterGlobal::undefined) {
@@ -79,13 +79,14 @@ bool Filter::eval(const Feature& feat, const StyleContext& ctx) const {
         }
         return false;
     }
-    case FilterType::function: {
+    case Data::type<Function>::value: {
         auto& f = data.get<Function>();
         return ctx.evalFilter(f.id);
     }
-    case FilterType::undefined:
+    default:
         return true;
     }
+
     // Cannot be reached
     assert(false);
     return false;

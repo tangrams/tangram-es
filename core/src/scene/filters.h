@@ -9,23 +9,6 @@ namespace Tangram {
 class StyleContext;
 struct Feature;
 
-enum class Operators : uint8_t {
-    any = 0,
-    all,
-    none
-};
-
-enum class FilterType : uint8_t {
-    any = 0,
-    all,
-    none,
-    existence,
-    equality,
-    range,
-    function,
-    undefined
-};
-
 enum class FilterGlobal : uint8_t {
     undefined,
     zoom,
@@ -33,9 +16,16 @@ enum class FilterGlobal : uint8_t {
 };
 
 struct Filter {
-    struct Operator {
+    struct OperatorAll {
         std::vector<Filter> operands;
     };
+    struct OperatorAny {
+        std::vector<Filter> operands;
+    };
+    struct OperatorNone {
+        std::vector<Filter> operands;
+    };
+
     struct Equality {
         std::string key;
         std::vector<Value> values;
@@ -54,43 +44,50 @@ struct Filter {
     struct Function {
         uint32_t id;
     };
-    using Data = variant<none_type, Operator, Equality, Range, Existence, Function>;
+    using Data = variant<none_type,
+                         OperatorAll,
+                         OperatorNone,
+                         OperatorAny,
+                         Equality,
+                         Range,
+                         Existence,
+                         Function>;
     Data data;
-    FilterType type;
 
-    Filter() : data(none_type{}), type(FilterType::undefined) {}
-    Filter(FilterType _type, Data _data) : data(std::move(_data)), type(_type) {}
+    Filter() : data(none_type{}) {}
+    Filter(Data _data) : data(std::move(_data)) {}
 
     // Create an 'any', 'all', or 'none' filter
     inline static Filter MatchAny(const std::vector<Filter>& filters) {
-        return { FilterType::any,  Operator{ filters }};
+        return { OperatorAny{ filters }};
     }
     inline static Filter MatchAll(const std::vector<Filter>& filters) {
-        return { FilterType::all,  Operator{ filters }};
+        return { OperatorAll{ filters }};
     }
     inline static Filter MatchNone(const std::vector<Filter>& filters) {
-        return { FilterType::none, Operator{ filters }};
+        return { OperatorNone{ filters }};
     }
     // Create an 'equality' filter
     inline static Filter MatchEquality(const std::string& k, const std::vector<Value>& vals) {
-        return { FilterType::equality, Equality{ k, vals, globalType(k) }};
+        return { Equality{ k, vals, globalType(k) }};
     }
     // Create a 'range' filter
     inline static Filter MatchRange(const std::string& k, float min, float max) {
-        return { FilterType::range, Range{ k, min, max, globalType(k) }};
+        return { Range{ k, min, max, globalType(k) }};
     }
     // Create an 'existence' filter
     inline static Filter MatchExistence(const std::string& k, bool ex) {
-        return { FilterType::existence, Existence{ k, ex }};
+        return { Existence{ k, ex }};
     }
     // Create an 'function' filter with reference to Scene function id
     inline static Filter MatchFunction(uint32_t id) {
-        return { FilterType::function, Function{ id }};
+        return { Function{ id }};
     }
 
     bool eval(const Feature& feat, const StyleContext& ctx) const;
 
 private:
+
     static FilterGlobal globalType(const std::string& _key) {
         if (_key == "$geometry") {
             return FilterGlobal::geometry;

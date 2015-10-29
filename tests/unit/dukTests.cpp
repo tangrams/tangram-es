@@ -239,8 +239,8 @@ TEST_CASE( "Test evalFilter - Init filter function from yaml", "[Duktape][evalFi
 
     REQUIRE(scene.functions().size() == 2);
 
-    REQUIRE(filter0.type == FilterType::function);
-    REQUIRE(filter1.type == FilterType::function);
+    REQUIRE(filter0.data.is<Filter::Function>());
+    REQUIRE(filter1.data.is<Filter::Function>());
 
     StyleContext ctx;
     ctx.initFunctions(scene);
