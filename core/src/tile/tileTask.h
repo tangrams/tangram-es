@@ -23,6 +23,8 @@ public:
     // Raw tile data that will be processed by DataSource.
     std::shared_ptr<std::vector<char>> rawTileData;
 
+    bool loaded = false;
+
     TileTask(std::shared_ptr<Tile> _tile, std::shared_ptr<DataSource> _source) :
         tile(_tile),
         source(_source) {

@@ -119,19 +119,27 @@ void DataSource::constructURL(const TileID& _tileCoord, std::string& _url) const
 }
 
 bool DataSource::getTileData(std::shared_ptr<TileTask>& _task) {
-    return m_cache->get(_task);
+    if (m_cache->get(_task)) {
+        _task->loaded = true;
+        return true;
+    }
+    return false;
 }
 
 void DataSource::onTileLoaded(std::vector<char>&& _rawData, std::shared_ptr<TileTask>& _task, TileTaskCb _cb) {
     TileID tileID = _task->tile->getID();
 
-    auto rawDataRef = std::make_shared<std::vector<char>>();
-    std::swap(*rawDataRef, _rawData);
-    _task->rawTileData = rawDataRef;
+    if (!_rawData.empty()) {
+        _task->loaded = true;
 
-    _cb.func(std::move(_task));
+        auto rawDataRef = std::make_shared<std::vector<char>>();
+        std::swap(*rawDataRef, _rawData);
+        _task->rawTileData = rawDataRef;
 
-    m_cache->put(tileID, rawDataRef);
+        _cb.func(std::move(_task));
+
+        m_cache->put(tileID, rawDataRef);
+    }
 }
 
 

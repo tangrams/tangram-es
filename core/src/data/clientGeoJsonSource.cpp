@@ -52,7 +52,7 @@ bool ClientGeoJsonSource::loadTileData(std::shared_ptr<TileTask>&& _task, TileTa
 }
 
 bool ClientGeoJsonSource::getTileData(std::shared_ptr<TileTask>& _task) {
-
+    _task->loaded = true;
     return true;
 }
 
