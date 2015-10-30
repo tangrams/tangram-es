@@ -3,6 +3,7 @@
 #include "labels/textLabel.h"
 #include "gl/texture.h"
 #include "gl/vboMesh.h"
+#include "fontstash.h"
 
 namespace Tangram {
 
@@ -11,17 +12,37 @@ TextBuffer::TextBuffer(std::shared_ptr<VertexLayout> _vertexLayout)
     addVertices({}, {});
 }
 
-TextBuffer::~TextBuffer() {
-}
+TextBuffer::~TextBuffer() {}
 
 std::vector<TextBuffer::WordBreak> TextBuffer::findWordBreaks(const std::string& _text) {
     std::vector<WordBreak> breaks;
+    unsigned int utf8state = 0;
+    const char* str = _text.c_str();
+    const char* end = str + strlen(str);
+    int quad = 0;
 
-    for (int i = 0, quad = 0; i < _text.size(); ++i) {
-        if (std::isspace(_text[i])) {
-            int lookAhead = i;
-            while (lookAhead++ < _text.size() && !std::isspace(_text[lookAhead])) {}
-            breaks.push_back({int(quad + breaks.size() + 1), lookAhead});
+    for (; str != end; ++str) {
+        unsigned int byte = *(const unsigned char*)str;
+
+        if (fonsDecUTF8(&utf8state, byte)) {
+            continue;
+        }
+
+        if (std::isspace(*str)) {
+            unsigned int utf8stateForward = 0;
+            const char* forward = str + 1;
+            int lookAhead = quad;
+
+            for (; forward != end; ++forward) {
+                byte = *(const unsigned char*) forward;
+                if (!fonsDecUTF8(&utf8stateForward, byte)) {
+                    if (std::isspace(*forward)) {
+                        break;
+                    }
+                    lookAhead++;
+                }
+            }
+            breaks.push_back({int(quad + breaks.size() + 1), int(lookAhead + breaks.size())});
         } else {
             quad++;
         }
@@ -30,8 +51,10 @@ std::vector<TextBuffer::WordBreak> TextBuffer::findWordBreaks(const std::string&
     return breaks;
 }
 
-int TextBuffer::applyWordWrapping(std::vector<FONSquad>& quads, const TextStyle::Parameters& _params,
-                                  const FontContext::FontMetrics& _metrics, Label::Type _type, glm::vec2* _bbox) {
+int TextBuffer::applyWordWrapping(std::vector<FONSquad>& _quads,
+                                  const TextStyle::Parameters& _params,
+                                  const FontContext::FontMetrics& _metrics,
+                                  Label::Type _type, glm::vec2* _bbox) {
     struct LineQuad {
         std::vector<FONSquad*> quads;
         float length;
@@ -48,8 +71,8 @@ int TextBuffer::applyWordWrapping(std::vector<FONSquad>& quads, const TextStyle:
     }
 
     // Apply word wrapping based on the word breaks
-    for (int i = 0; i < quads.size(); ++i) {
-        auto& q = quads[i];
+    for (int i = 0; i < _quads.size(); ++i) {
+        auto& q = _quads[i];
 
         LineQuad line;
         lines.push_back(line);
@@ -57,11 +80,11 @@ int TextBuffer::applyWordWrapping(std::vector<FONSquad>& quads, const TextStyle:
         if (i > 1 && breaks.size() > 0) {
             for (auto& b : breaks) {
                 if (i == b.start && b.end - lastBreak >= _params.maxLineWidth) {
-                    auto& previousQuad = quads[i - 1];
+                    auto& previousQuad = _quads[i - 1];
                     float spaceLength = q.x0 - previousQuad.x1;
 
                     yOffset += _metrics.lineHeight;
-                    xOffset -= q.x0 + quads[0].x0 * 0.5f - spaceLength;
+                    xOffset -= q.x0 + _quads[0].x0 * 0.5f - spaceLength;
 
                     lastBreak = b.start;
                     nLine++;
@@ -78,7 +101,7 @@ int TextBuffer::applyWordWrapping(std::vector<FONSquad>& quads, const TextStyle:
         lines[nLine - 1].length = q.x1;
 
         // Adjust the bounding box on x
-        _bbox->x = std::max(_bbox->x, q.x1 + quads[0].x0);
+        _bbox->x = std::max(_bbox->x, q.x1 + _quads[0].x0);
     }
 
     // Adjust the bounding box on y
@@ -111,7 +134,9 @@ int TextBuffer::applyWordWrapping(std::vector<FONSquad>& quads, const TextStyle:
 }
 
 
-std::string TextBuffer::applyTextTransform(const TextStyle::Parameters& _params, const std::string& _string) {
+std::string TextBuffer::applyTextTransform(const TextStyle::Parameters& _params,
+                                           const std::string& _string) {
+
     std::locale loc;
     std::string text = _string;
 
