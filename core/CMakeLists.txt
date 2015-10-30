@@ -13,13 +13,11 @@ if (CMAKE_CXX_COMPILER_ID MATCHES "Clang")
 endif()
 
 set(INCLUDE_DIR include)
-set(DEPENDENCIES_DIR dependencies)
 set(SOURCE_DIR src)
 set(CORE_LIBRARY core CACHE INTERNAL "core library name" FORCE)
 
 add_definitions(-DLOG_LEVEL=2)
 
-add_subdirectory("${DEPENDENCIES_DIR}")
 
 file(GLOB_RECURSE FOUND_SOURCES "${CMAKE_CURRENT_SOURCE_DIR}/${SOURCE_DIR}/*.cpp")
 

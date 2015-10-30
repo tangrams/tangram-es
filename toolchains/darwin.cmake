@@ -7,7 +7,7 @@ set(CXX_FLAGS_DEBUG "-g -O0")
 
 
 if (USE_EXTERNAL_LIBS)
-include(${EXTERNAL_LIBS_DIR}/yaml-cpp.cmake)
+include(${EXTERNAL_LIBS_DIR}/core-dependencies.cmake)
 include(${EXTERNAL_LIBS_DIR}/glfw.cmake)
 else()
 # build dependencies (yaml, benchmark, glfw)

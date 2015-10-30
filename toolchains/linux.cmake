@@ -5,7 +5,7 @@ set(PLATFORM_LINUX ON)
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wall -std=c++1y")
 
 if (USE_EXTERNAL_LIBS)
-include(${EXTERNAL_LIBS_DIR}/yaml-cpp.cmake)
+include(${EXTERNAL_LIBS_DIR}/core-dependencies.cmake)
 include(${EXTERNAL_LIBS_DIR}/glfw.cmake)
 else()
 add_subdirectory(${PROJECT_SOURCE_DIR}/external)
