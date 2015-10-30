@@ -83,13 +83,19 @@ void TileWorker::run() {
         // NB: Save shared reference to Scene while building tile
         auto scene = m_tileManager.getScene();
 
+        const clock_t begin = clock();
+
         context.initFunctions(*scene);
 
         if (tileData) {
             task->tile->build(context, *scene, *tileData, *task->source);
 
+            float loadTime = (float(clock() - begin) / CLOCKS_PER_SEC) * 1000;
+            LOG("loadTime %s - %f", task->tile->getID().toString().c_str(), loadTime);
+
             m_tileManager.tileProcessed(std::move(task));
         }
+
         requestRender();
     }
 }

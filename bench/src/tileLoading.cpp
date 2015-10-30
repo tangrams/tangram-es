@@ -18,6 +18,61 @@
 
 using namespace Tangram;
 
+struct TestContext {
+
+    MercatorProjection s_projection;
+    const char* sceneFile = "scene.yaml";
+
+    std::unique_ptr<Scene> scene;
+    StyleContext styleContext;
+
+    std::shared_ptr<DataSource> source;
+
+    std::vector<char> rawTileData;
+
+    std::shared_ptr<TileData> tileData;
+
+    void loadScene(const char* sceneFile) {
+        auto sceneRelPath = setResourceRoot(sceneFile);
+        auto sceneString = stringFromFile(sceneRelPath.c_str(), PathType::resource);
+
+        YAML::Node sceneNode;
+
+        try { sceneNode = YAML::Load(sceneString); }
+        catch (YAML::ParserException e) {
+            LOGE("Parsing scene config '%s'", e.what());
+            return;
+        }
+        scene = std::make_unique<Scene>();
+        SceneLoader::loadScene(sceneNode, *scene);
+        styleContext.initFunctions(*scene);
+        styleContext.setGlobalZoom(0);
+
+        source = scene->dataSources()[0];
+    }
+
+    void loadTile(const char* path){
+        std::ifstream resource(path, std::ifstream::ate | std::ifstream::binary);
+        if(!resource.is_open()) {
+            LOGE("Failed to read file at path: %s", path.c_str());
+            return;
+        }
+
+        size_t _size = resource.tellg();
+        resource.seekg(std::ifstream::beg);
+
+        rawTileData.resize(_size);
+
+        resource.read(&rawTileData[0], _size);
+        resource.close();
+    }
+
+    void parseTile() {
+        Tile tile({0,0,0}, s_projection);
+        tileData = source->parse(tile, rawTileData);
+    }
+};
+
 class TileLoadingFixture : public benchmark::Fixture {
 public:
     MercatorProjection s_projection;
