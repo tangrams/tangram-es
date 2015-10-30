@@ -1,8 +1,7 @@
-### http://www.cmake.org/Wiki/CMake/Tutorials/Exporting_and_Importing_Targets
-
 cmake_minimum_required(VERSION 2.8.12)
 
 if(USE_EXTERNAL_LIBS)
+# http://www.cmake.org/Wiki/CMake/Tutorials/Exporting_and_Importing_Targets
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wall -std=c++1y")
 set(CMAKE_BUILD_TYPE Release)
 set(EXPORTS_DIR ${CMAKE_CURRENT_SOURCE_DIR}/exports/${PLATFORM_TARGET})
@@ -16,20 +15,19 @@ set(YAML_CPP_BUILD_CONTRIB OFF CACHE BOOL "Enable contrib stuff in library")
 add_subdirectory("yaml-cpp")
 
 
-# css-color-parser-cpp #
-########################
+## css-color-parser-cpp ##
+##########################
+add_library(css-color-parser-cpp
+  ${CMAKE_CURRENT_SOURCE_DIR}/css-color-parser-cpp/csscolorparser.cpp)
 
-add_library(css-color-parser-cpp "css-color-parser-cpp/csscolorparser.cpp")
 target_include_directories(css-color-parser-cpp
   PUBLIC
-  ${CMAKE_CURRENT_SOURCE_DIR}/css-color-parser-cpp
-)
+  ${CMAKE_CURRENT_SOURCE_DIR}/css-color-parser-cpp)
+
 
 ## geojsonvt ##
 ###############
-
 file(GLOB_RECURSE GEOJSON_VT_CPP_SOURCES "geojson-vt-cpp/src/*.cpp")
-
 add_library(geojson-vt-cpp ${GEOJSON_VT_CPP_SOURCES})
 target_include_directories(geojson-vt-cpp
   PUBLIC
@@ -39,8 +37,7 @@ target_include_directories(geojson-vt-cpp
   PRIVATE
   ${CMAKE_CURRENT_SOURCE_DIR}/../core/src
   ${CMAKE_CURRENT_SOURCE_DIR}/../core/include
-  ${CMAKE_CURRENT_SOURCE_DIR}/../core/include/mapbox
-  )
+  ${CMAKE_CURRENT_SOURCE_DIR}/../core/include/mapbox)
 
 set_target_properties(geojson-vt-cpp
   PROPERTIES COMPILE_FLAGS -DGEOJSONVT_CUSTOM_TAGS)
@@ -49,10 +46,12 @@ target_compile_options(geojson-vt-cpp
   PUBLIC
   -Wno-unknown-pragmas)
 
-# duktape #
-############
 
-add_library(duktape "${CMAKE_CURRENT_SOURCE_DIR}/duktape/duktape.c")
+## duktape ##
+#############
+add_library(duktape
+  ${CMAKE_CURRENT_SOURCE_DIR}/duktape/duktape.c)
+
 target_compile_options(duktape PRIVATE
   -fstrict-aliasing
   -fomit-frame-pointer
@@ -61,9 +60,11 @@ target_compile_options(duktape PRIVATE
 
 target_include_directories(duktape
   PUBLIC
-  "${CMAKE_CURRENT_SOURCE_DIR}/duktape"
-)
+  ${CMAKE_CURRENT_SOURCE_DIR}/duktape)
 
+
+## cmake exports ##
+###################
 if(USE_EXTERNAL_LIBS)
   export(TARGETS
     yaml-cpp
@@ -106,10 +107,9 @@ if(PLATFORM_LINUX OR PLATFORM_OSX)
 endif()
 
 
-
 ## benchmark ##
 ###############
-if((PLATFORM_LINUX OR PLATFORM_OSX) AND BENCHMARK)
+if((BENCHMARK OR USE_EXTERNAL_LIBS) AND (PLATFORM_LINUX OR PLATFORM_OSX))
   set(BENCHMARK_ENABLE_TESTING OFF CACHE BOOL "")
   set(BENCHMARK_ENABLE_LTO OFF CACHE BOOL "")
 
