@@ -88,7 +88,7 @@ PointStyle::Parameters PointStyle::applyRule(const DrawRule& _rule, const Proper
     if (sizeParam.stops && sizeParam.value.is<float>()) {
         float lowerSize = sizeParam.value.get<float>();
         float higherSize = sizeParam.stops->evalWidth(_zoom + 1);
-        p.extrudeScale = (higherSize - lowerSize) * 0.5f;
+        p.extrudeScale = (higherSize - lowerSize) * 0.5f - 1.f;
         p.size = glm::vec2(lowerSize);
     } else if (_rule.get(StyleParamKey::size, size)) {
         if (size.x == 0.f || std::isnan(size.y)) {
@@ -110,10 +110,10 @@ PointStyle::Parameters PointStyle::applyRule(const DrawRule& _rule, const Proper
 void PointStyle::pushQuad(std::vector<Label::Vertex>& _vertices, const glm::vec2& _size, const glm::vec2& _uvBL,
                           const glm::vec2& _uvTR, unsigned int _color, float _extrudeScale) const {
 
-    _vertices.push_back({{-_size.x, -_size.y}, {_uvBL.x, _uvBL.y}, {-1.f, -1.f, _extrudeScale}, _color});
-    _vertices.push_back({{-_size.x,  _size.y}, {_uvBL.x, _uvTR.y}, {-1.f,  1.f, _extrudeScale}, _color});
+    _vertices.push_back({{    0.0,       0.0}, {_uvBL.x, _uvTR.y}, {-1.f,  1.f, _extrudeScale}, _color});
+    _vertices.push_back({{_size.x,       0.0}, {_uvTR.x, _uvTR.y}, { 1.f,  1.f, _extrudeScale}, _color});
+    _vertices.push_back({{    0.0,  -_size.y}, {_uvBL.x, _uvBL.y}, {-1.f, -1.f, _extrudeScale}, _color});
     _vertices.push_back({{_size.x,  -_size.y}, {_uvTR.x, _uvBL.y}, { 1.f, -1.f, _extrudeScale}, _color});
-    _vertices.push_back({{_size.x,   _size.y}, {_uvTR.x, _uvTR.y}, { 1.f,  1.f, _extrudeScale}, _color});
 }
 
 bool PointStyle::getUVQuad(Parameters& _params, glm::vec4& _quad) const {
@@ -165,7 +165,7 @@ void PointStyle::buildPoint(const Point& _point, const DrawRule& _rule, const Pr
     std::vector<Label::Vertex> vertices;
 
     vertices.reserve(4);
-    pushQuad(vertices, p.size * 0.5f, {uvsQuad.x, uvsQuad.y}, {uvsQuad.z, uvsQuad.w},
+    pushQuad(vertices, p.size, {uvsQuad.x, uvsQuad.y}, {uvsQuad.z, uvsQuad.w},
             p.color, p.extrudeScale);
     mesh.addVertices(std::move(vertices), {});
 }
@@ -189,7 +189,7 @@ void PointStyle::buildLine(const Line& _line, const DrawRule& _rule, const Prope
 
         mesh.addLabel(std::make_unique<SpriteLabel>(transform, p.size, mesh, _mesh.numVertices(),
                     p.labelOptions, p.extrudeScale));
-        pushQuad(vertices, p.size * 0.5f, {uvsQuad.x, uvsQuad.y}, {uvsQuad.z, uvsQuad.w},
+        pushQuad(vertices, p.size, {uvsQuad.x, uvsQuad.y}, {uvsQuad.z, uvsQuad.w},
                 p.color, p.extrudeScale);
     }
 
@@ -221,7 +221,7 @@ void PointStyle::buildPolygon(const Polygon& _polygon, const DrawRule& _rule, co
 
                 mesh.addLabel(std::make_unique<SpriteLabel>(transform, p.size, mesh, _mesh.numVertices(),
                             p.labelOptions, p.extrudeScale));
-                pushQuad(vertices, p.size * 0.5f, {uvsQuad.x, uvsQuad.y}, {uvsQuad.z, uvsQuad.w},
+                pushQuad(vertices, p.size, {uvsQuad.x, uvsQuad.y}, {uvsQuad.z, uvsQuad.w},
                         p.color, p.extrudeScale);
             }
         }
@@ -232,7 +232,7 @@ void PointStyle::buildPolygon(const Polygon& _polygon, const DrawRule& _rule, co
 
         mesh.addLabel(std::make_unique<SpriteLabel>(transform, p.size, mesh, _mesh.numVertices(),
                     p.labelOptions, p.extrudeScale));
-        pushQuad(vertices, p.size * 0.5f,
+        pushQuad(vertices, p.size,
                 {uvsQuad.x, uvsQuad.y}, {uvsQuad.z, uvsQuad.w}, p.color, p.extrudeScale);
     }
 
