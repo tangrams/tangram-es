@@ -7,11 +7,8 @@
 #include "tileTask.h"
 
 #include <map>
-#include <list>
 #include <vector>
 #include <memory>
-#include <future>
-#include <set>
 #include <mutex>
 #include <tuple>
 
