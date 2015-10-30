@@ -13,9 +13,12 @@ typedef struct duk_hthread duk_context;
 namespace Tangram {
 
 class Scene;
-enum class StyleParamKey : uint8_t;
 struct Feature;
 struct StyleParam;
+
+enum class StyleParamKey : uint8_t;
+enum class FilterGlobal : uint8_t;
+
 
 class StyleContext {
 
@@ -26,26 +29,44 @@ public:
     StyleContext();
     ~StyleContext();
 
-    bool addFunction(const std::string& _name, const std::string& _func);
-
-    bool evalFilterFn(const std::string& _name);
-    bool evalFilter(FunctionID id);
-
-    bool evalStyleFn(const std::string& _name, StyleParamKey _key, StyleParam::Value& _val);
-    bool evalStyle(FunctionID id, StyleParamKey _key, StyleParam::Value& _val);
-
+    /*
+     * Set currently processed Feature
+     */
     void setFeature(const Feature& _feature);
 
-    void setGlobal(const std::string& _key, const Value& _value);
+    /*
+     * Set global for currently processed Tile
+     */
     void setGlobalZoom(float _zoom);
 
-    const Value& getGlobal(const std::string& _key) const;
+    /* Called from Filter::eval */
     float getGlobalZoom() const { return m_globalZoom; }
 
-    void clear();
+    const Value& getGlobal(FilterGlobal _key) const;
 
+    /* Called from Filter::eval */
+    bool evalFilter(FunctionID id);
+
+    /* Called from DrawRule::eval */
+    bool evalStyle(FunctionID id, StyleParamKey _key, StyleParam::Value& _val);
+
+    /*
+     * Setup filter and style functions from @_scene
+     */
     void initFunctions(const Scene& _scene);
 
+    /*
+     * Unset Feature handle
+     */
+    void clear();
+
+    // Public for testing
+    bool addFunction(const std::string& _name, const std::string& _func);
+    bool evalFilterFn(const std::string& _name);
+    bool evalStyleFn(const std::string& _name, StyleParamKey _key, StyleParam::Value& _val);
+    void addAccessor(const std::string& _name);
+    void setGlobal(const std::string& _key, const Value& _value);
+    const Value& getGlobal(const std::string& _key) const;
 
 private:
     static int jsPropertyGetter(duk_context *_ctx);
@@ -54,7 +75,6 @@ private:
     bool parseStyleResult(StyleParamKey _key, StyleParam::Value& _val) const;
 
     void setAccessors();
-    void addAccessor(const std::string& _name);
 
     mutable duk_context *m_ctx;
 
@@ -67,7 +87,7 @@ private:
     };
 
     fastmap<std::string, std::unique_ptr<Accessor>> m_accessors;
-    fastmap<std::string, Value> m_globals;
+    fastmap<FilterGlobal, Value> m_globals;
 
     int32_t m_sceneId = -1;
 

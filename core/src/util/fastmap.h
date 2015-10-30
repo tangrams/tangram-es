@@ -38,7 +38,7 @@ struct fastmap {
                 return item.first < key;
             });
 
-        if (it == map.end() || it->first.k == key) {
+        if (it == map.end() || it->first == key) {
             return it;
         }
         return map.end();

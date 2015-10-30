@@ -1,10 +1,11 @@
 #include "styleContext.h"
 
 #include "platform.h"
-#include "data/tileData.h"
-#include "util/builders.h"
-#include "scene/scene.h"
 #include "data/propertyItem.h"
+#include "data/tileData.h"
+#include "scene/filters.h"
+#include "scene/scene.h"
+#include "util/builders.h"
 
 #include "duktape.h"
 
@@ -93,7 +94,10 @@ void StyleContext::setGlobalZoom(float _zoom) {
 }
 
 void StyleContext::setGlobal(const std::string& _key, const Value& _val) {
-    Value& entry = m_globals[_key];
+    auto globalKey = Filter::globalType(_key);
+    if (globalKey == FilterGlobal::undefined) { return; }
+
+    Value& entry = m_globals[globalKey];
     if (entry == _val) { return; }
 
     entry = _val;
@@ -114,8 +118,7 @@ void StyleContext::setGlobal(const std::string& _key, const Value& _val) {
     }
 }
 
-const Value& StyleContext::getGlobal(const std::string& _key) const {
-
+const Value& StyleContext::getGlobal(FilterGlobal _key) const {
     const static Value NOT_FOUND(none_type{});
 
     auto it = m_globals.find(_key);
@@ -123,8 +126,12 @@ const Value& StyleContext::getGlobal(const std::string& _key) const {
         return it->second;
     }
     return NOT_FOUND;
+
 }
 
+const Value& StyleContext::getGlobal(const std::string& _key) const {
+    return getGlobal(Filter::globalType(_key));
+}
 
 void StyleContext::clear() {
     m_feature = nullptr;

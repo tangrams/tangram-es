@@ -39,7 +39,7 @@ bool Filter::eval(const Feature& feat, StyleContext& ctx) const {
                 if (v == value) { return true; }
             }
         } else {
-            auto& global = ctx.getGlobal(f.key);
+            auto& global = ctx.getGlobal(f.global);
             if (!global.is<none_type>()) {
                 for (const auto& v : f.values) {
                     if (v == global) { return true; }
@@ -64,7 +64,7 @@ bool Filter::eval(const Feature& feat, StyleContext& ctx) const {
                 return num >= f.min && num < f.max;
             }
         } else {
-            auto& global = ctx.getGlobal(f.key);
+            auto& global = ctx.getGlobal(f.global);
             if (!global.is<none_type>()) {
                 // only check range for numbers
                 if (global.is<int64_t>()) {

@@ -86,8 +86,6 @@ struct Filter {
 
     bool eval(const Feature& feat, StyleContext& ctx) const;
 
-private:
-
     static FilterGlobal globalType(const std::string& _key) {
         if (_key == "$geometry") {
             return FilterGlobal::geometry;
