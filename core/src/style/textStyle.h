@@ -19,6 +19,12 @@ enum class TextTransform {
     lowercase,
 };
 
+enum class TextAlign : char {
+    right,
+    left,
+    center
+};
+
 class TextStyle : public Style {
 
 public:
@@ -34,6 +40,7 @@ public:
         float fontSize = 12.0f;
         float blurSpread = 0.0f;
         TextTransform transform = TextTransform::none;
+        TextAlign align = TextAlign::center;
         bool visible = true;
         Label::Options labelOptions;
         bool wordWrap = true;
