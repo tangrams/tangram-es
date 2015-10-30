@@ -30,7 +30,7 @@ Tile::Tile(TileID _id, const MapProjection& _projection) :
     m_scale = bounds.width();
     m_inverseScale = 1.0/m_scale;
 
-    updateTileOrigin();
+    updateTileOrigin(_id.wrap);
 
     // Init model matrix to size of tile
     m_modelMatrix = glm::scale(glm::mat4(1.0), glm::vec3(m_scale));
@@ -40,7 +40,7 @@ Tile::~Tile() {
 
 }
 
-void Tile::updateTileOrigin() {
+void Tile::updateTileOrigin(const int _wrap) {
     BoundingBox bounds(m_projection->TileBounds(m_id));
 
     m_tileOrigin = { bounds.min.x, bounds.max.y }; // South-West corner
@@ -49,16 +49,8 @@ void Tile::updateTileOrigin() {
 
     auto mapBound = m_projection->MapBounds();
     auto mapSpan = mapBound.max.x - mapBound.min.x;
-    switch (m_id.wrap) {
-        case TileWrap::none:
-            break;
-        case TileWrap::positive:
-            m_tileOrigin.x += mapSpan;
-            break;
-        case TileWrap::negative:
-            m_tileOrigin.x -= mapSpan;
-            break;
-    }
+
+    m_tileOrigin.x += (mapSpan * _wrap);
 }
 
 void Tile::build(StyleContext& _ctx, const Scene& _scene, const TileData& _data, const DataSource& _source) {

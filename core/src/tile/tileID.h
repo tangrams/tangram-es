@@ -12,21 +12,14 @@
 
 namespace Tangram {
 
-enum class TileWrap {
-    none, // no tile wrapping
-    negative, //negative wrap
-    positive, //positive wrap
-};
-
 struct TileID {
 
     const int x;
     const int y;
     const int z;
+    const int wrap;
 
-    TileWrap wrap = TileWrap::none;
-
-    TileID(int _x, int _y, int _z, TileWrap _wrap = TileWrap::none) : x(_x), y(_y), z(_z), wrap(_wrap) {};
+    TileID(int _x, int _y, int _z, int _wrap = 0) : x(_x), y(_y), z(_z), wrap(_wrap) {};
     TileID(const TileID& _rhs): x(_rhs.x), y(_rhs.y), z(_rhs.z), wrap(_rhs.wrap) {};
 
     bool operator< (const TileID& _rhs) const {
@@ -55,7 +48,7 @@ struct TileID {
     TileID getChild(int _index) const {
 
         if (_index > 3 || _index < 0) {
-            return TileID(-1, -1, -1);
+            return TileID(-1, -1, -1, -1);
         }
 
         int i = _index / 2;
@@ -74,6 +67,6 @@ struct TileID {
 
 };
 
-static TileID NOT_A_TILE(-1, -1, -1);
+static TileID NOT_A_TILE(-1, -1, -1, -1);
 
 }

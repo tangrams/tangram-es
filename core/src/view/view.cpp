@@ -501,17 +501,11 @@ void View::updateTiles() {
         y >>= lod;
         z = glm::clamp((z-lod), 0, (int)s_maxZoom);
 
-        TileWrap wrap = TileWrap::none;
+        int wrap = std::floor((float)x / (maxX));
+        int wrappedX = x % maxX;
+        if (wrappedX < 0) { wrappedX += maxX; }
 
-        if (x < 0) {
-            wrap = TileWrap::negative;
-            x = maxX + (x % maxX);
-        } else if (x >= maxX) {
-            wrap = TileWrap::positive;
-            x %= maxX;
-        }
-
-        m_visibleTiles.emplace(x, y, z, wrap);
+        m_visibleTiles.emplace(wrappedX, y, z, wrap);
 
     };
 

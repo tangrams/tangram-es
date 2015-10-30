@@ -62,7 +62,7 @@ public:
     void update(float _dt, const View& _view);
 
     /* Update tile origin based on wraping for this tile */
-    void updateTileOrigin();
+    void updateTileOrigin(const int _wrap);
 
     /* Draws the geometry associated with the provided <Style> and view-projection matrix */
     void draw(const Style& _style, const View& _view);
