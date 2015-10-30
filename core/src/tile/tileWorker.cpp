@@ -87,9 +87,9 @@ void TileWorker::run() {
 
         if (tileData) {
             task->tile->build(context, *scene, *tileData, *task->source);
-        }
 
-        m_tileManager.tileProcessed(std::move(task));
+            m_tileManager.tileProcessed(std::move(task));
+        }
         requestRender();
     }
 }

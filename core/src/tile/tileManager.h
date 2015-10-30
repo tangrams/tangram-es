@@ -7,11 +7,8 @@
 #include "tileTask.h"
 
 #include <map>
-#include <list>
 #include <vector>
 #include <memory>
-#include <future>
-#include <set>
 #include <mutex>
 #include <tuple>
 
@@ -21,7 +18,6 @@ class DataSource;
 class Scene;
 class View;
 class TileCache;
-class ClientGeoJsonSource;
 
 /* Singleton container of <Tile>s
  *
@@ -77,8 +73,6 @@ public:
     void addDataSource(std::shared_ptr<DataSource> dataSource);
 
     const auto getTileSets() { return m_tileSets; }
-
-    std::shared_ptr<ClientGeoJsonSource> getClientSourceById(int32_t _id);
 
     /* @_cacheSize: Set size of in-memory tile cache in bytes.
      * This cache holds recently used <Tile>s that are ready for rendering.
