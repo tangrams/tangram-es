@@ -58,7 +58,7 @@ void main() {
     {
         float width = a_extrude.z;
         float dwdz = a_extrude.w;
-        float dz = u_map_position.z - abs(u_tile_origin.z);
+        float dz = clamp(u_map_position.z - abs(u_tile_origin.z), 0.0, 1.0);
         // Interpolate between zoom levels
         width += dwdz * dz;
         // Scale pixel dimensions to be consistent in screen space

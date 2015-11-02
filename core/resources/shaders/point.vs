@@ -52,7 +52,7 @@ void main() {
 
         if (de != 0.0) {
             float dz = u_map_position.z - abs(u_tile_origin.z);
-            vertexPos.xy += dz * a_extrude.xy * de;
+            vertexPos.xy += clamp(dz, 0.0, 1.0) * a_extrude.xy * de;
         }
 
         // rotates first around +z-axis (0,0,1) and then translates by (tx,ty,0)
