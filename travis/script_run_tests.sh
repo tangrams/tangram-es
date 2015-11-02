@@ -6,12 +6,12 @@ set -o pipefail
 if [[ ${PLATFORM} == "osx" || ${PLATFORM} == "linux" ]]; then
     # Run unit tests
     echo "Running Unit Tests"
-    pushd ./build/tests/unit/bin
+    pushd ./build/${PLATFORM}/bin
 
-    for file in *.out
+    for file in unit/*.out
         do
             echo "Running ${file}"
-            ./$file
+            $file
         done
     popd
 fi

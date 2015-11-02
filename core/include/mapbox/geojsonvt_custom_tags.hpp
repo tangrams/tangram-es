@@ -1,6 +1,6 @@
 #pragma once
 
-#include "../../../src/data/properties.h"
+#include "data/properties.h"
 
 #include <memory>
 

@@ -9,8 +9,14 @@ extern "C" {
     void glDisable(GLenum){}
     void glDepthFunc(GLenum func){}
     void glDepthMask(GLboolean flag){}
-    void glDepthRangef (GLfloat n, GLfloat f){}
-    void glClearDepthf (GLfloat d){}
+
+#ifdef PLATFORM_OSX
+    void glDepthRange(GLclampd n, GLclampd f){}
+    void glClearDepth(GLclampd d){}
+#else
+    void glDepthRangef(GLfloat n, GLfloat f){}
+    void glClearDepthf(GLfloat d){}
+#endif
 
     void glBlendFunc(GLenum sfactor, GLenum dfactor){}
     void glStencilFunc(GLenum func, GLint ref, GLuint mask){}
@@ -20,7 +26,6 @@ extern "C" {
     void glColorMask(GLboolean red, GLboolean green, GLboolean blue, GLboolean alpha){}
     void glCullFace(GLenum mode){}
     void glFrontFace(GLenum mode){}
-    void glClearDepth(GLclampd depth){}
     void glClearColor(GLclampf red, GLclampf green, GLclampf blue, GLclampf alpha){}
     void glUseProgram(GLuint program){}
 

@@ -1,5 +1,12 @@
-cmake_minimum_required(VERSION 2.8.11)
+cmake_minimum_required(VERSION 2.8.12)
+
 project(tangram)
+
+set(APPLICATION ON)
+
+if(NOT CMAKE_BUILD_TYPE)
+  set(CMAKE_BUILD_TYPE Release)
+endif()
 
 include(${PROJECT_SOURCE_DIR}/toolchains/utils.cmake)
 
@@ -37,36 +44,43 @@ endif()
 # setting up cache variable platform
 set(PLATFORM ${varplatform} CACHE INTERNAL "platform" FORCE)
 
-if(UNIT_TESTS)
-  message(STATUS "Build tests for : ${PLATFORM_TARGET}")
-
-  if(PLATFORM_TARGET STREQUAL "linux")
-    include(${PROJECT_SOURCE_DIR}/toolchains/linux.tests.cmake)
-  else()
-    include(${PROJECT_SOURCE_DIR}/toolchains/darwin.tests.cmake)
-  endif()
-  return()
-endif()
-
-if(BENCHMARK)
-    message(STATUS "Build benchmarks for : ${PLATFORM_TARGET}")
-
-    if(PLATFORM_TARGET STREQUAL "linux")
-        include(${PROJECT_SOURCE_DIR}/toolchains/linux.benchmark.cmake)
-    else()
-        include(${PROJECT_SOURCE_DIR}/toolchains/darwin.benchmark.cmake)
-    endif()
-    return()
-endif()
-
 # cmake inclusions and definitions
-# set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} ${CMAKE_SOURCE_DIR}/build/modules)
 set(CMAKE_TARGET_FILE ${PROJECT_SOURCE_DIR}/toolchains/${PLATFORM_TARGET}.cmake)
 
 message(STATUS "Including ${varplatform} dependent cmake file : ${CMAKE_TARGET_FILE}")
+
+set(EXTERNAL_LIBS_DIR ${CMAKE_SOURCE_DIR}/external/exports/${PLATFORM_TARGET}
+    CACHE INTERNAL "external-libs" FORCE)
+
+## set platform configuration, build library and application.
+# adds targets:
+# - core
+# - tangram
+# - copy_resources
 include(${CMAKE_TARGET_FILE})
 
-# dependent platform build
-build()
+if(BENCHMARK OR UNIT_TESTS)
+  add_library(platform_mock
+    ${PROJECT_SOURCE_DIR}/tests/src/platform_mock.cpp
+    ${PROJECT_SOURCE_DIR}/tests/src/gl_mock.cpp)
 
-link_libraries()
+  target_include_directories(platform_mock
+    PUBLIC ${CORE_LIBRARIES_INCLUDE_DIRS})
+
+  target_compile_definitions(platform_mock
+    PUBLIC -DUNIT_TESTS)
+
+  target_link_libraries(platform_mock
+    PUBLIC core)
+
+endif()
+
+if(UNIT_TESTS)
+  message(STATUS "Build with tests")
+  add_subdirectory(${PROJECT_SOURCE_DIR}/tests)
+endif()
+
+if(BENCHMARK)
+  message(STATUS "Build with benchmarks")
+  add_subdirectory(${PROJECT_SOURCE_DIR}/bench)
+endif()

@@ -8,13 +8,15 @@ else()
     message(STATUS "Will use make prebuilt tool located at : ${CMAKE_BUILD_TOOL}")
 endif()
 
-# configurations
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++1y -pedantic")
 
-if (CMAKE_CXX_COMPILER_ID MATCHES "Clang")
-    # using regular Clang or AppleClang
-    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wno-gnu-anonymous-struct -Wno-nested-anon-types -Wno-gnu-zero-variadic-macro-arguments")
-endif()
+# configurations
+#set(CXX_FLAGS "${CXX_FLAGS} -Wall -std=c++1y -pedantic")
+#set(CXX_FLAGS_DEBUG "${CXX_FLAGS_DEBUG} -g -O0")
+#set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -Wall -fPIC")
+
+# build external dependencies
+add_subdirectory(${PROJECT_SOURCE_DIR}/external)
 
 # load core library
 add_subdirectory(${PROJECT_SOURCE_DIR}/core)
@@ -39,12 +41,3 @@ target_compile_options(${LIB_NAME}
 # install to android library dir
 set(LIB_INSTALLATION_PATH ${CMAKE_SOURCE_DIR}/android/tangram/libs/${ANDROID_ABI})
 install(TARGETS ${LIB_NAME} DESTINATION ${LIB_INSTALLATION_PATH})
-
-# link and build functions
-function(link_libraries)
-    # nothing to do
-endfunction()
-
-function(build)
-    # nothing to do
-endfunction()

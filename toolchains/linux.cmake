@@ -1,51 +1,47 @@
-# options
-set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wall -std=c++1y")
-set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wno-unknown-pragmas")
-set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wparentheses")
-#set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wuninitialized")
-set(CXX_FLAGS_DEBUG "-g -O0")
+# set for test in other cmake files
+set(PLATFORM_LINUX ON)
 
-if (CMAKE_CXX_COMPILER_ID MATCHES "Clang")
-set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wno-gnu-zero-variadic-macro-arguments")
+# global compile options
+set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wall -std=c++1y")
+
+if (USE_EXTERNAL_LIBS)
+include(${EXTERNAL_LIBS_DIR}/core-dependencies.cmake)
+include(${EXTERNAL_LIBS_DIR}/glfw.cmake)
+else()
+add_subdirectory(${PROJECT_SOURCE_DIR}/external)
 endif()
 
-# if ("${CMAKE_CXX_COMPILER_ID}" STREQUAL "Clang" OR
-#     "${CMAKE_CXX_COMPILER_ID}" STREQUAL "AppleClang")
-#   # using Clang
-# elseif ("${CMAKE_CXX_COMPILER_ID}" STREQUAL "GNU")
-#   # using GCC
+# if(CMAKE_COMPILER_IS_GNUCXX)
+#   list(APPEND CORE_CXX_FLAGS -ffast-math)
 # endif()
 
-set(EXECUTABLE_NAME "tangram")
-
-add_definitions(-DPLATFORM_LINUX)
+# compile definitions (adds -DPLATFORM_LINUX)
+set(CORE_COMPILE_DEFS PLATFORM_LINUX)
 
 # load core library
 add_subdirectory(${PROJECT_SOURCE_DIR}/core)
-include_directories(${CORE_INCLUDE_DIRS})
 
-# add sources and include headers
-find_sources_and_include_directories(
+if(APPLICATION)
+
+  set(EXECUTABLE_NAME "tangram")
+
+  find_package(OpenGL REQUIRED)
+
+  # add sources and include headers
+  find_sources_and_include_directories(
     ${PROJECT_SOURCE_DIR}/linux/src/*.h
     ${PROJECT_SOURCE_DIR}/linux/src/*.cpp)
 
-# load glfw
-include(${PROJECT_SOURCE_DIR}/toolchains/add_glfw.cmake)
+  add_executable(${EXECUTABLE_NAME} ${SOURCES})
 
-# link and build functions
-function(link_libraries)
+  target_link_libraries(${EXECUTABLE_NAME}
+    ${CORE_LIBRARY}
+    -lcurl glfw
+    # only used when not using external lib
+    -ldl
+    ${GLFW_LIBRARIES}
+    ${OPENGL_LIBRARIES})
 
-    target_link_libraries(${EXECUTABLE_NAME} ${CORE_LIBRARY} -lcurl glfw ${GLFW_LIBRARIES})
+  add_dependencies(${EXECUTABLE_NAME} copy_resources)
 
-endfunction()
-
-function(build)
-
-    add_executable(${EXECUTABLE_NAME} ${SOURCES})
-
-    add_custom_command(TARGET tangram POST_BUILD COMMAND
-      COMMAND ${CMAKE_COMMAND} -E echo "Copying data..."
-      COMMAND ${CMAKE_COMMAND} -E copy_directory ${PROJECT_SOURCE_DIR}/core/resources $<TARGET_FILE_DIR:tangram>
-    )
-
-endfunction()
+endif()
