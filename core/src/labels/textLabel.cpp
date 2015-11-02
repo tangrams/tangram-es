@@ -22,7 +22,9 @@ void TextLabel::updateBBoxes(float _zoomFract) {
     // move forward on line by half the text length
     obbCenter += t * m_dim.x * 0.5f;
     // move down on the perpendicular to estimated font baseline
-    obbCenter -= m_dim.y * 0.5f + m_metrics.descender * (float) m_nLines;
+    obbCenter -= tperp * m_dim.y * 0.5f;
+    // ajdust with baseline
+    obbCenter.y += m_metrics.lineHeight * m_nLines * 0.5f;
 
     m_obb = OBB(obbCenter.x, obbCenter.y, m_transform.state.rotation, m_dim.x, m_dim.y);
     m_aabb = m_obb.getExtent();

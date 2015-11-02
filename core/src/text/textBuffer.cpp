@@ -63,7 +63,7 @@ int TextBuffer::applyWordWrapping(std::vector<FONSquad>& _quads,
         float length;
     };
 
-    float yOffset = 0.f, xOffset = 0.f, bboxOffsetY = 0.f;
+    float yOffset = 0.f, xOffset = 0.f;
     int nLine = 1, lastBreak = 0;
 
     std::vector<LineQuad> lines;
@@ -111,7 +111,7 @@ int TextBuffer::applyWordWrapping(std::vector<FONSquad>& _quads,
     _bbox->y = _metrics.lineHeight * nLine;
 
     if (nLine > 1) {
-        bboxOffsetY += _bbox->y * 0.5f;
+        float bboxOffsetY = _bbox->y * 0.5f - _metrics.lineHeight - _metrics.descender;
 
         // Apply justification
         for (const auto& line : lines) {
