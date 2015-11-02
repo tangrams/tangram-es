@@ -222,9 +222,13 @@ void init_main_window() {
 
 int main(int argc, char* argv[]) {
 
-    if (argc > 1) {
-        sceneFile = std::string(argv[1]);
-        logMsg("File from command line: %s\n", argv[1]);
+    int argi = 0;
+    while (++argi < argc) {
+        if (strcmp(argv[argi - 1], "-f") == 0) {
+            sceneFile = std::string(argv[argi]);
+            logMsg("File from command line: %s\n", argv[argi]);
+            break;
+        }
     }
 
     // Initialize the windowing library
