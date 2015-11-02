@@ -246,7 +246,7 @@ layers:
         draw:
             icons:
                 interactive: true
-                #offset: [0px, -15px]
+                offset: [0px, -15px]
                 size: 20px
                 priority: 5
                 collide: true
@@ -338,7 +338,8 @@ layers:
         draw:
             text:
                 interactive: true
-                #offset: [0px, 13px]
+                offset: [0, 12px]
+                align: right
                 font:
                     family: sans-serif
                     weight: 400
@@ -353,7 +354,7 @@ layers:
                 interactive: true
                 visible: true
                 priority: 2
-                #offset: [0, 8px]
+                offset: [0, 8px]
                 font:
                     family: sans-serif
                     weight: 400
@@ -366,7 +367,7 @@ layers:
             draw:
                 text:
                     visible: true
-                    #offset: [0px, 5px]
+                    offset: [0px, 5px]
                     priority: 1
                     font:
                         family: sans-serif
@@ -447,7 +448,7 @@ layers:
                     family: sans-serif
                     weight: 400
                     style: normal
-                    size: 18px
+                    size: 20px
                     fill: darkgreen
 
     pois:

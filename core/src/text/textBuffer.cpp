@@ -104,7 +104,7 @@ int TextBuffer::applyWordWrapping(std::vector<FONSquad>& _quads,
         lines[nLine - 1].length = q.x1;
 
         // Adjust the bounding box on x
-        _bbox->x = std::max(_bbox->x, q.x1 + _quads[0].x0);
+        _bbox->x = std::max(_bbox->x, q.x1 - _quads[0].x0 * 0.5f);
     }
 
     // Adjust the bounding box on y
