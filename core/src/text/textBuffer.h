@@ -27,18 +27,18 @@ public:
     bool addLabel(const TextStyle::Parameters& _params, Label::Transform _transform,
                   Label::Type _type, FontContext& _fontContext);
 
-private:
-    int applyWordWrapping(std::vector<FONSquad>& _quads, const TextStyle::Parameters& _params,
-                          const FontContext::FontMetrics& _metrics, Label::Type _type, glm::vec2* _bbox);
-
-    std::string applyTextTransform(const TextStyle::Parameters& _params, const std::string& _string);
-
     struct WordBreak {
         int start;
         int end;
     };
 
-    std::vector<WordBreak> findWordBreaks(const std::string& _text);
+    static std::vector<WordBreak> findWordBreaks(const std::string& _text);
+
+private:
+    static int applyWordWrapping(std::vector<FONSquad>& _quads, const TextStyle::Parameters& _params,
+                          const FontContext::FontMetrics& _metrics, Label::Type _type, glm::vec2* _bbox);
+
+    static std::string applyTextTransform(const TextStyle::Parameters& _params, const std::string& _string);
 
 };
 

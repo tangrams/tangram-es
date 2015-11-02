@@ -42,7 +42,10 @@ std::vector<TextBuffer::WordBreak> TextBuffer::findWordBreaks(const std::string&
                     lookAhead++;
                 }
             }
-            breaks.push_back({int(quad + breaks.size() + 1), int(lookAhead + breaks.size())});
+
+            if (lookAhead > quad) {
+                breaks.push_back({int(quad + breaks.size() + 1), int(lookAhead + breaks.size())});
+            }
         } else {
             quad++;
         }
