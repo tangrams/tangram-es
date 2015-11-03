@@ -203,11 +203,11 @@ void setPosition(double _lon, double _lat) {
 
 }
 
-void setPosition(double _lon, double _lat, float _duration) {
+void setPosition(double _lon, double _lat, float _duration, EaseType _e) {
 
     double lon_start, lat_start;
     getPosition(lon_start, lat_start);
-    auto cb = [=](float t) { setPosition(ease(lon_start, _lon, t), ease(lat_start, _lat, t)); };
+    auto cb = [=](float t) { setPosition(ease(lon_start, _lon, t, _e), ease(lat_start, _lat, t, _e)); };
     m_eases.push_back({ _duration, cb });
 
 }
@@ -228,10 +228,10 @@ void setZoom(float _z) {
 
 }
 
-void setZoom(float _z, float _duration) {
+void setZoom(float _z, float _duration, EaseType _e) {
 
     float z_start = getZoom();
-    auto cb = [=](float t) { setZoom(ease(z_start, _z, t)); };
+    auto cb = [=](float t) { setZoom(ease(z_start, _z, t, _e)); };
     m_eases.push_back({ _duration, cb });
 
 }
@@ -249,10 +249,10 @@ void setRotation(float _radians) {
 
 }
 
-void setRotation(float _radians, float _duration) {
+void setRotation(float _radians, float _duration, EaseType _e) {
 
     float radians_start = getRotation();
-    auto cb = [=](float t) { setRotation(ease(radians_start, _radians, t)); };
+    auto cb = [=](float t) { setRotation(ease(radians_start, _radians, t, _e)); };
     m_eases.push_back({ _duration, cb });
 
 }
@@ -271,10 +271,10 @@ void setTilt(float _radians) {
 
 }
 
-void setTilt(float _radians, float _duration) {
+void setTilt(float _radians, float _duration, EaseType _e) {
 
     float tilt_start = getTilt();
-    auto cb = [=](float t) { setTilt(ease(tilt_start, _radians, t)); };
+    auto cb = [=](float t) { setTilt(ease(tilt_start, _radians, t, _e)); };
     m_eases.push_back({ _duration, cb });
 
 }
