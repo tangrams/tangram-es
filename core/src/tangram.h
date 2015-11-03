@@ -35,6 +35,7 @@ void render();
 
 // Set the position of the map view in degrees longitude and latitude
 void setPosition(double _lon, double _lat);
+void setPosition(double _lon, double _lat, float _duration);
 
 // Set the values of the arguments to the position of the map view in degrees
 // longitude and latitude
@@ -42,6 +43,7 @@ void getPosition(double& _lon, double& _lat);
 
 // Set the fractional zoom level of the view
 void setZoom(float _z);
+void setZoom(float _z, float _duration);
 
 // Get the fractional zoom level of the view
 float getZoom();
@@ -49,6 +51,7 @@ float getZoom();
 // Set the counter-clockwise rotation of the view in radians; 0 corresponds to
 // North pointing up
 void setRotation(float _radians);
+void setRotation(float _radians, float _duration);
 
 // Get the counter-clockwise rotation of the view in radians; 0 corresponds to
 // North pointing up
@@ -56,6 +59,7 @@ float getRotation();
 
 // Set the tilt angle of the view in radians; 0 corresponds to straight down
 void setTilt(float _radians);
+void setTilt(float _radians, float _duration);
 
 // Get the tilt angle of the view in radians; 0 corresponds to straight down
 float getTilt();

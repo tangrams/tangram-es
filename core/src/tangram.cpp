@@ -19,6 +19,7 @@
 #include "text/fontContext.h"
 #include "gl.h"
 #include "gl/extension.h"
+#include "util/ease.h"
 #include <memory>
 #include <cmath>
 #include <bitset>
@@ -33,6 +34,7 @@ std::unique_ptr<Labels> m_labels;
 std::unique_ptr<Skybox> m_skybox;
 std::unique_ptr<InputHandler> m_inputHandler;
 std::mutex m_tilesMutex;
+std::vector<Ease> m_eases;
 
 static float g_time = 0.0;
 static std::bitset<8> g_flags = 0;
@@ -122,6 +124,11 @@ void update(float _dt) {
 
     g_time += _dt;
 
+    for (auto& ease : m_eases) {
+        ease.update(_dt);
+    }
+    std::remove_if(m_eases.begin(), m_eases.end(), [](Ease& e) { return e.finished(); });
+
     m_inputHandler->update(_dt);
 
     m_view->update();
@@ -196,6 +203,15 @@ void setPosition(double _lon, double _lat) {
 
 }
 
+void setPosition(double _lon, double _lat, float _duration) {
+
+    double lon_start, lat_start;
+    getPosition(lon_start, lat_start);
+    auto cb = [=](float t) { setPosition(ease(lon_start, _lon, t), ease(lat_start, _lat, t)); };
+    m_eases.push_back({ _duration, cb });
+
+}
+
 void getPosition(double& _lon, double& _lat) {
 
     glm::dvec2 meters(m_view->getPosition().x, m_view->getPosition().y);
@@ -212,6 +228,14 @@ void setZoom(float _z) {
 
 }
 
+void setZoom(float _z, float _duration) {
+
+    float z_start = getZoom();
+    auto cb = [=](float t) { setZoom(ease(z_start, _z, t)); };
+    m_eases.push_back({ _duration, cb });
+
+}
+
 float getZoom() {
 
     return m_view->getZoom();
@@ -222,6 +246,14 @@ void setRotation(float _radians) {
 
     m_view->setRoll(_radians);
     requestRender();
+
+}
+
+void setRotation(float _radians, float _duration) {
+
+    float radians_start = getRotation();
+    auto cb = [=](float t) { setRotation(ease(radians_start, _radians, t)); };
+    m_eases.push_back({ _duration, cb });
 
 }
 
@@ -236,6 +268,14 @@ void setTilt(float _radians) {
 
     m_view->setPitch(_radians);
     requestRender();
+
+}
+
+void setTilt(float _radians, float _duration) {
+
+    float tilt_start = getTilt();
+    auto cb = [=](float t) { setTilt(ease(tilt_start, _radians, t)); };
+    m_eases.push_back({ _duration, cb });
 
 }
 

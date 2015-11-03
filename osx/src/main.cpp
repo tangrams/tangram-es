@@ -149,6 +149,9 @@ void key_callback(GLFWwindow* window, int key, int scancode, int action, int mod
             case GLFW_KEY_R:
                 Tangram::loadScene(sceneFile.c_str());
                 break;
+            case GLFW_KEY_Z:
+                Tangram::setZoom(Tangram::getZoom() + 1.f, 1.5f);
+                break;
         default:
                 break;
         }
