@@ -40,6 +40,8 @@ Tile::~Tile() {
 
 }
 
+//Note: This could set tile origin to be something different than the one if TileID's wrap is used.
+// But, this is required for wrapped tiles which are picked up from the cache
 void Tile::updateTileOrigin(const int _wrap) {
     BoundingBox bounds(m_projection->TileBounds(m_id));
 
