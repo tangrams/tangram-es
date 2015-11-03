@@ -13,12 +13,12 @@ struct Ease {
     float d;
     EaseCb cb;
 
-    Ease(float _duration, EaseCb _cb) : t(0), d(_duration), cb(_cb) {}
+    Ease(float _duration, EaseCb _cb) : t(-1), d(_duration), cb(_cb) {}
 
-    bool finished() { return t >= d; }
+    bool finished() const { return t >= d; }
 
     void update(float _dt) {
-        t = fminf(t + _dt, d);
+        t = t < 0 ? 0 : std::fmin(t + _dt, d);
         cb(t / d);
     }
 
