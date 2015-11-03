@@ -8,7 +8,7 @@ namespace Tangram {
 using EaseCb = std::function<void (float)>;
 
 enum class EaseType {
-    linear,
+    linear = 0,
     cubic,
     quint,
     sine,
