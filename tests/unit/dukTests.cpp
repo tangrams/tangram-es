@@ -132,8 +132,8 @@ TEST_CASE( "Test numeric global", "[Duktape][setGlobal]") {
 
 TEST_CASE( "Test string global", "[Duktape][setGlobal]") {
     StyleContext ctx;
-    ctx.setGlobal("$geometry", "point");
-    ctx.addFunction("fn", R"(function() { return $geometry == point })");
+    ctx.setGlobal("$geometry", GeometryType::points);
+    ctx.addFunction("fn", R"(function() { return $geometry === point })");
 
     REQUIRE(ctx.evalFilterFn("fn") == true);
 
