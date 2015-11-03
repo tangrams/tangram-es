@@ -133,7 +133,7 @@ public:
     virtual ~View() {}
 
     /* TODO: API for setting these */
-    constexpr static float s_maxZoom = 18.0;
+    constexpr static float s_maxZoom = 18.5;
     constexpr static float s_minZoom = 0.0;
 
     const glm::mat4& getOrthoViewportMatrix() const { return m_orthoViewport; };
