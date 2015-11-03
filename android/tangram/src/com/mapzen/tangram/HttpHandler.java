@@ -48,10 +48,9 @@ public class HttpHandler {
      * @return true if cache was successfully created
      */
     public boolean setCache(File directory, long maxSize) {
-        try {
-            Cache okTileCache = new Cache(directory, maxSize);
-            okClient.setCache(okTileCache);
-        } catch (IOException ignored) { return false; }
+        Cache okTileCache = new Cache(directory, maxSize);
+        okClient.setCache(okTileCache);
+
         return true;
     }
 
