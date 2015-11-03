@@ -11,6 +11,7 @@
 
 #include <chrono>
 #include <algorithm>
+#include <set>
 
 namespace Tangram {
 
@@ -416,6 +417,35 @@ void TileManager::updateProxyTiles(TileSet& tileSet, Tile& _tile) {
 
     // Get current parent
     auto parentID = _tileID.getParent();
+    // Get Grand Parent
+    auto gparentID = parentID.getParent();
+    {
+        const auto& it = tiles.find(gparentID);
+        if (it != tiles.end()) {
+            auto& gparent = it->second;
+            if (_tile.setProxy(Tile::parent2)) {
+                gparent->incProxyCounter();
+                if (gparent->isReady()) {
+                    m_tiles.push_back(gparent);
+                }
+            }
+            return;
+        }
+    }
+    // Get gparent proxy from cache
+    {
+        auto gparent = m_tileCache->get(tileSet.source->id(), gparentID);
+        if (gparent) {
+            _tile.setProxy(Tile::parent2);
+            gparent->incProxyCounter();
+            m_tiles.push_back(gparent);
+
+            tiles.emplace(gparentID, std::move(gparent));
+
+            return;
+        }
+    }
+
     {
         const auto& it = tiles.find(parentID);
         if (it != tiles.end()) {
@@ -476,6 +506,20 @@ void TileManager::clearProxyTiles(TileSet& tileSet, Tile& _tile,
                                   std::vector<TileID>& _removes) {
     const TileID& _tileID = _tile.getID();
     auto& tiles = tileSet.tiles;
+
+    // Check if gparent proxy is present
+    if (_tile.unsetProxy(Tile::parent2)) {
+        TileID gparentID(_tileID.getParent().getParent());
+        auto it = tiles.find(gparentID);
+        if (it != tiles.end()) {
+            auto& gparent = it->second;
+            gparent->decProxyCounter();
+
+            if (gparent->getProxyCounter() == 0 && !gparent->isVisible()) {
+                _removes.push_back(gparentID);
+            }
+        }
+    }
 
     // Check if parent proxy is present
     if (_tile.unsetProxy(Tile::parent)) {
