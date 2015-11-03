@@ -19,7 +19,7 @@ const static char DATA_ID[] = "\xff""\xff""data";
 const static char ATTR_ID[] = "\xff""\xff""attr";
 const static char FUNC_ID[] = "\xff""\xff""fns";
 
-static const std::string key_geometry = "$geomtry";
+static const std::string key_geometry = "$geometry";
 static const std::string key_zoom("$zoom");
 
 StyleContext::StyleContext() {
@@ -39,9 +39,14 @@ StyleContext::StyleContext() {
         LOGE("Feature not assigned");
     }
 
-    setGlobal("point", GeometryType::points);
-    setGlobal("line", GeometryType::lines);
-    setGlobal("polygon", GeometryType::polygons);
+    duk_push_number(m_ctx, GeometryType::points);
+    duk_put_global_string(m_ctx, "point");
+
+    duk_push_number(m_ctx, GeometryType::lines);
+    duk_put_global_string(m_ctx, "line");
+
+    duk_push_number(m_ctx, GeometryType::polygons);
+    duk_put_global_string(m_ctx, "polygon");
 
     DUMP("init\n");
 }
@@ -95,7 +100,10 @@ void StyleContext::setGlobalZoom(float _zoom) {
 
 void StyleContext::setGlobal(const std::string& _key, const Value& _val) {
     auto globalKey = Filter::globalType(_key);
-    if (globalKey == FilterGlobal::undefined) { return; }
+    if (globalKey == FilterGlobal::undefined) {
+        LOG("Undefined Global: %s", _key.c_str());
+        return;
+    }
 
     Value& entry = m_globals[globalKey];
     if (entry == _val) { return; }
@@ -397,6 +405,8 @@ bool StyleContext::evalStyleFn(const std::string& name, StyleParamKey _key, Styl
 void StyleContext::setAccessors() {
 
     m_featureIsReady = true;
+
+    if (!m_feature) { return; }
 
     setGlobal(key_geometry, m_feature->geometryType);
 

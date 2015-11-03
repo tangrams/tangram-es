@@ -132,12 +132,12 @@ TEST_CASE( "Test numeric global", "[Duktape][setGlobal]") {
 
 TEST_CASE( "Test string global", "[Duktape][setGlobal]") {
     StyleContext ctx;
-    ctx.setGlobal("$layer", "test");
-    ctx.addFunction("fn", R"(function() { return $layer === 'test' })");
+    ctx.setGlobal("$geometry", "point");
+    ctx.addFunction("fn", R"(function() { return $geometry == point })");
 
     REQUIRE(ctx.evalFilterFn("fn") == true);
 
-    ctx.setGlobal("$layer", "none");
+    ctx.setGlobal("$geometry", "none");
 
     REQUIRE(ctx.evalFilterFn("fn") == false);
 }
