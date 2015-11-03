@@ -124,10 +124,10 @@ void update(float _dt) {
 
     g_time += _dt;
 
-    for (auto& ease : m_eases) {
-        ease.update(_dt);
+    for (auto it = m_eases.begin(); it < m_eases.end(); it++) {
+        it->update(_dt);
+        if (it->finished()) { m_eases.erase(it); }
     }
-    std::remove_if(m_eases.begin(), m_eases.end(), [](Ease& e) { return e.finished(); });
 
     m_inputHandler->update(_dt);
 
