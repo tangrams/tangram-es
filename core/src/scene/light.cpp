@@ -50,6 +50,11 @@ void Light::injectOnProgram(ShaderProgram& _shader) {
     // Inject all needed #defines for this light instance
     _shader.addSourceBlock("defines", getInstanceDefinesBlock(), false);
 
+    if (m_dynamic) {
+        // If the light is dynamic, initialize it using the corresponding uniform at the start of main()
+        _shader.addSourceBlock("setup", getInstanceName() + " = " + getUniformName() + ";", false);
+    }
+
     _shader.addSourceBlock("__lighting", getClassBlock(), false);
     _shader.addSourceBlock("__lighting", getInstanceBlock());
     _shader.addSourceBlock("__lights_to_compute", getInstanceComputeBlock());
@@ -139,11 +144,7 @@ std::string Light::getInstanceAssignBlock() {
 }
 
 std::string Light::getInstanceComputeBlock() {
-    std::string str = "";
-    if (m_dynamic) {
-        str += getInstanceName() + " = " + getUniformName() + ";\n";
-    }
-    return  str + "calculateLight(" + getInstanceName() + ", _eyeToPoint, _normal);\n";
+    return  "calculateLight(" + getInstanceName() + ", _eyeToPoint, _normal);\n";
 }
 
 }

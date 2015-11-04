@@ -152,6 +152,7 @@ std::string Material::getClassBlock() {
 void Material::injectOnProgram(ShaderProgram& _shader ) {
     _shader.addSourceBlock("defines", getDefinesBlock(), false);
     _shader.addSourceBlock("material", getClassBlock(), false);
+    _shader.addSourceBlock("setup", "material = u_material;", false);
 }
 
 void Material::setupProgram(ShaderProgram& _shader) {

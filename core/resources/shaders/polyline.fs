@@ -34,6 +34,10 @@ varying vec2 v_texcoord;
 #pragma tangram: global
 
 void main(void) {
+
+    // Initialize globals
+    #pragma tangram: setup
+
     vec4 color = v_color;
     vec3 normal = v_normal;
 

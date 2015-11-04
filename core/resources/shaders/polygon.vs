@@ -49,6 +49,9 @@ vec4 worldPosition() {
 
 void main() {
 
+    // Initialize globals
+    #pragma tangram: setup
+
     vec4 position = a_position;
 
     v_color = a_color;
