@@ -345,6 +345,7 @@ layers:
                 #offset: [0, 12px]
                 align: right
                 text_wrap: 20
+                anchor: bottom-left
                 font:
                     family: sans-serif
                     weight: 400
@@ -409,6 +410,7 @@ layers:
                 #- function() {return (feature.scalerank * .75) <= ($zoom - 4); }
         draw:
             text:
+                anchor: left
                 interactive: true
                 priority: 5
                 font:
@@ -447,6 +449,7 @@ layers:
                 - { $zoom: { min: 18 } }
         draw:
             text:
+                anchor: left
                 interactive: true
                 priority: 0
                 font:

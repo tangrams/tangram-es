@@ -22,10 +22,10 @@ const std::map<std::string, Anchor> s_AnchorMap = {
     {"bottom", Anchor::bottom},
     {"left", Anchor::left},
     {"right", Anchor::right},
-    {"top_left", Anchor::top_left},
-    {"top_right", Anchor::top_right},
-    {"bottom_left", Anchor::bottom_left},
-    {"bottom_right", Anchor::bottom_right},
+    {"top-left", Anchor::top_left},
+    {"top-right", Anchor::top_right},
+    {"bottom-left", Anchor::bottom_left},
+    {"bottom-right", Anchor::bottom_right},
 };
 
 bool transform(const std::string& _transform, Transform& _out) {
