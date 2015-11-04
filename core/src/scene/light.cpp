@@ -119,7 +119,7 @@ std::string Light::getInstanceBlock() {
     if (m_dynamic) {
         //  If is dynamic, define the uniform and copy it to the global instance of the light struct
         block += "uniform " + typeName + " " + getUniformName() + ";\n";
-        block += typeName + " " + getInstanceName() + " = " + getUniformName() + ";\n";
+        block += typeName + " " + getInstanceName() + ";\n";
     } else {
         //  If is not dynamic define the global instance of the light struct and fill the variables
         block += typeName + " " + getInstanceName() + getInstanceAssignBlock() +";\n";
@@ -139,7 +139,11 @@ std::string Light::getInstanceAssignBlock() {
 }
 
 std::string Light::getInstanceComputeBlock() {
-    return "calculateLight("+getInstanceName()+", _eyeToPoint, _normal);\n";
+    std::string str = "";
+    if (m_dynamic) {
+        str += getInstanceName() + " = " + getUniformName() + ";\n";
+    }
+    return  str + "calculateLight(" + getInstanceName() + ", _eyeToPoint, _normal);\n";
 }
 
 }
