@@ -425,7 +425,8 @@ void View::updateTiles() {
 
     m_visibleTiles.clear();
 
-    int maxTileIndex = 1 << int(m_zoom);
+    int zoom = int(m_zoom);
+    int maxTileIndex = 1 << zoom;
 
     // Bounds of view trapezoid in world space (i.e. view frustum projected onto z = 0 plane)
     glm::dvec2 viewBL = { 0.f,       m_vpHeight }; // bottom left
@@ -494,18 +495,15 @@ void View::updateTiles() {
         while (lod < MAX_LOD && y >= y_limit_pos[lod]) { lod++; }
         while (lod < MAX_LOD && y <  y_limit_neg[lod]) { lod++; }
 
-        int z = (int)m_zoom;
-        int maxX = (1 << z);
-
         x >>= lod;
         y >>= lod;
-        z = glm::clamp((z-lod), 0, (int)s_maxZoom);
+        int z = glm::clamp((zoom - lod), 0, (int)s_maxZoom);
 
-        int wrap = std::floor((float)x / (maxX));
-        int wrappedX = x % maxX;
-        if (wrappedX < 0) { wrappedX += maxX; }
+        // Wrap x to the range [0, maxTileIndex)
+        int wx = x & (maxTileIndex - 1);
+        int wrap = (x - wx) >> zoom;
 
-        m_visibleTiles.emplace(wrappedX, y, z, wrap);
+        m_visibleTiles.emplace(wx, y, z, wrap);
 
     };
 
