@@ -37,6 +37,7 @@ enum class StyleParamKey : uint8_t {
     sprite_default,
     style,
     text_source,
+    text_wrap,
     transform,
     visible,
     width,

@@ -73,7 +73,6 @@ private:
     void initFontContext(int _atlasSize);
 
     std::map<std::string, int> m_fonts;
-    std::map<int, FontMetrics> m_fontMetrics;
     std::unique_ptr<Texture> m_atlas;
     std::mutex m_contextMutex;
     std::mutex m_atlasMutex;

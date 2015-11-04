@@ -100,6 +100,7 @@ auto TextStyle::applyRule(const DrawRule& _rule, const Properties& _props) const
     _rule.get(StyleParamKey::transition_hide_time, p.labelOptions.hideTransition.time);
     _rule.get(StyleParamKey::transition_selected_time, p.labelOptions.selectTransition.time);
     _rule.get(StyleParamKey::transition_show_time, p.labelOptions.showTransition.time);
+    _rule.get(StyleParamKey::text_wrap, p.maxLineWidth);
 
     _rule.get(StyleParamKey::text_source, p.text);
     if (!_rule.isJSFunction(StyleParamKey::text_source)) {

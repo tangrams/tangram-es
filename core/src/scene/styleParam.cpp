@@ -43,6 +43,7 @@ const std::map<std::string, StyleParamKey> s_StyleParamMap = {
     {"sprite_default", StyleParamKey::sprite_default},
     {"style", StyleParamKey::style},
     {"text_source", StyleParamKey::text_source},
+    {"text_wrap", StyleParamKey::text_wrap},
     {"transition:hide:time", StyleParamKey::transition_hide_time},
     {"transition:selected:time", StyleParamKey::transition_selected_time},
     {"transition:show:time", StyleParamKey::transition_show_time},
@@ -114,6 +115,14 @@ StyleParam::Value StyleParam::parseString(StyleParamKey key, const std::string& 
             LOGW("Invalid extrude parameter '%s'.", _value.c_str());
         }
         return vec2;
+    }
+    case StyleParamKey::text_wrap: {
+        int textWrap = 15;
+        if (_value == "true") return textWrap;
+        if (_value == "false") return std::numeric_limits<uint32_t>::max();
+        if (parseInt(_value, textWrap) > 0) {
+             return static_cast<uint32_t>(textWrap);
+        }
     }
     case StyleParamKey::offset: {
         auto vec2 = glm::vec2(0.f, 0.f);
@@ -244,6 +253,7 @@ std::string StyleParam::toString() const {
     case StyleParamKey::font_style:
     case StyleParamKey::text_source:
     case StyleParamKey::transform:
+    case StyleParamKey::text_wrap:
     case StyleParamKey::sprite:
     case StyleParamKey::sprite_default:
     case StyleParamKey::style:

@@ -340,6 +340,7 @@ layers:
                 interactive: true
                 offset: [0, 12px]
                 align: right
+                text_wrap: 20
                 font:
                     family: sans-serif
                     weight: 400

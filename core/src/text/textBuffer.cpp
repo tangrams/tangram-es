@@ -69,7 +69,7 @@ int TextBuffer::applyWordWrapping(std::vector<FONSquad>& _quads,
     std::vector<LineQuad> lines;
     std::vector<TextBuffer::WordBreak> breaks;
 
-    if (_params.wordWrap && _type != Label::Type::line) {
+    if (_params.wordWrap < _params.text.length() && _type != Label::Type::line) {
        breaks = findWordBreaks(_params.text);
     }
 
