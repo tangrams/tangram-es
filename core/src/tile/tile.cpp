@@ -30,9 +30,7 @@ Tile::Tile(TileID _id, const MapProjection& _projection) :
     m_scale = bounds.width();
     m_inverseScale = 1.0/m_scale;
 
-    m_tileOrigin = { bounds.min.x, bounds.max.y }; // South-West corner
-    // negative y coordinate: to change from y down to y up (tile system has y down and gl context we use has y up).
-    m_tileOrigin.y *= -1.0;
+    updateTileOrigin(_id.wrap);
 
     // Init model matrix to size of tile
     m_modelMatrix = glm::scale(glm::mat4(1.0), glm::vec3(m_scale));
@@ -40,6 +38,21 @@ Tile::Tile(TileID _id, const MapProjection& _projection) :
 
 Tile::~Tile() {
 
+}
+
+//Note: This could set tile origin to be something different than the one if TileID's wrap is used.
+// But, this is required for wrapped tiles which are picked up from the cache
+void Tile::updateTileOrigin(const int _wrap) {
+    BoundingBox bounds(m_projection->TileBounds(m_id));
+
+    m_tileOrigin = { bounds.min.x, bounds.max.y }; // South-West corner
+    // negative y coordinate: to change from y down to y up (tile system has y down and gl context we use has y up).
+    m_tileOrigin.y *= -1.0;
+
+    auto mapBound = m_projection->MapBounds();
+    auto mapSpan = mapBound.max.x - mapBound.min.x;
+
+    m_tileOrigin.x += (mapSpan * _wrap);
 }
 
 void Tile::build(StyleContext& _ctx, const Scene& _scene, const TileData& _data, const DataSource& _source) {
