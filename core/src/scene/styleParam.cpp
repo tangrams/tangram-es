@@ -117,7 +117,7 @@ StyleParam::Value StyleParam::parseString(StyleParamKey key, const std::string& 
         return vec2;
     }
     case StyleParamKey::text_wrap: {
-        int textWrap = 15;
+        int textWrap;
         if (_value == "true") return textWrap;
         if (_value == "false") return std::numeric_limits<uint32_t>::max();
         if (parseInt(_value, textWrap) > 0) {
@@ -157,7 +157,7 @@ StyleParam::Value StyleParam::parseString(StyleParamKey key, const std::string& 
     case StyleParamKey::style:
         return _value;
     case StyleParamKey::font_size: {
-        float fontSize = 16;
+        float fontSize;
         if (!parseFontSize(_value, fontSize)) {
             LOGW("Invalid font-size '%s'.", _value.c_str());
         }
