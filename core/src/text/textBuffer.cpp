@@ -3,7 +3,6 @@
 #include "labels/textLabel.h"
 #include "gl/texture.h"
 #include "gl/vboMesh.h"
-#include "fontstash.h"
 
 namespace Tangram {
 
@@ -27,6 +26,7 @@ std::vector<TextBuffer::WordBreak> TextBuffer::findWordBreaks(const std::string&
         if (fonsDecUTF8(&utf8state, byte)) {
             continue;
         }
+        quad++;
 
         if (std::isspace(*str)) {
             unsigned int utf8stateForward = 0;
@@ -44,10 +44,8 @@ std::vector<TextBuffer::WordBreak> TextBuffer::findWordBreaks(const std::string&
             }
 
             if (lookAhead > quad) {
-                breaks.push_back({int(quad + breaks.size() + 1), int(lookAhead + breaks.size())});
+                breaks.push_back({quad, lookAhead - 1});
             }
-        } else {
-            quad++;
         }
     }
 

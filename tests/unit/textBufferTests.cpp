@@ -6,13 +6,13 @@
 #include "text/textBuffer.h"
 
 TEST_CASE( "Basic word break utf8 string", "[Core][TextBuffer]" ) {
-    auto breaks = Tangram::TextBuffer::findWordBreaks("The quick brown fox");
+    auto breaks = Tangram::TextBuffer::findWordBreaks("The  quick brown fox");
 
     REQUIRE(breaks.size() == 3);
-    REQUIRE(breaks[0].start == 4);
-    REQUIRE(breaks[0].end == 8);
-    REQUIRE(breaks[2].start == 16);
-    REQUIRE(breaks[2].end == 18);
+    REQUIRE(breaks[0].start == 5);
+    REQUIRE(breaks[0].end == 9);
+    REQUIRE(breaks[2].start == 17);
+    REQUIRE(breaks[2].end == 19);
 }
 
 TEST_CASE( "Find breaks on non-utf8 string", "[Core][TextBuffer]" ) {
