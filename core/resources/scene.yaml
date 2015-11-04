@@ -343,9 +343,8 @@ layers:
             text:
                 interactive: true
                 #offset: [0, 12px]
-                align: right
                 text_wrap: 20
-                anchor: bottom-left
+                anchor: right
                 font:
                     family: sans-serif
                     weight: 400

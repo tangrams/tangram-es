@@ -117,8 +117,26 @@ auto TextStyle::applyRule(const DrawRule& _rule, const Properties& _props) const
     }
 
     Text::transform(transform, p.transform);
-    Text::align(align, p.align);
     Text::anchor(anchor, p.anchor);
+    bool res = Text::align(align, p.align);
+    if (!res) {
+        switch(p.anchor) {
+            case Text::Anchor::top_left:
+            case Text::Anchor::left:
+            case Text::Anchor::bottom_left:
+                p.align = Text::Align::right;
+                break;
+            case Text::Anchor::top_right:
+            case Text::Anchor::right:
+            case Text::Anchor::bottom_right:
+                p.align = Text::Align::left;
+                break;
+            case Text::Anchor::top:
+            case Text::Anchor::bottom:
+            case Text::Anchor::center:
+                break;
+        }
+    }
 
     /* Global operations done for fontsize and sdfblur */
     float emSize = p.fontSize / 16.f;
