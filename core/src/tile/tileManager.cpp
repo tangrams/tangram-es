@@ -57,19 +57,18 @@ void TileManager::setScene(std::shared_ptr<Scene> _scene) {
                 sources.begin(), sources.end(),
                 [&](auto& s){ return tileSet.source->equals(*s); });
 
-            if (sIt != sources.end()) {
-                // Cancel pending  tiles
-                for_each(tileSet.tiles.begin(), tileSet.tiles.end(), [&](auto& tile) {
-                        this->setTileState(*tile.second, TileState::canceled); });
-
-                // Clear cache
-                tileSet.tiles.clear();
-                return false;
+            if (sIt == sources.end()) {
+                LOG("remove source %s", tileSet.source->name().c_str());
+                return true;
             }
 
-            LOG("remove source %s", tileSet.source->name().c_str());
-            return true;
+            // Cancel pending  tiles
+            for_each(tileSet.tiles.begin(), tileSet.tiles.end(), [&](auto& tile) {
+                    this->setTileState(*tile.second, TileState::canceled); });
 
+            // Clear cache
+            tileSet.tiles.clear();
+            return false;
         });
 
     m_tileSets.erase(it, m_tileSets.end());
@@ -229,6 +228,11 @@ void TileManager::updateTileSet(TileSet& tileSet) {
 
     glm::dvec2 viewCenter(m_view->getPosition().x, -m_view->getPosition().y);
 
+    // Tile load request above this zoom-level will be canceled in order to
+    // not wait for tiles that are too small to contribute significantly to
+    // the current view.
+    int maxZoom = m_view->getZoom() + 2;
+
     if (m_view->changedOnLastUpdate() || m_tileSetChanged) {
 
         // Loop over visibleTiles and add any needed tiles to tileSet
@@ -255,7 +259,12 @@ void TileManager::updateTileSet(TileSet& tileSet) {
                 if (tile->isReady()) {
                     m_tiles.push_back(tile);
                 } else if (tile->hasState(TileState::none)) {
+                    // Not yet available - enqueue for loading
                     enqueueTask(tileSet, visTileId, viewCenter);
+                    if (m_tileSetChanged) {
+                        // check again for proxies
+                        updateProxyTiles(tileSet, *tile);
+                    }
                 }
 
                 ++curTilesIt;
@@ -269,6 +278,7 @@ void TileManager::updateTileSet(TileSet& tileSet) {
 
                 // tileSet is missing an element present in visibleTiles
                 if (!addTile(tileSet, visTileId)) {
+                    // Not in cache - enqueue for loading
                     enqueueTask(tileSet, visTileId, viewCenter);
                 }
 
@@ -284,6 +294,10 @@ void TileManager::updateTileSet(TileSet& tileSet) {
                     removeTiles.push_back(tile->getID());
                 } else if (tile->isReady()) {
                     m_tiles.push_back(tile);
+                } else if (tile->getID().z > maxZoom) {
+                    // cancel requsts for tiles that
+                    // are too small on screen
+                    removeTiles.push_back(tile->getID());
                 }
 
                 ++curTilesIt;
@@ -291,26 +305,26 @@ void TileManager::updateTileSet(TileSet& tileSet) {
         }
     }
 
-    {
-        while (!removeTiles.empty()) {
-            auto tileIt = tiles.find(removeTiles.back());
-            removeTiles.pop_back();
+    while (!removeTiles.empty()) {
+        auto tileIt = tiles.find(removeTiles.back());
+        removeTiles.pop_back();
 
-            if (tileIt != tiles.end()) {
-                if (tileIt->second->getProxyCounter() <= 0) {
-                    removeTile(tileSet, tileIt, removeTiles);
-                }
-            }
+        if ((tileIt != tiles.end()) &&
+            (tileIt->second->getProxyCounter() <= 0 ||
+             tileIt->second->getID().z > maxZoom)) {
+
+            removeTile(tileSet, tileIt, removeTiles);
         }
     }
 
     // Update tile distance to map center for load priority
-    {
-        for (auto& entry : tiles) {
-            auto& tile = entry.second;
-            auto tileCenter = m_view->getMapProjection().TileCenter(tile->getID());
-            tile->setPriority(glm::length2(tileCenter - viewCenter));
-        }
+    for (auto& entry : tiles) {
+        auto& tile = entry.second;
+        auto tileCenter = m_view->getMapProjection().TileCenter(tile->getID());
+        double scaleDiv = exp2(tile->getID().z - m_view->getZoom());
+        // prefer parent tiles
+        if (scaleDiv < 1) { scaleDiv = 0.1/scaleDiv; }
+        tile->setPriority(glm::length2(tileCenter - viewCenter) * scaleDiv);
     }
 }
 

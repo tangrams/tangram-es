@@ -72,7 +72,7 @@ public:
 
     void addDataSource(std::shared_ptr<DataSource> dataSource);
 
-    const auto getTileSets() { return m_tileSets; }
+    const auto& getTileSets() { return m_tileSets; }
 
     /* @_cacheSize: Set size of in-memory tile cache in bytes.
      * This cache holds recently used <Tile>s that are ready for rendering.
