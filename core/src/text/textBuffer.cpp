@@ -56,17 +56,18 @@ int TextBuffer::applyWordWrapping(std::vector<FONSquad>& _quads,
     };
 
     float yOffset = 0.f, xOffset = 0.f;
-    int nLine = 1, lastBreak = 0;
+    int nLine = 1;
 
     std::vector<LineQuad> lines;
     std::vector<TextBuffer::WordBreak> words;
 
     if (_params.wordWrap < _params.text.length() && _type != Label::Type::line) {
        words = findWords(_params.text);
+    } else {
+        for (auto& q : _quads) {
+            _bbox->x = std::max(_bbox->x, q.x1);
+        }
     }
-
-    // Approximation of the first glyph left side bearing
-    float firstGlyphLSB = _quads[0].x0 * 0.5f;
 
     LineQuad line;
     lines.push_back(line); // atleast one line
@@ -81,12 +82,13 @@ int TextBuffer::applyWordWrapping(std::vector<FONSquad>& _quads,
 
         // Check if quads need to be added to next line?
         if (iWord > 0 && (lastLineQuads.size() + wordSize) > (size_t)_params.maxLineWidth) {
+            xOffset = 0.0f;
             auto& quad = _quads[start];
-            auto& prevQuad = _quads[words[iWord-1].end];
+            auto& prevQuad = lines[nLine - 1].quads.front();
 
-            float spaceLength = quad.x0 - prevQuad.x1;
+            float baseLength = quad.x0 - prevQuad->x0;
             yOffset += _metrics.lineHeight;
-            xOffset -= quad.x0 + firstGlyphLSB - spaceLength;
+            xOffset -= (baseLength);
             lines.push_back(LineQuad());
             nLine++;
         }
