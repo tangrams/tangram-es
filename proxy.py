@@ -9,7 +9,7 @@
 # see also: https://pymotw.com/2/BaseHTTPServer/
 
 import BaseHTTPServer
-import hashlib
+# import hashlib
 import os
 import urllib2
 
@@ -21,11 +21,24 @@ class ThreadedHTTPServer(ThreadingMixIn, HTTPServer):
 
 class CacheHandler(BaseHTTPServer.BaseHTTPRequestHandler):
     def do_GET(self):
-        m = hashlib.md5()
-        m.update(self.path)
-        cache_filename = ".tiles/" + m.hexdigest()
+
+        dirname = ".tiles/" + os.path.dirname(self.path)[1:]
+        filename = os.path.basename(self.path)
+
+        while not os.path.exists(dirname):
+            # might be a race here
+            try:
+                os.makedirs(dirname)
+            except:
+                None
+
+        # m = hashlib.md5()
+        # m.update(self.path)
+        # cache_filename = ".tiles/" + m.hexdigest()
+        cache_filename = dirname + "/" + filename
+
         if os.path.exists(cache_filename):
-            print "Cache hit"
+            # print "Cache hit"
             data = open(cache_filename).readlines()
         else:
             print "Cache miss"
