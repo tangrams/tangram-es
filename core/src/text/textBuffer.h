@@ -32,7 +32,7 @@ public:
         int end;
     };
 
-    static std::vector<WordBreak> findWordBreaks(const std::string& _text);
+    static std::vector<WordBreak> findWords(const std::string& _text);
 
 private:
     static int applyWordWrapping(std::vector<FONSquad>& _quads, const TextStyle::Parameters& _params,

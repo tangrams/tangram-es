@@ -5,48 +5,68 @@
 #include "tangram.h"
 #include "text/textBuffer.h"
 
+TEST_CASE( "Testing", "[Core][TextBuffer]" ) {
+    auto words = Tangram::TextBuffer::findWords(" varun  talwar");
+
+    REQUIRE(words.size() == 2);
+    REQUIRE(words[0].start == 1);
+    REQUIRE(words[0].end== 5);
+    REQUIRE(words[1].start == 8);
+    REQUIRE(words[1].end== 13);
+}
+
 TEST_CASE( "Basic word break utf8 string", "[Core][TextBuffer]" ) {
-    auto breaks = Tangram::TextBuffer::findWordBreaks("The  quick brown fox");
+    auto words = Tangram::TextBuffer::findWords("The  quick brown fox");
 
-    REQUIRE(breaks.size() == 3);
-    REQUIRE(breaks[0].start == 5);
-    REQUIRE(breaks[0].end == 9);
-    REQUIRE(breaks[2].start == 17);
-    REQUIRE(breaks[2].end == 19);
+    REQUIRE(words.size() == 4);
+    REQUIRE(words[1].start == 5);
+    REQUIRE(words[1].end == 9);
+    REQUIRE(words[3].start == 17);
+    REQUIRE(words[3].end == 19);
 }
 
-TEST_CASE( "Find breaks on non-utf8 string", "[Core][TextBuffer]" ) {
-    auto breaks = Tangram::TextBuffer::findWordBreaks("사용할 수있는 구절 많은");
+TEST_CASE( "Find words on non-utf8 string", "[Core][TextBuffer]" ) {
+    auto words = Tangram::TextBuffer::findWords("사용할 수있는 구절 많은");
 
-    REQUIRE(breaks.size() == 3);
-    REQUIRE(breaks[0].start == 4);
-    REQUIRE(breaks[0].end == 6);
-    REQUIRE(breaks[2].start == 11);
-    REQUIRE(breaks[2].end == 12);
+    REQUIRE(words.size() == 4);
+    REQUIRE(words[0].start == 0);
+    REQUIRE(words[0].end == 2);
+    REQUIRE(words[1].start == 4);
+    REQUIRE(words[1].end == 6);
+    REQUIRE(words[3].start == 11);
+    REQUIRE(words[3].end == 12);
 }
 
-TEST_CASE( "Find breaks on non-utf8 string with CR", "[Core][TextBuffer]" ) {
-    auto breaks = Tangram::TextBuffer::findWordBreaks("Вяш выро\nконтынтёонэж\nад");
+TEST_CASE( "Find words on non-utf8 string with CR", "[Core][TextBuffer]" ) {
+    auto words = Tangram::TextBuffer::findWords("Вяш выро\nконтынтёонэж\nад");
 
-    REQUIRE(breaks.size() == 3);
-    REQUIRE(breaks[0].start == 4);
-    REQUIRE(breaks[0].end == 7);
-    REQUIRE(breaks[1].start == 9);
-    REQUIRE(breaks[1].end == 20);
+    REQUIRE(words.size() == 4);
+    REQUIRE(words[0].start == 0);
+    REQUIRE(words[0].end == 2);
+    REQUIRE(words[1].start == 4);
+    REQUIRE(words[1].end == 7);
+    REQUIRE(words[2].start == 9);
+    REQUIRE(words[2].end == 20);
 }
 
-TEST_CASE( "Find breaks on one word non-utf8 string with CR", "[Core][TextBuffer]" ) {
-    auto breaks = Tangram::TextBuffer::findWordBreaks("Вяш\n");
+TEST_CASE( "Find words on one word non-utf8 string with CR", "[Core][TextBuffer]" ) {
+    auto words = Tangram::TextBuffer::findWords("Вяш\n");
 
-    REQUIRE(breaks.size() == 0);
+    REQUIRE(words.size() == 1);
+    REQUIRE(words[0].start == 0);
+    REQUIRE(words[0].end == 2);
 }
 
-TEST_CASE( "Find breaks in one character long strings", "[Core][TextBuffer]" ) {
-    auto breaks = Tangram::TextBuffer::findWordBreaks("A\nB C D");
+TEST_CASE( "Find words in one character long strings", "[Core][TextBuffer]" ) {
+    auto words = Tangram::TextBuffer::findWords("A\nB C D");
 
-    REQUIRE(breaks.size() == 3);
-    REQUIRE(breaks[0].start == 2);
-    REQUIRE(breaks[0].end == 2);
-    REQUIRE(breaks[2].start == 6);
-    REQUIRE(breaks[2].end == 6);
+    REQUIRE(words.size() == 4);
+    REQUIRE(words[0].start == 0);
+    REQUIRE(words[0].end == 0);
+    REQUIRE(words[1].start == 2);
+    REQUIRE(words[1].end == 2);
+    REQUIRE(words[2].start == 4);
+    REQUIRE(words[2].end == 4);
+    REQUIRE(words[3].start == 6);
+    REQUIRE(words[3].end == 6);
 }

@@ -13,12 +13,14 @@ TextBuffer::TextBuffer(std::shared_ptr<VertexLayout> _vertexLayout)
 
 TextBuffer::~TextBuffer() {}
 
-std::vector<TextBuffer::WordBreak> TextBuffer::findWordBreaks(const std::string& _text) {
-    std::vector<WordBreak> breaks;
+std::vector<TextBuffer::WordBreak> TextBuffer::findWords(const std::string& _text) {
+    std::vector<WordBreak> words;
     unsigned int utf8state = 0;
     const char* str = _text.c_str();
     const char* end = str + strlen(str);
-    int quad = 0;
+    int wordBegin = 0;
+    int wordEnd = -1;
+    int itr = 0;
 
     for (; str != end; ++str) {
         unsigned int byte = *(const unsigned char*)str;
@@ -26,30 +28,22 @@ std::vector<TextBuffer::WordBreak> TextBuffer::findWordBreaks(const std::string&
         if (fonsDecUTF8(&utf8state, byte)) {
             continue;
         }
-        quad++;
 
         if (std::isspace(*str)) {
-            unsigned int utf8stateForward = 0;
-            const char* forward = str + 1;
-            int lookAhead = quad;
-
-            for (; forward != end; ++forward) {
-                byte = *(const unsigned char*) forward;
-                if (!fonsDecUTF8(&utf8stateForward, byte)) {
-                    if (std::isspace(*forward)) {
-                        break;
-                    }
-                    lookAhead++;
-                }
+            wordEnd = itr - 1;
+            if (wordBegin <= wordEnd) {
+                words.push_back({wordBegin, wordEnd});
             }
-
-            if (lookAhead > quad) {
-                breaks.push_back({quad, lookAhead - 1});
-            }
+            wordBegin = itr + 1;
         }
+        itr++;
     }
 
-    return breaks;
+    if (!std::isspace(*(end-1))) {
+        words.push_back({wordBegin, itr-1});
+    }
+
+    return words;
 }
 
 int TextBuffer::applyWordWrapping(std::vector<FONSquad>& _quads,
@@ -65,47 +59,52 @@ int TextBuffer::applyWordWrapping(std::vector<FONSquad>& _quads,
     int nLine = 1, lastBreak = 0;
 
     std::vector<LineQuad> lines;
-    std::vector<TextBuffer::WordBreak> breaks;
+    std::vector<TextBuffer::WordBreak> words;
 
     if (_params.wordWrap < _params.text.length() && _type != Label::Type::line) {
-       breaks = findWordBreaks(_params.text);
+       words = findWords(_params.text);
     }
 
     // Approximation of the first glyph left side bearing
     float firstGlyphLSB = _quads[0].x0 * 0.5f;
 
+    LineQuad line;
+    lines.push_back(line); // atleast one line
+
     // Apply word wrapping based on the word breaks
-    for (int i = 0; i < _quads.size(); ++i) {
-        auto& q = _quads[i];
+    for (int iWord = 0; iWord < words.size(); iWord++) {
+        int start = words[iWord].start;
+        int end = words[iWord].end;
+        size_t wordSize = end - start + 1;
 
-        LineQuad line;
-        lines.push_back(line);
+        auto& lastLineQuads = lines[nLine - 1].quads;
 
-        if (i > 1 && breaks.size() > 0) {
-            for (auto& b : breaks) {
-                if (i == b.start && b.end - lastBreak >= _params.maxLineWidth) {
-                    auto& previousQuad = _quads[i - 1];
-                    float spaceLength = q.x0 - previousQuad.x1;
+        // Check if quads need to be added to next line?
+        if (iWord > 0 && (lastLineQuads.size() + wordSize) > (size_t)_params.maxLineWidth) {
+            auto& quad = _quads[start];
+            auto& prevQuad = _quads[words[iWord-1].end];
 
-                    yOffset += _metrics.lineHeight;
-                    xOffset -= q.x0 + firstGlyphLSB - spaceLength;
-
-                    lastBreak = b.start;
-                    nLine++;
-                }
-            }
+            float spaceLength = quad.x0 - prevQuad.x1;
+            yOffset += _metrics.lineHeight;
+            xOffset -= quad.x0 + firstGlyphLSB - spaceLength;
+            lines.push_back(LineQuad());
+            nLine++;
         }
 
-        q.x0 += xOffset;
-        q.x1 += xOffset;
-        q.y0 += yOffset;
-        q.y1 += yOffset;
+        for (int i = start; i <= end; i++) {
+            auto& q = _quads[i];
 
-        lines[nLine - 1].quads.push_back(&q);
-        lines[nLine - 1].length = q.x1;
+            q.x0 += xOffset;
+            q.x1 += xOffset;
+            q.y0 += yOffset;
+            q.y1 += yOffset;
 
-        // Adjust the bounding box on x
-        _bbox->x = std::max(_bbox->x, q.x1);
+            lines[nLine - 1].quads.push_back(&q);
+            lines[nLine - 1].length = q.x1;
+
+            // Adjust the bounding box on x
+            _bbox->x = std::max(_bbox->x, q.x1);
+        }
     }
 
     // Adjust the bounding box on y
