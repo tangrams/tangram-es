@@ -42,6 +42,7 @@ IOS_TARGET = tangram
 OSX_XCODE_PROJ = tangram.xcodeproj
 IOS_XCODE_PROJ = tangram.xcodeproj
 
+
 ifdef ANDROID_X86
 	ANDROID_BUILD_DIR = build/android-x86
 	ANDROID_TOOLCHAIN = x86-clang3.5
@@ -76,7 +77,7 @@ UNIT_TESTS_CMAKE_PARAMS = \
 
 ANDROID_CMAKE_PARAMS = \
 	-DPLATFORM_TARGET=android \
-	-DCMAKE_BUILD_TYPE=Release \
+	-DCMAKE_BUILD_TYPE=Debug \
 	-DCMAKE_TOOLCHAIN_FILE=${TOOLCHAIN_DIR}/android.toolchain.cmake \
 	-DMAKE_BUILD_TOOL=$$ANDROID_NDK/prebuilt/darwin-x86_64/bin/make \
 	-DANDROID_ABI=${ANDROID_ARCH} \

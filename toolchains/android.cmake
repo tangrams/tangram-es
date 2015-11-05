@@ -36,8 +36,37 @@ target_link_libraries(${LIB_NAME}
 
 target_compile_options(${LIB_NAME}
   PUBLIC
-   -fPIC)
+  -fPIC)
+
 
 # install to android library dir
 set(LIB_INSTALLATION_PATH ${CMAKE_SOURCE_DIR}/android/tangram/libs/${ANDROID_ABI})
+
+
+# from http://www.stellarium.org/wiki/index.php/Building_for_Android
+if(${CMAKE_BUILD_TYPE} MATCHES "Debug")
+  message(STATUS " >>> DEBUG <<< ")
+
+  # 1. generate a fake Android.mk
+  file(WRITE ${CMAKE_SOURCE_DIR}/android/tangram/jni/Android.mk "APP_ABI := ${ANDROID_ABI}\n")
+
+  # 2. generate gdb.setup
+  get_directory_property(INCLUDE_DIRECTORIES DIRECTORY . INCLUDE_DIRECTORIES)
+  message(STATUS "Directories >> ${INCLUDE_DIRECTORIES} <<")
+
+  string(REGEX REPLACE ";" " " INCLUDE_DIRECTORIES "${INCLUDE_DIRECTORIES}")
+  file(WRITE ${CMAKE_CURRENT_BINARY_DIR}/libs/${ARM_TARGET}/gdb.setup
+    "set solib-search-path ${CMAKE_CURRENT_BINARY_DIR}/obj/local/${ARM_TARGET}\n")
+
+  file(APPEND ${LIB_INSTALLATION_PATH}/gdb.setup
+    "directory ${INCLUDE_DIRECTORIES}\n")
+
+  # 3. copy gdbserver executable
+  file(COPY ${ANDROID_NDK}/prebuilt/android-arm/gdbserver/gdbserver
+    DESTINATION ${LIB_INSTALLATION_PATH}/)
+else()
+  message(STATUS " >>> NO DEBUG <<< ")
+
+endif()
+
 install(TARGETS ${LIB_NAME} DESTINATION ${LIB_INSTALLATION_PATH})
