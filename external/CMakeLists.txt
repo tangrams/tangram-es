@@ -3,6 +3,16 @@ cmake_minimum_required(VERSION 2.8.12)
 if(USE_EXTERNAL_LIBS)
 # http://www.cmake.org/Wiki/CMake/Tutorials/Exporting_and_Importing_Targets
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wall -std=c++1y")
+
+if (CMAKE_COMPILER_IS_GNUCC)
+  execute_process(COMMAND ${CMAKE_C_COMPILER} -dumpversion
+    OUTPUT_VARIABLE GCC_VERSION)
+
+  if (GCC_VERSION VERSION_GREATER 5.1)
+    add_definitions("-D_GLIBCXX_USE_CXX11_ABI=1")
+  endif()
+endif()
+
 set(CMAKE_BUILD_TYPE Release)
 set(EXPORTS_DIR ${CMAKE_CURRENT_SOURCE_DIR}/exports/${PLATFORM_TARGET})
 endif()
