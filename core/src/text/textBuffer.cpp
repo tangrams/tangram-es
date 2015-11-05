@@ -31,11 +31,11 @@ std::vector<TextBuffer::WordBreak> TextBuffer::findWords(const std::string& _tex
 
         if (std::isspace(*str)) {
             wordEnd = itr - 1;
-            if (*str == '\n') {
-                words.push_back({wordBegin, wordBegin});
-            }
             if (wordBegin <= wordEnd) {
                 words.push_back({wordBegin, wordEnd});
+            }
+            if (*str == '\n') {
+                words.push_back({itr, itr});
             }
             wordBegin = itr + 1;
         }
@@ -52,7 +52,8 @@ std::vector<TextBuffer::WordBreak> TextBuffer::findWords(const std::string& _tex
 int TextBuffer::applyWordWrapping(std::vector<FONSquad>& _quads,
                                   const TextStyle::Parameters& _params,
                                   const FontContext::FontMetrics& _metrics,
-                                  Label::Type _type, glm::vec2* _bbox) {
+                                  Label::Type _type, glm::vec2* _bbox,
+                                  std::vector<TextBuffer::WordBreak>& _wordBreaks) {
     struct LineQuad {
         std::vector<FONSquad*> quads;
         float length;
@@ -62,10 +63,9 @@ int TextBuffer::applyWordWrapping(std::vector<FONSquad>& _quads,
     int nLine = 1;
 
     std::vector<LineQuad> lines;
-    std::vector<TextBuffer::WordBreak> words;
 
     if (_params.wordWrap < _params.text.length() && _type != Label::Type::line) {
-       words = findWords(_params.text);
+       _wordBreaks = findWords(_params.text);
     } else {
         for (auto& q : _quads) {
             _bbox->x = std::max(_bbox->x, q.x1);
@@ -76,9 +76,9 @@ int TextBuffer::applyWordWrapping(std::vector<FONSquad>& _quads,
     lines.push_back(line); // atleast one line
 
     // Apply word wrapping based on the word breaks
-    for (int iWord = 0; iWord < words.size(); iWord++) {
-        int start = words[iWord].start;
-        int end = words[iWord].end;
+    for (int iWord = 0; iWord < _wordBreaks.size(); iWord++) {
+        int start = _wordBreaks[iWord].start;
+        int end = _wordBreaks[iWord].end;
         size_t wordSize = end - start + 1;
 
         auto& lastLineQuads = lines[nLine - 1].quads;
@@ -224,10 +224,27 @@ bool TextBuffer::addLabel(const TextStyle::Parameters& _params, Label::Transform
 
     /// Apply word wrapping
     glm::vec2 bbox;
-    int nLine = applyWordWrapping(quads, _params, _fontContext.getMetrics(), _type, &bbox);
+    std::vector<TextBuffer::WordBreak> wordBreaks;
+    int nLine = applyWordWrapping(quads, _params, _fontContext.getMetrics(), _type, &bbox, wordBreaks);
 
     /// Generate the quads
-    for (const auto& q : quads) {
+    for (int i = 0; i < quads.size(); ++i) {
+        if (wordBreaks.size() > 0) {
+            bool skip = false;
+            // Skip spaces/CR quads
+            for (int j = 0; j < wordBreaks.size() - 1; ++j) {
+                const auto& b1 = wordBreaks[j];
+                const auto& b2 = wordBreaks[j + 1];
+                if (i >= b1.end + 1 && i <= b2.start - 1) {
+                    numVertices -= 4;
+                    skip = true;
+                    break;
+                }
+            }
+            if (skip) { continue; }
+        }
+
+        const auto& q = quads[i];
         vertices.push_back({{q.x0, q.y0}, {q.s0, q.t0}, {-1.f, -1.f, 0.f}, _params.fill, stroke});
         vertices.push_back({{q.x0, q.y1}, {q.s0, q.t1}, {-1.f,  1.f, 0.f}, _params.fill, stroke});
         vertices.push_back({{q.x1, q.y0}, {q.s1, q.t0}, { 1.f, -1.f, 0.f}, _params.fill, stroke});

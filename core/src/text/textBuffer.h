@@ -36,7 +36,8 @@ public:
 
 private:
     static int applyWordWrapping(std::vector<FONSquad>& _quads, const TextStyle::Parameters& _params,
-                          const FontContext::FontMetrics& _metrics, Label::Type _type, glm::vec2* _bbox);
+                                 const FontContext::FontMetrics& _metrics, Label::Type _type,
+                                 glm::vec2* _bbox, std::vector<TextBuffer::WordBreak>& words);
 
     static std::string applyTextTransform(const TextStyle::Parameters& _params, const std::string& _string);
 
