@@ -12,7 +12,7 @@
 #include "glm/vec3.hpp"
 #include "glm/vec4.hpp"
 
-#include "util/variant.h"
+#include "util/uniform.h"
 
 namespace Tangram {
 
