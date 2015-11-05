@@ -71,6 +71,9 @@ int TextBuffer::applyWordWrapping(std::vector<FONSquad>& _quads,
        breaks = findWordBreaks(_params.text);
     }
 
+    // Approximation of the first glyph left side bearing
+    float firstGlyphLSB = _quads[0].x0 * 0.5f;
+
     // Apply word wrapping based on the word breaks
     for (int i = 0; i < _quads.size(); ++i) {
         auto& q = _quads[i];
@@ -85,7 +88,7 @@ int TextBuffer::applyWordWrapping(std::vector<FONSquad>& _quads,
                     float spaceLength = q.x0 - previousQuad.x1;
 
                     yOffset += _metrics.lineHeight;
-                    xOffset -= q.x0 + _quads[0].x0 * 0.5f - spaceLength;
+                    xOffset -= q.x0 + firstGlyphLSB - spaceLength;
 
                     lastBreak = b.start;
                     nLine++;
@@ -102,32 +105,30 @@ int TextBuffer::applyWordWrapping(std::vector<FONSquad>& _quads,
         lines[nLine - 1].length = q.x1;
 
         // Adjust the bounding box on x
-        _bbox->x = std::max(_bbox->x, q.x1 - _quads[0].x0 * 0.5f);
+        _bbox->x = std::max(_bbox->x, q.x1);
     }
 
     // Adjust the bounding box on y
     _bbox->y = _metrics.lineHeight * nLine;
 
-    if (nLine > 1) {
-        float bboxOffsetY = _bbox->y * 0.5f - _metrics.lineHeight - _metrics.descender;
+    float bboxOffsetY = _bbox->y * 0.5f - _metrics.lineHeight - _metrics.descender;
 
-        // Apply justification
-        for (const auto& line : lines) {
-            float paddingRight = _bbox->x - line.length;
-            float padding;
+    // Apply justification
+    for (const auto& line : lines) {
+        float paddingRight = _bbox->x - line.length;
+        float padding;
 
-            switch(_params.align) {
-                case TextAlign::left: padding = 0.f; break;
-                case TextAlign::right: padding = paddingRight; break;
-                case TextAlign::center: padding = paddingRight * 0.5f; break;
-            }
+        switch(_params.align) {
+            case TextAlign::left: padding = 0.f; break;
+            case TextAlign::right: padding = paddingRight; break;
+            case TextAlign::center: padding = paddingRight * 0.5f; break;
+        }
 
-            for (auto quad : line.quads) {
-                quad->x0 += padding;
-                quad->x1 += padding;
-                quad->y0 -= bboxOffsetY;
-                quad->y1 -= bboxOffsetY;
-            }
+        for (auto quad : line.quads) {
+            quad->x0 += padding;
+            quad->x1 += padding;
+            quad->y0 -= bboxOffsetY;
+            quad->y1 -= bboxOffsetY;
         }
     }
 
@@ -174,7 +175,7 @@ std::string TextBuffer::applyTextTransform(const TextStyle::Parameters& _params,
 bool TextBuffer::addLabel(const TextStyle::Parameters& _params, Label::Transform _transform,
                           Label::Type _type, FontContext& _fontContext) {
 
-    if (_params.fontId < 0 || _params.fontSize <= 0.f) {
+    if (_params.fontId < 0 || _params.fontSize <= 0.f || _params.text.size() == 0) {
         return false;
     }
 
