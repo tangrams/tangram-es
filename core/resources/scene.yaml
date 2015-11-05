@@ -336,9 +336,13 @@ layers:
         data: { source: osm, layer: pois }
         filter: { name: true, not: { kind: [peak, viewpoint, bicycle_rental, car_sharing] }, $zoom: { min: 15 } }
         draw:
+            points:
+                size: 5px
+                color: red
+                collide: false
             text:
                 interactive: true
-                offset: [0, 12px]
+                #offset: [0, 12px]
                 align: right
                 text_wrap: 20
                 font:

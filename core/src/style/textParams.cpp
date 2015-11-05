@@ -1,0 +1,44 @@
+#include "textParams.h"
+
+namespace Tangram {
+namespace Text {
+
+const std::map<std::string, Transform> s_TransformMap = {
+    {"none", Transform::none},
+    {"capitalize", Transform::capitalize},
+    {"uppercase", Transform::uppercase},
+    {"lowercase", Transform::lowercase},
+};
+
+const std::map<std::string, Align> s_AlignMap = {
+    {"right", Align::right},
+    {"left", Align::left},
+    {"center", Align::center},
+};
+
+const std::map<std::string, Anchor> s_AnchorMap = {
+    {"center", Anchor::center},
+    {"top", Anchor::top},
+    {"bottom", Anchor::bottom},
+    {"left", Anchor::left},
+    {"right", Anchor::right},
+    {"top_left", Anchor::top_left},
+    {"top_right", Anchor::top_right},
+    {"bottom_left", Anchor::bottom_left},
+    {"bottom_right", Anchor::bottom_right},
+};
+
+bool transform(const std::string& _transform, Transform& _out) {
+    return tryFind(s_TransformMap, _transform, _out);
+}
+
+bool align(const std::string& _align, Align& _out) {
+    return tryFind(s_AlignMap, _align, _out);
+}
+
+bool anchor(const std::string& _anchor, Anchor& _out) {
+    return tryFind(s_AnchorMap, _anchor, _out);
+}
+
+}
+}

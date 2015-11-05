@@ -14,6 +14,7 @@ using Color = CSSColorParser::Color;
 
 const std::map<std::string, StyleParamKey> s_StyleParamMap = {
     {"align", StyleParamKey::align},
+    {"anchor", StyleParamKey::anchor},
     {"cap", StyleParamKey::cap},
     {"centroid", StyleParamKey::centroid},
     {"collide", StyleParamKey::collide},
@@ -147,6 +148,7 @@ StyleParam::Value StyleParam::parseString(StyleParamKey key, const std::string& 
         }
         return time;
     case StyleParamKey::align:
+    case StyleParamKey::anchor:
     case StyleParamKey::font_family:
     case StyleParamKey::font_weight:
     case StyleParamKey::font_style:
@@ -258,6 +260,7 @@ std::string StyleParam::toString() const {
     case StyleParamKey::sprite_default:
     case StyleParamKey::style:
     case StyleParamKey::align:
+    case StyleParamKey::anchor:
         if (!value.is<std::string>()) break;
         return k + value.get<std::string>();
     case StyleParamKey::interactive:

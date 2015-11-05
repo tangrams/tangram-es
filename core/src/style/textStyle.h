@@ -2,6 +2,7 @@
 
 #include "style.h"
 #include "labels/label.h"
+#include "textParams.h"
 
 #include <memory>
 
@@ -11,19 +12,6 @@ class TextBuffer;
 class FontContext;
 struct Properties;
 typedef int FontID;
-
-enum class TextTransform {
-    none,
-    capitalize,
-    uppercase,
-    lowercase,
-};
-
-enum class TextAlign : char {
-    right,
-    left,
-    center
-};
 
 class TextStyle : public Style {
 
@@ -39,8 +27,9 @@ public:
         float strokeWidth = 0.0f;
         float fontSize = 16.0f;
         float blurSpread = 0.0f;
-        TextTransform transform = TextTransform::none;
-        TextAlign align = TextAlign::center;
+        Text::Transform transform = Text::Transform::none;
+        Text::Align align = Text::Align::center;
+        Text::Anchor anchor = Text::Anchor::center;
         bool visible = true;
         Label::Options labelOptions;
         bool wordWrap = true;

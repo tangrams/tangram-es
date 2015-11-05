@@ -71,7 +71,7 @@ auto TextStyle::applyRule(const DrawRule& _rule, const Properties& _props) const
 
     Parameters p;
 
-    std::string fontFamily, fontWeight, fontStyle, transform, align;
+    std::string fontFamily, fontWeight, fontStyle, transform, align, anchor;
     glm::vec2 offset;
 
     _rule.get(StyleParamKey::font_family, fontFamily);
@@ -94,6 +94,7 @@ auto TextStyle::applyRule(const DrawRule& _rule, const Properties& _props) const
     _rule.get(StyleParamKey::font_stroke_width, p.strokeWidth);
     _rule.get(StyleParamKey::transform, transform);
     _rule.get(StyleParamKey::align, align);
+    _rule.get(StyleParamKey::anchor, anchor);
     _rule.get(StyleParamKey::visible, p.visible);
     _rule.get(StyleParamKey::priority, p.labelOptions.priority);
     _rule.get(StyleParamKey::collide, p.labelOptions.collide);
@@ -111,25 +112,13 @@ auto TextStyle::applyRule(const DrawRule& _rule, const Properties& _props) const
         }
     }
 
-   if (_rule.get(StyleParamKey::interactive, p.interactive) && p.interactive) {
-       p.properties = std::make_shared<Properties>(_props);
-   }
-
-    if (transform == "capitalize") {
-        p.transform = TextTransform::capitalize;
-    } else if (transform == "lowercase") {
-        p.transform = TextTransform::lowercase;
-    } else if (transform == "uppercase") {
-        p.transform = TextTransform::uppercase;
+    if (_rule.get(StyleParamKey::interactive, p.interactive) && p.interactive) {
+        p.properties = std::make_shared<Properties>(_props);
     }
 
-    if (align == "left") {
-        p.align = TextAlign::left;
-    } else if (align == "right") {
-        p.align = TextAlign::right;
-    } else if (align == "center") {
-        p.align = TextAlign::center;
-    }
+    Text::transform(transform, p.transform);
+    Text::align(align, p.align);
+    Text::anchor(anchor, p.anchor);
 
     /* Global operations done for fontsize and sdfblur */
     float emSize = p.fontSize / 16.f;
