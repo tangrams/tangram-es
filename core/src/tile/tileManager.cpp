@@ -412,62 +412,53 @@ void TileManager::removeTile(TileSet& tileSet, std::map<TileID,
     _tileIt = tileSet.tiles.erase(_tileIt);
 }
 
+bool TileManager::updateProxyTile(TileSet& tileSet, Tile& _tile, const TileID& _proxy, const Tile::ProxyID _proxyID) {
+    auto& tiles = tileSet.tiles;
+
+    // check if the proxy exists in the visible tile set
+    {
+        const auto& it = tiles.find(_proxy);
+        if (it != tiles.end()) {
+            auto& proxyTile = it->second;
+            if (_tile.setProxy(_proxyID)) {
+                proxyTile->incProxyCounter();
+                if (proxyTile->isReady()) {
+                    m_tiles.push_back(proxyTile);
+                }
+                return true;
+            }
+        }
+    }
+
+    // check if the proxy exists in the cache
+    {
+        auto proxyTile = m_tileCache->get(tileSet.source->id(), _proxy);
+        if (proxyTile) {
+            _tile.setProxy(_proxyID);
+            proxyTile->incProxyCounter();
+            m_tiles.push_back(proxyTile);
+
+            tiles.emplace(_proxy, std::move(proxyTile));
+            return true;
+        }
+    }
+
+    return false;
+}
+
 void TileManager::updateProxyTiles(TileSet& tileSet, Tile& _tile) {
     const TileID& _tileID = _tile.getID();
-    auto& tiles = tileSet.tiles;
 
     // Get current parent
     auto parentID = _tileID.getParent();
-    {
-        const auto& it = tiles.find(parentID);
-        if (it != tiles.end()) {
-            auto& parent = it->second;
-            if (_tile.setProxy(Tile::parent)) {
-                parent->incProxyCounter();
-                if (parent->isReady()) {
-                    m_tiles.push_back(parent);
-                }
-            }
-            return;
-        }
-    }
-    // Get parent proxy from cache
-    {
-        auto parent = m_tileCache->get(tileSet.source->id(), parentID);
-        if (parent) {
-            _tile.setProxy(Tile::parent);
-            parent->incProxyCounter();
-            m_tiles.push_back(parent);
+    // Get Grand Parent
+    auto gparentID = parentID.getParent();
 
-            tiles.emplace(parentID, std::move(parent));
-
-            return;
-        }
-    }
-
-    if (m_view->s_maxZoom > _tileID.z) {
-        for (int i = 0; i < 4; i++) {
-            auto childID = _tileID.getChild(i);
-
-            const auto& it = tiles.find(childID);
-            if (it != tiles.end()) {
-                auto& child = it->second;
-
-                if (_tile.setProxy(static_cast<Tile::ProxyID>(1 << i))) {
-                    child->incProxyCounter();
-
-                    if (child->isReady()) {
-                        m_tiles.push_back(child);
-                    }
-                }
-            } else {
-                auto child = m_tileCache->get(tileSet.source->id(), childID);
-                if (child) {
-                    _tile.setProxy(static_cast<Tile::ProxyID>(1 << i));
-                    child->incProxyCounter();
-                    m_tiles.push_back(child);
-
-                    tiles.emplace(childID, std::move(child));
+    if (!updateProxyTile(tileSet, _tile, gparentID, Tile::parent2)) {
+        if (!updateProxyTile(tileSet, _tile, parentID, Tile::parent)) {
+            if (m_view->s_maxZoom > _tileID.z) {
+                for (int i = 0; i < 4; i++) {
+                    updateProxyTile(tileSet, _tile, _tileID.getChild(i), static_cast<Tile::ProxyID>(1 << i));
                 }
             }
         }
@@ -478,6 +469,20 @@ void TileManager::clearProxyTiles(TileSet& tileSet, Tile& _tile,
                                   std::vector<TileID>& _removes) {
     const TileID& _tileID = _tile.getID();
     auto& tiles = tileSet.tiles;
+
+    // Check if gparent proxy is present
+    if (_tile.unsetProxy(Tile::parent2)) {
+        TileID gparentID(_tileID.getParent().getParent());
+        auto it = tiles.find(gparentID);
+        if (it != tiles.end()) {
+            auto& gparent = it->second;
+            gparent->decProxyCounter();
+
+            if (gparent->getProxyCounter() == 0 && !gparent->isVisible()) {
+                _removes.push_back(gparentID);
+            }
+        }
+    }
 
     // Check if parent proxy is present
     if (_tile.unsetProxy(Tile::parent)) {

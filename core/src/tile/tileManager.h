@@ -113,6 +113,7 @@ private:
      * Checks and updates m_tileSet with proxy tiles for every new visible tile
      *  @_tile: Tile, the new visible tile for which proxies needs to be added
      */
+    bool updateProxyTile(TileSet& tileSet, Tile& _tile, const TileID& _proxy, const Tile::ProxyID _proxyID);
     void updateProxyTiles(TileSet& tileSet, Tile& _tile);
 
     /*
