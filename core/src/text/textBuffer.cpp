@@ -31,6 +31,9 @@ std::vector<TextBuffer::WordBreak> TextBuffer::findWords(const std::string& _tex
 
         if (std::isspace(*str)) {
             wordEnd = itr - 1;
+            if (*str == '\n') {
+                words.push_back({wordBegin, wordBegin});
+            }
             if (wordBegin <= wordEnd) {
                 words.push_back({wordBegin, wordEnd});
             }
