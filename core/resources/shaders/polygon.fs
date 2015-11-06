@@ -35,7 +35,7 @@ varying vec2 v_texcoord;
 #pragma tangram: global
 
 vec3 worldNormal() {
-    return u_inverseNormalMatrix * v_normal;
+    return normalize(u_inverseNormalMatrix * v_normal);
 }
 
 void main(void) {

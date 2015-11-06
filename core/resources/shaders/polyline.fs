@@ -31,7 +31,7 @@ varying vec2 v_texcoord;
 #endif
 
 vec3 worldNormal() {
-    return u_inverseNormalMatrix * v_normal;
+    return normalize(u_inverseNormalMatrix * v_normal);
 }
 
 #pragma tangram: material
