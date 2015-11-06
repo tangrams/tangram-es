@@ -33,6 +33,7 @@ class FontFileParser {
             if ("family".equals(parser.getName())) {
                 // Parse this family:
                 String name = parser.getAttributeValue(null, "name");
+                if (name == null) { continue; }
                 while (parser.next() != XmlPullParser.END_TAG) {
                     if (parser.getEventType() != XmlPullParser.START_TAG) {
                         continue;
@@ -51,6 +52,9 @@ class FontFileParser {
 
                         String key = name + "_" + weightStr + "_" + styleStr;
                         fontDict.put(key, fullFilename);
+                        String name2 = Character.toUpperCase(name.charAt(0)) + name.substring(1);
+                        key = name2 + "_" + weightStr + "_" + styleStr;
+                        fontDict.put(key, fullFilename);
                     } else {
                         skip(parser);
                     }
@@ -58,6 +62,7 @@ class FontFileParser {
             } else if ("alias".equals(parser.getName())) {
                 // Parse this alias to font to fileName
                 String aliasName = parser.getAttributeValue(null, "name");
+                String aliasName2 = Character.toUpperCase(aliasName.charAt(0)) + aliasName.substring(1);
                 String toName = parser.getAttributeValue(null, "to");
                 String weightStr = parser.getAttributeValue(null, "weight");
                 Vector<String> aliasWeights = new Vector<String>();
@@ -74,9 +79,11 @@ class FontFileParser {
                     // Normal style
                     fontFilename = fontDict.get(toName + "_" + aliasWeights.get(i) + "_normal");
                     fontDict.put(aliasName + "_" + aliasWeights.get(i) + "_normal", fontFilename);
+                    fontDict.put(aliasName2 + "_" + aliasWeights.get(i) + "_normal", fontFilename);
                     // Italic style
                     fontFilename = fontDict.get(toName + "_" + aliasWeights.get(i) + "_italic");
                     fontDict.put(aliasName + "_" + aliasWeights.get(i) + "_italic", fontFilename);
+                    fontDict.put(aliasName2 + "_" + aliasWeights.get(i) + "_italic", fontFilename);
                 }
             } else {
                 skip(parser);
