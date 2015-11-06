@@ -43,6 +43,10 @@ vec4 worldPosition() {
     return v_world_position;
 }
 
+vec3 worldNormal() {
+    return a_normal;
+}
+
 #pragma tangram: material
 #pragma tangram: lighting
 #pragma tangram: global

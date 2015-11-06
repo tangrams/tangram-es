@@ -16,6 +16,7 @@ uniform vec2 u_resolution;
 uniform float u_time;
 uniform float u_meters_per_pixel;
 uniform float u_device_pixel_ratio;
+uniform mat3 u_inverseNormalMatrix;
 
 #pragma tangram: uniforms
 
@@ -32,6 +33,10 @@ varying vec2 v_texcoord;
 #pragma tangram: material
 #pragma tangram: lighting
 #pragma tangram: global
+
+vec3 worldNormal() {
+    return u_inverseNormalMatrix * v_normal;
+}
 
 void main(void) {
 

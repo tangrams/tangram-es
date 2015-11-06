@@ -10,6 +10,7 @@ uniform mat4 u_model;
 uniform mat4 u_view;
 uniform mat4 u_proj;
 uniform mat3 u_normalMatrix;
+uniform mat3 u_inverseNormalMatrix;
 uniform vec3 u_map_position;
 uniform vec3 u_tile_origin;
 uniform vec2 u_resolution;
@@ -28,6 +29,10 @@ varying vec2 v_texcoord;
 #ifdef TANGRAM_LIGHTING_VERTEX
     varying vec4 v_lighting;
 #endif
+
+vec3 worldNormal() {
+    return u_inverseNormalMatrix * v_normal;
+}
 
 #pragma tangram: material
 #pragma tangram: lighting
