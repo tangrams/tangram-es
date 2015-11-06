@@ -1042,7 +1042,7 @@ if( BUILD_WITH_ANDROID_NDK )
     # android support sfiles
     include_directories ( SYSTEM ${ANDROID_NDK}/sources/android/support/include )
     if( EXISTS "${ANDROID_LLVM_ROOT}/libs/${ANDROID_NDK_ABI_NAME}/libc++_shared.so" )
-        set( __libstl                           "${ANDROID_LLVM_ROOT}/libs/${ANDROID_NDK_ABI_NAME}/libc++_shared.so" )
+        set( __libstl "${ANDROID_LLVM_ROOT}/libs/${ANDROID_NDK_ABI_NAME}/libc++_shared.so" )
     else()
         message( "c++ shared library doesn't exist" )
     endif()

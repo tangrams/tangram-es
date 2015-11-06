@@ -49,11 +49,13 @@ macro(android_ndk_gdb_enable)
     # create custom target that depends on the real target so it gets executed afterwards
     add_custom_target(NDK_GDB ALL)
 
-    if(${ARGC})
-      set(ANDROID_PROJECT_DIR ${ARGV0})
-    else()
-      set(ANDROID_PROJECT_DIR ${PROJECT_SOURCE_DIR})
-    endif()
+    # if(${ARGC})
+    #   set(ANDROID_PROJECT_DIR ${ARGV0})
+    # else()
+    #   set(ANDROID_PROJECT_DIR ${PROJECT_SOURCE_DIR})
+    # endif()
+
+    message(STATUS "ANDROID_LIB_DIR >>> ${ANDROID_PROJECT_DIR}")
 
     set(NDK_GDB_SOLIB_PATH ${ANDROID_PROJECT_DIR}/obj/local/${ANDROID_NDK_ABI_NAME}/)
     file(MAKE_DIRECTORY ${NDK_GDB_SOLIB_PATH})
@@ -70,11 +72,12 @@ macro(android_ndk_gdb_enable)
     # 2. generate gdb.setup
     get_directory_property(PROJECT_INCLUDES DIRECTORY ${PROJECT_SOURCE_DIR} INCLUDE_DIRECTORIES)
     string(REGEX REPLACE ";" " " PROJECT_INCLUDES "${PROJECT_INCLUDES}")
-    file(WRITE ${LIBRARY_OUTPUT_PATH}/gdb.setup "set solib-search-path ${NDK_GDB_SOLIB_PATH}\n")
+    file(WRITE ${LIBRARY_OUTPUT_PATH}/gdb.setup "set solib-search-path ${NDK_GDB_SOLIB_PATH}:obj/local/${ANDROID_NDK_ABI_NAME}\n")
     file(APPEND ${LIBRARY_OUTPUT_PATH}/gdb.setup "directory ${PROJECT_INCLUDES}\n")
 
     # 3. copy gdbserver executable
-    file(COPY ${ANDROID_NDK}/prebuilt/android-${ANDROID_ARCH_NAME}/gdbserver/gdbserver DESTINATION ${LIBRARY_OUTPUT_PATH})
+    file(COPY ${ANDROID_NDK}/prebuilt/android-${ANDROID_ARCH_NAME}/gdbserver/gdbserver
+      DESTINATION ${LIBRARY_OUTPUT_PATH})
   endif()
 endmacro()
 
@@ -82,15 +85,23 @@ endmacro()
 # copies the debug version to NDK_GDB_SOLIB_PATH then strips symbols of original
 macro(android_ndk_gdb_debuggable TARGET_NAME)
   if(ANDROID)
+
     get_property(TARGET_LOCATION TARGET ${TARGET_NAME} PROPERTY LOCATION)
+    message(STATUS "TARGET_LOCATION >>> ${TARGET_LOCATION}")
 
     # create custom target that depends on the real target so it gets executed afterwards
     add_dependencies(NDK_GDB ${TARGET_NAME})
 
     # 4. copy lib to obj
-    add_custom_command(TARGET NDK_GDB POST_BUILD COMMAND ${CMAKE_COMMAND} -E copy_if_different ${TARGET_LOCATION} ${NDK_GDB_SOLIB_PATH})
+    add_custom_command(TARGET NDK_GDB POST_BUILD
+      COMMAND ${CMAKE_COMMAND} -E copy_if_different ${TARGET_LOCATION} ${NDK_GDB_SOLIB_PATH})
+
+    # COMMAND ${CMAKE_COMMAND} -E copy_if_different
+    #   "${ANDROID_LLVM_ROOT}/libs/${ANDROID_NDK_ABI_NAME}/libc++_shared.so"
+    #    ${NDK_GDB_SOLIB_PATH})
 
     # 5. strip symbols
-    add_custom_command(TARGET NDK_GDB POST_BUILD COMMAND ${CMAKE_STRIP} ${TARGET_LOCATION})
+    add_custom_command(TARGET NDK_GDB POST_BUILD
+      COMMAND ${CMAKE_STRIP} ${TARGET_LOCATION})
   endif()
 endmacro()
