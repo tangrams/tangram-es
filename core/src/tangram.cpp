@@ -34,7 +34,12 @@ std::unique_ptr<Labels> m_labels;
 std::unique_ptr<Skybox> m_skybox;
 std::unique_ptr<InputHandler> m_inputHandler;
 std::mutex m_tilesMutex;
-std::vector<Ease> m_eases;
+
+std::array<Ease, 4> m_eases;
+enum class EaseField { position, zoom, rotation, tilt };
+void setEase(EaseField _f, Ease _e) {
+    m_eases[static_cast<size_t>(_f)] = _e;
+}
 
 static float g_time = 0.0;
 static std::bitset<8> g_flags = 0;
@@ -124,9 +129,8 @@ void update(float _dt) {
 
     g_time += _dt;
 
-    for (auto it = m_eases.begin(); it < m_eases.end(); it++) {
-        it->update(_dt);
-        if (it->finished()) { m_eases.erase(it); }
+    for (auto& ease : m_eases) {
+        if (!ease.finished()) { ease.update(_dt); }
     }
 
     m_inputHandler->update(_dt);
@@ -195,7 +199,7 @@ void render() {
     while (Error::hadGlError("Tangram::render()")) {}
 }
 
-void setPosition(double _lon, double _lat) {
+void setPositionNow(double _lon, double _lat) {
 
     glm::dvec2 meters = m_view->getMapProjection().LonLatToMeters({ _lon, _lat});
     m_view->setPosition(meters.x, meters.y);
@@ -203,12 +207,19 @@ void setPosition(double _lon, double _lat) {
 
 }
 
+void setPosition(double _lon, double _lat) {
+
+    setPositionNow(_lon, _lat);
+    setEase(EaseField::position, {});
+
+}
+
 void setPosition(double _lon, double _lat, float _duration, EaseType _e) {
 
     double lon_start, lat_start;
     getPosition(lon_start, lat_start);
-    auto cb = [=](float t) { setPosition(ease(lon_start, _lon, t, _e), ease(lat_start, _lat, t, _e)); };
-    m_eases.push_back({ _duration, cb });
+    auto cb = [=](float t) { setPositionNow(ease(lon_start, _lon, t, _e), ease(lat_start, _lat, t, _e)); };
+    setEase(EaseField::position, { _duration, cb });
 
 }
 
@@ -221,18 +232,25 @@ void getPosition(double& _lon, double& _lat) {
 
 }
 
-void setZoom(float _z) {
+void setZoomNow(float _z) {
 
     m_view->setZoom(_z);
     requestRender();
 
 }
 
+void setZoom(float _z) {
+
+    setZoomNow(_z);
+    setEase(EaseField::zoom, {});
+
+}
+
 void setZoom(float _z, float _duration, EaseType _e) {
 
     float z_start = getZoom();
-    auto cb = [=](float t) { setZoom(ease(z_start, _z, t, _e)); };
-    m_eases.push_back({ _duration, cb });
+    auto cb = [=](float t) { setZoomNow(ease(z_start, _z, t, _e)); };
+    setEase(EaseField::zoom, { _duration, cb });
 
 }
 
@@ -242,18 +260,25 @@ float getZoom() {
 
 }
 
-void setRotation(float _radians) {
+void setRotationNow(float _radians) {
 
     m_view->setRoll(_radians);
     requestRender();
 
 }
 
+void setRotation(float _radians) {
+
+    setRotationNow(_radians);
+    setEase(EaseField::rotation, {});
+
+}
+
 void setRotation(float _radians, float _duration, EaseType _e) {
 
     float radians_start = getRotation();
-    auto cb = [=](float t) { setRotation(ease(radians_start, _radians, t, _e)); };
-    m_eases.push_back({ _duration, cb });
+    auto cb = [=](float t) { setRotationNow(ease(radians_start, _radians, t, _e)); };
+    setEase(EaseField::rotation, { _duration, cb });
 
 }
 
@@ -264,18 +289,25 @@ float getRotation() {
 }
 
 
-void setTilt(float _radians) {
+void setTiltNow(float _radians) {
 
     m_view->setPitch(_radians);
     requestRender();
 
 }
 
+void setTilt(float _radians) {
+
+    setTiltNow(_radians);
+    setEase(EaseField::tilt, {});
+
+}
+
 void setTilt(float _radians, float _duration, EaseType _e) {
 
     float tilt_start = getTilt();
-    auto cb = [=](float t) { setTilt(ease(tilt_start, _radians, t, _e)); };
-    m_eases.push_back({ _duration, cb });
+    auto cb = [=](float t) { setTiltNow(ease(tilt_start, _radians, t, _e)); };
+    setEase(EaseField::tilt, { _duration, cb });
 
 }
 

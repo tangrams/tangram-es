@@ -32,6 +32,7 @@ struct Ease {
     float d;
     EaseCb cb;
 
+    Ease() : t(0), d(0), cb([](float) {}) {}
     Ease(float _duration, EaseCb _cb) : t(-1), d(_duration), cb(_cb) {}
 
     bool finished() const { return t >= d; }
