@@ -46,14 +46,6 @@
 # uses PROJECT_SOURCE_DIR by default.
 macro(android_ndk_gdb_enable)
   if(ANDROID)
-    # create custom target that depends on the real target so it gets executed afterwards
-    add_custom_target(NDK_GDB ALL)
-
-    # if(${ARGC})
-    #   set(ANDROID_PROJECT_DIR ${ARGV0})
-    # else()
-    #   set(ANDROID_PROJECT_DIR ${PROJECT_SOURCE_DIR})
-    # endif()
 
     message(STATUS "ANDROID_LIB_DIR >>> ${ANDROID_PROJECT_DIR}")
 
@@ -62,12 +54,14 @@ macro(android_ndk_gdb_enable)
 
     # 1. generate essential Android Makefiles
     file(MAKE_DIRECTORY ${ANDROID_PROJECT_DIR}/jni)
-    if(NOT EXISTS ${ANDROID_PROJECT_DIR}/jni/Android.mk)
-      file(WRITE ${ANDROID_PROJECT_DIR}/jni/Android.mk "APP_ABI := ${ANDROID_NDK_ABI_NAME}\n")
-    endif()
-    if(NOT EXISTS ${ANDROID_PROJECT_DIR}/jni/Application.mk)
-      file(WRITE ${ANDROID_PROJECT_DIR}/jni/Application.mk "APP_ABI := ${ANDROID_NDK_ABI_NAME}\n")
-    endif()
+
+    # FIXME need to overwrite when APP_ABI changes
+    #if(NOT EXISTS ${ANDROID_PROJECT_DIR}/jni/Android.mk)
+    file(WRITE ${ANDROID_PROJECT_DIR}/jni/Android.mk "APP_ABI := ${ANDROID_NDK_ABI_NAME}\n")
+    #endif()
+    #if(NOT EXISTS ${ANDROID_PROJECT_DIR}/jni/Application.mk)
+    file(WRITE ${ANDROID_PROJECT_DIR}/jni/Application.mk "APP_ABI := ${ANDROID_NDK_ABI_NAME}\n")
+    #endif()
 
     # 2. generate gdb.setup
     get_directory_property(PROJECT_INCLUDES DIRECTORY ${PROJECT_SOURCE_DIR} INCLUDE_DIRECTORIES)
@@ -89,19 +83,18 @@ macro(android_ndk_gdb_debuggable TARGET_NAME)
     get_property(TARGET_LOCATION TARGET ${TARGET_NAME} PROPERTY LOCATION)
     message(STATUS "TARGET_LOCATION >>> ${TARGET_LOCATION}")
 
-    # create custom target that depends on the real target so it gets executed afterwards
-    add_dependencies(NDK_GDB ${TARGET_NAME})
-
+    add_custom_command(TARGET ${TARGET_NAME} POST_BUILD
     # 4. copy lib to obj
-    add_custom_command(TARGET NDK_GDB POST_BUILD
-      COMMAND ${CMAKE_COMMAND} -E copy_if_different ${TARGET_LOCATION} ${NDK_GDB_SOLIB_PATH})
+    COMMAND ${CMAKE_COMMAND} -E copy_if_different
+        ${TARGET_LOCATION}
+        ${NDK_GDB_SOLIB_PATH}
 
-    # COMMAND ${CMAKE_COMMAND} -E copy_if_different
-    #   "${ANDROID_LLVM_ROOT}/libs/${ANDROID_NDK_ABI_NAME}/libc++_shared.so"
-    #    ${NDK_GDB_SOLIB_PATH})
+    COMMAND ${CMAKE_COMMAND} -E copy_if_different
+       ${ANDROID_LLVM_ROOT}/libs/${ANDROID_NDK_ABI_NAME}/libc++_shared.so
+       ${NDK_GDB_SOLIB_PATH}
 
-    # 5. strip symbols
-    add_custom_command(TARGET NDK_GDB POST_BUILD
+      # 5. strip symbols
       COMMAND ${CMAKE_STRIP} ${TARGET_LOCATION})
+
   endif()
 endmacro()

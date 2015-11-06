@@ -40,6 +40,8 @@ target_compile_options(${LIB_NAME}
 
 android_ndk_gdb_debuggable(${LIB_NAME})
 
+#add_dependencies(${LIB_NAME} NDK_GDB)
+
 # install to android library dir
 set(LIB_INSTALLATION_PATH ${CMAKE_SOURCE_DIR}/android/tangram/libs/${ANDROID_ABI})
 
