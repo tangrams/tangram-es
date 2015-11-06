@@ -55,6 +55,12 @@ class FontFileParser {
                         String name2 = Character.toUpperCase(name.charAt(0)) + name.substring(1);
                         key = name2 + "_" + weightStr + "_" + styleStr;
                         fontDict.put(key, fullFilename);
+
+                        styleStr = Character.toUpperCase(styleStr.charAt(0)) + styleStr.substring(1);
+                        key = name + "_" + weightStr + "_" + styleStr;
+                        fontDict.put(key, fullFilename);
+                        key = name2 + "_" + weightStr + "_" + styleStr;
+                        fontDict.put(key, fullFilename);
                     } else {
                         skip(parser);
                     }
@@ -80,10 +86,14 @@ class FontFileParser {
                     fontFilename = fontDict.get(toName + "_" + aliasWeights.get(i) + "_normal");
                     fontDict.put(aliasName + "_" + aliasWeights.get(i) + "_normal", fontFilename);
                     fontDict.put(aliasName2 + "_" + aliasWeights.get(i) + "_normal", fontFilename);
+                    fontDict.put(aliasName + "_" + aliasWeights.get(i) + "_Normal", fontFilename);
+                    fontDict.put(aliasName2 + "_" + aliasWeights.get(i) + "_Normal", fontFilename);
                     // Italic style
                     fontFilename = fontDict.get(toName + "_" + aliasWeights.get(i) + "_italic");
                     fontDict.put(aliasName + "_" + aliasWeights.get(i) + "_italic", fontFilename);
                     fontDict.put(aliasName2 + "_" + aliasWeights.get(i) + "_italic", fontFilename);
+                    fontDict.put(aliasName + "_" + aliasWeights.get(i) + "_Italic", fontFilename);
+                    fontDict.put(aliasName2 + "_" + aliasWeights.get(i) + "_Italic", fontFilename);
                 }
             } else {
                 skip(parser);
