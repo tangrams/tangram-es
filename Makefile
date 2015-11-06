@@ -45,10 +45,10 @@ IOS_XCODE_PROJ = tangram.xcodeproj
 
 ifdef ANDROID_X86
 	ANDROID_BUILD_DIR = build/android-x86
-	ANDROID_TOOLCHAIN = x86-clang3.5
+	ANDROID_TOOLCHAIN = x86-clang3.6
 	ANDROID_ARCH = x86
 else
-	ANDROID_TOOLCHAIN = arm-linux-androideabi-clang3.5
+	ANDROID_TOOLCHAIN = arm-linux-androideabi-clang3.6
 endif
 
 ifndef ANDROID_ARCH

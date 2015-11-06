@@ -7,7 +7,7 @@ if [[ ${PLATFORM} == "android" ]]; then
 
     # Install android ndk
     echo "Cloning mindk..."
-    git clone --quiet --depth 1 --branch tangram-es-travis-linux https://github.com/tangrams/mindk.git
+    git clone --quiet --depth 1 --branch clang-3.6 https://github.com/tangrams/mindk.git
     export ANDROID_NDK=$PWD/mindk/android-ndk-r10e
     echo "Done."
 
