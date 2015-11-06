@@ -42,7 +42,6 @@ IOS_TARGET = tangram
 OSX_XCODE_PROJ = tangram.xcodeproj
 IOS_XCODE_PROJ = tangram.xcodeproj
 
-
 ifdef ANDROID_X86
 	ANDROID_BUILD_DIR = build/android-x86
 	ANDROID_TOOLCHAIN = x86-clang3.6
@@ -156,13 +155,6 @@ cmake-android:
 	@cd ${ANDROID_BUILD_DIR} && \
 	cmake ../.. ${ANDROID_CMAKE_PARAMS}
 
-debug-android:
-	@cd android/demo &&           \
-	cp -a ../tangram/libs . &&    \
-	mkdir -p jni &&               \
-	cp ../tangram/jni/*.mk jni && \
-	python2 $$ANDROID_NDK/ndk-gdb.py --start --verbose
-
 osx: ${OSX_BUILD_DIR}/Makefile
 	@cd ${OSX_BUILD_DIR} && \
 	${MAKE}
@@ -255,3 +247,18 @@ swig-bindings:
 	@astyle --style=attach --indent=spaces=2 android/tangram/jni/jniGenerated.cpp
 	@astyle --style=java generated/*.java
 	@mv generated/*.java android/tangram/src/com/mapzen/tangram
+
+### Android Helpers
+android-install: android
+	@adb install -r android/demo/build/outputs/apk/demo-debug.apk
+
+android-debug:
+	@cd android/demo &&           \
+	cp -a ../tangram/libs . &&    \
+	mkdir -p jni &&               \
+	cp ../tangram/jni/*.mk jni && \
+	python2 $$ANDROID_NDK/ndk-gdb.py --verbose --start
+
+android-debug-attach:
+	@cd android/demo &&           \
+	python2 $$ANDROID_NDK/ndk-gdb.py --verbose
