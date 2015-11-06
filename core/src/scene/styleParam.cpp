@@ -13,6 +13,7 @@ namespace Tangram {
 using Color = CSSColorParser::Color;
 
 const std::map<std::string, StyleParamKey> s_StyleParamMap = {
+    {"align", StyleParamKey::align},
     {"cap", StyleParamKey::cap},
     {"centroid", StyleParamKey::centroid},
     {"collide", StyleParamKey::collide},
@@ -42,6 +43,7 @@ const std::map<std::string, StyleParamKey> s_StyleParamMap = {
     {"sprite_default", StyleParamKey::sprite_default},
     {"style", StyleParamKey::style},
     {"text_source", StyleParamKey::text_source},
+    {"text_wrap", StyleParamKey::text_wrap},
     {"transition:hide:time", StyleParamKey::transition_hide_time},
     {"transition:selected:time", StyleParamKey::transition_selected_time},
     {"transition:show:time", StyleParamKey::transition_show_time},
@@ -114,6 +116,14 @@ StyleParam::Value StyleParam::parseString(StyleParamKey key, const std::string& 
         }
         return vec2;
     }
+    case StyleParamKey::text_wrap: {
+        int textWrap;
+        if (_value == "true") return textWrap;
+        if (_value == "false") return std::numeric_limits<uint32_t>::max();
+        if (parseInt(_value, textWrap) > 0) {
+             return static_cast<uint32_t>(textWrap);
+        }
+    }
     case StyleParamKey::offset: {
         auto vec2 = glm::vec2(0.f, 0.f);
         if (!parseVec2(_value, { Unit::pixel }, vec2) || isnan(vec2.y)) {
@@ -136,6 +146,7 @@ StyleParam::Value StyleParam::parseString(StyleParamKey key, const std::string& 
             LOGW("Invalid time param '%s'", _value.c_str());
         }
         return time;
+    case StyleParamKey::align:
     case StyleParamKey::font_family:
     case StyleParamKey::font_weight:
     case StyleParamKey::font_style:
@@ -146,7 +157,7 @@ StyleParam::Value StyleParam::parseString(StyleParamKey key, const std::string& 
     case StyleParamKey::style:
         return _value;
     case StyleParamKey::font_size: {
-        float fontSize = 16;
+        float fontSize;
         if (!parseFontSize(_value, fontSize)) {
             LOGW("Invalid font-size '%s'.", _value.c_str());
         }
@@ -242,9 +253,11 @@ std::string StyleParam::toString() const {
     case StyleParamKey::font_style:
     case StyleParamKey::text_source:
     case StyleParamKey::transform:
+    case StyleParamKey::text_wrap:
     case StyleParamKey::sprite:
     case StyleParamKey::sprite_default:
     case StyleParamKey::style:
+    case StyleParamKey::align:
         if (!value.is<std::string>()) break;
         return k + value.get<std::string>();
     case StyleParamKey::interactive:

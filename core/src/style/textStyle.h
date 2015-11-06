@@ -19,6 +19,12 @@ enum class TextTransform {
     lowercase,
 };
 
+enum class TextAlign : char {
+    right,
+    left,
+    center
+};
+
 class TextStyle : public Style {
 
 public:
@@ -31,11 +37,14 @@ public:
         uint32_t fill = 0xff000000;
         uint32_t strokeColor = 0xffffffff;
         float strokeWidth = 0.0f;
-        float fontSize = 12.0f;
+        float fontSize = 16.0f;
         float blurSpread = 0.0f;
         TextTransform transform = TextTransform::none;
+        TextAlign align = TextAlign::center;
         bool visible = true;
         Label::Options labelOptions;
+        bool wordWrap = true;
+        unsigned int maxLineWidth = 15;
 
         bool isValid() {
             return fontSize > 0.f && !text.empty();

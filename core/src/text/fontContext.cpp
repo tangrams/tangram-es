@@ -82,6 +82,7 @@ FontID FontContext::addFont(const std::string& _family, const std::string& _weig
             }
         }
     }
+
     font = fonsAddFont(m_fsContext, fontKey.c_str(), data, dataSize);
 
     if (font == FONS_INVALID) {
@@ -99,6 +100,12 @@ fallback:
         return 0;
     }
     return INVALID_FONT;
+}
+
+FontContext::FontMetrics FontContext::getMetrics() {
+    FontMetrics metrics;
+    fonsVertMetrics(m_fsContext, &metrics.ascender, &metrics.descender, &metrics.lineHeight);
+    return metrics;
 }
 
 void FontContext::setFont(const std::string& _key, int size) {

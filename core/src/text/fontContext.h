@@ -19,6 +19,11 @@ class FontContext {
 
 public:
 
+    struct FontMetrics {
+        float ascender;
+        float descender;
+        float lineHeight;
+    };
 
     ~FontContext();
     FontContext();
@@ -53,7 +58,11 @@ public:
         return m_boundAtlasSize;
     }
 
+    /* Returns the metrics of the currently used font */
+    FontMetrics getMetrics();
+
 private:
+
     static void renderUpdate(void* _userPtr, int* _rect, const unsigned char* _data);
     static int renderCreate(void* _userPtr, int _width, int _height);
     static void pushQuad(void* _userPtr, const FONSquad* _quad);
@@ -68,6 +77,7 @@ private:
     std::mutex m_contextMutex;
     std::mutex m_atlasMutex;
     bool m_handleAtlasFull = false;
+
     FONScontext* m_fsContext;
     std::vector<FONSquad> m_quadBuffer;
     glm::vec2 m_boundAtlasSize;

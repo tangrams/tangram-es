@@ -71,7 +71,7 @@ auto TextStyle::applyRule(const DrawRule& _rule, const Properties& _props) const
 
     Parameters p;
 
-    std::string fontFamily, fontWeight, fontStyle, transform;
+    std::string fontFamily, fontWeight, fontStyle, transform, align;
     glm::vec2 offset;
 
     _rule.get(StyleParamKey::font_family, fontFamily);
@@ -93,12 +93,14 @@ auto TextStyle::applyRule(const DrawRule& _rule, const Properties& _props) const
     _rule.get(StyleParamKey::font_stroke_color, p.strokeColor);
     _rule.get(StyleParamKey::font_stroke_width, p.strokeWidth);
     _rule.get(StyleParamKey::transform, transform);
+    _rule.get(StyleParamKey::align, align);
     _rule.get(StyleParamKey::visible, p.visible);
     _rule.get(StyleParamKey::priority, p.labelOptions.priority);
     _rule.get(StyleParamKey::collide, p.labelOptions.collide);
     _rule.get(StyleParamKey::transition_hide_time, p.labelOptions.hideTransition.time);
     _rule.get(StyleParamKey::transition_selected_time, p.labelOptions.selectTransition.time);
     _rule.get(StyleParamKey::transition_show_time, p.labelOptions.showTransition.time);
+    _rule.get(StyleParamKey::text_wrap, p.maxLineWidth);
 
     _rule.get(StyleParamKey::text_source, p.text);
     if (!_rule.isJSFunction(StyleParamKey::text_source)) {
@@ -119,6 +121,14 @@ auto TextStyle::applyRule(const DrawRule& _rule, const Properties& _props) const
         p.transform = TextTransform::lowercase;
     } else if (transform == "uppercase") {
         p.transform = TextTransform::uppercase;
+    }
+
+    if (align == "left") {
+        p.align = TextAlign::left;
+    } else if (align == "right") {
+        p.align = TextAlign::right;
+    } else if (align == "center") {
+        p.align = TextAlign::center;
     }
 
     /* Global operations done for fontsize and sdfblur */

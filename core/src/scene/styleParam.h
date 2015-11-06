@@ -10,6 +10,7 @@ namespace Tangram {
 struct Stops;
 
 enum class StyleParamKey : uint8_t {
+    align,
     cap,
     color,
     extrude,
@@ -36,6 +37,7 @@ enum class StyleParamKey : uint8_t {
     sprite_default,
     style,
     text_source,
+    text_wrap,
     transform,
     visible,
     width,
