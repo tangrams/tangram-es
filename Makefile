@@ -156,6 +156,13 @@ cmake-android:
 	@cd ${ANDROID_BUILD_DIR} && \
 	cmake ../.. ${ANDROID_CMAKE_PARAMS}
 
+debug-android:
+	@cd android/demo &&           \
+	cp -a ../tangram/libs . &&    \
+	mkdir -p jni &&               \
+	cp ../tangram/jni/*.mk jni && \
+	python2 $$ANDROID_NDK/ndk-gdb.py --start --verbose
+
 osx: ${OSX_BUILD_DIR}/Makefile
 	@cd ${OSX_BUILD_DIR} && \
 	${MAKE}
