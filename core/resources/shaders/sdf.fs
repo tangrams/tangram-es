@@ -80,7 +80,7 @@ void main(void) {
     float alpha_stroke = pow(sampleAlpha(v_texcoords, distance, threshold_stroke), 0.4545);
 
     vec4 color = mix(v_strokeColor, v_color, alpha_fill);
-    color.a = max(alpha_fill, alpha_stroke) * v_alpha;
+    color.a = max(alpha_fill, alpha_stroke) * v_alpha * v_color.a;
 
     #pragma tangram: color
     #pragma tangram: filter
