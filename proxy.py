@@ -15,11 +15,17 @@ import urllib2
 
 from BaseHTTPServer import HTTPServer
 from SocketServer import ThreadingMixIn
+import tempfile
 
 class ThreadedHTTPServer(ThreadingMixIn, HTTPServer):
     pass
 
 class CacheHandler(BaseHTTPServer.BaseHTTPRequestHandler):
+    def ok(self):
+        self.send_response(200)
+        self.send_header("Content-Encoding", "gzip")
+        self.end_headers()
+
     def do_GET(self):
 
         dirname = ".tiles/" + os.path.dirname(self.path)[1:]
@@ -32,23 +38,25 @@ class CacheHandler(BaseHTTPServer.BaseHTTPRequestHandler):
             except:
                 None
 
-        # m = hashlib.md5()
-        # m.update(self.path)
-        # cache_filename = ".tiles/" + m.hexdigest()
         cache_filename = dirname + "/" + filename
 
         if os.path.exists(cache_filename):
-            # print "Cache hit"
-            data = open(cache_filename).readlines()
-        else:
-            print "Cache miss"
-            data = urllib2.urlopen("http:/" + self.path, timeout=10).readlines()
-            open(cache_filename, 'wb').writelines(data)
+            data = open(cache_filename, mode='rb').readlines()
+            self.ok()
+            self.wfile.writelines(data)
+            return
 
-        self.send_response(200)
-        self.send_header("Content-Encoding", "gzip")
-        self.end_headers()
+        print "fetching: %s" % (cache_filename)
+        data = urllib2.urlopen("http:/" + self.path, timeout=10).readlines()
+        self.ok()
         self.wfile.writelines(data)
+
+        f = tempfile.NamedTemporaryFile(dir=os.path.dirname(cache_filename),
+                                        mode='wb',
+                                        delete=False)
+        f.writelines(data)
+        f.close()
+        os.rename(f.name, cache_filename)
 
 def run():
     if not os.path.exists(".tiles"):
