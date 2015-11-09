@@ -56,7 +56,7 @@ int TextBuffer::applyWordWrapping(std::vector<FONSquad>& _quads,
                                   std::vector<TextBuffer::WordBreak>& _wordBreaks) {
     struct LineQuad {
         std::vector<FONSquad*> quads;
-        float length;
+        float length = 0.0f;
     };
 
     float yOffset = 0.f, xOffset = 0.f;
@@ -75,7 +75,7 @@ int TextBuffer::applyWordWrapping(std::vector<FONSquad>& _quads,
     lines.push_back(LineQuad()); // atleast one line
 
     // Apply word wrapping based on the word breaks
-    for (int iWord = 0; iWord < _wordBreaks.size(); iWord++) {
+    for (int iWord = 0; iWord < int(_wordBreaks.size()); iWord++) {
         int start = _wordBreaks[iWord].start;
         int end = _wordBreaks[iWord].end;
         size_t wordSize = end - start + 1;
@@ -83,7 +83,7 @@ int TextBuffer::applyWordWrapping(std::vector<FONSquad>& _quads,
         auto& lastLineQuads = lines[nLine - 1].quads;
 
         // Check if quads need to be added to next line?
-        if (iWord > 0 && (lastLineQuads.size() + wordSize) > (size_t)_params.maxLineWidth) {
+        if (iWord > 0 && (lastLineQuads.size() + wordSize) > size_t(_params.maxLineWidth)) {
             xOffset = 0.0f;
             auto& quad = _quads[start];
             auto& prevQuad = lines[nLine - 1].quads.front();
@@ -119,7 +119,7 @@ int TextBuffer::applyWordWrapping(std::vector<FONSquad>& _quads,
     // Apply justification
     for (const auto& line : lines) {
         float paddingRight = _bbox->x - line.length;
-        float padding;
+        float padding = 0;
 
         switch(_params.align) {
             case TextLabelProperty::Align::left: padding = 0.f; break;
@@ -227,11 +227,11 @@ bool TextBuffer::addLabel(const TextStyle::Parameters& _params, Label::Transform
     int nLine = applyWordWrapping(quads, _params, _fontContext.getMetrics(), _type, &bbox, wordBreaks);
 
     /// Generate the quads
-    for (int i = 0; i < quads.size(); ++i) {
+    for (int i = 0; i < int(quads.size()); ++i) {
         if (wordBreaks.size() > 0) {
             bool skip = false;
             // Skip spaces/CR quads
-            for (int j = 0; j < wordBreaks.size() - 1; ++j) {
+            for (int j = 0; j < int(wordBreaks.size()) - 1; ++j) {
                 const auto& b1 = wordBreaks[j];
                 const auto& b2 = wordBreaks[j + 1];
                 if (i >= b1.end + 1 && i <= b2.start - 1) {
