@@ -246,10 +246,10 @@ layers:
         draw:
             icons:
                 interactive: true
-                offset: [0px, -15px]
+                anchor: top-left
                 size: 20px
                 priority: 5
-                collide: true
+                collide: false
                 transition:
                     [show, hide]:
                         time: .3s

@@ -72,7 +72,6 @@ int TextBuffer::applyWordWrapping(std::vector<FONSquad>& _quads,
         }
     }
 
-    LineQuad line;
     lines.push_back(LineQuad()); // atleast one line
 
     // Apply word wrapping based on the word breaks
