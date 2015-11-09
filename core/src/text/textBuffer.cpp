@@ -123,9 +123,9 @@ int TextBuffer::applyWordWrapping(std::vector<FONSquad>& _quads,
         float padding;
 
         switch(_params.align) {
-            case Text::Align::left: padding = 0.f; break;
-            case Text::Align::right: padding = paddingRight; break;
-            case Text::Align::center: padding = paddingRight * 0.5f; break;
+            case TextLabelProperty::Align::left: padding = 0.f; break;
+            case TextLabelProperty::Align::right: padding = paddingRight; break;
+            case TextLabelProperty::Align::center: padding = paddingRight * 0.5f; break;
         }
 
         for (auto quad : line.quads) {
@@ -148,7 +148,7 @@ std::string TextBuffer::applyTextTransform(const TextStyle::Parameters& _params,
 
     // perfom text transforms
     switch (_params.transform) {
-        case Text::Transform::capitalize:
+        case TextLabelProperty::Transform::capitalize:
             text[0] = toupper(text[0], loc);
             if (text.size() > 1) {
                 for (size_t i = 1; i < text.length(); ++i) {
@@ -158,12 +158,12 @@ std::string TextBuffer::applyTextTransform(const TextStyle::Parameters& _params,
                 }
             }
             break;
-        case Text::Transform::lowercase:
+        case TextLabelProperty::Transform::lowercase:
             for (size_t i = 0; i < text.length(); ++i) {
                 text[i] = std::tolower(text[i], loc);
             }
             break;
-        case Text::Transform::uppercase:
+        case TextLabelProperty::Transform::uppercase:
             // TOOD : use to wupper when any wide character is detected
             for (size_t i = 0; i < text.length(); ++i) {
                 text[i] = std::toupper(text[i], loc);
@@ -187,7 +187,7 @@ bool TextBuffer::addLabel(const TextStyle::Parameters& _params, Label::Transform
     const std::string* renderText;
     std::string text;
 
-    if (_params.transform == Text::Transform::none) {
+    if (_params.transform == TextLabelProperty::Transform::none) {
         renderText = &_params.text;
     } else {
         text = applyTextTransform(_params, _params.text);

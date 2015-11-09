@@ -2,7 +2,7 @@
 
 #include "style.h"
 #include "labels/label.h"
-#include "textParams.h"
+#include "labelProperty.h"
 
 #include <memory>
 
@@ -27,13 +27,14 @@ public:
         float strokeWidth = 0.0f;
         float fontSize = 16.0f;
         float blurSpread = 0.0f;
-        Text::Transform transform = Text::Transform::none;
-        Text::Align align = Text::Align::center;
-        Text::Anchor anchor = Text::Anchor::center;
         bool visible = true;
         Label::Options labelOptions;
         bool wordWrap = true;
         unsigned int maxLineWidth = 15;
+
+        TextLabelProperty::Transform transform = TextLabelProperty::Transform::none;
+        TextLabelProperty::Align align = TextLabelProperty::Align::center;
+        LabelProperty::Anchor anchor = LabelProperty::Anchor::center;
 
         bool isValid() {
             return fontSize > 0.f && !text.empty();

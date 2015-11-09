@@ -1,0 +1,54 @@
+#pragma once
+
+#include "text/fontContext.h"
+
+namespace Tangram {
+
+template <class M, class T>
+inline bool tryFind(M& _map, const std::string& _transform, T& _out) {
+    auto it = _map.find(_transform);
+    if (it != _map.end()) {
+        _out = it->second;
+        return true;
+    }
+    return false;
+}
+
+namespace LabelProperty {
+
+enum class Anchor {
+    center,
+    top,
+    bottom,
+    left,
+    right,
+    top_left,
+    top_right,
+    bottom_left,
+    bottom_right,
+};
+
+bool anchor(const std::string& _transform, Anchor& _out);
+
+} // LabelProperty
+
+namespace TextLabelProperty {
+
+enum class Transform {
+    none,
+    capitalize,
+    uppercase,
+    lowercase,
+};
+
+enum class Align : char {
+    right,
+    left,
+    center,
+};
+
+bool transform(const std::string& _transform, Transform& _out);
+bool align(const std::string& _transform, Align& _out);
+
+} // TextLabelProperty
+} // Tangram

@@ -3,7 +3,7 @@
 #include "labels/label.h"
 #include "text/textBuffer.h"
 #include "text/fontContext.h"
-#include "style/textParams.h"
+#include "style/labelProperty.h"
 
 namespace Tangram {
 
@@ -11,7 +11,7 @@ class TextLabel : public Label {
 
 public:
     TextLabel(Label::Transform _transform, Type _type, glm::vec2 _dim, TextBuffer& _mesh, Range _vertexRange,
-              Label::Options _options, FontContext::FontMetrics _metrics, int _nLines, Text::Anchor _anchor);
+              Label::Options _options, FontContext::FontMetrics _metrics, int _nLines, LabelProperty::Anchor _anchor);
 
     void updateBBoxes(float _zoomFract) override;
 

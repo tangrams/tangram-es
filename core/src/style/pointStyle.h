@@ -4,6 +4,7 @@
 #include "glm/vec2.hpp"
 #include "glm/vec3.hpp"
 #include "labels/label.h"
+#include "labelProperty.h"
 
 namespace Tangram {
 
@@ -21,6 +22,7 @@ protected:
         glm::vec2 size;
         uint32_t color = 0xffffffff;
         Label::Options labelOptions;
+        LabelProperty::Anchor anchor = LabelProperty::Anchor::center;
         float extrudeScale = 1.f;
     };
 

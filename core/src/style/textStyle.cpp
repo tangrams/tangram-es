@@ -116,24 +116,25 @@ auto TextStyle::applyRule(const DrawRule& _rule, const Properties& _props) const
         p.properties = std::make_shared<Properties>(_props);
     }
 
-    Text::transform(transform, p.transform);
-    Text::anchor(anchor, p.anchor);
-    bool res = Text::align(align, p.align);
+    LabelProperty::anchor(anchor, p.anchor);
+
+    TextLabelProperty::transform(transform, p.transform);
+    bool res = TextLabelProperty::align(align, p.align);
     if (!res) {
         switch(p.anchor) {
-            case Text::Anchor::top_left:
-            case Text::Anchor::left:
-            case Text::Anchor::bottom_left:
-                p.align = Text::Align::right;
+            case LabelProperty::Anchor::top_left:
+            case LabelProperty::Anchor::left:
+            case LabelProperty::Anchor::bottom_left:
+                p.align = TextLabelProperty::Align::right;
                 break;
-            case Text::Anchor::top_right:
-            case Text::Anchor::right:
-            case Text::Anchor::bottom_right:
-                p.align = Text::Align::left;
+            case LabelProperty::Anchor::top_right:
+            case LabelProperty::Anchor::right:
+            case LabelProperty::Anchor::bottom_right:
+                p.align = TextLabelProperty::Align::left;
                 break;
-            case Text::Anchor::top:
-            case Text::Anchor::bottom:
-            case Text::Anchor::center:
+            case LabelProperty::Anchor::top:
+            case LabelProperty::Anchor::bottom:
+            case LabelProperty::Anchor::center:
                 break;
         }
     }
