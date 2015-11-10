@@ -1,4 +1,4 @@
-
+#if (defined(TANGRAM_VERTEX_SHADER) && defined(TANGRAM_LIGHTING_VERTEX)) || (defined(TANGRAM_FRAGMENT_SHADER) && defined(TANGRAM_LIGHTING_FRAGMENT))
 vec4 calculateLighting(in vec3 _eyeToPoint, in vec3 _normal, in vec4 _color) {
 
     // Do initial material calculations over normal, emission, ambient, diffuse and specular values
@@ -36,3 +36,4 @@ vec4 calculateLighting(in vec3 _eyeToPoint, in vec3 _normal, in vec4 _color) {
 
     return color;
 }
+#endif

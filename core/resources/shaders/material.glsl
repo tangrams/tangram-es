@@ -146,6 +146,7 @@ void calculateNormal (inout vec3 _normal) {
 }
 #endif
 
+#if (defined(TANGRAM_VERTEX_SHADER) && defined(TANGRAM_LIGHTING_VERTEX)) || (defined(TANGRAM_FRAGMENT_SHADER) && defined(TANGRAM_LIGHTING_FRAGMENT))
 void calculateMaterial (in vec3 _eyeToPoint, inout vec3 _normal) {
     // get EMISSION TEXTUREMAP
     //------------------------------------------------
@@ -227,3 +228,4 @@ void calculateMaterial (in vec3 _eyeToPoint, inout vec3 _normal) {
         #endif
     #endif
 }
+#endif
