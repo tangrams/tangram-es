@@ -8,6 +8,7 @@
 #define NDEBUG
 #endif
 
+#include "glm/glm.hpp"
 #include "variant/variant.hpp"
 
 #ifndef KEEP_NDEBUG
@@ -38,5 +39,8 @@ class Value : public detail::Value {
     using Base = detail::Value;
     using Base::Base;
 };
+
+/* Style Block Uniform types */
+using UniformValue = variant<none_type, bool, std::string, float, int, glm::vec2, glm::vec3, glm::vec4, glm::mat2, glm::mat3, glm::mat4>;
 
 }

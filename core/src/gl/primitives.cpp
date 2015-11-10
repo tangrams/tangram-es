@@ -3,7 +3,6 @@
 #include "debug.h"
 #include "glm/mat4x4.hpp"
 #include "glm/gtc/matrix_transform.hpp"
-#include "glm/gtc/type_ptr.hpp"
 #include "gl/shaderProgram.h"
 #include "gl/vertexLayout.h"
 #include "gl/renderState.h"
@@ -108,7 +107,7 @@ void setResolution(float _width, float _height) {
     init();
 
     glm::mat4 proj = glm::ortho(0.f, _width, _height, 0.f, -1.f, 1.f);
-    s_shader->setUniformMatrix4f("u_proj", glm::value_ptr(proj));
+    s_shader->setUniformMatrix4f("u_proj", proj);
 }
 
 }
