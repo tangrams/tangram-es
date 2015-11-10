@@ -42,6 +42,13 @@ IOS_TARGET = tangram
 OSX_XCODE_PROJ = tangram.xcodeproj
 IOS_XCODE_PROJ = tangram.xcodeproj
 
+ifdef DEBUG
+	BUILD_TYPE = -DCMAKE_BUILD_TYPE=Debug
+endif
+ifdef RELEASE
+	BUILD_TYPE = -DCMAKE_BUILD_TYPE=Release
+endif
+
 ifdef ANDROID_X86
 	ANDROID_BUILD_DIR = build/android-x86
 	ANDROID_TOOLCHAIN = x86-clang3.6
@@ -75,38 +82,49 @@ UNIT_TESTS_CMAKE_PARAMS = \
 	-DCMAKE_BUILD_TYPE=Debug
 
 ANDROID_CMAKE_PARAMS = \
+        ${BUILD_TYPE} \
+        ${CMAKE_OPTIONS} \
 	-DPLATFORM_TARGET=android \
-	-DCMAKE_BUILD_TYPE=Debug \
 	-DCMAKE_TOOLCHAIN_FILE=${TOOLCHAIN_DIR}/android.toolchain.cmake \
 	-DMAKE_BUILD_TOOL=$$ANDROID_NDK/prebuilt/darwin-x86_64/bin/make \
 	-DANDROID_ABI=${ANDROID_ARCH} \
 	-DANDROID_STL=c++_shared \
 	-DANDROID_TOOLCHAIN_NAME=${ANDROID_TOOLCHAIN} \
 	-DANDROID_NATIVE_API_LEVEL=${ANDROID_API_LEVEL} \
-	-DLIBRARY_OUTPUT_PATH_ROOT=../../android/tangram
+	-DLIBRARY_OUTPUT_PATH_ROOT=../../android/tangram \
+	-DCMAKE_EXPORT_COMPILE_COMMANDS=TRUE
 
 IOS_CMAKE_PARAMS = \
+        ${BUILD_TYPE} \
+        ${CMAKE_OPTIONS} \
 	-DPLATFORM_TARGET=ios \
 	-DCMAKE_TOOLCHAIN_FILE=${TOOLCHAIN_DIR}/iOS.toolchain.cmake \
 	-G Xcode
 
 DARWIN_XCODE_CMAKE_PARAMS = \
-        ${TANGRAM_CMAKE_OPTIONS} \
+        ${BUILD_TYPE} \
+        ${CMAKE_OPTIONS} \
 	-DPLATFORM_TARGET=darwin \
 	-DCMAKE_OSX_DEPLOYMENT_TARGET:STRING="10.9" \
 	-G Xcode
 
 DARWIN_CMAKE_PARAMS = \
-        ${TANGRAM_CMAKE_OPTIONS} \
-	-DPLATFORM_TARGET=darwin
+        ${BUILD_TYPE} \
+        ${CMAKE_OPTIONS} \
+	-DPLATFORM_TARGET=darwin \
+	-DCMAKE_EXPORT_COMPILE_COMMANDS=TRUE
 
 RPI_CMAKE_PARAMS = \
-        ${TANGRAM_CMAKE_OPTIONS} \
-	-DPLATFORM_TARGET=raspberrypi
+        ${BUILD_TYPE} \
+        ${CMAKE_OPTIONS} \
+	-DPLATFORM_TARGET=raspberrypi \
+	-DCMAKE_EXPORT_COMPILE_COMMANDS=TRUE
 
 LINUX_CMAKE_PARAMS = \
-        ${TANGRAM_CMAKE_OPTIONS} \
-	-DPLATFORM_TARGET=linux
+        ${BUILD_TYPE} \
+        ${CMAKE_OPTIONS} \
+	-DPLATFORM_TARGET=linux \
+	-DCMAKE_EXPORT_COMPILE_COMMANDS=TRUE
 
 clean: clean-android clean-osx clean-ios clean-rpi clean-tests clean-xcode clean-linux
 
@@ -140,6 +158,8 @@ clean-benchmark:
 android: android/tangram/libs/${ANDROID_ARCH}/libtangram.so android/build.gradle
 	@cd android/ && \
 	./gradlew demo:assembleDebug
+	@echo "run: 'adb install -r android/demo/build/outputs/apk/demo-debug.apk'"
+
 
 android/tangram/libs/${ANDROID_ARCH}/libtangram.so: install-android
 
@@ -249,7 +269,7 @@ swig-bindings:
 	@mv generated/*.java android/tangram/src/com/mapzen/tangram
 
 ### Android Helpers
-android-install: android
+android-install:
 	@adb install -r android/demo/build/outputs/apk/demo-debug.apk
 
 android-debug:
