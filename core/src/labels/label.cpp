@@ -148,7 +148,7 @@ bool Label::canOcclude() {
         return false;
     }
 
-    int occludeFlags = (State::visible | State::wait_occ | State::fading_in | State::sleep);
+    int occludeFlags = (State::visible | State::wait_occ | State::fading_in | State::sleep | State::out_of_screen);
     return (occludeFlags & m_currentState) && !(m_type == Type::debug);
 }
 

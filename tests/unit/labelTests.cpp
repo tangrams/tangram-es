@@ -86,7 +86,7 @@ TEST_CASE( "Ensure the out of screen state transition", "[Core][Label]" ) {
     l.update(glm::ortho(0.f, screenSize.x, screenSize.y, 0.f, -1.f, 1.f), screenSize, 0.f, 0);
 
     REQUIRE(l.getState() == Label::State::out_of_screen);
-    REQUIRE(!l.canOcclude());
+    REQUIRE(l.canOcclude());
 
     l.update(glm::ortho(0.f, screenSize.x * 4.f, screenSize.y * 4.f, 0.f, -1.f, 1.f), screenSize, 0.f, 0);
     REQUIRE(l.getState() == Label::State::wait_occ);
