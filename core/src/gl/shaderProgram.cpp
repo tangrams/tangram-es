@@ -390,7 +390,7 @@ void ShaderProgram::setUniformMatrix2f(const std::string& _name, const glm::mat2
     use();
     GLint location = getUniformLocation(_name);
     if (location >= 0) {
-        bool cached = getFromCache(location, _value);
+        bool cached = !_transpose && getFromCache(location, _value);
         if (!cached) { glUniformMatrix2fv(location, 1, _transpose, glm::value_ptr(_value)); }
     }
 }
@@ -399,7 +399,7 @@ void ShaderProgram::setUniformMatrix3f(const std::string& _name, const glm::mat3
     use();
     GLint location = getUniformLocation(_name);
     if (location >= 0) {
-        bool cached = getFromCache(location, _value);
+        bool cached = !_transpose && getFromCache(location, _value);
         if (!cached) { glUniformMatrix3fv(location, 1, _transpose, glm::value_ptr(_value)); }
     }
 }
@@ -408,7 +408,7 @@ void ShaderProgram::setUniformMatrix4f(const std::string& _name, const glm::mat4
     use();
     GLint location = getUniformLocation(_name);
     if (location >= 0) {
-        bool cached = getFromCache(location, _value);
+        bool cached = !_transpose && getFromCache(location, _value);
         if (!cached) { glUniformMatrix4fv(location, 1, _transpose, glm::value_ptr(_value)); }
     }
 }

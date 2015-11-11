@@ -3,7 +3,7 @@
 #include "gl.h"
 #include "glm/glm.hpp"
 #include "util/fastmap.h"
-#include "util/variant.h"
+#include "util/uniform.h"
 
 #include <string>
 #include <vector>
@@ -111,6 +111,7 @@ private:
 
     static int s_validGeneration; // Incremented when GL context is invalidated
 
+    // Get a uniform value from the cache, and returns false when it's a cache miss
     template <class T>
     inline bool getFromCache(GLint _location, T _value) {
         const auto& v = m_uniformCache.find(_location);
