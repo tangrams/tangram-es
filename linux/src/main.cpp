@@ -7,6 +7,7 @@
 
 #include <sys/types.h>
 #include <sys/stat.h>
+#include <cstdlib>
 
 using namespace Tangram;
 

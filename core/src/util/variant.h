@@ -14,10 +14,6 @@
 #undef NDEBUG
 #endif
 
-#include "glm/vec2.hpp"
-#include "glm/vec3.hpp"
-#include "glm/vec4.hpp"
-
 #include <string>
 
 namespace Tangram {
@@ -42,8 +38,5 @@ class Value : public detail::Value {
     using Base = detail::Value;
     using Base::Base;
 };
-
-/* Style Block Uniform types */
-using UniformValue = variant<none_type, bool, std::string, float, glm::vec2, glm::vec3, glm::vec4>;
 
 }

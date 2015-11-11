@@ -50,7 +50,7 @@ auto Stops::Widths(const YAML::Node& _node, const MapProjection& _projection) ->
 
     double tileSize = _projection.TileSize();
 
-    bool lastIsMeter;
+    bool lastIsMeter = false;
     float lastKey = 0;
     float lastMeter = 0;
 
@@ -79,7 +79,6 @@ auto Stops::Widths(const YAML::Node& _node, const MapProjection& _projection) ->
             } else {
                 stops.frames.emplace_back(key, width.value);
                 lastIsMeter = false;
-
             }
         } else {
             logMsg("could not parse node %s\n", Dump(frameNode[1]).c_str());

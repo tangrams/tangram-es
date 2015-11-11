@@ -2,7 +2,7 @@
 
 #include "gl.h"
 #include "data/tileData.h"
-#include "util/variant.h"
+#include "util/uniform.h"
 
 #include <memory>
 #include <string>

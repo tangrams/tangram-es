@@ -219,7 +219,7 @@ tests: unit-tests
 unit-tests:
 	@mkdir -p ${TESTS_BUILD_DIR}
 	@cd ${TESTS_BUILD_DIR} && \
-	cmake ../../.. ${UNIT_TESTS_CMAKE_PARAMS} && \
+	cmake ../.. ${UNIT_TESTS_CMAKE_PARAMS} && \
 	${MAKE}
 
 benchmark:

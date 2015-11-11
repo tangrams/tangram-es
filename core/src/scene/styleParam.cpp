@@ -141,12 +141,13 @@ StyleParam::Value StyleParam::parseString(StyleParamKey key, const std::string& 
     }
     case StyleParamKey::transition_hide_time:
     case StyleParamKey::transition_show_time:
-    case StyleParamKey::transition_selected_time:
-        float time;
+    case StyleParamKey::transition_selected_time: {
+        float time = 0.0f;
         if (!parseTime(_value, time)) {
             LOGW("Invalid time param '%s'", _value.c_str());
         }
         return time;
+    }
     case StyleParamKey::align:
     case StyleParamKey::anchor:
     case StyleParamKey::font_family:
@@ -159,7 +160,7 @@ StyleParam::Value StyleParam::parseString(StyleParamKey key, const std::string& 
     case StyleParamKey::style:
         return _value;
     case StyleParamKey::font_size: {
-        float fontSize;
+        float fontSize = 0.f;
         if (!parseFontSize(_value, fontSize)) {
             LOGW("Invalid font-size '%s'.", _value.c_str());
         }
