@@ -7,7 +7,7 @@ namespace Tangram {
 
 using EaseCb = std::function<void (float)>;
 
-enum class EaseType {
+enum class EaseType : char {
     linear = 0,
     cubic,
     quint,
@@ -18,8 +18,8 @@ template<typename T>
 T ease(T _start, T _end, float _t, EaseType _e) {
     float f = _t;
     switch (_e) {
-        case EaseType::cubic: f = -2*f*f*f + 3*f*f; break;
-        case EaseType::quint: f = 6*f*f*f*f*f - 15*f*f*f*f + 10*f*f*f; break;
+        case EaseType::cubic: f = (-2 * f + 3) * f * f; break;
+        case EaseType::quint: f = (6 * f * f - 15 * f + 10) * f * f * f; break;
         case EaseType::sine: f = 0.5 - 0.5 * cos(M_PI * f); break;
         default: break;
     }
@@ -39,7 +39,7 @@ struct Ease {
 
     void update(float _dt) {
         t = t < 0 ? 0 : std::fmin(t + _dt, d);
-        cb(t / d);
+        cb(std::fmin(1, t / d));
     }
 
 };
