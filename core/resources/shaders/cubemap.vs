@@ -9,8 +9,8 @@ attribute vec3 a_position;
 varying vec3 v_uv;
 
 const mat3 rotNegHalfPiAroundX = mat3( 1.0,  0.0,  0.0,
-                                       0.0,  0.0, -1.0,
-                                       0.0,  1.0,  0.0);
+        0.0,  0.0, -1.0,
+        0.0,  1.0,  0.0);
 
 void main() {
     // The map coordinates use +z as "up" instead of the cubemap convention of +y,
@@ -19,5 +19,5 @@ void main() {
     vec4 pos = u_modelViewProj * vec4(a_position, 1.0);
 
     // force depth to 1.0
-	gl_Position = pos.xyww;
+    gl_Position = pos.xyww;
 }
