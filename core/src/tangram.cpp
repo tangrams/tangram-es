@@ -39,6 +39,11 @@ std::array<Ease, 4> m_eases;
 enum class EaseField { position, zoom, rotation, tilt };
 void setEase(EaseField _f, Ease _e) {
     m_eases[static_cast<size_t>(_f)] = _e;
+    requestRender();
+}
+void clearEase(EaseField _f) {
+    static Ease none = {};
+    m_eases[static_cast<size_t>(_f)] = none;
 }
 
 static float g_time = 0.0;
@@ -210,7 +215,7 @@ void setPositionNow(double _lon, double _lat) {
 void setPosition(double _lon, double _lat) {
 
     setPositionNow(_lon, _lat);
-    setEase(EaseField::position, {});
+    clearEase(EaseField::position);
 
 }
 
@@ -242,7 +247,7 @@ void setZoomNow(float _z) {
 void setZoom(float _z) {
 
     setZoomNow(_z);
-    setEase(EaseField::zoom, {});
+    clearEase(EaseField::zoom);
 
 }
 
@@ -270,7 +275,7 @@ void setRotationNow(float _radians) {
 void setRotation(float _radians) {
 
     setRotationNow(_radians);
-    setEase(EaseField::rotation, {});
+    clearEase(EaseField::rotation);
 
 }
 
@@ -299,7 +304,7 @@ void setTiltNow(float _radians) {
 void setTilt(float _radians) {
 
     setTiltNow(_radians);
-    setEase(EaseField::tilt, {});
+    clearEase(EaseField::tilt);
 
 }
 

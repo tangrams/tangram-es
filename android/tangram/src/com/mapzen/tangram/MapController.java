@@ -122,11 +122,9 @@ public class MapController implements Renderer, OnTouchListener, OnScaleGestureL
     }
     public void setMapPosition(double lng, double lat, float duration) {
         setPositionEased(lng, lat, duration, EaseType.QUINT.ordinal());
-        requestRender();
     }
     public void setMapPosition(double lng, double lat, float duration, EaseType ease) {
         setPositionEased(lng, lat, duration, ease.ordinal());
-        requestRender();
     }
 
     /**
@@ -159,11 +157,9 @@ public class MapController implements Renderer, OnTouchListener, OnScaleGestureL
     }
     public void setMapZoom(float zoom, float duration) {
         setZoomEased(zoom, duration, EaseType.QUINT.ordinal());
-        requestRender();
     }
     public void setMapZoom(float zoom, float duration, EaseType ease) {
         setZoomEased(zoom, duration, ease.ordinal());
-        requestRender();
     }
 
     /**
@@ -185,11 +181,9 @@ public class MapController implements Renderer, OnTouchListener, OnScaleGestureL
     }
     public void setMapRotation(float radians, float duration) {
         setRotationEased(radians, duration, EaseType.QUINT.ordinal());
-        requestRender();
     }
     public void setMapRotation(float radians, float duration, EaseType ease) {
         setRotationEased(radians, duration, ease.ordinal());
-        requestRender();
     }
 
     /**
@@ -211,11 +205,9 @@ public class MapController implements Renderer, OnTouchListener, OnScaleGestureL
     }
     public void setMapTilt(float radians, float duration) {
         setTiltEased(radians, duration, EaseType.QUINT.ordinal());
-        requestRender();
     }
     public void setMapTilt(float radians, float duration, EaseType ease) {
         setTiltEased(radians, duration, ease.ordinal());
-        requestRender();
     }
 
     /**
