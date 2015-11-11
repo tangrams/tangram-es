@@ -22,6 +22,7 @@
 #include <unistd.h>
 #include <sys/resource.h>
 #include <fstream>
+#include <algorithm>
 
 /* Followed the following document for JavaVM tips when used with native threads
  * http://android.wooyd.org/JNIExample/#NWD1sCYeT-I
@@ -62,8 +63,8 @@ void setupJniEnv(JNIEnv* _jniEnv, jobject _tangramInstance, jobject _assetManage
     jclass tangramClass = jniEnv->FindClass("com/mapzen/tangram/MapController");
     startUrlRequestMID = jniEnv->GetMethodID(tangramClass, "startUrlRequest", "(Ljava/lang/String;J)Z");
     cancelUrlRequestMID = jniEnv->GetMethodID(tangramClass, "cancelUrlRequest", "(Ljava/lang/String;)V");
-    getFontFilePath = jniEnv->GetMethodID(tangramClass, "getFontFilePath", "(Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;)Ljava/lang/String;");
-        requestRenderMethodID = _jniEnv->GetMethodID(tangramClass, "requestRender", "()V");
+    getFontFilePath = jniEnv->GetMethodID(tangramClass, "getFontFilePath", "(Ljava/lang/String;)Ljava/lang/String;");
+    requestRenderMethodID = _jniEnv->GetMethodID(tangramClass, "requestRender", "()V");
     setRenderModeMethodID = _jniEnv->GetMethodID(tangramClass, "setRenderMode", "(I)V");
     featureSelectionCbMID = _jniEnv->GetMethodID(tangramClass, "featureSelectionCb", "(Lcom/mapzen/tangram/Properties;)V");
 
@@ -118,14 +119,17 @@ std::string systemFontPath(const std::string& _family, const std::string& _weigh
 
     JniThreadBinding jniEnv(jvm);
 
-    jstring jfamily = jniEnv->NewStringUTF(_family.c_str());
-    jstring jweight = jniEnv->NewStringUTF(_weight.c_str());
-    jstring jstyle = jniEnv->NewStringUTF(_style.c_str());
-    jstring returnStr = (jstring) jniEnv->CallObjectMethod(tangramInstance, getFontFilePath, jfamily, jweight, jstyle);
+    std::string key = _family + "_" + _weight + "_" + _style;
+    std::transform(key.begin(), key.end(), key.begin(), ::tolower);
+
+
+    jstring jkey = jniEnv->NewStringUTF(key.c_str());
+    jstring returnStr = (jstring) jniEnv->CallObjectMethod(tangramInstance, getFontFilePath, jkey);
 
     size_t length = jniEnv->GetStringUTFLength(returnStr);
     std::string fontPath = std::string(length, 0);
     jniEnv->GetStringUTFRegion(returnStr, 0, length, &fontPath[0]);
+
     return fontPath;
 }
 
