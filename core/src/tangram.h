@@ -33,33 +33,41 @@ void update(float _dt);
 // Render a new frame of the map view (if needed)
 void render();
 
-// Set the position of the map view in degrees longitude and latitude
+// Set the position of the map view in degrees longitude and latitude; if duration
+// (in seconds) is provided, position eases to the set value over the duration;
+// calling either version of the setter overrides all previous calls
 void setPosition(double _lon, double _lat);
-void setPosition(double _lon, double _lat, float _duration, EaseType _e = EaseType::cubic);
+void setPosition(double _lon, double _lat, float _duration, EaseType _e = EaseType::quint);
 
 // Set the values of the arguments to the position of the map view in degrees
 // longitude and latitude
 void getPosition(double& _lon, double& _lat);
 
-// Set the fractional zoom level of the view
+// Set the fractional zoom level of the view; if duration (in seconds) is provided,
+// zoom eases to the set value over the duration; calling either version of the setter
+// overrides all previous calls
 void setZoom(float _z);
-void setZoom(float _z, float _duration, EaseType _e = EaseType::cubic);
+void setZoom(float _z, float _duration, EaseType _e = EaseType::quint);
 
 // Get the fractional zoom level of the view
 float getZoom();
 
 // Set the counter-clockwise rotation of the view in radians; 0 corresponds to
-// North pointing up
+// North pointing up; if duration (in seconds) is provided, rotation eases to the
+// the set value over the duration; calling either version of the setter overrides
+// all previous calls
 void setRotation(float _radians);
-void setRotation(float _radians, float _duration, EaseType _e = EaseType::cubic);
+void setRotation(float _radians, float _duration, EaseType _e = EaseType::quint);
 
 // Get the counter-clockwise rotation of the view in radians; 0 corresponds to
 // North pointing up
 float getRotation();
 
-// Set the tilt angle of the view in radians; 0 corresponds to straight down
+// Set the tilt angle of the view in radians; 0 corresponds to straight down;
+// if duration (in seconds) is provided, tilt eases to the set value over the
+// duration; calling either version of the setter overrides all previous calls
 void setTilt(float _radians);
-void setTilt(float _radians, float _duration, EaseType _e = EaseType::cubic);
+void setTilt(float _radians, float _duration, EaseType _e = EaseType::quint);
 
 // Get the tilt angle of the view in radians; 0 corresponds to straight down
 float getTilt();
