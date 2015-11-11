@@ -246,10 +246,10 @@ layers:
         draw:
             icons:
                 interactive: true
-                anchor: top-left
+                offset: [0px, -15px]
                 size: 20px
                 priority: 5
-                collide: false
+                collide: true
                 transition:
                     [show, hide]:
                         time: .3s
@@ -336,15 +336,11 @@ layers:
         data: { source: osm, layer: pois }
         filter: { name: true, not: { kind: [peak, viewpoint, bicycle_rental, car_sharing] }, $zoom: { min: 15 } }
         draw:
-            points:
-                size: 5px
-                color: red
-                collide: false
             text:
                 interactive: true
-                #offset: [0, 12px]
+                offset: [0, 12px]
+                align: right
                 text_wrap: 20
-                anchor: right
                 font:
                     family: sans-serif
                     weight: 400
@@ -409,7 +405,6 @@ layers:
                 #- function() {return (feature.scalerank * .75) <= ($zoom - 4); }
         draw:
             text:
-                anchor: left
                 interactive: true
                 priority: 5
                 font:
@@ -448,7 +443,6 @@ layers:
                 - { $zoom: { min: 18 } }
         draw:
             text:
-                anchor: left
                 interactive: true
                 priority: 0
                 font:
