@@ -72,8 +72,7 @@ int TextBuffer::applyWordWrapping(std::vector<FONSquad>& _quads,
         }
     }
 
-    LineQuad line;
-    lines.push_back(line); // atleast one line
+    lines.push_back(LineQuad()); // atleast one line
 
     // Apply word wrapping based on the word breaks
     for (int iWord = 0; iWord < _wordBreaks.size(); iWord++) {
@@ -123,9 +122,9 @@ int TextBuffer::applyWordWrapping(std::vector<FONSquad>& _quads,
         float padding;
 
         switch(_params.align) {
-            case TextAlign::left: padding = 0.f; break;
-            case TextAlign::right: padding = paddingRight; break;
-            case TextAlign::center: padding = paddingRight * 0.5f; break;
+            case TextLabelProperty::Align::left: padding = 0.f; break;
+            case TextLabelProperty::Align::right: padding = paddingRight; break;
+            case TextLabelProperty::Align::center: padding = paddingRight * 0.5f; break;
         }
 
         for (auto quad : line.quads) {
@@ -148,7 +147,7 @@ std::string TextBuffer::applyTextTransform(const TextStyle::Parameters& _params,
 
     // perfom text transforms
     switch (_params.transform) {
-        case TextTransform::capitalize:
+        case TextLabelProperty::Transform::capitalize:
             text[0] = toupper(text[0], loc);
             if (text.size() > 1) {
                 for (size_t i = 1; i < text.length(); ++i) {
@@ -158,12 +157,12 @@ std::string TextBuffer::applyTextTransform(const TextStyle::Parameters& _params,
                 }
             }
             break;
-        case TextTransform::lowercase:
+        case TextLabelProperty::Transform::lowercase:
             for (size_t i = 0; i < text.length(); ++i) {
                 text[i] = std::tolower(text[i], loc);
             }
             break;
-        case TextTransform::uppercase:
+        case TextLabelProperty::Transform::uppercase:
             // TOOD : use to wupper when any wide character is detected
             for (size_t i = 0; i < text.length(); ++i) {
                 text[i] = std::toupper(text[i], loc);
@@ -187,7 +186,7 @@ bool TextBuffer::addLabel(const TextStyle::Parameters& _params, Label::Transform
     const std::string* renderText;
     std::string text;
 
-    if (_params.transform == TextTransform::none) {
+    if (_params.transform == TextLabelProperty::Transform::none) {
         renderText = &_params.text;
     } else {
         text = applyTextTransform(_params, _params.text);
@@ -253,9 +252,8 @@ bool TextBuffer::addLabel(const TextStyle::Parameters& _params, Label::Transform
 
     _fontContext.unlock();
 
-    m_labels.emplace_back(new TextLabel(_transform, _type, bbox, *this,
-                                        { vertexOffset, numVertices },
-                                        _params.labelOptions, metrics, nLine));
+    m_labels.emplace_back(new TextLabel(_transform, _type, bbox, *this, { vertexOffset, numVertices },
+                                        _params.labelOptions, metrics, nLine, _params.anchor));
 
     // TODO: change this in TypeMesh::adVertices()
     m_nVertices = vertices.size();

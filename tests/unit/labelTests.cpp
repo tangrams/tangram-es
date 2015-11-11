@@ -15,7 +15,7 @@ TextBuffer dummy(nullptr);
 TextLabel makeLabel(Label::Transform _transform, Label::Type _type) {
     Label::Options options;
     options.offset = {0.0f, 0.0f};
-    return TextLabel(_transform, _type, {0, 0}, dummy, {0, 0}, options, {}, 1);
+    return TextLabel(_transform, _type, {0, 0}, dummy, {0, 0}, options, {}, 1, LabelProperty::Anchor::center);
 }
 
 TEST_CASE( "Ensure the transition from wait -> sleep when occlusion happens", "[Core][Label]" ) {
@@ -86,7 +86,7 @@ TEST_CASE( "Ensure the out of screen state transition", "[Core][Label]" ) {
     l.update(glm::ortho(0.f, screenSize.x, screenSize.y, 0.f, -1.f, 1.f), screenSize, 0.f, 0);
 
     REQUIRE(l.getState() == Label::State::out_of_screen);
-    REQUIRE(!l.canOcclude());
+    REQUIRE(l.canOcclude());
 
     l.update(glm::ortho(0.f, screenSize.x * 4.f, screenSize.y * 4.f, 0.f, -1.f, 1.f), screenSize, 0.f, 0);
     REQUIRE(l.getState() == Label::State::wait_occ);

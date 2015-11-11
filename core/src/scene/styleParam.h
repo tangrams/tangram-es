@@ -11,6 +11,7 @@ struct Stops;
 
 enum class StyleParamKey : uint8_t {
     align,
+    anchor,
     cap,
     color,
     extrude,

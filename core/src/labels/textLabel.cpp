@@ -2,11 +2,28 @@
 
 namespace Tangram {
 
-TextLabel::TextLabel(Label::Transform _transform, Type _type, glm::vec2 _dim, TextBuffer& _mesh,
-                     Range _vertexRange, Label::Options _options, FontContext::FontMetrics _metrics, int _nLines)
-    : Label(_transform, _dim, _type, static_cast<LabelMesh&>(_mesh), _vertexRange, _options),
+using namespace LabelProperty;
+
+TextLabel::TextLabel(Label::Transform _transform, Type _type, glm::vec2 _dim, TextBuffer& _mesh, Range _vertexRange,
+    Label::Options _options, FontContext::FontMetrics _metrics, int _nLines, Anchor _anchor) :
+    Label(_transform, _dim, _type, static_cast<LabelMesh&>(_mesh), _vertexRange, _options),
     m_metrics(_metrics), m_nLines(_nLines)
-{}
+{
+    if (m_type == Type::point) {
+        glm::vec2 halfDim = m_dim * 0.5f;
+        switch(_anchor) {
+            case Anchor::left: m_anchor.x -= halfDim.x; break;
+            case Anchor::right: m_anchor.x += halfDim.x; break;
+            case Anchor::top: m_anchor.y -= halfDim.y; break;
+            case Anchor::bottom: m_anchor.y += halfDim.y; break;
+            case Anchor::bottom_left: m_anchor += glm::vec2(-halfDim.x, halfDim.y); break;
+            case Anchor::bottom_right: m_anchor += halfDim; break;
+            case Anchor::top_left: m_anchor -= halfDim; break;
+            case Anchor::top_right: m_anchor += glm::vec2(halfDim.x, -halfDim.y); break;
+            case Anchor::center: break;
+        }
+    }
+}
 
 void TextLabel::updateBBoxes(float _zoomFract) {
     glm::vec2 t(1.0, 0.0);
@@ -37,6 +54,7 @@ void TextLabel::align(glm::vec2& _screenPosition, const glm::vec2& _ap1, const g
         case Type::point:
             // modify position set by updateScreenTransform()
             _screenPosition.x -= m_dim.x * 0.5f;
+            _screenPosition += m_anchor;
             break;
         case Type::line: {
             // anchor at line center
