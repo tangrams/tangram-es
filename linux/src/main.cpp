@@ -57,6 +57,11 @@ void mouse_button_callback(GLFWwindow* window, int button, int action, int mods)
     }
 
     if (time - last_mouse_up < double_tap_time) {
+
+        LngLat p { x, y };
+        Tangram::screenToWorldCoordinates(p.longitude, p.latitude);
+        Tangram::setPosition(p.longitude, p.latitude, 1.f);
+
         logMsg("pick feature\n");
         Tangram::clearDataSource(*data_source, true, true);
 

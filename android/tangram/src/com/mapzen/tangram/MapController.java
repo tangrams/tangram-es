@@ -32,6 +32,13 @@ import okio.BufferedSource;
 
 public class MapController implements Renderer, OnTouchListener, OnScaleGestureListener, OnRotateGestureListener, OnGestureListener, OnDoubleTapListener, OnShoveGestureListener {
 
+    public enum EaseType {
+        LINEAR,
+        CUBIC,
+        QUINT,
+        SINE,
+    }
+
     public interface FeatureTouchListener {
         void onTouch(Properties properties);
     }
@@ -107,9 +114,17 @@ public class MapController implements Renderer, OnTouchListener, OnScaleGestureL
      * Set the geographic position of the center of the map view
      * @param lng Degrees longitude of the position to set
      * @param lat Degrees latitude of the position to set
+     * @param duration Time in seconds to ease to the given position
+     * @param ease Type of easing to use
      */
     public void setMapPosition(double lng, double lat) {
         setPosition(lng, lat);
+    }
+    public void setMapPosition(double lng, double lat, float duration) {
+        setPositionEased(lng, lat, duration, EaseType.QUINT.ordinal());
+    }
+    public void setMapPosition(double lng, double lat, float duration, EaseType ease) {
+        setPositionEased(lng, lat, duration, ease.ordinal());
     }
 
     /**
@@ -134,9 +149,17 @@ public class MapController implements Renderer, OnTouchListener, OnScaleGestureL
     /**
      * Set the zoom level of the map view
      * @param zoom Fractional zoom level
+     * @param duration Time in seconds to ease to given zoom
+     * @param ease Type of easing to use
      */
     public void setMapZoom(float zoom) {
         setZoom(zoom);
+    }
+    public void setMapZoom(float zoom, float duration) {
+        setZoomEased(zoom, duration, EaseType.QUINT.ordinal());
+    }
+    public void setMapZoom(float zoom, float duration, EaseType ease) {
+        setZoomEased(zoom, duration, ease.ordinal());
     }
 
     /**
@@ -150,9 +173,17 @@ public class MapController implements Renderer, OnTouchListener, OnScaleGestureL
     /**
      * Set the counter-clockwise rotation of the view in radians; 0 corresponds to North pointing up
      * @param radians Rotation in radians
+     * @param duration Time in seconds to ease to the given rotation
+     * @param ease Type of easing to use
      */
     public void setMapRotation(float radians) {
         setRotation(radians);
+    }
+    public void setMapRotation(float radians, float duration) {
+        setRotationEased(radians, duration, EaseType.QUINT.ordinal());
+    }
+    public void setMapRotation(float radians, float duration, EaseType ease) {
+        setRotationEased(radians, duration, ease.ordinal());
     }
 
     /**
@@ -166,9 +197,17 @@ public class MapController implements Renderer, OnTouchListener, OnScaleGestureL
     /**
      * Set the tilt angle of the view in radians; 0 corresponds to straight down
      * @param radians Tilt angle in radians
+     * @param duration Time in seconds to ease to the given tilt
+     * @param ease Type of easing to use
      */
     public void setMapTilt(float radians) {
         setTilt(radians);
+    }
+    public void setMapTilt(float radians, float duration) {
+        setTiltEased(radians, duration, EaseType.QUINT.ordinal());
+    }
+    public void setMapTilt(float radians, float duration, EaseType ease) {
+        setTiltEased(radians, duration, ease.ordinal());
     }
 
     /**
@@ -252,12 +291,16 @@ public class MapController implements Renderer, OnTouchListener, OnScaleGestureL
     private synchronized native void update(float dt);
     private synchronized native void render();
     private synchronized native void setPosition(double lon, double lat);
+    private synchronized native void setPositionEased(double lon, double lat, float duration, int ease);
     private synchronized native void getPosition(double[] lonLatOut);
     private synchronized native void setZoom(float zoom);
+    private synchronized native void setZoomEased(float zoom, float duration, int ease);
     private synchronized native float getZoom();
     private synchronized native void setRotation(float radians);
+    private synchronized native void setRotationEased(float radians, float duration, int ease);
     private synchronized native float getRotation();
     private synchronized native void setTilt(float radians);
+    private synchronized native void setTiltEased(float radians, float duration, int ease);
     private synchronized native float getTilt();
     private synchronized native void screenToWorldCoordinates(double[] screenCoords);
     private synchronized native void setPixelScale(float scale);

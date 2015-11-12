@@ -7,6 +7,10 @@ extern "C" {
         Tangram::setPosition(lon, lat);
     }
 
+    JNIEXPORT void JNICALL Java_com_mapzen_tangram_MapController_setPositionEased(JNIEnv* jniEnv, jobject obj, jdouble lon, jdouble lat, jfloat duration, jint ease) {
+        Tangram::setPosition(lon, lat, duration, static_cast<Tangram::EaseType>(ease));
+    }
+
     JNIEXPORT void JNICALL Java_com_mapzen_tangram_MapController_getPosition(JNIEnv* jniEnv, jobject obj, jdoubleArray lonLat) {
         jdouble* arr = jniEnv->GetDoubleArrayElements(lonLat, NULL);
         Tangram::getPosition(arr[0], arr[1]);
@@ -17,6 +21,10 @@ extern "C" {
         Tangram::setZoom(zoom);
     }
 
+    JNIEXPORT void JNICALL Java_com_mapzen_tangram_MapController_setZoomEased(JNIEnv* jniEnv, jobject obj, jfloat zoom, jfloat duration, jint ease) {
+        Tangram::setZoom(zoom, duration, static_cast<Tangram::EaseType>(ease));
+    }
+
     JNIEXPORT jfloat JNICALL Java_com_mapzen_tangram_MapController_getZoom(JNIEnv* jniEnv, jobject obj) {
         return Tangram::getZoom();
     }
@@ -25,12 +33,20 @@ extern "C" {
         Tangram::setRotation(radians);
     }
 
+    JNIEXPORT void JNICALL Java_com_mapzen_tangram_MapController_setRotationEased(JNIEnv* jniEnv, jobject obj, jfloat radians, jfloat duration, jint ease) {
+        Tangram::setRotation(radians, duration, static_cast<Tangram::EaseType>(ease));
+    }
+
     JNIEXPORT jfloat JNICALL Java_com_mapzen_tangram_MapController_getRotation(JNIEnv* jniEnv, jobject obj) {
         return Tangram::getRotation();
     }
 
     JNIEXPORT void JNICALL Java_com_mapzen_tangram_MapController_setTilt(JNIEnv* jniEnv, jobject obj, jfloat radians) {
         Tangram::setTilt(radians);
+    }
+
+    JNIEXPORT void JNICALL Java_com_mapzen_tangram_MapController_setTiltEased(JNIEnv* jniEnv, jobject obj, jfloat radians, jfloat duration, jint ease) {
+        Tangram::setTilt(radians, duration, static_cast<Tangram::EaseType>(ease));
     }
 
     JNIEXPORT jfloat JNICALL Java_com_mapzen_tangram_MapController_getTilt(JNIEnv* jniEnv, jobject obj) {

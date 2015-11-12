@@ -51,6 +51,11 @@ void mouse_button_callback(GLFWwindow* window, int button, int action, int mods)
     }
 
     if (time - last_mouse_up < double_tap_time) {
+
+        LngLat p { x, y };
+        Tangram::screenToWorldCoordinates(p.longitude, p.latitude);
+        Tangram::setPosition(p.longitude, p.latitude, 1.f);
+
         logMsg("pick feature\n");
         Tangram::clearDataSource(*data_source, true, true);
 
@@ -148,6 +153,9 @@ void key_callback(GLFWwindow* window, int key, int scancode, int action, int mod
                 break;
             case GLFW_KEY_R:
                 Tangram::loadScene(sceneFile.c_str());
+                break;
+            case GLFW_KEY_Z:
+                Tangram::setZoom(Tangram::getZoom() + 1.f, 1.5f);
                 break;
         default:
                 break;

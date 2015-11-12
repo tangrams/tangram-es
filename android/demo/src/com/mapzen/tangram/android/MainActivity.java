@@ -77,6 +77,9 @@ public class MainActivity extends Activity {
                 lastTappedPoint.set(tapPoint);
 
                 mapController.pickFeature(event.getX(), event.getY());
+
+                mapController.setMapPosition(tapPoint.longitude, tapPoint.latitude, 1);
+
                 return true;
             }
         });
