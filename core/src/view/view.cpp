@@ -499,8 +499,8 @@ void View::updateTiles() {
         y >>= lod;
         int z = glm::clamp((zoom - lod), 0, (int)s_maxZoom);
 
-        // Wrap x to the range [0, maxTileIndex)
-        int wx = x & (maxTileIndex - 1);
+        // Wrap x to the range [0, (1 << z))
+        int wx = x & ((1 << z) - 1);
         int wrap = (x - wx) >> zoom;
 
         m_visibleTiles.emplace(wx, y, z, wrap);
