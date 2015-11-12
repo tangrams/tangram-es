@@ -140,6 +140,9 @@ public:
 
     float pixelsPerMeter() const;
 
+    /* Get the next zoom level based on the zoom direction */
+    int getNextZoom() const { return m_next_zoom; }
+
 protected:
 
     void updateMatrices();
@@ -172,6 +175,7 @@ protected:
 
     float m_zoom;
     float m_zoom_prev = 0.0f;
+    int m_next_zoom;
     float m_initZoom = 16.0;
 
     float m_width;

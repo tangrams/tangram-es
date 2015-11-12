@@ -125,11 +125,16 @@ void Labels::update(const View& _view, float _dt, const std::vector<std::unique_
         TileID tileID = t0->getID();
         std::vector<std::shared_ptr<Tile>> tiles;
 
-        tiles.push_back(_cache->contains(t0->getDataSourceSerial(), tileID.getParent()));
-        tiles.push_back(_cache->contains(t0->getDataSourceSerial(), tileID.getChild(0)));
-        tiles.push_back(_cache->contains(t0->getDataSourceSerial(), tileID.getChild(1)));
-        tiles.push_back(_cache->contains(t0->getDataSourceSerial(), tileID.getChild(2)));
-        tiles.push_back(_cache->contains(t0->getDataSourceSerial(), tileID.getChild(3)));
+        float currentZoom = _view.getZoom();
+
+        if (_view.getNextZoom() > currentZoom) {
+            tiles.push_back(_cache->contains(t0->getDataSourceSerial(), tileID.getParent()));
+        } else {
+            tiles.push_back(_cache->contains(t0->getDataSourceSerial(), tileID.getChild(0)));
+            tiles.push_back(_cache->contains(t0->getDataSourceSerial(), tileID.getChild(1)));
+            tiles.push_back(_cache->contains(t0->getDataSourceSerial(), tileID.getChild(2)));
+            tiles.push_back(_cache->contains(t0->getDataSourceSerial(), tileID.getChild(3)));
+        }
 
         for (const auto& t1 : tiles) {
             if (!t1) { continue; }
