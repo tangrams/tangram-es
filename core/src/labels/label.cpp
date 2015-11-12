@@ -7,14 +7,16 @@
 
 namespace Tangram {
 
-Label::Label(Label::Transform _transform, glm::vec2 _size, Type _type, LabelMesh& _mesh, Range _vertexRange, Options _options) :
+Label::Label(Label::Transform _transform, glm::vec2 _size, Type _type, LabelMesh& _mesh,
+             Range _vertexRange, Options _options, size_t _hash) :
     m_options(_options),
+    m_hash(_hash),
     m_type(_type),
     m_transform(_transform),
     m_dim(_size),
     m_mesh(_mesh),
-    m_vertexRange(_vertexRange) {
-
+    m_vertexRange(_vertexRange)
+{
     if (!m_options.collide || m_type == Type::debug){
         enterState(State::visible, 1.0);
     } else {
@@ -294,19 +296,13 @@ bool Label::updateState(const glm::mat4& _mvp, const glm::vec2& _screenSize, flo
             if (m_occlusionSolved) {
                 if (occludedLastFrame) {
                     enterState(State::dead, 0.0); // dead
-                }  else {
-<<<<<<< HEAD
+                }  else if (m_skipTransitions) {
+                    enterState(State::visible, 1.0);
+                    animate = true;
+                } else {
                     m_fade = FadeEffect(true, m_options.showTransition.ease, m_options.showTransition.time);
                     enterState(State::fading_in, 0.0);
                     animate = true;
-=======
-                    if (m_skipTransitions) {
-                        enterState(State::visible, 1.0);
-                    } else {
-                        m_fade = FadeEffect(true, m_options.showTransition.ease, m_options.showTransition.time);
-                        enterState(State::fading_in, 0.0);
-                    }
->>>>>>> Reduce flickering
                 }
             } else {
                 // request for occlusion solving
