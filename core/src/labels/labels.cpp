@@ -152,8 +152,14 @@ void Labels::update(const View& _view, float _dt, const std::vector<std::unique_
                     for (auto& l1 : mesh1->getLabels()) {
                         if (!l1) { continue; }
                         if (!l1->canOcclude()) { continue; }
+
                         if (l0->getHash() == l1->getHash()) {
-                            l0->skipTransitions();
+                            float d2 = glm::distance2(l0->getTransform().state.screenPos, l1->getTransform().state.screenPos);
+
+                            // The new label lies within the circle defined by the bounding box of the already visible label
+                            if (sqrt(d2) < std::max(l0->getDimension().x, l0->getDimension().y)) {
+                                l0->skipTransitions();
+                            }
                         }
                     }
                 }

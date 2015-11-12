@@ -140,6 +140,8 @@ public:
 
     size_t getHash() { return m_hash; }
 
+    glm::vec2 getDimension() const { return m_dim; }
+
 private:
 
     bool offViewport(const glm::vec2& _screenSize);
