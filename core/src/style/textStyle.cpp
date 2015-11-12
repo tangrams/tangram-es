@@ -155,6 +155,10 @@ void TextStyle::buildPoint(const Point& _point, const DrawRule& _rule, const Pro
 
     Parameters params = applyRule(_rule, _props);
 
+   // std::hash<Parameters> hash;
+   // auto h = hash(params);
+   // LOG("Hash %d", h);
+
     if (!params.visible || !params.isValid()) { return; }
 
     buffer.addLabel(params, { glm::vec2(_point), glm::vec2(_point) },

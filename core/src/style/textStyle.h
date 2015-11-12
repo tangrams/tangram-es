@@ -3,6 +3,7 @@
 #include "style.h"
 #include "labels/label.h"
 #include "labelProperty.h"
+#include "util/hash.h"
 
 #include <memory>
 
@@ -80,3 +81,29 @@ private:
 };
 
 }
+
+namespace std {
+    template <>
+    struct hash<Tangram::TextStyle::Parameters> {
+        size_t operator() (const Tangram::TextStyle::Parameters& p) const {
+            std::hash<Tangram::Label::Options> optionsHash;
+            std::size_t seed = 0;
+            hash_combine(seed, p.fontId);
+            hash_combine(seed, p.text);
+            hash_combine(seed, p.interactive);
+            hash_combine(seed, p.fill);
+            hash_combine(seed, p.strokeColor);
+            hash_combine(seed, p.strokeWidth);
+            hash_combine(seed, p.fontSize);
+            hash_combine(seed, p.visible);
+            hash_combine(seed, p.wordWrap);
+            hash_combine(seed, p.maxLineWidth);
+            hash_combine(seed, p.transform);
+            hash_combine(seed, p.align);
+            hash_combine(seed, p.anchor);
+            hash_combine(seed, optionsHash(p.labelOptions));
+            return seed;
+        }
+    };
+}
+

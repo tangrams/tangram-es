@@ -8,6 +8,7 @@
 #include "style/material.h"
 #include "style/style.h"
 #include "tile/tile.h"
+#include "tile/tileCache.h"
 
 #include "glm/glm.hpp"
 #include "glm/gtc/matrix_transform.hpp"
@@ -26,7 +27,7 @@ int Labels::LODDiscardFunc(float _maxZoom, float _zoom) {
 
 
 void Labels::update(const View& _view, float _dt, const std::vector<std::unique_ptr<Style>>& _styles,
-                    const std::vector<std::shared_ptr<Tile>>& _tiles) {
+                    const std::vector<std::shared_ptr<Tile>>& _tiles, std::unique_ptr<TileCache>& _cache) {
 
     m_needUpdate = false;
 
