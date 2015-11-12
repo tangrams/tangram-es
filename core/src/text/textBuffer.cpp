@@ -255,10 +255,8 @@ bool TextBuffer::addLabel(const TextStyle::Parameters& _params, Label::Transform
 
 
     std::hash<TextStyle::Parameters> hash;
-    size_t hashCode = hash(_params);
-    LOG("%s %d", _params.text.c_str(), hashCode);
     m_labels.emplace_back(new TextLabel(_transform, _type, bbox, *this, { vertexOffset, numVertices },
-                                        _params.labelOptions, metrics, nLine, _params.anchor, hashCode));
+                                        _params.labelOptions, metrics, nLine, _params.anchor, hash(_params)));
 
     // TODO: change this in TypeMesh::adVertices()
     m_nVertices = vertices.size();

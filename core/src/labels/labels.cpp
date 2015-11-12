@@ -118,6 +118,9 @@ void Labels::update(const View& _view, float _dt, const std::vector<std::unique_
 
     /// Mark labels to skip transitions
 
+    static float globalTime = 0.f;
+    static int cpt = 0;
+    time_t start = clock();
     for (const auto& t0 : _tiles) {
         TileID tileID = t0->getID();
         std::vector<std::shared_ptr<Tile>> tiles;
@@ -137,8 +140,7 @@ void Labels::update(const View& _view, float _dt, const std::vector<std::unique_
                 if (!mesh0) { continue; }
                 const auto& m1 = t1->getMesh(*style);
                 if (!m1) { continue; }
-                const LabelMesh* mesh1 = dynamic_cast<const LabelMesh*>(m1.get());
-                if (!mesh1) { continue; }
+                const LabelMesh* mesh1 = static_cast<const LabelMesh*>(m1.get());
 
                 for (auto& l0 : mesh0->getLabels()) {
                     if (!l0->canOcclude()) { continue; }
@@ -153,6 +155,12 @@ void Labels::update(const View& _view, float _dt, const std::vector<std::unique_
             }
         }
     }
+    time_t end = clock();
+    float t = float(end - start) / CLOCKS_PER_SEC * 1000.f;
+    globalTime += t;
+    cpt++;
+    LOG("T: %f", t);
+    LOG("AVG: %f", globalTime / float(cpt));
 
     //// Update label meshes
 
