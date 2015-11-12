@@ -95,7 +95,7 @@ void main() {
 
     gl_Position = u_proj * v_position;
 
-    // Proxy tiles have u_tile_origin.z < 0, so this adjustment will place proxy tiles 
+    // Proxy tiles have u_tile_origin.z < 0, so this adjustment will place proxy tiles
     // deeper in the depth buffer than non-proxy tiles
     gl_Position.z += TANGRAM_DEPTH_DELTA * gl_Position.w * (1. - sign(u_tile_origin.z));
 
