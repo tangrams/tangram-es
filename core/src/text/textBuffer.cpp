@@ -11,11 +11,9 @@ namespace Tangram {
 TextBuffer::TextBuffer(std::shared_ptr<VertexLayout> _vertexLayout)
     : LabelMesh(_vertexLayout, GL_TRIANGLES) {
     addVertices({}, {});
-    LOG("Buffer created");
 }
 
 TextBuffer::~TextBuffer() {
-    LOG("Buffer destroyed");
 }
 
 std::vector<TextBuffer::WordBreak> TextBuffer::findWords(const std::string& _text) {
@@ -255,9 +253,12 @@ bool TextBuffer::addLabel(const TextStyle::Parameters& _params, Label::Transform
 
     _fontContext.unlock();
 
+
     std::hash<TextStyle::Parameters> hash;
+    size_t hashCode = hash(_params);
+    LOG("%s %d", _params.text.c_str(), hashCode);
     m_labels.emplace_back(new TextLabel(_transform, _type, bbox, *this, { vertexOffset, numVertices },
-                                        _params.labelOptions, metrics, nLine, _params.anchor, hash(_params)));
+                                        _params.labelOptions, metrics, nLine, _params.anchor, hashCode));
 
     // TODO: change this in TypeMesh::adVertices()
     m_nVertices = vertices.size();

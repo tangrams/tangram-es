@@ -122,6 +122,8 @@ public:
     /* Mark the label as resolved */
     void occlusionSolved();
 
+    void skipTransitions();
+
     bool occludedLastFrame() { return m_occludedLastFrame; }
 
     State getState() const { return m_currentState; }
@@ -159,6 +161,7 @@ private:
     bool m_updateMeshVisibility;
     // label options
     Options m_options;
+    bool m_skipTransitions;
 
 protected:
 

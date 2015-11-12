@@ -116,6 +116,46 @@ void Labels::update(const View& _view, float _dt, const std::vector<std::unique_
         }
     }
 
+
+    for (const auto& tile : _tiles) {
+        TileID tileID = tile->getID();
+        TileID parent = tileID.getParent();
+        TileID child0 = tileID.getChild(0);
+        TileID child1 = tileID.getChild(1);
+        TileID child2 = tileID.getChild(2);
+        TileID child3 = tileID.getChild(3);
+
+        auto pTile = _cache->contains(tile->getDataSourceSerial(), parent);
+
+        // check for parent tile
+        if (pTile) {
+            for (const auto& style : _styles) {
+                const auto& mesh = tile->getMesh(*style);
+                if (!mesh) { continue; }
+                const LabelMesh* labelMesh = dynamic_cast<const LabelMesh*>(mesh.get());
+                if (!labelMesh) { continue; }
+                const auto& pMesh = pTile->getMesh(*style);
+                if (!pMesh) { continue; }
+                const LabelMesh* pLabelMesh = dynamic_cast<const LabelMesh*>(pMesh.get());
+                if (!pLabelMesh) { continue; }
+
+                for (auto& label : labelMesh->getLabels()) {
+                    TextLabel* textLabel = dynamic_cast<TextLabel*>(label.get());
+                    if (!textLabel) { continue; }
+                    if (!textLabel->canOcclude()) { continue; }
+                    for (auto& labelParent : pLabelMesh->getLabels()) {
+                        TextLabel* pTextLabel = dynamic_cast<TextLabel*>(labelParent.get());
+                        if (!pTextLabel) { continue; }
+                        if (!pTextLabel->canOcclude()) { continue; }
+                        if (textLabel->getHash() == pTextLabel->getHash()) {
+                            textLabel->skipTransitions();
+                        }
+                    }
+                }
+            }
+        }
+    }
+
     //// Update label meshes
 
     for (auto label : m_labels) {

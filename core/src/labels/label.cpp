@@ -27,6 +27,7 @@ Label::Label(Label::Transform _transform, glm::vec2 _size, Type _type, LabelMesh
     m_updateMeshVisibility = true;
     m_dirty = true;
     m_proxy = false;
+    m_skipTransitions = false;
 }
 
 Label::~Label() {}
@@ -171,6 +172,12 @@ void Label::occlusionSolved() {
     m_occlusionSolved = true;
 }
 
+void Label::skipTransitions() {
+    if (!m_occlusionSolved) {
+        m_skipTransitions = true;
+    }
+}
+
 void Label::enterState(const State& _state, float _alpha) {
     m_currentState = _state;
     setAlpha(_alpha);
@@ -218,6 +225,7 @@ void Label::resetState() {
     m_updateMeshVisibility = true;
     m_dirty = true;
     m_proxy = false;
+    m_skipTransitions = false;
     enterState(State::wait_occ, 0.0);
 }
 
@@ -287,9 +295,18 @@ bool Label::updateState(const glm::mat4& _mvp, const glm::vec2& _screenSize, flo
                 if (occludedLastFrame) {
                     enterState(State::dead, 0.0); // dead
                 }  else {
+<<<<<<< HEAD
                     m_fade = FadeEffect(true, m_options.showTransition.ease, m_options.showTransition.time);
                     enterState(State::fading_in, 0.0);
                     animate = true;
+=======
+                    if (m_skipTransitions) {
+                        enterState(State::visible, 1.0);
+                    } else {
+                        m_fade = FadeEffect(true, m_options.showTransition.ease, m_options.showTransition.time);
+                        enterState(State::fading_in, 0.0);
+                    }
+>>>>>>> Reduce flickering
                 }
             } else {
                 // request for occlusion solving
