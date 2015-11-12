@@ -116,39 +116,37 @@ void Labels::update(const View& _view, float _dt, const std::vector<std::unique_
         }
     }
 
+    /// Mark labels to skip transitions
 
-    for (const auto& tile : _tiles) {
-        TileID tileID = tile->getID();
-        TileID parent = tileID.getParent();
-        TileID child0 = tileID.getChild(0);
-        TileID child1 = tileID.getChild(1);
-        TileID child2 = tileID.getChild(2);
-        TileID child3 = tileID.getChild(3);
+    for (const auto& t0 : _tiles) {
+        TileID tileID = t0->getID();
+        std::vector<std::shared_ptr<Tile>> tiles;
 
-        auto pTile = _cache->contains(tile->getDataSourceSerial(), parent);
+        tiles.push_back(_cache->contains(t0->getDataSourceSerial(), tileID.getParent()));
+        tiles.push_back(_cache->contains(t0->getDataSourceSerial(), tileID.getChild(0)));
+        tiles.push_back(_cache->contains(t0->getDataSourceSerial(), tileID.getChild(1)));
+        tiles.push_back(_cache->contains(t0->getDataSourceSerial(), tileID.getChild(2)));
+        tiles.push_back(_cache->contains(t0->getDataSourceSerial(), tileID.getChild(3)));
 
-        // check for parent tile
-        if (pTile) {
+        for (const auto& t1 : tiles) {
+            if (!t1) { continue; }
             for (const auto& style : _styles) {
-                const auto& mesh = tile->getMesh(*style);
-                if (!mesh) { continue; }
-                const LabelMesh* labelMesh = dynamic_cast<const LabelMesh*>(mesh.get());
-                if (!labelMesh) { continue; }
-                const auto& pMesh = pTile->getMesh(*style);
-                if (!pMesh) { continue; }
-                const LabelMesh* pLabelMesh = dynamic_cast<const LabelMesh*>(pMesh.get());
-                if (!pLabelMesh) { continue; }
+                const auto& m0 = t0->getMesh(*style);
+                if (!m0) { continue; }
+                const LabelMesh* mesh0 = dynamic_cast<const LabelMesh*>(m0.get());
+                if (!mesh0) { continue; }
+                const auto& m1 = t1->getMesh(*style);
+                if (!m1) { continue; }
+                const LabelMesh* mesh1 = dynamic_cast<const LabelMesh*>(m1.get());
+                if (!mesh1) { continue; }
 
-                for (auto& label : labelMesh->getLabels()) {
-                    TextLabel* textLabel = dynamic_cast<TextLabel*>(label.get());
-                    if (!textLabel) { continue; }
-                    if (!textLabel->canOcclude()) { continue; }
-                    for (auto& labelParent : pLabelMesh->getLabels()) {
-                        TextLabel* pTextLabel = dynamic_cast<TextLabel*>(labelParent.get());
-                        if (!pTextLabel) { continue; }
-                        if (!pTextLabel->canOcclude()) { continue; }
-                        if (textLabel->getHash() == pTextLabel->getHash()) {
-                            textLabel->skipTransitions();
+                for (auto& l0 : mesh0->getLabels()) {
+                    if (!l0->canOcclude()) { continue; }
+                    for (auto& l1 : mesh1->getLabels()) {
+                        if (!l1) { continue; }
+                        if (!l1->canOcclude()) { continue; }
+                        if (l0->getHash() == l1->getHash()) {
+                            l0->skipTransitions();
                         }
                     }
                 }
