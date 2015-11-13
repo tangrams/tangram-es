@@ -94,6 +94,21 @@ void mouse_button_callback(GLFWwindow* window, int button, int action, int mods)
 
 }
 
+int count = 0;
+
+void test() {
+    //LngLat t {400, 300 - count*10.0};
+    LngLat t {400, 300};
+    Tangram::screenToWorldCoordinates(t.longitude, t.latitude);
+
+    Properties prop;
+    prop.add("type", "point");
+    Tangram::clearDataSource(*data_source, true, false);
+    data_source->addPoint(prop, t);
+    requestRender();
+    count++;
+}
+
 void cursor_pos_callback(GLFWwindow* window, double x, double y) {
 
     int action = glfwGetMouseButton(window, GLFW_MOUSE_BUTTON_1);
@@ -160,6 +175,9 @@ void key_callback(GLFWwindow* window, int key, int scancode, int action, int mod
             case GLFW_KEY_N:
                 Tangram::setRotation(0.f, 1.f);
                 break;
+            case GLFW_KEY_X:
+                LOG("Here");
+                test();
         default:
                 break;
         }
