@@ -82,7 +82,7 @@ public:
     StyleContext styleContext;
 
     std::shared_ptr<DataSource> source;
-    //std::shared_ptr<TileData> tileData;
+    std::shared_ptr<TileData> tileData;
     std::vector<char> rawTileData;
 
     void SetUp() override {
@@ -102,7 +102,7 @@ public:
         scene = std::make_unique<Scene>();
         SceneLoader::loadScene(sceneNode, *scene);
         styleContext.initFunctions(*scene);
-        styleContext.setGlobalZoom(0);
+        styleContext.setGlobalZoom(10);
 
         const char* path = "tile.mvt";
 
@@ -126,6 +126,8 @@ public:
 
         source = scene->dataSources()[0];
 
+        tileData = source->parse(tile, rawTileData);
+
         LOG("Ready");
     }
     void TearDown() override {
@@ -137,9 +139,6 @@ BENCHMARK_DEFINE_F(TileLoadingFixture, BuildTest)(benchmark::State& st) {
 
     while (st.KeepRunning()) {
         Tile tile({0,0,0}, s_projection);
-
-        auto tileData = source->parse(tile, rawTileData);
-
         tile.build(styleContext, *scene, *tileData, *source);
     }
 }
