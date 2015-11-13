@@ -55,6 +55,7 @@ public:
     void clearTileSets();
 
     void clearTileSet(int32_t _id);
+    void markStale(int32_t _id);
 
     /* For TileWorker: Pass TileTask with processed data back
      * to TileManager.
@@ -140,7 +141,7 @@ private:
     TileTaskCb m_dataCallback;
 
     /* Temporary list of tiles that need to be loaded */
-    std::vector<std::tuple<double, const TileSet*, const TileID*>> m_loadTasks;
+    std::vector<std::tuple<double, const TileSet*, std::shared_ptr<Tile>>> m_loadTasks;
 
     /* List of tiles passed from <TileWorker> threads */
     std::vector<std::shared_ptr<TileTask>> m_readyTiles;
