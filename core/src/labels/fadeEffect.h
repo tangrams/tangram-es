@@ -8,7 +8,7 @@ struct FadeEffect {
 
 public:
 
-    enum class Interpolation {
+    enum class Interpolation : char {
         linear, pow, sine
     };
 

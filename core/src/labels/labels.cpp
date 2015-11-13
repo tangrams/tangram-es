@@ -118,9 +118,6 @@ void Labels::update(const View& _view, float _dt, const std::vector<std::unique_
 
     /// Mark labels to skip transitions
 
-    static float globalTime = 0.f;
-    static int cpt = 0;
-    time_t start = clock();
     for (const auto& t0 : _tiles) {
         TileID tileID = t0->getID();
         std::vector<std::shared_ptr<Tile>> tiles;
@@ -149,29 +146,23 @@ void Labels::update(const View& _view, float _dt, const std::vector<std::unique_
 
                 for (auto& l0 : mesh0->getLabels()) {
                     if (!l0->canOcclude()) { continue; }
+
                     for (auto& l1 : mesh1->getLabels()) {
-                        if (!l1) { continue; }
-                        if (!l1->canOcclude()) { continue; }
+                        if (!l1 || !l1->canOcclude() || l0->getHash() != l1->getHash()) {
+                            continue;
+                        }
+                        float d2 = glm::distance2(l0->getTransform().state.screenPos,
+                                l1->getTransform().state.screenPos);
 
-                        if (l0->getHash() == l1->getHash()) {
-                            float d2 = glm::distance2(l0->getTransform().state.screenPos, l1->getTransform().state.screenPos);
-
-                            // The new label lies within the circle defined by the bounding box of the already visible label
-                            if (sqrt(d2) < std::max(l0->getDimension().x, l0->getDimension().y)) {
-                                l0->skipTransitions();
-                            }
+                        // The new label lies within the circle defined by the bbox of l0
+                        if (sqrt(d2) < std::max(l0->getDimension().x, l0->getDimension().y)) {
+                            l0->skipTransitions();
                         }
                     }
                 }
             }
         }
     }
-    time_t end = clock();
-    float t = float(end - start) / CLOCKS_PER_SEC * 1000.f;
-    globalTime += t;
-    cpt++;
-    LOG("T: %f", t);
-    LOG("AVG: %f", globalTime / float(cpt));
 
     //// Update label meshes
 

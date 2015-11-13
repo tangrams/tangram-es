@@ -165,7 +165,9 @@ private:
     bool m_updateMeshVisibility;
     // label options
     Options m_options;
+    // whether this label should skip transitions to move to first visible state
     bool m_skipTransitions;
+    // the label hash based on its styling parameters
     size_t m_hash;
 
 protected:

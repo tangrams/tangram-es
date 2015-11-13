@@ -65,9 +65,8 @@ namespace std {
         size_t operator() (const Tangram::PointStyle::Parameters& p) const {
             std::hash<Tangram::Label::Options> optionsHash;
             std::size_t seed = 0;
-            hash_combine(seed, p.centroid);;
+            hash_combine(seed, p.centroid);
             hash_combine(seed, p.sprite);
-            hash_combine(seed, p.spriteDefault);
             hash_combine(seed, p.color);
             hash_combine(seed, p.anchor);
             hash_combine(seed, p.size.x);

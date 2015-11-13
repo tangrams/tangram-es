@@ -223,6 +223,7 @@ void Label::pushTransform() {
 
 void Label::resetState() {
     m_occludedLastFrame = false;
+    m_skipTransitions = false;
     m_occlusionSolved = false;
     m_updateMeshVisibility = true;
     m_dirty = true;
