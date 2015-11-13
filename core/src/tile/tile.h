@@ -22,7 +22,7 @@ class View;
 class StyleContext;
 struct TileData;
 
-enum class TileState { none, loading, processing, ready, canceled };
+enum class TileState { none, loading, processing, ready, canceled, stale };
 
 /* Tile of vector map data
  *
