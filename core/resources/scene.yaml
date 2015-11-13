@@ -44,26 +44,26 @@ textures:
             bookstore: [0, 333, 32, 32]
 
 styles:
-    flatcolor:
-        base: polygons
-        lighting: false
-    heightglow:
-        base: polygons
-        lighting: vertex
-        shaders:
-            blocks:
-                color: "color.rgb += vec3(position.z / 800.);"
-    heightglowline:
-        base: lines
-        mix: heightglow
+    #flatcolor:
+        #base: polygons
+        #lighting: false
+    #heightglow:
+        #base: polygons
+        #lighting: vertex
+        #shaders:
+            #blocks:
+                #color: "color.rgb += vec3(position.z / 800.);"
+    #heightglowline:
+        #base: lines
+        #mix: heightglow
     icons:
         base: points
         texture: pois
 
 sources:
-    osm:
-        type: MVT
-        url:  https://vector.mapzen.com/osm/all/{z}/{x}/{y}.mvt
+    #osm:
+        #type: MVT
+        #url:  https://vector.mapzen.com/osm/all/{z}/{x}/{y}.mvt
 
 layers:
     touch:
