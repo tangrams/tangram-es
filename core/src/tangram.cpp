@@ -46,6 +46,8 @@ void clearEase(EaseField _f) {
     m_eases[static_cast<size_t>(_f)] = none;
 }
 
+std::shared_ptr<Scene> m_newScene;
+
 static float g_time = 0.0;
 static std::bitset<8> g_flags = 0;
 int log_level = 2;
@@ -96,17 +98,21 @@ void loadScene(const char* _scenePath, bool _setPositionFromScene) {
 
     auto scene = std::make_shared<Scene>();
     if (SceneLoader::loadScene(sceneString, *scene)) {
-        m_scene = scene;
-        m_scene->fontContext()->addFont("FiraSans", "Medium", "");
+
         if (setPositionFromCurrentView && !_setPositionFromScene) {
-            m_scene->view()->setPosition(m_view->getPosition());
-            m_scene->view()->setZoom(m_view->getZoom());
+            scene->view()->setPosition(m_view->getPosition());
+            scene->view()->setZoom(m_view->getZoom());
         }
-        m_view = m_scene->view();
+        m_view = scene->view();
         m_inputHandler->setView(m_view);
         m_tileManager->setView(m_view);
-        m_tileManager->setScene(scene);
 
+        // Old scene looses references and frees its textures
+        // when reference count goes to zero here.
+        // For now release all stuff in update() to ensure GL
+        // resources are freed on render thread.
+        m_newScene = scene;
+        requestRender();
     }
 }
 
@@ -131,6 +137,22 @@ void resize(int _newWidth, int _newHeight) {
 }
 
 void update(float _dt) {
+
+    if (m_newScene) {
+        // Now we are on the render-thread - free GL resources from old scene
+        m_scene = std::move(m_newScene);
+
+        m_scene->fontContext()->addFont("FiraSans", "Medium", "");
+
+        // This frees tile GL data.
+        m_tileManager->setScene(m_scene);
+
+        float pixelScale = m_view->getPixelScale();
+
+        for (auto& style : m_scene->styles()) {
+            style->setPixelScale(pixelScale);
+        }
+    }
 
     g_time += _dt;
 
