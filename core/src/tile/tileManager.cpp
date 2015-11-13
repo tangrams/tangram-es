@@ -142,8 +142,18 @@ bool TileManager::setTileState(Tile& _tile, TileState _newState) {
         return false;
 
     case TileState::stale:
-        _tile.setState(_newState);
-        return true;
+        if (_newState == TileState::updating) {
+            _tile.setState(_newState);
+            return true;
+        }
+
+    case TileState::updating:
+        if (_newState == TileState::ready ||
+            _newState == TileState::stale ||
+            _newState == TileState::canceled) {
+            _tile.setState(_newState);
+            return true;
+        }
 
     case TileState::ready:
         if (_newState == TileState::stale) {
@@ -236,7 +246,7 @@ void TileManager::updateTileSet(TileSet& tileSet) {
             if (tileSet.source == task->source) {
 
                 auto& setTile = tileSet.tiles[tile->getID()];
-                if (setTile && setTile->hasState(TileState::stale)) {
+                if (setTile && setTile->hasState(TileState::updating)) {
                     setTile = tile;
                     requestRender();
                 }
@@ -275,7 +285,7 @@ void TileManager::updateTileSet(TileSet& tileSet) {
             auto& curTileId = curTilesIt == tiles.end()
                 ? NOT_A_TILE
                 : curTilesIt->first;
-            
+
             if (visTileId == curTileId) {
                 assert(!(visTileId == NOT_A_TILE));
 
@@ -283,11 +293,12 @@ void TileManager::updateTileSet(TileSet& tileSet) {
                 auto& tile = curTilesIt->second;
                 tile->setVisible(true);
 
-                if (tile->isReady()) {
+                if (tile->isReady() || tile->hasState(TileState::updating)) {
                     m_tiles.push_back(tile);
                 } else if(tile->hasState(TileState::stale)) {
                     m_tiles.push_back(tile); // Keep on drawing the stale tile, new tile will update this
                     enqueueTask(tileSet, visTileId, viewCenter); // Enqueue tile for rebuild and refresh
+                    setTileState(*tile, TileState::updating);
                 } else if (tile->hasState(TileState::none)) {
                     // Not yet available - enqueue for loading
                     enqueueTask(tileSet, visTileId, viewCenter);
