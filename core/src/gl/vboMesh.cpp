@@ -35,10 +35,19 @@ VboMesh::VboMesh(std::shared_ptr<VertexLayout> _vertexLayout, GLenum _drawMode, 
 }
 
 VboMesh::~VboMesh() {
+    // Deleting a index/array buffer being used ends up setting up the current vertex/index buffer to 0
+    // after the driver finishes using it, force the render state to be 0 for vertex/index buffer
+
     if (m_glVertexBuffer) {
+        if (RenderState::vertexBuffer.compare(m_glVertexBuffer)) {
+            RenderState::vertexBuffer.init(0, false);
+        }
         glDeleteBuffers(1, &m_glVertexBuffer);
     }
     if (m_glIndexBuffer) {
+        if (RenderState::indexBuffer.compare(m_glVertexBuffer)) {
+            RenderState::indexBuffer.init(0, false);
+        }
         glDeleteBuffers(1, &m_glIndexBuffer);
     }
 
