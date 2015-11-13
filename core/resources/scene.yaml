@@ -4,13 +4,14 @@ scene:
 cameras:
     iso-camera:
         # Manhattan
-        position: [-74.00976419448854, 40.70532700869127, 16]
+        position: [0, 0, 0]
         type: isometric
         axis: [0, 1]
         active: false
     perspective-camera:
         # Manhattan
-        position: [-74.00976419448854, 40.70532700869127, 16]
+        position: [0, 0, 0]
+        #position: [-74.00976419448854, 40.70532700869127, 1]
         type: perspective #currently ignored
         focal_length: [[16, 2], [20, 6]] # currently ignored
         vanishing_point: [-250, -250] # currently ignored
