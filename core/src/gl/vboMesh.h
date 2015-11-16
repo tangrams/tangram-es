@@ -63,6 +63,7 @@ public:
      * Sub data upload of the mesh, returns true if this results in a buffer binding
      */
     void subDataUpload();
+    void resetDirty();
 
     /*
      * Renders the geometry in this mesh using the ShaderProgram _shader; if
