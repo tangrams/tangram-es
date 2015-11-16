@@ -76,6 +76,12 @@ void VboMesh::setDrawMode(GLenum _drawMode) {
     }
 }
 
+void VboMesh::resetDirty() {
+    m_dirtyOffset = 0;
+    m_dirtySize = 0;
+    m_dirty = false;
+}
+
 void VboMesh::subDataUpload() {
     if (!m_dirty) {
         return;
@@ -113,9 +119,7 @@ void VboMesh::subDataUpload() {
         }
     }
 
-    m_dirtyOffset = 0;
-    m_dirtySize = 0;
-    m_dirty = false;
+    resetDirty();
 }
 
 void VboMesh::upload() {
@@ -157,6 +161,8 @@ void VboMesh::upload() {
     m_generation = s_validGeneration;
 
     m_isUploaded = true;
+
+    resetDirty();
 }
 
 void VboMesh::draw(ShaderProgram& _shader) {
