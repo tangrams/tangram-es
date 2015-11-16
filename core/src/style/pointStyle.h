@@ -68,7 +68,7 @@ namespace std {
             hash_combine(seed, p.centroid);
             hash_combine(seed, p.sprite);
             hash_combine(seed, p.color);
-            hash_combine(seed, p.anchor);
+            hash_combine(seed, (int)p.anchor);
             hash_combine(seed, p.size.x);
             hash_combine(seed, p.size.y);
             hash_combine(seed, optionsHash(p.labelOptions));

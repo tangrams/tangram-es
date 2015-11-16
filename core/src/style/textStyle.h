@@ -98,9 +98,9 @@ namespace std {
             hash_combine(seed, p.visible);
             hash_combine(seed, p.wordWrap);
             hash_combine(seed, p.maxLineWidth);
-            hash_combine(seed, p.transform);
-            hash_combine(seed, p.align);
-            hash_combine(seed, p.anchor);
+            hash_combine(seed, (int)p.transform);
+            hash_combine(seed, (int)p.align);
+            hash_combine(seed, (int)p.anchor);
             hash_combine(seed, optionsHash(p.labelOptions));
             return seed;
         }

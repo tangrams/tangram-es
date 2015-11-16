@@ -205,11 +205,11 @@ namespace std {
             hash_combine(seed, o.priority);
             hash_combine(seed, o.interactive);
             hash_combine(seed, o.collide);
-            hash_combine(seed, o.selectTransition.ease);
+            hash_combine(seed, (int)o.selectTransition.ease);
             hash_combine(seed, o.selectTransition.time);
-            hash_combine(seed, o.hideTransition.ease);
+            hash_combine(seed, (int)o.hideTransition.ease);
             hash_combine(seed, o.hideTransition.time);
-            hash_combine(seed, o.showTransition.ease);
+            hash_combine(seed, (int)o.showTransition.ease);
             hash_combine(seed, o.showTransition.time);
             return seed;
         }
