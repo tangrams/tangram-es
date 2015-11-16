@@ -57,10 +57,10 @@ open build/xcode/tangram.xcodeproj
 Note that any Xcode configuration change you make to the project won't be preserved when CMake runs again. Build configuration is defined only in the CMakeLists file(s).
 
 ### Ubuntu Linux ###
-To build on Ubuntu you will need to install a libcurl development package:
+To build on Ubuntu you will need to install development packages for libcurl, x11, and opengl:
 
 ```bash
-sudo apt-get install libcurl4-openssl-dev
+sudo apt-get install libcurl4-openssl-dev xorg-dev libgl1-mesa-dev
 ```
 
 Then build an executable:
