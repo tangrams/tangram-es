@@ -248,7 +248,7 @@ void TileManager::updateTileSet(TileSet& tileSet) {
                 auto& setTile = tileSet.tiles[tile->getID()];
                 if (setTile && setTile->hasState(TileState::updating)) {
                     setTile = tile;
-                    requestRender();
+                    m_tileSetChanged = true;
                 }
                 if (setTileState(*tile, TileState::ready)) {
                     clearProxyTiles(tileSet, *tile, removeTiles);
@@ -297,7 +297,7 @@ void TileManager::updateTileSet(TileSet& tileSet) {
                     m_tiles.push_back(tile);
                 } else if(tile->hasState(TileState::stale)) {
                     m_tiles.push_back(tile); // Keep on drawing the stale tile, new tile will update this
-                    enqueueTask(tileSet, visTileId, viewCenter); // Enqueue tile for rebuild and refresh
+                    enqueueTask(tileSet, visTileId, viewCenter);
                     setTileState(*tile, TileState::updating);
                 } else if (tile->hasState(TileState::none)) {
                     // Not yet available - enqueue for loading
@@ -386,6 +386,7 @@ void TileManager::enqueueTask(const TileSet& tileSet, const TileID& tileID,
                                    return distance < std::get<0>(other);
                                });
 
+    // Enqueue a new tile to update the stale tile
     if (tileSet.tiles.at(tileID)->hasState(TileState::stale)) {
         std::shared_ptr<Tile> tile(new Tile(tileID, m_view->getMapProjection()));
         m_loadTasks.insert(it, std::make_tuple(distance, &tileSet, std::move(tile)));
