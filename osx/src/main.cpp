@@ -94,20 +94,6 @@ void mouse_button_callback(GLFWwindow* window, int button, int action, int mods)
 
 }
 
-int count = 1;
-
-void test() {
-    //LngLat t {400, 300 - count*10.0};
-    LngLat t {20, 10};
-    Tangram::screenToWorldCoordinates(t.longitude, t.latitude);
-
-    Properties prop;
-    prop.add("type", "point");
-    Tangram::clearDataSource(*data_source, true, false);
-    data_source->addPoint(prop, t);
-    requestRender();
-}
-
 void cursor_pos_callback(GLFWwindow* window, double x, double y) {
 
     int action = glfwGetMouseButton(window, GLFW_MOUSE_BUTTON_1);
@@ -174,9 +160,6 @@ void key_callback(GLFWwindow* window, int key, int scancode, int action, int mod
             case GLFW_KEY_N:
                 Tangram::setRotation(0.f, 1.f);
                 break;
-            case GLFW_KEY_X:
-                LOG("Here");
-                test();
         default:
                 break;
         }
@@ -194,8 +177,8 @@ void drop_callback(GLFWwindow* window, int count, const char** paths) {
 // ===============
 
 GLFWwindow* main_window = nullptr;
-int width = 100;
-int height = 100;
+int width = 800;
+int height = 600;
 
 void window_size_callback(GLFWwindow* window, int width, int height) {
 
@@ -293,12 +276,6 @@ int main(int argc, char* argv[]) {
         if (isContinuousRendering()) {
             glfwPollEvents();
         } else {
-            if (count == 1) { test(); }
-            if (count % 5 == 0) {
-                test();
-            }
-            requestRender();
-            count++;
             glfwWaitEvents();
         }
     }
