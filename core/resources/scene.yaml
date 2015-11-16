@@ -4,14 +4,13 @@ scene:
 cameras:
     iso-camera:
         # Manhattan
-        position: [0, 0, 0]
+        position: [-74.00976419448854, 40.70532700869127, 16]
         type: isometric
         axis: [0, 1]
         active: false
     perspective-camera:
         # Manhattan
-        position: [0, 0, 0]
-        #position: [-74.00976419448854, 40.70532700869127, 1]
+        position: [-74.00976419448854, 40.70532700869127, 16]
         type: perspective #currently ignored
         focal_length: [[16, 2], [20, 6]] # currently ignored
         vanishing_point: [-250, -250] # currently ignored
@@ -45,26 +44,26 @@ textures:
             bookstore: [0, 333, 32, 32]
 
 styles:
-    #flatcolor:
-        #base: polygons
-        #lighting: false
-    #heightglow:
-        #base: polygons
-        #lighting: vertex
-        #shaders:
-            #blocks:
-                #color: "color.rgb += vec3(position.z / 800.);"
-    #heightglowline:
-        #base: lines
-        #mix: heightglow
+    flatcolor:
+        base: polygons
+        lighting: false
+    heightglow:
+        base: polygons
+        lighting: vertex
+        shaders:
+            blocks:
+                color: "color.rgb += vec3(position.z / 800.);"
+    heightglowline:
+        base: lines
+        mix: heightglow
     icons:
         base: points
         texture: pois
 
 sources:
-    #osm:
-        #type: MVT
-        #url:  https://vector.mapzen.com/osm/all/{z}/{x}/{y}.mvt
+    osm:
+        type: MVT
+        url:  https://vector.mapzen.com/osm/all/{z}/{x}/{y}.mvt
 
 layers:
     touch:
