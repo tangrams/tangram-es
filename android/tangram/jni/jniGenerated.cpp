@@ -314,7 +314,7 @@ SWIGINTERN void std_vector_Sl_std_vector_Sl_Tangram_LngLat_Sg__Sg__set(std::vect
 #include "data/clientGeoJsonSource.h"
 
 SWIGINTERN void Tangram_DataSource_update(Tangram::DataSource *self) {
-  Tangram::clearDataSource(*(self), false, true);
+  Tangram::clearDataSource(*(self), true, false);
 }
 SWIGINTERN void Tangram_DataSource_clearJNI(Tangram::DataSource *self) {
   Tangram::clearDataSource(*(self), true, true);
