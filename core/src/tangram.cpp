@@ -97,7 +97,7 @@ void loadScene(const char* _scenePath, bool _setPositionFromScene) {
     auto scene = std::make_shared<Scene>();
     if (SceneLoader::loadScene(sceneString, *scene)) {
         m_scene = scene;
-        m_scene->fontContext()->addFont("FiraSans", "Medium", "");
+        m_scene->fontContext()->addFont("firasans", "medium", "");
         if (setPositionFromCurrentView && !_setPositionFromScene) {
             m_scene->view()->setPosition(m_view->getPosition());
             m_scene->view()->setZoom(m_view->getZoom());
