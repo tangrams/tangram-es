@@ -184,36 +184,35 @@ void render() {
     {
         std::lock_guard<std::mutex> lock(m_tilesMutex);
 
-        // Setup rendering for stencil dependent styles
-        glEnable(GL_STENCIL_TEST);
-        // Write 1 to stencil buffer
-        glStencilFunc(GL_ALWAYS, 1, 0xFF);
-        glStencilOp(GL_KEEP, GL_KEEP, GL_REPLACE);
-        // Enale stencil writes
-        glStencilMask(0xFF);
+        /// Setup rendering for stencil dependent styles
+
+        // Enable stencil buffer target
+        RenderState::stencilTest(GL_TRUE);
+        RenderState::stencilFunc(GL_ALWAYS, 1, 0xFF);
+        RenderState::stencilOp(GL_KEEP, GL_KEEP, GL_REPLACE);
+        RenderState::stencilWrite(0xFF);
         RenderState::depthWrite(GL_FALSE);
         RenderState::depthTest(GL_FALSE);
         glClear(GL_STENCIL_BUFFER_BIT);
 
         for (const auto& style : m_scene->styles()) {
             auto stencilStyle = dynamic_cast<StencilPolygonStyle*>(style.get());
-            if (!stencilStyle) { continue; }
+
+            if (!stencilStyle) {
+                continue;
+            }
+
             for (const auto& tile : m_tileManager->getVisibleTiles()) {
                 tile->draw(*style, *m_view);
             }
         }
-        glDisable(GL_STENCIL_TEST);
 
-        // Set up openGL for new frame
+        /// Set up openGL for new frame
+
         RenderState::depthWrite(GL_TRUE);
         auto& color = m_scene->background();
         RenderState::clearColor(color.r / 255.f, color.g / 255.f, color.b / 255.f, color.a / 255.f);
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-
-        // Pass if stencil is not 1
-        glStencilFunc(GL_NOTEQUAL, 1, 0xFF);
-        // Disable stencil writes
-        glStencilMask(0x00);
 
         // Loop over all styles
         for (const auto& style : m_scene->styles()) {
@@ -223,20 +222,12 @@ void render() {
 
             style->onBeginDrawFrame(*m_view, *m_scene);
 
-            if (style->getName() == "text") {
-                glEnable(GL_STENCIL_TEST);
-            }
-
             // Loop over all tiles in m_tileSet
             for (const auto& tile : m_tileManager->getVisibleTiles()) {
                 tile->draw(*style, *m_view);
             }
 
             style->onEndDrawFrame();
-
-            if (style->getName() == "text") {
-                glDisable(GL_STENCIL_TEST);
-            }
         }
     }
 

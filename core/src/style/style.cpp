@@ -192,39 +192,52 @@ void Style::onBeginDrawFrame(const View& _view, Scene& _scene, int _textureUnit)
     setupShaderUniforms(_textureUnit, contextLost, _scene);
 
     // Configure render state
+
+    // Disable writing to the stencil buffer
+    RenderState::stencilWrite(0x00);
+
     switch (m_blend) {
         case Blending::none:
             RenderState::blending(GL_FALSE);
             RenderState::blendingFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
             RenderState::depthTest(GL_TRUE);
             RenderState::depthWrite(GL_TRUE);
+            RenderState::stencilTest(GL_FALSE);
             break;
         case Blending::add:
             RenderState::blending(GL_TRUE);
             RenderState::blendingFunc(GL_ONE, GL_ONE);
             RenderState::depthTest(GL_FALSE);
             RenderState::depthWrite(GL_TRUE);
+            RenderState::stencilTest(GL_FALSE);
             break;
         case Blending::multiply:
             RenderState::blending(GL_TRUE);
             RenderState::blendingFunc(GL_ZERO, GL_SRC_COLOR);
             RenderState::depthTest(GL_FALSE);
             RenderState::depthWrite(GL_TRUE);
+            RenderState::stencilTest(GL_FALSE);
             break;
         case Blending::overlay:
             RenderState::blending(GL_TRUE);
             RenderState::blendingFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
             RenderState::depthTest(GL_FALSE);
             RenderState::depthWrite(GL_FALSE);
+            RenderState::stencilTest(GL_FALSE);
             break;
         case Blending::inlay:
+            RenderState::blending(GL_TRUE);
+            RenderState::blendingFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+            RenderState::depthTest(GL_TRUE);
+
             if (noDepth()) {
+                RenderState::stencilTest(GL_TRUE);
+                RenderState::stencilFunc(GL_NOTEQUAL, 1, 0xFF);
             } else {
-                RenderState::blending(GL_TRUE);
-                RenderState::blendingFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
-                RenderState::depthTest(GL_TRUE);
                 RenderState::depthWrite(GL_FALSE);
+                RenderState::stencilTest(GL_FALSE);
             }
+
             break;
         default:
             break;

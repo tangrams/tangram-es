@@ -56,6 +56,9 @@ styles:
     heightglowline:
         base: lines
         mix: heightglow
+    textinlay:
+        base: text
+        blend: inlay
     icons:
         base: points
         texture: pois
@@ -351,7 +354,7 @@ layers:
         data: {source: osm, layer: roads}
         filter: { name: true, aeroway: false, tunnel: false, railway: false, not: { kind: rail }, $zoom: { min: 10 } }
         draw:
-            text:
+            textinlay:
                 interactive: true
                 visible: true
                 priority: 2
@@ -366,7 +369,7 @@ layers:
         highway:
             filter: { kind: highway }
             draw:
-                text:
+                textinlay:
                     visible: true
                     offset: [0px, 5px]
                     priority: 1
@@ -380,7 +383,7 @@ layers:
         major_road:
             filter: { kind: major_road }
             draw:
-                text:
+                textinlay:
                     interactive: true
                     visible: true
                     priority: 3
@@ -404,7 +407,7 @@ layers:
                 # this function matches the "cities" sublayer
                 #- function() {return (feature.scalerank * .75) <= ($zoom - 4); }
         draw:
-            text:
+            textinlay:
                 interactive: true
                 priority: 5
                 font:

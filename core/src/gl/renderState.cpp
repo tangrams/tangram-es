@@ -43,6 +43,8 @@ namespace RenderState {
     void bindTexture(GLenum _target, GLuint _textureId) { glBindTexture(_target, _textureId); }
 
     void configure() {
+        unsigned int max = std::numeric_limits<unsigned int>::max();
+
         blending.init(GL_FALSE);
         blendingFunc.init(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
         culling.init(GL_TRUE);
@@ -50,19 +52,19 @@ namespace RenderState {
         frontFace.init(GL_CCW);
         depthTest.init(GL_TRUE);
         depthWrite.init(GL_TRUE);
+        stencilTest.init(GL_FALSE);
 
-        glDisable(GL_STENCIL_TEST);
+        clearColor.init(0.0, 0.0, 0.0, 0.0);
+        shaderProgram.init(max, false);
+        vertexBuffer.init(max, false);
+        indexBuffer.init(max, false);
+        texture.init(GL_TEXTURE_2D, max, false);
+        texture.init(GL_TEXTURE_CUBE_MAP, max, false);
+        textureUnit.init(max, false);
+
         glDepthFunc(GL_LEQUAL);
         glClearDepthf(1.0);
         glDepthRangef(0.0, 1.0);
-
-        clearColor.init(0.0, 0.0, 0.0, 0.0);
-        shaderProgram.init(std::numeric_limits<unsigned int>::max(), false);
-        vertexBuffer.init(std::numeric_limits<unsigned int>::max(), false);
-        indexBuffer.init(std::numeric_limits<unsigned int>::max(), false);
-        texture.init(GL_TEXTURE_2D, std::numeric_limits<unsigned int>::max(), false);
-        texture.init(GL_TEXTURE_CUBE_MAP, std::numeric_limits<unsigned int>::max(), false);
-        textureUnit.init(std::numeric_limits<unsigned int>::max(), false);
     }
 
 }
