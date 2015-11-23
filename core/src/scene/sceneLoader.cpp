@@ -781,7 +781,7 @@ bool SceneLoader::loadStyle(const std::string& styleName, Node styles, Scene& sc
     if (baseStyle == "polygons") {
         style = std::make_unique<PolygonStyle>(styleName);
         // create corresponding stencil style
-        stencilStyle = std::make_unique<PolygonStyle>(styleName + "_stencil");
+        stencilStyle = std::make_unique<StencilPolygonStyle>(styleName + "_stencil");
         style->setStyleDependency(stencilStyle->getName());
     } else if (baseStyle == "lines") {
         style = std::make_unique<PolylineStyle>(styleName);
