@@ -53,10 +53,6 @@ class FontFileParser {
 
                         String key = name + "_" + weightStr + "_" + styleStr;
                         fontDict.put(key, fullFilename);
-
-                        styleStr = Character.toUpperCase(styleStr.charAt(0)) + styleStr.substring(1);
-                        key = name + "_" + weightStr + "_" + styleStr;
-                        fontDict.put(key, fullFilename);
                     } else {
                         skip(parser);
                     }
