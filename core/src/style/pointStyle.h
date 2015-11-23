@@ -33,6 +33,8 @@ protected:
     virtual void buildPolygon(const Polygon& _polygon, const DrawRule& _rule, const Properties& _props, VboMesh& _mesh, Tile& _tile) const override;
     virtual bool checkRule(const DrawRule& _rule) const override;
 
+    virtual bool noDepth() const override { return true; }
+
     void pushQuad(std::vector<Label::Vertex>& _vertices, const glm::vec2& _size, const glm::vec2& _uvBL,
             const glm::vec2& _uvTR, unsigned int _color, float _extrudeScale) const;
     bool getUVQuad(Parameters& _params, glm::vec4& _quad) const;

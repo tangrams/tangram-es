@@ -218,11 +218,13 @@ void Style::onBeginDrawFrame(const View& _view, Scene& _scene, int _textureUnit)
             RenderState::depthWrite(GL_FALSE);
             break;
         case Blending::inlay:
-            // TODO: inlay does not behave correctly for labels because they don't have a z position
-            RenderState::blending(GL_TRUE);
-            RenderState::blendingFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
-            RenderState::depthTest(GL_TRUE);
-            RenderState::depthWrite(GL_FALSE);
+            if (noDepth()) {
+            } else {
+                RenderState::blending(GL_TRUE);
+                RenderState::blendingFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+                RenderState::depthTest(GL_TRUE);
+                RenderState::depthWrite(GL_FALSE);
+            }
             break;
         default:
             break;

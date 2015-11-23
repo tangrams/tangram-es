@@ -106,6 +106,8 @@ protected:
        and bind textures starting at @_textureUnit */
     void setupShaderUniforms(int _textureUnit, bool _updateUniforms, Scene& _scene);
 
+    virtual bool noDepth() const { return false; }
+
 private:
 
     /* Whether the context has been lost on last frame */
