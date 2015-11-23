@@ -14,6 +14,7 @@
 #include "style/debugStyle.h"
 #include "style/debugTextStyle.h"
 #include "style/pointStyle.h"
+#include "style/stencilPolygonStyle.h"
 #include "scene/dataLayer.h"
 #include "scene/filters.h"
 #include "scene/sceneLayer.h"
@@ -61,6 +62,7 @@ bool SceneLoader::loadScene(Node& config, Scene& _scene) {
     _scene.styles().emplace_back(new DebugTextStyle(_scene.fontContext(), 0, "debugtext", 30.0f, true, false));
     _scene.styles().emplace_back(new DebugStyle("debug"));
     _scene.styles().emplace_back(new PointStyle("points"));
+    _scene.styles().emplace_back(new StencilPolygonStyle("stencilPolygons"));
 
     if (Node sources = config["sources"]) {
         for (const auto& source : sources) {
