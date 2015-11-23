@@ -228,12 +228,14 @@ void Style::onBeginDrawFrame(const View& _view, Scene& _scene, int _textureUnit)
         case Blending::inlay:
             RenderState::blending(GL_TRUE);
             RenderState::blendingFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
-            RenderState::depthTest(GL_TRUE);
 
             if (noDepth()) {
+                RenderState::depthWrite(GL_FALSE);
+                RenderState::depthTest(GL_FALSE);
                 RenderState::stencilTest(GL_TRUE);
                 RenderState::stencilFunc(GL_NOTEQUAL, 1, 0xFF);
             } else {
+                RenderState::depthTest(GL_TRUE);
                 RenderState::depthWrite(GL_FALSE);
                 RenderState::stencilTest(GL_FALSE);
             }

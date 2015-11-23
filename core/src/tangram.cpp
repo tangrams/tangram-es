@@ -181,19 +181,20 @@ void update(float _dt) {
 }
 
 void render() {
+
+    /// Setup rendering for stencil dependent styles
+
+    // Enable stencil buffer target
+    RenderState::stencilTest(GL_TRUE);
+    RenderState::stencilFunc(GL_ALWAYS, 1, 0xFF);
+    RenderState::stencilOp(GL_KEEP, GL_KEEP, GL_REPLACE);
+    RenderState::stencilWrite(0xFF);
+    RenderState::depthWrite(GL_FALSE);
+    RenderState::depthTest(GL_FALSE);
+    glClear(GL_STENCIL_BUFFER_BIT);
+
     {
         std::lock_guard<std::mutex> lock(m_tilesMutex);
-
-        /// Setup rendering for stencil dependent styles
-
-        // Enable stencil buffer target
-        RenderState::stencilTest(GL_TRUE);
-        RenderState::stencilFunc(GL_ALWAYS, 1, 0xFF);
-        RenderState::stencilOp(GL_KEEP, GL_KEEP, GL_REPLACE);
-        RenderState::stencilWrite(0xFF);
-        RenderState::depthWrite(GL_FALSE);
-        RenderState::depthTest(GL_FALSE);
-        glClear(GL_STENCIL_BUFFER_BIT);
 
         for (const auto& style : m_scene->styles()) {
             auto stencilStyle = dynamic_cast<StencilPolygonStyle*>(style.get());
@@ -206,13 +207,17 @@ void render() {
                 tile->draw(*style, *m_view);
             }
         }
+    }
 
-        /// Set up openGL for new frame
+    /// Set up openGL for new frame
 
-        RenderState::depthWrite(GL_TRUE);
-        auto& color = m_scene->background();
-        RenderState::clearColor(color.r / 255.f, color.g / 255.f, color.b / 255.f, color.a / 255.f);
-        glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+    RenderState::depthWrite(GL_TRUE);
+    auto& color = m_scene->background();
+    RenderState::clearColor(color.r / 255.f, color.g / 255.f, color.b / 255.f, color.a / 255.f);
+    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+
+    {
+        std::lock_guard<std::mutex> lock(m_tilesMutex);
 
         // Loop over all styles
         for (const auto& style : m_scene->styles()) {
