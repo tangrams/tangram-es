@@ -56,13 +56,16 @@ bool SceneLoader::loadScene(const std::string& _sceneString, Scene& _scene) {
 bool SceneLoader::loadScene(Node& config, Scene& _scene) {
 
     // Instantiate built-in styles
-    _scene.styles().emplace_back(new PolygonStyle("polygons"));
     _scene.styles().emplace_back(new PolylineStyle("lines"));
     _scene.styles().emplace_back(new TextStyle("text", _scene.fontContext(), true, false));
     _scene.styles().emplace_back(new DebugTextStyle(_scene.fontContext(), 0, "debugtext", 30.0f, true, false));
     _scene.styles().emplace_back(new DebugStyle("debug"));
     _scene.styles().emplace_back(new PointStyle("points"));
     _scene.styles().emplace_back(new StencilPolygonStyle("stencilPolygons"));
+
+    std::unique_ptr<PolygonStyle> polygon = std::make_unique<PolygonStyle>("polygons");
+    polygon->setStyleDependency("stencilPolygons");
+    _scene.styles().push_back(std::move(polygon));
 
     if (Node sources = config["sources"]) {
         for (const auto& source : sources) {
@@ -779,6 +782,7 @@ bool SceneLoader::loadStyle(const std::string& styleName, Node styles, Scene& sc
         style = std::make_unique<PolygonStyle>(styleName);
         // create corresponding stencil style
         stencilStyle = std::make_unique<PolygonStyle>(styleName + "_stencil");
+        style->setStyleDependency(stencilStyle->getName());
     } else if (baseStyle == "lines") {
         style = std::make_unique<PolylineStyle>(styleName);
     } else if (baseStyle == "text") {

@@ -111,6 +111,7 @@ private:
     /* Whether the context has been lost on last frame */
     bool m_contextLost;
     std::vector<StyleUniform> m_styleUniforms;
+    std::string m_styleDependency = "";
 
 public:
 
@@ -123,6 +124,12 @@ public:
     void viewportHasChanged() { m_dirtyViewport = true; }
 
     Blending blendMode() const { return m_blend; };
+
+    void setStyleDependency(std::string _dependency) { m_styleDependency = _dependency; }
+
+    std::string getStyleDependency() const { return m_styleDependency; }
+
+    bool hasStyleDependency() const { return m_styleDependency != ""; }
 
     void setBlendMode(Blending _blendMode) { m_blend = _blendMode; }
 

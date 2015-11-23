@@ -6,6 +6,7 @@
 #include "scene/skybox.h"
 #include "style/material.h"
 #include "style/style.h"
+#include "style/stencilPolygonStyle.h"
 #include "labels/labels.h"
 #include "tile/tileManager.h"
 #include "tile/tile.h"
@@ -82,6 +83,9 @@ void initialize(const char* _scenePath) {
     LOG("Scene styles:");
     for (const auto& style : m_scene->styles()) {
         LOG("\t - %s", style->getName().c_str());
+        if (style->hasStyleDependency()) {
+            LOG("\t\t - Dependency: %s", style->getStyleDependency().c_str());
+        }
     }
 
     glm::dvec2 projPos = m_view->getMapProjection().LonLatToMeters(m_scene->startPosition);
@@ -186,6 +190,14 @@ void render() {
 
     {
         std::lock_guard<std::mutex> lock(m_tilesMutex);
+
+        for (const auto& style : m_scene->styles()) {
+            auto stencilStyle = dynamic_cast<StencilPolygonStyle*>(style.get());
+            if (!stencilStyle) { continue; }
+            for (const auto& tile : m_tileManager->getVisibleTiles()) {
+                tile->draw(*style, *m_view);
+            }
+        }
 
         // Loop over all styles
         for (const auto& style : m_scene->styles()) {
