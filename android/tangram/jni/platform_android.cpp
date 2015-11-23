@@ -120,8 +120,6 @@ std::string systemFontPath(const std::string& _family, const std::string& _weigh
     JniThreadBinding jniEnv(jvm);
 
     std::string key = _family + "_" + _weight + "_" + _style;
-    std::transform(key.begin(), key.end(), key.begin(), ::tolower);
-
 
     jstring jkey = jniEnv->NewStringUTF(key.c_str());
     jstring returnStr = (jstring) jniEnv->CallObjectMethod(tangramInstance, getFontFilePath, jkey);

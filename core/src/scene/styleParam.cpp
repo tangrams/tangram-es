@@ -148,11 +148,15 @@ StyleParam::Value StyleParam::parseString(StyleParamKey key, const std::string& 
         }
         return time;
     }
-    case StyleParamKey::align:
-    case StyleParamKey::anchor:
     case StyleParamKey::font_family:
     case StyleParamKey::font_weight:
-    case StyleParamKey::font_style:
+    case StyleParamKey::font_style: {
+        std::string normalized = _value;
+        std::transform(normalized.begin(), normalized.end(), normalized.begin(), ::tolower);
+        return normalized;
+    }
+    case StyleParamKey::align:
+    case StyleParamKey::anchor:
     case StyleParamKey::text_source:
     case StyleParamKey::transform:
     case StyleParamKey::sprite:
