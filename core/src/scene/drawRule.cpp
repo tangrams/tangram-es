@@ -13,6 +13,10 @@
 
 namespace Tangram {
 
+DrawRule::DrawRule(const StaticDrawRule& _rule) :
+    name(&_rule.name),
+    id(_rule.id) {}
+
 const StyleParam& DrawRule::findParameter(StyleParamKey _key) const {
     static const StyleParam NONE;
 
@@ -34,7 +38,7 @@ const std::string& DrawRule::getStyleName() const {
     if (style) {
         return style.value.get<std::string>();
     } else {
-        return styleName;
+        return *name;
     }
 }
 
@@ -45,8 +49,8 @@ void DrawRule::logGetError(StyleParamKey _expectedKey, const StyleParam& _param)
 bool Styling::match(const Feature& _feature, const SceneLayer& _layer, StyleContext& _ctx) {
 
     _ctx.setFeature(_feature);
-    styles.clear();
-    processQ.clear();
+    matchedRules.clear();
+    queuedLayers.clear();
 
     // Match layers
     if (!_layer.filter().eval(_feature, _ctx)) { return false; }
@@ -54,22 +58,20 @@ bool Styling::match(const Feature& _feature, const SceneLayer& _layer, StyleCont
     // Add initial drawrules
     mergeRules(_layer.rules());
 
-    for (auto it = _layer.sublayers().begin();
-         it != _layer.sublayers().end(); ++it) {
-        processQ.push_back(it);
+    const auto& sublayers = _layer.sublayers();
+    for (auto it = sublayers.begin(); it != sublayers.end(); ++it) {
+        queuedLayers.push_back(it);
     }
 
-    while (!processQ.empty()) {
-        const auto& layer = *processQ.front();
-        processQ.pop_front();
+    while (!queuedLayers.empty()) {
+        const auto& layer = *queuedLayers.front();
+        queuedLayers.pop_front();
 
-        if (!layer.filter().eval(_feature, _ctx)) {
-            continue;
-        }
+        if (!layer.filter().eval(_feature, _ctx)) { continue; }
 
-        const auto& subLayers = layer.sublayers();
-        for (auto it = subLayers.begin(); it != subLayers.end(); ++it) {
-            processQ.push_back(it);
+        const auto& sublayers = layer.sublayers();
+        for (auto it = sublayers.begin(); it != sublayers.end(); ++it) {
+            queuedLayers.push_back(it);
         }
         // override with sublayer drawrules
         mergeRules(layer.rules());
@@ -83,14 +85,11 @@ void Styling::apply(const Feature& _feature, const Scene& _scene, const SceneLay
     if (!match(_feature, _layer, _ctx)) { return; }
 
     // Apply styles
-    for (auto& rule : styles) {
+    for (auto& rule : matchedRules) {
 
-        auto& styleName = rule.getStyleName();
-        int styleId = styleName.empty()
-            ? rule.styleId
-            : _scene.getStyleId(styleName);
+        auto* style = _scene.findStyle(rule.getStyleName());
 
-        if (styleId < 0){
+        if (!style) {
             LOGE("Invalid style %s", rule.getStyleName().c_str());
             continue;
         }
@@ -124,7 +123,6 @@ void Styling::apply(const Feature& _feature, const Scene& _scene, const SceneLay
         }
 
         if (valid) {
-            auto& style = _scene.styles()[styleId];
             style->buildFeature(_tile, _feature, rule);
         }
     }
@@ -133,14 +131,11 @@ void Styling::apply(const Feature& _feature, const Scene& _scene, const SceneLay
 void Styling::mergeRules(const std::vector<StaticDrawRule>& rules) {
     for (auto& rule : rules) {
 
-        auto it = std::find_if(styles.begin(), styles.end(), [&](auto& m) {
-                return rule.styleId == m.styleId; });
+        auto it = std::find_if(matchedRules.begin(), matchedRules.end(),
+                               [&](auto& m) { return rule.id == m.id; });
 
-        if (it == styles.end()) {
-            styles.emplace_back();
-            it = styles.end()-1;
-            it->styleId = rule.styleId;
-            it->styleName = rule.styleName;
+        if (it == matchedRules.end()) {
+            it = matchedRules.insert(it, DrawRule(rule));
         }
 
         for (auto& param : rule.parameters) {

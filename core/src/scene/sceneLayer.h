@@ -14,17 +14,17 @@ namespace Tangram {
 struct Feature;
 
 struct StaticDrawRule {
-    std::string styleName;
-    int styleId;
+    std::string name;
+    int id;
     std::vector<StyleParam> parameters;
 
-    StaticDrawRule(std::string _styleName, int _styleId,
+    StaticDrawRule(std::string _name, int _id,
                    const std::vector<StyleParam>& _parameters);
 
     std::string toString() const;
 
     bool operator<(const StaticDrawRule& _rhs) const {
-        return styleId < _rhs.styleId;
+        return id < _rhs.id;
     }
 };
 

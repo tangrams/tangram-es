@@ -52,11 +52,11 @@ public:
     const auto& mapProjection() const { return m_mapProjection; };
     const auto& fontContext() const { return m_fontContext; }
 
-    const Style* findStyle(int _name) const;
+    const Style* findStyle(const std::string& _name) const;
     const Light* findLight(const std::string& _name) const;
-    int getStyleId(const std::string& _name) const;
-    int addStyleNameId(const std::string& _name);
-    int getStyleNameId(const std::string& _name) const;
+
+    int addIdForName(const std::string& _name);
+    int getIdForName(const std::string& _name) const;
 
     const int32_t id;
 
@@ -74,7 +74,11 @@ private:
     std::vector<std::unique_ptr<Light>> m_lights;
     std::unordered_map<std::string, std::shared_ptr<Texture>> m_textures;
     std::unordered_map<std::string, std::shared_ptr<SpriteAtlas>> m_spriteAtlases;
-    std::vector<std::string> m_styleNames;
+
+    // Container of all strings used in styling rules; these need to be
+    // copied and compared frequently when applying styling, so rules use
+    // integer indices into this container to represent strings
+    std::vector<std::string> m_names;
 
     std::vector<std::string> m_jsFunctions;
     std::list<Stops> m_stops;

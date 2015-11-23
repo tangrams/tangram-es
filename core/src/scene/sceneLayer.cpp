@@ -16,10 +16,10 @@ SceneLayer::SceneLayer(std::string _name, Filter _filter,
     std::sort(m_rules.begin(), m_rules.end());
 }
 
-StaticDrawRule::StaticDrawRule(std::string _styleName, int _styleId,
+StaticDrawRule::StaticDrawRule(std::string _name, int _id,
                                const std::vector<StyleParam>& _parameters)
-    : styleName(std::move(_styleName)),
-      styleId(_styleId),
+    : name(std::move(_name)),
+      id(_id),
       parameters(_parameters) {
 }
 

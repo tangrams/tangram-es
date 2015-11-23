@@ -17,14 +17,19 @@ struct StaticDrawRule;
 
 struct DrawRule {
 
+    DrawRule(const StaticDrawRule& _rule);
+
     // Reference to original StyleParams
-    const StyleParam* params[StyleParamKeySize];
+    const StyleParam* params[StyleParamKeySize] = { nullptr };
 
     // Evaluated params for stops and functions
     StyleParam evaluated[StyleParamKeySize];
 
-    std::string styleName;
-    int styleId;
+    // Name of the stylesheet node defining this rule
+    const std::string* name;
+
+    // An identifier of the rule's name within the scene's name index
+    int id;
 
     bool isJSFunction(StyleParamKey _key) const {
         auto& param = findParameter(_key);
@@ -73,13 +78,13 @@ struct Styling {
     // internal
     void mergeRules(const std::vector<StaticDrawRule>& rules);
 
-    // Reusable 'styles' and 'processQ'
-    std::vector<DrawRule> styles;
+    // Reusable containers 'matchedRules' and 'queuedLayers'
+    std::vector<DrawRule> matchedRules;
     // NB: Minimal memory usage of deque:
     // http://info.prelert.com/blog/stl-container-memory-usage
     // libdc++   4096 + 8 bytes heap
     // libstdc++ 512 + 64 bytes heap
-    std::deque<std::vector<SceneLayer>::const_iterator> processQ;
+    std::deque<std::vector<SceneLayer>::const_iterator> queuedLayers;
 
 };
 

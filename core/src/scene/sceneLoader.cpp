@@ -1315,20 +1315,13 @@ SceneLayer SceneLoader::loadSublayer(Node layer, const std::string& name, Scene&
         } else if (key == "draw") {
             // Member is a mapping of draw rules
             for (auto& ruleNode : member.second) {
-                auto name = ruleNode.first.as<std::string>();
-                auto explicitStyle = ruleNode.second["style"];
-                auto style = explicitStyle
-                    ? explicitStyle.as<std::string>()
-                    : name;
 
-                int styleId = scene.getStyleId(style);
-                if (styleId < 0) {
-                    LOGE("TODO Invalid style reference! %s", style.c_str());
-                    continue;
-                }
                 std::vector<StyleParam> params;
                 parseStyleParams(ruleNode.second, scene, "", params);
-                int nameId = scene.addStyleNameId(name);
+
+                auto name = ruleNode.first.as<std::string>();
+                int nameId = scene.addIdForName(name);
+
                 rules.push_back({ name, nameId, std::move(params) });
             }
         } else if (key == "filter") {

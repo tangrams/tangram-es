@@ -29,33 +29,31 @@ Scene::Scene() : id(s_serial++) {
 
 Scene::~Scene() {}
 
-const Style* Scene::findStyle(int _name) const {
-    return  m_styles[_name].get();
-}
+const Style* Scene::findStyle(const std::string& _name) const {
 
-int Scene::getStyleId(const std::string& _name) const {
     for (auto& style : m_styles) {
-         if (style->getName() == _name) { return style->getID(); }
+        if (style->getName() == _name) { return style.get(); }
     }
-    return -1;
+    return nullptr;
+
 }
 
-int Scene::addStyleNameId(const std::string& _name) {
-    int id = getStyleNameId(_name);
+int Scene::addIdForName(const std::string& _name) {
+    int id = getIdForName(_name);
 
     if (id < 0) {
-        m_styleNames.push_back(_name);
-        return m_styleNames.size()-1;
+        m_names.push_back(_name);
+        return m_names.size() - 1;
     }
     return id;
 }
 
-int Scene::getStyleNameId(const std::string& _name) const {
-    auto it = std::find(m_styleNames.begin(), m_styleNames.end(), _name);
-    if (it == m_styleNames.end()) {
+int Scene::getIdForName(const std::string& _name) const {
+    auto it = std::find(m_names.begin(), m_names.end(), _name);
+    if (it == m_names.end()) {
         return -1;
     }
-    return it - m_styleNames.begin();
+    return it - m_names.begin();
 }
 
 const Light* Scene::findLight(const std::string &_name) const {
