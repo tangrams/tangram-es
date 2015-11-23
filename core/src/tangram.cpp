@@ -79,6 +79,11 @@ void initialize(const char* _scenePath) {
 
     loadScene(_scenePath, true);
 
+    LOG("Scene styles:");
+    for (const auto& style : m_scene->styles()) {
+        LOG("\t - %s", style->getName().c_str());
+    }
+
     glm::dvec2 projPos = m_view->getMapProjection().LonLatToMeters(m_scene->startPosition);
     m_view->setPosition(projPos.x, projPos.y);
     m_view->setZoom(m_scene->startZoom);

@@ -773,9 +773,12 @@ bool SceneLoader::loadStyle(const std::string& styleName, Node styles, Scene& sc
 
     // Construct style instance using the merged properties
     std::unique_ptr<Style> style;
+    std::unique_ptr<Style> stencilStyle;
     std::string baseStyle = baseNode.as<std::string>();
     if (baseStyle == "polygons") {
         style = std::make_unique<PolygonStyle>(styleName);
+        // create corresponding stencil style
+        stencilStyle = std::make_unique<PolygonStyle>(styleName + "_stencil");
     } else if (baseStyle == "lines") {
         style = std::make_unique<PolylineStyle>(styleName);
     } else if (baseStyle == "text") {
@@ -790,6 +793,10 @@ bool SceneLoader::loadStyle(const std::string& styleName, Node styles, Scene& sc
     loadStyleProps(*style.get(), styleNode, scene);
 
     scene.styles().push_back(std::move(style));
+
+    if (stencilStyle) {
+        scene.styles().push_back(std::move(stencilStyle));
+    }
 
     return true;
 }
