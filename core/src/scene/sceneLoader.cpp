@@ -1182,8 +1182,10 @@ void SceneLoader::parseStyleParams(Node params, Scene& scene, const std::string&
                         scene.stops().push_back(Stops::Widths(value, *scene.mapProjection()));
                         out.push_back(StyleParam{ styleKey, &(scene.stops().back()) });
 
-                    } else {
-                        // TODO other stops
+                    } else if (StyleParam::isFontSize(styleKey)){
+                        scene.stops().push_back(Stops::FontSize(value));
+                        out.push_back(StyleParam{ styleKey, &(scene.stops().back()) });
+
                     }
                 } else {
                     LOGW("Unknown style parameter %s", key.c_str());

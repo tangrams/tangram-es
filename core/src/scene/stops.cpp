@@ -44,6 +44,36 @@ double widthMeterToPixel(float _zoom, double _tileSize, double _width) {
     return _width * meterRes;
 }
 
+auto Stops::FontSize(const YAML::Node& _node) -> Stops {
+    Stops stops;
+
+    if (!_node.IsSequence()) {
+        return stops;
+    }
+
+    float lastKey = 0;
+    for (const auto& frameNode : _node) {
+        if (!frameNode.IsSequence() || frameNode.size() != 2) { continue; }
+        float key = frameNode[0].as<float>();
+
+        if (lastKey > key) {
+            LOGW("Invalid stop order: key %f > %f\n", lastKey, key);
+            continue;
+        }
+
+        lastKey = key;
+        float pixelSize;
+
+        if (StyleParam::parseFontSize(frameNode[1].Scalar(), pixelSize)) {
+            stops.frames.emplace_back(key, pixelSize);
+        } else {
+            LOGW("Error while parsing font size stops: %f %s", key, Dump(frameNode[1]).c_str());
+        }
+    }
+
+    return stops;
+}
+
 auto Stops::Widths(const YAML::Node& _node, const MapProjection& _projection) -> Stops {
     Stops stops;
     if (!_node.IsSequence()) { return stops; }
@@ -59,7 +89,7 @@ auto Stops::Widths(const YAML::Node& _node, const MapProjection& _projection) ->
         float key = frameNode[0].as<float>();
 
         if (lastKey > key) {
-            logMsg("Invalid stop order: key %f > %f\n", lastKey, key);
+            LOGW("Invalid stop order: key %f > %f\n", lastKey, key);
             continue;
         }
         lastKey = key;
@@ -81,7 +111,7 @@ auto Stops::Widths(const YAML::Node& _node, const MapProjection& _projection) ->
                 lastIsMeter = false;
             }
         } else {
-            logMsg("could not parse node %s\n", Dump(frameNode[1]).c_str());
+            LOGW("could not parse node %s\n", Dump(frameNode[1]).c_str());
         }
     }
     // Append stop at max-zoom to continue scaling after the last stop

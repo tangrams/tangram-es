@@ -27,6 +27,7 @@ struct Stops {
     std::vector<Frame> frames;
     static Stops Colors(const YAML::Node& _node);
     static Stops Widths(const YAML::Node& _node, const MapProjection& _projection);
+    static Stops FontSize(const YAML::Node& _node);
 
     Stops(const std::vector<Frame>& _frames) : frames(_frames) {}
     Stops() {}
