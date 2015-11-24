@@ -45,9 +45,6 @@ struct DrawRuleData {
 
     std::string toString() const;
 
-    bool operator<(const DrawRuleData& _rhs) const {
-        return id < _rhs.id;
-    }
 };
 
 struct DrawRule {

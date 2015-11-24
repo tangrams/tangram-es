@@ -12,8 +12,6 @@ SceneLayer::SceneLayer(std::string _name, Filter _filter,
     m_rules(_rules),
     m_sublayers(_sublayers) {
 
-    // Rules must be sorted to merge correctly - not anymore
-    std::sort(m_rules.begin(), m_rules.end());
 }
 
 }
