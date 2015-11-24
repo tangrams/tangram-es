@@ -57,8 +57,8 @@ TEST_CASE("DrawRule correctly merges with another DrawRule", "[DrawRule]") {
         Styling styling;
         styling.mergeRules(rule_a);
 
-        REQUIRE(styling.styles.size() == 1);
-        auto& merged_ab = styling.styles[0];
+        REQUIRE(styling.matchedRules.size() == 1);
+        auto& merged_ab = styling.matchedRules[0];
 
         for (int i = 0; i < StyleParamKeySize; i++) {
             auto* param = merged_ab.params[i];
@@ -71,7 +71,7 @@ TEST_CASE("DrawRule correctly merges with another DrawRule", "[DrawRule]") {
 
         styling.mergeRules(rule_b);
 
-        REQUIRE(styling.styles.size() == 1);
+        REQUIRE(styling.matchedRules.size() == 1);
 
         // printf("rule_a:\n %s", rule_a.toString().c_str());
         // printf("rule_c:\n %s", rule_c.toString().c_str());
@@ -106,7 +106,7 @@ TEST_CASE("DrawRule correctly merges with another DrawRule", "[DrawRule]") {
         styling.mergeRules(rule_b);
         styling.mergeRules(rule_a);
 
-        auto& merged_ba = styling.styles[0];
+        auto& merged_ba = styling.matchedRules[0];
 
         REQUIRE(merged_ba.params[static_cast<uint8_t>(StyleParamKey::cap)]->key == StyleParamKey::cap);
         REQUIRE(merged_ba.params[static_cast<uint8_t>(StyleParamKey::cap)]->value.get<std::string>() == "value_3b");
@@ -130,7 +130,7 @@ TEST_CASE("DrawRule correctly merges with another DrawRule", "[DrawRule]") {
         styling.mergeRules(rule_c);
         styling.mergeRules(rule_b);
 
-        auto& merged_bc = styling.styles[0];
+        auto& merged_bc = styling.matchedRules[0];
 
         // for (size_t i = 0; i < StyleParamKeySize; i++) {
         //     auto* param = merged_bc.params[i];
@@ -155,7 +155,7 @@ TEST_CASE("DrawRule locates and outputs a parameter that it contains", "[DrawRul
 
     Styling a;
     a.mergeRules(srule_a);
-    auto& rule_a = a.styles[0];
+    auto& rule_a = a.matchedRules[0];
 
     REQUIRE(rule_a.get(StyleParamKey::order, str)); REQUIRE(str == "value_0a");
     REQUIRE(rule_a.get(StyleParamKey::color, str)); REQUIRE(str == "value_1a");
@@ -163,7 +163,7 @@ TEST_CASE("DrawRule locates and outputs a parameter that it contains", "[DrawRul
 
     Styling b;
     b.mergeRules(srule_b);
-    auto& rule_b = b.styles[0];
+    auto& rule_b = b.matchedRules[0];
 
     REQUIRE(rule_b.get(StyleParamKey::color, str)); REQUIRE(str == "value_1b");
     REQUIRE(rule_b.get(StyleParamKey::width, str)); REQUIRE(str == "value_2b");
@@ -177,18 +177,18 @@ TEST_CASE("DrawRule correctly reports that it doesn't contain a parameter", "[Dr
     const std::vector<StaticDrawRule> srule_a{instance_a()};
     Styling a;
     a.mergeRules(srule_a);
-    REQUIRE(!a.styles[0].get(StyleParamKey::width, str)); REQUIRE(str == "");
+    REQUIRE(!a.matchedRules[0].get(StyleParamKey::width, str)); REQUIRE(str == "");
 
 
     const std::vector<StaticDrawRule> srule_b{instance_b()};
     Styling b;
     b.mergeRules(srule_b);
-    REQUIRE(!b.styles[0].get(StyleParamKey::join, str)); REQUIRE(str == "");
+    REQUIRE(!b.matchedRules[0].get(StyleParamKey::join, str)); REQUIRE(str == "");
 
     const std::vector<StaticDrawRule> srule_c{instance_c()};
     Styling c;
     c.mergeRules(srule_c);
-    REQUIRE(!c.styles[0].get(StyleParamKey::order, str)); REQUIRE(str == "");
+    REQUIRE(!c.matchedRules[0].get(StyleParamKey::order, str)); REQUIRE(str == "");
 
 
 }

@@ -153,7 +153,7 @@ TEST_CASE("SceneLayer matches correct rules for a feature and context", "[SceneL
         auto layer_a = instance_a();
 
         styling.match(feat, layer_a, ctx);
-        auto& matches_a = styling.styles;
+        auto& matches_a = styling.matchedRules;
 
         REQUIRE(matches_a.size() == 1);
         REQUIRE(matches_a[0].getStyleName() == "dg0");
@@ -164,7 +164,7 @@ TEST_CASE("SceneLayer matches correct rules for a feature and context", "[SceneL
         auto layer_b = instance_b();
 
         styling.match(feat, layer_b, ctx);
-        auto& matches_b = styling.styles;
+        auto& matches_b = styling.matchedRules;
 
         REQUIRE(matches_b.size() == 0);
     }
@@ -182,7 +182,7 @@ TEST_CASE("SceneLayer matches correct sublayer rules for a feature and context",
 
     std::vector<DrawRule> matches;
     layer_c.match(feat, ctx, styling);
-    auto& matches = styling.styles;
+    auto& matches = styling.matchedRules;
 
     REQUIRE(matches.size() == 2);
 
