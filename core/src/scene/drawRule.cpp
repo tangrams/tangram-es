@@ -37,6 +37,12 @@ DrawRule::DrawRule(const DrawRuleData& _ruleData) :
     name(&_ruleData.name),
     id(_ruleData.id) {}
 
+void DrawRule::merge(const DrawRuleData& _ruleData) {
+    for (auto& param : _ruleData.parameters) {
+        params[static_cast<uint8_t>(param.key)] = &param;
+    }
+}
+
 bool DrawRule::isJSFunction(StyleParamKey _key) const {
     auto& param = findParameter(_key);
     if (!param) {
@@ -170,9 +176,7 @@ void Styling::mergeRules(const std::vector<DrawRuleData>& rules) {
             it = matchedRules.insert(it, DrawRule(rule));
         }
 
-        for (auto& param : rule.parameters) {
-            it->params[static_cast<uint8_t>(param.key)] = &param;
-        }
+        it->merge(rule);
     }
 }
 

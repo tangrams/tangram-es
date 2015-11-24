@@ -49,8 +49,6 @@ struct DrawRuleData {
 
 struct DrawRule {
 
-    DrawRule(const DrawRuleData& _ruleData);
-
     const StyleParam* params[StyleParamKeySize] = { nullptr };
 
     StyleParam evaluated[StyleParamKeySize];
@@ -58,6 +56,10 @@ struct DrawRule {
     const std::string* name = nullptr;
 
     int id;
+
+    DrawRule(const DrawRuleData& _ruleData);
+
+    void merge(const DrawRuleData& _ruleData);
 
     bool isJSFunction(StyleParamKey _key) const;
 
