@@ -13,7 +13,7 @@ using namespace Tangram;
 const int dg1 = 0;
 const int dg2 = 1;
 
-StaticDrawRule instance_a() {
+DrawRuleData instance_a() {
 
     std::vector<StyleParam> params = {
         { StyleParamKey::order, "value_0a" },
@@ -25,7 +25,7 @@ StaticDrawRule instance_a() {
 
 }
 
-StaticDrawRule instance_b() {
+DrawRuleData instance_b() {
 
     std::vector<StyleParam> params = {
         { StyleParamKey::order, "value_0b" },
@@ -39,7 +39,7 @@ StaticDrawRule instance_b() {
 
 }
 
-StaticDrawRule instance_c() {
+DrawRuleData instance_c() {
 
     std::vector<StyleParam> params = {};
 
@@ -49,9 +49,9 @@ StaticDrawRule instance_c() {
 }
 
 TEST_CASE("DrawRule correctly merges with another DrawRule", "[DrawRule]") {
-    const std::vector<StaticDrawRule> rule_a{instance_a()};
-    const std::vector<StaticDrawRule> rule_b{instance_b()};
-    const std::vector<StaticDrawRule> rule_c{instance_c()};
+    const std::vector<DrawRuleData> rule_a{instance_a()};
+    const std::vector<DrawRuleData> rule_b{instance_b()};
+    const std::vector<DrawRuleData> rule_c{instance_c()};
 
     {
         Styling styling;
@@ -150,8 +150,8 @@ TEST_CASE("DrawRule locates and outputs a parameter that it contains", "[DrawRul
 
     std::string str;
 
-    const std::vector<StaticDrawRule> srule_a{instance_a()};
-    const std::vector<StaticDrawRule> srule_b{instance_b()};
+    const std::vector<DrawRuleData> srule_a{instance_a()};
+    const std::vector<DrawRuleData> srule_b{instance_b()};
 
     Styling a;
     a.mergeRules(srule_a);
@@ -174,18 +174,18 @@ TEST_CASE("DrawRule locates and outputs a parameter that it contains", "[DrawRul
 TEST_CASE("DrawRule correctly reports that it doesn't contain a parameter", "[DrawRule]") {
     std::string str;
 
-    const std::vector<StaticDrawRule> srule_a{instance_a()};
+    const std::vector<DrawRuleData> srule_a{instance_a()};
     Styling a;
     a.mergeRules(srule_a);
     REQUIRE(!a.matchedRules[0].get(StyleParamKey::width, str)); REQUIRE(str == "");
 
 
-    const std::vector<StaticDrawRule> srule_b{instance_b()};
+    const std::vector<DrawRuleData> srule_b{instance_b()};
     Styling b;
     b.mergeRules(srule_b);
     REQUIRE(!b.matchedRules[0].get(StyleParamKey::join, str)); REQUIRE(str == "");
 
-    const std::vector<StaticDrawRule> srule_c{instance_c()};
+    const std::vector<DrawRuleData> srule_c{instance_c()};
     Styling c;
     c.mergeRules(srule_c);
     REQUIRE(!c.matchedRules[0].get(StyleParamKey::order, str)); REQUIRE(str == "");
