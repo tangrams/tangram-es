@@ -5,7 +5,7 @@
 namespace Tangram {
 
 SceneLayer::SceneLayer(std::string _name, Filter _filter,
-                       std::vector<StaticDrawRule> _rules,
+                       std::vector<DrawRuleData> _rules,
                        std::vector<SceneLayer> _sublayers) :
     m_filter(_filter),
     m_name(_name),
@@ -14,27 +14,6 @@ SceneLayer::SceneLayer(std::string _name, Filter _filter,
 
     // Rules must be sorted to merge correctly - not anymore
     std::sort(m_rules.begin(), m_rules.end());
-}
-
-StaticDrawRule::StaticDrawRule(std::string _name, int _id,
-                               const std::vector<StyleParam>& _parameters)
-    : name(std::move(_name)),
-      id(_id),
-      parameters(_parameters) {
-}
-
-std::string StaticDrawRule::toString() const {
-    std::string str = "{\n";
-    for (auto& p : parameters) {
-         str += " { "
-             + std::to_string(static_cast<int>(p.key))
-             + ", "
-             + p.toString()
-             + " }\n";
-    }
-    str += "}\n";
-
-    return str;
 }
 
 }

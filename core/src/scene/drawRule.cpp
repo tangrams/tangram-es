@@ -13,9 +13,41 @@
 
 namespace Tangram {
 
-DrawRule::DrawRule(const StaticDrawRule& _rule) :
-    name(&_rule.name),
-    id(_rule.id) {}
+DrawRuleData::DrawRuleData(std::string _name, int _id,
+                               const std::vector<StyleParam>& _parameters) :
+    parameters(_parameters),
+    name(std::move(_name)),
+    id(_id) {}
+
+std::string DrawRuleData::toString() const {
+    std::string str = "{\n";
+    for (auto& p : parameters) {
+         str += " { "
+             + std::to_string(static_cast<int>(p.key))
+             + ", "
+             + p.toString()
+             + " }\n";
+    }
+    str += "}\n";
+
+    return str;
+}
+
+DrawRule::DrawRule(const DrawRuleData& _ruleData) :
+    name(&_ruleData.name),
+    id(_ruleData.id) {}
+
+bool DrawRule::isJSFunction(StyleParamKey _key) const {
+    auto& param = findParameter(_key);
+    if (!param) {
+        return false;
+    }
+    return param.function >= 0;
+}
+
+bool DrawRule::contains(StyleParamKey _key) const {
+    return findParameter(_key) != false;
+}
 
 const StyleParam& DrawRule::findParameter(StyleParamKey _key) const {
     static const StyleParam NONE;
@@ -128,7 +160,7 @@ void Styling::apply(const Feature& _feature, const Scene& _scene, const SceneLay
     }
 }
 
-void Styling::mergeRules(const std::vector<StaticDrawRule>& rules) {
+void Styling::mergeRules(const std::vector<DrawRuleData>& rules) {
     for (auto& rule : rules) {
 
         auto it = std::find_if(matchedRules.begin(), matchedRules.end(),
