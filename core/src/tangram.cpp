@@ -184,34 +184,14 @@ void render() {
 
     /// Setup rendering for stencil dependent styles
 
-    bool inlay = false;
-    for (const auto& style : m_scene->styles()) {
-        if (style->blendMode() == Blending::inlay) {
-            inlay = true;
-            break;
-        }
-    }
-
-    if (inlay) {
-        // Enable stencil buffer target
-        RenderState::stencilTest(GL_TRUE);
-        RenderState::stencilFunc(GL_ALWAYS, 1, 0xFF);
-        RenderState::stencilOp(GL_KEEP, GL_KEEP, GL_REPLACE);
+    if (m_scene->containsStyleWithBlend(Blending::inlay)) {
         RenderState::stencilWrite(0xFF);
-        RenderState::depthWrite(GL_FALSE);
-        RenderState::depthTest(GL_FALSE);
         glClear(GL_STENCIL_BUFFER_BIT);
-
         {
             std::lock_guard<std::mutex> lock(m_tilesMutex);
 
-            for (const auto& style : m_scene->styles()) {
-                auto stencilStyle = dynamic_cast<StencilPolygonStyle*>(style.get());
-
-                if (!stencilStyle) {
-                    continue;
-                }
-
+            for (const auto& style : m_scene->stencilStyles()) {
+                style->onBeginDrawFrame(*m_view, *m_scene);
                 for (const auto& tile : m_tileManager->getVisibleTiles()) {
                     tile->draw(*style, *m_view);
                 }

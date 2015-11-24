@@ -61,7 +61,7 @@ bool SceneLoader::loadScene(Node& config, Scene& _scene) {
     _scene.styles().emplace_back(new DebugTextStyle(_scene.fontContext(), 0, "debugtext", 30.0f, true, false));
     _scene.styles().emplace_back(new DebugStyle("debug"));
     _scene.styles().emplace_back(new PointStyle("points"));
-    _scene.styles().emplace_back(new StencilPolygonStyle("stencilPolygons"));
+    _scene.stencilStyles().emplace_back(new StencilPolygonStyle("stencilPolygons"));
 
     std::unique_ptr<PolygonStyle> polygon = std::make_unique<PolygonStyle>("polygons");
     polygon->setStyleDependency("stencilPolygons");
@@ -135,6 +135,10 @@ bool SceneLoader::loadScene(Node& config, Scene& _scene) {
 
     for (auto& style : _scene.styles()) {
         style->build(_scene.lights());
+    }
+
+    for (auto& style : _scene.stencilStyles()) {
+        style->build({});
     }
 
     // Styles that are opaque must be ordered first in the scene so that
@@ -799,7 +803,7 @@ bool SceneLoader::loadStyle(const std::string& styleName, Node styles, Scene& sc
     scene.styles().push_back(std::move(style));
 
     if (stencilStyle) {
-        scene.styles().push_back(std::move(stencilStyle));
+        scene.stencilStyles().push_back(std::move(stencilStyle));
     }
 
     return true;

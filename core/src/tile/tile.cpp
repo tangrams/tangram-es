@@ -92,7 +92,9 @@ void Tile::build(StyleContext& _ctx, const Scene& _scene, const TileData& _data,
 
                         if (style->hasStyleDependency()) {
                             styleDependency = _scene.findStyle(style->getStyleDependency());
-                            styleDependency->buildFeature(*this, feat, rule);
+                            if (styleDependency->shouldBuild(_scene)) {
+                                styleDependency->buildFeature(*this, feat, rule);
+                            }
                         }
                     }
                 }

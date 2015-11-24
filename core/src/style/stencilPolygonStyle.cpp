@@ -2,6 +2,7 @@
 
 #include "gl/shaderProgram.h"
 #include "gl/typedMesh.h"
+#include "scene/scene.h"
 
 #include <memory>
 
@@ -10,6 +11,10 @@ namespace Tangram {
 StencilPolygonStyle::StencilPolygonStyle(std::string _name, Blending _blendMode, GLenum _drawMode)
     : PolygonStyle(_name, _blendMode, _drawMode)
 {
+}
+
+bool StencilPolygonStyle::shouldBuild(const Scene& _scene) const {
+    return _scene.containsStyleWithBlend(Blending::inlay);
 }
 
 void StencilPolygonStyle::constructShaderProgram() {

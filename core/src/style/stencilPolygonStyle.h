@@ -12,9 +12,11 @@ protected:
 
 public:
 
-    StencilPolygonStyle(std::string _name, Blending _blendMode = Blending::none, GLenum _drawMode = GL_TRIANGLES);
+    StencilPolygonStyle(std::string _name, Blending _blendMode = Blending::stencil, GLenum _drawMode = GL_TRIANGLES);
 
     virtual ~StencilPolygonStyle() {}
+
+    virtual bool shouldBuild(const Scene& _scene) const override;
 
 };
 

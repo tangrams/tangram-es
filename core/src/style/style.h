@@ -29,6 +29,7 @@ enum class LightingType : char {
 
 enum class Blending : char {
     none,
+    stencil,
     add,
     multiply,
     overlay,
@@ -124,6 +125,9 @@ public:
     void notifyGLContextLost() { m_contextLost = true; }
 
     void viewportHasChanged() { m_dirtyViewport = true; }
+
+    /* Whether or not the style should build considering the current scene */
+    virtual bool shouldBuild(const Scene& _scene) const { return true; }
 
     Blending blendMode() const { return m_blend; };
 
