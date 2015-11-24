@@ -87,7 +87,7 @@ SceneLayer instance() {
 
     return { "layer", f, { rule }, { instance_1(), instance_2() } };
 }
-#if 0
+
 TEST_CASE("SceneLayer", "[SceneLayer][Filter][DrawRule][Match][Merge]") {
 
     Feature f1;
@@ -97,51 +97,54 @@ TEST_CASE("SceneLayer", "[SceneLayer][Filter][DrawRule][Match][Merge]") {
     Context ctx;
 
     auto layer = instance();
-    std::vector<DrawRule> matches;
 
     {
+        Styling styling;
         f1.props.add("base", "blah"); // Should match Base Layer
-        matches = layer.match(f1, ctx);
+        styling.match(f1, layer, ctx);
+        auto& matches = styling.matchedRules;
 
         REQUIRE(matches.size() == 1);
         REQUIRE(matches[0].getStyleName() == "group1");
     }
 
     {
-        matches.clear();
+        Styling styling;
         f2.props.add("one", "blah"); // Should match Base and subLayer1
         f2.props.add("base", "blah");
-        matches = layer.match(f2, ctx);
+        styling.match(f2, layer, ctx);
+        auto& matches = styling.matchedRules;
 
         REQUIRE(matches.size() == 1);
         REQUIRE(matches[0].getStyleName() == "group1");
-        REQUIRE(matches[0].parameters[0].key == StyleParamKey::order);
-        REQUIRE(matches[0].parameters[0].value.get<std::string>() == "a");
+        REQUIRE(matches[0].params[static_cast<uint8_t>(StyleParamKey::order)]->key == StyleParamKey::order);
+        REQUIRE(matches[0].params[static_cast<uint8_t>(StyleParamKey::order)]->value.get<std::string>() == "a");
     }
 
     {
-        matches.clear();
+        Styling styling;
         f3.props.add("two", "blah"); // Should not match anything as uber layer will not be satisfied
-        matches = layer.match(f3, ctx);
+        styling.match(f3, layer, ctx);
+        auto& matches = styling.matchedRules;
 
         REQUIRE(matches.size() == 0);
     }
 
     {
-        matches.clear();
+        Styling styling;
         f4.props.add("two", "blah");
         f4.props.add("base", "blah"); // Should match Base and subLayer2
-        matches = layer.match(f4, ctx);
+        styling.match(f4, layer, ctx);
+        auto& matches = styling.matchedRules;
 
         REQUIRE(matches.size() == 2);
         REQUIRE(matches[0].getStyleName() == "group1");
-        REQUIRE(matches[0].parameters[0].key == StyleParamKey::order);
-        REQUIRE(matches[0].parameters[0].value.get<std::string>() == "a");
+        REQUIRE(matches[0].params[static_cast<uint8_t>(StyleParamKey::order)]->key == StyleParamKey::order);
+        REQUIRE(matches[0].params[static_cast<uint8_t>(StyleParamKey::order)]->value.get<std::string>() == "a");
         REQUIRE(matches[1].getStyleName() == "group2");
     }
 
 }
-#endif
 
 TEST_CASE("SceneLayer matches correct rules for a feature and context", "[SceneLayer][Filter]") {
 
@@ -171,7 +174,6 @@ TEST_CASE("SceneLayer matches correct rules for a feature and context", "[SceneL
 
 }
 
-#if 0
 TEST_CASE("SceneLayer matches correct sublayer rules for a feature and context", "[SceneLayer][Filter]") {
 
     Feature feat;
@@ -180,15 +182,13 @@ TEST_CASE("SceneLayer matches correct sublayer rules for a feature and context",
 
     auto layer_c = instance_c();
 
-    std::vector<DrawRule> matches;
-    layer_c.match(feat, ctx, styling);
+    styling.match(feat, layer_c, ctx);
     auto& matches = styling.matchedRules;
 
     REQUIRE(matches.size() == 2);
 
-    // matches should be in lexicographic order by name
-    REQUIRE(matches[0].getStyleName() == "dg0");
-    REQUIRE(matches[1].getStyleName() == "dg2");
+    REQUIRE(matches[0].getStyleName() == "dg2");
+    REQUIRE(matches[1].getStyleName() == "dg0");
 
 }
 
@@ -196,23 +196,23 @@ TEST_CASE("SceneLayer correctly merges rules matched from sublayer", "[SceneLaye
 
     Feature feat;
     Context ctx;
+    Styling styling;
 
     auto layer_e = instance_e();
 
-    std::vector<DrawRule> matches;
-    matches = layer_e.match(feat, ctx);
+    styling.match(feat, layer_e, ctx);
+    auto& matches = styling.matchedRules;
 
     REQUIRE(matches.size() == 2);
 
     // deeper match from layer_a should override parameters in same style from layer_d
-    REQUIRE(matches[0].getStyleName() == "dg0");
-    REQUIRE(matches[0].parameters[0].key == StyleParamKey::order);
-    REQUIRE(matches[0].parameters[0].value.get<std::string>() == "value_a");
+    REQUIRE(matches[1].getStyleName() == "dg0");
+    REQUIRE(matches[1].params[static_cast<uint8_t>(StyleParamKey::order)]->key == StyleParamKey::order);
+    REQUIRE(matches[1].params[static_cast<uint8_t>(StyleParamKey::order)]->value.get<std::string>() == "value_a");
 
     // deeper match from layer_c should override parameters in same style from layer_e
-    REQUIRE(matches[1].getStyleName() == "dg2");
-    REQUIRE(matches[1].parameters[0].key == StyleParamKey::order);
-    REQUIRE(matches[1].parameters[0].value.get<std::string>() == "value_c");
+    REQUIRE(matches[0].getStyleName() == "dg2");
+    REQUIRE(matches[0].params[static_cast<uint8_t>(StyleParamKey::order)]->key == StyleParamKey::order);
+    REQUIRE(matches[0].params[static_cast<uint8_t>(StyleParamKey::order)]->value.get<std::string>() == "value_c");
 
 }
-#endif
