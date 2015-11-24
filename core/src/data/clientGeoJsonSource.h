@@ -3,6 +3,8 @@
 #include "dataSource.h"
 #include "util/types.h"
 
+#include <mutex>
+
 namespace mapbox {
 namespace util {
 namespace geojsonvt {
@@ -40,6 +42,7 @@ protected:
     virtual std::shared_ptr<TileData> parse(const Tile& _tile, std::vector<char>& _rawData) const override;
 
     std::unique_ptr<GeoJSONVT> m_store;
+    std::mutex m_mutexStore;
     std::vector<mapbox::util::geojsonvt::ProjectedFeature> m_features;
 
 };
