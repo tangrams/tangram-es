@@ -6,6 +6,7 @@
 #include "scene/skybox.h"
 #include "style/material.h"
 #include "style/style.h"
+#include "style/stencilPolygonStyle.h"
 #include "labels/labels.h"
 #include "tile/tileManager.h"
 #include "tile/tile.h"
@@ -78,6 +79,14 @@ void initialize(const char* _scenePath) {
     m_labels = std::unique_ptr<Labels>(new Labels());
 
     loadScene(_scenePath, true);
+
+    LOG("Scene styles:");
+    for (const auto& style : m_scene->styles()) {
+        LOG("\t - %s", style->getName().c_str());
+        if (style->hasStyleDependency()) {
+            LOG("\t\t - Dependency: %s", style->getStyleDependency().c_str());
+        }
+    }
 
     glm::dvec2 projPos = m_view->getMapProjection().LonLatToMeters(m_scene->startPosition);
     m_view->setPosition(projPos.x, projPos.y);
@@ -173,7 +182,25 @@ void update(float _dt) {
 
 void render() {
 
-    // Set up openGL for new frame
+    /// Setup rendering for stencil dependent styles
+
+    if (m_scene->containsStyleWithBlend(Blending::inlay)) {
+        RenderState::stencilWrite(0xFF);
+        glClear(GL_STENCIL_BUFFER_BIT);
+        {
+            std::lock_guard<std::mutex> lock(m_tilesMutex);
+
+            for (const auto& style : m_scene->stencilStyles()) {
+                style->onBeginDrawFrame(*m_view, *m_scene);
+                for (const auto& tile : m_tileManager->getVisibleTiles()) {
+                    tile->draw(*style, *m_view);
+                }
+            }
+        }
+    }
+
+    /// Set up openGL for new frame
+
     RenderState::depthWrite(GL_TRUE);
     auto& color = m_scene->background();
     RenderState::clearColor(color.r / 255.f, color.g / 255.f, color.b / 255.f, color.a / 255.f);

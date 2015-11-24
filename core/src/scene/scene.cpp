@@ -32,6 +32,9 @@ const Style* Scene::findStyle(const std::string &_name) const {
     for (auto& style : m_styles) {
         if (style->getName() == _name) { return style.get(); }
     }
+    for (auto& style : m_stencilStyles) {
+        if (style->getName() == _name) { return style.get(); }
+    }
     return nullptr;
 }
 
@@ -40,6 +43,15 @@ const Light* Scene::findLight(const std::string &_name) const {
         if (light->getInstanceName() == _name) { return light.get(); }
     }
     return nullptr;
+}
+
+bool Scene::containsStyleWithBlend(Blending _blend) const {
+     for (auto& style : m_styles) {
+        if (style->blendMode() == _blend) {
+            return true;
+        }
+    }
+    return false;
 }
 
 }

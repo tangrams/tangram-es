@@ -29,6 +29,7 @@ enum class LightingType : char {
 
 enum class Blending : char {
     none,
+    stencil,
     add,
     multiply,
     overlay,
@@ -106,11 +107,14 @@ protected:
        and bind textures starting at @_textureUnit */
     void setupShaderUniforms(int _textureUnit, bool _updateUniforms, Scene& _scene);
 
+    virtual bool noDepth() const { return false; }
+
 private:
 
     /* Whether the context has been lost on last frame */
     bool m_contextLost;
     std::vector<StyleUniform> m_styleUniforms;
+    std::string m_styleDependency = "";
 
 public:
 
@@ -122,7 +126,16 @@ public:
 
     void viewportHasChanged() { m_dirtyViewport = true; }
 
+    /* Whether or not the style should build considering the current scene */
+    virtual bool shouldBuild(const Scene& _scene) const { return true; }
+
     Blending blendMode() const { return m_blend; };
+
+    void setStyleDependency(std::string _dependency) { m_styleDependency = _dependency; }
+
+    std::string getStyleDependency() const { return m_styleDependency; }
+
+    bool hasStyleDependency() const { return m_styleDependency != ""; }
 
     void setBlendMode(Blending _blendMode) { m_blend = _blendMode; }
 

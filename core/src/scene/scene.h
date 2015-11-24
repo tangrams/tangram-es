@@ -8,10 +8,10 @@
 #include <unordered_map>
 
 #include "glm/vec2.hpp"
+#include "style/style.h"
 
 namespace Tangram {
 
-class Style;
 class Texture;
 class DataSource;
 class DataLayer;
@@ -36,6 +36,7 @@ public:
     auto& dataSources() { return m_dataSources; };
     auto& layers() { return m_layers; };
     auto& styles() { return m_styles; };
+    auto& stencilStyles() { return m_stencilStyles; }
     auto& lights() { return m_lights; };
     auto& textures() { return m_textures; };
     auto& functions() { return m_jsFunctions; };
@@ -60,6 +61,8 @@ public:
     glm::dvec2 startPosition = { 0, 0 };
     float startZoom = 0;
 
+    bool containsStyleWithBlend(Blending _blend) const;
+
 private:
 
     std::unique_ptr<MapProjection> m_mapProjection;
@@ -68,6 +71,7 @@ private:
     std::vector<DataLayer> m_layers;
     std::vector<std::shared_ptr<DataSource>> m_dataSources;
     std::vector<std::unique_ptr<Style>> m_styles;
+    std::vector<std::unique_ptr<Style>> m_stencilStyles;
     std::vector<std::unique_ptr<Light>> m_lights;
     std::unordered_map<std::string, std::shared_ptr<Texture>> m_textures;
     std::unordered_map<std::string, std::shared_ptr<SpriteAtlas>> m_spriteAtlases;
