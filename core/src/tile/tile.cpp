@@ -73,7 +73,7 @@ void Tile::build(StyleContext& _ctx, const Scene& _scene, const TileData& _data,
         style->onBeginBuildTile(*this);
     }
 
-    Styling styling;
+    DrawRuleMergeSet ruleSet;
 
     for (const auto& datalayer : layers) {
 
@@ -90,7 +90,7 @@ void Tile::build(StyleContext& _ctx, const Scene& _scene, const TileData& _data,
             }
 
             for (const auto& feat : collection.features) {
-                styling.apply(feat, _scene, datalayer, _ctx, *this);
+                ruleSet.apply(feat, _scene, datalayer, _ctx, *this);
             }
         }
     }

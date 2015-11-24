@@ -99,21 +99,21 @@ TEST_CASE("SceneLayer", "[SceneLayer][Filter][DrawRule][Match][Merge]") {
     auto layer = instance();
 
     {
-        Styling styling;
+        DrawRuleMergeSet ruleSet;
         f1.props.add("base", "blah"); // Should match Base Layer
-        styling.match(f1, layer, ctx);
-        auto& matches = styling.matchedRules;
+        ruleSet.match(f1, layer, ctx);
+        auto& matches = ruleSet.matchedRules;
 
         REQUIRE(matches.size() == 1);
         REQUIRE(matches[0].getStyleName() == "group1");
     }
 
     {
-        Styling styling;
+        DrawRuleMergeSet ruleSet;
         f2.props.add("one", "blah"); // Should match Base and subLayer1
         f2.props.add("base", "blah");
-        styling.match(f2, layer, ctx);
-        auto& matches = styling.matchedRules;
+        ruleSet.match(f2, layer, ctx);
+        auto& matches = ruleSet.matchedRules;
 
         REQUIRE(matches.size() == 1);
         REQUIRE(matches[0].getStyleName() == "group1");
@@ -122,20 +122,20 @@ TEST_CASE("SceneLayer", "[SceneLayer][Filter][DrawRule][Match][Merge]") {
     }
 
     {
-        Styling styling;
+        DrawRuleMergeSet ruleSet;
         f3.props.add("two", "blah"); // Should not match anything as uber layer will not be satisfied
-        styling.match(f3, layer, ctx);
-        auto& matches = styling.matchedRules;
+        ruleSet.match(f3, layer, ctx);
+        auto& matches = ruleSet.matchedRules;
 
         REQUIRE(matches.size() == 0);
     }
 
     {
-        Styling styling;
+        DrawRuleMergeSet ruleSet;
         f4.props.add("two", "blah");
         f4.props.add("base", "blah"); // Should match Base and subLayer2
-        styling.match(f4, layer, ctx);
-        auto& matches = styling.matchedRules;
+        ruleSet.match(f4, layer, ctx);
+        auto& matches = ruleSet.matchedRules;
 
         REQUIRE(matches.size() == 2);
         REQUIRE(matches[0].getStyleName() == "group1");
@@ -152,22 +152,22 @@ TEST_CASE("SceneLayer matches correct rules for a feature and context", "[SceneL
     Context ctx;
 
     {
-        Styling styling;
+        DrawRuleMergeSet ruleSet;
         auto layer_a = instance_a();
 
-        styling.match(feat, layer_a, ctx);
-        auto& matches_a = styling.matchedRules;
+        ruleSet.match(feat, layer_a, ctx);
+        auto& matches_a = ruleSet.matchedRules;
 
         REQUIRE(matches_a.size() == 1);
         REQUIRE(matches_a[0].getStyleName() == "dg0");
     }
 
     {
-        Styling styling;
+        DrawRuleMergeSet ruleSet;
         auto layer_b = instance_b();
 
-        styling.match(feat, layer_b, ctx);
-        auto& matches_b = styling.matchedRules;
+        ruleSet.match(feat, layer_b, ctx);
+        auto& matches_b = ruleSet.matchedRules;
 
         REQUIRE(matches_b.size() == 0);
     }
@@ -178,12 +178,12 @@ TEST_CASE("SceneLayer matches correct sublayer rules for a feature and context",
 
     Feature feat;
     Context ctx;
-    Styling styling;
+    DrawRuleMergeSet ruleSet;
 
     auto layer_c = instance_c();
 
-    styling.match(feat, layer_c, ctx);
-    auto& matches = styling.matchedRules;
+    ruleSet.match(feat, layer_c, ctx);
+    auto& matches = ruleSet.matchedRules;
 
     REQUIRE(matches.size() == 2);
 
@@ -196,12 +196,12 @@ TEST_CASE("SceneLayer correctly merges rules matched from sublayer", "[SceneLaye
 
     Feature feat;
     Context ctx;
-    Styling styling;
+    DrawRuleMergeSet ruleSet;
 
     auto layer_e = instance_e();
 
-    styling.match(feat, layer_e, ctx);
-    auto& matches = styling.matchedRules;
+    ruleSet.match(feat, layer_e, ctx);
+    auto& matches = ruleSet.matchedRules;
 
     REQUIRE(matches.size() == 2);
 

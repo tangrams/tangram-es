@@ -84,7 +84,7 @@ void DrawRule::logGetError(StyleParamKey _expectedKey, const StyleParam& _param)
     LOGE("wrong type '%d'for StyleParam '%d'", _param.value.which(), _expectedKey);
 }
 
-bool Styling::match(const Feature& _feature, const SceneLayer& _layer, StyleContext& _ctx) {
+bool DrawRuleMergeSet::match(const Feature& _feature, const SceneLayer& _layer, StyleContext& _ctx) {
 
     _ctx.setFeature(_feature);
     matchedRules.clear();
@@ -117,7 +117,7 @@ bool Styling::match(const Feature& _feature, const SceneLayer& _layer, StyleCont
     return true;
 }
 
-void Styling::apply(const Feature& _feature, const Scene& _scene, const SceneLayer& _layer,
+void DrawRuleMergeSet::apply(const Feature& _feature, const Scene& _scene, const SceneLayer& _layer,
                     StyleContext& _ctx, Tile& _tile) {
 
     if (!match(_feature, _layer, _ctx)) { return; }
@@ -166,7 +166,7 @@ void Styling::apply(const Feature& _feature, const Scene& _scene, const SceneLay
     }
 }
 
-void Styling::mergeRules(const std::vector<DrawRuleData>& rules) {
+void DrawRuleMergeSet::mergeRules(const std::vector<DrawRuleData>& rules) {
     for (auto& rule : rules) {
 
         auto it = std::find_if(matchedRules.begin(), matchedRules.end(),

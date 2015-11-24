@@ -85,7 +85,7 @@ private:
 
 };
 
-struct Styling {
+struct DrawRuleMergeSet {
 
     /* Determine and apply DrawRules for a @_feature and add
      * the result to @_tile
