@@ -47,10 +47,10 @@ enum class StyleParamKey : uint8_t {
     transition_show_time,
     visible,
     width,
+    NUM_ELEMENTS
 };
 
-// UPDATE WITH StyleParamKey CHANGES!
-constexpr size_t StyleParamKeySize = static_cast<size_t>(StyleParamKey::width)+1;
+constexpr size_t StyleParamKeySize = static_cast<size_t>(StyleParamKey::NUM_ELEMENTS);
 
 enum class Unit { pixel, milliseconds, meter, seconds };
 
