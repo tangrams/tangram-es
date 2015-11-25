@@ -38,6 +38,8 @@ public:
 
     size_t getOffset(std::string _attribName);
 
+    static void clearCache();
+
 private:
 
     static fastmap<GLint, GLuint> s_enabledAttribs; // Map from attrib locations to bound shader program
