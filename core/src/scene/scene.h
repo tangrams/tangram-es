@@ -55,6 +55,9 @@ public:
     const Style* findStyle(const std::string& _name) const;
     const Light* findLight(const std::string& _name) const;
 
+    int addIdForName(const std::string& _name);
+    int getIdForName(const std::string& _name) const;
+
     const int32_t id;
 
     glm::dvec2 startPosition = { 0, 0 };
@@ -71,6 +74,11 @@ private:
     std::vector<std::unique_ptr<Light>> m_lights;
     std::unordered_map<std::string, std::shared_ptr<Texture>> m_textures;
     std::unordered_map<std::string, std::shared_ptr<SpriteAtlas>> m_spriteAtlases;
+
+    // Container of all strings used in styling rules; these need to be
+    // copied and compared frequently when applying styling, so rules use
+    // integer indices into this container to represent strings
+    std::vector<std::string> m_names;
 
     std::vector<std::string> m_jsFunctions;
     std::list<Stops> m_stops;

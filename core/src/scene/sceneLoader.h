@@ -24,7 +24,6 @@ class ShaderProgram;
 class Material;
 class Style;
 struct StyleParam;
-struct DrawRule;
 struct MaterialTexture;
 struct Filter;
 

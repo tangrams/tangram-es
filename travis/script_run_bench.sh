@@ -8,6 +8,8 @@ if [[ ${PLATFORM} == "osx" || ${PLATFORM} == "linux" ]]; then
     echo "Running Benchmarks"
 
     pushd ./build/${PLATFORM}/bin
+    # a tile for testing
+    curl -L  https://vector.mapzen.com/osm/all/10/301/384.mvt | gunzip > tile.mvt
 
     for file in bench/*.out
         do

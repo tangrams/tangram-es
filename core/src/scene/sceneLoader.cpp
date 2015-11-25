@@ -96,6 +96,25 @@ bool SceneLoader::loadScene(Node& config, Scene& _scene) {
         }
     }
 
+    // Styles that are opaque must be ordered first in the scene so that
+    // they are rendered 'under' styles that require blending
+    std::sort(_scene.styles().begin(), _scene.styles().end(),
+              [](std::unique_ptr<Style>& a, std::unique_ptr<Style>& b) {
+                  if (a->blendMode() != b->blendMode()) {
+                      return a->blendMode() == Blending::none;
+                  }
+                  // Just for consistent ordering
+                  // anytime the scene is loaded
+                  return a->getName() < b->getName();
+              });
+
+    // Post style sorting set their respective IDs=>vector indices
+    // These indices are used for style geometry lookup in tiles
+    auto& styles = _scene.styles();
+    for(uint32_t i = 0; i < styles.size(); i++) {
+        styles[i]->setID(i);
+    }
+
     if (Node layers = config["layers"]) {
         for (const auto& layer : layers) {
             try { loadLayer(layer, _scene); }
@@ -131,18 +150,6 @@ bool SceneLoader::loadScene(Node& config, Scene& _scene) {
     for (auto& style : _scene.styles()) {
         style->build(_scene.lights());
     }
-
-    // Styles that are opaque must be ordered first in the scene so that
-    // they are rendered 'under' styles that require blending
-    std::sort(_scene.styles().begin(), _scene.styles().end(),
-              [](std::unique_ptr<Style>& a, std::unique_ptr<Style>& b) {
-                  if (a->blendMode() != b->blendMode()) {
-                      return a->blendMode() == Blending::none;
-                  }
-                  // Just for consistent ordering
-                  // anytime the scene is loaded
-                  return a->getName() < b->getName();
-              });
 
     return true;
 }
@@ -1296,7 +1303,7 @@ void SceneLoader::parseTransition(Node params, Scene& scene, std::vector<StylePa
 SceneLayer SceneLoader::loadSublayer(Node layer, const std::string& name, Scene& scene) {
 
     std::vector<SceneLayer> sublayers;
-    std::vector<DrawRule> rules;
+    std::vector<DrawRuleData> rules;
     Filter filter;
 
     for (const auto& member : layer) {
@@ -1308,10 +1315,14 @@ SceneLayer SceneLoader::loadSublayer(Node layer, const std::string& name, Scene&
         } else if (key == "draw") {
             // Member is a mapping of draw rules
             for (auto& ruleNode : member.second) {
-                auto name = ruleNode.first.as<std::string>();
+
                 std::vector<StyleParam> params;
                 parseStyleParams(ruleNode.second, scene, "", params);
-                rules.push_back({ name, std::move(params) });
+
+                auto name = ruleNode.first.as<std::string>();
+                int nameId = scene.addIdForName(name);
+
+                rules.push_back({ name, nameId, std::move(params) });
             }
         } else if (key == "filter") {
             filter = generateFilter(member.second, scene);

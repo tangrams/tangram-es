@@ -10,7 +10,11 @@ struct PropertyItem {
 
     std::string key;
     Value value;
-    bool operator<(const PropertyItem& _rhs) const { return key < _rhs.key; }
+    bool operator<(const PropertyItem& _rhs) const {
+        return key.size() == _rhs.key.size()
+            ? key < _rhs.key
+            : key.size() < _rhs.key.size();
+    }
 };
 
 }

@@ -29,7 +29,11 @@ const Value& Properties::get(const std::string& key) const {
 
     const auto it = std::lower_bound(props.begin(), props.end(), key,
                                      [](const auto& item, const auto& key) {
-                                         return item.key < key;
+                                         if (item.key.size() == key.size()) {
+                                             return item.key < key;
+                                         } else {
+                                             return item.key.size() < key.size();
+                                         }
                                      });
 
     if (it == props.end() || it->key != key) {

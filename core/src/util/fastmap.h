@@ -38,7 +38,7 @@ struct fastmap {
                 return item.first < key;
             });
 
-        if (it == map.end() || it->first.k == key) {
+        if (it == map.end() || it->first == key) {
             return it;
         }
         return map.end();
@@ -69,7 +69,7 @@ struct fastmap<std::string, T> {
 
     T& operator[](const std::string& key) {
 
-        size_t hash = key.size();
+        size_t hash = std::hash<std::string>()(key);
         iterator it = std::lower_bound(
             map.begin(), map.end(), key,
             [&](const auto& item, const auto& key) {
@@ -88,7 +88,8 @@ struct fastmap<std::string, T> {
     }
 
     const_iterator find(const std::string& key) const {
-        size_t hash = key.size();
+        size_t hash = std::hash<std::string>()(key);
+
         const_iterator it = std::lower_bound(
             map.begin(), map.end(), key,
             [&](const auto& item, const auto& key) {
