@@ -40,6 +40,8 @@ ClientGeoJsonSource::~ClientGeoJsonSource() {}
 void ClientGeoJsonSource::addData(const std::string& _data) {
 
     m_features = geojsonvt::GeoJSONVT::convertFeatures(_data);
+
+    std::lock_guard<std::mutex> lock(m_mutexStore);
     m_store = std::make_unique<GeoJSONVT>(m_features, maxZoom, indexMaxZoom, indexMaxPoints, tolerance);
 
 }
@@ -59,6 +61,8 @@ bool ClientGeoJsonSource::getTileData(std::shared_ptr<TileTask>& _task) {
 void ClientGeoJsonSource::clearData() {
 
     m_features.clear();
+
+    std::lock_guard<std::mutex> lock(m_mutexStore);
     m_store.reset();
 
 }
@@ -74,6 +78,8 @@ void ClientGeoJsonSource::addPoint(const Properties& _tags, LngLat _point) {
                                               container.members);
 
     m_features.push_back(std::move(feature));
+
+    std::lock_guard<std::mutex> lock(m_mutexStore);
     m_store = std::make_unique<GeoJSONVT>(m_features, maxZoom, indexMaxZoom, indexMaxPoints, tolerance);
 
 }
@@ -88,6 +94,8 @@ void ClientGeoJsonSource::addLine(const Properties& _tags, const Coordinates& _l
                                               geometry);
 
     m_features.push_back(std::move(feature));
+
+    std::lock_guard<std::mutex> lock(m_mutexStore);
     m_store = std::make_unique<GeoJSONVT>(m_features, maxZoom, indexMaxZoom, indexMaxPoints, tolerance);
 }
 
@@ -104,18 +112,23 @@ void ClientGeoJsonSource::addPoly(const Properties& _tags, const std::vector<Coo
                                               geometry);
 
     m_features.push_back(std::move(feature));
+
+    std::lock_guard<std::mutex> lock(m_mutexStore);
     m_store = std::make_unique<GeoJSONVT>(m_features, maxZoom, indexMaxZoom, indexMaxPoints, tolerance);
 }
 
 std::shared_ptr<TileData> ClientGeoJsonSource::parse(const Tile& _tile, std::vector<char>& _rawData) const {
 
-    if (!m_store) { return nullptr; }
-
     auto data = std::make_shared<TileData>();
 
     auto id = _tile.getID();
 
-    auto tile = m_store->getTile(id.z, id.x, id.y); // uses a mutex lock internally for thread-safety
+    geojsonvt::Tile tile;
+    {
+        std::lock_guard<std::mutex> lock(m_mutexStore);
+        if (!m_store) { return nullptr; }
+        tile = m_store->getTile(id.z, id.x, id.y); // uses a mutex lock internally for thread-safety
+    }
 
     Layer layer(""); // empty name will skip filtering by 'collection'
 
