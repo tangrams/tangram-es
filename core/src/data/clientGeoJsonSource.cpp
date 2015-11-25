@@ -119,13 +119,16 @@ void ClientGeoJsonSource::addPoly(const Properties& _tags, const std::vector<Coo
 
 std::shared_ptr<TileData> ClientGeoJsonSource::parse(const Tile& _tile, std::vector<char>& _rawData) const {
 
-    if (!m_store) { return nullptr; }
-
     auto data = std::make_shared<TileData>();
 
     auto id = _tile.getID();
 
-    auto tile = m_store->getTile(id.z, id.x, id.y); // uses a mutex lock internally for thread-safety
+    geojsonvt::Tile tile;
+    {
+        std::lock_guard<std::mutex> lock(m_mutexStore);
+        if (!m_store) { return nullptr; }
+        tile = m_store->getTile(id.z, id.x, id.y); // uses a mutex lock internally for thread-safety
+    }
 
     Layer layer(""); // empty name will skip filtering by 'collection'
 
