@@ -14,7 +14,15 @@ LabelMesh::LabelMesh(std::shared_ptr<VertexLayout> _vertexLayout, GLenum _drawMo
     : TypedMesh<Label::Vertex>(_vertexLayout, _drawMode, GL_DYNAMIC_DRAW) {
 }
 
-LabelMesh::~LabelMesh() {}
+LabelMesh::~LabelMesh() {
+    if (s_quadIndexBuffer != 0 && s_quadGeneration != s_validGeneration) {
+        if (RenderState::indexBuffer.compare(s_quadIndexBuffer)) {
+            RenderState::indexBuffer.init(0, false);
+        }
+        glDeleteBuffers(1, &s_quadIndexBuffer);
+        s_quadIndexBuffer = 0;
+    }
+}
 
 void LabelMesh::addLabel(std::unique_ptr<Label> _label) {
     m_labels.push_back(std::move(_label));
