@@ -6,112 +6,116 @@
 
 namespace Tangram {
 
-void GeoJson::extractPoint(const rapidjson::Value& _in, Point& _out, const tileProjectionFn& _proj) {
-    _out = _proj(glm::dvec2(_in[0].GetDouble(), _in[1].GetDouble()));
+Point GeoJson::getPoint(const JsonValue& _in, const Transform& _proj) {
+    return _proj(glm::dvec2(_in[0].GetDouble(), _in[1].GetDouble()));
 }
 
-void GeoJson::extractLine(const rapidjson::Value& _in, Line& _out, const tileProjectionFn& _proj) {
+Line GeoJson::getLine(const JsonValue& _in, const Transform& _proj) {
 
+    Line line;
     for (auto itr = _in.Begin(); itr != _in.End(); ++itr) {
-        _out.emplace_back();
-        extractPoint(*itr, _out.back(), _proj);
+        line.push_back(getPoint(*itr, _proj));
     }
+    return line;
 
 }
 
-void GeoJson::extractPoly(const rapidjson::Value& _in, Polygon& _out, const tileProjectionFn& _proj) {
+Polygon GeoJson::getPolygon(const JsonValue& _in, const Transform& _proj) {
 
+    Polygon polygon;
     for (auto itr = _in.Begin(); itr != _in.End(); ++itr) {
-        _out.emplace_back();
-        extractLine(*itr, _out.back(), _proj);
+        polygon.push_back(getLine(*itr, _proj));
     }
+    return polygon;
 
 }
 
-void GeoJson::extractFeature(const rapidjson::Value& _in, Feature& _out, const tileProjectionFn& _proj) {
+Feature GeoJson::getFeature(const JsonValue& _in, const Transform& _proj, int32_t _sourceId) {
+
+    Feature feature(_sourceId);
 
     // Copy properties into tile data
 
-    const rapidjson::Value& properties = _in["properties"];
+    const JsonValue& properties = _in["properties"];
 
     for (auto itr = properties.MemberBegin(); itr != properties.MemberEnd(); ++itr) {
 
         const auto& member = itr->name.GetString();
 
-        const rapidjson::Value& prop = properties[member];
+        const JsonValue& prop = properties[member];
 
         if (prop.IsNumber()) {
-            _out.props.set(member, prop.GetDouble());
+            feature.props.set(member, prop.GetDouble());
         } else if (prop.IsString()) {
-            _out.props.set(member, prop.GetString());
+            feature.props.set(member, prop.GetString());
         }
 
     }
 
     // Copy geometry into tile data
 
-    const rapidjson::Value& geometry = _in["geometry"];
-    const rapidjson::Value& coords = geometry["coordinates"];
+    const JsonValue& geometry = _in["geometry"];
+    const JsonValue& coords = geometry["coordinates"];
     const std::string& geometryType = geometry["type"].GetString();
 
     if (geometryType.compare("Point") == 0) {
 
-        _out.geometryType = GeometryType::points;
-        _out.points.emplace_back();
-        extractPoint(coords, _out.points.back(), _proj);
+        feature.geometryType = GeometryType::points;
+        feature.points.push_back(getPoint(coords, _proj));
 
     } else if (geometryType.compare("MultiPoint") == 0) {
 
-        _out.geometryType= GeometryType::points;
+        feature.geometryType = GeometryType::points;
         for (auto pointCoords = coords.Begin(); pointCoords != coords.End(); ++pointCoords) {
-            _out.points.emplace_back();
-            extractPoint(*pointCoords, _out.points.back(), _proj);
+            feature.points.push_back(getPoint(*pointCoords, _proj));
         }
 
     } else if (geometryType.compare("LineString") == 0) {
-        _out.geometryType = GeometryType::lines;
-        _out.lines.emplace_back();
-        extractLine(coords, _out.lines.back(), _proj);
+
+        feature.geometryType = GeometryType::lines;
+        feature.lines.push_back(getLine(coords, _proj));
 
     } else if (geometryType.compare("MultiLineString") == 0) {
-        _out.geometryType = GeometryType::lines;
+
+        feature.geometryType = GeometryType::lines;
         for (auto lineCoords = coords.Begin(); lineCoords != coords.End(); ++lineCoords) {
-            _out.lines.emplace_back();
-            extractLine(*lineCoords, _out.lines.back(), _proj);
+            feature.lines.push_back(getLine(*lineCoords, _proj));
         }
 
     } else if (geometryType.compare("Polygon") == 0) {
 
-        _out.geometryType = GeometryType::polygons;
-        _out.polygons.emplace_back();
-        extractPoly(coords, _out.polygons.back(), _proj);
+        feature.geometryType = GeometryType::polygons;
+        feature.polygons.push_back(getPolygon(coords, _proj));
 
     } else if (geometryType.compare("MultiPolygon") == 0) {
 
-        _out.geometryType = GeometryType::polygons;
+        feature.geometryType = GeometryType::polygons;
         for (auto polyCoords = coords.Begin(); polyCoords != coords.End(); ++polyCoords) {
-            _out.polygons.emplace_back();
-            extractPoly(*polyCoords, _out.polygons.back(), _proj);
+            feature.polygons.push_back(getPolygon(*polyCoords, _proj));
         }
 
     }
 
+    return feature;
+
 }
 
-void GeoJson::extractLayer(int32_t _sourceId, const rapidjson::Value& _in, Layer& _out, const tileProjectionFn& _proj) {
+Layer GeoJson::getLayer(const JsonDocument::MemberIterator& _in, const Transform& _proj, int32_t _sourceId) {
 
-    const auto& featureIter = _in.FindMember("features");
+    Layer layer(_in->name.GetString());
 
-    if (featureIter == _in.MemberEnd()) {
+    auto features = _in->value.FindMember("features");
+
+    if (features == _in->value.MemberEnd()) {
         LOGE("GeoJSON missing 'features' member");
-        return;
+        return layer;
     }
 
-    const auto& features = featureIter->value;
-    for (auto featureJson = features.Begin(); featureJson != features.End(); ++featureJson) {
-        _out.features.emplace_back(_sourceId);
-        extractFeature(*featureJson, _out.features.back(), _proj);
+    for (auto featureIt = features->value.Begin(); featureIt != features->value.End(); ++featureIt) {
+        layer.features.push_back(getFeature(*featureIt, _proj, _sourceId));
     }
+
+    return layer;
 
 }
 

@@ -1,26 +1,25 @@
 #pragma once
 
-#include "rapidjson/document.h"
 #include "data/tileData.h"
+#include "util/json.h"
 
-#include <vector>
 #include <functional>
 
 namespace Tangram {
 
 namespace GeoJson {
 
-typedef std::function<Point(glm::dvec2 _lonLat)> tileProjectionFn;
+using Transform = std::function<Point(glm::dvec2 _lonLat)>;
 
-void extractPoint(const rapidjson::Value& _in, Point& _out, const tileProjectionFn& _proj);
+Point getPoint(const JsonValue& _in, const Transform& _proj);
 
-void extractLine(const rapidjson::Value& _in, Line& _out, const tileProjectionFn& _proj);
+Line getLine(const JsonValue& _in, const Transform& _proj);
 
-void extractPoly(const rapidjson::Value& _in, Polygon& _out, const tileProjectionFn& _proj);
+Polygon getPolygon(const JsonValue& _in, const Transform& _proj);
 
-void extractFeature(const rapidjson::Value& _in, Feature& _out, const tileProjectionFn& _proj);
+Feature getFeature(const JsonValue& _in, const Transform& _proj, int32_t _sourceId);
 
-void extractLayer(int32_t _sourceId, const rapidjson::Value& _in, Layer& _out, const tileProjectionFn& _proj);
+Layer getLayer(const JsonDocument::MemberIterator& _in, const Transform& _proj, int32_t _sourceId);
 
 }
 

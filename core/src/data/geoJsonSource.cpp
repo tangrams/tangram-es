@@ -8,11 +8,6 @@
 #include "util/geoJson.h"
 #include "platform.h"
 
-#include "rapidjson/error/en.h"
-#include "rapidjson/memorystream.h"
-#include "rapidjson/encodings.h"
-#include "rapidjson/encodedstream.h"
-
 namespace Tangram {
 
 GeoJsonSource::GeoJsonSource(const std::string& _name, const std::string& _urlTemplate, int32_t _maxZoom) :
@@ -26,21 +21,14 @@ std::shared_ptr<TileData> GeoJsonSource::parse(const TileTask& _task,
 
     std::shared_ptr<TileData> tileData = std::make_shared<TileData>();
 
-    // parse written data into a JSON object
-    rapidjson::Document doc;
+    // Parse data into a JSON document
+    const char* error;
+    size_t offset;
+    auto document = JsonParseBytes(task.rawTileData->data(), task.rawTileData->size(), &error, &offset);
 
-    rapidjson::MemoryStream ms(task.rawTileData->data(), task.rawTileData->size());
-    rapidjson::EncodedInputStream<rapidjson::UTF8<char>, rapidjson::MemoryStream> is(ms);
-
-    doc.ParseStream(is);
-
-    if (doc.HasParseError()) {
-
-        size_t offset = doc.GetErrorOffset();
-        const char* error = rapidjson::GetParseError_En(doc.GetParseError());
+    if (error) {
         LOGE("Json parsing failed on tile [%s]: %s (%u)", task.tileId().toString().c_str(), error, offset);
         return tileData;
-
     }
 
     BoundingBox tileBounds(_projection.TileBounds(task.tileId()));
@@ -55,10 +43,10 @@ std::shared_ptr<TileData> GeoJsonSource::parse(const TileTask& _task,
              0
         };
     };
-    // transform JSON data into a TileData using GeoJson functions
-    for (auto layer = doc.MemberBegin(); layer != doc.MemberEnd(); ++layer) {
-        tileData->layers.emplace_back(std::string(layer->name.GetString()));
-        GeoJson::extractLayer(m_id, layer->value, tileData->layers.back(), projFn);
+
+    // Transform JSON data into TileData using GeoJson functions
+    for (auto layer = document.MemberBegin(); layer != document.MemberEnd(); ++layer) {
+        tileData->layers.push_back(GeoJson::getLayer(layer, projFn, m_id));
     }
 
 
