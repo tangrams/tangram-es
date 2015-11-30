@@ -250,6 +250,7 @@ size_t VboMesh::bufferSize() {
 void VboMesh::invalidateAllVBOs() {
 
     ++s_validGeneration;
+    VertexLayout::clearCache();
 
 }
 

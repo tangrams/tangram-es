@@ -76,6 +76,10 @@ void VertexLayout::enable(const fastmap<std::string, GLuint>& _locations, size_t
 
 }
 
+void VertexLayout::clearCache() {
+    s_enabledAttribs.clear();
+}
+
 void VertexLayout::enable(ShaderProgram& _program, size_t _byteOffset, void* _ptr) {
 
     GLuint glProgram = _program.getGlProgram();
