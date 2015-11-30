@@ -2,6 +2,7 @@
 
 #include "tile/tile.h"
 #include "platform.h"
+#include "util/geom.h"
 
 namespace Tangram {
 
@@ -135,17 +136,12 @@ void PbfParser::extractFeature(ParserContext& _ctx, protobuf::message& _featureI
         case GeometryType::lines:
         case GeometryType::polygons:
         {
-            std::vector<Line> lines;
             int offset = 0;
-            lines.reserve(_ctx.numCoordinates.size());
 
             for (int length : _ctx.numCoordinates) {
-                if (length == 0) {
-                    continue;
-                }
+                if (length == 0) { continue; }
 
-                lines.emplace_back();
-                auto& line = lines.back();
+                Line line;
                 line.reserve(length);
 
                 line.insert(line.begin(),
@@ -153,11 +149,17 @@ void PbfParser::extractFeature(ParserContext& _ctx, protobuf::message& _featureI
                             _ctx.coordinates.begin() + offset + length);
 
                 offset += length;
-            }
-            if (_out.geometryType == GeometryType::lines) {
-                _out.lines = std::move(lines);
-            } else {
-                _out.polygons.push_back(std::move(lines));
+
+                if (_out.geometryType == GeometryType::lines) {
+                    _out.lines.emplace_back(std::move(line));
+                } else {
+                    // Polygons are in a flat list of rings, with ccw rings indicating
+                    // the beginning of a new polygon
+                    if (signedArea(line) >= 0 || _out.polygons.empty()) {
+                        _out.polygons.emplace_back();
+                    }
+                    _out.polygons.back().push_back(std::move(line));
+                }
             }
             break;
         }
