@@ -44,6 +44,10 @@ struct fastmap {
         return map.end();
     }
 
+    iterator find(const K& key) {
+        return const_cast<iterator&>(static_cast<const iterator &>(find(key)));
+    }
+
     iterator begin() { return map.begin(); }
     iterator end() { return map.end(); }
 

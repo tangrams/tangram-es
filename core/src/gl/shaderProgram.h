@@ -132,7 +132,7 @@ private:
 
     fastmap<std::string, ShaderLocation> m_attribMap;
     fastmap<std::string, ShaderLocation> m_uniformMap;
-    std::map<GLint, UniformValue> m_uniformCache;
+    fastmap<GLint, UniformValue> m_uniformCache;
 
     std::string m_fragmentShaderSource;
     std::string m_vertexShaderSource;
