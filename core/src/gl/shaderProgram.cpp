@@ -326,18 +326,6 @@ void ShaderProgram::setUniformi(const std::string& _name, int _value) {
     }
 }
 
-void ShaderProgram::setUniformi(const std::string& _name, int _value0, int _value1) {
-    setUniformf(_name, glm::vec2(_value0, _value1));
-}
-
-void ShaderProgram::setUniformi(const std::string& _name, int _value0, int _value1, int _value2) {
-    setUniformf(_name, glm::vec3(_value0, _value1, _value2));
-}
-
-void ShaderProgram::setUniformi(const std::string& _name, int _value0, int _value1, int _value2, int _value3) {
-    setUniformf(_name, glm::vec4(_value0, _value1, _value2, _value3));
-}
-
 void ShaderProgram::setUniformf(const std::string& _name, float _value) {
     use();
     GLint location = getUniformLocation(_name);

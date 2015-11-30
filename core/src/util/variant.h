@@ -39,5 +39,4 @@ class Value : public detail::Value {
     using Base::Base;
 };
 
-
 }
