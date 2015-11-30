@@ -1,6 +1,5 @@
 #include "skybox.h"
 #include "view/view.h"
-#include "glm/gtc/type_ptr.hpp"
 #include "gl/renderState.h"
 #include "gl/shaderProgram.h"
 #include "gl/textureCube.h"
@@ -60,9 +59,9 @@ void Skybox::draw(const View& _view) {
     // Remove translation so that skybox is centered on view
     vp[3] = { 0, 0, 0, 0 };
 
-    m_shader->setUniformMatrix4f("u_modelViewProj", glm::value_ptr(vp));
+    m_shader->setUniformMatrix4f("u_modelViewProj", vp);
     m_shader->setUniformi("u_tex", 0);
-    
+
     RenderState::blending(GL_FALSE);
     RenderState::depthTest(GL_TRUE);
 

@@ -120,10 +120,6 @@ void resize(int _newWidth, int _newHeight) {
         m_view->setSize(_newWidth, _newHeight);
     }
 
-    for (auto& style : m_scene->styles()) {
-        style->viewportHasChanged();
-    }
-
     Primitives::setResolution(_newWidth, _newHeight);
 
     while (Error::hadGlError("Tangram::resize()")) {}
@@ -430,10 +426,6 @@ void setupGL() {
 
     if (m_tileManager) {
         m_tileManager->clearTileSets();
-
-        for (auto& style : m_scene->styles()) {
-           style->notifyGLContextLost();
-        }
     }
 
     // The OpenGL context has been destroyed since the last time resources were created,

@@ -44,6 +44,19 @@ struct fastmap {
         return map.end();
     }
 
+    iterator find(const K& key) {
+        iterator it = std::lower_bound(
+            map.begin(), map.end(), key,
+            [&](const auto& item, const auto& key) {
+                return item.first < key;
+            });
+
+        if (it == map.end() || it->first == key) {
+            return it;
+        }
+        return map.end();
+    }
+
     iterator begin() { return map.begin(); }
     iterator end() { return map.end(); }
 

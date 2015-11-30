@@ -1,10 +1,9 @@
 #pragma once
 
 #include "gl.h"
-#include "glm/vec2.hpp"
-#include "glm/vec3.hpp"
-#include "glm/vec4.hpp"
+#include "glm/glm.hpp"
 #include "util/fastmap.h"
+#include "util/uniform.h"
 
 #include <string>
 #include <vector>
@@ -75,17 +74,17 @@ public:
     void setUniformf(const std::string& _name, float _value0, float _value1, float _value2);
     void setUniformf(const std::string& _name, float _value0, float _value1, float _value2, float _value3);
 
-    void setUniformf(const std::string& _name, const glm::vec2& _value){setUniformf(_name,_value.x,_value.y);}
-    void setUniformf(const std::string& _name, const glm::vec3& _value){setUniformf(_name,_value.x,_value.y,_value.z);}
-    void setUniformf(const std::string& _name, const glm::vec4& _value){setUniformf(_name,_value.x,_value.y,_value.z,_value.w);}
+    void setUniformf(const std::string& _name, const glm::vec2& _value);
+    void setUniformf(const std::string& _name, const glm::vec3& _value);
+    void setUniformf(const std::string& _name, const glm::vec4& _value);
 
     /*
      * Ensures the program is bound and then sets the named uniform to the values
      * beginning at the pointer _value; 4 values are used for a 2x2 matrix, 9 values for a 3x3, etc.
      */
-    void setUniformMatrix2f(const std::string& _name, const float* _value, bool transpose = false);
-    void setUniformMatrix3f(const std::string& _name, const float* _value, bool transpose = false);
-    void setUniformMatrix4f(const std::string& _name, const float* _value, bool transpose = false);
+    void setUniformMatrix2f(const std::string& _name, const glm::mat2& _value, bool transpose = false);
+    void setUniformMatrix3f(const std::string& _name, const glm::mat3& _value, bool transpose = false);
+    void setUniformMatrix4f(const std::string& _name, const glm::mat4& _value, bool transpose = false);
 
     /* Invalidates all managed ShaderPrograms
      *
@@ -95,6 +94,7 @@ public:
     static void invalidateAllPrograms();
 
     auto getSourceBlocks() const { return  m_sourceBlocks; }
+
 private:
 
     struct ShaderLocation {
@@ -111,6 +111,23 @@ private:
 
     static int s_validGeneration; // Incremented when GL context is invalidated
 
+    // Get a uniform value from the cache, and returns false when it's a cache miss
+    template <class T>
+    inline bool getFromCache(GLint _location, T _value) {
+        const auto& v = m_uniformCache.find(_location);
+        bool cached = false;
+        if (v != m_uniformCache.end()) {
+            if (v->second.is<T>()) {
+                T& value = v->second.get<T>();
+                cached = value == _value;
+                if (!cached) {
+                    value = _value;
+                }
+            }
+        } else { m_uniformCache[_location] = _value; }
+        return cached;
+    }
+
     int m_generation;
     GLuint m_glProgram;
     GLuint m_glFragmentShader;
@@ -118,6 +135,7 @@ private:
 
     fastmap<std::string, ShaderLocation> m_attribMap;
     fastmap<std::string, ShaderLocation> m_uniformMap;
+    fastmap<GLint, UniformValue> m_uniformCache;
 
     std::string m_fragmentShaderSource;
     std::string m_vertexShaderSource;

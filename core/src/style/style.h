@@ -76,9 +76,6 @@ protected:
     /* Draw mode to pass into <VboMesh>es created with this style */
     GLenum m_drawMode;
 
-    /* Whether the viewport has changed size */
-    bool m_dirtyViewport = true;
-
     /* animated property */
     bool m_animated = false;
 
@@ -100,17 +97,12 @@ protected:
     /* Create a new mesh object using the vertex layout corresponding to this style */
     virtual VboMesh* newMesh() const = 0;
 
-    /* Toggle on read if true, checks whether the context has been lost on last frame */
-    bool glContextLost();
-
     /* Set uniform values when @_updateUniforms is true,
        and bind textures starting at @_textureUnit */
-    void setupShaderUniforms(int _textureUnit, bool _updateUniforms, Scene& _scene);
+    void setupShaderUniforms(int _textureUnit, Scene& _scene);
 
 private:
 
-    /* Whether the context has been lost on last frame */
-    bool m_contextLost;
     std::vector<StyleUniform> m_styleUniforms;
 
 public:
@@ -118,10 +110,6 @@ public:
     Style(std::string _name, Blending _blendMode, GLenum _drawMode);
 
     virtual ~Style();
-
-    void notifyGLContextLost() { m_contextLost = true; }
-
-    void viewportHasChanged() { m_dirtyViewport = true; }
 
     Blending blendMode() const { return m_blend; };
 
