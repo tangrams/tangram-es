@@ -223,7 +223,7 @@ StyleParam::Value StyleParam::parseString(StyleParamKey key, const std::string& 
     case StyleParamKey::outline_join:
         return static_cast<uint32_t>(JoinTypeFromString(_value));
 
-    case StyleParamKey::none:
+    default:
         break;
     }
 
@@ -293,7 +293,7 @@ std::string StyleParam::toString() const {
     case StyleParamKey::outline_join:
         if (!value.is<uint32_t>()) break;
         return k + std::to_string(value.get<uint32_t>());
-    case StyleParamKey::none:
+    default:
         break;
     }
 
