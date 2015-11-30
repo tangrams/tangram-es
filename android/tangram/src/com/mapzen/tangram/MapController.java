@@ -623,9 +623,9 @@ public class MapController implements Renderer, OnTouchListener, OnScaleGestureL
 
     // Font Fetching
     // =============
-    public String getFontFilePath(String family, String weight, String style) {
+    public String getFontFilePath(String key) {
 
-        return fontFileParser.getFontFile(family + "_" + weight + "_" + style);
+        return fontFileParser.getFontFile(key);
 
     }
 

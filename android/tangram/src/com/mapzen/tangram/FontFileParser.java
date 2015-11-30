@@ -7,6 +7,7 @@ import java.io.InputStream;
 import java.io.FileNotFoundException;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.ArrayList;
 
 import org.xmlpull.v1.XmlPullParser;
 import org.xmlpull.v1.XmlPullParserException;
@@ -20,6 +21,8 @@ class FontFileParser {
 
     private void processDocument(XmlPullParser parser) throws XmlPullParserException, IOException {
 
+        ArrayList<String> familyWeights = new ArrayList<String>();
+
         parser.nextTag();
         // Parse Families
         parser.require(XmlPullParser.START_TAG, null, "familyset");
@@ -28,8 +31,10 @@ class FontFileParser {
                 continue;
             }
             if ("family".equals(parser.getName())) {
+                familyWeights.clear();
                 // Parse this family:
                 String name = parser.getAttributeValue(null, "name");
+                if (name == null) { continue; }
                 while (parser.next() != XmlPullParser.END_TAG) {
                     if (parser.getEventType() != XmlPullParser.START_TAG) {
                         continue;
@@ -37,6 +42,7 @@ class FontFileParser {
                     String tag = parser.getName();
                     if ("font".equals(tag)) {
                         String weightStr = parser.getAttributeValue(null, "weight");
+                        if (weightStr != null) { familyWeights.add(weightStr); }
                         weightStr = (weightStr == null) ? "400" : weightStr;
 
                         String styleStr = parser.getAttributeValue(null, "style");
@@ -56,9 +62,24 @@ class FontFileParser {
                 String aliasName = parser.getAttributeValue(null, "name");
                 String toName = parser.getAttributeValue(null, "to");
                 String weightStr = parser.getAttributeValue(null, "weight");
-                weightStr = (weightStr == null) ? "400" : weightStr;
-                String fontFilename = fontDict.get(toName + "_" + weightStr + "_normal"); // alias style is default: normal (always)
-                fontDict.put(aliasName + "_" + weightStr, fontFilename);
+                ArrayList<String> aliasWeights = new ArrayList<String>();
+                String fontFilename;
+
+                if (weightStr == null) {
+                    aliasWeights = familyWeights;
+                } else {
+                    aliasWeights.add(weightStr);
+                }
+
+                for (String weight : aliasWeights) {
+                    // Only 2 styles possible based on /etc/fonts.xml
+                    // Normal style
+                    fontFilename = fontDict.get(toName + "_" + weight + "_normal");
+                    fontDict.put(aliasName + "_" + weight + "_normal", fontFilename);
+                    // Italic style
+                    fontFilename = fontDict.get(toName + "_" + weight + "_italic");
+                    fontDict.put(aliasName + "_" + weight + "_italic", fontFilename);
+                }
             } else {
                 skip(parser);
             }
