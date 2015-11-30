@@ -326,6 +326,33 @@ void ShaderProgram::setUniformi(const std::string& _name, int _value) {
     }
 }
 
+void ShaderProgram::setUniformi(const std::string& _name, int _value0, int _value1) {
+    use();
+    GLint location = getUniformLocation(_name);
+    if (location >= 0) {
+        bool cached = getFromCache(location, glm::vec2(_value0, _value1));
+        if (!cached) { glUniform2i(location, _value0, _value1); }
+    }
+}
+
+void ShaderProgram::setUniformi(const std::string& _name, int _value0, int _value1, int _value2) {
+    use();
+    GLint location = getUniformLocation(_name);
+    if (location >= 0) {
+        bool cached = getFromCache(location, glm::vec3(_value0, _value1, _value2));
+        if (!cached) { glUniform3i(location, _value0, _value1, _value2); }
+    }
+}
+
+void ShaderProgram::setUniformi(const std::string& _name, int _value0, int _value1, int _value2, int _value3) {
+    use();
+    GLint location = getUniformLocation(_name);
+    if (location >= 0) {
+        bool cached = getFromCache(location, glm::vec4(_value0, _value1, _value2, _value3));
+        if (!cached) { glUniform4i(location, _value0, _value1, _value2, _value3); }
+    }
+}
+
 void ShaderProgram::setUniformf(const std::string& _name, float _value) {
     use();
     GLint location = getUniformLocation(_name);

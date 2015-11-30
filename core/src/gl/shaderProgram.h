@@ -65,6 +65,9 @@ public:
      * Ensures the program is bound and then sets the named uniform to the given value(s)
      */
     void setUniformi(const std::string& _name, int _value);
+    void setUniformi(const std::string& _name, int _value0, int _value1);
+    void setUniformi(const std::string& _name, int _value0, int _value1, int _value2);
+    void setUniformi(const std::string& _name, int _value0, int _value1, int _value2, int _value3);
 
     void setUniformf(const std::string& _name, float _value);
     void setUniformf(const std::string& _name, float _value0, float _value1);
