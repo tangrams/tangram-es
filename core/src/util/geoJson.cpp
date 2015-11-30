@@ -30,30 +30,36 @@ Polygon GeoJson::getPolygon(const JsonValue& _in, const Transform& _proj) {
 
 }
 
-Feature GeoJson::getFeature(const JsonValue& _in, const Transform& _proj, int32_t _sourceId) {
+Properties GeoJson::getProperties(const JsonValue& _in, int32_t _sourceId) {
 
-    Feature feature(_sourceId);
+    Properties properties;
+    properties.sourceId = _sourceId;
+    for (auto it = _in.MemberBegin(); it != _in.MemberEnd(); ++it) {
 
-    // Copy properties into tile data
-
-    const JsonValue& properties = _in["properties"];
-
-    for (auto itr = properties.MemberBegin(); itr != properties.MemberEnd(); ++itr) {
-
-        const auto& member = itr->name.GetString();
-
-        const JsonValue& prop = properties[member];
-
-        if (prop.IsNumber()) {
-            feature.props.set(member, prop.GetDouble());
-        } else if (prop.IsString()) {
-            feature.props.set(member, prop.GetString());
+        const auto& name = it->name.GetString();
+        const auto& value = it->value;
+        if (value.IsNumber()) {
+            properties.set(name, value.GetDouble());
+        } else if (it->value.IsString()) {
+            properties.set(name, value.GetString());
         }
 
     }
+    return properties;
+
+}
+
+Feature GeoJson::getFeature(const JsonValue& _in, const Transform& _proj, int32_t _sourceId) {
+
+    Feature feature;
+
+    // Copy properties into tile data
+    auto properties = _in.FindMember("properties");
+    if (properties != _in.MemberEnd()) {
+        feature.props = std::move(getProperties(properties->value, _sourceId));
+    }
 
     // Copy geometry into tile data
-
     const JsonValue& geometry = _in["geometry"];
     const JsonValue& coords = geometry["coordinates"];
     const std::string& geometryType = geometry["type"].GetString();
