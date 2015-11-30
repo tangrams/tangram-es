@@ -455,4 +455,4 @@ layers:
     pois:
         data: { source: osm }
         draw:
-            sprites: {}
+            icons: {}
