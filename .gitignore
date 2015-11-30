@@ -121,6 +121,12 @@ build
 cmake_install.cmake
 install_manifest.txt
 
+# Android debugging
+android/demo/jni
+android/*/libs
+android/*/obj
+*.mk
+
 # vim 
 *.swp
 *.swo

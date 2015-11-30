@@ -21,6 +21,12 @@ android {
     resources.srcDirs = ['src']
     res.srcDirs = ['res']
   }
+  buildTypes {
+    debug {
+      // applicationIdSuffix ".debug"
+      jniDebuggable true
+    }
+  }
 }
 
 dependencies {

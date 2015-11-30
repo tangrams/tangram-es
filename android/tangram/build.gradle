@@ -36,6 +36,15 @@ android {
   }
 }
 
+// Add gdb server to apk
+afterEvaluate {
+    Sync packageTask = project.getTasks().findByName("packageReleaseJniLibs")
+    if (packageTask) { packageTask.include(['**/gdbserver', '**/gdb.setup']) }
+
+    packageTask = project.getTasks().findByName("packageDebugJniLibs")
+    if (packageTask) { packageTask.include(['**/gdbserver', '**/gdb.setup']) }
+}
+
 dependencies {
   compile 'com.squareup.okhttp:okhttp:2.5.0'
   compile 'xmlpull:xmlpull:1.1.3.1'
