@@ -61,6 +61,8 @@ private:
     isect2d::ISect2D<glm::vec2> m_isect2d;
 
     std::vector<TouchItem> m_touchItems;
+
+    int m_lastZoom;
 };
 
 }

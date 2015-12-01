@@ -118,45 +118,47 @@ void Labels::update(const View& _view, float _dt, const std::vector<std::unique_
 
     /// Mark labels to skip transitions
 
-    for (const auto& t0 : _tiles) {
-        TileID tileID = t0->getID();
-        std::vector<std::shared_ptr<Tile>> tiles;
+    if (m_lastZoom != (int) _view.getZoom()) {
+        for (const auto& t0 : _tiles) {
+            TileID tileID = t0->getID();
+            std::vector<std::shared_ptr<Tile>> tiles;
 
-        float currentZoom = _view.getZoom();
+            float currentZoom = _view.getZoom();
 
-        if (_view.getNextZoom() > currentZoom) {
-            tiles.push_back(_cache->contains(t0->getDataSourceSerial(), tileID.getParent()));
-        } else {
-            tiles.push_back(_cache->contains(t0->getDataSourceSerial(), tileID.getChild(0)));
-            tiles.push_back(_cache->contains(t0->getDataSourceSerial(), tileID.getChild(1)));
-            tiles.push_back(_cache->contains(t0->getDataSourceSerial(), tileID.getChild(2)));
-            tiles.push_back(_cache->contains(t0->getDataSourceSerial(), tileID.getChild(3)));
-        }
+            if (_view.getNextZoom() > currentZoom) {
+                tiles.push_back(_cache->contains(t0->getDataSourceSerial(), tileID.getParent()));
+            } else {
+                tiles.push_back(_cache->contains(t0->getDataSourceSerial(), tileID.getChild(0)));
+                tiles.push_back(_cache->contains(t0->getDataSourceSerial(), tileID.getChild(1)));
+                tiles.push_back(_cache->contains(t0->getDataSourceSerial(), tileID.getChild(2)));
+                tiles.push_back(_cache->contains(t0->getDataSourceSerial(), tileID.getChild(3)));
+            }
 
-        for (const auto& t1 : tiles) {
-            if (!t1) { continue; }
-            for (const auto& style : _styles) {
-                const auto& m0 = t0->getMesh(*style);
-                if (!m0) { continue; }
-                const LabelMesh* mesh0 = dynamic_cast<const LabelMesh*>(m0.get());
-                if (!mesh0) { continue; }
-                const auto& m1 = t1->getMesh(*style);
-                if (!m1) { continue; }
-                const LabelMesh* mesh1 = static_cast<const LabelMesh*>(m1.get());
+            for (const auto& t1 : tiles) {
+                if (!t1) { continue; }
+                for (const auto& style : _styles) {
+                    const auto& m0 = t0->getMesh(*style);
+                    if (!m0) { continue; }
+                    const LabelMesh* mesh0 = dynamic_cast<const LabelMesh*>(m0.get());
+                    if (!mesh0) { continue; }
+                    const auto& m1 = t1->getMesh(*style);
+                    if (!m1) { continue; }
+                    const LabelMesh* mesh1 = static_cast<const LabelMesh*>(m1.get());
 
-                for (auto& l0 : mesh0->getLabels()) {
-                    if (!l0->canOcclude()) { continue; }
+                    for (auto& l0 : mesh0->getLabels()) {
+                        if (!l0->canOcclude()) { continue; }
 
-                    for (auto& l1 : mesh1->getLabels()) {
-                        if (!l1 || !l1->canOcclude() || l0->getHash() != l1->getHash()) {
-                            continue;
-                        }
-                        float d2 = glm::distance2(l0->getTransform().state.screenPos,
-                                l1->getTransform().state.screenPos);
+                        for (auto& l1 : mesh1->getLabels()) {
+                            if (!l1 || !l1->canOcclude() || l0->getHash() != l1->getHash()) {
+                                continue;
+                            }
+                            float d2 = glm::distance2(l0->getTransform().state.screenPos,
+                                    l1->getTransform().state.screenPos);
 
-                        // The new label lies within the circle defined by the bbox of l0
-                        if (sqrt(d2) < std::max(l0->getDimension().x, l0->getDimension().y)) {
-                            l0->skipTransitions();
+                            // The new label lies within the circle defined by the bbox of l0
+                            if (sqrt(d2) < std::max(l0->getDimension().x, l0->getDimension().y)) {
+                                l0->skipTransitions();
+                            }
                         }
                     }
                 }
@@ -175,6 +177,8 @@ void Labels::update(const View& _view, float _dt, const std::vector<std::unique_
     if (m_needUpdate) {
         requestRender();
     }
+
+    m_lastZoom = (int) z;
 }
 
 const std::vector<TouchItem>& Labels::getFeaturesAtPoint(const View& _view, float _dt,
