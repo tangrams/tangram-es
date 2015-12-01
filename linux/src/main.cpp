@@ -16,6 +16,10 @@ void init_main_window();
 
 std::string sceneFile = "scene.yaml";
 
+GLFWwindow* main_window = nullptr;
+int width = 800;
+int height = 600;
+
 // Input handling
 // ==============
 
@@ -24,6 +28,8 @@ const double scroll_multiplier = 0.05; // scaling for zoom
 const double single_tap_time = 0.25; //seconds (to avoid a long press being considered as a tap)
 
 bool was_panning = false;
+bool is_zooming = false;
+bool is_rotating = false;
 double last_mouse_up = -double_tap_time; // First click should never trigger a double tap
 double last_mouse_down = 0.0f;
 double last_x_down = 0.0;
@@ -41,12 +47,17 @@ void mouse_button_callback(GLFWwindow* window, int button, int action, int mods)
 
     if (was_panning) {
         was_panning = false;
+        is_zooming = false;
+        is_rotating = false;
         return; // Clicks with movement don't count as taps
     }
 
     double x, y;
     glfwGetCursorPos(window, &x, &y);
     double time = glfwGetTime();
+
+    if ((mods & GLFW_MOD_SHIFT) != 0) { is_zooming = true; }
+    if ((mods & GLFW_MOD_CONTROL) != 0) { is_rotating = true; }
 
     if (action == GLFW_PRESS) {
         Tangram::handlePanGesture(0.0f, 0.0f, 0.0f, 0.0f);
@@ -108,7 +119,13 @@ void cursor_pos_callback(GLFWwindow* window, double x, double y) {
 
     if (action == GLFW_PRESS) {
 
-        if (was_panning) {
+        if (is_zooming) {
+            Tangram::handlePinchGesture(width/2, height/2, 1.0 + 0.01 * (last_y_down - y), 0.f);
+
+        } else if (is_rotating) {
+            Tangram::handleRotateGesture(width/2, height/2, 0.01 * (last_x_down - x));
+
+        } else if (was_panning) {
             Tangram::handlePanGesture(last_x_down, last_y_down, x, y);
         }
 
@@ -124,8 +141,10 @@ void scroll_callback(GLFWwindow* window, double scrollx, double scrolly) {
     double x, y;
     glfwGetCursorPos(window, &x, &y);
 
-    bool rotating = glfwGetKey(window, GLFW_KEY_LEFT_ALT) == GLFW_PRESS || glfwGetKey(window, GLFW_KEY_RIGHT_ALT) == GLFW_PRESS;
-    bool shoving = glfwGetKey(window, GLFW_KEY_LEFT_CONTROL) == GLFW_PRESS || glfwGetKey(window, GLFW_KEY_RIGHT_CONTROL) == GLFW_PRESS;
+    bool rotating = glfwGetKey(window, GLFW_KEY_LEFT_ALT) == GLFW_PRESS ||
+                    glfwGetKey(window, GLFW_KEY_RIGHT_ALT) == GLFW_PRESS;
+    bool shoving = glfwGetKey(window, GLFW_KEY_LEFT_CONTROL) == GLFW_PRESS ||
+                   glfwGetKey(window, GLFW_KEY_RIGHT_CONTROL) == GLFW_PRESS;
 
     if (shoving) {
         Tangram::handleShoveGesture(scroll_multiplier * scrolly);
@@ -192,14 +211,10 @@ void drop_callback(GLFWwindow* window, int count, const char** paths) {
 // Window handling
 // ===============
 
-GLFWwindow* main_window = nullptr;
-int width = 800;
-int height = 600;
-
-void window_size_callback(GLFWwindow* window, int width, int height) {
-
+void window_size_callback(GLFWwindow* window, int w, int h) {
+    width = w;
+    height = h;
     Tangram::resize(width, height);
-
 }
 
 void init_main_window() {
