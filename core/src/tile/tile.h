@@ -22,7 +22,7 @@ class View;
 class StyleContext;
 struct TileData;
 
-enum class TileState { none, loading, processing, ready, canceled, stale, updating};
+enum class TileState { none, loading, processing, ready, canceled };
 
 /* Tile of vector map data
  *
@@ -148,6 +148,10 @@ public:
 
     /* Get the sum in bytes of all <VboMesh>es */
     size_t getMemoryUsage() const;
+
+    bool stale = false;
+
+    bool isStale() { return stale; }
 
 private:
 

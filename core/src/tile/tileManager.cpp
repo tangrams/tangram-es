@@ -109,8 +109,7 @@ bool TileManager::setTileState(Tile& _tile, TileState _newState) {
             m_loadPending++;
             return true;
         }
-        if (_newState == TileState::processing ||
-            _newState == TileState::stale) {
+        if (_newState == TileState::processing) {
             _tile.setState(_newState);
             return true;
         }
@@ -121,8 +120,7 @@ bool TileManager::setTileState(Tile& _tile, TileState _newState) {
 
     case TileState::loading:
         if (_newState == TileState::processing ||
-            _newState == TileState::canceled ||
-            _newState == TileState::stale) {
+            _newState == TileState::canceled) {
             _tile.setState(_newState);
             m_loadPending--;
             return true;
@@ -130,8 +128,7 @@ bool TileManager::setTileState(Tile& _tile, TileState _newState) {
         break;
 
     case TileState::processing:
-        if (_newState == TileState::ready ||
-            _newState == TileState::stale) {
+        if (_newState == TileState::ready) {
             _tile.setState(_newState);
             return true;
         }
@@ -140,26 +137,6 @@ bool TileManager::setTileState(Tile& _tile, TileState _newState) {
     case TileState::canceled:
         // Ignore any state change when tile was canceled
         return false;
-
-    case TileState::stale:
-        if (_newState == TileState::updating) {
-            _tile.setState(_newState);
-            return true;
-        }
-
-    case TileState::updating:
-        if (_newState == TileState::ready ||
-            _newState == TileState::stale ||
-            _newState == TileState::canceled) {
-            _tile.setState(_newState);
-            return true;
-        }
-
-    case TileState::ready:
-        if (_newState == TileState::stale) {
-            _tile.setState(_newState);
-            return true;
-        }
 
     default:
         break;
@@ -205,7 +182,9 @@ void TileManager::markStale(int32_t _sourceId) {
     for (auto& tileSet : m_tileSets) {
         if (tileSet.source->id() != _sourceId) { continue; }
         for (auto& tile : tileSet.tiles) {
-            setTileState(*tile.second, TileState::stale);
+            tile.second->stale = true;
+            LOG("mark stale");
+            //setTileState(*tile.second, TileState::stale);
         }
     }
 }
@@ -241,18 +220,26 @@ void TileManager::updateTileSet(TileSet& tileSet) {
 
         while (it != m_readyTiles.end()) {
             auto& task = *it;
-            auto& tile = task->tile; // task tile, could be a non tileSet tile to refresh a stale tile
+            auto& tile = task->tile;
 
             if (tileSet.source == task->source) {
+                auto setTile = tileSet.tiles.find(tile->getID());
 
-                auto& setTile = tileSet.tiles[tile->getID()];
-                if (setTile && setTile->hasState(TileState::updating)) {
-                    setTile = tile;
-                    m_tileSetChanged = true;
-                }
-                if (setTileState(*tile, TileState::ready)) {
-                    clearProxyTiles(tileSet, *tile, removeTiles);
-                    m_tileSetChanged = true;
+                //auto& setTile = tileSet.tiles[tile->getID()];
+
+                if (setTile != tileSet.tiles.end()) {
+                    // when instances are different replace stale tile in tileSet
+                    if (setTile->second.get() != tile.get()) {
+                        LOG("replace tile");
+                        setTile->second = tile;
+                        m_tileSetChanged = true;
+                    }
+                    if (setTileState(*tile, TileState::ready)) {
+                        clearProxyTiles(tileSet, *tile, removeTiles);
+                        m_tileSetChanged = true;
+                    }
+                } else {
+                    LOG("got orphaned tile task");
                 }
                 it = m_readyTiles.erase(it);
             } else {
@@ -293,13 +280,16 @@ void TileManager::updateTileSet(TileSet& tileSet) {
                 auto& tile = curTilesIt->second;
                 tile->setVisible(true);
 
-                if (tile->isReady() || tile->hasState(TileState::updating)) {
+                if (tile->isReady()) {
                     m_tiles.push_back(tile);
-                } else if(tile->hasState(TileState::stale)) {
-                    m_tiles.push_back(tile); // Keep on drawing the stale tile, new tile will update this
-                    enqueueTask(tileSet, visTileId, viewCenter);
-                    setTileState(*tile, TileState::updating);
-                } else if (tile->hasState(TileState::none)) {
+
+                    if (tile->stale) {
+                        // Tile needs update - enqueue for loading
+                        enqueueTask(tileSet, visTileId, viewCenter);
+                    }
+                } else if (tile->hasState(TileState::none) || tile->stale) {
+                    // FIXME: use tileSourceSerial < sourceSerial
+
                     // Not yet available - enqueue for loading
                     enqueueTask(tileSet, visTileId, viewCenter);
                     if (m_tileSetChanged) {
@@ -386,34 +376,44 @@ void TileManager::enqueueTask(const TileSet& tileSet, const TileID& tileID,
                                    return distance < std::get<0>(other);
                                });
 
-    // Enqueue a new tile to update the stale tile
-    if (tileSet.tiles.at(tileID)->hasState(TileState::stale)) {
-        std::shared_ptr<Tile> tile(new Tile(tileID, m_view->getMapProjection()));
-        m_loadTasks.insert(it, std::make_tuple(distance, &tileSet, std::move(tile)));
-    } else {
-        m_loadTasks.insert(it, std::make_tuple(distance, &tileSet, tileSet.tiles.at(tileID)));
-    }
+    m_loadTasks.insert(it, std::make_tuple(distance, &tileSet, &tileID));
 }
 
 void TileManager::loadTiles() {
 
     for (auto& item : m_loadTasks) {
 
-        auto& tile =  std::get<2>(item);
-        auto& id = tile->getID();
+        auto id = *std::get<2>(item);
         auto& tileSet = *std::get<1>(item);
 
-        auto& source = tileSet.source;
+        auto tileIt = tileSet.tiles.find(id);
+        if (tileIt == tileSet.tiles.end()) {
+            //assert(false);
+            continue;
+        }
 
-        auto task = std::make_shared<TileTask>(tile, source);
-        if (source->getTileData(task)) {
+        auto tile = tileIt->second;
+
+        if (tile->isStale()) {
+            // use new tile for updating while the stale tile is kept in
+            // tileSet for rendering.
+            // FIXME: A problem here is that this tile cannot be canceled
+            tile = std::make_shared<Tile>(id, m_view->getMapProjection());
+        }
+
+        auto task = std::make_shared<TileTask>(tile, tileSet.source);
+        if (tileSet.source->getTileData(task)) {
+            tile->stale = false;
+
             setTileState(*tile, TileState::loading);
             m_dataCallback.func(std::move(task));
 
         } else if (m_loadPending < (int)MAX_DOWNLOADS) {
+            tile->stale = false;
+
             setTileState(*tile, TileState::loading);
 
-            if (!source->loadTileData(std::move(task), m_dataCallback)) {
+            if (!tileSet.source->loadTileData(std::move(task), m_dataCallback)) {
                 LOGE("Loading failed for tile [%d, %d, %d]", id.z, id.x, id.y);
                 m_loadPending--;
             }
@@ -478,7 +478,8 @@ void TileManager::removeTile(TileSet& tileSet, std::map<TileID,
     _tileIt = tileSet.tiles.erase(_tileIt);
 }
 
-bool TileManager::updateProxyTile(TileSet& tileSet, Tile& _tile, const TileID& _proxy, const Tile::ProxyID _proxyID) {
+bool TileManager::updateProxyTile(TileSet& tileSet, Tile& _tile, const TileID& _proxy,
+                                  const Tile::ProxyID _proxyID) {
     auto& tiles = tileSet.tiles;
 
     // check if the proxy exists in the visible tile set
@@ -524,7 +525,8 @@ void TileManager::updateProxyTiles(TileSet& tileSet, Tile& _tile) {
         if (!updateProxyTile(tileSet, _tile, parentID, Tile::parent)) {
             if (m_view->s_maxZoom > _tileID.z) {
                 for (int i = 0; i < 4; i++) {
-                    updateProxyTile(tileSet, _tile, _tileID.getChild(i), static_cast<Tile::ProxyID>(1 << i));
+                    updateProxyTile(tileSet, _tile, _tileID.getChild(i),
+                                    static_cast<Tile::ProxyID>(1 << i));
                 }
             }
         }

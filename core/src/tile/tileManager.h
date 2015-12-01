@@ -141,7 +141,7 @@ private:
     TileTaskCb m_dataCallback;
 
     /* Temporary list of tiles that need to be loaded */
-    std::vector<std::tuple<double, const TileSet*, std::shared_ptr<Tile>>> m_loadTasks;
+    std::vector<std::tuple<double, const TileSet*, const TileID*>> m_loadTasks;
 
     /* List of tiles passed from <TileWorker> threads */
     std::vector<std::shared_ptr<TileTask>> m_readyTiles;
