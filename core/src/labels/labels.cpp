@@ -99,9 +99,10 @@ void Labels::update(const View& _view, float _dt, const std::vector<std::unique_
 
     for (auto& pair : occlusions) {
         if (!pair.first->occludedLastFrame() || !pair.second->occludedLastFrame()) {
-            if (pair.first->proxy() && !pair.second->proxy() ) {
+            // check first is the label belongs to a proxy tile
+            if (pair.first->isProxy() && !pair.second->isProxy()) {
                 pair.first->setOcclusion(true);
-            } else if (!pair.first->proxy() && pair.second->proxy() ) {
+            } else if (!pair.first->isProxy() && pair.second->isProxy()) {
                 pair.second->setOcclusion(true);
             } else {
                 // lower numeric priority means higher priority

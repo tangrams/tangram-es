@@ -129,8 +129,11 @@ public:
     bool visibleState() const;
 
     void resetState();
+
     void setProxy(bool _proxy);
-    bool proxy() const { return m_proxy; }
+
+    /* Whether the label belongs to a proxy tile */
+    bool isProxy() const { return m_proxy; }
 
 private:
 
@@ -143,8 +146,6 @@ private:
     void setAlpha(float _alpha);
 
     bool m_proxy;
-
-
     // the current label state
     State m_currentState;
     // the label fade effect
