@@ -45,7 +45,7 @@ VboMesh::~VboMesh() {
         glDeleteBuffers(1, &m_glVertexBuffer);
     }
     if (m_glIndexBuffer) {
-        if (RenderState::indexBuffer.compare(m_glVertexBuffer)) {
+        if (RenderState::indexBuffer.compare(m_glIndexBuffer)) {
             RenderState::indexBuffer.init(0, false);
         }
         glDeleteBuffers(1, &m_glIndexBuffer);
