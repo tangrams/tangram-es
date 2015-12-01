@@ -131,7 +131,7 @@ bool TileManager::setTileState(Tile& _tile, TileState _newState) {
 
     case TileState::processing:
         if (_newState == TileState::ready ||
-                _newState == TileState::stale) {
+            _newState == TileState::stale) {
             _tile.setState(_newState);
             return true;
         }
@@ -170,9 +170,9 @@ bool TileManager::setTileState(Tile& _tile, TileState _newState) {
         return true;
     }
 
-    LOGE("Wrong state change %d -> %d<<<", _tile.getState(), _newState);
+    LOGE("Wrong state change %d -> %d", _tile.getState(), _newState);
     assert(false);
-    return false; // ...
+    return false; // no warning
 }
 
 void TileManager::clearTileSets() {
@@ -187,9 +187,9 @@ void TileManager::clearTileSets() {
     m_loadPending = 0;
 }
 
-void TileManager::clearTileSet(int32_t _id) {
+void TileManager::clearTileSet(int32_t _sourceId) {
     for (auto& tileSet : m_tileSets) {
-        if (tileSet.source->id() != _id) { continue; }
+        if (tileSet.source->id() != _sourceId) { continue; }
         for (auto& tile : tileSet.tiles) {
             setTileState(*tile.second, TileState::canceled);
         }
@@ -201,9 +201,9 @@ void TileManager::clearTileSet(int32_t _id) {
     m_tileSetChanged = true;
 }
 
-void TileManager::markStale(int32_t _id) {
+void TileManager::markStale(int32_t _sourceId) {
     for (auto& tileSet : m_tileSets) {
-        if (tileSet.source->id() != _id) { continue; }
+        if (tileSet.source->id() != _sourceId) { continue; }
         for (auto& tile : tileSet.tiles) {
             setTileState(*tile.second, TileState::stale);
         }
@@ -241,7 +241,7 @@ void TileManager::updateTileSet(TileSet& tileSet) {
 
         while (it != m_readyTiles.end()) {
             auto& task = *it;
-            auto& tile = task->tile; //task tile, could be a non tileSet tile to refresh a stale tile
+            auto& tile = task->tile; // task tile, could be a non tileSet tile to refresh a stale tile
 
             if (tileSet.source == task->source) {
 

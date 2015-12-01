@@ -54,8 +54,8 @@ public:
 
     void clearTileSets();
 
-    void clearTileSet(int32_t _id);
-    void markStale(int32_t _id);
+    void clearTileSet(int32_t _sourceId);
+    void markStale(int32_t _sourceId);
 
     /* For TileWorker: Pass TileTask with processed data back
      * to TileManager.
