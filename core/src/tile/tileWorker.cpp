@@ -83,6 +83,8 @@ void TileWorker::run() {
         // NB: Save shared reference to Scene while building tile
         auto scene = m_tileManager.getScene();
 
+        if (!scene) { continue; }
+
         // const clock_t begin = clock();
 
         context.initFunctions(*scene);
