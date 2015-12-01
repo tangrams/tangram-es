@@ -21,9 +21,14 @@ Label::Label(Label::Transform _transform, glm::vec2 _size, Type _type, LabelMesh
     m_occlusionSolved = false;
     m_updateMeshVisibility = true;
     m_dirty = true;
+    m_proxy = false;
 }
 
 Label::~Label() {}
+
+void Label::setProxy(bool _proxy) {
+    m_proxy = _proxy;
+}
 
 bool Label::updateScreenTransform(const glm::mat4& _mvp, const glm::vec2& _screenSize, bool _testVisibility) {
 
@@ -207,6 +212,7 @@ void Label::resetState() {
     m_occlusionSolved = false;
     m_updateMeshVisibility = true;
     m_dirty = true;
+    m_proxy = false;
     enterState(State::wait_occ, 0.0);
 }
 

@@ -55,6 +55,8 @@ void Labels::update(const View& _view, float _dt, const std::vector<std::unique_
         //     continue;
         // }
 
+        bool proxyTile = tile->getProxyCounter() > 0;
+
         glm::mat4 mvp = _view.getViewProjectionMatrix() * tile->getModelMatrix();
 
         for (const auto& style : _styles) {
@@ -66,6 +68,8 @@ void Labels::update(const View& _view, float _dt, const std::vector<std::unique_
 
             for (auto& label : labelMesh->getLabels()) {
                 m_needUpdate |= label->update(mvp, screenSize, _dt, dz);
+
+                label->setProxy(proxyTile);
 
                 if (label->canOcclude()) {
                     m_aabbs.push_back(label->getAABB());
@@ -95,11 +99,17 @@ void Labels::update(const View& _view, float _dt, const std::vector<std::unique_
 
     for (auto& pair : occlusions) {
         if (!pair.first->occludedLastFrame() || !pair.second->occludedLastFrame()) {
-            // lower numeric priority means higher priority
-            if (pair.first->getOptions().priority < pair.second->getOptions().priority) {
+            if (pair.first->proxy() && !pair.second->proxy() ) {
+                pair.first->setOcclusion(true);
+            } else if (!pair.first->proxy() && pair.second->proxy() ) {
                 pair.second->setOcclusion(true);
             } else {
-                pair.first->setOcclusion(true);
+                // lower numeric priority means higher priority
+                if (pair.first->getOptions().priority < pair.second->getOptions().priority) {
+                    pair.second->setOcclusion(true);
+                } else {
+                    pair.first->setOcclusion(true);
+                }
             }
         }
     }

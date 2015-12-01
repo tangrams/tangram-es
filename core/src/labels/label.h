@@ -129,6 +129,8 @@ public:
     bool visibleState() const;
 
     void resetState();
+    void setProxy(bool _proxy);
+    bool proxy() const { return m_proxy; }
 
 private:
 
@@ -139,6 +141,9 @@ private:
     bool updateState(const glm::mat4& _mvp, const glm::vec2& _screenSize, float _dt, float _zoomFract);
 
     void setAlpha(float _alpha);
+
+    bool m_proxy;
+
 
     // the current label state
     State m_currentState;
