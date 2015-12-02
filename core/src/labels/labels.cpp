@@ -17,7 +17,10 @@
 
 namespace Tangram {
 
-Labels::Labels() : m_needUpdate(false) {}
+Labels::Labels()
+    : m_needUpdate(false),
+      m_lastZoom(0.0f)
+{}
 
 Labels::~Labels() {}
 
@@ -43,8 +46,8 @@ void Labels::update(const View& _view, float _dt, const std::vector<std::unique_
 
     glm::vec2 screenSize = glm::vec2(_view.getWidth(), _view.getHeight());
 
-    float z = _view.getZoom();
-    float dz = z - std::floor(z);
+    float currentZoom = _view.getZoom();
+    float dz = currentZoom - std::floor(currentZoom);
 
     //// Collect labels from visible tiles
 
@@ -116,18 +119,18 @@ void Labels::update(const View& _view, float _dt, const std::vector<std::unique_
         }
     }
 
-    /// Mark labels to skip transitions
+    //// Mark labels to skip transitions
 
-    if (m_lastZoom != (int) _view.getZoom()) {
+    if ((int) m_lastZoom != (int) currentZoom) {
         for (const auto& t0 : _tiles) {
             TileID tileID = t0->getID();
             std::vector<std::shared_ptr<Tile>> tiles;
 
-            float currentZoom = _view.getZoom();
-
-            if (_view.getNextZoom() > currentZoom) {
+            if (m_lastZoom < currentZoom) {
+                // zooming in, add the one cached parent tile
                 tiles.push_back(_cache->contains(t0->getDataSourceSerial(), tileID.getParent()));
             } else {
+                // zooming out, add the 4 cached children tiles
                 tiles.push_back(_cache->contains(t0->getDataSourceSerial(), tileID.getChild(0)));
                 tiles.push_back(_cache->contains(t0->getDataSourceSerial(), tileID.getChild(1)));
                 tiles.push_back(_cache->contains(t0->getDataSourceSerial(), tileID.getChild(2)));
@@ -178,7 +181,7 @@ void Labels::update(const View& _view, float _dt, const std::vector<std::unique_
         requestRender();
     }
 
-    m_lastZoom = (int) z;
+    m_lastZoom = currentZoom;
 }
 
 const std::vector<TouchItem>& Labels::getFeaturesAtPoint(const View& _view, float _dt,

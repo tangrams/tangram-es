@@ -62,7 +62,7 @@ private:
 
     std::vector<TouchItem> m_touchItems;
 
-    int m_lastZoom;
+    float m_lastZoom;
 };
 
 }
