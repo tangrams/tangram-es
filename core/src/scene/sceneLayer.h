@@ -17,6 +17,7 @@ class SceneLayer {
     std::string m_name;
     std::vector<DrawRuleData> m_rules;
     std::vector<SceneLayer> m_sublayers;
+    size_t m_depth = 0;
 
 public:
 
@@ -28,6 +29,9 @@ public:
     const auto& filter() const { return m_filter; }
     const auto& rules() const { return m_rules; }
     const auto& sublayers() const { return m_sublayers; }
+    const auto& depth() const { return m_depth; }
+
+    void setDepth(size_t _d);
 };
 
 }
