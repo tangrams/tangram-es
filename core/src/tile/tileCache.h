@@ -42,8 +42,8 @@ public:
         m_cacheUsage(0),
         m_cacheMaxUsage(_cacheSizeMB) {}
 
-    void put(int32_t _source, std::shared_ptr<Tile> _tile) {
-        TileCacheKey k(_source, _tile->getID());
+    void put(int32_t _sourceId, std::shared_ptr<Tile> _tile) {
+        TileCacheKey k(_sourceId, _tile->getID());
 
         m_cacheList.push_front({k, _tile});
         m_cacheMap[k] = m_cacheList.begin();
@@ -52,9 +52,9 @@ public:
         limitCacheSize(m_cacheMaxUsage);
     }
 
-    std::shared_ptr<Tile> get(int32_t _source, TileID _tileID) {
+    std::shared_ptr<Tile> get(int32_t _sourceId, TileID _tileId) {
         std::shared_ptr<Tile> tile;
-        TileCacheKey k(_source, _tileID);
+        TileCacheKey k(_sourceId, _tileId);
 
         auto it = m_cacheMap.find(k);
         if (it != m_cacheMap.end()) {
