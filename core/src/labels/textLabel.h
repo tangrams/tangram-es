@@ -24,6 +24,7 @@ protected:
 private:
 
     glm::vec2 m_anchor;
+    glm::vec2 m_perpAxis;
 
 };
 
