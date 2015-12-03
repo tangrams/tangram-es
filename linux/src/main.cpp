@@ -176,7 +176,8 @@ void test(double time) {
 
     std::string color = "#eeaaee";
 
-    Tangram::clearDataSource(*data_source, true, false);
+    //Tangram::clearDataSource(*data_source, true, false);
+    data_source->clearFeatures();
 
     for (int x = -5; x <= 5; x++) {
         for (int y = -5; y <= 5; y++) {
@@ -193,6 +194,7 @@ void test(double time) {
                             }});
         }
     }
+    data_source->applyChanges();
 
     requestRender();
 }
