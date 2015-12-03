@@ -157,19 +157,27 @@ public:
     void addPoint(const Properties& props, Tangram::LngLat point);
     void addLine(const Properties& props, const Coordinates& line);
     void addPoly(const Properties& props, const std::vector<Coordinates>& polygon);
+    void clearFeatures();
+    void applyChanges();
 };
 } // namespace Tangram
 
 
 %extend Tangram::DataSource {
 
-    void update() {
-        Tangram::clearDataSource(*($self), true, false);
-    }
     void clearJNI() {
         Tangram::clearDataSource(*($self), true, true);
     }
     std::string name() {
         return $self->name();
+    }
+}
+
+%extend Tangram::ClientGeoJsonSource {
+
+    void update() {
+        $self->applyChanges();
+        //requestRender();
+        //Tangram::clearDataSource(*($self), true, false);
     }
 }

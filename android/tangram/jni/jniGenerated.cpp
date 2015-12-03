@@ -313,14 +313,16 @@ SWIGINTERN void std_vector_Sl_std_vector_Sl_Tangram_LngLat_Sg__Sg__set(std::vect
 #include "data/dataSource.h"
 #include "data/clientGeoJsonSource.h"
 
-SWIGINTERN void Tangram_DataSource_update(Tangram::DataSource *self) {
-  Tangram::clearDataSource(*(self), true, false);
-}
 SWIGINTERN void Tangram_DataSource_clearJNI(Tangram::DataSource *self) {
   Tangram::clearDataSource(*(self), true, true);
 }
 SWIGINTERN std::string Tangram_DataSource_name(Tangram::DataSource *self) {
   return self->name();
+}
+SWIGINTERN void Tangram_ClientGeoJsonSource_update(Tangram::ClientGeoJsonSource *self) {
+  self->applyChanges();
+  //requestRender();
+  //Tangram::clearDataSource(*(self), true, false);
 }
 
 #ifdef __cplusplus
@@ -893,20 +895,6 @@ SWIGEXPORT void JNICALL Java_com_mapzen_tangram_TangramJNI_delete_1Polygon(JNIEn
 }
 
 
-SWIGEXPORT void JNICALL Java_com_mapzen_tangram_TangramJNI_DataSource_1update(JNIEnv *jenv, jclass jcls, jlong jarg1, jobject jarg1_) {
-  Tangram::DataSource *arg1 = (Tangram::DataSource *) 0 ;
-  std::shared_ptr< Tangram::DataSource > *smartarg1 = 0 ;
-
-  (void)jenv;
-  (void)jcls;
-  (void)jarg1_;
-
-  smartarg1 = *(std::shared_ptr<  Tangram::DataSource > **)&jarg1;
-  arg1 = (Tangram::DataSource *)(smartarg1 ? smartarg1->get() : 0);
-  Tangram_DataSource_update(arg1);
-}
-
-
 SWIGEXPORT void JNICALL Java_com_mapzen_tangram_TangramJNI_DataSource_1clearJNI(JNIEnv *jenv, jclass jcls, jlong jarg1, jobject jarg1_) {
   Tangram::DataSource *arg1 = (Tangram::DataSource *) 0 ;
   std::shared_ptr< Tangram::DataSource > *smartarg1 = 0 ;
@@ -1103,6 +1091,48 @@ SWIGEXPORT void JNICALL Java_com_mapzen_tangram_TangramJNI_MapData_1addPolyJNI(J
     return ;
   }
   (arg1)->addPoly((Tangram::Properties const &)*arg2,(std::vector< Tangram::Coordinates > const &)*arg3);
+}
+
+
+SWIGEXPORT void JNICALL Java_com_mapzen_tangram_TangramJNI_MapData_1clearFeatures(JNIEnv *jenv, jclass jcls, jlong jarg1, jobject jarg1_) {
+  Tangram::ClientGeoJsonSource *arg1 = (Tangram::ClientGeoJsonSource *) 0 ;
+  std::shared_ptr< Tangram::ClientGeoJsonSource > *smartarg1 = 0 ;
+
+  (void)jenv;
+  (void)jcls;
+  (void)jarg1_;
+
+  smartarg1 = *(std::shared_ptr<  Tangram::ClientGeoJsonSource > **)&jarg1;
+  arg1 = (Tangram::ClientGeoJsonSource *)(smartarg1 ? smartarg1->get() : 0);
+  (arg1)->clearFeatures();
+}
+
+
+SWIGEXPORT void JNICALL Java_com_mapzen_tangram_TangramJNI_MapData_1applyChanges(JNIEnv *jenv, jclass jcls, jlong jarg1, jobject jarg1_) {
+  Tangram::ClientGeoJsonSource *arg1 = (Tangram::ClientGeoJsonSource *) 0 ;
+  std::shared_ptr< Tangram::ClientGeoJsonSource > *smartarg1 = 0 ;
+
+  (void)jenv;
+  (void)jcls;
+  (void)jarg1_;
+
+  smartarg1 = *(std::shared_ptr<  Tangram::ClientGeoJsonSource > **)&jarg1;
+  arg1 = (Tangram::ClientGeoJsonSource *)(smartarg1 ? smartarg1->get() : 0);
+  (arg1)->applyChanges();
+}
+
+
+SWIGEXPORT void JNICALL Java_com_mapzen_tangram_TangramJNI_MapData_1update(JNIEnv *jenv, jclass jcls, jlong jarg1, jobject jarg1_) {
+  Tangram::ClientGeoJsonSource *arg1 = (Tangram::ClientGeoJsonSource *) 0 ;
+  std::shared_ptr< Tangram::ClientGeoJsonSource > *smartarg1 = 0 ;
+
+  (void)jenv;
+  (void)jcls;
+  (void)jarg1_;
+
+  smartarg1 = *(std::shared_ptr<  Tangram::ClientGeoJsonSource > **)&jarg1;
+  arg1 = (Tangram::ClientGeoJsonSource *)(smartarg1 ? smartarg1->get() : 0);
+  Tangram_ClientGeoJsonSource_update(arg1);
 }
 
 

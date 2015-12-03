@@ -40,7 +40,6 @@ public class TangramJNI {
     public final static native long Polygon_get(long jarg1, Polygon jarg1_, int jarg2);
     public final static native void Polygon_set(long jarg1, Polygon jarg1_, int jarg2, long jarg3, Coordinates jarg3_);
     public final static native void delete_Polygon(long jarg1);
-    public final static native void DataSource_update(long jarg1, DataSource jarg1_);
     public final static native void DataSource_clearJNI(long jarg1, DataSource jarg1_);
     public final static native String DataSource_name(long jarg1, DataSource jarg1_);
     public final static native void delete_DataSource(long jarg1);
@@ -49,6 +48,9 @@ public class TangramJNI {
     public final static native void MapData_addPointJNI(long jarg1, MapData jarg1_, long jarg2, Properties jarg2_, LngLat jarg3);
     public final static native void MapData_addLineJNI(long jarg1, MapData jarg1_, long jarg2, Properties jarg2_, long jarg3, Coordinates jarg3_);
     public final static native void MapData_addPolyJNI(long jarg1, MapData jarg1_, long jarg2, Properties jarg2_, long jarg3, Polygon jarg3_);
+    public final static native void MapData_clearFeatures(long jarg1, MapData jarg1_);
+    public final static native void MapData_applyChanges(long jarg1, MapData jarg1_);
+    public final static native void MapData_update(long jarg1, MapData jarg1_);
     public final static native void delete_MapData(long jarg1);
     public final static native void addDataSource(long jarg1, DataSource jarg1_);
     public final static native void clearDataSource(long jarg1, DataSource jarg1_, boolean jarg2, boolean jarg3);

@@ -158,4 +158,16 @@ public class MapData extends DataSource {
         TangramJNI.MapData_addPolyJNI(swigCPtr, this, Properties.getCPtr(props), props, Polygon.getCPtr(polygon), polygon);
     }
 
+    public void clearFeatures() {
+        TangramJNI.MapData_clearFeatures(swigCPtr, this);
+    }
+
+    public void applyChanges() {
+        TangramJNI.MapData_applyChanges(swigCPtr, this);
+    }
+
+    public void update() {
+        TangramJNI.MapData_update(swigCPtr, this);
+    }
+
 }

@@ -37,6 +37,9 @@ public:
     virtual void cancelLoadingTile(const TileID& _tile) override {};
     virtual void clearData() override;
 
+    void clearFeatures();
+    void applyChanges();
+
 protected:
 
     virtual std::shared_ptr<TileData> parse(const Tile& _tile, std::vector<char>& _rawData) const override;
