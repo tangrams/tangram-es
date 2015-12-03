@@ -6,7 +6,7 @@
 #define DESKTOP_GL false
 #endif
 
-#ifdef PLATFORM_ANDROID
+#if defined(PLATFORM_ANDROID) || defined(PLATFORM_RPI)
 typedef long GLsizeiptr;
 typedef long GLintptr;
 #else
@@ -23,7 +23,7 @@ typedef ptrdiff_t GLintptr;
 #define glBindVertexArray glBindVertexArrayAPPLE
 #endif
 
-#if defined(PLATFORM_ANDROID) || defined(PLATFORM_IOS)
+#if defined(PLATFORM_ANDROID) || defined(PLATFORM_IOS) || defined(PLATFORM_RPI)
 #define glMapBuffer glMapBufferOES
 #define glUnmapBuffer glUnmapBufferOES
 #endif
@@ -316,7 +316,7 @@ extern "C" {
     GL_APICALL void GL_APIENTRY glCompileShader(GLuint shader);
     GL_APICALL void GL_APIENTRY glAttachShader(GLuint program, GLuint shader);
     GL_APICALL void GL_APIENTRY glLinkProgram(GLuint program);
-#if PLATFORM_ANDROID
+#if defined(PLATFORM_ANDROID) || defined(PLATFORM_RPI)
     GL_APICALL void GL_APIENTRY glShaderSource(GLuint shader, GLsizei count, const GLchar** string, const GLint *length);
 #else
     GL_APICALL void GL_APIENTRY glShaderSource(GLuint shader, GLsizei count, const GLchar *const*string, const GLint *length);

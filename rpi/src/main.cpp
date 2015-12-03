@@ -13,6 +13,7 @@
 
 #include "context.h"
 #include "tangram.h"
+#include "platform.h"
 #include "platform_rpi.h"
 
 #include <iostream>
