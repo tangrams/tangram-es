@@ -1,6 +1,7 @@
 #pragma once
 
 #include "platform_rpi.h"
+#undef countof
 #include "glm/glm.hpp"
 
 // GL Context
