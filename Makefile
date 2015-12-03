@@ -49,17 +49,37 @@ ifdef RELEASE
 	BUILD_TYPE = -DCMAKE_BUILD_TYPE=Release
 endif
 
-ifdef ANDROID_X86
-	ANDROID_BUILD_DIR = build/android-x86
-	ANDROID_TOOLCHAIN = x86-clang3.6
-	ANDROID_ARCH = x86
+ifdef ANDROID_ARCH
+	ANDROID_BUILD_DIR = build/android-${ANDROID_ARCH}
+	ifeq ($(ANDROID_ARCH), x86)
+		ANDROID_TOOLCHAIN = x86-clang3.6
+	endif
+	ifeq ($(ANDROID_ARCH), x86_64)
+		ANDROID_TOOLCHAIN = x86_64-clang3.6
+	endif
+	ifeq ($(ANDROID_ARCH), armeabi) #TODO: Does not work - linking error
+		ANDROID_TOOLCHAIN = arm-linux-androideabi-clang3.6
+	endif
+	ifeq ($(ANDROID_ARCH), armeabi-v7a)
+		ANDROID_TOOLCHAIN = arm-linux-androideabi-clang3.6
+	endif
+	ifeq ($(ANDROID_ARCH), arm64-v8a)
+		ANDROID_TOOLCHAIN = aarch64-linux-android-clang3.6
+	endif
+	ifeq ($(ANDROID_ARCH), mips) #TODO: Does not work - linking error
+		ANDROID_TOOLCHAIN = mipsel-linux-android-clang3.6
+	endif
+	ifeq ($(ANDROID_ARCH), mips64)
+		ANDROID_TOOLCHAIN = mips64el-linux-android-clang3.6
+	endif
 else
+	ANDROID_ARCH = armeabi-v7a
 	ANDROID_TOOLCHAIN = arm-linux-androideabi-clang3.6
 endif
 
-ifndef ANDROID_ARCH
-	ANDROID_ARCH = armeabi-v7a
-endif
+#$(info ANDROID_ARCH is ${ANDROID_ARCH}) 
+#$(info ANDROID_TOOLCHAIN is ${ANDROID_TOOLCHAIN}) 
+#$(info ANDROID_BUILD_DIR is ${ANDROID_BUILD_DIR}) 
 
 ifndef ANDROID_API_LEVEL
 	ANDROID_API_LEVEL = android-15
