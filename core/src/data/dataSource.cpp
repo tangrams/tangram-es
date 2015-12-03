@@ -103,6 +103,7 @@ void DataSource::setCacheSize(size_t _cacheSize) {
 
 void DataSource::clearData() {
     m_cache->clear();
+    m_generation++;
 }
 
 void DataSource::constructURL(const TileID& _tileCoord, std::string& _url) const {

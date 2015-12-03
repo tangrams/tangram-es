@@ -55,7 +55,6 @@ public:
     void clearTileSets();
 
     void clearTileSet(int32_t _sourceId);
-    void markStale(int32_t _sourceId);
 
     /* For TileWorker: Pass TileTask with processed data back
      * to TileManager.
@@ -101,8 +100,7 @@ private:
     /*
      * Removes a tile from m_tileSet
      */
-    void removeTile(TileSet& tileSet, std::map<TileID, std::shared_ptr<Tile>>::iterator& _tileIter,
-                    std::vector<TileID>& _removes);
+    void removeTile(TileSet& tileSet, std::map<TileID, std::shared_ptr<Tile>>::iterator& _tileIter);
 
     /*
      * Checks and updates m_tileSet with proxy tiles for every new visible tile
@@ -115,7 +113,7 @@ private:
      * Once a visible tile finishes loading and is added to m_tileSet, all
      * its proxy(ies) Tiles are removed
      */
-    void clearProxyTiles(TileSet& tileSet, Tile& _tile, std::vector<TileID>& _removes);
+    void clearProxyTiles(TileSet& tileSet, Tile& _tile);
 
     std::shared_ptr<View> m_view;
     std::shared_ptr<Scene> m_scene;

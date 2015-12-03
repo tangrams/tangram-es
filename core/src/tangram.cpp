@@ -356,13 +356,8 @@ void clearDataSource(DataSource& _source, bool _data, bool _tiles) {
     if (!m_tileManager) { return; }
     std::lock_guard<std::mutex> lock(m_tilesMutex);
 
-    if (_data && !_tiles) {
-        _source.clearData();
-        m_tileManager->markStale(_source.id());
-    } else {
-        if (_tiles) { m_tileManager->clearTileSet(_source.id()); }
-        if (_data) { _source.clearData(); }
-    }
+    if (_tiles) { m_tileManager->clearTileSet(_source.id()); }
+    if (_data) { _source.clearData(); }
 
     requestRender();
 }

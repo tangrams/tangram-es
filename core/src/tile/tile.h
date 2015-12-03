@@ -33,7 +33,7 @@ class Tile {
 
 public:
 
-    Tile(TileID _id, const MapProjection& _projection);
+    Tile(TileID _id, const MapProjection& _projection, int64_t _sourceGeneration = 0);
 
 
     virtual ~Tile();
@@ -149,9 +149,9 @@ public:
     /* Get the sum in bytes of all <VboMesh>es */
     size_t getMemoryUsage() const;
 
-    bool stale = false;
+    bool reloading = false;
 
-    bool isStale() { return stale; }
+    int64_t sourceGeneration() { return m_sourceGeneration; }
 
 private:
 
@@ -177,6 +177,9 @@ private:
     float m_inverseScale = 1;
 
     std::atomic<double> m_priority;
+
+    /* State of the DataSource for which this tile was created */
+    const int64_t m_sourceGeneration;
 
     glm::dvec2 m_tileOrigin; // South-West corner of the tile in 2D projection space in meters (e.g. mercator meters)
 

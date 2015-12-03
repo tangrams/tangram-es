@@ -64,7 +64,7 @@ void ClientGeoJsonSource::clearData() {
 
     std::lock_guard<std::mutex> lock(m_mutexStore);
     m_store.reset();
-
+    m_generation++;
 }
 
 void ClientGeoJsonSource::addPoint(const Properties& _tags, LngLat _point) {

@@ -59,8 +59,11 @@ public:
      */
     void setCacheSize(size_t _cacheSize);
 
+    /* ID of this DataSource instance */
     int32_t id() { return m_id; }
 
+    /* Generation ID of DataSource state (incremented for each update, e.g. on clearData()) */
+    int64_t generation() { return m_generation; }
 
 protected:
 
@@ -80,6 +83,10 @@ protected:
 
     // Unique id for DataSource
     int32_t m_id;
+
+    // Generation of dynamic DataSource state (incremented for each update)
+    int64_t m_generation = 1;
+
     // URL template for requesting tiles from a network or filesystem
     std::string m_urlTemplate;
 
