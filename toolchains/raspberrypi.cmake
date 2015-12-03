@@ -34,9 +34,11 @@ include_directories(/opt/vc/include/)
 include_directories(/opt/vc/include/interface/vcos/pthreads)
 include_directories(/opt/vc/include/interface/vmcs_host/linux)
 
+# load library dependencies
+add_subdirectory(${PROJECT_SOURCE_DIR}/external)
+
 # load core library
 add_subdirectory(${PROJECT_SOURCE_DIR}/core)
-include_directories(${CORE_LIBRARIES_INCLUDE_DIRS})
 
 add_executable(${EXECUTABLE_NAME} ${SOURCES})
 
