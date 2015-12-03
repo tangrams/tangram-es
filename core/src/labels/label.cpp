@@ -286,6 +286,9 @@ bool Label::updateState(const glm::mat4& _mvp, const glm::vec2& _screenSize, flo
                     enterState(State::fading_in, 0.0);
                     animate = true;
                 }
+            } else {
+                // request for occlusion solving
+                animate = true;
             }
             break;
         case State::sleep:
