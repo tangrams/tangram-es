@@ -251,6 +251,7 @@ bool Label::updateState(const glm::mat4& _mvp, const glm::vec2& _screenSize, flo
             if (occludedLastFrame) {
                 m_fade = FadeEffect(false, m_options.hideTransition.ease, m_options.hideTransition.time);
                 enterState(State::fading_out, 1.0);
+                animate = true;
             }
             break;
         case State::fading_in:
@@ -283,13 +284,18 @@ bool Label::updateState(const glm::mat4& _mvp, const glm::vec2& _screenSize, flo
                 }  else {
                     m_fade = FadeEffect(true, m_options.showTransition.ease, m_options.showTransition.time);
                     enterState(State::fading_in, 0.0);
+                    animate = true;
                 }
+            } else {
+                // request for occlusion solving
+                animate = true;
             }
             break;
         case State::sleep:
             if (!occludedLastFrame) {
                 m_fade = FadeEffect(true, m_options.showTransition.ease, m_options.showTransition.time);
                 enterState(State::fading_in, 0.0);
+                animate = true;
             }
             break;
         case State::dead:
