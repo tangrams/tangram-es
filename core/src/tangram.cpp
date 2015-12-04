@@ -278,6 +278,12 @@ void setRotation(float _radians) {
 void setRotation(float _radians, float _duration, EaseType _e) {
 
     float radians_start = getRotation();
+
+    // Ease over the smallest angular distance needed
+    float radians_delta = glm::mod(_radians - radians_start, (float)TWO_PI);
+    if (radians_delta > PI) { radians_delta -= TWO_PI; }
+    _radians = radians_start + radians_delta;
+
     auto cb = [=](float t) { setRotationNow(ease(radians_start, _radians, t, _e)); };
     setEase(EaseField::rotation, { _duration, cb });
 
