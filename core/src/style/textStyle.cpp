@@ -76,9 +76,11 @@ auto TextStyle::applyRule(const DrawRule& _rule, const Properties& _props) const
     _rule.get(StyleParamKey::font_weight, fontWeight);
     _rule.get(StyleParamKey::font_style, fontStyle);
 
+    // Normalize font family names to lowercase
+    for (auto& c : fontFamily) { c = std::tolower(c); }
+
     fontWeight = (fontWeight.size() == 0) ? "400" : fontWeight;
     fontStyle = (fontStyle.size() == 0) ? "normal" : fontStyle;
-    std::string fontKey = fontFamily + "_" + fontWeight + "_" + fontStyle;
     {
         if (!m_fontContext->lock()) { return p; }
 
