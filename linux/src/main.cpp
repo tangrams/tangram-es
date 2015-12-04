@@ -173,6 +173,9 @@ void key_callback(GLFWwindow* window, int key, int scancode, int action, int mod
             case GLFW_KEY_BACKSPACE:
                 init_main_window(); // Simulate GL context loss
                 break;
+            case GLFW_KEY_N:
+                Tangram::setRotation(0.f, 1.f);
+                break;
             default:
                 break;
         }

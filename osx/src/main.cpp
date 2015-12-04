@@ -157,6 +157,9 @@ void key_callback(GLFWwindow* window, int key, int scancode, int action, int mod
             case GLFW_KEY_Z:
                 Tangram::setZoom(Tangram::getZoom() + 1.f, 1.5f);
                 break;
+            case GLFW_KEY_N:
+                Tangram::setRotation(0.f, 1.f);
+                break;
         default:
                 break;
         }
