@@ -184,6 +184,10 @@ void window_size_callback(GLFWwindow* window, int width, int height) {
 
     Tangram::resize(width, height);
 
+    // Work-around for a bug in GLFW on retina displays
+    int fbWidth = 0, fbHeight = 0;
+    glfwGetFramebufferSize(main_window, &fbWidth, &fbHeight);
+    glViewport(0, 0, fbWidth, fbHeight);
 }
 
 void init_main_window() {
