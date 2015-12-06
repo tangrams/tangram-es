@@ -32,11 +32,7 @@ class TileManager {
 
 public:
 
-    /* Returns the single instance of the TileManager */
-    static std::unique_ptr<TileManager> GetInstance() {
-        static std::unique_ptr<TileManager> instance (new TileManager());
-        return std::move(instance);
-    }
+    TileManager();
 
     virtual ~TileManager();
 
@@ -85,8 +81,6 @@ private:
         std::shared_ptr<DataSource> source;
         std::map<TileID, std::shared_ptr<Tile>> tiles;
     };
-
-    TileManager();
 
     void updateTileSet(TileSet& tileSet);
 

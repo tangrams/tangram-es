@@ -66,16 +66,16 @@ void initialize(const char* _scenePath) {
     m_scene = std::make_shared<Scene>();
 
     // Input handler
-    m_inputHandler = std::unique_ptr<InputHandler>(new InputHandler(m_view));
+    m_inputHandler = std::make_unique<InputHandler>(m_view);
 
     // Create a tileManager
-    m_tileManager = TileManager::GetInstance();
+    m_tileManager = std::make_unique<TileManager>();
 
     // Pass references to the view and scene into the tile manager
     m_tileManager->setView(m_view);
 
     // label setup
-    m_labels = std::unique_ptr<Labels>(new Labels());
+    m_labels = std::make_unique<Labels>();
 
     loadScene(_scenePath, true);
 
