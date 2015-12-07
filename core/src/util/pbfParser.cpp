@@ -43,9 +43,10 @@ void PbfParser::extractGeometry(ParserContext& _ctx, protobuf::message& _geomIn)
             p.x = invTileExtent * (double)x;
             p.y = invTileExtent * (double)(_ctx.tileExtent - y);
 
-            _ctx.coordinates.push_back(p);
-            numCoordinates++;
-
+            if (numCoordinates == 0 || _ctx.coordinates.back() != p) {
+                _ctx.coordinates.push_back(p);
+                numCoordinates++;
+            }
         } else if(cmd == pbfGeomCmd::closePath) {
             // end of a polygon, push first point in this line as last and push line to poly
             _ctx.coordinates.push_back(_ctx.coordinates[_ctx.coordinates.size() - numCoordinates]);
@@ -124,7 +125,6 @@ void PbfParser::extractFeature(ParserContext& _ctx, protobuf::message& _featureI
         }
     }
     _out.props = std::move(_ctx.properties);
-
 
     switch(_out.geometryType) {
         case GeometryType::points:
