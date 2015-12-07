@@ -2,19 +2,34 @@
 #include "labels/label.h"
 #include "gl/renderState.h"
 #include "gl/shaderProgram.h"
+#include <atomic>
 
 namespace Tangram {
 
 static GLuint s_quadIndexBuffer = 0;
 static int s_quadGeneration = -1;
+static std::atomic<int> s_meshCounter(0);
 
 const size_t maxVertices = 16384;
 
 LabelMesh::LabelMesh(std::shared_ptr<VertexLayout> _vertexLayout, GLenum _drawMode)
-    : TypedMesh<Label::Vertex>(_vertexLayout, _drawMode, GL_DYNAMIC_DRAW) {
+    : TypedMesh<Label::Vertex>(_vertexLayout, _drawMode, GL_DYNAMIC_DRAW)
+{
+    s_meshCounter++;
 }
 
-LabelMesh::~LabelMesh() {}
+LabelMesh::~LabelMesh() {
+    s_meshCounter--;
+
+    if (s_quadIndexBuffer != 0 && (s_quadGeneration != s_validGeneration || s_meshCounter <= 0)) {
+        if (RenderState::indexBuffer.compare(s_quadIndexBuffer)) {
+            RenderState::indexBuffer.init(0, false);
+        }
+        glDeleteBuffers(1, &s_quadIndexBuffer);
+        s_quadIndexBuffer = 0;
+        s_quadGeneration = -1;
+    }
+}
 
 void LabelMesh::addLabel(std::unique_ptr<Label> _label) {
     m_labels.push_back(std::move(_label));
