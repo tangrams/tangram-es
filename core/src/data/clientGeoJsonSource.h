@@ -39,7 +39,8 @@ public:
 
 protected:
 
-    virtual std::shared_ptr<TileData> parse(const Tile& _tile, std::vector<char>& _rawData) const override;
+    virtual std::shared_ptr<TileData> parse(const TileID& _tileId, const MapProjection& _projection,
+                                            std::vector<char>& _rawData) const override;
 
     std::unique_ptr<GeoJSONVT> m_store;
     mutable std::mutex m_mutexStore;

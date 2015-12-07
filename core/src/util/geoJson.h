@@ -4,22 +4,23 @@
 #include "data/tileData.h"
 
 #include <vector>
+#include <functional>
 
 namespace Tangram {
 
-class Tile;
-
 namespace GeoJson {
 
-void extractPoint(const rapidjson::Value& _in, Point& _out, const Tile& _tile);
+typedef std::function<Point(glm::dvec2 _lonLat)> tileProjectionFn;
 
-void extractLine(const rapidjson::Value& _in, Line& _out, const Tile& _tile);
+void extractPoint(const rapidjson::Value& _in, Point& _out, const tileProjectionFn& _proj);
 
-void extractPoly(const rapidjson::Value& _in, Polygon& _out, const Tile& _tile);
+void extractLine(const rapidjson::Value& _in, Line& _out, const tileProjectionFn& _proj);
 
-void extractFeature(const rapidjson::Value& _in, Feature& _out, const Tile& _tile);
+void extractPoly(const rapidjson::Value& _in, Polygon& _out, const tileProjectionFn& _proj);
 
-void extractLayer(int32_t _sourceId, const rapidjson::Value& _in, Layer& _out, const Tile& _tile);
+void extractFeature(const rapidjson::Value& _in, Feature& _out, const tileProjectionFn& _proj);
+
+void extractLayer(int32_t _sourceId, const rapidjson::Value& _in, Layer& _out, const tileProjectionFn& _proj);
 
 }
 

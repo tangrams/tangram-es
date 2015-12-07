@@ -31,8 +31,6 @@ public:
 
     bool loaded = false;
     bool canceled = false;
-
-    virtual std::shared_ptr<TileData> process();
     bool visible = true;
 
     std::atomic<double> priority;
@@ -41,6 +39,8 @@ public:
         tileId(_tileId),
         source(_source),
         sourceGeneration(_source->generation()) {}
+
+    virtual std::shared_ptr<TileData> process(MapProjection& _projection);
 
     TileTask& operator=(const TileTask& _other) = delete;
 
