@@ -69,7 +69,7 @@ struct TestContext {
 
     void parseTile() {
         Tile tile({0,0,0}, s_projection);
-        tileData = source->parse(tile, rawTileData);
+        tileData = source->parse(tile.getID(), s_projection, rawTileData);
     }
 };
 
@@ -124,9 +124,10 @@ public:
 
         Tile tile({0,0,0}, s_projection);
 
-        source = scene->dataSources()[0];
-
-        tileData = source->parse(tile, rawTileData);
+        if (!scene->dataSources().empty()) {
+            source = scene->dataSources()[0];
+            tileData = source->parse(tile.getID(), s_projection,rawTileData);
+        }
 
         LOG("Ready");
     }
