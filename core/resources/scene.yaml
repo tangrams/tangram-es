@@ -246,7 +246,7 @@ layers:
         draw:
             icons:
                 interactive: true
-                offset: [0px, -15px]
+                #offset: [0px, -15px]
                 size: 20px
                 priority: 5
                 collide: true
@@ -338,7 +338,7 @@ layers:
         draw:
             text:
                 interactive: true
-                offset: [0, 12px]
+                #offset: [0, 12px]
                 align: right
                 text_wrap: 20
                 font:
@@ -355,7 +355,7 @@ layers:
                 interactive: true
                 visible: true
                 priority: 2
-                offset: [0, 8px]
+                #offset: [0, 8px]
                 font:
                     family: sans-serif
                     weight: 400
@@ -368,7 +368,7 @@ layers:
             draw:
                 text:
                     visible: true
-                    offset: [0px, 5px]
+                    #offset: [0px, 5px]
                     priority: 1
                     font:
                         family: sans-serif

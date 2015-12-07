@@ -4,6 +4,8 @@
 #include "gl/texture.h"
 #include "gl/vboMesh.h"
 
+#include <limits>
+
 namespace Tangram {
 
 TextBuffer::TextBuffer(std::shared_ptr<VertexLayout> _vertexLayout)
@@ -52,7 +54,7 @@ std::vector<TextBuffer::WordBreak> TextBuffer::findWords(const std::string& _tex
 int TextBuffer::applyWordWrapping(std::vector<FONSquad>& _quads,
                                   const TextStyle::Parameters& _params,
                                   const FontContext::FontMetrics& _metrics,
-                                  Label::Type _type, glm::vec2* _bbox,
+                                  Label::Type _type,
                                   std::vector<TextBuffer::WordBreak>& _wordBreaks) {
     struct LineQuad {
         std::vector<FONSquad*> quads;
@@ -63,16 +65,12 @@ int TextBuffer::applyWordWrapping(std::vector<FONSquad>& _quads,
     int nLine = 1;
 
     std::vector<LineQuad> lines;
-
     if (_params.wordWrap < _params.text.length() && _type != Label::Type::line) {
        _wordBreaks = findWords(_params.text);
-    } else {
-        for (auto& q : _quads) {
-            _bbox->x = std::max(_bbox->x, q.x1);
-        }
     }
 
     lines.push_back(LineQuad()); // atleast one line
+    float totalWidth = 0.f;
 
     // Apply word wrapping based on the word breaks
     for (int iWord = 0; iWord < int(_wordBreaks.size()); iWord++) {
@@ -106,19 +104,13 @@ int TextBuffer::applyWordWrapping(std::vector<FONSquad>& _quads,
             lines[nLine - 1].quads.push_back(&q);
             lines[nLine - 1].length = q.x1;
 
-            // Adjust the bounding box on x
-            _bbox->x = std::max(_bbox->x, q.x1);
+            totalWidth = std::max(totalWidth, q.x1);
         }
     }
 
-    // Adjust the bounding box on y
-    _bbox->y = _metrics.lineHeight * nLine;
-
-    float bboxOffsetY = _bbox->y * 0.5f - _metrics.lineHeight - _metrics.descender;
-
     // Apply justification
     for (const auto& line : lines) {
-        float paddingRight = _bbox->x - line.length;
+        float paddingRight = totalWidth - line.length;
         float padding = 0;
 
         switch(_params.align) {
@@ -130,8 +122,6 @@ int TextBuffer::applyWordWrapping(std::vector<FONSquad>& _quads,
         for (auto quad : line.quads) {
             quad->x0 += padding;
             quad->x1 += padding;
-            quad->y0 -= bboxOffsetY;
-            quad->y1 -= bboxOffsetY;
         }
     }
 
@@ -163,7 +153,7 @@ std::string TextBuffer::applyTextTransform(const TextStyle::Parameters& _params,
             }
             break;
         case TextLabelProperty::Transform::uppercase:
-            // TOOD : use to wupper when any wide character is detected
+            // TODO : use to wupper when any wide character is detected
             for (size_t i = 0; i < text.length(); ++i) {
                 text[i] = std::toupper(text[i], loc);
             }
@@ -224,9 +214,10 @@ bool TextBuffer::addLabel(const TextStyle::Parameters& _params, Label::Transform
     /// Apply word wrapping
     glm::vec2 bbox;
     std::vector<TextBuffer::WordBreak> wordBreaks;
-    int nLine = applyWordWrapping(quads, _params, _fontContext.getMetrics(), _type, &bbox, wordBreaks);
+    int nLine = applyWordWrapping(quads, _params, _fontContext.getMetrics(), _type, wordBreaks);
 
     /// Generate the quads
+    float yMin = std::numeric_limits<float>::max();
     for (int i = 0; i < int(quads.size()); ++i) {
         if (wordBreaks.size() > 0) {
             bool skip = false;
@@ -248,7 +239,16 @@ bool TextBuffer::addLabel(const TextStyle::Parameters& _params, Label::Transform
         vertices.push_back({{q.x0, q.y1}, {q.s0, q.t1}, {-1.f,  1.f, 0.f}, _params.fill, stroke});
         vertices.push_back({{q.x1, q.y0}, {q.s1, q.t0}, { 1.f, -1.f, 0.f}, _params.fill, stroke});
         vertices.push_back({{q.x1, q.y1}, {q.s1, q.t1}, { 1.f,  1.f, 0.f}, _params.fill, stroke});
+
+        yMin = std::min(yMin, q.y0);
+        bbox.x = std::max(bbox.x, q.x1);
+        bbox.y = std::max(bbox.y, std::abs(yMin - q.y1));
     }
+
+    // Adjust the bounding boxes
+    bbox.y += metrics.descender * nLine;
+    // Approximate the first left side bearing
+    bbox.x += quads[0].x0;
 
     _fontContext.unlock();
 
