@@ -74,7 +74,7 @@ auto Stops::FontSize(const YAML::Node& _node) -> Stops {
     return stops;
 }
 
-auto Stops::Widths(const YAML::Node& _node, const MapProjection& _projection) -> Stops {
+auto Stops::Widths(const YAML::Node& _node, const MapProjection& _projection, const std::vector<Unit>& _units) -> Stops {
     Stops stops;
     if (!_node.IsSequence()) { return stops; }
 
@@ -98,7 +98,19 @@ auto Stops::Widths(const YAML::Node& _node, const MapProjection& _projection) ->
         width.unit = Unit::meter;
         size_t start = 0;
 
-        if (StyleParam::parseValueUnitPair(frameNode[1].Scalar(), start, width)){
+        if (StyleParam::parseValueUnitPair(frameNode[1].Scalar(), start, width)) {
+            bool valid = false;
+            for (auto& unit : _units) {
+                if (width.unit == unit) {
+                    valid = true;
+                    break;
+                }
+            }
+
+            if (!valid) {
+                LOGW("Invalid unit is being used for stop %s", Dump(frameNode[1]).c_str());
+            }
+
             if (width.unit == Unit::meter) {
                 float w = widthMeterToPixel(key, tileSize, width.value);
                 stops.frames.emplace_back(key, w);
