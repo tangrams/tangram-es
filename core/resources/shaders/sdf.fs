@@ -72,7 +72,7 @@ float sampleAlpha(in vec2 uv, float distance, float threshold) {
 void main(void) {
 
     float threshold_fill = 0.5;
-    float threshold_stroke = threshold_fill - v_strokeWidth;
+    float threshold_stroke = threshold_fill - v_strokeWidth * u_device_pixel_ratio;
 
     float distance = texture2D(u_tex, v_texcoords * u_uv_scale_factor).a;
 
