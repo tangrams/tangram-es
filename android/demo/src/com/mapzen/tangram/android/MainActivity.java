@@ -72,7 +72,7 @@ public class MainActivity extends Activity {
                     props.add("type", "point");
                     touchMarkers.addPoint(props, lastTappedPoint);
 
-                    touchMarkers.update();
+                    // touchMarkers.update();
                 }
                 lastTappedPoint.set(tapPoint);
 

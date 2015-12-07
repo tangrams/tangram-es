@@ -102,7 +102,9 @@ void mouse_button_callback(GLFWwindow* window, int button, int action, int mods)
             data_source->addPoint(prop2, p2);
         }
         last_point = p1;
-        Tangram::clearDataSource(*data_source, false, true);
+
+        // This updates the tiles (maybe we need a recalcTiles())
+        requestRender();
     }
 
     last_mouse_up = time;
