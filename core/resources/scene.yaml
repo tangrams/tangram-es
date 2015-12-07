@@ -61,9 +61,9 @@ styles:
         texture: pois
 
 sources:
-    osm:
-        type: MVT
-        url:  https://vector.mapzen.com/osm/all/{z}/{x}/{y}.mvt
+    # osm:
+    #     type: MVT
+    #     url:  https://vector.mapzen.com/osm/all/{z}/{x}/{y}.mvt
 
 layers:
     touch:
@@ -79,8 +79,10 @@ layers:
             filter: { type: poly }
             draw:
               polygons:
-                color: magenta
+                color: function () { return feature.color || 'black'; }
                 order: 40
+                extrude: true
+
         point:
             filter: { type: point }
             draw:

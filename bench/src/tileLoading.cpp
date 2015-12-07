@@ -124,9 +124,10 @@ public:
 
         Tile tile({0,0,0}, s_projection);
 
-        source = scene->dataSources()[0];
-
-        tileData = source->parse(tile, rawTileData);
+        if (!scene->dataSources().empty()) {
+            source = scene->dataSources()[0];
+            tileData = source->parse(tile, rawTileData);
+        }
 
         LOG("Ready");
     }
@@ -138,8 +139,10 @@ public:
 BENCHMARK_DEFINE_F(TileLoadingFixture, BuildTest)(benchmark::State& st) {
 
     while (st.KeepRunning()) {
-        Tile tile({0,0,0}, s_projection);
-        tile.build(styleContext, *scene, *tileData, *source);
+        if (tileData) {
+            Tile tile({0,0,0}, s_projection);
+            tile.build(styleContext, *scene, *tileData, *source);
+        }
     }
 }
 
