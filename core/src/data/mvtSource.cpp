@@ -16,7 +16,8 @@ MVTSource::MVTSource(const std::string& _name, const std::string& _urlTemplate) 
     DataSource(_name, _urlTemplate) {
 }
 
-std::shared_ptr<TileData> MVTSource::parse(const Tile& _tile, std::vector<char>& _rawData) const {
+std::shared_ptr<TileData> MVTSource::parse(const TileID& _tileId, const MapProjection& _projection,
+                                           std::vector<char>& _rawData) const {
 
     std::shared_ptr<TileData> tileData = std::make_shared<TileData>();
 

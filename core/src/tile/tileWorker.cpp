@@ -81,28 +81,27 @@ void TileWorker::run() {
 
         if (task->isCanceled()) { continue; }
 
-        // NB: Save shared reference to Scene while building tile
+        // Save shared reference to Scene while building tile
+        // FIXME: Scene could be released on Worker-Thread and
+        // therefore call unsafe glDelete* functions...
         auto scene = m_tileManager.getScene();
-
         if (!scene) { continue; }
 
-        // FIXME task->process() expects task->tile. Otherwise tile
-        // should be created when tileData is available.
-        task->tile = std::make_shared<Tile>(task->tileId, *scene->mapProjection(),
-                                            task->source.get());
-        auto tileData = task->process();
+        auto tileData = task->process(*scene->mapProjection());
 
         const clock_t begin = clock();
 
         context.initFunctions(*scene);
 
         if (tileData) {
+            task->tile = std::make_shared<Tile>(task->tileId,
+                                                *scene->mapProjection(),
+                                                task->source.get());
+
             task->tile->build(context, *scene, *tileData, *task->source);
 
             float loadTime = (float(clock() - begin) / CLOCKS_PER_SEC) * 1000;
             LOG("loadTime %s - %f", task->tile->getID().toString().c_str(), loadTime);
-        } else {
-            task->tile.reset();
         }
 
         m_tileManager.tileProcessed(std::move(task));
