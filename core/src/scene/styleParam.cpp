@@ -457,11 +457,22 @@ bool StyleParam::isColor(StyleParamKey _key) {
             return false;
     }
 }
+
 bool StyleParam::isWidth(StyleParamKey _key) {
     switch (_key) {
         case StyleParamKey::width:
+        case StyleParamKey::font_stroke_width:
         case StyleParamKey::outline_width:
         case StyleParamKey::size:
+            return true;
+        default:
+            return false;
+    }
+}
+
+bool StyleParam::isFontSize(StyleParamKey _key) {
+    switch (_key) {
+        case StyleParamKey::font_size:
             return true;
         default:
             return false;
