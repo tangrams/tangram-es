@@ -155,8 +155,15 @@ void PbfParser::extractFeature(ParserContext& _ctx, protobuf::message& _featureI
                 } else {
                     // Polygons are in a flat list of rings, with ccw rings indicating
                     // the beginning of a new polygon
-                    if (signedArea(line) >= 0 || _out.polygons.empty()) {
+                    if (_out.polygons.empty()) {
                         _out.polygons.emplace_back();
+                    } else {
+                        double area = signedArea(line);
+                        if (area > 0) {
+                            _out.polygons.emplace_back();
+                        } else if (area == 0){
+                            continue;
+                        }
                     }
                     _out.polygons.back().push_back(std::move(line));
                 }
