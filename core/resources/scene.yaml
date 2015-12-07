@@ -79,8 +79,10 @@ layers:
             filter: { type: poly }
             draw:
               polygons:
-                color: magenta
+                color: function () { return feature.color || 'black'; }
                 order: 40
+                extrude: true
+
         point:
             filter: { type: point }
             draw:
