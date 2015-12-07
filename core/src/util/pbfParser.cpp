@@ -43,9 +43,10 @@ void PbfParser::extractGeometry(ParserContext& _ctx, protobuf::message& _geomIn)
             p.x = invTileExtent * (double)x;
             p.y = invTileExtent * (double)(_ctx.tileExtent - y);
 
-            _ctx.coordinates.push_back(p);
-            numCoordinates++;
-
+            if (numCoordinates == 0 || _ctx.coordinates.back() != p) {
+                _ctx.coordinates.push_back(p);
+                numCoordinates++;
+            }
         } else if(cmd == pbfGeomCmd::closePath) {
             // end of a polygon, push first point in this line as last and push line to poly
             _ctx.coordinates.push_back(_ctx.coordinates[_ctx.coordinates.size() - numCoordinates]);
@@ -125,7 +126,6 @@ void PbfParser::extractFeature(ParserContext& _ctx, protobuf::message& _featureI
     }
     _out.props = std::move(_ctx.properties);
 
-
     switch(_out.geometryType) {
         case GeometryType::points:
             _out.points.insert(_out.points.begin(),
@@ -155,8 +155,15 @@ void PbfParser::extractFeature(ParserContext& _ctx, protobuf::message& _featureI
                 } else {
                     // Polygons are in a flat list of rings, with ccw rings indicating
                     // the beginning of a new polygon
-                    if (signedArea(line) >= 0 || _out.polygons.empty()) {
+                    if (_out.polygons.empty()) {
                         _out.polygons.emplace_back();
+                    } else {
+                        double area = signedArea(line);
+                        if (area > 0) {
+                            _out.polygons.emplace_back();
+                        } else if (area == 0){
+                            continue;
+                        }
                     }
                     _out.polygons.back().push_back(std::move(line));
                 }
