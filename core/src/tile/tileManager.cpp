@@ -14,16 +14,13 @@
 
 namespace Tangram {
 
-TileManager::TileManager() {
-
-    // Instantiate workers
-    m_workers = std::unique_ptr<TileWorker>(new TileWorker(MAX_WORKERS));
+TileManager::TileManager(TileTaskQueue& _tileWorker) : m_workers(_tileWorker) {
 
     m_tileCache = std::unique_ptr<TileCache>(new TileCache(DEFAULT_CACHE_SIZE));
 
     m_dataCallback = TileTaskCb{[this](std::shared_ptr<TileTask>&& task) {
             if (task->hasData()) {
-                m_workers->enqueue(std::move(task));
+                m_workers.enqueue(std::move(task));
             } else {
                 task->cancel();
             }
@@ -31,9 +28,6 @@ TileManager::TileManager() {
 }
 
 TileManager::~TileManager() {
-    if (m_workers->isRunning()) {
-        m_workers->stop();
-    }
     m_tileSets.clear();
 }
 
@@ -80,7 +74,7 @@ void TileManager::setScene(std::shared_ptr<Scene> _scene) {
     }
 
     m_scene = _scene;
-    m_workers->setScene(_scene);
+    //m_workers.setScene(_scene);
 }
 
 void TileManager::addDataSource(std::shared_ptr<DataSource> _dataSource) {
@@ -136,7 +130,7 @@ void TileManager::updateTileSets() {
 
 void TileManager::updateTileSet(TileSet& _tileSet) {
 
-    m_tileSetChanged |= m_workers->checkPendingTiles();
+    m_tileSetChanged |= m_workers.checkProcessedTiles();
 
     if (_tileSet.sourceGeneration != _tileSet.source->generation()) {
         _tileSet.sourceGeneration = _tileSet.source->generation();
