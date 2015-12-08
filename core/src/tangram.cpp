@@ -25,9 +25,13 @@
 #include <bitset>
 #include <mutex>
 
+
 namespace Tangram {
 
+const static size_t MAX_WORKERS = 2;
+
 std::unique_ptr<TileManager> m_tileManager;
+std::unique_ptr<TileWorker> m_tileWorker;
 std::shared_ptr<Scene> m_scene;
 std::shared_ptr<View> m_view;
 std::unique_ptr<Labels> m_labels;
@@ -68,8 +72,15 @@ void initialize(const char* _scenePath) {
     // Input handler
     m_inputHandler = std::make_unique<InputHandler>(m_view);
 
+    // Instantiate workers
+    m_tileWorker = std::make_unique<TileWorker>(MAX_WORKERS);
+    // TODO
+    // if (m_workers->isRunning()) {
+    //     m_workers->stop();
+    // }
+
     // Create a tileManager
-    m_tileManager = std::make_unique<TileManager>();
+    m_tileManager = std::make_unique<TileManager>(*m_tileWorker);
 
     // Pass references to the view and scene into the tile manager
     m_tileManager->setView(m_view);
@@ -106,7 +117,7 @@ void loadScene(const char* _scenePath, bool _setPositionFromScene) {
         m_inputHandler->setView(m_view);
         m_tileManager->setView(m_view);
         m_tileManager->setScene(scene);
-
+        m_tileWorker->setScene(scene);
     }
 }
 
