@@ -2,6 +2,7 @@
 
 #include "util/color.h"
 #include "scene/styleParam.h"
+#include "variant.hpp"
 
 #include <vector>
 
@@ -13,16 +14,15 @@ namespace Tangram {
 
 class MapProjection;
 
+using StopValue = variant<none_type, float, Color, glm::vec2>;
+
 struct Stops {
 
     struct Frame {
         float key = 0;
-        union {
-            float value;
-            Color color;
-        };
+        StopValue value;
         Frame(float _k, float _v) : key(_k), value(_v) {}
-        Frame(float _k, Color _c) : key(_k), color(_c) {}
+        Frame(float _k, Color _c) : key(_k), value(_c) {}
     };
 
     std::vector<Frame> frames;

@@ -141,18 +141,26 @@ auto Stops::evalWidth(float _key) const -> float {
     auto upper = nearestHigherFrame(_key);
     auto lower = upper - 1;
 
-    if (upper == frames.end())  { return lower->value; }
-    if (lower < frames.begin()) { return upper->value; }
+    if (upper == frames.end())  {
+        return lower->value.get<float>();
+    }
+    if (lower < frames.begin()) {
+        return upper->value.get<float>();
+    }
 
-    if (upper->key <= _key) { return upper->value; }
-    if (lower->key >= _key) { return lower->value; }
+    if (upper->key <= _key) {
+        return upper->value.get<float>();
+    }
+    if (lower->key >= _key) {
+        return lower->value.get<float>();
+    }
 
     double range = exp2(upper->key - lower->key) - 1.0;
     double pos = exp2(_key - lower->key) - 1.0;
 
     double lerp = pos / range;
 
-    return lower->value * (1 - lerp) + upper->value * lerp;
+    return lower->value.get<float>() * (1 - lerp) + upper->value.get<float>() * lerp;
 
 }
 
@@ -161,12 +169,16 @@ auto Stops::evalFloat(float _key) const -> float {
     auto upper = nearestHigherFrame(_key);
     auto lower = upper - 1;
 
-    if (upper == frames.end()) { return lower->value; }
-    if (lower < frames.begin()) { return upper->value; }
+    if (upper == frames.end()) {
+        return lower->value.get<float>();
+    }
+    if (lower < frames.begin()) {
+        return upper->value.get<float>();
+    }
 
     float lerp = (_key - lower->key) / (upper->key - lower->key);
 
-    return (lower->value * (1 - lerp) + upper->value * lerp);
+    return (lower->value.get<float>() * (1 - lerp) + upper->value.get<float>() * lerp);
 
 }
 
@@ -174,12 +186,16 @@ auto Stops::evalColor(float _key) const -> uint32_t {
 
     auto upper = nearestHigherFrame(_key);
     auto lower = upper - 1;
-    if (upper == frames.end())  { return lower->color.abgr; }
-    if (lower < frames.begin()) { return upper->color.abgr; }
+    if (upper == frames.end())  {
+        return lower->value.get<Color>().abgr;
+    }
+    if (lower < frames.begin()) {
+        return upper->value.get<Color>().abgr;
+    }
 
     float lerp = (_key - lower->key) / (upper->key - lower->key);
 
-    return Color::mix(lower->color, upper->color, lerp).abgr;
+    return Color::mix(lower->value.get<Color>(), upper->value.get<Color>(), lerp).abgr;
 
 }
 
