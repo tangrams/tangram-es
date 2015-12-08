@@ -300,31 +300,27 @@ layers:
         filter: { $zoom: { min: 14 } }
         draw:
             polygons:
-                style: polygons
+                style: heightglow
                 order: 50
-                color: [.85, .85, .83]
+                color: [.65, .65, .63]
         # turn interactive feature selection on for buildings with names
         interactive:
             filter: { name: true }
             draw:
                 polygons:
-                    style: heightglow
-                    color: [.65, .65, .63]
                     interactive: true
         extruded:
             filter: { $zoom: { min: 15 } }
             draw:
                 polygons:
-                    style: heightglow
-                    color: [.65, .65, .63]
-                    extrude: true
+                    extrude: 'function() { return feature.height || 20 }'
             draw:
                 lines:
                     style: heightglowline
                     width: 1.0
                     color: [.75, .75, .73]
                     order: 52
-                    extrude: true
+                    extrude: 'function() { return feature.height || 20 }'
         high-line:
             filter: {roof_material: grass}
             draw:
