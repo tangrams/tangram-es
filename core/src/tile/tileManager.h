@@ -19,7 +19,7 @@ class Scene;
 class View;
 class TileCache;
 
-/* Singleton container of <Tile>s
+/* Singleton container of <TileSet>s
  *
  * TileManager is a singleton that maintains a set of Tiles based on the current
  * view into the map
@@ -41,8 +41,6 @@ public:
     /* Sets the scene which the TileManager will use to style tiles */
     void setScene(std::shared_ptr<Scene> _scene);
 
-    std::shared_ptr<Scene>& getScene() { return m_scene; }
-
     /* Updates visible tile set if necessary
      *
      * Contacts the <ViewModule> to determine whether the set of visible tiles
@@ -60,7 +58,7 @@ public:
 
     bool hasTileSetChanged() { return m_tileSetChanged; }
 
-    void addDataSource(std::shared_ptr<DataSource> dataSource);
+    void addDataSource(std::shared_ptr<DataSource> _dataSource);
 
     std::unique_ptr<TileCache>& getTileCache() { return m_tileCache; }
 
@@ -154,8 +152,8 @@ private:
 
         void setVisible(bool _visible) {
             m_visible = _visible;
+            if (task) { task->visible = _visible; }
         }
-
     };
 
     struct TileSet {
@@ -166,7 +164,7 @@ private:
 
     void updateTileSet(TileSet& tileSet);
 
-    void enqueueTask(TileSet& tileSet, const TileID& tileID, const glm::dvec2& viewCenter);
+    void enqueueTask(TileSet& _tileSet, const TileID& _tileID, const glm::dvec2& _viewCenter);
 
     void loadTiles();
 
@@ -175,25 +173,25 @@ private:
      *      also responsible for loading proxy tiles for the newly visible tiles
      * @_tileID: TileID for which new Tile needs to be constructed
      */
-    bool addTile(TileSet& tileSet, const TileID& _tileID);
+    bool addTile(TileSet& _tileSet, const TileID& _tileID);
 
     /*
      * Removes a tile from m_tileSet
      */
-    void removeTile(TileSet& tileSet, std::map<TileID, TileEntry>::iterator& _tileIter);
+    void removeTile(TileSet& _tileSet, std::map<TileID, TileEntry>::iterator& _tileIter);
 
     /*
      * Checks and updates m_tileSet with proxy tiles for every new visible tile
      *  @_tile: Tile, the new visible tile for which proxies needs to be added
      */
-    bool updateProxyTile(TileSet& tileSet, TileEntry& _tile, const TileID& _proxy, const ProxyID _proxyID);
-    void updateProxyTiles(TileSet& tileSet, const TileID& _tileID, TileEntry& _tile);
+    bool updateProxyTile(TileSet& _tileSet, TileEntry& _tile, const TileID& _proxy, const ProxyID _proxyID);
+    void updateProxyTiles(TileSet& _tileSet, const TileID& _tileID, TileEntry& _tile);
 
     /*
      * Once a visible tile finishes loading and is added to m_tileSet, all
      * its proxy(ies) Tiles are removed
      */
-    void clearProxyTiles(TileSet& tileSet, const TileID& _tileID, TileEntry& _tile, std::vector<TileID>& _removes);
+    void clearProxyTiles(TileSet& _tileSet, const TileID& _tileID, TileEntry& _tile, std::vector<TileID>& _removes);
 
     std::shared_ptr<View> m_view;
     std::shared_ptr<Scene> m_scene;
