@@ -317,6 +317,9 @@ bool StyleContext::parseStyleResult(StyleParamKey _key, StyleParam::Value& _val)
     } else if (duk_is_number(m_ctx, -1)) {
 
         switch (_key) {
+            case StyleParamKey::extrude:
+                _val = glm::vec2(0.f, static_cast<float>(duk_get_number(m_ctx, -1)));
+                break;
             case StyleParamKey::width:
             case StyleParamKey::outline_width: {
                 // TODO more efficient way to return pixels.
