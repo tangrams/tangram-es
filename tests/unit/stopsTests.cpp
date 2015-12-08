@@ -79,7 +79,7 @@ TEST_CASE("Stops parses correctly from YAML distance values", "[Stops][YAML]") {
 
     MercatorProjection proj;
 
-    Stops stops(Stops::Widths(node, proj));
+    Stops stops(Stops::Widths(node, proj, {}));
 
     // +1 added for meter end stop
     REQUIRE(stops.frames.size() == 5);
@@ -87,10 +87,10 @@ TEST_CASE("Stops parses correctly from YAML distance values", "[Stops][YAML]") {
     REQUIRE(stops.frames[1].key == 16.f);
     REQUIRE(stops.frames[2].key == 18.f);
     REQUIRE(stops.frames[3].key == 19.f);
-    REQUIRE(stops.frames[0].value == 0.f);
+    REQUIRE(stops.frames[0].value.get<float>() == 0.f);
 
     // check if same meters have twice the width in pixel one zoom-level above
-    REQUIRE(std::abs(stops.frames[2].value * 2.0 - stops.frames[3].value) < 0.00001);
+    REQUIRE(std::abs(stops.frames[2].value.get<float>() * 2.0 - stops.frames[3].value.get<float>()) < 0.00001);
 }
 
 TEST_CASE("Stops parses correctly from YAML color values", "[Stops][YAML]") {
@@ -103,8 +103,8 @@ TEST_CASE("Stops parses correctly from YAML color values", "[Stops][YAML]") {
     REQUIRE(stops.frames[0].key == 10.f);
     REQUIRE(stops.frames[1].key == 16.f);
     REQUIRE(stops.frames[2].key == 18.f);
-    REQUIRE(stops.frames[0].color.abgr == 0xffaaaaaa);
-    REQUIRE(stops.frames[1].color.abgr == 0xffff7f00);
-    REQUIRE(stops.frames[2].color.abgr == 0x7fff3f00);
+    REQUIRE(stops.frames[0].value.get<Color>().abgr == 0xffaaaaaa);
+    REQUIRE(stops.frames[1].value.get<Color>().abgr == 0xffff7f00);
+    REQUIRE(stops.frames[2].value.get<Color>().abgr == 0x7fff3f00);
 
 }
