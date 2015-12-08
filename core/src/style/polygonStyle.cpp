@@ -102,8 +102,8 @@ void PolygonStyle::buildPolygon(const Polygon& _polygon, const DrawRule& _rule, 
                 height = extrude[0];
             }
         } else {
-            minHeight = extrude[0];
-            height = extrude[1];
+            minHeight = extrude[0] * _tile.getInverseScale();
+            height = extrude[1] * _tile.getInverseScale();
         }
 
         Builders::buildPolygonExtrusion(_polygon, minHeight, height, builder);

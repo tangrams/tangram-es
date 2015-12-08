@@ -185,9 +185,9 @@ void PolylineStyle::buildLine(const Line& _line, const DrawRule& _rule, const Pr
         height = _props.getNumeric(key_height) * _tile.getInverseScale();
         if (std::isnan(extrude[1])) {
             if (!std::isnan(extrude[0])) {
-                height = extrude[0];
+                height = extrude[0] * _tile.getInverseScale();
             }
-        } else { height = extrude[1]; }
+        } else { height = extrude[1] * _tile.getInverseScale(); }
     }
 
     PolyLineBuilder builder {
