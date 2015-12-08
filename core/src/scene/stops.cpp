@@ -199,6 +199,28 @@ auto Stops::evalColor(float _key) const -> uint32_t {
 
 }
 
+auto Stops::evalVec(float _key) const -> glm::vec2 {
+
+    auto upper = nearestHigherFrame(_key);
+    auto lower = upper - 1;
+
+    if (upper == frames.end()) {
+        return lower->value.get<glm::vec2>();
+    }
+    if (lower < frames.begin()) {
+        return upper->value.get<glm::vec2>();
+    }
+
+    float lerp = (_key - lower->key) / (upper->key - lower->key);
+
+    const glm::vec2& lowerVal = lower->value.get<glm::vec2>();
+    const glm::vec2& upperVal = upper->value.get<glm::vec2>();
+
+    return glm::vec2(lowerVal.x * (1 - lerp) + upperVal.x * lerp,
+                     lowerVal.y * (1 - lerp) + upperVal.y * lerp);
+
+}
+
 auto Stops::nearestHigherFrame(float _key) const -> std::vector<Frame>::const_iterator {
 
     return std::lower_bound(frames.begin(), frames.end(), _key,

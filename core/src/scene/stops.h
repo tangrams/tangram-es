@@ -36,6 +36,7 @@ struct Stops {
     auto evalFloat(float _key) const -> float;
     auto evalWidth(float _key) const -> float;
     auto evalColor(float _key) const -> uint32_t;
+    auto evalVec(float _key) const -> glm::vec2;
     auto nearestHigherFrame(float _key) const -> std::vector<Frame>::const_iterator;
 };
 
