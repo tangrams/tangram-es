@@ -68,6 +68,15 @@ public:
 
 };
 
+struct TileTaskQueue {
+    virtual void enqueue(std::shared_ptr<TileTask>&& task) = 0;
+
+    // Check processed-tiles flag. Resets flag on each call..
+    // TODO better name checkAndResetProcessedTilesFlag?
+    virtual bool checkProcessedTiles() = 0;
+
+};
+
 struct TileTaskCb {
     std::function<void(std::shared_ptr<TileTask>&&)> func;
 };

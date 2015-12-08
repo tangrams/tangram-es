@@ -26,13 +26,12 @@ class TileCache;
  */
 class TileManager {
 
-    const static size_t MAX_WORKERS = 2;
     const static size_t MAX_DOWNLOADS = 4;
     const static size_t DEFAULT_CACHE_SIZE = 32*1024*1024; // 32 MB
 
 public:
 
-    TileManager();
+    TileManager(TileTaskQueue& _tileWorker);
 
     virtual ~TileManager();
 
@@ -89,10 +88,10 @@ private:
         TileEntry(){}
         TileEntry(std::shared_ptr<Tile>& _tile) : tile(_tile) {}
 
-        ~TileEntry(){
-            // Make sure that all proxy references are released
-            assert(m_proxies == 0);
-        }
+        // ~TileEntry(){
+        //   // Debugging: Make sure that all proxy references are released
+        //   assert(m_proxies == 0);
+        // }
 
         std::shared_ptr<Tile> tile;
         std::shared_ptr<TileTask> task;
@@ -100,6 +99,7 @@ private:
         /* A Counter for number of tiles this tile acts a proxy for */
         int m_proxyCounter = 0;
 
+        /* The set of proxy tiles referenced by this tile */
         uint8_t m_proxies = 0;
 
         bool isReady() { return bool(tile); }
@@ -207,7 +207,7 @@ private:
 
     std::unique_ptr<TileCache> m_tileCache;
 
-    std::unique_ptr<TileWorker> m_workers;
+    TileTaskQueue& m_workers;
 
     bool m_tileSetChanged = false;
 

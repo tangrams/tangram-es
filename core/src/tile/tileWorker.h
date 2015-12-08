@@ -1,5 +1,7 @@
 #pragma once
 
+#include "tile/tileTask.h"
+
 #include <memory>
 #include <vector>
 #include <condition_variable>
@@ -14,7 +16,9 @@ class Scene;
 class Tile;
 class TileTask;
 class View;
-class TileWorker {
+
+
+class TileWorker : public TileTaskQueue {
 
 public:
 
@@ -22,15 +26,13 @@ public:
 
     ~TileWorker();
 
-    void enqueue(std::shared_ptr<TileTask>&& task);
+    virtual void enqueue(std::shared_ptr<TileTask>&& task) override;
 
     void stop();
 
     bool isRunning() const { return m_running; }
 
-    // Check pending-tiles flag. Resets flag on each call..
-    // TODO better name checkAndResetPendingTilesFlag?
-    bool checkPendingTiles() {
+    virtual bool checkProcessedTiles() override {
         if (m_pendingTiles) {
             m_pendingTiles = false;
             return true;
