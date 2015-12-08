@@ -84,8 +84,8 @@ void TileManager::setScene(std::shared_ptr<Scene> _scene) {
     m_workers->setScene(_scene);
 }
 
-void TileManager::addDataSource(std::shared_ptr<DataSource> dataSource) {
-    m_tileSets.push_back({ dataSource });
+void TileManager::addDataSource(std::shared_ptr<DataSource> _dataSource) {
+    m_tileSets.push_back({ _dataSource });
 }
 
 void TileManager::clearTileSets() {
@@ -135,9 +135,9 @@ void TileManager::updateTileSets() {
     m_tiles.erase(std::unique(m_tiles.begin(), m_tiles.end()), m_tiles.end());
 }
 
-void TileManager::updateTileSet(TileSet& tileSet) {
+void TileManager::updateTileSet(TileSet& _tileSet) {
 
-    auto& tiles = tileSet.tiles;
+    auto& tiles = _tileSet.tiles;
 
     std::vector<TileID> removeTiles;
 
@@ -152,8 +152,8 @@ void TileManager::updateTileSet(TileSet& tileSet) {
 
     m_tileSetChanged |= m_workers->checkPendingTiles();
 
-    if (tileSet.sourceGeneration != tileSet.source->generation()) {
-        tileSet.sourceGeneration = tileSet.source->generation();
+    if (_tileSet.sourceGeneration != _tileSet.source->generation()) {
+        _tileSet.sourceGeneration = _tileSet.source->generation();
         m_tileSetChanged = true;
     }
 
@@ -181,7 +181,7 @@ void TileManager::updateTileSet(TileSet& tileSet) {
                 entry.setVisible(true);
 
                 if (entry.newData()) {
-                    clearProxyTiles(tileSet, curTileId, entry, removeTiles);
+                    clearProxyTiles(_tileSet, curTileId, entry, removeTiles);
                     entry.tile = std::move(entry.task->tile);
                     entry.task.reset();
                 }
@@ -190,25 +190,25 @@ void TileManager::updateTileSet(TileSet& tileSet) {
                     m_tiles.push_back(entry.tile);
 
                     bool update = !entry.isLoading() &&
-                        (entry.tile->sourceGeneration() < tileSet.source->generation());
+                        (entry.tile->sourceGeneration() < _tileSet.source->generation());
 
                     if (update) {
                         LOG("reload tile %s - %d %d", visTileId.toString().c_str(),
                             entry.tile->sourceGeneration(),
-                            tileSet.source->generation());
+                            _tileSet.source->generation());
 
                         // Tile needs update - enqueue for loading
-                        enqueueTask(tileSet, visTileId, viewCenter);
+                        enqueueTask(_tileSet, visTileId, viewCenter);
                     }
 
                 } else if (!entry.isLoading()) {
 
                     // Not yet available - enqueue for loading
-                    enqueueTask(tileSet, visTileId, viewCenter);
+                    enqueueTask(_tileSet, visTileId, viewCenter);
 
                     if (m_tileSetChanged) {
                         // check again for proxies
-                        updateProxyTiles(tileSet, visTileId, entry);
+                        updateProxyTiles(_tileSet, visTileId, entry);
                     }
                 }
 
@@ -222,9 +222,9 @@ void TileManager::updateTileSet(TileSet& tileSet) {
                 //     NOT_A_TILE. (for the current implementation of > operator)
                 assert(!(visTileId == NOT_A_TILE));
 
-                if (!addTile(tileSet, visTileId)) {
+                if (!addTile(_tileSet, visTileId)) {
                     // Not in cache - enqueue for loading
-                    enqueueTask(tileSet, visTileId, viewCenter);
+                    enqueueTask(_tileSet, visTileId, viewCenter);
                 }
 
                 ++visTilesIt;
@@ -236,7 +236,7 @@ void TileManager::updateTileSet(TileSet& tileSet) {
 
                 if (entry.getProxyCounter() > 0) {
                     if (entry.newData()) {
-                        clearProxyTiles(tileSet, curTileId, entry, removeTiles);
+                        clearProxyTiles(_tileSet, curTileId, entry, removeTiles);
                         entry.tile = std::move(entry.task->tile);
                         entry.task.reset();
                     }
@@ -269,9 +269,9 @@ void TileManager::updateTileSet(TileSet& tileSet) {
                 entry.getProxyCounter(),
                 entry.m_proxies);
 
-            clearProxyTiles(tileSet, it->first, it->second, removeTiles);
+            clearProxyTiles(_tileSet, it->first, it->second, removeTiles);
 
-            removeTile(tileSet, it);
+            removeTile(_tileSet, it);
         }
     }
 
@@ -312,19 +312,19 @@ void TileManager::updateTileSet(TileSet& tileSet) {
     }
 }
 
-void TileManager::enqueueTask(TileSet& tileSet, const TileID& tileID,
-                              const glm::dvec2& viewCenter) {
+void TileManager::enqueueTask(TileSet& _tileSet, const TileID& _tileID,
+                              const glm::dvec2& _viewCenter) {
 
     // Keep the items sorted by distance
-    auto tileCenter = m_view->getMapProjection().TileCenter(tileID);
-    double distance = glm::length2(tileCenter - viewCenter);
+    auto tileCenter = m_view->getMapProjection().TileCenter(_tileID);
+    double distance = glm::length2(tileCenter - _viewCenter);
 
     auto it = std::upper_bound(m_loadTasks.begin(), m_loadTasks.end(), distance,
                                [](auto& distance, auto& other){
                                    return distance < std::get<0>(other);
                                });
 
-    m_loadTasks.insert(it, std::make_tuple(distance, &tileSet, &tileID));
+    m_loadTasks.insert(it, std::make_tuple(distance, &_tileSet, &_tileID));
 }
 
 void TileManager::loadTiles() {
@@ -359,12 +359,12 @@ void TileManager::loadTiles() {
     m_loadTasks.clear();
 }
 
-bool TileManager::addTile(TileSet& tileSet, const TileID& _tileID) {
+bool TileManager::addTile(TileSet& _tileSet, const TileID& _tileID) {
 
-    auto tile = m_tileCache->get(tileSet.source->id(), _tileID);
+    auto tile = m_tileCache->get(_tileSet.source->id(), _tileID);
 
     if (tile) {
-        if (tile->sourceGeneration() == tileSet.source->generation()) {
+        if (tile->sourceGeneration() == _tileSet.source->generation()) {
             m_tiles.push_back(tile);
 
             // Update tile origin based on wrap (set in the new tileID)
@@ -380,18 +380,18 @@ bool TileManager::addTile(TileSet& tileSet, const TileID& _tileID) {
     }
 
     // Add TileEntry to TileSet
-    auto entry = tileSet.tiles.emplace(_tileID, tile);
+    auto entry = _tileSet.tiles.emplace(_tileID, tile);
 
     if (!tile) {
         // Add Proxy if corresponding proxy MapTile ready
-        updateProxyTiles(tileSet, _tileID, entry.first->second);
+        updateProxyTiles(_tileSet, _tileID, entry.first->second);
     }
     entry.first->second.setVisible(true);
 
     return bool(tile);
 }
 
-void TileManager::removeTile(TileSet& tileSet, std::map<TileID, TileEntry>::iterator& _tileIt) {
+void TileManager::removeTile(TileSet& _tileSet, std::map<TileID, TileEntry>::iterator& _tileIt) {
 
     auto& id = _tileIt->first;
     auto& entry = _tileIt->second;
@@ -402,20 +402,21 @@ void TileManager::removeTile(TileSet& tileSet, std::map<TileID, TileEntry>::iter
 
         // 1. Remove from Datasource. Make sure to cancel
         //  the network request associated with this tile.
-        tileSet.source->cancelLoadingTile(id);
+        _tileSet.source->cancelLoadingTile(id);
 
     } else if (entry.isReady()) {
         // Add to cache
-        m_tileCache->put(tileSet.source->id(), entry.tile);
+        m_tileCache->put(_tileSet.source->id(), entry.tile);
     }
 
     // Remove tile from set
-    _tileIt = tileSet.tiles.erase(_tileIt);
+    _tileIt = _tileSet.tiles.erase(_tileIt);
 }
 
-bool TileManager::updateProxyTile(TileSet& tileSet, TileEntry& _tile, const TileID& _proxyTileId,
+bool TileManager::updateProxyTile(TileSet& _tileSet, TileEntry& _tile,
+                                  const TileID& _proxyTileId,
                                   const ProxyID _proxyId) {
-    auto& tiles = tileSet.tiles;
+    auto& tiles = _tileSet.tiles;
 
     // check if the proxy exists in the visible tile set
     {
@@ -441,7 +442,7 @@ bool TileManager::updateProxyTile(TileSet& tileSet, TileEntry& _tile, const Tile
 
     // check if the proxy exists in the cache
     {
-        auto proxyTile = m_tileCache->get(tileSet.source->id(), _proxyTileId);
+        auto proxyTile = m_tileCache->get(_tileSet.source->id(), _proxyTileId);
         if (proxyTile && _tile.setProxy(_proxyId)) {
 
             auto result = tiles.emplace(_proxyTileId, proxyTile);
@@ -456,32 +457,32 @@ bool TileManager::updateProxyTile(TileSet& tileSet, TileEntry& _tile, const Tile
     return false;
 }
 
-void TileManager::updateProxyTiles(TileSet& tileSet, const TileID& _tileID, TileEntry& _tile) {
+void TileManager::updateProxyTiles(TileSet& _tileSet, const TileID& _tileID, TileEntry& _tile) {
 
     // Try parent proxy
     auto parentID = _tileID.getParent();
-    if (updateProxyTile(tileSet, _tile, parentID, ProxyID::parent)) {
+    if (updateProxyTile(_tileSet, _tile, parentID, ProxyID::parent)) {
         LOG("use parent proxy");
         return;
     }
     // Try grandparent
-    if (updateProxyTile(tileSet, _tile, parentID.getParent(), ProxyID::parent2)) {
+    if (updateProxyTile(_tileSet, _tile, parentID.getParent(), ProxyID::parent2)) {
         LOG("use grand parent proxy");
         return;
     }
     // Try children
     if (m_view->s_maxZoom > _tileID.z) {
         for (int i = 0; i < 4; i++) {
-            if (updateProxyTile(tileSet, _tile, _tileID.getChild(i), static_cast<ProxyID>(1 << i))) {
+            if (updateProxyTile(_tileSet, _tile, _tileID.getChild(i), static_cast<ProxyID>(1 << i))) {
                 LOG("use child proxy");
             }
         }
     }
 }
 
-void TileManager::clearProxyTiles(TileSet& tileSet, const TileID& _tileID, TileEntry& _tile,
+void TileManager::clearProxyTiles(TileSet& _tileSet, const TileID& _tileID, TileEntry& _tile,
                                   std::vector<TileID>& _removes) {
-    auto& tiles = tileSet.tiles;
+    auto& tiles = _tileSet.tiles;
 
     auto removeProxy = [&tiles,&_removes](TileID id) {
         auto it = tiles.find(id);
