@@ -6,7 +6,6 @@
 #include "view/view.h"
 #include "scene/scene.h"
 #include "scene/styleContext.h"
-#include "tile/tileManager.h"
 #include "tile/tileID.h"
 #include "tile/tileTask.h"
 
@@ -16,8 +15,7 @@
 
 namespace Tangram {
 
-TileWorker::TileWorker(TileManager& _tileManager, int _num_worker)
-    : m_tileManager(_tileManager) {
+TileWorker::TileWorker(int _num_worker) {
     m_running = true;
 
     for (int i = 0; i < _num_worker; i++) {
@@ -84,7 +82,7 @@ void TileWorker::run() {
         // Save shared reference to Scene while building tile
         // FIXME: Scene could be released on Worker-Thread and
         // therefore call unsafe glDelete* functions...
-        auto scene = m_tileManager.getScene();
+        auto scene = m_scene;
         if (!scene) { continue; }
 
         auto tileData = task->process(*scene->mapProjection());
@@ -94,17 +92,22 @@ void TileWorker::run() {
         context.initFunctions(*scene);
 
         if (tileData) {
-            task->tile = std::make_shared<Tile>(task->tileId,
-                                                *scene->mapProjection(),
-                                                task->source.get());
+            auto tile = std::make_shared<Tile>(task->tileId,
+                                               *scene->mapProjection(),
+                                               task->source.get());
 
-            task->tile->build(context, *scene, *tileData, *task->source);
+            tile->build(context, *scene, *tileData, *task->source);
+
+            // Mark task as ready
+            task->tile = std::move(tile);
 
             float loadTime = (float(clock() - begin) / CLOCKS_PER_SEC) * 1000;
             LOG("loadTime %s - %f", task->tile->getID().toString().c_str(), loadTime);
+        } else {
+            task->cancel();
         }
 
-        m_tileManager.tileProcessed(std::move(task));
+        m_pendingTiles = true;
 
         requestRender();
     }
