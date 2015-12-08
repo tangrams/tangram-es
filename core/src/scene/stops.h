@@ -23,6 +23,7 @@ struct Stops {
         StopValue value;
         Frame(float _k, float _v) : key(_k), value(_v) {}
         Frame(float _k, Color _c) : key(_k), value(_c) {}
+        Frame(float _k, glm::vec2 _v) : key(_k), value(_v) {}
     };
 
     std::vector<Frame> frames;
