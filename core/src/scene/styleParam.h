@@ -134,6 +134,7 @@ struct StyleParam {
 
     static bool isColor(StyleParamKey _key);
     static bool isWidth(StyleParamKey _key);
+    static bool is2DWidth(StyleParamKey _key);
     static bool isFontSize(StyleParamKey _key);
     static bool isRequired(StyleParamKey _key);
 

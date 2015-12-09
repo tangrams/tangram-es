@@ -467,6 +467,14 @@ bool StyleParam::isWidth(StyleParamKey _key) {
         case StyleParamKey::outline_width:
         case StyleParamKey::size:
         case StyleParamKey::font_stroke_width:
+            return true;
+        default:
+            return false;
+    }
+}
+
+bool StyleParam::is2DWidth(StyleParamKey _key) {
+    switch (_key) {
         case StyleParamKey::offset:
             return true;
         default:

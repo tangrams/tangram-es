@@ -44,13 +44,13 @@ TEST_CASE("Stops evaluate vec2 values correctly at and between key frames", "[St
             Stops::Frame(4, glm::vec2(0.0, 1.0))
     });
 
-    REQUIRE(stops.evalVec(-3) == glm::vec2(0.0));
-    REQUIRE(stops.evalVec(0) == glm::vec2(0.0));
-    REQUIRE(stops.evalVec(0.3) == glm::vec2(0.3));
-    REQUIRE(stops.evalVec(1) == glm::vec2(1.0));
-    REQUIRE(stops.evalVec(1.5) == glm::vec2(1.0, 0.5));
-    REQUIRE(stops.evalVec(4) == glm::vec2(0.0, 1.0));
-    REQUIRE(stops.evalVec(3.0) == glm::vec2(0.5));;
+    REQUIRE(stops.evalVec2(-3) == glm::vec2(0.0));
+    REQUIRE(stops.evalVec2(0) == glm::vec2(0.0));
+    REQUIRE(stops.evalVec2(0.3) == glm::vec2(0.3));
+    REQUIRE(stops.evalVec2(1) == glm::vec2(1.0));
+    REQUIRE(stops.evalVec2(1.5) == glm::vec2(1.0, 0.5));
+    REQUIRE(stops.evalVec2(4) == glm::vec2(0.0, 1.0));
+    REQUIRE(stops.evalVec2(3.0) == glm::vec2(0.5));;
 
 }
 

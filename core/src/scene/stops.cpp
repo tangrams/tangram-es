@@ -74,6 +74,51 @@ auto Stops::FontSize(const YAML::Node& _node) -> Stops {
     return stops;
 }
 
+auto Stops::Widths2D(const YAML::Node& _node, const std::vector<Unit>& _units) -> Stops {
+    Stops stops;
+    if (!_node.IsSequence()) {
+        return stops;
+    }
+    float lastKey = 0;
+    for (const auto& frameNode : _node) {
+        if (!frameNode.IsSequence() || frameNode.size() != 2) { continue; }
+        float key = frameNode[0].as<float>();
+
+        if (lastKey > key) {
+            LOGW("Invalid stop order: key %f > %f\n", lastKey, key);
+            continue;
+        }
+        lastKey = key;
+
+        if (frameNode[1].IsSequence()) {
+            std::vector<StyleParam::ValueUnitPair> widths;
+            Unit lastUnit = Unit::pixel;
+
+            for (const auto& sequenceNode : frameNode[1]) {
+                StyleParam::ValueUnitPair width;
+                width.unit = Unit::pixel; // default to pixel
+                if (StyleParam::parseValueUnitPair(sequenceNode.Scalar(), 0, width)) {
+                    widths.push_back(width);
+                    if (lastUnit != width.unit) {
+                        LOGW("Mixed units not allowed for stop values", Dump(frameNode[1]).c_str());
+                    }
+                    lastUnit = width.unit;
+                } else {
+                    LOGW("could not parse node %s\n", Dump(sequenceNode).c_str());
+                }
+            }
+            if (widths.size() == 2) {
+                if (widths[0].unit != Unit::pixel || widths[1].unit != Unit::pixel) {
+                    LOGW("Non-pixel unit not allowed for multidimensionnal stop values");
+                }
+                stops.frames.emplace_back(key, glm::vec2(widths[0].value, widths[1].value));
+            }
+        }
+    }
+
+    return stops;
+}
+
 auto Stops::Widths(const YAML::Node& _node, const MapProjection& _projection, const std::vector<Unit>& _units) -> Stops {
     Stops stops;
     if (!_node.IsSequence()) { return stops; }
@@ -199,7 +244,7 @@ auto Stops::evalColor(float _key) const -> uint32_t {
 
 }
 
-auto Stops::evalVec(float _key) const -> glm::vec2 {
+auto Stops::evalVec2(float _key) const -> glm::vec2 {
 
     auto upper = nearestHigherFrame(_key);
     auto lower = upper - 1;

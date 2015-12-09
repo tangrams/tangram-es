@@ -1182,7 +1182,12 @@ void SceneLoader::parseStyleParams(Node params, Scene& scene, const std::string&
                         StyleParam::unitsForStyleParam(styleKey, allowedUnits);
                         scene.stops().push_back(Stops::Widths(value, *scene.mapProjection(), allowedUnits));
                         out.push_back(StyleParam{ styleKey, &(scene.stops().back()) });
-                    } else if (StyleParam::isFontSize(styleKey)){
+                    } else if (StyleParam::is2DWidth(styleKey)) {
+                        std::vector<Unit> allowedUnits;
+                        StyleParam::unitsForStyleParam(styleKey, allowedUnits);
+                        scene.stops().push_back(Stops::Widths2D(value, allowedUnits));
+                        out.push_back(StyleParam{ styleKey, &(scene.stops().back()) });
+                    } else if (StyleParam::isFontSize(styleKey)) {
                         scene.stops().push_back(Stops::FontSize(value));
                         out.push_back(StyleParam{ styleKey, &(scene.stops().back()) });
                     }
