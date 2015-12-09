@@ -52,7 +52,7 @@ styles:
         lighting: vertex
         shaders:
             blocks:
-                color: "color.rgb += vec3(position.z / 800.);"
+                color: "color.rgb += vec3(worldPosition().z / 800.);"
     heightglowline:
         base: lines
         mix: heightglow
