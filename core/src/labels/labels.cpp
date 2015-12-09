@@ -59,7 +59,7 @@ void Labels::update(const View& _view, float _dt, const std::vector<std::unique_
         //     continue;
         // }
 
-        bool proxyTile = tile->getProxyCounter() > 0;
+        bool proxyTile = tile->isProxy();
 
         glm::mat4 mvp = _view.getViewProjectionMatrix() * tile->getModelMatrix();
 
