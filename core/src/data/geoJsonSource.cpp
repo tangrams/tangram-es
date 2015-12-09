@@ -19,15 +19,17 @@ GeoJsonSource::GeoJsonSource(const std::string& _name, const std::string& _urlTe
     DataSource(_name, _urlTemplate) {
 }
 
-std::shared_ptr<TileData> GeoJsonSource::parse(const TileID& _tileId, const MapProjection& _projection,
-                                               std::vector<char>& _rawData) const {
+std::shared_ptr<TileData> GeoJsonSource::parse(const TileTask& _task,
+                                               const MapProjection& _projection) const {
+
+    auto& task = dynamic_cast<const DownloadTileTask&>(_task);
 
     std::shared_ptr<TileData> tileData = std::make_shared<TileData>();
 
     // parse written data into a JSON object
     rapidjson::Document doc;
 
-    rapidjson::MemoryStream ms(_rawData.data(), _rawData.size());
+    rapidjson::MemoryStream ms(task.rawTileData->data(), task.rawTileData->size());
     rapidjson::EncodedInputStream<rapidjson::UTF8<char>, rapidjson::MemoryStream> is(ms);
 
     doc.ParseStream(is);
@@ -36,12 +38,12 @@ std::shared_ptr<TileData> GeoJsonSource::parse(const TileID& _tileId, const MapP
 
         size_t offset = doc.GetErrorOffset();
         const char* error = rapidjson::GetParseError_En(doc.GetParseError());
-        LOGE("Json parsing failed on tile [%s]: %s (%u)", _tileId.toString().c_str(), error, offset);
+        LOGE("Json parsing failed on tile [%s]: %s (%u)", task.tileId().toString().c_str(), error, offset);
         return tileData;
 
     }
 
-    BoundingBox tileBounds(_projection.TileBounds(_tileId));
+    BoundingBox tileBounds(_projection.TileBounds(task.tileId()));
     glm::dvec2 tileOrigin = {tileBounds.min.x, tileBounds.max.y*-1.0};
     double tileInverseScale = 1.0 / tileBounds.width();
 

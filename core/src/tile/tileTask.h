@@ -15,57 +15,84 @@ class DataSource;
 class Tile;
 struct TileData;
 
+
 class TileTask {
 
 public:
-    // Tile ID
-    const TileID tileId;
-
-    // Save shared reference to Datasource while building tile
-    std::shared_ptr<DataSource> source;
-
-    // Raw tile data that will be processed by DataSource.
-    std::shared_ptr<std::vector<char>> rawTileData;
-
-    // Tile result, set when tile was  sucessfully created
-    std::shared_ptr<Tile> tile;
-
-    bool loaded = false;
-    bool canceled = false;
-    bool visible = true;
-
-    std::atomic<double> priority;
 
     TileTask(TileID& _tileId, std::shared_ptr<DataSource> _source) :
-        tileId(_tileId),
-        source(_source),
-        sourceGeneration(_source->generation()) {}
+        m_tileId(_tileId),
+        m_source(_source),
+        m_sourceGeneration(_source->generation()) {}
 
-    virtual std::shared_ptr<TileData> process(MapProjection& _projection);
+    // No copies
+    TileTask(const TileTask& _other) = delete;
+    TileTask& operator=(const TileTask& _other) = delete;
 
     virtual ~TileTask() {}
 
-    TileTask& operator=(const TileTask& _other) = delete;
+    virtual std::shared_ptr<TileData> process(MapProjection& _projection) = 0;
+
+    virtual bool hasData() const = 0;
+
+    void cancel() {  m_canceled = true; }
+
+    bool isCanceled() const { return m_canceled; }
 
     double getPriority() const {
-        return priority.load();
+        return m_priority.load();
     }
 
     void setPriority(double _priority) {
-        priority.store(_priority);
+        m_priority.store(_priority);
     }
 
-    bool isCanceled() const { return canceled; }
-
-    bool isReady() const { return bool(tile); }
-
-    void cancel() {
-        canceled = true;
-        tile.reset();
+    void setTile(std::shared_ptr<Tile>&& _tile) {
+        m_tile = std::move(_tile);
     }
 
-    const int64_t sourceGeneration;
+    std::shared_ptr<Tile>& tile() { return m_tile; }
 
+    bool isReady() const { return bool(m_tile); }
+
+    DataSource& source() { return *m_source; }
+    int64_t sourceGeneration() const { return m_sourceGeneration; }
+
+    TileID tileId() const { return m_tileId; }
+
+protected:
+
+    const TileID m_tileId;
+
+    // Save shared reference to Datasource while building tile
+    std::shared_ptr<DataSource> m_source;
+
+    const int64_t m_sourceGeneration;
+
+    // Tile result, set when tile was  sucessfully created
+    std::shared_ptr<Tile> m_tile;
+
+    bool m_canceled = false;
+
+    std::atomic<double> m_priority;
+    // bool visible = true;
+
+};
+
+class DownloadTileTask : public TileTask {
+public:
+    DownloadTileTask(TileID& _tileId, std::shared_ptr<DataSource> _source)
+        : TileTask(_tileId, _source) {}
+
+    virtual std::shared_ptr<TileData> process(MapProjection& _projection) override {
+        return m_source->parse(*this, _projection);
+    }
+
+    virtual bool hasData() const override {
+        return rawTileData && !rawTileData->empty();
+    }
+    // Raw tile data that will be processed by DataSource.
+    std::shared_ptr<std::vector<char>> rawTileData;
 };
 
 struct TileTaskQueue {

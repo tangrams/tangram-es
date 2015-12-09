@@ -20,6 +20,24 @@ const uint8_t indexMaxZoom = 18;
 const uint32_t indexMaxPoints = 100000;
 double tolerance = 1E-8;
 
+class Task : public TileTask {
+public:
+    Task(TileID& _tileId, std::shared_ptr<DataSource> _source)
+        : TileTask(_tileId, _source) {}
+
+    virtual std::shared_ptr<TileData> process(MapProjection& _projection) override {
+        return m_source->parse(*this, _projection);
+    }
+
+    virtual bool hasData() const override {
+        return true;
+    }
+};
+
+std::shared_ptr<TileTask> ClientGeoJsonSource::createTask(TileID _tileId) {
+    return std::make_shared<Task>(_tileId, shared_from_this());
+}
+
 // Transform a geojsonvt::TilePoint into the corresponding Tangram::Point
 Point transformPoint(geojsonvt::TilePoint pt) {
     return { pt.x / extent, 1. - pt.y / extent, 0 };
@@ -50,11 +68,6 @@ bool ClientGeoJsonSource::loadTileData(std::shared_ptr<TileTask>&& _task, TileTa
 
     _cb.func(std::move(_task));
 
-    return true;
-}
-
-bool ClientGeoJsonSource::getTileData(std::shared_ptr<TileTask>& _task) {
-    _task->loaded = true;
     return true;
 }
 
@@ -119,8 +132,8 @@ void ClientGeoJsonSource::addPoly(const Properties& _tags, const std::vector<Coo
     m_generation++;
 }
 
-std::shared_ptr<TileData> ClientGeoJsonSource::parse(const TileID& _tileId, const MapProjection& _projection,
-                                                     std::vector<char>& _rawData) const {
+std::shared_ptr<TileData> ClientGeoJsonSource::parse(const TileTask& _task,
+                                                     const MapProjection& _projection) const {
 
     auto data = std::make_shared<TileData>();
 
@@ -128,7 +141,7 @@ std::shared_ptr<TileData> ClientGeoJsonSource::parse(const TileID& _tileId, cons
     {
         std::lock_guard<std::mutex> lock(m_mutexStore);
         if (!m_store) { return nullptr; }
-        tile = m_store->getTile(_tileId.z, _tileId.x, _tileId.y);
+        tile = m_store->getTile(_task.tileId().z, _task.tileId().x, _task.tileId().y);
     }
 
     Layer layer(""); // empty name will skip filtering by 'collection'

@@ -1,5 +1,6 @@
 #pragma once
 
+
 #include <string>
 #include <memory>
 #include <vector>
@@ -15,7 +16,7 @@ struct RawCache;
 class TileTask;
 struct TileTaskCb;
 
-class DataSource {
+class DataSource : public std::enable_shared_from_this<DataSource> {
 
 public:
 
@@ -36,15 +37,12 @@ public:
      */
     virtual bool loadTileData(std::shared_ptr<TileTask>&& _task, TileTaskCb _cb);
 
-    /* Lookup TileData in cache and */
-    virtual bool getTileData(std::shared_ptr<TileTask>& _task);
 
     /* Stops any running I/O tasks pertaining to @_tile */
     virtual void cancelLoadingTile(const TileID& _tile);
 
-    /* Parse an I/O response into a <TileData>, returning an empty TileData on failure */
-    virtual std::shared_ptr<TileData> parse(const TileID& _tileId, const MapProjection& _projection,
-                                            std::vector<char>& _rawData) const = 0;
+    /* Parse a <TileTask> with data into a <TileData>, returning an empty TileData on failure */
+    virtual std::shared_ptr<TileData> parse(const TileTask& _task, const MapProjection& _projection) const = 0;
 
     /* Clears all data associated with this DataSource */
     virtual void clearData();
@@ -55,6 +53,8 @@ public:
         return m_name == _other.m_name &&
                m_urlTemplate == _other.m_urlTemplate;
     }
+
+    virtual std::shared_ptr<TileTask> createTask(TileID _tile);
 
     /* @_cacheSize: Set size of in-memory cache for tile data in bytes.
      * This cache holds unprocessed tile data for fast recreation of recently used tiles.

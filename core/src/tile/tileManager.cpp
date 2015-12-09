@@ -19,10 +19,10 @@ TileManager::TileManager(TileTaskQueue& _tileWorker) : m_workers(_tileWorker) {
     m_tileCache = std::unique_ptr<TileCache>(new TileCache(DEFAULT_CACHE_SIZE));
 
     m_dataCallback = TileTaskCb{[this](std::shared_ptr<TileTask>&& task) {
-            if (task->loaded) {
+            if (task->hasData()) {
                 m_workers.enqueue(std::move(task));
             } else {
-                LOGD("No data for tile: %s", task->tile->getID().toString().c_str());
+                LOGD("No data for tile: %s", task->tile()->getID().toString().c_str());
                 task->cancel();
             }
     }};
@@ -146,8 +146,8 @@ void TileManager::updateTileSet(TileSet& _tileSet) {
 
     m_tileSetChanged |= m_workers.checkProcessedTiles();
 
-    if (tileSet.sourceGeneration != tileSet.source->generation()) {
-        tileSet.sourceGeneration = tileSet.source->generation();
+    if (_tileSet.sourceGeneration != _tileSet.source->generation()) {
+        _tileSet.sourceGeneration = _tileSet.source->generation();
         m_tileSetChanged = true;
     }
 
@@ -176,7 +176,7 @@ void TileManager::updateTileSet(TileSet& _tileSet) {
 
                 if (entry.newData()) {
                     clearProxyTiles(_tileSet, curTileId, entry, removeTiles);
-                    entry.tile = std::move(entry.task->tile);
+                    entry.tile = std::move(entry.task->tile());
                     entry.task.reset();
                 }
 
@@ -231,7 +231,7 @@ void TileManager::updateTileSet(TileSet& _tileSet) {
                 if (entry.getProxyCounter() > 0) {
                     if (entry.newData()) {
                         clearProxyTiles(_tileSet, curTileId, entry, removeTiles);
-                        entry.tile = std::move(entry.task->tile);
+                        entry.tile = std::move(entry.task->tile());
                         entry.task.reset();
                     }
                     if (entry.isReady()) {
@@ -278,7 +278,7 @@ void TileManager::updateTileSet(TileSet& _tileSet) {
             entry.getProxyCounter(),
             entry.m_proxies,
             entry.isVisible(),
-            entry.task && !entry.task->loaded
+            entry.task && !entry.task->hasData()
             );
 
         if (entry.isLoading()) {
@@ -290,10 +290,11 @@ void TileManager::updateTileSet(TileSet& _tileSet) {
             double scaleDiv = exp2(id.z - m_view->getZoom());
             if (scaleDiv < 1) { scaleDiv = 0.1/scaleDiv; } // prefer parent tiles
             task->setPriority(glm::length2(tileCenter - viewCenter) * scaleDiv);
+            //task->visible = entry.isVisible();
 
             // Count tiles that are currently being downloaded to
             // limit download requests.
-            if (!task->loaded) {
+            if (!task->hasData()) {
 
                 m_loadPending++;
             }
@@ -330,19 +331,22 @@ void TileManager::loadTiles() {
         auto& tileSet = *std::get<1>(loadTask);
         auto tileIt = tileSet.tiles.find(tileId);
         auto& entry = tileIt->second;
-        auto task = std::make_shared<TileTask>(tileId, tileSet.source);
 
-        bool cached = tileSet.source->getTileData(task);
+        auto task = tileSet.source->createTask(tileId);
 
-        if (cached || m_loadPending < int(MAX_DOWNLOADS)) {
+        if (task->hasData()) {
             // NB: Set implicit 'loading' state
             entry.task = task;
+            m_dataCallback.func(std::move(task));
 
-            if (cached) {
-                m_dataCallback.func(std::move(task));
-
-            } else if (tileSet.source->loadTileData(std::move(task), m_dataCallback)) {
+        } else if (m_loadPending < int(MAX_DOWNLOADS)) {
+            entry.task = task;
+            if (tileSet.source->loadTileData(std::move(task), m_dataCallback)) {
                 m_loadPending++;
+            } else {
+                // TODO: How to handle this case?
+                // This would constantly try to reload the failed tile:
+                // entry.task.reset()
             }
         }
     }

@@ -107,7 +107,7 @@ private:
         }
 
         bool newData() {
-            return bool(task) && bool(task->tile);
+            return bool(task) && bool(task->tile());
         }
 
         void cancelTask() {
@@ -152,7 +152,7 @@ private:
 
         void setVisible(bool _visible) {
             m_visible = _visible;
-            if (task) { task->visible = _visible; }
+            //if (task) { task->visible = _visible; }
         }
     };
 
