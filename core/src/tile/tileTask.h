@@ -1,9 +1,12 @@
 #pragma once
 
+#include "data/dataSource.h"
+#include "tile/tileID.h"
 
 #include <memory>
 #include <vector>
 #include <functional>
+#include <atomic>
 
 namespace Tangram {
 
@@ -15,7 +18,7 @@ struct TileData;
 class TileTask {
 
 public:
-    std::shared_ptr<Tile> tile;
+    const TileID tileId;
 
     // NB: Save shared reference to Datasource while building tile
     std::shared_ptr<DataSource> source;
@@ -23,15 +26,38 @@ public:
     // Raw tile data that will be processed by DataSource.
     std::shared_ptr<std::vector<char>> rawTileData;
 
-    bool loaded = false;
+    //
+    std::shared_ptr<Tile> tile;
 
-    TileTask(std::shared_ptr<Tile> _tile, std::shared_ptr<DataSource> _source) :
-        tile(_tile),
-        source(_source) {
-    }
+    bool loaded = false;
+    bool canceled = false;
+
     virtual std::shared_ptr<TileData> process();
+    bool visible = true;
+
+    std::atomic<double> priority;
+
+    TileTask(TileID& _tileId, std::shared_ptr<DataSource> _source) :
+        tileId(_tileId),
+        source(_source),
+        sourceGeneration(_source->generation()) {}
 
     TileTask& operator=(const TileTask& _other) = delete;
+
+    double getPriority() const {
+        return priority.load();
+    }
+
+    void setPriority(double _priority) {
+        priority.store(_priority);
+    }
+
+    bool isCanceled() const { return canceled; }
+
+    void cancel() { canceled = true; }
+
+    const int64_t sourceGeneration;
+
 };
 
 struct TileTaskCb {

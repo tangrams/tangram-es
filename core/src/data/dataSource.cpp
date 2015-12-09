@@ -31,16 +31,16 @@ struct RawCache {
     int m_usage = 0;
     int m_maxUsage = 0;
 
-    bool get(std::shared_ptr<TileTask>& _task) {
+    bool get(TileTask& _task) {
 
         if (m_maxUsage <= 0) { return false; }
 
         std::lock_guard<std::mutex> lock(m_mutex);
-        auto it = m_cacheMap.find(_task->tile->getID());
+        auto it = m_cacheMap.find(_task.tileId);
         if (it != m_cacheMap.end()) {
             // Move cached entry to start of list
             m_cacheList.splice(m_cacheList.begin(), m_cacheList, it->second);
-            _task->rawTileData = m_cacheList.front().second;
+            _task.rawTileData = m_cacheList.front().second;
 
             return true;
         }
@@ -121,7 +121,7 @@ void DataSource::constructURL(const TileID& _tileCoord, std::string& _url) const
 }
 
 bool DataSource::getTileData(std::shared_ptr<TileTask>& _task) {
-    if (m_cache->get(_task)) {
+    if (m_cache->get(*_task)) {
         _task->loaded = true;
         return true;
     }
@@ -129,7 +129,7 @@ bool DataSource::getTileData(std::shared_ptr<TileTask>& _task) {
 }
 
 void DataSource::onTileLoaded(std::vector<char>&& _rawData, std::shared_ptr<TileTask>& _task, TileTaskCb _cb) {
-    TileID tileID = _task->tile->getID();
+    TileID tileID = _task->tileId;
 
     if (!_rawData.empty()) {
         _task->loaded = true;
@@ -147,7 +147,7 @@ void DataSource::onTileLoaded(std::vector<char>&& _rawData, std::shared_ptr<Tile
 
 bool DataSource::loadTileData(std::shared_ptr<TileTask>&& _task, TileTaskCb _cb) {
 
-    std::string url(constructURL(_task->tile->getID()));
+    std::string url(constructURL(_task->tileId));
 
     // Using bind instead of lambda to be able to 'move' (until c++14)
     return startUrlRequest(url, std::bind(&DataSource::onTileLoaded,

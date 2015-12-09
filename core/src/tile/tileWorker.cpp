@@ -1,6 +1,7 @@
 #include "tileWorker.h"
 
 #include "platform.h"
+#include "data/dataSource.h"
 #include "tile/tile.h"
 #include "view/view.h"
 #include "scene/scene.h"
@@ -53,7 +54,7 @@ void TileWorker::run() {
 
             // Remove all canceled tasks
             auto removes = std::remove_if(m_queue.begin(), m_queue.end(),
-                [](const auto& a) { return a->tile->isCanceled(); });
+                                          [](const auto& a) { return a->isCanceled(); });
 
             m_queue.erase(removes, m_queue.end());
 
@@ -64,40 +65,44 @@ void TileWorker::run() {
             // Pop highest priority tile from queue
             auto it = std::min_element(m_queue.begin(), m_queue.end(),
                 [](const auto& a, const auto& b) {
-                    if (a->tile->isVisible() != b->tile->isVisible()) {
-                        return a->tile->isVisible();
+                    if (a->visible != b->visible) {
+                        return a->visible;
                     }
-                    if (a->tile->sourceID() == b->tile->sourceID() &&
-                        a->tile->sourceGeneration() != b->tile->sourceGeneration()) {
-                        return a->tile->sourceGeneration() < b->tile->sourceGeneration();
+                    if (a->source == b->source &&
+                        a->sourceGeneration != b->sourceGeneration) {
+                        return a->sourceGeneration < b->sourceGeneration;
                     }
-                    return a->tile->getPriority() < b->tile->getPriority();
+                    return a->getPriority() < b->getPriority();
                 });
 
             task = std::move(*it);
             m_queue.erase(it);
         }
 
-        if (task->tile->isCanceled()) {
-            continue;
-        }
-
-        auto tileData = task->process();
+        if (task->isCanceled()) { continue; }
 
         // NB: Save shared reference to Scene while building tile
         auto scene = m_tileManager.getScene();
 
         if (!scene) { continue; }
 
-        // const clock_t begin = clock();
+        // FIXME task->process() expects task->tile. Otherwise tile
+        // should be created when tileData is available.
+        task->tile = std::make_shared<Tile>(task->tileId, *scene->mapProjection(),
+                                            task->source.get());
+        auto tileData = task->process();
+
+        const clock_t begin = clock();
 
         context.initFunctions(*scene);
 
         if (tileData) {
             task->tile->build(context, *scene, *tileData, *task->source);
 
-            // float loadTime = (float(clock() - begin) / CLOCKS_PER_SEC) * 1000;
-            // LOG("loadTime %s - %f", task->tile->getID().toString().c_str(), loadTime);
+            float loadTime = (float(clock() - begin) / CLOCKS_PER_SEC) * 1000;
+            LOG("loadTime %s - %f", task->tile->getID().toString().c_str(), loadTime);
+        } else {
+            task->tile.reset();
         }
 
         m_tileManager.tileProcessed(std::move(task));

@@ -79,17 +79,90 @@ public:
 
 private:
 
+    enum class ProxyID : uint8_t {
+        no_proxies = 0,
+        child1 = 1 << 0,
+        child2 = 1 << 1,
+        child3 = 1 << 2,
+        child4 = 1 << 3,
+        parent = 1 << 4,
+        parent2 = 1 << 5,
+    };
+
+    struct TileEntry {
+
+        TileEntry(){}
+        TileEntry(std::shared_ptr<Tile>& _tile) : tile(_tile) {}
+
+        std::shared_ptr<Tile> tile;
+        std::shared_ptr<TileTask> task;
+
+        /* A Counter for number of tiles this tile acts a proxy for */
+        int m_proxyCounter = 0;
+
+        uint8_t m_proxies = 0;
+
+        bool isReady() { return bool(tile); }
+        bool isLoading() {
+            // FIXME remove second condition (see m_dataCallback)
+            return bool(task) && !task->isCanceled();
+        }
+
+        void cancelTask() {
+            if (task) {
+                task->cancel();
+                task.reset();
+            }
+        }
+
+        /*
+         * Methods to set and get proxy counter
+         */
+        int getProxyCounter() { return m_proxyCounter; }
+        void incProxyCounter() { m_proxyCounter++; }
+        void decProxyCounter() { m_proxyCounter = m_proxyCounter > 0 ? m_proxyCounter - 1 : 0; }
+        void resetProxyCounter() { m_proxyCounter = 0; }
+
+        bool setProxy(ProxyID id) {
+            if ((m_proxies & static_cast<uint8_t>(id)) == 0) {
+                m_proxies |= static_cast<uint8_t>(id);
+                return true;
+            }
+            return false;
+        }
+
+        bool unsetProxy(ProxyID id) {
+            if ((m_proxies & static_cast<uint8_t>(id)) != 0) {
+                m_proxies &= ~static_cast<uint8_t>(id);
+                return true;
+            }
+            return false;
+        }
+
+        bool m_visible;
+
+        /* Method to check whther this tile is in the current set of visible tiles
+         * determined by view::updateTiles().
+         */
+        bool isVisible() const {
+            return m_visible;
+        }
+
+        void setVisible(bool _visible) {
+            m_visible = _visible;
+        }
+
+    };
+
     struct TileSet {
         std::shared_ptr<DataSource> source;
-        std::map<TileID, std::shared_ptr<Tile>> tiles;
+        std::map<TileID, TileEntry> tiles;
         int64_t sourceGeneration;
     };
 
     void updateTileSet(TileSet& tileSet);
 
-    bool setTileState(Tile& tile, TileState state);
-
-    void enqueueTask(const TileSet& tileSet, const TileID& tileID, const glm::dvec2& viewCenter);
+    void enqueueTask(TileSet& tileSet, const TileID& tileID, const glm::dvec2& viewCenter);
 
     void loadTiles();
 
@@ -103,27 +176,24 @@ private:
     /*
      * Removes a tile from m_tileSet
      */
-    void removeTile(TileSet& tileSet, std::map<TileID, std::shared_ptr<Tile>>::iterator& _tileIter,
-                    std::vector<TileID>& _removes);
+    void removeTile(TileSet& tileSet, std::map<TileID, TileEntry>::iterator& _tileIter);
 
     /*
      * Checks and updates m_tileSet with proxy tiles for every new visible tile
      *  @_tile: Tile, the new visible tile for which proxies needs to be added
      */
-    bool updateProxyTile(TileSet& tileSet, Tile& _tile, const TileID& _proxy, const Tile::ProxyID _proxyID);
-    void updateProxyTiles(TileSet& tileSet, Tile& _tile);
+    bool updateProxyTile(TileSet& tileSet, TileEntry& _tile, const TileID& _proxy, const ProxyID _proxyID);
+    void updateProxyTiles(TileSet& tileSet, const TileID& _tileID, TileEntry& _tile);
 
     /*
      * Once a visible tile finishes loading and is added to m_tileSet, all
      * its proxy(ies) Tiles are removed
      */
-    void clearProxyTiles(TileSet& tileSet, Tile& _tile, std::vector<TileID>& _removes);
+    void clearProxyTiles(TileSet& tileSet, const TileID& _tileID, TileEntry& _tile, std::vector<TileID>& _removes);
 
     std::shared_ptr<View> m_view;
     std::shared_ptr<Scene> m_scene;
 
-    std::mutex m_readyTileMutex;
-    std::mutex m_tileStateMutex;
     int32_t m_loadPending;
 
     std::vector<TileSet> m_tileSets;
@@ -143,10 +213,12 @@ private:
     TileTaskCb m_dataCallback;
 
     /* Temporary list of tiles that need to be loaded */
-    std::vector<std::tuple<double, const TileSet*, const TileID*>> m_loadTasks;
+    std::vector<std::tuple<double, TileSet*, const TileID*>> m_loadTasks;
 
     /* List of tiles passed from <TileWorker> threads */
     std::vector<std::shared_ptr<TileTask>> m_readyTiles;
+    std::mutex m_readyTileMutex;
+
 };
 
 }

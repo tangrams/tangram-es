@@ -21,8 +21,6 @@ namespace Tangram {
 Tile::Tile(TileID _id, const MapProjection& _projection, const DataSource* _source) :
     m_id(_id),
     m_projection(&_projection),
-    m_visible(false),
-    m_priority(0),
     m_sourceId(_source ? _source->id() : 0),
     m_sourceGeneration(_source ? _source->generation() : 0) {
 
@@ -116,7 +114,7 @@ void Tile::update(float _dt, const View& _view) {
 
 }
 
-void Tile::reset() {
+void Tile::resetState() {
     for (auto& entry : m_geometry) {
         if (!entry) { continue; }
         auto labelMesh = dynamic_cast<LabelMesh*>(entry.get());
@@ -132,7 +130,7 @@ void Tile::draw(const Style& _style, const View& _view) {
     if (styleMesh) {
         auto& shader = _style.getShaderProgram();
 
-        float zoomAndProxy = m_proxyCounter > 0 ? -m_id.z : m_id.z;
+        float zoomAndProxy = isProxy() ? -m_id.z : m_id.z;
 
         shader->setUniformMatrix4f("u_model", m_modelMatrix);
         shader->setUniformf("u_tile_origin", m_tileOrigin.x, m_tileOrigin.y, zoomAndProxy);
