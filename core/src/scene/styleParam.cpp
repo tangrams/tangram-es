@@ -3,6 +3,7 @@
 #include "csscolorparser.hpp"
 #include "platform.h"
 #include "util/builders.h" // for cap, join
+#include "util/extrude.h"
 #include "util/geom.h" // for CLAMP
 #include <algorithm>
 #include <map>
@@ -109,13 +110,7 @@ StyleParam::Value StyleParam::parseString(StyleParamKey key, const std::string& 
 
     switch (key) {
     case StyleParamKey::extrude: {
-        if (_value == "true") { return glm::vec2(NAN, NAN); }
-        if (_value == "false") { return glm::vec2(0, 0) ; }
-        auto vec2 = glm::vec2(NAN, NAN);
-        if (!parseVec2(_value, { Unit::meter, Unit::pixel }, vec2)) {
-            LOGW("Invalid extrude parameter '%s'.", _value.c_str());
-        }
-        return vec2;
+        return parseExtrudeString(_value);
     }
     case StyleParamKey::text_wrap: {
         int textWrap;

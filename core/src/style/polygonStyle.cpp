@@ -4,6 +4,7 @@
 #include "platform.h"
 #include "material.h"
 #include "util/builders.h"
+#include "util/extrude.h"
 #include "gl/shaderProgram.h"
 #include "gl/typedMesh.h"
 #include "tile/tile.h"
@@ -90,21 +91,11 @@ void PolygonStyle::buildPolygon(const Polygon& _polygon, const DrawRule& _rule, 
 
     auto& mesh = static_cast<Mesh&>(_mesh);
 
-    float height = 0.0f, minHeight = 0.0f;
+    float tileUnitsPerMeter = _tile.getInverseScale();
+    float minHeight = getLowerExtrudeMeters(extrude, _props) * tileUnitsPerMeter;
+    float height = getUpperExtrudeMeters(extrude, _props) * tileUnitsPerMeter;
 
-    if (extrude[0] != 0.0f || extrude[1] != 0.0f) {
-
-        height = _props.getNumeric(key_height) * _tile.getInverseScale();
-        minHeight = _props.getNumeric(key_min_height) * _tile.getInverseScale();
-
-        if (std::isnan(extrude[1])) {
-            if (!std::isnan(extrude[0])) {
-                height = extrude[0];
-            }
-        } else {
-            minHeight = extrude[0];
-            height = extrude[1];
-        }
+    if (minHeight != height) {
 
         Builders::buildPolygonExtrusion(_polygon, minHeight, height, builder);
         mesh.addVertices(std::move(vertices), std::move(builder.indices));
