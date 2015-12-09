@@ -5,12 +5,14 @@ namespace Tangram {
 using namespace LabelProperty;
 
 TextLabel::TextLabel(Label::Transform _transform, Type _type, glm::vec2 _dim, TextBuffer& _mesh, Range _vertexRange,
-    Label::Options _options, FontContext::FontMetrics _metrics, int _nLines, Anchor _anchor, glm::vec2 _quadsLocalOrigin) :
+    Label::Options _options, FontContext::FontMetrics _metrics, int _nLines, Anchor _anchor, glm::vec2 _quadsLocalOrigin,
+    std::string _text) :
     Label(_transform, _dim, _type, static_cast<LabelMesh&>(_mesh), _vertexRange, _options),
     m_metrics(_metrics),
     m_nLines(_nLines),
-    m_quadLocalOrigin(_quadsLocalOrigin) {
-
+    m_quadLocalOrigin(_quadsLocalOrigin),
+    text(_text)
+{
     if (m_type == Type::point) {
         glm::vec2 halfDim = m_dim * 0.5f;
         switch(_anchor) {

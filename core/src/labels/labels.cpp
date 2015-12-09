@@ -28,7 +28,6 @@ int Labels::LODDiscardFunc(float _maxZoom, float _zoom) {
     return (int) MIN(floor(((log(-_zoom + (_maxZoom + 2)) / log(_maxZoom + 2) * (_maxZoom )) * 0.5)), MAX_LOD);
 }
 
-
 void Labels::update(const View& _view, float _dt, const std::vector<std::unique_ptr<Style>>& _styles,
                     const std::vector<std::shared_ptr<Tile>>& _tiles, std::unique_ptr<TileCache>& _cache) {
 
@@ -184,6 +183,9 @@ void Labels::update(const View& _view, float _dt, const std::vector<std::unique_
     m_lastZoom = currentZoom;
 }
 
+
+
+
 const std::vector<TouchItem>& Labels::getFeaturesAtPoint(const View& _view, float _dt,
                                                          const std::vector<std::unique_ptr<Style>>& _styles,
                                                          const std::vector<std::shared_ptr<Tile>>& _tiles,
@@ -241,6 +243,50 @@ const std::vector<TouchItem>& Labels::getFeaturesAtPoint(const View& _view, floa
 
 
 void Labels::drawDebug(const View& _view) {
+
+    m_collideComponents.clear();
+    for (auto& label : m_labels) {
+        if (!label->visibleState()) { continue; }
+        TextLabel* textLabel = dynamic_cast<TextLabel*>(label);
+        if (!textLabel) { continue; }
+
+        CollideComponent component;
+        component.position = textLabel->transform().state.screenPos;
+        component.userData = (void*)textLabel;
+        std::size_t seed = 0;
+
+        hash_combine(seed, textLabel->text);
+
+        // Group is hash for now
+        component.group = textLabel->hash();
+
+        // Mask is the group
+        component.mask = textLabel->hash();
+
+        m_collideComponents.push_back(component);
+    }
+
+    isect2d::CollideOption options;
+    options.thresholdDistance = 200.0f;
+    options.rule = isect2d::CollideRuleOption::BIDIRECTIONNAL;
+    auto collisionMaskPairs = isect2d::intersect(m_collideComponents, options);
+
+    LOG("%d", collisionMaskPairs.size());
+
+    // TODO: consistent resolution of the pairs
+    for (auto& pair : collisionMaskPairs) {
+        Label* l0 = (Label*) m_collideComponents[pair.first].userData;
+        Label* l1 = (Label*) m_collideComponents[pair.second].userData;
+
+        //l0->setOcclusion(true);
+        //l1->setOcclusion(true);
+
+        Primitives::setColor(0xffff00);
+        Primitives::drawLine(l0->transform().state.screenPos, l1->transform().state.screenPos);
+        Primitives::setColor(0xff00ff);
+        Primitives::drawLine(l1->transform().state.screenPos + glm::vec2(5.0, 0.0),
+                             l0->transform().state.screenPos + glm::vec2(5.0, 0.0));
+    }
 
     if (!Tangram::getDebugFlag(Tangram::DebugFlags::labels)) {
         return;

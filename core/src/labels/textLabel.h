@@ -11,10 +11,12 @@ class TextLabel : public Label {
 
 public:
     TextLabel(Label::Transform _transform, Type _type, glm::vec2 _dim, TextBuffer& _mesh, Range _vertexRange,
-              Label::Options _options, FontContext::FontMetrics _metrics, int _nLines, LabelProperty::Anchor _anchor, 
-              glm::vec2 _quadsLocalOrigin);
+              Label::Options _options, FontContext::FontMetrics _metrics, int _nLines, LabelProperty::Anchor _anchor,
+              glm::vec2 _quadsLocalOrigin, std::string _text);
 
     void updateBBoxes(float _zoomFract) override;
+
+    std::string text;
 
 protected:
 
