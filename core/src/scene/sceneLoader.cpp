@@ -245,8 +245,8 @@ glm::vec4 parseMaterialVec(const Node& prop) {
     case NodeType::Sequence:
         return parseVec<glm::vec4>(prop);
     case NodeType::Scalar: {
-        float value;
-        if (getFloat(prop, value)) {
+        double value;
+        if (getDouble(prop, value)) {
             return glm::vec4(value, value, value, 1.0);
         } else {
             LOGNode("Invalid 'material'", prop);
@@ -298,8 +298,8 @@ void SceneLoader::loadMaterial(Node matNode, Material& material, Scene& scene) {
     }
 
     if (Node shininess = matNode["shininess"]) {
-        float value;
-        if (getFloat(shininess, value, "shininess")) {
+        double value;
+        if (getDouble(shininess, value, "shininess")) {
             material.setShininess(value);
         }
     }
@@ -1050,8 +1050,8 @@ Filter SceneLoader::generatePredicate(Node _node, std::string _key) {
             // canonical form
             return Filter::MatchEquality(_key, { Value(_node.as<std::string>()) });
         }
-        float number;
-        if (getFloat(_node, number)) {
+        double number;
+        if (getDouble(_node, number)) {
             return Filter::MatchEquality(_key, { Value(number) });
         }
         bool existence;
@@ -1064,8 +1064,8 @@ Filter SceneLoader::generatePredicate(Node _node, std::string _key) {
     case NodeType::Sequence: {
         std::vector<Value> values;
         for (const auto& valItr : _node) {
-            float number;
-            if (getFloat(valItr, number)) {
+            double number;
+            if (getDouble(valItr, number)) {
                 values.emplace_back(number);
             } else {
                 std::string value = valItr.as<std::string>();
@@ -1075,19 +1075,19 @@ Filter SceneLoader::generatePredicate(Node _node, std::string _key) {
         return Filter::MatchEquality(_key, std::move(values));
     }
     case NodeType::Map: {
-        float minVal = -std::numeric_limits<float>::infinity();
-        float maxVal = std::numeric_limits<float>::infinity();
+        double minVal = -std::numeric_limits<double>::infinity();
+        double maxVal = std::numeric_limits<double>::infinity();
 
         for (const auto& valItr : _node) {
             if (valItr.first.Scalar() == "min") {
 
-                if (!getFloat(valItr.second, minVal, "min")) {
+                if (!getDouble(valItr.second, minVal, "min")) {
                     LOGNode("Invalid  'filter'", _node);
                     return Filter();
                 }
             } else if (valItr.first.Scalar() == "max") {
 
-                if (!getFloat(valItr.second, maxVal, "max")) {
+                if (!getDouble(valItr.second, maxVal, "max")) {
                     LOGNode("Invalid  'filter'", _node);
                     return Filter();
                 }
@@ -1211,11 +1211,11 @@ StyleUniforms SceneLoader::parseStyleUniforms(const Node& value, Scene& scene) {
     std::string type = "";
     std::vector<UniformValue> uniformValues;
     if (value.IsScalar()) { // float, bool or string (texture)
-        float fValue;
+        double fValue;
         bool bValue;
-        if (getFloat(value, fValue)) {
+        if (getDouble(value, fValue)) {
             type = "float";
-            uniformValues.push_back(fValue);
+            uniformValues.push_back((float)fValue);
 
         } else if (getBool(value, bValue)) {
             type = "bool";

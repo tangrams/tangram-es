@@ -28,9 +28,9 @@ struct Properties {
 
     bool contains(const std::string& key) const;
 
-    bool getNumeric(const std::string& key, double& value) const;
+    bool getNumber(const std::string& key, double& value) const;
 
-    double getNumeric(const std::string& key) const;
+    double getNumber(const std::string& key) const;
 
     bool getString(const std::string& key, std::string& value) const;
 
@@ -43,7 +43,7 @@ struct Properties {
     std::string toJson() const;
 
     void add(std::string key, std::string value);
-    void add(std::string key, float value);
+    void add(std::string key, double value);
 
     // template <typename... Args> void add(std::string key, Args&&... args) {
     //     props.emplace_back(std::move(key), Value{std::forward<Args>(args)...});

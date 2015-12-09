@@ -48,27 +48,23 @@ bool Properties::contains(const std::string& key) const {
     return !get(key).is<none_type>();
 }
 
-bool Properties::getNumeric(const std::string& key, double& value) const {
+bool Properties::getNumber(const std::string& key, double& value) const {
     auto& it = get(key);
-    if (it.is<float>()) {
-        value = it.get<float>();
-        return true;
-    } else if (it.is<int64_t>()) {
-        value = it.get<int64_t>();
+    if (it.is<double>()) {
+        value = it.get<double>();
         return true;
     }
     return false;
 }
 
-double Properties::getNumeric(const std::string& key) const {
+double Properties::getNumber(const std::string& key) const {
     auto& it = get(key);
-    if (it.is<float>()) {
-        return it.get<float>();
-    } else if (it.is<int64_t>()) {
-        return it.get<int64_t>();
+    if (it.is<double>()) {
+        return it.get<double>();
     }
     return 0;
 }
+
 bool Properties::getString(const std::string& key, std::string& value) const {
     auto& it = get(key);
     if (it.is<std::string>()) {
@@ -91,10 +87,8 @@ const std::string& Properties::getString(const std::string& key) const {
 std::string Properties::asString(const Value& value) const {
     if (value.is<std::string>()) {
         return value.get<std::string>();
-    } else if (value.is<int64_t>()) {
-        return std::to_string(value.get<int64_t>());
-    } else if (value.is<float>()) {
-        return std::to_string(value.get<float>());
+    } else if (value.is<double>()) {
+        return std::to_string(value.get<double>());
     }
     return "";
 }
@@ -113,7 +107,7 @@ void Properties::add(std::string key, std::string value) {
     props.emplace_back(std::move(key), Value{std::move(value)});
     sort();
 }
-void Properties::add(std::string key, float value) {
+void Properties::add(std::string key, double value) {
     props.emplace_back(std::move(key), Value{value});
     sort();
 }

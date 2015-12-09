@@ -110,19 +110,16 @@ void StyleContext::setGlobal(const std::string& _key, const Value& _val) {
 
     entry = _val;
 
-    if (_val.is<float>()) {
-        duk_push_number(m_ctx, _val.get<float>());
+    if (_val.is<double>()) {
+        duk_push_number(m_ctx, _val.get<double>());
         duk_put_global_string(m_ctx, _key.c_str());
 
-        if (_key == "$zoom") { m_globalZoom = _val.get<float>(); }
+        if (_key == "$zoom") { m_globalZoom = _val.get<double>(); }
 
     } else if (_val.is<std::string>()) {
         duk_push_string(m_ctx, _val.get<std::string>().c_str());
         duk_put_global_string(m_ctx, _key.c_str());
 
-    } else if (_val.is<int64_t>()) {
-        duk_push_number(m_ctx, (int)_val.get<int64_t>());
-        duk_put_global_string(m_ctx, _key.c_str());
     }
 }
 
@@ -483,10 +480,8 @@ duk_ret_t StyleContext::jsPropertyGetter(duk_context *_ctx) {
 
     if (it.is<std::string>()) {
         duk_push_string(_ctx, it.get<std::string>().c_str());
-    } else if (it.is<float>()) {
-        duk_push_number(_ctx, it.get<float>());
-    } else if (it.is<int64_t>()) {
-        duk_push_number(_ctx, it.get<int64_t>());
+    } else if (it.is<double>()) {
+        duk_push_number(_ctx, it.get<double>());
     } else {
         duk_push_undefined(_ctx);
     }
