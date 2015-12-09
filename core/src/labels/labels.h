@@ -53,10 +53,12 @@ private:
 
     using AABB = isect2d::AABB<glm::vec2>;
     using OBB = isect2d::OBB<glm::vec2>;
+    using CollideComponent = isect2d::CollideComponent<glm::vec2>;
 
     // temporary data used in update()
     std::vector<Label*> m_labels;
     std::vector<AABB> m_aabbs;
+    std::vector<CollideComponent> m_collideComponents;
 
     isect2d::ISect2D<glm::vec2> m_isect2d;
 
@@ -66,3 +68,4 @@ private:
 };
 
 }
+

@@ -146,8 +146,6 @@ public:
 
     void skipTransitions();
 
-    bool occludedLastFrame() { return m_occludedLastFrame; }
-
     /* Checks whether the label is in a visible state */
     bool visibleState() const;
 
@@ -167,6 +165,7 @@ public:
     const OBB& obb() const { return m_obb; }
     const Transform& transform() const { return m_transform; }
     const State& state() const { return m_currentState; }
+    bool occludedLastFrame() const { return m_occludedLastFrame; }
 
 private:
 
@@ -239,3 +238,4 @@ namespace std {
         }
     };
 }
+
