@@ -9,6 +9,7 @@
 #include "scene/drawRule.h"
 #include "tile/tile.h"
 #include "util/mapProjection.h"
+#include "util/extrude.h"
 #include "glm/vec3.hpp"
 
 namespace Tangram {
@@ -176,19 +177,10 @@ void PolylineStyle::buildLine(const Line& _line, const DrawRule& _rule, const Pr
         abgr = abgr << (_tile.getID().z % 6);
     }
 
-    float height = 0.0f;
     auto& extrude = params.extrude;
 
-    if (extrude[0] != 0.0f || extrude[1] != 0.0f) {
-        const static std::string key_height("height");
-
-        height = _props.getNumeric(key_height) * _tile.getInverseScale();
-        if (std::isnan(extrude[1])) {
-            if (!std::isnan(extrude[0])) {
-                height = extrude[0] * _tile.getInverseScale();
-            }
-        } else { height = extrude[1] * _tile.getInverseScale(); }
-    }
+    float tileUnitsPerMeter = _tile.getInverseScale();
+    float height = getUpperExtrudeMeters(extrude, _props) * tileUnitsPerMeter;
 
     PolyLineBuilder builder {
         [&](const glm::vec3& coord, const glm::vec2& normal, const glm::vec2& uv) {

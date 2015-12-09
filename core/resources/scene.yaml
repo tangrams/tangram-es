@@ -313,14 +313,14 @@ layers:
             filter: { $zoom: { min: 15 } }
             draw:
                 polygons:
-                    extrude: 'function() { return feature.height || 20 }'
+                    extrude: true
             draw:
                 lines:
                     style: heightglowline
                     width: 1.0
                     color: [.75, .75, .73]
                     order: 52
-                    extrude: 'function() { return feature.height || 20 }'
+                    extrude: true
         high-line:
             filter: {roof_material: grass}
             draw:
