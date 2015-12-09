@@ -36,7 +36,7 @@ struct Properties {
 
     bool contains(const std::string& key) const;
 
-    float getNumeric(const std::string& key) const;
+    double getNumber(const std::string& key) const;
 
     const std::string& getString(const std::string& key) const;
 };
@@ -45,7 +45,7 @@ struct Properties {
     void add(std::string key, std::string value) {
         $self->add(key, value);
     }
-    void add(std::string key, float value) {
+    void add(std::string key, double value) {
         $self->add(key, value);
     }
 }
