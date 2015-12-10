@@ -2,7 +2,6 @@
 
 #include "data/dataSource.h"
 #include "platform.h"
-#include "scene/scene.h"
 #include "tile/tile.h"
 #include "view/view.h"
 #include "tileCache.h"
@@ -31,20 +30,18 @@ TileManager::~TileManager() {
     m_tileSets.clear();
 }
 
-void TileManager::setScene(std::shared_ptr<Scene> _scene) {
+void TileManager::setDataSources(std::vector<std::shared_ptr<DataSource>> _sources) {
     m_tileCache->clear();
-
-    auto& sources = _scene->dataSources();
 
     // remove sources that are not in new scene - there must be a better way..
     auto it = std::remove_if(
         m_tileSets.begin(), m_tileSets.end(),
         [&](auto& tileSet) {
             auto sIt = std::find_if(
-                sources.begin(), sources.end(),
+                _sources.begin(), _sources.end(),
                 [&](auto& s){ return tileSet.source->equals(*s); });
 
-            if (sIt == sources.end()) {
+            if (sIt == _sources.end()) {
                 LOG("remove source %s", tileSet.source->name().c_str());
                 return true;
             }
@@ -62,7 +59,7 @@ void TileManager::setScene(std::shared_ptr<Scene> _scene) {
     m_tileSets.erase(it, m_tileSets.end());
 
     // add new sources
-    for (const auto& source : sources) {
+    for (const auto& source : _sources) {
 
         if (std::find_if(m_tileSets.begin(), m_tileSets.end(),
                          [&](const TileSet& a) {
@@ -72,9 +69,6 @@ void TileManager::setScene(std::shared_ptr<Scene> _scene) {
             addDataSource(source);
         }
     }
-
-    m_scene = _scene;
-    //m_workers.setScene(_scene);
 }
 
 void TileManager::addDataSource(std::shared_ptr<DataSource> _dataSource) {

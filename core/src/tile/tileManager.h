@@ -15,7 +15,6 @@
 namespace Tangram {
 
 class DataSource;
-class Scene;
 class View;
 class TileCache;
 
@@ -38,8 +37,8 @@ public:
     /* Sets the view for which the TileManager will maintain tiles */
     void setView(std::shared_ptr<View> _view) { m_view = _view; }
 
-    /* Sets the scene which the TileManager will use to style tiles */
-    void setScene(std::shared_ptr<Scene> _scene);
+    /* Sets the tile DataSources */
+    void setDataSources(std::vector<std::shared_ptr<DataSource>> _sources);
 
     /* Updates visible tile set if necessary
      *
