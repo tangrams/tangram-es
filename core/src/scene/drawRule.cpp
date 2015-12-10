@@ -7,6 +7,7 @@
 #include "scene/styleContext.h"
 #include "style/style.h"
 #include "platform.h"
+#include "drawRuleWarnings.h"
 
 #include <algorithm>
 
@@ -42,6 +43,8 @@ DrawRule::DrawRule(const DrawRuleData& _ruleData) :
 }
 
 void DrawRule::merge(const DrawRuleData& _ruleData, const SceneLayer& _layer) {
+
+    evalConflict(*this, _ruleData, _layer);
 
     for (const auto& param : _ruleData.parameters) {
 
