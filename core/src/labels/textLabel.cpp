@@ -43,8 +43,7 @@ void TextLabel::updateBBoxes(float _zoomFract) {
     obbCenter += t * m_dim.x * 0.5f;
     // move down on the perpendicular to estimated font baseline
     obbCenter -= m_perpAxis * m_dim.y * 0.5f;
-    // ajdust with baseline
-    //obbCenter += m_perpAxis * m_metrics.lineHeight * (float) (m_nLines - 1);
+    // ajdust with local origin of the quads
     obbCenter += m_perpAxis * m_quadLocalOrigin.y + m_perpAxis * m_dim.y;
     obbCenter += t * m_quadLocalOrigin.x;
 
@@ -59,7 +58,11 @@ void TextLabel::align(glm::vec2& _screenPosition, const glm::vec2& _ap1, const g
         case Type::point:
             // modify position set by updateScreenTransform()
             _screenPosition.x -= m_dim.x * 0.5f;
-            _screenPosition.y += m_dim.y * 0.5f - m_metrics.lineHeight * (float) (m_nLines - 1);
+            _screenPosition.y -= m_metrics.descender;
+            if (m_nLines > 1) {
+                _screenPosition.y -= m_dim.y * 0.5f;
+                _screenPosition.y += m_metrics.lineHeight;
+            }
             _screenPosition += m_anchor;
             break;
         case Type::line: {
