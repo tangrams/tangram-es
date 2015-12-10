@@ -157,7 +157,7 @@ void test(double time) {
 
     std::string color = "#eeaaee";
 
-    Tangram::clearDataSource(*data_source, true, false);
+    data_source->clearData();
 
     for (int x = -5; x <= 5; x++) {
         for (int y = -5; y <= 5; y++) {
@@ -310,7 +310,7 @@ int main(int argc, char* argv[]) {
         double delta = currentTime - lastTime;
         lastTime = currentTime;
 
-        // test(currentTime);
+        test(currentTime);
 
         // Render
         Tangram::update(delta);
