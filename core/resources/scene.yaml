@@ -97,7 +97,6 @@ layers:
             polygons:
                 order: 0
                 color: '#f0ebeb'
-
     landuse:
         data: { source: osm }
         filter:

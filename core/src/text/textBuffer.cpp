@@ -251,7 +251,6 @@ bool TextBuffer::addLabel(const TextStyle::Parameters& _params, Label::Transform
     }
 
     bbox.x -= xMin;
-    LOG("%f %f", quads[0].x0, quads[0].y0);
     glm::vec2 quadsLocalOrigin(xMin, quads[0].y0);
 
     _fontContext.unlock();

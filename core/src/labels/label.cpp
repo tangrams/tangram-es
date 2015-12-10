@@ -226,7 +226,6 @@ void Label::resetState() {
     m_updateMeshVisibility = true;
     m_dirty = true;
     m_proxy = false;
-    m_skipTransitions = false;
     enterState(State::wait_occ, 0.0);
 }
 

@@ -145,6 +145,9 @@ auto TextStyle::applyRule(const DrawRule& _rule, const Properties& _props) const
     float emSize = p.fontSize / 16.f;
     p.blurSpread = m_sdf ? emSize * 5.0f : 0.0f;
 
+    float boundingBoxBuffer = -p.fontSize / 2.f;
+    p.labelOptions.buffer = boundingBoxBuffer;
+
     std::hash<Parameters> hash;
     p.labelOptions.paramHash = hash(p);
 

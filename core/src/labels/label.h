@@ -81,6 +81,7 @@ public:
         Transition selectTransition;
         Transition hideTransition;
         Transition showTransition;
+        float buffer = 0.f;
 
         // the label hash based on its styling parameters
         size_t paramHash;
@@ -159,8 +160,6 @@ private:
     bool m_occlusionSolved;
     // whether or not we need to update the mesh visibilit (alpha channel)
     bool m_updateMeshVisibility;
-    // label options
-    Options m_options;
     // whether this label should skip transitions to move to first visible state
     bool m_skipTransitions;
 
@@ -185,6 +184,8 @@ protected:
     LabelMesh& m_mesh;
     // first vertex and count in m_mesh vertices
     Range m_vertexRange;
+    // label options
+    Options m_options;
 };
 
 }
@@ -209,4 +210,3 @@ namespace std {
         }
     };
 }
-
