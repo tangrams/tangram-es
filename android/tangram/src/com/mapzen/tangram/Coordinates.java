@@ -9,81 +9,81 @@
 package com.mapzen.tangram;
 
 public class Coordinates {
-  private transient long swigCPtr;
-  protected transient boolean swigCMemOwn;
+    private transient long swigCPtr;
+    protected transient boolean swigCMemOwn;
 
-  protected Coordinates(long cPtr, boolean cMemoryOwn) {
-    swigCMemOwn = cMemoryOwn;
-    swigCPtr = cPtr;
-  }
-
-  protected static long getCPtr(Coordinates obj) {
-    return (obj == null) ? 0 : obj.swigCPtr;
-  }
-
-  protected void finalize() {
-    delete();
-  }
-
-  public synchronized void delete() {
-    if (swigCPtr != 0) {
-      if (swigCMemOwn) {
-        swigCMemOwn = false;
-        TangramJNI.delete_Coordinates(swigCPtr);
-      }
-      swigCPtr = 0;
+    protected Coordinates(long cPtr, boolean cMemoryOwn) {
+        swigCMemOwn = cMemoryOwn;
+        swigCPtr = cPtr;
     }
-  }
 
-  // Ensure that the GC doesn't collect any Polygon instance set from Java
-  // While we holding a Coordinates Ring of it.
-  private Object owner;
-  protected void addReference(Object obj) {
-    owner = obj;
-  }
+    protected static long getCPtr(Coordinates obj) {
+        return (obj == null) ? 0 : obj.swigCPtr;
+    }
 
-  public Coordinates() {
-    this(TangramJNI.new_Coordinates__SWIG_0(), true);
-  }
+    protected void finalize() {
+        delete();
+    }
 
-  public Coordinates(long n) {
-    this(TangramJNI.new_Coordinates__SWIG_1(n), true);
-  }
+    public synchronized void delete() {
+        if (swigCPtr != 0) {
+            if (swigCMemOwn) {
+                swigCMemOwn = false;
+                TangramJNI.delete_Coordinates(swigCPtr);
+            }
+            swigCPtr = 0;
+        }
+    }
 
-  public long size() {
-    return TangramJNI.Coordinates_size(swigCPtr, this);
-  }
+    // Ensure that the GC doesn't collect any Polygon instance set from Java
+    // While we holding a Coordinates Ring of it.
+    private Object owner;
+    protected void addReference(Object obj) {
+        owner = obj;
+    }
 
-  public long capacity() {
-    return TangramJNI.Coordinates_capacity(swigCPtr, this);
-  }
+    public Coordinates() {
+        this(TangramJNI.new_Coordinates__SWIG_0(), true);
+    }
 
-  public void reserve(long n) {
-    TangramJNI.Coordinates_reserve(swigCPtr, this, n);
-  }
+    public Coordinates(long n) {
+        this(TangramJNI.new_Coordinates__SWIG_1(n), true);
+    }
 
-  public boolean isEmpty() {
-    return TangramJNI.Coordinates_isEmpty(swigCPtr, this);
-  }
+    public long size() {
+        return TangramJNI.Coordinates_size(swigCPtr, this);
+    }
 
-  public void clear() {
-    TangramJNI.Coordinates_clear(swigCPtr, this);
-  }
+    public long capacity() {
+        return TangramJNI.Coordinates_capacity(swigCPtr, this);
+    }
 
-  public void add(LngLat x) {
-    TangramJNI.Coordinates_add__SWIG_0(swigCPtr, this, x);
-  }
+    public void reserve(long n) {
+        TangramJNI.Coordinates_reserve(swigCPtr, this, n);
+    }
 
-  public LngLat get(int i) {
-    return TangramJNI.Coordinates_get(swigCPtr, this, i);
-}
+    public boolean isEmpty() {
+        return TangramJNI.Coordinates_isEmpty(swigCPtr, this);
+    }
 
-  public void set(int i, LngLat val) {
-    TangramJNI.Coordinates_set(swigCPtr, this, i, val);
-  }
+    public void clear() {
+        TangramJNI.Coordinates_clear(swigCPtr, this);
+    }
 
-  public void add(double lng, double lat) {
-    TangramJNI.Coordinates_add__SWIG_1(swigCPtr, this, lng, lat);
-  }
+    public void add(LngLat x) {
+        TangramJNI.Coordinates_add__SWIG_0(swigCPtr, this, x);
+    }
+
+    public LngLat get(int i) {
+        return TangramJNI.Coordinates_get(swigCPtr, this, i);
+    }
+
+    public void set(int i, LngLat val) {
+        TangramJNI.Coordinates_set(swigCPtr, this, i, val);
+    }
+
+    public void add(double lng, double lat) {
+        TangramJNI.Coordinates_add__SWIG_1(swigCPtr, this, lng, lat);
+    }
 
 }

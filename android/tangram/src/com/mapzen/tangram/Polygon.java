@@ -9,76 +9,76 @@
 package com.mapzen.tangram;
 
 public class Polygon {
-  private transient long swigCPtr;
-  protected transient boolean swigCMemOwn;
+    private transient long swigCPtr;
+    protected transient boolean swigCMemOwn;
 
-  protected Polygon(long cPtr, boolean cMemoryOwn) {
-    swigCMemOwn = cMemoryOwn;
-    swigCPtr = cPtr;
-  }
-
-  protected static long getCPtr(Polygon obj) {
-    return (obj == null) ? 0 : obj.swigCPtr;
-  }
-
-  protected void finalize() {
-    delete();
-  }
-
-  public synchronized void delete() {
-    if (swigCPtr != 0) {
-      if (swigCMemOwn) {
-        swigCMemOwn = false;
-        TangramJNI.delete_Polygon(swigCPtr);
-      }
-      swigCPtr = 0;
+    protected Polygon(long cPtr, boolean cMemoryOwn) {
+        swigCMemOwn = cMemoryOwn;
+        swigCPtr = cPtr;
     }
-  }
 
-  public Polygon() {
-    this(TangramJNI.new_Polygon__SWIG_0(), true);
-  }
-
-  public Polygon(long n) {
-    this(TangramJNI.new_Polygon__SWIG_1(n), true);
-  }
-
-  public long size() {
-    return TangramJNI.Polygon_size(swigCPtr, this);
-  }
-
-  public long capacity() {
-    return TangramJNI.Polygon_capacity(swigCPtr, this);
-  }
-
-  public void reserve(long n) {
-    TangramJNI.Polygon_reserve(swigCPtr, this, n);
-  }
-
-  public boolean isEmpty() {
-    return TangramJNI.Polygon_isEmpty(swigCPtr, this);
-  }
-
-  public void clear() {
-    TangramJNI.Polygon_clear(swigCPtr, this);
-  }
-
-  public void add(Coordinates x) {
-    TangramJNI.Polygon_add(swigCPtr, this, Coordinates.getCPtr(x), x);
-  }
-
-  public Coordinates get(int i) {
-    long cPtr = TangramJNI.Polygon_get(swigCPtr, this, i);
-    Coordinates ret = null;
-    if (cPtr != 0) {
-      ret = new Coordinates(cPtr, false);
-      ret.addReference(this);
+    protected static long getCPtr(Polygon obj) {
+        return (obj == null) ? 0 : obj.swigCPtr;
     }
-    return ret;
-}
 
-  public void set(int i, Coordinates val) {
-    TangramJNI.Polygon_set(swigCPtr, this, i, Coordinates.getCPtr(val), val);
-  }
+    protected void finalize() {
+        delete();
+    }
+
+    public synchronized void delete() {
+        if (swigCPtr != 0) {
+            if (swigCMemOwn) {
+                swigCMemOwn = false;
+                TangramJNI.delete_Polygon(swigCPtr);
+            }
+            swigCPtr = 0;
+        }
+    }
+
+    public Polygon() {
+        this(TangramJNI.new_Polygon__SWIG_0(), true);
+    }
+
+    public Polygon(long n) {
+        this(TangramJNI.new_Polygon__SWIG_1(n), true);
+    }
+
+    public long size() {
+        return TangramJNI.Polygon_size(swigCPtr, this);
+    }
+
+    public long capacity() {
+        return TangramJNI.Polygon_capacity(swigCPtr, this);
+    }
+
+    public void reserve(long n) {
+        TangramJNI.Polygon_reserve(swigCPtr, this, n);
+    }
+
+    public boolean isEmpty() {
+        return TangramJNI.Polygon_isEmpty(swigCPtr, this);
+    }
+
+    public void clear() {
+        TangramJNI.Polygon_clear(swigCPtr, this);
+    }
+
+    public void add(Coordinates x) {
+        TangramJNI.Polygon_add(swigCPtr, this, Coordinates.getCPtr(x), x);
+    }
+
+    public Coordinates get(int i) {
+        long cPtr = TangramJNI.Polygon_get(swigCPtr, this, i);
+        Coordinates ret = null;
+        if (cPtr != 0) {
+            ret = new Coordinates(cPtr, false);
+            ret.addReference(this);
+        }
+        return ret;
+    }
+
+    public void set(int i, Coordinates val) {
+        TangramJNI.Polygon_set(swigCPtr, this, i, Coordinates.getCPtr(val), val);
+    }
 
 }

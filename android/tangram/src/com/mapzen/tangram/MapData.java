@@ -11,33 +11,33 @@ package com.mapzen.tangram;
 import java.util.List;
 
 public class MapData extends DataSource {
-  private transient long swigCPtr;
-  private boolean swigCMemOwnDerived;
+    private transient long swigCPtr;
+    private boolean swigCMemOwnDerived;
 
-  protected MapData(long cPtr, boolean cMemoryOwn) {
-    super(TangramJNI.MapData_SWIGSmartPtrUpcast(cPtr), true);
-    swigCMemOwnDerived = cMemoryOwn;
-    swigCPtr = cPtr;
-  }
-
-  protected static long getCPtr(MapData obj) {
-    return (obj == null) ? 0 : obj.swigCPtr;
-  }
-
-  protected void finalize() {
-    delete();
-  }
-
-  public synchronized void delete() {
-    if (swigCPtr != 0) {
-      if (swigCMemOwnDerived) {
-        swigCMemOwnDerived = false;
-        TangramJNI.delete_MapData(swigCPtr);
-      }
-      swigCPtr = 0;
+    protected MapData(long cPtr, boolean cMemoryOwn) {
+        super(TangramJNI.MapData_SWIGSmartPtrUpcast(cPtr), true);
+        swigCMemOwnDerived = cMemoryOwn;
+        swigCPtr = cPtr;
     }
-    super.delete();
-  }
+
+    protected static long getCPtr(MapData obj) {
+        return (obj == null) ? 0 : obj.swigCPtr;
+    }
+
+    protected void finalize() {
+        delete();
+    }
+
+    public synchronized void delete() {
+        if (swigCPtr != 0) {
+            if (swigCMemOwnDerived) {
+                swigCMemOwnDerived = false;
+                TangramJNI.delete_MapData(swigCPtr);
+            }
+            swigCPtr = 0;
+        }
+        super.delete();
+    }
 
 
     /**
@@ -138,24 +138,24 @@ public class MapData extends DataSource {
         return this;
     }
 
-  public MapData(String _name, String _url) {
-    this(TangramJNI.new_MapData(_name, _url), true);
-  }
+    public MapData(String _name, String _url) {
+        this(TangramJNI.new_MapData(_name, _url), true);
+    }
 
-  public void addData(String _data) {
-    TangramJNI.MapData_addData(swigCPtr, this, _data);
-  }
+    public void addData(String _data) {
+        TangramJNI.MapData_addData(swigCPtr, this, _data);
+    }
 
-  private void addPointJNI(Properties props, LngLat point) {
-    TangramJNI.MapData_addPointJNI(swigCPtr, this, Properties.getCPtr(props), props, point);
-  }
+    private void addPointJNI(Properties props, LngLat point) {
+        TangramJNI.MapData_addPointJNI(swigCPtr, this, Properties.getCPtr(props), props, point);
+    }
 
-  private void addLineJNI(Properties props, Coordinates line) {
-    TangramJNI.MapData_addLineJNI(swigCPtr, this, Properties.getCPtr(props), props, Coordinates.getCPtr(line), line);
-  }
+    private void addLineJNI(Properties props, Coordinates line) {
+        TangramJNI.MapData_addLineJNI(swigCPtr, this, Properties.getCPtr(props), props, Coordinates.getCPtr(line), line);
+    }
 
-  private void addPolyJNI(Properties props, Polygon polygon) {
-    TangramJNI.MapData_addPolyJNI(swigCPtr, this, Properties.getCPtr(props), props, Polygon.getCPtr(polygon), polygon);
-  }
+    private void addPolyJNI(Properties props, Polygon polygon) {
+        TangramJNI.MapData_addPolyJNI(swigCPtr, this, Properties.getCPtr(props), props, Polygon.getCPtr(polygon), polygon);
+    }
 
 }
