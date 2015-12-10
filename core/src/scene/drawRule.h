@@ -49,10 +49,8 @@ struct DrawRuleData {
 struct DrawRule {
 
     const StyleParam* params[StyleParamKeySize] = { nullptr };
-    const char* layers[StyleParamKeySize] = { nullptr };
-    size_t depths[StyleParamKeySize] = { 0 };
-
-    StyleParam evaluated[StyleParamKeySize];
+    const char*       layers[StyleParamKeySize] = { nullptr };
+    size_t            depths[StyleParamKeySize] = { 0 };
 
     const std::string* name = nullptr;
 
@@ -104,6 +102,9 @@ struct DrawRuleMergeSet {
     // Reusable containers 'matchedRules' and 'queuedLayers'
     std::vector<DrawRule> matchedRules;
     std::vector<const SceneLayer*> queuedLayers;
+
+    // Container for dynamically-evaluated parameters
+    StyleParam evaluated[StyleParamKeySize];
 
 };
 

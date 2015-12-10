@@ -74,9 +74,6 @@ const StyleParam& DrawRule::findParameter(StyleParamKey _key) const {
 
     const auto* p = params[static_cast<uint8_t>(_key)];
     if (p) {
-        if (p->function >= 0 || p->stops != nullptr) {
-            return evaluated[static_cast<uint8_t>(_key)];
-        }
         return *p;
     }
 
@@ -155,26 +152,33 @@ void DrawRuleMergeSet::apply(const Feature& _feature, const Scene& _scene, const
             if (!param) { continue; }
 
             if (param->function >= 0) {
-                rule.evaluated[i].function = param->function;
-                if (!_ctx.evalStyle(param->function, param->key, rule.evaluated[i].value) &&
-                    StyleParam::isRequired(param->key)) {
+
+                if (!_ctx.evalStyle(param->function, param->key, evaluated[i].value) && StyleParam::isRequired(param->key)) {
                     valid = false;
                     break;
                 }
+
+                evaluated[i].function = param->function;
+                rule.params[i] = &evaluated[i];
+
             }
             if (param->stops) {
-                rule.evaluated[i].stops = param->stops;
+
+                evaluated[i].stops = param->stops;
 
                 if (StyleParam::isColor(param->key)) {
-                    rule.evaluated[i].value = param->stops->evalColor(_ctx.getGlobalZoom());
+                    evaluated[i].value = param->stops->evalColor(_ctx.getGlobalZoom());
                 } else if (StyleParam::isWidth(param->key)) {
                     // FIXME width result is ignored from here
-                    rule.evaluated[i].value = param->stops->evalWidth(_ctx.getGlobalZoom());
+                    evaluated[i].value = param->stops->evalWidth(_ctx.getGlobalZoom());
                 } else {
-                    rule.evaluated[i].value = param->stops->evalFloat(_ctx.getGlobalZoom());
+                    evaluated[i].value = param->stops->evalFloat(_ctx.getGlobalZoom());
                 }
+
+                rule.params[i] = &evaluated[i];
+
             }
-            rule.evaluated[i].key = param->key;
+
         }
 
         if (valid) {

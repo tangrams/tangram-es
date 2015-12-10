@@ -112,7 +112,7 @@ bool evalStyleParamWidth(StyleParamKey _key, const DrawRule& _rule, const Tile& 
     auto& styleParam = _rule.findParameter(_key);
     if (styleParam.stops) {
 
-        width = styleParam.stops->evalWidth(zoom);
+        width = styleParam.value.get<float>();
         width *= tileRes;
 
         dWdZ = styleParam.stops->evalWidth(zoom + 1);
