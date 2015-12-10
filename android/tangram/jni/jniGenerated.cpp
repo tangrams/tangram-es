@@ -890,6 +890,20 @@ SWIGEXPORT void JNICALL Java_com_mapzen_tangram_TangramJNI_delete_1Polygon(JNIEn
 }
 
 
+SWIGEXPORT void JNICALL Java_com_mapzen_tangram_TangramJNI_DataSource_1clearData(JNIEnv *jenv, jclass jcls, jlong jarg1, jobject jarg1_) {
+  Tangram::DataSource *arg1 = (Tangram::DataSource *) 0 ;
+  std::shared_ptr< Tangram::DataSource > *smartarg1 = 0 ;
+
+  (void)jenv;
+  (void)jcls;
+  (void)jarg1_;
+
+  smartarg1 = *(std::shared_ptr<  Tangram::DataSource > **)&jarg1;
+  arg1 = (Tangram::DataSource *)(smartarg1 ? smartarg1->get() : 0);
+  (arg1)->clearData();
+}
+
+
 SWIGEXPORT void JNICALL Java_com_mapzen_tangram_TangramJNI_DataSource_1clearJNI(JNIEnv *jenv, jclass jcls, jlong jarg1, jobject jarg1_) {
   Tangram::DataSource *arg1 = (Tangram::DataSource *) 0 ;
   std::shared_ptr< Tangram::DataSource > *smartarg1 = 0 ;

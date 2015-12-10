@@ -144,9 +144,10 @@ namespace Tangram {
 typedef std::vector<Tangram::LngLat> Coordinates;
 
 class DataSource {
+public:
+    virtual void clearData() override;
 protected:
     DataSource(const std::string& _name, const std::string& _url);
-    virtual void clearData() override;
 };
 
 class ClientGeoJsonSource : public DataSource {
