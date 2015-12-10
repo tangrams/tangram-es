@@ -49,13 +49,16 @@ DrawRuleData instance_c() {
 }
 
 TEST_CASE("DrawRule correctly merges with another DrawRule", "[DrawRule]") {
-    const std::vector<DrawRuleData> rule_a{instance_a()};
-    const std::vector<DrawRuleData> rule_b{instance_b()};
-    const std::vector<DrawRuleData> rule_c{instance_c()};
 
+    const SceneLayer layer_a = { "a", Filter(), { instance_a() }, {} };
+    const SceneLayer layer_b = { "b", Filter(), { instance_b() }, {} };
+    const SceneLayer layer_c = { "c", Filter(), { instance_c() }, {} };
+
+    // For parameters contained in multiple rules, the parameter from the last rule
+    // (by lexicographical order) should result.
     {
         DrawRuleMergeSet ruleSet;
-        ruleSet.mergeRules(rule_a);
+        ruleSet.mergeRules(layer_a);
 
         REQUIRE(ruleSet.matchedRules.size() == 1);
         auto& merged_ab = ruleSet.matchedRules[0];
@@ -69,7 +72,7 @@ TEST_CASE("DrawRule correctly merges with another DrawRule", "[DrawRule]") {
             logMsg("param : %s\n", param->toString().c_str());
         }
 
-        ruleSet.mergeRules(rule_b);
+        ruleSet.mergeRules(layer_b);
 
         REQUIRE(ruleSet.matchedRules.size() == 1);
 
@@ -103,19 +106,21 @@ TEST_CASE("DrawRule correctly merges with another DrawRule", "[DrawRule]") {
 
     {
         DrawRuleMergeSet ruleSet;
-        ruleSet.mergeRules(rule_b);
-        ruleSet.mergeRules(rule_a);
+        ruleSet.mergeRules(layer_b);
+        ruleSet.mergeRules(layer_a);
+
+        REQUIRE(ruleSet.matchedRules.size() == 1);
 
         auto& merged_ba = ruleSet.matchedRules[0];
 
         REQUIRE(merged_ba.params[static_cast<uint8_t>(StyleParamKey::cap)]->key == StyleParamKey::cap);
         REQUIRE(merged_ba.params[static_cast<uint8_t>(StyleParamKey::cap)]->value.get<std::string>() == "value_3b");
         REQUIRE(merged_ba.params[static_cast<uint8_t>(StyleParamKey::color)]->key == StyleParamKey::color);
-        REQUIRE(merged_ba.params[static_cast<uint8_t>(StyleParamKey::color)]->value.get<std::string>() == "value_1a");
+        REQUIRE(merged_ba.params[static_cast<uint8_t>(StyleParamKey::color)]->value.get<std::string>() == "value_1b");
         REQUIRE(merged_ba.params[static_cast<uint8_t>(StyleParamKey::join)]->key == StyleParamKey::join);
         REQUIRE(merged_ba.params[static_cast<uint8_t>(StyleParamKey::join)]->value.get<std::string>() == "value_4a");
         REQUIRE(merged_ba.params[static_cast<uint8_t>(StyleParamKey::order)]->key == StyleParamKey::order);
-        REQUIRE(merged_ba.params[static_cast<uint8_t>(StyleParamKey::order)]->value.get<std::string>() == "value_0a");
+        REQUIRE(merged_ba.params[static_cast<uint8_t>(StyleParamKey::order)]->value.get<std::string>() == "value_0b");
         REQUIRE(merged_ba.params[static_cast<uint8_t>(StyleParamKey::style)]->key == StyleParamKey::style);
         REQUIRE(merged_ba.params[static_cast<uint8_t>(StyleParamKey::style)]->value.get<std::string>() == "value_4b");
         REQUIRE(merged_ba.params[static_cast<uint8_t>(StyleParamKey::width)]->key == StyleParamKey::width);
@@ -127,8 +132,10 @@ TEST_CASE("DrawRule correctly merges with another DrawRule", "[DrawRule]") {
 
     {
         DrawRuleMergeSet ruleSet;
-        ruleSet.mergeRules(rule_c);
-        ruleSet.mergeRules(rule_b);
+        ruleSet.mergeRules(layer_c);
+        ruleSet.mergeRules(layer_b);
+
+        REQUIRE(ruleSet.matchedRules.size() == 1);
 
         auto& merged_bc = ruleSet.matchedRules[0];
 
@@ -150,11 +157,11 @@ TEST_CASE("DrawRule locates and outputs a parameter that it contains", "[DrawRul
 
     std::string str;
 
-    const std::vector<DrawRuleData> srule_a{instance_a()};
-    const std::vector<DrawRuleData> srule_b{instance_b()};
+    const SceneLayer layer_a = { "a", Filter(), { instance_a() }, {} };
+    const SceneLayer layer_b = { "b", Filter(), { instance_b() }, {} };
 
     DrawRuleMergeSet a;
-    a.mergeRules(srule_a);
+    a.mergeRules(layer_a);
     auto& rule_a = a.matchedRules[0];
 
     REQUIRE(rule_a.get(StyleParamKey::order, str)); REQUIRE(str == "value_0a");
@@ -162,7 +169,7 @@ TEST_CASE("DrawRule locates and outputs a parameter that it contains", "[DrawRul
     REQUIRE(rule_a.get(StyleParamKey::join, str)); REQUIRE(str == "value_4a");
 
     DrawRuleMergeSet b;
-    b.mergeRules(srule_b);
+    b.mergeRules(layer_b);
     auto& rule_b = b.matchedRules[0];
 
     REQUIRE(rule_b.get(StyleParamKey::color, str)); REQUIRE(str == "value_1b");
@@ -174,20 +181,20 @@ TEST_CASE("DrawRule locates and outputs a parameter that it contains", "[DrawRul
 TEST_CASE("DrawRule correctly reports that it doesn't contain a parameter", "[DrawRule]") {
     std::string str;
 
-    const std::vector<DrawRuleData> srule_a{instance_a()};
+    const SceneLayer layer_a = { "a", Filter(), { instance_a() }, {} };
     DrawRuleMergeSet a;
-    a.mergeRules(srule_a);
+    a.mergeRules(layer_a);
     REQUIRE(!a.matchedRules[0].get(StyleParamKey::width, str)); REQUIRE(str == "");
 
 
-    const std::vector<DrawRuleData> srule_b{instance_b()};
+    const SceneLayer layer_b = { "b", Filter(), { instance_b() }, {} };
     DrawRuleMergeSet b;
-    b.mergeRules(srule_b);
+    b.mergeRules(layer_b);
     REQUIRE(!b.matchedRules[0].get(StyleParamKey::join, str)); REQUIRE(str == "");
 
-    const std::vector<DrawRuleData> srule_c{instance_c()};
+    const SceneLayer layer_c = { "c", Filter(), { instance_c() }, {} };
     DrawRuleMergeSet c;
-    c.mergeRules(srule_c);
+    c.mergeRules(layer_c);
     REQUIRE(!c.matchedRules[0].get(StyleParamKey::order, str)); REQUIRE(str == "");
 
 
