@@ -53,7 +53,7 @@ float getLowerExtrudeMeters(const Extrude& _extrude, const Properties& _props) {
 
     if (std::isnan(_extrude[0])) {
         // A NAN indicates that the default property should be used for this height
-        _props.getNumeric(key_min_height, lower);
+        _props.getNumber(key_min_height, lower);
     } else {
         lower = _extrude[0];
     }
@@ -70,7 +70,7 @@ float getUpperExtrudeMeters(const Extrude& _extrude, const Properties& _props) {
 
     if (std::isnan(_extrude[1])) {
         // A NAN indicates that the default property should be used for this height
-        _props.getNumeric(key_height, upper);
+        _props.getNumber(key_height, upper);
     } else {
         upper = _extrude[1];
     }

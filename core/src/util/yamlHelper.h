@@ -16,7 +16,7 @@ inline T parseVec(const Node& node) {
     int i = 0;
     for (const auto& nodeVal : node) {
         if (i < vec.length()) {
-            vec[i++] = nodeVal.as<float>();
+            vec[i++] = nodeVal.as<double>();
         } else {
             break;
         }
@@ -26,7 +26,7 @@ inline T parseVec(const Node& node) {
 
 std::string parseSequence(const Node& node);
 
-bool getFloat(const Node& node, float& value, const char* name = nullptr);
+bool getDouble(const Node& node, double& value, const char* name = nullptr);
 
 bool getBool(const Node& node, bool& value, const char* name = nullptr);
 

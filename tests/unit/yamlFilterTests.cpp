@@ -42,6 +42,7 @@ void init() {
     bmw1.props.add("wheel", 4);
     bmw1.props.add("drive", "all");
     bmw1.props.add("type", "car");
+    bmw1.props.add("serial", 4398046511104); // 2^42
 
     bike.props.clear();
     bike.props.add("name", "cb1100");
@@ -50,6 +51,7 @@ void init() {
     bike.props.add("type", "bike");
     bike.props.add("series", "CB");
     bike.props.add("check", "available");
+    bike.props.add("serial", 4398046511105); // 2^42 + 1
 
     ctx.setGlobal("$geometry", Value(1));
     ctx.setGlobal("$zoom", Value("false"));
@@ -213,5 +215,15 @@ TEST_CASE( "yaml-filter-tests: boolean false filter as existence check for keywo
     REQUIRE(filter.eval(civic, ctx));
     REQUIRE(filter.eval(bmw1, ctx));
     REQUIRE(filter.eval(bike, ctx));
+
+}
+
+TEST_CASE( "yaml-filter-tests: predicate with large integers", "[filters][core][yaml]") {
+    init();
+    Filter filter = load("filter: { serial : [4398046511104] }");
+
+    REQUIRE(!filter.eval(civic, ctx));
+    REQUIRE(filter.eval(bmw1, ctx));
+    REQUIRE(!filter.eval(bike, ctx));
 
 }

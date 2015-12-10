@@ -8,7 +8,7 @@ std::string parseSequence(const Node& node) {
     std::stringstream sstream;
     for (const auto& val : node) {
         try {
-            sstream << val.as<float>() << ",";
+            sstream << val.as<double>() << ",";
         } catch (const BadConversion& e) {
             try {
                 sstream << val.as<std::string>() << ",";
@@ -20,14 +20,14 @@ std::string parseSequence(const Node& node) {
     return sstream.str();
 }
 
-bool getFloat(const Node& node, float& value, const char* name) {
+bool getDouble(const Node& node, double& value, const char* name) {
     try {
-        value = node.as<float>();
+        value = node.as<double>();
         return true;
     } catch (const BadConversion& e) {}
 
     if (name) {
-        LOGW("Expected a float value for '%s' property.:\n%s\n", name, Dump(node).c_str());
+        LOGW("Expected a floating point value for '%s' property.:\n%s\n", name, Dump(node).c_str());
     }
     return false;
 }

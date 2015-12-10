@@ -55,24 +55,16 @@ bool Filter::eval(const Feature& feat, StyleContext& ctx) const {
 
         if (f.global == FilterGlobal::undefined) {
             auto& value = feat.props.get(f.key);
-            if (value.is<float>()) {
-                auto num =  value.get<float>();
-                return num >= f.min && num < f.max;
-            }
-            if (value.is<int64_t>()) {
-                auto num =  value.get<int64_t>();
+            if (value.is<double>()) {
+                auto num =  value.get<double>();
                 return num >= f.min && num < f.max;
             }
         } else {
             auto& global = ctx.getGlobal(f.global);
             if (!global.is<none_type>()) {
                 // only check range for numbers
-                if (global.is<int64_t>()) {
-                    auto num = global.get<int64_t>();
-                    return num >= f.min && num < f.max;
-                }
-                if (global.is<float>()) {
-                    auto num = global.get<float>();
+                if (global.is<double>()) {
+                    auto num = global.get<double>();
                     return num >= f.min && num < f.max;
                 }
             }

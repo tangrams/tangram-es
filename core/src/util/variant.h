@@ -31,7 +31,7 @@ using variant = mapbox::util::variant<Types...>;
 
 namespace detail {
 /* Common Value type for Feature Properties and Filter Values */
-using Value = variant<none_type, float, int64_t, std::string>;
+using Value = variant<none_type, double, std::string>;
 }
 
 class Value : public detail::Value {
