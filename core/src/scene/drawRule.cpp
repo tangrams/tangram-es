@@ -34,7 +34,12 @@ std::string DrawRuleData::toString() const {
 
 DrawRule::DrawRule(const DrawRuleData& _ruleData) :
     name(&_ruleData.name),
-    id(_ruleData.id) {}
+    id(_ruleData.id) {
+
+    const static char* empty = "";
+    std::fill_n(layers, StyleParamKeySize, empty);
+
+}
 
 void DrawRule::merge(const DrawRuleData& _ruleData, const SceneLayer& _layer) {
 
