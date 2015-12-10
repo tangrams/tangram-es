@@ -11,7 +11,8 @@ class TextLabel : public Label {
 
 public:
     TextLabel(Label::Transform _transform, Type _type, glm::vec2 _dim, TextBuffer& _mesh, Range _vertexRange,
-              Label::Options _options, FontContext::FontMetrics _metrics, int _nLines, LabelProperty::Anchor _anchor);
+              Label::Options _options, FontContext::FontMetrics _metrics, int _nLines, LabelProperty::Anchor _anchor, 
+              glm::vec2 _quadsLocalOrigin);
 
     void updateBBoxes(float _zoomFract) override;
 
@@ -25,6 +26,7 @@ private:
 
     glm::vec2 m_anchor;
     glm::vec2 m_perpAxis;
+    glm::vec2 m_quadLocalOrigin;
 
 };
 

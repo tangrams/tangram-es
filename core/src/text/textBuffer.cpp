@@ -219,6 +219,8 @@ bool TextBuffer::addLabel(const TextStyle::Parameters& _params, Label::Transform
 
     /// Generate the quads
     float yMin = std::numeric_limits<float>::max();
+    float xMin = std::numeric_limits<float>::max();
+
     for (int i = 0; i < int(quads.size()); ++i) {
         if (wordBreaks.size() > 0) {
             bool skip = false;
@@ -242,15 +244,20 @@ bool TextBuffer::addLabel(const TextStyle::Parameters& _params, Label::Transform
         vertices.push_back({{q.x1, q.y1}, {q.s1, q.t1}, { 1.f,  1.f, 0.f}, _params.fill, stroke});
 
         yMin = std::min(yMin, q.y0);
+        xMin = std::min(xMin, q.x0);
+
         bbox.x = std::max(bbox.x, q.x1);
         bbox.y = std::max(bbox.y, std::abs(yMin - q.y1));
     }
 
+    bbox.x -= xMin;
+    LOG("%f %f", quads[0].x0, quads[0].y0);
+    glm::vec2 quadsLocalOrigin(xMin, quads[0].y0);
+
     _fontContext.unlock();
 
-
     m_labels.emplace_back(new TextLabel(_transform, _type, bbox, *this, { vertexOffset, numVertices },
-                                        _params.labelOptions, metrics, nLine, _params.anchor));
+                                        _params.labelOptions, metrics, nLine, _params.anchor, quadsLocalOrigin));
 
     // TODO: change this in TypeMesh::adVertices()
     m_nVertices = vertices.size();

@@ -5,11 +5,12 @@ namespace Tangram {
 using namespace LabelProperty;
 
 TextLabel::TextLabel(Label::Transform _transform, Type _type, glm::vec2 _dim, TextBuffer& _mesh, Range _vertexRange,
-    Label::Options _options, FontContext::FontMetrics _metrics, int _nLines, Anchor _anchor) :
+    Label::Options _options, FontContext::FontMetrics _metrics, int _nLines, Anchor _anchor, glm::vec2 _quadsLocalOrigin) :
     Label(_transform, _dim, _type, static_cast<LabelMesh&>(_mesh), _vertexRange, _options),
     m_metrics(_metrics),
-    m_nLines(_nLines)
-{
+    m_nLines(_nLines),
+    m_quadLocalOrigin(_quadsLocalOrigin) {
+
     if (m_type == Type::point) {
         glm::vec2 halfDim = m_dim * 0.5f;
         switch(_anchor) {
@@ -43,8 +44,9 @@ void TextLabel::updateBBoxes(float _zoomFract) {
     // move down on the perpendicular to estimated font baseline
     obbCenter -= m_perpAxis * m_dim.y * 0.5f;
     // ajdust with baseline
-    obbCenter += m_perpAxis * m_metrics.lineHeight * (float) (m_nLines - 1);
-    obbCenter -= m_perpAxis * m_metrics.descender;
+    //obbCenter += m_perpAxis * m_metrics.lineHeight * (float) (m_nLines - 1);
+    obbCenter += m_perpAxis * m_quadLocalOrigin.y + m_perpAxis * m_dim.y;
+    obbCenter += t * m_quadLocalOrigin.x;
 
     m_obb = OBB(obbCenter.x, obbCenter.y, m_transform.state.rotation, m_dim.x, m_dim.y);
     m_aabb = m_obb.getExtent();
