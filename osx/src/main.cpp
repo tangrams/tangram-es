@@ -4,17 +4,10 @@
 #include <cmath>
 #include <memory>
 
-#include "util/mapProjection.h"
-#include "glm/glm.hpp"
-
 // Forward declaration
 void init_main_window();
 
 std::string sceneFile = "scene.yaml";
-
-GLFWwindow* main_window = nullptr;
-int width = 800;
-int height = 600;
 
 // Input handling
 // ==============
@@ -140,44 +133,6 @@ void scroll_callback(GLFWwindow* window, double scrollx, double scrolly) {
 
 }
 
-LngLat project(glm::dvec2 _m) {
-    MercatorProjection proj;
-    auto p = proj.MetersToLonLat(_m);
-    return { p.x, p.y };
-}
-
-void test(double time) {
-
-    LngLat t = {width/2.0, height/2.0};
-
-    Tangram::screenToWorldCoordinates(t.longitude, t.latitude);
-
-    MercatorProjection proj;
-    glm::dvec2 c = proj.LonLatToMeters({t.longitude, t.latitude});
-
-    std::string color = "#eeaaee";
-
-    data_source->clearData();
-
-    for (int x = -5; x <= 5; x++) {
-        for (int y = -5; y <= 5; y++) {
-            Properties prop;
-            prop.add("type", "poly");
-            prop.add("color", color);
-            prop.add("height", (float)abs((int)((x * y) * 100 + 1000.0*sin(time))%1000));
-            data_source->addPoly(prop, {{
-                            project(c + glm::dvec2{x*220 - 100., y*220 - 100.}),
-                            project(c + glm::dvec2{x*220 - 100., y*220 + 100.}),
-                            project(c + glm::dvec2{x*220 + 100., y*220 + 100.}),
-                            project(c + glm::dvec2{x*220 + 100., y*220 - 100.}),
-                            project(c + glm::dvec2{x*220 - 100., y*220 - 100.})
-                            }});
-        }
-    }
-
-    requestRender();
-}
-
 void key_callback(GLFWwindow* window, int key, int scancode, int action, int mods) {
 
     if (action == GLFW_PRESS) {
@@ -224,6 +179,10 @@ void drop_callback(GLFWwindow* window, int count, const char** paths) {
 
 // Window handling
 // ===============
+
+GLFWwindow* main_window = nullptr;
+int width = 800;
+int height = 600;
 
 void window_size_callback(GLFWwindow* window, int width, int height) {
 
@@ -309,8 +268,6 @@ int main(int argc, char* argv[]) {
         double currentTime = glfwGetTime();
         double delta = currentTime - lastTime;
         lastTime = currentTime;
-
-        test(currentTime);
 
         // Render
         Tangram::update(delta);
