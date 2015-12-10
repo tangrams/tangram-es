@@ -246,11 +246,6 @@ bool TextBuffer::addLabel(const TextStyle::Parameters& _params, Label::Transform
         bbox.y = std::max(bbox.y, std::abs(yMin - q.y1));
     }
 
-    // Adjust the bounding boxes
-    bbox.y += metrics.descender * nLine;
-    // Approximate the first left side bearing
-    bbox.x += quads[0].x0;
-
     _fontContext.unlock();
 
 

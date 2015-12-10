@@ -57,12 +57,12 @@ void TextLabel::align(glm::vec2& _screenPosition, const glm::vec2& _ap1, const g
         case Type::point:
             // modify position set by updateScreenTransform()
             _screenPosition.x -= m_dim.x * 0.5f;
+            _screenPosition.y += m_dim.y * 0.5f - m_metrics.lineHeight * (float) (m_nLines - 1);
             _screenPosition += m_anchor;
             break;
         case Type::line: {
             // anchor at line center
             _screenPosition = (_ap1 + _ap2) * 0.5f;
-
             // move back by half the length (so that text will be drawn centered)
             glm::vec2 direction = glm::normalize(_ap1 - _ap2);
             _screenPosition += direction * m_dim.x * 0.5f;

@@ -247,7 +247,7 @@ void Labels::drawDebug(const View& _view) {
     }
 
     for (auto label : m_labels) {
-        if (label->canOcclude()) {
+        //if (label->canOcclude()) {
             glm::vec2 offset = label->options().offset;
             glm::vec2 sp = label->transform().state.screenPos;
             float angle = label->transform().state.rotation;
@@ -260,7 +260,7 @@ void Labels::drawDebug(const View& _view) {
                     Primitives::setColor(0x00ff00);
                     break;
                 case Label::State::visible:
-                    Primitives::setColor(0xffffff);
+                    Primitives::setColor(0x000000);
                     break;
                 case Label::State::wait_occ:
                     Primitives::setColor(0x0000ff);
@@ -282,7 +282,7 @@ void Labels::drawDebug(const View& _view) {
             // draw projected anchor point
             Primitives::setColor(0x0000ff);
             Primitives::drawRect(sp - glm::vec2(1.f), sp + glm::vec2(1.f));
-        }
+        //}
     }
 
     glm::vec2 split(_view.getWidth() / 256, _view.getHeight() / 256);

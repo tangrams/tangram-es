@@ -327,7 +327,6 @@ layers:
                 polygons:
                     style: polygons
                     color: '#bddec5'
-
     poi_labels:
         data: { source: osm, layer: pois }
         filter: { name: true, not: { kind: [peak, viewpoint, bicycle_rental, car_sharing] }, $zoom: { min: 15 } }
