@@ -2,6 +2,8 @@
 #include "scene/styleContext.h"
 #include "data/tileData.h"
 
+#include <cmath>
+
 namespace Tangram {
 
 bool Filter::eval(const Feature& feat, StyleContext& ctx) const {
@@ -36,7 +38,13 @@ bool Filter::eval(const Feature& feat, StyleContext& ctx) const {
         if (f.global == FilterGlobal::undefined) {
             auto& value = feat.props.get(f.key);
             for (const auto& v : f.values) {
-                if (v == value) { return true; }
+                if (v == value) {
+                    return true;
+                } else if (value.is<double>() && v.is<double>()) {
+                    auto& a = v.get<double>();
+                    auto& b = value.get<double>();
+                    if (std::fabs(a - b) <= std::numeric_limits<double>::epsilon()) { return true; }
+                }
             }
         } else {
             auto& global = ctx.getGlobal(f.global);
