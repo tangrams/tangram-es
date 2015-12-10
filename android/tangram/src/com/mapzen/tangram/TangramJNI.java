@@ -40,7 +40,6 @@ public class TangramJNI {
     public final static native long Polygon_get(long jarg1, Polygon jarg1_, int jarg2);
     public final static native void Polygon_set(long jarg1, Polygon jarg1_, int jarg2, long jarg3, Coordinates jarg3_);
     public final static native void delete_Polygon(long jarg1);
-    public final static native void DataSource_update(long jarg1, DataSource jarg1_);
     public final static native void DataSource_clearJNI(long jarg1, DataSource jarg1_);
     public final static native String DataSource_name(long jarg1, DataSource jarg1_);
     public final static native void delete_DataSource(long jarg1);

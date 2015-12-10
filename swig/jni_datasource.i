@@ -163,9 +163,6 @@ public:
 
 %extend Tangram::DataSource {
 
-    void update() {
-        Tangram::clearDataSource(*($self), false, true);
-    }
     void clearJNI() {
         Tangram::clearDataSource(*($self), true, true);
     }
