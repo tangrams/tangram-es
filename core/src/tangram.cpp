@@ -116,7 +116,7 @@ void loadScene(const char* _scenePath, bool _setPositionFromScene) {
         m_view = m_scene->view();
         m_inputHandler->setView(m_view);
         m_tileManager->setView(m_view);
-        m_tileManager->setScene(scene);
+        m_tileManager->setDataSources(scene->dataSources());
         m_tileWorker->setScene(scene);
     }
 }
