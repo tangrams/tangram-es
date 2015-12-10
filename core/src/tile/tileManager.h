@@ -82,6 +82,7 @@ private:
     struct TileSet {
         std::shared_ptr<DataSource> source;
         std::map<TileID, std::shared_ptr<Tile>> tiles;
+        int64_t sourceGeneration;
     };
 
     void updateTileSet(TileSet& tileSet);

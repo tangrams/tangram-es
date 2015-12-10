@@ -246,6 +246,11 @@ void TileManager::updateTileSet(TileSet& tileSet) {
     // the current view.
     int maxZoom = m_view->getZoom() + 2;
 
+    if (tileSet.sourceGeneration != tileSet.source->generation()) {
+        tileSet.sourceGeneration = tileSet.source->generation();
+        m_tileSetChanged = true;
+    }
+
     if (m_view->changedOnLastUpdate() || m_tileSetChanged) {
 
         // Loop over visibleTiles and add any needed tiles to tileSet
