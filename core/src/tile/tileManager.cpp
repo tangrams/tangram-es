@@ -386,13 +386,7 @@ void TileManager::loadTiles() {
 
         auto id = *std::get<2>(item);
         auto& tileSet = *std::get<1>(item);
-
         auto tileIt = tileSet.tiles.find(id);
-        if (tileIt == tileSet.tiles.end()) {
-            //assert(false);
-            continue;
-        }
-
         auto tile = tileIt->second;
         auto task = std::make_shared<TileTask>(tile, tileSet.source);
 
