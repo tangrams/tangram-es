@@ -67,7 +67,8 @@ void TileWorker::run() {
                     if (a->tile->isVisible() != b->tile->isVisible()) {
                         return a->tile->isVisible();
                     }
-                    if (a->tile->sourceGeneration() != b->tile->sourceGeneration()) {
+                    if (a->tile->sourceID() == b->tile->sourceID() &&
+                        a->tile->sourceGeneration() != b->tile->sourceGeneration()) {
                         return a->tile->sourceGeneration() < b->tile->sourceGeneration();
                     }
                     return a->tile->getPriority() < b->tile->getPriority();
