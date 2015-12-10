@@ -53,14 +53,6 @@ const std::map<std::string, StyleParamKey> s_StyleParamMap = {
     {"width", StyleParamKey::width},
 };
 
-static const char* keyName(StyleParamKey key) {
-    static std::string empty = "bug";
-    for (const auto& entry : s_StyleParamMap) {
-        if (entry.second == key) { return entry.first.c_str(); }
-    }
-    return empty.c_str();
-}
-
 static int parseInt(const std::string& _str, int& _value) {
     try {
         size_t index;
@@ -83,6 +75,14 @@ static int parseFloat(const std::string& _str, double& _value) {
     LOGW("Not a Float '%s'", _str.c_str());
 
     return -1;
+}
+
+const std::string& StyleParam::keyName(StyleParamKey _key) {
+    static std::string fallback = "bug";
+    for (const auto& entry : s_StyleParamMap) {
+        if (entry.second == _key) { return entry.first; }
+    }
+    return fallback;
 }
 
 StyleParamKey StyleParam::getKey(const std::string& _key) {
