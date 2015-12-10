@@ -128,13 +128,13 @@ void Labels::update(const View& _view, float _dt, const std::vector<std::unique_
 
             if (m_lastZoom < currentZoom) {
                 // zooming in, add the one cached parent tile
-                tiles.push_back(_cache->contains(t0->getDataSourceSerial(), tileID.getParent()));
+                tiles.push_back(_cache->contains(t0->sourceID(), tileID.getParent()));
             } else {
                 // zooming out, add the 4 cached children tiles
-                tiles.push_back(_cache->contains(t0->getDataSourceSerial(), tileID.getChild(0)));
-                tiles.push_back(_cache->contains(t0->getDataSourceSerial(), tileID.getChild(1)));
-                tiles.push_back(_cache->contains(t0->getDataSourceSerial(), tileID.getChild(2)));
-                tiles.push_back(_cache->contains(t0->getDataSourceSerial(), tileID.getChild(3)));
+                tiles.push_back(_cache->contains(t0->sourceID(), tileID.getChild(0)));
+                tiles.push_back(_cache->contains(t0->sourceID(), tileID.getChild(1)));
+                tiles.push_back(_cache->contains(t0->sourceID(), tileID.getChild(2)));
+                tiles.push_back(_cache->contains(t0->sourceID(), tileID.getChild(3)));
             }
 
             for (const auto& t1 : tiles) {

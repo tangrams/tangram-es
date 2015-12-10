@@ -109,8 +109,7 @@ bool TileManager::setTileState(Tile& _tile, TileState _newState) {
             m_loadPending++;
             return true;
         }
-        if (_newState == TileState::processing ||
-            _newState == TileState::stale) {
+        if (_newState == TileState::processing) {
             _tile.setState(_newState);
             return true;
         }
@@ -121,8 +120,7 @@ bool TileManager::setTileState(Tile& _tile, TileState _newState) {
 
     case TileState::loading:
         if (_newState == TileState::processing ||
-            _newState == TileState::canceled ||
-            _newState == TileState::stale) {
+            _newState == TileState::canceled) {
             _tile.setState(_newState);
             m_loadPending--;
             return true;
@@ -130,8 +128,7 @@ bool TileManager::setTileState(Tile& _tile, TileState _newState) {
         break;
 
     case TileState::processing:
-        if (_newState == TileState::ready ||
-            _newState == TileState::stale) {
+        if (_newState == TileState::ready) {
             _tile.setState(_newState);
             return true;
         }
@@ -140,26 +137,6 @@ bool TileManager::setTileState(Tile& _tile, TileState _newState) {
     case TileState::canceled:
         // Ignore any state change when tile was canceled
         return false;
-
-    case TileState::stale:
-        if (_newState == TileState::updating) {
-            _tile.setState(_newState);
-            return true;
-        }
-
-    case TileState::updating:
-        if (_newState == TileState::ready ||
-            _newState == TileState::stale ||
-            _newState == TileState::canceled) {
-            _tile.setState(_newState);
-            return true;
-        }
-
-    case TileState::ready:
-        if (_newState == TileState::stale) {
-            _tile.setState(_newState);
-            return true;
-        }
 
     default:
         break;
@@ -201,15 +178,6 @@ void TileManager::clearTileSet(int32_t _sourceId) {
     m_tileSetChanged = true;
 }
 
-void TileManager::markStale(int32_t _sourceId) {
-    for (auto& tileSet : m_tileSets) {
-        if (tileSet.source->id() != _sourceId) { continue; }
-        for (auto& tile : tileSet.tiles) {
-            setTileState(*tile.second, TileState::stale);
-        }
-    }
-}
-
 void TileManager::updateTileSets() {
 
     m_tileSetChanged = false;
@@ -237,27 +205,35 @@ void TileManager::updateTileSet(TileSet& tileSet) {
 
     if (!m_readyTiles.empty()) {
         std::lock_guard<std::mutex> lock(m_readyTileMutex);
-        auto it = m_readyTiles.begin();
+        auto taskIt = m_readyTiles.begin();
 
-        while (it != m_readyTiles.end()) {
-            auto& task = *it;
-            auto& tile = task->tile; // task tile, could be a non tileSet tile to refresh a stale tile
+        while (taskIt != m_readyTiles.end()) {
+            auto& task = *taskIt;
+            auto& tile = task->tile;
 
-            if (tileSet.source == task->source) {
-
-                auto& setTile = tileSet.tiles[tile->getID()];
-                if (setTile && setTile->hasState(TileState::updating)) {
-                    setTile = tile;
-                    m_tileSetChanged = true;
-                }
-                if (setTileState(*tile, TileState::ready)) {
-                    clearProxyTiles(tileSet, *tile, removeTiles);
-                    m_tileSetChanged = true;
-                }
-                it = m_readyTiles.erase(it);
-            } else {
-                it++;
+            if (tileSet.source != task->source) {
+                taskIt++;
+                continue;
             }
+            auto setTile = tileSet.tiles.find(tile->getID());
+
+            if (setTile != tileSet.tiles.end() &&
+                setTile->second->sourceGeneration() <= tile->sourceGeneration() &&
+                setTileState(*tile, TileState::ready)) {
+
+                // NB: proxies are added for the original
+                // tile in tileSet - not the one from tileTask.
+                // Dont use *tile here!
+                clearProxyTiles(tileSet, *setTile->second, removeTiles);
+
+                // Replace old tile with new tile from task
+                if (setTile->second != tile) {
+                    setTile->second = tile;
+                }
+
+                m_tileSetChanged = true;
+            }
+            taskIt = m_readyTiles.erase(taskIt);
         }
     }
 
@@ -293,15 +269,25 @@ void TileManager::updateTileSet(TileSet& tileSet) {
                 auto& tile = curTilesIt->second;
                 tile->setVisible(true);
 
-                if (tile->isReady() || tile->hasState(TileState::updating)) {
+                // LOG("%s - %d %d %d", tile->getID().toString().c_str(),
+                //     tile->sourceGeneration(), tileSet.source->generation(), tile->reloading);
+
+                bool stale = (tile->sourceGeneration() < tileSet.source->generation() &&
+                              !tile->reloading);
+
+                if (tile->isReady()) {
                     m_tiles.push_back(tile);
-                } else if(tile->hasState(TileState::stale)) {
-                    m_tiles.push_back(tile); // Keep on drawing the stale tile, new tile will update this
-                    enqueueTask(tileSet, visTileId, viewCenter);
-                    setTileState(*tile, TileState::updating);
-                } else if (tile->hasState(TileState::none)) {
+
+                    if (stale) {
+                        // Tile needs update - enqueue for loading
+                        enqueueTask(tileSet, visTileId, viewCenter);
+                    }
+
+                } else if (tile->hasState(TileState::none) || stale) {
+
                     // Not yet available - enqueue for loading
                     enqueueTask(tileSet, visTileId, viewCenter);
+
                     if (m_tileSetChanged) {
                         // check again for proxies
                         updateProxyTiles(tileSet, *tile);
@@ -386,43 +372,53 @@ void TileManager::enqueueTask(const TileSet& tileSet, const TileID& tileID,
                                    return distance < std::get<0>(other);
                                });
 
-    // Enqueue a new tile to update the stale tile
-    if (tileSet.tiles.at(tileID)->hasState(TileState::stale)) {
-        std::shared_ptr<Tile> tile(new Tile(tileID, m_view->getMapProjection()));
-        m_loadTasks.insert(it, std::make_tuple(distance, &tileSet, std::move(tile)));
-    } else {
-        m_loadTasks.insert(it, std::make_tuple(distance, &tileSet, tileSet.tiles.at(tileID)));
-    }
+    m_loadTasks.insert(it, std::make_tuple(distance, &tileSet, &tileID));
 }
 
 void TileManager::loadTiles() {
 
     for (auto& item : m_loadTasks) {
 
-        auto& tile =  std::get<2>(item);
-        auto& id = tile->getID();
+        auto id = *std::get<2>(item);
         auto& tileSet = *std::get<1>(item);
 
-        auto& source = tileSet.source;
+        auto tileIt = tileSet.tiles.find(id);
+        if (tileIt == tileSet.tiles.end()) {
+            //assert(false);
+            continue;
+        }
 
-        auto task = std::make_shared<TileTask>(tile, source);
-        if (source->getTileData(task)) {
-            setTileState(*tile, TileState::loading);
-            m_dataCallback.func(std::move(task));
+        auto tile = tileIt->second;
+        auto task = std::make_shared<TileTask>(tile, tileSet.source);
 
-        } else if (m_loadPending < (int)MAX_DOWNLOADS) {
-            setTileState(*tile, TileState::loading);
+        bool cached = tileSet.source->getTileData(task);
 
-            if (!source->loadTileData(std::move(task), m_dataCallback)) {
+        if (cached || m_loadPending < int(MAX_DOWNLOADS)) {
+
+            if (tile->sourceGeneration() < tileSet.source->generation()) {
+                // use new tile for updating while the stale tile
+                // is kept in tileSet for rendering.
+                tile->reloading = true;
+                task->tile = std::make_shared<Tile>(id, m_view->getMapProjection(),
+                                                    tileSet.source.get());
+            }
+
+            setTileState(*task->tile, TileState::loading);
+
+            if (cached) {
+                m_dataCallback.func(std::move(task));
+
+            } else if (!tileSet.source->loadTileData(std::move(task),
+                                                     m_dataCallback)) {
                 LOGE("Loading failed for tile [%d, %d, %d]", id.z, id.x, id.y);
                 m_loadPending--;
             }
         }
     }
 
-    LOGD("loading:%d pending:%d cache: %fMB",
-       m_loadTasks.size(), m_loadPending,
-       (double(m_tileCache->getMemoryUsage()) / (1024 * 1024)));
+    // LOGD("loading:%d pending:%d cache: %fMB",
+    //    m_loadTasks.size(), m_loadPending,
+    //    (double(m_tileCache->getMemoryUsage()) / (1024 * 1024)));
 
     m_loadTasks.clear();
 }
@@ -430,19 +426,19 @@ void TileManager::loadTiles() {
 bool TileManager::addTile(TileSet& tileSet, const TileID& _tileID) {
 
     auto tile = m_tileCache->get(tileSet.source->id(), _tileID);
-    bool fromCache = false;
+    bool cached = bool(tile);
 
-    if (tile) {
+    if (cached) {
         m_tiles.push_back(tile);
-
         // Update tile origin based on wrap (set in the new tileID)
         tile->updateTileOrigin(_tileID.wrap);
         // Reset tile on potential internal dynamic data set
         tile->reset();
 
-        fromCache = true;
     } else {
-        tile = std::shared_ptr<Tile>(new Tile(_tileID, m_view->getMapProjection()));
+        tile = std::make_shared<Tile>(_tileID, m_view->getMapProjection(),
+                                      tileSet.source.get());
+
         //Add Proxy if corresponding proxy MapTile ready
         updateProxyTiles(tileSet, *tile);
     }
@@ -450,7 +446,7 @@ bool TileManager::addTile(TileSet& tileSet, const TileID& _tileID) {
     tile->setVisible(true);
     tileSet.tiles.emplace(_tileID, tile);
 
-    return fromCache;
+    return cached;
 }
 
 void TileManager::removeTile(TileSet& tileSet, std::map<TileID,
@@ -469,7 +465,7 @@ void TileManager::removeTile(TileSet& tileSet, std::map<TileID,
 
     clearProxyTiles(tileSet, *tile, _removes);
 
-    if (tile->hasState(TileState::ready)) {
+    if (tile->hasState(TileState::ready) && !tile->reloading) {
         // Add to cache
         m_tileCache->put(tileSet.source->id(), tile);
     }
@@ -478,7 +474,8 @@ void TileManager::removeTile(TileSet& tileSet, std::map<TileID,
     _tileIt = tileSet.tiles.erase(_tileIt);
 }
 
-bool TileManager::updateProxyTile(TileSet& tileSet, Tile& _tile, const TileID& _proxy, const Tile::ProxyID _proxyID) {
+bool TileManager::updateProxyTile(TileSet& tileSet, Tile& _tile, const TileID& _proxy,
+                                  const Tile::ProxyID _proxyID) {
     auto& tiles = tileSet.tiles;
 
     // check if the proxy exists in the visible tile set
@@ -524,7 +521,8 @@ void TileManager::updateProxyTiles(TileSet& tileSet, Tile& _tile) {
         if (!updateProxyTile(tileSet, _tile, parentID, Tile::parent)) {
             if (m_view->s_maxZoom > _tileID.z) {
                 for (int i = 0; i < 4; i++) {
-                    updateProxyTile(tileSet, _tile, _tileID.getChild(i), static_cast<Tile::ProxyID>(1 << i));
+                    updateProxyTile(tileSet, _tile, _tileID.getChild(i),
+                                    static_cast<Tile::ProxyID>(1 << i));
                 }
             }
         }

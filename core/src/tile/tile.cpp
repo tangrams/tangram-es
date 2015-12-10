@@ -18,11 +18,13 @@
 
 namespace Tangram {
 
-Tile::Tile(TileID _id, const MapProjection& _projection) :
+Tile::Tile(TileID _id, const MapProjection& _projection, const DataSource* _source) :
     m_id(_id),
     m_projection(&_projection),
     m_visible(false),
-    m_priority(0) {
+    m_priority(0),
+    m_sourceId(_source ? _source->id() : 0),
+    m_sourceGeneration(_source ? _source->generation() : 0) {
 
     BoundingBox bounds(_projection.TileBounds(_id));
 
@@ -63,8 +65,6 @@ void Tile::build(StyleContext& _ctx, const Scene& _scene, const TileData& _data,
 
     // Initialize m_geometry
     initGeometry(_scene.styles().size());
-
-    m_dataSourceSerial = _source.id();
 
     const auto& layers = _scene.layers();
 

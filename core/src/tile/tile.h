@@ -22,7 +22,7 @@ class View;
 class StyleContext;
 struct TileData;
 
-enum class TileState { none, loading, processing, ready, canceled, stale, updating};
+enum class TileState { none, loading, processing, ready, canceled };
 
 /* Tile of vector map data
  *
@@ -33,7 +33,7 @@ class Tile {
 
 public:
 
-    Tile(TileID _id, const MapProjection& _projection);
+    Tile(TileID _id, const MapProjection& _projection, const DataSource* _source = nullptr);
 
 
     virtual ~Tile();
@@ -149,7 +149,11 @@ public:
     /* Get the sum in bytes of all <VboMesh>es */
     size_t getMemoryUsage() const;
 
-    int32_t getDataSourceSerial() { return m_dataSourceSerial; }
+    int64_t sourceGeneration() const { return m_sourceGeneration; }
+
+    int32_t sourceID() const { return m_sourceId; }
+
+    bool reloading = false;
 
 private:
 
@@ -174,9 +178,13 @@ private:
 
     float m_inverseScale = 1;
 
-    int32_t m_dataSourceSerial;
-
     std::atomic<double> m_priority;
+
+    /* ID of the DataSource */
+    const int32_t m_sourceId;
+
+    /* State of the DataSource for which this tile was created */
+    const int64_t m_sourceGeneration;
 
     glm::dvec2 m_tileOrigin; // South-West corner of the tile in 2D projection space in meters (e.g. mercator meters)
 

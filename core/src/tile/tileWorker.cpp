@@ -67,6 +67,9 @@ void TileWorker::run() {
                     if (a->tile->isVisible() != b->tile->isVisible()) {
                         return a->tile->isVisible();
                     }
+                    if (a->tile->sourceGeneration() != b->tile->sourceGeneration()) {
+                        return a->tile->sourceGeneration() < b->tile->sourceGeneration();
+                    }
                     return a->tile->getPriority() < b->tile->getPriority();
                 });
 
@@ -94,9 +97,9 @@ void TileWorker::run() {
 
             // float loadTime = (float(clock() - begin) / CLOCKS_PER_SEC) * 1000;
             // LOG("loadTime %s - %f", task->tile->getID().toString().c_str(), loadTime);
-
-            m_tileManager.tileProcessed(std::move(task));
         }
+
+        m_tileManager.tileProcessed(std::move(task));
 
         requestRender();
     }
