@@ -13,7 +13,8 @@ TextBuffer::TextBuffer(std::shared_ptr<VertexLayout> _vertexLayout)
     addVertices({}, {});
 }
 
-TextBuffer::~TextBuffer() {}
+TextBuffer::~TextBuffer() {
+}
 
 std::vector<TextBuffer::WordBreak> TextBuffer::findWords(const std::string& _text) {
     std::vector<WordBreak> words;
@@ -252,8 +253,10 @@ bool TextBuffer::addLabel(const TextStyle::Parameters& _params, Label::Transform
 
     _fontContext.unlock();
 
+
+    std::hash<TextStyle::Parameters> hash;
     m_labels.emplace_back(new TextLabel(_transform, _type, bbox, *this, { vertexOffset, numVertices },
-                                        _params.labelOptions, metrics, nLine, _params.anchor));
+                                        _params.labelOptions, metrics, nLine, _params.anchor, hash(_params)));
 
     // TODO: change this in TypeMesh::adVertices()
     m_nVertices = vertices.size();

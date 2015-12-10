@@ -19,6 +19,7 @@ class FontContext;
 class Tile;
 class View;
 class Style;
+class TileCache;
 struct TouchItem;
 
 /*
@@ -35,7 +36,7 @@ public:
     void drawDebug(const View& _view);
 
     void update(const View& _view, float _dt, const std::vector<std::unique_ptr<Style>>& _styles,
-                const std::vector<std::shared_ptr<Tile>>& _tiles);
+                const std::vector<std::shared_ptr<Tile>>& _tiles, std::unique_ptr<TileCache>& _cache);
 
     const std::vector<TouchItem>& getFeaturesAtPoint(const View& _view, float _dt,
                                                      const std::vector<std::unique_ptr<Style>>& _styles,
@@ -60,6 +61,8 @@ private:
     isect2d::ISect2D<glm::vec2> m_isect2d;
 
     std::vector<TouchItem> m_touchItems;
+
+    float m_lastZoom;
 };
 
 }

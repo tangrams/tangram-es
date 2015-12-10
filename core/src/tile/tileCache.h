@@ -66,6 +66,17 @@ public:
         return tile;
     }
 
+    std::shared_ptr<Tile> contains(int32_t _source, TileID _tileID) {
+        std::shared_ptr<Tile> tile;
+        TileCacheKey k(_source, _tileID);
+
+        auto it = m_cacheMap.find(k);
+        if (it != m_cacheMap.end()) {
+            return it->second->tile;
+        }
+        return nullptr;
+    }
+
     void limitCacheSize(size_t _cacheSizeBytes) {
         m_cacheMaxUsage = _cacheSizeBytes;
 

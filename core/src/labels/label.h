@@ -7,6 +7,7 @@
 #include "glm_vec.h" // for isect2d.h
 #include "fadeEffect.h"
 #include "util/types.h"
+#include "util/hash.h"
 #include "data/properties.h"
 
 #include <string>
@@ -82,23 +83,13 @@ public:
         Transition showTransition;
     };
 
-    Label(Transform _transform, glm::vec2 _size, Type _type, LabelMesh& _mesh, Range _vertexRange, Options _options);
+    Label(Transform _transform, glm::vec2 _size, Type _type, LabelMesh& _mesh, Range _vertexRange,
+            Options _options, size_t _hash);
 
     virtual ~Label();
 
-    const Transform& getTransform() const { return m_transform; }
-
     /* Update the transform of the label in world space, and project it to screen space */
     void updateTransform(const Transform& _transform, const glm::mat4& _mvp, const glm::vec2& _screenSize);
-
-    /* Gets the oriented bounding box of the label */
-    const OBB& getOBB() const { return m_obb; }
-
-    /* Gets the extent of the oriented bounding box of the label */
-    const AABB& getAABB() const { return m_aabb; }
-
-    /* Gets for label options: color and offset */
-    const Options& getOptions() const { return m_options; }
 
     bool update(const glm::mat4& _mvp, const glm::vec2& _screenSize, float _dt, float _zoomFract);
 
@@ -111,7 +102,6 @@ public:
 
     virtual void updateBBoxes(float _zoomFract) = 0;
 
-
     /* Sets the occlusion */
     void setOcclusion(bool _occlusion);
 
@@ -121,9 +111,9 @@ public:
     /* Mark the label as resolved */
     void occlusionSolved();
 
-    bool occludedLastFrame() { return m_occludedLastFrame; }
+    void skipTransitions();
 
-    State getState() const { return m_currentState; }
+    bool occludedLastFrame() { return m_occludedLastFrame; }
 
     /* Checks whether the label is in a visible state */
     bool visibleState() const;
@@ -134,6 +124,16 @@ public:
 
     /* Whether the label belongs to a proxy tile */
     bool isProxy() const { return m_proxy; }
+    size_t hash() const { return m_hash; }
+    const glm::vec2& dimension() const { return m_dim; }
+    /* Gets for label options: color and offset */
+    const Options& options() const { return m_options; }
+    /* Gets the extent of the oriented bounding box of the label */
+    const AABB& aabb() const { return m_aabb; }
+    /* Gets the oriented bounding box of the label */
+    const OBB& obb() const { return m_obb; }
+    const Transform& transform() const { return m_transform; }
+    const State& state() const { return m_currentState; }
 
 private:
 
@@ -158,6 +158,10 @@ private:
     bool m_updateMeshVisibility;
     // label options
     Options m_options;
+    // whether this label should skip transitions to move to first visible state
+    bool m_skipTransitions;
+    // the label hash based on its styling parameters
+    size_t m_hash;
 
 protected:
 
@@ -183,3 +187,25 @@ protected:
 };
 
 }
+
+namespace std {
+    template <>
+    struct hash<Tangram::Label::Options> {
+        size_t operator() (const Tangram::Label::Options& o) const {
+            std::size_t seed = 0;
+            hash_combine(seed, o.offset.x);
+            hash_combine(seed, o.offset.y);
+            hash_combine(seed, o.priority);
+            hash_combine(seed, o.interactive);
+            hash_combine(seed, o.collide);
+            hash_combine(seed, (int)o.selectTransition.ease);
+            hash_combine(seed, o.selectTransition.time);
+            hash_combine(seed, (int)o.hideTransition.ease);
+            hash_combine(seed, o.hideTransition.time);
+            hash_combine(seed, (int)o.showTransition.ease);
+            hash_combine(seed, o.showTransition.time);
+            return seed;
+        }
+    };
+}
+

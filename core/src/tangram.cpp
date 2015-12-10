@@ -151,7 +151,8 @@ void update(float _dt) {
                 tile->update(_dt, *m_view);
             }
 
-            m_labels->update(*m_view, _dt, m_scene->styles(), tiles);
+            auto& cache = m_tileManager->getTileCache();
+            m_labels->update(*m_view, _dt, m_scene->styles(), tiles, cache);
         }
 
         bool animated = false;

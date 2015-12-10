@@ -22,7 +22,7 @@ std::unique_ptr<TextLabel> makeLabel(Label::Transform _transform, Label::Type _t
     options.properties->add("id", id);
     options.interactive = true;
 
-    return std::unique_ptr<TextLabel>(new TextLabel(_transform, _type, {10, 10},dummy, {0, 0}, options, {}, 1, LabelProperty::Anchor::center));
+    return std::unique_ptr<TextLabel>(new TextLabel(_transform, _type, {10, 10},dummy, {0, 0}, options, {}, 1, LabelProperty::Anchor::center, 0));
 }
 
 TEST_CASE("Test getFeaturesAtPoint", "[Labels][FeaturePicking]") {

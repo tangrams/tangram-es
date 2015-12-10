@@ -16,7 +16,7 @@ inline bool tryFind(M& _map, const std::string& _transform, T& _out) {
 
 namespace LabelProperty {
 
-enum class Anchor {
+enum Anchor {
     center,
     top,
     bottom,
@@ -34,14 +34,14 @@ bool anchor(const std::string& _transform, Anchor& _out);
 
 namespace TextLabelProperty {
 
-enum class Transform {
+enum Transform {
     none,
     capitalize,
     uppercase,
     lowercase,
 };
 
-enum class Align : char {
+enum Align {
     right,
     left,
     center,

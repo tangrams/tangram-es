@@ -252,7 +252,7 @@ layers:
                 collide: true
                 transition:
                     [show, hide]:
-                        time: .3s
+                        time: 1s
                 #size: [[13, 12px], [15, 18px]]
                 #interactive: true
 
@@ -351,7 +351,10 @@ layers:
                 interactive: true
                 visible: true
                 priority: 2
-                #offset: [0, 8px]
+                offset: [0, 8px]
+                transition:
+                    [show, hide]:
+                        time: 1s
                 font:
                     family: sans-serif
                     weight: 400
@@ -366,6 +369,9 @@ layers:
                     visible: true
                     #offset: [0px, 5px]
                     priority: 1
+                    transition:
+                        [show, hide]:
+                            time: 1s
                     font:
                         family: sans-serif
                         weight: 400
@@ -380,6 +386,9 @@ layers:
                     interactive: true
                     visible: true
                     priority: 3
+                    transition:
+                        [show, hide]:
+                            time: 1s
                     font:
                         family: sans-serif
                         weight: 400
@@ -403,6 +412,9 @@ layers:
             text:
                 interactive: true
                 priority: 5
+                transition:
+                    [show, hide]:
+                        time: 1s
                 font:
                     family: sans-serif
                     weight: 400
@@ -441,6 +453,9 @@ layers:
             text:
                 interactive: true
                 priority: 0
+                transition:
+                    [show, hide]:
+                        time: 1s
                 font:
                     family: sans-serif
                     weight: 400

@@ -65,6 +65,11 @@ bool PointStyle::checkRule(const DrawRule& _rule) const {
     return true;
 }
 
+size_t PointStyle::hashParams(const Parameters& _params) const {
+    std::hash<Parameters> hash;
+    return hash(_params);
+}
+
 PointStyle::Parameters PointStyle::applyRule(const DrawRule& _rule, const Properties& _props, float _zoom) const {
 
     Parameters p;
@@ -162,7 +167,7 @@ void PointStyle::buildPoint(const Point& _point, const DrawRule& _rule, const Pr
     Label::Transform transform = { glm::vec2(_point) };
 
     mesh.addLabel(std::make_unique<SpriteLabel>(transform, p.size, mesh, _mesh.numVertices(),
-                p.labelOptions, p.extrudeScale, p.anchor));
+                p.labelOptions, p.extrudeScale, p.anchor, hashParams(p)));
 
     std::vector<Label::Vertex> vertices;
 
@@ -190,7 +195,7 @@ void PointStyle::buildLine(const Line& _line, const DrawRule& _rule, const Prope
         Label::Transform transform = { glm::vec2(_line[i]) };
 
         mesh.addLabel(std::make_unique<SpriteLabel>(transform, p.size, mesh, _mesh.numVertices(),
-                    p.labelOptions, p.extrudeScale, p.anchor));
+                    p.labelOptions, p.extrudeScale, p.anchor, hashParams(p)));
         pushQuad(vertices, p.size, {uvsQuad.x, uvsQuad.y}, {uvsQuad.z, uvsQuad.w},
                 p.color, p.extrudeScale);
     }
@@ -222,7 +227,7 @@ void PointStyle::buildPolygon(const Polygon& _polygon, const DrawRule& _rule, co
                 Label::Transform transform = { glm::vec2(point) };
 
                 mesh.addLabel(std::make_unique<SpriteLabel>(transform, p.size, mesh, _mesh.numVertices(),
-                            p.labelOptions, p.extrudeScale, p.anchor));
+                            p.labelOptions, p.extrudeScale, p.anchor, hashParams(p)));
                 pushQuad(vertices, p.size, {uvsQuad.x, uvsQuad.y}, {uvsQuad.z, uvsQuad.w},
                         p.color, p.extrudeScale);
             }
@@ -233,7 +238,7 @@ void PointStyle::buildPolygon(const Polygon& _polygon, const DrawRule& _rule, co
         Label::Transform transform = { c };
 
         mesh.addLabel(std::make_unique<SpriteLabel>(transform, p.size, mesh, _mesh.numVertices(),
-                    p.labelOptions, p.extrudeScale, p.anchor));
+                    p.labelOptions, p.extrudeScale, p.anchor, hashParams(p)));
         pushQuad(vertices, p.size,
                 {uvsQuad.x, uvsQuad.y}, {uvsQuad.z, uvsQuad.w}, p.color, p.extrudeScale);
     }

@@ -116,12 +116,10 @@ void View::setPosition(double _x, double _y) {
 }
 
 void View::setZoom(float _z) {
-
     // ensure zoom value is allowed
     m_zoom = glm::clamp(_z, s_minZoom, s_maxZoom);
     m_dirtyMatrices = true;
     m_dirtyTiles = true;
-
 }
 
 void View::setRoll(float _roll) {

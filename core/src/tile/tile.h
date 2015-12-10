@@ -149,6 +149,8 @@ public:
     /* Get the sum in bytes of all <VboMesh>es */
     size_t getMemoryUsage() const;
 
+    int32_t getDataSourceSerial() { return m_dataSourceSerial; }
+
 private:
 
     const TileID m_id;
@@ -171,6 +173,8 @@ private:
     float m_scale = 1;
 
     float m_inverseScale = 1;
+
+    int32_t m_dataSourceSerial;
 
     std::atomic<double> m_priority;
 

@@ -59,7 +59,7 @@ public:
      */
     void setCacheSize(size_t _cacheSize);
 
-    int32_t id() { return m_id; }
+    int32_t id() const { return m_id; }
 
 
 protected:
