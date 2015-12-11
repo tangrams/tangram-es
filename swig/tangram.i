@@ -61,8 +61,10 @@ struct Properties {
 // - DataSource
 // - ClientGeoJsonSource
 %include "jni_datasource.i"
+%include "jni_debug.i"
 
 namespace Tangram {
 void addDataSource(std::shared_ptr<Tangram::DataSource> _source);
 void clearDataSource(DataSource& _source, bool _data, bool _tiles);
+void setDebugFlag(DebugFlags _flag, bool _on);
 }

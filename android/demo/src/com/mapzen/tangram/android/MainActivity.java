@@ -7,6 +7,7 @@ import android.view.View;
 import android.view.Window;
 import android.widget.Toast;
 
+import com.mapzen.tangram.DebugFlags;
 import com.mapzen.tangram.HttpHandler;
 import com.mapzen.tangram.LngLat;
 import com.mapzen.tangram.MapController;
@@ -29,6 +30,8 @@ public class MainActivity extends Activity {
     MapController mapController;
     MapView mapView;
     MapData touchMarkers;
+
+    boolean tileInfo;
 
     String tileApiKey = "?api_key=vector-tiles-tyHL4AY";
 
@@ -86,6 +89,9 @@ public class MainActivity extends Activity {
             @Override
             public boolean onGenericMotion(View v, MotionEvent event) {
                 if (touchMarkers != null) { touchMarkers.clear(); }
+
+                tileInfo = !tileInfo;
+                Tangram.setDebugFlag(DebugFlags.tile_infos, tileInfo);
                 return true;
             }
         });
