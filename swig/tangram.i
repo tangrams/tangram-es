@@ -19,6 +19,9 @@
 %include "std_vector.i"
 %include "std_shared_ptr.i"
 
+// Uppercase all enum items
+%rename("%(uppercase)s", %$isenumitem) "";
+
 // http://www.swig.org/Doc3.0/Java.html#Java_imclass_pragmas
 // Change class modifier of the native methods intermediate class (i.e. TangramJNI)
 // %pragma(java) jniclassclassmodifiers="class"
