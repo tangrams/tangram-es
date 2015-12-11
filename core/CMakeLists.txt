@@ -16,8 +16,12 @@ set(INCLUDE_DIR include)
 set(SOURCE_DIR src)
 set(CORE_LIBRARY core CACHE INTERNAL "core library name" FORCE)
 
-add_definitions(-DLOG_LEVEL=2)
 
+if (CMAKE_BUILD_TYPE MATCHES Debug)
+  add_definitions(-DLOG_LEVEL=3)
+else()
+  add_definitions(-DLOG_LEVEL=2)
+endif()
 
 if (TANGRAM_WARN_ON_RULE_CONFLICT)
   add_definitions(-DTANGRAM_WARN_ON_RULE_CONFLICT)
