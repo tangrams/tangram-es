@@ -3,7 +3,6 @@
 #include "scene/styleParam.h"
 
 #include <vector>
-#include <deque>
 
 namespace Tangram {
 
@@ -50,8 +49,8 @@ struct DrawRuleData {
 struct DrawRule {
 
     const StyleParam* params[StyleParamKeySize] = { nullptr };
-
-    StyleParam evaluated[StyleParamKeySize];
+    const char*       layers[StyleParamKeySize] = { nullptr };
+    size_t            depths[StyleParamKeySize] = { 0 };
 
     const std::string* name = nullptr;
 
@@ -59,7 +58,7 @@ struct DrawRule {
 
     DrawRule(const DrawRuleData& _ruleData);
 
-    void merge(const DrawRuleData& _ruleData);
+    void merge(const DrawRuleData& _ruleData, const SceneLayer& _layer);
 
     bool isJSFunction(StyleParamKey _key) const;
 
@@ -98,15 +97,14 @@ struct DrawRuleMergeSet {
     bool match(const Feature& _feature, const SceneLayer& _layer, StyleContext& _ctx);
 
     // internal
-    void mergeRules(const std::vector<DrawRuleData>& rules);
+    void mergeRules(const SceneLayer& _layer);
 
     // Reusable containers 'matchedRules' and 'queuedLayers'
     std::vector<DrawRule> matchedRules;
-    // NB: Minimal memory usage of deque:
-    // http://info.prelert.com/blog/stl-container-memory-usage
-    // libdc++   4096 + 8 bytes heap
-    // libstdc++ 512 + 64 bytes heap
-    std::deque<std::vector<SceneLayer>::const_iterator> queuedLayers;
+    std::vector<const SceneLayer*> queuedLayers;
+
+    // Container for dynamically-evaluated parameters
+    StyleParam evaluated[StyleParamKeySize];
 
 };
 

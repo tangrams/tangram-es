@@ -16,8 +16,16 @@ set(INCLUDE_DIR include)
 set(SOURCE_DIR src)
 set(CORE_LIBRARY core CACHE INTERNAL "core library name" FORCE)
 
-add_definitions(-DLOG_LEVEL=2)
 
+if (CMAKE_BUILD_TYPE MATCHES Debug)
+  add_definitions(-DLOG_LEVEL=3)
+else()
+  add_definitions(-DLOG_LEVEL=2)
+endif()
+
+if (TANGRAM_WARN_ON_RULE_CONFLICT)
+  add_definitions(-DTANGRAM_WARN_ON_RULE_CONFLICT)
+endif()
 
 file(GLOB_RECURSE FOUND_SOURCES "${CMAKE_CURRENT_SOURCE_DIR}/${SOURCE_DIR}/*.cpp")
 file(GLOB_RECURSE FOUND_HEADERS "${CMAKE_CURRENT_SOURCE_DIR}/${SOURCE_DIR}/*.h")

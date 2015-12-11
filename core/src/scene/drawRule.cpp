@@ -7,9 +7,9 @@
 #include "scene/styleContext.h"
 #include "style/style.h"
 #include "platform.h"
+#include "drawRuleWarnings.h"
 
 #include <algorithm>
-#include <deque>
 
 namespace Tangram {
 
@@ -35,11 +35,30 @@ std::string DrawRuleData::toString() const {
 
 DrawRule::DrawRule(const DrawRuleData& _ruleData) :
     name(&_ruleData.name),
-    id(_ruleData.id) {}
+    id(_ruleData.id) {
 
-void DrawRule::merge(const DrawRuleData& _ruleData) {
-    for (auto& param : _ruleData.parameters) {
-        params[static_cast<uint8_t>(param.key)] = &param;
+    const static char* empty = "";
+    std::fill_n(layers, StyleParamKeySize, empty);
+}
+
+void DrawRule::merge(const DrawRuleData& _ruleData, const SceneLayer& _layer) {
+
+    evalConflict(*this, _ruleData, _layer);
+
+    for (const auto& param : _ruleData.parameters) {
+
+        auto key = static_cast<uint8_t>(param.key);
+
+        const auto depthOld = depths[key];
+        const auto depthNew = _layer.depth();
+        const char* layerOld = layers[key];
+        const char* layerNew = _layer.name().c_str();
+
+        if (depthNew > depthOld || (depthNew == depthOld && strcmp(layerNew, layerOld) > 0)) {
+            params[key] = &param;
+            depths[key] = depthNew;
+            layers[key] = layerNew;
+        }
     }
 }
 
@@ -60,9 +79,6 @@ const StyleParam& DrawRule::findParameter(StyleParamKey _key) const {
 
     const auto* p = params[static_cast<uint8_t>(_key)];
     if (p) {
-        if (p->function >= 0 || p->stops != nullptr) {
-            return evaluated[static_cast<uint8_t>(_key)];
-        }
         return *p;
     }
 
@@ -90,29 +106,29 @@ bool DrawRuleMergeSet::match(const Feature& _feature, const SceneLayer& _layer, 
     matchedRules.clear();
     queuedLayers.clear();
 
-    // Match layers
+    // If the first filter doesn't match, return immediately
     if (!_layer.filter().eval(_feature, _ctx)) { return false; }
 
-    // Add initial drawrules
-    mergeRules(_layer.rules());
+    // Add the first layer to the stack
+    queuedLayers.push_back(&_layer);
 
-    const auto& sublayers = _layer.sublayers();
-    for (auto it = sublayers.begin(); it != sublayers.end(); ++it) {
-        queuedLayers.push_back(it);
-    }
-
+    // Iterate depth-first over the layer hierarchy
     while (!queuedLayers.empty()) {
-        const auto& layer = *queuedLayers.front();
-        queuedLayers.pop_front();
 
+        // Pop a layer off the top of the stack
+        const auto& layer = *queuedLayers.back();
+        queuedLayers.pop_back();
+
+        // If the filter doesn't pass, move on to the next one
         if (!layer.filter().eval(_feature, _ctx)) { continue; }
 
-        const auto& sublayers = layer.sublayers();
-        for (auto it = sublayers.begin(); it != sublayers.end(); ++it) {
-            queuedLayers.push_back(it);
+        // Push each of the layer's sublayers onto the stack
+        for (const auto& sublayer : layer.sublayers()) {
+            queuedLayers.push_back(&sublayer);
         }
-        // override with sublayer drawrules
-        mergeRules(layer.rules());
+
+        // Merge rules from current layer into accumulated set
+        mergeRules(layer);
     }
     return true;
 }
@@ -120,9 +136,11 @@ bool DrawRuleMergeSet::match(const Feature& _feature, const SceneLayer& _layer, 
 void DrawRuleMergeSet::apply(const Feature& _feature, const Scene& _scene, const SceneLayer& _layer,
                     StyleContext& _ctx, Tile& _tile) {
 
+    // If no rules matched the feature, return immediately
     if (!match(_feature, _layer, _ctx)) { return; }
 
-    // Apply styles
+    // For each matched rule, find the style to be used and
+    // build the feature with the rule's parameters
     for (auto& rule : matchedRules) {
 
         auto* style = _scene.findStyle(rule.getStyleName());
@@ -135,30 +153,38 @@ void DrawRuleMergeSet::apply(const Feature& _feature, const Scene& _scene, const
         // Evaluate JS functions and Stops
         bool valid = true;
         for (size_t i = 0; i < StyleParamKeySize; ++i) {
+
             auto* param = rule.params[i];
             if (!param) { continue; }
 
             if (param->function >= 0) {
-                rule.evaluated[i].function = param->function;
-                if (!_ctx.evalStyle(param->function, param->key, rule.evaluated[i].value) &&
+
+                if (!_ctx.evalStyle(param->function, param->key, evaluated[i].value) &&
                     StyleParam::isRequired(param->key)) {
                     valid = false;
                     break;
                 }
+
+                evaluated[i].function = param->function;
+                rule.params[i] = &evaluated[i];
+
             }
             if (param->stops) {
-                rule.evaluated[i].stops = param->stops;
+
+                evaluated[i].stops = param->stops;
 
                 if (StyleParam::isColor(param->key)) {
-                    rule.evaluated[i].value = param->stops->evalColor(_ctx.getGlobalZoom());
+                    evaluated[i].value = param->stops->evalColor(_ctx.getGlobalZoom());
                 } else if (StyleParam::isWidth(param->key)) {
-                    // FIXME widht result is isgnored from here..
-                    rule.evaluated[i].value = param->stops->evalWidth(_ctx.getGlobalZoom());
+                    // FIXME width result is ignored from here
+                    evaluated[i].value = param->stops->evalWidth(_ctx.getGlobalZoom());
                 } else {
-                    rule.evaluated[i].value = param->stops->evalFloat(_ctx.getGlobalZoom());
+                    evaluated[i].value = param->stops->evalFloat(_ctx.getGlobalZoom());
                 }
+
+                rule.params[i] = &evaluated[i];
+
             }
-            rule.evaluated[i].key = param->key;
         }
 
         if (valid) {
@@ -167,8 +193,9 @@ void DrawRuleMergeSet::apply(const Feature& _feature, const Scene& _scene, const
     }
 }
 
-void DrawRuleMergeSet::mergeRules(const std::vector<DrawRuleData>& rules) {
-    for (auto& rule : rules) {
+void DrawRuleMergeSet::mergeRules(const SceneLayer& _layer) {
+
+    for (const auto& rule : _layer.rules()) {
 
         auto it = std::find_if(matchedRules.begin(), matchedRules.end(),
                                [&](auto& m) { return rule.id == m.id; });
@@ -177,7 +204,7 @@ void DrawRuleMergeSet::mergeRules(const std::vector<DrawRuleData>& rules) {
             it = matchedRules.insert(it, DrawRule(rule));
         }
 
-        it->merge(rule);
+        it->merge(rule, _layer);
     }
 }
 
