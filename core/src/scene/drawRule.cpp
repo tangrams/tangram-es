@@ -139,6 +139,7 @@ void DrawRuleMergeSet::apply(const Feature& _feature, const Scene& _scene, const
             if (!param) { continue; }
 
             if (param->function >= 0) {
+                rule.evaluated[i].function = param->function;
                 if (!_ctx.evalStyle(param->function, param->key, rule.evaluated[i].value) &&
                     StyleParam::isRequired(param->key)) {
                     valid = false;
