@@ -39,7 +39,6 @@ DrawRule::DrawRule(const DrawRuleData& _ruleData) :
 
     const static char* empty = "";
     std::fill_n(layers, StyleParamKeySize, empty);
-
 }
 
 void DrawRule::merge(const DrawRuleData& _ruleData, const SceneLayer& _layer) {
@@ -60,9 +59,7 @@ void DrawRule::merge(const DrawRuleData& _ruleData, const SceneLayer& _layer) {
             depths[key] = depthNew;
             layers[key] = layerNew;
         }
-
     }
-
 }
 
 bool DrawRule::isJSFunction(StyleParamKey _key) const {
@@ -142,7 +139,8 @@ void DrawRuleMergeSet::apply(const Feature& _feature, const Scene& _scene, const
     // If no rules matched the feature, return immediately
     if (!match(_feature, _layer, _ctx)) { return; }
 
-    // For each matched rule, find the style to be used and build the feature with the rule's parameters
+    // For each matched rule, find the style to be used and
+    // build the feature with the rule's parameters
     for (auto& rule : matchedRules) {
 
         auto* style = _scene.findStyle(rule.getStyleName());
@@ -161,7 +159,8 @@ void DrawRuleMergeSet::apply(const Feature& _feature, const Scene& _scene, const
 
             if (param->function >= 0) {
 
-                if (!_ctx.evalStyle(param->function, param->key, evaluated[i].value) && StyleParam::isRequired(param->key)) {
+                if (!_ctx.evalStyle(param->function, param->key, evaluated[i].value) &&
+                    StyleParam::isRequired(param->key)) {
                     valid = false;
                     break;
                 }
@@ -186,7 +185,6 @@ void DrawRuleMergeSet::apply(const Feature& _feature, const Scene& _scene, const
                 rule.params[i] = &evaluated[i];
 
             }
-
         }
 
         if (valid) {
@@ -208,7 +206,6 @@ void DrawRuleMergeSet::mergeRules(const SceneLayer& _layer) {
 
         it->merge(rule, _layer);
     }
-
 }
 
 }
