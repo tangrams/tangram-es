@@ -313,9 +313,6 @@ SWIGINTERN void std_vector_Sl_std_vector_Sl_Tangram_LngLat_Sg__Sg__set(std::vect
 #include "data/dataSource.h"
 #include "data/clientGeoJsonSource.h"
 
-SWIGINTERN void Tangram_DataSource_update(Tangram::DataSource *self) {
-  Tangram::clearDataSource(*(self), false, true);
-}
 SWIGINTERN void Tangram_DataSource_clearJNI(Tangram::DataSource *self) {
   Tangram::clearDataSource(*(self), true, true);
 }
@@ -893,7 +890,7 @@ SWIGEXPORT void JNICALL Java_com_mapzen_tangram_TangramJNI_delete_1Polygon(JNIEn
 }
 
 
-SWIGEXPORT void JNICALL Java_com_mapzen_tangram_TangramJNI_DataSource_1update(JNIEnv *jenv, jclass jcls, jlong jarg1, jobject jarg1_) {
+SWIGEXPORT void JNICALL Java_com_mapzen_tangram_TangramJNI_DataSource_1clearData(JNIEnv *jenv, jclass jcls, jlong jarg1, jobject jarg1_) {
   Tangram::DataSource *arg1 = (Tangram::DataSource *) 0 ;
   std::shared_ptr< Tangram::DataSource > *smartarg1 = 0 ;
 
@@ -903,7 +900,7 @@ SWIGEXPORT void JNICALL Java_com_mapzen_tangram_TangramJNI_DataSource_1update(JN
 
   smartarg1 = *(std::shared_ptr<  Tangram::DataSource > **)&jarg1;
   arg1 = (Tangram::DataSource *)(smartarg1 ? smartarg1->get() : 0);
-  Tangram_DataSource_update(arg1);
+  (arg1)->clearData();
 }
 
 

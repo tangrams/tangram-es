@@ -54,7 +54,7 @@ public:
 
     void clearTileSets();
 
-    void clearTileSet(int32_t _id);
+    void clearTileSet(int32_t _sourceId);
 
     /* For TileWorker: Pass TileTask with processed data back
      * to TileManager.
@@ -82,6 +82,7 @@ private:
     struct TileSet {
         std::shared_ptr<DataSource> source;
         std::map<TileID, std::shared_ptr<Tile>> tiles;
+        int64_t sourceGeneration;
     };
 
     void updateTileSet(TileSet& tileSet);

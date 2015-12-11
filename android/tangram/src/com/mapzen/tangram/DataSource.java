@@ -43,8 +43,8 @@ public class DataSource {
         return name();
     }
 
-    public void update() {
-        TangramJNI.DataSource_update(swigCPtr, this);
+    public void clearData() {
+        TangramJNI.DataSource_clearData(swigCPtr, this);
     }
 
     public void clearJNI() {
