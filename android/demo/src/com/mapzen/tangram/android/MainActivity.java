@@ -91,7 +91,7 @@ public class MainActivity extends Activity {
                 if (touchMarkers != null) { touchMarkers.clear(); }
 
                 tileInfo = !tileInfo;
-                Tangram.setDebugFlag(DebugFlags.tile_infos, tileInfo);
+                Tangram.setDebugFlag(DebugFlags.TILE_INFOS, tileInfo);
                 return true;
             }
         });
