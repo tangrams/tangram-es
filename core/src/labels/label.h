@@ -81,10 +81,13 @@ public:
         Transition selectTransition;
         Transition hideTransition;
         Transition showTransition;
+
+        // the label hash based on its styling parameters
+        size_t paramHash;
     };
 
     Label(Transform _transform, glm::vec2 _size, Type _type, LabelMesh& _mesh, Range _vertexRange,
-            Options _options, size_t _hash);
+            Options _options);
 
     virtual ~Label();
 
@@ -124,7 +127,7 @@ public:
 
     /* Whether the label belongs to a proxy tile */
     bool isProxy() const { return m_proxy; }
-    size_t hash() const { return m_hash; }
+    size_t hash() const { return m_options.paramHash; }
     const glm::vec2& dimension() const { return m_dim; }
     /* Gets for label options: color and offset */
     const Options& options() const { return m_options; }
@@ -160,8 +163,6 @@ private:
     Options m_options;
     // whether this label should skip transitions to move to first visible state
     bool m_skipTransitions;
-    // the label hash based on its styling parameters
-    size_t m_hash;
 
 protected:
 

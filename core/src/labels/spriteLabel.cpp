@@ -6,8 +6,8 @@ namespace Tangram {
 using namespace LabelProperty;
 
 SpriteLabel::SpriteLabel(Label::Transform _transform, glm::vec2 _size, LabelMesh& _mesh, int _vertexOffset,
-        Label::Options _options, float _extrudeScale, LabelProperty::Anchor _anchor, size_t _hash) :
-    Label(_transform, _size, Label::Type::point, _mesh, {_vertexOffset, 4}, _options, _hash),
+        Label::Options _options, float _extrudeScale, LabelProperty::Anchor _anchor) :
+    Label(_transform, _size, Label::Type::point, _mesh, {_vertexOffset, 4}, _options),
     m_extrudeScale(_extrudeScale)
 {
     switch(_anchor) {
