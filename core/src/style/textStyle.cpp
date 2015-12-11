@@ -140,9 +140,9 @@ auto TextStyle::applyRule(const DrawRule& _rule, const Properties& _props) const
     }
 
     /* Global operations done for fontsize and sdfblur */
-    float emSize = p.fontSize / 16.f;
     p.fontSize *= m_pixelScale;
     p.labelOptions.offset *= m_pixelScale;
+    float emSize = p.fontSize / 16.f;
     p.blurSpread = m_sdf ? emSize * 5.0f : 0.0f;
 
     return p;

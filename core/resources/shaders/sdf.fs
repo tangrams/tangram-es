@@ -17,8 +17,7 @@
 
 #pragma tangram: defines
 
-// TODO: use this as attribute
-const float emSize = 1.35;
+const float emSize = 15.0 / 16.0;
 
 uniform sampler2D u_tex;
 uniform vec3 u_map_position;
