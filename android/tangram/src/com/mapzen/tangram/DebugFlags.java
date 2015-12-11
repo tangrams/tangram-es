@@ -9,11 +9,11 @@
 package com.mapzen.tangram;
 
 public enum DebugFlags {
-    freeze_tiles(0),
-    proxy_colors,
-    tile_bounds,
-    tile_infos,
-    labels;
+    FREEZE_TILES(0),
+    PROXY_COLORS,
+    TILE_BOUNDS,
+    TILE_INFOS,
+    LABELS;
 
     public final int swigValue() {
         return swigValue;
