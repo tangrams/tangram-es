@@ -52,5 +52,6 @@ public class TangramJNI {
     public final static native void delete_MapData(long jarg1);
     public final static native void addDataSource(long jarg1, DataSource jarg1_);
     public final static native void clearDataSource(long jarg1, DataSource jarg1_, boolean jarg2, boolean jarg3);
+    public final static native void setDebugFlag(int jarg1, boolean jarg2);
     public final static native long MapData_SWIGSmartPtrUpcast(long jarg1);
 }

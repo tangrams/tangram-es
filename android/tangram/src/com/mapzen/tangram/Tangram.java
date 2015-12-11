@@ -17,4 +17,8 @@ public class Tangram {
         TangramJNI.clearDataSource(DataSource.getCPtr(_source), _source, _data, _tiles);
     }
 
+    public static void setDebugFlag(DebugFlags _flag, boolean _on) {
+        TangramJNI.setDebugFlag(_flag.swigValue(), _on);
+    }
+
 }

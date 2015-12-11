@@ -320,6 +320,9 @@ SWIGINTERN std::string Tangram_DataSource_name(Tangram::DataSource *self) {
   return self->name();
 }
 
+#include "debug.h"
+
+
 #ifdef __cplusplus
 extern "C" {
 #endif
@@ -1147,6 +1150,18 @@ SWIGEXPORT void JNICALL Java_com_mapzen_tangram_TangramJNI_clearDataSource(JNIEn
   arg2 = jarg2 ? true : false;
   arg3 = jarg3 ? true : false;
   Tangram::clearDataSource(*arg1,arg2,arg3);
+}
+
+
+SWIGEXPORT void JNICALL Java_com_mapzen_tangram_TangramJNI_setDebugFlag(JNIEnv *jenv, jclass jcls, jint jarg1, jboolean jarg2) {
+  Tangram::DebugFlags arg1 ;
+  bool arg2 ;
+
+  (void)jenv;
+  (void)jcls;
+  arg1 = (Tangram::DebugFlags)jarg1;
+  arg2 = jarg2 ? true : false;
+  Tangram::setDebugFlag(arg1,arg2);
 }
 
 
