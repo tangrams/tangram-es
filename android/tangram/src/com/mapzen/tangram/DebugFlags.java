@@ -8,50 +8,48 @@
 
 package com.mapzen.tangram;
 
-public final class DebugFlags {
-    public final static DebugFlags freeze_tiles = new DebugFlags("freeze_tiles", 0);
-    public final static DebugFlags proxy_colors = new DebugFlags("proxy_colors");
-    public final static DebugFlags tile_bounds = new DebugFlags("tile_bounds");
-    public final static DebugFlags tile_infos = new DebugFlags("tile_infos");
-    public final static DebugFlags labels = new DebugFlags("labels");
+public enum DebugFlags {
+    freeze_tiles(0),
+    proxy_colors,
+    tile_bounds,
+    tile_infos,
+    labels;
 
     public final int swigValue() {
         return swigValue;
     }
 
-    public String toString() {
-        return swigName;
-    }
-
     public static DebugFlags swigToEnum(int swigValue) {
+        DebugFlags[] swigValues = DebugFlags.class.getEnumConstants();
         if (swigValue < swigValues.length && swigValue >= 0 && swigValues[swigValue].swigValue == swigValue)
             return swigValues[swigValue];
-        for (int i = 0; i < swigValues.length; i++)
-            if (swigValues[i].swigValue == swigValue)
-                return swigValues[i];
+        for (DebugFlags swigEnum : swigValues)
+            if (swigEnum.swigValue == swigValue)
+                return swigEnum;
         throw new IllegalArgumentException("No enum " + DebugFlags.class + " with value " + swigValue);
     }
 
-    private DebugFlags(String swigName) {
-        this.swigName = swigName;
-        this.swigValue = swigNext++;
+    @SuppressWarnings("unused")
+    private DebugFlags() {
+        this.swigValue = SwigNext.next++;
     }
 
-    private DebugFlags(String swigName, int swigValue) {
-        this.swigName = swigName;
+    @SuppressWarnings("unused")
+    private DebugFlags(int swigValue) {
         this.swigValue = swigValue;
-        swigNext = swigValue+1;
+        SwigNext.next = swigValue+1;
     }
 
-    private DebugFlags(String swigName, DebugFlags swigEnum) {
-        this.swigName = swigName;
+    @SuppressWarnings("unused")
+    private DebugFlags(DebugFlags swigEnum) {
         this.swigValue = swigEnum.swigValue;
-        swigNext = this.swigValue+1;
+        SwigNext.next = this.swigValue+1;
     }
 
-    private static DebugFlags[] swigValues = { freeze_tiles, proxy_colors, tile_bounds, tile_infos, labels };
-    private static int swigNext = 0;
     private final int swigValue;
-    private final String swigName;
+
+    private static class SwigNext {
+        private static int next = 0;
+    }
 }
 
