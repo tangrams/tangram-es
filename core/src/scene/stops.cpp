@@ -74,7 +74,7 @@ auto Stops::FontSize(const YAML::Node& _node) -> Stops {
     return stops;
 }
 
-auto Stops::Widths2D(const YAML::Node& _node, const std::vector<Unit>& _units) -> Stops {
+auto Stops::Offsets(const YAML::Node& _node, const std::vector<Unit>& _units) -> Stops {
     Stops stops;
     if (!_node.IsSequence()) {
         return stops;

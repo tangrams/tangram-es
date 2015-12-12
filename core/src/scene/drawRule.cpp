@@ -178,7 +178,7 @@ void DrawRuleMergeSet::apply(const Feature& _feature, const Scene& _scene, const
                 } else if (StyleParam::isWidth(param->key)) {
                     // FIXME width result is ignored from here
                     evaluated[i].value = param->stops->evalWidth(_ctx.getGlobalZoom());
-                } else if (StyleParam::is2DWidth(param->key)) {
+                } else if (StyleParam::isOffsets(param->key)) {
                     evaluated[i].value = param->stops->evalVec2(_ctx.getGlobalZoom());
                 } else {
                     evaluated[i].value = param->stops->evalFloat(_ctx.getGlobalZoom());

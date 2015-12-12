@@ -473,7 +473,7 @@ bool StyleParam::isWidth(StyleParamKey _key) {
     }
 }
 
-bool StyleParam::is2DWidth(StyleParamKey _key) {
+bool StyleParam::isOffsets(StyleParamKey _key) {
     switch (_key) {
         case StyleParamKey::offset:
             return true;
