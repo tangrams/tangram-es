@@ -1177,15 +1177,19 @@ void SceneLoader::parseStyleParams(Node params, Scene& scene, const std::string&
                     if (StyleParam::isColor(styleKey)) {
                         scene.stops().push_back(Stops::Colors(value));
                         out.push_back(StyleParam{ styleKey, &(scene.stops().back()) });
-
                     } else if (StyleParam::isWidth(styleKey)) {
-                        scene.stops().push_back(Stops::Widths(value, *scene.mapProjection()));
+                        std::vector<Unit> allowedUnits;
+                        StyleParam::unitsForStyleParam(styleKey, allowedUnits);
+                        scene.stops().push_back(Stops::Widths(value, *scene.mapProjection(), allowedUnits));
                         out.push_back(StyleParam{ styleKey, &(scene.stops().back()) });
-
-                    } else if (StyleParam::isFontSize(styleKey)){
+                    } else if (StyleParam::isOffsets(styleKey)) {
+                        std::vector<Unit> allowedUnits;
+                        StyleParam::unitsForStyleParam(styleKey, allowedUnits);
+                        scene.stops().push_back(Stops::Offsets(value, allowedUnits));
+                        out.push_back(StyleParam{ styleKey, &(scene.stops().back()) });
+                    } else if (StyleParam::isFontSize(styleKey)) {
                         scene.stops().push_back(Stops::FontSize(value));
                         out.push_back(StyleParam{ styleKey, &(scene.stops().back()) });
-
                     }
                 } else {
                     LOGW("Unknown style parameter %s", key.c_str());

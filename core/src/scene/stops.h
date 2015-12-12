@@ -1,6 +1,8 @@
 #pragma once
 
 #include "util/color.h"
+#include "scene/styleParam.h"
+#include "variant.hpp"
 
 #include <vector>
 
@@ -12,22 +14,23 @@ namespace Tangram {
 
 class MapProjection;
 
+using StopValue = variant<none_type, float, Color, glm::vec2>;
+
 struct Stops {
 
     struct Frame {
         float key = 0;
-        union {
-            float value;
-            Color color;
-        };
+        StopValue value;
         Frame(float _k, float _v) : key(_k), value(_v) {}
-        Frame(float _k, Color _c) : key(_k), color(_c) {}
+        Frame(float _k, Color _c) : key(_k), value(_c) {}
+        Frame(float _k, glm::vec2 _v) : key(_k), value(_v) {}
     };
 
     std::vector<Frame> frames;
     static Stops Colors(const YAML::Node& _node);
-    static Stops Widths(const YAML::Node& _node, const MapProjection& _projection);
+    static Stops Widths(const YAML::Node& _node, const MapProjection& _projection, const std::vector<Unit>& _units);
     static Stops FontSize(const YAML::Node& _node);
+    static Stops Offsets(const YAML::Node& _node, const std::vector<Unit>& _units);
 
     Stops(const std::vector<Frame>& _frames) : frames(_frames) {}
     Stops() {}
@@ -35,6 +38,7 @@ struct Stops {
     auto evalFloat(float _key) const -> float;
     auto evalWidth(float _key) const -> float;
     auto evalColor(float _key) const -> uint32_t;
+    auto evalVec2(float _key) const -> glm::vec2;
     auto nearestHigherFrame(float _key) const -> std::vector<Frame>::const_iterator;
 };
 

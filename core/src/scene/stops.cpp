@@ -74,7 +74,52 @@ auto Stops::FontSize(const YAML::Node& _node) -> Stops {
     return stops;
 }
 
-auto Stops::Widths(const YAML::Node& _node, const MapProjection& _projection) -> Stops {
+auto Stops::Offsets(const YAML::Node& _node, const std::vector<Unit>& _units) -> Stops {
+    Stops stops;
+    if (!_node.IsSequence()) {
+        return stops;
+    }
+    float lastKey = 0;
+    for (const auto& frameNode : _node) {
+        if (!frameNode.IsSequence() || frameNode.size() != 2) { continue; }
+        float key = frameNode[0].as<float>();
+
+        if (lastKey > key) {
+            LOGW("Invalid stop order: key %f > %f\n", lastKey, key);
+            continue;
+        }
+        lastKey = key;
+
+        if (frameNode[1].IsSequence()) {
+            std::vector<StyleParam::ValueUnitPair> widths;
+            Unit lastUnit = Unit::pixel;
+
+            for (const auto& sequenceNode : frameNode[1]) {
+                StyleParam::ValueUnitPair width;
+                width.unit = Unit::pixel; // default to pixel
+                if (StyleParam::parseValueUnitPair(sequenceNode.Scalar(), 0, width)) {
+                    widths.push_back(width);
+                    if (lastUnit != width.unit) {
+                        LOGW("Mixed units not allowed for stop values", Dump(frameNode[1]).c_str());
+                    }
+                    lastUnit = width.unit;
+                } else {
+                    LOGW("could not parse node %s\n", Dump(sequenceNode).c_str());
+                }
+            }
+            if (widths.size() == 2) {
+                if (widths[0].unit != Unit::pixel || widths[1].unit != Unit::pixel) {
+                    LOGW("Non-pixel unit not allowed for multidimensionnal stop values");
+                }
+                stops.frames.emplace_back(key, glm::vec2(widths[0].value, widths[1].value));
+            }
+        }
+    }
+
+    return stops;
+}
+
+auto Stops::Widths(const YAML::Node& _node, const MapProjection& _projection, const std::vector<Unit>& _units) -> Stops {
     Stops stops;
     if (!_node.IsSequence()) { return stops; }
 
@@ -98,7 +143,19 @@ auto Stops::Widths(const YAML::Node& _node, const MapProjection& _projection) ->
         width.unit = Unit::meter;
         size_t start = 0;
 
-        if (StyleParam::parseValueUnitPair(frameNode[1].Scalar(), start, width)){
+        if (StyleParam::parseValueUnitPair(frameNode[1].Scalar(), start, width)) {
+            bool valid = false;
+            for (auto& unit : _units) {
+                if (width.unit == unit) {
+                    valid = true;
+                    break;
+                }
+            }
+
+            if (!valid) {
+                LOGW("Invalid unit is being used for stop %s", Dump(frameNode[1]).c_str());
+            }
+
             if (width.unit == Unit::meter) {
                 float w = widthMeterToPixel(key, tileSize, width.value);
                 stops.frames.emplace_back(key, w);
@@ -129,18 +186,26 @@ auto Stops::evalWidth(float _key) const -> float {
     auto upper = nearestHigherFrame(_key);
     auto lower = upper - 1;
 
-    if (upper == frames.end())  { return lower->value; }
-    if (lower < frames.begin()) { return upper->value; }
+    if (upper == frames.end())  {
+        return lower->value.get<float>();
+    }
+    if (lower < frames.begin()) {
+        return upper->value.get<float>();
+    }
 
-    if (upper->key <= _key) { return upper->value; }
-    if (lower->key >= _key) { return lower->value; }
+    if (upper->key <= _key) {
+        return upper->value.get<float>();
+    }
+    if (lower->key >= _key) {
+        return lower->value.get<float>();
+    }
 
     double range = exp2(upper->key - lower->key) - 1.0;
     double pos = exp2(_key - lower->key) - 1.0;
 
     double lerp = pos / range;
 
-    return lower->value * (1 - lerp) + upper->value * lerp;
+    return lower->value.get<float>() * (1 - lerp) + upper->value.get<float>() * lerp;
 
 }
 
@@ -149,12 +214,16 @@ auto Stops::evalFloat(float _key) const -> float {
     auto upper = nearestHigherFrame(_key);
     auto lower = upper - 1;
 
-    if (upper == frames.end()) { return lower->value; }
-    if (lower < frames.begin()) { return upper->value; }
+    if (upper == frames.end()) {
+        return lower->value.get<float>();
+    }
+    if (lower < frames.begin()) {
+        return upper->value.get<float>();
+    }
 
     float lerp = (_key - lower->key) / (upper->key - lower->key);
 
-    return (lower->value * (1 - lerp) + upper->value * lerp);
+    return (lower->value.get<float>() * (1 - lerp) + upper->value.get<float>() * lerp);
 
 }
 
@@ -162,12 +231,38 @@ auto Stops::evalColor(float _key) const -> uint32_t {
 
     auto upper = nearestHigherFrame(_key);
     auto lower = upper - 1;
-    if (upper == frames.end())  { return lower->color.abgr; }
-    if (lower < frames.begin()) { return upper->color.abgr; }
+    if (upper == frames.end())  {
+        return lower->value.get<Color>().abgr;
+    }
+    if (lower < frames.begin()) {
+        return upper->value.get<Color>().abgr;
+    }
 
     float lerp = (_key - lower->key) / (upper->key - lower->key);
 
-    return Color::mix(lower->color, upper->color, lerp).abgr;
+    return Color::mix(lower->value.get<Color>(), upper->value.get<Color>(), lerp).abgr;
+
+}
+
+auto Stops::evalVec2(float _key) const -> glm::vec2 {
+
+    auto upper = nearestHigherFrame(_key);
+    auto lower = upper - 1;
+
+    if (upper == frames.end()) {
+        return lower->value.get<glm::vec2>();
+    }
+    if (lower < frames.begin()) {
+        return upper->value.get<glm::vec2>();
+    }
+
+    float lerp = (_key - lower->key) / (upper->key - lower->key);
+
+    const glm::vec2& lowerVal = lower->value.get<glm::vec2>();
+    const glm::vec2& upperVal = upper->value.get<glm::vec2>();
+
+    return glm::vec2(lowerVal.x * (1 - lerp) + upperVal.x * lerp,
+                     lowerVal.y * (1 - lerp) + upperVal.y * lerp);
 
 }
 

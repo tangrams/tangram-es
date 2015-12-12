@@ -134,8 +134,11 @@ struct StyleParam {
 
     static bool isColor(StyleParamKey _key);
     static bool isWidth(StyleParamKey _key);
+    static bool isOffsets(StyleParamKey _key);
     static bool isFontSize(StyleParamKey _key);
     static bool isRequired(StyleParamKey _key);
+
+    static bool unitsForStyleParam(StyleParamKey _key, std::vector<Unit>& _unit);
 
     static StyleParamKey getKey(const std::string& _key);
 

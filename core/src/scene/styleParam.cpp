@@ -53,6 +53,14 @@ const std::map<std::string, StyleParamKey> s_StyleParamMap = {
     {"width", StyleParamKey::width},
 };
 
+const std::map<StyleParamKey, std::vector<Unit>> s_StyleParamUnits = {
+    {StyleParamKey::offset, {Unit::pixel}},
+    {StyleParamKey::size, {Unit::pixel}},
+    {StyleParamKey::font_stroke_width, {Unit::pixel}},
+    {StyleParamKey::width, {Unit::meter, Unit::pixel}},
+    {StyleParamKey::outline_width, {Unit::meter, Unit::pixel}}
+};
+
 static int parseInt(const std::string& _str, int& _value) {
     try {
         size_t index;
@@ -456,9 +464,18 @@ bool StyleParam::isColor(StyleParamKey _key) {
 bool StyleParam::isWidth(StyleParamKey _key) {
     switch (_key) {
         case StyleParamKey::width:
-        case StyleParamKey::font_stroke_width:
         case StyleParamKey::outline_width:
         case StyleParamKey::size:
+        case StyleParamKey::font_stroke_width:
+            return true;
+        default:
+            return false;
+    }
+}
+
+bool StyleParam::isOffsets(StyleParamKey _key) {
+    switch (_key) {
+        case StyleParamKey::offset:
             return true;
         default:
             return false;
@@ -480,4 +497,14 @@ bool StyleParam::isRequired(StyleParamKey _key) {
 
     return std::find(requiredKeys.begin(), requiredKeys.end(), _key) != requiredKeys.end();
 }
+
+bool StyleParam::unitsForStyleParam(StyleParamKey _key, std::vector<Unit>& _unit) {
+    auto it = s_StyleParamUnits.find(_key);
+    if (it != s_StyleParamUnits.end()) {
+        _unit = it->second;
+        return true;
+    }
+    return false;
+}
+
 }
