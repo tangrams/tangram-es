@@ -84,7 +84,5 @@ void main(void) {
     #pragma tangram: filter
 
     gl_FragColor = color;
-    gl_FragColor.r *= 0.5;
-    gl_FragColor.a = 0.5;
 }
 
