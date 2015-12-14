@@ -62,7 +62,7 @@ void TextLabel::align(glm::vec2& _screenPosition, const glm::vec2& _ap1, const g
 
             if (m_nLines > 1) {
                 _screenPosition.y -= m_dim.y * 0.5f;
-                _screenPosition.y += m_metrics.lineHeight;
+                _screenPosition.y += (m_metrics.lineHeight + m_metrics.descender);
             }
             _screenPosition += m_anchor;
             break;
