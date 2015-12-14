@@ -53,8 +53,6 @@ protected:
     std::shared_ptr<SpriteAtlas> m_spriteAtlas;
     std::shared_ptr<Texture> m_texture;
 
-    inline size_t hashParams(const Parameters& _params) const;
-
 };
 
 }

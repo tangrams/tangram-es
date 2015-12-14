@@ -8,15 +8,13 @@
 namespace Tangram {
 
 Label::Label(Label::Transform _transform, glm::vec2 _size, Type _type, LabelMesh& _mesh,
-             Range _vertexRange, Options _options, size_t _hash) :
-    m_options(_options),
-    m_hash(_hash),
+             Range _vertexRange, Options _options) :
     m_type(_type),
     m_transform(_transform),
     m_dim(_size),
     m_mesh(_mesh),
-    m_vertexRange(_vertexRange)
-{
+    m_vertexRange(_vertexRange),
+    m_options(_options) {
     if (!m_options.collide || m_type == Type::debug){
         enterState(State::visible, 1.0);
     } else {
@@ -228,7 +226,6 @@ void Label::resetState() {
     m_updateMeshVisibility = true;
     m_dirty = true;
     m_proxy = false;
-    m_skipTransitions = false;
     enterState(State::wait_occ, 0.0);
 }
 

@@ -5,11 +5,12 @@ namespace Tangram {
 using namespace LabelProperty;
 
 TextLabel::TextLabel(Label::Transform _transform, Type _type, glm::vec2 _dim, TextBuffer& _mesh, Range _vertexRange,
-    Label::Options _options, FontContext::FontMetrics _metrics, int _nLines, Anchor _anchor, size_t _hash) :
-    Label(_transform, _dim, _type, static_cast<LabelMesh&>(_mesh), _vertexRange, _options, _hash),
+    Label::Options _options, FontContext::FontMetrics _metrics, int _nLines, Anchor _anchor, glm::vec2 _quadsLocalOrigin) :
+    Label(_transform, _dim, _type, static_cast<LabelMesh&>(_mesh), _vertexRange, _options),
     m_metrics(_metrics),
-    m_nLines(_nLines)
-{
+    m_nLines(_nLines),
+    m_quadLocalOrigin(_quadsLocalOrigin) {
+
     if (m_type == Type::point) {
         glm::vec2 halfDim = m_dim * 0.5f;
         switch(_anchor) {
@@ -42,11 +43,11 @@ void TextLabel::updateBBoxes(float _zoomFract) {
     obbCenter += t * m_dim.x * 0.5f;
     // move down on the perpendicular to estimated font baseline
     obbCenter -= m_perpAxis * m_dim.y * 0.5f;
-    // ajdust with baseline
-    obbCenter += m_perpAxis * m_metrics.lineHeight * (float) (m_nLines - 1);
-    obbCenter -= m_perpAxis * m_metrics.descender;
+    // ajdust with local origin of the quads
+    obbCenter += m_perpAxis * m_quadLocalOrigin.y + m_perpAxis * m_dim.y;
+    obbCenter += t * m_quadLocalOrigin.x;
 
-    m_obb = OBB(obbCenter.x, obbCenter.y, m_transform.state.rotation, m_dim.x, m_dim.y);
+    m_obb = OBB(obbCenter.x, obbCenter.y, m_transform.state.rotation, m_dim.x + m_options.buffer, m_dim.y + m_options.buffer);
     m_aabb = m_obb.getExtent();
 }
 
@@ -56,7 +57,13 @@ void TextLabel::align(glm::vec2& _screenPosition, const glm::vec2& _ap1, const g
         case Type::debug:
         case Type::point:
             // modify position set by updateScreenTransform()
-            _screenPosition.x -= m_dim.x * 0.5f;
+            _screenPosition.x -= m_dim.x * 0.5f + m_quadLocalOrigin.x;
+            _screenPosition.y -= m_metrics.descender;
+
+            if (m_nLines > 1) {
+                _screenPosition.y -= m_dim.y * 0.5f;
+                _screenPosition.y += (m_metrics.lineHeight + m_metrics.descender);
+            }
             _screenPosition += m_anchor;
             break;
         case Type::line: {
@@ -66,8 +73,7 @@ void TextLabel::align(glm::vec2& _screenPosition, const glm::vec2& _ap1, const g
             // move back by half the length (so that text will be drawn centered)
             glm::vec2 direction = glm::normalize(_ap1 - _ap2);
             _screenPosition += direction * m_dim.x * 0.5f;
-
-            _screenPosition += m_perpAxis * (m_dim.y * 0.5f  + m_metrics.descender);
+            _screenPosition += m_perpAxis * (m_dim.y * 0.5f + 2.f * m_metrics.descender);
             break;
         }
     }

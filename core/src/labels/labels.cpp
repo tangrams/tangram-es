@@ -260,7 +260,7 @@ void Labels::drawDebug(const View& _view) {
                     Primitives::setColor(0x00ff00);
                     break;
                 case Label::State::visible:
-                    Primitives::setColor(0xffffff);
+                    Primitives::setColor(0x000000);
                     break;
                 case Label::State::wait_occ:
                     Primitives::setColor(0x0000ff);
