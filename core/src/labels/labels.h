@@ -59,6 +59,8 @@ private:
     std::vector<Label*> m_labels;
     std::vector<AABB> m_aabbs;
     std::vector<CollideComponent> m_collideComponents;
+    std::vector<TextLabel*> m_visibleTextSet;
+    fastmap<size_t, std::vector<CollideComponent>> m_repeatGroups;
 
     isect2d::ISect2D<glm::vec2> m_isect2d;
 
