@@ -187,8 +187,18 @@ void Labels::update(const View& _view, float _dt, const std::vector<std::unique_
 
     /// Apply repeat groups
 
+    // TODO: optimize
+    // Ensure the labels are always treated in the same order
     std::sort(m_visibleTextSet.begin(), m_visibleTextSet.end(), [](TextLabel* _a, TextLabel* _b) {
-        return glm::length2(_a->transform().state.screenPos) < glm::length2(_b->transform().state.screenPos);
+        std::size_t seed0 = 0;
+        std::size_t seed1 = 0;
+        hash_combine(seed0, _a->hash());
+        hash_combine(seed0, _a->transform().modelPosition1.x);
+        hash_combine(seed0, _a->transform().modelPosition1.y);
+        hash_combine(seed1, _b->hash());
+        hash_combine(seed1, _b->transform().modelPosition1.x);
+        hash_combine(seed1, _b->transform().modelPosition1.y);
+        return seed0 < seed1;
     });
 
     auto textLabelIt = m_visibleTextSet.begin();
@@ -197,27 +207,24 @@ void Labels::update(const View& _view, float _dt, const std::vector<std::unique_
         CollideComponent component;
         component.position = textLabel->transform().state.screenPos;
         component.userData = (void*)textLabel;
-        std::size_t seed = 0;
 
+        std::size_t seed = 0;
         hash_combine(seed, textLabel->text);
 
-        // Group is hash for now
         component.group = seed;
-
-        // Mask is the group
         component.mask = seed;
 
         auto it = m_repeatGroups.find(seed);
         if (it != m_repeatGroups.end()) {
             std::vector<CollideComponent>& group = m_repeatGroups[seed];
 
-            if(std::find(group.begin(), group.end(), component) == group.end()) {
+            if (std::find(group.begin(), group.end(), component) == group.end()) {
                 std::vector<CollideComponent> newGroup(group);
                 newGroup.push_back(component);
 
                 isect2d::CollideOption options;
                 options.thresholdDistance = 300.0f;
-                options.rule = isect2d::CollideRuleOption::BIDIRECTIONNAL;
+                options.rule = isect2d::CollideRuleOption::UNIDIRECTIONNAL;
 
                 auto collisionMaskPairs = isect2d::intersect(newGroup, options);
 
