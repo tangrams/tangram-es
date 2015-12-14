@@ -187,18 +187,9 @@ void Labels::update(const View& _view, float _dt, const std::vector<std::unique_
 
     /// Apply repeat groups
 
-    // TODO: optimize
     // Ensure the labels are always treated in the same order
     std::sort(m_visibleTextSet.begin(), m_visibleTextSet.end(), [](TextLabel* _a, TextLabel* _b) {
-        std::size_t seed0 = 0;
-        std::size_t seed1 = 0;
-        hash_combine(seed0, _a->hash());
-        hash_combine(seed0, _a->transform().modelPosition1.x);
-        hash_combine(seed0, _a->transform().modelPosition1.y);
-        hash_combine(seed1, _b->hash());
-        hash_combine(seed1, _b->transform().modelPosition1.x);
-        hash_combine(seed1, _b->transform().modelPosition1.y);
-        return seed0 < seed1;
+        return glm::length2(_a->transform().modelPosition1) < glm::length2(_b->transform().modelPosition1);
     });
 
     auto textLabelIt = m_visibleTextSet.begin();
@@ -223,7 +214,7 @@ void Labels::update(const View& _view, float _dt, const std::vector<std::unique_
                 newGroup.push_back(component);
 
                 isect2d::CollideOption options;
-                options.thresholdDistance = 300.0f;
+                options.thresholdDistance = 100.0f;
                 options.rule = isect2d::CollideRuleOption::UNIDIRECTIONNAL;
 
                 auto collisionMaskPairs = isect2d::intersect(newGroup, options);
