@@ -42,6 +42,9 @@ void Labels::update(const View& _view, float _dt, const std::vector<std::unique_
     // Could clear this at end of function unless debug draw is active
     m_labels.clear();
     m_aabbs.clear();
+    m_visibleTextSet.clear();
+    m_collideComponents.clear();
+    m_repeatGroups.clear();
 
     glm::vec2 screenSize = glm::vec2(_view.getWidth(), _view.getHeight());
 
@@ -173,6 +176,65 @@ void Labels::update(const View& _view, float _dt, const std::vector<std::unique_
     for (auto label : m_labels) {
         label->occlusionSolved();
         label->pushTransform();
+
+        if (label->canOcclude()) {
+            if (!label->visibleState()) { continue; }
+            TextLabel* textLabel = dynamic_cast<TextLabel*>(label);
+            if (!textLabel) { continue; }
+            m_visibleTextSet.push_back(textLabel);
+        }
+    }
+
+    /// Apply repeat groups
+
+    std::sort(m_visibleTextSet.begin(), m_visibleTextSet.end(), [](TextLabel* _a, TextLabel* _b) {
+        return glm::length2(_a->transform().state.screenPos) < glm::length2(_b->transform().state.screenPos);
+    });
+
+    auto textLabelIt = m_visibleTextSet.begin();
+    while (textLabelIt != m_visibleTextSet.end()) {
+        auto textLabel = *textLabelIt;
+        CollideComponent component;
+        component.position = textLabel->transform().state.screenPos;
+        component.userData = (void*)textLabel;
+        std::size_t seed = 0;
+
+        hash_combine(seed, textLabel->text);
+
+        // Group is hash for now
+        component.group = seed;
+
+        // Mask is the group
+        component.mask = seed;
+
+        auto it = m_repeatGroups.find(seed);
+        if (it != m_repeatGroups.end()) {
+            std::vector<CollideComponent>& group = m_repeatGroups[seed];
+
+            if(std::find(group.begin(), group.end(), component) == group.end()) {
+                std::vector<CollideComponent> newGroup(group);
+                newGroup.push_back(component);
+
+                isect2d::CollideOption options;
+                options.thresholdDistance = 300.0f;
+                options.rule = isect2d::CollideRuleOption::BIDIRECTIONNAL;
+
+                auto collisionMaskPairs = isect2d::intersect(newGroup, options);
+
+                if (collisionMaskPairs.size() == 0) {
+                    group.push_back(component);
+                    textLabelIt++;
+                } else {
+                    textLabel->setOcclusion(true);
+                    m_visibleTextSet.erase(textLabelIt);
+                }
+            } else {
+                textLabelIt++;
+            }
+        } else {
+            m_repeatGroups[seed].push_back(component);
+            textLabelIt++;
+        }
     }
 
     // Request for render if labels are in fading in/out states
@@ -243,50 +305,6 @@ const std::vector<TouchItem>& Labels::getFeaturesAtPoint(const View& _view, floa
 
 
 void Labels::drawDebug(const View& _view) {
-
-    m_collideComponents.clear();
-    for (auto& label : m_labels) {
-        if (!label->visibleState()) { continue; }
-        TextLabel* textLabel = dynamic_cast<TextLabel*>(label);
-        if (!textLabel) { continue; }
-
-        CollideComponent component;
-        component.position = textLabel->transform().state.screenPos;
-        component.userData = (void*)textLabel;
-        std::size_t seed = 0;
-
-        hash_combine(seed, textLabel->text);
-
-        // Group is hash for now
-        component.group = textLabel->hash();
-
-        // Mask is the group
-        component.mask = textLabel->hash();
-
-        m_collideComponents.push_back(component);
-    }
-
-    isect2d::CollideOption options;
-    options.thresholdDistance = 200.0f;
-    options.rule = isect2d::CollideRuleOption::BIDIRECTIONNAL;
-    auto collisionMaskPairs = isect2d::intersect(m_collideComponents, options);
-
-    LOG("%d", collisionMaskPairs.size());
-
-    // TODO: consistent resolution of the pairs
-    for (auto& pair : collisionMaskPairs) {
-        Label* l0 = (Label*) m_collideComponents[pair.first].userData;
-        Label* l1 = (Label*) m_collideComponents[pair.second].userData;
-
-        //l0->setOcclusion(true);
-        //l1->setOcclusion(true);
-
-        Primitives::setColor(0xffff00);
-        Primitives::drawLine(l0->transform().state.screenPos, l1->transform().state.screenPos);
-        Primitives::setColor(0xff00ff);
-        Primitives::drawLine(l1->transform().state.screenPos + glm::vec2(5.0, 0.0),
-                             l0->transform().state.screenPos + glm::vec2(5.0, 0.0));
-    }
 
     if (!Tangram::getDebugFlag(Tangram::DebugFlags::labels)) {
         return;
