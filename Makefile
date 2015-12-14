@@ -58,7 +58,7 @@ ifdef ANDROID_ARCH
 		ANDROID_TOOLCHAIN = x86_64-clang3.6
 		ANDROID_API_LEVEL = android-21
 	endif
-	ifeq ($(ANDROID_ARCH), armeabi) #TODO: Does not work - linking error
+	ifeq ($(ANDROID_ARCH), armeabi)
 		ANDROID_TOOLCHAIN = arm-linux-androideabi-clang3.6
 	endif
 	ifeq ($(ANDROID_ARCH), armeabi-v7a)
@@ -68,7 +68,7 @@ ifdef ANDROID_ARCH
 		ANDROID_TOOLCHAIN = aarch64-linux-android-clang3.6
 		ANDROID_API_LEVEL = android-21
 	endif
-	ifeq ($(ANDROID_ARCH), mips) #TODO: Does not work - linking error
+	ifeq ($(ANDROID_ARCH), mips)
 		ANDROID_TOOLCHAIN = mipsel-linux-android-clang3.6
 	endif
 	ifeq ($(ANDROID_ARCH), mips64)
