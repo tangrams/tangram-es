@@ -68,7 +68,7 @@ auto TextStyle::applyRule(const DrawRule& _rule, const Properties& _props) const
 
     Parameters p;
 
-    std::string fontFamily, fontWeight, fontStyle, transform, align, anchor;
+    std::string fontFamily, fontWeight, fontStyle, transform, align, anchor, repeatGroup;
     glm::vec2 offset;
 
     _rule.get(StyleParamKey::font_family, fontFamily);
@@ -101,6 +101,17 @@ auto TextStyle::applyRule(const DrawRule& _rule, const Properties& _props) const
     _rule.get(StyleParamKey::transition_selected_time, p.labelOptions.selectTransition.time);
     _rule.get(StyleParamKey::transition_show_time, p.labelOptions.showTransition.time);
     _rule.get(StyleParamKey::text_wrap, p.maxLineWidth);
+
+    if (_rule.get(StyleParamKey::repeat_group, p.labelOptions.repeatGroup)) {
+        StyleParam::Width repeatDistance;
+        if (_rule.get(StyleParamKey::repeat_distance, repeatDistance)) {
+            p.labelOptions.repeatDistance = repeatDistance.value * m_pixelScale;
+        }
+    } else {
+        // TODO: default to 'draw.key'
+    }
+
+    LOG("Draw rule id %s", _rule.name);
 
     _rule.get(StyleParamKey::text_source, p.text);
     if (!_rule.isJSFunction(StyleParamKey::text_source)) {

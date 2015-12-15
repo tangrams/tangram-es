@@ -366,6 +366,8 @@ layers:
             filter: { kind: highway }
             draw:
                 text:
+                    repeat_distance: 100px
+                    repeat_group: road_labels
                     visible: true
                     #offset: [0px, 5px]
                     priority: 1
@@ -383,6 +385,8 @@ layers:
             filter: { kind: major_road }
             draw:
                 text:
+                    repeat_distance: 100px
+                    repeat_group: road_labels
                     interactive: true
                     visible: true
                     priority: 3
