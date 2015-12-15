@@ -15,8 +15,7 @@
 
 namespace Tangram {
 
-const static char DATA_ID[] = "\xff""\xff""data";
-const static char ATTR_ID[] = "\xff""\xff""attr";
+const static char INSTANCE_ID[] = "\xff""\xff""obj";
 const static char FUNC_ID[] = "\xff""\xff""fns";
 
 static const std::string key_geometry = "$geometry";
@@ -25,20 +24,8 @@ static const std::string key_zoom("$zoom");
 StyleContext::StyleContext() {
     m_ctx = duk_create_heap_default();
 
-    // add empty feature_object
-    duk_push_object(m_ctx);
-
-    // assign instance to feature_object
-    duk_push_pointer(m_ctx, this);
-    if (!duk_put_prop_string(m_ctx, -2, DATA_ID)) {
-        LOGE("Ctx not assigned");
-    }
-
-    // put object in global scope
-    if (!duk_put_global_string(m_ctx, "feature")) {
-        LOGE("Feature not assigned");
-    }
-
+    //// Create global geometry constants
+    // TODO make immutable
     duk_push_number(m_ctx, GeometryType::points);
     duk_put_global_string(m_ctx, "point");
 
@@ -47,6 +34,40 @@ StyleContext::StyleContext() {
 
     duk_push_number(m_ctx, GeometryType::polygons);
     duk_put_global_string(m_ctx, "polygon");
+
+    //// Create global 'feature' object
+    // Get Proxy constructor
+    // -> [cons]
+    duk_eval_string(m_ctx, "Proxy");
+
+    // Add feature object
+    // -> [cons, { __obj: this }]
+    duk_idx_t featureObj = duk_push_object(m_ctx);
+    duk_push_pointer(m_ctx, this);
+    duk_put_prop_string(m_ctx, featureObj, INSTANCE_ID);
+
+    // Add handler object
+    // -> [cons, {...}, { get: func, has: func }]
+    duk_idx_t handlerObj = duk_push_object(m_ctx);
+    // Add 'get' property to handler
+    duk_push_c_function(m_ctx, jsGetProperty, 3 /*nargs*/);
+    duk_put_prop_string(m_ctx, handlerObj, "get");
+    // Add 'has' property to handler
+    duk_push_c_function(m_ctx, jsHasProperty, 2 /*nargs*/);
+    duk_put_prop_string(m_ctx, handlerObj, "has");
+
+    // Call proxy constructor
+    // [cons, feature, handler ] -> [obj|error]
+    duk_ret_t result = duk_pnew(m_ctx, 2);
+    if (result != 0) {
+        LOGE("Failure: %s", duk_safe_to_string(m_ctx, -1));
+        duk_pop(m_ctx);
+    } else {
+        // put feature proxy object in global scope
+        if (!duk_put_global_string(m_ctx, "feature")) {
+            LOGE("Initialization failed");
+        }
+    }
 
     DUMP("init\n");
 }
@@ -89,7 +110,8 @@ void StyleContext::initFunctions(const Scene& _scene) {
 void StyleContext::setFeature(const Feature& _feature) {
 
     m_feature = &_feature;
-    m_featureIsReady = false;
+
+    setGlobal(key_geometry, m_feature->geometryType);
 }
 
 void StyleContext::setGlobalZoom(float _zoom) {
@@ -160,9 +182,6 @@ bool StyleContext::addFunction(const std::string& _name, const std::string& _fun
 }
 
 bool StyleContext::evalFilter(FunctionID _id) {
-    if (!m_featureIsReady) {
-        setAccessors();
-    }
 
     if (!duk_get_global_string(m_ctx, FUNC_ID)) {
         LOGE("EvalFilterFn - functions not initialized");
@@ -200,9 +219,6 @@ bool StyleContext::evalFilter(FunctionID _id) {
 }
 
 bool StyleContext::evalFilterFn(const std::string& _name) {
-    if (!m_featureIsReady) {
-        setAccessors();
-    }
 
     if (!duk_get_global_string(m_ctx, _name.c_str())) {
         LOGE("EvalFilter %s", _name.c_str());
@@ -211,12 +227,16 @@ bool StyleContext::evalFilterFn(const std::string& _name) {
 
     if (duk_pcall(m_ctx, 0) != 0) {
         LOGE("EvalFilterFn: %s", duk_safe_to_string(m_ctx, -1));
+        duk_pop(m_ctx);
+        return false;
     }
 
     bool result = false;
 
     if (duk_is_boolean(m_ctx, -1)) {
         result = duk_get_boolean(m_ctx, -1);
+    } else {
+        LOGE("EvalFilterFn: invalid return type");
     }
 
     // pop result
@@ -356,9 +376,6 @@ bool StyleContext::parseStyleResult(StyleParamKey _key, StyleParam::Value& _val)
 }
 
 bool StyleContext::evalStyle(FunctionID _id, StyleParamKey _key, StyleParam::Value& _val) {
-    if (!m_featureIsReady) {
-        setAccessors();
-    }
 
     if (!duk_get_global_string(m_ctx, FUNC_ID)) {
         LOGE("EvalFilterFn - functions array not initialized");
@@ -383,9 +400,6 @@ bool StyleContext::evalStyle(FunctionID _id, StyleParamKey _key, StyleParam::Val
 
 
 bool StyleContext::evalStyleFn(const std::string& name, StyleParamKey _key, StyleParam::Value& _val) {
-    if (!m_featureIsReady) {
-        setAccessors();
-    }
 
     if (!duk_get_global_string(m_ctx, name.c_str())) {
         LOGE("EvalFilter %s", name.c_str());
@@ -401,83 +415,34 @@ bool StyleContext::evalStyleFn(const std::string& name, StyleParamKey _key, Styl
     return parseStyleResult(_key, _val);
 }
 
+duk_ret_t StyleContext::jsHasProperty(duk_context *_ctx) {
 
-void StyleContext::setAccessors() {
-
-    m_featureIsReady = true;
-
-    if (!m_feature) { return; }
-
-    setGlobal(key_geometry, m_feature->geometryType);
-
-    for (auto& item : m_feature->props.items()) {
-        addAccessor(item.key);
-    }
-}
-
-void StyleContext::addAccessor(const std::string& _name) {
-
-    auto& entry = m_accessors[_name];
-    if (entry) { return; }
-
-    entry = std::make_unique<Accessor>();
-    entry->key = _name;
-    entry->ctx = this;
-
-    // push 'feature' obj onto stack
-    if (!duk_get_global_string(m_ctx, "feature")) {
-        LOGE("'feature' not in global scope");
-        return;
-    }
-
-    // push property name
-    duk_push_string(m_ctx, _name.c_str());
-
-    // push getter function
-    duk_push_c_function(m_ctx, jsPropertyGetter, 0 /*nargs*/);
-    duk_push_pointer(m_ctx, (void*)entry.get());
-    duk_put_prop_string(m_ctx, -2, ATTR_ID);
-
-    // push setter function
-    // duk_push_c_function(m_ctx, jsPropertySetter, 1 /*nargs*/);
-    // duk_push_pointer(m_ctx, (void*)&attr);
-    // duk_put_prop_string(m_ctx, -2, ATTR_ID);
-
-    // stack: [ feature_obj, name, getter, setter ] -> [ feature_obj.name ]
-    duk_def_prop(m_ctx, -3,
-                 DUK_DEFPROP_HAVE_GETTER |
-                 // DUK_DEFPROP_HAVE_SETTER |
-                 // DUK_DEFPROP_WRITABLE |
-                 // DUK_DEFPROP_HAVE_ENUMERABLE |
-                 // DUK_DEFPROP_ENUMERABLE |
-                 // DUK_DEFPROP_HAVE_CONFIGURABLE |
-                 0);
-
-    // pop feature obj
-    duk_pop(m_ctx);
-
-    DUMP("addAccessor\n");
-}
-
-duk_ret_t StyleContext::jsPropertyGetter(duk_context *_ctx) {
-
-    // Storing state for a Duktape/C function:
-    // http://duktape.org/guide.html#programming.9
-    duk_push_current_function(_ctx);
-    duk_get_prop_string(_ctx, -1, ATTR_ID);
-    auto* attr = static_cast<const Accessor*> (duk_to_pointer(_ctx, -1));
-
-    if (!attr || !attr->ctx || !attr->ctx->m_feature) {
-        LOGE("Error: no context set %p %p",
-               attr,
-               attr ? attr->ctx : nullptr);
-
+    duk_get_prop_string(_ctx, 0, INSTANCE_ID);
+    auto* attr = static_cast<const StyleContext*> (duk_to_pointer(_ctx, -1));
+    if (!attr || !attr->m_feature) {
+        LOGE("Error: no context set %p %p", attr, attr ? attr->m_feature : nullptr);
         duk_pop(_ctx);
         return 0;
     }
 
-    auto it = attr->ctx->m_feature->props.get(attr->key);
+    const char* key = duk_require_string(_ctx, 1);
+    duk_push_boolean(_ctx, attr->m_feature->props.contains(key));
 
+    return 1;
+}
+
+duk_ret_t StyleContext::jsGetProperty(duk_context *_ctx) {
+
+    duk_get_prop_string(_ctx, 0, INSTANCE_ID);
+    auto* attr = static_cast<const StyleContext*> (duk_to_pointer(_ctx, -1));
+    if (!attr || !attr->m_feature) {
+        LOGE("Error: no context set %p %p",  attr, attr ? attr->m_feature : nullptr);
+        duk_pop(_ctx);
+        return 0;
+    }
+
+    const char* key = duk_require_string(_ctx, 1);
+    auto it = attr->m_feature->props.get(key);
     if (it.is<std::string>()) {
         duk_push_string(_ctx, it.get<std::string>().c_str());
     } else if (it.is<double>()) {
@@ -487,10 +452,6 @@ duk_ret_t StyleContext::jsPropertyGetter(duk_context *_ctx) {
     }
 
     return 1;
-}
-
-duk_ret_t StyleContext::jsPropertySetter(duk_context *_ctx) {
-    return 0;
 }
 
 }
