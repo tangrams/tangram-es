@@ -58,15 +58,14 @@ StyleContext::StyleContext() {
 
     // Call proxy constructor
     // [cons, feature, handler ] -> [obj|error]
-    duk_ret_t result = duk_pnew(m_ctx, 2);
-    if (result != 0) {
-        LOGE("Failure: %s", duk_safe_to_string(m_ctx, -1));
-        duk_pop(m_ctx);
-    } else {
+    if (duk_pnew(m_ctx, 2) == 0) {
         // put feature proxy object in global scope
         if (!duk_put_global_string(m_ctx, "feature")) {
             LOGE("Initialization failed");
         }
+    } else {
+        LOGE("Failure: %s", duk_safe_to_string(m_ctx, -1));
+        duk_pop(m_ctx);
     }
 
     DUMP("init\n");
@@ -415,6 +414,7 @@ bool StyleContext::evalStyleFn(const std::string& name, StyleParamKey _key, Styl
     return parseStyleResult(_key, _val);
 }
 
+// Implements Proxy handler.has(target_object, key)
 duk_ret_t StyleContext::jsHasProperty(duk_context *_ctx) {
 
     duk_get_prop_string(_ctx, 0, INSTANCE_ID);
@@ -431,8 +431,10 @@ duk_ret_t StyleContext::jsHasProperty(duk_context *_ctx) {
     return 1;
 }
 
+// Implements Proxy handler.get(target_object, key)
 duk_ret_t StyleContext::jsGetProperty(duk_context *_ctx) {
 
+    // Get the StyleContext instance from JS Feature object (first parameter).
     duk_get_prop_string(_ctx, 0, INSTANCE_ID);
     auto* attr = static_cast<const StyleContext*> (duk_to_pointer(_ctx, -1));
     if (!attr || !attr->m_feature) {
@@ -441,7 +443,9 @@ duk_ret_t StyleContext::jsGetProperty(duk_context *_ctx) {
         return 0;
     }
 
+    // Get the property name (second parameter)
     const char* key = duk_require_string(_ctx, 1);
+
     auto it = attr->m_feature->props.get(key);
     if (it.is<std::string>()) {
         duk_push_string(_ctx, it.get<std::string>().c_str());
