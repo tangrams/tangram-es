@@ -22,10 +22,6 @@ class Style;
 class TileCache;
 struct TouchItem;
 
-/*
- * Singleton class containing all labels
- */
-
 class Labels {
 
 public:
@@ -43,36 +39,37 @@ public:
                                                      const std::vector<std::shared_ptr<Tile>>& _tiles,
                                                      float _x, float _y, bool _visibleOnly = true);
 
-    bool needUpdate() { return m_needUpdate; }
+    bool needUpdate() const { return m_needUpdate; }
 
 private:
 
-    void updateLabels(const std::vector<std::unique_ptr<Style>>& _styles,
+    using AABB = isect2d::AABB<glm::vec2>;
+    using OBB = isect2d::OBB<glm::vec2>;
+    using CollideComponent = isect2d::CollideComponent<glm::vec2>;
+    using CollisionPairs = std::vector<isect2d::ISect2D<glm::vec2>::Pair>;
+
+    bool updateLabels(const std::vector<std::unique_ptr<Style>>& _styles,
                       const std::vector<std::shared_ptr<Tile>>& _tiles,
                       float _dt, float _dz, const View& _view);
 
-    void solveOcclusions();
+    std::set<std::pair<Label*, Label*>> narrowPhase(const CollisionPairs& _pairs) const;
+
+    void applyPriorities(const std::set<std::pair<Label*, Label*>> _occlusions) const;
 
     void skipTransitions(const std::vector<std::unique_ptr<Style>>& _styles,
                          const std::vector<std::shared_ptr<Tile>>& _tiles,
-                         std::unique_ptr<TileCache>& _cache, float _currentZoom);
+                         std::unique_ptr<TileCache>& _cache, float _currentZoom) const;
 
-    void checkRepeatGroups();
+    void checkRepeatGroups(std::vector<TextLabel*>& _visibleSet) const;
 
     int LODDiscardFunc(float _maxZoom, float _zoom);
 
     bool m_needUpdate;
 
-    using AABB = isect2d::AABB<glm::vec2>;
-    using OBB = isect2d::OBB<glm::vec2>;
-    using CollideComponent = isect2d::CollideComponent<glm::vec2>;
-
     // temporary data used in update()
     std::vector<Label*> m_labels;
     std::vector<AABB> m_aabbs;
-    std::vector<CollideComponent> m_collideComponents;
     std::vector<TextLabel*> m_visibleTextSet;
-    fastmap<size_t, std::vector<CollideComponent>> m_repeatGroups;
 
     isect2d::ISect2D<glm::vec2> m_isect2d;
 
