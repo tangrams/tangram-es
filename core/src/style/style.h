@@ -31,8 +31,8 @@ enum class Blending : char {
     none,
     add,
     multiply,
-    overlay,
     inlay,
+    overlay,
 };
 
 
@@ -72,6 +72,7 @@ protected:
     LightingType m_lightingType = LightingType::fragment;
 
     Blending m_blend = Blending::none;
+    int m_blendOrder = -1;
 
     /* Draw mode to pass into <VboMesh>es created with this style */
     GLenum m_drawMode;
@@ -112,8 +113,10 @@ public:
     virtual ~Style();
 
     Blending blendMode() const { return m_blend; };
+    int blendOrder() const { return m_blendOrder; };
 
     void setBlendMode(Blending _blendMode) { m_blend = _blendMode; }
+    void setBlendOrder(int _blendOrder) { m_blendOrder = _blendOrder; }
 
     /* Whether or not the style is animated */
     bool isAnimated() { return m_animated; }
