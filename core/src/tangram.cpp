@@ -21,6 +21,7 @@
 #include "gl/extension.h"
 #include "util/ease.h"
 #include <memory>
+#include <array>
 #include <cmath>
 #include <bitset>
 #include <mutex>

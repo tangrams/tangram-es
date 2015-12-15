@@ -5,7 +5,6 @@
 #include "gl/shaderProgram.h"
 #include "gl/primitives.h"
 #include "view/view.h"
-#include "style/material.h"
 #include "style/style.h"
 #include "tile/tile.h"
 #include "tile/tileCache.h"
@@ -28,10 +27,12 @@ int Labels::LODDiscardFunc(float _maxZoom, float _zoom) {
     return (int) MIN(floor(((log(-_zoom + (_maxZoom + 2)) / log(_maxZoom + 2) * (_maxZoom )) * 0.5)), MAX_LOD);
 }
 
-void Labels::updateLabels(const std::vector<std::unique_ptr<Style>>& _styles,
+bool Labels::updateLabels(const std::vector<std::unique_ptr<Style>>& _styles,
                           const std::vector<std::shared_ptr<Tile>>& _tiles,
                           float _dt, float _dz, const View& _view)
 {
+    bool animate = false;
+
     glm::vec2 screenSize = glm::vec2(_view.getWidth(), _view.getHeight());
 
     // int lodDiscard = LODDiscardFunc(View::s_maxZoom, _view.getZoom());
@@ -55,7 +56,7 @@ void Labels::updateLabels(const std::vector<std::unique_ptr<Style>>& _styles,
             if (!labelMesh) { continue; }
 
             for (auto& label : labelMesh->getLabels()) {
-                m_needUpdate |= label->update(mvp, screenSize, _dt, _dz);
+                animate |= label->update(mvp, screenSize, _dt, _dz);
 
                 label->setProxy(proxyTile);
 
@@ -67,16 +68,14 @@ void Labels::updateLabels(const std::vector<std::unique_ptr<Style>>& _styles,
             }
         }
     }
+
+    return animate;
 }
 
-void Labels::solveOcclusions() {
-    // Broad phase
-    m_isect2d.intersect(m_aabbs);
-
-    // Narrow phase
+std::set<std::pair<Label*, Label*>> Labels::narrowPhase(const CollisionPairs& _pairs) const {
     std::set<std::pair<Label*, Label*>> occlusions;
 
-    for (auto pair : m_isect2d.pairs) {
+    for (auto pair : _pairs) {
         const auto& aabb1 = m_aabbs[pair.first];
         const auto& aabb2 = m_aabbs[pair.second];
 
@@ -88,8 +87,11 @@ void Labels::solveOcclusions() {
         }
     }
 
-    // Manage priorities
-    for (auto& pair : occlusions) {
+    return occlusions;
+}
+
+void Labels::applyPriorities(const std::set<std::pair<Label*, Label*>> _occlusions) const {
+    for (auto& pair : _occlusions) {
         if (!pair.first->occludedLastFrame() || !pair.second->occludedLastFrame()) {
             // check first is the label belongs to a proxy tile
             if (pair.first->isProxy() && !pair.second->isProxy()) {
@@ -108,10 +110,9 @@ void Labels::solveOcclusions() {
     }
 }
 
-
 void Labels::skipTransitions(const std::vector<std::unique_ptr<Style>>& _styles,
                              const std::vector<std::shared_ptr<Tile>>& _tiles,
-                             std::unique_ptr<TileCache>& _cache, float _currentZoom)
+                             std::unique_ptr<TileCache>& _cache, float _currentZoom) const
 {
     for (const auto& t0 : _tiles) {
         TileID tileID = t0->getID();
@@ -160,9 +161,11 @@ void Labels::skipTransitions(const std::vector<std::unique_ptr<Style>>& _styles,
     }
 }
 
-void Labels::checkRepeatGroups() {
-    auto textLabelIt = m_visibleTextSet.begin();
-    while (textLabelIt != m_visibleTextSet.end()) {
+void Labels::checkRepeatGroups(std::vector<TextLabel*>& _visibleSet) const {
+    std::map<size_t, std::vector<CollideComponent>> repeatGroups;
+
+    auto textLabelIt = _visibleSet.begin();
+    while (textLabelIt != _visibleSet.end()) {
         auto textLabel = *textLabelIt;
         CollideComponent component;
         component.position = textLabel->transform().state.screenPos;
@@ -174,9 +177,9 @@ void Labels::checkRepeatGroups() {
         component.group = seed;
         component.mask = seed;
 
-        auto it = m_repeatGroups.find(seed);
-        if (it != m_repeatGroups.end()) {
-            std::vector<CollideComponent>& group = m_repeatGroups[seed];
+        auto it = repeatGroups.find(seed);
+        if (it != repeatGroups.end()) {
+            std::vector<CollideComponent>& group = repeatGroups[seed];
 
             if (std::find(group.begin(), group.end(), component) == group.end()) {
                 std::vector<CollideComponent> newGroup(group);
@@ -193,13 +196,13 @@ void Labels::checkRepeatGroups() {
                     textLabelIt++;
                 } else {
                     textLabel->setOcclusion(true);
-                    m_visibleTextSet.erase(textLabelIt);
+                    _visibleSet.erase(textLabelIt);
                 }
             } else {
                 textLabelIt++;
             }
         } else {
-            m_repeatGroups[seed].push_back(component);
+            repeatGroups[seed].push_back(component);
             textLabelIt++;
         }
     }
@@ -210,30 +213,31 @@ void Labels::update(const View& _view, float _dt,
                     const std::vector<std::shared_ptr<Tile>>& _tiles,
                     std::unique_ptr<TileCache>& _cache)
 {
-    m_needUpdate = false;
-
     // Could clear this at end of function unless debug draw is active
     m_labels.clear();
     m_aabbs.clear();
-    m_visibleTextSet.clear();
-    m_collideComponents.clear();
-    m_repeatGroups.clear();
 
     float currentZoom = _view.getZoom();
     float dz = currentZoom - std::floor(currentZoom);
 
     /// Collect and update labels from visible tiles
 
-    updateLabels(_styles, _tiles, _dt, dz, _view);
+    m_needUpdate = updateLabels(_styles, _tiles, _dt, dz, _view);
+
+    /// Manage occlusions
 
     // Update collision context size
 
     m_isect2d.resize({_view.getWidth() / 256, _view.getHeight() / 256},
                      {_view.getWidth(), _view.getHeight()});
 
-    /// Manage occlusions
+    // Broad phase collision detection
+    m_isect2d.intersect(m_aabbs);
 
-    solveOcclusions();
+    // Narrow Phase
+    auto occlusions = narrowPhase(m_isect2d.pairs);
+
+    applyPriorities(occlusions);
 
     /// Mark labels to skip transitions
 
@@ -243,6 +247,8 @@ void Labels::update(const View& _view, float _dt,
 
     /// Update label meshes
 
+    std::vector<TextLabel*> visibleSet;
+
     for (auto label : m_labels) {
         label->occlusionSolved();
         label->pushTransform();
@@ -251,7 +257,7 @@ void Labels::update(const View& _view, float _dt,
             if (!label->visibleState()) { continue; }
             TextLabel* textLabel = dynamic_cast<TextLabel*>(label);
             if (!textLabel) { continue; }
-            m_visibleTextSet.push_back(textLabel);
+            visibleSet.push_back(textLabel);
         }
     }
 
@@ -262,7 +268,7 @@ void Labels::update(const View& _view, float _dt,
 
     /// Apply repeat groups
 
-    checkRepeatGroups();
+    checkRepeatGroups(visibleSet);
 
     // Request for render if labels are in fading in/out states
     if (m_needUpdate) {
