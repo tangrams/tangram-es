@@ -14,16 +14,6 @@ TEST_CASE( "", "[Duktape][init]") {
     StyleContext();
 }
 
-TEST_CASE( "Test filter without feature being set", "[Duktape][evalFilterFn]") {
-    StyleContext ctx;
-    ctx.addFunction("fn", R"(function() { return feature.name === undefined; })");
-    ctx.addAccessor("name");
-    REQUIRE(ctx.evalFilterFn("fn") == true);
-
-    ctx.addFunction("fn2", R"(function() { return feature.name === ''; })");
-    REQUIRE(ctx.evalFilterFn("fn2") == false);
-}
-
 TEST_CASE( "Test evalFilterFn with feature", "[Duktape][evalFilterFn]") {
     Feature feature;
     feature.props.add("a", "A");

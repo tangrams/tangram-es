@@ -69,24 +69,15 @@ public:
     const Value& getGlobal(const std::string& _key) const;
 
 private:
-    static int jsPropertyGetter(duk_context *_ctx);
-    static int jsPropertySetter(duk_context *_ctx);
+    static int jsGetProperty(duk_context *_ctx);
+    static int jsHasProperty(duk_context *_ctx);
 
     bool parseStyleResult(StyleParamKey _key, StyleParam::Value& _val) const;
-
-    void setAccessors();
 
     mutable duk_context *m_ctx;
 
     const Feature* m_feature = nullptr;
-    bool m_featureIsReady;
 
-    struct Accessor {
-        std::string key;
-        StyleContext* ctx;
-    };
-
-    fastmap<std::string, std::unique_ptr<Accessor>> m_accessors;
     fastmap<FilterGlobal, Value> m_globals;
 
     int32_t m_sceneId = -1;
