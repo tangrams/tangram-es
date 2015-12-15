@@ -27,8 +27,8 @@ enum class LightingType : char {
     fragment
 };
 
-enum class Blending : char {
-    none,
+enum class Blending : int8_t {
+    none = 0,
     add,
     multiply,
     inlay,
@@ -111,6 +111,20 @@ public:
     Style(std::string _name, Blending _blendMode, GLenum _drawMode);
 
     virtual ~Style();
+
+    static bool compare(std::unique_ptr<Style>& a, std::unique_ptr<Style>& b) {
+        auto aBlend = static_cast<int>(a->blendMode());
+        auto bBlend = static_cast<int>(b->blendMode());
+
+        if ( !(aBlend * bBlend) && (aBlend ^ bBlend) ) { // When either is opaque
+            return !aBlend;
+        } else if (aBlend * bBlend) { // All non opaque styles, order takes precedence
+            size_t hash_a = (a->blendOrder() << 16) + aBlend;
+            size_t hash_b = (b->blendOrder() << 16) + bBlend;
+            if (hash_a != hash_b) { return hash_a < hash_b; }
+        }
+        return a->getName() < b->getName();
+    }
 
     Blending blendMode() const { return m_blend; };
     int blendOrder() const { return m_blendOrder; };

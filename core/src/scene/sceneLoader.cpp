@@ -98,15 +98,7 @@ bool SceneLoader::loadScene(Node& config, Scene& _scene) {
 
     // Styles that are opaque must be ordered first in the scene so that
     // they are rendered 'under' styles that require blending
-    std::sort(_scene.styles().begin(), _scene.styles().end(),
-              [](std::unique_ptr<Style>& a, std::unique_ptr<Style>& b) {
-                  if (a->blendMode() != b->blendMode()) {
-                      return a->blendMode() == Blending::none;
-                  }
-                  // Just for consistent ordering
-                  // anytime the scene is loaded
-                  return a->getName() < b->getName();
-              });
+    std::sort(_scene.styles().begin(), _scene.styles().end(), Style::compare);
 
     // Post style sorting set their respective IDs=>vector indices
     // These indices are used for style geometry lookup in tiles
@@ -450,6 +442,15 @@ void SceneLoader::loadStyleProps(Style& style, Node styleNode, Scene& scene) {
         else { LOGW("Invalid blend mode '%s'", str.c_str()); }
     }
 
+    if (Node blendOrderNode = styleNode["blend_order"]) {
+        try {
+            auto blendOrder = blendOrderNode.as<int>();
+            style.setBlendOrder(blendOrder);
+        } catch (const BadConversion& e) {
+            LOGE("Integral value expected for blend_order style parameter.\n");
+        }
+    }
+
     if (Node texcoordsNode = styleNode["texcoords"]) {
         LOGW("'texcoords' style parameter is currently ignored");
 
@@ -666,7 +667,7 @@ Node SceneLoader::mixStyles(const std::vector<Node>& styles) {
         }
     }
 
-    for (auto& property : {"base", "lighting", "texture", "blend", "material", "shaders"}) {
+    for (auto& property : {"base", "lighting", "texture", "blend", "material", "shaders", "blend_order"}) {
         Node node = propMerge(property, styles);
         if (!node.IsNull()) {
             result[property] = node;
