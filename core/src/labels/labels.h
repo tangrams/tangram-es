@@ -47,6 +47,18 @@ public:
 
 private:
 
+    void updateLabels(const std::vector<std::unique_ptr<Style>>& _styles,
+                      const std::vector<std::shared_ptr<Tile>>& _tiles,
+                      float _dt, float _dz, const View& _view);
+
+    void solveOcclusions();
+
+    void skipTransitions(const std::vector<std::unique_ptr<Style>>& _styles,
+                         const std::vector<std::shared_ptr<Tile>>& _tiles,
+                         std::unique_ptr<TileCache>& _cache, float _currentZoom);
+
+    void checkRepeatGroups();
+
     int LODDiscardFunc(float _maxZoom, float _zoom);
 
     bool m_needUpdate;
