@@ -78,9 +78,6 @@ void initialize(const char* _scenePath) {
     // Create a tileManager
     m_tileManager = std::make_unique<TileManager>(*m_tileWorker);
 
-    // Pass references to the view and scene into the tile manager
-    m_tileManager->setView(m_view);
-
     // label setup
     m_labels = std::make_unique<Labels>();
 
@@ -114,7 +111,6 @@ void loadScene(const char* _scenePath, bool _setPositionFromScene) {
         }
         m_view = m_scene->view();
         m_inputHandler->setView(m_view);
-        m_tileManager->setView(m_view);
         m_tileManager->setDataSources(scene->dataSources());
         setPixelScale(m_view->pixelScale());
 
@@ -152,17 +148,26 @@ void update(float _dt) {
 
     {
         std::lock_guard<std::mutex> lock(m_tilesMutex);
+        ViewState viewState {
+            m_view->getMapProjection(),
+            m_view->changedOnLastUpdate(),
+            glm::dvec2{m_view->getPosition().x, -m_view->getPosition().y },
+            m_view->getZoom()
+        };
 
-        m_tileManager->updateTileSets();
+        m_tileManager->updateTileSets(viewState, m_view->getVisibleTiles());
 
-        if (m_view->changedOnLastUpdate() || m_tileManager->hasTileSetChanged() || m_labels->needUpdate()) {
+        bool updateLabels = m_labels->needUpdate();
+        auto& tiles = m_tileManager->getVisibleTiles();
 
-            auto& tiles = m_tileManager->getVisibleTiles();
-
+        if (m_view->changedOnLastUpdate() || m_tileManager->hasTileSetChanged()) {
             for (const auto& tile : tiles) {
                 tile->update(_dt, *m_view);
             }
+            updateLabels = true;
+        }
 
+        if (updateLabels) {
             auto& cache = m_tileManager->getTileCache();
             m_labels->update(*m_view, _dt, m_scene->styles(), tiles, cache);
         }
