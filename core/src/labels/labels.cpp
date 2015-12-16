@@ -374,6 +374,14 @@ void Labels::drawDebug(const View& _view) {
             // draw projected anchor point
             Primitives::setColor(0x0000ff);
             Primitives::drawRect(sp - glm::vec2(1.f), sp + glm::vec2(1.f));
+            if (!label->options().repeatGroup.empty()) {
+                float repeatDistance = label->options().repeatDistance;
+                for (float pad = 0.f; pad < M_PI * 2.f; pad += 0.4f) {
+                    glm::vec2 p0 = glm::vec2(cos(pad), sin(pad)) * repeatDistance + label->transform().state.screenPos;
+                    glm::vec2 p1 = glm::vec2(cos(pad + 0.2f), sin(pad + 0.2f)) * repeatDistance + label->transform().state.screenPos;
+                    Primitives::drawLine(p0, p1);
+                }
+            }
         }
     }
 
