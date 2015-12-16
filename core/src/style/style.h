@@ -113,15 +113,19 @@ public:
     virtual ~Style();
 
     static bool compare(std::unique_ptr<Style>& a, std::unique_ptr<Style>& b) {
-        auto aBlend = static_cast<int>(a->blendMode());
-        auto bBlend = static_cast<int>(b->blendMode());
 
-        if ( !(aBlend * bBlend) && (aBlend ^ bBlend) ) { // When either is opaque
-            return !aBlend;
-        } else if (aBlend * bBlend) { // All non opaque styles, order takes precedence
-            size_t hash_a = (a->blendOrder() << 16) + aBlend;
-            size_t hash_b = (b->blendOrder() << 16) + bBlend;
-            if (hash_a != hash_b) { return hash_a < hash_b; }
+        const auto& modeA = a->blendMode();
+        const auto& modeB = b->blendMode();
+        const auto& orderA = a->blendOrder();
+        const auto& orderB = b->blendOrder();
+
+        if (modeA != Blending::none && modeB != Blending::none) {
+            if (orderA != orderB) {
+                return orderA < orderB;
+            }
+        }
+        if (modeA != modeB) {
+            return static_cast<uint8_t>(modeA) < static_cast<uint8_t>(modeB);
         }
         return a->getName() < b->getName();
     }
