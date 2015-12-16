@@ -27,12 +27,12 @@ enum class LightingType : char {
     fragment
 };
 
-enum class Blending : char {
-    none,
+enum class Blending : int8_t {
+    none = 0,
     add,
     multiply,
-    overlay,
     inlay,
+    overlay,
 };
 
 
@@ -72,6 +72,7 @@ protected:
     LightingType m_lightingType = LightingType::fragment;
 
     Blending m_blend = Blending::none;
+    int m_blendOrder = -1;
 
     /* Draw mode to pass into <VboMesh>es created with this style */
     GLenum m_drawMode;
@@ -111,9 +112,29 @@ public:
 
     virtual ~Style();
 
+    static bool compare(std::unique_ptr<Style>& a, std::unique_ptr<Style>& b) {
+
+        const auto& modeA = a->blendMode();
+        const auto& modeB = b->blendMode();
+        const auto& orderA = a->blendOrder();
+        const auto& orderB = b->blendOrder();
+
+        if (modeA != Blending::none && modeB != Blending::none) {
+            if (orderA != orderB) {
+                return orderA < orderB;
+            }
+        }
+        if (modeA != modeB) {
+            return static_cast<uint8_t>(modeA) < static_cast<uint8_t>(modeB);
+        }
+        return a->getName() < b->getName();
+    }
+
     Blending blendMode() const { return m_blend; };
+    int blendOrder() const { return m_blendOrder; };
 
     void setBlendMode(Blending _blendMode) { m_blend = _blendMode; }
+    void setBlendOrder(int _blendOrder) { m_blendOrder = _blendOrder; }
 
     /* Whether or not the style is animated */
     bool isAnimated() { return m_animated; }
