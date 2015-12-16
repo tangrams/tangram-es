@@ -110,7 +110,7 @@ public:
         Transition selectTransition;
         Transition hideTransition;
         Transition showTransition;
-        std::string repeatGroup;
+        std::string repeatGroup = "";
         float repeatDistance = 256.0; // TODO: move those value to a config file (pixel per tile from view.h)
         float buffer = 0.f;
 
