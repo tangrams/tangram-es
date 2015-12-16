@@ -102,6 +102,15 @@ auto TextStyle::applyRule(const DrawRule& _rule, const Properties& _props) const
     _rule.get(StyleParamKey::transition_show_time, p.labelOptions.showTransition.time);
     _rule.get(StyleParamKey::text_wrap, p.maxLineWidth);
 
+    _rule.get(StyleParamKey::text_source, p.text);
+    if (!_rule.isJSFunction(StyleParamKey::text_source)) {
+        if (p.text.empty()) {
+            p.text = _props.getString(key_name);
+        } else {
+            p.text = _props.getString(p.text);
+        }
+    }
+
     if (_rule.get(StyleParamKey::repeat_group, p.labelOptions.repeatGroup)) {
         StyleParam::Width repeatDistance;
         if (_rule.get(StyleParamKey::repeat_distance, repeatDistance)) {
@@ -111,16 +120,7 @@ auto TextStyle::applyRule(const DrawRule& _rule, const Properties& _props) const
         // TODO: default to 'draw.key'
     }
 
-    LOG("Draw rule id %s", _rule.name);
-
-    _rule.get(StyleParamKey::text_source, p.text);
-    if (!_rule.isJSFunction(StyleParamKey::text_source)) {
-        if (p.text.empty()) {
-            p.text = _props.getString(key_name);
-        } else {
-            p.text = _props.getString(p.text);
-        }
-    }
+    p.labelOptions.repeatGroup += "/" + p.text;
 
     if (_rule.get(StyleParamKey::interactive, p.interactive) && p.interactive) {
         p.properties = std::make_shared<Properties>(_props);
@@ -170,10 +170,6 @@ void TextStyle::buildPoint(const Point& _point, const DrawRule& _rule, const Pro
     auto& buffer = static_cast<TextBuffer&>(_mesh);
 
     Parameters params = applyRule(_rule, _props);
-
-   // std::hash<Parameters> hash;
-   // auto h = hash(params);
-   // LOG("Hash %d", h);
 
     if (!params.visible || !params.isValid()) { return; }
 

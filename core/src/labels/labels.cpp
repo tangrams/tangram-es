@@ -167,12 +167,13 @@ void Labels::checkRepeatGroups(std::vector<TextLabel*>& _visibleSet) const {
     auto textLabelIt = _visibleSet.begin();
     while (textLabelIt != _visibleSet.end()) {
         auto textLabel = *textLabelIt;
+
         CollideComponent component;
         component.position = textLabel->transform().state.screenPos;
         component.userData = (void*)textLabel;
-
         std::size_t seed = 0;
-        hash_combine(seed, textLabel->text);
+
+        hash_combine(seed, textLabel->options().repeatGroup);
 
         component.group = seed;
         component.mask = seed;
@@ -186,7 +187,7 @@ void Labels::checkRepeatGroups(std::vector<TextLabel*>& _visibleSet) const {
                 newGroup.push_back(component);
 
                 isect2d::CollideOption options;
-                options.thresholdDistance = 100.0f;
+                options.thresholdDistance = textLabel->options().repeatDistance;;
                 options.rule = isect2d::CollideRuleOption::UNIDIRECTIONNAL;
 
                 auto collisionMaskPairs = isect2d::intersect(newGroup, options);
@@ -374,11 +375,22 @@ void Labels::drawDebug(const View& _view) {
             // draw projected anchor point
             Primitives::setColor(0x0000ff);
             Primitives::drawRect(sp - glm::vec2(1.f), sp + glm::vec2(1.f));
-            if (!label->options().repeatGroup.empty()) {
+
+            if (!label->options().repeatGroup.empty() && label->state() == Label::State::visible) {
+                size_t seed = 0;
+                hash_combine(seed, label->options().repeatGroup);
                 float repeatDistance = label->options().repeatDistance;
-                for (float pad = 0.f; pad < M_PI * 2.f; pad += 0.4f) {
-                    glm::vec2 p0 = glm::vec2(cos(pad), sin(pad)) * repeatDistance + label->transform().state.screenPos;
-                    glm::vec2 p1 = glm::vec2(cos(pad + 0.2f), sin(pad + 0.2f)) * repeatDistance + label->transform().state.screenPos;
+
+                Primitives::setColor(seed);
+                Primitives::drawLine(label->transform().state.screenPos,
+                        glm::vec2(repeatDistance, 0.f) + label->transform().state.screenPos);
+
+                float off = M_PI / 6.f;
+                for (float pad = 0.f; pad < M_PI * 2.f; pad += off) {
+                    glm::vec2 p0 = glm::vec2(cos(pad), sin(pad)) * repeatDistance
+                        + label->transform().state.screenPos;
+                    glm::vec2 p1 = glm::vec2(cos(pad + off), sin(pad + off)) * repeatDistance
+                        + label->transform().state.screenPos;
                     Primitives::drawLine(p0, p1);
                 }
             }
