@@ -11,12 +11,19 @@
 #include <memory>
 #include <mutex>
 #include <tuple>
+#include <set>
 
 namespace Tangram {
 
 class DataSource;
-class View;
 class TileCache;
+
+struct ViewState {
+    const MapProjection& mapProjection;
+    bool changedOnLastUpdate;
+    glm::dvec2 center;
+    float zoom;
+};
 
 /* Singleton container of <TileSet>s
  *
@@ -34,19 +41,11 @@ public:
 
     virtual ~TileManager();
 
-    /* Sets the view for which the TileManager will maintain tiles */
-    void setView(std::shared_ptr<View> _view) { m_view = _view; }
-
     /* Sets the tile DataSources */
     void setDataSources(std::vector<std::shared_ptr<DataSource>> _sources);
 
-    /* Updates visible tile set if necessary
-     *
-     * Contacts the <ViewModule> to determine whether the set of visible tiles
-     * has changed; if so, constructs or disposes tiles as needed and returns
-     * true
-     */
-    void updateTileSets();
+    /* Updates visible tile set and load missing tiles */
+    void updateTileSets(const ViewState& _view, const std::set<TileID>& _visibleTiles);
 
     void clearTileSets();
 
@@ -156,9 +155,9 @@ private:
         int64_t sourceGeneration;
     };
 
-    void updateTileSet(TileSet& tileSet);
+    void updateTileSet(TileSet& tileSet, const ViewState& _view, const std::set<TileID>& _visibleTiles);
 
-    void enqueueTask(TileSet& _tileSet, const TileID& _tileID, const glm::dvec2& _viewCenter);
+    void enqueueTask(TileSet& _tileSet, const TileID& _tileID, const ViewState& _view);
 
     void loadTiles();
 
@@ -186,9 +185,6 @@ private:
      * its proxy(ies) Tiles are removed
      */
     void clearProxyTiles(TileSet& _tileSet, const TileID& _tileID, TileEntry& _tile, std::vector<TileID>& _removes);
-
-    std::shared_ptr<View> m_view;
-    std::shared_ptr<Scene> m_scene;
 
     int32_t m_loadPending;
 

@@ -3,12 +3,11 @@
 #include "data/dataSource.h"
 #include "platform.h"
 #include "tile/tile.h"
-#include "view/view.h"
 #include "tileCache.h"
+#include "util/mapProjection.h"
 
 #include "glm/gtx/norm.hpp"
 
-#include <chrono>
 #include <algorithm>
 
 namespace Tangram {
@@ -101,14 +100,14 @@ void TileManager::clearTileSet(int32_t _sourceId) {
     m_tileSetChanged = true;
 }
 
-void TileManager::updateTileSets() {
+void TileManager::updateTileSets(const ViewState& _view, const std::set<TileID>& _visibleTiles) {
 
     m_tileSetChanged = false;
     m_tiles.clear();
     m_loadPending = 0;
 
     for (auto& tileSet : m_tileSets) {
-        updateTileSet(tileSet);
+        updateTileSet(tileSet, _view, _visibleTiles);
     }
 
     loadTiles();
@@ -122,7 +121,7 @@ void TileManager::updateTileSets() {
     m_tiles.erase(std::unique(m_tiles.begin(), m_tiles.end()), m_tiles.end());
 }
 
-void TileManager::updateTileSet(TileSet& _tileSet) {
+void TileManager::updateTileSet(TileSet& _tileSet, const ViewState& _view, const std::set<TileID>& _visibleTiles) {
 
     m_tileSetChanged |= m_workers.checkProcessedTiles();
 
@@ -131,28 +130,25 @@ void TileManager::updateTileSet(TileSet& _tileSet) {
         m_tileSetChanged = true;
     }
 
-    if (!m_view->changedOnLastUpdate() && !m_tileSetChanged) {
+    if (!_view.changedOnLastUpdate && !m_tileSetChanged) {
         return;
     }
-
-    std::vector<TileID> removeTiles;
-    glm::dvec2 viewCenter(m_view->getPosition().x, -m_view->getPosition().y);
 
     // Tile load request above this zoom-level will be canceled in order to
     // not wait for tiles that are too small to contribute significantly to
     // the current view.
-    int maxZoom = m_view->getZoom() + 2;
+    int maxZoom = _view.zoom + 2;
 
+    std::vector<TileID> removeTiles;
     auto& tiles = _tileSet.tiles;
-    auto& visibleTiles = m_view->getVisibleTiles();
 
     // Loop over visibleTiles and add any needed tiles to tileSet
     auto curTilesIt = tiles.begin();
-    auto visTilesIt = visibleTiles.begin();
+    auto visTilesIt = _visibleTiles.begin();
 
-    while (visTilesIt != visibleTiles.end() || curTilesIt != tiles.end()) {
+    while (visTilesIt != _visibleTiles.end() || curTilesIt != tiles.end()) {
 
-        auto& visTileId = visTilesIt == visibleTiles.end()
+        auto& visTileId = visTilesIt == _visibleTiles.end()
             ? NOT_A_TILE
             : *visTilesIt;
 
@@ -185,13 +181,13 @@ void TileManager::updateTileSet(TileSet& _tileSet) {
                         _tileSet.source->generation());
 
                     // Tile needs update - enqueue for loading
-                    enqueueTask(_tileSet, visTileId, viewCenter);
+                    enqueueTask(_tileSet, visTileId, _view);
                 }
 
             } else if (!entry.isLoading()) {
 
                 // Not yet available - enqueue for loading
-                enqueueTask(_tileSet, visTileId, viewCenter);
+                enqueueTask(_tileSet, visTileId, _view);
 
                 if (m_tileSetChanged) {
                     // check again for proxies
@@ -211,7 +207,7 @@ void TileManager::updateTileSet(TileSet& _tileSet) {
 
             if (!addTile(_tileSet, visTileId)) {
                 // Not in cache - enqueue for loading
-                enqueueTask(_tileSet, visTileId, viewCenter);
+                enqueueTask(_tileSet, visTileId, _view);
             }
 
             ++visTilesIt;
@@ -280,10 +276,10 @@ void TileManager::updateTileSet(TileSet& _tileSet) {
             auto& task = entry.task;
 
             // Update tile distance to map center for load priority.
-            auto tileCenter = m_view->getMapProjection().TileCenter(id);
-            double scaleDiv = exp2(id.z - m_view->getZoom());
+            auto tileCenter = _view.mapProjection.TileCenter(id);
+            double scaleDiv = exp2(id.z - _view.zoom);
             if (scaleDiv < 1) { scaleDiv = 0.1/scaleDiv; } // prefer parent tiles
-            task->setPriority(glm::length2(tileCenter - viewCenter) * scaleDiv);
+            task->setPriority(glm::length2(tileCenter - _view.center) * scaleDiv);
             task->setProxyState(entry.getProxyCounter() > 0);
 
             // Count tiles that are currently being downloaded to
@@ -302,11 +298,11 @@ void TileManager::updateTileSet(TileSet& _tileSet) {
 }
 
 void TileManager::enqueueTask(TileSet& _tileSet, const TileID& _tileID,
-                              const glm::dvec2& _viewCenter) {
+                              const ViewState& _view) {
 
     // Keep the items sorted by distance
-    auto tileCenter = m_view->getMapProjection().TileCenter(_tileID);
-    double distance = glm::length2(tileCenter - _viewCenter);
+    auto tileCenter = _view.mapProjection.TileCenter(_tileID);
+    double distance = glm::length2(tileCenter - _view.center);
 
     auto it = std::upper_bound(m_loadTasks.begin(), m_loadTasks.end(), distance,
                                [](auto& distance, auto& other){
@@ -461,11 +457,12 @@ void TileManager::updateProxyTiles(TileSet& _tileSet, const TileID& _tileID, Til
         return;
     }
     // Try children
-    if (m_view->s_maxZoom > _tileID.z) {
-        for (int i = 0; i < 4; i++) {
-            updateProxyTile(_tileSet, _tile, _tileID.getChild(i), static_cast<ProxyID>(1 << i));
-        }
+    // FIXME maxZoom also depends on DataSource
+    //if (m_view->s_maxZoom > _tileID.z) {
+    for (int i = 0; i < 4; i++) {
+        updateProxyTile(_tileSet, _tile, _tileID.getChild(i), static_cast<ProxyID>(1 << i));
     }
+    //}
 }
 
 void TileManager::clearProxyTiles(TileSet& _tileSet, const TileID& _tileID, TileEntry& _tile,
