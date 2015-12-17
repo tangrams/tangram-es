@@ -7,7 +7,7 @@ tangram-es
 
 tangram-es is a C++ library for rendering 2D and 3D maps from vector data using OpenGL ES, it is a counterpart to [tangram](https://github.com/tangrams/tangram) focused on mobile and embedded devices.
 
-This repository contains both the core rendering library and sample applications that use the library on Android, iOS, Mac OS X, Ubuntu, and Raspberry Pi. 
+This repository contains both the core rendering library and sample applications that use the library on Android, iOS, Mac OS X, Ubuntu, and Raspberry Pi.
 
 *tangram-es is in active development and is not yet feature-complete*
 
@@ -25,7 +25,7 @@ Make sure to update git submodules before you build:
 git submodule init && git submodule update
 ```
 
-Currently we are targeting five platforms: OS X, Ubuntu Linux, iOS, Android, and Raspberry Pi. 
+Currently we are targeting five platforms: OS X, Ubuntu Linux, iOS, Android, and Raspberry Pi.
 
 ## platforms ##
 
@@ -42,13 +42,13 @@ open build/osx/bin/tangram.app
 ```
 
 ### OS X (Xcode) ###
-For running on OS X from Xcode, generate and compile an Xcode project:
+For running on OS X from Xcode you will need Xcode version **6.0** or higher. Generate and compile an Xcode project:
 
 ```bash
 make xcode
 ```
 
-Then just open the Xcode project and run/debug from there: 
+Then just open the Xcode project and run/debug from there:
 
 ```bash
 open build/xcode/tangram.xcodeproj
@@ -57,7 +57,9 @@ open build/xcode/tangram.xcodeproj
 Note that any Xcode configuration change you make to the project won't be preserved when CMake runs again. Build configuration is defined only in the CMakeLists file(s).
 
 ### Ubuntu Linux ###
-To build on Ubuntu you will need to install development packages for libcurl, x11, and opengl:
+To build on Ubuntu you will need a C++ toolchain with support for C++14. GCC 4.9 (or higher) and Clang 3.4 (or higher) are known to work.
+
+You will also need to install development packages for libcurl, x11, and opengl:
 
 ```bash
 sudo apt-get install libcurl4-openssl-dev xorg-dev libgl1-mesa-dev
@@ -82,7 +84,7 @@ For running on the iOS simulator, generate and compile an Xcode project:
 make ios-sim
 ```
 
-Then just open the Xcode project and run/debug from there: 
+Then just open the Xcode project and run/debug from there:
 
 ```bash
 open build/ios-sim/tangram.xcodeproj
@@ -91,7 +93,7 @@ open build/ios-sim/tangram.xcodeproj
 Note that any Xcode configuration change you make to the project won't be preserved when CMake runs again. Build configuration is defined only in the CMakeLists file(s).
 
 ### iOS Devices ###
-For running on iOS devices you will need an iOS developer account, a valid code signing certificate, and a valid provisioning profile. Help on these topics can be found at [Apple's developer website](http://developer.apple.com). 
+For running on iOS devices you will need an iOS developer account, a valid code signing certificate, and a valid provisioning profile. Help on these topics can be found at [Apple's developer website](http://developer.apple.com).
 
 First generate an Xcode project without compiling:
 
@@ -108,7 +110,7 @@ open build/ios/tangram.xcodeproj
 If you run into problems deploying to an iOS device, see [this note](https://github.com/tangrams/tangram-es/wiki/iOS-Notes).
 
 ### Android ###
-To build for Android you'll need to have installed both the [Android SDK](http://developer.android.com/sdk/installing/index.html?pkg=tools) and the [Android NDK](https://developer.android.com/tools/sdk/ndk/index.html). Set an `ANDROID_HOME` environment variable with the root directory of your SDK and an `ANDROID_NDK` environment variable with the root directory of your NDK. 
+To build for Android you'll need to have installed both the [Android SDK](http://developer.android.com/sdk/installing/index.html?pkg=tools) and the [Android NDK](https://developer.android.com/tools/sdk/ndk/index.html). Set an `ANDROID_HOME` environment variable with the root directory of your SDK and an `ANDROID_NDK` environment variable with the root directory of your NDK.
 
 Build an APK of the demo application and optionally specify an architecture (default is armeabi-v7a):
 
@@ -123,14 +125,13 @@ Then install to a connected device or emulator. You can (re)install and run the 
 ```
 
 ### Raspberry Pi ###
+To build on Rasberry Pi you will need a C++ toolchain with support for C++14. GCC 4.9 (or higher) is known to work (refer [here](https://solarianprogrammer.com/2015/01/13/raspberry-pi-raspbian-install-gcc-compile-cpp-14-programs/) for instructions on getting GCC 4.9).
 
 First, install CMake and libcurl:
 
 ```
 sudo apt-get install cmake libcurl4-openssl-dev
 ```
-
-To build the project, you will need to have C++11 compatible compiler installed, for example GNU g++-4.9 or greater (refer [here](https://solarianprogrammer.com/2015/01/13/raspberry-pi-raspbian-install-gcc-compile-cpp-14-programs/) for instructions on getting g++-4.9)
 
 Before compiling, choose which compiler to use:
 ```
@@ -154,22 +155,22 @@ cd build/rpi/bin
 
 You can also move the map with `w`, `a`, `s`, and `z`, zoom in and out with `-` and `=`, and quit with `q`.
 
-code-styling
+Code Style
 =====
-Tangram is using clang-format to style the code. 
-When submitting a PR, make sure the code conforms to the styling rules defined in the clang style file.
+In general, code changes should follow the style of the surrounding code.
 
-Install clang-format (available through brew or apt-get)
+When in doubt, you can use the provided clang-format style file for automatic styling.
+
+Install clang-format (available through brew or apt-get):
 ```
 brew install clang-format
-```  
+```
 or
 ```
 sudo apt-get install clang-format
 ```
 
-Running clang-format with specified style (use -i to modify the contents of the specified file):
+Run clang-format with specified style (use -i to modify the contents of the specified file):
 ```
-clang-format -i -style=file [file] 
+clang-format -i -style=file [file]
 ```
-
