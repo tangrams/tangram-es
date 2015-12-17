@@ -162,38 +162,54 @@ void Labels::skipTransitions(const std::vector<std::unique_ptr<Style>>& _styles,
 }
 
 void Labels::checkRepeatGroups(std::vector<TextLabel*>& _visibleSet) const {
-    std::map<size_t, std::vector<CollideComponent>> repeatGroups;
+    struct GroupElement {
+        glm::vec2 position;
+        float threshold;
+        size_t hash;
+
+        bool operator==(const GroupElement& _ge) {
+            return _ge.position == position
+                && _ge.threshold == threshold
+                && _ge.hash == hash;
+        };
+    };
+
+    std::map<size_t, std::vector<GroupElement>> repeatGroups;
 
     auto textLabelIt = _visibleSet.begin();
     while (textLabelIt != _visibleSet.end()) {
         auto textLabel = *textLabelIt;
 
-        CollideComponent component;
-        component.position = textLabel->transform().state.screenPos;
-        component.userData = (void*)textLabel;
         std::size_t seed = 0;
 
         hash_combine(seed, textLabel->options().repeatGroup);
 
-        component.group = seed;
-        component.mask = seed;
+        GroupElement element;
+        element.position = textLabel->transform().state.screenPos;
+        element.threshold = textLabel->options().repeatDistance;
+        element.hash = seed;
 
         auto it = repeatGroups.find(seed);
         if (it != repeatGroups.end()) {
-            std::vector<CollideComponent>& group = repeatGroups[seed];
+            std::vector<GroupElement>& group = repeatGroups[seed];
 
-            if (std::find(group.begin(), group.end(), component) == group.end()) {
-                std::vector<CollideComponent> newGroup(group);
-                newGroup.push_back(component);
+            if (std::find(group.begin(), group.end(), element) == group.end()) {
+                std::vector<GroupElement> newGroup(group);
+                bool add = true;
+                newGroup.push_back(element);
+                float threshold2 = pow(element.threshold, 2);
 
-                isect2d::CollideOption options;
-                options.thresholdDistance = textLabel->options().repeatDistance;;
-                options.rule = isect2d::CollideRuleOption::UNIDIRECTIONNAL;
+                for (size_t i = 0; i < newGroup.size() - 1; ++i) {
+                    const GroupElement& ge = newGroup[i];
+                    float d2 = distance2(ge.position, element.position);
+                    if (d2 < threshold2) {
+                        add = false;
+                        break;
+                    }
+                }
 
-                auto collisionMaskPairs = isect2d::intersect(newGroup, options);
-
-                if (collisionMaskPairs.size() == 0) {
-                    group.push_back(component);
+                if (add) {
+                    group.push_back(element);
                     textLabelIt++;
                 } else {
                     textLabel->setOcclusion(true);
@@ -203,7 +219,7 @@ void Labels::checkRepeatGroups(std::vector<TextLabel*>& _visibleSet) const {
                 textLabelIt++;
             }
         } else {
-            repeatGroups[seed].push_back(component);
+            repeatGroups[seed].push_back(element);
             textLabelIt++;
         }
     }
