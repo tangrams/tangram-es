@@ -127,6 +127,10 @@ android/*/libs
 android/*/obj
 *.mk
 
+# Android gradle
+android/demo/gradle
+android/demo/gradlew*
+
 # vim 
 *.swp
 *.swo
