@@ -148,7 +148,7 @@ void TileManager::updateTileSet(TileSet& _tileSet) {
     // Tile load request above this zoom-level will be canceled in order to
     // not wait for tiles that are too small to contribute significantly to
     // the current view.
-    // int maxZoom = m_view->getZoom() + 2;
+    int maxZoom = m_view->getZoom() + 2;
 
     m_tileSetChanged |= m_workers->checkPendingTiles();
 
@@ -242,6 +242,9 @@ void TileManager::updateTileSet(TileSet& _tileSet) {
                     }
                     if (entry.isReady()) {
                         m_tiles.push_back(entry.tile);
+
+                    } else if (curTileId.z < maxZoom){
+                        removeTiles.push_back(curTileId);
                     }
                 } else {
                     removeTiles.push_back(curTileId);
@@ -258,8 +261,8 @@ void TileManager::updateTileSet(TileSet& _tileSet) {
 
         if ((it != tiles.end()) &&
             (!it->second.isVisible()) &&
-            (it->second.getProxyCounter() <= 0)) { // ||
-            //tileIt->first.z > maxZoom)) {
+            (it->second.getProxyCounter() <= 0  ||
+             it->first.z >= maxZoom)) {
 
             auto& entry = it->second;
 
