@@ -102,7 +102,7 @@ private:
         }
 
         bool newData() {
-            return bool(task) && bool(task->tile);
+            return bool(task) && bool(task->tile());
         }
 
         void cancelTask() {

@@ -14,6 +14,7 @@ class Scene;
 class Tile;
 class TileTask;
 class View;
+
 class TileWorker {
 
 public:

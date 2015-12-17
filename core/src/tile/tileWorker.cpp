@@ -63,12 +63,12 @@ void TileWorker::run() {
             // Pop highest priority tile from queue
             auto it = std::min_element(m_queue.begin(), m_queue.end(),
                 [](const auto& a, const auto& b) {
-                    if (a->visible != b->visible) {
-                        return a->visible;
+                    if (a->isProxy() != b->isProxy()) {
+                        return !a->isProxy();
                     }
-                    if (a->source == b->source &&
-                        a->sourceGeneration != b->sourceGeneration) {
-                        return a->sourceGeneration < b->sourceGeneration;
+                    if (a->source().id() == b->source().id() &&
+                        a->sourceGeneration() != b->sourceGeneration()) {
+                        return a->sourceGeneration() < b->sourceGeneration();
                     }
                     return a->getPriority() < b->getPriority();
                 });
@@ -85,24 +85,24 @@ void TileWorker::run() {
         auto scene = m_scene;
         if (!scene) { continue; }
 
-        auto tileData = task->process(*scene->mapProjection());
+        auto tileData = task->source().parse(*task, *scene->mapProjection());
 
         const clock_t begin = clock();
 
         context.initFunctions(*scene);
 
         if (tileData) {
-            auto tile = std::make_shared<Tile>(task->tileId,
+            auto tile = std::make_shared<Tile>(task->tileId(),
                                                *scene->mapProjection(),
-                                               task->source.get());
+                                               &task->source());
 
-            tile->build(context, *scene, *tileData, *task->source);
+            tile->build(context, *scene, *tileData, task->source());
 
             // Mark task as ready
-            task->tile = std::move(tile);
+            task->setTile(std::move(tile));
 
             float loadTime = (float(clock() - begin) / CLOCKS_PER_SEC) * 1000;
-            LOG("loadTime %s - %f", task->tile->getID().toString().c_str(), loadTime);
+            LOG("loadTime %s - %f", task->tile()->getID().toString().c_str(), loadTime);
         } else {
             task->cancel();
         }
