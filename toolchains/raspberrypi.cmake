@@ -6,18 +6,9 @@ set(EXECUTABLE_NAME "tangram")
 
 add_definitions(-DPLATFORM_RPI)
 
-# check for c++11 compiler
-execute_process(COMMAND ${CMAKE_CXX_COMPILER} -dumpversion OUTPUT_VARIABLE GCC_VERSION)
+check_unsupported_compiler_version()
 
-if("${CMAKE_CXX_COMPILER_ID}" MATCHES "GNU")
-  if(NOT (GCC_VERSION VERSION_GREATER 4.9 OR GCC_VERSION VERSION_EQUAL 4.9))
-    message(FATAL_ERROR "Please install g++ version 4.9 or greater")
-  else()
-    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++14")
-  endif()
-else()
-  message(FATAL_ERROR "Please install a C++14 compatible compiler")
-endif()
+set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++14")
 
 # add sources and include headers
 find_sources_and_include_directories(

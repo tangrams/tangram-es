@@ -8,6 +8,9 @@ else()
     message(STATUS "Will use make prebuilt tool located at : ${CMAKE_BUILD_TOOL}")
 endif()
 
+# check for unsupported compilers
+check_unsupported_compiler_version()
+
 # configurations
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++1y -pedantic")
 

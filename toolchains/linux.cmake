@@ -12,7 +12,7 @@ if (CMAKE_CXX_COMPILER_ID MATCHES "Clang")
 endif()
 
 if (CMAKE_COMPILER_IS_GNUCC)
-  execute_process(COMMAND ${CMAKE_C_COMPILER} -dumpversion
+  execute_process(COMMAND ${CMAKE_CXX_COMPILER} -dumpversion
     OUTPUT_VARIABLE GCC_VERSION)
   string(REGEX MATCHALL "[0-9]+" GCC_VERSION_COMPONENTS ${GCC_VERSION})
   list(GET GCC_VERSION_COMPONENTS 0 GCC_MAJOR)
@@ -24,6 +24,8 @@ if (CMAKE_COMPILER_IS_GNUCC)
     add_definitions("-D_GLIBCXX_USE_CXX11_ABI=1")
   endif()
 endif()
+
+check_unsupported_compiler_version()
 
 # compile definitions (adds -DPLATFORM_LINUX)
 set(CORE_COMPILE_DEFS PLATFORM_LINUX)
