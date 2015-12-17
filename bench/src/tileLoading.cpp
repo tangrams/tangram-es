@@ -8,6 +8,7 @@
 #include "scene/styleContext.h"
 #include "util/mapProjection.h"
 #include "tile/tile.h"
+#include "tile/tileTask.h"
 
 #include <vector>
 #include <iostream>
@@ -69,7 +70,13 @@ struct TestContext {
 
     void parseTile() {
         Tile tile({0,0,0}, s_projection);
-        tileData = source->parse(tile.getID(), s_projection, rawTileData);
+        source = scene->dataSources()[0];
+        auto task = source->createTask(tile.getID());
+        auto& t = dynamic_cast<DownloadTileTask&>(*task);
+        t.rawTileData = std::make_shared<std::vector<char>>();
+        std::swap(*t.rawTileData, rawTileData);
+
+        tileData = source->parse(*task, s_projection);
     }
 };
 
@@ -126,7 +133,12 @@ public:
 
         if (!scene->dataSources().empty()) {
             source = scene->dataSources()[0];
-            tileData = source->parse(tile.getID(), s_projection,rawTileData);
+            auto task = source->createTask(tile.getID());
+            auto& t = dynamic_cast<DownloadTileTask&>(*task);
+            t.rawTileData = std::make_shared<std::vector<char>>();
+            std::swap(*t.rawTileData, rawTileData);
+
+            tileData = source->parse(*task, s_projection);
         }
 
         LOG("Ready");
