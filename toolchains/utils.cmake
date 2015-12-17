@@ -1,3 +1,27 @@
+function(check_unsupported_compiler_version)
+
+    set(MIN_GCC 4.9)
+    set(MIN_CLANG 3.4)
+    set(MIN_APPLECLANG 6.0)
+
+    if(CMAKE_CXX_COMPILER_ID STREQUAL "GNU")
+        if(CMAKE_CXX_COMPILER_VERSION VERSION_LESS ${MIN_GCC})
+            message(FATAL_ERROR "Your GCC version does not support C++14, please install version ${MIN_GCC} or higher")
+        endif()
+    elseif(CMAKE_CXX_COMPILER_ID STREQUAL "Clang")
+        if(CMAKE_CXX_COMPILER_VERSION VERSION_LESS ${MIN_CLANG})
+            message(FATAL_ERROR "Your Clang version does not support C++14, please install version ${MIN_CLANG} or higher")
+        endif()
+    elseif(CMAKE_CXX_COMPILER_ID STREQUAL "AppleClang")
+        if(CMAKE_CXX_COMPILER_VERSION VERSION_LESS ${MIN_APPLECLANG})
+            message(FATAL_ERROR "Your Xcode version does not support C++14, please install version ${MIN_APPLECLANG} or higher")
+        endif()
+    else()
+        message(WARNING "Compilation has only been tested with Clang, AppleClang, and GCC")
+    endif()
+
+endfunction(check_unsupported_compiler_version)
+
 function(find_sources_and_include_directories HEADERS_PATH SOURCES_PATH)
     include_recursive_dirs(${HEADERS_PATH})
     file(GLOB_RECURSE FOUND_SOURCES ${SOURCES_PATH})
