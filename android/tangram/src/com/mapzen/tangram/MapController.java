@@ -22,7 +22,6 @@ import com.squareup.okhttp.Callback;
 import com.squareup.okhttp.Request;
 import com.squareup.okhttp.Response;
 
-import java.io.File;
 import java.io.IOException;
 
 import javax.microedition.khronos.egl.EGLConfig;
@@ -280,6 +279,14 @@ public class MapController implements Renderer, OnTouchListener, OnScaleGestureL
      */
     public void setFeatureTouchListener(FeatureTouchListener listener) {
         featureTouchListener = listener;
+    }
+
+    /**
+     * Enqueue a Runnable to be executed synchronously on the rendering thread
+     * @param r Runnable to run
+     */
+    public void queueEvent(Runnable r) {
+        mapView.queueEvent(r);
     }
 
     // Native methods
