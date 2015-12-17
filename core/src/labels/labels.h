@@ -46,7 +46,6 @@ private:
 
     using AABB = isect2d::AABB<glm::vec2>;
     using OBB = isect2d::OBB<glm::vec2>;
-    using CollideComponent = isect2d::CollideComponent<glm::vec2>;
     using CollisionPairs = std::vector<isect2d::ISect2D<glm::vec2>::Pair>;
 
     bool updateLabels(const std::vector<std::unique_ptr<Style>>& _styles,
@@ -70,7 +69,6 @@ private:
     // temporary data used in update()
     std::vector<Label*> m_labels;
     std::vector<AABB> m_aabbs;
-    std::vector<TextLabel*> m_visibleTextSet;
 
     isect2d::ISect2D<glm::vec2> m_isect2d;
 

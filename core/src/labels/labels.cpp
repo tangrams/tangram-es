@@ -279,7 +279,7 @@ void Labels::update(const View& _view, float _dt,
     }
 
     // Ensure the labels are always treated in the same order in the visible set
-    std::sort(m_visibleTextSet.begin(), m_visibleTextSet.end(), [](TextLabel* _a, TextLabel* _b) {
+    std::sort(visibleSet.begin(), visibleSet.end(), [](TextLabel* _a, TextLabel* _b) {
         return glm::length2(_a->transform().modelPosition1) < glm::length2(_b->transform().modelPosition1);
     });
 
