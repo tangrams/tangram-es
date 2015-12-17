@@ -12,6 +12,7 @@
 #include <mutex>
 #include <vector>
 #include <map>
+#include <set>
 
 namespace Tangram {
 
