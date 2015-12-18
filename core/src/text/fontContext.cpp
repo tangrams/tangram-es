@@ -1,4 +1,9 @@
 #include "fontContext.h"
+
+#define FONS_USE_HARFBUZZ
+#define FONS_USE_FREETYPE
+#include "hb.h"
+#include "hb-ft.h"
 #define FONTSTASH_IMPLEMENTATION
 #include "fontstash.h"
 

@@ -31,3 +31,6 @@
 [submodule "external/benchmark"]
 	path = external/benchmark
 	url = https://github.com/google/benchmark
+[submodule "external/harfbuzz-icu-freetype"]
+	path = external/harfbuzz-icu-freetype
+	url = git@github.com:tangrams/harfbuzz-icu-freetype.git
