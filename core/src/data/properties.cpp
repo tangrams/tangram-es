@@ -20,8 +20,12 @@ Properties::Properties(std::vector<Item>&& _items) {
 }
 
 Properties& Properties::operator=(Properties&& _other) {
-     props = std::move(_other.props);
-     return *this;
+    props = std::move(_other.props);
+    return *this;
+}
+
+void Properties::setSorted(std::vector<Item>&& _items) {
+    props = std::move(_items);
 }
 
 const Value& Properties::get(const std::string& key) const {
@@ -29,11 +33,7 @@ const Value& Properties::get(const std::string& key) const {
 
     const auto it = std::lower_bound(props.begin(), props.end(), key,
                                      [](const auto& item, const auto& key) {
-                                         if (item.key.size() == key.size()) {
-                                             return item.key < key;
-                                         } else {
-                                             return item.key.size() < key.size();
-                                         }
+                                         return keyComparator(item.key, key);
                                      });
 
     if (it == props.end() || it->key != key) {
