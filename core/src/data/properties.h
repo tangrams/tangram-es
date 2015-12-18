@@ -45,6 +45,8 @@ struct Properties {
     void add(std::string key, std::string value);
     void add(std::string key, double value);
 
+    void setSorted(std::vector<Item>&& _items);
+
     // template <typename... Args> void add(std::string key, Args&&... args) {
     //     props.emplace_back(std::move(key), Value{std::forward<Args>(args)...});
     //     sort();
@@ -54,6 +56,13 @@ struct Properties {
 
     int32_t sourceId;
 
+    static bool keyComparator(const std::string& a, const std::string& b) {
+        if (a.size() == b.size()) {
+            return a < b;
+        } else {
+            return a.size() < b.size();
+        }
+    }
 private:
     std::vector<Item> props;
 };

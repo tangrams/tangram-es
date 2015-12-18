@@ -1,9 +1,8 @@
 #pragma once
 
 #include "data/tileData.h"
-#include "data/propertyItem.h"
-
 #include "pbf/pbf.hpp"
+#include "util/variant.h"
 
 #include <vector>
 #include <string>
@@ -20,10 +19,13 @@ namespace PbfParser {
         int32_t sourceId;
         std::vector<std::string> keys;
         std::vector<Value> values;
-        std::vector<Properties::Item> properties;
         std::vector<protobuf::message> featureMsgs;
         std::vector<Point> coordinates;
         std::vector<int> numCoordinates;
+        // Map Key ID -> Tag values
+        std::vector<int> featureTags;
+        // Key IDs sorted by Property key ordering
+        std::vector<int> orderedKeys;
 
         int tileExtent = 0;
     };

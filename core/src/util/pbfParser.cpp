@@ -1,8 +1,11 @@
 #include "pbfParser.h"
 
+#include "data/propertyItem.h"
 #include "tile/tile.h"
 #include "platform.h"
 #include "util/geom.h"
+
+#include <algorithm>
 
 namespace Tangram {
 
@@ -68,9 +71,12 @@ void PbfParser::extractFeature(ParserContext& _ctx, protobuf::message& _featureI
     //Iterate through this feature
     protobuf::message geometry; // By default data_ and end_ are nullptr
 
-    _ctx.properties.clear();
     _ctx.coordinates.clear();
     _ctx.numCoordinates.clear();
+
+    _ctx.featureTags.clear();
+    _ctx.featureTags.assign(_ctx.keys.size(), -1);
+
 
     while(_featureIn.next()) {
         switch(_featureIn.tag) {
@@ -86,7 +92,7 @@ void PbfParser::extractFeature(ParserContext& _ctx, protobuf::message& _featureI
                 protobuf::message tagsMsg = _featureIn.getMessage();
 
                 while(tagsMsg) {
-                    std::size_t tagKey = tagsMsg.varint();
+                    auto tagKey = tagsMsg.varint();
 
                     if(_ctx.keys.size() <= tagKey) {
                         LOGE("accessing out of bound key");
@@ -98,14 +104,14 @@ void PbfParser::extractFeature(ParserContext& _ctx, protobuf::message& _featureI
                         return;
                     }
 
-                    std::size_t valueKey = tagsMsg.varint();
+                    auto valueKey = tagsMsg.varint();
 
                     if( _ctx.values.size() <= valueKey ) {
                         LOGE("accessing out of bound values");
                         return;
                     }
 
-                    _ctx.properties.emplace_back(_ctx.keys[tagKey], _ctx.values[valueKey]);
+                    _ctx.featureTags[tagKey] = valueKey;
                 }
                 break;
             }
@@ -124,7 +130,17 @@ void PbfParser::extractFeature(ParserContext& _ctx, protobuf::message& _featureI
                 break;
         }
     }
-    _out.props = std::move(_ctx.properties);
+
+    std::vector<Properties::Item> properties;
+    properties.reserve(_ctx.featureTags.size());
+
+    for (int tagKey : _ctx.orderedKeys) {
+        int tagValue = _ctx.featureTags[tagKey];
+        if (tagValue >= 0) {
+            properties.emplace_back(_ctx.keys[tagKey], _ctx.values[tagValue]);
+        }
+    }
+    _out.props.setSorted(std::move(properties));
 
     switch(_out.geometryType) {
         case GeometryType::points:
@@ -184,7 +200,7 @@ void PbfParser::extractLayer(ParserContext& _ctx, protobuf::message& _layerIn, L
     _ctx.values.clear();
     _ctx.featureMsgs.clear();
 
-    //iterate layer to populate featureMsgs, keys and values
+    //// Iterate layer to populate featureMsgs, keys and values
     while(_layerIn.next()) {
         switch(_layerIn.tag) {
             case 2: // features
@@ -244,6 +260,19 @@ void PbfParser::extractLayer(ParserContext& _ctx, protobuf::message& _layerIn, L
                 break;
         }
     }
+
+    //// Assign ordering to keys for faster sorting
+    _ctx.orderedKeys.clear();
+    _ctx.orderedKeys.reserve(_ctx.keys.size());
+    // assign key ids
+    for (int i = 0, n = _ctx.keys.size(); i < n; i++) {
+        _ctx.orderedKeys.push_back(i);
+    }
+    // sort by Property key ordering
+    std::sort(_ctx.orderedKeys.begin(), _ctx.orderedKeys.end(),
+              [&](int a, int b) {
+                  return Properties::keyComparator(_ctx.keys[a], _ctx.keys[b]);
+              });
 
     _out.features.reserve(_ctx.featureMsgs.size());
     for(auto& featureMsg : _ctx.featureMsgs) {
