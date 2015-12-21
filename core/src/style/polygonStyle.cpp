@@ -12,34 +12,38 @@
 
 #include "glm/vec2.hpp"
 #include "glm/vec3.hpp"
+#include "glm/gtc/type_precision.hpp"
 
 #include <cmath>
+
+#define POSITION_SCALE 4096.0f
+#define TEXTURE_SCALE 16384.0f
+#define NORMAL_SCALE 127.0f
 
 namespace Tangram {
 
 struct PolygonVertex {
-    glm::vec3 pos;
-    glm::vec3 norm;
-    glm::vec2 texcoord;
+    glm::i16vec4 pos; // pos.w contains layer (params.order)
+    glm::i8vec4 norm;
+    glm::i16vec2 texcoord;
     GLuint abgr;
-    GLfloat layer;
 };
 
 using Mesh = TypedMesh<PolygonVertex>;
 
 
-PolygonStyle::PolygonStyle(std::string _name, Blending _blendMode, GLenum _drawMode) : Style(_name, _blendMode, _drawMode) {
+PolygonStyle::PolygonStyle(std::string _name, Blending _blendMode, GLenum _drawMode)
+    : Style(_name, _blendMode, _drawMode) {
 }
 
 void PolygonStyle::constructVertexLayout() {
 
     // TODO: Ideally this would be in the same location as the struct that it basically describes
     m_vertexLayout = std::shared_ptr<VertexLayout>(new VertexLayout({
-        {"a_position", 3, GL_FLOAT, false, 0},
-        {"a_normal", 3, GL_FLOAT, false, 0},
-        {"a_texcoord", 2, GL_FLOAT, false, 0},
+        {"a_position", 4, GL_SHORT, false, 0},
+        {"a_normal", 4, GL_BYTE, true, 0},
+        {"a_texcoord", 2, GL_SHORT, false, 0},
         {"a_color", 4, GL_UNSIGNED_BYTE, true, 0},
-        {"a_layer", 1, GL_FLOAT, false, 0}
     }));
 
 }
@@ -65,14 +69,14 @@ PolygonStyle::Parameters PolygonStyle::parseRule(const DrawRule& _rule) const {
     return p;
 }
 
-void PolygonStyle::buildPolygon(const Polygon& _polygon, const DrawRule& _rule, const Properties& _props, VboMesh& _mesh, Tile& _tile) const {
+void PolygonStyle::buildPolygon(const Polygon& _polygon, const DrawRule& _rule,
+                                const Properties& _props, VboMesh& _mesh, Tile& _tile) const {
 
     std::vector<PolygonVertex> vertices;
 
     Parameters params = parseRule(_rule);
 
     GLuint abgr = params.color;
-    GLfloat layer = params.order;
     auto& extrude = params.extrude;
 
     if (Tangram::getDebugFlag(Tangram::DebugFlags::proxy_colors)) {
@@ -83,8 +87,12 @@ void PolygonStyle::buildPolygon(const Polygon& _polygon, const DrawRule& _rule, 
     const static std::string key_min_height("min_height");
 
     PolygonBuilder builder = {
-        [&](const glm::vec3& coord, const glm::vec3& normal, const glm::vec2& uv){
-            vertices.push_back({ coord, normal, uv, abgr, layer });
+        [&](const glm::vec3& _coord, const glm::vec3& _normal, const glm::vec2& _uv) {
+            glm::vec3 coord = _coord * POSITION_SCALE;
+            glm::i16vec2 uv = _uv * TEXTURE_SCALE;
+            glm::i8vec4 normal = glm::i8vec4{ _normal * NORMAL_SCALE, 0};
+
+            vertices.push_back({ glm::i16vec4{coord, params.order}, normal, uv, abgr });
         },
         [&](size_t sizeHint){ vertices.reserve(sizeHint); }
     };

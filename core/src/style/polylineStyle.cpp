@@ -10,16 +10,21 @@
 #include "tile/tile.h"
 #include "util/mapProjection.h"
 #include "util/extrude.h"
+
 #include "glm/vec3.hpp"
+#include "glm/gtc/type_precision.hpp"
+
+#define EXTRUSION_SCALE 4096.0f
+#define POSITION_SCALE 4096.0f
+#define TEXTURE_SCALE 16384.0f
 
 namespace Tangram {
 
 struct PolylineVertex {
-    glm::vec3 pos;
-    glm::vec2 texcoord;
-    glm::vec4 extrude;
+    glm::i16vec4 pos;
+    glm::i16vec2 texcoord;
+    glm::i16vec4 extrude;
     GLuint abgr;
-    GLfloat layer;
 };
 
 using Mesh = TypedMesh<PolylineVertex>;
@@ -32,13 +37,11 @@ void PolylineStyle::constructVertexLayout() {
 
     // TODO: Ideally this would be in the same location as the struct that it basically describes
     m_vertexLayout = std::shared_ptr<VertexLayout>(new VertexLayout({
-        {"a_position", 3, GL_FLOAT, false, 0},
-        {"a_texcoord", 2, GL_FLOAT, false, 0},
-        {"a_extrude", 4, GL_FLOAT, false, 0},
+        {"a_position", 4, GL_SHORT, false, 0},
+        {"a_texcoord", 2, GL_SHORT, false, 0},
+        {"a_extrude", 4, GL_SHORT, false, 0},
         {"a_color", 4, GL_UNSIGNED_BYTE, true, 0},
-        {"a_layer", 1, GL_FLOAT, false, 0}
     }));
-
 }
 
 void PolylineStyle::constructShaderProgram() {
@@ -182,10 +185,18 @@ void PolylineStyle::buildLine(const Line& _line, const DrawRule& _rule, const Pr
     float tileUnitsPerMeter = _tile.getInverseScale();
     float height = getUpperExtrudeMeters(extrude, _props) * tileUnitsPerMeter;
 
+    width *= EXTRUSION_SCALE;
+    dWdZ *= EXTRUSION_SCALE;
+
+    if (width < 1) { width = 1.0f; }
+    if (dWdZ < 1) { dWdZ = 1.0f; }
+
     PolyLineBuilder builder {
         [&](const glm::vec3& coord, const glm::vec2& normal, const glm::vec2& uv) {
-            glm::vec4 extrude = { normal.x, normal.y, width, dWdZ };
-            vertices.push_back({ {coord.x, coord.y, height}, uv, extrude, abgr, (float)params.order });
+            glm::vec3 position = glm::vec3{coord.x, coord.y, height} * POSITION_SCALE;
+            glm::i16vec4 extrude = glm::vec4{ normal * EXTRUSION_SCALE, width, dWdZ };
+            glm::i16vec2 texCoord = uv * TEXTURE_SCALE;
+            vertices.push_back({ glm::i16vec4{position, params.order}, texCoord, extrude, abgr});
         },
         [&](size_t sizeHint){ vertices.reserve(sizeHint); },
         params.cap,
@@ -202,12 +213,14 @@ void PolylineStyle::buildLine(const Line& _line, const DrawRule& _rule, const Pr
         float widthOutline = 0.f;
         float dWdZOutline = 0.f;
 
-        if (evalStyleParamWidth(StyleParamKey::outline_width, _rule, _tile, widthOutline, dWdZOutline) &&
-            ((widthOutline > 0.0f || dWdZOutline > 0.0f)) ) {
+        if (evalStyleParamWidth(StyleParamKey::outline_width, _rule, _tile,
+                                widthOutline, dWdZOutline) &&
+            ((widthOutline > 0.0f || dWdZOutline > 0.0f))) {
 
-            // Note: this must update width and dWdZ as they are captured (and used) by builder
-            width += widthOutline;
-            dWdZ += dWdZOutline;
+            // Note: this must update <width> and <dWdZ> as they are captured
+            // (and used) by <builder>
+            width += widthOutline * EXTRUSION_SCALE;
+            dWdZ += dWdZOutline * EXTRUSION_SCALE;
 
             if (params.outlineCap != params.cap || params.outlineJoin != params.join) {
                 // need to re-triangulate with different cap and/or join
@@ -225,8 +238,9 @@ void PolylineStyle::buildLine(const Line& _line, const DrawRule& _rule, const Pr
                 }
                 for (size_t i = 0; i < offset; i++) {
                     const auto& v = vertices[i];
-                    glm::vec4 extrudeOutline = { v.extrude.x, v.extrude.y, width, dWdZ };
-                    vertices.push_back({ v.pos, v.texcoord, extrudeOutline, abgrOutline, outlineOrder });
+                    glm::i16vec4 position = { v.pos.x, v.pos.y, v.pos.z, outlineOrder };
+                    glm::i16vec4 extrude = glm::vec4{ v.extrude.x, v.extrude.y, width, dWdZ };
+                    vertices.push_back({ position, v.texcoord, extrude, abgrOutline });
                 }
             }
         }
