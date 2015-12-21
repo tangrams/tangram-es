@@ -205,8 +205,9 @@ void PolylineStyle::buildLine(const Line& _line, const DrawRule& _rule, const Pr
         if (evalStyleParamWidth(StyleParamKey::outline_width, _rule, _tile, widthOutline, dWdZOutline) &&
             ((widthOutline > 0.0f || dWdZOutline > 0.0f)) ) {
 
-            widthOutline += width;
-            dWdZOutline += dWdZ;
+            // Note: this must update width and dWdZ as they are captured (and used) by builder
+            width += widthOutline;
+            dWdZ += dWdZOutline;
 
             if (params.outlineCap != params.cap || params.outlineJoin != params.join) {
                 // need to re-triangulate with different cap and/or join
@@ -224,7 +225,7 @@ void PolylineStyle::buildLine(const Line& _line, const DrawRule& _rule, const Pr
                 }
                 for (size_t i = 0; i < offset; i++) {
                     const auto& v = vertices[i];
-                    glm::vec4 extrudeOutline = { v.extrude.x, v.extrude.y, widthOutline, dWdZOutline };
+                    glm::vec4 extrudeOutline = { v.extrude.x, v.extrude.y, width, dWdZ };
                     vertices.push_back({ v.pos, v.texcoord, extrudeOutline, abgrOutline, outlineOrder });
                 }
             }
