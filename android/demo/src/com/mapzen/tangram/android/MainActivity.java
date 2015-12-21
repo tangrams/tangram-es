@@ -18,6 +18,7 @@ import com.mapzen.tangram.Tangram;
 import com.mapzen.tangram.Coordinates;
 import com.mapzen.tangram.Polygon;
 
+import com.mapzen.tangram.TouchManager;
 import com.squareup.okhttp.Callback;
 
 import java.io.File;
@@ -56,10 +57,15 @@ public class MainActivity extends Activity {
         final LngLat zeroCoord = new LngLat();
         final Coordinates line = new Coordinates();
 
-        mapController.setTapGestureListener(new View.OnGenericMotionListener() {
+        mapController.setTapResponder(new TouchManager.TapResponder() {
             @Override
-            public boolean onGenericMotion(View v, MotionEvent event) {
-                LngLat tapPoint = mapController.coordinatesAtScreenPosition(event.getX(), event.getY());
+            public boolean onSingleTapUp(float x, float y) {
+                return false;
+            }
+
+            @Override
+            public boolean onSingleTapConfirmed(float x, float y) {
+                LngLat tapPoint = mapController.coordinatesAtScreenPosition(x, y);
 
                 if (!lastTappedPoint.equals(zeroCoord)) {
                     Properties props = new Properties();
@@ -77,7 +83,7 @@ public class MainActivity extends Activity {
                 }
                 lastTappedPoint.set(tapPoint);
 
-                mapController.pickFeature(event.getX(), event.getY());
+                mapController.pickFeature(x, y);
 
                 mapController.setMapPosition(tapPoint.longitude, tapPoint.latitude, 1);
 
