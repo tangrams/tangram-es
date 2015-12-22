@@ -67,34 +67,11 @@ public class MapController implements Renderer {
         assetManager = mainApp.getAssets();
 
         touchManager = new TouchManager(mainApp);
-        touchManager.setPanResponder(new TouchManager.PanResponder() {
-            @Override
-            public boolean onPan(float startX, float startY, float endX, float endY) {
-                handlePanGesture(startX, startY, endX, endY);
-                return true;
-            }
-        });
-        touchManager.setScaleResponder(new TouchManager.ScaleResponder() {
-            @Override
-            public boolean onScale(float x, float y, float scale, float velocity) {
-                handlePinchGesture(x, y, scale, velocity);
-                return true;
-            }
-        });
-        touchManager.setRotateResponder(new TouchManager.RotateResponder() {
-            @Override
-            public boolean onRotate(float x, float y, float rotation) {
-                handleRotateGesture(x, y, rotation);
-                return true;
-            }
-        });
-        touchManager.setShoveResponder(new TouchManager.ShoveResponder() {
-            @Override
-            public boolean onShove(float distance) {
-                handleShoveGesture(distance / displayMetrics.heightPixels);
-                return true;
-            }
-        });
+        setPanResponder(null);
+        setScaleResponder(null);
+        setRotateResponder(null);
+        setShoveResponder(null);
+
         touchManager.setSimultaneousDetectionAllowed(Gestures.SHOVE, Gestures.ROTATE, false);
         touchManager.setSimultaneousDetectionAllowed(Gestures.SHOVE, Gestures.SCALE, false);
         touchManager.setSimultaneousDetectionAllowed(Gestures.SHOVE, Gestures.PAN, false);
@@ -267,33 +244,110 @@ public class MapController implements Renderer {
     }
 
     /**
-     * Set a listener for raw motion events
-     * @param listener Listener to call
+     * Set a responder for tap gestures
+     * @param responder TapResponder to call
      */
-    public void setGenericMotionEventListener(View.OnGenericMotionListener listener) {
-        // genericMotionListener = listener;
-    }
-
-    /**
-     * Set a listener for long press events
-     * @param listener Listener to call
-     */
-    public void setLongPressListener(View.OnGenericMotionListener listener) {
-        // longPressListener = listener;
-    }
-
-    /**
-     * Set a listener for tap gesture
-     * @param listener Listen to call
-     */
-    public void setTapResponder(final TouchManager.TapResponder tapResponder) {
+    public void setTapResponder(final TouchManager.TapResponder responder) {
         touchManager.setTapResponder(new TouchManager.TapResponder() {
             @Override
             public boolean onSingleTapUp(float x, float y) {
-                return (tapResponder == null || tapResponder.onSingleTapUp(x, y));
+                return responder != null && responder.onSingleTapUp(x, y);
             }
             @Override
-            public boolean onSingleTapConfirmed(float x, float y) { return false; }
+            public boolean onSingleTapConfirmed(float x, float y) {
+                return responder != null && responder.onSingleTapConfirmed(x, y);
+            }
+        });
+    }
+
+    /**
+     * Set a responder for double-tap gestures
+     * @param responder DoubleTapResponder to call
+     */
+    public void setDoubleTapResponder(final TouchManager.DoubleTapResponder responder) {
+        touchManager.setDoubleTapResponder(new TouchManager.DoubleTapResponder() {
+            @Override
+            public boolean onDoubleTap(float x, float y) {
+                return responder != null && responder.onDoubleTap(x, y);
+            }
+        });
+    }
+
+    /**
+     * Set a responder for long press gestures
+     * @param responder LongPressResponder to call
+     */
+    public void setLongPressResponder(final TouchManager.LongPressResponder responder) {
+        touchManager.setLongPressResponder(new TouchManager.LongPressResponder() {
+            @Override
+            public void onLongPress(float x, float y) {
+                if (responder != null) {
+                    responder.onLongPress(x, y);
+                }
+            }
+        });
+    }
+    /**
+     * Set a responder for pan gestures
+     * @param responder PanResponder to call; if onPan returns true, normal panning behavior will not occur
+     */
+    public void setPanResponder(final TouchManager.PanResponder responder) {
+        touchManager.setPanResponder(new TouchManager.PanResponder() {
+            @Override
+            public boolean onPan(float startX, float startY, float endX, float endY) {
+                if (responder == null || !responder.onPan(startX, startY, endX, endY)) {
+                    handlePanGesture(startX, startY, endX, endY);
+                }
+                return true;
+            }
+        });
+    }
+
+    /**
+     * Set a responder for rotate gestures
+     * @param responder RotateResponder to call; if onRotate returns true, normal rotation behavior will not occur
+     */
+    public void setRotateResponder(final TouchManager.RotateResponder responder) {
+        touchManager.setRotateResponder(new TouchManager.RotateResponder() {
+            @Override
+            public boolean onRotate(float x, float y, float rotation) {
+                if (responder == null || !responder.onRotate(x, y, rotation)) {
+                    handleRotateGesture(x, y, rotation);
+                }
+                return true;
+            }
+        });
+    }
+
+    /**
+     * Set a responder for scale gestures
+     * @param responder ScaleResponder to call; if onScale returns true, normal scaling behavior will not occur
+     */
+    public void setScaleResponder(final TouchManager.ScaleResponder responder) {
+        touchManager.setScaleResponder(new TouchManager.ScaleResponder() {
+            @Override
+            public boolean onScale(float x, float y, float scale, float velocity) {
+                if (responder == null || !responder.onScale(x, y, scale, velocity)) {
+                    handlePinchGesture(x, y, scale, velocity);
+                }
+                return true;
+            }
+        });
+    }
+
+    /**
+     * Set a responder for shove (vertical two-finger drag) gestures
+     * @param responder ShoveResponder to call; if onShove returns true, normal tilting behavior will not occur
+     */
+    public void setShoveResponder(final TouchManager.ShoveResponder responder) {
+        touchManager.setShoveResponder(new TouchManager.ShoveResponder() {
+            @Override
+            public boolean onShove(float distance) {
+                if (responder == null || !responder.onShove(distance)) {
+                    handleShoveGesture(distance / displayMetrics.heightPixels);
+                }
+                return true;
+            }
         });
     }
 

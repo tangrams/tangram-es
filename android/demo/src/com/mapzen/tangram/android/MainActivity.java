@@ -91,22 +91,14 @@ public class MainActivity extends Activity {
             }
         });
 
-        mapController.setLongPressListener(new View.OnGenericMotionListener() {
+        mapController.setLongPressResponder(new TouchManager.LongPressResponder() {
             @Override
-            public boolean onGenericMotion(View v, MotionEvent event) {
-                if (touchMarkers != null) { touchMarkers.clear(); }
-
+            public void onLongPress(float x, float y) {
+                if (touchMarkers != null) {
+                    touchMarkers.clear();
+                }
                 tileInfo = !tileInfo;
                 Tangram.setDebugFlag(DebugFlags.TILE_INFOS, tileInfo);
-                return true;
-            }
-        });
-
-        mapController.setGenericMotionEventListener(new View.OnGenericMotionListener() {
-            @Override
-            public boolean onGenericMotion(View v, MotionEvent event) {
-                // Handle generic motion event.
-                return false;
             }
         });
 
