@@ -274,11 +274,13 @@ public class TouchManager implements OnTouchListener, OnScaleGestureListener,
     @Override
     public boolean onScale(ScaleGestureDetector detector) {
         if (isDetectionAllowed(Gestures.SCALE) && scaleResponder != null) {
-            float dt = detector.getTimeDelta() > 0 ? detector.getTimeDelta() : 1;
-            float velocity = (detector.getCurrentSpan() - detector.getPreviousSpan()) / dt;
+            long ms = detector.getTimeDelta();
+            float dt = ms > 0 ? ms / 1000.f : 1.f;
+            float scale = detector.getScaleFactor();
+            float velocity = (scale - 1.f) / dt;
             float x = detector.getFocusX();
             float y = detector.getFocusY();
-            return scaleResponder.onScale(x, y, detector.getScaleFactor(), velocity);
+            return scaleResponder.onScale(x, y, scale, velocity);
         }
         return false;
     }

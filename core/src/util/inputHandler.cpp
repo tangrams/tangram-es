@@ -83,7 +83,8 @@ void InputHandler::handlePinchGesture(float _posX, float _posY, float _scale, fl
     float s = pow(2, m_view->getZoom() - z) - 1;
     m_view->translate(s * _posX, s * _posY);
 
-    setDeltas(m_minZoomStart * _velocity, glm::vec2(0.f));
+    float zoomVelocity = log(_velocity) * invLog2;
+    setDeltas(m_minZoomStart * zoomVelocity, glm::vec2(0.f));
 
 }
 
