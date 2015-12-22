@@ -1,6 +1,7 @@
 package com.mapzen.tangram;
 
 import android.content.Context;
+import android.os.SystemClock;
 import android.view.GestureDetector;
 import android.view.GestureDetector.OnDoubleTapListener;
 import android.view.GestureDetector.OnGestureListener;
@@ -25,13 +26,28 @@ public class TouchManager implements OnTouchListener, OnScaleGestureListener,
         OnRotateGestureListener, OnGestureListener, OnDoubleTapListener, OnShoveGestureListener {
 
     public enum Gestures {
-        TAP,
-        DOUBLE_TAP,
-        LONG_PRESS,
-        PAN,
-        ROTATE,
-        SCALE,
-        SHOVE,
+        TAP(1),
+        DOUBLE_TAP(1),
+        LONG_PRESS(1),
+        PAN(1),
+        ROTATE(2),
+        SCALE(2),
+        SHOVE(2),
+        ;
+
+        private int touches;
+
+        Gestures(int touches) {
+            this.touches = touches;
+        }
+
+        public int getTouchesRequired() {
+            return touches;
+        }
+
+        public boolean isMultiTouch() {
+            return touches > 1;
+        }
     }
 
     public interface TapResponder {
@@ -63,6 +79,8 @@ public class TouchManager implements OnTouchListener, OnScaleGestureListener,
         boolean onShove(float distance);
     }
 
+    private static final long MULTITOUCH_BUFFER_TIME = 256; // milliseconds
+
     private GestureDetector panTapGestureDetector;
     private ScaleGestureDetector scaleGestureDetector;
     private RotateGestureDetector rotateGestureDetector;
@@ -78,6 +96,8 @@ public class TouchManager implements OnTouchListener, OnScaleGestureListener,
 
     private boolean[] detectedGestures;
     private boolean[][] allowedSimultaneousGestures;
+
+    private long lastMultiTouchEndTime = -MULTITOUCH_BUFFER_TIME;
 
     public TouchManager(Context context) {
 
@@ -142,11 +162,21 @@ public class TouchManager implements OnTouchListener, OnScaleGestureListener,
                 return false;
             }
         }
+        if (!g.isMultiTouch()) {
+            // Return false if a multitouch gesture has finished within a time threshold
+            long t = SystemClock.uptimeMillis() - lastMultiTouchEndTime;
+            if (t < MULTITOUCH_BUFFER_TIME) {
+                return false;
+            }
+        }
         return true;
     }
 
     private void setGestureDetected(Gestures g, boolean detected) {
         detectedGestures[g.ordinal()] = detected;
+        if (!detected && g.isMultiTouch()) {
+            lastMultiTouchEndTime = SystemClock.uptimeMillis();
+        }
     }
 
     // View.OnTouchListener implementation
