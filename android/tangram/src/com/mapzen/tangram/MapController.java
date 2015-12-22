@@ -317,9 +317,10 @@ public class MapController implements Renderer, OnTouchListener, OnScaleGestureL
     private synchronized native void handlePinchGesture(float posX, float posY, float scale, float velocity);
     private synchronized native void handleRotateGesture(float posX, float posY, float rotation);
     private synchronized native void handleShoveGesture(float distance);
-    private synchronized native void onUrlSuccess(byte[] rawDataBytes, long callbackPtr);
-    private synchronized native void onUrlFailure(long callbackPtr);
     public synchronized native void pickFeature(float posX, float posY);
+
+    private native void onUrlSuccess(byte[] rawDataBytes, long callbackPtr);
+    private native void onUrlFailure(long callbackPtr);
 
     // Private members
     // ===============
@@ -611,7 +612,7 @@ public class MapController implements Renderer, OnTouchListener, OnScaleGestureL
             @Override
             public void onFailure(Request request, IOException e) {
                 onUrlFailure(callbackPtr);
-                e.printStackTrace();
+                //e.printStackTrace();
             }
 
             @Override
