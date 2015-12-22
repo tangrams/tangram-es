@@ -17,7 +17,7 @@ namespace Tangram {
 TileManager::TileManager() {
 
     // Instantiate workers
-    m_workers = std::unique_ptr<TileWorker>(new TileWorker(*this, MAX_WORKERS));
+    m_workers = std::unique_ptr<TileWorker>(new TileWorker(MAX_WORKERS));
 
     m_tileCache = std::unique_ptr<TileCache>(new TileCache(DEFAULT_CACHE_SIZE));
 
@@ -81,15 +81,11 @@ void TileManager::setScene(std::shared_ptr<Scene> _scene) {
     }
 
     m_scene = _scene;
+    m_workers->setScene(_scene);
 }
 
 void TileManager::addDataSource(std::shared_ptr<DataSource> dataSource) {
     m_tileSets.push_back({ dataSource });
-}
-
-void TileManager::tileProcessed(std::shared_ptr<TileTask>&& _task) {
-    std::lock_guard<std::mutex> lock(m_readyTileMutex);
-    m_readyTiles.push_back(std::move(_task));
 }
 
 void TileManager::clearTileSets() {
@@ -135,6 +131,7 @@ void TileManager::updateTileSets() {
     std::sort(m_tiles.begin(), m_tiles.end(), [](auto& a, auto& b){
             return a->getID() < b->getID(); });
 
+    // Remove duplicates: Proxy tiles could have been added more than once
     m_tiles.erase(std::unique(m_tiles.begin(), m_tiles.end()), m_tiles.end());
 }
 
@@ -144,65 +141,6 @@ void TileManager::updateTileSet(TileSet& tileSet) {
 
     std::vector<TileID> removeTiles;
 
-    if (!m_readyTiles.empty()) {
-        std::lock_guard<std::mutex> lock(m_readyTileMutex);
-        auto taskIt = m_readyTiles.begin();
-
-        while (taskIt != m_readyTiles.end()) {
-
-            if (tileSet.source != (*taskIt)->source) {
-                taskIt++;
-                continue;
-            }
-            auto task = *taskIt;
-            taskIt = m_readyTiles.erase(taskIt);
-
-            auto setTile = tileSet.tiles.find(task->tileId);
-            if (setTile == tileSet.tiles.end()) { continue; }
-
-            auto& entry = setTile->second;
-
-            if (!task->tile) {
-                LOG("got empty tile task %d", task->isCanceled());
-                entry.task.reset();
-                continue;
-            }
-
-            if (!entry.isLoading()) {
-                // FIXME: just testing: this case should not happen
-                LOG("got orphaned tile task");
-                assert(entry.m_proxies == 0);
-                continue;
-            }
-
-            // NB: Unset implicit 'loading' state
-            entry.task.reset();
-
-            if (entry.isReady() &&
-                entry.tile->sourceGeneration() > task->tile->sourceGeneration()) {
-                // FIXME: just testing: this case should be avoided
-                LOG("got older tile task");
-                assert(entry.m_proxies == 0);
-                continue;
-            }
-
-            if (entry.isReady()) {
-                LOG("%s replace tile %d -> %d",
-                    task->tile->getID().toString().c_str(),
-                    entry.tile->sourceGeneration(),
-                    task->tile->sourceGeneration());
-            } else {
-                LOG("%s new tile %d",
-                    task->tile->getID().toString().c_str(),
-                    task->tile->sourceGeneration());
-            }
-
-            clearProxyTiles(tileSet, setTile->first, entry, removeTiles);
-            entry.tile = task->tile;
-            m_tileSetChanged = true;
-        }
-    }
-
     const std::set<TileID>& visibleTiles = m_view->getVisibleTiles();
 
     glm::dvec2 viewCenter(m_view->getPosition().x, -m_view->getPosition().y);
@@ -210,7 +148,9 @@ void TileManager::updateTileSet(TileSet& tileSet) {
     // Tile load request above this zoom-level will be canceled in order to
     // not wait for tiles that are too small to contribute significantly to
     // the current view.
-    //int maxZoom = m_view->getZoom() + 2;
+    // int maxZoom = m_view->getZoom() + 2;
+
+    m_tileSetChanged |= m_workers->checkPendingTiles();
 
     if (tileSet.sourceGeneration != tileSet.source->generation()) {
         tileSet.sourceGeneration = tileSet.source->generation();
@@ -239,6 +179,12 @@ void TileManager::updateTileSet(TileSet& tileSet) {
 
                 auto& entry = curTilesIt->second;
                 entry.setVisible(true);
+
+                if (entry.newData()) {
+                    clearProxyTiles(tileSet, curTileId, entry, removeTiles);
+                    entry.tile = std::move(entry.task->tile);
+                    entry.task.reset();
+                }
 
                 if (entry.isReady()) {
                     m_tiles.push_back(entry.tile);
@@ -289,15 +235,18 @@ void TileManager::updateTileSet(TileSet& tileSet) {
                 auto& entry = curTilesIt->second;
 
                 if (entry.getProxyCounter() > 0) {
+                    if (entry.newData()) {
+                        clearProxyTiles(tileSet, curTileId, entry, removeTiles);
+                        entry.tile = std::move(entry.task->tile);
+                        entry.task.reset();
+                    }
                     if (entry.isReady()) {
                         m_tiles.push_back(entry.tile);
                     }
                 } else {
-                    LOG("CLEANUP PROXY %s", curTileId.toString().c_str());
                     removeTiles.push_back(curTileId);
                 }
                 entry.setVisible(false);
-
                 ++curTilesIt;
             }
         }

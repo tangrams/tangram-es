@@ -56,11 +56,6 @@ public:
 
     void clearTileSet(int32_t _sourceId);
 
-    /* For TileWorker: Pass TileTask with processed data back
-     * to TileManager.
-     */
-    void tileProcessed(std::shared_ptr<TileTask>&& task);
-
     /* Returns the set of currently visible tiles */
     const auto& getVisibleTiles() { return m_tiles; }
 
@@ -106,6 +101,10 @@ private:
         bool isLoading() {
             // FIXME remove second condition (see m_dataCallback)
             return bool(task) && !task->isCanceled();
+        }
+
+        bool newData() {
+            return bool(task) && bool(task->tile);
         }
 
         void cancelTask() {
@@ -215,9 +214,6 @@ private:
     /* Temporary list of tiles that need to be loaded */
     std::vector<std::tuple<double, TileSet*, const TileID*>> m_loadTasks;
 
-    /* List of tiles passed from <TileWorker> threads */
-    std::vector<std::shared_ptr<TileTask>> m_readyTiles;
-    std::mutex m_readyTileMutex;
 
 };
 
