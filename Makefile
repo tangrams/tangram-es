@@ -178,14 +178,14 @@ clean-tests:
 clean-benchmark:
 	rm -rf ${BENCH_BUILD_DIR}
 
-android: android-native-lib android-demo-apk
+android: android-demo-apk
 	@echo "run: 'adb install -r android/demo/build/outputs/apk/demo-debug.apk'"
 
 android-tangram-apk:
 	@cd android/ && \
 	./gradlew tangram:assembleDebug
 
-android-demo-apk:
+android-demo-apk: android-native-lib
 	@cd android/ && \
 	./gradlew demo:assembleDebug
 
