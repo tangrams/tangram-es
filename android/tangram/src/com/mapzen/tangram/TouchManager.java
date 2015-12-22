@@ -27,6 +27,7 @@ public class TouchManager implements OnTouchListener, OnScaleGestureListener,
     public enum Gestures {
         TAP,
         DOUBLE_TAP,
+        LONG_PRESS,
         PAN,
         ROTATE,
         SCALE,
@@ -40,6 +41,10 @@ public class TouchManager implements OnTouchListener, OnScaleGestureListener,
 
     public interface DoubleTapResponder {
         boolean onDoubleTap(float x, float y);
+    }
+
+    public interface LongPressResponder {
+        void onLongPress(float x, float y);
     }
 
     public interface PanResponder {
@@ -63,9 +68,10 @@ public class TouchManager implements OnTouchListener, OnScaleGestureListener,
     private RotateGestureDetector rotateGestureDetector;
     private ShoveGestureDetector shoveGestureDetector;
 
-    private PanResponder panResponder;
     private TapResponder tapResponder;
     private DoubleTapResponder doubleTapResponder;
+    private LongPressResponder longPressResponder;
+    private PanResponder panResponder;
     private ScaleResponder scaleResponder;
     private RotateResponder rotateResponder;
     private ShoveResponder shoveResponder;
@@ -90,28 +96,32 @@ public class TouchManager implements OnTouchListener, OnScaleGestureListener,
         }
     }
 
-    public void setPanResponder(PanResponder panResponder) {
-        this.panResponder = panResponder;
+    public void setTapResponder(TapResponder responder) {
+        this.tapResponder = responder;
     }
 
-    public void setTapResponder(TapResponder tapResponder) {
-        this.tapResponder = tapResponder;
+    public void setDoubleTapResponder(DoubleTapResponder responder) {
+        this.doubleTapResponder = responder;
     }
 
-    public void setDoubleTapResponder(DoubleTapResponder doubleTapResponder) {
-        this.doubleTapResponder = doubleTapResponder;
+    public void setLongPressResponder(LongPressResponder responder) {
+        this.longPressResponder = responder;
     }
 
-    public void setScaleResponder(ScaleResponder scaleResponder) {
-        this.scaleResponder = scaleResponder;
+    public void setPanResponder(PanResponder responder) {
+        this.panResponder = responder;
     }
 
-    public void setRotateResponder(RotateResponder rotateResponder) {
-        this.rotateResponder = rotateResponder;
+    public void setScaleResponder(ScaleResponder responder) {
+        this.scaleResponder = responder;
     }
 
-    public void setShoveResponder(ShoveResponder shoveResponder) {
-        this.shoveResponder = shoveResponder;
+    public void setRotateResponder(RotateResponder responder) {
+        this.rotateResponder = responder;
+    }
+
+    public void setShoveResponder(ShoveResponder responder) {
+        this.shoveResponder = responder;
     }
 
     // Set whether 'second' can detect while 'first' is in progress
@@ -221,7 +231,9 @@ public class TouchManager implements OnTouchListener, OnScaleGestureListener,
 
     @Override
     public void onLongPress(MotionEvent e) {
-        // TODO
+        if (isDetectionAllowed(Gestures.LONG_PRESS) && longPressResponder != null) {
+            longPressResponder.onLongPress(e.getX(), e.getY());
+        }
     }
 
     @Override
