@@ -25,37 +25,37 @@ import android.view.MotionEvent;
  */
 public class RotateGestureDetector extends TwoFingerGestureDetector {
 
-	/**
-	 * Listener which must be implemented which is used by RotateGestureDetector
-	 * to perform callbacks to any implementing class which is registered to a
-	 * RotateGestureDetector via the constructor.
-	 *
-	 * @see RotateGestureDetector.SimpleOnRotateGestureListener
-	 */
-	public interface OnRotateGestureListener {
-		public boolean onRotate(RotateGestureDetector detector);
-		public boolean onRotateBegin(RotateGestureDetector detector);
-		public void onRotateEnd(RotateGestureDetector detector);
-	}
+    /**
+     * Listener which must be implemented which is used by RotateGestureDetector
+     * to perform callbacks to any implementing class which is registered to a
+     * RotateGestureDetector via the constructor.
+     *
+     * @see RotateGestureDetector.SimpleOnRotateGestureListener
+     */
+    public interface OnRotateGestureListener {
+        public boolean onRotate(RotateGestureDetector detector);
+        public boolean onRotateBegin(RotateGestureDetector detector);
+        public void onRotateEnd(RotateGestureDetector detector);
+    }
 
-	/**
-	 * Helper class which may be extended and where the methods may be
-	 * implemented. This way it is not necessary to implement all methods
-	 * of OnRotateGestureListener.
-	 */
-	public static class SimpleOnRotateGestureListener implements OnRotateGestureListener {
-	    public boolean onRotate(RotateGestureDetector detector) {
-	        return false;
-	    }
+    /**
+     * Helper class which may be extended and where the methods may be
+     * implemented. This way it is not necessary to implement all methods
+     * of OnRotateGestureListener.
+     */
+    public static class SimpleOnRotateGestureListener implements OnRotateGestureListener {
+        public boolean onRotate(RotateGestureDetector detector) {
+            return false;
+        }
 
-	    public boolean onRotateBegin(RotateGestureDetector detector) {
-	        return true;
-	    }
+        public boolean onRotateBegin(RotateGestureDetector detector) {
+            return true;
+        }
 
-	    public void onRotateEnd(RotateGestureDetector detector) {
-	    	// Do nothing, overridden implementation may be used
-	    }
-	}
+        public void onRotateEnd(RotateGestureDetector detector) {
+            // Do nothing, overridden implementation may be used
+        }
+    }
 
 
     private final OnRotateGestureListener mListener;
@@ -65,7 +65,7 @@ public class RotateGestureDetector extends TwoFingerGestureDetector {
     private float mFocusY;
 
     public RotateGestureDetector(Context context, OnRotateGestureListener listener) {
-    	super(context);
+        super(context);
         mListener = listener;
     }
 
@@ -89,20 +89,20 @@ public class RotateGestureDetector extends TwoFingerGestureDetector {
                 // See if we have a sloppy gesture
                 mSloppyGesture = isSloppyGesture(event);
                 if(!mSloppyGesture){
-                	// No, start gesture now
+                    // No, start gesture now
                     mGestureInProgress = mListener.onRotateBegin(this);
                 }
-            	break;
+                break;
 
             case MotionEvent.ACTION_MOVE:
                 if (!mSloppyGesture) {
-                	break;
+                    break;
                 }
 
                 // See if we still have a sloppy gesture
                 mSloppyGesture = isSloppyGesture(event);
                 if(!mSloppyGesture){
-                	// No, start normal gesture now
+                    // No, start normal gesture now
                     mGestureInProgress = mListener.onRotateBegin(this);
                 }
 
@@ -110,7 +110,7 @@ public class RotateGestureDetector extends TwoFingerGestureDetector {
 
             case MotionEvent.ACTION_POINTER_UP:
                 if (!mSloppyGesture) {
-                	break;
+                    break;
                 }
 
                 break;
@@ -143,9 +143,9 @@ public class RotateGestureDetector extends TwoFingerGestureDetector {
             case MotionEvent.ACTION_MOVE:
                 updateStateByEvent(event);
 
-				// Only accept the event if our relative pressure is within
-				// a certain limit. This can help filter shaky data as a
-				// finger is lifted.
+                // Only accept the event if our relative pressure is within
+                // a certain limit. This can help filter shaky data as a
+                // finger is lifted.
                 if (mCurrPressure / mPrevPressure > PRESSURE_THRESHOLD) {
                     determineFocusPoint(event);
                     final boolean updatePrevious = mListener.onRotate(this);
@@ -183,10 +183,10 @@ public class RotateGestureDetector extends TwoFingerGestureDetector {
      *
      * @return The current rotation //difference in degrees.
      */
-	public float getRotationRadiansDelta() {
-		double diffRadians = Math.atan2(mPrevFingerDiffY, mPrevFingerDiffX) - Math.atan2(mCurrFingerDiffY, mCurrFingerDiffX);
-		return (float) (diffRadians);
-	}
+    public float getRotationRadiansDelta() {
+        double diffRadians = Math.atan2(mPrevFingerDiffY, mPrevFingerDiffX) - Math.atan2(mCurrFingerDiffY, mCurrFingerDiffX);
+        return (float) (diffRadians);
+    }
 
     /**
      * Return the rotation difference from the previous rotate event to the current
@@ -194,8 +194,8 @@ public class RotateGestureDetector extends TwoFingerGestureDetector {
      *
      * @return The current rotation //difference in degrees.
      */
-	public float getRotationDegreesDelta() {
-		double diffRadians = Math.atan2(mPrevFingerDiffY, mPrevFingerDiffX) - Math.atan2(mCurrFingerDiffY, mCurrFingerDiffX);
-		return (float) (diffRadians * 180 / Math.PI);
-	}
+    public float getRotationDegreesDelta() {
+        double diffRadians = Math.atan2(mPrevFingerDiffY, mPrevFingerDiffX) - Math.atan2(mCurrFingerDiffY, mCurrFingerDiffX);
+        return (float) (diffRadians * 180 / Math.PI);
+    }
 }
