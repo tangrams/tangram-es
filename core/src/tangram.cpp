@@ -172,14 +172,21 @@ void render() {
 
     // Set up openGL for new frame
     RenderState::depthWrite(GL_TRUE);
+    RenderState::stencilTest(GL_TRUE);
+    RenderState::stencilWrite(0xFF);
     auto& color = m_scene->background();
     RenderState::clearColor(color.r / 255.f, color.g / 255.f, color.b / 255.f, color.a / 255.f);
-    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT | GL_STENCIL_BUFFER_BIT);
 
     {
         std::lock_guard<std::mutex> lock(m_tilesMutex);
 
         // Loop over all styles
+        // 1. Draw all non proxy tiles, and filling the stencil buffer
+        RenderState::stencilTest(GL_TRUE);
+        RenderState::stencilWrite(0xFF);
+        RenderState::stencilOp(GL_KEEP, GL_KEEP, GL_REPLACE);
+
         for (const auto& style : m_scene->styles()) {
 
             // Set time uniforms style's shader programs
@@ -187,11 +194,62 @@ void render() {
 
             style->onBeginDrawFrame(*m_view, *m_scene);
 
-            // Loop over all tiles in m_tileSet
             for (const auto& tile : m_tileManager->getVisibleTiles()) {
-                tile->draw(*style, *m_view);
-            }
 
+                const auto& tileID = tile->getID();
+
+                if (tile->getProxyCounter() == 0) {
+                    RenderState::stencilFunc(GL_ALWAYS, 1, 0xFF);
+                    tile->draw(*style, *m_view);
+                }
+            }
+            style->onEndDrawFrame();
+        }
+
+        // 2. Disable Color buffer writting and invert stencil value wherever depth from proxy wins
+        RenderState::colorWrite(GL_FALSE, GL_FALSE, GL_FALSE, GL_FALSE);
+        RenderState::stencilTest(GL_TRUE);
+        RenderState::stencilWrite(0xFF);
+        RenderState::stencilOp(GL_KEEP, GL_KEEP, GL_INVERT);
+
+        glEnable(GL_POLYGON_OFFSET_FILL);
+        glPolygonOffset(1.0, 1.0);
+
+        for (const auto& style : m_scene->styles()) {
+
+            // Set time uniforms style's shader programs
+            style->getShaderProgram()->setUniformf("u_time", g_time);
+            style->onBeginDrawFrame(*m_view, *m_scene);
+
+            for (const auto& tile : m_tileManager->getVisibleTiles()) {
+                const auto& tileID = tile->getID();
+                if (tile->getProxyCounter() > 0) {
+                    RenderState::stencilFunc(GL_EQUAL, 1, 0xFF);
+                    tile->draw(*style, *m_view);
+                }
+            }
+            style->onEndDrawFrame();
+        }
+
+        // 3. Draw all proxy tiles, with stencil check and not no writes to stencil buffer
+        RenderState::colorWrite(GL_TRUE, GL_TRUE, GL_TRUE, GL_TRUE);
+        RenderState::stencilTest(GL_TRUE);
+        RenderState::stencilWrite(0x00);
+        glDisable(GL_POLYGON_OFFSET_FILL);
+
+        for (const auto& style : m_scene->styles()) {
+
+            // Set time uniforms style's shader programs
+            style->getShaderProgram()->setUniformf("u_time", g_time);
+            style->onBeginDrawFrame(*m_view, *m_scene);
+
+            for (const auto& tile : m_tileManager->getVisibleTiles()) {
+                const auto& tileID = tile->getID();
+                if (tile->getProxyCounter() > 0) {
+                    RenderState::stencilFunc(GL_NOTEQUAL, 1, 0xFF);
+                    tile->draw(*style, *m_view);
+                }
+            }
             style->onEndDrawFrame();
         }
     }
