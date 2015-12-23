@@ -135,7 +135,7 @@ void Tile::draw(const Style& _style, const View& _view) {
         float zoomAndProxy = m_proxyCounter > 0 ? -m_id.z : m_id.z;
 
         shader->setUniformMatrix4f("u_model", m_modelMatrix);
-        shader->setUniformf("u_tile_origin", m_tileOrigin.x, m_tileOrigin.y, zoomAndProxy);
+        shader->setUniformf("u_tile_origin", m_tileOrigin.x, m_tileOrigin.y, m_id.z);
 
         styleMesh->draw(*shader);
     }
