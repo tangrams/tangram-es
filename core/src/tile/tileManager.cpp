@@ -25,7 +25,6 @@ TileManager::TileManager() {
             if (task->hasData()) {
                 m_workers->enqueue(std::move(task));
             } else {
-                LOGD("No data for tile: %s", task->tileId().toString().c_str());
                 task->cancel();
             }
     }};
@@ -243,7 +242,8 @@ void TileManager::updateTileSet(TileSet& _tileSet) {
                     if (entry.isReady()) {
                         m_tiles.push_back(entry.tile);
 
-                    } else if (curTileId.z < maxZoom){
+                    } else if (curTileId.z < maxZoom) {
+                        // Cancel loading
                         removeTiles.push_back(curTileId);
                     }
                 } else {
@@ -342,7 +342,7 @@ void TileManager::loadTiles() {
         auto task = tileSet.source->createTask(tileId);
 
         if (task->hasData()) {
-            // NB: Set implicit 'loading' state
+            // Note: Set implicit 'loading' state
             entry.task = task;
             m_dataCallback.func(std::move(task));
 
@@ -428,9 +428,6 @@ bool TileManager::updateProxyTile(TileSet& _tileSet, TileEntry& _tile,
     {
         const auto& it = tiles.find(_proxyTileId);
         if (it != tiles.end()) {
-            // FIXME: this uses indirect proxy tiles
-            // even if a cached tile for the direct proxy
-            // may be available
             auto& entry = it->second;
             if (_tile.setProxy(_proxyId)) {
                 entry.incProxyCounter();
@@ -464,24 +461,23 @@ bool TileManager::updateProxyTile(TileSet& _tileSet, TileEntry& _tile,
 }
 
 void TileManager::updateProxyTiles(TileSet& _tileSet, const TileID& _tileID, TileEntry& _tile) {
+    // TODO: this should be improved to use the nearest proxy tile available.
+    // Currently it would use parent or grand*parent  as proxies even if the
+    // child proxies would be more appropriate
 
     // Try parent proxy
     auto parentID = _tileID.getParent();
     if (updateProxyTile(_tileSet, _tile, parentID, ProxyID::parent)) {
-        LOG("use parent proxy");
         return;
     }
     // Try grandparent
     if (updateProxyTile(_tileSet, _tile, parentID.getParent(), ProxyID::parent2)) {
-        LOG("use grand parent proxy");
         return;
     }
     // Try children
     if (m_view->s_maxZoom > _tileID.z) {
         for (int i = 0; i < 4; i++) {
-            if (updateProxyTile(_tileSet, _tile, _tileID.getChild(i), static_cast<ProxyID>(1 << i))) {
-                LOG("use child proxy");
-            }
+            updateProxyTile(_tileSet, _tile, _tileID.getChild(i), static_cast<ProxyID>(1 << i));
         }
     }
 }
