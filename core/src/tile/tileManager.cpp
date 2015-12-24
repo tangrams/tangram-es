@@ -136,19 +136,6 @@ void TileManager::updateTileSets() {
 
 void TileManager::updateTileSet(TileSet& _tileSet) {
 
-    auto& tiles = _tileSet.tiles;
-
-    std::vector<TileID> removeTiles;
-
-    const std::set<TileID>& visibleTiles = m_view->getVisibleTiles();
-
-    glm::dvec2 viewCenter(m_view->getPosition().x, -m_view->getPosition().y);
-
-    // Tile load request above this zoom-level will be canceled in order to
-    // not wait for tiles that are too small to contribute significantly to
-    // the current view.
-    int maxZoom = m_view->getZoom() + 2;
-
     m_tileSetChanged |= m_workers->checkPendingTiles();
 
     if (_tileSet.sourceGeneration != _tileSet.source->generation()) {
@@ -156,102 +143,114 @@ void TileManager::updateTileSet(TileSet& _tileSet) {
         m_tileSetChanged = true;
     }
 
-    if (m_view->changedOnLastUpdate() || m_tileSetChanged) {
+    if (!m_view->changedOnLastUpdate() && !m_tileSetChanged) {
+        return;
+    }
 
-        // Loop over visibleTiles and add any needed tiles to tileSet
-        auto curTilesIt = tiles.begin();
-        auto visTilesIt = visibleTiles.begin();
+    std::vector<TileID> removeTiles;
+    glm::dvec2 viewCenter(m_view->getPosition().x, -m_view->getPosition().y);
 
-        while (visTilesIt != visibleTiles.end() || curTilesIt != tiles.end()) {
+    // Tile load request above this zoom-level will be canceled in order to
+    // not wait for tiles that are too small to contribute significantly to
+    // the current view.
+    int maxZoom = m_view->getZoom() + 2;
 
-            auto& visTileId = visTilesIt == visibleTiles.end()
-                ? NOT_A_TILE
-                : *visTilesIt;
+    auto& tiles = _tileSet.tiles;
+    auto& visibleTiles = m_view->getVisibleTiles();
 
-            auto& curTileId = curTilesIt == tiles.end()
-                ? NOT_A_TILE
-                : curTilesIt->first;
+    // Loop over visibleTiles and add any needed tiles to tileSet
+    auto curTilesIt = tiles.begin();
+    auto visTilesIt = visibleTiles.begin();
 
-            if (visTileId == curTileId) {
-                // tiles in both sets match
-                assert(!(visTileId == NOT_A_TILE));
+    while (visTilesIt != visibleTiles.end() || curTilesIt != tiles.end()) {
 
-                auto& entry = curTilesIt->second;
-                entry.setVisible(true);
+        auto& visTileId = visTilesIt == visibleTiles.end()
+            ? NOT_A_TILE
+            : *visTilesIt;
 
+        auto& curTileId = curTilesIt == tiles.end()
+            ? NOT_A_TILE
+            : curTilesIt->first;
+
+        if (visTileId == curTileId) {
+            // tiles in both sets match
+            assert(!(visTileId == NOT_A_TILE));
+
+            auto& entry = curTilesIt->second;
+            entry.setVisible(true);
+
+            if (entry.newData()) {
+                clearProxyTiles(_tileSet, curTileId, entry, removeTiles);
+                entry.tile = std::move(entry.task->tile());
+                entry.task.reset();
+            }
+
+            if (entry.isReady()) {
+                m_tiles.push_back(entry.tile);
+
+                bool update = !entry.isLoading() &&
+                    (entry.tile->sourceGeneration() < _tileSet.source->generation());
+
+                if (update) {
+                    LOG("reload tile %s - %d %d", visTileId.toString().c_str(),
+                        entry.tile->sourceGeneration(),
+                        _tileSet.source->generation());
+
+                    // Tile needs update - enqueue for loading
+                    enqueueTask(_tileSet, visTileId, viewCenter);
+                }
+
+            } else if (!entry.isLoading()) {
+
+                // Not yet available - enqueue for loading
+                enqueueTask(_tileSet, visTileId, viewCenter);
+
+                if (m_tileSetChanged) {
+                    // check again for proxies
+                    updateProxyTiles(_tileSet, visTileId, entry);
+                }
+            }
+
+            ++curTilesIt;
+            ++visTilesIt;
+
+        } else if (curTileId > visTileId) {
+            // tileSet is missing an element present in visibleTiles
+            // NB: if (curTileId == NOT_A_TILE) it is always > visTileId
+            //     and if curTileId > visTileId, then visTileId cannot be
+            //     NOT_A_TILE. (for the current implementation of > operator)
+            assert(!(visTileId == NOT_A_TILE));
+
+            if (!addTile(_tileSet, visTileId)) {
+                // Not in cache - enqueue for loading
+                enqueueTask(_tileSet, visTileId, viewCenter);
+            }
+
+            ++visTilesIt;
+
+        } else {
+            // tileSet has a tile not present in visibleTiles
+            assert(!(curTileId == NOT_A_TILE));
+            auto& entry = curTilesIt->second;
+
+            if (entry.getProxyCounter() > 0) {
                 if (entry.newData()) {
                     clearProxyTiles(_tileSet, curTileId, entry, removeTiles);
                     entry.tile = std::move(entry.task->tile());
                     entry.task.reset();
                 }
-
                 if (entry.isReady()) {
                     m_tiles.push_back(entry.tile);
 
-                    bool update = !entry.isLoading() &&
-                        (entry.tile->sourceGeneration() < _tileSet.source->generation());
-
-                    if (update) {
-                        LOG("reload tile %s - %d %d", visTileId.toString().c_str(),
-                            entry.tile->sourceGeneration(),
-                            _tileSet.source->generation());
-
-                        // Tile needs update - enqueue for loading
-                        enqueueTask(_tileSet, visTileId, viewCenter);
-                    }
-
-                } else if (!entry.isLoading()) {
-
-                    // Not yet available - enqueue for loading
-                    enqueueTask(_tileSet, visTileId, viewCenter);
-
-                    if (m_tileSetChanged) {
-                        // check again for proxies
-                        updateProxyTiles(_tileSet, visTileId, entry);
-                    }
-                }
-
-                ++curTilesIt;
-                ++visTilesIt;
-
-            } else if (curTileId > visTileId) {
-                // tileSet is missing an element present in visibleTiles
-                // NB: if (curTileId == NOT_A_TILE) it is always > visTileId
-                //     and if curTileId > visTileId, then visTileId cannot be
-                //     NOT_A_TILE. (for the current implementation of > operator)
-                assert(!(visTileId == NOT_A_TILE));
-
-                if (!addTile(_tileSet, visTileId)) {
-                    // Not in cache - enqueue for loading
-                    enqueueTask(_tileSet, visTileId, viewCenter);
-                }
-
-                ++visTilesIt;
-
-            } else {
-                // tileSet has a tile not present in visibleTiles
-                assert(!(curTileId == NOT_A_TILE));
-                auto& entry = curTilesIt->second;
-
-                if (entry.getProxyCounter() > 0) {
-                    if (entry.newData()) {
-                        clearProxyTiles(_tileSet, curTileId, entry, removeTiles);
-                        entry.tile = std::move(entry.task->tile());
-                        entry.task.reset();
-                    }
-                    if (entry.isReady()) {
-                        m_tiles.push_back(entry.tile);
-
-                    } else if (curTileId.z < maxZoom) {
-                        // Cancel loading
-                        removeTiles.push_back(curTileId);
-                    }
-                } else {
+                } else if (curTileId.z < maxZoom) {
+                    // Cancel loading
                     removeTiles.push_back(curTileId);
                 }
-                entry.setVisible(false);
-                ++curTilesIt;
+            } else {
+                removeTiles.push_back(curTileId);
             }
+            entry.setVisible(false);
+            ++curTilesIt;
         }
     }
 
