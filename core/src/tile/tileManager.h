@@ -87,6 +87,8 @@ private:
         TileEntry(){}
         TileEntry(std::shared_ptr<Tile>& _tile) : tile(_tile) {}
 
+        ~TileEntry() { cancelTask(); }
+
         std::shared_ptr<Tile> tile;
         std::shared_ptr<TileTask> task;
 
@@ -97,7 +99,6 @@ private:
 
         bool isReady() { return bool(tile); }
         bool isLoading() {
-            // FIXME remove second condition (see m_dataCallback)
             return bool(task) && !task->isCanceled();
         }
 
