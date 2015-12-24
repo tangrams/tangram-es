@@ -33,13 +33,15 @@ public:
     void addPoly(const Properties& _tags, const std::vector<Coordinates>& _poly);
 
     virtual bool loadTileData(std::shared_ptr<TileTask>&& _task, TileTaskCb _cb) override;
-    virtual bool getTileData(std::shared_ptr<TileTask>& _task) override;
+    std::shared_ptr<TileTask> createTask(TileID _tileId) override;
+
     virtual void cancelLoadingTile(const TileID& _tile) override {};
     virtual void clearData() override;
 
 protected:
 
-    virtual std::shared_ptr<TileData> parse(const Tile& _tile, std::vector<char>& _rawData) const override;
+    virtual std::shared_ptr<TileData> parse(const TileTask& _task,
+                                            const MapProjection& _projection) const override;
 
     std::unique_ptr<GeoJSONVT> m_store;
     mutable std::mutex m_mutexStore;
