@@ -1,5 +1,17 @@
+list:
+	@echo "Specify a target to build with one of the following tasks:"
+	@echo "  android"
+	@echo "  osx"
+	@echo "  xcode"
+	@echo "  ios"
+	@echo "  ios-sim"
+	@echo "  linux"
+	@echo "  rpi"
+	@echo "  tests"
+
 all: android osx ios
 
+.PHONY: list
 .PHONY: clean
 .PHONY: clean-android
 .PHONY: clean-osx
@@ -80,9 +92,9 @@ else
 	ANDROID_TOOLCHAIN = arm-linux-androideabi-clang3.6
 endif
 
-#$(info ANDROID_ARCH is ${ANDROID_ARCH}) 
-#$(info ANDROID_TOOLCHAIN is ${ANDROID_TOOLCHAIN}) 
-#$(info ANDROID_BUILD_DIR is ${ANDROID_BUILD_DIR}) 
+#$(info ANDROID_ARCH is ${ANDROID_ARCH})
+#$(info ANDROID_TOOLCHAIN is ${ANDROID_TOOLCHAIN})
+#$(info ANDROID_BUILD_DIR is ${ANDROID_BUILD_DIR})
 
 ifndef ANDROID_API_LEVEL
 	ANDROID_API_LEVEL = android-15
@@ -149,7 +161,15 @@ LINUX_CMAKE_PARAMS = \
 	-DPLATFORM_TARGET=linux \
 	-DCMAKE_EXPORT_COMPILE_COMMANDS=TRUE
 
-clean: clean-android clean-osx clean-ios clean-rpi clean-tests clean-xcode clean-linux
+clean:
+	@echo "Specify a target to clean with one of the following tasks:"
+	@echo "  clean-android"
+	@echo "  clean-osx"
+	@echo "  clean-xcode"
+	@echo "  clean-ios"
+	@echo "  clean-linux"
+	@echo "  clean-rpi"
+	@echo "  clean-tests"
 
 clean-android:
 	@cd android/ && \
