@@ -157,6 +157,7 @@ public class TouchManager implements OnTouchListener, OnScaleGestureListener,
 
     private boolean isDetectionAllowed(Gestures g) {
         boolean [] allowed = allowedSimultaneousGestures[g.ordinal()];
+        // TODO: Replace boolean array with bitmask
         for (int i = 0; i < allowed.length; ++i) {
             if (!allowed[i] && detectedGestures[i]) {
                 return false;
@@ -221,6 +222,7 @@ public class TouchManager implements OnTouchListener, OnScaleGestureListener,
 
     @Override
     public boolean onDown(MotionEvent e) {
+        // TODO: Stop fling when new touch is placed
         return false;
     }
 
@@ -247,6 +249,9 @@ public class TouchManager implements OnTouchListener, OnScaleGestureListener,
             if (panResponder == null) {
                 return false;
             }
+
+            // TODO: Predictive panning
+            // Use estimated velocity to counteract input->render lag
 
             float x = 0, y = 0;
             int n = e2.getPointerCount();
