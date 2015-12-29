@@ -222,7 +222,13 @@ public class TouchManager implements OnTouchListener, OnScaleGestureListener,
 
     @Override
     public boolean onDown(MotionEvent e) {
-        // TODO: Stop fling when new touch is placed
+        // When new touch is placed, dispatch a zero-distance pan;
+        // this provides an opportunity to halt any current motion.
+        if (isDetectionAllowed(Gestures.PAN) && panResponder != null) {
+            final float x = e.getX();
+            final float y = e.getY();
+            return panResponder.onPan(x, y, x, y);
+        }
         return false;
     }
 
