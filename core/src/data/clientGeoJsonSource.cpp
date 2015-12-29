@@ -9,14 +9,15 @@
 #include "data/propertyItem.h"
 #include "data/tileData.h"
 #include "tile/tile.h"
+#include "view/view.h"
 
 using namespace mapbox::util;
 
 namespace Tangram {
 
 const double extent = 4096;
-const uint8_t maxZoom = 18;
-const uint8_t indexMaxZoom = 18;
+const uint8_t maxZoom = (uint8_t)View::s_maxZoom;
+const uint8_t indexMaxZoom = maxZoom;
 const uint32_t indexMaxPoints = 100000;
 double tolerance = 1E-8;
 
