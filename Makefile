@@ -80,9 +80,9 @@ else
 	ANDROID_TOOLCHAIN = arm-linux-androideabi-clang3.6
 endif
 
-#$(info ANDROID_ARCH is ${ANDROID_ARCH}) 
-#$(info ANDROID_TOOLCHAIN is ${ANDROID_TOOLCHAIN}) 
-#$(info ANDROID_BUILD_DIR is ${ANDROID_BUILD_DIR}) 
+#$(info ANDROID_ARCH is ${ANDROID_ARCH})
+#$(info ANDROID_TOOLCHAIN is ${ANDROID_TOOLCHAIN})
+#$(info ANDROID_BUILD_DIR is ${ANDROID_BUILD_DIR})
 
 ifndef ANDROID_API_LEVEL
 	ANDROID_API_LEVEL = android-15
@@ -152,10 +152,12 @@ LINUX_CMAKE_PARAMS = \
 clean: clean-android clean-osx clean-ios clean-rpi clean-tests clean-xcode clean-linux
 
 clean-android:
-	@cd android/ && \
-	./gradlew clean
 	rm -rf ${ANDROID_BUILD_DIR}
+	rm -rf android/build
+	rm -rf android/tangram/build
 	rm -rf android/tangram/libs
+	rm -rf android/demo/build
+	rm -rf android/demo/libs
 
 clean-osx:
 	rm -rf ${OSX_BUILD_DIR}
