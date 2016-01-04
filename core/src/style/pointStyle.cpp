@@ -53,22 +53,62 @@ void PointStyle::constructShaderProgram() {
     m_shaderProgram->addSourceBlock("defines", defines);
 }
 
-VboMesh* PointStyle::newMesh() const {
-    return new LabelMesh(m_vertexLayout, m_drawMode);
+void PointStyle::onBeginDrawFrame(const View& _view, Scene& _scene, int _textureUnit) {
+    if (m_spriteAtlas) {
+        m_spriteAtlas->bind(0);
+    } else if (m_texture) {
+        m_texture->update(0);
+        m_texture->bind(0);
+    }
+
+    m_shaderProgram->setUniformi("u_tex", 0);
+    m_shaderProgram->setUniformMatrix4f("u_ortho", _view.getOrthoViewportMatrix());
+
+    Style::onBeginDrawFrame(_view, _scene, 1);
 }
 
-bool PointStyle::checkRule(const DrawRule& _rule) const {
-    uint32_t checkColor;
+namespace {
+
+struct Builder : public StyleBuilder {
+
+    std::shared_ptr<SpriteAtlas> m_spriteAtlas;
+
+    std::unique_ptr<LabelMesh> m_mesh;
+
+    virtual void addPolygon(const Polygon& _polygon, const Properties& _props, const DrawRule& _rule) override;
+    virtual void addLine(const Line& _line, const Properties& _props, const DrawRule& _rule) override;
+    virtual void addPoint(const Point& _line, const Properties& _props, const DrawRule& _rule) override;
+
+    virtual bool checkRule(const DrawRule& _rule) const override;
+
+    void pushQuad(std::vector<Label::Vertex>& _vertices, const glm::vec2& _size, const glm::vec2& _uvBL,
+                  const glm::vec2& _uvTR, unsigned int _color, float _extrudeScale) const;
+
+    bool getUVQuad(PointStyle::Parameters& _params, glm::vec4& _quad) const;
+
+    PointStyle::Parameters applyRule(const DrawRule& _rule, const Properties& _props) const;
+
+    virtual void initMesh() override { m_mesh = std::make_unique<LabelMesh>(m_vertexLayout, m_drawMode); }
+    virtual std::unique_ptr<VboMesh> build() override { return std::move(m_mesh); };
+
+    Builder(std::shared_ptr<VertexLayout> _vertexLayout, GLenum _drawMode,
+            std::shared_ptr<SpriteAtlas> _spriteAtlas)
+        : StyleBuilder(_vertexLayout, _drawMode), m_spriteAtlas(_spriteAtlas) {}
+
+};
+
+bool Builder::checkRule(const DrawRule& _rule) const {
+    //uint32_t checkColor;
     // require a color or texture atlas/texture to be valid
-    if (!_rule.get(StyleParamKey::color, checkColor) && !m_texture && !m_spriteAtlas) {
-        return false;
-    }
+    // if (!_rule.get(StyleParamKey::color, checkColor) && !m_texture && !m_spriteAtlas) {
+    //     return false;
+    // }
     return true;
 }
 
-PointStyle::Parameters PointStyle::applyRule(const DrawRule& _rule, const Properties& _props, float _zoom) const {
+auto Builder::applyRule(const DrawRule& _rule, const Properties& _props) const -> PointStyle::Parameters {
 
-    Parameters p;
+    PointStyle::Parameters p;
     glm::vec2 size;
     std::string anchor;
 
@@ -84,6 +124,8 @@ PointStyle::Parameters PointStyle::applyRule(const DrawRule& _rule, const Proper
     _rule.get(StyleParamKey::transition_selected_time, p.labelOptions.selectTransition.time);
     _rule.get(StyleParamKey::transition_show_time, p.labelOptions.showTransition.time);
     _rule.get(StyleParamKey::anchor, anchor);
+
+    float _zoom = m_tile->getID().z;
 
     auto sizeParam = _rule.findParameter(StyleParamKey::size);
     if (sizeParam.stops && sizeParam.value.is<float>()) {
@@ -107,13 +149,13 @@ PointStyle::Parameters PointStyle::applyRule(const DrawRule& _rule, const Proper
         p.labelOptions.properties = std::make_shared<Properties>(_props);
     }
 
-    std::hash<Parameters> hash;
+    std::hash<PointStyle::Parameters> hash;
     p.labelOptions.paramHash = hash(p);
 
     return p;
 }
 
-void PointStyle::pushQuad(std::vector<Label::Vertex>& _vertices, const glm::vec2& _size, const glm::vec2& _uvBL,
+void Builder::pushQuad(std::vector<Label::Vertex>& _vertices, const glm::vec2& _size, const glm::vec2& _uvBL,
                           const glm::vec2& _uvTR, unsigned int _color, float _extrudeScale) const {
 
     float es = _extrudeScale;
@@ -128,7 +170,7 @@ void PointStyle::pushQuad(std::vector<Label::Vertex>& _vertices, const glm::vec2
     _vertices.push_back({{_size.x,  -_size.y}, {uvTR.x, uvBL.y}, { es, -es }, _color});
 }
 
-bool PointStyle::getUVQuad(Parameters& _params, glm::vec4& _quad) const {
+bool Builder::getUVQuad(PointStyle::Parameters& _params, glm::vec4& _quad) const {
     _quad = glm::vec4(0.0, 0.0, 1.0, 1.0);
 
     if (m_spriteAtlas) {
@@ -154,37 +196,39 @@ bool PointStyle::getUVQuad(Parameters& _params, glm::vec4& _quad) const {
         }
     }
 
-    _params.size *= m_pixelScale;
+    // FIXME
+    // _params.size *= m_pixelScale;
 
     return true;
 }
 
-void PointStyle::buildPoint(const Point& _point, const DrawRule& _rule, const Properties& _props,
-                            VboMesh& _mesh, Tile& _tile) const {
-    Parameters p = applyRule(_rule, _props, _tile.getID().z);
+void Builder::addPoint(const Point& _point, const Properties& _props,
+                                   const DrawRule& _rule) {
+
+    PointStyle::Parameters p = applyRule(_rule, _props);
     glm::vec4 uvsQuad;
 
     if (!getUVQuad(p, uvsQuad)) {
         return;
     }
 
-    auto& mesh = static_cast<LabelMesh&>(_mesh);
     Label::Transform transform = { glm::vec2(_point) };
 
-    mesh.addLabel(std::make_unique<SpriteLabel>(transform, p.size, mesh, _mesh.numVertices(),
-                p.labelOptions, p.extrudeScale, p.anchor));
+    m_mesh->addLabel(std::make_unique<SpriteLabel>(transform, p.size, *m_mesh, m_mesh->numVertices(),
+                                                   p.labelOptions, p.extrudeScale, p.anchor));
 
     std::vector<Label::Vertex> vertices;
 
     vertices.reserve(4);
     pushQuad(vertices, p.size, {uvsQuad.x, uvsQuad.y}, {uvsQuad.z, uvsQuad.w},
             p.color, p.extrudeScale);
-    mesh.addVertices(std::move(vertices), {});
+    m_mesh->addVertices(std::move(vertices), {});
 }
 
-void PointStyle::buildLine(const Line& _line, const DrawRule& _rule, const Properties& _props,
-                           VboMesh& _mesh, Tile& _tile) const {
-    Parameters p = applyRule(_rule, _props, _tile.getID().z);
+void Builder::addLine(const Line& _line, const Properties& _props,
+                                  const DrawRule& _rule) {
+
+    PointStyle::Parameters p = applyRule(_rule, _props);
     glm::vec4 uvsQuad;
 
     if (!getUVQuad(p, uvsQuad)) {
@@ -192,25 +236,25 @@ void PointStyle::buildLine(const Line& _line, const DrawRule& _rule, const Prope
     }
 
     std::vector<Label::Vertex> vertices;
-    auto& mesh = static_cast<LabelMesh&>(_mesh);
 
     vertices.reserve(4 * _line.size());
 
     for (size_t i = 0; i < _line.size(); ++i) {
         Label::Transform transform = { glm::vec2(_line[i]) };
 
-        mesh.addLabel(std::make_unique<SpriteLabel>(transform, p.size, mesh, _mesh.numVertices(),
-                    p.labelOptions, p.extrudeScale, p.anchor));
+        m_mesh->addLabel(std::make_unique<SpriteLabel>(transform, p.size, *m_mesh, m_mesh->numVertices(),
+                                                       p.labelOptions, p.extrudeScale, p.anchor));
         pushQuad(vertices, p.size, {uvsQuad.x, uvsQuad.y}, {uvsQuad.z, uvsQuad.w},
                 p.color, p.extrudeScale);
     }
 
-    mesh.addVertices(std::move(vertices), {});
+    m_mesh->addVertices(std::move(vertices), {});
 }
 
-void PointStyle::buildPolygon(const Polygon& _polygon, const DrawRule& _rule, const Properties& _props,
-                              VboMesh& _mesh, Tile& _tile) const {
-    Parameters p = applyRule(_rule, _props, _tile.getID().z);
+void Builder::addPolygon(const Polygon& _polygon, const Properties& _props,
+                                     const DrawRule& _rule) {
+
+    PointStyle::Parameters p = applyRule(_rule, _props);
     glm::vec4 uvsQuad;
 
     if (!getUVQuad(p, uvsQuad)) {
@@ -218,7 +262,6 @@ void PointStyle::buildPolygon(const Polygon& _polygon, const DrawRule& _rule, co
     }
 
     std::vector<Label::Vertex> vertices;
-    auto& mesh = static_cast<LabelMesh&>(_mesh);
 
     if (!p.centroid) {
 
@@ -231,7 +274,7 @@ void PointStyle::buildPolygon(const Polygon& _polygon, const DrawRule& _rule, co
             for (auto point : line) {
                 Label::Transform transform = { glm::vec2(point) };
 
-                mesh.addLabel(std::make_unique<SpriteLabel>(transform, p.size, mesh, _mesh.numVertices(),
+                m_mesh->addLabel(std::make_unique<SpriteLabel>(transform, p.size, *m_mesh, m_mesh->numVertices(),
                             p.labelOptions, p.extrudeScale, p.anchor));
                 pushQuad(vertices, p.size, {uvsQuad.x, uvsQuad.y}, {uvsQuad.z, uvsQuad.w},
                         p.color, p.extrudeScale);
@@ -242,27 +285,19 @@ void PointStyle::buildPolygon(const Polygon& _polygon, const DrawRule& _rule, co
         glm::vec2 c = centroid(_polygon);
         Label::Transform transform = { c };
 
-        mesh.addLabel(std::make_unique<SpriteLabel>(transform, p.size, mesh, _mesh.numVertices(),
+        m_mesh->addLabel(std::make_unique<SpriteLabel>(transform, p.size, *m_mesh, m_mesh->numVertices(),
                     p.labelOptions, p.extrudeScale, p.anchor));
         pushQuad(vertices, p.size,
                 {uvsQuad.x, uvsQuad.y}, {uvsQuad.z, uvsQuad.w}, p.color, p.extrudeScale);
     }
 
-    mesh.addVertices(std::move(vertices), {});
+    m_mesh->addVertices(std::move(vertices), {});
 }
 
-void PointStyle::onBeginDrawFrame(const View& _view, Scene& _scene, int _textureUnit) {
-    if (m_spriteAtlas) {
-        m_spriteAtlas->bind(0);
-    } else if (m_texture) {
-        m_texture->update(0);
-        m_texture->bind(0);
-    }
+}
 
-    m_shaderProgram->setUniformi("u_tex", 0);
-    m_shaderProgram->setUniformMatrix4f("u_ortho", _view.getOrthoViewportMatrix());
-
-    Style::onBeginDrawFrame(_view, _scene, 1);
+std::unique_ptr<StyleBuilder> PointStyle::createBuilder() const {
+    return std::make_unique<Builder>(m_vertexLayout, m_drawMode, m_spriteAtlas);
 }
 
 }

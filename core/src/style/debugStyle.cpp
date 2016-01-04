@@ -44,6 +44,11 @@ void DebugStyle::constructShaderProgram() {
 
 }
 
+std::unique_ptr<StyleBuilder> DebugStyle::createBuilder() const {
+    return nullptr; /// std::make_unique<Builder>(m_fontContext, m_sdf);
+}
+
+#if 0
 void DebugStyle::onBeginBuildTile(Tile &_tile) const {
 
     if (Tangram::getDebugFlag(Tangram::DebugFlags::tile_bounds)) {
@@ -68,5 +73,6 @@ void DebugStyle::onBeginBuildTile(Tile &_tile) const {
 
     }
 }
+#endif
 
 }

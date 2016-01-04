@@ -15,6 +15,7 @@ namespace Tangram {
 class Scene;
 struct Feature;
 struct StyleParam;
+class StyleBuilder;
 
 enum class StyleParamKey : uint8_t;
 enum class FilterGlobal : uint8_t;
@@ -68,6 +69,10 @@ public:
     void setGlobal(const std::string& _key, const Value& _value);
     const Value& getGlobal(const std::string& _key) const;
 
+    StyleBuilder* getStyleBuilder(const std::string& _name);
+
+    const auto& styleBuilders() { return m_styleBuilder; }
+
 private:
     static int jsGetProperty(duk_context *_ctx);
     static int jsHasProperty(duk_context *_ctx);
@@ -83,6 +88,8 @@ private:
     int32_t m_sceneId = -1;
 
     float m_globalZoom = -1;
+
+    fastmap<std::string, std::unique_ptr<StyleBuilder>> m_styleBuilder;
 };
 
 }

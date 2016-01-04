@@ -16,6 +16,11 @@ DebugTextStyle::DebugTextStyle(std::shared_ptr<FontContext> _fontContext, FontID
       m_font(_fontId), m_fontSize(_fontSize) {
 }
 
+std::unique_ptr<StyleBuilder> DebugTextStyle::createBuilder() const {
+    return nullptr; /// std::make_unique<Builder>(m_fontContext, m_sdf);
+}
+
+#if 0
 void DebugTextStyle::onBeginBuildTile(Tangram::Tile &_tile) const {
 
     Parameters params;
@@ -41,7 +46,7 @@ void DebugTextStyle::onBeginBuildTile(Tangram::Tile &_tile) const {
         onEndBuildTile(_tile);
 
     }
-
 }
+#endif
 
 }

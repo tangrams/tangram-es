@@ -35,6 +35,43 @@ enum class Blending : int8_t {
     overlay,
 };
 
+class StyleBuilder {
+public:
+
+    StyleBuilder(std::shared_ptr<VertexLayout> _vertexLayout, GLenum _drawMode)
+        : m_vertexLayout(_vertexLayout), m_drawMode(_drawMode) {}
+
+    /* <VertexLayout> shared between meshes using this style */
+    std::shared_ptr<VertexLayout> m_vertexLayout;
+
+    /* Draw mode to pass into <VboMesh>es created with this style */
+    GLenum m_drawMode;
+
+    const Tile* m_tile;
+
+    void beginTile(const Tile& _tile) {
+        m_tile = &_tile;
+        initMesh();
+    }
+
+    void addFeature(const Feature& _feat, const DrawRule& _rule);
+
+    /* Build styled vertex data for point geometry */
+    virtual void addPoint(const Point& _point, const Properties& _props, const DrawRule& _rule);
+
+    /* Build styled vertex data for line geometry */
+    virtual void addLine(const Line& _line, const Properties& _props, const DrawRule& _rule);
+
+    /* Build styled vertex data for polygon geometry */
+    virtual void addPolygon(const Polygon& _polygon, const Properties& _props, const DrawRule& _rule);
+
+    virtual void initMesh() = 0;
+
+    /* Create a new mesh object using the vertex layout corresponding to this style */
+    virtual std::unique_ptr<VboMesh> build() = 0;
+
+    virtual bool checkRule(const DrawRule& _rule) const;
+};
 
 /* Means of constructing and rendering map geometry
  *
@@ -86,18 +123,6 @@ protected:
     /* Create <ShaderProgram> for this style; subclasses must implement this and call it on construction */
     virtual void constructShaderProgram() = 0;
 
-    /* Build styled vertex data for point geometry and add it to the given <VboMesh> */
-    virtual void buildPoint(const Point& _point, const DrawRule& _rule, const Properties& _props, VboMesh& _mesh, Tile& _tile) const;
-
-    /* Build styled vertex data for line geometry and add it to the given <VboMesh> */
-    virtual void buildLine(const Line& _line, const DrawRule& _rule, const Properties& _props, VboMesh& _mesh, Tile& _tile) const;
-
-    /* Build styled vertex data for polygon geometry and add it to the given <VboMesh> */
-    virtual void buildPolygon(const Polygon& _polygon, const DrawRule& _rule, const Properties& _props, VboMesh& _mesh, Tile& _tile) const;
-
-    /* Create a new mesh object using the vertex layout corresponding to this style */
-    virtual VboMesh* newMesh() const = 0;
-
     /* Set uniform values when @_updateUniforms is true,
        and bind textures starting at @_textureUnit */
     void setupShaderUniforms(int _textureUnit, Scene& _scene);
@@ -142,15 +167,13 @@ public:
     /* Make this style ready to be used (call after all needed properties are set) */
     virtual void build(const std::vector<std::unique_ptr<Light>>& _lights);
 
-    virtual bool checkRule(const DrawRule& _rule) const;
+    // virtual bool checkRule(const DrawRule& _rule) const;
 
-    void buildFeature(Tile& _tile, const Feature& _feat, const DrawRule& _rule) const;
+    // /* Perform any needed setup to process the data for a tile */
+    // virtual void onBeginBuildTile(Tile& _tile) const;
 
-    /* Perform any needed setup to process the data for a tile */
-    virtual void onBeginBuildTile(Tile& _tile) const;
-
-    /* Perform any needed teardown after processing data for a tile */
-    virtual void onEndBuildTile(Tile& _tile) const;
+    // /* Perform any needed teardown after processing data for a tile */
+    // virtual void onEndBuildTile(Tile& _tile) const;
 
     /* Perform any setup needed before drawing each frame
      * _textUnit is the next available texture unit
@@ -178,6 +201,8 @@ public:
     const uint32_t& getID() const { return m_id; }
 
     std::vector<StyleUniform>& styleUniforms() { return m_styleUniforms; }
+
+    virtual std::unique_ptr<StyleBuilder> createBuilder() const = 0;
 
 };
 
