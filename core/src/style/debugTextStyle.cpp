@@ -16,32 +16,43 @@ DebugTextStyle::DebugTextStyle(std::shared_ptr<FontContext> _fontContext, FontID
       m_font(_fontId), m_fontSize(_fontSize) {
 }
 
-void DebugTextStyle::onBeginBuildTile(Tangram::Tile &_tile) const {
+namespace {
+struct Builder : public StyleBuilder {
 
-    Parameters params;
+    Builder(std::shared_ptr<VertexLayout> _vertexLayout, GLenum _drawMode,
+            std::shared_ptr<FontContext> _fontContext, TextStyle::Parameters _params)
+        : StyleBuilder(_vertexLayout, _drawMode),
+          m_fontContext(_fontContext), m_params(_params) {}
+
+    std::shared_ptr<FontContext> m_fontContext;
+    TextStyle::Parameters m_params;
+
+    void initMesh() override {}
+
+    std::unique_ptr<VboMesh> build() override {
+        if (!Tangram::getDebugFlag(Tangram::DebugFlags::tile_infos)) {
+            return nullptr;
+        }
+
+        m_params.text = m_tile->getID().toString();
+
+        auto mesh = std::make_unique<TextBuffer>(m_vertexLayout);
+        mesh->addLabel(m_params, { glm::vec2(.5f) }, Label::Type::debug, *m_fontContext);
+
+        return std::move(mesh);
+    }
+};
+}
+
+std::unique_ptr<StyleBuilder> DebugTextStyle::createBuilder() const {
+    TextStyle::Parameters params;
     params.fontId = m_font;
     params.fontSize = m_fontSize * m_pixelScale;
     params.blurSpread = m_sdf ? 2.5f : 0.0f;
     params.fill = 0xdc3522ff;
-    params.text = _tile.getID().toString();
 
-    TextStyle::onBeginBuildTile(_tile);
-
-    if (Tangram::getDebugFlag(Tangram::DebugFlags::tile_infos)) {
-
-        auto& mesh = _tile.getMesh(*this);
-        if (!mesh) {
-            mesh.reset(newMesh());
-        }
-
-        auto& buffer = static_cast<TextBuffer&>(*mesh);
-
-        buffer.addLabel(params, { glm::vec2(.5f) }, Label::Type::debug, *m_fontContext);
-
-        onEndBuildTile(_tile);
-
-    }
-
+    return std::make_unique<Builder>(m_vertexLayout, m_drawMode,
+                                     m_fontContext, params);
 }
 
 }

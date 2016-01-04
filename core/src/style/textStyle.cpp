@@ -55,18 +55,55 @@ void TextStyle::constructShaderProgram() {
     m_shaderProgram->addSourceBlock("defines", defines);
 }
 
-VboMesh* TextStyle::newMesh() const {
-    return new TextBuffer(m_vertexLayout);
+void TextStyle::onBeginDrawFrame(const View& _view, Scene& _scene, int _textureUnit) {
+    m_fontContext->bindAtlas(0);
+
+    m_shaderProgram->setUniformf("u_uv_scale_factor",
+                                 1.0f / m_fontContext->getAtlasResolution());
+    m_shaderProgram->setUniformi("u_tex", 0);
+    m_shaderProgram->setUniformMatrix4f("u_ortho", _view.getOrthoViewportMatrix());
+
+    Style::onBeginDrawFrame(_view, _scene, 1);
 }
 
-bool TextStyle::checkRule(const DrawRule& _rule) const {
+namespace {
+
+struct Builder : public StyleBuilder {
+
+    std::shared_ptr<FontContext> m_fontContext;
+
+    bool m_sdf;
+    // FIXME
+    float m_pixelScale = 1;
+
+    std::unique_ptr<TextBuffer> m_mesh;
+
+    virtual void addPolygon(const Polygon& _polygon, const Properties& _props, const DrawRule& _rule) override;
+    virtual void addLine(const Line& _line, const Properties& _props, const DrawRule& _rule) override;
+    virtual void addPoint(const Point& _line, const Properties& _props, const DrawRule& _rule) override;
+
+    virtual bool checkRule(const DrawRule& _rule) const override;
+
+    TextStyle::Parameters applyRule(const DrawRule& _rule, const Properties& _props) const;
+
+    virtual void initMesh() override { m_mesh = std::make_unique<TextBuffer>(m_vertexLayout); }
+    virtual std::unique_ptr<VboMesh> build() override { return std::move(m_mesh); };
+
+    Builder(std::shared_ptr<VertexLayout> _vertexLayout, GLenum _drawMode,
+            std::shared_ptr<FontContext> _fontContext, bool _sdf)
+        : StyleBuilder(_vertexLayout, _drawMode),
+          m_fontContext(_fontContext), m_sdf(_sdf) {}
+
+};
+
+bool Builder::checkRule(const DrawRule& _rule) const {
     return true;
 }
 
-auto TextStyle::applyRule(const DrawRule& _rule, const Properties& _props) const -> Parameters {
+auto Builder::applyRule(const DrawRule& _rule, const Properties& _props) const -> TextStyle::Parameters {
     const static std::string key_name("name");
 
-    Parameters p;
+    TextStyle::Parameters p;
 
     std::string fontFamily, fontWeight, fontStyle, transform, align, anchor;
     glm::vec2 offset;
@@ -94,7 +131,6 @@ auto TextStyle::applyRule(const DrawRule& _rule, const Properties& _props) const
     _rule.get(StyleParamKey::transform, transform);
     _rule.get(StyleParamKey::align, align);
     _rule.get(StyleParamKey::anchor, anchor);
-    _rule.get(StyleParamKey::visible, p.visible);
     _rule.get(StyleParamKey::priority, p.labelOptions.priority);
     _rule.get(StyleParamKey::collide, p.labelOptions.collide);
     _rule.get(StyleParamKey::transition_hide_time, p.labelOptions.hideTransition.time);
@@ -147,62 +183,49 @@ auto TextStyle::applyRule(const DrawRule& _rule, const Properties& _props) const
     float boundingBoxBuffer = -p.fontSize / 2.f;
     p.labelOptions.buffer = boundingBoxBuffer;
 
-    std::hash<Parameters> hash;
+    std::hash<TextStyle::Parameters> hash;
     p.labelOptions.paramHash = hash(p);
 
     return p;
 }
 
-void TextStyle::buildPoint(const Point& _point, const DrawRule& _rule, const Properties& _props,
-                           VboMesh& _mesh, Tile& _tile) const {
+void Builder::addPoint(const Point& _point, const Properties& _props, const DrawRule& _rule) {
 
-    auto& buffer = static_cast<TextBuffer&>(_mesh);
-
-    Parameters params = applyRule(_rule, _props);
+    TextStyle::Parameters params = applyRule(_rule, _props);
 
    // std::hash<Parameters> hash;
    // auto h = hash(params);
    // LOG("Hash %d", h);
 
-    if (!params.visible || !params.isValid()) { return; }
+    if (!params.isValid()) { return; }
 
-    buffer.addLabel(params, { glm::vec2(_point), glm::vec2(_point) },
+    m_mesh->addLabel(params, { glm::vec2(_point), glm::vec2(_point) },
                     Label::Type::point, *m_fontContext);
 }
 
-void TextStyle::buildLine(const Line& _line, const DrawRule& _rule, const Properties& _props,
-        VboMesh& _mesh, Tile& _tile) const {
+void Builder::addLine(const Line& _line, const Properties& _props, const DrawRule& _rule) {
 
-    auto& buffer = static_cast<TextBuffer&>(_mesh);
+    TextStyle::Parameters params = applyRule(_rule, _props);
 
-    Parameters params = applyRule(_rule, _props);
-
-    if (!params.visible || !params.isValid()) { return; }
+    if (!params.isValid()) { return; }
 
     for (size_t i = 0; i < _line.size() - 1; i++) {
         glm::vec2 p1 = glm::vec2(_line[i]);
         glm::vec2 p2 = glm::vec2(_line[i + 1]);
 
-        buffer.addLabel(params, { p1, p2 }, Label::Type::line, *m_fontContext);
+        m_mesh->addLabel(params, { p1, p2 }, Label::Type::line, *m_fontContext);
     }
 }
 
-void TextStyle::buildPolygon(const Polygon& _polygon, const DrawRule& _rule,
-                             const Properties& _props, VboMesh& _mesh, Tile& _tile) const {
+void Builder::addPolygon(const Polygon& _polygon, const Properties& _props, const DrawRule& _rule) {
     Point p = glm::vec3(centroid(_polygon), 0.0);
-    buildPoint(p, _rule, _props, _mesh, _tile);
+    addPoint(p, _props, _rule);
 }
 
-void TextStyle::onBeginDrawFrame(const View& _view, Scene& _scene, int _textureUnit) {
-    m_fontContext->bindAtlas(0);
+}
 
-    m_shaderProgram->setUniformf("u_uv_scale_factor",
-                                 1.0f / m_fontContext->getAtlasResolution());
-    m_shaderProgram->setUniformi("u_tex", 0);
-    m_shaderProgram->setUniformMatrix4f("u_ortho", _view.getOrthoViewportMatrix());
-
-    Style::onBeginDrawFrame(_view, _scene, 1);
-
+std::unique_ptr<StyleBuilder> TextStyle::createBuilder() const {
+    return std::make_unique<Builder>(m_vertexLayout, m_drawMode, m_fontContext, m_sdf);
 }
 
 }

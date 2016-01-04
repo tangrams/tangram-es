@@ -10,7 +10,7 @@ class DebugTextStyle : public TextStyle {
 
 protected:
 
-    virtual void onBeginBuildTile(Tile& _tile) const override;
+    virtual std::unique_ptr<StyleBuilder> createBuilder() const override;
 
 public:
 

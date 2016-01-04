@@ -28,7 +28,6 @@ public:
         float strokeWidth = 0.0f;
         float fontSize = 16.0f;
         float blurSpread = 0.0f;
-        bool visible = true;
         Label::Options labelOptions;
         bool wordWrap = true;
         unsigned int maxLineWidth = 15;
@@ -47,17 +46,17 @@ protected:
     virtual void constructVertexLayout() override;
     virtual void constructShaderProgram() override;
 
-    virtual void buildPoint(const Point& _point, const DrawRule& _rule, const Properties& _props, VboMesh& _mesh, Tile& _tile) const override;
-    virtual void buildLine(const Line& _line, const DrawRule& _rule, const Properties& _props, VboMesh& _mesh, Tile& _tile) const override;
-    virtual void buildPolygon(const Polygon& _polygon, const DrawRule& _rule, const Properties& _props, VboMesh& _mesh, Tile& _tile) const override;
-    virtual bool checkRule(const DrawRule& _rule) const override;
+    virtual std::unique_ptr<StyleBuilder> createBuilder() const override;
 
-    virtual VboMesh* newMesh() const override;
+    // virtual void buildPoint(const Point& _point, const DrawRule& _rule, const Properties& _props, VboMesh& _mesh, Tile& _tile) const override;
+    // virtual void buildLine(const Line& _line, const DrawRule& _rule, const Properties& _props, VboMesh& _mesh, Tile& _tile) const override;
+    // virtual void buildPolygon(const Polygon& _polygon, const DrawRule& _rule, const Properties& _props, VboMesh& _mesh, Tile& _tile) const override;
+    // virtual bool checkRule(const DrawRule& _rule) const override;
 
-    Parameters applyRule(const DrawRule& _rule, const Properties& _props) const;
+    // virtual VboMesh* newMesh() const override;
 
     /* Creates a text label and add it to the processed <TextBuffer>. */
-    void addTextLabel(TextBuffer& _buffer, Label::Transform _transform, std::string _text, Label::Type _type) const;
+    // void addTextLabel(TextBuffer& _buffer, Label::Transform _transform, std::string _text, Label::Type _type) const;
 
     bool m_sdf;
     bool m_sdfMultisampling;
@@ -95,7 +94,6 @@ namespace std {
             hash_combine(seed, p.strokeColor);
             hash_combine(seed, p.strokeWidth);
             hash_combine(seed, p.fontSize);
-            hash_combine(seed, p.visible);
             hash_combine(seed, p.wordWrap);
             hash_combine(seed, p.maxLineWidth);
             hash_combine(seed, (int)p.transform);

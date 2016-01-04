@@ -42,8 +42,7 @@ using Mesh = TypedMesh<PolygonVertex>;
 
 
 PolygonStyle::PolygonStyle(std::string _name, Blending _blendMode, GLenum _drawMode)
-    : Style(_name, _blendMode, _drawMode) {
-}
+    : Style(_name, _blendMode, _drawMode) {}
 
 void PolygonStyle::constructVertexLayout() {
 
@@ -65,11 +64,31 @@ void PolygonStyle::constructShaderProgram() {
     m_shaderProgram->setSourceStrings(fragShaderSrcStr, vertShaderSrcStr);
 }
 
-VboMesh* PolygonStyle::newMesh() const {
-    return new Mesh(m_vertexLayout, m_drawMode);
-}
+namespace {
 
-PolygonStyle::Parameters PolygonStyle::parseRule(const DrawRule& _rule) const {
+struct Builder : public StyleBuilder {
+
+    struct Parameters {
+        uint32_t order = 0;
+        uint32_t color = 0xff00ffff;
+        glm::vec2 extrude;
+    };
+
+    virtual void addPolygon(const Polygon& _polygon, const Properties& _props, const DrawRule& _rule) override;
+
+    Parameters parseRule(const DrawRule& _rule) const;
+
+    std::unique_ptr<Mesh> m_mesh;
+
+    virtual void initMesh() override { m_mesh = std::make_unique<Mesh>(m_vertexLayout, m_drawMode); }
+    virtual std::unique_ptr<VboMesh> build() override { return std::move(m_mesh); };
+
+    Builder(std::shared_ptr<VertexLayout> _vertexLayout, GLenum _drawMode)
+        : StyleBuilder(_vertexLayout, _drawMode) {}
+
+};
+
+Builder::Parameters Builder::parseRule(const DrawRule& _rule) const {
     Parameters p;
     _rule.get(StyleParamKey::color, p.color);
     _rule.get(StyleParamKey::extrude, p.extrude);
@@ -78,8 +97,7 @@ PolygonStyle::Parameters PolygonStyle::parseRule(const DrawRule& _rule) const {
     return p;
 }
 
-void PolygonStyle::buildPolygon(const Polygon& _polygon, const DrawRule& _rule,
-                                const Properties& _props, VboMesh& _mesh, Tile& _tile) const {
+void Builder::addPolygon(const Polygon& _polygon, const Properties& _props, const DrawRule& _rule) {
 
     std::vector<PolygonVertex> vertices;
 
@@ -89,7 +107,7 @@ void PolygonStyle::buildPolygon(const Polygon& _polygon, const DrawRule& _rule,
     auto& extrude = params.extrude;
 
     if (Tangram::getDebugFlag(Tangram::DebugFlags::proxy_colors)) {
-        abgr = abgr << (_tile.getID().z % 6);
+        abgr = abgr << (m_tile->getID().z % 6);
     }
 
     PolygonBuilder builder = {
@@ -99,23 +117,27 @@ void PolygonStyle::buildPolygon(const Polygon& _polygon, const DrawRule& _rule,
         [&](size_t sizeHint){ vertices.reserve(sizeHint); }
     };
 
-    auto& mesh = static_cast<Mesh&>(_mesh);
-
-    float tileUnitsPerMeter = _tile.getInverseScale();
+    float tileUnitsPerMeter = m_tile->getInverseScale();
     float minHeight = getLowerExtrudeMeters(extrude, _props) * tileUnitsPerMeter;
     float height = getUpperExtrudeMeters(extrude, _props) * tileUnitsPerMeter;
 
     if (minHeight != height) {
 
         Builders::buildPolygonExtrusion(_polygon, minHeight, height, builder);
-        mesh.addVertices(std::move(vertices), std::move(builder.indices));
+        m_mesh->addVertices(std::move(vertices), std::move(builder.indices));
 
         // TODO add builder.clear() ?;
         builder.numVertices = 0;
     }
 
     Builders::buildPolygon(_polygon, height, builder);
-    mesh.addVertices(std::move(vertices), std::move(builder.indices));
+    m_mesh->addVertices(std::move(vertices), std::move(builder.indices));
+}
+
+}
+
+std::unique_ptr<StyleBuilder> PolygonStyle::createBuilder() const {
+    return std::make_unique<Builder>(m_vertexLayout, m_drawMode);
 }
 
 }

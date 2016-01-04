@@ -133,8 +133,8 @@ bool DrawRuleMergeSet::match(const Feature& _feature, const SceneLayer& _layer, 
     return true;
 }
 
-void DrawRuleMergeSet::apply(const Feature& _feature, const Scene& _scene, const SceneLayer& _layer,
-                    StyleContext& _ctx, Tile& _tile) {
+void DrawRuleMergeSet::apply(const Feature& _feature, const SceneLayer& _layer,
+                             StyleContext& _ctx, Tile& _tile) {
 
     // If no rules matched the feature, return immediately
     if (!match(_feature, _layer, _ctx)) { return; }
@@ -143,7 +143,7 @@ void DrawRuleMergeSet::apply(const Feature& _feature, const Scene& _scene, const
     // build the feature with the rule's parameters
     for (auto& rule : matchedRules) {
 
-        auto* style = _scene.findStyle(rule.getStyleName());
+        StyleBuilder* style = _ctx.getStyleBuilder(rule.getStyleName());
         if (!style) {
             LOGE("Invalid style %s", rule.getStyleName().c_str());
             continue;
@@ -194,7 +194,7 @@ void DrawRuleMergeSet::apply(const Feature& _feature, const Scene& _scene, const
         }
 
         if (valid) {
-            style->buildFeature(_tile, _feature, rule);
+            style->addFeature(_feature, rule);
         }
     }
 }

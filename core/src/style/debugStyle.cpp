@@ -23,8 +23,8 @@ struct PosColVertex {
 using Mesh = TypedMesh<PosColVertex>;
 
 
-DebugStyle::DebugStyle(std::string _name, Blending _blendMode, GLenum _drawMode) : Style(_name, _blendMode, _drawMode) {
-}
+DebugStyle::DebugStyle(std::string _name, Blending _blendMode, GLenum _drawMode)
+    : Style(_name, _blendMode, _drawMode) {}
 
 void DebugStyle::constructVertexLayout() {
 
@@ -44,14 +44,22 @@ void DebugStyle::constructShaderProgram() {
 
 }
 
-void DebugStyle::onBeginBuildTile(Tile &_tile) const {
+namespace {
+struct Builder : public StyleBuilder {
 
-    if (Tangram::getDebugFlag(Tangram::DebugFlags::tile_bounds)) {
+    Builder(std::shared_ptr<VertexLayout> _vertexLayout, GLenum _drawMode)
+        : StyleBuilder(_vertexLayout, _drawMode) {}
 
-        Mesh* mesh = new Mesh(m_vertexLayout, m_drawMode);
+    void initMesh() override {}
+
+    std::unique_ptr<VboMesh> build() override {
+        if (!Tangram::getDebugFlag(Tangram::DebugFlags::tile_bounds)) {
+            return nullptr;
+        }
+
+        auto mesh = std::make_unique<Mesh>(m_vertexLayout, m_drawMode);
 
         // Add four vertices to draw the outline of the tile in red
-
         std::vector<PosColVertex> vertices;
 
         GLuint abgr = 0xff0000ff;
@@ -64,9 +72,13 @@ void DebugStyle::onBeginBuildTile(Tile &_tile) const {
 
         mesh->addVertices(std::move(vertices), { 0, 1, 2, 3, 0 });
 
-        _tile.getMesh(*this).reset(mesh);
-
+        return std::move(mesh);
     }
+};
+}
+
+std::unique_ptr<StyleBuilder> DebugStyle::createBuilder() const {
+    return std::make_unique<Builder>(m_vertexLayout, m_drawMode);
 }
 
 }

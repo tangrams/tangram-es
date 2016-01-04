@@ -5,6 +5,7 @@
 #include "data/tileData.h"
 #include "scene/filters.h"
 #include "scene/scene.h"
+#include "style/style.h"
 #include "util/builders.h"
 
 #include "duktape.h"
@@ -82,12 +83,25 @@ StyleContext::~StyleContext() {
     duk_destroy_heap(m_ctx);
 }
 
+StyleBuilder* StyleContext::getStyleBuilder(const std::string& _name) {
+    auto it = m_styleBuilder.find(_name);
+    if (it == m_styleBuilder.end()) { return nullptr; }
+
+    return it->second.get();
+}
+
 void StyleContext::initFunctions(const Scene& _scene) {
 
     if (_scene.id == m_sceneId) {
         return;
     }
     m_sceneId = _scene.id;
+
+    m_styleBuilder.clear();
+
+    for (auto& style : _scene.styles()) {
+        m_styleBuilder[style->getName()] = style->createBuilder();
+    }
 
     auto arr_idx = duk_push_array(m_ctx);
     int id = 0;
