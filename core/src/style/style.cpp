@@ -83,11 +83,6 @@ void Style::buildFeature(Tile& _tile, const Feature& _feat, const DrawRule& _rul
 
     if (!checkRule(_rule)) { return; }
 
-    bool visible;
-    if (_rule.get(StyleParamKey::visible, visible) && !visible) {
-        return;
-    }
-
     auto& mesh = _tile.getMesh(*this);
 
     if (!mesh) {
