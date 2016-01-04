@@ -144,9 +144,13 @@ void DrawRuleMergeSet::apply(const Feature& _feature, const Scene& _scene, const
     for (auto& rule : matchedRules) {
 
         auto* style = _scene.findStyle(rule.getStyleName());
-
         if (!style) {
             LOGE("Invalid style %s", rule.getStyleName().c_str());
+            continue;
+        }
+
+        bool visible;
+        if (rule.get(StyleParamKey::visible, visible) && !visible) {
             continue;
         }
 
