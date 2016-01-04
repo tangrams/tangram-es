@@ -3,6 +3,7 @@
 #include "platform.h"
 #include "tangram.h"
 #include "glm/gtc/matrix_transform.hpp"
+#include "glm/gtc/type_ptr.hpp"
 #include "glm/gtx/rotate_vector.hpp"
 
 #include <cmath>
@@ -287,6 +288,18 @@ float View::pixelsPerMeter() const {
     return s_pixelsPerTile / metersPerTile;
 }
 
+void View::setOverrideViewMatrix(const float* _view) {
+    m_overrideView = _view ? std::make_unique<glm::mat4>(glm::make_mat4(_view)) : nullptr;
+    updateMatrices();
+    updateTiles();
+}
+
+void View::setOverridePerspectiveMatrix(const float* _perspective) {
+    m_overridePerspective = _perspective ? std::make_unique<glm::mat4>(glm::make_mat4(_perspective)) : nullptr;
+    updateMatrices();
+    updateTiles();
+}
+
 void View::updateMatrices() {
 
     // find dimensions of tiles in world space at new zoom level
@@ -310,12 +323,18 @@ void View::updateMatrices() {
     // set camera z to produce desired viewable area
     m_pos.z = m_height * 0.5 / tan(fovy * 0.5);
 
+    // Generate view matrix
     m_eye = glm::rotateZ(glm::rotateX(glm::vec3(0.f, 0.f, m_pos.z), m_pitch), m_roll);
     glm::vec3 at = { 0.f, 0.f, 0.f };
     glm::vec3 up = glm::rotateZ(glm::rotateX(glm::vec3(0.f, 1.f, 0.f), m_pitch), m_roll);
 
-    // Generate view matrix
     m_view = glm::lookAt(m_eye, at, up);
+
+    if (m_overrideView) {
+        m_view = *m_overrideView;
+        m_view = glm::rotate(m_view, (float)(PI * 0.5), glm::vec3(1.f, 0.f, 0.f));
+        m_view = glm::translate(m_view, -m_eye);
+    }
 
     float maxTileDistance = worldTileSize * invLodFunc(MAX_LOD + 1);
     float near = m_pos.z / 50.f;
@@ -342,6 +361,10 @@ void View::updateMatrices() {
         // Add the oblique projection scaling factors to the view matrix
         m_view[2][0] += m_obliqueAxis.x;
         m_view[2][1] += m_obliqueAxis.y;
+    }
+
+    if (m_overridePerspective) {
+        m_proj = *m_overridePerspective;
     }
 
     m_viewProj = m_proj * m_view;

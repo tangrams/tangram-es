@@ -4,7 +4,9 @@ import android.content.Context;
 import android.opengl.GLSurfaceView;
 import android.util.AttributeSet;
 
-public class MapView extends GLSurfaceView {
+import com.google.vrtoolkit.cardboard.CardboardView;
+
+public class MapView extends CardboardView {
 
     public MapView(Context context) {
 

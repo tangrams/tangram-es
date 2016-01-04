@@ -133,5 +133,9 @@ struct TouchItem {
 
 const std::vector<TouchItem>& pickFeaturesAt(float _x, float _y);
 
+void setOverrideViewMatrix(const float* _view);
+
+void setOverridePerspectiveMatrix(const float* _perspective);
+
 }
 

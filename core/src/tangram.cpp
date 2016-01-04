@@ -189,6 +189,7 @@ void update(float _dt) {
 void render() {
 
     // Set up openGL for new frame
+    RenderState::configure();
     RenderState::depthWrite(GL_TRUE);
     auto& color = m_scene->background();
     RenderState::clearColor(color.r / 255.f, color.g / 255.f, color.b / 255.f, color.a / 255.f);
@@ -462,7 +463,13 @@ const std::vector<TouchItem>& pickFeaturesAt(float _x, float _y) {
                                         _x, _y);
 }
 
+void setOverrideViewMatrix(const float* _view) {
+    m_view->setOverrideViewMatrix(_view);
+}
 
+void setOverridePerspectiveMatrix(const float* _perspective) {
+    m_view->setOverridePerspectiveMatrix(_perspective);
+}
 
 void setupGL() {
 

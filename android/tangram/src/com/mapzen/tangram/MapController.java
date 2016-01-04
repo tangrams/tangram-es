@@ -3,9 +3,12 @@ package com.mapzen.tangram;
 import android.app.Activity;
 import android.content.res.AssetManager;
 import android.opengl.GLSurfaceView;
-import android.opengl.GLSurfaceView.Renderer;
 import android.util.DisplayMetrics;
 
+import com.google.vrtoolkit.cardboard.CardboardView.StereoRenderer;
+import com.google.vrtoolkit.cardboard.Eye;
+import com.google.vrtoolkit.cardboard.HeadTransform;
+import com.google.vrtoolkit.cardboard.Viewport;
 import com.squareup.okhttp.Callback;
 import com.squareup.okhttp.Request;
 import com.squareup.okhttp.Response;
@@ -19,7 +22,7 @@ import okio.BufferedSource;
 
 import com.mapzen.tangram.TouchInput.Gestures;
 
-public class MapController implements Renderer {
+public class MapController implements StereoRenderer {
 
     public enum EaseType {
         LINEAR,
@@ -452,6 +455,8 @@ public class MapController implements Renderer {
     private synchronized native void handleRotateGesture(float posX, float posY, float rotation);
     private synchronized native void handleShoveGesture(float distance);
     public synchronized native void pickFeature(float posX, float posY);
+    private synchronized native void setOverrideViewMatrix(float[] view);
+    private synchronized native void setOverridePerspectiveMatrix(float[] perspective);
 
     private native void onUrlSuccess(byte[] rawDataBytes, long callbackPtr);
     private native void onUrlFailure(long callbackPtr);
@@ -474,28 +479,51 @@ public class MapController implements Renderer {
 
     private FeatureTouchListener featureTouchListener;
 
-    // GLSurfaceView.Renderer methods
-    // ==============================
+    // CardboardView.StereoRenderer implementation
+    // ===========================================
 
-    public void onDrawFrame(GL10 gl) {
+    @Override
+    public void onNewFrame(HeadTransform headTransform) {
         long newTime = System.nanoTime();
         float delta = (newTime - time) / 1000000000.0f;
         time = newTime;
 
         update(delta);
-        render();
+
     }
 
-    public void onSurfaceChanged(GL10 gl, int width, int height) {
+    @Override
+    public void onDrawEye(Eye eye) {
+
+        setOverrideViewMatrix(eye.getEyeView());
+        setOverridePerspectiveMatrix(eye.getPerspective(1f, 1e4f));
+
+        render();
+
+    }
+
+    @Override
+    public void onFinishFrame(Viewport viewport) {
+
+    }
+
+    @Override
+    public void onSurfaceChanged(int width, int height) {
         setPixelScale(displayMetrics.density);
         resize(width, height);
     }
 
-    public void onSurfaceCreated(GL10 gl, EGLConfig config) {
+    @Override
+    public void onSurfaceCreated(EGLConfig eglConfig) {
         init(this, assetManager, scenePath);
         // init() is safe to call twice, this invocation ensures that the jni
         // environment is attached to the rendering thread
         setupGL();
+    }
+
+    @Override
+    public void onRendererShutdown() {
+
     }
 
     // Networking methods

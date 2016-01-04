@@ -11,7 +11,7 @@ android {
   buildToolsVersion "21.1.2"
 
   defaultConfig {
-    minSdkVersion 15
+    minSdkVersion 16
     targetSdkVersion 22
   }
 
@@ -32,3 +32,4 @@ android {
 dependencies {
   compile project(":tangram")
 }
+

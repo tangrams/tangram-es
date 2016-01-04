@@ -143,5 +143,17 @@ extern "C" {
         }
     }
 
+    JNIEXPORT void JNICALL Java_com_mapzen_tangram_MapController_setOverrideViewMatrix(JNIEnv* jniEnv, jobject obj, jfloatArray view) {
+        jfloat* array = jniEnv->GetFloatArrayElements(view, NULL);
+        Tangram::setOverrideViewMatrix(array);
+        jniEnv->ReleaseFloatArrayElements(view, array, 0);
+    }
+
+    JNIEXPORT void JNICALL Java_com_mapzen_tangram_MapController_setOverridePerspectiveMatrix(JNIEnv* jniEnv, jobject obj, jfloatArray perspective) {
+        jfloat* array = jniEnv->GetFloatArrayElements(perspective, NULL);
+        Tangram::setOverridePerspectiveMatrix(array);
+        jniEnv->ReleaseFloatArrayElements(perspective, array, 0);
+    }
+
 }
 
