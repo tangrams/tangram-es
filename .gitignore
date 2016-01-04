@@ -123,8 +123,8 @@ install_manifest.txt
 
 # Android debugging
 android/demo/jni
-android/*/libs
-android/*/obj
+android/**.so
+android/**.o
 *.mk
 
 # Android gradle
