@@ -12,6 +12,7 @@ typedef struct duk_hthread duk_context;
 
 namespace Tangram {
 
+class DataLayer;
 class Scene;
 struct Feature;
 struct StyleParam;
@@ -54,7 +55,7 @@ public:
     /*
      * Setup filter and style functions from @_scene
      */
-    void initFunctions(const Scene& _scene);
+    void setScene(const Scene& _scene);
 
     /*
      * Unset Feature handle
@@ -73,6 +74,8 @@ public:
 
     const auto& styleBuilders() { return m_styleBuilder; }
 
+    const auto& sceneLayers() const { return *m_sceneLayers; };
+
 private:
     static int jsGetProperty(duk_context *_ctx);
     static int jsHasProperty(duk_context *_ctx);
@@ -90,6 +93,8 @@ private:
     float m_globalZoom = -1;
 
     fastmap<std::string, std::unique_ptr<StyleBuilder>> m_styleBuilder;
+
+    std::shared_ptr<std::vector<DataLayer>> m_sceneLayers;
 };
 
 }

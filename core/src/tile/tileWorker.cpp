@@ -20,7 +20,9 @@ TileWorker::TileWorker(TileManager& _tileManager, int _num_worker)
     m_running = true;
 
     for (int i = 0; i < _num_worker; i++) {
-        m_workers.emplace_back(&TileWorker::run, this);
+        auto worker = std::make_unique<Worker>();
+        worker->thread = std::thread(&TileWorker::run, this, worker.get());
+        m_workers.push_back(std::move(worker));
     }
 }
 
@@ -30,11 +32,11 @@ TileWorker::~TileWorker(){
     }
 }
 
-void TileWorker::run() {
+void TileWorker::run(Worker* instance) {
 
     setCurrentThreadPriority(WORKER_NICENESS);
 
-    StyleContext context;
+    std::unique_ptr<StyleContext> context;
 
     while (true) {
 
@@ -84,17 +86,21 @@ void TileWorker::run() {
 
         auto tileData = task->process();
 
-        // NB: Save shared reference to Scene while building tile
-        auto scene = m_tileManager.getScene();
+        if (instance->styleContext) {
+            context = std::move(instance->styleContext);
+            LOG("Passed new StyleContext to TileWorker");
+        }
 
-        if (!scene) { continue; }
+        if (!context) {
+            LOGE("Missing Scene/StyleContext in TileWorker!");
+            continue;
+        }
 
         // const clock_t begin = clock();
-
-        context.initFunctions(*scene);
+        // context.initFunctions(*scene);
 
         if (tileData) {
-            task->tile->build(context, *scene, *tileData, *task->source);
+            task->tile->build(*context, *tileData, *task->source);
 
             // float loadTime = (float(clock() - begin) / CLOCKS_PER_SEC) * 1000;
             // LOG("loadTime %s - %f", task->tile->getID().toString().c_str(), loadTime);
@@ -103,6 +109,15 @@ void TileWorker::run() {
         m_tileManager.tileProcessed(std::move(task));
 
         requestRender();
+    }
+}
+
+void TileWorker::setScene(const Scene& _scene) {
+    for (auto& worker : m_workers) {
+        auto styleContext = std::make_unique<StyleContext>();
+        styleContext->setScene(_scene);
+
+        worker->styleContext = std::move(styleContext);
     }
 }
 
@@ -125,8 +140,8 @@ void TileWorker::stop() {
 
     m_condition.notify_all();
 
-    for (std::thread &worker: m_workers) {
-        worker.join();
+    for (auto& worker : m_workers) {
+        worker->thread.join();
     }
 }
 

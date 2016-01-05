@@ -61,10 +61,8 @@ void Tile::initGeometry(uint32_t _size) {
     //m_geometry.resize(_size);
 }
 
-void Tile::build(StyleContext& _ctx, const Scene& _scene, const TileData& _data,
+void Tile::build(StyleContext& _ctx, const TileData& _tileData,
                  const DataSource& _source) {
-
-    const auto& layers = _scene.layers();
 
     _ctx.setGlobalZoom(m_id.z);
 
@@ -75,11 +73,11 @@ void Tile::build(StyleContext& _ctx, const Scene& _scene, const TileData& _data,
 
     DrawRuleMergeSet ruleSet;
 
-    for (const auto& datalayer : layers) {
+    for (const auto& datalayer : _ctx.sceneLayers()) {
 
         if (datalayer.source() != _source.name()) { continue; }
 
-        for (const auto& collection : _data.layers) {
+        for (const auto& collection : _tileData.layers) {
 
             if (!collection.name.empty()) {
                 const auto& dlc = datalayer.collections();

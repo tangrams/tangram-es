@@ -42,8 +42,6 @@ public:
     /* Sets the scene which the TileManager will use to style tiles */
     void setScene(std::shared_ptr<Scene> _scene);
 
-    std::shared_ptr<Scene>& getScene() { return m_scene; }
-
     /* Updates visible tile set if necessary
      *
      * Contacts the <ViewModule> to determine whether the set of visible tiles

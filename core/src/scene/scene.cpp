@@ -25,6 +25,7 @@ Scene::Scene() : id(s_serial++) {
     // For now we only have one projection..
     // TODO how to share projection with view?
     m_mapProjection.reset(new MercatorProjection());
+    m_layers = std::make_shared<std::vector<DataLayer>>();
 }
 
 Scene::~Scene() {}

@@ -83,18 +83,19 @@ StyleBuilder* StyleContext::getStyleBuilder(const std::string& _name) {
     return it->second.get();
 }
 
-void StyleContext::initFunctions(const Scene& _scene) {
+void StyleContext::setScene(const Scene& _scene) {
 
-    if (_scene.id == m_sceneId) {
-        return;
-    }
+    if (_scene.id == m_sceneId) { return; }
     m_sceneId = _scene.id;
 
+    // Initialize StyleBuilders
     m_styleBuilder.clear();
-
     for (auto& style : _scene.styles()) {
         m_styleBuilder[style->getName()] = style->createBuilder();
     }
+
+    // Store reference to SceneLayers
+    m_sceneLayers = _scene.layers();
 
     auto arr_idx = duk_push_array(m_ctx);
     int id = 0;

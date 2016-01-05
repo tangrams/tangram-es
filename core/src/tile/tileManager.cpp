@@ -87,6 +87,7 @@ void TileManager::setScene(std::shared_ptr<Scene> _scene) {
         }
     }
 
+    m_workers->setScene(*_scene);
     m_scene = _scene;
 }
 
