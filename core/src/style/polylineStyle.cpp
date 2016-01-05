@@ -43,7 +43,39 @@ struct PolylineVertex {
     GLuint abgr;
 };
 
-using Mesh = TypedMesh<PolylineVertex>;
+
+struct Mesh : public VboMesh {
+
+    Mesh(std::shared_ptr<VertexLayout> _vertexLayout, GLenum _drawMode)
+        : VboMesh(_vertexLayout, _drawMode) {}
+
+    void compile(std::vector<std::pair<uint32_t, uint32_t>> _offsets,
+                 std::vector<PolylineVertex> _vertices,
+                 std::vector<uint16_t> _indices) {
+
+        m_vertexOffsets.insert(m_vertexOffsets.begin(),
+                               _offsets.begin(),
+                               _offsets.end());
+
+        for (auto& p : m_vertexOffsets) {
+            m_nVertices += p.second;
+            m_nIndices += p.first;
+        }
+
+        int stride = m_vertexLayout->getStride();
+        m_glVertexData = new GLbyte[m_nVertices * stride];
+        std::memcpy(m_glVertexData, (GLbyte*)_vertices.data(), m_nVertices * stride);
+
+        m_glIndexData = new GLushort[m_nIndices];
+        std::memcpy(m_glIndexData, (GLbyte*)_indices.data(), m_nIndices * sizeof(GLushort));
+
+        m_isCompiled = true;
+    }
+
+    void compileVertexBuffer() override {}
+
+};
+
 
 PolylineStyle::PolylineStyle(std::string _name, Blending _blendMode, GLenum _drawMode)
     : Style(_name, _blendMode, _drawMode) {
@@ -85,20 +117,42 @@ struct Builder : public StyleBuilder {
         glm::vec2 extrude;
     };
 
-    std::unique_ptr<Mesh> m_mesh;
-
     virtual void addPolygon(const Polygon& _polygon, const Properties& _props, const DrawRule& _rule) override;
     virtual void addLine(const Line& _line, const Properties& _props, const DrawRule& _rule) override;
 
     static Parameters parseRule(const DrawRule& _rule);
 
-    virtual void initMesh() override { m_mesh = std::make_unique<Mesh>(m_vertexLayout, m_drawMode); }
-    virtual std::unique_ptr<VboMesh> build() override { return std::move(m_mesh); };
+    virtual void initMesh() override {
+        m_vertexOffsets.clear();
+        m_vertexOffsets.emplace_back(0,0);
+        m_indices.clear();
+        m_vertices.clear();
+    }
+    virtual std::unique_ptr<VboMesh> build() override;
 
     Builder(std::shared_ptr<VertexLayout> _vertexLayout, GLenum _drawMode)
         : StyleBuilder(_vertexLayout, _drawMode) {}
 
+    PolyLineBuilder m_builder {
+        [&](const glm::vec3& coord, const glm::vec2& normal, const glm::vec2& uv) {},
+        [&](size_t sizeHint){
+            //LOGE("RESERVE %d %d", m_vertices.size(), sizeHint);
+            //m_vertices.reserve(m_vertices.size() + sizeHint);
+        }
+    };
+
+    // Used in draw for legth and offsets: sumIndices, sumVertices
+    std::vector<std::pair<uint32_t, uint32_t>> m_vertexOffsets;
+    std::vector<PolylineVertex> m_vertices;
+    std::vector<uint16_t> m_indices;
 };
+
+
+std::unique_ptr<VboMesh> Builder::build() {
+    auto mesh = std::make_unique<Mesh>(m_vertexLayout, m_drawMode);
+    mesh->compile(m_vertexOffsets, m_vertices, m_indices);
+    return std::move(mesh);
+}
 
 auto Builder::parseRule(const DrawRule& _rule) -> Parameters {
     Parameters p;
@@ -204,8 +258,6 @@ bool evalStyleParamWidth(StyleParamKey _key, const DrawRule& _rule, const Tile& 
 
 void Builder::addLine(const Line& _line, const Properties& _props, const DrawRule& _rule) {
 
-    std::vector<PolylineVertex> vertices;
-
     Parameters params = parseRule(_rule);
     GLuint abgr = params.color;
 
@@ -228,57 +280,75 @@ void Builder::addLine(const Line& _line, const Properties& _props, const DrawRul
     float height = getUpperExtrudeMeters(extrude, _props) * tileUnitsPerMeter;
     float order = params.order;
 
-    PolyLineBuilder builder {
-        [&](const glm::vec3& coord, const glm::vec2& normal, const glm::vec2& texCoord) {
-            glm::vec3 position = glm::vec3{coord.x, coord.y, height};
-            vertices.push_back({position, order, texCoord, normal, { width, dWdZ }, abgr});
-        },
-        [&](size_t sizeHint){ vertices.reserve(sizeHint); },
-        params.cap,
-        params.join
+    m_builder.cap = params.cap;
+    m_builder.join = params.join;
+
+    m_builder.addVertex = [&](const glm::vec3& coord, const glm::vec2& normal, const glm::vec2& uv) {
+        m_vertices.push_back({ {coord.x, coord.y, height}, order, uv, normal, {width, dWdZ}, abgr });
     };
 
-    Builders::buildPolyLine(_line, builder);
-
-    if (params.outlineOn) {
-
-        GLuint abgrOutline = params.outlineColor;
-        float outlineOrder = std::min(params.outlineOrder, params.order) - 0.5f;
-
-        float widthOutline = 0.f;
-        float dWdZOutline = 0.f;
-
-        if (evalStyleParamWidth(StyleParamKey::outline_width, _rule,
-                                *m_tile, widthOutline, dWdZOutline) &&
-            ((widthOutline > 0.0f || dWdZOutline > 0.0f)) ) {
-
-            // Note: this must update <width> and <dWdZ> as they are captured
-            // (and used) by <builder>
-            width += widthOutline;
-            dWdZ += dWdZOutline;
-
-            if (params.outlineCap != params.cap || params.outlineJoin != params.join) {
-                // need to re-triangulate with different cap and/or join
-                builder.cap = params.outlineCap;
-                builder.join = params.outlineJoin;
-                Builders::buildPolyLine(_line, builder);
-            } else {
-                // re-use indices from original line
-                size_t oldSize = builder.indices.size();
-                size_t offset = vertices.size();
-                builder.indices.reserve(2 * oldSize);
-
-                for(size_t i = 0; i < oldSize; i++) {
-                    builder.indices.push_back(offset + builder.indices[i]);
-                }
-                for (size_t i = 0; i < offset; i++) {
-                    vertices.push_back({ vertices[i], outlineOrder, { width, dWdZ }, abgrOutline });
-                }
-            }
+    auto addVertices = [&](){
+        auto sumVertices = m_vertexOffsets.back().second;
+        if (sumVertices + m_builder.numVertices > MAX_INDEX_VALUE) {
+            m_vertexOffsets.emplace_back(0, 0);
+            sumVertices = 0;
+            LOGE("LARGE BUFFER");
         }
+        for (uint16_t idx : m_builder.indices) {
+            m_indices.push_back(idx + sumVertices);
+        }
+        auto& vertexOffset = m_vertexOffsets.back();
+        vertexOffset.first += m_builder.indices.size();
+        vertexOffset.second += m_builder.numVertices;
+        //LOGE("add %d %d", m_builder.indices.size(), m_builder.numVertices);
+
+        m_builder.clear();
+    };
+
+    Builders::buildPolyLine(_line, m_builder);
+    addVertices();
+
+    if (!params.outlineOn) { return; }
+
+    float widthOutline = 0.f;
+    float dWdZOutline = 0.f;
+    if (!evalStyleParamWidth(StyleParamKey::outline_width, _rule, *m_tile,
+                             widthOutline, dWdZOutline)) {
+        return;
     }
 
-    m_mesh->addVertices(std::move(vertices), std::move(builder.indices));
+    if (!(widthOutline > 0.0f || dWdZOutline > 0.0f)) {
+        return;
+    }
+
+    // Note: this must update values captured (and used) by builder!
+    width += widthOutline;
+    dWdZ += dWdZOutline;
+    abgr = params.outlineColor;
+    order = std::min(params.outlineOrder, params.order) - .5f;
+
+    //if (params.outlineCap != params.cap || params.outlineJoin != params.join) {
+        // need to re-triangulate with different cap and/or join
+        m_builder.cap = params.outlineCap;
+        m_builder.join = params.outlineJoin;
+        Builders::buildPolyLine(_line, m_builder);
+        addVertices();
+
+    // } else {
+    //     return;
+
+    //     // re-use indices from original line
+    //     size_t oldSize = m_builder.indices.size();
+    //     size_t offset = m_vertices.size();
+    //     m_builder.indices.reserve(2 * oldSize);
+
+    //     for(size_t i = 0; i < oldSize; i++) {
+    //         m_builder.indices.push_back(offset + m_builder.indices[i]);
+    //     }
+    //     for (size_t i = 0; i < offset; i++) {
+    //         vertices.push_back({ vertices[i], outlineOrder, { width, dWdZ }, abgrOutline });
+    //     }
+    // }
 }
 
 }

@@ -38,7 +38,38 @@ struct PolygonVertex {
     GLuint abgr;
 };
 
-using Mesh = TypedMesh<PolygonVertex>;
+struct Mesh : public VboMesh {
+
+    Mesh(std::shared_ptr<VertexLayout> _vertexLayout, GLenum _drawMode)
+        : VboMesh(_vertexLayout, _drawMode) {}
+
+    void compile(std::vector<std::pair<uint32_t, uint32_t>> _offsets,
+                 std::vector<PolygonVertex> _vertices,
+                 std::vector<uint16_t> _indices) {
+
+        m_vertexOffsets.insert(m_vertexOffsets.begin(),
+                               _offsets.begin(),
+                               _offsets.end());
+
+        for (auto& p : m_vertexOffsets) {
+            m_nVertices += p.second;
+            m_nIndices += p.first;
+        }
+
+        int stride = m_vertexLayout->getStride();
+        m_glVertexData = new GLbyte[m_nVertices * stride];
+        std::memcpy(m_glVertexData, (GLbyte*)_vertices.data(), m_nVertices * stride);
+
+        m_glIndexData = new GLushort[m_nIndices];
+        std::memcpy(m_glIndexData, (GLbyte*)_indices.data(), m_nIndices * sizeof(GLushort));
+
+        m_isCompiled = true;
+    }
+
+    void compileVertexBuffer() override {}
+
+};
+
 
 
 PolygonStyle::PolygonStyle(std::string _name, Blending _blendMode, GLenum _drawMode)
@@ -46,7 +77,6 @@ PolygonStyle::PolygonStyle(std::string _name, Blending _blendMode, GLenum _drawM
 
 void PolygonStyle::constructVertexLayout() {
 
-    // TODO: Ideally this would be in the same location as the struct that it basically describes
     m_vertexLayout = std::shared_ptr<VertexLayout>(new VertexLayout({
         {"a_position", 4, GL_SHORT, false, 0},
         {"a_normal", 4, GL_BYTE, true, 0}, // The 4th byte is for padding
@@ -78,15 +108,40 @@ struct Builder : public StyleBuilder {
 
     Parameters parseRule(const DrawRule& _rule) const;
 
-    std::unique_ptr<Mesh> m_mesh;
+    //virtual void initMesh() override { m_mesh = std::make_unique<Mesh>(m_vertexLayout, m_drawMode); }
+    virtual void initMesh() override {
+        m_vertexOffsets.clear();
+        m_vertexOffsets.emplace_back(0,0);
+        m_indices.clear();
+        m_vertices.clear();
+    }
 
-    virtual void initMesh() override { m_mesh = std::make_unique<Mesh>(m_vertexLayout, m_drawMode); }
-    virtual std::unique_ptr<VboMesh> build() override { return std::move(m_mesh); };
+    //virtual std::unique_ptr<VboMesh> build() override { return std::move(m_mesh); };
+    virtual std::unique_ptr<VboMesh> build() override;
 
     Builder(std::shared_ptr<VertexLayout> _vertexLayout, GLenum _drawMode)
         : StyleBuilder(_vertexLayout, _drawMode) {}
 
+    PolygonBuilder m_builder = {
+        [&](const glm::vec3& coord, const glm::vec3& normal, const glm::vec2& uv){
+            //m_vertices.push_back({ coord, normal, uv, abgr, layer });
+        },
+        [&](size_t sizeHint) {
+            //m_vertices.reserve(m_vertices.size() + sizeHint);
+        }
+    };
+
+    // Used in draw for legth and offsets: sumIndices, sumVertices
+    std::vector<std::pair<uint32_t, uint32_t>> m_vertexOffsets;
+    std::vector<PolygonVertex> m_vertices;
+    std::vector<uint16_t> m_indices;
 };
+
+std::unique_ptr<VboMesh> Builder::build() {
+    auto mesh = std::make_unique<Mesh>(m_vertexLayout, m_drawMode);
+    mesh->compile(m_vertexOffsets, m_vertices, m_indices);
+    return std::move(mesh);
+}
 
 Builder::Parameters Builder::parseRule(const DrawRule& _rule) const {
     Parameters p;
@@ -110,28 +165,42 @@ void Builder::addPolygon(const Polygon& _polygon, const Properties& _props, cons
         abgr = abgr << (m_tile->getID().z % 6);
     }
 
-    PolygonBuilder builder = {
-        [&](const glm::vec3& _coord, const glm::vec3& _normal, const glm::vec2& _uv) {
-            vertices.push_back({ _coord, params.order, _normal, _uv, abgr });
-        },
-        [&](size_t sizeHint){ vertices.reserve(sizeHint); }
+    m_builder.addVertex = [&](const glm::vec3& coord, const glm::vec3& normal, const glm::vec2& uv){
+        m_vertices.push_back({ coord, params.order, normal, uv, abgr });
     };
 
     float tileUnitsPerMeter = m_tile->getInverseScale();
     float minHeight = getLowerExtrudeMeters(extrude, _props) * tileUnitsPerMeter;
     float height = getUpperExtrudeMeters(extrude, _props) * tileUnitsPerMeter;
 
+    auto addVertices = [&](){
+        auto sumVertices = m_vertexOffsets.back().second;
+
+        if (sumVertices + m_builder.numVertices > MAX_INDEX_VALUE) {
+            m_vertexOffsets.emplace_back(0, 0);
+            sumVertices = 0;
+            LOGE("LARGE BUFFER");
+        }
+
+        for (uint16_t idx : m_builder.indices) {
+            m_indices.push_back(idx + sumVertices);
+        }
+
+        auto& vertexOffset = m_vertexOffsets.back();
+        vertexOffset.first += m_builder.indices.size();
+        vertexOffset.second += m_builder.numVertices;
+        //LOGE("add %d %d", m_builder.indices.size(), m_builder.numVertices);
+
+        m_builder.clear();
+    };
+
     if (minHeight != height) {
-
-        Builders::buildPolygonExtrusion(_polygon, minHeight, height, builder);
-        m_mesh->addVertices(std::move(vertices), std::move(builder.indices));
-
-        // TODO add builder.clear() ?;
-        builder.numVertices = 0;
+        Builders::buildPolygonExtrusion(_polygon, minHeight, height, m_builder);
+        addVertices();
     }
 
-    Builders::buildPolygon(_polygon, height, builder);
-    m_mesh->addVertices(std::move(vertices), std::move(builder.indices));
+    Builders::buildPolygon(_polygon, height, m_builder);
+    addVertices();
 }
 
 }
