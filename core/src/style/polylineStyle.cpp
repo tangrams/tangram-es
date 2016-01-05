@@ -105,6 +105,10 @@ namespace {
 
 struct Builder : public StyleBuilder {
 
+    Builder(std::shared_ptr<VertexLayout> _vertexLayout, GLenum _drawMode)
+        : StyleBuilder(_vertexLayout, _drawMode) {}
+
+
     struct Parameters {
         uint32_t order = 0;
         uint32_t outlineOrder = 0;
@@ -117,6 +121,34 @@ struct Builder : public StyleBuilder {
         bool outlineOn = false;
         glm::vec2 extrude;
     };
+
+    struct {
+        float height;
+        float order;
+        GLuint abgr;
+
+        float width;
+        float dWdZ;
+
+    } m_builderOptions;
+
+    PolyLineBuilder m_builder = {
+        [&](const glm::vec3& coord, const glm::vec2& normal, const glm::vec2& uv) {
+            m_vertices.push_back({ {coord.x, coord.y, m_builderOptions.height},
+                                 m_builderOptions.order, uv, normal,
+                                 {m_builderOptions.width, m_builderOptions.dWdZ},
+                                 m_builderOptions.abgr });
+        },
+        [&](size_t sizeHint) {
+            //LOGE("RESERVE %d %d", m_vertices.size(), sizeHint);
+            //m_vertices.reserve(m_vertices.size() + sizeHint);
+        }
+    };
+
+    // Used in draw for legth and offsets: sumIndices, sumVertices
+    std::vector<std::pair<uint32_t, uint32_t>> m_vertexOffsets;
+    std::vector<PolylineVertex> m_vertices;
+    std::vector<uint16_t> m_indices;
 
     virtual void addPolygon(const Polygon& _polygon, const Properties& _props, const DrawRule& _rule) override;
     virtual void addLine(const Line& _line, const Properties& _props, const DrawRule& _rule) override;
@@ -131,23 +163,8 @@ struct Builder : public StyleBuilder {
     }
     virtual std::unique_ptr<VboMesh> build() override;
 
-    Builder(std::shared_ptr<VertexLayout> _vertexLayout, GLenum _drawMode)
-        : StyleBuilder(_vertexLayout, _drawMode) {}
 
-    PolyLineBuilder m_builder {
-        [&](const glm::vec3& coord, const glm::vec2& normal, const glm::vec2& uv) {},
-        [&](size_t sizeHint){
-            //LOGE("RESERVE %d %d", m_vertices.size(), sizeHint);
-            //m_vertices.reserve(m_vertices.size() + sizeHint);
-        }
-    };
-
-    // Used in draw for legth and offsets: sumIndices, sumVertices
-    std::vector<std::pair<uint32_t, uint32_t>> m_vertexOffsets;
-    std::vector<PolylineVertex> m_vertices;
-    std::vector<uint16_t> m_indices;
 };
-
 
 std::unique_ptr<VboMesh> Builder::build() {
     auto mesh = std::make_unique<Mesh>(m_vertexLayout, m_drawMode);
@@ -260,40 +277,42 @@ bool evalStyleParamWidth(StyleParamKey _key, const DrawRule& _rule, const Tile& 
 void Builder::addLine(const Line& _line, const Properties& _props, const DrawRule& _rule) {
 
     Parameters params = parseRule(_rule);
-    GLuint abgr = params.color;
 
+    m_builderOptions.abgr = params.color;
     float dWdZ = 0.f;
     float width = 0.f;
 
-    if (!evalStyleParamWidth(StyleParamKey::width, _rule, *m_tile, width, dWdZ)) {
+    if (!evalStyleParamWidth(StyleParamKey::width, _rule, *m_tile,
+                             width, dWdZ)) {
         return;
     }
-
     if (width <= 0.0f && dWdZ <= 0.0f ) { return; }
 
     if (Tangram::getDebugFlag(Tangram::DebugFlags::proxy_colors)) {
-        abgr = abgr << (m_tile->getID().z % 6);
+        m_builderOptions.abgr <<= (m_tile->getID().z % 6);
     }
 
     auto& extrude = params.extrude;
 
     float tileUnitsPerMeter = m_tile->getInverseScale();
-    float height = getUpperExtrudeMeters(extrude, _props) * tileUnitsPerMeter;
-    float order = params.order;
+
+    m_builderOptions.height = getUpperExtrudeMeters(extrude, _props) * tileUnitsPerMeter;
+    m_builderOptions.order = params.order;
+    m_builderOptions.width = width;
+    m_builderOptions.dWdZ = dWdZ;
 
     m_builder.cap = params.cap;
     m_builder.join = params.join;
 
-    m_builder.addVertex = [&](const glm::vec3& coord, const glm::vec2& normal, const glm::vec2& uv) {
-        m_vertices.push_back({ {coord.x, coord.y, height}, order, uv, normal, {width, dWdZ}, abgr });
-    };
-
+    // TODO: This could be done nicer (with one copy less) with
+    // PolylineBuilder::sizeHint callback,  when the hint is
+    // *always* correct.
     auto addVertices = [&](){
         auto sumVertices = m_vertexOffsets.back().second;
         if (sumVertices + m_builder.numVertices > MAX_INDEX_VALUE) {
             m_vertexOffsets.emplace_back(0, 0);
+            // Indices must reference vertices starting at 0
             sumVertices = 0;
-            LOGE("LARGE BUFFER");
         }
         for (uint16_t idx : m_builder.indices) {
             m_indices.push_back(idx + sumVertices);
@@ -301,10 +320,14 @@ void Builder::addLine(const Line& _line, const Properties& _props, const DrawRul
         auto& vertexOffset = m_vertexOffsets.back();
         vertexOffset.first += m_builder.indices.size();
         vertexOffset.second += m_builder.numVertices;
-        //LOGE("add %d %d", m_builder.indices.size(), m_builder.numVertices);
 
         m_builder.clear();
     };
+
+    // Keep current vertex buffer position when the
+    // same vertices are used for the outline.
+    size_t startIndex = m_indices.size();
+    size_t startVertex = m_vertices.size();
 
     Builders::buildPolyLine(_line, m_builder);
     addVertices();
@@ -317,39 +340,56 @@ void Builder::addLine(const Line& _line, const Properties& _props, const DrawRul
                              widthOutline, dWdZOutline)) {
         return;
     }
-
     if (!(widthOutline > 0.0f || dWdZOutline > 0.0f)) {
         return;
     }
 
-    // Note: this must update values captured (and used) by builder!
-    width += widthOutline;
-    dWdZ += dWdZOutline;
-    abgr = params.outlineColor;
-    order = std::min(params.outlineOrder, params.order) - .5f;
+    m_builderOptions.width += widthOutline;
+    m_builderOptions.dWdZ += dWdZOutline;
+    m_builderOptions.abgr = params.outlineColor;
+    m_builderOptions.order = std::min(params.outlineOrder, params.order) - .5f;
 
-    //if (params.outlineCap != params.cap || params.outlineJoin != params.join) {
+    if (params.outlineCap != params.cap || params.outlineJoin != params.join) {
         // need to re-triangulate with different cap and/or join
         m_builder.cap = params.outlineCap;
         m_builder.join = params.outlineJoin;
         Builders::buildPolyLine(_line, m_builder);
         addVertices();
 
-    // } else {
-    //     return;
+    } else {
+        // re-use indices from original line
 
-    //     // re-use indices from original line
-    //     size_t oldSize = m_builder.indices.size();
-    //     size_t offset = m_vertices.size();
-    //     m_builder.indices.reserve(2 * oldSize);
+        // TODO: This is a bit too much shuffling with offsets
+        size_t numIndices = m_indices.size() - startIndex;
+        size_t numVertices = m_vertices.size() - startVertex;
+        int shift = 0;
 
-    //     for(size_t i = 0; i < oldSize; i++) {
-    //         m_builder.indices.push_back(offset + m_builder.indices[i]);
-    //     }
-    //     for (size_t i = 0; i < offset; i++) {
-    //         vertices.push_back({ vertices[i], outlineOrder, { width, dWdZ }, abgrOutline });
-    //     }
-    // }
+        auto curVertices = m_vertexOffsets.back().second;
+        if (curVertices + numVertices > MAX_INDEX_VALUE) {
+            m_vertexOffsets.emplace_back(0, 0);
+            // Indices must reference vertices starting at 0
+            shift = - (m_vertices.size() - numVertices);
+        } else {
+            shift = numVertices;
+        }
+
+        for (size_t i = 0; i < numIndices; i++) {
+            m_indices.push_back(m_indices[startIndex + i] + shift);
+        }
+
+        auto& vertexOffset = m_vertexOffsets.back();
+        vertexOffset.first += numIndices;
+        vertexOffset.second += numVertices;
+
+        for (size_t i = 0; i < numVertices; i++) {
+            const auto& v = m_vertices[startVertex + i];
+
+            m_vertices.push_back({ v, m_builderOptions.order,
+                                 { m_builderOptions.width,
+                                   m_builderOptions.dWdZ },
+                                  m_builderOptions.abgr });
+        }
+    }
 }
 
 }
