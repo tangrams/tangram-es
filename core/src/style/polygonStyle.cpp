@@ -43,13 +43,11 @@ struct Mesh : public VboMesh {
     Mesh(std::shared_ptr<VertexLayout> _vertexLayout, GLenum _drawMode)
         : VboMesh(_vertexLayout, _drawMode) {}
 
-    void compile(std::vector<std::pair<uint32_t, uint32_t>> _offsets,
-                 std::vector<PolygonVertex> _vertices,
-                 std::vector<uint16_t> _indices) {
+    void compile(const std::vector<std::pair<uint32_t, uint32_t>>& _offsets,
+                 const std::vector<PolygonVertex>& _vertices,
+                 const std::vector<uint16_t>& _indices) {
 
-        m_vertexOffsets.insert(m_vertexOffsets.begin(),
-                               _offsets.begin(),
-                               _offsets.end());
+        m_vertexOffsets = _offsets;
 
         for (auto& p : m_vertexOffsets) {
             m_nVertices += p.second;
@@ -58,10 +56,14 @@ struct Mesh : public VboMesh {
 
         int stride = m_vertexLayout->getStride();
         m_glVertexData = new GLbyte[m_nVertices * stride];
-        std::memcpy(m_glVertexData, (GLbyte*)_vertices.data(), m_nVertices * stride);
+        std::memcpy(m_glVertexData,
+                    reinterpret_cast<const GLbyte*>(_vertices.data()),
+                    m_nVertices * stride);
 
         m_glIndexData = new GLushort[m_nIndices];
-        std::memcpy(m_glIndexData, (GLbyte*)_indices.data(), m_nIndices * sizeof(GLushort));
+        std::memcpy(m_glIndexData,
+                    reinterpret_cast<const GLbyte*>(_indices.data()),
+                    m_nIndices * sizeof(GLushort));
 
         m_isCompiled = true;
     }
