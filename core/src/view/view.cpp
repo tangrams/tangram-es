@@ -332,7 +332,7 @@ void View::updateMatrices() {
 
     if (m_overrideView) {
         m_view = *m_overrideView;
-        m_view = glm::rotate(m_view, (float)(PI * 0.5), glm::vec3(1.f, 0.f, 0.f));
+        m_view = glm::rotate(m_view, (float)(-0.5 * PI), glm::vec3(1.f, 0.f, 0.f));
         m_view = glm::translate(m_view, -m_eye);
     }
 
