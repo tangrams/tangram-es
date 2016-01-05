@@ -5,16 +5,10 @@
 #include "gl/vboMesh.h"
 
 #include <limits>
+#include <memory>
+#include <locale>
 
 namespace Tangram {
-
-TextBuffer::TextBuffer(std::shared_ptr<VertexLayout> _vertexLayout)
-    : LabelMesh(_vertexLayout, GL_TRIANGLES) {
-    addVertices({}, {});
-}
-
-TextBuffer::~TextBuffer() {
-}
 
 std::vector<TextBuffer::WordBreak> TextBuffer::findWords(const std::string& _text) {
     std::vector<WordBreak> words;
@@ -56,7 +50,7 @@ int TextBuffer::applyWordWrapping(std::vector<FONSquad>& _quads,
                                   const TextStyle::Parameters& _params,
                                   const FontContext::FontMetrics& _metrics,
                                   Label::Type _type,
-                                  std::vector<TextBuffer::WordBreak>& _wordBreaks) {
+                                  std::vector<WordBreak>& _wordBreaks) {
     struct LineQuad {
         std::vector<FONSquad*> quads;
         float length = 0.0f;
@@ -164,104 +158,6 @@ std::string TextBuffer::applyTextTransform(const TextStyle::Parameters& _params,
     }
 
     return text;
-}
-
-bool TextBuffer::addLabel(const TextStyle::Parameters& _params, Label::Transform _transform,
-                          Label::Type _type, FontContext& _fontContext) {
-
-    if (_params.fontId < 0 || _params.fontSize <= 0.f || _params.text.size() == 0) {
-        return false;
-    }
-
-    /// Apply text transforms
-    const std::string* renderText;
-    std::string text;
-
-    if (_params.transform == TextLabelProperty::Transform::none) {
-        renderText = &_params.text;
-    } else {
-        text = applyTextTransform(_params, _params.text);
-        renderText = &text;
-    }
-
-    if (!_fontContext.lock()) {
-        return false;
-    }
-
-    /// Rasterize the glyphs
-    auto& quads = _fontContext.rasterize(*renderText, _params.fontId,
-                                         _params.fontSize, _params.blurSpread);
-
-    size_t numGlyphs = quads.size();
-
-    if (numGlyphs == 0) {
-        _fontContext.unlock();
-        return false;
-    }
-
-    auto& vertices = m_vertices[0];
-    int vertexOffset = vertices.size();
-    int numVertices = numGlyphs * 4;
-
-    // Stroke width is normalized by the distance of the SDF spread, then scaled
-    // to a char, then packed into the "alpha" channel of stroke. The .25 scaling
-    // probably has to do with how the SDF is generated, but honestly I'm not sure
-    // what it represents.
-    uint32_t strokeWidth = _params.strokeWidth / _params.blurSpread * 255. * .25;
-    uint32_t stroke = (_params.strokeColor & 0x00ffffff) + (strokeWidth << 24);
-
-    FontContext::FontMetrics metrics = _fontContext.getMetrics();
-
-    /// Apply word wrapping
-    glm::vec2 bbox;
-    std::vector<TextBuffer::WordBreak> wordBreaks;
-    int nLine = applyWordWrapping(quads, _params, _fontContext.getMetrics(), _type, wordBreaks);
-
-    /// Generate the quads
-    float yMin = std::numeric_limits<float>::max();
-    float xMin = std::numeric_limits<float>::max();
-
-    for (int i = 0; i < int(quads.size()); ++i) {
-        if (wordBreaks.size() > 0) {
-            bool skip = false;
-            // Skip spaces/CR quads
-            for (int j = 0; j < int(wordBreaks.size()) - 1; ++j) {
-                const auto& b1 = wordBreaks[j];
-                const auto& b2 = wordBreaks[j + 1];
-                if (i >= b1.end + 1 && i <= b2.start - 1) {
-                    numVertices -= 4;
-                    skip = true;
-                    break;
-                }
-            }
-            if (skip) { continue; }
-        }
-
-        const auto& q = quads[i];
-        vertices.push_back({{q.x0, q.y0}, {q.s0, q.t0}, _params.fill, stroke});
-        vertices.push_back({{q.x0, q.y1}, {q.s0, q.t1}, _params.fill, stroke});
-        vertices.push_back({{q.x1, q.y0}, {q.s1, q.t0}, _params.fill, stroke});
-        vertices.push_back({{q.x1, q.y1}, {q.s1, q.t1}, _params.fill, stroke});
-
-        yMin = std::min(yMin, q.y0);
-        xMin = std::min(xMin, q.x0);
-
-        bbox.x = std::max(bbox.x, q.x1);
-        bbox.y = std::max(bbox.y, std::abs(yMin - q.y1));
-    }
-
-    bbox.x -= xMin;
-    glm::vec2 quadsLocalOrigin(xMin, quads[0].y0);
-
-    _fontContext.unlock();
-
-    m_labels.emplace_back(new TextLabel(_transform, _type, bbox, *this, { vertexOffset, numVertices },
-                                        _params.labelOptions, metrics, nLine, _params.anchor, quadsLocalOrigin));
-
-    // TODO: change this in TypeMesh::adVertices()
-    m_nVertices = vertices.size();
-
-    return true;
 }
 
 }
