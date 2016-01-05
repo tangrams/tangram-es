@@ -26,27 +26,24 @@ public class TouchManager implements OnTouchListener, OnScaleGestureListener,
         OnRotateGestureListener, OnGestureListener, OnDoubleTapListener, OnShoveGestureListener {
 
     public enum Gestures {
-        TAP(1),
-        DOUBLE_TAP(1),
-        LONG_PRESS(1),
-        PAN(1),
-        ROTATE(2),
-        SCALE(2),
-        SHOVE(2),
+        TAP,
+        DOUBLE_TAP,
+        LONG_PRESS,
+        PAN,
+        ROTATE,
+        SCALE,
+        SHOVE,
         ;
 
-        private int touches;
-
-        Gestures(int touches) {
-            this.touches = touches;
-        }
-
-        public int getTouchesRequired() {
-            return touches;
-        }
-
         public boolean isMultiTouch() {
-            return touches > 1;
+            switch(this) {
+                case ROTATE:
+                case SCALE:
+                case SHOVE:
+                    return true;
+                default:
+                    return false;
+            }
         }
     }
 
