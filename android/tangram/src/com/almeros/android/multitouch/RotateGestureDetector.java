@@ -57,10 +57,13 @@ public class RotateGestureDetector extends TwoFingerGestureDetector {
         }
     }
 
+    private static final float ROTATION_THRESHOLD = 0.25f; // Minimum radians of rotation to recognize
 
     private final OnRotateGestureListener mListener;
     private boolean mSloppyGesture;
+    private boolean mRecognized;
 
+    private float mTotalRotation;
     private float mFocusX;
     private float mFocusY;
 
@@ -88,9 +91,9 @@ public class RotateGestureDetector extends TwoFingerGestureDetector {
 
                 // See if we have a sloppy gesture
                 mSloppyGesture = isSloppyGesture(event);
-                if(!mSloppyGesture){
-                    // No, start gesture now
-                    mGestureInProgress = mListener.onRotateBegin(this);
+                if (!mSloppyGesture) {
+                    // No, start listening for gesture now
+                    mGestureInProgress = true;
                 }
                 break;
 
@@ -101,18 +104,10 @@ public class RotateGestureDetector extends TwoFingerGestureDetector {
 
                 // See if we still have a sloppy gesture
                 mSloppyGesture = isSloppyGesture(event);
-                if(!mSloppyGesture){
-                    // No, start normal gesture now
-                    mGestureInProgress = mListener.onRotateBegin(this);
-                }
-
-                break;
-
-            case MotionEvent.ACTION_POINTER_UP:
                 if (!mSloppyGesture) {
-                    break;
+                    // No, start listening for gesture now
+                    mGestureInProgress = true;
                 }
-
                 break;
         }
     }
@@ -122,10 +117,10 @@ public class RotateGestureDetector extends TwoFingerGestureDetector {
     protected void handleInProgressEvent(int actionCode, MotionEvent event){
         switch (actionCode) {
             case MotionEvent.ACTION_POINTER_UP:
-                // Gesture ended but
+                // Gesture ended with up event, update and finalize state
                 updateStateByEvent(event);
 
-                if (!mSloppyGesture) {
+                if (!mSloppyGesture && mRecognized) {
                     mListener.onRotateEnd(this);
                 }
 
@@ -133,7 +128,8 @@ public class RotateGestureDetector extends TwoFingerGestureDetector {
                 break;
 
             case MotionEvent.ACTION_CANCEL:
-                if (!mSloppyGesture) {
+                // Gesture ended with no up event, finalize state
+                if (!mSloppyGesture && mRecognized) {
                     mListener.onRotateEnd(this);
                 }
 
@@ -148,7 +144,15 @@ public class RotateGestureDetector extends TwoFingerGestureDetector {
                 // finger is lifted.
                 if (mCurrPressure / mPrevPressure > PRESSURE_THRESHOLD) {
                     determineFocusPoint(event);
-                    final boolean updatePrevious = mListener.onRotate(this);
+                    boolean updatePrevious;
+                    if (mRecognized) {
+                        updatePrevious = mListener.onRotate(this);
+                    } else {
+                        updatePrevious = true;
+                        mRecognized =
+                                Math.abs(mTotalRotation) >= ROTATION_THRESHOLD &&
+                                mListener.onRotateBegin(this);
+                    }
                     if (updatePrevious) {
                         mPrevEvent.recycle();
                         mPrevEvent = MotionEvent.obtain(event);
@@ -162,6 +166,14 @@ public class RotateGestureDetector extends TwoFingerGestureDetector {
     protected void resetState() {
         super.resetState();
         mSloppyGesture = false;
+        mRecognized = false;
+        mTotalRotation = 0;
+    }
+
+    @Override
+    protected void updateStateByEvent(MotionEvent event) {
+        super.updateStateByEvent(event);
+        mTotalRotation += getRotationRadiansDelta();
     }
 
     /**
