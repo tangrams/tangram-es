@@ -35,9 +35,9 @@ public class ShoveGestureDetector extends TwoFingerGestureDetector {
      * @see ShoveGestureDetector.SimpleOnShoveGestureListener
      */
     public interface OnShoveGestureListener {
-        public boolean onShove(ShoveGestureDetector detector);
-        public boolean onShoveBegin(ShoveGestureDetector detector);
-        public void onShoveEnd(ShoveGestureDetector detector);
+        boolean onShove(ShoveGestureDetector detector);
+        boolean onShoveBegin(ShoveGestureDetector detector);
+        void onShoveEnd(ShoveGestureDetector detector);
     }
 
     /**
@@ -85,7 +85,7 @@ public class ShoveGestureDetector extends TwoFingerGestureDetector {
     }
 
     @Override
-    protected void handleStartProgressEvent(int actionCode, MotionEvent event){
+    protected void handleStartProgressEvent(int actionCode, MotionEvent event) {
         switch (actionCode) {
             case MotionEvent.ACTION_POINTER_DOWN:
                 // At least the second finger is on screen now
@@ -112,10 +112,12 @@ public class ShoveGestureDetector extends TwoFingerGestureDetector {
                 }
 
                 // Update Previous
-                if(mPrevEvent != null) mPrevEvent.recycle();
+                if (mPrevEvent != null) {
+                    mPrevEvent.recycle();
+                }
                 mPrevEvent = MotionEvent.obtain(event);
 
-                if(mPrevEvent.getPointerCount() != 2) {
+                if (mPrevEvent.getPointerCount() != 2) {
                     break;
                 }
 
@@ -123,7 +125,7 @@ public class ShoveGestureDetector extends TwoFingerGestureDetector {
 
                 // See if we still have a sloppy gesture
                 mSloppyGesture = isSloppyGesture(event);
-                if(!mSloppyGesture){
+                if (!mSloppyGesture) {
                     // No, start normal gesture now
                     mGestureInProgress = mListener.onShoveBegin(this);
                 }
@@ -141,7 +143,7 @@ public class ShoveGestureDetector extends TwoFingerGestureDetector {
 
 
     @Override
-    protected void handleInProgressEvent(int actionCode, MotionEvent event){
+    protected void handleInProgressEvent(int actionCode, MotionEvent event) {
         switch (actionCode) {
             case MotionEvent.ACTION_POINTER_UP:
                 // Gesture ended but
@@ -194,7 +196,7 @@ public class ShoveGestureDetector extends TwoFingerGestureDetector {
     }
 
     @Override
-    protected void updateStateByEvent(MotionEvent curr){
+    protected void updateStateByEvent(MotionEvent curr) {
         super.updateStateByEvent(curr);
 
         final MotionEvent prev = mPrevEvent;
@@ -210,10 +212,11 @@ public class ShoveGestureDetector extends TwoFingerGestureDetector {
     }
 
     @Override
-    protected boolean isSloppyGesture(MotionEvent event){
+    protected boolean isSloppyGesture(MotionEvent event) {
         boolean sloppy = super.isSloppyGesture(event);
-        if (sloppy)
+        if (sloppy) {
             return true;
+        }
 
         final float drag0 = event.getY(0) - mStartY0;
         final float drag1 = event.getY(1) - mStartY1;
@@ -222,11 +225,11 @@ public class ShoveGestureDetector extends TwoFingerGestureDetector {
         final float minDim = Math.min(displayMetrics.widthPixels, displayMetrics.heightPixels);
         final float minDrag = DRAG_THRESHOLD * minDim;
 
-        if(drag0 * drag1 < 0.0f) { // Sloppy if fingers moving in opposite y direction
+        if (drag0 * drag1 < 0.0f) { // Sloppy if fingers moving in opposite y direction
             return true;
-        } else if(Math.abs(drag0) < minDrag || Math.abs(drag1) < minDrag) {
+        } else if (Math.abs(drag0) < minDrag || Math.abs(drag1) < minDrag) {
             return true;
-        } else if(xSpanDiff > XSPAN_THRESHOLD * minDim) {
+        } else if (xSpanDiff > XSPAN_THRESHOLD * minDim) {
             return true;
         }
 
@@ -235,10 +238,8 @@ public class ShoveGestureDetector extends TwoFingerGestureDetector {
         //about 35 degrees, left or right
         boolean badAngle = !(( 0.0f < angle && angle < 0.611f)
                 || 2.53f < angle && angle < Math.PI);
-        if(badAngle)
-            return true;
 
-        return false;
+        return badAngle;
     }
 
 
@@ -255,7 +256,7 @@ public class ShoveGestureDetector extends TwoFingerGestureDetector {
 
         float diff0 = mCurrFinger0Y - mPrevFinger0Y;
         float diff1 = mCurrFinger1Y - mPrevFinger1Y;
-        if(Math.abs(diff1) > Math.abs(diff0) && Math.abs(diff0) < 2) {
+        if (Math.abs(diff1) > Math.abs(diff0) && Math.abs(diff0) < 2) {
             return diff1;
         } else {
             return diff0;

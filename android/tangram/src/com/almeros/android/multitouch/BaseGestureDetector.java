@@ -58,8 +58,8 @@ public abstract class BaseGestureDetector {
      * @param event
      * @return
      */
-    public boolean onTouchEvent(MotionEvent event){
-        final int actionCode = event.getAction() & MotionEvent.ACTION_MASK;
+    public boolean onTouchEvent(MotionEvent event) {
+        final int actionCode = event.getActionMasked();
         if (!mGestureInProgress) {
             handleStartProgressEvent(actionCode, event);
         } else {
@@ -87,7 +87,7 @@ public abstract class BaseGestureDetector {
     protected abstract void handleInProgressEvent(int actionCode, MotionEvent event);
 
 
-    protected void updateStateByEvent(MotionEvent curr){
+    protected void updateStateByEvent(MotionEvent curr) {
         final MotionEvent prev = mPrevEvent;
 
         // Reset mCurrEvent

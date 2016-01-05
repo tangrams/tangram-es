@@ -35,9 +35,9 @@ public class MoveGestureDetector extends BaseGestureDetector {
      * @see MoveGestureDetector.SimpleOnMoveGestureListener
      */
     public interface OnMoveGestureListener {
-        public boolean onMove(MoveGestureDetector detector);
-        public boolean onMoveBegin(MoveGestureDetector detector);
-        public void onMoveEnd(MoveGestureDetector detector);
+        boolean onMove(MoveGestureDetector detector);
+        boolean onMoveBegin(MoveGestureDetector detector);
+        void onMoveEnd(MoveGestureDetector detector);
     }
 
     /**
@@ -75,7 +75,7 @@ public class MoveGestureDetector extends BaseGestureDetector {
     }
 
     @Override
-    protected void handleStartProgressEvent(int actionCode, MotionEvent event){
+    protected void handleStartProgressEvent(int actionCode, MotionEvent event) {
         switch (actionCode) {
             case MotionEvent.ACTION_DOWN:
                 resetState(); // In case we missed an UP/CANCEL event
@@ -93,7 +93,7 @@ public class MoveGestureDetector extends BaseGestureDetector {
     }
 
     @Override
-    protected void handleInProgressEvent(int actionCode, MotionEvent event){
+    protected void handleInProgressEvent(int actionCode, MotionEvent event) {
         switch (actionCode) {
             case MotionEvent.ACTION_UP:
             case MotionEvent.ACTION_CANCEL:
@@ -145,13 +145,13 @@ public class MoveGestureDetector extends BaseGestureDetector {
      * @param MotionEvent e
      * @return PointF focal point
      */
-    private PointF determineFocalPoint(MotionEvent e){
+    private PointF determineFocalPoint(MotionEvent e) {
         // Number of fingers on screen
         final int pCount = e.getPointerCount();
         float x = 0f;
         float y = 0f;
 
-        for(int i = 0; i < pCount; i++){
+        for(int i = 0; i < pCount; i++) {
             x += e.getX(i);
             y += e.getY(i);
         }

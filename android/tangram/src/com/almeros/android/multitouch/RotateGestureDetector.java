@@ -33,9 +33,9 @@ public class RotateGestureDetector extends TwoFingerGestureDetector {
      * @see RotateGestureDetector.SimpleOnRotateGestureListener
      */
     public interface OnRotateGestureListener {
-        public boolean onRotate(RotateGestureDetector detector);
-        public boolean onRotateBegin(RotateGestureDetector detector);
-        public void onRotateEnd(RotateGestureDetector detector);
+        boolean onRotate(RotateGestureDetector detector);
+        boolean onRotateBegin(RotateGestureDetector detector);
+        void onRotateEnd(RotateGestureDetector detector);
     }
 
     /**
@@ -78,7 +78,7 @@ public class RotateGestureDetector extends TwoFingerGestureDetector {
     }
 
     @Override
-    protected void handleStartProgressEvent(int actionCode, MotionEvent event){
+    protected void handleStartProgressEvent(int actionCode, MotionEvent event) {
         switch (actionCode) {
             case MotionEvent.ACTION_POINTER_DOWN:
                 // At least the second finger is on screen now
@@ -114,7 +114,7 @@ public class RotateGestureDetector extends TwoFingerGestureDetector {
 
 
     @Override
-    protected void handleInProgressEvent(int actionCode, MotionEvent event){
+    protected void handleInProgressEvent(int actionCode, MotionEvent event) {
         switch (actionCode) {
             case MotionEvent.ACTION_POINTER_UP:
                 // Gesture ended with up event, update and finalize state
