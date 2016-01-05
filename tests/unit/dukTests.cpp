@@ -232,7 +232,7 @@ TEST_CASE( "Test evalFilter - Init filter function from yaml", "[Duktape][evalFi
     REQUIRE(filter1.data.is<Filter::Function>());
 
     StyleContext ctx;
-    ctx.initFunctions(scene);
+    ctx.setScene(scene);
 
     Feature feat1;
     feat1.props.add("sort_key", 2);
@@ -280,7 +280,7 @@ TEST_CASE("Test evalStyle - Init StyleParam function from yaml", "[Duktape][eval
     // }
 
     StyleContext ctx;
-    ctx.initFunctions(scene);
+    ctx.setScene(scene);
 
     for (auto& style : styles) {
         //logMsg("S: %d - '%s' %d\n", style.key, style.toString().c_str(), style.function);

@@ -68,7 +68,10 @@ private:
     std::unique_ptr<MapProjection> m_mapProjection;
     std::shared_ptr<View> m_view;
 
-    std::vector<DataLayer> m_layers;
+    // StyleContext/TileWoker instances need a shared reference
+    // to SceneLayers
+    std::shared_ptr<std::vector<DataLayer>> m_layers;
+
     std::vector<std::shared_ptr<DataSource>> m_dataSources;
     std::vector<std::unique_ptr<Style>> m_styles;
     std::vector<std::unique_ptr<Light>> m_lights;

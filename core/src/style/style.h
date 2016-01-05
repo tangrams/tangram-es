@@ -20,6 +20,7 @@ class VertexLayout;
 class View;
 class Scene;
 class ShaderProgram;
+class Style;
 
 enum class LightingType : char {
     none,
@@ -38,23 +39,11 @@ enum class Blending : int8_t {
 class StyleBuilder {
 public:
 
-    StyleBuilder(std::shared_ptr<VertexLayout> _vertexLayout, GLenum _drawMode)
-        : m_vertexLayout(_vertexLayout), m_drawMode(_drawMode) {}
+    StyleBuilder(const Style& _style);
 
-    /* <VertexLayout> shared between meshes using this style */
-    std::shared_ptr<VertexLayout> m_vertexLayout;
+    virtual void begin(const Tile& _tile) = 0;
 
-    /* Draw mode to pass into <VboMesh>es created with this style */
-    GLenum m_drawMode;
-
-    const Tile* m_tile;
-
-    void beginTile(const Tile& _tile) {
-        m_tile = &_tile;
-        initMesh();
-    }
-
-    void addFeature(const Feature& _feat, const DrawRule& _rule);
+    virtual void addFeature(const Feature& _feat, const DrawRule& _rule);
 
     /* Build styled vertex data for point geometry */
     virtual void addPoint(const Point& _point, const Properties& _props, const DrawRule& _rule);
@@ -65,12 +54,13 @@ public:
     /* Build styled vertex data for polygon geometry */
     virtual void addPolygon(const Polygon& _polygon, const Properties& _props, const DrawRule& _rule);
 
-    virtual void initMesh() = 0;
-
     /* Create a new mesh object using the vertex layout corresponding to this style */
     virtual std::unique_ptr<VboMesh> build() = 0;
 
     virtual bool checkRule(const DrawRule& _rule) const;
+
+protected:
+    bool m_hasColorShaderBlock = false;;
 };
 
 /* Means of constructing and rendering map geometry
@@ -117,14 +107,19 @@ protected:
     /* animated property */
     bool m_animated = false;
 
-    /* Create <VertexLayout> corresponding to this style; subclasses must implement this and call it on construction */
+    /* Create <VertexLayout> corresponding to this style; subclasses must
+     * implement this and call it on construction
+     */
     virtual void constructVertexLayout() = 0;
 
-    /* Create <ShaderProgram> for this style; subclasses must implement this and call it on construction */
+    /* Create <ShaderProgram> for this style; subclasses must implement
+     * this and call it on construction
+     */
     virtual void constructShaderProgram() = 0;
 
     /* Set uniform values when @_updateUniforms is true,
-       and bind textures starting at @_textureUnit */
+     * and bind textures starting at @_textureUnit
+     */
     void setupShaderUniforms(int _textureUnit, Scene& _scene);
 
 private:
@@ -167,14 +162,6 @@ public:
     /* Make this style ready to be used (call after all needed properties are set) */
     virtual void build(const std::vector<std::unique_ptr<Light>>& _lights);
 
-    // virtual bool checkRule(const DrawRule& _rule) const;
-
-    // /* Perform any needed setup to process the data for a tile */
-    // virtual void onBeginBuildTile(Tile& _tile) const;
-
-    // /* Perform any needed teardown after processing data for a tile */
-    // virtual void onEndBuildTile(Tile& _tile) const;
-
     /* Perform any setup needed before drawing each frame
      * _textUnit is the next available texture unit
      */
@@ -203,6 +190,10 @@ public:
     std::vector<StyleUniform>& styleUniforms() { return m_styleUniforms; }
 
     virtual std::unique_ptr<StyleBuilder> createBuilder() const = 0;
+
+    GLenum drawMode() const { return m_drawMode; }
+    float pixelScale() const { return m_pixelScale; }
+    const auto& vertexLayout() const { return m_vertexLayout; }
 
 };
 

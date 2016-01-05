@@ -50,7 +50,11 @@ static float g_time = 0.0;
 static std::bitset<8> g_flags = 0;
 int log_level = 2;
 
-void initialize(const char* _scenePath) {
+float m_pixelsPerPoint;
+
+void initialize(const char* _scenePath, float _pixelsPerPoint) {
+
+    m_pixelsPerPoint = _pixelsPerPoint;
 
     if (m_tileManager) {
         LOG("Notice: Already initialized");
@@ -106,11 +110,15 @@ void loadScene(const char* _scenePath, bool _setPositionFromScene) {
             m_scene->view()->setZoom(m_view->getZoom());
         }
         m_view = m_scene->view();
+
+        m_view->setPixelScale(m_pixelsPerPoint);
+        for (auto& style : m_scene->styles()) {
+            style->setPixelScale(m_pixelsPerPoint);
+        }
+
         m_inputHandler->setView(m_view);
         m_tileManager->setView(m_view);
         m_tileManager->setScene(scene);
-        setPixelScale(m_view->pixelScale());
-
     }
 }
 
@@ -341,16 +349,6 @@ void screenToWorldCoordinates(double& _x, double& _y) {
 
 }
 
-void setPixelScale(float _pixelsPerPoint) {
-
-    if (m_view) {
-        m_view->setPixelScale(_pixelsPerPoint);
-    }
-
-    for (auto& style : m_scene->styles()) {
-        style->setPixelScale(_pixelsPerPoint);
-    }
-}
 
 void addDataSource(std::shared_ptr<DataSource> _source) {
     if (!m_tileManager) { return; }

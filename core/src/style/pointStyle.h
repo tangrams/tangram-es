@@ -33,6 +33,9 @@ public:
     void setSpriteAtlas(std::shared_ptr<SpriteAtlas> _spriteAtlas) { m_spriteAtlas = _spriteAtlas; }
     void setTexture(std::shared_ptr<Texture> _texture) { m_texture = _texture; }
 
+    const auto& texture() const { return m_texture; }
+    const auto& spriteAtlas() const { return m_spriteAtlas; }
+
     virtual ~PointStyle();
 
 protected:

@@ -70,29 +70,26 @@ namespace {
 
 struct Builder : public StyleBuilder {
 
-    std::shared_ptr<FontContext> m_fontContext;
-
-    bool m_sdf;
-    // FIXME
-    float m_pixelScale = 1;
+    const TextStyle& m_style;
 
     std::unique_ptr<TextBuffer> m_mesh;
 
-    virtual void addPolygon(const Polygon& _polygon, const Properties& _props, const DrawRule& _rule) override;
-    virtual void addLine(const Line& _line, const Properties& _props, const DrawRule& _rule) override;
-    virtual void addPoint(const Point& _line, const Properties& _props, const DrawRule& _rule) override;
+    void begin(const Tile& _tile) override {
+        m_mesh = std::make_unique<TextBuffer>(m_style.vertexLayout());
+    }
 
-    virtual bool checkRule(const DrawRule& _rule) const override;
+    bool checkRule(const DrawRule& _rule) const override;
+
+    void addPolygon(const Polygon& _polygon, const Properties& _props, const DrawRule& _rule) override;
+    void addLine(const Line& _line, const Properties& _props, const DrawRule& _rule) override;
+    void addPoint(const Point& _line, const Properties& _props, const DrawRule& _rule) override;
+
+    std::unique_ptr<VboMesh> build() override { return std::move(m_mesh); };
+
+
+    Builder(const TextStyle& _style) : StyleBuilder(_style), m_style(_style) {}
 
     TextStyle::Parameters applyRule(const DrawRule& _rule, const Properties& _props) const;
-
-    virtual void initMesh() override { m_mesh = std::make_unique<TextBuffer>(m_vertexLayout); }
-    virtual std::unique_ptr<VboMesh> build() override { return std::move(m_mesh); };
-
-    Builder(std::shared_ptr<VertexLayout> _vertexLayout, GLenum _drawMode,
-            std::shared_ptr<FontContext> _fontContext, bool _sdf)
-        : StyleBuilder(_vertexLayout, _drawMode),
-          m_fontContext(_fontContext), m_sdf(_sdf) {}
 
 };
 
@@ -115,11 +112,12 @@ auto Builder::applyRule(const DrawRule& _rule, const Properties& _props) const -
     fontWeight = (fontWeight.size() == 0) ? "400" : fontWeight;
     fontStyle = (fontStyle.size() == 0) ? "normal" : fontStyle;
     {
-        if (!m_fontContext->lock()) { return p; }
+        auto& fontContext = m_style.fontContext();
+        if (!fontContext.lock()) { return p; }
 
-        p.fontId = m_fontContext->addFont(fontFamily, fontWeight, fontStyle);
+        p.fontId = fontContext.addFont(fontFamily, fontWeight, fontStyle);
 
-        m_fontContext->unlock();
+        fontContext.unlock();
         if (p.fontId < 0) { return p; }
     }
 
@@ -175,10 +173,10 @@ auto Builder::applyRule(const DrawRule& _rule, const Properties& _props) const -
     }
 
     /* Global operations done for fontsize and sdfblur */
-    p.fontSize *= m_pixelScale;
-    p.labelOptions.offset *= m_pixelScale;
+    p.fontSize *= m_style.pixelScale();
+    p.labelOptions.offset *= m_style.pixelScale();
     float emSize = p.fontSize / 16.f;
-    p.blurSpread = m_sdf ? emSize * 5.0f : 0.0f;
+    p.blurSpread = m_style.useSDF() ? emSize * 5.0f : 0.0f;
 
     float boundingBoxBuffer = -p.fontSize / 2.f;
     p.labelOptions.buffer = boundingBoxBuffer;
@@ -200,7 +198,7 @@ void Builder::addPoint(const Point& _point, const Properties& _props, const Draw
     if (!params.isValid()) { return; }
 
     m_mesh->addLabel(params, { glm::vec2(_point), glm::vec2(_point) },
-                    Label::Type::point, *m_fontContext);
+                    Label::Type::point, m_style.fontContext());
 }
 
 void Builder::addLine(const Line& _line, const Properties& _props, const DrawRule& _rule) {
@@ -213,7 +211,7 @@ void Builder::addLine(const Line& _line, const Properties& _props, const DrawRul
         glm::vec2 p1 = glm::vec2(_line[i]);
         glm::vec2 p2 = glm::vec2(_line[i + 1]);
 
-        m_mesh->addLabel(params, { p1, p2 }, Label::Type::line, *m_fontContext);
+        m_mesh->addLabel(params, { p1, p2 }, Label::Type::line, m_style.fontContext());
     }
 }
 
@@ -225,7 +223,7 @@ void Builder::addPolygon(const Polygon& _polygon, const Properties& _props, cons
 }
 
 std::unique_ptr<StyleBuilder> TextStyle::createBuilder() const {
-    return std::make_unique<Builder>(m_vertexLayout, m_drawMode, m_fontContext, m_sdf);
+    return std::make_unique<Builder>(*this);
 }
 
 }

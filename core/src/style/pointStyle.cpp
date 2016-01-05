@@ -71,15 +71,27 @@ namespace {
 
 struct Builder : public StyleBuilder {
 
-    std::shared_ptr<SpriteAtlas> m_spriteAtlas;
+    const PointStyle& m_style;
 
     std::unique_ptr<LabelMesh> m_mesh;
 
-    virtual void addPolygon(const Polygon& _polygon, const Properties& _props, const DrawRule& _rule) override;
-    virtual void addLine(const Line& _line, const Properties& _props, const DrawRule& _rule) override;
-    virtual void addPoint(const Point& _line, const Properties& _props, const DrawRule& _rule) override;
+    float m_zoom;
 
-    virtual bool checkRule(const DrawRule& _rule) const override;
+    void begin(const Tile& _tile) override {
+        m_zoom = _tile.getID().z;
+        m_mesh = std::make_unique<LabelMesh>(m_style.vertexLayout(), m_style.drawMode());
+    }
+
+    bool checkRule(const DrawRule& _rule) const override;
+
+    void addPolygon(const Polygon& _polygon, const Properties& _props, const DrawRule& _rule) override;
+    void addLine(const Line& _line, const Properties& _props, const DrawRule& _rule) override;
+    void addPoint(const Point& _line, const Properties& _props, const DrawRule& _rule) override;
+
+    std::unique_ptr<VboMesh> build() override { return std::move(m_mesh); };
+
+
+    Builder(const PointStyle& _style) : StyleBuilder(_style), m_style(_style) {}
 
     void pushQuad(std::vector<Label::Vertex>& _vertices, const glm::vec2& _size, const glm::vec2& _uvBL,
                   const glm::vec2& _uvTR, unsigned int _color, float _extrudeScale) const;
@@ -87,22 +99,16 @@ struct Builder : public StyleBuilder {
     bool getUVQuad(PointStyle::Parameters& _params, glm::vec4& _quad) const;
 
     PointStyle::Parameters applyRule(const DrawRule& _rule, const Properties& _props) const;
-
-    virtual void initMesh() override { m_mesh = std::make_unique<LabelMesh>(m_vertexLayout, m_drawMode); }
-    virtual std::unique_ptr<VboMesh> build() override { return std::move(m_mesh); };
-
-    Builder(std::shared_ptr<VertexLayout> _vertexLayout, GLenum _drawMode,
-            std::shared_ptr<SpriteAtlas> _spriteAtlas)
-        : StyleBuilder(_vertexLayout, _drawMode), m_spriteAtlas(_spriteAtlas) {}
-
 };
 
 bool Builder::checkRule(const DrawRule& _rule) const {
-    //uint32_t checkColor;
+    uint32_t checkColor;
     // require a color or texture atlas/texture to be valid
-    // if (!_rule.get(StyleParamKey::color, checkColor) && !m_texture && !m_spriteAtlas) {
-    //     return false;
-    // }
+    if (!_rule.get(StyleParamKey::color, checkColor) &&
+        !m_style.texture() &&
+        !m_style.spriteAtlas()) {
+        return false;
+    }
     return true;
 }
 
@@ -125,12 +131,10 @@ auto Builder::applyRule(const DrawRule& _rule, const Properties& _props) const -
     _rule.get(StyleParamKey::transition_show_time, p.labelOptions.showTransition.time);
     _rule.get(StyleParamKey::anchor, anchor);
 
-    float _zoom = m_tile->getID().z;
-
     auto sizeParam = _rule.findParameter(StyleParamKey::size);
     if (sizeParam.stops && sizeParam.value.is<float>()) {
         float lowerSize = sizeParam.value.get<float>();
-        float higherSize = sizeParam.stops->evalWidth(_zoom + 1);
+        float higherSize = sizeParam.stops->evalWidth(m_zoom + 1);
         p.extrudeScale = (higherSize - lowerSize) * 0.5f - 1.f;
         p.size = glm::vec2(lowerSize);
     } else if (_rule.get(StyleParamKey::size, size)) {
@@ -173,11 +177,11 @@ void Builder::pushQuad(std::vector<Label::Vertex>& _vertices, const glm::vec2& _
 bool Builder::getUVQuad(PointStyle::Parameters& _params, glm::vec4& _quad) const {
     _quad = glm::vec4(0.0, 0.0, 1.0, 1.0);
 
-    if (m_spriteAtlas) {
+    if (m_style.spriteAtlas()) {
         SpriteNode spriteNode;
 
-        if (!m_spriteAtlas->getSpriteNode(_params.sprite, spriteNode) &&
-            !m_spriteAtlas->getSpriteNode(_params.spriteDefault, spriteNode)) {
+        if (!m_style.spriteAtlas()->getSpriteNode(_params.sprite, spriteNode) &&
+            !m_style.spriteAtlas()->getSpriteNode(_params.spriteDefault, spriteNode)) {
             return false;
         }
 
@@ -196,8 +200,7 @@ bool Builder::getUVQuad(PointStyle::Parameters& _params, glm::vec4& _quad) const
         }
     }
 
-    // FIXME
-    // _params.size *= m_pixelScale;
+    _params.size *= m_style.pixelScale();
 
     return true;
 }
@@ -297,7 +300,7 @@ void Builder::addPolygon(const Polygon& _polygon, const Properties& _props,
 }
 
 std::unique_ptr<StyleBuilder> PointStyle::createBuilder() const {
-    return std::make_unique<Builder>(m_vertexLayout, m_drawMode, m_spriteAtlas);
+    return std::make_unique<Builder>(*this);
 }
 
 }

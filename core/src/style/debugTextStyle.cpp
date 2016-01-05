@@ -19,28 +19,31 @@ DebugTextStyle::DebugTextStyle(std::shared_ptr<FontContext> _fontContext, FontID
 namespace {
 struct Builder : public StyleBuilder {
 
-    Builder(std::shared_ptr<VertexLayout> _vertexLayout, GLenum _drawMode,
-            std::shared_ptr<FontContext> _fontContext, TextStyle::Parameters _params)
-        : StyleBuilder(_vertexLayout, _drawMode),
-          m_fontContext(_fontContext), m_params(_params) {}
+    const DebugTextStyle& m_style;
 
-    std::shared_ptr<FontContext> m_fontContext;
     TextStyle::Parameters m_params;
 
-    void initMesh() override {}
+    void begin(const Tile& _tile) override {
+        if (!Tangram::getDebugFlag(Tangram::DebugFlags::tile_infos)) {
+            return;
+        }
+
+        m_params.text = _tile.getID().toString();
+    }
 
     std::unique_ptr<VboMesh> build() override {
         if (!Tangram::getDebugFlag(Tangram::DebugFlags::tile_infos)) {
             return nullptr;
         }
 
-        m_params.text = m_tile->getID().toString();
-
-        auto mesh = std::make_unique<TextBuffer>(m_vertexLayout);
-        mesh->addLabel(m_params, { glm::vec2(.5f) }, Label::Type::debug, *m_fontContext);
+        auto mesh = std::make_unique<TextBuffer>(m_style.vertexLayout());
+        mesh->addLabel(m_params, { glm::vec2(.5f) }, Label::Type::debug, m_style.fontContext());
 
         return std::move(mesh);
     }
+
+    Builder(const DebugTextStyle& _style, TextStyle::Parameters _params)
+        : StyleBuilder(_style), m_style(_style), m_params(_params) {}
 };
 }
 
@@ -51,8 +54,7 @@ std::unique_ptr<StyleBuilder> DebugTextStyle::createBuilder() const {
     params.blurSpread = m_sdf ? 2.5f : 0.0f;
     params.fill = 0xdc3522ff;
 
-    return std::make_unique<Builder>(m_vertexLayout, m_drawMode,
-                                     m_fontContext, params);
+    return std::make_unique<Builder>(*this, params);
 }
 
 }

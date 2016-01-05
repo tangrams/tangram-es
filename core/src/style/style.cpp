@@ -162,12 +162,9 @@ bool StyleBuilder::checkRule(const DrawRule& _rule) const {
     uint32_t checkOrder;
 
     if (!_rule.get(StyleParamKey::color, checkColor)) {
-        // const auto& blocks = m_shaderProgram->getSourceBlocks();
-        // if (blocks.find("color") == blocks.end() &&
-        //     blocks.find("filter") == blocks.end()) {
-        //     return false; // No color parameter or color block? NO SOUP FOR YOU
-        // }
-        return false;
+        if (!m_hasColorShaderBlock) {
+            return false;
+        }
     }
 
     if (!_rule.get(StyleParamKey::order, checkOrder)) {
@@ -201,6 +198,14 @@ void StyleBuilder::addFeature(const Feature& _feat, const DrawRule& _rule) {
             break;
     }
 
+}
+
+StyleBuilder::StyleBuilder(const Style& _style) {
+    const auto& blocks = _style.getShaderProgram()->getSourceBlocks();
+    if (blocks.find("color") != blocks.end() ||
+        blocks.find("filter") != blocks.end()) {
+        m_hasColorShaderBlock = true;
+    }
 }
 
 void StyleBuilder::addPoint(const Point& _point, const Properties& _props, const DrawRule& _rule) {

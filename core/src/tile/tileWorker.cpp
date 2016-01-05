@@ -19,7 +19,9 @@ TileWorker::TileWorker(int _num_worker) {
     m_running = true;
 
     for (int i = 0; i < _num_worker; i++) {
-        m_workers.emplace_back(&TileWorker::run, this);
+        auto worker = std::make_unique<Worker>();
+        worker->thread = std::thread(&TileWorker::run, this, worker.get());
+        m_workers.push_back(std::move(worker));
     }
 }
 
@@ -29,11 +31,11 @@ TileWorker::~TileWorker(){
     }
 }
 
-void TileWorker::run() {
+void TileWorker::run(Worker* instance) {
 
     setCurrentThreadPriority(WORKER_NICENESS);
 
-    StyleContext context;
+    std::unique_ptr<StyleContext> context;
 
     while (true) {
 
@@ -77,26 +79,31 @@ void TileWorker::run() {
             m_queue.erase(it);
         }
 
-        if (task->isCanceled()) { continue; }
+        if (task->isCanceled()) {
+            continue;
+        }
 
-        // Save shared reference to Scene while building tile
-        // FIXME: Scene could be released on Worker-Thread and
-        // therefore call unsafe glDelete* functions...
-        auto scene = m_scene;
-        if (!scene) { continue; }
+        if (instance->styleContext) {
+            context = std::move(instance->styleContext);
+            LOG("Passed new StyleContext to TileWorker");
+        }
 
-        auto tileData = task->source().parse(*task, *scene->mapProjection());
+        if (!context) {
+            LOGE("Missing Scene/StyleContext in TileWorker!");
+            continue;
+        }
+
+        auto tileData = task->source().parse(*task, *context->mapProjection());
 
         // const clock_t begin = clock();
-
-        context.initFunctions(*scene);
+        // context.initFunctions(*scene);
 
         if (tileData) {
             auto tile = std::make_shared<Tile>(task->tileId(),
-                                               *scene->mapProjection(),
+                                               *context->mapProjection(),
                                                &task->source());
 
-            tile->build(context, *scene, *tileData, task->source());
+            tile->build(*context, *tileData, task->source());
 
             // Mark task as ready
             task->setTile(std::move(tile));
@@ -110,6 +117,15 @@ void TileWorker::run() {
         m_pendingTiles = true;
 
         requestRender();
+    }
+}
+
+void TileWorker::setScene(const Scene& _scene) {
+    for (auto& worker : m_workers) {
+        auto styleContext = std::make_unique<StyleContext>();
+        styleContext->setScene(_scene);
+
+        worker->styleContext = std::move(styleContext);
     }
 }
 
@@ -132,8 +148,8 @@ void TileWorker::stop() {
 
     m_condition.notify_all();
 
-    for (std::thread &worker: m_workers) {
-        worker.join();
+    for (auto& worker : m_workers) {
+        worker->thread.join();
     }
 }
 

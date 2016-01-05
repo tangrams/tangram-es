@@ -72,6 +72,13 @@ namespace {
 
 struct Builder : public StyleBuilder {
 
+    const PolylineStyle& m_style;
+
+    std::unique_ptr<Mesh> m_mesh;
+    float m_tileUnitsPerMeter;
+    float m_tileSize;
+    int m_zoom;
+
     struct Parameters {
         uint32_t order = 0;
         uint32_t outlineOrder = 0;
@@ -85,19 +92,25 @@ struct Builder : public StyleBuilder {
         glm::vec2 extrude;
     };
 
-    std::unique_ptr<Mesh> m_mesh;
+    void begin(const Tile& _tile) override {
+        m_tileUnitsPerMeter = _tile.getInverseScale();
+        m_zoom = _tile.getID().z;
+        m_tileSize = _tile.getProjection()->TileSize();
+        m_mesh = std::make_unique<Mesh>(m_style.vertexLayout(), m_style.drawMode());
+    }
 
-    virtual void addPolygon(const Polygon& _polygon, const Properties& _props, const DrawRule& _rule) override;
-    virtual void addLine(const Line& _line, const Properties& _props, const DrawRule& _rule) override;
+    void addPolygon(const Polygon& _polygon, const Properties& _props, const DrawRule& _rule) override;
+    void addLine(const Line& _line, const Properties& _props, const DrawRule& _rule) override;
+
+    std::unique_ptr<VboMesh> build() override { return std::move(m_mesh); };
+
+
+    Builder(const PolylineStyle& _style) : StyleBuilder(_style), m_style(_style) {}
+
+    bool evalStyleParamWidth(StyleParamKey _key, const DrawRule& _rule,
+                             float& width, float& dWdZ);
 
     static Parameters parseRule(const DrawRule& _rule);
-
-    virtual void initMesh() override { m_mesh = std::make_unique<Mesh>(m_vertexLayout, m_drawMode); }
-    virtual std::unique_ptr<VboMesh> build() override { return std::move(m_mesh); };
-
-    Builder(std::shared_ptr<VertexLayout> _vertexLayout, GLenum _drawMode)
-        : StyleBuilder(_vertexLayout, _drawMode) {}
-
 };
 
 auto Builder::parseRule(const DrawRule& _rule) -> Parameters {
@@ -145,14 +158,11 @@ double widthMeterToPixel(int _zoom, double _tileSize, double _width) {
     return _width * meterRes;
 }
 
-bool evalStyleParamWidth(StyleParamKey _key, const DrawRule& _rule, const Tile& _tile,
-                         float& width, float& dWdZ) {
-
-    int zoom  = _tile.getID().z;
-    double tileSize = _tile.getProjection()->TileSize();
+bool Builder::evalStyleParamWidth(StyleParamKey _key, const DrawRule& _rule,
+                                  float& width, float& dWdZ) {
 
     // NB: 0.5 because 'width' will be extruded in both directions
-    double tileRes = 0.5 / tileSize;
+    double tileRes = 0.5 / m_tileSize;
 
 
     auto& styleParam = _rule.findParameter(_key);
@@ -161,7 +171,7 @@ bool evalStyleParamWidth(StyleParamKey _key, const DrawRule& _rule, const Tile& 
         width = styleParam.value.get<float>();
         width *= tileRes;
 
-        dWdZ = styleParam.stops->evalWidth(zoom + 1);
+        dWdZ = styleParam.stops->evalWidth(m_zoom + 1);
         dWdZ *= tileRes;
         // NB: Multiply by 2 for the outline to get the expected stroke pixel width.
         if (_key == StyleParamKey::outline_width) {
@@ -180,7 +190,7 @@ bool evalStyleParamWidth(StyleParamKey _key, const DrawRule& _rule, const Tile& 
         width = widthParam.value;
 
         if (widthParam.isMeter()) {
-            width = widthMeterToPixel(zoom, tileSize, width);
+            width = widthMeterToPixel(m_zoom, m_tileSize, width);
             width *= tileRes;
             dWdZ = width * 2;
         } else {
@@ -212,20 +222,19 @@ void Builder::addLine(const Line& _line, const Properties& _props, const DrawRul
     float dWdZ = 0.f;
     float width = 0.f;
 
-    if (!evalStyleParamWidth(StyleParamKey::width, _rule, *m_tile, width, dWdZ)) {
+    if (!evalStyleParamWidth(StyleParamKey::width, _rule, width, dWdZ)) {
         return;
     }
 
     if (width <= 0.0f && dWdZ <= 0.0f ) { return; }
 
     if (Tangram::getDebugFlag(Tangram::DebugFlags::proxy_colors)) {
-        abgr = abgr << (m_tile->getID().z % 6);
+        abgr = abgr << (m_zoom % 6);
     }
 
     auto& extrude = params.extrude;
 
-    float tileUnitsPerMeter = m_tile->getInverseScale();
-    float height = getUpperExtrudeMeters(extrude, _props) * tileUnitsPerMeter;
+    float height = getUpperExtrudeMeters(extrude, _props) * m_tileUnitsPerMeter;
     float order = params.order;
 
     PolyLineBuilder builder {
@@ -249,7 +258,7 @@ void Builder::addLine(const Line& _line, const Properties& _props, const DrawRul
         float dWdZOutline = 0.f;
 
         if (evalStyleParamWidth(StyleParamKey::outline_width, _rule,
-                                *m_tile, widthOutline, dWdZOutline) &&
+                                widthOutline, dWdZOutline) &&
             ((widthOutline > 0.0f || dWdZOutline > 0.0f)) ) {
 
             // Note: this must update <width> and <dWdZ> as they are captured
@@ -284,7 +293,7 @@ void Builder::addLine(const Line& _line, const Properties& _props, const DrawRul
 }
 
 std::unique_ptr<StyleBuilder> PolylineStyle::createBuilder() const {
-    return std::make_unique<Builder>(m_vertexLayout, m_drawMode);
+    return std::make_unique<Builder>(*this);
 }
 
 }

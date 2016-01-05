@@ -47,17 +47,16 @@ void DebugStyle::constructShaderProgram() {
 namespace {
 struct Builder : public StyleBuilder {
 
-    Builder(std::shared_ptr<VertexLayout> _vertexLayout, GLenum _drawMode)
-        : StyleBuilder(_vertexLayout, _drawMode) {}
+    const DebugStyle& m_style;
 
-    void initMesh() override {}
+    void begin(const Tile& _tile) override {}
 
     std::unique_ptr<VboMesh> build() override {
         if (!Tangram::getDebugFlag(Tangram::DebugFlags::tile_bounds)) {
             return nullptr;
         }
 
-        auto mesh = std::make_unique<Mesh>(m_vertexLayout, m_drawMode);
+        auto mesh = std::make_unique<Mesh>(m_style.vertexLayout(), m_style.drawMode());
 
         // Add four vertices to draw the outline of the tile in red
         std::vector<PosColVertex> vertices;
@@ -74,11 +73,14 @@ struct Builder : public StyleBuilder {
 
         return std::move(mesh);
     }
+
+    Builder(const DebugStyle& _style) : StyleBuilder(_style), m_style(_style) {}
+
 };
 }
 
 std::unique_ptr<StyleBuilder> DebugStyle::createBuilder() const {
-    return std::make_unique<Builder>(m_vertexLayout, m_drawMode);
+    return std::make_unique<Builder>(*this);
 }
 
 }

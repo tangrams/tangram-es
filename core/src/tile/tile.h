@@ -68,7 +68,7 @@ public:
     /* Draws the geometry associated with the provided <Style> and view-projection matrix */
     void draw(const Style& _style, const View& _view);
 
-    void build(StyleContext& _ctx, const Scene& _scene, const TileData& _data, const DataSource& _source);
+    void build(StyleContext& _ctx, const TileData& _data, const DataSource& _source);
 
     void resetState();
 

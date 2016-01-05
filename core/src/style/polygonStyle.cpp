@@ -68,24 +68,32 @@ namespace {
 
 struct Builder : public StyleBuilder {
 
+    const PolygonStyle& m_style;
+
+    std::unique_ptr<Mesh> m_mesh;
+    float m_tileUnitsPerMeter;
+    int m_zoom;
+
     struct Parameters {
         uint32_t order = 0;
         uint32_t color = 0xff00ffff;
         glm::vec2 extrude;
     };
 
-    virtual void addPolygon(const Polygon& _polygon, const Properties& _props, const DrawRule& _rule) override;
+    void begin(const Tile& _tile) override {
+        m_tileUnitsPerMeter = _tile.getInverseScale();
+        m_zoom = _tile.getID().z;
+        m_mesh = std::make_unique<Mesh>(m_style.vertexLayout(), m_style.drawMode());
+    }
+
+    void addPolygon(const Polygon& _polygon, const Properties& _props, const DrawRule& _rule) override;
+
+    std::unique_ptr<VboMesh> build() override { return std::move(m_mesh); };
+
+
+    Builder(const PolygonStyle& _style) : StyleBuilder(_style), m_style(_style) {}
 
     Parameters parseRule(const DrawRule& _rule) const;
-
-    std::unique_ptr<Mesh> m_mesh;
-
-    virtual void initMesh() override { m_mesh = std::make_unique<Mesh>(m_vertexLayout, m_drawMode); }
-    virtual std::unique_ptr<VboMesh> build() override { return std::move(m_mesh); };
-
-    Builder(std::shared_ptr<VertexLayout> _vertexLayout, GLenum _drawMode)
-        : StyleBuilder(_vertexLayout, _drawMode) {}
-
 };
 
 Builder::Parameters Builder::parseRule(const DrawRule& _rule) const {
@@ -107,7 +115,7 @@ void Builder::addPolygon(const Polygon& _polygon, const Properties& _props, cons
     auto& extrude = params.extrude;
 
     if (Tangram::getDebugFlag(Tangram::DebugFlags::proxy_colors)) {
-        abgr = abgr << (m_tile->getID().z % 6);
+        abgr = abgr << (m_zoom % 6);
     }
 
     PolygonBuilder builder = {
@@ -117,9 +125,8 @@ void Builder::addPolygon(const Polygon& _polygon, const Properties& _props, cons
         [&](size_t sizeHint){ vertices.reserve(sizeHint); }
     };
 
-    float tileUnitsPerMeter = m_tile->getInverseScale();
-    float minHeight = getLowerExtrudeMeters(extrude, _props) * tileUnitsPerMeter;
-    float height = getUpperExtrudeMeters(extrude, _props) * tileUnitsPerMeter;
+    float minHeight = getLowerExtrudeMeters(extrude, _props) * m_tileUnitsPerMeter;
+    float height = getUpperExtrudeMeters(extrude, _props) * m_tileUnitsPerMeter;
 
     if (minHeight != height) {
 
@@ -137,7 +144,7 @@ void Builder::addPolygon(const Polygon& _polygon, const Properties& _props, cons
 }
 
 std::unique_ptr<StyleBuilder> PolygonStyle::createBuilder() const {
-    return std::make_unique<Builder>(m_vertexLayout, m_drawMode);
+    return std::make_unique<Builder>(*this);
 }
 
 }
