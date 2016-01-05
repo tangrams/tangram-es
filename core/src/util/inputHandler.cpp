@@ -99,7 +99,8 @@ void InputHandler::handleShoveGesture(float _distance) {
 
     onGesture();
 
-    m_view->pitch(-_distance * 2.f);
+    float angle = -M_PI * _distance / m_view->getHeight();
+    m_view->pitch(angle);
 
 }
 

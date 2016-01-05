@@ -345,7 +345,7 @@ public class MapController implements Renderer {
             @Override
             public boolean onShove(float distance) {
                 if (responder == null || !responder.onShove(distance)) {
-                    handleShoveGesture(distance / displayMetrics.heightPixels);
+                    handleShoveGesture(distance);
                 }
                 return true;
             }

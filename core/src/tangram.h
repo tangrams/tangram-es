@@ -103,7 +103,7 @@ void handlePinchGesture(float _posX, float _posY, float _scale, float _velocity)
 // Respond to a rotation gesture with the given incremental rotation in radians
 void handleRotateGesture(float _posX, float _posY, float _rotation);
 
-// Respond to a two-finger shove with the given distance
+// Respond to a two-finger shove with the given distance in screen coordinates
 void handleShoveGesture(float _distance);
 
 // Set debug features on or off using a boolean (see debug.h)

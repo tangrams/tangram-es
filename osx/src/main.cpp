@@ -13,7 +13,8 @@ std::string sceneFile = "scene.yaml";
 // ==============
 
 const double double_tap_time = 0.5; // seconds
-const double scroll_multiplier = 0.05; // scaling for zoom
+const double scroll_span_multiplier = 0.05; // scaling for zoom and rotation
+const double scroll_distance_multiplier = 5.0; // scaling for shove
 const double single_tap_time = 0.25; //seconds (to avoid a long press being considered as a tap)
 
 bool was_panning = false;
@@ -124,11 +125,11 @@ void scroll_callback(GLFWwindow* window, double scrollx, double scrolly) {
     bool shoving = glfwGetKey(window, GLFW_KEY_LEFT_CONTROL) == GLFW_PRESS || glfwGetKey(window, GLFW_KEY_RIGHT_CONTROL) == GLFW_PRESS;
 
     if (shoving) {
-        Tangram::handleShoveGesture(scroll_multiplier * scrolly);
+        Tangram::handleShoveGesture(scroll_distance_multiplier * scrolly);
     } else if (rotating) {
-        Tangram::handleRotateGesture(x, y, scroll_multiplier * scrolly);
+        Tangram::handleRotateGesture(x, y, scroll_span_multiplier * scrolly);
     } else {
-        Tangram::handlePinchGesture(x, y, 1.0 + scroll_multiplier * scrolly, 0.f);
+        Tangram::handlePinchGesture(x, y, 1.0 + scroll_span_multiplier * scrolly, 0.f);
     }
 
 }
