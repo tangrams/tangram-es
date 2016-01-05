@@ -88,7 +88,7 @@ public class MapController implements StereoRenderer {
 
         // Set up MapView
         mapView = view;
-        view.setOnTouchListener(touchInput);
+        // view.setOnTouchListener(this);
         view.setRenderer(this);
         view.setRenderMode(GLSurfaceView.RENDERMODE_WHEN_DIRTY);
 
