@@ -105,7 +105,7 @@ public class TouchManager implements OnTouchListener, OnScaleGestureListener,
         this.shoveGestureDetector = new ShoveGestureDetector(context, this);
 
         this.detectedGestures = EnumSet.noneOf(Gestures.class);
-        this.allowedSimultaneousGestures = new EnumMap(Gestures.class);
+        this.allowedSimultaneousGestures = new EnumMap<Gestures, EnumSet<Gestures>>(Gestures.class);
 
         // By default, all gestures are allowed to detect simultaneously
         for (Gestures g : Gestures.values()) {
