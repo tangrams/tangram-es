@@ -10,7 +10,7 @@
 #include <set>
 #include <memory>
 
-#define MAX_LOD 6
+#define MAX_LOD 3
 
 namespace Tangram {
 
