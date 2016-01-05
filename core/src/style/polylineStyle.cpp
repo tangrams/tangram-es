@@ -163,6 +163,8 @@ struct Builder : public StyleBuilder {
     }
     virtual std::unique_ptr<VboMesh> build() override;
 
+    static bool evalStyleParamWidth(StyleParamKey _key, const DrawRule& _rule,
+                                    const Tile& _tile, float& width, float& dWdZ);
 
 };
 
@@ -172,106 +174,11 @@ std::unique_ptr<VboMesh> Builder::build() {
     return std::move(mesh);
 }
 
-auto Builder::parseRule(const DrawRule& _rule) -> Parameters {
-    Parameters p;
-
-    uint32_t cap = 0, join = 0;
-
-    _rule.get(StyleParamKey::extrude, p.extrude);
-    _rule.get(StyleParamKey::color, p.color);
-    _rule.get(StyleParamKey::cap, cap);
-    _rule.get(StyleParamKey::join, join);
-    _rule.get(StyleParamKey::order, p.order);
-
-    p.cap = static_cast<CapTypes>(cap);
-    p.join = static_cast<JoinTypes>(join);
-
-    p.outlineOrder = p.order; // will offset from fill later
-
-    if (_rule.get(StyleParamKey::outline_color, p.outlineColor) |
-        _rule.get(StyleParamKey::outline_order, p.outlineOrder) |
-        _rule.contains(StyleParamKey::outline_width) |
-        _rule.get(StyleParamKey::outline_cap, cap) |
-        _rule.get(StyleParamKey::outline_join, join)) {
-        p.outlineOn = true;
-        p.outlineCap = static_cast<CapTypes>(cap);
-        p.outlineJoin = static_cast<JoinTypes>(join);
-    }
-
-    return p;
-}
-
 void Builder::addPolygon(const Polygon& _poly, const Properties& _props, const DrawRule& _rule) {
 
     for (const auto& line : _poly) {
         addLine(line, _props, _rule);
     }
-}
-
-double widthMeterToPixel(int _zoom, double _tileSize, double _width) {
-    // pixel per meter at z == 0
-    double meterRes = _tileSize / (2.0 * MapProjection::HALF_CIRCUMFERENCE);
-    // pixel per meter at zoom
-    meterRes *= exp2(_zoom);
-
-    return _width * meterRes;
-}
-
-bool evalStyleParamWidth(StyleParamKey _key, const DrawRule& _rule, const Tile& _tile,
-                         float& width, float& dWdZ) {
-
-    int zoom  = _tile.getID().z;
-    double tileSize = _tile.getProjection()->TileSize();
-
-    // NB: 0.5 because 'width' will be extruded in both directions
-    double tileRes = 0.5 / tileSize;
-
-
-    auto& styleParam = _rule.findParameter(_key);
-    if (styleParam.stops) {
-
-        width = styleParam.value.get<float>();
-        width *= tileRes;
-
-        dWdZ = styleParam.stops->evalWidth(zoom + 1);
-        dWdZ *= tileRes;
-        // NB: Multiply by 2 for the outline to get the expected stroke pixel width.
-        if (_key == StyleParamKey::outline_width) {
-            width *= 2;
-            dWdZ *= 2;
-        }
-
-        dWdZ -= width;
-
-        return true;
-    }
-
-    if (styleParam.value.is<StyleParam::Width>()) {
-        auto& widthParam = styleParam.value.get<StyleParam::Width>();
-
-        width = widthParam.value;
-
-        if (widthParam.isMeter()) {
-            width = widthMeterToPixel(zoom, tileSize, width);
-            width *= tileRes;
-            dWdZ = width * 2;
-        } else {
-            width *= tileRes;
-            dWdZ = width;
-        }
-
-        if (_key == StyleParamKey::outline_width) {
-            width *= 2;
-            dWdZ *= 2;
-        }
-
-        dWdZ -= width;
-
-        return true;
-    }
-
-    LOGD("Invalid type for Width '%d'\n", styleParam.value.which());
-    return false;
 }
 
 void Builder::addLine(const Line& _line, const Properties& _props, const DrawRule& _rule) {
@@ -370,6 +277,7 @@ void Builder::addLine(const Line& _line, const Properties& _props, const DrawRul
             // Indices must reference vertices starting at 0
             shift = - (m_vertices.size() - numVertices);
         } else {
+            // Shift indices to start at the copied vertices
             shift = numVertices;
         }
 
@@ -390,6 +298,97 @@ void Builder::addLine(const Line& _line, const Properties& _props, const DrawRul
                                   m_builderOptions.abgr });
         }
     }
+}
+
+auto Builder::parseRule(const DrawRule& _rule) -> Parameters {
+    Parameters p;
+
+    uint32_t cap = 0, join = 0;
+
+    _rule.get(StyleParamKey::extrude, p.extrude);
+    _rule.get(StyleParamKey::color, p.color);
+    _rule.get(StyleParamKey::cap, cap);
+    _rule.get(StyleParamKey::join, join);
+    _rule.get(StyleParamKey::order, p.order);
+
+    p.cap = static_cast<CapTypes>(cap);
+    p.join = static_cast<JoinTypes>(join);
+
+    p.outlineOrder = p.order; // will offset from fill later
+
+    if (_rule.get(StyleParamKey::outline_color, p.outlineColor) |
+        _rule.get(StyleParamKey::outline_order, p.outlineOrder) |
+        _rule.contains(StyleParamKey::outline_width) |
+        _rule.get(StyleParamKey::outline_cap, cap) |
+        _rule.get(StyleParamKey::outline_join, join)) {
+        p.outlineOn = true;
+        p.outlineCap = static_cast<CapTypes>(cap);
+        p.outlineJoin = static_cast<JoinTypes>(join);
+    }
+
+    return p;
+}
+
+double widthMeterToPixel(int _zoom, double _tileSize, double _width) {
+    // pixel per meter at z == 0
+    double meterRes = _tileSize / (2.0 * MapProjection::HALF_CIRCUMFERENCE);
+    // pixel per meter at zoom
+    meterRes *= exp2(_zoom);
+
+    return _width * meterRes;
+}
+
+bool Builder::evalStyleParamWidth(StyleParamKey _key, const DrawRule& _rule,
+                                  const Tile& _tile, float& width, float& dWdZ) {
+
+    int zoom  = _tile.getID().z;
+    double tileSize = _tile.getProjection()->TileSize();
+
+    // NB: 0.5 because 'width' will be extruded in both directions
+    double tileRes = 0.5 / tileSize;
+
+
+    auto& styleParam = _rule.findParameter(_key);
+    if (styleParam.stops) {
+
+        width = styleParam.value.get<float>();
+        width *= tileRes;
+
+        dWdZ = styleParam.stops->evalWidth(zoom + 1);
+        dWdZ *= tileRes;
+        // NB: Multiply by 2 for the outline to get the expected stroke pixel width.
+        if (_key == StyleParamKey::outline_width) {
+            width *= 2;
+            dWdZ *= 2;
+        }
+        dWdZ -= width;
+        return true;
+    }
+
+    if (styleParam.value.is<StyleParam::Width>()) {
+        auto& widthParam = styleParam.value.get<StyleParam::Width>();
+
+        width = widthParam.value;
+
+        if (widthParam.isMeter()) {
+            width = widthMeterToPixel(zoom, tileSize, width);
+            width *= tileRes;
+            dWdZ = width * 2;
+        } else {
+            width *= tileRes;
+            dWdZ = width;
+        }
+
+        if (_key == StyleParamKey::outline_width) {
+            width *= 2;
+            dWdZ *= 2;
+        }
+        dWdZ -= width;
+        return true;
+    }
+
+    LOGD("Invalid type for Width '%d'\n", styleParam.value.which());
+    return false;
 }
 
 }
