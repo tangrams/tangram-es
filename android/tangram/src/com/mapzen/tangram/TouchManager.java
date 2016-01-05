@@ -16,7 +16,8 @@ import com.almeros.android.multitouch.RotateGestureDetector.OnRotateGestureListe
 import com.almeros.android.multitouch.ShoveGestureDetector;
 import com.almeros.android.multitouch.ShoveGestureDetector.OnShoveGestureListener;
 
-import java.util.Arrays;
+import java.util.EnumMap;
+import java.util.EnumSet;
 
 /**
  * Collects touch data, applies gesture detectors, resolves simultaneous detection, and calls the
@@ -91,8 +92,8 @@ public class TouchManager implements OnTouchListener, OnScaleGestureListener,
     private RotateResponder rotateResponder;
     private ShoveResponder shoveResponder;
 
-    private boolean[] detectedGestures;
-    private boolean[][] allowedSimultaneousGestures;
+    private EnumSet<Gestures> detectedGestures;
+    private EnumMap<Gestures, EnumSet<Gestures>> allowedSimultaneousGestures;
 
     private long lastMultiTouchEndTime = -MULTITOUCH_BUFFER_TIME;
 
@@ -103,13 +104,12 @@ public class TouchManager implements OnTouchListener, OnScaleGestureListener,
         this.rotateGestureDetector = new RotateGestureDetector(context, this);
         this.shoveGestureDetector = new ShoveGestureDetector(context, this);
 
-        int nGestures = Gestures.values().length;
-        this.detectedGestures = new boolean[nGestures];
-        this.allowedSimultaneousGestures = new boolean[nGestures][nGestures];
+        this.detectedGestures = EnumSet.noneOf(Gestures.class);
+        this.allowedSimultaneousGestures = new EnumMap(Gestures.class);
 
         // By default, all gestures are allowed to detect simultaneously
-        for (boolean[] arr : allowedSimultaneousGestures) {
-            Arrays.fill(arr, true);
+        for (Gestures g : Gestures.values()) {
+            allowedSimultaneousGestures.put(g, EnumSet.allOf(Gestures.class));
         }
     }
 
@@ -144,21 +144,21 @@ public class TouchManager implements OnTouchListener, OnScaleGestureListener,
     // Set whether 'second' can detect while 'first' is in progress
     public void setSimultaneousDetectionAllowed(Gestures first, Gestures second, boolean allowed) {
         if (first != second) {
-            allowedSimultaneousGestures[second.ordinal()][first.ordinal()] = allowed;
+            if (allowed) {
+                allowedSimultaneousGestures.get(second).add(first);
+            } else {
+                allowedSimultaneousGestures.get(second).remove(first);
+            }
         }
     }
 
     public boolean isSimultaneousDetectionAllowed(Gestures first, Gestures second) {
-        return allowedSimultaneousGestures[second.ordinal()][first.ordinal()];
+        return allowedSimultaneousGestures.get(second).contains(first);
     }
 
     private boolean isDetectionAllowed(Gestures g) {
-        boolean [] allowed = allowedSimultaneousGestures[g.ordinal()];
-        // TODO: Replace boolean array with bitmask
-        for (int i = 0; i < allowed.length; ++i) {
-            if (!allowed[i] && detectedGestures[i]) {
-                return false;
-            }
+        if (!allowedSimultaneousGestures.get(g).containsAll(detectedGestures)) {
+            return false;
         }
         if (!g.isMultiTouch()) {
             // Return false if a multitouch gesture has finished within a time threshold
@@ -171,7 +171,11 @@ public class TouchManager implements OnTouchListener, OnScaleGestureListener,
     }
 
     private void setGestureDetected(Gestures g, boolean detected) {
-        detectedGestures[g.ordinal()] = detected;
+        if (detected) {
+            detectedGestures.add(g);
+        } else {
+            detectedGestures.remove(g);
+        }
         if (!detected && g.isMultiTouch()) {
             lastMultiTouchEndTime = SystemClock.uptimeMillis();
         }
