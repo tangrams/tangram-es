@@ -126,23 +126,8 @@ struct Builder : public StyleBuilder {
         float dWdZOutline;
     };
 
-    struct {
-        float height;
-        float order;
-        GLuint abgr;
-
-        float width;
-        float dWdZ;
-
-    } m_builderOptions;
-
     PolyLineBuilder m_builder = {
-        [&](const glm::vec3& coord, const glm::vec2& normal, const glm::vec2& uv) {
-            m_vertices.push_back({ {coord.x, coord.y, m_builderOptions.height},
-                                 m_builderOptions.order, uv, normal,
-                                 {m_builderOptions.width, m_builderOptions.dWdZ},
-                                 m_builderOptions.abgr });
-        },
+        [&](const glm::vec3& coord, const glm::vec2& normal, const glm::vec2& uv) {},
         [&](size_t sizeHint) {
             //LOGE("RESERVE %d %d", m_vertices.size(), sizeHint);
             //m_vertices.reserve(m_vertices.size() + sizeHint);
@@ -205,21 +190,29 @@ void Builder::addFeature(const Feature& _feat, const DrawRule& _rule) {
 void Builder::add(const Line& _line, const Properties& _props,
                   const DrawRule& _rule, const Parameters& params) {
 
-    m_builderOptions.abgr = params.color;
+    GLuint abgr = params.color;
 
     if (Tangram::getDebugFlag(Tangram::DebugFlags::proxy_colors)) {
-        m_builderOptions.abgr <<= (m_tile->getID().z % 6);
+        abgr <<= (m_tile->getID().z % 6);
     }
 
-    m_builderOptions.height = getUpperExtrudeMeters(params.extrude, _props);
-    m_builderOptions.height *= m_tile->getInverseScale();
+    float height = getUpperExtrudeMeters(params.extrude, _props);
+    height *= m_tile->getInverseScale();
 
-    m_builderOptions.order = params.order;
-    m_builderOptions.width = params.width;
-    m_builderOptions.dWdZ = params.dWdZ;
+    float order = params.order;
+    float width = params.width;
+    float dWdZ = params.dWdZ;
 
     m_builder.cap = params.cap;
     m_builder.join = params.join;
+
+    m_builder.addVertex = [&](const glm::vec3& coord,
+                              const glm::vec2& normal,
+                              const glm::vec2& uv) {
+        // glm::vec4 extrude = { normal.x, normal.y, width, dWdZ };
+        m_vertices.push_back({ {coord.x, coord.y, height}, order,
+                               uv, normal, { width, dWdZ}, abgr });
+    };
 
     // TODO: This could be done nicer (with one copy less) with
     // PolylineBuilder::sizeHint callback,  when the hint is
@@ -251,10 +244,10 @@ void Builder::add(const Line& _line, const Properties& _props,
 
     if (!params.outlineOn) { return; }
 
-    m_builderOptions.width += params.widthOutline;
-    m_builderOptions.dWdZ += params.dWdZOutline;
-    m_builderOptions.abgr = params.outlineColor;
-    m_builderOptions.order = std::min(params.outlineOrder, params.order) - .5f;
+    width += params.widthOutline;
+    dWdZ += params.dWdZOutline;
+    abgr = params.outlineColor;
+    order = std::min(params.outlineOrder, params.order) - .5f;
 
     if (params.outlineCap != params.cap || params.outlineJoin != params.join) {
         // need to re-triangulate with different cap and/or join
@@ -291,11 +284,7 @@ void Builder::add(const Line& _line, const Properties& _props,
 
         for (size_t i = 0; i < numVertices; i++) {
             const auto& v = m_vertices[startVertex + i];
-
-            m_vertices.push_back({ v, m_builderOptions.order,
-                                 { m_builderOptions.width,
-                                   m_builderOptions.dWdZ },
-                                  m_builderOptions.abgr });
+            m_vertices.push_back({ v, order, {width, dWdZ}, abgr });
         }
     }
 }
