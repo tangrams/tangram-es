@@ -63,6 +63,7 @@ public class TouchManager implements OnTouchListener, OnScaleGestureListener,
 
     public interface PanResponder {
         boolean onPan(float startX, float startY, float endX, float endY);
+        boolean onFling(float posX, float posY, float velocityX, float velocityY);
     }
 
     public interface ScaleResponder {
@@ -280,6 +281,9 @@ public class TouchManager implements OnTouchListener, OnScaleGestureListener,
 
     @Override
     public boolean onFling(MotionEvent e1, MotionEvent e2, float velocityX, float velocityY) {
+        if (isDetectionAllowed(Gestures.PAN) && panResponder != null) {
+            return panResponder.onFling(e2.getX(), e2.getY(), velocityX, velocityY);
+        }
         return false;
     }
 

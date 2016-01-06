@@ -301,6 +301,13 @@ public class MapController implements Renderer {
                 }
                 return true;
             }
+            @Override
+            public boolean onFling(float posX, float posY, float velocityX, float velocityY) {
+                if (responder == null || !responder.onFling(posX, posY, velocityX, velocityY)) {
+                    handleFlingGesture(posX, posY, velocityX, velocityY);
+                }
+                return true;
+            }
         });
     }
 
@@ -393,6 +400,7 @@ public class MapController implements Renderer {
     private synchronized native void handleTapGesture(float posX, float posY);
     private synchronized native void handleDoubleTapGesture(float posX, float posY);
     private synchronized native void handlePanGesture(float startX, float startY, float endX, float endY);
+    private synchronized native void handleFlingGesture(float posX, float posY, float velocityX, float velocityY);
     private synchronized native void handlePinchGesture(float posX, float posY, float scale, float velocity);
     private synchronized native void handleRotateGesture(float posX, float posY, float rotation);
     private synchronized native void handleShoveGesture(float distance);

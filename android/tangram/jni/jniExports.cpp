@@ -98,6 +98,10 @@ extern "C" {
         Tangram::handlePanGesture(startX, startY, endX, endY);
     }
 
+    JNIEXPORT void JNICALL Java_com_mapzen_tangram_MapController_handleFlingGesture(JNIEnv* jniEnv, jobject obj, jfloat posX, jfloat posY, jfloat velocityX, jfloat velocityY) {
+        Tangram::handleFlingGesture(posX, posY, velocityX, velocityY);
+    }
+
     JNIEXPORT void JNICALL Java_com_mapzen_tangram_MapController_handlePinchGesture(JNIEnv* jniEnv, jobject obj, jfloat posX, jfloat posY, jfloat scale, jfloat velocity) {
         Tangram::handlePinchGesture(posX, posY, scale, velocity);
     }
