@@ -128,14 +128,22 @@
 
 - (void)respondToPanGesture:(UIPanGestureRecognizer *)panRecognizer {
     CGPoint displacement = [panRecognizer translationInView:self.view];
-    // Do not handle zero displacement (last displacement when flinging is always zero)
-    if(fabsf(displacement.x) < FLT_EPSILON && fabsf(displacement.y) < FLT_EPSILON) {
-        return;
-    }
-    [panRecognizer setTranslation:{0, 0} inView:self.view];
+    CGPoint velocity = [panRecognizer velocityInView:self.view];
     CGPoint end = [panRecognizer locationInView:self.view];
     CGPoint start = {end.x - displacement.x, end.y - displacement.y};
-    Tangram::handlePanGesture(start.x * self.pixelScale, start.y * self.pixelScale, end.x * self.pixelScale, end.y * self.pixelScale);
+
+    [panRecognizer setTranslation:CGPointZero inView:self.view];
+
+    switch (panRecognizer.state) {
+        case UIGestureRecognizerStateChanged:
+            Tangram::handlePanGesture(start.x * self.pixelScale, start.y * self.pixelScale, end.x * self.pixelScale, end.y * self.pixelScale);
+            break;
+        case UIGestureRecognizerStateEnded:
+            Tangram::handleFlingGesture(end.x * self.pixelScale, end.y * self.pixelScale, velocity.x * self.pixelScale, velocity.y * self.pixelScale);
+            break;
+        default:
+            break;
+    }
 }
 
 - (void)respondToPinchGesture:(UIPinchGestureRecognizer *)pinchRecognizer {
