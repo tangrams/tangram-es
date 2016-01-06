@@ -71,7 +71,9 @@ namespace {
 
 struct Builder : public StyleBuilder {
 
+    // FIXME - holds GL resources
     std::shared_ptr<SpriteAtlas> m_spriteAtlas;
+    float m_pixelScale;
 
     std::unique_ptr<LabelMesh> m_mesh;
 
@@ -92,8 +94,10 @@ struct Builder : public StyleBuilder {
     virtual std::unique_ptr<VboMesh> build() override { return std::move(m_mesh); };
 
     Builder(std::shared_ptr<VertexLayout> _vertexLayout, GLenum _drawMode,
-            std::shared_ptr<SpriteAtlas> _spriteAtlas)
-        : StyleBuilder(_vertexLayout, _drawMode), m_spriteAtlas(_spriteAtlas) {}
+            std::shared_ptr<SpriteAtlas> _spriteAtlas, float _pixelScale)
+        : StyleBuilder(_vertexLayout, _drawMode),
+          m_spriteAtlas(_spriteAtlas),
+          m_pixelScale(_pixelScale) {}
 
 };
 
@@ -196,8 +200,7 @@ bool Builder::getUVQuad(PointStyle::Parameters& _params, glm::vec4& _quad) const
         }
     }
 
-    // FIXME
-    // _params.size *= m_pixelScale;
+    _params.size *= m_pixelScale;
 
     return true;
 }
@@ -297,7 +300,7 @@ void Builder::addPolygon(const Polygon& _polygon, const Properties& _props,
 }
 
 std::unique_ptr<StyleBuilder> PointStyle::createBuilder() const {
-    return std::make_unique<Builder>(m_vertexLayout, m_drawMode, m_spriteAtlas);
+    return std::make_unique<Builder>(m_vertexLayout, m_drawMode, m_spriteAtlas, m_pixelScale);
 }
 
 }

@@ -70,11 +70,11 @@ namespace {
 
 struct Builder : public StyleBuilder {
 
+    // FIXME - holds GL resources
     std::shared_ptr<FontContext> m_fontContext;
 
     bool m_sdf;
-    // FIXME
-    float m_pixelScale = 1;
+    float m_pixelScale;
 
     std::unique_ptr<TextBuffer> m_mesh;
 
@@ -90,9 +90,11 @@ struct Builder : public StyleBuilder {
     virtual std::unique_ptr<VboMesh> build() override { return std::move(m_mesh); };
 
     Builder(std::shared_ptr<VertexLayout> _vertexLayout, GLenum _drawMode,
-            std::shared_ptr<FontContext> _fontContext, bool _sdf)
+            std::shared_ptr<FontContext> _fontContext, bool _sdf, float _pixelScale)
         : StyleBuilder(_vertexLayout, _drawMode),
-          m_fontContext(_fontContext), m_sdf(_sdf) {}
+          m_fontContext(_fontContext),
+          m_sdf(_sdf),
+          m_pixelScale(_pixelScale) {}
 
 };
 
@@ -225,7 +227,7 @@ void Builder::addPolygon(const Polygon& _polygon, const Properties& _props, cons
 }
 
 std::unique_ptr<StyleBuilder> TextStyle::createBuilder() const {
-    return std::make_unique<Builder>(m_vertexLayout, m_drawMode, m_fontContext, m_sdf);
+    return std::make_unique<Builder>(m_vertexLayout, m_drawMode, m_fontContext, m_sdf, m_pixelScale);
 }
 
 }
