@@ -70,16 +70,18 @@ void InputHandler::handleFlingGesture(float _posX, float _posY, float _velocityX
         return;
     }
 
+    const static float epsilon = 0.0167f;
+
     float startX = _posX;
     float startY = _posY;
-    float endX = _posX + _velocityX;
-    float endY = _posY + _velocityY;
+    float endX = _posX + epsilon * _velocityX;
+    float endY = _posY + epsilon * _velocityY;
 
     m_view->screenToGroundPlane(startX, startY);
     m_view->screenToGroundPlane(endX, endY);
 
-    float dx = startX - endX;
-    float dy = startY - endY;
+    float dx = (startX - endX) / epsilon;
+    float dy = (startY - endY) / epsilon;
 
     setDeltas(0.f, glm::vec2(dx, dy));
 
