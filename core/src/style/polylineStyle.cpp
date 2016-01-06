@@ -108,7 +108,6 @@ struct Builder : public StyleBuilder {
     Builder(std::shared_ptr<VertexLayout> _vertexLayout, GLenum _drawMode)
         : StyleBuilder(_vertexLayout, _drawMode) {}
 
-
     struct Parameters {
         uint32_t order = 0;
         uint32_t outlineOrder = 0;
@@ -120,6 +119,11 @@ struct Builder : public StyleBuilder {
         JoinTypes outlineJoin = JoinTypes::miter;
         bool outlineOn = false;
         glm::vec2 extrude;
+
+        float width;
+        float dWdZ;
+        float widthOutline;
+        float dWdZOutline;
     };
 
     struct {
@@ -150,10 +154,7 @@ struct Builder : public StyleBuilder {
     std::vector<PolylineVertex> m_vertices;
     std::vector<uint16_t> m_indices;
 
-    virtual void addPolygon(const Polygon& _polygon, const Properties& _props, const DrawRule& _rule) override;
-    virtual void addLine(const Line& _line, const Properties& _props, const DrawRule& _rule) override;
-
-    static Parameters parseRule(const DrawRule& _rule);
+    virtual void addFeature(const Feature& _feat, const DrawRule& _rule) override;
 
     virtual void initMesh() override {
         m_vertexOffsets.clear();
@@ -163,8 +164,13 @@ struct Builder : public StyleBuilder {
     }
     virtual std::unique_ptr<VboMesh> build() override;
 
-    static bool evalStyleParamWidth(StyleParamKey _key, const DrawRule& _rule,
-                                    const Tile& _tile, float& width, float& dWdZ);
+    void add(const Line& _line, const Properties& _props,
+             const DrawRule& _rule, const Parameters& _params);
+
+    Parameters parseRule(const DrawRule& _rule);
+
+    bool evalStyleParamWidth(StyleParamKey _key, const DrawRule& _rule,
+                             float& width, float& dWdZ);
 
 };
 
@@ -174,39 +180,43 @@ std::unique_ptr<VboMesh> Builder::build() {
     return std::move(mesh);
 }
 
-void Builder::addPolygon(const Polygon& _poly, const Properties& _props, const DrawRule& _rule) {
+void Builder::addFeature(const Feature& _feat, const DrawRule& _rule) {
 
-    for (const auto& line : _poly) {
-        addLine(line, _props, _rule);
-    }
-}
-
-void Builder::addLine(const Line& _line, const Properties& _props, const DrawRule& _rule) {
+    if (_feat.geometryType == GeometryType::points) { return; }
+    if (!checkRule(_rule)) { return; }
 
     Parameters params = parseRule(_rule);
 
-    m_builderOptions.abgr = params.color;
-    float dWdZ = 0.f;
-    float width = 0.f;
+    if (params.width <= 0.0f && params. dWdZ <= 0.0f ) { return; }
 
-    if (!evalStyleParamWidth(StyleParamKey::width, _rule, *m_tile,
-                             width, dWdZ)) {
-        return;
+    if (_feat.geometryType == GeometryType::lines) {
+        for (auto& line : _feat.lines) {
+            add(line, _feat.props, _rule, params);
+        }
+    } else {
+        for (auto& polygon : _feat.polygons) {
+            for (const auto& line : polygon) {
+                add(line, _feat.props, _rule, params);
+            }
+        }
     }
-    if (width <= 0.0f && dWdZ <= 0.0f ) { return; }
+}
+
+void Builder::add(const Line& _line, const Properties& _props,
+                  const DrawRule& _rule, const Parameters& params) {
+
+    m_builderOptions.abgr = params.color;
 
     if (Tangram::getDebugFlag(Tangram::DebugFlags::proxy_colors)) {
         m_builderOptions.abgr <<= (m_tile->getID().z % 6);
     }
 
-    auto& extrude = params.extrude;
+    m_builderOptions.height = getUpperExtrudeMeters(params.extrude, _props);
+    m_builderOptions.height *= m_tile->getInverseScale();
 
-    float tileUnitsPerMeter = m_tile->getInverseScale();
-
-    m_builderOptions.height = getUpperExtrudeMeters(extrude, _props) * tileUnitsPerMeter;
     m_builderOptions.order = params.order;
-    m_builderOptions.width = width;
-    m_builderOptions.dWdZ = dWdZ;
+    m_builderOptions.width = params.width;
+    m_builderOptions.dWdZ = params.dWdZ;
 
     m_builder.cap = params.cap;
     m_builder.join = params.join;
@@ -241,18 +251,8 @@ void Builder::addLine(const Line& _line, const Properties& _props, const DrawRul
 
     if (!params.outlineOn) { return; }
 
-    float widthOutline = 0.f;
-    float dWdZOutline = 0.f;
-    if (!evalStyleParamWidth(StyleParamKey::outline_width, _rule, *m_tile,
-                             widthOutline, dWdZOutline)) {
-        return;
-    }
-    if (!(widthOutline > 0.0f || dWdZOutline > 0.0f)) {
-        return;
-    }
-
-    m_builderOptions.width += widthOutline;
-    m_builderOptions.dWdZ += dWdZOutline;
+    m_builderOptions.width += params.widthOutline;
+    m_builderOptions.dWdZ += params.dWdZOutline;
     m_builderOptions.abgr = params.outlineColor;
     m_builderOptions.order = std::min(params.outlineOrder, params.order) - .5f;
 
@@ -305,6 +305,11 @@ auto Builder::parseRule(const DrawRule& _rule) -> Parameters {
 
     uint32_t cap = 0, join = 0;
 
+    if (!evalStyleParamWidth(StyleParamKey::width, _rule, p.width, p.dWdZ)) {
+        p.width = 0;
+        return p;
+    }
+
     _rule.get(StyleParamKey::extrude, p.extrude);
     _rule.get(StyleParamKey::color, p.color);
     _rule.get(StyleParamKey::cap, cap);
@@ -321,9 +326,15 @@ auto Builder::parseRule(const DrawRule& _rule) -> Parameters {
         _rule.contains(StyleParamKey::outline_width) |
         _rule.get(StyleParamKey::outline_cap, cap) |
         _rule.get(StyleParamKey::outline_join, join)) {
-        p.outlineOn = true;
+
         p.outlineCap = static_cast<CapTypes>(cap);
         p.outlineJoin = static_cast<JoinTypes>(join);
+
+        if (!evalStyleParamWidth(StyleParamKey::outline_width, _rule,
+                                 p.widthOutline, p.dWdZOutline)) {
+            return p;
+        }
+        p.outlineOn = true;
     }
 
     return p;
@@ -339,10 +350,10 @@ double widthMeterToPixel(int _zoom, double _tileSize, double _width) {
 }
 
 bool Builder::evalStyleParamWidth(StyleParamKey _key, const DrawRule& _rule,
-                                  const Tile& _tile, float& width, float& dWdZ) {
+                                  float& width, float& dWdZ) {
 
-    int zoom  = _tile.getID().z;
-    double tileSize = _tile.getProjection()->TileSize();
+    int zoom  = m_tile->getID().z;
+    double tileSize = m_tile->getProjection()->TileSize();
 
     // NB: 0.5 because 'width' will be extruded in both directions
     double tileRes = 0.5 / tileSize;
