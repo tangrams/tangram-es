@@ -216,6 +216,9 @@ typedef char            GLchar;
 #define GL_DEPTH_WRITEMASK              0x0B72
 #define GL_DEPTH_COMPONENT              0x1902
 
+/* Polygon Offset */
+#define GL_POLYGON_OFFSET_FILL          0x8037
+
 /* Stencil */
 #define GL_STENCIL_BITS                 0x0D57
 #define GL_STENCIL_TEST                 0x0B90
@@ -232,6 +235,7 @@ typedef char            GLchar;
 #define GL_REPLACE                      0x1E01
 #define GL_INCR                         0x1E02
 #define GL_DECR                         0x1E03
+#define GL_INVERT                       0x150A
 
 /* Texture mapping */
 #define GL_NEAREST_MIPMAP_NEAREST       0x2700
@@ -289,6 +293,8 @@ extern "C" {
     GL_APICALL void GL_APIENTRY glDisable(GLenum);
     GL_APICALL void GL_APIENTRY glDepthFunc(GLenum func);
     GL_APICALL void GL_APIENTRY glDepthMask(GLboolean flag);
+    
+    GL_APICALL void GL_APIENTRY glPolygonOffset (GLfloat factor, GLfloat units);
 #ifdef PLATFORM_OSX
     GL_APICALL void GL_APIENTRY glDepthRange(GLclampd n, GLclampd f);
     GL_APICALL void GL_APIENTRY glClearDepth(GLclampd d);
