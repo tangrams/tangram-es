@@ -35,6 +35,13 @@ struct TestTileWorker : TileTaskQueue {
             break;
         }
     }
+    void dropTask() {
+        if (!tasks.empty()) {
+            auto task = tasks.front();
+            tasks.pop_front();
+            task->cancel();
+        }
+    }
 };
 
 struct TestDataSource : DataSource {
@@ -72,6 +79,55 @@ struct TestDataSource : DataSource {
     }
 };
 
+TEST_CASE( "Use proxy Tile - Dont remove proxy if it is now visible", "[TileManager][updateTileSets]" ) {
+    TestTileWorker worker;
+    TileManager tileManager(worker);
+    ViewState viewState { s_projection, true, glm::vec2(0), 1 };
+
+    auto source = std::make_shared<TestDataSource>();
+    std::vector<std::shared_ptr<DataSource>> sources = { source };
+    tileManager.setDataSources(sources);
+
+    /// Start loading tile 0/0/0
+    std::set<TileID> visibleTiles_1 = { TileID{0,0,0} };
+    tileManager.updateTileSets(viewState, visibleTiles_1);
+
+    REQUIRE(tileManager.getVisibleTiles().size() == 0);
+    REQUIRE(source->tileTaskCount == 1);
+    REQUIRE(worker.processedCount == 0);
+
+    /// Start loading tile 0/0/1 - uses 0/0/0 as proxy
+    std::set<TileID> visibleTiles_2 = { TileID{0,0,1} };
+    tileManager.updateTileSets(viewState, visibleTiles_2);
+
+    REQUIRE(tileManager.getVisibleTiles().size() == 0);
+    REQUIRE(source->tileTaskCount == 2);
+    REQUIRE(worker.processedCount == 0);
+
+    /// Drop tile task 0/0/0
+    worker.dropTask();
+
+    /// Process tile task 0/0/1
+    worker.processTask();
+
+    /// Go back to tile 0/0/0 - uses 0/0/1 as proxy
+    tileManager.updateTileSets(viewState, visibleTiles_1);
+
+    REQUIRE(tileManager.getVisibleTiles().size() == 1);
+    REQUIRE(source->tileTaskCount == 3);
+    REQUIRE(worker.processedCount == 1);
+    REQUIRE(tileManager.getVisibleTiles()[0]->isProxy() == true);
+    REQUIRE(tileManager.getVisibleTiles()[0]->getID() == TileID(0,0,1));
+
+    /// Process tile task 0/0/0
+    worker.processTask();
+    tileManager.updateTileSets(viewState, visibleTiles_1);
+
+    REQUIRE(tileManager.getVisibleTiles().size() == 1);
+    REQUIRE(tileManager.getVisibleTiles()[0]->isProxy() == false);
+    REQUIRE(tileManager.getVisibleTiles()[0]->getID() == TileID(0,0,0));
+}
+
 TEST_CASE( "Mock TileWorker Initialization", "[TileManager][Constructor]" ) {
 
     TestTileWorker worker;
@@ -82,7 +138,6 @@ TEST_CASE( "Real TileWorker Initialization", "[TileManager][Constructor]" ) {
     TileWorker worker(1);
     TileManager tileManager(worker);
 }
-
 
 TEST_CASE( "Load visible Tile", "[TileManager][updateTileSets]" ) {
     TestTileWorker worker;
