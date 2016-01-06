@@ -158,6 +158,17 @@ void TileManager::updateTileSet(TileSet& _tileSet) {
     auto& tiles = _tileSet.tiles;
     auto& visibleTiles = m_view->getVisibleTiles();
 
+    if (m_tileSetChanged) {
+        for (auto& it : tiles) {
+            auto& entry = it.second;
+            if (entry.newData()) {
+                clearProxyTiles(_tileSet, it.first, entry, removeTiles);
+                entry.tile = std::move(entry.task->tile());
+                entry.task.reset();
+            }
+        }
+    }
+
     // Loop over visibleTiles and add any needed tiles to tileSet
     auto curTilesIt = tiles.begin();
     auto visTilesIt = visibleTiles.begin();
@@ -178,12 +189,6 @@ void TileManager::updateTileSet(TileSet& _tileSet) {
 
             auto& entry = curTilesIt->second;
             entry.setVisible(true);
-
-            if (entry.newData()) {
-                clearProxyTiles(_tileSet, curTileId, entry, removeTiles);
-                entry.tile = std::move(entry.task->tile());
-                entry.task.reset();
-            }
 
             if (entry.isReady()) {
                 m_tiles.push_back(entry.tile);
@@ -236,11 +241,6 @@ void TileManager::updateTileSet(TileSet& _tileSet) {
             auto& entry = curTilesIt->second;
 
             if (entry.getProxyCounter() > 0) {
-                if (entry.newData()) {
-                    clearProxyTiles(_tileSet, curTileId, entry, removeTiles);
-                    entry.tile = std::move(entry.task->tile());
-                    entry.task.reset();
-                }
                 if (entry.isReady()) {
                     m_tiles.push_back(entry.tile);
 
