@@ -100,7 +100,8 @@ void TileManager::clearTileSet(int32_t _sourceId) {
     m_tileSetChanged = true;
 }
 
-void TileManager::updateTileSets(const ViewState& _view, const std::set<TileID>& _visibleTiles) {
+void TileManager::updateTileSets(const ViewState& _view,
+                                 const std::set<TileID>& _visibleTiles) {
 
     m_tileSetChanged = false;
     m_tiles.clear();
@@ -121,7 +122,8 @@ void TileManager::updateTileSets(const ViewState& _view, const std::set<TileID>&
     m_tiles.erase(std::unique(m_tiles.begin(), m_tiles.end()), m_tiles.end());
 }
 
-void TileManager::updateTileSet(TileSet& _tileSet, const ViewState& _view, const std::set<TileID>& _visibleTiles) {
+void TileManager::updateTileSet(TileSet& _tileSet, const ViewState& _view,
+                                const std::set<TileID>& _visibleTiles) {
 
     m_tileSetChanged |= m_workers.checkProcessedTiles();
 
