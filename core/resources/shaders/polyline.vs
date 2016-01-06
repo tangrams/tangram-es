@@ -37,6 +37,7 @@ varying vec2 v_texcoord;
 const float POSITION_SCALE = 1.0/4096.0;
 const float EXTRUSION_SCALE = 1.0/4096.0;
 const float TEXTURE_SCALE = 1.0/16384.0;
+const float ORDER_SCALE = 1.0/2.0;
 
 vec4 modelPosition() {
     return vec4(a_position.xyz * POSITION_SCALE, 1.0);
@@ -119,7 +120,7 @@ void main() {
     gl_Position.z += TANGRAM_DEPTH_DELTA * gl_Position.w * (1. - sign(u_tile_origin.z));
 
     #ifdef TANGRAM_DEPTH_DELTA
-        float layer = a_position.w;
+        float layer = a_position.w * ORDER_SCALE;
         gl_Position.z -= layer * TANGRAM_DEPTH_DELTA * gl_Position.w;
     #endif
 }

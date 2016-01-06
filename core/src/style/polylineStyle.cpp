@@ -17,10 +17,25 @@
 #define EXTRUSION_SCALE 4096.0f
 #define POSITION_SCALE 4096.0f
 #define TEXTURE_SCALE 16384.0f
+#define ORDER_SCALE 2.0f
 
 namespace Tangram {
 
 struct PolylineVertex {
+
+    PolylineVertex(glm::vec3 position, float order, glm::vec2 uv,
+                   glm::vec2 extrude, glm::vec2 width, GLuint abgr)
+        : pos(glm::i16vec4{ position * POSITION_SCALE, order * ORDER_SCALE }),
+          texcoord(uv * TEXTURE_SCALE),
+          extrude(extrude * EXTRUSION_SCALE, width * EXTRUSION_SCALE),
+          abgr(abgr) {}
+
+    PolylineVertex(PolylineVertex v, float order, glm::vec2 width, GLuint abgr)
+        : pos(glm::i16vec4{ v.pos.x, v.pos.y, v.pos.z, order * ORDER_SCALE}),
+          texcoord(v.texcoord),
+          extrude(glm::i16vec4{ v.extrude.x, v.extrude.y, width * EXTRUSION_SCALE }),
+          abgr(abgr) {}
+
     glm::i16vec4 pos;
     glm::i16vec2 texcoord;
     glm::i16vec4 extrude;
@@ -184,19 +199,12 @@ void PolylineStyle::buildLine(const Line& _line, const DrawRule& _rule, const Pr
 
     float tileUnitsPerMeter = _tile.getInverseScale();
     float height = getUpperExtrudeMeters(extrude, _props) * tileUnitsPerMeter;
-
-    width *= EXTRUSION_SCALE;
-    dWdZ *= EXTRUSION_SCALE;
-
-    if (width < 1) { width = 1.0f; }
-    if (dWdZ < 1) { dWdZ = 1.0f; }
+    float order = params.order;
 
     PolyLineBuilder builder {
-        [&](const glm::vec3& coord, const glm::vec2& normal, const glm::vec2& uv) {
-            glm::vec3 position = glm::vec3{coord.x, coord.y, height} * POSITION_SCALE;
-            glm::i16vec4 extrude = glm::vec4{ normal * EXTRUSION_SCALE, width, dWdZ };
-            glm::i16vec2 texCoord = uv * TEXTURE_SCALE;
-            vertices.push_back({ glm::i16vec4{position, params.order}, texCoord, extrude, abgr});
+        [&](const glm::vec3& coord, const glm::vec2& normal, const glm::vec2& texCoord) {
+            glm::vec3 position = glm::vec3{coord.x, coord.y, height};
+            vertices.push_back({position, order, texCoord, normal, { width, dWdZ }, abgr});
         },
         [&](size_t sizeHint){ vertices.reserve(sizeHint); },
         params.cap,
@@ -208,7 +216,7 @@ void PolylineStyle::buildLine(const Line& _line, const DrawRule& _rule, const Pr
     if (params.outlineOn) {
 
         GLuint abgrOutline = params.outlineColor;
-        float outlineOrder = std::min(params.outlineOrder, params.order) - .5f;
+        float outlineOrder = std::min(params.outlineOrder, params.order) - 0.5f;
 
         float widthOutline = 0.f;
         float dWdZOutline = 0.f;
@@ -219,8 +227,8 @@ void PolylineStyle::buildLine(const Line& _line, const DrawRule& _rule, const Pr
 
             // Note: this must update <width> and <dWdZ> as they are captured
             // (and used) by <builder>
-            width += widthOutline * EXTRUSION_SCALE;
-            dWdZ += dWdZOutline * EXTRUSION_SCALE;
+            width += widthOutline;
+            dWdZ += dWdZOutline;
 
             if (params.outlineCap != params.cap || params.outlineJoin != params.join) {
                 // need to re-triangulate with different cap and/or join
@@ -237,10 +245,7 @@ void PolylineStyle::buildLine(const Line& _line, const DrawRule& _rule, const Pr
                     builder.indices.push_back(offset + builder.indices[i]);
                 }
                 for (size_t i = 0; i < offset; i++) {
-                    const auto& v = vertices[i];
-                    glm::i16vec4 position = { v.pos.x, v.pos.y, v.pos.z, outlineOrder };
-                    glm::i16vec4 extrude = glm::vec4{ v.extrude.x, v.extrude.y, width, dWdZ };
-                    vertices.push_back({ position, v.texcoord, extrude, abgrOutline });
+                    vertices.push_back({ vertices[i], outlineOrder, { width, dWdZ }, abgrOutline });
                 }
             }
         }

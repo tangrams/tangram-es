@@ -23,6 +23,14 @@
 namespace Tangram {
 
 struct PolygonVertex {
+
+    PolygonVertex(glm::vec3 position, uint32_t order,
+                  glm::vec3 normal, glm::vec2 uv, GLuint abgr)
+        : pos(glm::i16vec4{ position * POSITION_SCALE, order }),
+          norm(normal * NORMAL_SCALE, 0),
+          texcoord(uv * TEXTURE_SCALE),
+          abgr(abgr) {}
+
     glm::i16vec4 pos; // pos.w contains layer (params.order)
     glm::i8vec4 norm;
     glm::i16vec2 texcoord;
@@ -83,16 +91,9 @@ void PolygonStyle::buildPolygon(const Polygon& _polygon, const DrawRule& _rule,
         abgr = abgr << (_tile.getID().z % 6);
     }
 
-    const static std::string key_height("height");
-    const static std::string key_min_height("min_height");
-
     PolygonBuilder builder = {
         [&](const glm::vec3& _coord, const glm::vec3& _normal, const glm::vec2& _uv) {
-            glm::vec3 coord = _coord * POSITION_SCALE;
-            glm::i16vec2 uv = _uv * TEXTURE_SCALE;
-            glm::i8vec4 normal = glm::i8vec4{ _normal * NORMAL_SCALE, 0};
-
-            vertices.push_back({ glm::i16vec4{coord, params.order}, normal, uv, abgr });
+            vertices.push_back({ _coord, params.order, _normal, _uv, abgr });
         },
         [&](size_t sizeHint){ vertices.reserve(sizeHint); }
     };
