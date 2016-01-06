@@ -1,9 +1,26 @@
 #include "inputHandler.h"
 
 #include "glm/glm.hpp"
-#include "glm/gtx/rotate_vector.hpp"
 #include "platform.h"
 #include <cmath>
+
+// Damping factor for translation; reciprocal of the decay period in seconds
+#define DAMPING_PAN 4.0f
+
+// Damping factor for zoom; reciprocal of the decay period in seconds
+#define DAMPING_ZOOM 6.0f
+
+// Minimum translation at which momentum should start (pixels per second)
+#define THRESHOLD_START_PAN 350.f
+
+// Minimum translation at which momentum should stop (pixels per second)
+#define THRESHOLD_STOP_PAN 24.f
+
+// Minimum zoom at which momentum should start (zoom levels per second)
+#define THRESHOLD_START_ZOOM 1.f
+
+// Minimum zoom at which momentum should stop (zoom levels per second)
+#define THRESHOLD_STOP_ZOOM 0.3f
 
 namespace Tangram {
 
@@ -11,17 +28,17 @@ InputHandler::InputHandler(std::shared_ptr<View> _view) : m_view(_view) {}
 
 void InputHandler::update(float _dt) {
 
-    auto screenVelocityTranslate = m_view->pixelsPerMeter() * m_deltaTranslate;
+    auto velocityPanPixels = m_view->pixelsPerMeter() / m_view->pixelScale() * m_velocityPan;
 
-    bool isFlinging = glm::length(screenVelocityTranslate) > m_thresholdStopTranslate || std::abs(m_deltaZoom) > m_thresholdStopZoom;
+    bool isFlinging = glm::length(velocityPanPixels) > THRESHOLD_STOP_PAN || std::abs(m_velocityZoom) > THRESHOLD_STOP_ZOOM;
 
     if (!m_gestureOccured && isFlinging) {
 
-        m_deltaTranslate -= _dt * m_dampingTranslate * m_deltaTranslate;
-        m_view->translate(_dt * m_deltaTranslate.x, _dt * m_deltaTranslate.y);
+        m_velocityPan -= _dt * DAMPING_PAN * m_velocityPan;
+        m_view->translate(_dt * m_velocityPan.x, _dt * m_velocityPan.y);
 
-        m_deltaZoom -= _dt * m_dampingZoom * m_deltaZoom;
-        m_view->zoom(m_deltaZoom * _dt);
+        m_velocityZoom -= _dt * DAMPING_ZOOM * m_velocityZoom;
+        m_view->zoom(m_velocityZoom * _dt);
 
         requestRender();
 
@@ -66,7 +83,7 @@ void InputHandler::handlePanGesture(float _startX, float _startY, float _endX, f
 
 void InputHandler::handleFlingGesture(float _posX, float _posY, float _velocityX, float _velocityY) {
 
-    if (glm::length(glm::vec2(_velocityX, _velocityY)) <= m_thresholdStartTranslate) {
+    if (glm::length(glm::vec2(_velocityX, _velocityY)) / m_view->pixelScale() <= THRESHOLD_START_PAN) {
         return;
     }
 
@@ -83,7 +100,7 @@ void InputHandler::handleFlingGesture(float _posX, float _posY, float _velocityX
     float dx = (startX - endX) / epsilon;
     float dy = (startY - endY) / epsilon;
 
-    setDeltas(0.f, glm::vec2(dx, dy));
+    setVelocity(0.f, glm::vec2(dx, dy));
 
 }
 
@@ -102,9 +119,9 @@ void InputHandler::handlePinchGesture(float _posX, float _posY, float _scale, fl
     // Take the derivative of zoom as a function of scale:
     // z(s) = log2(s) + C
     // z'(s) = s' / s / log(2)
-    float zoomVelocity = _velocity / _scale * invLog2;
-    if (std::abs(zoomVelocity) >= m_thresholdStartZoom) {
-        setDeltas(zoomVelocity, glm::vec2(0.f));
+    float vz = _velocity / _scale * invLog2;
+    if (std::abs(vz) >= THRESHOLD_START_ZOOM) {
+        setVelocity(vz, glm::vec2(0.f));
     }
 
 }
@@ -128,16 +145,16 @@ void InputHandler::handleShoveGesture(float _distance) {
 void InputHandler::onGesture() {
 
     m_gestureOccured = true;
-    setDeltas(0.f, { 0.f, 0.f });
+    setVelocity(0.f, { 0.f, 0.f });
     requestRender();
 
 }
 
-void InputHandler::setDeltas(float _zoom, glm::vec2 _translate) {
+void InputHandler::setVelocity(float _zoom, glm::vec2 _translate) {
 
     // setup deltas for momentum on gesture
-    m_deltaTranslate = _translate;
-    m_deltaZoom = _zoom;
+    m_velocityPan = _translate;
+    m_velocityZoom = _zoom;
 }
 
 }
