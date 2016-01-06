@@ -27,12 +27,13 @@ struct PolygonVertex {
     PolygonVertex(glm::vec3 position, uint32_t order,
                   glm::vec3 normal, glm::vec2 uv, GLuint abgr)
         : pos(glm::i16vec4{ position * POSITION_SCALE, order }),
-          norm(normal * NORMAL_SCALE, 0),
+          norm(normal * NORMAL_SCALE),
           texcoord(uv * TEXTURE_SCALE),
           abgr(abgr) {}
 
     glm::i16vec4 pos; // pos.w contains layer (params.order)
-    glm::i8vec4 norm;
+    glm::i8vec3 norm;
+    uint8_t padding = 0;
     glm::i16vec2 texcoord;
     GLuint abgr;
 };
@@ -49,7 +50,7 @@ void PolygonStyle::constructVertexLayout() {
     // TODO: Ideally this would be in the same location as the struct that it basically describes
     m_vertexLayout = std::shared_ptr<VertexLayout>(new VertexLayout({
         {"a_position", 4, GL_SHORT, false, 0},
-        {"a_normal", 4, GL_BYTE, true, 0},
+        {"a_normal", 4, GL_BYTE, true, 0}, // The 4th byte is for padding
         {"a_texcoord", 2, GL_SHORT, false, 0},
         {"a_color", 4, GL_UNSIGNED_BYTE, true, 0},
     }));
