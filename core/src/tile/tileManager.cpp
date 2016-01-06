@@ -347,6 +347,7 @@ void TileManager::updateTileSet(TileSet& tileSet) {
         removeTiles.pop_back();
 
         if ((tileIt != tiles.end()) &&
+            (!tileIt->second->isVisible()) &&
             (tileIt->second->getProxyCounter() <= 0 ||
              tileIt->second->getID().z > maxZoom)) {
 
