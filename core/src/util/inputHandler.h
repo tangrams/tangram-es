@@ -38,16 +38,23 @@ private:
 
     /* Momentum config */
 
-    const float m_expDecrease = 0.95f;
+    // Damping factor for translation; reciprocal of the decay period in seconds
+    const float m_dampingTranslate = 4.0f;
 
-    // the minimum translation at which a momentum should start
-    const float m_minDeltaTranslate = 8.f;
-    // the minimum translation at which momentum should stop
-    const float m_minDeltaLength = 1.f;
-    // the minimum zoom at which momentum should stop
-    const float m_minDeltaZoomLength = 1e-4f;
-    // the minimum zoom value at which momentum will start
-    const float m_minZoomStart = 0.05f;
+    // Damping factor for zoom; reciprocal of the decay period in seconds
+    const float m_dampingZoom = 6.0f;
+
+    // Minimum translation at which momentum should start
+    const float m_thresholdStartTranslate = 8.f;
+
+    // Minimum translation at which momentum should stop
+    const float m_thresholdStopTranslate = 1.f;
+
+    // Minimum zoom at which momentum should start
+    const float m_thresholdStartZoom = 0.1f;
+
+    // Minimum zoom at which momentum should stop
+    const float m_thresholdStopZoom = 0.1f;
 
 };
 

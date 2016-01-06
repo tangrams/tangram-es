@@ -11,17 +11,17 @@ InputHandler::InputHandler(std::shared_ptr<View> _view) : m_view(_view) {}
 
 void InputHandler::update(float _dt) {
 
-    bool isFlinging = glm::length(m_deltaTranslate) > m_minDeltaLength || std::abs(m_deltaZoom) > m_minDeltaZoomLength;
+    // TODO: Determine screen-space translation for threshold check
+
+    bool isFlinging = glm::length(m_deltaTranslate) > m_thresholdStopTranslate || std::abs(m_deltaZoom) > m_thresholdStopZoom;
 
     if (!m_gestureOccured && isFlinging) {
 
-        // exponential decrease, m_expDecrease should be between [0..1]
-        m_deltaTranslate *= m_expDecrease;
+        m_deltaTranslate -= _dt * m_dampingTranslate * m_deltaTranslate;
         m_view->translate(m_deltaTranslate.x, m_deltaTranslate.y);
 
-        // to give more control, make zoom decrease faster than translation
-        m_deltaZoom *= m_expDecrease * m_expDecrease;
-        m_view->zoom(m_deltaZoom);
+        m_deltaZoom -= _dt * m_dampingZoom * m_deltaZoom;
+        m_view->zoom(m_deltaZoom * _dt);
 
         requestRender();
 
@@ -63,7 +63,9 @@ void InputHandler::handlePanGesture(float _startX, float _startY, float _endX, f
     float dx = _startX - _endX;
     float dy = _startY - _endY;
 
-    if (glm::length(glm::vec2(dScreenX, dScreenY)) > m_minDeltaTranslate) {
+    // TODO: Use a time interval to estimate velocity of pan
+
+    if (glm::length(glm::vec2(dScreenX, dScreenY)) > m_thresholdStartTranslate) {
         setDeltas(0.f, glm::vec2(dx, dy));
     }
 
@@ -83,8 +85,13 @@ void InputHandler::handlePinchGesture(float _posX, float _posY, float _scale, fl
     float s = pow(2, m_view->getZoom() - z) - 1;
     m_view->translate(s * _posX, s * _posY);
 
-    float zoomVelocity = log(_velocity) * invLog2;
-    setDeltas(m_minZoomStart * zoomVelocity, glm::vec2(0.f));
+    // Take the derivative of zoom as a function of scale:
+    // z(s) = log2(s) + C
+    // z'(s) = s' / s / log(2)
+    float zoomVelocity = _velocity / _scale * invLog2;
+    if (std::abs(zoomVelocity) >= m_thresholdStartZoom) {
+        setDeltas(zoomVelocity, glm::vec2(0.f));
+    }
 
 }
 
