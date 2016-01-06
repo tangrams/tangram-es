@@ -18,10 +18,13 @@ const double scroll_distance_multiplier = 5.0; // scaling for shove
 const double single_tap_time = 0.25; //seconds (to avoid a long press being considered as a tap)
 
 bool was_panning = false;
-double last_mouse_up = -double_tap_time; // First click should never trigger a double tap
-double last_mouse_down = 0.0f;
+double last_time_released = -double_tap_time; // First click should never trigger a double tap
+double last_time_pressed = 0.0;
+double last_time_moved = 0.0;
 double last_x_down = 0.0;
 double last_y_down = 0.0;
+double last_x_velocity = 0.0;
+double last_y_velocity = 0.0;
 
 using namespace Tangram;
 
@@ -34,25 +37,26 @@ void mouse_button_callback(GLFWwindow* window, int button, int action, int mods)
         return; // This event is for a mouse button that we don't care about
     }
 
-    if (was_panning) {
-        was_panning = false;
-        return; // Clicks with movement don't count as taps
-    }
-
     double x, y;
     glfwGetCursorPos(window, &x, &y);
     double time = glfwGetTime();
+
+    if (was_panning && action == GLFW_RELEASE) {
+        was_panning = false;
+        Tangram::handleFlingGesture(x, y, last_x_velocity, last_y_velocity);
+        return; // Clicks with movement don't count as taps, so stop here
+    }
 
     if (action == GLFW_PRESS) {
         Tangram::handlePanGesture(0.0f, 0.0f, 0.0f, 0.0f);
         last_x_down = x;
         last_y_down = y;
-        last_mouse_down = glfwGetTime();
+        last_time_pressed = time;
         return;
     }
 
-    if (time - last_mouse_up < double_tap_time) {
-
+    if ((time - last_time_released) < double_tap_time) {
+        // Double tap recognized
         LngLat p { x, y };
         Tangram::screenToWorldCoordinates(p.longitude, p.latitude);
         Tangram::setPosition(p.longitude, p.latitude, 1.f);
@@ -68,7 +72,8 @@ void mouse_button_callback(GLFWwindow* window, int button, int action, int mods)
                 logMsg(" - %f\t %s\n", it.distance, name.c_str());
             }
         }
-    } else if ( (time - last_mouse_down) < single_tap_time) {
+    } else if ((time - last_time_pressed) < single_tap_time) {
+        // Single tap recognized
         LngLat p1 {x, y};
         Tangram::screenToWorldCoordinates(p1.longitude, p1.latitude);
 
@@ -92,16 +97,16 @@ void mouse_button_callback(GLFWwindow* window, int button, int action, int mods)
         // Tangram::clearDataSource(*data_source, false, true);
         // This updates the tiles (maybe we need a recalcTiles())
         requestRender();
-
     }
 
-    last_mouse_up = time;
+    last_time_released = time;
 
 }
 
 void cursor_pos_callback(GLFWwindow* window, double x, double y) {
 
     int action = glfwGetMouseButton(window, GLFW_MOUSE_BUTTON_1);
+    double time = glfwGetTime();
 
     if (action == GLFW_PRESS) {
 
@@ -110,9 +115,14 @@ void cursor_pos_callback(GLFWwindow* window, double x, double y) {
         }
 
         was_panning = true;
+        last_x_velocity = (x - last_x_down) / (time - last_time_moved);
+        last_y_velocity = (y - last_y_down) / (time - last_time_moved);
         last_x_down = x;
         last_y_down = y;
+
     }
+
+    last_time_moved = time;
 
 }
 
