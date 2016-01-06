@@ -30,9 +30,9 @@ void PointStyle::constructVertexLayout() {
         {"a_extrude", 2, GL_SHORT, false, 0},
         {"a_color", 4, GL_UNSIGNED_BYTE, true, 0},
         {"a_stroke", 4, GL_UNSIGNED_BYTE, true, 0},
-        {"a_screenPosition", 2, GL_FLOAT, false, 0},
-        {"a_alpha", 1, GL_FLOAT, false, 0},
-        {"a_rotation", 1, GL_FLOAT, false, 0},
+        {"a_screenPosition", 2, GL_SHORT, false, 0},
+        {"a_alpha", 1, GL_SHORT, true, 0},
+        {"a_rotation", 1, GL_SHORT, false, 0},
     }));
 }
 

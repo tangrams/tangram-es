@@ -39,6 +39,7 @@ const vec4 clipped = vec4(2.0, 0.0, 2.0, 1.0);
 
 const float POSITION_SCALE = 1.0/4.0; // 4 subpixel precision
 const float EXTRUDE_SCALE = 1.0/256.0;
+const float ROTATION_SCALE = 1.0/4096.0;
 
 void main() {
     v_texcoords = a_uv;
@@ -47,8 +48,6 @@ void main() {
     v_strokeWidth = a_stroke.a;
 
     if (a_alpha > TANGRAM_EPSILON) {
-        float st = sin(a_rotation);
-        float ct = cos(a_rotation);
 
         vec2 vertexPos = a_position * POSITION_SCALE;
 
@@ -58,9 +57,12 @@ void main() {
         }
 
         // rotates first around +z-axis (0,0,1) and then translates by (tx,ty,0)
+        float st = sin(a_rotation * ROTATION_SCALE);
+        float ct = cos(a_rotation * ROTATION_SCALE);
+        vec2 screenPos = a_screenPosition * POSITION_SCALE;
         vec4 position = vec4(
-            vertexPos.x * ct - vertexPos.y * st + a_screenPosition.x,
-            vertexPos.x * st + vertexPos.y * ct + a_screenPosition.y,
+            vertexPos.x * ct - vertexPos.y * st + screenPos.x,
+            vertexPos.x * st + vertexPos.y * ct + screenPos.y,
             0.0, 1.0
         );
 

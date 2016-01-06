@@ -53,9 +53,15 @@ public:
         uint32_t color;
         uint32_t stroke;
         struct State {
-            glm::vec2 screenPos;
-            float alpha = 0.f;
-            float rotation = 0.f;
+            State() {}
+            State(glm::vec2 pos, float alpha, float rotation)
+                : screenPos(pos * 4.f),
+                  alpha(alpha * 32767.f),
+                  rotation(rotation * 4096.f) {}
+
+            glm::i16vec2 screenPos;
+            short alpha = 0;
+            short rotation = 0;
         } state;
     };
 
@@ -66,7 +72,12 @@ public:
         glm::vec2 modelPosition1;
         glm::vec2 modelPosition2;
 
-        Vertex::State state;
+        struct {
+            glm::vec2 screenPos;
+            float alpha = 0.f;
+            float rotation = 0.f;
+            Vertex::State vertex() { return Vertex::State(screenPos, alpha, rotation); }
+        } state;
     };
 
     struct Transition {
