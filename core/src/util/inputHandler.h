@@ -14,6 +14,7 @@ public:
     void handleTapGesture(float _posX, float _posY);
     void handleDoubleTapGesture(float _posX, float _posY);
     void handlePanGesture(float _startX, float _startY, float _endX, float _endY);
+    void handleFlingGesture(float _posX, float _posY, float _velocityX, float _velocityY);
     void handlePinchGesture(float _posX, float _posY, float _scale, float _velocity);
     void handleRotateGesture(float _posX, float _posY, float _radians);
     void handleShoveGesture(float _distance);

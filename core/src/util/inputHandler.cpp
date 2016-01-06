@@ -11,14 +11,14 @@ InputHandler::InputHandler(std::shared_ptr<View> _view) : m_view(_view) {}
 
 void InputHandler::update(float _dt) {
 
-    // TODO: Determine screen-space translation for threshold check
+    auto screenVelocityTranslate = m_view->pixelsPerMeter() * m_deltaTranslate;
 
-    bool isFlinging = glm::length(m_deltaTranslate) > m_thresholdStopTranslate || std::abs(m_deltaZoom) > m_thresholdStopZoom;
+    bool isFlinging = glm::length(screenVelocityTranslate) > m_thresholdStopTranslate || std::abs(m_deltaZoom) > m_thresholdStopZoom;
 
     if (!m_gestureOccured && isFlinging) {
 
         m_deltaTranslate -= _dt * m_dampingTranslate * m_deltaTranslate;
-        m_view->translate(m_deltaTranslate.x, m_deltaTranslate.y);
+        m_view->translate(_dt * m_deltaTranslate.x, _dt * m_deltaTranslate.y);
 
         m_deltaZoom -= _dt * m_dampingZoom * m_deltaZoom;
         m_view->zoom(m_deltaZoom * _dt);
@@ -54,22 +54,34 @@ void InputHandler::handlePanGesture(float _startX, float _startY, float _endX, f
 
     onGesture();
 
-    float dScreenX = _startX - _endX;
-    float dScreenY = _startY - _endY;
-
     m_view->screenToGroundPlane(_startX, _startY);
     m_view->screenToGroundPlane(_endX, _endY);
 
     float dx = _startX - _endX;
     float dy = _startY - _endY;
 
-    // TODO: Use a time interval to estimate velocity of pan
+    m_view->translate(dx, dy);
 
-    if (glm::length(glm::vec2(dScreenX, dScreenY)) > m_thresholdStartTranslate) {
-        setDeltas(0.f, glm::vec2(dx, dy));
+}
+
+void InputHandler::handleFlingGesture(float _posX, float _posY, float _velocityX, float _velocityY) {
+
+    if (glm::length(glm::vec2(_velocityX, _velocityY)) <= m_thresholdStartTranslate) {
+        return;
     }
 
-    m_view->translate(dx, dy);
+    float startX = _posX;
+    float startY = _posY;
+    float endX = _posX + _velocityX;
+    float endY = _posY + _velocityY;
+
+    m_view->screenToGroundPlane(startX, startY);
+    m_view->screenToGroundPlane(endX, endY);
+
+    float dx = startX - endX;
+    float dy = startY - endY;
+
+    setDeltas(0.f, glm::vec2(dx, dy));
 
 }
 

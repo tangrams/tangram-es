@@ -96,6 +96,9 @@ void handleDoubleTapGesture(float _posX, float _posY);
 // Respond to a drag with the given displacement in screen coordinates (x right, y down)
 void handlePanGesture(float _startX, float _startY, float _endX, float _endY);
 
+// Respond to a fling from the given position with the given velocity in screen coordinates
+void handleFlingGesture(float _posX, float _posY, float _velocityX, float _velocityY);
+
 // Respond to a pinch at the given position in screen coordinates with the given
 // incremental scale
 void handlePinchGesture(float _posX, float _posY, float _scale, float _velocity);
