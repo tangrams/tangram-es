@@ -238,10 +238,10 @@ bool TextBuffer::addLabel(const TextStyle::Parameters& _params, Label::Transform
         }
 
         const auto& q = quads[i];
-        vertices.push_back({{q.x0, q.y0}, {q.s0, q.t0}, {-1.f, -1.f, 0.f}, _params.fill, stroke});
-        vertices.push_back({{q.x0, q.y1}, {q.s0, q.t1}, {-1.f,  1.f, 0.f}, _params.fill, stroke});
-        vertices.push_back({{q.x1, q.y0}, {q.s1, q.t0}, { 1.f, -1.f, 0.f}, _params.fill, stroke});
-        vertices.push_back({{q.x1, q.y1}, {q.s1, q.t1}, { 1.f,  1.f, 0.f}, _params.fill, stroke});
+        vertices.push_back({{q.x0, q.y0}, {q.s0, q.t0}, { 0.f, 0.f }, _params.fill, stroke});
+        vertices.push_back({{q.x0, q.y1}, {q.s0, q.t1}, { 0.f, 0.f }, _params.fill, stroke});
+        vertices.push_back({{q.x1, q.y0}, {q.s1, q.t0}, { 0.f, 0.f }, _params.fill, stroke});
+        vertices.push_back({{q.x1, q.y1}, {q.s1, q.t1}, { 0.f, 0.f }, _params.fill, stroke});
 
         yMin = std::min(yMin, q.y0);
         xMin = std::min(xMin, q.x0);
