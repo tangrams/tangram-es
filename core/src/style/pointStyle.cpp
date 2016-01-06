@@ -25,9 +25,9 @@ PointStyle::~PointStyle() {}
 void PointStyle::constructVertexLayout() {
 
     m_vertexLayout = std::shared_ptr<VertexLayout>(new VertexLayout({
-        {"a_position", 2, GL_FLOAT, false, 0},
-        {"a_uv", 2, GL_FLOAT, false, 0},
-        {"a_extrude", 2, GL_FLOAT, false, 0},
+        {"a_position", 2, GL_SHORT, false, 0},
+        {"a_uv", 2, GL_SHORT, true, 0},
+        {"a_extrude", 2, GL_SHORT, false, 0},
         {"a_color", 4, GL_UNSIGNED_BYTE, true, 0},
         {"a_stroke", 4, GL_UNSIGNED_BYTE, true, 0},
         {"a_screenPosition", 2, GL_FLOAT, false, 0},
@@ -116,10 +116,15 @@ void PointStyle::pushQuad(std::vector<Label::Vertex>& _vertices, const glm::vec2
                           const glm::vec2& _uvTR, unsigned int _color, float _extrudeScale) const {
 
     float es = _extrudeScale;
-    _vertices.push_back({{    0.0,       0.0}, {_uvBL.x, _uvTR.y}, {-es,  es }, _color});
-    _vertices.push_back({{_size.x,       0.0}, {_uvTR.x, _uvTR.y}, { es,  es }, _color});
-    _vertices.push_back({{    0.0,  -_size.y}, {_uvBL.x, _uvBL.y}, {-es, -es }, _color});
-    _vertices.push_back({{_size.x,  -_size.y}, {_uvTR.x, _uvBL.y}, { es, -es }, _color});
+
+    // Attribute will be normalized - scale to max short;
+    glm::vec2 uvTR = _uvTR * 32767.f;
+    glm::vec2 uvBL = _uvBL * 32767.f;
+
+    _vertices.push_back({{    0.0,       0.0}, {uvBL.x, uvTR.y}, {-es,  es }, _color});
+    _vertices.push_back({{_size.x,       0.0}, {uvTR.x, uvTR.y}, { es,  es }, _color});
+    _vertices.push_back({{    0.0,  -_size.y}, {uvBL.x, uvBL.y}, {-es, -es }, _color});
+    _vertices.push_back({{_size.x,  -_size.y}, {uvTR.x, uvBL.y}, { es, -es }, _color});
 }
 
 bool PointStyle::getUVQuad(Parameters& _params, glm::vec4& _quad) const {

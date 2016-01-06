@@ -37,6 +37,9 @@ const vec4 clipped = vec4(2.0, 0.0, 2.0, 1.0);
 
 #pragma tangram: global
 
+const float POSITION_SCALE = 1.0/4.0; // 4 subpixel precision
+const float EXTRUDE_SCALE = 1.0/256.0;
+
 void main() {
     v_texcoords = a_uv;
     v_alpha = a_alpha;
@@ -47,11 +50,11 @@ void main() {
         float st = sin(a_rotation);
         float ct = cos(a_rotation);
 
-        vec2 vertexPos = a_position;
+        vec2 vertexPos = a_position * POSITION_SCALE;
 
         if (a_extrude.x != 0.0) {
             float dz = u_map_position.z - abs(u_tile_origin.z);
-            vertexPos.xy += clamp(dz, 0.0, 1.0) * a_extrude.xy;
+            vertexPos.xy += clamp(dz, 0.0, 1.0) * a_extrude.xy * EXTRUDE_SCALE;
         }
 
         // rotates first around +z-axis (0,0,1) and then translates by (tx,ty,0)
