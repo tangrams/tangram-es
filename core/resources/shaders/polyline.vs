@@ -34,7 +34,7 @@ varying vec2 v_texcoord;
     varying vec4 v_lighting;
 #endif
 
-const float POSITION_SCALE = 1.0/4096.0;
+const float POSITION_SCALE = 1.0/1024.0;
 const float EXTRUSION_SCALE = 1.0/4096.0;
 const float TEXTURE_SCALE = 1.0/16384.0;
 const float ORDER_SCALE = 1.0/2.0;

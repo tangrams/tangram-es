@@ -16,7 +16,7 @@
 
 #include <cmath>
 
-constexpr float position_scale = 4096.0f;
+constexpr float position_scale = 1024.0f;
 constexpr float texture_scale = 16384.0f;
 constexpr float normal_scale = 127.0f;
 
