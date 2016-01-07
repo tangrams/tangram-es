@@ -16,6 +16,9 @@ uniform vec2 u_resolution;
 uniform float u_time;
 uniform float u_meters_per_pixel;
 uniform float u_device_pixel_ratio;
+#ifdef TANGRAM_TEXT
+uniform vec2 u_uv_scale_factor;
+#endif
 
 #pragma tangram: uniforms
 
@@ -47,7 +50,12 @@ const float EXTRUDE_SCALE = 1.0/256.0;
 const float ROTATION_SCALE = 1.0/4096.0;
 
 void main() {
+    #ifdef TANGRAM_TEXT
+    v_texcoords = a_uv * u_uv_scale_factor;
+    #else
     v_texcoords = a_uv;
+    #endif
+
     v_alpha = a_alpha;
     v_color = a_color;
 
