@@ -30,7 +30,6 @@ void TextStyle::constructVertexLayout() {
     m_vertexLayout = std::shared_ptr<VertexLayout>(new VertexLayout({
         {"a_position", 2, GL_SHORT, false, 0},
         {"a_uv", 2, GL_SHORT, false, 0},
-        {"a_extrude", 2, GL_SHORT, false, 0},
         {"a_color", 4, GL_UNSIGNED_BYTE, true, 0},
         {"a_stroke", 4, GL_UNSIGNED_BYTE, true, 0},
         {"a_screenPosition", 2, GL_SHORT, false, 0},
@@ -47,7 +46,7 @@ void TextStyle::constructShaderProgram() {
 
     m_shaderProgram->setSourceStrings(fragShaderSrcStr, vertShaderSrcStr);
 
-    std::string defines;
+    std::string defines = "#define TANGRAM_TEXT\n";
 
     if (m_sdf && m_sdfMultisampling) {
         defines += "#define TANGRAM_SDF_MULTISAMPLING\n";

@@ -50,16 +50,24 @@ public:
     };
 
     struct Vertex {
-        Vertex(glm::vec2 pos, glm::vec2 uv, glm::vec2 extrude, uint32_t color, uint32_t stroke = 0)
+        // Constructor for TextStyle vertices
+        Vertex(glm::vec2 pos, glm::vec2 uv, uint32_t color, uint32_t stroke)
             : pos(pos * position_scale), uv(uv),
-              extrude(extrude * extrusion_scale),
               color(color), stroke(stroke) {}
+
+        // Constructor for PointStyle vertices
+        Vertex(glm::vec2 pos, glm::vec2 uv, glm::vec2 extrude, uint32_t color)
+            : pos(pos * position_scale), uv(uv),
+              color(color),
+              extrude(extrude * extrusion_scale) {}
 
         glm::i16vec2 pos;
         glm::i16vec2 uv;
-        glm::i16vec2 extrude;
         uint32_t color;
-        uint32_t stroke;
+        union {
+            glm::i16vec2 extrude;
+            uint32_t stroke;
+        };
         struct State {
             State() {}
             State(glm::vec2 pos, float alpha, float rotation)

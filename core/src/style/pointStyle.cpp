@@ -19,8 +19,8 @@ constexpr float texture_scale = 32767.f;
 
 namespace Tangram {
 
-PointStyle::PointStyle(std::string _name, Blending _blendMode, GLenum _drawMode) : Style(_name, _blendMode, _drawMode) {
-}
+PointStyle::PointStyle(std::string _name, Blending _blendMode, GLenum _drawMode)
+    : Style(_name, _blendMode, _drawMode) {}
 
 PointStyle::~PointStyle() {}
 
@@ -29,9 +29,8 @@ void PointStyle::constructVertexLayout() {
     m_vertexLayout = std::shared_ptr<VertexLayout>(new VertexLayout({
         {"a_position", 2, GL_SHORT, false, 0},
         {"a_uv", 2, GL_SHORT, true, 0},
-        {"a_extrude", 2, GL_SHORT, false, 0},
         {"a_color", 4, GL_UNSIGNED_BYTE, true, 0},
-        {"a_stroke", 4, GL_UNSIGNED_BYTE, true, 0},
+        {"a_extrude", 2, GL_SHORT, false, 0},
         {"a_screenPosition", 2, GL_SHORT, false, 0},
         {"a_alpha", 1, GL_SHORT, true, 0},
         {"a_rotation", 1, GL_SHORT, false, 0},

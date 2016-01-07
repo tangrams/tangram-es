@@ -25,13 +25,18 @@ attribute vec2 a_screenPosition;
 attribute LOWP float a_alpha;
 attribute LOWP float a_rotation;
 attribute LOWP vec4 a_color;
+#ifdef TANGRAM_TEXT
 attribute LOWP vec4 a_stroke;
+#else
 attribute vec3 a_extrude;
+#endif
 
 varying vec4 v_color;
-varying vec4 v_strokeColor;
 varying vec2 v_texcoords;
+#ifdef TANGRAM_TEXT
+varying vec4 v_strokeColor;
 varying float v_strokeWidth;
+#endif
 varying float v_alpha;
 const vec4 clipped = vec4(2.0, 0.0, 2.0, 1.0);
 
@@ -45,16 +50,17 @@ void main() {
     v_texcoords = a_uv;
     v_alpha = a_alpha;
     v_color = a_color;
-    v_strokeWidth = a_stroke.a;
 
     if (a_alpha > TANGRAM_EPSILON) {
 
         vec2 vertexPos = a_position * POSITION_SCALE;
 
+        #ifndef TANGRAM_TEXT
         if (a_extrude.x != 0.0) {
             float dz = u_map_position.z - abs(u_tile_origin.z);
             vertexPos.xy += clamp(dz, 0.0, 1.0) * a_extrude.xy * EXTRUDE_SCALE;
         }
+        #endif
 
         // rotates first around +z-axis (0,0,1) and then translates by (tx,ty,0)
         float st = sin(a_rotation * ROTATION_SCALE);
@@ -70,9 +76,13 @@ void main() {
 
         gl_Position = u_ortho * position;
 
+        #ifdef TANGRAM_TEXT
+        v_strokeWidth = a_stroke.a;
+
         // If width of stroke is zero, set the stroke color to the fill color -
         // the border pixel of the fill is always slightly mixed with the stroke color
         v_strokeColor.rgb = (v_strokeWidth > TANGRAM_EPSILON) ? a_stroke.rgb : a_color.rgb;
+        #endif
     } else {
         gl_Position = clipped;
     }
