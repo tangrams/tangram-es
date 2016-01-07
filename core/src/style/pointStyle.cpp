@@ -15,6 +15,8 @@
 #include "data/propertyItem.h" // Include wherever Properties is used!
 #include "scene/stops.h"
 
+constexpr float texture_scale = 32767.f;
+
 namespace Tangram {
 
 PointStyle::PointStyle(std::string _name, Blending _blendMode, GLenum _drawMode) : Style(_name, _blendMode, _drawMode) {
@@ -118,8 +120,8 @@ void PointStyle::pushQuad(std::vector<Label::Vertex>& _vertices, const glm::vec2
     float es = _extrudeScale;
 
     // Attribute will be normalized - scale to max short;
-    glm::vec2 uvTR = _uvTR * 32767.f;
-    glm::vec2 uvBL = _uvBL * 32767.f;
+    glm::vec2 uvTR = _uvTR * texture_scale;
+    glm::vec2 uvBL = _uvBL * texture_scale;
 
     _vertices.push_back({{    0.0,       0.0}, {uvBL.x, uvTR.y}, {-es,  es }, _color});
     _vertices.push_back({{_size.x,       0.0}, {uvTR.x, uvTR.y}, { es,  es }, _color});

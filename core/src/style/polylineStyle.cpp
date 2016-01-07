@@ -14,10 +14,10 @@
 #include "glm/vec3.hpp"
 #include "glm/gtc/type_precision.hpp"
 
-#define EXTRUSION_SCALE 4096.0f
-#define POSITION_SCALE 4096.0f
-#define TEXTURE_SCALE 16384.0f
-#define ORDER_SCALE 2.0f
+constexpr float extrusion_scale = 4096.0f;
+constexpr float position_scale = 4096.0f;
+constexpr float texture_scale = 16384.0f;
+constexpr float order_scale = 2.0f;
 
 namespace Tangram {
 
@@ -25,15 +25,15 @@ struct PolylineVertex {
 
     PolylineVertex(glm::vec3 position, float order, glm::vec2 uv,
                    glm::vec2 extrude, glm::vec2 width, GLuint abgr)
-        : pos(glm::i16vec4{ position * POSITION_SCALE, order * ORDER_SCALE }),
-          texcoord(uv * TEXTURE_SCALE),
-          extrude(extrude * EXTRUSION_SCALE, width * EXTRUSION_SCALE),
+        : pos(glm::i16vec4{ position * position_scale, order * order_scale }),
+          texcoord(uv * texture_scale),
+          extrude(extrude * extrusion_scale, width * extrusion_scale),
           abgr(abgr) {}
 
     PolylineVertex(PolylineVertex v, float order, glm::vec2 width, GLuint abgr)
-        : pos(glm::i16vec4{ v.pos.x, v.pos.y, v.pos.z, order * ORDER_SCALE}),
+        : pos(glm::i16vec4{ v.pos.x, v.pos.y, v.pos.z, order * order_scale}),
           texcoord(v.texcoord),
-          extrude(glm::i16vec4{ v.extrude.x, v.extrude.y, width * EXTRUSION_SCALE }),
+          extrude(glm::i16vec4{ v.extrude.x, v.extrude.y, width * extrusion_scale }),
           abgr(abgr) {}
 
     glm::i16vec4 pos;

@@ -14,6 +14,14 @@
 #include <limits>
 #include <memory>
 
+namespace {
+// Conversion factors for Label::Vertex attributes
+constexpr float position_scale = 4.0f;
+constexpr float extrusion_scale = 256.0f;
+constexpr float rotation_scale = 4096.0f;
+constexpr float alpha_scale = 32767.f;
+}
+
 namespace Tangram {
 
 class LabelMesh;
@@ -43,8 +51,8 @@ public:
 
     struct Vertex {
         Vertex(glm::vec2 pos, glm::vec2 uv, glm::vec2 extrude, uint32_t color, uint32_t stroke = 0)
-            : pos(pos * 4.f), uv(uv),
-              extrude(extrude * 256.f),
+            : pos(pos * position_scale), uv(uv),
+              extrude(extrude * extrusion_scale),
               color(color), stroke(stroke) {}
 
         glm::i16vec2 pos;
@@ -55,9 +63,9 @@ public:
         struct State {
             State() {}
             State(glm::vec2 pos, float alpha, float rotation)
-                : screenPos(pos * 4.f),
-                  alpha(alpha * 32767.f),
-                  rotation(rotation * 4096.f) {}
+                : screenPos(pos * position_scale),
+                  alpha(alpha * alpha_scale),
+                  rotation(rotation * rotation_scale) {}
 
             glm::i16vec2 screenPos;
             short alpha = 0;

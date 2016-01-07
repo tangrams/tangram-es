@@ -16,9 +16,9 @@
 
 #include <cmath>
 
-#define POSITION_SCALE 4096.0f
-#define TEXTURE_SCALE 16384.0f
-#define NORMAL_SCALE 127.0f
+constexpr float position_scale = 4096.0f;
+constexpr float texture_scale = 16384.0f;
+constexpr float normal_scale = 127.0f;
 
 namespace Tangram {
 
@@ -26,9 +26,9 @@ struct PolygonVertex {
 
     PolygonVertex(glm::vec3 position, uint32_t order,
                   glm::vec3 normal, glm::vec2 uv, GLuint abgr)
-        : pos(glm::i16vec4{ position * POSITION_SCALE, order }),
-          norm(normal * NORMAL_SCALE),
-          texcoord(uv * TEXTURE_SCALE),
+        : pos(glm::i16vec4{ position * position_scale, order }),
+          norm(normal * normal_scale),
+          texcoord(uv * texture_scale),
           abgr(abgr) {}
 
     glm::i16vec4 pos; // pos.w contains layer (params.order)
