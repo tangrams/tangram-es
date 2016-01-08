@@ -213,7 +213,7 @@ void render() {
         RenderState::stencilOp(GL_KEEP, GL_KEEP, GL_INVERT);
 
         glEnable(GL_POLYGON_OFFSET_FILL);
-        glPolygonOffset(1.0, 1.0);
+        glPolygonOffset(1.0, 1024.0);
 
         for (const auto& style : m_scene->styles()) {
 
