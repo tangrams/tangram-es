@@ -23,7 +23,6 @@ attribute vec4 a_position;
 attribute vec4 a_color;
 attribute vec4 a_extrude;
 attribute vec2 a_texcoord;
-attribute float a_layer;
 
 varying vec4 v_world_position;
 varying vec4 v_position;
@@ -35,8 +34,12 @@ varying vec2 v_texcoord;
     varying vec4 v_lighting;
 #endif
 
+#define UNPACK_POSITION(x) (x / 1024.0)
+#define UNPACK_EXTRUSION(x) (x / 4096.0)
+#define UNPACK_ORDER(x) (x / 2.0)
+
 vec4 modelPosition() {
-    return a_position;
+    return vec4(UNPACK_POSITION(a_position.xyz), 1.0);
 }
 
 vec4 worldPosition() {
@@ -56,15 +59,16 @@ void main() {
     // Initialize globals
     #pragma tangram: setup
 
-    vec4 position = a_position;
+    vec4 position = vec4(UNPACK_POSITION(a_position.xyz), 1.0);
 
     v_color = a_color;
     v_texcoord = a_texcoord;
     v_normal = u_normalMatrix * vec3(0.,0.,1.);
 
     {
-        float width = a_extrude.z;
-        float dwdz = a_extrude.w;
+        vec4 extrude = UNPACK_EXTRUSION(a_extrude);
+        float width = extrude.z;
+        float dwdz = extrude.w;
         float dz = clamp(u_map_position.z - abs(u_tile_origin.z), 0.0, 1.0);
         // Interpolate between zoom levels
         width += dwdz * dz;
@@ -74,7 +78,7 @@ void main() {
         // Modify line width in model space before extrusion
         #pragma tangram: width
 
-        position.xy += a_extrude.xy * width;
+        position.xy += extrude.xy * width;
     }
 
     // Transform position into meters relative to map center
@@ -115,6 +119,7 @@ void main() {
     gl_Position.z += TANGRAM_DEPTH_DELTA * gl_Position.w * (1. - sign(u_tile_origin.z));
 
     #ifdef TANGRAM_DEPTH_DELTA
-        gl_Position.z -= a_layer * TANGRAM_DEPTH_DELTA * gl_Position.w;
+        float layer = UNPACK_ORDER(a_position.w);
+        gl_Position.z -= layer * TANGRAM_DEPTH_DELTA * gl_Position.w;
     #endif
 }

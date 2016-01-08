@@ -204,13 +204,13 @@ void Label::pushTransform() {
 
         if (visibleState()) {
             // update the complete state on the mesh
-            m_mesh.updateAttribute(m_vertexRange, m_transform.state, attribOffset);
+            m_mesh.updateAttribute(m_vertexRange, m_transform.state.vertex(), attribOffset);
         } else {
 
             // for any non-visible states, we don't need to overhead the gpu with updates on the
             // alpha attribute, but simply do it once until the label goes back in a visible state
             if (m_updateMeshVisibility) {
-                m_mesh.updateAttribute(m_vertexRange, m_transform.state.alpha, alphaOffset);
+                m_mesh.updateAttribute(m_vertexRange, (m_transform.state.vertex().alpha), alphaOffset);
                 m_updateMeshVisibility = false;
             }
         }

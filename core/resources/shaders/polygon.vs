@@ -23,7 +23,6 @@ attribute vec4 a_position;
 attribute vec4 a_color;
 attribute vec3 a_normal;
 attribute vec2 a_texcoord;
-attribute float a_layer;
 
 varying vec4 v_world_position;
 varying vec4 v_position;
@@ -35,8 +34,10 @@ varying vec2 v_texcoord;
     varying vec4 v_lighting;
 #endif
 
+#define UNPACK_POSITION(x) (x / 1024.0)
+
 vec4 modelPosition() {
-    return a_position;
+    return vec4(UNPACK_POSITION(a_position.xyz), 1.0);
 }
 
 vec4 worldPosition() {
@@ -56,7 +57,7 @@ void main() {
     // Initialize globals
     #pragma tangram: setup
 
-    vec4 position = a_position;
+    vec4 position = vec4(UNPACK_POSITION(a_position.xyz), 1.0);
 
     v_color = a_color;
     v_texcoord = a_texcoord;
@@ -100,6 +101,7 @@ void main() {
     gl_Position.z += TANGRAM_DEPTH_DELTA * gl_Position.w * (1. - sign(u_tile_origin.z));
 
     #ifdef TANGRAM_DEPTH_DELTA
-        gl_Position.z -= a_layer * TANGRAM_DEPTH_DELTA * gl_Position.w;
+        float layer = a_position.w;
+        gl_Position.z -= layer * TANGRAM_DEPTH_DELTA * gl_Position.w;
     #endif
 }

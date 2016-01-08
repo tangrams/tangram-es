@@ -14,6 +14,14 @@
 #include <limits>
 #include <memory>
 
+namespace {
+// Conversion factors for Label::Vertex attributes
+constexpr float position_scale = 4.0f;
+constexpr float extrusion_scale = 256.0f;
+constexpr float rotation_scale = 4096.0f;
+constexpr float alpha_scale = 32767.f;
+}
+
 namespace Tangram {
 
 class LabelMesh;
@@ -42,18 +50,34 @@ public:
     };
 
     struct Vertex {
-        Vertex(glm::vec2 pos, glm::vec2 uv, glm::vec3 extrude, uint32_t color, uint32_t stroke = 0)
-            : pos(pos), uv(uv), extrude(extrude), color(color), stroke(stroke) {}
+        // Constructor for TextStyle vertices
+        Vertex(glm::vec2 pos, glm::vec2 uv, uint32_t color, uint32_t stroke)
+            : pos(pos * position_scale), uv(uv),
+              color(color), stroke(stroke) {}
 
-        glm::vec2 pos;
-        glm::vec2 uv;
-        glm::vec3 extrude;
+        // Constructor for PointStyle vertices
+        Vertex(glm::vec2 pos, glm::vec2 uv, glm::vec2 extrude, uint32_t color)
+            : pos(pos * position_scale), uv(uv),
+              color(color),
+              extrude(extrude * extrusion_scale) {}
+
+        glm::i16vec2 pos;
+        glm::u16vec2 uv;
         uint32_t color;
-        uint32_t stroke;
+        union {
+            glm::i16vec2 extrude;
+            uint32_t stroke;
+        };
         struct State {
-            glm::vec2 screenPos;
-            float alpha = 0.f;
-            float rotation = 0.f;
+            State() {}
+            State(glm::vec2 pos, float alpha, float rotation)
+                : screenPos(pos * position_scale),
+                  alpha(alpha * alpha_scale),
+                  rotation(rotation * rotation_scale) {}
+
+            glm::i16vec2 screenPos;
+            short alpha = 0;
+            short rotation = 0;
         } state;
     };
 
@@ -64,7 +88,12 @@ public:
         glm::vec2 modelPosition1;
         glm::vec2 modelPosition2;
 
-        Vertex::State state;
+        struct {
+            glm::vec2 screenPos;
+            float alpha = 0.f;
+            float rotation = 0.f;
+            Vertex::State vertex() { return Vertex::State(screenPos, alpha, rotation); }
+        } state;
     };
 
     struct Transition {

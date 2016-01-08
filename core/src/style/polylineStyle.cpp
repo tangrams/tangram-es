@@ -10,16 +10,36 @@
 #include "tile/tile.h"
 #include "util/mapProjection.h"
 #include "util/extrude.h"
+
 #include "glm/vec3.hpp"
+#include "glm/gtc/type_precision.hpp"
+
+constexpr float extrusion_scale = 4096.0f;
+constexpr float position_scale = 1024.0f;
+constexpr float texture_scale = 65535.0f;
+constexpr float order_scale = 2.0f;
 
 namespace Tangram {
 
 struct PolylineVertex {
-    glm::vec3 pos;
-    glm::vec2 texcoord;
-    glm::vec4 extrude;
+
+    PolylineVertex(glm::vec3 position, float order, glm::vec2 uv,
+                   glm::vec2 extrude, glm::vec2 width, GLuint abgr)
+        : pos(glm::i16vec4{ position * position_scale, order * order_scale }),
+          texcoord(uv * texture_scale),
+          extrude(extrude * extrusion_scale, width * extrusion_scale),
+          abgr(abgr) {}
+
+    PolylineVertex(PolylineVertex v, float order, glm::vec2 width, GLuint abgr)
+        : pos(glm::i16vec4{ v.pos.x, v.pos.y, v.pos.z, order * order_scale}),
+          texcoord(v.texcoord),
+          extrude(glm::i16vec4{ v.extrude.x, v.extrude.y, width * extrusion_scale }),
+          abgr(abgr) {}
+
+    glm::i16vec4 pos;
+    glm::u16vec2 texcoord;
+    glm::i16vec4 extrude;
     GLuint abgr;
-    GLfloat layer;
 };
 
 using Mesh = TypedMesh<PolylineVertex>;
@@ -32,13 +52,11 @@ void PolylineStyle::constructVertexLayout() {
 
     // TODO: Ideally this would be in the same location as the struct that it basically describes
     m_vertexLayout = std::shared_ptr<VertexLayout>(new VertexLayout({
-        {"a_position", 3, GL_FLOAT, false, 0},
-        {"a_texcoord", 2, GL_FLOAT, false, 0},
-        {"a_extrude", 4, GL_FLOAT, false, 0},
+        {"a_position", 4, GL_SHORT, false, 0},
+        {"a_texcoord", 2, GL_UNSIGNED_SHORT, true, 0},
+        {"a_extrude", 4, GL_SHORT, false, 0},
         {"a_color", 4, GL_UNSIGNED_BYTE, true, 0},
-        {"a_layer", 1, GL_FLOAT, false, 0}
     }));
-
 }
 
 void PolylineStyle::constructShaderProgram() {
@@ -181,11 +199,12 @@ void PolylineStyle::buildLine(const Line& _line, const DrawRule& _rule, const Pr
 
     float tileUnitsPerMeter = _tile.getInverseScale();
     float height = getUpperExtrudeMeters(extrude, _props) * tileUnitsPerMeter;
+    float order = params.order;
 
     PolyLineBuilder builder {
-        [&](const glm::vec3& coord, const glm::vec2& normal, const glm::vec2& uv) {
-            glm::vec4 extrude = { normal.x, normal.y, width, dWdZ };
-            vertices.push_back({ {coord.x, coord.y, height}, uv, extrude, abgr, (float)params.order });
+        [&](const glm::vec3& coord, const glm::vec2& normal, const glm::vec2& texCoord) {
+            glm::vec3 position = glm::vec3{coord.x, coord.y, height};
+            vertices.push_back({position, order, texCoord, normal, { width, dWdZ }, abgr});
         },
         [&](size_t sizeHint){ vertices.reserve(sizeHint); },
         params.cap,
@@ -197,15 +216,17 @@ void PolylineStyle::buildLine(const Line& _line, const DrawRule& _rule, const Pr
     if (params.outlineOn) {
 
         GLuint abgrOutline = params.outlineColor;
-        float outlineOrder = std::min(params.outlineOrder, params.order) - .5f;
+        float outlineOrder = std::min(params.outlineOrder, params.order) - 0.5f;
 
         float widthOutline = 0.f;
         float dWdZOutline = 0.f;
 
-        if (evalStyleParamWidth(StyleParamKey::outline_width, _rule, _tile, widthOutline, dWdZOutline) &&
-            ((widthOutline > 0.0f || dWdZOutline > 0.0f)) ) {
+        if (evalStyleParamWidth(StyleParamKey::outline_width, _rule, _tile,
+                                widthOutline, dWdZOutline) &&
+            ((widthOutline > 0.0f || dWdZOutline > 0.0f))) {
 
-            // Note: this must update width and dWdZ as they are captured (and used) by builder
+            // Note: this must update <width> and <dWdZ> as they are captured
+            // (and used) by <builder>
             width += widthOutline;
             dWdZ += dWdZOutline;
 
@@ -224,9 +245,7 @@ void PolylineStyle::buildLine(const Line& _line, const DrawRule& _rule, const Pr
                     builder.indices.push_back(offset + builder.indices[i]);
                 }
                 for (size_t i = 0; i < offset; i++) {
-                    const auto& v = vertices[i];
-                    glm::vec4 extrudeOutline = { v.extrude.x, v.extrude.y, width, dWdZ };
-                    vertices.push_back({ v.pos, v.texcoord, extrudeOutline, abgrOutline, outlineOrder });
+                    vertices.push_back({ vertices[i], outlineOrder, { width, dWdZ }, abgrOutline });
                 }
             }
         }
