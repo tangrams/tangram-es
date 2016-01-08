@@ -192,9 +192,6 @@ void TileManager::updateTileSet(TileSet& _tileSet) {
                     (entry.tile->sourceGeneration() < _tileSet.source->generation());
 
                 if (update) {
-                    LOG("reload tile %s - %d %d", visTileId.toString().c_str(),
-                        entry.tile->sourceGeneration(),
-                        _tileSet.source->generation());
 
                     // Tile needs update - enqueue for loading
                     enqueueTask(_tileSet, visTileId, viewCenter);
@@ -268,14 +265,6 @@ void TileManager::updateTileSet(TileSet& _tileSet) {
             (it->second.getProxyCounter() <= 0  ||
              it->first.z >= maxZoom)) {
 
-            auto& entry = it->second;
-
-            LOG("REMOVE %s - ready:%d proxy:%d/%d",
-                it->first.toString().c_str(),
-                entry.isReady(),
-                entry.getProxyCounter(),
-                entry.m_proxies);
-
             clearProxyTiles(_tileSet, it->first, it->second, removeTiles);
 
             removeTile(_tileSet, it);
@@ -285,13 +274,13 @@ void TileManager::updateTileSet(TileSet& _tileSet) {
     for (auto& it : tiles) {
         auto& entry = it.second;
 
-        LOG("> %s - ready:%d proxy:%d/%d loading:%d",
-            it.first.toString().c_str(),
-            entry.isReady(),
-            entry.getProxyCounter(),
-            entry.m_proxies,
-            entry.task && !entry.task->hasData()
-            );
+        LOGD("> %s - ready:%d proxy:%d/%d loading:%d canceled:%d",
+             it.first.toString().c_str(),
+             entry.isReady(),
+             entry.getProxyCounter(),
+             entry.m_proxies,
+             entry.task && !entry.task->hasData(),
+             entry.task && entry.task->isCanceled());
 
         if (entry.isLoading()) {
             auto& id = it.first;
@@ -361,9 +350,9 @@ void TileManager::loadTiles() {
         }
     }
 
-    LOG("loading:%d pending:%d cache: %fMB",
-       m_loadTasks.size(), m_loadPending,
-       (double(m_tileCache->getMemoryUsage()) / (1024 * 1024)));
+    LOGD("loading:%d pending:%d cache: %fMB",
+         m_loadTasks.size(), m_loadPending,
+         (double(m_tileCache->getMemoryUsage()) / (1024 * 1024)));
 
     m_loadTasks.clear();
 }

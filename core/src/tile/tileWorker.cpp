@@ -87,7 +87,7 @@ void TileWorker::run() {
 
         auto tileData = task->source().parse(*task, *scene->mapProjection());
 
-        const clock_t begin = clock();
+        // const clock_t begin = clock();
 
         context.initFunctions(*scene);
 
@@ -101,8 +101,8 @@ void TileWorker::run() {
             // Mark task as ready
             task->setTile(std::move(tile));
 
-            float loadTime = (float(clock() - begin) / CLOCKS_PER_SEC) * 1000;
-            LOG("loadTime %s - %f", task->tile()->getID().toString().c_str(), loadTime);
+            // float loadTime = (float(clock() - begin) / CLOCKS_PER_SEC) * 1000;
+            // LOG("loadTime %s - %f", task->tile()->getID().toString().c_str(), loadTime);
         } else {
             task->cancel();
         }
