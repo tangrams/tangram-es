@@ -135,7 +135,7 @@ std::vector<FONSquad>& FontContext::rasterize(const std::string& _text, FontID _
                                               float _fontSize, float _sdf) {
 
     m_quadBuffer.clear();
-
+    fonsSetShaping(m_fsContext, "arabic", "RTL", "ar");
     fonsSetSize(m_fsContext, _fontSize);
     fonsSetFont(m_fsContext, _fontID);
 
@@ -153,6 +153,8 @@ std::vector<FONSquad>& FontContext::rasterize(const std::string& _text, FontID _
         m_quadBuffer.clear();
         return m_quadBuffer;
     }
+
+    fons__clearShaping(m_fsContext);
 
     return m_quadBuffer;
 }

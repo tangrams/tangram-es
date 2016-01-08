@@ -336,10 +336,9 @@ layers:
                 align: right
                 text_wrap: 20
                 font:
-                    family: sans-serif
-                    weight: 400
-                    style: normal
-                    size: 1.2em
+                    family: amiri
+                    style: regular
+                    size: 25px
                     fill: white
     road_labels:
         data: {source: osm, layer: roads}
@@ -355,10 +354,9 @@ layers:
                         time: 1s
                 offset: [[16, [0, 8px]], [18, [0, 120px]]]
                 font:
-                    family: sans-serif
-                    weight: 400
+                    family: amiri
                     style: normal
-                    size: 1.em
+                    size: 25px
                     fill: black
                     stroke: { color: white, width: 2 }
         highway:
@@ -374,9 +372,8 @@ layers:
                         [show, hide]:
                             time: 1s
                     font:
-                        family: sans-serif
-                        weight: 400
-                        style: normal
+                        family: amiri
+                        style: regular
                         size: 25px
                         fill: black
                         transform: capitalize
@@ -393,10 +390,9 @@ layers:
                         [show, hide]:
                             time: 1s
                     font:
-                        family: sans-serif
-                        weight: 400
-                        style: normal
-                        size: 20.5pt
+                        family: amiri
+                        style: regular
+                        size: 25px
     places:
         data: { sources: osm }
         filter:
@@ -419,10 +415,9 @@ layers:
                     [show, hide]:
                         time: 1s
                 font:
-                    family: sans-serif
-                    weight: 400
-                    style: normal
-                    size: 15.5px
+                    family: amiri
+                    style: regular
+                    size: 24px
                     fill: black
         continents:
             filter: { kind: continent }
@@ -460,10 +455,10 @@ layers:
                     [show, hide]:
                         time: 1s
                 font:
-                    family: sans-serif
-                    weight: 400
+                    family: amiri
+                    style: regular
                     style: normal
-                    size: 20px
+                    size: 24px
                     fill: darkgreen
 
     pois:
