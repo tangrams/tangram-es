@@ -282,11 +282,11 @@ void TileManager::updateTileSet(TileSet& _tileSet) {
         }
     }
 
-    for (auto it = tiles.begin(); it != tiles.end();) {
-        auto& entry = it->second;
+    for (auto& it : tiles) {
+        auto& entry = it.second;
 
         LOG("> %s - ready:%d proxy:%d/%d loading:%d",
-            it->first.toString().c_str(),
+            it.first.toString().c_str(),
             entry.isReady(),
             entry.getProxyCounter(),
             entry.m_proxies,
@@ -294,7 +294,7 @@ void TileManager::updateTileSet(TileSet& _tileSet) {
             );
 
         if (entry.isLoading()) {
-            auto& id = it->first;
+            auto& id = it.first;
             auto& task = entry.task;
 
             // Update tile distance to map center for load priority.
@@ -315,7 +315,6 @@ void TileManager::updateTileSet(TileSet& _tileSet) {
             // Mark as proxy
             entry.tile->setProxyState(entry.getProxyCounter() > 0);
         }
-        ++it;
     }
 }
 
