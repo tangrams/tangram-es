@@ -3,6 +3,7 @@
 #include "scene/styleParam.h"
 
 #include <vector>
+#include "platform.h"
 
 namespace Tangram {
 
@@ -104,6 +105,13 @@ struct DrawRuleMergeSet {
 
     // Container for dynamically-evaluated parameters
     StyleParam evaluated[StyleParamKeySize];
+
+    double m_buildTime = 0, m_matchTime = 0;
+    std::string m_tile;
+
+    ~DrawRuleMergeSet(){
+        LOG("    %s - match:%f\t style:%f", m_tile.c_str(), (float)m_matchTime, (float)m_buildTime);
+    }
 
 };
 

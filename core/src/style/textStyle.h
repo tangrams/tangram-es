@@ -9,7 +9,6 @@
 
 namespace Tangram {
 
-class TextBuffer;
 class FontContext;
 struct Properties;
 typedef int FontID;
@@ -47,16 +46,6 @@ protected:
     virtual void constructShaderProgram() override;
 
     virtual std::unique_ptr<StyleBuilder> createBuilder() const override;
-
-    // virtual void buildPoint(const Point& _point, const DrawRule& _rule, const Properties& _props, VboMesh& _mesh, Tile& _tile) const override;
-    // virtual void buildLine(const Line& _line, const DrawRule& _rule, const Properties& _props, VboMesh& _mesh, Tile& _tile) const override;
-    // virtual void buildPolygon(const Polygon& _polygon, const DrawRule& _rule, const Properties& _props, VboMesh& _mesh, Tile& _tile) const override;
-    // virtual bool checkRule(const DrawRule& _rule) const override;
-
-    // virtual VboMesh* newMesh() const override;
-
-    /* Creates a text label and add it to the processed <TextBuffer>. */
-    // void addTextLabel(TextBuffer& _buffer, Label::Transform _transform, std::string _text, Label::Type _type) const;
 
     bool m_sdf;
     bool m_sdfMultisampling;

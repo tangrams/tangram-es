@@ -54,7 +54,7 @@ public:
         initMesh();
     }
 
-    void addFeature(const Feature& _feat, const DrawRule& _rule);
+    virtual void addFeature(const Feature& _feat, const DrawRule& _rule);
 
     /* Build styled vertex data for point geometry */
     virtual void addPoint(const Point& _point, const Properties& _props, const DrawRule& _rule);

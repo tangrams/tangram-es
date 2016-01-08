@@ -15,6 +15,7 @@
 #include "glm/gtc/matrix_transform.hpp"
 
 #include <algorithm>
+#include <chrono>
 
 namespace Tangram {
 
@@ -71,27 +72,32 @@ void Tile::build(StyleContext& _ctx, const TileData& _tileData,
             builder.second->beginTile(*this);
     }
 
+    const clock_t t2 = clock();
+
     DrawRuleMergeSet ruleSet;
 
-    for (const auto& datalayer : _ctx.sceneLayers()) {
+    for (const auto& sceneLayer : _ctx.sceneLayers()) {
 
-        if (datalayer.source() != _source.name()) { continue; }
+        if (sceneLayer.source() != _source.name()) { continue; }
 
-        for (const auto& collection : _tileData.layers) {
+        for (const auto& featureLayer : _tileData.layers) {
 
-            if (!collection.name.empty()) {
-                const auto& dlc = datalayer.collections();
-                bool layerContainsCollection =
-                    std::find(dlc.begin(), dlc.end(), collection.name) != dlc.end();
+            if (!featureLayer.name.empty()) {
+                const auto& slc = sceneLayer.collections();
 
-                if (!layerContainsCollection) { continue; }
+                bool sceneLayerCollectionContainsFeatureLayer =
+                    std::find(slc.begin(), slc.end(), featureLayer.name) != slc.end();
+
+                if (!sceneLayerCollectionContainsFeatureLayer) { continue; }
             }
 
-            for (const auto& feat : collection.features) {
-                ruleSet.apply(feat, datalayer, _ctx, *this);
+            for (const auto& feat : featureLayer.features) {
+                ruleSet.apply(feat, sceneLayer, _ctx, *this);
             }
         }
     }
+
+    const clock_t t3 = clock();
 
     for (auto& builder : _ctx.styleBuilders()) {
         std::unique_ptr<VboMesh> geometry;
@@ -103,6 +109,14 @@ void Tile::build(StyleContext& _ctx, const TileData& _tileData,
         }
         m_geometry[builder.first.k] = std::move(geometry);
     }
+
+    const clock_t t4 = clock();
+
+    float buildTime = (float(t3 - t2) / CLOCKS_PER_SEC) * 1000;
+    float endTime = (float(t4 - t3) / CLOCKS_PER_SEC) * 1000;
+    LOG("      %s - apply:%f\t finish:%f", m_id.toString().c_str(),
+        buildTime, endTime);
+
 }
 
 void Tile::update(float _dt, const View& _view) {

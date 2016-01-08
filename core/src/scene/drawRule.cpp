@@ -10,6 +10,7 @@
 #include "drawRuleWarnings.h"
 
 #include <algorithm>
+#include <chrono>
 
 namespace Tangram {
 
@@ -136,8 +137,16 @@ bool DrawRuleMergeSet::match(const Feature& _feature, const SceneLayer& _layer, 
 void DrawRuleMergeSet::apply(const Feature& _feature, const SceneLayer& _layer,
                              StyleContext& _ctx, Tile& _tile) {
 
+    const clock_t t1 = clock();
+
+    if (m_tile.empty()) {
+        m_tile = _tile.getID().toString();
+    }
+
     // If no rules matched the feature, return immediately
     if (!match(_feature, _layer, _ctx)) { return; }
+
+    const clock_t t2 = clock();
 
     // For each matched rule, find the style to be used and
     // build the feature with the rule's parameters
@@ -197,6 +206,9 @@ void DrawRuleMergeSet::apply(const Feature& _feature, const SceneLayer& _layer,
             style->addFeature(_feature, rule);
         }
     }
+
+    m_buildTime += (double(clock() - t2) / CLOCKS_PER_SEC) * 1000;
+    m_matchTime += (double(t2 - t1) / CLOCKS_PER_SEC) * 1000;
 }
 
 void DrawRuleMergeSet::mergeRules(const SceneLayer& _layer) {
