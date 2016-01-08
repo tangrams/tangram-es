@@ -11,7 +11,7 @@
 
 #include <algorithm>
 
-#define WORKER_NICENESS 10
+#define WORKER_NICENESS 5
 
 namespace Tangram {
 
@@ -84,8 +84,6 @@ void TileWorker::run(Worker* instance) {
             continue;
         }
 
-        auto tileData = task->process();
-
         if (instance->styleContext) {
             context = std::move(instance->styleContext);
             LOG("Passed new StyleContext to TileWorker");
@@ -96,14 +94,22 @@ void TileWorker::run(Worker* instance) {
             continue;
         }
 
-        // const clock_t begin = clock();
-        // context.initFunctions(*scene);
+        auto t1 = clock();
+
+        auto tileData = task->process();
+
+        auto t2 = clock();
 
         if (tileData) {
             task->tile->build(*context, *tileData, *task->source);
+            auto t3 = clock();
 
-            // float loadTime = (float(clock() - begin) / CLOCKS_PER_SEC) * 1000;
-            // LOG("loadTime %s - %f", task->tile->getID().toString().c_str(), loadTime);
+            float parseTime = (float(t2 - t1) / CLOCKS_PER_SEC) * 1000;
+            float buildTime = (float(t3 - t2) / CLOCKS_PER_SEC) * 1000;
+            float allTime = (float(t3 - t1) / CLOCKS_PER_SEC) * 1000;
+            LOG("%s - parse:%f\t build:%f\t all:%f", task->tile->getID().toString().c_str(),
+                parseTime, buildTime, allTime);
+
         }
 
         m_tileManager.tileProcessed(std::move(task));
