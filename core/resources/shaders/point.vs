@@ -45,9 +45,9 @@ const vec4 clipped = vec4(2.0, 0.0, 2.0, 1.0);
 
 #pragma tangram: global
 
-const float POSITION_SCALE = 1.0/4.0; // 4 subpixel precision
-const float EXTRUDE_SCALE = 1.0/256.0;
-const float ROTATION_SCALE = 1.0/4096.0;
+#define UNPACK_POSITION(x) (x / 4.0) // 4 subpixel precision
+#define UNPACK_EXTRUDE(x) (x / 256.0)
+#define UNPACK_ROTATION(x) (x / 4096.0)
 
 void main() {
     #ifdef TANGRAM_TEXT
@@ -61,19 +61,19 @@ void main() {
 
     if (a_alpha > TANGRAM_EPSILON) {
 
-        vec2 vertexPos = a_position * POSITION_SCALE;
+        vec2 vertexPos = UNPACK_POSITION(a_position);
 
         #ifndef TANGRAM_TEXT
         if (a_extrude.x != 0.0) {
             float dz = u_map_position.z - abs(u_tile_origin.z);
-            vertexPos.xy += clamp(dz, 0.0, 1.0) * a_extrude.xy * EXTRUDE_SCALE;
+            vertexPos.xy += clamp(dz, 0.0, 1.0) * UNPACK_EXTRUDE(a_extrude.xy);
         }
         #endif
 
         // rotates first around +z-axis (0,0,1) and then translates by (tx,ty,0)
-        float st = sin(a_rotation * ROTATION_SCALE);
-        float ct = cos(a_rotation * ROTATION_SCALE);
-        vec2 screenPos = a_screenPosition * POSITION_SCALE;
+        float st = sin(UNPACK_ROTATION(a_rotation));
+        float ct = cos(UNPACK_ROTATION(a_rotation));
+        vec2 screenPos = UNPACK_POSITION(a_screenPosition);
         vec4 position = vec4(
             vertexPos.x * ct - vertexPos.y * st + screenPos.x,
             vertexPos.x * st + vertexPos.y * ct + screenPos.y,

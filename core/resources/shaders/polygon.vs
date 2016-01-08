@@ -34,10 +34,10 @@ varying vec2 v_texcoord;
     varying vec4 v_lighting;
 #endif
 
-const float POSITION_SCALE = 1.0/1024.0;
+#define UNPACK_POSITION(x) (x / 1024.0)
 
 vec4 modelPosition() {
-    return vec4(a_position.xyz * POSITION_SCALE, 1.0);
+    return vec4(UNPACK_POSITION(a_position.xyz), 1.0);
 }
 
 vec4 worldPosition() {
@@ -57,7 +57,7 @@ void main() {
     // Initialize globals
     #pragma tangram: setup
 
-    vec4 position = vec4(a_position.xyz * POSITION_SCALE, 1.0);
+    vec4 position = vec4(UNPACK_POSITION(a_position.xyz), 1.0);
 
     v_color = a_color;
     v_texcoord = a_texcoord;

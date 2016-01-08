@@ -34,12 +34,12 @@ varying vec2 v_texcoord;
     varying vec4 v_lighting;
 #endif
 
-const float POSITION_SCALE = 1.0/1024.0;
-const float EXTRUSION_SCALE = 1.0/4096.0;
-const float ORDER_SCALE = 1.0/2.0;
+#define UNPACK_POSITION(x) (x / 1024.0)
+#define UNPACK_EXTRUSION(x) (x / 4096.0)
+#define UNPACK_ORDER(x) (x / 2.0)
 
 vec4 modelPosition() {
-    return vec4(a_position.xyz * POSITION_SCALE, 1.0);
+    return vec4(UNPACK_POSITION(a_position.xyz), 1.0);
 }
 
 vec4 worldPosition() {
@@ -59,14 +59,14 @@ void main() {
     // Initialize globals
     #pragma tangram: setup
 
-    vec4 position = vec4(a_position.xyz * POSITION_SCALE, 1.0);
+    vec4 position = vec4(UNPACK_POSITION(a_position.xyz), 1.0);
 
     v_color = a_color;
     v_texcoord = a_texcoord;
     v_normal = u_normalMatrix * vec3(0.,0.,1.);
 
     {
-        vec4 extrude = a_extrude * EXTRUSION_SCALE;
+        vec4 extrude = UNPACK_EXTRUSION(a_extrude);
         float width = extrude.z;
         float dwdz = extrude.w;
         float dz = clamp(u_map_position.z - abs(u_tile_origin.z), 0.0, 1.0);
@@ -119,7 +119,7 @@ void main() {
     gl_Position.z += TANGRAM_DEPTH_DELTA * gl_Position.w * (1. - sign(u_tile_origin.z));
 
     #ifdef TANGRAM_DEPTH_DELTA
-        float layer = a_position.w * ORDER_SCALE;
+        float layer = UNPACK_ORDER(a_position.w);
         gl_Position.z -= layer * TANGRAM_DEPTH_DELTA * gl_Position.w;
     #endif
 }
