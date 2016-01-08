@@ -21,6 +21,7 @@ TextStyle::TextStyle(std::string _name, std::shared_ptr<FontContext> _fontContex
                      bool _sdfMultisampling, Blending _blendMode, GLenum _drawMode) :
     Style(_name, _blendMode, _drawMode), m_sdf(_sdf), m_sdfMultisampling(_sdfMultisampling),
     m_fontContext(_fontContext) {
+        m_drawProxy = false;
 }
 
 TextStyle::~TextStyle() {

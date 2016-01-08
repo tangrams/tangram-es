@@ -14,6 +14,7 @@ DebugTextStyle::DebugTextStyle(std::shared_ptr<FontContext> _fontContext, FontID
                                bool _sdfMultisampling, Blending _blendMode, GLenum _drawMode)
     : TextStyle(_name, _fontContext, _sdf, _sdfMultisampling, _blendMode, _drawMode),
       m_font(_fontId), m_fontSize(_fontSize) {
+          m_drawProxy = false;
 }
 
 void DebugTextStyle::onBeginBuildTile(Tangram::Tile &_tile) const {

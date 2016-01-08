@@ -217,6 +217,8 @@ void render() {
 
         for (const auto& style : m_scene->styles()) {
 
+            if (!style->drawProxy()) { continue; }
+
             // Set time uniforms style's shader programs
             style->getShaderProgram()->setUniformf("u_time", g_time);
             style->onBeginDrawFrame(*m_view, *m_scene);
@@ -238,6 +240,8 @@ void render() {
         glDisable(GL_POLYGON_OFFSET_FILL);
 
         for (const auto& style : m_scene->styles()) {
+
+            if (!style->drawProxy()) { continue; }
 
             // Set time uniforms style's shader programs
             style->getShaderProgram()->setUniformf("u_time", g_time);
