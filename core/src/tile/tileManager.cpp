@@ -201,13 +201,18 @@ void TileManager::updateTileSet(TileSet& _tileSet) {
                 }
 
             } else if (!entry.isLoading()) {
+                // Start loading when no task is set or the task stems from an
+                // older tile source generation
+                if (!entry.task ||
+                    (entry.task->sourceGeneration() < _tileSet.source->generation())) {
 
-                // Not yet available - enqueue for loading
-                enqueueTask(_tileSet, visTileId, viewCenter);
+                    // Not yet available - enqueue for loading
+                    enqueueTask(_tileSet, visTileId, viewCenter);
 
-                if (m_tileSetChanged) {
-                    // check again for proxies
-                    updateProxyTiles(_tileSet, visTileId, entry);
+                    if (m_tileSetChanged) {
+                        // check again for proxies
+                        updateProxyTiles(_tileSet, visTileId, entry);
+                    }
                 }
             }
 
