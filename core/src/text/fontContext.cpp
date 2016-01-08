@@ -2,8 +2,11 @@
 
 #define FONS_USE_HARFBUZZ
 #define FONS_USE_FREETYPE
+
 #include "hb.h"
 #include "hb-ft.h"
+#include "hb-icu.h"
+#include "unicode/unistr.h"
 #define FONTSTASH_IMPLEMENTATION
 #include "fontstash.h"
 
@@ -135,7 +138,30 @@ std::vector<FONSquad>& FontContext::rasterize(const std::string& _text, FontID _
                                               float _fontSize, float _sdf) {
 
     m_quadBuffer.clear();
-    fonsSetShaping(m_fsContext, "arabic", "RTL", "ar");
+
+    icu_52::UnicodeString text(_text.c_str());
+
+    hb_unicode_funcs_t* unicodeFuncs =  hb_unicode_funcs_get_default();
+    hb_script_t script = HB_SCRIPT_INVALID;
+    bool invalid = true;
+
+    for (int i = 0; i < text.length(); ++i) {
+        hb_codepoint_t codepoint = (hb_codepoint_t)text.char32At(i);
+        script = hb_unicode_script(unicodeFuncs, codepoint);
+        if (script != HB_SCRIPT_INVALID) {
+            invalid = false;
+            break;
+        }
+    }
+
+    hb_direction_t direction = hb_script_get_horizontal_direction(script);
+    hb_language_t language = hb_language_get_default();
+
+    if (invalid) {
+        LOGW("Could not determine script from string %s", _text.c_str());
+    }
+
+    fonsSetShaping(m_fsContext, &script, &direction, &language);
     fonsSetSize(m_fsContext, _fontSize);
     fonsSetFont(m_fsContext, _fontID);
 
@@ -146,15 +172,11 @@ std::vector<FONSquad>& FontContext::rasterize(const std::string& _text, FontID _
         fonsSetBlurType(m_fsContext, FONS_EFFECT_NONE);
     }
 
-    float advance = fonsDrawText(m_fsContext, 0, 0,
-                                 _text.c_str(), _text.c_str() + _text.length(),
-                                 0);
+    float advance = fonsDrawText(m_fsContext, 0, 0, _text.c_str(), _text.c_str() + _text.length(), 1);
     if (advance < 0) {
         m_quadBuffer.clear();
         return m_quadBuffer;
     }
-
-    fons__clearShaping(m_fsContext);
 
     return m_quadBuffer;
 }
