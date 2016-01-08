@@ -35,7 +35,6 @@ varying vec2 v_texcoord;
 #endif
 
 const float POSITION_SCALE = 1.0/1024.0;
-const float TEXTURE_SCALE = 1.0/16384.0;
 
 vec4 modelPosition() {
     return vec4(a_position.xyz * POSITION_SCALE, 1.0);
@@ -61,7 +60,7 @@ void main() {
     vec4 position = vec4(a_position.xyz * POSITION_SCALE, 1.0);
 
     v_color = a_color;
-    v_texcoord = a_texcoord * TEXTURE_SCALE;
+    v_texcoord = a_texcoord;
     v_normal = normalize(u_normalMatrix * a_normal);
 
     // Transform position into meters relative to map center

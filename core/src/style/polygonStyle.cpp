@@ -17,7 +17,7 @@
 #include <cmath>
 
 constexpr float position_scale = 1024.0f;
-constexpr float texture_scale = 16384.0f;
+constexpr float texture_scale = 65535.0f;
 constexpr float normal_scale = 127.0f;
 
 namespace Tangram {
@@ -34,7 +34,7 @@ struct PolygonVertex {
     glm::i16vec4 pos; // pos.w contains layer (params.order)
     glm::i8vec3 norm;
     uint8_t padding = 0;
-    glm::i16vec2 texcoord;
+    glm::u16vec2 texcoord;
     GLuint abgr;
 };
 
@@ -51,7 +51,7 @@ void PolygonStyle::constructVertexLayout() {
     m_vertexLayout = std::shared_ptr<VertexLayout>(new VertexLayout({
         {"a_position", 4, GL_SHORT, false, 0},
         {"a_normal", 4, GL_BYTE, true, 0}, // The 4th byte is for padding
-        {"a_texcoord", 2, GL_SHORT, false, 0},
+        {"a_texcoord", 2, GL_UNSIGNED_SHORT, true, 0},
         {"a_color", 4, GL_UNSIGNED_BYTE, true, 0},
     }));
 

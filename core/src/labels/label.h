@@ -62,7 +62,7 @@ public:
               extrude(extrude * extrusion_scale) {}
 
         glm::i16vec2 pos;
-        glm::i16vec2 uv;
+        glm::u16vec2 uv;
         uint32_t color;
         union {
             glm::i16vec2 extrude;

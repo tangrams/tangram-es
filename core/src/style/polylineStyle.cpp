@@ -16,7 +16,7 @@
 
 constexpr float extrusion_scale = 4096.0f;
 constexpr float position_scale = 1024.0f;
-constexpr float texture_scale = 16384.0f;
+constexpr float texture_scale = 65535.0f;
 constexpr float order_scale = 2.0f;
 
 namespace Tangram {
@@ -37,7 +37,7 @@ struct PolylineVertex {
           abgr(abgr) {}
 
     glm::i16vec4 pos;
-    glm::i16vec2 texcoord;
+    glm::u16vec2 texcoord;
     glm::i16vec4 extrude;
     GLuint abgr;
 };
@@ -53,7 +53,7 @@ void PolylineStyle::constructVertexLayout() {
     // TODO: Ideally this would be in the same location as the struct that it basically describes
     m_vertexLayout = std::shared_ptr<VertexLayout>(new VertexLayout({
         {"a_position", 4, GL_SHORT, false, 0},
-        {"a_texcoord", 2, GL_SHORT, false, 0},
+        {"a_texcoord", 2, GL_UNSIGNED_SHORT, true, 0},
         {"a_extrude", 4, GL_SHORT, false, 0},
         {"a_color", 4, GL_UNSIGNED_BYTE, true, 0},
     }));

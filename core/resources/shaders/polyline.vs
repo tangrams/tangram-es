@@ -36,7 +36,6 @@ varying vec2 v_texcoord;
 
 const float POSITION_SCALE = 1.0/1024.0;
 const float EXTRUSION_SCALE = 1.0/4096.0;
-const float TEXTURE_SCALE = 1.0/16384.0;
 const float ORDER_SCALE = 1.0/2.0;
 
 vec4 modelPosition() {
@@ -63,7 +62,7 @@ void main() {
     vec4 position = vec4(a_position.xyz * POSITION_SCALE, 1.0);
 
     v_color = a_color;
-    v_texcoord = a_texcoord * TEXTURE_SCALE;
+    v_texcoord = a_texcoord;
     v_normal = u_normalMatrix * vec3(0.,0.,1.);
 
     {
