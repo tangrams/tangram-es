@@ -68,9 +68,9 @@ TEST_CASE( "Test evalFilterFn with feature and global geometry", "[Duktape][eval
     StyleContext ctx;
 
     // Test $geometry global
-    ctx.addFunction("fn1", R"(function() { return $geometry === point; })");
-    ctx.addFunction("fn2", R"(function() { return $geometry === line; })");
-    ctx.addFunction("fn3", R"(function() { return $geometry === polygon; })");
+    ctx.addFunction("fn1", R"(function() { return $geometry === 'point'; })");
+    ctx.addFunction("fn2", R"(function() { return $geometry === 'line'; })");
+    ctx.addFunction("fn3", R"(function() { return $geometry === 'polygon'; })");
 
     ctx.setFeature(points);
     REQUIRE(ctx.evalFilterFn("fn1") == true);

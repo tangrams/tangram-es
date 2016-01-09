@@ -21,6 +21,13 @@ const static char FUNC_ID[] = "\xff""\xff""fns";
 static const std::string key_geometry = "$geometry";
 static const std::string key_zoom("$zoom");
 
+static const std::vector<std::string> s_geometryStrings = {
+    "", // unknown
+    "point",
+    "line",
+    "polygon",
+};
+
 StyleContext::StyleContext() {
     m_ctx = duk_create_heap_default();
 
@@ -110,7 +117,7 @@ void StyleContext::setFeature(const Feature& _feature) {
 
     m_feature = &_feature;
 
-    setGlobal(key_geometry, m_feature->geometryType);
+    setGlobal(key_geometry, s_geometryStrings[m_feature->geometryType]);
 }
 
 void StyleContext::setGlobalZoom(float _zoom) {
