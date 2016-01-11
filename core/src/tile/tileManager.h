@@ -27,8 +27,8 @@ class TileCache;
 class TileManager {
 
     const static size_t MAX_WORKERS = 2;
-    const static size_t MAX_DOWNLOADS = 4;
     const static size_t DEFAULT_CACHE_SIZE = 32*1024*1024; // 32 MB
+    const static int MAX_DOWNLOADS = 4;
 
 public:
 

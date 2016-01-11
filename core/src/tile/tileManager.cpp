@@ -338,7 +338,7 @@ void TileManager::loadTiles() {
             entry.task = task;
             m_dataCallback.func(std::move(task));
 
-        } else if (m_loadPending < int(MAX_DOWNLOADS)) {
+        } else if (m_loadPending < MAX_DOWNLOADS) {
             entry.task = task;
             if (tileSet.source->loadTileData(std::move(task), m_dataCallback)) {
                 m_loadPending++;
