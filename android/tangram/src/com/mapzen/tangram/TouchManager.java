@@ -250,7 +250,7 @@ public class TouchManager implements OnTouchListener, OnScaleGestureListener,
     @Override
     public boolean onScroll(MotionEvent e1, MotionEvent e2, float distanceX, float distanceY) {
         if (isDetectionAllowed(Gestures.PAN)) {
-            int action = e2.getAction();
+            int action = e2.getActionMasked();
             boolean detected = !(action == MotionEvent.ACTION_CANCEL || action == MotionEvent.ACTION_UP);
             setGestureDetected(Gestures.PAN, detected);
 
