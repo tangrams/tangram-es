@@ -23,7 +23,7 @@ import java.util.EnumSet;
  * Collects touch data, applies gesture detectors, resolves simultaneous detection, and calls the
  * appropriate input responders
  */
-public class TouchManager implements OnTouchListener, OnScaleGestureListener,
+public class TouchInput implements OnTouchListener, OnScaleGestureListener,
         OnRotateGestureListener, OnGestureListener, OnDoubleTapListener, OnShoveGestureListener {
 
     public enum Gestures {
@@ -98,7 +98,7 @@ public class TouchManager implements OnTouchListener, OnScaleGestureListener,
 
     private long lastMultiTouchEndTime = -MULTITOUCH_BUFFER_TIME;
 
-    public TouchManager(Context context) {
+    public TouchInput(Context context) {
 
         this.panTapGestureDetector = new GestureDetector(context, this);
         this.scaleGestureDetector = new ScaleGestureDetector(context, this);

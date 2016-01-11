@@ -5,7 +5,6 @@ import android.content.res.AssetManager;
 import android.opengl.GLSurfaceView;
 import android.opengl.GLSurfaceView.Renderer;
 import android.util.DisplayMetrics;
-import android.view.View;
 
 import com.squareup.okhttp.Callback;
 import com.squareup.okhttp.Request;
@@ -18,7 +17,7 @@ import javax.microedition.khronos.opengles.GL10;
 
 import okio.BufferedSource;
 
-import com.mapzen.tangram.TouchManager.Gestures;
+import com.mapzen.tangram.TouchInput.Gestures;
 
 public class MapController implements Renderer {
 
@@ -66,22 +65,22 @@ public class MapController implements Renderer {
         mainApp.getWindowManager().getDefaultDisplay().getMetrics(displayMetrics);
         assetManager = mainApp.getAssets();
 
-        touchManager = new TouchManager(mainApp);
+        touchInput = new TouchInput(mainApp);
         setPanResponder(null);
         setScaleResponder(null);
         setRotateResponder(null);
         setShoveResponder(null);
 
-        touchManager.setSimultaneousDetectionAllowed(Gestures.SHOVE, Gestures.ROTATE, false);
-        touchManager.setSimultaneousDetectionAllowed(Gestures.ROTATE, Gestures.SHOVE, false);
-        touchManager.setSimultaneousDetectionAllowed(Gestures.SHOVE, Gestures.SCALE, false);
-        touchManager.setSimultaneousDetectionAllowed(Gestures.SCALE, Gestures.SHOVE, false);
-        touchManager.setSimultaneousDetectionAllowed(Gestures.SHOVE, Gestures.PAN, false);
-        touchManager.setSimultaneousDetectionAllowed(Gestures.SCALE, Gestures.LONG_PRESS, false);
+        touchInput.setSimultaneousDetectionAllowed(Gestures.SHOVE, Gestures.ROTATE, false);
+        touchInput.setSimultaneousDetectionAllowed(Gestures.ROTATE, Gestures.SHOVE, false);
+        touchInput.setSimultaneousDetectionAllowed(Gestures.SHOVE, Gestures.SCALE, false);
+        touchInput.setSimultaneousDetectionAllowed(Gestures.SCALE, Gestures.SHOVE, false);
+        touchInput.setSimultaneousDetectionAllowed(Gestures.SHOVE, Gestures.PAN, false);
+        touchInput.setSimultaneousDetectionAllowed(Gestures.SCALE, Gestures.LONG_PRESS, false);
 
         // Set up MapView
         mapView = view;
-        view.setOnTouchListener(touchManager);
+        view.setOnTouchListener(touchInput);
         view.setRenderer(this);
         view.setRenderMode(GLSurfaceView.RENDERMODE_WHEN_DIRTY);
 
@@ -250,8 +249,8 @@ public class MapController implements Renderer {
      * Set a responder for tap gestures
      * @param responder TapResponder to call
      */
-    public void setTapResponder(final TouchManager.TapResponder responder) {
-        touchManager.setTapResponder(new TouchManager.TapResponder() {
+    public void setTapResponder(final TouchInput.TapResponder responder) {
+        touchInput.setTapResponder(new TouchInput.TapResponder() {
             @Override
             public boolean onSingleTapUp(float x, float y) {
                 return responder != null && responder.onSingleTapUp(x, y);
@@ -268,8 +267,8 @@ public class MapController implements Renderer {
      * Set a responder for double-tap gestures
      * @param responder DoubleTapResponder to call
      */
-    public void setDoubleTapResponder(final TouchManager.DoubleTapResponder responder) {
-        touchManager.setDoubleTapResponder(new TouchManager.DoubleTapResponder() {
+    public void setDoubleTapResponder(final TouchInput.DoubleTapResponder responder) {
+        touchInput.setDoubleTapResponder(new TouchInput.DoubleTapResponder() {
             @Override
             public boolean onDoubleTap(float x, float y) {
                 return responder != null && responder.onDoubleTap(x, y);
@@ -281,8 +280,8 @@ public class MapController implements Renderer {
      * Set a responder for long press gestures
      * @param responder LongPressResponder to call
      */
-    public void setLongPressResponder(final TouchManager.LongPressResponder responder) {
-        touchManager.setLongPressResponder(new TouchManager.LongPressResponder() {
+    public void setLongPressResponder(final TouchInput.LongPressResponder responder) {
+        touchInput.setLongPressResponder(new TouchInput.LongPressResponder() {
             @Override
             public void onLongPress(float x, float y) {
                 if (responder != null) {
@@ -296,8 +295,8 @@ public class MapController implements Renderer {
      * Set a responder for pan gestures
      * @param responder PanResponder to call; if onPan returns true, normal panning behavior will not occur
      */
-    public void setPanResponder(final TouchManager.PanResponder responder) {
-        touchManager.setPanResponder(new TouchManager.PanResponder() {
+    public void setPanResponder(final TouchInput.PanResponder responder) {
+        touchInput.setPanResponder(new TouchInput.PanResponder() {
             @Override
             public boolean onPan(float startX, float startY, float endX, float endY) {
                 if (responder == null || !responder.onPan(startX, startY, endX, endY)) {
@@ -320,8 +319,8 @@ public class MapController implements Renderer {
      * Set a responder for rotate gestures
      * @param responder RotateResponder to call; if onRotate returns true, normal rotation behavior will not occur
      */
-    public void setRotateResponder(final TouchManager.RotateResponder responder) {
-        touchManager.setRotateResponder(new TouchManager.RotateResponder() {
+    public void setRotateResponder(final TouchInput.RotateResponder responder) {
+        touchInput.setRotateResponder(new TouchInput.RotateResponder() {
             @Override
             public boolean onRotate(float x, float y, float rotation) {
                 if (responder == null || !responder.onRotate(x, y, rotation)) {
@@ -336,8 +335,8 @@ public class MapController implements Renderer {
      * Set a responder for scale gestures
      * @param responder ScaleResponder to call; if onScale returns true, normal scaling behavior will not occur
      */
-    public void setScaleResponder(final TouchManager.ScaleResponder responder) {
-        touchManager.setScaleResponder(new TouchManager.ScaleResponder() {
+    public void setScaleResponder(final TouchInput.ScaleResponder responder) {
+        touchInput.setScaleResponder(new TouchInput.ScaleResponder() {
             @Override
             public boolean onScale(float x, float y, float scale, float velocity) {
                 if (responder == null || !responder.onScale(x, y, scale, velocity)) {
@@ -352,8 +351,8 @@ public class MapController implements Renderer {
      * Set a responder for shove (vertical two-finger drag) gestures
      * @param responder ShoveResponder to call; if onShove returns true, normal tilting behavior will not occur
      */
-    public void setShoveResponder(final TouchManager.ShoveResponder responder) {
-        touchManager.setShoveResponder(new TouchManager.ShoveResponder() {
+    public void setShoveResponder(final TouchInput.ShoveResponder responder) {
+        touchInput.setShoveResponder(new TouchInput.ShoveResponder() {
             @Override
             public boolean onShove(float distance) {
                 if (responder == null || !responder.onShove(distance)) {
@@ -371,7 +370,7 @@ public class MapController implements Renderer {
      * @param allowed True if {@param second} should be recognized, else false
      */
     public void setSimultaneousGestureAllowed(Gestures first, Gestures second, boolean allowed) {
-        touchManager.setSimultaneousDetectionAllowed(first, second, allowed);
+        touchInput.setSimultaneousDetectionAllowed(first, second, allowed);
     }
 
     /**
@@ -381,7 +380,7 @@ public class MapController implements Renderer {
      * @return True if {@param second} will be recognized, else false
      */
     public boolean isSimultaneousGestureAllowed(Gestures first, Gestures second) {
-        return touchManager.isSimultaneousDetectionAllowed(first, second);
+        return touchInput.isSimultaneousDetectionAllowed(first, second);
     }
 
     /**
@@ -442,7 +441,7 @@ public class MapController implements Renderer {
     private long time = System.nanoTime();
     private MapView mapView;
     private AssetManager assetManager;
-    private TouchManager touchManager;
+    private TouchInput touchInput;
 
     private final FontFileParser fontFileParser = new FontFileParser();
 
