@@ -205,7 +205,7 @@ void TileManager::updateTileSet(TileSet& _tileSet) {
             } else if (!entry.isLoading()) {
                 // Start loading when no task is set or the task stems from an
                 // older tile source generation
-                if (!entry.task ||
+                if (!bool(entry.task) ||
                     (entry.task->sourceGeneration() < _tileSet.source->generation())) {
 
                     // Not yet available - enqueue for loading
@@ -343,9 +343,9 @@ void TileManager::loadTiles() {
             if (tileSet.source->loadTileData(std::move(task), m_dataCallback)) {
                 m_loadPending++;
             } else {
-                // TODO: How to handle this case?
-                // This would constantly try to reload the failed tile:
-                // entry.task.reset()
+                // Set canceled state, so that tile will not be tried
+                // for reloading until sourceGeneration increased.
+                entry.task->cancel();
             }
         }
     }
@@ -421,7 +421,8 @@ bool TileManager::updateProxyTile(TileSet& _tileSet, TileEntry& _tile,
         const auto& it = tiles.find(_proxyTileId);
         if (it != tiles.end()) {
             auto& entry = it->second;
-            if (_tile.setProxy(_proxyId)) {
+
+            if (!entry.isCanceled() && _tile.setProxy(_proxyId)) {
                 entry.incProxyCounter();
 
                 if (entry.isReady()) {

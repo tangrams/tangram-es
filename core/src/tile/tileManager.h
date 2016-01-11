@@ -98,13 +98,9 @@ private:
         uint8_t m_proxies = 0;
 
         bool isReady() { return bool(tile); }
-        bool isLoading() {
-            return bool(task) && !task->isCanceled();
-        }
-
-        bool newData() {
-            return bool(task) && bool(task->tile());
-        }
+        bool isLoading() { return bool(task) && !task->isCanceled(); }
+        bool isCanceled() { return bool(task) && task->isCanceled(); }
+        bool newData() { return bool(task) && bool(task->tile()); }
 
         void cancelTask() {
             if (task) {
