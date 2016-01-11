@@ -77,6 +77,7 @@ public class MapController implements Renderer {
         touchManager.setSimultaneousDetectionAllowed(Gestures.SHOVE, Gestures.SCALE, false);
         touchManager.setSimultaneousDetectionAllowed(Gestures.SCALE, Gestures.SHOVE, false);
         touchManager.setSimultaneousDetectionAllowed(Gestures.SHOVE, Gestures.PAN, false);
+        touchManager.setSimultaneousDetectionAllowed(Gestures.SCALE, Gestures.LONG_PRESS, false);
 
         // Set up MapView
         mapView = view;
