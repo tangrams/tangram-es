@@ -18,6 +18,8 @@ namespace RenderState {
     ColorWrite colorWrite;
     FrontFace frontFace;
     CullFace cullFace;
+    PolygonOffsetFill polygonOffsetFill;
+    PolygonOffset polygonOffset;
 
     VertexBuffer vertexBuffer;
     IndexBuffer indexBuffer;

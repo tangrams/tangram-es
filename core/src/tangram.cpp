@@ -211,9 +211,8 @@ void render() {
         RenderState::stencilTest(GL_TRUE);
         RenderState::stencilWrite(0xFF);
         RenderState::stencilOp(GL_KEEP, GL_KEEP, GL_INVERT);
-
-        glEnable(GL_POLYGON_OFFSET_FILL);
-        glPolygonOffset(1.0, 1024.0);
+        RenderState::polygonOffsetFill(GL_TRUE);
+        RenderState::polygonOffset(1.0, 1024.0);
 
         for (const auto& style : m_scene->styles()) {
 
@@ -237,7 +236,7 @@ void render() {
         RenderState::colorWrite(GL_TRUE, GL_TRUE, GL_TRUE, GL_TRUE);
         RenderState::stencilTest(GL_TRUE);
         RenderState::stencilWrite(0x00);
-        glDisable(GL_POLYGON_OFFSET_FILL);
+        RenderState::polygonOffsetFill(GL_FALSE);
 
         for (const auto& style : m_scene->styles()) {
 

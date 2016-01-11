@@ -99,6 +99,7 @@ namespace RenderState {
     using StencilTest = State<BoolSwitch<GL_STENCIL_TEST>>;
     using Blending = State<BoolSwitch<GL_BLEND>>;
     using Culling = State<BoolSwitch<GL_CULL_FACE>>;
+    using PolygonOffsetFill = State<BoolSwitch<GL_POLYGON_OFFSET_FILL>>;
 
 #define FUN(X) decltype((X)), X
 
@@ -147,6 +148,9 @@ namespace RenderState {
                                  GLclampf,  // green
                                  GLclampf,  // blue
                                  GLclampf>; // alpha
+    using PolygonOffset = StateWrap<FUN(glPolygonOffset),
+                                    GLfloat,  // factor
+                                    GLfloat>; // units
 
 #undef FUN
 
@@ -163,6 +167,8 @@ namespace RenderState {
     extern CullFace cullFace;
     extern Culling culling;
     extern ShaderProgram shaderProgram;
+    extern PolygonOffsetFill polygonOffsetFill;
+    extern PolygonOffset polygonOffset;
 
     extern VertexBuffer vertexBuffer;
     extern IndexBuffer indexBuffer;
