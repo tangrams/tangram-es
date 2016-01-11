@@ -217,10 +217,10 @@ void SceneLoader::loadShaderConfig(Node shaders, Style& style, Scene& scene) {
 
     if (Node blocksNode = shaders["blocks"]) {
         for (const auto& block : blocksNode) {
-            auto& name = block.first.as<std::string>();
+            const auto& name = block.first.as<std::string>();
             if (block.second.IsSequence()){
                 for (auto & n : block.second) {
-                    auto& value = n.as<std::string>();
+                    const auto& value = n.as<std::string>();
                     shader.addSourceBlock(name, value, false);
 
                 }
@@ -998,7 +998,7 @@ Filter SceneLoader::generateFilter(Node _filter, Scene& scene) {
     switch (_filter.Type()) {
     case NodeType::Scalar: {
 
-        auto& val = _filter.as<std::string>();
+        const auto& val = _filter.as<std::string>();
 
         if (val.compare(0, 8, "function") == 0) {
             scene.functions().push_back(val);
@@ -1158,7 +1158,7 @@ void SceneLoader::parseStyleParams(Node params, Scene& scene, const std::string&
 
         switch (value.Type()) {
         case NodeType::Scalar: {
-            auto& val = value.as<std::string>();
+            const auto& val = value.as<std::string>();
 
             if (val.compare(0, 8, "function") == 0) {
                 StyleParam param(key, "");
