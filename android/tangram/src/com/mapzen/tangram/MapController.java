@@ -256,6 +256,7 @@ public class MapController implements Renderer {
             public boolean onSingleTapUp(float x, float y) {
                 return responder != null && responder.onSingleTapUp(x, y);
             }
+
             @Override
             public boolean onSingleTapConfirmed(float x, float y) {
                 return responder != null && responder.onSingleTapConfirmed(x, y);
@@ -290,6 +291,7 @@ public class MapController implements Renderer {
             }
         });
     }
+
     /**
      * Set a responder for pan gestures
      * @param responder PanResponder to call; if onPan returns true, normal panning behavior will not occur
@@ -303,6 +305,7 @@ public class MapController implements Renderer {
                 }
                 return true;
             }
+
             @Override
             public boolean onFling(float posX, float posY, float velocityX, float velocityY) {
                 if (responder == null || !responder.onFling(posX, posY, velocityX, velocityY)) {
@@ -359,6 +362,26 @@ public class MapController implements Renderer {
                 return true;
             }
         });
+    }
+
+    /**
+     * Set whether the gesture {@param second} can be recognized while {@param first} is in progress
+     * @param first Initial gesture type
+     * @param second Subsequent gesture type
+     * @param allowed True if {@param second} should be recognized, else false
+     */
+    public void setSimultaneousGestureAllowed(Gestures first, Gestures second, boolean allowed) {
+        touchManager.setSimultaneousDetectionAllowed(first, second, allowed);
+    }
+
+    /**
+     * Get whether the gesture {@param second} can be recognized while {@param first} is in progress
+     * @param first Initial gesture type
+     * @param second Subsequent gesture type
+     * @return True if {@param second} will be recognized, else false
+     */
+    public boolean isSimultaneousGestureAllowed(Gestures first, Gestures second) {
+        return touchManager.isSimultaneousDetectionAllowed(first, second);
     }
 
     /**
