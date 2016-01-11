@@ -33,4 +33,4 @@
 	url = https://github.com/google/benchmark
 [submodule "external/harfbuzz-icu-freetype"]
 	path = external/harfbuzz-icu-freetype
-	url = git@github.com:tangrams/harfbuzz-icu-freetype.git
+	url = https://github.com/tangrams/harfbuzz-icu-freetype

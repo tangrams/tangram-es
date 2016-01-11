@@ -5,8 +5,8 @@
 
 #include "hb.h"
 #include "hb-ft.h"
-#include "hb-icu.h"
-#include "unicode/unistr.h"
+#include <locale>
+#include <codecvt>
 #define FONTSTASH_IMPLEMENTATION
 #include "fontstash.h"
 
@@ -82,8 +82,7 @@ FontID FontContext::addFont(const std::string& _family, const std::string& _weig
         if (!(data = bytesFromFile(bundledFontPath.c_str(), PathType::resource, &dataSize)) &&
             !(data = bytesFromFile(bundledFontPath.c_str(), PathType::internal, &dataSize))) {
             const std::string sysFontPath = systemFontPath(_family, _weight, _style);
-            if ( !(data = bytesFromFile(sysFontPath.c_str(), PathType::absolute, &dataSize)) ) {
-
+            if (!(data = bytesFromFile(sysFontPath.c_str(), PathType::absolute, &dataSize))) {
                 LOGE("Could not load font file %s", fontKey.c_str());
                 m_fonts.emplace(std::move(fontKey), INVALID_FONT);
                 goto fallback;
@@ -134,38 +133,18 @@ FontID FontContext::getFontID(const std::string& _key) {
     }
 }
 
-std::vector<FONSquad>& FontContext::rasterize(const std::string& _text, FontID _fontID,
-                                              float _fontSize, float _sdf) {
-
+std::vector<FONSquad>& FontContext::rasterize(const std::string& _text,
+    FontID _fontID,
+    float _fontSize,
+    float _sdf)
+{
     m_quadBuffer.clear();
 
-    icu_52::UnicodeString text(_text.c_str());
-
-    hb_unicode_funcs_t* unicodeFuncs =  hb_unicode_funcs_get_default();
-    hb_script_t script = HB_SCRIPT_INVALID;
-    bool invalid = true;
-
-    for (int i = 0; i < text.length(); ++i) {
-        hb_codepoint_t codepoint = (hb_codepoint_t)text.char32At(i);
-        script = hb_unicode_script(unicodeFuncs, codepoint);
-        if (script != HB_SCRIPT_INVALID) {
-            invalid = false;
-            break;
-        }
-    }
-
-    hb_direction_t direction = hb_script_get_horizontal_direction(script);
-    hb_language_t language = hb_language_get_default();
-
-    if (invalid) {
-        LOGW("Could not determine script from string %s", _text.c_str());
-    }
-
-    fonsSetShaping(m_fsContext, &script, &direction, &language);
+    fonsInitShapingPlan(m_fsContext, _text.c_str());
     fonsSetSize(m_fsContext, _fontSize);
     fonsSetFont(m_fsContext, _fontID);
 
-    if (_sdf > 0){
+    if (_sdf > 0) {
         fonsSetBlur(m_fsContext, _sdf);
         fonsSetBlurType(m_fsContext, FONS_EFFECT_DISTANCE_FIELD);
     } else {
@@ -203,6 +182,25 @@ void FontContext::renderUpdate(void* _userPtr, int* _rect, const unsigned char* 
     fontContext->m_atlas->setDirty(yoff, height);
 }
 
+void FontContext::UTF32Free(void* _uptr, FONSUTF32string _str) {
+    std::u32string* text = static_cast<std::u32string*>(_str.userPtr);
+    delete text;
+}
+
+FONSUTF32string FontContext::toUTF32Alloc(void* _uptr, const char* _str) {
+    FONSUTF32string utf32String;
+    std::wstring_convert<std::codecvt_utf8<char32_t>, char32_t> conv;
+    std::u32string* text = new std::u32string;
+
+    *text = conv.from_bytes(_str);
+
+    utf32String.userPtr = (void*) text;
+    utf32String.str = text->data();
+    utf32String.length = text->length();
+
+    return utf32String;
+}
+
 void FontContext::fontstashError(void* _uptr, int _error, int _val) {
     FontContext* fontContext = static_cast<FontContext*>(_uptr);
 
@@ -232,6 +230,7 @@ void FontContext::fontstashError(void* _uptr, int _error, int _val) {
     case FONS_SCRATCH_FULL:
     case FONS_STATES_OVERFLOW:
     case FONS_STATES_UNDERFLOW:
+    case FONS_HB_SCRIPT_DETECTION_FAILED:
     default:
         LOGE("Unexpected error in Fontstash %d:%d!", _error, _val);
         break;
@@ -252,6 +251,8 @@ void FontContext::initFontContext(int _atlasSize) {
     params.renderDraw = nullptr;
     params.renderDelete = nullptr;
     params.pushQuad = pushQuad;
+    params.toUTF32Alloc = toUTF32Alloc;
+    params.UTF32Free = UTF32Free;
     params.userPtr = (void*) this;
 
     m_fsContext = fonsCreateInternal(&params);
