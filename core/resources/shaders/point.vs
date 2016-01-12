@@ -18,6 +18,7 @@ uniform float u_meters_per_pixel;
 uniform float u_device_pixel_ratio;
 #ifdef TANGRAM_TEXT
 uniform vec2 u_uv_scale_factor;
+uniform int u_pass;
 #endif
 
 #pragma tangram: uniforms
@@ -37,8 +38,7 @@ attribute vec3 a_extrude;
 varying vec4 v_color;
 varying vec2 v_texcoords;
 #ifdef TANGRAM_TEXT
-varying vec4 v_strokeColor;
-varying float v_strokeWidth;
+varying float v_sdf_threshold;
 #endif
 varying float v_alpha;
 const vec4 clipped = vec4(2.0, 0.0, 2.0, 1.0);
@@ -50,20 +50,27 @@ const vec4 clipped = vec4(2.0, 0.0, 2.0, 1.0);
 #define UNPACK_ROTATION(x) (x / 4096.0)
 
 void main() {
-    #ifdef TANGRAM_TEXT
-    v_texcoords = a_uv * u_uv_scale_factor;
-    #else
-    v_texcoords = a_uv;
-    #endif
-
-    v_alpha = a_alpha;
-    v_color = a_color;
 
     if (a_alpha > TANGRAM_EPSILON) {
 
+        v_alpha = a_alpha;
+        v_color = a_color;
+
         vec2 vertexPos = UNPACK_POSITION(a_position);
 
-        #ifndef TANGRAM_TEXT
+        #ifdef TANGRAM_TEXT
+        v_texcoords = a_uv * u_uv_scale_factor;
+        if (u_pass == 0) {
+            // fill
+            v_sdf_threshold = 0.5;
+        } else {
+            // stroke
+            float stroke_width = a_stroke.a;
+            v_sdf_threshold = 0.5 - stroke_width * u_device_pixel_ratio;
+            v_color.rgb = a_stroke.rgb;
+        }
+        #else
+        v_texcoords = a_uv;
         if (a_extrude.x != 0.0) {
             float dz = u_map_position.z - abs(u_tile_origin.z);
             vertexPos.xy += clamp(dz, 0.0, 1.0) * UNPACK_EXTRUDE(a_extrude.xy);
@@ -84,13 +91,6 @@ void main() {
 
         gl_Position = u_ortho * position;
 
-        #ifdef TANGRAM_TEXT
-        v_strokeWidth = a_stroke.a;
-
-        // If width of stroke is zero, set the stroke color to the fill color -
-        // the border pixel of the fill is always slightly mixed with the stroke color
-        v_strokeColor.rgb = (v_strokeWidth > TANGRAM_EPSILON) ? a_stroke.rgb : a_color.rgb;
-        #endif
     } else {
         gl_Position = clipped;
     }

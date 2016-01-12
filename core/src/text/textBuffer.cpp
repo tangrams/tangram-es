@@ -3,6 +3,7 @@
 #include "labels/textLabel.h"
 #include "gl/texture.h"
 #include "gl/vboMesh.h"
+#include "gl/shaderProgram.h"
 
 #include <limits>
 
@@ -173,6 +174,8 @@ bool TextBuffer::addLabel(const TextStyle::Parameters& _params, Label::Transform
         return false;
     }
 
+    if (_params.strokeWidth > 0.f) { m_strokePass = true; }
+
     /// Apply text transforms
     const std::string* renderText;
     std::string text;
@@ -262,6 +265,17 @@ bool TextBuffer::addLabel(const TextStyle::Parameters& _params, Label::Transform
     m_nVertices = vertices.size();
 
     return true;
+}
+
+void TextBuffer::draw(ShaderProgram& _shader) {
+
+    if (m_strokePass) {
+        _shader.setUniformi("u_pass", 1);
+        LabelMesh::draw(_shader);
+        _shader.setUniformi("u_pass", 0);
+    }
+
+    LabelMesh::draw(_shader);
 }
 
 }
