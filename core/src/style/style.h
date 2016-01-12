@@ -102,6 +102,8 @@ protected:
        and bind textures starting at @_textureUnit */
     void setupShaderUniforms(int _textureUnit, Scene& _scene);
 
+    bool m_drawProxy = true;
+
 private:
 
     std::vector<StyleUniform> m_styleUniforms;
@@ -111,6 +113,8 @@ public:
     Style(std::string _name, Blending _blendMode, GLenum _drawMode);
 
     virtual ~Style();
+
+    bool drawProxy() { return m_drawProxy; }
 
     static bool compare(std::unique_ptr<Style>& a, std::unique_ptr<Style>& b) {
 

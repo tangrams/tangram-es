@@ -18,6 +18,8 @@ namespace RenderState {
     ColorWrite colorWrite;
     FrontFace frontFace;
     CullFace cullFace;
+    PolygonOffsetFill polygonOffsetFill;
+    PolygonOffset polygonOffset;
 
     VertexBuffer vertexBuffer;
     IndexBuffer indexBuffer;
@@ -52,7 +54,7 @@ namespace RenderState {
         depthWrite.init(GL_TRUE);
 
         glDisable(GL_STENCIL_TEST);
-        glDepthFunc(GL_LEQUAL);
+        glDepthFunc(GL_LESS);
         glClearDepthf(1.0);
         glDepthRangef(0.0, 1.0);
 

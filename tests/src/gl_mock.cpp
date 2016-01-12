@@ -65,6 +65,7 @@ extern "C" {
     void glGetDoublev( GLenum pname, GLdouble *params ){}
     void glGetFloatv( GLenum pname, GLfloat *params ){}
     void glGetIntegerv( GLenum pname, GLint *params ){}
+    void glPolygonOffset( GLfloat factor, GLfloat units) {};
     void glBindTexture( GLenum target, GLuint texture ){}
     void glActiveTexture (GLenum texture){}
     void glGenTextures( GLsizei n, GLuint *textures ){}

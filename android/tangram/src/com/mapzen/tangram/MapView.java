@@ -26,7 +26,7 @@ public class MapView extends GLSurfaceView {
 
         setEGLContextClientVersion(2);
         setPreserveEGLContextOnPause(true);
-        setEGLConfigChooser(new ConfigChooser(8, 8, 8, 0, 16, 0));
+        setEGLConfigChooser(new ConfigChooser(8, 8, 8, 0, 16, 8));
 
     }
 

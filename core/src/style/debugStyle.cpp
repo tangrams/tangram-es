@@ -24,6 +24,7 @@ using Mesh = TypedMesh<PosColVertex>;
 
 
 DebugStyle::DebugStyle(std::string _name, Blending _blendMode, GLenum _drawMode) : Style(_name, _blendMode, _drawMode) {
+    m_drawProxy = false;
 }
 
 void DebugStyle::constructVertexLayout() {
