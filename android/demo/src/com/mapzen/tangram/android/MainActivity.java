@@ -2,8 +2,6 @@ package com.mapzen.tangram.android;
 
 import android.app.Activity;
 import android.os.Bundle;
-import android.view.MotionEvent;
-import android.view.View;
 import android.view.Window;
 import android.widget.Toast;
 
@@ -16,13 +14,11 @@ import com.mapzen.tangram.MapView;
 import com.mapzen.tangram.Properties;
 import com.mapzen.tangram.Tangram;
 import com.mapzen.tangram.Coordinates;
-import com.mapzen.tangram.Polygon;
 
+import com.mapzen.tangram.TouchInput;
 import com.squareup.okhttp.Callback;
 
 import java.io.File;
-import java.util.Arrays;
-import java.util.LinkedList;
 import java.lang.Math;
 
 public class MainActivity extends Activity {
@@ -56,10 +52,15 @@ public class MainActivity extends Activity {
         final LngLat zeroCoord = new LngLat();
         final Coordinates line = new Coordinates();
 
-        mapController.setTapGestureListener(new View.OnGenericMotionListener() {
+        mapController.setTapResponder(new TouchInput.TapResponder() {
             @Override
-            public boolean onGenericMotion(View v, MotionEvent event) {
-                LngLat tapPoint = mapController.coordinatesAtScreenPosition(event.getX(), event.getY());
+            public boolean onSingleTapUp(float x, float y) {
+                return false;
+            }
+
+            @Override
+            public boolean onSingleTapConfirmed(float x, float y) {
+                LngLat tapPoint = mapController.coordinatesAtScreenPosition(x, y);
 
                 if (!lastTappedPoint.equals(zeroCoord)) {
                     Properties props = new Properties();
@@ -77,7 +78,7 @@ public class MainActivity extends Activity {
                 }
                 lastTappedPoint.set(tapPoint);
 
-                mapController.pickFeature(event.getX(), event.getY());
+                mapController.pickFeature(x, y);
 
                 mapController.setMapPosition(tapPoint.longitude, tapPoint.latitude, 1);
 
@@ -85,22 +86,14 @@ public class MainActivity extends Activity {
             }
         });
 
-        mapController.setLongPressListener(new View.OnGenericMotionListener() {
+        mapController.setLongPressResponder(new TouchInput.LongPressResponder() {
             @Override
-            public boolean onGenericMotion(View v, MotionEvent event) {
-                if (touchMarkers != null) { touchMarkers.clear(); }
-
+            public void onLongPress(float x, float y) {
+                if (touchMarkers != null) {
+                    touchMarkers.clear();
+                }
                 tileInfo = !tileInfo;
                 Tangram.setDebugFlag(DebugFlags.TILE_INFOS, tileInfo);
-                return true;
-            }
-        });
-
-        mapController.setGenericMotionEventListener(new View.OnGenericMotionListener() {
-            @Override
-            public boolean onGenericMotion(View v, MotionEvent event) {
-                // Handle generic motion event.
-                return false;
             }
         });
 

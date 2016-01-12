@@ -5,19 +5,7 @@ import android.content.res.AssetManager;
 import android.opengl.GLSurfaceView;
 import android.opengl.GLSurfaceView.Renderer;
 import android.util.DisplayMetrics;
-import android.view.GestureDetector;
-import android.view.GestureDetector.OnDoubleTapListener;
-import android.view.GestureDetector.OnGestureListener;
-import android.view.MotionEvent;
-import android.view.ScaleGestureDetector;
-import android.view.ScaleGestureDetector.OnScaleGestureListener;
-import android.view.View;
-import android.view.View.OnTouchListener;
 
-import com.almeros.android.multitouch.RotateGestureDetector;
-import com.almeros.android.multitouch.RotateGestureDetector.OnRotateGestureListener;
-import com.almeros.android.multitouch.ShoveGestureDetector;
-import com.almeros.android.multitouch.ShoveGestureDetector.OnShoveGestureListener;
 import com.squareup.okhttp.Callback;
 import com.squareup.okhttp.Request;
 import com.squareup.okhttp.Response;
@@ -29,7 +17,9 @@ import javax.microedition.khronos.opengles.GL10;
 
 import okio.BufferedSource;
 
-public class MapController implements Renderer, OnTouchListener, OnScaleGestureListener, OnRotateGestureListener, OnGestureListener, OnDoubleTapListener, OnShoveGestureListener {
+import com.mapzen.tangram.TouchInput.Gestures;
+
+public class MapController implements Renderer {
 
     public enum EaseType {
         LINEAR,
@@ -75,16 +65,22 @@ public class MapController implements Renderer, OnTouchListener, OnScaleGestureL
         mainApp.getWindowManager().getDefaultDisplay().getMetrics(displayMetrics);
         assetManager = mainApp.getAssets();
 
-        // Set up gesture recognizers
-        gestureDetector = new GestureDetector(mainApp, this);
-        scaleGestureDetector = new ScaleGestureDetector(mainApp, this);
-        rotateGestureDetector = new RotateGestureDetector(mainApp, this);
-        shoveGestureDetector = new ShoveGestureDetector(mainApp, this);
-        gestureDetector.setOnDoubleTapListener(this);
+        touchInput = new TouchInput(mainApp);
+        setPanResponder(null);
+        setScaleResponder(null);
+        setRotateResponder(null);
+        setShoveResponder(null);
+
+        touchInput.setSimultaneousDetectionAllowed(Gestures.SHOVE, Gestures.ROTATE, false);
+        touchInput.setSimultaneousDetectionAllowed(Gestures.ROTATE, Gestures.SHOVE, false);
+        touchInput.setSimultaneousDetectionAllowed(Gestures.SHOVE, Gestures.SCALE, false);
+        touchInput.setSimultaneousDetectionAllowed(Gestures.SCALE, Gestures.SHOVE, false);
+        touchInput.setSimultaneousDetectionAllowed(Gestures.SHOVE, Gestures.PAN, false);
+        touchInput.setSimultaneousDetectionAllowed(Gestures.SCALE, Gestures.LONG_PRESS, false);
 
         // Set up MapView
         mapView = view;
-        view.setOnTouchListener(this);
+        view.setOnTouchListener(touchInput);
         view.setRenderer(this);
         view.setRenderMode(GLSurfaceView.RENDERMODE_WHEN_DIRTY);
 
@@ -250,27 +246,141 @@ public class MapController implements Renderer, OnTouchListener, OnScaleGestureL
     }
 
     /**
-     * Set a listener for raw motion events
-     * @param listener Listener to call
+     * Set a responder for tap gestures
+     * @param responder TapResponder to call
      */
-    public void setGenericMotionEventListener(View.OnGenericMotionListener listener) {
-        genericMotionListener = listener;
+    public void setTapResponder(final TouchInput.TapResponder responder) {
+        touchInput.setTapResponder(new TouchInput.TapResponder() {
+            @Override
+            public boolean onSingleTapUp(float x, float y) {
+                return responder != null && responder.onSingleTapUp(x, y);
+            }
+
+            @Override
+            public boolean onSingleTapConfirmed(float x, float y) {
+                return responder != null && responder.onSingleTapConfirmed(x, y);
+            }
+        });
     }
 
     /**
-     * Set a listener for long press events
-     * @param listener Listener to call
+     * Set a responder for double-tap gestures
+     * @param responder DoubleTapResponder to call
      */
-    public void setLongPressListener(View.OnGenericMotionListener listener) {
-        longPressListener = listener;
+    public void setDoubleTapResponder(final TouchInput.DoubleTapResponder responder) {
+        touchInput.setDoubleTapResponder(new TouchInput.DoubleTapResponder() {
+            @Override
+            public boolean onDoubleTap(float x, float y) {
+                return responder != null && responder.onDoubleTap(x, y);
+            }
+        });
     }
 
     /**
-     * Set a listener for tap gesture
-     * @param listener Listen to call
+     * Set a responder for long press gestures
+     * @param responder LongPressResponder to call
      */
-    public void setTapGestureListener(View.OnGenericMotionListener listener) {
-        tapGestureListener = listener;
+    public void setLongPressResponder(final TouchInput.LongPressResponder responder) {
+        touchInput.setLongPressResponder(new TouchInput.LongPressResponder() {
+            @Override
+            public void onLongPress(float x, float y) {
+                if (responder != null) {
+                    responder.onLongPress(x, y);
+                }
+            }
+        });
+    }
+
+    /**
+     * Set a responder for pan gestures
+     * @param responder PanResponder to call; if onPan returns true, normal panning behavior will not occur
+     */
+    public void setPanResponder(final TouchInput.PanResponder responder) {
+        touchInput.setPanResponder(new TouchInput.PanResponder() {
+            @Override
+            public boolean onPan(float startX, float startY, float endX, float endY) {
+                if (responder == null || !responder.onPan(startX, startY, endX, endY)) {
+                    handlePanGesture(startX, startY, endX, endY);
+                }
+                return true;
+            }
+
+            @Override
+            public boolean onFling(float posX, float posY, float velocityX, float velocityY) {
+                if (responder == null || !responder.onFling(posX, posY, velocityX, velocityY)) {
+                    handleFlingGesture(posX, posY, velocityX, velocityY);
+                }
+                return true;
+            }
+        });
+    }
+
+    /**
+     * Set a responder for rotate gestures
+     * @param responder RotateResponder to call; if onRotate returns true, normal rotation behavior will not occur
+     */
+    public void setRotateResponder(final TouchInput.RotateResponder responder) {
+        touchInput.setRotateResponder(new TouchInput.RotateResponder() {
+            @Override
+            public boolean onRotate(float x, float y, float rotation) {
+                if (responder == null || !responder.onRotate(x, y, rotation)) {
+                    handleRotateGesture(x, y, rotation);
+                }
+                return true;
+            }
+        });
+    }
+
+    /**
+     * Set a responder for scale gestures
+     * @param responder ScaleResponder to call; if onScale returns true, normal scaling behavior will not occur
+     */
+    public void setScaleResponder(final TouchInput.ScaleResponder responder) {
+        touchInput.setScaleResponder(new TouchInput.ScaleResponder() {
+            @Override
+            public boolean onScale(float x, float y, float scale, float velocity) {
+                if (responder == null || !responder.onScale(x, y, scale, velocity)) {
+                    handlePinchGesture(x, y, scale, velocity);
+                }
+                return true;
+            }
+        });
+    }
+
+    /**
+     * Set a responder for shove (vertical two-finger drag) gestures
+     * @param responder ShoveResponder to call; if onShove returns true, normal tilting behavior will not occur
+     */
+    public void setShoveResponder(final TouchInput.ShoveResponder responder) {
+        touchInput.setShoveResponder(new TouchInput.ShoveResponder() {
+            @Override
+            public boolean onShove(float distance) {
+                if (responder == null || !responder.onShove(distance)) {
+                    handleShoveGesture(distance);
+                }
+                return true;
+            }
+        });
+    }
+
+    /**
+     * Set whether the gesture {@param second} can be recognized while {@param first} is in progress
+     * @param first Initial gesture type
+     * @param second Subsequent gesture type
+     * @param allowed True if {@param second} should be recognized, else false
+     */
+    public void setSimultaneousGestureAllowed(Gestures first, Gestures second, boolean allowed) {
+        touchInput.setSimultaneousDetectionAllowed(first, second, allowed);
+    }
+
+    /**
+     * Get whether the gesture {@param second} can be recognized while {@param first} is in progress
+     * @param first Initial gesture type
+     * @param second Subsequent gesture type
+     * @return True if {@param second} will be recognized, else false
+     */
+    public boolean isSimultaneousGestureAllowed(Gestures first, Gestures second) {
+        return touchInput.isSimultaneousDetectionAllowed(first, second);
     }
 
     /**
@@ -314,6 +424,7 @@ public class MapController implements Renderer, OnTouchListener, OnScaleGestureL
     private synchronized native void handleTapGesture(float posX, float posY);
     private synchronized native void handleDoubleTapGesture(float posX, float posY);
     private synchronized native void handlePanGesture(float startX, float startY, float endX, float endY);
+    private synchronized native void handleFlingGesture(float posX, float posY, float velocityX, float velocityY);
     private synchronized native void handlePinchGesture(float posX, float posY, float scale, float velocity);
     private synchronized native void handleRotateGesture(float posX, float posY, float rotation);
     private synchronized native void handleShoveGesture(float distance);
@@ -325,60 +436,20 @@ public class MapController implements Renderer, OnTouchListener, OnScaleGestureL
     // Private members
     // ===============
 
+    private static String TAG = "Tangram";
     private String scenePath;
     private long time = System.nanoTime();
     private MapView mapView;
     private AssetManager assetManager;
-    private GestureDetector gestureDetector;
-    private ScaleGestureDetector scaleGestureDetector;
-    private RotateGestureDetector rotateGestureDetector;
-    private ShoveGestureDetector shoveGestureDetector;
+    private TouchInput touchInput;
 
     private final FontFileParser fontFileParser = new FontFileParser();
 
-    private static final float PINCH_THRESHOLD = 0.015f; //1.5% of minDim
-    private static final float ROTATION_THRESHOLD = 0.30f;
-    private static final float DOUBLETAP_MOVE_THRESHOLD = 5.0f;
-    private static final long SCROLL_TIME_THRESHOLD = 100; // Ignore small residual scrolls/pans post a double finger gesture
-
-    private float doubleTapDownY;
-
-    /*
-     * NOTE: Not relying on gestureDetector.isInProgress() since this is set after gestureBegin call and before
-     * onGesture call, which makes it hard to get exclusivity with gestures.
-     */
-    private boolean mScaleHandled = false;
-    private boolean mRotationHandled = false;
-    private boolean mShoveHandled = false;
-    private boolean mDoubleTapScale = false;
-
-    private long mLastDoubleGestureTime = -SCROLL_TIME_THRESHOLD;
-
-    private View.OnGenericMotionListener genericMotionListener;
-    private View.OnGenericMotionListener longPressListener;
-    private View.OnGenericMotionListener tapGestureListener;
     private DisplayMetrics displayMetrics = new DisplayMetrics();
 
     private HttpHandler httpHandler;
 
     private FeatureTouchListener featureTouchListener;
-
-    // View.OnTouchListener methods
-    // ============================
-
-    public boolean onTouch(View v, MotionEvent event) {
-
-        if (genericMotionListener != null) {
-            genericMotionListener.onGenericMotion(v, event);
-        }
-
-        gestureDetector.onTouchEvent(event);
-        scaleGestureDetector.onTouchEvent(event);
-        shoveGestureDetector.onTouchEvent(event);
-        rotateGestureDetector.onTouchEvent(event);
-
-        return true;
-    }
 
     // GLSurfaceView.Renderer methods
     // ==============================
@@ -402,196 +473,6 @@ public class MapController implements Renderer, OnTouchListener, OnScaleGestureL
         // init() is safe to call twice, this invocation ensures that the jni
         // environment is attached to the rendering thread
         setupGL();
-    }
-
-    // GestureDetector.OnDoubleTapListener methods
-    // ========================================
-
-    public boolean onDoubleTap(MotionEvent event) {
-        return true;
-    }
-
-    public boolean onDoubleTapEvent(MotionEvent event) {
-        if(event.getAction() == 2) { // Move action during double tap
-            // Set TapScaling only if sufficient Y movement has happened
-            float movement = event.getY() - doubleTapDownY;
-            if(Math.abs(movement) > DOUBLETAP_MOVE_THRESHOLD) {
-                mDoubleTapScale = true;
-            }
-        }
-        else if(event.getAction() == 1) { // DoubleTap Up; handleDoubleTap zoom-in if not moved (scale happened)
-            if(!mDoubleTapScale) {
-                handleDoubleTapGesture(mapView.getWidth() * 0.5f, mapView.getHeight() * 0.5f);
-            }
-            mDoubleTapScale = false;
-        } else { // DoubleTap down event
-            doubleTapDownY = event.getY();
-        }
-        return true;
-    }
-
-    public boolean onSingleTapConfirmed(MotionEvent event) {
-        if (tapGestureListener != null) {
-            return tapGestureListener.onGenericMotion(mapView, event);
-        }
-        return false;
-    }
-
-    // GestureDetector.OnGestureListener methods
-    // ========================================
-
-    public boolean onDown(MotionEvent event) {
-        handlePanGesture(0.0f, 0.0f, 0.0f, 0.0f);
-        return true;
-    }
-
-    public boolean onScroll(MotionEvent e1, MotionEvent e2, float distanceX, float distanceY) {
-
-        // Ignore onScroll for a small time period after a double finger gesture has occured
-        // Depending on how fingers are picked up after a double finger gesture, there could be a residual "single"
-        // finger pan which could also result in a fling. This check will ignore that.
-        long time = e2.getEventTime();
-        if( ( (time - mLastDoubleGestureTime) < SCROLL_TIME_THRESHOLD) && e2.getPointerCount() == 1) {
-            return false;
-        }
-
-        if (mShoveHandled) { return false; }
-
-        float x = 0, y = 0;
-        int n = e2.getPointerCount();
-        for (int i = 0; i < n; i++) {
-          x += e2.getX(i) / n;
-          y += e2.getY(i) / n;
-        }
-
-        handlePanGesture(x + distanceX, y + distanceY, x, y);
-
-        return true;
-    }
-
-    public boolean onFling(MotionEvent e1, MotionEvent e2, float velocityX, float velocityY) {
-        //not handled
-        return false;
-    }
-
-    public void onLongPress(MotionEvent event) {
-        if (longPressListener != null) {
-            longPressListener.onGenericMotion(mapView, event);
-        }
-    }
-
-    public void onShowPress(MotionEvent event) {
-        //not handled
-    }
-
-    public boolean onSingleTapUp(MotionEvent event) {
-        return true;
-    }
-
-    // ScaleGestureDetector.OnScaleGestureListener methods
-    // ===================================================
-
-    public boolean onScaleBegin(ScaleGestureDetector detector) {
-        mScaleHandled = false;
-        return !mShoveHandled;
-    }
-
-    public boolean onScale(ScaleGestureDetector detector) {
-        // the velocity of the pinch in scale factor per ms
-        float velocity = (detector.getCurrentSpan() - detector.getPreviousSpan()) / detector.getTimeDelta();
-        float currentSpan = detector.getCurrentSpanX();
-        float prevSpan = detector.getPreviousSpanX();
-
-        double diff = Math.abs(currentSpan - prevSpan);
-
-         /*
-          * If Shove is in progress do not handle scale
-          * If previous scale is handled then keep on handling scale
-          * else give some buffer for shove to be processed
-          */
-        if ( mDoubleTapScale || mScaleHandled || (!mShoveHandled && diff > PINCH_THRESHOLD * Math.min(displayMetrics.widthPixels, displayMetrics.heightPixels) )) {
-            mScaleHandled = true;
-            float focusX = mDoubleTapScale ? mapView.getWidth() * 0.5f : detector.getFocusX();
-            float focusY = mDoubleTapScale ? mapView.getHeight() * 0.5f : detector.getFocusY();
-            mLastDoubleGestureTime = detector.getEventTime();
-            handlePinchGesture(focusX, focusY, detector.getScaleFactor(), velocity);
-            return true;
-        }
-        mScaleHandled = false;
-        return false;
-    }
-
-    public void onScaleEnd(ScaleGestureDetector detector) {
-        mScaleHandled = false;
-    }
-
-    // RotateGestureDetector.OnRotateGestureListener methods
-    // =====================================================
-
-    public boolean onRotateBegin(RotateGestureDetector detector) {
-        mRotationHandled = false;
-        return !mShoveHandled;
-    }
-
-    public boolean onRotate(RotateGestureDetector detector) {
-
-        float rotation = detector.getRotationRadiansDelta();
-
-         /*
-          * If Shove is in progress do not handle rotation
-          * If previous rotation is handled then keep on handling it
-          * else give some buffer for shove to be processed
-          */
-        if ( mRotationHandled || (!mShoveHandled && (Math.abs(rotation) > ROTATION_THRESHOLD)) ) {
-            float rotAngle;
-
-            // Compensate for the ROTATION_THRESHOLD at the very beginning of the gesture, to avoid rotation jumps
-            if (!mRotationHandled) {
-                rotAngle = (rotation > 0) ? (rotation- ROTATION_THRESHOLD) : (rotation + ROTATION_THRESHOLD);
-            } else {
-                rotAngle = rotation;
-            }
-            float x = rotateGestureDetector.getFocusX();
-            float y = rotateGestureDetector.getFocusY();
-            mLastDoubleGestureTime = detector.getEventTime();
-            handleRotateGesture(x, y, -(rotAngle));
-            mRotationHandled = true;
-            return true;
-        }
-        mRotationHandled = false;
-        return false;
-    }
-
-    public void onRotateEnd(RotateGestureDetector detector) {
-        mRotationHandled = false;
-    }
-
-    // ShoveGestureDetector.OnShoveGestureListener methods
-    // ===================================================
-
-    public boolean onShoveBegin(ShoveGestureDetector detector) {
-        // If scale has started being handled ignore shove
-        mShoveHandled = false;
-        return !(mScaleHandled && mRotationHandled);
-    }
-
-    public boolean onShove(ShoveGestureDetector detector) {
-
-        if (mScaleHandled || mRotationHandled) return false;
-
-        mShoveHandled = true;
-
-        float currentSpanX = detector.getCurrentSpanX();
-        float prevSpanX = detector.getPreviousSpanX();
-
-        double diffX = Math.abs(currentSpanX - prevSpanX);
-        mLastDoubleGestureTime = detector.getEventTime();
-        handleShoveGesture(detector.getShovePixelsDelta() / displayMetrics.heightPixels);
-        return true;
-    }
-
-    public void onShoveEnd(ShoveGestureDetector detector) {
-        mShoveHandled = false;
     }
 
     // Networking methods

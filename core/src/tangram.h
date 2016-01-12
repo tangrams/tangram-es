@@ -96,6 +96,9 @@ void handleDoubleTapGesture(float _posX, float _posY);
 // Respond to a drag with the given displacement in screen coordinates (x right, y down)
 void handlePanGesture(float _startX, float _startY, float _endX, float _endY);
 
+// Respond to a fling from the given position with the given velocity in screen coordinates
+void handleFlingGesture(float _posX, float _posY, float _velocityX, float _velocityY);
+
 // Respond to a pinch at the given position in screen coordinates with the given
 // incremental scale
 void handlePinchGesture(float _posX, float _posY, float _scale, float _velocity);
@@ -103,7 +106,7 @@ void handlePinchGesture(float _posX, float _posY, float _scale, float _velocity)
 // Respond to a rotation gesture with the given incremental rotation in radians
 void handleRotateGesture(float _posX, float _posY, float _rotation);
 
-// Respond to a two-finger shove with the given distance
+// Respond to a two-finger shove with the given distance in screen coordinates
 void handleShoveGesture(float _distance);
 
 // Set debug features on or off using a boolean (see debug.h)

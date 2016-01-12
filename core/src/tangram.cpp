@@ -381,6 +381,12 @@ void handlePanGesture(float _startX, float _startY, float _endX, float _endY) {
 
 }
 
+void handleFlingGesture(float _posX, float _posY, float _velocityX, float _velocityY) {
+
+    m_inputHandler->handleFlingGesture(_posX, _posY, _velocityX, _velocityY);
+
+}
+
 void handlePinchGesture(float _posX, float _posY, float _scale, float _velocity) {
 
     m_inputHandler->handlePinchGesture(_posX, _posY, _scale, _velocity);

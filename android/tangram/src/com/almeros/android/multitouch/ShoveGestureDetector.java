@@ -27,44 +27,44 @@ import android.util.DisplayMetrics;
  */
 public class ShoveGestureDetector extends TwoFingerGestureDetector {
 
-	/**
-	 * Listener which must be implemented which is used by ShoveGestureDetector
-	 * to perform callbacks to any implementing class which is registered to a
-	 * ShoveGestureDetector via the constructor.
-	 *
-	 * @see ShoveGestureDetector.SimpleOnShoveGestureListener
-	 */
-	public interface OnShoveGestureListener {
-		public boolean onShove(ShoveGestureDetector detector);
-		public boolean onShoveBegin(ShoveGestureDetector detector);
-		public void onShoveEnd(ShoveGestureDetector detector);
-	}
+    /**
+     * Listener which must be implemented which is used by ShoveGestureDetector
+     * to perform callbacks to any implementing class which is registered to a
+     * ShoveGestureDetector via the constructor.
+     *
+     * @see ShoveGestureDetector.SimpleOnShoveGestureListener
+     */
+    public interface OnShoveGestureListener {
+        boolean onShove(ShoveGestureDetector detector);
+        boolean onShoveBegin(ShoveGestureDetector detector);
+        void onShoveEnd(ShoveGestureDetector detector);
+    }
 
-	/**
-	 * Helper class which may be extended and where the methods may be
-	 * implemented. This way it is not necessary to implement all methods
-	 * of OnShoveGestureListener.
-	 */
-	public static class SimpleOnShoveGestureListener implements OnShoveGestureListener {
-	    public boolean onShove(ShoveGestureDetector detector) {
-	        return false;
-	    }
+    /**
+     * Helper class which may be extended and where the methods may be
+     * implemented. This way it is not necessary to implement all methods
+     * of OnShoveGestureListener.
+     */
+    public static class SimpleOnShoveGestureListener implements OnShoveGestureListener {
+        public boolean onShove(ShoveGestureDetector detector) {
+            return false;
+        }
 
-	    public boolean onShoveBegin(ShoveGestureDetector detector) {
-	        return true;
-	    }
+        public boolean onShoveBegin(ShoveGestureDetector detector) {
+            return true;
+        }
 
-	    public void onShoveEnd(ShoveGestureDetector detector) {
-	    	// Do nothing, overridden implementation may be used
-	    }
-	}
+        public void onShoveEnd(ShoveGestureDetector detector) {
+            // Do nothing, overridden implementation may be used
+        }
+    }
 
     private DisplayMetrics displayMetrics;
 
-	private float mPrevFinger0Y;
-	private float mCurrFinger0Y;
-	private float mPrevFinger1Y;
-	private float mCurrFinger1Y;
+    private float mPrevFinger0Y;
+    private float mCurrFinger0Y;
+    private float mPrevFinger1Y;
+    private float mCurrFinger1Y;
 
     private float mStartY0;
     private float mStartY1;
@@ -79,13 +79,13 @@ public class ShoveGestureDetector extends TwoFingerGestureDetector {
     private final float XSPAN_THRESHOLD = 0.01f;
 
     public ShoveGestureDetector(Context context, OnShoveGestureListener listener) {
-    	super(context);
+        super(context);
         displayMetrics = context.getResources().getDisplayMetrics();
         mListener = listener;
     }
 
     @Override
-    protected void handleStartProgressEvent(int actionCode, MotionEvent event){
+    protected void handleStartProgressEvent(int actionCode, MotionEvent event) {
         switch (actionCode) {
             case MotionEvent.ACTION_POINTER_DOWN:
                 // At least the second finger is on screen now
@@ -102,7 +102,7 @@ public class ShoveGestureDetector extends TwoFingerGestureDetector {
                 // Make this event explicitly sloppy
                 mInitiated = isSloppyGesture(event);
                 mSloppyGesture = true;
-            	break;
+                break;
 
             case MotionEvent.ACTION_MOVE:
 
@@ -112,10 +112,12 @@ public class ShoveGestureDetector extends TwoFingerGestureDetector {
                 }
 
                 // Update Previous
-                if(mPrevEvent != null) mPrevEvent.recycle();
+                if (mPrevEvent != null) {
+                    mPrevEvent.recycle();
+                }
                 mPrevEvent = MotionEvent.obtain(event);
 
-                if(mPrevEvent.getPointerCount() != 2) {
+                if (mPrevEvent.getPointerCount() != 2) {
                     break;
                 }
 
@@ -123,8 +125,8 @@ public class ShoveGestureDetector extends TwoFingerGestureDetector {
 
                 // See if we still have a sloppy gesture
                 mSloppyGesture = isSloppyGesture(event);
-                if(!mSloppyGesture){
-                	// No, start normal gesture now
+                if (!mSloppyGesture) {
+                    // No, start normal gesture now
                     mGestureInProgress = mListener.onShoveBegin(this);
                 }
 
@@ -132,7 +134,7 @@ public class ShoveGestureDetector extends TwoFingerGestureDetector {
 
             case MotionEvent.ACTION_POINTER_UP:
                 if (!mSloppyGesture) {
-                	break;
+                    break;
                 }
 
                 break;
@@ -141,7 +143,7 @@ public class ShoveGestureDetector extends TwoFingerGestureDetector {
 
 
     @Override
-    protected void handleInProgressEvent(int actionCode, MotionEvent event){
+    protected void handleInProgressEvent(int actionCode, MotionEvent event) {
         switch (actionCode) {
             case MotionEvent.ACTION_POINTER_UP:
                 // Gesture ended but
@@ -165,11 +167,11 @@ public class ShoveGestureDetector extends TwoFingerGestureDetector {
             case MotionEvent.ACTION_MOVE:
                 updateStateByEvent(event);
 
-				// Only accept the event if our relative pressure is within
-				// a certain limit. This can help filter shaky data as a
-				// finger is lifted. Also check that shove is meaningful.
+                // Only accept the event if our relative pressure is within
+                // a certain limit. This can help filter shaky data as a
+                // finger is lifted. Also check that shove is meaningful.
                 if (mCurrPressure / mPrevPressure > PRESSURE_THRESHOLD
-                		&& Math.abs(getShovePixelsDelta()) > 0.5f) {
+                        && Math.abs(getShovePixelsDelta()) > 0.5f) {
                     final boolean updatePrevious = mListener.onShove(this);
                     if (updatePrevious) {
                         mPrevEvent.recycle();
@@ -194,26 +196,27 @@ public class ShoveGestureDetector extends TwoFingerGestureDetector {
     }
 
     @Override
-    protected void updateStateByEvent(MotionEvent curr){
-		super.updateStateByEvent(curr);
+    protected void updateStateByEvent(MotionEvent curr) {
+        super.updateStateByEvent(curr);
 
-		final MotionEvent prev = mPrevEvent;
-		float py0 = prev.getY(0);
-		float py1 = prev.getY(1);
+        final MotionEvent prev = mPrevEvent;
+        float py0 = prev.getY(0);
+        float py1 = prev.getY(1);
 
-		float cy0 = curr.getY(0);
-		float cy1 = curr.getY(1);
+        float cy0 = curr.getY(0);
+        float cy1 = curr.getY(1);
         mCurrFinger0Y = cy0;
         mPrevFinger0Y = py0;
         mCurrFinger1Y = cy1;
         mPrevFinger1Y = py1;
-	}
+    }
 
     @Override
-    protected boolean isSloppyGesture(MotionEvent event){
-    	boolean sloppy = super.isSloppyGesture(event);
-    	if (sloppy)
-    		return true;
+    protected boolean isSloppyGesture(MotionEvent event) {
+        boolean sloppy = super.isSloppyGesture(event);
+        if (sloppy) {
+            return true;
+        }
 
         final float drag0 = event.getY(0) - mStartY0;
         final float drag1 = event.getY(1) - mStartY1;
@@ -222,23 +225,21 @@ public class ShoveGestureDetector extends TwoFingerGestureDetector {
         final float minDim = Math.min(displayMetrics.widthPixels, displayMetrics.heightPixels);
         final float minDrag = DRAG_THRESHOLD * minDim;
 
-        if(drag0 * drag1 < 0.0f) { // Sloppy if fingers moving in opposite y direction
+        if (drag0 * drag1 < 0.0f) { // Sloppy if fingers moving in opposite y direction
             return true;
-        } else if(Math.abs(drag0) < minDrag || Math.abs(drag1) < minDrag) {
+        } else if (Math.abs(drag0) < minDrag || Math.abs(drag1) < minDrag) {
             return true;
-        } else if(xSpanDiff > XSPAN_THRESHOLD * minDim) {
+        } else if (xSpanDiff > XSPAN_THRESHOLD * minDim) {
             return true;
         }
 
         // Do angle check post drag check!!
-    	double angle = Math.abs(Math.atan2(mCurrFingerDiffY, mCurrFingerDiffX));
-    	//about 35 degrees, left or right
+        double angle = Math.abs(Math.atan2(mCurrFingerDiffY, mCurrFingerDiffX));
+        //about 35 degrees, left or right
         boolean badAngle = !(( 0.0f < angle && angle < 0.611f)
                 || 2.53f < angle && angle < Math.PI);
-        if(badAngle)
-            return true;
 
-        return false;
+        return badAngle;
     }
 
 
@@ -248,18 +249,18 @@ public class ShoveGestureDetector extends TwoFingerGestureDetector {
      *
      * @return The current distance in pixels.
      */
-	public float getShovePixelsDelta() {
+    public float getShovePixelsDelta() {
 
         /* Prefer first finger unless 2nd finger absolute difference is overpowering.
          * This is better than oscillating between the 2 finger differences */
 
         float diff0 = mCurrFinger0Y - mPrevFinger0Y;
         float diff1 = mCurrFinger1Y - mPrevFinger1Y;
-        if(Math.abs(diff1) > Math.abs(diff0) && Math.abs(diff0) < 2) {
+        if (Math.abs(diff1) > Math.abs(diff0) && Math.abs(diff0) < 2) {
             return diff1;
         } else {
             return diff0;
         }
-	}
+    }
 
 }
