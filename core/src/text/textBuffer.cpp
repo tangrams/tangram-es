@@ -270,11 +270,11 @@ bool TextBuffer::addLabel(const TextStyle::Parameters& _params, Label::Transform
 void TextBuffer::draw(ShaderProgram& _shader) {
 
     if (m_strokePass) {
-        _shader.setUniformi("u_pass", 0);
+        _shader.setUniformi("u_pass", 1);
         LabelMesh::draw(_shader);
+        _shader.setUniformi("u_pass", 0);
     }
 
-    _shader.setUniformi("u_pass", 1);
     LabelMesh::draw(_shader);
 }
 

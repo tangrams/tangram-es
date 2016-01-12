@@ -86,7 +86,7 @@ void main() {
 
         #ifdef TANGRAM_TEXT
 
-        if (u_pass == 1) {
+        if (u_pass == 0) {
           // fill
           v_sdf_threshold = 0.5;
         } else {
