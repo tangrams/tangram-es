@@ -50,20 +50,27 @@ const vec4 clipped = vec4(2.0, 0.0, 2.0, 1.0);
 #define UNPACK_ROTATION(x) (x / 4096.0)
 
 void main() {
-    #ifdef TANGRAM_TEXT
-    v_texcoords = a_uv * u_uv_scale_factor;
-    #else
-    v_texcoords = a_uv;
-    #endif
-
-    v_alpha = a_alpha;
-    v_color = a_color;
 
     if (a_alpha > TANGRAM_EPSILON) {
 
+        v_alpha = a_alpha;
+        v_color = a_color;
+
         vec2 vertexPos = UNPACK_POSITION(a_position);
 
-        #ifndef TANGRAM_TEXT
+        #ifdef TANGRAM_TEXT
+        v_texcoords = a_uv * u_uv_scale_factor;
+        if (u_pass == 0) {
+            // fill
+            v_sdf_threshold = 0.5;
+        } else {
+            // stroke
+            float stroke_width = a_stroke.a;
+            v_sdf_threshold = 0.5 - stroke_width * u_device_pixel_ratio;
+            v_color.rgb = a_stroke.rgb;
+        }
+        #else
+        v_texcoords = a_uv;
         if (a_extrude.x != 0.0) {
             float dz = u_map_position.z - abs(u_tile_origin.z);
             vertexPos.xy += clamp(dz, 0.0, 1.0) * UNPACK_EXTRUDE(a_extrude.xy);
@@ -84,19 +91,6 @@ void main() {
 
         gl_Position = u_ortho * position;
 
-        #ifdef TANGRAM_TEXT
-
-        if (u_pass == 0) {
-          // fill
-          v_sdf_threshold = 0.5;
-        } else {
-          // stroke
-          float stroke_width = a_stroke.a;
-          v_sdf_threshold = 0.5 - stroke_width * u_device_pixel_ratio;
-          v_color.rgb = a_stroke.rgb;
-        }
-
-        #endif
     } else {
         gl_Position = clipped;
     }
