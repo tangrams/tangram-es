@@ -74,7 +74,6 @@ public class MapController implements Renderer {
         touchInput.setSimultaneousDetectionAllowed(Gestures.SHOVE, Gestures.ROTATE, false);
         touchInput.setSimultaneousDetectionAllowed(Gestures.ROTATE, Gestures.SHOVE, false);
         touchInput.setSimultaneousDetectionAllowed(Gestures.SHOVE, Gestures.SCALE, false);
-        touchInput.setSimultaneousDetectionAllowed(Gestures.SCALE, Gestures.SHOVE, false);
         touchInput.setSimultaneousDetectionAllowed(Gestures.SHOVE, Gestures.PAN, false);
         touchInput.setSimultaneousDetectionAllowed(Gestures.SCALE, Gestures.LONG_PRESS, false);
 
