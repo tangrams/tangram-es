@@ -18,6 +18,7 @@ uniform float u_meters_per_pixel;
 uniform float u_device_pixel_ratio;
 #ifdef TANGRAM_TEXT
 uniform vec2 u_uv_scale_factor;
+uniform int u_pass;
 #endif
 
 #pragma tangram: uniforms
@@ -37,8 +38,7 @@ attribute vec3 a_extrude;
 varying vec4 v_color;
 varying vec2 v_texcoords;
 #ifdef TANGRAM_TEXT
-varying vec4 v_strokeColor;
-varying float v_strokeWidth;
+varying float v_sdf_threshold;
 #endif
 varying float v_alpha;
 const vec4 clipped = vec4(2.0, 0.0, 2.0, 1.0);
@@ -85,11 +85,17 @@ void main() {
         gl_Position = u_ortho * position;
 
         #ifdef TANGRAM_TEXT
-        v_strokeWidth = a_stroke.a;
 
-        // If width of stroke is zero, set the stroke color to the fill color -
-        // the border pixel of the fill is always slightly mixed with the stroke color
-        v_strokeColor.rgb = (v_strokeWidth > TANGRAM_EPSILON) ? a_stroke.rgb : a_color.rgb;
+        if (u_pass == 1) {
+          // fill
+          v_sdf_threshold = 0.5;
+        } else {
+          // stroke
+          float stroke_width = a_stroke.a;
+          v_sdf_threshold = 0.5 - stroke_width * u_device_pixel_ratio;
+          v_color.rgb = a_stroke.rgb;
+        }
+
         #endif
     } else {
         gl_Position = clipped;

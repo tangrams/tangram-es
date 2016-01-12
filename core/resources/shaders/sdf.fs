@@ -31,9 +31,8 @@ uniform int u_pass;
 #pragma tangram: uniforms
 
 varying vec4 v_color;
-varying vec4 v_strokeColor;
 varying vec2 v_texcoords;
-varying float v_strokeWidth;
+varying float v_sdf_threshold;
 varying float v_alpha;
 
 #pragma tangram: global
@@ -69,20 +68,11 @@ float sampleAlpha(in vec2 uv, float distance, float threshold) {
 
 void main(void) {
 
-    float distance = texture2D(u_tex, v_texcoords).a;
-    vec4 color;
+    vec4 color = v_color;
 
-    if (u_pass == 1) {
-        float threshold_fill = 0.5;
-        float alpha_fill = pow(sampleAlpha(v_texcoords, distance, threshold_fill), 0.4545);
-        color = v_color;
-        color.a *= alpha_fill * v_alpha;
-    } else {
-        float threshold_stroke = 0.5 - v_strokeWidth * u_device_pixel_ratio;
-        float alpha_stroke = pow(sampleAlpha(v_texcoords, distance, threshold_stroke), 0.4545);
-        color = v_strokeColor;
-        color.a = alpha_stroke * v_alpha * v_color.a;
-    }
+    float distance = texture2D(u_tex, v_texcoords).a;
+
+    color.a *= v_alpha * pow(sampleAlpha(v_texcoords, distance, v_sdf_threshold), 0.4545);
 
     #pragma tangram: color
     #pragma tangram: filter
