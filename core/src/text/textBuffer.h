@@ -34,6 +34,8 @@ public:
 
     static std::vector<WordBreak> findWords(const std::string& _text);
 
+    virtual void draw(ShaderProgram& _shader) override;
+
 private:
     static int applyWordWrapping(std::vector<FONSquad>& _quads, const TextStyle::Parameters& _params,
                                  const FontContext::FontMetrics& _metrics, Label::Type _type,
