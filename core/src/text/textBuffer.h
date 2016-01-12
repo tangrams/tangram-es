@@ -43,6 +43,7 @@ private:
 
     static std::string applyTextTransform(const TextStyle::Parameters& _params, const std::string& _string);
 
+    bool m_strokePass = false;
 };
 
 }
