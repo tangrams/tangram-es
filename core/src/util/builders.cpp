@@ -245,7 +245,7 @@ bool isOnTileEdge(const glm::vec3& _pa, const glm::vec3& _pb) {
 
     float tolerance = 0.0002; // tweak this adjust if catching too few/many line segments near tile edges
     // TODO: make tolerance configurable by source if necessary
-    glm::vec2 tile_min(-1.0, -1.0);
+    glm::vec2 tile_min(0.0, 0.0);
     glm::vec2 tile_max(1.0, 1.0);
 
     return (valuesWithinTolerance(_pa.x, tile_min.x, tolerance) && valuesWithinTolerance(_pb.x, tile_min.x, tolerance)) ||
