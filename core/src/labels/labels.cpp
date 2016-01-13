@@ -165,62 +165,53 @@ void Labels::checkRepeatGroups(std::vector<TextLabel*>& _visibleSet) const {
     struct GroupElement {
         glm::vec2 position;
         float threshold;
-        size_t hash;
+        const std::string* group;
 
         bool operator==(const GroupElement& _ge) {
             return _ge.position == position
                 && _ge.threshold == threshold
-                && _ge.hash == hash;
+                && *_ge.group == *group;
         };
     };
 
     std::map<size_t, std::vector<GroupElement>> repeatGroups;
 
-    auto textLabelIt = _visibleSet.begin();
-    while (textLabelIt != _visibleSet.end()) {
-        auto textLabel = *textLabelIt;
+    for (TextLabel* textLabel : _visibleSet) {
 
-        std::size_t seed = 0;
-
-        hash_combine(seed, textLabel->options().repeatGroup);
-
+        size_t hash = std::hash<std::string>()(textLabel->options().repeatGroup);
         GroupElement element;
         element.position = textLabel->transform().state.screenPos;
         element.threshold = textLabel->options().repeatDistance;
-        element.hash = seed;
+        element.group = &textLabel->options().repeatGroup;
 
-        auto it = repeatGroups.find(seed);
-        if (it != repeatGroups.end()) {
-            std::vector<GroupElement>& group = repeatGroups[seed];
+        auto it = repeatGroups.find(hash);
+        if (it == repeatGroups.end()) {
+            repeatGroups[hash].push_back(element);
+            continue;
+        }
 
-            if (std::find(group.begin(), group.end(), element) == group.end()) {
-                std::vector<GroupElement> newGroup(group);
-                bool add = true;
-                newGroup.push_back(element);
-                float threshold2 = pow(element.threshold, 2);
+        std::vector<GroupElement>& group = it->second;
+        if (std::find(group.begin(), group.end(), element) != group.end()) {
+            // TBD: when is this case possible?
+            // -> When two tiles contain the same label?
+            continue;
+        }
 
-                for (size_t i = 0; i < newGroup.size() - 1; ++i) {
-                    const GroupElement& ge = newGroup[i];
-                    float d2 = distance2(ge.position, element.position);
-                    if (d2 < threshold2) {
-                        add = false;
-                        break;
-                    }
-                }
+        bool add = true;
+        float threshold2 = pow(element.threshold, 2);
 
-                if (add) {
-                    group.push_back(element);
-                    textLabelIt++;
-                } else {
-                    textLabel->setOcclusion(true);
-                    _visibleSet.erase(textLabelIt);
-                }
-            } else {
-                textLabelIt++;
+        for (const GroupElement& ge : group) {
+            float d2 = distance2(ge.position, element.position);
+            if (d2 < threshold2) {
+                textLabel->setOcclusion(true);
+                add = false;
+                break;
             }
-        } else {
-            repeatGroups[seed].push_back(element);
-            textLabelIt++;
+        }
+
+        if (add) {
+            // No other label of this group within repeatDistance
+            group.push_back(element);
         }
     }
 }

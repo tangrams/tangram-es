@@ -120,6 +120,7 @@ auto TextStyle::applyRule(const DrawRule& _rule, const Properties& _props) const
         // TODO: default to 'draw.key'
     }
 
+    // TBD: should avoid allocation for combined string
     p.labelOptions.repeatGroup += "/" + p.text;
 
     if (_rule.get(StyleParamKey::interactive, p.interactive) && p.interactive) {
