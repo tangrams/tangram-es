@@ -102,10 +102,10 @@ void TileManager::clearTileSet(int32_t _sourceId) {
 
 void TileManager::updateTileSets(const ViewState& _view,
                                  const std::set<TileID>& _visibleTiles) {
-
-    m_tileSetChanged = false;
     m_tiles.clear();
     m_loadPending = 0;
+
+    m_tileSetChanged = m_workers.checkProcessedTiles();
 
     for (auto& tileSet : m_tileSets) {
         updateTileSet(tileSet, _view, _visibleTiles);
@@ -125,14 +125,15 @@ void TileManager::updateTileSets(const ViewState& _view,
 void TileManager::updateTileSet(TileSet& _tileSet, const ViewState& _view,
                                 const std::set<TileID>& _visibleTiles) {
 
-    m_tileSetChanged |= m_workers.checkProcessedTiles();
+    bool reloadTiles = false;
+    bool newTiles = false;
 
     if (_tileSet.sourceGeneration != _tileSet.source->generation()) {
         _tileSet.sourceGeneration = _tileSet.source->generation();
-        m_tileSetChanged = true;
+        reloadTiles = true;
     }
 
-    if (!_view.changedOnLastUpdate && !m_tileSetChanged) {
+    if (!_view.changedOnLastUpdate && !m_tileSetChanged && !reloadTiles) {
         return;
     }
 
@@ -151,6 +152,8 @@ void TileManager::updateTileSet(TileSet& _tileSet, const ViewState& _view,
                 clearProxyTiles(_tileSet, it.first, entry, removeTiles);
                 entry.tile = std::move(entry.task->tile());
                 entry.task.reset();
+
+                newTiles = true;
             }
         }
     }
@@ -164,12 +167,10 @@ void TileManager::updateTileSet(TileSet& _tileSet, const ViewState& _view,
     while (visTilesIt != _visibleTiles.end() || curTilesIt != tiles.end()) {
 
         auto& visTileId = visTilesIt == _visibleTiles.end()
-            ? NOT_A_TILE
-            : *visTilesIt;
+            ? NOT_A_TILE : *visTilesIt;
 
         auto& curTileId = curTilesIt == tiles.end()
-            ? NOT_A_TILE
-            : curTilesIt->first;
+            ? NOT_A_TILE : curTilesIt->first;
 
         if (visTileId == curTileId) {
             // tiles in both sets match
@@ -190,7 +191,7 @@ void TileManager::updateTileSet(TileSet& _tileSet, const ViewState& _view,
             } else {
 
                 if (entry.isLoading()) {
-                    if (m_tileSetChanged) {
+                    if (newTiles) {
                         // check again for proxies
                         updateProxyTiles(_tileSet, visTileId, entry);
                     }
