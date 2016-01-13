@@ -13,6 +13,7 @@ MercatorProjection s_projection;
 
 struct TestTileWorker : TileTaskQueue {
     int processedCount = 0;
+    bool pendingTiles = false;
 
     std::deque<std::shared_ptr<TileTask>> tasks;
 
@@ -20,7 +21,13 @@ struct TestTileWorker : TileTaskQueue {
         tasks.push_back(std::move(task));
     }
 
-    virtual bool checkProcessedTiles() { return true; }
+    virtual bool checkProcessedTiles() {
+        if (pendingTiles) {
+            pendingTiles = false;
+            return true;
+        }
+        return false;
+    }
 
     void processTask() {
         while (!tasks.empty()) {
@@ -31,10 +38,22 @@ struct TestTileWorker : TileTaskQueue {
             }
             task->setTile(std::make_shared<Tile>(task->tileId(), s_projection, &task->source()));
 
+            pendingTiles = true;
             processedCount++;
             break;
         }
     }
+    void processTask(int position) {
+
+        auto task = tasks[position];
+        tasks.erase(tasks.begin() + position);
+
+        task->setTile(std::make_shared<Tile>(task->tileId(), s_projection, &task->source()));
+
+        pendingTiles = true;
+        processedCount++;
+    }
+
     void dropTask() {
         if (!tasks.empty()) {
             auto task = tasks.front();
@@ -104,25 +123,21 @@ TEST_CASE( "Use proxy Tile - Dont remove proxy if it is now visible", "[TileMana
     REQUIRE(source->tileTaskCount == 2);
     REQUIRE(worker.processedCount == 0);
 
-    /// Drop tile task 0/0/0
-    worker.dropTask();
-
     /// Process tile task 0/0/1
-    worker.processTask();
+    worker.processTask(1);
 
     /// Go back to tile 0/0/0 - uses 0/0/1 as proxy
     tileManager.updateTileSets(viewState, visibleTiles_1);
 
     REQUIRE(tileManager.getVisibleTiles().size() == 1);
-    REQUIRE(source->tileTaskCount == 3);
+    REQUIRE(source->tileTaskCount == 2);
     REQUIRE(worker.processedCount == 1);
     REQUIRE(tileManager.getVisibleTiles()[0]->isProxy() == true);
     REQUIRE(tileManager.getVisibleTiles()[0]->getID() == TileID(0,0,1));
 
-    /// Process tile task 0/0/0
-    worker.processTask();
+    // Process tile task 0/0/0
+    worker.processTask(0);
     tileManager.updateTileSets(viewState, visibleTiles_1);
-
     REQUIRE(tileManager.getVisibleTiles().size() == 1);
     REQUIRE(tileManager.getVisibleTiles()[0]->isProxy() == false);
     REQUIRE(tileManager.getVisibleTiles()[0]->getID() == TileID(0,0,0));
@@ -229,7 +244,8 @@ TEST_CASE( "Use proxy Tile - circular proxies", "[TileManager][updateTileSets]" 
     REQUIRE(source->tileTaskCount == 2);
     REQUIRE(worker.processedCount == 0);
 
-    /// Go back to tile 0/0/0 - add 0/0/1 as proxy
+    /// Go back to tile 0/0/0
+    /// NB: does not add 0/0/1 as proxy, since no newTiles were loaded
     tileManager.updateTileSets(viewState, visibleTiles_1);
 
     REQUIRE(tileManager.getVisibleTiles().size() == 0);
@@ -237,7 +253,9 @@ TEST_CASE( "Use proxy Tile - circular proxies", "[TileManager][updateTileSets]" 
     REQUIRE(worker.processedCount == 0);
 
     REQUIRE(worker.tasks.size() == 2);
+    // tile 0/0/0 still loading
     REQUIRE(worker.tasks[0]->isCanceled() == false);
+    // tile 0/0/1 canceled
     REQUIRE(worker.tasks[1]->isCanceled() == true);
 
     worker.processTask();

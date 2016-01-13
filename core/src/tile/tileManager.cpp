@@ -102,10 +102,10 @@ void TileManager::clearTileSet(int32_t _sourceId) {
 
 void TileManager::updateTileSets(const ViewState& _view,
                                  const std::set<TileID>& _visibleTiles) {
-
-    m_tileSetChanged = false;
     m_tiles.clear();
     m_loadPending = 0;
+
+    m_tileSetChanged = m_workers.checkProcessedTiles();
 
     for (auto& tileSet : m_tileSets) {
         updateTileSet(tileSet, _view, _visibleTiles);
@@ -125,14 +125,15 @@ void TileManager::updateTileSets(const ViewState& _view,
 void TileManager::updateTileSet(TileSet& _tileSet, const ViewState& _view,
                                 const std::set<TileID>& _visibleTiles) {
 
-    m_tileSetChanged |= m_workers.checkProcessedTiles();
+    bool reloadTiles = false;
+    bool newTiles = false;
 
     if (_tileSet.sourceGeneration != _tileSet.source->generation()) {
         _tileSet.sourceGeneration = _tileSet.source->generation();
-        m_tileSetChanged = true;
+        reloadTiles = true;
     }
 
-    if (!_view.changedOnLastUpdate && !m_tileSetChanged) {
+    if (!_view.changedOnLastUpdate && !m_tileSetChanged && !reloadTiles) {
         return;
     }
 
@@ -161,6 +162,8 @@ void TileManager::updateTileSet(TileSet& _tileSet, const ViewState& _view,
                 clearProxyTiles(_tileSet, it.first, entry, removeTiles);
                 entry.tile = std::move(entry.task->tile());
                 entry.task.reset();
+
+                newTiles = true;
             }
         }
     }
@@ -169,6 +172,8 @@ void TileManager::updateTileSet(TileSet& _tileSet, const ViewState& _view,
     auto curTilesIt = tiles.begin();
     auto visTilesIt = visibleTiles->begin();
 
+    auto generation = _tileSet.source->generation();
+
     while (visTilesIt != visibleTiles->end() || curTilesIt != tiles.end()) {
 
         auto& visTileId = visTilesIt == visibleTiles->end()
@@ -176,8 +181,7 @@ void TileManager::updateTileSet(TileSet& _tileSet, const ViewState& _view,
             : *visTilesIt;
 
         auto& curTileId = curTilesIt == tiles.end()
-            ? NOT_A_TILE
-            : curTilesIt->first;
+            ? NOT_A_TILE : curTilesIt->first;
 
         if (visTileId == curTileId) {
             // tiles in both sets match
@@ -189,28 +193,28 @@ void TileManager::updateTileSet(TileSet& _tileSet, const ViewState& _view,
             if (entry.isReady()) {
                 m_tiles.push_back(entry.tile);
 
-                bool update = !entry.isLoading() &&
-                    (entry.tile->sourceGeneration() < _tileSet.source->generation());
-
-                if (update) {
-
+                if (!entry.isLoading() &&
+                    (entry.tile->sourceGeneration() < generation)) {
                     // Tile needs update - enqueue for loading
                     enqueueTask(_tileSet, visTileId, _view);
                 }
 
-            } else if (!entry.isLoading()) {
-                // Start loading when no task is set or the task stems from an
-                // older tile source generation
-                if (!bool(entry.task) ||
-                    (entry.task->sourceGeneration() < _tileSet.source->generation())) {
+            } else {
 
-                    // Not yet available - enqueue for loading
-                    enqueueTask(_tileSet, visTileId, _view);
-
-                    if (m_tileSetChanged) {
+                if (entry.isLoading()) {
+                    if (newTiles) {
                         // check again for proxies
                         updateProxyTiles(_tileSet, visTileId, entry);
                     }
+
+                } else if (!bool(entry.task) ||
+                           (entry.isCanceled() &&
+                            (entry.task->sourceGeneration() < generation))) {
+                    // Start loading when no task is set or the task stems from an
+                    // older tile source generation.
+
+                    // Not yet available - enqueue for loading
+                    enqueueTask(_tileSet, visTileId, _view);
                 }
             }
 
