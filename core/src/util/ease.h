@@ -23,7 +23,7 @@ T ease(T _start, T _end, float _t, EaseType _e) {
         case EaseType::sine: f = 0.5 - 0.5 * cos(M_PI * f); break;
         default: break;
     }
-    return _start * (1 - f) + _end * f;
+    return _start + (_end - _start) * f;
 }
 
 struct Ease {
