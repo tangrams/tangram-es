@@ -159,6 +159,8 @@ void TileManager::updateTileSet(TileSet& _tileSet, const ViewState& _view,
     auto curTilesIt = tiles.begin();
     auto visTilesIt = _visibleTiles.begin();
 
+    auto generation = _tileSet.source->generation();
+
     while (visTilesIt != _visibleTiles.end() || curTilesIt != tiles.end()) {
 
         auto& visTileId = visTilesIt == _visibleTiles.end()
@@ -179,28 +181,28 @@ void TileManager::updateTileSet(TileSet& _tileSet, const ViewState& _view,
             if (entry.isReady()) {
                 m_tiles.push_back(entry.tile);
 
-                bool update = !entry.isLoading() &&
-                    (entry.tile->sourceGeneration() < _tileSet.source->generation());
-
-                if (update) {
-
+                if (!entry.isLoading() &&
+                    (entry.tile->sourceGeneration() < generation)) {
                     // Tile needs update - enqueue for loading
                     enqueueTask(_tileSet, visTileId, _view);
                 }
 
-            } else if (!entry.isLoading()) {
-                // Start loading when no task is set or the task stems from an
-                // older tile source generation
-                if (!bool(entry.task) ||
-                    (entry.task->sourceGeneration() < _tileSet.source->generation())) {
+            } else {
 
-                    // Not yet available - enqueue for loading
-                    enqueueTask(_tileSet, visTileId, _view);
-
+                if (entry.isLoading()) {
                     if (m_tileSetChanged) {
                         // check again for proxies
                         updateProxyTiles(_tileSet, visTileId, entry);
                     }
+
+                } else if (!bool(entry.task) ||
+                           (entry.isCanceled() &&
+                            (entry.task->sourceGeneration() < generation))) {
+                    // Start loading when no task is set or the task stems from an
+                    // older tile source generation.
+
+                    // Not yet available - enqueue for loading
+                    enqueueTask(_tileSet, visTileId, _view);
                 }
             }
 
