@@ -3,8 +3,9 @@
 
 namespace Tangram {
 
-std::shared_ptr<TileData> TileTask::process() {
-    return source->parse(*tile, *rawTileData);
-}
+TileTask::TileTask(TileID& _tileId, std::shared_ptr<DataSource> _source) :
+    m_tileId(_tileId),
+    m_source(_source),
+    m_sourceGeneration(_source->generation()) {}
 
 }
