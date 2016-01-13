@@ -87,6 +87,12 @@ public class MapController implements Renderer {
 
     }
 
+    public void loadSceneFile(String path) {
+        scenePath = path;
+        loadScene(path);
+        requestRender();
+    }
+
     /**
      * Set the {@link HttpHandler} for retrieving remote map resources; a default-constructed
      * HttpHandler is suitable for most cases, but methods can be extended to modify resource URLs
@@ -402,6 +408,7 @@ public class MapController implements Renderer {
     // ==============
 
     private synchronized native void init(MapController instance, AssetManager assetManager, String stylePath);
+    private synchronized native void loadScene(String path);
     private synchronized native void setupGL();
     private synchronized native void resize(int width, int height);
     private synchronized native void update(float dt);
