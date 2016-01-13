@@ -40,6 +40,8 @@ const std::map<std::string, StyleParamKey> s_StyleParamMap = {
     {"outline:order", StyleParamKey::outline_order},
     {"outline:width", StyleParamKey::outline_width},
     {"priority", StyleParamKey::priority},
+    {"repeat_distance", StyleParamKey::repeat_distance},
+    {"repeat_group", StyleParamKey::repeat_group},
     {"size", StyleParamKey::size},
     {"sprite", StyleParamKey::sprite},
     {"sprite_default", StyleParamKey::sprite_default},
@@ -165,6 +167,7 @@ StyleParam::Value StyleParam::parseString(StyleParamKey key, const std::string& 
     case StyleParamKey::sprite:
     case StyleParamKey::sprite_default:
     case StyleParamKey::style:
+    case StyleParamKey::repeat_group:
         return _value;
     case StyleParamKey::font_size: {
         float fontSize = 0.f;
@@ -190,6 +193,23 @@ StyleParam::Value StyleParam::parseString(StyleParamKey key, const std::string& 
         }
         break;
     }
+    case StyleParamKey::repeat_distance: {
+        ValueUnitPair repeatDistance;
+        repeatDistance.unit = Unit::pixel;
+
+        int pos = parseValueUnitPair(_value, 0, repeatDistance);
+        if (pos < 0) {
+            LOGW("Invalid repeat distance value '%s'", _value.c_str());
+            repeatDistance.value =  256.0f;
+            repeatDistance.unit = Unit::pixel;
+        } else {
+            if (repeatDistance.unit != Unit::pixel) {
+                LOGW("Invalid unit provided for repeat distance");
+            }
+        }
+
+        return Width(repeatDistance);
+    }
     case StyleParamKey::width:
     case StyleParamKey::outline_width: {
         ValueUnitPair width;
@@ -197,7 +217,7 @@ StyleParam::Value StyleParam::parseString(StyleParamKey key, const std::string& 
 
         int pos = parseValueUnitPair(_value, 0, width);
         if (pos < 0) {
-            logMsg("Warning: Invalid width value '%s'\n", _value.c_str());
+            LOGW("Invalid width value '%s'", _value.c_str());
             width.value =  2.0f;
             width.unit = Unit::pixel;
         }
@@ -264,6 +284,7 @@ std::string StyleParam::toString() const {
     case StyleParamKey::text_source:
     case StyleParamKey::transform:
     case StyleParamKey::text_wrap:
+    case StyleParamKey::repeat_group:
     case StyleParamKey::sprite:
     case StyleParamKey::sprite_default:
     case StyleParamKey::style:
@@ -290,6 +311,7 @@ std::string StyleParam::toString() const {
     case StyleParamKey::outline_color:
     case StyleParamKey::font_fill:
     case StyleParamKey::font_stroke_color:
+    case StyleParamKey::repeat_distance:
     case StyleParamKey::cap:
     case StyleParamKey::outline_cap:
     case StyleParamKey::join:

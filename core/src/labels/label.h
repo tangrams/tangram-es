@@ -110,6 +110,8 @@ public:
         Transition selectTransition;
         Transition hideTransition;
         Transition showTransition;
+        std::string repeatGroup = "";
+        float repeatDistance = 256.0; // TODO: move those value to a config file (pixel per tile from view.h)
         float buffer = 0.f;
 
         // the label hash based on its styling parameters
@@ -146,8 +148,6 @@ public:
 
     void skipTransitions();
 
-    bool occludedLastFrame() { return m_occludedLastFrame; }
-
     /* Checks whether the label is in a visible state */
     bool visibleState() const;
 
@@ -167,6 +167,7 @@ public:
     const OBB& obb() const { return m_obb; }
     const Transform& transform() const { return m_transform; }
     const State& state() const { return m_currentState; }
+    bool occludedLastFrame() const { return m_occludedLastFrame; }
 
 private:
 
@@ -229,6 +230,8 @@ namespace std {
             hash_combine(seed, o.priority);
             hash_combine(seed, o.interactive);
             hash_combine(seed, o.collide);
+            hash_combine(seed, o.repeatDistance);
+            hash_combine(seed, o.repeatGroup);
             hash_combine(seed, (int)o.selectTransition.ease);
             hash_combine(seed, o.selectTransition.time);
             hash_combine(seed, (int)o.hideTransition.ease);
@@ -239,3 +242,4 @@ namespace std {
         }
     };
 }
+

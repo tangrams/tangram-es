@@ -68,7 +68,7 @@ auto TextStyle::applyRule(const DrawRule& _rule, const Properties& _props) const
 
     Parameters p;
 
-    std::string fontFamily, fontWeight, fontStyle, transform, align, anchor;
+    std::string fontFamily, fontWeight, fontStyle, transform, align, anchor, repeatGroup;
     glm::vec2 offset;
 
     _rule.get(StyleParamKey::font_family, fontFamily);
@@ -110,6 +110,17 @@ auto TextStyle::applyRule(const DrawRule& _rule, const Properties& _props) const
             p.text = _props.getString(p.text);
         }
     }
+
+    if (_rule.get(StyleParamKey::repeat_group, p.labelOptions.repeatGroup)) {
+        StyleParam::Width repeatDistance;
+        if (_rule.get(StyleParamKey::repeat_distance, repeatDistance)) {
+            p.labelOptions.repeatDistance = repeatDistance.value * m_pixelScale;
+        }
+    } else {
+        // TODO: default to 'draw.key'
+    }
+
+    p.labelOptions.repeatGroup += "/" + p.text;
 
     if (_rule.get(StyleParamKey::interactive, p.interactive) && p.interactive) {
         p.properties = std::make_shared<Properties>(_props);
@@ -159,10 +170,6 @@ void TextStyle::buildPoint(const Point& _point, const DrawRule& _rule, const Pro
     auto& buffer = static_cast<TextBuffer&>(_mesh);
 
     Parameters params = applyRule(_rule, _props);
-
-   // std::hash<Parameters> hash;
-   // auto h = hash(params);
-   // LOG("Hash %d", h);
 
     if (!params.visible || !params.isValid()) { return; }
 

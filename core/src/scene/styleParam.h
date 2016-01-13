@@ -35,6 +35,8 @@ enum class StyleParamKey : uint8_t {
     outline_order,
     outline_width,
     priority,
+    repeat_distance,
+    repeat_group,
     size,
     sprite,
     sprite_default,

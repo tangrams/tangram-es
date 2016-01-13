@@ -5,7 +5,6 @@
 #include "gl/shaderProgram.h"
 #include "gl/primitives.h"
 #include "view/view.h"
-#include "style/material.h"
 #include "style/style.h"
 #include "tile/tile.h"
 #include "tile/tileCache.h"
@@ -28,34 +27,20 @@ int Labels::LODDiscardFunc(float _maxZoom, float _zoom) {
     return (int) MIN(floor(((log(-_zoom + (_maxZoom + 2)) / log(_maxZoom + 2) * (_maxZoom )) * 0.5)), MAX_LOD);
 }
 
-
-void Labels::update(const View& _view, float _dt, const std::vector<std::unique_ptr<Style>>& _styles,
-                    const std::vector<std::shared_ptr<Tile>>& _tiles, std::unique_ptr<TileCache>& _cache) {
-
-    m_needUpdate = false;
-
-    // float zoom = _view.getZoom();
-    // int lodDiscard = LODDiscardFunc(View::s_maxZoom, zoom);
-    // LOG("loddiscard %f %d", zoom, lodDiscard);
-
-    std::set<std::pair<Label*, Label*>> occlusions;
-
-    // Could clear this at end of function unless debug draw is active
-    m_labels.clear();
-    m_aabbs.clear();
+bool Labels::updateLabels(const std::vector<std::unique_ptr<Style>>& _styles,
+                          const std::vector<std::shared_ptr<Tile>>& _tiles,
+                          float _dt, float _dz, const View& _view)
+{
+    bool animate = false;
 
     glm::vec2 screenSize = glm::vec2(_view.getWidth(), _view.getHeight());
 
-    float currentZoom = _view.getZoom();
-    float dz = currentZoom - std::floor(currentZoom);
-
-    //// Collect labels from visible tiles
+    // int lodDiscard = LODDiscardFunc(View::s_maxZoom, _view.getZoom());
 
     for (const auto& tile : _tiles) {
 
         // discard based on level of detail
         // if ((zoom - tile->getID().z) > lodDiscard) {
-        //     LOG("discard %d %d %d", tile->getID().z, tile->getID().x, tile->getID().y);
         //     continue;
         // }
 
@@ -71,7 +56,7 @@ void Labels::update(const View& _view, float _dt, const std::vector<std::unique_
             if (!labelMesh) { continue; }
 
             for (auto& label : labelMesh->getLabels()) {
-                m_needUpdate |= label->update(mvp, screenSize, _dt, dz);
+                animate |= label->update(mvp, screenSize, _dt, _dz);
 
                 label->setProxy(proxyTile);
 
@@ -84,24 +69,29 @@ void Labels::update(const View& _view, float _dt, const std::vector<std::unique_
         }
     }
 
-    //// Manage occlusions
+    return animate;
+}
 
-    // broad phase
-    m_isect2d.resize({_view.getWidth() / 256, _view.getHeight() / 256}, {_view.getWidth(), _view.getHeight()});
-    m_isect2d.intersect(m_aabbs);
+std::set<std::pair<Label*, Label*>> Labels::narrowPhase(const CollisionPairs& _pairs) const {
+    std::set<std::pair<Label*, Label*>> occlusions;
 
-    // narrow phase
-    for (auto pair : m_isect2d.pairs) {
+    for (auto pair : _pairs) {
         const auto& aabb1 = m_aabbs[pair.first];
         const auto& aabb2 = m_aabbs[pair.second];
 
         auto l1 = static_cast<Label*>(aabb1.m_userData);
         auto l2 = static_cast<Label*>(aabb2.m_userData);
 
-        if (intersect(l1->obb(), l2->obb())) { occlusions.insert({l1, l2}); }
+        if (intersect(l1->obb(), l2->obb())) {
+            occlusions.insert({l1, l2});
+        }
     }
 
-    for (auto& pair : occlusions) {
+    return occlusions;
+}
+
+void Labels::applyPriorities(const std::set<std::pair<Label*, Label*>> _occlusions) const {
+    for (auto& pair : _occlusions) {
         if (!pair.first->occludedLastFrame() || !pair.second->occludedLastFrame()) {
             // check first is the label belongs to a proxy tile
             if (pair.first->isProxy() && !pair.second->isProxy()) {
@@ -118,63 +108,184 @@ void Labels::update(const View& _view, float _dt, const std::vector<std::unique_
             }
         }
     }
+}
 
-    //// Mark labels to skip transitions
+void Labels::skipTransitions(const std::vector<std::unique_ptr<Style>>& _styles,
+                             const std::vector<std::shared_ptr<Tile>>& _tiles,
+                             std::unique_ptr<TileCache>& _cache, float _currentZoom) const
+{
+    for (const auto& t0 : _tiles) {
+        TileID tileID = t0->getID();
+        std::vector<std::shared_ptr<Tile>> tiles;
 
-    if ((int) m_lastZoom != (int) currentZoom) {
-        for (const auto& t0 : _tiles) {
-            TileID tileID = t0->getID();
-            std::vector<std::shared_ptr<Tile>> tiles;
+        if (m_lastZoom < _currentZoom) {
+            // zooming in, add the one cached parent tile
+            tiles.push_back(_cache->contains(t0->sourceID(), tileID.getParent()));
+        } else {
+            // zooming out, add the 4 cached children tiles
+            tiles.push_back(_cache->contains(t0->sourceID(), tileID.getChild(0)));
+            tiles.push_back(_cache->contains(t0->sourceID(), tileID.getChild(1)));
+            tiles.push_back(_cache->contains(t0->sourceID(), tileID.getChild(2)));
+            tiles.push_back(_cache->contains(t0->sourceID(), tileID.getChild(3)));
+        }
 
-            if (m_lastZoom < currentZoom) {
-                // zooming in, add the one cached parent tile
-                tiles.push_back(_cache->contains(t0->sourceID(), tileID.getParent()));
-            } else {
-                // zooming out, add the 4 cached children tiles
-                tiles.push_back(_cache->contains(t0->sourceID(), tileID.getChild(0)));
-                tiles.push_back(_cache->contains(t0->sourceID(), tileID.getChild(1)));
-                tiles.push_back(_cache->contains(t0->sourceID(), tileID.getChild(2)));
-                tiles.push_back(_cache->contains(t0->sourceID(), tileID.getChild(3)));
-            }
+        for (const auto& t1 : tiles) {
+            if (!t1) { continue; }
+            for (const auto& style : _styles) {
+                const auto& m0 = t0->getMesh(*style);
+                if (!m0) { continue; }
+                const LabelMesh* mesh0 = dynamic_cast<const LabelMesh*>(m0.get());
+                if (!mesh0) { continue; }
+                const auto& m1 = t1->getMesh(*style);
+                if (!m1) { continue; }
+                const LabelMesh* mesh1 = static_cast<const LabelMesh*>(m1.get());
 
-            for (const auto& t1 : tiles) {
-                if (!t1) { continue; }
-                for (const auto& style : _styles) {
-                    const auto& m0 = t0->getMesh(*style);
-                    if (!m0) { continue; }
-                    const LabelMesh* mesh0 = dynamic_cast<const LabelMesh*>(m0.get());
-                    if (!mesh0) { continue; }
-                    const auto& m1 = t1->getMesh(*style);
-                    if (!m1) { continue; }
-                    const LabelMesh* mesh1 = static_cast<const LabelMesh*>(m1.get());
+                for (auto& l0 : mesh0->getLabels()) {
+                    if (!l0->canOcclude()) { continue; }
 
-                    for (auto& l0 : mesh0->getLabels()) {
-                        if (!l0->canOcclude()) { continue; }
+                    for (auto& l1 : mesh1->getLabels()) {
+                        if (!l1 || !l1->canOcclude() || l0->hash() != l1->hash()) {
+                            continue;
+                        }
+                        float d2 = glm::distance2(l0->transform().state.screenPos,
+                                l1->transform().state.screenPos);
 
-                        for (auto& l1 : mesh1->getLabels()) {
-                            if (!l1 || !l1->canOcclude() || l0->hash() != l1->hash()) {
-                                continue;
-                            }
-                            float d2 = glm::distance2(l0->transform().state.screenPos,
-                                    l1->transform().state.screenPos);
-
-                            // The new label lies within the circle defined by the bbox of l0
-                            if (sqrt(d2) < std::max(l0->dimension().x, l0->dimension().y)) {
-                                l0->skipTransitions();
-                            }
+                        // The new label lies within the circle defined by the bbox of l0
+                        if (sqrt(d2) < std::max(l0->dimension().x, l0->dimension().y)) {
+                            l0->skipTransitions();
                         }
                     }
                 }
             }
         }
     }
+}
 
-    //// Update label meshes
+void Labels::checkRepeatGroups(std::vector<TextLabel*>& _visibleSet) const {
+    struct GroupElement {
+        glm::vec2 position;
+        float threshold;
+        size_t hash;
+
+        bool operator==(const GroupElement& _ge) {
+            return _ge.position == position
+                && _ge.threshold == threshold
+                && _ge.hash == hash;
+        };
+    };
+
+    std::map<size_t, std::vector<GroupElement>> repeatGroups;
+
+    auto textLabelIt = _visibleSet.begin();
+    while (textLabelIt != _visibleSet.end()) {
+        auto textLabel = *textLabelIt;
+
+        std::size_t seed = 0;
+
+        hash_combine(seed, textLabel->options().repeatGroup);
+
+        GroupElement element;
+        element.position = textLabel->transform().state.screenPos;
+        element.threshold = textLabel->options().repeatDistance;
+        element.hash = seed;
+
+        auto it = repeatGroups.find(seed);
+        if (it != repeatGroups.end()) {
+            std::vector<GroupElement>& group = repeatGroups[seed];
+
+            if (std::find(group.begin(), group.end(), element) == group.end()) {
+                std::vector<GroupElement> newGroup(group);
+                bool add = true;
+                newGroup.push_back(element);
+                float threshold2 = pow(element.threshold, 2);
+
+                for (size_t i = 0; i < newGroup.size() - 1; ++i) {
+                    const GroupElement& ge = newGroup[i];
+                    float d2 = distance2(ge.position, element.position);
+                    if (d2 < threshold2) {
+                        add = false;
+                        break;
+                    }
+                }
+
+                if (add) {
+                    group.push_back(element);
+                    textLabelIt++;
+                } else {
+                    textLabel->setOcclusion(true);
+                    _visibleSet.erase(textLabelIt);
+                }
+            } else {
+                textLabelIt++;
+            }
+        } else {
+            repeatGroups[seed].push_back(element);
+            textLabelIt++;
+        }
+    }
+}
+
+void Labels::update(const View& _view, float _dt,
+                    const std::vector<std::unique_ptr<Style>>& _styles,
+                    const std::vector<std::shared_ptr<Tile>>& _tiles,
+                    std::unique_ptr<TileCache>& _cache)
+{
+    // Could clear this at end of function unless debug draw is active
+    m_labels.clear();
+    m_aabbs.clear();
+
+    float currentZoom = _view.getZoom();
+    float dz = currentZoom - std::floor(currentZoom);
+
+    /// Collect and update labels from visible tiles
+
+    m_needUpdate = updateLabels(_styles, _tiles, _dt, dz, _view);
+
+    /// Manage occlusions
+
+    // Update collision context size
+
+    m_isect2d.resize({_view.getWidth() / 256, _view.getHeight() / 256},
+                     {_view.getWidth(), _view.getHeight()});
+
+    // Broad phase collision detection
+    m_isect2d.intersect(m_aabbs);
+
+    // Narrow Phase
+    auto occlusions = narrowPhase(m_isect2d.pairs);
+
+    applyPriorities(occlusions);
+
+    /// Mark labels to skip transitions
+
+    if ((int) m_lastZoom != (int) _view.getZoom()) {
+        skipTransitions(_styles, _tiles, _cache, currentZoom);
+    }
+
+    /// Update label meshes
+
+    std::vector<TextLabel*> visibleSet;
 
     for (auto label : m_labels) {
         label->occlusionSolved();
         label->pushTransform();
+
+        if (label->canOcclude()) {
+            if (!label->visibleState()) { continue; }
+            TextLabel* textLabel = dynamic_cast<TextLabel*>(label);
+            if (!textLabel) { continue; }
+            visibleSet.push_back(textLabel);
+        }
     }
+
+    // Ensure the labels are always treated in the same order in the visible set
+    std::sort(visibleSet.begin(), visibleSet.end(), [](TextLabel* _a, TextLabel* _b) {
+        return glm::length2(_a->transform().modelPosition1) < glm::length2(_b->transform().modelPosition1);
+    });
+
+    /// Apply repeat groups
+
+    checkRepeatGroups(visibleSet);
 
     // Request for render if labels are in fading in/out states
     if (m_needUpdate) {
@@ -238,8 +349,6 @@ const std::vector<TouchItem>& Labels::getFeaturesAtPoint(const View& _view, floa
     return m_touchItems;
 }
 
-
-
 void Labels::drawDebug(const View& _view) {
 
     if (!Tangram::getDebugFlag(Tangram::DebugFlags::labels)) {
@@ -282,6 +391,25 @@ void Labels::drawDebug(const View& _view) {
             // draw projected anchor point
             Primitives::setColor(0x0000ff);
             Primitives::drawRect(sp - glm::vec2(1.f), sp + glm::vec2(1.f));
+
+            if (!label->options().repeatGroup.empty() && label->state() == Label::State::visible) {
+                size_t seed = 0;
+                hash_combine(seed, label->options().repeatGroup);
+                float repeatDistance = label->options().repeatDistance;
+
+                Primitives::setColor(seed);
+                Primitives::drawLine(label->transform().state.screenPos,
+                        glm::vec2(repeatDistance, 0.f) + label->transform().state.screenPos);
+
+                float off = M_PI / 6.f;
+                for (float pad = 0.f; pad < M_PI * 2.f; pad += off) {
+                    glm::vec2 p0 = glm::vec2(cos(pad), sin(pad)) * repeatDistance
+                        + label->transform().state.screenPos;
+                    glm::vec2 p1 = glm::vec2(cos(pad + off), sin(pad + off)) * repeatDistance
+                        + label->transform().state.screenPos;
+                    Primitives::drawLine(p0, p1);
+                }
+            }
         }
     }
 
