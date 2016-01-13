@@ -142,6 +142,12 @@ void InputHandler::handleShoveGesture(float _distance) {
 
 }
 
+void InputHandler::cancelFling() {
+
+    setVelocity(0.f, { 0.f, 0.f});
+
+}
+
 void InputHandler::onGesture() {
 
     m_gestureOccured = true;

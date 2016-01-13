@@ -205,6 +205,7 @@ void setPositionNow(double _lon, double _lat) {
 
     glm::dvec2 meters = m_view->getMapProjection().LonLatToMeters({ _lon, _lat});
     m_view->setPosition(meters.x, meters.y);
+    m_inputHandler->cancelFling();
     requestRender();
 
 }
@@ -237,6 +238,7 @@ void getPosition(double& _lon, double& _lat) {
 void setZoomNow(float _z) {
 
     m_view->setZoom(_z);
+    m_inputHandler->cancelFling();
     requestRender();
 
 }

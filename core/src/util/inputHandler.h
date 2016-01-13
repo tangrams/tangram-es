@@ -21,6 +21,8 @@ public:
 
     void update(float _dt);
 
+    void cancelFling();
+
     void setView(std::shared_ptr<View> _view) { m_view = _view; }
 
 private:
