@@ -143,7 +143,7 @@ public:
     virtual void updateBBoxes(float _zoomFract) = 0;
 
     /* Occlude the label */
-    void occlude(OcclusionType _type);
+    void occlude(OcclusionType _type, bool _occlusion = true);
 
     /* Checks whether the label is in a state where it can occlusion */
     bool canOcclude();
