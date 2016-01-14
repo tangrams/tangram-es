@@ -32,6 +32,8 @@ public:
 
     View(int _width = 800, int _height = 600, ProjectionType _projType = ProjectionType::mercator);
 
+    View(const View& _view) = default;
+
     /* Sets a new map projection with default tileSize */
     void setMapProjection(ProjectionType _projType);
 
@@ -151,7 +153,7 @@ protected:
      */
     bool checkMapBound();
 
-    std::unique_ptr<MapProjection> m_projection;
+    std::shared_ptr<MapProjection> m_projection;
     std::set<TileID> m_visibleTiles;
 
     glm::dvec3 m_pos;

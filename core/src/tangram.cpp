@@ -95,6 +95,9 @@ void loadScene(const char* _scenePath, bool _setPositionFromScene) {
     bool setPositionFromCurrentView = bool(m_scene);
 
     auto scene = std::make_shared<Scene>();
+    if (m_view) {
+        scene->view() = std::make_shared<View>(*m_view);
+    }
     if (SceneLoader::loadScene(sceneString, *scene)) {
         m_scene = scene;
         m_scene->fontContext()->addFont("firasans", "medium", "");
@@ -102,15 +105,11 @@ void loadScene(const char* _scenePath, bool _setPositionFromScene) {
             m_scene->view()->setPosition(m_view->getPosition());
             m_scene->view()->setZoom(m_view->getZoom());
         }
-        auto w = m_view->getWidth();
-        auto h = m_view->getHeight();
-        auto s = m_view->pixelScale();
         m_view = m_scene->view();
-        setPixelScale(s);
-        resize(w, h);
         m_inputHandler->setView(m_view);
         m_tileManager->setView(m_view);
         m_tileManager->setScene(scene);
+        setPixelScale(m_view->pixelScale());
 
     }
 }
