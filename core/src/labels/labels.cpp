@@ -181,12 +181,7 @@ void Labels::checkRepeatGroups(std::vector<TextLabel*>& _visibleSet) const {
         size_t hash = std::hash<std::string>()(textLabel->options().repeatGroup);
         GroupElement element;
 
-        float r = textLabel->transform().state.rotation;
-        glm::vec2 t = glm::vec2(cos(r), sin(r));
-        glm::vec2 groupCenter = textLabel->transform().state.screenPos
-            + t * textLabel->dimension().x * 0.5f;
-
-        element.position = groupCenter;
+        element.position = textLabel->center();
         element.threshold = textLabel->options().repeatDistance;
         element.group = &textLabel->options().repeatGroup;
 
@@ -394,21 +389,16 @@ void Labels::drawDebug(const View& _view) {
                 hash_combine(seed, label->options().repeatGroup);
                 float repeatDistance = label->options().repeatDistance;
 
-                float r = label->transform().state.rotation;
-                glm::vec2 t = glm::vec2(cos(r), sin(r));
-                glm::vec2 groupCenter = label->transform().state.screenPos
-                    + t * label->dimension().x * 0.5f;
-
                 Primitives::setColor(seed);
-                Primitives::drawLine(groupCenter,
-                        glm::vec2(repeatDistance, 0.f) + groupCenter);
+                Primitives::drawLine(label->center(),
+                    glm::vec2(repeatDistance, 0.f) + label->center());
 
                 float off = M_PI / 6.f;
                 for (float pad = 0.f; pad < M_PI * 2.f; pad += off) {
                     glm::vec2 p0 = glm::vec2(cos(pad), sin(pad)) * repeatDistance
-                        + groupCenter;
+                        + label->center();
                     glm::vec2 p1 = glm::vec2(cos(pad + off), sin(pad + off)) * repeatDistance
-                        + groupCenter;
+                        + label->center();
                     Primitives::drawLine(p0, p1);
                 }
             }

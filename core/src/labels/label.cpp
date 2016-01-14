@@ -28,6 +28,8 @@ Label::Label(Label::Transform _transform, glm::vec2 _size, Type _type, LabelMesh
     m_dirty = true;
     m_proxy = false;
     m_skipTransitions = false;
+    m_xAxis = glm::vec2(1.0, 0.0);
+    m_yAxis = glm::vec2(0.0, 1.0);
 }
 
 Label::~Label() {}
@@ -176,6 +178,10 @@ void Label::skipTransitions() {
     if (!m_occlusionSolved) {
         m_skipTransitions = true;
     }
+}
+
+glm::vec2 Label::center() const {
+    return m_obb.getCentroid();
 }
 
 void Label::enterState(const State& _state, float _alpha) {

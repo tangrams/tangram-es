@@ -168,6 +168,7 @@ public:
     const Transform& transform() const { return m_transform; }
     const State& state() const { return m_currentState; }
     bool occludedLastFrame() const { return m_occludedLastFrame; }
+    virtual glm::vec2 center() const;
 
 private:
 
@@ -216,6 +217,9 @@ protected:
     Range m_vertexRange;
     // label options
     Options m_options;
+
+    glm::vec2 m_xAxis;
+    glm::vec2 m_yAxis;
 };
 
 }

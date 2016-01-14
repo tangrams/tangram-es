@@ -25,27 +25,24 @@ TextLabel::TextLabel(Label::Transform _transform, Type _type, glm::vec2 _dim, Te
             case Anchor::center: break;
         }
     }
-
-    m_perpAxis = glm::vec2(0.0, 1.0);
 }
 
 void TextLabel::updateBBoxes(float _zoomFract) {
-    glm::vec2 t(1.0, 0.0);
     glm::vec2 obbCenter;
 
     if (m_type == Type::line) {
-        t = glm::vec2(cos(m_transform.state.rotation), sin(m_transform.state.rotation));
-        m_perpAxis = glm::vec2(-t.y, t.x);
+        m_xAxis = glm::vec2(cos(m_transform.state.rotation), sin(m_transform.state.rotation));
+        m_yAxis = glm::vec2(-m_xAxis.y, m_xAxis.x);
     }
 
     obbCenter = m_transform.state.screenPos;
     // move forward on line by half the text length
-    obbCenter += t * m_dim.x * 0.5f;
+    obbCenter += m_xAxis * m_dim.x * 0.5f;
     // move down on the perpendicular to estimated font baseline
-    obbCenter -= m_perpAxis * m_dim.y * 0.5f;
+    obbCenter -= m_yAxis * m_dim.y * 0.5f;
     // ajdust with local origin of the quads
-    obbCenter += m_perpAxis * m_quadLocalOrigin.y + m_perpAxis * m_dim.y;
-    obbCenter += t * m_quadLocalOrigin.x;
+    obbCenter += m_yAxis * m_quadLocalOrigin.y + m_yAxis * m_dim.y;
+    obbCenter += m_xAxis * m_quadLocalOrigin.x;
 
     m_obb = OBB(obbCenter.x, obbCenter.y, m_transform.state.rotation, m_dim.x + m_options.buffer, m_dim.y + m_options.buffer);
     m_aabb = m_obb.getExtent();
@@ -73,7 +70,7 @@ void TextLabel::align(glm::vec2& _screenPosition, const glm::vec2& _ap1, const g
             // move back by half the length (so that text will be drawn centered)
             glm::vec2 direction = glm::normalize(_ap1 - _ap2);
             _screenPosition += direction * m_dim.x * 0.5f;
-            _screenPosition += m_perpAxis * (m_dim.y * 0.5f + 2.f * m_metrics.descender);
+            _screenPosition += m_yAxis * (m_dim.y * 0.5f + 2.f * m_metrics.descender);
             break;
         }
     }
