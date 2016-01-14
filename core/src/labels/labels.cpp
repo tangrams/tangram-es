@@ -95,15 +95,15 @@ void Labels::applyPriorities(const std::set<std::pair<Label*, Label*>> _occlusio
         if (!pair.first->occludedLastFrame() || !pair.second->occludedLastFrame()) {
             // check first is the label belongs to a proxy tile
             if (pair.first->isProxy() && !pair.second->isProxy()) {
-                pair.first->setOcclusion(true);
+                pair.first->occlude(Label::OcclusionType::collision);
             } else if (!pair.first->isProxy() && pair.second->isProxy()) {
-                pair.second->setOcclusion(true);
+                pair.second->occlude(Label::OcclusionType::collision);
             } else {
                 // lower numeric priority means higher priority
                 if (pair.first->options().priority < pair.second->options().priority) {
-                    pair.second->setOcclusion(true);
+                    pair.second->occlude(Label::OcclusionType::collision);
                 } else {
-                    pair.first->setOcclusion(true);
+                    pair.first->occlude(Label::OcclusionType::collision);
                 }
             }
         }
@@ -204,7 +204,7 @@ void Labels::checkRepeatGroups(std::vector<TextLabel*>& _visibleSet) const {
         for (const GroupElement& ge : group) {
             float d2 = distance2(ge.position, element.position);
             if (d2 < threshold2) {
-                textLabel->setOcclusion(true);
+                textLabel->occlude(Label::OcclusionType::repeat_group);
                 add = false;
                 break;
             }
@@ -256,28 +256,30 @@ void Labels::update(const View& _view, float _dt,
 
     /// Update label meshes
 
-    std::vector<TextLabel*> visibleSet;
+    std::vector<TextLabel*> repeatGroupSet;
 
     for (auto label : m_labels) {
         label->occlusionSolved();
         label->pushTransform();
 
         if (label->canOcclude()) {
-            if (!label->visibleState()) { continue; }
+            if (!label->visibleState() && label->occlusionType() == Label::OcclusionType::collision) {
+                continue;
+            }
             TextLabel* textLabel = dynamic_cast<TextLabel*>(label);
             if (!textLabel) { continue; }
-            visibleSet.push_back(textLabel);
+            repeatGroupSet.push_back(textLabel);
         }
     }
 
     // Ensure the labels are always treated in the same order in the visible set
-    std::sort(visibleSet.begin(), visibleSet.end(), [](TextLabel* _a, TextLabel* _b) {
+    std::sort(repeatGroupSet.begin(), repeatGroupSet.end(), [](TextLabel* _a, TextLabel* _b) {
         return glm::length2(_a->transform().modelPosition1) < glm::length2(_b->transform().modelPosition1);
     });
 
     /// Apply repeat groups
 
-    checkRepeatGroups(visibleSet);
+    checkRepeatGroups(repeatGroupSet);
 
     // Request for render if labels are in fading in/out states
     if (m_needUpdate) {

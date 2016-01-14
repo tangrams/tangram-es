@@ -118,6 +118,11 @@ public:
         size_t paramHash;
     };
 
+    enum OcclusionType {
+        collision,
+        repeat_group
+    };
+
     Label(Transform _transform, glm::vec2 _size, Type _type, LabelMesh& _mesh, Range _vertexRange,
             Options _options);
 
@@ -137,8 +142,8 @@ public:
 
     virtual void updateBBoxes(float _zoomFract) = 0;
 
-    /* Sets the occlusion */
-    void setOcclusion(bool _occlusion);
+    /* Occlude the label */
+    void occlude(OcclusionType _type);
 
     /* Checks whether the label is in a state where it can occlusion */
     bool canOcclude();
@@ -170,6 +175,8 @@ public:
     bool occludedLastFrame() const { return m_occludedLastFrame; }
     virtual glm::vec2 center() const;
 
+    OcclusionType occlusionType() const { return m_occlusionType; }
+
 private:
 
     bool offViewport(const glm::vec2& _screenSize);
@@ -193,6 +200,8 @@ private:
     bool m_updateMeshVisibility;
     // whether this label should skip transitions to move to first visible state
     bool m_skipTransitions;
+    // How occlusion have been triggered
+    OcclusionType m_occlusionType;
 
 protected:
 
