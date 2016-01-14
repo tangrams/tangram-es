@@ -104,3 +104,5 @@ bool startUrlRequest(const std::string& _url, UrlCallback _callback) {
 
 void cancelUrlRequest(const std::string& _url) {
 }
+
+void initGLExtensions() {}

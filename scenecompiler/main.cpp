@@ -27,8 +27,8 @@ bool optimizeShader(glslopt_ctx* ctx, std::string& source, bool vertexShader) {
         source = glslopt_get_output(shader);
         ok = true;
     } else {
-        logMsg("Error: Shader optimzation failed %s / %d\n",
-               glslopt_get_log(shader), type);
+        LOGE("Error: Shader optimzation failed %s / %d\n",
+             glslopt_get_log(shader), type);
     }
     glslopt_shader_delete (shader);
 
@@ -37,7 +37,7 @@ bool optimizeShader(glslopt_ctx* ctx, std::string& source, bool vertexShader) {
 
 int main(int argc, char *argv[]) {
     if (argc < 2) {
-        logMsg("Missing filename argument\n");
+        LOGE("Missing filename argument\n");
         return 1;
     }
     glslopt_target languageTarget = kGlslTargetOpenGL;
@@ -55,7 +55,7 @@ int main(int argc, char *argv[]) {
 
     glslopt_ctx* ctx = glslopt_initialize(languageTarget);
 
-    logMsg("\n ----------- Process: %s ------------- \n", argv[1]);
+    LOG("\n ----------- Process: %s -------------", argv[1]);
 
     std::string fileName = argv[1];
 
@@ -80,7 +80,7 @@ int main(int argc, char *argv[]) {
 
     SceneLoader::loadScene(sceneNode, scene);
 
-    logMsg("got styles: %d\n", scene.styles().size());
+    LOG("got styles: %d", scene.styles().size());
 
     YAML::Node stylesNode = sceneNode["styles"];
     YAML::Node newStyles;
@@ -95,7 +95,7 @@ int main(int argc, char *argv[]) {
             continue;
         }
 
-        logMsg("compile shader: %s\n", style->getName().c_str());
+        LOG("compile shader: %s", style->getName().c_str());
 
         auto& shader = style->getShaderProgram();
         std::string vertSrc;
@@ -104,10 +104,10 @@ int main(int argc, char *argv[]) {
         shader->getSource(vertSrc, fragSrc);
 
         if (!optimizeShader(ctx, vertSrc, true)) {
-            logMsg("vert:\n%s\n", vertSrc.c_str());
+            LOG("vert:\n%s", vertSrc.c_str());
         }
         if (!optimizeShader(ctx, fragSrc, false)) {
-            logMsg("frag:\n%s\n", fragSrc.c_str());
+            LOG("frag:\n%s", fragSrc.c_str());
         }
 
         YAML::Node styleNode = stylesNode[style->getName()];
@@ -130,7 +130,7 @@ int main(int argc, char *argv[]) {
     std::ofstream fout(prefix + fileName.substr(fileName.find_last_of("/")+1));
     fout << sceneNode;
 
-    logMsg("\n ----------- Testing: %s ------------- \n", argv[1]);
+    LOG("\n ----------- Testing: %s -------------", argv[1]);
 
     StyleContext styleContext;
     styleContext.initFunctions(scene);
@@ -147,15 +147,23 @@ int main(int argc, char *argv[]) {
 }
 
 void testFilter(const Filter& filter, StyleContext& ctx, int level) {
-    if (filter.type == FilterType::function) {
+    if (filter.data.is<Filter::Function>()) {
         auto id = filter.data.get<Filter::Function>().id;
-        logMsg("%*s filter function: %d\n", level+2, "", id);
+        LOG("%*s filter function: %d", level+2, "", id);
         ctx.evalFilter(id);
     }
-    if (filter.type == FilterType::all ||
-        filter.type == FilterType::none ||
-        filter.type == FilterType::any) {
-        for (const auto& filt : filter.data.get<Filter::Operator>().operands) {
+    if (filter.data.is<Filter::OperatorAll>()) {
+        for (const auto& filt : filter.data.get<Filter::OperatorAll>().operands) {
+            testFilter(filt, ctx, level + 2);
+        }
+    }
+    if (filter.data.is<Filter::OperatorAny>()) {
+        for (const auto& filt : filter.data.get<Filter::OperatorAny>().operands) {
+            testFilter(filt, ctx, level + 2);
+        }
+    }
+    if (filter.data.is<Filter::OperatorNone>()) {
+        for (const auto& filt : filter.data.get<Filter::OperatorNone>().operands) {
             testFilter(filt, ctx, level + 2);
         }
     }
@@ -163,7 +171,7 @@ void testFilter(const Filter& filter, StyleContext& ctx, int level) {
 
 void testLayer(const SceneLayer& layer, StyleContext& ctx, int level) {
 
-    logMsg("%*s <layer: %s>\n", level, "", layer.name().c_str());
+    LOG("%*s <layer: %s>", level, "", layer.name().c_str());
 
     testFilter(layer.filter(), ctx, level);
 
@@ -171,8 +179,8 @@ void testLayer(const SceneLayer& layer, StyleContext& ctx, int level) {
         for (auto& styleParam : rule.parameters) {
             if (styleParam.function >= 0) {
 
-                logMsg("%*s function: %s - %s\n", level+4, "", rule.name.c_str(),
-                       StyleParam::getKeyName(styleParam.key).c_str());
+                LOG("%*s function: %s - %s", level+4, "", rule.name.c_str(),
+                       StyleParam::keyName(styleParam.key).c_str());
 
                 StyleParam::Value val;
                 ctx.evalStyle(styleParam.function, styleParam.key, val);

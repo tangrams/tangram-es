@@ -11,6 +11,7 @@ include_directories(
 add_executable( scenecompiler
   main.cpp
   platform_mock.cpp
+  gl_mock.cpp
 )
 
 target_link_libraries( scenecompiler
