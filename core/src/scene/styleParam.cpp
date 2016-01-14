@@ -433,9 +433,7 @@ bool StyleParam::parseFontSize(const std::string& _str, float& _pxSize) {
     size_t end = _str.length() - 1;
 
     if (_str.compare(index, end, "px") == 0) {
-        // px may not be fractional value here
-        if (_str.find('.') != std::string::npos)
-            return false;
+        return true;
     } else if (_str.compare(index, end, "em") == 0) {
         _pxSize *= 16.f;
     } else if (_str.compare(index, end, "pt") == 0) {
