@@ -16,8 +16,6 @@ using namespace mapbox::util;
 namespace Tangram {
 
 const double extent = 4096;
-const uint8_t maxZoom = (uint8_t)View::s_maxZoom;
-const uint8_t indexMaxZoom = maxZoom;
 const uint32_t indexMaxPoints = 100000;
 double tolerance = 1E-8;
 
@@ -30,8 +28,8 @@ Point transformPoint(geojsonvt::TilePoint pt) {
     return { pt.x / extent, 1. - pt.y / extent, 0 };
 }
 
-ClientGeoJsonSource::ClientGeoJsonSource(const std::string& _name, const std::string& _url)
-    : DataSource(_name, _url) {
+ClientGeoJsonSource::ClientGeoJsonSource(const std::string& _name, const std::string& _url, int32_t _maxZoom)
+    : DataSource(_name, _url, _maxZoom) {
 
     if (!_url.empty()) {
         // Load from file
@@ -47,7 +45,7 @@ void ClientGeoJsonSource::addData(const std::string& _data) {
     m_features = geojsonvt::GeoJSONVT::convertFeatures(_data);
 
     std::lock_guard<std::mutex> lock(m_mutexStore);
-    m_store = std::make_unique<GeoJSONVT>(m_features, maxZoom, indexMaxZoom, indexMaxPoints, tolerance);
+    m_store = std::make_unique<GeoJSONVT>(m_features, m_maxZoom, m_maxZoom, indexMaxPoints, tolerance);
 
 }
 
@@ -80,7 +78,7 @@ void ClientGeoJsonSource::addPoint(const Properties& _tags, LngLat _point) {
     m_features.push_back(std::move(feature));
 
     std::lock_guard<std::mutex> lock(m_mutexStore);
-    m_store = std::make_unique<GeoJSONVT>(m_features, maxZoom, indexMaxZoom, indexMaxPoints, tolerance);
+    m_store = std::make_unique<GeoJSONVT>(m_features, m_maxZoom, m_maxZoom, indexMaxPoints, tolerance);
     m_generation++;
 }
 
@@ -96,7 +94,7 @@ void ClientGeoJsonSource::addLine(const Properties& _tags, const Coordinates& _l
     m_features.push_back(std::move(feature));
 
     std::lock_guard<std::mutex> lock(m_mutexStore);
-    m_store = std::make_unique<GeoJSONVT>(m_features, maxZoom, indexMaxZoom, indexMaxPoints, tolerance);
+    m_store = std::make_unique<GeoJSONVT>(m_features, m_maxZoom, m_maxZoom, indexMaxPoints, tolerance);
     m_generation++;
 }
 
@@ -115,7 +113,7 @@ void ClientGeoJsonSource::addPoly(const Properties& _tags, const std::vector<Coo
     m_features.push_back(std::move(feature));
 
     std::lock_guard<std::mutex> lock(m_mutexStore);
-    m_store = std::make_unique<GeoJSONVT>(m_features, maxZoom, indexMaxZoom, indexMaxPoints, tolerance);
+    m_store = std::make_unique<GeoJSONVT>(m_features, m_maxZoom, m_maxZoom, indexMaxPoints, tolerance);
     m_generation++;
 }
 

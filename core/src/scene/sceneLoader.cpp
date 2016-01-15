@@ -806,6 +806,11 @@ void SceneLoader::loadSource(const std::pair<Node, Node>& src, Scene& _scene) {
     std::string name = src.first.as<std::string>();
     std::string type = source["type"].as<std::string>();
     std::string url = source["url"].as<std::string>();
+    int32_t maxZoom = std::numeric_limits<int32_t>::max();
+
+    if (auto maxZoomNode = source["max_zoom"]) {
+        maxZoom = maxZoomNode.as<int32_t>(maxZoom);
+    }
 
     // distinguish tiled and non-tiled sources by url
     bool tiled = url.find("{x}") != std::string::npos &&
@@ -816,14 +821,14 @@ void SceneLoader::loadSource(const std::pair<Node, Node>& src, Scene& _scene) {
 
     if (type == "GeoJSON") {
         if (tiled) {
-            sourcePtr = std::shared_ptr<DataSource>(new GeoJsonSource(name, url));
+            sourcePtr = std::shared_ptr<DataSource>(new GeoJsonSource(name, url, maxZoom));
         } else {
-            sourcePtr = std::shared_ptr<DataSource>(new ClientGeoJsonSource(name, url));
+            sourcePtr = std::shared_ptr<DataSource>(new ClientGeoJsonSource(name, url, maxZoom));
         }
     } else if (type == "TopoJSON") {
         LOGW("TopoJSON data sources not yet implemented"); // TODO
     } else if (type == "MVT") {
-        sourcePtr = std::shared_ptr<DataSource>(new MVTSource(name, url));
+        sourcePtr = std::shared_ptr<DataSource>(new MVTSource(name, url, maxZoom));
     } else {
         LOGW("Unrecognized data source type '%s', skipping", type.c_str());
     }
