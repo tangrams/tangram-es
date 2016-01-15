@@ -25,7 +25,7 @@ public:
      * each of '{x}', '{y}', and '{z}' which will be replaced by the x index, y index,
      * and zoom level of tiles to produce their URL.
      */
-    DataSource(const std::string& _name, const std::string& _urlTemplate);
+    DataSource(const std::string& _name, const std::string& _urlTemplate, int32_t _maxZoom = 20);
 
     virtual ~DataSource();
 
@@ -82,6 +82,9 @@ protected:
 
     // Name used to identify this source in the style sheet
     std::string m_name;
+
+    // Maximum zoom for which tiles will be requested
+    int32_t m_maxZoom;
 
     // Unique id for DataSource
     int32_t m_id;
