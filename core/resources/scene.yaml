@@ -64,6 +64,7 @@ sources:
     osm:
         type: MVT
         url:  https://vector.mapzen.com/osm/all/{z}/{x}/{y}.mvt
+        max_zoom: 16
 
 layers:
     touch:
@@ -296,7 +297,7 @@ layers:
 
     buildings:
         data: { source: osm }
-        filter: { $zoom: { min: 14 } }
+        filter: { $zoom: { min: 14, max: 17 } }
         draw:
             polygons:
                 style: heightglow
