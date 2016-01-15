@@ -32,9 +32,6 @@ public:
     FontID addFont(const std::string& _family, const std::string& _weight,
                    const std::string& _style, bool _tryFallback = true);
 
-    /* sets the current font for a size in pixels */
-    void setFont(const std::string& _key, int size);
-
     FontID getFontID(const std::string& _key);
 
     void clearState();

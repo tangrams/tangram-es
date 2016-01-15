@@ -108,17 +108,6 @@ FontContext::FontMetrics FontContext::getMetrics() {
     return metrics;
 }
 
-void FontContext::setFont(const std::string& _key, int size) {
-    FontID id = getFontID(_key);
-
-    if (id >= 0) {
-        fonsSetSize(m_fsContext, size);
-        fonsSetFont(m_fsContext, id);
-    } else {
-        LOGW("Could not find font %s", _key.c_str());
-    }
-}
-
 FontID FontContext::getFontID(const std::string& _key) {
     auto it = m_fonts.find(_key);
 

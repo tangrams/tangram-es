@@ -418,7 +418,7 @@ layers:
                     family: sans-serif
                     weight: 400
                     style: normal
-                    size: 15px
+                    size: 15.5px
                     fill: black
         continents:
             filter: { kind: continent }
