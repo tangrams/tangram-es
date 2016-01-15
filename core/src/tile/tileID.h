@@ -17,9 +17,9 @@ struct TileID {
 
     int32_t x; // Index from left edge of projection space
     int32_t y; // Index from top edge of projection space
-    int32_t z; // Data zoom
-    int32_t s; // Styling zoom
-    int32_t wrap;
+    int8_t  z; // Data zoom
+    int8_t  s; // Styling zoom
+    int16_t wrap;
 
     TileID(int32_t _x, int32_t _y, int32_t _z, int32_t _s, int32_t _wrap) : x(_x), y(_y), z(_z), s(_s), wrap(_wrap) {}
 
