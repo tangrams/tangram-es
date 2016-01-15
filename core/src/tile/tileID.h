@@ -21,7 +21,9 @@ struct TileID {
     int32_t s; // Styling zoom
     int32_t wrap;
 
-    TileID(int32_t _x, int32_t _y, int32_t _z, int32_t _s, int32_t _wrap = 0) : x(_x), y(_y), z(_z), s(_s), wrap(_wrap) {}
+    TileID(int32_t _x, int32_t _y, int32_t _z, int32_t _s, int32_t _wrap) : x(_x), y(_y), z(_z), s(_s), wrap(_wrap) {}
+
+    TileID(int32_t _x, int32_t _y, int32_t _z) : TileID(_x, _y, _z, _z, 0) {}
 
     TileID(const TileID& _rhs) = default;
 
