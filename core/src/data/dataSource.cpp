@@ -114,6 +114,20 @@ void DataSource::clearData() {
     m_generation++;
 }
 
+TileID DataSource::remapTileID(TileID _id) const {
+
+    if (_id.z <= m_maxZoom) {
+        return _id;
+    }
+
+    int32_t over = _id.z - m_maxZoom;
+    int32_t x = _id.x >> over;
+    int32_t y = _id.y >> over;
+
+    return TileID(x, y, m_maxZoom, _id.z, _id.wrap);
+
+}
+
 void DataSource::constructURL(const TileID& _tileCoord, std::string& _url) const {
     _url.assign(m_urlTemplate);
     try {
