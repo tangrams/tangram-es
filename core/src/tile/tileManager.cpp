@@ -156,7 +156,11 @@ void TileManager::updateTileSet(TileSet& _tileSet) {
     int maxZoom = m_view->getZoom() + 2;
 
     auto& tiles = _tileSet.tiles;
-    auto& visibleTiles = m_view->getVisibleTiles();
+
+    std::set<TileID> visibleTiles;
+    for (auto& t : m_view->getVisibleTiles()) {
+        visibleTiles.emplace(_tileSet.source->remapTileID(t));
+    }
 
     if (m_tileSetChanged) {
         for (auto& it : tiles) {
@@ -319,14 +323,14 @@ void TileManager::enqueueTask(TileSet& _tileSet, const TileID& _tileID,
                                    return distance < std::get<0>(other);
                                });
 
-    m_loadTasks.insert(it, std::make_tuple(distance, &_tileSet, &_tileID));
+    m_loadTasks.insert(it, std::make_tuple(distance, &_tileSet, _tileID));
 }
 
 void TileManager::loadTiles() {
 
     for (auto& loadTask : m_loadTasks) {
 
-        auto tileId = *std::get<2>(loadTask);
+        auto tileId = std::get<2>(loadTask);
         auto& tileSet = *std::get<1>(loadTask);
         auto tileIt = tileSet.tiles.find(tileId);
         auto& entry = tileIt->second;

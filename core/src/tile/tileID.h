@@ -1,5 +1,6 @@
 #pragma once
 
+#include <cstdint>
 #include <string>
 
 /* An immutable identifier for a map tile
@@ -14,23 +15,23 @@ namespace Tangram {
 
 struct TileID {
 
-    const int x;
-    const int y;
-    const int z;
-    const int wrap;
+    int32_t x; // Index from left edge of projection space
+    int32_t y; // Index from top edge of projection space
+    int32_t z; // Data zoom
+    int32_t s; // Styling zoom
+    int32_t wrap;
 
-    TileID(int _x, int _y, int _z, int _wrap = 0) : x(_x), y(_y), z(_z), wrap(_wrap) {};
-    TileID(const TileID& _rhs): x(_rhs.x), y(_rhs.y), z(_rhs.z), wrap(_rhs.wrap) {};
+    TileID(int32_t _x, int32_t _y, int32_t _z, int32_t _s, int32_t _wrap = 0) : x(_x), y(_y), z(_z), s(_s), wrap(_wrap) {}
+
+    TileID(const TileID& _rhs) = default;
 
     bool operator< (const TileID& _rhs) const {
-        return z > _rhs.z || (z == _rhs.z && (x < _rhs.x || (x == _rhs.x && (y < _rhs.y || (y == _rhs.y && wrap < _rhs.wrap)))));
+        return s > _rhs.s || (s == _rhs.s && (z > _rhs.z || (z == _rhs.z && (x < _rhs.x || (x == _rhs.x && (y < _rhs.y || (y == _rhs.y && wrap < _rhs.wrap)))))));
     }
     bool operator> (const TileID& _rhs) const { return _rhs < const_cast<TileID&>(*this); }
     bool operator<=(const TileID& _rhs) const { return !(*this > _rhs); }
     bool operator>=(const TileID& _rhs) const { return !(*this < _rhs); }
-    bool operator==(const TileID& _rhs) const { return x == _rhs.x && y == _rhs.y && z == _rhs.z && wrap == _rhs.wrap; }
-
-    TileID& operator=(const TileID& _rhs) = delete;
+    bool operator==(const TileID& _rhs) const { return x == _rhs.x && y == _rhs.y && z == _rhs.z && s == _rhs.s && wrap == _rhs.wrap; }
 
     bool isValid() const {
         int max = 1 << z;
@@ -42,13 +43,13 @@ struct TileID {
     }
 
     TileID getParent() const {
-        return TileID(x >> 1, y >> 1, z-1, wrap);
+        return TileID(x >> 1, y >> 1, z-1, z-1, wrap);
     }
 
     TileID getChild(int _index) const {
 
         if (_index > 3 || _index < 0) {
-            return TileID(-1, -1, -1, -1);
+            return TileID(-1, -1, -1, -1, -1);
         }
 
         int i = _index / 2;
@@ -58,7 +59,7 @@ struct TileID {
         // i:      0, 0, 1, 1
         // j:      0, 1, 0, 1
 
-        return TileID((x<<1)+i, (y<<1)+j, z+1, wrap);
+        return TileID((x<<1)+i, (y<<1)+j, z+1, z+1, wrap);
     }
 
     std::string toString() const {
@@ -67,6 +68,6 @@ struct TileID {
 
 };
 
-static TileID NOT_A_TILE(-1, -1, -1, -1);
+static const TileID NOT_A_TILE(-1, -1, -1, -1, -1);
 
 }
