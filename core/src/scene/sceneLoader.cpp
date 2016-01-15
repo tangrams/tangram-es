@@ -1375,7 +1375,7 @@ void SceneLoader::loadLayer(const std::pair<Node, Node>& layer, Scene& scene) {
 
     auto sublayer = loadSublayer(layer.second, name, scene);
 
-    scene.layers().push_back({ sublayer, source, collections });
+    scene.layers()->push_back({ sublayer, source, collections });
 }
 
 void SceneLoader::loadBackground(Node background, Scene& scene) {

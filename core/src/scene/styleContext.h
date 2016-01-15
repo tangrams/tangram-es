@@ -2,19 +2,23 @@
 
 #include "scene/styleParam.h"
 #include "util/fastmap.h"
+#include "util/mapProjection.h"
 
 #include <string>
 #include <functional>
 #include <memory>
+#include <array>
 
 struct duk_hthread;
 typedef struct duk_hthread duk_context;
 
 namespace Tangram {
 
+class DataLayer;
 class Scene;
 struct Feature;
 struct StyleParam;
+class StyleBuilder;
 
 enum class StyleParamKey : uint8_t;
 enum class FilterGlobal : uint8_t;
@@ -37,7 +41,7 @@ public:
     /*
      * Set global for currently processed Tile
      */
-    void setGlobalZoom(float _zoom);
+    void setGlobalZoom(int _zoom);
 
     /* Called from Filter::eval */
     float getGlobalZoom() const { return m_globalZoom; }
@@ -53,7 +57,7 @@ public:
     /*
      * Setup filter and style functions from @_scene
      */
-    void initFunctions(const Scene& _scene);
+    void setScene(const Scene& _scene);
 
     /*
      * Unset Feature handle
@@ -68,6 +72,14 @@ public:
     void setGlobal(const std::string& _key, const Value& _value);
     const Value& getGlobal(const std::string& _key) const;
 
+    StyleBuilder* getStyleBuilder(const std::string& _name);
+
+    const auto& styleBuilders() { return m_styleBuilder; }
+
+    const auto& sceneLayers() const { return *m_sceneLayers; };
+
+    const auto& mapProjection() const { return m_mapProjection; };
+
 private:
     static int jsGetProperty(duk_context *_ctx);
     static int jsHasProperty(duk_context *_ctx);
@@ -78,11 +90,18 @@ private:
 
     const Feature* m_feature = nullptr;
 
-    fastmap<FilterGlobal, Value> m_globals;
+    std::array<Value, 4> m_globals;
 
     int32_t m_sceneId = -1;
 
-    float m_globalZoom = -1;
+    double m_globalZoom = -1;
+    double m_globalGeom = -1;
+
+    fastmap<std::string, std::unique_ptr<StyleBuilder>> m_styleBuilder;
+
+    std::shared_ptr<std::vector<DataLayer>> m_sceneLayers;
+
+    const MapProjection* m_mapProjection;
 };
 
 }

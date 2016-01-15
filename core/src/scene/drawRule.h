@@ -89,8 +89,7 @@ struct DrawRuleMergeSet {
     /* Determine and apply DrawRules for a @_feature and add
      * the result to @_tile
      */
-    void apply(const Feature& _feature, const Scene& _scene,
-               const SceneLayer& _sceneLayer,
+    void apply(const Feature& _feature, const SceneLayer& _sceneLayer,
                StyleContext& _ctx, Tile& _tile);
 
     // internal

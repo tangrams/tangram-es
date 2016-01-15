@@ -79,8 +79,8 @@ void TileManager::setScene(std::shared_ptr<Scene> _scene) {
         }
     }
 
+    m_workers->setScene(*_scene);
     m_scene = _scene;
-    m_workers->setScene(_scene);
 }
 
 void TileManager::addDataSource(std::shared_ptr<DataSource> _dataSource) {

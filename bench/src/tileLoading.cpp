@@ -46,7 +46,7 @@ struct TestContext {
         }
         scene = std::make_unique<Scene>();
         SceneLoader::loadScene(sceneNode, *scene);
-        styleContext.initFunctions(*scene);
+        styleContext.setScene(*scene);
         styleContext.setGlobalZoom(0);
 
         source = scene->dataSources()[0];
@@ -108,7 +108,7 @@ public:
         }
         scene = std::make_unique<Scene>();
         SceneLoader::loadScene(sceneNode, *scene);
-        styleContext.initFunctions(*scene);
+        styleContext.setScene(*scene);
         styleContext.setGlobalZoom(10);
 
         const char* path = "tile.mvt";
@@ -152,7 +152,7 @@ BENCHMARK_DEFINE_F(TileLoadingFixture, BuildTest)(benchmark::State& st) {
 
     while (st.KeepRunning()) {
         Tile tile({0,0,0}, s_projection);
-        tile.build(styleContext, *scene, *tileData, *source);
+        tile.build(styleContext, *tileData, *source);
     }
 }
 
