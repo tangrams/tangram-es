@@ -1,6 +1,7 @@
 #include "pbfParser.h"
 
 #include "data/propertyItem.h"
+#include "data/dataSource.h"
 #include "tile/tile.h"
 #include "platform.h"
 #include "util/geom.h"
@@ -66,7 +67,7 @@ void PbfParser::extractGeometry(ParserContext& _ctx, protobuf::message& _geomIn)
     }
 }
 
-void PbfParser::extractFeature(ParserContext& _ctx, protobuf::message& _featureIn, Feature& _out) {
+void PbfParser::extractFeature(ParserContext& _ctx, protobuf::message& _featureIn, TileDataSink& _sink) {
 
     //Iterate through this feature
     protobuf::message geometry; // By default data_ and end_ are nullptr
@@ -77,6 +78,7 @@ void PbfParser::extractFeature(ParserContext& _ctx, protobuf::message& _featureI
     _ctx.featureTags.clear();
     _ctx.featureTags.assign(_ctx.keys.size(), -1);
 
+    Feature& feature = _ctx.feature;
 
     while(_featureIn.next()) {
         switch(_featureIn.tag) {
@@ -117,7 +119,7 @@ void PbfParser::extractFeature(ParserContext& _ctx, protobuf::message& _featureI
             }
             // Feature Type
             case 3:
-                _out.geometryType = (GeometryType)_featureIn.varint();
+                feature.geometryType = (GeometryType)_featureIn.varint();
                 break;
             // Actual geometry data
             case 4:
@@ -130,71 +132,81 @@ void PbfParser::extractFeature(ParserContext& _ctx, protobuf::message& _featureI
                 break;
         }
     }
+    if (feature.geometryType == GeometryType::unknown) {
+        return;
+    }
 
-    std::vector<Properties::Item> properties;
-    properties.reserve(_ctx.featureTags.size());
+    std::vector<Properties::Item>& properties = feature.props.items();
+    properties.resize(_ctx.featureTags.size());
+
+    size_t numTags = 0;
 
     for (int tagKey : _ctx.orderedKeys) {
         int tagValue = _ctx.featureTags[tagKey];
         if (tagValue >= 0) {
-            properties.emplace_back(_ctx.keys[tagKey], _ctx.values[tagValue]);
+            properties[numTags++] = PropertyItem{_ctx.keys[tagKey], _ctx.values[tagValue]};
         }
     }
-    _out.props.setSorted(std::move(properties));
+    // feature.props.setSorted(std::move(properties));
 
-    switch(_out.geometryType) {
-        case GeometryType::points:
-            _out.points.insert(_out.points.begin(),
+    if (!_sink.matchFeature(feature)) {
+        return;
+    }
+
+    switch(feature.geometryType) {
+    case GeometryType::points: {
+            feature.points.clear();
+            feature.points.insert(feature.points.begin(),
                                _ctx.coordinates.begin(),
                                _ctx.coordinates.end());
             break;
+    }
+    case GeometryType::lines:
+    case GeometryType::polygons: {
+        int offset = 0;
+        feature.lines.clear();
+        feature.polygons.clear();
 
-        case GeometryType::lines:
-        case GeometryType::polygons:
-        {
-            int offset = 0;
+        for (int length : _ctx.numCoordinates) {
+            if (length == 0) { continue; }
 
-            for (int length : _ctx.numCoordinates) {
-                if (length == 0) { continue; }
+            Line line;
+            line.reserve(length);
 
-                Line line;
-                line.reserve(length);
+            line.insert(line.begin(),
+                        _ctx.coordinates.begin() + offset,
+                        _ctx.coordinates.begin() + offset + length);
 
-                line.insert(line.begin(),
-                            _ctx.coordinates.begin() + offset,
-                            _ctx.coordinates.begin() + offset + length);
+            offset += length;
 
-                offset += length;
-
-                if (_out.geometryType == GeometryType::lines) {
-                    _out.lines.emplace_back(std::move(line));
+            if (feature.geometryType == GeometryType::lines) {
+                feature.lines.emplace_back(std::move(line));
+            } else {
+                // Polygons are in a flat list of rings, with ccw rings indicating
+                // the beginning of a new polygon
+                if (feature.polygons.empty()) {
+                    feature.polygons.emplace_back();
                 } else {
-                    // Polygons are in a flat list of rings, with ccw rings indicating
-                    // the beginning of a new polygon
-                    if (_out.polygons.empty()) {
-                        _out.polygons.emplace_back();
-                    } else {
-                        double area = signedArea(line);
-                        if (area > 0) {
-                            _out.polygons.emplace_back();
-                        } else if (area == 0){
-                            continue;
-                        }
+                    double area = signedArea(line);
+                    if (area > 0) {
+                        feature.polygons.emplace_back();
+                    } else if (area == 0){
+                        continue;
                     }
-                    _out.polygons.back().push_back(std::move(line));
                 }
+                feature.polygons.back().push_back(std::move(line));
             }
-            break;
         }
-        case GeometryType::unknown:
-            break;
-        default:
-            break;
+        break;
+    }
+    default:
+        break;
     }
 
+    _sink.addFeature(feature);
 }
 
-void PbfParser::extractLayer(ParserContext& _ctx, protobuf::message& _layerIn, Layer& _out) {
+void PbfParser::extractLayer(ParserContext& _ctx, protobuf::message& _layerIn, TileDataSink& _sink) {
 
     _ctx.keys.clear();
     _ctx.values.clear();
@@ -274,10 +286,11 @@ void PbfParser::extractLayer(ParserContext& _ctx, protobuf::message& _layerIn, L
                   return Properties::keyComparator(_ctx.keys[a], _ctx.keys[b]);
               });
 
-    _out.features.reserve(_ctx.featureMsgs.size());
+    // _out.features.reserve(_ctx.featureMsgs.size());
     for(auto& featureMsg : _ctx.featureMsgs) {
-        _out.features.emplace_back(_ctx.sourceId);
-        extractFeature(_ctx, featureMsg, _out.features.back());
+        // _out.features.emplace_back(_ctx.sourceId);
+        // extractFeature(_ctx, featureMsg, _out.features.back());
+        extractFeature(_ctx, featureMsg, _sink);
     }
 }
 

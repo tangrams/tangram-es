@@ -19,8 +19,8 @@ GeoJsonSource::GeoJsonSource(const std::string& _name, const std::string& _urlTe
     DataSource(_name, _urlTemplate, _maxZoom) {
 }
 
-std::shared_ptr<TileData> GeoJsonSource::parse(const TileTask& _task,
-                                               const MapProjection& _projection) const {
+bool GeoJsonSource::process(const TileTask& _task, const MapProjection& _projection,
+                            TileDataSink& _sink) const {
 
     auto& task = static_cast<const DownloadTileTask&>(_task);
 
@@ -39,8 +39,8 @@ std::shared_ptr<TileData> GeoJsonSource::parse(const TileTask& _task,
         size_t offset = doc.GetErrorOffset();
         const char* error = rapidjson::GetParseError_En(doc.GetParseError());
         LOGE("Json parsing failed on tile [%s]: %s (%u)", task.tileId().toString().c_str(), error, offset);
-        return tileData;
-
+        // return tileData;
+        return true;
     }
 
     BoundingBox tileBounds(_projection.TileBounds(task.tileId()));
@@ -64,8 +64,8 @@ std::shared_ptr<TileData> GeoJsonSource::parse(const TileTask& _task,
 
     // Discard original JSON object and return TileData
 
-    return tileData;
-
+    // return tileData;
+    return true;
 }
 
 }

@@ -105,22 +105,21 @@ void TileWorker::run(Worker* instance) {
             continue;
         }
 
-        auto tileData = task->source().parse(*task, *builder->scene().mapProjection());
+        const clock_t begin = clock();
 
-        // const clock_t begin = clock();
+        builder->begin(task->tileId(), task->source());
 
-        if (tileData) {
-
-            auto&& tile = builder->build(task->tileId(), *tileData, task->source());
-
-            // Mark task as ready
-            task->setTile(std::move(tile));
-
-            // float loadTime = (float(clock() - begin) / CLOCKS_PER_SEC) * 1000;
-            // LOG("loadTime %s - %f", task->tile()->getID().toString().c_str(), loadTime);
-        } else {
+        if (!task->source().process(*task, *builder->scene().mapProjection(), *builder)) {
             task->cancel();
+            continue;
         }
+
+        auto&& tile = builder->build();
+
+        float loadTime = (float(clock() - begin) / CLOCKS_PER_SEC) * 1000;
+        LOG("loadTime %s - %f", tile->getID().toString().c_str(), loadTime);
+
+        task->setTile(std::move(tile));
 
         m_pendingTiles = true;
 
