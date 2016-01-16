@@ -7,3 +7,5 @@
 
 void processNetworkQueue();
 
+void finishUrlRequests();
+

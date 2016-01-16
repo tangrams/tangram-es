@@ -32,6 +32,7 @@ class UrlWorker {
         void reset();
         bool isAvailable() { return !bool(m_task); }
         bool hasTask(const std::string& _url);
+        void join();
 
         UrlWorker();
         ~UrlWorker();
