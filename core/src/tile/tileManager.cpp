@@ -472,7 +472,7 @@ void TileManager::updateProxyTiles(TileSet& _tileSet, const TileID& _tileID, Til
         return;
     }
     // Try children
-    if (m_view->s_maxZoom > _tileID.z) {
+    if (_tileSet.source->maxZoom() > _tileID.z) {
         for (int i = 0; i < 4; i++) {
             auto childID = _tileID.getChild(i, _tileSet.source->maxZoom());
             updateProxyTile(_tileSet, _tile, childID, static_cast<ProxyID>(1 << i));
