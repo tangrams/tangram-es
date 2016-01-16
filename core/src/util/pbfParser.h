@@ -10,6 +10,7 @@
 namespace Tangram {
 
 class Tile;
+struct TileDataSink;
 
 namespace PbfParser {
 
@@ -24,17 +25,19 @@ namespace PbfParser {
         std::vector<int> numCoordinates;
         // Map Key ID -> Tag values
         std::vector<int> featureTags;
+        std::vector<int> previousTags;
         // Key IDs sorted by Property key ordering
         std::vector<int> orderedKeys;
+        Feature feature;
 
         int tileExtent = 0;
     };
 
     void extractGeometry(ParserContext& _ctx, protobuf::message& _geomIn);
 
-    void extractFeature(ParserContext& _ctx, protobuf::message& _featureIn, Feature& _out);
+    void extractFeature(ParserContext& _ctx, protobuf::message& _featureIn, TileDataSink& _sink);
 
-    void extractLayer(ParserContext& _ctx, protobuf::message& _in, Layer& _out);
+    void extractLayer(ParserContext& _ctx, protobuf::message& _in, TileDataSink& _sink);
 
     enum pbfGeomCmd {
         moveTo = 1,
