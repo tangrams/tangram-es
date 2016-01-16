@@ -3,6 +3,7 @@
 #include "glm/mat4x4.hpp"
 #include "glm/vec2.hpp"
 #include "tileID.h"
+#include "util/fastmap.h"
 
 #include <map>
 #include <memory>
@@ -19,7 +20,6 @@ class TextBuffer;
 class VboMesh;
 class View;
 class StyleContext;
-struct TileData;
 
 /* Tile of vector map data
  *
@@ -67,8 +67,6 @@ public:
     /* Draws the geometry associated with the provided <Style> and view-projection matrix */
     void draw(const Style& _style, const View& _view);
 
-    void build(StyleContext& _ctx, const Scene& _scene, const TileData& _data, const DataSource& _source);
-
     void resetState();
 
     /* Get the sum in bytes of all <VboMesh>es */
@@ -107,7 +105,9 @@ private:
     // Distances from the global origin are too large to represent precisely in 32-bit floats, so we only apply the
     // relative translation from the view origin to the model origin immediately before drawing the tile.
 
-    std::vector<std::unique_ptr<VboMesh>> m_geometry; // Map of <Style>s and their associated <VboMesh>es
+    // Map of <Style>s and their associated <VboMesh>es
+    fastmap<std::string, std::unique_ptr<VboMesh>> m_geometry;
+    //std::vector<std::unique_ptr<VboMesh>> m_geometry;
 
     mutable size_t m_memoryUsage = 0;
 };
