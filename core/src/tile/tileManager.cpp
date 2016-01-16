@@ -157,9 +157,14 @@ void TileManager::updateTileSet(TileSet& _tileSet) {
 
     auto& tiles = _tileSet.tiles;
 
-    std::set<TileID> visibleTiles;
-    for (auto& t : m_view->getVisibleTiles()) {
-        visibleTiles.insert(t.withMaxSourceZoom(_tileSet.source->maxZoom()));
+    const auto* visibleTiles = &m_view->getVisibleTiles();
+
+    std::set<TileID> mappedTiles;
+    if (m_view->getZoom() > _tileSet.source->maxZoom()) {
+        for (const auto& id : *visibleTiles) {
+            mappedTiles.insert(id.withMaxSourceZoom(_tileSet.source->maxZoom()));
+        }
+        visibleTiles = &mappedTiles;
     }
 
     if (m_tileSetChanged) {
@@ -175,11 +180,11 @@ void TileManager::updateTileSet(TileSet& _tileSet) {
 
     // Loop over visibleTiles and add any needed tiles to tileSet
     auto curTilesIt = tiles.begin();
-    auto visTilesIt = visibleTiles.begin();
+    auto visTilesIt = visibleTiles->begin();
 
-    while (visTilesIt != visibleTiles.end() || curTilesIt != tiles.end()) {
+    while (visTilesIt != visibleTiles->end() || curTilesIt != tiles.end()) {
 
-        auto& visTileId = visTilesIt == visibleTiles.end()
+        auto& visTileId = visTilesIt == visibleTiles->end()
             ? NOT_A_TILE
             : *visTilesIt;
 
