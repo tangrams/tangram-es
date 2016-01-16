@@ -2,9 +2,7 @@
 
 #include "data/dataSource.h"
 #include "scene/scene.h"
-#include "scene/dataLayer.h"
 #include "scene/styleContext.h"
-#include "scene/drawRule.h"
 #include "style/style.h"
 #include "view/view.h"
 #include "tile/tileID.h"
@@ -45,7 +43,8 @@ void Tile::updateTileOrigin(const int _wrap) {
     BoundingBox bounds(m_projection->TileBounds(m_id));
 
     m_tileOrigin = { bounds.min.x, bounds.max.y }; // South-West corner
-    // negative y coordinate: to change from y down to y up (tile system has y down and gl context we use has y up).
+    // negative y coordinate: to change from y down to y up
+    // (tile system has y down and gl context we use has y up).
     m_tileOrigin.y *= -1.0;
 
     auto mapBound = m_projection->MapBounds();
@@ -55,54 +54,7 @@ void Tile::updateTileOrigin(const int _wrap) {
 }
 
 void Tile::initGeometry(uint32_t _size) {
-    m_geometry.resize(_size);
-}
-
-void Tile::build(StyleContext& _ctx, const Scene& _scene, const TileData& _data,
-                 const DataSource& _source) {
-
-    // Initialize m_geometry
-    initGeometry(_scene.styles().size());
-
-    const auto& layers = _scene.layers();
-
-    _ctx.setGlobalZoom(m_id.s);
-
-    for (auto& style : _scene.styles()) {
-        style->onBeginBuildTile(*this);
-    }
-
-    DrawRuleMergeSet ruleSet;
-
-    for (const auto& datalayer : layers) {
-
-        if (datalayer.source() != _source.name()) { continue; }
-
-        for (const auto& collection : _data.layers) {
-
-            if (!collection.name.empty()) {
-                const auto& dlc = datalayer.collections();
-                bool layerContainsCollection =
-                    std::find(dlc.begin(), dlc.end(), collection.name) != dlc.end();
-
-                if (!layerContainsCollection) { continue; }
-            }
-
-            for (const auto& feat : collection.features) {
-                ruleSet.apply(feat, _scene, datalayer, _ctx, *this);
-            }
-        }
-    }
-
-    for (auto& style : _scene.styles()) {
-        style->onEndBuildTile(*this);
-    }
-
-    for (auto& geometry : m_geometry) {
-        if (geometry) {
-            geometry->compileVertexBuffer();
-        }
-    }
+    //m_geometry.resize(_size);
 }
 
 void Tile::update(float _dt, const View& _view) {
@@ -116,8 +68,8 @@ void Tile::update(float _dt, const View& _view) {
 
 void Tile::resetState() {
     for (auto& entry : m_geometry) {
-        if (!entry) { continue; }
-        auto labelMesh = dynamic_cast<LabelMesh*>(entry.get());
+        if (!entry.second) { continue; }
+        auto labelMesh = dynamic_cast<LabelMesh*>(entry.second.get());
         if (!labelMesh) { continue; }
         labelMesh->reset();
     }
@@ -140,18 +92,17 @@ void Tile::draw(const Style& _style, const View& _view) {
 }
 
 std::unique_ptr<VboMesh>& Tile::getMesh(const Style& _style) {
-    static std::unique_ptr<VboMesh> NONE = nullptr;
-
-    if (_style.getID() >= m_geometry.size()) { return NONE; }
-
-    return m_geometry[_style.getID()];
+    // static std::unique_ptr<VboMesh> NONE = nullptr;
+    // if (_style.getID() >= m_geometry.size()) { return NONE; }
+    // return m_geometry[_style.getID()];
+    return m_geometry[_style.getName()];
 }
 
 size_t Tile::getMemoryUsage() const {
     if (m_memoryUsage == 0) {
         for (auto& entry : m_geometry) {
-            if (entry) {
-                m_memoryUsage += entry->bufferSize();
+            if (entry.second) {
+                m_memoryUsage += entry.second->bufferSize();
             }
         }
     }

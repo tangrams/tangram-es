@@ -8,7 +8,7 @@
 namespace Tangram {
 
 struct Feature;
-class Tile;
+class TileBuilder;
 class Scene;
 class SceneLayer;
 class StyleContext;
@@ -99,9 +99,8 @@ struct DrawRuleMergeSet {
     /* Determine and apply DrawRules for a @_feature and add
      * the result to @_tile
      */
-    void apply(const Feature& _feature, const Scene& _scene,
-               const SceneLayer& _sceneLayer,
-               StyleContext& _ctx, Tile& _tile);
+    void apply(const Feature& _feature, const SceneLayer& _sceneLayer,
+               StyleContext& _ctx, TileBuilder& _builder);
 
     // internal
     bool match(const Feature& _feature, const SceneLayer& _layer, StyleContext& _ctx);
