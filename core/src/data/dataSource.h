@@ -69,8 +69,6 @@ public:
 
     int32_t maxZoom() const { return m_maxZoom; }
 
-    TileID remapTileID(TileID _id) const;
-
 protected:
 
     void onTileLoaded(std::vector<char>&& _rawData, std::shared_ptr<TileTask>& _task, TileTaskCb _cb);

@@ -159,7 +159,7 @@ void TileManager::updateTileSet(TileSet& _tileSet) {
 
     std::set<TileID> visibleTiles;
     for (auto& t : m_view->getVisibleTiles()) {
-        visibleTiles.emplace(_tileSet.source->remapTileID(t));
+        visibleTiles.insert(t.withMaxSourceZoom(_tileSet.source->maxZoom()));
     }
 
     if (m_tileSetChanged) {
@@ -474,7 +474,8 @@ void TileManager::updateProxyTiles(TileSet& _tileSet, const TileID& _tileID, Til
     // Try children
     if (m_view->s_maxZoom > _tileID.z) {
         for (int i = 0; i < 4; i++) {
-            updateProxyTile(_tileSet, _tile, _tileID.getChild(i), static_cast<ProxyID>(1 << i));
+            auto childID = _tileID.getChild(i, _tileSet.source->maxZoom());
+            updateProxyTile(_tileSet, _tile, childID, static_cast<ProxyID>(1 << i));
         }
     }
 }
