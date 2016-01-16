@@ -332,6 +332,8 @@ int main(int argc, char* argv[]) {
         }
     }
 
+    finishUrlRequests();
+
     curl_global_cleanup();
     glfwTerminate();
     return 0;
