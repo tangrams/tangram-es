@@ -58,7 +58,8 @@ private:
     std::mutex m_mutex;
     std::vector<std::shared_ptr<TileTask>> m_queue;
 
-    std::shared_ptr<Scene> m_scene;
+    std::vector<std::unique_ptr<TileBuilder>> m_disposedBuilders;
+
 };
 
 }

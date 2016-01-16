@@ -48,9 +48,26 @@ void TileWorker::run(Worker* instance) {
                     return !m_running || !m_queue.empty();
                 });
 
+            if (instance->tileBuilder) {
+                if (builder) {
+                    m_disposedBuilders.push_back(std::move(builder));
+                }
+                builder = std::move(instance->tileBuilder);
+                LOG("Passed new StyleContext to TileWorker");
+            }
+
+
             // Check if thread should stop
             if (!m_running) {
+                if (builder) {
+                    m_disposedBuilders.push_back(std::move(builder));
+                }
                 break;
+            }
+
+            if (!builder) {
+                LOGE("Missing Scene/StyleContext in TileWorker!");
+                continue;
             }
 
             // Remove all canceled tasks
@@ -81,16 +98,6 @@ void TileWorker::run(Worker* instance) {
         }
 
         if (task->isCanceled()) {
-            continue;
-        }
-
-        if (instance->tileBuilder) {
-            builder = std::move(instance->tileBuilder);
-            LOG("Passed new StyleContext to TileWorker");
-        }
-
-        if (!builder) {
-            LOGE("Missing Scene/StyleContext in TileWorker!");
             continue;
         }
 
@@ -133,6 +140,8 @@ void TileWorker::enqueue(std::shared_ptr<TileTask>&& task) {
             return;
         }
         m_queue.push_back(std::move(task));
+
+        m_disposedBuilders.clear();
     }
     m_condition.notify_one();
 }
