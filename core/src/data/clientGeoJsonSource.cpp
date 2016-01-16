@@ -117,15 +117,17 @@ void ClientGeoJsonSource::addPoly(const Properties& _tags, const std::vector<Coo
     m_generation++;
 }
 
-std::shared_ptr<TileData> ClientGeoJsonSource::parse(const TileTask& _task,
-                                                     const MapProjection& _projection) const {
+bool ClientGeoJsonSource::process(const TileTask& _task,
+                                  const MapProjection& _projection,
+                                  TileDataSink& _sink) const {
 
     auto data = std::make_shared<TileData>();
 
     geojsonvt::Tile tile;
     {
         std::lock_guard<std::mutex> lock(m_mutexStore);
-        if (!m_store) { return nullptr; }
+        //if (!m_store) { return nullptr; }
+        if (!m_store) { return false; }
         tile = m_store->getTile(_task.tileId().z, _task.tileId().x, _task.tileId().y);
     }
 
@@ -184,8 +186,8 @@ std::shared_ptr<TileData> ClientGeoJsonSource::parse(const TileTask& _task,
 
     data->layers.emplace_back(std::move(layer));
 
-    return data;
-
+    // return data;
+    return true;
 }
 
 }

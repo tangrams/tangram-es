@@ -25,6 +25,7 @@
 #include <cmath>
 #include <bitset>
 #include <mutex>
+#include <array>
 
 
 namespace Tangram {

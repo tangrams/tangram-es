@@ -36,45 +36,58 @@ void TileBuilder::setScene(std::shared_ptr<Scene> _scene) {
     }
 }
 
-std::shared_ptr<Tile> TileBuilder::build(TileID _tileID, const TileData& _tileData,
-                                         const DataSource& _source) {
+void TileBuilder::begin(const TileID& _tileID, const DataSource& _source) {
+    m_tile = std::make_shared<Tile>(_tileID, *m_scene->mapProjection(), &_source);
 
-    auto tile = std::make_shared<Tile>(_tileID, *m_scene->mapProjection(), &_source);
-
-    const auto& layers = m_scene->layers();
-
-    m_styleContext.setGlobalZoom(_tileID.s);
+    m_styleContext.setGlobalZoom(_tileID.z);
 
     for (auto& builder : m_styleBuilder) {
         if (builder.second)
-            builder.second->begin(*tile);
+            builder.second->begin(*m_tile);
     }
+}
 
-    for (const auto& datalayer : layers) {
+bool TileBuilder::beginLayer(const std::string& _layerName) {
 
-        if (datalayer.source() != _source.name()) { continue; }
+    m_activeLayers.clear();
 
-        for (const auto& collection : _tileData.layers) {
+    for (auto& layer : m_scene->layers()) {
 
-            if (!collection.name.empty()) {
-                const auto& dlc = datalayer.collections();
-                bool layerContainsCollection =
-                    std::find(dlc.begin(), dlc.end(), collection.name) != dlc.end();
+        if (!_layerName.empty()) {
+            const auto& dlc = layer.collections();
+            bool layerContainsCollection =
+                std::find(dlc.begin(), dlc.end(), _layerName) != dlc.end();
 
-                if (!layerContainsCollection) { continue; }
+            if (!layerContainsCollection) {
+                continue;
             }
-
-            for (const auto& feat : collection.features) {
-                m_ruleSet.apply(feat, datalayer, m_styleContext, *this);
-            }
+            m_activeLayers.push_back(&layer);
         }
     }
+    // LOGE("begin layer %d - %s", m_activeLayers.size(), _layerName.c_str());
 
-    for (auto& builder : m_styleBuilder) {
-        tile->getMesh(builder.second->style()) = builder.second->build();
+    return !m_activeLayers.empty();
+}
+
+bool TileBuilder::matchFeature(const Feature& _feature) {
+    // for (auto* layer : m_activeLayers) {
+    //     m_ruleSet.apply(_feature, *layer, m_styleContext, *this);
+    // }
+    return true;
+}
+
+
+void TileBuilder::addFeature(const Feature& _feature) {
+    for (auto* layer : m_activeLayers) {
+        m_ruleSet.apply(_feature, *layer, m_styleContext, *this);
     }
+}
 
-    return tile;
+std::shared_ptr<Tile> TileBuilder::build() {
+    for (auto& builder : m_styleBuilder) {
+        m_tile->getMesh(builder.second->style()) = builder.second->build();
+    }
+    return m_tile;
 }
 
 }

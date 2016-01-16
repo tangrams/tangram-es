@@ -62,7 +62,7 @@ public:
     virtual const Style& style() const = 0;
 
 protected:
-    bool m_hasColorShaderBlock = false;;
+    bool m_hasColorShaderBlock = false;
 };
 
 /* Means of constructing and rendering map geometry
