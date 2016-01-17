@@ -1054,7 +1054,7 @@ Filter SceneLoader::generateFilter(Node _filter, Scene& scene) {
     }
 
     if (filters.size() == 0) { return Filter(); }
-    if (filters.size() == 1) { return filters.front(); }
+    if (filters.size() == 1) { return std::move(filters.front()); }
     return (Filter::MatchAll(filters));
 }
 
@@ -1324,7 +1324,7 @@ void SceneLoader::parseTransition(Node params, Scene& scene, std::vector<StylePa
     }
 }
 
-SceneLayer SceneLoader::loadSublayer(Node layer, const std::string& name, Scene& scene) {
+SceneLayer SceneLoader::loadSublayer(Node layer, const std::string& _name, Scene& scene) {
 
     std::vector<SceneLayer> sublayers;
     std::vector<DrawRuleData> rules;
@@ -1356,11 +1356,11 @@ SceneLayer SceneLoader::loadSublayer(Node layer, const std::string& name, Scene&
             // TODO: ignored for now
         } else {
             // Member is a sublayer
-            sublayers.push_back(loadSublayer(member.second, (name + ":" + key), scene));
+            sublayers.push_back(loadSublayer(member.second, (_name + ":" + key), scene));
         }
     }
 
-    return { name, filter, rules, sublayers };
+    return { std::string(_name), std::move(filter), std::move(rules), std::move(sublayers) };
 }
 
 void SceneLoader::loadLayer(const std::pair<Node, Node>& layer, Scene& scene) {
@@ -1392,7 +1392,7 @@ void SceneLoader::loadLayer(const std::pair<Node, Node>& layer, Scene& scene) {
 
     auto sublayer = loadSublayer(layer.second, name, scene);
 
-    scene.layers().push_back({ sublayer, source, collections });
+    scene.layers().push_back({ std::move(sublayer), source, collections });
 }
 
 void SceneLoader::loadBackground(Node background, Scene& scene) {
