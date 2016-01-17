@@ -94,8 +94,9 @@ private:
 
 };
 
-struct DrawRuleMergeSet {
+class DrawRuleMergeSet {
 
+public:
     /* Determine and apply DrawRules for a @_feature and add
      * the result to @_tile
      */
@@ -109,12 +110,15 @@ struct DrawRuleMergeSet {
     // internal
     void mergeRules(const SceneLayer& _layer);
 
+    auto& matchedRules() { return m_matchedRules; }
+
+private:
     // Reusable containers 'matchedRules' and 'queuedLayers'
-    std::vector<DrawRule> matchedRules;
-    std::vector<const SceneLayer*> queuedLayers;
+    std::vector<DrawRule> m_matchedRules;
+    std::vector<const SceneLayer*> m_queuedLayers;
 
     // Container for dynamically-evaluated parameters
-    StyleParam evaluated[StyleParamKeySize];
+    StyleParam m_evaluated[StyleParamKeySize];
 
 };
 

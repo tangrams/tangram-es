@@ -102,7 +102,7 @@ TEST_CASE("SceneLayer", "[SceneLayer][Filter][DrawRule][Match][Merge]") {
         DrawRuleMergeSet ruleSet;
         f1.props.add("base", "blah"); // Should match Base Layer
         ruleSet.match(f1, layer, ctx);
-        auto& matches = ruleSet.matchedRules;
+        auto& matches = ruleSet.matchedRules();
 
         REQUIRE(matches.size() == 1);
         REQUIRE(matches[0].getStyleName() == "group1");
@@ -113,7 +113,7 @@ TEST_CASE("SceneLayer", "[SceneLayer][Filter][DrawRule][Match][Merge]") {
         f2.props.add("one", "blah"); // Should match Base and subLayer1
         f2.props.add("base", "blah");
         ruleSet.match(f2, layer, ctx);
-        auto& matches = ruleSet.matchedRules;
+        auto& matches = ruleSet.matchedRules();
 
         REQUIRE(matches.size() == 1);
         REQUIRE(matches[0].getStyleName() == "group1");
@@ -125,7 +125,7 @@ TEST_CASE("SceneLayer", "[SceneLayer][Filter][DrawRule][Match][Merge]") {
         DrawRuleMergeSet ruleSet;
         f3.props.add("two", "blah"); // Should not match anything as uber layer will not be satisfied
         ruleSet.match(f3, layer, ctx);
-        auto& matches = ruleSet.matchedRules;
+        auto& matches = ruleSet.matchedRules();
 
         REQUIRE(matches.size() == 0);
     }
@@ -135,7 +135,7 @@ TEST_CASE("SceneLayer", "[SceneLayer][Filter][DrawRule][Match][Merge]") {
         f4.props.add("two", "blah");
         f4.props.add("base", "blah"); // Should match Base and subLayer2
         ruleSet.match(f4, layer, ctx);
-        auto& matches = ruleSet.matchedRules;
+        auto& matches = ruleSet.matchedRules();
 
         REQUIRE(matches.size() == 2);
         REQUIRE(matches[0].getStyleName() == "group1");
@@ -156,7 +156,7 @@ TEST_CASE("SceneLayer matches correct rules for a feature and context", "[SceneL
         auto layer_a = instance_a();
 
         ruleSet.match(feat, layer_a, ctx);
-        auto& matches_a = ruleSet.matchedRules;
+        auto& matches_a = ruleSet.matchedRules();
 
         REQUIRE(matches_a.size() == 1);
         REQUIRE(matches_a[0].getStyleName() == "dg0");
@@ -167,7 +167,7 @@ TEST_CASE("SceneLayer matches correct rules for a feature and context", "[SceneL
         auto layer_b = instance_b();
 
         ruleSet.match(feat, layer_b, ctx);
-        auto& matches_b = ruleSet.matchedRules;
+        auto& matches_b = ruleSet.matchedRules();
 
         REQUIRE(matches_b.size() == 0);
     }
@@ -183,7 +183,7 @@ TEST_CASE("SceneLayer matches correct sublayer rules for a feature and context",
     auto layer_c = instance_c();
 
     ruleSet.match(feat, layer_c, ctx);
-    auto& matches = ruleSet.matchedRules;
+    auto& matches = ruleSet.matchedRules();
 
     REQUIRE(matches.size() == 2);
 
@@ -201,7 +201,7 @@ TEST_CASE("SceneLayer correctly merges rules matched from sublayer", "[SceneLaye
     auto layer_e = instance_e();
 
     ruleSet.match(feat, layer_e, ctx);
-    auto& matches = ruleSet.matchedRules;
+    auto& matches = ruleSet.matchedRules();
 
     REQUIRE(matches.size() == 2);
 
