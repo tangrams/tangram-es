@@ -376,14 +376,14 @@ struct edge { // An edge between two points; oriented such that y is non-decreas
 
 typedef std::function<void (int, int)> Scan;
 
-static void scanLine(int _x0, int _x1, int _y, Scan _s) {
+static void scanLine(int _x0, int _x1, int _y, const Scan& _s) {
 
     for (int x = _x0; x < _x1; x++) {
         _s(x, _y);
     }
 }
 
-static void scanSpan(edge _e0, edge _e1, int _min, int _max, Scan& _s) {
+static void scanSpan(edge _e0, edge _e1, int _min, int _max, const Scan& _s) {
 
     // _e1 has a shorter y-span, so we'll use it to limit our y coverage
     int y0 = fmax(_min, floor(_e1.y0));
@@ -409,7 +409,7 @@ static void scanSpan(edge _e0, edge _e1, int _min, int _max, Scan& _s) {
 
 }
 
-static void scanTriangle(glm::dvec2& _a, glm::dvec2& _b, glm::dvec2& _c, int _min, int _max, Scan& _s) {
+static void scanTriangle(glm::dvec2& _a, glm::dvec2& _b, glm::dvec2& _c, int _min, int _max, const Scan& _s) {
 
     edge ab = edge(_a, _b);
     edge bc = edge(_b, _c);
