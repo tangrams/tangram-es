@@ -63,6 +63,7 @@ styles:
 sources:
     osm:
         type: MVT
+        #url:  http://localhost:8000/vector.mapzen.com/osm/all/{z}/{x}/{y}.mvt
         url:  https://vector.mapzen.com/osm/all/{z}/{x}/{y}.mvt
         max_zoom: 16
 
