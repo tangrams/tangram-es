@@ -15,7 +15,6 @@ class DataSource;
 class MapProjection;
 class Scene;
 class Style;
-class TextBuffer;
 class VboMesh;
 class View;
 class StyleContext;
