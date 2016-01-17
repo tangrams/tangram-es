@@ -167,6 +167,9 @@ void key_callback(GLFWwindow* window, int key, int scancode, int action, int mod
             case GLFW_KEY_5:
                 Tangram::toggleDebugFlag(Tangram::DebugFlags::labels);
                 break;
+            case GLFW_KEY_6:
+                Tangram::toggleDebugFlag(Tangram::DebugFlags::all_labels);
+                break;
             case GLFW_KEY_R:
                 Tangram::loadScene(sceneFile.c_str());
                 break;
