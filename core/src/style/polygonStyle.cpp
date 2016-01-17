@@ -106,11 +106,11 @@ struct Builder : public StyleBuilder {
     float m_tileUnitsPerMeter;
     int m_zoom;
 
-    struct Parameters {
+    struct {
         uint32_t order = 0;
         uint32_t color = 0xff00ffff;
         glm::vec2 extrude;
-    };
+    } m_params;
 
     void begin(const Tile& _tile) override {
         m_tileUnitsPerMeter = _tile.getInverseScale();
@@ -131,10 +131,13 @@ struct Builder : public StyleBuilder {
 
     Builder(const PolygonStyle& _style) : StyleBuilder(_style), m_style(_style) {}
 
-    Parameters parseRule(const DrawRule& _rule) const;
+    void parseRule(const DrawRule& _rule);
 
     PolygonBuilder m_builder = {
-        [&](const glm::vec3& coord, const glm::vec3& normal, const glm::vec2& uv){},
+        [&](const glm::vec3& coord, const glm::vec3& normal, const glm::vec2& uv){
+            m_vertices.push_back({ coord, m_params.order, normal, uv, m_params.color });
+
+        },
         [&](size_t sizeHint) {}
     };
 
@@ -150,32 +153,22 @@ std::unique_ptr<VboMesh> Builder::build() {
     return std::move(mesh);
 }
 
-Builder::Parameters Builder::parseRule(const DrawRule& _rule) const {
-    Parameters p;
-    _rule.get(StyleParamKey::color, p.color);
-    _rule.get(StyleParamKey::extrude, p.extrude);
-    _rule.get(StyleParamKey::order, p.order);
 
-    return p;
+void Builder::parseRule(const DrawRule& _rule) {
+    _rule.get(StyleParamKey::color, m_params.color);
+    _rule.get(StyleParamKey::extrude, m_params.extrude);
+    _rule.get(StyleParamKey::order, m_params.order);
 }
 
 void Builder::addPolygon(const Polygon& _polygon, const Properties& _props, const DrawRule& _rule) {
 
-    std::vector<PolygonVertex> vertices;
-
-    Parameters params = parseRule(_rule);
-
-    GLuint abgr = params.color;
-    auto& extrude = params.extrude;
+    parseRule(_rule);
 
     if (Tangram::getDebugFlag(Tangram::DebugFlags::proxy_colors)) {
-        abgr = abgr << (m_zoom % 6);
+        m_params.color <<= (m_zoom % 6);
     }
 
-    m_builder.addVertex = [&](const glm::vec3& coord, const glm::vec3& normal, const glm::vec2& uv){
-        m_vertices.push_back({ coord, params.order, normal, uv, abgr });
-    };
-
+    auto& extrude = m_params.extrude;
     float minHeight = getLowerExtrudeMeters(extrude, _props) * m_tileUnitsPerMeter;
     float height = getUpperExtrudeMeters(extrude, _props) * m_tileUnitsPerMeter;
 
