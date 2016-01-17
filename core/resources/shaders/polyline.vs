@@ -69,9 +69,9 @@ void main() {
         vec4 extrude = UNPACK_EXTRUSION(a_extrude);
         float width = extrude.z;
         float dwdz = extrude.w;
-        float dz = clamp(u_map_position.z - abs(u_tile_origin.z), 0.0, 1.0);
+        float dz = u_map_position.z - abs(u_tile_origin.z);
         // Interpolate between zoom levels
-        width += dwdz * dz;
+        width += dwdz * clamp(dz, 0.0, 1.0);
         // Scale pixel dimensions to be consistent in screen space
         width *= exp2(-dz);
 
