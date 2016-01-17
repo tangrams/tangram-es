@@ -1,7 +1,7 @@
 #pragma once
 
 #include "labels/label.h"
-#include "text/textBuffer.h"
+#include "labels/labelMesh.h"
 #include "text/fontContext.h"
 #include "style/labelProperty.h"
 
@@ -10,7 +10,7 @@ namespace Tangram {
 class TextLabel : public Label {
 
 public:
-    TextLabel(Label::Transform _transform, Type _type, glm::vec2 _dim, TextBuffer& _mesh, Range _vertexRange,
+    TextLabel(Label::Transform _transform, Type _type, glm::vec2 _dim, LabelMesh& _mesh, Range _vertexRange,
               Label::Options _options, FontContext::FontMetrics _metrics, int _nLines, LabelProperty::Anchor _anchor,
               glm::vec2 _quadsLocalOrigin);
 
