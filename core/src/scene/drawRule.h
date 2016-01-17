@@ -89,6 +89,16 @@ struct DrawRule {
         return true;
     }
 
+    template<typename T>
+    const T* get(StyleParamKey _key) const {
+        auto& param = findParameter(_key);
+        if (!param) { return nullptr; }
+        if (!param.value.is<T>()) {
+            return nullptr;
+        }
+        return &param.value.get<T>();
+    }
+
 private:
     void logGetError(StyleParamKey _expectedKey, const StyleParam& _param) const;
 
