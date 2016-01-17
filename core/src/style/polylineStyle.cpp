@@ -103,6 +103,24 @@ void PolylineStyle::constructShaderProgram() {
 
 namespace {
 
+struct Parameters {
+    uint32_t order = 0;
+    uint32_t outlineOrder = 0;
+    uint32_t color = 0xff00ffff;
+    uint32_t outlineColor = 0xff00ffff;
+    CapTypes cap = CapTypes::butt;
+    CapTypes outlineCap = CapTypes::butt;
+    JoinTypes join = JoinTypes::miter;
+    JoinTypes outlineJoin = JoinTypes::miter;
+    bool outlineOn = false;
+    glm::vec2 extrude = glm::vec2(0);
+
+    float width;
+    float dWdZ;
+    float widthOutline;
+    float dWdZOutline;
+};
+
 struct Builder : public StyleBuilder {
 
     const PolylineStyle& m_style;
@@ -112,63 +130,57 @@ struct Builder : public StyleBuilder {
     float m_tileSize;
     int m_zoom;
 
-    struct Parameters {
-        uint32_t order = 0;
-        uint32_t outlineOrder = 0;
-        uint32_t color = 0xff00ffff;
-        uint32_t outlineColor = 0xff00ffff;
-        CapTypes cap = CapTypes::butt;
-        CapTypes outlineCap = CapTypes::butt;
-        JoinTypes join = JoinTypes::miter;
-        JoinTypes outlineJoin = JoinTypes::miter;
-        bool outlineOn = false;
-        glm::vec2 extrude;
-
-        float width;
-        float dWdZ;
-        float widthOutline;
-        float dWdZOutline;
-    };
-
-    PolyLineBuilder m_builder = {
-        [&](const glm::vec3& coord, const glm::vec2& normal, const glm::vec2& uv) {},
-        [&](size_t sizeHint) {}
-    };
-
-    void begin(const Tile& _tile) override {
-        m_tileUnitsPerMeter = _tile.getInverseScale();
-        m_zoom = _tile.getID().z;
-        m_tileSize = _tile.getProjection()->TileSize();
-        m_mesh = std::make_unique<Mesh>(m_style.vertexLayout(), m_style.drawMode());
-
-        m_vertexOffsets.clear();
-        m_vertexOffsets.emplace_back(0,0);
-        m_indices.clear();
-        m_vertices.clear();
-    }
-
-    const Style& style() const override { return m_style; }
-
-    Builder(const PolylineStyle& _style) : StyleBuilder(_style), m_style(_style) {}
-
     // Used in draw for legth and offsets: sumIndices, sumVertices
     std::vector<std::pair<uint32_t, uint32_t>> m_vertexOffsets;
     std::vector<PolylineVertex> m_vertices;
     std::vector<uint16_t> m_indices;
 
+    // Current vertex attributes for builder
+    glm::vec2 m_optWidth;
+    uint32_t m_optColor;
+    float m_optOrder;
+    float m_optHeight;
+
+    PolyLineBuilder m_builder = {
+        [&](const glm::vec3& coord, const glm::vec2& normal, const glm::vec2& uv) {
+            m_vertices.push_back({ {coord.x, coord.y, m_optHeight}, m_optOrder,
+                                    uv, normal, m_optWidth, m_optColor });
+        },
+        [&](size_t sizeHint) {}
+    };
+
+    void begin(const Tile& _tile) override;
+
+    const Style& style() const override { return m_style; }
+
     void addFeature(const Feature& _feat, const DrawRule& _rule) override;
 
-    virtual std::unique_ptr<VboMesh> build() override;
+    std::unique_ptr<VboMesh> build() override;
+
+    Builder(const PolylineStyle& _style) : StyleBuilder(_style), m_style(_style) {}
 
     void add(const Line& _line, const Properties& _props,
              const DrawRule& _rule, const Parameters& _params);
 
+    void buildLine(const Line& _line);
+
     Parameters parseRule(const DrawRule& _rule);
 
-    bool evalStyleParamWidth(StyleParamKey _key, const DrawRule& _rule,
-                             float& width, float& dWdZ);
+    bool evalWidth(StyleParam _styleParam, float& width, float& dWdZ);
 
 };
+
+void Builder::begin(const Tile& _tile) {
+    m_tileUnitsPerMeter = _tile.getInverseScale();
+    m_zoom = _tile.getID().z;
+    m_tileSize = _tile.getProjection()->TileSize();
+    m_mesh = std::make_unique<Mesh>(m_style.vertexLayout(), m_style.drawMode());
+
+    m_vertexOffsets.clear();
+    m_vertexOffsets.emplace_back(0,0);
+    m_indices.clear();
+    m_vertices.clear();
+}
 
 std::unique_ptr<VboMesh> Builder::build() {
     auto mesh = std::make_unique<Mesh>(m_style.vertexLayout(), m_style.drawMode());
@@ -181,10 +193,13 @@ auto Builder::parseRule(const DrawRule& _rule) -> Parameters {
 
     uint32_t cap = 0, join = 0;
 
-    if (!evalStyleParamWidth(StyleParamKey::width, _rule, p.width, p.dWdZ)) {
+    auto& width = _rule.findParameter(StyleParamKey::width);
+
+    if (!evalWidth(width, p.width, p.dWdZ)) {
         p.width = 0;
         return p;
     }
+    p.dWdZ -= p.width;
 
     _rule.get(StyleParamKey::extrude, p.extrude);
     _rule.get(StyleParamKey::color, p.color);
@@ -197,19 +212,26 @@ auto Builder::parseRule(const DrawRule& _rule) -> Parameters {
 
     p.outlineOrder = p.order; // will offset from fill later
 
-    if (_rule.get(StyleParamKey::outline_color, p.outlineColor) |
+    auto& outlineWidth = _rule.findParameter(StyleParamKey::outline_width);
+
+    if (outlineWidth |
+        _rule.get(StyleParamKey::outline_color, p.outlineColor) |
         _rule.get(StyleParamKey::outline_order, p.outlineOrder) |
-        _rule.contains(StyleParamKey::outline_width) |
         _rule.get(StyleParamKey::outline_cap, cap) |
         _rule.get(StyleParamKey::outline_join, join)) {
 
         p.outlineCap = static_cast<CapTypes>(cap);
         p.outlineJoin = static_cast<JoinTypes>(join);
 
-        if (!evalStyleParamWidth(StyleParamKey::outline_width, _rule,
-                                 p.widthOutline, p.dWdZOutline)) {
+        if (!evalWidth(outlineWidth, p.widthOutline, p.dWdZOutline)) {
             return p;
         }
+
+        // NB: Multiply by 2 for the outline to get the expected stroke pixel width.
+        p.widthOutline *= 2.0f;
+        p.dWdZOutline *= 2.0f;
+        p.dWdZOutline -= p.widthOutline;
+
         p.outlineOn = true;
     }
 
@@ -225,32 +247,24 @@ double widthMeterToPixel(int _zoom, double _tileSize, double _width) {
     return _width * meterRes;
 }
 
-bool Builder::evalStyleParamWidth(StyleParamKey _key, const DrawRule& _rule,
-                                  float& width, float& dWdZ) {
+bool Builder::evalWidth(StyleParam _styleParam, float& width, float& dWdZ) {
 
     // NB: 0.5 because 'width' will be extruded in both directions
-    double tileRes = 0.5 / m_tileSize;
+    float tileRes = 0.5 / m_tileSize;
 
+    // auto& styleParam = _rule.findParameter(_key);
+    if (_styleParam.stops) {
 
-    auto& styleParam = _rule.findParameter(_key);
-    if (styleParam.stops) {
-
-        width = styleParam.value.get<float>();
+        width = _styleParam.value.get<float>();
         width *= tileRes;
 
-        dWdZ = styleParam.stops->evalWidth(m_zoom + 1);
+        dWdZ = _styleParam.stops->evalWidth(m_zoom + 1);
         dWdZ *= tileRes;
-        // NB: Multiply by 2 for the outline to get the expected stroke pixel width.
-        if (_key == StyleParamKey::outline_width) {
-            width *= 2;
-            dWdZ *= 2;
-        }
-        dWdZ -= width;
         return true;
     }
 
-    if (styleParam.value.is<StyleParam::Width>()) {
-        auto& widthParam = styleParam.value.get<StyleParam::Width>();
+    if (_styleParam.value.is<StyleParam::Width>()) {
+        auto& widthParam = _styleParam.value.get<StyleParam::Width>();
 
         width = widthParam.value;
 
@@ -262,16 +276,10 @@ bool Builder::evalStyleParamWidth(StyleParamKey _key, const DrawRule& _rule,
             width *= tileRes;
             dWdZ = width;
         }
-
-        if (_key == StyleParamKey::outline_width) {
-            width *= 2;
-            dWdZ *= 2;
-        }
-        dWdZ -= width;
         return true;
     }
 
-    LOGD("Invalid type for Width '%d'\n", styleParam.value.which());
+    LOGD("Invalid type for Width '%d'\n", _styleParam.value.which());
     return false;
 }
 
@@ -297,6 +305,26 @@ void Builder::addFeature(const Feature& _feat, const DrawRule& _rule) {
     }
 }
 
+void Builder::buildLine(const Line& _line) {
+
+    Builders::buildPolyLine(_line, m_builder);
+
+    auto sumVertices = m_vertexOffsets.back().second;
+    if (sumVertices + m_builder.numVertices > MAX_INDEX_VALUE) {
+        m_vertexOffsets.emplace_back(0, 0);
+        // Indices must reference vertices starting at 0
+        sumVertices = 0;
+    }
+    for (uint16_t idx : m_builder.indices) {
+        m_indices.push_back(idx + sumVertices);
+    }
+    auto& vertexOffset = m_vertexOffsets.back();
+    vertexOffset.first += m_builder.indices.size();
+    vertexOffset.second += m_builder.numVertices;
+
+    m_builder.clear();
+}
+
 void Builder::add(const Line& _line, const Properties& _props,
                   const DrawRule& _rule, const Parameters& params) {
 
@@ -306,6 +334,11 @@ void Builder::add(const Line& _line, const Properties& _props,
         abgr <<= (m_zoom % 6);
     }
 
+    // Keep current vertex buffer position when the
+    // same vertices are used for the outline.
+    size_t startIndex = m_indices.size();
+    size_t startVertex = m_vertices.size();
+
     float height = getUpperExtrudeMeters(params.extrude, _props);
     height *= m_tileUnitsPerMeter;
 
@@ -313,45 +346,20 @@ void Builder::add(const Line& _line, const Properties& _props,
     float width = params.width;
     float dWdZ = params.dWdZ;
 
+    // FIXME: just to make lines visible
+    if (width < 1.0/512) { width = 1.0/512; }
+    if (dWdZ < 1.0/512) { dWdZ = 1.0/512; }
+
     m_builder.cap = params.cap;
     m_builder.join = params.join;
+    m_optOrder = order;
+    m_optColor = abgr;
+    m_optWidth = { width, dWdZ};
+    m_optHeight = height;
 
-    m_builder.addVertex = [&](const glm::vec3& coord,
-                              const glm::vec2& normal,
-                              const glm::vec2& uv) {
-        // glm::vec4 extrude = { normal.x, normal.y, width, dWdZ };
-        m_vertices.push_back({ {coord.x, coord.y, height}, order,
-                               uv, normal, { width, dWdZ}, abgr });
-    };
+    buildLine(_line);
 
-    // TODO: This could be done nicer (with one copy less) with
-    // PolylineBuilder::sizeHint callback,  when the hint is
-    // *always* correct.
-    auto addVertices = [&](){
-        auto sumVertices = m_vertexOffsets.back().second;
-        if (sumVertices + m_builder.numVertices > MAX_INDEX_VALUE) {
-            m_vertexOffsets.emplace_back(0, 0);
-            // Indices must reference vertices starting at 0
-            sumVertices = 0;
-        }
-        for (uint16_t idx : m_builder.indices) {
-            m_indices.push_back(idx + sumVertices);
-        }
-        auto& vertexOffset = m_vertexOffsets.back();
-        vertexOffset.first += m_builder.indices.size();
-        vertexOffset.second += m_builder.numVertices;
-
-        m_builder.clear();
-    };
-
-    // Keep current vertex buffer position when the
-    // same vertices are used for the outline.
-    size_t startIndex = m_indices.size();
-    size_t startVertex = m_vertices.size();
-
-    Builders::buildPolyLine(_line, m_builder);
-    addVertices();
-
+    return;
     if (!params.outlineOn) { return; }
 
     width += params.widthOutline;
@@ -363,8 +371,12 @@ void Builder::add(const Line& _line, const Properties& _props,
         // need to re-triangulate with different cap and/or join
         m_builder.cap = params.outlineCap;
         m_builder.join = params.outlineJoin;
-        Builders::buildPolyLine(_line, m_builder);
-        addVertices();
+        m_optOrder = order;
+        m_optColor = abgr;
+        m_optWidth = { width, dWdZ};
+        m_optHeight = height;
+
+        buildLine(_line);
 
     } else {
         // re-use indices from original line
