@@ -10,7 +10,7 @@
 using namespace Tangram;
 
 glm::vec2 screenSize(500.f, 500.f);
-TextBuffer dummy(nullptr);
+LabelMesh dummy(nullptr, 0);
 
 TextLabel makeLabel(Label::Transform _transform, Label::Type _type) {
     Label::Options options;
