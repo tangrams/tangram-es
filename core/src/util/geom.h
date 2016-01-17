@@ -86,6 +86,9 @@ glm::vec2 worldToScreenSpace(const glm::mat4& _mvp, const glm::vec4& _worldPosit
 
 float signedArea(const std::vector<glm::vec3>& _polygon);
 
+float signedArea(const std::vector<glm::vec3>::const_iterator& _begin,
+                 const std::vector<glm::vec3>::const_iterator& _end);
+
 /* Computes the geometric center of the two dimentionnal region defined by the polygon */
 glm::vec2 centroid(const std::vector<std::vector<glm::vec3>>& _polygon);
 
