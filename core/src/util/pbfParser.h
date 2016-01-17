@@ -15,7 +15,10 @@ struct TileDataSink;
 namespace PbfParser {
 
     struct ParserContext {
-        ParserContext(int32_t _sourceId) : sourceId(_sourceId){}
+        ParserContext(int32_t _sourceId) : sourceId(_sourceId) {
+            values.reserve(256);
+            coordinates.reserve(256);
+        }
 
         int32_t sourceId;
         std::vector<std::string> keys;

@@ -12,58 +12,71 @@ namespace Tangram {
 
 void PbfParser::extractGeometry(ParserContext& _ctx, protobuf::message& _geomIn) {
 
-    pbfGeomCmd cmd = pbfGeomCmd::moveTo;
-    uint32_t cmdRepeat = 0;
+    int32_t x = 0;
+    int32_t y = 0;
+    int32_t lastX = 0;
+    int32_t lastY = 0;
 
-    double invTileExtent = (1.0/(double)_ctx.tileExtent);
-
-    int64_t x = 0;
-    int64_t y = 0;
-
-    size_t numCoordinates = 0;
+    auto& coordinates = _ctx.coordinates;
+    auto& numCoordinates = _ctx.numCoordinates;
+    size_t cnt = 0;
 
     while(_geomIn.getData() < _geomIn.getEnd()) {
 
-        if(cmdRepeat == 0) { // get new command, lengh and parameters..
-            uint32_t cmdData = static_cast<uint32_t>(_geomIn.varint());
-            cmd = static_cast<pbfGeomCmd>(cmdData & 0x7); //first 3 bits of the cmdData
-            cmdRepeat = cmdData >> 3; //last 5 bits
-        }
+        uint32_t cmdData = static_cast<uint32_t>(_geomIn.varint());
+        pbfGeomCmd cmd = static_cast<pbfGeomCmd>(cmdData & 0x7); // first 3 bits of the cmdData
+        uint32_t cmdRepeat = cmdData >> 3; // last 5 bits
 
-        if(cmd == pbfGeomCmd::moveTo || cmd == pbfGeomCmd::lineTo) { // get parameters/points
-            // if cmd is move then move to a new line/set of points and save this line
-            if(cmd == pbfGeomCmd::moveTo) {
-                if(_ctx.coordinates.size() > 0) {
-                    _ctx.numCoordinates.push_back(numCoordinates);
+        if (cmd == pbfGeomCmd::lineTo) {
+
+            for (uint32_t i = 0; i < cmdRepeat; ++i) {
+                x += _geomIn.svarint();
+                y += _geomIn.svarint();
+
+                if (lastX != x || lastY != y || cnt == 0) {
+                    lastX = x;
+                    lastY = y;
+                    coordinates.emplace_back(x, y, 0);
+                    cnt++;
                 }
-                numCoordinates = 0;
             }
 
-            x += _geomIn.svarint();
-            y += _geomIn.svarint();
+        } else if (cmd == pbfGeomCmd::moveTo) {
 
-            // bring the points in 0 to 1 space
-            Point p;
-            p.x = invTileExtent * (double)x;
-            p.y = invTileExtent * (double)(_ctx.tileExtent - y);
-
-            if (numCoordinates == 0 || _ctx.coordinates.back() != p) {
-                _ctx.coordinates.push_back(p);
-                numCoordinates++;
+            // if cmd is move then move to a new line/set of points and save this line
+            if (coordinates.size() > 0) {
+                numCoordinates.push_back(cnt);
             }
-        } else if(cmd == pbfGeomCmd::closePath) {
+            cnt = 0;
+            for (uint32_t i = 0; i < cmdRepeat; ++i) {
+                x += _geomIn.svarint();
+                y += _geomIn.svarint();
+                coordinates.emplace_back(x, y, 0);
+                cnt++;
+            }
+
+        } else if (cmd == pbfGeomCmd::closePath) {
             // end of a polygon, push first point in this line as last and push line to poly
-            _ctx.coordinates.push_back(_ctx.coordinates[_ctx.coordinates.size() - numCoordinates]);
-            _ctx.numCoordinates.push_back(numCoordinates + 1);
-            numCoordinates = 0;
+            coordinates.push_back(_ctx.coordinates[coordinates.size() - cnt]);
+            numCoordinates.push_back(cnt + 1);
+            cnt = 0;
         }
-
-        cmdRepeat--;
     }
 
+    assert(_geomIn.getData() == _geomIn.getEnd());
+
     // Enter the last line
-    if (numCoordinates > 0) {
-        _ctx.numCoordinates.push_back(numCoordinates);
+    if (cnt > 0) {
+        numCoordinates.push_back(cnt);
+    }
+
+    // bring the points in 0 to 1 space
+    double tileExtent = _ctx.tileExtent;
+    double invTileExtent = 1.0/tileExtent;
+
+    for (auto& p : coordinates) {
+        p.x = invTileExtent * p.x;
+        p.y = invTileExtent * (tileExtent - p.y);
     }
 }
 
@@ -79,6 +92,7 @@ void PbfParser::extractFeature(ParserContext& _ctx, protobuf::message& _featureI
     _ctx.featureTags.assign(_ctx.keys.size(), -1);
 
     Feature& feature = _ctx.feature;
+    size_t numTags = 0;
 
     while(_featureIn.next()) {
         switch(_featureIn.tag) {
@@ -114,6 +128,7 @@ void PbfParser::extractFeature(ParserContext& _ctx, protobuf::message& _featureI
                     }
 
                     _ctx.featureTags[tagKey] = valueKey;
+                    numTags++;
                 }
                 break;
             }
@@ -136,18 +151,47 @@ void PbfParser::extractFeature(ParserContext& _ctx, protobuf::message& _featureI
         return;
     }
 
-    std::vector<Properties::Item>& properties = feature.props.items();
-    properties.resize(_ctx.featureTags.size());
+    auto& properties = feature.props.items();
+    properties.resize(numTags);
 
-    size_t numTags = 0;
+    numTags = 0;
+    bool matchPrevious = true;
+
+    int matchedKey = 0;
+    int matchedVal = 0;
 
     for (int tagKey : _ctx.orderedKeys) {
         int tagValue = _ctx.featureTags[tagKey];
+
         if (tagValue >= 0) {
-            properties[numTags++] = PropertyItem{_ctx.keys[tagKey], _ctx.values[tagValue]};
+
+            auto& it = properties[numTags++];
+
+            if (matchPrevious && _ctx.previousTags[tagKey] < 0) {
+                matchPrevious = false;
+            }
+            if (matchPrevious && _ctx.previousTags[tagKey] == tagValue) {
+                // Same as before. yay!
+                matchedKey++;
+                matchedVal++;
+                continue;
+            }
+            if (!matchPrevious) {
+                it.key = _ctx.keys[tagKey];
+            } else {
+                matchedKey++;
+            }
+            it.value = _ctx.values[tagValue];
+        } else {
+            if (matchPrevious && _ctx.previousTags[tagKey] >= 0) {
+                matchPrevious = false;
+            }
         }
     }
-    // feature.props.setSorted(std::move(properties));
+
+    // LOG("Matched %d %d - %d", matchedKey, matchedVal, numTags);
+
+    _ctx.featureTags.swap(_ctx.previousTags);
 
     if (!_sink.matchFeature(feature)) {
         return;
@@ -161,41 +205,58 @@ void PbfParser::extractFeature(ParserContext& _ctx, protobuf::message& _featureI
                                _ctx.coordinates.end());
             break;
     }
-    case GeometryType::lines:
-    case GeometryType::polygons: {
-        int offset = 0;
-        feature.lines.clear();
-        feature.polygons.clear();
+    case GeometryType::lines: {
+        feature.lines.resize(1);
+        feature.lines[0].clear();
+
+        auto coordIt = _ctx.coordinates.begin();
+        size_t numLines = 0;
 
         for (int length : _ctx.numCoordinates) {
             if (length == 0) { continue; }
 
-            Line line;
-            line.reserve(length);
-
-            line.insert(line.begin(),
-                        _ctx.coordinates.begin() + offset,
-                        _ctx.coordinates.begin() + offset + length);
-
-            offset += length;
-
-            if (feature.geometryType == GeometryType::lines) {
-                feature.lines.emplace_back(std::move(line));
-            } else {
-                // Polygons are in a flat list of rings, with ccw rings indicating
-                // the beginning of a new polygon
-                if (feature.polygons.empty()) {
-                    feature.polygons.emplace_back();
-                } else {
-                    double area = signedArea(line);
-                    if (area > 0) {
-                        feature.polygons.emplace_back();
-                    } else if (area == 0){
-                        continue;
-                    }
-                }
-                feature.polygons.back().push_back(std::move(line));
+            if (numLines++ > 0) {
+                feature.lines.emplace_back();
             }
+
+            Line& line = feature.lines.back();
+            line.reserve(length);
+            line.insert(line.begin(), coordIt, coordIt + length);
+
+            coordIt += length;
+        }
+        break;
+    }
+    case GeometryType::polygons: {
+        feature.polygons.resize(1);
+        feature.polygons[0].resize(1);
+        feature.polygons[0][0].clear();
+
+        auto coordIt = _ctx.coordinates.begin();
+        size_t numRings = 0;
+
+        for (int length : _ctx.numCoordinates) {
+            if (length == 0) { continue; }
+
+            // Polygons are in a flat list of rings, with ccw rings indicating
+            // the beginning of a new polygon
+            if (numRings++ > 0) {
+                double area = signedArea(coordIt, coordIt + length);
+                if (area > 0) {
+                    feature.polygons.emplace_back();
+                } else if (area == 0){
+                    coordIt += length;
+                    continue;
+                }
+                // Start ring
+                feature.polygons.back().emplace_back();
+            }
+
+            auto& ring = feature.polygons.back().back();
+            ring.reserve(length);
+            ring.insert(ring.begin(), coordIt, coordIt + length);
+
+            coordIt += length;
         }
         break;
     }
@@ -286,10 +347,9 @@ void PbfParser::extractLayer(ParserContext& _ctx, protobuf::message& _layerIn, T
                   return Properties::keyComparator(_ctx.keys[a], _ctx.keys[b]);
               });
 
-    // _out.features.reserve(_ctx.featureMsgs.size());
+    _ctx.previousTags.assign(_ctx.keys.size(), -1);
+
     for(auto& featureMsg : _ctx.featureMsgs) {
-        // _out.features.emplace_back(_ctx.sourceId);
-        // extractFeature(_ctx, featureMsg, _out.features.back());
         extractFeature(_ctx, featureMsg, _sink);
     }
 }
