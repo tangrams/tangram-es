@@ -9,7 +9,6 @@
 
 namespace Tangram {
 
-class TextBuffer;
 class FontContext;
 struct Properties;
 typedef int FontID;
@@ -29,8 +28,7 @@ public:
         float fontSize = 16.0f;
         float blurSpread = 0.0f;
         Label::Options labelOptions;
-        bool wordWrap = true;
-        unsigned int maxLineWidth = 15;
+        uint32_t maxLineWidth = 15;
 
         TextLabelProperty::Transform transform = TextLabelProperty::Transform::none;
         TextLabelProperty::Align align = TextLabelProperty::Align::center;
@@ -87,7 +85,6 @@ namespace std {
             hash_combine(seed, p.strokeColor);
             hash_combine(seed, p.strokeWidth);
             hash_combine(seed, p.fontSize);
-            hash_combine(seed, p.wordWrap);
             hash_combine(seed, p.maxLineWidth);
             hash_combine(seed, (int)p.transform);
             hash_combine(seed, (int)p.align);

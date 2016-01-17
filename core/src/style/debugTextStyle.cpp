@@ -1,11 +1,12 @@
 #include "debugTextStyle.h"
 
 #include "gl/shaderProgram.h"
+#include "labels/textLabel.h"
 #include "style/material.h"
 #include "text/fontContext.h"
-#include "text/textBuffer.h"
 #include "tile/tile.h"
 #include "tangram.h"
+#include "text/textBuffer.h"
 
 namespace Tangram {
 
@@ -23,12 +24,15 @@ struct Builder : public StyleBuilder {
 
     TextStyle::Parameters m_params;
 
+    TextBuffer::Builder m_builder;
+
     void begin(const Tile& _tile) override {
         if (!Tangram::getDebugFlag(Tangram::DebugFlags::tile_infos)) {
             return;
         }
 
         m_params.text = _tile.getID().toString();
+        m_builder.beginMesh(m_style.vertexLayout());
     }
 
     std::unique_ptr<VboMesh> build() override {
@@ -36,11 +40,13 @@ struct Builder : public StyleBuilder {
             return nullptr;
         }
 
-        auto mesh = std::make_unique<TextBuffer>(m_style.vertexLayout());
-        mesh->addLabel(m_params, { glm::vec2(.5f) }, Label::Type::debug, m_style.fontContext());
-        mesh->compileVertexBuffer();
+        if(!m_builder.prepareLabel(m_style.fontContext(), m_params, Label::Type::point)) {
+            return nullptr;
+        }
 
-        return std::move(mesh);
+        m_builder.addLabel(m_params, Label::Type::debug, { glm::vec2(.5f) });
+
+        return m_builder.build();
     }
 
     const Style& style() const override { return m_style; }
