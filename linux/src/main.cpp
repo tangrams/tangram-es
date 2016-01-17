@@ -323,6 +323,8 @@ int main(int argc, char* argv[]) {
 
     finishUrlRequests();
 
+    Tangram::shutdown();
+
     curl_global_cleanup();
     glfwTerminate();
     return 0;
