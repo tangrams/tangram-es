@@ -36,28 +36,25 @@ std::string DrawRuleData::toString() const {
 DrawRule::DrawRule(const DrawRuleData& _ruleData) :
     name(&_ruleData.name),
     id(_ruleData.id) {
-
-    const static char* empty = "";
-    std::fill_n(layers, StyleParamKeySize, empty);
 }
 
 void DrawRule::merge(const DrawRuleData& _ruleData, const SceneLayer& _layer) {
 
     evalConflict(*this, _ruleData, _layer);
 
+    const auto depthNew = _layer.depth();
+    const char* layerNew = _layer.name().c_str();
+
     for (const auto& param : _ruleData.parameters) {
 
         auto key = static_cast<uint8_t>(param.key);
+        auto& layer = layers[key];
 
-        const auto depthOld = depths[key];
-        const auto depthNew = _layer.depth();
-        const char* layerOld = layers[key];
-        const char* layerNew = _layer.name().c_str();
-
-        if (depthNew > depthOld || (depthNew == depthOld && strcmp(layerNew, layerOld) > 0)) {
+        if (depthNew > layer.depth || layer.name == nullptr ||
+            (depthNew == layer.depth && strcmp(layerNew, layer.name) > 0)) {
             params[key] = &param;
-            depths[key] = depthNew;
-            layers[key] = layerNew;
+            layer.name = layerNew;
+            layer.depth = depthNew;
         }
     }
 }
@@ -222,7 +219,7 @@ void DrawRuleMergeSet::mergeRules(const SceneLayer& _layer) {
                                [&](auto& m) { return rule.id == m.id; });
 
         if (it == matchedRules.end()) {
-            it = matchedRules.insert(it, DrawRule(rule));
+            it = matchedRules.emplace(it, rule);
         }
 
         it->merge(rule, _layer);
