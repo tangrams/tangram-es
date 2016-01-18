@@ -66,7 +66,7 @@ void Tile::build(StyleContext& _ctx, const Scene& _scene, const TileData& _data,
 
     const auto& layers = _scene.layers();
 
-    _ctx.setGlobalZoom(m_id.z);
+    _ctx.setGlobalZoom(m_id.s);
 
     for (auto& style : _scene.styles()) {
         style->onBeginBuildTile(*this);

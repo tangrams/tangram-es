@@ -206,7 +206,7 @@ private:
     TileTaskCb m_dataCallback;
 
     /* Temporary list of tiles that need to be loaded */
-    std::vector<std::tuple<double, TileSet*, const TileID*>> m_loadTasks;
+    std::vector<std::tuple<double, TileSet*, TileID>> m_loadTasks;
 
 
 };

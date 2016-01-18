@@ -13,7 +13,7 @@ protected:
 
 public:
 
-    MVTSource(const std::string& _name, const std::string& _urlTemplate);
+    MVTSource(const std::string& _name, const std::string& _urlTemplate, int32_t _maxZoom);
 
 };
 

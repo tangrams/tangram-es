@@ -501,7 +501,7 @@ void View::updateTiles() {
         int wx = x & ((1 << z) - 1);
         int wrap = (x - wx) >> zoom;
 
-        m_visibleTiles.emplace(wx, y, z, wrap);
+        m_visibleTiles.emplace(wx, y, z, z, wrap);
 
     };
 

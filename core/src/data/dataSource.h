@@ -25,7 +25,7 @@ public:
      * each of '{x}', '{y}', and '{z}' which will be replaced by the x index, y index,
      * and zoom level of tiles to produce their URL.
      */
-    DataSource(const std::string& _name, const std::string& _urlTemplate);
+    DataSource(const std::string& _name, const std::string& _urlTemplate, int32_t _maxZoom = 18);
 
     virtual ~DataSource();
 
@@ -67,6 +67,8 @@ public:
     /* Generation ID of DataSource state (incremented for each update, e.g. on clearData()) */
     int64_t generation() const { return m_generation; }
 
+    int32_t maxZoom() const { return m_maxZoom; }
+
 protected:
 
     void onTileLoaded(std::vector<char>&& _rawData, std::shared_ptr<TileTask>& _task, TileTaskCb _cb);
@@ -82,6 +84,9 @@ protected:
 
     // Name used to identify this source in the style sheet
     std::string m_name;
+
+    // Maximum zoom for which tiles will be requested
+    int32_t m_maxZoom;
 
     // Unique id for DataSource
     int32_t m_id;

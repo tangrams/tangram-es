@@ -64,6 +64,7 @@ sources:
     osm:
         type: MVT
         url:  https://vector.mapzen.com/osm/all/{z}/{x}/{y}.mvt
+        max_zoom: 16
 
 layers:
     touch:

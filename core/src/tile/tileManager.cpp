@@ -156,7 +156,16 @@ void TileManager::updateTileSet(TileSet& _tileSet) {
     int maxZoom = m_view->getZoom() + 2;
 
     auto& tiles = _tileSet.tiles;
-    auto& visibleTiles = m_view->getVisibleTiles();
+
+    const auto* visibleTiles = &m_view->getVisibleTiles();
+
+    std::set<TileID> mappedTiles;
+    if (m_view->getZoom() > _tileSet.source->maxZoom()) {
+        for (const auto& id : *visibleTiles) {
+            mappedTiles.insert(id.withMaxSourceZoom(_tileSet.source->maxZoom()));
+        }
+        visibleTiles = &mappedTiles;
+    }
 
     if (m_tileSetChanged) {
         for (auto& it : tiles) {
@@ -171,11 +180,11 @@ void TileManager::updateTileSet(TileSet& _tileSet) {
 
     // Loop over visibleTiles and add any needed tiles to tileSet
     auto curTilesIt = tiles.begin();
-    auto visTilesIt = visibleTiles.begin();
+    auto visTilesIt = visibleTiles->begin();
 
-    while (visTilesIt != visibleTiles.end() || curTilesIt != tiles.end()) {
+    while (visTilesIt != visibleTiles->end() || curTilesIt != tiles.end()) {
 
-        auto& visTileId = visTilesIt == visibleTiles.end()
+        auto& visTileId = visTilesIt == visibleTiles->end()
             ? NOT_A_TILE
             : *visTilesIt;
 
@@ -319,14 +328,14 @@ void TileManager::enqueueTask(TileSet& _tileSet, const TileID& _tileID,
                                    return distance < std::get<0>(other);
                                });
 
-    m_loadTasks.insert(it, std::make_tuple(distance, &_tileSet, &_tileID));
+    m_loadTasks.insert(it, std::make_tuple(distance, &_tileSet, _tileID));
 }
 
 void TileManager::loadTiles() {
 
     for (auto& loadTask : m_loadTasks) {
 
-        auto tileId = *std::get<2>(loadTask);
+        auto tileId = std::get<2>(loadTask);
         auto& tileSet = *std::get<1>(loadTask);
         auto tileIt = tileSet.tiles.find(tileId);
         auto& entry = tileIt->second;
@@ -468,9 +477,10 @@ void TileManager::updateProxyTiles(TileSet& _tileSet, const TileID& _tileID, Til
         return;
     }
     // Try children
-    if (m_view->s_maxZoom > _tileID.z) {
+    if (_tileSet.source->maxZoom() > _tileID.z) {
         for (int i = 0; i < 4; i++) {
-            updateProxyTile(_tileSet, _tile, _tileID.getChild(i), static_cast<ProxyID>(1 << i));
+            auto childID = _tileID.getChild(i, _tileSet.source->maxZoom());
+            updateProxyTile(_tileSet, _tile, childID, static_cast<ProxyID>(1 << i));
         }
     }
 }
