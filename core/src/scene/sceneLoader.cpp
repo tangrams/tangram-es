@@ -806,7 +806,7 @@ void SceneLoader::loadSource(const std::pair<Node, Node>& src, Scene& _scene) {
     std::string name = src.first.as<std::string>();
     std::string type = source["type"].as<std::string>();
     std::string url = source["url"].as<std::string>();
-    int32_t maxZoom = std::numeric_limits<int32_t>::max();
+    int32_t maxZoom = 18;
 
     if (auto maxZoomNode = source["max_zoom"]) {
         maxZoom = maxZoomNode.as<int32_t>(maxZoom);
