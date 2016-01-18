@@ -6,6 +6,7 @@
 #include <string>
 #include <functional>
 #include <memory>
+#include <array>
 
 struct duk_hthread;
 typedef struct duk_hthread duk_context;
@@ -37,7 +38,7 @@ public:
     /*
      * Set global for currently processed Tile
      */
-    void setGlobalZoom(float _zoom);
+    void setGlobalZoom(int _zoom);
 
     /* Called from Filter::eval */
     float getGlobalZoom() const { return m_globalZoom; }
@@ -78,11 +79,12 @@ private:
 
     const Feature* m_feature = nullptr;
 
-    fastmap<FilterGlobal, Value> m_globals;
+    std::array<Value, 4> m_globals;
 
     int32_t m_sceneId = -1;
 
-    float m_globalZoom = -1;
+    double m_globalGeom = -1;
+    double m_globalZoom = -1;
 };
 
 }
