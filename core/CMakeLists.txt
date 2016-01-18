@@ -60,9 +60,7 @@ target_link_libraries(${CORE_LIBRARY}
   css-color-parser-cpp
   geojson-vt-cpp
   yaml-cpp
-  freetype
-  icucommon
-  harfbuzz)
+  harfbuzz ${HARFBUZZ_LIBRARIES})
 
 target_include_directories(${CORE_LIBRARY}
   PUBLIC
