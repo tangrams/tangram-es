@@ -50,8 +50,13 @@ struct DrawRuleData {
 struct DrawRule {
 
     const StyleParam* params[StyleParamKeySize] = { nullptr };
-    const char*       layers[StyleParamKeySize] = { nullptr };
-    size_t            depths[StyleParamKeySize] = { 0 };
+
+    struct Layer {
+        const char* name = nullptr;
+        size_t depth = 0;
+    };
+
+    Layer layers[StyleParamKeySize];
 
     const std::string* name = nullptr;
 
