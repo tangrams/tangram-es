@@ -110,10 +110,17 @@ public:
         Transition selectTransition;
         Transition hideTransition;
         Transition showTransition;
+        size_t repeatGroup = 0;
+        float repeatDistance;
         float buffer = 0.f;
 
         // the label hash based on its styling parameters
         size_t paramHash;
+    };
+
+    enum OcclusionType {
+        collision,
+        repeat_group
     };
 
     Label(Transform _transform, glm::vec2 _size, Type _type, LabelMesh& _mesh, Range _vertexRange,
@@ -135,8 +142,8 @@ public:
 
     virtual void updateBBoxes(float _zoomFract) = 0;
 
-    /* Sets the occlusion */
-    void setOcclusion(bool _occlusion);
+    /* Occlude the label */
+    void occlude(OcclusionType _type, bool _occlusion = true);
 
     /* Checks whether the label is in a state where it can occlusion */
     bool canOcclude();
@@ -145,8 +152,6 @@ public:
     void occlusionSolved();
 
     void skipTransitions();
-
-    bool occludedLastFrame() { return m_occludedLastFrame; }
 
     /* Checks whether the label is in a visible state */
     bool visibleState() const;
@@ -167,6 +172,10 @@ public:
     const OBB& obb() const { return m_obb; }
     const Transform& transform() const { return m_transform; }
     const State& state() const { return m_currentState; }
+    bool occludedLastFrame() const { return m_occludedLastFrame; }
+    virtual glm::vec2 center() const;
+
+    OcclusionType occlusionType() const { return m_occlusionType; }
 
 private:
 
@@ -191,6 +200,8 @@ private:
     bool m_updateMeshVisibility;
     // whether this label should skip transitions to move to first visible state
     bool m_skipTransitions;
+    // How occlusion have been triggered
+    OcclusionType m_occlusionType;
 
 protected:
 
@@ -215,6 +226,9 @@ protected:
     Range m_vertexRange;
     // label options
     Options m_options;
+
+    glm::vec2 m_xAxis;
+    glm::vec2 m_yAxis;
 };
 
 }
@@ -229,6 +243,8 @@ namespace std {
             hash_combine(seed, o.priority);
             hash_combine(seed, o.interactive);
             hash_combine(seed, o.collide);
+            hash_combine(seed, o.repeatDistance);
+            hash_combine(seed, o.repeatGroup);
             hash_combine(seed, (int)o.selectTransition.ease);
             hash_combine(seed, o.selectTransition.time);
             hash_combine(seed, (int)o.hideTransition.ease);
@@ -239,3 +255,4 @@ namespace std {
         }
     };
 }
+

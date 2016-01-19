@@ -3,6 +3,7 @@
 #include "scene/styleParam.h"
 
 #include <vector>
+#include <set>
 
 namespace Tangram {
 
@@ -65,6 +66,10 @@ struct DrawRule {
     bool contains(StyleParamKey _key) const;
 
     const std::string& getStyleName() const;
+
+    const char* getLayerName(StyleParamKey _key) const;
+
+    std::set<const char*> getLayerNames() const;
 
     const StyleParam& findParameter(StyleParamKey _key) const;
 

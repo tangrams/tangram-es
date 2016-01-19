@@ -22,14 +22,14 @@ TEST_CASE( "Ensure the transition from wait -> sleep when occlusion happens", "[
     TextLabel l(makeLabel({screenSize/2.f}, Label::Type::point));
 
     REQUIRE(l.state() == Label::State::wait_occ);
-    l.setOcclusion(true);
+    l.occlude(Label::OcclusionType::collision, true);
     l.update(glm::ortho(0.f, screenSize.x, screenSize.y, 0.f, -1.f, 1.f), screenSize, 0, 0);
 
     REQUIRE(l.state() != Label::State::sleep);
     REQUIRE(l.state() == Label::State::wait_occ);
     REQUIRE(l.canOcclude());
 
-    l.setOcclusion(true);
+    l.occlude(Label::OcclusionType::collision, true);
     l.occlusionSolved();
     l.update(glm::ortho(0.f, screenSize.x, screenSize.y, 0.f, -1.f, 1.f), screenSize, 0, 0);
 
@@ -42,13 +42,13 @@ TEST_CASE( "Ensure the transition from wait -> visible when no occlusion happens
 
     REQUIRE(l.state() == Label::State::wait_occ);
 
-    l.setOcclusion(false);
+    l.occlude(Label::OcclusionType::collision, false);
     l.update(glm::ortho(0.f, screenSize.x, screenSize.y, 0.f, -1.f, 1.f), screenSize, 0, 0);
 
     REQUIRE(l.state() != Label::State::sleep);
     REQUIRE(l.state() == Label::State::wait_occ);
 
-    l.setOcclusion(false);
+    l.occlude(Label::OcclusionType::collision, false);
     l.occlusionSolved();
     l.update(glm::ortho(0.f, screenSize.x, screenSize.y, 0.f, -1.f, 1.f), screenSize, 0, 0);
 
@@ -63,14 +63,14 @@ TEST_CASE( "Ensure the transition from wait -> visible when no occlusion happens
 TEST_CASE( "Ensure the end state after occlusion is leep state", "[Core][Label]" ) {
     TextLabel l(makeLabel({screenSize/2.f}, Label::Type::point));
 
-    l.setOcclusion(false);
+    l.occlude(Label::OcclusionType::collision, false);
     l.occlusionSolved();
     l.update(glm::ortho(0.f, screenSize.x, screenSize.y, 0.f, -1.f, 1.f), screenSize, 0.f, 0);
 
     REQUIRE(l.state() == Label::State::fading_in);
     REQUIRE(l.canOcclude());
 
-    l.setOcclusion(true);
+    l.occlude(Label::OcclusionType::collision, true);
     l.occlusionSolved();
     l.update(glm::ortho(0.f, screenSize.x, screenSize.y, 0.f, -1.f, 1.f), screenSize, 0.f, 0);
 
@@ -92,7 +92,8 @@ TEST_CASE( "Ensure the out of screen state transition", "[Core][Label]" ) {
     REQUIRE(l.state() == Label::State::wait_occ);
     REQUIRE(l.canOcclude());
 
-    l.setOcclusion(false);
+    l.occlude(Label::OcclusionType::collision, false);
+    l.resetState();
     l.occlusionSolved();
     l.update(glm::ortho(0.f, screenSize.x * 4.f, screenSize.y * 4.f, 0.f, -1.f, 1.f), screenSize, 0.f, 0);
     REQUIRE(l.state() != Label::State::wait_occ);

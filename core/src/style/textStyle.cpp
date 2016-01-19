@@ -11,6 +11,7 @@
 #include "text/fontContext.h"
 #include "data/propertyItem.h" // Include wherever Properties is used!
 #include "text/textBuffer.h"
+#include "util/hash.h"
 
 #include "platform.h"
 #include "tangram.h"
@@ -111,6 +112,32 @@ auto TextStyle::applyRule(const DrawRule& _rule, const Properties& _props) const
         }
     }
 
+    size_t repeatGroupHash = 0;
+    std::string repeatGroup;
+    if (_rule.get(StyleParamKey::repeat_group, repeatGroup)) {
+        hash_combine(repeatGroupHash, repeatGroup);
+    } else {
+        // Default to hash on all used layer names ('draw.key' in JS version)
+        for (auto* name : _rule.getLayerNames()) {
+            hash_combine(repeatGroupHash, name);
+            // repeatGroup += name;
+            // repeatGroup += "/";
+        }
+        //LOG("rg: %s", p.labelOptions.repeatGroup.c_str());
+    }
+
+    StyleParam::Width repeatDistance;
+    if (_rule.get(StyleParamKey::repeat_distance, repeatDistance)) {
+        p.labelOptions.repeatDistance = repeatDistance.value;
+    } else {
+        p.labelOptions.repeatDistance = View::s_pixelsPerTile;
+    }
+
+    hash_combine(repeatGroupHash, p.text);
+    p.labelOptions.repeatGroup = repeatGroupHash;
+
+    p.labelOptions.repeatDistance *= m_pixelScale;
+
     if (_rule.get(StyleParamKey::interactive, p.interactive) && p.interactive) {
         p.properties = std::make_shared<Properties>(_props);
     }
@@ -159,10 +186,6 @@ void TextStyle::buildPoint(const Point& _point, const DrawRule& _rule, const Pro
     auto& buffer = static_cast<TextBuffer&>(_mesh);
 
     Parameters params = applyRule(_rule, _props);
-
-   // std::hash<Parameters> hash;
-   // auto h = hash(params);
-   // LOG("Hash %d", h);
 
     if (!params.visible || !params.isValid()) { return; }
 
