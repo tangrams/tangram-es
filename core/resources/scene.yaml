@@ -314,7 +314,6 @@ layers:
             draw:
                 polygons:
                     extrude: true
-            draw:
                 lines:
                     style: heightglowline
                     width: 1.0
