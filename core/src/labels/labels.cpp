@@ -164,13 +164,9 @@ void Labels::skipTransitions(const std::vector<std::unique_ptr<Style>>& _styles,
 void Labels::checkRepeatGroups(std::vector<TextLabel*>& _visibleSet) const {
     struct GroupElement {
         glm::vec2 position;
-        float threshold;
-        const size_t group;
 
         bool operator==(const GroupElement& _ge) {
-            return _ge.position == position
-                && _ge.threshold == threshold
-                && _ge.group == group;
+            return _ge.position == position;
         };
     };
 
@@ -178,36 +174,23 @@ void Labels::checkRepeatGroups(std::vector<TextLabel*>& _visibleSet) const {
 
     for (TextLabel* textLabel : _visibleSet) {
         auto& options = textLabel->options();
-        if (options.repeatDistance == 0.f) { continue; }
+        GroupElement element { textLabel->center() };
 
-        size_t hash = options.repeatGroup;
-
-        GroupElement element {
-            textLabel->center(),
-            options.repeatDistance,
-            options.repeatGroup
-        };
-
-        auto it = repeatGroups.find(hash);
-        if (it == repeatGroups.end()) {
-            repeatGroups[hash].push_back(element);
+        auto& group = repeatGroups[options.repeatGroup];
+        if (group.empty()) {
+            group.push_back(element);
             continue;
         }
 
-        std::vector<GroupElement>& group = it->second;
         if (std::find(group.begin(), group.end(), element) != group.end()) {
-            // TBD: when is this case possible?
-            // -> When two tiles contain the same label?
+            //Two tiles contain the same label - have the same screen position.
             continue;
         }
+
+        float threshold2 = pow(options.repeatDistance, 2);
 
         bool add = true;
-        float threshold2 = pow(element.threshold, 2);
-
         for (const GroupElement& ge : group) {
-            if (ge.group != element.group) {
-                continue;
-            }
 
             float d2 = distance2(ge.position, element.position);
             if (d2 < threshold2) {
@@ -273,6 +256,10 @@ void Labels::update(const View& _view, float _dt,
             if (!label->visibleState() && label->occlusionType() == Label::OcclusionType::collision) {
                 continue;
             }
+            if (label->options().repeatDistance == 0.f) {
+                continue;
+            }
+
             TextLabel* textLabel = dynamic_cast<TextLabel*>(label);
             if (!textLabel) { continue; }
             repeatGroupSet.push_back(textLabel);
