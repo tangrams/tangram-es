@@ -213,6 +213,8 @@ std::vector<Filter> Filter::sort(const std::vector<Filter>& _filters) {
     return filters;
 }
 
+#if 0
+
 bool Filter::eval(const Feature& feat, StyleContext& ctx) const {
 
     switch (data.get_type_index()) {
@@ -298,5 +300,131 @@ bool Filter::eval(const Feature& feat, StyleContext& ctx) const {
     //assert(false);
     return false;
 }
+
+#else
+
+struct string_matcher {
+    using result_type = bool;
+    const std::string& str;
+
+    template <typename T>
+    bool operator()(T v) const { return false; }
+    bool operator()(const std::string& v) const {
+        return str == v;
+    }
+};
+
+struct number_matcher {
+    using result_type = bool;
+    double num;
+
+    template <typename T>
+    bool operator()(T v) const { return false; }
+    bool operator()(const double& v) const {
+        if (num == v) { return true; }
+        return std::fabs(num - v) <= std::numeric_limits<double>::epsilon();
+    }
+};
+
+struct match_equal {
+    using result_type = bool;
+
+    const std::vector<Value>& values;
+
+    template <typename T>
+    bool operator()(T) const { return false; }
+
+    bool operator()(const double& num) const {
+        number_matcher m{num};
+        for (const auto& v : values) {
+            if (Value::visit(v, m)) {
+                return true;
+            }
+        }
+        return false;
+    }
+    bool operator()(const std::string& str) const {
+        string_matcher m{str};
+
+        for (const auto& v : values) {
+            if (Value::visit(v, m)) {
+                return true;
+            }
+        }
+        return false;
+    }
+};
+
+struct match_range {
+    const Filter::Range& f;
+
+    bool operator() (const double& num) const {
+        return num >= f.min && num < f.max;
+    }
+    bool operator() (const std::string&) const { return false; }
+    bool operator() (const none_type&) const { return false; }
+};
+
+struct matcher {
+    using result_type = bool;
+
+    matcher(const Feature& feat, StyleContext& ctx) :
+        props(feat.props), ctx(ctx) {}
+
+    const Properties& props;
+    StyleContext& ctx;
+
+    bool eval(const Filter::Data& data) const {
+        return Filter::Data::visit(data, *this);
+    }
+
+    bool operator() (const Filter::OperatorAny& f) const {
+        for (const auto& filt : f.operands) {
+            if (eval(filt.data)) { return true; }
+        }
+        return false;
+    }
+    bool operator() (const Filter::OperatorAll& f) const {
+        for (const auto& filt : f.operands) {
+            if (!eval(filt.data)) { return false; }
+        }
+        return true;
+    }
+    bool operator() (const Filter::OperatorNone& f) const {
+        for (const auto& filt : f.operands) {
+            if (eval(filt.data)) { return false; }
+        }
+        return true;
+    }
+    bool operator() (const Filter::Existence& f) const {
+        return f.exists == props.contains(f.key);
+    }
+    bool operator() (const Filter::Equality& f) const {
+        auto& value = (f.global == FilterGlobal::undefined)
+            ? props.get(f.key)
+            : ctx.getGlobal(f.global);
+
+        return Value::visit(value, match_equal{f.values});
+    }
+    bool operator() (const Filter::Range& f) const {
+        auto& value = (f.global == FilterGlobal::undefined)
+            ? props.get(f.key)
+            : ctx.getGlobal(f.global);
+
+        return Value::visit(value, match_range{f});
+    }
+    bool operator() (const Filter::Function& f) const {
+        return ctx.evalFilter(f.id);
+    }
+    bool operator() (const none_type& f) const {
+        return true;
+    }
+};
+
+bool Filter::eval(const Feature& feat, StyleContext& ctx) const {
+    return Data::visit(data, matcher(feat, ctx));
+}
+
+#endif
 
 }
