@@ -111,13 +111,19 @@ auto TextStyle::applyRule(const DrawRule& _rule, const Properties& _props) const
         }
     }
 
-    if (_rule.get(StyleParamKey::repeat_group, p.labelOptions.repeatGroup)) {
-        StyleParam::Width repeatDistance;
-        if (_rule.get(StyleParamKey::repeat_distance, repeatDistance)) {
-            p.labelOptions.repeatDistance = repeatDistance.value;
-        }
-    } else {
+    if (!_rule.get(StyleParamKey::repeat_group, p.labelOptions.repeatGroup)) {
         // TODO: default to 'draw.key'
+        // TODO: Optimize - this is kind of heavy on allocations
+        for (auto* name : _rule.getLayerNames()) {
+            p.labelOptions.repeatGroup += name;
+            p.labelOptions.repeatGroup += "/";
+        }
+        //LOG("rg: %s", p.labelOptions.repeatGroup.c_str());
+    }
+
+    StyleParam::Width repeatDistance;
+    if (_rule.get(StyleParamKey::repeat_distance, repeatDistance)) {
+        p.labelOptions.repeatDistance = repeatDistance.value;
     }
 
     // TBD: should avoid allocation for combined string

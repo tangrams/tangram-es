@@ -96,6 +96,21 @@ const std::string& DrawRule::getStyleName() const {
     }
 }
 
+const char* DrawRule::getLayerName(StyleParamKey _key) const {
+    return layers[static_cast<uint8_t>(_key)];
+}
+
+std::set<const char*> DrawRule::getLayerNames() const {
+    std::set<const char*> layerNames;
+
+    for (size_t i = 0; i < StyleParamKeySize; i++) {
+        if (layers[i][0] != '\0') {
+            layerNames.insert(layers[i]);
+        }
+    }
+    return layerNames;
+}
+
 void DrawRule::logGetError(StyleParamKey _expectedKey, const StyleParam& _param) const {
     LOGE("wrong type '%d'for StyleParam '%d'", _param.value.which(), _expectedKey);
 }
