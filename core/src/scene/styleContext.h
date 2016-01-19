@@ -43,7 +43,9 @@ public:
     /* Called from Filter::eval */
     float getGlobalZoom() const { return m_globalZoom; }
 
-    const Value& getGlobal(FilterGlobal _key) const;
+    const Value& getGlobal(FilterGlobal _key) const {
+        return m_globals[static_cast<uint8_t>(_key)];
+    }
 
     /* Called from Filter::eval */
     bool evalFilter(FunctionID id);
@@ -75,16 +77,15 @@ private:
 
     bool parseStyleResult(StyleParamKey _key, StyleParam::Value& _val) const;
 
-    mutable duk_context *m_ctx;
-
-    const Feature* m_feature = nullptr;
-
     std::array<Value, 4> m_globals;
+    double m_globalGeom = -1;
+    double m_globalZoom = -1;
 
     int32_t m_sceneId = -1;
 
-    double m_globalGeom = -1;
-    double m_globalZoom = -1;
+    const Feature* m_feature = nullptr;
+
+    mutable duk_context *m_ctx;
 };
 
 }

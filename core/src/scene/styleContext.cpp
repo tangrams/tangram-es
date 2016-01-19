@@ -154,10 +154,6 @@ void StyleContext::setGlobal(const std::string& _key, const Value& _val) {
     }
 }
 
-const Value& StyleContext::getGlobal(FilterGlobal _key) const {
-    return m_globals[static_cast<uint8_t>(_key)];
-}
-
 const Value& StyleContext::getGlobal(const std::string& _key) const {
     return getGlobal(Filter::globalType(_key));
 }
