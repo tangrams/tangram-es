@@ -11,6 +11,7 @@
 #include "text/fontContext.h"
 #include "data/propertyItem.h" // Include wherever Properties is used!
 #include "text/textBuffer.h"
+#include "util/hash.h"
 
 #include "platform.h"
 #include "tangram.h"
@@ -111,13 +112,16 @@ auto TextStyle::applyRule(const DrawRule& _rule, const Properties& _props) const
         }
     }
 
-    std::string repeatGroup = "";
-    if (!_rule.get(StyleParamKey::repeat_group, repeatGroup)) {
-        // TODO: default to 'draw.key'
-        // TODO: Optimize - this is kind of heavy on allocations
+    size_t repeatGroupHash = 0;
+    std::string repeatGroup;
+    if (_rule.get(StyleParamKey::repeat_group, repeatGroup)) {
+        hash_combine(repeatGroupHash, repeatGroup);
+    } else {
+        // Default to hash on all used layer names ('draw.key' in JS version)
         for (auto* name : _rule.getLayerNames()) {
-            repeatGroup += name;
-            repeatGroup += "/";
+            hash_combine(repeatGroupHash, name);
+            // repeatGroup += name;
+            // repeatGroup += "/";
         }
         //LOG("rg: %s", p.labelOptions.repeatGroup.c_str());
     }
@@ -127,9 +131,9 @@ auto TextStyle::applyRule(const DrawRule& _rule, const Properties& _props) const
         p.labelOptions.repeatDistance = repeatDistance.value;
     }
 
-    // TBD: should avoid allocation for combined string
-    repeatGroup += "/" + p.text;
-    p.labelOptions.repeatGroup = std::hash<std::string>()(repeatGroup);
+    hash_combine(repeatGroupHash, p.text);
+    p.labelOptions.repeatGroup = repeatGroupHash;
+
     p.labelOptions.repeatDistance *= m_pixelScale;
 
     if (_rule.get(StyleParamKey::interactive, p.interactive) && p.interactive) {
