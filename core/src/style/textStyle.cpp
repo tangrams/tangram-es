@@ -114,7 +114,7 @@ auto TextStyle::applyRule(const DrawRule& _rule, const Properties& _props) const
     if (_rule.get(StyleParamKey::repeat_group, p.labelOptions.repeatGroup)) {
         StyleParam::Width repeatDistance;
         if (_rule.get(StyleParamKey::repeat_distance, repeatDistance)) {
-            p.labelOptions.repeatDistance = repeatDistance.value * m_pixelScale;
+            p.labelOptions.repeatDistance = repeatDistance.value;
         }
     } else {
         // TODO: default to 'draw.key'
@@ -122,6 +122,7 @@ auto TextStyle::applyRule(const DrawRule& _rule, const Properties& _props) const
 
     // TBD: should avoid allocation for combined string
     p.labelOptions.repeatGroup += "/" + p.text;
+    p.labelOptions.repeatDistance *= m_pixelScale;
 
     if (_rule.get(StyleParamKey::interactive, p.interactive) && p.interactive) {
         p.properties = std::make_shared<Properties>(_props);
