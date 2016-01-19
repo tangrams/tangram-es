@@ -165,12 +165,12 @@ void Labels::checkRepeatGroups(std::vector<TextLabel*>& _visibleSet) const {
     struct GroupElement {
         glm::vec2 position;
         float threshold;
-        const std::string* group;
+        const size_t group;
 
         bool operator==(const GroupElement& _ge) {
             return _ge.position == position
                 && _ge.threshold == threshold
-                && *_ge.group == *group;
+                && _ge.group == group;
         };
     };
 
@@ -180,12 +180,12 @@ void Labels::checkRepeatGroups(std::vector<TextLabel*>& _visibleSet) const {
         auto& options = textLabel->options();
         if (options.repeatDistance == 0.f) { continue; }
 
-        size_t hash = std::hash<std::string>()(options.repeatGroup);
+        size_t hash = options.repeatGroup;
 
         GroupElement element {
             textLabel->center(),
             options.repeatDistance,
-            &options.repeatGroup
+            options.repeatGroup
         };
 
         auto it = repeatGroups.find(hash);
@@ -205,6 +205,10 @@ void Labels::checkRepeatGroups(std::vector<TextLabel*>& _visibleSet) const {
         float threshold2 = pow(element.threshold, 2);
 
         for (const GroupElement& ge : group) {
+            if (ge.group != element.group) {
+                continue;
+            }
+
             float d2 = distance2(ge.position, element.position);
             if (d2 < threshold2) {
                 textLabel->occlude(Label::OcclusionType::repeat_group);
@@ -389,7 +393,7 @@ void Labels::drawDebug(const View& _view) {
             Primitives::setColor(0x0000ff);
             Primitives::drawRect(sp - glm::vec2(1.f), sp + glm::vec2(1.f));
 
-            if (!label->options().repeatGroup.empty() && label->state() == Label::State::visible) {
+            if (label->options().repeatGroup != 0 && label->state() == Label::State::visible) {
                 size_t seed = 0;
                 hash_combine(seed, label->options().repeatGroup);
                 float repeatDistance = label->options().repeatDistance;

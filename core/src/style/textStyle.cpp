@@ -68,7 +68,7 @@ auto TextStyle::applyRule(const DrawRule& _rule, const Properties& _props) const
 
     Parameters p;
 
-    std::string fontFamily, fontWeight, fontStyle, transform, align, anchor, repeatGroup;
+    std::string fontFamily, fontWeight, fontStyle, transform, align, anchor;
     glm::vec2 offset;
 
     _rule.get(StyleParamKey::font_family, fontFamily);
@@ -111,12 +111,13 @@ auto TextStyle::applyRule(const DrawRule& _rule, const Properties& _props) const
         }
     }
 
-    if (!_rule.get(StyleParamKey::repeat_group, p.labelOptions.repeatGroup)) {
+    std::string repeatGroup = "";
+    if (!_rule.get(StyleParamKey::repeat_group, repeatGroup)) {
         // TODO: default to 'draw.key'
         // TODO: Optimize - this is kind of heavy on allocations
         for (auto* name : _rule.getLayerNames()) {
-            p.labelOptions.repeatGroup += name;
-            p.labelOptions.repeatGroup += "/";
+            repeatGroup += name;
+            repeatGroup += "/";
         }
         //LOG("rg: %s", p.labelOptions.repeatGroup.c_str());
     }
@@ -127,7 +128,8 @@ auto TextStyle::applyRule(const DrawRule& _rule, const Properties& _props) const
     }
 
     // TBD: should avoid allocation for combined string
-    p.labelOptions.repeatGroup += "/" + p.text;
+    repeatGroup += "/" + p.text;
+    p.labelOptions.repeatGroup = std::hash<std::string>()(repeatGroup);
     p.labelOptions.repeatDistance *= m_pixelScale;
 
     if (_rule.get(StyleParamKey::interactive, p.interactive) && p.interactive) {
