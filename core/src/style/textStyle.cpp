@@ -129,6 +129,8 @@ auto TextStyle::applyRule(const DrawRule& _rule, const Properties& _props) const
     StyleParam::Width repeatDistance;
     if (_rule.get(StyleParamKey::repeat_distance, repeatDistance)) {
         p.labelOptions.repeatDistance = repeatDistance.value;
+    } else {
+        p.labelOptions.repeatDistance = View::s_pixelsPerTile;
     }
 
     hash_combine(repeatGroupHash, p.text);

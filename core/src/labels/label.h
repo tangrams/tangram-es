@@ -111,7 +111,7 @@ public:
         Transition hideTransition;
         Transition showTransition;
         size_t repeatGroup = 0;
-        float repeatDistance = 256.0; // TODO: move those value to a config file (pixel per tile from view.h)
+        float repeatDistance;
         float buffer = 0.f;
 
         // the label hash based on its styling parameters

@@ -137,6 +137,7 @@ public:
     /* TODO: API for setting these */
     constexpr static float s_maxZoom = 20.5;
     constexpr static float s_minZoom = 0.0;
+    constexpr static float s_pixelsPerTile = 256.0;
 
     const glm::mat4& getOrthoViewportMatrix() const { return m_orthoViewport; };
 
@@ -184,7 +185,6 @@ protected:
     int m_vpHeight;
     float m_aspect;
     float m_pixelScale = 1.0f;
-    float m_pixelsPerTile = 256.0;
 
     CameraType m_type;
 

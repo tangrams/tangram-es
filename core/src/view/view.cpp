@@ -278,7 +278,7 @@ double View::screenToGroundPlane(double& _screenX, double& _screenY) {
 float View::pixelsPerMeter() const {
 
     double metersPerTile = MapProjection::HALF_CIRCUMFERENCE * exp2(-m_zoom);
-    return m_pixelsPerTile / metersPerTile;
+    return s_pixelsPerTile / metersPerTile;
 }
 
 void View::updateMatrices() {
@@ -287,7 +287,7 @@ void View::updateMatrices() {
     float worldTileSize = 2 * MapProjection::HALF_CIRCUMFERENCE * pow(2, -m_zoom);
 
     // viewport height in world space is such that each tile is [m_pixelsPerTile] px square in screen space
-    float screenTileSize = m_pixelsPerTile * m_pixelScale;
+    float screenTileSize = s_pixelsPerTile * m_pixelScale;
     m_height = (float)m_vpHeight * worldTileSize / screenTileSize;
     m_width = m_height * m_aspect;
 
