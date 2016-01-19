@@ -161,12 +161,14 @@ Feature getFeature(const JsonValue& _geometry, const Topology& _topology, int32_
     }
 
     if (type == "Point") {
+        feature.geometryType = GeometryType::points;
         auto coordinatesIt = _geometry.FindMember(keyCoordinates);
         if (coordinatesIt != _geometry.MemberEnd()) {
             glm::ivec2 cursor;
             feature.points.push_back(getPoint(coordinatesIt->value, _topology, cursor));
         }
     } else if (type == "MultiPoint") {
+        feature.geometryType = GeometryType::points;
         auto coordinatesIt = _geometry.FindMember(keyCoordinates);
         if (coordinatesIt != _geometry.MemberEnd() && coordinatesIt->value.IsArray()) {
             auto& coordinates = coordinatesIt->value;
@@ -176,11 +178,13 @@ Feature getFeature(const JsonValue& _geometry, const Topology& _topology, int32_
             }
         }
     } else if (type == "LineString") {
+        feature.geometryType = GeometryType::lines;
         auto arcsIt = _geometry.FindMember(keyArcs);
         if (arcsIt != _geometry.MemberEnd()) {
             feature.lines.push_back(getLine(arcsIt->value, _topology));
         }
     } else if (type == "MultiLineString") {
+        feature.geometryType = GeometryType::lines;
         auto arcsIt = _geometry.FindMember(keyArcs);
         if (arcsIt != _geometry.MemberEnd() && arcsIt->value.IsArray()) {
             auto& arcs = arcsIt->value;
@@ -189,11 +193,13 @@ Feature getFeature(const JsonValue& _geometry, const Topology& _topology, int32_
             }
         }
     } else if (type == "Polygon") {
+        feature.geometryType = GeometryType::polygons;
         auto arcsIt = _geometry.FindMember(keyArcs);
         if (arcsIt != _geometry.MemberEnd()) {
             feature.polygons.push_back(getPolygon(arcsIt->value, _topology));
         }
     } else if (type == "MultiPolygon") {
+        feature.geometryType = GeometryType::polygons;
         auto arcsIt = _geometry.FindMember(keyArcs);
         if (arcsIt != _geometry.MemberEnd() && arcsIt->value.IsArray()) {
             auto& arcs = arcsIt->value;
