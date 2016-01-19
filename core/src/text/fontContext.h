@@ -64,8 +64,6 @@ private:
     static int renderCreate(void* _userPtr, int _width, int _height);
     static void pushQuad(void* _userPtr, const FONSquad* _quad);
     static void fontstashError(void* _uptr, int _error, int _val);
-    static FONSUTF32string toUTF32Alloc(void* _uptr, const char* _str);
-    static void UTF32Free(void* _uptr, FONSUTF32string _str);
 
     FontContext(int _atlasSize);
 

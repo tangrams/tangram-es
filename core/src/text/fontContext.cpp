@@ -7,8 +7,13 @@
 #include "hb-ft.h"
 #include <locale>
 #include <codecvt>
+#include "unicode/unistr.h"
+#include "unicode/ubidi.h"
+#include "unicode/uscript.h"
+#include "unicode/schriter.h"
 #define FONTSTASH_IMPLEMENTATION
 #include "fontstash.h"
+#include "wordbreak.h"
 
 #include "platform.h"
 
@@ -140,21 +145,103 @@ std::vector<FONSquad>& FontContext::rasterize(const std::string& _text,
 {
     m_quadBuffer.clear();
 
-    fonsInitShapingPlan(m_fsContext, _text.c_str());
+    // Line breaks detection
+    static bool init_libunibreak = false;
+    if(!init_libunibreak) {
+        init_wordbreak();
+        init_linebreak();
+        init_libunibreak = true;
+    }
+
+    std::wstring_convert<std::codecvt_utf8<char16_t>, char16_t> conv;
+    std::u16string u16 = conv.from_bytes(_text.c_str());
+    char* wordbreaks = new char[u16.length()];
+    char* linebreaks = new char[u16.length()];
+    set_wordbreaks_utf16(reinterpret_cast<const unsigned short*>(u16.c_str()), u16.length(), "", wordbreaks);
+    set_linebreaks_utf16(reinterpret_cast<const unsigned short*>(u16.c_str()), u16.length(), "", linebreaks);
+
+    for (int i = 0; i < u16.length(); ++i) {
+        if (wordbreaks[i] == WORDBREAK_BREAK) {
+            LOGW("Break word %s at %d", _text.c_str(), i);
+        }
+    }
+    for (int i = 0; i < u16.length(); ++i) {
+        if (linebreaks[i] == LINEBREAK_MUSTBREAK) {
+            LOGW("Line break  %s at %d", _text.c_str(), i);
+        }
+    }
+    delete[] wordbreaks;
+    delete[] linebreaks;
+
+    // Ubidi detection
+    size_t const length = u16.length();
+    UErrorCode error = U_ZERO_ERROR;
+    UBiDiLevel dirn = 0;
+    UBiDi* bidi = ubidi_openSized(u16.length(), 0, &error);
+
+    if(bidi == NULL) {
+        LOGW("Bidi NULL");
+        return m_quadBuffer;
+    }
+
+    if (error != U_ZERO_ERROR) {
+        LOGW("UBidi error %s", u_errorName(error));
+        return m_quadBuffer;
+    }
+
+    ubidi_setPara(bidi, reinterpret_cast<const UChar*>(u16.c_str()), u16.length(), dirn, NULL, &error);
+
+    if (error != U_ZERO_ERROR) {
+        LOGW("UBidi error %s", u_errorName(error));
+        ubidi_close(bidi);
+        return m_quadBuffer;
+    }
+
+    UBiDiDirection direction = ubidi_getDirection(bidi);
+    if (direction == UBIDI_MIXED) {
+        size_t count = ubidi_countRuns(bidi, &error);
+        if (error != U_ZERO_ERROR) {
+            LOGW("UBidi error %s", u_errorName(error));
+            ubidi_close(bidi);
+            return m_quadBuffer;
+        }
+        LOG("Bidi direction detected %d %s", count, _text.c_str());
+        for (size_t i = 0; i < count; i++) {
+            int start, length;
+            direction = ubidi_getVisualRun_52(bidi, i, &start, &length);
+            LOG("Direction detected %d", direction);
+            switch (direction) {
+                case UBIDI_LTR: LOGW("\tLTR"); break;
+                case UBIDI_RTL: LOGW("\tRTL"); break;
+                case UBIDI_MIXED: LOGW("\tMIXED"); break;
+                case UBIDI_NEUTRAL: LOGW("\tNEUTRAL"); break;
+            }
+        }
+    }
+    ubidi_close(bidi);
+
+    fonsSetShaping(m_fsContext);
     fonsSetSize(m_fsContext, _fontSize);
     fonsSetFont(m_fsContext, _fontID);
 
-    if (_sdf > 0) {
-        fonsSetBlur(m_fsContext, _sdf);
-        fonsSetBlurType(m_fsContext, FONS_EFFECT_DISTANCE_FIELD);
-    } else {
-        fonsSetBlurType(m_fsContext, FONS_EFFECT_NONE);
-    }
+    if (fonsTextDrawable(m_fsContext, _text.c_str(), _text.c_str() + _text.length(), 1)) {
+        if (_sdf > 0) {
+            fonsSetBlur(m_fsContext, _sdf);
+            fonsSetBlurType(m_fsContext, FONS_EFFECT_DISTANCE_FIELD);
+        } else {
+            fonsSetBlurType(m_fsContext, FONS_EFFECT_NONE);
+        }
 
-    float advance = fonsDrawText(m_fsContext, 0, 0, _text.c_str(), _text.c_str() + _text.length(), 1);
-    if (advance < 0) {
-        m_quadBuffer.clear();
-        return m_quadBuffer;
+        float advance = fonsDrawText(m_fsContext, 0, 0, _text.c_str(), _text.c_str() + _text.length(), 1);
+        if (advance < 0) {
+            m_quadBuffer.clear();
+            return m_quadBuffer;
+        }
+    } else {
+        // TODO: font stack fallback:
+        // while font stack has font && !fonsTextDrawable
+        //     change fontstash current font
+        LOGW("Can't draw string %s", _text.c_str());
     }
 
     return m_quadBuffer;
@@ -180,25 +267,6 @@ void FontContext::renderUpdate(void* _userPtr, int* _rect, const unsigned char* 
 
     std::lock_guard<std::mutex> lock(fontContext->m_atlasMutex);
     fontContext->m_atlas->setDirty(yoff, height);
-}
-
-void FontContext::UTF32Free(void* _uptr, FONSUTF32string _str) {
-    std::u32string* text = static_cast<std::u32string*>(_str.userPtr);
-    delete text;
-}
-
-FONSUTF32string FontContext::toUTF32Alloc(void* _uptr, const char* _str) {
-    FONSUTF32string utf32String;
-    std::wstring_convert<std::codecvt_utf8<char32_t>, char32_t> conv;
-    std::u32string* text = new std::u32string;
-
-    *text = conv.from_bytes(_str);
-
-    utf32String.userPtr = (void*) text;
-    utf32String.str = text->data();
-    utf32String.length = text->length();
-
-    return utf32String;
 }
 
 void FontContext::fontstashError(void* _uptr, int _error, int _val) {
@@ -251,8 +319,6 @@ void FontContext::initFontContext(int _atlasSize) {
     params.renderDraw = nullptr;
     params.renderDelete = nullptr;
     params.pushQuad = pushQuad;
-    params.toUTF32Alloc = toUTF32Alloc;
-    params.UTF32Free = UTF32Free;
     params.userPtr = (void*) this;
 
     m_fsContext = fonsCreateInternal(&params);
