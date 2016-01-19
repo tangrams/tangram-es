@@ -21,6 +21,7 @@ Properties::Properties(std::vector<Item>&& _items) {
 
 Properties& Properties::operator=(Properties&& _other) {
     props = std::move(_other.props);
+    sourceId = _other.sourceId;
     return *this;
 }
 
