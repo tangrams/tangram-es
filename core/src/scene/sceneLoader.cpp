@@ -52,6 +52,15 @@ bool SceneLoader::loadScene(const std::string& _sceneString, Scene& _scene) {
     return loadScene(config, _scene);
 }
 
+void printFilters(const SceneLayer& layer, int indent){
+    logMsg("%*s >>> %s\n", indent, "", layer.name().c_str());
+    layer.filter().print(indent + 2);
+
+    for (auto& l : layer.sublayers()) {
+        printFilters(l, indent + 2);
+    }
+};
+
 bool SceneLoader::loadScene(Node& config, Scene& _scene) {
 
     // Instantiate built-in styles
@@ -143,6 +152,9 @@ bool SceneLoader::loadScene(Node& config, Scene& _scene) {
         style->build(_scene.lights());
     }
 
+    for (auto& l : _scene.layers()) {
+        printFilters(l, 0);
+    }
     return true;
 }
 

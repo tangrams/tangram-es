@@ -18,12 +18,17 @@
 
 namespace Tangram {
 struct none_type {
+    template<typename T>
+    bool operator==(T const& rhs) const {
+        return false;
+    }
     bool operator==(none_type const& rhs) const {
         return true;
     }
     bool operator<(none_type const& rhs) const {
         return false;
     }
+
 };
 
 template<typename... Types>
