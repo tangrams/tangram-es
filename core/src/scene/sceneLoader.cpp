@@ -6,6 +6,7 @@
 #include "data/clientGeoJsonSource.h"
 #include "data/geoJsonSource.h"
 #include "data/mvtSource.h"
+#include "data/topoJsonSource.h"
 #include "gl/shaderProgram.h"
 #include "style/material.h"
 #include "style/polygonStyle.h"
@@ -835,7 +836,7 @@ void SceneLoader::loadSource(const std::pair<Node, Node>& src, Scene& _scene) {
             sourcePtr = std::shared_ptr<DataSource>(new ClientGeoJsonSource(name, url, maxZoom));
         }
     } else if (type == "TopoJSON") {
-        LOGW("TopoJSON data sources not yet implemented"); // TODO
+        sourcePtr = std::shared_ptr<DataSource>(new TopoJsonSource(name, url));
     } else if (type == "MVT") {
         sourcePtr = std::shared_ptr<DataSource>(new MVTSource(name, url, maxZoom));
     } else {
