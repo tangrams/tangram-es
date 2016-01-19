@@ -177,13 +177,16 @@ void Labels::checkRepeatGroups(std::vector<TextLabel*>& _visibleSet) const {
     std::map<size_t, std::vector<GroupElement>> repeatGroups;
 
     for (TextLabel* textLabel : _visibleSet) {
+        auto& options = textLabel->options();
+        if (options.repeatDistance == 0.f) { continue; }
 
-        size_t hash = std::hash<std::string>()(textLabel->options().repeatGroup);
-        GroupElement element;
+        size_t hash = std::hash<std::string>()(options.repeatGroup);
 
-        element.position = textLabel->center();
-        element.threshold = textLabel->options().repeatDistance;
-        element.group = &textLabel->options().repeatGroup;
+        GroupElement element {
+            textLabel->center(),
+            options.repeatDistance,
+            &options.repeatGroup
+        };
 
         auto it = repeatGroups.find(hash);
         if (it == repeatGroups.end()) {
