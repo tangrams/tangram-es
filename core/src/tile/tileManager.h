@@ -11,13 +11,19 @@
 #include <memory>
 #include <mutex>
 #include <tuple>
+#include <set>
 
 namespace Tangram {
 
 class DataSource;
-class Scene;
-class View;
 class TileCache;
+
+struct ViewState {
+    const MapProjection& mapProjection;
+    bool changedOnLastUpdate;
+    glm::dvec2 center;
+    float zoom;
+};
 
 /* Singleton container of <TileSet>s
  *
@@ -26,29 +32,20 @@ class TileCache;
  */
 class TileManager {
 
-    const static size_t MAX_WORKERS = 2;
     const static size_t DEFAULT_CACHE_SIZE = 32*1024*1024; // 32 MB
     const static int MAX_DOWNLOADS = 4;
 
 public:
 
-    TileManager();
+    TileManager(TileTaskQueue& _tileWorker);
 
     virtual ~TileManager();
 
-    /* Sets the view for which the TileManager will maintain tiles */
-    void setView(std::shared_ptr<View> _view) { m_view = _view; }
+    /* Sets the tile DataSources */
+    void setDataSources(std::vector<std::shared_ptr<DataSource>> _sources);
 
-    /* Sets the scene which the TileManager will use to style tiles */
-    void setScene(std::shared_ptr<Scene> _scene);
-
-    /* Updates visible tile set if necessary
-     *
-     * Contacts the <ViewModule> to determine whether the set of visible tiles
-     * has changed; if so, constructs or disposes tiles as needed and returns
-     * true
-     */
-    void updateTileSets();
+    /* Updates visible tile set and load missing tiles */
+    void updateTileSets(const ViewState& _view, const std::set<TileID>& _visibleTiles);
 
     void clearTileSets();
 
@@ -95,6 +92,7 @@ private:
         /* A Counter for number of tiles this tile acts a proxy for */
         int m_proxyCounter = 0;
 
+        /* The set of proxy tiles referenced by this tile */
         uint8_t m_proxies = 0;
 
         bool isReady() { return bool(tile); }
@@ -153,9 +151,9 @@ private:
         int64_t sourceGeneration;
     };
 
-    void updateTileSet(TileSet& tileSet);
+    void updateTileSet(TileSet& tileSet, const ViewState& _view, const std::set<TileID>& _visibleTiles);
 
-    void enqueueTask(TileSet& _tileSet, const TileID& _tileID, const glm::dvec2& _viewCenter);
+    void enqueueTask(TileSet& _tileSet, const TileID& _tileID, const ViewState& _view);
 
     void loadTiles();
 
@@ -184,9 +182,6 @@ private:
      */
     void clearProxyTiles(TileSet& _tileSet, const TileID& _tileID, TileEntry& _tile, std::vector<TileID>& _removes);
 
-    std::shared_ptr<View> m_view;
-    std::shared_ptr<Scene> m_scene;
-
     int32_t m_loadPending;
 
     std::vector<TileSet> m_tileSets;
@@ -196,7 +191,7 @@ private:
 
     std::unique_ptr<TileCache> m_tileCache;
 
-    std::unique_ptr<TileWorker> m_workers;
+    TileTaskQueue& m_workers;
 
     bool m_tileSetChanged = false;
 
