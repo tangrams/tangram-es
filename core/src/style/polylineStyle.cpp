@@ -166,7 +166,7 @@ struct Builder : public StyleBuilder {
 
     Parameters parseRule(const DrawRule& _rule);
 
-    bool evalWidth(StyleParam _styleParam, float& width, float& dWdZ);
+    bool evalWidth(const StyleParam& _styleParam, float& width, float& dWdZ);
 
 };
 
@@ -247,7 +247,7 @@ double widthMeterToPixel(int _zoom, double _tileSize, double _width) {
     return _width * meterRes;
 }
 
-bool Builder::evalWidth(StyleParam _styleParam, float& width, float& dWdZ) {
+bool Builder::evalWidth(const StyleParam& _styleParam, float& width, float& dWdZ) {
 
     // NB: 0.5 because 'width' will be extruded in both directions
     float tileRes = 0.5 / m_tileSize;
