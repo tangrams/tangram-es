@@ -37,6 +37,8 @@ void TileBuilder::setScene(std::shared_ptr<Scene> _scene) {
 }
 
 void TileBuilder::begin(const TileID& _tileID, const DataSource& _source) {
+    // todo use unique_ptr and upgrade to shared_ptr in tileworker
+
     m_tile = std::make_shared<Tile>(_tileID, *m_scene->mapProjection(), &_source);
 
     m_styleContext.setGlobalZoom(_tileID.z);
@@ -70,9 +72,13 @@ bool TileBuilder::beginLayer(const std::string& _layerName) {
 }
 
 bool TileBuilder::matchFeature(const Feature& _feature) {
+
     // for (auto* layer : m_activeLayers) {
-    //     m_ruleSet.apply(_feature, *layer, m_styleContext, *this);
+    //     if (m_ruleSet.match(_feature, *layer, m_styleContext)) {
+    //         return true;
+    //     }
     // }
+    // return false;
     return true;
 }
 
@@ -87,7 +93,7 @@ std::shared_ptr<Tile> TileBuilder::build() {
     for (auto& builder : m_styleBuilder) {
         m_tile->getMesh(builder.second->style()) = builder.second->build();
     }
-    return m_tile;
+    return std::move(m_tile);
 }
 
 }
