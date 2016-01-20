@@ -59,6 +59,12 @@ void View::setPixelScale(float _pixelsPerPoint) {
 
 }
 
+void View::setCameraType(CameraType _type) {
+    m_type = _type;
+    m_dirtyMatrices = true;
+    m_dirtyTiles = true;
+}
+
 void View::setSize(int _width, int _height) {
 
     m_vpWidth = _width;

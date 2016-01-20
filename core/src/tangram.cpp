@@ -353,6 +353,17 @@ void setPixelScale(float _pixelsPerPoint) {
     }
 }
 
+void setCameraType(uint8_t _cameraType) {
+
+    if (m_view) {
+        m_view->setCameraType(static_cast<CameraType>(_cameraType));
+    }
+}
+
+uint8_t getCameraType() {
+    return static_cast<uint8_t>(m_view->cameraType());
+}
+
 void addDataSource(std::shared_ptr<DataSource> _source) {
     if (!m_tileManager) { return; }
     std::lock_guard<std::mutex> lock(m_tilesMutex);

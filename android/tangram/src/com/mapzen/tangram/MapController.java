@@ -28,6 +28,12 @@ public class MapController implements Renderer {
         SINE,
     }
 
+    public enum CameraType {
+        PERSPECTIVE,
+        ISOMETRIC,
+        FLAT,
+    }
+
     public interface FeatureTouchListener {
         void onTouch(Properties properties);
     }
@@ -216,6 +222,15 @@ public class MapController implements Renderer {
      */
     public float getMapTilt() {
         return getTilt();
+    }
+
+    public void setMapCameraType(CameraType _cameraType) {
+        setCameraType(_cameraType.ordinal());
+        requestRender();
+    }
+
+    public CameraType getMapCameraType() {
+        return CameraType.values()[getCameraType()];
     }
 
     /**
@@ -427,6 +442,8 @@ public class MapController implements Renderer {
     private synchronized native float getTilt();
     private synchronized native void screenToWorldCoordinates(double[] screenCoords);
     private synchronized native void setPixelScale(float scale);
+    private synchronized native void setCameraType(int cameraType);
+    private synchronized native int getCameraType();
     private synchronized native void handleTapGesture(float posX, float posY);
     private synchronized native void handleDoubleTapGesture(float posX, float posY);
     private synchronized native void handlePanGesture(float startX, float startY, float endX, float endY);
