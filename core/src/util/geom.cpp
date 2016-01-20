@@ -66,6 +66,19 @@ float signedArea(const std::vector<glm::vec3>& _polygon) {
     return 0.5 * area;
 }
 
+float signedArea(const std::vector<glm::vec3>::const_iterator& _begin,
+                 const std::vector<glm::vec3>::const_iterator& _end) {
+    if (_begin == _end) { return 0; }
+    float area = 0;
+    glm::vec3 prev = *(_end-1);
+    for (auto it = _begin; it != _end; ++it) {
+        const auto& curr = *it;
+        area += curr.x * prev.y - curr.y * prev.x;
+        prev = curr;
+    }
+    return 0.5 * area;
+}
+
 
 glm::vec2 centroid(const std::vector<std::vector<glm::vec3>>& _polygon) {
     glm::vec2 centroid;

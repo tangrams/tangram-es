@@ -19,7 +19,9 @@ class DataSource;
 
 // Create resources and initialize the map view using the scene file at the
 // given resource path
-void initialize(const char* _scenePath);
+void initialize(const char* _scenePath, float _pixelScale = 1);
+
+void shutdown();
 
 // Initialize graphics resources; OpenGL context must be created prior to calling this
 void setupGL();
@@ -77,7 +79,6 @@ float getTilt();
 void screenToWorldCoordinates(double& _x, double& _y);
 
 // Set the ratio of hardware pixels to logical pixels (defaults to 1.0)
-void setPixelScale(float _pixelsPerPoint);
 
 // Add a data source for adding drawable map data, which will be styled
 // according to the scene file using the provided data source name;

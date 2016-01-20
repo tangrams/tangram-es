@@ -12,7 +12,8 @@ std::string DirectionalLight::s_typeName = "DirectionalLight";
 
 DirectionalLight::DirectionalLight(const std::string& _name, bool _dynamic) :
     Light(_name, _dynamic),
-    m_direction(1.0,0.0,0.0) {
+    m_direction(1.0,0.0,0.0),
+    m_uDirection(getUniformName()+".direction") {
 
     m_type = LightType::directional;
 }
@@ -34,7 +35,7 @@ void DirectionalLight::setupProgram(const View& _view, ShaderProgram& _shader ) 
 
 	if (m_dynamic) {
 		Light::setupProgram(_view, _shader);
-		_shader.setUniformf(getUniformName()+".direction", direction);
+		_shader.setUniformf(m_uDirection, direction);
 	}
 }
 

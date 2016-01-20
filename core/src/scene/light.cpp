@@ -15,6 +15,10 @@ Light::Light(const std::string& _name, bool _dynamic):
     m_ambient(0.0f),
     m_diffuse(1.0f),
     m_specular(0.0f),
+    m_uAmbient(getUniformName()+".ambient"),
+    m_uDiffuse(getUniformName()+".diffuse"),
+    m_uSpecular(getUniformName()+".specular"),
+
     m_type(LightType::ambient),
     m_origin(LightOrigin::camera),
     m_dynamic(_dynamic) {
@@ -63,9 +67,9 @@ void Light::injectOnProgram(ShaderProgram& _shader) {
 
 void Light::setupProgram(const View& _view, ShaderProgram& _shader) {
     if (m_dynamic) {
-        _shader.setUniformf(getUniformName()+".ambient", m_ambient);
-        _shader.setUniformf(getUniformName()+".diffuse", m_diffuse);
-        _shader.setUniformf(getUniformName()+".specular", m_specular);
+        _shader.setUniformf(m_uAmbient, m_ambient);
+        _shader.setUniformf(m_uDiffuse, m_diffuse);
+        _shader.setUniformf(m_uSpecular, m_specular);
     }
 }
 

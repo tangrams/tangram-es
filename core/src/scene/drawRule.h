@@ -4,11 +4,12 @@
 
 #include <vector>
 #include <set>
+#include <array>
 
 namespace Tangram {
 
 struct Feature;
-class Tile;
+class TileBuilder;
 class Scene;
 class SceneLayer;
 class StyleContext;
@@ -50,14 +51,19 @@ struct DrawRuleData {
 struct DrawRule {
 
     const StyleParam* params[StyleParamKeySize] = { nullptr };
-    const char*       layers[StyleParamKeySize] = { nullptr };
-    size_t            depths[StyleParamKeySize] = { 0 };
+
+    struct Layer {
+        const char* name;
+        size_t depth;
+    };
+
+    Layer layers[StyleParamKeySize];
 
     const std::string* name = nullptr;
 
     int id;
 
-    DrawRule(const DrawRuleData& _ruleData);
+    DrawRule(const DrawRuleData& _ruleData, const SceneLayer& _layer);
 
     void merge(const DrawRuleData& _ruleData, const SceneLayer& _layer);
 
@@ -84,19 +90,29 @@ struct DrawRule {
         return true;
     }
 
+    template<typename T>
+    const T* get(StyleParamKey _key) const {
+        auto& param = findParameter(_key);
+        if (!param) { return nullptr; }
+        if (!param.value.is<T>()) {
+            return nullptr;
+        }
+        return &param.value.get<T>();
+    }
+
 private:
     void logGetError(StyleParamKey _expectedKey, const StyleParam& _param) const;
 
 };
 
-struct DrawRuleMergeSet {
+class DrawRuleMergeSet {
 
+public:
     /* Determine and apply DrawRules for a @_feature and add
      * the result to @_tile
      */
-    void apply(const Feature& _feature, const Scene& _scene,
-               const SceneLayer& _sceneLayer,
-               StyleContext& _ctx, Tile& _tile);
+    void apply(const Feature& _feature, const SceneLayer& _sceneLayer,
+               StyleContext& _ctx, TileBuilder& _builder);
 
     // internal
     bool match(const Feature& _feature, const SceneLayer& _layer, StyleContext& _ctx);
@@ -104,12 +120,15 @@ struct DrawRuleMergeSet {
     // internal
     void mergeRules(const SceneLayer& _layer);
 
+    auto& matchedRules() { return m_matchedRules; }
+
+private:
     // Reusable containers 'matchedRules' and 'queuedLayers'
-    std::vector<DrawRule> matchedRules;
-    std::vector<const SceneLayer*> queuedLayers;
+    std::vector<DrawRule> m_matchedRules;
+    std::vector<const SceneLayer*> m_queuedLayers;
 
     // Container for dynamically-evaluated parameters
-    StyleParam evaluated[StyleParamKeySize];
+    StyleParam m_evaluated[StyleParamKeySize];
 
 };
 

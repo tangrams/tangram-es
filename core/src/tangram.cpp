@@ -25,6 +25,7 @@
 #include <cmath>
 #include <bitset>
 #include <mutex>
+#include <array>
 
 
 namespace Tangram {
@@ -55,7 +56,11 @@ static float g_time = 0.0;
 static std::bitset<8> g_flags = 0;
 int log_level = 2;
 
-void initialize(const char* _scenePath) {
+float m_pixelsPerPoint;
+
+void initialize(const char* _scenePath, float _pixelsPerPoint) {
+
+    m_pixelsPerPoint = _pixelsPerPoint;
 
     if (m_tileManager) {
         LOG("Notice: Already initialized");
@@ -111,10 +116,14 @@ void loadScene(const char* _scenePath, bool _setPositionFromScene) {
             m_scene->view()->setZoom(m_view->getZoom());
         }
         m_view = m_scene->view();
+
+        m_view->setPixelScale(m_pixelsPerPoint);
+        for (auto& style : m_scene->styles()) {
+            style->setPixelScale(m_pixelsPerPoint);
+        }
+
         m_inputHandler->setView(m_view);
         m_tileManager->setDataSources(scene->dataSources());
-        setPixelScale(m_view->pixelScale());
-
         m_tileWorker->setScene(scene);
     }
 }
@@ -355,16 +364,6 @@ void screenToWorldCoordinates(double& _x, double& _y) {
 
 }
 
-void setPixelScale(float _pixelsPerPoint) {
-
-    if (m_view) {
-        m_view->setPixelScale(_pixelsPerPoint);
-    }
-
-    for (auto& style : m_scene->styles()) {
-        style->setPixelScale(_pixelsPerPoint);
-    }
-}
 
 void addDataSource(std::shared_ptr<DataSource> _source) {
     if (!m_tileManager) { return; }
@@ -485,6 +484,15 @@ void setupGL() {
     GLExtensions::printAvailableExtensions();
 
     while (Error::hadGlError("Tangram::setupGL()")) {}
+}
+
+void shutdown() {
+    m_tileManager.reset();
+    m_scene.reset();
+    m_view.reset();
+    m_labels.reset();
+    m_skybox.reset();
+    m_inputHandler.reset();
 }
 
 }

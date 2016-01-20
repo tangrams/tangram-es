@@ -98,6 +98,10 @@ protected:
     glm::vec4 m_diffuse;
     glm::vec4 m_specular;
 
+    const std::string m_uAmbient;
+    const std::string m_uDiffuse;
+    const std::string m_uSpecular;
+
     /*  This is use to identify the type of light after been pull inside a vector of uniq_ptr of this abstract class*/
     LightType m_type;
 

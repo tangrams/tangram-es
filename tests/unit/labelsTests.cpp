@@ -13,7 +13,7 @@
 namespace Tangram {
 
 glm::vec2 screenSize(256.f, 256.f);
-TextBuffer dummy(nullptr);
+LabelMesh dummy(nullptr, 0);
 
 std::unique_ptr<TextLabel> makeLabel(Label::Transform _transform, Label::Type _type, std::string id) {
     Label::Options options;

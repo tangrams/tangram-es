@@ -157,6 +157,12 @@ void cancelUrlRequest(const std::string& _url) {
     }
 }
 
+void finishUrlRequests() {
+    for(auto& worker : s_Workers) {
+        worker.join();
+    }
+}
+
 void setCurrentThreadPriority(int priority){
     int tid = syscall(SYS_gettid);
     //int  p1 = getpriority(PRIO_PROCESS, tid);

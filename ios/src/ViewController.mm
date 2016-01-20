@@ -201,15 +201,13 @@
 {
     [EAGLContext setCurrentContext:self.context];
 
-    Tangram::initialize("scene.yaml");
+    Tangram::initialize("scene.yaml", self.pixelScale);
     Tangram::setupGL();
 
     int width = self.view.bounds.size.width;
     int height = self.view.bounds.size.height;
 
     Tangram::resize(width * self.pixelScale, height * self.pixelScale);
-
-    Tangram::setPixelScale(self.pixelScale);
 }
 
 - (void)tearDownGL

@@ -87,7 +87,13 @@ void InputHandler::handleFlingGesture(float _posX, float _posY, float _velocityX
         return;
     }
 
+    LOG("---------------------- fling %f %f ---------------", _velocityX, _velocityY);
     const static float epsilon = 0.0167f;
+
+    if (_velocityX >  10000) _velocityX =  10000;
+    if (_velocityX < -10000) _velocityX = -10000;
+    if (_velocityY >  10000) _velocityY  = 10000;
+    if (_velocityY < -10000) _velocityY = -10000;
 
     float startX = _posX;
     float startY = _posY;
@@ -107,6 +113,9 @@ void InputHandler::handleFlingGesture(float _posX, float _posY, float _velocityX
 void InputHandler::handlePinchGesture(float _posX, float _posY, float _scale, float _velocity) {
 
     onGesture();
+
+    if (_velocity >  1000) _velocity =  1000;
+    if (_velocity < -1000) _velocity = -1000;
 
     float z = m_view->getZoom();
     static float invLog2 = 1 / log(2);

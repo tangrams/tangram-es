@@ -4,6 +4,8 @@
 #include "labels/labelMesh.h"
 #include "glm/gtx/rotate_vector.hpp"
 #include "gl/extension.h"
+#include "debug.h"
+#include "tangram.h"
 
 namespace Tangram {
 
@@ -162,6 +164,10 @@ bool Label::canOcclude() {
         return false;
     }
 
+    if (Tangram::getDebugFlag(DebugFlags::all_labels)) {
+        return false;
+    }
+
     int occludeFlags = (State::visible | State::wait_occ | State::fading_in | State::sleep | State::out_of_screen);
     return (occludeFlags & m_currentState) && !(m_type == Type::debug);
 }
@@ -244,7 +250,7 @@ bool Label::updateState(const glm::mat4& _mvp, const glm::vec2& _screenSize, flo
     bool occludedLastFrame = m_occludedLastFrame;
     m_occludedLastFrame = false;
 
-    bool ruleSatisfied = updateScreenTransform(_mvp, _screenSize);
+    bool ruleSatisfied = updateScreenTransform(_mvp, _screenSize, !Tangram::getDebugFlag(DebugFlags::all_labels));
 
     // one of the label rules has not been satisfied
     if (!ruleSatisfied) {
@@ -262,6 +268,11 @@ bool Label::updateState(const glm::mat4& _mvp, const glm::vec2& _screenSize, flo
     // checks whether the label is out of the viewport
     if (offViewport(_screenSize)) {
         enterState(State::out_of_screen, 0.0);
+    }
+
+    if (Tangram::getDebugFlag(DebugFlags::all_labels)) {
+        enterState(State::visible, 1.0);
+        return false;
     }
 
     bool animate = false;

@@ -40,8 +40,9 @@ public:
 
 protected:
 
-    virtual std::shared_ptr<TileData> parse(const TileTask& _task,
-                                            const MapProjection& _projection) const override;
+    virtual bool process(const TileTask& _task,
+                         const MapProjection& _projection,
+                         TileDataSink& _sink) const override;
 
     std::unique_ptr<GeoJSONVT> m_store;
     mutable std::mutex m_mutexStore;

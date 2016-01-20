@@ -86,10 +86,9 @@ struct TestDataSource : DataSource {
 
     virtual void cancelLoadingTile(const TileID& _tile) {}
 
-    virtual std::shared_ptr<TileData> parse(const TileTask& _task,
-                                            const MapProjection& _projection) const {
-        return nullptr;
-    };
+    virtual bool process(const TileTask& _task, const MapProjection& _projection, TileDataSink& _sink) const {
+        return true;
+    }
 
     virtual void clearData() {}
 
