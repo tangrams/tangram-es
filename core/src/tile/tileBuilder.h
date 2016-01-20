@@ -6,6 +6,7 @@
 
 namespace Tangram {
 
+class DataLayer;
 class DataSource;
 class Tile;
 struct TileData;
