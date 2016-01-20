@@ -40,7 +40,7 @@ public:
     /* Gets the current map projection */
     const MapProjection& getMapProjection() const;
 
-    void setCameraType(CameraType _type) { m_type = _type; }
+    void setCameraType(CameraType _type);
     auto cameraType() const { return m_type; }
 
     void setObliqueAxis(float _x, float _y) { m_obliqueAxis = { _x, _y}; }

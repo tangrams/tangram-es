@@ -79,6 +79,12 @@ void screenToWorldCoordinates(double& _x, double& _y);
 // Set the ratio of hardware pixels to logical pixels (defaults to 1.0)
 void setPixelScale(float _pixelsPerPoint);
 
+// Set the CameraType based on the _cameraType value
+void setCameraType(uint8_t _cameraType);
+
+// Get the current CameraType of the view
+uint8_t getCameraType();
+
 // Add a data source for adding drawable map data, which will be styled
 // according to the scene file using the provided data source name;
 void addDataSource(std::shared_ptr<DataSource> _source);
