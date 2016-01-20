@@ -9,7 +9,7 @@ using namespace Tangram;
 
 std::vector<TextBuffer::WordBreak> findWords(std::string text) {
     std::vector<TextBuffer::WordBreak> words;
-    TextBuffer::Builder::findWords(" varun\n  talwar", words);
+    TextBuffer::Builder::findWords(text, words);
     return words;
 }
 

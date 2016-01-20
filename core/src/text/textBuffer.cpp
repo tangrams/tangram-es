@@ -40,9 +40,9 @@ void TextBuffer::Builder::findWords(const std::string& _text, std::vector<WordBr
             if (wordBegin <= wordEnd) {
                 _wordBreaks.push_back({wordBegin, wordEnd});
             }
-            // if (*str == '\n') {
-            //     words.push_back({itr, itr});
-            // }
+            if (*str == '\n') {
+                _wordBreaks.push_back({itr, itr});
+            }
             wordBegin = itr + 1;
         }
         itr++;
