@@ -86,6 +86,21 @@ public class MainActivity extends Activity {
             }
         });
 
+        mapController.setDoubleTapResponder(new TouchInput.DoubleTapResponder() {
+            @Override
+            public boolean onDoubleTap(float x, float y) {
+                mapController.setMapZoom(mapController.getMapZoom() + 1.f, .5f);
+                LngLat tapped = mapController.coordinatesAtScreenPosition(x, y);
+                LngLat current = mapController.getMapPosition();
+                mapController.setMapPosition(
+                        .5 * (tapped.longitude + current.longitude),
+                        .5 * (tapped.latitude + current.latitude),
+                        .5f
+                );
+                return false;
+            }
+        });
+
         mapController.setLongPressResponder(new TouchInput.LongPressResponder() {
             @Override
             public void onLongPress(float x, float y) {
