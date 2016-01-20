@@ -33,27 +33,36 @@ std::string DrawRuleData::toString() const {
     return str;
 }
 
-DrawRule::DrawRule(const DrawRuleData& _ruleData) :
+DrawRule::DrawRule(const DrawRuleData& _ruleData, const SceneLayer& _layer) :
     name(&_ruleData.name),
     id(_ruleData.id) {
+
+    const char* layerName = _layer.name().c_str();
+    const auto layerDepth = _layer.depth();
+
+    for (const auto& param : _ruleData.parameters) {
+        auto key = static_cast<uint8_t>(param.key);
+        params[key] = &param;
+        layers[key] = { layerName, layerDepth };
+    }
 }
 
 void DrawRule::merge(const DrawRuleData& _ruleData, const SceneLayer& _layer) {
-    // TODO Optimize - string copying going on here
 
     evalConflict(*this, _ruleData, _layer);
 
     const auto depthNew = _layer.depth();
     const char* layerNew = _layer.name().c_str();
 
-    for (const auto& param : _ruleData.parameters) {
+    for (const auto& paramNew : _ruleData.parameters) {
 
-        auto key = static_cast<uint8_t>(param.key);
+        auto key = static_cast<uint8_t>(paramNew.key);
+        auto& param = params[key];
         auto& layer = layers[key];
 
-        if (depthNew > layer.depth || layer.name == nullptr ||
+        if (param == nullptr || depthNew > layer.depth ||
             (depthNew == layer.depth && strcmp(layerNew, layer.name) > 0)) {
-            params[key] = &param;
+            param = &paramNew;
             layer.name = layerNew;
             layer.depth = depthNew;
         }
@@ -95,15 +104,15 @@ const std::string& DrawRule::getStyleName() const {
 }
 
 const char* DrawRule::getLayerName(StyleParamKey _key) const {
-    return layers[static_cast<uint8_t>(_key)];
+    return layers[static_cast<uint8_t>(_key)].name;
 }
 
 std::set<const char*> DrawRule::getLayerNames() const {
     std::set<const char*> layerNames;
 
     for (size_t i = 0; i < StyleParamKeySize; i++) {
-        if (layers[i][0] != '\0') {
-            layerNames.insert(layers[i]);
+        if (layers[i].name) {
+            layerNames.insert(layers[i].name);
         }
     }
     return layerNames;
@@ -171,8 +180,8 @@ void DrawRuleMergeSet::apply(const Feature& _feature, const SceneLayer& _layer,
         bool valid = true;
         for (size_t i = 0; i < StyleParamKeySize; ++i) {
 
-            auto* param = rule.params[i];
-            if (!param) { continue; }
+            auto*& param = rule.params[i];
+            if (param == nullptr) { continue; }
 
             if (param->function >= 0) {
 
@@ -183,7 +192,7 @@ void DrawRuleMergeSet::apply(const Feature& _feature, const SceneLayer& _layer,
                 }
 
                 m_evaluated[i].function = param->function;
-                rule.params[i] = &m_evaluated[i];
+                param = &m_evaluated[i];
 
             }
             if (param->stops) {
@@ -193,7 +202,6 @@ void DrawRuleMergeSet::apply(const Feature& _feature, const SceneLayer& _layer,
                 if (StyleParam::isColor(param->key)) {
                     m_evaluated[i].value = param->stops->evalColor(_ctx.getGlobalZoom());
                 } else if (StyleParam::isWidth(param->key)) {
-                    // FIXME width result is ignored from here
                     m_evaluated[i].value = param->stops->evalWidth(_ctx.getGlobalZoom());
                 } else if (StyleParam::isOffsets(param->key)) {
                     m_evaluated[i].value = param->stops->evalVec2(_ctx.getGlobalZoom());
@@ -201,7 +209,7 @@ void DrawRuleMergeSet::apply(const Feature& _feature, const SceneLayer& _layer,
                     m_evaluated[i].value = param->stops->evalFloat(_ctx.getGlobalZoom());
                 }
 
-                rule.params[i] = &m_evaluated[i];
+                param = &m_evaluated[i];
 
             }
         }
@@ -220,10 +228,10 @@ void DrawRuleMergeSet::mergeRules(const SceneLayer& _layer) {
                                [&](auto& m) { return rule.id == m.id; });
 
         if (it == m_matchedRules.end()) {
-            it = m_matchedRules.emplace(it, rule);
+            m_matchedRules.emplace_back(rule, _layer);
+        } else {
+            it->merge(rule, _layer);
         }
-
-        it->merge(rule, _layer);
     }
 }
 

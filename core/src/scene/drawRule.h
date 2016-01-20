@@ -4,6 +4,7 @@
 
 #include <vector>
 #include <set>
+#include <array>
 
 namespace Tangram {
 
@@ -52,8 +53,8 @@ struct DrawRule {
     const StyleParam* params[StyleParamKeySize] = { nullptr };
 
     struct Layer {
-        const char* name = nullptr;
-        size_t depth = 0;
+        const char* name;
+        size_t depth;
     };
 
     Layer layers[StyleParamKeySize];
@@ -62,7 +63,7 @@ struct DrawRule {
 
     int id;
 
-    DrawRule(const DrawRuleData& _ruleData);
+    DrawRule(const DrawRuleData& _ruleData, const SceneLayer& _layer);
 
     void merge(const DrawRuleData& _ruleData, const SceneLayer& _layer);
 
