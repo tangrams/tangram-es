@@ -24,17 +24,16 @@ struct LineBuilder {
         numVertices = 0;
         indices.clear();
     }
-    void buildPolyLine(const Line& _line, int cornersOnCap, int trianglesOnJoin);
-    // void addQuad(int _nPairs, int _nVertices);
+    void build(const Line& _line, int cornersOnCap, int trianglesOnJoin);
 
-    void addFan(const glm::vec3& _pC,
+    void addFan(const glm::vec2& _pC,
                 const glm::vec2& _nA, const glm::vec2& _nB, const glm::vec2& _nC,
                 const glm::vec2& _uA, const glm::vec2& _uB, const glm::vec2& _uC,
                 int _numTriangles);
 
-    void addCap(const glm::vec3& _coord, const glm::vec2& _normal, int _numCorners, bool _isBeginning);
+    void addCap(const glm::vec2& _coord, const glm::vec2& _normal, int _numCorners, bool _isBeginning);
 
-    void add(const glm::vec3& coord,
+    void add(const glm::vec2& coord,
                    const glm::vec2& enormal,
                    const glm::vec2& uv,
              Context& ctx) {
@@ -43,7 +42,7 @@ struct LineBuilder {
     }
 
     // template<typename Vertex>
-    void addVertex(const glm::vec3& coord,
+    void addVertex(const glm::vec2& coord,
              const glm::vec2& enormal,
              const glm::vec2& uv,
              Context& ctx);
@@ -53,7 +52,7 @@ struct LineBuilder {
 
 namespace {
 // Get 2D perpendicular of two points
-glm::vec2 perp2d(const glm::vec3& _v1, const glm::vec3& _v2 ){
+glm::vec2 perp2d(const glm::vec2& _v1, const glm::vec2& _v2 ){
     return glm::vec2(_v2.y - _v1.y, _v1.x - _v2.x);
 }
 }
@@ -64,16 +63,14 @@ glm::vec2 perp2d(const glm::vec3& _v1, const glm::vec3& _v2 ){
 // }
 
 // Helper function for polyline tesselation; adds indices for pairs of vertices arranged like a line strip
-void addQuad( int _nPairs, int _nVertices, std::vector<uint16_t>& indices) {
-    for (int i = 0; i < _nPairs; i++) {
-        indices.push_back(_nVertices - 2*i - 4);
-        indices.push_back(_nVertices - 2*i - 2);
-        indices.push_back(_nVertices - 2*i - 3);
+void addQuad(int _nVertices, std::vector<uint16_t>& indices) {
+    indices.push_back(_nVertices - 4);
+    indices.push_back(_nVertices - 2);
+    indices.push_back(_nVertices - 3);
 
-        indices.push_back(_nVertices - 2*i - 3);
-        indices.push_back(_nVertices - 2*i - 2);
-        indices.push_back(_nVertices - 2*i - 1);
-    }
+    indices.push_back(_nVertices - 3);
+    indices.push_back(_nVertices - 2);
+    indices.push_back(_nVertices - 1);
 }
 
 //  Tessalate a fan geometry between points A       B
@@ -82,7 +79,7 @@ void addQuad( int _nPairs, int _nVertices, std::vector<uint16_t>& indices) {
 //                                             \./
 //                                              C
 template<typename T>
-void LineBuilder<T>::addFan(const glm::vec3& _pC,
+void LineBuilder<T>::addFan(const glm::vec2& _pC,
                             const glm::vec2& _nA, const glm::vec2& _nB, const glm::vec2& _nC,
                             const glm::vec2& _uA, const glm::vec2& _uB, const glm::vec2& _uC,
                             int _numTriangles) {
@@ -117,7 +114,7 @@ void LineBuilder<T>::addFan(const glm::vec3& _pC,
 
 // Function to add the vertices for line caps
 template<typename T>
-void LineBuilder<T>::addCap(const glm::vec3& _coord, const glm::vec2& _normal,
+void LineBuilder<T>::addCap(const glm::vec2& _coord, const glm::vec2& _normal,
                             int _numCorners, bool _isBeginning) {
 
     float v = _isBeginning ? 0.f : 1.f; // length-wise tex coord
@@ -132,7 +129,7 @@ void LineBuilder<T>::addCap(const glm::vec3& _coord, const glm::vec2& _normal,
         add(_coord, -_normal + tangent, {0.f, v}, ctx);
          // At the beginning of a line we can't form triangles with previous vertices
         if (!_isBeginning) {
-            addQuad(1, numVertices, indices);
+            addQuad(numVertices, indices);
         }
         return;
     }
@@ -149,12 +146,12 @@ void LineBuilder<T>::addCap(const glm::vec3& _coord, const glm::vec2& _normal,
 }
 
 template<typename T>
-void LineBuilder<T>::buildPolyLine(const Line& _line, int cornersOnCap, int trianglesOnJoin) {
+void LineBuilder<T>::build(const Line& _line, int cornersOnCap, int trianglesOnJoin) {
 
     int lineSize = (int)_line.size();
     if (lineSize < 2) { return; }
 
-    glm::vec3 coordPrev(_line[0]), coordCurr(_line[0]), coordNext(_line[1]);
+    glm::vec2 coordPrev(_line[0]), coordCurr(_line[0]), coordNext(_line[1]);
     glm::vec2 normPrev, normNext, miterVec;
 
     // int cornersOnCap = (int)_ctx.cap;
@@ -193,7 +190,7 @@ void LineBuilder<T>::buildPolyLine(const Line& _line, int cornersOnCap, int tria
 
         coordPrev = coordCurr;
         coordCurr = coordNext;
-        coordNext = _line[i + 1];
+        coordNext = glm::vec2(_line[i + 1]);
 
         normPrev = normNext;
         normNext = glm::normalize(perp2d(coordCurr, coordNext));
@@ -210,7 +207,7 @@ void LineBuilder<T>::buildPolyLine(const Line& _line, int cornersOnCap, int tria
 
             add(coordCurr, miterVec, {1.0, v}, ctx); // right corner
             add(coordCurr, -miterVec, {0.0, v}, ctx); // left corner
-            addQuad(1, numVertices, indices);
+            addQuad(numVertices, indices);
 
         } else {
             // Join type is a fan of triangles
@@ -222,7 +219,7 @@ void LineBuilder<T>::buildPolyLine(const Line& _line, int cornersOnCap, int tria
 
                 add(coordCurr, miterVec, {1.0f, v}, ctx); // right (inner) corner
                 add(coordCurr, -normPrev, {0.0f, v}, ctx); // left (outer) corner
-                addQuad(1, numVertices, indices);
+                addQuad(numVertices, indices);
 
                 addFan(coordCurr, -normPrev, -normNext, miterVec,
                        {0.f, v}, {0.f, v}, {1.f, v}, trianglesOnJoin);
@@ -234,7 +231,7 @@ void LineBuilder<T>::buildPolyLine(const Line& _line, int cornersOnCap, int tria
 
                 add(coordCurr, normPrev, {1.0f, v}, ctx); // right (outer) corner
                 add(coordCurr, -miterVec, {0.0f, v}, ctx); // left (inner) corner
-                addQuad(1, numVertices, indices);
+                addQuad(numVertices, indices);
 
                 addFan(coordCurr, normPrev, normNext, -miterVec,
                        {1.f, v}, {1.f, v}, {0.0f, v}, trianglesOnJoin);
@@ -248,7 +245,7 @@ void LineBuilder<T>::buildPolyLine(const Line& _line, int cornersOnCap, int tria
     // Process last point in line with a cap
     add(coordNext, normNext, {1.f, 1.f}, ctx); // right corner
     add(coordNext, -normNext, {0.f, 1.f}, ctx); // left corner
-    addQuad(1, numVertices, indices);
+    addQuad(numVertices, indices);
     addCap(coordNext, normNext, cornersOnCap , false);
 
 #if 1

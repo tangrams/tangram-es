@@ -25,11 +25,11 @@ namespace Tangram {
 
 struct PolylineVertex {
 
-    PolylineVertex(glm::vec3 position, float order, glm::vec2 uv,
-                   glm::vec2 extrude, glm::vec2 width, GLuint abgr)
-        : pos(glm::i16vec4{ position * position_scale, order * order_scale }),
-          texcoord(uv * texture_scale),
-          extrude(extrude * extrusion_scale, width * extrusion_scale),
+    PolylineVertex(glm::i16vec4 position, glm::i16vec2 uv,
+                   glm::i16vec4 extrude , GLuint abgr)
+        : pos(position),
+          texcoord(uv),
+          extrude(extrude),
           abgr(abgr) {}
 
     PolylineVertex(PolylineVertex v, float order, glm::vec2 width, GLuint abgr)
@@ -105,20 +105,29 @@ void PolylineStyle::constructShaderProgram() {
 struct Context {
     std::vector<PolylineVertex> vertices;
 
-    glm::vec2 width;
+    glm::i16vec2 width; // (width, dwdz)
+    glm::i16vec2 height; // (height, order)
     uint32_t color;
-    float order;
-    float height;
+
+    void set(GLuint _color, float _width, float _dWdZ, float _height, float _order) {
+        color = _color;
+        width = glm::vec2{ _width, _dWdZ} * extrusion_scale;
+        height = glm::i16vec2{ _height * position_scale,
+                               _order * order_scale};
+    }
 };
 
 template<>
-void LineBuilder<Context>::addVertex(const glm::vec3& coord,
-                                     const glm::vec2& normal,
-                                     const glm::vec2& uv,
-                                     Context& ctx) {
-    ctx.vertices.push_back({ {coord.x, coord.y, ctx.height}, ctx.order,
-                              uv, normal, ctx.width, ctx.color });
+void LineBuilder<Context>::addVertex(const glm::vec2& _coord,
+                                     const glm::vec2& _extrude,
+                                     const glm::vec2& _uv,
+                                     Context& _ctx) {
 
+    ctx.vertices.emplace_back(
+            glm::i16vec4{ _coord * position_scale, _ctx.height },
+            glm::i16vec2{ _uv * texture_scale },
+            glm::i16vec4{ _extrude * extrusion_scale, _ctx.width },
+            _ctx.color);
 }
 
 namespace {
@@ -193,12 +202,10 @@ void Builder::begin(const Tile& _tile) {
     m_builder.ctx.vertices.clear();
 
     m_indices.clear();
-    // m_vertices.clear();
 }
 
 std::unique_ptr<VboMesh> Builder::build() {
     auto mesh = std::make_unique<Mesh>(m_style.vertexLayout(), m_style.drawMode());
-    //mesh->compile(m_vertexOffsets, m_vertices, m_indices);
     mesh->compile(m_vertexOffsets, m_builder.ctx.vertices, m_indices);
     return std::move(mesh);
 }
@@ -267,7 +274,6 @@ bool Builder::evalWidth(const StyleParam& _styleParam, float& width, float& dWdZ
     // NB: 0.5 because 'width' will be extruded in both directions
     float tileRes = 0.5 / m_tileSize;
 
-    // auto& styleParam = _rule.findParameter(_key);
     if (_styleParam.stops) {
 
         width = _styleParam.value.get<float>();
@@ -325,6 +331,7 @@ void Builder::buildLine(const Line& _line) {
     auto sumVertices = m_vertexOffsets.back().second;
     if (sumVertices + m_builder.numVertices > MAX_INDEX_VALUE) {
         m_vertexOffsets.emplace_back(0, 0);
+
         // Indices must reference vertices starting at 0
         sumVertices = 0;
     }
@@ -363,14 +370,8 @@ void Builder::add(const Line& _line, const Properties& _props,
     if (width < 1.0/512) { width = 1.0/512; }
     if (dWdZ < 1.0/512) { dWdZ = 1.0/512; }
 
-    m_builder.ctx.order = order;
-    m_builder.ctx.color = abgr;
-    m_builder.ctx.width = { width, dWdZ};
-    m_builder.ctx.height = height;
-
-    m_builder.buildPolyLine(_line,
-                            int(params.cap),
-                            int(params.join));
+    m_builder.ctx.set(abgr, width, dWdZ, height, order);
+    m_builder.build(_line, int(params.cap), int(params.join));
 
     buildLine(_line);
 
@@ -384,14 +385,9 @@ void Builder::add(const Line& _line, const Properties& _props,
 
     if (params.outlineCap != params.cap || params.outlineJoin != params.join) {
         // need to re-triangulate with different cap and/or join
-        m_builder.ctx.order = order;
-        m_builder.ctx.color = abgr;
-        m_builder.ctx.width = { width, dWdZ};
-        m_builder.ctx.height = height;
 
-        m_builder.buildPolyLine(_line,
-                                int(params.outlineCap),
-                                int(params.outlineJoin));
+        m_builder.ctx.set(abgr, width, dWdZ, height, order);
+        m_builder.build(_line, int(params.outlineCap), int(params.outlineJoin));
 
         buildLine(_line);
 
