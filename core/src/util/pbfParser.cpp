@@ -306,10 +306,6 @@ void PbfParser::extractLayer(ParserContext& _ctx, protobuf::message& _layerIn, T
     // Iterate layer to populate featureMsgs, keys and values
     while(_layerIn.next()) {
 
-        if (_layerIn.tag != LAYER_FEATURE) {
-            lastWasFeature = false;
-        }
-
         switch(_layerIn.tag) {
             case LAYER_FEATURE: {
                 if (!lastWasFeature) {
@@ -317,14 +313,13 @@ void PbfParser::extractLayer(ParserContext& _ctx, protobuf::message& _layerIn, T
                     lastWasFeature = true;
                 }
                 _layerIn.skip();
-                break;
+                continue;
             }
             case LAYER_KEY: {
                 _ctx.keys.push_back(_layerIn.string());
                 break;
             }
-            case LAYER_VALUE:
-            {
+            case LAYER_VALUE: {
                 protobuf::message valueItr = _layerIn.getMessage();
 
                 while (valueItr.next()) {
@@ -366,6 +361,7 @@ void PbfParser::extractLayer(ParserContext& _ctx, protobuf::message& _layerIn, T
                 _layerIn.skip();
                 break;
         }
+        lastWasFeature = false;
     }
 
     // LOG("FEATURE MESSAGES %d  KEYS:%d VALUES:%d",
