@@ -118,11 +118,13 @@ auto TextStyle::applyRule(const DrawRule& _rule, const Properties& _props) const
         hash_combine(repeatGroupHash, repeatGroup);
     } else {
         // Default to hash on all used layer names ('draw.key' in JS version)
-        for (auto* name : _rule.getLayerNames()) {
-            hash_combine(repeatGroupHash, name);
-            // repeatGroup += name;
-            // repeatGroup += "/";
-        }
+        repeatGroup = _rule.getParamSetHash();
+
+        // for (auto* name : _rule.getLayerNames()) {
+        //     hash_combine(repeatGroupHash, name);
+        //     // repeatGroup += name;
+        //     // repeatGroup += "/";
+        // }
         //LOG("rg: %s", p.labelOptions.repeatGroup.c_str());
     }
 
