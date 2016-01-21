@@ -8,6 +8,7 @@
 #include "style/style.h"
 #include "platform.h"
 #include "drawRuleWarnings.h"
+#include "util/hash.h"
 
 #include <algorithm>
 
@@ -33,29 +34,40 @@ std::string DrawRuleData::toString() const {
     return str;
 }
 
-DrawRule::DrawRule(const DrawRuleData& _ruleData) :
+DrawRule::DrawRule(const DrawRuleData& _ruleData, const SceneLayer& _layer) :
     name(&_ruleData.name),
     id(_ruleData.id) {
+
+    const char* layerName = _layer.name().c_str();
+    const auto layerDepth = _layer.depth();
+
+    for (const auto& param : _ruleData.parameters) {
+        auto key = static_cast<uint8_t>(param.key);
+        active[key] = true;
+        params[key] = &param;
+        layers[key] = { layerName, layerDepth };
+    }
 }
 
 void DrawRule::merge(const DrawRuleData& _ruleData, const SceneLayer& _layer) {
-    // TODO Optimize - string copying going on here
 
     evalConflict(*this, _ruleData, _layer);
 
     const auto depthNew = _layer.depth();
     const char* layerNew = _layer.name().c_str();
 
-    for (const auto& param : _ruleData.parameters) {
+    for (const auto& paramNew : _ruleData.parameters) {
 
-        auto key = static_cast<uint8_t>(param.key);
+        auto key = static_cast<uint8_t>(paramNew.key);
+        auto& param = params[key];
         auto& layer = layers[key];
 
-        if (depthNew > layer.depth || layer.name == nullptr ||
+        if (!active[key] || depthNew > layer.depth ||
             (depthNew == layer.depth && strcmp(layerNew, layer.name) > 0)) {
-            params[key] = &param;
+            param = &paramNew;
             layer.name = layerNew;
             layer.depth = depthNew;
+            active[key] = true;
         }
     }
 }
@@ -75,12 +87,9 @@ bool DrawRule::contains(StyleParamKey _key) const {
 const StyleParam& DrawRule::findParameter(StyleParamKey _key) const {
     static const StyleParam NONE;
 
-    const auto* p = params[static_cast<uint8_t>(_key)];
-    if (p) {
-        return *p;
-    }
-
-    return NONE;
+    uint8_t key = static_cast<uint8_t>(_key);
+    if (!active[key]) { return NONE; }
+    return *params[key];
 }
 
 const std::string& DrawRule::getStyleName() const {
@@ -171,9 +180,9 @@ void DrawRuleMergeSet::apply(const Feature& _feature, const SceneLayer& _layer,
         bool valid = true;
         for (size_t i = 0; i < StyleParamKeySize; ++i) {
 
-            auto* param = rule.params[i];
-            if (!param) { continue; }
+            if (!rule.active[i]) { continue; }
 
+            auto*& param = rule.params[i];
             if (param->function >= 0) {
 
                 m_evaluated[i] = *param;
@@ -183,8 +192,7 @@ void DrawRuleMergeSet::apply(const Feature& _feature, const SceneLayer& _layer,
                     valid = false;
                     break;
                 }
-
-                rule.params[i] = &m_evaluated[i];
+                param = &m_evaluated[i];
             }
             if (param->stops) {
 
@@ -193,16 +201,13 @@ void DrawRuleMergeSet::apply(const Feature& _feature, const SceneLayer& _layer,
                 if (StyleParam::isColor(param->key)) {
                     m_evaluated[i].value = param->stops->evalColor(_ctx.getGlobalZoom());
                 } else if (StyleParam::isWidth(param->key)) {
-                    // FIXME width result is ignored from here
                     m_evaluated[i].value = param->stops->evalWidth(_ctx.getGlobalZoom());
                 } else if (StyleParam::isOffsets(param->key)) {
                     m_evaluated[i].value = param->stops->evalVec2(_ctx.getGlobalZoom());
                 } else {
                     m_evaluated[i].value = param->stops->evalFloat(_ctx.getGlobalZoom());
                 }
-
-                rule.params[i] = &m_evaluated[i];
-
+                param = &m_evaluated[i];
             }
         }
 
@@ -220,10 +225,10 @@ void DrawRuleMergeSet::mergeRules(const SceneLayer& _layer) {
                                [&](auto& m) { return rule.id == m.id; });
 
         if (it == m_matchedRules.end()) {
-            it = m_matchedRules.emplace(it, rule);
+            m_matchedRules.emplace_back(rule, _layer);
+        } else {
+            it->merge(rule, _layer);
         }
-
-        it->merge(rule, _layer);
     }
 }
 
