@@ -117,8 +117,8 @@ TEST_CASE("SceneLayer", "[SceneLayer][Filter][DrawRule][Match][Merge]") {
 
         REQUIRE(matches.size() == 1);
         REQUIRE(matches[0].getStyleName() == "group1");
-        REQUIRE(matches[0].params[static_cast<uint8_t>(StyleParamKey::order)]->key == StyleParamKey::order);
-        REQUIRE(matches[0].params[static_cast<uint8_t>(StyleParamKey::order)]->value.get<std::string>() == "a");
+        REQUIRE(matches[0].findParameter(StyleParamKey::order).key == StyleParamKey::order);
+        REQUIRE(matches[0].findParameter(StyleParamKey::order).value.get<std::string>() == "a");
     }
 
     {
@@ -139,8 +139,8 @@ TEST_CASE("SceneLayer", "[SceneLayer][Filter][DrawRule][Match][Merge]") {
 
         REQUIRE(matches.size() == 2);
         REQUIRE(matches[0].getStyleName() == "group1");
-        REQUIRE(matches[0].params[static_cast<uint8_t>(StyleParamKey::order)]->key == StyleParamKey::order);
-        REQUIRE(matches[0].params[static_cast<uint8_t>(StyleParamKey::order)]->value.get<std::string>() == "a");
+        REQUIRE(matches[0].findParameter(StyleParamKey::order).key == StyleParamKey::order);
+        REQUIRE(matches[0].findParameter(StyleParamKey::order).value.get<std::string>() == "a");
         REQUIRE(matches[1].getStyleName() == "group2");
     }
 
@@ -207,12 +207,12 @@ TEST_CASE("SceneLayer correctly merges rules matched from sublayer", "[SceneLaye
 
     // deeper match from layer_a should override parameters in same style from layer_d
     REQUIRE(matches[1].getStyleName() == "dg0");
-    REQUIRE(matches[1].params[static_cast<uint8_t>(StyleParamKey::order)]->key == StyleParamKey::order);
-    REQUIRE(matches[1].params[static_cast<uint8_t>(StyleParamKey::order)]->value.get<std::string>() == "value_a");
+    REQUIRE(matches[1].findParameter(StyleParamKey::order).key == StyleParamKey::order);
+    REQUIRE(matches[1].findParameter(StyleParamKey::order).value.get<std::string>() == "value_a");
 
     // deeper match from layer_c should override parameters in same style from layer_e
     REQUIRE(matches[0].getStyleName() == "dg2");
-    REQUIRE(matches[0].params[static_cast<uint8_t>(StyleParamKey::order)]->key == StyleParamKey::order);
-    REQUIRE(matches[0].params[static_cast<uint8_t>(StyleParamKey::order)]->value.get<std::string>() == "value_c");
+    REQUIRE(matches[0].findParameter(StyleParamKey::order).key == StyleParamKey::order);
+    REQUIRE(matches[0].findParameter(StyleParamKey::order).value.get<std::string>() == "value_c");
 
 }
