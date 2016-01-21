@@ -83,17 +83,50 @@ struct DrawRule {
 
     template<typename T>
     bool get(StyleParamKey _key, T& _value) const {
-        auto& param = findParameter(_key);
-        if (!param) { return false; }
-        if (!param.value.is<T>()) {
-            return false;
+        if (auto& param = findParameter(_key)) {
+            return StyleParam::Value::visit(param.value,
+                                            prop_visitor<T>{ _value });
         }
-        _value = param.value.get<T>();
-        return true;
+        return false;
+    }
+
+    template<typename T>
+    const T* get(StyleParamKey _key) const {
+        if (auto& param = findParameter(_key)) {
+            return StyleParam::Value::visit(param.value,
+                                            prop_visitor_ptr<T>{});
+        }
+        return nullptr;
     }
 
 private:
     void logGetError(StyleParamKey _expectedKey, const StyleParam& _param) const;
+
+    template<typename T>
+    struct prop_visitor {
+        using result_type = bool;
+        T& out;
+        bool operator()(const T& v) const {
+            out = v;
+            return true;
+        }
+        template<typename O>
+        bool operator()(const O v) const {
+            return false;
+        }
+    };
+    template<typename T>
+    struct prop_visitor_ptr {
+        using result_type = const T*;
+        const T* operator()(const T& v) const {
+            return &v;
+        }
+        template<typename O>
+        const T* operator()(const O v) const {
+            return nullptr;
+        }
+    };
+
 
 };
 
