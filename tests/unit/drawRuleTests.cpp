@@ -16,9 +16,9 @@ const int dg2 = 1;
 DrawRuleData instance_a() {
 
     std::vector<StyleParam> params = {
-        { StyleParamKey::order, "value_0a" },
-        { StyleParamKey::join, "value_4a" },
-        { StyleParamKey::color, "value_1a" }
+        StyleParam{ StyleParamKey::order, "value_0a" },
+        StyleParam{ StyleParamKey::join, "value_4a" },
+        StyleParam{ StyleParamKey::color, "value_1a" }
     };
 
     return { "dg1", dg1, std::move(params) };
@@ -28,11 +28,11 @@ DrawRuleData instance_a() {
 DrawRuleData instance_b() {
 
     std::vector<StyleParam> params = {
-        { StyleParamKey::order, "value_0b" },
-        { StyleParamKey::width, "value_2b" },
-        { StyleParamKey::color, "value_1b" },
-        { StyleParamKey::cap, "value_3b" },
-        { StyleParamKey::style, "value_4b" }
+        StyleParam{ StyleParamKey::order, "value_0b" },
+        StyleParam{ StyleParamKey::width, "value_2b" },
+        StyleParam{ StyleParamKey::color, "value_1b" },
+        StyleParam{ StyleParamKey::cap, "value_3b" },
+        StyleParam{ StyleParamKey::style, "value_4b" }
     };
 
     return { "dg1", dg1, std::move(params) };

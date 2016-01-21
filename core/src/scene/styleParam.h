@@ -97,21 +97,26 @@ struct StyleParam {
         key(StyleParamKey::none),
         value(none_type{}) {};
 
-    StyleParam(const std::string& _key, const std::string& _value);
+    static StyleParam create(const std::string& _key, const std::string& _value);
 
-    StyleParam(StyleParamKey _key, std::string _value) :
+    explicit StyleParam(StyleParamKey _key, Value _value) :
         key(_key),
         value(std::move(_value)) {}
 
-    StyleParam(StyleParamKey _key, Stops* _stops) :
+    explicit StyleParam(StyleParamKey _key, int32_t _function) :
+        key(_key),
+        value(none_type{}),
+        function(_function) {}
+
+    explicit StyleParam(StyleParamKey _key, Stops* _stops) :
         key(_key),
         value(none_type{}),
         stops(_stops) {
     }
 
-    StyleParamKey key;
+    const StyleParamKey key;
     Value value;
-    Stops* stops = nullptr;
+    const Stops* stops = nullptr;
     int32_t function = -1;
 
     bool operator<(const StyleParam& _rhs) const { return key < _rhs.key; }

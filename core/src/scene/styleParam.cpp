@@ -103,17 +103,18 @@ StyleParamKey StyleParam::getKey(const std::string& _key) {
     return it->second;
 }
 
-StyleParam::StyleParam(const std::string& _key, const std::string& _value) {
-    key = getKey(_key);
-    value = none_type{};
+StyleParam StyleParam::create(const std::string& _key, const std::string& _value) {
+    auto key = getKey(_key);
 
     if (key == StyleParamKey::none) {
         LOGW("Unknown StyleParam %s:%s", _key.c_str(), _value.c_str());
-        return;
+        return {};
     }
     if (!_value.empty()) {
-        value = parseString(key, _value);
+        return StyleParam{ key, parseString(key, _value) };
     }
+
+    return StyleParam{ key, none_type{} };
 }
 
 StyleParam::Value StyleParam::parseString(StyleParamKey key, const std::string& _value) {

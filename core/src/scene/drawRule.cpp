@@ -14,6 +14,8 @@
 
 namespace Tangram {
 
+static const StyleParam NONE = {};
+
 DrawRuleData::DrawRuleData(std::string _name, int _id,
                            const std::vector<StyleParam>& _parameters) :
     parameters(_parameters),
@@ -81,7 +83,6 @@ bool DrawRule::contains(StyleParamKey _key) const {
 }
 
 const StyleParam& DrawRule::findParameter(StyleParamKey _key) const {
-    static const StyleParam NONE;
 
     uint8_t key = static_cast<uint8_t>(_key);
     if (!active[key]) { return NONE; }

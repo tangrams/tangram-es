@@ -1178,12 +1178,10 @@ void SceneLoader::parseStyleParams(Node params, Scene& scene, const std::string&
             const auto& val = value.as<std::string>();
 
             if (val.compare(0, 8, "function") == 0) {
-                StyleParam param(key, "");
-                param.function = scene.functions().size();
                 scene.functions().push_back(val);
-                out.push_back(std::move(param));
+                out.emplace_back(StyleParam::getKey(key), int32_t(scene.functions().size()-1));
             } else {
-                out.push_back(StyleParam{ key, val });
+                out.emplace_back(StyleParam::create(key, val));
             }
             break;
         }
@@ -1214,7 +1212,7 @@ void SceneLoader::parseStyleParams(Node params, Scene& scene, const std::string&
                 }
 
             } else {
-                out.push_back(StyleParam{ key, parseSequence(value) });
+                out.push_back(StyleParam::create(key, parseSequence(value)));
             }
             break;
         }
@@ -1318,7 +1316,7 @@ void SceneLoader::parseTransition(Node params, Scene& scene, std::vector<StylePa
 
             for (auto child : prop.second) {
                 auto childKey = prefixedKey + ":" + child.first.as<std::string>();
-                out.push_back(StyleParam{ childKey, child.second.as<std::string>() });
+                out.push_back(StyleParam::create(childKey, child.second.as<std::string>()));
             }
         }
     }
