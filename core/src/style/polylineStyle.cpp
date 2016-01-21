@@ -27,10 +27,7 @@ struct PolylineVertex {
 
     PolylineVertex(glm::i16vec4 position, glm::i16vec2 uv,
                    glm::i16vec4 extrude , GLuint abgr)
-        : pos(position),
-          texcoord(uv),
-          extrude(extrude),
-          abgr(abgr) {}
+        : pos(position), texcoord(uv), extrude(extrude), abgr(abgr) {}
 
     PolylineVertex(PolylineVertex v, float order, glm::vec2 width, GLuint abgr)
         : pos(glm::i16vec4{ v.pos.x, v.pos.y, v.pos.z, order * order_scale}),
@@ -111,9 +108,9 @@ struct Context {
 
     void set(GLuint _color, float _width, float _dWdZ, float _height, float _order) {
         color = _color;
-        width = glm::vec2{ _width, _dWdZ} * extrusion_scale;
-        height = glm::i16vec2{ _height * position_scale,
-                               _order * order_scale};
+        width = glm::vec2{_width, _dWdZ} * extrusion_scale;
+        height = glm::vec2{_height * position_scale,
+                           _order * order_scale};
     }
 };
 
@@ -375,7 +372,6 @@ void Builder::add(const Line& _line, const Properties& _props,
 
     buildLine(_line);
 
-    return;
     if (!params.outlineOn) { return; }
 
     width += params.widthOutline;
