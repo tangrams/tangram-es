@@ -91,18 +91,53 @@ void PbfParser::extractGeometry(ParserContext& _ctx, protobuf::message& _geomIn)
     }
 }
 
-// Reuse string allocations in Value. Variant is not yet smart enough
-// probably due to traits not being so well supported everywhere..
-struct copy_visitor {
+// Reuse string allocations in Propery Value!
+// Just copy over the string from the input
+// buffer to the currently used values :)
+
+struct update_visitor {
     using result_type = bool;
-    template <typename T>
-    bool operator()(T& l, const T& r) const {
-        l = r;
-        return true;
-    }
-    template <typename L, typename R>
-    bool operator()(L l, R r) const {
+    const PbfParser::TagValue& tagValue;
+    Value& propValue;
+
+    bool operator()(double& v) const {
+        if (tagValue.is<double>()) {
+            v = tagValue.get<double>();
+            return true;
+        }
+        if (tagValue.is<PbfParser::StringView>()) {
+            auto& s = tagValue.get<PbfParser::StringView>();
+            propValue = std::string(s.second, s.first);
+            return false;
+        }
+        propValue = none_type{};
         return false;
+    }
+    bool operator()(std::string& v) const {
+        if (tagValue.is<PbfParser::StringView>()) {
+            auto& s = tagValue.get<PbfParser::StringView>();
+            v.assign(s.second, s.first);
+            return true;
+        }
+        if (tagValue.is<double>()) {
+            propValue = tagValue.get<double>();
+            return false;
+        }
+        propValue = none_type{};
+        return false;
+    }
+    bool operator()(none_type) const {
+        if (tagValue.is<PbfParser::StringView>()) {
+            auto& s = tagValue.get<PbfParser::StringView>();
+            propValue = std::string(s.second, s.first);
+            return false;
+        }
+        if (tagValue.is<double>()) {
+            propValue = tagValue.get<double>();
+            return false;
+        }
+        // propValue = none_type{};
+        return true;
     }
 };
 
@@ -205,10 +240,9 @@ void PbfParser::extractFeature(ParserContext& _ctx, protobuf::message& _featureI
             } else {
                 matchedKey++;
             }
-            if (!Value::binary_visit(it.value, _ctx.values[tagValue], copy_visitor{})) {
-                // Throw away old value
-                it.value = _ctx.values[tagValue];
-            } else { reused++; }
+            if (Value::visit(it.value, update_visitor{_ctx.values[tagValue], it.value})) {
+                reused++;
+            }
         } else {
             if (matchPrevious && _ctx.previousTags[tagKey] >= 0) {
                 matchPrevious = false;
@@ -325,7 +359,7 @@ void PbfParser::extractLayer(ParserContext& _ctx, protobuf::message& _layerIn, T
                 while (valueItr.next()) {
                     switch (valueItr.tag) {
                         case 1: // string value
-                            _ctx.values.push_back(valueItr.string());
+                            _ctx.values.push_back(valueItr.chunk());
                             break;
                         case 2: // float value
                             _ctx.values.push_back(valueItr.float32());

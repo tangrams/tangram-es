@@ -14,6 +14,9 @@ struct TileDataSink;
 
 namespace PbfParser {
 
+    using StringView = std::pair<size_t, const char*>;
+    using TagValue = variant<none_type, double, StringView>;
+
     struct ParserContext {
         ParserContext(int32_t _sourceId) : sourceId(_sourceId) {
             values.reserve(256);
@@ -22,7 +25,7 @@ namespace PbfParser {
 
         int32_t sourceId;
         std::vector<std::string> keys;
-        std::vector<Value> values;
+        std::vector<TagValue> values;
         std::vector<protobuf::message> featureMsgs;
         std::vector<Point> coordinates;
         std::vector<int> numCoordinates;
