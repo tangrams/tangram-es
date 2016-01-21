@@ -1,19 +1,10 @@
 #include "fontContext.h"
 
+#include "shaping.h"
 #define FONS_USE_HARFBUZZ
 #define FONS_USE_FREETYPE
-
-#include "hb.h"
-#include "hb-ft.h"
-#include <locale>
-#include <codecvt>
-#include "unicode/unistr.h"
-#include "unicode/ubidi.h"
-#include "unicode/uscript.h"
-#include "unicode/schriter.h"
 #define FONTSTASH_IMPLEMENTATION
 #include "fontstash.h"
-#include "wordbreak.h"
 
 #include "platform.h"
 
@@ -145,82 +136,15 @@ std::vector<FONSquad>& FontContext::rasterize(const std::string& _text,
 {
     m_quadBuffer.clear();
 
-    // Line breaks detection
-    static bool init_libunibreak = false;
-    if(!init_libunibreak) {
-        init_wordbreak();
-        init_linebreak();
-        init_libunibreak = true;
-    }
+    FONSdirection direction;
+    FONSscript script;
+    FONSlanguage language = hb_language_get_default();
 
-    std::wstring_convert<std::codecvt_utf8<char16_t>, char16_t> conv;
-    std::u16string u16 = conv.from_bytes(_text.c_str());
-    char* wordbreaks = new char[u16.length()];
-    char* linebreaks = new char[u16.length()];
-    set_wordbreaks_utf16(reinterpret_cast<const unsigned short*>(u16.c_str()), u16.length(), "", wordbreaks);
-    set_linebreaks_utf16(reinterpret_cast<const unsigned short*>(u16.c_str()), u16.length(), "", linebreaks);
-
-    for (int i = 0; i < u16.length(); ++i) {
-        if (wordbreaks[i] == WORDBREAK_BREAK) {
-            LOGW("Break word %s at %d", _text.c_str(), i);
-        }
-    }
-    for (int i = 0; i < u16.length(); ++i) {
-        if (linebreaks[i] == LINEBREAK_MUSTBREAK) {
-            LOGW("Line break  %s at %d", _text.c_str(), i);
-        }
-    }
-    delete[] wordbreaks;
-    delete[] linebreaks;
-
-    // Ubidi detection
-    size_t const length = u16.length();
-    UErrorCode error = U_ZERO_ERROR;
-    UBiDiLevel dirn = 0;
-    UBiDi* bidi = ubidi_openSized(u16.length(), 0, &error);
-
-    if(bidi == NULL) {
-        LOGW("Bidi NULL");
+    if (!Shaping::bidiDetection(_text, direction) || !Shaping::scriptDetection(_text, script)) {
         return m_quadBuffer;
     }
 
-    if (error != U_ZERO_ERROR) {
-        LOGW("UBidi error %s", u_errorName(error));
-        return m_quadBuffer;
-    }
-
-    ubidi_setPara(bidi, reinterpret_cast<const UChar*>(u16.c_str()), u16.length(), dirn, NULL, &error);
-
-    if (error != U_ZERO_ERROR) {
-        LOGW("UBidi error %s", u_errorName(error));
-        ubidi_close(bidi);
-        return m_quadBuffer;
-    }
-
-    UBiDiDirection direction = ubidi_getDirection(bidi);
-    if (direction == UBIDI_MIXED) {
-        size_t count = ubidi_countRuns(bidi, &error);
-        if (error != U_ZERO_ERROR) {
-            LOGW("UBidi error %s", u_errorName(error));
-            ubidi_close(bidi);
-            return m_quadBuffer;
-        }
-        LOG("Bidi direction detected %d %s", count, _text.c_str());
-        for (size_t i = 0; i < count; i++) {
-            int start, length;
-            direction = ubidi_getVisualRun_52(bidi, i, &start, &length);
-            LOG("Direction detected %d", direction);
-            switch (direction) {
-                case UBIDI_LTR: LOGW("\tLTR"); break;
-                case UBIDI_RTL: LOGW("\tRTL"); break;
-                case UBIDI_MIXED: LOGW("\tMIXED"); break;
-                case UBIDI_NEUTRAL: LOGW("\tNEUTRAL"); break;
-            }
-        }
-    }
-    ubidi_close(bidi);
-
-    fonsSetShaping(m_fsContext);
+    fonsSetShaping(m_fsContext, script, direction, language);
     fonsSetSize(m_fsContext, _fontSize);
     fonsSetFont(m_fsContext, _fontID);
 
@@ -241,7 +165,7 @@ std::vector<FONSquad>& FontContext::rasterize(const std::string& _text,
         // TODO: font stack fallback:
         // while font stack has font && !fonsTextDrawable
         //     change fontstash current font
-        LOGW("Can't draw string %s", _text.c_str());
+        LOGW("Can't draw string %s -- unicode glyph not available", _text.c_str());
     }
 
     return m_quadBuffer;
