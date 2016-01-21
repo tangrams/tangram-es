@@ -47,6 +47,7 @@ public:
     PBF_INLINE uint64_t varint2();
     PBF_INLINE int64_t svarint();
     PBF_INLINE std::string string();
+    PBF_INLINE std::pair<size_t, const char*> chunk();
     PBF_INLINE float float32();
     PBF_INLINE double float64();
     PBF_INLINE int64_t int64();
@@ -149,6 +150,14 @@ std::string message::string()
     value_type string = static_cast<value_type>(data_);
     skipBytes(len);
     return std::string(string, len);
+}
+
+std::pair<size_t, const char*> message::chunk()
+{
+    uint64_t len = varint();
+    value_type string = static_cast<value_type>(data_);
+    skipBytes(len);
+    return { len, string };
 }
 
 float message::float32()
