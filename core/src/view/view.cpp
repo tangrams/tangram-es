@@ -463,16 +463,23 @@ void View::updateTiles() {
     // Location of the view center in tile space
     glm::dvec2 e = (glm::dvec2(m_pos.x + m_eye.x, m_pos.y + m_eye.y) - tileSpaceOrigin) * tileSpaceAxes;
 
-    int imax = std::numeric_limits<int>::max();
-    int imin = std::numeric_limits<int>::min();
+    static const int imax = std::numeric_limits<int>::max();
+    static const int imin = std::numeric_limits<int>::min();
 
-    // Distance thresholds in tile space for levels of detail:
-    // Element [n] in each array is the minimum tile index at which level-of-detail n
-    // should be applied in that direction.
-    int x_limit_pos[MAX_LOD] = { imax };
-    int x_limit_neg[MAX_LOD] = { imin };
-    int y_limit_pos[MAX_LOD] = { imax };
-    int y_limit_neg[MAX_LOD] = { imin };
+    // Scan options - avoid heap allocation for std::function
+    // [1] http://www.drdobbs.com/cpp/efficient-use-of-lambda-expressions-and/232500059?pgno=2
+    struct {
+        std::set<TileID>& tiles;
+        int zoom;
+        // Distance thresholds in tile space for levels of detail:
+        // Element [n] in each array is the minimum tile index at which level-of-detail n
+        // should be applied in that direction.
+        int x_limit_pos[MAX_LOD] = { imax };
+        int x_limit_neg[MAX_LOD] = { imin };
+        int y_limit_pos[MAX_LOD] = { imax };
+        int y_limit_neg[MAX_LOD] = { imin };
+
+    } opt = { m_visibleTiles, zoom };
 
     if (m_type == CameraType::perspective) {
 
@@ -484,31 +491,30 @@ void View::updateTiles() {
         for (int i = 0; i < MAX_LOD; i++) {
             int j = i + 1;
             double r = invLodFunc(i) + tilesAtFullZoom;
-            x_limit_neg[i] = ((int(viewCenterX - r) >> j) - 1) << j;
-            y_limit_pos[i] = ((int(viewCenterY + r) >> j) + 1) << j;
-            y_limit_neg[i] = ((int(viewCenterY - r) >> j) - 1) << j;
-            x_limit_pos[i] = ((int(viewCenterX + r) >> j) + 1) << j;
+            opt.x_limit_neg[i] = ((int(viewCenterX - r) >> j) - 1) << j;
+            opt.y_limit_pos[i] = ((int(viewCenterY + r) >> j) + 1) << j;
+            opt.y_limit_neg[i] = ((int(viewCenterY - r) >> j) - 1) << j;
+            opt.x_limit_pos[i] = ((int(viewCenterX + r) >> j) + 1) << j;
         }
     }
 
-    Scan s = [&](int x, int y) {
+    Scan s = [&opt](int x, int y) {
 
         int lod = 0;
-        while (lod < MAX_LOD && x >= x_limit_pos[lod]) { lod++; }
-        while (lod < MAX_LOD && x <  x_limit_neg[lod]) { lod++; }
-        while (lod < MAX_LOD && y >= y_limit_pos[lod]) { lod++; }
-        while (lod < MAX_LOD && y <  y_limit_neg[lod]) { lod++; }
+        while (lod < MAX_LOD && x >= opt.x_limit_pos[lod]) { lod++; }
+        while (lod < MAX_LOD && x <  opt.x_limit_neg[lod]) { lod++; }
+        while (lod < MAX_LOD && y >= opt.y_limit_pos[lod]) { lod++; }
+        while (lod < MAX_LOD && y <  opt.y_limit_neg[lod]) { lod++; }
 
         x >>= lod;
         y >>= lod;
-        int z = glm::clamp((zoom - lod), 0, (int)s_maxZoom);
+        int z = glm::clamp((opt.zoom - lod), 0, (int)s_maxZoom);
 
         // Wrap x to the range [0, (1 << z))
         int wx = x & ((1 << z) - 1);
-        int wrap = (x - wx) >> zoom;
+        int wrap = (x - wx) >> opt.zoom;
 
-        m_visibleTiles.emplace(wx, y, z, z, wrap);
-
+        opt.tiles.emplace(wx, y, z, z, wrap);
     };
 
     // Rasterize view trapezoid into tiles
