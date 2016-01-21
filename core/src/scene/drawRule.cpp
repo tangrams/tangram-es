@@ -44,8 +44,7 @@ DrawRule::DrawRule(const DrawRuleData& _ruleData, const SceneLayer& _layer) :
     for (const auto& param : _ruleData.parameters) {
         auto key = static_cast<uint8_t>(param.key);
         active[key] = true;
-        params[key] = &param;
-        layers[key] = { layerName, layerDepth };
+        params[key] = { &param, layerName, layerDepth };
     }
 }
 
@@ -60,13 +59,10 @@ void DrawRule::merge(const DrawRuleData& _ruleData, const SceneLayer& _layer) {
 
         auto key = static_cast<uint8_t>(paramNew.key);
         auto& param = params[key];
-        auto& layer = layers[key];
 
-        if (!active[key] || depthNew > layer.depth ||
-            (depthNew == layer.depth && strcmp(layerNew, layer.name) > 0)) {
-            param = &paramNew;
-            layer.name = layerNew;
-            layer.depth = depthNew;
+        if (!active[key] || depthNew > param.depth ||
+            (depthNew == param.depth && strcmp(layerNew, param.name) > 0)) {
+            param = { &paramNew, layerNew, depthNew };
             active[key] = true;
         }
     }
@@ -89,7 +85,7 @@ const StyleParam& DrawRule::findParameter(StyleParamKey _key) const {
 
     uint8_t key = static_cast<uint8_t>(_key);
     if (!active[key]) { return NONE; }
-    return *params[key];
+    return *params[key].param;
 }
 
 const std::string& DrawRule::getStyleName() const {
@@ -104,15 +100,15 @@ const std::string& DrawRule::getStyleName() const {
 }
 
 const char* DrawRule::getLayerName(StyleParamKey _key) const {
-    return layers[static_cast<uint8_t>(_key)].name;
+    return params[static_cast<uint8_t>(_key)].name;
 }
 
 std::set<const char*> DrawRule::getLayerNames() const {
     std::set<const char*> layerNames;
 
     for (size_t i = 0; i < StyleParamKeySize; i++) {
-        if (layers[i].name) {
-            layerNames.insert(layers[i].name);
+        if (params[i].name) {
+            layerNames.insert(params[i].name);
         }
     }
     return layerNames;
@@ -182,7 +178,7 @@ void DrawRuleMergeSet::apply(const Feature& _feature, const Scene& _scene, const
 
             if (!rule.active[i]) { continue; }
 
-            auto*& param = rule.params[i];
+            auto*& param = rule.params[i].param;
             if (param->function >= 0) {
 
                 if (!_ctx.evalStyle(param->function, param->key, m_evaluated[i].value) &&

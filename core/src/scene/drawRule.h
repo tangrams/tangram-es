@@ -52,14 +52,15 @@ struct DrawRule {
 
     std::bitset<StyleParamKeySize> active = { 0 };
 
-    const StyleParam* params[StyleParamKeySize]; // = { nullptr };
-
-    struct Layer {
+    struct Param {
+        const StyleParam* param;
+        // Layer name
         const char* name;
+        // Layer depth
         size_t depth;
     };
 
-    Layer layers[StyleParamKeySize];
+    Param params[StyleParamKeySize];
 
     const std::string* styleName = nullptr;
     int styleId;
