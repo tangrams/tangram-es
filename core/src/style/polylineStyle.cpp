@@ -9,6 +9,7 @@
 #include "scene/drawRule.h"
 #include "tile/tile.h"
 #include "util/builders.h"
+#include "util/lineBuilder.h"
 #include "util/mapProjection.h"
 #include "util/extrude.h"
 
@@ -101,6 +102,25 @@ void PolylineStyle::constructShaderProgram() {
     m_shaderProgram->setSourceStrings(fragShaderSrcStr, vertShaderSrcStr);
 }
 
+struct Context {
+    std::vector<PolylineVertex> vertices;
+
+    glm::vec2 width;
+    uint32_t color;
+    float order;
+    float height;
+};
+
+template<>
+void LineBuilder<Context>::addVertex(const glm::vec3& coord,
+                                     const glm::vec2& normal,
+                                     const glm::vec2& uv,
+                                     Context& ctx) {
+    ctx.vertices.push_back({ {coord.x, coord.y, ctx.height}, ctx.order,
+                              uv, normal, ctx.width, ctx.color });
+
+}
+
 namespace {
 
 struct Parameters {
@@ -121,6 +141,7 @@ struct Parameters {
     float dWdZOutline;
 };
 
+
 struct Builder : public StyleBuilder {
 
     const PolylineStyle& m_style;
@@ -132,22 +153,10 @@ struct Builder : public StyleBuilder {
 
     // Used in draw for legth and offsets: sumIndices, sumVertices
     std::vector<std::pair<uint32_t, uint32_t>> m_vertexOffsets;
-    std::vector<PolylineVertex> m_vertices;
+
     std::vector<uint16_t> m_indices;
 
-    // Current vertex attributes for builder
-    glm::vec2 m_optWidth;
-    uint32_t m_optColor;
-    float m_optOrder;
-    float m_optHeight;
-
-    PolyLineBuilder m_builder = {
-        [&](const glm::vec3& coord, const glm::vec2& normal, const glm::vec2& uv) {
-            m_vertices.push_back({ {coord.x, coord.y, m_optHeight}, m_optOrder,
-                                    uv, normal, m_optWidth, m_optColor });
-        },
-        [&](size_t sizeHint) {}
-    };
+    LineBuilder<Context> m_builder;
 
     void begin(const Tile& _tile) override;
 
@@ -170,6 +179,7 @@ struct Builder : public StyleBuilder {
 
 };
 
+
 void Builder::begin(const Tile& _tile) {
     m_tileUnitsPerMeter = _tile.getInverseScale();
     m_zoom = _tile.getID().z;
@@ -178,13 +188,18 @@ void Builder::begin(const Tile& _tile) {
 
     m_vertexOffsets.clear();
     m_vertexOffsets.emplace_back(0,0);
+
+    m_builder.indices.clear();
+    m_builder.ctx.vertices.clear();
+
     m_indices.clear();
-    m_vertices.clear();
+    // m_vertices.clear();
 }
 
 std::unique_ptr<VboMesh> Builder::build() {
     auto mesh = std::make_unique<Mesh>(m_style.vertexLayout(), m_style.drawMode());
-    mesh->compile(m_vertexOffsets, m_vertices, m_indices);
+    //mesh->compile(m_vertexOffsets, m_vertices, m_indices);
+    mesh->compile(m_vertexOffsets, m_builder.ctx.vertices, m_indices);
     return std::move(mesh);
 }
 
@@ -307,8 +322,6 @@ void Builder::addFeature(const Feature& _feat, const DrawRule& _rule) {
 
 void Builder::buildLine(const Line& _line) {
 
-    Builders::buildPolyLine(_line, m_builder);
-
     auto sumVertices = m_vertexOffsets.back().second;
     if (sumVertices + m_builder.numVertices > MAX_INDEX_VALUE) {
         m_vertexOffsets.emplace_back(0, 0);
@@ -337,7 +350,7 @@ void Builder::add(const Line& _line, const Properties& _props,
     // Keep current vertex buffer position when the
     // same vertices are used for the outline.
     size_t startIndex = m_indices.size();
-    size_t startVertex = m_vertices.size();
+    size_t startVertex = m_builder.ctx.vertices.size();
 
     float height = getUpperExtrudeMeters(params.extrude, _props);
     height *= m_tileUnitsPerMeter;
@@ -350,12 +363,14 @@ void Builder::add(const Line& _line, const Properties& _props,
     if (width < 1.0/512) { width = 1.0/512; }
     if (dWdZ < 1.0/512) { dWdZ = 1.0/512; }
 
-    m_builder.cap = params.cap;
-    m_builder.join = params.join;
-    m_optOrder = order;
-    m_optColor = abgr;
-    m_optWidth = { width, dWdZ};
-    m_optHeight = height;
+    m_builder.ctx.order = order;
+    m_builder.ctx.color = abgr;
+    m_builder.ctx.width = { width, dWdZ};
+    m_builder.ctx.height = height;
+
+    m_builder.buildPolyLine(_line,
+                            int(params.cap),
+                            int(params.join));
 
     buildLine(_line);
 
@@ -369,12 +384,14 @@ void Builder::add(const Line& _line, const Properties& _props,
 
     if (params.outlineCap != params.cap || params.outlineJoin != params.join) {
         // need to re-triangulate with different cap and/or join
-        m_builder.cap = params.outlineCap;
-        m_builder.join = params.outlineJoin;
-        m_optOrder = order;
-        m_optColor = abgr;
-        m_optWidth = { width, dWdZ};
-        m_optHeight = height;
+        m_builder.ctx.order = order;
+        m_builder.ctx.color = abgr;
+        m_builder.ctx.width = { width, dWdZ};
+        m_builder.ctx.height = height;
+
+        m_builder.buildPolyLine(_line,
+                                int(params.outlineCap),
+                                int(params.outlineJoin));
 
         buildLine(_line);
 
@@ -383,14 +400,14 @@ void Builder::add(const Line& _line, const Properties& _props,
 
         // TODO: This is a bit too much shuffling with offsets
         size_t numIndices = m_indices.size() - startIndex;
-        size_t numVertices = m_vertices.size() - startVertex;
+        size_t numVertices = m_builder.ctx.vertices.size() - startVertex;
         int shift = 0;
 
         auto curVertices = m_vertexOffsets.back().second;
         if (curVertices + numVertices > MAX_INDEX_VALUE) {
             m_vertexOffsets.emplace_back(0, 0);
             // Indices must reference vertices starting at 0
-            shift = - (m_vertices.size() - numVertices);
+            shift = - (m_builder.ctx.vertices.size() - numVertices);
         } else {
             // Shift indices to start at the copied vertices
             shift = numVertices;
@@ -405,8 +422,8 @@ void Builder::add(const Line& _line, const Properties& _props,
         vertexOffset.second += numVertices;
 
         for (size_t i = 0; i < numVertices; i++) {
-            const auto& v = m_vertices[startVertex + i];
-            m_vertices.push_back({ v, order, {width, dWdZ}, abgr });
+            const auto& v = m_builder.ctx.vertices[startVertex + i];
+            m_builder.ctx.vertices.push_back({ v, order, {width, dWdZ}, abgr });
         }
     }
 }
