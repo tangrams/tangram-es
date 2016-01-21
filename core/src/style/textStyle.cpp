@@ -111,20 +111,26 @@ auto Builder::applyRule(const DrawRule& _rule, const Properties& _props) const -
 
     TextStyle::Parameters p;
 
-    std::string fontFamily, fontWeight, fontStyle, transform, align, anchor;
+    const std::string *fontFamily = nullptr, *fontWeight = nullptr, *fontStyle = nullptr;
     glm::vec2 offset;
 
-    _rule.get(StyleParamKey::font_family, fontFamily);
-    _rule.get(StyleParamKey::font_weight, fontWeight);
-    _rule.get(StyleParamKey::font_style, fontStyle);
+    fontFamily = _rule.get<std::string>(StyleParamKey::font_family);
+    fontWeight = _rule.get<std::string>(StyleParamKey::font_weight);
+    fontStyle = _rule.get<std::string>(StyleParamKey::font_style);
 
-    fontWeight = (fontWeight.size() == 0) ? "400" : fontWeight;
-    fontStyle = (fontStyle.size() == 0) ? "normal" : fontStyle;
+    static const std::string defaultWeight = "400";
+    static const std::string defaultStyle = "normal";
+    static const std::string defaultFamily = "";
+
+    fontWeight = (!fontWeight) ? &defaultWeight : fontWeight;
+    fontStyle = (!fontStyle) ? &defaultStyle : fontStyle;
+    fontFamily = (!fontFamily) ? &defaultFamily : fontFamily;
+
     {
         auto& fontContext = m_style.fontContext();
         if (!fontContext.lock()) { return p; }
 
-        p.fontId = fontContext.addFont(fontFamily, fontWeight, fontStyle);
+        p.fontId = fontContext.addFont(*fontFamily, *fontWeight, *fontStyle);
 
         fontContext.unlock();
         if (p.fontId < 0) { return p; }
@@ -135,9 +141,6 @@ auto Builder::applyRule(const DrawRule& _rule, const Properties& _props) const -
     _rule.get(StyleParamKey::offset, p.labelOptions.offset);
     _rule.get(StyleParamKey::font_stroke_color, p.strokeColor);
     _rule.get(StyleParamKey::font_stroke_width, p.strokeWidth);
-    _rule.get(StyleParamKey::transform, transform);
-    _rule.get(StyleParamKey::align, align);
-    _rule.get(StyleParamKey::anchor, anchor);
     _rule.get(StyleParamKey::priority, p.labelOptions.priority);
     _rule.get(StyleParamKey::collide, p.labelOptions.collide);
     _rule.get(StyleParamKey::transition_hide_time, p.labelOptions.hideTransition.time);
@@ -184,12 +187,18 @@ auto Builder::applyRule(const DrawRule& _rule, const Properties& _props) const -
         p.labelOptions.properties = std::make_shared<Properties>(_props);
     }
 
-    LabelProperty::anchor(anchor, p.anchor);
+    if (auto* anchor = _rule.get<std::string>(StyleParamKey::anchor)) {
+        LabelProperty::anchor(*anchor, p.anchor);
+    }
 
-    TextLabelProperty::transform(transform, p.transform);
-    bool res = TextLabelProperty::align(align, p.align);
-    if (!res) {
-        switch(p.anchor) {
+    if (auto* transform = _rule.get<std::string>(StyleParamKey::transform)) {
+        TextLabelProperty::transform(*transform, p.transform);
+    }
+
+    if (auto* align = _rule.get<std::string>(StyleParamKey::align)) {
+        bool res = TextLabelProperty::align(*align, p.align);
+        if (!res) {
+            switch(p.anchor) {
             case LabelProperty::Anchor::top_left:
             case LabelProperty::Anchor::left:
             case LabelProperty::Anchor::bottom_left:
@@ -204,6 +213,7 @@ auto Builder::applyRule(const DrawRule& _rule, const Properties& _props) const -
             case LabelProperty::Anchor::bottom:
             case LabelProperty::Anchor::center:
                 break;
+            }
         }
     }
 
