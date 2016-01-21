@@ -110,10 +110,10 @@ public:
      * @_options parameters for polyline construction
      * @_ctx output vectors, see <PolyLineBuilder>
      */
-    static void buildPolyLine(const Line& _line, PolyLineBuilder& _ctx);
+    static void buildPolyLineSegment(const Line& _line, PolyLineBuilder& _ctx);
 
-    /* Build a tesselated outline that follows the given line while skipping tile boundaries */
-    static void buildOutline(const Line& _line, PolyLineBuilder& _ctx);
+    /* Build a tesselated polygon line that skips tile boundaries */
+    static void buildPolyLine(const Line& _line, PolyLineBuilder& _ctx);
 
     /* Build a tesselated quad centered on _screenOrigin
      * @_screenOrigin the sprite origin in screen space
