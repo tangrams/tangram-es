@@ -103,15 +103,12 @@ const char* DrawRule::getLayerName(StyleParamKey _key) const {
     return params[static_cast<uint8_t>(_key)].name;
 }
 
-std::set<const char*> DrawRule::getLayerNames() const {
-    std::set<const char*> layerNames;
-
+size_t DrawRule::getParamSetHash() const {
+    size_t seed = 0;
     for (size_t i = 0; i < StyleParamKeySize; i++) {
-        if (params[i].name) {
-            layerNames.insert(params[i].name);
-        }
+        if (active[i]) { hash_combine(seed, params[i].name); }
     }
-    return layerNames;
+    return seed;
 }
 
 void DrawRule::logGetError(StyleParamKey _expectedKey, const StyleParam& _param) const {

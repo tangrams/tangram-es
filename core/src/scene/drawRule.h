@@ -78,7 +78,7 @@ struct DrawRule {
 
     const char* getLayerName(StyleParamKey _key) const;
 
-    std::set<const char*> getLayerNames() const;
+    size_t getParamSetHash() const;
 
     const StyleParam& findParameter(StyleParamKey _key) const;
 
