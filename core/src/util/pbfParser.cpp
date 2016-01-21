@@ -94,52 +94,49 @@ void PbfParser::extractGeometry(ParserContext& _ctx, protobuf::message& _geomIn)
 // Reuse string allocations in Propery Value!
 // Just copy over the string from the input
 // buffer to the currently used values :)
+struct string_visitor {
+    using result_type = bool;
+    Value& propValue;
+    std::string& str;
 
+    bool operator()(const PbfParser::StringView& v) const {
+        str.assign(v.second, v.first);
+        return true;
+    }
+    template<typename T>
+    bool operator()(const T& v) const {
+        propValue = v;
+        return false;
+    }
+};
+struct double_visitor {
+    using result_type = bool;
+    Value& propValue;
+
+    bool operator()(const PbfParser::StringView& v) const {
+        propValue = std::string(v.second, v.first);
+        return false;
+    }
+    template<typename T>
+    bool operator()(const T& v) const {
+        propValue = v;
+        return true;
+    }
+};
 struct update_visitor {
     using result_type = bool;
     const PbfParser::TagValue& tagValue;
     Value& propValue;
 
-    bool operator()(double& v) const {
-        if (tagValue.is<double>()) {
-            v = tagValue.get<double>();
-            return true;
-        }
-        if (tagValue.is<PbfParser::StringView>()) {
-            auto& s = tagValue.get<PbfParser::StringView>();
-            propValue = std::string(s.second, s.first);
-            return false;
-        }
-        propValue = none_type{};
-        return false;
+    template<typename T>
+    bool operator()(T& v) const {
+        return PbfParser::TagValue::visit(tagValue, double_visitor{propValue});
     }
     bool operator()(std::string& v) const {
-        if (tagValue.is<PbfParser::StringView>()) {
-            auto& s = tagValue.get<PbfParser::StringView>();
-            v.assign(s.second, s.first);
-            return true;
-        }
-        if (tagValue.is<double>()) {
-            propValue = tagValue.get<double>();
-            return false;
-        }
-        propValue = none_type{};
-        return false;
-    }
-    bool operator()(none_type) const {
-        if (tagValue.is<PbfParser::StringView>()) {
-            auto& s = tagValue.get<PbfParser::StringView>();
-            propValue = std::string(s.second, s.first);
-            return false;
-        }
-        if (tagValue.is<double>()) {
-            propValue = tagValue.get<double>();
-            return false;
-        }
-        // propValue = none_type{};
-        return true;
+        return PbfParser::TagValue::visit(tagValue, string_visitor{propValue, v});
     }
 };
+
 
 void PbfParser::extractFeature(ParserContext& _ctx, protobuf::message& _featureIn, TileDataSink& _sink) {
 
