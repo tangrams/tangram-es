@@ -91,6 +91,21 @@ void PbfParser::extractGeometry(ParserContext& _ctx, protobuf::message& _geomIn)
     }
 }
 
+// Reuse string allocations in Value. Variant is not yet smart enough
+// probably due to traits not being so well supported everywhere..
+struct copy_visitor {
+    using result_type = bool;
+    template <typename T>
+    bool operator()(T& l, const T& r) const {
+        l = r;
+        return true;
+    }
+    template <typename L, typename R>
+    bool operator()(L l, R r) const {
+        return false;
+    }
+};
+
 void PbfParser::extractFeature(ParserContext& _ctx, protobuf::message& _featureIn, TileDataSink& _sink) {
 
     //Iterate through this feature
@@ -166,7 +181,9 @@ void PbfParser::extractFeature(ParserContext& _ctx, protobuf::message& _featureI
 
     int matchedKey = 0;
     int matchedVal = 0;
+    int reused = 0;
 
+    // Less copies: Only update keys and values that have changed
     for (int tagKey : _ctx.orderedKeys) {
         int tagValue = _ctx.featureTags[tagKey];
 
@@ -188,7 +205,10 @@ void PbfParser::extractFeature(ParserContext& _ctx, protobuf::message& _featureI
             } else {
                 matchedKey++;
             }
-            it.value = _ctx.values[tagValue];
+            if (!Value::binary_visit(it.value, _ctx.values[tagValue], copy_visitor{})) {
+                // Throw away old value
+                it.value = _ctx.values[tagValue];
+            } else { reused++; }
         } else {
             if (matchPrevious && _ctx.previousTags[tagKey] >= 0) {
                 matchPrevious = false;
@@ -196,7 +216,7 @@ void PbfParser::extractFeature(ParserContext& _ctx, protobuf::message& _featureI
         }
     }
 
-    // LOG("Matched %d %d - %d", matchedKey, matchedVal, numTags);
+    // LOG("Matched %d %d - %d / %d", matchedKey, matchedVal, reused + matchedVal, numTags);
 
     _ctx.featureTags.swap(_ctx.previousTags);
 
@@ -348,8 +368,8 @@ void PbfParser::extractLayer(ParserContext& _ctx, protobuf::message& _layerIn, T
         }
     }
 
-    LOG("FEATURE MESSAGES %d  KEYS:%d VALUES:%d",
-        _ctx.featureMsgs.size(), _ctx.keys.size(), _ctx.values.size());
+    // LOG("FEATURE MESSAGES %d  KEYS:%d VALUES:%d",
+    //     _ctx.featureMsgs.size(), _ctx.keys.size(), _ctx.values.size());
 
     if (_ctx.featureMsgs.empty()) { return; }
 
