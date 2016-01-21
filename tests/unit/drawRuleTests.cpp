@@ -64,7 +64,7 @@ TEST_CASE("DrawRule correctly merges with another DrawRule", "[DrawRule]") {
         auto& merged_ab = ruleSet.matchedRules()[0];
 
         for (size_t i = 0; i < StyleParamKeySize; i++) {
-            auto* param = merged_ab.params[i];
+            auto* param = merged_ab.params[i].param;
             if (!param) {
                 logMsg("param : none %d\n", i);
                 continue;
@@ -80,25 +80,25 @@ TEST_CASE("DrawRule correctly merges with another DrawRule", "[DrawRule]") {
         // printf("rule_c:\n %s", rule_c.toString().c_str());
         // printf("merged_ac:\n %s", merged_ac.toString().c_str());
         for (size_t i = 0; i < StyleParamKeySize; i++) {
-            auto* param = merged_ab.params[i];
+            auto* param = merged_ab.params[i].param;
             if (!param) {
                 logMsg("param : none %d\n", i);
                 continue;
             }
             logMsg("param : %s\n", param->toString().c_str());
         }
-        REQUIRE(merged_ab.params[static_cast<uint8_t>(StyleParamKey::cap)]->key == StyleParamKey::cap);
-        REQUIRE(merged_ab.params[static_cast<uint8_t>(StyleParamKey::cap)]->value.get<std::string>() == "value_3b");
-        REQUIRE(merged_ab.params[static_cast<uint8_t>(StyleParamKey::color)]->key == StyleParamKey::color);
-        REQUIRE(merged_ab.params[static_cast<uint8_t>(StyleParamKey::color)]->value.get<std::string>() == "value_1b");
-        REQUIRE(merged_ab.params[static_cast<uint8_t>(StyleParamKey::join)]->key == StyleParamKey::join);
-        REQUIRE(merged_ab.params[static_cast<uint8_t>(StyleParamKey::join)]->value.get<std::string>() == "value_4a");
-        REQUIRE(merged_ab.params[static_cast<uint8_t>(StyleParamKey::order)]->key == StyleParamKey::order);
-        REQUIRE(merged_ab.params[static_cast<uint8_t>(StyleParamKey::order)]->value.get<std::string>() == "value_0b");
-        REQUIRE(merged_ab.params[static_cast<uint8_t>(StyleParamKey::style)]->key == StyleParamKey::style);
-        REQUIRE(merged_ab.params[static_cast<uint8_t>(StyleParamKey::style)]->value.get<std::string>() == "value_4b");
-        REQUIRE(merged_ab.params[static_cast<uint8_t>(StyleParamKey::width)]->key == StyleParamKey::width);
-        REQUIRE(merged_ab.params[static_cast<uint8_t>(StyleParamKey::width)]->value.get<std::string>() == "value_2b");
+        REQUIRE(merged_ab.findParameter(StyleParamKey::cap).key == StyleParamKey::cap);
+        REQUIRE(merged_ab.findParameter(StyleParamKey::cap).value.get<std::string>() == "value_3b");
+        REQUIRE(merged_ab.findParameter(StyleParamKey::color).key == StyleParamKey::color);
+        REQUIRE(merged_ab.findParameter(StyleParamKey::color).value.get<std::string>() == "value_1b");
+        REQUIRE(merged_ab.findParameter(StyleParamKey::join).key == StyleParamKey::join);
+        REQUIRE(merged_ab.findParameter(StyleParamKey::join).value.get<std::string>() == "value_4a");
+        REQUIRE(merged_ab.findParameter(StyleParamKey::order).key == StyleParamKey::order);
+        REQUIRE(merged_ab.findParameter(StyleParamKey::order).value.get<std::string>() == "value_0b");
+        REQUIRE(merged_ab.findParameter(StyleParamKey::style).key == StyleParamKey::style);
+        REQUIRE(merged_ab.findParameter(StyleParamKey::style).value.get<std::string>() == "value_4b");
+        REQUIRE(merged_ab.findParameter(StyleParamKey::width).key == StyleParamKey::width);
+        REQUIRE(merged_ab.findParameter(StyleParamKey::width).value.get<std::string>() == "value_2b");
 
         // explicit style wins
         REQUIRE(merged_ab.getStyleName() == "value_4b");
@@ -113,18 +113,18 @@ TEST_CASE("DrawRule correctly merges with another DrawRule", "[DrawRule]") {
 
         auto& merged_ba = ruleSet.matchedRules()[0];
 
-        REQUIRE(merged_ba.params[static_cast<uint8_t>(StyleParamKey::cap)]->key == StyleParamKey::cap);
-        REQUIRE(merged_ba.params[static_cast<uint8_t>(StyleParamKey::cap)]->value.get<std::string>() == "value_3b");
-        REQUIRE(merged_ba.params[static_cast<uint8_t>(StyleParamKey::color)]->key == StyleParamKey::color);
-        REQUIRE(merged_ba.params[static_cast<uint8_t>(StyleParamKey::color)]->value.get<std::string>() == "value_1b");
-        REQUIRE(merged_ba.params[static_cast<uint8_t>(StyleParamKey::join)]->key == StyleParamKey::join);
-        REQUIRE(merged_ba.params[static_cast<uint8_t>(StyleParamKey::join)]->value.get<std::string>() == "value_4a");
-        REQUIRE(merged_ba.params[static_cast<uint8_t>(StyleParamKey::order)]->key == StyleParamKey::order);
-        REQUIRE(merged_ba.params[static_cast<uint8_t>(StyleParamKey::order)]->value.get<std::string>() == "value_0b");
-        REQUIRE(merged_ba.params[static_cast<uint8_t>(StyleParamKey::style)]->key == StyleParamKey::style);
-        REQUIRE(merged_ba.params[static_cast<uint8_t>(StyleParamKey::style)]->value.get<std::string>() == "value_4b");
-        REQUIRE(merged_ba.params[static_cast<uint8_t>(StyleParamKey::width)]->key == StyleParamKey::width);
-        REQUIRE(merged_ba.params[static_cast<uint8_t>(StyleParamKey::width)]->value.get<std::string>() == "value_2b");
+        REQUIRE(merged_ba.findParameter(StyleParamKey::cap).key == StyleParamKey::cap);
+        REQUIRE(merged_ba.findParameter(StyleParamKey::cap).value.get<std::string>() == "value_3b");
+        REQUIRE(merged_ba.findParameter(StyleParamKey::color).key == StyleParamKey::color);
+        REQUIRE(merged_ba.findParameter(StyleParamKey::color).value.get<std::string>() == "value_1b");
+        REQUIRE(merged_ba.findParameter(StyleParamKey::join).key == StyleParamKey::join);
+        REQUIRE(merged_ba.findParameter(StyleParamKey::join).value.get<std::string>() == "value_4a");
+        REQUIRE(merged_ba.findParameter(StyleParamKey::order).key == StyleParamKey::order);
+        REQUIRE(merged_ba.findParameter(StyleParamKey::order).value.get<std::string>() == "value_0b");
+        REQUIRE(merged_ba.findParameter(StyleParamKey::style).key == StyleParamKey::style);
+        REQUIRE(merged_ba.findParameter(StyleParamKey::style).value.get<std::string>() == "value_4b");
+        REQUIRE(merged_ba.findParameter(StyleParamKey::width).key == StyleParamKey::width);
+        REQUIRE(merged_ba.findParameter(StyleParamKey::width).value.get<std::string>() == "value_2b");
 
         // explicit style wins
         REQUIRE(merged_ba.getStyleName() == "value_4b");
