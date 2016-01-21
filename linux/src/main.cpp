@@ -9,6 +9,10 @@
 #include <sys/stat.h>
 #include <cstdlib>
 
+#include <signal.h>
+
+
+
 using namespace Tangram;
 
 // Forward declaration
@@ -253,10 +257,18 @@ void init_main_window() {
     Tangram::addDataSource(data_source);
 }
 
+static volatile int keepRunning = 1;
+
+void intHandler(int dummy) {
+    keepRunning = 0;
+}
+
 // Main program
 // ============
 
 int main(int argc, char* argv[]) {
+
+    signal(SIGINT, intHandler);
 
     int argi = 0;
     while (++argi < argc) {
@@ -290,7 +302,7 @@ int main(int argc, char* argv[]) {
     glfwSwapInterval(0);
 
     // Loop until the user closes the window
-    while (!glfwWindowShouldClose(main_window)) {
+    while (keepRunning && !glfwWindowShouldClose(main_window)) {
 
         double currentTime = glfwGetTime();
         double delta = currentTime - lastTime;
