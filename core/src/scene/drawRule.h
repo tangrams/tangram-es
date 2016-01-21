@@ -4,6 +4,7 @@
 
 #include <vector>
 #include <set>
+#include <bitset>
 
 namespace Tangram {
 
@@ -49,20 +50,21 @@ struct DrawRuleData {
 
 struct DrawRule {
 
-    const StyleParam* params[StyleParamKeySize] = { nullptr };
+    std::bitset<StyleParamKeySize> active = { 0 };
+
+    const StyleParam* params[StyleParamKeySize]; // = { nullptr };
 
     struct Layer {
-        const char* name = nullptr;
-        size_t depth = 0;
+        const char* name;
+        size_t depth;
     };
 
     Layer layers[StyleParamKeySize];
 
-    const std::string* name = nullptr;
+    const std::string* styleName = nullptr;
+    int styleId;
 
-    int id;
-
-    DrawRule(const DrawRuleData& _ruleData);
+    DrawRule(const DrawRuleData& _ruleData, const SceneLayer& _layer);
 
     void merge(const DrawRuleData& _ruleData, const SceneLayer& _layer);
 
