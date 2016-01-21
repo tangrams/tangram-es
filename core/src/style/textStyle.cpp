@@ -16,6 +16,8 @@
 #include "platform.h"
 #include "tangram.h"
 
+#include "glm/gtx/norm.hpp"
+
 namespace Tangram {
 
 TextStyle::TextStyle(std::string _name, std::shared_ptr<FontContext> _fontContext, bool _sdf,
@@ -253,13 +255,13 @@ void Builder::addLine(const Line& _line, const Properties& _props, const DrawRul
 
     if (!m_builder.prepareLabel(m_style.fontContext(), params, Label::Type::line)) { return; }
 
-    float pixel = 2.0 / m_tileSize;
-    float minLength = m_builder.labelWidth() * pixel * 0.2;
+    float minLength2 = std::pow(m_builder.labelWidth()*0.5, 2);
+    float tileScale = m_tileSize * 0.5;
 
     for (size_t i = 0; i < _line.size() - 1; i++) {
         glm::vec2 p1 = glm::vec2(_line[i]);
         glm::vec2 p2 = glm::vec2(_line[i + 1]);
-        if (glm::length(p1-p2) > minLength) {
+        if (glm::length2((p1 - p2) * tileScale) > minLength2) {
             m_builder.addLabel(params, Label::Type::line, { p1, p2 });
         }
     }
