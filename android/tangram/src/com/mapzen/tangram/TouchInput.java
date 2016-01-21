@@ -10,6 +10,7 @@ import android.view.ScaleGestureDetector;
 import android.view.ScaleGestureDetector.OnScaleGestureListener;
 import android.view.View;
 import android.view.View.OnTouchListener;
+import android.view.ViewConfiguration;
 
 import com.almeros.android.multitouch.RotateGestureDetector;
 import com.almeros.android.multitouch.RotateGestureDetector.OnRotateGestureListener;
@@ -79,6 +80,7 @@ public class TouchInput implements OnTouchListener, OnScaleGestureListener,
     }
 
     private static final long MULTITOUCH_BUFFER_TIME = 256; // milliseconds
+    private static final long DOUBLE_TAP_TIMEOUT = ViewConfiguration.getDoubleTapTimeout(); // milliseconds
 
     private GestureDetector panTapGestureDetector;
     private ScaleGestureDetector scaleGestureDetector;
@@ -208,14 +210,25 @@ public class TouchInput implements OnTouchListener, OnScaleGestureListener,
 
     @Override
     public boolean onDoubleTap(MotionEvent e) {
-        if (isDetectionAllowed(Gestures.DOUBLE_TAP) && doubleTapResponder != null) {
-            return doubleTapResponder.onDoubleTap(e.getX(), e.getY());
-        }
+        // This event handles the second 'down' of a double tap, which is not a confirmed double tap
+        // (e.g. it could be the start of a 'quick scale' gesture). We ignore this callback and
+        // check for the 'up' event that follows.
         return false;
     }
 
     @Override
     public boolean onDoubleTapEvent(MotionEvent e) {
+        int action = e.getActionMasked();
+        long time = e.getEventTime() - e.getDownTime();
+        if (action != MotionEvent.ACTION_UP || time > DOUBLE_TAP_TIMEOUT) {
+            // The detector sends back only the first 'down' and the second 'up' so we only need to
+            // respond when we receive an 'up' action. We also discard the gesture if the second tap
+            // lasts longer than the permitted duration between taps.
+            return false;
+        }
+        if (isDetectionAllowed(Gestures.DOUBLE_TAP) && doubleTapResponder != null) {
+            return doubleTapResponder.onDoubleTap(e.getX(), e.getY());
+        }
         return false;
     }
 
