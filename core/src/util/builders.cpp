@@ -243,15 +243,17 @@ float valuesWithinTolerance(float _a, float _b, float _tolerance = 0.001) {
 // Tests if a line segment (from point A to B) is nearly coincident with the edge of a tile
 bool isOnTileEdge(const glm::vec3& _pa, const glm::vec3& _pb) {
 
-    float tolerance = 0.0002; // tweak this adjust if catching too few/many line segments near tile edges
+    float tolerance = 0.0005; // tweak this adjust if catching too few/many line segments near tile edges
     // TODO: make tolerance configurable by source if necessary
     glm::vec2 tile_min(0.0, 0.0);
     glm::vec2 tile_max(1.0, 1.0);
+    glm::vec2 a(fmod(_pa.x, tile_max.x), fmod(_pa.y, tile_max.y));
+    glm::vec2 b(fmod(_pb.x, tile_max.x), fmod(_pb.y, tile_max.y));
 
-    return (valuesWithinTolerance(_pa.x, tile_min.x, tolerance) && valuesWithinTolerance(_pb.x, tile_min.x, tolerance)) ||
-           (valuesWithinTolerance(_pa.x, tile_max.x, tolerance) && valuesWithinTolerance(_pb.x, tile_max.x, tolerance)) ||
-           (valuesWithinTolerance(_pa.y, tile_min.y, tolerance) && valuesWithinTolerance(_pb.y, tile_min.y, tolerance)) ||
-           (valuesWithinTolerance(_pa.y, tile_max.y, tolerance) && valuesWithinTolerance(_pb.y, tile_max.y, tolerance));
+    return (valuesWithinTolerance(a.x, tile_min.x, tolerance) && valuesWithinTolerance(b.x, tile_min.x, tolerance)) ||
+           (valuesWithinTolerance(a.x, tile_max.x, tolerance) && valuesWithinTolerance(b.x, tile_max.x, tolerance)) ||
+           (valuesWithinTolerance(a.y, tile_min.y, tolerance) && valuesWithinTolerance(b.y, tile_min.y, tolerance)) ||
+           (valuesWithinTolerance(a.y, tile_max.y, tolerance) && valuesWithinTolerance(b.y, tile_max.y, tolerance));
 }
 
 void Builders::buildPolyLineSegment(const Line& _line, PolyLineBuilder& _ctx) {
