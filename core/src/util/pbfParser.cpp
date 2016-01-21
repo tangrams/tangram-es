@@ -8,6 +8,17 @@
 
 #include <algorithm>
 
+#define FEATURE_ID 1
+#define FEATURE_TAGS 2
+#define FEATURE_TYPE 3
+#define FEATURE_GEOM 4
+
+
+#define LAYER_FEATURE 2
+#define LAYER_KEY 3
+#define LAYER_VALUE 4
+#define LAYER_TILE_EXTENT 5
+
 namespace Tangram {
 
 void PbfParser::extractGeometry(ParserContext& _ctx, protobuf::message& _geomIn) {
@@ -96,15 +107,12 @@ void PbfParser::extractFeature(ParserContext& _ctx, protobuf::message& _featureI
 
     while(_featureIn.next()) {
         switch(_featureIn.tag) {
-            // Feature ID
-            case 1:
+            case FEATURE_ID:
                 // ignored for now, also not used in json parsing
                 _featureIn.skip();
                 break;
-            // Feature tags (properties)
-            case 2:
-            {
-                // extract tags message
+
+            case FEATURE_TAGS: {
                 protobuf::message tagsMsg = _featureIn.getMessage();
 
                 while(tagsMsg) {
@@ -132,16 +140,15 @@ void PbfParser::extractFeature(ParserContext& _ctx, protobuf::message& _featureI
                 }
                 break;
             }
-            // Feature Type
-            case 3:
+            case FEATURE_TYPE:
                 feature.geometryType = (GeometryType)_featureIn.varint();
                 break;
-            // Actual geometry data
-            case 4:
+
+            case FEATURE_GEOM:
                 geometry = _featureIn.getMessage();
                 extractGeometry(_ctx, geometry);
                 break;
-            // None.. skip
+
             default:
                 _featureIn.skip();
                 break;
@@ -273,22 +280,30 @@ void PbfParser::extractLayer(ParserContext& _ctx, protobuf::message& _layerIn, T
     _ctx.values.clear();
     _ctx.featureMsgs.clear();
 
-    //// Iterate layer to populate featureMsgs, keys and values
+    bool lastWasFeature = false;
+    protobuf::message featureItr;
+
+    // Iterate layer to populate featureMsgs, keys and values
     while(_layerIn.next()) {
+
+        if (_layerIn.tag != LAYER_FEATURE) {
+            lastWasFeature = false;
+        }
+
         switch(_layerIn.tag) {
-            case 2: // features
-            {
-                _ctx.featureMsgs.push_back(_layerIn.getMessage());
+            case LAYER_FEATURE: {
+                if (!lastWasFeature) {
+                    _ctx.featureMsgs.push_back(_layerIn);
+                    lastWasFeature = true;
+                }
+                _layerIn.skip();
                 break;
             }
-
-            case 3: // key string
-            {
+            case LAYER_KEY: {
                 _ctx.keys.push_back(_layerIn.string());
                 break;
             }
-
-            case 4: // values
+            case LAYER_VALUE:
             {
                 protobuf::message valueItr = _layerIn.getMessage();
 
@@ -323,8 +338,7 @@ void PbfParser::extractLayer(ParserContext& _ctx, protobuf::message& _layerIn, T
                 }
                 break;
             }
-
-            case 5: //extent
+            case LAYER_TILE_EXTENT:
                 _ctx.tileExtent = static_cast<int>(_layerIn.int64());
                 break;
 
@@ -333,6 +347,11 @@ void PbfParser::extractLayer(ParserContext& _ctx, protobuf::message& _layerIn, T
                 break;
         }
     }
+
+    LOG("FEATURE MESSAGES %d  KEYS:%d VALUES:%d",
+        _ctx.featureMsgs.size(), _ctx.keys.size(), _ctx.values.size());
+
+    if (_ctx.featureMsgs.empty()) { return; }
 
     //// Assign ordering to keys for faster sorting
     _ctx.orderedKeys.clear();
@@ -349,8 +368,13 @@ void PbfParser::extractLayer(ParserContext& _ctx, protobuf::message& _layerIn, T
 
     _ctx.previousTags.assign(_ctx.keys.size(), -1);
 
-    for(auto& featureMsg : _ctx.featureMsgs) {
-        extractFeature(_ctx, featureMsg, _sink);
+    for (auto& featureItr : _ctx.featureMsgs) {
+        do {
+            auto featureMsg = featureItr.getMessage();
+
+            extractFeature(_ctx, featureMsg, _sink);
+
+        } while (featureItr.next() && featureItr.tag == LAYER_FEATURE);
     }
 }
 
