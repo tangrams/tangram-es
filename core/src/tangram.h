@@ -128,6 +128,7 @@ void loadScene(const char* _scenePath, bool _setPositionFromScene = false);
 
 struct TouchItem {
     std::shared_ptr<Properties> properties;
+    float position[2];
     float distance;
 };
 
