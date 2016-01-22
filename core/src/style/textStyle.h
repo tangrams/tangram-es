@@ -22,7 +22,6 @@ public:
         FontID fontId = -1;
         std::string text = "";
         bool interactive = false;
-        std::shared_ptr<Properties> properties;
         uint32_t fill = 0xff000000;
         uint32_t strokeColor = 0xffffffff;
         float strokeWidth = 0.0f;
