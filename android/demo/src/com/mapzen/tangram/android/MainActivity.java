@@ -97,7 +97,7 @@ public class MainActivity extends Activity {
                         .5 * (tapped.latitude + current.latitude),
                         .5f
                 );
-                return false;
+                return true;
             }
         });
 
