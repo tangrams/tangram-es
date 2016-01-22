@@ -20,6 +20,7 @@
 #include "gl.h"
 #include "gl/extension.h"
 #include "util/ease.h"
+#include "debug/textDisplay.h"
 #include <memory>
 #include <array>
 #include <cmath>
@@ -38,6 +39,7 @@ std::shared_ptr<View> m_view;
 std::unique_ptr<Labels> m_labels;
 std::unique_ptr<Skybox> m_skybox;
 std::unique_ptr<InputHandler> m_inputHandler;
+std::unique_ptr<TextDisplay> m_textDisplay;
 std::mutex m_tilesMutex;
 
 std::array<Ease, 4> m_eases;
@@ -81,6 +83,10 @@ void initialize(const char* _scenePath) {
 
     // label setup
     m_labels = std::make_unique<Labels>();
+
+    std::string font("fonts/firasans-medium.ttf");
+    m_textDisplay = std::make_unique<TextDisplay>(font);
+    m_textDisplay->init();
 
     loadScene(_scenePath, true);
 
@@ -194,6 +200,8 @@ void render() {
     RenderState::clearColor(color.r / 255.f, color.g / 255.f, color.b / 255.f, color.a / 255.f);
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
+    m_textDisplay->clear();
+    /*
     {
         std::lock_guard<std::mutex> lock(m_tilesMutex);
 
@@ -215,6 +223,8 @@ void render() {
     }
 
     m_labels->drawDebug(*m_view);
+    */
+    m_textDisplay->draw(m_view->getOrthoViewportMatrix());
 
     while (Error::hadGlError("Tangram::render()")) {}
 }
