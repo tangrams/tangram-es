@@ -236,24 +236,31 @@ void addCap(const glm::vec3& _coord, const glm::vec2& _normal, int _numCorners, 
     addFan(_coord, nA, nB, nC, uA, uB, uC, _numCorners, _ctx);
 }
 
-float valuesWithinTolerance(float _a, float _b, float _tolerance = 0.001) {
+bool nearlyEqual(float _a, float _b, float _tolerance = 0.001) {
     return fabsf(_a - _b) < _tolerance;
 }
 
 // Tests if a line segment (from point A to B) is nearly coincident with the edge of a tile
-bool isOnTileEdge(const glm::vec3& _pa, const glm::vec3& _pb) {
+bool isOnTileEdge(const glm::vec3& _a, const glm::vec3& _b) {
 
     float tolerance = 0.0005; // tweak this adjust if catching too few/many line segments near tile edges
     // TODO: make tolerance configurable by source if necessary
     glm::vec2 tile_min(0.0, 0.0);
     glm::vec2 tile_max(1.0, 1.0);
-    glm::vec2 a(fmod(_pa.x, tile_max.x), fmod(_pa.y, tile_max.y));
-    glm::vec2 b(fmod(_pb.x, tile_max.x), fmod(_pb.y, tile_max.y));
 
-    return (valuesWithinTolerance(a.x, tile_min.x, tolerance) && valuesWithinTolerance(b.x, tile_min.x, tolerance)) ||
-           (valuesWithinTolerance(a.x, tile_max.x, tolerance) && valuesWithinTolerance(b.x, tile_max.x, tolerance)) ||
-           (valuesWithinTolerance(a.y, tile_min.y, tolerance) && valuesWithinTolerance(b.y, tile_min.y, tolerance)) ||
-           (valuesWithinTolerance(a.y, tile_max.y, tolerance) && valuesWithinTolerance(b.y, tile_max.y, tolerance));
+    if (nearlyEqual(_a.x, _b.x, tolerance)) {
+        auto x = fmod(_a.x, tile_max.x);
+        if (nearlyEqual(x, tile_min.x, tolerance) || nearlyEqual(x, tile_max.x, tolerance)) {
+            return true;
+        }
+    }
+    if (nearlyEqual(_a.y, _b.y, tolerance)) {
+        auto y = fmod(_a.y, tile_max.y);
+        if (nearlyEqual(y, tile_min.y, tolerance) || nearlyEqual(y, tile_min.y, tolerance)) {
+            return true;
+        }
+    }
+    return false;
 }
 
 void buildPolyLineSegment(const Line& _line, PolyLineBuilder& _ctx) {
