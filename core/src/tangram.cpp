@@ -14,6 +14,7 @@
 #include "gl/renderState.h"
 #include "gl/primitives.h"
 #include "util/inputHandler.h"
+#include "tile/tileCache.h"
 #include "view/view.h"
 #include "data/clientGeoJsonSource.h"
 #include "text/fontContext.h"
@@ -220,7 +221,18 @@ void render() {
     }
 
     m_labels->drawDebug(*m_view);
-    m_textDisplay->draw(m_view->getOrthoViewportMatrix(), m_view->getZoom());
+    std::vector<std::string> debuginfos;
+    debuginfos.push_back("zoom:" + std::to_string(m_view->getZoom()));
+    debuginfos.push_back("pos:" + std::to_string(m_view->getPosition().x) + "/" + std::to_string(m_view->getPosition().y));
+    debuginfos.push_back("visible tiles:" + std::to_string(m_tileManager->getVisibleTiles().size()));
+    debuginfos.push_back("tile cache size:" + std::to_string(m_tileManager->getTileCache()->getMemoryUsage()));
+    size_t memused = 0;
+    for (const auto& tile : m_tileManager->getVisibleTiles()) {
+        memused += tile->getMemoryUsage();
+    }
+    debuginfos.push_back("tile size:" + std::to_string(memused));
+    debuginfos.push_back("number of styles"+ std::to_string(m_scene->styles().size()));
+    m_textDisplay->draw(m_view->getOrthoViewportMatrix(), debuginfos);
 
     while (Error::hadGlError("Tangram::render()")) {}
 }
