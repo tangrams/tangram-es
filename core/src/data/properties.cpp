@@ -114,31 +114,29 @@ void Properties::sort() {
 void Properties::set(std::string key, std::string value) {
 
     auto it = std::lower_bound(props.begin(), props.end(), key,
-                                 [](auto& item, auto& key) {
-                                     return keyComparator(item.key, key);
-                                 });
+                               [](auto& item, auto& key) {
+                                   return keyComparator(item.key, key);
+                               });
 
     if (it == props.end() || it->key != key) {
-        props.emplace_back(std::move(key), Value{std::move(value)});
+        props.emplace(it, std::move(key), std::move(value));
     } else {
-        it->value = Value{std::move(value)};
+        it->value = std::move(value);
     }
-    sort();
 }
 
 void Properties::set(std::string key, double value) {
 
     auto it = std::lower_bound(props.begin(), props.end(), key,
-                                 [](auto& item, auto& key) {
-                                     return keyComparator(item.key, key);
-                                 });
+                               [](auto& item, auto& key) {
+                                   return keyComparator(item.key, key);
+                               });
 
     if (it == props.end() || it->key != key) {
-        props.emplace_back(std::move(key), Value{value});
+        props.emplace(it, std::move(key), value);
     } else {
-        it->value = Value{value};
+        it->value = value;
     }
-    sort();
 }
 
 std::string Properties::toJson() const {
