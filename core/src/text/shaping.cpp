@@ -2,11 +2,22 @@
 
 #include "platform.h"
 
+#include "hb-ft.h"
+
+#include "unicode/unistr.h"
+#include "unicode/ubidi.h"
+#include "unicode/uscript.h"
+#include "unicode/schriter.h"
+
 namespace Tangram {
 
-void Shaping::icuBidiError(UBiDi* _bidi, UErrorCode _error) {
+void icuBidiError(UBiDi* _bidi, UErrorCode _error) {
     LOGW("UBidi error %s", u_errorName(_error));
     ubidi_close(_bidi);
+}
+
+hb_direction_t icuDirectionToHB(UBiDiDirection _direction) {
+    return (_direction == UBIDI_RTL) ? HB_DIRECTION_RTL : HB_DIRECTION_LTR;
 }
 
 bool Shaping::bidiDetection(const std::string& _text, hb_direction_t& _direction) {
@@ -18,14 +29,14 @@ bool Shaping::bidiDetection(const std::string& _text, hb_direction_t& _direction
     UBiDi* bidi = ubidi_openSized(text.length(), 0, &error);
 
     if (error != U_ZERO_ERROR) {
-        Shaping::icuBidiError(bidi, error);
+        icuBidiError(bidi, error);
         return false;
     }
 
     ubidi_setPara(bidi, text.getBuffer(), text.length(), dirn, NULL, &error);
 
     if (error != U_ZERO_ERROR) {
-        Shaping::icuBidiError(bidi, error);
+        icuBidiError(bidi, error);
         return false;
     }
 
@@ -34,7 +45,7 @@ bool Shaping::bidiDetection(const std::string& _text, hb_direction_t& _direction
         size_t count = ubidi_countRuns(bidi, &error);
 
         if (error != U_ZERO_ERROR) {
-            Shaping::icuBidiError(bidi, error);
+            icuBidiError(bidi, error);
             return false;
         }
 
@@ -56,10 +67,6 @@ bool Shaping::bidiDetection(const std::string& _text, hb_direction_t& _direction
     ubidi_close(bidi);
 
     return true;
-}
-
-hb_direction_t Shaping::icuDirectionToHB(UBiDiDirection _direction) {
-    return (_direction == UBIDI_RTL) ? HB_DIRECTION_RTL : HB_DIRECTION_LTR;
 }
 
 bool Shaping::scriptDetection(const std::string& _text, hb_script_t& _script) {

@@ -1,6 +1,8 @@
 #include "fontContext.h"
 
 #include "shaping.h"
+#include "hb-ft.h"
+
 #define FONS_USE_HARFBUZZ
 #define FONS_USE_FREETYPE
 #define FONTSTASH_IMPLEMENTATION
