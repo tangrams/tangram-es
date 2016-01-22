@@ -66,7 +66,7 @@ void setupJniEnv(JNIEnv* _jniEnv, jobject _tangramInstance, jobject _assetManage
     getFontFilePath = jniEnv->GetMethodID(tangramClass, "getFontFilePath", "(Ljava/lang/String;)Ljava/lang/String;");
     requestRenderMethodID = _jniEnv->GetMethodID(tangramClass, "requestRender", "()V");
     setRenderModeMethodID = _jniEnv->GetMethodID(tangramClass, "setRenderMode", "(I)V");
-    featureSelectionCbMID = _jniEnv->GetMethodID(tangramClass, "featureSelectionCb", "(Lcom/mapzen/tangram/Properties;)V");
+    featureSelectionCbMID = _jniEnv->GetMethodID(tangramClass, "featureSelectionCb", "(Lcom/mapzen/tangram/Properties;FF)V");
 
     jclass propertiesClass = jniEnv->FindClass("com/mapzen/tangram/Properties");
 
@@ -302,7 +302,7 @@ void featureSelectionCallback(JNIEnv* jniEnv, const std::vector<Tangram::TouchIt
     jresult = reinterpret_cast<jlong>(new std::shared_ptr<Tangram::Properties >(items[0].properties));
     jobject object = jniEnv->NewObject(propertiesClass, propertiesConstructorMID, jresult, true);
 
-    jniEnv->CallVoidMethod(tangramInstance, featureSelectionCbMID, object);
+    jniEnv->CallVoidMethod(tangramInstance, featureSelectionCbMID, object, items[0].position[0], items[0].position[1]);
 }
 
 void initGLExtensions() {
