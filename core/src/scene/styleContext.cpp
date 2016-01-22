@@ -89,10 +89,17 @@ void StyleContext::initFunctions(const Scene& _scene) {
     }
     m_sceneId = _scene.id;
 
+    setFunctions(_scene.functions());
+}
+
+bool StyleContext::setFunctions(const std::vector<std::string>& _functions) {
+
     auto arr_idx = duk_push_array(m_ctx);
     int id = 0;
 
-    for (auto& function : _scene.functions()) {
+    bool ok = true;
+
+    for (auto& function : _functions) {
         LOGD("compile '%s'", function.c_str());
         duk_push_string(m_ctx, function.c_str());
         duk_push_string(m_ctx, "");
@@ -102,6 +109,7 @@ void StyleContext::initFunctions(const Scene& _scene) {
         } else {
             LOGE("Compile failed: %s", duk_safe_to_string(m_ctx, -1));
             duk_pop(m_ctx);
+            ok = false;
         }
         id++;
     }
@@ -110,7 +118,8 @@ void StyleContext::initFunctions(const Scene& _scene) {
         LOGE("'fns' object not set");
     }
 
-    DUMP("setScene - %d functions\n", id);
+    DUMP("setFunctions\n");
+    return ok;
 }
 
 void StyleContext::setFeature(const Feature& _feature) {
@@ -160,23 +169,6 @@ const Value& StyleContext::getGlobal(const std::string& _key) const {
 
 void StyleContext::clear() {
     m_feature = nullptr;
-}
-
-bool StyleContext::addFunction(const std::string& _name, const std::string& _func) {
-
-    duk_push_string(m_ctx, _func.c_str());
-    duk_push_string(m_ctx, _name.c_str());
-
-    if (duk_pcompile(m_ctx, DUK_COMPILE_FUNCTION) != 0) {
-        LOGE("Compile failed: %s", duk_safe_to_string(m_ctx, -1));
-        return false;
-    }
-
-    // Put function in global scope
-    duk_put_global_string(m_ctx, _name.c_str());
-
-    DUMP("addFunction\n");
-    return true;
 }
 
 bool StyleContext::evalFilter(FunctionID _id) {
@@ -410,52 +402,6 @@ duk_ret_t StyleContext::jsGetProperty(duk_context *_ctx) {
     }
 
     return 1;
-}
-
-/* This function is only used by tests - Remove? */
-bool StyleContext::evalFilterFn(const std::string& _name) {
-
-    if (!duk_get_global_string(m_ctx, _name.c_str())) {
-        LOGE("EvalFilter %s", _name.c_str());
-        return false;
-    }
-
-    if (duk_pcall(m_ctx, 0) != 0) {
-        LOGE("EvalFilterFn: %s", duk_safe_to_string(m_ctx, -1));
-        duk_pop(m_ctx);
-        return false;
-    }
-
-    bool result = false;
-
-    if (duk_is_boolean(m_ctx, -1)) {
-        result = duk_get_boolean(m_ctx, -1);
-    } else {
-        LOGE("EvalFilterFn: invalid return type");
-    }
-
-    // pop result
-    duk_pop(m_ctx);
-
-    DUMP("evalFilterFn\n");
-    return result;
-}
-
-/* This function is only used by tests - Remove? */
-bool StyleContext::evalStyleFn(const std::string& name, StyleParamKey _key, StyleParam::Value& _val) {
-
-    if (!duk_get_global_string(m_ctx, name.c_str())) {
-        LOGE("EvalFilter %s", name.c_str());
-        return false;
-    }
-
-    if (duk_pcall(m_ctx, 0) != 0) {
-        LOGE("EvalStyleFn: %s", duk_safe_to_string(m_ctx, -1));
-        duk_pop(m_ctx);
-        return false;
-    }
-
-    return parseStyleResult(_key, _val);
 }
 
 }

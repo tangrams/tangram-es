@@ -63,11 +63,8 @@ public:
      */
     void clear();
 
-    // Public for testing
-    bool addFunction(const std::string& _name, const std::string& _func);
-    bool evalFilterFn(const std::string& _name);
-    bool evalStyleFn(const std::string& _name, StyleParamKey _key, StyleParam::Value& _val);
-    void addAccessor(const std::string& _name);
+    bool setFunctions(const std::vector<std::string>& _functions);
+
     void setGlobal(const std::string& _key, const Value& _value);
     const Value& getGlobal(const std::string& _key) const;
 
