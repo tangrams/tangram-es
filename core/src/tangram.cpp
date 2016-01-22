@@ -84,8 +84,7 @@ void initialize(const char* _scenePath) {
     // label setup
     m_labels = std::make_unique<Labels>();
 
-    std::string font("fonts/firasans-medium.ttf");
-    m_textDisplay = std::make_unique<TextDisplay>(font);
+    m_textDisplay = std::make_unique<TextDisplay>();
     m_textDisplay->init();
 
     loadScene(_scenePath, true);
@@ -200,8 +199,6 @@ void render() {
     RenderState::clearColor(color.r / 255.f, color.g / 255.f, color.b / 255.f, color.a / 255.f);
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
-    m_textDisplay->clear();
-    /*
     {
         std::lock_guard<std::mutex> lock(m_tilesMutex);
 
@@ -223,8 +220,7 @@ void render() {
     }
 
     m_labels->drawDebug(*m_view);
-    */
-    m_textDisplay->draw(m_view->getOrthoViewportMatrix());
+    m_textDisplay->draw(m_view->getOrthoViewportMatrix(), m_view->getZoom());
 
     while (Error::hadGlError("Tangram::render()")) {}
 }

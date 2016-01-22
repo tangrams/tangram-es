@@ -8,16 +8,12 @@
 
 namespace Tangram {
 
-TextDisplay::TextDisplay(std::string& _fontName, glm::vec2 _textDisplayResolution)
-    : m_font(_fontName),
-      m_textDisplayResolution(_textDisplayResolution)
+TextDisplay::TextDisplay(glm::vec2 _textDisplayResolution)
+    : m_textDisplayResolution(_textDisplayResolution)
 {
-
 }
 
-TextDisplay::~TextDisplay() {
-
-}
+TextDisplay::~TextDisplay() {}
 
 void TextDisplay::init() {
     std::string vertShaderSrcStr = R"END(
@@ -49,35 +45,30 @@ void TextDisplay::init() {
     m_shader->setSourceStrings(fragShaderSrcStr, vertShaderSrcStr);
 }
 
-void TextDisplay::clear() {
-
-}
-
-void TextDisplay::draw(glm::mat4 _orthoProj) {
+void TextDisplay::draw(glm::mat4 _orthoProj, float _zoom) {
+    std::string text = "Zoom:" + std::to_string(_zoom);
     static std::shared_ptr<VertexLayout> vertexLayout = std::shared_ptr<VertexLayout>(new VertexLayout({
         {"a_position", 2, GL_FLOAT, false, 0},
     }));
 
-    static char buffer[99999]; // ~500 chars
+    static char buffer[99999];
     static GLint boundbuffer = -1;
 
     std::vector<glm::vec2> vertices;
     int nquads;
 
-    nquads = stb_easy_font_print(3, 3, "1", NULL, buffer, sizeof(buffer));
+    nquads = stb_easy_font_print(3, 3, text.c_str(), NULL, buffer, sizeof(buffer));
 
     float* data = reinterpret_cast<float*>(buffer);
 
-    int offset = 0;
     vertices.reserve(nquads * 6);
     for (int quad = 0, stride = 0; quad < nquads; ++quad, stride += 16) {
-        vertices.push_back({data[(0 * 4) + offset], data[(0 * 4) + 1 + offset]});
-        vertices.push_back({data[(1 * 4) + offset], data[(1 * 4) + 1 + offset]});
-        vertices.push_back({data[(2 * 4) + offset], data[(2 * 4) + 1 + offset]});
-        vertices.push_back({data[(2 * 4) + offset], data[(2 * 4) + 1 + offset]});
-        vertices.push_back({data[(3 * 4) + offset], data[(3 * 4) + 1 + offset]});
-        vertices.push_back({data[(0 * 4) + offset], data[(0 * 4) + 1 + offset]});
-        offset += 16;
+        vertices.push_back({data[(0 * 4) + stride], data[(0 * 4) + 1 + stride]});
+        vertices.push_back({data[(1 * 4) + stride], data[(1 * 4) + 1 + stride]});
+        vertices.push_back({data[(2 * 4) + stride], data[(2 * 4) + 1 + stride]});
+        vertices.push_back({data[(2 * 4) + stride], data[(2 * 4) + 1 + stride]});
+        vertices.push_back({data[(3 * 4) + stride], data[(3 * 4) + 1 + stride]});
+        vertices.push_back({data[(0 * 4) + stride], data[(0 * 4) + 1 + stride]});
     }
 
     RenderState::culling(GL_FALSE);
@@ -90,12 +81,13 @@ void TextDisplay::draw(glm::mat4 _orthoProj) {
 
     m_shader->use();
 
-    _orthoProj = glm::ortho(0.f, (float)100.0, (float)100.0, 0.f, -1.f, 1.f);
+    _orthoProj = glm::ortho(0.f, (float)m_textDisplayResolution.x, (float)m_textDisplayResolution.y, 0.f, -1.f, 1.f);
     m_shader->setUniformMatrix4f("u_orthoProj", _orthoProj);
     vertexLayout->enable(*m_shader, 0, (void*)vertices.data());
 
     glDrawArrays(GL_TRIANGLES, 0, nquads * 6);
 
+    RenderState::culling(GL_TRUE);
     RenderState::vertexBuffer(boundbuffer);
 }
 
