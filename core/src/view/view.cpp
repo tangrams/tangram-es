@@ -468,10 +468,14 @@ void View::updateTiles() {
 
     // Scan options - avoid heap allocation for std::function
     // [1] http://www.drdobbs.com/cpp/efficient-use-of-lambda-expressions-and/232500059?pgno=2
-    struct {
+    struct ScanParams {
+        ScanParams(std::set<TileID>& _tiles, int _zoom)
+            : tiles(_tiles), zoom(_zoom) {}
+
         std::set<TileID>& tiles;
         int zoom;
-        int maxZoom;
+        int maxZoom = int(s_maxZoom);
+
         // Distance thresholds in tile space for levels of detail:
         // Element [n] in each array is the minimum tile index at which level-of-detail n
         // should be applied in that direction.
@@ -481,8 +485,9 @@ void View::updateTiles() {
         int y_limit_neg[MAX_LOD] = { imin };
 
         glm::ivec4 last = glm::ivec4{-1};
+    };
 
-    } opt = { m_visibleTiles, zoom, int(s_maxZoom) };
+    ScanParams opt{ m_visibleTiles, zoom };
 
     if (m_type == CameraType::perspective) {
 
