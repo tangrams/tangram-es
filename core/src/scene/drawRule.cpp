@@ -164,18 +164,25 @@ void DrawRuleMergeSet::apply(const Feature& _feature, const Scene& _scene, const
             continue;
         }
 
-        bool visible;
-        if (rule.get(StyleParamKey::visible, visible) && !visible) {
-            continue;
-        }
-
         // Evaluate JS functions and Stops
         bool valid = true;
         for (size_t i = 0; i < StyleParamKeySize; ++i) {
 
-            if (!rule.active[i]) { continue; }
+            if (!rule.active[i]) {
+                rule.params[i].param = nullptr;
+                continue;
+            }
 
             auto*& param = rule.params[i].param;
+
+            if (param->key == StyleParamKey::visible) {
+
+                if (!StyleParam::Value::visit(param->value, StyleParam::visitor_ptr<bool>{})) {
+                    valid = false;
+                    break;
+                }
+            }
+
             if (param->function >= 0) {
 
                 if (!_ctx.evalStyle(param->function, param->key, m_evaluated[i].value) &&
