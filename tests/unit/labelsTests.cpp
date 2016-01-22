@@ -19,7 +19,7 @@ std::unique_ptr<TextLabel> makeLabel(Label::Transform _transform, Label::Type _t
     Label::Options options;
     options.offset = {0.0f, 0.0f};
     options.properties = std::make_shared<Properties>();
-    options.properties->add("id", id);
+    options.properties->set("id", id);
     options.interactive = true;
 
     return std::unique_ptr<TextLabel>(new TextLabel(_transform, _type, {10, 10},dummy,

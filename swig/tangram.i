@@ -45,11 +45,11 @@ struct Properties {
 };
 }
 %extend Tangram::Properties {
-    void add(std::string key, std::string value) {
-        $self->add(key, value);
+    void set(std::string key, std::string value) {
+        $self->set(key, value);
     }
-    void add(std::string key, double value) {
-        $self->add(key, value);
+    void set(std::string key, double value) {
+        $self->set(key, value);
     }
 }
 

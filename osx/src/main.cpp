@@ -90,10 +90,10 @@ void mouse_button_callback(GLFWwindow* window, int button, int action, int mods)
             // data_source->addLine(Properties{{"type", "line" }}, {p1, p2});
             // data_source->addPoint(Properties{{"type", "point" }}, p2);
             Properties prop1;
-            prop1.add("type", "line");
+            prop1.set("type", "line");
             data_source->addLine(prop1, {p1, p2});
             Properties prop2;
-            prop2.add("type", "point");
+            prop2.set("type", "point");
             data_source->addPoint(prop2, p2);
         }
         last_point = p1;

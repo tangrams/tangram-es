@@ -100,7 +100,7 @@ TEST_CASE("SceneLayer", "[SceneLayer][Filter][DrawRule][Match][Merge]") {
 
     {
         DrawRuleMergeSet ruleSet;
-        f1.props.add("base", "blah"); // Should match Base Layer
+        f1.props.set("base", "blah"); // Should match Base Layer
         ruleSet.match(f1, layer, ctx);
         auto& matches = ruleSet.matchedRules;
 
@@ -110,8 +110,8 @@ TEST_CASE("SceneLayer", "[SceneLayer][Filter][DrawRule][Match][Merge]") {
 
     {
         DrawRuleMergeSet ruleSet;
-        f2.props.add("one", "blah"); // Should match Base and subLayer1
-        f2.props.add("base", "blah");
+        f2.props.set("one", "blah"); // Should match Base and subLayer1
+        f2.props.set("base", "blah");
         ruleSet.match(f2, layer, ctx);
         auto& matches = ruleSet.matchedRules;
 
@@ -123,7 +123,7 @@ TEST_CASE("SceneLayer", "[SceneLayer][Filter][DrawRule][Match][Merge]") {
 
     {
         DrawRuleMergeSet ruleSet;
-        f3.props.add("two", "blah"); // Should not match anything as uber layer will not be satisfied
+        f3.props.set("two", "blah"); // Should not match anything as uber layer will not be satisfied
         ruleSet.match(f3, layer, ctx);
         auto& matches = ruleSet.matchedRules;
 
@@ -132,8 +132,8 @@ TEST_CASE("SceneLayer", "[SceneLayer][Filter][DrawRule][Match][Merge]") {
 
     {
         DrawRuleMergeSet ruleSet;
-        f4.props.add("two", "blah");
-        f4.props.add("base", "blah"); // Should match Base and subLayer2
+        f4.props.set("two", "blah");
+        f4.props.set("base", "blah"); // Should match Base and subLayer2
         ruleSet.match(f4, layer, ctx);
         auto& matches = ruleSet.matchedRules;
 

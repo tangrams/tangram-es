@@ -55,12 +55,12 @@ public class Properties {
         return TangramJNI.Properties_getString(swigCPtr, this, key);
     }
 
-    public void add(String key, String value) {
-        TangramJNI.Properties_add__SWIG_0(swigCPtr, this, key, value);
+    public void set(String key, String value) {
+        TangramJNI.Properties_set__SWIG_0(swigCPtr, this, key, value);
     }
 
-    public void add(String key, double value) {
-        TangramJNI.Properties_add__SWIG_1(swigCPtr, this, key, value);
+    public void set(String key, double value) {
+        TangramJNI.Properties_set__SWIG_1(swigCPtr, this, key, value);
     }
 
 }

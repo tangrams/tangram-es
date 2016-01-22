@@ -111,12 +111,33 @@ void Properties::sort() {
     std::sort(props.begin(), props.end());
 }
 
-void Properties::add(std::string key, std::string value) {
-    props.emplace_back(std::move(key), Value{std::move(value)});
+void Properties::set(std::string key, std::string value) {
+
+    auto it = std::lower_bound(props.begin(), props.end(), key,
+                                 [](auto& item, auto& key) {
+                                     return keyComparator(item.key, key);
+                                 });
+
+    if (it == props.end() || it->key != key) {
+        props.emplace_back(std::move(key), Value{std::move(value)});
+    } else {
+        it->value = Value{std::move(value)};
+    }
     sort();
 }
-void Properties::add(std::string key, double value) {
-    props.emplace_back(std::move(key), Value{value});
+
+void Properties::set(std::string key, double value) {
+
+    auto it = std::lower_bound(props.begin(), props.end(), key,
+                                 [](auto& item, auto& key) {
+                                     return keyComparator(item.key, key);
+                                 });
+
+    if (it == props.end() || it->key != key) {
+        props.emplace_back(std::move(key), Value{value});
+    } else {
+        it->value = Value{value};
+    }
     sort();
 }
 

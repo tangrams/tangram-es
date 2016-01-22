@@ -28,30 +28,30 @@ Filter load(const std::string& filterYaml) {
 void init() {
 
     civic.props.clear();
-    civic.props.add("name", "civic");
-    civic.props.add("brand", "honda");
-    civic.props.add("wheel",  4);
-    civic.props.add("drive", "fwd");
-    civic.props.add("type", "car");
+    civic.props.set("name", "civic");
+    civic.props.set("brand", "honda");
+    civic.props.set("wheel",  4);
+    civic.props.set("drive", "fwd");
+    civic.props.set("type", "car");
 
     bmw1.props.clear();
-    bmw1.props.add("name", "bmw320i");
-    bmw1.props.add("brand", "bmw");
-    bmw1.props.add("check", "false");
-    bmw1.props.add("series", "3");
-    bmw1.props.add("wheel", 4);
-    bmw1.props.add("drive", "all");
-    bmw1.props.add("type", "car");
-    bmw1.props.add("serial", 4398046511104); // 2^42
+    bmw1.props.set("name", "bmw320i");
+    bmw1.props.set("brand", "bmw");
+    bmw1.props.set("check", "false");
+    bmw1.props.set("series", "3");
+    bmw1.props.set("wheel", 4);
+    bmw1.props.set("drive", "all");
+    bmw1.props.set("type", "car");
+    bmw1.props.set("serial", 4398046511104); // 2^42
 
     bike.props.clear();
-    bike.props.add("name", "cb1100");
-    bike.props.add("brand", "honda");
-    bike.props.add("wheel", 2);
-    bike.props.add("type", "bike");
-    bike.props.add("series", "CB");
-    bike.props.add("check", "available");
-    bike.props.add("serial", 4398046511105); // 2^42 + 1
+    bike.props.set("name", "cb1100");
+    bike.props.set("brand", "honda");
+    bike.props.set("wheel", 2);
+    bike.props.set("type", "bike");
+    bike.props.set("series", "CB");
+    bike.props.set("check", "available");
+    bike.props.set("serial", 4398046511105); // 2^42 + 1
 
     ctx.setGlobal("$geometry", Value(1));
     ctx.setGlobal("$zoom", Value("false"));
