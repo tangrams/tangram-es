@@ -145,6 +145,7 @@ std::vector<FONSquad>& FontContext::rasterize(const std::string& _text,
     }
 
     fonsSetShaping(m_fsContext, script, direction, language);
+
     fonsSetSize(m_fsContext, _fontSize);
     fonsSetFont(m_fsContext, _fontID);
 
@@ -163,8 +164,11 @@ std::vector<FONSquad>& FontContext::rasterize(const std::string& _text,
         }
     } else {
         // TODO: font stack fallback:
-        // while font stack has font && !fonsTextDrawable
-        //     change fontstash current font
+        // if (!fonsTextDrawable)
+        //     while fontstack has font
+        //         if (!fonsTextDrawable)
+        //             fonsSetFont(fontstack.pop)
+        //             if (fonsTextDrawable) break
         LOGW("Can't draw string %s -- unicode glyph not available", _text.c_str());
     }
 
