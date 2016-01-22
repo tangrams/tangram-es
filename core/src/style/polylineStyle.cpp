@@ -15,7 +15,7 @@
 #include "glm/gtc/type_precision.hpp"
 
 constexpr float extrusion_scale = 4096.0f;
-constexpr float position_scale = 1024.0f;
+constexpr float position_scale = 8192.0f;
 constexpr float texture_scale = 65535.0f;
 constexpr float order_scale = 2.0f;
 

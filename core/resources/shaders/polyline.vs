@@ -34,7 +34,7 @@ varying vec2 v_texcoord;
     varying vec4 v_lighting;
 #endif
 
-#define UNPACK_POSITION(x) (x / 1024.0)
+#define UNPACK_POSITION(x) (x / 8192.0)
 #define UNPACK_EXTRUSION(x) (x / 4096.0)
 #define UNPACK_ORDER(x) (x / 2.0)
 
@@ -114,7 +114,7 @@ void main() {
 
     gl_Position = u_proj * v_position;
 
-    // Proxy tiles have u_tile_origin.z < 0, so this adjustment will place proxy tiles 
+    // Proxy tiles have u_tile_origin.z < 0, so this adjustment will place proxy tiles
     // deeper in the depth buffer than non-proxy tiles
     gl_Position.z += TANGRAM_DEPTH_DELTA * gl_Position.w * (1. - sign(u_tile_origin.z));
 
