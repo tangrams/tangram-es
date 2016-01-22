@@ -319,6 +319,8 @@ const std::vector<TouchItem>& Labels::getFeaturesAtPoint(const View& _view, floa
                 if (!_visibleOnly) {
                     label->updateScreenTransform(mvp, screenSize, false);
                     label->updateBBoxes(dz);
+                } else if (!label->visibleState()) {
+                    continue;
                 }
 
                 if (isect2d::intersect(label->obb(), obb)) {
