@@ -91,21 +91,21 @@ void Filter::print(int _indent) const {
 }
 
 
-int Filter::matchCost() const {
+int Filter::filterCost() const {
     // Add some extra penalty for set vs simple filters
-    int sum = -100;
+    int sum = 100;
 
     switch (data.get_type_index()) {
     case Data::type<OperatorAny>::value:
-        for (auto& f : operands()) { sum -= f.matchCost(); }
+        for (auto& f : operands()) { sum += f.filterCost(); }
         return sum;
 
     case Data::type<OperatorAll>::value:
-        for (auto& f : operands()) { sum -= f.matchCost(); }
+        for (auto& f : operands()) { sum += f.filterCost(); }
         return sum;
 
     case Data::type<OperatorNone>::value:
-        for (auto& f : operands()) { sum -= f.matchCost(); }
+        for (auto& f : operands()) { sum += f.filterCost(); }
         return sum;
 
     case Data::type<Existence>::value:
@@ -172,6 +172,24 @@ const std::vector<Filter>& Filter::operands() const {
     return empty;
 }
 
+const bool Filter::isOperator() const {
+
+    switch (data.get_type_index()) {
+    case Data::type<OperatorAny>::value:
+        return true;
+
+    case Data::type<OperatorAll>::value:
+        return true;
+
+    case Data::type<OperatorNone>::value:
+        return true;
+
+    default:
+        break;
+    }
+    return false;
+}
+
 int compareSetFilter(const Filter& a, const Filter& b) {
     auto& oa = a.operands();
     auto& ob = b.operands();
@@ -201,9 +219,10 @@ std::vector<Filter> Filter::sort(const std::vector<Filter>& _filters) {
               [](auto& a, auto& b) {
 
                   // Sort simple filters by eval cost
-                  int ma = a.matchCost();
-                  int mb = b.matchCost();
-                  if (ma > 0 && mb > 0) {
+                  int ma = a.filterCost();
+                  int mb = b.filterCost();
+
+                  if (!a.isOperator() && !b.isOperator()) {
                       int diff = ma - mb;
                       if (diff != 0) {
                           return diff < 0;
@@ -214,13 +233,11 @@ std::vector<Filter> Filter::sort(const std::vector<Filter>& _filters) {
                       return a.key() > b.key();
                   }
 
-                  // When one is a simple Filter and the other is a set
-                  // or both are sets prefer the one with the cheaper
+                  // When one is a simple Filter and the other is a operaor
+                  // or both are operators prefer the one with the cheaper
                   // filter(s).
                   if (ma != mb) {
-                      // No abs(int) in our android libstdc..
-                      //return std::abs(ma) < std::abs(mb);
-                      return std::fabs(ma) < std::fabs(mb);
+                      return ma < mb;
                   }
 
                   return compareSetFilter(a, b) < 0;

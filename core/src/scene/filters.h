@@ -63,11 +63,7 @@ struct Filter {
     Filter() : data(none_type{}) {}
     Filter(Data _data) : data(std::move(_data)) {}
 
-    static std::vector<Filter> sort(const std::vector<Filter>& filters);
-    void print(int _indent = 0) const;
-    int matchCost() const;
-    const std::string& key() const;
-    const std::vector<Filter>& operands() const;
+    bool eval(const Feature& feat, StyleContext& ctx) const;
 
     // Create an 'any', 'all', or 'none' filter
     inline static Filter MatchAny(const std::vector<Filter>& filters) {
@@ -100,8 +96,6 @@ struct Filter {
         return { Function{ id }};
     }
 
-    bool eval(const Feature& feat, StyleContext& ctx) const;
-
     static FilterGlobal globalType(const std::string& _key) {
         if (_key == "$geometry") {
             return FilterGlobal::geometry;
@@ -110,5 +104,14 @@ struct Filter {
         }
         return  FilterGlobal::undefined;
     }
+
+    /* Public for testing */
+    static std::vector<Filter> sort(const std::vector<Filter>& filters);
+    void print(int _indent = 0) const;
+    int filterCost() const;
+    const bool isOperator() const;
+    const std::string& key() const;
+    const std::vector<Filter>& operands() const;
+
 };
 }
