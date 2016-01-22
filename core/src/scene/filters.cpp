@@ -203,9 +203,7 @@ int compareSetFilter(const Filter& a, const Filter& b) {
         auto ra = oa[0].data.get<Filter::Range>();
         auto rb = ob[0].data.get<Filter::Range>();
 
-        if (ra.max == std::numeric_limits<double>::infinity() &&
-            rb.max == std::numeric_limits<double>::infinity()) {
-
+        if (std::isinf(ra.max) && std::isinf(rb.max)) {
             return rb.min - ra.min;
         }
     }
