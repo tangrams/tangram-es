@@ -41,10 +41,10 @@ void Filter::print(int _indent) const {
         logMsg("%*s existence - key:%s\n", _indent, "", f.key.c_str());
         break;
     }
-    case Data::type<Equality>::value: {
-        auto& f = data.get<Equality>();
+    case Data::type<EqualitySet>::value: {
+        auto& f = data.get<EqualitySet>();
         if (f.values[0].is<std::string>()) {
-            logMsg("%*s equality - global:%d key:%s val:%s\n", _indent, "",
+            logMsg("%*s equality set - global:%d key:%s val:%s\n", _indent, "",
                    f.global != FilterGlobal::undefined,
                    f.key.c_str(),
                    f.values[0].get<std::string>().c_str());
@@ -54,6 +54,22 @@ void Filter::print(int _indent) const {
                    f.global != FilterGlobal::undefined,
                    f.key.c_str(),
                    f.values[0].get<double>());
+        }
+        break;
+    }
+    case Data::type<Equality>::value: {
+        auto& f = data.get<Equality>();
+        if (f.value.is<std::string>()) {
+            logMsg("%*s equality - global:%d key:%s val:%s\n", _indent, "",
+                   f.global != FilterGlobal::undefined,
+                   f.key.c_str(),
+                   f.value.get<std::string>().c_str());
+        }
+        if (f.value.is<double>()) {
+            logMsg("%*s equality - global:%d key:%s val:%f\n", _indent, "",
+                   f.global != FilterGlobal::undefined,
+                   f.key.c_str(),
+                   f.value.get<double>());
         }
         break;
     }
@@ -97,6 +113,9 @@ int Filter::matchCost() const {
         // the chance to fail early check them before Existence
         return 20;
 
+    case Data::type<EqualitySet>::value:
+        return data.get<EqualitySet>().global == FilterGlobal::undefined ? 10 : 1;
+
     case Data::type<Equality>::value:
         return data.get<Equality>().global == FilterGlobal::undefined ? 10 : 1;
 
@@ -118,6 +137,9 @@ const std::string& Filter::key() const {
 
     case Data::type<Existence>::value:
         return data.get<Existence>().key;
+
+    case Data::type<EqualitySet>::value:
+        return data.get<EqualitySet>().key;
 
     case Data::type<Equality>::value:
         return data.get<Equality>().key;
@@ -320,9 +342,8 @@ struct number_matcher {
     }
 };
 
-struct match_equal {
+struct match_equal_set {
     using result_type = bool;
-
     const std::vector<Value>& values;
 
     template <typename T>
@@ -346,6 +367,21 @@ struct match_equal {
             }
         }
         return false;
+    }
+};
+
+struct match_equal {
+    using result_type = bool;
+    const Value& value;
+
+    template <typename T>
+    bool operator()(T) const { return false; }
+
+    bool operator()(const double& num) const {
+        return Value::visit(value, number_matcher{num});
+    }
+    bool operator()(const std::string& str) const {
+        return Value::visit(value, string_matcher{str});
     }
 };
 
@@ -393,12 +429,19 @@ struct matcher {
     bool operator() (const Filter::Existence& f) const {
         return f.exists == props.contains(f.key);
     }
+    bool operator() (const Filter::EqualitySet& f) const {
+        auto& value = (f.global == FilterGlobal::undefined)
+            ? props.get(f.key)
+            : ctx.getGlobal(f.global);
+
+        return Value::visit(value, match_equal_set{f.values});
+    }
     bool operator() (const Filter::Equality& f) const {
         auto& value = (f.global == FilterGlobal::undefined)
             ? props.get(f.key)
             : ctx.getGlobal(f.global);
 
-        return Value::visit(value, match_equal{f.values});
+        return Value::visit(value, match_equal{f.value});
     }
     bool operator() (const Filter::Range& f) const {
         auto& value = (f.global == FilterGlobal::undefined)

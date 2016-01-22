@@ -26,12 +26,12 @@ struct Filter {
         std::vector<Filter> operands;
     };
 
-    struct Equality {
+    struct EqualitySet {
         std::string key;
         std::vector<Value> values;
         FilterGlobal global;
     };
-    struct EqualityOne {
+    struct Equality {
         std::string key;
         Value value;
         FilterGlobal global;
@@ -53,6 +53,7 @@ struct Filter {
                          OperatorAll,
                          OperatorNone,
                          OperatorAny,
+                         EqualitySet,
                          Equality,
                          Range,
                          Existence,
@@ -80,11 +81,11 @@ struct Filter {
     }
     // Create an 'equality' filter
     inline static Filter MatchEquality(const std::string& k, const std::vector<Value>& vals) {
-        // if (vals.size() == 1) {
-        //     return { EqualityOne{ k, vals[0], globalType(k) }};
-        // } else {
-        return { Equality{ k, vals, globalType(k) }};
-        // }
+        if (vals.size() == 1) {
+            return { Equality{ k, vals[0], globalType(k) }};
+        } else {
+            return { EqualitySet{ k, vals, globalType(k) }};
+        }
     }
     // Create a 'range' filter
     inline static Filter MatchRange(const std::string& k, float min, float max) {
