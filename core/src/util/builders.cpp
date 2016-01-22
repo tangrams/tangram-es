@@ -256,7 +256,7 @@ bool isOnTileEdge(const glm::vec3& _pa, const glm::vec3& _pb) {
            (valuesWithinTolerance(a.y, tile_max.y, tolerance) && valuesWithinTolerance(b.y, tile_max.y, tolerance));
 }
 
-void Builders::buildPolyLineSegment(const Line& _line, PolyLineBuilder& _ctx) {
+void buildPolyLineSegment(const Line& _line, PolyLineBuilder& _ctx) {
 
     int lineSize = (int)_line.size();
     if (lineSize < 2) { return; }
@@ -367,20 +367,28 @@ void Builders::buildPolyLineSegment(const Line& _line, PolyLineBuilder& _ctx) {
 
 void Builders::buildPolyLine(const Line& _line, PolyLineBuilder& _ctx) {
 
-    int cut = 0;
+    if (_ctx.keepTileEdges) {
 
-    for (size_t i = 0; i < _line.size() - 1; i++) {
-        const glm::vec3& coordCurr = _line[i];
-        const glm::vec3& coordNext = _line[i+1];
-        if (isOnTileEdge(coordCurr, coordNext)) {
-            Line line = Line(&_line[cut], &_line[i+1]);
-            buildPolyLineSegment(line, _ctx);
-            cut = i + 1;
+        buildPolyLineSegment(_line, _ctx);
+
+    } else {
+
+        int cut = 0;
+
+        for (size_t i = 0; i < _line.size() - 1; i++) {
+            const glm::vec3& coordCurr = _line[i];
+            const glm::vec3& coordNext = _line[i+1];
+            if (isOnTileEdge(coordCurr, coordNext)) {
+                Line line = Line(&_line[cut], &_line[i+1]);
+                buildPolyLineSegment(line, _ctx);
+                cut = i + 1;
+            }
         }
-    }
 
-    Line line = Line(&_line[cut], &_line[_line.size()]);
-    buildPolyLineSegment(line, _ctx);
+        Line line = Line(&_line[cut], &_line[_line.size()]);
+        buildPolyLineSegment(line, _ctx);
+
+    }
 
 }
 

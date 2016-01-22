@@ -84,6 +84,7 @@ void PolylineStyle::buildLine(const Line& _line, const DrawRule& _rule, const Pr
                               VboMesh& _mesh, Tile& _tile) const {
 
     auto params = parseRule(_rule, _props, _tile);
+    params.keepTileEdges = true; // Line geometries are never clipped to tiles, so keep all segments
     buildMesh(_line, params, _mesh);
 
 }
@@ -191,6 +192,8 @@ PolylineStyle::Parameters PolylineStyle::parseRule(const DrawRule& _rule, const 
         p.outline.color = p.outline.color << (_tile.getID().z % 6);
     }
 
+    _rule.get(StyleParamKey::tile_edges, p.keepTileEdges);
+
     return p;
 }
 
@@ -212,7 +215,8 @@ void PolylineStyle::buildMesh(const Line& _line, Parameters& _params, VboMesh& _
         },
         [&](size_t sizeHint){ vertices.reserve(sizeHint); },
         _params.fill.cap,
-        _params.fill.join
+        _params.fill.join,
+        _params.keepTileEdges
     };
 
     Builders::buildPolyLine(_line, builder);

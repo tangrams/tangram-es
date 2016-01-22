@@ -21,6 +21,7 @@ protected:
         } fill, outline;
         float height = 0.f;
         bool outlineOn = false;
+        bool keepTileEdges = false;
     };
 
     virtual void constructVertexLayout() override;
