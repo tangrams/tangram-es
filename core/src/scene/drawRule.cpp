@@ -169,13 +169,17 @@ void DrawRuleMergeSet::apply(const Feature& _feature, const SceneLayer& _layer,
             continue;
         }
 
-        // Evaluate JS functions and Stops
         bool valid = true;
         for (size_t i = 0; i < StyleParamKeySize; ++i) {
 
-            if (!rule.active[i]) { continue; }
+            if (!rule.active[i]) {
+                rule.params[i].param = nullptr;
+                continue;
+            }
 
             auto*& param = rule.params[i].param;
+
+            // Evaluate JS functions and Stops
             if (param->function >= 0) {
 
                 // Copy param into 'evaluated' and point param to the evaluated StyleParam.
