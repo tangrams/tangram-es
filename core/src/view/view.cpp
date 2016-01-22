@@ -471,6 +471,7 @@ void View::updateTiles() {
     struct {
         std::set<TileID>& tiles;
         int zoom;
+        int maxZoom;
         // Distance thresholds in tile space for levels of detail:
         // Element [n] in each array is the minimum tile index at which level-of-detail n
         // should be applied in that direction.
@@ -479,7 +480,9 @@ void View::updateTiles() {
         int y_limit_pos[MAX_LOD] = { imax };
         int y_limit_neg[MAX_LOD] = { imin };
 
-    } opt = { m_visibleTiles, zoom };
+        glm::ivec4 last = glm::ivec4{-1};
+
+    } opt = { m_visibleTiles, zoom, int(s_maxZoom) };
 
     if (m_type == CameraType::perspective) {
 
@@ -508,13 +511,19 @@ void View::updateTiles() {
 
         x >>= lod;
         y >>= lod;
-        int z = glm::clamp((opt.zoom - lod), 0, (int)s_maxZoom);
+
+        glm::ivec4 tile;
+        tile.z = glm::clamp((opt.zoom - lod), 0, opt.maxZoom);
 
         // Wrap x to the range [0, (1 << z))
-        int wx = x & ((1 << z) - 1);
-        int wrap = (x - wx) >> opt.zoom;
+        tile.x = x & ((1 << tile.z) - 1);
+        tile.y = y;
+        tile.w = (x - tile.x) >> opt.zoom; // wrap
 
-        opt.tiles.emplace(wx, y, z, z, wrap);
+        if (tile != opt.last) {
+            opt.tiles.emplace(tile.x, tile.y, tile.z, tile.z, tile.w);
+            opt.last = tile;
+        }
     };
 
     // Rasterize view trapezoid into tiles
