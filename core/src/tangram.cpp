@@ -507,7 +507,7 @@ void setupGL() {
     while (Error::hadGlError("Tangram::setupGL()")) {}
 }
 
-void runOnMainLoop(std::function<void()>&& _task) {
+void runOnMainLoop(std::function<void()> _task) {
     std::lock_guard<std::mutex> lock(m_tasksMutex);
     m_tasks.emplace(std::move(_task));
 }
