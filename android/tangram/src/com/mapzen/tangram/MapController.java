@@ -89,8 +89,7 @@ public class MapController implements Renderer {
         view.setRenderer(this);
         view.setRenderMode(GLSurfaceView.RENDERMODE_WHEN_DIRTY);
 
-        init(this, assetManager, scenePath);
-
+        init(this, assetManager, scenePath, displayMetrics.density);
     }
 
     public void loadSceneFile(String path) {
@@ -422,7 +421,7 @@ public class MapController implements Renderer {
     // Native methods
     // ==============
 
-    private synchronized native void init(MapController instance, AssetManager assetManager, String stylePath);
+    private synchronized native void init(MapController instance, AssetManager assetManager, String stylePath, float pixelScale);
     private synchronized native void loadScene(String path);
     private synchronized native void setupGL();
     private synchronized native void resize(int width, int height);
@@ -441,7 +440,6 @@ public class MapController implements Renderer {
     private synchronized native void setTiltEased(float radians, float duration, int ease);
     private synchronized native float getTilt();
     private synchronized native void screenToWorldCoordinates(double[] screenCoords);
-    private synchronized native void setPixelScale(float scale);
     private synchronized native void setCameraType(int cameraType);
     private synchronized native int getCameraType();
     private synchronized native void handleTapGesture(float posX, float posY);
@@ -487,12 +485,12 @@ public class MapController implements Renderer {
     }
 
     public void onSurfaceChanged(GL10 gl, int width, int height) {
-        setPixelScale(displayMetrics.density);
         resize(width, height);
     }
 
     public void onSurfaceCreated(GL10 gl, EGLConfig config) {
-        init(this, assetManager, scenePath);
+        init(this, assetManager, scenePath, displayMetrics.density);
+
         // init() is safe to call twice, this invocation ensures that the jni
         // environment is attached to the rendering thread
         setupGL();

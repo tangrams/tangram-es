@@ -59,10 +59,10 @@ extern "C" {
         jniEnv->ReleaseDoubleArrayElements(screenPos, arr, 0);
     }
 
-    JNIEXPORT void JNICALL Java_com_mapzen_tangram_MapController_init(JNIEnv* jniEnv, jobject obj, jobject tangramInstance, jobject assetManager, jstring stylePath) {
+    JNIEXPORT void JNICALL Java_com_mapzen_tangram_MapController_init(JNIEnv* jniEnv, jobject obj, jobject tangramInstance, jobject assetManager, jstring stylePath, jfloat scale) {
         setupJniEnv(jniEnv, tangramInstance, assetManager);
         const char* cStylePath = jniEnv->GetStringUTFChars(stylePath, NULL);
-        Tangram::initialize(cStylePath);
+        Tangram::initialize(cStylePath, scale);
         jniEnv->ReleaseStringUTFChars(stylePath, cStylePath);
     }
 
@@ -86,10 +86,6 @@ extern "C" {
 
     JNIEXPORT void JNICALL Java_com_mapzen_tangram_MapController_setupGL(JNIEnv* jniEnv, jobject obj) {
         Tangram::setupGL();
-    }
-
-    JNIEXPORT void JNICALL Java_com_mapzen_tangram_MapController_setPixelScale(JNIEnv* jniEnv, jobject obj, jfloat scale) {
-        Tangram::setPixelScale(scale);
     }
 
     JNIEXPORT void JNICALL Java_com_mapzen_tangram_MapController_setCameraType(JNIEnv* jniEnv, jobject obj, jint cameraType) {
