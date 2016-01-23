@@ -54,7 +54,7 @@ void Tile::updateTileOrigin(const int _wrap) {
 }
 
 void Tile::initGeometry(uint32_t _size) {
-    m_geometry.resize(_size);
+    //m_geometry.resize(_size);
 }
 
 void Tile::update(float _dt, const View& _view) {
@@ -68,8 +68,8 @@ void Tile::update(float _dt, const View& _view) {
 
 void Tile::resetState() {
     for (auto& entry : m_geometry) {
-        if (!entry) { continue; }
-        auto labelMesh = dynamic_cast<LabelMesh*>(entry.get());
+        if (!entry.second) { continue; }
+        auto labelMesh = dynamic_cast<LabelMesh*>(entry.second.get());
         if (!labelMesh) { continue; }
         labelMesh->reset();
     }
@@ -92,18 +92,17 @@ void Tile::draw(const Style& _style, const View& _view) {
 }
 
 std::unique_ptr<VboMesh>& Tile::getMesh(const Style& _style) {
-    static std::unique_ptr<VboMesh> NONE = nullptr;
-
-    if (_style.getID() >= m_geometry.size()) { return NONE; }
-
-    return m_geometry[_style.getID()];
+    // static std::unique_ptr<VboMesh> NONE = nullptr;
+    // if (_style.getID() >= m_geometry.size()) { return NONE; }
+    // return m_geometry[_style.getID()];
+    return m_geometry[_style.getName()];
 }
 
 size_t Tile::getMemoryUsage() const {
     if (m_memoryUsage == 0) {
         for (auto& entry : m_geometry) {
-            if (entry) {
-                m_memoryUsage += entry->bufferSize();
+            if (entry.second) {
+                m_memoryUsage += entry.second->bufferSize();
             }
         }
     }

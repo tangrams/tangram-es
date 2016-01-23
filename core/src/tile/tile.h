@@ -3,6 +3,7 @@
 #include "glm/mat4x4.hpp"
 #include "glm/vec2.hpp"
 #include "tileID.h"
+#include "util/fastmap.h"
 
 #include <map>
 #include <memory>
@@ -105,7 +106,8 @@ private:
     // relative translation from the view origin to the model origin immediately before drawing the tile.
 
     // Map of <Style>s and their associated <VboMesh>es
-    std::vector<std::unique_ptr<VboMesh>> m_geometry;
+    fastmap<std::string, std::unique_ptr<VboMesh>> m_geometry;
+    //std::vector<std::unique_ptr<VboMesh>> m_geometry;
 
     mutable size_t m_memoryUsage = 0;
 };
