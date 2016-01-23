@@ -72,7 +72,7 @@ struct TestContext {
         resource.close();
     }
 
-    void parseTile() {
+    void processTile() {
         Tile tile({0,0,0}, s_projection);
         source = scene->dataSources()[0];
         auto task = source->createTask(tile.getID());
@@ -80,7 +80,13 @@ struct TestContext {
         t.rawTileData = std::make_shared<std::vector<char>>();
         std::swap(*t.rawTileData, rawTileData);
 
-        tileData = source->parse(*task, s_projection);
+        tileBuilder.begin(task->tileId(), task->source());
+
+        if (!task->source().process(*task, *tileBuilder.scene().mapProjection(), tileBuilder)) {
+            // task->cancel();
+            // continue;
+        }
+        auto result = tileBuilder.build();
     }
 };
 
@@ -96,7 +102,6 @@ public:
         LOG("SETUP");
         ctx.loadScene(sceneFile);
         ctx.loadTile("tile.mvt");
-        ctx.parseTile();
         LOG("Ready");
     }
     void TearDown() override {
@@ -108,7 +113,7 @@ public:
 BENCHMARK_DEFINE_F(TileLoadingFixture, BuildTest)(benchmark::State& st) {
 
     while (st.KeepRunning()) {
-        result = ctx.tileBuilder.build({0,0,0}, *ctx.tileData, *ctx.source);
+        ctx.processTile();
     }
 }
 
