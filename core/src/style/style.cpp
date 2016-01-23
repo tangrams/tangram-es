@@ -45,75 +45,14 @@ void Style::build(const std::vector<std::unique_ptr<Light>>& _lights) {
     for (auto& light : _lights) {
         light->injectOnProgram(*m_shaderProgram);
     }
-
 }
 
 void Style::setMaterial(const std::shared_ptr<Material>& _material) {
-
     m_material = _material;
-
 }
 
 void Style::setLightingType(LightingType _type){
-
     m_lightingType = _type;
-
-}
-
-bool Style::checkRule(const DrawRule& _rule) const {
-
-    uint32_t checkColor;
-    uint32_t checkOrder;
-
-    if (!_rule.get(StyleParamKey::color, checkColor)) {
-        const auto& blocks = m_shaderProgram->getSourceBlocks();
-        if (blocks.find("color") == blocks.end() && blocks.find("filter") == blocks.end()) {
-            return false; // No color parameter or color block? NO SOUP FOR YOU
-        }
-    }
-
-    if (!_rule.get(StyleParamKey::order, checkOrder)) {
-        return false;
-    }
-
-    return true;
-}
-
-void Style::buildFeature(Tile& _tile, const Feature& _feat, const DrawRule& _rule) const {
-
-    if (!checkRule(_rule)) { return; }
-
-    bool visible;
-    if (_rule.get(StyleParamKey::visible, visible) && !visible) {
-        return;
-    }
-
-    auto& mesh = _tile.getMesh(*this);
-
-    if (!mesh) {
-        mesh.reset(newMesh());
-    }
-
-    switch (_feat.geometryType) {
-        case GeometryType::points:
-            for (auto& point : _feat.points) {
-                buildPoint(point, _rule, _feat.props, *mesh, _tile);
-            }
-            break;
-        case GeometryType::lines:
-            for (auto& line : _feat.lines) {
-                buildLine(line, _rule, _feat.props, *mesh, _tile);
-            }
-            break;
-        case GeometryType::polygons:
-            for (auto& polygon : _feat.polygons) {
-                buildPolygon(polygon, _rule, _feat.props, *mesh, _tile);
-            }
-            break;
-        default:
-            break;
-    }
-
 }
 
 void Style::setupShaderUniforms(int _textureUnit, Scene& _scene) {
@@ -216,23 +155,68 @@ void Style::onBeginDrawFrame(const View& _view, Scene& _scene, int _textureUnit)
     }
 }
 
-void Style::onBeginBuildTile(Tile& _tile) const {
+
+bool StyleBuilder::checkRule(const DrawRule& _rule) const {
+
+    uint32_t checkColor;
+    uint32_t checkOrder;
+
+    if (!_rule.get(StyleParamKey::color, checkColor)) {
+        if (!m_hasColorShaderBlock) {
+            return false;
+        }
+    }
+
+    if (!_rule.get(StyleParamKey::order, checkOrder)) {
+        return false;
+    }
+
+    return true;
+}
+
+void StyleBuilder::addFeature(const Feature& _feat, const DrawRule& _rule) {
+
+    if (!checkRule(_rule)) { return; }
+
+    switch (_feat.geometryType) {
+        case GeometryType::points:
+            for (auto& point : _feat.points) {
+                addPoint(point, _feat.props, _rule);
+            }
+            break;
+        case GeometryType::lines:
+            for (auto& line : _feat.lines) {
+                addLine(line, _feat.props, _rule);
+            }
+            break;
+        case GeometryType::polygons:
+            for (auto& polygon : _feat.polygons) {
+                addPolygon(polygon, _feat.props, _rule);
+            }
+            break;
+        default:
+            break;
+    }
+
+}
+
+StyleBuilder::StyleBuilder(const Style& _style) {
+    const auto& blocks = _style.getShaderProgram()->getSourceBlocks();
+    if (blocks.find("color") != blocks.end() ||
+        blocks.find("filter") != blocks.end()) {
+        m_hasColorShaderBlock = true;
+    }
+}
+
+void StyleBuilder::addPoint(const Point& _point, const Properties& _props, const DrawRule& _rule) {
     // No-op by default
 }
 
-void Style::onEndBuildTile(Tile& _tile) const {
+void StyleBuilder::addLine(const Line& _line, const Properties& _props, const DrawRule& _rule) {
     // No-op by default
 }
 
-void Style::buildPoint(const Point& _point, const DrawRule& _rule, const Properties& _props, VboMesh& _mesh, Tile& _tile) const {
-    // No-op by default
-}
-
-void Style::buildLine(const Line& _line, const DrawRule& _rule, const Properties& _props, VboMesh& _mesh, Tile& _tile) const {
-    // No-op by default
-}
-
-void Style::buildPolygon(const Polygon& _polygon, const DrawRule& _rule, const Properties& _props, VboMesh& _mesh, Tile& _tile) const {
+void StyleBuilder::addPolygon(const Polygon& _polygon, const Properties& _props, const DrawRule& _rule) {
     // No-op by default
 }
 

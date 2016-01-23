@@ -36,6 +36,8 @@ private:
     StyleContext m_styleContext;
     DrawRuleMergeSet m_ruleSet;
 
+    fastmap<std::string, std::unique_ptr<StyleBuilder>> m_styleBuilder;
+
     std::vector<const DataLayer*> m_activeLayers;
 
     std::shared_ptr<Tile> m_tile;
