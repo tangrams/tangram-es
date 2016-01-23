@@ -43,6 +43,7 @@ enum class StyleParamKey : uint8_t {
     style,
     text_source,
     text_wrap,
+    tile_edges,
     transform,
     transition_hide_time,
     transition_selected_time,

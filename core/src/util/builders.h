@@ -66,9 +66,10 @@ struct PolyLineBuilder {
     size_t numVertices = 0;
     CapTypes cap;
     JoinTypes join;
+    bool keepTileEdges;
 
-    PolyLineBuilder(PolyLineVertexFn _addVertex, SizeHintFn _sizeHint, CapTypes _cap = CapTypes::butt, JoinTypes _join = JoinTypes::bevel)
-        : addVertex(_addVertex), sizeHint(_sizeHint), cap(_cap), join(_join) {}
+    PolyLineBuilder(PolyLineVertexFn _addVertex, SizeHintFn _sizeHint, CapTypes _cap = CapTypes::butt, JoinTypes _join = JoinTypes::bevel, bool _kte = true)
+        : addVertex(_addVertex), sizeHint(_sizeHint), cap(_cap), join(_join), keepTileEdges(_kte) {}
 };
 
 /* Callback function for SpriteBuilder
@@ -110,9 +111,6 @@ public:
      * @_options parameters for polyline construction
      * @_ctx output vectors, see <PolyLineBuilder>
      */
-    static void buildPolyLineSegment(const Line& _line, PolyLineBuilder& _ctx);
-
-    /* Build a tesselated polygon line that skips tile boundaries */
     static void buildPolyLine(const Line& _line, PolyLineBuilder& _ctx);
 
     /* Build a tesselated quad centered on _screenOrigin

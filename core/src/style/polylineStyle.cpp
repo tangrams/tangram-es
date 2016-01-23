@@ -71,41 +71,22 @@ VboMesh* PolylineStyle::newMesh() const {
     return new Mesh(m_vertexLayout, m_drawMode);
 }
 
-PolylineStyle::Parameters PolylineStyle::parseRule(const DrawRule& _rule) const {
-    Parameters p;
-
-    uint32_t cap = 0, join = 0;
-
-    _rule.get(StyleParamKey::extrude, p.extrude);
-    _rule.get(StyleParamKey::color, p.color);
-    _rule.get(StyleParamKey::cap, cap);
-    _rule.get(StyleParamKey::join, join);
-    _rule.get(StyleParamKey::order, p.order);
-
-    p.cap = static_cast<CapTypes>(cap);
-    p.join = static_cast<JoinTypes>(join);
-
-    p.outlineOrder = p.order; // will offset from fill later
-
-    if (_rule.get(StyleParamKey::outline_color, p.outlineColor) |
-        _rule.get(StyleParamKey::outline_order, p.outlineOrder) |
-        _rule.contains(StyleParamKey::outline_width) |
-        _rule.get(StyleParamKey::outline_cap, cap) |
-        _rule.get(StyleParamKey::outline_join, join)) {
-        p.outlineOn = true;
-        p.outlineCap = static_cast<CapTypes>(cap);
-        p.outlineJoin = static_cast<JoinTypes>(join);
-    }
-
-    return p;
-}
-
 void PolylineStyle::buildPolygon(const Polygon& _poly, const DrawRule& _rule, const Properties& _props,
                                  VboMesh& _mesh, Tile& _tile) const {
 
+    auto params = parseRule(_rule, _props, _tile);
     for (const auto& line : _poly) {
-        buildLine(line, _rule, _props, _mesh, _tile);
+        buildMesh(line, params, _mesh);
     }
+}
+
+void PolylineStyle::buildLine(const Line& _line, const DrawRule& _rule, const Properties& _props,
+                              VboMesh& _mesh, Tile& _tile) const {
+
+    auto params = parseRule(_rule, _props, _tile);
+    params.keepTileEdges = true; // Line geometries are never clipped to tiles, so keep all segments
+    buildMesh(_line, params, _mesh);
+
 }
 
 double widthMeterToPixel(int _zoom, double _tileSize, double _width) {
@@ -174,79 +155,96 @@ bool evalStyleParamWidth(StyleParamKey _key, const DrawRule& _rule, const Tile& 
     return false;
 }
 
-void PolylineStyle::buildLine(const Line& _line, const DrawRule& _rule, const Properties& _props,
-                              VboMesh& _mesh, Tile& _tile) const {
+PolylineStyle::Parameters PolylineStyle::parseRule(const DrawRule& _rule, const Properties& _props, const Tile& _tile) const {
+    Parameters p;
+
+    uint32_t cap = 0, join = 0;
+
+    _rule.get(StyleParamKey::color, p.fill.color);
+    _rule.get(StyleParamKey::cap, cap);
+    _rule.get(StyleParamKey::join, join);
+    _rule.get(StyleParamKey::order, p.fill.order);
+
+    p.fill.cap = static_cast<CapTypes>(cap);
+    p.fill.join = static_cast<JoinTypes>(join);
+
+    evalStyleParamWidth(StyleParamKey::width, _rule, _tile, p.fill.width, p.fill.slope);
+
+    p.outline.order = p.fill.order; // will offset from fill later
+
+    if (_rule.get(StyleParamKey::outline_color, p.outline.color) |
+        _rule.get(StyleParamKey::outline_order, p.outline.order) |
+        _rule.contains(StyleParamKey::outline_width) |
+        _rule.get(StyleParamKey::outline_cap, cap) |
+        _rule.get(StyleParamKey::outline_join, join)) {
+        p.outlineOn = true;
+        p.outline.cap = static_cast<CapTypes>(cap);
+        p.outline.join = static_cast<JoinTypes>(join);
+        evalStyleParamWidth(StyleParamKey::outline_width, _rule, _tile, p.outline.width, p.outline.slope);
+    }
+
+    Extrude extrude;
+    _rule.get(StyleParamKey::extrude, extrude);
+    p.height = getUpperExtrudeMeters(extrude, _props) * _tile.getInverseScale();
+
+    if (Tangram::getDebugFlag(Tangram::DebugFlags::proxy_colors)) {
+        p.fill.color = p.fill.color << (_tile.getID().z % 6);
+        p.outline.color = p.outline.color << (_tile.getID().z % 6);
+    }
+
+    _rule.get(StyleParamKey::tile_edges, p.keepTileEdges);
+
+    return p;
+}
+
+void PolylineStyle::buildMesh(const Line& _line, Parameters& _params, VboMesh& _mesh) const {
 
     std::vector<PolylineVertex> vertices;
 
-    Parameters params = parseRule(_rule);
-    GLuint abgr = params.color;
+    GLuint color = _params.fill.color;
+    float width = _params.fill.width;
+    float slope = _params.fill.slope;
+    float order = _params.fill.order;
 
-    float dWdZ = 0.f;
-    float width = 0.f;
-
-    if (!evalStyleParamWidth(StyleParamKey::width, _rule, _tile, width, dWdZ)) {
-        return;
-    }
-
-    if (width <= 0.0f && dWdZ <= 0.0f ) { return; }
-
-    if (Tangram::getDebugFlag(Tangram::DebugFlags::proxy_colors)) {
-        abgr = abgr << (_tile.getID().z % 6);
-    }
-
-    auto& extrude = params.extrude;
-
-    float tileUnitsPerMeter = _tile.getInverseScale();
-    float height = getUpperExtrudeMeters(extrude, _props) * tileUnitsPerMeter;
-    float order = params.order;
+    if (width <= 0.f && slope <= 0.f ) { return; }
 
     PolyLineBuilder builder {
         [&](const glm::vec3& coord, const glm::vec2& normal, const glm::vec2& texCoord) {
-            glm::vec3 position = glm::vec3{coord.x, coord.y, height};
-            vertices.push_back({position, order, texCoord, normal, { width, dWdZ }, abgr});
+            glm::vec3 position = glm::vec3{coord.x, coord.y, _params.height};
+            vertices.push_back({position, order, texCoord, normal, { width, slope }, color});
         },
         [&](size_t sizeHint){ vertices.reserve(sizeHint); },
-        params.cap,
-        params.join
+        _params.fill.cap,
+        _params.fill.join,
+        _params.keepTileEdges
     };
 
     Builders::buildPolyLine(_line, builder);
 
-    if (params.outlineOn) {
+    if (_params.outlineOn && (_params.outline.width > 0.f || _params.outline.slope > 0.f)) {
 
-        GLuint abgrOutline = params.outlineColor;
-        float outlineOrder = std::min(params.outlineOrder, params.order) - 0.5f;
+        // Must update existing variables, they are captured (and used) by the builder
+        color = _params.outline.color;
+        width += _params.outline.width;
+        slope += _params.outline.slope;
+        order = std::min(_params.outline.order, _params.fill.order) - 0.5f;
 
-        float widthOutline = 0.f;
-        float dWdZOutline = 0.f;
+        if (_params.outline.cap != _params.fill.cap || _params.outline.join != _params.fill.join) {
+            // need to re-triangulate with different cap and/or join
+            builder.cap = _params.outline.cap;
+            builder.join = _params.outline.join;
+            Builders::buildPolyLine(_line, builder);
+        } else {
+            // re-use indices and positions from original line
+            size_t oldSize = builder.indices.size();
+            size_t offset = vertices.size();
+            builder.indices.reserve(2 * oldSize);
 
-        if (evalStyleParamWidth(StyleParamKey::outline_width, _rule, _tile,
-                                widthOutline, dWdZOutline) &&
-            ((widthOutline > 0.0f || dWdZOutline > 0.0f))) {
-
-            // Note: this must update <width> and <dWdZ> as they are captured
-            // (and used) by <builder>
-            width += widthOutline;
-            dWdZ += dWdZOutline;
-
-            if (params.outlineCap != params.cap || params.outlineJoin != params.join) {
-                // need to re-triangulate with different cap and/or join
-                builder.cap = params.outlineCap;
-                builder.join = params.outlineJoin;
-                Builders::buildPolyLine(_line, builder);
-            } else {
-                // re-use indices from original line
-                size_t oldSize = builder.indices.size();
-                size_t offset = vertices.size();
-                builder.indices.reserve(2 * oldSize);
-
-                for(size_t i = 0; i < oldSize; i++) {
-                    builder.indices.push_back(offset + builder.indices[i]);
-                }
-                for (size_t i = 0; i < offset; i++) {
-                    vertices.push_back({ vertices[i], outlineOrder, { width, dWdZ }, abgrOutline });
-                }
+            for(size_t i = 0; i < oldSize; i++) {
+                builder.indices.push_back(offset + builder.indices[i]);
+            }
+            for (size_t i = 0; i < offset; i++) {
+                vertices.push_back({ vertices[i], order, { width, slope }, color });
             }
         }
     }

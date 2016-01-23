@@ -48,6 +48,7 @@ const std::map<std::string, StyleParamKey> s_StyleParamMap = {
     {"style", StyleParamKey::style},
     {"text_source", StyleParamKey::text_source},
     {"text_wrap", StyleParamKey::text_wrap},
+    {"tile_edges", StyleParamKey::tile_edges},
     {"transition:hide:time", StyleParamKey::transition_hide_time},
     {"transition:selected:time", StyleParamKey::transition_selected_time},
     {"transition:show:time", StyleParamKey::transition_show_time},
@@ -178,6 +179,7 @@ StyleParam::Value StyleParam::parseString(StyleParamKey key, const std::string& 
     }
     case StyleParamKey::centroid:
     case StyleParamKey::interactive:
+    case StyleParamKey::tile_edges:
     case StyleParamKey::visible:
     case StyleParamKey::collide:
         if (_value == "true") { return true; }
@@ -293,6 +295,7 @@ std::string StyleParam::toString() const {
         if (!value.is<std::string>()) break;
         return k + value.get<std::string>();
     case StyleParamKey::interactive:
+    case StyleParamKey::tile_edges:
     case StyleParamKey::visible:
     case StyleParamKey::centroid:
     case StyleParamKey::collide:
