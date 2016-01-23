@@ -25,6 +25,7 @@
 #include <cmath>
 #include <bitset>
 #include <mutex>
+#include <queue>
 
 
 namespace Tangram {
@@ -38,7 +39,9 @@ std::shared_ptr<View> m_view;
 std::unique_ptr<Labels> m_labels;
 std::unique_ptr<Skybox> m_skybox;
 std::unique_ptr<InputHandler> m_inputHandler;
+std::queue<std::function<void()>> m_tasks;
 std::mutex m_tilesMutex;
+std::mutex m_tasksMutex;
 
 std::array<Ease, 4> m_eases;
 enum class EaseField { position, zoom, rotation, tilt };
@@ -155,6 +158,14 @@ void update(float _dt) {
 
     m_view->update();
 
+    {
+        std::lock_guard<std::mutex> lock(m_tasksMutex);
+
+        while (!m_tasks.empty()) {
+            m_tasks.front()();
+            m_tasks.pop();
+        }
+    }
     {
         std::lock_guard<std::mutex> lock(m_tilesMutex);
         ViewState viewState {
@@ -494,6 +505,11 @@ void setupGL() {
     GLExtensions::printAvailableExtensions();
 
     while (Error::hadGlError("Tangram::setupGL()")) {}
+}
+
+void runOnMainLoop(std::function<void()>&& _task) {
+    std::lock_guard<std::mutex> lock(m_tasksMutex);
+    m_tasks.emplace(std::move(_task));
 }
 
 }
