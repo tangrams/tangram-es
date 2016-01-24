@@ -289,13 +289,27 @@ float View::pixelsPerMeter() const {
 }
 
 void View::setOverrideViewMatrix(const float* _view) {
-    m_overrideView = _view ? std::make_unique<glm::mat4>(glm::make_mat4(_view)) : nullptr;
+    if (_view != nullptr) {
+        if (!m_overrideView) {
+            m_overrideView = std::make_shared<glm::mat4>();
+        }
+        *m_overrideView = glm::make_mat4(_view);
+    } else {
+        m_overrideView = nullptr;
+    }
     updateMatrices();
     updateTiles();
 }
 
 void View::setOverridePerspectiveMatrix(const float* _perspective) {
-    m_overridePerspective = _perspective ? std::make_unique<glm::mat4>(glm::make_mat4(_perspective)) : nullptr;
+    if (_perspective != nullptr) {
+        if (!m_overridePerspective) {
+            m_overridePerspective = std::make_shared<glm::mat4>();
+        }
+        *m_overridePerspective = glm::make_mat4(_perspective);
+    } else {
+        m_overridePerspective = nullptr;
+    }
     updateMatrices();
     updateTiles();
 }

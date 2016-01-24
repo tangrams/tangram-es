@@ -173,8 +173,8 @@ protected:
     glm::mat4 m_invViewProj;
     glm::mat3 m_normalMatrix;
 
-    std::unique_ptr<glm::mat4> m_overrideView;
-    std::unique_ptr<glm::mat4> m_overridePerspective;
+    std::shared_ptr<glm::mat4> m_overrideView;
+    std::shared_ptr<glm::mat4> m_overridePerspective;
 
     float m_roll = 0.f;
     float m_roll_prev = 0.f;
