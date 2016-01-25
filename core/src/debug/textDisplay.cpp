@@ -1,4 +1,5 @@
 #include "textDisplay.h"
+#include <cstdarg>
 #include "platform.h"
 #include "gl/vertexLayout.h"
 #include "gl/renderState.h"
@@ -70,9 +71,7 @@ void TextDisplay::log(const char* fmt, ...) {
 }
 
 void TextDisplay::draw(const std::string& _text, int _posx, int _posy) {
-    static std::shared_ptr<VertexLayout> vertexLayout = std::shared_ptr<VertexLayout>(new VertexLayout({
-        {"a_position", 2, GL_FLOAT, false, 0},
-    }));
+    static VertexLayout vertexLayout({{"a_position", 2, GL_FLOAT, false, 0}});
     static char buffer[99999];
     std::vector<glm::vec2> vertices;
     int nquads;
@@ -90,12 +89,12 @@ void TextDisplay::draw(const std::string& _text, int _posx, int _posy) {
         vertices.push_back({data[(3 * 4) + stride], data[(3 * 4) + 1 + stride]});
         vertices.push_back({data[(0 * 4) + stride], data[(0 * 4) + 1 + stride]});
     }
-    vertexLayout->enable(*m_shader, 0, (void*)vertices.data());
+    vertexLayout.enable(*m_shader, 0, (void*)vertices.data());
 
     glDrawArrays(GL_TRIANGLES, 0, nquads * 6);
 }
 
-void TextDisplay::draw(std::vector<std::string> _infos) {
+void TextDisplay::draw(const std::vector<std::string>& _infos) {
     static GLint boundbuffer = -1;
 
     RenderState::culling(GL_FALSE);
@@ -112,7 +111,7 @@ void TextDisplay::draw(std::vector<std::string> _infos) {
     m_shader->setUniformMatrix4f("u_orthoProj", orthoProj);
 
     // Display Tangram info messages
-    m_shader->setUniformf("u_color", 1.f, 1.f, 1.f);
+    m_shader->setUniformf("u_color", 0.f, 0.f, 0.f);
     int offset = 0;
     for (auto& text : _infos) {
         draw(text, 3, 3 + offset);

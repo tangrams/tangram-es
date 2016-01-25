@@ -3,6 +3,7 @@
 #include <string>
 #include <vector>
 #include <mutex>
+#include <cstdio>
 #include "gl/texture.h"
 #include "gl/typedMesh.h"
 #include "gl/shaderProgram.h"
@@ -15,7 +16,9 @@ namespace Tangram {
 typedef int FontID;
 
 class TextDisplay {
+
 public:
+
     static TextDisplay& Instance() {
         static TextDisplay instance;
         instance.init();
@@ -28,17 +31,21 @@ public:
 
     void init();
 
-    void draw(std::vector<std::string> _infos);
+    /* Draw stacked messages added through log and draw _infos string list */
+    void draw(const std::vector<std::string>& _infos);
+
+    /* Stack the log message to be displayed in the screen log */
     void log(const char* fmt, ...);
 
 private:
+
     TextDisplay();
 
     void draw(const std::string& _text, int _posx, int _posy);
 
+    glm::vec2 m_textDisplayResolution;
     bool m_initialized;
     std::unique_ptr<ShaderProgram> m_shader;
-    glm::vec2 m_textDisplayResolution;
     std::string m_log[LOG_CAPACITY];
     std::mutex m_mutex;
 };

@@ -123,7 +123,7 @@ void loadScene(const char* _scenePath, bool _setPositionFromScene) {
 
 void resize(int _newWidth, int _newHeight) {
 
-    LOG("resize: %d x %d", _newWidth, _newHeight);
+    LOGS("resize: %d x %d", _newWidth, _newHeight);
 
     glViewport(0, 0, _newWidth, _newHeight);
 
@@ -138,8 +138,6 @@ void resize(int _newWidth, int _newHeight) {
 }
 
 void update(float _dt) {
-
-    LOGS("dt %f", _dt);
 
     g_time += _dt;
 
@@ -237,7 +235,7 @@ void render() {
         }
 
         debuginfos.push_back("tile size:" + std::to_string(memused / (1024 * 1024)) + "mb");
-        debuginfos.push_back("number of styles"+ std::to_string(m_scene->styles().size()));
+        debuginfos.push_back("number of styles:"+ std::to_string(m_scene->styles().size()));
 
         TextDisplay::Instance().draw(debuginfos);
     }
