@@ -2,9 +2,7 @@
 
 #include "data/dataSource.h"
 #include "scene/scene.h"
-#include "scene/dataLayer.h"
 #include "scene/styleContext.h"
-#include "scene/drawRule.h"
 #include "style/style.h"
 #include "view/view.h"
 #include "tile/tileID.h"
@@ -45,7 +43,8 @@ void Tile::updateTileOrigin(const int _wrap) {
     BoundingBox bounds(m_projection->TileBounds(m_id));
 
     m_tileOrigin = { bounds.min.x, bounds.max.y }; // South-West corner
-    // negative y coordinate: to change from y down to y up (tile system has y down and gl context we use has y up).
+    // negative y coordinate: to change from y down to y up
+    // (tile system has y down and gl context we use has y up).
     m_tileOrigin.y *= -1.0;
 
     auto mapBound = m_projection->MapBounds();
@@ -56,53 +55,6 @@ void Tile::updateTileOrigin(const int _wrap) {
 
 void Tile::initGeometry(uint32_t _size) {
     m_geometry.resize(_size);
-}
-
-void Tile::build(StyleContext& _ctx, const Scene& _scene, const TileData& _data,
-                 const DataSource& _source) {
-
-    // Initialize m_geometry
-    initGeometry(_scene.styles().size());
-
-    const auto& layers = _scene.layers();
-
-    _ctx.setGlobalZoom(m_id.s);
-
-    for (auto& style : _scene.styles()) {
-        style->onBeginBuildTile(*this);
-    }
-
-    DrawRuleMergeSet ruleSet;
-
-    for (const auto& datalayer : layers) {
-
-        if (datalayer.source() != _source.name()) { continue; }
-
-        for (const auto& collection : _data.layers) {
-
-            if (!collection.name.empty()) {
-                const auto& dlc = datalayer.collections();
-                bool layerContainsCollection =
-                    std::find(dlc.begin(), dlc.end(), collection.name) != dlc.end();
-
-                if (!layerContainsCollection) { continue; }
-            }
-
-            for (const auto& feat : collection.features) {
-                ruleSet.apply(feat, _scene, datalayer, _ctx, *this);
-            }
-        }
-    }
-
-    for (auto& style : _scene.styles()) {
-        style->onEndBuildTile(*this);
-    }
-
-    for (auto& geometry : m_geometry) {
-        if (geometry) {
-            geometry->compileVertexBuffer();
-        }
-    }
 }
 
 void Tile::update(float _dt, const View& _view) {
