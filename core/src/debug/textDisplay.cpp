@@ -45,7 +45,7 @@ void TextDisplay::init() {
     m_shader->setSourceStrings(fragShaderSrcStr, vertShaderSrcStr);
 }
 
-void TextDisplay::draw(glm::mat4 _orthoProj, std::vector<std::string> _infos) {
+void TextDisplay::draw(std::vector<std::string> _infos) {
     static std::shared_ptr<VertexLayout> vertexLayout = std::shared_ptr<VertexLayout>(new VertexLayout({
         {"a_position", 2, GL_FLOAT, false, 0},
     }));
@@ -63,8 +63,8 @@ void TextDisplay::draw(glm::mat4 _orthoProj, std::vector<std::string> _infos) {
 
     m_shader->use();
 
-    _orthoProj = glm::ortho(0.f, (float)m_textDisplayResolution.x, (float)m_textDisplayResolution.y, 0.f, -1.f, 1.f);
-    m_shader->setUniformMatrix4f("u_orthoProj", _orthoProj);
+    glm::mat4 orthoProj = glm::ortho(0.f, (float)m_textDisplayResolution.x, (float)m_textDisplayResolution.y, 0.f, -1.f, 1.f);
+    m_shader->setUniformMatrix4f("u_orthoProj", orthoProj);
 
     int offset = 0;
 

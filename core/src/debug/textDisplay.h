@@ -18,7 +18,7 @@ public:
 
     void init();
 
-    void draw(glm::mat4 _orthoProj, std::vector<std::string> _infos);
+    void draw(std::vector<std::string> _infos);
 
 private:
 

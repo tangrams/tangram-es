@@ -167,6 +167,9 @@ void key_callback(GLFWwindow* window, int key, int scancode, int action, int mod
             case GLFW_KEY_5:
                 Tangram::toggleDebugFlag(Tangram::DebugFlags::labels);
                 break;
+            case GLFW_KEY_6:
+                Tangram::toggleDebugFlag(Tangram::DebugFlags::tangram_infos);
+                break;
             case GLFW_KEY_BACKSPACE:
                 init_main_window(); // Simulate GL context loss
                 break;
