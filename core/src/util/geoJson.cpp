@@ -32,19 +32,26 @@ Polygon GeoJson::getPolygon(const JsonValue& _in, const Transform& _proj) {
 
 Properties GeoJson::getProperties(const JsonValue& _in, int32_t _sourceId) {
 
-    Properties properties;
-    properties.sourceId = _sourceId;
+    std::vector<PropertyItem> items;
+    items.reserve(_in.MemberCount());
+
     for (auto it = _in.MemberBegin(); it != _in.MemberEnd(); ++it) {
 
         const auto& name = it->name.GetString();
         const auto& value = it->value;
         if (value.IsNumber()) {
-            properties.set(name, value.GetDouble());
+            items.emplace_back(name, value.GetDouble());
         } else if (it->value.IsString()) {
-            properties.set(name, value.GetString());
+            items.emplace_back(name, value.GetString());
         }
 
     }
+
+    Properties properties;
+    properties.sourceId = _sourceId;
+    properties.setSorted(std::move(items));
+    properties.sort();
+
     return properties;
 
 }
