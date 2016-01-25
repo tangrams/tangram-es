@@ -6,6 +6,7 @@
 #include <string>
 #include <functional>
 #include <memory>
+#include <array>
 
 struct duk_hthread;
 typedef struct duk_hthread duk_context;
@@ -37,12 +38,14 @@ public:
     /*
      * Set global for currently processed Tile
      */
-    void setGlobalZoom(float _zoom);
+    void setGlobalZoom(int _zoom);
 
     /* Called from Filter::eval */
     float getGlobalZoom() const { return m_globalZoom; }
 
-    const Value& getGlobal(FilterGlobal _key) const;
+    const Value& getGlobal(FilterGlobal _key) const {
+        return m_globals[static_cast<uint8_t>(_key)];
+    }
 
     /* Called from Filter::eval */
     bool evalFilter(FunctionID id);
@@ -60,11 +63,8 @@ public:
      */
     void clear();
 
-    // Public for testing
-    bool addFunction(const std::string& _name, const std::string& _func);
-    bool evalFilterFn(const std::string& _name);
-    bool evalStyleFn(const std::string& _name, StyleParamKey _key, StyleParam::Value& _val);
-    void addAccessor(const std::string& _name);
+    bool setFunctions(const std::vector<std::string>& _functions);
+
     void setGlobal(const std::string& _key, const Value& _value);
     const Value& getGlobal(const std::string& _key) const;
 
@@ -74,15 +74,15 @@ private:
 
     bool parseStyleResult(StyleParamKey _key, StyleParam::Value& _val) const;
 
-    mutable duk_context *m_ctx;
-
-    const Feature* m_feature = nullptr;
-
-    fastmap<FilterGlobal, Value> m_globals;
+    std::array<Value, 4> m_globals;
+    double m_globalGeom = -1;
+    double m_globalZoom = -1;
 
     int32_t m_sceneId = -1;
 
-    float m_globalZoom = -1;
+    const Feature* m_feature = nullptr;
+
+    mutable duk_context *m_ctx;
 };
 
 }

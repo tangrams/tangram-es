@@ -23,20 +23,20 @@ TEST_CASE( "Test evalFilterFn with feature", "[Duktape][evalFilterFn]") {
     StyleContext ctx;
     ctx.setFeature(feature);
 
-    ctx.addFunction("fn_a", R"(function() { return feature.a === 'A' })");
-    REQUIRE(ctx.evalFilterFn("fn_a") == true);
+    REQUIRE(ctx.setFunctions({R"(function() { return feature.a === 'A' })"}));
+    REQUIRE(ctx.evalFilter(0) == true);
 
-    ctx.addFunction("fn_b", R"(function() { return feature.b === 'B' })");
-    REQUIRE(ctx.evalFilterFn("fn_b") == true);
+    REQUIRE(ctx.setFunctions({ R"(function() { return feature.b === 'B' })"}));
+    REQUIRE(ctx.evalFilter(0) == true);
 
-    ctx.addFunction("fn_n", R"(function() { return feature.n === 42 })");
-    REQUIRE(ctx.evalFilterFn("fn_n") == true);
+    REQUIRE(ctx.setFunctions({ R"(function() { return feature.n === 42 })"}));
+    REQUIRE(ctx.evalFilter(0) == true);
 
-    ctx.addFunction("fn_n2", R"(function() { return feature.n === 43 })");
-    REQUIRE(ctx.evalFilterFn("fn_n2") == false);
+    REQUIRE(ctx.setFunctions({ R"(function() { return feature.n === 43 })"}));
+    REQUIRE(ctx.evalFilter(0) == false);
 
-    ctx.addFunction("fn_n3", R"(function() { return feature.n === '42' })");
-    REQUIRE(ctx.evalFilterFn("fn_n3") == false);
+    REQUIRE(ctx.setFunctions({ R"(function() { return feature.n === '42' })"}));
+    REQUIRE(ctx.evalFilter(0) == false);
 }
 
 TEST_CASE( "Test evalFilterFn with feature and globals", "[Duktape][evalFilterFn]") {
@@ -47,11 +47,11 @@ TEST_CASE( "Test evalFilterFn with feature and globals", "[Duktape][evalFilterFn
     ctx.setFeature(feature);
     ctx.setGlobal("$zoom", 5);
 
-    ctx.addFunction("fn", R"(function() { return (feature.scalerank * .5) <= ($zoom - 4); })");
-    REQUIRE(ctx.evalFilterFn("fn") == true);
+    REQUIRE(ctx.setFunctions({ R"(function() { return (feature.scalerank * .5) <= ($zoom - 4); })"}));
+    REQUIRE(ctx.evalFilter(0) == true);
 
     ctx.setGlobal("$zoom", 4);
-    REQUIRE(ctx.evalFilterFn("fn") == false);
+    REQUIRE(ctx.evalFilter(0) == false);
 
 }
 
@@ -68,68 +68,66 @@ TEST_CASE( "Test evalFilterFn with feature and global geometry", "[Duktape][eval
     StyleContext ctx;
 
     // Test $geometry global
-    ctx.addFunction("fn1", R"(function() { return $geometry === 'point'; })");
-    ctx.addFunction("fn2", R"(function() { return $geometry === 'line'; })");
-    ctx.addFunction("fn3", R"(function() { return $geometry === 'polygon'; })");
+    REQUIRE(ctx.setFunctions({
+                R"(function() { return $geometry === 'point'; })",
+                R"(function() { return $geometry === 'line'; })",
+                R"(function() { return $geometry === 'polygon'; })"}));
 
     ctx.setFeature(points);
-    REQUIRE(ctx.evalFilterFn("fn1") == true);
-    REQUIRE(ctx.evalFilterFn("fn2") == false);
-    REQUIRE(ctx.evalFilterFn("fn3") == false);
+    REQUIRE(ctx.evalFilter(0) == true);
+    REQUIRE(ctx.evalFilter(1) == false);
+    REQUIRE(ctx.evalFilter(2) == false);
 
     ctx.setFeature(lines);
-    REQUIRE(ctx.evalFilterFn("fn1") == false);
-    REQUIRE(ctx.evalFilterFn("fn2") == true);
-    REQUIRE(ctx.evalFilterFn("fn3") == false);
+    REQUIRE(ctx.evalFilter(0) == false);
+    REQUIRE(ctx.evalFilter(1) == true);
+    REQUIRE(ctx.evalFilter(2) == false);
 
     ctx.setFeature(polygons);
-    REQUIRE(ctx.evalFilterFn("fn1") == false);
-    REQUIRE(ctx.evalFilterFn("fn2") == false);
-    REQUIRE(ctx.evalFilterFn("fn3") == true);
+    REQUIRE(ctx.evalFilter(0) == false);
+    REQUIRE(ctx.evalFilter(1) == false);
+    REQUIRE(ctx.evalFilter(2) == true);
 
 }
 
 TEST_CASE( "Test evalFilterFn with different features", "[Duktape][evalFilterFn]") {
     StyleContext ctx;
 
-    ctx.addFunction("fn", R"(function() { return feature.scalerank === 2; })");
+    REQUIRE(ctx.setFunctions({ R"(function() { return feature.scalerank === 2; })"}));
 
     Feature feat1;
     feat1.props.add("scalerank", 2);
 
     ctx.setFeature(feat1);
-    REQUIRE(ctx.evalFilterFn("fn") == true);
+    REQUIRE(ctx.evalFilter(0) == true);
 
     Feature feat2;
     ctx.setFeature(feat2);
-    REQUIRE(ctx.evalFilterFn("fn") == false);
+    REQUIRE(ctx.evalFilter(0) == false);
 
     ctx.setFeature(feat1);
-    REQUIRE(ctx.evalFilterFn("fn") == true);
+    REQUIRE(ctx.evalFilter(0) == true);
 }
 
 TEST_CASE( "Test numeric global", "[Duktape][setGlobal]") {
     StyleContext ctx;
     ctx.setGlobal("$zoom", 10);
-    ctx.addFunction("fn", R"(function() { return $zoom === 10 })");
-
-    REQUIRE(ctx.evalFilterFn("fn") == true);
+    REQUIRE(ctx.setFunctions({ R"(function() { return $zoom === 10 })"}));
+    REQUIRE(ctx.evalFilter(0) == true);
 
     ctx.setGlobal("$zoom", 0);
-
-    REQUIRE(ctx.evalFilterFn("fn") == false);
+    REQUIRE(ctx.evalFilter(0) == false);
 }
 
 TEST_CASE( "Test string global", "[Duktape][setGlobal]") {
     StyleContext ctx;
     ctx.setGlobal("$geometry", GeometryType::points);
-    ctx.addFunction("fn", R"(function() { return $geometry === point })");
-
-    REQUIRE(ctx.evalFilterFn("fn") == true);
+    REQUIRE(ctx.setFunctions({ R"(function() { return $geometry === point })"}));
+    REQUIRE(ctx.evalFilter(0) == true);
 
     ctx.setGlobal("$geometry", "none");
+    REQUIRE(ctx.evalFilter(0) == false);
 
-    REQUIRE(ctx.evalFilterFn("fn") == false);
 }
 
 TEST_CASE( "Test evalStyleFn - StyleParamKey::order", "[Duktape][evalStyleFn]") {
@@ -138,11 +136,11 @@ TEST_CASE( "Test evalStyleFn - StyleParamKey::order", "[Duktape][evalStyleFn]") 
 
     StyleContext ctx;
     ctx.setFeature(feat);
-    ctx.addFunction("fn", R"(function () { return feature.sort_key + 5 })");
+    REQUIRE(ctx.setFunctions({ R"(function () { return feature.sort_key + 5 })"}));
 
     StyleParam::Value value;
 
-    REQUIRE(ctx.evalStyleFn("fn", StyleParamKey::order, value) == true);
+    REQUIRE(ctx.evalStyle(0, StyleParamKey::order, value) == true);
     REQUIRE(value.is<uint32_t>() == true);
     REQUIRE(value.get<uint32_t>() == 7);
 }
@@ -152,23 +150,23 @@ TEST_CASE( "Test evalStyleFn - StyleParamKey::color", "[Duktape][evalStyleFn]") 
     StyleContext ctx;
     StyleParam::Value value;
 
-    ctx.addFunction("fn_s", R"(function () { return '#f0f'; })");
-    REQUIRE(ctx.evalStyleFn("fn_s", StyleParamKey::color, value) == true);
+    REQUIRE(ctx.setFunctions({ R"(function () { return '#f0f'; })"}));
+    REQUIRE(ctx.evalStyle(0, StyleParamKey::color, value) == true);
     REQUIRE(value.is<uint32_t>() == true);
     REQUIRE(value.get<uint32_t>() == 0xffff00ff);
 
-    ctx.addFunction("fn_i", R"(function () { return 0xff00ffff; })");
-    REQUIRE(ctx.evalStyleFn("fn_i", StyleParamKey::color, value) == true);
+    REQUIRE(ctx.setFunctions({ R"(function () { return 0xff00ffff; })"}));
+    REQUIRE(ctx.evalStyle(0, StyleParamKey::color, value) == true);
     REQUIRE(value.is<uint32_t>() == true);
     REQUIRE(value.get<uint32_t>() == 0xff00ffff);
 
-    ctx.addFunction("fn_a", R"(function () { return [1.0, 1.0, 0.0, 1.0] })");
-    REQUIRE(ctx.evalStyleFn("fn_a", StyleParamKey::color, value) == true);
+    REQUIRE(ctx.setFunctions({ R"(function () { return [1.0, 1.0, 0.0, 1.0] })"}));
+    REQUIRE(ctx.evalStyle(0, StyleParamKey::color, value) == true);
     REQUIRE(value.is<uint32_t>() == true);
     REQUIRE(value.get<uint32_t>() == 0xffffff00);
 
-    ctx.addFunction("fn_a2", R"(function () { return [0.0, 1.0, 0.0] })");
-    REQUIRE(ctx.evalStyleFn("fn_a2", StyleParamKey::color, value) == true);
+    REQUIRE(ctx.setFunctions({ R"(function () { return [0.0, 1.0, 0.0] })"}));
+    REQUIRE(ctx.evalStyle(0, StyleParamKey::color, value) == true);
     REQUIRE(value.is<uint32_t>() == true);
     REQUIRE(value.get<uint32_t>() == 0xff00ff00);
 
@@ -180,11 +178,11 @@ TEST_CASE( "Test evalStyleFn - StyleParamKey::width", "[Duktape][evalStyleFn]") 
 
     StyleContext ctx;
     ctx.setFeature(feat);
-    ctx.addFunction("fn", R"(function () { return feature.width * 2.3; })");
+    REQUIRE(ctx.setFunctions({ R"(function () { return feature.width * 2.3; })"}));
 
     StyleParam::Value value;
 
-    REQUIRE(ctx.evalStyleFn("fn", StyleParamKey::width, value) == true);
+    REQUIRE(ctx.evalStyle(0, StyleParamKey::width, value) == true);
     REQUIRE(value.is<StyleParam::Width>() == true);
     REQUIRE(value.get<StyleParam::Width>().value == 4.6f);
 }
@@ -195,23 +193,24 @@ TEST_CASE( "Test evalStyleFn - StyleParamKey::extrude", "[Duktape][evalStyleFn]"
 
     StyleContext ctx;
     ctx.setFeature(feat);
-    ctx.addFunction("fn_t", R"(function () { return true; })");
-    ctx.addFunction("fn_f", R"(function () { return false; })");
-    ctx.addFunction("fn_a", R"(function () { return [1.1, 2.2]; })");
+    REQUIRE(ctx.setFunctions({
+                R"(function () { return true; })",
+                R"(function () { return false; })",
+                R"(function () { return [1.1, 2.2]; })"}));
 
     StyleParam::Value value;
 
-    REQUIRE(ctx.evalStyleFn("fn_t", StyleParamKey::extrude, value) == true);
+    REQUIRE(ctx.evalStyle(0, StyleParamKey::extrude, value) == true);
     REQUIRE(value.is<glm::vec2>() == true);
     StyleParam::Value e1(glm::vec2(NAN, NAN));
     REQUIRE(isnan(value.get<glm::vec2>()[0]) == true);
 
-    REQUIRE(ctx.evalStyleFn("fn_f", StyleParamKey::extrude, value) == true);
+    REQUIRE(ctx.evalStyle(1, StyleParamKey::extrude, value) == true);
     REQUIRE(value.is<glm::vec2>() == true);
     StyleParam::Value e2(glm::vec2(0.0f, 0.0f));
     REQUIRE(value == e2);
 
-    REQUIRE(ctx.evalStyleFn("fn_a", StyleParamKey::extrude, value) == true);
+    REQUIRE(ctx.evalStyle(2, StyleParamKey::extrude, value) == true);
     REQUIRE(value.is<glm::vec2>() == true);
     StyleParam::Value e3(glm::vec2(1.1f, 2.2f));
     REQUIRE(value == e3);

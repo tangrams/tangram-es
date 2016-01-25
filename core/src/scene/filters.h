@@ -26,9 +26,14 @@ struct Filter {
         std::vector<Filter> operands;
     };
 
-    struct Equality {
+    struct EqualitySet {
         std::string key;
         std::vector<Value> values;
+        FilterGlobal global;
+    };
+    struct Equality {
+        std::string key;
+        Value value;
         FilterGlobal global;
     };
     struct Range {
@@ -48,6 +53,7 @@ struct Filter {
                          OperatorAll,
                          OperatorNone,
                          OperatorAny,
+                         EqualitySet,
                          Equality,
                          Range,
                          Existence,
@@ -57,19 +63,25 @@ struct Filter {
     Filter() : data(none_type{}) {}
     Filter(Data _data) : data(std::move(_data)) {}
 
+    bool eval(const Feature& feat, StyleContext& ctx) const;
+
     // Create an 'any', 'all', or 'none' filter
     inline static Filter MatchAny(const std::vector<Filter>& filters) {
-        return { OperatorAny{ filters }};
+        return { OperatorAny{ sort(filters) }};
     }
     inline static Filter MatchAll(const std::vector<Filter>& filters) {
-        return { OperatorAll{ filters }};
+        return { OperatorAll{ sort(filters) }};
     }
     inline static Filter MatchNone(const std::vector<Filter>& filters) {
-        return { OperatorNone{ filters }};
+        return { OperatorNone{ sort(filters) }};
     }
     // Create an 'equality' filter
     inline static Filter MatchEquality(const std::string& k, const std::vector<Value>& vals) {
-        return { Equality{ k, vals, globalType(k) }};
+        if (vals.size() == 1) {
+            return { Equality{ k, vals[0], globalType(k) }};
+        } else {
+            return { EqualitySet{ k, vals, globalType(k) }};
+        }
     }
     // Create a 'range' filter
     inline static Filter MatchRange(const std::string& k, float min, float max) {
@@ -84,8 +96,6 @@ struct Filter {
         return { Function{ id }};
     }
 
-    bool eval(const Feature& feat, StyleContext& ctx) const;
-
     static FilterGlobal globalType(const std::string& _key) {
         if (_key == "$geometry") {
             return FilterGlobal::geometry;
@@ -94,5 +104,14 @@ struct Filter {
         }
         return  FilterGlobal::undefined;
     }
+
+    /* Public for testing */
+    static std::vector<Filter> sort(const std::vector<Filter>& filters);
+    void print(int _indent = 0) const;
+    int filterCost() const;
+    const bool isOperator() const;
+    const std::string& key() const;
+    const std::vector<Filter>& operands() const;
+
 };
 }
