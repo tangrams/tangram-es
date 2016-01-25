@@ -13,7 +13,7 @@ protected:
 
 public:
 
-    TopoJsonSource(const std::string& _name, const std::string& _urlTemplate);
+    TopoJsonSource(const std::string& _name, const std::string& _urlTemplate, int32_t maxZoom);
 
 };
 

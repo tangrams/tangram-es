@@ -836,7 +836,7 @@ void SceneLoader::loadSource(const std::pair<Node, Node>& src, Scene& _scene) {
             sourcePtr = std::shared_ptr<DataSource>(new ClientGeoJsonSource(name, url, maxZoom));
         }
     } else if (type == "TopoJSON") {
-        sourcePtr = std::shared_ptr<DataSource>(new TopoJsonSource(name, url));
+        sourcePtr = std::shared_ptr<DataSource>(new TopoJsonSource(name, url, maxZoom));
     } else if (type == "MVT") {
         sourcePtr = std::shared_ptr<DataSource>(new MVTSource(name, url, maxZoom));
     } else {

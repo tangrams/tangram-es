@@ -10,8 +10,8 @@
 
 namespace Tangram {
 
-TopoJsonSource::TopoJsonSource(const std::string& _name, const std::string& _urlTemplate) :
-    DataSource(_name, _urlTemplate) {
+TopoJsonSource::TopoJsonSource(const std::string& _name, const std::string& _urlTemplate, int32_t maxZoom) :
+    DataSource(_name, _urlTemplate, maxZoom) {
 }
 
 std::shared_ptr<TileData> TopoJsonSource::parse(const TileTask& _task,
