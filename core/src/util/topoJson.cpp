@@ -32,6 +32,12 @@ Topology getTopology(const JsonDocument& _document, const Transform& _proj) {
 
     const auto& jsonArcs = jsonArcList->value;
 
+    if (!jsonArcs.IsArray()) {
+        return topo;
+    }
+
+    topo.arcs.reserve(jsonArcs.Size());
+
     // Decode and transform the points that make up 'arcs'
     for (auto jsonArcsIt = jsonArcs.Begin(); jsonArcsIt != jsonArcs.End(); ++jsonArcsIt) {
 
@@ -42,6 +48,7 @@ Topology getTopology(const JsonDocument& _document, const Transform& _proj) {
         }
 
         Line arc;
+        arc.reserve(jsonArc.Size());
 
         // Quantized position
         glm::ivec2 q;
