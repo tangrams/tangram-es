@@ -8,14 +8,16 @@
 
 namespace Tangram {
 
-TextDisplay::TextDisplay(glm::vec2 _textDisplayResolution)
-    : m_textDisplayResolution(_textDisplayResolution)
-{
+TextDisplay::TextDisplay() : m_textDisplayResolution(200.0), m_initialized(false) {
 }
 
 TextDisplay::~TextDisplay() {}
 
 void TextDisplay::init() {
+    if (m_initialized) {
+        return;
+    }
+
     std::string vertShaderSrcStr = R"END(
         #ifdef GL_ES
         precision mediump float;
@@ -36,21 +38,64 @@ void TextDisplay::init() {
         #else
         #define LOWP
         #endif
+        uniform vec3 u_color;
         void main(void) {
-            gl_FragColor = vec4(0.0, 0.0, 0.0, 1.0);
+            gl_FragColor = vec4(u_color, 1.0);
         }
     )END";
 
     m_shader = std::make_unique<ShaderProgram>();
     m_shader->setSourceStrings(fragShaderSrcStr, vertShaderSrcStr);
+
+    m_initialized = true;
 }
 
-void TextDisplay::draw(std::vector<std::string> _infos) {
+void TextDisplay::log(const char* fmt, ...) {
+    static char text[99999];
+
+    va_list args;
+    va_start(args, fmt);
+    vsprintf(text, fmt, args);
+    va_end(args);
+
+    {
+        std::lock_guard<std::mutex> lock(m_mutex);
+
+        for (int i = 1; i < LOG_CAPACITY; ++i) {
+            m_log[i] = m_log[i - 1];
+        }
+
+        m_log[0] = std::string(text);
+    }
+}
+
+void TextDisplay::draw(const std::string& _text, int _posx, int _posy) {
     static std::shared_ptr<VertexLayout> vertexLayout = std::shared_ptr<VertexLayout>(new VertexLayout({
         {"a_position", 2, GL_FLOAT, false, 0},
     }));
-
     static char buffer[99999];
+    std::vector<glm::vec2> vertices;
+    int nquads;
+
+    nquads = stb_easy_font_print(_posx, _posy, _text.c_str(), NULL, buffer, sizeof(buffer));
+
+    float* data = reinterpret_cast<float*>(buffer);
+
+    vertices.reserve(nquads * 6);
+    for (int quad = 0, stride = 0; quad < nquads; ++quad, stride += 16) {
+        vertices.push_back({data[(0 * 4) + stride], data[(0 * 4) + 1 + stride]});
+        vertices.push_back({data[(1 * 4) + stride], data[(1 * 4) + 1 + stride]});
+        vertices.push_back({data[(2 * 4) + stride], data[(2 * 4) + 1 + stride]});
+        vertices.push_back({data[(2 * 4) + stride], data[(2 * 4) + 1 + stride]});
+        vertices.push_back({data[(3 * 4) + stride], data[(3 * 4) + 1 + stride]});
+        vertices.push_back({data[(0 * 4) + stride], data[(0 * 4) + 1 + stride]});
+    }
+    vertexLayout->enable(*m_shader, 0, (void*)vertices.data());
+
+    glDrawArrays(GL_TRIANGLES, 0, nquads * 6);
+}
+
+void TextDisplay::draw(std::vector<std::string> _infos) {
     static GLint boundbuffer = -1;
 
     RenderState::culling(GL_FALSE);
@@ -66,30 +111,20 @@ void TextDisplay::draw(std::vector<std::string> _infos) {
     glm::mat4 orthoProj = glm::ortho(0.f, (float)m_textDisplayResolution.x, (float)m_textDisplayResolution.y, 0.f, -1.f, 1.f);
     m_shader->setUniformMatrix4f("u_orthoProj", orthoProj);
 
+    // Display Tangram info messages
+    m_shader->setUniformf("u_color", 1.f, 1.f, 1.f);
     int offset = 0;
-
     for (auto& text : _infos) {
-        std::vector<glm::vec2> vertices;
-        int nquads;
-
-        nquads = stb_easy_font_print(3, 3 + offset, text.c_str(), NULL, buffer, sizeof(buffer));
-
-        float* data = reinterpret_cast<float*>(buffer);
-
-        vertices.reserve(nquads * 6);
-        for (int quad = 0, stride = 0; quad < nquads; ++quad, stride += 16) {
-            vertices.push_back({data[(0 * 4) + stride], data[(0 * 4) + 1 + stride]});
-            vertices.push_back({data[(1 * 4) + stride], data[(1 * 4) + 1 + stride]});
-            vertices.push_back({data[(2 * 4) + stride], data[(2 * 4) + 1 + stride]});
-            vertices.push_back({data[(2 * 4) + stride], data[(2 * 4) + 1 + stride]});
-            vertices.push_back({data[(3 * 4) + stride], data[(3 * 4) + 1 + stride]});
-            vertices.push_back({data[(0 * 4) + stride], data[(0 * 4) + 1 + stride]});
-        }
-        vertexLayout->enable(*m_shader, 0, (void*)vertices.data());
-
-        glDrawArrays(GL_TRIANGLES, 0, nquads * 6);
-
+        draw(text, 3, 3 + offset);
         offset += 10;
+    }
+
+    // Display screen log
+    offset = 0;
+    m_shader->setUniformf("u_color", 51 / 255.f, 73 / 255.f, 120 / 255.f);
+    for (int i = 0; i < LOG_CAPACITY; ++i) {
+        draw(m_log[i], 3, m_textDisplayResolution.y - 10 + offset);
+        offset -= 10;
     }
 
     RenderState::culling(GL_TRUE);

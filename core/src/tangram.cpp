@@ -40,7 +40,6 @@ std::shared_ptr<View> m_view;
 std::unique_ptr<Labels> m_labels;
 std::unique_ptr<Skybox> m_skybox;
 std::unique_ptr<InputHandler> m_inputHandler;
-std::unique_ptr<TextDisplay> m_textDisplay;
 std::mutex m_tilesMutex;
 
 std::array<Ease, 4> m_eases;
@@ -84,9 +83,6 @@ void initialize(const char* _scenePath) {
 
     // label setup
     m_labels = std::make_unique<Labels>();
-
-    m_textDisplay = std::make_unique<TextDisplay>();
-    m_textDisplay->init();
 
     loadScene(_scenePath, true);
 
@@ -142,6 +138,8 @@ void resize(int _newWidth, int _newHeight) {
 }
 
 void update(float _dt) {
+
+    LOGS("dt %f", _dt);
 
     g_time += _dt;
 
@@ -241,7 +239,7 @@ void render() {
         debuginfos.push_back("tile size:" + std::to_string(memused / (1024 * 1024)) + "mb");
         debuginfos.push_back("number of styles"+ std::to_string(m_scene->styles().size()));
 
-        m_textDisplay->draw(debuginfos);
+        TextDisplay::Instance().draw(debuginfos);
     }
 
     while (Error::hadGlError("Tangram::render()")) {}
