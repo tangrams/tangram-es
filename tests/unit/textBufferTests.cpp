@@ -5,8 +5,16 @@
 #include "tangram.h"
 #include "text/textBuffer.h"
 
+using namespace Tangram;
+
+std::vector<TextBuffer::WordBreak> findWords(std::string text) {
+    std::vector<TextBuffer::WordBreak> words;
+    TextBuffer::Builder::findWords(text, words);
+    return words;
+}
+
 TEST_CASE( "Testing", "[Core][TextBuffer]" ) {
-    auto words = Tangram::TextBuffer::findWords(" varun\n  talwar");
+    auto words = findWords(" varun\n  talwar");
 
     REQUIRE(words.size() == 3);
     REQUIRE(words[0].start == 1);
@@ -18,7 +26,7 @@ TEST_CASE( "Testing", "[Core][TextBuffer]" ) {
 }
 
 TEST_CASE( "Basic word break utf8 string", "[Core][TextBuffer]" ) {
-    auto words = Tangram::TextBuffer::findWords("The  quick brown fox");
+    auto words = findWords("The  quick brown fox");
 
     REQUIRE(words.size() == 4);
     REQUIRE(words[1].start == 5);
@@ -28,7 +36,7 @@ TEST_CASE( "Basic word break utf8 string", "[Core][TextBuffer]" ) {
 }
 
 TEST_CASE( "Find words on non-utf8 string", "[Core][TextBuffer]" ) {
-    auto words = Tangram::TextBuffer::findWords("사용할 수있는 구절 많은");
+    auto words = findWords("사용할 수있는 구절 많은");
 
     REQUIRE(words.size() == 4);
     REQUIRE(words[0].start == 0);
@@ -40,7 +48,7 @@ TEST_CASE( "Find words on non-utf8 string", "[Core][TextBuffer]" ) {
 }
 
 TEST_CASE( "Find words on non-utf8 string with CR", "[Core][TextBuffer]" ) {
-    auto words = Tangram::TextBuffer::findWords("Вяш выро\nконтынтёонэж\nад");
+    auto words = findWords("Вяш выро\nконтынтёонэж\nад");
 
     REQUIRE(words.size() == 6);
     REQUIRE(words[0].start == 0);
@@ -58,7 +66,7 @@ TEST_CASE( "Find words on non-utf8 string with CR", "[Core][TextBuffer]" ) {
 }
 
 TEST_CASE( "Find words on one word non-utf8 string with CR", "[Core][TextBuffer]" ) {
-    auto words = Tangram::TextBuffer::findWords("Вяш\n");
+    auto words = findWords("Вяш\n");
 
     REQUIRE(words.size() == 2);
     REQUIRE(words[0].start == 0);
@@ -68,7 +76,7 @@ TEST_CASE( "Find words on one word non-utf8 string with CR", "[Core][TextBuffer]
 }
 
 TEST_CASE( "Find words in one character long strings", "[Core][TextBuffer]" ) {
-    auto words = Tangram::TextBuffer::findWords("A\nB C D");
+    auto words = findWords("A\nB C D");
 
     REQUIRE(words.size() == 5);
     REQUIRE(words[0].start == 0);

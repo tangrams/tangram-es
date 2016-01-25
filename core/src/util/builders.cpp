@@ -5,8 +5,6 @@
 #include "platform.h"
 #include <memory>
 
-#include "earcut.hpp/include/earcut.hpp"
-
 namespace mapbox { namespace util {
 template <>
 struct nth<0, Tangram::Point> {
@@ -34,17 +32,15 @@ JoinTypes JoinTypeFromString(const std::string& str) {
 
 void Builders::buildPolygon(const Polygon& _polygon, float _height, PolygonBuilder& _ctx) {
 
-    mapbox::Earcut<float, uint16_t> earcut;
-
-    earcut(_polygon);
+    _ctx.earcut(_polygon);
 
     uint16_t vertexDataOffset = _ctx.numVertices;
 
     if (vertexDataOffset == 0) {
-        _ctx.indices = std::move(earcut.indices);
+        _ctx.indices = std::move(_ctx.earcut.indices);
     } else {
-        _ctx.indices.reserve(_ctx.indices.size() +  earcut.indices.size());
-        for (auto i : earcut.indices) {
+        _ctx.indices.reserve(_ctx.indices.size() +  _ctx.earcut.indices.size());
+        for (auto i : _ctx.earcut.indices) {
             _ctx.indices.push_back(vertexDataOffset + i);
         }
     }
@@ -66,10 +62,10 @@ void Builders::buildPolygon(const Polygon& _polygon, float _height, PolygonBuild
     // call the tesselator
     glm::vec3 normal(0.0, 0.0, 1.0);
 
-    _ctx.numVertices += earcut.vertices.size();
+    _ctx.numVertices += _ctx.earcut.vertices.size();
     _ctx.sizeHint(_ctx.numVertices);
 
-    for (auto& p : earcut.vertices) {
+    for (auto& p : _ctx.earcut.vertices) {
         glm::vec3 coord(p[0], p[1], _height);
 
         if (_ctx.useTexCoords) {
@@ -97,6 +93,8 @@ void Builders::buildPolygonExtrusion(const Polygon& _polygon, float _minHeight, 
         size_t lineSize = line.size();
         sumIndices += lineSize * 6;
         sumVertices += (lineSize - 1) * 4;
+
+        _ctx.numVertices = sumVertices;
     }
 
     _ctx.indices.reserve(sumIndices);

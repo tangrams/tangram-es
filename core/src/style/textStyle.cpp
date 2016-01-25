@@ -73,10 +73,11 @@ struct Builder : public StyleBuilder {
 
     const TextStyle& m_style;
 
-    std::unique_ptr<TextBuffer> m_mesh;
+    float m_tileSize;
 
     void begin(const Tile& _tile) override {
-        m_mesh = std::make_unique<TextBuffer>(m_style.vertexLayout());
+        m_builder.beginMesh(m_style.vertexLayout());
+        m_tileSize = _tile.getProjection()->TileSize();
     }
 
     bool checkRule(const DrawRule& _rule) const override;
@@ -86,9 +87,8 @@ struct Builder : public StyleBuilder {
     void addPoint(const Point& _line, const Properties& _props, const DrawRule& _rule) override;
 
     std::unique_ptr<VboMesh> build() override {
-        m_mesh->compileVertexBuffer();
-        return std::move(m_mesh);
-    };
+        return m_builder.build();
+    }
 
     const Style& style() const override { return m_style; }
 
@@ -96,6 +96,10 @@ struct Builder : public StyleBuilder {
 
     TextStyle::Parameters applyRule(const DrawRule& _rule, const Properties& _props) const;
 
+    TextBuffer::Builder m_builder;
+
+    bool prepareLabel(const TextStyle::Parameters& _params, Label::Type _type);
+    void addLabel(const TextStyle::Parameters& _params, Label::Type _type, Label::Transform _transform);
 };
 
 bool Builder::checkRule(const DrawRule& _rule) const {
@@ -224,8 +228,9 @@ void Builder::addPoint(const Point& _point, const Properties& _props, const Draw
 
     if (!params.isValid()) { return; }
 
-    m_mesh->addLabel(params, { glm::vec2(_point), glm::vec2(_point) },
-                    Label::Type::point, m_style.fontContext());
+    if (!m_builder.prepareLabel(m_style.fontContext(), params, Label::Type::point)) { return; }
+
+    m_builder.addLabel(params, Label::Type::point, { glm::vec2(_point), glm::vec2(_point) });
 }
 
 void Builder::addLine(const Line& _line, const Properties& _props, const DrawRule& _rule) {
@@ -234,11 +239,17 @@ void Builder::addLine(const Line& _line, const Properties& _props, const DrawRul
 
     if (!params.isValid()) { return; }
 
+    if (!m_builder.prepareLabel(m_style.fontContext(), params, Label::Type::line)) { return; }
+
+    float pixel = 2.0 / m_tileSize;
+    float minLength = m_builder.labelWidth() * pixel * 0.2;
+
     for (size_t i = 0; i < _line.size() - 1; i++) {
         glm::vec2 p1 = glm::vec2(_line[i]);
         glm::vec2 p2 = glm::vec2(_line[i + 1]);
-
-        m_mesh->addLabel(params, { p1, p2 }, Label::Type::line, m_style.fontContext());
+        if (glm::length(p1-p2) > minLength) {
+            m_builder.addLabel(params, Label::Type::line, { p1, p2 });
+        }
     }
 }
 
@@ -246,6 +257,7 @@ void Builder::addPolygon(const Polygon& _polygon, const Properties& _props, cons
     Point p = glm::vec3(centroid(_polygon), 0.0);
     addPoint(p, _props, _rule);
 }
+
 
 }
 
