@@ -9,6 +9,10 @@ void init_main_window();
 
 std::string sceneFile = "scene.yaml";
 
+GLFWwindow* main_window = nullptr;
+int width = 800;
+int height = 600;
+
 // Input handling
 // ==============
 
@@ -175,6 +179,9 @@ void key_callback(GLFWwindow* window, int key, int scancode, int action, int mod
             case GLFW_KEY_N:
                 Tangram::setRotation(0.f, 1.f);
                 break;
+            case GLFW_KEY_ESCAPE:
+                glfwSetWindowShouldClose(main_window, true);
+                break;
         default:
                 break;
         }
@@ -190,10 +197,6 @@ void drop_callback(GLFWwindow* window, int count, const char** paths) {
 
 // Window handling
 // ===============
-
-GLFWwindow* main_window = nullptr;
-int width = 800;
-int height = 600;
 
 void window_size_callback(GLFWwindow* window, int width, int height) {
 
