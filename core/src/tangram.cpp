@@ -491,6 +491,10 @@ const std::vector<TouchItem>& pickFeaturesAt(float _x, float _y) {
                                         _x, _y);
 }
 
+void setOverrideMatrices(const float* _view, const float* _proj) {
+    m_view->setOverrideMatrices(_view, _proj);
+}
+
 void queueSceneUpdate(const char* componentName, const char* value) {
 
     return m_scene->queueComponentUpdate(componentName, value);

@@ -572,6 +572,8 @@ public class MapController implements Renderer {
     private synchronized native void nativeApplySceneUpdates();
     private synchronized native void nativePickFeature(float posX, float posY, FeaturePickListener listener);
 
+    public synchronized native void setOverrideMatrices(float[] view, float[] projection);
+
     private native void nativeOnUrlSuccess(byte[] rawDataBytes, long callbackPtr);
     private native void nativeOnUrlFailure(long callbackPtr);
 

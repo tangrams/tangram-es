@@ -236,4 +236,12 @@ extern "C" {
         Tangram::applySceneUpdates();
     }
 
+    JNIEXPORT void JNICALL Java_com_mapzen_tangram_MapController_setOverrideMatrices(JNIEnv* jniEnv, jobject obj, jfloatArray view, jfloatArray proj) {
+        jfloat* arrayView = jniEnv->GetFloatArrayElements(view, NULL);
+        jfloat* arrayProj = jniEnv->GetFloatArrayElements(proj, NULL);
+        Tangram::setOverrideMatrices(arrayView, arrayProj);
+        jniEnv->ReleaseFloatArrayElements(view, arrayView, 0);
+        jniEnv->ReleaseFloatArrayElements(proj, arrayProj, 0);
+    }
+
 }

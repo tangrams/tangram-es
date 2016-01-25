@@ -172,6 +172,8 @@ public:
     static float focalLengthToFieldOfView(float length);
     static float fieldOfViewToFocalLength(float radians);
 
+    void setOverrideMatrices(const float* _view, const float* _proj);
+
 protected:
 
     void updateMatrices();
@@ -195,6 +197,9 @@ protected:
     glm::mat4 m_invViewProj;
     glm::mat3 m_normalMatrix;
     glm::mat3 m_invNormalMatrix;
+
+    std::shared_ptr<glm::mat4> m_overrideView;
+    std::shared_ptr<glm::mat4> m_overrideProj;
 
     float m_roll = 0.f;
     float m_pitch = 0.f;
