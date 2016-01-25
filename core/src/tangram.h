@@ -125,6 +125,8 @@ void toggleDebugFlag(DebugFlags _flag);
 
 void loadScene(const char* _scenePath, bool _setPositionFromScene = false);
 
+void runOnMainLoop(std::function<void()> _task);
+
 struct TouchItem {
     std::shared_ptr<Properties> properties;
     float distance;
