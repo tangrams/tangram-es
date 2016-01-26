@@ -146,6 +146,10 @@ std::vector<FONSquad>& FontContext::rasterize(const std::string& _text,
         return m_quadBuffer;
     }
 
+    char tag[5] = {0};
+    hb_tag_to_string(hb_script_to_iso15924_tag(script), tag);
+    LOGW("script %s rtl:%d - %s", tag, direction == HB_DIRECTION_RTL, _text.c_str());
+
     fonsSetShaping(m_fsContext, script, direction, language);
 
     fonsSetSize(m_fsContext, _fontSize);
