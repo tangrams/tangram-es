@@ -25,7 +25,7 @@ bool Shaping::bidiDetection(const std::string& _text, hb_direction_t& _direction
 
     // Ubidi detection
     UErrorCode error = U_ZERO_ERROR;
-    UBiDiLevel dirn = 0;
+    UBiDiLevel dirn = UBIDI_DEFAULT_LTR;
     UBiDi* bidi = ubidi_openSized(text.length(), 0, &error);
 
     if (error != U_ZERO_ERROR) {
