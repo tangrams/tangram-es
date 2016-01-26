@@ -1,21 +1,21 @@
-#include "geoJsonSource.h"
-#include "util/mapProjection.h"
+#include "topoJsonSource.h"
 
 #include "tileData.h"
 #include "tile/tile.h"
-#include "tile/tileID.h"
 #include "tile/tileTask.h"
-#include "util/geoJson.h"
+#include "util/mapProjection.h"
+#include "util/topoJson.h"
 #include "platform.h"
+
 
 namespace Tangram {
 
-GeoJsonSource::GeoJsonSource(const std::string& _name, const std::string& _urlTemplate, int32_t _maxZoom) :
-    DataSource(_name, _urlTemplate, _maxZoom) {
+TopoJsonSource::TopoJsonSource(const std::string& _name, const std::string& _urlTemplate, int32_t maxZoom) :
+    DataSource(_name, _urlTemplate, maxZoom) {
 }
 
-std::shared_ptr<TileData> GeoJsonSource::parse(const TileTask& _task,
-                                               const MapProjection& _projection) const {
+std::shared_ptr<TileData> TopoJsonSource::parse(const TileTask& _task,
+                                                const MapProjection& _projection) const {
 
     auto& task = static_cast<const DownloadTileTask&>(_task);
 
@@ -31,6 +31,7 @@ std::shared_ptr<TileData> GeoJsonSource::parse(const TileTask& _task,
         return tileData;
     }
 
+    // Transform JSON data into a TileData using TopoJson functions
     BoundingBox tileBounds(_projection.TileBounds(task.tileId()));
     glm::dvec2 tileOrigin = {tileBounds.min.x, tileBounds.max.y*-1.0};
     double tileInverseScale = 1.0 / tileBounds.width();
@@ -44,14 +45,18 @@ std::shared_ptr<TileData> GeoJsonSource::parse(const TileTask& _task,
         };
     };
 
-    // Transform JSON data into TileData using GeoJson functions
-    for (auto layer = document.MemberBegin(); layer != document.MemberEnd(); ++layer) {
-        tileData->layers.push_back(GeoJson::getLayer(layer, projFn, m_id));
+    // Parse topology and transform
+    auto topology = TopoJson::getTopology(document, projFn);
+
+    // Parse each TopoJson object as a data layer
+    auto objectsIt = document.FindMember("objects");
+    if (objectsIt == document.MemberEnd()) { return tileData; }
+    auto& objects = objectsIt->value;
+    for (auto layer = objects.MemberBegin(); layer != objects.MemberEnd(); ++layer) {
+        tileData->layers.push_back(TopoJson::getLayer(layer, topology, m_id));
     }
 
-
-    // Discard original JSON object and return TileData
-
+    // Discard JSON object and return TileData
     return tileData;
 
 }
