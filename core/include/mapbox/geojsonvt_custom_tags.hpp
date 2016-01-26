@@ -21,7 +21,7 @@ struct Tags {
     std::shared_ptr<Tangram::Properties> map;
 
     void emplace(std::string key, std::string value) {
-        map->add(std::move(key), std::move(value));
+        map->set(std::move(key), std::move(value));
     }
 
 };

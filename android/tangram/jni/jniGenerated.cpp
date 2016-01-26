@@ -267,11 +267,11 @@ struct SWIG_null_deleter {
 #define SWIG_NO_NULL_DELETER_SWIG_POINTER_NEW
 #define SWIG_NO_NULL_DELETER_SWIG_POINTER_OWN
 
-SWIGINTERN void Tangram_Properties_add__SWIG_0(Tangram::Properties *self,std::string key,std::string value) {
-  self->add(key, value);
+SWIGINTERN void Tangram_Properties_set__SWIG_0(Tangram::Properties *self,std::string key,std::string value) {
+  self->set(key, value);
 }
-SWIGINTERN void Tangram_Properties_add__SWIG_1(Tangram::Properties *self,std::string key,double value) {
-  self->add(key, value);
+SWIGINTERN void Tangram_Properties_set__SWIG_1(Tangram::Properties *self,std::string key,double value) {
+  self->set(key, value);
 }
 
 // Include LngLat class
@@ -439,7 +439,7 @@ SWIGEXPORT jstring JNICALL Java_com_mapzen_tangram_TangramJNI_Properties_1getStr
 }
 
 
-SWIGEXPORT void JNICALL Java_com_mapzen_tangram_TangramJNI_Properties_1add_1_1SWIG_10(JNIEnv *jenv, jclass jcls, jlong jarg1, jobject jarg1_, jstring jarg2, jstring jarg3) {
+SWIGEXPORT void JNICALL Java_com_mapzen_tangram_TangramJNI_Properties_1set_1_1SWIG_10(JNIEnv *jenv, jclass jcls, jlong jarg1, jobject jarg1_, jstring jarg2, jstring jarg3) {
   Tangram::Properties *arg1 = (Tangram::Properties *) 0 ;
   std::string arg2 ;
   std::string arg3 ;
@@ -467,11 +467,11 @@ SWIGEXPORT void JNICALL Java_com_mapzen_tangram_TangramJNI_Properties_1add_1_1SW
   if (!arg3_pstr) return ;
   (&arg3)->assign(arg3_pstr);
   jenv->ReleaseStringUTFChars(jarg3, arg3_pstr);
-  Tangram_Properties_add__SWIG_0(arg1,arg2,arg3);
+  Tangram_Properties_set__SWIG_0(arg1,arg2,arg3);
 }
 
 
-SWIGEXPORT void JNICALL Java_com_mapzen_tangram_TangramJNI_Properties_1add_1_1SWIG_11(JNIEnv *jenv, jclass jcls, jlong jarg1, jobject jarg1_, jstring jarg2, jdouble jarg3) {
+SWIGEXPORT void JNICALL Java_com_mapzen_tangram_TangramJNI_Properties_1set_1_1SWIG_11(JNIEnv *jenv, jclass jcls, jlong jarg1, jobject jarg1_, jstring jarg2, jdouble jarg3) {
   Tangram::Properties *arg1 = (Tangram::Properties *) 0 ;
   std::string arg2 ;
   double arg3 ;
@@ -492,7 +492,7 @@ SWIGEXPORT void JNICALL Java_com_mapzen_tangram_TangramJNI_Properties_1add_1_1SW
   (&arg2)->assign(arg2_pstr);
   jenv->ReleaseStringUTFChars(jarg2, arg2_pstr);
   arg3 = (double)jarg3;
-  Tangram_Properties_add__SWIG_1(arg1,arg2,arg3);
+  Tangram_Properties_set__SWIG_1(arg1,arg2,arg3);
 }
 
 

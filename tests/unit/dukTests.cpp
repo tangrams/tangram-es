@@ -16,9 +16,9 @@ TEST_CASE( "", "[Duktape][init]") {
 
 TEST_CASE( "Test evalFilterFn with feature", "[Duktape][evalFilterFn]") {
     Feature feature;
-    feature.props.add("a", "A");
-    feature.props.add("b", "B");
-    feature.props.add("n", 42);
+    feature.props.set("a", "A");
+    feature.props.set("b", "B");
+    feature.props.set("n", 42);
 
     StyleContext ctx;
     ctx.setFeature(feature);
@@ -41,7 +41,7 @@ TEST_CASE( "Test evalFilterFn with feature", "[Duktape][evalFilterFn]") {
 
 TEST_CASE( "Test evalFilterFn with feature and globals", "[Duktape][evalFilterFn]") {
     Feature feature;
-    feature.props.add("scalerank", 2);
+    feature.props.set("scalerank", 2);
 
     StyleContext ctx;
     ctx.setFeature(feature);
@@ -96,7 +96,7 @@ TEST_CASE( "Test evalFilterFn with different features", "[Duktape][evalFilterFn]
     REQUIRE(ctx.setFunctions({ R"(function() { return feature.scalerank === 2; })"}));
 
     Feature feat1;
-    feat1.props.add("scalerank", 2);
+    feat1.props.set("scalerank", 2);
 
     ctx.setFeature(feat1);
     REQUIRE(ctx.evalFilter(0) == true);
@@ -132,7 +132,7 @@ TEST_CASE( "Test string global", "[Duktape][setGlobal]") {
 
 TEST_CASE( "Test evalStyleFn - StyleParamKey::order", "[Duktape][evalStyleFn]") {
     Feature feat;
-    feat.props.add("sort_key", 2);
+    feat.props.set("sort_key", 2);
 
     StyleContext ctx;
     ctx.setFeature(feat);
@@ -174,7 +174,7 @@ TEST_CASE( "Test evalStyleFn - StyleParamKey::color", "[Duktape][evalStyleFn]") 
 
 TEST_CASE( "Test evalStyleFn - StyleParamKey::width", "[Duktape][evalStyleFn]") {
     Feature feat;
-    feat.props.add("width", 2.0);
+    feat.props.set("width", 2.0);
 
     StyleContext ctx;
     ctx.setFeature(feat);
@@ -189,7 +189,7 @@ TEST_CASE( "Test evalStyleFn - StyleParamKey::width", "[Duktape][evalStyleFn]") 
 
 TEST_CASE( "Test evalStyleFn - StyleParamKey::extrude", "[Duktape][evalStyleFn]") {
     Feature feat;
-    feat.props.add("width", 2.0);
+    feat.props.set("width", 2.0);
 
     StyleContext ctx;
     ctx.setFeature(feat);
@@ -234,8 +234,8 @@ TEST_CASE( "Test evalFilter - Init filter function from yaml", "[Duktape][evalFi
     ctx.initFunctions(scene);
 
     Feature feat1;
-    feat1.props.add("sort_key", 2);
-    feat1.props.add("name", "test");
+    feat1.props.set("sort_key", 2);
+    feat1.props.set("name", "test");
     ctx.setFeature(feat1);
 
     // NB: feature parameter is ignored for Function evaluation
@@ -248,7 +248,7 @@ TEST_CASE( "Test evalFilter - Init filter function from yaml", "[Duktape][evalFi
 
     // ... Also check that setFeature updates the ctx
     Feature feat2;
-    feat2.props.add("name", "nope");
+    feat2.props.set("name", "nope");
     ctx.setFeature(feat2);
 
     REQUIRE(filter0.eval(feat2, ctx) == false);

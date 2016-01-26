@@ -41,9 +41,9 @@ void GeoJson::extractFeature(const rapidjson::Value& _in, Feature& _out, const t
         const rapidjson::Value& prop = properties[member];
 
         if (prop.IsNumber()) {
-            _out.props.add(member, prop.GetDouble());
+            _out.props.set(member, prop.GetDouble());
         } else if (prop.IsString()) {
-            _out.props.add(member, prop.GetString());
+            _out.props.set(member, prop.GetString());
         }
 
     }

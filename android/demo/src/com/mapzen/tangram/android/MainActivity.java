@@ -64,8 +64,8 @@ public class MainActivity extends Activity {
 
                 if (!lastTappedPoint.equals(zeroCoord)) {
                     Properties props = new Properties();
-                    props.add("type", "line");
-                    props.add("color", colors[(int)(Math.random() * 2.0 + 0.5)] );
+                    props.set("type", "line");
+                    props.set("color", colors[(int)(Math.random() * 2.0 + 0.5)] );
 
                     line.clear();
                     line.add(tapPoint);
@@ -73,7 +73,7 @@ public class MainActivity extends Activity {
                     touchMarkers.addLine(props, line);
 
                     props = new Properties();
-                    props.add("type", "point");
+                    props.set("type", "point");
                     touchMarkers.addPoint(props, lastTappedPoint);
                 }
                 lastTappedPoint.set(tapPoint);

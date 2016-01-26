@@ -42,12 +42,12 @@ struct Properties {
 
     std::string toJson() const;
 
-    void add(std::string key, std::string value);
-    void add(std::string key, double value);
+    void set(std::string key, std::string value);
+    void set(std::string key, double value);
 
     void setSorted(std::vector<Item>&& _items);
 
-    // template <typename... Args> void add(std::string key, Args&&... args) {
+    // template <typename... Args> void set(std::string key, Args&&... args) {
     //     props.emplace_back(std::move(key), Value{std::forward<Args>(args)...});
     //     sort();
     // }
