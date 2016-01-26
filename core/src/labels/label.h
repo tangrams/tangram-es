@@ -52,12 +52,12 @@ public:
     struct Vertex {
         // Constructor for TextStyle vertices
         Vertex(glm::vec2 pos, glm::vec2 uv, uint32_t color, uint32_t stroke)
-            : pos(pos * position_scale), uv(uv),
+            : pos(glm::round(pos * position_scale)), uv(uv),
               color(color), stroke(stroke) {}
 
         // Constructor for PointStyle vertices
         Vertex(glm::vec2 pos, glm::vec2 uv, glm::vec2 extrude, uint32_t color)
-            : pos(pos * position_scale), uv(uv),
+            : pos(glm::round(pos * position_scale)), uv(uv),
               color(color),
               extrude(extrude * extrusion_scale) {}
 
