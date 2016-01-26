@@ -191,9 +191,9 @@ void update(float _dt) {
 void render() {
     clock_t start, end;
 
-    //if (Tangram::getDebugFlag(Tangram::DebugFlags::tangram_infos)) {
+    if (Tangram::getDebugFlag(Tangram::DebugFlags::tangram_infos)) {
         start = clock();
-    //}
+    }
 
     // Set up openGL for new frame
     RenderState::depthWrite(GL_TRUE);

@@ -5,6 +5,8 @@
 #include "gl/renderState.h"
 #include "glm/glm.hpp"
 #include "glm/gtc/matrix_transform.hpp"
+
+#define STB_EASY_FONT_IMPLEMENTATION
 #include "stb_easy_font.h"
 
 namespace Tangram {
