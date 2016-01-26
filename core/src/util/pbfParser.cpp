@@ -14,7 +14,7 @@ void PbfParser::extractGeometry(ParserContext& _ctx, protobuf::message& _geomIn)
     pbfGeomCmd cmd = pbfGeomCmd::moveTo;
     uint32_t cmdRepeat = 0;
 
-    double invTileExtent = (1.0/(double)_ctx.tileExtent);
+    double invTileExtent = (1.0/(_ctx.tileExtent-1.0));
 
     int64_t x = 0;
     int64_t y = 0;
