@@ -25,13 +25,13 @@ struct PolylineVertex {
 
     PolylineVertex(glm::vec3 position, float order, glm::vec2 uv,
                    glm::vec2 extrude, glm::vec2 width, GLuint abgr)
-        : pos(glm::i16vec4{ position * position_scale, order * order_scale }),
+        : pos(glm::i16vec4{ glm::round(position * position_scale), order * order_scale }),
           texcoord(uv * texture_scale),
           extrude(extrude * extrusion_scale, width * extrusion_scale),
           abgr(abgr) {}
 
     PolylineVertex(PolylineVertex v, float order, glm::vec2 width, GLuint abgr)
-        : pos(glm::i16vec4{ v.pos.x, v.pos.y, v.pos.z, order * order_scale}),
+        : pos(glm::i16vec4{ glm::round(glm::vec3(v.pos)), order * order_scale}),
           texcoord(v.texcoord),
           extrude(glm::i16vec4{ v.extrude.x, v.extrude.y, width * extrusion_scale }),
           abgr(abgr) {}

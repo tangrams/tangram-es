@@ -26,7 +26,7 @@ struct PolygonVertex {
 
     PolygonVertex(glm::vec3 position, uint32_t order,
                   glm::vec3 normal, glm::vec2 uv, GLuint abgr)
-        : pos(glm::i16vec4{ position * position_scale, order }),
+        : pos(glm::i16vec4{ glm::round(position * position_scale), order }),
           norm(normal * normal_scale),
           texcoord(uv * texture_scale),
           abgr(abgr) {}
