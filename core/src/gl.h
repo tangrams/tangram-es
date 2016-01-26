@@ -392,6 +392,8 @@ extern "C" {
     GL_APICALL void *GL_APIENTRY glMapBuffer(GLenum target, GLenum access);
     GL_APICALL GLboolean GL_APIENTRY glUnmapBuffer(GLenum target);
 
+    GL_APICALL void GL_APIENTRY glFinish(void);
+
     // VAO
 #ifdef PLATFORM_ANDROID
     typedef void (GL_APIENTRYP PFNGLBINDVERTEXARRAYOESPROC) (GLuint array);

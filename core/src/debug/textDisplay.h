@@ -11,7 +11,8 @@
 
 namespace Tangram {
 
-#define LOG_CAPACITY 10
+#define LOG_CAPACITY        10
+#define VERTEX_BUFFER_SIZE  99999
 
 typedef int FontID;
 
@@ -48,6 +49,7 @@ private:
     std::unique_ptr<ShaderProgram> m_shader;
     std::string m_log[LOG_CAPACITY];
     std::mutex m_mutex;
+    char* m_vertexBuffer;
 };
 
 }

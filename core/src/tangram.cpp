@@ -189,6 +189,11 @@ void update(float _dt) {
 }
 
 void render() {
+    clock_t start, end;
+
+    //if (Tangram::getDebugFlag(Tangram::DebugFlags::tangram_infos)) {
+        start = clock();
+    //}
 
     // Set up openGL for new frame
     RenderState::depthWrite(GL_TRUE);
@@ -219,6 +224,25 @@ void render() {
     m_labels->drawDebug(*m_view);
 
     if (Tangram::getDebugFlag(Tangram::DebugFlags::tangram_infos)) {
+
+        // Force opengl to finish commands (for accurate frame time)
+        glFinish();
+
+        end = clock();
+
+        static int cpt = 0;
+        static float totaltime = 0;
+        static float time = 0.f;
+
+        // Only compute average frame time every 60 frames
+        if (cpt++ > 60) {
+            time = totaltime / float(cpt);
+            totaltime = 0.f;
+            cpt = 0;
+        }
+
+        totaltime += (float(end - start) / CLOCKS_PER_SEC) * 1000.f;
+
         std::vector<std::string> debuginfos;
 
         debuginfos.push_back("zoom:" + std::to_string(m_view->getZoom()));
@@ -228,6 +252,7 @@ void render() {
                 + std::to_string(m_tileManager->getVisibleTiles().size()));
         debuginfos.push_back("tile cache size:"
                 + std::to_string(m_tileManager->getTileCache()->getMemoryUsage() / (1024 * 1024)) + "mb");
+        debuginfos.push_back("avg frame render time:" + std::to_string(time) + "ms");
 
         size_t memused = 0;
         for (const auto& tile : m_tileManager->getVisibleTiles()) {

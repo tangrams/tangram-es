@@ -10,9 +10,12 @@
 namespace Tangram {
 
 TextDisplay::TextDisplay() : m_textDisplayResolution(200.0), m_initialized(false) {
+    m_vertexBuffer = new char[VERTEX_BUFFER_SIZE];
 }
 
-TextDisplay::~TextDisplay() {}
+TextDisplay::~TextDisplay() {
+    delete[] m_vertexBuffer;
+}
 
 void TextDisplay::init() {
     if (m_initialized) {
@@ -72,13 +75,12 @@ void TextDisplay::log(const char* fmt, ...) {
 
 void TextDisplay::draw(const std::string& _text, int _posx, int _posy) {
     static VertexLayout vertexLayout({{"a_position", 2, GL_FLOAT, false, 0}});
-    static char buffer[99999];
     std::vector<glm::vec2> vertices;
     int nquads;
 
-    nquads = stb_easy_font_print(_posx, _posy, _text.c_str(), NULL, buffer, sizeof(buffer));
+    nquads = stb_easy_font_print(_posx, _posy, _text.c_str(), NULL, m_vertexBuffer, VERTEX_BUFFER_SIZE);
 
-    float* data = reinterpret_cast<float*>(buffer);
+    float* data = reinterpret_cast<float*>(m_vertexBuffer);
 
     vertices.reserve(nquads * 6);
     for (int quad = 0, stride = 0; quad < nquads; ++quad, stride += 16) {
@@ -95,7 +97,7 @@ void TextDisplay::draw(const std::string& _text, int _posx, int _posy) {
 }
 
 void TextDisplay::draw(const std::vector<std::string>& _infos) {
-    static GLint boundbuffer = -1;
+    GLint boundbuffer = -1;
 
     RenderState::culling(GL_FALSE);
     RenderState::blending(GL_FALSE);
