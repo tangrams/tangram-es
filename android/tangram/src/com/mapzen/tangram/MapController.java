@@ -35,7 +35,7 @@ public class MapController implements Renderer {
     }
 
     public interface FeatureTouchListener {
-        void onTouch(Properties properties);
+        void onTouch(Properties properties, float positionX, float positionY);
     }
 
     static {
@@ -543,9 +543,9 @@ public class MapController implements Renderer {
 
     // Feature selection
     // =================
-    public void featureSelectionCb(Properties properties) {
+    public void featureSelectionCb(Properties properties, float positionX, float positionY) {
         if (featureTouchListener != null) {
-            featureTouchListener.onTouch(properties);
+            featureTouchListener.onTouch(properties, positionX, positionY);
         }
     }
 

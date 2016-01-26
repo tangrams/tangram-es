@@ -325,8 +325,8 @@ const std::vector<TouchItem>& Labels::getFeaturesAtPoint(const View& _view, floa
 
                 if (isect2d::intersect(label->obb(), obb)) {
                     float distance = glm::length2(label->transform().state.screenPos - touchPoint);
-
-                    m_touchItems.push_back({options.properties, std::sqrt(distance)});
+                    auto labelCenter = label->center();
+                    m_touchItems.push_back({options.properties, {labelCenter.x, labelCenter.y}, std::sqrt(distance)});
                 }
             }
         }

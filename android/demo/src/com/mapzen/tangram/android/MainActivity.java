@@ -114,13 +114,13 @@ public class MainActivity extends Activity {
 
         mapController.setFeatureTouchListener(new MapController.FeatureTouchListener() {
             @Override
-            public void onTouch(Properties properties) {
+            public void onTouch(Properties properties, float positionX, float positionY) {
                 String name = properties.getString("name");
                 if (name.length() == 0) {
                     name = "unnamed...";
                 }
                 Toast.makeText(getApplicationContext(),
-                        "Selected: " + name,
+                        "Selected: " + name + " at: " + positionX + ", " + positionY,
                         Toast.LENGTH_SHORT).show();
             }
         });
