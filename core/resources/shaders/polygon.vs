@@ -34,7 +34,7 @@ varying vec2 v_texcoord;
     varying vec4 v_lighting;
 #endif
 
-#define UNPACK_POSITION(x) (x / 1024.0)
+#define UNPACK_POSITION(x) (x / 8192.0)
 
 vec4 modelPosition() {
     return vec4(UNPACK_POSITION(a_position.xyz), 1.0);
