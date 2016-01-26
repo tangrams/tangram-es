@@ -1,8 +1,6 @@
 #include "shaping.h"
 
 #include "platform.h"
-#include <locale>
-#include <codecvt>
 
 namespace Tangram {
 
@@ -12,20 +10,19 @@ void Shaping::icuBidiError(UBiDi* _bidi, UErrorCode _error) {
 }
 
 bool Shaping::bidiDetection(const std::string& _text, hb_direction_t& _direction) {
-    std::wstring_convert<std::codecvt_utf8<char16_t>, char16_t> conv;
-    std::u16string u16 = conv.from_bytes(_text.c_str());
+    auto text = UnicodeString::fromUTF8(_text);
 
     // Ubidi detection
     UErrorCode error = U_ZERO_ERROR;
     UBiDiLevel dirn = 0;
-    UBiDi* bidi = ubidi_openSized(u16.length(), 0, &error);
+    UBiDi* bidi = ubidi_openSized(text.length(), 0, &error);
 
     if (error != U_ZERO_ERROR) {
         Shaping::icuBidiError(bidi, error);
         return false;
     }
 
-    ubidi_setPara(bidi, reinterpret_cast<const UChar*>(u16.c_str()), u16.length(), dirn, NULL, &error);
+    ubidi_setPara(bidi, text.getBuffer(), text.length(), dirn, NULL, &error);
 
     if (error != U_ZERO_ERROR) {
         Shaping::icuBidiError(bidi, error);
@@ -66,7 +63,8 @@ hb_direction_t Shaping::icuDirectionToHB(UBiDiDirection _direction) {
 }
 
 bool Shaping::scriptDetection(const std::string& _text, hb_script_t& _script) {
-    icu_52::UnicodeString text(_text.c_str());
+    auto text = UnicodeString::fromUTF8(_text);
+
     hb_unicode_funcs_t* unicodeFuncs =  hb_unicode_funcs_get_default();
     bool invalid = true;
 
@@ -91,4 +89,3 @@ bool Shaping::scriptDetection(const std::string& _text, hb_script_t& _script) {
 }
 
 }
-
