@@ -110,7 +110,8 @@ void PolygonStyle::buildPolygon(const Polygon& _polygon, const DrawRule& _rule,
         Builders::buildPolygonExtrusion(_polygon, minHeight, height, builder);
         mesh.addVertices(std::move(vertices), std::move(builder.indices));
 
-        builder.clear();
+        // TODO add builder.clear() ?;
+        builder.numVertices = 0;
     }
 
     Builders::buildPolygon(_polygon, height, builder);

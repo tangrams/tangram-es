@@ -201,9 +201,6 @@ void PolylineStyle::buildMesh(const Line& _line, Parameters& _params, VboMesh& _
 
     std::vector<PolylineVertex> vertices;
 
-    std::vector<uint16_t> fillIndices;
-    std::vector<PolylineVertex> fillVertices;
-
     GLuint color = _params.fill.color;
     float width = _params.fill.width;
     float slope = _params.fill.slope;
@@ -223,10 +220,6 @@ void PolylineStyle::buildMesh(const Line& _line, Parameters& _params, VboMesh& _
     };
 
     Builders::buildPolyLine(_line, builder);
-    vertices.swap(fillVertices);
-    builder.indices.swap(fillIndices);
-    // clear buider vertices for a new build call
-    builder.clear();
 
     if (_params.outlineOn && (_params.outline.width > 0.f || _params.outline.slope > 0.f)) {
 
@@ -243,19 +236,21 @@ void PolylineStyle::buildMesh(const Line& _line, Parameters& _params, VboMesh& _
             Builders::buildPolyLine(_line, builder);
         } else {
             // re-use indices and positions from original line
+            size_t oldSize = builder.indices.size();
+            size_t offset = vertices.size();
+            builder.indices.reserve(2 * oldSize);
 
-            for(size_t i = 0; i < fillIndices.size(); i++) {
-                builder.indices.push_back(fillIndices[i]);
+            for(size_t i = 0; i < oldSize; i++) {
+                builder.indices.push_back(offset + builder.indices[i]);
             }
-            for (size_t i = 0; i < fillVertices.size(); i++) {
-                vertices.push_back({ fillVertices[i], order, { width, slope }, color });
+            for (size_t i = 0; i < offset; i++) {
+                vertices.push_back({ vertices[i], order, { width, slope }, color });
             }
         }
     }
 
     auto& mesh = static_cast<Mesh&>(_mesh);
     mesh.addVertices(std::move(vertices), std::move(builder.indices));
-    mesh.addVertices(std::move(fillVertices), std::move(fillIndices));
 }
 
 }
