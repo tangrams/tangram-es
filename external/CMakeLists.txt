@@ -133,3 +133,9 @@ if((BENCHMARK OR USE_EXTERNAL_LIBS) AND (PLATFORM_LINUX OR PLATFORM_OSX))
       FILE ${EXPORTS_DIR}/benchmark.cmake)
   endif()
 endif()
+
+## Harfbuzz - ICU-Common - UCDN - Freetype2 ##
+##############################################
+set(HARFBUZZ_BUILD_ICU ON CACHE BOOL "Enable building of ICU")
+set(HARFBUZZ_BUILD_UCDN ON CACHE BOOL "Enable building of UCDN")
+add_subdirectory(${CMAKE_CURRENT_SOURCE_DIR}/harfbuzz-icu-freetype)

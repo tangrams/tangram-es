@@ -1,4 +1,10 @@
 #include "fontContext.h"
+
+#include "shaping.h"
+#include "hb-ft.h"
+
+#define FONS_USE_HARFBUZZ
+#define FONS_USE_FREETYPE
 #define FONTSTASH_IMPLEMENTATION
 #include "fontstash.h"
 
@@ -74,8 +80,7 @@ FontID FontContext::addFont(const std::string& _family, const std::string& _weig
         if (!(data = bytesFromFile(bundledFontPath.c_str(), PathType::resource, &dataSize)) &&
             !(data = bytesFromFile(bundledFontPath.c_str(), PathType::internal, &dataSize))) {
             const std::string sysFontPath = systemFontPath(_family, _weight, _style);
-            if ( !(data = bytesFromFile(sysFontPath.c_str(), PathType::absolute, &dataSize)) ) {
-
+            if (!(data = bytesFromFile(sysFontPath.c_str(), PathType::absolute, &dataSize))) {
                 LOGE("Could not load font file %s", fontKey.c_str());
                 m_fonts.emplace(std::move(fontKey), INVALID_FONT);
                 goto fallback;
@@ -126,27 +131,51 @@ FontID FontContext::getFontID(const std::string& _key) {
     }
 }
 
-std::vector<FONSquad>& FontContext::rasterize(const std::string& _text, FontID _fontID,
-                                              float _fontSize, float _sdf) {
-
+std::vector<FONSquad>& FontContext::rasterize(const std::string& _text,
+    FontID _fontID,
+    float _fontSize,
+    float _sdf)
+{
     m_quadBuffer.clear();
+
+    FONSdirection direction;
+    FONSscript script;
+    FONSlanguage language = hb_language_get_default();
+
+    if (!Shaping::bidiDetection(_text, direction) || !Shaping::scriptDetection(_text, script)) {
+        return m_quadBuffer;
+    }
+
+    char tag[5] = {0};
+    hb_tag_to_string(hb_script_to_iso15924_tag(script), tag);
+    LOGW("script %s rtl:%d - %s", tag, direction == HB_DIRECTION_RTL, _text.c_str());
+
+    fonsSetShaping(m_fsContext, script, direction, language);
 
     fonsSetSize(m_fsContext, _fontSize);
     fonsSetFont(m_fsContext, _fontID);
 
-    if (_sdf > 0){
-        fonsSetBlur(m_fsContext, _sdf);
-        fonsSetBlurType(m_fsContext, FONS_EFFECT_DISTANCE_FIELD);
-    } else {
-        fonsSetBlurType(m_fsContext, FONS_EFFECT_NONE);
-    }
+    if (fonsTextDrawable(m_fsContext, _text.c_str(), _text.c_str() + _text.length(), 1)) {
+        if (_sdf > 0) {
+            fonsSetBlur(m_fsContext, _sdf);
+            fonsSetBlurType(m_fsContext, FONS_EFFECT_DISTANCE_FIELD);
+        } else {
+            fonsSetBlurType(m_fsContext, FONS_EFFECT_NONE);
+        }
 
-    float advance = fonsDrawText(m_fsContext, 0, 0,
-                                 _text.c_str(), _text.c_str() + _text.length(),
-                                 0);
-    if (advance < 0) {
-        m_quadBuffer.clear();
-        return m_quadBuffer;
+        float advance = fonsDrawText(m_fsContext, 0, 0, _text.c_str(), _text.c_str() + _text.length(), 1);
+        if (advance < 0) {
+            m_quadBuffer.clear();
+            return m_quadBuffer;
+        }
+    } else {
+        // TODO: font stack fallback:
+        // if (!fonsTextDrawable)
+        //     while fontstack has font
+        //         if (!fonsTextDrawable)
+        //             fonsSetFont(fontstack.pop)
+        //             if (fonsTextDrawable) break
+        LOGW("Can't draw string %s -- unicode glyph not available", _text.c_str());
     }
 
     return m_quadBuffer;
@@ -203,6 +232,7 @@ void FontContext::fontstashError(void* _uptr, int _error, int _val) {
     case FONS_SCRATCH_FULL:
     case FONS_STATES_OVERFLOW:
     case FONS_STATES_UNDERFLOW:
+    case FONS_HB_SCRIPT_DETECTION_FAILED:
     default:
         LOGE("Unexpected error in Fontstash %d:%d!", _error, _val);
         break;

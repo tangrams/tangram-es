@@ -24,7 +24,7 @@ matrix:
             components: [ 'build-tools-21.1.2', 'android-22' ]
 
 before_install:
-    - git submodule init && git submodule update
+    - git submodule update --init --recursive
     - source ./travis/before_install.sh
 
 install: ulimit -c
