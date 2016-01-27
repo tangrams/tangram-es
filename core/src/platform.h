@@ -31,7 +31,7 @@ enum class PathType : char {
     resource, // resolved relative to the resource root
 };
 
-/* Set a path to act as the resource root. All other resource paths will be resolved relative to this root. 
+/* Set a path to act as the resource root. All other resource paths will be resolved relative to this root.
  * The string returned is the path to the given file relative to the new root resource directory. */
 std::string setResourceRoot(const char* _path);
 
@@ -84,7 +84,7 @@ void initGLExtensions();
 
 #if LOG_LEVEL >= 2
 #define LOGW(fmt, ...) do { logMsg("WARNING %s:%d: " fmt "\n", __FILENAME__, __LINE__, ## __VA_ARGS__); } while(0)
-#else 
+#else
 #define LOGW(fmt, ...)
 #endif
 
@@ -99,3 +99,5 @@ void initGLExtensions();
 #else
 #define LOG(fmt, ...)
 #endif
+
+#define LOGS(fmt, ...) do { TextDisplay::Instance().log(fmt, ## __VA_ARGS__); } while(0)

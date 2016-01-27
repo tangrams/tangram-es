@@ -146,6 +146,7 @@ extern "C" {
     void glVertexAttrib4ubv (GLuint index, const GLubyte *v){}
     void glVertexAttrib4uiv (GLuint index, const GLuint *v){}
     void glVertexAttrib4usv (GLuint index, const GLushort *v){}
+    void glFinish(void){}
 
     // mapbuffer
     void* glMapBuffer(GLenum target, GLenum access){ return nullptr; }

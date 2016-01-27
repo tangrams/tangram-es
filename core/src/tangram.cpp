@@ -14,12 +14,14 @@
 #include "gl/renderState.h"
 #include "gl/primitives.h"
 #include "util/inputHandler.h"
+#include "tile/tileCache.h"
 #include "view/view.h"
 #include "data/clientGeoJsonSource.h"
 #include "text/fontContext.h"
 #include "gl.h"
 #include "gl/extension.h"
 #include "util/ease.h"
+#include "debug/textDisplay.h"
 #include <memory>
 #include <array>
 #include <cmath>
@@ -121,6 +123,7 @@ void loadScene(const char* _scenePath, bool _setPositionFromScene) {
 
 void resize(int _newWidth, int _newHeight) {
 
+    LOGS("resize: %d x %d", _newWidth, _newHeight);
     LOG("resize: %d x %d", _newWidth, _newHeight);
 
     glViewport(0, 0, _newWidth, _newHeight);
@@ -187,6 +190,11 @@ void update(float _dt) {
 }
 
 void render() {
+    clock_t start, end;
+
+    if (Tangram::getDebugFlag(Tangram::DebugFlags::tangram_infos)) {
+        start = clock();
+    }
 
     // Set up openGL for new frame
     RenderState::depthWrite(GL_TRUE);
@@ -215,6 +223,48 @@ void render() {
     }
 
     m_labels->drawDebug(*m_view);
+
+    if (Tangram::getDebugFlag(Tangram::DebugFlags::tangram_infos)) {
+
+        // Force opengl to finish commands (for accurate frame time)
+        glFinish();
+
+        end = clock();
+
+        static int cpt = 0;
+        static float totaltime = 0;
+        static float time = 0.f;
+
+        // Only compute average frame time every 60 frames
+        if (cpt++ > 60) {
+            time = totaltime / float(cpt);
+            totaltime = 0.f;
+            cpt = 0;
+        }
+
+        totaltime += (float(end - start) / CLOCKS_PER_SEC) * 1000.f;
+
+        std::vector<std::string> debuginfos;
+
+        debuginfos.push_back("zoom:" + std::to_string(m_view->getZoom()));
+        debuginfos.push_back("pos:" + std::to_string(m_view->getPosition().x) + "/"
+                + std::to_string(m_view->getPosition().y));
+        debuginfos.push_back("visible tiles:"
+                + std::to_string(m_tileManager->getVisibleTiles().size()));
+        debuginfos.push_back("tile cache size:"
+                + std::to_string(m_tileManager->getTileCache()->getMemoryUsage() / 1024) + "kb");
+        debuginfos.push_back("avg frame render time:" + std::to_string(time) + "ms");
+
+        size_t memused = 0;
+        for (const auto& tile : m_tileManager->getVisibleTiles()) {
+            memused += tile->getMemoryUsage();
+        }
+
+        debuginfos.push_back("tile size:" + std::to_string(memused / 1024) + "kb");
+        debuginfos.push_back("number of styles:"+ std::to_string(m_scene->styles().size()));
+
+        TextDisplay::Instance().draw(debuginfos);
+    }
 
     while (Error::hadGlError("Tangram::render()")) {}
 }

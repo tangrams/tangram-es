@@ -13,7 +13,8 @@ public enum DebugFlags {
     PROXY_COLORS,
     TILE_BOUNDS,
     TILE_INFOS,
-    LABELS;
+    LABELS,
+    TANGRAM_INFOS;
 
     public final int swigValue() {
         return swigValue;
