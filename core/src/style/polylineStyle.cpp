@@ -265,7 +265,7 @@ bool Builder::evalWidth(const StyleParam& _styleParam, float& width, float& slop
         return true;
     }
 
-    LOGD("Invalid type for Width '%d'", _styleParam.value.which());
+    //LOGD("Invalid type for Width '%d'", _styleParam.value.which());
     return false;
 }
 
