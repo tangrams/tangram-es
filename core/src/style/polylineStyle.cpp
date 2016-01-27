@@ -225,6 +225,8 @@ void PolylineStyle::buildMesh(const Line& _line, Parameters& _params, VboMesh& _
     Builders::buildPolyLine(_line, builder);
     vertices.swap(fillVertices);
     builder.indices.swap(fillIndices);
+    // clear buider vertices for a new build call
+    builder.clear();
 
     if (_params.outlineOn && (_params.outline.width > 0.f || _params.outline.slope > 0.f)) {
 
