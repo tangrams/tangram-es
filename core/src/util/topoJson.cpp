@@ -96,7 +96,7 @@ Line getLine(const JsonValue& _arcs, const Topology& _topology) {
             index = -1 - index;
         }
 
-        if (index < 0 || index >= _topology.arcs.size()) {
+        if (index < 0 || (std::vector<Line>::size_type)index >= _topology.arcs.size()) {
             continue;
         }
 
