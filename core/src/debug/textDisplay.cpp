@@ -67,7 +67,7 @@ void TextDisplay::log(const char* fmt, ...) {
     {
         std::lock_guard<std::mutex> lock(m_mutex);
 
-        for (int i = 1; i < LOG_CAPACITY; ++i) {
+        for (int i = LOG_CAPACITY - 1; i >= 1; i--) {
             m_log[i] = m_log[i - 1];
         }
 

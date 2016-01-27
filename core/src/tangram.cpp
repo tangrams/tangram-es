@@ -124,6 +124,7 @@ void loadScene(const char* _scenePath, bool _setPositionFromScene) {
 void resize(int _newWidth, int _newHeight) {
 
     LOGS("resize: %d x %d", _newWidth, _newHeight);
+    LOG("resize: %d x %d", _newWidth, _newHeight);
 
     glViewport(0, 0, _newWidth, _newHeight);
 
@@ -251,7 +252,7 @@ void render() {
         debuginfos.push_back("visible tiles:"
                 + std::to_string(m_tileManager->getVisibleTiles().size()));
         debuginfos.push_back("tile cache size:"
-                + std::to_string(m_tileManager->getTileCache()->getMemoryUsage() / (1024 * 1024)) + "mb");
+                + std::to_string(m_tileManager->getTileCache()->getMemoryUsage() / 1024) + "kb");
         debuginfos.push_back("avg frame render time:" + std::to_string(time) + "ms");
 
         size_t memused = 0;
@@ -259,7 +260,7 @@ void render() {
             memused += tile->getMemoryUsage();
         }
 
-        debuginfos.push_back("tile size:" + std::to_string(memused / (1024 * 1024)) + "mb");
+        debuginfos.push_back("tile size:" + std::to_string(memused / 1024) + "kb");
         debuginfos.push_back("number of styles:"+ std::to_string(m_scene->styles().size()));
 
         TextDisplay::Instance().draw(debuginfos);
