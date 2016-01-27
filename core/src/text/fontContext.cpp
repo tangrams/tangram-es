@@ -131,22 +131,24 @@ std::vector<FONSquad>& FontContext::rasterize(const std::string& _text, FontID _
 
     m_quadBuffer.clear();
 
-    fonsSetSize(m_fsContext, _fontSize);
-    fonsSetFont(m_fsContext, _fontID);
+    if (fonsTextDrawable(m_fsContext, _text.c_str(), _text.c_str() + _text.length(), 1)) {
+        fonsSetSize(m_fsContext, _fontSize);
+        fonsSetFont(m_fsContext, _fontID);
 
-    if (_sdf > 0){
-        fonsSetBlur(m_fsContext, _sdf);
-        fonsSetBlurType(m_fsContext, FONS_EFFECT_DISTANCE_FIELD);
-    } else {
-        fonsSetBlurType(m_fsContext, FONS_EFFECT_NONE);
-    }
+        if (_sdf > 0){
+            fonsSetBlur(m_fsContext, _sdf);
+            fonsSetBlurType(m_fsContext, FONS_EFFECT_DISTANCE_FIELD);
+        } else {
+            fonsSetBlurType(m_fsContext, FONS_EFFECT_NONE);
+        }
 
-    float advance = fonsDrawText(m_fsContext, 0, 0,
-                                 _text.c_str(), _text.c_str() + _text.length(),
-                                 0);
-    if (advance < 0) {
-        m_quadBuffer.clear();
-        return m_quadBuffer;
+        float advance = fonsDrawText(m_fsContext, 0, 0,
+                _text.c_str(), _text.c_str() + _text.length(),
+                0);
+        if (advance < 0) {
+            m_quadBuffer.clear();
+            return m_quadBuffer;
+        }
     }
 
     return m_quadBuffer;
