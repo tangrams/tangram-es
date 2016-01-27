@@ -174,19 +174,20 @@ void DrawRuleMergeSet::apply(const Feature& _feature, const Scene& _scene, const
 
             if (param->function >= 0) {
 
+                evaluated[i] = *param;
+
                 if (!_ctx.evalStyle(param->function, param->key, evaluated[i].value) &&
                     StyleParam::isRequired(param->key)) {
                     valid = false;
                     break;
                 }
 
-                evaluated[i].function = param->function;
                 rule.params[i] = &evaluated[i];
 
             }
             if (param->stops) {
 
-                evaluated[i].stops = param->stops;
+                evaluated[i] = *param;
 
                 if (StyleParam::isColor(param->key)) {
                     evaluated[i].value = param->stops->evalColor(_ctx.getGlobalZoom());
