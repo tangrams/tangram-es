@@ -149,6 +149,8 @@ std::vector<FONSquad>& FontContext::rasterize(const std::string& _text, FontID _
             m_quadBuffer.clear();
             return m_quadBuffer;
         }
+    } else {
+        LOGW("Can't draw text %s", _text.c_str());
     }
 
     return m_quadBuffer;
