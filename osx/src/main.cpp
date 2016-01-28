@@ -13,6 +13,7 @@ std::string sceneFile = "scene.yaml";
 GLFWwindow* main_window = nullptr;
 int width = 800;
 int height = 600;
+bool recreate_context;
 
 // Input handling
 // ==============
@@ -172,7 +173,7 @@ void key_callback(GLFWwindow* window, int key, int scancode, int action, int mod
                 Tangram::toggleDebugFlag(Tangram::DebugFlags::tangram_infos);
                 break;
             case GLFW_KEY_BACKSPACE:
-                init_main_window(); // Simulate GL context loss
+                recreate_context = true;
                 break;
             case GLFW_KEY_R:
                 Tangram::loadScene(sceneFile.c_str());
@@ -293,6 +294,8 @@ int main(int argc, char* argv[]) {
 
     double lastTime = glfwGetTime();
 
+    recreate_context = false;
+
     // Loop until the user closes the window
     while (keepRunning && !glfwWindowShouldClose(main_window)) {
 
@@ -313,6 +316,14 @@ int main(int argc, char* argv[]) {
         } else {
             glfwWaitEvents();
         }
+
+        if (recreate_context) {
+            logMsg("recreate context\n");
+             // Simulate GL context loss
+            init_main_window();
+            recreate_context = false;
+        }
+
     }
 
     glfwTerminate();
