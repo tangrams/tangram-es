@@ -23,7 +23,6 @@ constexpr float order_scale = 2.0f;
 namespace Tangram {
 
 struct PolylineVertex {
-
     PolylineVertex(glm::vec2 position, glm::vec2 extrude, glm::vec2 uv,
                    glm::i16vec2 width, glm::i16vec2 height, GLuint abgr)
 
@@ -43,41 +42,6 @@ struct PolylineVertex {
     glm::i16vec4 extrude;
     GLuint abgr;
 };
-
-
-struct Mesh : public VboMesh {
-
-    Mesh(std::shared_ptr<VertexLayout> _vertexLayout, GLenum _drawMode)
-        : VboMesh(_vertexLayout, _drawMode) {}
-
-    void compile(const std::vector<std::pair<uint32_t, uint32_t>>& _offsets,
-                 const std::vector<PolylineVertex>& _vertices,
-                 const std::vector<uint16_t>& _indices) {
-
-        m_vertexOffsets = _offsets;
-
-        for (auto& p : m_vertexOffsets) {
-            m_nVertices += p.second;
-            m_nIndices += p.first;
-        }
-
-        int stride = m_vertexLayout->getStride();
-        m_glVertexData = new GLbyte[m_nVertices * stride];
-        std::memcpy(m_glVertexData,
-                    reinterpret_cast<const GLbyte*>(_vertices.data()),
-                    m_nVertices * stride);
-
-        m_glIndexData = new GLushort[m_nIndices];
-        std::memcpy(m_glIndexData,
-                    reinterpret_cast<const GLbyte*>(_indices.data()),
-                    m_nIndices * sizeof(GLushort));
-
-        m_isCompiled = true;
-    }
-
-    void compileVertexBuffer() override {}
-};
-
 
 PolylineStyle::PolylineStyle(std::string _name, Blending _blendMode, GLenum _drawMode)
     : Style(_name, _blendMode, _drawMode) {
@@ -102,7 +66,103 @@ void PolylineStyle::constructShaderProgram() {
     m_shaderProgram->setSourceStrings(fragShaderSrcStr, vertShaderSrcStr);
 }
 
-namespace {
+namespace { // Builder
+
+struct MeshData {
+    std::vector<std::pair<uint32_t, uint32_t>> offsets;
+    std::vector<PolylineVertex> vertices;
+    std::vector<uint16_t> indices;
+
+    // Temporary values for the currently build mesh
+    glm::i16vec2 height;
+    glm::i16vec2 width;
+    GLuint color;
+    void set(uint32_t _color, float _width, float _dWdZ, float _height, float _order) {
+        height = { glm::round(_height * position_scale), _order * order_scale};
+        width = glm::vec2{_width, _dWdZ} * extrusion_scale;
+        color =_color;
+    }
+
+    void clear() {
+        offsets.clear();
+        indices.clear();
+        vertices.clear();
+    }
+};
+
+struct Mesh : public VboMesh {
+
+    Mesh(std::shared_ptr<VertexLayout> _vertexLayout, GLenum _drawMode)
+        : VboMesh(_vertexLayout, _drawMode) {}
+
+    // Add indices by collecting them into batches to draw as much as
+    // possible in one draw call.  The indices must be shifted by the
+    // number of vertices that are present in the current batch.
+    GLushort* compileIndices(GLushort* dst, const MeshData& data) {
+        m_vertexOffsets.emplace_back(0, 0);
+        size_t curVertices = 0;
+        size_t src = 0;
+
+        for (auto& p : data.offsets) {
+            size_t nIndices = p.first;
+            size_t nVertices = p.second;
+
+            if (curVertices + nVertices > MAX_INDEX_VALUE) {
+                m_vertexOffsets.emplace_back(0, 0);
+                curVertices = 0;
+            }
+            for (size_t i = 0; i < nIndices; i++, dst++) {
+                *dst = data.indices[src++] + curVertices;
+            }
+            auto& offset = m_vertexOffsets.back();
+            offset.first += nIndices;
+            offset.second += nVertices;
+
+            curVertices += nVertices;
+        }
+        return dst;
+    }
+
+    // Use custom 'compile' to directly transfer buffers from MeshData
+    void compile(const MeshData& _fill, const MeshData& _outline) {
+        m_isCompiled = true;
+
+        size_t nFillVertices = 0;
+        size_t nFillIndices = 0;
+        for (auto& p : _fill.offsets) {
+            nFillVertices += p.second;
+            nFillIndices += p.first;
+        }
+        size_t nOutlineVertices = 0;
+        size_t nOutlineIndices = 0;
+        for (auto& p : _outline.offsets) {
+            nOutlineVertices += p.second;
+            nOutlineIndices += p.first;
+        }
+        m_nVertices = nFillVertices + nOutlineVertices;
+        m_nIndices = nFillIndices + nOutlineIndices;
+
+        int stride = m_vertexLayout->getStride();
+        m_glVertexData = new GLbyte[m_nVertices * stride];
+        m_glIndexData = new GLushort[m_nIndices];
+
+        std::memcpy(m_glVertexData,
+                    reinterpret_cast<const GLbyte*>(_outline.vertices.data()),
+                    nOutlineVertices * stride);
+
+        std::memcpy(m_glVertexData + (nOutlineVertices * stride),
+                    reinterpret_cast<const GLbyte*>(_fill.vertices.data()),
+                    nFillVertices * stride);
+
+        GLushort* dst = m_glIndexData;
+        dst = compileIndices(dst, _outline);
+        dst = compileIndices(dst, _fill);
+
+        assert(dst == m_glIndexData + m_nIndices);
+    }
+
+    void compileVertexBuffer() override {}
+};
 
 struct Parameters {
 
@@ -123,16 +183,13 @@ struct Parameters {
 struct Builder : public StyleBuilder {
 
     const PolylineStyle& m_style;
+    PolyLineBuilder m_builder;
+    MeshData m_fill, m_outline;
 
     std::unique_ptr<Mesh> m_mesh;
     float m_tileUnitsPerMeter;
     float m_tileSize;
     int m_zoom;
-
-    // Used in draw for legth and offsets: sumIndices, sumVertices
-    std::vector<std::pair<uint32_t, uint32_t>> m_vertexOffsets;
-    std::vector<PolylineVertex> m_vertices;
-    std::vector<uint16_t> m_indices;
 
     void begin(const Tile& _tile) override;
 
@@ -146,7 +203,7 @@ struct Builder : public StyleBuilder {
 
     void addMesh(const Line& _line, const Parameters& _params);
 
-    void buildLine(const Line& _line, PolyLineBuilder& _builder);
+    void buildLine(const Line& _line, MeshData& _mesh);
 
     Parameters parseRule(const DrawRule& _rule, const Properties& _props);
 
@@ -159,16 +216,15 @@ void Builder::begin(const Tile& _tile) {
     m_zoom = _tile.getID().z;
     m_tileSize = _tile.getProjection()->TileSize();
     m_mesh = std::make_unique<Mesh>(m_style.vertexLayout(), m_style.drawMode());
-
-    m_vertexOffsets.clear();
-    m_vertexOffsets.emplace_back(0,0);
-    m_indices.clear();
-    m_vertices.clear();
+    m_fill.clear();
+    m_outline.clear();
 }
 
 std::unique_ptr<VboMesh> Builder::build() {
     auto mesh = std::make_unique<Mesh>(m_style.vertexLayout(), m_style.drawMode());
-    mesh->compile(m_vertexOffsets, m_vertices, m_indices);
+    mesh->compile(m_fill, m_outline);
+    m_fill.clear();
+    m_outline.clear();
     return std::move(mesh);
 }
 
@@ -225,6 +281,11 @@ auto Builder::parseRule(const DrawRule& _rule, const Properties& _props) -> Para
         p.outline.slope += p.fill.slope;
 
         p.outlineOn = true;
+    }
+
+    if (Tangram::getDebugFlag(Tangram::DebugFlags::proxy_colors)) {
+        p.fill.color <<= (m_zoom % 6);
+        p.outline.color <<= (m_zoom % 6);
     }
 
     // FIXME: just to make hidden lines visible
@@ -303,112 +364,73 @@ void Builder::addFeature(const Feature& _feat, const DrawRule& _rule) {
     }
 }
 
-void Builder::buildLine(const Line& _line, PolyLineBuilder& _builder) {
+void Builder::buildLine(const Line& _line, MeshData& _mesh) {
 
-    Builders::buildPolyLine(_line, _builder);
-
-    auto sumVertices = m_vertexOffsets.back().second;
-    if (sumVertices + _builder.numVertices > MAX_INDEX_VALUE) {
-        m_vertexOffsets.emplace_back(0, 0);
-        // Indices must reference vertices starting at 0
-        sumVertices = 0;
-    }
-    for (uint16_t idx : _builder.indices) {
-        m_indices.push_back(idx + sumVertices);
-    }
-    auto& vertexOffset = m_vertexOffsets.back();
-    vertexOffset.first += _builder.indices.size();
-    vertexOffset.second += _builder.numVertices;
-
-    _builder.clear();
-}
-
-void Builder::addMesh(const Line& _line, const Parameters& params) {
-
-    GLuint abgr = params.fill.color;
-
-    if (Tangram::getDebugFlag(Tangram::DebugFlags::proxy_colors)) {
-        abgr <<= (m_zoom % 6);
-    }
-
-    // Keep current vertex buffer position when the
-    // same vertices are used for the outline.
-    size_t startIndex = m_indices.size();
-    size_t startVertex = m_vertices.size();
-
-    float order = params.fill.order;
-    float width = params.fill.width;
-    float slope = params.fill.slope;
-
-    struct {
-        glm::i16vec2 height;
-        glm::i16vec2 width;
-        GLuint color;
-        void set(uint32_t _color, float _width, float _dWdZ, float _height, float _order) {
-            height = { glm::round(_height * position_scale), _order * order_scale};
-            width = glm::vec2{_width, _dWdZ} * extrusion_scale;
-            color =_color;
-        }
-    } options;
-
-    PolyLineBuilder builder = {
-        [this, &p = options](const glm::vec3& coord, const glm::vec2& normal, const glm::vec2& uv) {
-            m_vertices.push_back({{coord.x,coord.y}, normal, uv, p.width, p.height, p.color});
-        },
-        [&](size_t sizeHint) {}
+    m_builder.addVertex = [&_mesh](const glm::vec3& coord,
+                                   const glm::vec2& normal,
+                                   const glm::vec2& uv) {
+        _mesh.vertices.push_back({{ coord.x,coord.y }, normal, uv,
+                              _mesh.width, _mesh.height, _mesh.color});
     };
 
-    builder.cap = params.fill.cap;
-    builder.join = params.fill.join;
-    builder.keepTileEdges = params.keepTileEdges;
-    options.set(abgr, width, slope, params.height, order);
+    Builders::buildPolyLine(_line, m_builder);
 
-    buildLine(_line, builder);
+    _mesh.indices.insert(_mesh.indices.end(),
+                         m_builder.indices.begin(),
+                         m_builder.indices.end());
 
-    if (!params.outlineOn) { return; }
+    _mesh.offsets.emplace_back(m_builder.indices.size(),
+                               m_builder.numVertices);
 
-    width = params.outline.width;
-    slope = params.outline.slope;
-    abgr = params.outline.color;
-    order = std::min(params.outline.order, params.fill.order) - .5f;
+    m_builder.clear();
+}
 
-    if (params.outline.cap != params.fill.cap || params.outline.join != params.fill.join) {
+void Builder::addMesh(const Line& _line, const Parameters& _params) {
+
+    m_builder.cap = _params.fill.cap;
+    m_builder.join = _params.fill.join;
+    m_builder.keepTileEdges = _params.keepTileEdges;
+    m_fill.set(_params.fill.color,
+               _params.fill.width,
+               _params.fill.slope,
+               _params.height,
+               _params.fill.order);
+
+    buildLine(_line, m_fill);
+
+    if (!_params.outlineOn) { return; }
+
+    float order = std::min(_params.outline.order, _params.fill.order) - .5f;
+
+    if (_params.outline.cap != _params.fill.cap ||
+        _params.outline.join != _params.fill.join) {
         // need to re-triangulate with different cap and/or join
-        builder.cap = params.outline.cap;
-        builder.join = params.outline.join;
-        options.set(abgr, width, slope, params.height, order);
+        m_builder.cap = _params.outline.cap;
+        m_builder.join = _params.outline.join;
+        m_outline.set(_params.outline.color,
+                      _params.outline.width,
+                      _params.outline.slope,
+                      _params.height, order);
 
-        buildLine(_line, builder);
+        buildLine(_line, m_outline);
 
     } else {
-        // re-use indices from original line
+        // reuse indices from original line, overriding color and width
+        size_t nIndices = m_fill.offsets.back().first;
+        auto indicesIt = m_fill.indices.end() - nIndices;
 
-        // TODO: This is a bit too much shuffling with offsets
-        size_t numIndices = m_indices.size() - startIndex;
-        size_t numVertices = m_vertices.size() - startVertex;
-        int shift = 0;
+        m_outline.indices.insert(m_outline.indices.begin(),
+                                 indicesIt,
+                                 m_fill.indices.end());
 
-        auto curVertices = m_vertexOffsets.back().second;
-        if (curVertices + numVertices > MAX_INDEX_VALUE) {
-            m_vertexOffsets.emplace_back(0, 0);
-            // Indices must reference vertices starting at 0
-            shift = - (m_vertices.size() - numVertices);
-        } else {
-            // Shift indices to start at the copied vertices
-            shift = numVertices;
-        }
+        size_t nVertices = m_fill.offsets.back().second;
+        auto vertexIt = m_fill.vertices.end() - nVertices;
 
-        for (size_t i = 0; i < numIndices; i++) {
-            m_indices.push_back(m_indices[startIndex + i] + shift);
-        }
+        glm::vec2 width = {_params.outline.width, _params.outline.slope };
+        GLuint abgr = _params.outline.color;
 
-        auto& vertexOffset = m_vertexOffsets.back();
-        vertexOffset.first += numIndices;
-        vertexOffset.second += numVertices;
-
-        for (size_t i = 0; i < numVertices; i++) {
-            const auto& v = m_vertices[startVertex + i];
-            m_vertices.push_back({ v, order, {width, slope}, abgr });
+        for (; vertexIt != m_fill.vertices.end(); ++vertexIt) {
+            m_outline.vertices.emplace_back(*vertexIt, order, width, abgr);
         }
     }
 }

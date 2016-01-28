@@ -77,7 +77,11 @@ struct PolyLineBuilder {
     JoinTypes join;
     bool keepTileEdges;
 
-    PolyLineBuilder(PolyLineVertexFn _addVertex, SizeHintFn _sizeHint, CapTypes _cap = CapTypes::butt, JoinTypes _join = JoinTypes::bevel, bool _kte = true)
+    PolyLineBuilder(PolyLineVertexFn _addVertex = [](auto&,auto&,auto&){},
+                    SizeHintFn _sizeHint = [](auto){},
+                    CapTypes _cap = CapTypes::butt,
+                    JoinTypes _join = JoinTypes::bevel,
+                    bool _kte = true)
         : addVertex(_addVertex), sizeHint(_sizeHint), cap(_cap), join(_join), keepTileEdges(_kte) {}
 
     void clear() {
