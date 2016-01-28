@@ -509,6 +509,7 @@ void toggleDebugFlag(DebugFlags _flag) {
      || _flag == DebugFlags::tile_bounds
      || _flag == DebugFlags::tile_infos) {
         if (m_tileManager) {
+            std::lock_guard<std::mutex> lock(m_tilesMutex);
             m_tileManager->clearTileSets();
         }
     }
