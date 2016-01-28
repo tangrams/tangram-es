@@ -8,7 +8,6 @@
 #include <sys/types.h>
 #include <sys/stat.h>
 #include <cstdlib>
-
 #include <signal.h>
 
 
@@ -267,7 +266,16 @@ int main(int argc, char* argv[]) {
 
     static bool keepRunning = true;
 
-    signal(SIGINT, [](int) { keepRunning = false; });
+    // Give it a chance to shutdown cleanly on CTRL-C
+    signal(SIGINT, [](int) {
+            if (keepRunning) {
+                logMsg("shutdown\n");
+                keepRunning = false;
+                glfwPostEmptyEvent();
+            } else {
+                logMsg("killed!\n");
+                exit(1);
+            }});
 
     int argi = 0;
     while (++argi < argc) {

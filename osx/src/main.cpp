@@ -3,6 +3,7 @@
 #include "data/clientGeoJsonSource.h"
 #include <cmath>
 #include <memory>
+#include <signal.h>
 
 // Forward declaration
 void init_main_window();
@@ -258,6 +259,19 @@ void init_main_window() {
 
 int main(int argc, char* argv[]) {
 
+    static bool keepRunning = true;
+
+    // Give it a chance to shutdown cleanly on CTRL-C
+    signal(SIGINT, [](int) {
+            if (keepRunning) {
+                logMsg("shutdown\n");
+                keepRunning = false;
+                glfwPostEmptyEvent();
+            } else {
+                logMsg("killed!\n");
+                exit(1);
+            }});
+
     int argi = 0;
     while (++argi < argc) {
         if (strcmp(argv[argi - 1], "-f") == 0) {
@@ -280,7 +294,7 @@ int main(int argc, char* argv[]) {
     double lastTime = glfwGetTime();
 
     // Loop until the user closes the window
-    while (!glfwWindowShouldClose(main_window)) {
+    while (keepRunning && !glfwWindowShouldClose(main_window)) {
 
         double currentTime = glfwGetTime();
         double delta = currentTime - lastTime;
