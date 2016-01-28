@@ -5,9 +5,10 @@
 #include "tile/tile.h"
 #include "view/view.h"
 #include "scene/scene.h"
-#include "scene/styleContext.h"
 #include "tile/tileID.h"
 #include "tile/tileTask.h"
+#include "tile/tileBuilder.h"
+#include "tangram.h"
 
 #include <algorithm>
 
@@ -20,7 +21,9 @@ TileWorker::TileWorker(int _num_worker) {
     m_pendingTiles = false;
 
     for (int i = 0; i < _num_worker; i++) {
-        m_workers.emplace_back(&TileWorker::run, this);
+        auto worker = std::make_unique<Worker>();
+        worker->thread = std::thread(&TileWorker::run, this, worker.get());
+        m_workers.push_back(std::move(worker));
     }
 }
 
@@ -30,11 +33,25 @@ TileWorker::~TileWorker(){
     }
 }
 
-void TileWorker::run() {
+void disposeBuilder(std::unique_ptr<TileBuilder> _builder) {
+    if (_builder) {
+        // Bind _builder to a std::function that will run on the next mainloop
+        // iteration and does therefore dispose the TileBuilder, including it's
+        // Scene reference with OpenGL resources on the mainloop. This is done
+        // in order to ensure that no GL functions are called on
+        // the worker-thread.
+        auto disposer = std::bind([](auto builder){},
+                                  std::shared_ptr<TileBuilder>(std::move(_builder)));
+
+        Tangram::runOnMainLoop(disposer);
+    }
+}
+
+void TileWorker::run(Worker* instance) {
 
     setCurrentThreadPriority(WORKER_NICENESS);
 
-    StyleContext context;
+    std::unique_ptr<TileBuilder> builder;
 
     while (true) {
 
@@ -46,9 +63,22 @@ void TileWorker::run() {
                     return !m_running || !m_queue.empty();
                 });
 
+            if (instance->tileBuilder) {
+                disposeBuilder(std::move(builder));
+
+                builder = std::move(instance->tileBuilder);
+                LOG("Passed new TileBuilder to TileWorker");
+            }
+
             // Check if thread should stop
             if (!m_running) {
+                disposeBuilder(std::move(builder));
                 break;
+            }
+
+            if (!builder) {
+                LOGE("Missing Scene/StyleContext in TileWorker!");
+                continue;
             }
 
             // Remove all canceled tasks
@@ -78,26 +108,17 @@ void TileWorker::run() {
             m_queue.erase(it);
         }
 
-        if (task->isCanceled()) { continue; }
+        if (task->isCanceled()) {
+            continue;
+        }
 
-        // Save shared reference to Scene while building tile
-        // FIXME: Scene could be released on Worker-Thread and
-        // therefore call unsafe glDelete* functions...
-        auto scene = m_scene;
-        if (!scene) { continue; }
-
-        auto tileData = task->source().parse(*task, *scene->mapProjection());
+        auto tileData = task->source().parse(*task, *builder->scene().mapProjection());
 
         // const clock_t begin = clock();
 
-        context.initFunctions(*scene);
-
         if (tileData) {
-            auto tile = std::make_shared<Tile>(task->tileId(),
-                                               *scene->mapProjection(),
-                                               &task->source());
 
-            tile->build(context, *scene, *tileData, task->source());
+            auto&& tile = builder->build(task->tileId(), *tileData, task->source());
 
             // Mark task as ready
             task->setTile(std::move(tile));
@@ -111,6 +132,15 @@ void TileWorker::run() {
         m_pendingTiles = true;
 
         requestRender();
+    }
+}
+
+void TileWorker::setScene(std::shared_ptr<Scene>& _scene) {
+    for (auto& worker : m_workers) {
+        auto tileBuilder = std::make_unique<TileBuilder>();
+        tileBuilder->setScene(_scene);
+
+        worker->tileBuilder = std::move(tileBuilder);
     }
 }
 
@@ -133,8 +163,8 @@ void TileWorker::stop() {
 
     m_condition.notify_all();
 
-    for (std::thread &worker: m_workers) {
-        worker.join();
+    for (auto& worker : m_workers) {
+        worker->thread.join();
     }
 }
 
