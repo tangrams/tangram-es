@@ -15,13 +15,6 @@ class PointStyle : public Style {
 
 public:
 
-    virtual void onBeginDrawFrame(const View& _view, Scene& _scene, int _textureUnit = 0) override;
-
-    PointStyle(std::string _name, Blending _blendMode = Blending::overlay, GLenum _drawMode = GL_TRIANGLES);
-    void setSpriteAtlas(std::shared_ptr<SpriteAtlas> _spriteAtlas) { m_spriteAtlas = _spriteAtlas; }
-    void setTexture(std::shared_ptr<Texture> _texture) { m_texture = _texture; }
-
-    virtual ~PointStyle();
     struct Parameters {
         bool centroid = false;
         std::string sprite;
@@ -33,22 +26,24 @@ public:
         float extrudeScale = 1.f;
     };
 
+    PointStyle(std::string _name, Blending _blendMode = Blending::overlay, GLenum _drawMode = GL_TRIANGLES);
+
+    virtual void onBeginDrawFrame(const View& _view, Scene& _scene, int _textureUnit = 0) override;
+
+    void setSpriteAtlas(std::shared_ptr<SpriteAtlas> _spriteAtlas) { m_spriteAtlas = _spriteAtlas; }
+    void setTexture(std::shared_ptr<Texture> _texture) { m_texture = _texture; }
+
+    const auto& texture() const { return m_texture; }
+    const auto& spriteAtlas() const { return m_spriteAtlas; }
+
+    virtual ~PointStyle();
+
 protected:
 
     virtual void constructVertexLayout() override;
     virtual void constructShaderProgram() override;
-    virtual void buildPoint(const Point& _point, const DrawRule& _rule, const Properties& _props, VboMesh& _mesh, Tile& _tile) const override;
-    virtual void buildLine(const Line& _line, const DrawRule& _rule, const Properties& _props, VboMesh& _mesh, Tile& _tile) const override;
-    virtual void buildPolygon(const Polygon& _polygon, const DrawRule& _rule, const Properties& _props, VboMesh& _mesh, Tile& _tile) const override;
-    virtual bool checkRule(const DrawRule& _rule) const override;
 
-    void pushQuad(std::vector<Label::Vertex>& _vertices, const glm::vec2& _size, const glm::vec2& _uvBL,
-            const glm::vec2& _uvTR, unsigned int _color, float _extrudeScale) const;
-    bool getUVQuad(Parameters& _params, glm::vec4& _quad) const;
-
-    Parameters applyRule(const DrawRule& _rule, const Properties& _props, float _zoom) const;
-
-    virtual VboMesh* newMesh() const override;
+    virtual std::unique_ptr<StyleBuilder> createBuilder() const override;
 
     std::shared_ptr<SpriteAtlas> m_spriteAtlas;
     std::shared_ptr<Texture> m_texture;
@@ -74,4 +69,3 @@ namespace std {
         }
     };
 }
-
