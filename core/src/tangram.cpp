@@ -515,6 +515,15 @@ void toggleDebugFlag(DebugFlags _flag) {
     g_flags.flip(_flag);
     m_view->setZoom(m_view->getZoom()); // Force the view to refresh
 
+    // Rebuild tiles for debug modes that needs it
+    if (_flag == DebugFlags::proxy_colors
+     || _flag == DebugFlags::tile_bounds
+     || _flag == DebugFlags::tile_infos) {
+        if (m_tileManager) {
+            std::lock_guard<std::mutex> lock(m_tilesMutex);
+            m_tileManager->clearTileSets();
+        }
+    }
 }
 
 const std::vector<TouchItem>& pickFeaturesAt(float _x, float _y) {
