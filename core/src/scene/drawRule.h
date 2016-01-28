@@ -50,17 +50,22 @@ struct DrawRuleData {
 
 struct DrawRule {
 
-    std::bitset<StyleParamKeySize> active = { 0 };
-
-    struct Param {
+    // Map of StypeParamKey => StyleParam pointer
+    // of the matched SceneLayer or the evaluated
+    // Function/Stops in DrawRuleMergeset.
+    struct {
         const StyleParam* param;
-        // Layer name
+        // SceneLayer name and depth
         const char* name;
-        // Layer depth
         size_t depth;
-    };
 
-    Param params[StyleParamKeySize];
+    } params[StyleParamKeySize];
+
+    // A mask to indicate which parameters are set.
+    // 'active' MUST be checked before accessing 'params'
+    // This is cheaper to zero out 4 byte than
+    // 480 (on 32bit arch) or 980 byte for params array.
+    std::bitset<StyleParamKeySize> active = { 0 };
 
     // draw-style name and id
     const std::string* name = nullptr;
