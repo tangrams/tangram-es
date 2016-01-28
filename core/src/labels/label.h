@@ -111,14 +111,15 @@ public:
         Transition hideTransition;
         Transition showTransition;
         size_t repeatGroup = 0;
-        float repeatDistance;
+        float repeatDistance = 0;
         float buffer = 0.f;
 
         // the label hash based on its styling parameters
-        size_t paramHash;
+        size_t paramHash = 0;
     };
 
     enum OcclusionType {
+        none,
         collision,
         repeat_group
     };
