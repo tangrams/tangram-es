@@ -4,7 +4,8 @@
 #include <cmath>
 #include <memory>
 #include <signal.h>
-
+#include <stdlib.h>
+ 
 // Forward declaration
 void init_main_window();
 
