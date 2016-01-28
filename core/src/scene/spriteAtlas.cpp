@@ -14,7 +14,7 @@ void SpriteAtlas::addSpriteNode(const std::string& _name, glm::vec2 _origin, glm
     m_spritesNodes[_name] = SpriteNode { uvBL, uvTR, _size };
 }
 
-bool SpriteAtlas::getSpriteNode(const std::string& _name, SpriteNode& _node) {
+bool SpriteAtlas::getSpriteNode(const std::string& _name, SpriteNode& _node) const {
     auto it = m_spritesNodes.find(_name);
     if (it == m_spritesNodes.end()) {
         return false;

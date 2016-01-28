@@ -8,6 +8,7 @@
 #include "scene/stops.h"
 #include "scene/drawRule.h"
 #include "tile/tile.h"
+#include "util/builders.h"
 #include "util/mapProjection.h"
 #include "util/extrude.h"
 
@@ -67,11 +68,56 @@ void PolylineStyle::constructShaderProgram() {
     m_shaderProgram->setSourceStrings(fragShaderSrcStr, vertShaderSrcStr);
 }
 
-VboMesh* PolylineStyle::newMesh() const {
-    return new Mesh(m_vertexLayout, m_drawMode);
-}
+namespace {
 
-PolylineStyle::Parameters PolylineStyle::parseRule(const DrawRule& _rule) const {
+struct Builder : public StyleBuilder {
+
+    const PolylineStyle& m_style;
+
+    std::unique_ptr<Mesh> m_mesh;
+    float m_tileUnitsPerMeter;
+    float m_tileSize;
+    int m_zoom;
+
+    struct Parameters {
+        uint32_t order = 0;
+        uint32_t outlineOrder = 0;
+        uint32_t color = 0xff00ffff;
+        uint32_t outlineColor = 0xff00ffff;
+        CapTypes cap = CapTypes::butt;
+        CapTypes outlineCap = CapTypes::butt;
+        JoinTypes join = JoinTypes::miter;
+        JoinTypes outlineJoin = JoinTypes::miter;
+        bool outlineOn = false;
+        glm::vec2 extrude;
+    };
+
+    void begin(const Tile& _tile) override {
+        m_tileUnitsPerMeter = _tile.getInverseScale();
+        m_zoom = _tile.getID().z;
+        m_tileSize = _tile.getProjection()->TileSize();
+        m_mesh = std::make_unique<Mesh>(m_style.vertexLayout(), m_style.drawMode());
+    }
+
+    void addPolygon(const Polygon& _polygon, const Properties& _props, const DrawRule& _rule) override;
+    void addLine(const Line& _line, const Properties& _props, const DrawRule& _rule) override;
+
+    std::unique_ptr<VboMesh> build() override {
+        m_mesh->compileVertexBuffer();
+        return std::move(m_mesh);
+    };
+
+    const Style& style() const override { return m_style; }
+
+    Builder(const PolylineStyle& _style) : StyleBuilder(_style), m_style(_style) {}
+
+    bool evalStyleParamWidth(StyleParamKey _key, const DrawRule& _rule,
+                             float& width, float& dWdZ);
+
+    static Parameters parseRule(const DrawRule& _rule);
+};
+
+auto Builder::parseRule(const DrawRule& _rule) -> Parameters {
     Parameters p;
 
     uint32_t cap = 0, join = 0;
@@ -100,11 +146,10 @@ PolylineStyle::Parameters PolylineStyle::parseRule(const DrawRule& _rule) const 
     return p;
 }
 
-void PolylineStyle::buildPolygon(const Polygon& _poly, const DrawRule& _rule, const Properties& _props,
-                                 VboMesh& _mesh, Tile& _tile) const {
+void Builder::addPolygon(const Polygon& _poly, const Properties& _props, const DrawRule& _rule) {
 
     for (const auto& line : _poly) {
-        buildLine(line, _rule, _props, _mesh, _tile);
+        addLine(line, _props, _rule);
     }
 }
 
@@ -117,14 +162,11 @@ double widthMeterToPixel(int _zoom, double _tileSize, double _width) {
     return _width * meterRes;
 }
 
-bool evalStyleParamWidth(StyleParamKey _key, const DrawRule& _rule, const Tile& _tile,
-                         float& width, float& dWdZ){
-
-    int zoom  = _tile.getID().z;
-    double tileSize = _tile.getProjection()->TileSize();
+bool Builder::evalStyleParamWidth(StyleParamKey _key, const DrawRule& _rule,
+                                  float& width, float& dWdZ) {
 
     // NB: 0.5 because 'width' will be extruded in both directions
-    double tileRes = 0.5 / tileSize;
+    double tileRes = 0.5 / m_tileSize;
 
 
     auto& styleParam = _rule.findParameter(_key);
@@ -133,7 +175,7 @@ bool evalStyleParamWidth(StyleParamKey _key, const DrawRule& _rule, const Tile& 
         width = styleParam.value.get<float>();
         width *= tileRes;
 
-        dWdZ = styleParam.stops->evalWidth(zoom + 1);
+        dWdZ = styleParam.stops->evalWidth(m_zoom + 1);
         dWdZ *= tileRes;
         // NB: Multiply by 2 for the outline to get the expected stroke pixel width.
         if (_key == StyleParamKey::outline_width) {
@@ -152,7 +194,7 @@ bool evalStyleParamWidth(StyleParamKey _key, const DrawRule& _rule, const Tile& 
         width = widthParam.value;
 
         if (widthParam.isMeter()) {
-            width = widthMeterToPixel(zoom, tileSize, width);
+            width = widthMeterToPixel(m_zoom, m_tileSize, width);
             width *= tileRes;
             dWdZ = width * 2;
         } else {
@@ -174,8 +216,7 @@ bool evalStyleParamWidth(StyleParamKey _key, const DrawRule& _rule, const Tile& 
     return false;
 }
 
-void PolylineStyle::buildLine(const Line& _line, const DrawRule& _rule, const Properties& _props,
-                              VboMesh& _mesh, Tile& _tile) const {
+void Builder::addLine(const Line& _line, const Properties& _props, const DrawRule& _rule) {
 
     std::vector<PolylineVertex> vertices;
 
@@ -185,20 +226,19 @@ void PolylineStyle::buildLine(const Line& _line, const DrawRule& _rule, const Pr
     float dWdZ = 0.f;
     float width = 0.f;
 
-    if (!evalStyleParamWidth(StyleParamKey::width, _rule, _tile, width, dWdZ)) {
+    if (!evalStyleParamWidth(StyleParamKey::width, _rule, width, dWdZ)) {
         return;
     }
 
     if (width <= 0.0f && dWdZ <= 0.0f ) { return; }
 
     if (Tangram::getDebugFlag(Tangram::DebugFlags::proxy_colors)) {
-        abgr = abgr << (_tile.getID().z % 6);
+        abgr = abgr << (m_zoom % 6);
     }
 
     auto& extrude = params.extrude;
 
-    float tileUnitsPerMeter = _tile.getInverseScale();
-    float height = getUpperExtrudeMeters(extrude, _props) * tileUnitsPerMeter;
+    float height = getUpperExtrudeMeters(extrude, _props) * m_tileUnitsPerMeter;
     float order = params.order;
 
     PolyLineBuilder builder {
@@ -221,9 +261,9 @@ void PolylineStyle::buildLine(const Line& _line, const DrawRule& _rule, const Pr
         float widthOutline = 0.f;
         float dWdZOutline = 0.f;
 
-        if (evalStyleParamWidth(StyleParamKey::outline_width, _rule, _tile,
+        if (evalStyleParamWidth(StyleParamKey::outline_width, _rule,
                                 widthOutline, dWdZOutline) &&
-            ((widthOutline > 0.0f || dWdZOutline > 0.0f))) {
+            ((widthOutline > 0.0f || dWdZOutline > 0.0f)) ) {
 
             // Note: this must update <width> and <dWdZ> as they are captured
             // (and used) by <builder>
@@ -251,8 +291,13 @@ void PolylineStyle::buildLine(const Line& _line, const DrawRule& _rule, const Pr
         }
     }
 
-    auto& mesh = static_cast<Mesh&>(_mesh);
-    mesh.addVertices(std::move(vertices), std::move(builder.indices));
+    m_mesh->addVertices(std::move(vertices), std::move(builder.indices));
+}
+
+}
+
+std::unique_ptr<StyleBuilder> PolylineStyle::createBuilder() const {
+    return std::make_unique<Builder>(*this);
 }
 
 }

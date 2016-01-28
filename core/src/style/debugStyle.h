@@ -10,11 +10,8 @@ protected:
 
     virtual void constructVertexLayout() override;
     virtual void constructShaderProgram() override;
-    virtual void onBeginBuildTile(Tile& _tile) const override;
 
-    virtual VboMesh* newMesh() const override {
-        return nullptr;
-    };
+    virtual std::unique_ptr<StyleBuilder> createBuilder() const override;
 
 public:
 

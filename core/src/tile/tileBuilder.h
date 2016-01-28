@@ -10,6 +10,7 @@ class DataLayer;
 class DataSource;
 class Tile;
 struct TileData;
+class StyleBuilder;
 
 class TileBuilder {
 
@@ -18,6 +19,8 @@ public:
     TileBuilder();
 
     ~TileBuilder();
+
+    StyleBuilder* getStyleBuilder(const std::string& _name);
 
     void setScene(std::shared_ptr<Scene> _scene);
 
@@ -32,6 +35,8 @@ private:
 
     StyleContext m_styleContext;
     DrawRuleMergeSet m_ruleSet;
+
+    fastmap<std::string, std::unique_ptr<StyleBuilder>> m_styleBuilder;
 
     std::shared_ptr<Tile> m_tile;
 };
