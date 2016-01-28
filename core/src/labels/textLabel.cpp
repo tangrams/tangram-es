@@ -41,9 +41,9 @@ void TextLabel::updateBBoxes(float _zoomFract) {
     // move forward on line by half the text length
     obbCenter += m_xAxis * m_dim.x * 0.5f;
     // move down on the perpendicular to estimated font baseline
-    obbCenter -= m_yAxis * m_dim.y * 0.5f;
+    obbCenter += m_yAxis * m_dim.y * 0.5f;
     // ajdust with local origin of the quads
-    obbCenter += m_yAxis * m_quadLocalOrigin.y + m_yAxis * m_dim.y;
+    obbCenter += m_yAxis * m_quadLocalOrigin.y;
     obbCenter += m_xAxis * m_quadLocalOrigin.x;
 
     m_obb = OBB(obbCenter.x, obbCenter.y, m_transform.state.rotation, m_dim.x + m_options.buffer, m_dim.y + m_options.buffer);
@@ -72,7 +72,7 @@ void TextLabel::align(glm::vec2& _screenPosition, const glm::vec2& _ap1, const g
             // move back by half the length (so that text will be drawn centered)
             glm::vec2 direction = glm::normalize(_ap1 - _ap2);
             _screenPosition += direction * m_dim.x * 0.5f;
-            _screenPosition += m_yAxis * (m_dim.y * 0.5f + 2.f * m_metrics.descender);
+            _screenPosition += m_yAxis * (m_dim.y * 0.5f + m_metrics.descender);
             break;
         }
     }
