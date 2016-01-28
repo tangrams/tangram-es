@@ -100,7 +100,7 @@ void Texture::setData(const GLuint* _data, unsigned int _dataSize) {
 }
 
 void Texture::setSubData(const GLuint* _subData, uint16_t _xoff, uint16_t _yoff,
-                         uint16_t _width, uint16_t _height) {
+                         uint16_t _width, uint16_t _height, uint16_t _stride) {
 
     size_t bpp = bytesPerPixel();
     size_t divisor = sizeof(GLuint) / bpp;
@@ -111,10 +111,11 @@ void Texture::setSubData(const GLuint* _subData, uint16_t _xoff, uint16_t _yoff,
     }
 
     // update m_data with subdata
-    for (size_t row = _yoff, end = row + _height; row < end; row++) {
+    for (size_t row = 0; row < _height; row++) {
 
-        size_t pos = (row * m_width + _xoff) / divisor;
-        std::memcpy(&m_data[pos], &_subData[pos], _width * bpp);
+        size_t pos = ((_yoff + row) * m_width + _xoff) / divisor;
+        size_t posIn = (row * _stride) / divisor;
+        std::memcpy(&m_data[pos], &_subData[posIn], _width * bpp);
     }
 
     setDirty(_yoff, _height);

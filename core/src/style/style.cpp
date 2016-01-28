@@ -139,7 +139,8 @@ void Style::onBeginDrawFrame(const View& _view, Scene& _scene, int _textureUnit)
             break;
         case Blending::overlay:
             RenderState::blending(GL_TRUE);
-            RenderState::blendingFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+            //RenderState::blendingFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+            RenderState::blendingFunc(GL_ONE, GL_ONE_MINUS_SRC_ALPHA);
             RenderState::depthTest(GL_FALSE);
             RenderState::depthWrite(GL_FALSE);
             break;

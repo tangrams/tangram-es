@@ -52,6 +52,9 @@ set(CORE_LIBRARIES_INCLUDE_DIRS
     ${PROJECT_SOURCE_DIR}/${INCLUDE_DIR}/isect2d/include
     CACHE INTERNAL "core libraries include directories" FORCE)
 
+#include( ${PROJECT_SOURCE_DIR}/../../alfons/build/alfons-exports.cmake REQUIRED )
+#include( ${PROJECT_SOURCE_DIR}/../../alfons/debug/alfons-exports.cmake REQUIRED )
+
 add_library(${CORE_LIBRARY} ${FOUND_SOURCES} ${FOUND_HEADERS})
 
 target_link_libraries(${CORE_LIBRARY}
@@ -59,7 +62,8 @@ target_link_libraries(${CORE_LIBRARY}
   duktape
   css-color-parser-cpp
   geojson-vt-cpp
-  yaml-cpp)
+  yaml-cpp
+  alfons)
 
 target_include_directories(${CORE_LIBRARY}
   PUBLIC

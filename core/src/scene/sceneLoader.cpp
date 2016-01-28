@@ -11,6 +11,7 @@
 #include "style/material.h"
 #include "style/polygonStyle.h"
 #include "style/polylineStyle.h"
+#include "style/alfonsStyle.h"
 #include "style/debugStyle.h"
 #include "style/pointStyle.h"
 #include "scene/dataLayer.h"
@@ -65,6 +66,7 @@ bool SceneLoader::loadScene(Node& config, Scene& _scene) {
     // Instantiate built-in styles
     _scene.styles().emplace_back(new PolygonStyle("polygons"));
     _scene.styles().emplace_back(new PolylineStyle("lines"));
+    _scene.styles().emplace_back(new AlfonsStyle("text", true));
     _scene.styles().emplace_back(new DebugStyle("debug"));
     _scene.styles().emplace_back(new PointStyle("points"));
 
@@ -790,8 +792,8 @@ bool SceneLoader::loadStyle(const std::string& styleName, Node styles, Scene& sc
         style = std::make_unique<PolygonStyle>(styleName);
     } else if (baseStyle == "lines") {
         style = std::make_unique<PolylineStyle>(styleName);
-    // } else if (baseStyle == "text") {
-    //     style = std::make_unique<TextStyle>(styleName, scene.fontContext(), true, false);
+    } else if (baseStyle == "text") {
+        style = std::make_unique<AlfonsStyle>(styleName, true);
     } else if (baseStyle == "points") {
         style = std::make_unique<PointStyle>(styleName);
     } else {

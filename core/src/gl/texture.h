@@ -70,7 +70,7 @@ public:
 
     /* Update a region of the texture */
     void setSubData(const GLuint* _subData, uint16_t _xoff, uint16_t _yoff,
-                    uint16_t _width, uint16_t _height);
+                    uint16_t _width, uint16_t _height, uint16_t _stride);
 
     bool isValid();
 
