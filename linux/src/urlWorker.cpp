@@ -72,7 +72,9 @@ void UrlWorker::reset() {
 }
 
 void UrlWorker::join() {
-    m_future.get();
+    if (m_future.valid()) {
+        m_future.get();
+    }
 }
 
 bool UrlWorker::hasTask(const std::string& _url) {
