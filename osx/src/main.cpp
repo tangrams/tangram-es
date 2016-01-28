@@ -3,7 +3,9 @@
 #include "data/clientGeoJsonSource.h"
 #include <cmath>
 #include <memory>
-
+#include <signal.h>
+#include <stdlib.h>
+ 
 // Forward declaration
 void init_main_window();
 
@@ -12,6 +14,7 @@ std::string sceneFile = "scene.yaml";
 GLFWwindow* main_window = nullptr;
 int width = 800;
 int height = 600;
+bool recreate_context;
 
 // Input handling
 // ==============
@@ -171,7 +174,7 @@ void key_callback(GLFWwindow* window, int key, int scancode, int action, int mod
                 Tangram::toggleDebugFlag(Tangram::DebugFlags::tangram_infos);
                 break;
             case GLFW_KEY_BACKSPACE:
-                init_main_window(); // Simulate GL context loss
+                recreate_context = true;
                 break;
             case GLFW_KEY_R:
                 Tangram::loadScene(sceneFile.c_str());
@@ -258,6 +261,19 @@ void init_main_window() {
 
 int main(int argc, char* argv[]) {
 
+    static bool keepRunning = true;
+
+    // Give it a chance to shutdown cleanly on CTRL-C
+    signal(SIGINT, [](int) {
+            if (keepRunning) {
+                logMsg("shutdown\n");
+                keepRunning = false;
+                glfwPostEmptyEvent();
+            } else {
+                logMsg("killed!\n");
+                exit(1);
+            }});
+
     int argi = 0;
     while (++argi < argc) {
         if (strcmp(argv[argi - 1], "-f") == 0) {
@@ -279,8 +295,10 @@ int main(int argc, char* argv[]) {
 
     double lastTime = glfwGetTime();
 
+    recreate_context = false;
+
     // Loop until the user closes the window
-    while (!glfwWindowShouldClose(main_window)) {
+    while (keepRunning && !glfwWindowShouldClose(main_window)) {
 
         double currentTime = glfwGetTime();
         double delta = currentTime - lastTime;
@@ -299,6 +317,14 @@ int main(int argc, char* argv[]) {
         } else {
             glfwWaitEvents();
         }
+
+        if (recreate_context) {
+            logMsg("recreate context\n");
+             // Simulate GL context loss
+            init_main_window();
+            recreate_context = false;
+        }
+
     }
 
     glfwTerminate();
