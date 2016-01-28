@@ -105,21 +105,19 @@ void PolylineStyle::constructShaderProgram() {
 namespace {
 
 struct Parameters {
-    uint32_t order = 0;
-    uint32_t outlineOrder = 0;
-    uint32_t color = 0xff00ffff;
-    uint32_t outlineColor = 0xff00ffff;
-    CapTypes cap = CapTypes::butt;
-    CapTypes outlineCap = CapTypes::butt;
-    JoinTypes join = JoinTypes::miter;
-    JoinTypes outlineJoin = JoinTypes::miter;
-    bool outlineOn = false;
-    glm::vec2 extrude = glm::vec2(0);
 
-    float width;
-    float dWdZ;
-    float widthOutline;
-    float dWdZOutline;
+    struct {
+        uint32_t order = 0;
+        uint32_t color = 0xff00ffff;
+        float width = 0.f;
+        float slope = 0.f;
+        CapTypes cap = CapTypes::butt;
+        JoinTypes join = JoinTypes::miter;
+    } fill, outline;
+
+    float height = 0.f;
+    bool keepTileEdges = false;
+    bool outlineOn = false;
 };
 
 struct Builder : public StyleBuilder {
@@ -146,14 +144,13 @@ struct Builder : public StyleBuilder {
 
     Builder(const PolylineStyle& _style) : StyleBuilder(_style), m_style(_style) {}
 
-    void add(const Line& _line, const Properties& _props,
-             const DrawRule& _rule, const Parameters& _params);
+    void addMesh(const Line& _line, const Parameters& _params);
 
     void buildLine(const Line& _line, PolyLineBuilder& _builder);
 
-    Parameters parseRule(const DrawRule& _rule);
+    Parameters parseRule(const DrawRule& _rule, const Properties& _props);
 
-    bool evalWidth(const StyleParam& _styleParam, float& width, float& dWdZ);
+    bool evalWidth(const StyleParam& _styleParam, float& width, float& slope);
 
 };
 
@@ -175,52 +172,63 @@ std::unique_ptr<VboMesh> Builder::build() {
     return std::move(mesh);
 }
 
-auto Builder::parseRule(const DrawRule& _rule) -> Parameters {
+auto Builder::parseRule(const DrawRule& _rule, const Properties& _props) -> Parameters {
     Parameters p;
 
     uint32_t cap = 0, join = 0;
 
     auto& width = _rule.findParameter(StyleParamKey::width);
-
-    if (!evalWidth(width, p.width, p.dWdZ)) {
-        p.width = 0;
+    if (!evalWidth(width, p.fill.width, p.fill.slope)) {
+        p.fill.width = 0;
         return p;
     }
-    p.dWdZ -= p.width;
-
-    _rule.get(StyleParamKey::extrude, p.extrude);
-    _rule.get(StyleParamKey::color, p.color);
+    p.fill.slope -= p.fill.width;
+    _rule.get(StyleParamKey::color, p.fill.color);
     _rule.get(StyleParamKey::cap, cap);
     _rule.get(StyleParamKey::join, join);
-    _rule.get(StyleParamKey::order, p.order);
+    _rule.get(StyleParamKey::order, p.fill.order);
+    _rule.get(StyleParamKey::tile_edges, p.keepTileEdges);
 
-    p.cap = static_cast<CapTypes>(cap);
-    p.join = static_cast<JoinTypes>(join);
+    p.fill.cap = static_cast<CapTypes>(cap);
+    p.fill.join = static_cast<JoinTypes>(join);
 
-    p.outlineOrder = p.order; // will offset from fill later
+    glm::vec2 extrude = glm::vec2(0);
+    _rule.get(StyleParamKey::extrude, extrude);
+
+    p.height = getUpperExtrudeMeters(extrude, _props);
+    p.height *= m_tileUnitsPerMeter;
+
+    p.outline.order = p.fill.order;
+    p.outline.cap = p.fill.cap;
+    p.outline.join = p.fill.join;
 
     auto& outlineWidth = _rule.findParameter(StyleParamKey::outline_width);
-
     if (outlineWidth |
-        _rule.get(StyleParamKey::outline_color, p.outlineColor) |
-        _rule.get(StyleParamKey::outline_order, p.outlineOrder) |
+        _rule.get(StyleParamKey::outline_color, p.outline.color) |
+        _rule.get(StyleParamKey::outline_order, p.outline.order) |
         _rule.get(StyleParamKey::outline_cap, cap) |
         _rule.get(StyleParamKey::outline_join, join)) {
 
-        p.outlineCap = static_cast<CapTypes>(cap);
-        p.outlineJoin = static_cast<JoinTypes>(join);
+        p.outline.cap = static_cast<CapTypes>(cap);
+        p.outline.join = static_cast<JoinTypes>(join);
 
-        if (!evalWidth(outlineWidth, p.widthOutline, p.dWdZOutline)) {
+        if (!evalWidth(outlineWidth, p.outline.width, p.outline.slope)) {
             return p;
         }
 
         // NB: Multiply by 2 for the outline to get the expected stroke pixel width.
-        p.widthOutline *= 2.0f;
-        p.dWdZOutline *= 2.0f;
-        p.dWdZOutline -= p.widthOutline;
+        p.outline.width *= 2.0f;
+        p.outline.slope *= 2.0f;
+        p.outline.slope -= p.outline.width;
+
+        p.outline.width += p.fill.width;
+        p.outline.slope += p.fill.slope;
 
         p.outlineOn = true;
     }
+
+    // FIXME: just to make hidden lines visible
+    if (p.fill.width < 0.5/m_tileSize) { p.fill.width = 0.5/m_tileSize; }
 
     return p;
 }
@@ -234,7 +242,7 @@ double widthMeterToPixel(int _zoom, double _tileSize, double _width) {
     return _width * meterRes;
 }
 
-bool Builder::evalWidth(const StyleParam& _styleParam, float& width, float& dWdZ) {
+bool Builder::evalWidth(const StyleParam& _styleParam, float& width, float& slope) {
 
     // NB: 0.5 because 'width' will be extruded in both directions
     float tileRes = 0.5 / m_tileSize;
@@ -245,8 +253,8 @@ bool Builder::evalWidth(const StyleParam& _styleParam, float& width, float& dWdZ
         width = _styleParam.value.get<float>();
         width *= tileRes;
 
-        dWdZ = _styleParam.stops->evalWidth(m_zoom + 1);
-        dWdZ *= tileRes;
+        slope = _styleParam.stops->evalWidth(m_zoom + 1);
+        slope *= tileRes;
         return true;
     }
 
@@ -258,10 +266,10 @@ bool Builder::evalWidth(const StyleParam& _styleParam, float& width, float& dWdZ
         if (widthParam.isMeter()) {
             width = widthMeterToPixel(m_zoom, m_tileSize, width);
             width *= tileRes;
-            dWdZ = width * 2;
+            slope = width * 2;
         } else {
             width *= tileRes;
-            dWdZ = width;
+            slope = width;
         }
         return true;
     }
@@ -275,18 +283,21 @@ void Builder::addFeature(const Feature& _feat, const DrawRule& _rule) {
     if (_feat.geometryType == GeometryType::points) { return; }
     if (!checkRule(_rule)) { return; }
 
-    Parameters params = parseRule(_rule);
+    Parameters params = parseRule(_rule, _feat.props);
 
-    if (params.width <= 0.0f && params. dWdZ <= 0.0f ) { return; }
+    if (params.fill.width <= 0.0f && params.fill.slope <= 0.0f ) { return; }
 
     if (_feat.geometryType == GeometryType::lines) {
+        // Line geometries are never clipped to tiles, so keep all segments
+        params.keepTileEdges = true;
+
         for (auto& line : _feat.lines) {
-            add(line, _feat.props, _rule, params);
+            addMesh(line, params);
         }
     } else {
         for (auto& polygon : _feat.polygons) {
             for (const auto& line : polygon) {
-                add(line, _feat.props, _rule, params);
+                addMesh(line, params);
             }
         }
     }
@@ -312,10 +323,9 @@ void Builder::buildLine(const Line& _line, PolyLineBuilder& _builder) {
     _builder.clear();
 }
 
-void Builder::add(const Line& _line, const Properties& _props,
-                  const DrawRule& _rule, const Parameters& params) {
+void Builder::addMesh(const Line& _line, const Parameters& params) {
 
-    GLuint abgr = params.color;
+    GLuint abgr = params.fill.color;
 
     if (Tangram::getDebugFlag(Tangram::DebugFlags::proxy_colors)) {
         abgr <<= (m_zoom % 6);
@@ -326,12 +336,9 @@ void Builder::add(const Line& _line, const Properties& _props,
     size_t startIndex = m_indices.size();
     size_t startVertex = m_vertices.size();
 
-    float height = getUpperExtrudeMeters(params.extrude, _props);
-    height *= m_tileUnitsPerMeter;
-
-    float order = params.order;
-    float width = params.width;
-    float dWdZ = params.dWdZ;
+    float order = params.fill.order;
+    float width = params.fill.width;
+    float slope = params.fill.slope;
 
     struct {
         glm::i16vec2 height;
@@ -345,32 +352,31 @@ void Builder::add(const Line& _line, const Properties& _props,
     } options;
 
     PolyLineBuilder builder = {
-        [this, &p = options](const glm::vec3& coord,
-                             const glm::vec2& normal,
-                             const glm::vec2& uv) {
+        [this, &p = options](const glm::vec3& coord, const glm::vec2& normal, const glm::vec2& uv) {
             m_vertices.push_back({{coord.x,coord.y}, normal, uv, p.width, p.height, p.color});
         },
         [&](size_t sizeHint) {}
     };
 
-    builder.cap = params.cap;
-    builder.join = params.join;
-    options.set(abgr, width, dWdZ, height, order);
+    builder.cap = params.fill.cap;
+    builder.join = params.fill.join;
+    builder.keepTileEdges = params.keepTileEdges;
+    options.set(abgr, width, slope, params.height, order);
 
     buildLine(_line, builder);
 
     if (!params.outlineOn) { return; }
 
-    width += params.widthOutline;
-    dWdZ += params.dWdZOutline;
-    abgr = params.outlineColor;
-    order = std::min(params.outlineOrder, params.order) - .5f;
+    width = params.outline.width;
+    slope = params.outline.slope;
+    abgr = params.outline.color;
+    order = std::min(params.outline.order, params.fill.order) - .5f;
 
-    if (params.outlineCap != params.cap || params.outlineJoin != params.join) {
+    if (params.outline.cap != params.fill.cap || params.outline.join != params.fill.join) {
         // need to re-triangulate with different cap and/or join
-        builder.cap = params.outlineCap;
-        builder.join = params.outlineJoin;
-        options.set(abgr, width, dWdZ, height, order);
+        builder.cap = params.outline.cap;
+        builder.join = params.outline.join;
+        options.set(abgr, width, slope, params.height, order);
 
         buildLine(_line, builder);
 
@@ -402,7 +408,7 @@ void Builder::add(const Line& _line, const Properties& _props,
 
         for (size_t i = 0; i < numVertices; i++) {
             const auto& v = m_vertices[startVertex + i];
-            m_vertices.push_back({ v, order, {width, dWdZ}, abgr });
+            m_vertices.push_back({ v, order, {width, slope}, abgr });
         }
     }
 }
