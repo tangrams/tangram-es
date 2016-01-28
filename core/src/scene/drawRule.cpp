@@ -198,15 +198,8 @@ void DrawRuleMergeSet::apply(const Feature& _feature, const SceneLayer& _layer,
                 m_evaluated[i] = *param;
                 param = &m_evaluated[i];
 
-                if (StyleParam::isColor(param->key)) {
-                    m_evaluated[i].value = param->stops->evalColor(_ctx.getGlobalZoom());
-                } else if (StyleParam::isWidth(param->key)) {
-                    m_evaluated[i].value = param->stops->evalWidth(_ctx.getGlobalZoom());
-                } else if (StyleParam::isOffsets(param->key)) {
-                    m_evaluated[i].value = param->stops->evalVec2(_ctx.getGlobalZoom());
-                } else {
-                    m_evaluated[i].value = param->stops->evalFloat(_ctx.getGlobalZoom());
-                }
+                Stops::eval(*param->stops, param->key, _ctx.getGlobalZoom(),
+                            m_evaluated[i].value);
             }
         }
 
