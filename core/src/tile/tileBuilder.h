@@ -28,8 +28,6 @@ public:
 
     const Scene& scene() const { return *m_scene; }
 
-    Tile& tile() const { return *m_tile; }
-
 private:
     std::shared_ptr<Scene> m_scene;
 
@@ -37,8 +35,6 @@ private:
     DrawRuleMergeSet m_ruleSet;
 
     fastmap<std::string, std::unique_ptr<StyleBuilder>> m_styleBuilder;
-
-    std::shared_ptr<Tile> m_tile;
 };
 
 }

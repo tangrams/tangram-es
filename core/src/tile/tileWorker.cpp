@@ -118,13 +118,13 @@ void TileWorker::run(Worker* instance) {
 
         if (tileData) {
 
-            auto&& tile = builder->build(task->tileId(), *tileData, task->source());
-
-            // Mark task as ready
-            task->setTile(std::move(tile));
+            auto tile = builder->build(task->tileId(), *tileData, task->source());
 
             // float loadTime = (float(clock() - begin) / CLOCKS_PER_SEC) * 1000;
             // LOG("loadTime %s - %f", task->tile()->getID().toString().c_str(), loadTime);
+
+            // Mark task as ready
+            task->setTile(std::move(tile));
         } else {
             task->cancel();
         }
