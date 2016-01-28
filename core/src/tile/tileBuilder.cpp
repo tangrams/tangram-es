@@ -39,14 +39,14 @@ void TileBuilder::setScene(std::shared_ptr<Scene> _scene) {
 std::shared_ptr<Tile> TileBuilder::build(TileID _tileID, const TileData& _tileData,
                                          const DataSource& _source) {
 
-    m_tile = std::make_shared<Tile>(_tileID, *m_scene->mapProjection(), &_source);
-    m_tile->initGeometry(m_scene->styles().size());
+    auto tile = std::make_shared<Tile>(_tileID, *m_scene->mapProjection(), &_source);
+    tile->initGeometry(m_scene->styles().size());
 
     m_styleContext.setGlobalZoom(_tileID.s);
 
     for (auto& builder : m_styleBuilder) {
         if (builder.second)
-            builder.second->begin(*m_tile);
+            builder.second->begin(*tile);
     }
 
     for (const auto& datalayer : m_scene->layers()) {
@@ -70,10 +70,10 @@ std::shared_ptr<Tile> TileBuilder::build(TileID _tileID, const TileData& _tileDa
     }
 
     for (auto& builder : m_styleBuilder) {
-        m_tile->getMesh(builder.second->style()) = builder.second->build();
+        tile->getMesh(builder.second->style()) = builder.second->build();
     }
 
-    return std::move(m_tile);
+    return tile;
 }
 
 }
