@@ -1,0 +1,39 @@
+#pragma once
+
+#include "data/dataSource.h"
+#include "scene/styleContext.h"
+#include "scene/drawRule.h"
+
+namespace Tangram {
+
+class DataLayer;
+class DataSource;
+class Tile;
+struct TileData;
+
+class TileBuilder {
+
+public:
+
+    TileBuilder();
+
+    ~TileBuilder();
+
+    void setScene(std::shared_ptr<Scene> _scene);
+
+    std::shared_ptr<Tile> build(TileID _tileID, const TileData& _data, const DataSource& _source);
+
+    const Scene& scene() const { return *m_scene; }
+
+    Tile& tile() const { return *m_tile; }
+
+private:
+    std::shared_ptr<Scene> m_scene;
+
+    StyleContext m_styleContext;
+    DrawRuleMergeSet m_ruleSet;
+
+    std::shared_ptr<Tile> m_tile;
+};
+
+}

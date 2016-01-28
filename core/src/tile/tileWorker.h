@@ -11,8 +11,8 @@
 
 namespace Tangram {
 
-class DataSource;
 class Scene;
+class TileBuilder;
 
 class TileWorker : public TileTaskQueue {
 
@@ -36,17 +36,23 @@ public:
         return false;
     }
 
-    void setScene(std::shared_ptr<Scene> _scene) { m_scene = _scene; }
+    void setScene(std::shared_ptr<Scene>& _scene);
 
 private:
 
-    void run();
+    struct Worker {
+        std::thread thread;
+        std::unique_ptr<TileBuilder> tileBuilder;
+    };
+
+    void run(Worker* instance);
 
     bool m_running;
 
     std::atomic<bool> m_pendingTiles;
 
-    std::vector<std::thread> m_workers;
+    std::vector<std::unique_ptr<Worker>> m_workers;
+
     std::condition_variable m_condition;
 
     std::mutex m_mutex;
