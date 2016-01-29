@@ -49,7 +49,8 @@ void main(void) {
             color = vec4(vec3(c1) * v_color.rgb, c2 * v_alpha * v_color.a);
         #else
             vec4 texColor = texture2D(u_tex, v_texcoords);
-            color = vec4(texColor.rgb * v_color.rgb, v_alpha * texColor.a * v_color.a);
+            color = vec4(texColor.rgb * v_color.rgb, 1.0);
+            color *= v_alpha * texColor.a * v_color.a;
         #endif
 
         #pragma tangram: color

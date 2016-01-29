@@ -70,13 +70,26 @@ void main(void) {
 
     vec4 color = v_color;
 
-    float distance = texture2D(u_tex, v_texcoords).a;
+    //float distance = texture2D(u_tex, v_texcoords).a;
+    // color *= v_alpha * pow(sampleAlpha(v_texcoords, distance, v_sdf_threshold), 0.4545);
 
-    color.a *= v_alpha * pow(sampleAlpha(v_texcoords, distance, v_sdf_threshold), 0.4545);
+    float dist = texture2D(u_tex, v_texcoords).a;
+
+    // emSize 15/16 = .937
+    // float s = 0.0625 * emSize; // 0.0625 = 1.0/1em ratio
+    // // ==> .0666
+    float s = 0.066;
+    s *= 2.5;
+
+    float alpha = smoothstep(v_sdf_threshold - s,
+                             v_sdf_threshold + s,
+                             dist);
+
+    color *= v_alpha * alpha;
+
 
     #pragma tangram: color
     #pragma tangram: filter
 
     gl_FragColor = color;
 }
-
