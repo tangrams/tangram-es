@@ -16,20 +16,6 @@ public:
               GLenum _hint = GL_STATIC_DRAW, bool _keepMemoryData = false)
         : VboMesh(_vertexLayout, _drawMode, _hint, _keepMemoryData) {};
 
-    void addVertices(std::vector<T>&& _vertices,
-                     std::vector<uint16_t>&& _indices) {
-
-        m_nVertices += _vertices.size();
-        m_nIndices += _indices.size();
-
-        m_vertices.push_back(std::move(_vertices));
-        m_indices.push_back(std::move(_indices));
-    }
-
-    void compile() {
-        compile(m_vertices, m_indices);
-    }
-
     /*
      * Update _nVerts vertices in the mesh with the new T value _newVertexValue
      * starting after _byteOffset in the mesh vertex data memory
@@ -45,21 +31,19 @@ public:
     template<class A>
     void updateAttribute(Range _vertexRange, const A& _newAttributeValue, size_t _attribOffset = 0);
 
+    void compile(std::vector<std::vector<T>>&& _vertices,
+                 std::vector<std::vector<uint16_t>>&& _indices);
+
 protected:
 
-    void compile(std::vector<std::vector<T>>& _vertices,
-                 std::vector<std::vector<uint16_t>>& _indices);
 
     void setDirty(GLintptr _byteOffset, GLsizei _byteSize);
-
-    std::vector<std::vector<T>> m_vertices;
-    std::vector<std::vector<uint16_t>> m_indices;
 
 };
 
 template<class T>
-void TypedMesh<T>::compile(std::vector<std::vector<T>>& _vertices,
-                           std::vector<std::vector<uint16_t>>& _indices) {
+void TypedMesh<T>::compile(std::vector<std::vector<T>>&& _vertices,
+                           std::vector<std::vector<uint16_t>>&& _indices) {
 
     std::vector<std::vector<T>> vertices;
     std::vector<std::vector<uint16_t>> indices;

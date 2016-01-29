@@ -44,9 +44,7 @@ void Skybox::init() {
         {  1.0,  1.0, -1.0 }
     };
 
-    m_mesh->addVertices(std::move(vertices), std::move(indices));
-    m_mesh->compile();
-
+    m_mesh->compile({std::move(vertices)}, {std::move(indices)});
 }
 
 void Skybox::draw(const View& _view) {

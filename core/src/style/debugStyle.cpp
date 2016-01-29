@@ -69,8 +69,7 @@ struct Builder : public StyleBuilder {
         vertices.push_back({{ 1.f, 1.f, 0.f }, abgr });
         vertices.push_back({{ 0.f, 1.f, 0.f }, abgr });
 
-        mesh->addVertices(std::move(vertices), { 0, 1, 2, 3, 0 });
-        mesh->compile();
+        mesh->compile({std::move(vertices)}, {{ 0, 1, 2, 3, 0 }});
 
         return std::move(mesh);
     }

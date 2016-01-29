@@ -27,8 +27,14 @@ public:
 
     void reset();
 
+    void addVertices(std::vector<Label::Vertex>&& _vertices,
+                     std::vector<uint16_t>&& _indices);
+
 protected:
     void loadQuadIndices();
+
+    std::vector<std::vector<Label::Vertex>> m_vertices;
+    std::vector<std::vector<uint16_t>> m_indices;
 
     std::vector<std::unique_ptr<Label>> m_labels;
 };
