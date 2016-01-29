@@ -228,7 +228,7 @@ void Builder::addPoint(const Point& _point, const Properties& _props, const Draw
 
     if (!params.isValid()) { return; }
 
-    if (!m_builder.prepareLabel(m_style.fontContext(), params, Label::Type::point)) { return; }
+    if (!m_builder.prepareLabel(m_style.fontContext(), params)) { return; }
 
     m_builder.addLabel(params, Label::Type::point, { glm::vec2(_point), glm::vec2(_point) });
 }
@@ -239,7 +239,10 @@ void Builder::addLine(const Line& _line, const Properties& _props, const DrawRul
 
     if (!params.isValid()) { return; }
 
-    if (!m_builder.prepareLabel(m_style.fontContext(), params, Label::Type::line)) { return; }
+    // Not yet supported for line labels
+    params.wordWrap = false;
+
+    if (!m_builder.prepareLabel(m_style.fontContext(), params)) { return; }
 
     float pixel = 2.0 / m_tileSize;
     float minLength = m_builder.labelWidth() * pixel * 0.2;
