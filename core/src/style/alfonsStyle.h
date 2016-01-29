@@ -44,10 +44,10 @@ public:
 
 protected:
 
-    virtual void constructVertexLayout() override;
-    virtual void constructShaderProgram() override;
+    void constructVertexLayout() override;
+    void constructShaderProgram() override;
 
-    virtual std::unique_ptr<StyleBuilder> createBuilder() const override;
+    std::unique_ptr<StyleBuilder> createBuilder() const override;
 
     bool m_sdf;
 
@@ -58,9 +58,10 @@ public:
               Blending _blendMode = Blending::overlay,
               GLenum _drawMode = GL_TRIANGLES);
 
-    virtual void onBeginDrawFrame(const View& _view, Scene& _scene, int _textureUnit = 0) override;
+    void onBeginDrawFrame(const View& _view, Scene& _scene, int _textureUnit = 0) override;
+    void onEndDrawFrame() override;
 
-    virtual ~AlfonsStyle();
+    ~AlfonsStyle() override;
 
 private:
 
