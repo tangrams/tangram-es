@@ -27,6 +27,7 @@ public:
         float fontSize = 16.0f;
         float blurSpread = 0.0f;
         Label::Options labelOptions;
+        bool wordWrap = true;
         uint32_t maxLineWidth = 15;
 
         TextLabelProperty::Transform transform = TextLabelProperty::Transform::none;

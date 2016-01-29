@@ -55,8 +55,7 @@ void TextBuffer::Builder::findWords(const std::string& _text, std::vector<WordBr
 
 int TextBuffer::Builder::applyWordWrapping(std::vector<FONSquad>& _quads,
                                            const TextStyle::Parameters& _params,
-                                           const FontContext::FontMetrics& _metrics,
-                                           Label::Type _type) {
+                                           const FontContext::FontMetrics& _metrics) {
     struct LineQuad {
         std::vector<FONSquad*> quads;
         float length = 0.0f;
@@ -66,7 +65,7 @@ int TextBuffer::Builder::applyWordWrapping(std::vector<FONSquad>& _quads,
     int nLine = 1;
 
     std::vector<LineQuad> lines;
-    if (_params.maxLineWidth < _params.text.length() && _type != Label::Type::line) {
+    if (_params.wordWrap && _params.maxLineWidth < _params.text.length()) {
         findWords(_params.text, m_wordBreaks);
     } else {
         return 1;
@@ -228,8 +227,7 @@ std::unique_ptr<TextBuffer> TextBuffer::Builder::build() {
 }
 
 bool TextBuffer::Builder::prepareLabel(FontContext& _fontContext,
-                                       const TextStyle::Parameters& _params,
-                                       Label::Type _type) {
+                                       const TextStyle::Parameters& _params) {
 
     if (_params.fontId < 0 || _params.fontSize <= 0.f || _params.text.size() == 0) {
         return false;
@@ -275,7 +273,7 @@ bool TextBuffer::Builder::prepareLabel(FontContext& _fontContext,
     int nLine = 1;
 
     m_wordBreaks.clear();
-    nLine = applyWordWrapping(quads, _params, m_metrics, _type);
+    nLine = applyWordWrapping(quads, _params, m_metrics);
 
     /// Generate the quads
     float yMin = std::numeric_limits<float>::max();

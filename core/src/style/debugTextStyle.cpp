@@ -40,7 +40,7 @@ struct Builder : public StyleBuilder {
             return nullptr;
         }
 
-        if(!m_builder.prepareLabel(m_style.fontContext(), m_params, Label::Type::point)) {
+        if(!m_builder.prepareLabel(m_style.fontContext(), m_params)) {
             return nullptr;
         }
 
