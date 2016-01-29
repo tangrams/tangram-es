@@ -127,7 +127,7 @@ public:
     bool update(const glm::mat4& _mvp, const glm::vec2& _screenSize, float _zoomFract);
 
     /* Push the pending transforms to the vbo by updating the vertices */
-    void pushTransform();
+    virtual void pushTransform();
 
     bool evalState(const glm::vec2& _screenSize, float _dt);
 
