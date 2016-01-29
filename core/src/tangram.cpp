@@ -96,8 +96,8 @@ void initialize(const char* _scenePath) {
     int i = 0;
     int boldHint = 500;
     std::string fontFallback = systemFontFallbackPath(i, boldHint);
-    while (fontFallback.empty()) {
-        LOGS("%s", fontFallback.c_str());
+    while (!fontFallback.empty()) {
+        LOG("%s", fontFallback.c_str());
         fontFallback = systemFontFallbackPath(i++, boldHint);
     }
 
