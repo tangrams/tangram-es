@@ -47,6 +47,36 @@ Texture::Texture(const std::string& _file, TextureOptions _options, bool _genera
     stbi_image_free(pixels);
 }
 
+Texture::Texture(Texture&& _other) {
+    m_glHandle = _other.m_glHandle;
+    _other.m_glHandle = 0;
+
+    m_options = _other.m_options;
+    m_data = std::move(_other.m_data);
+    m_dirtyRanges = std::move(_other.m_dirtyRanges);
+    m_width = _other.m_width;
+    m_height = _other.m_height;
+    m_target = _other.m_target;
+    m_generation = _other.m_generation;
+    m_generateMipmaps = _other.m_generateMipmaps;
+}
+
+Texture& Texture::operator=(Texture&& _other) {
+    m_glHandle = _other.m_glHandle;
+    _other.m_glHandle = 0;
+
+    m_options = _other.m_options;
+    m_data = std::move(_other.m_data);
+    m_dirtyRanges = std::move(_other.m_dirtyRanges);
+    m_width = _other.m_width;
+    m_height = _other.m_height;
+    m_target = _other.m_target;
+    m_generation = _other.m_generation;
+    m_generateMipmaps = _other.m_generateMipmaps;
+
+    return *this;
+}
+
 Texture::~Texture() {
     if (m_glHandle) {
         glDeleteTextures(1, &m_glHandle);
@@ -91,6 +121,7 @@ void Texture::setSubData(const GLuint* _subData, uint16_t _xoff, uint16_t _yoff,
 }
 
 void Texture::setDirty(size_t _yoff, size_t _height) {
+    // FIXME: check that dirty range is valid for texture size!
     size_t max = _yoff + _height;
     size_t min = _yoff;
 

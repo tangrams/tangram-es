@@ -39,6 +39,9 @@ public:
             TextureOptions _options = {GL_RGBA, GL_RGBA, {GL_LINEAR, GL_LINEAR}, {GL_CLAMP_TO_EDGE, GL_CLAMP_TO_EDGE}},
             bool _generateMipmaps = false);
 
+    Texture(Texture&& _other);
+    Texture& operator=(Texture&& _other);
+
     virtual ~Texture();
 
     /* Perform texture updates, should be called at least once and after adding data or resizing */
