@@ -22,6 +22,7 @@ GLFWwindow* main_window = nullptr;
 int width = 800;
 int height = 600;
 bool recreate_context;
+bool enable_msaa = true;
 
 // Input handling
 // ==============
@@ -193,6 +194,7 @@ void key_callback(GLFWwindow* window, int key, int scancode, int action, int mod
                 Tangram::loadScene(sceneFile.c_str());
                 break;
             case GLFW_KEY_BACKSPACE:
+                enable_msaa = !enable_msaa;
                 recreate_context = true;
                 break;
             case GLFW_KEY_N:
@@ -234,7 +236,9 @@ void init_main_window() {
     }
 
     // Create a windowed mode window and its OpenGL context
-    glfwWindowHint(GLFW_SAMPLES, 2);
+    if (enable_msaa) {
+        glfwWindowHint(GLFW_SAMPLES, 2);
+    }
     main_window = glfwCreateWindow(width, height, "Tangram ES", NULL, NULL);
     if (!main_window) {
         glfwTerminate();
