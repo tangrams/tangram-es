@@ -31,10 +31,10 @@ struct PolylineVertex {
           extrude(glm::i16vec2{extrude * extrusion_scale}, width),
           abgr(abgr) {}
 
-    PolylineVertex(PolylineVertex v, float order, glm::vec2 width, GLuint abgr)
-        : pos(glm::i16vec4{glm::i16vec3{v.pos}, order * order_scale}),
+    PolylineVertex(PolylineVertex v, short order, glm::i16vec2 width, GLuint abgr)
+        : pos(glm::i16vec4{glm::i16vec3{v.pos}, order}),
           texcoord(v.texcoord),
-          extrude(glm::i16vec4{ v.extrude.x, v.extrude.y, width * extrusion_scale }),
+          extrude(glm::i16vec4{ v.extrude.x, v.extrude.y, width }),
           abgr(abgr) {}
 
     glm::i16vec4 pos;
@@ -72,16 +72,6 @@ struct MeshData {
     std::vector<std::pair<uint32_t, uint32_t>> offsets;
     std::vector<PolylineVertex> vertices;
     std::vector<uint16_t> indices;
-
-    // Temporary values for the currently build mesh
-    glm::i16vec2 height;
-    glm::i16vec2 width;
-    GLuint color;
-    void set(uint32_t _color, float _width, float _dWdZ, float _height, float _order) {
-        height = { glm::round(_height * position_scale), _order * order_scale};
-        width = glm::vec2{_width, _dWdZ} * extrusion_scale;
-        color =_color;
-    }
 
     void clear() {
         offsets.clear();
@@ -124,39 +114,34 @@ struct Mesh : public VboMesh {
     }
 
     // Use custom 'compile' to directly transfer buffers from MeshData
-    void compile(const MeshData& _fill, const MeshData& _outline) {
+    void compile(const std::vector<MeshData>& _meshes) {
         m_isCompiled = true;
 
-        size_t nFillVertices = 0;
-        size_t nFillIndices = 0;
-        for (auto& p : _fill.offsets) {
-            nFillVertices += p.second;
-            nFillIndices += p.first;
+        m_nVertices = 0;
+        m_nIndices = 0;
+
+        for (auto& m : _meshes) {
+            m_nVertices += m.vertices.size();
+            m_nIndices += m.indices.size();
         }
-        size_t nOutlineVertices = 0;
-        size_t nOutlineIndices = 0;
-        for (auto& p : _outline.offsets) {
-            nOutlineVertices += p.second;
-            nOutlineIndices += p.first;
-        }
-        m_nVertices = nFillVertices + nOutlineVertices;
-        m_nIndices = nFillIndices + nOutlineIndices;
 
         int stride = m_vertexLayout->getStride();
         m_glVertexData = new GLbyte[m_nVertices * stride];
         m_glIndexData = new GLushort[m_nIndices];
 
-        std::memcpy(m_glVertexData,
-                    reinterpret_cast<const GLbyte*>(_outline.vertices.data()),
-                    nOutlineVertices * stride);
+        size_t byteOffset = 0;
+        for (auto& m : _meshes) {
+            std::memcpy(m_glVertexData + byteOffset,
+                        reinterpret_cast<const GLbyte*>(m.vertices.data()),
+                        m.vertices.size() * stride);
 
-        std::memcpy(m_glVertexData + (nOutlineVertices * stride),
-                    reinterpret_cast<const GLbyte*>(_fill.vertices.data()),
-                    nFillVertices * stride);
+            byteOffset += m.vertices.size() * stride;
+        }
 
         GLushort* dst = m_glIndexData;
-        dst = compileIndices(dst, _outline);
-        dst = compileIndices(dst, _fill);
+        for (auto& m : _meshes) {
+            dst = compileIndices(dst, m);
+        }
 
         assert(dst == m_glIndexData + m_nIndices);
     }
@@ -166,16 +151,21 @@ struct Mesh : public VboMesh {
 
 struct Parameters {
 
-    struct {
-        uint32_t order = 0;
-        uint32_t color = 0xff00ffff;
-        float width = 0.f;
-        float slope = 0.f;
+    struct Attributes {
+        // Values prepared for the currently build mesh
+        glm::i16vec2 height;
+        glm::i16vec2 width;
+        uint32_t color;
+
         CapTypes cap = CapTypes::butt;
         JoinTypes join = JoinTypes::miter;
-    } fill, outline;
 
-    float height = 0.f;
+        void set(float _width, float _dWdZ, float _height, float _order) {
+            height = { glm::round(_height * position_scale), _order * order_scale};
+            width = glm::vec2{_width, _dWdZ} * extrusion_scale;
+        }
+    } fill, stroke;
+
     bool keepTileEdges = false;
     bool outlineOn = false;
 };
@@ -184,7 +174,8 @@ struct Builder : public StyleBuilder {
 
     const PolylineStyle& m_style;
     PolyLineBuilder m_builder;
-    MeshData m_fill, m_outline;
+
+    std::vector<MeshData> m_meshData;
 
     std::unique_ptr<Mesh> m_mesh;
     float m_tileUnitsPerMeter;
@@ -199,11 +190,13 @@ struct Builder : public StyleBuilder {
 
     std::unique_ptr<VboMesh> build() override;
 
-    Builder(const PolylineStyle& _style) : StyleBuilder(_style), m_style(_style) {}
+    Builder(const PolylineStyle& _style)
+        : StyleBuilder(_style), m_style(_style),
+          m_meshData(2) {}
 
     void addMesh(const Line& _line, const Parameters& _params);
 
-    void buildLine(const Line& _line, MeshData& _mesh);
+    void buildLine(const Line& _line, const Parameters::Attributes& _att, MeshData& _mesh);
 
     Parameters parseRule(const DrawRule& _rule, const Properties& _props);
 
@@ -216,15 +209,15 @@ void Builder::begin(const Tile& _tile) {
     m_zoom = _tile.getID().z;
     m_tileSize = _tile.getProjection()->TileSize();
     m_mesh = std::make_unique<Mesh>(m_style.vertexLayout(), m_style.drawMode());
-    m_fill.clear();
-    m_outline.clear();
+    m_meshData[0].clear();
+    m_meshData[1].clear();
 }
 
 std::unique_ptr<VboMesh> Builder::build() {
     auto mesh = std::make_unique<Mesh>(m_style.vertexLayout(), m_style.drawMode());
-    mesh->compile(m_fill, m_outline);
-    m_fill.clear();
-    m_outline.clear();
+    mesh->compile(m_meshData);
+    m_meshData[0].clear();
+    m_meshData[1].clear();
     return std::move(mesh);
 }
 
@@ -233,16 +226,23 @@ auto Builder::parseRule(const DrawRule& _rule, const Properties& _props) -> Para
 
     uint32_t cap = 0, join = 0;
 
+    struct {
+        uint32_t order = 0;
+        uint32_t color = 0xff00ffff;
+        float width = 0.f;
+        float slope = 0.f;
+    } fill, stroke;
+
     auto& width = _rule.findParameter(StyleParamKey::width);
-    if (!evalWidth(width, p.fill.width, p.fill.slope)) {
-        p.fill.width = 0;
+    if (!evalWidth(width, fill.width, fill.slope)) {
+        fill.width = 0;
         return p;
     }
-    p.fill.slope -= p.fill.width;
+    fill.slope -= fill.width;
     _rule.get(StyleParamKey::color, p.fill.color);
     _rule.get(StyleParamKey::cap, cap);
     _rule.get(StyleParamKey::join, join);
-    _rule.get(StyleParamKey::order, p.fill.order);
+    _rule.get(StyleParamKey::order, fill.order);
     _rule.get(StyleParamKey::tile_edges, p.keepTileEdges);
 
     p.fill.cap = static_cast<CapTypes>(cap);
@@ -251,45 +251,53 @@ auto Builder::parseRule(const DrawRule& _rule, const Properties& _props) -> Para
     glm::vec2 extrude = glm::vec2(0);
     _rule.get(StyleParamKey::extrude, extrude);
 
-    p.height = getUpperExtrudeMeters(extrude, _props);
-    p.height *= m_tileUnitsPerMeter;
+    float height = getUpperExtrudeMeters(extrude, _props);
+    height *= m_tileUnitsPerMeter;
 
-    p.outline.order = p.fill.order;
-    p.outline.cap = p.fill.cap;
-    p.outline.join = p.fill.join;
+    stroke.order = fill.order;
+    p.stroke.cap = p.fill.cap;
+    p.stroke.join = p.fill.join;
 
-    auto& outlineWidth = _rule.findParameter(StyleParamKey::outline_width);
-    if (outlineWidth |
-        _rule.get(StyleParamKey::outline_color, p.outline.color) |
-        _rule.get(StyleParamKey::outline_order, p.outline.order) |
+    auto& strokeWidth = _rule.findParameter(StyleParamKey::outline_width);
+    if (strokeWidth |
+        _rule.get(StyleParamKey::outline_color, p.stroke.color) |
+        _rule.get(StyleParamKey::outline_order, stroke.order) |
         _rule.get(StyleParamKey::outline_cap, cap) |
         _rule.get(StyleParamKey::outline_join, join)) {
 
-        p.outline.cap = static_cast<CapTypes>(cap);
-        p.outline.join = static_cast<JoinTypes>(join);
+        p.stroke.cap = static_cast<CapTypes>(cap);
+        p.stroke.join = static_cast<JoinTypes>(join);
 
-        if (!evalWidth(outlineWidth, p.outline.width, p.outline.slope)) {
+        if (!evalWidth(strokeWidth, stroke.width, stroke.slope)) {
             return p;
         }
 
-        // NB: Multiply by 2 for the outline to get the expected stroke pixel width.
-        p.outline.width *= 2.0f;
-        p.outline.slope *= 2.0f;
-        p.outline.slope -= p.outline.width;
+        // NB: Multiply by 2 for the stroke to get the expected stroke pixel width.
+        stroke.width *= 2.0f;
+        stroke.slope *= 2.0f;
+        stroke.slope -= stroke.width;
 
-        p.outline.width += p.fill.width;
-        p.outline.slope += p.fill.slope;
+        stroke.width += fill.width;
+        stroke.slope += fill.slope;
+
+        stroke.order = std::min(stroke.order, fill.order);
+
+        p.stroke.set(stroke.width, stroke.slope,
+                     height, stroke.order - 0.5f);
 
         p.outlineOn = true;
     }
 
     if (Tangram::getDebugFlag(Tangram::DebugFlags::proxy_colors)) {
-        p.fill.color <<= (m_zoom % 6);
-        p.outline.color <<= (m_zoom % 6);
+        fill.color <<= (m_zoom % 6);
+        stroke.color <<= (m_zoom % 6);
     }
 
     // FIXME: just to make hidden lines visible
-    if (p.fill.width < 0.5/m_tileSize) { p.fill.width = 0.5/m_tileSize; }
+    if (fill.width < 0.5/m_tileSize) { fill.width = 0.5/m_tileSize; }
+
+
+    p.fill.set(fill.width, fill.slope, height, fill.order);
 
     return p;
 }
@@ -346,7 +354,7 @@ void Builder::addFeature(const Feature& _feat, const DrawRule& _rule) {
 
     Parameters params = parseRule(_rule, _feat.props);
 
-    if (params.fill.width <= 0.0f && params.fill.slope <= 0.0f ) { return; }
+    // if (params.fill.width <= 0.0f && params.fill.slope <= 0.0f ) { return; }
 
     if (_feat.geometryType == GeometryType::lines) {
         // Line geometries are never clipped to tiles, so keep all segments
@@ -364,13 +372,13 @@ void Builder::addFeature(const Feature& _feat, const DrawRule& _rule) {
     }
 }
 
-void Builder::buildLine(const Line& _line, MeshData& _mesh) {
+void Builder::buildLine(const Line& _line, const Parameters::Attributes& _att, MeshData& _mesh) {
 
-    m_builder.addVertex = [&_mesh](const glm::vec3& coord,
+    m_builder.addVertex = [&_mesh, &_att](const glm::vec3& coord,
                                    const glm::vec2& normal,
                                    const glm::vec2& uv) {
         _mesh.vertices.push_back({{ coord.x,coord.y }, normal, uv,
-                              _mesh.width, _mesh.height, _mesh.color});
+                              _att.width, _att.height, _att.color});
     };
 
     Builders::buildPolyLine(_line, m_builder);
@@ -390,48 +398,41 @@ void Builder::addMesh(const Line& _line, const Parameters& _params) {
     m_builder.cap = _params.fill.cap;
     m_builder.join = _params.fill.join;
     m_builder.keepTileEdges = _params.keepTileEdges;
-    m_fill.set(_params.fill.color,
-               _params.fill.width,
-               _params.fill.slope,
-               _params.height,
-               _params.fill.order);
 
-    buildLine(_line, m_fill);
+    buildLine(_line, _params.fill, m_meshData[0]);
 
     if (!_params.outlineOn) { return; }
 
-    float order = std::min(_params.outline.order, _params.fill.order) - .5f;
-
-    if (_params.outline.cap != _params.fill.cap ||
-        _params.outline.join != _params.fill.join) {
+    if (_params.stroke.cap != _params.fill.cap ||
+        _params.stroke.join != _params.fill.join) {
         // need to re-triangulate with different cap and/or join
-        m_builder.cap = _params.outline.cap;
-        m_builder.join = _params.outline.join;
-        m_outline.set(_params.outline.color,
-                      _params.outline.width,
-                      _params.outline.slope,
-                      _params.height, order);
+        m_builder.cap = _params.stroke.cap;
+        m_builder.join = _params.stroke.join;
 
-        buildLine(_line, m_outline);
+        buildLine(_line, _params.stroke, m_meshData[1]);
 
     } else {
+        auto& fill = m_meshData[0];
+        auto& stroke = m_meshData[1];
+
         // reuse indices from original line, overriding color and width
-        size_t nIndices = m_fill.offsets.back().first;
-        size_t nVertices = m_fill.offsets.back().second;
-        m_outline.offsets.emplace_back(nIndices, nVertices);
+        size_t nIndices = fill.offsets.back().first;
+        size_t nVertices = fill.offsets.back().second;
+        stroke.offsets.emplace_back(nIndices, nVertices);
 
-        auto indicesIt = m_fill.indices.end() - nIndices;
-        m_outline.indices.insert(m_outline.indices.end(),
+        auto indicesIt = fill.indices.end() - nIndices;
+        stroke.indices.insert(stroke.indices.end(),
                                  indicesIt,
-                                 m_fill.indices.end());
+                                 fill.indices.end());
 
-        auto vertexIt = m_fill.vertices.end() - nVertices;
+        auto vertexIt = fill.vertices.end() - nVertices;
 
-        glm::vec2 width = {_params.outline.width, _params.outline.slope };
-        GLuint abgr = _params.outline.color;
+        glm::vec2 width = _params.stroke.width;
+        GLuint abgr = _params.stroke.color;
+        short order = _params.stroke.height[1];
 
-        for (; vertexIt != m_fill.vertices.end(); ++vertexIt) {
-            m_outline.vertices.emplace_back(*vertexIt, order, width, abgr);
+        for (; vertexIt != fill.vertices.end(); ++vertexIt) {
+            stroke.vertices.emplace_back(*vertexIt, order, width, abgr);
         }
     }
 }
