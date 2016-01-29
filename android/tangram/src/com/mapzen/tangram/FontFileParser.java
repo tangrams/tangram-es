@@ -131,10 +131,9 @@ class FontFileParser {
         }
     }
 
-    public FontFileParser() {
-
+    public void parse(String fontXMLPath) {
         InputStream in = null;
-        final File fontFile = new File("/system/etc/fonts.xml");
+        final File fontFile = new File(fontXMLPath);
 
         // TODO: Handle system_fonts parsing which has a different xml layout as compared to fonts.xml
         //       system_fonts.xml also does not seem to have a good css style font parameter mapping as is the case with
