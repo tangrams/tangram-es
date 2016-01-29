@@ -94,6 +94,10 @@ std::string systemFontPath(const std::string& _name, const std::string& _weight,
     return "";
 }
 
+std::string systemFontFallbackPath(int _importance, int _weightHint) {
+    return "";
+}
+
 bool startUrlRequest(const std::string& _url, UrlCallback _callback) {
     return true;
 }
