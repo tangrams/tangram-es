@@ -42,7 +42,7 @@ namespace Tangram {
 #define FONT_JA "fonts/DroidSansJapanese.ttf"
 #define FALLBACK "fonts/DroidSansFallback.ttf"
 
-#define FONT_SIZE 18
+#define FONT_SIZE 24
 
 struct AlfonsContext : public alf::TextureCallback {
     AlfonsContext() :
@@ -346,12 +346,29 @@ bool Builder::prepareLabel(const AlfonsStyle::Parameters& _params, Label::Type _
     m_scratch.reset();
 
     m_scratch.fill = _params.fill;
-    m_scratch.stroke = _params.stroke;
+
+    // Stroke width is normalized by the distance of the SDF spread, then scaled
+    // to a char, then packed into the "alpha" channel of stroke. The .25 scaling
+    // probably has to do with how the SDF is generated, but honestly I'm not sure
+    // what it represents.
+    float fontScale = _params.fontSize / FONT_SIZE;
+
+    //uint32_t strokeWidth = (_params.strokeWidth / _params.blurSpread * 255. * .25) / fontScale;
+    //m_scratch.stroke = (_params.strokeColor & 0x00ffffff) + (strokeWidth << 24);
+
+    uint32_t strokeWidth = (_params.strokeWidth / 3.f * 255. * .25) / fontScale;
+
+    m_scratch.stroke = (_params.strokeColor & 0x00ffffff) + (strokeWidth << 24);
+
+
     {
         auto ctx = m_style.context();
 
         std::lock_guard<std::mutex> lock(ctx->m_mutex);
         auto line = m_shaper.shape(ctx->m_font, _params.text);
+
+        line.setScale(fontScale);
+
         if (_type == Label::Type::point) {
             auto adv = m_batch.draw(line, {0, 0}, _params.maxLineWidth * line.height() * 0.5);
             m_scratch.numLines = adv.y/line.height();
