@@ -45,7 +45,7 @@ void Skybox::init() {
     };
 
     m_mesh->addVertices(std::move(vertices), std::move(indices));
-    m_mesh->compileVertexBuffer();
+    m_mesh->compile();
 
 }
 

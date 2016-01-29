@@ -198,10 +198,6 @@ void TextBuffer::setLabels(std::vector<std::unique_ptr<Label>>& _labels,
     m_isCompiled = true;
 }
 
-void TextBuffer::compileVertexBuffer() {
-    // already compiled above
-}
-
 void TextBuffer::draw(ShaderProgram& _shader) {
 
     if (m_strokePass) {
