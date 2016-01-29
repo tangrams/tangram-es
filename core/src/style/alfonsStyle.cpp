@@ -26,6 +26,8 @@
 
 #include "sdf.h"
 
+#include <bitset>
+
 #define TEXTURE_SIZE 256
 
 
@@ -159,6 +161,8 @@ struct GlyphBatch {
     Texture texture;
     bool dirty;
     std::unique_ptr<AlfonsMesh> mesh;
+
+    size_t refCount = 0;
 };
 
 struct AlfonsContext : public alf::TextureCallback {
@@ -175,10 +179,12 @@ struct AlfonsContext : public alf::TextureCallback {
         m_vertexLayout = vertexLayout();
     }
 
+    // Synchronized on m_mutex on tile-worker threads
     void addTexture(alf::AtlasID id, uint16_t width, uint16_t height) override {
         m_batches.emplace_back(m_vertexLayout);
     }
 
+    // Synchronized on m_mutex, called tile-worker threads
     void addGlyph(alf::AtlasID id, uint16_t gx, uint16_t gy, uint16_t gw, uint16_t gh,
                   const unsigned char* src, uint16_t pad) override {
 
@@ -230,6 +236,7 @@ struct AlfonsContext : public alf::TextureCallback {
 // TODO make LabelMesh an interface
 // - just keeps labels and vertices for all Labels of a tile
 struct LabelContainer : public LabelMesh {
+
     LabelContainer(AlfonsContext& _ctx)
         // just adding vertexlayout to not crash in getMemoryusage!
         : LabelMesh(std::make_shared<VertexLayout>(std::vector<VertexLayout::VertexAttrib>{}), 0),
@@ -237,7 +244,7 @@ struct LabelContainer : public LabelMesh {
 
     AlfonsContext& context;
     std::vector<GlyphQuad> quads;
-
+    std::bitset<128> batchRefs;
 
     void compileVertexBuffer() override {}
     void draw(ShaderProgram& _shader) override {}
@@ -325,8 +332,10 @@ void AlfonsStyle::onBeginDrawFrame(const View& _view, Scene& _scene, int _textur
         // TODO upload mesh batch
         batch.mesh->myUpload();
 
-        LOG("compiled texture:%d/%d texid:%d upload:%d - buffersize:%d",
-            tex++, m_context->m_batches.size(), batch.texture.getGlHandle(),
+        LOG(">>> refcount:%d texture:%d/%d texid:%d upload:%d - buffersize:%d",
+            batch.refCount, tex++,
+            m_context->m_batches.size(),
+            batch.texture.getGlHandle(),
             dirty, batch.mesh->bufferSize());
     }
 
@@ -384,6 +393,7 @@ struct Builder : public StyleBuilder {
 
     struct ScratchBuffer : public alf::MeshCallback {
         std::vector<GlyphQuad> quads;
+        std::bitset<128> batchRefs;
 
         // label width and height
         glm::vec2 bbox;
@@ -417,9 +427,13 @@ struct Builder : public StyleBuilder {
                      {glm::vec2{q.x2, q.y2} * position_scale, {g.u2, g.v2}}},
                     fill, stroke, atlasGlyph.atlas });
 
+            // keep track which textures are used
+            batchRefs.set(atlasGlyph.atlas);
         }
+
         void clear() {
             quads.clear();
+            batchRefs.reset();
         }
     };
 
