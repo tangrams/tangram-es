@@ -31,6 +31,16 @@ LabelMesh::~LabelMesh() {
     }
 }
 
+void LabelMesh::addVertices(std::vector<Label::Vertex>&& _vertices,
+                            std::vector<uint16_t>&& _indices) {
+
+    m_nVertices += _vertices.size();
+    m_nIndices += _indices.size();
+
+    m_vertices.push_back(std::move(_vertices));
+    m_indices.push_back(std::move(_indices));
+}
+
 void LabelMesh::addLabel(std::unique_ptr<Label> _label) {
     m_labels.push_back(std::move(_label));
 }

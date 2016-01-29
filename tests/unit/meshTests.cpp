@@ -24,8 +24,7 @@ std::shared_ptr<TypedMesh<Vertex>> newMesh(unsigned int size) {
     for (size_t i = 0; i < size; ++i) {
         vertices.push_back({0,0,0,0});
     }
-    mesh->addVertices(std::move(vertices), {});
-    mesh->compile();
+    mesh->compile({std::move(vertices)}, {{}});
     return mesh;
 }
 
