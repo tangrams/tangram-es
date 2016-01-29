@@ -189,7 +189,7 @@ class FontFileParser {
      * The weightHint value determines the closest fallback hint for boldness
      * See /etc/fonts/font_fallback for documentation
      */
-    public String getFontFallback(int id, int weightHint) {
+    public String getFontFallback(int importance, int weightHint) {
         Iterator it = fallbackFontDict.entrySet().iterator();
         Integer diffWeight = Integer.MAX_VALUE;
         String fallback = "";
@@ -201,8 +201,8 @@ class FontFileParser {
             if (diff < diffWeight) {
                 Vector<String> fallbacks = (Vector<String>) pair.getValue();
 
-                if (id < fallbacks.size()) {
-                    fallback = fallbacks.elementAt(id);
+                if (importance < fallbacks.size()) {
+                    fallback = fallbacks.elementAt(importance);
                     diffWeight = diff;
                 }
             }

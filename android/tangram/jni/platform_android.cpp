@@ -117,11 +117,11 @@ void requestRender() {
     jniEnv->CallVoidMethod(tangramInstance, requestRenderMethodID);
 }
 
-std::string systemFontFallbackPath(int _order, int _weightHint) {
+std::string systemFontFallbackPath(int _importance, int _weightHint) {
 
     JniThreadBinding jniEnv(jvm);
 
-    jstring returnStr = (jstring) jniEnv->CallObjectMethod(tangramInstance, getFontFallbackFilePath, _order, _weightHint);
+    jstring returnStr = (jstring) jniEnv->CallObjectMethod(tangramInstance, getFontFallbackFilePath, _importance, _weightHint);
 
     size_t length = jniEnv->GetStringUTFLength(returnStr);
     std::string fontFallbackPath(length, 0);

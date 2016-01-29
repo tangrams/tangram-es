@@ -73,7 +73,7 @@ void setCurrentThreadPriority(int priority);
 /* Get the font fallback ordered by importance, 0 being the first fallback
  * (e.g. the fallback more willing resolve the glyph codepoint)
  */
-std::string systemFontFallbackPath(int _order, int _weightHint);
+std::string systemFontFallbackPath(int _importance, int _weightHint);
 
 void initGLExtensions();
 

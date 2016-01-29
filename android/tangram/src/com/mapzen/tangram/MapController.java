@@ -541,9 +541,9 @@ public class MapController implements Renderer {
 
     }
 
-    public String getFontFallbackFilePath(int id, int weightHint) {
+    public String getFontFallbackFilePath(int importance, int weightHint) {
 
-        return fontFileParser.getFontFallback(id, weightHint);
+        return fontFileParser.getFontFallback(importance, weightHint);
     }
 
     // Feature selection
