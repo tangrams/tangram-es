@@ -46,6 +46,9 @@ public:
             TextureOptions _options = DEFAULT_TEXTURE_OPTION},
             bool _generateMipmaps = false);
 
+    Texture(Texture&& _other);
+    Texture& operator=(Texture&& _other);
+
     virtual ~Texture();
 
     /* Perform texture updates, should be called at least once and after adding data or resizing */
@@ -74,7 +77,9 @@ public:
 
     /* Update a region of the texture */
     void setSubData(const GLuint* _subData, uint16_t _xoff, uint16_t _yoff,
-                    uint16_t _width, uint16_t _height);
+                    uint16_t _width, uint16_t _height, uint16_t _stride);
+
+    bool isValid();
 
     typedef std::pair<GLuint, GLuint> TextureSlot;
 

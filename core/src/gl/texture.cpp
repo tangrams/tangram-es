@@ -59,6 +59,36 @@ void Texture::loadPNG(const unsigned char* blob, unsigned int size) {
     stbi_image_free(pixels);
 }
 
+Texture::Texture(Texture&& _other) {
+    m_glHandle = _other.m_glHandle;
+    _other.m_glHandle = 0;
+
+    m_options = _other.m_options;
+    m_data = std::move(_other.m_data);
+    m_dirtyRanges = std::move(_other.m_dirtyRanges);
+    m_width = _other.m_width;
+    m_height = _other.m_height;
+    m_target = _other.m_target;
+    m_generation = _other.m_generation;
+    m_generateMipmaps = _other.m_generateMipmaps;
+}
+
+Texture& Texture::operator=(Texture&& _other) {
+    m_glHandle = _other.m_glHandle;
+    _other.m_glHandle = 0;
+
+    m_options = _other.m_options;
+    m_data = std::move(_other.m_data);
+    m_dirtyRanges = std::move(_other.m_dirtyRanges);
+    m_width = _other.m_width;
+    m_height = _other.m_height;
+    m_target = _other.m_target;
+    m_generation = _other.m_generation;
+    m_generateMipmaps = _other.m_generateMipmaps;
+
+    return *this;
+}
+
 Texture::~Texture() {
     if (m_glHandle) {
         glDeleteTextures(1, &m_glHandle);
@@ -82,7 +112,7 @@ void Texture::setData(const GLuint* _data, unsigned int _dataSize) {
 }
 
 void Texture::setSubData(const GLuint* _subData, uint16_t _xoff, uint16_t _yoff,
-                         uint16_t _width, uint16_t _height) {
+                         uint16_t _width, uint16_t _height, uint16_t _stride) {
 
     size_t bpp = bytesPerPixel();
     size_t divisor = sizeof(GLuint) / bpp;
@@ -93,16 +123,18 @@ void Texture::setSubData(const GLuint* _subData, uint16_t _xoff, uint16_t _yoff,
     }
 
     // update m_data with subdata
-    for (size_t row = _yoff, end = row + _height; row < end; row++) {
+    for (size_t row = 0; row < _height; row++) {
 
-        size_t pos = (row * m_width + _xoff) / divisor;
-        std::memcpy(&m_data[pos], &_subData[pos], _width * bpp);
+        size_t pos = ((_yoff + row) * m_width + _xoff) / divisor;
+        size_t posIn = (row * _stride) / divisor;
+        std::memcpy(&m_data[pos], &_subData[posIn], _width * bpp);
     }
 
     setDirty(_yoff, _height);
 }
 
 void Texture::setDirty(size_t _yoff, size_t _height) {
+    // FIXME: check that dirty range is valid for texture size!
     size_t max = _yoff + _height;
     size_t min = _yoff;
 
@@ -168,6 +200,10 @@ void Texture::checkValidity() {
         m_shouldResize = true;
         m_glHandle = 0;
     }
+}
+
+bool Texture::isValid() {
+    return (RenderState::isValidGeneration(m_generation) && m_glHandle != 0);
 }
 
 void Texture::update(GLuint _textureUnit) {
