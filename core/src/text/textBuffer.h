@@ -60,8 +60,6 @@ public:
     void setLabels(std::vector<std::unique_ptr<Label>>& _labels,
                    std::vector<Label::Vertex>& _vertices);
 
-    void compileVertexBuffer() override;
-
 protected:
 
     bool m_strokePass = false;

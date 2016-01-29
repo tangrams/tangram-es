@@ -66,7 +66,7 @@ void LabelMesh::loadQuadIndices() {
                  reinterpret_cast<GLbyte*>(indices.data()), GL_STATIC_DRAW);
 }
 
-void LabelMesh::compileVertexBuffer() {
+void LabelMesh::compile() {
     size_t sumVertices = 0;
     int stride = m_vertexLayout->getStride();
     m_glVertexData = new GLbyte[stride * m_nVertices];

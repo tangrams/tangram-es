@@ -21,7 +21,7 @@ public:
     const std::vector<std::unique_ptr<Label>>& getLabels() const {
         return m_labels;
     }
-    virtual void compileVertexBuffer() override;
+    void compile();
 
     virtual void draw(ShaderProgram& _shader) override;
 

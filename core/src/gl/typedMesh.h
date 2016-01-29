@@ -26,7 +26,7 @@ public:
         m_indices.push_back(std::move(_indices));
     }
 
-    virtual void compileVertexBuffer() override {
+    void compile() {
         compile(m_vertices, m_indices);
     }
 
@@ -173,7 +173,7 @@ void TypedMesh<T>::updateVertices(Range _vertexRange, const T& _newVertexValue) 
 
     size_t tSize = sizeof(T);
 
-    if (_vertexRange.start +_vertexRange.length > m_nVertices) {
+    if (_vertexRange.start + _vertexRange.length > int(m_nVertices)) {
         return;
     }
 

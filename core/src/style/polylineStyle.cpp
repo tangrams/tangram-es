@@ -145,8 +145,6 @@ struct Mesh : public VboMesh {
 
         assert(dst == m_glIndexData + m_nIndices);
     }
-
-    void compileVertexBuffer() override {}
 };
 
 struct Parameters {

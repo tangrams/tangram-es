@@ -67,9 +67,6 @@ struct Mesh : public VboMesh {
 
         m_isCompiled = true;
     }
-
-    void compileVertexBuffer() override {}
-
 };
 
 
