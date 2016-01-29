@@ -15,7 +15,6 @@ class DataSource;
 class MapProjection;
 class Scene;
 class Style;
-class TextBuffer;
 class VboMesh;
 class View;
 class StyleContext;
@@ -52,7 +51,6 @@ public:
 
     const glm::mat4& getModelMatrix() const { return m_modelMatrix; }
 
-    // Exposing for labelsTest
     void initGeometry(uint32_t _size);
 
     std::unique_ptr<VboMesh>& getMesh(const Style& _style);
