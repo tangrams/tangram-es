@@ -202,7 +202,7 @@ void update(float _dt) {
 }
 
 void render() {
-    clock_t start, end;
+    clock_t start{0};
 
     if (Tangram::getDebugFlag(Tangram::DebugFlags::tangram_infos)) {
         start = clock();
@@ -241,8 +241,7 @@ void render() {
         // Force opengl to finish commands (for accurate frame time)
         glFinish();
 
-        end = clock();
-
+        clock_t end = clock();
         static int cpt = 0;
         static float totaltime = 0;
         static float time = 0.f;
