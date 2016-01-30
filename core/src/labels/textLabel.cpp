@@ -8,9 +8,10 @@ TextLabel::TextLabel(Label::Transform _transform, Type _type, glm::vec2 _dim,
                      LabelMesh& _mesh, Range _vertexRange,
                      Label::Options _options, FontContext::FontMetrics _metrics,
                      int _nLines, Anchor _anchor, glm::vec2 _quadsLocalOrigin)
-    : Label(_transform, _dim, _type, _mesh, _vertexRange, _options),
+    : Label(_transform, _dim, _type, _vertexRange, _options),
       m_metrics(_metrics),
       m_nLines(_nLines),
+      m_mesh(_mesh),
       m_quadLocalOrigin(_quadsLocalOrigin) {
 
     if (m_type == Type::point) {
@@ -46,7 +47,8 @@ void TextLabel::updateBBoxes(float _zoomFract) {
     obbCenter += m_yAxis * m_quadLocalOrigin.y + m_yAxis * m_dim.y;
     obbCenter += m_xAxis * m_quadLocalOrigin.x;
 
-    m_obb = OBB(obbCenter.x, obbCenter.y, m_transform.state.rotation, m_dim.x + m_options.buffer, m_dim.y + m_options.buffer);
+    m_obb = OBB(obbCenter.x, obbCenter.y, m_transform.state.rotation,
+                m_dim.x + m_options.buffer, m_dim.y + m_options.buffer);
     m_aabb = m_obb.getExtent();
 }
 
@@ -75,6 +77,30 @@ void TextLabel::align(glm::vec2& _screenPosition, const glm::vec2& _ap1, const g
             _screenPosition += m_yAxis * (m_dim.y * 0.5f + 2.f * m_metrics.descender);
             break;
         }
+    }
+}
+
+void TextLabel::pushTransform() {
+
+    // update the buffer on valid states
+    if (m_dirty) {
+        static size_t attribOffset = offsetof(Label::Vertex, state);
+        static size_t alphaOffset = offsetof(Label::Vertex::State, alpha) + attribOffset;
+
+        if (visibleState()) {
+            // update the complete state on the mesh
+            m_mesh.updateAttribute(m_vertexRange, m_transform.state.vertex(), attribOffset);
+        } else {
+
+            // for any non-visible states, we don't need to overhead the gpu with updates on the
+            // alpha attribute, but simply do it once until the label goes back in a visible state
+            if (m_updateMeshVisibility) {
+                m_mesh.updateAttribute(m_vertexRange, (m_transform.state.vertex().alpha), alphaOffset);
+                m_updateMeshVisibility = false;
+            }
+        }
+
+        m_dirty = false;
     }
 }
 
