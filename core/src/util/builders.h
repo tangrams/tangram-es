@@ -47,7 +47,9 @@ struct PolygonBuilder {
 
     mapbox::Earcut<float, uint16_t> earcut;
 
-    PolygonBuilder(PolygonVertexFn _addVertex, SizeHintFn _sizeHint, bool _useTexCoords = true)
+    PolygonBuilder(PolygonVertexFn _addVertex = [](auto&,auto&,auto&){},
+                   SizeHintFn _sizeHint = [](auto){},
+                   bool _useTexCoords = true)
         : addVertex(_addVertex), sizeHint(_sizeHint), useTexCoords(_useTexCoords){}
 
     void clear() {
