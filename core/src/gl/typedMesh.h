@@ -8,6 +8,19 @@
 namespace Tangram {
 
 template<class T>
+struct MeshData {
+    std::vector<std::pair<uint32_t, uint32_t>> offsets;
+    std::vector<T> vertices;
+    std::vector<uint16_t> indices;
+
+    void clear() {
+        offsets.clear();
+        indices.clear();
+        vertices.clear();
+    }
+};
+
+template<class T>
 class TypedMesh : public VboMesh {
 
 public:
@@ -34,12 +47,79 @@ public:
     void compile(std::vector<std::vector<T>>&& _vertices,
                  std::vector<std::vector<uint16_t>>&& _indices);
 
-protected:
+    void compile(const std::vector<MeshData<T>>& _meshes);
 
+protected:
 
     void setDirty(GLintptr _byteOffset, GLsizei _byteSize);
 
+    GLushort* compileIndices(GLushort* _dst, const MeshData<T>& _data);
+
 };
+
+
+// Add indices by collecting them into batches to draw as much as
+// possible in one draw call.  The indices must be shifted by the
+// number of vertices that are present in the current batch.
+template<class T>
+GLushort* TypedMesh<T>::compileIndices(GLushort* _dst, const MeshData<T>& _data) {
+    m_vertexOffsets.emplace_back(0, 0);
+
+    size_t curVertices = 0;
+    size_t src = 0;
+
+    for (auto& p : _data.offsets) {
+        size_t nIndices = p.first;
+        size_t nVertices = p.second;
+
+        if (curVertices + nVertices > MAX_INDEX_VALUE) {
+            m_vertexOffsets.emplace_back(0, 0);
+            curVertices = 0;
+        }
+        for (size_t i = 0; i < nIndices; i++, _dst++) {
+            *_dst = _data.indices[src++] + curVertices;
+        }
+        auto& offset = m_vertexOffsets.back();
+        offset.first += nIndices;
+        offset.second += nVertices;
+
+        curVertices += nVertices;
+    }
+    return _dst;
+}
+
+template<class T>
+void TypedMesh<T>::compile(const std::vector<MeshData<T>>& _meshes) {
+    m_isCompiled = true;
+
+    m_nVertices = 0;
+    m_nIndices = 0;
+
+    for (auto& m : _meshes) {
+        m_nVertices += m.vertices.size();
+        m_nIndices += m.indices.size();
+    }
+
+    int stride = m_vertexLayout->getStride();
+    m_glVertexData = new GLbyte[m_nVertices * stride];
+    m_glIndexData = new GLushort[m_nIndices];
+
+    size_t byteOffset = 0;
+    for (auto& m : _meshes) {
+        std::memcpy(m_glVertexData + byteOffset,
+                    reinterpret_cast<const GLbyte*>(m.vertices.data()),
+                    m.vertices.size() * stride);
+
+        byteOffset += m.vertices.size() * stride;
+    }
+
+    GLushort* dst = m_glIndexData;
+    for (auto& m : _meshes) {
+        dst = compileIndices(dst, m);
+    }
+
+    assert(dst == m_glIndexData + m_nIndices);
+}
 
 template<class T>
 void TypedMesh<T>::compile(std::vector<std::vector<T>>&& _vertices,
