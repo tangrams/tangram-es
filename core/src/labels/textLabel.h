@@ -22,7 +22,11 @@ protected:
     FontContext::FontMetrics m_metrics;
     int m_nLines;
 
+    void pushTransform() override;
+
 private:
+    // Back-pointer to owning container
+    LabelMesh& m_mesh;
 
     glm::vec2 m_anchor;
     glm::vec2 m_quadLocalOrigin;
