@@ -51,6 +51,7 @@ std::string resolvePath(const char* _path, PathType _type) {
     case PathType::resource:
         return s_resourceRoot + _path;
     }
+    return "";
 }
 
 std::string stringFromFile(const char* _path, PathType _type) {

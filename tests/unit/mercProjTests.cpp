@@ -14,7 +14,7 @@ TEST_CASE( "Testing some functionality for mercator projection", "[MERCATOR][PRO
     MercatorProjection mercProjection = MercatorProjection();
     glm::dvec2 lonLat = glm::dvec2(0.0,0.0);
     glm::dvec2 worldCoord = glm::dvec2(0.0, 0.0);
-    glm::ivec3 tileCoord = glm::ivec3(2, 2, 3);
+    //glm::ivec3 tileCoord = glm::ivec3(2, 2, 3);
     double epsilon = 0.000000000000000001;
     //check if all the test tileCoordinates are loaded
     /*REQUIRE(dataSource.JsonRootSize() == 3);
