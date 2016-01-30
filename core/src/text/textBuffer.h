@@ -57,9 +57,6 @@ public:
 
     virtual void draw(ShaderProgram& _shader) override;
 
-    void setLabels(std::vector<std::unique_ptr<Label>>& _labels,
-                   std::vector<Label::Vertex>& _vertices);
-
 protected:
 
     bool m_strokePass = false;
