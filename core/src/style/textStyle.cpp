@@ -86,7 +86,7 @@ struct Builder : public StyleBuilder {
     void addLine(const Line& _line, const Properties& _props, const DrawRule& _rule) override;
     void addPoint(const Point& _line, const Properties& _props, const DrawRule& _rule) override;
 
-    std::unique_ptr<VboMesh> build() override {
+    std::unique_ptr<Mesh> build() override {
         return m_builder.build();
     }
 

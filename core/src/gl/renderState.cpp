@@ -1,8 +1,12 @@
 #include "renderState.h"
 
 #include "platform.h"
+#include "vertexLayout.h"
 
 namespace Tangram {
+
+ // Incremented when the GL context is invalidated
+static int s_validGeneration;
 
 namespace RenderState {
 
@@ -43,6 +47,9 @@ namespace RenderState {
     void bindTexture(GLenum _target, GLuint _textureId) { glBindTexture(_target, _textureId); }
 
     void configure() {
+        s_validGeneration++;
+        VertexLayout::clearCache();
+
         blending.init(GL_FALSE);
         blendingFunc.init(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
         culling.init(GL_TRUE);
@@ -63,6 +70,14 @@ namespace RenderState {
         texture.init(GL_TEXTURE_2D, std::numeric_limits<unsigned int>::max(), false);
         texture.init(GL_TEXTURE_CUBE_MAP, std::numeric_limits<unsigned int>::max(), false);
         textureUnit.init(std::numeric_limits<unsigned int>::max(), false);
+    }
+
+    bool isCurrentGeneration(int _generation) {
+        return _generation == s_validGeneration;
+    }
+
+    int generation() {
+        return s_validGeneration;
     }
 
 }

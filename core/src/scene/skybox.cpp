@@ -22,7 +22,7 @@ void Skybox::init() {
         {"a_position", 3, GL_FLOAT, false, 0},
     }));
 
-    m_mesh = std::make_unique<Mesh>(layout, GL_TRIANGLES, GL_STATIC_DRAW, true);
+    m_mesh = std::make_unique<VboMesh<PosVertex>>(layout, GL_TRIANGLES, GL_STATIC_DRAW, true);
     m_mesh->compile({
         { 5, 1, 3, 3, 7, 5, // +x
           6, 2, 0, 0, 4, 6, // -x

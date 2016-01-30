@@ -52,7 +52,7 @@ bool Labels::updateLabels(const std::vector<std::unique_ptr<Style>>& _styles,
             const auto& mesh = tile->getMesh(*style);
             if (!mesh) { continue; }
 
-            const LabelMesh* labelMesh = dynamic_cast<const LabelMesh*>(mesh.get());
+            auto labelMesh = dynamic_cast<const LabelSet*>(mesh.get());
             if (!labelMesh) { continue; }
 
             for (auto& label : labelMesh->getLabels()) {
@@ -134,11 +134,11 @@ void Labels::skipTransitions(const std::vector<std::unique_ptr<Style>>& _styles,
             for (const auto& style : _styles) {
                 const auto& m0 = t0->getMesh(*style);
                 if (!m0) { continue; }
-                const LabelMesh* mesh0 = dynamic_cast<const LabelMesh*>(m0.get());
+                auto mesh0 = dynamic_cast<const LabelSet*>(m0.get());
                 if (!mesh0) { continue; }
                 const auto& m1 = t1->getMesh(*style);
                 if (!m1) { continue; }
-                const LabelMesh* mesh1 = static_cast<const LabelMesh*>(m1.get());
+                auto mesh1 = dynamic_cast<const LabelSet*>(m1.get());
 
                 for (auto& l0 : mesh0->getLabels()) {
                     if (!l0->canOcclude()) { continue; }
@@ -308,7 +308,7 @@ const std::vector<TouchItem>& Labels::getFeaturesAtPoint(const View& _view, floa
             const auto& mesh = tile->getMesh(*style);
             if (!mesh) { continue; }
 
-            const LabelMesh* labelMesh = dynamic_cast<const LabelMesh*>(mesh.get());
+            auto labelMesh = dynamic_cast<const LabelSet*>(mesh.get());
             if (!labelMesh) { continue; }
 
             for (auto& label : labelMesh->getLabels()) {

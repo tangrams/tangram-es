@@ -1,6 +1,6 @@
 #pragma once
 
-#include "gl/typedMesh.h"
+#include "gl/vboMesh.h"
 
 #include <string>
 #include <memory>
@@ -34,8 +34,7 @@ private:
     std::unique_ptr<ShaderProgram> m_shader;
     std::unique_ptr<Texture> m_texture;
 
-    typedef TypedMesh<PosVertex> Mesh;
-    std::unique_ptr<Mesh> m_mesh;
+    std::unique_ptr<VboMesh<PosVertex>> m_mesh;
 
     std::string m_file;
 

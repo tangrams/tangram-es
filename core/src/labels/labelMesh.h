@@ -1,6 +1,6 @@
 #pragma once
 
-#include "gl/typedMesh.h"
+#include "gl/vboMesh.h"
 #include "labels/label.h"
 
 #include <memory>
@@ -10,27 +10,31 @@ namespace Tangram {
 
 class ShaderProgram;
 
-class LabelMesh : public TypedMesh<Label::Vertex> {
+class LabelSet {
 public:
-    LabelMesh(std::shared_ptr<VertexLayout> _vertexLayout, GLenum _drawMode);
-
-    virtual ~LabelMesh();
-
     const std::vector<std::unique_ptr<Label>>& getLabels() const {
         return m_labels;
     }
-
-    virtual void draw(ShaderProgram& _shader) override;
-
-    void compile(std::vector<std::unique_ptr<Label>>& _labels,
-                 std::vector<Label::Vertex>& _vertices);
+    void setLabels(std::vector<std::unique_ptr<Label>>& _labels);
 
     void reset();
 
 protected:
-    void loadQuadIndices();
-
     std::vector<std::unique_ptr<Label>> m_labels;
+};
+
+class LabelMesh : public VboMesh<Label::Vertex> {
+public:
+    LabelMesh(std::shared_ptr<VertexLayout> _vertexLayout, GLenum _drawMode);
+
+    ~LabelMesh() override;
+
+    void draw(ShaderProgram& _shader) override;
+
+    void compile(std::vector<Label::Vertex>& _vertices);
+
+    static void loadQuadIndices();
+
 };
 
 }

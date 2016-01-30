@@ -12,8 +12,23 @@ static std::atomic<int> s_meshCounter(0);
 
 const size_t maxVertices = 16384;
 
+void LabelSet::reset() {
+    for (auto& label : m_labels) {
+        label->resetState();
+    }
+}
+
+void LabelSet::setLabels(std::vector<std::unique_ptr<Label>>& _labels) {
+    typedef std::vector<std::unique_ptr<Label>>::iterator iter_t;
+    m_labels.reserve(_labels.size());
+    m_labels.insert(m_labels.begin(),
+                    std::move_iterator<iter_t>(_labels.begin()),
+                    std::move_iterator<iter_t>(_labels.end()));
+
+}
+
 LabelMesh::LabelMesh(std::shared_ptr<VertexLayout> _vertexLayout, GLenum _drawMode)
-    : TypedMesh<Label::Vertex>(_vertexLayout, _drawMode, GL_DYNAMIC_DRAW)
+    : VboMesh<Label::Vertex>(_vertexLayout, _drawMode, GL_DYNAMIC_DRAW)
 {
     s_meshCounter++;
 }
@@ -21,7 +36,7 @@ LabelMesh::LabelMesh(std::shared_ptr<VertexLayout> _vertexLayout, GLenum _drawMo
 LabelMesh::~LabelMesh() {
     s_meshCounter--;
 
-    if (s_quadIndexBuffer != 0 && (s_quadGeneration != s_validGeneration || s_meshCounter <= 0)) {
+    if (s_quadIndexBuffer != 0 && (!RenderState::isCurrentGeneration(s_quadGeneration) || s_meshCounter <= 0)) {
         if (RenderState::indexBuffer.compare(s_quadIndexBuffer)) {
             RenderState::indexBuffer.init(0, false);
         }
@@ -31,18 +46,12 @@ LabelMesh::~LabelMesh() {
     }
 }
 
-void LabelMesh::reset() {
-    for (auto& label : m_labels) {
-        label->resetState();
-    }
-}
-
 void LabelMesh::loadQuadIndices() {
-    if (s_quadGeneration == s_validGeneration) {
+    if (RenderState::isCurrentGeneration(s_quadGeneration)) {
         return;
     }
 
-    s_quadGeneration = s_validGeneration;
+    s_quadGeneration = RenderState::generation();
 
     std::vector<GLushort> indices;
     indices.reserve(maxVertices / 4 * 6);
@@ -62,17 +71,9 @@ void LabelMesh::loadQuadIndices() {
                  reinterpret_cast<GLbyte*>(indices.data()), GL_STATIC_DRAW);
 }
 
-void LabelMesh::compile(std::vector<std::unique_ptr<Label>>& _labels,
-                        std::vector<Label::Vertex>& _vertices) {
+void LabelMesh::compile(std::vector<Label::Vertex>& _vertices) {
 
     constexpr size_t maxVertices = 16384;
-
-    typedef std::vector<std::unique_ptr<Label>>::iterator iter_t;
-
-    m_labels.reserve(_labels.size());
-    m_labels.insert(m_labels.begin(),
-                    std::move_iterator<iter_t>(_labels.begin()),
-                    std::move_iterator<iter_t>(_labels.end()));
 
     // Compile vertex buffer directly instead of making a temporary copy
     m_nVertices = _vertices.size();
@@ -135,4 +136,3 @@ void LabelMesh::draw(ShaderProgram& _shader) {
 }
 
 }
-

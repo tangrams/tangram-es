@@ -69,7 +69,7 @@ void Tile::update(float _dt, const View& _view) {
 void Tile::resetState() {
     for (auto& entry : m_geometry) {
         if (!entry) { continue; }
-        auto labelMesh = dynamic_cast<LabelMesh*>(entry.get());
+        auto labelMesh = dynamic_cast<LabelSet*>(entry.get());
         if (!labelMesh) { continue; }
         labelMesh->reset();
     }
@@ -91,8 +91,8 @@ void Tile::draw(const Style& _style, const View& _view) {
     }
 }
 
-std::unique_ptr<VboMesh>& Tile::getMesh(const Style& _style) {
-    static std::unique_ptr<VboMesh> NONE = nullptr;
+std::unique_ptr<Mesh>& Tile::getMesh(const Style& _style) {
+    static std::unique_ptr<Mesh> NONE = nullptr;
 
     if (_style.getID() >= m_geometry.size()) { return NONE; }
 
