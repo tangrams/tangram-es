@@ -1,4 +1,5 @@
 #include "labels/spriteLabel.h"
+#include "labels/labelMesh.h"
 #include "platform.h"
 
 namespace Tangram {
@@ -7,7 +8,8 @@ using namespace LabelProperty;
 
 SpriteLabel::SpriteLabel(Label::Transform _transform, glm::vec2 _size, LabelMesh& _mesh, int _vertexOffset,
         Label::Options _options, float _extrudeScale, LabelProperty::Anchor _anchor) :
-    Label(_transform, _size, Label::Type::point, _mesh, {_vertexOffset, 4}, _options),
+    Label(_transform, _size, Label::Type::point, {_vertexOffset, 4}, _options),
+    m_mesh(_mesh),
     m_extrudeScale(_extrudeScale)
 {
     switch(_anchor) {
@@ -44,6 +46,30 @@ void SpriteLabel::align(glm::vec2& _screenPosition, const glm::vec2& _ap1, const
             break;
     }
 
+}
+
+void SpriteLabel::pushTransform() {
+
+    // update the buffer on valid states
+    if (m_dirty) {
+        static size_t attribOffset = offsetof(Label::Vertex, state);
+        static size_t alphaOffset = offsetof(Label::Vertex::State, alpha) + attribOffset;
+
+        if (visibleState()) {
+            // update the complete state on the mesh
+            m_mesh.updateAttribute(m_vertexRange, m_transform.state.vertex(), attribOffset);
+        } else {
+
+            // for any non-visible states, we don't need to overhead the gpu with updates on the
+            // alpha attribute, but simply do it once until the label goes back in a visible state
+            if (m_updateMeshVisibility) {
+                m_mesh.updateAttribute(m_vertexRange, (m_transform.state.vertex().alpha), alphaOffset);
+                m_updateMeshVisibility = false;
+            }
+        }
+
+        m_dirty = false;
+    }
 }
 
 }
