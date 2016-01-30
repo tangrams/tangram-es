@@ -175,6 +175,7 @@ public:
 
     OcclusionType occlusionType() const { return m_occlusionType; }
 
+    Label::Type type() const { return m_type; }
 private:
 
     bool offViewport(const glm::vec2& _screenSize);

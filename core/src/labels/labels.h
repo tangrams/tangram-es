@@ -60,7 +60,7 @@ private:
                          const std::vector<std::shared_ptr<Tile>>& _tiles,
                          std::unique_ptr<TileCache>& _cache, float _currentZoom) const;
 
-    void checkRepeatGroups(std::vector<TextLabel*>& _visibleSet) const;
+    void checkRepeatGroups(std::vector<Label*>& _visibleSet) const;
 
     int LODDiscardFunc(float _maxZoom, float _zoom);
 

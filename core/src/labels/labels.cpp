@@ -161,7 +161,7 @@ void Labels::skipTransitions(const std::vector<std::unique_ptr<Style>>& _styles,
     }
 }
 
-void Labels::checkRepeatGroups(std::vector<TextLabel*>& _visibleSet) const {
+void Labels::checkRepeatGroups(std::vector<Label*>& _visibleSet) const {
     struct GroupElement {
         glm::vec2 position;
 
@@ -172,7 +172,7 @@ void Labels::checkRepeatGroups(std::vector<TextLabel*>& _visibleSet) const {
 
     std::map<size_t, std::vector<GroupElement>> repeatGroups;
 
-    for (TextLabel* textLabel : _visibleSet) {
+    for (Label* textLabel : _visibleSet) {
         auto& options = textLabel->options();
         GroupElement element { textLabel->center() };
 
@@ -246,7 +246,7 @@ void Labels::update(const View& _view, float _dt,
 
     /// Update label meshes
 
-    std::vector<TextLabel*> repeatGroupSet;
+    std::vector<Label*> repeatGroupSet;
 
     for (auto label : m_labels) {
         label->occlusionSolved();
@@ -260,14 +260,16 @@ void Labels::update(const View& _view, float _dt,
                 continue;
             }
 
-            TextLabel* textLabel = dynamic_cast<TextLabel*>(label);
-            if (!textLabel) { continue; }
-            repeatGroupSet.push_back(textLabel);
+            // TextLabel* textLabel = dynamic_cast<TextLabel*>(label);
+            // if (!textLabel) { continue; }
+            if (label->type() != Label::Type::line) { continue; }
+
+            repeatGroupSet.push_back(label);
         }
     }
 
     // Ensure the labels are always treated in the same order in the visible set
-    std::sort(repeatGroupSet.begin(), repeatGroupSet.end(), [](TextLabel* _a, TextLabel* _b) {
+    std::sort(repeatGroupSet.begin(), repeatGroupSet.end(), [](auto _a, auto _b) {
         return glm::length2(_a->transform().modelPosition1) < glm::length2(_b->transform().modelPosition1);
     });
 
