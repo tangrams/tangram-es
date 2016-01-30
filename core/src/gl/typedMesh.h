@@ -54,56 +54,44 @@ public:
 protected:
 
     void setDirty(GLintptr _byteOffset, GLsizei _byteSize);
-
-    size_t compileIndices(size_t _offset, const MeshData<T>& _data);
-
-    size_t compileVertices(size_t _offset, size_t _stride, const MeshData<T>& _mesh);
-
 };
 
-
+namespace {
 // Add indices by collecting them into batches to draw as much as
 // possible in one draw call.  The indices must be shifted by the
 // number of vertices that are present in the current batch.
-template<class T>
-size_t TypedMesh<T>::compileIndices(size_t _offset, const MeshData<T>& _mesh) {
-    m_vertexOffsets.emplace_back(0, 0);
+size_t compileIndices(const std::vector<std::pair<uint32_t, uint32_t>>& offsetsIn,
+                      const std::vector<uint16_t>& indicesIn,
+                      std::vector<std::pair<uint32_t, uint32_t>>& offsetsOut,
+                      GLushort* indicesOut, size_t _offset) {
 
-    GLushort* dst = m_glIndexData + _offset;
+    offsetsOut.emplace_back(0, 0);
+
+    GLushort* dst = indicesOut + _offset;
     size_t curVertices = 0;
     size_t src = 0;
 
-    for (auto& p : _mesh.offsets) {
+    for (auto& p : offsetsIn) {
         size_t nIndices = p.first;
         size_t nVertices = p.second;
 
         if (curVertices + nVertices > MAX_INDEX_VALUE) {
-            m_vertexOffsets.emplace_back(0, 0);
+            offsetsOut.emplace_back(0, 0);
             curVertices = 0;
         }
         for (size_t i = 0; i < nIndices; i++, dst++) {
-            *dst = _mesh.indices[src++] + curVertices;
+            *dst = indicesIn[src++] + curVertices;
         }
-        auto& offset = m_vertexOffsets.back();
+
+        auto& offset = offsetsOut.back();
         offset.first += nIndices;
         offset.second += nVertices;
 
         curVertices += nVertices;
     }
 
-    assert((dst - m_glIndexData) == (_offset + src));
-
     return _offset + src;
 }
-
-template<class T>
-size_t TypedMesh<T>::compileVertices(size_t _offset, size_t _stride, const MeshData<T>& _mesh) {
-
-    std::memcpy(m_glVertexData + _offset,
-                reinterpret_cast<const GLbyte*>(_mesh.vertices.data()),
-                _mesh.vertices.size() * _stride);
-
-    return _offset + _mesh.vertices.size() * _stride;
 }
 
 template<class T>
@@ -123,14 +111,21 @@ void TypedMesh<T>::compile(const std::vector<MeshData<T>>& _meshes) {
 
     size_t offset = 0;
     for (auto& m : _meshes) {
-        offset = compileVertices(offset, stride, m);
+        size_t nBytes = m.vertices.size() * stride;
+        std::memcpy(m_glVertexData + offset,
+                    (const GLbyte*)m.vertices.data(),
+                    nBytes);
+
+        offset += nBytes;
     }
 
     assert(offset == m_nVertices * stride);
 
     offset = 0;
     for (auto& m : _meshes) {
-        offset = compileIndices(offset, m);
+        offset = compileIndices(m.offsets, m.indices,
+                                m_vertexOffsets,
+                                m_glIndexData, offset);
     }
 
     assert(offset == m_nIndices);
@@ -148,8 +143,13 @@ void TypedMesh<T>::compile(const MeshData<T>& _mesh) {
     m_glVertexData = new GLbyte[m_nVertices * stride];
     m_glIndexData = new GLushort[m_nIndices];
 
-    compileVertices(0, stride, _mesh);
-    compileIndices(0, _mesh);
+    std::memcpy(m_glVertexData,
+                (const GLbyte*)_mesh.vertices.data(),
+                m_nVertices * stride);
+
+    compileIndices(_mesh.offsets, _mesh.indices,
+                   m_vertexOffsets,
+                   m_glIndexData, 0);
 
     m_isCompiled = true;
 }
@@ -210,7 +210,9 @@ void TypedMesh<T>::compile(std::vector<std::vector<T>>&& _vertices,
 
 template<class T>
 template<class A>
-void TypedMesh<T>::updateAttribute(Range _vertexRange, const A& _newAttributeValue, size_t _attribOffset) {
+void TypedMesh<T>::updateAttribute(Range _vertexRange,
+                                   const A& _newAttributeValue,
+                                   size_t _attribOffset) {
     if (m_glVertexData == nullptr) {
         assert(false);
         return;
