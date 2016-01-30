@@ -58,18 +58,14 @@ struct Builder : public StyleBuilder {
 
         auto mesh = std::make_unique<Mesh>(m_style.vertexLayout(), m_style.drawMode());
 
-        // Add four vertices to draw the outline of the tile in red
-        std::vector<PosColVertex> vertices;
-
         GLuint abgr = 0xff0000ff;
 
-        vertices.reserve(4);
-        vertices.push_back({{ 0.f, 0.f, 0.f }, abgr });
-        vertices.push_back({{ 1.f, 0.f, 0.f }, abgr });
-        vertices.push_back({{ 1.f, 1.f, 0.f }, abgr });
-        vertices.push_back({{ 0.f, 1.f, 0.f }, abgr });
-
-        mesh->compile({std::move(vertices)}, {{ 0, 1, 2, 3, 0 }});
+        // Add four vertices to draw the outline of the tile in red
+        mesh->compile({{ 0, 1, 2, 3, 0 },
+                       {{{ 0.f, 0.f, 0.f }, abgr },
+                        {{ 1.f, 0.f, 0.f }, abgr },
+                        {{ 1.f, 1.f, 0.f }, abgr },
+                        {{ 0.f, 1.f, 0.f }, abgr }}});
 
         return std::move(mesh);
     }
