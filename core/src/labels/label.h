@@ -125,15 +125,14 @@ public:
         repeat_group
     };
 
-    Label(Transform _transform, glm::vec2 _size, Type _type, LabelMesh& _mesh, Range _vertexRange,
-            Options _options);
+    Label(Transform _transform, glm::vec2 _size, Type _type, Range _vertexRange, Options _options);
 
     virtual ~Label();
 
     bool update(const glm::mat4& _mvp, const glm::vec2& _screenSize, float _dt, float _zoomFract);
 
     /* Push the pending transforms to the vbo by updating the vertices */
-    virtual void pushTransform();
+    virtual void pushTransform() = 0;
 
     /* Update the screen position of the label */
     bool updateScreenTransform(const glm::mat4& _mvp, const glm::vec2& _screenSize,
@@ -195,8 +194,6 @@ private:
     bool m_occludedLastFrame;
     // whether or not the occlusion has been solved by the occlusion manager
     bool m_occlusionSolved;
-    // whether or not we need to update the mesh visibilit (alpha channel)
-    bool m_updateMeshVisibility;
     // whether this label should skip transitions to move to first visible state
     bool m_skipTransitions;
     // How occlusion have been triggered
@@ -219,8 +216,6 @@ protected:
     Transform m_transform;
     // the dimension of the label
     glm::vec2 m_dim;
-    // Back-pointer to owning container
-    LabelMesh& m_mesh;
     // first vertex and count in m_mesh vertices
     Range m_vertexRange;
     // label options
@@ -228,6 +223,10 @@ protected:
 
     glm::vec2 m_xAxis;
     glm::vec2 m_yAxis;
+
+    // whether or not we need to update the mesh visibilit (alpha channel)
+    bool m_updateMeshVisibility;
+
 };
 
 }
