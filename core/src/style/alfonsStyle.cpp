@@ -77,14 +77,14 @@ struct AlfonsMesh : public LabelMesh {
     using LabelMesh::LabelMesh;
 
     int bufferCapacity = 0;
+    std::vector<Label::Vertex> m_vertices;
 
     void pushQuad(GlyphQuad& _quad, Label::Vertex::State& _state) {
-        if (m_vertices.empty()) { m_vertices.emplace_back(); }
-        auto& vertices = m_vertices.back();
-        vertices.resize(m_nVertices + 4);
+
+        m_vertices.resize(m_nVertices + 4);
 
         for (int i = 0; i < 4; i++) {
-            Label::Vertex& v = vertices[m_nVertices+i];
+            Label::Vertex& v = m_vertices[m_nVertices+i];
             v.pos = _quad.quad[i].pos;
             v.uv = _quad.quad[i].uv;
             v.color = _quad.color;
@@ -93,8 +93,6 @@ struct AlfonsMesh : public LabelMesh {
         }
         m_nVertices += 4;
     }
-
-    void compileVertexBuffer() override {}
 
     void myUpload() {
 
@@ -126,11 +124,11 @@ struct AlfonsMesh : public LabelMesh {
             bufferCapacity = vertexBytes;
 
             glBufferData(GL_ARRAY_BUFFER, vertexBytes,
-                         reinterpret_cast<GLbyte*>(m_vertices[0].data()),
+                         reinterpret_cast<GLbyte*>(m_vertices.data()),
                          m_hint);
         } else {
             glBufferSubData(GL_ARRAY_BUFFER, 0, vertexBytes,
-                            reinterpret_cast<GLbyte*>(m_vertices[0].data()));
+                            reinterpret_cast<GLbyte*>(m_vertices.data()));
         }
         m_isCompiled = true;
         m_isUploaded = true;
@@ -141,7 +139,7 @@ struct AlfonsMesh : public LabelMesh {
 
     void myClear() {
         m_nVertices = 0;
-        m_vertices[0].clear();
+        m_vertices.clear();
         m_isCompiled = false;
     }
 };
@@ -246,7 +244,6 @@ struct LabelContainer : public LabelMesh {
     std::vector<GlyphQuad> quads;
     std::bitset<128> batchRefs;
 
-    void compileVertexBuffer() override {}
     void draw(ShaderProgram& _shader) override {}
 
     void setLabels(std::vector<std::unique_ptr<Label>>& _labels,
