@@ -35,7 +35,12 @@ TEST_CASE("Test getFeaturesAtPoint", "[Labels][FeaturePicking]") {
     view.setZoom(0);
     view.update();
 
-    auto labelMesh = std::unique_ptr<LabelMesh>(new LabelMesh(nullptr, 0));
+    struct TestLabelMesh : public LabelMesh {
+        using LabelMesh::LabelMesh;
+        void addLabel(std::unique_ptr<Label> _label) { m_labels.push_back(std::move(_label)); }
+    };
+
+    auto labelMesh = std::unique_ptr<TestLabelMesh>(new TestLabelMesh(nullptr, 0));
     auto textStyle = std::unique_ptr<TextStyle>(new TextStyle("test", nullptr));
     textStyle->setID(0);
 

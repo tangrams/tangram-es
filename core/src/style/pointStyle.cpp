@@ -73,8 +73,10 @@ struct Builder : public StyleBuilder {
 
     const PointStyle& m_style;
 
-    std::unique_ptr<LabelMesh> m_mesh;
+    std::vector<Label::Vertex> m_vertices;
+    std::vector<std::unique_ptr<Label>> m_labels;
 
+    std::unique_ptr<LabelMesh> m_mesh;
     float m_zoom;
 
     void begin(const Tile& _tile) override {
@@ -89,7 +91,9 @@ struct Builder : public StyleBuilder {
     void addPoint(const Point& _line, const Properties& _props, const DrawRule& _rule) override;
 
     std::unique_ptr<VboMesh> build() override {
-        m_mesh->compile();
+        m_mesh->compile(m_labels, m_vertices);
+        m_labels.clear();
+        m_vertices.clear();
         return std::move(m_mesh);
     };
 
@@ -103,6 +107,12 @@ struct Builder : public StyleBuilder {
     bool getUVQuad(PointStyle::Parameters& _params, glm::vec4& _quad) const;
 
     PointStyle::Parameters applyRule(const DrawRule& _rule, const Properties& _props) const;
+
+    template<typename ...Args>
+    void addLabel(Args&& ...args) {
+        m_labels.push_back(std::make_unique<SpriteLabel>(args...));
+    }
+
 };
 
 bool Builder::checkRule(const DrawRule& _rule) const {
@@ -221,15 +231,13 @@ void Builder::addPoint(const Point& _point, const Properties& _props,
 
     Label::Transform transform = { glm::vec2(_point) };
 
-    m_mesh->addLabel(std::make_unique<SpriteLabel>(transform, p.size, *m_mesh, m_mesh->numVertices(),
-                                                   p.labelOptions, p.extrudeScale, p.anchor));
+    addLabel(transform, p.size, *m_mesh, m_vertices.size(),
+             p.labelOptions, p.extrudeScale, p.anchor);
 
-    std::vector<Label::Vertex> vertices;
-
-    vertices.reserve(4);
-    pushQuad(vertices, p.size, {uvsQuad.x, uvsQuad.y}, {uvsQuad.z, uvsQuad.w},
-            p.color, p.extrudeScale);
-    m_mesh->addVertices(std::move(vertices), {});
+    pushQuad(m_vertices, p.size,
+             {uvsQuad.x, uvsQuad.y},
+             {uvsQuad.z, uvsQuad.w},
+             p.color, p.extrudeScale);
 }
 
 void Builder::addLine(const Line& _line, const Properties& _props,
@@ -242,20 +250,17 @@ void Builder::addLine(const Line& _line, const Properties& _props,
         return;
     }
 
-    std::vector<Label::Vertex> vertices;
-
-    vertices.reserve(4 * _line.size());
-
     for (size_t i = 0; i < _line.size(); ++i) {
         Label::Transform transform = { glm::vec2(_line[i]) };
 
-        m_mesh->addLabel(std::make_unique<SpriteLabel>(transform, p.size, *m_mesh, m_mesh->numVertices(),
-                                                       p.labelOptions, p.extrudeScale, p.anchor));
-        pushQuad(vertices, p.size, {uvsQuad.x, uvsQuad.y}, {uvsQuad.z, uvsQuad.w},
-                p.color, p.extrudeScale);
-    }
+        addLabel(transform, p.size, *m_mesh, m_vertices.size(),
+                 p.labelOptions, p.extrudeScale, p.anchor);
 
-    m_mesh->addVertices(std::move(vertices), {});
+        pushQuad(m_vertices, p.size,
+                 {uvsQuad.x, uvsQuad.y},
+                 {uvsQuad.z, uvsQuad.w},
+                 p.color, p.extrudeScale);
+    }
 }
 
 void Builder::addPolygon(const Polygon& _polygon, const Properties& _props,
@@ -268,37 +273,36 @@ void Builder::addPolygon(const Polygon& _polygon, const Properties& _props,
         return;
     }
 
-    std::vector<Label::Vertex> vertices;
-
     if (!p.centroid) {
 
         int size = 0;
         for (auto line : _polygon) { size += line.size(); }
 
-        vertices.reserve(size);
-
         for (auto line : _polygon) {
             for (auto point : line) {
                 Label::Transform transform = { glm::vec2(point) };
 
-                m_mesh->addLabel(std::make_unique<SpriteLabel>(transform, p.size, *m_mesh, m_mesh->numVertices(),
-                            p.labelOptions, p.extrudeScale, p.anchor));
-                pushQuad(vertices, p.size, {uvsQuad.x, uvsQuad.y}, {uvsQuad.z, uvsQuad.w},
-                        p.color, p.extrudeScale);
+                addLabel(transform, p.size, *m_mesh, m_vertices.size(),
+                         p.labelOptions, p.extrudeScale, p.anchor);
+
+                pushQuad(m_vertices, p.size,
+                         {uvsQuad.x, uvsQuad.y},
+                         {uvsQuad.z, uvsQuad.w},
+                         p.color, p.extrudeScale);
             }
         }
     } else {
-        vertices.reserve(4);
         glm::vec2 c = centroid(_polygon);
         Label::Transform transform = { c };
 
-        m_mesh->addLabel(std::make_unique<SpriteLabel>(transform, p.size, *m_mesh, m_mesh->numVertices(),
-                    p.labelOptions, p.extrudeScale, p.anchor));
-        pushQuad(vertices, p.size,
-                {uvsQuad.x, uvsQuad.y}, {uvsQuad.z, uvsQuad.w}, p.color, p.extrudeScale);
-    }
+        addLabel(transform, p.size, *m_mesh, m_vertices.size(),
+                 p.labelOptions, p.extrudeScale, p.anchor);
 
-    m_mesh->addVertices(std::move(vertices), {});
+        pushQuad(m_vertices, p.size,
+                 {uvsQuad.x, uvsQuad.y},
+                 {uvsQuad.z, uvsQuad.w},
+                 p.color, p.extrudeScale);
+    }
 }
 
 }
