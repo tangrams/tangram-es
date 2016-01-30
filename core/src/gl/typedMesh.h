@@ -9,9 +9,17 @@ namespace Tangram {
 
 template<class T>
 struct MeshData {
-    std::vector<std::pair<uint32_t, uint32_t>> offsets;
-    std::vector<T> vertices;
+
+    MeshData() {}
+    MeshData(std::vector<uint16_t>&& _indices, std::vector<T>&& _vertices)
+        : indices(std::move(_indices)),
+          vertices(std::move(_vertices)) {
+        offsets.emplace_back(indices.size(), vertices.size());
+    }
+
     std::vector<uint16_t> indices;
+    std::vector<T> vertices;
+    std::vector<std::pair<uint32_t, uint32_t>> offsets;
 
     void clear() {
         offsets.clear();
@@ -40,12 +48,10 @@ public:
      * _newAttributeValue starting after _byteOffset in the mesh vertex data
      * memory
      */
-
     template<class A>
-    void updateAttribute(Range _vertexRange, const A& _newAttributeValue, size_t _attribOffset = 0);
-
-    void compile(std::vector<std::vector<T>>&& _vertices,
-                 std::vector<std::vector<uint16_t>>&& _indices);
+    void updateAttribute(Range _vertexRange,
+                         const A& _newAttributeValue,
+                         size_t _attribOffset = 0);
 
     void compile(const std::vector<MeshData<T>>& _meshes);
 
@@ -107,7 +113,6 @@ void TypedMesh<T>::compile(const std::vector<MeshData<T>>& _meshes) {
 
     int stride = m_vertexLayout->getStride();
     m_glVertexData = new GLbyte[m_nVertices * stride];
-    m_glIndexData = new GLushort[m_nIndices];
 
     size_t offset = 0;
     for (auto& m : _meshes) {
@@ -121,14 +126,17 @@ void TypedMesh<T>::compile(const std::vector<MeshData<T>>& _meshes) {
 
     assert(offset == m_nVertices * stride);
 
-    offset = 0;
-    for (auto& m : _meshes) {
-        offset = compileIndices(m.offsets, m.indices,
-                                m_vertexOffsets,
-                                m_glIndexData, offset);
-    }
+    if (m_nIndices > 0) {
+        m_glIndexData = new GLushort[m_nIndices];
 
-    assert(offset == m_nIndices);
+        size_t offset = 0;
+        for (auto& m : _meshes) {
+            offset = compileIndices(m.offsets, m.indices,
+                                    m_vertexOffsets,
+                                    m_glIndexData, offset);
+        }
+        assert(offset == m_nIndices);
+    }
 
     m_isCompiled = true;
 }
@@ -141,69 +149,17 @@ void TypedMesh<T>::compile(const MeshData<T>& _mesh) {
 
     int stride = m_vertexLayout->getStride();
     m_glVertexData = new GLbyte[m_nVertices * stride];
-    m_glIndexData = new GLushort[m_nIndices];
 
     std::memcpy(m_glVertexData,
                 (const GLbyte*)_mesh.vertices.data(),
                 m_nVertices * stride);
 
-    compileIndices(_mesh.offsets, _mesh.indices,
-                   m_vertexOffsets,
-                   m_glIndexData, 0);
-
-    m_isCompiled = true;
-}
-
-template<class T>
-void TypedMesh<T>::compile(std::vector<std::vector<T>>&& _vertices,
-                           std::vector<std::vector<uint16_t>>&& _indices) {
-
-    std::vector<std::vector<T>> vertices;
-    std::vector<std::vector<uint16_t>> indices;
-
-    // take over contents
-    std::swap(_vertices, vertices);
-    std::swap(_indices, indices);
-
-    int vertexOffset = 0, indexOffset = 0;
-
-    // Buffer positions: vertex byte and index short
-    int vPos = 0, iPos = 0;
-
-    int stride = m_vertexLayout->getStride();
-    m_glVertexData = new GLbyte[stride * m_nVertices];
-
-    bool useIndices = m_nIndices > 0;
-    if (useIndices) {
+    if (m_nIndices > 0) {
         m_glIndexData = new GLushort[m_nIndices];
+        compileIndices(_mesh.offsets, _mesh.indices,
+                       m_vertexOffsets,
+                       m_glIndexData, 0);
     }
-
-    for (size_t i = 0; i < vertices.size(); i++) {
-        auto& curVertices = vertices[i];
-        size_t nVertices = curVertices.size();
-        int nBytes = nVertices * stride;
-
-        std::memcpy(m_glVertexData + vPos, (GLbyte*)curVertices.data(), nBytes);
-        vPos += nBytes;
-
-        if (useIndices) {
-            if (vertexOffset + nVertices > MAX_INDEX_VALUE) {
-                //LOGD("Big Mesh %d\n", vertexOffset + nVertices);
-
-                m_vertexOffsets.emplace_back(indexOffset, vertexOffset);
-                vertexOffset = 0;
-                indexOffset = 0;
-            }
-
-            for (int idx : indices[i]) {
-                m_glIndexData[iPos++] = idx + vertexOffset;
-            }
-            indexOffset += indices[i].size();
-        }
-        vertexOffset += nVertices;
-    }
-
-    m_vertexOffsets.emplace_back(indexOffset, vertexOffset);
 
     m_isCompiled = true;
 }
