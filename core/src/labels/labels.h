@@ -48,13 +48,9 @@ private:
     using OBB = isect2d::OBB<glm::vec2>;
     using CollisionPairs = std::vector<isect2d::ISect2D<glm::vec2>::Pair>;
 
-    bool updateLabels(const std::vector<std::unique_ptr<Style>>& _styles,
+    void updateLabels(const std::vector<std::unique_ptr<Style>>& _styles,
                       const std::vector<std::shared_ptr<Tile>>& _tiles,
                       float _dt, float _dz, const View& _view);
-
-    std::set<std::pair<Label*, Label*>> narrowPhase(const CollisionPairs& _pairs) const;
-
-    void applyPriorities(const std::set<std::pair<Label*, Label*>> _occlusions) const;
 
     void skipTransitions(const std::vector<std::unique_ptr<Style>>& _styles,
                          const std::vector<std::shared_ptr<Tile>>& _tiles,

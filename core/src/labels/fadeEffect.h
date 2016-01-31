@@ -26,9 +26,9 @@ public:
 
         switch (m_interpolation) {
             case Interpolation::linear:
-                return m_in ? st : -st + 1;
+                return m_in ? st : 1.f - st;
             case Interpolation::pow:
-                return m_in ? st * st : -(st * st) + 1;
+                return m_in ? st * st : 1.f - (st * st);
             case Interpolation::sine:
                 return m_in ? sin(st * M_PI * 0.5) : cos(st * M_PI * 0.5);
         }
