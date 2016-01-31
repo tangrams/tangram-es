@@ -291,30 +291,31 @@ void AlfonsStyle::constructShaderProgram() {
 void AlfonsStyle::onBeginDrawFrame(const View& _view, Scene& _scene, int _textureUnit) {
     if (m_context->m_batches.empty()) { return; }
 
-    int tex = 0;
-    for (auto& batch : m_context->m_batches) {
-        bool dirty = false;
+    {
+        std::lock_guard<std::mutex> lock(m_context->m_mutex);
+        int tex = 0;
 
-        if (batch.dirty) {
-            batch.dirty = false;
-            dirty = true;
+        for (auto& batch : m_context->m_batches) {
+            bool dirty = false;
 
-            std::lock_guard<std::mutex> lock(m_context->m_mutex);
+            if (batch.dirty) {
+                batch.dirty = false;
+                dirty = true;
 
-            auto td = reinterpret_cast<const GLuint*>(batch.texData.data());
-            batch.texture.update(0, td);
+                auto td = reinterpret_cast<const GLuint*>(batch.texData.data());
+                batch.texture.update(0, td);
+            }
+
+            // TODO upload mesh batch
+            batch.mesh->myUpload();
+
+            // LOG(">>> refcount:%d texture:%d/%d texid:%d upload:%d - buffersize:%d",
+            //     batch.refCount, tex++,
+            //     m_context->m_batches.size(),
+            //     batch.texture.getGlHandle(),
+            //     dirty, batch.mesh->bufferSize());
         }
-
-        // TODO upload mesh batch
-        batch.mesh->myUpload();
-
-        LOG(">>> refcount:%d texture:%d/%d texid:%d upload:%d - buffersize:%d",
-            batch.refCount, tex++,
-            m_context->m_batches.size(),
-            batch.texture.getGlHandle(),
-            dirty, batch.mesh->bufferSize());
     }
-
     m_shaderProgram->setUniformf("u_uv_scale_factor",
                                  glm::vec2(1.0f / TEXTURE_SIZE));
     m_shaderProgram->setUniformi("u_tex", 0);
@@ -325,6 +326,8 @@ void AlfonsStyle::onBeginDrawFrame(const View& _view, Scene& _scene, int _textur
 
 void AlfonsStyle::onEndDrawFrame() {
     if (m_context->m_batches.empty()) { return; }
+
+    std::lock_guard<std::mutex> lock(m_context->m_mutex);
 
     if (m_sdf) {
         m_shaderProgram->setUniformi("u_pass", 1);
