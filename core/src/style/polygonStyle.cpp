@@ -144,13 +144,12 @@ void PolygonStyleBuilder::addPolygon(const Polygon& _polygon, const Properties& 
 
     Builders::buildPolygon(_polygon, m_params.height, m_builder);
 
-    auto& m = m_meshData;
-    m.indices.insert(m.indices.end(),
-                     m_builder.indices.begin(),
-                     m_builder.indices.end());
+    m_meshData.indices.insert(m_meshData.indices.end(),
+                              m_builder.indices.begin(),
+                              m_builder.indices.end());
 
-    m.offsets.emplace_back(m_builder.indices.size(),
-                           m_builder.numVertices);
+    m_meshData.offsets.emplace_back(m_builder.indices.size(),
+                                    m_builder.numVertices);
     m_builder.clear();
 }
 
