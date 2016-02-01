@@ -15,7 +15,6 @@ class Light;
 class Tile;
 class MapProjection;
 class Material;
-class VboMesh;
 class VertexLayout;
 class View;
 class Scene;
@@ -34,6 +33,14 @@ enum class Blending : int8_t {
     multiply,
     inlay,
     overlay,
+};
+
+struct StyledMesh {
+    virtual void draw(ShaderProgram& _shader) = 0;
+    virtual size_t bufferSize() = 0;
+
+    virtual ~StyledMesh() {}
+
 };
 
 class StyleBuilder {
@@ -55,7 +62,7 @@ public:
     virtual void addPolygon(const Polygon& _polygon, const Properties& _props, const DrawRule& _rule);
 
     /* Create a new mesh object using the vertex layout corresponding to this style */
-    virtual std::unique_ptr<VboMesh> build() = 0;
+    virtual std::unique_ptr<StyledMesh> build() = 0;
 
     virtual bool checkRule(const DrawRule& _rule) const;
 
@@ -103,7 +110,7 @@ protected:
     Blending m_blend = Blending::none;
     int m_blendOrder = -1;
 
-    /* Draw mode to pass into <VboMesh>es created with this style */
+    /* Draw mode to pass into <Mesh>es created with this style */
     GLenum m_drawMode;
 
     /* animated property */

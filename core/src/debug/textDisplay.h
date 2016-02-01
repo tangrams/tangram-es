@@ -5,7 +5,7 @@
 #include <mutex>
 #include <cstdio>
 #include "gl/texture.h"
-#include "gl/typedMesh.h"
+#include "gl/vboMesh.h"
 #include "gl/shaderProgram.h"
 #include "glm/vec2.hpp"
 

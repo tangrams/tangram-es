@@ -25,6 +25,9 @@ namespace RenderState {
     /* Bind a texture for the specified target */
     void bindTexture(GLenum _target, GLuint _textureId);
 
+    bool isCurrentGeneration(int _generation);
+    int generation();
+
     template <typename T>
     class State {
     public:

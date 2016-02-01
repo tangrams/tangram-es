@@ -5,7 +5,7 @@
 #include "material.h"
 #include "tile/tile.h"
 #include "gl/shaderProgram.h"
-#include "gl/typedMesh.h"
+#include "gl/vboMesh.h"
 
 #include <vector>
 #include <memory>
@@ -19,8 +19,6 @@ struct PosColVertex {
     // Color Data
     GLuint abgr;
 };
-
-using Mesh = TypedMesh<PosColVertex>;
 
 
 DebugStyle::DebugStyle(std::string _name, Blending _blendMode, GLenum _drawMode)
@@ -50,12 +48,13 @@ struct DebugStyleBuilder : public StyleBuilder {
 
     void setup(const Tile& _tile) override {}
 
-    std::unique_ptr<VboMesh> build() override {
+    std::unique_ptr<StyledMesh> build() override {
         if (!Tangram::getDebugFlag(Tangram::DebugFlags::tile_bounds)) {
             return nullptr;
         }
 
-        auto mesh = std::make_unique<Mesh>(m_style.vertexLayout(), m_style.drawMode());
+        auto mesh = std::make_unique<VboMesh<PosColVertex>>(m_style.vertexLayout(),
+                                                            m_style.drawMode());
 
         GLuint abgr = 0xff0000ff;
 

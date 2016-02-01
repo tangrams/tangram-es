@@ -4,7 +4,7 @@
 #include "platform.h"
 #include "material.h"
 #include "gl/shaderProgram.h"
-#include "gl/typedMesh.h"
+#include "gl/vboMesh.h"
 #include "scene/stops.h"
 #include "scene/drawRule.h"
 #include "tile/tile.h"
@@ -66,8 +66,6 @@ void PolylineStyle::constructShaderProgram() {
     m_shaderProgram->setSourceStrings(fragShaderSrcStr, vertShaderSrcStr);
 }
 
-using Mesh = TypedMesh<PolylineVertex>;
-
 struct PolylineStyleBuilder : public StyleBuilder {
 
     struct Parameters {
@@ -96,7 +94,6 @@ struct PolylineStyleBuilder : public StyleBuilder {
 
     std::vector<MeshData<PolylineVertex>> m_meshData;
 
-    std::unique_ptr<Mesh> m_mesh;
     float m_tileUnitsPerMeter;
     float m_tileSize;
     int m_zoom;
@@ -107,7 +104,7 @@ struct PolylineStyleBuilder : public StyleBuilder {
 
     void addFeature(const Feature& _feat, const DrawRule& _rule) override;
 
-    std::unique_ptr<VboMesh> build() override;
+    std::unique_ptr<StyledMesh> build() override;
 
     PolylineStyleBuilder(const PolylineStyle& _style)
         : StyleBuilder(_style), m_style(_style),
@@ -128,13 +125,11 @@ void PolylineStyleBuilder::setup(const Tile& _tile) {
     m_tileUnitsPerMeter = _tile.getInverseScale();
     m_zoom = _tile.getID().z;
     m_tileSize = _tile.getProjection()->TileSize();
-    m_mesh = std::make_unique<Mesh>(m_style.vertexLayout(), m_style.drawMode());
-    m_meshData[0].clear();
-    m_meshData[1].clear();
 }
 
-std::unique_ptr<VboMesh> PolylineStyleBuilder::build() {
-    auto mesh = std::make_unique<Mesh>(m_style.vertexLayout(), m_style.drawMode());
+std::unique_ptr<StyledMesh> PolylineStyleBuilder::build() {
+    auto mesh = std::make_unique<VboMesh<PolylineVertex>>(m_style.vertexLayout(),
+                                                          m_style.drawMode());
 
     bool painterMode = (m_style.blendMode() == Blending::overlay ||
                         m_style.blendMode() == Blending::inlay);

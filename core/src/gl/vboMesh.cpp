@@ -6,9 +6,8 @@
 
 namespace Tangram {
 
-int VboMesh::s_validGeneration = 0;
 
-VboMesh::VboMesh() {
+VboMeshBase::VboMeshBase() {
     m_drawMode = GL_TRIANGLES;
     m_hint = GL_STATIC_DRAW;
     m_keepMemoryData = false;
@@ -26,7 +25,8 @@ VboMesh::VboMesh() {
     m_generation = -1;
 }
 
-VboMesh::VboMesh(std::shared_ptr<VertexLayout> _vertexLayout, GLenum _drawMode, GLenum _hint, bool _keepMemoryData) : VboMesh() {
+VboMeshBase::VboMeshBase(std::shared_ptr<VertexLayout> _vertexLayout, GLenum _drawMode,
+                 GLenum _hint, bool _keepMemoryData) : VboMeshBase() {
     m_vertexLayout = _vertexLayout;
     m_hint = _hint;
     m_keepMemoryData = _keepMemoryData;
@@ -34,7 +34,7 @@ VboMesh::VboMesh(std::shared_ptr<VertexLayout> _vertexLayout, GLenum _drawMode, 
     setDrawMode(_drawMode);
 }
 
-VboMesh::~VboMesh() {
+VboMeshBase::~VboMeshBase() {
     // Deleting a index/array buffer being used ends up setting up the current vertex/index buffer to 0
     // after the driver finishes using it, force the render state to be 0 for vertex/index buffer
 
@@ -55,11 +55,11 @@ VboMesh::~VboMesh() {
     delete[] m_glIndexData;
 }
 
-void VboMesh::setVertexLayout(std::shared_ptr<VertexLayout> _vertexLayout) {
+void VboMeshBase::setVertexLayout(std::shared_ptr<VertexLayout> _vertexLayout) {
     m_vertexLayout = _vertexLayout;
 }
 
-void VboMesh::setDrawMode(GLenum _drawMode) {
+void VboMeshBase::setDrawMode(GLenum _drawMode) {
     switch (_drawMode) {
         case GL_POINTS:
         case GL_LINE_STRIP:
@@ -76,13 +76,13 @@ void VboMesh::setDrawMode(GLenum _drawMode) {
     }
 }
 
-void VboMesh::resetDirty() {
+void VboMeshBase::resetDirty() {
     m_dirtyOffset = 0;
     m_dirtySize = 0;
     m_dirty = false;
 }
 
-void VboMesh::subDataUpload() {
+void VboMeshBase::subDataUpload() {
     if (!m_dirty) {
         return;
     }
@@ -122,7 +122,7 @@ void VboMesh::subDataUpload() {
     resetDirty();
 }
 
-void VboMesh::upload() {
+void VboMeshBase::upload() {
 
     // Generate vertex buffer, if needed
     if (m_glVertexBuffer == 0) {
@@ -158,14 +158,14 @@ void VboMesh::upload() {
         }
     }
 
-    m_generation = s_validGeneration;
+    m_generation = RenderState::generation();
 
     m_isUploaded = true;
 
     resetDirty();
 }
 
-void VboMesh::draw(ShaderProgram& _shader) {
+void VboMeshBase::draw(ShaderProgram& _shader) {
 
     checkValidity();
 
@@ -233,14 +233,14 @@ void VboMesh::draw(ShaderProgram& _shader) {
     }
 }
 
-bool VboMesh::checkValidity() {
-    if (m_generation != s_validGeneration) {
+bool VboMeshBase::checkValidity() {
+    if (!RenderState::isCurrentGeneration(m_generation)) {
         m_isUploaded = false;
         m_glVertexBuffer = 0;
         m_glIndexBuffer = 0;
         m_vaos.reset();
 
-        m_generation = s_validGeneration;
+        m_generation = RenderState::generation();
 
         return false;
     }
@@ -248,16 +248,15 @@ bool VboMesh::checkValidity() {
     return true;
 }
 
-size_t VboMesh::bufferSize() {
+size_t VboMeshBase::bufferSize() {
     return m_nVertices * m_vertexLayout->getStride() + m_nIndices * sizeof(GLushort);
 }
 
 // Add indices by collecting them into batches to draw as much as
 // possible in one draw call.  The indices must be shifted by the
 // number of vertices that are present in the current batch.
-// Note: m_glIndexdata must already be allocted to the right size!
-size_t VboMesh::compileIndices(const std::vector<std::pair<uint32_t, uint32_t>>& _offsets,
-                               const std::vector<uint16_t>& _indices, size_t _offset) {
+size_t VboMeshBase::compileIndices(const std::vector<std::pair<uint32_t, uint32_t>>& _offsets,
+                                   const std::vector<uint16_t>& _indices, size_t _offset) {
 
     m_vertexOffsets.emplace_back(0, 0);
 
@@ -287,11 +286,20 @@ size_t VboMesh::compileIndices(const std::vector<std::pair<uint32_t, uint32_t>>&
     return _offset + src;
 }
 
-void VboMesh::invalidateAllVBOs() {
+void VboMeshBase::setDirty(GLintptr _byteOffset, GLsizei _byteSize) {
 
-    ++s_validGeneration;
-    VertexLayout::clearCache();
+    if (!m_dirty) {
+        m_dirty = true;
 
+        m_dirtySize = _byteSize;
+        m_dirtyOffset = _byteOffset;
+
+    } else {
+        size_t end = std::max(m_dirtyOffset + m_dirtySize, _byteOffset + _byteSize);
+
+        m_dirtyOffset = std::min(m_dirtyOffset, _byteOffset);
+        m_dirtySize = end - m_dirtyOffset;
+    }
 }
 
 }
