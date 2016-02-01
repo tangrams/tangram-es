@@ -88,7 +88,7 @@ struct PointStyleBuilder : public StyleBuilder {
     void addLine(const Line& _line, const Properties& _props, const DrawRule& _rule) override;
     void addPoint(const Point& _line, const Properties& _props, const DrawRule& _rule) override;
 
-    std::unique_ptr<VboMesh> build() override {
+    std::unique_ptr<StyledMesh> build() override {
         m_mesh->compile(m_labels, m_vertices);
         m_labels.clear();
         m_vertices.clear();

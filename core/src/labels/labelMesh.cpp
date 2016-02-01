@@ -13,7 +13,7 @@ static std::atomic<int> s_meshCounter(0);
 const size_t maxVertices = 16384;
 
 LabelMesh::LabelMesh(std::shared_ptr<VertexLayout> _vertexLayout, GLenum _drawMode)
-    : TypedMesh<Label::Vertex>(_vertexLayout, _drawMode, GL_DYNAMIC_DRAW)
+    : VboMesh<Label::Vertex>(_vertexLayout, _drawMode, GL_DYNAMIC_DRAW)
 {
     s_meshCounter++;
 }
@@ -21,7 +21,7 @@ LabelMesh::LabelMesh(std::shared_ptr<VertexLayout> _vertexLayout, GLenum _drawMo
 LabelMesh::~LabelMesh() {
     s_meshCounter--;
 
-    if (s_quadIndexBuffer != 0 && (s_quadGeneration != s_validGeneration || s_meshCounter <= 0)) {
+    if (s_quadIndexBuffer != 0 && (!RenderState::isCurrentGeneration(s_quadGeneration) || s_meshCounter <= 0)) {
         if (RenderState::indexBuffer.compare(s_quadIndexBuffer)) {
             RenderState::indexBuffer.init(0, false);
         }
@@ -38,11 +38,11 @@ void LabelMesh::reset() {
 }
 
 void LabelMesh::loadQuadIndices() {
-    if (s_quadGeneration == s_validGeneration) {
+    if (RenderState::isCurrentGeneration(s_quadGeneration)) {
         return;
     }
 
-    s_quadGeneration = s_validGeneration;
+    s_quadGeneration = RenderState::generation();
 
     std::vector<GLushort> indices;
     indices.reserve(maxVertices / 4 * 6);

@@ -6,7 +6,7 @@
 #include "util/builders.h"
 #include "util/extrude.h"
 #include "gl/shaderProgram.h"
-#include "gl/typedMesh.h"
+#include "gl/vboMesh.h"
 #include "tile/tile.h"
 #include "scene/drawRule.h"
 
@@ -38,7 +38,6 @@ struct PolygonVertex {
     GLuint abgr;
 };
 
-
 PolygonStyle::PolygonStyle(std::string _name, Blending _blendMode, GLenum _drawMode)
     : Style(_name, _blendMode, _drawMode) {}
 
@@ -61,15 +60,12 @@ void PolygonStyle::constructShaderProgram() {
     m_shaderProgram->setSourceStrings(fragShaderSrcStr, vertShaderSrcStr);
 }
 
-using Mesh = TypedMesh<PolygonVertex>;
-
 struct PolygonStyleBuilder : public StyleBuilder {
 
     const PolygonStyle& m_style;
 
     MeshData<PolygonVertex> m_meshData;
 
-    std::unique_ptr<Mesh> m_mesh;
     float m_tileUnitsPerMeter;
     int m_zoom;
 
@@ -84,7 +80,6 @@ struct PolygonStyleBuilder : public StyleBuilder {
     void setup(const Tile& _tile) override {
         m_tileUnitsPerMeter = _tile.getInverseScale();
         m_zoom = _tile.getID().z;
-        m_mesh = std::make_unique<Mesh>(m_style.vertexLayout(), m_style.drawMode());
         m_meshData.clear();
     }
 
@@ -92,7 +87,7 @@ struct PolygonStyleBuilder : public StyleBuilder {
 
     const Style& style() const override { return m_style; }
 
-    std::unique_ptr<VboMesh> build() override;
+    std::unique_ptr<StyledMesh> build() override;
 
     PolygonStyleBuilder(const PolygonStyle& _style) : StyleBuilder(_style), m_style(_style) {}
 
@@ -101,9 +96,9 @@ struct PolygonStyleBuilder : public StyleBuilder {
     PolygonBuilder m_builder;
 };
 
-std::unique_ptr<VboMesh> PolygonStyleBuilder::build() {
-    auto mesh = std::make_unique<Mesh>(m_style.vertexLayout(), m_style.drawMode());
-
+std::unique_ptr<StyledMesh> PolygonStyleBuilder::build() {
+    auto mesh = std::make_unique<VboMesh<PolygonVertex>>(m_style.vertexLayout(),
+                                                         m_style.drawMode());
     mesh->compile(m_meshData);
     m_meshData.clear();
 

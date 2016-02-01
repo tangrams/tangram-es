@@ -34,7 +34,7 @@ struct DebugTextStyleBuilder : public StyleBuilder {
         m_builder.setup(m_style.vertexLayout());
     }
 
-    std::unique_ptr<VboMesh> build() override {
+    std::unique_ptr<StyledMesh> build() override {
         if (!Tangram::getDebugFlag(Tangram::DebugFlags::tile_infos)) {
             return nullptr;
         }

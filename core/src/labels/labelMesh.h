@@ -1,6 +1,6 @@
 #pragma once
 
-#include "gl/typedMesh.h"
+#include "gl/vboMesh.h"
 #include "labels/label.h"
 
 #include <memory>
@@ -10,7 +10,8 @@ namespace Tangram {
 
 class ShaderProgram;
 
-class LabelMesh : public TypedMesh<Label::Vertex> {
+
+class LabelMesh : public VboMesh<Label::Vertex> {
 public:
     LabelMesh(std::shared_ptr<VertexLayout> _vertexLayout, GLenum _drawMode);
 

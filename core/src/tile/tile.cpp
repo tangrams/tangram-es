@@ -91,8 +91,8 @@ void Tile::draw(const Style& _style, const View& _view) {
     }
 }
 
-std::unique_ptr<VboMesh>& Tile::getMesh(const Style& _style) {
-    static std::unique_ptr<VboMesh> NONE = nullptr;
+std::unique_ptr<StyledMesh>& Tile::getMesh(const Style& _style) {
+    static std::unique_ptr<StyledMesh> NONE = nullptr;
 
     if (_style.getID() >= m_geometry.size()) { return NONE; }
 

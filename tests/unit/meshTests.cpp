@@ -1,7 +1,7 @@
 #include "catch.hpp"
 
 #include <iostream>
-#include "gl/typedMesh.h"
+#include "gl/vboMesh.h"
 
 using namespace Tangram;
 
@@ -18,8 +18,19 @@ std::shared_ptr<VertexLayout> layout = std::shared_ptr<VertexLayout>(new VertexL
     {"d",  1, GL_BYTE,  false, 0},
 }));
 
-std::shared_ptr<TypedMesh<Vertex>> newMesh(unsigned int size) {
-    auto mesh = std::shared_ptr<TypedMesh<Vertex>>(new TypedMesh<Vertex>(layout, GL_TRIANGLES));
+struct TestMesh : public VboMesh<Vertex> {
+    using Base = VboMesh<Vertex>;
+    using Base::Base;
+
+    GLsizei getDirtySize() const { return m_dirtySize; }
+    GLintptr getDirtyOffset() const { return m_dirtyOffset; }
+
+    int numVertices() const { return m_nVertices; }
+    int numIndices() const { return m_nIndices; }
+};
+
+std::shared_ptr<TestMesh> newMesh(unsigned int size) {
+    auto mesh = std::make_shared<TestMesh>(layout, GL_TRIANGLES);
     MeshData<Vertex> meshData;
 
     for (size_t i = 0; i < size; ++i) {
@@ -30,7 +41,7 @@ std::shared_ptr<TypedMesh<Vertex>> newMesh(unsigned int size) {
     return mesh;
 }
 
-void checkBounds(const std::shared_ptr<TypedMesh<Vertex>>& mesh) {
+void checkBounds(const std::shared_ptr<TestMesh>& mesh) {
 
     REQUIRE(mesh->getDirtyOffset() >= 0);
     REQUIRE(mesh->getDirtyOffset() < mesh->numVertices() * sizeof(Vertex));

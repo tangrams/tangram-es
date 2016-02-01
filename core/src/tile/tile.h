@@ -15,9 +15,9 @@ class DataSource;
 class MapProjection;
 class Scene;
 class Style;
-class VboMesh;
 class View;
 class StyleContext;
+class StyledMesh;
 
 /* Tile of vector map data
  *
@@ -53,7 +53,7 @@ public:
 
     void initGeometry(uint32_t _size);
 
-    std::unique_ptr<VboMesh>& getMesh(const Style& _style);
+    std::unique_ptr<StyledMesh>& getMesh(const Style& _style);
 
     /* Update the Tile considering the current view */
     void update(float _dt, const View& _view);
@@ -66,7 +66,7 @@ public:
 
     void resetState();
 
-    /* Get the sum in bytes of all <VboMesh>es */
+    /* Get the sum in bytes of all <Mesh>es */
     size_t getMemoryUsage() const;
 
     int64_t sourceGeneration() const { return m_sourceGeneration; }
@@ -102,8 +102,8 @@ private:
     // Distances from the global origin are too large to represent precisely in 32-bit floats, so we only apply the
     // relative translation from the view origin to the model origin immediately before drawing the tile.
 
-    // Map of <Style>s and their associated <VboMesh>es
-    std::vector<std::unique_ptr<VboMesh>> m_geometry;
+    // Map of <Style>s and their associated <Mesh>es
+    std::vector<std::unique_ptr<StyledMesh>> m_geometry;
 
     mutable size_t m_memoryUsage = 0;
 };
