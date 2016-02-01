@@ -69,7 +69,7 @@ void Tile::update(float _dt, const View& _view) {
 void Tile::resetState() {
     for (auto& entry : m_geometry) {
         if (!entry) { continue; }
-        auto labelMesh = dynamic_cast<LabelMesh*>(entry.get());
+        auto labelMesh = dynamic_cast<LabelSet*>(entry.get());
         if (!labelMesh) { continue; }
         labelMesh->reset();
     }

@@ -12,6 +12,22 @@ static std::atomic<int> s_meshCounter(0);
 
 const size_t maxVertices = 16384;
 
+LabelSet::~LabelSet() {}
+
+void LabelSet::reset() {
+    for (auto& label : m_labels) {
+        label->resetState();
+    }
+}
+
+void LabelSet::setLabels(std::vector<std::unique_ptr<Label>>& _labels) {
+    typedef std::vector<std::unique_ptr<Label>>::iterator iter_t;
+    m_labels.insert(m_labels.begin(),
+                    std::move_iterator<iter_t>(_labels.begin()),
+                    std::move_iterator<iter_t>(_labels.end()));
+
+}
+
 LabelMesh::LabelMesh(std::shared_ptr<VertexLayout> _vertexLayout, GLenum _drawMode)
     : VboMesh<Label::Vertex>(_vertexLayout, _drawMode, GL_DYNAMIC_DRAW)
 {
@@ -28,12 +44,6 @@ LabelMesh::~LabelMesh() {
         glDeleteBuffers(1, &s_quadIndexBuffer);
         s_quadIndexBuffer = 0;
         s_quadGeneration = -1;
-    }
-}
-
-void LabelMesh::reset() {
-    for (auto& label : m_labels) {
-        label->resetState();
     }
 }
 
@@ -62,16 +72,9 @@ void LabelMesh::loadQuadIndices() {
                  reinterpret_cast<GLbyte*>(indices.data()), GL_STATIC_DRAW);
 }
 
-void LabelMesh::compile(std::vector<std::unique_ptr<Label>>& _labels,
-                        std::vector<Label::Vertex>& _vertices) {
+void LabelMesh::compile(std::vector<Label::Vertex>& _vertices) {
 
     constexpr size_t maxVertices = 16384;
-
-    typedef std::vector<std::unique_ptr<Label>>::iterator iter_t;
-
-    m_labels.insert(m_labels.end(),
-                    std::move_iterator<iter_t>(_labels.begin()),
-                    std::move_iterator<iter_t>(_labels.end()));
 
     // Compile vertex buffer directly instead of making a temporary copy
     m_nVertices = _vertices.size();

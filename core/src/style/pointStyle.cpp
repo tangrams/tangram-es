@@ -69,17 +69,22 @@ void PointStyle::onBeginDrawFrame(const View& _view, Scene& _scene, int _texture
 
 struct PointStyleBuilder : public StyleBuilder {
 
+    struct PointStyleMesh : public LabelMesh, public LabelSet {
+        using LabelMesh::LabelMesh;
+    };
+
     const PointStyle& m_style;
 
     std::vector<Label::Vertex> m_vertices;
     std::vector<std::unique_ptr<Label>> m_labels;
 
-    std::unique_ptr<LabelMesh> m_mesh;
+    std::unique_ptr<PointStyleMesh> m_mesh;
     float m_zoom;
 
     void setup(const Tile& _tile) override {
         m_zoom = _tile.getID().z;
-        m_mesh = std::make_unique<LabelMesh>(m_style.vertexLayout(), m_style.drawMode());
+        m_mesh = std::make_unique<PointStyleMesh>(m_style.vertexLayout(),
+                                                  m_style.drawMode());
     }
 
     bool checkRule(const DrawRule& _rule) const override;
@@ -89,7 +94,8 @@ struct PointStyleBuilder : public StyleBuilder {
     void addPoint(const Point& _line, const Properties& _props, const DrawRule& _rule) override;
 
     std::unique_ptr<StyledMesh> build() override {
-        m_mesh->compile(m_labels, m_vertices);
+        m_mesh->setLabels(m_labels);
+        m_mesh->compile(m_vertices);
         m_labels.clear();
         m_vertices.clear();
         return std::move(m_mesh);

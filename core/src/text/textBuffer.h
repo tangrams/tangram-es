@@ -11,7 +11,7 @@ class FontContext;
 /*
  * This class holds TextLabels together with their VboMesh
  */
-class TextBuffer : public LabelMesh {
+class TextBuffer : public LabelMesh, public LabelSet {
 
 public:
     struct WordBreak {
