@@ -66,32 +66,30 @@ void PolylineStyle::constructShaderProgram() {
     m_shaderProgram->setSourceStrings(fragShaderSrcStr, vertShaderSrcStr);
 }
 
-namespace { // Builder
-
 using Mesh = TypedMesh<PolylineVertex>;
 
-struct Parameters {
+struct PolylineStyleBuilder : public StyleBuilder {
 
-    struct Attributes {
-        // Values prepared for the currently build mesh
-        glm::i16vec2 height;
-        glm::i16vec2 width;
-        uint32_t color;
+    struct Parameters {
 
-        CapTypes cap = CapTypes::butt;
-        JoinTypes join = JoinTypes::miter;
+        struct Attributes {
+            // Values prepared for the currently build mesh
+            glm::i16vec2 height;
+            glm::i16vec2 width;
+            uint32_t color;
 
-        void set(float _width, float _dWdZ, float _height, float _order) {
-            height = { glm::round(_height * position_scale), _order * order_scale};
-            width = glm::vec2{_width, _dWdZ} * extrusion_scale;
-        }
-    } fill, stroke;
+            CapTypes cap = CapTypes::butt;
+            JoinTypes join = JoinTypes::miter;
 
-    bool keepTileEdges = false;
-    bool outlineOn = false;
-};
+            void set(float _width, float _dWdZ, float _height, float _order) {
+                height = { glm::round(_height * position_scale), _order * order_scale};
+                width = glm::vec2{_width, _dWdZ} * extrusion_scale;
+            }
+        } fill, stroke;
 
-struct Builder : public StyleBuilder {
+        bool keepTileEdges = false;
+        bool outlineOn = false;
+    };
 
     const PolylineStyle& m_style;
     PolyLineBuilder m_builder;
@@ -111,7 +109,7 @@ struct Builder : public StyleBuilder {
 
     std::unique_ptr<VboMesh> build() override;
 
-    Builder(const PolylineStyle& _style)
+    PolylineStyleBuilder(const PolylineStyle& _style)
         : StyleBuilder(_style), m_style(_style),
           m_meshData(2) {}
 
@@ -126,7 +124,7 @@ struct Builder : public StyleBuilder {
 
 };
 
-void Builder::begin(const Tile& _tile) {
+void PolylineStyleBuilder::begin(const Tile& _tile) {
     m_tileUnitsPerMeter = _tile.getInverseScale();
     m_zoom = _tile.getID().z;
     m_tileSize = _tile.getProjection()->TileSize();
@@ -135,7 +133,7 @@ void Builder::begin(const Tile& _tile) {
     m_meshData[1].clear();
 }
 
-std::unique_ptr<VboMesh> Builder::build() {
+std::unique_ptr<VboMesh> PolylineStyleBuilder::build() {
     auto mesh = std::make_unique<Mesh>(m_style.vertexLayout(), m_style.drawMode());
     mesh->compile(m_meshData);
     m_meshData[0].clear();
@@ -143,7 +141,7 @@ std::unique_ptr<VboMesh> Builder::build() {
     return std::move(mesh);
 }
 
-auto Builder::parseRule(const DrawRule& _rule, const Properties& _props) -> Parameters {
+auto PolylineStyleBuilder::parseRule(const DrawRule& _rule, const Properties& _props) -> Parameters {
     Parameters p;
 
     uint32_t cap = 0, join = 0;
@@ -233,7 +231,7 @@ double widthMeterToPixel(int _zoom, double _tileSize, double _width) {
     return _width * meterRes;
 }
 
-bool Builder::evalWidth(const StyleParam& _styleParam, float& width, float& slope) {
+bool PolylineStyleBuilder::evalWidth(const StyleParam& _styleParam, float& width, float& slope) {
 
     // NB: 0.5 because 'width' will be extruded in both directions
     float tileRes = 0.5 / m_tileSize;
@@ -269,7 +267,7 @@ bool Builder::evalWidth(const StyleParam& _styleParam, float& width, float& slop
     return false;
 }
 
-void Builder::addFeature(const Feature& _feat, const DrawRule& _rule) {
+void PolylineStyleBuilder::addFeature(const Feature& _feat, const DrawRule& _rule) {
 
     if (_feat.geometryType == GeometryType::points) { return; }
     if (!checkRule(_rule)) { return; }
@@ -294,7 +292,7 @@ void Builder::addFeature(const Feature& _feat, const DrawRule& _rule) {
     }
 }
 
-void Builder::buildLine(const Line& _line, const Parameters::Attributes& _att,
+void PolylineStyleBuilder::buildLine(const Line& _line, const Parameters::Attributes& _att,
                         MeshData<PolylineVertex>& _mesh) {
 
     m_builder.addVertex = [&_mesh, &_att](const glm::vec3& coord,
@@ -316,7 +314,7 @@ void Builder::buildLine(const Line& _line, const Parameters::Attributes& _att,
     m_builder.clear();
 }
 
-void Builder::addMesh(const Line& _line, const Parameters& _params) {
+void PolylineStyleBuilder::addMesh(const Line& _line, const Parameters& _params) {
 
     m_builder.cap = _params.fill.cap;
     m_builder.join = _params.fill.join;
@@ -360,10 +358,8 @@ void Builder::addMesh(const Line& _line, const Parameters& _params) {
     }
 }
 
-}
-
 std::unique_ptr<StyleBuilder> PolylineStyle::createBuilder() const {
-    return std::make_unique<Builder>(*this);
+    return std::make_unique<PolylineStyleBuilder>(*this);
 }
 
 }

@@ -67,9 +67,7 @@ void TextStyle::onBeginDrawFrame(const View& _view, Scene& _scene, int _textureU
     Style::onBeginDrawFrame(_view, _scene, 1);
 }
 
-namespace {
-
-struct Builder : public StyleBuilder {
+struct TextStyleBuilder : public StyleBuilder {
 
     const TextStyle& m_style;
 
@@ -92,7 +90,7 @@ struct Builder : public StyleBuilder {
 
     const Style& style() const override { return m_style; }
 
-    Builder(const TextStyle& _style) : StyleBuilder(_style), m_style(_style) {}
+    TextStyleBuilder(const TextStyle& _style) : StyleBuilder(_style), m_style(_style) {}
 
     TextStyle::Parameters applyRule(const DrawRule& _rule, const Properties& _props) const;
 
@@ -102,11 +100,11 @@ struct Builder : public StyleBuilder {
     void addLabel(const TextStyle::Parameters& _params, Label::Type _type, Label::Transform _transform);
 };
 
-bool Builder::checkRule(const DrawRule& _rule) const {
+bool TextStyleBuilder::checkRule(const DrawRule& _rule) const {
     return true;
 }
 
-auto Builder::applyRule(const DrawRule& _rule, const Properties& _props) const -> TextStyle::Parameters {
+auto TextStyleBuilder::applyRule(const DrawRule& _rule, const Properties& _props) const -> TextStyle::Parameters {
     const static std::string key_name("name");
 
     TextStyle::Parameters p;
@@ -222,7 +220,7 @@ auto Builder::applyRule(const DrawRule& _rule, const Properties& _props) const -
     return p;
 }
 
-void Builder::addPoint(const Point& _point, const Properties& _props, const DrawRule& _rule) {
+void TextStyleBuilder::addPoint(const Point& _point, const Properties& _props, const DrawRule& _rule) {
 
     TextStyle::Parameters params = applyRule(_rule, _props);
 
@@ -233,7 +231,7 @@ void Builder::addPoint(const Point& _point, const Properties& _props, const Draw
     m_builder.addLabel(params, Label::Type::point, { glm::vec2(_point), glm::vec2(_point) });
 }
 
-void Builder::addLine(const Line& _line, const Properties& _props, const DrawRule& _rule) {
+void TextStyleBuilder::addLine(const Line& _line, const Properties& _props, const DrawRule& _rule) {
 
     TextStyle::Parameters params = applyRule(_rule, _props);
 
@@ -256,16 +254,13 @@ void Builder::addLine(const Line& _line, const Properties& _props, const DrawRul
     }
 }
 
-void Builder::addPolygon(const Polygon& _polygon, const Properties& _props, const DrawRule& _rule) {
+void TextStyleBuilder::addPolygon(const Polygon& _polygon, const Properties& _props, const DrawRule& _rule) {
     Point p = glm::vec3(centroid(_polygon), 0.0);
     addPoint(p, _props, _rule);
 }
 
-
-}
-
 std::unique_ptr<StyleBuilder> TextStyle::createBuilder() const {
-    return std::make_unique<Builder>(*this);
+    return std::make_unique<TextStyleBuilder>(*this);
 }
 
 }

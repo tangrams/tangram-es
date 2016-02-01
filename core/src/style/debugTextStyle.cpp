@@ -17,8 +17,7 @@ DebugTextStyle::DebugTextStyle(std::shared_ptr<FontContext> _fontContext, FontID
       m_font(_fontId), m_fontSize(_fontSize) {
 }
 
-namespace {
-struct Builder : public StyleBuilder {
+struct DebugTextStyleBuilder : public StyleBuilder {
 
     const DebugTextStyle& m_style;
 
@@ -51,10 +50,9 @@ struct Builder : public StyleBuilder {
 
     const Style& style() const override { return m_style; }
 
-    Builder(const DebugTextStyle& _style, TextStyle::Parameters _params)
+    DebugTextStyleBuilder(const DebugTextStyle& _style, TextStyle::Parameters _params)
         : StyleBuilder(_style), m_style(_style), m_params(_params) {}
 };
-}
 
 std::unique_ptr<StyleBuilder> DebugTextStyle::createBuilder() const {
     TextStyle::Parameters params;
@@ -63,7 +61,7 @@ std::unique_ptr<StyleBuilder> DebugTextStyle::createBuilder() const {
     params.blurSpread = m_sdf ? 2.5f : 0.0f;
     params.fill = 0xdc3522ff;
 
-    return std::make_unique<Builder>(*this, params);
+    return std::make_unique<DebugTextStyleBuilder>(*this, params);
 }
 
 }

@@ -61,11 +61,9 @@ void PolygonStyle::constructShaderProgram() {
     m_shaderProgram->setSourceStrings(fragShaderSrcStr, vertShaderSrcStr);
 }
 
-namespace {
-
 using Mesh = TypedMesh<PolygonVertex>;
 
-struct Builder : public StyleBuilder {
+struct PolygonStyleBuilder : public StyleBuilder {
 
     const PolygonStyle& m_style;
 
@@ -96,14 +94,14 @@ struct Builder : public StyleBuilder {
 
     std::unique_ptr<VboMesh> build() override;
 
-    Builder(const PolygonStyle& _style) : StyleBuilder(_style), m_style(_style) {}
+    PolygonStyleBuilder(const PolygonStyle& _style) : StyleBuilder(_style), m_style(_style) {}
 
     void parseRule(const DrawRule& _rule, const Properties& _props);
 
     PolygonBuilder m_builder;
 };
 
-std::unique_ptr<VboMesh> Builder::build() {
+std::unique_ptr<VboMesh> PolygonStyleBuilder::build() {
     auto mesh = std::make_unique<Mesh>(m_style.vertexLayout(), m_style.drawMode());
 
     mesh->compile(m_meshData);
@@ -113,7 +111,7 @@ std::unique_ptr<VboMesh> Builder::build() {
 }
 
 
-void Builder::parseRule(const DrawRule& _rule, const Properties& _props) {
+void PolygonStyleBuilder::parseRule(const DrawRule& _rule, const Properties& _props) {
     _rule.get(StyleParamKey::color, m_params.color);
     _rule.get(StyleParamKey::extrude, m_params.extrude);
     _rule.get(StyleParamKey::order, m_params.order);
@@ -128,7 +126,7 @@ void Builder::parseRule(const DrawRule& _rule, const Properties& _props) {
 
 }
 
-void Builder::addPolygon(const Polygon& _polygon, const Properties& _props, const DrawRule& _rule) {
+void PolygonStyleBuilder::addPolygon(const Polygon& _polygon, const Properties& _props, const DrawRule& _rule) {
 
     parseRule(_rule, _props);
 
@@ -156,10 +154,8 @@ void Builder::addPolygon(const Polygon& _polygon, const Properties& _props, cons
     m_builder.clear();
 }
 
-}
-
 std::unique_ptr<StyleBuilder> PolygonStyle::createBuilder() const {
-    return std::make_unique<Builder>(*this);
+    return std::make_unique<PolygonStyleBuilder>(*this);
 }
 
 }

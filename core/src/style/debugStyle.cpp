@@ -44,8 +44,7 @@ void DebugStyle::constructShaderProgram() {
 
 }
 
-namespace {
-struct Builder : public StyleBuilder {
+struct DebugStyleBuilder : public StyleBuilder {
 
     const DebugStyle& m_style;
 
@@ -72,13 +71,12 @@ struct Builder : public StyleBuilder {
 
     const Style& style() const override { return m_style; }
 
-    Builder(const DebugStyle& _style) : StyleBuilder(_style), m_style(_style) {}
+    DebugStyleBuilder(const DebugStyle& _style) : StyleBuilder(_style), m_style(_style) {}
 
 };
-}
 
 std::unique_ptr<StyleBuilder> DebugStyle::createBuilder() const {
-    return std::make_unique<Builder>(*this);
+    return std::make_unique<DebugStyleBuilder>(*this);
 }
 
 }

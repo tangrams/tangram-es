@@ -67,9 +67,7 @@ void PointStyle::onBeginDrawFrame(const View& _view, Scene& _scene, int _texture
     Style::onBeginDrawFrame(_view, _scene, 1);
 }
 
-namespace {
-
-struct Builder : public StyleBuilder {
+struct PointStyleBuilder : public StyleBuilder {
 
     const PointStyle& m_style;
 
@@ -99,7 +97,7 @@ struct Builder : public StyleBuilder {
 
     const Style& style() const override { return m_style; }
 
-    Builder(const PointStyle& _style) : StyleBuilder(_style), m_style(_style) {}
+    PointStyleBuilder(const PointStyle& _style) : StyleBuilder(_style), m_style(_style) {}
 
     void pushQuad(std::vector<Label::Vertex>& _vertices, const glm::vec2& _size, const glm::vec2& _uvBL,
                   const glm::vec2& _uvTR, unsigned int _color, float _extrudeScale) const;
@@ -115,7 +113,7 @@ struct Builder : public StyleBuilder {
 
 };
 
-bool Builder::checkRule(const DrawRule& _rule) const {
+bool PointStyleBuilder::checkRule(const DrawRule& _rule) const {
     uint32_t checkColor;
     // require a color or texture atlas/texture to be valid
     if (!_rule.get(StyleParamKey::color, checkColor) &&
@@ -126,7 +124,7 @@ bool Builder::checkRule(const DrawRule& _rule) const {
     return true;
 }
 
-auto Builder::applyRule(const DrawRule& _rule, const Properties& _props) const -> PointStyle::Parameters {
+auto PointStyleBuilder::applyRule(const DrawRule& _rule, const Properties& _props) const -> PointStyle::Parameters {
 
     PointStyle::Parameters p;
     glm::vec2 size;
@@ -173,8 +171,9 @@ auto Builder::applyRule(const DrawRule& _rule, const Properties& _props) const -
     return p;
 }
 
-void Builder::pushQuad(std::vector<Label::Vertex>& _vertices, const glm::vec2& _size, const glm::vec2& _uvBL,
-                          const glm::vec2& _uvTR, unsigned int _color, float _extrudeScale) const {
+void PointStyleBuilder::pushQuad(std::vector<Label::Vertex>& _vertices, const glm::vec2& _size,
+                                 const glm::vec2& _uvBL, const glm::vec2& _uvTR, unsigned int _color,
+                                 float _extrudeScale) const {
 
     float es = _extrudeScale;
 
@@ -188,7 +187,7 @@ void Builder::pushQuad(std::vector<Label::Vertex>& _vertices, const glm::vec2& _
     _vertices.push_back({{_size.x,  -_size.y}, {uvTR.x, uvBL.y}, { es, -es }, _color});
 }
 
-bool Builder::getUVQuad(PointStyle::Parameters& _params, glm::vec4& _quad) const {
+bool PointStyleBuilder::getUVQuad(PointStyle::Parameters& _params, glm::vec4& _quad) const {
     _quad = glm::vec4(0.0, 0.0, 1.0, 1.0);
 
     if (m_style.spriteAtlas()) {
@@ -219,8 +218,8 @@ bool Builder::getUVQuad(PointStyle::Parameters& _params, glm::vec4& _quad) const
     return true;
 }
 
-void Builder::addPoint(const Point& _point, const Properties& _props,
-                                   const DrawRule& _rule) {
+void PointStyleBuilder::addPoint(const Point& _point, const Properties& _props,
+                                 const DrawRule& _rule) {
 
     PointStyle::Parameters p = applyRule(_rule, _props);
     glm::vec4 uvsQuad;
@@ -240,8 +239,8 @@ void Builder::addPoint(const Point& _point, const Properties& _props,
              p.color, p.extrudeScale);
 }
 
-void Builder::addLine(const Line& _line, const Properties& _props,
-                                  const DrawRule& _rule) {
+void PointStyleBuilder::addLine(const Line& _line, const Properties& _props,
+                                const DrawRule& _rule) {
 
     PointStyle::Parameters p = applyRule(_rule, _props);
     glm::vec4 uvsQuad;
@@ -263,8 +262,8 @@ void Builder::addLine(const Line& _line, const Properties& _props,
     }
 }
 
-void Builder::addPolygon(const Polygon& _polygon, const Properties& _props,
-                                     const DrawRule& _rule) {
+void PointStyleBuilder::addPolygon(const Polygon& _polygon, const Properties& _props,
+                                   const DrawRule& _rule) {
 
     PointStyle::Parameters p = applyRule(_rule, _props);
     glm::vec4 uvsQuad;
@@ -305,10 +304,8 @@ void Builder::addPolygon(const Polygon& _polygon, const Properties& _props,
     }
 }
 
-}
-
 std::unique_ptr<StyleBuilder> PointStyle::createBuilder() const {
-    return std::make_unique<Builder>(*this);
+    return std::make_unique<PointStyleBuilder>(*this);
 }
 
 }
