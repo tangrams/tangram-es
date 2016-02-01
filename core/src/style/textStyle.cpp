@@ -242,8 +242,10 @@ void TextStyleBuilder::addLine(const Line& _line, const Properties& _props, cons
 
     if (!m_builder.prepareLabel(m_style.fontContext(), params)) { return; }
 
-    float pixel = 2.0 / m_tileSize;
-    float minLength = m_builder.labelWidth() * pixel * 0.2;
+    // Check if any line segment is long enough for the label
+    // when the tile is magnified to 2 zoom-levels above (=> 0.25)
+    float pixel = 1.0 / (m_tileSize * m_style.pixelScale());
+    float minLength = m_builder.labelWidth() * pixel * 0.25;
 
     for (size_t i = 0; i < _line.size() - 1; i++) {
         glm::vec2 p1 = glm::vec2(_line[i]);
