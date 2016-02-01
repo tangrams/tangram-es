@@ -59,7 +59,8 @@ class FontFileParser {
                                 fallbackFontDict.put(weight, new Vector<String>());
                             }
 
-                            fallbackFontDict.get(weight).add(filename);
+                            String fullFileName = "/system/fonts/" + filename;
+                            fallbackFontDict.get(weight).add(fullFileName);
                         } else {
                             skip(parser);
                         }
