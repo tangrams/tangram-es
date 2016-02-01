@@ -28,12 +28,13 @@
 
 #include <bitset>
 
-#define TEXTURE_SIZE 256
-
 
 namespace alf = alfons;
 
 namespace Tangram {
+
+constexpr int texture_size = 256;
+constexpr int max_textures = 64;
 
 // #define DEFAULT_FONT "fonts/amiri-400regular.ttf"
 // #define DEFAULT_FONT "/usr/share/fonts/TTF/DejaVuSans.ttf"
@@ -139,7 +140,7 @@ struct AlfonsMesh : public LabelMesh {
 
     bool ready() { return m_isCompiled; }
 
-    void myClear() {
+    void clear() {
         m_nVertices = 0;
         m_vertices.clear();
         m_isCompiled = false;
@@ -150,9 +151,9 @@ struct AlfonsMesh : public LabelMesh {
 struct GlyphBatch {
 
     GlyphBatch(std::shared_ptr<VertexLayout> _vertexLayout)
-        : texture(TEXTURE_SIZE, TEXTURE_SIZE) {
+        : texture(texture_size, texture_size) {
 
-        texData.resize(TEXTURE_SIZE * TEXTURE_SIZE);
+        texData.resize(texture_size * texture_size);
         mesh = std::make_unique<AlfonsMesh>(_vertexLayout, GL_TRIANGLES);
     }
 
@@ -166,7 +167,7 @@ struct GlyphBatch {
 
 struct AlfonsContext : public alf::TextureCallback {
     AlfonsContext() :
-        m_atlas(*this, TEXTURE_SIZE) {
+        m_atlas(*this, texture_size) {
 
 #if defined(PLATFORM_ANDROID)
 
@@ -217,8 +218,8 @@ struct AlfonsContext : public alf::TextureCallback {
         auto& texture = m_batches[id].texture;
         m_batches[id].dirty = true;
 
-        uint16_t stride = TEXTURE_SIZE;
-        uint16_t width = TEXTURE_SIZE;
+        uint16_t stride = texture_size;
+        uint16_t width = texture_size;
 
         unsigned char* dst = &texData[(gx + pad) + (gy + pad) * stride];
 
@@ -235,24 +236,45 @@ struct AlfonsContext : public alf::TextureCallback {
         gh += pad * 2;
 
         size_t bytes = gw * gh * sizeof(float) * 3;
-        if (m_tmpBuffer.size() < bytes) {
-            m_tmpBuffer.resize(bytes);
+        if (m_sdfBuffer.size() < bytes) {
+            m_sdfBuffer.resize(bytes);
         }
 
         sdfBuildDistanceFieldNoAlloc(dst, width, SDF_WIDTH,
                                      dst, gw, gh, width,
-                                     &m_tmpBuffer[0]);
+                                     &m_sdfBuffer[0]);
 
         texture.setDirty(gy, gh);
+    }
+
+    void releaseAtlas(std::bitset<max_textures> _refs) {
+        if (!_refs.any()) { return; }
+        std::lock_guard<std::mutex> lock(m_mutex);
+        for (size_t i = 0; i < m_batches.size(); i++) {
+            if (!_refs[i]) { continue; }
+
+            if (--m_atlasRefCount[i] == 0) {
+                m_atlas.clear(i);
+                m_batches[i].texData.assign(texture_size * texture_size, 0);
+            }
+        }
+    }
+    void lockAtlas(std::bitset<max_textures> _refs) {
+        if (!_refs.any()) { return; }
+        std::lock_guard<std::mutex> lock(m_mutex);
+        for (size_t i = 0; i < m_batches.size(); i++) {
+            if (_refs[i]) { m_atlasRefCount[i]++; }
+        }
     }
 
     alf::FontManager m_alfons;
     alf::GlyphAtlas m_atlas;
 
     std::shared_ptr<alf::Font> m_font;
-    std::vector<unsigned char> m_tmpBuffer;
+    std::vector<unsigned char> m_sdfBuffer;
     std::vector<GlyphBatch> m_batches;
     std::shared_ptr<VertexLayout> m_vertexLayout;
+    std::array<int, max_textures> m_atlasRefCount = {{0}};
 
     std::mutex m_mutex;
 };
@@ -262,13 +284,15 @@ struct AlfonsContext : public alf::TextureCallback {
 // - just keeps labels and vertices for all Labels of a tile
 struct LabelContainer : public LabelSet, public Mesh {
 
-    LabelContainer(AlfonsContext& _ctx)
-        // just adding vertexlayout to not crash in getMemoryusage!
-        : context(_ctx) {}
+    LabelContainer(AlfonsContext& _ctx) : context(_ctx) {}
+
+    ~LabelContainer() override {
+        context.releaseAtlas(atlasRefs);
+    }
 
     AlfonsContext& context;
     std::vector<GlyphQuad> quads;
-    std::bitset<128> batchRefs;
+    std::bitset<max_textures> atlasRefs;
 
     void draw(ShaderProgram& _shader) override {}
     size_t bufferSize() override { return 0; }
@@ -288,7 +312,11 @@ struct LabelContainer : public LabelSet, public Mesh {
                      _quads.begin(),
                      _quads.end());
 
-        //m_isCompiled = true;
+        for (auto& q : quads) {
+            atlasRefs.set(q.atlas);
+        }
+
+        context.lockAtlas(atlasRefs);
     }
 };
 
@@ -334,18 +362,18 @@ void AlfonsStyle::onBeginDrawFrame(const View& _view, Scene& _scene, int _textur
                 batch.texture.update(0, td);
             }
 
-            // TODO upload mesh batch
             batch.mesh->myUpload();
 
-            // LOG(">>> refcount:%d texture:%d/%d texid:%d upload:%d - buffersize:%d",
-            //     batch.refCount, tex++,
-            //     m_context->m_batches.size(),
-            //     batch.texture.getGlHandle(),
-            //     dirty, batch.mesh->bufferSize());
+            LOG(">>> refcount:%d texture:%d/%d texid:%d upload:%d - buffersize:%d",
+                m_context->m_atlasRefCount[tex], tex,
+                m_context->m_batches.size(),
+                batch.texture.getGlHandle(),
+                dirty, batch.mesh->bufferSize());
+            tex++;
         }
     }
     m_shaderProgram->setUniformf("u_uv_scale_factor",
-                                 glm::vec2(1.0f / TEXTURE_SIZE));
+                                 glm::vec2(1.0f / texture_size));
     m_shaderProgram->setUniformi("u_tex", 0);
     m_shaderProgram->setUniformMatrix4f("u_ortho", _view.getOrthoViewportMatrix());
 
@@ -375,10 +403,10 @@ void AlfonsStyle::onEndDrawFrame() {
             gt.mesh->draw(*m_shaderProgram);
 
             // FIXME - resets for next frame..
-            gt.mesh->myClear();
+            // should be done only when buffers are changing
+            gt.mesh->clear();
         }
     }
-
 }
 
 namespace {
@@ -400,7 +428,6 @@ struct Builder : public StyleBuilder {
 
     struct ScratchBuffer : public alf::MeshCallback {
         std::vector<GlyphQuad> quads;
-        std::bitset<128> batchRefs;
 
         // label width and height
         glm::vec2 bbox;
@@ -433,14 +460,10 @@ struct Builder : public StyleBuilder {
                      {glm::vec2{q.x2, q.y1} * position_scale, {g.u2, g.v1}},
                      {glm::vec2{q.x2, q.y2} * position_scale, {g.u2, g.v2}}},
                     fill, stroke, atlasGlyph.atlas });
-
-            // keep track which textures are used
-            batchRefs.set(atlasGlyph.atlas);
         }
 
         void clear() {
             quads.clear();
-            batchRefs.reset();
         }
     };
 
