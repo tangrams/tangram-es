@@ -213,10 +213,6 @@ auto PolylineStyleBuilder::parseRule(const DrawRule& _rule, const Properties& _p
         stroke.color <<= (m_zoom % 6);
     }
 
-    // FIXME: just to make hidden lines visible
-    if (fill.width < 0.5/m_tileSize) { fill.width = 0.5/m_tileSize; }
-
-
     p.fill.set(fill.width, fill.slope, height, fill.order);
 
     return p;
@@ -274,7 +270,7 @@ void PolylineStyleBuilder::addFeature(const Feature& _feat, const DrawRule& _rul
 
     Parameters params = parseRule(_rule, _feat.props);
 
-    // if (params.fill.width <= 0.0f && params.fill.slope <= 0.0f ) { return; }
+    if (params.fill.width[0] <= 0.0f && params.fill.width[1] <= 0.0f ) { return; }
 
     if (_feat.geometryType == GeometryType::lines) {
         // Line geometries are never clipped to tiles, so keep all segments
