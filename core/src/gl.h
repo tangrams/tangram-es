@@ -266,6 +266,7 @@ typedef char            GLchar;
 #define GL_WRITE_ONLY                   0x88B9
 #define GL_READ_WRITE                   0x88BA
 
+#define GL_MAX_TEXTURE_SIZE             0x0D33
 
 #ifdef PLATFORM_ANDROID
 #define GL_APICALL  __attribute__((visibility("default")))

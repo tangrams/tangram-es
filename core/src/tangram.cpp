@@ -13,6 +13,7 @@
 #include "gl/shaderProgram.h"
 #include "gl/renderState.h"
 #include "gl/primitives.h"
+#include "gl/hardware.h"
 #include "util/inputHandler.h"
 #include "tile/tileCache.h"
 #include "view/view.h"
@@ -562,6 +563,8 @@ void setupGL() {
 
     // Load GL extensions
     GLExtensions::load();
+
+    Hardware::loadCapability();
 
     GLExtensions::printAvailableExtensions();
 

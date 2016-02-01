@@ -3,6 +3,7 @@
 #include "fontstash.h"
 
 #include "platform.h"
+#include "gl/hardware.h"
 
 namespace Tangram {
 
@@ -189,7 +190,7 @@ void FontContext::fontstashError(void* _uptr, int _error, int _val) {
         unsigned int nw = tex->getWidth() * 2;
         unsigned int nh = tex->getHeight() * 2;
 
-        if (nw > TANGRAM_MAX_TEXTURE_WIDTH || nh > TANGRAM_MAX_TEXTURE_HEIGHT) {
+        if (nw > Hardware::maxTextureSize || nh > Hardware::maxTextureSize) {
             LOGE("Full font texture atlas size reached!");
         } else {
             std::lock_guard<std::mutex> lock(fontContext->m_atlasMutex);
