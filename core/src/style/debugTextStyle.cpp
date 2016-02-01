@@ -25,13 +25,13 @@ struct DebugTextStyleBuilder : public StyleBuilder {
 
     TextBuffer::Builder m_builder;
 
-    void begin(const Tile& _tile) override {
+    void setup(const Tile& _tile) override {
         if (!Tangram::getDebugFlag(Tangram::DebugFlags::tile_infos)) {
             return;
         }
 
         m_params.text = _tile.getID().toString();
-        m_builder.beginMesh(m_style.vertexLayout());
+        m_builder.setup(m_style.vertexLayout());
     }
 
     std::unique_ptr<VboMesh> build() override {

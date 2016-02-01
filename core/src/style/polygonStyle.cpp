@@ -81,7 +81,7 @@ struct PolygonStyleBuilder : public StyleBuilder {
         float minHeight;
     } m_params;
 
-    void begin(const Tile& _tile) override {
+    void setup(const Tile& _tile) override {
         m_tileUnitsPerMeter = _tile.getInverseScale();
         m_zoom = _tile.getID().z;
         m_mesh = std::make_unique<Mesh>(m_style.vertexLayout(), m_style.drawMode());

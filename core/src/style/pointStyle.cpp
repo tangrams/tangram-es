@@ -77,7 +77,7 @@ struct PointStyleBuilder : public StyleBuilder {
     std::unique_ptr<LabelMesh> m_mesh;
     float m_zoom;
 
-    void begin(const Tile& _tile) override {
+    void setup(const Tile& _tile) override {
         m_zoom = _tile.getID().z;
         m_mesh = std::make_unique<LabelMesh>(m_style.vertexLayout(), m_style.drawMode());
     }

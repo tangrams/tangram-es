@@ -39,7 +39,7 @@ public:
         static std::string applyTextTransform(const TextStyle::Parameters& _params, const std::string& _string);
 
     public:
-        void beginMesh(std::shared_ptr<VertexLayout> _vertexLayout);
+        void setup(std::shared_ptr<VertexLayout> _vertexLayout);
         bool prepareLabel(FontContext& _fontContext, const TextStyle::Parameters& _params);
         void addLabel(const TextStyle::Parameters& _params, Label::Type _type,
                       Label::Transform _transform);

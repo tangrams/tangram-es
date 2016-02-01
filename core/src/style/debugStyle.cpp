@@ -48,7 +48,7 @@ struct DebugStyleBuilder : public StyleBuilder {
 
     const DebugStyle& m_style;
 
-    void begin(const Tile& _tile) override {}
+    void setup(const Tile& _tile) override {}
 
     std::unique_ptr<VboMesh> build() override {
         if (!Tangram::getDebugFlag(Tangram::DebugFlags::tile_bounds)) {

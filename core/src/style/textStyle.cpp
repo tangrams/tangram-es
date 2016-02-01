@@ -73,8 +73,8 @@ struct TextStyleBuilder : public StyleBuilder {
 
     float m_tileSize;
 
-    void begin(const Tile& _tile) override {
-        m_builder.beginMesh(m_style.vertexLayout());
+    void setup(const Tile& _tile) override {
+        m_builder.setup(m_style.vertexLayout());
         m_tileSize = _tile.getProjection()->TileSize();
     }
 

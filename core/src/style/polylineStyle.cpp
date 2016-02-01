@@ -101,7 +101,7 @@ struct PolylineStyleBuilder : public StyleBuilder {
     float m_tileSize;
     int m_zoom;
 
-    void begin(const Tile& _tile) override;
+    void setup(const Tile& _tile) override;
 
     const Style& style() const override { return m_style; }
 
@@ -124,7 +124,7 @@ struct PolylineStyleBuilder : public StyleBuilder {
 
 };
 
-void PolylineStyleBuilder::begin(const Tile& _tile) {
+void PolylineStyleBuilder::setup(const Tile& _tile) {
     m_tileUnitsPerMeter = _tile.getInverseScale();
     m_zoom = _tile.getID().z;
     m_tileSize = _tile.getProjection()->TileSize();

@@ -176,7 +176,7 @@ void TextBuffer::draw(ShaderProgram& _shader) {
     LabelMesh::draw(_shader);
 }
 
-void TextBuffer::Builder::beginMesh(std::shared_ptr<VertexLayout> _vertexLayout) {
+void TextBuffer::Builder::setup(std::shared_ptr<VertexLayout> _vertexLayout) {
     m_mesh = std::make_unique<TextBuffer>(_vertexLayout);
     m_vertices.clear();
     m_labels.clear();

@@ -41,7 +41,7 @@ public:
 
     StyleBuilder(const Style& _style);
 
-    virtual void begin(const Tile& _tile) = 0;
+    virtual void setup(const Tile& _tile) = 0;
 
     virtual void addFeature(const Feature& _feat, const DrawRule& _rule);
 

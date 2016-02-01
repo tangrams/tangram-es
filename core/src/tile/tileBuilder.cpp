@@ -46,7 +46,7 @@ std::shared_ptr<Tile> TileBuilder::build(TileID _tileID, const TileData& _tileDa
 
     for (auto& builder : m_styleBuilder) {
         if (builder.second)
-            builder.second->begin(*tile);
+            builder.second->setup(*tile);
     }
 
     for (const auto& datalayer : m_scene->layers()) {
