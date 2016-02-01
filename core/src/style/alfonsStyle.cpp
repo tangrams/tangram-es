@@ -49,6 +49,8 @@ namespace Tangram {
 #define FONT_SIZE 24
 #define SDF_WIDTH 3
 
+#define ANDROID_FONT_PATH "/system/fonts/"
+
 auto vertexLayout() {
     return std::shared_ptr<VertexLayout>(new VertexLayout({
         {"a_position", 2, GL_SHORT, false, 0},
@@ -166,12 +168,38 @@ struct AlfonsContext : public alf::TextureCallback {
     AlfonsContext() :
         m_atlas(*this, TEXTURE_SIZE) {
 
-        m_font = m_alfons.addFont(DEFAULT, FONT_SIZE);
+#if defined(PLATFORM_ANDROID)
 
+        auto fontPath = systemFontPath("sans-serif", "400", "normal");
+        LOG("FONT %s", fontPath.c_str());
+
+        m_font = m_alfons.addFont(fontPath, FONT_SIZE);
+
+        std::string fallback = "";
+        int importance = 0;
+
+        while (importance < 100) {
+            fallback = systemFontFallbackPath(importance++, 400);
+            if (fallback.empty()) {
+                break;
+            }
+            if (fallback.find("UI-") != std::string::npos) {
+                continue;
+            }
+            fontPath = ANDROID_FONT_PATH;
+            fontPath += fallback;
+            LOG("FALLBACK %s", fontPath.c_str());
+
+            m_font->addFace(m_alfons.getFontFace(alf::InputSource(fontPath), FONT_SIZE));
+        }
+#else
+        m_font = m_alfons.addFont(DEFAULT, FONT_SIZE);
         m_font->addFace(m_alfons.getFontFace(alf::InputSource(FONT_AR), FONT_SIZE));
         m_font->addFace(m_alfons.getFontFace(alf::InputSource(FONT_HE), FONT_SIZE));
         m_font->addFace(m_alfons.getFontFace(alf::InputSource(FONT_JA), FONT_SIZE));
         m_font->addFace(m_alfons.getFontFace(alf::InputSource(FALLBACK), FONT_SIZE));
+#endif
+
 
         m_vertexLayout = vertexLayout();
     }
@@ -474,7 +502,8 @@ void Builder::addLine(const Line& _line, const Properties& _props, const DrawRul
 
     if (!prepareLabel(params, Label::Type::line)) { return; }
 
-    float pixel = 2.0 / m_tileSize;
+    float pixel = 2.0 / (m_tileSize * m_style.pixelScale());
+
     float minLength = m_scratch.bbox.x * pixel * 0.2;
 
     for (size_t i = 0; i < _line.size() - 1; i++) {
@@ -506,7 +535,7 @@ bool Builder::prepareLabel(const AlfonsStyle::Parameters& _params, Label::Type _
     // to a char, then packed into the "alpha" channel of stroke. The .25 scaling
     // probably has to do with how the SDF is generated, but honestly I'm not sure
     // what it represents.
-    float fontScale = _params.fontSize / FONT_SIZE;
+    float fontScale = _params.fontSize / FONT_SIZE * m_style.pixelScale();
 
     //uint32_t strokeWidth = (_params.strokeWidth / _params.blurSpread * 255. * .25) / fontScale;
     //m_scratch.stroke = (_params.strokeColor & 0x00ffffff) + (strokeWidth << 24);
