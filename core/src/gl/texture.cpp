@@ -3,6 +3,7 @@
 #include "platform.h"
 #include "util/geom.h"
 #include "gl/renderState.h"
+#include "gl/hardware.h"
 
 #define STB_IMAGE_IMPLEMENTATION
 #include "stb_image.h"
@@ -194,6 +195,10 @@ void Texture::update(GLuint _textureUnit, const GLuint* data) {
 
     // resize or push data
     if (m_shouldResize) {
+        if (Hardware::maxTextureSize < m_width || Hardware::maxTextureSize < m_height) {
+            LOGW("The hardware maximum texture size is currently reached");
+        }
+
         glTexImage2D(m_target, 0, m_options.m_internalFormat,
                      m_width, m_height, 0, m_options.m_format,
                      GL_UNSIGNED_BYTE, data);
