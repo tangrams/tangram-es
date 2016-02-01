@@ -414,6 +414,9 @@ void TileManager::removeTile(TileSet& _tileSet, std::map<TileID, TileEntry>::ite
 bool TileManager::updateProxyTile(TileSet& _tileSet, TileEntry& _tile,
                                   const TileID& _proxyTileId,
                                   const ProxyID _proxyId) {
+
+    if (!_proxyTileId.isValid()) { return false; }
+
     auto& tiles = _tileSet.tiles;
 
     // check if the proxy exists in the visible tile set
