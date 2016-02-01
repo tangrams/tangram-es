@@ -36,7 +36,9 @@ struct RawCache {
         if (m_maxUsage <= 0) { return false; }
 
         std::lock_guard<std::mutex> lock(m_mutex);
-        auto it = m_cacheMap.find(_task.tileId());
+        TileID id(_task.tileId().x, _task.tileId().y, _task.tileId().z);
+
+        auto it = m_cacheMap.find(id);
         if (it != m_cacheMap.end()) {
             // Move cached entry to start of list
             m_cacheList.splice(m_cacheList.begin(), m_cacheList, it->second);
@@ -52,9 +54,10 @@ struct RawCache {
         if (m_maxUsage <= 0) { return; }
 
         std::lock_guard<std::mutex> lock(m_mutex);
+        TileID id(tileID.x, tileID.y, tileID.z);
 
-        m_cacheList.push_front({tileID, rawDataRef});
-        m_cacheMap[tileID] = m_cacheList.begin();
+        m_cacheList.push_front({id, rawDataRef});
+        m_cacheMap[id] = m_cacheList.begin();
 
         m_usage += rawDataRef->size();
 
