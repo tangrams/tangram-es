@@ -182,6 +182,7 @@ auto Stops::Widths(const YAML::Node& _node, const MapProjection& _projection, co
 }
 
 auto Stops::evalWidth(float _key) const -> float {
+    if (frames.empty()) { return 0; }
 
     auto upper = nearestHigherFrame(_key);
     auto lower = upper - 1;
@@ -206,10 +207,10 @@ auto Stops::evalWidth(float _key) const -> float {
     double lerp = pos / range;
 
     return lower->value.get<float>() * (1 - lerp) + upper->value.get<float>() * lerp;
-
 }
 
 auto Stops::evalFloat(float _key) const -> float {
+    if (frames.empty()) { return 0; }
 
     auto upper = nearestHigherFrame(_key);
     auto lower = upper - 1;
@@ -224,10 +225,10 @@ auto Stops::evalFloat(float _key) const -> float {
     float lerp = (_key - lower->key) / (upper->key - lower->key);
 
     return (lower->value.get<float>() * (1 - lerp) + upper->value.get<float>() * lerp);
-
 }
 
 auto Stops::evalColor(float _key) const -> uint32_t {
+    if (frames.empty()) { return 0; }
 
     auto upper = nearestHigherFrame(_key);
     auto lower = upper - 1;
@@ -241,10 +242,10 @@ auto Stops::evalColor(float _key) const -> uint32_t {
     float lerp = (_key - lower->key) / (upper->key - lower->key);
 
     return Color::mix(lower->value.get<Color>(), upper->value.get<Color>(), lerp).abgr;
-
 }
 
 auto Stops::evalVec2(float _key) const -> glm::vec2 {
+    if (frames.empty()) { return glm::vec2{0.f}; }
 
     auto upper = nearestHigherFrame(_key);
     auto lower = upper - 1;
@@ -270,7 +271,6 @@ auto Stops::nearestHigherFrame(float _key) const -> std::vector<Frame>::const_it
 
     return std::lower_bound(frames.begin(), frames.end(), _key,
                             [](const Frame& f, float z) { return f.key < z; });
-
 }
 
 }
