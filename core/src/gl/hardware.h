@@ -1,13 +1,18 @@
 #pragma once
 
-namespace Tangram {
+#include <string>
 
+namespace Tangram {
 namespace Hardware {
 
+extern bool supportsMapBuffer;
+extern bool supportsVAOs;
 extern int maxTextureSize;
 
-void loadCapability();
+void loadCapabilities();
+void loadExtensions();
+bool isAvailable(std::string _extension);
+void printAvailableExtensions();
 
 }
-
 }

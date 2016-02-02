@@ -20,7 +20,7 @@
 #include "data/clientGeoJsonSource.h"
 #include "text/fontContext.h"
 #include "gl.h"
-#include "gl/extension.h"
+#include "gl/hardware.h"
 #include "util/ease.h"
 #include "debug/textDisplay.h"
 #include <memory>
@@ -561,12 +561,11 @@ void setupGL() {
     // Set default primitive render color
     Primitives::setColor(0xffffff);
 
-    // Load GL extensions
-    GLExtensions::load();
+    // Load GL extensions and capabilities
+    Hardware::loadExtensions();
+    Hardware::loadCapabilities();
 
-    Hardware::loadCapability();
-
-    GLExtensions::printAvailableExtensions();
+    Hardware::printAvailableExtensions();
 
     while (Error::hadGlError("Tangram::setupGL()")) {}
 }
