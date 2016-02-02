@@ -130,3 +130,33 @@ TEST_CASE("Stops parses correctly from YAML color values", "[Stops][YAML]") {
 
 }
 
+TEST_CASE("Regression test - Dont crash on evaluating empty stops", "[Stops][YAML]") {
+
+    YAML::Node node = YAML::Load("[]");
+
+    {
+        MercatorProjection proj{};
+        std::vector<Unit> units = { Unit::meter };
+        Stops stops(Stops::Widths(node, proj, units));
+        REQUIRE(stops.frames.size() == 0);
+        stops.evalVec2(1);
+    }
+    {
+        Stops stops(Stops::Colors(node));
+        REQUIRE(stops.frames.size() == 0);
+        stops.evalVec2(1);
+    }
+    {
+        std::vector<Unit> units = { Unit::meter };
+        Stops stops(Stops::Offsets(node, units));
+        REQUIRE(stops.frames.size() == 0);
+        stops.evalVec2(1);
+    }
+    {
+        Stops stops(Stops::FontSize(node));
+        REQUIRE(stops.frames.size() == 0);
+        stops.evalVec2(1);
+    }
+
+}
+
