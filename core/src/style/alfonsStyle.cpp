@@ -104,7 +104,6 @@ struct AlfonsMesh : public LabelMesh {
         if (m_nVertices == 0) { return; }
 
         m_vertexOffsets.clear();
-
         for (size_t offset = 0; offset < m_nVertices; offset += maxVertices) {
             size_t nVertices = maxVertices;
             if (offset + maxVertices > m_nVertices) {
@@ -113,10 +112,13 @@ struct AlfonsMesh : public LabelMesh {
             m_vertexOffsets.emplace_back(nVertices / 4 * 6, nVertices);
         }
 
-        // Generate vertex buffer, if needed
-        if (m_glVertexBuffer == 0) {
-            glGenBuffers(1, &m_glVertexBuffer);
+        if (!checkValidity()) {
+            loadQuadIndices();
+            bufferCapacity = 0;
         }
+
+        // Generate vertex buffer, if needed
+        if (m_glVertexBuffer == 0) { glGenBuffers(1, &m_glVertexBuffer); }
 
         // Buffer vertex data
         int vertexBytes = m_nVertices * m_vertexLayout->getStride();
@@ -254,6 +256,7 @@ struct AlfonsContext : public alf::TextureCallback {
             if (!_refs[i]) { continue; }
 
             if (--m_atlasRefCount[i] == 0) {
+                LOG("CLEAR ATLAS %d", i);
                 m_atlas.clear(i);
                 m_batches[i].texData.assign(texture_size * texture_size, 0);
             }
@@ -354,7 +357,7 @@ void AlfonsStyle::onBeginDrawFrame(const View& _view, Scene& _scene, int _textur
         for (auto& batch : m_context->m_batches) {
             bool dirty = false;
 
-            if (batch.dirty) {
+            if (batch.dirty || !batch.texture.isValid()) {
                 batch.dirty = false;
                 dirty = true;
 
