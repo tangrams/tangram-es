@@ -189,6 +189,11 @@ void Texture::checkValidity() {
     }
 }
 
+bool Texture::isValid() {
+    return (m_generation == s_validGeneration &&
+            m_glHandle != 0);
+}
+
 void Texture::update(GLuint _textureUnit) {
 
     checkValidity();
