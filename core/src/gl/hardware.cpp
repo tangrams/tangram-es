@@ -1,4 +1,4 @@
-#include "extension.h"
+#include "hardware.h"
 
 #include <cstring>
 #include <sstream>
@@ -8,10 +8,11 @@
 #include "gl.h"
 
 namespace Tangram {
-namespace GLExtensions {
+namespace Hardware {
 
 bool supportsMapBuffer = false;
 bool supportsVAOs = false;
+int maxTextureSize = 0;
 static char* s_glExtensions;
 
 bool isAvailable(std::string _extension) {
@@ -37,7 +38,7 @@ void printAvailableExtensions() {
     }
 }
 
-void load() {
+void loadExtensions() {
     s_glExtensions = (char*) glGetString(GL_EXTENSIONS);
 
     if (s_glExtensions == NULL) {
@@ -53,6 +54,12 @@ void load() {
 
     // find extension symbols if needed
     initGLExtensions();
+}
+
+void loadCapabilities() {
+    glGetIntegerv(GL_MAX_TEXTURE_SIZE, &maxTextureSize);
+
+    LOG("Hardware max texture size %d", maxTextureSize);
 }
 
 }

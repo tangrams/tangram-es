@@ -3,13 +3,15 @@
 #include <string>
 
 namespace Tangram {
-namespace GLExtensions {
+namespace Hardware {
 
 extern bool supportsMapBuffer;
 extern bool supportsVAOs;
-    
+extern int maxTextureSize;
+
+void loadCapabilities();
+void loadExtensions();
 bool isAvailable(std::string _extension);
-void load();
 void printAvailableExtensions();
 
 }

@@ -3,7 +3,6 @@
 #include "util/geom.h"
 #include "labels/labelMesh.h"
 #include "glm/gtx/rotate_vector.hpp"
-#include "gl/extension.h"
 
 namespace Tangram {
 

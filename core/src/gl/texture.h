@@ -26,8 +26,6 @@ struct TextureOptions {
 };
 
 #define TANGRAM_MAX_TEXTURE_UNIT    6
-#define TANGRAM_MAX_TEXTURE_WIDTH   2048
-#define TANGRAM_MAX_TEXTURE_HEIGHT  2048
 
 class Texture {
 
@@ -36,7 +34,7 @@ public:
     Texture(unsigned int _width, unsigned int _height,
             TextureOptions _options = {GL_ALPHA, GL_ALPHA, {GL_LINEAR, GL_LINEAR}, {GL_CLAMP_TO_EDGE, GL_CLAMP_TO_EDGE}},
             bool _generateMipmaps = false);
-    
+
     Texture(const std::string& _file,
             TextureOptions _options = {GL_RGBA, GL_RGBA, {GL_LINEAR, GL_LINEAR}, {GL_CLAMP_TO_EDGE, GL_CLAMP_TO_EDGE}},
             bool _generateMipmaps = false);
@@ -54,7 +52,7 @@ public:
     /* Width and Height texture getters */
     unsigned int getWidth() const { return m_width; }
     unsigned int getHeight() const { return m_height; }
-    
+
     void bind(GLuint _unit);
 
     void setDirty(size_t yOffset, size_t height);
@@ -74,7 +72,7 @@ public:
     typedef std::pair<GLuint, GLuint> TextureSlot;
 
     static void invalidateAllTextures();
-    
+
 protected:
     void generate(GLuint _textureUnit);
     void checkValidity();

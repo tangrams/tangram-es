@@ -1,7 +1,7 @@
 #include "vboMesh.h"
 #include "shaderProgram.h"
 #include "renderState.h"
-#include "extension.h"
+#include "hardware.h"
 #include "platform.h"
 
 namespace Tangram {
@@ -96,7 +96,7 @@ void VboMesh::subDataUpload() {
 
     long vertexBytes = m_nVertices * m_vertexLayout->getStride();
 
-    if (GLExtensions::supportsMapBuffer) {
+    if (Hardware::supportsMapBuffer) {
         // invalidate/orphane the data store on the driver
         glBufferData(GL_ARRAY_BUFFER, vertexBytes, NULL, m_hint);
         GLvoid* dataStore = glMapBuffer(GL_ARRAY_BUFFER, GL_WRITE_ONLY);
@@ -184,7 +184,7 @@ void VboMesh::draw(ShaderProgram& _shader) {
         subDataUpload();
     }
 
-    if (GLExtensions::supportsVAOs) {
+    if (Hardware::supportsVAOs) {
         if (!m_vaos) {
             m_vaos = std::make_unique<Vao>();
 
@@ -208,7 +208,7 @@ void VboMesh::draw(ShaderProgram& _shader) {
         uint32_t nIndices = o.first;
         uint32_t nVertices = o.second;
 
-        if (!GLExtensions::supportsVAOs) {
+        if (!Hardware::supportsVAOs) {
             // Enable vertex attribs via vertex layout object
             size_t byteOffset = vertexOffset * m_vertexLayout->getStride();
             m_vertexLayout->enable(_shader, byteOffset);
@@ -228,7 +228,7 @@ void VboMesh::draw(ShaderProgram& _shader) {
         indiceOffset += nIndices;
     }
 
-    if (GLExtensions::supportsVAOs) {
+    if (Hardware::supportsVAOs) {
         m_vaos->unbind();
     }
 }
