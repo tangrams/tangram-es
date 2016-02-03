@@ -134,22 +134,6 @@ if((BENCHMARK OR USE_EXTERNAL_LIBS) AND (PLATFORM_LINUX OR PLATFORM_OSX))
   endif()
 endif()
 
-## Harfbuzz - ICU-Common - UCDN - Freetype2 ##
-##############################################
-set(HARFBUZZ_BUILD_ICU ON CACHE BOOL "Enable building of ICU")
-set(HARFBUZZ_BUILD_UCDN ON CACHE BOOL "Enable building of UCDN")
-add_subdirectory(${CMAKE_CURRENT_SOURCE_DIR}/harfbuzz-icu-freetype)
-
 ## alfons ##
 ############
-set(ALFONS_DEPS_LIBRARIES
-  harfbuzz ${HARFBUZZ_LIBRARIES}
-  CACHE INTERNAL "alfons-libs" FORCE)
-
-set(ALFONS_DEPS_INCLUDE_DIRS
-  # option to use a different logger.h
-  ${CMAKE_CURRENT_SOURCE_DIR}/alfons/src/logger
-  ${PROJECT_SOURCE_DIR}/core/include/glm
-  CACHE INTERNAL "alfons-includes" FORCE)
-
 add_subdirectory(${CMAKE_CURRENT_SOURCE_DIR}/alfons)
