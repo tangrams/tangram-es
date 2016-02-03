@@ -40,6 +40,7 @@ static jmethodID setRenderModeMethodID;
 static jmethodID startUrlRequestMID;
 static jmethodID cancelUrlRequestMID;
 static jmethodID getFontFilePath;
+static jmethodID getFontFallbackFilePath;
 static jmethodID featureSelectionCbMID;
 
 static jmethodID propertiesConstructorMID;
@@ -64,6 +65,7 @@ void setupJniEnv(JNIEnv* _jniEnv, jobject _tangramInstance, jobject _assetManage
     startUrlRequestMID = jniEnv->GetMethodID(tangramClass, "startUrlRequest", "(Ljava/lang/String;J)Z");
     cancelUrlRequestMID = jniEnv->GetMethodID(tangramClass, "cancelUrlRequest", "(Ljava/lang/String;)V");
     getFontFilePath = jniEnv->GetMethodID(tangramClass, "getFontFilePath", "(Ljava/lang/String;)Ljava/lang/String;");
+    getFontFallbackFilePath = jniEnv->GetMethodID(tangramClass, "getFontFallbackFilePath", "(II)Ljava/lang/String;");
     requestRenderMethodID = _jniEnv->GetMethodID(tangramClass, "requestRender", "()V");
     setRenderModeMethodID = _jniEnv->GetMethodID(tangramClass, "setRenderMode", "(I)V");
     featureSelectionCbMID = _jniEnv->GetMethodID(tangramClass, "featureSelectionCb", "(Lcom/mapzen/tangram/Properties;FF)V");
@@ -115,6 +117,19 @@ void requestRender() {
     jniEnv->CallVoidMethod(tangramInstance, requestRenderMethodID);
 }
 
+std::string systemFontFallbackPath(int _importance, int _weightHint) {
+
+    JniThreadBinding jniEnv(jvm);
+
+    jstring returnStr = (jstring) jniEnv->CallObjectMethod(tangramInstance, getFontFallbackFilePath, _importance, _weightHint);
+
+    size_t length = jniEnv->GetStringUTFLength(returnStr);
+    std::string fontFallbackPath(length, 0);
+    jniEnv->GetStringUTFRegion(returnStr, 0, length, &fontFallbackPath[0]);
+
+    return fontFallbackPath;
+}
+
 std::string systemFontPath(const std::string& _family, const std::string& _weight, const std::string& _style) {
 
     JniThreadBinding jniEnv(jvm);
@@ -125,7 +140,7 @@ std::string systemFontPath(const std::string& _family, const std::string& _weigh
     jstring returnStr = (jstring) jniEnv->CallObjectMethod(tangramInstance, getFontFilePath, jkey);
 
     size_t length = jniEnv->GetStringUTFLength(returnStr);
-    std::string fontPath = std::string(length, 0);
+    std::string fontPath(length, 0);
     jniEnv->GetStringUTFRegion(returnStr, 0, length, &fontPath[0]);
 
     return fontPath;

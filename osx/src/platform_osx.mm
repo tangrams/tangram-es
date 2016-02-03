@@ -16,30 +16,30 @@ static NSMutableString* s_resourceRoot = NULL;
 NSURLSession* defaultSession;
 
 void logMsg(const char* fmt, ...) {
-    
+
     va_list args;
     va_start(args, fmt);
     vfprintf(stderr, fmt, args);
     va_end(args);
-    
+
 }
 
 void requestRender() {
-    
+
     glfwPostEmptyEvent();
-    
+
 }
 
 void setContinuousRendering(bool _isContinuous) {
-    
+
     s_isContinuousRendering = _isContinuous;
-    
+
 }
 
 bool isContinuousRendering() {
-    
+
     return s_isContinuousRendering;
-    
+
 }
 
 std::string setResourceRoot(const char* _path) {
@@ -76,7 +76,7 @@ NSString* resolvePath(const char* _path, PathType _type) {
 }
 
 std::string stringFromFile(const char* _path, PathType _type) {
-    
+
     NSString* path = resolvePath(_path, _type);
     NSString* str = [NSString stringWithContentsOfFile:path
                                           usedEncoding:NULL
@@ -86,7 +86,7 @@ std::string stringFromFile(const char* _path, PathType _type) {
         LOGW("Failed to read file at path: %s", [path UTF8String]);
         return std::string();
     }
-    
+
     return std::string([str UTF8String]);
 }
 
@@ -113,6 +113,11 @@ std::string systemFontPath(const std::string& _name, const std::string& _weight,
     return "";
 }
 
+// No system fonts fallback implementation (yet!)
+std::string systemFontFallbackPath(int _importance, int _weightHint) {
+    return "";
+}
+
 void NSurlInit() {
     NSURLSessionConfiguration *defaultConfigObject = [NSURLSessionConfiguration defaultSessionConfiguration];
     NSString *cachePath = [NSTemporaryDirectory() stringByAppendingPathComponent:@"/tile_cache"];
@@ -121,44 +126,44 @@ void NSurlInit() {
     defaultConfigObject.requestCachePolicy = NSURLRequestUseProtocolCachePolicy;
     defaultConfigObject.timeoutIntervalForRequest = 30;
     defaultConfigObject.timeoutIntervalForResource = 60;
-    
+
     defaultSession = [NSURLSession sessionWithConfiguration: defaultConfigObject];
 }
 
 bool startUrlRequest(const std::string& _url, UrlCallback _callback) {
 
     NSString* nsUrl = [NSString stringWithUTF8String:_url.c_str()];
-    
+
     void (^handler)(NSData*, NSURLResponse*, NSError*) = ^void (NSData* data, NSURLResponse* response, NSError* error) {
-        
+
         if(error == nil) {
-            
+
             int dataLength = [data length];
             std::vector<char> rawDataVec;
             rawDataVec.resize(dataLength);
             memcpy(rawDataVec.data(), (char *)[data bytes], dataLength);
             _callback(std::move(rawDataVec));
-            
+
         } else {
-            
+
             LOGE("Response \"%s\" with error \"%s\".", response, std::string([error.localizedDescription UTF8String]).c_str());
 
         }
-        
+
     };
-    
+
     NSURLSessionDataTask* dataTask = [defaultSession dataTaskWithURL:[NSURL URLWithString:nsUrl] completionHandler:handler];
-    
+
     [dataTask resume];
-    
+
     return true;
-    
+
 }
 
 void cancelUrlRequest(const std::string& _url) {
-    
+
     NSString* nsUrl = [NSString stringWithUTF8String:_url.c_str()];
-   
+
     [defaultSession getTasksWithCompletionHandler:^(NSArray* dataTasks, NSArray* uploadTasks, NSArray* downloadTasks) {
         for(NSURLSessionTask* task in dataTasks) {
             if([[task originalRequest].URL.absoluteString isEqualToString:nsUrl]) {

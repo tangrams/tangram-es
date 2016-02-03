@@ -94,6 +94,14 @@ void initialize(const char* _scenePath) {
     m_view->setPosition(projPos.x, projPos.y);
     m_view->setZoom(m_scene->startZoom);
 
+    int i = 0;
+    int boldHint = 500;
+    std::string fontFallback = systemFontFallbackPath(i, boldHint);
+    while (!fontFallback.empty()) {
+        LOG("%s", fontFallback.c_str());
+        fontFallback = systemFontFallbackPath(i++, boldHint);
+    }
+
     LOG("finish initialize");
 
 }

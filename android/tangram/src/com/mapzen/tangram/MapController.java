@@ -89,6 +89,10 @@ public class MapController implements Renderer {
         view.setRenderer(this);
         view.setRenderMode(GLSurfaceView.RENDERMODE_WHEN_DIRTY);
 
+        // Load the fonts
+        fontFileParser = new FontFileParser();
+        fontFileParser.parse("/system/etc/fonts.xml");
+
         init(this, assetManager, scenePath);
 
     }
@@ -466,7 +470,7 @@ public class MapController implements Renderer {
     private AssetManager assetManager;
     private TouchInput touchInput;
 
-    private final FontFileParser fontFileParser = new FontFileParser();
+    private FontFileParser fontFileParser;
 
     private DisplayMetrics displayMetrics = new DisplayMetrics();
 
@@ -539,6 +543,11 @@ public class MapController implements Renderer {
 
         return fontFileParser.getFontFile(key);
 
+    }
+
+    public String getFontFallbackFilePath(int importance, int weightHint) {
+
+        return fontFileParser.getFontFallback(importance, weightHint);
     }
 
     // Feature selection
