@@ -113,6 +113,9 @@ protected:
 
     bool checkValidity();
 
+    size_t compileIndices(const std::vector<std::pair<uint32_t, uint32_t>>& _offsets,
+                          const std::vector<uint16_t>& _indices, size_t _offset);
+
 };
 
 }

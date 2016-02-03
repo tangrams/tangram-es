@@ -62,43 +62,6 @@ protected:
     void setDirty(GLintptr _byteOffset, GLsizei _byteSize);
 };
 
-namespace {
-// Add indices by collecting them into batches to draw as much as
-// possible in one draw call.  The indices must be shifted by the
-// number of vertices that are present in the current batch.
-size_t compileIndices(const std::vector<std::pair<uint32_t, uint32_t>>& offsetsIn,
-                      const std::vector<uint16_t>& indicesIn,
-                      std::vector<std::pair<uint32_t, uint32_t>>& offsetsOut,
-                      GLushort* indicesOut, size_t _offset) {
-
-    offsetsOut.emplace_back(0, 0);
-
-    GLushort* dst = indicesOut + _offset;
-    size_t curVertices = 0;
-    size_t src = 0;
-
-    for (auto& p : offsetsIn) {
-        size_t nIndices = p.first;
-        size_t nVertices = p.second;
-
-        if (curVertices + nVertices > MAX_INDEX_VALUE) {
-            offsetsOut.emplace_back(0, 0);
-            curVertices = 0;
-        }
-        for (size_t i = 0; i < nIndices; i++, dst++) {
-            *dst = indicesIn[src++] + curVertices;
-        }
-
-        auto& offset = offsetsOut.back();
-        offset.first += nIndices;
-        offset.second += nVertices;
-
-        curVertices += nVertices;
-    }
-
-    return _offset + src;
-}
-}
 
 template<class T>
 void TypedMesh<T>::compile(const std::vector<MeshData<T>>& _meshes) {
@@ -131,9 +94,7 @@ void TypedMesh<T>::compile(const std::vector<MeshData<T>>& _meshes) {
 
         size_t offset = 0;
         for (auto& m : _meshes) {
-            offset = compileIndices(m.offsets, m.indices,
-                                    m_vertexOffsets,
-                                    m_glIndexData, offset);
+            offset = compileIndices(m.offsets, m.indices, offset);
         }
         assert(offset == m_nIndices);
     }
@@ -156,9 +117,7 @@ void TypedMesh<T>::compile(const MeshData<T>& _mesh) {
 
     if (m_nIndices > 0) {
         m_glIndexData = new GLushort[m_nIndices];
-        compileIndices(_mesh.offsets, _mesh.indices,
-                       m_vertexOffsets,
-                       m_glIndexData, 0);
+        compileIndices(_mesh.offsets, _mesh.indices, 0);
     }
 
     m_isCompiled = true;
