@@ -7,9 +7,9 @@
 #include "view/view.h"
 #include "style/style.h"
 #include "style/pointStyle.h"
-#include "style/textStyle.h"
 #include "tile/tile.h"
 #include "tile/tileCache.h"
+#include "labels/labelMesh.h"
 
 #include "glm/glm.hpp"
 #include "glm/gtc/matrix_transform.hpp"
@@ -124,8 +124,9 @@ void Labels::skipTransitions(const std::vector<std::unique_ptr<Style>>& _styles,
     std::vector<const Style*> styles;
 
     for (const auto& style : _styles) {
-        if (dynamic_cast<const TextStyle*>(style.get()) ||
-            dynamic_cast<const PointStyle*>(style.get())) {
+        // if (dynamic_cast<const TextStyle*>(style.get()) ||
+        //     dynamic_cast<const PointStyle*>(style.get())) {
+        if (dynamic_cast<const PointStyle*>(style.get())) {
             styles.push_back(style.get());
         }
     }
@@ -155,10 +156,10 @@ void Labels::skipTransitions(const std::vector<std::unique_ptr<Style>>& _styles,
     }
 }
 
-void Labels::checkRepeatGroups(std::vector<TextLabel*>& _visibleSet) const {
+void Labels::checkRepeatGroups(std::vector<Label*>& _visibleSet) const {
 
     struct GroupElement {
-        TextLabel* label;
+        Label* label;
 
         bool operator==(const GroupElement& _ge) {
             return _ge.label->center() == label->center();
@@ -167,7 +168,7 @@ void Labels::checkRepeatGroups(std::vector<TextLabel*>& _visibleSet) const {
 
     std::map<size_t, std::vector<GroupElement>> repeatGroups;
 
-    for (TextLabel* textLabel : _visibleSet) {
+    for (Label* textLabel : _visibleSet) {
         auto& options = textLabel->options();
         GroupElement element { textLabel };
 
@@ -305,7 +306,7 @@ void Labels::update(const View& _view, float _dt,
 
     /// Apply repeat groups
 
-    std::vector<TextLabel*> repeatGroupSet;
+    std::vector<Label*> repeatGroupSet;
     for (auto* label : m_labels) {
         if (!label->canOcclude() || label->isOccluded()) {
             continue;
@@ -314,14 +315,12 @@ void Labels::update(const View& _view, float _dt,
         if (label->options().repeatDistance == 0.f) {
             continue;
         }
-        TextLabel* textLabel = dynamic_cast<TextLabel*>(label);
-        if (!textLabel) { continue; }
-        repeatGroupSet.push_back(textLabel);
+        repeatGroupSet.push_back(label);
     }
 
     // Ensure the labels are always treated in the same order in the visible set
     std::sort(repeatGroupSet.begin(), repeatGroupSet.end(),
-              [](TextLabel* _a, TextLabel* _b) {
+              [](auto* _a, auto* _b) {
         return glm::length2(_a->transform().modelPosition1) <
                glm::length2(_b->transform().modelPosition1);
     });

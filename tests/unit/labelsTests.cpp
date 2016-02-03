@@ -1,3 +1,4 @@
+#if 0
 #include "catch.hpp"
 #include "tangram.h"
 #include "platform.h"
@@ -78,3 +79,4 @@ TEST_CASE("Test getFeaturesAtPoint", "[Labels][FeaturePicking]") {
 }
 
 }
+#endif

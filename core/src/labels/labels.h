@@ -1,7 +1,6 @@
 #pragma once
 
 #include "label.h"
-#include "textLabel.h"
 #include "spriteLabel.h"
 #include "tile/tileID.h"
 #include "data/properties.h"
@@ -58,7 +57,7 @@ private:
 
     void skipTransitions(const std::vector<const Style*>& _styles, Tile& _tile, Tile& _proxy) const;
 
-    void checkRepeatGroups(std::vector<TextLabel*>& _visibleSet) const;
+    void checkRepeatGroups(std::vector<Label*>& _visibleSet) const;
 
     int LODDiscardFunc(float _maxZoom, float _zoom);
 
