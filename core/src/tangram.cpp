@@ -18,7 +18,6 @@
 #include "tile/tileCache.h"
 #include "view/view.h"
 #include "data/clientGeoJsonSource.h"
-#include "text/fontContext.h"
 #include "gl.h"
 #include "gl/hardware.h"
 #include "util/ease.h"
@@ -119,7 +118,7 @@ void loadScene(const char* _scenePath, bool _setPositionFromScene) {
     }
     if (SceneLoader::loadScene(sceneString, *scene)) {
         m_scene = scene;
-        m_scene->fontContext()->addFont("firasans", "medium", "");
+        //m_scene->fontContext()->addFont("firasans", "medium", "");
         if (setPositionFromCurrentView && !_setPositionFromScene) {
             m_scene->view()->setPosition(m_view->getPosition());
             m_scene->view()->setZoom(m_view->getZoom());

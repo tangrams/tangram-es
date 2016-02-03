@@ -1,6 +1,6 @@
 #pragma once
 
-#include "text/fontContext.h"
+#include <string>
 
 namespace Tangram {
 

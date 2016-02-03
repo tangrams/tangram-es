@@ -1,3 +1,4 @@
+#if 0
 #include "catch.hpp"
 #include "tangram.h"
 #include "labels/label.h"
@@ -197,3 +198,4 @@ TEST_CASE( "Sine interpolation", "[Core][Label][Fade]" ) {
     REQUIRE(fadeIn.isFinished());
 }
 
+#endif
