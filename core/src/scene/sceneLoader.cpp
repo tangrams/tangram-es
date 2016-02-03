@@ -11,10 +11,8 @@
 #include "style/material.h"
 #include "style/polygonStyle.h"
 #include "style/polylineStyle.h"
-#include "style/textStyle.h"
 #include "style/alfonsStyle.h"
 #include "style/debugStyle.h"
-#include "style/debugTextStyle.h"
 #include "style/pointStyle.h"
 #include "scene/dataLayer.h"
 #include "scene/filters.h"
@@ -70,7 +68,8 @@ bool SceneLoader::loadScene(Node& config, Scene& _scene) {
     _scene.styles().emplace_back(new PolylineStyle("lines"));
 //    _scene.styles().emplace_back(new TextStyle("text", _scene.fontContext(), true, false));
     _scene.styles().emplace_back(new AlfonsStyle("text", true));
-    _scene.styles().emplace_back(new DebugTextStyle(_scene.fontContext(), 0, "debugtext", 30.0f, true, false));
+    // TODO: create an alfonsDebugTextStyle
+    //_scene.styles().emplace_back(new DebugTextStyle(_scene.fontContext(), 0, "debugtext", 30.0f, true, false));
     _scene.styles().emplace_back(new DebugStyle("debug"));
     _scene.styles().emplace_back(new PointStyle("points"));
 

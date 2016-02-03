@@ -1,7 +1,6 @@
 #pragma once
 
 #include "label.h"
-#include "textLabel.h"
 #include "spriteLabel.h"
 #include "tile/tileID.h"
 #include "data/properties.h"

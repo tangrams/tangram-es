@@ -6,10 +6,12 @@
 #include "gl/primitives.h"
 #include "view/view.h"
 #include "style/style.h"
-#include "style/textStyle.h"
 #include "style/pointStyle.h"
 #include "tile/tile.h"
 #include "tile/tileCache.h"
+#include "labels/labelMesh.h"
+// TODO: remove (for AlfonsLabel)
+#include "style/alfonsStyle.h"
 
 #include "glm/glm.hpp"
 #include "glm/gtc/matrix_transform.hpp"
@@ -94,7 +96,7 @@ void skip(const std::vector<const Style*>& _styles, Tile& _tile, Tile& _proxy) {
                 // The new label lies within the circle defined by the bbox of l0
                 if (sqrt(d2) < std::max(l0->dimension().x, l0->dimension().y)) {
 
-                    auto* t = dynamic_cast<const TextLabel*>(l0.get());
+                    auto* t = dynamic_cast<const AlfonsLabel*>(l0.get());
                     if (t && t->options().properties) {
                         auto v = t->options().properties->get("name");
                         if (v.is<std::string>())
@@ -116,7 +118,7 @@ void Labels::skipTransitions(const std::vector<std::unique_ptr<Style>>& _styles,
     std::vector<const Style*> styles;
 
     for (const auto& style : _styles) {
-        if (dynamic_cast<const TextStyle*>(style.get()) ||
+        if (dynamic_cast<const AlfonsStyle*>(style.get()) ||
             dynamic_cast<const PointStyle*>(style.get())) {
             styles.push_back(style.get());
         }

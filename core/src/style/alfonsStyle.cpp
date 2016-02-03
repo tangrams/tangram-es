@@ -2,15 +2,13 @@
 
 #include "material.h"
 #include "scene/drawRule.h"
-#include "text/fontContext.h"
 #include "tile/tile.h"
 #include "gl/shaderProgram.h"
 #include "gl/vboMesh.h"
 #include "view/view.h"
-#include "labels/textLabel.h"
-#include "text/fontContext.h"
 #include "data/propertyItem.h" // Include wherever Properties is used!
-#include "text/textBuffer.h"
+#include "labels/labelMesh.h"
+#include "gl/texture.h"
 #include "gl/renderState.h"
 
 #include "platform.h"
@@ -27,7 +25,7 @@
 #include "sdf.h"
 
 #include <bitset>
-
+#include <mutex>
 
 namespace alf = alfons;
 
@@ -242,9 +240,10 @@ struct AlfonsContext : public alf::TextureCallback {
             m_sdfBuffer.resize(bytes);
         }
 
-        sdfBuildDistanceFieldNoAlloc(dst, width, SDF_WIDTH,
-                                     dst, gw, gh, width,
-                                     &m_sdfBuffer[0]);
+        // FIXME: Add to either alfons or within tangram includes
+        //sdfBuildDistanceFieldNoAlloc(dst, width, SDF_WIDTH,
+        //                             dst, gw, gh, width,
+        //                             &m_sdfBuffer[0]);
 
         texture.setDirty(gy, gh);
     }
@@ -436,7 +435,7 @@ struct Builder : public StyleBuilder {
         glm::vec2 bbox;
         glm::vec2 quadsLocalOrigin;
         int numLines;
-        FontContext::FontMetrics metrics;
+        //FontContext::FontMetrics metrics;
         int numQuads;
 
         uint32_t fill;
@@ -592,9 +591,10 @@ bool Builder::prepareLabel(const AlfonsStyle::Parameters& _params, Label::Type _
             m_scratch.bbox.x = line.advance();
         }
 
-        m_scratch.metrics.descender = -line.descent();
-        m_scratch.metrics.ascender = line.ascent();
-        m_scratch.metrics.lineHeight = line.height();
+        // TODO: read metrics from alfons
+        //m_scratch.metrics.descender = -line.descent();
+        //m_scratch.metrics.ascender = line.ascent();
+        //m_scratch.metrics.lineHeight = line.height();
         m_scratch.quadsLocalOrigin = { 0, -line.ascent() };
 
     }
@@ -617,7 +617,7 @@ void Builder::addLabel(const AlfonsStyle::Parameters& _params, Label::Type _type
                                           m_scratch.bbox, *m_mesh,
                                           { quadOffset, numQuads },
                                           _params.labelOptions,
-                                          m_scratch.metrics,
+                                          //m_scratch.metrics,
                                           m_scratch.numLines,
                                           _params.anchor,
                                           m_scratch.quadsLocalOrigin));
@@ -740,10 +740,10 @@ using namespace LabelProperty;
 
 AlfonsLabel::AlfonsLabel(Label::Transform _transform, Type _type, glm::vec2 _dim,
                      LabelContainer& _mesh, Range _vertexRange,
-                     Label::Options _options, FontContext::FontMetrics _metrics,
+                     Label::Options _options, /*FontContext::FontMetrics _metrics,*/
                      int _nLines, Anchor _anchor, glm::vec2 _quadsLocalOrigin)
     : Label(_transform, _dim, _type, _vertexRange, _options),
-      m_metrics(_metrics),
+      /*m_metrics(_metrics),*/
       m_nLines(_nLines),
       m_mesh(_mesh),
       m_quadLocalOrigin(_quadsLocalOrigin) {
@@ -793,11 +793,13 @@ void AlfonsLabel::align(glm::vec2& _screenPosition, const glm::vec2& _ap1, const
         case Type::point:
             // modify position set by updateScreenTransform()
             _screenPosition.x -= m_dim.x * 0.5f + m_quadLocalOrigin.x;
-            _screenPosition.y -= m_metrics.descender;
+            // TODO: use meitrcs from alfons (if needed)
+            //_screenPosition.y -= m_metrics.descender;
 
             if (m_nLines > 1) {
                 _screenPosition.y -= m_dim.y * 0.5f;
-                _screenPosition.y += (m_metrics.lineHeight + m_metrics.descender);
+                // TODO: use meitrcs from alfons (if needed)
+                //_screenPosition.y += (m_metrics.lineHeight + m_metrics.descender);
             }
             _screenPosition += m_anchor;
             break;
@@ -808,7 +810,8 @@ void AlfonsLabel::align(glm::vec2& _screenPosition, const glm::vec2& _ap1, const
             // move back by half the length (so that text will be drawn centered)
             glm::vec2 direction = glm::normalize(_ap1 - _ap2);
             _screenPosition += direction * m_dim.x * 0.5f;
-            _screenPosition += m_yAxis * (m_dim.y * 0.5f + m_metrics.descender);
+            // TODO: use meitrcs from alfons (if needed)
+            _screenPosition += m_yAxis * (m_dim.y * 0.5f /*+ m_metrics.descender*/);
             break;
         }
     }
