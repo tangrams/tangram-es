@@ -22,31 +22,23 @@ void Skybox::init() {
         {"a_position", 3, GL_FLOAT, false, 0},
     }));
 
-    m_mesh = std::unique_ptr<Mesh>(new Mesh(layout, GL_TRIANGLES, GL_STATIC_DRAW, true));
-
-    std::vector<uint16_t> indices = {
-        5, 1, 3, 3, 7, 5, // +x
-        6, 2, 0, 0, 4, 6, // -x
-        2, 6, 7, 7, 3, 2, // +y
-        5, 4, 0, 0, 1, 5, // -y
-        0, 2, 3, 3, 1, 0, // +z
-        7, 6, 4, 4, 5, 7  // -z
-    };
-
-    std::vector<PosVertex> vertices = {
-        { -1.0, -1.0,  1.0 },
-        {  1.0, -1.0,  1.0 },
-        { -1.0,  1.0,  1.0 },
-        {  1.0,  1.0,  1.0 },
-        { -1.0, -1.0, -1.0 },
-        {  1.0, -1.0, -1.0 },
-        { -1.0,  1.0, -1.0 },
-        {  1.0,  1.0, -1.0 }
-    };
-
-    m_mesh->addVertices(std::move(vertices), std::move(indices));
-    m_mesh->compileVertexBuffer();
-
+    m_mesh = std::make_unique<Mesh>(layout, GL_TRIANGLES, GL_STATIC_DRAW, true);
+    m_mesh->compile({
+        { 5, 1, 3, 3, 7, 5, // +x
+          6, 2, 0, 0, 4, 6, // -x
+          2, 6, 7, 7, 3, 2, // +y
+          5, 4, 0, 0, 1, 5, // -y
+          0, 2, 3, 3, 1, 0, // +z
+          7, 6, 4, 4, 5, 7  // -z
+        },
+        {{ -1.0, -1.0,  1.0 },
+         {  1.0, -1.0,  1.0 },
+         { -1.0,  1.0,  1.0 },
+         {  1.0,  1.0,  1.0 },
+         { -1.0, -1.0, -1.0 },
+         {  1.0, -1.0, -1.0 },
+         { -1.0,  1.0, -1.0 },
+         {  1.0,  1.0, -1.0 }}});
 }
 
 void Skybox::draw(const View& _view) {

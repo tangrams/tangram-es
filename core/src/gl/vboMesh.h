@@ -51,8 +51,6 @@ public:
         return m_nIndices;
     }
 
-    virtual void compileVertexBuffer() = 0;
-
     /*
      * Copies all added vertices and indices into OpenGL buffer objects; After
      * geometry is uploaded, no more vertices or indices can be added
@@ -84,7 +82,7 @@ protected:
     int m_generation; // Generation in which this mesh's GL handles were created
 
     // Used in draw for legth and offsets: sumIndices, sumVertices
-    // needs to be set by compileVertexBuffers()
+    // needs to be set by compile()
     std::vector<std::pair<uint32_t, uint32_t>> m_vertexOffsets;
 
     std::shared_ptr<VertexLayout> m_vertexLayout;
@@ -114,6 +112,9 @@ protected:
     GLintptr m_dirtyOffset;
 
     bool checkValidity();
+
+    size_t compileIndices(const std::vector<std::pair<uint32_t, uint32_t>>& _offsets,
+                          const std::vector<uint16_t>& _indices, size_t _offset);
 
 };
 

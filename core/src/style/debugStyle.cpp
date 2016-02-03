@@ -23,8 +23,8 @@ struct PosColVertex {
 using Mesh = TypedMesh<PosColVertex>;
 
 
-DebugStyle::DebugStyle(std::string _name, Blending _blendMode, GLenum _drawMode) : Style(_name, _blendMode, _drawMode) {
-}
+DebugStyle::DebugStyle(std::string _name, Blending _blendMode, GLenum _drawMode)
+    : Style(_name, _blendMode, _drawMode) {}
 
 void DebugStyle::constructVertexLayout() {
 
@@ -44,29 +44,39 @@ void DebugStyle::constructShaderProgram() {
 
 }
 
-void DebugStyle::onBeginBuildTile(Tile &_tile) const {
+struct DebugStyleBuilder : public StyleBuilder {
 
-    if (Tangram::getDebugFlag(Tangram::DebugFlags::tile_bounds)) {
+    const DebugStyle& m_style;
 
-        Mesh* mesh = new Mesh(m_vertexLayout, m_drawMode);
+    void setup(const Tile& _tile) override {}
 
-        // Add four vertices to draw the outline of the tile in red
+    std::unique_ptr<VboMesh> build() override {
+        if (!Tangram::getDebugFlag(Tangram::DebugFlags::tile_bounds)) {
+            return nullptr;
+        }
 
-        std::vector<PosColVertex> vertices;
+        auto mesh = std::make_unique<Mesh>(m_style.vertexLayout(), m_style.drawMode());
 
         GLuint abgr = 0xff0000ff;
 
-        vertices.reserve(4);
-        vertices.push_back({{ 0.f, 0.f, 0.f }, abgr });
-        vertices.push_back({{ 1.f, 0.f, 0.f }, abgr });
-        vertices.push_back({{ 1.f, 1.f, 0.f }, abgr });
-        vertices.push_back({{ 0.f, 1.f, 0.f }, abgr });
+        // Add four vertices to draw the outline of the tile in red
+        mesh->compile({{ 0, 1, 2, 3, 0 },
+                       {{{ 0.f, 0.f, 0.f }, abgr },
+                        {{ 1.f, 0.f, 0.f }, abgr },
+                        {{ 1.f, 1.f, 0.f }, abgr },
+                        {{ 0.f, 1.f, 0.f }, abgr }}});
 
-        mesh->addVertices(std::move(vertices), { 0, 1, 2, 3, 0 });
-
-        _tile.getMesh(*this).reset(mesh);
-
+        return std::move(mesh);
     }
+
+    const Style& style() const override { return m_style; }
+
+    DebugStyleBuilder(const DebugStyle& _style) : StyleBuilder(_style), m_style(_style) {}
+
+};
+
+std::unique_ptr<StyleBuilder> DebugStyle::createBuilder() const {
+    return std::make_unique<DebugStyleBuilder>(*this);
 }
 
 }

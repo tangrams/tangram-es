@@ -5,6 +5,8 @@
 #include <functional>
 #include <vector>
 
+#include "earcut.hpp/include/earcut.hpp"
+
 namespace Tangram {
 
 enum class CapTypes {
@@ -43,7 +45,11 @@ struct PolygonBuilder {
     size_t numVertices = 0;
     bool useTexCoords;
 
-    PolygonBuilder(PolygonVertexFn _addVertex, SizeHintFn _sizeHint, bool _useTexCoords = true)
+    mapbox::Earcut<float, uint16_t> earcut;
+
+    PolygonBuilder(PolygonVertexFn _addVertex = [](auto&,auto&,auto&){},
+                   SizeHintFn _sizeHint = [](auto){},
+                   bool _useTexCoords = true)
         : addVertex(_addVertex), sizeHint(_sizeHint), useTexCoords(_useTexCoords){}
 
     void clear() {
@@ -73,7 +79,11 @@ struct PolyLineBuilder {
     JoinTypes join;
     bool keepTileEdges;
 
-    PolyLineBuilder(PolyLineVertexFn _addVertex, SizeHintFn _sizeHint, CapTypes _cap = CapTypes::butt, JoinTypes _join = JoinTypes::bevel, bool _kte = true)
+    PolyLineBuilder(PolyLineVertexFn _addVertex = [](auto&,auto&,auto&){},
+                    SizeHintFn _sizeHint = [](auto){},
+                    CapTypes _cap = CapTypes::butt,
+                    JoinTypes _join = JoinTypes::bevel,
+                    bool _kte = true)
         : addVertex(_addVertex), sizeHint(_sizeHint), cap(_cap), join(_join), keepTileEdges(_kte) {}
 
     void clear() {

@@ -56,18 +56,58 @@ void TextStyle::constructShaderProgram() {
     m_shaderProgram->addSourceBlock("defines", defines);
 }
 
-VboMesh* TextStyle::newMesh() const {
-    return new TextBuffer(m_vertexLayout);
+void TextStyle::onBeginDrawFrame(const View& _view, Scene& _scene, int _textureUnit) {
+    m_fontContext->bindAtlas(0);
+
+    m_shaderProgram->setUniformf("u_uv_scale_factor",
+                                 1.0f / m_fontContext->getAtlasResolution());
+    m_shaderProgram->setUniformi("u_tex", 0);
+    m_shaderProgram->setUniformMatrix4f("u_ortho", _view.getOrthoViewportMatrix());
+
+    Style::onBeginDrawFrame(_view, _scene, 1);
 }
 
-bool TextStyle::checkRule(const DrawRule& _rule) const {
+struct TextStyleBuilder : public StyleBuilder {
+
+    const TextStyle& m_style;
+
+    float m_tileSize;
+
+    void setup(const Tile& _tile) override {
+        m_builder.setup(m_style.vertexLayout());
+        m_tileSize = _tile.getProjection()->TileSize();
+    }
+
+    bool checkRule(const DrawRule& _rule) const override;
+
+    void addPolygon(const Polygon& _polygon, const Properties& _props, const DrawRule& _rule) override;
+    void addLine(const Line& _line, const Properties& _props, const DrawRule& _rule) override;
+    void addPoint(const Point& _line, const Properties& _props, const DrawRule& _rule) override;
+
+    std::unique_ptr<VboMesh> build() override {
+        return m_builder.build();
+    }
+
+    const Style& style() const override { return m_style; }
+
+    TextStyleBuilder(const TextStyle& _style) : StyleBuilder(_style), m_style(_style) {}
+
+    TextStyle::Parameters applyRule(const DrawRule& _rule, const Properties& _props) const;
+
+    TextBuffer::Builder m_builder;
+
+    bool prepareLabel(const TextStyle::Parameters& _params, Label::Type _type);
+    void addLabel(const TextStyle::Parameters& _params, Label::Type _type, Label::Transform _transform);
+};
+
+bool TextStyleBuilder::checkRule(const DrawRule& _rule) const {
     return true;
 }
 
-auto TextStyle::applyRule(const DrawRule& _rule, const Properties& _props) const -> Parameters {
+auto TextStyleBuilder::applyRule(const DrawRule& _rule, const Properties& _props) const -> TextStyle::Parameters {
     const static std::string key_name("name");
 
-    Parameters p;
+    TextStyle::Parameters p;
 
     std::string fontFamily, fontWeight, fontStyle, transform, align, anchor;
     glm::vec2 offset;
@@ -79,11 +119,12 @@ auto TextStyle::applyRule(const DrawRule& _rule, const Properties& _props) const
     fontWeight = (fontWeight.size() == 0) ? "400" : fontWeight;
     fontStyle = (fontStyle.size() == 0) ? "normal" : fontStyle;
     {
-        if (!m_fontContext->lock()) { return p; }
+        auto& fontContext = m_style.fontContext();
+        if (!fontContext.lock()) { return p; }
 
-        p.fontId = m_fontContext->addFont(fontFamily, fontWeight, fontStyle);
+        p.fontId = fontContext.addFont(fontFamily, fontWeight, fontStyle);
 
-        m_fontContext->unlock();
+        fontContext.unlock();
         if (p.fontId < 0) { return p; }
     }
 
@@ -95,7 +136,6 @@ auto TextStyle::applyRule(const DrawRule& _rule, const Properties& _props) const
     _rule.get(StyleParamKey::transform, transform);
     _rule.get(StyleParamKey::align, align);
     _rule.get(StyleParamKey::anchor, anchor);
-    _rule.get(StyleParamKey::visible, p.visible);
     _rule.get(StyleParamKey::priority, p.labelOptions.priority);
     _rule.get(StyleParamKey::collide, p.labelOptions.collide);
     _rule.get(StyleParamKey::transition_hide_time, p.labelOptions.hideTransition.time);
@@ -136,7 +176,7 @@ auto TextStyle::applyRule(const DrawRule& _rule, const Properties& _props) const
     hash_combine(repeatGroupHash, p.text);
     p.labelOptions.repeatGroup = repeatGroupHash;
 
-    p.labelOptions.repeatDistance *= m_pixelScale;
+    p.labelOptions.repeatDistance *= m_style.pixelScale();
 
     if (_rule.get(StyleParamKey::interactive, p.interactive) && p.interactive) {
         p.labelOptions.properties = std::make_shared<Properties>(_props);
@@ -166,66 +206,63 @@ auto TextStyle::applyRule(const DrawRule& _rule, const Properties& _props) const
     }
 
     /* Global operations done for fontsize and sdfblur */
-    p.fontSize *= m_pixelScale;
-    p.labelOptions.offset *= m_pixelScale;
+    p.fontSize *= m_style.pixelScale();
+    p.labelOptions.offset *= m_style.pixelScale();
     float emSize = p.fontSize / 16.f;
-    p.blurSpread = m_sdf ? emSize * 5.0f : 0.0f;
+    p.blurSpread = m_style.useSDF() ? emSize * 5.0f : 0.0f;
 
     float boundingBoxBuffer = -p.fontSize / 2.f;
     p.labelOptions.buffer = boundingBoxBuffer;
 
-    std::hash<Parameters> hash;
+    std::hash<TextStyle::Parameters> hash;
     p.labelOptions.paramHash = hash(p);
 
     return p;
 }
 
-void TextStyle::buildPoint(const Point& _point, const DrawRule& _rule, const Properties& _props,
-                           VboMesh& _mesh, Tile& _tile) const {
+void TextStyleBuilder::addPoint(const Point& _point, const Properties& _props, const DrawRule& _rule) {
 
-    auto& buffer = static_cast<TextBuffer&>(_mesh);
+    TextStyle::Parameters params = applyRule(_rule, _props);
 
-    Parameters params = applyRule(_rule, _props);
+    if (!params.isValid()) { return; }
 
-    if (!params.visible || !params.isValid()) { return; }
+    if (!m_builder.prepareLabel(m_style.fontContext(), params)) { return; }
 
-    buffer.addLabel(params, { glm::vec2(_point), glm::vec2(_point) },
-                    Label::Type::point, *m_fontContext);
+    m_builder.addLabel(params, Label::Type::point, { glm::vec2(_point), glm::vec2(_point) });
 }
 
-void TextStyle::buildLine(const Line& _line, const DrawRule& _rule, const Properties& _props,
-        VboMesh& _mesh, Tile& _tile) const {
+void TextStyleBuilder::addLine(const Line& _line, const Properties& _props, const DrawRule& _rule) {
 
-    auto& buffer = static_cast<TextBuffer&>(_mesh);
+    TextStyle::Parameters params = applyRule(_rule, _props);
 
-    Parameters params = applyRule(_rule, _props);
+    if (!params.isValid()) { return; }
 
-    if (!params.visible || !params.isValid()) { return; }
+    // Not yet supported for line labels
+    params.wordWrap = false;
+
+    if (!m_builder.prepareLabel(m_style.fontContext(), params)) { return; }
+
+    // Check if any line segment is long enough for the label
+    // when the tile is magnified to 2 zoom-levels above (=> 0.25)
+    float pixel = 1.0 / (m_tileSize * m_style.pixelScale());
+    float minLength = m_builder.labelWidth() * pixel * 0.25;
 
     for (size_t i = 0; i < _line.size() - 1; i++) {
         glm::vec2 p1 = glm::vec2(_line[i]);
         glm::vec2 p2 = glm::vec2(_line[i + 1]);
-
-        buffer.addLabel(params, { p1, p2 }, Label::Type::line, *m_fontContext);
+        if (glm::length(p1-p2) > minLength) {
+            m_builder.addLabel(params, Label::Type::line, { p1, p2 });
+        }
     }
 }
 
-void TextStyle::buildPolygon(const Polygon& _polygon, const DrawRule& _rule,
-                             const Properties& _props, VboMesh& _mesh, Tile& _tile) const {
+void TextStyleBuilder::addPolygon(const Polygon& _polygon, const Properties& _props, const DrawRule& _rule) {
     Point p = glm::vec3(centroid(_polygon), 0.0);
-    buildPoint(p, _rule, _props, _mesh, _tile);
+    addPoint(p, _props, _rule);
 }
 
-void TextStyle::onBeginDrawFrame(const View& _view, Scene& _scene, int _textureUnit) {
-    m_fontContext->bindAtlas(0);
-
-    m_shaderProgram->setUniformf("u_uv_scale_factor",
-                                 1.0f / m_fontContext->getAtlasResolution());
-    m_shaderProgram->setUniformi("u_tex", 0);
-    m_shaderProgram->setUniformMatrix4f("u_ortho", _view.getOrthoViewportMatrix());
-
-    Style::onBeginDrawFrame(_view, _scene, 1);
-
+std::unique_ptr<StyleBuilder> TextStyle::createBuilder() const {
+    return std::make_unique<TextStyleBuilder>(*this);
 }
 
 }

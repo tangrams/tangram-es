@@ -6,19 +6,19 @@
 #include "gl/shaderProgram.h"
 
 #include <limits>
+#include <memory>
+#include <locale>
 
 namespace Tangram {
 
 TextBuffer::TextBuffer(std::shared_ptr<VertexLayout> _vertexLayout)
-    : LabelMesh(_vertexLayout, GL_TRIANGLES) {
-    addVertices({}, {});
-}
+    : LabelMesh(_vertexLayout, GL_TRIANGLES) {}
 
 TextBuffer::~TextBuffer() {
 }
 
-std::vector<TextBuffer::WordBreak> TextBuffer::findWords(const std::string& _text) {
-    std::vector<WordBreak> words;
+void TextBuffer::Builder::findWords(const std::string& _text, std::vector<WordBreak>& _wordBreaks) {
+
     unsigned int utf8state = 0;
     const char* str = _text.c_str();
     const char* end = str + strlen(str);
@@ -36,10 +36,10 @@ std::vector<TextBuffer::WordBreak> TextBuffer::findWords(const std::string& _tex
         if (std::isspace(*str)) {
             wordEnd = itr - 1;
             if (wordBegin <= wordEnd) {
-                words.push_back({wordBegin, wordEnd});
+                _wordBreaks.push_back({wordBegin, wordEnd});
             }
             if (*str == '\n') {
-                words.push_back({itr, itr});
+                _wordBreaks.push_back({itr, itr});
             }
             wordBegin = itr + 1;
         }
@@ -47,17 +47,13 @@ std::vector<TextBuffer::WordBreak> TextBuffer::findWords(const std::string& _tex
     }
 
     if (!std::isspace(*(end-1))) {
-        words.push_back({wordBegin, itr-1});
+        _wordBreaks.push_back({wordBegin, itr-1});
     }
-
-    return words;
 }
 
-int TextBuffer::applyWordWrapping(std::vector<FONSquad>& _quads,
-                                  const TextStyle::Parameters& _params,
-                                  const FontContext::FontMetrics& _metrics,
-                                  Label::Type _type,
-                                  std::vector<TextBuffer::WordBreak>& _wordBreaks) {
+int TextBuffer::Builder::applyWordWrapping(std::vector<FONSquad>& _quads,
+                                           const TextStyle::Parameters& _params,
+                                           const FontContext::FontMetrics& _metrics) {
     struct LineQuad {
         std::vector<FONSquad*> quads;
         float length = 0.0f;
@@ -67,17 +63,19 @@ int TextBuffer::applyWordWrapping(std::vector<FONSquad>& _quads,
     int nLine = 1;
 
     std::vector<LineQuad> lines;
-    if (_params.wordWrap < _params.text.length() && _type != Label::Type::line) {
-       _wordBreaks = findWords(_params.text);
+    if (_params.wordWrap && _params.maxLineWidth < _params.text.length()) {
+        findWords(_params.text, m_wordBreaks);
+    } else {
+        return 1;
     }
 
     lines.push_back(LineQuad()); // atleast one line
     float totalWidth = 0.f;
 
     // Apply word wrapping based on the word breaks
-    for (int iWord = 0; iWord < int(_wordBreaks.size()); iWord++) {
-        int start = _wordBreaks[iWord].start;
-        int end = _wordBreaks[iWord].end;
+    for (int iWord = 0; iWord < int(m_wordBreaks.size()); iWord++) {
+        int start = m_wordBreaks[iWord].start;
+        int end = m_wordBreaks[iWord].end;
         size_t wordSize = end - start + 1;
 
         auto& lastLineQuads = lines[nLine - 1].quads;
@@ -131,8 +129,8 @@ int TextBuffer::applyWordWrapping(std::vector<FONSquad>& _quads,
 }
 
 
-std::string TextBuffer::applyTextTransform(const TextStyle::Parameters& _params,
-                                           const std::string& _string) {
+std::string TextBuffer::Builder::applyTextTransform(const TextStyle::Parameters& _params,
+                                                    const std::string& _string) {
 
     std::locale loc;
     std::string text = _string;
@@ -167,14 +165,36 @@ std::string TextBuffer::applyTextTransform(const TextStyle::Parameters& _params,
     return text;
 }
 
-bool TextBuffer::addLabel(const TextStyle::Parameters& _params, Label::Transform _transform,
-                          Label::Type _type, FontContext& _fontContext) {
+void TextBuffer::draw(ShaderProgram& _shader) {
+
+    if (m_strokePass) {
+        _shader.setUniformi("u_pass", 1);
+        LabelMesh::draw(_shader);
+        _shader.setUniformi("u_pass", 0);
+    }
+
+    LabelMesh::draw(_shader);
+}
+
+void TextBuffer::Builder::setup(std::shared_ptr<VertexLayout> _vertexLayout) {
+    m_mesh = std::make_unique<TextBuffer>(_vertexLayout);
+    m_vertices.clear();
+    m_labels.clear();
+}
+
+std::unique_ptr<TextBuffer> TextBuffer::Builder::build() {
+    if (!m_labels.empty()) {
+        m_mesh->compile(m_labels, m_vertices);
+    }
+    return std::move(m_mesh);
+}
+
+bool TextBuffer::Builder::prepareLabel(FontContext& _fontContext,
+                                       const TextStyle::Parameters& _params) {
 
     if (_params.fontId < 0 || _params.fontSize <= 0.f || _params.text.size() == 0) {
         return false;
     }
-
-    if (_params.strokeWidth > 0.f) { m_strokePass = true; }
 
     /// Apply text transforms
     const std::string* renderText;
@@ -202,10 +222,6 @@ bool TextBuffer::addLabel(const TextStyle::Parameters& _params, Label::Transform
         return false;
     }
 
-    auto& vertices = m_vertices[0];
-    int vertexOffset = vertices.size();
-    int numVertices = numGlyphs * 4;
-
     // Stroke width is normalized by the distance of the SDF spread, then scaled
     // to a char, then packed into the "alpha" channel of stroke. The .25 scaling
     // probably has to do with how the SDF is generated, but honestly I'm not sure
@@ -213,26 +229,29 @@ bool TextBuffer::addLabel(const TextStyle::Parameters& _params, Label::Transform
     uint32_t strokeWidth = _params.strokeWidth / _params.blurSpread * 255. * .25;
     uint32_t stroke = (_params.strokeColor & 0x00ffffff) + (strokeWidth << 24);
 
-    FontContext::FontMetrics metrics = _fontContext.getMetrics();
+    m_metrics = _fontContext.getMetrics();
+    m_bbox = glm::vec2(0);
 
     /// Apply word wrapping
-    glm::vec2 bbox;
-    std::vector<TextBuffer::WordBreak> wordBreaks;
-    int nLine = applyWordWrapping(quads, _params, _fontContext.getMetrics(), _type, wordBreaks);
+    int nLine = 1;
+
+    m_wordBreaks.clear();
+    nLine = applyWordWrapping(quads, _params, m_metrics);
 
     /// Generate the quads
     float yMin = std::numeric_limits<float>::max();
     float xMin = std::numeric_limits<float>::max();
 
+    m_scratchVertices.clear();
+
     for (int i = 0; i < int(quads.size()); ++i) {
-        if (wordBreaks.size() > 0) {
+        if (m_wordBreaks.size() > 0) {
             bool skip = false;
             // Skip spaces/CR quads
-            for (int j = 0; j < int(wordBreaks.size()) - 1; ++j) {
-                const auto& b1 = wordBreaks[j];
-                const auto& b2 = wordBreaks[j + 1];
+            for (int j = 0; j < int(m_wordBreaks.size()) - 1; ++j) {
+                const auto& b1 = m_wordBreaks[j];
+                const auto& b2 = m_wordBreaks[j + 1];
                 if (i >= b1.end + 1 && i <= b2.start - 1) {
-                    numVertices -= 4;
                     skip = true;
                     break;
                 }
@@ -241,41 +260,43 @@ bool TextBuffer::addLabel(const TextStyle::Parameters& _params, Label::Transform
         }
 
         const auto& q = quads[i];
-        vertices.push_back({{q.x0, q.y0}, {q.s0, q.t0}, _params.fill, stroke});
-        vertices.push_back({{q.x0, q.y1}, {q.s0, q.t1}, _params.fill, stroke});
-        vertices.push_back({{q.x1, q.y0}, {q.s1, q.t0}, _params.fill, stroke});
-        vertices.push_back({{q.x1, q.y1}, {q.s1, q.t1}, _params.fill, stroke});
+        m_scratchVertices.push_back({{q.x0, q.y0}, {q.s0, q.t0}, _params.fill, stroke});
+        m_scratchVertices.push_back({{q.x0, q.y1}, {q.s0, q.t1}, _params.fill, stroke});
+        m_scratchVertices.push_back({{q.x1, q.y0}, {q.s1, q.t0}, _params.fill, stroke});
+        m_scratchVertices.push_back({{q.x1, q.y1}, {q.s1, q.t1}, _params.fill, stroke});
 
         yMin = std::min(yMin, q.y0);
         xMin = std::min(xMin, q.x0);
 
-        bbox.x = std::max(bbox.x, q.x1);
-        bbox.y = std::max(bbox.y, std::abs(yMin - q.y1));
+        m_bbox.x = std::max(m_bbox.x, q.x1);
+        m_bbox.y = std::max(m_bbox.y, std::abs(yMin - q.y1));
     }
 
-    bbox.x -= xMin;
-    glm::vec2 quadsLocalOrigin(xMin, quads[0].y0);
+    m_bbox.x -= xMin;
+    m_quadsLocalOrigin = { xMin, quads[0].y0 };
+    m_numLines = nLine;
 
     _fontContext.unlock();
-
-    m_labels.emplace_back(new TextLabel(_transform, _type, bbox, *this, { vertexOffset, numVertices },
-                                        _params.labelOptions, metrics, nLine, _params.anchor, quadsLocalOrigin));
-
-    // TODO: change this in TypeMesh::adVertices()
-    m_nVertices = vertices.size();
 
     return true;
 }
 
-void TextBuffer::draw(ShaderProgram& _shader) {
+void TextBuffer::Builder::addLabel(const TextStyle::Parameters& _params, Label::Type _type,
+                                   Label::Transform _transform) {
 
-    if (m_strokePass) {
-        _shader.setUniformi("u_pass", 1);
-        LabelMesh::draw(_shader);
-        _shader.setUniformi("u_pass", 0);
-    }
+    int vertexOffset = m_vertices.size();
+    int numVertices = m_scratchVertices.size();
 
-    LabelMesh::draw(_shader);
+    if (_params.strokeWidth > 0.f) { m_mesh->m_strokePass = true; }
+
+    m_labels.emplace_back(new TextLabel(_transform, _type, m_bbox, *m_mesh,
+                                        { vertexOffset, numVertices },
+                                        _params.labelOptions, m_metrics, m_numLines,
+                                        _params.anchor, m_quadsLocalOrigin));
+
+    m_vertices.insert(m_vertices.end(),
+                      m_scratchVertices.begin(),
+                      m_scratchVertices.end());
 }
 
 }

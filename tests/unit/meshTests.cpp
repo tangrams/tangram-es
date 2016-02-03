@@ -20,12 +20,13 @@ std::shared_ptr<VertexLayout> layout = std::shared_ptr<VertexLayout>(new VertexL
 
 std::shared_ptr<TypedMesh<Vertex>> newMesh(unsigned int size) {
     auto mesh = std::shared_ptr<TypedMesh<Vertex>>(new TypedMesh<Vertex>(layout, GL_TRIANGLES));
-    std::vector<Vertex> vertices;
+    MeshData<Vertex> meshData;
+
     for (size_t i = 0; i < size; ++i) {
-        vertices.push_back({0,0,0,0});
+        meshData.vertices.push_back({0,0,0,0});
+        meshData.offsets.emplace_back(0, 4);
     }
-    mesh->addVertices(std::move(vertices), {});
-    mesh->compileVertexBuffer();
+    mesh->compile(meshData);
     return mesh;
 }
 

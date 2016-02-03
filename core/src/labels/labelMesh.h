@@ -16,14 +16,14 @@ public:
 
     virtual ~LabelMesh();
 
-    void addLabel(std::unique_ptr<Label> _label);
-
     const std::vector<std::unique_ptr<Label>>& getLabels() const {
         return m_labels;
     }
-    virtual void compileVertexBuffer() override;
 
     virtual void draw(ShaderProgram& _shader) override;
+
+    void compile(std::vector<std::unique_ptr<Label>>& _labels,
+                 std::vector<Label::Vertex>& _vertices);
 
     void reset();
 

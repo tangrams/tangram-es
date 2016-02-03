@@ -158,9 +158,14 @@ void DrawRuleMergeSet::apply(const Feature& _feature, const SceneLayer& _layer,
     // build the feature with the rule's parameters
     for (auto& rule : matchedRules) {
 
-        const Style* style = _builder.scene().findStyle(rule.getStyleName());
+        StyleBuilder* style = _builder.getStyleBuilder(rule.getStyleName());
         if (!style) {
             LOGE("Invalid style %s", rule.getStyleName().c_str());
+            continue;
+        }
+
+        bool visible;
+        if (rule.get(StyleParamKey::visible, visible) && !visible) {
             continue;
         }
 
@@ -205,7 +210,7 @@ void DrawRuleMergeSet::apply(const Feature& _feature, const SceneLayer& _layer,
         }
 
         if (valid) {
-            style->buildFeature(_builder.tile(), _feature, rule);
+            style->addFeature(_feature, rule);
         }
     }
 }

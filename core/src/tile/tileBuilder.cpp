@@ -16,23 +16,37 @@ TileBuilder::TileBuilder() {}
 
 TileBuilder::~TileBuilder() {}
 
+StyleBuilder* TileBuilder::getStyleBuilder(const std::string& _name) {
+    auto it = m_styleBuilder.find(_name);
+    if (it == m_styleBuilder.end()) { return nullptr; }
+
+    return it->second.get();
+}
+
 void TileBuilder::setScene(std::shared_ptr<Scene> _scene) {
 
     m_scene = _scene;
 
     m_styleContext.initFunctions(*_scene);
+
+    // Initialize StyleBuilders
+    m_styleBuilder.clear();
+    for (auto& style : _scene->styles()) {
+        m_styleBuilder[style->getName()] = style->createBuilder();
+    }
 }
 
 std::shared_ptr<Tile> TileBuilder::build(TileID _tileID, const TileData& _tileData,
                                          const DataSource& _source) {
 
-    m_tile = std::make_shared<Tile>(_tileID, *m_scene->mapProjection(), &_source);
-    m_tile->initGeometry(m_scene->styles().size());
+    auto tile = std::make_shared<Tile>(_tileID, *m_scene->mapProjection(), &_source);
+    tile->initGeometry(m_scene->styles().size());
 
     m_styleContext.setGlobalZoom(_tileID.s);
 
-    for (auto& style : m_scene->styles()) {
-        style->onBeginBuildTile(*m_tile);
+    for (auto& builder : m_styleBuilder) {
+        if (builder.second)
+            builder.second->setup(*tile);
     }
 
     for (const auto& datalayer : m_scene->layers()) {
@@ -55,15 +69,11 @@ std::shared_ptr<Tile> TileBuilder::build(TileID _tileID, const TileData& _tileDa
         }
     }
 
-    for (auto& style : m_scene->styles()) {
-        style->onEndBuildTile(*m_tile);
-        auto& mesh = m_tile->getMesh(*style);
-        if (mesh) {
-            mesh->compileVertexBuffer();
-        }
+    for (auto& builder : m_styleBuilder) {
+        tile->getMesh(builder.second->style()) = builder.second->build();
     }
 
-    return std::move(m_tile);
+    return tile;
 }
 
 }

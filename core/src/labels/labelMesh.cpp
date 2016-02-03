@@ -31,10 +31,6 @@ LabelMesh::~LabelMesh() {
     }
 }
 
-void LabelMesh::addLabel(std::unique_ptr<Label> _label) {
-    m_labels.push_back(std::move(_label));
-}
-
 void LabelMesh::reset() {
     for (auto& label : m_labels) {
         label->resetState();
@@ -66,30 +62,33 @@ void LabelMesh::loadQuadIndices() {
                  reinterpret_cast<GLbyte*>(indices.data()), GL_STATIC_DRAW);
 }
 
-void LabelMesh::compileVertexBuffer() {
-    size_t sumVertices = 0;
+void LabelMesh::compile(std::vector<std::unique_ptr<Label>>& _labels,
+                        std::vector<Label::Vertex>& _vertices) {
+
+    constexpr size_t maxVertices = 16384;
+
+    typedef std::vector<std::unique_ptr<Label>>::iterator iter_t;
+
+    m_labels.insert(m_labels.end(),
+                    std::move_iterator<iter_t>(_labels.begin()),
+                    std::move_iterator<iter_t>(_labels.end()));
+
+    // Compile vertex buffer directly instead of making a temporary copy
+    m_nVertices = _vertices.size();
+
     int stride = m_vertexLayout->getStride();
     m_glVertexData = new GLbyte[stride * m_nVertices];
+    std::memcpy(m_glVertexData,
+                reinterpret_cast<const GLbyte*>(_vertices.data()),
+                m_nVertices * stride);
 
-    for (auto& vertices : m_vertices) {
-        size_t nVertices = vertices.size();
-
-        std::memcpy(m_glVertexData + (sumVertices * stride),
-                    reinterpret_cast<GLbyte*>(vertices.data()), nVertices * stride);
-        sumVertices += nVertices;
-    }
-
-    for (size_t offset = 0; offset < sumVertices; offset += maxVertices) {
+    for (size_t offset = 0; offset < m_nVertices; offset += maxVertices) {
         size_t nVertices = maxVertices;
-        if (offset + maxVertices > sumVertices) {
-            nVertices = sumVertices - offset;
+        if (offset + maxVertices > m_nVertices) {
+            nVertices = m_nVertices - offset;
         }
         m_vertexOffsets.emplace_back(nVertices / 4 * 6, nVertices);
     }
-
-    // clear vertices...
-    std::vector<std::vector<Label::Vertex>>().swap(m_vertices);
-
     m_isCompiled = true;
 }
 
@@ -135,4 +134,3 @@ void LabelMesh::draw(ShaderProgram& _shader) {
 }
 
 }
-

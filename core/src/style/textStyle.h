@@ -9,7 +9,6 @@
 
 namespace Tangram {
 
-class TextBuffer;
 class FontContext;
 struct Properties;
 typedef int FontID;
@@ -27,10 +26,9 @@ public:
         float strokeWidth = 0.0f;
         float fontSize = 16.0f;
         float blurSpread = 0.0f;
-        bool visible = true;
         Label::Options labelOptions;
         bool wordWrap = true;
-        unsigned int maxLineWidth = 15;
+        uint32_t maxLineWidth = 15;
 
         TextLabelProperty::Transform transform = TextLabelProperty::Transform::none;
         TextLabelProperty::Align align = TextLabelProperty::Align::center;
@@ -46,17 +44,7 @@ protected:
     virtual void constructVertexLayout() override;
     virtual void constructShaderProgram() override;
 
-    virtual void buildPoint(const Point& _point, const DrawRule& _rule, const Properties& _props, VboMesh& _mesh, Tile& _tile) const override;
-    virtual void buildLine(const Line& _line, const DrawRule& _rule, const Properties& _props, VboMesh& _mesh, Tile& _tile) const override;
-    virtual void buildPolygon(const Polygon& _polygon, const DrawRule& _rule, const Properties& _props, VboMesh& _mesh, Tile& _tile) const override;
-    virtual bool checkRule(const DrawRule& _rule) const override;
-
-    virtual VboMesh* newMesh() const override;
-
-    Parameters applyRule(const DrawRule& _rule, const Properties& _props) const;
-
-    /* Creates a text label and add it to the processed <TextBuffer>. */
-    void addTextLabel(TextBuffer& _buffer, Label::Transform _transform, std::string _text, Label::Type _type) const;
+    virtual std::unique_ptr<StyleBuilder> createBuilder() const override;
 
     bool m_sdf;
     bool m_sdfMultisampling;
@@ -73,6 +61,9 @@ public:
     virtual void onBeginDrawFrame(const View& _view, Scene& _scene, int _textureUnit = 0) override;
 
     virtual ~TextStyle();
+
+    bool useSDF() const { return m_sdf; }
+    auto& fontContext() const { return *m_fontContext; }
 
 private:
 
@@ -94,8 +85,6 @@ namespace std {
             hash_combine(seed, p.strokeColor);
             hash_combine(seed, p.strokeWidth);
             hash_combine(seed, p.fontSize);
-            hash_combine(seed, p.visible);
-            hash_combine(seed, p.wordWrap);
             hash_combine(seed, p.maxLineWidth);
             hash_combine(seed, (int)p.transform);
             hash_combine(seed, (int)p.align);
