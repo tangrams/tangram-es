@@ -97,7 +97,7 @@ void VertexLayout::enable(ShaderProgram& _program, size_t _byteOffset, void* _pt
                 loc = glProgram;
             }
 
-            void* data = _ptr ? _ptr : ((unsigned char*) attrib.offset) + _byteOffset;
+            void* data = (unsigned char*)_ptr + attrib.offset + _byteOffset;
             glVertexAttribPointer(location, attrib.size, attrib.type, attrib.normalized, m_stride, data);
         }
     }
