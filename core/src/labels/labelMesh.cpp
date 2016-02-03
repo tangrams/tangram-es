@@ -69,8 +69,7 @@ void LabelMesh::compile(std::vector<std::unique_ptr<Label>>& _labels,
 
     typedef std::vector<std::unique_ptr<Label>>::iterator iter_t;
 
-    m_labels.reserve(_labels.size());
-    m_labels.insert(m_labels.begin(),
+    m_labels.insert(m_labels.end(),
                     std::move_iterator<iter_t>(_labels.begin()),
                     std::move_iterator<iter_t>(_labels.end()));
 
@@ -135,4 +134,3 @@ void LabelMesh::draw(ShaderProgram& _shader) {
 }
 
 }
-

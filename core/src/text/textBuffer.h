@@ -61,7 +61,6 @@ protected:
 
     bool m_strokePass = false;
 
-    friend class Builder;
 };
 
 }
