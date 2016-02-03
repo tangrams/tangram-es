@@ -135,7 +135,18 @@ void PolylineStyleBuilder::setup(const Tile& _tile) {
 
 std::unique_ptr<VboMesh> PolylineStyleBuilder::build() {
     auto mesh = std::make_unique<Mesh>(m_style.vertexLayout(), m_style.drawMode());
+
+    bool painterMode = (m_style.blendMode() == Blending::overlay ||
+                        m_style.blendMode() == Blending::inlay);
+
+    // Swap draw order to draw outline first when not using depth testing
+    if (painterMode) { std::swap(m_meshData[0], m_meshData[1]); }
+
     mesh->compile(m_meshData);
+
+    // Swapping back since fill mesh may have more vertices than outline
+    if (painterMode) { std::swap(m_meshData[0], m_meshData[1]); }
+
     m_meshData[0].clear();
     m_meshData[1].clear();
     return std::move(mesh);
