@@ -43,7 +43,12 @@ void TextMesh::myUpload() {
     RenderState::vertexBuffer(m_glVertexBuffer);
 
     if (vertexBytes > bufferCapacity) {
+        if (bufferCapacity > 0) {
+            glBufferData(GL_ARRAY_BUFFER, vertexBytes, NULL, m_hint);
+        }
+
         bufferCapacity = vertexBytes;
+
 
         glBufferData(GL_ARRAY_BUFFER, vertexBytes,
                      reinterpret_cast<GLbyte*>(m_vertices.data()),
