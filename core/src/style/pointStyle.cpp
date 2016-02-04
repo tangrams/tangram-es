@@ -9,6 +9,7 @@
 #include "labels/spriteLabel.h"
 #include "scene/drawRule.h"
 #include "scene/spriteAtlas.h"
+#include "labels/labelSet.h"
 #include "tile/tile.h"
 #include "util/builders.h"
 #include "view/view.h"

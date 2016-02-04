@@ -12,22 +12,6 @@ static std::atomic<int> s_meshCounter(0);
 
 const size_t maxVertices = 16384;
 
-LabelSet::~LabelSet() {}
-
-void LabelSet::reset() {
-    for (auto& label : m_labels) {
-        label->resetState();
-    }
-}
-
-void LabelSet::setLabels(std::vector<std::unique_ptr<Label>>& _labels) {
-    typedef std::vector<std::unique_ptr<Label>>::iterator iter_t;
-    m_labels.insert(m_labels.begin(),
-                    std::move_iterator<iter_t>(_labels.begin()),
-                    std::move_iterator<iter_t>(_labels.end()));
-
-}
-
 LabelMesh::LabelMesh(std::shared_ptr<VertexLayout> _vertexLayout, GLenum _drawMode)
     : VboMesh<Label::Vertex>(_vertexLayout, _drawMode, GL_DYNAMIC_DRAW)
 {

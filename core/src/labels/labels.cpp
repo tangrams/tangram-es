@@ -11,6 +11,7 @@
 #include "tile/tile.h"
 #include "tile/tileCache.h"
 #include "labels/labelMesh.h"
+#include "labels/labelSet.h"
 
 #include "glm/glm.hpp"
 #include "glm/gtc/matrix_transform.hpp"

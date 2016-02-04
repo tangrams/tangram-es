@@ -2,7 +2,7 @@
 
 #include "style.h"
 #include "labels/label.h"
-#include "labelProperty.h"
+#include "style/labelProperty.h"
 #include "util/hash.h"
 
 #include <memory>
@@ -13,40 +13,8 @@ class FontContext;
 struct Properties;
 typedef int FontID;
 
-struct AlfonsContext;
-struct LabelContainer;
-
-struct FontMetrics {
-    float ascender, descender, lineHeight;
-};
-
-struct TextLabel : public Label {
-  public:
-    TextLabel(Label::Transform _transform, Type _type,
-                glm::vec2 _dim, LabelContainer& _mesh,
-                Range _vertexRange,
-                Label::Options _options,
-                FontMetrics _metrics,
-                int _nLines, LabelProperty::Anchor _anchor,
-                glm::vec2 _quadsLocalOrigin);
-
-    void updateBBoxes(float _zoomFract) override;
-
-protected:
-
-    void align(glm::vec2& _screenPosition, const glm::vec2& _ap1, const glm::vec2& _ap2) override;
-    FontMetrics m_metrics;
-    int m_nLines;
-
-    void pushTransform() override;
-
-private:
-    // Back-pointer to owning container
-    LabelContainer& m_labelContainer;
-
-    glm::vec2 m_anchor;
-    glm::vec2 m_quadLocalOrigin;
-};
+class AlfonsContext;
+class LabelContainer;
 
 class TextStyle : public Style {
 

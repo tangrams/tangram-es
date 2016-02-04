@@ -6,7 +6,7 @@
 #include "style/style.h"
 #include "view/view.h"
 #include "tile/tileID.h"
-#include "labels/labelMesh.h"
+#include "labels/labelSet.h"
 #include "gl/vboMesh.h"
 #include "gl/shaderProgram.h"
 

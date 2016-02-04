@@ -10,22 +10,6 @@ namespace Tangram {
 
 class ShaderProgram;
 
-class LabelSet {
-public:
-    const std::vector<std::unique_ptr<Label>>& getLabels() const {
-        return m_labels;
-    }
-
-    virtual ~LabelSet();
-
-    void setLabels(std::vector<std::unique_ptr<Label>>& _labels);
-
-    void reset();
-
-protected:
-    std::vector<std::unique_ptr<Label>> m_labels;
-};
-
 class LabelMesh : public VboMesh<Label::Vertex> {
 public:
     LabelMesh(std::shared_ptr<VertexLayout> _vertexLayout, GLenum _drawMode);
