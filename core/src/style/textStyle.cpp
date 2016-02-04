@@ -100,7 +100,7 @@ void TextStyle::onEndDrawFrame() {
     if (m_sdf) {
         m_shaderProgram->setUniformi("u_pass", 1);
         for (auto& gt : m_context->batches()) {
-            if (gt.mesh->ready()) {
+            if (gt.mesh->compiled()) {
                 gt.texture.bind(0);
                 gt.mesh->draw(*m_shaderProgram);
             }
@@ -109,7 +109,7 @@ void TextStyle::onEndDrawFrame() {
     }
 
     for (auto& gt : m_context->batches()) {
-        if (gt.mesh->ready()) {
+        if (gt.mesh->compiled()) {
 
             gt.texture.bind(0);
             gt.mesh->draw(*m_shaderProgram);

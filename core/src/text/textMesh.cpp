@@ -57,10 +57,6 @@ void TextMesh::myUpload() {
     m_dirty = false;
 }
 
-bool TextMesh::ready() {
-    return m_isCompiled;
-}
-
 void TextMesh::clear() {
     m_nVertices = 0;
     m_vertices.clear();

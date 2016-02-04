@@ -152,6 +152,11 @@ public:
     void compile(const MeshData<T>& _mesh);
 
     /*
+     * Returns whether the mesh has been processed as binary data for upload
+     */
+    bool compiled() { return m_isCompiled; }
+
+    /*
      * Update _nVerts vertices in the mesh with the new T value _newVertexValue
      * starting after _byteOffset in the mesh vertex data memory
      */

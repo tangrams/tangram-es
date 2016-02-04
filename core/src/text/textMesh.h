@@ -25,7 +25,6 @@ class TextMesh : public LabelMesh {
 public:
     void pushQuad(GlyphQuad& _quad, Label::Vertex::State& _state);
     void myUpload();
-    bool ready();
     void clear();
 
 private:
