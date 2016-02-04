@@ -136,4 +136,6 @@ endif()
 
 ## alfons ##
 ############
+set(GLM_ROOT ${PROJECT_SOURCE_DIR}/core/include/glm)
+
 add_subdirectory(${CMAKE_CURRENT_SOURCE_DIR}/alfons)
