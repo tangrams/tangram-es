@@ -1,4 +1,4 @@
-#include "alfonsStyle.h"
+#include "textStyle.h"
 
 #include "material.h"
 #include "scene/drawRule.h"
@@ -68,14 +68,13 @@ struct GlyphQuad {
         glm::i16vec2 pos;
         glm::u16vec2 uv;
     } quad[4];
+    // TODO color and stroke must not be stored per quad
     uint32_t color;
     uint32_t stroke;
     alf::AtlasID atlas;
 };
 
-// NB: just using LabelMesh here to reuse its quadIndices
-// for drawing..
-struct AlfonsMesh : public LabelMesh {
+struct TextMesh : public LabelMesh {
     using LabelMesh::LabelMesh;
 
     int bufferCapacity = 0;
@@ -155,13 +154,13 @@ struct GlyphBatch {
         : texture(texture_size, texture_size) {
 
         texData.resize(texture_size * texture_size);
-        mesh = std::make_unique<AlfonsMesh>(_vertexLayout, GL_TRIANGLES);
+        mesh = std::make_unique<TextMesh>(_vertexLayout, GL_TRIANGLES);
     }
 
     std::vector<unsigned char> texData;
     Texture texture;
     bool dirty;
-    std::unique_ptr<AlfonsMesh> mesh;
+    std::unique_ptr<TextMesh> mesh;
 
     size_t refCount = 0;
 };
@@ -202,7 +201,6 @@ struct AlfonsContext : public alf::TextureCallback {
         m_font->addFace(m_alfons.getFontFace(alf::InputSource(FALLBACK), FONT_SIZE));
 #endif
 
-
         m_vertexLayout = vertexLayout();
     }
 
@@ -226,9 +224,9 @@ struct AlfonsContext : public alf::TextureCallback {
 
         size_t pos = 0;
         for (uint16_t y = 0; y < gh; y++) {
+            size_t row = (y * stride);
             for (uint16_t x = 0; x < gw; x++) {
-                //dst[x + (y * stride)] += std::min(src[pos++] + 30,  0xff);
-                dst[x + (y * stride)] = src[pos++];
+                dst[row + x] = src[pos++];
             }
         }
 
@@ -282,8 +280,7 @@ struct AlfonsContext : public alf::TextureCallback {
 };
 
 // Not actually used as VboMesh!
-// TODO make LabelMesh an interface
-// - just keeps labels and vertices for all Labels of a tile
+// Just keeps labels and vertices for all Labels of a tile
 struct LabelContainer : public LabelSet, public StyledMesh {
 
     LabelContainer(AlfonsContext& _ctx) : context(_ctx) {}
@@ -323,17 +320,17 @@ struct LabelContainer : public LabelSet, public StyledMesh {
 };
 
 
-AlfonsStyle::AlfonsStyle(std::string _name, bool _sdf, Blending _blendMode, GLenum _drawMode) :
+TextStyle::TextStyle(std::string _name, bool _sdf, Blending _blendMode, GLenum _drawMode) :
     Style(_name, _blendMode, _drawMode), m_sdf(_sdf),
     m_context(std::make_shared<AlfonsContext>()) {}
 
-AlfonsStyle::~AlfonsStyle() {}
+TextStyle::~TextStyle() {}
 
-void AlfonsStyle::constructVertexLayout() {
+void TextStyle::constructVertexLayout() {
     m_vertexLayout = vertexLayout();
 }
 
-void AlfonsStyle::constructShaderProgram() {
+void TextStyle::constructShaderProgram() {
     std::string frag = m_sdf ? "shaders/sdf.fs" : "shaders/text.fs";
 
     std::string vertShaderSrcStr = stringFromFile("shaders/point.vs", PathType::internal);
@@ -346,7 +343,7 @@ void AlfonsStyle::constructShaderProgram() {
     m_shaderProgram->addSourceBlock("defines", defines);
 }
 
-void AlfonsStyle::onBeginDrawFrame(const View& _view, Scene& _scene, int _textureUnit) {
+void TextStyle::onBeginDrawFrame(const View& _view, Scene& _scene, int _textureUnit) {
     if (m_context->m_batches.empty()) { return; }
 
     {
@@ -382,7 +379,7 @@ void AlfonsStyle::onBeginDrawFrame(const View& _view, Scene& _scene, int _textur
     Style::onBeginDrawFrame(_view, _scene, 1);
 }
 
-void AlfonsStyle::onEndDrawFrame() {
+void TextStyle::onEndDrawFrame() {
     if (m_context->m_batches.empty()) { return; }
 
     std::lock_guard<std::mutex> lock(m_context->m_mutex);
@@ -413,7 +410,7 @@ void AlfonsStyle::onEndDrawFrame() {
 
 struct TextStyleBuilder : public StyleBuilder {
 
-    const AlfonsStyle& m_style;
+    const TextStyle& m_style;
 
     float m_tileSize;
 
@@ -423,7 +420,7 @@ struct TextStyleBuilder : public StyleBuilder {
     bool m_sdf;
     float m_pixelScale = 1;
 
-    std::unique_ptr<LabelContainer> m_mesh;
+    std::unique_ptr<LabelContainer> m_labelContainer;
     std::vector<std::unique_ptr<Label>> m_labels;
 
     struct ScratchBuffer : public alf::MeshCallback {
@@ -469,7 +466,7 @@ struct TextStyleBuilder : public StyleBuilder {
 
     ScratchBuffer m_scratch;
 
-    TextStyleBuilder(const AlfonsStyle& _style) :
+    TextStyleBuilder(const TextStyle& _style) :
         StyleBuilder(_style),
         m_style(_style),
         m_batch(_style.context()->m_atlas, m_scratch) {}
@@ -487,23 +484,25 @@ struct TextStyleBuilder : public StyleBuilder {
         m_labels.clear();
         m_scratch.clear();
 
-        m_mesh = std::make_unique<LabelContainer>(*m_style.context());
+        m_labelContainer = std::make_unique<LabelContainer>(*m_style.context());
     }
 
     virtual std::unique_ptr<StyledMesh> build() override {
         if (!m_labels.empty()) {
-            m_mesh->setLabels(m_labels, m_scratch.quads);
+            m_labelContainer->setLabels(m_labels, m_scratch.quads);
         }
         m_labels.clear();
         m_scratch.clear();
 
-        return std::move(m_mesh);
+        return std::move(m_labelContainer);
     };
 
-    AlfonsStyle::Parameters applyRule(const DrawRule& _rule, const Properties& _props) const;
+    TextStyle::Parameters applyRule(const DrawRule& _rule,
+                                    const Properties& _props) const;
 
-    bool prepareLabel(const AlfonsStyle::Parameters& _params, Label::Type _type);
-    void addLabel(const AlfonsStyle::Parameters& _params, Label::Type _type, Label::Transform _transform);
+    bool prepareLabel(const TextStyle::Parameters& _params, Label::Type _type);
+    void addLabel(const TextStyle::Parameters& _params, Label::Type _type,
+                  Label::Transform _transform);
 };
 
 bool TextStyleBuilder::checkRule(const DrawRule& _rule) const {
@@ -511,17 +510,21 @@ bool TextStyleBuilder::checkRule(const DrawRule& _rule) const {
 }
 
 
-void TextStyleBuilder::addPoint(const Point& _point, const Properties& _props, const DrawRule& _rule) {
-    AlfonsStyle::Parameters params = applyRule(_rule, _props);
+void TextStyleBuilder::addPoint(const Point& _point,
+                               const Properties& _props,
+                               const DrawRule& _rule) {
+    TextStyle::Parameters params = applyRule(_rule, _props);
 
     if (!prepareLabel(params, Label::Type::point)) { return; }
 
     addLabel(params, Label::Type::point, { glm::vec2(_point), glm::vec2(_point) });
 }
 
-void TextStyleBuilder::addLine(const Line& _line, const Properties& _props, const DrawRule& _rule) {
+void TextStyleBuilder::addLine(const Line& _line,
+                              const Properties& _props,
+                              const DrawRule& _rule) {
 
-    AlfonsStyle::Parameters params = applyRule(_rule, _props);
+    TextStyle::Parameters params = applyRule(_rule, _props);
 
     if (!prepareLabel(params, Label::Type::line)) { return; }
 
@@ -538,12 +541,14 @@ void TextStyleBuilder::addLine(const Line& _line, const Properties& _props, cons
     }
 }
 
-void TextStyleBuilder::addPolygon(const Polygon& _polygon, const Properties& _props, const DrawRule& _rule) {
+void TextStyleBuilder::addPolygon(const Polygon& _polygon,
+                                 const Properties& _props,
+                                 const DrawRule& _rule) {
     Point p = glm::vec3(centroid(_polygon), 0.0);
     addPoint(p, _props, _rule);
 }
 
-bool TextStyleBuilder::prepareLabel(const AlfonsStyle::Parameters& _params, Label::Type _type) {
+bool TextStyleBuilder::prepareLabel(const TextStyle::Parameters& _params, Label::Type _type) {
 
     if (_params.text.empty() || _params.fontSize <= 0.f) {
         LOGD("invalid params: %s %f", _params.text.c_str(), _params.fontSize);
@@ -604,14 +609,14 @@ bool TextStyleBuilder::prepareLabel(const AlfonsStyle::Parameters& _params, Labe
     return true;
 }
 
-void TextStyleBuilder::addLabel(const AlfonsStyle::Parameters& _params, Label::Type _type,
+void TextStyleBuilder::addLabel(const TextStyle::Parameters& _params, Label::Type _type,
                        Label::Transform _transform) {
 
     int numQuads = m_scratch.numQuads;
     int quadOffset = m_scratch.quads.size() - numQuads;
 
-    m_labels.emplace_back(new AlfonsLabel(_transform, _type,
-                                          m_scratch.bbox, *m_mesh,
+    m_labels.emplace_back(new TextLabel(_transform, _type,
+                                          m_scratch.bbox, *m_labelContainer,
                                           { quadOffset, numQuads },
                                           _params.labelOptions,
                                           m_scratch.metrics,
@@ -620,12 +625,12 @@ void TextStyleBuilder::addLabel(const AlfonsStyle::Parameters& _params, Label::T
                                           m_scratch.quadsLocalOrigin));
 }
 
-AlfonsStyle::Parameters TextStyleBuilder::applyRule(const DrawRule& _rule,
+TextStyle::Parameters TextStyleBuilder::applyRule(const DrawRule& _rule,
                                            const Properties& _props) const {
 
     const static std::string key_name("name");
 
-    AlfonsStyle::Parameters p;
+    TextStyle::Parameters p;
 
     std::string fontFamily, fontWeight, fontStyle, transform, align, anchor;
     glm::vec2 offset;
@@ -720,27 +725,27 @@ AlfonsStyle::Parameters TextStyleBuilder::applyRule(const DrawRule& _rule,
     float boundingBoxBuffer = -p.fontSize / 2.f;
     p.labelOptions.buffer = boundingBoxBuffer;
 
-    std::hash<AlfonsStyle::Parameters> hash;
+    std::hash<TextStyle::Parameters> hash;
     p.labelOptions.paramHash = hash(p);
 
     return p;
 }
 
-std::unique_ptr<StyleBuilder> AlfonsStyle::createBuilder() const {
+std::unique_ptr<StyleBuilder> TextStyle::createBuilder() const {
     return std::make_unique<TextStyleBuilder>(*this);
 }
 
 
 using namespace LabelProperty;
 
-AlfonsLabel::AlfonsLabel(Label::Transform _transform, Type _type, glm::vec2 _dim,
-                     LabelContainer& _mesh, Range _vertexRange,
+TextLabel::TextLabel(Label::Transform _transform, Type _type, glm::vec2 _dim,
+                     LabelContainer& _labelContainer, Range _vertexRange,
                      Label::Options _options, FontMetrics _metrics,
                      int _nLines, Anchor _anchor, glm::vec2 _quadsLocalOrigin)
     : Label(_transform, _dim, _type, _vertexRange, _options),
       m_metrics(_metrics),
       m_nLines(_nLines),
-      m_mesh(_mesh),
+      m_labelContainer(_labelContainer),
       m_quadLocalOrigin(_quadsLocalOrigin) {
 
     if (m_type == Type::point) {
@@ -759,7 +764,7 @@ AlfonsLabel::AlfonsLabel(Label::Transform _transform, Type _type, glm::vec2 _dim
     }
 }
 
-void AlfonsLabel::updateBBoxes(float _zoomFract) {
+void TextLabel::updateBBoxes(float _zoomFract) {
     glm::vec2 obbCenter;
 
     if (m_type == Type::line) {
@@ -781,7 +786,7 @@ void AlfonsLabel::updateBBoxes(float _zoomFract) {
     m_aabb = m_obb.getExtent();
 }
 
-void AlfonsLabel::align(glm::vec2& _screenPosition, const glm::vec2& _ap1, const glm::vec2& _ap2) {
+void TextLabel::align(glm::vec2& _screenPosition, const glm::vec2& _ap1, const glm::vec2& _ap2) {
 
     switch (m_type) {
         case Type::debug:
@@ -809,18 +814,17 @@ void AlfonsLabel::align(glm::vec2& _screenPosition, const glm::vec2& _ap1, const
     }
 }
 
-void AlfonsLabel::pushTransform() {
-    // if (!m_dirty) { return; }
-    // m_dirty = false;
+void TextLabel::pushTransform() {
     if (!visibleState()) { return; }
 
+    auto& batches = m_labelContainer.context.m_batches;
     auto state = m_transform.state.vertex();
 
-    auto it = m_mesh.quads.begin() + m_vertexRange.start;
+    auto it = m_labelContainer.quads.begin() + m_vertexRange.start;
     auto end = it + m_vertexRange.length;
 
     for (; it != end; ++it) {
-        m_mesh.context.m_batches[it->atlas].mesh->pushQuad(*it, state);
+        batches[it->atlas].mesh->pushQuad(*it, state);
     }
 }
 

@@ -20,9 +20,9 @@ struct FontMetrics {
     float ascender, descender, lineHeight;
 };
 
-struct AlfonsLabel : public Label {
+struct TextLabel : public Label {
   public:
-    AlfonsLabel(Label::Transform _transform, Type _type,
+    TextLabel(Label::Transform _transform, Type _type,
                 glm::vec2 _dim, LabelContainer& _mesh,
                 Range _vertexRange,
                 Label::Options _options,
@@ -42,13 +42,13 @@ protected:
 
 private:
     // Back-pointer to owning container
-    LabelContainer& m_mesh;
+    LabelContainer& m_labelContainer;
 
     glm::vec2 m_anchor;
     glm::vec2 m_quadLocalOrigin;
 };
 
-class AlfonsStyle : public Style {
+class TextStyle : public Style {
 
 public:
 
@@ -87,14 +87,14 @@ protected:
     std::shared_ptr<AlfonsContext> m_context;
 public:
 
-    AlfonsStyle(std::string _name, bool _sdf = false,
+    TextStyle(std::string _name, bool _sdf = false,
               Blending _blendMode = Blending::overlay,
               GLenum _drawMode = GL_TRIANGLES);
 
     void onBeginDrawFrame(const View& _view, Scene& _scene, int _textureUnit = 0) override;
     void onEndDrawFrame() override;
 
-    ~AlfonsStyle() override;
+    ~TextStyle() override;
 
 private:
 
@@ -105,8 +105,8 @@ private:
 
 namespace std {
     template <>
-    struct hash<Tangram::AlfonsStyle::Parameters> {
-        size_t operator() (const Tangram::AlfonsStyle::Parameters& p) const {
+    struct hash<Tangram::TextStyle::Parameters> {
+        size_t operator() (const Tangram::TextStyle::Parameters& p) const {
             std::hash<Tangram::Label::Options> optionsHash;
             std::size_t seed = 0;
             hash_combine(seed, p.fontId);

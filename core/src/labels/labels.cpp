@@ -7,6 +7,7 @@
 #include "view/view.h"
 #include "style/style.h"
 #include "style/pointStyle.h"
+#include "style/textStyle.h"
 #include "tile/tile.h"
 #include "tile/tileCache.h"
 #include "labels/labelMesh.h"
@@ -124,9 +125,8 @@ void Labels::skipTransitions(const std::vector<std::unique_ptr<Style>>& _styles,
     std::vector<const Style*> styles;
 
     for (const auto& style : _styles) {
-        // if (dynamic_cast<const TextStyle*>(style.get()) ||
-        //     dynamic_cast<const PointStyle*>(style.get())) {
-        if (dynamic_cast<const PointStyle*>(style.get())) {
+        if (dynamic_cast<const TextStyle*>(style.get()) ||
+            dynamic_cast<const PointStyle*>(style.get())) {
             styles.push_back(style.get());
         }
     }
