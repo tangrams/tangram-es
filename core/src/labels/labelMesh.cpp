@@ -55,9 +55,6 @@ void LabelMesh::loadQuadIndices() {
 }
 
 void LabelMesh::compile(std::vector<Label::Vertex>& _vertices) {
-
-    constexpr size_t maxVertices = 16384;
-
     // Compile vertex buffer directly instead of making a temporary copy
     m_nVertices = _vertices.size();
 
@@ -67,9 +64,9 @@ void LabelMesh::compile(std::vector<Label::Vertex>& _vertices) {
                 reinterpret_cast<const GLbyte*>(_vertices.data()),
                 m_nVertices * stride);
 
-    for (size_t offset = 0; offset < m_nVertices; offset += maxVertices) {
-        size_t nVertices = maxVertices;
-        if (offset + maxVertices > m_nVertices) {
+    for (size_t offset = 0; offset < m_nVertices; offset += maxLabelMeshVertices) {
+        size_t nVertices = maxLabelMeshVertices;
+        if (offset + maxLabelMeshVertices > m_nVertices) {
             nVertices = m_nVertices - offset;
         }
         m_vertexOffsets.emplace_back(nVertices / 4 * 6, nVertices);
