@@ -690,7 +690,7 @@ TextStyle::Parameters TextStyleBuilder::applyRule(const DrawRule& _rule,
     p.labelOptions.repeatDistance *= m_style.pixelScale();
 
     if (_rule.get(StyleParamKey::interactive, p.interactive) && p.interactive) {
-        p.properties = std::make_shared<Properties>(_props);
+        p.labelOptions.properties = std::make_shared<Properties>(_props);
     }
 
     LabelProperty::anchor(anchor, p.anchor);
