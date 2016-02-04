@@ -10,8 +10,6 @@ static GLuint s_quadIndexBuffer = 0;
 static int s_quadGeneration = -1;
 static std::atomic<int> s_meshCounter(0);
 
-const size_t maxVertices = 16384;
-
 LabelMesh::LabelMesh(std::shared_ptr<VertexLayout> _vertexLayout, GLenum _drawMode)
     : Mesh<Label::Vertex>(_vertexLayout, _drawMode, GL_DYNAMIC_DRAW)
 {
@@ -39,9 +37,9 @@ void LabelMesh::loadQuadIndices() {
     s_quadGeneration = RenderState::generation();
 
     std::vector<GLushort> indices;
-    indices.reserve(maxVertices / 4 * 6);
+    indices.reserve(maxLabelMeshVertices / 4 * 6);
 
-    for (size_t i = 0; i < maxVertices; i += 4) {
+    for (size_t i = 0; i < maxLabelMeshVertices; i += 4) {
         indices.push_back(i + 2);
         indices.push_back(i + 0);
         indices.push_back(i + 1);
@@ -57,9 +55,6 @@ void LabelMesh::loadQuadIndices() {
 }
 
 void LabelMesh::compile(std::vector<Label::Vertex>& _vertices) {
-
-    constexpr size_t maxVertices = 16384;
-
     // Compile vertex buffer directly instead of making a temporary copy
     m_nVertices = _vertices.size();
 
@@ -69,9 +64,9 @@ void LabelMesh::compile(std::vector<Label::Vertex>& _vertices) {
                 reinterpret_cast<const GLbyte*>(_vertices.data()),
                 m_nVertices * stride);
 
-    for (size_t offset = 0; offset < m_nVertices; offset += maxVertices) {
-        size_t nVertices = maxVertices;
-        if (offset + maxVertices > m_nVertices) {
+    for (size_t offset = 0; offset < m_nVertices; offset += maxLabelMeshVertices) {
+        size_t nVertices = maxLabelMeshVertices;
+        if (offset + maxLabelMeshVertices > m_nVertices) {
             nVertices = m_nVertices - offset;
         }
         m_vertexOffsets.emplace_back(nVertices / 4 * 6, nVertices);
